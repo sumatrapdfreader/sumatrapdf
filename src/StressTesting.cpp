@@ -229,18 +229,6 @@ static bool IsStressTestSupportedFile(const char* filePath, const char* filter) 
     return DocIsSupportedFileType(kindSniffed);
 }
 
-static bool CollectStressTestSupportedFilesFromDirectory(const char* dirPath, const char* filter, StrVec& paths) {
-    bool hasFiles = false;
-    DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const char* filePath) -> bool {
-        if (IsStressTestSupportedFile(filePath, filter)) {
-            paths.Append(filePath);
-            hasFiles = true;
-        }
-        return true;
-    });
-    return hasFiles;
-}
-
 // return t1 - t2 in seconds
 static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2) {
     FILETIME ft1, ft2;
@@ -309,8 +297,6 @@ class TestFileProvider {
     }
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
     virtual TempStr NextFile() = 0;
-    // start the iteration from the beginning
-    virtual void Restart() = 0;
     virtual int GetFilesCount() = 0;
 };
 
@@ -346,107 +332,69 @@ class FilesProvider : public TestFileProvider {
         TempStr res = files.at(provided++);
         return res;
     }
-
-    void Restart() override {
-        provided = 0;
-    }
 };
 
 class DirFileProviderAsync : public TestFileProvider {
     StrQueue queue;
     AutoFreeStr startDir;
     AutoFreeStr fileFilter;
+    // those are only set once and then only read so
+    // don't have to be atomic
+    volatile int max = 0;
+    volatile bool random = false;
+
+    AtomicInt nFiles;
 
   public:
-    DirFileProviderAsync(const char* path, const char* filter) {
+    DirFileProviderAsync(const char* path, const char* filter, int max = 0, bool random = false) {
         startDir.SetCopy(path);
         if (filter && !str::Eq(filter, "*")) {
             fileFilter.SetCopy(filter);
         }
+        this->max = max;
+        this->random = random;
         StartDirTraverseAsync(&queue, path, true);
     }
     ~DirFileProviderAsync() override = default;
     TempStr NextFile() override;
-    void Restart() override {
-        StartDirTraverseAsync(&queue, startDir.Get(), true);
-    }
     int GetFilesCount() override {
         return queue.Size();
     }
 };
 
 TempStr DirFileProviderAsync::NextFile() {
-    char* path = queue.PopFront();
+    if (max > 0 && nFiles.Get() >= max) {
+        return nullptr;
+    }
+again:
+    char* path = nullptr;
+    if (random) {
+        bool isFinished = queue.Access([&path](StrQueue* q) {
+            int n = q->strings.Size();
+            int idx = rand() % n;
+            path = q->strings.RemoveAtFast(idx);
+            path = str::DupTemp(path);
+        });
+        if (isFinished) {
+            CrashIf(path);
+            return nullptr;
+        }
+        CrashIf(!path);
+        if (!IsStressTestSupportedFile(path, fileFilter.Get())) {
+            goto again;
+        }
+        nFiles.Inc();
+        return path;
+    }
+    path = queue.PopFront();
     if (queue.IsSentinel(path)) {
         return nullptr;
     }
+    if (!IsStressTestSupportedFile(path, fileFilter.Get())) {
+        goto again;
+    }
+    nFiles.Inc();
     return path;
-}
-
-class DirFileProvider : public TestFileProvider {
-    AutoFreeStr startDir;
-    AutoFreeStr fileFilter;
-
-    // current state of directory traversal
-    StrVec filesToOpen;
-    StrVec dirsToVisit;
-
-    bool OpenDir(const char* dirPath);
-
-  public:
-    DirFileProvider(const char* path, const char* filter);
-    ~DirFileProvider() override = default;
-    TempStr NextFile() override;
-    void Restart() override;
-    int GetFilesCount() override;
-};
-
-DirFileProvider::DirFileProvider(const char* path, const char* filter) {
-    startDir.SetCopy(path);
-    if (filter && !str::Eq(filter, "*")) {
-        fileFilter.SetCopy(filter);
-    }
-    OpenDir(path);
-}
-
-bool DirFileProvider::OpenDir(const char* dirPath) {
-    CrashIf(filesToOpen.Size() > 0);
-
-    bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
-    SortNatural(filesToOpen);
-
-    TempStr pattern = str::FormatTemp("%s\\*", dirPath);
-    bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
-
-    return hasFiles || hasSubDirs;
-}
-
-TempStr DirFileProvider::NextFile() {
-    if (filesToOpen.Size() > 0) {
-        return filesToOpen.PopAt(0);
-    }
-
-    if (dirsToVisit.Size() > 0) {
-        // test next directory
-        char* path = dirsToVisit.RemoveAt(0);
-        OpenDir(path);
-        return NextFile();
-    }
-
-    return nullptr;
-}
-
-int DirFileProvider::GetFilesCount() {
-    return filesToOpen.Size();
-}
-
-void DirFileProvider::Restart() {
-    OpenDir(startDir);
-}
-
-static int GetAllMatchingFiles(const char* dir, const char* filter, StrVec& files, bool showProgress) {
-    CollectStressTestSupportedFilesFromDirectory(dir, filter, files);
-    return files.Size();
 }
 
 /* The idea of StressTest is to render a lot of PDFs sequentially, simulating
@@ -464,9 +412,7 @@ struct StressTest {
     bool exitWhenDone = false;
 
     SYSTEMTIME stressStartTime{};
-    int cycles = 1;
     Vec<PageRange> pageRanges;
-    // range of files to render (files get a new index when going through several cycles)
     Vec<PageRange> fileRanges;
     int fileIndex = 0;
 
@@ -493,18 +439,18 @@ StressTest::StressTest(MainWindow* win, bool exitWhenDone) {
 }
 
 StressTest::~StressTest() {
-    delete fileProvider;
+    //TODO: it can be shared so find a different way to free it
+    //delete fileProvider;
 }
 
 static void TickTimer(StressTest* st) {
     SetTimer(st->win->hwndFrame, st->timerId, USER_TIMER_MINIMUM, nullptr);
 }
 
-static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
+static void Start(StressTest* st, TestFileProvider* fileProvider) {
     GetSystemTime(&st->stressStartTime);
 
     st->fileProvider = fileProvider;
-    st->cycles = cycles;
 
     if (st->pageRanges.size() == 0) {
         st->pageRanges.Append(PageRange());
@@ -535,15 +481,15 @@ static void Finished(StressTest* st, bool success) {
     delete st;
 }
 
-static void Start(StressTest* st, const char* path, const char* filter, const char* ranges, int cycles) {
+static void Start(StressTest* st, const char* path, const char* filter, const char* ranges) {
     if (file::Exists(path)) {
         FilesProvider* filesProvider = new FilesProvider(path);
         ParsePageRanges(ranges, st->pageRanges);
-        Start(st, filesProvider, cycles);
+        Start(st, filesProvider);
     } else if (dir::Exists(path)) {
         auto dirFileProvider = new DirFileProviderAsync(path, filter);
         ParsePageRanges(ranges, st->fileRanges);
-        Start(st, dirFileProvider, cycles);
+        Start(st, dirFileProvider);
     } else {
         TempStr s = str::FormatTemp("Path '%s' doesn't exist", path);
         NotificationCreateArgs args;
@@ -734,10 +680,7 @@ static bool GoToNextFile(StressTest* st) {
             }
             continue;
         }
-        if (--st->cycles <= 0) {
-            return false;
-        }
-        st->fileProvider->Restart();
+        return false;
     }
 }
 
@@ -867,64 +810,6 @@ void GetStressTestInfo(str::Str* s) {
     }
 }
 
-// Select random files to test. We want to test each file type equally, so
-// we first group them by file extension and then select up to maxPerType
-// for each extension, randomly, and inter-leave the files with different
-// extensions, so their testing is evenly distributed.
-// Returns result in <files>.
-static void RandomizeFiles(StrVec& files, int maxPerType) {
-    StrVec fileExts;
-    Vec<StrVec*> filesPerType;
-
-    for (int i = 0; i < files.Size(); i++) {
-        char* file = files.at(i);
-        char* ext = path::GetExtTemp(file);
-        CrashAlwaysIf(!ext);
-        int typeNo = fileExts.FindI(ext);
-        if (-1 == typeNo) {
-            fileExts.Append(ext);
-            filesPerType.Append(new StrVec());
-            typeNo = filesPerType.Size() - 1;
-        }
-        filesPerType.at(typeNo)->Append(file);
-    }
-
-    for (size_t j = 0; j < filesPerType.size(); j++) {
-        StrVec* all = filesPerType.at(j);
-        StrVec* random = new StrVec();
-
-        for (int n = 0; n < maxPerType && all->Size() > 0; n++) {
-            int idx = rand() % all->Size();
-            char* file = all->at(idx);
-            random->Append(file);
-            all->RemoveAt(idx);
-        }
-
-        filesPerType.at(j) = random;
-        delete all;
-    }
-
-    files.Reset();
-
-    bool gotAll = false;
-    while (!gotAll) {
-        gotAll = true;
-        for (size_t j = 0; j < filesPerType.size(); j++) {
-            StrVec* random = filesPerType.at(j);
-            if (random->Size() > 0) {
-                gotAll = false;
-                char* file = random->at(0);
-                files.Append(file);
-                random->RemoveAt(0);
-            }
-        }
-    }
-
-    for (size_t j = 0; j < filesPerType.size(); j++) {
-        delete filesPerType.at(j);
-    }
-}
-
 void StartStressTest(Flags* i, MainWindow* win) {
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
@@ -949,42 +834,19 @@ void StartStressTest(Flags* i, MainWindow* win) {
                 return;
             }
         }
-        StrVec filesToTest;
 
         printf("Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);
-        int filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
-        if (0 == filesCount) {
-            printf("Didn't find any files matching filter '%s'\n", i->stressTestFilter);
-            return;
-        }
-        printf("Found %d files", filesCount);
-        if (i->stressTestMax > 0) {
-            while (filesToTest.Size() > i->stressTestMax) {
-                int lastIdx = filesToTest.Size() - 1;
-                filesToTest.RemoveAtFast(lastIdx);
-            }
-            printf("limited to %d files", filesToTest.Size());
-        }
 
-        fflush(stdout);
-        if (i->stressRandomizeFiles) {
-            // TODO: should probably allow over-writing the 100 limit
-            RandomizeFiles(filesToTest, 100);
-            filesCount = filesToTest.Size();
-            printf("\nAfter randomization: %d files", filesCount);
-        }
-        printf("\n");
-        fflush(stdout);
+        auto filesProvider =
+            new DirFileProviderAsync(i->stressTestPath, i->stressTestFilter, i->stressTestMax, i->stressRandomizeFiles);
 
         for (int j = 0; j < n; j++) {
             // dst will be deleted when the stress ends
             win = windows[j];
             StressTest* dst = new StressTest(win, i->exitWhenDone);
             win->stressTest = dst;
-            // divide filesToTest among each window
-            FilesProvider* filesProvider = new FilesProvider(filesToTest, n, j);
-            Start(dst, filesProvider, i->stressTestCycles);
+            Start(dst, filesProvider);
         }
 
         free(windows);
@@ -992,7 +854,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
         // dst will be deleted when the stress ends
         StressTest* st = new StressTest(win, i->exitWhenDone);
         win->stressTest = st;
-        Start(st, i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
+        Start(st, i->stressTestPath, i->stressTestFilter, i->stressTestRanges);
     }
 }
 

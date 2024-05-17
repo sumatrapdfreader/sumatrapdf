@@ -2939,16 +2939,6 @@ struct StrVecWithData : StrVecWithDataRaw {
     }
 };
 
-constexpr uintptr_t kStrQueueSentinel = (uintptr_t)-2;
-
-void StrQueue::MarkFinished() {
-    Lock();
-    CrashIf(finishedQueuing);
-    finishedQueuing = true;
-    Unlock();
-    SetEvent(hEvent);
-}
-
 StrQueue::StrQueue() {
     InitializeCriticalSection(&cs);
     BOOL manualReset = FALSE;
@@ -2969,6 +2959,21 @@ void StrQueue::Unlock() {
     LeaveCriticalSection(&cs);
 }
 
+void StrQueue::MarkFinished() {
+    Lock();
+    CrashIf(isFinished);
+    isFinished = true;
+    Unlock();
+    SetEvent(hEvent);
+}
+
+bool StrQueue::IsFinished() {
+    Lock();
+    auto res = isFinished;
+    Unlock();
+    return res;
+}
+
 int StrQueue::Size() {
     Lock();
     auto res = strings.Size();
@@ -2984,39 +2989,49 @@ int StrQueue::Append(const char* s, int len) {
     return res;
 }
 
+constexpr uintptr_t kStrQueueSentinel = (uintptr_t)-2;
+
+bool StrQueue::IsSentinel(char* s) {
+    return s == (char*)kStrQueueSentinel;
+}
+
 // is blocking
 // retuns sentinel value if no more strings
 // use IsSentinel() to check if returned value is a sentinel
 char* StrQueue::PopFront() {
-    while (true) {
-        Lock();
-        if (strings.Size() > 0) {
-            char* s = strings.RemoveAt(0);
-            Unlock();
-            return s;
-        } else {
-            if (finishedQueuing) {
-                Unlock();
-                return (char*)kStrQueueSentinel;
-            }
-        }
+again:
+    Lock();
+    if (strings.Size() == 0) {
+        bool end = isFinished;
         Unlock();
-        WaitForSingleObject(hEvent, INFINITE);
-    }
-}
-
-void StrQueue::Access(const std::function<bool(StrQueue*)>& fn) {
-    while (true) {
-        Lock();
-        auto didPick = fn(this);
-        Unlock();
-        if (didPick) {
-            return;
+        if (end) {
+            return (char*)kStrQueueSentinel;
         }
         WaitForSingleObject(hEvent, INFINITE);
+        goto again;
     }
+    char* s = strings.RemoveAt(0);
+    Unlock();
+    return str::DupTemp(s);
 }
 
-bool StrQueue::IsSentinel(char* s) {
-    return s == (char*)kStrQueueSentinel;
+// is blocking
+// returns true if we finished i.e. there was no more strings to access
+// and we finished adding. In that case fn was called
+// calls fn() and returns false if there are strings available
+bool StrQueue::Access(const std::function<void(StrQueue*)>& fn) {
+again:
+    Lock();
+    if (strings.Size() == 0) {
+        bool end = isFinished;
+        Unlock();
+        if (end) {
+            return true;
+        }
+        WaitForSingleObject(hEvent, INFINITE);
+        goto again;
+    }
+    fn(this);
+    Unlock();
+    return false;
 }

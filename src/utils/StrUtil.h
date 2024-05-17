@@ -483,12 +483,12 @@ struct StrQueue {
     char* PopFront();
     bool IsSentinel(char*);
     void MarkFinished();
-
-    void Access(const std::function<bool(StrQueue*)>& fn);
+    bool IsFinished();
+    bool Access(const std::function<void(StrQueue*)>& fn);
 
     StrVec strings;
 
-    volatile bool finishedQueuing = false;
+    volatile bool isFinished = false;
     CRITICAL_SECTION cs;
     HANDLE hEvent = nullptr;
 };

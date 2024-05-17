@@ -605,6 +605,7 @@ class ExitScopeHelp {
 struct AtomicInt {
     AtomicInt() = default;
     ~AtomicInt() = default;
+    int Set(int n);
     int Inc();
     int Dec();
     int Add(int n);

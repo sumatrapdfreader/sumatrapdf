@@ -9,38 +9,51 @@ Kind kindNone = "none";
 // if > 1 we won't crash when memory allocation fails
 LONG gAllowAllocFailure = 0;
 
+// returns previous value
+int AtomicInt::Set(int n) {
+    auto res = InterlockedExchange((LONG*)&val, n);
+    return (int)res;
+}
+
+// returns value after increment
 int AtomicInt::Inc() {
     return (int)InterlockedIncrement(&val);
 }
 
+// returns value after decrement
 int AtomicInt::Dec() {
     return (int)InterlockedDecrement(&val);
 }
 
+// returns value after adding
 int AtomicInt::Add(int n) {
     return (int)InterlockedAdd(&val, n);
 }
 
+// returns value after subtracting
 int AtomicInt::Sub(int n) {
     return (int)InterlockedAdd(&val, -n);
 }
 
 int AtomicInt::Get() const {
-    return InterlockedCompareExchange((ULONG*)&val, 0, 0);
+    return InterlockedCompareExchange((LONG*)&val, 0, 0);
 }
 
 bool AtomicBool::Get() const {
-    return InterlockedCompareExchange((ULONG*)&val, 0, 0) != 0;
+    return InterlockedCompareExchange((LONG*)&val, 0, 0) != 0;
 }
 
+// returns previous value
 bool AtomicBool::Set(bool newValue) {
-    auto res = InterlockedExchange((ULONG*)&val, newValue ? 1 : 0);
+    auto res = InterlockedExchange((LONG*)&val, newValue ? 1 : 0);
     return res != 0;
 }
 
+// returns count after adding
 int AtomicRefCount::Add() {
     return (int)InterlockedIncrement(&val);
 }
+
 // returns true if counter reaches 0, meaning it has been released
 // by all who held a reference to it
 bool AtomicRefCount::Dec() {

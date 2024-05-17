@@ -26,3 +26,71 @@ static void ClearPixmap(fz_pixmap* pixmap) {
     }
 }
 
+// Select random files to test. We want to test each file type equally, so
+// we first group them by file extension and then select up to maxPerType
+// for each extension, randomly, and inter-leave the files with different
+// extensions, so their testing is evenly distributed.
+// Returns result in <files>.
+static void RandomizeFiles(StrVec& files, int maxPerType) {
+    StrVec fileExts;
+    Vec<StrVec*> filesPerType;
+
+    for (int i = 0; i < files.Size(); i++) {
+        char* file = files.at(i);
+        char* ext = path::GetExtTemp(file);
+        CrashAlwaysIf(!ext);
+        int typeNo = fileExts.FindI(ext);
+        if (-1 == typeNo) {
+            fileExts.Append(ext);
+            filesPerType.Append(new StrVec());
+            typeNo = filesPerType.Size() - 1;
+        }
+        filesPerType.at(typeNo)->Append(file);
+    }
+
+    for (size_t j = 0; j < filesPerType.size(); j++) {
+        StrVec* all = filesPerType.at(j);
+        StrVec* random = new StrVec();
+
+        for (int n = 0; n < maxPerType && all->Size() > 0; n++) {
+            int idx = rand() % all->Size();
+            char* file = all->at(idx);
+            random->Append(file);
+            all->RemoveAt(idx);
+        }
+
+        filesPerType.at(j) = random;
+        delete all;
+    }
+
+    files.Reset();
+
+    bool gotAll = false;
+    while (!gotAll) {
+        gotAll = true;
+        for (size_t j = 0; j < filesPerType.size(); j++) {
+            StrVec* random = filesPerType.at(j);
+            if (random->Size() > 0) {
+                gotAll = false;
+                char* file = random->at(0);
+                files.Append(file);
+                random->RemoveAt(0);
+            }
+        }
+    }
+
+    for (size_t j = 0; j < filesPerType.size(); j++) {
+        delete filesPerType.at(j);
+    }
+}
+
+int idx = rand() % all->Size();
+if (i->stressTestMax > 0) {
+
+DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const char* filePath) -> bool {
+    if (IsStressTestSupportedFile(filePath, filter)) {
+        paths.Append(filePath);
+        hasFiles = true;
+    }
+    return true;
+});
