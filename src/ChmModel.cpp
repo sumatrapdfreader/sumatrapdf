@@ -166,11 +166,16 @@ void ChmModel::CopySelection() const {
     }
 }
 
+static bool gSendingHtmlWindowMsg = false;
+
 LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
-    if (!htmlWindow) {
+    if (!htmlWindow || gSendingHtmlWindowMsg) {
         return 0;
     }
-    return htmlWindow->SendMsg(msg, wp, lp);
+    gSendingHtmlWindowMsg = true;
+    auto res = htmlWindow->SendMsg(msg, wp, lp);
+    gSendingHtmlWindowMsg = false;
+    return res;
 }
 
 bool ChmModel::DisplayPage(const char* pageUrl) {
