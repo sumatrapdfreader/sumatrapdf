@@ -465,7 +465,7 @@ struct StrVec2 {
     char* At(int i);
     char* operator[](int);
 
-    void Append(const char* s, int n = 0);
+    char* Append(const char* s, int n = 0);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
 
@@ -499,14 +499,14 @@ struct StrQueue {
     void Lock();
     void Unlock();
     int Size();
-    int Append(const char*, int len = 0);
+    char* Append(const char*, int len = 0);
     char* PopFront();
     bool IsSentinel(char*);
     void MarkFinished();
     bool IsFinished();
     bool Access(const std::function<void(StrQueue*)>& fn);
 
-    StrVec strings;
+    StrVec2 strings;
 
     volatile bool isFinished = false;
     CRITICAL_SECTION cs;

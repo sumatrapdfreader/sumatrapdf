@@ -392,7 +392,6 @@ static void StrVec2Test() {
         auto got = v.At(i);
         auto exp = strs[unsortedOrder[i]];
         assertStrEq(got, exp);
-
     }
 
     for (int i = 0; i < n; i++) {
@@ -423,7 +422,7 @@ static void StrVec2Test() {
     }
 #endif
 
- #if 0
+#if 0
     StrVecCheckIter(v, nullptr);
 
     SortNoCase(v);
@@ -434,8 +433,8 @@ static void StrVec2Test() {
     }
 #endif
 
-    //v.SetAt(3, nullptr);
-    //utassert(nullptr == v[3]);
+    // v.SetAt(3, nullptr);
+    // utassert(nullptr == v[3]);
     CheckRemoveAt(v);
 }
 
