@@ -32,20 +32,19 @@ struct StrVec {
     bool Remove(const char*);
 
     struct iterator {
-        StrVec* v;
+        const StrVec* v;
         int idx;
 
-        iterator(StrVec* v, int i);
+        iterator(const StrVec* v, int i);
         char* operator*() const;
         iterator& operator++();
-        // iterator operator++(int);
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
-    iterator begin() {
+    iterator begin() const {
         return iterator(this, 0);
     }
-    iterator end() {
+    iterator end() const {
         return iterator(this, this->Size());
     }
 };
@@ -89,22 +88,21 @@ struct StrVec2 {
     int FindI(const char* sv, int startAt = 0) const;
 
     struct iterator {
-        StrVec2* v;
+        const StrVec2* v;
         int idx;
         StrVecPage* page;
         int idxInPage;
 
-        iterator(StrVec2* v, int idx);
+        iterator(const StrVec2* v, int idx);
         char* operator*() const;
         iterator& operator++();
-        // iterator operator++(int);
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
-    iterator begin() {
+    iterator begin() const {
         return iterator{this, 0};
     }
-    iterator end() {
+    iterator end() const {
         int n = this->Size();
         return iterator{this, n};
     }
