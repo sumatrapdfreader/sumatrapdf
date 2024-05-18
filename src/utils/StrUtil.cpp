@@ -2800,9 +2800,9 @@ void Sort(StrVec& v, StrLessFunc lessFn) {
     auto b = v.index.begin();
     auto e = v.index.end();
     std::sort(b, e, [strs, lessFn](u32 i1, u32 i2) -> bool {
-        const char* is1 = (i1 == kNullIdx) ? nullptr : strs + i1;
-        const char* is2 = (i2 == kNullIdx) ? nullptr : strs + i2;
-        bool ret = lessFn(is1, is2);
+        const char* s1 = (i1 == kNullIdx) ? nullptr : strs + i1;
+        const char* s2 = (i2 == kNullIdx) ? nullptr : strs + i2;
+        bool ret = lessFn(s1, s2);
         return ret;
     });
 }
@@ -2956,6 +2956,7 @@ struct StrVecWithData : StrVecWithDataRaw {
     }
 };
 
+// TODO: support strings with 0 in them by storing size of the string
 struct StrVecPage {
     struct StrVecPage* next;
     int pageSize;
@@ -2965,12 +2966,12 @@ struct StrVecPage {
 
     // strings are allocated from the end
 
-    char* At(int);
+    char* At(int) const;
     char* RemoveAt(int);
     char* RemoveAtFast(int);
     char* SetAt(int idx, const char* s, int sLen);
 
-    char* AtHelper(int, u32*&);
+    char* AtHelper(int, u32*&) const;
     int BytesLeft();
     char* Append(const char* s, int len, int idxSet = -1);
 };
@@ -3028,7 +3029,7 @@ char* StrVecPage::Append(const char* s, int sLen, int idxToSet) {
     return currEnd;
 }
 
-char* StrVecPage::AtHelper(int idx, u32*& offsets) {
+char* StrVecPage::AtHelper(int idx, u32*& offsets) const {
     CrashIf(idx < 0 || idx >= nStrings);
     u8* start = (u8*)this;
     offsets = (u32*)(start + kStrVecPageHdrSize);
@@ -3040,7 +3041,7 @@ char* StrVecPage::AtHelper(int idx, u32*& offsets) {
     return s;
 }
 
-char* StrVecPage::At(int idx) {
+char* StrVecPage::At(int idx) const {
     u32* offsets;
     char* s = AtHelper(idx, offsets);
     return s;
@@ -3077,9 +3078,66 @@ char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
     if (res != kNoSpace) {
         return res;
     }
-    // have to resize page
+    // TODO: have to resize page
     CrashIf(true);
     return nullptr;
+}
+
+static void FreePages(StrVecPage* toFree) {
+    StrVecPage* next;
+    while (toFree) {
+        next = toFree->next;
+        Allocator::Free(nullptr, toFree);
+        toFree = next;
+    }
+}
+
+static StrVecPage* CompactPages(StrVecPage* first) {
+    if (!first) {
+        return nullptr;
+    }
+    if (!first->next) {
+        // if only one, no need to compact
+        return first;
+    }
+    int nStrings = 0;
+    int strLenTotal = 0; // including 0-termination
+    auto curr = first;
+    char *pageStart, *pageEnd;
+    int strsLen;
+    while (curr) {
+        nStrings += curr->nStrings;
+        pageStart = (char*)curr;
+        pageEnd = pageStart + curr->pageSize;
+        strsLen = (int)(pageEnd - curr->currEnd);
+        strLenTotal += strsLen;
+        curr = curr->next;
+    }
+    // strLenTotal might be more than needed if we removed strings, but that's ok
+    int pageSize = kStrVecPageHdrSize + (nStrings * sizeof(u32)) + strLenTotal;
+    pageSize = RoundUp(pageSize, 64); // just in case
+    auto page = AllocStrVecPage(pageSize);
+    curr = first;
+    int i, n, sLen;
+    char* s;
+    while (curr) {
+        n = curr->nStrings;
+        for (i = 0; i < n; i++) {
+            s = curr->At(i);
+            sLen = str::Leni(s);
+            page->Append(s, sLen, -1);
+        }
+        curr = curr->next;
+    }
+    FreePages(first);
+    return page;
+}
+
+static void CompactPages(StrVec2* v) {
+    auto first = CompactPages(v->first);
+    v->first = first;
+    v->curr = first;
+    CrashIf(!first && (v->cachedSize != first->nStrings));
 }
 
 StrVec2::~StrVec2() {
@@ -3110,13 +3168,7 @@ StrVec2& StrVec2::operator=(const StrVec2& that) {
 }
 
 void StrVec2::Reset() {
-    StrVecPage* toFree = first;
-    StrVecPage* next;
-    while (toFree) {
-        next = curr->next;
-        Allocator::Free(nullptr, toFree);
-        toFree = next;
-    }
+    FreePages(first);
     first = nullptr;
     curr = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
@@ -3306,20 +3358,23 @@ bool operator!=(const StrVec2::iterator& a, const StrVec2::iterator& b) {
 };
 
 void Sort(StrVec2& v, StrLessFunc lessFn) {
+    if (!v.first) {
+        return;
+    }
     if (lessFn == nullptr) {
         lessFn = strLess;
     }
-    // TODO: very unoptimized
-    // should compact into a single StrVecPage and sort within that page
-    StrVec v2;
-    for (char* s : v) {
-        v2.Append(s);
-    }
-    Sort(v2, lessFn);
-    v.Reset();
-    for (char* s : v2) {
-        v.Append(s);
-    }
+    CompactPages(&v);
+
+    const char* pageStart = (const char*)v.first;
+    u32* b = (u32*)(pageStart + kStrVecPageHdrSize);
+    u32* e = b + v.first->nStrings;
+    std::sort(b, e, [pageStart, lessFn](u32 off1, u32 off2) -> bool {
+        const char* s1 = (off1 == kNullIdx) ? nullptr : pageStart + off1;
+        const char* s2 = (off2 == kNullIdx) ? nullptr : pageStart + off2;
+        bool ret = lessFn(s1, s2);
+        return ret;
+    });
 }
 
 void SortNoCase(StrVec2& v) {
