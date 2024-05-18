@@ -2970,7 +2970,7 @@ struct StrVecPage {
 
     char* AtHelper(int, u32*&);
     int BytesLeft();
-    char* Append(char* s, int len);
+    char* Append(const char* s, int len);
 };
 
 constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
@@ -2978,7 +2978,9 @@ constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
 int StrVecPage::BytesLeft() {
     char* start = (char*)this;
     start += kStrVecPageHdrSize;
-    return (int)(currEnd - start);
+    int nTotal = (int)(currEnd - start);
+    int nOffsets = nStrings * sizeof(u32);
+    return nTotal - nOffsets;
 }
 
 static StrVecPage* AllocStrVecPage(int pageSize) {
@@ -2991,10 +2993,11 @@ static StrVecPage* AllocStrVecPage(int pageSize) {
     return page;
 }
 
-char* StrVecPage::Append(char* s, int len) {
+char* StrVecPage::Append(const char* s, int len) {
+    int nBytes = len + 1; // +1 for zero termination
     int nBytesNeeded = sizeof(u32); // for index
     if (s) {
-        nBytesNeeded += (len + 1);
+        nBytesNeeded += nBytes;
     }
     CrashIf(nBytesNeeded > BytesLeft());
     char* start = (char*)this;
@@ -3004,10 +3007,10 @@ char* StrVecPage::Append(char* s, int len) {
         offsets[nStrings++] = kNullIdx;
         return nullptr;
     }
-    currEnd = (currEnd - len - 1);
+    currEnd -= nBytes;
     size_t offset = (currEnd - start);
     offsets[nStrings++] = (u32)offset;
-    memcpy(currEnd, s, (size_t)(len + 1));
+    memcpy(currEnd, s, (size_t)nBytes);
     return currEnd;
 }
 
@@ -3070,6 +3073,13 @@ int StrVec2::Size() {
 }
 
 static int CalcNextPageSize(int currSize) {
+    // at the beginning grow faster
+    if (currSize == 256) {
+        return 1024;
+    }
+    if (currSize == 1024) {
+        return 4 * 1024;
+    }
     if (currSize >= 64 * 1024) {
         // cap the page size at 64 kB
         return currSize;
@@ -3077,7 +3087,7 @@ static int CalcNextPageSize(int currSize) {
     return currSize * 2;
 }
 
-void StrVec2::Append(char* s, int n) {
+void StrVec2::Append(const char* s, int n) {
     cachedSize = -1;
     if (n <= 0) {
         n = str::Leni(s);
@@ -3107,11 +3117,9 @@ void StrVec2::Append(char* s, int n) {
 }
 
 StrVecPage* PageForIdx(StrVec2* v, int& idx) {
-    int n = v->Size();
-    CrashIfFunc(idx < 0 || idx >= n);
     auto page = v->first;
     while (page) {
-        if (page->nStrings < idx) {
+        if (page->nStrings > idx) {
             return page;
         }
         idx -= page->nStrings;
@@ -3122,24 +3130,32 @@ StrVecPage* PageForIdx(StrVec2* v, int& idx) {
 }
 
 char* StrVec2::At(int idx) {
-    auto page = PageForIdx(this, idx);
-    return page->At(idx);
+    int idxInPage = idx;
+    auto page = PageForIdx(this, idxInPage);
+    return page->At(idxInPage);
+}
+
+char* StrVec2::operator[](int idx) {
+    CrashIf(idx < 0);
+    return At(idx);
 }
 
 // remove string at idx and return it
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAt(int idx) {
     cachedSize = -1;
-    auto page = PageForIdx(this, idx);
-    return page->RemoveAt(idx);
+    int idxInPage = idx;
+    auto page = PageForIdx(this, idxInPage);
+    return page->RemoveAt(idxInPage);
 }
 
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAtFast(int idx) {
     cachedSize = -1;
-    auto page = PageForIdx(this, idx);
-    return page->RemoveAtFast(idx);
+    int idxInPage = idx;
+    auto page = PageForIdx(this, idxInPage);
+    return page->RemoveAtFast(idxInPage);
 }
 
 char* StrVec2::Iterator::operator*() const {

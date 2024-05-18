@@ -246,7 +246,37 @@ static void CheckRemoveAt(StrVec& v) {
     }
 }
 
+static void CheckRemoveAt(StrVec2& v) {
+    while (v.Size() > 0) {
+        int prevSize = v.Size();
+        int idx = prevSize / 2; // remove from the middle. TODO: random?
+        auto exp = v[idx];
+        char* got;
+        if (prevSize % 2 == 0) {
+            got = v.RemoveAt(idx);
+        } else {
+            got = v.RemoveAtFast(idx);
+        }
+        utassert(exp == got); // should be exact same pointer value
+        int newSize = v.Size();
+        utassert(newSize == prevSize - 1);
+    }
+}
+
 static void StrVecCheckIter(StrVec& v, const char** strs) {
+    int i = 0;
+    for (char* s : v) {
+        char* s2 = v[i];
+        utassert(str::Eq(s, s2));
+        if (strs) {
+            const char* s3 = strs[i];
+            utassert(str::Eq(s, s3));
+        }
+        i++;
+    }
+}
+
+static void StrVecCheckIter(StrVec2& v, const char** strs) {
     int i = 0;
     for (char* s : v) {
         char* s2 = v[i];
@@ -323,6 +353,89 @@ static void StrVecTest() {
     }
     v.SetAt(3, nullptr);
     utassert(nullptr == v[3]);
+    CheckRemoveAt(v);
+}
+
+static void StrVec2Test() {
+    const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
+    int unsortedOrder[] = {0, 1, 2, 3, 4};
+    int sortedOrder[]{3, 2, 1, 0, 4};
+    int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
+
+    int n = (int)dimof(strs);
+    StrVec2 v;
+    utassert(v.Size() == 0);
+    for (int i = 0; i < n; i++) {
+        v.Append(strs[i]);
+        utassert(v.Size() == i + 1);
+    }
+    StrVecCheckIter(v, strs);
+
+#if 0
+    StrVec2 sortedView = v;
+    Sort(sortedView);
+
+    for (int i = 0; i < n; i++) {
+        char* got = sortedView.At(i);
+        auto exp = strs[sortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+#endif
+    // allocate a bunch to test allocating
+    for (int i = 0; i < 1024; i++) {
+        v.Append(strs[4]);
+    }
+    utassert(v.Size() == 1024 + n);
+
+    {
+        int i = 3;
+        auto got = v.At(i);
+        auto exp = strs[unsortedOrder[i]];
+        assertStrEq(got, exp);
+
+    }
+
+    for (int i = 0; i < n; i++) {
+        auto got = v.At(i);
+        auto exp = strs[unsortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+
+    for (int i = 0; i < 1024; i++) {
+        auto got = v.At(i + n);
+        auto exp = strs[4];
+        assertStrEq(got, exp);
+    }
+
+#if 0
+    SortNoCase(sortedView);
+    for (int i = 0; i < n; i++) {
+        auto got = sortedView.At(i);
+        auto exp = strs[sortedNoCaseOrder[i]];
+        assertStrEq(got, exp);
+    }
+
+    Sort(v);
+    for (int i = 0; i < n; i++) {
+        char* got = v.At(i);
+        auto exp = strs[sortedOrder[i]];
+        assertStrEq(got, exp);
+    }
+#endif
+
+ #if 0
+    StrVecCheckIter(v, nullptr);
+
+    SortNoCase(v);
+    for (int i = 0; i < n; i++) {
+        char* got = v.At(i);
+        auto exp = strs[sortedNoCaseOrder[i]];
+        assertStrEq(got, exp);
+    }
+#endif
+
+    //v.SetAt(3, nullptr);
+    //utassert(nullptr == v[3]);
     CheckRemoveAt(v);
 }
 
@@ -850,6 +963,8 @@ void StrTest() {
     StrConvTest();
     StrUrlExtractTest();
     // ParseUntilTest();
+    StrVec2Test();
+
     StrVecTest();
     StrVecTest2();
     StrVecTest3();

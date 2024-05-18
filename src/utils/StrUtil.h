@@ -458,12 +458,14 @@ struct StrVecPage;
 struct StrVec2 {
     StrVecPage* first = nullptr;
     StrVecPage* curr = nullptr;
-    int nextPageSize = 4 * 1024;
+    int nextPageSize = 256;
     int cachedSize = -1;
 
     int Size();
-    void Append(char* s, int n = 0);
     char* At(int i);
+    char* operator[](int);
+
+    void Append(const char* s, int n = 0);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
 
