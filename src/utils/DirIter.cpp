@@ -5,6 +5,7 @@
 #include "utils/FileUtil.h"
 #include "utils/ThreadUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/StrQueue.h"
 #include "utils/DirIter.h"
 
 // try to filter out things that are not files

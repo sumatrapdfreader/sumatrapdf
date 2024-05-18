@@ -75,7 +75,13 @@
     <ClInclude Include="..\src\utils\StrFormat.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\StrQueue.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrVec.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrconvUtil.h">
@@ -162,7 +168,13 @@
     <ClCompile Include="..\src\utils\StrFormat.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\StrQueue.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrVec.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrconvUtil.cpp">
