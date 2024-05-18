@@ -160,6 +160,11 @@ StrVec::iterator& StrVec::iterator::operator++() {
     return *this;
 }
 
+StrVec::iterator& StrVec::iterator::operator++(int) {
+    idx++;
+    return *this;
+}
+
 bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
     return a.idx == b.idx;
 };
@@ -690,28 +695,26 @@ char* StrVec2::operator[](int idx) const {
 
 int StrVec2::Find(const char* s, int startAt) const {
     StrVec2::iterator it(this, startAt);
-    int n = Size();
+    StrVec2::iterator end = this->end();
     char* s2;
-    for (int i = startAt; i < n; i++) {
+    for (; it != end; it++) {
         s2 = *it;
         if (str::Eq(s, s2)) {
-            return i;
+            return it.idx;
         }
-        ++it;
     }
     return -1;
 }
 
 int StrVec2::FindI(const char* s, int startAt) const {
     StrVec2::iterator it(this, startAt);
-    int n = Size();
+    StrVec2::iterator end = this->end();
     char* s2;
-    for (int i = startAt; i < n; i++) {
+    for (; it != end; it++) {
         s2 = *it;
         if (str::EqI(s, s2)) {
-            return i;
+            return it.idx;
         }
-        ++it;
     }
     return -1;
 }
@@ -764,14 +767,22 @@ char* StrVec2::iterator::operator*() const {
     return page->At(idxInPage);
 }
 
-StrVec2::iterator& StrVec2::iterator::operator++() {
-    idx++;
-    idxInPage++;
-    if (idxInPage >= page->nStrings) {
-        idxInPage = 0;
-        page = page->next;
+static StrVec2::iterator& Next(StrVec2::iterator& it) {
+    it.idx++;
+    it.idxInPage++;
+    if (it.idxInPage >= it.page->nStrings) {
+        it.idxInPage = 0;
+        it.page = it.page->next;
     }
-    return *this;
+    return it;
+}
+
+StrVec2::iterator& StrVec2::iterator::operator++(int) {
+    return Next(*this);
+}
+
+StrVec2::iterator& StrVec2::iterator::operator++() {
+    return Next(*this);
 }
 
 bool operator==(const StrVec2::iterator& a, const StrVec2::iterator& b) {

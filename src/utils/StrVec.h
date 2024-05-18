@@ -37,7 +37,8 @@ struct StrVec {
 
         iterator(const StrVec* v, int i);
         char* operator*() const;
-        iterator& operator++();
+        iterator& operator++();    // ++it
+        iterator& operator++(int); // it++
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
@@ -95,7 +96,8 @@ struct StrVec2 {
 
         iterator(const StrVec2* v, int idx);
         char* operator*() const;
-        iterator& operator++();
+        iterator& operator++();    // ++it
+        iterator& operator++(int); // it++
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
