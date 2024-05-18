@@ -525,7 +525,7 @@ static bool FilterMatches(const char* str, const char* filter) {
     // all words must be present
     int nWords = words.Size();
     for (int i = 0; i < nWords; i++) {
-        auto word = words.at(i);
+        auto word = words.At(i);
         if (!str::ContainsI(str, word)) {
             return false;
         }

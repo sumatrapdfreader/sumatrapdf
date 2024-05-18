@@ -2666,10 +2666,10 @@ int StrVec::Size() const {
 
 char* StrVec::operator[](int idx) const {
     CrashIf(idx < 0);
-    return at(idx);
+    return At(idx);
 }
 
-char* StrVec::at(int idx) const {
+char* StrVec::At(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
@@ -2683,7 +2683,7 @@ char* StrVec::at(int idx) const {
 int StrVec::Find(const char* sv, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
-        auto s = at(i);
+        auto s = At(i);
         if (str::Eq(sv, s)) {
             return i;
         }
@@ -2694,7 +2694,7 @@ int StrVec::Find(const char* sv, int startAt) const {
 int StrVec::FindI(const char* sv, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
-        auto s = at(i);
+        auto s = At(i);
         if (str::EqI(sv, s)) {
             return i;
         }
@@ -2734,6 +2734,29 @@ bool StrVec::Remove(const char* s) {
     }
     return false;
 }
+
+char* StrVec::Iterator::operator*() const {
+    return v->At(idx);
+}
+
+StrVec::Iterator& StrVec::Iterator::operator++() {
+    idx++;
+    return *this;
+}
+
+StrVec::Iterator StrVec::Iterator::operator++(int) {
+    Iterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+
+bool operator==(const StrVec::Iterator& a, const StrVec::Iterator& b) {
+    return a.idx == b.idx;
+};
+
+bool operator!=(const StrVec::Iterator& a, const StrVec::Iterator& b) {
+    return a.idx != b.idx;
+};
 
 static bool strLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
@@ -2822,7 +2845,7 @@ static int CalcCapForJoin(const StrVec& v, const char* joint) {
     size_t jointLen = str::Len(joint);
     int cap = len * (int)jointLen;
     for (int i = 0; i < len; i++) {
-        char* s = v.at(i);
+        char* s = v.At(i);
         cap += (int)str::Len(s);
     }
     return cap + 32; // arbitrary buffer
@@ -2833,7 +2856,7 @@ static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
     size_t jointLen = str::Len(joint);
     int firstForJoint = 0;
     for (int i = 0; i < len; i++) {
-        char* s = v.at(i);
+        char* s = v.At(i);
         if (!s) {
             firstForJoint++;
             continue;
@@ -3032,20 +3055,6 @@ char* StrVecPage::RemoveAtFast(int idx) {
     return s;
 }
 
-struct StrVec2 {
-    StrVecPage* first = nullptr;
-    StrVecPage* curr = nullptr;
-    int nextPageSize = 4 * 1024;
-    int cachedSize = -1;
-
-    int Size();
-    void Append(char* s, int n = 0);
-    char* At(int i);
-    char* RemoveAt(int);
-    char* RemoveAtFast(int);
-    StrVecPage* PageForIdx(int& idx);
-};
-
 int StrVec2::Size() {
     if (cachedSize >= 0) {
         return cachedSize;
@@ -3097,10 +3106,10 @@ void StrVec2::Append(char* s, int n) {
     curr->Append(s, n);
 }
 
-StrVecPage* StrVec2::PageForIdx(int& idx) {
-    int n = Size();
+StrVecPage* PageForIdx(StrVec2* v, int& idx) {
+    int n = v->Size();
     CrashIfFunc(idx < 0 || idx >= n);
-    auto page = first;
+    auto page = v->first;
     while (page) {
         if (page->nStrings < idx) {
             return page;
@@ -3113,7 +3122,7 @@ StrVecPage* StrVec2::PageForIdx(int& idx) {
 }
 
 char* StrVec2::At(int idx) {
-    auto page = PageForIdx(idx);
+    auto page = PageForIdx(this, idx);
     return page->At(idx);
 }
 
@@ -3121,7 +3130,7 @@ char* StrVec2::At(int idx) {
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAt(int idx) {
     cachedSize = -1;
-    auto page = PageForIdx(idx);
+    auto page = PageForIdx(this, idx);
     return page->RemoveAt(idx);
 }
 
@@ -3129,9 +3138,30 @@ char* StrVec2::RemoveAt(int idx) {
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAtFast(int idx) {
     cachedSize = -1;
-    auto page = PageForIdx(idx);
+    auto page = PageForIdx(this, idx);
     return page->RemoveAtFast(idx);
 }
+
+char* StrVec2::Iterator::operator*() const {
+    return v->At(idx);
+}
+
+StrVec2::Iterator& StrVec2::Iterator::operator++() {
+    idx++;
+    return *this;
+}
+StrVec2::Iterator StrVec2::Iterator::operator++(int) {
+    Iterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+
+bool operator==(const StrVec2::Iterator& a, const StrVec2::Iterator& b) {
+    return a.idx == b.idx;
+};
+bool operator!=(const StrVec2::Iterator& a, const StrVec2::Iterator& b) {
+    return a.idx != b.idx;
+};
 
 StrQueue::StrQueue() {
     InitializeCriticalSection(&cs);
@@ -3230,4 +3260,3 @@ again:
     Unlock();
     return false;
 }
-

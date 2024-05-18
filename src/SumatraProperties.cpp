@@ -71,17 +71,17 @@ struct PropertiesLayout {
 
     char* PropKey(int i) {
         int idx = props[i].keyIdx;
-        return strings.at(idx);
+        return strings.At(idx);
     }
 
     char* PropValue(int i) {
         int idx = props[i].valIdx;
-        return strings.at(idx);
+        return strings.At(idx);
     }
 
     bool HasProperty(const char* key) {
         for (auto&& prop : props) {
-            char* k = strings.at(prop.keyIdx);
+            char* k = strings.At(prop.keyIdx);
             if (str::Eq(key, k)) {
                 return true;
             }

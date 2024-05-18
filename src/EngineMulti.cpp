@@ -338,7 +338,7 @@ bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     int n = files.Size();
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
-        char* path = files.at(i);
+        char* path = files.At(i);
         EngineBase* engine = CreateEngineFromFile(path, nullptr, true);
         if (!engine) {
             continue;

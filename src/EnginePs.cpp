@@ -60,7 +60,7 @@ TryAgain64Bit:
     int nVers = versions.Size();
     for (int ix = nVers; ix > 0; ix--) {
         for (const char* gsProd : gsProducts) {
-            char* ver = versions.at(ix - 1);
+            char* ver = versions.At(ix - 1);
             TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd, ver);
             char* GS_DLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
             if (!GS_DLL) {

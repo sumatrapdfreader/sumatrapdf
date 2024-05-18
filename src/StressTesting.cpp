@@ -185,16 +185,16 @@ static void BenchDir(char* dir) {
     StrVec files;
     CollectFilesToBench(dir, files);
     for (int i = 0; i < files.Size(); i++) {
-        BenchFile(files.at(i), nullptr);
+        BenchFile(files.At(i), nullptr);
     }
 }
 
 void BenchFileOrDir(StrVec& pathsToBench) {
     int n = pathsToBench.Size() / 2;
     for (int i = 0; i < n; i++) {
-        char* path = pathsToBench.at(2 * i);
+        char* path = pathsToBench.At(2 * i);
         if (file::Exists(path)) {
-            BenchFile(path, pathsToBench.at(2 * i + 1));
+            BenchFile(path, pathsToBench.At(2 * i + 1));
         } else if (dir::Exists(path)) {
             BenchDir(path);
         } else {
@@ -329,7 +329,7 @@ class FilesProvider : public TestFileProvider {
         if (provided >= files.Size()) {
             return nullptr;
         }
-        TempStr res = files.at(provided++);
+        TempStr res = files.At(provided++);
         return res;
     }
 };

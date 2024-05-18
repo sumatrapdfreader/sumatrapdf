@@ -278,7 +278,7 @@ static void StrVecTest() {
     Sort(sortedView);
 
     for (int i = 0; i < n; i++) {
-        char* got = sortedView.at(i);
+        char* got = sortedView.At(i);
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }
@@ -290,34 +290,34 @@ static void StrVecTest() {
     utassert(v.Size() == 1024 + n);
 
     for (int i = 0; i < n; i++) {
-        auto got = v.at(i);
+        auto got = v.At(i);
         auto exp = strs[unsortedOrder[i]];
         assertStrEq(got, exp);
     }
 
     for (int i = 0; i < 1024; i++) {
-        auto got = v.at(i + n);
+        auto got = v.At(i + n);
         auto exp = strs[4];
         assertStrEq(got, exp);
     }
     SortNoCase(sortedView);
 
     for (int i = 0; i < n; i++) {
-        auto got = sortedView.at(i);
+        auto got = sortedView.At(i);
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
 
     Sort(v);
     for (int i = 0; i < n; i++) {
-        char* got = v.at(i);
+        char* got = v.At(i);
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }
     StrVecCheckIter(v, nullptr);
     SortNoCase(v);
     for (int i = 0; i < n; i++) {
-        char* got = v.at(i);
+        char* got = v.At(i);
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
@@ -365,15 +365,15 @@ static void StrVecTest2() {
 
     {
         StrVec v2(v);
-        utassert(str::Eq(v2.at(2), "foo"));
+        utassert(str::Eq(v2.At(2), "foo"));
         v2.Append("nobar");
-        utassert(str::Eq(v2.at(4), "nobar"));
+        utassert(str::Eq(v2.At(4), "nobar"));
         v2 = v;
         utassert(v2.Size() == 4);
         // copies should be same values but at different addresses
-        utassert(v2.at(1) != v.at(1));
-        utassert(str::Eq(v2.at(1), v.at(1)));
-        s = v2.at(2);
+        utassert(v2.At(1) != v.At(1));
+        utassert(str::Eq(v2.At(1), v.At(1)));
+        s = v2.At(2);
         utassert(str::Eq(s, "foo"));
         CheckRemoveAt(v2);
     }
@@ -415,8 +415,8 @@ static void StrVecTest3() {
     v.Append(str::Dup("two"));
     v.Append(str::Dup("One"));
     utassert(v.Size() == 3);
-    utassert(str::Eq(v.at(0), "one"));
-    utassert(str::EqI(v.at(2), "one"));
+    utassert(str::Eq(v.At(0), "one"));
+    utassert(str::EqI(v.At(2), "one"));
     utassert(v.Find("One") == 2);
     utassert(v.FindI("One") == 0);
     utassert(v.Find("Two") == -1);

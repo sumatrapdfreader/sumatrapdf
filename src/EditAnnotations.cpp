@@ -625,7 +625,7 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownTextColor->GetCurrentSelection();
-    char* item = ew->dropDownTextColor->items.at(idx);
+    char* item = ew->dropDownTextColor->items.At(idx);
     auto col = GetDropDownColor(item);
     SetDefaultAppearanceTextColor(ew->tab->selectedAnnotation, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -724,7 +724,7 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void IconSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownIcon->GetCurrentSelection();
-    auto item = ew->dropDownIcon->items.at(idx);
+    auto item = ew->dropDownIcon->items.At(idx);
     SetIconName(ew->tab->selectedAnnotation, item);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
@@ -751,7 +751,7 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownColor->GetCurrentSelection();
-    auto item = ew->dropDownColor->items.at(idx);
+    auto item = ew->dropDownColor->items.At(idx);
     auto col = GetDropDownColor(item);
     SetColor(ew->tab->selectedAnnotation, col);
     EnableSaveIfAnnotationsChanged(ew);
@@ -772,7 +772,7 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
     auto idx = ew->dropDownInteriorColor->GetCurrentSelection();
-    auto item = ew->dropDownInteriorColor->items.at(idx);
+    auto item = ew->dropDownInteriorColor->items.At(idx);
     auto col = GetDropDownColor(item);
     SetInteriorColor(ew->tab->selectedAnnotation, col);
     EnableSaveIfAnnotationsChanged(ew);

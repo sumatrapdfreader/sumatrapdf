@@ -439,7 +439,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     if (nArgs == 0) {
         return false;
     }
-    const char* exePath = args.at(0);
+    const char* exePath = args.At(0);
     if (!file::Exists(exePath)) {
         TempStr msg =
             str::Format("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
@@ -453,7 +453,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         return LaunchFileShell(exePath, tab->filePath);
     }
     for (int i = 1; i < nArgs; i++) {
-        char* s = args.at(i);
+        char* s = args.At(i);
         TempStr param = FormatParamTemp(s, tab);
         TempStr paramQuoted = QuoteCmdLineArgTemp(param);
         argsQuoted.Append(paramQuoted);
