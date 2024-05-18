@@ -371,7 +371,6 @@ static void StrVec2Test() {
     }
     StrVecCheckIter(v, strs);
 
-#if 0
     StrVec2 sortedView = v;
     Sort(sortedView);
 
@@ -380,7 +379,7 @@ static void StrVec2Test() {
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }
-#endif
+
     // allocate a bunch to test allocating
     for (int i = 0; i < 1024; i++) {
         v.Append(strs[4]);
@@ -406,7 +405,6 @@ static void StrVec2Test() {
         assertStrEq(got, exp);
     }
 
-#if 0
     SortNoCase(sortedView);
     for (int i = 0; i < n; i++) {
         auto got = sortedView.At(i);
@@ -420,9 +418,7 @@ static void StrVec2Test() {
         auto exp = strs[sortedOrder[i]];
         assertStrEq(got, exp);
     }
-#endif
 
-#if 0
     StrVecCheckIter(v, nullptr);
 
     SortNoCase(v);
@@ -431,10 +427,104 @@ static void StrVec2Test() {
         auto exp = strs[sortedNoCaseOrder[i]];
         assertStrEq(got, exp);
     }
-#endif
 
     // v.SetAt(3, nullptr);
     // utassert(nullptr == v[3]);
+    CheckRemoveAt(v);
+}
+
+static void StrVec2Test2() {
+    StrVec2 v;
+    v.Append("foo");
+    v.Append("bar");
+    char* s = Join(v);
+    utassert(v.Size() == 2);
+    utassert(str::Eq("foobar", s));
+    str::Free(s);
+
+    s = Join(v, ";");
+    utassert(v.Size() == 2);
+    utassert(str::Eq("foo;bar", s));
+    str::Free(s);
+
+    v.Append(nullptr);
+    utassert(v.Size() == 3);
+
+    v.Append("glee");
+    s = Join(v, "_ _");
+    utassert(v.Size() == 4);
+    utassert(str::Eq("foo_ _bar_ _glee", s));
+    str::Free(s);
+
+    StrVecCheckIter(v, nullptr);
+
+    Sort(v);
+    const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
+    StrVecCheckIter(v, strsSorted);
+
+    s = Join(v, "++");
+    utassert(v.Size() == 4);
+    utassert(str::Eq("bar++foo++glee", s));
+    str::Free(s);
+
+    s = Join(v);
+    utassert(str::Eq("barfooglee", s));
+    str::Free(s);
+
+    {
+        StrVec2 v2(v);
+        s = v2.At(2);
+        utassert(str::Eq(s, "foo"));
+        v2.Append("nobar");
+        s = v2.At(4);
+        utassert(str::Eq(s, "nobar"));
+        v2 = v;
+        utassert(v2.Size() == 4);
+        // copies should be same values but at different addresses
+        s = v2.At(1);
+        char* s2 = v.At(1);
+        utassert(s != s2);
+        s = v2.At(1);
+        s2 = v.At(1);
+        utassert(str::Eq(s, s2));
+        s = v2.At(2);
+        utassert(str::Eq(s, "foo"));
+        CheckRemoveAt(v2);
+    }
+
+    {
+        StrVec2 v2;
+        size_t count = Split(v2, "a,b,,c,", ",");
+        utassert(count == 5);
+        int idx = v2.Find("c");
+        utassert(idx == 3);
+        idx = v2.Find("");
+        utassert(idx == 2);
+        idx = v2.Find("", 3);
+        utassert(idx == 4);
+        idx = v2.Find("", 5);
+        utassert(idx == -1);
+        idx = v2.Find("B");
+        utassert(idx == -1 && v2.FindI("B") == 1);
+        TempStr joined = JoinTemp(v2, ";");
+        utassert(str::Eq(joined, "a;b;;c;"));
+        CheckRemoveAt(v2);
+    }
+
+    {
+        StrVec2 v2;
+        size_t count = Split(v2, "a,b,,c,", ",", true);
+        utassert(count == 3 && v2.Find("c") == 2);
+        TempStr joined = JoinTemp(v2, ";");
+        utassert(str::Eq(joined, "a;b;c"));
+        StrVecCheckIter(v2, nullptr);
+
+#if 0
+        AutoFreeWstr last(v2.Pop());
+        utassert(v2.size() == 2 && str::Eq(last, L"c"));
+#endif
+        CheckRemoveAt(v2);
+    }
     CheckRemoveAt(v);
 }
 
@@ -962,7 +1052,9 @@ void StrTest() {
     StrConvTest();
     StrUrlExtractTest();
     // ParseUntilTest();
+
     StrVec2Test();
+    StrVec2Test2();
 
     StrVecTest();
     StrVecTest2();
