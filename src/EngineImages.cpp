@@ -871,7 +871,7 @@ TempStr EngineImageDir::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    const char* path = pageFileNames.at(pageNo - 1);
+    const char* path = pageFileNames.At(pageNo - 1);
     TempStr fileName = path::GetBaseNameTemp(path);
     TempStr ext = path::GetExtTemp(fileName);
     if (!ext) {
@@ -938,7 +938,7 @@ bool EngineImageDir::SaveFileAs(const char* dstPath) {
 }
 
 Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
-    char* path = pageFileNames.at(pageNo - 1);
+    char* path = pageFileNames.At(pageNo - 1);
     ByteSlice bmpData = file::ReadFile(path);
     if (!bmpData) {
         return nullptr;
@@ -950,7 +950,7 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
-    char* path = pageFileNames.at(pageNo - 1);
+    char* path = pageFileNames.At(pageNo - 1);
     ByteSlice bmpData = file::ReadFile(path);
     if (bmpData) {
         Size size = BitmapSizeFromData(bmpData);

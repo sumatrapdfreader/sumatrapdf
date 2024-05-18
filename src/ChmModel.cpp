@@ -120,7 +120,7 @@ void ChmModel::GoToPage(int pageNo, bool) {
     if (!ValidPageNo(pageNo)) {
         return;
     }
-    DisplayPage(pages.at(pageNo - 1));
+    DisplayPage(pages.At(pageNo - 1));
 }
 
 bool ChmModel::SetParentHwnd(HWND hwnd) {
@@ -340,7 +340,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         this->allocator = allocator;
         int n = pages->Size();
         for (int i = 0; i < n; i++) {
-            const char* url = pages->at(i);
+            const char* url = pages->At(i);
             bool inserted = urlsSet.Insert(url, i + 1, nullptr);
             CrashIf(!inserted);
         }

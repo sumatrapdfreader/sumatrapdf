@@ -447,7 +447,9 @@ bool EpubDoc::Load() {
     // EPUB 2 ToC
     char* tocId = node->GetAttributeTemp("toc");
     if (tocId && !tocPath && idList.Contains(tocId)) {
-        tocPath.Set(str::Join(contentPath, pathList.at(idList.Find(tocId))));
+        auto idx = idList.Find(tocId);
+        auto s = pathList.At(idx);
+        tocPath.Set(str::Join(contentPath, s));
         isNcxToc = true;
     }
     AutoFreeWstr readingDir(node->GetAttribute("page-progression-direction"));
@@ -464,7 +466,8 @@ bool EpubDoc::Load() {
             continue;
         }
 
-        const char* fname = pathList.at(idList.Find(idref));
+        auto idx = idList.Find(idref);
+        const char* fname = pathList.At(idx);
         char* fullPath = str::JoinTemp(contentPath, fname);
         ByteSlice html = zip->GetFileDataByName(fullPath);
         if (!html) {

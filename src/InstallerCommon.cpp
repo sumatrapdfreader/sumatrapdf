@@ -493,9 +493,9 @@ static const char* ReadableProcName(const char* procPath) {
 
 static void SetCloseProcessMsg() {
     int n = gProcessesToClose.Size();
-    const char* procNames = ReadableProcName(gProcessesToClose.at(0));
+    const char* procNames = ReadableProcName(gProcessesToClose.At(0));
     for (int i = 1; i < n; i++) {
-        const char* name = ReadableProcName(gProcessesToClose.at(i));
+        const char* name = ReadableProcName(gProcessesToClose.At(i));
         if (i < n - 1) {
             procNames = str::JoinTemp(procNames, ", ", name);
         } else {

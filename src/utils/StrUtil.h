@@ -410,7 +410,7 @@ struct StrVec {
     void Reset();
 
     int Size() const;
-    char* at(int) const;
+    char* At(int) const;
     char* operator[](int) const;
 
     int Append(const char*, int len = 0);
@@ -425,39 +425,22 @@ struct StrVec {
     bool Remove(const char*);
 
     struct Iterator {
-        using iterator_category = std::forward_iterator_tag;
+        StrVec* v;
+        int idx;
 
         Iterator(StrVec* v, int i) : v(v), idx(i) {
         }
-
-        char* operator*() const {
-            return v->at(idx);
-        }
-
-        Iterator& operator++() {
-            idx++;
-            return *this;
-        }
-        Iterator operator++(int) {
-            Iterator tmp = *this;
-            ++(*this);
-            return tmp;
-        }
-        friend bool operator==(const Iterator& a, const Iterator& b) {
-            return a.idx == b.idx;
-        };
-        friend bool operator!=(const Iterator& a, const Iterator& b) {
-            return a.idx != b.idx;
-        };
-
-        StrVec* v;
-        int idx;
+        char* operator*() const;
+        Iterator& operator++();
+        Iterator operator++(int);
+        friend bool operator==(const Iterator& a, const Iterator& b);
+        friend bool operator!=(const Iterator& a, const Iterator& b);
     };
     Iterator begin() {
         return Iterator(this, 0);
     }
     Iterator end() {
-        return Iterator(this, index.Size());
+        return Iterator(this, this->Size());
     }
 };
 
@@ -469,6 +452,42 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse = false
 char* Join(const StrVec& v, const char* sep = nullptr);
 TempStr JoinTemp(const StrVec& v, const char* sep);
 ByteSlice ToByteSlice(const char* s);
+
+struct StrVecPage;
+
+struct StrVec2 {
+    StrVecPage* first = nullptr;
+    StrVecPage* curr = nullptr;
+    int nextPageSize = 4 * 1024;
+    int cachedSize = -1;
+
+    int Size();
+    void Append(char* s, int n = 0);
+    char* At(int i);
+    char* RemoveAt(int);
+    char* RemoveAtFast(int);
+
+    struct Iterator {
+        // TODO: could optimize
+        StrVec2* v;
+        int idx;
+
+        Iterator(StrVec2* v, int i) : v(v), idx(i) {
+        }
+
+        char* operator*() const;
+        Iterator& operator++();
+        Iterator operator++(int);
+        friend bool operator==(const Iterator& a, const Iterator& b);
+        friend bool operator!=(const Iterator& a, const Iterator& b);
+    };
+    Iterator begin() {
+        return Iterator(this, 0);
+    }
+    Iterator end() {
+        return Iterator(this, this->Size());
+    }
+};
 
 // multi-threaded queue of strings
 struct StrQueue {

@@ -406,7 +406,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 
     for (int i = 0; i < menusCount; i++) {
-        const char* filePath = filePathsSorted.at(i);
+        const char* filePath = filePathsSorted.At(i);
         FileState* f = gFavorites.GetFavByFilePath(filePath);
         CrashIf(!f);
         if (!f) {

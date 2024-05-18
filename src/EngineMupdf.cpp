@@ -666,7 +666,7 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
                                          const WCHAR* next, Rect* coords) {
     int lastIx = list->coords.Size() - 1;
-    char* uri = list->links.at(lastIx);
+    char* uri = list->links.At(lastIx);
     const WCHAR* end = next;
     bool multiline = false;
 
@@ -1416,19 +1416,20 @@ static void EnsureLabelsUnique(StrVec* labels) {
     Sort(dups);
     int nDups = dups.Size();
     for (int i = 1; i < nDups; i++) {
-        if (!str::Eq(dups.at(i), dups.at(i - 1))) {
+        char* s = dups.At(i);
+        if (!str::Eq(s, dups.At(i - 1))) {
             continue;
         }
-        int idx = labels->Find(dups.at(i)), counter = 0;
-        while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
+        int idx = labels->Find(s), counter = 0;
+        while ((idx = labels->Find(s, idx + 1)) != -1) {
             TempStr unique = nullptr;
             do {
-                unique = str::FormatTemp("%s.%d", dups.at(i), ++counter);
+                unique = str::FormatTemp("%s.%d", s, ++counter);
             } while (labels->Contains(unique));
             labels->SetAt(idx, unique);
         }
         nDups = dups.Size();
-        for (; i + 1 < nDups && str::Eq(dups.at(i), dups.at(i + 1)); i++) {
+        for (; i + 1 < nDups && str::Eq(dups.At(i), dups.At(i + 1)); i++) {
             // no-op
         }
     }
@@ -3585,7 +3586,7 @@ TempStr EngineMupdf::GetPageLabeTemp(int pageNo) const {
         return EngineBase::GetPageLabeTemp(pageNo);
     }
 
-    char* res = pageLabels->at(pageNo - 1);
+    char* res = pageLabels->At(pageNo - 1);
     return res;
 }
 

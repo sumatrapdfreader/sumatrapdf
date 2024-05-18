@@ -174,7 +174,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
 
     bool ok;
     for (int i = 0; i < nFiles; i++) {
-        const char* path = filePaths.at(i);
+        const char* path = filePaths.At(i);
         ok = MergePdfFile(path);
         if (!ok) {
             // TODO: show error message
