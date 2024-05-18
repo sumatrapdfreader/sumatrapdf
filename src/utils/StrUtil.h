@@ -420,7 +420,6 @@ struct StrVec {
     int Find(const char*, int startAt = 0) const;
     int FindI(const char*, int startAt = 0) const;
     bool Contains(const char*) const;
-    char* PopAt(int);
     char* RemoveAtFast(int idx);
     char* RemoveAt(int idx);
     bool Remove(const char*);
