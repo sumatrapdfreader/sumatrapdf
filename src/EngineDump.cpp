@@ -206,17 +206,17 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 
 // caller must free() the result
 static char* DestRectToStr(EngineBase* engine, IPageDestination* dest) {
-    char* destName = dest->GetName();
+    char* destName = PageDestGetName(dest);
     if (destName) {
         TempStr name = EscapeTemp(destName);
         return str::Format("Name=\"%s\"", name);
     }
     // as handled by LinkHandler::ScrollTo in MainWindow.cpp
-    int pageNo = dest->GetPageNo();
+    int pageNo = PageDestGetPageNo(dest);
     if (pageNo <= 0 || pageNo > engine->PageCount()) {
         return nullptr;
     }
-    RectF rect = dest->GetRect();
+    RectF rect = PageDestGetRect(dest);
     if (rect.IsEmpty()) {
         PointF pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
@@ -247,12 +247,12 @@ void DumpTocItem(EngineBase* engine, TocItem* item, int level, int& idCounter) {
         }
         if (item->GetPageDestination()) {
             IPageDestination* dest = item->GetPageDestination();
-            TempStr target = EscapeTemp(dest->GetValue());
+            TempStr target = EscapeTemp(PageDestGetValue(dest));
             if (target) {
                 Out(" Target=\"%s\"", target);
             }
-            if (item->pageNo != dest->GetPageNo()) {
-                Out(" TargetPage=\"%d\"", dest->GetPageNo());
+            if (item->pageNo != PageDestGetPageNo(dest)) {
+                Out(" TargetPage=\"%d\"", PageDestGetPageNo(dest));
             }
             AutoFreeStr rectStr = DestRectToStr(engine, dest);
             if (rectStr) {
@@ -346,12 +346,12 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 if (dest->GetKind() != nullptr) {
                     Out("\t\t\t\tLinkType=\"%s\"\n", dest->GetKind());
                 }
-                TempStr value = EscapeTemp(dest->GetValue());
+                TempStr value = EscapeTemp(PageDestGetValue(dest));
                 if (value) {
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value);
                 }
-                if (dest->GetPageNo()) {
-                    Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetPageNo());
+                if (PageDestGetPageNo(dest)) {
+                    Out("\t\t\t\tLinkedPage=\"%d\"\n", PageDestGetPageNo(dest));
                 }
                 AutoFreeStr rectStr = DestRectToStr(engine, dest);
                 if (rectStr) {
