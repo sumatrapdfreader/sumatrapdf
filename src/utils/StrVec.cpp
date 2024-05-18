@@ -556,6 +556,82 @@ static void CompactPages(StrVec2* v) {
     CrashIf(!first && (v->cachedSize != first->nStrings));
 }
 
+struct SideString {
+    SideString* next;
+    int idx;
+    char* s; // just for debugger, should be <start of SideStrings> + sizeof(SideStrings)
+    // string data followss
+};
+
+SideString* AllocSideString(int idx, const char* s, int sLen) {
+    int n = sLen + 1 + sizeof(SideString);
+    auto ss = (SideString*)Allocator::Alloc(nullptr, (size_t)sLen);
+    ss->next = 0;
+    ss->idx = idx;
+    char* s2 = (char*)ss;
+    s2 += sizeof(SideString);
+    ss->s = s2;
+    memmove(s2, s, sLen);
+    s2[sLen] = 0;
+    return ss;
+}
+
+void FreeSideStrings(SideString* curr) {
+    while (curr) {
+        SideString* next = curr->next;
+        Allocator::Free(nullptr, (void*)curr);
+        curr = next;
+    }
+}
+
+// return true if removed a string at idx
+bool SideStringsRemoveAt(SideString** currPtr, int idx) {
+    if (!*currPtr) {
+        return false;
+    }
+    int n = 0;
+    auto curr = *currPtr;
+    bool needRemove = false;
+    while (curr) {
+        if (curr->idx == idx) {
+            needRemove = true;
+        }
+        n++;
+    }
+    if (!needRemove) {
+        return false;
+    }
+    auto v = Vec<SideString*>(n);
+    curr = *currPtr;
+    while (curr) {
+        if (curr->idx != idx) {
+            v.Append(curr);
+        }
+        curr = curr->next;
+    }
+    curr = v[0];
+    curr->next = nullptr;
+    *currPtr = curr;
+    n = v.Size();
+    auto prev = curr;
+    for (int i = 1; i < n; i++) {
+        curr = v[i];
+        curr->next = nullptr;
+        prev->next = curr;
+    }
+    return false;
+}
+
+void StrVec2::Reset() {
+    FreePages(first);
+    FreeSideStrings(firstSide);
+    first = nullptr;
+    curr = nullptr;
+    firstSide = nullptr;
+    nextPageSize = 256; // TODO: or leave it alone?
+    cachedSize = 0;
+}
+
 StrVec2::~StrVec2() {
     Reset();
 }
@@ -581,14 +657,6 @@ StrVec2& StrVec2::operator=(const StrVec2& that) {
         Append(s);
     }
     return *this;
-}
-
-void StrVec2::Reset() {
-    FreePages(first);
-    first = nullptr;
-    curr = nullptr;
-    nextPageSize = 256; // TODO: or leave it alone?
-    cachedSize = 0;
 }
 
 static void UpdateSize(StrVec2* v) {
@@ -662,27 +730,21 @@ static StrVecPage* PageForIdx(const StrVec2* v, int& idx) {
     return nullptr;
 }
 
-struct SideString {
-    SideString* next;
-    int idx;
-    char* s; // just for debugger, should be <start of SideStrings> + sizeof(SideStrings)
-    // string data followss
-};
-
-SideString* AllocSideString(int idx, const char* s, int sLen) {
-    int n = sLen + 1 + sizeof(SideString);
-    auto ss = (SideString*)Allocator::Alloc(nullptr, (size_t)sLen);
-    ss->next = 0;
-    ss->idx = idx;
-    char* s2 = (char*)ss;
-    s2 += sizeof(SideString);
-    ss->s = s2;
-    memmove(s2, s, sLen);
-    s2[sLen] = 0;
-    return ss;
+static char* SideStringAt(SideString* first, int idx) {
+    while (first) {
+        if (first->idx == idx) {
+            return first->s;
+        }
+        first = first->next;
+    }
+    return nullptr;
 }
 
 char* StrVec2::At(int idx) const {
+    char* s = SideStringAt(firstSide, idx);
+    if (s) {
+        return s;
+    }
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     return page->At(idxInPage);
@@ -735,6 +797,7 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
 // remove string at idx and return it
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAt(int idx) {
+    SideStringsRemoveAt(&firstSide, idx);
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAt(idxInPage);
@@ -745,6 +808,7 @@ char* StrVec2::RemoveAt(int idx) {
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAtFast(int idx) {
+    SideStringsRemoveAt(&firstSide, idx);
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAtFast(idxInPage);
@@ -760,6 +824,12 @@ StrVec2::iterator::iterator(const StrVec2* v, int idx) {
 }
 
 char* StrVec2::iterator::operator*() const {
+    if (v->firstSide) {
+        char* s = SideStringAt(v->firstSide, idx);
+        if (s) {
+            return s;
+        }
+    }
     return page->At(idxInPage);
 }
 
