@@ -2611,7 +2611,7 @@ int StrVec::Append(const char* s, int sLen) {
         }
         return Size() - 1;
     }
-    if (sLen == 0) {
+    if (sLen < 0) {
         sLen = str::Leni(s);
     }
     u32 idx = (u32)strings.Size();
@@ -2787,17 +2787,9 @@ static bool strLessNoCase(const char* s1, const char* s2) {
     return n < 0;
 }
 
-void SortNoCase(StrVec& v) {
-    Sort(v, strLessNoCase);
-}
-
 static bool strLessNatural(const char* s1, const char* s2) {
     int n = str::CmpNatural(s1, s2);
     return n < 0; // TODO: verify it's < and not >
-}
-
-void SortNatural(StrVec& v) {
-    Sort(v, strLessNatural);
 }
 
 void Sort(StrVec& v, StrLessFunc lessFn) {
@@ -2815,6 +2807,14 @@ void Sort(StrVec& v, StrLessFunc lessFn) {
     });
 }
 
+void SortNoCase(StrVec& v) {
+    Sort(v, strLessNoCase);
+}
+
+void SortNatural(StrVec& v) {
+    Sort(v, strLessNatural);
+}
+
 /* splits a string into several substrings, separated by the separator
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
@@ -2828,7 +2828,8 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
             break;
         }
         if (!collapse || next > s) {
-            v.Append(str::DupTemp(s, next - s));
+            int sLen = (int)(next - s);
+            v.Append(s, sLen);
         }
         s = next + str::Len(separator);
     }
@@ -3010,7 +3011,8 @@ char* StrVecPage::Append(const char* s, int len) {
     currEnd -= nBytes;
     size_t offset = (currEnd - start);
     offsets[nStrings++] = (u32)offset;
-    memcpy(currEnd, s, (size_t)nBytes);
+    memcpy(currEnd, s, (size_t)len);
+    currEnd[len] = 0; // zero-terminate for C compat
     return currEnd;
 }
 
@@ -3058,18 +3060,63 @@ char* StrVecPage::RemoveAtFast(int idx) {
     return s;
 }
 
-int StrVec2::Size() {
-    if (cachedSize >= 0) {
-        return cachedSize;
+StrVec2::~StrVec2() {
+    Reset();
+}
+
+StrVec2::StrVec2(const StrVec2& that) {
+    // TODO: unoptimized, should compact into a single StrVecPage
+    Reset();
+    int n = that.SizeConst();
+    for (int i = 0; i < n; i++) {
+        char* s = that.At(i);
+        Append(s);
     }
+}
+
+StrVec2& StrVec2::operator=(const StrVec2& that) {
+    if (this == &that) {
+        return *this;
+    }
+    Reset();
+    int n = that.SizeConst();
+    for (int i = 0; i < n; i++) {
+        char* s = that.At(i);
+        Append(s);
+    }
+    return *this;
+}
+
+void StrVec2::Reset() {
+    StrVecPage* toFree = first;
+    StrVecPage* next;
+    while (toFree) {
+        next = curr->next;
+        Allocator::Free(nullptr, toFree);
+        toFree = next;
+    }
+    first = nullptr;
+    curr = nullptr;
+    nextPageSize = 256; // TODO: or leave it alone?
+    cachedSize = -1;
+}
+
+int StrVec2::SizeConst() const {
     int n = 0;
     auto page = first;
     while (page) {
         n += page->nStrings;
         page = page->next;
     }
-    cachedSize = n;
     return n;
+}
+
+int StrVec2::Size() {
+    if (cachedSize >= 0) {
+        return cachedSize;
+    }
+    cachedSize = SizeConst();
+    return cachedSize;
 }
 
 static int CalcNextPageSize(int currSize) {
@@ -3089,7 +3136,7 @@ static int CalcNextPageSize(int currSize) {
 
 char* StrVec2::Append(const char* s, int n) {
     cachedSize = -1;
-    if (n <= 0) {
+    if (n < 0) {
         n = str::Leni(s);
     }
     int nBytesNeeded = sizeof(32); // for index
@@ -3116,7 +3163,7 @@ char* StrVec2::Append(const char* s, int n) {
     return curr->Append(s, n);
 }
 
-StrVecPage* PageForIdx(StrVec2* v, int& idx) {
+static StrVecPage* PageForIdx(const StrVec2* v, int& idx) {
     auto page = v->first;
     while (page) {
         if (page->nStrings > idx) {
@@ -3129,15 +3176,39 @@ StrVecPage* PageForIdx(StrVec2* v, int& idx) {
     return nullptr;
 }
 
-char* StrVec2::At(int idx) {
+char* StrVec2::At(int idx) const {
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     return page->At(idxInPage);
 }
 
-char* StrVec2::operator[](int idx) {
+char* StrVec2::operator[](int idx) const {
     CrashIf(idx < 0);
     return At(idx);
+}
+
+int StrVec2::Find(const char* s, int startAt) {
+    int n = Size();
+    char* s2;
+    for (int i = startAt; i < n; i++) {
+        s2 = At(i);
+        if (str::Eq(s, s2)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int StrVec2::FindI(const char* s, int startAt) {
+    int n = Size();
+    char* s2;
+    for (int i = startAt; i < n; i++) {
+        s2 = At(i);
+        if (str::EqI(s, s2)) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 // remove string at idx and return it
@@ -3178,6 +3249,98 @@ bool operator==(const StrVec2::Iterator& a, const StrVec2::Iterator& b) {
 bool operator!=(const StrVec2::Iterator& a, const StrVec2::Iterator& b) {
     return a.idx != b.idx;
 };
+
+void Sort(StrVec2& v, StrLessFunc lessFn) {
+    if (lessFn == nullptr) {
+        lessFn = strLess;
+    }
+    // TODO: very unoptimized
+    // should compact into a single StrVecPage and sort within that page
+    StrVec v2;
+    for (char* s : v) {
+        v2.Append(s);
+    }
+    Sort(v2, lessFn);
+    v.Reset();
+    for (char* s : v2) {
+        v.Append(s);
+    }
+}
+
+void SortNoCase(StrVec2& v) {
+    Sort(v, strLessNoCase);
+}
+
+void SortNatural(StrVec2& v) {
+    Sort(v, strLessNatural);
+}
+
+/* splits a string into several substrings, separated by the separator
+(optionally collapsing several consecutive separators into one);
+e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+(resp. "a", "b", "c" if separators are collapsed) */
+int Split(StrVec2& v, const char* s, const char* separator, bool collapse) {
+    int startSize = v.Size();
+    const char* next;
+    while (true) {
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            int sLen = (int)(next - s);
+            v.Append(s, sLen);
+        }
+        s = next + str::Len(separator);
+    }
+    if (!collapse || *s) {
+        v.Append(s);
+    }
+
+    return (size_t)(v.Size() - startSize);
+}
+
+static int CalcCapForJoin(StrVec2& v, const char* joint) {
+    // it's ok to over-estimate
+    int len = v.Size();
+    size_t jointLen = str::Len(joint);
+    int cap = len * (int)jointLen;
+    for (int i = 0; i < len; i++) {
+        char* s = v.At(i);
+        cap += (int)str::Len(s);
+    }
+    return cap + 32; // arbitrary buffer
+}
+
+static char* JoinInner(StrVec2& v, const char* joint, str::Str& res) {
+    int len = v.Size();
+    size_t jointLen = str::Len(joint);
+    int firstForJoint = 0;
+    for (int i = 0; i < len; i++) {
+        char* s = v.At(i);
+        if (!s) {
+            firstForJoint++;
+            continue;
+        }
+        if (i > firstForJoint && jointLen > 0) {
+            res.Append(joint, jointLen);
+        }
+        res.Append(s);
+    }
+    return res.StealData();
+}
+
+char* Join(StrVec2& v, const char* joint) {
+    int capHint = CalcCapForJoin(v, joint);
+    str::Str tmp(capHint);
+    return JoinInner(v, joint, tmp);
+}
+
+TempStr JoinTemp(StrVec2& v, const char* joint) {
+    int capHint = CalcCapForJoin(v, joint);
+    str::Str tmp(capHint, GetTempAllocator());
+    return JoinInner(v, joint, tmp);
+}
 
 StrQueue::StrQueue() {
     InitializeCriticalSection(&cs);

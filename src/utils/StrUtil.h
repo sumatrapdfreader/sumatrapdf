@@ -276,9 +276,8 @@ struct Str {
 
     explicit Str(size_t capHint = 0, Allocator* allocator = nullptr);
     Str(const Str& that);
-    Str(const char*); // NOLINT
-
     Str& operator=(const Str& that);
+    Str(const char*); // NOLINT
 
     ~Str();
 
@@ -413,7 +412,7 @@ struct StrVec {
     char* At(int) const;
     char* operator[](int) const;
 
-    int Append(const char*, int len = 0);
+    int Append(const char*, int len = -1);
     int AppendIfNotExists(const char*);
     bool InsertAt(int, const char*);
     void SetAt(int idx, const char* s);
@@ -461,13 +460,24 @@ struct StrVec2 {
     int nextPageSize = 256;
     int cachedSize = -1;
 
-    int Size();
-    char* At(int i);
-    char* operator[](int);
+    StrVec2() = default;
+    StrVec2(const StrVec2& that);
+    StrVec2& operator=(const StrVec2& that);
+    ~StrVec2();
 
-    char* Append(const char* s, int n = 0);
+    void Reset();
+
+    int Size();
+    int SizeConst() const;
+    char* At(int i) const;
+    char* operator[](int) const;
+
+    char* Append(const char* s, int n = -1);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
+
+    int Find(const char* sv, int startAt = 0);
+    int FindI(const char* sv, int startAt = 0);
 
     struct Iterator {
         // TODO: could optimize
@@ -490,6 +500,14 @@ struct StrVec2 {
         return Iterator(this, this->Size());
     }
 };
+
+void Sort(StrVec2& v, StrLessFunc lessFn = nullptr);
+void SortNoCase(StrVec2&);
+void SortNatural(StrVec2&);
+
+int Split(StrVec2& v, const char* s, const char* separator, bool collapse = false);
+char* Join(StrVec2& v, const char* sep = nullptr);
+TempStr JoinTemp(StrVec2& v, const char* sep);
 
 // multi-threaded queue of strings
 struct StrQueue {
