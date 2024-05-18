@@ -230,6 +230,7 @@ static void assertStrEq(const char* s1, const char* s2) {
     utassert(ok);
 }
 
+template <typename StrVec>
 static void CheckRemoveAt(StrVec& v) {
     while (v.Size() > 0) {
         int n = v.Size();
@@ -246,23 +247,7 @@ static void CheckRemoveAt(StrVec& v) {
     }
 }
 
-static void CheckRemoveAt(StrVec2& v) {
-    while (v.Size() > 0) {
-        int prevSize = v.Size();
-        int idx = prevSize / 2; // remove from the middle. TODO: random?
-        auto exp = v[idx];
-        char* got;
-        if (prevSize % 2 == 0) {
-            got = v.RemoveAt(idx);
-        } else {
-            got = v.RemoveAtFast(idx);
-        }
-        utassert(exp == got); // should be exact same pointer value
-        int newSize = v.Size();
-        utassert(newSize == prevSize - 1);
-    }
-}
-
+template <typename StrVec>
 static void StrVecCheckIter(StrVec& v, const char** strs) {
     int i = 0;
     for (char* s : v) {
@@ -276,19 +261,7 @@ static void StrVecCheckIter(StrVec& v, const char** strs) {
     }
 }
 
-static void StrVecCheckIter(StrVec2& v, const char** strs) {
-    int i = 0;
-    for (char* s : v) {
-        char* s2 = v[i];
-        utassert(str::Eq(s, s2));
-        if (strs) {
-            const char* s3 = strs[i];
-            utassert(str::Eq(s, s3));
-        }
-        i++;
-    }
-}
-
+template <typename StrVec>
 static void StrVecTest() {
     const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
     int unsortedOrder[] = {0, 1, 2, 3, 4};
@@ -356,178 +329,7 @@ static void StrVecTest() {
     CheckRemoveAt(v);
 }
 
-static void StrVec2Test() {
-    const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
-    int unsortedOrder[] = {0, 1, 2, 3, 4};
-    int sortedOrder[]{3, 2, 1, 0, 4};
-    int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
-
-    int n = (int)dimof(strs);
-    StrVec2 v;
-    utassert(v.Size() == 0);
-    for (int i = 0; i < n; i++) {
-        v.Append(strs[i]);
-        utassert(v.Size() == i + 1);
-    }
-    StrVecCheckIter(v, strs);
-
-    StrVec2 sortedView = v;
-    Sort(sortedView);
-
-    for (int i = 0; i < n; i++) {
-        char* got = sortedView.At(i);
-        auto exp = strs[sortedOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    // allocate a bunch to test allocating
-    for (int i = 0; i < 1024; i++) {
-        v.Append(strs[4]);
-    }
-    utassert(v.Size() == 1024 + n);
-
-    {
-        int i = 3;
-        auto got = v.At(i);
-        auto exp = strs[unsortedOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    for (int i = 0; i < n; i++) {
-        auto got = v.At(i);
-        auto exp = strs[unsortedOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    for (int i = 0; i < 1024; i++) {
-        auto got = v.At(i + n);
-        auto exp = strs[4];
-        assertStrEq(got, exp);
-    }
-
-    SortNoCase(sortedView);
-    for (int i = 0; i < n; i++) {
-        auto got = sortedView.At(i);
-        auto exp = strs[sortedNoCaseOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    Sort(v);
-    for (int i = 0; i < n; i++) {
-        char* got = v.At(i);
-        auto exp = strs[sortedOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    StrVecCheckIter(v, nullptr);
-
-    SortNoCase(v);
-    for (int i = 0; i < n; i++) {
-        char* got = v.At(i);
-        auto exp = strs[sortedNoCaseOrder[i]];
-        assertStrEq(got, exp);
-    }
-
-    // v.SetAt(3, nullptr);
-    // utassert(nullptr == v[3]);
-    CheckRemoveAt(v);
-}
-
-static void StrVec2Test2() {
-    StrVec2 v;
-    v.Append("foo");
-    v.Append("bar");
-    char* s = Join(v);
-    utassert(v.Size() == 2);
-    utassert(str::Eq("foobar", s));
-    str::Free(s);
-
-    s = Join(v, ";");
-    utassert(v.Size() == 2);
-    utassert(str::Eq("foo;bar", s));
-    str::Free(s);
-
-    v.Append(nullptr);
-    utassert(v.Size() == 3);
-
-    v.Append("glee");
-    s = Join(v, "_ _");
-    utassert(v.Size() == 4);
-    utassert(str::Eq("foo_ _bar_ _glee", s));
-    str::Free(s);
-
-    StrVecCheckIter(v, nullptr);
-
-    Sort(v);
-    const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
-    StrVecCheckIter(v, strsSorted);
-
-    s = Join(v, "++");
-    utassert(v.Size() == 4);
-    utassert(str::Eq("bar++foo++glee", s));
-    str::Free(s);
-
-    s = Join(v);
-    utassert(str::Eq("barfooglee", s));
-    str::Free(s);
-
-    {
-        StrVec2 v2(v);
-        s = v2.At(2);
-        utassert(str::Eq(s, "foo"));
-        v2.Append("nobar");
-        s = v2.At(4);
-        utassert(str::Eq(s, "nobar"));
-        v2 = v;
-        utassert(v2.Size() == 4);
-        // copies should be same values but at different addresses
-        s = v2.At(1);
-        char* s2 = v.At(1);
-        utassert(s != s2);
-        s = v2.At(1);
-        s2 = v.At(1);
-        utassert(str::Eq(s, s2));
-        s = v2.At(2);
-        utassert(str::Eq(s, "foo"));
-        CheckRemoveAt(v2);
-    }
-
-    {
-        StrVec2 v2;
-        size_t count = Split(v2, "a,b,,c,", ",");
-        utassert(count == 5);
-        int idx = v2.Find("c");
-        utassert(idx == 3);
-        idx = v2.Find("");
-        utassert(idx == 2);
-        idx = v2.Find("", 3);
-        utassert(idx == 4);
-        idx = v2.Find("", 5);
-        utassert(idx == -1);
-        idx = v2.Find("B");
-        utassert(idx == -1 && v2.FindI("B") == 1);
-        TempStr joined = JoinTemp(v2, ";");
-        utassert(str::Eq(joined, "a;b;;c;"));
-        CheckRemoveAt(v2);
-    }
-
-    {
-        StrVec2 v2;
-        size_t count = Split(v2, "a,b,,c,", ",", true);
-        utassert(count == 3 && v2.Find("c") == 2);
-        TempStr joined = JoinTemp(v2, ";");
-        utassert(str::Eq(joined, "a;b;c"));
-        StrVecCheckIter(v2, nullptr);
-
-#if 0
-        AutoFreeWstr last(v2.Pop());
-        utassert(v2.size() == 2 && str::Eq(last, L"c"));
-#endif
-        CheckRemoveAt(v2);
-    }
-    CheckRemoveAt(v);
-}
-
+template <typename StrVec>
 static void StrVecTest2() {
     StrVec v;
     v.Append("foo");
@@ -610,6 +412,7 @@ static void StrVecTest2() {
     CheckRemoveAt(v);
 }
 
+template <typename StrVec>
 static void StrVecTest3() {
     StrVec v;
     utassert(v.Size() == 0);
@@ -1053,10 +856,11 @@ void StrTest() {
     StrUrlExtractTest();
     // ParseUntilTest();
 
-    StrVec2Test();
-    StrVec2Test2();
+    StrVecTest<StrVec2>();
+    StrVecTest2<StrVec2>();
+    StrVecTest3<StrVec2>();
 
-    StrVecTest();
-    StrVecTest2();
-    StrVecTest3();
+    StrVecTest<StrVec>();
+    StrVecTest2<StrVec>();
+    StrVecTest3<StrVec>();
 }
