@@ -2994,7 +2994,7 @@ static StrVecPage* AllocStrVecPage(int pageSize) {
 }
 
 char* StrVecPage::Append(const char* s, int len) {
-    int nBytes = len + 1; // +1 for zero termination
+    int nBytes = len + 1;           // +1 for zero termination
     int nBytesNeeded = sizeof(u32); // for index
     if (s) {
         nBytesNeeded += nBytes;
@@ -3087,7 +3087,7 @@ static int CalcNextPageSize(int currSize) {
     return currSize * 2;
 }
 
-void StrVec2::Append(const char* s, int n) {
+char* StrVec2::Append(const char* s, int n) {
     cachedSize = -1;
     if (n <= 0) {
         n = str::Leni(s);
@@ -3113,7 +3113,7 @@ void StrVec2::Append(const char* s, int n) {
         }
         curr = page;
     }
-    curr->Append(s, n);
+    return curr->Append(s, n);
 }
 
 StrVecPage* PageForIdx(StrVec2* v, int& idx) {
@@ -3221,7 +3221,7 @@ int StrQueue::Size() {
     return res;
 }
 
-int StrQueue::Append(const char* s, int len) {
+char* StrQueue::Append(const char* s, int len) {
     Lock();
     auto res = strings.Append(s, len);
     Unlock();
@@ -3251,9 +3251,8 @@ again:
         goto again;
     }
     char* s = strings.RemoveAt(0);
-    char* res = str::DupTemp(s);
     Unlock();
-    return res;
+    return s;
 }
 
 // is blocking

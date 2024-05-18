@@ -373,7 +373,6 @@ again:
             int n = q->strings.Size();
             int idx = rand() % n;
             path = q->strings.RemoveAtFast(idx);
-            path = str::DupTemp(path);
         });
         if (isFinished) {
             CrashIf(path);
