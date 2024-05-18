@@ -146,26 +146,33 @@ bool StrVec::Remove(const char* s) {
     return false;
 }
 
-char* StrVec::Iterator::operator*() const {
+StrVec::iterator::iterator(StrVec* v, int idx) {
+    this->v = v;
+    this->idx = idx;
+}
+
+char* StrVec::iterator::operator*() const {
     return v->At(idx);
 }
 
-StrVec::Iterator& StrVec::Iterator::operator++() {
+StrVec::iterator& StrVec::iterator::operator++() {
     idx++;
     return *this;
 }
 
-StrVec::Iterator StrVec::Iterator::operator++(int) {
-    Iterator tmp = *this;
+#if 0
+StrVec::iterator StrVec::iterator::operator++(int) {
+    iterator tmp = *this;
     ++(*this);
     return tmp;
 }
+#endif
 
-bool operator==(const StrVec::Iterator& a, const StrVec::Iterator& b) {
+bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
     return a.idx == b.idx;
 };
 
-bool operator!=(const StrVec::Iterator& a, const StrVec::Iterator& b) {
+bool operator!=(const StrVec::iterator& a, const StrVec::iterator& b) {
     return a.idx != b.idx;
 };
 
@@ -739,7 +746,7 @@ again:
     return -1;
 }
 
-// returns a string 
+// returns a string
 char* StrVec2::SetAt(int idx, const char* s, int sLen) {
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
@@ -776,19 +783,34 @@ char* StrVec2::RemoveAtFast(int idx) {
     return res;
 }
 
+StrVec2::iterator::iterator(StrVec2* v, int idx) {
+    this->v = v;
+    this->idx = idx;
+    this->idxInPage = idx;
+    this->page = PageForIdx(v, this->idxInPage);
+}
+
 char* StrVec2::iterator::operator*() const {
-    return v->At(idx);
+    return page->At(idxInPage);
 }
 
 StrVec2::iterator& StrVec2::iterator::operator++() {
     idx++;
+    idxInPage++;
+    if (idxInPage >= page->nStrings) {
+        idxInPage = 0;
+        page = page->next;
+    }
     return *this;
 }
+
+#if 0
 StrVec2::iterator StrVec2::iterator::operator++(int) {
     iterator tmp = *this;
     ++(*this);
     return tmp;
 }
+#endif
 
 bool operator==(const StrVec2::iterator& a, const StrVec2::iterator& b) {
     return a.idx == b.idx;
