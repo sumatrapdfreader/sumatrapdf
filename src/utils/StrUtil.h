@@ -392,4 +392,3 @@ struct WStr {
 bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 } // namespace str
-

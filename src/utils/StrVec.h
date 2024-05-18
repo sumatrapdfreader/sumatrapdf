@@ -31,23 +31,22 @@ struct StrVec {
     char* RemoveAt(int idx);
     bool Remove(const char*);
 
-    struct Iterator {
+    struct iterator {
         StrVec* v;
         int idx;
 
-        Iterator(StrVec* v, int i) : v(v), idx(i) {
-        }
+        iterator(StrVec* v, int i);
         char* operator*() const;
-        Iterator& operator++();
-        Iterator operator++(int);
-        friend bool operator==(const Iterator& a, const Iterator& b);
-        friend bool operator!=(const Iterator& a, const Iterator& b);
+        iterator& operator++();
+        // iterator operator++(int);
+        friend bool operator==(const iterator& a, const iterator& b);
+        friend bool operator!=(const iterator& a, const iterator& b);
     };
-    Iterator begin() {
-        return Iterator(this, 0);
+    iterator begin() {
+        return iterator(this, 0);
     }
-    Iterator end() {
-        return Iterator(this, this->Size());
+    iterator end() {
+        return iterator(this, this->Size());
     }
 };
 
@@ -90,17 +89,15 @@ struct StrVec2 {
     int FindI(const char* sv, int startAt = 0) const;
 
     struct iterator {
-        // TODO: could optimize
-        StrVec2* v = nullptr;
-        int idx = 0;
+        StrVec2* v;
+        int idx;
+        StrVecPage* page;
+        int idxInPage;
 
-        iterator() = default;
-        iterator(StrVec2* v, int idx) : v(v), idx(idx) {
-        }
-
+        iterator(StrVec2* v, int idx);
         char* operator*() const;
         iterator& operator++();
-        iterator operator++(int);
+        // iterator operator++(int);
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
