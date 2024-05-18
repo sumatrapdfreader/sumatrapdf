@@ -694,11 +694,9 @@ char* StrVec2::operator[](int idx) const {
 }
 
 int StrVec2::Find(const char* s, int startAt) const {
-    StrVec2::iterator it(this, startAt);
-    StrVec2::iterator end = this->end();
-    char* s2;
-    for (; it != end; it++) {
-        s2 = *it;
+    auto end = this->end();
+    for (auto it = this->begin() + startAt; it != end; it++) {
+        char* s2 = *it;
         if (str::Eq(s, s2)) {
             return it.idx;
         }
@@ -707,11 +705,9 @@ int StrVec2::Find(const char* s, int startAt) const {
 }
 
 int StrVec2::FindI(const char* s, int startAt) const {
-    StrVec2::iterator it(this, startAt);
-    StrVec2::iterator end = this->end();
-    char* s2;
-    for (; it != end; it++) {
-        s2 = *it;
+    auto end = this->end();
+    for (auto it = this->begin() + startAt; it != end; it++) {
+        char* s2 = *it;
         if (str::EqI(s, s2)) {
             return it.idx;
         }
@@ -767,22 +763,31 @@ char* StrVec2::iterator::operator*() const {
     return page->At(idxInPage);
 }
 
-static StrVec2::iterator& Next(StrVec2::iterator& it) {
+static void Next(StrVec2::iterator& it) {
     it.idx++;
     it.idxInPage++;
     if (it.idxInPage >= it.page->nStrings) {
         it.idxInPage = 0;
         it.page = it.page->next;
     }
-    return it;
 }
 
 StrVec2::iterator& StrVec2::iterator::operator++(int) {
-    return Next(*this);
+    Next(*this);
+    return *this;
 }
 
 StrVec2::iterator& StrVec2::iterator::operator++() {
-    return Next(*this);
+    Next(*this);
+    return *this;
+}
+
+StrVec2::iterator& StrVec2::iterator::operator+(int n) {
+    // TODO: could optimize
+    for (int i = 0; i < n; i++) {
+        Next(*this);
+    }
+    return *this;
 }
 
 bool operator==(const StrVec2::iterator& a, const StrVec2::iterator& b) {
