@@ -440,8 +440,8 @@ StressTest::StressTest(MainWindow* win, bool exitWhenDone) {
 }
 
 StressTest::~StressTest() {
-    //TODO: it can be shared so find a different way to free it
-    //delete fileProvider;
+    // TODO: it can be shared so find a different way to free it
+    // delete fileProvider;
 }
 
 static void TickTimer(StressTest* st) {
