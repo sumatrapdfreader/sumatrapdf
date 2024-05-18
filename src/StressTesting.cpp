@@ -8,6 +8,7 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
+#include "utils/StrQueue.h"
 
 #include "wingui/UIModels.h"
 
