@@ -3036,3 +3036,204 @@ again:
     Unlock();
     return false;
 }
+
+struct StrVecPage {
+    struct StrVecPage* next;
+    int pageSize;
+    int nStrings;
+    char* currEnd;
+    // now follows u32[nStrings] offsets since the beginning of StrVecPage
+
+    // strings are allocated from the end
+
+    char* At(int);
+    char* RemoveAt(int);
+    char* RemoveAtFast(int);
+
+    char* AtHelper(int, u32*&);
+    int BytesLeft();
+    char* Append(char* s, int len);
+};
+
+constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
+
+int StrVecPage::BytesLeft() {
+    char* start = (char*)this;
+    start += kStrVecPageHdrSize;
+    return (int)(currEnd - start);
+}
+
+static StrVecPage* AllocStrVecPage(int pageSize) {
+    auto page = (StrVecPage*)Allocator::AllocZero(nullptr, pageSize);
+    page->next = nullptr;
+    page->nStrings = 0;
+    page->pageSize = pageSize;
+    char* start = (char*)page;
+    page->currEnd = start + pageSize;
+    return page;
+}
+
+char* StrVecPage::Append(char* s, int len) {
+    int nBytesNeeded = sizeof(u32); // for index
+    if (s) {
+        nBytesNeeded += (len + 1);
+    }
+    CrashIf(nBytesNeeded > BytesLeft());
+    char* start = (char*)this;
+    u32* offsets = (u32*)(start + kStrVecPageHdrSize);
+
+    if (!s) {
+        offsets[nStrings++] = kNullIdx;
+        return nullptr;
+    }
+    currEnd = (currEnd - len - 1);
+    size_t offset = (currEnd - start);
+    offsets[nStrings++] = (u32)offset;
+    memcpy(currEnd, s, (size_t)(len + 1));
+    return currEnd;
+}
+
+char* StrVecPage::AtHelper(int idx, u32*& offsets) {
+    CrashIf(idx < 0 || idx >= nStrings);
+    u8* start = (u8*)this;
+    offsets = (u32*)(start + kStrVecPageHdrSize);
+    u32 offset = offsets[idx];
+    if (offset == kNullIdx) {
+        return nullptr;
+    }
+    char* s = (char*)(start + offset);
+    return s;
+}
+
+char* StrVecPage::At(int idx) {
+    u32* offsets;
+    char* s = AtHelper(idx, offsets);
+    return s;
+}
+
+// we don't de-allocate removed strings so we can safely return the string
+char* StrVecPage::RemoveAt(int idx) {
+    u32* offsets;
+    char* s = AtHelper(idx, offsets);
+    nStrings--;
+
+    int nToCopy = (nStrings - idx) * sizeof(u32);
+    if (nToCopy == 0) {
+        return s;
+    }
+    u32* dst = offsets + idx;
+    u32* src = offsets + idx + 1;
+    memmove((void*)dst, (void*)src, nToCopy);
+    return s;
+}
+
+char* StrVecPage::RemoveAtFast(int idx) {
+    u32* offsets;
+    char* s = AtHelper(idx, offsets);
+    nStrings--;
+
+    int lastIdx = nStrings;
+    offsets[idx] = offsets[lastIdx];
+    return s;
+}
+
+struct StrVec2 {
+    StrVecPage* first = nullptr;
+    StrVecPage* curr = nullptr;
+    int nextPageSize = 4 * 1024;
+    int cachedSize = -1;
+
+    int Size();
+    void Append(char* s, int n = 0);
+    char* At(int i);
+    char* RemoveAt(int);
+    char* RemoveAtFast(int);
+    StrVecPage* PageForIdx(int& idx);
+};
+
+int StrVec2::Size() {
+    if (cachedSize >= 0) {
+        return cachedSize;
+    }
+    int n = 0;
+    auto page = first;
+    while (page) {
+        n += page->nStrings;
+        page = page->next;
+    }
+    cachedSize = n;
+    return n;
+}
+
+static int CalcNextPageSize(int currSize) {
+    if (currSize >= 64 * 1024) {
+        // cap the page size at 64 kB
+        return currSize;
+    }
+    return currSize * 2;
+}
+
+void StrVec2::Append(char* s, int n) {
+    cachedSize = -1;
+    if (n <= 0) {
+        n = str::Leni(s);
+    }
+    int nBytesNeeded = sizeof(32); // for index
+    if (s) {
+        nBytesNeeded += (n + 1); // +1 for zero termination
+    }
+    if (!curr || curr->BytesLeft() < nBytesNeeded) {
+        int minPageSize = kStrVecPageHdrSize + nBytesNeeded;
+        int pageSize = RoundUp(minPageSize, 8);
+        if (pageSize < nextPageSize) {
+            pageSize = nextPageSize;
+            nextPageSize = CalcNextPageSize(nextPageSize);
+        }
+        auto page = AllocStrVecPage(pageSize);
+        if (curr) {
+            CrashIf(!first);
+            curr->next = page;
+        } else {
+            CrashIf(first);
+            first = page;
+        }
+        curr = page;
+    }
+    curr->Append(s, n);
+}
+
+StrVecPage* StrVec2::PageForIdx(int& idx) {
+    int n = Size();
+    CrashIfFunc(idx < 0 || idx >= n);
+    auto page = first;
+    while (page) {
+        if (page->nStrings < idx) {
+            return page;
+        }
+        idx -= page->nStrings;
+        page = page->next;
+    }
+    CrashIf(true);
+    return nullptr;
+}
+
+char* StrVec2::At(int idx) {
+    auto page = PageForIdx(idx);
+    return page->At(idx);
+}
+
+// remove string at idx and return it
+// return value is valid as long as StrVec2 is valid
+char* StrVec2::RemoveAt(int idx) {
+    cachedSize = -1;
+    auto page = PageForIdx(idx);
+    return page->RemoveAt(idx);
+}
+
+// remove string at idx more quickly but will change order of string
+// return value is valid as long as StrVec2 is valid
+char* StrVec2::RemoveAtFast(int idx) {
+    cachedSize = -1;
+    auto page = PageForIdx(idx);
+    return page->RemoveAtFast(idx);
+}
