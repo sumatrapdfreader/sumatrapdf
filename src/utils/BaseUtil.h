@@ -654,6 +654,7 @@ defer { instance->Release(); };
 #include "Vec.h"
 #include "TempAllocator.h"
 #include "StrUtil.h"
+#include "StrVec.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"
 #include "ColorUtil.h"

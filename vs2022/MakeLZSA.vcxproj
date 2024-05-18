@@ -427,7 +427,9 @@
     <ClInclude Include="..\src\utils\Log.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\StrFormat.h" />
+    <ClInclude Include="..\src\utils\StrQueue.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
+    <ClInclude Include="..\src\utils\StrVec.h" />
     <ClInclude Include="..\src\utils\StrconvUtil.h" />
     <ClInclude Include="..\src\utils\TempAllocator.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
@@ -501,7 +503,9 @@
     <ClCompile Include="..\src\utils\Log.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
+    <ClCompile Include="..\src\utils\StrQueue.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
+    <ClCompile Include="..\src\utils\StrVec.cpp" />
     <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
     <ClCompile Include="..\src\utils\TempAllocator.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
