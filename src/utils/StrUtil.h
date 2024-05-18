@@ -458,7 +458,7 @@ struct StrVec2 {
     StrVecPage* first = nullptr;
     StrVecPage* curr = nullptr;
     int nextPageSize = 256;
-    int cachedSize = -1;
+    int cachedSize = 0;
 
     StrVec2() = default;
     StrVec2(const StrVec2& that);
@@ -467,37 +467,39 @@ struct StrVec2 {
 
     void Reset();
 
-    int Size();
-    int SizeConst() const;
+    int Size() const;
     char* At(int i) const;
     char* operator[](int) const;
 
-    char* Append(const char* s, int n = -1);
+    char* Append(const char* s, int sLen = -1);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
+    void SetAt(int idx, const char* s, int sLen = -1);
 
-    int Find(const char* sv, int startAt = 0);
-    int FindI(const char* sv, int startAt = 0);
+    int Find(const char* sv, int startAt = 0) const;
+    int FindI(const char* sv, int startAt = 0) const;
 
-    struct Iterator {
+    struct iterator {
         // TODO: could optimize
-        StrVec2* v;
-        int idx;
+        StrVec2* v = nullptr;
+        int idx = 0;
 
-        Iterator(StrVec2* v, int i) : v(v), idx(i) {
+        iterator() = default;
+        iterator(StrVec2* v, int idx) : v(v), idx(idx) {
         }
 
         char* operator*() const;
-        Iterator& operator++();
-        Iterator operator++(int);
-        friend bool operator==(const Iterator& a, const Iterator& b);
-        friend bool operator!=(const Iterator& a, const Iterator& b);
+        iterator& operator++();
+        iterator operator++(int);
+        friend bool operator==(const iterator& a, const iterator& b);
+        friend bool operator!=(const iterator& a, const iterator& b);
     };
-    Iterator begin() {
-        return Iterator(this, 0);
+    iterator begin() {
+        return iterator{this, 0};
     }
-    Iterator end() {
-        return Iterator(this, this->Size());
+    iterator end() {
+        int n = this->Size();
+        return iterator{this, n};
     }
 };
 
