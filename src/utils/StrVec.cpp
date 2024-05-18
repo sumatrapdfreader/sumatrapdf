@@ -146,7 +146,7 @@ bool StrVec::Remove(const char* s) {
     return false;
 }
 
-StrVec::iterator::iterator(StrVec* v, int idx) {
+StrVec::iterator::iterator(const StrVec* v, int idx) {
     this->v = v;
     this->idx = idx;
 }
@@ -159,14 +159,6 @@ StrVec::iterator& StrVec::iterator::operator++() {
     idx++;
     return *this;
 }
-
-#if 0
-StrVec::iterator StrVec::iterator::operator++(int) {
-    iterator tmp = *this;
-    ++(*this);
-    return tmp;
-}
-#endif
 
 bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
     return a.idx == b.idx;
@@ -697,51 +689,29 @@ char* StrVec2::operator[](int idx) const {
 }
 
 int StrVec2::Find(const char* s, int startAt) const {
-    int idxInPage = startAt;
-    int idxRet = startAt;
-    auto page = PageForIdx(this, idxInPage);
-    if (!page) {
-        return -1;
-    }
-again:
-    int n = page->nStrings;
+    StrVec2::iterator it(this, startAt);
+    int n = Size();
     char* s2;
-    for (int i = idxInPage; i < n; i++) {
-        s2 = page->At(i);
+    for (int i = startAt; i < n; i++) {
+        s2 = *it;
         if (str::Eq(s, s2)) {
-            return idxRet;
+            return i;
         }
-        ++idxRet;
-    }
-    page = page->next;
-    idxInPage = 0;
-    if (page) {
-        goto again;
+        ++it;
     }
     return -1;
 }
 
 int StrVec2::FindI(const char* s, int startAt) const {
-    int idxInPage = startAt;
-    int idxRet = startAt;
-    auto page = PageForIdx(this, idxInPage);
-    if (!page) {
-        return -1;
-    }
-again:
-    int n = page->nStrings;
+    StrVec2::iterator it(this, startAt);
+    int n = Size();
     char* s2;
-    for (int i = idxInPage; i < n; i++) {
-        s2 = page->At(i);
+    for (int i = startAt; i < n; i++) {
+        s2 = *it;
         if (str::EqI(s, s2)) {
-            return idxRet;
+            return i;
         }
-        ++idxRet;
-    }
-    page = page->next;
-    idxInPage = 0;
-    if (page) {
-        goto again;
+        ++it;
     }
     return -1;
 }
@@ -783,7 +753,7 @@ char* StrVec2::RemoveAtFast(int idx) {
     return res;
 }
 
-StrVec2::iterator::iterator(StrVec2* v, int idx) {
+StrVec2::iterator::iterator(const StrVec2* v, int idx) {
     this->v = v;
     this->idx = idx;
     this->idxInPage = idx;
@@ -804,17 +774,10 @@ StrVec2::iterator& StrVec2::iterator::operator++() {
     return *this;
 }
 
-#if 0
-StrVec2::iterator StrVec2::iterator::operator++(int) {
-    iterator tmp = *this;
-    ++(*this);
-    return tmp;
-}
-#endif
-
 bool operator==(const StrVec2::iterator& a, const StrVec2::iterator& b) {
     return a.idx == b.idx;
 };
+
 bool operator!=(const StrVec2::iterator& a, const StrVec2::iterator& b) {
     return a.idx != b.idx;
 };
