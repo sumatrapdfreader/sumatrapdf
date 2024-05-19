@@ -248,7 +248,7 @@ static void CheckRemoveAt(StrVec& v) {
 }
 
 template <typename StrVec>
-static void StrVecCheckIter(StrVec& v, const char** strs, int start = 0) {
+static void StrVecCheckIter(StrVec& v, const char** strings, int start = 0) {
     int i = 0;
     for (char* s : v) {
         if (i < start) {
@@ -257,11 +257,24 @@ static void StrVecCheckIter(StrVec& v, const char** strs, int start = 0) {
         }
         char* s2 = v[i];
         utassert(str::Eq(s, s2));
-        if (strs) {
-            const char* s3 = strs[i - start];
+        if (strings) {
+            const char* s3 = strings[i - start];
             utassert(str::Eq(s, s3));
         }
         i++;
+    }
+    if (!strings) {
+        return;
+    }
+
+    // test iterator + operator
+    auto it = v.begin() + start;
+    auto end = v.end();
+    i = 0;
+    for (; it != end; it++, i++) {
+        char* s = *it;
+        const char* s2 = strings[i];
+        utassert(str::Eq(s, s2));
     }
 }
 

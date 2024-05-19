@@ -165,6 +165,11 @@ StrVec::iterator& StrVec::iterator::operator++(int) {
     return *this;
 }
 
+StrVec::iterator& StrVec::iterator::operator+(int n) {
+    idx += n;
+    return *this;
+}
+
 bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
     return a.idx == b.idx;
 };

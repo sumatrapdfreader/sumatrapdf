@@ -39,6 +39,7 @@ struct StrVec {
         char* operator*() const;
         iterator& operator++();    // ++it
         iterator& operator++(int); // it++
+        iterator& operator+(int);
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
