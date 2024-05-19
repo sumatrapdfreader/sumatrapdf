@@ -620,7 +620,30 @@ static char* SideStringsRemoveAt(SideString** firstPtr, SideString** firstRemove
         return first->s;
     }
 
-    // TODO: unoptimized. Should be able to do this without temporary Vec<SideString*>
+#if 1
+    // this reverses the order side strings but is easier to implement
+    // than order-preserving
+    SideString* newFirst = nullptr;
+    auto curr = *firstPtr;
+    char* val = nullptr;
+    while (curr) {
+        auto next = curr->next;
+        if (curr->idx == idx) {
+            // removing this node
+            CrashIf(val); // we only expect one node matching idx
+            val = curr->s;
+            SetSideStringAside(firstRemovedPtr, curr);
+        } else {
+            curr->next = newFirst;
+            newFirst = curr;
+        }
+        curr = next;
+    }
+    CrashIf(!val);
+    *firstPtr = newFirst;
+#else
+    // slower but simpler implemention
+    // TODO: remove when above is more tested
     auto v = Vec<SideString*>(n);
     auto curr = first;
     char* val = nullptr;
@@ -646,6 +669,7 @@ static char* SideStringsRemoveAt(SideString** firstPtr, SideString** firstRemove
         prev->next = curr;
         prev = curr;
     }
+#endif
     return val;
 }
 
