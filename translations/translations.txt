@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fe76f03152c703f62ae3a8e009b3a8c4d42d1430
+cd29b7cd51fbb83ee869062fce6f96be10108c47
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -13552,6 +13552,7 @@ cn:在线手册
 co:Manuale nant’à u situ web
 de:Handbuch im Internet
 fr:Manuel sur le site web
+it:Manuale (sito web)
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
 pt:Manual no Site da Web
