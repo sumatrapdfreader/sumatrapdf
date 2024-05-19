@@ -231,6 +231,16 @@ static void assertStrEq(const char* s1, const char* s2) {
 }
 
 template <typename StrVec>
+static void AppendStrings(StrVec& v, const char** strings, int nStrings) {
+    int initialSize = v.Size();
+    for (int i = 0; i < nStrings; i++) {
+        v.Append(strings[i]);
+        utassert(v.Size() == initialSize + i + 1);
+    }
+    StrVecCheckIter(v, strings, initialSize);
+}
+
+template <typename StrVec>
 static void CheckRemoveAt(StrVec& v) {
     while (v.Size() > 0) {
         int n = v.Size();
@@ -279,16 +289,6 @@ static void StrVecCheckIter(StrVec& v, const char** strings, int start = 0) {
 }
 
 const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
-
-template <typename StrVec>
-static void AppendStrings(StrVec& v, const char** strings, int nStrings) {
-    int initialSize = v.Size();
-    for (int i = 0; i < nStrings; i++) {
-        v.Append(strings[i]);
-        utassert(v.Size() == initialSize + i + 1);
-    }
-    StrVecCheckIter(v, strs, initialSize);
-}
 
 template <typename StrVec>
 static void StrVecTest() {
@@ -455,7 +455,57 @@ static void StrVecTest3() {
 
 template <typename StrVec>
 static void StrVecTest4() {
-    { StrVec v; }
+    {
+        StrVec v;
+        AppendStrings(v, strs, dimofi(strs));
+
+        int idx = 2;
+
+        utassert(str::Eq(strs[idx], v[idx]));
+        auto s = "new value of string, should be large to get results faster";
+        // StrVec2: tests adding where can allocate new value inside a page
+        v.SetAt(idx, s);
+        utassert(str::Eq(s, v[idx]));
+        v.SetAt(idx, nullptr);
+        utassert(str::Eq(nullptr, v[idx]));
+        v.SetAt(idx, "");
+        utassert(str::Eq("", v[idx]));
+        // StrVec2: force allocating in side strings
+        // first page is 256 bytes so this should force allocation in sideStrings
+        int n = 256 / str::Leni(s);
+        for (int i = 0; i < n; i++) {
+            v.SetAt(idx, s);
+        }
+        utassert(str::Eq(s, v[idx]));
+
+        auto prevAtIdx = strs[idx];
+        defer {
+            strs[idx] = prevAtIdx;
+        };
+        strs[idx] = s;
+        StrVecCheckIter(v, strs);
+
+        auto s2 = v.RemoveAt(idx);
+        utassert(str::Eq(s, s2));
+
+        // should be replaced  by next value
+        s2 = v.At(idx);
+        utassert(str::Eq(s2, strs[idx + 1]));
+
+        // StrVec2: test multiple side strings
+        n = v.Size();
+        for (int i = 0; i < n; i++) {
+            v.SetAt(i, s);
+        }
+        for (auto it = v.begin(); it != v.end(); it++) {
+            s2 = *it;
+            utassert(str::Eq(s, s2));
+        }
+        s = "hello";
+        v.SetAt(n / 2, s);
+        s2 = v[n / 2];
+        utassert(str::Eq(s, s2));
+    }
 }
 
 void StrTest() {

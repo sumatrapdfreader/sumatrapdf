@@ -396,7 +396,6 @@ struct StrVecPage {
     char* At(int) const;
     char* RemoveAt(int);
     char* RemoveAtFast(int);
-    char* SetAt(int idx, const char* s, int sLen);
 
     char* AtHelper(int, u32*&) const;
     int BytesLeft();
@@ -500,17 +499,6 @@ char* StrVecPage::RemoveAtFast(int idx) {
     return s;
 }
 
-char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
-    char* res = Append(s, sLen, idx);
-    return res;
-    if (res != kNoSpace) {
-        return res;
-    }
-    // TODO: have to resize page
-    CrashIf(true);
-    return nullptr;
-}
-
 static void FreePages(StrVecPage* toFree) {
     StrVecPage* next;
     while (toFree) {
@@ -577,69 +565,89 @@ struct SideString {
 
 SideString* AllocSideString(int idx, const char* s, int sLen) {
     int n = sLen + 1 + sizeof(SideString);
-    auto ss = (SideString*)Allocator::Alloc(nullptr, (size_t)sLen);
+    auto ss = (SideString*)Allocator::Alloc(nullptr, (size_t)n);
     ss->next = 0;
     ss->idx = idx;
     char* s2 = (char*)ss;
     s2 += sizeof(SideString);
-    ss->s = s2;
     memmove(s2, s, sLen);
     s2[sLen] = 0;
+    ss->s = s2;
     return ss;
 }
 
-void FreeSideStrings(SideString* curr) {
+static void FreeSideString(SideString* s) {
+    Allocator::Free(nullptr, (void*)s);
+}
+
+static void FreeSideStrings(SideString** firstPtr) {
+    auto curr = *firstPtr;
+    *firstPtr = nullptr;
     while (curr) {
         SideString* next = curr->next;
-        Allocator::Free(nullptr, (void*)curr);
+        FreeSideString(curr);
         curr = next;
     }
 }
 
-// return true if removed a string at idx
-bool SideStringsRemoveAt(SideString** currPtr, int idx) {
-    if (!*currPtr) {
-        return false;
-    }
-    int n = 0;
-    auto curr = *currPtr;
-    bool needRemove = false;
+static bool NeedRemove(SideString* curr, int idx) {
     while (curr) {
         if (curr->idx == idx) {
-            needRemove = true;
-        }
-        n++;
-    }
-    if (!needRemove) {
-        return false;
-    }
-    auto v = Vec<SideString*>(n);
-    curr = *currPtr;
-    while (curr) {
-        if (curr->idx != idx) {
-            v.Append(curr);
+            return true;
         }
         curr = curr->next;
     }
+    return false;
+}
+
+// return true if removed a string for idx
+bool SideStringsRemoveAt(SideString** firstPtr, int idx) {
+    auto first = *firstPtr;
+    if (!first) {
+        return false;
+    }
+    int n = 0;
+    if (!NeedRemove(first, idx)) {
+        return false;
+    }
+    if (!first->next) {
+        // fast path when there's only one
+        FreeSideString(first);
+        *firstPtr = nullptr;
+        return true;
+    }
+
+    // TODO: unoptimized. Should be able to do this without temporary Vec<SideString*>
+    auto v = Vec<SideString*>(n);
+    auto curr = first;
+    while (curr) {
+        auto next = curr->next;
+        if (curr->idx != idx) {
+            v.Append(curr);
+        } else {
+            FreeSideString(curr);
+        }
+        curr = next;
+    }
     curr = v[0];
     curr->next = nullptr;
-    *currPtr = curr;
+    *firstPtr = curr;
     n = v.Size();
     auto prev = curr;
     for (int i = 1; i < n; i++) {
         curr = v[i];
         curr->next = nullptr;
         prev->next = curr;
+        prev = curr;
     }
-    return false;
+    return true;
 }
 
 void StrVec2::Reset() {
     FreePages(first);
-    FreeSideStrings(firstSide);
+    FreeSideStrings(&firstSide);
     first = nullptr;
     curr = nullptr;
-    firstSide = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
     cachedSize = 0;
 }
@@ -796,7 +804,9 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
     if (sLen < 0) {
         sLen = str::Leni(s);
     }
-    char* res = page->SetAt(idx, s, sLen);
+    char* res = page->Append(s, sLen, idxInPage);
+    // remove stale side string for this index
+    SideStringsRemoveAt(&firstSide, idx);
     if (res != kNoSpace) {
         return res;
     }
