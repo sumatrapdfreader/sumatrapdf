@@ -101,5 +101,34 @@ then call StrVecPage::InsertAt() which must succeed.
 
 ------------------------------------------------------------------
 
+struct ClosureData;
+typedef void (*closureFunc)(ClosureData*);
+
+struct ClosureData {
+    closureFunc func;
+    virtual ~ClosureData() = 0;
+    virtual operator()() {
+        func(this);
+    }
+};
+
+template <typename T>
+ClosureData* newClosure(void (*func)(T*)) {
+    T* res = new T();
+    res->func = (closureFunc)func;
+    return res;
+}
+
+struct UpdateCheckData : ClosureData {
+    ~UpdateCheckData() override {
+    }
+};
+
+void updateCheck(UpdateCheckData* d) {
+    // ...
+    delete d;
+}
+
+auto res = newClosure<UpdateCheckData>(updateCheck);
 
 ------------------------------------------------------------------
