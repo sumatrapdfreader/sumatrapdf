@@ -573,7 +573,7 @@ static void CompactPages(StrVec2* v, int extraSize) {
     auto first = CompactStrVecPages(v->first, extraSize);
     v->first = first;
     v->curr = first;
-    CrashIf(!first && (v->cachedSize != first->nStrings));
+    CrashIf(first && (v->cachedSize != first->nStrings));
 }
 
 struct SideString {

@@ -165,6 +165,9 @@ void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse) {
     auto td = new DirTraverseThreadData{queue, dir, recurse};
     DWORD threadId = 0;
     HANDLE hThread = CreateThread(nullptr, 0, DirTraverseThread, (void*)td, 0, &threadId);
+    if (!hThread) {
+        return;
+    }
     SetThreadName("DirTraverseThread", threadId);
     CloseHandle(hThread);
 }
