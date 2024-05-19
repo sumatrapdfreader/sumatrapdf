@@ -93,8 +93,7 @@ The format of update information downloaded from the server:
 
 [SumatraPDF]
 Latest: 14276
-Installer64:
-https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64-install.exe
+Installer64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64-install.exe
 Installer32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-install.exe
 PortableExe64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64.exe
 PortableExe32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel.exe
@@ -129,6 +128,7 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
     res->installer64 = str::Dup(node->GetValue("Installer64"));
     res->installerArm64 = str::Dup(node->GetValue("InstallerArm64"));
     res->installer32 = str::Dup(node->GetValue("Installer32"));
+
     res->portable64 = str::Dup(node->GetValue("PortableExe64"));
     res->portableArm64 = str::Dup(node->GetValue("PortableExeArm64"));
     res->portable32 = str::Dup(node->GetValue("PortableExe32"));
@@ -204,10 +204,9 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     const WCHAR* mainInstr = _TR("New version available");
-    WCHAR* verTmp = ToWStrTemp(updateInfo->latestVer);
-    WCHAR* content =
-        str::Format(_TR("You have version '%s' and version '%s' is available.\nDo you want to install new version?"),
-                    CURR_VERSION_STR, verTmp);
+    auto ver = updateInfo->latestVer;
+    auto fmt = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
+    auto content = str::Format(fmt, CURR_VERSION_STRA, ver);
 
     constexpr int kBtnIdDontInstall = 100;
     constexpr int kBtnIdInstall = 101;
@@ -228,7 +227,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
     dialogConfig.pszWindowTitle = title;
     dialogConfig.pszMainInstruction = mainInstr;
-    dialogConfig.pszContent = content;
+    dialogConfig.pszContent = ToWStrTemp(content);
     dialogConfig.pszVerificationText = _TR("Skip this version");
     dialogConfig.nDefaultButton = kBtnIdInstall;
     dialogConfig.dwFlags = flags;
@@ -247,7 +246,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     CrashIf(hr == E_INVALIDARG);
     bool doInstall = (hr == S_OK) && (buttonPressedId == kBtnIdInstall);
 
-    const char* installerPath = updateInfo->installerPath;
+    auto installerPath = updateInfo->installerPath;
     if (!doInstall && verificationFlagChecked) {
         str::ReplaceWithCopy(&gGlobalPrefs->versionToSkip, updateInfo->latestVer);
     }
@@ -362,7 +361,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
     RunAsync([hwndForNotif, updateInfo] { // NOLINT
-        char* installerPath = path::GetTempFilePath("sumatra-installer");
+        auto installerPath = path::GetTempFilePath("sumatra-installer");
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
         installerPath = str::JoinTemp(installerPath, ".exe");

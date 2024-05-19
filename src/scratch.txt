@@ -1,3 +1,9 @@
+Ideas for refactorings:
+
+- path::GetTempFilePath() => *Temp()
+
+------------------------------------------------------------------
+
 static void ClearPixmap(fz_pixmap* pixmap) {
     auto stride = pixmap->stride;
     size_t dx = (size_t)pixmap->w;

@@ -111,9 +111,9 @@ func getDownloadUrlsForPrefix(prefix string, buildType BuildType, ver string) *D
 			installerArm64:   prefix + "SumatraPDF-prerel-arm64-install.exe",
 			portableExeArm64: prefix + "SumatraPDF-prerel-arm64.exe",
 			portableZipArm64: prefix + "SumatraPDF-prerel-arm64.zip",
-			installer32:      prefix + "SumatraPDF-prerel-install.exe",
-			portableExe32:    prefix + "SumatraPDF-prerel.exe",
-			portableZip32:    prefix + "SumatraPDF-prerel.zip",
+			installer32:      prefix + "SumatraPDF-prerel-32-install.exe",
+			portableExe32:    prefix + "SumatraPDF-prerel-32.exe",
+			portableZip32:    prefix + "SumatraPDF-prerel-32.zip",
 		}
 	}
 	rplc := func(s *string) {
