@@ -53,6 +53,14 @@ TempStr JoinTemp(const char* s1, const char* s2, const char* s3) {
     return Join(GetTempAllocator(), s1, s2, s3);
 }
 
+TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4) {
+    return Join(GetTempAllocator(), s1, s2, s3, s4, nullptr);
+}
+
+TempStr JoinTemp(const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
+    return Join(GetTempAllocator(), s1, s2, s3, s4, s5);
+}
+
 TempWStr JoinTemp(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3) {
     return Join(GetTempAllocator(), s1, s2, s3);
 }

@@ -491,6 +491,31 @@ void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
     ReplaceWithCopy((const WCHAR**)s, snew);
 }
 
+char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
+    size_t s1Len = str::Len(s1);
+    size_t s2Len = str::Len(s2);
+    size_t s3Len = str::Len(s3);
+    size_t s4Len = str::Len(s4);
+    size_t s5Len = str::Len(s5);
+    size_t len = s1Len + s2Len + s3Len + s4Len + s5Len + 1;
+    char* res = (char*)Allocator::Alloc(allocator, len);
+
+    char* s = res;
+    memcpy(s, s1, s1Len);
+    s += s1Len;
+    memcpy(s, s2, s2Len);
+    s += s2Len;
+    memcpy(s, s3, s3Len);
+    s += s3Len;
+    memcpy(s, s4, s4Len);
+    s += s4Len;
+    memcpy(s, s5, s5Len);
+    s += s5Len;
+    *s = 0;
+
+    return res;
+}
+
 char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3) {
     size_t s1Len = str::Len(s1);
     size_t s2Len = str::Len(s2);
