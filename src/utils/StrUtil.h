@@ -120,8 +120,9 @@ void ReplaceWithCopy(char** s, const char* snew);
 void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew);
 void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
 
-char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3);
-WCHAR* Join(Allocator* allocator, const WCHAR*, const WCHAR*, const WCHAR* s3);
+char* Join(Allocator*, const char*, const char*, const char*);
+char* Join(Allocator*, const char*, const char*, const char*, const char*, const char*);
+WCHAR* Join(Allocator*, const WCHAR*, const WCHAR*, const WCHAR* s3);
 char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
 WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 

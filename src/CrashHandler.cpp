@@ -48,12 +48,14 @@ static bool gDisableSymbolsDownload = false;
 
 // Get url for file with symbols. Caller needs to free().
 static char* BuildSymbolsUrl() {
-    const char* urlBase = nullptr;
+    const char* urlBase = "https://www.sumatrapdfreader.org/dl/";
     if (gIsPreReleaseBuild) {
-        urlBase = "https://www.sumatrapdfreader.org/dl/prerel/" QM(PRE_RELEASE_VER) "/SumatraPDF-prerel";
+        const char* ver = QM(PRE_RELEASE_VER);
+        urlBase = str::JoinTemp(urlBase, "prerel/", ver, "/SumatraPDF-prerel");
     } else {
         // assuming this is release version
-        urlBase = "https://www.sumatrapdfreader.org/dl/rel/SumatraPDF-" QM(CURR_VERSION);
+        const char *ver = QM(CURR_VERSION);
+        urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);;
     }
     const char* suff = "-32.pdb.lzsa";
 #if IS_ARM_64 == 1
