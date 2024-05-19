@@ -144,8 +144,8 @@ static Rect ExtractDSCPageSize(const WCHAR* path) {
 
 static EngineBase* ps2pdf(const char* path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    AutoFreeStr shortPath = path::ShortPath(path);
-    AutoFreeStr tmpFile = path::GetTempFilePath("PsE");
+    TempStr shortPath = path::ShortPathTemp(path);
+    TempStr tmpFile = path::GetTempFilePathTemp("PsE");
     ScopedFile tmpFileScope(tmpFile);
     AutoFreeStr gswin32c = GetGhostscriptPath();
     if (!shortPath || !tmpFile || !gswin32c) {
@@ -164,12 +164,12 @@ static EngineBase* ps2pdf(const char* path) {
     TempStr cmdLine = str::FormatTemp(
         "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
         "-f \"%s\"",
-        gswin32c.Get(), tmpFile.Get(), shortPath.Get());
+        gswin32c.Get(), tmpFile, shortPath);
 
     {
         TempStr fileName = path::GetBaseNameTemp(__FILE__);
         char* gswin = gswin32c.Get();
-        TempStr tmpFileName = path::GetBaseNameTemp(tmpFile.Get());
+        TempStr tmpFileName = path::GetBaseNameTemp(tmpFile);
         logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin, tmpFileName);
     }
 
@@ -210,7 +210,7 @@ static EngineBase* ps2pdf(const char* path) {
 }
 
 static EngineBase* psgz2pdf(const char* fileName) {
-    AutoFreeStr tmpFile = path::GetTempFilePath("PsE");
+    TempStr tmpFile = path::GetTempFilePathTemp("PsE");
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;

@@ -279,7 +279,7 @@ char* NormalizeTemp(const char* path) {
 
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
-char* ShortPath(const char* pathA) {
+TempStr ShortPathTemp(const char* pathA) {
     WCHAR* path = ToWStrTemp(pathA);
     AutoFreeWstr normpath = Normalize(path);
     DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
@@ -288,7 +288,7 @@ char* ShortPath(const char* pathA) {
     }
     WCHAR* shortPath = AllocArray<WCHAR>(cch + 1);
     GetShortPathNameW(normpath, shortPath, cch);
-    char* res = ToUtf8(shortPath);
+    char* res = ToUtf8Temp(shortPath);
     str::Free(shortPath);
     return res;
 }
@@ -469,21 +469,21 @@ bool IsAbsolute(const char* path) {
 
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
-char* GetTempFilePath(const char* filePrefix) {
+TempStr GetTempFilePathTemp(const char* filePrefix) {
     WCHAR tempDir[MAX_PATH]{};
     DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
     if (!res || res >= dimof(tempDir)) {
         return nullptr;
     }
     if (!filePrefix) {
-        return ToUtf8(tempDir);
+        return ToUtf8Temp(tempDir);
     }
     WCHAR path[MAX_PATH]{};
     WCHAR* filePrefixW = ToWStrTemp(filePrefix);
     if (!GetTempFileNameW(tempDir, filePrefixW, 0, path)) {
         return nullptr;
     }
-    return ToUtf8(path);
+    return ToUtf8Temp(path);
 }
 
 // returns a path to the application module's directory

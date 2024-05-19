@@ -364,7 +364,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
     RunAsync([hwndForNotif, updateInfo] { // NOLINT
-        auto installerPath = path::GetTempFilePath("sumatra-installer");
+        TempStr installerPath = path::GetTempFilePathTemp("sumatra-installer");
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
         installerPath = str::JoinTemp(installerPath, ".exe");

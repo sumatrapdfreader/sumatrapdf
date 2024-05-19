@@ -1,6 +1,6 @@
 Ideas for refactorings:
 
-- path::GetTempFilePath() => *Temp()
+- change all size_t => int
 
 ------------------------------------------------------------------
 
