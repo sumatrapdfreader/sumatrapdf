@@ -763,7 +763,7 @@ char* StrVec2::Append(const char* s, int sLen) {
     if (sLen < 0) {
         sLen = str::Leni(s);
     }
-    int nBytesNeeded = sizeof(32); // for index
+    int nBytesNeeded = sizeof(u32); // for index
     if (s) {
         nBytesNeeded += (sLen + 1); // +1 for zero termination
     }

@@ -77,10 +77,16 @@ end
 -- to make debug builds faster, we compile stable libraries (freetype, libjpeg etc.)
 -- in release mode even in debug builds
 function regconf()
-  defines { "_HAS_ITERATOR_DEBUGGING=0" }
   editandcontinue "Off"
 
+  -- same as in optconf()
+  runtime "Release"
+  defines { "_HAS_ITERATOR_DEBUGGING=0" }
+
   filter "configurations:Debug"
+    defines { "DEBUG" }
+
+  filter "configurations:DebugFull"
     defines { "DEBUG" }
 
   filter "configurations:Release*"
@@ -95,28 +101,30 @@ function regconf()
       "LinkTimeOptimization",
     }
   filter {}
-  runtime "Release"
 end
 
 -- config for stable libraries where debug build is done with optimization
 function optconf()
-  optimize "Size"
-  undefines { "DEBUG" }
-  defines { "NDEBUG" }
   editandcontinue "Off"
+  optimize "Size"
 
   -- we mix Deubg / Release compilation between projects
   -- but all linked modules have to use the same type
   -- of c libraries, so we use release C libs
   -- and we disable C++ iterator debugging because it also
   -- must be consistent across modules
-  defines { "_HAS_ITERATOR_DEBUGGING=0" }
   runtime "Release"
+  defines { "_HAS_ITERATOR_DEBUGGING=0" }
 
-  -- asan builds:
-  -- * no ltcg
-  -- TODO: or arm64 ?
-  filter { "configurations:Release*", "platforms:x32 or x64" }
+  filter "configurations:DebugFull"
+    defines { "DEBUG" }
+
+  filter "configurations:Debug or Release or ReleaseAnalyze"
+    undefines { "DEBUG" }
+    defines { "NDEBUG" }
+  filter {}
+
+  filter { "configurations:Release*", "platforms:x32 or x64 or arm64" }
     flags {
       "LinkTimeOptimization",
     }
@@ -166,7 +174,7 @@ function uses_zlib()
 end
 
 workspace "SumatraPDF"
-  configurations { "Debug", "Release", "ReleaseAnalyze", }
+  configurations { "Debug", "DebugFull", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x64", "arm64", "x64_asan" }
   startproject "SumatraPDF"
 
@@ -205,7 +213,8 @@ workspace "SumatraPDF"
     targetdir "out/rel32_prefast"
   filter {"platforms:x32", "configurations:Debug"}
     targetdir "out/dbg32"
-  filter {}
+  filter {"platforms:x32", "configurations:DebugFull"}
+    targetdir "out/dbgfull32"
 
   filter {"platforms:x64", "configurations:Release"}
     targetdir "out/rel64"
@@ -213,6 +222,8 @@ workspace "SumatraPDF"
     targetdir "out/rel64_prefast"
   filter {"platforms:x64", "configurations:Debug"}
     targetdir "out/dbg64"
+  filter {"platforms:x64", "configurations:DebugFull"}
+    targetdir "out/dbgfull64"
   filter {}
 
   filter {"platforms:x64_asan", "configurations:Release"}
@@ -221,6 +232,8 @@ workspace "SumatraPDF"
     targetdir "out/rel64_prefast_asan"
   filter {"platforms:x64_asan", "configurations:Debug"}
     targetdir "out/dbg64_asan"
+  filter {"platforms:x64_asan", "configurations:DebugFull"}
+    targetdir "out/dbgfull64_asan"
   filter {}
 
   filter {"platforms:arm64", "configurations:Release"}
@@ -229,6 +242,8 @@ workspace "SumatraPDF"
     targetdir "out/arm64_prefast"
   filter {"platforms:arm64", "configurations:Debug"}
     targetdir "out/dbgarm64"
+  filter {"platforms:arm64", "configurations:DebugFull"}
+    targetdir "out/dbgfullarm64"
   filter {}
 
   objdir "%{cfg.targetdir}/obj"
@@ -511,7 +526,7 @@ workspace "SumatraPDF"
     gumbo_files()
 
     -- extract
-    disablewarnings { "4005", "4201" }
+    disablewarnings { "4005", "4201", "4130" }
     includedirs { "ext/extract/include" }
     uses_zlib()
     extract_files()

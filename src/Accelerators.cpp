@@ -605,9 +605,7 @@ static void CreateSumatraAcceleratorTable() {
     int nBuiltIn = (int)dimof(gBuiltInAccelerators);
 
     int nCustomShortcuts = 0;
-    if (gGlobalPrefs->shortcuts) {
-        nCustomShortcuts = gGlobalPrefs->shortcuts->Size();
-    }
+    nCustomShortcuts = gGlobalPrefs->shortcuts->Size();
 
     // build a combined accelerator table of those defined in settings file
     // and built-in shortcuts. Custom shortcuts over-ride built-in

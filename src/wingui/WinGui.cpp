@@ -2631,7 +2631,7 @@ put_IsBuiltInErrorPageEnabled(BOOL enabled)
 bool Webview2Wnd::Embed(WebViewMsgCb cb) {
     // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
     // called on a different thread?
-    LONG flag = 0;
+    volatile LONG flag = 0;
     // InterlockedCompareExchange()
     WCHAR* userDataFolder = ToWStrTemp(dataDir);
     HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(

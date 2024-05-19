@@ -671,7 +671,7 @@ function sumatrapdf_files()
     "scratch.txt",
     "../docs/*.txt",
   })
-  filter {"configurations:Debug"}
+  filter {"configurations:Debug or DebugFull"}
     files_in_dir("src", {
       "Tests.cpp",
       "regress/Regress.*",
@@ -760,7 +760,7 @@ function utils_files()
     "WinUtil.*",
     "ZipUtil.*",
   })
-  filter {"configurations:Debug"}
+  filter {"configurations:Debug or DebugFull"}
     files_in_dir("src/utils", {
       "windrawlib.*",
     })
@@ -1231,7 +1231,7 @@ function search_filter_files()
     "EbookDoc.*",
   })
 
-  filter {"configurations:Debug"}
+  filter {"configurations:Debug or DebugFull"}
     files_in_dir("src/ifilter", {
       "TeXFilter.*",
       "EpubFilter.*",
