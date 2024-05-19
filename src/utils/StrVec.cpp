@@ -234,7 +234,8 @@ void SortNatural(StrVec& v) {
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
+template <typename StrVec>
+int SplitT(StrVec& v, const char* s, const char* separator, bool collapse) {
     int startSize = v.Size();
     const char* next;
     while (true) {
@@ -255,6 +256,11 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
     return (size_t)(v.Size() - startSize);
 }
 
+int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
+    return SplitT<StrVec>(v, s, separator, collapse);
+}
+
+template <typename StrVec>
 static int CalcCapForJoin(const StrVec& v, const char* joint) {
     // it's ok to over-estimate
     int len = v.Size();
@@ -264,9 +270,10 @@ static int CalcCapForJoin(const StrVec& v, const char* joint) {
         char* s = v.At(i);
         cap += (int)str::Len(s);
     }
-    return cap + 32; // arbitrary buffer
+    return cap + 32; // +32 arbitrary buffer
 }
 
+template <typename StrVec>
 static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
     int len = v.Size();
     size_t jointLen = str::Len(joint);
@@ -896,59 +903,8 @@ void SortNatural(StrVec2& v) {
     Sort(v, strLessNatural);
 }
 
-/* splits a string into several substrings, separated by the separator
-(optionally collapsing several consecutive separators into one);
-e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
-(resp. "a", "b", "c" if separators are collapsed) */
 int Split(StrVec2& v, const char* s, const char* separator, bool collapse) {
-    int startSize = v.Size();
-    const char* next;
-    while (true) {
-        next = str::Find(s, separator);
-        if (!next) {
-            break;
-        }
-        if (!collapse || next > s) {
-            int sLen = (int)(next - s);
-            v.Append(s, sLen);
-        }
-        s = next + str::Len(separator);
-    }
-    if (!collapse || *s) {
-        v.Append(s);
-    }
-
-    return (size_t)(v.Size() - startSize);
-}
-
-static int CalcCapForJoin(StrVec2& v, const char* joint) {
-    // it's ok to over-estimate
-    int len = v.Size();
-    size_t jointLen = str::Len(joint);
-    int cap = len * (int)jointLen;
-    for (int i = 0; i < len; i++) {
-        char* s = v.At(i);
-        cap += (int)str::Len(s);
-    }
-    return cap + 32; // arbitrary buffer
-}
-
-static char* JoinInner(StrVec2& v, const char* joint, str::Str& res) {
-    int len = v.Size();
-    size_t jointLen = str::Len(joint);
-    int firstForJoint = 0;
-    for (int i = 0; i < len; i++) {
-        char* s = v.At(i);
-        if (!s) {
-            firstForJoint++;
-            continue;
-        }
-        if (i > firstForJoint && jointLen > 0) {
-            res.Append(joint, jointLen);
-        }
-        res.Append(s);
-    }
-    return res.StealData();
+    return SplitT<StrVec2>(v, s, separator, collapse);
 }
 
 char* Join(StrVec2& v, const char* joint) {

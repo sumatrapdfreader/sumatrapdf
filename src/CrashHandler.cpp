@@ -54,8 +54,9 @@ static char* BuildSymbolsUrl() {
         urlBase = str::JoinTemp(urlBase, "prerel/", ver, "/SumatraPDF-prerel");
     } else {
         // assuming this is release version
-        const char *ver = QM(CURR_VERSION);
-        urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);;
+        const char* ver = QM(CURR_VERSION);
+        urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
+        ;
     }
     const char* suff = "-32.pdb.lzsa";
 #if IS_ARM_64 == 1
