@@ -4,18 +4,18 @@
 #include "BaseUtil.h"
 
 // represents null string
-constexpr u32 kNullIdx = (u32)-2;
+constexpr u32 kNullOffset = (u32)-2;
 
 void StrVec::Reset() {
     strings.Reset();
-    index.Reset();
+    offsets.Reset();
 }
 
 // returns index of inserted string
 int StrVec::Append(const char* s, int sLen) {
     bool ok;
     if (s == nullptr) {
-        ok = index.Append(kNullIdx);
+        ok = offsets.Append(kNullOffset);
         if (!ok) {
             return -1;
         }
@@ -31,7 +31,7 @@ int StrVec::Append(const char* s, int sLen) {
     if (!ok) {
         return -1;
     }
-    ok = index.Append(idx);
+    ok = offsets.Append(idx);
     if (!ok) {
         return -1;
     }
@@ -53,12 +53,12 @@ bool StrVec::InsertAt(int idx, const char* s) {
     if (!ok) {
         return false;
     }
-    return index.InsertAt(idx, strIdx);
+    return offsets.InsertAt(idx, strIdx);
 }
 
 char* StrVec::SetAt(int idx, const char* s) {
     if (s == nullptr) {
-        index[idx] = kNullIdx;
+        offsets[idx] = kNullOffset;
         return nullptr;
     }
     size_t n = str::Len(s);
@@ -67,12 +67,12 @@ char* StrVec::SetAt(int idx, const char* s) {
     if (!ok) {
         return nullptr;
     }
-    index[idx] = strIdx;
+    offsets[idx] = strIdx;
     return strings.Get() + strIdx;
 }
 
 int StrVec::Size() const {
-    return index.Size();
+    return offsets.Size();
 }
 
 char* StrVec::operator[](int idx) const {
@@ -83,8 +83,8 @@ char* StrVec::operator[](int idx) const {
 char* StrVec::At(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
-    u32 start = index.at(idx);
-    if (start == kNullIdx) {
+    u32 start = offsets.at(idx);
+    if (start == kNullOffset) {
         return nullptr;
     }
     char* s = strings.LendData() + start;
@@ -121,18 +121,18 @@ bool StrVec::Contains(const char* s) const {
 // Note: adding might invalidate the returned string due to re-allocation
 // of underlying strings memory
 char* StrVec::RemoveAt(int idx) {
-    u32 strIdx = index[idx];
-    index.RemoveAt(idx);
-    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
+    u32 strOff = offsets[idx];
+    offsets.RemoveAt(idx);
+    char* res = (strOff == kNullOffset) ? nullptr : strings.Get() + strOff;
     return res;
 }
 
 // Note: returned string remains valid as long as StrVec is valid
 char* StrVec::RemoveAtFast(int idx) {
     CrashIf(idx < 0);
-    u32 strIdx = index[idx];
-    index.RemoveAtFast((size_t)idx);
-    char* res = (strIdx == kNullIdx) ? nullptr : strings.Get() + strIdx;
+    u32 strOff = offsets[idx];
+    offsets.RemoveAtFast((size_t)idx);
+    char* res = (strOff == kNullOffset) ? nullptr : strings.Get() + strOff;
     return res;
 }
 
@@ -217,11 +217,11 @@ void Sort(StrVec& v, StrLessFunc lessFn) {
         lessFn = strLess;
     }
     const char* strs = v.strings.Get();
-    auto b = v.index.begin();
-    auto e = v.index.end();
+    auto b = v.offsets.begin();
+    auto e = v.offsets.end();
     std::sort(b, e, [strs, lessFn](u32 i1, u32 i2) -> bool {
-        const char* s1 = (i1 == kNullIdx) ? nullptr : strs + i1;
-        const char* s2 = (i2 == kNullIdx) ? nullptr : strs + i2;
+        const char* s1 = (i1 == kNullOffset) ? nullptr : strs + i1;
+        const char* s2 = (i2 == kNullOffset) ? nullptr : strs + i2;
         bool ret = lessFn(s1, s2);
         return ret;
     });
@@ -349,7 +349,7 @@ char* StrVecWithDataRaw::at(int idx) const {
     int n = Size();
     CrashIf(idx < 0 || idx >= n);
     u32 start = index.at(idx);
-    if (start == kNullIdx) {
+    if (start == kNullOffset) {
         return nullptr;
     }
     char* s = strings.LendData() + start;
@@ -425,7 +425,28 @@ static StrVecPage* AllocStrVecPage(int pageSize) {
 #define kNoSpace (char*)-2
 
 char* StrVecPage::Append(const char* s, int sLen, int idxToSet) {
-    bool append = idxToSet < 0;                  // otherwise replace
+    bool append = idxToSet < 0; // otherwise replace
+    char* start = (char*)this;
+    u32* offsets = (u32*)(start + kStrVecPageHdrSize);
+    if (!append) {
+        if (!s) {
+            // fast path for null, doesn't require new space at all
+            offsets[idxToSet] = kNullOffset;
+            return nullptr;
+        }
+        u32 off = offsets[idxToSet];
+        if (off != kNullOffset) {
+            auto curr = start + offsets[idxToSet];
+            int currLen = str::Leni(curr);
+            if (sLen <= currLen) {
+                // fost path for when new string is smaller than the current string
+                memcpy(curr, s, (size_t)sLen);
+                curr[sLen] = 0; // zero-terminate for C compat
+                return curr;
+            }
+        }
+    }
+
     int nBytesNeeded = append ? sizeof(u32) : 0; // for index
     int nBytes = sLen + 1;                       // +1 for zero termination
     if (s) {
@@ -441,10 +462,8 @@ char* StrVecPage::Append(const char* s, int sLen, int idxToSet) {
     if (append) {
         nStrings++;
     }
-    char* start = (char*)this;
-    u32* offsets = (u32*)(start + kStrVecPageHdrSize);
     if (!s) {
-        offsets[idxToSet] = kNullIdx;
+        offsets[idxToSet] = kNullOffset;
         return nullptr;
     }
     currEnd -= nBytes;
@@ -460,7 +479,7 @@ char* StrVecPage::AtHelper(int idx, u32*& offsets) const {
     u8* start = (u8*)this;
     offsets = (u32*)(start + kStrVecPageHdrSize);
     u32 offset = offsets[idx];
-    if (offset == kNullIdx) {
+    if (offset == kNullOffset) {
         return nullptr;
     }
     char* s = (char*)(start + offset);
@@ -934,8 +953,8 @@ void Sort(StrVec2& v, StrLessFunc lessFn) {
     u32* b = (u32*)(pageStart + kStrVecPageHdrSize);
     u32* e = b + v.first->nStrings;
     std::sort(b, e, [pageStart, lessFn](u32 off1, u32 off2) -> bool {
-        const char* s1 = (off1 == kNullIdx) ? nullptr : pageStart + off1;
-        const char* s2 = (off2 == kNullIdx) ? nullptr : pageStart + off2;
+        const char* s1 = (off1 == kNullOffset) ? nullptr : pageStart + off1;
+        const char* s2 = (off2 == kNullOffset) ? nullptr : pageStart + off2;
         bool ret = lessFn(s1, s2);
         return ret;
     });
