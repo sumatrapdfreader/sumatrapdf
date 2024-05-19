@@ -10,7 +10,7 @@ typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 // beginning of string at index 2
 struct StrVec {
     str::Str strings;
-    Vec<u32> index;
+    Vec<u32> offsets;
 
     StrVec() = default;
     ~StrVec() = default;
