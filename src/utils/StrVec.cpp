@@ -527,7 +527,7 @@ static void FreePages(StrVecPage* toFree) {
     }
 }
 
-static StrVecPage* CompactPages(StrVecPage* first) {
+static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
     if (!first) {
         return nullptr;
     }
@@ -550,6 +550,7 @@ static StrVecPage* CompactPages(StrVecPage* first) {
     }
     // strLenTotal might be more than needed if we removed strings, but that's ok
     int pageSize = kStrVecPageHdrSize + (nStrings * sizeof(u32)) + strLenTotal;
+    pageSize += extraSize;
     pageSize = RoundUp(pageSize, 64); // just in case
     auto page = AllocStrVecPage(pageSize);
     curr = first;
@@ -568,8 +569,8 @@ static StrVecPage* CompactPages(StrVecPage* first) {
     return page;
 }
 
-static void CompactPages(StrVec2* v) {
-    auto first = CompactPages(v->first);
+static void CompactPages(StrVec2* v, int extraSize) {
+    auto first = CompactStrVecPages(v->first, extraSize);
     v->first = first;
     v->curr = first;
     CrashIf(!first && (v->cachedSize != first->nStrings));
@@ -947,7 +948,7 @@ void Sort(StrVec2& v, StrLessFunc lessFn) {
     if (lessFn == nullptr) {
         lessFn = strLess;
     }
-    CompactPages(&v);
+    CompactPages(&v, 0);
 
     const char* pageStart = (const char*)v.first;
     u32* b = (u32*)(pageStart + kStrVecPageHdrSize);

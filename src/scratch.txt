@@ -26,6 +26,8 @@ static void ClearPixmap(fz_pixmap* pixmap) {
     }
 }
 
+------------------------------------------------------------------
+
 // Select random files to test. We want to test each file type equally, so
 // we first group them by file extension and then select up to maxPerType
 // for each extension, randomly, and inter-leave the files with different
@@ -84,13 +86,13 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
     }
 }
 
-int idx = rand() % all->Size();
-if (i->stressTestMax > 0) {
+------------------------------------------------------------------
 
-DirTraverse(dirPath, true, [filter, &hasFiles, &paths](const char* filePath) -> bool {
-    if (IsStressTestSupportedFile(filePath, filter)) {
-        paths.Append(filePath);
-        hasFiles = true;
-    }
-    return true;
-});
+Idea on how to implement StrVec2::InsertAt()
+
+bool StrVecPage::InsertAt() that inserts if has space.
+
+If no space, call CompactPages() with additional argument for additinal space
+then call StrVecPage::InsertAt() which must succeed.
+
+------------------------------------------------------------------
