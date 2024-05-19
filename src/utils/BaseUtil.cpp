@@ -36,7 +36,7 @@ int AtomicInt::Sub(int n) {
 }
 
 int AtomicInt::Get() const {
-    return InterlockedCompareExchange((LONG*)&val, 0, 0);
+    return (int)InterlockedCompareExchange((LONG*)&val, 0, 0);
 }
 
 bool AtomicBool::Get() const {

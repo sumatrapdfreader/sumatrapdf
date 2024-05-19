@@ -32,7 +32,6 @@ constexpr COLORREF kColWhite = 0xFFFFFF;
 // #define kColWhiteish 0xEBEBF9
 // #define kColDarkGray 0x424242
 
-
 struct MainWindowStyle {
     // Background color of recently added, about, and properties menus
     COLORREF backgroundColor;

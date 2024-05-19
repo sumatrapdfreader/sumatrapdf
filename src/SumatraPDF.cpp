@@ -1946,7 +1946,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
     }
 
     RunAsync([args, wndNotif] {
-        IncDangerousThreadCount();
+        gDangerousThreadCount.Inc();
         SetThreadName("LoadDocument");
         DocController* ctrl = nullptr;
         MainWindow* win = args->win;
@@ -1971,7 +1971,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
             LoadDocumentFinish(args);
             delete args;
         });
-        DecDangerousThreadCount();
+        gDangerousThreadCount.Dec();
     });
 }
 

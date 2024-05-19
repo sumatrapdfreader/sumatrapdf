@@ -112,16 +112,9 @@ void RunAsync(const std::function<void()>& func) {
     AutoCloseHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, nullptr));
 }
 
-LONG gDangerousThreadCount = 0;
+AtomicInt gDangerousThreadCount;
 
-void IncDangerousThreadCount() {
-    InterlockedIncrement(&gDangerousThreadCount);
-}
-
-void DecDangerousThreadCount() {
-    InterlockedDecrement(&gDangerousThreadCount);
-}
 bool AreDangerousThreadsPending() {
-    LONG count = InterlockedAdd(&gDangerousThreadCount, 0);
+    auto count = gDangerousThreadCount.Get();
     return count != 0;
 }
