@@ -501,10 +501,20 @@ static void StrVecTest4() {
             s2 = *it;
             utassert(str::Eq(s, s2));
         }
-        s = "hello";
-        v.SetAt(n / 2, s);
+        auto s3 = "hello";
+        v.SetAt(n / 2, s3);
         s2 = v[n / 2];
-        utassert(str::Eq(s, s2));
+        utassert(str::Eq(s3, s2));
+        while (v.Size() > 0) {
+            n = v.Size();
+            s2 = v[0];
+            if (n % 2 == 0) {
+                s3 = v.RemoveAtFast(0);
+            } else {
+                s3 = v.RemoveAt(0);
+            }
+            utassert(str::Eq(s2, s3));
+        }
     }
 }
 

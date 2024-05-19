@@ -576,18 +576,21 @@ SideString* AllocSideString(int idx, const char* s, int sLen) {
     return ss;
 }
 
-static void FreeSideString(SideString* s) {
-    Allocator::Free(nullptr, (void*)s);
-}
-
 static void FreeSideStrings(SideString** firstPtr) {
     auto curr = *firstPtr;
     *firstPtr = nullptr;
     while (curr) {
         SideString* next = curr->next;
-        FreeSideString(curr);
+        Allocator::Free(nullptr, (void*)curr);
         curr = next;
     }
+}
+
+// to ensure validity of a string after RemoveAt() and RemoveAtFast(), we can't
+// free the strings immediately. We put them on a side queue to be freed at end
+static void SetSideStringAside(SideString** firstRemovedPtr, SideString* ss) {
+    ss->next = *firstRemovedPtr;
+    *firstRemovedPtr = ss;
 }
 
 static bool NeedRemove(SideString* curr, int idx) {
@@ -601,34 +604,37 @@ static bool NeedRemove(SideString* curr, int idx) {
 }
 
 // return true if removed a string for idx
-bool SideStringsRemoveAt(SideString** firstPtr, int idx) {
+static char* SideStringsRemoveAt(SideString** firstPtr, SideString** firstRemovedPtr, int idx) {
     auto first = *firstPtr;
     if (!first) {
-        return false;
+        return nullptr;
     }
     int n = 0;
     if (!NeedRemove(first, idx)) {
-        return false;
+        return nullptr;
     }
     if (!first->next) {
         // fast path when there's only one
-        FreeSideString(first);
+        SetSideStringAside(firstRemovedPtr, first);
         *firstPtr = nullptr;
-        return true;
+        return first->s;
     }
 
     // TODO: unoptimized. Should be able to do this without temporary Vec<SideString*>
     auto v = Vec<SideString*>(n);
     auto curr = first;
+    char* val = nullptr;
     while (curr) {
         auto next = curr->next;
         if (curr->idx != idx) {
             v.Append(curr);
         } else {
-            FreeSideString(curr);
+            val = curr->s;
+            SetSideStringAside(firstRemovedPtr, curr);
         }
         curr = next;
     }
+    CrashIf(!val);
     curr = v[0];
     curr->next = nullptr;
     *firstPtr = curr;
@@ -640,12 +646,13 @@ bool SideStringsRemoveAt(SideString** firstPtr, int idx) {
         prev->next = curr;
         prev = curr;
     }
-    return true;
+    return val;
 }
 
 void StrVec2::Reset() {
     FreePages(first);
     FreeSideStrings(&firstSide);
+    FreeSideStrings(&firstSideRemoved);
     first = nullptr;
     curr = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
@@ -806,7 +813,7 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
     }
     char* res = page->Append(s, sLen, idxInPage);
     // remove stale side string for this index
-    SideStringsRemoveAt(&firstSide, idx);
+    SideStringsRemoveAt(&firstSide, &firstSideRemoved, idx);
     if (res != kNoSpace) {
         return res;
     }
@@ -819,23 +826,23 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
 // remove string at idx and return it
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAt(int idx) {
-    SideStringsRemoveAt(&firstSide, idx);
+    auto maybeRes = SideStringsRemoveAt(&firstSide, &firstSideRemoved, idx);
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAt(idxInPage);
     UpdateSize(this);
-    return res;
+    return maybeRes ? maybeRes : res;
 }
 
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAtFast(int idx) {
-    SideStringsRemoveAt(&firstSide, idx);
+    auto maybeRes = SideStringsRemoveAt(&firstSide, &firstSideRemoved, idx);
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAtFast(idxInPage);
     UpdateSize(this);
-    return res;
+    return maybeRes ? maybeRes : res;
 }
 
 StrVec2::iterator::iterator(const StrVec2* v, int idx) {
