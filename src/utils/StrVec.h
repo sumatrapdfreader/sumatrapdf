@@ -67,6 +67,7 @@ struct StrVec2 {
     StrVecPage* first = nullptr;
     StrVecPage* curr = nullptr;
     SideString* firstSide = nullptr;
+    SideString* firstSideRemoved = nullptr;
     int nextPageSize = 256;
     int cachedSize = 0;
 
