@@ -48,11 +48,11 @@ constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-
 constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/update-check-rel.txt";
 #endif
 
-#ifndef WEBSITE_DOWNLOAD_PAGE_URL
+#ifndef kWebisteDownloadPageURL
 #if defined(PRE_RELEASE_VER)
-#define WEBSITE_DOWNLOAD_PAGE_URL "https://www.sumatrapdfreader.org/prerelease"
+#define kWebisteDownloadPageURL "https://www.sumatrapdfreader.org/prerelease"
 #else
-#define WEBSITE_DOWNLOAD_PAGE_URL "https://www.sumatrapdfreader.org/download-free-pdf-viewer"
+#define kWebisteDownloadPageURL "https://www.sumatrapdfreader.org/download-free-pdf-viewer"
 #endif
 #endif
 // clang-format on
@@ -260,7 +260,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
     // if installer not downloaded tell user to download from website
     if (!installerPath || !file::Exists(installerPath)) {
-        SumatraLaunchBrowser(WEBSITE_DOWNLOAD_PAGE_URL);
+        SumatraLaunchBrowser(kWebisteDownloadPageURL);
         return;
     }
 
@@ -270,6 +270,9 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     if (IsDllBuild()) {
         // no need for sleep because it shows the installer dialog anyway
         cmd.Append(" -install");
+        if (gIsPreReleaseBuild) {
+            cmd.Append(" -silent");
+        }
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
         // our process to exit
