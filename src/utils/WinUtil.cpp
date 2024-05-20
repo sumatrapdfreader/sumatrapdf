@@ -269,23 +269,46 @@ TempStr GetWindowsVerTemp() {
     return OsNameFromVerTemp(ver);
 }
 
-bool IsRunningInWow64() {
-#ifndef _WIN64
-    BOOL isWow = FALSE;
-    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
-        return isWow == TRUE;
+// returns nullptr if not set
+TempStr GetEnvVariableTemp(const char* name) {
+    WCHAR bufStatic[256];
+    WCHAR* buf = &bufStatic[0];
+    DWORD cchBufSize = dimof(bufStatic);
+    TempWStr nameW = ToWStrTemp(name);
+    DWORD res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
+    if (res == 0) {
+        // env variable doesn't exist
+        return nullptr;
     }
-#endif
-    return false;
+    if (res >= cchBufSize) {
+        // buffer was too small
+        cchBufSize = res + 4; // +4 jic
+        buf = AllocArrayTemp<WCHAR>(cchBufSize);
+        res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
+        CrashIf(res == 0 || res > cchBufSize);
+    }
+    return ToUtf8Temp(buf);
 }
 
-// return true if this is 64-bit executable
 bool IsProcess64() {
     return 8 == sizeof(void*);
 }
 
 bool IsProcess32() {
     return 4 == sizeof(void*);
+}
+
+// https://learn.microsoft.com/en-us/windows/win32/api/wow64apiset/nf-wow64apiset-iswow64process
+bool IsRunningInWow64() {
+    if (IsProcess64()) {
+        // only 32-bit build can run under wow
+        return false;
+    }
+    BOOL isWow = FALSE;
+    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
+        return isWow == TRUE;
+    }
+    return false;
 }
 
 // return true if running on a 64-bit OS

@@ -97,7 +97,6 @@ static HANDLE gDumpThread = nullptr;
 static bool isDllBuild = false;
 static bool gCrashed = false;
 
-
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
@@ -472,15 +471,14 @@ static void GetOsVersion(str::Str& s) {
         return;
     }
 
-    const char* os = OsNameFromVerTemp(ver);
+    TempStr os = OsNameFromVerTemp(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     int buildNumber = ver.dwBuildNumber & 0xFFFF;
-#ifdef _WIN64
-    const char* arch = "64-bit";
-#else
-    const char* arch = IsRunningInWow64() ? "Wow64" : "32-bit";
-#endif
+    auto arch = "64-bit";
+    if (IsProcess32()) {
+        arch = IsRunningInWow64() ? "Wow64" : "32-bit";
+    }
     if (0 == servicePackMajor) {
         s.AppendFmt("OS: Windows %s build %d %s\n", os, buildNumber, arch);
     } else if (0 == servicePackMinor) {
@@ -598,42 +596,45 @@ static void BuildSystemInfo() {
     gSystemInfo = s.StealData();
 }
 
-/* Setting symbol path:
-add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
-add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)
-add: "srv*c:\\symbols*http://msdl.microsoft.com/download/symbols;cache*c:\\symbols"
-(except a better directory than c:\\symbols
+/*
+https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-path
+http://p-nand-q.com/python/procmon.html
+https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools
 
-Note: I've decided to use just one, known to me location rather than the
-more comprehensive list. It works so why give dbghelp.dll more directories
-to scan?
+Setting symbol path:
+add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
+add GetEnvironmentVariableA("_NT_ALT_SYMBOL_PATH ", ..., ...)
+add: cache*C:\MySymbols;srv*https://msdl.microsoft.com/download/symbols
+
+dbghelp.dll should be installed with os but might be outdated
+for symbols server symsrv.dll is needed, installed with debug tools for windows
 */
+
+static bool gAddNtSymbolPath = true;
+static bool gAddSymbolServer = true;
+
 static void BuildSymbolPath() {
     str::Str path(1024);
 
-#if 0
-    WCHAR buf[512];
-    DWORD res = GetEnvironmentVariable(L"_NT_SYMBOL_PATH", buf, dimof(buf));
-    if (0 < res && res < dimof(buf)) {
-        path.Append(buf);
-        path.Append(L";");
+    if (gAddNtSymbolPath) {
+        TempStr ntSymPath = GetEnvVariableTemp("_NT_SYMBOL_PATH");
+        // internet talks about both _NT_ALT_SYMBOL_PATH and _NT_ALTERNATE_SYMBOL_PATH
+        if (str::IsEmpty(ntSymPath)) {
+            ntSymPath = GetEnvVariableTemp("_NT_ALT_SYMBOL_PATH");
+        }
+        if (str::IsEmpty(ntSymPath)) {
+            ntSymPath = GetEnvVariableTemp("_NT_ALTERNATE_SYMBOL_PATH");
+        }
+        if (!str::IsEmpty(ntSymPath)) {
+            path.Append(ntSymPath);
+            path.Append(";");
+        }
     }
-    res = GetEnvironmentVariable(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
-    if (0 < res && res < dimof(buf)) {
-        path.Append(buf);
-        path.Append(L";");
-    }
-#endif
-
     path.Append(gSymbolsDir);
-#if 0
-    // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
-    // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
-    path.Append(L"srv*");
-    path.Append(symDir);
-    path.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
-    path.Append(symDir);
-#endif
+    if (gAddSymbolServer) {
+        // this probably typicall doesn't work as it needs symsrv.dll
+        path.AppendFmt("cache*%s;srv*http://msdl.microsoft.com/download/symbols;", gSymbolsDir);
+    }
 
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe

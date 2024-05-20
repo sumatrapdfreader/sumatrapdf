@@ -138,3 +138,13 @@ void updateCheck(UpdateCheckData* d) {
 auto res = newClosure<UpdateCheckData>(updateCheck);
 
 ------------------------------------------------------------------
+
+Delegates ideas:
+https://github.com/rosbacke/delegate
+https://github.com/rosbacke/MCU-tools/tree/master/src/callback
+https://github.com/Naios/function2
+https://gist.github.com/twoscomplement/030818a6c38c5a983482dc3a385a3ab8
+https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0792r3.html
+https://github.com/vittorioromeo/Experiments/blob/master/function_ref.cpp
+https://blog.stratifylabs.dev/device/2022-12-01-Callback-and-Lambdas-in-embedded-cpp/
+
