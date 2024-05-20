@@ -69,10 +69,11 @@ struct StrVec2 {
     StrVec2& operator=(const StrVec2& that);
     ~StrVec2();
 
-    void Reset();
+    void Reset(StrVecPage*);
 
     int Size() const;
     char* At(int i) const;
+    StrSpan AtSpan(int i) const;
     char* operator[](int) const;
 
     char* Append(const char* s, int sLen = -1);

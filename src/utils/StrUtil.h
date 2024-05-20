@@ -12,6 +12,20 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
+template <typename T>
+struct Span {
+    Span() = default;
+    ~Span() = default;
+    Span(const T* d, int sz) : d((T*)d), sz(sz) {
+    }
+    T* d = nullptr;
+    int sz = 0;
+};
+
+struct StrSpan : Span<char> {
+    StrSpan(const char* s);
+};
+
 struct ByteSlice {
     u8* d = nullptr;
     size_t sz = 0;

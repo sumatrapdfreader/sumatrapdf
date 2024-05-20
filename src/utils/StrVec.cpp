@@ -539,10 +539,6 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         CrashIf(extraSize > 0);
         return nullptr;
     }
-    if (!first->next && extraSize == 0) {
-        // if only one, no need to compact
-        return first;
-    }
     int nStrings = 0;
     int strLenTotal = 0; // including 0-termination
     auto curr = first;
@@ -575,49 +571,44 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         }
         curr = curr->next;
     }
-    FreePages(first);
     return page;
 }
 
 static void CompactPages(StrVec2* v, int extraSize) {
     auto first = CompactStrVecPages(v->first, extraSize);
+    FreePages(v->first);
     v->first = first;
     v->curr = first;
     CrashIf(first && (v->size != first->nStrings));
 }
 
-void StrVec2::Reset() {
+void StrVec2::Reset(StrVecPage* initWith) {
     FreePages(first);
     first = nullptr;
     curr = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
     size = 0;
+    if (initWith == nullptr) {
+        return;
+    }
+    first = CompactStrVecPages(initWith, 0);
+    curr = first;
+    size = first->nStrings;
 }
 
 StrVec2::~StrVec2() {
-    Reset();
+    Reset(nullptr);
 }
 
 StrVec2::StrVec2(const StrVec2& that) {
-    // TODO: unoptimized, should compact into a single StrVecPage
-    Reset();
-    int n = that.Size();
-    for (int i = 0; i < n; i++) {
-        char* s = that.At(i);
-        Append(s);
-    }
+    Reset(that.first);
 }
 
 StrVec2& StrVec2::operator=(const StrVec2& that) {
     if (this == &that) {
         return *this;
     }
-    Reset();
-    int n = that.Size();
-    for (int i = 0; i < n; i++) {
-        char* s = that.At(i);
-        Append(s);
-    }
+    Reset(that.first);
     return *this;
 }
 
@@ -682,22 +673,27 @@ char* StrVec2::Append(const char* s, int sLen) {
     return res;
 }
 
-static StrVecPage* PageForIdx(const StrVec2* v, int& idx) {
+static std::pair<StrVecPage*, int> PageForIdx(const StrVec2* v, int idx) {
     auto page = v->first;
     while (page) {
         if (page->nStrings > idx) {
-            return page;
+            return {page, idx};
         }
         idx -= page->nStrings;
         page = page->next;
     }
-    return nullptr;
+    return {nullptr, 0};
 }
 
 char* StrVec2::At(int idx) const {
-    int idxInPage = idx;
-    auto page = PageForIdx(this, idxInPage);
+    auto [page, idxInPage] = PageForIdx(this, idx);
     return page->At(idxInPage);
+}
+
+StrSpan StrVec2::AtSpan(int idx) const {
+    auto [page, idxInPage] = PageForIdx(this, idx);
+    char* s = page->At(idxInPage);
+    return StrSpan(s);
 }
 
 char* StrVec2::operator[](int idx) const {
@@ -732,8 +728,7 @@ int StrVec2::FindI(const char* s, int startAt) const {
 // it might re-allocate memore used for those strings
 char* StrVec2::SetAt(int idx, const char* s, int sLen) {
     {
-        int idxInPage = idx;
-        auto page = PageForIdx(this, idxInPage);
+        auto [page, idxInPage] = PageForIdx(this, idx);
         if (sLen < 0) {
             sLen = str::Leni(s);
         }
@@ -754,8 +749,7 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
 // remove string at idx and return it
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAt(int idx) {
-    int idxInPage = idx;
-    auto page = PageForIdx(this, idxInPage);
+    auto [page, idxInPage] = PageForIdx(this, idx);
     auto res = page->RemoveAt(idxInPage);
     size--;
     return res;
@@ -764,8 +758,7 @@ char* StrVec2::RemoveAt(int idx) {
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAtFast(int idx) {
-    int idxInPage = idx;
-    auto page = PageForIdx(this, idxInPage);
+    auto [page, idxInPage] = PageForIdx(this, idx);
     auto res = page->RemoveAtFast(idxInPage);
     size--;
     return res;
@@ -782,38 +775,39 @@ StrVec2::iterator StrVec2::end() const {
 StrVec2::iterator::iterator(const StrVec2* v, int idx) {
     this->v = v;
     this->idx = idx;
-    this->idxInPage = idx;
-    this->page = PageForIdx(v, this->idxInPage);
+    auto [page, idxInPage] = PageForIdx(v, idx);
+    this->page = page;
+    this->idxInPage = idxInPage;
 }
 
 char* StrVec2::iterator::operator*() const {
     return page->At(idxInPage);
 }
 
-static void Next(StrVec2::iterator& it) {
-    it.idx++;
-    it.idxInPage++;
-    if (it.idxInPage >= it.page->nStrings) {
-        it.idxInPage = 0;
-        it.page = it.page->next;
+static void Next(StrVec2::iterator& it, int n) {
+    // TODO: optimize for n > 1
+    for (int i = 0; i < n; i++) {
+        it.idx++;
+        it.idxInPage++;
+        if (it.idxInPage >= it.page->nStrings) {
+            it.idxInPage = 0;
+            it.page = it.page->next;
+        }
     }
 }
 
 StrVec2::iterator& StrVec2::iterator::operator++(int) {
-    Next(*this);
+    Next(*this, 1);
     return *this;
 }
 
 StrVec2::iterator& StrVec2::iterator::operator++() {
-    Next(*this);
+    Next(*this, 1);
     return *this;
 }
 
 StrVec2::iterator& StrVec2::iterator::operator+(int n) {
-    // TODO: could optimize
-    for (int i = 0; i < n; i++) {
-        Next(*this);
-    }
+    Next(*this, n);
     return *this;
 }
 

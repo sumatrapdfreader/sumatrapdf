@@ -95,10 +95,8 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
 ------------------------------------------------------------------
 
 StrVec2 ideas:
-- store size of strings as u32 in the index to support storing zero-terminated strings, add tests
 - optimize for SetAt(): when removing last string from a page, free its memory (update currEnd)
-
--- implement StrVec2::InsertAt()
+- implement StrVec2::InsertAt()
 
 bool StrVecPage::InsertAt() that inserts if has space.
 

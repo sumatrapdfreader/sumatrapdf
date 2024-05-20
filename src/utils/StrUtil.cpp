@@ -194,6 +194,11 @@ bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
     return res == 0;
 }
 
+StrSpan::StrSpan(const char* s) {
+    d = (char*)s;
+    sz = str::Leni(s);
+}
+
 namespace str {
 
 size_t Len(const char* s) {
