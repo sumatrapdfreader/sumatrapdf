@@ -794,7 +794,7 @@ bool Exists(const char* dirA) {
 
 // Return true if a directory already exists or has been successfully created
 bool Create(const char* dir) {
-    WCHAR* dirW = ToWStrTemp(dir);
+    TempWStr dirW = ToWStrTemp(dir);
     BOOL ok = CreateDirectoryW(dirW, nullptr);
     if (ok) {
         return true;
@@ -812,7 +812,7 @@ bool CreateAll(const char* dir) {
 }
 
 bool CreateForFile(const char* path) {
-    char* dir = path::GetDirTemp(path);
+    TempStr dir = path::GetDirTemp(path);
     return CreateAll(dir);
 }
 

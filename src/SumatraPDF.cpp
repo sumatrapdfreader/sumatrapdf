@@ -4752,24 +4752,50 @@ static void OnMenuCustomZoom(MainWindow* win) {
     SmartZoom(win, zoom, nullptr, true);
 }
 
-char* GetLogFilePath() {
-    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+// this is a directory for not important data, like downloaded symbols
+// this directory is the same for installed / portable etc. versions
+TempStr GetNotImportantDataDirTemp() {
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
     if (!dir) {
         return nullptr;
     }
-    return path::Join(dir, "sumatra-log.txt");
+    return path::JoinTemp(dir, "SumatraPDF-data");
+}
+
+TempStr GetLogFilePathTemp() {
+    TempStr dir = GetNotImportantDataDirTemp();
+    if (!dir) {
+        return nullptr;
+    }
+    // TODO: maybe use unique name
+    return path::JoinTemp(dir, "sumatra-log.txt");
+}
+
+// separate directory for each build number / type
+static TempStr GetCrashInfoDirNameTemp() {
+    auto variant = gIsPreReleaseBuild ? "prerel" : "rel";
+    auto bits = IsProcess64() ? "64" : "32";
+    if (IsArmBuild()) {
+        bits = "arm64";
+    }
+    auto ver = CURR_VERSION_STRA; // 3.6.16105 or 3.5.2 for release
+    // TODO: something different for store build?
+    return str::FormatTemp("crashinfo-%s-%s-%s", variant, ver, bits);
+}
+
+TempStr GetCrashInfoDirTemp() {
+    TempStr dataDir = GetNotImportantDataDirTemp();
+    TempStr dirName = GetCrashInfoDirNameTemp();
+    return path::Join(dataDir, dirName);
 }
 
 void ShowLogFileSmart() {
-    char* path = gLogFilePath;
+    TempStr path = gLogFilePath;
     if (path == nullptr) {
-        path = GetLogFilePath();
-        WriteCurrentLogToFile(path);
+        path = GetLogFilePathTemp();
     }
+    WriteCurrentLogToFile(path);
     LaunchFileIfExists(path);
-    if (path != gLogFilePath) {
-        str::Free(path);
-    }
 }
 
 void ReopenLastClosedFile(MainWindow* win) {
@@ -4787,7 +4813,6 @@ void CopyFilePath(WindowTab* tab) {
     }
     const char* path = tab->GetPath();
     CopyTextToClipboard(path);
-    // TODO: implement me
 }
 
 void ClearHistory(MainWindow* win) {
@@ -4825,7 +4850,8 @@ void ClearHistory(MainWindow* win) {
     auto notifWnd = ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 
     DeleteThumbnailCacheDirectory();
-    TempStr symDir = AppGenDataFilenameTemp("crashinfo");
+
+    TempStr symDir = GetCrashInfoDirTemp();
     dir::RemoveAll(symDir);
 
     RemoveNotification(notifWnd);
@@ -4834,25 +4860,7 @@ void ClearHistory(MainWindow* win) {
     TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
 
-    // TODO: deletion takes time so run it async
-
-    /*
-    RunAsync([nFiles, win, notifWnd]() {
-        DeleteThumbnailCacheDirectory();
-        TempStr symDir = AppGenDataFilenameTemp("crashinfo");
-        dir::RemoveAll(symDir);
-
-        uitask::Post([nFiles, win, notifWnd]() {
-            RemoveNotification(notifWnd);
-            ::InvalidateRect(win->hwndCanvas, nullptr, true);
-            ::UpdateWindow(win->hwndCanvas);
-            char* msg2 = str::Format(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
-            ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
-            str::Free(msg);
-        });
-        DestroyTempAllocator();
-    });
-    */
+    // TODO: deletion takes time so run it async with RunAsync()
 }
 
 // try to trigger a crash due to corrupting allocator
@@ -6136,16 +6144,10 @@ void ShowCrashHandlerMessage() {
 }
 
 static void DownloadDebugSymbols() {
-    // over-ride the default symbols directory to be more useful
-    TempStr symDir = AppGenDataFilenameTemp("crashinfo");
-    SetSymbolsDir(symDir);
-
     bool ok = CrashHandlerDownloadSymbols();
-    TempStr msg = nullptr;
+    TempStr msg = (TempStr) "Failed to download symbols.";
     if (ok) {
-        msg = str::FormatTemp("Downloaded symbols! to %s", symDir);
-    } else {
-        msg = str::DupTemp("Failed to download symbols.");
+        msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir);
     }
     uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);

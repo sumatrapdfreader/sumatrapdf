@@ -26,6 +26,7 @@
 #define QM4(x, y, z, u) _QUOTEME4(x, y, z, u)
 
 // version as displayed in UI and included in resources
+// CURR_VERSION is 3.6.16105 for pre-release builds
 #ifndef PRE_RELEASE_VER
  #ifndef VER_QUALIFIER
   #define CURR_VERSION_STRA QM(CURR_VERSION)
@@ -50,7 +51,7 @@
 #endif
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
-#define kCopyrightStr      "Copyright 2006-2022 all authors (GPLv3)"
+#define kCopyrightStr      "Copyright 2006-2024 all authors (GPLv3)"
 #define kPublisherStr      "Krzysztof Kowalczyk"
 
 #define kAppName        "SumatraPDF"

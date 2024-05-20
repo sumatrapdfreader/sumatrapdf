@@ -470,10 +470,7 @@ static bool SetupPluginMode(Flags& i) {
 }
 
 static void SetupCrashHandler() {
-    const char* bits = IsProcess64() ? "64" : "32";
-    const char* ver = CURR_VERSION_STRA;
-    TempStr dirName = str::FormatTemp("crashinfo-%s-%s", ver, bits);
-    TempStr symDir = AppGenDataFilenameTemp(dirName);
+    TempStr symDir = GetCrashInfoDirTemp();
     TempStr crashDumpPath = path::JoinTemp(symDir, "sumatrapdfcrash.dmp");
     TempStr crashFilePath = path::JoinTemp(symDir, "sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
@@ -1028,7 +1025,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     bool noLogHere = isInstaller || isUninstaller;
 
     if (flags.log && !noLogHere) {
-        logFilePath = GetLogFilePath();
+        logFilePath = GetLogFilePathTemp();
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
         }

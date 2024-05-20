@@ -99,20 +99,19 @@ void SetAppDataPath(const char* path) {
     gAppDataDir.SetCopy(path);
 }
 
-// Generate the full path for a filename used by the app in the userdata path
-// Caller needs to free() the result
-TempStr AppGenDataFilenameTemp(const char* fileName) {
-    if (!fileName) {
+// Generate full path for a file or directory for storing data
+TempStr AppGenDataFilenameTemp(const char* name) {
+    if (!name) {
         return nullptr;
     }
 
     if (gAppDataDir && dir::Exists(gAppDataDir)) {
-        return path::JoinTemp(gAppDataDir, fileName);
+        return path::JoinTemp(gAppDataDir, name);
     }
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return path::GetPathOfFileInAppDirTemp(fileName);
+        return path::GetPathOfFileInAppDirTemp(name);
     }
 
     TempStr path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
@@ -120,9 +119,6 @@ TempStr AppGenDataFilenameTemp(const char* fileName) {
         return nullptr;
     }
     path = path::JoinTemp(path, kAppName);
-    if (!path) {
-        return nullptr;
-    }
 
     // use a different path for store builds
     if (gIsStoreBuild) {
@@ -137,7 +133,7 @@ TempStr AppGenDataFilenameTemp(const char* fileName) {
     if (!ok) {
         return nullptr;
     }
-    return path::JoinTemp(path, fileName);
+    return path::JoinTemp(path, name);
 }
 
 // List of rules used to detect TeX editors.

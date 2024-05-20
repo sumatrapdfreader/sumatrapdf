@@ -217,7 +217,15 @@ bool WriteCurrentLogToFile(const char* path) {
     if (slice.empty()) {
         return false;
     }
-    bool ok = file::WriteFile(path, slice);
+    bool ok = dir::CreateForFile(path);
+    if (!ok) {
+        logf("WriteCurrentLogToFile: dir::CreateForFile('%s') failed\n", path);
+        return false;
+    }
+    ok = file::WriteFile(path, slice);
+    if (!ok) {
+        logf("WriteCurrentLogToFile: file::WriteFile('%s') failed\n", path);
+    }
     return ok;
 }
 

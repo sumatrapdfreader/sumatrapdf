@@ -83,13 +83,12 @@ static HeapAllocator* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
+char* gSymbolsDir = nullptr;
+char* gCrashFilePath = nullptr;
+
 static char* gSymbolsUrl = nullptr;
 static char* gCrashDumpPath = nullptr;
 static char* gSymbolPath = nullptr;
-static char* gSymbolsDir = nullptr;
-static char* gLibMupdfPdbPath = nullptr;
-static char* gSumatraPdfDllPdbPath = nullptr;
-static char* gSumatraPdfPdbPath = nullptr;
 static char* gSystemInfo = nullptr;
 static char* gSettingsFile = nullptr;
 static char* gModulesInfo = nullptr;
@@ -97,7 +96,7 @@ static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static bool isDllBuild = false;
 static bool gCrashed = false;
-char* gCrashFilePath = nullptr;
+
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei{};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
@@ -227,22 +226,6 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
     return ok;
 }
 
-// no longer needed because we use unique directory for each build
-#if 0
-// We might have symbol files for older builds. If we're here, then we
-// didn't get the symbols so we assume it's because symbols didn't match
-// Returns false if files were there but we couldn't delete them
-static void DeleteSymbolsIfExist() {
-    // TODO: remove all files in symDir (symbols, previous crash files
-    bool ok = file::Delete(gLibMupdfPdbPath);
-    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
-    ok = file::Delete(gSumatraPdfPdbPath);
-    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
-    ok = file::Delete(gSumatraPdfDllPdbPath);
-    logf("DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
-}
-#endif
-
 // .pdb files are stored in a .zip file on a web server. Download that .zip
 // file as pdbZipPath, extract the symbols relevant to our executable
 // to symDir directory.
@@ -282,7 +265,7 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
 
 bool CrashHandlerDownloadSymbols() {
     log("CrashHandlerDownloadSymbols()\n");
-    if (!dir::Create(gSymbolsDir)) {
+    if (!dir::CreateAll(gSymbolsDir)) {
         log("CrashHandlerDownloadSymbols: couldn't create symbols dir\n");
         return false;
     }
@@ -666,16 +649,7 @@ bool SetSymbolsDir(const char* symDir) {
     if (!symDir) {
         return false;
     }
-
-    free(gSymbolsDir);
-    free(gLibMupdfPdbPath);
-    free(gSumatraPdfDllPdbPath);
-    free(gSumatraPdfPdbPath);
-
-    gSymbolsDir = str::Dup(symDir);
-    gSumatraPdfPdbPath = path::Join(symDir, "SumatraPDF.pdb");
-    gSumatraPdfDllPdbPath = path::Join(symDir, "SumatraPDF-dll.pdb");
-    gLibMupdfPdbPath = path::Join(symDir, "libmupdf.pdb");
+    str::ReplaceWithCopy(&gSymbolsDir, symDir);
     BuildSymbolPath();
     return true;
 }
@@ -797,10 +771,6 @@ void UninstallCrashHandler() {
     str::FreePtr(&gCrashDumpPath);
     str::FreePtr(&gSymbolsUrl);
     str::FreePtr(&gSymbolsDir);
-    str::FreePtr(&gLibMupdfPdbPath);
-    str::FreePtr(&gSumatraPdfPdbPath);
-    str::FreePtr(&gSumatraPdfDllPdbPath);
-    str::FreePtr(&gCrashFilePath);
 
     str::FreePtr(&gSymbolPath);
     str::FreePtr(&gSystemInfo);
