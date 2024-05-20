@@ -115,7 +115,7 @@ static const char* ParseNumber(ParseArgs& args, const char* data) {
         if ('+' == *data || '-' == *data) {
             data++;
         }
-        data = SkipDigits(data + 1);
+        data = SkipDigits(data);
     }
     // validity check
     if (!str::IsDigit(*(data - 1)) || str::IsDigit(*data)) {
@@ -236,6 +236,7 @@ static const char* ParseValue(ParseArgs& args, const char* data) {
     }
 }
 
+// return false if invalid JSON
 bool Parse(const char* data, ValueVisitor* visitor) {
     ParseArgs args(visitor);
     if (str::StartsWith(data, UTF8_BOM)) {

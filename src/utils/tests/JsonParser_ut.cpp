@@ -104,6 +104,11 @@ void JsonTest() {
         "-", "-01",    "{",    "{,}",    "{\"key\": }", "{\"key: 123 }", "{ 'key': 123 }", "[",  "[,]"};
 
     JsonVerifier verifyError(nullptr, 0);
+    {
+        auto s = invalidJson[10]; // this one caused buffer overflow
+        utassert(!json::Parse(s, &verifyError));
+    }
+
     for (size_t i = 0; i < dimof(invalidJson); i++) {
         utassert(!json::Parse(invalidJson[i], &verifyError));
     }
