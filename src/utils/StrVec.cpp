@@ -446,6 +446,20 @@ u32* OffsetsForString(const StrVecPage* p, int idx) {
     return offsets + (idx * 2);
 }
 
+// must have enough space
+static char* AppendJustString(StrVecPage* p, const char* s, int sLen, int idx) {
+    CrashIf(!s);
+    u32* offsets = OffsetsForString(p, idx);
+    char* dst = p->currEnd - sLen - 1; // 1 for zero termination
+    u32 off = (u32)(dst - (char*)p);
+    offsets[0] = (u32)off;
+    offsets[1] = (u32)sLen;
+    memcpy(dst, s, (size_t)sLen);
+    dst[sLen] = 0; // zero-terminate for C compat
+    p->currEnd = dst;
+    return dst;
+}
+
 // if idx < 0 we append, otherwise we replace
 char* StrVecPage::SetAt(const char* s, int sLen, int idx) {
     u32* offsets = OffsetsForString(this, idx);
@@ -468,32 +482,23 @@ char* StrVecPage::SetAt(const char* s, int sLen, int idx) {
         }
     }
 
-    int cbNeeded = 0;     // when replacing, we re-use offset / size slots
-    int cbStr = sLen + 1; // +1 for zero termination
+    int cbNeeded = 0; // when replacing, we re-use offset / size slots
     if (s) {
-        cbNeeded += cbStr;
+        cbNeeded += sLen + 1; // +1 for zero termination
     }
 
     int cbLeft = BytesLeft();
     if (cbNeeded > cbLeft) {
         return kNoSpace;
     }
-
-    currEnd -= cbStr;
-    off = (u32)(currEnd - start);
-    offsets[0] = (u32)off;
-    offsets[1] = (u32)sLen;
-    memcpy(currEnd, s, (size_t)sLen);
-    currEnd[sLen] = 0; // zero-terminate for C compat
-    return currEnd;
+    return AppendJustString(this, s, sLen, idx);
 }
 
 // if idx < 0 we append, otherwise we replace
 char* StrVecPage::Append(const char* s, int sLen) {
     int cbNeeded = sizeof(u32) * 2; // for offset / size
-    int cbStr = sLen + 1;           // +1 for zero termination
     if (s) {
-        cbNeeded += cbStr;
+        cbNeeded += sLen + 1; // +1 for zero termination
     }
     int cbLeft = BytesLeft();
     if (cbNeeded > cbLeft) {
@@ -507,13 +512,7 @@ char* StrVecPage::Append(const char* s, int sLen) {
         return nullptr;
     }
 
-    currEnd -= cbStr;
-    size_t off = (currEnd - (char*)this);
-    offsets[0] = (u32)off;
-    offsets[1] = (u32)sLen;
-    memcpy(currEnd, s, (size_t)sLen);
-    currEnd[sLen] = 0; // zero-terminate for C compat
-    return currEnd;
+    return AppendJustString(this, s, sLen, idx);
 }
 
 char* StrVecPage::AtHelper(int idx, int& sLen) const {
