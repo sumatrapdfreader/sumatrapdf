@@ -146,6 +146,13 @@ bool StrVec::Remove(const char* s) {
     return false;
 }
 
+StrVec::iterator StrVec::begin() const {
+    return StrVec::iterator(this, 0);
+}
+StrVec::iterator StrVec::end() const {
+    return StrVec::iterator(this, this->Size());
+}
+
 StrVec::iterator::iterator(const StrVec* v, int idx) {
     this->v = v;
     this->idx = idx;
@@ -576,7 +583,7 @@ static void CompactPages(StrVec2* v, int extraSize) {
     auto first = CompactStrVecPages(v->first, extraSize);
     v->first = first;
     v->curr = first;
-    CrashIf(first && (v->cachedSize != first->nStrings));
+    CrashIf(first && (v->size != first->nStrings));
 }
 
 void StrVec2::Reset() {
@@ -584,7 +591,7 @@ void StrVec2::Reset() {
     first = nullptr;
     curr = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
-    cachedSize = 0;
+    size = 0;
 }
 
 StrVec2::~StrVec2() {
@@ -627,7 +634,7 @@ static void UpdateSize(StrVec2* v) {
 #endif
 
 int StrVec2::Size() const {
-    return cachedSize;
+    return size;
 }
 
 static int CalcNextPageSize(int currSize) {
@@ -671,11 +678,7 @@ char* StrVec2::Append(const char* s, int sLen) {
         curr = page;
     }
     auto res = curr->Append(s, sLen);
-#if 1
-    cachedSize++;
-#else
-    UpdateSize(this);
-#endif
+    size++;
     return res;
 }
 
@@ -754,11 +757,7 @@ char* StrVec2::RemoveAt(int idx) {
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAt(idxInPage);
-#if 1
-    cachedSize--;
-#else
-    UpdateSize(this);
-#endif
+    size--;
     return res;
 }
 
@@ -768,12 +767,16 @@ char* StrVec2::RemoveAtFast(int idx) {
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAtFast(idxInPage);
-#if 1
-    cachedSize--;
-#else
-    UpdateSize(this);
-#endif
+    size--;
     return res;
+}
+
+StrVec2::iterator StrVec2::begin() const {
+    return StrVec2::iterator(this, 0);
+}
+
+StrVec2::iterator StrVec2::end() const {
+    return StrVec2::iterator(this, this->Size());
 }
 
 StrVec2::iterator::iterator(const StrVec2* v, int idx) {

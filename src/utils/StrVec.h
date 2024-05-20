@@ -39,16 +39,12 @@ struct StrVec {
         char* operator*() const;
         iterator& operator++();    // ++it
         iterator& operator++(int); // it++
-        iterator& operator+(int);
+        iterator& operator+(int);  // it += n
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
-    iterator begin() const {
-        return iterator(this, 0);
-    }
-    iterator end() const {
-        return iterator(this, this->Size());
-    }
+    iterator begin() const;
+    iterator end() const;
 };
 
 void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
@@ -66,7 +62,7 @@ struct StrVec2 {
     StrVecPage* first = nullptr;
     StrVecPage* curr = nullptr;
     int nextPageSize = 256;
-    int cachedSize = 0;
+    int size = 0;
 
     StrVec2() = default;
     StrVec2(const StrVec2& that);
@@ -99,17 +95,12 @@ struct StrVec2 {
         char* operator*() const;
         iterator& operator++();    // ++it
         iterator& operator++(int); // it++
-        iterator& operator+(int);
+        iterator& operator+(int);  // it += n
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
-    iterator begin() const {
-        return iterator{this, 0};
-    }
-    iterator end() const {
-        int n = this->Size();
-        return iterator{this, n};
-    }
+    iterator begin() const;
+    iterator end() const;
 };
 
 void Sort(StrVec2& v, StrLessFunc lessFn = nullptr);
