@@ -529,9 +529,10 @@ static void FreePages(StrVecPage* toFree) {
 
 static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
     if (!first) {
+        CrashIf(extraSize > 0);
         return nullptr;
     }
-    if (!first->next) {
+    if (!first->next && extraSize == 0) {
         // if only one, no need to compact
         return first;
     }
@@ -550,8 +551,10 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
     }
     // strLenTotal might be more than needed if we removed strings, but that's ok
     int pageSize = kStrVecPageHdrSize + (nStrings * sizeof(u32)) + strLenTotal;
-    pageSize += extraSize;
-    pageSize = RoundUp(pageSize, 64); // just in case
+    if (extraSize > 0) {
+        pageSize += extraSize;
+    }
+    pageSize = RoundUp(pageSize, 64); // jic
     auto page = AllocStrVecPage(pageSize);
     curr = first;
     int i, n, sLen;
@@ -576,127 +579,8 @@ static void CompactPages(StrVec2* v, int extraSize) {
     CrashIf(first && (v->cachedSize != first->nStrings));
 }
 
-struct SideString {
-    SideString* next;
-    int idx;
-    char* s; // just for debugger, should be <start of SideStrings> + sizeof(SideStrings)
-    // string data followss
-};
-
-SideString* AllocSideString(int idx, const char* s, int sLen) {
-    int n = sLen + 1 + sizeof(SideString);
-    auto ss = (SideString*)Allocator::Alloc(nullptr, (size_t)n);
-    ss->next = 0;
-    ss->idx = idx;
-    char* s2 = (char*)ss;
-    s2 += sizeof(SideString);
-    memmove(s2, s, sLen);
-    s2[sLen] = 0;
-    ss->s = s2;
-    return ss;
-}
-
-static void FreeSideStrings(SideString** firstPtr) {
-    auto curr = *firstPtr;
-    *firstPtr = nullptr;
-    while (curr) {
-        SideString* next = curr->next;
-        Allocator::Free(nullptr, (void*)curr);
-        curr = next;
-    }
-}
-
-// to ensure validity of a string after RemoveAt() and RemoveAtFast(), we can't
-// free the strings immediately. We put them on a side queue to be freed at end
-static void SetSideStringAside(SideString** firstRemovedPtr, SideString* ss) {
-    ss->next = *firstRemovedPtr;
-    *firstRemovedPtr = ss;
-}
-
-static bool NeedRemove(SideString* curr, int idx) {
-    while (curr) {
-        if (curr->idx == idx) {
-            return true;
-        }
-        curr = curr->next;
-    }
-    return false;
-}
-
-// return true if removed a string for idx
-static char* SideStringsRemoveAt(SideString** firstPtr, SideString** firstRemovedPtr, int idx) {
-    auto first = *firstPtr;
-    if (!first) {
-        return nullptr;
-    }
-    int n = 0;
-    if (!NeedRemove(first, idx)) {
-        return nullptr;
-    }
-    if (!first->next) {
-        // fast path when there's only one
-        SetSideStringAside(firstRemovedPtr, first);
-        *firstPtr = nullptr;
-        return first->s;
-    }
-
-#if 1
-    // this reverses the order side strings but is easier to implement
-    // than order-preserving
-    SideString* newFirst = nullptr;
-    auto curr = *firstPtr;
-    char* val = nullptr;
-    while (curr) {
-        auto next = curr->next;
-        if (curr->idx == idx) {
-            // removing this node
-            CrashIf(val); // we only expect one node matching idx
-            val = curr->s;
-            SetSideStringAside(firstRemovedPtr, curr);
-        } else {
-            curr->next = newFirst;
-            newFirst = curr;
-        }
-        curr = next;
-    }
-    CrashIf(!val);
-    *firstPtr = newFirst;
-#else
-    // slower but simpler implemention
-    // TODO: remove when above is more tested
-    auto v = Vec<SideString*>(n);
-    auto curr = first;
-    char* val = nullptr;
-    while (curr) {
-        auto next = curr->next;
-        if (curr->idx != idx) {
-            v.Append(curr);
-        } else {
-            val = curr->s;
-            SetSideStringAside(firstRemovedPtr, curr);
-        }
-        curr = next;
-    }
-    CrashIf(!val);
-    curr = v[0];
-    curr->next = nullptr;
-    *firstPtr = curr;
-    n = v.Size();
-    auto prev = curr;
-    for (int i = 1; i < n; i++) {
-        curr = v[i];
-        curr->next = nullptr;
-        prev->next = curr;
-        prev = curr;
-    }
-#endif
-    return val;
-}
-
 void StrVec2::Reset() {
     FreePages(first);
-    FreeSideStrings(&firstSide);
-    FreeSideStrings(&firstSideRemoved);
     first = nullptr;
     curr = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
@@ -730,6 +614,7 @@ StrVec2& StrVec2::operator=(const StrVec2& that) {
     return *this;
 }
 
+#if 0
 static void UpdateSize(StrVec2* v) {
     int n = 0;
     auto page = v->first;
@@ -739,6 +624,7 @@ static void UpdateSize(StrVec2* v) {
     }
     v->cachedSize = n;
 }
+#endif
 
 int StrVec2::Size() const {
     return cachedSize;
@@ -785,7 +671,11 @@ char* StrVec2::Append(const char* s, int sLen) {
         curr = page;
     }
     auto res = curr->Append(s, sLen);
+#if 1
+    cachedSize++;
+#else
     UpdateSize(this);
+#endif
     return res;
 }
 
@@ -801,21 +691,7 @@ static StrVecPage* PageForIdx(const StrVec2* v, int& idx) {
     return nullptr;
 }
 
-static char* SideStringAt(SideString* first, int idx) {
-    while (first) {
-        if (first->idx == idx) {
-            return first->s;
-        }
-        first = first->next;
-    }
-    return nullptr;
-}
-
 char* StrVec2::At(int idx) const {
-    char* s = SideStringAt(firstSide, idx);
-    if (s) {
-        return s;
-    }
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     return page->At(idxInPage);
@@ -849,44 +725,55 @@ int StrVec2::FindI(const char* s, int startAt) const {
 }
 
 // returns a string
+// note: this might invalidate previously returned strings because
+// it might re-allocate memore used for those strings
 char* StrVec2::SetAt(int idx, const char* s, int sLen) {
-    int idxInPage = idx;
-    auto page = PageForIdx(this, idxInPage);
-    if (sLen < 0) {
-        sLen = str::Leni(s);
+    {
+        int idxInPage = idx;
+        auto page = PageForIdx(this, idxInPage);
+        if (sLen < 0) {
+            sLen = str::Leni(s);
+        }
+        char* res = page->Append(s, sLen, idxInPage);
+        if (res != kNoSpace) {
+            return res;
+        }
     }
-    char* res = page->Append(s, sLen, idxInPage);
-    // remove stale side string for this index
-    SideStringsRemoveAt(&firstSide, &firstSideRemoved, idx);
-    if (res != kNoSpace) {
-        return res;
-    }
-    auto ss = AllocSideString(idx, s, sLen);
-    ss->next = firstSide;
-    firstSide = ss;
-    return ss->s;
+    // perf: we assume that there will be more SetAt() calls so pre-allocate
+    // extra space to make many SetAt() calls less expensive
+    int extraSpace = RoundUp(sLen, 2048);
+    CompactPages(this, extraSpace);
+    char* res = first->Append(s, sLen, idx);
+    CrashIf(res == kNoSpace);
+    return res;
 }
 
 // remove string at idx and return it
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAt(int idx) {
-    auto maybeRes = SideStringsRemoveAt(&firstSide, &firstSideRemoved, idx);
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAt(idxInPage);
+#if 1
+    cachedSize--;
+#else
     UpdateSize(this);
-    return maybeRes ? maybeRes : res;
+#endif
+    return res;
 }
 
 // remove string at idx more quickly but will change order of string
 // return value is valid as long as StrVec2 is valid
 char* StrVec2::RemoveAtFast(int idx) {
-    auto maybeRes = SideStringsRemoveAt(&firstSide, &firstSideRemoved, idx);
     int idxInPage = idx;
     auto page = PageForIdx(this, idxInPage);
     auto res = page->RemoveAtFast(idxInPage);
+#if 1
+    cachedSize--;
+#else
     UpdateSize(this);
-    return maybeRes ? maybeRes : res;
+#endif
+    return res;
 }
 
 StrVec2::iterator::iterator(const StrVec2* v, int idx) {
@@ -897,12 +784,6 @@ StrVec2::iterator::iterator(const StrVec2* v, int idx) {
 }
 
 char* StrVec2::iterator::operator*() const {
-    if (v->firstSide) {
-        char* s = SideStringAt(v->firstSide, idx);
-        if (s) {
-            return s;
-        }
-    }
     return page->At(idxInPage);
 }
 

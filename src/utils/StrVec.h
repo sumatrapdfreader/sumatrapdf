@@ -61,13 +61,10 @@ TempStr JoinTemp(const StrVec& v, const char* sep);
 ByteSlice ToByteSlice(const char* s);
 
 struct StrVecPage;
-struct SideString;
 
 struct StrVec2 {
     StrVecPage* first = nullptr;
     StrVecPage* curr = nullptr;
-    SideString* firstSide = nullptr;
-    SideString* firstSideRemoved = nullptr;
     int nextPageSize = 256;
     int cachedSize = 0;
 
@@ -93,8 +90,10 @@ struct StrVec2 {
     struct iterator {
         const StrVec2* v;
         int idx;
-        StrVecPage* page;
+
+        // perf: cache page, idxInPage from prev iteration
         int idxInPage;
+        StrVecPage* page;
 
         iterator(const StrVec2* v, int idx);
         char* operator*() const;
