@@ -14,16 +14,31 @@ int utf8RuneLen(const u8* s);
 
 template <typename T>
 struct Span {
+    T* d = nullptr;
+    int size = 0;
+
     Span() = default;
     ~Span() = default;
-    Span(const T* d, int sz) : d((T*)d), sz(sz) {
+    Span(const T* d, int size) : d((T*)d), size(size) {
     }
-    T* d = nullptr;
-    int sz = 0;
+    T* Data() const {
+        return d;
+    }
+    int Size() const {
+        return size;
+    }
 };
 
 struct StrSpan : Span<char> {
+    StrSpan() = default;
     StrSpan(const char* s);
+    StrSpan(const char* s, int sLen);
+    char* Str() const {
+        return d;
+    }
+    int Len() const {
+        return size;
+    }
 };
 
 struct ByteSlice {

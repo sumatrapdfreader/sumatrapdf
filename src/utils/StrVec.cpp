@@ -401,22 +401,30 @@ struct StrVecPage {
     // strings are allocated from the end
 
     char* At(int) const;
+    StrSpan AtSpan(int i) const;
     char* RemoveAt(int);
     char* RemoveAtFast(int);
 
-    char* AtHelper(int, u32*&) const;
+    char* AtHelper(int, int& sLen) const;
     int BytesLeft();
-    char* Append(const char* s, int len, int idxSet = -1);
+    char* Append(const char* s, int len);
+    char* SetAt(const char* s, int len, int idxSet);
 };
 
 constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
 
+static int cbOffsetsSize(int nStrings) {
+    return nStrings * 2 * sizeof(u32);
+}
+
 int StrVecPage::BytesLeft() {
     char* start = (char*)this;
     start += kStrVecPageHdrSize;
-    int nTotal = (int)(currEnd - start);
-    int nOffsets = nStrings * sizeof(u32);
-    return nTotal - nOffsets;
+    int cbTotal = (int)(currEnd - start);
+    int cbOffsets = cbOffsetsSize(nStrings);
+    auto res = cbTotal - cbOffsets;
+    CrashIf(res < 0);
+    return res;
 }
 
 static StrVecPage* AllocStrVecPage(int pageSize) {
@@ -431,97 +439,137 @@ static StrVecPage* AllocStrVecPage(int pageSize) {
 
 #define kNoSpace (char*)-2
 
-char* StrVecPage::Append(const char* s, int sLen, int idxToSet) {
-    bool append = idxToSet < 0; // otherwise replace
-    char* start = (char*)this;
+u32* OffsetsForString(const StrVecPage* p, int idx) {
+    CrashIf(idx < 0 || idx >= p->nStrings);
+    char* start = (char*)p;
     u32* offsets = (u32*)(start + kStrVecPageHdrSize);
-    if (!append) {
-        if (!s) {
-            // fast path for null, doesn't require new space at all
-            offsets[idxToSet] = kNullOffset;
-            return nullptr;
-        }
-        u32 off = offsets[idxToSet];
-        if (off != kNullOffset) {
-            auto curr = start + offsets[idxToSet];
-            int currLen = str::Leni(curr);
-            if (sLen <= currLen) {
-                // fost path for when new string is smaller than the current string
-                memcpy(curr, s, (size_t)sLen);
-                curr[sLen] = 0; // zero-terminate for C compat
-                return curr;
-            }
+    return offsets + (idx * 2);
+}
+
+// if idx < 0 we append, otherwise we replace
+char* StrVecPage::SetAt(const char* s, int sLen, int idx) {
+    u32* offsets = OffsetsForString(this, idx);
+    if (!s) {
+        // fast path for null, doesn't require new space at all
+        offsets[0] = kNullOffset;
+        offsets[1] = 0;
+        return nullptr;
+    }
+    u32 off = offsets[0];
+    char* start = (char*)this;
+    if (off != kNullOffset) {
+        // fast path for when new string is smaller than the current string
+        int currLen = (int)offsets[1];
+        if (sLen <= currLen) {
+            auto curr = start + off;
+            memcpy(curr, s, (size_t)sLen);
+            curr[sLen] = 0; // zero-terminate for C compat
+            return curr;
         }
     }
 
-    int nBytesNeeded = append ? sizeof(u32) : 0; // for index
-    int nBytes = sLen + 1;                       // +1 for zero termination
+    int cbNeeded = 0;     // when replacing, we re-use offset / size slots
+    int cbStr = sLen + 1; // +1 for zero termination
     if (s) {
-        nBytesNeeded += nBytes;
+        cbNeeded += cbStr;
     }
-    if (append) {
-        idxToSet = nStrings;
-    }
-    int nBytesLeft = BytesLeft();
-    if (nBytesNeeded > nBytesLeft) {
+
+    int cbLeft = BytesLeft();
+    if (cbNeeded > cbLeft) {
         return kNoSpace;
     }
-    if (append) {
-        nStrings++;
-    }
-    if (!s) {
-        offsets[idxToSet] = kNullOffset;
-        return nullptr;
-    }
-    currEnd -= nBytes;
-    size_t offset = (currEnd - start);
-    offsets[idxToSet] = (u32)offset;
+
+    currEnd -= cbStr;
+    off = (u32)(currEnd - start);
+    offsets[0] = (u32)off;
+    offsets[1] = (u32)sLen;
     memcpy(currEnd, s, (size_t)sLen);
     currEnd[sLen] = 0; // zero-terminate for C compat
     return currEnd;
 }
 
-char* StrVecPage::AtHelper(int idx, u32*& offsets) const {
-    CrashIf(idx < 0 || idx >= nStrings);
-    u8* start = (u8*)this;
-    offsets = (u32*)(start + kStrVecPageHdrSize);
-    u32 offset = offsets[idx];
-    if (offset == kNullOffset) {
+// if idx < 0 we append, otherwise we replace
+char* StrVecPage::Append(const char* s, int sLen) {
+    int cbNeeded = sizeof(u32) * 2; // for offset / size
+    int cbStr = sLen + 1;           // +1 for zero termination
+    if (s) {
+        cbNeeded += cbStr;
+    }
+    int cbLeft = BytesLeft();
+    if (cbNeeded > cbLeft) {
+        return kNoSpace;
+    }
+    int idx = nStrings++;
+    u32* offsets = OffsetsForString(this, idx);
+    if (!s) {
+        offsets[0] = kNullOffset;
+        offsets[1] = 0;
         return nullptr;
     }
-    char* s = (char*)(start + offset);
+
+    currEnd -= cbStr;
+    size_t off = (currEnd - (char*)this);
+    offsets[0] = (u32)off;
+    offsets[1] = (u32)sLen;
+    memcpy(currEnd, s, (size_t)sLen);
+    currEnd[sLen] = 0; // zero-terminate for C compat
+    return currEnd;
+}
+
+char* StrVecPage::AtHelper(int idx, int& sLen) const {
+    u8* start = (u8*)this;
+    u32* offsets = OffsetsForString(this, idx);
+    u32 off = offsets[0];
+    sLen = (int)offsets[1];
+    if (off == kNullOffset) {
+        return nullptr;
+    }
+    char* s = (char*)(start + off);
     return s;
 }
 
 char* StrVecPage::At(int idx) const {
-    u32* offsets;
-    char* s = AtHelper(idx, offsets);
+    int sLen;
+    char* s = AtHelper(idx, sLen);
     return s;
+}
+
+StrSpan StrVecPage::AtSpan(int idx) const {
+    int sLen;
+    char* s = AtHelper(idx, sLen);
+    return {s, sLen};
 }
 
 // we don't de-allocate removed strings so we can safely return the string
 char* StrVecPage::RemoveAt(int idx) {
-    u32* offsets;
-    char* s = AtHelper(idx, offsets);
+    int sLen;
+    char* s = AtHelper(idx, sLen);
     nStrings--;
-
-    int nToCopy = (nStrings - idx) * sizeof(u32);
+    int nToCopy = cbOffsetsSize(nStrings - idx);
     if (nToCopy == 0) {
+        // last string
+        // TODO(perf): removing the last string
+        // if currEnd is offset of this string, push it forward by sLen
+        // to free the space used by it
         return s;
     }
-    u32* dst = offsets + idx;
-    u32* src = offsets + idx + 1;
+    u32* dst = OffsetsForString(this, idx);
+    u32* src = dst + 2;
     memmove((void*)dst, (void*)src, nToCopy);
     return s;
 }
 
 char* StrVecPage::RemoveAtFast(int idx) {
-    u32* offsets;
-    char* s = AtHelper(idx, offsets);
+    int sLen;
+    char* s = AtHelper(idx, sLen);
+    // TODO(perf): if removing the last string
+    // if currEnd is offset of this string, push it forward by sLen
+    // to free the space used by it
+    u32* dst = OffsetsForString(this, idx);
+    u32* src = OffsetsForString(this, nStrings - 1);
+    *dst++ = *src++;
+    *dst = *src;
     nStrings--;
-
-    int lastIdx = nStrings;
-    offsets[idx] = offsets[lastIdx];
     return s;
 }
 
@@ -540,34 +588,34 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         return nullptr;
     }
     int nStrings = 0;
-    int strLenTotal = 0; // including 0-termination
+    int cbStringsTotal = 0; // including 0-termination
     auto curr = first;
     char *pageStart, *pageEnd;
-    int strsLen;
+    int cbStrings;
     while (curr) {
         nStrings += curr->nStrings;
         pageStart = (char*)curr;
         pageEnd = pageStart + curr->pageSize;
-        strsLen = (int)(pageEnd - curr->currEnd);
-        strLenTotal += strsLen;
+        cbStrings = (int)(pageEnd - curr->currEnd);
+        cbStringsTotal += cbStrings;
         curr = curr->next;
     }
     // strLenTotal might be more than needed if we removed strings, but that's ok
-    int pageSize = kStrVecPageHdrSize + (nStrings * sizeof(u32)) + strLenTotal;
+    int pageSize = kStrVecPageHdrSize + cbOffsetsSize(nStrings) + cbStringsTotal;
     if (extraSize > 0) {
         pageSize += extraSize;
     }
     pageSize = RoundUp(pageSize, 64); // jic
     auto page = AllocStrVecPage(pageSize);
+    int n;
+    StrSpan s;
     curr = first;
-    int i, n, sLen;
-    char* s;
     while (curr) {
         n = curr->nStrings;
-        for (i = 0; i < n; i++) {
-            s = curr->At(i);
-            sLen = str::Leni(s);
-            page->Append(s, sLen, -1);
+        // TODO(perf): could optimize slightly
+        for (int i = 0; i < n; i++) {
+            s = curr->AtSpan(i);
+            page->Append(s.Str(), s.Len());
         }
         curr = curr->next;
     }
@@ -647,7 +695,7 @@ char* StrVec2::Append(const char* s, int sLen) {
     if (sLen < 0) {
         sLen = str::Leni(s);
     }
-    int nBytesNeeded = sizeof(u32); // for index
+    int nBytesNeeded = sizeof(u32) * 2; // for index and size
     if (s) {
         nBytesNeeded += (sLen + 1); // +1 for zero termination
     }
@@ -692,8 +740,7 @@ char* StrVec2::At(int idx) const {
 
 StrSpan StrVec2::AtSpan(int idx) const {
     auto [page, idxInPage] = PageForIdx(this, idx);
-    char* s = page->At(idxInPage);
-    return StrSpan(s);
+    return page->AtSpan(idxInPage);
 }
 
 char* StrVec2::operator[](int idx) const {
@@ -715,6 +762,7 @@ int StrVec2::Find(const char* s, int startAt) const {
 int StrVec2::FindI(const char* s, int startAt) const {
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
+        // TODO(perf): check length firsts
         char* s2 = *it;
         if (str::EqI(s, s2)) {
             return it.idx;
@@ -732,16 +780,16 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
         if (sLen < 0) {
             sLen = str::Leni(s);
         }
-        char* res = page->Append(s, sLen, idxInPage);
+        char* res = page->SetAt(s, sLen, idxInPage);
         if (res != kNoSpace) {
             return res;
         }
     }
     // perf: we assume that there will be more SetAt() calls so pre-allocate
     // extra space to make many SetAt() calls less expensive
-    int extraSpace = RoundUp(sLen, 2048);
+    int extraSpace = RoundUp(sLen + 1, 2048);
     CompactPages(this, extraSpace);
-    char* res = first->Append(s, sLen, idx);
+    char* res = first->SetAt(s, sLen, idx);
     CrashIf(res == kNoSpace);
     return res;
 }
@@ -827,11 +875,19 @@ void Sort(StrVec2& v, StrLessFunc lessFn) {
         lessFn = strLess;
     }
     CompactPages(&v, 0);
+    if (v.Size() == 0) {
+        return;
+    }
+    CrashIf(!v.first);
+    CrashIf(v.first->next);
+    int n = v.Size();
 
     const char* pageStart = (const char*)v.first;
-    u32* b = (u32*)(pageStart + kStrVecPageHdrSize);
-    u32* e = b + v.first->nStrings;
-    std::sort(b, e, [pageStart, lessFn](u32 off1, u32 off2) -> bool {
+    u64* b = (u64*)(pageStart + kStrVecPageHdrSize);
+    u64* e = b + n;
+    std::sort(b, e, [pageStart, lessFn](u64 offLen1, u64 offLen2) -> bool {
+        u32 off1 = (u32)(offLen1 & 0xffffffff);
+        u32 off2 = (u32)(offLen2 & 0xffffffff);
         const char* s1 = (off1 == kNullOffset) ? nullptr : pageStart + off1;
         const char* s2 = (off2 == kNullOffset) ? nullptr : pageStart + off2;
         bool ret = lessFn(s1, s2);

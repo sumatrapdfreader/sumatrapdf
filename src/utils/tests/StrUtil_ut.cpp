@@ -301,6 +301,7 @@ static void StrVecTest() {
     StrVec v;
     utassert(v.Size() == 0);
     AppendStrings(v, strs, n);
+    StrVecCheckIter(v, strs, 0);
 
     StrVec sortedView = v;
     Sort(sortedView);
