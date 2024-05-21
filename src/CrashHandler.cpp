@@ -149,13 +149,10 @@ static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
     GetStressTestInfo(&s);
     s.Append("\n");
 
+    bool addCallstack = !noCallstack;
     if (reportCond) {
         // this is not a crash but debug report, we don't have an exception
-        if (noCallstack) {
-            // dummy line so that we don't have to
-            s.Append("\nCrashed thread:\n");
-            s.Append("00007FF79239E91A 01:000000000001D91A dummy!quick report\n");
-        } else {
+        if (addCallstack) {
             s.Append("\nCrashed thread:\n");
             dbghelp::GetCurrentThreadCallstack(s);
         }
@@ -163,7 +160,7 @@ static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     }
 
-    if (!noCallstack) {
+    if (addCallstack) {
         dbghelp::GetAllThreadsCallstacks(s);
         s.Append("\n");
     }

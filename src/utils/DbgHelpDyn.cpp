@@ -337,7 +337,7 @@ void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
     } else {
         AppendAddress(s, addr);
     }
-    s.Append("\r\n");
+    s.Append("\n");
 }
 
 static bool GetStackFrameInfo(str::Str& s, STACKFRAME64* stackFrame, CONTEXT* ctx, HANDLE hThread) {
@@ -367,7 +367,7 @@ static bool GetStackFrameInfo(str::Str& s, STACKFRAME64* stackFrame, CONTEXT* ct
 
 static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
     if (!CanStackWalk()) {
-        s.Append("GetCallstack(): CanStackWalk() returned false");
+        s.Append("GetCallstack(): CanStackWalk() returned false\n");
         return false;
     }
 
@@ -401,7 +401,7 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
         framesCount++;
     }
     if (0 == framesCount) {
-        s.Append("StackWalk64() couldn't get even the first stack frame info");
+        s.Append("StackWalk64() couldn't get even the first stack frame info\n");
         return false;
     }
     return true;
@@ -412,18 +412,18 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
         return;
     }
 
-    s.AppendFmt("\r\nThread: %x\r\n", threadId);
+    s.AppendFmt("\nThread: %x\n", threadId);
 
     DWORD access = THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SUSPEND_RESUME;
     HANDLE hThread = OpenThread(access, false, threadId);
     if (!hThread) {
-        s.Append("Failed to OpenThread()\r\n");
+        s.Append("Failed to OpenThread()\n");
         return;
     }
 
     DWORD res = SuspendThread(hThread);
     if (-1 == res) {
-        s.Append("Failed to SuspendThread()\r\n");
+        s.Append("Failed to SuspendThread()\n");
     } else {
         CONTEXT ctx{};
         ctx.ContextFlags = CONTEXT_FULL;
@@ -431,7 +431,7 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
         if (ok) {
             GetCallstack(s, ctx, hThread);
         } else {
-            s.Append("Failed to GetThreadContext()\r\n");
+            s.Append("Failed to GetThreadContext()\n");
         }
 
         ResumeThread(hThread);
@@ -526,7 +526,7 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
 
     EXCEPTION_RECORD* excRecord = excPointers->ExceptionRecord;
     DWORD excCode = excRecord->ExceptionCode;
-    s.AppendFmt("Exception: %08X %s\r\n", (int)excCode, ExceptionNameFromCode(excCode));
+    s.AppendFmt("Exception: %08X %s\n", (int)excCode, ExceptionNameFromCode(excCode));
 
     s.AppendFmt("Faulting IP: ");
     GetAddressInfo(s, (DWORD64)excRecord->ExceptionAddress, false);
@@ -545,36 +545,36 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
         } else {
             s.Append("unknown readWriteFlag: %d", readWriteFlag);
         }
-        s.Append("\r\n");
+        s.Append("\n");
     }
 
     PCONTEXT ctx = excPointers->ContextRecord;
-    s.AppendFmt("\r\nRegisters:\r\n");
+    s.AppendFmt("\nRegisters:\n");
 #if IS_INTEL_64 == 1
     s.AppendFmt(
-        "RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\r\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\r\n"
-        "R8: %016I64X\r\nR9: "
-        "%016I64X\r\nR10:%016I64X\r\nR11:%016I64X\r\nR12:%016I64X\r\nR13:%016I64X\r\nR14:%016I64X\r\nR15:%016I64X\r\n",
+        "RAX:%016I64X  RBX:%016I64X  RCX:%016I64X\nRDX:%016I64X  RSI:%016I64X  RDI:%016I64X\n"
+        "R8: %016I64X\nR9: "
+        "%016I64X\nR10:%016I64X\nR11:%016I64X\nR12:%016I64X\nR13:%016I64X\nR14:%016I64X\nR15:%016I64X\n",
         ctx->Rax, ctx->Rbx, ctx->Rcx, ctx->Rdx, ctx->Rsi, ctx->Rdi, ctx->R8, ctx->R9, ctx->R10, ctx->R11, ctx->R12,
         ctx->R13, ctx->R14, ctx->R15);
-    s.AppendFmt("CS:RIP:%04X:%016I64X\r\n", ctx->SegCs, ctx->Rip);
-    s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\r\n", ctx->SegSs, (unsigned int)ctx->Rsp, (unsigned int)ctx->Rbp);
-    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
-    s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
+    s.AppendFmt("CS:RIP:%04X:%016I64X\n", ctx->SegCs, ctx->Rip);
+    s.AppendFmt("SS:RSP:%04X:%016X  RBP:%08X\n", ctx->SegSs, (unsigned int)ctx->Rsp, (unsigned int)ctx->Rbp);
+    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
+    s.AppendFmt("Flags:%08X\n", ctx->EFlags);
 #elif IS_INTEL_32 == 1
-    s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\r\nEDX:%08X  ESI:%08X  EDI:%08X\r\n", ctx->Eax, ctx->Ebx, ctx->Ecx,
+    s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx,
                 ctx->Edx, ctx->Esi, ctx->Edi);
-    s.AppendFmt("CS:EIP:%04X:%08X\r\n", ctx->SegCs, ctx->Eip);
-    s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\r\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
-    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\r\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
-    s.AppendFmt("Flags:%08X\r\n", ctx->EFlags);
+    s.AppendFmt("CS:EIP:%04X:%08X\n", ctx->SegCs, ctx->Eip);
+    s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
+    s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
+    s.AppendFmt("Flags:%08X\n", ctx->EFlags);
 #elif IS_ARM_64 == 1
-    s.AppendFmt("Fp:%016I64X\r\nLr:%016I64X\r\nSp:%016I64X\r\nPc:%016I64X\r\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc);
+    s.AppendFmt("Fp:%016I64X\nLr:%016I64X\nSp:%016I64X\nPc:%016I64X\n", ctx->Fp, ctx->Lr, ctx->Sp, ctx->Pc);
 #else
 #error "Unsupported CPU architecture"
 #endif
 
-    s.Append("\r\nCrashed thread:\r\n");
+    s.Append("\nCrashed thread:\n");
     // it's not really for current thread, but it seems to work
     GetCallstack(s, *ctx, GetCurrentThread());
 }
