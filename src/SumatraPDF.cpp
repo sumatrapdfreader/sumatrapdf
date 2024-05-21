@@ -5801,7 +5801,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 }
 
 // minimum size of the window
-constexpr LONG kWinMinDx = 480;
+constexpr LONG kWinMinDx = 500;
 constexpr LONG kWinMinDy = 320;
 
 static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
