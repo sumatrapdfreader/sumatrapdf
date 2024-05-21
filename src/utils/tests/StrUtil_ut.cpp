@@ -456,67 +456,82 @@ static void StrVecTest3() {
 
 template <typename StrVec>
 static void StrVecTest4() {
-    {
-        StrVec v;
-        AppendStrings(v, strs, dimofi(strs));
+    StrVec v;
+    AppendStrings(v, strs, dimofi(strs));
 
-        int idx = 2;
+    int idx = 2;
 
-        utassert(str::Eq(strs[idx], v[idx]));
-        auto s = "new value of string, should be large to get results faster";
-        // StrVec2: tests adding where can allocate new value inside a page
+    utassert(str::Eq(strs[idx], v[idx]));
+    auto s = "new value of string, should be large to get results faster";
+    // StrVec2: tests adding where can allocate new value inside a page
+    v.SetAt(idx, s);
+    utassert(str::Eq(s, v[idx]));
+    v.SetAt(idx, nullptr);
+    utassert(str::Eq(nullptr, v[idx]));
+    v.SetAt(idx, "");
+    utassert(str::Eq("", v[idx]));
+    // StrVec2: force allocating in side strings
+    // first page is 256 bytes so this should force allocation in sideStrings
+    int n = 256 / str::Leni(s);
+    for (int i = 0; i < n; i++) {
         v.SetAt(idx, s);
-        utassert(str::Eq(s, v[idx]));
-        v.SetAt(idx, nullptr);
-        utassert(str::Eq(nullptr, v[idx]));
-        v.SetAt(idx, "");
-        utassert(str::Eq("", v[idx]));
-        // StrVec2: force allocating in side strings
-        // first page is 256 bytes so this should force allocation in sideStrings
-        int n = 256 / str::Leni(s);
-        for (int i = 0; i < n; i++) {
-            v.SetAt(idx, s);
-        }
-        utassert(str::Eq(s, v[idx]));
-
-        auto prevAtIdx = strs[idx];
-        defer {
-            strs[idx] = prevAtIdx;
-        };
-        strs[idx] = s;
-        StrVecCheckIter(v, strs);
-
-        auto s2 = v.RemoveAt(idx);
-        utassert(str::Eq(s, s2));
-
-        // should be replaced  by next value
-        s2 = v.At(idx);
-        utassert(str::Eq(s2, strs[idx + 1]));
-
-        // StrVec2: test multiple side strings
-        n = v.Size();
-        for (int i = 0; i < n; i++) {
-            v.SetAt(i, s);
-        }
-        for (auto it = v.begin(); it != v.end(); it++) {
-            s2 = *it;
-            utassert(str::Eq(s, s2));
-        }
-        auto s3 = "hello";
-        v.SetAt(n / 2, s3);
-        s2 = v[n / 2];
-        utassert(str::Eq(s3, s2));
-        while (v.Size() > 0) {
-            n = v.Size();
-            s2 = v[0];
-            if (n % 2 == 0) {
-                s3 = v.RemoveAtFast(0);
-            } else {
-                s3 = v.RemoveAt(0);
-            }
-            utassert(str::Eq(s2, s3));
-        }
     }
+    utassert(str::Eq(s, v[idx]));
+
+    auto prevAtIdx = strs[idx];
+    defer {
+        strs[idx] = prevAtIdx;
+    };
+    strs[idx] = s;
+    StrVecCheckIter(v, strs);
+
+    auto s2 = v.RemoveAt(idx);
+    utassert(str::Eq(s, s2));
+
+    // should be replaced  by next value
+    s2 = v.At(idx);
+    utassert(str::Eq(s2, strs[idx + 1]));
+
+    // StrVec2: test multiple side strings
+    n = v.Size();
+    for (int i = 0; i < n; i++) {
+        v.SetAt(i, s);
+    }
+    for (auto it = v.begin(); it != v.end(); it++) {
+        s2 = *it;
+        utassert(str::Eq(s, s2));
+    }
+    auto s3 = "hello";
+    v.SetAt(n / 2, s3);
+    s2 = v[n / 2];
+    utassert(str::Eq(s3, s2));
+    while (v.Size() > 0) {
+        n = v.Size();
+        s2 = v[0];
+        if (n % 2 == 0) {
+            s3 = v.RemoveAtFast(0);
+        } else {
+            s3 = v.RemoveAt(0);
+        }
+        utassert(str::Eq(s2, s3));
+    }
+}
+
+template <typename StrVec>
+static void StrVecTest5() {
+    StrVec v;
+    AppendStrings(v, strs, dimofi(strs));
+    const char* s = "first";
+    v.InsertAt(0, s);
+    auto s2 = v.At(0);
+    utassert(str::Eq(s, s2));
+    s = strs[0];
+    s2 = v.At(1);
+    utassert(str::Eq(s2, s));
+    s = "middle";
+    v.InsertAt(3, s);
+    s2 = v.At(3);
+    utassert(str::Eq(s2, s));
 }
 
 void StrTest() {
@@ -950,9 +965,11 @@ void StrTest() {
     StrVecTest2<StrVec2>();
     StrVecTest3<StrVec2>();
     StrVecTest4<StrVec2>();
+    StrVecTest5<StrVec2>();
 
     StrVecTest<StrVec>();
     StrVecTest2<StrVec>();
     StrVecTest3<StrVec>();
     StrVecTest4<StrVec>();
+    StrVecTest5<StrVec>();
 }

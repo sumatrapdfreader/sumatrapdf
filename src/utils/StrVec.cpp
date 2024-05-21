@@ -415,8 +415,9 @@ struct StrVecPage {
 
     char* AtHelper(int, int& sLen) const;
     int BytesLeft();
-    char* Append(const char* s, int len);
-    char* SetAt(const char* s, int len, int idxSet);
+    char* Append(const char* s, int sLen);
+    char* SetAt(int idxSet, const char* s, int sLen);
+    char* InsertAt(int idxSet, const char* s, int sLen);
 };
 
 constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
@@ -448,7 +449,7 @@ static StrVecPage* AllocStrVecPage(int pageSize) {
 #define kNoSpace (char*)-2
 
 u32* OffsetsForString(const StrVecPage* p, int idx) {
-    CrashIf(idx < 0 || idx >= p->nStrings);
+    CrashIf(idx < 0 || idx > p->nStrings);
     char* start = (char*)p;
     u32* offsets = (u32*)(start + kStrVecPageHdrSize);
     return offsets + (idx * 2);
@@ -468,8 +469,7 @@ static char* AppendJustString(StrVecPage* p, const char* s, int sLen, int idx) {
     return dst;
 }
 
-// if idx < 0 we append, otherwise we replace
-char* StrVecPage::SetAt(const char* s, int sLen, int idx) {
+char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
     u32* offsets = OffsetsForString(this, idx);
     if (!s) {
         // fast path for null, doesn't require new space at all
@@ -502,8 +502,9 @@ char* StrVecPage::SetAt(const char* s, int sLen, int idx) {
     return AppendJustString(this, s, sLen, idx);
 }
 
-// if idx < 0 we append, otherwise we replace
-char* StrVecPage::Append(const char* s, int sLen) {
+char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
+    CrashIfFunc(idx < 0 || idx > nStrings);
+
     int cbNeeded = sizeof(u32) * 2; // for offset / size
     if (s) {
         cbNeeded += sLen + 1; // +1 for zero termination
@@ -512,15 +513,29 @@ char* StrVecPage::Append(const char* s, int sLen) {
     if (cbNeeded > cbLeft) {
         return kNoSpace;
     }
-    int idx = nStrings++;
+
     u32* offsets = OffsetsForString(this, idx);
-    if (!s) {
-        offsets[0] = kNullOffset;
-        offsets[1] = 0;
-        return nullptr;
+    if (idx != nStrings) {
+        // make space for idx
+        u32* src = offsets;
+        u32* dst = OffsetsForString(this, idx + 1);
+        size_t nToCopy = (nStrings - idx) * 2 * sizeof(u32);
+        memmove(dst, src, nToCopy);
     }
 
-    return AppendJustString(this, s, sLen, idx);
+    if (s) {
+        s = AppendJustString(this, s, sLen, idx);
+    } else {
+        offsets[0] = kNullOffset;
+        offsets[1] = 0;
+        s = nullptr;
+    }
+    nStrings++;
+    return (char*)s;
+}
+
+char* StrVecPage::Append(const char* s, int sLen) {
+    return InsertAt(nStrings, s, sLen);
 }
 
 char* StrVecPage::AtHelper(int idx, int& sLen) const {
@@ -787,7 +802,7 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
         if (sLen < 0) {
             sLen = str::Leni(s);
         }
-        char* res = page->SetAt(s, sLen, idxInPage);
+        char* res = page->SetAt(idxInPage, s, sLen);
         if (res != kNoSpace) {
             return res;
         }
@@ -796,7 +811,30 @@ char* StrVec2::SetAt(int idx, const char* s, int sLen) {
     // extra space to make many SetAt() calls less expensive
     int extraSpace = RoundUp(sLen + 1, 2048);
     CompactPages(this, extraSpace);
-    char* res = first->SetAt(s, sLen, idx);
+    char* res = first->SetAt(idx, s, sLen);
+    CrashIf(res == kNoSpace);
+    return res;
+}
+
+// returns a string
+// note: this might invalidate previously returned strings because
+// it might re-allocate memore used for those strings
+char* StrVec2::InsertAt(int idx, const char* s, int sLen) {
+    {
+        auto [page, idxInPage] = PageForIdx(this, idx);
+        if (sLen < 0) {
+            sLen = str::Leni(s);
+        }
+        char* res = page->InsertAt(idxInPage, s, sLen);
+        if (res != kNoSpace) {
+            return res;
+        }
+    }
+    // perf: we assume that there will be more SetAt() calls so pre-allocate
+    // extra space to make many SetAt() calls less expensive
+    int extraSpace = RoundUp(sLen + 1, 2048);
+    CompactPages(this, extraSpace);
+    char* res = first->InsertAt(idx, s, sLen);
     CrashIf(res == kNoSpace);
     return res;
 }
