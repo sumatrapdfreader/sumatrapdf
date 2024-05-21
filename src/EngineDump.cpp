@@ -18,10 +18,6 @@
 #include "EngineAll.h"
 #include "PdfCreator.h"
 
-void _uploadDebugReportIfFunc(bool, const char*) {
-    // no-op implementation to satisfy SubmitBugReport()
-}
-
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
 static void Out1(const char* msg) {

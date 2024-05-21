@@ -20,10 +20,6 @@ struct PluginStartData {
     const char* fileOriginUrl;
 };
 
-void _uploadDebugReportIfFunc(bool, const char*) {
-    // no-op implementation to satisfy SubmitBugReport()
-}
-
 // in order to host SumatraPDF as a plugin, create a (child) window and
 // handle the following messages for it:
 LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {

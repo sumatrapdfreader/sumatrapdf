@@ -189,6 +189,11 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 #define IS_UNUSED __attribute__((unused))
 #endif
 
+// __analysis_assume is defined by msvc for prefast analysis
+#if !defined(__analysis_assume)
+#define __analysis_assume(x)
+#endif
+
 #if COMPILER_MSVC
 #pragma warning(push)
 #pragma warning(disable : 6011) // silence /analyze: de-referencing a nullptr pointer
@@ -205,6 +210,15 @@ inline void CrashMe() {
 }
 #if COMPILER_MSVC
 #pragma warning(pop)
+#endif
+
+#ifdef ENABLE_CRASH_REPORTING
+// must be defined in the app. can be no-op to disable this functionality
+void _uploadDebugReportIfFunc(bool cond, const char*);
+#else
+inline void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
+    // no-op implementation to satisfy SubmitBugReport()
+}
 #endif
 
 // CrashIf() is like assert() except it crashes in debug and pre-release builds.
@@ -240,11 +254,6 @@ inline void CrashIfFunc(bool cond) {
 #endif
 }
 
-// __analysis_assume is defined by msvc for prefast analysis
-#if !defined(__analysis_assume)
-#define __analysis_assume(x)
-#endif
-
 // trigger a crash if cond is true and we're pre-release, debug or asan build
 #define CrashIf(cond)               \
     do {                            \
@@ -260,9 +269,6 @@ inline void CrashIfFunc(bool cond) {
             CrashMe();              \
         }                           \
     } while (0)
-
-// must be defined in the app. can be no-op to disable this functionality
-void _uploadDebugReportIfFunc(bool cond, const char*);
 
 #define ReportIf(cond)                         \
     do {                                       \

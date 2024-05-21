@@ -965,6 +965,7 @@ workspace "SumatraPDF"
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
+    defines { "ENABLE_CRASH_REPORTING" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
@@ -1018,6 +1019,7 @@ workspace "SumatraPDF"
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
+    defines { "ENABLE_CRASH_REPORTING" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about

@@ -21,8 +21,6 @@
 #define ErrOut(msg, ...) fprintf(stderr, msg "\n", __VA_ARGS__)
 #define ErrOut1(msg) fprintf(stderr, "%s", msg "\n")
 
-void _uploadDebugReportIfFunc(bool, char const*){};
-
 void ShowUsage(const char* exeName) {
     ErrOut("Syntax: %s", path::GetBaseNameTemp(exeName));
     ErrOut1("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
