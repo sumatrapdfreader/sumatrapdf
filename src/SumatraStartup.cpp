@@ -105,7 +105,7 @@ void FileExistenceChecker::GetFilePathsToCheck() {
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
         char* fp = fs->filePath;
-        paths.AppendIfNotExists(fp);
+        AppendIfNotExists(paths, fp);
     }
 }
 

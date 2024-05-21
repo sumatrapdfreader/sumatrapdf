@@ -623,7 +623,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
                 continue;
             }
             char* fontName = ToUtf8Temp(fontNameW);
-            fonts.AppendIfNotExists(fontName);
+            AppendIfNotExists(fonts, fontName);
         }
     }
     if (fonts.Size() == 0) {

@@ -2019,7 +2019,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
                 logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
             } else {
                 logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
-                gFilesFailedToOpen.AppendIfNotExists(path);
+                AppendIfNotExists(gFilesFailedToOpen, path);
             }
         }
 
@@ -3389,7 +3389,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
         }
         files.RemoveAt(i);
     }
-    files.AppendIfNotExists(path);
+    AppendIfNotExists(files, path);
     SortNatural(files);
     return files;
 }

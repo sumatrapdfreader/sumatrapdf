@@ -39,31 +39,38 @@ int StrVec::Append(const char* s, int sLen) {
 }
 
 // returns index of inserted string, -1 if not inserted
-int StrVec::AppendIfNotExists(const char* s) {
-    if (Contains(s)) {
+int AppendIfNotExists(StrVec& v, const char* s, int sLen) {
+    if (sLen < 0) {
+        sLen = str::Leni(s);
+    }
+    if (v.Contains(s, sLen)) {
         return -1;
     }
-    return Append(s);
+    return v.Append(s, sLen);
 }
 
-bool StrVec::InsertAt(int idx, const char* s) {
-    size_t n = str::Len(s);
+bool StrVec::InsertAt(int idx, const char* s, int sLen) {
+    if (sLen < 0) {
+        sLen = str::Leni(s);
+    }
     u32 strIdx = (u32)strings.size();
-    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    bool ok = strings.Append(s, sLen + 1); // also append terminating 0
     if (!ok) {
         return false;
     }
     return offsets.InsertAt(idx, strIdx);
 }
 
-char* StrVec::SetAt(int idx, const char* s) {
+char* StrVec::SetAt(int idx, const char* s, int sLen) {
     if (s == nullptr) {
         offsets[idx] = kNullOffset;
         return nullptr;
     }
-    size_t n = str::Len(s);
+    if (sLen < 0) {
+        sLen = str::Leni(s);
+    }
     u32 strIdx = (u32)strings.size();
-    bool ok = strings.Append(s, n + 1); // also append terminating 0
+    bool ok = strings.Append(s, sLen + 1); // +1 for zero termination
     if (!ok) {
         return nullptr;
     }
@@ -91,29 +98,30 @@ char* StrVec::At(int idx) const {
     return s;
 }
 
-int StrVec::Find(const char* sv, int startAt) const {
+int StrVec::Find(const char* s, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
-        auto s = At(i);
-        if (str::Eq(sv, s)) {
+        auto s2 = At(i);
+        if (str::Eq(s2, s)) {
             return i;
         }
     }
     return -1;
 }
 
-int StrVec::FindI(const char* sv, int startAt) const {
+int StrVec::FindI(const char* s, int startAt) const {
     int n = Size();
     for (int i = startAt; i < n; i++) {
-        auto s = At(i);
-        if (str::EqI(sv, s)) {
+        auto s2 = At(i);
+        if (str::EqI(s2, s)) {
             return i;
         }
     }
     return -1;
 }
 
-bool StrVec::Contains(const char* s) const {
+// TODO: need to use int sLen
+bool StrVec::Contains(const char* s, int) const {
     int idx = Find(s);
     return idx != -1;
 }

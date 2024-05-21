@@ -3302,7 +3302,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             continue;
         }
         char* fontName = info.LendData();
-        fonts.AppendIfNotExists(fontName);
+        AppendIfNotExists(fonts, fontName);
     }
     if (fonts.Size() == 0) {
         return nullptr;

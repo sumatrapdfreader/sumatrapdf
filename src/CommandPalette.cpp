@@ -412,7 +412,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
                 }
                 const char* name = tab2->filePath.Get();
                 name = path::GetBaseNameTemp(name);
-                filesInTabs.AppendIfNotExists(name);
+                AppendIfNotExists(filesInTabs, name);
                 // find current tab index
                 if (tab2 == mainWin->CurrentTab()) {
                     currTabPos = tabPos;
@@ -512,7 +512,7 @@ static bool FilterMatches(const char* str, const char* filter) {
         if (str::IsWs(*s)) {
             *s = 0;
             if (!wasWs) {
-                words.AppendIfNotExists(wordStart);
+                AppendIfNotExists(words, wordStart);
                 wasWs = true;
             }
             wordStart = s + 1;
@@ -520,7 +520,7 @@ static bool FilterMatches(const char* str, const char* filter) {
         s++;
     }
     if (str::Leni(wordStart) > 0) {
-        words.AppendIfNotExists(wordStart);
+        AppendIfNotExists(words, wordStart);
     }
     // all words must be present
     int nWords = words.Size();

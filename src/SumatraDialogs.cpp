@@ -749,17 +749,16 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 StrVec detected;
                 for (auto e : textEditors) {
                     const char* open = e->openFileCmd;
-                    detected.AppendIfNotExists(open);
+                    AppendIfNotExists(detected, open);
                 }
                 if (cmdLine) {
-                    detected.AppendIfNotExists(cmdLine);
+                    AppendIfNotExists(detected, cmdLine);
                 } else {
                     cmdLine = detected[0];
                 }
                 for (char* s : detected) {
-                    TempWStr ws = ToWStrTemp(s);
                     // if no existing command was selected then set the user custom command in the combo
-                    ComboBox_AddString(hwndComboBox, ws);
+                    CbAddString(hwndComboBox, s);
                 }
 
                 // Find the index of the active command line

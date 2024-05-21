@@ -21,12 +21,11 @@ struct StrVec {
     char* operator[](int) const;
 
     int Append(const char*, int len = -1);
-    int AppendIfNotExists(const char*);
-    bool InsertAt(int, const char*);
-    char* SetAt(int idx, const char* s);
+    bool InsertAt(int, const char*, int sLen = -1);
+    char* SetAt(int idx, const char* s, int sLen = -1);
     int Find(const char*, int startAt = 0) const;
     int FindI(const char*, int startAt = 0) const;
-    bool Contains(const char*) const;
+    bool Contains(const char*, int sLen = -1) const;
     char* RemoveAtFast(int idx);
     char* RemoveAt(int idx);
     bool Remove(const char*);
@@ -46,6 +45,8 @@ struct StrVec {
     iterator begin() const;
     iterator end() const;
 };
+
+int AppendIfNotExists(StrVec& v, const char* s, int sLen = -1);
 
 void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
 void SortNoCase(StrVec&);
@@ -77,9 +78,10 @@ struct StrVec2 {
     char* operator[](int) const;
 
     char* Append(const char* s, int sLen = -1);
+    char* SetAt(int idx, const char* s, int sLen = -1);
+    char* InsertAt(int, const char*, int sLen = -1);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
-    char* SetAt(int idx, const char* s, int sLen = -1);
 
     int Find(const char* sv, int startAt = 0) const;
     int FindI(const char* sv, int startAt = 0) const;
