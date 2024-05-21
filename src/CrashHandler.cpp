@@ -135,7 +135,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
 static char* BuildCrashInfoText(bool forCrash, bool noCallstack) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (!forCrash) {
-        s.Append("Type: deubg report (not crash)\n");
+        s.Append("Type: debug report (not crash)\n");
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
