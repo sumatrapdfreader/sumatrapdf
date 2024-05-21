@@ -130,7 +130,7 @@ DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-void LabelWithCloseWnd::SetLabel(const WCHAR* label) const {
+void LabelWithCloseWnd::SetLabel(const char* label) const {
     HwndSetText(this->hwnd, label);
     HwndScheduleRepaint(this->hwnd);
 }

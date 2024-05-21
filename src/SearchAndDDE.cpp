@@ -81,7 +81,8 @@ void FindFirst(MainWindow* win) {
         AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
-            HwndSetText(win->hwndFindEdit, selection);
+            TempStr s = ToUtf8Temp(selection);
+            HwndSetText(win->hwndFindEdit, s);
             Edit_SetModify(win->hwndFindEdit, TRUE);
         }
     }
@@ -96,11 +97,11 @@ void FindFirst(MainWindow* win) {
         return;
     }
 
-    WCHAR* previousFind = HwndGetTextWTemp(win->hwndFindEdit);
+    TempStr previousFind = HwndGetTextTemp(win->hwndFindEdit);
     WORD state = (WORD)SendMessageW(win->hwndToolbar, TB_GETSTATE, CmdFindMatch, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
-    AutoFreeWstr findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
+    AutoFreeStr findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
     if (!findString) {
         return;
     }
@@ -164,7 +165,8 @@ void FindSelection(MainWindow* win, TextSearchDirection direction) {
         return;
     }
 
-    HwndSetText(win->hwndFindEdit, selection);
+    TempStr s = ToUtf8Temp(selection);
+    HwndSetText(win->hwndFindEdit, s);
     AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);

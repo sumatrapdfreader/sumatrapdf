@@ -741,9 +741,9 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
     n = dimof(gAnnotsIsColorBackground);
     bool isBgCol = IsAnnotationTypeInArray(gAnnotsIsColorBackground, n, Type(annot));
     if (isBgCol) {
-        ew->staticColor->SetText(_TR("Background Color:"));
+        ew->staticColor->SetText(_TRA("Background Color:"));
     } else {
-        ew->staticColor->SetText(_TR("Color:"));
+        ew->staticColor->SetText(_TRA("Color:"));
     }
     ew->staticColor->SetIsVisible(true);
     ew->dropDownColor->SetIsVisible(true);

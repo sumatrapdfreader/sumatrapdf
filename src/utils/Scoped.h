@@ -123,6 +123,10 @@ struct AutoFree {
         return data;
     }
 
+    char* Str() const {
+        return data;
+    }
+
     operator char*() const { // NOLINT
         return data;
     }

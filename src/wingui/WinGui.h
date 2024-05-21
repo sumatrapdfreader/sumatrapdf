@@ -113,7 +113,6 @@ struct Wnd : public ILayout {
     void SetPos(RECT* r);
     void SetIsVisible(bool isVisible);
     bool IsVisible() const;
-    void SetText(const WCHAR*);
     void SetText(const char*);
     TempStr GetTextTemp();
 

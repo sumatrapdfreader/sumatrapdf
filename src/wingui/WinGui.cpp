@@ -267,12 +267,6 @@ Kind Wnd::GetKind() {
     return kind;
 }
 
-void Wnd::SetText(const WCHAR* s) {
-    CrashIf(!hwnd);
-    HwndSetText(hwnd, s);
-    HwndInvalidate(hwnd); // TODO: move inside HwndSetText()?
-}
-
 void Wnd::SetText(const char* s) {
     if (!s) {
         s = "";

@@ -319,9 +319,10 @@ size_t HwndGetTextLen(HWND hwnd);
 TempWStr HwndGetTextWTemp(HWND hwnd);
 TempStr HwndGetTextTemp(HWND hwnd);
 void HwndSetText(HWND, const char* s);
-void HwndSetText(HWND, const WCHAR*);
 bool HwndHasFrameThickness(HWND hwnd);
 bool HwndHasCaption(HWND hwnd);
+
+void HwndSetDlgItemText(HWND, int, const char*);
 
 HICON HwndGetIcon(HWND);
 HICON HwndSetIcon(HWND, HICON);

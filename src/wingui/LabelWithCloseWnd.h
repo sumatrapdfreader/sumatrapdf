@@ -16,7 +16,7 @@ struct LabelWithCloseWnd : Wnd {
     void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
-    void SetLabel(const WCHAR*) const;
+    void SetLabel(const char*) const;
     void SetFont(HFONT);
     void SetBgCol(COLORREF);
     void SetTextCol(COLORREF);

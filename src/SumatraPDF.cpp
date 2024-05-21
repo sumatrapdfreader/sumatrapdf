@@ -1083,7 +1083,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     FindToggleMatchCase(win);
     UpdateFindbox(win);
 
-    HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
+    HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle.Str());
 
     // TODO: match either the toolbar (if shown) or background
     HwndScheduleRepaint(win->tabsCtrl->hwnd); // TODO: was RepaintNow() ?
@@ -1360,7 +1360,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     // we postpone the reload until the next autorefresh event
     if (!ctrl && autoRefresh) {
         SetFrameTitleForTab(tab, true);
-        HwndSetText(win->hwndFrame, tab->frameTitle);
+        HwndSetText(win->hwndFrame, tab->frameTitle.Str());
         return;
     }
 
@@ -1455,8 +1455,8 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     UpdateToolbarFindText(win);
     UpdateToolbarButtonsToolTipsForWindow(win);
 
-    win->tocLabelWithClose->SetLabel(_TR("Bookmarks"));
-    win->favLabelWithClose->SetLabel(_TR("Favorites"));
+    win->tocLabelWithClose->SetLabel(_TRA("Bookmarks"));
+    win->favLabelWithClose->SetLabel(_TRA("Favorites"));
 }
 
 static MainWindow* CreateMainWindow() {

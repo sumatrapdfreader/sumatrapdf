@@ -1,8 +1,9 @@
 Ideas for refactorings:
 
 - change all size_t => int
-- remove all use of _TR( : 141 matches
+- remove all use of _TR( : 94 matches (was 141)
 - change use of Str::Get() => Str::CStr() (or maybe make it Str() as in StrSpan?)
+- LabelWithCloseWnd::SetLabel => char*
 
 ------------------------------------------------------------------
 

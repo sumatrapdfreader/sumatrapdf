@@ -447,7 +447,7 @@ static void EnableAndShow(Wnd* w, bool enable) {
     }
 }
 
-static Size SetButtonTextAndResize(Button* b, const WCHAR* s) {
+static Size SetButtonTextAndResize(Button* b, const char* s) {
     b->SetText(s);
     Size size = b->GetIdealSize();
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
@@ -470,10 +470,10 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (showOpts) {
-        SetButtonTextAndResize(btnOptions, _TR("Hide &Options"));
+        SetButtonTextAndResize(btnOptions, _TRA("Hide &Options"));
     } else {
         //| ACCESSKEY_ALTERNATIVE
-        SetButtonTextAndResize(btnOptions, _TR("&Options"));
+        SetButtonTextAndResize(btnOptions, _TRA("&Options"));
     }
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer

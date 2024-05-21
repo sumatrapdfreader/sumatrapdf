@@ -91,12 +91,14 @@ int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
 // Should be called after user types Ctrl + Backspace to
 // delete word backwards from current cursor position
 void EditImplementCtrlBack(HWND hwnd) {
+    // we calc selection in WCHAR space because it's easier
     WCHAR* text = HwndGetTextWTemp(hwnd);
     int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
     // remove the rectangle produced by Ctrl+Backspace
     if (selStart > 0 && text[selStart - 1] == '\x7F') {
         memmove(text + selStart - 1, text + selStart, str::Len(text + selStart - 1) * sizeof(WCHAR));
-        HwndSetText(hwnd, text);
+        TempStr s = ToUtf8Temp(text);
+        HwndSetText(hwnd, s);
         selStart = selEnd = selStart - 1;
     }
     // remove the previous word (and any spacing after it)
@@ -2659,18 +2661,6 @@ bool IsValidDelayType(int type) {
     return false;
 }
 
-void HwndSetText(HWND hwnd, const WCHAR* s) {
-    // can be called before a window is created
-    if (!hwnd) {
-        return;
-    }
-    if (!s) {
-        SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
-        return;
-    }
-    SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)s);
-}
-
 void HwndSetText(HWND hwnd, const char* sv) {
     // can be called before a window is created
     if (!hwnd) {
@@ -2682,6 +2672,11 @@ void HwndSetText(HWND hwnd, const char* sv) {
     }
     WCHAR* ws = ToWStrTemp(sv);
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws);
+}
+
+void HwndSetDlgItemText(HWND hDlg, int itemID, const char* s) {
+    TempWStr ws = ToWStrTemp(s);
+    SetDlgItemTextW(hDlg, itemID, ws);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon
