@@ -379,7 +379,7 @@ next:
         return;
     }
     if (node->title) {
-        WCHAR* ws = ToWStrTemp(node->title);
+        TempWStr ws = ToWStrTemp(node->title);
         for (const WCHAR* c = ws; *c; c++) {
             if (isLeftToRightChar(*c)) {
                 l2r++;

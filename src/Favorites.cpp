@@ -331,7 +331,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, b
             s = FavReadableNameTemp(fn);
         }
         auto safeStr = MenuToSafeStringTemp(s);
-        WCHAR* ws = ToWStrTemp(safeStr);
+        TempWStr ws = ToWStrTemp(safeStr);
         AppendMenuW(m, MF_STRING, (UINT_PTR)fn->menuId, ws);
     }
 }

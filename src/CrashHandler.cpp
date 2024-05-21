@@ -401,7 +401,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID) {
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
     DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", nullptr, 0);
     bool fullDump = (0 != n);
-    WCHAR* ws = ToWStrTemp(gCrashDumpPath);
+    TempWStr ws = ToWStrTemp(gCrashDumpPath);
     dbghelp::WriteMiniDump(ws, &gMei, fullDump);
     return 0;
 }

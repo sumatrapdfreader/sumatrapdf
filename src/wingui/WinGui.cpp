@@ -1417,7 +1417,7 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
     for (int i = 0; i < nTools; i++) {
         TooltipInfo& tti = tools[i];
 
-        WCHAR* ws = ToWStrTemp(tti.s);
+        TempWStr ws = ToWStrTemp(tti.s);
         TOOLINFOW ti = {0};
         ti.cbSize = sizeof(ti);
         ti.hwnd = owner;
@@ -1459,7 +1459,7 @@ static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool
     }
 
     SetMaxWidthForText(hwnd, s, multiline);
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     TOOLINFOW ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;
@@ -1508,7 +1508,7 @@ void Tooltip::SetMaxWidth(int dx) {
 int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     int id = GetNextTooltipID();
     SetMaxWidthForText(hwnd, s, multiline);
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     TOOLINFOW ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
@@ -1613,7 +1613,7 @@ static bool EditSetCueText(HWND hwnd, const char* s) {
     if (!hwnd) {
         return false;
     }
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
     return ok;
 }
@@ -2030,7 +2030,7 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
     int n = items.Size();
     for (int i = 0; i < n; i++) {
         char* s = items[i];
-        WCHAR* ws = ToWStrTemp(s);
+        TempWStr ws = ToWStrTemp(s);
         ComboBox_AddString(hwnd, ws);
     }
 }
@@ -2563,7 +2563,7 @@ void Webview2Wnd::UpdateWebviewSize() {
 }
 
 void Webview2Wnd::Eval(const char* js) {
-    WCHAR* ws = ToWStrTemp(js);
+    TempWStr ws = ToWStrTemp(js);
     webview->ExecuteScript(ws, nullptr);
 }
 
@@ -2580,12 +2580,12 @@ void Webview2Wnd::SetHtml(const char* html) {
 }
 
 void Webview2Wnd::Init(const char* js) {
-    WCHAR* ws = ToWStrTemp(js);
+    TempWStr ws = ToWStrTemp(js);
     webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
 }
 
 void Webview2Wnd::Navigate(const char* url) {
-    WCHAR* ws = ToWStrTemp(url);
+    TempWStr ws = ToWStrTemp(url);
     webview->Navigate(ws);
 }
 
@@ -3489,7 +3489,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
         rTxt.X += 8;
         rTxt.Width -= (8 + r.dx + 8);
         br.SetColor(GdipCol(textColor));
-        WCHAR* ws = ToWStrTemp(ti->text);
+        TempWStr ws = ToWStrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
     }
 }
@@ -3525,7 +3525,7 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     rTxt.X += 8;
     rTxt.Width -= (8 + 8);
     br.SetColor(GdipCol(textCol));
-    WCHAR* ws = ToWStrTemp(ti->text);
+    TempWStr ws = ToWStrTemp(ti->text);
     gfx->DrawString(ws, -1, &f, rTxt, &sf, &br);
 
     HBITMAP ret;

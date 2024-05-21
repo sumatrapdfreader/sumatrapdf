@@ -1397,7 +1397,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             if (subMenuDef == menuDefFile) {
                 DynamicPartOfFileMenu(subMenu, ctx);
             }
-            WCHAR* ws = ToWStrTemp(title);
+            TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
             str::Str title2 = title;
@@ -1408,7 +1408,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
                 }
             }
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
-            WCHAR* ws = ToWStrTemp(title2.Get());
+            TempWStr ws = ToWStrTemp(title2.Get());
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
         }
 
@@ -1514,7 +1514,7 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
             }
         }
         if (!filePrintAllowed || !disableOnly) {
-            WCHAR* ws = ToWStrTemp(printItem.Get());
+            TempWStr ws = ToWStrTemp(printItem.Get());
             ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, ws);
         }
         MenuSetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
@@ -2214,7 +2214,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // DrawTextEx handles & => underscore drawing
     rc.top += padY;
     rc.left += cxCheckMark;
-    WCHAR* ws = ToWStrTemp(menuText);
+    TempWStr ws = ToWStrTemp(menuText);
     DrawTextExW(hdc, ws, -1, &rc, DT_LEFT, nullptr);
     if (shortcutText != nullptr) {
         ws = ToWStrTemp(shortcutText);

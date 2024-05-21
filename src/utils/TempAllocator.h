@@ -13,10 +13,6 @@ FORCEINLINE T* AllocArrayTemp(size_t n) {
     return (T*)Allocator::AllocZero(a, n * sizeof(T));
 }
 
-// exists just to mark the intentA
-using TempStr = char*;
-using TempWStr = WCHAR*;
-
 namespace str {
 TempStr DupTemp(const char* s, size_t cb = (size_t)-1);
 TempWStr DupTemp(const WCHAR* s, size_t cch = (size_t)-1);
@@ -33,3 +29,4 @@ TempStr FormatTemp(const char* fmt, ...);
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
 TempWStr ToWStrTemp(const char* s, size_t cb = (size_t)-1);
+TempWStr ToWStrTemp(const str::Str& s);

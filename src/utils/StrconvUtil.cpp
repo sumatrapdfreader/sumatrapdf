@@ -160,7 +160,7 @@ char* WstrToAnsi(const WCHAR* src) {
 }
 
 char* Utf8ToAnsi(const char* s) {
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     return WstrToAnsi(ws);
 }
 

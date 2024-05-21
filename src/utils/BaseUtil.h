@@ -667,10 +667,14 @@ defer { fclose(f); };
 defer { instance->Release(); };
 */
 
+// exists just to mark the intent, needed by both StrUtil.h and TempAllocator.h
+using TempStr = char*;
+using TempWStr = WCHAR*;
+
 #include "GeomUtil.h"
 #include "Vec.h"
-#include "TempAllocator.h"
 #include "StrUtil.h"
+#include "TempAllocator.h"
 #include "StrVec.h"
 #include "StrconvUtil.h"
 #include "Scoped.h"

@@ -757,7 +757,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     cmdLine = detected[0];
                 }
                 for (char* s : detected) {
-                    WCHAR* ws = ToWStrTemp(s);
+                    TempWStr ws = ToWStrTemp(s);
                     // if no existing command was selected then set the user custom command in the combo
                     ComboBox_AddString(hwndComboBox, ws);
                 }

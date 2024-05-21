@@ -582,7 +582,7 @@ bool LoggedDeleteRegValue(HKEY hkey, const char* keyName, const char* valName) {
 }
 
 HRESULT CLSIDFromString(const char* lpsz, LPCLSID pclsid) {
-    WCHAR* ws = ToWStrTemp(lpsz);
+    TempWStr ws = ToWStrTemp(lpsz);
     return CLSIDFromString(ws, pclsid);
 }
 
@@ -1340,7 +1340,7 @@ static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
 }
 
 static bool CopyOrAppendTextToClipboard(const char* s, bool appendOnly) {
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     return CopyOrAppendTextToClipboard(ws, appendOnly);
 }
 
@@ -1730,7 +1730,7 @@ void MenuSetText(HMENU m, int id, const WCHAR* s) {
 }
 
 void MenuSetText(HMENU m, int id, const char* s) {
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     MenuSetText(m, id, ws);
 }
 
@@ -2670,7 +2670,7 @@ void HwndSetText(HWND hwnd, const char* sv) {
         SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)L"");
         return;
     }
-    WCHAR* ws = ToWStrTemp(sv);
+    TempWStr ws = ToWStrTemp(sv);
     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)ws);
 }
 
@@ -2837,7 +2837,7 @@ int HdcDrawText(HDC hdc, const char* s, RECT* r, uint fmt, HFONT font) {
     if (!s) {
         return 0;
     }
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     if (!ws) {
         return 0;
     }
@@ -2860,7 +2860,7 @@ int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font) 
 // uses the same logic as HdcDrawText
 Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
     fmt |= DT_CALCRECT;
-    WCHAR* ws = ToWStrTemp(s);
+    TempWStr ws = ToWStrTemp(s);
     if (!ws) {
         return {};
     }

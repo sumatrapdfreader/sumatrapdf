@@ -131,3 +131,13 @@ TempWStr ToWStrTemp(const char* s, size_t cb) {
     }
     return strconv::Utf8ToWstr(s, cb, GetTempAllocator());
 }
+
+// handles embedded 0 in the string
+TempWStr ToWStrTemp(const str::Str& str) {
+    if (str.IsEmpty()) {
+        return nullptr;
+    }
+    char* s = str.CStr();
+    size_t cb = str.Size();
+    return strconv::Utf8ToWstr(s, cb, GetTempAllocator());
+}

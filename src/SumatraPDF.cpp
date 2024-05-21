@@ -2753,7 +2753,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 }
 
 // returns false if no filter has been appended
-static bool AppendFileFilterForDoc(DocController* ctrl, str::WStr& fileFilter) {
+static bool AppendFileFilterForDoc(DocController* ctrl, str::Str& fileFilter) {
     // TODO: use ctrl->GetDefaultFileExt()
     Kind type = nullptr;
     if (ctrl->AsFixed()) {
@@ -2764,32 +2764,32 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::WStr& fileFilter) {
 
     auto ext = ctrl->GetDefaultFileExt();
     if (str::EqI(ext, ".xps")) {
-        fileFilter.Append(_TR("XPS documents"));
+        fileFilter.Append(_TRA("XPS documents"));
     } else if (type == kindEngineDjVu) {
-        fileFilter.Append(_TR("DjVu documents"));
+        fileFilter.Append(_TRA("DjVu documents"));
     } else if (type == kindEngineComicBooks) {
-        fileFilter.Append(_TR("Comic books"));
+        fileFilter.Append(_TRA("Comic books"));
     } else if (type == kindEngineImage) {
         WCHAR* extW = ToWStrTemp(ctrl->GetDefaultFileExt() + 1);
-        fileFilter.AppendFmt(_TR("Image files (*.%s)"), extW);
+        fileFilter.AppendFmt(_TRA("Image files (*.%s)"), extW);
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
     } else if (type == kindEnginePostScript) {
-        fileFilter.Append(_TR("Postscript documents"));
+        fileFilter.Append(_TRA("Postscript documents"));
     } else if (type == kindEngineChm) {
-        fileFilter.Append(_TR("CHM documents"));
+        fileFilter.Append(_TRA("CHM documents"));
     } else if (type == kindEngineEpub) {
-        fileFilter.Append(_TR("EPUB ebooks"));
+        fileFilter.Append(_TRA("EPUB ebooks"));
     } else if (type == kindEngineMobi) {
-        fileFilter.Append(_TR("Mobi documents"));
+        fileFilter.Append(_TRA("Mobi documents"));
     } else if (type == kindEngineFb2) {
-        fileFilter.Append(_TR("FictionBook documents"));
+        fileFilter.Append(_TRA("FictionBook documents"));
     } else if (type == kindEnginePdb) {
-        fileFilter.Append(_TR("PalmDoc documents"));
+        fileFilter.Append(_TRA("PalmDoc documents"));
     } else if (type == kindEngineTxt) {
-        fileFilter.Append(_TR("Text documents"));
+        fileFilter.Append(_TRA("Text documents"));
     } else {
-        fileFilter.Append(_TR("PDF documents"));
+        fileFilter.Append(_TRA("PDF documents"));
     }
     return true;
 }
@@ -2825,20 +2825,20 @@ static void SaveCurrentFileAs(MainWindow* win) {
         return;
     }
 
-    TempWStr defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
+    auto defExt = ctrl->GetDefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    str::WStr fileFilter(256);
+    str::Str fileFilter(256);
     if (AppendFileFilterForDoc(ctrl, fileFilter)) {
-        fileFilter.AppendFmt(L"\1*%s\1", defExt);
+        fileFilter.AppendFmt("\1*%s\1", defExt);
     }
-    fileFilter.Append(_TR("All files"));
-    fileFilter.Append(L"\1*.*\1");
-    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
+    fileFilter.Append(_TRA("All files"));
+    fileFilter.Append("\1*.*\1");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
 
     WCHAR dstFileName[MAX_PATH];
-    auto baseName = path::GetBaseNameTemp(srcFileName);
+    TempStr baseName = path::GetBaseNameTemp(srcFileName);
     str::BufSet(dstFileName, dimof(dstFileName), baseName);
     if (str::FindChar(dstFileName, ':')) {
         // handle embed-marks (for embedded PDF documents):
@@ -2854,7 +2854,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
             ext = colon;
         }
         memmove(ext, colon, (str::Len(colon) + 1) * sizeof(WCHAR));
-    } else if (str::EndsWithI(dstFileName, defExt)) {
+    } else if (str::EndsWithI(dstFileName, ToWStrTemp(defExt))) {
         // Remove the extension so that it can be re-added depending on the chosen filter
         int idx = str::Leni(dstFileName) - str::Leni(defExt);
         dstFileName[idx] = '\0';
@@ -2865,13 +2865,13 @@ static void SaveCurrentFileAs(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilter.Get();
+    ofn.lpstrFilter = ToWStrTemp(fileFilter);
     ofn.nFilterIndex = 1;
     // defExt can be null, we want to skip '.'
     if (str::Leni(defExt) > 0 && defExt[0] == L'.') {
         defExt++;
     }
-    ofn.lpstrDefExt = defExt;
+    ofn.lpstrDefExt = ToWStrTemp(defExt);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     // note: explicitly not setting lpstrInitialDir so that the OS
     // picks a reasonable default (in particular, we don't want this
@@ -2885,9 +2885,8 @@ static void SaveCurrentFileAs(MainWindow* win) {
     TempStr realDstFileName = ToUtf8Temp(dstFileName);
 
     // Make sure that the file has a valid extension
-    if (!str::EndsWithI(dstFileName, defExt)) {
-        TempWStr s = str::JoinTemp(dstFileName, defExt);
-        realDstFileName = ToUtf8(dstFileName);
+    if (!str::EndsWithI(realDstFileName, defExt)) {
+        realDstFileName = str::JoinTemp(realDstFileName, defExt);
     }
 
     logf("Saving '%s' to '%s'\n", srcFileName, realDstFileName);
@@ -2984,19 +2983,20 @@ static void RenameCurrentFile(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    const WCHAR* defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
-    str::WStr fileFilter(256);
+    const char* defExt = ctrl->GetDefaultFileExt();
+    TempWStr defExtW = ToWStrTemp(defExt);
+    str::Str fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     CrashIf(!ok);
-    fileFilter.AppendFmt(L"\1*%s\1", defExt);
-    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
+    fileFilter.AppendFmt("\1*%s\1", defExt);
+    str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
 
     WCHAR dstFileName[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
     str::BufSet(dstFileName, dimof(dstFileName), baseName);
     // Remove the extension so that it can be re-added depending on the chosen filter
-    if (str::EndsWithI(dstFileName, defExt)) {
-        int idx = str::Leni(dstFileName) - str::Leni(defExt);
+    if (str::EndsWithI(dstFileName, defExtW)) {
+        int idx = str::Leni(dstFileName) - str::Leni(defExtW);
         dstFileName[idx] = '\0';
     }
 
@@ -3008,12 +3008,13 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilter.Get();
+    ofn.lpstrFilter = ToWStrTemp(fileFilter);
+    ;
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
     ofn.lpstrTitle = _TR("Rename To");
     ofn.lpstrInitialDir = initDir;
-    ofn.lpstrDefExt = defExt + 1;
+    ofn.lpstrDefExt = defExtW + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     ok = GetSaveFileNameW(&ofn);

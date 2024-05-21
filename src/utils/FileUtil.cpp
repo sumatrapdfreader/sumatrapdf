@@ -463,7 +463,7 @@ bool Match(const char* path, const char* filter) {
 }
 
 bool IsAbsolute(const char* path) {
-    WCHAR* ws = ToWStrTemp(path);
+    TempWStr ws = ToWStrTemp(path);
     return !PathIsRelativeW(ws);
 }
 
