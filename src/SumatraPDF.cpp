@@ -3249,6 +3249,54 @@ static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     }
 }
 
+static TempWStr GetFileFilterTemp() {
+    const struct {
+        const char* name; /* nullptr if only to include in "All supported documents" */
+        const char* filter;
+        bool available;
+    } fileFormats[] = {
+        {_TRA("PDF documents"), "*.pdf", true},
+        {_TRA("XPS documents"), "*.xps;*.oxps", true},
+        {_TRA("DjVu documents"), "*.djvu", true},
+        {_TRA("Postscript documents"), "*.ps;*.eps", IsEnginePsAvailable()},
+        {_TRA("Comic books"), "*.cbz;*.cbr;*.cb7;*.cbt", true},
+        {_TRA("CHM documents"), "*.chm", true},
+        {_TRA("SVG documents"), "*.svg", true},
+        {_TRA("EPUB ebooks"), "*.epub", true},
+        {_TRA("Mobi documents"), "*.mobi", true},
+        {_TRA("FictionBook documents"), "*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
+        {_TRA("PalmDoc documents"), "*.pdb;*.prc", true},
+        {_TRA("Images"), "*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jxr;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.avif", true},
+        {_TRA("Text documents"), "*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr", true},
+    };
+    // Prepare the file filters (use \1 instead of \0 so that the
+    // double-zero terminated string isn't cut by the string handling
+    // methods too early on)
+    str::Str fileFilter;
+    fileFilter.Append(_TRA("All supported documents"));
+    fileFilter.AppendChar('\1');
+    for (int i = 0; i < dimof(fileFormats); i++) {
+        if (fileFormats[i].available) {
+            fileFilter.Append(fileFormats[i].filter);
+            fileFilter.AppendChar(';');
+        }
+    }
+    CrashIf(fileFilter.Last() != ';');
+    fileFilter.Last() = '\1';
+    for (int i = 0; i < dimof(fileFormats); i++) {
+        if (fileFormats[i].available && fileFormats[i].name) {
+            fileFilter.Append(fileFormats[i].name);
+            fileFilter.AppendChar('\1');
+            fileFilter.Append(fileFormats[i].filter);
+            fileFilter.AppendChar('\1');
+        }
+    }
+    fileFilter.Append(_TRA("All files"));
+    fileFilter.Append("\1*.*\1");
+    str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
+    return ToWStrTemp(fileFilter.CStr());
+}
+
 static void OpenFile(MainWindow* win) {
     if (!HasPermission(Perm::DiskAccess)) {
         return;
@@ -3259,56 +3307,11 @@ static void OpenFile(MainWindow* win) {
         return;
     }
 
-    const struct {
-        const WCHAR* name; /* nullptr if only to include in "All supported documents" */
-        const WCHAR* filter;
-        bool available;
-    } fileFormats[] = {
-        {_TR("PDF documents"), L"*.pdf", true},
-        {_TR("XPS documents"), L"*.xps;*.oxps", true},
-        {_TR("DjVu documents"), L"*.djvu", true},
-        {_TR("Postscript documents"), L"*.ps;*.eps", IsEnginePsAvailable()},
-        {_TR("Comic books"), L"*.cbz;*.cbr;*.cb7;*.cbt", true},
-        {_TR("CHM documents"), L"*.chm", true},
-        {_TR("SVG documents"), L"*.svg", true},
-        {_TR("EPUB ebooks"), L"*.epub", true},
-        {_TR("Mobi documents"), L"*.mobi", true},
-        {_TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
-        {_TR("PalmDoc documents"), L"*.pdb;*.prc", true},
-        {_TR("Images"), L"*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jxr;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.avif", true},
-        {_TR("Text documents"), L"*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr", true},
-    };
-    // Prepare the file filters (use \1 instead of \0 so that the
-    // double-zero terminated string isn't cut by the string handling
-    // methods too early on)
-    str::WStr fileFilter;
-    fileFilter.Append(_TR("All supported documents"));
-    fileFilter.AppendChar(L'\1');
-    for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available) {
-            fileFilter.Append(fileFormats[i].filter);
-            fileFilter.AppendChar(L';');
-        }
-    }
-    CrashIf(fileFilter.Last() != L';');
-    fileFilter.Last() = L'\1';
-    for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available && fileFormats[i].name) {
-            fileFilter.Append(fileFormats[i].name);
-            fileFilter.AppendChar(L'\1');
-            fileFilter.Append(fileFormats[i].filter);
-            fileFilter.AppendChar(L'\1');
-        }
-    }
-    fileFilter.Append(_TR("All files"));
-    fileFilter.Append(L"\1*.*\1");
-    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
-
     OPENFILENAMEW ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
 
-    ofn.lpstrFilter = fileFilter.Get();
+    ofn.lpstrFilter = GetFileFilterTemp();
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
 

@@ -1618,6 +1618,10 @@ char* Str::Get() const {
     return els;
 }
 
+char* Str::CStr() const {
+    return els;
+}
+
 char Str::LastChar() const {
     auto n = this->len;
     if (n == 0) {

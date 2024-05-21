@@ -342,6 +342,7 @@ struct Str {
     bool AppendAndFree(const char* s);
     void Set(const char*);
     char* Get() const;
+    char* CStr() const;
     char LastChar() const;
 
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html

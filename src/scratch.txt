@@ -1,6 +1,8 @@
 Ideas for refactorings:
 
 - change all size_t => int
+- remove all use of _TR( : 141 matches
+- change use of Str::Get() => Str::CStr() (or maybe make it Str() as in StrSpan?)
 
 ------------------------------------------------------------------
 
