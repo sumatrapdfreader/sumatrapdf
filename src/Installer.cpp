@@ -358,7 +358,7 @@ static void StartInstallation(InstallerWnd* wnd) {
 
     wnd->btnInstall->SetIsEnabled(false);
 
-    SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
+    SetMsg(_TRA("Installation in progress..."), COLOR_MSG_INSTALLATION);
     HwndInvalidate(wnd->hwnd);
 
     gInstallStarted = true;
@@ -419,13 +419,13 @@ static void OnInstallationFinished() {
     DeleteWnd(&gWnd->progressBar);
 
     if (gWnd->failed) {
-        gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TR("Close"));
+        gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"));
         gWnd->btnExit->onClicked = OnButtonExit;
-        SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
+        SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
     } else {
-        gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TR("Start SumatraPDF"));
+        gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"));
         gWnd->btnRunSumatra->onClicked = OnButtonStartSumatra;
-        SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
+        SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     }
     gMsgError = gFirstError;
     HwndInvalidate(gWnd->hwnd);
@@ -640,12 +640,12 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     bool showOptions = false;
 
     HWND hwnd = wnd->hwnd;
-    wnd->btnInstall = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"));
+    wnd->btnInstall = CreateDefaultButton(hwnd, _TRA("Install SumatraPDF"));
     wnd->btnInstall->onClicked = OnButtonInstall;
     PositionInstallButton(wnd->btnInstall);
 
     Rect r = ClientRect(hwnd);
-    wnd->btnOptions = CreateDefaultButton(hwnd, _TR("&Options"));
+    wnd->btnOptions = CreateDefaultButton(hwnd, _TRA("&Options"));
     wnd->btnOptions->onClicked = OnButtonOptions;
     auto btnSize = wnd->btnOptions->GetIdealSize();
     int margin = DpiScale(hwnd, kInstallerWinMargin);
@@ -1086,7 +1086,7 @@ int RunInstaller() {
         return 1;
     }
 
-    gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
+    gDefaultMsg = _TRA("Thank you for choosing SumatraPDF!");
 
     if (!gCli->runInstallNow) {
         // if not set explicitly, default to state from previous installation

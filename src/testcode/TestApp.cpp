@@ -31,12 +31,12 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     vbox->alignCross = CrossAxisAlign::CrossCenter;
 
     {
-        auto b = CreateButton(hwnd, L"Tabs test", LaunchTabs);
+        auto b = CreateButton(hwnd, "Tabs test", LaunchTabs);
         vbox->AddChild(b);
     }
 
     {
-        auto b = CreateButton(hwnd, L"Layout test", LaunchLayout);
+        auto b = CreateButton(hwnd, "Layout test", LaunchLayout);
         vbox->AddChild(b);
     }
 

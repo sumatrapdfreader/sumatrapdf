@@ -23,10 +23,10 @@ extern int gButtonDy;
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 #define WM_APP_START_INSTALLATION (WM_APP + 2)
 
-extern WCHAR* gFirstError;
-extern const WCHAR* gDefaultMsg;
+extern char* gFirstError;
+extern const char* gDefaultMsg;
 extern HWND gHwndFrame;
-extern WCHAR* gMsgError;
+extern char* gMsgError;
 
 extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;
@@ -48,7 +48,7 @@ void AnimStep();
 
 void NotifyFailed(const char* msg);
 
-void SetMsg(const WCHAR* msg, Gdiplus::Color color);
+void SetMsg(const char* msg, Gdiplus::Color color);
 void SetDefaultMsg();
 
 int KillProcessesWithModule(const char* modulePath, bool waitUntilTerminated);

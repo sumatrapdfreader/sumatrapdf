@@ -549,32 +549,33 @@ static float gItemZoom[] = {kZoomFitPage, kZoomFitWidth, kZoomFitContent, 0,    
                             200.0,        150.0,         125.0,           100.0, 50.0,   25.0,   12.5,   8.33f};
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
+    HWND hwnd = GetDlgItem(hDlg, idComboBox);
     if (!forChm) {
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Page"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Content"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"-");
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"6400%");
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"3200%");
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"1600%");
+        CbAddString(hwnd, _TRA("Fit Page"));
+        CbAddString(hwnd, _TRA("Fit Width"));
+        CbAddString(hwnd, _TRA("Fit Content"));
+        CbAddString(hwnd, "-");
+        CbAddString(hwnd, "6400%");
+        CbAddString(hwnd, "3200%");
+        CbAddString(hwnd, "1600%");
     }
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"800%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"400%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"200%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"150%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"125%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"100%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"50%");
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"25%");
+    CbAddString(hwnd, "800%");
+    CbAddString(hwnd, "400%");
+    CbAddString(hwnd, "200%");
+    CbAddString(hwnd, "150%");
+    CbAddString(hwnd, "125%");
+    CbAddString(hwnd, "100%");
+    CbAddString(hwnd, "50%");
+    CbAddString(hwnd, "25%");
     if (!forChm) {
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"12.5%");
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"8.33%");
+        CbAddString(hwnd, "12.5%");
+        CbAddString(hwnd, "8.33%");
     }
     int first = forChm ? 7 : 0;
     int last = forChm ? dimof(gItemZoom) - 2 : dimof(gItemZoom);
     for (int i = first; i < last; i++) {
         if (gItemZoom[i] == currZoom) {
-            SendDlgItemMessage(hDlg, idComboBox, CB_SETCURSEL, i - first, 0);
+            CbSetCurrentSelection(hwnd, i - first);
         }
     }
 
@@ -625,9 +626,9 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, L
             SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, data->forChm, data->zoomArg);
 
             HwndSetText(hDlg, _TRA("Zoom factor"));
-            SetDlgItemTextW(hDlg, IDC_STATIC, _TR("&Magnification:"));
-            SetDlgItemTextW(hDlg, IDOK, _TR("Zoom"));
-            SetDlgItemTextW(hDlg, IDCANCEL, _TR("Cancel"));
+            HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("&Magnification:"));
+            HwndSetDlgItemText(hDlg, IDOK, _TRA("Zoom"));
+            HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
             CenterDialog(hDlg);
             SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
@@ -696,16 +697,19 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             prefs = (GlobalPrefs*)lp;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)prefs);
 
-            // Fill the page layouts into the select box
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Automatic"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Single Page"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Facing"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Book View"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous Facing"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous Book View"));
-            SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL,
-                               (int)prefs->defaultDisplayModeEnum - (int)DisplayMode::Automatic, 0);
+            {
+                HWND hwndCb = GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT);
+                // Fill the page layouts into the select box
+                CbAddString(hwndCb, _TRA("Automatic"));
+                CbAddString(hwndCb, _TRA("Single Page"));
+                CbAddString(hwndCb, _TRA("Facing"));
+                CbAddString(hwndCb, _TRA("Book View"));
+                CbAddString(hwndCb, _TRA("Continuous"));
+                CbAddString(hwndCb, _TRA("Continuous Facing"));
+                CbAddString(hwndCb, _TRA("Continuous Book View"));
+                int selIdx = (int)prefs->defaultDisplayModeEnum - (int)DisplayMode::Automatic;
+                CbSetCurrentSelection(hwndCb, selIdx);
+            }
 
             SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, false, prefs->defaultZoomFloat);
 
@@ -765,7 +769,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     HwndSetDlgItemText(hDlg, IDC_CMDLINE, cmdLine);
                 } else {
                     // select the active command
-                    SendMessageW(hwndComboBox, CB_SETCURSEL, (WPARAM)ind, 0);
+                    CbSetCurrentSelection(hwndComboBox, ind);
                 }
             } else {
                 RemoveDialogItem(hDlg, IDC_SECTION_INVERSESEARCH, IDC_SECTION_ADVANCED);

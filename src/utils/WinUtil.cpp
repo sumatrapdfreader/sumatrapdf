@@ -2679,6 +2679,17 @@ void HwndSetDlgItemText(HWND hDlg, int itemID, const char* s) {
     SetDlgItemTextW(hDlg, itemID, ws);
 }
 
+// hwnd should be Combo Box control
+void CbAddString(HWND hwnd, const char* s) {
+    TempWStr ws = ToWStrTemp(s);
+    SendMessageW(hwnd, CB_ADDSTRING, 0, (LPARAM)ws);
+}
+
+// hwnd should be Combo Box control
+void CbSetCurrentSelection(HWND hwnd, int selIdx) {
+    SendMessageW(hwnd, CB_SETCURSEL, (WPARAM)selIdx, 0);
+}
+
 // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-seticon
 HICON HwndSetIcon(HWND hwnd, HICON icon) {
     if (!hwnd || !icon) {

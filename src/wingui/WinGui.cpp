@@ -1320,10 +1320,10 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked) {
+Button* CreateButton(HWND parent, const char* s, const ClickedHandler& onClicked) {
     ButtonCreateArgs args;
     args.parent = parent;
-    args.text = ToUtf8Temp(s);
+    args.text = s;
 
     auto b = new Button();
     b->onClicked = onClicked;
@@ -1332,27 +1332,6 @@ Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicke
 }
 
 #define kButtonMargin 8
-
-Button* CreateDefaultButton(HWND parent, const WCHAR* s) {
-    ButtonCreateArgs args;
-    args.parent = parent;
-    args.text = ToUtf8Temp(s);
-
-    auto* b = new Button();
-    b->Create(args);
-
-    RECT r = ClientRECT(parent);
-    Size size = b->GetIdealSize();
-    int margin = DpiScale(parent, kButtonMargin);
-    int x = RectDx(r) - size.dx - margin;
-    int y = RectDy(r) - size.dy - margin;
-    r.left = x;
-    r.right = x + size.dx;
-    r.top = y;
-    r.bottom = y + size.dy;
-    b->SetPos(&r);
-    return b;
-}
 
 Button* CreateDefaultButton(HWND parent, const char* s) {
     ButtonCreateArgs args;

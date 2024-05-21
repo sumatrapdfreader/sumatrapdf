@@ -133,7 +133,7 @@ static void OnButtonUninstall() {
 
     // disable the button during uninstallation
     gButtonUninstaller->SetIsEnabled(false);
-    SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
+    SetMsg(_TRA("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     HwndInvalidate(gHwndFrame);
 
     hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, nullptr);
@@ -146,9 +146,9 @@ static void OnButtonExit() {
 void OnUninstallationFinished() {
     delete gButtonUninstaller;
     gButtonUninstaller = nullptr;
-    gButtonExit = CreateDefaultButton(gHwndFrame, _TR("Close"));
+    gButtonExit = CreateDefaultButton(gHwndFrame, _TRA("Close"));
     gButtonExit->onClicked = OnButtonExit;
-    SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
+    SetMsg(_TRA("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
 
@@ -183,7 +183,7 @@ static void CreateUninstallerWindow() {
     DpiScale(gHwndFrame, dx, dy);
     HwndResizeClientSize(gHwndFrame, dx, dy);
 
-    gButtonUninstaller = CreateDefaultButton(gHwndFrame, _TR("Uninstall SumatraPDF"));
+    gButtonUninstaller = CreateDefaultButton(gHwndFrame, _TRA("Uninstall SumatraPDF"));
     gButtonUninstaller->onClicked = OnButtonUninstall;
 }
 
@@ -460,7 +460,7 @@ int RunUninstaller() {
         log("Previewer is installed\n");
     }
 
-    gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
+    gDefaultMsg = _TRA("Are you sure you want to uninstall SumatraPDF?");
 
     // unregister search filter and previewer to reduce
     // possibility of blocking

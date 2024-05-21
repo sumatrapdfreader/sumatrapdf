@@ -201,8 +201,7 @@ struct Button : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
-Button* CreateButton(HWND parent, const WCHAR* s, const ClickedHandler& onClicked);
-Button* CreateDefaultButton(HWND parent, const WCHAR* s);
+Button* CreateButton(HWND parent, const char* s, const ClickedHandler& onClicked);
 Button* CreateDefaultButton(HWND parent, const char* s);
 
 //--- Tooltip

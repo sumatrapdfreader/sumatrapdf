@@ -324,6 +324,9 @@ bool HwndHasCaption(HWND hwnd);
 
 void HwndSetDlgItemText(HWND, int, const char*);
 
+void CbAddString(HWND, const char*);
+void CbSetCurrentSelection(HWND, int);
+
 HICON HwndGetIcon(HWND);
 HICON HwndSetIcon(HWND, HICON);
 
