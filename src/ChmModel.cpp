@@ -19,6 +19,8 @@
 #include "GlobalPrefs.h"
 #include "ChmModel.h"
 
+#include "utils/Log.h"
+
 static IPageDestination* NewChmNamedDest(const char* url, int pageNo) {
     if (!url) {
         return nullptr;
@@ -223,7 +225,11 @@ void ChmModel::ScrollTo(int, RectF, float) {
 }
 
 bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler*) {
-    CrashIf(link->GetKind() != kindDestinationScrollTo);
+    Kind k = link->GetKind();
+    if (k != kindDestinationScrollTo) {
+        logf("ChmModel::HandleLink: unsupported kind '%s'\n", k);
+        ReportIfQuick(link->GetKind() != kindDestinationScrollTo);
+    }
     char* url = PageDestGetName(link);
     if (DisplayPage(url)) {
         return true;

@@ -272,19 +272,19 @@ inline void CrashIfFunc(bool cond) {
         }                       \
     } while (0)
 
-#define ReportIf(cond)                       \
-    __analysis_assume(!(cond));              \
-    do {                                     \
-        if (cond) {                          \
-            _uploadDebugReport(#cond, true); \
-        }                                    \
-    } while (0)
-
-#define ReportIfQuick(cond)                   \
+#define ReportIf(cond)                        \
+    __analysis_assume(!(cond));               \
     do {                                      \
         if (cond) {                           \
             _uploadDebugReport(#cond, false); \
         }                                     \
+    } while (0)
+
+#define ReportIfQuick(cond)                  \
+    do {                                     \
+        if (cond) {                          \
+            _uploadDebugReport(#cond, true); \
+        }                                    \
     } while (0)
 
 void* AllocZero(size_t count, size_t size);

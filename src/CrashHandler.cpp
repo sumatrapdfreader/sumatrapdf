@@ -132,10 +132,15 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     return isWine;
 }
 
-static char* BuildCrashInfoText(bool forCrash, bool noCallstack) {
+// if reportCond this is building for ReportIf() / ReportIfQuick()
+// otherwise this is a crsah
+static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
-    if (!forCrash) {
+    if (reportCond) {
         s.Append("Type: debug report (not crash)\n");
+        s.Append("Cond: ");
+        s.Append(reportCond);
+        s.Append("\n");
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -144,16 +149,18 @@ static char* BuildCrashInfoText(bool forCrash, bool noCallstack) {
     GetStressTestInfo(&s);
     s.Append("\n");
 
-    if (forCrash) {
-        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
-    } else {
+    if (reportCond) {
         // this is not a crash but debug report, we don't have an exception
         if (noCallstack) {
-            s.Append("\r\nCrashed thread:\r\n");
+            // dummy line so that we don't have to
+            s.Append("\nCrashed thread:\n");
+            s.Append("00007FF79239E91A 01:000000000001D91A dummy!quick report\n");
         } else {
-            s.Append("\r\nCrashed thread:\r\n");
+            s.Append("\nCrashed thread:\n");
             dbghelp::GetCurrentThreadCallstack(s);
         }
+    } else {
+        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     }
 
     if (!noCallstack) {
@@ -308,13 +315,14 @@ bool CrashHandlerDownloadSymbols() {
 // like crash report, but can be triggered without a crash
 void _uploadDebugReport(const char* condStr, bool noCallstack) {
     // we want to avoid submitting multiple reports for the same
-    // condition. I'm too lazy to implement tracking this granuarly
-    // so only allow once submition in a given session
+    // condition. I'm too lazy to implement tracking this granularly
+    // so only allow once submission in a given session
     static bool didSubmitDebugReport = false;
 
     if (didSubmitDebugReport) {
         return;
     }
+
     didSubmitDebugReport = true;
     // don't send report if this is me debugging
     if (IsDebuggerPresent()) {
@@ -347,7 +355,7 @@ void _uploadDebugReport(const char* condStr, bool noCallstack) {
         }
     }
 
-    auto s = BuildCrashInfoText(false, noCallstack);
+    auto s = BuildCrashInfoText(condStr, noCallstack);
     if (str::IsEmpty(s)) {
         log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
@@ -377,7 +385,7 @@ void TryUploadCrashReport() {
         log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
     }
 
-    char* sv = BuildCrashInfoText(true, true);
+    char* sv = BuildCrashInfoText(nullptr, true);
     if (str::IsEmpty(sv)) {
         log("TryUploadCrashReport(): skipping because !BuildCrashInfoText()\n");
         return;

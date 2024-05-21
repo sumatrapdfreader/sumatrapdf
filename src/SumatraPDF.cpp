@@ -3294,8 +3294,8 @@ static TempWStr GetFileFilterTemp() {
     }
     fileFilter.Append(_TRA("All files"));
     fileFilter.Append("\1*.*\1");
-    str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
-    return ToWStrTemp(fileFilter.CStr());
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    return ToWStrTemp(fileFilter);
 }
 
 static void OpenFile(MainWindow* win) {
