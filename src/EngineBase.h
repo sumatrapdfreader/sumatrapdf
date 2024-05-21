@@ -208,7 +208,6 @@ struct IPageElement {
     }
 
     // string value associated with this element (e.g. displayed in an infotip)
-    // caller must free() the result
     virtual char* GetValue() {
         return nullptr;
     }

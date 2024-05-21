@@ -132,7 +132,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     return isWine;
 }
 
-static char* BuildCrashInfoText(bool forCrash) {
+static char* BuildCrashInfoText(bool forCrash, bool noCallstack) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (!forCrash) {
         s.Append("Type: deubg report (not crash)\n");
@@ -147,13 +147,20 @@ static char* BuildCrashInfoText(bool forCrash) {
     if (forCrash) {
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     } else {
-        // This is not a crash but debug report, we don't have an exception
-        s.Append("\r\nCrashed thread:\r\n");
-        dbghelp::GetCurrentThreadCallstack(s);
+        // this is not a crash but debug report, we don't have an exception
+        if (noCallstack) {
+            s.Append("\r\nCrashed thread:\r\n");
+        } else {
+            s.Append("\r\nCrashed thread:\r\n");
+            dbghelp::GetCurrentThreadCallstack(s);
+        }
     }
 
-    dbghelp::GetAllThreadsCallstacks(s);
-    s.Append("\n");
+    if (!noCallstack) {
+        dbghelp::GetAllThreadsCallstacks(s);
+        s.Append("\n");
+    }
+
     s.Append(gModulesInfo);
     s.Append("\nModules loaded later:\n");
     GetModules(s, true);
@@ -299,21 +306,48 @@ bool CrashHandlerDownloadSymbols() {
 }
 
 // like crash report, but can be triggered without a crash
-void _uploadDebugReport(const char* condStr) {
+void _uploadDebugReport(const char* condStr, bool noCallstack) {
+    // we want to avoid submitting multiple reports for the same
+    // condition. I'm too lazy to implement tracking this granuarly
+    // so only allow once submition in a given session
+    static bool didSubmitDebugReport = false;
+
+    if (didSubmitDebugReport) {
+        return;
+    }
+    didSubmitDebugReport = true;
+    // don't send report if this is me debugging
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+        return;
+    }
+
+    if (!gIsPreReleaseBuild) {
+        // only enabled for pre-release builds, don't want lots of non-crash
+        // reports from official release
+        return;
+    }
+    if (gIsDebugBuild) {
+        // exclude debug builds. Those are most likely other people modyfing Sumatra
+        return;
+    }
+
     logf("uploadDebugReport: %s\n", condStr);
     if (!CrashHandlerCanUseNet()) {
         return;
     }
 
-    logf("_uploadDebugReport: gSymbolPathW: '%s'\n", gSymbolPath);
+    logf("_uploadDebugReport: noCallstack: %d, gSymbolPathW: '%s'\n", (int)noCallstack, gSymbolPath);
 
-    bool ok = CrashHandlerDownloadSymbols();
-    if (!ok) {
-        log("_uploadDebugReport(): CrashHandlerDownloadSymbols() failed\n");
-        return;
+    if (!noCallstack) {
+        bool ok = CrashHandlerDownloadSymbols();
+        if (!ok) {
+            log("_uploadDebugReport(): CrashHandlerDownloadSymbols() failed\n");
+            return;
+        }
     }
 
-    auto s = BuildCrashInfoText(false);
+    auto s = BuildCrashInfoText(false, noCallstack);
     if (str::IsEmpty(s)) {
         log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
@@ -324,30 +358,6 @@ void _uploadDebugReport(const char* condStr) {
     // gCrashHandlerAllocator->Free((const void*)d.data());
     log(s);
     log("_uploadDebugReport() finished\n");
-}
-
-// we want to avoid submitting multiple reports for the same
-// condition. I'm too lazy to implement tracking this granuarly
-// so only allow once submition in a given session
-static bool didSubmitDebugReport = false;
-
-void _uploadDebugReportIfFunc(bool cond, const char* condStr) {
-    if (!cond || didSubmitDebugReport) {
-        return;
-    }
-    didSubmitDebugReport = true;
-    // don't send report if this is me debugging
-    if (IsDebuggerPresent()) {
-        DebugBreak();
-        return;
-    }
-    // only enabled for pre-release builds, don't want lots of non-crash
-    // reports from official release
-    // exclude debug builds because don't want to get reports
-    // from people compiling Sumatra themselfes
-    if (gIsPreReleaseBuild && !gIsDebugBuild) {
-        _uploadDebugReport(condStr);
-    }
 }
 
 // If we can't resolve the symbols, we assume it's because we don't have symbols
@@ -367,7 +377,7 @@ void TryUploadCrashReport() {
         log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
     }
 
-    char* sv = BuildCrashInfoText(true);
+    char* sv = BuildCrashInfoText(true, true);
     if (str::IsEmpty(sv)) {
         log("TryUploadCrashReport(): skipping because !BuildCrashInfoText()\n");
         return;

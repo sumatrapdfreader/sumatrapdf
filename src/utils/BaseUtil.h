@@ -213,12 +213,14 @@ inline void CrashMe() {
 #endif
 
 #ifdef ENABLE_CRASH_REPORTING
-// must be defined in the app. can be no-op to disable this functionality
-void _uploadDebugReportIfFunc(bool cond, const char*);
+void _uploadDebugReport(const char*, bool);
 #else
-inline void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) {
-    // no-op implementation to satisfy SubmitBugReport()
-}
+// must be a macro that expands to nothing
+// can't be a function because we might mix compilation units
+// with ENABLE_CRASH_REPORTING defined and not defined
+#define _uploadDebugReport(x, y) \
+    do {                         \
+    } while (0)
 #endif
 
 // CrashIf() is like assert() except it crashes in debug and pre-release builds.
@@ -255,25 +257,34 @@ inline void CrashIfFunc(bool cond) {
 }
 
 // trigger a crash if cond is true and we're pre-release, debug or asan build
-#define CrashIf(cond)               \
-    do {                            \
-        __analysis_assume(!(cond)); \
-        CrashIfFunc(cond);          \
+#define CrashIf(cond)           \
+    __analysis_assume(!(cond)); \
+    do {                        \
+        CrashIfFunc(cond);      \
     } while (0)
 
 // trigger a crash always, even in release builds
-#define CrashAlwaysIf(cond)         \
-    do {                            \
-        __analysis_assume(!(cond)); \
-        if (cond) {                 \
-            CrashMe();              \
-        }                           \
+#define CrashAlwaysIf(cond)     \
+    __analysis_assume(!(cond)); \
+    do {                        \
+        if (cond) {             \
+            CrashMe();          \
+        }                       \
     } while (0)
 
-#define ReportIf(cond)                         \
-    do {                                       \
-        __analysis_assume(!(cond));            \
-        _uploadDebugReportIfFunc(cond, #cond); \
+#define ReportIf(cond)                       \
+    __analysis_assume(!(cond));              \
+    do {                                     \
+        if (cond) {                          \
+            _uploadDebugReport(#cond, true); \
+        }                                    \
+    } while (0)
+
+#define ReportIfQuick(cond)                   \
+    do {                                      \
+        if (cond) {                           \
+            _uploadDebugReport(#cond, false); \
+        }                                     \
     } while (0)
 
 void* AllocZero(size_t count, size_t size);
