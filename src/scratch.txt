@@ -1,7 +1,6 @@
 Ideas for refactorings:
 
 - change all size_t => int
-- remove all use of _TR( : 26 matches (was 48, 61, 74, 94, 141)
 - change use of Str::Get() => Str::CStr() (or maybe make it Str() as in StrSpan?)
 - audit all str::Join() and path::Join() to see if could / should be *Temp()
 

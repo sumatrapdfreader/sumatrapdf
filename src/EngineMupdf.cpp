@@ -1844,7 +1844,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
         fz_stream* file = fz_open_buffer(ctx, buf);
         fz_drop_buffer(ctx, buf);
         str::Free(d);
-        char* nameHint = str::Join(path, ".html");
+        TempStr nameHint = str::JoinTemp(path, ".html");
         if (!LoadFromStream(file, nameHint, pwdUI)) {
             return false;
         }

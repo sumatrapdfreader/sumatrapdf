@@ -127,8 +127,8 @@ char* NormalizeURL(const char* url, const char* base) {
     } else {
         baseEnd = base;
     }
-    AutoFreeStr basePath = str::Dup(base, baseEnd - base);
-    AutoFreeStr norm = str::Join(basePath, url);
+    TempStr basePath = str::DupTemp(base, baseEnd - base);
+    char* norm = str::Join(basePath, url);
 
     char* dst = norm;
     for (char* src = norm; *src; src++) {
@@ -146,7 +146,7 @@ char* NormalizeURL(const char* url, const char* base) {
         }
     }
     *dst = '\0';
-    return norm.Release();
+    return norm;
 }
 
 inline char decode64(char c) {

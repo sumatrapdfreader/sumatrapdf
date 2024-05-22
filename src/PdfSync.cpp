@@ -111,13 +111,13 @@ bool Synchronizer::NeedsToRebuildIndex() const {
 
 int Synchronizer::MarkIndexWasRebuilt() {
     needsToRebuildIndex = false;
-    WCHAR* path = ToWStrTemp(syncFilePath);
+    TempWStr path = ToWStrTemp(syncFilePath);
     _wstat(path, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
 
 char* Synchronizer::PrependDir(const char* filename) const {
-    char* dir = path::GetDirTemp(syncFilePath);
+    TempStr dir = path::GetDirTemp(syncFilePath);
     return path::Join(dir, filename);
 }
 

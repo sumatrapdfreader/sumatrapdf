@@ -88,7 +88,7 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
 
     // parse into lines
     char* s = (char*)d.data();
-    StrVec lines;
+    StrVec2 lines;
     Split(lines, s, "\n", true);
     int nStrings = 0;
     for (char* l : lines) {
