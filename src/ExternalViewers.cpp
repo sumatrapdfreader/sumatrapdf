@@ -433,7 +433,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         return false;
     }
 
-    StrVec args;
+    StrVec2 args;
     ParseCmdLine(ToWStrTemp(ev->commandLine), args);
     int nArgs = args.Size();
     if (nArgs == 0) {

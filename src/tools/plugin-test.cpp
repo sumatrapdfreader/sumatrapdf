@@ -88,7 +88,7 @@ WCHAR* GetSumatraExePath() {
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
-    StrVec argList;
+    StrVec2 argList;
     ParseCmdLine(GetCommandLine(), argList);
 
     if (argList.Size() == 1) {
