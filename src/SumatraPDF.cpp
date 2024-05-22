@@ -1945,34 +1945,35 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
         }
     }
 
-    RunAsync([args, wndNotif] {
-        gDangerousThreadCount.Inc();
-        SetThreadName("LoadDocument");
-        DocController* ctrl = nullptr;
-        MainWindow* win = args->win;
-        HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
-        const char* path = args->FilePath();
-        EngineBase* engine = args->engine;
-        args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
-        if (args->ctrl && gIsDebugBuild) {
-            //::Sleep(5000);
-        }
-
-        uitask::Post([args, wndNotif] {
-            RemoveNotification(wndNotif);
+    RunAsync(
+        [args, wndNotif] {
+            gDangerousThreadCount.Inc();
+            DocController* ctrl = nullptr;
             MainWindow* win = args->win;
+            HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
             const char* path = args->FilePath();
-            if (!args->ctrl) {
-                ShowErrorLoadingNotification(win, path, args->noSavePrefs);
-                delete args;
-                return;
+            EngineBase* engine = args->engine;
+            args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
+            if (args->ctrl && gIsDebugBuild) {
+                //::Sleep(5000);
             }
-            args->activateExisting = false;
-            LoadDocumentFinish(args);
-            delete args;
-        });
-        gDangerousThreadCount.Dec();
-    });
+
+            uitask::Post([args, wndNotif] {
+                RemoveNotification(wndNotif);
+                MainWindow* win = args->win;
+                const char* path = args->FilePath();
+                if (!args->ctrl) {
+                    ShowErrorLoadingNotification(win, path, args->noSavePrefs);
+                    delete args;
+                    return;
+                }
+                args->activateExisting = false;
+                LoadDocumentFinish(args);
+                delete args;
+            });
+            gDangerousThreadCount.Dec();
+        },
+        "LoadDocumentThread");
 }
 
 // remember which files failed to open so that a failure to
@@ -4774,21 +4775,24 @@ TempStr GetLogFilePathTemp() {
 }
 
 // separate directory for each build number / type
-static TempStr GetCrashInfoDirNameTemp() {
+static TempStr GetVerDirNameTemp(const char* prefix) {
     auto variant = gIsPreReleaseBuild ? "prerel" : "rel";
+    if (gIsDebugBuild) {
+        variant = "dbg";
+    }
     auto bits = IsProcess64() ? "64" : "32";
     if (IsArmBuild()) {
         bits = "arm64";
     }
-    auto ver = CURR_VERSION_STRA; // 3.6.16105 or 3.5.2 for release
+    auto ver = CURR_VERSION_STRA; // 3.6.16105 for pre-release,  3.5.2 for release
     // TODO: something different for store build?
-    return str::FormatTemp("crashinfo-%s-%s-%s", variant, ver, bits);
+    return str::FormatTemp("%s%s-%s-%s", prefix, variant, ver, bits);
 }
 
 TempStr GetCrashInfoDirTemp() {
     TempStr dataDir = GetNotImportantDataDirTemp();
-    TempStr dirName = GetCrashInfoDirNameTemp();
-    return path::Join(dataDir, dirName);
+    TempStr dirName = GetVerDirNameTemp("crashinfo-");
+    return path::JoinTemp(dataDir, dirName);
 }
 
 void ShowLogFileSmart() {
@@ -4851,6 +4855,7 @@ void ClearHistory(MainWindow* win) {
     const char* msg = _TRA("Clearing history...");
     auto notifWnd = ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
 
+    // TODO: run this part with RunAsync()
     DeleteThumbnailCacheDirectory();
 
     TempStr symDir = GetCrashInfoDirTemp();
@@ -4861,8 +4866,6 @@ void ClearHistory(MainWindow* win) {
     ::UpdateWindow(win->hwndCanvas);
     TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
-
-    // TODO: deletion takes time so run it async with RunAsync()
 }
 
 static void DownloadDebugSymbols() {
@@ -4902,27 +4905,6 @@ void DebugCorruptMemory() {
 #endif
 }
 
-static LoadedDataResource gManualArchiveData;
-static lzma::SimpleArchive gManualArchive{};
-
-bool OpenManualArchive() {
-    if (gManualArchive.filesCount > 0) {
-        return true;
-    }
-    bool ok = LockDataResource(IDR_MANUAL_PAK, &gManualArchiveData);
-    if (!ok) {
-        return false;
-    }
-    auto data = gManualArchiveData.data;
-    auto size = gManualArchiveData.dataSize;
-    ok = lzma::ParseSimpleArchive(data, (size_t)size, &gManualArchive);
-    if (!ok) {
-        logf("OpenManualArchive: lzma:ParseSimpleArchive() failed\n");
-        return false;
-    }
-    return true;
-}
-
 static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
     logf("ExtractFiles(): dir '%s'\n", destDir);
     lzma::FileInfo* fi;
@@ -4960,38 +4942,88 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
     return true;
 }
 
-TempStr GetManualDir() {
-    TempStr dirName = str::FormatTemp("manual-%s", CURR_VERSION_STRA);
-    TempStr dir = AppGenDataFilenameTemp(dirName);
-    return dir;
+static bool MaybeDeleteStaleDirectory(WIN32_FIND_DATAW* fd, const char* dir) {
+    CrashIf(!IsDirectory(fd->dwFileAttributes));
+    TempStr name = ToUtf8Temp(fd->cFileName);
+    bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
+    if (!maybeDelete) {
+        logf("MaybeDeleteStaleDirectory: skipping '%s' because not manual-* or crsahinfo-*\n", name);
+        return true;
+    }
+    TempStr currVer = GetVerDirNameTemp("");
+    if (str::Contains(name, currVer)) {
+        logf("MaybeDeleteStaleDirectory: skipping '%s' because our ver '%s'\n", name, currVer);
+        return true;
+    }
+    bool ok = dir::RemoveAll(dir);
+    logf("MaybeDeleteStaleDirectory: dir::RemoveAll('%s') returned %d\n", dir, ok);
+    return true;
+}
+
+// delete symbols and manual from possibly previous versions
+static void DeleteStaleFiles() {
+    TempStr dir = GetNotImportantDataDirTemp();
+    VisitDir(dir, kVisitDirIncludeDirs, MaybeDeleteStaleDirectory);
+}
+
+void DeleteStaleFilesAsync() {
+    // for now we only care about pre-release builds as they can be updated frequently
+    if (false && !gIsPreReleaseBuild) {
+        logf("DeleteStaleFiles: skipping because gIsPreRelaseBuild: %d\n", (int)gIsPreReleaseBuild);
+        return;
+    }
+    TempStr dir = GetNotImportantDataDirTemp();
+    logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", (int)gIsPreReleaseBuild,
+         GetVerDirNameTemp(""));
+    RunAsync(DeleteStaleFiles, "DeleteStaleFilesThread");
 }
 
 constexpr const char* kManualIndex = "SumatraPDF-documentation.html";
 constexpr const char* kManualKeyboard = "Keyboard-shortcuts.html";
 
-static bool ExtractManual() {
-    auto dir = GetManualDir();
-    auto path = path::Join(dir, kManualIndex);
-    if (file::Exists(path)) {
-        return true;
+static LoadedDataResource gManualArchiveData;
+static lzma::SimpleArchive gManualArchive{};
+
+static void OpenManualAtFile(const char* htmlFileName) {
+    TempStr dataDir = GetNotImportantDataDirTemp();
+    TempStr dirName = GetVerDirNameTemp("crashinfo-");
+    TempStr dir = path::JoinTemp(dataDir, dirName);
+    TempStr htmlFilePath = path::JoinTemp(dir, kManualIndex);
+    // in debug build we force extraction because those could be stale files
+    bool ok = !gIsDebugBuild && file::Exists(htmlFilePath);
+    if (ok) {
+        logf("OpenManualAtFile: '%s' already exists\n", htmlFilePath);
+        goto OpenFileInBrowser;
     }
-    bool ok = OpenManualArchive();
+
+    ok = gManualArchive.filesCount > 0;
     if (!ok) {
-        return false;
+        ok = LockDataResource(IDR_MANUAL_PAK, &gManualArchiveData);
+        if (!ok) {
+            logf("OpenManualAtFile(): LockDataResource() failed\n");
+            return;
+        }
+        auto data = gManualArchiveData.data;
+        auto size = gManualArchiveData.dataSize;
+        ok = lzma::ParseSimpleArchive(data, (size_t)size, &gManualArchive);
+        if (!ok) {
+            logf("OpenManualAtFile: lzma:ParseSimpleArchive() failed\n");
+            return;
+        }
+        logf("OpenManualAtFile(): opened manual.dat, %d files\n", gManualArchive.filesCount);
+        ok = gManualArchive.filesCount > 0;
+        if (!ok) {
+            return;
+        }
     }
     dir::CreateAll(dir);
-    logf("ExtractInstallerFiles() to '%s'\n", dir);
     // on error, ExtractFiles() shows error message itself
-    return ExtractFiles(&gManualArchive, dir);
-}
-
-static void OpenManualAtFile(const char* name) {
-    if (!ExtractManual()) {
+    ok = ExtractFiles(&gManualArchive, dir);
+    if (!ok) {
         return;
     }
-    auto dir = GetManualDir();
-    auto path = path::Join(dir, name);
-    TempStr url = str::Join("file://", path);
+OpenFileInBrowser:
+    TempStr url = str::JoinTemp("file://", htmlFilePath);
     SumatraLaunchBrowser(url);
 }
 

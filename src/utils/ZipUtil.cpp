@@ -217,7 +217,7 @@ bool ZipCreator::AddFileFromDir(const char* filePath, const char* dir) {
 }
 
 bool ZipCreator::AddDir(const char* dir, bool recursive) {
-    DirTraverse(dir, recursive, [this, dir](const char* path) -> bool {
+    DirTraverse(dir, recursive, [this, dir](WIN32_FIND_DATAW*, const char* path) -> bool {
         if (!this->AddFileFromDir(path, dir)) {
             return false;
         }

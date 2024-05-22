@@ -41,4 +41,7 @@ docs_epub_tmp
 this_is_invalid_location
 docs/www/*.html
 docs/www/img/
+# https://stackoverflow.com/questions/10755655/git-ignore-tracked-files
+# git update-index --assume-unchanged .\docs\manual.dat
+# git update-index --no-assume-unchanged .\docs\manual.dat
 docs/manual.dat

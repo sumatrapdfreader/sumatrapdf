@@ -835,7 +835,7 @@ class EngineImageDir : public EngineImages {
 static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     e->SetFilePath(dir);
 
-    DirTraverse(dir, false, [e](const char* path) -> bool {
+    DirTraverse(dir, false, [e](WIN32_FIND_DATAW*, const char* path) -> bool {
         Kind kind = GuessFileTypeFromName(path);
         if (IsEngineImageSupportedFileType(kind)) {
             e->pageFileNames.Append(path);

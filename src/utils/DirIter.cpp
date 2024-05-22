@@ -10,7 +10,7 @@
 
 // try to filter out things that are not files
 // or not meant to be used by other applications
-static bool IsRegularFile(DWORD fileAttr) {
+bool IsRegularFile(DWORD fileAttr) {
     if (fileAttr & FILE_ATTRIBUTE_DEVICE) {
         return false;
     }
@@ -29,7 +29,7 @@ static bool IsRegularFile(DWORD fileAttr) {
     return true;
 }
 
-static bool IsDirectory(DWORD fileAttr) {
+bool IsDirectory(DWORD fileAttr) {
     return (fileAttr & FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
@@ -37,7 +37,13 @@ static bool IsSpecialDir(const char* s) {
     return str::Eq(s, ".") || str::Eq(s, "..");
 }
 
-bool DirTraverse(const char* dir, bool recurse, const std::function<bool(WIN32_FIND_DATAW* fd, const char*)>& cb) {
+// if cb returns false, we stop further traversal
+bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb) {
+    CrashIf(flg == 0);
+    bool includeFiles = flg & kVisitDirIncudeFiles;
+    bool includeDirs = flg & kVisitDirIncludeDirs;
+    bool recur = flg & kVisitDirRecurse;
+
     auto dirW = ToWStrTemp(dir);
     WCHAR* pattern = path::JoinTemp(dirW, L"*");
 
@@ -57,11 +63,15 @@ bool DirTraverse(const char* dir, bool recurse, const std::function<bool(WIN32_F
         isDir = IsDirectory(fd.dwFileAttributes);
         name = ToUtf8Temp(fd.cFileName);
         path = path::JoinTemp(dir, name);
-        if (isFile) {
+        if (isFile && includeFiles) {
             cont = cb(&fd, path);
-        } else if (recurse && isDir) {
-            if (!IsSpecialDir(name)) {
-                cont = DirTraverse(path, recurse, cb);
+        }
+        if (isDir && !IsSpecialDir(name)) {
+            if (includeDirs) {
+                cont = cb(&fd, path);
+            }
+            if (cont && recur) {
+                cont = VisitDir(path, flg, cb);
             }
         }
     } while (cont && FindNextFileW(h, &fd));
@@ -69,11 +79,13 @@ bool DirTraverse(const char* dir, bool recurse, const std::function<bool(WIN32_F
     return true;
 }
 
-bool DirTraverse(const char* dir, bool recurse, const std::function<bool(const char*)>& cb) {
-    bool ok = DirTraverse(dir, recurse, [&cb](WIN32_FIND_DATAW*, const char* path) -> bool {
-        bool cont = cb(path);
-        return cont;
-    });
+// if cb returns false, we stop further traversal
+bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb) {
+    u32 flg = kVisitDirIncudeFiles;
+    if (recurse) {
+        flg |= kVisitDirRecurse;
+    }
+    bool ok = VisitDir(dir, flg, cb);
     return ok;
 }
 
@@ -106,34 +118,15 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
     return paths.Size() > 0;
 }
 
-bool CollectFilesFromDirectory(const char* dir, StrVec& files, const std::function<bool(const char*)>& fileMatchesFn) {
-    auto dirW = ToWStrTemp(dir);
-    WCHAR* pattern = path::JoinTemp(dirW, L"*");
-
-    WIN32_FIND_DATAW fdata;
-    HANDLE hfind = FindFirstFileW(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return false;
-    }
-
-    bool isFile;
-    for (; FindNextFileW(hfind, &fdata);) {
-        isFile = IsRegularFile(fdata.dwFileAttributes);
-        if (!isFile) {
-            continue;
+bool CollectFilesFromDirectory(const char* dir, StrVec& files, const VisitDirCb& fileMatches) {
+    u32 flg = kVisitDirIncudeFiles;
+    bool ok = VisitDir(dir, flg, [&files, &fileMatches](WIN32_FIND_DATAW* fd, const char* path) -> bool {
+        if (fileMatches(fd, path)) {
+            files.Append(path);
         }
-        char* name = ToUtf8Temp(fdata.cFileName);
-        char* filePath = path::JoinTemp(dir, name);
-        bool matches = true;
-        if (fileMatchesFn) {
-            matches = fileMatchesFn(filePath);
-        }
-        if (matches) {
-            files.Append(filePath);
-        }
-    }
-    FindClose(hfind);
-    return true;
+        return true;
+    });
+    return ok;
 }
 
 i64 GetFileSize(WIN32_FIND_DATAW* fd) {
@@ -153,7 +146,7 @@ static DWORD WINAPI DirTraverseThread(LPVOID data) {
     DirTraverseThreadData* td = (DirTraverseThreadData*)data;
     CrashIf(!td);
 
-    DirTraverse(td->dir, td->recurse, [td](const char* path) -> bool {
+    DirTraverse(td->dir, td->recurse, [td](WIN32_FIND_DATAW*, const char* path) -> bool {
         td->queue->Append(path);
         return true;
     });

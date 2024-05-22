@@ -429,7 +429,7 @@ static SeqStrings gSupportedExtsForMulti =
     ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0";
 // clang-format on
 
-static bool isSupportedForMultis(const char* path) {
+static bool isSupportedForMultis(WIN32_FIND_DATAW*, const char* path) {
     char* ext = path::GetExtTemp(path);
     int idx = seqstrings::StrToIdxIS(gSupportedExtsForMulti, ext);
     return idx >= 0;

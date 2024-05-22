@@ -174,7 +174,7 @@ static bool IsFileToBench(const char* path) {
 }
 
 static void CollectFilesToBench(char* dir, StrVec& files) {
-    DirTraverse(dir, true, [&files](const char* path) -> bool {
+    DirTraverse(dir, true, [&files](WIN32_FIND_DATAW*, const char* path) -> bool {
         if (IsFileToBench(path)) {
             files.Append(path);
         }

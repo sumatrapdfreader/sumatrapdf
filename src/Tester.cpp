@@ -148,7 +148,7 @@ static void MobiTestFile(const char* filePath) {
 
 static void MobiTestDir(char* dir) {
     printf("Testing mobi files in '%s'\n", dir);
-    DirTraverse(dir, true, [](const char* path) -> bool {
+    DirTraverse(dir, true, [](WIN32_FIND_DATAW*, const char* path) -> bool {
         Kind kind = GuessFileTypeFromName(path);
         if (kind == kindFileMobi) {
             MobiTestFile(path);

@@ -107,9 +107,17 @@ static DWORD WINAPI ThreadFunc(void* data) {
     return 0;
 }
 
-void RunAsync(const std::function<void()>& func) {
+void RunAsync(const std::function<void()>& func, const char* threadName) {
     auto fp = new std::function<void()>(func);
-    AutoCloseHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, nullptr));
+    DWORD threadId = 0;
+    HANDLE hThread = CreateThread(nullptr, 0, ThreadFunc, (void*)fp, 0, &threadId);
+    if (!hThread) {
+        return;
+    }
+    if (threadName != nullptr) {
+        SetThreadName(threadName, threadId);
+    }
+    CloseHandle(hThread);
 }
 
 AtomicInt gDangerousThreadCount;

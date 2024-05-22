@@ -95,7 +95,7 @@ void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
     }
 }
 
-static HANDLE g_threadHandle = nullptr;
+static HANDLE gThreadHandle = nullptr;
 static DWORD g_threadId = 0;
 
 static HANDLE g_threadControlHandle = nullptr;
@@ -288,7 +288,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
 }
 
 static void StartMonitoringDirForChanges(WatchedDir* wd) {
-    QueueUserAPC(StartMonitoringDirForChangesAPC, g_threadHandle, (ULONG_PTR)wd);
+    QueueUserAPC(StartMonitoringDirForChangesAPC, gThreadHandle, (ULONG_PTR)wd);
 }
 
 static DWORD GetTimeoutInMs() {
@@ -462,13 +462,15 @@ WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>&
         return nullptr;
     }
 
-    if (!g_threadHandle) {
+    if (!gThreadHandle) {
         logf("StartFileThreadIfNecessary: starting a thread\n");
         InitializeCriticalSection(&g_threadCritSec);
         g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
-        g_threadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
-        SetThreadName("FileWatcherThread", g_threadId);
+        gThreadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
+        if (gThreadHandle) {
+            SetThreadName("FileWatcherThread", g_threadId);
+        }
     }
 
     ScopedCritSec cs(&g_threadCritSec);
@@ -493,7 +495,7 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
     CrashIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
     InterlockedIncrement(&gRemovalsPending);
-    QueueUserAPC(StopMonitoringDirAPC, g_threadHandle, (ULONG_PTR)wd);
+    QueueUserAPC(StopMonitoringDirAPC, gThreadHandle, (ULONG_PTR)wd);
 }
 
 void FileWatcherWaitForShutdown() {
@@ -501,7 +503,7 @@ void FileWatcherWaitForShutdown() {
     // have any file watching subscriptions pending
     CrashIf(g_watchedFiles != nullptr);
     CrashIf(g_watchedDirs != nullptr);
-    QueueUserAPC(ExitMonitoringThread, g_threadHandle, (ULONG_PTR)0);
+    QueueUserAPC(ExitMonitoringThread, gThreadHandle, (ULONG_PTR)0);
 
     // wait for ReadDirectoryChangesNotification() process actions triggered
     // in RemoveWatchedDirIfNotReferenced
@@ -537,7 +539,7 @@ void FileWatcherUnsubscribe(WatchedFile* wf) {
     if (!wf) {
         return;
     }
-    CrashIf(!g_threadHandle);
+    CrashIf(!gThreadHandle);
 
     ScopedCritSec cs(&g_threadCritSec);
 

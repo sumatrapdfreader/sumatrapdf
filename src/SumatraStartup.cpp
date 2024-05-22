@@ -1425,6 +1425,8 @@ ContinueOpenWindow:
 
     BringWindowToTop(win->hwndFrame);
 
+    DeleteStaleFilesAsync();
+
     exitCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache(gFileHistory);

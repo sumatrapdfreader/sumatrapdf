@@ -205,3 +205,4 @@ void SumatraOpenPathInExplorer(const char* path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetNotImportantDataDirTemp();
 TempStr GetCrashInfoDirTemp();
+void DeleteStaleFilesAsync();
