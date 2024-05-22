@@ -4821,6 +4821,28 @@ void CopyFilePath(WindowTab* tab) {
     CopyTextToClipboard(path);
 }
 
+Kind kNotifClearHistory = "clearHistry";
+
+void ClearHistoryAfterAsync(MainWindow* win, int nFiles) {
+    if (!MainWindowStillValid(win)) {
+        return;
+    }
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
+    ::InvalidateRect(win->hwndCanvas, nullptr, true);
+    ::UpdateWindow(win->hwndCanvas);
+    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
+    ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
+}
+
+void ClearHistoryAsyncPart(MainWindow* win, int nFiles) {
+    DeleteThumbnailCacheDirectory();
+    TempStr symDir = GetCrashInfoDirTemp();
+    dir::RemoveAll(symDir);
+
+    uitask::Post([win, nFiles]() { ClearHistoryAfterAsync(win, nFiles); });
+    DestroyTempAllocator();
+}
+
 void ClearHistory(MainWindow* win) {
     if (!win) {
         // TODO: find current active MainWindow ?
@@ -4853,19 +4875,12 @@ void ClearHistory(MainWindow* win) {
     SaveSettings();
 
     const char* msg = _TRA("Clearing history...");
-    auto notifWnd = ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
-
-    // TODO: run this part with RunAsync()
-    DeleteThumbnailCacheDirectory();
-
-    TempStr symDir = GetCrashInfoDirTemp();
-    dir::RemoveAll(symDir);
-
-    RemoveNotification(notifWnd);
-    ::InvalidateRect(win->hwndCanvas, nullptr, true);
-    ::UpdateWindow(win->hwndCanvas);
-    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
-    ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
+    NotificationCreateArgs args;
+    args.groupId = kNotifClearHistory;
+    args.hwndParent = win->hwndCanvas;
+    args.timeoutMs = kNotif5SecsTimeOut;
+    ShowNotification(args);
+    RunAsync([win, nFiles]() { ClearHistoryAsyncPart(win, nFiles); }, "ClearHistoryThread");
 }
 
 static void DownloadDebugSymbols() {
