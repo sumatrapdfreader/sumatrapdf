@@ -25,8 +25,8 @@ ReadDirectoryChangesW() but only if it's in alertable state.
 Our ui thread isn't so we create our own thread and run code that
 calls ReadDirectoryChangesW() on that thread via QueueUserAPC().
 
-g_watchedDirs and g_watchedFiles are shared between the main thread and
-worker thread so must be protected via g_threadCritSec.
+gWatchedDirs and gWsatchedFiles are shared between the main thread and
+worker thread so must be protected via gThreadCritSec.
 
 ReadDirectChangesW() doesn't always work for files on network drives,
 so for those files, we do manual checks, by using a timeout to
@@ -45,8 +45,8 @@ TODO:
   - try to handle short file names as well: http://blogs.msdn.com/b/ericgu/archive/2005/10/07/478396.aspx
     but how to test it?
 
-  - I could try to remove the need for g_threadCritSec by queing all code
-    that touches g_watchedDirs/g_watchedFiles onto a thread via APC, but that's
+  - I could try to remove the need for gThreadCritSec by queing all code
+    that touches gWatchedDirs/gWatchedFiles onto a thread via APC, but that's
     probably an overkill
 */
 
@@ -96,23 +96,23 @@ void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
 }
 
 static HANDLE gThreadHandle = nullptr;
-static DWORD g_threadId = 0;
+static DWORD gThreadId = 0;
 
-static HANDLE g_threadControlHandle = nullptr;
+static HANDLE gThreadControlHandle = nullptr;
 
 // protects data structures shared between ui thread and file
-// watcher thread i.e. g_watchedDirs, g_watchedFiles
-static CRITICAL_SECTION g_threadCritSec;
+// watcher thread i.e. gWatchedDirs, gWatchedFiles
+static CRITICAL_SECTION gThreadCritSec;
 
-static WatchedDir* g_watchedDirs = nullptr;
-static WatchedFile* g_watchedFiles = nullptr;
+static WatchedDir* gWatchedDirs = nullptr;
+static WatchedFile* gWatchedFiles = nullptr;
 
 static LONG gRemovalsPending = 0;
 
 static void StartMonitoringDirForChanges(WatchedDir* wd);
 
 static void AwakeWatcherThread() {
-    SetEvent(g_threadControlHandle);
+    SetEvent(gThreadControlHandle);
 }
 
 static void GetFileState(const char* path, FileWatcherState* fs) {
@@ -158,7 +158,7 @@ static bool FileStateChanged(const char* filePath, FileWatcherState* fs) {
 static void NotifyAboutFile(WatchedDir* d, const char* fileName) {
     int i = 0;
 
-    for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
+    for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->ignore) {
             logf("NotifyAboutFile: ignoring '%s'\n", wf->filePath);
             continue;
@@ -205,7 +205,7 @@ const char* GetFileActionName(int actionId) {
 }
 
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytesTransfered, LPOVERLAPPED overlapped) {
-    ScopedCritSec cs(&g_threadCritSec);
+    ScopedCritSec cs(&gThreadCritSec);
 
     OverlappedEx* over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
@@ -274,7 +274,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
         logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
     }
 
-    CrashIf(g_threadId != GetCurrentThreadId());
+    CrashIf(gThreadId != GetCurrentThreadId());
 
     DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
     ReadDirectoryChangesW(wd->hDir,
@@ -292,8 +292,8 @@ static void StartMonitoringDirForChanges(WatchedDir* wd) {
 }
 
 static DWORD GetTimeoutInMs() {
-    ScopedCritSec cs(&g_threadCritSec);
-    for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
+    ScopedCritSec cs(&gThreadCritSec);
+    for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->isManualCheck) {
             return FILEWATCH_DELAY_IN_MS;
         }
@@ -302,9 +302,9 @@ static DWORD GetTimeoutInMs() {
 }
 
 static void RunManualChecks() {
-    ScopedCritSec cs(&g_threadCritSec);
+    ScopedCritSec cs(&gThreadCritSec);
 
-    for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
+    for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (!wf->isManualCheck) {
             continue;
         }
@@ -322,7 +322,7 @@ static DWORD WINAPI FileWatcherThread(void*) {
 
     for (;;) {
         ResetTempAllocator();
-        handles[0] = g_threadControlHandle;
+        handles[0] = gThreadControlHandle;
         DWORD timeout = GetTimeoutInMs();
         DWORD obj = WaitForMultipleObjectsEx(1, handles, FALSE, timeout, alertable);
         if (WAIT_TIMEOUT == obj) {
@@ -340,8 +340,8 @@ static DWORD WINAPI FileWatcherThread(void*) {
 
         if (n == 0) {
             // a thread was explicitly awaken
-            ResetEvent(g_threadControlHandle);
-            // logf("FileWatcherThread(): g_threadControlHandle signalled\n");
+            ResetEvent(gThreadControlHandle);
+            // logf("FileWatcherThread(): gThreadControlHandle signalled\n");
         } else {
             logf("FileWatcherThread(): n=%d\n", n);
             CrashIf(true);
@@ -352,7 +352,7 @@ static DWORD WINAPI FileWatcherThread(void*) {
 }
 
 static WatchedDir* FindExistingWatchedDir(const char* dirPath) {
-    for (WatchedDir* wd = g_watchedDirs; wd; wd = wd->next) {
+    for (WatchedDir* wd = gWatchedDirs; wd; wd = wd->next) {
         // TODO: normalize dirPath?
         if (str::EqI(dirPath, wd->dirPath)) {
             return wd;
@@ -394,7 +394,7 @@ static WatchedDir* NewWatchedDir(const char* dirPath) {
     wd->hDir = hDir;
     wd->dirPath = str::Dup(dirPath);
 
-    ListInsert(&g_watchedDirs, wd);
+    ListInsert(&gWatchedDirs, wd);
     return wd;
 }
 
@@ -422,7 +422,7 @@ static WatchedFile* NewWatchedFile(const char* filePath, const std::function<voi
     wf->watchedDir = wd;
     wf->isManualCheck = isManualCheck;
 
-    ListInsert(&g_watchedFiles, wf);
+    ListInsert(&gWatchedFiles, wf);
 
     if (wf->isManualCheck) {
         GetFileState(filePath, &wf->fileState);
@@ -464,21 +464,21 @@ WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>&
 
     if (!gThreadHandle) {
         logf("StartFileThreadIfNecessary: starting a thread\n");
-        InitializeCriticalSection(&g_threadCritSec);
-        g_threadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+        InitializeCriticalSection(&gThreadCritSec);
+        gThreadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
-        gThreadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &g_threadId);
+        gThreadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &gThreadId);
         if (gThreadHandle) {
-            SetThreadName("FileWatcherThread", g_threadId);
+            SetThreadName("FileWatcherThread", gThreadId);
         }
     }
 
-    ScopedCritSec cs(&g_threadCritSec);
+    ScopedCritSec cs(&gThreadCritSec);
     return NewWatchedFile(path, onFileChangedCb);
 }
 
 static bool IsWatchedDirReferenced(WatchedDir* wd) {
-    for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
+    for (WatchedFile* wf = gWatchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir == wd) {
             return true;
         }
@@ -491,7 +491,7 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
         return;
     }
 
-    bool ok = ListRemove(&g_watchedDirs, wd);
+    bool ok = ListRemove(&gWatchedDirs, wd);
     CrashIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
     InterlockedIncrement(&gRemovalsPending);
@@ -501,8 +501,8 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
 void FileWatcherWaitForShutdown() {
     // this is meant to be called at the end so we shouldn't
     // have any file watching subscriptions pending
-    CrashIf(g_watchedFiles != nullptr);
-    CrashIf(g_watchedDirs != nullptr);
+    CrashIf(gWatchedFiles != nullptr);
+    CrashIf(gWatchedDirs != nullptr);
     QueueUserAPC(ExitMonitoringThread, gThreadHandle, (ULONG_PTR)0);
 
     // wait for ReadDirectoryChangesNotification() process actions triggered
@@ -523,7 +523,7 @@ void FileWatcherWaitForShutdown() {
 
 static void RemoveWatchedFile(WatchedFile* wf) {
     WatchedDir* wd = wf->watchedDir;
-    bool ok = ListRemove(&g_watchedFiles, wf);
+    bool ok = ListRemove(&gWatchedFiles, wf);
     CrashIf(!ok);
 
     bool needsAwakeThread = wf->isManualCheck;
@@ -541,7 +541,7 @@ void FileWatcherUnsubscribe(WatchedFile* wf) {
     }
     CrashIf(!gThreadHandle);
 
-    ScopedCritSec cs(&g_threadCritSec);
+    ScopedCritSec cs(&gThreadCritSec);
 
     RemoveWatchedFile(wf);
 }
