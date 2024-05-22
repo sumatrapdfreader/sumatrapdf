@@ -426,7 +426,7 @@ static void OnInstallationFinished() {
     if (gWnd->btnExit) {
         gWnd->btnExit->SetFocus();
     }
-    SetForegroundWindow(hwnd);
+    SetForegroundWindow(gWnd->hwnd);
 
     DeleteWnd(&gWnd->btnInstall);
     DeleteWnd(&gWnd->progressBar);
