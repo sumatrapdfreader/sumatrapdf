@@ -931,13 +931,12 @@ static int RunApp() {
     }
 }
 
-static void ShowNoEmbeddedFiles(const WCHAR* msg) {
+static void ShowNoEmbeddedFiles(const char* msg) {
     if (gCli->silent) {
-        log(ToUtf8Temp(msg));
+        log(msg);
         return;
     }
-    const WCHAR* caption = L"Error";
-    MessageBoxW(nullptr, msg, caption, MB_OK);
+    MsgBox(nullptr, msg, "Error", MB_OK);
 }
 
 static LoadedDataResource gLoadedArchive;
@@ -949,7 +948,7 @@ static bool OpenEmbeddedFilesArchive() {
     }
     bool ok = LockDataResource(IDR_DLL_PAK, &gLoadedArchive);
     if (!ok) {
-        ShowNoEmbeddedFiles(L"No embbedded files");
+        ShowNoEmbeddedFiles("No embbedded files");
         return false;
     }
 
@@ -957,7 +956,7 @@ static bool OpenEmbeddedFilesArchive() {
     auto size = gLoadedArchive.dataSize;
     ok = lzma::ParseSimpleArchive(data, (size_t)size, &gArchive);
     if (!ok) {
-        ShowNoEmbeddedFiles(L"Embedded lzsa archive is corrupted");
+        ShowNoEmbeddedFiles("Embedded lzsa archive is corrupted");
         return false;
     }
     log("OpenEmbeddedFilesArchive: opened archive\n");

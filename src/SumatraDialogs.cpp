@@ -907,7 +907,8 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROPSHEET_PRINT_ADVANCED);
     psp.pfnDlgProc = Sheet_Print_Advanced_Proc;
     psp.lParam = (LPARAM)data;
-    psp.pszTitle = _TR("Advanced");
+    auto s = _TRA("Advanced");
+    psp.pszTitle = ToWStrTemp(s);
 
     if (IsUIRightToLeft()) {
         dlgTemplate.Set(GetRtLDlgTemplate(IDD_PROPSHEET_PRINT_ADVANCED));

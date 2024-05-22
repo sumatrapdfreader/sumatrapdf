@@ -895,7 +895,7 @@ static void supressThrowFromNew() {
 }
 
 static void ShowNotValidInstallerError() {
-    MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
+    MsgBox(nullptr, "Not a valid installer", "Error", MB_OK | MB_ICONERROR);
 }
 
 static void ShowNoAdminErrorMessage() {
@@ -1205,7 +1205,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     if (flags.hwndPluginParent) {
         // check early to avoid a crash in MakePluginWindow()
         if (!IsWindow(flags.hwndPluginParent)) {
-            MessageBoxA(nullptr, "-plugin argument is not a valid window handle (hwnd)", "Error", MB_OK | MB_ICONERROR);
+            MsgBox(nullptr, "-plugin argument is not a valid window handle (hwnd)", "Error", MB_OK | MB_ICONERROR);
             goto Exit;
         }
     }

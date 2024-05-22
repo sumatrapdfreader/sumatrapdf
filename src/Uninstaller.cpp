@@ -196,7 +196,7 @@ static void ShowUsage() {
     /s\tuninstalls %s silently (without user interaction).\n\
     /d\tchanges the directory from where %s will be uninstalled.",
         kAppName, kAppName);
-    MessageBoxA(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
+    MsgBox(nullptr, msg, caption, MB_OK | MB_ICONINFORMATION);
 }
 
 static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -437,9 +437,9 @@ int RunUninstaller() {
     auto installerExists = file::Exists(exePath);
     if (!installerExists) {
         log("Uninstaller executable doesn't exist\n");
-        const WCHAR* caption = _TR("Uninstallation failed");
-        const WCHAR* msg = _TR("SumatraPDF installation not found.");
-        MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
+        auto caption = _TRA("Uninstallation failed");
+        auto msg = _TRA("SumatraPDF installation not found.");
+        MsgBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
         goto Exit;
     }
 

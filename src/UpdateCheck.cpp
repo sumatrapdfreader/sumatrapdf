@@ -203,21 +203,23 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 }
 
 static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
-    const WCHAR* mainInstr = _TR("New version available");
+    auto mainInstr = _TRA("New version available");
     auto ver = updateInfo->latestVer;
     auto fmt = _TRA("You have version '%s' and version '%s' is available.\nDo you want to install new version?");
     auto content = str::Format(fmt, CURR_VERSION_STRA, ver);
 
     constexpr int kBtnIdDontInstall = 100;
     constexpr int kBtnIdInstall = 101;
-    const WCHAR* title = _TR("SumatraPDF Update");
+    auto title = _TRA("SumatraPDF Update");
     TASKDIALOGCONFIG dialogConfig{};
     TASKDIALOG_BUTTON buttons[2];
 
     buttons[0].nButtonID = kBtnIdDontInstall;
-    buttons[0].pszButtonText = _TR("Don't install");
+    auto s = _TRA("Don't install");
+    buttons[0].pszButtonText = ToWStrTemp(s);
     buttons[1].nButtonID = kBtnIdInstall;
-    buttons[1].pszButtonText = _TR("Install and relaunch");
+    s = _TRA("Install and relaunch");
+    buttons[1].pszButtonText = ToWStrTemp(s);
 
     DWORD flags =
         TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -225,10 +227,11 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = title;
-    dialogConfig.pszMainInstruction = mainInstr;
+    dialogConfig.pszWindowTitle = ToWStrTemp(title);
+    dialogConfig.pszMainInstruction = ToWStrTemp(mainInstr);
     dialogConfig.pszContent = ToWStrTemp(content);
-    dialogConfig.pszVerificationText = _TR("Skip this version");
+    s = _TRA("Skip this version");
+    dialogConfig.pszVerificationText = ToWStrTemp(s);
     dialogConfig.nDefaultButton = kBtnIdInstall;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
@@ -338,7 +341,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
             if (updateCheckType == UpdateCheck::UserInitiated) {
                 RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
                 uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
-                MessageBoxW(hwndParent, _TR("You have the latest version."), _TR("SumatraPDF Update"), flags);
+                MsgBox(hwndParent, _TRA("You have the latest version."), _TRA("SumatraPDF Update"), flags);
             }
             return 0;
         }

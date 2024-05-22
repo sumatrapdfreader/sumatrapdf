@@ -572,9 +572,7 @@ void MessageBoxWarning(HWND hwnd, const char* msg, const char* title) {
     if (!title) {
         title = _TRA("Warning");
     }
-    WCHAR* msgW = ToWStrTemp(msg);
-    WCHAR* titleW = ToWStrTemp(title);
-    MessageBoxW(hwnd, msgW, titleW, type);
+    MsgBox(hwnd, msg, title, type);
 }
 
 // updates the layout for a window to either left-to-right or right-to-left
@@ -2418,7 +2416,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilterW;
     ofn.nFilterIndex = 1;
-    // ofn.lpstrTitle = _TR("Rename To");
+    // ofn.lpstrTitle = _TRA("Rename To");
     // ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = L".pdf";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -2475,7 +2473,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     TempStr fileName = (TempStr)path::GetBaseNameTemp(filePath);
     TempStr mainInstrA = str::FormatTemp(_TRA("Unsaved annotations in '%s'"), fileName);
     TempWStr mainInstr = ToWStrTemp(mainInstrA);
-    const WCHAR* content = _TR("Save annotations?");
+    auto content = _TRA("Save annotations?");
 
     constexpr int kBtnIdDiscard = 100;
     constexpr int kBtnIdSaveToExisting = 101;
@@ -2485,13 +2483,17 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     TASKDIALOG_BUTTON buttons[4];
 
     buttons[0].nButtonID = kBtnIdSaveToExisting;
-    buttons[0].pszButtonText = _TR("&Save to existing PDF");
+    auto s = _TRA("&Save to existing PDF");
+    buttons[0].pszButtonText = ToWStrTemp(s);
     buttons[1].nButtonID = kBtnIdSaveToNew;
-    buttons[1].pszButtonText = _TR("Save to &new PDF");
+    s = _TRA("Save to &new PDF");
+    buttons[1].pszButtonText = ToWStrTemp(s);
     buttons[2].nButtonID = kBtnIdDiscard;
-    buttons[2].pszButtonText = _TR("&Discard changes");
+    s = _TRA("&Discard changes");
+    buttons[2].pszButtonText = ToWStrTemp(s);
     buttons[3].nButtonID = IDCANCEL;
-    buttons[3].pszButtonText = _TR("&Cancel");
+    s = _TRA("&Cancel");
+    buttons[3].pszButtonText = ToWStrTemp(s);
 
     DWORD flags =
         TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS | TDF_POSITION_RELATIVE_TO_WINDOW;
@@ -2499,9 +2501,10 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = _TR("Unsaved annotations");
+    s = _TRA("Unsaved annotations");
+    dialogConfig.pszWindowTitle = ToWStrTemp(s);
     dialogConfig.pszMainInstruction = mainInstr;
-    dialogConfig.pszContent = content;
+    dialogConfig.pszContent = ToWStrTemp(content);
     dialogConfig.nDefaultButton = IDCANCEL;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;
@@ -2656,8 +2659,10 @@ bool CanCloseWindow(MainWindow* win) {
     }
 
     if (win->printThread && !win->printCanceled && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT) {
-        int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"),
-                             _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
+        UINT flags = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
+        auto caption = _TRA("Printing in progress.");
+        auto msg = _TRA("Printing is still in progress. Abort and quit?");
+        int res = MsgBox(win->hwndFrame, msg, caption, flags);
         if (IDNO == res) {
             return false;
         }
@@ -3010,10 +3015,10 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = ToWStrTemp(fileFilter);
-    ;
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
-    ofn.lpstrTitle = _TR("Rename To");
+    auto s = _TRA("Rename To");
+    ofn.lpstrTitle = ToWStrTemp(s);
     ofn.lpstrInitialDir = initDir;
     ofn.lpstrDefExt = defExtW + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -4903,8 +4908,7 @@ static void DownloadDebugSymbols() {
         ReportIfQuick(!didInitializeDbgHelp);
     }
 ShowMessage:
-    uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
-    MessageBoxA(nullptr, msg, "Downloading symbols", flags);
+    MessageBoxWarning(nullptr, msg, "Downloading symbols");
 }
 
 // try to trigger a crash due to corrupting allocator
@@ -6196,7 +6200,7 @@ void ShowCrashHandlerMessage() {
     }
 
 #if 0
-    int res = MessageBox(nullptr, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | MbRtlReadingMaybe());
+    int res = MsgBox(nullptr, _TRA("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TRA("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | MbRtlReadingMaybe());
     if (IDCANCEL == res) {
         LaunchBrowser(CRASH_REPORT_URL);
     }
@@ -6206,7 +6210,7 @@ void ShowCrashHandlerMessage() {
     uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
 
-    int res = MessageBoxA(nullptr, msg, "SumatraPDF crashed", flags);
+    int res = MsgBox(nullptr, msg, "SumatraPDF crashed", flags);
     if (IDCANCEL != res) {
         return;
     }

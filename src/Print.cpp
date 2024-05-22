@@ -136,7 +136,7 @@ Printer* NewPrinter(char* printerName) {
     structSize = DocumentPropertiesW(nullptr, hPrinter, printerNameW, nullptr, nullptr, 0);
     if (structSize < sizeof(DEVMODEW)) {
         // if (displayErrors) {
-        //    MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
+        //    MessageBoxWarning(nullptr, _TRA("Could not obtain Printer properties"), _TRA("Printing problem."));
         //}
         goto Exit;
     }
@@ -146,7 +146,7 @@ Printer* NewPrinter(char* printerName) {
     ret = DocumentPropertiesW(nullptr, hPrinter, printerNameW, devMode, nullptr, DM_OUT_BUFFER);
     if (IDOK != ret) {
         // if (displayErrors) {
-        //    MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
+        //    MessageBoxWarning(nullptr, _TRA("Could not obtain Printer properties"), _TRA("Printing problem."));
         //}
         goto Exit;
     }
@@ -755,9 +755,9 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     if (win->printThread) {
         uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
-        const WCHAR* title = _TR("Printing in progress.");
-        const WCHAR* msg = _TR("Printing is still in progress. Abort and start over?");
-        int res = MessageBox(win->hwndFrame, msg, title, type);
+        const char* title = _TRA("Printing in progress.");
+        const char* msg = _TRA("Printing is still in progress. Abort and start over?");
+        int res = MsgBox(win->hwndFrame, msg, title, type);
         if (res == IDNO) {
             return;
         }

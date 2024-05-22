@@ -3006,3 +3006,9 @@ TempStr AtomToStrTemp(ATOM a) {
     }
     return ToUtf8Temp(buf, cch);
 }
+
+int MsgBox(HWND hwnd, const char* text, const char* caption, UINT flags) {
+    TempWStr textW = ToWStrTemp(text);
+    TempWStr captionW = ToWStrTemp(caption);
+    return MessageBoxW(hwnd, textW, captionW, flags);
+}

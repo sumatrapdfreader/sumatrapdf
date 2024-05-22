@@ -441,10 +441,10 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     }
     const char* exePath = args.At(0);
     if (!file::Exists(exePath)) {
-        TempStr msg =
-            str::Format("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
+        TempStr msg = str::FormatTemp(
+            "External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
         auto caption = _TRA("Error");
-        MessageBoxExA(nullptr, msg, caption, MB_OK | MB_ICONERROR, 0);
+        MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
         return false;
     }
     StrVec argsQuoted;

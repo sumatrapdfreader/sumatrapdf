@@ -419,12 +419,11 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
         }
         AppendFavMenuItems(sub, f, menuId, combined, f == currFileFav);
         if (!combined) {
-            if (f == currFileFav) {
-                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
-            } else {
-                TempStr fileName = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
-                AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWStrTemp(fileName));
+            const char* s = _TRA("Current file");
+            if (f != currFileFav) {
+                s = MenuToSafeStringTemp(path::GetBaseNameTemp(filePath));
             }
+            AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, ToWStrTemp(s));
         }
     }
 }

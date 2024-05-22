@@ -92,9 +92,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     ParseCmdLine(GetCommandLine(), argList);
 
     if (argList.Size() == 1) {
-        AutoFreeStr msg =
-            str::Format("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseNameTemp(argList.At(0)));
-        MessageBoxA(nullptr, msg.Get(), PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
+        char* exe = argList.At(0);
+        TempStr name = path::GetBaseNameTemp(exe);
+        TempStr msg = str::FormatTemp("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
+        MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
     if (argList.Size() == 2 || !str::EndsWithI(argList.At(1), ".exe")) {

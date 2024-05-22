@@ -112,7 +112,7 @@ static void EnumeratePrinters() {
     }
     if (ok == 0 || !info5Arr) {
         out.AppendFmt("Call to EnumPrinters failed with error %#x", GetLastError());
-        MessageBoxA(nullptr, out.Get(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
+        MsgBox(nullptr, out.CStr(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONERROR);
         free(info5Arr);
         return;
     }
@@ -147,7 +147,7 @@ static void EnumeratePrinters() {
         }
     }
     free(info5Arr);
-    MessageBoxA(nullptr, out.Get(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
+    MsgBox(nullptr, out.CStr(), "SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)

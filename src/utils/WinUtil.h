@@ -357,3 +357,4 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode);
 HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags = GMEM_MOVEABLE);
 HGLOBAL StrToHGLOBAL(const char* s, UINT flags = GMEM_MOVEABLE);
 TempStr AtomToStrTemp(ATOM a);
+int MsgBox(HWND, const char*, const char*, UINT);

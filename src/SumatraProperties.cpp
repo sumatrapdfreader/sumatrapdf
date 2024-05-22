@@ -432,9 +432,12 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     CrashIf(layoutData->hwnd);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     auto clsName = kPropertiesWinClassName;
-    auto title = _TR("Document Properties");
-    HWND hwnd = CreateWindowW(clsName, title, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                              nullptr, nullptr, h, nullptr);
+    auto title = ToWStrTemp(_TRA("Document Properties"));
+    int x = CW_USEDEFAULT;
+    int y = CW_USEDEFAULT;
+    int dx = CW_USEDEFAULT;
+    int dy = CW_USEDEFAULT;
+    HWND hwnd = CreateWindowExW(0, clsName, title, dwStyle, x, y, dx, dy, nullptr, nullptr, h, nullptr);
     if (!hwnd) {
         return false;
     }
