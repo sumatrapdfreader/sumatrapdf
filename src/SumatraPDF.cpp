@@ -2400,11 +2400,12 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     WCHAR dstFileName[MAX_PATH + 1]{};
 
     OPENFILENAME ofn{};
-    str::WStr fileFilter(256);
-    fileFilter.Append(_TR("PDF documents"));
-    fileFilter.Append(L"\1*.pdf\1");
-    fileFilter.Append(L"\1*.*\1");
-    str::TransCharsInPlace(fileFilter.Get(), L"\1", L"\0");
+    str::Str fileFilter(256);
+    fileFilter.Append(_TRA("PDF documents"));
+    fileFilter.Append("\1*.pdf\1");
+    fileFilter.Append("\1*.*\1");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    TempWStr fileFilterW = ToWStrTemp(fileFilter);
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
@@ -2415,7 +2416,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     ofn.hwndOwner = tab->win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilter.Get();
+    ofn.lpstrFilter = fileFilterW;
     ofn.nFilterIndex = 1;
     // ofn.lpstrTitle = _TR("Rename To");
     // ofn.lpstrInitialDir = initDir;
@@ -3076,15 +3077,17 @@ static void CreateLnkShortcut(MainWindow* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    AutoFreeWstr fileFilter = str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts"));
-    str::TransCharsInPlace(fileFilter, L"\1", L"\0");
+    str::Str fileFilter;
+    fileFilter.AppendFmt("%s\1*.lnk\1", _TRA("Bookmark Shortcuts"));
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    TempWStr fileFilterW = ToWStrTemp(fileFilter);
 
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = fileFilter;
+    ofn.lpstrFilter = fileFilterW;
     ofn.nFilterIndex = 1;
     ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;

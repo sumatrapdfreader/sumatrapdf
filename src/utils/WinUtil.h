@@ -115,9 +115,7 @@ void FillRect(HDC, const Rect&, HBRUSH);
 void FillRect(HDC hdc, const Rect&, COLORREF);
 void DrawLine(HDC, const Rect&);
 
-void DrawCenteredText(HDC hdc, Rect r, const WCHAR* txt, bool isRTL = false);
 void DrawCenteredText(HDC hdc, Rect r, const char* txt, bool isRTL = false);
-void DrawCenteredText(HDC, const RECT& r, const WCHAR* txt, bool isRTL = false);
 Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font = nullptr);
 int FontDyPx(HWND hwnd, HFONT hfont);
 

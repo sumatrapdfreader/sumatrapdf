@@ -995,11 +995,11 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
                     RepaintAsync(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 } else {
-                    DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), isRtl);
+                    DrawCenteredText(hdc, bounds, _TRA("Please wait - rendering..."), isRtl);
                 }
                 rendering = true;
             } else {
-                DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), isRtl);
+                DrawCenteredText(hdc, bounds, _TRA("Couldn't render the page"), isRtl);
             }
             SelectObject(hdc, hPrevFont);
             continue;

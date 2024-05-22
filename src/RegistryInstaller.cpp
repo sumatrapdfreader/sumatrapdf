@@ -301,7 +301,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
         LoggedWriteRegStr(hkey, regClassesApp, L"previous.pdf", prevHandler);
     }
 
-    LoggedWriteRegStr(hkey, regClassesApp, nullptr, _TR("PDF Document"));
+    LoggedWriteRegStr(hkey, regClassesApp, nullptr, _TRA("PDF Document"));
     AutoFreeWstr icon_path = str::Join(exePath, L",1");
     {
         AutoFreeWstr key = str::Join(regClassesApp, LR"(\DefaultIcon)");

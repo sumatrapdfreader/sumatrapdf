@@ -1912,7 +1912,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         SetSelectedAnnotation(tab, annot);
     }
     /*
-        { _TR("Line"), CmdCreateAnnotLine, },
+        { _TRA("Line"), CmdCreateAnnotLine, },
         { _TR_TODON("Highlight"), CmdCreateAnnotHighlight, },
         { _TR_TODON("Underline"), CmdCreateAnnotUnderline, },
         { _TR_TODON("Strike Out"), CmdCreateAnnotStrikeOut, },

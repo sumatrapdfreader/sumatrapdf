@@ -77,12 +77,10 @@ static void ProgressStep() {
     }
 }
 
-static Checkbox* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked) {
+static Checkbox* CreateCheckbox(HWND hwndParent, const char* s, bool isChecked) {
     CheckboxCreateArgs args;
     args.parent = hwndParent;
-    if (s) {
-        args.text = ToUtf8Temp(s);
-    }
+    args.text = s;
     args.initialState = isChecked ? CheckState::Checked : CheckState::Unchecked;
 
     Checkbox* w = new Checkbox();
@@ -683,7 +681,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
-        const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
+        const char* s = _TRA("Let Windows show &previews of PDF documents");
         bool isChecked = gCli->withPreview || IsPreviewInstalled();
         if (isChecked) {
             showOptions = true;
@@ -697,7 +695,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
         if (isChecked) {
             showOptions = true;
         }
-        s = _TR("Let Windows Desktop Search &search PDF documents");
+        s = _TRA("Let Windows Desktop Search &search PDF documents");
         wnd->checkboxRegisterSearchFilter = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
         wnd->checkboxRegisterSearchFilter->SetPos(&rc);
@@ -705,7 +703,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     }
 
     {
-        const WCHAR* s = _TR("Install for all users");
+        const char* s = _TRA("Install for all users");
         bool isChecked = gCli->allUsers;
         if (isChecked) {
             showOptions = true;
@@ -1021,19 +1019,22 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
     TASKDIALOG_BUTTON buttons[2];
 
     buttons[0].nButtonID = kBtnIdDownload;
-    buttons[0].pszButtonText = _TR("Download 64-bit version");
+    const char* s = _TRA("Download 64-bit version");
+    buttons[0].pszButtonText = ToWStrTemp(s);
     buttons[1].nButtonID = kBtnIdContinue;
-    buttons[1].pszButtonText = _TR("&Continue installing 32-bit version");
+    s = _TRA("&Continue installing 32-bit version");
+    buttons[1].pszButtonText = ToWStrTemp(s);
 
     DWORD flags = TDF_SIZE_TO_CONTENT | TDF_POSITION_RELATIVE_TO_WINDOW;
     if (trans::IsCurrLangRtl()) {
         flags |= TDF_RTL_LAYOUT;
     }
     dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
-    dialogConfig.pszWindowTitle = _TR("Installing 32-bit SumatraPDF on 64-bit OS");
+    s = _TRA("Installing 32-bit SumatraPDF on 64-bit OS");
+    dialogConfig.pszWindowTitle = ToWStrTemp(s);
     // dialogConfig.pszMainInstruction = mainInstr;
-    dialogConfig.pszContent =
-        _TR("You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?");
+    s = _TRA("You're installing 32-bit SumatraPDF on 64-bit OS.\nWould you like to download\n64-bit version?");
+    dialogConfig.pszContent = ToWStrTemp(s);
     dialogConfig.nDefaultButton = kBtnIdContinue;
     dialogConfig.dwFlags = flags;
     dialogConfig.cxWidth = 0;

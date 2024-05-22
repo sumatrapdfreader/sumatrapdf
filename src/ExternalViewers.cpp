@@ -443,9 +443,8 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     if (!file::Exists(exePath)) {
         TempStr msg =
             str::Format("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
-        TempWStr msgw = ToWStrTemp(msg);
-        auto caption = _TR("Error");
-        MessageBoxExW(nullptr, msgw, caption, MB_OK | MB_ICONERROR, 0);
+        auto caption = _TRA("Error");
+        MessageBoxExA(nullptr, msg, caption, MB_OK | MB_ICONERROR, 0);
         return false;
     }
     StrVec argsQuoted;

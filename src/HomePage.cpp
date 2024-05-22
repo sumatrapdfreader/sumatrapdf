@@ -536,7 +536,7 @@ void ShowAboutWindow(MainWindow* win) {
         CrashIf(!gAtomAbout);
     }
 
-    const WCHAR* title = _TR("About SumatraPDF");
+    TempWStr title = ToWStrTemp(_TRA("About SumatraPDF"));
     DWORD style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     int x = CW_USEDEFAULT;
     int y = CW_USEDEFAULT;
