@@ -3354,10 +3354,10 @@ static void OpenFile(MainWindow* win) {
     }
 }
 
-static StrVec gLastNextPrevFiles;
+static StrVec2 gLastNextPrevFiles;
 const char* lastNextPrevFilesPattern = nullptr;
 
-static void RemoveFailedFiles(StrVec& files) {
+static void RemoveFailedFiles(StrVec2& files) {
     for (char* path : gFilesFailedToOpen) {
         int idx = files.Find(path);
         if (idx >= 0) {
@@ -3366,8 +3366,8 @@ static void RemoveFailedFiles(StrVec& files) {
     }
 }
 
-static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
-    StrVec& files = gLastNextPrevFiles;
+static StrVec2& CollectNextPrevFilesIfChanged(const char* path) {
+    StrVec2& files = gLastNextPrevFiles;
 
     char* pattern = path::GetDirTemp(path);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
@@ -3413,7 +3413,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
 
     WindowTab* tab = win->CurrentTab();
     char* path = tab->filePath;
-    StrVec files = CollectNextPrevFilesIfChanged(path);
+    StrVec2 files = CollectNextPrevFilesIfChanged(path);
     if (files.Size() < 2) {
         return;
     }
@@ -4658,12 +4658,15 @@ static bool NeedsURLEncoding(WCHAR c) {
 }
 #endif
 
-static str::WStr URLEncode(const WCHAR* s) {
-    WCHAR buf[INTERNET_MAX_URL_LENGTH]{};
+static TempWStr URLEncodeTemp(const WCHAR* s) {
+    WCHAR buf[INTERNET_MAX_URL_LENGTH + 16]{}; // +16 jic
     DWORD cchSizeInOut = dimof(buf) - 1;
     DWORD flags = URL_ESCAPE_AS_UTF8;
-    UrlEscapeW(s, buf, &cchSizeInOut, flags);
-    return str::WStr(buf);
+    HRESULT hr = UrlEscapeW(s, buf, &cchSizeInOut, flags);
+    if (FAILED(hr)) {
+        return nullptr;
+    }
+    return str::DupTemp(buf);
 #if 0
     str::WStr res;
     size_t n = sv.size();
@@ -4703,8 +4706,8 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
         return;
     }
     // TODO: limit the size of the selection to e.g. 1 kB?
-    WCHAR* selTextW = ToWStrTemp(selText);
-    str::WStr encodedSelection = URLEncode(selTextW);
+    TempWStr selTextW = ToWStrTemp(selText);
+    TempWStr encodedSelection = URLEncodeTemp(selTextW);
     str::WStr url(urlPattern);
     // assume that user might typo and use e.g. ${userLang} in url
     // so replace with cannonical lower-cased version
@@ -4712,7 +4715,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
     if (pos) {
         memcpy((void*)pos, (void*)kUserLangStr, str::Len(kUserLangStr) * sizeof(kUserLangStr[0]));
     }
-    Replace(url, kSelectionStr, encodedSelection.Get());
+    Replace(url, kSelectionStr, encodedSelection);
     const char* lang = trans::GetCurrentLangCode();
     auto langW = ToWStrTemp(lang);
     Replace(url, kUserLangStr, langW);

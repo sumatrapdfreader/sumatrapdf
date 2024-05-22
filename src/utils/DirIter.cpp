@@ -89,7 +89,7 @@ bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb) {
     return ok;
 }
 
-bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles) {
+bool CollectPathsFromDirectory(const char* pattern, StrVec2& paths, bool dirsInsteadOfFiles) {
     TempStr dir = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATAW fdata{};
@@ -118,7 +118,7 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
     return paths.Size() > 0;
 }
 
-bool CollectFilesFromDirectory(const char* dir, StrVec& files, const VisitDirCb& fileMatches) {
+bool CollectFilesFromDirectory(const char* dir, StrVec2& files, const VisitDirCb& fileMatches) {
     u32 flg = kVisitDirIncudeFiles;
     bool ok = VisitDir(dir, flg, [&files, &fileMatches](WIN32_FIND_DATAW* fd, const char* path) -> bool {
         if (fileMatches(fd, path)) {

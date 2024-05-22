@@ -743,6 +743,19 @@ char* StrVec2::Append(const char* s, int sLen) {
     return res;
 }
 
+// returns index of inserted string, -1 if not inserted
+int AppendIfNotExists(StrVec2& v, const char* s, int sLen) {
+    if (sLen < 0) {
+        sLen = str::Leni(s);
+    }
+    if (v.Contains(s, sLen)) {
+        return -1;
+    }
+    int idx = v.Size();
+    v.Append(s, sLen);
+    return idx;
+}
+
 static std::pair<StrVecPage*, int> PageForIdx(const StrVec2* v, int idx) {
     auto page = v->first;
     while (page) {
@@ -791,6 +804,12 @@ int StrVec2::FindI(const char* s, int startAt) const {
         }
     }
     return -1;
+}
+
+// TODO: needs to use sLen
+bool StrVec2::Contains(const char* s, int) const {
+    int idx = Find(s);
+    return idx != -1;
 }
 
 // returns a string
@@ -855,6 +874,16 @@ char* StrVec2::RemoveAtFast(int idx) {
     auto res = page->RemoveAtFast(idxInPage);
     size--;
     return res;
+}
+
+// return true if did remove
+bool StrVec2::Remove(const char* s) {
+    int idx = Find(s);
+    if (idx >= 0) {
+        RemoveAt(idx);
+        return true;
+    }
+    return false;
 }
 
 StrVec2::iterator StrVec2::begin() const {

@@ -11,8 +11,8 @@ using VisitDirCb = std::function<bool(WIN32_FIND_DATAW* fd, const char*)>;
 bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb);
 bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb);
 bool VisitDirs(const char* dir, bool recurse, const VisitDirCb& cb);
-bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles = false);
-bool CollectFilesFromDirectory(const char* dir, StrVec& files, const VisitDirCb& fileMatches);
+bool CollectPathsFromDirectory(const char* pattern, StrVec2& paths, bool dirsInsteadOfFiles = false);
+bool CollectFilesFromDirectory(const char* dir, StrVec2& files, const VisitDirCb& fileMatches);
 void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse);
 
 i64 GetFileSize(WIN32_FIND_DATAW*);

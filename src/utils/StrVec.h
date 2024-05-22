@@ -82,9 +82,11 @@ struct StrVec2 {
     char* InsertAt(int, const char*, int sLen = -1);
     char* RemoveAt(int);
     char* RemoveAtFast(int);
+    bool Remove(const char*);
 
     int Find(const char* sv, int startAt = 0) const;
     int FindI(const char* sv, int startAt = 0) const;
+    bool Contains(const char*, int sLen = -1) const;
 
     struct iterator {
         const StrVec2* v;
@@ -105,6 +107,8 @@ struct StrVec2 {
     iterator begin() const;
     iterator end() const;
 };
+
+int AppendIfNotExists(StrVec2& v, const char* s, int sLen = -1);
 
 void Sort(StrVec2& v, StrLessFunc lessFn = nullptr);
 void SortNoCase(StrVec2&);
