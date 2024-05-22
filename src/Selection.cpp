@@ -204,7 +204,7 @@ void UpdateTextSelection(MainWindow* win, bool select) {
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to
 // rectangular selection)
 // caller needs to str::Free() the result
-char* GetSelectedText(WindowTab* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
+TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnlySelectionOut) {
     if (!tab || !tab->selectionOnPage) {
         return nullptr;
     }
@@ -223,11 +223,11 @@ char* GetSelectedText(WindowTab* tab, const char* lineSep, bool& isTextOnlySelec
     isTextOnlySelectionOut = dm->textSelection->result.len > 0;
     if (isTextOnlySelectionOut) {
         WCHAR* s = dm->textSelection->ExtractText(lineSep);
-        char* res = ToUtf8(s);
+        TempStr res = ToUtf8Temp(s);
         str::Free(s);
         return res;
     }
-    StrVec selections;
+    StrVec2 selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         char* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {
@@ -238,7 +238,7 @@ char* GetSelectedText(WindowTab* tab, const char* lineSep, bool& isTextOnlySelec
     if (selections.Size() == 0) {
         return nullptr;
     }
-    char* s = Join(selections, lineSep);
+    TempStr s = JoinTemp(selections, lineSep);
     return s;
 }
 
@@ -255,7 +255,7 @@ void CopySelectionToClipboard(MainWindow* win) {
     };
 
     DisplayModel* dm = win->AsFixed();
-    char* selText = nullptr;
+    TempStr selText = nullptr;
     bool isTextOnlySelectionOut = false;
     if (!gDisableDocumentRestrictions && (dm && !dm->GetEngine()->AllowsCopyingText())) {
         NotificationCreateArgs args;
@@ -263,13 +263,12 @@ void CopySelectionToClipboard(MainWindow* win) {
         args.msg = _TRA("Copying text was denied (copying as image only)");
         ShowNotification(args);
     } else {
-        selText = GetSelectedText(tab, "\r\n", isTextOnlySelectionOut);
+        selText = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelectionOut);
     }
 
     if (!str::IsEmpty(selText)) {
         AppendTextToClipboard(selText);
     }
-    str::Free(selText);
 
     if (isTextOnlySelectionOut) {
         // don't also copy the first line of a text selection as an image

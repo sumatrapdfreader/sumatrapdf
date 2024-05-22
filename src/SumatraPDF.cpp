@@ -4701,7 +4701,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
 #endif
 
     bool isTextOnlySelectionOut; // if false, a rectangular selection
-    char* selText = GetSelectedText(tab, "\n", isTextOnlySelectionOut);
+    TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelectionOut);
     if (!selText) {
         return;
     }
@@ -4721,7 +4721,6 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
     Replace(url, kUserLangStr, langW);
     char* uri = ToUtf8Temp(url.Get());
     LaunchBrowser(uri);
-    str::Free(selText);
 }
 
 // TODO: rather arbitrary divide of responsibility between this and CopySelectionToClipboard()
