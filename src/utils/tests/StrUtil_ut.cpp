@@ -230,8 +230,8 @@ static void assertStrEq(const char* s1, const char* s2) {
     utassert(ok);
 }
 
-template <typename StrVec>
-static void AppendStrings(StrVec& v, const char** strings, int nStrings) {
+template <typename StrVecT>
+static void AppendStrings(StrVecT& v, const char** strings, int nStrings) {
     int initialSize = v.Size();
     for (int i = 0; i < nStrings; i++) {
         v.Append(strings[i]);
@@ -240,8 +240,8 @@ static void AppendStrings(StrVec& v, const char** strings, int nStrings) {
     StrVecCheckIter(v, strings, initialSize);
 }
 
-template <typename StrVec>
-static void CheckRemoveAt(StrVec& v) {
+template <typename StrVecT>
+static void CheckRemoveAt(StrVecT& v) {
     while (v.Size() > 0) {
         int n = v.Size();
         int idx = v.Size() / 2;
@@ -257,8 +257,8 @@ static void CheckRemoveAt(StrVec& v) {
     }
 }
 
-template <typename StrVec>
-static void StrVecCheckIter(StrVec& v, const char** strings, int start = 0) {
+template <typename StrVecT>
+static void StrVecCheckIter(StrVecT& v, const char** strings, int start = 0) {
     int i = 0;
     for (char* s : v) {
         if (i < start) {
@@ -290,7 +290,7 @@ static void StrVecCheckIter(StrVec& v, const char** strings, int start = 0) {
 
 const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
 
-template <typename StrVec>
+template <typename StrVecT>
 static void StrVecTest() {
     // order in strs
     int unsortedOrder[] = {0, 1, 2, 3, 4};
@@ -298,12 +298,12 @@ static void StrVecTest() {
     int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
 
     int n = dimofi(strs);
-    StrVec v;
+    StrVecT v;
     utassert(v.Size() == 0);
     AppendStrings(v, strs, n);
     StrVecCheckIter(v, strs, 0);
 
-    StrVec sortedView = v;
+    StrVecT sortedView = v;
     Sort(sortedView);
 
     for (int i = 0; i < n; i++) {
@@ -355,9 +355,9 @@ static void StrVecTest() {
     CheckRemoveAt(v);
 }
 
-template <typename StrVec>
+template <typename StrVecT>
 static void StrVecTest2() {
-    StrVec v;
+    StrVecT v;
     v.Append("foo");
     v.Append("bar");
     char* s = Join(v);
@@ -393,7 +393,7 @@ static void StrVecTest2() {
     str::Free(s);
 
     {
-        StrVec v2(v);
+        StrVecT v2(v);
         utassert(str::Eq(v2.At(2), "foo"));
         v2.Append("nobar");
         utassert(str::Eq(v2.At(4), "nobar"));
@@ -408,7 +408,7 @@ static void StrVecTest2() {
     }
 
     {
-        StrVec v2;
+        StrVecT v2;
         size_t count = Split(v2, "a,b,,c,", ",");
         utassert(count == 5 && v2.Find("c") == 3);
         utassert(v2.Find("") == 2);
@@ -421,7 +421,7 @@ static void StrVecTest2() {
     }
 
     {
-        StrVec v2;
+        StrVecT v2;
         size_t count = Split(v2, "a,b,,c,", ",", true);
         utassert(count == 3 && v2.Find("c") == 2);
         TempStr joined = JoinTemp(v2, ";");
@@ -437,9 +437,9 @@ static void StrVecTest2() {
     CheckRemoveAt(v);
 }
 
-template <typename StrVec>
+template <typename StrVecT>
 static void StrVecTest3() {
-    StrVec v;
+    StrVecT v;
     utassert(v.Size() == 0);
     v.Append("one");
     v.Append("two");
@@ -454,9 +454,9 @@ static void StrVecTest3() {
     CheckRemoveAt(v);
 }
 
-template <typename StrVec>
+template <typename StrVecT>
 static void StrVecTest4() {
-    StrVec v;
+    StrVecT v;
     AppendStrings(v, strs, dimofi(strs));
 
     int idx = 2;
@@ -517,9 +517,9 @@ static void StrVecTest4() {
     }
 }
 
-template <typename StrVec>
+template <typename StrVecT>
 static void StrVecTest5() {
-    StrVec v;
+    StrVecT v;
     AppendStrings(v, strs, dimofi(strs));
     const char* s = "first";
     v.InsertAt(0, s);
