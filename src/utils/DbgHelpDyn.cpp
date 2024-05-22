@@ -149,9 +149,15 @@ NO_INLINE bool CanSymbolizeAddress(DWORD64 addr) {
 
     DWORD64 symDisp = 0;
     BOOL ok = DynSymFromAddr(GetCurrentProcess(), addr, &symDisp, symInfo);
+    if (!ok) {
+        return false;
+    }
     int symLen = symInfo->NameLen;
+    if (symLen < 4) {
+        return false;
+    }
     char* name = symInfo->Name;
-    return ok && symLen > 4 && (name[0] != 0);
+    return *name != 0;
 }
 
 // a heuristic to test if we have symbols for our own binaries by testing if

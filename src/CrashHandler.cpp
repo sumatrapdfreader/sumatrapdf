@@ -273,37 +273,31 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
     return ok;
 }
 
-bool CrashHandlerDownloadSymbols() {
-    log("CrashHandlerDownloadSymbols()\n");
-    if (!dir::CreateAll(gSymbolsDir)) {
-        log("CrashHandlerDownloadSymbols: couldn't create symbols dir\n");
-        return false;
-    }
-
+bool InitializeDbgHelp() {
     TempWStr ws = ToWStrTemp(gSymbolPath);
     if (!dbghelp::Initialize(ws, false)) {
-        log("CrashHandlerDownloadSymbols: dbghelp::Initialize() failed\n");
-        return false;
-    }
-
-    if (dbghelp::HasSymbols()) {
-        log("CrashHandlerDownloadSymbols(): skipping because dbghelp::HasSymbols()\n");
-        return true;
-    }
-
-    if (!DownloadAndUnzipSymbols(gSymbolsDir)) {
-        log("CrashHandlerDownloadSymbols: failed to download symbols\n");
-        return false;
-    }
-
-    if (!dbghelp::Initialize(ws, true)) {
-        log("CrashHandlerDownloadSymbols: second dbghelp::Initialize() failed\n");
+        logf("InitializeDbgHelp: dbghelp::Initialize('%s') failed\n", gSymbolPath);
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("CrashHandlerDownloadSymbols: HasSymbols() false after downloading symbols, gSymbolPath:'%s'\n",
-             gSymbolPath);
+        log("InitializeDbgHelp(): dbghelp::HasSymbols() failed\n");
+        return false;
+    }
+    log("InitializeDbgHelp(): did initialize ok\n");
+    return true;
+}
+
+bool CrashHandlerDownloadSymbols() {
+    log("CrashHandlerDownloadSymbols()\n");
+
+    if (!dir::CreateAll(gSymbolsDir)) {
+        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", gSymbolsDir);
+        return false;
+    }
+
+    if (!DownloadAndUnzipSymbols(gSymbolsDir)) {
+        log("CrashHandlerDownloadSymbols: failed to download symbols\n");
         return false;
     }
     return true;
@@ -332,6 +326,7 @@ void _uploadDebugReport(const char* condStr, bool noCallstack) {
         // reports from official release
         return;
     }
+
     if (gIsDebugBuild) {
         // exclude debug builds. Those are most likely other people modyfing Sumatra
         return;
@@ -342,13 +337,17 @@ void _uploadDebugReport(const char* condStr, bool noCallstack) {
         return;
     }
 
-    logf("_uploadDebugReport: noCallstack: %d, gSymbolPathW: '%s'\n", (int)noCallstack, gSymbolPath);
+    logf("_uploadDebugReport: noCallstack: %d, gSymbolPath: '%s'\n", (int)noCallstack, gSymbolPath);
 
-    if (!noCallstack) {
-        bool ok = CrashHandlerDownloadSymbols();
+    bool needsSymbols = !noCallstack;
+    if (needsSymbols) {
+        // we proceed even if we fail to download symbols
+        bool ok = InitializeDbgHelp();
         if (!ok) {
-            log("_uploadDebugReport(): CrashHandlerDownloadSymbols() failed\n");
-            return;
+            ok = CrashHandlerDownloadSymbols();
+            if (ok) {
+                InitializeDbgHelp();
+            }
         }
     }
 
@@ -377,9 +376,15 @@ void TryUploadCrashReport() {
 
     logf("TryUploadCrashReport: gSymbolPathW: '%s'\n", gSymbolPath);
 
-    bool ok = CrashHandlerDownloadSymbols();
-    if (!ok) {
-        log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
+    bool ok = InitializeDbgHelp();
+    if (ok) {
+        // we preceed even if we can't download symbols or initialize dbghelp
+        ok = CrashHandlerDownloadSymbols();
+        if (!ok) {
+            log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
+        } else {
+            InitializeDbgHelp();
+        }
     }
 
     char* sv = BuildCrashInfoText(nullptr, true);
@@ -616,6 +621,8 @@ https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-path
 http://p-nand-q.com/python/procmon.html
 https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools
 
+
+
 Setting symbol path:
 add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
 add GetEnvironmentVariableA("_NT_ALT_SYMBOL_PATH ", ..., ...)
@@ -627,9 +634,24 @@ for symbols server symsrv.dll is needed, installed with debug tools for windows
 
 static bool gAddNtSymbolPath = true;
 static bool gAddSymbolServer = true;
+static bool gAddExeDir = true;
 
-static void BuildSymbolPath() {
+static void BuildSymbolPath(const char* symDir) {
     str::Str path(1024);
+
+    bool symDirExists = dir::Exists(symDir);
+
+    if (symDirExists) {
+        path.Append(symDir);
+        path.Append(";");
+    }
+
+    // in debug builds the symbols are in the same directory as .exe
+    if (gIsDebugBuild || gAddExeDir) {
+        TempStr dir = GetExeDirTemp();
+        path.Append(dir);
+        path.Append(";");
+    }
 
     if (gAddNtSymbolPath) {
         TempStr ntSymPath = GetEnvVariableTemp("_NT_SYMBOL_PATH");
@@ -645,20 +667,17 @@ static void BuildSymbolPath() {
             path.Append(";");
         }
     }
-    path.Append(gSymbolsDir);
-    if (gAddSymbolServer) {
-        // this probably typicall doesn't work as it needs symsrv.dll
-        path.AppendFmt("cache*%s;srv*http://msdl.microsoft.com/download/symbols;", gSymbolsDir);
+    if (gAddSymbolServer && symDirExists) {
+        // this probably won't work as it needs symsrv.dll and that's not included with Windows
+        // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
+        path.AppendFmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir);
     }
 
-#if 0
-    // when running local builds, *.pdb is in the same dir as *.exe
-    WCHAR* exePath = GetExePathTemp().Get();
-    path.Append(L";");
-    path.Append(exePath);
-#endif
+    // remove ";" from the end
+    path.RemoveLast();
 
-    str::ReplaceWithCopy(&gSymbolPath, path.Get());
+    char* p = path.CStr();
+    str::ReplaceWithCopy(&gSymbolPath, p);
 }
 
 bool SetSymbolsDir(const char* symDir) {
@@ -666,7 +685,7 @@ bool SetSymbolsDir(const char* symDir) {
         return false;
     }
     str::ReplaceWithCopy(&gSymbolsDir, symDir);
-    BuildSymbolPath();
+    BuildSymbolPath(gSymbolsDir);
     return true;
 }
 

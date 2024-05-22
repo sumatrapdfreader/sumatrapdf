@@ -140,7 +140,6 @@ static bool gDontSavePrefs = false;
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
 static void OnSidebarSplitterMove(SplitterMoveEvent*);
 static void OnFavSplitterMove(SplitterMoveEvent*);
-static void DownloadDebugSymbols();
 
 LoadArgs::LoadArgs(const char* origPath, MainWindow* win) {
     this->fileArgs = ParseFileArgs(origPath);
@@ -4866,6 +4865,27 @@ void ClearHistory(MainWindow* win) {
     // TODO: deletion takes time so run it async with RunAsync()
 }
 
+static void DownloadDebugSymbols() {
+    TempStr msg = (TempStr) "Symbols were already downloaded";
+    bool ok = InitializeDbgHelp();
+    if (ok) {
+        goto ShowMessage;
+    }
+    ok = CrashHandlerDownloadSymbols();
+    if (!ok) {
+        msg = (TempStr) "Failed to download symbols";
+        goto ShowMessage;
+    }
+    msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir);
+    if (ok) {
+        bool didInitializeDbgHelp = InitializeDbgHelp();
+        ReportIfQuick(!didInitializeDbgHelp);
+    }
+ShowMessage:
+    uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
+    MessageBoxA(nullptr, msg, "Downloading symbols", flags);
+}
+
 // try to trigger a crash due to corrupting allocator
 // this is a different kind of a crash than just referencing invalid memory
 // as corrupted memory migh prevent crash handler from working
@@ -6147,16 +6167,6 @@ void ShowCrashHandlerMessage() {
     LaunchFileShell(gCrashFilePath, nullptr, "open");
     auto url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
     LaunchFileShell(url, nullptr, "open");
-}
-
-static void DownloadDebugSymbols() {
-    bool ok = CrashHandlerDownloadSymbols();
-    TempStr msg = (TempStr) "Failed to download symbols.";
-    if (ok) {
-        msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir);
-    }
-    uint flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
-    MessageBoxA(nullptr, msg, "Downloading symbols", flags);
 }
 
 void ShutdownCleanup() {
