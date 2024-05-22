@@ -418,6 +418,16 @@ static void OnButtonStartSumatra() {
 }
 
 static void OnInstallationFinished() {
+    logf("OnInstallationFinished\n");
+
+    if (gWnd->btnRunSumatra) {
+        gWnd->btnRunSumatra->SetFocus();
+    }
+    if (gWnd->btnExit) {
+        gWnd->btnExit->SetFocus();
+    }
+    SetForegroundWindow(hwnd);
+
     DeleteWnd(&gWnd->btnInstall);
     DeleteWnd(&gWnd->progressBar);
 
@@ -436,8 +446,7 @@ static void OnInstallationFinished() {
     CloseHandle(gWnd->hThread);
 
     if (gCli->fastInstall && !gWnd->failed) {
-        // click the Start button
-        PostMessageW(gWnd->hwnd, WM_COMMAND, IDOK, 0);
+        OnButtonStartSumatra();
     }
 }
 
@@ -846,13 +855,6 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
 
         case WM_APP_INSTALLATION_FINISHED: {
             OnInstallationFinished();
-            if (gWnd->btnRunSumatra) {
-                gWnd->btnRunSumatra->SetFocus();
-            }
-            if (gWnd->btnExit) {
-                gWnd->btnExit->SetFocus();
-            }
-            SetForegroundWindow(hwnd);
             break;
         }
 
