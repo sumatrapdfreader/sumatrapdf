@@ -11,11 +11,10 @@ namespace trans {
 
 // defined in Trans*_txt.cpp
 extern int gLangsCount;
-extern const char* gLangNames;
+extern const char* gLangNames;  
 extern const char* gLangCodes;
 extern const LANGID* GetLangIds();
 extern bool IsLangRtl(int langIdx);
-extern const char** GetOriginalStrings();
 } // namespace trans
 
 namespace trans {
@@ -29,8 +28,6 @@ struct Translation {
     // translation of str/origStr in gCurrLangCode
     // index points inside allTranslations
     u16 idxTrans = 0;
-    // translation in WCHAR*, points inside allTranslationsW
-    u16 idxTransW = 0;
 };
 
 struct TranslationCache {
@@ -38,7 +35,6 @@ struct TranslationCache {
     // we lazily match it to origStr
     str::Str allStrings;
     str::Str allTranslations;
-    str::WStr allTranslationsW;
     // TODO: maybe also cache str::WStr allTranslationsW
     // we currently return a temp converted string but there's a chance their
     // lifetime could survive temp allocator lifetime
@@ -109,7 +105,6 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
     // "missing" value in transIdx
     gTranslationCache->allStrings.AppendChar(' ');
     gTranslationCache->allTranslations.AppendChar(' ');
-    gTranslationCache->allTranslationsW.AppendChar(' ');
     auto c = gTranslationCache;
     c->nTranslations = nStrings;
     c->translations = AllocArray<Translation>(c->nTranslations);
@@ -145,20 +140,14 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
         translation.idxStr = (u16)idxStr;
         UnescapeStringIntoStr(orig, c->allStrings);
         char* toConvert = c->allStrings.LendData() + idxStr; // after insertion because could re-allocate
-        if (trans) {
-            size_t idxTrans = c->allTranslations.size();
-            CrashIf(idxTrans > 64 * 1024);
-            translation.idxTrans = (u16)idxTrans;
-            UnescapeStringIntoStr(trans, c->allTranslations);
-            toConvert = c->allTranslations.LendData() + idxTrans; // after insertion because could re-allocate
+        if (!trans) {
+            continue;
         }
-        // if we don't have a translation, we cache WCHAR* version from original string
-        auto ws = ToWStrTemp(toConvert);
-        size_t idxTransW = c->allTranslationsW.size();
-        CrashIf(idxTransW > 64 * 1024);
-        translation.idxTransW = (u16)idxTransW;
-        size_t wsLen = str::Len(ws);
-        c->allTranslationsW.Append(ws, wsLen + 1);
+        size_t idxTrans = c->allTranslations.size();
+        CrashIf(idxTrans > 64 * 1024);
+        translation.idxTrans = (u16)idxTrans;
+        UnescapeStringIntoStr(trans, c->allTranslations);
+        toConvert = c->allTranslations.LendData() + idxTrans; // after insertion because could re-allocate
     }
     CrashIf(nTrans != c->nTranslations);
     if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
@@ -182,7 +171,7 @@ static Translation* FindTranslation(const char* s) {
 }
 
 // don't free
-const char* GetTranslationA(const char* s) {
+const char* GetTranslation(const char* s) {
     if (gCurrLangIdx == 0) {
         return s;
     }
@@ -194,22 +183,6 @@ const char* GetTranslationA(const char* s) {
     }
     auto idx = trans->idxTrans;
     return gTranslationCache->allTranslations.LendData() + idx;
-}
-
-// don't free
-const WCHAR* GetTranslation(const char* s) {
-    Translation* trans = FindTranslation(s);
-    // we don't have a translation for this string
-    if (!trans || trans->idxTransW == 0) {
-        logf("GetTranslation: didn't find translation for '%s'\n", s);
-        // shouldn't happen
-        // ReportIf(true);
-        // it's a mem leak but the contract is that those strings
-        // are not freed and survive long enough they can't be temp strings
-        return ToWstr(s);
-    }
-    auto idx = trans->idxTransW;
-    return gTranslationCache->allTranslationsW.LendData() + idx;
 }
 
 int GetLangsCount() {
@@ -289,10 +262,6 @@ void Destroy() {
 
 } // namespace trans
 
-const WCHAR* _TR(const char* s) {
-    return trans::GetTranslation(s);
-}
-
 const char* _TRA(const char* s) {
-    return trans::GetTranslationA(s);
+    return trans::GetTranslation(s);
 }

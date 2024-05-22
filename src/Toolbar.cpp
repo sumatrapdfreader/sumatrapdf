@@ -193,7 +193,8 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
         info.iBitmap = (int)btInfo.bmpIndex;
         info.fsState = TBSTATE_ENABLED;
         info.fsStyle = TBSTYLE_BUTTON;
-        info.iString = (INT_PTR)trans::GetTranslation(btInfo.toolTip);
+        auto s = trans::GetTranslation(btInfo.toolTip);
+        info.iString = (INT_PTR)ToWStrTemp(s);
     }
     return info;
 }
@@ -215,7 +216,7 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
             AppendAccelKeyToMenuString(accelStr, accel);
         }
 
-        const char* s = trans::GetTranslationA(tb.toolTip);
+        const char* s = trans::GetTranslation(tb.toolTip);
         if (accelStr.size() > 0) {
             accelStr[0] = '(';
             accelStr.Append(")");

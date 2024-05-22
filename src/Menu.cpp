@@ -1388,7 +1388,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         noTranslate |= (subMenuDef == menuDefDebug);
         const char* title = md.title;
         if (!noTranslate) {
-            title = trans::GetTranslationA(md.title);
+            title = trans::GetTranslation(md.title);
         }
 
         if (isSubMenu) {
@@ -1504,7 +1504,7 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
         if (def.idOrSubmenu != CmdPrint) {
             continue;
         }
-        str::Str printItem = trans::GetTranslationA(def.title);
+        str::Str printItem = trans::GetTranslation(def.title);
         if (!filePrintAllowed) {
             printItem = _TRA("&Print... (denied)");
         } else {

@@ -10,8 +10,7 @@ const char* GetCurrentLangCode();
 void SetCurrentLangByCode(const char* langCode);
 const char* ValidateLangCode(const char* langCode);
 
-const WCHAR* GetTranslation(const char* s);
-const char* GetTranslationA(const char* s);
+const char* GetTranslation(const char* s);
 const char* GetLangCodeByIdx(int idx);
 const char* GetLangNameByIdx(int idx);
 bool IsCurrLangRtl();
@@ -20,8 +19,6 @@ void Destroy();
 
 } // namespace trans
 
-// _TR() marks strings that need to be translated
-const WCHAR* _TR(const char* s);
 // _TRA() is like _TR() but returns Utf8 version
 const char* _TRA(const char* s);
 #define _TR_TODO(quote) L##quote
