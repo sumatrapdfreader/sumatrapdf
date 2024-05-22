@@ -302,7 +302,7 @@ bool CrashHandlerDownloadSymbols() {
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("CrashHandlerDownloadSymbols: HasSymbols() false after downloading symbols, gSymbolPath:'%'s\n",
+        logf("CrashHandlerDownloadSymbols: HasSymbols() false after downloading symbols, gSymbolPath:'%s'\n",
              gSymbolPath);
         return false;
     }
