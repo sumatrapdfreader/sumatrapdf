@@ -544,6 +544,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.gitignore" />
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md">
       <Filter>docs\md</Filter>
     </None>
@@ -670,6 +671,8 @@
     <None Include="..\docs\wishlist.txt">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\premake5.files.lua" />
+    <None Include="..\premake5.lua" />
     <None Include="..\src\ext\versions.txt">
       <Filter>src\ext</Filter>
     </None>

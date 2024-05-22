@@ -671,6 +671,9 @@ function sumatrapdf_files()
     "scratch.txt",
     "../docs/*.txt",
     "../docs/md/*.md",
+    "../premake5.lua",
+    "../premake5.files.lua",
+    "../.gitignore",
   })
   filter {"configurations:Debug or DebugFull"}
     files_in_dir("src", {
