@@ -56,7 +56,10 @@ struct Flags {
     HWND hwndPluginParent = nullptr;
     char* pluginURL = nullptr;
     bool exitImmediately = false;
+    // installer: doesn't show any UI
     bool silent = false;
+    // installer: starts the install immediately and launches the app at end
+    bool fastInstall = false;
     char* appdataDir = nullptr;
     char* inverseSearchCmdLine = nullptr;
     bool invertColors = false;

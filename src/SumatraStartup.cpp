@@ -1020,7 +1020,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     gCli = &flags;
 
     CheckIsStoreBuild();
-    bool isInstaller = flags.install || flags.runInstallNow || IsInstallerAndNamedAsSuch();
+    bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
     bool isUninstaller = flags.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
 

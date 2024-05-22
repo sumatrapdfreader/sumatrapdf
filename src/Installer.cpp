@@ -307,6 +307,9 @@ static void RestartElevatedForAllUsers() {
     if (gCli->silent) {
         cmdLine = str::JoinTemp(cmdLine, " -silent");
     }
+    if (gCli->fastInstall) {
+        cmdLine = str::JoinTemp(cmdLine, " -fast-install");
+    }
     if (gCli->log) {
         cmdLine = str::JoinTemp(cmdLine, " -log");
     }
@@ -432,12 +435,10 @@ static void OnInstallationFinished() {
 
     CloseHandle(gWnd->hThread);
 
-#if 0 // TODO: not sure
-    if (gCli->runInstallNow && !gWnd->failed) {
+    if (gCli->fastInstall && !gWnd->failed) {
         // click the Start button
         PostMessageW(gWnd->hwnd, WM_COMMAND, IDOK, 0);
     }
-#endif
 }
 
 static void EnableAndShow(Wnd* w, bool enable) {
@@ -790,7 +791,8 @@ static HWND CreateInstallerHwnd() {
     DpiScale(hwnd, dx, dy);
     HwndResizeClientSize(hwnd, dx, dy);
     CreateInstallerWindowControls(gWnd);
-    if (gCli->runInstallNow) {
+    auto autoStartInstall = gCli->runInstallNow || gCli->fastInstall;
+    if (autoStartInstall) {
         PostMessageW(hwnd, WM_APP_START_INSTALLATION, 0, 0);
     }
     return hwnd;
@@ -1088,7 +1090,8 @@ int RunInstaller() {
 
     gDefaultMsg = _TRA("Thank you for choosing SumatraPDF!");
 
-    if (!gCli->runInstallNow) {
+    auto autoStartInstall = gCli->runInstallNow || gCli->fastInstall;
+    if (!autoStartInstall) {
         // if not set explicitly, default to state from previous installation
         if (!gCli->withFilter) {
             gCli->withFilter = gWnd->prevInstall.searchFilterInstalled;
@@ -1098,10 +1101,10 @@ int RunInstaller() {
         }
     }
     logf(
-        "RunInstaller: gClii->silent: %d, gCli->allUsers: %d, gCli->runInstallNow = %d, gCli->withFilter = %d, "
-        "gCli->withPreview = %d\n",
-        (int)gCli->silent, (int)gCli->allUsers, (int)gCli->runInstallNow, (int)gCli->withFilter,
-        (int)gCli->withPreview);
+        "RunInstaller: gClii->silent: %d, gCli->allUsers: %d, gCli->runInstallNow: %d, gCli->withFilter: %d, "
+        "gCli->withPreview: %d, gCli->fastInstall: %d\n",
+        (int)gCli->silent, (int)gCli->allUsers, (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview,
+        (int)gCli->fastInstall);
 
     // unregister search filter and previewer to reduce
     // possibility of blocking the installation because the dlls are loaded

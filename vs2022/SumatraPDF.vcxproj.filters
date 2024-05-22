@@ -4,6 +4,9 @@
     <Filter Include="docs">
       <UniqueIdentifier>{CECA957C-BA01-970D-63EE-7C104F04130F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs\md">
+      <UniqueIdentifier>{6E56AB1F-DA35-2ABB-E34D-B5914FAC901C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
@@ -541,6 +544,123 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Add-Favorite.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Advanced-options-settings.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Build-system.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Command-Palette.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Command-line-arguments.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Commands.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Configure-for-restricted-use.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Contribute-to-SumatraPDF.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Contribute-translation.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Corrupted-installation.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Customize-external-viewers.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Customize-search-translation-services.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Customizing-eBook-UI.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Customizing-keyboard-shortcuts.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\DDE-Commands.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Debugging-Sumatra.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Editing-annotations.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Go-to-Page.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\How-to-submit-bug-reports.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\How-we-store-settings.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Installer-cmd-line-arguments.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Is-there-a-virus-in-Sumatra-sources.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Keyboard-shortcuts.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\LaTeX-integration.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Logview.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Reporting-printing-bugs.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Scrolling-and-zooming.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Set-as-default-PDF-viewer.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Source-code-downloads.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Submit-crash-report.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\SumatraPDF-documentation.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Supported-document-formats.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Uninstalling-SumatraPDF.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Update-check-doesnt-work.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Using-DrMemory.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Using-OpenCppCoverage.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Version-history.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Why-only-Windows.md">
+      <Filter>docs\md</Filter>
+    </None>
     <None Include="..\docs\notes.txt">
       <Filter>docs</Filter>
     </None>

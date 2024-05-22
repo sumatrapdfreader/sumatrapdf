@@ -562,8 +562,8 @@ void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);
     s.AppendFmt("Flags:%08X\n", ctx->EFlags);
 #elif IS_INTEL_32 == 1
-    s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx,
-                ctx->Edx, ctx->Esi, ctx->Edi);
+    s.AppendFmt("EAX:%08X  EBX:%08X  ECX:%08X\nEDX:%08X  ESI:%08X  EDI:%08X\n", ctx->Eax, ctx->Ebx, ctx->Ecx, ctx->Edx,
+                ctx->Esi, ctx->Edi);
     s.AppendFmt("CS:EIP:%04X:%08X\n", ctx->SegCs, ctx->Eip);
     s.AppendFmt("SS:ESP:%04X:%08X  EBP:%08X\n", ctx->SegSs, ctx->Esp, ctx->Ebp);
     s.AppendFmt("DS:%04X  ES:%04X  FS:%04X  GS:%04X\n", ctx->SegDs, ctx->SegEs, ctx->SegFs, ctx->SegGs);

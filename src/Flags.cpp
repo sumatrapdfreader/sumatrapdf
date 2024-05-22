@@ -18,6 +18,7 @@
 #define ARGS(V)                                  \
     V(Silent, "s")                               \
     V(Silent2, "silent")                         \
+    V(FastInstall, "fast-install")               \
     V(PrintToDefault, "print-to-default")        \
     V(PrintDialog, "print-dialog")               \
     V(Help, "h")                                 \
@@ -429,6 +430,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::Install) {
             i.install = true;
+            continue;
+        }
+        if (arg == Arg::FastInstall) {
+            i.fastInstall = true;
             continue;
         }
         if (arg == Arg::UnInstall) {

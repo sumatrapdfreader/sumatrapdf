@@ -670,6 +670,7 @@ function sumatrapdf_files()
     "ext/versions.txt",
     "scratch.txt",
     "../docs/*.txt",
+    "../docs/md/*.md",
   })
   filter {"configurations:Debug or DebugFull"}
     files_in_dir("src", {

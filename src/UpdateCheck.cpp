@@ -269,9 +269,10 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     str::Str cmd;
     if (IsDllBuild()) {
         // no need for sleep because it shows the installer dialog anyway
-        cmd.Append(" -install");
         if (gIsPreReleaseBuild) {
-            cmd.Append(" -silent");
+            cmd.Append(" -fast-install");
+        } else {
+            cmd.Append(" -install");
         }
     } else {
         // we're asking to over-write over ourselves, so also wait 2 secs to allow
