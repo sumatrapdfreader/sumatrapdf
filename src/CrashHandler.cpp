@@ -46,27 +46,6 @@ static bool gDisableSymbolsDownload = true;
 static bool gDisableSymbolsDownload = false;
 #endif
 
-// Get url for file with symbols. Caller needs to free().
-static char* BuildSymbolsUrl() {
-    const char* urlBase = "https://www.sumatrapdfreader.org/dl/";
-    if (gIsPreReleaseBuild) {
-        const char* ver = QM(PRE_RELEASE_VER);
-        urlBase = str::JoinTemp(urlBase, "prerel/", ver, "/SumatraPDF-prerel");
-    } else {
-        // assuming this is release version
-        const char* ver = QM(CURR_VERSION);
-        urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
-        ;
-    }
-    const char* suff = "-32.pdb.lzsa";
-#if IS_ARM_64 == 1
-    suff = "-arm64.pdb.lzsa";
-#elif IS_INTEL_64 == 1
-    suff = "-64.pdb.lzsa";
-#endif
-    return str::Join(urlBase, suff);
-}
-
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
 For multi-thread safety, there is a per-heap lock taken by HeapAlloc() etc.
 It's possible that a crash originates from  inside such functions after a lock
@@ -708,6 +687,26 @@ void onUnexpected() {
 int __cdecl _purecall() {
     CrashMe();
     return 0;
+}
+
+// Get url for file with symbols. Caller needs to free().
+static char* BuildSymbolsUrl() {
+    const char* urlBase = "https://www.sumatrapdfreader.org/dl/";
+    if (gIsPreReleaseBuild) {
+        const char* ver = QM(PRE_RELEASE_VER);
+        urlBase = str::JoinTemp(urlBase, "prerel/", ver, "/SumatraPDF-prerel");
+    } else {
+        // assuming this is release version
+        const char* ver = QM(CURR_VERSION);
+        urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
+    }
+    const char* suff = "-32.pdb.lzsa";
+#if IS_ARM_64 == 1
+    suff = "-arm64.pdb.lzsa";
+#elif IS_INTEL_64 == 1
+    suff = "-64.pdb.lzsa";
+#endif
+    return str::Join(urlBase, suff);
 }
 
 void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir) {

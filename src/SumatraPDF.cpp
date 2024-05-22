@@ -4996,8 +4996,7 @@ void DeleteStaleFilesAsync() {
     }
     TempStr dir = GetNotImportantDataDirTemp();
     TempStr ver = GetVerDirNameTemp("");
-    logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild,
-         ver);
+    logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
     RunAsync(DeleteStaleFiles, "DeleteStaleFilesThread");
 }
 

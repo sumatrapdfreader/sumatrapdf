@@ -11,11 +11,13 @@ namespace trans {
 
 // defined in Trans*_txt.cpp
 extern int gLangsCount;
-extern const char* gLangNames;  
+extern const char* gLangNames;
 extern const char* gLangCodes;
 extern const LANGID* GetLangIds();
 extern bool IsLangRtl(int langIdx);
 } // namespace trans
+
+constexpr u16 kIdxMissing = 0xffff;
 
 namespace trans {
 
@@ -23,21 +25,18 @@ namespace trans {
 // we set str/trans once by parsing translations.txt file
 // after the user changes the language
 struct Translation {
-    // index points inside allStrings;
+    // index in allStrings;
     u16 idxStr = 0;
     // translation of str/origStr in gCurrLangCode
-    // index points inside allTranslations
+    // index in allTranslations
     u16 idxTrans = 0;
 };
 
 struct TranslationCache {
     // english string from translations.txt file
     // we lazily match it to origStr
-    str::Str allStrings;
-    str::Str allTranslations;
-    // TODO: maybe also cache str::WStr allTranslationsW
-    // we currently return a temp converted string but there's a chance their
-    // lifetime could survive temp allocator lifetime
+    StrVec2 allStrings;
+    StrVec2 allTranslations;
     Translation* translations = nullptr;
     int nTranslations = 0;
     int nUntranslated = 0;
@@ -48,30 +47,39 @@ static const char* gCurrLangCode = nullptr;
 static int gCurrLangIdx = 0;
 static TranslationCache* gTranslationCache = nullptr;
 
-static void UnescapeStringIntoStr(char* s, str::Str& str) {
-    for (; *s; s++) {
-        if (*s == '\\') {
-            char c = s[1];
-            switch (c) {
-                case 't':
-                    str.AppendChar('\t');
-                    break;
-                case 'n':
-                    str.AppendChar('\n');
-                    break;
-                case 'r':
-                    str.AppendChar('\r');
-                    break;
-                default:
-                    str.AppendChar(c);
-                    break;
-            }
-            s++;
-        } else {
-            str.AppendChar(*s);
+static TempStr UnescapeTemp(char* sOrig) {
+    char* s = str::DupTemp(sOrig);
+    char* unescaped = s;
+    char* dst = s;
+    char c, c2;
+    while (*s) {
+        c = *s++;
+        if (c != '\\') {
+            *dst++ = c;
+            continue;
         }
+        c2 = *s;
+        switch (c2) {
+            case '\\':
+                *dst++ = '\\';
+                break;
+            case 't':
+                *dst++ = '\t';
+                break;
+            case 'n':
+                *dst++ = '\n';
+                break;
+            case 'r':
+                *dst++ = '\r';
+                break;
+            default:
+                *dst++ = c;
+                break;
+        }
+        s++;
     }
-    str.AppendChar(0);
+    *dst = 0;
+    return unescaped;
 }
 
 static void FreeTranslations() {
@@ -101,10 +109,6 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
 
     FreeTranslations();
     gTranslationCache = new TranslationCache();
-    // make index of first string to be 1 so that 0 can be
-    // "missing" value in transIdx
-    gTranslationCache->allStrings.AppendChar(' ');
-    gTranslationCache->allTranslations.AppendChar(' ');
     auto c = gTranslationCache;
     c->nTranslations = nStrings;
     c->translations = AllocArray<Translation>(c->nTranslations);
@@ -134,20 +138,21 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
             c->nUntranslated++;
         }
         Translation& translation = c->translations[nTrans++];
-        size_t idxStr = c->allStrings.size();
+        int idxStr = c->allStrings.Size();
         // when this fires, we'll have to bump strIdx form u16 to u32
         CrashIf(idxStr > 64 * 1024);
         translation.idxStr = (u16)idxStr;
-        UnescapeStringIntoStr(orig, c->allStrings);
-        char* toConvert = c->allStrings.LendData() + idxStr; // after insertion because could re-allocate
+        TempStr unescaped = UnescapeTemp(orig);
+        c->allStrings.Append(unescaped);
         if (!trans) {
+            translation.idxTrans = kIdxMissing;
             continue;
         }
-        size_t idxTrans = c->allTranslations.size();
+        int idxTrans = c->allTranslations.Size();
         CrashIf(idxTrans > 64 * 1024);
         translation.idxTrans = (u16)idxTrans;
-        UnescapeStringIntoStr(trans, c->allTranslations);
-        toConvert = c->allTranslations.LendData() + idxTrans; // after insertion because could re-allocate
+        unescaped = UnescapeTemp(trans);
+        c->allTranslations.Append(unescaped);
     }
     CrashIf(nTrans != c->nTranslations);
     if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
@@ -161,8 +166,8 @@ static Translation* FindTranslation(const char* s) {
     auto c = gTranslationCache;
     for (int i = 0; i < c->nTranslations; i++) {
         Translation& trans = c->translations[i];
-        size_t idx = trans.idxStr;
-        const char* s2 = c->allStrings.LendData() + idx;
+        int idx = (int)trans.idxStr;
+        char* s2 = c->allStrings.At(idx);
         if (str::Eq(s, s2)) {
             return &trans;
         }
@@ -177,12 +182,12 @@ const char* GetTranslation(const char* s) {
     }
     Translation* trans = FindTranslation(s);
     // we don't have a translation for this string
-    if (!trans || trans->idxTrans == 0) {
+    u32 idx = trans ? trans->idxTrans : kIdxMissing;
+    if (idx == kIdxMissing) {
         logf("Didn't find translation for '%s'\n", s);
         return s;
     }
-    auto idx = trans->idxTrans;
-    return gTranslationCache->allTranslations.LendData() + idx;
+    return gTranslationCache->allTranslations.At((int)idx);
 }
 
 int GetLangsCount() {
