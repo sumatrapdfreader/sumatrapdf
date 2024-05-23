@@ -190,7 +190,7 @@ static void BenchDir(char* dir) {
     }
 }
 
-void BenchFileOrDir(StrVec& pathsToBench) {
+void BenchFileOrDir(StrVec2& pathsToBench) {
     int n = pathsToBench.Size() / 2;
     for (int i = 0; i < n; i++) {
         char* path = pathsToBench.At(2 * i);

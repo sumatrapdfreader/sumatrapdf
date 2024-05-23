@@ -31,4 +31,4 @@ void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showP
 void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
                       bool showProgress);
 extern bool gIsStartup;
-extern StrVec gDdeOpenOnStartup;
+extern StrVec2 gDdeOpenOnStartup;

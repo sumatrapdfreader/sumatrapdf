@@ -312,7 +312,7 @@ float ChmModel::GetZoomVirtual(bool) const {
 class ChmTocBuilder : public EbookTocVisitor {
     ChmFile* doc = nullptr;
 
-    StrVec* pages = nullptr;
+    StrVec2* pages = nullptr;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
     Allocator* allocator = nullptr;
     // TODO: could use dict::MapWStrToInt instead of StrList in the caller as well
@@ -339,7 +339,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
+    ChmTocBuilder(ChmFile* doc, StrVec2* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
         this->doc = doc;
         this->pages = pages;
         this->tocTrace = tocTrace;

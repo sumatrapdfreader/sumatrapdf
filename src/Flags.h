@@ -30,13 +30,13 @@ struct FileArgs {
 FileArgs* ParseFileArgs(const char* path);
 
 struct Flags {
-    StrVec fileNames;
+    StrVec2 fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (nullptr if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
-    StrVec pathsToBenchmark;
+    StrVec2 pathsToBenchmark;
     bool exitWhenDone = false;
     bool printDialog = false;
     char* printerName = nullptr;
@@ -90,7 +90,7 @@ struct Flags {
 
     // deprecated flags
     char* lang = nullptr;
-    StrVec globalPrefArgs;
+    StrVec2 globalPrefArgs;
 
     // related to installer
     bool showHelp = false;

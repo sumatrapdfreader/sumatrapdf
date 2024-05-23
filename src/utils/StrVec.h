@@ -70,7 +70,7 @@ struct StrVec2 {
     StrVec2& operator=(const StrVec2& that);
     ~StrVec2();
 
-    void Reset(StrVecPage*);
+    void Reset(StrVecPage* = nullptr);
 
     int Size() const;
     char* At(int i) const;

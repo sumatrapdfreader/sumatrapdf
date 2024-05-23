@@ -41,7 +41,7 @@
 #include "utils/Log.h"
 
 bool gIsStartup = false;
-StrVec gDdeOpenOnStartup;
+StrVec2 gDdeOpenOnStartup;
 
 Kind kNotifGroupFindProgress = "findProgress";
 

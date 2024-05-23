@@ -1809,7 +1809,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
     }
 }
 
-static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec& files) {
+static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec2& files) {
     int nFiles = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
     WCHAR pathW[MAX_PATH]{};
     char* path = nullptr;
@@ -1830,7 +1830,7 @@ static void GetDropFilesResolved(HDROP hDrop, bool dragFinish, StrVec& files) {
 }
 
 static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
-    StrVec files;
+    StrVec2 files;
     bool isShift = IsShiftPressed();
 
     GetDropFilesResolved(hDrop, dragFinish, files);

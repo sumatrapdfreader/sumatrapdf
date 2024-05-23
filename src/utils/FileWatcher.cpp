@@ -232,7 +232,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     FILE_NOTIFY_INFORMATION* notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
 
     // collect files that changed, removing duplicates
-    StrVec changedFiles;
+    StrVec2 changedFiles;
     for (;;) {
         size_t fnLen = notify->FileNameLength / sizeof(WCHAR);
         char* fileName = ToUtf8Temp(notify->FileName, fnLen);
