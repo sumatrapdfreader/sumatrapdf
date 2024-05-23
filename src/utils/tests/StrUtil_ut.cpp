@@ -966,10 +966,4 @@ void StrTest() {
     StrVecTest3<StrVec2>();
     StrVecTest4<StrVec2>();
     StrVecTest5<StrVec2>();
-
-    StrVecTest<StrVec>();
-    StrVecTest2<StrVec>();
-    StrVecTest3<StrVec>();
-    StrVecTest4<StrVec>();
-    StrVecTest5<StrVec>();
 }

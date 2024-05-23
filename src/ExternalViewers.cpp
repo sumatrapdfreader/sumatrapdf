@@ -447,7 +447,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
         return false;
     }
-    StrVec argsQuoted;
+    StrVec2 argsQuoted;
     if (nArgs == 1) {
         return LaunchFileShell(exePath, tab->filePath);
     }
