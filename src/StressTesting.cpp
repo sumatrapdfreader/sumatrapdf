@@ -416,6 +416,7 @@ struct StressTest {
     Vec<PageRange> pageRanges;
     Vec<PageRange> fileRanges;
     int fileIndex = 0;
+    bool gotToc = false;
 
     // owned by StressTest
     TestFileProvider* fileProvider = nullptr;
@@ -555,9 +556,10 @@ static bool OpenFile(StressTest* st, const char* fileName) {
         return false;
     }
 
-    st->win->ctrl->SetDisplayMode(DisplayMode::Continuous);
-    st->win->ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
-    st->win->ctrl->GoToFirstPage();
+    auto ctrl = st->win->ctrl;
+    ctrl->SetDisplayMode(DisplayMode::Continuous);
+    ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
+    ctrl->GoToFirstPage();
     if (st->win->tocVisible || gGlobalPrefs->showFavorites) {
         SetSidebarVisibility(st->win, st->win->tocVisible, gGlobalPrefs->showFavorites);
     }
@@ -565,7 +567,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     st->nSlowPages = 0;
     st->pagesToRender.Clear();
     constexpr int nMaxPages = 32;
-    int nPages = st->win->ctrl->PageCount();
+    int nPages = ctrl->PageCount();
     if (IsFullRange(st->pageRanges)) {
         Vec<int> allPages;
         for (int n = 1; n <= nPages; n++) {
@@ -595,7 +597,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     st->pageForSearchStart = st->pagesToRender[randomPageIdx];
 
     st->currPageNo = st->pagesToRender.PopAt(0);
-    st->win->ctrl->GoToPage(st->currPageNo, false);
+    ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
     ++st->nFilesProcessed;
 
@@ -713,9 +715,16 @@ static bool GoToNextPage(StressTest* st) {
         return false;
     }
 
+    auto ctrl = st->win->ctrl;
+    if (!st->gotToc) {
+        // trigger getting toc
+        st->gotToc = true;
+        ctrl->GetToc();
+    }
+
     RandomizeViewingState(st);
     st->currPageNo = st->pagesToRender.PopAt(0);
-    st->win->ctrl->GoToPage(st->currPageNo, false);
+    ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
 
     // start text search when we're in the middle of the document, so that

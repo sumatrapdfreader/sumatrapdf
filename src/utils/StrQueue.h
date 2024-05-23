@@ -9,7 +9,7 @@ struct StrQueue {
     void Lock();
     void Unlock();
     int Size();
-    char* Append(const char*, int len = 0);
+    char* Append(const char*, int len = -1);
     char* PopFront();
     bool IsSentinel(char*);
     void MarkFinished();
