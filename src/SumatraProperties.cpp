@@ -40,10 +40,11 @@ constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 
 struct PropertiesLayout {
+    // TODO: key / val are implicit in strings (at pos i*2 and i*2+1
     struct Prop {
         // A property is always in format: Name (left): Value (right)
-        int keyIdx;
-        int valIdx;
+        char* key; // not owned
+        char* val; // not owned
         // overlong paths get the ellipsis in the middle instead of at the end
         bool isPath;
 
@@ -63,25 +64,25 @@ struct PropertiesLayout {
         if (str::IsEmpty(value)) {
             return;
         }
-        int keyIdx = strings.Append(key);
-        int valIdx = strings.Append(value);
-        Prop p = {keyIdx, valIdx, isPath};
+        char* key2 = strings.Append(key);
+        char* val2 = strings.Append(value);
+        Prop p = {key2, val2, isPath};
         props.Append(p);
     }
 
     char* PropKey(int i) {
-        int idx = props[i].keyIdx;
-        return strings.At(idx);
+        auto s = props[i].key;
+        return s;
     }
 
     char* PropValue(int i) {
-        int idx = props[i].valIdx;
-        return strings.At(idx);
+        auto s = props[i].val;
+        return s;
     }
 
     bool HasProperty(const char* key) {
         for (auto&& prop : props) {
-            char* k = strings.At(prop.keyIdx);
+            char* k = prop.key;
             if (str::Eq(key, k)) {
                 return true;
             }
@@ -94,7 +95,7 @@ struct PropertiesLayout {
     Button* btnCopyToClipboard = nullptr;
     Button* btnGetFonts = nullptr;
     Vec<Prop> props;
-    StrVec strings;
+    StrVec2 strings;
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
@@ -251,10 +252,10 @@ static char* FormatPdfFileStructure(DocController* ctrl) {
     if (str::IsEmpty(fstruct)) {
         return nullptr;
     }
-    StrVec parts;
+    StrVec2 parts;
     Split(parts, fstruct, ",", true);
 
-    StrVec props;
+    StrVec2 props;
 
     if (parts.Contains("linearized")) {
         props.Append(_TRA("Fast Web View"));
@@ -282,7 +283,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
         return nullptr;
     }
 
-    StrVec denials;
+    StrVec2 denials;
 
     EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {
