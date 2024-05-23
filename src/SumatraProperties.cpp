@@ -501,26 +501,44 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     return true;
 }
 
+// clang-format off
+static const char* propToName[] = {
+    kPropTitle, _TRN("Title:"),
+    kPropSubject, _TRN("Subject:"),
+    kPropAuthor, _TRN("Author:"),
+    kPropCopyright, _TRN("Copyright:"),
+    kPropCreatorApp, _TRN("Application:"),
+    kPropPdfProducer, _TRN("PDF Producer:"),
+    kPropPdfVersion, _TRN("PDF Version:"),
+    nullptr,
+};
+// clang-format on
+
+static void AddPropTranslated(PropertiesLayout* layoutData, const char* propName, const char* val) {
+    const char* s = GetMatchingString(propToName, propName);
+    CrashIf(!s);
+    const char* trans = trans::GetTranslation(s);
+    layoutData->AddProperty(trans, val);
+}
+
+static void AddPropTranslated(DocController* ctrl, PropertiesLayout* layoutData, const char* propName) {
+    TempStr val = ctrl->GetPropertyTemp(kPropTitle);
+    AddPropTranslated(layoutData, kPropTitle, val);
+}
+
 static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool extended) {
     CrashIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
     layoutData->AddProperty(_TRA("File:"), path, true);
 
-    char* str = ctrl->GetPropertyTemp(kPropTitle);
-    layoutData->AddProperty(_TRA("Title:"), str);
-
-    str = ctrl->GetPropertyTemp(kPropSubject);
-    layoutData->AddProperty(_TRA("Subject:"), str);
-
-    str = ctrl->GetPropertyTemp(kPropAuthor);
-    layoutData->AddProperty(_TRA("Author:"), str);
-
-    str = ctrl->GetPropertyTemp(kPropCopyright);
-    layoutData->AddProperty(_TRA("Copyright:"), str);
+    AddPropTranslated(ctrl, layoutData, kPropTitle);
+    AddPropTranslated(ctrl, layoutData, kPropSubject);
+    AddPropTranslated(ctrl, layoutData, kPropAuthor);
+    AddPropTranslated(ctrl, layoutData, kPropCopyright);
 
     DisplayModel* dm = ctrl->AsFixed();
-    str = ctrl->GetPropertyTemp(kPropCreationDate);
+    TempStr str = ctrl->GetPropertyTemp(kPropCreationDate);
     TempStr strTemp;
     if (str && dm && kindEngineMupdf == dm->engineType) {
         strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
@@ -537,14 +555,9 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     }
     layoutData->AddProperty(_TRA("Modified:"), strTemp);
 
-    str = ctrl->GetPropertyTemp(kPropCreatorApp);
-    layoutData->AddProperty(_TRA("Application:"), str);
-
-    str = ctrl->GetPropertyTemp(kPropPdfProducer);
-    layoutData->AddProperty(_TRA("PDF Producer:"), str);
-
-    str = ctrl->GetPropertyTemp(kPropPdfVersion);
-    layoutData->AddProperty(_TRA("PDF Version:"), str);
+    AddPropTranslated(ctrl, layoutData, kPropCreatorApp);
+    AddPropTranslated(ctrl, layoutData, kPropPdfProducer);
+    AddPropTranslated(ctrl, layoutData, kPropPdfVersion);
 
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TRA("PDF Optimizations:"), str);

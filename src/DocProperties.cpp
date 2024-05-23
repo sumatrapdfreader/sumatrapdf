@@ -18,6 +18,24 @@ const char* kPropPdfVersion = "pdfVersion";
 const char* kPropPdfProducer = "pdfProducer";
 const char* kPropPdfFileStructure = "pdfFileStructure";
 
+// clang-format off
+extern const char* gAllProps[] = {
+     kPropTitle,
+     kPropAuthor,
+     kPropCopyright,
+     kPropSubject,
+     kPropCreationDate,
+     kPropModificationDate,
+     kPropCreatorApp,
+     kPropUnsupportedFeatures,
+     kPropFontList,
+     kPropPdfVersion,
+     kPropPdfProducer,
+     kPropPdfFileStructure,
+    nullptr,
+};
+// clang-format off
+
 int PropsCount(const Props& props) {
     int n = props.Size();
     CrashIf(n < 0 || (n % 2) != 0);

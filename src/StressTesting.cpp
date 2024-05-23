@@ -13,6 +13,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -717,9 +718,18 @@ static bool GoToNextPage(StressTest* st) {
 
     auto ctrl = st->win->ctrl;
     if (!st->gotToc) {
-        // trigger getting toc
+        // trigger getting toc and props
         st->gotToc = true;
         ctrl->GetToc();
+        const char** props = gAllProps;
+        while (*props) {
+            const char* prop = *props++;
+            if (str::Eq(prop, kPropFontList)) {
+                // this can be expensive so skip
+                continue;
+            }
+            ctrl->GetPropertyTemp(prop);
+        }
     }
 
     RandomizeViewingState(st);

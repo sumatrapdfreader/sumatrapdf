@@ -14,6 +14,8 @@ extern const char* kPropPdfVersion;
 extern const char* kPropPdfProducer;
 extern const char* kPropPdfFileStructure;
 
+extern const char* gAllProps[];
+
 // Props are stored in StrVec as name, value sequentially
 using Props = StrVec;
 int PropsCount(const Props& props);
