@@ -309,9 +309,9 @@ static float FzRectOverlap(fz_rect r1, RectF r2f) {
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
-static WCHAR* PdfToWStr(fz_context* ctx, pdf_obj* obj) {
+static TempWStr PdfToWStrTemp(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    WCHAR* res = ToWStr(s);
+    WCHAR* res = ToWStrTemp(s);
     fz_free(ctx, s);
     return res;
 }
@@ -3397,36 +3397,32 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
         return ExtractFontListTemp();
     }
 
-    static struct {
-        const char* prop;
-        const char* name;
-    } pdfPropNames[] = {
-        {kPropTitle, "Title"},
-        {kPropAuthor, "Author"},
-        {kPropSubject, "Subject"},
-        {kPropCopyright, "Copyright"},
-        {kPropCreationDate, "CreationDate"},
-        {kPropModificationDate, "ModDate"},
-        {kPropCreatorApp, "Creator"},
-        {kPropPdfProducer, "Producer"},
+    static const char* pdfPropNames[] = {
+        kPropTitle, "Title",
+        kPropAuthor, "Author",
+        kPropSubject, "Subject",
+        kPropCopyright, "Copyright",
+        kPropCreationDate, "CreationDate",
+        kPropModificationDate, "ModDate",
+        kPropCreatorApp, "Creator",
+        kPropPdfProducer, "Producer",
+        nullptr,
     };
-    for (int i = 0; i < dimof(pdfPropNames); i++) {
-        auto s = pdfPropNames[i].prop;
-        if (str::Eq(s, name)) {
-            // _info is guaranteed not to contain any indirect references,
-            // so no need for ctxAccess
-            pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropNames[i].name);
-            if (!obj) {
-                return nullptr;
-            }
-            WCHAR* ws = PdfToWStr(ctx, obj);
-            PdfCleanStringInPlace(ws);
-            TempStr res = ToUtf8Temp(ws);
-            str::Free(ws);
-            return res;
-        }
+    const char* pdfPropName = GetMatchingString(pdfPropNames, name);
+    if (!pdfPropName) {
+        return nullptr;
     }
-    return nullptr;
+
+    // _info is guaranteed not to contain any indirect references,
+    // so no need for ctxAccess
+    pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropName);
+    if (!obj) {
+        return nullptr;
+    }
+    TempWStr ws = PdfToWStrTemp(ctx, obj);
+    PdfCleanStringInPlace(ws);
+    TempStr res = ToUtf8Temp(ws);
+    return res;
 };
 
 ByteSlice EngineMupdf::GetFileData() {
