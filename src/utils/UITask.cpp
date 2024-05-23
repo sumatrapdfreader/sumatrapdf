@@ -8,6 +8,10 @@
 
 #include "utils/Log.h"
 
+#define DEF_NAME(id) #id "\0"
+static SeqStrings gTaskNames = TASK_NAMES(DEF_NAME) "\0";
+#undef DEF_NAME
+
 namespace uitask {
 
 static HWND gTaskDispatchHwnd = nullptr;
@@ -27,8 +31,15 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
     UINT wmExecTask = GetExecuteTaskMessage();
     if (wmExecTask == msg) {
         auto func = (std::function<void()>*)lp;
+        int taskId = (int)wp;
         // logf("uitask::WndPorcTaskDispatch: about to free func 0x%p\n", (void*)func);
+        auto name = seqstrings::IdxToStr(gTaskNames, taskId);
+        if (!name) {
+            name = "not found";
+        }
+        logf("uitask::WndProcTaskDispatch: will execute taskID: %d name: %s\n", taskId, name);
         (*func)();
+        logf("uitask::WndProcTaskDispatch: did execute, will delete func 0x%p\n", (void*)func);
         delete func;
         return 0;
     }
@@ -60,14 +71,14 @@ void Destroy() {
     gTaskDispatchHwnd = nullptr;
 }
 
-void Post(const std::function<void()>& f) {
+void Post(int taskId, const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
     // logf("uitask::Post: allocated func 0x%p\n", (void*)func);
     UINT wmExecTask = GetExecuteTaskMessage();
-    PostMessageW(gTaskDispatchHwnd, wmExecTask, 0, (LPARAM)func);
+    PostMessageW(gTaskDispatchHwnd, wmExecTask, (WPARAM)taskId, (LPARAM)func);
 } // NOLINT
 
-void PostOptimized(const std::function<void()>& f) {
+void PostOptimized(int taskId, const std::function<void()>& f) {
     if (IsGUIThread(FALSE)) {
         // if we're already on ui thread, execute immediately
         // faster and easier to debug
@@ -77,7 +88,7 @@ void PostOptimized(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
     // logf("uitask::PostOptimized: allocated func 0x%p\n", (void*)func);
     UINT wmExecTask = GetExecuteTaskMessage();
-    PostMessageW(gTaskDispatchHwnd, wmExecTask, 0, (LPARAM)func);
+    PostMessageW(gTaskDispatchHwnd, wmExecTask, (WPARAM)taskId, (LPARAM)func);
 } // NOLINT
 
 } // namespace uitask

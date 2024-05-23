@@ -363,7 +363,7 @@ void CleanUpSettings() {
 }
 
 void schedulePrefsReload() {
-    uitask::Post(ReloadSettings);
+    uitask::Post(TaskReloadSettings, ReloadSettings);
 }
 
 void RegisterSettingsForFileChanges() {

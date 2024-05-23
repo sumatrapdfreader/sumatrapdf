@@ -602,7 +602,7 @@ void SafeDeleteCommandPaletteWnd() {
 }
 
 void CommandPaletteWnd::ScheduleDelete() {
-    uitask::Post(&SafeDeleteCommandPaletteWnd);
+    uitask::Post(TaskCommandPaletteDelete, &SafeDeleteCommandPaletteWnd);
 }
 
 static WindowTab* FindOpenedFile(const char* s) {

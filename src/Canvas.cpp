@@ -1715,7 +1715,7 @@ static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPAR
 void RepaintAsync(MainWindow* win, int delayInMs) {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post([win, delayInMs] {
+    uitask::Post(TaskRepaintAsync, [win, delayInMs] {
         if (!MainWindowStillValid(win)) {
             return;
         }

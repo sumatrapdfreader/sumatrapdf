@@ -136,7 +136,7 @@ void FileExistenceChecker::Run() {
         }
     }
 
-    uitask::Post([=] {
+    uitask::Post(TaskHideMissingFiles, [=] {
         CrashIf(WasCancelRequested());
         HideMissingFiles();
         Terminate();

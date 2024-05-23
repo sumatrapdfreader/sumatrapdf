@@ -6,11 +6,11 @@
 #include "Commands.h"
 
 #define CMD_NAME(id, txt) #id "\0"
-SeqStrings gCommandNames = COMMANDS(CMD_NAME) "\0";
+static SeqStrings gCommandNames = COMMANDS(CMD_NAME) "\0";
 #undef CMD_NAME
 
 #define CMD_ID(id, txt) id,
-i32 gCommandIds[] = {COMMANDS(CMD_ID)};
+static i32 gCommandIds[] = {COMMANDS(CMD_ID)};
 #undef CMD_ID
 
 #define CMD_DESC(id, txt) txt "\0"

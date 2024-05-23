@@ -213,7 +213,7 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
         // delay changing the page until the tree messages have been handled
         WindowTab* tab = win->CurrentTab();
         DocController* ctrl = win->ctrl;
-        uitask::Post([=] { GoToTocLinkTask(tocItem, tab, ctrl); });
+        uitask::Post(TaskGoToTocTreeItem, [=] { GoToTocLinkTask(tocItem, tab, ctrl); });
     }
 }
 
