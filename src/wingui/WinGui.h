@@ -376,7 +376,7 @@ struct DropDownCreateArgs {
 
 struct DropDown : Wnd {
     // TODO: use DropDownModel
-    StrVec items;
+    StrVec2 items;
     DropDownSelectionChangedHandler onSelectionChanged = nullptr;
 
     DropDown();
@@ -388,7 +388,7 @@ struct DropDown : Wnd {
 
     int GetCurrentSelection();
     void SetCurrentSelection(int n);
-    void SetItems(StrVec& newItems);
+    void SetItems(StrVec2& newItems);
     void SetItemsSeqStrings(const char* items);
     void SetCueBanner(const char*);
 };

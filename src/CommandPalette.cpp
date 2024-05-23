@@ -158,9 +158,9 @@ struct CommandPaletteWnd : Wnd {
     MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
-    StrVec filesInTabs;
-    StrVec filesInHistory;
-    StrVec commands;
+    StrVec2 filesInTabs;
+    StrVec2 filesInHistory;
+    StrVec2 commands;
     ListBox* listBox = nullptr;
     Static* staticHelp = nullptr;
 
@@ -172,7 +172,7 @@ struct CommandPaletteWnd : Wnd {
 
     void ScheduleDelete();
     void CollectStrings(MainWindow*);
-    void FilterStringsForQuery(const char*, StrVec&);
+    void FilterStringsForQuery(const char*, StrVec2&);
 
     bool Create(MainWindow* win, const char* prefix);
     void QueryChanged();
@@ -431,7 +431,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     // we want the commands sorted
-    StrVec tempStrings;
+    StrVec2 tempStrings;
     int cmdId = (int)CmdFirst + 1;
     for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, cmdId)) {
         if (AllowCommand(ctx, (i32)cmdId)) {
@@ -504,7 +504,7 @@ static bool FilterMatches(const char* str, const char* filter) {
     if (str::EmptyOrWhiteSpaceOnly(filter)) {
         return true;
     }
-    StrVec words;
+    StrVec2 words;
     char* s = str::DupTemp(filter);
     char* wordStart = s;
     bool wasWs = false;
@@ -533,7 +533,7 @@ static bool FilterMatches(const char* str, const char* filter) {
     return true;
 }
 
-static void FilterStrings(StrVec& strs, const char* filter, StrVec& matchedOut) {
+static void FilterStrings(StrVec2& strs, const char* filter, StrVec2& matchedOut) {
     for (char* s : strs) {
         if (!FilterMatches(s, filter)) {
             continue;
@@ -549,7 +549,7 @@ const char* SkipWS(const char* s) {
     return s;
 }
 
-void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVec& strings) {
+void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVec2& strings) {
     filter = SkipWS(filter);
     bool skipFiles = (filter[0] == '>');
     bool onlyTabs = (filter[0] == '@');

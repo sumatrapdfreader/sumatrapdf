@@ -3,195 +3,13 @@
 
 #include "BaseUtil.h"
 
+ByteSlice ToByteSlice(const char* s) {
+    size_t n = str::Len(s);
+    return {(u8*)s, n};
+}
+
 // represents null string
 constexpr u32 kNullOffset = (u32)-2;
-
-void StrVec::Reset() {
-    strings.Reset();
-    offsets.Reset();
-}
-
-// returns index of inserted string
-int StrVec::Append(const char* s, int sLen) {
-    bool ok;
-    if (s == nullptr) {
-        ok = offsets.Append(kNullOffset);
-        if (!ok) {
-            return -1;
-        }
-        return Size() - 1;
-    }
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
-    u32 idx = (u32)strings.Size();
-    ok = strings.Append(s, (size_t)sLen);
-    // ensure to always zero-terminate
-    ok &= strings.AppendChar(0);
-    if (!ok) {
-        return -1;
-    }
-    ok = offsets.Append(idx);
-    if (!ok) {
-        return -1;
-    }
-    return Size() - 1;
-}
-
-// returns index of inserted string, -1 if not inserted
-int AppendIfNotExists(StrVec& v, const char* s, int sLen) {
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
-    if (v.Contains(s, sLen)) {
-        return -1;
-    }
-    return v.Append(s, sLen);
-}
-
-bool StrVec::InsertAt(int idx, const char* s, int sLen) {
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
-    u32 strIdx = (u32)strings.size();
-    bool ok = strings.Append(s, sLen + 1); // also append terminating 0
-    if (!ok) {
-        return false;
-    }
-    return offsets.InsertAt(idx, strIdx);
-}
-
-char* StrVec::SetAt(int idx, const char* s, int sLen) {
-    if (s == nullptr) {
-        offsets[idx] = kNullOffset;
-        return nullptr;
-    }
-    if (sLen < 0) {
-        sLen = str::Leni(s);
-    }
-    u32 strIdx = (u32)strings.size();
-    bool ok = strings.Append(s, sLen + 1); // +1 for zero termination
-    if (!ok) {
-        return nullptr;
-    }
-    offsets[idx] = strIdx;
-    return strings.Get() + strIdx;
-}
-
-int StrVec::Size() const {
-    return offsets.Size();
-}
-
-char* StrVec::operator[](int idx) const {
-    CrashIf(idx < 0);
-    return At(idx);
-}
-
-char* StrVec::At(int idx) const {
-    int n = Size();
-    CrashIf(idx < 0 || idx >= n);
-    u32 start = offsets.at(idx);
-    if (start == kNullOffset) {
-        return nullptr;
-    }
-    char* s = strings.LendData() + start;
-    return s;
-}
-
-int StrVec::Find(const char* s, int startAt) const {
-    int n = Size();
-    for (int i = startAt; i < n; i++) {
-        auto s2 = At(i);
-        if (str::Eq(s2, s)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int StrVec::FindI(const char* s, int startAt) const {
-    int n = Size();
-    for (int i = startAt; i < n; i++) {
-        auto s2 = At(i);
-        if (str::EqI(s2, s)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// TODO: need to use int sLen
-bool StrVec::Contains(const char* s, int) const {
-    int idx = Find(s);
-    return idx != -1;
-}
-
-// Note: adding might invalidate the returned string due to re-allocation
-// of underlying strings memory
-char* StrVec::RemoveAt(int idx) {
-    u32 strOff = offsets[idx];
-    offsets.RemoveAt(idx);
-    char* res = (strOff == kNullOffset) ? nullptr : strings.Get() + strOff;
-    return res;
-}
-
-// Note: returned string remains valid as long as StrVec is valid
-char* StrVec::RemoveAtFast(int idx) {
-    CrashIf(idx < 0);
-    u32 strOff = offsets[idx];
-    offsets.RemoveAtFast((size_t)idx);
-    char* res = (strOff == kNullOffset) ? nullptr : strings.Get() + strOff;
-    return res;
-}
-
-// return true if did remove
-bool StrVec::Remove(const char* s) {
-    int idx = Find(s);
-    if (idx >= 0) {
-        RemoveAt(idx);
-        return true;
-    }
-    return false;
-}
-
-StrVec::iterator StrVec::begin() const {
-    return StrVec::iterator(this, 0);
-}
-StrVec::iterator StrVec::end() const {
-    return StrVec::iterator(this, this->Size());
-}
-
-StrVec::iterator::iterator(const StrVec* v, int idx) {
-    this->v = v;
-    this->idx = idx;
-}
-
-char* StrVec::iterator::operator*() const {
-    return v->At(idx);
-}
-
-StrVec::iterator& StrVec::iterator::operator++() {
-    idx++;
-    return *this;
-}
-
-StrVec::iterator& StrVec::iterator::operator++(int) {
-    idx++;
-    return *this;
-}
-
-StrVec::iterator& StrVec::iterator::operator+(int n) {
-    idx += n;
-    return *this;
-}
-
-bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
-    return a.idx == b.idx;
-};
-
-bool operator!=(const StrVec::iterator& a, const StrVec::iterator& b) {
-    return a.idx != b.idx;
-};
 
 static bool strLess(const char* s1, const char* s2) {
     if (str::IsEmpty(s1)) {
@@ -227,35 +45,11 @@ static bool strLessNatural(const char* s1, const char* s2) {
     return n < 0; // TODO: verify it's < and not >
 }
 
-void Sort(StrVec& v, StrLessFunc lessFn) {
-    if (lessFn == nullptr) {
-        lessFn = strLess;
-    }
-    const char* strs = v.strings.Get();
-    auto b = v.offsets.begin();
-    auto e = v.offsets.end();
-    std::sort(b, e, [strs, lessFn](u32 i1, u32 i2) -> bool {
-        const char* s1 = (i1 == kNullOffset) ? nullptr : strs + i1;
-        const char* s2 = (i2 == kNullOffset) ? nullptr : strs + i2;
-        bool ret = lessFn(s1, s2);
-        return ret;
-    });
-}
-
-void SortNoCase(StrVec& v) {
-    Sort(v, strLessNoCase);
-}
-
-void SortNatural(StrVec& v) {
-    Sort(v, strLessNatural);
-}
-
 /* splits a string into several substrings, separated by the separator
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-template <typename StrVec>
-int SplitT(StrVec& v, const char* s, const char* separator, bool collapse) {
+int Split(StrVec2& v, const char* s, const char* separator, bool collapse) {
     int startSize = v.Size();
     const char* next;
     while (true) {
@@ -276,12 +70,7 @@ int SplitT(StrVec& v, const char* s, const char* separator, bool collapse) {
     return (size_t)(v.Size() - startSize);
 }
 
-int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
-    return SplitT<StrVec>(v, s, separator, collapse);
-}
-
-template <typename StrVec>
-static int CalcCapForJoin(const StrVec& v, const char* joint) {
+static int CalcCapForJoin(const StrVec2& v, const char* joint) {
     // it's ok to over-estimate
     int len = v.Size();
     size_t jointLen = str::Len(joint);
@@ -293,8 +82,7 @@ static int CalcCapForJoin(const StrVec& v, const char* joint) {
     return cap + 32; // +32 arbitrary buffer
 }
 
-template <typename StrVec>
-static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
+static char* JoinInner(const StrVec2& v, const char* joint, str::Str& res) {
     int len = v.Size();
     size_t jointLen = str::Len(joint);
     int firstForJoint = 0;
@@ -312,93 +100,6 @@ static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
     return res.StealData();
 }
 
-char* Join(const StrVec& v, const char* joint) {
-    int capHint = CalcCapForJoin(v, joint);
-    str::Str tmp(capHint);
-    return JoinInner(v, joint, tmp);
-}
-
-TempStr JoinTemp(const StrVec& v, const char* joint) {
-    int capHint = CalcCapForJoin(v, joint);
-    str::Str tmp(capHint, GetTempAllocator());
-    return JoinInner(v, joint, tmp);
-}
-
-ByteSlice ToByteSlice(const char* s) {
-    size_t n = str::Len(s);
-    return {(u8*)s, n};
-}
-
-/*
-    TODO:
-    - StrVecWithData where it associate arbitrary data with each string
-    - StrVecWithSubset - has additional index which contains a subset
-    of strings which we create by providing a filter function.
-    Could be used for efficiently managing strings in
-    Command Palette
-*/
-
-struct StrVecWithDataRaw {
-    str::Str strings;
-    Vec<u32> index;
-    Vec<uintptr_t> data;
-
-    StrVecWithDataRaw() = default;
-    ~StrVecWithDataRaw() = default;
-
-    int Size() const;
-    char* at(int) const;
-    char* operator[](int) const;
-
-    int Append(const char*, uintptr_t);
-    uintptr_t GetData(int) const;
-};
-
-int StrVecWithDataRaw::Size() const {
-    int n = index.Size();
-    CrashIf(data.Size() != n);
-    return n;
-}
-
-char* StrVecWithDataRaw::at(int idx) const {
-    int n = Size();
-    CrashIf(idx < 0 || idx >= n);
-    u32 start = index.at(idx);
-    if (start == kNullOffset) {
-        return nullptr;
-    }
-    char* s = strings.LendData() + start;
-    return s;
-}
-
-char* StrVecWithDataRaw::operator[](int idx) const {
-    return at(idx);
-}
-
-int StrVecWithDataRaw::Append(const char*, uintptr_t) {
-    return -1;
-}
-
-uintptr_t StrVecWithDataRaw::GetData(int idx) const {
-    int n = Size();
-    CrashIf(idx < 0 || idx >= n);
-    uintptr_t res = data.at(idx);
-    return res;
-}
-
-template <typename T>
-struct StrVecWithData : StrVecWithDataRaw {
-    int Append(const char* s, T data) {
-        uintptr_t d = (uintptr_t)data;
-        return StrVecWithDataRaw::Append(s, d);
-    }
-    T GetData(int idx) const {
-        uintptr_t res = StrVecWithDataRaw::GetData(idx);
-        return (T)(res);
-    }
-};
-
-// TODO: support strings with 0 in them by storing size of the string
 struct StrVecPage {
     struct StrVecPage* next;
     int pageSize;
@@ -681,18 +382,6 @@ StrVec2& StrVec2::operator=(const StrVec2& that) {
     Reset(that.first);
     return *this;
 }
-
-#if 0
-static void UpdateSize(StrVec2* v) {
-    int n = 0;
-    auto page = v->first;
-    while (page) {
-        n += page->nStrings;
-        page = page->next;
-    }
-    v->cachedSize = n;
-}
-#endif
 
 int StrVec2::Size() const {
     return size;
@@ -977,9 +666,6 @@ void SortNatural(StrVec2& v) {
     Sort(v, strLessNatural);
 }
 
-int Split(StrVec2& v, const char* s, const char* separator, bool collapse) {
-    return SplitT<StrVec2>(v, s, separator, collapse);
-}
 
 char* Join(StrVec2& v, const char* joint) {
     int capHint = CalcCapForJoin(v, joint);

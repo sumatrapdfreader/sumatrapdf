@@ -3,7 +3,6 @@ Ideas for refactorings:
 - change all size_t => int
 - change use of Str::Get() => Str::CStr() (or maybe make it Str() as in StrSpan?)
 - audit all str::Join() and path::Join() to see if could / should be *Temp()
-- Change StrVec => StrVec2 97 matches left (was 106, 141)
 
 ------------------------------------------------------------------
 
@@ -100,11 +99,6 @@ static void RandomizeFiles(StrVec& files, int maxPerType) {
 StrVec2 ideas:
 - optimize for SetAt(): when removing last string from a page, free its memory (update currEnd)
 - implement StrVec2::InsertAt()
-
-bool StrVecPage::InsertAt() that inserts if has space.
-
-If no space, call CompactPages() with additional argument for additinal space
-then call StrVecPage::InsertAt() which must succeed.
 
 ------------------------------------------------------------------
 

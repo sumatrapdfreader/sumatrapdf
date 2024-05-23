@@ -435,7 +435,7 @@ bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
     return false;
 }
 
-static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
+static void ItemsFromSeqstrings(StrVec2& items, const char* strings) {
     while (strings) {
         items.Append(strings);
         seqstrings::Next(strings);
@@ -443,7 +443,7 @@ static void ItemsFromSeqstrings(StrVec& items, const char* strings) {
 }
 
 static void DropDownFillColors(DropDown* w, PdfColor col, str::Str& customColor) {
-    StrVec items;
+    StrVec2 items;
     ItemsFromSeqstrings(items, gColors);
     const char* colorName = GetKnownColorName(col);
     int idx = seqstrings::StrToIdx(gColors, colorName);
