@@ -27,7 +27,7 @@ struct ChmFile {
     ByteSlice GetData(const char* fileName) const;
     char* ResolveTopicID(unsigned int id) const;
 
-    char* SmartToUtf8(const char* text, uint overrideCP = 0) const;
+    TempStr SmartToUtf8Temp(const char* text, uint overrideCP = 0) const;
     WCHAR* SmartToWStr(const char* text) const;
 
     TempStr GetPropertyTemp(const char* name) const;

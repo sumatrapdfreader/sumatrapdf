@@ -71,17 +71,19 @@ ByteSlice ChmFile::GetData(const char* fileName) const {
     return {d, len};
 }
 
-char* ChmFile::SmartToUtf8(const char* s, uint overrideCP) const {
+TempStr ChmFile::SmartToUtf8Temp(const char* s, uint overrideCP) const {
     if (str::StartsWith(s, UTF8_BOM)) {
-        return str::Dup(s + 3);
+        return str::DupTemp(s + 3);
     }
     if (overrideCP) {
-        return strconv::ToMultiByte(s, overrideCP, CP_UTF8);
+        char* s2 = strconv::ToMultiByte(s, overrideCP, CP_UTF8);
+        return str::DupTemp(s2);
     }
     if (CP_UTF8 == codepage) {
-        return str::Dup(s);
+        return str::DupTemp(s);
     }
-    return strconv::ToMultiByte(s, codepage, CP_UTF8);
+    char* s2 = strconv::ToMultiByte(s, codepage, CP_UTF8);
+    return s2;
 }
 
 WCHAR* ChmFile::SmartToWStr(const char* text) const {
@@ -254,25 +256,23 @@ void ChmFile::FixPathCodepage(AutoFreeStr& path, uint& fileCP) {
         return;
     }
 
-    char* utf8Path = SmartToUtf8(path.Get());
+    TempStr utf8Path = SmartToUtf8Temp(path.Get());
     if (HasData(utf8Path)) {
-        path.Set(utf8Path);
+        path.SetCopy(utf8Path);
         fileCP = codepage;
         return;
     }
-    str::Free(utf8Path);
 
     if (fileCP == codepage) {
         return;
     }
 
-    utf8Path = SmartToUtf8(path.Get(), fileCP);
+    utf8Path = SmartToUtf8Temp(path.Get(), fileCP);
     if (HasData(utf8Path)) {
-        path.Set(utf8Path);
+        path.SetCopy(utf8Path);
         codepage = fileCP;
         return;
     }
-    str::Free(utf8Path);
 }
 
 bool ChmFile::Load(const char* path) {
@@ -325,9 +325,9 @@ bool ChmFile::Load(const char* path) {
 TempStr ChmFile::GetPropertyTemp(const char* name) const {
     char* result = nullptr;
     if (str::Eq(kPropTitle, name) && title.CStr()) {
-        result = SmartToUtf8(title.CStr());
+        result = SmartToUtf8Temp(title.CStr());
     } else if (str::Eq(kPropCreatorApp, name) && creator.CStr()) {
-        result = SmartToUtf8(creator.CStr());
+        result = SmartToUtf8Temp(creator.CStr());
     }
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (!result) {
@@ -335,9 +335,7 @@ TempStr ChmFile::GetPropertyTemp(const char* name) const {
     }
     // TODO: original code called str::RemoveCharsInPlace(result, "\n\r\t")
     str::NormalizeWSInPlace(result);
-    TempStr temp = str::DupTemp(result);
-    str::Free(result);
-    return temp;
+    return result;
 }
 
 const char* ChmFile::GetHomePath() const {

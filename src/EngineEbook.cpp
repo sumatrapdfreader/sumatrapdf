@@ -1511,9 +1511,8 @@ class ChmHtmlCollector : public EbookTocVisitor {
         }
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl);
         uint charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
-        char* s = doc->SmartToUtf8((const char*)pageHtml.Get(), charset);
+        TempStr s = doc->SmartToUtf8Temp((const char*)pageHtml.Get(), charset);
         html.Append(s);
-        str::Free(s);
         added.Append(plainUrl);
         pageHtml.Free();
     }
