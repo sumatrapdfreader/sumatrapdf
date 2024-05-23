@@ -12,6 +12,7 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"

@@ -11,6 +11,7 @@
 #include "utils/WinUtil.h"
 
 #include "DocController.h"
+#include "DocProperties.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
 

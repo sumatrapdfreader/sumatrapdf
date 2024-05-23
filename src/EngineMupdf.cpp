@@ -25,6 +25,7 @@ extern "C" {
 
 #include "AppColors.h"
 #include "Annotation.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineMupdf.h"

@@ -616,6 +616,7 @@ function sumatrapdf_files()
     "DisplayModel.*",
     "DisplayMode.*",
     "DocController.h",
+    "DocProperties.*",
     "EditAnnotations.*",
     "ExternalViewers.*",
     "Favorites.*",
@@ -788,6 +789,8 @@ end
 function engines_files()
   files_in_dir("src", {
     "Annotation.*",
+    "ChmFile.*",
+    "DocProperties.*",
     "EngineBase.*",
     "EngineCreate.*",
     "EngineDjVu.*",
@@ -798,7 +801,6 @@ function engines_files()
     "EngineMupdfImpl.*",
     "EnginePs.*",
     "EngineAll.h",
-    "ChmFile.*",
     "EbookDoc.*",
     "EbookFormatter.*",
     "HtmlFormatter.*",
@@ -1195,6 +1197,7 @@ function pdf_preview_files()
     "mui/Mui.*",
     "mui/TextRender.*",
     "ChmFile.*",
+    "DocProperties.*",
     "EbookDoc.*",
     "EbookFormatter.*",
     "EngineBase.*",
@@ -1225,14 +1228,15 @@ function search_filter_files()
   files_in_dir("src", {
     "utils/LogDbg.*",
     "MUPDF_Exports.cpp",
+    "DocProperties.*",
+    "EbookDoc.*",
     "EngineBase.*",
     "EngineAll.h",
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
+    "MobiDoc.*",
     "PalmDbReader.*",
     "RegistrySearchFilter.*",
-    "MobiDoc.*",
-    "EbookDoc.*",
   })
 
   filter {"configurations:Debug or DebugFull"}

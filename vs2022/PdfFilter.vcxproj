@@ -890,6 +890,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EngineAll.h" />
     <ClInclude Include="..\src\EngineBase.h" />
@@ -903,6 +904,7 @@
     <ClInclude Include="..\src\ifilter\TeXFilter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />

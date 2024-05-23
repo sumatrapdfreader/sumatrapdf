@@ -954,6 +954,7 @@
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\DocController.h" />
+    <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EditAnnotations.h" />
     <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
@@ -1028,6 +1029,7 @@
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
+    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EditAnnotations.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />

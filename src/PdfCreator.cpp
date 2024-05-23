@@ -14,6 +14,7 @@ extern "C" {
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "Annotation.h"

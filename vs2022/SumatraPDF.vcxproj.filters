@@ -81,6 +81,9 @@
     <ClInclude Include="..\src\DocController.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\DocProperties.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\EditAnnotations.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -297,6 +300,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\DisplayModel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\DocProperties.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\EditAnnotations.cpp">

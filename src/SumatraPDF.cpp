@@ -31,6 +31,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"

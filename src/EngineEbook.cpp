@@ -19,6 +19,7 @@
 
 #include "wingui/UIModels.h"
 
+#include "DocProperties.h"
 #include "DocController.h"
 #include "FzImgReader.h"
 #include "EngineBase.h"

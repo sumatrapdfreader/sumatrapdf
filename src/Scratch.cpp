@@ -20,6 +20,7 @@
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"

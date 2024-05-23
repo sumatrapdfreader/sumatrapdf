@@ -891,6 +891,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ChmFile.h" />
+    <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EngineAll.h" />
@@ -909,6 +910,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChmFile.cpp" />
+    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />

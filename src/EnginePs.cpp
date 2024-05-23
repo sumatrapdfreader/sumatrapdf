@@ -11,6 +11,7 @@
 
 #include "wingui/UIModels.h"
 
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
