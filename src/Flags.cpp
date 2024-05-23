@@ -593,9 +593,9 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         if (arg == Arg::StressTest) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
             // count>x]
-            // e.g. -stress-test file.pdf  for rendering file.pdf
+            // e.g. -stress-test file.pdf 25x    for rendering file.pdf 25 times
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
-            //      -stress-test dir 301-    render all files in dir, skipping first 300
+            //      -stress-test dir 301-  2x  render all files in dir twice, skipping first 300
             //      -stress-test dir *.pdf;*.xps  render all files in dir that are either PDF or XPS
             i.stressTestPath = str::Dup(param);
             const char* s = args.AdditionalParam(1);
@@ -606,6 +606,11 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             if (s && IsValidPageRange(s)) {
                 i.stressTestRanges = str::Dup(args.EatParam());
                 s = args.AdditionalParam(1);
+            }
+            int num;
+            if (s && str::Parse(s, "%dx%$", &num) && num > 0) {
+                i.stressTestCycles = num;
+                args.EatParam();
             }
             continue;
         }

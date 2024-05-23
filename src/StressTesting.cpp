@@ -293,20 +293,19 @@ static void MakeRandomSelection(MainWindow* win, int pageNo) {
 
 // encapsulates the logic of getting the next file to test, so
 // that we can implement different strategies
-class TestFileProvider {
-  public:
+struct TestFileProvider {
     virtual ~TestFileProvider() {
     }
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
     virtual TempStr NextFile() = 0;
+    virtual void Restart() = 0;
     virtual int GetFilesCount() = 0;
 };
 
-class FilesProvider : public TestFileProvider {
+struct FilesProvider : TestFileProvider {
     StrVec files;
     int provided = 0;
 
-  public:
     explicit FilesProvider(const char* path) {
         files.Append(path);
         provided = 0;
@@ -334,9 +333,13 @@ class FilesProvider : public TestFileProvider {
         TempStr res = files.At(provided++);
         return res;
     }
+
+    void Restart() override {
+        provided = 0;
+    }
 };
 
-class DirFileProviderAsync : public TestFileProvider {
+struct DirFileProviderAsync : TestFileProvider {
     StrQueue queue;
     AutoFreeStr startDir;
     AutoFreeStr fileFilter;
@@ -347,7 +350,6 @@ class DirFileProviderAsync : public TestFileProvider {
 
     AtomicInt nFiles;
 
-  public:
     DirFileProviderAsync(const char* path, const char* filter, int max = 0, bool random = false) {
         startDir.SetCopy(path);
         if (filter && !str::Eq(filter, "*")) {
@@ -355,12 +357,17 @@ class DirFileProviderAsync : public TestFileProvider {
         }
         this->max = max;
         this->random = random;
-        StartDirTraverseAsync(&queue, path, true);
+        StartDirTraverseAsync(&queue, startDir.CStr(), true);
     }
     ~DirFileProviderAsync() override = default;
     TempStr NextFile() override;
     int GetFilesCount() override {
         return queue.Size();
+    }
+
+    virtual void Restart() override {
+        nFiles.Set(0);
+        StartDirTraverseAsync(&queue, startDir.CStr(), true);
     }
 };
 
@@ -414,7 +421,9 @@ struct StressTest {
     int nSlowPages = 0;
 
     SYSTEMTIME stressStartTime{};
+    int cycles = 1;
     Vec<PageRange> pageRanges;
+    // range of files to render (files get a new index when going through several cycles)
     Vec<PageRange> fileRanges;
     int fileIndex = 0;
     bool gotToc = false;
@@ -450,10 +459,11 @@ static void TickTimer(StressTest* st) {
     SetTimer(st->win->hwndFrame, st->timerId, USER_TIMER_MINIMUM, nullptr);
 }
 
-static void Start(StressTest* st, TestFileProvider* fileProvider) {
+static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
     GetSystemTime(&st->stressStartTime);
 
     st->fileProvider = fileProvider;
+    st->cycles = cycles;
 
     if (st->pageRanges.size() == 0) {
         st->pageRanges.Append(PageRange());
@@ -484,15 +494,15 @@ static void Finished(StressTest* st, bool success) {
     delete st;
 }
 
-static void Start(StressTest* st, const char* path, const char* filter, const char* ranges) {
+static void Start(StressTest* st, const char* path, const char* filter, const char* ranges, int cycles) {
     if (file::Exists(path)) {
         FilesProvider* filesProvider = new FilesProvider(path);
         ParsePageRanges(ranges, st->pageRanges);
-        Start(st, filesProvider);
+        Start(st, filesProvider, cycles);
     } else if (dir::Exists(path)) {
         auto dirFileProvider = new DirFileProviderAsync(path, filter);
         ParsePageRanges(ranges, st->fileRanges);
-        Start(st, dirFileProvider);
+        Start(st, dirFileProvider, cycles);
     } else {
         TempStr s = str::FormatTemp("Path '%s' doesn't exist", path);
         NotificationCreateArgs args;
@@ -686,7 +696,10 @@ static bool GoToNextFile(StressTest* st) {
             }
             continue;
         }
-        return false;
+        if (--st->cycles <= 0) {
+            return false;
+        }
+        st->fileProvider->Restart();
     }
 }
 
@@ -877,7 +890,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
             win = windows[j];
             StressTest* dst = new StressTest(win, i->exitWhenDone);
             win->stressTest = dst;
-            Start(dst, filesProvider);
+            Start(dst, filesProvider, i->stressTestCycles);
         }
 
         free(windows);
@@ -885,7 +898,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
         // dst will be deleted when the stress ends
         StressTest* st = new StressTest(win, i->exitWhenDone);
         win->stressTest = st;
-        Start(st, i->stressTestPath, i->stressTestFilter, i->stressTestRanges);
+        Start(st, i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
     }
 }
 

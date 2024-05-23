@@ -75,6 +75,7 @@ struct Flags {
     // nullptr is equivalent to "*" (i.e. all files)
     char* stressTestFilter = nullptr;
     char* stressTestRanges = nullptr;
+    int stressTestCycles = 1;
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
     int stressTestMax = 0;
