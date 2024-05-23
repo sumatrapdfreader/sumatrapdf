@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cd29b7cd51fbb83ee869062fce6f96be10108c47
+dbc8f83fe50c699f8e6935342fa8d00437d419bf
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -8755,6 +8755,7 @@ cz:Vymazat
 de:Löschen
 fr:Supprimer
 he:מחק
+hi:मिटाओ
 it:Cancella
 ja:削除
 nl:Verwijderen
@@ -13936,6 +13937,7 @@ tw:下一頁
 uk:Наступна сторінка
 uz:Keyingi bet
 vn:Trang sau
+:No
 :No matches were found
 am:Ոչինչ չի գտնվել
 ar:لا توجد متطابقات
@@ -21882,6 +21884,7 @@ tw:XPS 文件
 uk:Документи XPS
 uz:XPS hujjatlari
 vn:Tập tin XPS
+:Yes
 :You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
 am:Սա վերջին տարբերակն է։

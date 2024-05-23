@@ -7284,6 +7284,7 @@ cz:Vymazat
 de:Löschen
 fr:Supprimer
 he:מחק
+hi:मिटाओ
 it:Cancella
 ja:削除
 nl:Verwijderen
@@ -11631,6 +11632,7 @@ tr:Sonraki Sayfa
 tw:下一頁
 uk:Наступна сторінка
 vn:Trang sau
+:No
 :No matches were found
 am:Ոչինչ չի գտնվել
 ar:لا توجد متطابقات
@@ -18475,6 +18477,7 @@ tr:XPS belgeleri
 tw:XPS 文件
 uk:Документи XPS
 vn:Tập tin XPS
+:Yes
 :You have the latest version.
 am:Սա վերջին տարբերակն է։
 ar:لديك آخر نسخة
