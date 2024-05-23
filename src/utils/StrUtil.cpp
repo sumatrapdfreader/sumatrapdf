@@ -1582,17 +1582,11 @@ void Str::AppendFmt(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char* res = FmtV(fmt, args);
-    AppendAndFree(res);
-    va_end(args);
-}
-
-bool Str::AppendAndFree(const char* s) {
-    if (!s) {
-        return true;
+    if (res) {
+        Append(res);
+        str::Free(res);
     }
-    bool ok = Append(s, str::Len(s));
-    str::Free(s);
-    return ok;
+    va_end(args);
 }
 
 #if 0
@@ -1923,17 +1917,11 @@ void WStr::AppendFmt(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     WCHAR* res = FmtV(fmt, args);
-    AppendAndFree(res);
-    va_end(args);
-}
-
-bool WStr::AppendAndFree(const WCHAR* s) {
-    if (!s) {
-        return true;
+    if (res) {
+        Append(res);
+        str::Free(res);
     }
-    bool ok = Append(s, str::Len(s));
-    str::Free(s);
-    return ok;
+    va_end(args);
 }
 
 // returns true if was replaced
@@ -1944,7 +1932,10 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith) {
     }
     WCHAR* newStr = str::Replace(s.els, toReplace, replaceWith);
     s.Reset();
-    s.AppendAndFree(newStr);
+    if (newStr) {
+        s.Append(newStr);
+        str::Free(newStr);
+    }
     return true;
 }
 

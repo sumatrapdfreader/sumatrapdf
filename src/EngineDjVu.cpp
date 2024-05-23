@@ -827,14 +827,14 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>
             AppendNewline(extracted, coords, lineSep);
         }
         const char* content = miniexp_to_str(str);
-        WCHAR* value = ToWStr(content);
+        TempWStr value = ToWStrTemp(content);
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
             for (size_t i = 0; i < len; i++) {
                 coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
             }
-            extracted.AppendAndFree(value);
+            extracted.Append(value);
         }
         if (miniexp_symbol("word") == type) {
             extracted.AppendChar(' ');

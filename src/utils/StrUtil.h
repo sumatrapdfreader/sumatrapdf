@@ -339,7 +339,6 @@ struct Str {
     bool Append(const u8* src, size_t size = -1);
     bool AppendSlice(const ByteSlice& d);
     void AppendFmt(const char* fmt, ...);
-    bool AppendAndFree(const char* s);
     void Set(const char*);
     char* Get() const;
     char* CStr() const;
@@ -403,7 +402,6 @@ struct WStr {
     WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
     bool IsEmpty() const;
     void AppendFmt(const WCHAR* fmt, ...);
-    bool AppendAndFree(const WCHAR*);
     void Set(const WCHAR*);
     WCHAR* Get() const;
     WCHAR LastChar() const;
