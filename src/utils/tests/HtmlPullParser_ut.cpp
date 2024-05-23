@@ -43,10 +43,11 @@ static void HtmlEntities() {
         utassert(got == entities[i].rune);
         utassert((-1 == got) == !entEnd);
     }
+    Allocator* ta = GetTempAllocator();
     const char* unchanged[] = {"foo", "", " as;d "};
     for (size_t i = 0; i < dimof(unchanged); i++) {
         const char* s = unchanged[i];
-        const char* res = ResolveHtmlEntities(s, s + str::Len(s), nullptr);
+        TempStr res = (TempStr)ResolveHtmlEntities(s, s + str::Len(s), ta);
         utassert(res == s);
     }
 
@@ -67,9 +68,8 @@ static void HtmlEntities() {
     };
     for (size_t i = 0; i < dimof(changed); i++) {
         const char* s = changed[i].s;
-        const char* res = ResolveHtmlEntities(s, s + str::Len(s), nullptr);
+        TempStr res = (TempStr)ResolveHtmlEntities(s, s + str::Len(s), ta);
         utassert(str::Eq(res, changed[i].res));
-        str::Free(res);
     }
 }
 

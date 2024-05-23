@@ -97,7 +97,8 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
                 t->sLen--;
             }
             if (t->sLen > 0) {
-                text.AppendAndFree(ResolveHtmlEntities(t->s, t->sLen));
+                TempStr s = ResolveHtmlEntitiesTemp(t->s, t->sLen);
+                text.Append(s);
                 text.AppendChar(' ');
             }
         } else if (t->IsStartTag()) {

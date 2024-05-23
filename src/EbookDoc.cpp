@@ -506,9 +506,8 @@ void EpubDoc::ParseMetadata(const char* content) {
             tok = pullParser.Next();
             if (tok && tok->IsText()) {
                 auto prop = epubPropsMap[idx];
-                char* val = ResolveHtmlEntities(tok->s, tok->sLen);
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
                 AddProp(props, prop, val);
-                str::Free(val);
             }
             break;
         }
@@ -886,27 +885,26 @@ bool Fb2Doc::Load() {
                 break;
             }
             if (tok->IsText()) {
-                char* val = ResolveHtmlEntities(tok->s, tok->sLen);
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
                 AddProp(props, kPropTitle, val);
-                str::Free(val);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS)) {
-            AutoFreeStr docAuthor;
+            TempStr docAuthor = nullptr;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    !(tok->IsEndTag() && tok->NameIsNS("author", FB2_MAIN_NS))) {
                 if (tok->IsText()) {
-                    AutoFreeStr author = ResolveHtmlEntities(tok->s, tok->sLen);
+                    TempStr author = ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
                     if (docAuthor) {
-                        docAuthor.Set(str::Join(docAuthor, " ", author));
+                        docAuthor = str::JoinTemp(docAuthor, " ", author);
                     } else {
-                        docAuthor.Set(author.Release());
+                        docAuthor = author;
                     }
                 }
             }
             if (docAuthor) {
                 str::NormalizeWSInPlace(docAuthor);
-                if (!str::IsEmpty(docAuthor.CStr())) {
-                    char* val = docAuthor.CStr();
+                if (!str::IsEmpty(docAuthor)) {
+                    char* val = docAuthor;
                     bool replaceIfExists = inTitleInfo != 0;
                     AddProp(props, kPropAuthor, val, replaceIfExists);
                 }
@@ -914,25 +912,22 @@ bool Fb2Doc::Load() {
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
             AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS);
             if (attr) {
-                char* val = ResolveHtmlEntities(attr->val, attr->valLen);
+                TempStr val = ResolveHtmlEntitiesTemp(attr->val, attr->valLen);
                 AddProp(props, kPropCreationDate, val);
-                str::Free(val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
             AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS);
             if (attr) {
-                char* val = ResolveHtmlEntities(attr->val, attr->valLen);
+                TempStr val = ResolveHtmlEntitiesTemp(attr->val, attr->valLen);
                 AddProp(props, kPropModificationDate, val);
-                str::Free(val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("program-used", FB2_MAIN_NS)) {
             if ((tok = parser.Next()) == nullptr || tok->IsError()) {
                 break;
             }
             if (tok->IsText()) {
-                char* val = ResolveHtmlEntities(tok->s, tok->sLen);
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
                 AddProp(props, kPropCreatorApp, val);
-                str::Free(val);
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("coverpage", FB2_MAIN_NS)) {
             tok = parser.Next();
@@ -1290,9 +1285,8 @@ bool HtmlDoc::Load() {
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
             if (tok && tok->IsText()) {
-                char* val = ResolveHtmlEntities(tok->s, tok->sLen);
+                TempStr val = ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
                 AddProp(props, kPropTitle, val);
-                str::Free(val);
             }
         } else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
             AttrInfo* attrName = tok->GetAttrByName("name");
@@ -1300,17 +1294,14 @@ bool HtmlDoc::Load() {
             if (!attrName || !attrValue) {
                 /* ignore this tag */;
             } else if (attrName->ValIs("author")) {
-                char* val = ResolveHtmlEntities(attrValue->val, attrValue->valLen);
+                TempStr val = ResolveHtmlEntitiesTemp(attrValue->val, attrValue->valLen);
                 AddProp(props, kPropAuthor, val);
-                str::Free(val);
             } else if (attrName->ValIs("date")) {
-                char* val = ResolveHtmlEntities(attrValue->val, attrValue->valLen);
+                TempStr val = ResolveHtmlEntitiesTemp(attrValue->val, attrValue->valLen);
                 AddProp(props, kPropCreationDate, val);
-                str::Free(val);
             } else if (attrName->ValIs("copyright")) {
-                char* val = ResolveHtmlEntities(attrValue->val, attrValue->valLen);
+                TempStr val = ResolveHtmlEntitiesTemp(attrValue->val, attrValue->valLen);
                 AddProp(props, kPropCopyright, val);
-                str::Free(val);
             }
         }
     }

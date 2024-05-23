@@ -465,7 +465,7 @@ IPageElement* EngineEbook::CreatePageLink(DrawInstr* link, Rect rect, int pageNo
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
     if (baseAnchor) {
         char* basePath = str::DupTemp(baseAnchor->str.s, baseAnchor->str.len);
-        AutoFreeStr relPath = ResolveHtmlEntities(link->str.s, link->str.len);
+        TempStr relPath = ResolveHtmlEntitiesTemp(link->str.s, link->str.len);
         AutoFreeStr absPath = NormalizeURL(relPath, basePath);
         url = str::DupTemp(absPath.Get());
     }
