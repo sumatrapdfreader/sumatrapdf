@@ -184,10 +184,10 @@ char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
         // fast path for when new string is smaller than the current string
         int currLen = (int)offsets[1];
         if (sLen <= currLen) {
-            auto curr = start + off;
-            memcpy(curr, s, (size_t)sLen);
-            curr[sLen] = 0; // zero-terminate for C compat
-            return curr;
+            auto dst = start + off;
+            memcpy(dst, s, (size_t)sLen);
+            dst[sLen] = 0; // zero-terminate for C compat
+            return dst;
         }
     }
 
@@ -349,21 +349,18 @@ static void CompactPages(StrVec* v, int extraSize) {
     auto first = CompactStrVecPages(v->first, extraSize);
     FreePages(v->first);
     v->first = first;
-    v->curr = first;
     CrashIf(first && (v->size != first->nStrings));
 }
 
 void StrVec::Reset(StrVecPage* initWith) {
     FreePages(first);
     first = nullptr;
-    curr = nullptr;
     nextPageSize = 256; // TODO: or leave it alone?
     size = 0;
     if (initWith == nullptr) {
         return;
     }
     first = CompactStrVecPages(initWith, 0);
-    curr = first;
     size = first->nStrings;
 }
 
@@ -410,7 +407,11 @@ char* StrVec::Append(const char* s, int sLen) {
     if (s) {
         nBytesNeeded += (sLen + 1); // +1 for zero termination
     }
-    if (!curr || curr->BytesLeft() < nBytesNeeded) {
+    auto last = first;
+    while (last && last->next) {
+        last = last->next;
+    }
+    if (!last || last->BytesLeft() < nBytesNeeded) {
         int minPageSize = kStrVecPageHdrSize + nBytesNeeded;
         int pageSize = RoundUp(minPageSize, 8);
         if (pageSize < nextPageSize) {
@@ -418,16 +419,16 @@ char* StrVec::Append(const char* s, int sLen) {
             nextPageSize = CalcNextPageSize(nextPageSize);
         }
         auto page = AllocStrVecPage(pageSize);
-        if (curr) {
+        if (last) {
             CrashIf(!first);
-            curr->next = page;
+            last->next = page;
         } else {
             CrashIf(first);
             first = page;
         }
-        curr = page;
+        last = page;
     }
-    auto res = curr->Append(s, sLen);
+    auto res = last->Append(s, sLen);
     size++;
     return res;
 }

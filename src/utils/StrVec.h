@@ -11,7 +11,6 @@ struct StrVecPage;
 
 struct StrVec {
     StrVecPage* first = nullptr;
-    StrVecPage* curr = nullptr;
     int nextPageSize = 256;
     int size = 0;
 
