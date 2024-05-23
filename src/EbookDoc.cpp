@@ -455,16 +455,29 @@ bool EpubDoc::Load() {
     return htmlData.size() > 0;
 }
 
-void EpubDoc::ParseMetadata(const char* content) {
-    static struct {
-        const char* prop;
-        const char* name;
-    } metadataMap[] = {
-        {kPropTitle, "dc:title"},         {kPropAuthor, "dc:creator"},
-        {kPropCreationDate, "dc:date"},   {kPropModificationDate, "dcterms:modified"},
-        {kPropSubject, "dc:description"}, {kPropCopyright, "dc:rights"},
-    };
+// clang-format off
+static const char* epubPropsMap[] = {
+    kPropTitle, "dc:title",
+    kPropAuthor, "dc:creator",
+    kPropCreationDate, "dc:date",
+    kPropModificationDate, "dcterms:modified",
+    kPropSubject, "dc:description",
+    kPropCopyright, "dc:rights",
+};
+// clang-format on
 
+static bool IsTokPropName(HtmlToken* tok, const char* name) {
+    if (tok->NameIs(name)) {
+        return true;
+    }
+    if (Tag_Meta != tok->tag) {
+        return false;
+    }
+    AttrInfo* attr = tok->GetAttrByName("property");
+    return attr && attr->ValIs(name);
+}
+
+void EpubDoc::ParseMetadata(const char* content) {
     HtmlPullParser pullParser(content, str::Len(content));
     int insideMetadata = 0;
     HtmlToken* tok;
@@ -482,19 +495,22 @@ void EpubDoc::ParseMetadata(const char* content) {
             continue;
         }
 
-        for (int i = 0; i < dimof(metadataMap); i++) {
+        int nProps = dimofi(epubPropsMap) / 2;
+        for (int i = 0; i < nProps; i++) {
+            int idx = i * 2;
+            const char* epubName = epubPropsMap[idx + 1];
             // TODO: implement proper namespace support
-            if (tok->NameIs(metadataMap[i].name) || Tag_Meta == tok->tag && tok->GetAttrByName("property") &&
-                                                        tok->GetAttrByName("property")->ValIs(metadataMap[i].name)) {
-                tok = pullParser.Next();
-                if (tok && tok->IsText()) {
-                    auto prop = metadataMap[i].prop;
-                    char* val = ResolveHtmlEntities(tok->s, tok->sLen);
-                    AddProp(props, prop, val);
-                    str::Free(val);
-                }
-                break;
+            if (!IsTokPropName(tok, epubName)) {
+                continue;
             }
+            tok = pullParser.Next();
+            if (tok && tok->IsText()) {
+                auto prop = epubPropsMap[idx];
+                char* val = ResolveHtmlEntities(tok->s, tok->sLen);
+                AddProp(props, prop, val);
+                str::Free(val);
+            }
+            break;
         }
     }
 }
@@ -572,7 +588,7 @@ ByteSlice EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
 }
 
 TempStr EpubDoc::GetPropertyTemp(const char* name) const {
-    return FindProp(props, name);
+    return GetPropValueTemp(props, name);
 }
 
 const char* EpubDoc::GetFileName() const {
@@ -987,7 +1003,7 @@ ByteSlice* Fb2Doc::GetCoverImage() const {
 }
 
 TempStr Fb2Doc::GetPropertyTemp(const char* name) const {
-    return FindProp(props, name);
+    return GetPropValueTemp(props, name);
 }
 
 const char* Fb2Doc::GetFileName() const {
@@ -1345,7 +1361,7 @@ ByteSlice HtmlDoc::LoadURL(const char* url) {
 }
 
 TempStr HtmlDoc::GetPropertyTemp(const char* name) const {
-    return FindProp(props, name);
+    return GetPropValueTemp(props, name);
 }
 
 const char* HtmlDoc::GetFileName() const {

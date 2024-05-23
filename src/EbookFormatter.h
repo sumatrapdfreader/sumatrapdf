@@ -3,7 +3,7 @@
 
 /* formatting extensions for Mobi */
 
-class MobiDoc;
+struct MobiDoc;
 
 class MobiFormatter : public HtmlFormatter {
     // accessor to images (and other format-specific data)

@@ -3313,36 +3313,23 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     return JoinTemp(fonts, "\n");
 }
 
-// TODO: map via char*[]
-static const char* DocumentPropertyToMupdfMetadataKey(const char* name) {
-    if (str::Eq(name, kPropTitle)) {
-        return FZ_META_INFO_TITLE;
-    }
-    if (str::Eq(name, kPropAuthor)) {
-        return FZ_META_INFO_AUTHOR;
-    }
-    if (str::Eq(name, kPropSubject)) {
-        return "info:Subject";
-    }
-    if (str::Eq(name, kPropPdfProducer)) {
-        return FZ_META_INFO_PRODUCER;
-    }
-    if (str::Eq(name, kPropCreatorApp)) {
-        return "info:Creator"; // not sure if the same meaning
-    }
-    if (str::Eq(name, kPropCreationDate)) {
-        return "info:CreationDate";
-    }
-    if (str::Eq(name, kPropModificationDate)) {
-        return "info:ModDate";
-    }
-    return nullptr;
-}
+// clang-format off
+static const char* mupdfPropsMap[] = {
+    kPropTitle, FZ_META_INFO_TITLE,
+    kPropAuthor, FZ_META_INFO_AUTHOR,
+    kPropSubject, "info:Subject",
+    kPropPdfProducer, FZ_META_INFO_PRODUCER,
+    kPropCreatorApp, "info:Creator", // not sure if the same meaning
+    kPropCreationDate, "info:CreationDate",
+    kPropModificationDate, "info:ModDate",
+    nullptr,
+};
+// clang-format on
 
 TempStr EngineMupdf::GetPropertyTemp(const char* name) {
     auto ctx = Ctx();
 
-    const char* key = DocumentPropertyToMupdfMetadataKey(name);
+    const char* key = GetMatchingString(mupdfPropsMap, name);
     if (key) {
         char buf[1024]{};
         int bufSize = (int)dimof(buf);

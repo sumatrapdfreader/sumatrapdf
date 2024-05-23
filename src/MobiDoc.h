@@ -4,7 +4,7 @@
 class HuffDicDecompressor;
 class PdbReader;
 
-class MobiDoc {
+struct MobiDoc {
     char* fileName = nullptr;
 
     PdbReader* pdbReader = nullptr;
@@ -25,7 +25,7 @@ class MobiDoc {
 
     HuffDicDecompressor* huffDic = nullptr;
 
-    StrVec props;
+    Props props;
 
     explicit MobiDoc(const char* filePath);
 

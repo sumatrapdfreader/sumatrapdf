@@ -902,7 +902,7 @@ ByteSlice MobiDoc::GetHtmlData() const {
 }
 
 TempStr MobiDoc::GetPropertyTemp(const char* name) {
-    char* v = FindProp(props, name);
+    char* v = GetPropValueTemp(props, name);
     if (!v) {
         return nullptr;
     }

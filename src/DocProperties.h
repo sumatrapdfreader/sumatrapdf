@@ -14,9 +14,11 @@ extern const char* kPropPdfVersion;
 extern const char* kPropPdfProducer;
 extern const char* kPropPdfFileStructure;
 
-// Props are stored in StrVec as key, value sequentially
+// Props are stored in StrVec as name, value sequentially
 using Props = StrVec;
 int PropsCount(const Props& props);
-int FindPropIdx(const Props& props, const char* key);
-char* FindProp(const Props& props, const char* key);
-void AddProp(Props& props, const char* key, const char* val, bool replaceIfExists = false);
+int GetPropIdx(const Props& props, const char* name);
+char* GetPropValueTemp(const Props& props, const char* name);
+void AddProp(Props& props, const char* name, const char* val, bool replaceIfExists = false);
+
+const char* GetMatchingString(const char**, const char*);

@@ -24,20 +24,20 @@ int PropsCount(const Props& props) {
     return n / 2;
 }
 
-int FindPropIdx(const Props& props, const char* key) {
+int GetPropIdx(const Props& props, const char* name) {
     int n = PropsCount(props);
     for (int i = 0; i < n; i++) {
         int idx = i * 2;
         char* v = props.At(idx);
-        if (str::Eq(v, key)) {
+        if (str::Eq(v, name)) {
             return idx;
         }
     }
     return -1;
 }
 
-char* FindProp(const Props& props, const char* key) {
-    int idx = FindPropIdx(props, key);
+char* GetPropValueTemp(const Props& props, const char* name) {
+    int idx = GetPropIdx(props, name);
     if (idx < 0) {
         return nullptr;
     }
@@ -45,12 +45,12 @@ char* FindProp(const Props& props, const char* key) {
     return v;
 }
 
-void AddProp(Props& props, const char* key, const char* val, bool replaceIfExists) {
-    CrashIf(!key || !val);
-    int idx = FindPropIdx(props, key);
+void AddProp(Props& props, const char* name, const char* val, bool replaceIfExists) {
+    CrashIf(!name || !val);
+    int idx = GetPropIdx(props, name);
     if (idx < 0) {
         // doesn't exsit
-        props.Append(key);
+        props.Append(name);
         props.Append(val);
         return;
     }
@@ -58,4 +58,17 @@ void AddProp(Props& props, const char* key, const char* val, bool replaceIfExist
         return;
     }
     props.SetAt(idx + 1, val);
+}
+
+// strings are pairs of str1, str2 laid in sequence, with nullptr to mark the en
+// we find str1 matching s and return str2 or nullptr if not found
+const char* GetMatchingString(const char** strings, const char* s) {
+    while (*strings) {
+        const char* str1 = *strings++;
+        const char* str2 = *strings++;
+        if (str1 == s || str::Eq(str1, s)) {
+            return str2;
+        }
+    }
+    return nullptr;
 }

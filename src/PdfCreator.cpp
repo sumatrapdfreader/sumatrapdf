@@ -246,30 +246,25 @@ bool PdfCreator::AddPageFromImageData(const ByteSlice& data, float imgDpi) const
     return ok;
 }
 
-bool PdfCreator::SetProperty(const char* prop, const char* value) const {
+// clang-format off
+static const char* pdfCreatorPropsMap[] = {
+    kPropTitle, "Title",
+    kPropAuthor, "Author",
+    kPropSubject, "Subject",
+    kPropCopyright, "Copyright",
+    kPropModificationDate, "ModDate",
+    kPropCreatorApp, "Creator",
+    kPropPdfProducer, "Producer",
+    nullptr
+};
+// clang-format on
+
+bool PdfCreator::SetProperty(const char* propName, const char* value) const {
     if (!ctx || !doc) {
         return false;
     }
 
-    // adapted from EngineMupdf::GetProperty
-    static struct {
-        const char* prop;
-        const char* name;
-    } pdfPropNames[] = {
-        {kPropTitle, "Title"},
-        {kPropAuthor, "Author"},
-        {kPropSubject, "Subject"},
-        {kPropCopyright, "Copyright"},
-        {kPropModificationDate, "ModDate"},
-        {kPropCreatorApp, "Creator"},
-        {kPropPdfProducer, "Producer"},
-    };
-    const char* name = nullptr;
-    for (int i = 0; i < dimof(pdfPropNames) && !name; i++) {
-        if (str::Eq(pdfPropNames[i].prop, prop)) {
-            name = pdfPropNames[i].name;
-        }
-    }
+    const char* name = GetMatchingString(pdfCreatorPropsMap, propName);
     if (!name) {
         return false;
     }
