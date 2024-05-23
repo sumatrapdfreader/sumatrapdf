@@ -178,6 +178,7 @@ static Translation* FindTranslation(const char* s) {
 // don't free
 const char* GetTranslation(const char* s) {
     if (gCurrLangIdx == 0) {
+        // 0 is english, no translation needed
         return s;
     }
     Translation* trans = FindTranslation(s);

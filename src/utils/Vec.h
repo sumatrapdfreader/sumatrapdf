@@ -201,6 +201,12 @@ class Vec {
         return els[idx];
     }
 
+    T& At(int idx) const {
+        CrashIf(idx < 0);
+        CrashIf(idx >= (int)len);
+        return els[idx];
+    }
+
     bool isValidIndex(int idx) const {
         return (idx >= 0) && (idx < (int)len);
     }
