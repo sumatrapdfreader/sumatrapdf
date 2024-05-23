@@ -433,7 +433,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         return false;
     }
 
-    StrVec2 args;
+    StrVec args;
     ParseCmdLine(ToWStrTemp(ev->commandLine), args);
     int nArgs = args.Size();
     if (nArgs == 0) {
@@ -447,7 +447,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
         MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
         return false;
     }
-    StrVec2 argsQuoted;
+    StrVec argsQuoted;
     if (nArgs == 1) {
         return LaunchFileShell(exePath, tab->filePath);
     }

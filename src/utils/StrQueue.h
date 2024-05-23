@@ -16,7 +16,7 @@ struct StrQueue {
     bool IsFinished();
     bool Access(const std::function<void(StrQueue*)>& fn);
 
-    StrVec2 strings;
+    StrVec strings;
 
     volatile bool isFinished = false;
     CRITICAL_SECTION cs;

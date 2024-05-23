@@ -69,7 +69,7 @@ class EngineMulti : public EngineBase {
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
-    bool LoadFromFiles(const char* dir, StrVec2& files);
+    bool LoadFromFiles(const char* dir, StrVec& files);
     void UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo);
 
     EngineBase* PageToEngine(int& pageNo) const;
@@ -334,7 +334,7 @@ TocItem* CreateWrapperItem(EngineBase* engine) {
     return tocWrapper;
 }
 
-bool EngineMulti::LoadFromFiles(const char* dir, StrVec2& files) {
+bool EngineMulti::LoadFromFiles(const char* dir, StrVec& files) {
     int n = files.Size();
     TocItem* tocFiles = nullptr;
     for (int i = 0; i < n; i++) {
@@ -412,7 +412,7 @@ bool IsEngineMultiSupportedFileType(Kind kind) {
     return kind == kindDirectory;
 }
 
-static EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec2& files) {
+static EngineBase* CreateEngineMultiFromFiles(const char* dir, StrVec& files) {
     EngineMulti* engine = new EngineMulti();
     if (!engine->LoadFromFiles(dir, files)) {
         engine->Release();
@@ -436,7 +436,7 @@ static bool isSupportedForMultis(WIN32_FIND_DATAW*, const char* path) {
 };
 
 EngineBase* CreateEngineMultiFromDirectory(const char* dir) {
-    StrVec2 files;
+    StrVec files;
     bool ok = CollectFilesFromDirectory(dir, files, isSupportedForMultis);
     if (!ok) {
         // TODO: show error message

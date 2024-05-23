@@ -56,7 +56,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
     TempStr pattern = path::JoinTemp(thumbsDir, kPngExt);
 
-    StrVec2 filePaths;
+    StrVec filePaths;
 
     bool ok = CollectPathsFromDirectory(pattern, filePaths, false);
     if (!ok) {

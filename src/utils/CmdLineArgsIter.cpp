@@ -46,7 +46,7 @@ TempStr QuoteCmdLineArgTemp(char* arg) {
     return res.StealData();
 }
 
-void ParseCmdLine(const WCHAR* cmdLine, StrVec2& argsOut) {
+void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
     for (int i = 0; i < nArgs; i++) {

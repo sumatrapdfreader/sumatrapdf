@@ -314,7 +314,7 @@ static void FindTextEditors() {
     if (didFindTextEditors) {
         return;
     }
-    StrVec2 found;
+    StrVec found;
     // all but last entry, which is notepad.exe
     int n = (int)dimof(editorRules) - 1;
     for (int i = 0; i < n; i++) {

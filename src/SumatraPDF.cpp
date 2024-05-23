@@ -127,11 +127,11 @@ static Perm gPolicyRestrictions = Perm::RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm::DiskAccess)
-static StrVec2 gAllowedLinkProtocols;
+static StrVec gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static StrVec2 gAllowedFileTypes;
+static StrVec gAllowedFileTypes;
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
@@ -1976,7 +1976,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
 
 // remember which files failed to open so that a failure to
 // open a file doesn't block next/prev file in
-static StrVec2 gFilesFailedToOpen;
+static StrVec gFilesFailedToOpen;
 
 MainWindow* LoadDocument(LoadArgs* args) {
     CrashAlwaysIf(gCrashOnOpen);
@@ -3239,7 +3239,7 @@ static void OpenFolder(MainWindow* win) {
     LoadDocument(&args);
 }
 
-static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec2& filesOut) {
+static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     WCHAR* dir = ofn->lpstrFile;
     WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
     // only a single file, full path
@@ -3346,7 +3346,7 @@ static void OpenFile(MainWindow* win) {
         return;
     }
 
-    StrVec2 files;
+    StrVec files;
     GetFilesFromGetOpenFileName(&ofn, files);
     for (char* path : files) {
         LoadArgs args(path, win);
@@ -3354,10 +3354,10 @@ static void OpenFile(MainWindow* win) {
     }
 }
 
-static StrVec2 gLastNextPrevFiles;
+static StrVec gLastNextPrevFiles;
 const char* lastNextPrevFilesPattern = nullptr;
 
-static void RemoveFailedFiles(StrVec2& files) {
+static void RemoveFailedFiles(StrVec& files) {
     for (char* path : gFilesFailedToOpen) {
         int idx = files.Find(path);
         if (idx >= 0) {
@@ -3366,8 +3366,8 @@ static void RemoveFailedFiles(StrVec2& files) {
     }
 }
 
-static StrVec2& CollectNextPrevFilesIfChanged(const char* path) {
-    StrVec2& files = gLastNextPrevFiles;
+static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
+    StrVec& files = gLastNextPrevFiles;
 
     char* pattern = path::GetDirTemp(path);
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
@@ -3413,7 +3413,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
 
     WindowTab* tab = win->CurrentTab();
     char* path = tab->filePath;
-    StrVec2 files = CollectNextPrevFilesIfChanged(path);
+    StrVec files = CollectNextPrevFilesIfChanged(path);
     if (files.Size() < 2) {
         return;
     }

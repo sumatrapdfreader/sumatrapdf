@@ -28,7 +28,7 @@ static char* GetGhostscriptPath() {
     };
 
     // find all installed Ghostscript versions
-    StrVec2 versions;
+    StrVec versions;
     REGSAM access = KEY_READ | KEY_WOW64_32KEY;
 TryAgain64Bit:
     for (const char* gsProd : gsProducts) {
@@ -85,7 +85,7 @@ TryAgain64Bit:
         return nullptr;
     }
     GetEnvironmentVariableW(L"PATH", envpath, size);
-    StrVec2 paths;
+    StrVec paths;
     Split(paths, ToUtf8Temp(envpath), ";", true);
     for (char* path : paths) {
         char* exe = path::JoinTemp(path, "gswin32c.exe");

@@ -9,16 +9,16 @@ ByteSlice ToByteSlice(const char* s);
 
 struct StrVecPage;
 
-struct StrVec2 {
+struct StrVec {
     StrVecPage* first = nullptr;
     StrVecPage* curr = nullptr;
     int nextPageSize = 256;
     int size = 0;
 
-    StrVec2() = default;
-    StrVec2(const StrVec2& that);
-    StrVec2& operator=(const StrVec2& that);
-    ~StrVec2();
+    StrVec() = default;
+    StrVec(const StrVec& that);
+    StrVec& operator=(const StrVec& that);
+    ~StrVec();
 
     void Reset(StrVecPage* = nullptr);
 
@@ -39,14 +39,14 @@ struct StrVec2 {
     bool Contains(const char*, int sLen = -1) const;
 
     struct iterator {
-        const StrVec2* v;
+        const StrVec* v;
         int idx;
 
         // perf: cache page, idxInPage from prev iteration
         int idxInPage;
         StrVecPage* page;
 
-        iterator(const StrVec2* v, int idx);
+        iterator(const StrVec* v, int idx);
         char* operator*() const;
         iterator& operator++();    // ++it
         iterator& operator++(int); // it++
@@ -58,12 +58,12 @@ struct StrVec2 {
     iterator end() const;
 };
 
-int AppendIfNotExists(StrVec2& v, const char* s, int sLen = -1);
+int AppendIfNotExists(StrVec& v, const char* s, int sLen = -1);
 
-void Sort(StrVec2& v, StrLessFunc lessFn = nullptr);
-void SortNoCase(StrVec2&);
-void SortNatural(StrVec2&);
+void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
+void SortNoCase(StrVec&);
+void SortNatural(StrVec&);
 
-int Split(StrVec2& v, const char* s, const char* separator, bool collapse = false);
-char* Join(StrVec2& v, const char* sep = nullptr);
-TempStr JoinTemp(StrVec2& v, const char* sep);
+int Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
+char* Join(StrVec& v, const char* sep = nullptr);
+TempStr JoinTemp(StrVec& v, const char* sep);

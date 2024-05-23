@@ -95,7 +95,7 @@ struct PropertiesLayout {
     Button* btnCopyToClipboard = nullptr;
     Button* btnGetFonts = nullptr;
     Vec<Prop> props;
-    StrVec2 strings;
+    StrVec strings;
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
@@ -252,10 +252,10 @@ static char* FormatPdfFileStructure(DocController* ctrl) {
     if (str::IsEmpty(fstruct)) {
         return nullptr;
     }
-    StrVec2 parts;
+    StrVec parts;
     Split(parts, fstruct, ",", true);
 
-    StrVec2 props;
+    StrVec props;
 
     if (parts.Contains("linearized")) {
         props.Append(_TRA("Fast Web View"));
@@ -283,7 +283,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
         return nullptr;
     }
 
-    StrVec2 denials;
+    StrVec denials;
 
     EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {

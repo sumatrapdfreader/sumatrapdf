@@ -15,7 +15,7 @@ struct ListBoxModel {
 using DropDownModel = ListBoxModel;
 
 struct ListBoxModelStrings : ListBoxModel {
-    StrVec2 strings;
+    StrVec strings;
 
     ~ListBoxModelStrings() override = default;
     int ItemsCount() override;

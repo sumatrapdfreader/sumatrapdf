@@ -75,7 +75,7 @@
 // terminate and delete itself asynchronously while the UI is
 // being set up
 class FileExistenceChecker : public ThreadBase {
-    StrVec2 paths;
+    StrVec paths;
 
     void GetFilePathsToCheck();
     void HideMissingFiles();
@@ -452,7 +452,7 @@ static bool SetupPluginMode(Flags& i) {
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
         TempStr args = str::DupTemp(str::FindChar(i.pluginURL, '#') + 1);
         str::TransCharsInPlace(args, "#", "&");
-        StrVec2 parts;
+        StrVec parts;
         Split(parts, args, "&", true);
         for (int k = 0; k < parts.Size(); k++) {
             char* part = parts.At(k);

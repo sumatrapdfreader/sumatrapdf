@@ -2025,7 +2025,7 @@ DropDown::DropDown() {
     kind = kindDropDown;
 }
 
-static void SetDropDownItems(HWND hwnd, StrVec2& items) {
+static void SetDropDownItems(HWND hwnd, StrVec& items) {
     ComboBox_ResetContent(hwnd);
     int n = items.Size();
     for (int i = 0; i < n; i++) {
@@ -2086,7 +2086,7 @@ void DropDown::SetCueBanner(const char* sv) {
     ComboBox_SetCueBannerText(hwnd, ws);
 }
 
-void DropDown::SetItems(StrVec2& newItems) {
+void DropDown::SetItems(StrVec& newItems) {
     items.Reset();
     int n = newItems.Size();
     for (int i = 0; i < n; i++) {
@@ -2097,14 +2097,14 @@ void DropDown::SetItems(StrVec2& newItems) {
     SetCurrentSelection(-1);
 }
 
-static void DropDownItemsFromStringArray(StrVec2& items, const char* strings) {
+static void DropDownItemsFromStringArray(StrVec& items, const char* strings) {
     for (; strings; seqstrings::Next(strings)) {
         items.Append(strings);
     }
 }
 
 void DropDown::SetItemsSeqStrings(const char* items) {
-    StrVec2 strings;
+    StrVec strings;
     DropDownItemsFromStringArray(strings, items);
     SetItems(strings);
 }

@@ -14,12 +14,12 @@ struct Printer {
     int nPaperSizes = 0;
     // papers[i] is DMPAPER_LETTER etc.
     WORD* papers = nullptr;      // DC_PAPERS
-    StrVec2 paperNames;           // DC_PAPERNAMES
+    StrVec paperNames;           // DC_PAPERNAMES
     POINT* paperSizes = nullptr; // DC_PAPERSIZE
 
     int nBins = 0;
     WORD* bins = nullptr; // DC_BINS
-    StrVec2 binNames;      // DC_BINNAMES
+    StrVec binNames;      // DC_BINNAMES
 
     bool isColor = false;    // DC_COLORDEVICE
     bool isDuplex = false;   // DC_DUPLEX

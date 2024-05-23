@@ -244,7 +244,7 @@ static PageElementDestination* NewLinkDestination(int srcPageNo, fz_context* ctx
 }
 
 struct LinkRectList {
-    StrVec2 links;
+    StrVec links;
     Vec<fz_rect> coords;
 };
 
@@ -1407,12 +1407,12 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
 // not sure if we should do it, it's unexpected behavior
 static bool gEnsureUniqueLabels = false;
 
-static void EnsureLabelsUnique(StrVec2* labels) {
+static void EnsureLabelsUnique(StrVec* labels) {
     if (!gEnsureUniqueLabels) {
         return;
     }
     // ensure that all page labels are unique (by appending a number to duplicates)
-    StrVec2 dups(*labels);
+    StrVec dups(*labels);
     Sort(dups);
     int nDups = dups.Size();
     for (int i = 1; i < nDups; i++) {
@@ -1435,7 +1435,7 @@ static void EnsureLabelsUnique(StrVec2* labels) {
     }
 }
 
-static StrVec2* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
+static StrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
@@ -1451,7 +1451,7 @@ static StrVec2* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount)
         return nullptr;
     }
 
-    StrVec2* labels = new StrVec2();
+    StrVec* labels = new StrVec();
     for (int i = 0; i < pageCount; i++) {
         labels->Append("");
     }
@@ -3220,7 +3220,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         pdf_unmark_obj(ctx, res);
     }
 
-    StrVec2 fonts;
+    StrVec fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
         bool embedded = false;
@@ -3369,7 +3369,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
     }
 
     if (DocumentProperty::PdfFileStructure == prop) {
-        StrVec2 fstruct;
+        StrVec fstruct;
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
             fstruct.Append("linearized");
         }

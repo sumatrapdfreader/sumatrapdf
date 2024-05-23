@@ -35,8 +35,8 @@ struct Translation {
 struct TranslationCache {
     // english string from translations.txt file
     // we lazily match it to origStr
-    StrVec2 allStrings;
-    StrVec2 allTranslations;
+    StrVec allStrings;
+    StrVec allTranslations;
     Translation* translations = nullptr;
     int nTranslations = 0;
     int nUntranslated = 0;
@@ -96,7 +96,7 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
 
     // parse into lines
     char* s = (char*)d.data();
-    StrVec2 lines;
+    StrVec lines;
     Split(lines, s, "\n", true);
     int nStrings = 0;
     for (char* l : lines) {

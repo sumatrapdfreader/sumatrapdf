@@ -59,7 +59,7 @@ void ShowUsage(const char* exeName) {
 }
 
 int main() {
-    StrVec2 args;
+    StrVec args;
     ParseCmdLine(GetCommandLineW(), args);
 
     const char* filePath = nullptr;

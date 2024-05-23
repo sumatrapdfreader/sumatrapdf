@@ -173,7 +173,7 @@ static bool IsFileToBench(const char* path) {
     return false;
 }
 
-static void CollectFilesToBench(char* dir, StrVec2& files) {
+static void CollectFilesToBench(char* dir, StrVec& files) {
     DirTraverse(dir, true, [&files](WIN32_FIND_DATAW*, const char* path) -> bool {
         if (IsFileToBench(path)) {
             files.Append(path);
@@ -183,14 +183,14 @@ static void CollectFilesToBench(char* dir, StrVec2& files) {
 }
 
 static void BenchDir(char* dir) {
-    StrVec2 files;
+    StrVec files;
     CollectFilesToBench(dir, files);
     for (int i = 0; i < files.Size(); i++) {
         BenchFile(files.At(i), nullptr);
     }
 }
 
-void BenchFileOrDir(StrVec2& pathsToBench) {
+void BenchFileOrDir(StrVec& pathsToBench) {
     int n = pathsToBench.Size() / 2;
     for (int i = 0; i < n; i++) {
         char* path = pathsToBench.At(2 * i);
@@ -302,7 +302,7 @@ class TestFileProvider {
 };
 
 class FilesProvider : public TestFileProvider {
-    StrVec2 files;
+    StrVec files;
     int provided = 0;
 
   public:
@@ -310,7 +310,7 @@ class FilesProvider : public TestFileProvider {
         files.Append(path);
         provided = 0;
     }
-    FilesProvider(StrVec2& filesIn, int n, int offset) {
+    FilesProvider(StrVec& filesIn, int n, int offset) {
         // get every n-th file starting at offset
         for (int i = offset; i < filesIn.Size(); i += n) {
             const char* f = filesIn[i];

@@ -352,7 +352,7 @@ static bool SortByBaseFileName(const char* s1, const char* s2) {
     return n < 0;
 }
 
-static void GetSortedFilePaths(StrVec2& filePathsSortedOut, FileState* toIgnore = nullptr) {
+static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore = nullptr) {
     FileState* fs;
     for (size_t i = 0; (fs = gFileHistory.Get(i)) != nullptr; i++) {
         if (fs->favorites->size() > 0 && fs != toIgnore) {
@@ -382,7 +382,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 
     // sort the files with favorites by base file name of file path
-    StrVec2 filePathsSorted;
+    StrVec filePathsSorted;
     if (HasPermission(Perm::DiskAccess)) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
@@ -598,7 +598,7 @@ static void MakeFavSecondLevel(FavTreeItem* parent, FileState* f) {
 static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
     auto* res = new FavTreeModel();
     res->root = new FavTreeItem();
-    StrVec2 filePathsSorted;
+    StrVec filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
     for (char* path : filePathsSorted) {
         FileState* f = gFavorites.GetFavByFilePath(path);

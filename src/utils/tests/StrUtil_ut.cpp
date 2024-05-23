@@ -230,18 +230,7 @@ static void assertStrEq(const char* s1, const char* s2) {
     utassert(ok);
 }
 
-template <typename StrVecT>
-static void AppendStrings(StrVecT& v, const char** strings, int nStrings) {
-    int initialSize = v.Size();
-    for (int i = 0; i < nStrings; i++) {
-        v.Append(strings[i]);
-        utassert(v.Size() == initialSize + i + 1);
-    }
-    StrVecCheckIter(v, strings, initialSize);
-}
-
-template <typename StrVecT>
-static void CheckRemoveAt(StrVecT& v) {
+static void CheckRemoveAt(StrVec& v) {
     while (v.Size() > 0) {
         int n = v.Size();
         int idx = v.Size() / 2;
@@ -257,8 +246,7 @@ static void CheckRemoveAt(StrVecT& v) {
     }
 }
 
-template <typename StrVecT>
-static void StrVecCheckIter(StrVecT& v, const char** strings, int start = 0) {
+static void StrVecCheckIter(StrVec& v, const char** strings, int start = 0) {
     int i = 0;
     for (char* s : v) {
         if (i < start) {
@@ -288,9 +276,17 @@ static void StrVecCheckIter(StrVecT& v, const char** strings, int start = 0) {
     }
 }
 
+static void AppendStrings(StrVec& v, const char** strings, int nStrings) {
+    int initialSize = v.Size();
+    for (int i = 0; i < nStrings; i++) {
+        v.Append(strings[i]);
+        utassert(v.Size() == initialSize + i + 1);
+    }
+    StrVecCheckIter(v, strings, initialSize);
+}
+
 const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
 
-template <typename StrVecT>
 static void StrVecTest() {
     // order in strs
     int unsortedOrder[] = {0, 1, 2, 3, 4};
@@ -298,12 +294,12 @@ static void StrVecTest() {
     int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
 
     int n = dimofi(strs);
-    StrVecT v;
+    StrVec v;
     utassert(v.Size() == 0);
     AppendStrings(v, strs, n);
     StrVecCheckIter(v, strs, 0);
 
-    StrVecT sortedView = v;
+    StrVec sortedView = v;
     Sort(sortedView);
 
     for (int i = 0; i < n; i++) {
@@ -355,9 +351,8 @@ static void StrVecTest() {
     CheckRemoveAt(v);
 }
 
-template <typename StrVecT>
 static void StrVecTest2() {
-    StrVecT v;
+    StrVec v;
     v.Append("foo");
     v.Append("bar");
     char* s = Join(v);
@@ -393,7 +388,7 @@ static void StrVecTest2() {
     str::Free(s);
 
     {
-        StrVecT v2(v);
+        StrVec v2(v);
         utassert(str::Eq(v2.At(2), "foo"));
         v2.Append("nobar");
         utassert(str::Eq(v2.At(4), "nobar"));
@@ -408,7 +403,7 @@ static void StrVecTest2() {
     }
 
     {
-        StrVecT v2;
+        StrVec v2;
         size_t count = Split(v2, "a,b,,c,", ",");
         utassert(count == 5 && v2.Find("c") == 3);
         utassert(v2.Find("") == 2);
@@ -421,7 +416,7 @@ static void StrVecTest2() {
     }
 
     {
-        StrVecT v2;
+        StrVec v2;
         size_t count = Split(v2, "a,b,,c,", ",", true);
         utassert(count == 3 && v2.Find("c") == 2);
         TempStr joined = JoinTemp(v2, ";");
@@ -437,9 +432,8 @@ static void StrVecTest2() {
     CheckRemoveAt(v);
 }
 
-template <typename StrVecT>
 static void StrVecTest3() {
-    StrVecT v;
+    StrVec v;
     utassert(v.Size() == 0);
     v.Append("one");
     v.Append("two");
@@ -454,23 +448,22 @@ static void StrVecTest3() {
     CheckRemoveAt(v);
 }
 
-template <typename StrVecT>
 static void StrVecTest4() {
-    StrVecT v;
+    StrVec v;
     AppendStrings(v, strs, dimofi(strs));
 
     int idx = 2;
 
     utassert(str::Eq(strs[idx], v[idx]));
     auto s = "new value of string, should be large to get results faster";
-    // StrVec2: tests adding where can allocate new value inside a page
+    // StrVec: tests adding where can allocate new value inside a page
     v.SetAt(idx, s);
     utassert(str::Eq(s, v[idx]));
     v.SetAt(idx, nullptr);
     utassert(str::Eq(nullptr, v[idx]));
     v.SetAt(idx, "");
     utassert(str::Eq("", v[idx]));
-    // StrVec2: force allocating in side strings
+    // StrVec: force allocating in side strings
     // first page is 256 bytes so this should force allocation in sideStrings
     int n = 256 / str::Leni(s);
     for (int i = 0; i < n; i++) {
@@ -492,7 +485,7 @@ static void StrVecTest4() {
     s2 = v.At(idx);
     utassert(str::Eq(s2, strs[idx + 1]));
 
-    // StrVec2: test multiple side strings
+    // StrVec: test multiple side strings
     n = v.Size();
     for (int i = 0; i < n; i++) {
         v.SetAt(i, s);
@@ -517,9 +510,8 @@ static void StrVecTest4() {
     }
 }
 
-template <typename StrVecT>
 static void StrVecTest5() {
-    StrVecT v;
+    StrVec v;
     AppendStrings(v, strs, dimofi(strs));
     const char* s = "first";
     v.InsertAt(0, s);
@@ -961,9 +953,9 @@ void StrTest() {
     StrUrlExtractTest();
     // ParseUntilTest();
 
-    StrVecTest<StrVec2>();
-    StrVecTest2<StrVec2>();
-    StrVecTest3<StrVec2>();
-    StrVecTest4<StrVec2>();
-    StrVecTest5<StrVec2>();
+    StrVecTest();
+    StrVecTest2();
+    StrVecTest3();
+    StrVecTest4();
+    StrVecTest5();
 }

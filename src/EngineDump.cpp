@@ -193,7 +193,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     }
     TempStr fontlist = engine->GetPropertyTemp(DocumentProperty::FontList);
     if (fontlist) {
-        StrVec2 fonts;
+        StrVec fonts;
         Split(fonts, fontlist, "\n");
         str = EscapeTemp(Join(fonts, "\n\t\t"));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str);

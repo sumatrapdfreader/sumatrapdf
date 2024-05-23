@@ -117,7 +117,7 @@ class PdbReader;
 class PalmDoc {
     AutoFreeStr fileName;
     str::Str htmlData;
-    StrVec2 tocEntries;
+    StrVec tocEntries;
 
     bool Load();
 

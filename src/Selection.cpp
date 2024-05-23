@@ -227,7 +227,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
         str::Free(s);
         return res;
     }
-    StrVec2 selections;
+    StrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
         char* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {

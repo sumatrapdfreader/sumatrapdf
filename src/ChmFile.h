@@ -32,7 +32,7 @@ struct ChmFile {
 
     TempStr GetPropertyTemp(DocumentProperty prop) const;
     const char* GetHomePath() const;
-    void GetAllPaths(StrVec2*) const;
+    void GetAllPaths(StrVec*) const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;
