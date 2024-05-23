@@ -84,8 +84,8 @@ char* ChmFile::SmartToUtf8(const char* s, uint overrideCP) const {
     return strconv::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-WCHAR* ChmFile::SmartToWstr(const char* text) const {
-    return strconv::StrToWstr(text, codepage);
+WCHAR* ChmFile::SmartToWStr(const char* text) const {
+    return strconv::StrToWStr(text, codepage);
 }
 
 static char* GetCharZ(const ByteSlice& d, size_t off) {
@@ -371,16 +371,16 @@ void ChmFile::GetAllPaths(StrVec* v) const {
 static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
-    AutoFreeWstr name, local;
+    AutoFreeWStr name, local;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {
             continue;
         }
-        AutoFreeWstr attrName(el->GetAttribute("name"));
-        AutoFreeWstr attrVal(el->GetAttribute("value"));
+        AutoFreeWStr attrName(el->GetAttribute("name"));
+        AutoFreeWStr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFreeStr bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
-            attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
+            AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
+            attrVal.Set(strconv::StrToWStr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
@@ -421,16 +421,16 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     StrVec references;
-    AutoFreeWstr keyword, name;
+    AutoFreeWStr keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {
             continue;
         }
-        AutoFreeWstr attrName(el->GetAttribute("name"));
-        AutoFreeWstr attrVal(el->GetAttribute("value"));
+        AutoFreeWStr attrName(el->GetAttribute("name"));
+        AutoFreeWStr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFreeStr bytes = strconv::WstrToCodePage(CP_CHM_DEFAULT, attrVal);
-            attrVal.Set(strconv::StrToWstr(bytes.Get(), cp));
+            AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
+            attrVal.Set(strconv::StrToWStr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
@@ -513,7 +513,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, uin
 
     HtmlElement* el = p.FindElementByName("body");
     while ((el = p.FindElementByName("object", el)) != nullptr) {
-        AutoFreeWstr type(el->GetAttribute("type"));
+        AutoFreeWStr type(el->GetAttribute("type"));
         if (!str::EqI(type, L"text/sitemap")) {
             continue;
         }

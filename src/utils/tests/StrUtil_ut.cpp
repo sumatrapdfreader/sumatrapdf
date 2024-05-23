@@ -95,15 +95,15 @@ static void StrConvTest() {
     char cbuf[4];
     size_t conv = strconv::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
     utassert(conv == 3 && str::Eq(wbuf, L"tes"));
-    conv = strconv::WstrToUtf8Buf(L"abc", cbuf, dimof(cbuf));
+    conv = strconv::WStrToUtf8Buf(L"abc", cbuf, dimof(cbuf));
     utassert(conv == 3 && str::Eq(cbuf, "abc"));
     conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf));
     utassert(conv == 3 && str::StartsWith(wbuf, L"ab") && wbuf[2] == 0xD800);
     conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf) - 1);
     utassert(conv == 1 && str::Eq(wbuf, L"a"));
-    conv = strconv::WstrToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
+    conv = strconv::WStrToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
     utassert(conv == 0 && str::Eq(cbuf, ""));
-    conv = strconv::WstrToUtf8Buf(L"abcd", cbuf, dimof(cbuf));
+    conv = strconv::WStrToUtf8Buf(L"abcd", cbuf, dimof(cbuf));
     utassert(conv == 0 && str::Eq(cbuf, ""));
 #endif
 }
@@ -424,7 +424,7 @@ static void StrVecTest2() {
         StrVecCheckIter(v2, nullptr);
 
 #if 0
-        AutoFreeWstr last(v2.Pop());
+        AutoFreeWStr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
 #endif
         CheckRemoveAt(v2);
@@ -557,7 +557,7 @@ void StrTest() {
     utassert(str::Eq(str, buf));
     str::Free(str);
     {
-        AutoFreeWstr large(AllocArray<WCHAR>(2000));
+        AutoFreeWStr large(AllocArray<WCHAR>(2000));
         memset(large, 0x11, 1998);
         str = str::Format(L"%s", large.Get());
         utassert(str::Eq(str, large));
@@ -620,7 +620,7 @@ void StrTest() {
 
     {
         uint u1 = 0;
-        AutoFreeWstr str1;
+        AutoFreeWStr str1;
         const WCHAR* end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
         utassert(end && !*end);
         utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
@@ -700,7 +700,7 @@ void StrTest() {
         utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
-        AutoFreeWstr str1;
+        AutoFreeWStr str1;
         int i, j;
         float f;
         utassert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
@@ -727,9 +727,9 @@ void StrTest() {
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    AutoFree strA = strconv::WstrToAnsi(TEXT(TEST_STRING));
+    AutoFree strA = strconv::WStrToAnsi(TEXT(TEST_STRING));
     utassert(str::Eq(strA.Get(), TEST_STRING));
-    str = strconv::AnsiToWstr(strA.Get());
+    str = strconv::AnsiToWStr(strA.Get());
     utassert(str::Eq(str, TEXT(TEST_STRING)));
     str::Free(str);
 #undef TEST_STRING
@@ -873,15 +873,15 @@ void StrTest() {
         utassert(!tmp.Get());
     }
     {
-        AutoFree tmp = strconv::WstrToCodePage(98765, L"abc");
+        AutoFree tmp = strconv::WStrToCodePage(98765, L"abc");
         utassert(!tmp.Get());
     }
     {
-        AutoFreeWstr tmp(strconv::StrToWstr("abc", 12345));
+        AutoFreeWStr tmp(strconv::StrToWStr("abc", 12345));
         utassert(str::IsEmpty(tmp.Get()));
     }
     {
-        AutoFree tmp = strconv::WstrToCodePage(987654, L"abc");
+        AutoFree tmp = strconv::WStrToCodePage(987654, L"abc");
         utassert(str::IsEmpty(tmp.Get()));
     }
 

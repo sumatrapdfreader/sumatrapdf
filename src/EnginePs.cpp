@@ -81,7 +81,7 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariableW(L"PATH", nullptr, 0);
-    AutoFreeWstr envpath(AllocArray<WCHAR>(size + 1));
+    AutoFreeWStr envpath(AllocArray<WCHAR>(size + 1));
     if (size == 0) {
         return nullptr;
     }

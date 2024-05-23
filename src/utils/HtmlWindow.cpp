@@ -365,7 +365,7 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWstr* urlRest) {
+static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeWStr* urlRest) {
     const WCHAR* rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
     return rest && !*rest;
 }
@@ -435,7 +435,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
     //       leaked and to DISPID_DOCUMENTCOMPLETE never being fired
 
     int htmlWindowId;
-    AutoFreeWstr urlRest;
+    AutoFreeWStr urlRest;
     bool ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
     if (!ok) {
         return INET_E_INVALID_URL;
@@ -1147,7 +1147,7 @@ class HW_IDownloadManager : public IDownloadManager {
         }
         // parse the URL (only internal its:// URLs are supported)
         int htmlWindowId;
-        AutoFreeWstr urlRest;
+        AutoFreeWStr urlRest;
         bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
         // free urlToFile using IMalloc::Free
         IMalloc* pMalloc = nullptr;

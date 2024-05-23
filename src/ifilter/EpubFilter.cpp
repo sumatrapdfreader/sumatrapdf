@@ -125,7 +125,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
         }
     }
 
-    return ToWstr(text.Get());
+    return ToWStr(text.Get());
 }
 
 HRESULT EpubFilter::GetNextChunkValue(ChunkValue& chunkValue) {

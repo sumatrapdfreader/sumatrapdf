@@ -542,7 +542,7 @@ bool MobiDoc::ParseHeader() {
         logf("DRM is unsupported\n");
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
-        char* v = strconv::WstrToCodePage(mobiHdr.textEncoding, L"DRM");
+        char* v = strconv::WStrToCodePage(mobiHdr.textEncoding, L"DRM");
         AddProp(props, kPropUnsupportedFeatures, v);
         str::Free(v);
     }
@@ -929,7 +929,7 @@ bool MobiDoc::HasToc() {
         if (!attr) {
             continue;
         }
-        AutoFreeWstr val(strconv::FromHtmlUtf8(attr->val, attr->valLen));
+        AutoFreeWStr val(strconv::FromHtmlUtf8(attr->val, attr->valLen));
         attr = tok->GetAttrByName("filepos");
         if (!str::EqI(val, L"toc") || !attr) {
             continue;
@@ -949,8 +949,8 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
     }
 
-    AutoFreeWstr itemText;
-    AutoFreeWstr itemLink;
+    AutoFreeWStr itemText;
+    AutoFreeWStr itemLink;
     int itemLevel = 0;
 
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
@@ -959,7 +959,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
-            AutoFreeWstr linkText(strconv::FromHtmlUtf8(tok->s, tok->sLen));
+            AutoFreeWStr linkText(strconv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText) {
                 itemText.Set(str::Join(itemText, L" ", linkText));
             } else {

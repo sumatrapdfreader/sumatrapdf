@@ -28,7 +28,7 @@ struct ChmFile {
     char* ResolveTopicID(unsigned int id) const;
 
     char* SmartToUtf8(const char* text, uint overrideCP = 0) const;
-    WCHAR* SmartToWstr(const char* text) const;
+    WCHAR* SmartToWStr(const char* text) const;
 
     TempStr GetPropertyTemp(const char* name) const;
     const char* GetHomePath() const;

@@ -309,9 +309,9 @@ static float FzRectOverlap(fz_rect r1, RectF r2f) {
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
-static WCHAR* PdfToWstr(fz_context* ctx, pdf_obj* obj) {
+static WCHAR* PdfToWStr(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    WCHAR* res = ToWstr(s);
+    WCHAR* res = ToWStr(s);
     fz_free(ctx, s);
     return res;
 }
@@ -2052,7 +2052,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
             AutoFreeStr pwd_ansi = str::Dup(pwd.Get());
-            AutoFreeWstr pwd_cp1252(strconv::StrToWstr(pwd_ansi.Get(), 1252));
+            AutoFreeWStr pwd_cp1252(strconv::StrToWStr(pwd_ansi.Get(), 1252));
             pwdA = ToUtf8(pwd_cp1252);
             ok = fz_authenticate_password(ctx, _doc, pwdA.Get());
         }
@@ -2335,7 +2335,7 @@ bool EngineMupdf::FinishLoading() {
 static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationAttachment;
-    // WCHAR* path = ToWstr(outline->uri);
+    // WCHAR* path = ToWStr(outline->uri);
     dest->name = str::Dup(outline->title);
     // page is really a stream number
     dest->value = str::Format("%s:%d", engine->FilePath(), outline->page.page);
@@ -2353,7 +2353,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
         WCHAR* nameW = nullptr;
         if (outline->title) {
             // must convert to Unicode because PdfCleanString() doesn't work on utf8
-            nameW = ToWstr(outline->title);
+            nameW = ToWStr(outline->title);
             PdfCleanStringInPlace(nameW);
             name = ToUtf8(nameW);
             str::Free(nameW);
@@ -3418,7 +3418,7 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
             if (!obj) {
                 return nullptr;
             }
-            WCHAR* ws = PdfToWstr(ctx, obj);
+            WCHAR* ws = PdfToWStr(ctx, obj);
             PdfCleanStringInPlace(ws);
             TempStr res = ToUtf8Temp(ws);
             str::Free(ws);

@@ -778,7 +778,7 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
 }
 
 char* ResolveLnkTemp(const char* path) {
-    WCHAR* pathW = ToWstr(path);
+    WCHAR* pathW = ToWStr(path);
     ScopedMem<OLECHAR> olePath(pathW);
     if (!olePath) {
         return nullptr;
@@ -1878,7 +1878,7 @@ char* NormalizeString(const char* strA, int /* NORM_FORM */ form) {
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 2;
-    AutoFreeWstr res(AllocArray<WCHAR>(sizeEst));
+    AutoFreeWStr res(AllocArray<WCHAR>(sizeEst));
     sizeEst = DynNormalizeString(form, str, -1, res, sizeEst);
     if (sizeEst <= 0) {
         return nullptr;

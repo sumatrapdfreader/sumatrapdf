@@ -404,7 +404,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeWstr s(strconv::FromHtmlUtf8(i.str.s, i.str.len));
+                    AutoFreeWStr s(strconv::FromHtmlUtf8(i.str.s, i.str.len));
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -428,7 +428,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeWstr s(strconv::FromHtmlUtf8(i.str.s, i.str.len));
+                    AutoFreeWStr s(strconv::FromHtmlUtf8(i.str.s, i.str.len));
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -1470,7 +1470,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
     char* GetHtml() {
         // first add the homepage
         const char* index = doc->GetHomePath();
-        AutoFreeWstr urlW(doc->SmartToWstr(index));
+        AutoFreeWStr urlW(doc->SmartToWStr(index));
         char* url = ToUtf8Temp(urlW);
         Visit(nullptr, url, 0);
 
@@ -1485,7 +1485,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 if (*path == '/') {
                     path++;
                 }
-                urlW.Set(ToWstr(path));
+                urlW.Set(ToWStr(path));
                 url = ToUtf8Temp(urlW);
                 Visit(nullptr, url, -1);
             }

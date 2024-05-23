@@ -5,7 +5,7 @@
 
 namespace strconv {
 
-WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
+WCHAR* Utf8ToWStr(const char* s, size_t cb, Allocator* a) {
     // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
     if (!s) {
         return nullptr;
@@ -30,7 +30,7 @@ WCHAR* Utf8ToWstr(const char* s, size_t cb, Allocator* a) {
     return res;
 }
 
-char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
+char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
     if (!s) {
         return nullptr;
@@ -56,12 +56,12 @@ char* WstrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     return res;
 }
 
-char* WstrToUtf8(const WCHAR* s, size_t cch, Allocator* a) {
-    return WstrToCodePage(CP_UTF8, s, cch, a);
+char* WStrToUtf8(const WCHAR* s, size_t cch, Allocator* a) {
+    return WStrToCodePage(CP_UTF8, s, cch, a);
 }
 
 // caller needs to free() the result
-WCHAR* StrToWstr(const char* src, uint codePage, int cbSrc) {
+WCHAR* StrToWStr(const char* src, uint codePage, int cbSrc) {
     CrashIf(!src);
     if (!src) {
         return nullptr;
@@ -97,12 +97,12 @@ char* ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
         return str::Dup(src);
     }
 
-    WCHAR* tmp = StrToWstr(src, codePageSrc);
+    WCHAR* tmp = StrToWStr(src, codePageSrc);
     if (!tmp) {
         return nullptr;
     }
     size_t tmpLen = str::Len(tmp);
-    char* res = WstrToCodePage(codePageDest, tmp, tmpLen);
+    char* res = WStrToCodePage(codePageDest, tmp, tmpLen);
     str::Free(tmp);
     return res;
 }
@@ -140,37 +140,37 @@ char* UnknownToUtf8(const char* s) {
         return str::Dup(s, len);
     }
 
-    AutoFreeWstr uni = strconv::AnsiToWstr(s, len);
+    AutoFreeWStr uni = strconv::AnsiToWStr(s, len);
     return ToUtf8(uni.Get());
 }
 
-WCHAR* AnsiToWstr(const char* src, size_t cbLen) {
-    return StrToWstr(src, CP_ACP, (int)cbLen);
+WCHAR* AnsiToWStr(const char* src, size_t cbLen) {
+    return StrToWStr(src, CP_ACP, (int)cbLen);
 }
 
 char* AnsiToUtf8(const char* src, size_t cbLen) {
-    WCHAR* ws = StrToWstr(src, CP_ACP, (int)cbLen);
+    WCHAR* ws = StrToWStr(src, CP_ACP, (int)cbLen);
     char* res = ToUtf8(ws);
     str::Free(ws);
     return res;
 }
 
-char* WstrToAnsi(const WCHAR* src) {
-    return WstrToCodePage(CP_ACP, src);
+char* WStrToAnsi(const WCHAR* src) {
+    return WStrToCodePage(CP_ACP, src);
 }
 
 char* Utf8ToAnsi(const char* s) {
     TempWStr ws = ToWStrTemp(s);
-    return WstrToAnsi(ws);
+    return WStrToAnsi(ws);
 }
 
 } // namespace strconv
 
 // short names because frequently used
 char* ToUtf8(const WCHAR* s, size_t cch) {
-    return strconv::WstrToUtf8(s, cch);
+    return strconv::WStrToUtf8(s, cch);
 }
 
-WCHAR* ToWstr(const char* s, size_t cb) {
-    return strconv::Utf8ToWstr(s, cb);
+WCHAR* ToWStr(const char* s, size_t cb) {
+    return strconv::Utf8ToWStr(s, cb);
 }

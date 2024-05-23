@@ -84,7 +84,7 @@ WCHAR* GetSumatraExePath() {
     if (!file::Exists(path)) {
         return str::Dup(L"SumatraPDF.exe");
     }
-    return ToWstr(path);
+    return ToWStr(path);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {

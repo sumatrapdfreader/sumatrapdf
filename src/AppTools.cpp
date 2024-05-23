@@ -511,7 +511,7 @@ void SaveCallstackLogs() {
 #if 0
 // cache because calculating md5 of the whole executable
 // might be relatively expensive
-static AutoFreeWstr gAppMd5;
+static AutoFreeWStr gAppMd5;
 
 // return hex version of md5 of app's executable
 // nullptr if there was an error
@@ -534,7 +534,7 @@ static const WCHAR* Md5OfAppExe() {
     CalcMD5Digest(d.data, d.size(), md5);
 
     AutoFree md5HexA(_MemToHex(&md5));
-    AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());
+    AutoFreeWStr md5Hex = strconv::Utf8ToWchar(md5HexA.AsView());
     d.Free();
     return md5Hex.StealData();
 }
@@ -544,7 +544,7 @@ static const WCHAR* Md5OfAppExe() {
 // locally or using pre-release builds (both cases where
 // exe and its md5 changes frequently)
 void RemoveMd5AppDataDirectories() {
-    AutoFreeWstr extractedDir = PathForFileInAppDataDir(L"extracted");
+    AutoFreeWStr extractedDir = PathForFileInAppDataDir(L"extracted");
     if (extractedDir.empty()) {
         return;
     }
@@ -554,12 +554,12 @@ void RemoveMd5AppDataDirectories() {
         return;
     }
 
-    AutoFreeWstr md5App = Md5OfAppExe();
+    AutoFreeWStr md5App = Md5OfAppExe();
     if (md5App.empty()) {
         return;
     }
 
-    AutoFreeWstr md5Dir = path::Join(extractedDir.data, md5App.data);
+    AutoFreeWStr md5Dir = path::Join(extractedDir.data, md5App.data);
 
     for (auto& dir : dirs) {
         const WCHAR* s = dir.data();
@@ -575,18 +575,18 @@ void RemoveMd5AppDataDirectories() {
 const WCHAR* ExractUnrarDll() {
     RemoveMd5AppDataDirectories();
 
-    AutoFreeWstr extractedDir = PathForFileInAppDataDir(L"extracted");
+    AutoFreeWStr extractedDir = PathForFileInAppDataDir(L"extracted");
     if (extractedDir.empty()) {
         return nullptr;
     }
 
-    AutoFreeWstr md5App = Md5OfAppExe();
+    AutoFreeWStr md5App = Md5OfAppExe();
     if (md5App.empty()) {
         return nullptr;
     }
 
-    AutoFreeWstr md5Dir = path::Join(extractedDir.data, md5App.data);
-    AutoFreeWstr dllPath = path::Join(md5Dir.data, unrarFileName);
+    AutoFreeWStr md5Dir = path::Join(extractedDir.data, md5App.data);
+    AutoFreeWStr dllPath = path::Join(md5Dir.data, unrarFileName);
 
     if (file::Exists(dllPath.data)) {
         const WCHAR* ret = dllPath.data;

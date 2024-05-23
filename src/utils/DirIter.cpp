@@ -93,7 +93,7 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
     TempStr dir = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATAW fdata{};
-    WCHAR* patternW = ToWstr(pattern);
+    WCHAR* patternW = ToWStr(pattern);
     HANDLE hfind = FindFirstFileW(patternW, &fdata);
     if (INVALID_HANDLE_VALUE == hfind) {
         return false;

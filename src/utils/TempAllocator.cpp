@@ -121,7 +121,7 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
         CrashIf((int)cch > 0);
         return nullptr;
     }
-    return strconv::WstrToUtf8(s, cch, GetTempAllocator());
+    return strconv::WStrToUtf8(s, cch, GetTempAllocator());
 }
 
 TempWStr ToWStrTemp(const char* s, size_t cb) {
@@ -129,7 +129,7 @@ TempWStr ToWStrTemp(const char* s, size_t cb) {
         CrashIf((int)cb > 0);
         return nullptr;
     }
-    return strconv::Utf8ToWstr(s, cb, GetTempAllocator());
+    return strconv::Utf8ToWStr(s, cb, GetTempAllocator());
 }
 
 // handles embedded 0 in the string
@@ -139,5 +139,5 @@ TempWStr ToWStrTemp(const str::Str& str) {
     }
     char* s = str.CStr();
     size_t cb = str.Size();
-    return strconv::Utf8ToWstr(s, cb, GetTempAllocator());
+    return strconv::Utf8ToWStr(s, cb, GetTempAllocator());
 }

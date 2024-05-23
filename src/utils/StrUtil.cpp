@@ -2558,7 +2558,7 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {
         } else if ('s' == *f) {
             *va_arg(args, WCHAR**) = ExtractUntil(str, *(f + 1), &end);
         } else if ('S' == *f) {
-            va_arg(args, AutoFreeWstr*)->Set(ExtractUntil(str, *(f + 1), &end));
+            va_arg(args, AutoFreeWStr*)->Set(ExtractUntil(str, *(f + 1), &end));
         } else if ('$' == *f && !*str) {
             continue; // don't fail, if we're indeed at the end of the string
         } else if ('%' == *f && *f == *str) {

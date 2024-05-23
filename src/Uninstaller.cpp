@@ -75,7 +75,7 @@ static void RemoveInstalledFiles() {
     for (size_t i = 0; i < n; i++) {
         const char* s = gInstalledFiles[i];
         auto relPath = ToWStrTemp(s);
-        AutoFreeWstr path = path::Join(dir, relPath);
+        AutoFreeWStr path = path::Join(dir, relPath);
         BOOL ok = file::Delete(path);
         if (ok) {
             logf(L"RemoveInstalledFiles(): removed '%s'\n", path.Get());

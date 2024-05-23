@@ -131,7 +131,7 @@ void TextSearch::SetDirection(TextSearchDirection direction) {
 void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
-    AutoFreeWstr selection(ExtractText(" "));
+    AutoFreeWStr selection(ExtractText(" "));
     str::NormalizeWSInPlace(selection);
     SetText(selection);
 

@@ -17,7 +17,7 @@ HRESULT TeXFilter::OnInit() {
             return res;
         }
 
-        m_pData = strconv::StrToWstr(data, CP_ACP);
+        m_pData = strconv::StrToWStr(data, CP_ACP);
         m_pBuffer = AllocArray<WCHAR>(data.size() + 1);
         data.Free();
 

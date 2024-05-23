@@ -152,7 +152,7 @@ struct HtmlFormatterArgs {
     // we start parsing from htmlStr + reparseIdx
     int reparseIdx = 0;
 
-    AutoFreeWstr fontName;
+    AutoFreeWStr fontName;
 };
 
 class HtmlPullParser;
@@ -233,7 +233,7 @@ class HtmlFormatter {
     float lineSpacing = 0;
     float spaceDx = 0;
     Graphics* gfx = nullptr; // for measuring text
-    AutoFreeWstr defaultFontName;
+    AutoFreeWStr defaultFontName;
     float defaultFontSize = 0;
     Allocator* textAllocator = nullptr;
     mui::ITextRender* textMeasure = nullptr;

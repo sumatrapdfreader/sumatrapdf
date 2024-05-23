@@ -159,7 +159,7 @@ struct AutoFree {
 // TODO: replace most of AutoFree with AutoFreeStr
 using AutoFreeStr = AutoFree;
 
-struct AutoFreeWstr {
+struct AutoFreeWStr {
     WCHAR* data = nullptr;
 
   protected:
@@ -169,24 +169,24 @@ struct AutoFreeWstr {
     size_t len = 0;
 
   public:
-    AutoFreeWstr() = default;
-    AutoFreeWstr(AutoFreeWstr& other) = delete;
-    AutoFreeWstr(AutoFreeWstr&& other) = delete;
+    AutoFreeWStr() = default;
+    AutoFreeWStr(AutoFreeWStr& other) = delete;
+    AutoFreeWStr(AutoFreeWStr&& other) = delete;
 
-    AutoFreeWstr(const WCHAR* p) { // NOLINT
+    AutoFreeWStr(const WCHAR* p) { // NOLINT
         data = (WCHAR*)p;
     }
 
-    AutoFreeWstr(WCHAR* p) { // NOLINT
+    AutoFreeWStr(WCHAR* p) { // NOLINT
         data = p;
     }
 
-    ~AutoFreeWstr() {
+    ~AutoFreeWStr() {
         str::Free(data);
     }
 
-    AutoFreeWstr& operator=(AutoFreeWstr& other) = delete;
-    AutoFreeWstr& operator=(AutoFreeWstr&& other) noexcept {
+    AutoFreeWStr& operator=(AutoFreeWStr& other) = delete;
+    AutoFreeWStr& operator=(AutoFreeWStr&& other) noexcept {
         if (this == &other) {
             return *this;
         }
@@ -199,8 +199,8 @@ struct AutoFreeWstr {
     }
 
 #if 0
-    AutoFreeWstr& operator=(const AutoFreeWstr& other) = delete;
-    AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
+    AutoFreeWStr& operator=(const AutoFreeWStr& other) = delete;
+    AutoFreeWStr& operator=(const AutoFreeWStr&& other) = delete;
 #endif
 
     WCHAR* Get() const {

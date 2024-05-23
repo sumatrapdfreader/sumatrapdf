@@ -237,7 +237,7 @@ WCHAR* Normalize(const WCHAR* path) {
         return str::Dup(path);
     }
 
-    AutoFreeWstr fullpath(AllocArray<WCHAR>(cch));
+    AutoFreeWStr fullpath(AllocArray<WCHAR>(cch));
     GetFullPathNameW(path, cch, fullpath, nullptr);
     // convert to long form
     cch = GetLongPathNameW(fullpath, nullptr, 0);
@@ -245,7 +245,7 @@ WCHAR* Normalize(const WCHAR* path) {
         return fullpath.StealData();
     }
 
-    AutoFreeWstr normpath(AllocArray<WCHAR>(cch));
+    AutoFreeWStr normpath(AllocArray<WCHAR>(cch));
     GetLongPathNameW(fullpath, normpath, cch);
     if (cch <= MAX_PATH) {
         return normpath.StealData();
@@ -254,7 +254,7 @@ WCHAR* Normalize(const WCHAR* path) {
     // handle overlong paths: first, try to shorten the path
     cch = GetShortPathNameW(fullpath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
-        AutoFreeWstr shortpath(AllocArray<WCHAR>(cch));
+        AutoFreeWStr shortpath(AllocArray<WCHAR>(cch));
         GetShortPathNameW(fullpath, shortpath, cch);
         if (str::Len(path::GetBaseNameTemp(normpath)) + path::GetBaseNameTemp(shortpath) - shortpath < MAX_PATH) {
             // keep the long filename if possible
@@ -272,7 +272,7 @@ WCHAR* Normalize(const WCHAR* path) {
 
 char* NormalizeTemp(const char* path) {
     WCHAR* s = ToWStrTemp(path);
-    AutoFreeWstr ws = Normalize(s);
+    AutoFreeWStr ws = Normalize(s);
     char* res = ToUtf8Temp(ws);
     return res;
 }
@@ -281,7 +281,7 @@ char* NormalizeTemp(const char* path) {
 // can be used for interaction with non-UNICODE aware applications
 TempStr ShortPathTemp(const char* pathA) {
     WCHAR* path = ToWStrTemp(pathA);
-    AutoFreeWstr normpath = Normalize(path);
+    AutoFreeWStr normpath = Normalize(path);
     DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
     if (!cch) {
         return ToUtf8(normpath.Get());

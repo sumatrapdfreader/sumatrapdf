@@ -78,7 +78,7 @@ void FindFirst(MainWindow* win) {
     // if search edit was empty
     // auto isEditEmpty = Edit_GetTextLength(win->hwndFindEdit) == 0
     if (dm->textSelection->result.len > 0) {
-        AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
+        AutoFreeWStr selection(dm->textSelection->ExtractText(" "));
         str::NormalizeWSInPlace(selection);
         if (!str::IsEmpty(selection.Get())) {
             TempStr s = ToUtf8Temp(selection);
@@ -159,7 +159,7 @@ void FindSelection(MainWindow* win, TextSearchDirection direction) {
         return;
     }
 
-    AutoFreeWstr selection(dm->textSelection->ExtractText(" "));
+    AutoFreeWStr selection(dm->textSelection->ExtractText(" "));
     str::NormalizeWSInPlace(selection);
     if (str::IsEmpty(selection.Get())) {
         return;
@@ -211,13 +211,13 @@ struct FindThreadData : public ProgressUpdateUI {
     MainWindow* win = nullptr;
     TextSearchDirection direction{TextSearchDirection::Forward};
     bool wasModified = false;
-    AutoFreeWstr text;
+    AutoFreeWStr text;
     HANDLE thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified) {
         this->win = win;
         this->direction = direction;
-        this->text = ToWstr(text);
+        this->text = ToWStr(text);
         this->wasModified = wasModified;
     }
     ~FindThreadData() override {

@@ -102,14 +102,14 @@ static bool SetupSymbolPath()
         return false;
     }
 
-    AutoFreeWstr path(GetSymbolPath());
+    AutoFreeWStr path(GetSymbolPath());
     if (!path) {
         plog("SetupSymbolPath(): GetSymbolPath() returned nullptr");
         return false;
     }
 
     BOOL ok = FALSE;
-    AutoFreeWstr tpath(strconv::FromWStr(path));
+    AutoFreeWStr tpath(strconv::FromWStr(path));
     if (DynSymSetSearchPathW) {
         ok = DynSymSetSearchPathW(GetCurrentProcess(), path);
         if (!ok)

@@ -533,7 +533,7 @@ int SyncTex::RebuildIndexIfNeeded() {
     TempStr syncPathTemp = str::DupTemp(syncFilePath.Get());
 Repeat:
     TempWStr ws = ToWStrTemp(syncPathTemp);
-    AutoFreeStr pathAnsi = strconv::WstrToAnsi(ws);
+    AutoFreeStr pathAnsi = strconv::WStrToAnsi(ws);
     scanner = synctex_scanner_new_with_output_file(pathAnsi, nullptr, 1);
     if (scanner) {
         logfa("synctex_scanner_new_with_output_file: ok for pathAnsi '%s'\n", pathAnsi.Get());

@@ -3197,8 +3197,8 @@ static void DuplicateInNewWindow(MainWindow* win) {
 static char* BrowseForFolderTemp(HWND hwnd, const char* initialFolder, const char* caption) {
     WCHAR dirW[MAX_PATH + 2] = {0};
 
-    AutoFreeWstr captionW = ToWstr(caption);
-    AutoFreeWstr initialFolderW = ToWstr(initialFolder);
+    AutoFreeWStr captionW = ToWStr(caption);
+    AutoFreeWStr initialFolderW = ToWStr(initialFolder);
     BROWSEINFOW bi{};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
@@ -3340,7 +3340,7 @@ static void OpenFile(MainWindow* win) {
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
 
-    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
+    AutoFreeWStr file = AllocArray<WCHAR>(ofn.nMaxFile);
     ofn.lpstrFile = file;
 
     if (!GetOpenFileNameW(&ofn)) {

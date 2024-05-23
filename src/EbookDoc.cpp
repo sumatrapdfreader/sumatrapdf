@@ -417,7 +417,7 @@ bool EpubDoc::Load() {
         tocPath.Set(str::Join(contentPath, s));
         isNcxToc = true;
     }
-    AutoFreeWstr readingDir(node->GetAttribute("page-progression-direction"));
+    AutoFreeWStr readingDir(node->GetAttribute("page-progression-direction"));
     if (readingDir) {
         isRtlDoc = str::EqI(readingDir, L"rtl");
     }
@@ -649,7 +649,7 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             }
             auto itemText = ToWStrTemp(text.Get());
             str::NormalizeWSInPlace(itemText);
-            AutoFreeWstr itemSrc;
+            AutoFreeWStr itemSrc;
             if (href) {
                 href.Set(NormalizeURL(href, pagePath));
                 itemSrc.Set(strconv::FromHtmlUtf8(href, str::Len(href)));
@@ -676,7 +676,7 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
         return false;
     }
 
-    AutoFreeWstr itemText, itemSrc;
+    AutoFreeWStr itemText, itemSrc;
     int level = 0;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
@@ -1014,7 +1014,7 @@ bool Fb2Doc::HasToc() const {
 }
 
 bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
-    AutoFreeWstr itemText;
+    AutoFreeWStr itemText;
     bool inTitle = false;
     int titleCount = 0;
     int level = 0;
@@ -1042,7 +1042,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             }
             inTitle = false;
         } else if (inTitle && tok->IsText()) {
-            AutoFreeWstr text(strconv::FromHtmlUtf8(tok->s, tok->sLen));
+            AutoFreeWStr text(strconv::FromHtmlUtf8(tok->s, tok->sLen));
             if (str::IsEmpty(itemText.Get())) {
                 itemText.Set(text.StealData());
             } else {
@@ -1642,8 +1642,8 @@ bool TxtDoc::ParseToc(EbookTocVisitor* visitor) {
     parser.Parse(htmlData.AsByteSlice(), CP_UTF8);
     HtmlElement* el = nullptr;
     while ((el = parser.FindElementByName("b", el)) != nullptr) {
-        AutoFreeWstr title(el->GetAttribute("title"));
-        AutoFreeWstr id(el->GetAttribute("id"));
+        AutoFreeWStr title(el->GetAttribute("title"));
+        AutoFreeWStr id(el->GetAttribute("id"));
         int level = 1;
         if (str::IsDigit(*title)) {
             const WCHAR* dot = SkipDigits(title);

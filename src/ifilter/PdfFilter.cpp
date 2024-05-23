@@ -95,7 +95,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
             m_state = PdfFilterState::Title;
             prop = m_pdfEngine->GetPropertyTemp(kPropAuthor);
             if (!str::IsEmpty(prop)) {
-                ws = ToWstr(prop);
+                ws = ToWStr(prop);
                 chunkValue.SetTextValue(PKEY_Author, ws);
                 return S_OK;
             }
@@ -109,7 +109,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
                 prop = m_pdfEngine->GetPropertyTemp(kPropSubject);
             }
             if (!str::IsEmpty(prop)) {
-                ws = ToWstr(prop);
+                ws = ToWStr(prop);
                 chunkValue.SetTextValue(PKEY_Title, ws);
                 return S_OK;
             }
