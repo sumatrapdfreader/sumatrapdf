@@ -79,22 +79,21 @@ WCHAR* StrToWStr(const char* src, uint codePage, int cbSrc) {
     return res;
 }
 
-// caller needs to free() the result
-char* ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
+TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
     CrashIf(!src);
     if (!src) {
         return nullptr;
     }
 
     if (codePageSrc == codePageDest) {
-        return str::Dup(src);
+        return str::DupTemp(src);
     }
 
     // 20127 is US-ASCII, which by definition is valid CP_UTF8
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
     // don't know what is CP_* name for it (if it exists)
     if ((codePageSrc == 20127) && (codePageDest == CP_UTF8)) {
-        return str::Dup(src);
+        return str::DupTemp(src);
     }
 
     WCHAR* tmp = StrToWStr(src, codePageSrc);
@@ -102,14 +101,16 @@ char* ToMultiByte(const char* src, uint codePageSrc, uint codePageDest) {
         return nullptr;
     }
     size_t tmpLen = str::Len(tmp);
-    char* res = WStrToCodePage(codePageDest, tmp, tmpLen);
+    Allocator* a = GetTempAllocator();
+    TempStr res = (TempStr)WStrToCodePage(codePageDest, tmp, tmpLen, a);
     str::Free(tmp);
     return res;
 }
 
 // caller needs to free() the result
 char* StrToUtf8(const char* src, uint codePage) {
-    return ToMultiByte(src, codePage, CP_UTF8);
+    TempStr res = ToMultiByteTemp(src, codePage, CP_UTF8);
+    return str::Dup(res);
 }
 
 // tries to convert a string in unknown encoding to utf8, as best

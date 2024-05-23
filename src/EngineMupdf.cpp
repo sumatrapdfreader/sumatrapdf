@@ -3280,7 +3280,8 @@ TempStr EngineMupdf::ExtractFontListTemp() {
 
         str::Str info;
         if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0)) {
-            info.Append(strconv::ToMultiByte(name, 936, CP_UTF8));
+            TempStr s = strconv::ToMultiByteTemp(name, 936, CP_UTF8);
+            info.Append(s);
         } else {
             info.Append(name);
         }

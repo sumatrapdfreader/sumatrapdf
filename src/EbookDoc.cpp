@@ -81,31 +81,33 @@ static bool IsValidUtf8(const char* string) {
     return true;
 }
 
-static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
-    AutoFree tmp;
+static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
+    WCHAR* ws = (WCHAR *)s;
     if (str::StartsWith(s, UTF16BE_BOM)) {
-        size_t byteCount = (str::Len((WCHAR*)s) + 1) * sizeof(WCHAR);
-        tmp.Set((char*)memdup(s, byteCount));
-        for (size_t i = 0; i + 1 < byteCount; i += 2) {
-            std::swap(tmp[i], tmp[i + 1]);
+        // convert from utf16 big endian to utf16
+        ws += 1; // skip bom
+        int nChars = str::Leni(ws);
+        char* tmp = (char*)ws;
+        for (int i = 0; i < nChars; i++) {
+            int idx = i * 2;
+            std::swap(tmp[idx], tmp[idx + 1]);
         }
-        s = tmp;
+        return ToUtf8Temp(ws); 
     }
     if (str::StartsWith(s, UTF16_BOM)) {
-        char* tmp2 = ToUtf8((WCHAR*)(s + 2));
-        return tmp2;
+        return ToUtf8Temp(ws + 1);
     }
     if (str::StartsWith(s, UTF8_BOM)) {
-        return str::Dup(s + 3);
+        return str::DupTemp(s + 3);
     }
     uint codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
     if (CP_ACP == codePage && IsValidUtf8(s)) {
-        return str::Dup(s);
+        return str::DupTemp(s);
     }
     if (CP_ACP == codePage) {
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
     }
-    return strconv::ToMultiByte(s, codePage, CP_UTF8);
+    return strconv::ToMultiByteTemp(s, codePage, CP_UTF8);
 }
 
 char* NormalizeURL(const char* url, const char* base) {
@@ -438,7 +440,7 @@ bool EpubDoc::Load() {
         if (!html) {
             continue;
         }
-        char* decoded = DecodeTextToUtf8(html, true);
+        TempStr decoded = DecodeTextToUtf8Temp(html, true);
         html.Free();
         if (!decoded) {
             continue;
@@ -449,7 +451,6 @@ bool EpubDoc::Load() {
         str::TransCharsInPlace(fullPath, "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", fullPath);
         htmlData.Append(decoded);
-        str::Free(decoded);
     }
 
     return htmlData.size() > 0;
@@ -846,13 +847,13 @@ bool Fb2Doc::Load() {
     if (data.empty()) {
         return false;
     }
-    AutoFreeStr tmp = DecodeTextToUtf8(data, true);
+    TempStr tmp = DecodeTextToUtf8Temp(data, true);
     data.Free();
     if (!tmp) {
         return false;
     }
 
-    ByteSlice data2(tmp.Get());
+    ByteSlice data2(tmp);
 
     HtmlPullParser parser(data2);
     HtmlToken* tok;
@@ -1186,7 +1187,7 @@ bool PalmDoc::Load() {
 
     ByteSlice text = mobiDoc->GetHtmlData();
     uint codePage = GuessTextCodepage((const char*)text.data(), text.size(), CP_ACP);
-    char* textUtf8 = strconv::ToMultiByte((const char*)text.data(), codePage, CP_UTF8);
+    TempStr textUtf8 = strconv::ToMultiByteTemp((const char*)text.data(), codePage, CP_UTF8);
 
     const char* start = textUtf8;
     const char* end = start + str::Len(textUtf8);
@@ -1206,7 +1207,6 @@ bool PalmDoc::Load() {
     }
 
     delete mobiDoc;
-    str::Free(textUtf8);
     return true;
 }
 
@@ -1267,11 +1267,11 @@ bool HtmlDoc::Load() {
         if (!data) {
             return false;
         }
-        char* decoded = DecodeTextToUtf8(data, true);
+        TempStr decoded = DecodeTextToUtf8Temp(data, true);
         if (!decoded) {
             return false;
         }
-        htmlData = decoded;
+        htmlData = str::Dup(decoded);
         data.Free();
     }
 
@@ -1528,19 +1528,21 @@ bool TxtDoc::Load() {
         return false;
     }
 
-    AutoFreeStr text(fileContent);
-    if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
+    AutoFreeStr toFree;
+    char* text = (char*)fileContent.Get();
+    if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(text, TCR_HEADER)) {
         char* s = DecompressTcrText(fileContent, fileContent.size());
         if (!s) {
             return false;
         }
-        text.TakeOwnershipOf(s);
+        text = s;
+        toFree = s;
     }
-    char* s = DecodeTextToUtf8(text.data);
+    TempStr s = DecodeTextToUtf8Temp(text);
     if (!s) {
         return false;
     }
-    text.TakeOwnershipOf(s);
+    text = s;
 
     int rfc;
     isRFC = str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc) != nullptr;
@@ -1550,7 +1552,7 @@ bool TxtDoc::Load() {
     int sectionCount = 0;
 
     htmlData.Append("<pre>");
-    char* d = text.data;
+    char* d = text;
     for (const char* curr = d; *curr; curr++) {
         // similar logic to LinkifyText in PdfEngine.cpp
         if (linkEnd == curr) {

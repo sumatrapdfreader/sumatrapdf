@@ -76,14 +76,14 @@ TempStr ChmFile::SmartToUtf8Temp(const char* s, uint overrideCP) const {
         return str::DupTemp(s + 3);
     }
     if (overrideCP) {
-        char* s2 = strconv::ToMultiByte(s, overrideCP, CP_UTF8);
-        return str::DupTemp(s2);
+        TempStr res = strconv::ToMultiByteTemp(s, overrideCP, CP_UTF8);
+        return res;
     }
     if (CP_UTF8 == codepage) {
         return str::DupTemp(s);
     }
-    char* s2 = strconv::ToMultiByte(s, codepage, CP_UTF8);
-    return s2;
+    TempStr res = strconv::ToMultiByteTemp(s, codepage, CP_UTF8);
+    return res;
 }
 
 WCHAR* ChmFile::SmartToWStr(const char* text) const {

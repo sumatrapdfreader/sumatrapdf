@@ -869,8 +869,8 @@ void StrTest() {
     }
 
     {
-        AutoFree tmp = strconv::ToMultiByte("abc", 9876, 123456);
-        utassert(!tmp.Get());
+        TempStr tmp = strconv::ToMultiByteTemp("abc", 9876, 123456);
+        utassert(!tmp);
     }
     {
         AutoFree tmp = strconv::WStrToCodePage(98765, L"abc");
