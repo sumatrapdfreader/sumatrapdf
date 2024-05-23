@@ -107,10 +107,8 @@ TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
     return res;
 }
 
-// caller needs to free() the result
-char* StrToUtf8(const char* src, uint codePage) {
-    TempStr res = ToMultiByteTemp(src, codePage, CP_UTF8);
-    return str::Dup(res);
+TempStr StrToUtf8Temp(const char* src, uint codePage) {
+    return ToMultiByteTemp(src, codePage, CP_UTF8);
 }
 
 // tries to convert a string in unknown encoding to utf8, as best

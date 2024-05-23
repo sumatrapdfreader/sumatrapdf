@@ -82,7 +82,7 @@ static bool IsValidUtf8(const char* string) {
 }
 
 static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
-    WCHAR* ws = (WCHAR *)s;
+    WCHAR* ws = (WCHAR*)s;
     if (str::StartsWith(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
         ws += 1; // skip bom
@@ -92,7 +92,7 @@ static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
             int idx = i * 2;
             std::swap(tmp[idx], tmp[idx + 1]);
         }
-        return ToUtf8Temp(ws); 
+        return ToUtf8Temp(ws);
     }
     if (str::StartsWith(s, UTF16_BOM)) {
         return ToUtf8Temp(ws + 1);

@@ -7,9 +7,9 @@ WCHAR* Utf8ToWStr(const char* s, size_t cb = (size_t)-1, Allocator* a = nullptr)
 char* WStrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
 
 char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
-char* ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest);
+TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest);
 WCHAR* StrToWStr(const char* src, uint codePage, int cbSrc = -1);
-char* StrToUtf8(const char* src, uint codePage);
+TempStr StrToUtf8Temp(const char* src, uint codePage);
 
 char* UnknownToUtf8(const char*);
 

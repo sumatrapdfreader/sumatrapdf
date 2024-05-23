@@ -906,10 +906,7 @@ TempStr MobiDoc::GetPropertyTemp(const char* name) {
     if (!v) {
         return nullptr;
     }
-    char* temp = strconv::StrToUtf8(v, textEncoding);
-    TempStr res = str::DupTemp(temp);
-    str::Free(temp);
-    return res;
+    return strconv::StrToUtf8Temp(v, textEncoding);
 }
 
 bool MobiDoc::HasToc() {
