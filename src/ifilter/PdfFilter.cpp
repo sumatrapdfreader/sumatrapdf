@@ -92,7 +92,7 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Author:
             m_state = PdfFilterState::Title;
-            prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::Author);
+            prop = m_pdfEngine->GetPropertyTemp(kPropAuthor);
             if (!str::IsEmpty(prop)) {
                 ws = ToWstr(prop);
                 chunkValue.SetTextValue(PKEY_Author, ws);
@@ -103,9 +103,9 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Title:
             m_state = PdfFilterState::Date;
-            prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::Title);
+            prop = m_pdfEngine->GetPropertyTemp(kPropTitle);
             if (!prop) {
-                prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::Subject);
+                prop = m_pdfEngine->GetPropertyTemp(kPropSubject);
             }
             if (!str::IsEmpty(prop)) {
                 ws = ToWstr(prop);
@@ -117,9 +117,9 @@ HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {
 
         case PdfFilterState::Date:
             m_state = PdfFilterState::Content;
-            prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::ModificationDate);
+            prop = m_pdfEngine->GetPropertyTemp(kPropModificationDate);
             if (!prop) {
-                prop = m_pdfEngine->GetPropertyTemp(DocumentProperty::CreationDate);
+                prop = m_pdfEngine->GetPropertyTemp(kPropCreationDate);
             }
             if (!str::IsEmpty(prop)) {
                 SYSTEMTIME systime;

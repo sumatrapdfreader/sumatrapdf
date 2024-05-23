@@ -3312,30 +3312,36 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     return JoinTemp(fonts, "\n");
 }
 
-static const char* DocumentPropertyToMupdfMetadataKey(DocumentProperty prop) {
-    switch (prop) {
-        case DocumentProperty::Title:
-            return FZ_META_INFO_TITLE;
-        case DocumentProperty::Author:
-            return FZ_META_INFO_AUTHOR;
-        case DocumentProperty::Subject:
-            return "info:Subject";
-        case DocumentProperty::PdfProducer:
-            return FZ_META_INFO_PRODUCER;
-        case DocumentProperty::CreatorApp:
-            return "info:Creator"; // not sure if the same meaning
-        case DocumentProperty::CreationDate:
-            return "info:CreationDate";
-        case DocumentProperty::ModificationDate:
-            return "info:ModDate";
+// TODO: map via char*[]
+static const char* DocumentPropertyToMupdfMetadataKey(const char* name) {
+    if (str::Eq(name, kPropTitle)) {
+        return FZ_META_INFO_TITLE;
+    }
+    if (str::Eq(name, kPropAuthor)) {
+        return FZ_META_INFO_AUTHOR;
+    }
+    if (str::Eq(name, kPropSubject)) {
+        return "info:Subject";
+    }
+    if (str::Eq(name, kPropPdfProducer)) {
+        return FZ_META_INFO_PRODUCER;
+    }
+    if (str::Eq(name, kPropCreatorApp)) {
+        return "info:Creator"; // not sure if the same meaning
+    }
+    if (str::Eq(name, kPropCreationDate)) {
+        return "info:CreationDate";
+    }
+    if (str::Eq(name, kPropModificationDate)) {
+        return "info:ModDate";
     }
     return nullptr;
 }
 
-TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
+TempStr EngineMupdf::GetPropertyTemp(const char* name) {
     auto ctx = Ctx();
 
-    const char* key = DocumentPropertyToMupdfMetadataKey(prop);
+    const char* key = DocumentPropertyToMupdfMetadataKey(name);
     if (key) {
         char buf[1024]{};
         int bufSize = (int)dimof(buf);
@@ -3354,7 +3360,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
         return nullptr;
     }
 
-    if (DocumentProperty::PdfVersion == prop) {
+    if (str::Eq(kPropPdfVersion, name)) {
         int major = pdfdoc->version / 10, minor = pdfdoc->version % 10;
         pdf_crypt* crypt = pdfdoc->crypt;
         if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
@@ -3368,7 +3374,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
         return str::FormatTemp("%d.%d", major, minor);
     }
 
-    if (DocumentProperty::PdfFileStructure == prop) {
+    if (str::Eq(kPropPdfFileStructure, name)) {
         StrVec fstruct;
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Linearized"))) {
             fstruct.Append("linearized");
@@ -3391,32 +3397,33 @@ TempStr EngineMupdf::GetPropertyTemp(DocumentProperty prop) {
         return JoinTemp(fstruct, ",");
     }
 
-    if (DocumentProperty::UnsupportedFeatures == prop) {
+    if (str::Eq(kPropUnsupportedFeatures, name)) {
         if (pdf_to_bool(ctx, pdf_dict_gets(ctx, pdfInfo, "Unsupported_XFA"))) {
             return (TempStr) "XFA";
         }
         return nullptr;
     }
 
-    if (DocumentProperty::FontList == prop) {
+    if (str::Eq(kPropFontList, name)) {
         return ExtractFontListTemp();
     }
 
     static struct {
-        DocumentProperty prop;
+        const char* prop;
         const char* name;
     } pdfPropNames[] = {
-        {DocumentProperty::Title, "Title"},
-        {DocumentProperty::Author, "Author"},
-        {DocumentProperty::Subject, "Subject"},
-        {DocumentProperty::Copyright, "Copyright"},
-        {DocumentProperty::CreationDate, "CreationDate"},
-        {DocumentProperty::ModificationDate, "ModDate"},
-        {DocumentProperty::CreatorApp, "Creator"},
-        {DocumentProperty::PdfProducer, "Producer"},
+        {kPropTitle, "Title"},
+        {kPropAuthor, "Author"},
+        {kPropSubject, "Subject"},
+        {kPropCopyright, "Copyright"},
+        {kPropCreationDate, "CreationDate"},
+        {kPropModificationDate, "ModDate"},
+        {kPropCreatorApp, "Creator"},
+        {kPropPdfProducer, "Producer"},
     };
     for (int i = 0; i < dimof(pdfPropNames); i++) {
-        if (pdfPropNames[i].prop == prop) {
+        auto s = pdfPropNames[i].prop;
+        if (str::Eq(s, name)) {
             // _info is guaranteed not to contain any indirect references,
             // so no need for ctxAccess
             pdf_obj* obj = pdf_dict_gets(ctx, pdfInfo, pdfPropNames[i].name);

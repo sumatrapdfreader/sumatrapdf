@@ -255,7 +255,7 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
 }
 
 static char* FormatPdfFileStructure(DocController* ctrl) {
-    TempStr fstruct = ctrl->GetPropertyTemp(DocumentProperty::PdfFileStructure);
+    TempStr fstruct = ctrl->GetPropertyTemp(kPropPdfFileStructure);
     if (str::IsEmpty(fstruct)) {
         return nullptr;
     }
@@ -506,20 +506,20 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
     layoutData->AddProperty(_TRA("File:"), path, true);
 
-    char* str = ctrl->GetPropertyTemp(DocumentProperty::Title);
+    char* str = ctrl->GetPropertyTemp(kPropTitle);
     layoutData->AddProperty(_TRA("Title:"), str);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::Subject);
+    str = ctrl->GetPropertyTemp(kPropSubject);
     layoutData->AddProperty(_TRA("Subject:"), str);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::Author);
+    str = ctrl->GetPropertyTemp(kPropAuthor);
     layoutData->AddProperty(_TRA("Author:"), str);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::Copyright);
+    str = ctrl->GetPropertyTemp(kPropCopyright);
     layoutData->AddProperty(_TRA("Copyright:"), str);
 
     DisplayModel* dm = ctrl->AsFixed();
-    str = ctrl->GetPropertyTemp(DocumentProperty::CreationDate);
+    str = ctrl->GetPropertyTemp(kPropCreationDate);
     TempStr strTemp;
     if (str && dm && kindEngineMupdf == dm->engineType) {
         strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
@@ -528,7 +528,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     }
     layoutData->AddProperty(_TRA("Created:"), strTemp);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::ModificationDate);
+    str = ctrl->GetPropertyTemp(kPropModificationDate);
     if (str && dm && kindEngineMupdf == dm->engineType) {
         strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
     } else {
@@ -536,13 +536,13 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     }
     layoutData->AddProperty(_TRA("Modified:"), strTemp);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::CreatorApp);
+    str = ctrl->GetPropertyTemp(kPropCreatorApp);
     layoutData->AddProperty(_TRA("Application:"), str);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::PdfProducer);
+    str = ctrl->GetPropertyTemp(kPropPdfProducer);
     layoutData->AddProperty(_TRA("PDF Producer:"), str);
 
-    str = ctrl->GetPropertyTemp(DocumentProperty::PdfVersion);
+    str = ctrl->GetPropertyTemp(kPropPdfVersion);
     layoutData->AddProperty(_TRA("PDF Version:"), str);
 
     str = FormatPdfFileStructure(ctrl);
@@ -584,7 +584,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
 
     if (extended) {
         // Note: FontList extraction can take a while
-        str = ctrl->GetPropertyTemp(DocumentProperty::FontList);
+        str = ctrl->GetPropertyTemp(kPropFontList);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(" ", " ");

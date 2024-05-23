@@ -321,18 +321,19 @@ bool ChmFile::Load(const char* path) {
     return true;
 }
 
-TempStr ChmFile::GetPropertyTemp(DocumentProperty prop) const {
+TempStr ChmFile::GetPropertyTemp(const char* name) const {
     char* result = nullptr;
-    if (DocumentProperty::Title == prop && title) {
-        result = SmartToUtf8(title);
-    } else if (DocumentProperty::CreatorApp == prop && creator) {
-        result = SmartToUtf8(creator);
+    if (str::Eq(kPropTitle, name) && title.CStr()) {
+        result = SmartToUtf8(title.CStr());
+    } else if (str::Eq(kPropCreatorApp, name) && creator.CStr()) {
+        result = SmartToUtf8(creator.CStr());
     }
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
-    if (result) {
-        // TODO: original code called str::RemoveCharsInPlace(result, "\n\r\t")
-        str::NormalizeWSInPlace(result);
+    if (!result) {
+        return nullptr;
     }
+    // TODO: original code called str::RemoveCharsInPlace(result, "\n\r\t")
+    str::NormalizeWSInPlace(result);
     TempStr temp = str::DupTemp(result);
     str::Free(result);
     return temp;

@@ -12,23 +12,28 @@ struct MainWindow;
 struct FileState;
 enum class DisplayMode;
 
-using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
+// TODO: those are implementd in EngineBase.cpp
+extern const char* kPropTitle;
+extern const char* kPropAuthor;
+extern const char* kPropCopyright;
+extern const char* kPropSubject;
+extern const char* kPropCreationDate;
+extern const char* kPropModificationDate;
+extern const char* kPropCreatorApp;
+extern const char* kPropUnsupportedFeatures;
+extern const char* kPropFontList;
+extern const char* kPropPdfVersion;
+extern const char* kPropPdfProducer;
+extern const char* kPropPdfFileStructure;
 
-// TODO: "format", "encryption", "info::Keywords" as in fz_lookup_metadata
-enum class DocumentProperty {
-    Title,
-    Author,
-    Copyright,
-    Subject,
-    CreationDate,
-    ModificationDate,
-    CreatorApp,
-    UnsupportedFeatures,
-    FontList,
-    PdfVersion,
-    PdfProducer,
-    PdfFileStructure,
-};
+// Props are stored in StrVec as key, value sequentially
+using Props = StrVec;
+int PropsCount(const Props& props);
+int FindPropIdx(const Props& props, const char* key);
+char* FindProp(const Props& props, const char* key);
+void AddProp(Props& props, const char* key, const char* val, bool replaceIfExists = false);
+
+using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
 
 struct ILinkHandler {
     virtual ~ILinkHandler(){};
@@ -77,7 +82,7 @@ struct DocController {
     virtual const char* GetFilePath() const = 0;
     virtual const char* GetDefaultFileExt() const = 0;
     virtual int PageCount() const = 0;
-    virtual TempStr GetPropertyTemp(DocumentProperty prop) = 0;
+    virtual TempStr GetPropertyTemp(const char* name) = 0;
 
     // page navigation (stateful)
     virtual int CurrentPageNo() const = 0;

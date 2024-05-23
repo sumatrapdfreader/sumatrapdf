@@ -1035,7 +1035,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
 
     TempStr docTitle = (TempStr) "";
     if (tab->ctrl) {
-        TempStr title = tab->ctrl->GetPropertyTemp(DocumentProperty::Title);
+        TempStr title = tab->ctrl->GetPropertyTemp(kPropTitle);
         if (title != nullptr) {
             str::NormalizeWSInPlace(title);
             docTitle = str::DupTemp(title);
@@ -1080,7 +1080,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     FindToggleMatchCase(win);
     UpdateFindbox(win);
 
-    HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle.Str());
+    HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle.CStr());
 
     // TODO: match either the toolbar (if shown) or background
     HwndScheduleRepaint(win->tabsCtrl->hwnd); // TODO: was RepaintNow() ?
@@ -1291,7 +1291,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         return;
     }
 
-    TempStr unsupported = win->ctrl->GetPropertyTemp(DocumentProperty::UnsupportedFeatures);
+    TempStr unsupported = win->ctrl->GetPropertyTemp(kPropUnsupportedFeatures);
     if (unsupported) {
         const char* s = _TRA("This document uses unsupported features (%s) and might not render properly");
         TempStr msg = str::FormatTemp(s, unsupported);
@@ -1357,7 +1357,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     // we postpone the reload until the next autorefresh event
     if (!ctrl && autoRefresh) {
         SetFrameTitleForTab(tab, true);
-        HwndSetText(win->hwndFrame, tab->frameTitle.Str());
+        HwndSetText(win->hwndFrame, tab->frameTitle.CStr());
         return;
     }
 

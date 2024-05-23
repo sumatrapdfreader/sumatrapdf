@@ -56,7 +56,7 @@ class EngineMupdf : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    TempStr GetPropertyTemp(DocumentProperty prop) override;
+    TempStr GetPropertyTemp(const char* name) override;
 
     bool BenchLoadPage(int pageNo) override;
 

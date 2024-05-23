@@ -245,27 +245,27 @@ bool PdfCreator::AddPageFromImageData(const ByteSlice& data, float imgDpi) const
     return ok;
 }
 
-bool PdfCreator::SetProperty(DocumentProperty prop, const char* value) const {
+bool PdfCreator::SetProperty(const char* prop, const char* value) const {
     if (!ctx || !doc) {
         return false;
     }
 
     // adapted from EngineMupdf::GetProperty
     static struct {
-        DocumentProperty prop;
+        const char* prop;
         const char* name;
     } pdfPropNames[] = {
-        {DocumentProperty::Title, "Title"},
-        {DocumentProperty::Author, "Author"},
-        {DocumentProperty::Subject, "Subject"},
-        {DocumentProperty::Copyright, "Copyright"},
-        {DocumentProperty::ModificationDate, "ModDate"},
-        {DocumentProperty::CreatorApp, "Creator"},
-        {DocumentProperty::PdfProducer, "Producer"},
+        {kPropTitle, "Title"},
+        {kPropAuthor, "Author"},
+        {kPropSubject, "Subject"},
+        {kPropCopyright, "Copyright"},
+        {kPropModificationDate, "ModDate"},
+        {kPropCreatorApp, "Creator"},
+        {kPropPdfProducer, "Producer"},
     };
     const char* name = nullptr;
     for (int i = 0; i < dimof(pdfPropNames) && !name; i++) {
-        if (pdfPropNames[i].prop == prop) {
+        if (str::Eq(pdfPropNames[i].prop, prop)) {
             name = pdfPropNames[i].name;
         }
     }
@@ -295,13 +295,13 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const char* value) const {
 }
 
 // clang-format off
-static DocumentProperty propsToCopy[] = {
-    DocumentProperty::Title,
-    DocumentProperty::Author,
-    DocumentProperty::Subject,
-    DocumentProperty::Copyright,
-    DocumentProperty::ModificationDate,
-    DocumentProperty::CreatorApp
+static const char* propsToCopy[] = {
+    kPropTitle,
+    kPropAuthor,
+    kPropSubject,
+    kPropCopyright,
+    kPropModificationDate,
+    kPropCreatorApp
 };
 // clang-format on
 
@@ -345,7 +345,7 @@ bool PdfCreator::SaveToFile(const char* filePath) const {
     }
 
     if (gPdfProducer) {
-        SetProperty(DocumentProperty::PdfProducer, gPdfProducer);
+        SetProperty(kPropPdfProducer, gPdfProducer);
     }
 
     fz_try(ctx) {

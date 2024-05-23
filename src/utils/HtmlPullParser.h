@@ -118,3 +118,4 @@ int HtmlEntityNameToRune(const WCHAR* name, size_t nameLen);
 const char* ResolveHtmlEntity(const char* s, size_t len, int& rune);
 const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc);
 char* ResolveHtmlEntities(const char* s, size_t len);
+TempStr ResolveHtmlEntities(const char* s, size_t len);

@@ -17,7 +17,7 @@ class PdfCreator {
     bool AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi = 0);
     bool AddPageFromImageData(const ByteSlice& data, float imgDpi = 0) const;
 
-    bool SetProperty(DocumentProperty prop, const char* value) const;
+    bool SetProperty(const char* prop, const char* value) const;
     bool CopyProperties(EngineBase* engine) const;
 
     bool SaveToFile(const char* filePath) const;

@@ -123,7 +123,7 @@ struct AutoFree {
         return data;
     }
 
-    char* Str() const {
+    char* CStr() const {
         return data;
     }
 

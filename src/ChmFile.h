@@ -30,7 +30,7 @@ struct ChmFile {
     char* SmartToUtf8(const char* text, uint overrideCP = 0) const;
     WCHAR* SmartToWstr(const char* text) const;
 
-    TempStr GetPropertyTemp(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(const char* name) const;
     const char* GetHomePath() const;
     void GetAllPaths(StrVec*) const;
 

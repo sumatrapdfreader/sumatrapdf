@@ -492,7 +492,7 @@ class EngineImage : public EngineImages {
 
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(DocumentProperty prop) override;
+    TempStr GetPropertyTemp(const char* name) override;
 
     static EngineBase* CreateFromFile(const char* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -667,23 +667,26 @@ static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     return res;
 }
 
-TempStr EngineImage::GetPropertyTemp(DocumentProperty prop) {
-    switch (prop) {
-        case DocumentProperty::Title:
-            return GetImagePropertyTemp(image, PropertyTagImageDescription, PropertyTagXPTitle);
-        case DocumentProperty::Subject:
-            return GetImagePropertyTemp(image, PropertyTagXPSubject);
-        case DocumentProperty::Author:
-            return GetImagePropertyTemp(image, PropertyTagArtist, PropertyTagXPAuthor);
-        case DocumentProperty::Copyright:
-            return GetImagePropertyTemp(image, PropertyTagCopyright);
-        case DocumentProperty::CreationDate:
-            return GetImagePropertyTemp(image, PropertyTagDateTime, PropertyTagExifDTDigitized);
-        case DocumentProperty::CreatorApp:
-            return GetImagePropertyTemp(image, PropertyTagSoftwareUsed);
-        default:
-            return nullptr;
+TempStr EngineImage::GetPropertyTemp(const char* name) {
+    if (str::Eq(name, kPropTitle)) {
+        return GetImagePropertyTemp(image, PropertyTagImageDescription, PropertyTagXPTitle);
     }
+    if (str::Eq(name, kPropSubject)) {
+        return GetImagePropertyTemp(image, PropertyTagXPSubject);
+    }
+    if (str::Eq(name, kPropAuthor)) {
+        return GetImagePropertyTemp(image, PropertyTagArtist, PropertyTagXPAuthor);
+    }
+    if (str::Eq(name, kPropCopyright)) {
+        return GetImagePropertyTemp(image, PropertyTagCopyright);
+    }
+    if (str::Eq(name, kPropCreationDate)) {
+        return GetImagePropertyTemp(image, PropertyTagDateTime, PropertyTagExifDTDigitized);
+    }
+    if (str::Eq(name, kPropCreatorApp)) {
+        return GetImagePropertyTemp(image, PropertyTagSoftwareUsed);
+    }
+    return nullptr;
 }
 
 Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
@@ -812,7 +815,7 @@ class EngineImageDir : public EngineImages {
     }
     bool SaveFileAs(const char* copyFileName) override;
 
-    TempStr GetPropertyTemp(DocumentProperty) override {
+    TempStr GetPropertyTemp(const char*) override {
         return nullptr;
     }
 
@@ -1092,7 +1095,7 @@ class EngineCbx : public EngineImages {
 
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(DocumentProperty prop) override;
+    TempStr GetPropertyTemp(const char* name) override;
 
     TocTree* GetToc() override;
 
@@ -1288,28 +1291,33 @@ ByteSlice EngineCbx::GetImageData(int pageNo) {
     return d;
 }
 
-TempStr EngineCbx::GetPropertyTemp(DocumentProperty prop) {
-    switch (prop) {
-        case DocumentProperty::Title:
-            return cip.propTitle;
-        case DocumentProperty::Author: {
-            if (cip.propAuthors.Size() == 0) {
-                return nullptr;
-            }
-            return JoinTemp(cip.propAuthors, ", ");
-        }
-        case DocumentProperty::CreationDate:
-            return cip.propDate;
-        case DocumentProperty::ModificationDate:
-            return cip.propModDate;
-        case DocumentProperty::CreatorApp:
-            return cip.propCreator;
-        // TODO: replace with Prop_Summary
-        case DocumentProperty::Subject:
-            return cip.propSummary;
-        default:
-            return nullptr;
+TempStr EngineCbx::GetPropertyTemp(const char* name) {
+    if (str::Eq(name, kPropTitle)) {
+        return cip.propTitle;
     }
+
+    if (str::Eq(name, kPropAuthor)) {
+        if (cip.propAuthors.Size() == 0) {
+            return nullptr;
+        }
+        return JoinTemp(cip.propAuthors, ", ");
+    }
+
+    if (str::Eq(name, kPropCreationDate)) {
+        return cip.propDate;
+    }
+    if (str::Eq(name, kPropModificationDate)) {
+        return cip.propModDate;
+    }
+    if (str::Eq(name, kPropCreatorApp)) {
+        return cip.propCreator;
+    }
+    if (str::Eq(name, kPropSubject)) {
+        // TODO: replace with Prop_Summary
+        return cip.propSummary;
+    }
+
+    return nullptr;
 }
 
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {

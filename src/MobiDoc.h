@@ -25,11 +25,7 @@ class MobiDoc {
 
     HuffDicDecompressor* huffDic = nullptr;
 
-    struct Metadata {
-        DocumentProperty prop;
-        char* value;
-    };
-    Vec<Metadata> props;
+    StrVec props;
 
     explicit MobiDoc(const char* filePath);
 
@@ -53,7 +49,7 @@ class MobiDoc {
     const char* GetFileName() const {
         return fileName;
     }
-    TempStr GetPropertyTemp(DocumentProperty prop);
+    TempStr GetPropertyTemp(const char* name);
     PdbDocType GetDocType() const {
         return docType;
     }

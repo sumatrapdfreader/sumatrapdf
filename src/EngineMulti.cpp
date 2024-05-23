@@ -54,7 +54,7 @@ class EngineMulti : public EngineBase {
     PageText ExtractPageText(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    TempStr GetPropertyTemp(DocumentProperty prop) override;
+    TempStr GetPropertyTemp(const char* name) override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -141,7 +141,7 @@ bool EngineMulti::HasClipOptimizations(int pageNo) {
     return e->HasClipOptimizations(pageNo);
 }
 
-TempStr EngineMulti::GetPropertyTemp(DocumentProperty prop) {
+TempStr EngineMulti::GetPropertyTemp(const char* name) {
     return nullptr;
 }
 

@@ -13,21 +13,18 @@
 
 #include "utils/Log.h"
 
-bool IsExternalUrl(const WCHAR* url) {
-    return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
-}
-
-bool IsExternalUrl(const char* url) {
-    return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
-}
-
-void FreePageText(PageText* pageText) {
-    str::Free(pageText->text);
-    free((void*)pageText->coords);
-    pageText->text = nullptr;
-    pageText->coords = nullptr;
-    pageText->len = 0;
-}
+const char* kPropTitle = "title";
+const char* kPropAuthor = "author";
+const char* kPropCopyright = "copyright";
+const char* kPropSubject = "subject";
+const char* kPropCreationDate = "creationDate";
+const char* kPropModificationDate = "modDate";
+const char* kPropCreatorApp = "creatorApp";
+const char* kPropUnsupportedFeatures = "unsupportedFeatures";
+const char* kPropFontList = "fontList";
+const char* kPropPdfVersion = "pdfVersion";
+const char* kPropPdfProducer = "pdfProducer";
+const char* kPropPdfFileStructure = "pdfFileStructure";
 
 Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
@@ -54,6 +51,64 @@ static Kind destKinds[] = {
     kindDestinationMupdf
 };
 // clang-format on
+
+int PropsCount(const Props& props) {
+    int n = props.Size();
+    CrashIf(n < 0 || (n % 2) != 0);
+    return n / 2;
+}
+
+int FindPropIdx(const Props& props, const char* key) {
+    int n = PropsCount(props);
+    for (int i = 0; i < n; i++) {
+        int idx = i * 2;
+        char* v = props.At(idx);
+        if (str::Eq(v, key)) {
+            return idx;
+        }
+    }
+    return -1;
+}
+
+char* FindProp(const Props& props, const char* key) {
+    int idx = FindPropIdx(props, key);
+    if (idx < 0) {
+        return nullptr;
+    }
+    char* v = props.At(idx);
+    return v;
+}
+
+void AddProp(Props& props, const char* key, const char* val, bool replaceIfExists) {
+    CrashIf(!key || !val);
+    int idx = FindPropIdx(props, key);
+    if (idx < 0) {
+        // doesn't exsit
+        props.Append(key);
+        props.Append(val);
+        return;
+    }
+    if (!replaceIfExists) {
+        return;
+    }
+    props.SetAt(idx + 1, val);
+}
+
+bool IsExternalUrl(const WCHAR* url) {
+    return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
+}
+
+bool IsExternalUrl(const char* url) {
+    return str::StartsWithI(url, "http://") || str::StartsWithI(url, "https://") || str::StartsWithI(url, "mailto:");
+}
+
+void FreePageText(PageText* pageText) {
+    str::Free(pageText->text);
+    free((void*)pageText->coords);
+    pageText->text = nullptr;
+    pageText->coords = nullptr;
+    pageText->len = 0;
+}
 
 PageDestination::~PageDestination() {
     free(value);
@@ -367,6 +422,20 @@ bool EngineBase::HasToc() {
 
 TocTree* EngineBase::GetToc() {
     return nullptr;
+}
+
+// default implementation that just sets wanted keys
+void EngineBase::GetProperties(const StrVec&, StrVec&) {
+#if 0
+    for (auto& key : keys) {
+        TempStr val = GetPropertyTemp(key);
+        if (!val) {
+            continue;
+        }
+        keyValueOut.Append(key);
+        keyValueOut.Append(val);
+    }
+#endif
 }
 
 bool EngineBase::HasPageLabels() const {

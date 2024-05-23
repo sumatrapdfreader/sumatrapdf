@@ -464,7 +464,12 @@ class EngineBase {
     bool IsImageCollection() const;
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual TempStr GetPropertyTemp(DocumentProperty prop) = 0;
+    virtual TempStr GetPropertyTemp(const char* name) = 0;
+
+    // keys are names of properties the caller wants. If given, we append those
+    // proerties in this order and potentially add more
+    // if keys are empty, we put them in order we want
+    virtual void GetProperties(const StrVec& keys, StrVec& keyValOut);
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

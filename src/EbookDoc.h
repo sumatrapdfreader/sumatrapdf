@@ -14,17 +14,6 @@ struct ImageData {
 
 char* NormalizeURL(const char* url, const char* base);
 
-struct PropertyMap {
-    char* values[(int)DocumentProperty::PdfVersion] = {0};
-
-    ~PropertyMap();
-    int Find(DocumentProperty prop) const;
-
-  public:
-    void SetVal(DocumentProperty prop, char* val, bool setIfExists = false);
-    TempStr GetTemp(DocumentProperty prop) const;
-};
-
 /* ********** EPUB ********** */
 
 class EpubDoc {
@@ -37,7 +26,7 @@ class EpubDoc {
     Vec<ImageData> images;
     AutoFreeStr tocPath;
     AutoFreeStr fileName;
-    PropertyMap props;
+    Props props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
 
@@ -56,7 +45,7 @@ class EpubDoc {
     ByteSlice* GetImageData(const char* fileName, const char* pagePath);
     ByteSlice GetFileData(const char* relPath, const char* pagePath);
 
-    TempStr GetPropertyTemp(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(const char* name) const;
     const char* GetFileName() const;
     bool IsRTL() const;
 
@@ -81,7 +70,7 @@ class Fb2Doc {
     str::Str xmlData;
     Vec<ImageData> images;
     AutoFree coverImage;
-    PropertyMap props;
+    Props props;
     bool isZipped = false;
     bool hasToc = false;
 
@@ -97,7 +86,7 @@ class Fb2Doc {
     ByteSlice* GetImageData(const char* fileName) const;
     ByteSlice* GetCoverImage() const;
 
-    TempStr GetPropertyTemp(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(const char* name) const;
     const char* GetFileName() const;
     bool IsZipped() const;
 
@@ -127,7 +116,7 @@ class PalmDoc {
 
     ByteSlice GetHtmlData() const;
 
-    TempStr GetPropertyTemp(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(const char* name) const;
     const char* GetFileName() const;
 
     bool HasToc() const;
@@ -144,7 +133,7 @@ class HtmlDoc {
     ByteSlice htmlData;
     AutoFreeStr pagePath;
     Vec<ImageData> images;
-    PropertyMap props;
+    Props props;
 
     bool Load();
     ByteSlice LoadURL(const char* url);
@@ -158,7 +147,7 @@ class HtmlDoc {
     ByteSlice* GetImageData(const char* fileName);
     ByteSlice GetFileData(const char* relPath);
 
-    TempStr GetPropertyTemp(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(const char* name) const;
     const char* GetFileName() const;
 
     static bool IsSupportedFileType(Kind kind);
@@ -179,7 +168,7 @@ class TxtDoc {
 
     ByteSlice GetHtmlData() const;
 
-    TempStr GetPropertyTemp(DocumentProperty prop) const;
+    TempStr GetPropertyTemp(const char* name) const;
     const char* GetFileName() const;
 
     bool IsRFC() const;

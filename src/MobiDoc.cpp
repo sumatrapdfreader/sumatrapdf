@@ -472,9 +472,6 @@ MobiDoc::~MobiDoc() {
     delete huffDic;
     delete doc;
     delete pdbReader;
-    for (size_t i = 0; i < props.size(); i++) {
-        free(props.at(i).value);
-    }
 }
 
 bool MobiDoc::ParseHeader() {
@@ -544,11 +541,9 @@ bool MobiDoc::ParseHeader() {
         logf("DRM is unsupported\n");
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
-        Metadata prop;
-        prop.prop = DocumentProperty::UnsupportedFeatures;
-        char* tmp = strconv::WstrToCodePage(mobiHdr.textEncoding, L"DRM");
-        prop.value = tmp;
-        props.Append(prop);
+        char* v = strconv::WstrToCodePage(mobiHdr.textEncoding, L"DRM");
+        AddProp(props, kPropUnsupportedFeatures, v);
+        str::Free(v);
     }
     textEncoding = mobiHdr.textEncoding;
 
@@ -646,22 +641,22 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
         }
         d.Skip(length - 8);
 
-        Metadata prop;
+        const char* prop;
         switch (type) {
             case 100:
-                prop.prop = DocumentProperty::Author;
+                prop = kPropAuthor;
                 break;
             case 105:
-                prop.prop = DocumentProperty::Subject;
+                prop = kPropSubject;
                 break;
             case 106:
-                prop.prop = DocumentProperty::CreationDate;
+                prop = kPropCreationDate;
                 break;
             case 108:
-                prop.prop = DocumentProperty::CreatorApp;
+                prop = kPropCreatorApp;
                 break;
             case 109:
-                prop.prop = DocumentProperty::Copyright;
+                prop = kPropCopyright;
                 break;
             case 201:
                 if (length == 12 && imageFirstRec) {
@@ -670,14 +665,14 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
                 }
                 continue;
             case 503:
-                prop.prop = DocumentProperty::Title;
+                prop = kPropTitle;
                 break;
             default:
                 continue;
         }
-        prop.value = str::Dup((char*)(data + d.Offset() - length + 8), length - 8);
-        if (prop.value) {
-            props.Append(prop);
+        TempStr value = str::DupTemp((char*)(data + d.Offset() - length + 8), length - 8);
+        if (!str::IsEmpty(value)) {
+            AddProp(props, prop, value);
         }
     }
 
@@ -905,16 +900,15 @@ ByteSlice MobiDoc::GetHtmlData() const {
     return {};
 }
 
-TempStr MobiDoc::GetPropertyTemp(DocumentProperty prop) {
-    for (auto& p : props) {
-        if (p.prop == prop) {
-            char* temp = strconv::StrToUtf8(p.value, textEncoding);
-            TempStr res = str::DupTemp(temp);
-            str::Free(temp);
-            return res;
-        }
+TempStr MobiDoc::GetPropertyTemp(const char* name) {
+    char* v = FindProp(props, name);
+    if (!v) {
+        return nullptr;
     }
-    return nullptr;
+    char* temp = strconv::StrToUtf8(v, textEncoding);
+    TempStr res = str::DupTemp(temp);
+    str::Free(temp);
+    return res;
 }
 
 bool MobiDoc::HasToc() {

@@ -75,7 +75,7 @@ struct DisplayModel : DocController {
     const char* GetFilePath() const override;
     const char* GetDefaultFileExt() const override;
     int PageCount() const override;
-    TempStr GetPropertyTemp(DocumentProperty prop) override;
+    TempStr GetPropertyTemp(const char* name) override;
 
     // page navigation (stateful)
     int CurrentPageNo() const override;

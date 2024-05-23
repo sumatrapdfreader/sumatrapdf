@@ -237,42 +237,6 @@ static ByteSlice DecodeDataURI(const char* url) {
     return {(u8*)str::Dup(data), str::Len(data)};
 }
 
-PropertyMap::~PropertyMap() {
-    int n = dimofi(values);
-    for (int i = 0; i < n; i++) {
-        str::Free(values[i]);
-    }
-}
-
-int PropertyMap::Find(DocumentProperty prop) const {
-    int n = (int)(prop);
-    if ((n >= 0) && (n < dimofi(values))) {
-        return n;
-    }
-    return -1;
-}
-
-// takes ownership of val
-void PropertyMap::SetVal(DocumentProperty prop, char* val, bool setIfExists) {
-    int idx = Find(prop);
-    CrashIf(-1 == idx);
-    char* oldVal = values[idx];
-    if (idx < 0 || (oldVal && !setIfExists)) {
-        str::Free(val);
-        return;
-    }
-    values[idx] = val;
-    str::Free(oldVal);
-}
-
-TempStr PropertyMap::GetTemp(DocumentProperty prop) const {
-    int idx = Find(prop);
-    if (idx >= 0 && values[idx]) {
-        return values[idx];
-    }
-    return nullptr;
-}
-
 /* ********** EPUB ********** */
 
 const char* EPUB_CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container";
@@ -491,13 +455,13 @@ bool EpubDoc::Load() {
 }
 
 void EpubDoc::ParseMetadata(const char* content) {
-    struct {
-        DocumentProperty prop;
+    static struct {
+        const char* prop;
         const char* name;
     } metadataMap[] = {
-        {DocumentProperty::Title, "dc:title"},         {DocumentProperty::Author, "dc:creator"},
-        {DocumentProperty::CreationDate, "dc:date"},   {DocumentProperty::ModificationDate, "dcterms:modified"},
-        {DocumentProperty::Subject, "dc:description"}, {DocumentProperty::Copyright, "dc:rights"},
+        {kPropTitle, "dc:title"},         {kPropAuthor, "dc:creator"},
+        {kPropCreationDate, "dc:date"},   {kPropModificationDate, "dcterms:modified"},
+        {kPropSubject, "dc:description"}, {kPropCopyright, "dc:rights"},
     };
 
     HtmlPullParser pullParser(content, str::Len(content));
@@ -525,7 +489,8 @@ void EpubDoc::ParseMetadata(const char* content) {
                 if (tok && tok->IsText()) {
                     auto prop = metadataMap[i].prop;
                     char* val = ResolveHtmlEntities(tok->s, tok->sLen);
-                    props.SetVal(prop, val);
+                    AddProp(props, prop, val);
+                    str::Free(val);
                 }
                 break;
             }
@@ -605,8 +570,8 @@ ByteSlice EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     return zip->GetFileDataByName(url);
 }
 
-TempStr EpubDoc::GetPropertyTemp(DocumentProperty prop) const {
-    return props.GetTemp(prop);
+TempStr EpubDoc::GetPropertyTemp(const char* name) const {
+    return FindProp(props, name);
 }
 
 const char* EpubDoc::GetFileName() const {
@@ -905,7 +870,8 @@ bool Fb2Doc::Load() {
             }
             if (tok->IsText()) {
                 char* val = ResolveHtmlEntities(tok->s, tok->sLen);
-                props.SetVal(DocumentProperty::Title, val);
+                AddProp(props, kPropTitle, val);
+                str::Free(val);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS)) {
             AutoFreeStr docAuthor;
@@ -922,23 +888,25 @@ bool Fb2Doc::Load() {
             }
             if (docAuthor) {
                 str::NormalizeWSInPlace(docAuthor);
-                if (!str::IsEmpty(docAuthor.Get())) {
-                    char* val = docAuthor.Release();
-                    bool setIfExists = inTitleInfo != 0;
-                    props.SetVal(DocumentProperty::Author, val, setIfExists);
+                if (!str::IsEmpty(docAuthor.CStr())) {
+                    char* val = docAuthor.CStr();
+                    bool replaceIfExists = inTitleInfo != 0;
+                    AddProp(props, kPropAuthor, val, replaceIfExists);
                 }
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
             AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS);
             if (attr) {
                 char* val = ResolveHtmlEntities(attr->val, attr->valLen);
-                props.SetVal(DocumentProperty::CreationDate, val);
+                AddProp(props, kPropCreationDate, val);
+                str::Free(val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
             AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS);
             if (attr) {
                 char* val = ResolveHtmlEntities(attr->val, attr->valLen);
-                props.SetVal(DocumentProperty::ModificationDate, val);
+                AddProp(props, kPropModificationDate, val);
+                str::Free(val);
             }
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("program-used", FB2_MAIN_NS)) {
             if ((tok = parser.Next()) == nullptr || tok->IsError()) {
@@ -946,7 +914,8 @@ bool Fb2Doc::Load() {
             }
             if (tok->IsText()) {
                 char* val = ResolveHtmlEntities(tok->s, tok->sLen);
-                props.SetVal(DocumentProperty::CreatorApp, val);
+                AddProp(props, kPropCreatorApp, val);
+                str::Free(val);
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("coverpage", FB2_MAIN_NS)) {
             tok = parser.Next();
@@ -1016,8 +985,8 @@ ByteSlice* Fb2Doc::GetCoverImage() const {
     return GetImageData(coverImage);
 }
 
-TempStr Fb2Doc::GetPropertyTemp(DocumentProperty prop) const {
-    return props.GetTemp(prop);
+TempStr Fb2Doc::GetPropertyTemp(const char* name) const {
+    return FindProp(props, name);
 }
 
 const char* Fb2Doc::GetFileName() const {
@@ -1233,7 +1202,7 @@ ByteSlice PalmDoc::GetHtmlData() const {
     return htmlData.AsByteSlice();
 }
 
-TempStr PalmDoc::GetPropertyTemp(DocumentProperty) const {
+TempStr PalmDoc::GetPropertyTemp(const char*) const {
     return nullptr;
 }
 
@@ -1305,7 +1274,8 @@ bool HtmlDoc::Load() {
             tok = parser.Next();
             if (tok && tok->IsText()) {
                 char* val = ResolveHtmlEntities(tok->s, tok->sLen);
-                props.SetVal(DocumentProperty::Title, val);
+                AddProp(props, kPropTitle, val);
+                str::Free(val);
             }
         } else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
             AttrInfo* attrName = tok->GetAttrByName("name");
@@ -1314,13 +1284,16 @@ bool HtmlDoc::Load() {
                 /* ignore this tag */;
             } else if (attrName->ValIs("author")) {
                 char* val = ResolveHtmlEntities(attrValue->val, attrValue->valLen);
-                props.SetVal(DocumentProperty::Author, val);
+                AddProp(props, kPropAuthor, val);
+                str::Free(val);
             } else if (attrName->ValIs("date")) {
                 char* val = ResolveHtmlEntities(attrValue->val, attrValue->valLen);
-                props.SetVal(DocumentProperty::CreationDate, val);
+                AddProp(props, kPropCreationDate, val);
+                str::Free(val);
             } else if (attrName->ValIs("copyright")) {
                 char* val = ResolveHtmlEntities(attrValue->val, attrValue->valLen);
-                props.SetVal(DocumentProperty::Copyright, val);
+                AddProp(props, kPropCopyright, val);
+                str::Free(val);
             }
         }
     }
@@ -1370,8 +1343,8 @@ ByteSlice HtmlDoc::LoadURL(const char* url) {
     return file::ReadFile(path);
 }
 
-TempStr HtmlDoc::GetPropertyTemp(DocumentProperty prop) const {
-    return props.GetTemp(prop);
+TempStr HtmlDoc::GetPropertyTemp(const char* name) const {
+    return FindProp(props, name);
 }
 
 const char* HtmlDoc::GetFileName() const {
@@ -1629,7 +1602,7 @@ ByteSlice TxtDoc::GetHtmlData() const {
     return htmlData.AsByteSlice();
 }
 
-TempStr TxtDoc::GetPropertyTemp(DocumentProperty) const {
+TempStr TxtDoc::GetPropertyTemp(const char*) const {
     return nullptr;
 }
 

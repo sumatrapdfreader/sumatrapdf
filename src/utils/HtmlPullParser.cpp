@@ -187,6 +187,11 @@ char* ResolveHtmlEntities(const char* s, size_t len) {
     return (char*)tmp;
 }
 
+TempStr ResolveHtmlEntitiesTemp(const char* s, size_t len) {
+    auto res = ResolveHtmlEntities(s, s + len, GetTempAllocator());
+    return (TempStr)res;
+}
+
 bool AttrInfo::NameIs(const char* s) const {
     return str::EqNIx(name, nameLen, s);
 }
