@@ -3398,14 +3398,10 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
     }
 
     static const char* pdfPropNames[] = {
-        kPropTitle, "Title",
-        kPropAuthor, "Author",
-        kPropSubject, "Subject",
-        kPropCopyright, "Copyright",
-        kPropCreationDate, "CreationDate",
-        kPropModificationDate, "ModDate",
-        kPropCreatorApp, "Creator",
-        kPropPdfProducer, "Producer",
+        kPropTitle,        "Title",        kPropAuthor,           "Author",
+        kPropSubject,      "Subject",      kPropCopyright,        "Copyright",
+        kPropCreationDate, "CreationDate", kPropModificationDate, "ModDate",
+        kPropCreatorApp,   "Creator",      kPropPdfProducer,      "Producer",
         nullptr,
     };
     const char* pdfPropName = GetMatchingString(pdfPropNames, name);

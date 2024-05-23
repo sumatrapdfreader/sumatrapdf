@@ -57,8 +57,8 @@ struct PropertiesLayout {
     }
 
     void AddProperty(const char* key, const char* value, bool isPath = false) {
-        // don't display value-less properties
         if (str::IsEmpty(value)) {
+            // don't display value-less properties
             return;
         }
         strings.Append(key);
@@ -253,35 +253,6 @@ static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) 
     char* strHeight = str::FormatFloatWithThousandSepTemp(height);
 
     return str::FormatTemp("%s x %s %s%s", strWidth, strHeight, unit, formatName);
-}
-
-static char* FormatPdfFileStructure(DocController* ctrl) {
-    TempStr fstruct = ctrl->GetPropertyTemp(kPropPdfFileStructure);
-    if (str::IsEmpty(fstruct)) {
-        return nullptr;
-    }
-    StrVec parts;
-    Split(parts, fstruct, ",", true);
-
-    StrVec props;
-
-    if (parts.Contains("linearized")) {
-        props.Append(_TRA("Fast Web View"));
-    }
-    if (parts.Contains("tagged")) {
-        props.Append(_TRA("Tagged PDF"));
-    }
-    if (parts.Contains("PDFX")) {
-        props.Append("PDF/X (ISO 15930)");
-    }
-    if (parts.Contains("PDFA1")) {
-        props.Append("PDF/A (ISO 19005)");
-    }
-    if (parts.Contains("PDFE1")) {
-        props.Append("PDF/E (ISO 24517)");
-    }
-
-    return Join(props, ", ");
 }
 
 // returns a list of permissions denied by this document
@@ -522,8 +493,46 @@ static void AddPropTranslated(PropertiesLayout* layoutData, const char* propName
 }
 
 static void AddPropTranslated(DocController* ctrl, PropertiesLayout* layoutData, const char* propName) {
-    TempStr val = ctrl->GetPropertyTemp(kPropTitle);
-    AddPropTranslated(layoutData, kPropTitle, val);
+    TempStr val = ctrl->GetPropertyTemp(propName);
+    AddPropTranslated(layoutData, propName, val);
+}
+
+static void AddPdfFileStructure(DocController* ctrl, PropertiesLayout* layoutData) {
+    TempStr fstruct = ctrl->GetPropertyTemp(kPropPdfFileStructure);
+    if (str::IsEmpty(fstruct)) {
+        bool isPDF = str::EndsWithI(ctrl->GetFilePath(), ".pdf");
+        if (isPDF) {
+            layoutData->AddProperty(_TRA("Fast Web View"), _TRA("No"));
+        }
+        return;
+    }
+    StrVec parts;
+    Split(parts, fstruct, ",", true);
+
+    StrVec props;
+
+    const char* linearized = _TRA("No");
+    if (parts.Contains("linearized")) {
+        props.Append(_TRA("Fast Web View"));
+        linearized = _TRA("Yes");
+    }
+    layoutData->AddProperty(_TRA("Fast Web View"), linearized);
+
+    if (parts.Contains("tagged")) {
+        props.Append(_TRA("Tagged PDF"));
+    }
+    if (parts.Contains("PDFX")) {
+        props.Append("PDF/X (ISO 15930)");
+    }
+    if (parts.Contains("PDFA1")) {
+        props.Append("PDF/A (ISO 19005)");
+    }
+    if (parts.Contains("PDFE1")) {
+        props.Append("PDF/E (ISO 24517)");
+    }
+
+    TempStr val = JoinTemp(props, ", ");
+    layoutData->AddProperty(_TRA("PDF Optimizations:"), val);
 }
 
 static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool extended) {
@@ -532,37 +541,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
     layoutData->AddProperty(_TRA("File:"), path, true);
 
-    AddPropTranslated(ctrl, layoutData, kPropTitle);
-    AddPropTranslated(ctrl, layoutData, kPropSubject);
-    AddPropTranslated(ctrl, layoutData, kPropAuthor);
-    AddPropTranslated(ctrl, layoutData, kPropCopyright);
-
     DisplayModel* dm = ctrl->AsFixed();
-    TempStr str = ctrl->GetPropertyTemp(kPropCreationDate);
-    TempStr strTemp;
-    if (str && dm && kindEngineMupdf == dm->engineType) {
-        strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
-    } else {
-        strTemp = ConvDateToDisplayTemp(str, IsoDateParse);
-    }
-    layoutData->AddProperty(_TRA("Created:"), strTemp);
-
-    str = ctrl->GetPropertyTemp(kPropModificationDate);
-    if (str && dm && kindEngineMupdf == dm->engineType) {
-        strTemp = ConvDateToDisplayTemp(str, PdfDateParseA);
-    } else {
-        strTemp = ConvDateToDisplayTemp(str, IsoDateParse);
-    }
-    layoutData->AddProperty(_TRA("Modified:"), strTemp);
-
-    AddPropTranslated(ctrl, layoutData, kPropCreatorApp);
-    AddPropTranslated(ctrl, layoutData, kPropPdfProducer);
-    AddPropTranslated(ctrl, layoutData, kPropPdfVersion);
-
-    str = FormatPdfFileStructure(ctrl);
-    layoutData->AddProperty(_TRA("PDF Optimizations:"), str);
-    str::Free(str);
-
     i64 fileSize = file::GetSize(path); // can be gPluginURL
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
@@ -572,10 +551,38 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         }
         d.Free();
     }
+    TempStr strTemp;
     if (-1 != fileSize) {
         strTemp = FormatFileSizeTemp(fileSize);
         layoutData->AddProperty(_TRA("File Size:"), strTemp);
     }
+
+    AddPropTranslated(ctrl, layoutData, kPropTitle);
+    AddPropTranslated(ctrl, layoutData, kPropSubject);
+    AddPropTranslated(ctrl, layoutData, kPropAuthor);
+    AddPropTranslated(ctrl, layoutData, kPropCopyright);
+
+    TempStr val = ctrl->GetPropertyTemp(kPropCreationDate);
+    if (val && dm && kindEngineMupdf == dm->engineType) {
+        strTemp = ConvDateToDisplayTemp(val, PdfDateParseA);
+    } else {
+        strTemp = ConvDateToDisplayTemp(val, IsoDateParse);
+    }
+    layoutData->AddProperty(_TRA("Created:"), strTemp);
+
+    val = ctrl->GetPropertyTemp(kPropModificationDate);
+    if (val && dm && kindEngineMupdf == dm->engineType) {
+        strTemp = ConvDateToDisplayTemp(val, PdfDateParseA);
+    } else {
+        strTemp = ConvDateToDisplayTemp(val, IsoDateParse);
+    }
+    layoutData->AddProperty(_TRA("Modified:"), strTemp);
+
+    AddPropTranslated(ctrl, layoutData, kPropCreatorApp);
+    AddPropTranslated(ctrl, layoutData, kPropPdfProducer);
+    AddPropTranslated(ctrl, layoutData, kPropPdfVersion);
+
+    AddPdfFileStructure(ctrl, layoutData);
 
     strTemp = str::FormatTemp("%d", ctrl->PageCount());
     layoutData->AddProperty(_TRA("Number of Pages:"), strTemp);
@@ -598,12 +605,12 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
 
     if (extended) {
         // Note: FontList extraction can take a while
-        str = ctrl->GetPropertyTemp(kPropFontList);
-        if (str) {
+        val = ctrl->GetPropertyTemp(kPropFontList);
+        if (val) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(" ", " ");
         }
-        layoutData->AddProperty(_TRA("Fonts:"), str);
+        layoutData->AddProperty(_TRA("Fonts:"), val);
     }
 }
 
