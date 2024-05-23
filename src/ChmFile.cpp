@@ -346,12 +346,12 @@ static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info
     if (str::IsEmpty(info->path)) {
         return CHM_ENUMERATOR_CONTINUE;
     }
-    StrVec* paths = (StrVec*)data;
+    StrVec2* paths = (StrVec2*)data;
     paths->Append(info->path);
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-void ChmFile::GetAllPaths(StrVec* v) const {
+void ChmFile::GetAllPaths(StrVec2* v) const {
     chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, v);
 }
 
@@ -418,7 +418,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
 static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
-    StrVec references;
+    StrVec2 references;
     AutoFreeWstr keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {

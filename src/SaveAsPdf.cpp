@@ -62,7 +62,7 @@ struct PdfMerger {
     fz_context* ctx = nullptr;
     pdf_document* doc_des = nullptr;
     pdf_document* doc_src = nullptr;
-    StrVec filePaths;
+    StrVec2 filePaths;
 
     PdfMerger() = default;
     ~PdfMerger();

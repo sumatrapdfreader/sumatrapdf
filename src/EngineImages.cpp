@@ -828,7 +828,7 @@ class EngineImageDir : public EngineImages {
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
 
-    StrVec pageFileNames;
+    StrVec2 pageFileNames;
     TocTree* tocTree = nullptr;
 };
 
@@ -984,7 +984,7 @@ EngineBase* CreateEngineImageDirFromFile(const char* fileName) {
 struct ComicInfoParser : json::ValueVisitor {
     // extracted metadata
     AutoFreeStr propTitle;
-    StrVec propAuthors;
+    StrVec2 propAuthors;
     AutoFreeStr propDate;
     AutoFreeStr propModDate;
     AutoFreeStr propCreator;

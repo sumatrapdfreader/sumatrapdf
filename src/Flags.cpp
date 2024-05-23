@@ -158,7 +158,7 @@ bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
         return false;
     }
 
-    StrVec rangeList;
+    StrVec2 rangeList;
     Split(rangeList, ranges, ",", true);
     SortNatural(rangeList);
 
@@ -258,8 +258,8 @@ static Arg GetArg(const char* s) {
 // https://www.robvanderwoude.com/commandlineswitches.php#Acrobat
 // with Sumatra extensions
 void ParseAdobeFlags(FileArgs& i, const char* s) {
-    StrVec parts;
-    StrVec parts2;
+    StrVec2 parts;
+    StrVec2 parts2;
     char* name;
     char* val;
     int valN;

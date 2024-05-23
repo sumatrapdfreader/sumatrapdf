@@ -356,7 +356,7 @@ bool EpubDoc::Load() {
     url::DecodeInPlace(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
-    StrVec encList;
+    StrVec2 encList;
     ByteSlice encryption = zip->GetFileDataByName("META-INF/encryption.xml");
     if (encryption) {
         (void)parser.ParseInPlace(encryption);
@@ -396,7 +396,7 @@ bool EpubDoc::Load() {
         *contentPath = '\0';
     }
 
-    StrVec idList, pathList;
+    StrVec2 idList, pathList;
 
     for (node = node->down; node; node = node->next) {
         char* mediaType = node->GetAttributeTemp("media-type");
@@ -1107,7 +1107,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static const char* HandleTealDocTag(str::Str& builder, StrVec& tocEntries, const char* text, size_t len, uint) {
+static const char* HandleTealDocTag(str::Str& builder, StrVec2& tocEntries, const char* text, size_t len, uint) {
     if (len < 9) {
     Fallback:
         builder.Append("&lt;");

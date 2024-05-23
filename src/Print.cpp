@@ -1101,7 +1101,7 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
                                Print_Advanced_Data& advanced) {
     auto devMode = printer->devMode;
 
-    StrVec rangeList;
+    StrVec2 rangeList;
     if (settings) {
         Split(rangeList, settings, ",", true);
     }

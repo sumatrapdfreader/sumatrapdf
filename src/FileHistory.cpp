@@ -238,7 +238,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
 }
 
 // list of recently closed documents, most recent at the end
-StrVec gClosedDocuments;
+StrVec2 gClosedDocuments;
 
 int RecentlyCloseDocumentsCount() {
     return gClosedDocuments.Size();

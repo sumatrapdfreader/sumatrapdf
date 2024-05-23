@@ -746,7 +746,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 HWND hwndComboBox = GetDlgItem(hDlg, IDC_CMDLINE);
                 Vec<TextEditor*> textEditors;
                 DetectTextEditors(textEditors);
-                StrVec detected;
+                StrVec2 detected;
                 for (auto e : textEditors) {
                     const char* open = e->openFileCmd;
                     AppendIfNotExists(detected, open);

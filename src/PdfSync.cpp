@@ -55,7 +55,7 @@ class Pdfsync : public Synchronizer {
     UINT SourceToRecord(const char* srcfilename, int line, int col, Vec<size_t>& records);
 
     EngineBase* engine;              // needed for converting between coordinate systems
-    StrVec srcfiles;                 // source file names
+    StrVec2 srcfiles;                 // source file names
     Vec<PdfsyncLine> lines;          // record-to-line mapping
     Vec<PdfsyncPoint> points;        // record-to-point mapping
     Vec<PdfsyncFileIndex> fileIndex; // start and end of entries for a file in <lines>

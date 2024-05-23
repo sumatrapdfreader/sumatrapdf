@@ -593,7 +593,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
     ScopedCritSec scope(&pagesAccess);
 
     Vec<mui::CachedFont*> seenFonts;
-    StrVec fonts;
+    StrVec2 fonts;
 
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
@@ -1443,7 +1443,7 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
 
 class ChmHtmlCollector : public EbookTocVisitor {
     ChmFile* doc = nullptr;
-    StrVec added;
+    StrVec2 added;
     str::Str html;
 
   public:
@@ -1462,7 +1462,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         doc->ParseToc(this);
 
         // finally add all the remaining HTML files
-        StrVec paths;
+        StrVec2 paths;
         doc->GetAllPaths(&paths);
         for (char* path : paths) {
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {

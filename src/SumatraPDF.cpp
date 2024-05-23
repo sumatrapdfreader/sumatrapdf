@@ -127,11 +127,11 @@ static Perm gPolicyRestrictions = Perm::RestrictedUse;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm::DiskAccess)
-static StrVec gAllowedLinkProtocols;
+static StrVec2 gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static StrVec gAllowedFileTypes;
+static StrVec2 gAllowedFileTypes;
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
@@ -1976,7 +1976,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
 
 // remember which files failed to open so that a failure to
 // open a file doesn't block next/prev file in
-static StrVec gFilesFailedToOpen;
+static StrVec2 gFilesFailedToOpen;
 
 MainWindow* LoadDocument(LoadArgs* args) {
     CrashAlwaysIf(gCrashOnOpen);
@@ -3239,7 +3239,7 @@ static void OpenFolder(MainWindow* win) {
     LoadDocument(&args);
 }
 
-static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
+static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec2& filesOut) {
     WCHAR* dir = ofn->lpstrFile;
     WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
     // only a single file, full path
@@ -3346,7 +3346,7 @@ static void OpenFile(MainWindow* win) {
         return;
     }
 
-    StrVec files;
+    StrVec2 files;
     GetFilesFromGetOpenFileName(&ofn, files);
     for (char* path : files) {
         LoadArgs args(path, win);

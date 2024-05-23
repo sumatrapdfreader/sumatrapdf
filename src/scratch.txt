@@ -3,7 +3,7 @@ Ideas for refactorings:
 - change all size_t => int
 - change use of Str::Get() => Str::CStr() (or maybe make it Str() as in StrSpan?)
 - audit all str::Join() and path::Join() to see if could / should be *Temp()
-- Change StrVec => StrVec2 141 matches left
+- Change StrVec => StrVec2 106 matches left (was 141)
 
 ------------------------------------------------------------------
 
