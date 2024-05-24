@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -378,6 +378,9 @@ pdf_annot_type_from_string(fz_context *ctx, const char *subtype)
 static void
 begin_annot_op(fz_context *ctx, pdf_annot *annot, const char *op)
 {
+	if (!annot->page)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
+
 	pdf_begin_operation(ctx, annot->page->doc, op);
 }
 
@@ -614,6 +617,9 @@ void pdf_delete_link(fz_context *ctx, pdf_page *page, fz_link *link)
 
 	if (*linkptr == NULL)
 		return;
+
+	/* Link may no longer borrow page pointer, since they are separated */
+	((pdf_link *) link)->page = NULL;
 
 	pdf_begin_operation(ctx, page->doc, "Delete Link");
 
@@ -935,6 +941,9 @@ pdf_delete_annot(fz_context *ctx, pdf_page *page, pdf_annot *annot)
 
 	/* Remove annot from page's list */
 	*annotptr = annot->next;
+
+	/* Annot may no longer borrow page pointer, since they are separated */
+	annot->page = NULL;
 
 	/* If the removed annotation was the last in the list adjust the end pointer */
 	if (*annotptr == NULL)

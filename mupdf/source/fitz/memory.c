@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -173,6 +173,42 @@ fz_free(fz_context *ctx, void *p)
 		ctx->alloc.free(ctx->alloc.user, p);
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 	}
+}
+
+/* align is assumed to be a power of 2. */
+void *fz_malloc_aligned(fz_context *ctx, size_t size, int align)
+{
+	uint8_t *block;
+	uint8_t *aligned;
+
+	if (size == 0)
+		return NULL;
+
+	if (align >= 256)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Alignment too large");
+	if ((align & (align-1)) != 0)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Alignment must be a power of 2");
+
+	block = fz_malloc(ctx, size + align);
+
+	aligned = (void *)((intptr_t)(block + align-1) & ~(align-1));
+	if (aligned == block)
+		aligned = block + align;
+	memset(block, aligned-block, aligned-block);
+
+	return aligned;
+}
+
+void fz_free_aligned(fz_context *ctx, void *ptr)
+{
+	uint8_t *block = ptr;
+
+	if (ptr == NULL)
+		return;
+
+	block -= block[-1];
+
+	fz_free(ctx, block);
 }
 
 char *

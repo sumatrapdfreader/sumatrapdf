@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -4412,6 +4412,44 @@ static void ffi_Pixmap_warp(js_State *J)
 	ffi_pushpixmap(J, dest);
 }
 
+static void ffi_Pixmap_skewDetect(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = ffi_topixmap(J, 0);
+	double angle;
+
+	fz_try(ctx)
+		angle = fz_skew_detect(ctx, pixmap);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_pushnumber(J, angle);
+}
+
+static int deskew_border_from_string(const char *str)
+{
+	if (!strcmp(str, "increase")) return FZ_DESKEW_BORDER_INCREASE;
+	if (!strcmp(str, "decrease")) return FZ_DESKEW_BORDER_DECREASE;
+	if (!strcmp(str, "maintain")) return FZ_DESKEW_BORDER_MAINTAIN;
+	return FZ_DESKEW_BORDER_INCREASE;
+}
+
+static void ffi_Pixmap_deskew(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = ffi_topixmap(J, 0);
+	float degrees = js_tonumber(J, 1);
+	int border = deskew_border_from_string(js_tostring(J, 2));
+	fz_pixmap *dest = NULL;
+
+	fz_try(ctx)
+		dest = fz_deskew_pixmap(ctx, pixmap, degrees, border);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushpixmap(J, dest);
+}
+
 static void ffi_Pixmap_asPNG(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -7508,6 +7546,18 @@ static void ffi_PDFObject_isIndirect(js_State *J)
 	js_pushboolean(J, b);
 }
 
+static void ffi_PDFObject_isInteger(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_obj *obj = js_touserdata(J, 0, "pdf_obj");
+	int b = 0;
+	fz_try(ctx)
+		b = pdf_is_int(ctx, obj);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, b);
+}
+
 static void ffi_PDFObject_asIndirect(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -7605,6 +7655,18 @@ static void ffi_PDFObject_asName(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 	js_pushstring(J, name);
+}
+
+static void ffi_PDFObject_isReal(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_obj *obj = js_touserdata(J, 0, "pdf_obj");
+	int b = 0;
+	fz_try(ctx)
+		b = pdf_is_real(ctx, obj);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, b);
 }
 
 static void ffi_PDFObject_isString(js_State *J)
@@ -7887,6 +7949,21 @@ static void ffi_PDFPage_deleteAnnotation(js_State *J)
 		pdf_delete_annot(ctx, page, annot);
 	fz_catch(ctx)
 		rethrow(J);
+}
+
+static void ffi_PDFPage_createSignature(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_page *page = js_touserdata(J, 0, "pdf_page");
+	const char *name = js_tostring(J, 1);
+	pdf_annot *widget;
+
+	fz_try(ctx)
+		widget = pdf_create_signature_widget(ctx, page, (char *) name);
+	fz_catch(ctx)
+		rethrow(J);
+	js_getregistry(J, "pdf_widget");
+	js_newuserdata(J, "pdf_widget", widget, ffi_gc_pdf_annot);
 }
 
 static void ffi_PDFPage_update(js_State *J)
@@ -9246,9 +9323,7 @@ static void ffi_PDFAnnotation_setFilespec(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_annot *annot = ffi_toannot(J, 0);
-	pdf_page *page = pdf_annot_page(ctx, annot);
-	pdf_document *pdf = page->doc;
-	pdf_obj *fs = ffi_toobj(J, pdf, 1);
+	pdf_obj *fs = js_touserdata(J, 1, "pdf_obj");
 
 	fz_try(ctx)
 		pdf_set_annot_filespec(ctx, annot, fs);
@@ -9439,6 +9514,66 @@ static void ffi_PDFAnnotation_setHiddenForEditing(js_State *J)
 
 	fz_try(ctx)
 		pdf_set_annot_hidden_for_editing(ctx, annot, hidden);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_eventEnter(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	fz_try(ctx)
+		pdf_annot_event_enter(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_eventExit(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	fz_try(ctx)
+		pdf_annot_event_exit(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_eventDown(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	fz_try(ctx)
+		pdf_annot_event_down(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_eventUp(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	fz_try(ctx)
+		pdf_annot_event_up(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_eventFocus(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	fz_try(ctx)
+		pdf_annot_event_focus(ctx, annot);
+	fz_catch(ctx)
+		rethrow(J);
+}
+
+static void ffi_PDFAnnotation_eventBlur(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *annot = js_touserdata(J, 0, "pdf_annot");
+	fz_try(ctx)
+		pdf_annot_event_blur(ctx, annot);
 	fz_catch(ctx)
 		rethrow(J);
 }
@@ -10414,6 +10549,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Pixmap.gamma", ffi_Pixmap_gamma, 1);
 		jsB_propfun(J, "Pixmap.tint", ffi_Pixmap_tint, 2);
 		jsB_propfun(J, "Pixmap.warp", ffi_Pixmap_warp, 3);
+		jsB_propfun(J, "Pixmap.skewDetect", ffi_Pixmap_skewDetect, 0);
+		jsB_propfun(J, "Pixmap.deskew", ffi_Pixmap_deskew, 2);
 		jsB_propfun(J, "Pixmap.convertToColorSpace", ffi_Pixmap_convertToColorSpace, 5);
 
 		// Pixmap.getPixels() - Buffer
@@ -10525,6 +10662,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFPage.getAnnotations", ffi_PDFPage_getAnnotations, 0);
 		jsB_propfun(J, "PDFPage.createAnnotation", ffi_PDFPage_createAnnotation, 1);
 		jsB_propfun(J, "PDFPage.deleteAnnotation", ffi_PDFPage_deleteAnnotation, 1);
+		jsB_propfun(J, "PDFPage.createSignature", ffi_PDFPage_createSignature, 0);
 		jsB_propfun(J, "PDFPage.update", ffi_PDFPage_update, 0);
 		jsB_propfun(J, "PDFPage.applyRedactions", ffi_PDFPage_applyRedactions, 4);
 		jsB_propfun(J, "PDFPage.process", ffi_PDFPage_process, 1);
@@ -10650,6 +10788,13 @@ int murun_main(int argc, char **argv)
 
 		jsB_propfun(J, "PDFAnnotation.getHiddenForEditing", ffi_PDFAnnotation_getHiddenForEditing, 0);
 		jsB_propfun(J, "PDFAnnotation.setHiddenForEditing", ffi_PDFAnnotation_setHiddenForEditing, 1);
+
+		jsB_propfun(J, "PDFAnnotation.eventEnter", ffi_PDFAnnotation_eventEnter, 0);
+		jsB_propfun(J, "PDFAnnotation.eventExit", ffi_PDFAnnotation_eventExit, 0);
+		jsB_propfun(J, "PDFAnnotation.eventDown", ffi_PDFAnnotation_eventDown, 0);
+		jsB_propfun(J, "PDFAnnotation.eventUp", ffi_PDFAnnotation_eventUp, 0);
+		jsB_propfun(J, "PDFAnnotation.eventFocus", ffi_PDFAnnotation_eventFocus, 0);
+		jsB_propfun(J, "PDFAnnotation.eventBlur", ffi_PDFAnnotation_eventBlur, 0);
 	}
 	js_setregistry(J, "pdf_annot");
 
@@ -10710,6 +10855,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFObject.isArray", ffi_PDFObject_isArray, 0);
 		jsB_propfun(J, "PDFObject.isDictionary", ffi_PDFObject_isDictionary, 0);
 		jsB_propfun(J, "PDFObject.isIndirect", ffi_PDFObject_isIndirect, 0);
+		jsB_propfun(J, "PDFObject.isInteger", ffi_PDFObject_isInteger, 0);
 		jsB_propfun(J, "PDFObject.asIndirect", ffi_PDFObject_asIndirect, 0);
 		jsB_propfun(J, "PDFObject.isNull", ffi_PDFObject_isNull, 0);
 		jsB_propfun(J, "PDFObject.isBoolean", ffi_PDFObject_isBoolean, 0);
@@ -10718,6 +10864,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFObject.asNumber", ffi_PDFObject_asNumber, 0);
 		jsB_propfun(J, "PDFObject.isName", ffi_PDFObject_isName, 0);
 		jsB_propfun(J, "PDFObject.asName", ffi_PDFObject_asName, 0);
+		jsB_propfun(J, "PDFObject.isReal", ffi_PDFObject_isReal, 0);
 		jsB_propfun(J, "PDFObject.isString", ffi_PDFObject_isString, 0);
 		jsB_propfun(J, "PDFObject.asString", ffi_PDFObject_asString, 0);
 		jsB_propfun(J, "PDFObject.asByteString", ffi_PDFObject_asByteString, 0);

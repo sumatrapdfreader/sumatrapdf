@@ -924,6 +924,45 @@ These properties are only present for some annotation types, so support for them
         annotation.setLine([100,100], [150, 175]);
 
 
+.. method:: hasPopup()
+
+
+    Checks the support for annotation popup.
+
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var hasPopup = annotation.hasPopup();
+
+
+.. method:: getPopup()
+
+    Get annotation popup rectangle.
+
+    :return: `[ulx,uly,lrx,lry]` :ref:`Rectangle<mutool_run_js_api_rectangle>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var popupRect = annotation.getPopup();
+
+.. method:: setPopup(rect)
+
+
+    Set annotation popup rectangle.
+
+    :arg rect: `[ulx,uly,lrx,lry]` :ref:`Rectangle<mutool_run_js_api_rectangle>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setPopup([0,0,100,100]);
+
 
 .. method:: hasOpen()
 

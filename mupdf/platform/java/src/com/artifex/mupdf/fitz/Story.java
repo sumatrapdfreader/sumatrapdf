@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Artifex Software, Inc.
+// Copyright (C) 2022-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //

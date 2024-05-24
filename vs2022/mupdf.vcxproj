@@ -758,6 +758,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\config.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\context.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\crypt.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\deskew.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\device.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\display-list.h" />
     <ClInclude Include="..\mupdf\include\mupdf\fitz\document.h" />
@@ -826,6 +827,9 @@
     <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\color-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\context-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\deskew_c.h" />
+    <ClInclude Include="..\mupdf\source\fitz\deskew_neon.h" />
+    <ClInclude Include="..\mupdf\source\fitz\deskew_sse.h" />
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\encodings.h" />
     <ClInclude Include="..\mupdf\source\fitz\font-table.h" />
@@ -870,6 +874,7 @@
     <ClCompile Include="..\mupdf\source\fitz\crypt-arc4.c" />
     <ClCompile Include="..\mupdf\source\fitz\crypt-md5.c" />
     <ClCompile Include="..\mupdf\source\fitz\crypt-sha2.c" />
+    <ClCompile Include="..\mupdf\source\fitz\deskew.c" />
     <ClCompile Include="..\mupdf\source\fitz\device.c" />
     <ClCompile Include="..\mupdf\source\fitz\directory.c" />
     <ClCompile Include="..\mupdf\source\fitz\document-all.c" />
@@ -951,6 +956,7 @@
     <ClCompile Include="..\mupdf\source\fitz\random.c" />
     <ClCompile Include="..\mupdf\source\fitz\separation.c" />
     <ClCompile Include="..\mupdf\source\fitz\shade.c" />
+    <ClCompile Include="..\mupdf\source\fitz\skew.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-output.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-search.c" />

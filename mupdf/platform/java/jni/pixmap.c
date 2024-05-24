@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -479,4 +479,38 @@ FUN(Pixmap_computeMD5)(JNIEnv *env, jobject self)
 	if ((*env)->ExceptionCheck(env)) return NULL;
 
 	return arr;
+}
+
+JNIEXPORT jlong JNICALL
+FUN(Pixmap_newNativeDeskew)(JNIEnv *env, jobject self, jfloat ang, jint border)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_pixmap *dest;
+
+	if (!ctx || !pixmap) return 0;
+
+	fz_try(ctx)
+		dest = fz_deskew_pixmap(ctx, pixmap, ang, border);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return jlong_cast(dest);
+}
+
+JNIEXPORT jfloat JNICALL
+FUN(Pixmap_skewDetect)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	float ang;
+
+	if (!ctx || !pixmap) return 0;
+
+	fz_try(ctx)
+		ang = fz_skew_detect(ctx, pixmap);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return (jfloat)ang;
 }

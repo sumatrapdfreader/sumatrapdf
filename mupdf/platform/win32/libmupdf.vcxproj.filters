@@ -672,6 +672,12 @@
     <ClCompile Include="..\..\source\fitz\xml-write.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\deskew.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\skew.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -939,6 +945,18 @@
       <Filter>!include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\fitz\ucdn_db.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\deskew.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\deskew_c.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\deskew_neon.h">
+      <Filter>fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\fitz\deskew_sse.h">
       <Filter>fitz</Filter>
     </ClInclude>
   </ItemGroup>

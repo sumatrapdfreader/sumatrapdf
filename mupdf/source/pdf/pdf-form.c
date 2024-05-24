@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -508,6 +508,9 @@ pdf_obj *pdf_button_field_on_state(fz_context *ctx, pdf_obj *field)
 static void
 begin_annot_op(fz_context *ctx, pdf_annot *annot, const char *op)
 {
+	if (!annot->page)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
+
 	pdf_begin_operation(ctx, annot->page->doc, op);
 }
 
@@ -1009,7 +1012,12 @@ pdf_annot *
 pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name)
 {
 	fz_rect rect = { 12, 12, 12+100, 12+50 };
-	pdf_annot *annot = pdf_create_annot_raw(ctx, page, PDF_ANNOT_WIDGET);
+	pdf_annot *annot;
+
+	pdf_begin_operation(ctx, page->doc, "Create signature");
+
+	annot = pdf_create_annot_raw(ctx, page, PDF_ANNOT_WIDGET);
+
 	fz_try(ctx)
 	{
 		pdf_obj *obj = annot->obj;
@@ -1035,9 +1043,11 @@ pdf_create_signature_widget(fz_context *ctx, pdf_page *page, char *name)
 		pdf_array_push(ctx, fields, obj);
 		lock = pdf_dict_put_dict(ctx, obj, PDF_NAME(Lock), 1);
 		pdf_dict_put(ctx, lock, PDF_NAME(Action), PDF_NAME(All));
+		pdf_end_operation(ctx, page->doc);
 	}
 	fz_catch(ctx)
 	{
+		pdf_abandon_operation(ctx, page->doc);
 		pdf_delete_annot(ctx, page, annot);
 	}
 	return (pdf_annot *)annot;

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -38,6 +38,7 @@ public class Pixmap
 
 	private native long newNative(ColorSpace cs, int x, int y, int w, int h, boolean alpha);
 	private native long newNativeFromColorAndMask(Pixmap color, Pixmap mask);
+	private native long newNativeDeskew(float angle, int border);
 
 	private Pixmap(long p) {
 		pointer = p;
@@ -123,4 +124,15 @@ public class Pixmap
 			" cs=" + getColorSpace() +
 			")";
 	}
+
+	public static final int DESKEW_BORDER_INCREASE = 0;
+	public static final int DESKEW_BORDER_MAINTAIN = 1;
+	public static final int DESKEW_BORDER_DECREASE = 2;
+
+	public Pixmap deskew(float angle, int border)
+	{
+		return new Pixmap(newNativeDeskew(angle, border));
+	}
+
+	public native float skewDetect();
 }

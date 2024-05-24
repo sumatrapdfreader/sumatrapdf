@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
 ----
@@ -464,3 +464,38 @@ so that they can easily be used to represent tiles of a page.
     .. code-block:: javascript
 
         var buffer = pixmap.asJPEG(80);
+
+
+.. method:: skewDetect()
+
+    |wasm_tag|
+
+    Returns the angle of skew detected from `Pixmap`.
+    Note, if the `Pixmap` is not Greyscale with no alpha then an exception will be thrown.
+
+
+    :return: `Float`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var angle = pixmap.skewDetect();
+
+
+.. method:: deskew(angle, border)
+
+    |wasm_tag|
+
+    Returns a new `Pixmap` being the deskewed version of the supplied `Pixmap`.
+    Note, if a `Pixmap` is supplied that is not RGB or Greyscale, or has alpha then an exception will be thrown.
+
+    :arg angle: `Float`. The angle to deskew.
+    :arg border: `String`. "increase" increases the size of the pixmap so no pixels are lost. "maintain" maintains the size of the pixmap. "decrease" decreases the size of the page so no new pixels are shown.
+    :return: `Pixmap`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var deskewed = pixmap.deskew(angle, 0);

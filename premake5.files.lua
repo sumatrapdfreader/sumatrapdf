@@ -846,6 +846,7 @@ function mupdf_files()
     "crypt-arc4.c",
     "crypt-md5.c",
     "crypt-sha2.c",
+    "deskew.c",
     "device.c",
     "directory.c",
     "document.c",
@@ -926,6 +927,7 @@ function mupdf_files()
     "pool.c",
     "printf.c",
     "random.c",
+    "skew.c",
     "separation.c",
     "shade.c",
     "stext-device.c",
@@ -1038,7 +1040,7 @@ function mupdf_files()
 
   files_in_dir("mupdf/source/xps", {
     "xps-common.c",
-    "xps-doc.c",
+    "xps-doc.c",d
     "xps-glyphs.c",
     "xps-gradient.c",
     "xps-image.c",

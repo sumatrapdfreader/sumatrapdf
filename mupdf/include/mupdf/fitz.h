@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -89,6 +89,8 @@ extern "C" {
 
 #include "mupdf/fitz/story.h"
 #include "mupdf/fitz/story-writer.h"
+
+#include "mupdf/fitz/deskew.h"
 
 #ifdef __cplusplus
 }

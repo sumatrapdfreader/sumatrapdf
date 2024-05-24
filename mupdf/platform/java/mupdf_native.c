@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -666,6 +666,10 @@ static int check_enums()
 
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_REMOVE == PDF_REDACT_TEXT_REMOVE;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_NONE == PDF_REDACT_TEXT_NONE;
+
+	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_INCREASE == FZ_DESKEW_BORDER_INCREASE;
+	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_MAINTAIN == FZ_DESKEW_BORDER_MAINTAIN;
+	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_DECREASE == FZ_DESKEW_BORDER_DECREASE;
 
 	return valid ? 1 : 0;
 }

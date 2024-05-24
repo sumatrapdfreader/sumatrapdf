@@ -379,7 +379,6 @@ FUN(PDFDocument_findPage)(JNIEnv *env, jobject self, jint jat)
 	pdf_obj *obj = NULL;
 
 	if (!ctx || !pdf) return NULL;
-	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) jni_throw_oob(env, "at is not a valid page");
 
 	fz_try(ctx)
 		obj = pdf_lookup_page_obj(ctx, pdf, jat);
@@ -608,7 +607,6 @@ FUN(PDFDocument_insertPage)(JNIEnv *env, jobject self, jint jat, jobject jpage)
 	pdf_obj *page = from_PDFObject(env, jpage);
 
 	if (!ctx || !pdf) return;
-	if (jat != INT_MAX && jat >= pdf_count_pages(ctx, pdf)) jni_throw_oob_void(env, "at is not a valid page");
 	if (!page) jni_throw_arg_void(env, "page must not be null");
 
 	fz_try(ctx)
@@ -625,7 +623,6 @@ FUN(PDFDocument_deletePage)(JNIEnv *env, jobject self, jint jat)
 	int at = jat;
 
 	if (!ctx || !pdf) return;
-	if (jat < 0 || jat >= pdf_count_pages(ctx, pdf)) jni_throw_oob_void(env, "at is not a valid page");
 
 	fz_try(ctx)
 		pdf_delete_page(ctx, pdf, at);

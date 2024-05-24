@@ -102,6 +102,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\fitz\crypt.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\fitz\deskew.h">
+      <Filter>mupdf\include\mupdf\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\fitz\device.h">
       <Filter>mupdf\include\mupdf\fitz</Filter>
     </ClInclude>
@@ -306,6 +309,15 @@
     <ClInclude Include="..\mupdf\source\fitz\context-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\deskew_c.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\deskew_neon.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mupdf\source\fitz\deskew_sse.h">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\source\fitz\draw-imp.h">
       <Filter>mupdf\source\fitz</Filter>
     </ClInclude>
@@ -432,6 +444,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\crypt-sha2.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\deskew.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\device.c">
@@ -675,6 +690,9 @@
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\shade.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\skew.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\stext-device.c">

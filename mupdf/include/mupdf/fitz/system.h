@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -76,11 +76,35 @@ typedef unsigned __int64 uint64_t;
 	Spot architectures where we have optimisations.
 */
 
-#if defined(__arm__) || defined(__thumb__)
+#if defined(__arm__) || defined(__thumb__) || defined(__ARM_NEON) || defined(__ARM_NEON__)
 #ifndef ARCH_ARM
 #define ARCH_ARM
 #endif
 #endif
+
+/* Detect NEON */
+#ifndef ARCH_HAS_NEON
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#define ARCH_HAS_NEON 1
+#endif
+#endif
+
+#ifndef ARCH_HAS_NEON
+#define ARCH_HAS_NEON 0
+#endif
+
+
+/* We assume that pretty much any X86 or X64 machine has SSE these days. */
+#ifndef ARCH_HAS_SSE
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64)
+#define ARCH_HAS_SSE 1
+#endif
+#endif
+
+#ifndef ARCH_HAS_SSE
+#define ARCH_HAS_SSE 0
+#endif
+
 
 /**
 	Some differences in libc can be smoothed over

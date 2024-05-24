@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -177,6 +177,10 @@ typedef struct
 	int strip_height;
 	char language[256];
 	char datadir[1024];
+
+	int skew_correct; /* 0 = no skew correction. 1 = automatic. 2 = use specified angle. */
+	float skew_angle; /* Only used if skew == 2 */
+	int skew_border; /* 0 = increase size so no content is lost. 1 = maintain size. 2 = decrease size so no new pixels are visible. */
 
 	/* Updated as we move through the job */
 	int page_count;

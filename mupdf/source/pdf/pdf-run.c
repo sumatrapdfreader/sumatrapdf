@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -254,8 +254,13 @@ void pdf_run_page_contents(fz_context *ctx, pdf_page *page, fz_device *dev, fz_m
 void pdf_run_annot(fz_context *ctx, pdf_annot *annot, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
 {
 	pdf_page *page = annot->page;
-	pdf_document *doc = page->doc;
+	pdf_document *doc;
 	int nocache;
+
+	if (!page)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
+
+	doc = page->doc;
 
 	nocache = !!(dev->hints & FZ_NO_CACHE);
 	if (nocache)

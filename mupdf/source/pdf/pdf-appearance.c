@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -3254,7 +3254,12 @@ pdf_signature_info(fz_context *ctx, const char *name, pdf_pkcs7_distinguished_na
 void
 pdf_annot_push_local_xref(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_document *doc = annot->page->doc;
+	pdf_document *doc;
+
+	if (!annot->page)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
+
+	doc = annot->page->doc;
 
 #ifdef PDF_DEBUG_APPEARANCE_SYNTHESIS
 	if (doc->local_xref_nesting == 0 && doc->local_xref)
@@ -3557,6 +3562,9 @@ int
 pdf_update_annot(fz_context *ctx, pdf_annot *annot)
 {
 	int changed;
+
+	if (!annot->page)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 
 	if (annot->page->doc->resynth_required)
 		update_all_appearances(ctx, annot->page);

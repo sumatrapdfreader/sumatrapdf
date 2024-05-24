@@ -519,8 +519,12 @@ def make_outparam_helper(
         # swig - swig maps int64_t to mupdf.SWIGTYPE_p_int64_t which can't be
         # treated or converted to an integer.
         #
+        # We also value-initialise in case the underlying mupdf function also
+        # reads the supplied value - i.e. treats it as an in-parm as well as an
+        # out-param; this is paricularly important for pointer out-params.
+        #
         pointee = state.get_name_canonical( arg.cursor.type.get_pointee())
-        generated.swig_cpp.write(f'        {declaration_text( pointee, arg.name)};\n')
+        generated.swig_cpp.write(f'        {declaration_text( pointee, arg.name)} = {{}};\n')
     generated.swig_cpp.write(f'    }};\n')
     generated.swig_cpp.write('\n')
 
@@ -538,19 +542,6 @@ def make_outparam_helper(
     generated.swig_cpp.write(f'    /* Out-params function for {cursor.spelling}(). */\n')
     generated.swig_cpp.write(f'    {declaration_text( cursor.result_type, name_args)}\n')
     generated.swig_cpp.write( '    {\n')
-    # Set all pointer fields to NULL.
-    for arg in parse.get_args( tu, cursor):
-        if not arg.out_param:
-            continue
-        if arg.cursor.type.get_pointee().kind == state.clang.cindex.TypeKind.POINTER:
-            generated.swig_cpp.write(f'        outparams->{arg.name} = NULL;\n')
-    # Make call. Note that *_outparams will have changed size_t to unsigned long or similar so
-    # that SWIG can handle it. Would like to cast the addresses of the struct members to
-    # things like (size_t*) but this cause problems with const so we use temporaries.
-    for arg in parse.get_args( tu, cursor):
-        if not arg.out_param:
-            continue
-        generated.swig_cpp.write(f'        {declaration_text(arg.cursor.type.get_pointee(), arg.name)};\n')
     return_void = (cursor.result_type.spelling == 'void')
     generated.swig_cpp.write(f'        ')
     if not return_void:
@@ -560,16 +551,11 @@ def make_outparam_helper(
     for arg in parse.get_args( tu, cursor):
         generated.swig_cpp.write(sep)
         if arg.out_param:
-            #generated.swig_cpp.write(f'&outparams->{arg.name}')
-            generated.swig_cpp.write(f'&{arg.name}')
+            generated.swig_cpp.write(f'&outparams->{arg.name}')
         else:
             generated.swig_cpp.write(f'{arg.name}')
         sep = ', '
     generated.swig_cpp.write(');\n')
-    for arg in parse.get_args( tu, cursor):
-        if not arg.out_param:
-            continue
-        generated.swig_cpp.write(f'        outparams->{arg.name} = {arg.name};\n')
     if not return_void:
         generated.swig_cpp.write('        return ret;\n')
     generated.swig_cpp.write('    }\n')
