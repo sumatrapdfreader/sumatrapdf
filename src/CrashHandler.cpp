@@ -228,6 +228,11 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
         return false;
     }
 
+    if (!dir::CreateAll(symDir)) {
+        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", gSymbolsDir);
+        return false;
+    }
+
     logf("DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
     if (!symDir || !dir::Exists(symDir)) {
         log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
@@ -252,34 +257,36 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
     return ok;
 }
 
-bool InitializeDbgHelp() {
+bool CrashHandlerDownloadSymbols() {
+    return DownloadAndUnzipSymbols(gSymbolsDir);
+}
+
+bool InitializeDbgHelp(bool force) {
     TempWStr ws = ToWStrTemp(gSymbolPath);
-    if (!dbghelp::Initialize(ws, false)) {
-        logf("InitializeDbgHelp: dbghelp::Initialize('%s') failed\n", gSymbolPath);
+    if (!dbghelp::Initialize(ws, force)) {
+        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", gSymbolPath, (int)force);
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        log("InitializeDbgHelp(): dbghelp::HasSymbols() failed\n");
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), force: %d failed\n", (int)force);
         return false;
     }
     log("InitializeDbgHelp(): did initialize ok\n");
     return true;
 }
 
-bool CrashHandlerDownloadSymbols() {
-    log("CrashHandlerDownloadSymbols()\n");
-
-    if (!dir::CreateAll(gSymbolsDir)) {
-        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", gSymbolsDir);
+static bool DownloadSymbolsIfNeeded() {
+    log("DownloadSymbolsIfNeeded()\n");
+    bool ok = InitializeDbgHelp(false);
+    if (ok) {
+        return true;
+    }
+    ok = CrashHandlerDownloadSymbols();
+    if (!ok) {
         return false;
     }
-
-    if (!DownloadAndUnzipSymbols(gSymbolsDir)) {
-        log("CrashHandlerDownloadSymbols: failed to download symbols\n");
-        return false;
-    }
-    return true;
+    return InitializeDbgHelp(true);
 }
 
 // like crash report, but can be triggered without a crash
@@ -321,13 +328,7 @@ void _uploadDebugReport(const char* condStr, bool noCallstack) {
     bool needsSymbols = !noCallstack;
     if (needsSymbols) {
         // we proceed even if we fail to download symbols
-        bool ok = InitializeDbgHelp();
-        if (!ok) {
-            ok = CrashHandlerDownloadSymbols();
-            if (ok) {
-                InitializeDbgHelp();
-            }
-        }
+        DownloadSymbolsIfNeeded();
     }
 
     auto s = BuildCrashInfoText(condStr, noCallstack);
@@ -355,16 +356,8 @@ void TryUploadCrashReport() {
 
     logf("TryUploadCrashReport: gSymbolPathW: '%s'\n", gSymbolPath);
 
-    bool ok = InitializeDbgHelp();
-    if (ok) {
-        // we preceed even if we can't download symbols or initialize dbghelp
-        ok = CrashHandlerDownloadSymbols();
-        if (!ok) {
-            log("TryUploadCrashReport(): CrashHandlerDownloadSymbols() failed\n");
-        } else {
-            InitializeDbgHelp();
-        }
-    }
+    // we preceed even if we can't download symbols or initialize dbghelp
+    DownloadSymbolsIfNeeded();
 
     char* sv = BuildCrashInfoText(nullptr, true);
     if (str::IsEmpty(sv)) {
