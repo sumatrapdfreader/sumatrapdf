@@ -47,6 +47,7 @@ struct StrVec {
 
         iterator(const StrVec* v, int idx);
         char* operator*() const;
+        StrSpan Span() const;
         iterator& operator++();    // ++it
         iterator& operator++(int); // it++
         iterator& operator+(int);  // it += n

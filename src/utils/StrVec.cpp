@@ -72,12 +72,11 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
 
 static int CalcCapForJoin(const StrVec& v, const char* joint) {
     // it's ok to over-estimate
-    int len = v.Size();
-    size_t jointLen = str::Len(joint);
-    int cap = len * (int)jointLen;
-    for (int i = 0; i < len; i++) {
-        char* s = v.At(i);
-        cap += (int)str::Len(s);
+    int cap = 0;
+    int jointLen = str::Leni(joint);
+    for (auto it = v.begin(); it != v.end(); it++) {
+        auto s = it.Span();
+        cap += s.Size() + 1 + jointLen;
     }
     return cap + 32; // +32 arbitrary buffer
 }
@@ -594,6 +593,10 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
 
 char* StrVec::iterator::operator*() const {
     return page->At(idxInPage);
+}
+
+StrSpan StrVec::iterator::Span() const {
+    return page->AtSpan(idxInPage);
 }
 
 static void Next(StrVec::iterator& it, int n) {
