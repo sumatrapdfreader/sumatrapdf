@@ -219,45 +219,45 @@ func main() {
 
 	// ad-hoc flags to be set manually (to show less options)
 	var (
-		flgGenTranslationsInfoCpp = false
-		flgCppCheck               = false
-		flgCppCheckAll            = false
+		flgBuildLzsa              = false
 		flgClangTidy              = false
 		flgClangTidyFix           = false
-		flgPrintBuildNo           = false
-		flgBuildLzsa              = false
+		flgCppCheck               = false
+		flgCppCheckAll            = false
 		flgFindLargestFilesByExt  = false
+		flgGenTranslationsInfoCpp = false
+		flgPrintBuildNo           = false
 	)
 
 	var (
-		flgRegenPremake    bool
-		flgUpload          bool
-		flgCIBuild         bool
-		flgCIDailyBuild    bool
-		flgUploadCiBuild   bool
-		flgBuildPreRelease bool
-		flgBuildRelease    bool
-		flgWc              bool
-		flgTransDownload   bool
-		flgClean           bool
-		flgCheckAccessKeys bool
-		flgTriggerCodeQL   bool
-		flgClangFormat     bool
-		flgDiff            bool
-		flgGenSettings     bool
-		flgUpdateVer       string
-		flgDrMem           bool
-		flgLogView         bool
-		flgRunTests        bool
-		flgSmoke           bool
-		flgFileUpload      string
-		flgFilesList       bool
-		flgExtractUtils    bool
 		flgBuildLogview    bool
 		flgBuildNo         int
-		flgUpdateGoDeps    bool
+		flgBuildPreRelease bool
+		flgBuildRelease    bool
+		flgBuildSmoke      bool
+		flgCheckAccessKeys bool
+		flgCIBuild         bool
+		flgCIDailyBuild    bool
+		flgClangFormat     bool
+		flgClean           bool
+		flgDiff            bool
+		flgDrMem           bool
+		flgExtractUtils    bool
+		flgFilesList       bool
+		flgFileUpload      string
 		flgGenDocs         bool
+		flgGenSettings     bool
 		flgGenWebsiteDocs  bool
+		flgLogView         bool
+		flgRegenPremake    bool
+		flgRunTests        bool
+		flgTransDownload   bool
+		flgTriggerCodeQL   bool
+		flgUpdateGoDeps    bool
+		flgUpdateVer       string
+		flgUpload          bool
+		flgUploadCiBuild   bool
+		flgWc              bool
 	)
 
 	{
@@ -267,7 +267,7 @@ func main() {
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgCIDailyBuild, "ci-daily", false, "run CI daily steps")
 		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3 and do spaces")
-		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
+		flag.BoolVar(&flgBuildSmoke, "build-smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
 		//flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
@@ -465,7 +465,7 @@ func main() {
 		return
 	}
 
-	if flgSmoke {
+	if flgBuildSmoke {
 		buildSmoke()
 		return
 	}
@@ -492,7 +492,6 @@ func main() {
 	}
 
 	if flgCIBuild {
-		genHTMLDocsForApp()
 		buildCi()
 		if opts.upload {
 			uploadToStorage(buildTypePreRel)
@@ -503,7 +502,6 @@ func main() {
 	}
 
 	if flgBuildRelease {
-		genHTMLDocsForApp()
 		buildRelease()
 		if opts.upload {
 			uploadToStorage(buildTypeRel)
@@ -514,6 +512,7 @@ func main() {
 	}
 
 	// this one is typically for me to build locally, so build all projects
+	// to build less use -build-smoke
 	if flgBuildPreRelease {
 		cleanReleaseBuilds()
 		genHTMLDocsForApp()
