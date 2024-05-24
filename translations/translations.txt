@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-dbc8f83fe50c699f8e6935342fa8d00437d419bf
+34503318b2c8a3e3894e2d1ad2f3d8a4f7445f00
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6182,6 +6182,7 @@ cy:Cau Pob Tab
 cz:Zavřít všechny karty
 de:Alle Tabs schließen
 fr:Fermer tous les onglets
+ga:Dún Gach Cluaisín
 he:סגור את כל הכרטיסיות
 it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
@@ -6250,6 +6251,7 @@ cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
 de:Tabs links schließen
 fr:Fermer les onglets sur la gauche
+ga:Dún cluaisíní ar chlé
 he:סגור כרטיסיות משמאל
 it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
@@ -8754,6 +8756,7 @@ cy:Dileu
 cz:Vymazat
 de:Löschen
 fr:Supprimer
+ga:Scrios
 he:מחק
 hi:मिटाओ
 it:Cancella
@@ -13553,11 +13556,13 @@ cn:在线手册
 co:Manuale nant’à u situ web
 de:Handbuch im Internet
 fr:Manuel sur le site web
+ga:Lámhleabhar ar an Láithreán Gréasáin
 it:Manuale (sito web)
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
 pt:Manual no Site da Web
 ru:Руководство на веб-сайте
+sk:Manuál na webovej stránke
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
 am:Հաշվի առնել մեծատառ/փոքրատառը
@@ -13938,6 +13943,11 @@ uk:Наступна сторінка
 uz:Keyingi bet
 vn:Trang sau
 :No
+br:Não
+ga:Níl
+pl:Nie
+pt:Não
+sk:Nie
 :No matches were found
 am:Ոչինչ չի գտնվել
 ar:لا توجد متطابقات
@@ -21885,6 +21895,11 @@ uk:Документи XPS
 uz:XPS hujjatlari
 vn:Tập tin XPS
 :Yes
+br:Sim
+ga:Tá
+pl:Tak
+pt:Sim
+sk:Áno
 :You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
 am:Սա վերջին տարբերակն է։
