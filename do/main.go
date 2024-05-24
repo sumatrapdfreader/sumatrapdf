@@ -299,7 +299,7 @@ func main() {
 		flag.Parse()
 	}
 
-	if true {
+	if false {
 		genTranslationInfoCpp()
 		return
 	}
