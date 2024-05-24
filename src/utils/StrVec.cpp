@@ -83,18 +83,22 @@ static int CalcCapForJoin(const StrVec& v, const char* joint) {
 
 static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
     int len = v.Size();
-    size_t jointLen = str::Len(joint);
+    int jointLen = str::Leni(joint);
+    // TODO: possibly not handling null values in the middle. need to add more tests and fix
     int firstForJoint = 0;
-    for (int i = 0; i < len; i++) {
-        char* s = v.At(i);
-        if (!s) {
+    int i = 0;
+    for (auto it = v.begin(); it != v.end(); it++) {
+        auto s = it.Span();
+        if (!s.Str()) {
             firstForJoint++;
+            i++;
             continue;
         }
         if (i > firstForJoint && jointLen > 0) {
             res.Append(joint, jointLen);
         }
-        res.Append(s);
+        res.Append(s.Str(), s.Len());
+        i++;
     }
     return res.StealData();
 }
