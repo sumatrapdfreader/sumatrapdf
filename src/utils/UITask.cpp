@@ -33,13 +33,19 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
         auto func = (std::function<void()>*)lp;
         int taskId = (int)wp;
         // logf("uitask::WndPorcTaskDispatch: about to free func 0x%p\n", (void*)func);
-        auto name = seqstrings::IdxToStr(gTaskNames, taskId);
-        if (!name) {
-            name = "not found";
+        // don't log most frequent for less spammy logs
+        bool skipLog = taskId == TaskRepaintAsync;
+        if (!skipLog) {
+            auto name = seqstrings::IdxToStr(gTaskNames, taskId);
+            if (!name) {
+                name = "not found";
+            }
+            logf("uitask::WndProcTaskDispatch: will execute taskID: %d name: %s\n", taskId, name);
         }
-        logf("uitask::WndProcTaskDispatch: will execute taskID: %d name: %s\n", taskId, name);
         (*func)();
-        logf("uitask::WndProcTaskDispatch: did execute, will delete func 0x%p\n", (void*)func);
+        if (!skipLog) {
+            logf("uitask::WndProcTaskDispatch: did execute, will delete func 0x%p\n", (void*)func);
+        }
         delete func;
         return 0;
     }
