@@ -8,7 +8,7 @@
 
 namespace trans {
 
-constexpr int kLangsCount = 72;
+constexpr int kLangsCount = 73;
 
 const char *gLangCodes =   "en\0" \
   "af\0" \
@@ -66,6 +66,7 @@ const char *gLangCodes =   "en\0" \
   "pa\0" \
   "ro\0" \
   "ru\0" \
+  "sat\0" \
   "sr-rs\0" \
   "sp-rs\0" \
   "sn\0" \
@@ -139,6 +140,7 @@ const char *gLangNames =   "English\0" \
   "Punjabi (\340\250\252\340\251\260\340\250\234\340\250\276\340\250\254\340\251\200)\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
+  "Santali (\341\261\245\341\261\237\341\261\261\341\261\233\341\261\237\341\261\262\341\261\244)\0" \
   "Serbian (Cyrillic)\0" \
   "Serbian (Latin)\0" \
   "Shona (Shona)\0" \
@@ -224,6 +226,7 @@ const LANGID gLangIds[kLangsCount] = {
   _LANGID(LANG_PUNJABI),
   _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
+  (LANGID)-1,
   MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC),
   MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN),
   (LANGID)-1,

@@ -1379,6 +1379,29 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />
+    <None Include="..\do\build.go" />
+    <None Include="..\do\check_accesskyes.go" />
+    <None Include="..\do\clang_format.go" />
+    <None Include="..\do\clang_tidy.go" />
+    <None Include="..\do\extract_utils.go" />
+    <None Include="..\do\file_upload.go" />
+    <None Include="..\do\gen_docs.go" />
+    <None Include="..\do\git.go" />
+    <None Include="..\do\github_ci.go" />
+    <None Include="..\do\main.go" />
+    <None Include="..\do\settings_def.go" />
+    <None Include="..\do\settings_gen_code.go" />
+    <None Include="..\do\settings_gen_html.go" />
+    <None Include="..\do\sign.go" />
+    <None Include="..\do\trans_download.go" />
+    <None Include="..\do\trans_gen.go" />
+    <None Include="..\do\trans_langs.go" />
+    <None Include="..\do\translations.go" />
+    <None Include="..\do\update_auto_update_ver.go" />
+    <None Include="..\do\upload_storage.go" />
+    <None Include="..\do\util.go" />
+    <None Include="..\do\vs.go" />
+    <None Include="..\do\wc.go" />
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md" />
     <None Include="..\docs\md\Add-Favorite.md" />
     <None Include="..\docs\md\Advanced-options-settings.md" />

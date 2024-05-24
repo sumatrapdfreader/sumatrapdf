@@ -299,6 +299,11 @@ func main() {
 		flag.Parse()
 	}
 
+	if true {
+		genTranslationInfoCpp()
+		return
+	}
+
 	if flgGenDocs {
 		genHTMLDocsForApp()
 		return

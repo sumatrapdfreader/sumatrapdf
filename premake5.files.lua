@@ -675,6 +675,8 @@ function sumatrapdf_files()
     "../premake5.lua",
     "../premake5.files.lua",
     "../.gitignore",
+
+    "../do/*.go",
   })
   filter {"configurations:Debug or DebugFull"}
     files_in_dir("src", {

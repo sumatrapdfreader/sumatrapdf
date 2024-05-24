@@ -60,6 +60,7 @@ var gLangs = [][]string{
 	{"pt", "Portuguese - Portugal (Português)", "_LANGID(LANG_PORTUGUESE)"},
 	{"ro", "Romanian (Română)", "_LANGID(LANG_ROMANIAN)"},
 	{"ru", "Russian (Русский)", "_LANGID(LANG_RUSSIAN)"},
+	{"sat", "Santali (ᱥᱟᱱᱛᱟᱲᱤ)", "(LANGID)-1"},
 	{"si", "Sinhala (සිංහල)", "_LANGID(LANG_SINHALESE)"},
 	{"sk", "Slovak (Slovenčina)", "_LANGID(LANG_SLOVAK)"},
 	{"sl", "Slovenian (Slovenščina)", "_LANGID(LANG_SLOVENIAN)"},

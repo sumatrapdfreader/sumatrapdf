@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="do">
+      <UniqueIdentifier>{98775900-8403-880B-EDB1-880BD95C880B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="docs">
       <UniqueIdentifier>{CECA957C-BA01-970D-63EE-7C104F04130F}</UniqueIdentifier>
     </Filter>
@@ -551,6 +554,75 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />
+    <None Include="..\do\build.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\check_accesskyes.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\clang_format.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\clang_tidy.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\extract_utils.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\file_upload.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\gen_docs.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\git.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\github_ci.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\main.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\settings_def.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\settings_gen_code.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\settings_gen_html.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\sign.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\trans_download.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\trans_gen.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\trans_langs.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\translations.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\update_auto_update_ver.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\upload_storage.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\util.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\vs.go">
+      <Filter>do</Filter>
+    </None>
+    <None Include="..\do\wc.go">
+      <Filter>do</Filter>
+    </None>
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md">
       <Filter>docs\md</Filter>
     </None>
