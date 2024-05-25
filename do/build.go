@@ -2,7 +2,9 @@ package main
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -112,6 +114,9 @@ var (
 
 func clearDirPreserveSettings(path string) {
 	entries2, err := os.ReadDir(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return
+	}
 	must(err)
 	for _, e2 := range entries2 {
 		name := e2.Name()
