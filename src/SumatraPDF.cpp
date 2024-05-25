@@ -3163,6 +3163,9 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     if (!tab || tab->IsAboutTab()) {
         return;
     }
+    // so that the file is opened in the same state
+    SaveSettings();
+
     const char* path = tab->GetPath();
     ReportIf(!path);
     if (!path) {

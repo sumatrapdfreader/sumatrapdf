@@ -3848,12 +3848,14 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONDOWN: {
-            logfa(
-                "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                "overClose: %d\n",
-                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
-            nWmMouseMoveCount = 0;
             // middle-clicking unconditionally closes the tab
+            if (gLogTabs) {
+                logfa(
+                    "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                    "overClose: %d\n",
+                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
+            }
+            nWmMouseMoveCount = 0;
             tabBeingClosed = tabUnderMouse;
             if (tabBeingClosed < 0 || !canClose) {
                 return 0;
