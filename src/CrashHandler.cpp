@@ -269,7 +269,7 @@ bool InitializeDbgHelp(bool force) {
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), force: %d failed\n", (int)force);
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), gSymbolPath: '%s' force: %d failed\n", gSymbolPath, (int)force);
         return false;
     }
     log("InitializeDbgHelp(): did initialize ok\n");
@@ -650,6 +650,7 @@ static void BuildSymbolPath(const char* symDir) {
 
     char* p = path.CStr();
     str::ReplaceWithCopy(&gSymbolPath, p);
+    logf("BuildSymbolPath: gSymbolPath '%s', symDir '%s'\n", gSymbolPath, symDir);
 }
 
 bool SetSymbolsDir(const char* symDir) {
