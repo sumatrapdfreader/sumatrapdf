@@ -19,6 +19,7 @@ fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 gl:%s anotación. Ctrl+clic para editar.
 he:.כדי לערוך Ctrl +  הערה. לחץ על %s
+hi:%s एनोटेशन । संपादित करने के लिए Ctrl+क्लिक करें।
 hu:Megjegyzés: %s. Szerkesztés: Ctrl+kattintás.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
@@ -5143,6 +5144,7 @@ de:Alle Tabs schließen
 fr:Fermer tous les onglets
 ga:Dún Gach Cluaisín
 he:סגור את כל הכרטיסיות
+hi:सभी टैब को बंद करें
 it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
 nl:Sluit Alle Tabbladen
@@ -11639,7 +11641,9 @@ uk:Наступна сторінка
 vn:Trang sau
 :No
 br:Não
+fr:Non
 ga:Níl
+nl:Nee
 pl:Nie
 pt:Não
 sk:Nie
@@ -18489,7 +18493,9 @@ uk:Документи XPS
 vn:Tập tin XPS
 :Yes
 br:Sim
+fr:Oui
 ga:Tá
+nl:Ja
 pl:Tak
 pt:Sim
 sk:Áno
