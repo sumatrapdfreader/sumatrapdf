@@ -717,6 +717,10 @@ workspace "SumatraPDF"
     -- we exclude the very big cjk fonts
     defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
 
+    filter { "platforms:arm64" }
+        defines { "ARCH_HAS_NEON=1" }
+    filter {}
+
     disablewarnings {
       "4005", "4018", "4057", "4100", "4115", "4130", "4132", "4204", "4206", "4210", "4245", "4267",
       "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819"
@@ -751,6 +755,11 @@ workspace "SumatraPDF"
     optconf()
     disablewarnings { "4206", "4702" }
     defines { "FZ_ENABLE_SVG" }
+
+    filter { "platforms:arm64" }
+        defines { "ARCH_HAS_NEON=1" }
+    filter {}
+
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/libmupdf.rc", "src/libmupdf.def", "src/no_op_for_premake.cpp" }

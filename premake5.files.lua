@@ -1040,7 +1040,7 @@ function mupdf_files()
 
   files_in_dir("mupdf/source/xps", {
     "xps-common.c",
-    "xps-doc.c",d
+    "xps-doc.c",
     "xps-glyphs.c",
     "xps-gradient.c",
     "xps-image.c",

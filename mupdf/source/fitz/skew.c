@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <limits.h>
 
-#ifdef ARCH_HAS_SSE
+#if ARCH_HAS_SSE
 #include <emmintrin.h>
 #include <smmintrin.h>
 #endif
@@ -106,7 +106,7 @@ static int sum_c(const uint8_t *data)
 	return sum;
 }
 
-#ifdef ARCH_HAS_SSE
+#if ARCH_HAS_SSE
 static inline int sum_sse(const uint8_t *data)
 {
 	__m128i mm0, mm1, mm2, mm3, mm4, mm5;
