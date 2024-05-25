@@ -3848,27 +3848,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_MBUTTONDOWN: {
-            if (gLogTabs) {
-                logfa(
-                    "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                    "overClose: %d\n",
-                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
-            }
+            logfa(
+                "TabsCtrl::WndProc: WM_MBUTTONDOWN, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
+                "overClose: %d\n",
+                tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
             nWmMouseMoveCount = 0;
             // middle-clicking unconditionally closes the tab
             tabBeingClosed = tabUnderMouse;
-            HwndScheduleRepaint(hwnd);
-            return 0;
-        }
-
-        case WM_MBUTTONUP: {
-            if (gLogTabs) {
-                logfa(
-                    "TabsCtrl::WndProc: WM_MBUTTONUP, tabUnderMouse: %d, tabHighlited: %d, tabBeingClosed: %d, "
-                    "overClose: %d\n",
-                    tabUnderMouse, tabHighlighted, tabBeingClosed, (int)overClose);
-            }
-            nWmMouseMoveCount = 0;
             if (tabBeingClosed < 0 || !canClose) {
                 return 0;
             }
