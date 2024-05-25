@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/kjk/u"
 )
 
 var (
@@ -476,6 +478,7 @@ func buildCiDaily(opts *BuildOptions) {
 	}
 
 	cleanReleaseBuilds()
+	genHTMLDocsForApp()
 	buildPreRelease(kPlatformArm64, false)
 	buildPreRelease(kPlatformIntel32, false)
 	buildPreRelease(kPlatformIntel64, false)
@@ -504,6 +507,14 @@ func buildCi() {
 func buildPreRelease(platform string, all bool) {
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
+
+	{
+		// make sure we've built manual
+		path := filepath.Join("docs", "manual.dat")
+		size, err := u.GetFileSize(path)
+		must(err)
+		panicIf(size < 2*2024, "size of '%s' is %d which indicates we didn't build it", path, size)
+	}
 
 	ver := getVerForBuildType(buildTypePreRel)
 	s := fmt.Sprintf("buidling pre-release version %s", ver)
