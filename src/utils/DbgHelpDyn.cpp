@@ -14,6 +14,8 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#include "utils/Log.h"
+
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
    have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
    doesn't work.
@@ -180,7 +182,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
     bool needsCleanup = gSymInitializeOk;
 
     if (!DynSymInitializeW) {
-        // plog("dbghelp::Initialize(): SymInitializeW() and SymInitialize() not present in dbghelp.dll");
+        log("dbghelp::Initialize(): SymInitializeW() and SymInitialize() not present in dbghelp.dll");
         return false;
     }
 
@@ -191,7 +193,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
     gSymInitializeOk = DynSymInitializeW(GetCurrentProcess(), symPathW, TRUE);
 
     if (!gSymInitializeOk) {
-        // plog("dbghelp::Initialize(): _SymInitialize() failed");
+        log("dbghelp::Initialize(): DynSymInitializeW() failed");
         return false;
     }
 

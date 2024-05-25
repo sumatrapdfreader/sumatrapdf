@@ -261,6 +261,13 @@ bool CrashHandlerDownloadSymbols() {
     return DownloadAndUnzipSymbols(gSymbolsDir);
 }
 
+bool AreSymbolsDownloaded(const char* symDir) {
+    auto path = path::JoinTemp(gSymbolsDir, "SumatraPDF.pdb");
+    bool areDownloaded = file::Exists(path);
+    logf("AreSymbolsDownloaded(), symDir: '%s', path: '%s', areDownloaded: %d\n", symDir, path, (int)areDownloaded);
+    return areDownloaded;
+}
+
 bool InitializeDbgHelp(bool force) {
     TempWStr ws = ToWStrTemp(gSymbolPath);
     if (!dbghelp::Initialize(ws, force)) {
@@ -269,7 +276,8 @@ bool InitializeDbgHelp(bool force) {
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), gSymbolPath: '%s' force: %d failed\n", gSymbolPath, (int)force);
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), gSymbolPath: '%s' force: %d failed\n", gSymbolPath,
+             (int)force);
         return false;
     }
     log("InitializeDbgHelp(): did initialize ok\n");
@@ -277,16 +285,14 @@ bool InitializeDbgHelp(bool force) {
 }
 
 static bool DownloadSymbolsIfNeeded() {
-    log("DownloadSymbolsIfNeeded()\n");
-    bool ok = InitializeDbgHelp(false);
-    if (ok) {
-        return true;
+    log("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir);
+    if (!AreSymbolsDownloaded(gSymbolsDir)) {
+        bool ok = CrashHandlerDownloadSymbols();
+        if (!ok) {
+            return false;
+        }
     }
-    ok = CrashHandlerDownloadSymbols();
-    if (!ok) {
-        return false;
-    }
-    return InitializeDbgHelp(true);
+    return InitializeDbgHelp(false);
 }
 
 // like crash report, but can be triggered without a crash

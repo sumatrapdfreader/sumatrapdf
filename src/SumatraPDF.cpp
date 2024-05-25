@@ -4899,7 +4899,8 @@ void ClearHistory(MainWindow* win) {
 
 static void DownloadDebugSymbols() {
     TempStr msg = (TempStr) "Symbols were already downloaded";
-    bool ok = InitializeDbgHelp(false);
+
+    bool ok = AreSymbolsDownloaded(gSymbolsDir);
     if (ok) {
         goto ShowMessage;
     }
@@ -4909,8 +4910,8 @@ static void DownloadDebugSymbols() {
         goto ShowMessage;
     }
     msg = str::FormatTemp("Downloaded symbols to %s", gSymbolsDir);
-    if (ok) {
-        bool didInitializeDbgHelp = InitializeDbgHelp(true);
+    {
+        bool didInitializeDbgHelp = InitializeDbgHelp(false);
         ReportIfQuick(!didInitializeDbgHelp);
     }
 ShowMessage:
