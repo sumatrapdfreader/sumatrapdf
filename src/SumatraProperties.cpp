@@ -513,7 +513,6 @@ static void AddPdfFileStructure(DocController* ctrl, PropertiesLayout* layoutDat
 
     const char* linearized = _TRA("No");
     if (parts.Contains("linearized")) {
-        props.Append(_TRA("Fast Web View"));
         linearized = _TRA("Yes");
     }
     layoutData->AddProperty(_TRA("Fast Web View"), linearized);
