@@ -907,6 +907,7 @@
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer\PdfPreviewBase.h" />
+    <ClInclude Include="..\src\utils\Log.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChmFile.cpp" />
@@ -930,6 +931,7 @@
     <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
+    <ClCompile Include="..\src\utils\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\previewer\PdfPreview.rc" />

@@ -1197,7 +1197,7 @@ function pdf_preview_files()
   })
 
   files_in_dir("src", {
-    "utils/LogDbg.*",
+    "utils/Log.*",
     "mui/Mui.*",
     "mui/TextRender.*",
     "ChmFile.*",
@@ -1230,7 +1230,7 @@ function search_filter_files()
     "FilterBase.h",
   })
   files_in_dir("src", {
-    "utils/LogDbg.*",
+    "utils/Log.*",
     "MUPDF_Exports.cpp",
     "DocProperties.*",
     "EbookDoc.*",

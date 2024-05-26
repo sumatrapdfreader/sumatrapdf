@@ -4,6 +4,9 @@
     <Filter Include="ifilter">
       <UniqueIdentifier>{74F9F98B-E0D8-7827-E9F0-03FE554FDF88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\DocProperties.h" />
@@ -26,6 +29,9 @@
     <ClInclude Include="..\src\ifilter\TeXFilter.h">
       <Filter>ifilter</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\Log.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\DocProperties.cpp" />
@@ -47,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ifilter\TeXFilter.cpp">
       <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Log.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

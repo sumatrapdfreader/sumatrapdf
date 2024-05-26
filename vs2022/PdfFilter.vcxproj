@@ -902,6 +902,7 @@
     <ClInclude Include="..\src\ifilter\FilterBase.h" />
     <ClInclude Include="..\src\ifilter\PdfFilter.h" />
     <ClInclude Include="..\src\ifilter\TeXFilter.h" />
+    <ClInclude Include="..\src\utils\Log.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\DocProperties.cpp" />
@@ -934,6 +935,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\utils\Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\ifilter\PdfFilter.rc" />

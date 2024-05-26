@@ -34,7 +34,7 @@ void log(const char* s, int) {
     printf("%s", s);
 }
 
-void log(const char* s) {
+void log(const char* s, bool) {
     int cb = (int)str::Len(s);
     log(s, cb);
 }
