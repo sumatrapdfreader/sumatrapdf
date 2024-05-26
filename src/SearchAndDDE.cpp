@@ -752,8 +752,9 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
     if (!next) {
         return nullptr;
     }
-    logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d\n", filePath.Get(),
-         newWindow, setFocus, forceRefresh, inCurrentTab);
+    bool isCtrl = IsCtrlPressed();
+    logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d, isCtrl: %d\n",
+         filePath.CStr(), newWindow, setFocus, forceRefresh, inCurrentTab, isCtrl);
     // on startup this is called while LoadDocument is in progress, which causes
     // all sort of mayhem. Queue files to be loaded in a sequence
     if (gIsStartup) {
@@ -828,10 +829,11 @@ static const char* HandleOpenCmd(const char* cmd, bool* ack) {
 
     if (doLoad) {
         LoadArgs args(filePath, win);
-        args.activateExisting = !IsCtrlPressed();
+        args.activateExisting = !isCtrl;
         if (newWindow) {
             args.activateExisting = false;
         }
+        logf("HandleOpenCmd: calling LoadDocument(), activateExisting: %d\n", (int)args.activateExisting);
         win = LoadDocument(&args);
         if (!win) {
             logf("HandleOpenCmd: LoadDocument() for '%s' failed\n", filePath.Get());

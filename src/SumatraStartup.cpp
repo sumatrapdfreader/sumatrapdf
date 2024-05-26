@@ -79,7 +79,6 @@ class FileExistenceChecker : public ThreadBase {
 
     void GetFilePathsToCheck();
     void HideMissingFiles();
-    void Terminate();
 
   public:
     FileExistenceChecker() {
@@ -119,27 +118,25 @@ void FileExistenceChecker::HideMissingFiles() {
     }
 }
 
-void FileExistenceChecker::Terminate() {
-    gFileExistenceChecker = nullptr;
-    Join(); // just to be safe
-    delete this;
-}
-
 void FileExistenceChecker::Run() {
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
-    for (int i = 0; i < paths.Size(); i++) {
+    int n = paths.Size();
+    for (int i = n - 1; i >= 0; i--) {
         const char* path = paths[i];
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-            paths.RemoveAt(i--);
+            paths.RemoveAt(i);
         }
     }
 
     uitask::Post(TaskHideMissingFiles, [=] {
         CrashIf(WasCancelRequested());
         HideMissingFiles();
-        Terminate();
+
+        gFileExistenceChecker = nullptr;
+        Join(); // just to be safe
+        delete this;
     });
 }
 

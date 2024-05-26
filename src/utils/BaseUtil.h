@@ -244,10 +244,10 @@ void _uploadDebugReport(const char*, bool);
 void CrashIfFunc(bool cond, const char* condStr);
 
 // trigger a crash if cond is true and we're pre-release, debug or asan build
-#define CrashIf(cond)           \
-    __analysis_assume(!(cond)); \
-    do {                        \
-        CrashIfFunc(cond, #cond);      \
+#define CrashIf(cond)             \
+    __analysis_assume(!(cond));   \
+    do {                          \
+        CrashIfFunc(cond, #cond); \
     } while (0)
 
 // trigger a crash always, even in release builds
