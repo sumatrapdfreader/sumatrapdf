@@ -62,7 +62,7 @@ hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:Info progr&amma
+it:&Informazioni su...
 ja:バージョン情報(&A)
 kr:정보(&A)
 kw:&A-dro dhe...
@@ -1289,6 +1289,7 @@ tw:螢光標示(&H)
 uk:Виділити
 vn:&Nổi Bật
 :&Keyboard Shortcuts
+am:&Հիմնաբառի դյուրանցումներ
 az:&Klaviatura birləşmələri
 br:&Atalhos do Teclado
 ca:&Dreceres de teclat
@@ -1422,7 +1423,7 @@ am:&Օգնություն
 ar:&التعليمات
 az:&Təlimat
 bg:&Ръководство
-br:&Manual
+br:&Manual (em inglês)
 by:&Кіраўніцтва
 ca:&Manual
 ca-xv:&Manual
@@ -4832,7 +4833,7 @@ hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
-it:Lingua interfaccia utente
+it:Lingua interfaccia utente (UI Language)
 ja:言語の変更 (Change Language)
 kr:언어 바꾸기(Change Language)
 kw:Chanjya yeth (Change Language)
@@ -4885,7 +4886,7 @@ hi:नए संसकरण के लिए जांच करें(&C)
 hr:Provjeri ažuriranje
 hu:&Frissítések keresése
 id:Periksa Versi Terbar&u
-it:Controlla &aggiornamenti programma
+it:Controlla &aggiornamenti
 ja:更新のチェック(&U)
 kr:업데이트 확인(&U)
 kw:&Checkya rag versyon nowydh
@@ -5134,6 +5135,7 @@ tw:關閉
 uk:Закрити
 vn:Đóng lại
 :Close All Tabs
+am:Փակել բոլոր ներդիրները
 br:Fechar Todas as Abas
 ca:Tanca totes les pestanyes
 cn:关闭所有标签页
@@ -5141,6 +5143,7 @@ co:Chjode tutte l’unghjette
 cy:Cau Pob Tab
 cz:Zavřít všechny karty
 de:Alle Tabs schließen
+es:Cerrar todas las pestañas
 fr:Fermer tous les onglets
 ga:Dún Gach Cluaisín
 he:סגור את כל הכרטיסיות
@@ -5201,6 +5204,7 @@ tw:關閉其他分頁
 uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
+am:Փակել ձախ կողմի ներդիրները
 br:Fechar Abas a Esquerda
 ca:Tanca totes les pestanyes de l'esquerra
 cn:关闭左侧标签页
@@ -5208,6 +5212,7 @@ co:Chjode l’unghjette versu a manca
 cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
 de:Tabs links schließen
+es:Cerrar pestañas a la izquierda
 fr:Fermer les onglets sur la gauche
 ga:Dún cluaisíní ar chlé
 he:סגור כרטיסיות משמאל
@@ -5247,7 +5252,7 @@ hi:दाईं ओर के टैब बंद करें
 hr:Zatvori kartice zdesna
 hu:Jobbra lévő lapok bezárása
 id:Tutup Tab Ke Kanan
-it:Chiudi scheda sulla destra
+it:Chiudi schede a destra
 ja:右側のタブを閉じる
 kr:오른쪽 탭 닫기
 nl:Sluit Tabbladen Rechts
@@ -6476,7 +6481,7 @@ hi:पेज रेंडर नहीं कर सका
 hr:Nije moguće iscrtati stranicu
 hu:Oldalfeldolgozási hiba
 id:Gagal menampilkan halaman
-it:Impossibile renderizzare la pagina
+it:Impossibile visualizzare la pagina
 ja:ページを描画できませんでした
 kr:페이지를 렌더링할 수 없습니다.
 kw:Ny yllys rendra folen
@@ -6947,7 +6952,7 @@ hi:कर्सर का स्थान
 hr:Pozicija pokazivača:
 hu:Kurzor pozíció:
 id:Posisi kursor:
-it:Posizione cursore
+it:Posizione cursore:
 ja:カーソル位置：
 kr:커서 위치:
 kw:Le resor:
@@ -7279,6 +7284,7 @@ tw:預設縮放(&Z):
 uk:Масштаб за замовчуванням:
 vn:Kích thước mặc định
 :Delete
+am:Ջնջել
 br:Apagar
 ca:Suprimeix
 cn:删除
@@ -7286,6 +7292,7 @@ co:Squassà
 cy:Dileu
 cz:Vymazat
 de:Löschen
+es:Eliminar
 fr:Supprimer
 ga:Scrios
 he:מחק
@@ -7671,7 +7678,7 @@ hi:पूर्ण स्क्रीन से बाहर निकलें
 hr:I&zlaz iz cijelog ekrana
 hu:Kilépés a teljes képernyőből
 id:Keluar dari layar penuh
-it:Esci da schermo pieno
+it:Esci da schermo intero
 ja:全画面を終了(&X)
 kr:전체화면 종료(&X)
 kw:Kwytya Skrin-leun
@@ -7990,6 +7997,7 @@ tw:請輸入滑鼠按兩下 PDF 文件時，應執行的命令(&E):
 uk:Введіть командну стрічку, що викликається при подвійному клацані на PDF-документі:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 :Error
+am:Սխալ
 az:Xəta
 br:Erro
 ca:Error
@@ -8019,7 +8027,7 @@ sk:Chyba
 sr-rs:Грешка
 tw:錯誤
 :Error loading %s
-am:Բացման սխալ %s
+am:Սխալ բեռնելիս %s
 ar:%s خطأ في التحميل
 az:%s faylının yüklənməsində xəta baş verdi
 bg:Грешка при зареждане на %s
@@ -8249,7 +8257,7 @@ hi:पूर्ण स्क्रीन
 hr:P&uni zaslon
 hu:&Teljes képernyő
 id:Layar penuh
-it:Sc&hermo pieno
+it:Sc&hermo intero
 ja:全画面表示(&U)
 kr:전체화면(&U)
 nl:V&oledig Scherm
@@ -11316,10 +11324,12 @@ tw:漫畫模式(&G)
 uk:Режим манги
 vn:Kiểu &Manga
 :Manual On Website
+am:Ձեռնարկը կայքում
 br:Manual no Site da Web
 cn:在线手册
 co:Manuale nant’à u situ web
 de:Handbuch im Internet
+es:Manual en la Web
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
 it:Manuale (sito web)
@@ -11640,9 +11650,13 @@ tw:下一頁
 uk:Наступна сторінка
 vn:Trang sau
 :No
+am:Ոչ
 br:Não
+de:Nein
+es:No
 fr:Non
 ga:Níl
+it:No
 nl:Nee
 pl:Nie
 pt:Não
@@ -16068,7 +16082,7 @@ am:Ցուցադրել &ոլորգոտիները
 ar:إظهار شريط التمرير
 az:&Sürüşdürmə zolaqlarını göstər
 bg:Покажи &лентите за превъртане (Scrollbars)
-br:Mostrar as &Barras de Rolagem
+br:Mostrar as &barras de rolagem
 by:Паказваць &палоскі пракруткі
 ca:Mostra les barres de &desplaçament
 ca-xv:Mostra les barres de &desplaçament
@@ -18362,7 +18376,7 @@ hi:वेबसाइट देखें(&W)
 hr:&Posjeti internetsku stranicu
 hu:&Weboldal
 id:&Kunjungi Situs
-it:Sito &web programma
+it:Visita il sito &web
 ja:Web サイトの訪問(&W)
 kr:웹 사이트 방문(&W)
 kw:&Mos dhe'n wiasva
@@ -18492,9 +18506,13 @@ tw:XPS 文件
 uk:Документи XPS
 vn:Tập tin XPS
 :Yes
+am:Այո
 br:Sim
+de:Ja
+es:Sí
 fr:Oui
 ga:Tá
+it:Sì
 nl:Ja
 pl:Tak
 pt:Sim
