@@ -1446,6 +1446,7 @@
     <None Include="..\docs\wishlist.txt" />
     <None Include="..\premake5.files.lua" />
     <None Include="..\premake5.lua" />
+    <None Include="..\premake5.obsolete.lua" />
     <None Include="..\src\ext\versions.txt" />
     <None Include="..\src\scratch.txt" />
   </ItemGroup>

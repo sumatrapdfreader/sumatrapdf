@@ -673,6 +673,7 @@ function sumatrapdf_files()
     "../docs/*.txt",
     "../docs/md/*.md",
     "../premake5.lua",
+    "../premake5.obsolete.lua",
     "../premake5.files.lua",
     "../.gitignore",
 
