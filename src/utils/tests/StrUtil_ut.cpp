@@ -288,6 +288,13 @@ static void AppendStrings(StrVec& v, const char** strings, int nStrings) {
 const char* strs[] = {"foo", "bar", "Blast", nullptr, "this is a large string, my friend"};
 
 static void StrVecTest() {
+    {
+        StrVec v;
+        const char* s = "lolda";
+        v.InsertAt(0, s);
+        utassert(v.Size() == 1);
+        utassert(str::Eq(v.At(0), s));
+    }
     // order in strs
     int unsortedOrder[] = {0, 1, 2, 3, 4};
     int sortedOrder[]{3, 2, 1, 0, 4};

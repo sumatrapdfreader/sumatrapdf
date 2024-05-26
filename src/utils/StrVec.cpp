@@ -207,7 +207,7 @@ char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
 }
 
 char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
-    CrashIfFunc(idx < 0 || idx > nStrings);
+    CrashIf(idx < 0 || idx > nStrings);
 
     int cbNeeded = sizeof(u32) * 2; // for offset / size
     if (s) {
@@ -402,6 +402,24 @@ static int CalcNextPageSize(int currSize) {
     return currSize * 2;
 }
 
+static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
+    int minPageSize = kStrVecPageHdrSize + nBytesNeeded;
+    int pageSize = RoundUp(minPageSize, 8);
+    if (pageSize < v->nextPageSize) {
+        pageSize = v->nextPageSize;
+        v->nextPageSize = CalcNextPageSize(v->nextPageSize);
+    }
+    auto page = AllocStrVecPage(pageSize);
+    if (last) {
+        CrashIf(!v->first);
+        last->next = page;
+    } else {
+        CrashIf(v->first);
+        v->first = page;
+    }
+    return page;
+}
+
 char* StrVec::Append(const char* s, int sLen) {
     if (sLen < 0) {
         sLen = str::Leni(s);
@@ -415,21 +433,7 @@ char* StrVec::Append(const char* s, int sLen) {
         last = last->next;
     }
     if (!last || last->BytesLeft() < nBytesNeeded) {
-        int minPageSize = kStrVecPageHdrSize + nBytesNeeded;
-        int pageSize = RoundUp(minPageSize, 8);
-        if (pageSize < nextPageSize) {
-            pageSize = nextPageSize;
-            nextPageSize = CalcNextPageSize(nextPageSize);
-        }
-        auto page = AllocStrVecPage(pageSize);
-        if (last) {
-            CrashIf(!first);
-            last->next = page;
-        } else {
-            CrashIf(first);
-            first = page;
-        }
-        last = page;
+        last = AllocatePage(this, last, nBytesNeeded);
     }
     auto res = last->Append(s, sLen);
     size++;
@@ -451,58 +455,14 @@ int AppendIfNotExists(StrVec& v, const char* s, int sLen) {
 
 static std::pair<StrVecPage*, int> PageForIdx(const StrVec* v, int idx) {
     auto page = v->first;
-    while (page) {
+    while (page && idx > 0) {
         if (page->nStrings > idx) {
             return {page, idx};
         }
         idx -= page->nStrings;
         page = page->next;
     }
-    return {nullptr, 0};
-}
-
-char* StrVec::At(int idx) const {
-    auto [page, idxInPage] = PageForIdx(this, idx);
-    return page->At(idxInPage);
-}
-
-StrSpan StrVec::AtSpan(int idx) const {
-    auto [page, idxInPage] = PageForIdx(this, idx);
-    return page->AtSpan(idxInPage);
-}
-
-char* StrVec::operator[](int idx) const {
-    CrashIf(idx < 0);
-    return At(idx);
-}
-
-int StrVec::Find(const char* s, int startAt) const {
-    auto end = this->end();
-    for (auto it = this->begin() + startAt; it != end; it++) {
-        char* s2 = *it;
-        if (str::Eq(s, s2)) {
-            return it.idx;
-        }
-    }
-    return -1;
-}
-
-int StrVec::FindI(const char* s, int startAt) const {
-    auto end = this->end();
-    for (auto it = this->begin() + startAt; it != end; it++) {
-        // TODO(perf): check length firsts
-        char* s2 = *it;
-        if (str::EqI(s, s2)) {
-            return it.idx;
-        }
-    }
-    return -1;
-}
-
-// TODO: needs to use sLen
-bool StrVec::Contains(const char* s, int) const {
-    int idx = Find(s);
-    return idx != -1;
+    return {page, 0};
 }
 
 // returns a string
@@ -532,6 +492,9 @@ char* StrVec::SetAt(int idx, const char* s, int sLen) {
 // note: this might invalidate previously returned strings because
 // it might re-allocate memore used for those strings
 char* StrVec::InsertAt(int idx, const char* s, int sLen) {
+    if (idx == size) {
+        return Append(s, sLen);
+    }
     {
         auto [page, idxInPage] = PageForIdx(this, idx);
         if (sLen < 0) {
@@ -577,6 +540,50 @@ bool StrVec::Remove(const char* s) {
         return true;
     }
     return false;
+}
+
+char* StrVec::At(int idx) const {
+    auto [page, idxInPage] = PageForIdx(this, idx);
+    return page->At(idxInPage);
+}
+
+StrSpan StrVec::AtSpan(int idx) const {
+    auto [page, idxInPage] = PageForIdx(this, idx);
+    return page->AtSpan(idxInPage);
+}
+
+char* StrVec::operator[](int idx) const {
+    CrashIf(idx < 0);
+    return At(idx);
+}
+
+int StrVec::Find(const char* s, int startAt) const {
+    auto end = this->end();
+    for (auto it = this->begin() + startAt; it != end; it++) {
+        char* s2 = *it;
+        if (str::Eq(s, s2)) {
+            return it.idx;
+        }
+    }
+    return -1;
+}
+
+int StrVec::FindI(const char* s, int startAt) const {
+    auto end = this->end();
+    for (auto it = this->begin() + startAt; it != end; it++) {
+        // TODO(perf): check length firsts
+        char* s2 = *it;
+        if (str::EqI(s, s2)) {
+            return it.idx;
+        }
+    }
+    return -1;
+}
+
+// TODO: needs to use sLen
+bool StrVec::Contains(const char* s, int) const {
+    int idx = Find(s);
+    return idx != -1;
 }
 
 StrVec::iterator StrVec::begin() const {

@@ -241,26 +241,13 @@ void _uploadDebugReport(const char*, bool);
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 
-// TODO: maybe change to NO_INLINE since now I can filter callstack
-// on the server
-inline void CrashIfFunc(bool cond) {
-    if (!cond) {
-        return;
-    }
-    if (IsDebuggerPresent()) {
-        DebugBreak();
-        return;
-    }
-#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
-    CrashMe();
-#endif
-}
+void CrashIfFunc(bool cond, const char* condStr);
 
 // trigger a crash if cond is true and we're pre-release, debug or asan build
 #define CrashIf(cond)           \
     __analysis_assume(!(cond)); \
     do {                        \
-        CrashIfFunc(cond);      \
+        CrashIfFunc(cond, #cond);      \
     } while (0)
 
 // trigger a crash always, even in release builds
