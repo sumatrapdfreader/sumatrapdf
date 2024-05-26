@@ -762,7 +762,6 @@ function utils_files()
     "Vec.h",
     "VecSegmented.h",
     "WebpReader.*",
-    "AvifReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
     "ZipUtil.*",

@@ -869,7 +869,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4267", "4457" }
     engine_dump_files()
     links_zlib()
-    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
+    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu", "dav1d", "libheif" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
       "version", "windowscodecs", "wininet"
