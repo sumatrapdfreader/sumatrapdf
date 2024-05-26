@@ -599,8 +599,6 @@ https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-path
 http://p-nand-q.com/python/procmon.html
 https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools
 
-
-
 Setting symbol path:
 add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
 add GetEnvironmentVariableA("_NT_ALT_SYMBOL_PATH ", ..., ...)
@@ -612,7 +610,7 @@ for symbols server symsrv.dll is needed, installed with debug tools for windows
 
 static bool gAddNtSymbolPath = true;
 static bool gAddSymbolServer = true;
-static bool gAddExeDir = true;
+static bool gAddExeDir = false;
 
 static void BuildSymbolPath(const char* symDir) {
     str::Str path(1024);
