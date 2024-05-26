@@ -139,6 +139,15 @@ static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
         dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     }
 
+    s.Append("\n\n-------- Log -----------------\n\n");
+    s.Append(gLogBuf->LendData());
+
+    if (gSettingsFile) {
+        s.Append("\n\n----- Settings file ----------\n\n");
+        s.Append(gSettingsFile);
+        s.Append("\n\n");
+    }
+
     if (addCallstack) {
         dbghelp::GetAllThreadsCallstacks(s);
         s.Append("\n");
@@ -147,14 +156,6 @@ static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
     s.Append(gModulesInfo);
     s.Append("\nModules loaded later:\n");
     GetModules(s, true);
-
-    s.Append("\n\n-------- Log -----------------\n\n");
-    s.Append(gLogBuf->LendData());
-
-    if (gSettingsFile) {
-        s.Append("\n\n----- Settings file ----------\n\n");
-        s.Append(gSettingsFile);
-    }
 
     return s.StealData();
 }
