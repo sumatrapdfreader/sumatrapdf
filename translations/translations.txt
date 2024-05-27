@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a1ef0b731fefe8c69521a93d7887542980aed8ed
+253e760d0b273692dace0578ecf51c61f6e1376e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -148,7 +148,7 @@ pl:&Rozmiar rzeczywisty
 pt:&Tamanho Real
 ro:&Mărimea actuală
 ru:Насто&ящий размер
-sat:ᱢᱩᱞ ᱢᱟᱯ
+sat:&ᱢᱩᱞ ᱢᱟᱯ
 sk:&Aktuálna veľkosť
 sl:Dej&anska velikost
 sr-rs:&Стварна величина
@@ -212,7 +212,7 @@ pl:Opcje &zaawansowane...
 pt:Opções &Avançadas...
 ro:Opțiuni &avansate...
 ru:&Расширенные настройки...
-sat:ᱩᱱᱱᱚᱛ ᱵᱟᱪᱷᱟᱣᱟᱜ ...
+sat:&ᱩᱱᱱᱚᱛ ᱵᱟᱪᱷᱟᱣᱟᱜ ...
 si:සංකීර්ණ සැකසුුම්
 sk:&Rozšírené možnosti...
 sl:N&apredne možnosti …
@@ -338,7 +338,7 @@ pl:&Wstecz
 pt:&Recuar
 ro:&Înapoi
 ru:&Назад
-sat:ᱛᱟᱭᱚᱢ
+sat:&ᱛᱟᱭᱚᱢ
 sk:&Späť
 sl:Nazaj
 sr-rs:&Назад
@@ -388,7 +388,7 @@ pl:Widok o&dczytu
 pt:&Ver como livro
 ro:&Vizualizare în format carte
 ru:В &разворот
-sat:ᱯᱚᱛᱚᱵ ᱧᱮᱞ
+sat:&ᱯᱚᱛᱚᱵ ᱧᱮᱞ
 sk:&Zobraziť ako knihu
 sl:Knjižni pogled
 sr-rs:Приказ &књиге
@@ -959,6 +959,7 @@ pl:&Wiele stron
 pt:&Lado a lado
 ro:&Două pagini
 ru:По &две страницы
+sat:&ᱥᱟᱢᱟᱝ
 sk:&Dve strany
 sl:Dvostransko
 sr-rs:Д&ве странице
@@ -1146,6 +1147,7 @@ pl:&Pierwsza strona
 pt:&Primeira página
 ro:&Prima pagină
 ru:Пер&вая страница
+sat:&ᱯᱩᱭᱞᱩ ᱥᱟᱦᱴᱟ
 sk:P&rvá strana
 sl:Prva stran
 sr-rs:П&рва страница
@@ -1260,6 +1262,7 @@ pl:&Dowolny tekst
 pt:Te&xto livre
 ro:&Text liber
 ru:Сво&бодный текст
+sat:&ᱯᱷᱨᱤ ᱚᱞ
 sk:&Voľný text
 sl:&Prosti tekst
 sr-rs:&Слободан текст
@@ -1326,6 +1329,7 @@ pl:&Idź do
 pt:&Ir para
 ro:Sal&t la
 ru:Пере&ход
+sat:&ᱛᱮ ᱪᱟᱞᱟᱜ
 si:&යන්න (G)
 sk:P&rejsť na
 sl:Po&jdi na
@@ -1467,6 +1471,7 @@ pl:&Pomoc
 pt:Aj&uda
 ro:A&jutor
 ru:&Справка
+sat:&ᱜᱚᱲᱚ
 si:&උදව් (H)
 sk:&Pomoc
 sl:Po&moč
@@ -1518,6 +1523,7 @@ pl:&Wyróżnienie
 pt:&Destacar
 ro:&Evidențiere
 ru:По&дсветка
+sat:&ᱪᱤᱱᱦᱟᱹ
 sk:&Zvýrazniť
 sl:O&znači
 sr-rs:&Маркирај
@@ -1556,6 +1562,7 @@ pl:Skróty &klawiaturowe
 pt:Atal&hos de teclado
 ro:&Comandă rapidă de la tastatură
 ru:&Горячие клавиши
+sat:&ᱠᱟᱹᱴᱷᱤᱵᱚᱰ ᱥᱚᱴᱠᱚᱴᱠᱚ
 sk:&Klávesové skratky
 sr-rs:&Пречице на тастатури
 tw:鍵盤快速鍵(&K)
@@ -1596,6 +1603,7 @@ pl:&Ostatnia strona
 pt:Ú&ltima página
 ro:&Ultima pagină
 ru:Последня&я страница
+sat:ᱢ&ᱩᱪᱟᱹᱫ ᱥᱟᱦᱴᱟ
 sk:Posl&edná strana
 sl:Zadnja stran
 sr-rs:&Задња страница
@@ -1655,6 +1663,7 @@ pl:&Powiększenie:
 pt:A&mpliação:
 ro:&Factor mărire:
 ru:Мас&штабирование:
+sat:&ᱢᱟᱨᱟᱝᱦᱚᱪᱚ ᱺ
 si:&විශාලනය:
 sk:&Zobrazenie:
 sl:&Povečava:
@@ -1724,6 +1733,7 @@ pl:Instrukcja o&bsługi
 pt:&Manual
 ro:&Manual
 ru:&Руководство пользователя
+sat:&ᱜᱚᱲᱚᱯᱩᱛᱷᱤ
 si:&අත්පොත (M)
 sk:&Príručka
 sl:P&riročnik
@@ -1841,6 +1851,7 @@ pl:&Następna strona
 pt:Página segui&nte
 ro:&Pagina următoare
 ru:&Следующая страница
+sat:&ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢ ᱥᱟᱦᱴᱟ
 sk:Ďal&šia strana
 sl:Naslednja stran
 sr-rs:&Следећа страница
@@ -2037,6 +2048,7 @@ pl:&Otwórz dokument
 pt:Abrir d&ocumento
 ro:Deschide d&ocument
 ru:&Открыть документ
+sat:ᱫᱚᱞᱤᱞ &ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ
 si:&ලේඛනයක් ව්වෘත කරන්න
 sk:&Otvoriť dokument
 sl:&Odpri dokument
@@ -2152,6 +2164,7 @@ pl:&Opcje
 pt:&Opções
 ro:&Opţiuni
 ru:&Параметры
+sat:&ᱵᱟᱪᱷᱟᱣᱟᱜᱠᱚ
 si:&විකල්ප
 sk:&Možnosti
 sl:M&ožnosti
@@ -2217,6 +2230,7 @@ pl:&Opcje...
 pt:&Opções...
 ro:&Opțiuni...
 ru:&Параметры...
+sat:&ᱢᱚᱱᱮ ᱛᱮᱭᱟᱜᱠᱚ ...
 si:&විකල්ප... (O)
 sk:&Možnosti...
 sl:&Možnosti …
@@ -2349,6 +2363,7 @@ pl:&Przypnij dokument
 pt:Fi&xar documento
 ro:&Fixează document
 ru:&Запомнить документ
+sat:ᱫᱚᱞᱤᱞ &ᱞᱟᱴᱷᱟᱭ ᱢᱮ
 si:&ලේඛනය පින් කරන්න
 sk:&Pripnúť dokument
 sl:&Pritrdi dokument
@@ -2401,6 +2416,7 @@ pl:&Poprzednia strona
 pt:&Página anterior
 ro:&Pagina anterioară
 ru:Пр&едыдущая страница
+sat:&ᱢᱟᱲᱟᱝ ᱥᱟᱦᱴᱟ
 sk:&Predchádzajúca strana
 sl:&Prejšnja stran
 sr-rs:&Претходна страница
@@ -2656,6 +2672,7 @@ pl:Pamiętaj ustawienia dla &każdego dokumentu
 pt:Memo&rizar estas definições para todos os documentos
 ro:&Reține aceste opțiuni pentru fiecare document
 ru:Запомнит&ь эти параметры для каждого документа
+sat:ᱡᱷᱚᱛᱚ ᱫᱚᱞᱤᱞ ᱯᱤᱪᱷᱟ ᱱᱚᱶᱟ ᱥᱟᱡᱟᱣ &ᱢᱚᱱᱮ ᱫᱚᱦᱚ ᱠᱟᱜ ᱢᱮ
 si:මෙම සැකසුම් සියලු ගොනු සදහා &මතක තබාගන්න
 sk:&Zapamätať si tieto nastavenia pre každý dokument
 sl:Zapomni si te &nastavitve za vsak dokument
@@ -2713,6 +2730,7 @@ pl:&Usuń z historii
 pt:&Remover do histórico
 ro:&Șterge din istoric
 ru:&Удалить из истории
+sat:ᱱᱟᱜᱟᱢ ᱠᱷᱚᱱ &ᱚᱪᱚᱜᱽ ᱢᱮ
 sk:&Odstrániť z histórie
 sl:Odst&rani iz zgodovine
 sr-rs:&Уклони из историје
@@ -2879,6 +2897,7 @@ pl:&Szukaj za pomocą Google
 pt:Pe&squisar com Google
 ro:&Caută cu Google
 ru:&Найти в Google
+sat:&ᱜᱩᱜᱚᱞ(Google) ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:&Hľadať pomocou Google
 sl:&Išči z Google
 sr-rs:&Претражи помоћу Google-а
@@ -2940,6 +2959,7 @@ pl:&Ustawienia
 pt:Definiçõe&s
 ro:&Opțiuni
 ru:&Настройки
+sat:&ᱥᱟᱡᱟᱣᱠᱚ
 si:සැකසුම් (E)
 sk:&Nastavenia
 sl:&Nastavitve
@@ -3055,6 +3075,7 @@ pl:&Pojedyncza strona
 pt:&Uma página
 ro:&O singură pagină
 ru:По &одной странице
+sat:&ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱦᱴᱟ
 sk:Jedna &strana
 sl:Eno&stransko
 sr-rs:&Једна страница
@@ -3104,6 +3125,7 @@ pl:Pie&częć
 pt:&Carimbo
 ro:&Ștampilă
 ru:&Штамп
+sat:&ᱥᱴᱟᱢᱯ
 sk:P&ečiatka
 sl:&Žig
 sr-rs:Пе&чат
@@ -3153,6 +3175,7 @@ pl:&Skreślenie
 pt:Ra&surado
 ro:&Tăiat
 ru:Зач&ёркнутый
+sat:&ᱛᱟᱞᱟᱜᱟᱨ
 sk:P&rečiarknuť
 sl:&Prečrtano
 sr-rs:Пре&цртано
@@ -3204,6 +3227,7 @@ pl:&Tekst
 pt:&Texto
 ro:&Text
 ru:&Текст
+sat:&ᱚᱞ
 sk:&Text
 sl:&Besedilo
 sr-rs:&Текст
@@ -3260,6 +3284,7 @@ pl:&Motyw
 pt:&Tema
 ro:&Temă
 ru:&Тема
+sat:&ᱛᱷᱤᱢ
 si:&තේමා
 sk:&Téma
 sl:&Tema
@@ -3314,6 +3339,7 @@ pl:&Tłumacz za pomocą Google
 pt:&Traduzir com Google
 ro:T&raduce cu Google
 ru:&Перевести в Google
+sat:ᱜᱩᱜᱩᱞ(Google) ᱥᱟᱶᱛᱮ &ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ
 sk:&Preložiť pomocou Google
 sl:Prevedi z &Google
 sr-rs:Пре&веди помоћу Google-а
@@ -3364,6 +3390,7 @@ pl:&Podkreślenie
 pt:&Sublinhado
 ro:&Subliniază
 ru:Под&чёркнутый
+sat:&ᱞᱟᱛᱟᱨᱜᱟᱨ
 sk:Podčiarkn&uť
 sl:&Podčrtano
 sr-rs:Под&вуци
@@ -3493,6 +3520,7 @@ pl:&Widok
 pt:&Ver
 ro:&Vizualizare
 ru:&Вид
+sat:&ᱧᱮᱞ
 si:&දසුන (V)
 sk:&Zobraziť
 sl:&Pogled
@@ -3624,7 +3652,7 @@ pl:&Tak
 pt:&Sim
 ro:&Da
 ru:&Да
-sat:ᱦᱚᱭ
+sat:&ᱦᱚᱭ
 si:&ඔව්
 sk:&Áno
 sl:&Da
@@ -3695,6 +3723,7 @@ pl:Po&większenie
 pt:&Ampliação
 ro:&Mărire
 ru:Мас&штаб
+sat:&ᱦᱩᱰᱤᱧᱢᱟᱨᱟᱝ
 si:&විශාලනය (Z)
 sk:&Zväčšenie
 sl:Po&večava
@@ -5005,7 +5034,7 @@ pl:&Szukaj aktualizacji automatycznie
 pt:Procurar atualizações &automaticamente
 ro:Urmărește automat &versiuni noi
 ru:&Автоматически проверять обновления
-sat:ᱟᱡ ᱛᱮ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱧᱮᱞ ᱢᱮ
+sat:ᱟᱡ ᱛᱮ ᱦ&ᱟᱹᱞᱤᱭᱟᱹᱠ ᱧᱮᱞ ᱢᱮ
 si:යාවත්කාලකිරීම් ස්වයක්‍රීයව සොයන්න
 sk:Automaticky kontrolovať &aktualizácie
 sl:&Samodejno preveri za posodobitve
@@ -5959,7 +5988,7 @@ pl:Szukaj &aktualizacji
 pt:Procurar &Atualizações
 ro:Verifică apariția unei &versiuni noi
 ru:Проверить наличие новой &версии
-sat:ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ
+sat:&ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ
 si:&යාවත්කාලීනකිරීම් සදහා සොයන්න
 sk:&Skontrolovať novú verziu
 sl:&Preveri za posodobitve
@@ -7310,7 +7339,7 @@ pl:Kopiuj do schowka
 pt:Copiar pra Área de Transferência
 ro:Copiază pe Clipboard
 ru:Скопировать в буфер обмена
-sat:ᱨᱮᱴᱚᱯᱵᱚᱨᱰ ᱨᱮ ᱱᱚᱠᱚᱞ ᱢᱮ
+sat:ᱨᱮᱴᱚᱯᱵᱚᱨᱰ ᱨᱮ &ᱱᱚᱠᱚᱞ ᱢᱮ
 sk:Kopírovať do schránky
 sl:Kopiraj v odložišče
 sr-rs:Копирај у оставу (клипборд)
@@ -7509,7 +7538,7 @@ pl:Nie można uzyskać właściwości drukarki
 pt:Não pôde obter as propriedades da impressora
 ro:Nu s-au putut obține proprietățile imprimantei
 ru:Не удалось определить свойства принтера
-sat:ᱯᱨᱤᱱᱴᱚᱨ ᱜᱩᱱ ᱵᱟᱭ ᱧᱟᱢ ᱞᱮᱱᱟ
+sat:ᱪᱷᱟᱯᱟ ᱜᱩᱱ ᱵᱟᱭ ᱧᱟᱢ ᱞᱮᱱᱟ
 si:මුද්‍රණ යන්ත්‍රයේ ගුණාංග ලබාගත නොහැකිවිය
 sk:Získanie vlastností tlačiarne zlyhalo
 sl:Ni bilo mogoče dobiti Lastnosti tiskalnika
@@ -7631,7 +7660,7 @@ pl:Nie można uzyskać nazwy drukarki
 pt:Não pôde obter o nome da impressora
 ro:Nu s-a putut obține numele imprimantei
 ru:Не удалось получить имя принтера
-sat:ᱯᱨᱤᱱᱴᱚᱨ ᱧᱩᱛᱩᱢ ᱵᱟᱭ ᱧᱟᱢ ᱞᱮᱱᱟ
+sat:ᱪᱷᱟᱯᱟ ᱧᱩᱛᱩᱢ ᱵᱟᱭ ᱧᱟᱢ ᱞᱮᱱᱟ
 sk:Nepodarilo sa získať názov tlačiarne
 sl:Ni bilo mogoče najti imena tiskalnika
 sr-rs:Није могуће добити име штампача
@@ -7695,7 +7724,7 @@ pl:Nie można zainicjować drukarki
 pt:Não pôde inicializar a impressora
 ro:Nu s-a putut inițializa imprimanta
 ru:Не удалось инициализировать принтер
-sat:ᱯᱨᱤᱱᱴᱚᱨ ᱞᱟᱫᱮ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ
+sat:ᱪᱷᱟᱯᱟ ᱞᱟᱫᱮ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ
 si:මුද්‍රණ යන්ත්‍රය ඇරඹිය නොහැක
 sk:Inicializácia tlačiarne zlyhala
 sl:Ni bilo mogoče inicializirati tiskalnika
@@ -8771,7 +8800,7 @@ pl:&Układ domyślny:
 pt:Estrutura &Padrão:
 ro:&Aspect implicit:
 ru:&Компоновка по умолчанию
-sat:ᱢᱩᱞ ᱱᱚᱠᱥᱟᱺ
+sat:ᱢᱩᱞ &ᱞᱚᱠᱥᱟ ᱺ
 si:පෙරනිමි දැක්ම:
 sk:Predvolené &zobrazenie:
 sl:&Privzeta postavitev:
@@ -8839,7 +8868,7 @@ pl:Domyślne &powiększenie:
 pt:Amp&liação padrão:
 ro:Factor de &mărire implicit:
 ru:Масшта&б по умолчанию
-sat:ᱢᱩᱞ ᱦᱩᱰᱤᱧ ᱢᱟᱨᱟᱝᱺ
+sat:ᱢᱩᱞ &ᱦᱩᱰᱤᱧ ᱢᱟᱨᱟᱝ :
 si:පෙරනිමි සෙවුම:
 sk:Predvolená &veľkosť
 sl:Pri&vzeta povečava:
@@ -9905,6 +9934,7 @@ pl:&Ulubione
 pt:F&avoritos
 ro:F&avorite
 ru:&Избранное
+sat:&ᱠᱩᱥᱤᱠᱚ
 si:ප්‍රියතම
 sk:&Obľúbené položky
 sl:Priljubljeni
@@ -9956,6 +9986,7 @@ pl:&Dalej
 pt:A&vançar
 ro:Î&nainte
 ru:В&перёд
+sat:&ᱞᱟᱦᱟ
 sk:&Dopredu
 sl:&Naprej
 sr-rs:Н&апред
@@ -10003,7 +10034,7 @@ pl:Pełny &ekran
 pt:E&crã Completo
 ro:P&e tot ecranul
 ru:Полный &экран
-sat:ᱯᱩᱨᱟᱹᱥᱠᱨᱤᱱ
+sat:ᱯ&ᱩᱨᱟᱹᱥᱠᱨᱤᱱ
 sk:Celá o&brazovka
 sl:Celozaslonsko
 sr-rs:&Цео екран
@@ -10922,7 +10953,7 @@ pl:&Znajdź...
 pt:Locali&zar...
 ro:C&aută...
 ru:На&йти...
-sat:ᱯᱟᱱᱛᱮ ᱢᱮ ...
+sat:ᱯ&ᱟᱱᱛᱮ ᱢᱮ ...
 sk:&Hľadať…
 sl:Naj&di …
 sr-rs:Прона&ђи...
@@ -11257,6 +11288,7 @@ pl:Dopasuj do &zawartości
 pt:Ajustar ao &Conteúdo
 ro:Cuprinde &conținutul
 ru:Вписать содер&жимое
+sat:&ᱡᱤᱱᱤᱥ ᱠᱷᱟᱯ
 sk:Prispôsobiť &obsahu
 sl:Prilagodi vsebino
 sr-rs:Смести &садржај
@@ -11302,6 +11334,7 @@ pl:Dopasuj do s&trony
 pt:Ajustar à &página
 ro:Cuprinde &Pagină
 ru:Вписать &страницу
+sat:&ᱥᱟᱦᱴᱟ ᱠᱷᱟᱯ
 sk:Prispôsobiť stra&ne
 sl:&Prilagodi stran
 sr-rs:Смести с&трану
@@ -11347,6 +11380,7 @@ pl:Dopasuj do sz&erokości
 pt:Ajustar à &largura
 ro:Cuprinde &lățime
 ru:Вписать по &ширине
+sat:&ᱚᱥᱟᱨ ᱠᱷᱟᱯ
 sk:Prispôsobiť šír&ke
 sl:P&rilagodi po širini
 sr-rs:Смести по &ширини
@@ -11407,7 +11441,7 @@ pl:Dopasuj do zawartości strony
 pt:Ajustar ao conteúdo
 ro:Potrivire după conținut
 ru:По содержимому
-sat:ᱡᱤᱱᱤᱥ ᱵᱟᱹᱭᱥᱟᱣ ᱢᱮ
+sat:ᱡᱤᱱᱤᱥ ᱠᱷᱟᱯ ᱢᱮ
 si:නිසිලෙස අන්තර්ගතය සකසන්න
 sk:Prispôsobiť obsah
 sl:Prilagodi vsebino
@@ -12209,6 +12243,7 @@ pl:Ukryj &opcje
 pt:Ocultar &opções
 ro:Ascundere &Opţiuni
 ru:Скрыть параметры
+sat:&ᱵᱟᱪᱷᱟᱣᱠᱚ ᱩᱠᱩᱭ ᱢᱮ
 si:&විකල්ප සගවන්න
 sk:Skryť &Možnosti
 sl:Skrij M&ožnosti
@@ -12710,6 +12745,7 @@ pl:Zainstaluj SumatraPDF w &folderze:
 pt:Instalar SumatraPDF na &pasta:
 ro:Instalare SumatraPDF în &folderul:
 ru:Установить SumatraPDF в &папку:
+sat:SumatraPDF ᱫᱚ &ᱯᱚᱴᱚᱢ ᱨᱮ ᱵᱚᱦᱚᱞ ᱢᱮ ᱺ
 si:ෆෝල්ඩරයේ SumatraPDF ස්ථාපනය කරන්න
 sk:Inštaluj SumatraPDF do &adresára:
 sl:Namesti SumatraPDF v mapo:
@@ -13181,6 +13217,7 @@ pl:Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwać pliki PDF
 pt:Permitir que Windows Desktop &Search localize os PDF
 ro:Permite Windows Desktop &Search să caute în documente PDF
 ru:&Поиск файлов PDF с помощью Windows Desktop Search
+sat:ᱣᱤᱱᱰᱚ ᱰᱮᱥᱠᱴᱚᱯ &ᱥᱮᱸᱫᱽᱨᱟ ᱫᱚ PDF ᱫᱚᱞᱤᱞᱠᱚ ᱥᱮᱸᱫᱽᱨᱟ ᱪᱷᱚᱣᱟᱭ ᱮᱢ
 si:Windows Desktop Searchට PDF ලේඛන සොයන්න ඉඩදෙන්න
 sk:Povoliť, aby Windows Desktop Search &vyhľadával PDF dokumenty
 sl:Naj Windows Desktop Search išče PDF dokumente
@@ -13245,6 +13282,7 @@ pl:Windows ma pokazywać &podgląd plików PDF
 pt:&Permitir que o Windows mostre uma antevisão dos PDF
 ro:Permite Windows-ului să arate &previzualizari ale documentelor PDF
 ru:&Просмотр PDF средствами Windows
+sat:ᱣᱤᱱᱰᱚ ᱫᱚ PDF ᱫᱚᱞᱤᱞᱠᱚ &ᱧᱮᱞᱵᱤᱲᱟᱹᱣ ᱟᱨ ᱫᱮᱠᱷᱟᱣ ᱪᱷᱚᱣᱟᱭ ᱮᱢ
 si:Windowsට PDF ලේඛනවල &පෙරදසුන් පෙන්වන්න දෙන්න
 sk:Povoliť, aby Windows zobrazoval &náhľad PDF dokumentov
 sl:Naj Windows prikazuje predogled PDF dokumentov
@@ -15904,6 +15942,7 @@ pl:&Strona...
 pt:Pá&gina...
 ro:Pa&gina
 ru:С&траница...
+sat:&ᱥᱟᱦᱴᱟ ...
 sk:Stra&na…
 sl:Stran …
 sr-rs:С&траница...
@@ -16746,6 +16785,7 @@ pl:&Prezentacja
 pt:Apr&esentação
 ro:Pr&ezentare
 ru:Презента&ция
+sat:ᱯ&ᱨᱮᱡᱮᱱᱴᱮᱥᱚᱱ
 sk:Prez&entácia
 sl:Pr&edstavitev
 sr-rs:Пр&езентација
@@ -16945,7 +16985,7 @@ pl:Zakres druku
 pt:Intervalo de impressão
 ro:Interval imprimare
 ru:Диапазон печати
-sat:ᱯᱨᱤᱱᱴ ᱛᱷᱚᱠ
+sat:ᱪᱷᱟᱯᱟ ᱛᱷᱚᱠ
 si:මුද්රණය කරන පරාසය
 sk:Rozsah tlače
 sl:Natisni razpon
@@ -17010,7 +17050,7 @@ pl:Drukarka o podanej nazwie nie istnieje
 pt:Não existe uma impressora com este nome
 ro:Imprimanta cu numele respectiv nu există
 ru:Нет принтера с указанным именем
-sat:ᱚᱱᱟ ᱧᱩᱛᱩᱢ ᱨᱮᱭᱟᱜ ᱯᱨᱤᱱᱴᱚᱨ ᱫᱚ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱟ
+sat:ᱚᱱᱟ ᱧᱩᱛᱩᱢ ᱨᱮᱭᱟᱜ ᱪᱷᱟᱯᱟ ᱫᱚ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱟ
 si:දෙන ලද නම සහිත මුද්‍රණ යන්ත්‍රයක් නොපවතී
 sk:Tlačiareň s uvedeným názvom neexistuje.
 sl:Tiskalnik z navedenim imenom ne obstaja
@@ -17078,6 +17118,7 @@ pl:Trwa drukowanie.
 pt:Impressão em curso.
 ro:Tipărire în curs.
 ru:Идёт печать.
+sat:ᱪᱷᱟᱯᱟ ᱪᱟᱹᱞᱩ ᱠᱟᱱᱟ ᱾
 si:මුද්රණය කරමින් පවතී
 sk:Prebieha tlač...
 sl:Tiskanje v teku.
@@ -17142,6 +17183,7 @@ pl:Nadal trwa drukowanie. Przerwać i wyjść?
 pt:A impressão está em curso. Cancelar e sair?
 ro:În prezent se tipărește ceva. Anulaţi si renuntaţi?
 ru:Печать ещё не завершена. Отменить и выйти?
+sat:ᱪᱷᱟᱯᱟ ᱱᱤᱛ ᱦᱚᱸ ᱪᱟᱹᱞᱩ ᱠᱟᱱᱟ ᱾ ᱵᱟᱫ ᱠᱟᱛᱮ ᱵᱟᱹᱜᱤᱭᱟ ᱥᱮ ?
 si:මුද්‍රණය කිරීම තවමත් සිදුවේ. එය නවත්වා ඉවත්වන්නද?
 sk:Prebieha tlač. Prerušiť a ukončiť tlač?
 sl:Tiskanje je še vedno v teku. Prekinem in končam?
@@ -17206,6 +17248,7 @@ pl:Nadal trwa drukowanie. Przerwać i zacząć od nowa?
 pt:A impressão está em curso. Cancelar e reiniciar?
 ro:Tipărirea este încă în curs. Opresc și reiau ?
 ru:Печать ещё не завершена. Отменить и начать заново?
+sat:ᱪᱷᱟᱯᱟ ᱱᱤᱛ ᱦᱚᱸ ᱪᱟᱹᱞᱩ ᱠᱟᱱᱟ ᱾ ᱵᱟᱫ ᱠᱟᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱹᱞᱩᱭᱟ ᱥᱮ ?
 si:මුද්‍රණය කිරීම තවමත් සිදුවෙමින් පවතී. එය නවත්වා අලුතෙන් පටන්ගන්නද?
 sk:Prebieha tlač. Prerušiť a začať znova?
 sl:Tiskanje je še vedno v teku. Prekinem in začnem znova?
@@ -17270,6 +17313,7 @@ pl:Drukowanie strony %d z %d...
 pt:A imprimir página %d de %d...
 ro:Tipărește pagina %d din %d...
 ru:Печать страницы %d из %d...
+sat:%d ᱠᱷᱚᱱ %d ᱥᱟᱦᱴᱟ ᱪᱷᱟᱯᱟᱜ ᱠᱟᱱᱟ ...
 si:%d වන %d න් පිටුව මුද්‍රණය කරමින්
 sk:Tlač strany %d z %d...
 sl:Tiskanje strani %d od %d …
@@ -17340,6 +17384,7 @@ pl:Problem z drukowaniem.
 pt:Erro de impressão.
 ro:Problemă la imprimare.
 ru:Ошибка при печати.
+sat:ᱛᱪᱟᱯᱟ ᱟᱱᱟᱴ ᱾
 si:මුද්‍රණ දෝෂ.
 sk:Problém pri tlači.
 sl:Težave pri tiskanju.
@@ -17387,6 +17432,7 @@ pl:Właściwości...
 pt:Propriedades...
 ro:Proprietăți
 ru:Свойства...
+sat:ᱜᱩᱱᱠᱚ ...
 sk:Vlastnosti…
 sr-rs:Својства...
 ta:பண்புகள்
@@ -17480,6 +17526,7 @@ pl:Prostokąt: x=%d y=%d dx=%d dy=%d
 pt:Retângulo: x=%d y=%d dx=%d dy=%d
 ro:Dreptunghi: x=%d y=%d dx=%d dy=%d
 ru:Прямоугольник: x=%d y=%d dx=%d dy=%d
+sat:ᱯᱩᱱᱪᱤ: x=%d y=%d dx=%d dy=%d
 sk:Obdĺžnik: x=%d y=%d dx=%d dy=%d
 sl:Pravokotnik: x=%d y=%d dx=%d dy=%d
 sr-rs:Правоугаоник: x=%d y=%d dx=%d dy=%d
@@ -17531,6 +17578,7 @@ pl:Redaguj
 pt:Censurar
 ro:Redactare
 ru:Правка
+sat:ᱯᱟᱨᱥᱟᱞ
 sk:Redigovať
 sl:Uredi
 sr-rs:Уреди
@@ -17591,6 +17639,7 @@ pl:Pamiętaj &otwierane pliki
 pt:Memorizar ficheiros abert&os
 ro:Ține minte &fișierele deschise
 ru:Запоминать &открытые файлы
+sat:&ᱡᱷᱤᱡᱽ ᱠᱟᱱ ᱨᱮᱫᱽᱠᱚ ᱢᱚᱱᱮ ᱠᱟᱜ ᱢᱮ
 si:&විවෘතකළ ගොනු මතකතබාගන්න
 sk:Zapamätať si &otvorené súbory
 sl:&Zapomni si odprte datoteke
@@ -17657,6 +17706,7 @@ pl:Usuń z ulubionych
 pt:Remover dos favoritos
 ro:Scoate de la favorite
 ru:Удалить из избранного
+sat:ᱠᱩᱥᱤᱠᱚᱴᱷᱮᱱᱠᱷᱚᱱ ᱚᱪᱚᱜᱽ ᱢᱮ
 si:ප්‍රියතමයන්ගෙන් ඉවත් කරන්න
 sk:Odobrať z obľúbených položiek
 sl:Odstrani iz priljubljenih
@@ -17721,6 +17771,7 @@ pl:Usuń stronę %s z ulubionych
 pt:Remover página %s dos favoritos
 ro:Scoate pagina %s de la favorite
 ru:Удалить стр. %s из избранного
+sat:ᱠᱩᱥᱤᱭᱟᱜᱠᱚ ᱠᱷᱚᱱ ᱥᱟᱦᱴᱟ %s ᱚᱪᱚᱜᱽ ᱢᱮ
 si:පිටුව %s ප්‍රියතමයන්ගෙන් ඉවත් කරන්න
 sk:Odobrať stranu %s z obľúbených položiek
 sl:Odstrani stran %s iz priljubljenih
@@ -17788,6 +17839,7 @@ pl:Zmień nazwę na
 pt:Mudar nome para
 ro:Redenumește la
 ru:Переименовать в
+sat:ᱛᱮ ᱧᱩᱛᱩᱢ ᱵᱚᱫᱚᱞ ᱢᱮ
 si:බවට නැවත නම් කරන්න
 sk:Premenovať na
 sl:Preimenuj v
@@ -17840,6 +17892,7 @@ pl:Obróć w &lewo
 pt:Rodar à &esquerda
 ro:Rotește spre &stânga
 ru:Повернуть в&лево
+sat:&ᱞᱮᱝᱜᱟᱛᱮ ᱟᱹᱪᱩᱨ
 sk:Otočiť vľav&o
 sl:Zasukaj v &levo
 sr-rs:Ротирај &лево
@@ -17887,6 +17940,7 @@ pl:Obróć w &prawo
 pt:Rodar à di&reita
 ro:Rotește spre &dreapta
 ru:Повернуть в&право
+sat:&ᱡᱚᱡᱚᱢᱛᱮ ᱟᱹᱪᱩᱨ
 sk:Otočiť v&pravo
 sl:Zasukaj v &desno
 sr-rs:Ротирај &десно
@@ -17936,6 +17990,7 @@ pl:Z&aznaczenie
 pt:S&eleção
 ro:S&electare
 ru:В&ыделение
+sat:&ᱵᱟᱪᱷᱟᱣ
 sk:&Výber
 sl:I&zbor
 sr-rs:И&збор
@@ -17985,6 +18040,7 @@ pl:&Falowanie
 pt:&Curva irregular
 ro:O&ndulat
 ru:Во&лнистый
+sat:ᱛ&ᱲᱦᱟ ᱢᱮᱲᱦᱟ
 sk:Červená v&lnovka
 sl:Vi&jugasto
 sr-rs:Ви&југаво
@@ -18035,6 +18091,7 @@ pl:Documenty SVG
 pt:Documentos SVG
 ro:Documente SVG
 ru:Документы SVG
+sat:SVG ᱫᱚᱞᱤᱞᱠᱚ
 sk:Dokumenty SVG
 sl:SVG dokumenti
 sr-rs:SVG документи
@@ -18083,6 +18140,7 @@ pl:Zapisz adnotacje do istniejącego pliku PDF
 pt:Guardar anotações em PDF existente
 ro:Salvează adnotări în PDF existent
 ru:Со&хранить аннотации в имеющемся PDF
+sat:ᱢᱟᱲᱟᱝᱟᱜ PDF ᱨᱮ ᱪᱤᱱᱦᱟᱹ ᱥᱟᱧᱪᱟᱣ ᱢᱮ
 sk:Uložiť anotácie do existujúceho PDF
 sl:Shrani pripombe v obstoječi PDF
 sr-rs:&Сачувај белешке у постојећи PDF
@@ -18129,6 +18187,7 @@ pl:Zapisz załącznik...
 pt:Guardar anexo...
 ro:Salvează ataşamentul...
 ru:Сохранить вложение...
+sat:ᱪᱟᱴᱷᱟ ᱥᱟᱧᱪᱟᱣᱟ ᱥᱮ ...
 sk:Uložiť prílohu…
 sl:Shrani priponko …
 sr-rs:Сачувај прилог...
@@ -18178,6 +18237,7 @@ pl:Zapisz osadzony plik...
 pt:Guardar ficheiro incorporado...
 ro:Salvează fișierul încorporat...
 ru:Сохранить вложенный файл...
+sat:ᱠᱷᱚᱧᱡᱟ ᱠᱟᱱ ᱨᱮᱫᱽ ᱥᱟᱧᱪᱟᱣ ᱢᱮ ...
 sk:Uložiť vložený súbor…
 sl:Shrani vdelano datoteko …
 sr-rs:Сачувај уграђену датотеку...
@@ -18271,6 +18331,7 @@ pl:Zapisać adnotacje?
 pt:Guardar anotações?
 ro:Salvați adnotările?
 ru:Сохранить аннотации?
+sat:ᱪᱤᱱᱦᱟᱹ ᱥᱟᱧᱪᱟᱣᱟ ᱥᱮ ?
 sk:Uložiť anotácie?
 sl:Shraniti pripombe?
 sr-rs:Сачувати белешке?
@@ -18325,6 +18386,7 @@ pl:Zapisz zmiany w nowym pliku PDF
 pt:Guardar alterações para um novo PDF
 ro:Salvează modificările într-un PDF nou
 ru:Сохранить изменения в новом PDF
+sat:ᱱᱚᱶᱟ PDF ᱨᱮ ᱵᱚᱫᱚᱞᱠᱚ ᱥᱟᱧᱪᱟᱣᱟ ᱥᱮ
 sk:Uloženie zmien do nového PDF
 sl:Shrani spremembe v novo PDF datoteko
 sr-rs:Сачувај измене у нови PDF
@@ -18377,6 +18439,7 @@ pl:Zapisz zmiany w istniejącym pliku PDF
 pt:Guardar alterações para PDF existente
 ro:Salvează modificările la PDF existent
 ru:Сохранить изменения в имеющемся PDF
+sat:ᱢᱟᱲᱟᱝᱟᱜ PDF ᱨᱮ ᱵᱚᱫᱚᱞᱠᱚ ᱥᱟᱧᱪᱟᱣᱟ ᱥᱮ
 sk:Uložiť zmeny do existujúceho PDF
 sl:Shrani spremembe v trenutno PDF datoteko
 sr-rs:Сачувај измене у постојећи PDF
@@ -18475,6 +18538,7 @@ pl:Zapisano adnotacje w '%s'
 pt:Anotações guardadas em '%s'
 ro:Adnotări salvate în '%s'
 ru:Аннотации сохранены в '%s'
+sat:'%s' ᱛᱮ ᱪᱤᱱᱦᱟᱹ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱᱟ
 sk:Anotácie uložené do '%s'
 sl:Shrani pripombe v '%s'
 sr-rs:Белешке сачуване у "%s"
@@ -18522,6 +18586,7 @@ pl:Zapisywanie '%s' nie powiodło się z: '%s'
 pt:Não foi possível guardar '%s': '%s'
 ro:Salvarea a '%s' a eșuat cu: '%s'
 ru:Ошибка сохранения '%s' с: '%s'
+sat:'%s' ᱦᱟᱜ ᱥᱟᱧᱪᱟᱣ ᱫᱚ ᱱᱩᱭ ᱥᱟᱶ ᱰᱤᱜᱟᱹᱣ ᱮᱱᱟᱭ ᱺ '%s'
 sk:Uloženie '%s' zlyhalo s: '%s'
 sl:Shranjevanje '%s' ni uspelo: '%s'
 sr-rs:Чување "%s" није успело због: "%s"
@@ -18571,6 +18636,7 @@ pl:Szukaj za pomocą &Bing
 pt:Pesquisar com &Bing
 ro:Caută cu &Bing
 ru:Н&айти в Bing
+sat:&ᱵᱤᱨ(Bing) ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadávanie pomocou &Bing
 sl:Išči z &Bing
 sr-rs:Претражи помоћу Bing-а (&Б)
@@ -18621,6 +18687,7 @@ pl:Szukaj za pomocą &Google
 pt:Pesquisar com &Google
 ro:Caută cu &Google
 ru:&Найти в Google
+sat:ᱜᱩᱜᱩᱞ(Google) ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Hľadať pomocou &Google
 sl:Išči z &Google
 sr-rs:Претражи помоћу Google-а (&Г)
@@ -18681,6 +18748,7 @@ pl:Szukanie %d z %d...
 pt:A pesquisar %d de %d...
 ro:Caut %d din %d...
 ru:Поиск на странице %d из %d...
+sat:%d ᱠᱷᱚᱱ %d ᱥᱮᱸᱫᱽᱨᱟᱜ ᱠᱟᱱᱟ ...
 si:සොයමින් %d of %d...
 sk:Vyhľadáva sa %d z/zo %d...
 sl:Preiskovanje strani %d od %d …
@@ -18746,6 +18814,7 @@ pl:Zaznacz &wszystko
 pt:Selecion&ar tudo
 ro:Selecte&ază Tot
 ru:В&ыделить все
+sat:&ᱡᱷᱚᱛᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ
 si:සියල්ල &තෝරන්න
 sk:Vybrať &všetko
 sl:Izberi vse
@@ -18811,6 +18880,7 @@ pl:Zaznacz zawartość, wciskając Ctrl i lewy przycisk myszy
 pt:Selecione o conteúdo com Ctrl+botão esquerdo do rato
 ro:Selectați conținut cu Ctrl+buton stânga maus
 ru:Выделите содержимое левой кнопкой мыши, удерживая Ctrl
+sat:ᱡᱤᱱᱤᱥ ᱫᱚ Ctrl+ᱞᱮᱝᱜᱟ ᱢᱟᱣᱥ ᱵᱩᱛᱟᱹᱢ ᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ
 si:Ctrl+left mouse button සමග අන්තර්ගතය තෝරන්න
 sk:Označiť obsah s "Ctrl + ľavé tlačidlo myši"
 sl:Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
@@ -18875,6 +18945,7 @@ pl:Wybierz folder, w którym należy zainstalować program SumatraPDF:
 pt:Selecione a pasta de instalação para o SumatraPDF:
 ro:Alegeţi folderul in care să se instaleze SumatraPDF:
 ru:Укажите папку установки SumatraPDF:
+sat:SumatraPDF ᱵᱚᱦᱟᱞ ᱞᱟᱹᱜᱤᱫ ᱢᱤᱫ ᱯᱚᱴᱚᱢ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱺ
 si:SumatraPDF ස්ථාපනය විය යුතු ෆෝල්ඩරය තෝරන්න:
 sk:Vyberte adresár, kde sa má SumatraPDF nainštalovať:
 sl:Izberite mapo, kjer naj se namesti SumatraPDF:
@@ -18940,6 +19011,7 @@ pl:Zaznaczenie:
 pt:Seleção:
 ro:Selectare:
 ru:Выделение:
+sat:ᱵᱟᱪᱷᱟᱣ ᱺ
 si:තෝරාගැනීම
 sk:Výber:
 sl:Izbor:
@@ -19077,6 +19149,7 @@ pl:Ustaw wiersz poleceń do odwrotnego wyszukiwania
 pt:Definir linha de comandos para procura inversa
 ro:Setați linia de comandă pentru căutare inversă
 ru:Задать команду обратного поиска
+sat:ᱩᱞᱴᱟᱹ ᱥᱮᱸᱫᱽᱨᱟ ᱟᱫᱮᱥᱼᱞᱟᱹᱭᱤᱱ ᱥᱮᱴ ᱢᱮ
 si:Command-line ප්‍රතිලෝම සෙවුම සකසන්න
 sk:Nastaviť inverzné vyhľadávanie
 sl:Nastavi obratno iskanje ukazne vrstice
@@ -19140,6 +19213,7 @@ pl:Pokaż &zakładki
 pt:Mostrar &marcadores
 ro:Arată &marcaje
 ru:Показать &закладки
+sat:ᱯᱩ&ᱛᱷᱤᱪᱤᱱᱦᱟᱹᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 si:පි&ටුසලකුණු පෙන්වන්න
 sk:Zobraziť &Záložky
 sl:Prikaži &zaznamke
@@ -19197,6 +19271,7 @@ pl:Pokaż &ulubione
 pt:Mostrar &favoritos
 ro:Arată &favorite
 ru:Показать и&збранное
+sat:&ᱠᱩᱥᱤᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 sk:Zobraziť &obľúbené položky
 sl:Pokaži priljubljene
 sr-rs:Прикажи &фаворите
@@ -19257,6 +19332,7 @@ pl:Wyświetlaj strony w układzie &ciągłym
 pt:M&ostrar páginas contínuas
 ro:Arată &paginile continuu
 ru:Отключить постраничную &прокрутку
+sat:ᱥ&ᱟᱦᱴᱟ ᱞᱮᱛᱟᱲ ᱥᱟᱹᱦᱤᱡ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 si:අඛණ්ඩව &පිටු පෙන්වන්න
 sk:Zobraziť strany priebe&žne
 sl:&Prikaži strani nepretrgano
@@ -19314,6 +19390,7 @@ pl:Pokaż &paski przewijania
 pt:Mo&strar barra de deslocação
 ro:Arată bare de &derulare
 ru:Показывать по&лосы прокрутки
+sat:&ᱠᱷᱚᱥᱨᱚᱫᱵᱟᱨᱠᱚ ᱫᱮᱠᱷᱟᱣᱢᱮ
 sk:Zobraziť po&suvníky
 sl:Pokaži dr&sne trakove
 sr-rs:Прикажи &траке за померање
@@ -19379,6 +19456,7 @@ pl:Pokaż pasek &narzędzi
 pt:Mostrar &barra de ferramentas
 ro:Arată bara de &instrumente
 ru:Показывать панель &инструментов
+sat:&ᱦᱟᱹᱛᱤᱭᱟᱹᱨᱵᱟᱨ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 si:&මෙවලම්පුවරුව පෙන්වන්න
 sk:Zobraziť panel &nástrojov
 sl:Pokaži orodno vrstico
@@ -19431,6 +19509,7 @@ pl:Pokaż za&kładki
 pt:&Mostrar marcadores
 ro:Arată marc&aje
 ru:Показывать &закладки
+sat:&ᱯᱩᱛᱷᱤ ᱪᱤᱱᱦᱟᱹᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 sk:Zobraziť záložky
 sl:Pokaži zazna&mke
 sr-rs:Прикажи обеле&живаче
@@ -19490,6 +19569,7 @@ pl:Pokaż ulubione
 pt:Mostrar favoritos
 ro:Arată favorite
 ru:Показывать панель &избранного
+sat:ᱠᱩᱥᱤᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 si: ප්‍රියතමයන් පෙන්වන්න
 sk:Zobraziť obľúbené položky
 sl:Prikaži Priljubljene
@@ -19547,6 +19627,7 @@ pl:Pokaż p&aski przewijania
 pt:M&ostrar barra de deslocação
 ro:Arată bare de de&rulare
 ru:Показывать по&лосы прокрутки
+sat:&ᱠᱷᱚᱥᱨᱚᱫᱵᱟᱨᱠᱚ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 sk:Zobraziť posu&vníky
 sl:Pokaži drsne trak&ove
 sr-rs:Прикажи траке за по&мерање
@@ -19606,6 +19687,7 @@ pl:Pokaż często otwierane
 pt:Mostrar frequentes
 ro:Arată documentele citite frecvent
 ru:Показать часто используемые документы
+sat:ᱜᱷᱤᱲᱜᱮ ᱯᱟᱲᱦᱟᱣᱟᱜ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 si:නිතර කියවුම් පෙන්වන්න
 sk:Zobraziť často čítané dokumenty
 sl:Prikaži pogosto brane
@@ -19711,6 +19793,7 @@ pl:Pokaż w folderze
 pt:Mostrar na pasta
 ro:Arată în folder
 ru:Показать в папке
+sat:ᱯᱚᱴᱚᱢᱨᱮ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 sk:Zobraziť v priečinku
 sl:Pokaži v mapi
 sr-rs:Прикажи у фасцикли
@@ -19769,6 +19852,7 @@ pl:Pokaż panel za&kładek, gdy są dostępne
 pt:Mostrar &barra de marcadores (se disponível)
 ro:Arată bara laterală pentru &marcaje, când există
 ru:Показывать панель &закладок (по возможности)
+sat:ᱛᱟᱦᱮᱸᱱ ᱠᱷᱟᱱ ᱥᱟᱭᱤᱰᱵᱟᱨ &ᱯᱩᱛᱷᱤᱪᱤᱱᱦᱟᱹ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
 si:තිබෙනවිටදී &පිටුසලකුණු පැතිපුවරුව පෙන්වන්න.
 sk:Zobraziť bočný panel &záložiek, pokiaľ je dostupný
 sl:Pokaži podokno z &zaznamki, če so na voljo
@@ -19839,6 +19923,7 @@ pl:Pojedyncza strona
 pt:Uma página
 ro:O singură pagină
 ru:Постранично
+sat:ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱦᱴᱟ
 si:තනි පිටුව
 sk:Jedna strana
 sl:Enostransko
@@ -19894,6 +19979,7 @@ pl:Pomiń tę wersję
 pt:Ignorar esta versão
 ro:Omite această versiune
 ru:Пропустить эту версию
+sat:ᱱᱚᱶᱟ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱟᱲᱟᱜ ᱠᱟᱜ ᱢᱮ
 sk:Preskočiť túto verziu
 sl:Preskoči to različico
 sr-rs:Прескочи ову верзију
@@ -19953,6 +20039,7 @@ pl:Przepraszamy - to nie powinno się zdarzyć!\n\nProszę nacisnąć przycisk '
 pt:Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrigir a origem deste erro.
 ro:Scuze, acest eveniment nu ar fi trebuit să aibă loc!\n\nVă rugăm apăsați „Renunță”, dacă doriți să ne ajutați să îndreptăm cauza erorii.
 ru:Извините, произошло что-то непредвиденное.\n\nНажмите 'Отмена', если хотите помочь нам устранить причину этого сбоя.
+sat:ᱤᱠᱟᱹ, ᱚᱱᱟ ᱫᱚ ᱦᱩᱱᱟᱹᱝ ᱵᱟᱝ ᱦᱩᱭ ᱠᱚᱜᱼᱟ!\n\nᱡᱩᱫᱟ ᱱᱚᱶᱟ ᱰᱤᱜᱟᱹᱣ ᱴᱷᱤᱠ ᱨᱮ ᱟᱞᱮᱭᱟᱜ ᱜᱚᱲᱚᱢ ᱮᱢ ᱥᱟᱱᱟ ᱠᱷᱟᱱ, ᱫᱟᱭᱟᱠᱟᱛᱮ 'ᱵᱟᱹᱰᱨᱟᱹ' ᱨᱮ ᱚᱛᱟᱭ ᱢᱮ ᱾
 si:සමාවන්න, එය සිදුනොවිය යුත්තක් විය!\n\nමෙම ගැටුමට හේතුව සමනය කිරීමට අපට සහාය වීම සදහා කරුණාකර 'වසන්න' බොත්තම ඔබන්න.
 sk:Ospravedlňujeme sa, nemalo sa to stať.\n\nAk nám chcete pomôcť vyriešiť príčinu tohto zlyhania programu, stlačte tlačidlo 'Storno'.
 sl:Oprostite, to se ne bi smelo zgoditi!\n\nČe želite pomagati pri določitvi vzroka za sesutje pritisnite 'Prekliči'.
@@ -20019,6 +20106,7 @@ pl:Plik źródłowy %s nie posiada punktów synchronizacji
 pt:O ficheiro %s não tem ponto de sincronização
 ro:Fișierul sursă %s nu are punct de sincronizare
 ru:Нет точки синхронизации в исходном файле %s
+sat:ᱥᱨᱚᱛ ᱨᱮᱫᱽ %s ᱴᱷᱮᱱ ᱪᱮᱫ ᱦᱚᱸ ᱟᱹᱭᱩᱨᱢᱤᱫ ᱫᱷᱟᱯ ᱵᱟᱹᱱᱩᱜ ᱠᱟᱫᱟ
 si:%s මූලාශ්‍ර ගොනුව  සතුව සමකාලනයකිරීමේ ලක්ශයක් නොමැත
 sk:Zdrojový súbor %s nemá synchronizačný bod
 sl:Izvorna datoteka %s nima točke sinhronizacije
@@ -20078,6 +20166,7 @@ pl:Kwadrat
 pt:Quadrado
 ro:Pătrat
 ru:Квадрат
+sat:ᱜᱷᱚᱬᱥᱟ
 sk:Štvorec
 sl:Kvadrat
 sr-rs:Квадрат
@@ -20137,6 +20226,7 @@ pl:Uruchom SumatraPDF
 pt:Iniciar SumatraPDF
 ro:Pornire SumatraPDF
 ru:Пуск SumatraPDF
+sat:SumatraPDF ᱮᱛᱦᱚᱵ ᱢᱮ
 si:SumatraPDF ආරම්භ කරන්න
 sk:Spustiť SumatraPDF
 sl:Zaženi SumatraPDF
@@ -20204,6 +20294,7 @@ pl:Temat:
 pt:Assunto:
 ro:Subiect:
 ru:Тема:
+sat:ᱥᱟᱛᱟᱢ ᱺ
 si:මාතෘකාව:
 sk:Predmet:
 sl:Zadeva:
@@ -20270,6 +20361,7 @@ pl:Instalator SumatraPDF %s
 pt:Instalador do SumatraPDF %s
 ro:Programul de instalare %s SumatraPDF
 ru:Установка SumatraPDF %s
+sat:SumatraPDF %s ᱤᱱᱥᱴᱚᱞᱚᱨ
 si:SumatraPDF %s ස්ථාපනය කරනය
 sk:SumatraPDF %s inštalátor
 sl:SumatraPDF %s namestitev
@@ -20333,6 +20425,7 @@ pl:Usuń SumatraPDF %s
 pt:Desinstalador do SumatraPDF %s
 ro:Programul de dezinstalare a %s SumatraPDF
 ru:Удаление SumatraPDF %s
+sat:SumatraPDF %s ᱚᱪᱚᱜᱤᱭᱟᱹ
 si:SumatraPDF %s ඉවත් කරනය
 sk:SumatraPDF %s odinštalátor
 sl:SumatraPDF %s odstranitev
@@ -20398,6 +20491,7 @@ pl:Opcje SumatraPDF
 pt:Opções do SumatraPDF
 ro:Opțiuni SumatraPDF
 ru:Параметры SumatraPDF
+sat:SumatraPDF ᱵᱚᱪᱷᱟᱣ
 si:SumatraPDF විකල්ප (O)
 sk:Nastavenia SumatraPDF
 sl:Možnosti SumatraPDF
@@ -20463,6 +20557,7 @@ pl:Aktualizacja SumatraPDF
 pt:Atualização do SumatraPDF
 ro:Versiune nouă SumatraPDF
 ru:Обновление SumatraPDF
+sat:SumatraPDF ᱦᱟᱹᱞᱤᱭᱟᱹᱠ
 si:SumatraPDF යාවත්කාලීන කිරීම
 sk:Aktualizácia SumatraPDF
 sl:Posodobitev SumatraPDF
@@ -20528,6 +20623,7 @@ pl:SumatraPDF uległ awarii
 pt:O SumatraPDF terminou
 ro:SumatraPDF s-a terminat incorect
 ru:Аварийное завершение работы SumatraPDF
+sat:SumatraPDF ᱰᱤᱜᱟᱹᱣ ᱮᱱᱟ
 si:SumatraPDF අකර්මන්‍ය විය
 sk:SumatraPDF - zrútenie programu
 sl:SumatraPDF se je sesul
@@ -20591,6 +20687,7 @@ pl:Program SumatraPDF został usunięty.
 pt:O SumatraPDF foi desinstalado.
 ro:SumatraPDF a fost dezinstalat.
 ru:Программа SumatraPDF удалена.
+sat:SumatraPDF ᱫᱚ ᱚᱪᱚᱜᱽ ᱮᱱᱟ ᱾
 si:SumatraPDF ඉවත්කර ඇත
 sk:Program SumatraPDF bol odinštalovaný.
 sl:SumatraPDF je bil odstranjen.
@@ -20654,6 +20751,7 @@ pl:Program SumatraPDF nie został znaleziony.
 pt:Não foi encontrada uma instalação do SumatraPDF.
 ro:Nu s-a găsit instalarea SumatraPDF.
 ru:Установка SumatraPDF не найдена.
+sat:SumatraPDF ᱵᱚᱦᱟᱞ ᱡᱟᱭᱜᱟ ᱵᱟᱭ ᱧᱟᱢ ᱞᱮᱱᱟ ᱾
 si:SumatraPDF ස්ථාපනය සොයාගත නොහැකිවිය.
 sk:Inštalácia programu SumatraPDF nebola nájdená.
 sl:SumatraPDF namestitve ni mogoče najti.
@@ -20719,6 +20817,7 @@ pl:Nie można otworzyć pliku synchronizacji
 pt:Não foi possível abrir o ficheiro de sincronização
 ro:Fișierul de sincronizare nu poate fi deschis
 ru:Не удалось открыть файл с информацией для синхронизации
+sat:ᱟᱹᱭᱩᱨᱢᱤᱫ ᱨᱮᱫᱽ ᱫᱚ ᱠᱷᱩᱞᱟᱹ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ
 si:සමකාලනය කළ ගොනුව විවෘත කළ නොහැක
 sk:Synchronizačný súbor nie je možné otvoriť
 sl:Datoteke sinhronizacije ni mogoče odpreti
@@ -20784,6 +20883,7 @@ pl:Tagowany plik PDF
 pt:PDF com etiqueta
 ro:PDF etichetat
 ru:Размеченный PDF
+sat:ᱪᱤᱱᱦᱟᱹ ᱠᱟᱱ PDF
 si:ටැග් කරන ලද PDF
 sk:Označený PDF
 sl:Označen PDF
@@ -20839,6 +20939,7 @@ pl:Wyrównanie tekstu:
 pt:Alinhamento do texto:
 ro:Aliniere text
 ru:Выравнивание текста:
+sat:ᱚᱞ ᱥᱟᱡᱟᱣ ᱺ
 sk:Zarovnanie textu:
 sl:Poravnava besedila:
 sr-rs:Поравнање текста:
@@ -20891,6 +20992,7 @@ pl:Kolor tekstu:
 pt:Cor do texto:
 ro:Culoare text:
 ru:Цвет текста:
+sat:ᱚᱞ ᱨᱚᱝ ᱺ
 sk:Farba textu:
 sl:Barva besedila:
 sr-rs:Боја текста:
@@ -20942,6 +21044,7 @@ pl:Rozmiar tekstu:
 pt:Tamanho do texto:
 ro:Mărime text:
 ru:Размер текста:
+sat:ᱚᱞ ᱢᱟᱯ ᱺ
 sk:Veľkosť textu:
 sl:Velikost besedila:
 sr-rs:Величина текста:
@@ -20993,6 +21096,7 @@ pl:Rozmiar tekstu: %d
 pt:Tamanho do texto: %d
 ro:Mărime text: %d
 ru:Размер текста: %d
+sat:ᱚᱞ ᱢᱟᱯ ᱺ %d
 sk:Veľkosť textu: %d
 sl:Velikost besedila: %d
 sr-rs:Величина текста: %d
@@ -21052,6 +21156,7 @@ pl:Pliki tekstowe
 pt:Documentos de texto
 ro:Documente Text
 ru:Текстовые документы
+sat:ᱚᱞ ᱫᱚᱞᱤᱞᱠᱚ
 si:පෙළ ගොනුව
 sk:Textové dokumenty
 sl:Tekstovni dokumenti
@@ -21117,6 +21222,7 @@ pl:Dziękujemy za wybór SumatraPDF!
 pt:Obrigado por escolher SumatraPDF!
 ro:Vă mulţumim pentru că aţi ales SumatraPDF!
 ru:Благодарим за выбор SumatraPDF!
+sat:SumatraPDF ᱵᱟᱪᱷᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱟᱢᱟᱜ ᱟᱭᱢᱟ ᱥᱟᱨᱦᱟᱣ!
 si:SumatraPDF තෝරගැනීම පිලිබදව ස්තූතියි!
 sk:Dakujeme, že ste sa rozhodli pre SumatraPDF!
 sl:Hvala, ker ste izbrali SumatraPDF!
@@ -21180,6 +21286,7 @@ pl:Program SumatraPDF został zainstalowany.
 pt:Obrigado! O SumatraPDF foi instalado.
 ro:Mulţumim! SumatraPDF a fost instalat.
 ru:Спасибо! Программа SumatraPDF установлена.
+sat:ᱟᱢᱟᱜ ᱥᱟᱨᱦᱟᱣ! SumatraPDF ᱫᱚ ᱵᱚᱦᱟᱞ ᱮᱱᱟ ᱾
 si:ස්තූතියි! Sumatra PDF ස්ථාපනය කර ඇත
 sk:Ďakujeme! SumatraPDF bol nainštalovaný.
 sl:Hvala! SumatraPDF je bil nameščen.
@@ -21243,6 +21350,7 @@ pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za k
 pt:O instalador está danificado.\nDescarregue novamente o ficheiro de instalação.\nDesculpe.
 ro:Programul de instalare este deteriorat. Rugăm descărcaţi-l din nou. \n Scuze pentru deranj!
 ru:Программа установки повреждена. Скачайте её повторно.\nИзвините за неудобства!
+sat:ᱤᱱᱥᱴᱚᱞᱚᱨ ᱫᱚ ᱠᱷᱟᱨᱟᱯ ᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱚᱱᱟ ᱫᱩᱦᱲᱟᱹ ᱰᱟᱣᱩᱱᱞᱚᱰ ᱢᱮ ᱾\nᱮᱴᱠᱮᱴᱚᱬᱮ ᱞᱟᱹᱜᱤᱫ ᱟᱹᱰᱤ ᱤᱠᱟᱹ ᱞᱮ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱᱟ!
 si:ස්ථාපනය කරනය අකර්මන්‍යයි. කරුණාකර නැවත බාගත කරන්න. \nඇතිවූ අපහසුතාවයට සමාවන්න!
 sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOspravedlňujeme sa za ťažkosti!
 sl:Namestitveni program je poškodovan. Prosimo, da ga ponovno prenesete.\nOpravičujemo se za nevšečnost!
@@ -21304,6 +21412,7 @@ pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się nie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ro:Acest document folosește caracteristici neacceptate (%s) și este posibil să nu fie redat corect
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
+sat:ᱱᱚᱶᱟ ᱫᱚᱞᱤᱞ ᱫᱚ ᱵᱟᱝ ᱥᱚᱦᱚᱫᱽ ᱯᱷᱤᱪᱚᱨ ᱵᱮᱵᱷᱟᱨᱮᱫᱟᱭ (%s) ᱟᱨ ᱵᱮᱥ ᱪᱚᱨᱚᱠ ᱫᱚ ᱵᱟᱭ ᱫᱮᱠᱷᱟᱣ ᱮᱫᱟᱭ
 si:මෙම ලේඛනයේ සහය නොදක්වන විශේෂාංග භාවිත වේ (%s) නිසි අයුරින් පිරිනැමීමට නොහැකිවේවි
 sk:Tento dokument používa nepodporované funkcie (%s) a týmto sa nemusí vykresliť správne
 sl:Ta dokument uporablja nepodprte funkcije (%s) in se morda ne bo naložil pravilno
@@ -21374,6 +21483,7 @@ pl:Tytuł:
 pt:Título:
 ro:Titlu:
 ru:Название:
+sat:ᱧᱩᱛᱩᱢ ᱺ
 si:මාතෘකාව:
 sk:Názov:
 sl:Naslov:
@@ -21430,6 +21540,7 @@ pl:Tłumacz za pomocą &DeepL
 pt:Traduzir com &DeepL
 ro:Traduce cu &DeepL
 ru:П&еревести в DeepL
+sat:&ᱰᱤᱯᱮᱞ(DeepL) ᱥᱟᱶᱛᱮ ᱛᱚᱨᱡᱚᱢᱟᱭ ᱢᱮ
 sk:Preložiť pomocou &DeepL
 sl:Prevedi z &DeepL
 sr-rs:Преведи помоћу DeepL-а (&Д)
@@ -21490,6 +21601,7 @@ pl:Usuń SumatraPDF
 pt:Desinstalar SumatraPDF
 ro:Dezinstalare SumatraPDF
 ru:Удалить SumatraPDF
+sat:SumatraPDF ᱚᱪᱚᱜᱽ ᱢᱮ
 si:SumatraPDF ඉවත්කරන්න
 sk:Odinštalovanie SumatraPDF
 sl:Odstrani SumatraPDF
@@ -21553,6 +21665,7 @@ pl:Usunięcie programu nie powiodło się
 pt:Falha ao desinstalar!
 ro:Dezinstalarea a eșuat
 ru:Ошибка удаления
+sat:ᱚᱪᱚᱜᱽ ᱨᱮ ᱰᱤᱜᱟᱹᱣ ᱦᱩᱭᱮᱱᱟ
 si:ඉවත්කිරීම අසාර්ථක විය
 sk:Odinštalovanie sa nepodarilo
 sl:Odstranitev ni uspela
@@ -21616,6 +21729,7 @@ pl:Trwa usuwanie...
 pt:Desinstalação em curso...
 ro:Dezinstalare in curs...
 ru:Удаление...
+sat:ᱚᱪᱚᱜ ᱠᱟᱹᱢᱤ ᱪᱟᱹᱞᱩ ᱠᱟᱱᱟ ...
 si:ඉවත්කරමින් පවතී...
 sk:Prebieha odinštalovanie...
 sl:Odstranjevanje poteka …
@@ -21682,6 +21796,7 @@ pl:Nieznany plik źródłowy (%s)
 pt:O ficheiro (%s) é desconhecido
 ro:Fișier sursă necunoscută (%s)
 ru:Неизвестный исходный файл (%s)
+sat:ᱵᱟᱝ ᱵᱟᱲᱟᱭ ᱥᱨᱚᱛ ᱨᱮᱫᱽ (%s)
 si:නොදත් මූලාශ්‍ර ගොනුව (%s)
 sk:Neznámy zdrojový súbor (%s)
 sl:Neznana izvorna datoteka (%s)
@@ -21737,6 +21852,7 @@ pl:Niezapisane adnotacje
 pt:Anotações não guardadas
 ro:Adnotări nesalvate
 ru:Не сохранены аннотации
+sat:ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣ ᱪᱤᱱᱦᱟᱹᱠᱚ
 sk:Neuložené anotácie
 sl:Neshranjene pripombe
 sr-rs:Несачуване белешке
@@ -21785,6 +21901,7 @@ pl:Niezapisane adnotacje w '%s'
 pt:Anotações não guardadas em '%s'
 ro:Adnotări nesalvate în '%s'
 ru:В '%s' есть несохранённые аннотации
+sat: '%s' ᱨᱮ ᱵᱟᱝᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱪᱤᱱᱦᱟᱹᱠᱚ
 sk:Neuložené anotácie v '%s'
 sl:Neshranjene pripombe v '%s'
 sr-rs:Несачуване белешке у "%s"
@@ -21842,6 +21959,7 @@ pl:Włącz wyświetlanie &kart
 pt:U&tilizar separadores
 ro:Utilizare & file
 ru:Использовать &вкладки
+sat:&ᱴᱮᱵᱽᱠᱚ ᱵᱮᱵᱷᱟᱨ ᱢᱮ
 si:ටැබ &භාවිතය
 sk:Povoliť &záložky
 sl:Uporabljaj &zavihke
@@ -21913,6 +22031,7 @@ pl:Widok
 pt:Ver
 ro:Vizualizare
 ru:Вид
+sat:ᱧᱮᱞ
 si:දසුන (V)
 sk:Zobraziť
 sl:Pogled
@@ -21984,6 +22103,7 @@ pl:Odwiedź &stronę internetową
 pt:&Visitar sítio web
 ro:&Vizitează website-ul
 ru:Посетить &сайт программы
+sat:&ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ
 si:&වෙබ්අඩවියට පිවිසෙන්න
 sk:&Navštíviť webovú stránku
 sl:Ob&išči domačo stran
@@ -22053,6 +22173,7 @@ pl:Uwaga
 pt:Aviso
 ro:Avertisment
 ru:Внимание
+sat:ᱦᱩᱥᱤᱭᱟᱨ
 si:අනතුරු හැගවීම
 sk:Upozornenie
 sl:Opozorilo
@@ -22118,6 +22239,7 @@ pl:Pliki XPS
 pt:Documentos XPS
 ro:Documente XPS
 ru:Документы XPS
+sat:XPS ᱫᱚᱞᱤᱞᱠᱚ
 si:XPS ලේඛන
 sk:XPS dokumenty
 sl:XPS dokumenti
@@ -22200,6 +22322,7 @@ pl:Masz najnowszą wersję.
 pt:Tem a versão mais recente.
 ro:Aveți ultima versiune.
 ru:Вы используете самую новую версию программы.
+sat:ᱟᱢ ᱴᱷᱮᱱ ᱱᱟᱶᱟᱱ ᱵᱷᱚᱨᱥᱚᱱ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ ᱾
 si:ඔබ සතුව නවතම සංස්කරණය ඇත.
 sk:Používate najnovšiu verziu.
 sl:Imate najnovejšo različico.
@@ -22257,6 +22380,7 @@ pl:Masz niezapisane adnotacje
 pt:Existem anotações não guardadas
 ro:Aveți adnotări nesalvate
 ru:Аннотации не сохранены
+sat:ᱟᱢ ᱴᱷᱮᱱ ᱵᱟᱝᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱪᱤᱱᱦᱟᱹᱠᱚ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ
 sk:Máte neuložené anotácie
 sl:Imate neshranjene pripombe
 sr-rs:Имате несачуване белешке
@@ -22305,6 +22429,7 @@ pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować no
 pt:Tem a versão "%s" mas está disponível a versão "%s".\nDeseja instalar a nova versão?
 ro:Versiunea instalată este '%s' și versiunea '%s' este disponibilă.\nDoriți să instalați o nouă versiune?
 ru:Вы используете версию '%s', хотя доступна версия '%s'.\nХотите установить новую версию?
+sat:ᱟᱢ ᱴᱷᱮᱱ '%s' ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱟᱨ '%s' ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ ᱾ \n ᱟᱢ ᱱᱟᱶᱟ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱵᱚᱦᱟᱞ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ ?
 sk:Máte verziu '%s' a k dispozícii je verzia '%s'.\nChcete nainštalovať novú verziu?
 sl:Nameščeno je različica '%s'. Na voljo je novejša različica '%s'.\n Ali jo želite namestiti?
 sr-rs:Користите верзију "%s", а доступна је верзија "%s".\nЖелите ли да инсталирате нову верзију?
@@ -22353,6 +22478,7 @@ pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\n
 pt:Está a instalar a versão 32 bits num sistema 64 bits.\nGostaria de descarregar e instalar\na versão 64-bit?
 ro:Se instalează SumatraPDF 32 de biți în Sistem de Operare 64 de biți.\nDoriți să descărcați\nversiunea 64 de biți?
 ru:Вы устанавливаете 32-разрядную версию SumatraPDF в 64-разрядной ОС.\nХотите загрузить 64-разрядную версию программы?
+sat:ᱟᱢ ᱫᱚ 64-bit OS ᱨᱮ 32-bit SumatraPDFᱮᱢ ᱵᱚᱦᱟᱞ ᱮᱫᱟ ᱾\nᱟᱢ ᱫᱚ 64-bit ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱰᱟᱣᱩᱱᱞᱚᱰ ᱥᱟᱱᱟᱢ ᱠᱟᱱᱟ ᱥᱮ ?
 sk:Inštalujete 32-bitovú verziu SumatraPDF na 64-bitový operačný systém.\nChcete stiahnuť\n64-bitovú verziu?
 sl:32-bitni SumatraPDF bo nameščen v 64-bitni operacijski sistem.\nAli bi raje prenesli in namestili 64-bitno različico?
 sr-rs:Инсталирате 32-битни SumatraPDF на 64-битном ОС-у.\nДа ли бисте желели да преузмете\n64-битну верзију?
@@ -22414,6 +22540,7 @@ pl:Powiększ
 pt:Zoom
 ro:Mărire
 ru:Масштаб
+sat:ᱦᱩᱰᱤᱧᱢᱟᱨᱟᱝ
 si:විශාලනය (Z)
 sk:Zmeniť veľkosť
 sl:Povečava
@@ -22485,6 +22612,7 @@ pl:Powiększ
 pt:Ampliar
 ro:Mărește
 ru:Увеличить
+sat:ᱢᱟᱨᱟᱝᱪᱷᱚ
 si:විශාල කරන්න
 sk:Zväčšiť
 sl:Povečaj
@@ -22557,6 +22685,7 @@ pl:Zmniejsz
 pt:Reduzir
 ro:Micșorează
 ru:Уменьшить
+sat:ᱦᱩᱲᱤᱧᱪᱷᱚ
 si:කුඩා කරන්න
 sk:Zmenšiť
 sl:Pomanjšaj
@@ -22624,6 +22753,7 @@ pl:Współczynnik powiększenia
 pt:Fator de ampliação
 ro:Factor de mărire
 ru:Масштаб
+sat:ᱦᱩᱰᱤᱧᱢᱟᱨᱟᱝ ᱜᱩᱱᱟᱹ
 si:විශාලන කළමනාකරණය
 sk:Veľkosť zobrazenia
 sl:Faktor povečave
@@ -22825,7 +22955,7 @@ pl:drukowanie dokumentu
 pt:a imprimir documento
 ro:se imprimă documentul
 ru:печать документа
-sat:ᱫᱚᱞᱤᱞ ᱯᱨᱤᱱᱴᱚᱜ ᱠᱟᱱᱟ
+sat:ᱫᱚᱞᱤᱞ ᱪᱷᱟᱯᱟᱜ ᱠᱟᱱᱟ
 si:ලේඛනය මුද්‍රණය
 sk:prebieha tlač dokumentu
 sl:tiskanje dokumenta
