@@ -269,7 +269,7 @@ typedef struct
 	int32_t  last_pixel;	/* last pixel number */
 } index_t;
 
-#ifdef ARCH_IS_ARM
+#if ARCH_HAS_NEON
 typedef int16_t weight_t;
 #else
 typedef int32_t weight_t;

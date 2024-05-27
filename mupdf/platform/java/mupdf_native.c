@@ -655,6 +655,15 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFWidget_PDF_SIGNATURE_SHOW_LOGO == PDF_SIGNATURE_SHOW_LOGO;
 	valid &= com_artifex_mupdf_fitz_PDFWidget_PDF_SIGNATURE_DEFAULT_APPEARANCE == PDF_SIGNATURE_DEFAULT_APPEARANCE;
 
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_OKAY == PDF_SIGNATURE_ERROR_OKAY;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_NO_SIGNATURES == PDF_SIGNATURE_ERROR_NO_SIGNATURES;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_NO_CERTIFICATE == PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_DIGEST_FAILURE == PDF_SIGNATURE_ERROR_DIGEST_FAILURE;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_SELF_SIGNED == PDF_SIGNATURE_ERROR_SELF_SIGNED;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN == PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_NOT_TRUSTED == PDF_SIGNATURE_ERROR_NOT_TRUSTED;
+	valid &= com_artifex_mupdf_fitz_PDFWidget_SIGNATURE_ERROR_UNKNOWN == PDF_SIGNATURE_ERROR_UNKNOWN;
+
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_NONE == PDF_REDACT_IMAGE_NONE;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_REMOVE == PDF_REDACT_IMAGE_REMOVE;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_IMAGE_PIXELS == PDF_REDACT_IMAGE_PIXELS;

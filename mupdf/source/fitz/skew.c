@@ -146,7 +146,7 @@ fz_skew_process(fz_context *ctx, fz_skew *skew, const uint8_t *input)
 	int i;
 	int off = skew->y++;
 
-#if 0//def ARCH_HAS_SSE
+#if ARCH_HAS_SSE
 	for (i = 0; i < NUM_SKEW_COLS * 2; i++)
 		skew->tables[i][off] = sum_sse(input + skew->offsets[i]);
 #else

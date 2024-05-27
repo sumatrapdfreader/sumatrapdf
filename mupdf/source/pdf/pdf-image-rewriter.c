@@ -718,6 +718,7 @@ do_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm,
 	image_type type;
 	int fmt = fz_compressed_image_type(ctx, *image);
 	int lossy = fmt_is_lossy(fmt);
+	size_t orig_len = pdf_dict_get_int64(ctx, im_obj, PDF_NAME(Length));
 
 	/* FIXME: We don't recompress im_obj->mask! */
 
@@ -832,8 +833,13 @@ do_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm,
 
 		if (newimg)
 		{
+			/* fz_image_size gives us the uncompressed size for losslessly compressed images
+			 * as the image holds the uncompressed buffer. But orig_len will be 0 for inline
+			 * images. So we have to combine the two. */
 			size_t oldsize = fz_image_size(ctx, *image);
 			size_t newsize = fz_image_size(ctx, newimg);
+			if (orig_len != 0)
+				oldsize = orig_len;
 			if (oldsize <= newsize)
 			{
 				/* Old one was smaller! Don't mess with it. */
@@ -933,7 +939,12 @@ void pdf_rewrite_images(fz_context *ctx, pdf_document *doc, pdf_image_rewriter_o
 		opts->gray_lossless_image_subsample_threshold == 0 &&
 		opts->gray_lossy_image_subsample_threshold == 0 &&
 		opts->color_lossless_image_subsample_threshold == 0 &&
-		opts->color_lossy_image_subsample_threshold == 0)
+		opts->color_lossy_image_subsample_threshold == 0 &&
+		opts->bitonal_image_recompress_method == FZ_RECOMPRESS_NEVER &&
+		opts->color_lossy_image_recompress_method == FZ_RECOMPRESS_NEVER &&
+		opts->color_lossless_image_recompress_method == FZ_RECOMPRESS_NEVER &&
+		opts->gray_lossy_image_recompress_method == FZ_RECOMPRESS_NEVER &&
+		opts->gray_lossless_image_recompress_method == FZ_RECOMPRESS_NEVER)
 		return;
 
 	/* Pass 1: Gather information */

@@ -76,7 +76,8 @@ typedef unsigned __int64 uint64_t;
 	Spot architectures where we have optimisations.
 */
 
-#if defined(__arm__) || defined(__thumb__) || defined(__ARM_NEON) || defined(__ARM_NEON__)
+/* ARCH_ARM is only used for 32bit ARM stuff. */
+#if defined(__arm__) || defined(__thumb__)
 #ifndef ARCH_ARM
 #define ARCH_ARM
 #endif
