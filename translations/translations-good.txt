@@ -1640,6 +1640,7 @@ pl:&Nie
 pt:&Não
 ro:&Nu
 ru:&Нет
+sat:&ᱵᱟᱝ
 sk:&Nie
 sl:&Ne
 sr-rs:&Не
@@ -1957,6 +1958,7 @@ pl:&Hasło:
 pt:&Palavra-passe:
 ro:&Parolă:
 ru:&Пароль:
+sat:&ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱺ
 sk:&Heslo:
 sl:&Geslo:
 sr-rs:&Лозинка
@@ -2165,6 +2167,7 @@ pl:&Drukuj... (odmówiono)
 pt:&Imprimir...(recusado)
 ro:&Imprimare... (interzisă)
 ru:Пе&чать... (отмена)
+sat:&ᱪᱷᱟᱯᱟ ... (ᱢᱟᱱᱟ ᱮᱱᱟ)
 sk:&Tlač... (odmietnutá)
 sl:&Natisni … (onemogočeno)
 sr-rs:&Штампај... (одбијено)
@@ -2218,6 +2221,7 @@ pl:Pamiętaj &hasło dla tego dokumentu
 pt:Memoriza&r palavra-passe deste documento
 ro:&Reține parola acestui document
 ru:Запомнит&ь пароль для этого документа
+sat:ᱱᱚᱶᱟ ᱫᱚᱞᱤᱞ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ &ᱢᱚᱱᱮ ᱫᱚᱦᱚ ᱠᱟᱜ ᱢᱮ
 sk:&Zapamätať si heslo pre tento dokument
 sl:&Zapomni si geslo za ta dokument
 sr-rs:&Запамти лозинку за овај документ
@@ -2429,6 +2433,7 @@ pl:&Zapisz w istniejącym pliku PDF
 pt:Guardar para PDF exi&stente
 ro:&Salvează în PDF existent
 ru:&Сохранить в имеющийся PDF
+sat:ᱢᱟᱲᱟᱝ ᱠᱷᱚᱱ ᱢᱮᱱᱟᱜ PDF ᱨᱮ &ᱥᱟᱧᱪᱟᱣ ᱢᱮ
 sk:&Uložiť do existujúceho PDF
 sl:&Shrani v obstoječo PDF datoteko
 sr-rs:&Сачувај у постојећи PDF
@@ -2991,6 +2996,7 @@ pl:Użyj &oryginalnego rozmiaru stron
 pt:&Utilizar tamanho original
 ro:&Utilizează mărimile originale ale paginii
 ru:&Исходный размер страниц
+sat:ᱢᱤᱞ ᱥᱟᱦᱴᱟ ᱢᱟᱯᱠᱚ &ᱵᱮᱵᱷᱟᱨ ᱢᱮ
 sk:Použiť originálne veľkosti strán
 sl:&Uporabi izvirno velikost strani
 sr-rs:&Употреби оригиналне величине страница
@@ -3097,6 +3103,7 @@ pl:&Okno
 pt:&Janela
 ro:&Fereastră
 ru:&Окно
+sat:&ᱡᱷᱚᱨᱠᱟ
 sk:&Okno
 sl:&Okno
 sr-rs:П&розор
@@ -11522,6 +11529,7 @@ pl:Tryb &mangi
 pt:Mod&o Manga
 ro:Mod man&ga
 ru:Режим Man&ga
+sat:ᱢᱟ&ᱝᱜᱟ ᱢᱳᱰ
 sk:Man&ga mód
 sl:Način Man&ga
 sr-rs:Ман&га мод
@@ -11876,6 +11884,7 @@ it:No
 nl:Nee
 pl:Nie
 pt:Não
+ru:Нет
 sat:ᱵᱟᱝᱟ
 sk:Nie
 :No matches were found
@@ -12400,6 +12409,7 @@ pl:Otwórz &w PDF-XChange
 pt:Abr&ir no PDF-XChange
 ro:Deschide &în PDF-XChange
 ru:Открыть в PDF-XChange
+sat:PDF-XChange ᱨᱮ ᱠ&ᱷᱩᱞᱟᱹᱭ ᱢᱮ
 sk:Otvoriť v programe PDF-XChange
 sl:Odpri s programom PDF-XChange
 sr-rs:Отвори &у PDF-XChange-у
@@ -12911,6 +12921,7 @@ pl:Otwórz w &Foxit Reader
 pt:Abrir no &Foxit Reader
 ro:Deschide în &Foxit Reader
 ru:Отк&рыть в Foxit Reader
+sat:&Foxit Reader ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť v programe &Foxit Reader
 sl:Odpri s programom &Foxit Reader
 sr-rs:Отвори у Foxit Reader-у (&Ф)
@@ -12964,6 +12975,7 @@ pl:Otwórz w &Microsoft XPS-Viewer
 pt:Abrir no &Microsoft XPS-Viewer
 ro:Deschide în &Microsoft XPS-Viewer
 ru:Открыть в Microsoft XPS-Viewer
+sat:&Microsoft XPS-Viewer ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť v programe Microsoft XPS-Viewer
 sl:Odpri s programom Microsoft XPS-Viewer
 sr-rs:Отвори у Microsoft XPS Viewer-у (&Џ)
@@ -18859,6 +18871,7 @@ it:Sì
 nl:Ja
 pl:Tak
 pt:Sim
+ru:Да
 sat:ᱦᱚᱭ
 sk:Áno
 :You have the latest version.
