@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-beb000654b1ee1529dd562efd6d08e7392b9b187
+b0fc5831a42abe1d349eed548e1001f665749257
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -1095,6 +1095,7 @@ pl:&Szukaj:
 pt:&Localizar o quê:
 ro:&Caută text:
 ru:На&йти:
+sat:ᱪᱮᱫ &ᱯᱟᱱᱛᱮᱭᱟᱢ ᱺ
 si:&සොයන්නෙ කුමක්ද:
 sk:&Vyhľadať:
 sl:&Najdi:
@@ -1400,6 +1401,7 @@ pl:Idź &do strony:
 pt:&Ir para a página:
 ro:&Salt la pagina:
 ru:Перейти &к странице
+sat:ᱥᱟᱦᱴᱟ ᱛᱮ &ᱪᱟᱞᱟᱜ ᱢᱮ ᱺ
 si:පිටුවට &යන්න:
 sk:&Prejsť na stranu:
 sl:Pojdi na &stran:
@@ -1799,6 +1801,7 @@ pl:&Uwzględnij wielkość liter
 pt:&Sensível a maiúsculas
 ro:&Potrivire literele mari și mici
 ru:&Учитывать регистр
+sat:ᱪᱤᱠᱤ &ᱢᱮᱲᱟᱣ ᱢᱮ
 si:&උදාහරණය ගැළපීම
 sk:&Podľa zadaných kritérií
 sl:Razlikuj &med velikimi/malimi črkami
@@ -13790,6 +13793,7 @@ it:Manuale (sito web)
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
 pt:Manual no Site da Web
+ro:Manual pe site
 ru:Руководство на веб-сайте
 sat:ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱟᱹᱠᱷᱤ
 sk:Manuál na webovej stránke
@@ -14189,6 +14193,7 @@ it:No
 nl:Nee
 pl:Nie
 pt:Não
+ro:Nu
 ru:Нет
 sat:ᱵᱟᱝᱟ
 sk:Nie
@@ -15041,6 +15046,7 @@ pl:Otwórz katalog w Directory &Opus
 pt:Abrir pasta no Directory &Opus
 ro:Deschide folder în Directory &Opus
 ru:Открыть папку в &Directory Opus
+sat:ᱰᱟᱭᱨᱮᱠᱴᱚᱨᱤ &Opus ᱨᱮ ᱰᱟᱭᱨᱮᱠᱴᱚᱨᱤ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v aplikácii &Opus
 sr-rs:Отвори фасциклу у Directory Opus-у (&Д)
 ta:டைரக்டரி ஓபஸில் கோப்புறை திற
@@ -15507,6 +15513,7 @@ pl:Otwórz w Microsoft &HTML Help
 pt:Abrir no Microsoft &HTML Help
 ro:Deschide în Microsoft &HTML Help
 ru:Открыть в Microsoft &HTML Help
+sat:Microsoft &HTML ᱜᱚᱲᱚ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť v Microsoft pomocník &HTML
 sr-rs:Отвори у Microsoft HTML Help-у (&Х)
 ta:மைக்ரோசாப்ட் HTML ஹெல்பில் திற
@@ -18502,6 +18509,7 @@ pl:Zapisz w &nowym pliku PDF
 pt:Guardar para um &novo PDF
 ro:Salvează într-un PDF &nou
 ru:Сохранить в &новом PDF
+sat:&ᱱᱟᱶᱟ PDF ᱛᱮ ᱥᱟᱧᱪᱟᱣᱢᱮ
 sk:Uložiť do &nového PDF
 sl:Shrani v &novo PDF datoteko
 sr-rs:Сачувај у &нови PDF
@@ -18710,6 +18718,8 @@ tr:&Google İle Ara
 tw:使用 Google 搜尋(&G)
 uk:Пошук за допомогою &Google
 vn:Tìm Kiếm Với &Google
+:Search with &Google Scholar
+:Search with &Wikipedia
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -22278,6 +22288,7 @@ it:Sì
 nl:Ja
 pl:Tak
 pt:Sim
+ro:Da
 ru:Да
 sat:ᱦᱚᱭ
 sk:Áno
