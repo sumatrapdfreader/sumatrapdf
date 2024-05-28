@@ -5646,6 +5646,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             LaunchBrowserWithSelection(tab, L"https://www.bing.com/search?q=${selection}");
             break;
 
+        case CmdSearchSelectionWithWikipedia:
+            LaunchBrowserWithSelection(tab, L"https://wikipedia.org/w/index.php?search=${selection}");
+            break;
+
+        case CmdSearchSelectionWithGoogleScholar:
+            LaunchBrowserWithSelection(tab, L"https://scholar.google.com/scholar?q=${selection}");
+            break;
+
         case CmdCopySelection:
             CopySelectionInTabToClipboard(tab);
             break;

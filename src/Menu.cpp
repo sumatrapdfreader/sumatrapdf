@@ -574,6 +574,14 @@ static MenuDef menuDefSelection[] = {
         CmdSearchSelectionWithBing,
     },
     {
+        _TRN("Search with &Wikipedia"),
+        CmdSearchSelectionWithWikipedia,
+    },
+    {
+        _TRN("Searche with &GoogleScholar"),
+        CmdSearchSelectionWithGoogleScholar,
+    },
+    {
         _TRN("Select &All"),
         CmdSelectAll,
     },
@@ -605,6 +613,14 @@ static MenuDef menuDefMainSelection[] = {
     {
         _TRN("Search With &Bing"),
         CmdSearchSelectionWithBing,
+    },
+    {
+        _TRN("Search with &Wikipedia"),
+        CmdSearchSelectionWithWikipedia,
+    },
+    {
+        _TRN("Searche with &GoogleScholar"),
+        CmdSearchSelectionWithGoogleScholar,
     },
     {
         _TRN("Select &All"),
@@ -875,6 +891,8 @@ UINT_PTR disableIfNoSelection[] = {
     CmdCopySelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
+    CmdSearchSelectionWithWikipedia,
+    CmdSearchSelectionWithGoogleScholar,
     CmdSearchSelectionWithBing,
     CmdSearchSelectionWithGoogle,
     CmdCreateAnnotHighlight,
@@ -906,6 +924,8 @@ UINT_PTR removeIfNoInternetPerms[] = {
     CmdTranslateSelectionWithDeepL,
     CmdSearchSelectionWithGoogle,
     CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithWikipedia,
+    CmdSearchSelectionWithGoogleScholar,
     CmdHelpVisitWebsite,
     CmdHelpOpenManualOnWebsite,
     CmdHelpOpenKeyboardShortcuts,
@@ -936,6 +956,8 @@ UINT_PTR removeIfNoCopyPerms[] = {
     CmdTranslateSelectionWithDeepL,
     CmdSearchSelectionWithGoogle,
     CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithWikipedia,
+    CmdSearchSelectionWithGoogleScholar,
     CmdSelectAll,
 
     CmdCopySelection,
@@ -1819,6 +1841,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdTranslateSelectionWithDeepL:
         case CmdSearchSelectionWithGoogle:
         case CmdSearchSelectionWithBing:
+        case CmdSearchSelectionWithWikipedia:
+        case CmdSearchSelectionWithGoogleScholar:
         case CmdSelectAll:
         case CmdSaveAs:
         case CmdPrint:
