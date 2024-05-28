@@ -40,7 +40,7 @@ static void addRawStr(Fmt& fmt, const char* s, size_t len) {
     if (len == 0) {
         return;
     }
-    CrashIf(fmt.nInst >= dimof(fmt.instructions));
+    ReportIf(fmt.nInst >= dimof(fmt.instructions));
     auto& i = fmt.instructions[fmt.nInst++];
     i.t = Type::RawStr;
     i.s = s;
@@ -50,12 +50,12 @@ static void addRawStr(Fmt& fmt, const char* s, size_t len) {
 
 // parse: {$n}
 static const char* parseArgDefPositional(Fmt& fmt, const char* s) {
-    CrashIf(*s != '{');
+    ReportIf(*s != '{');
     ++s;
     int n = 0;
     while (*s != '}') {
         // TODO: this could be more featurful
-        CrashIf(!str::IsDigit(*s));
+        ReportIf(!str::IsDigit(*s));
         n = n * 10 + (*s - '0');
         ++s;
     }
@@ -96,7 +96,7 @@ static bool isFmtChar(char c) {
 
 // parse: %[<fmt>][csfd]
 static const char* parseArgDefPerc(Fmt& fmt, const char* s) {
-    CrashIf(*s != '%');
+    ReportIf(*s != '%');
     s++;
     const char* fmtStart = s;
     while (*s && isFmtChar(*s)) {
@@ -121,13 +121,13 @@ static const char* parseArgDefPerc(Fmt& fmt, const char* s) {
             n--;
         }
     }
-    CrashIf(n > 1); // TODO: only support a single digit for nLen
+    ReportIf(n > 1); // TODO: only support a single digit for nLen
     if (n > 0) {
         c = *fmtStart++;
         if (c >= '0' && c <= '9') {
             i.width = c - '0';
         } else {
-            CrashIf(true);
+            ReportIf(true);
         }
     }
     return s;
@@ -223,7 +223,7 @@ static bool ParseFormat(Fmt& o, const char* fmt) {
     // but must cover all space from 0..nArgsExpected
     for (int i = 0; i <= maxArgNo; i++) {
         bool isOk = hasInstructionWithArgNo(o.instructions, o.nInst, i);
-        CrashIf(!isOk);
+        ReportIf(!isOk);
         if (!isOk) {
             return false;
         }
@@ -238,11 +238,11 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
     }
 
     for (int n = 0; n < nInst; n++) {
-        CrashIf(n >= dimof(instructions));
+        ReportIf(n >= dimof(instructions));
 
         auto& inst = instructions[n];
         int argNo = inst.argNo;
-        CrashIf(argNo >= nArgs);
+        ReportIf(argNo >= nArgs);
         if (argNo >= nArgs) {
             isOk = false;
             return false;
@@ -255,7 +255,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
 
         const Arg& arg = *args[argNo];
         isOk = validArgTypes(inst.t, arg.t);
-        CrashIf(!isOk);
+        ReportIf(!isOk);
         if (!isOk) {
             return false;
         }
@@ -276,7 +276,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
                     f[i++] = '0' + (char)inst.width;
                 }
                 f[i++] = 'd';
-                CrashIf(i >= dimof(f));
+                ReportIf(i >= dimof(f));
                 str::BufFmt(buf, dimof(buf), f, (int)arg.u.i);
                 res.Append(buf);
             } break;
@@ -298,7 +298,7 @@ bool Fmt::Eval(const Arg** args, int nArgs) {
                 res.Append(s);
                 break;
             default:
-                CrashIf(true);
+                ReportIf(true);
                 break;
         };
     }
@@ -314,7 +314,7 @@ char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const A
     args[nArgs++] = &a4;
     args[nArgs++] = &a5;
     args[nArgs++] = &a6;
-    CrashIf(nArgs > dimof(args));
+    ReportIf(nArgs > dimof(args));
     // arguments at the end could be empty
     while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
@@ -373,7 +373,7 @@ char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, con
     args[nArgs++] = &a4;
     args[nArgs++] = &a5;
     args[nArgs++] = &a6;
-    CrashIf(nArgs > dimof(args));
+    ReportIf(nArgs > dimof(args));
     return FormatTemp(s, args, nArgs);
 }
 

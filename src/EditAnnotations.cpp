@@ -220,11 +220,11 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
     int idx = ew->listBox->GetCurrentSelection();
     if (idx < 0) {
-        CrashIf(ew->tab->selectedAnnotation != nullptr);
+        ReportIf(ew->tab->selectedAnnotation != nullptr);
         return;
     }
     Annotation* annot = ew->annotations.at(idx);
-    CrashIf(ew->tab->selectedAnnotation != annot);
+    ReportIf(ew->tab->selectedAnnotation != annot);
     DeleteAnnotationAndUpdateUI(ew->tab, annot);
 
     // Note: auto-selecting next annotation might cause page jumping
@@ -461,7 +461,7 @@ static PdfColor GetDropDownColor(const char* sv) {
     int idx = seqstrings::StrToIdx(gColors, sv);
     if (idx >= 0) {
         int nMaxColors = (int)dimof(gColorsValues);
-        CrashIf(idx >= nMaxColors);
+        ReportIf(idx >= nMaxColors);
         if (idx < nMaxColors) {
             return gColorsValues[idx];
         }
@@ -813,7 +813,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
     HidePerAnnotControls(ew);
     if (annot) {
         int itemNo = ew->annotations.Find(annot);
-        CrashIf(itemNo < 0);
+        ReportIf(itemNo < 0);
 
         DoRect(ew, annot);
         DoAuthor(ew, annot);
@@ -870,7 +870,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
         // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1701
         logf("UpdateUIForSelectedAnnotation: invalid annotPageNo (%d), should be <= than nPages (%d)\n", annotPageNo,
              nPages);
-        CrashIf(annotPageNo > nPages);
+        ReportIf(annotPageNo > nPages);
         return;
     }
 
@@ -887,13 +887,13 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
 }
 
 static void ButtonSaveAttachment(EditAnnotationsWindow* ew) {
-    CrashIf(!ew->tab->selectedAnnotation);
+    ReportIf(!ew->tab->selectedAnnotation);
     // TODO: implement me
     MessageBoxNYI(ew->hwnd);
 }
 
 static void ButtonEmbedAttachment(EditAnnotationsWindow* ew) {
-    CrashIf(!ew->tab->selectedAnnotation);
+    ReportIf(!ew->tab->selectedAnnotation);
     // TODO: implement me
     MessageBoxNYI(ew->hwnd);
 }
@@ -932,7 +932,7 @@ void UpdateAnnotationsList(EditAnnotationsWindow* ew) {
 }
 
 static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
-    CrashIf(!ew->tab->selectedAnnotation);
+    ReportIf(!ew->tab->selectedAnnotation);
     DeleteSelectedAnnotation(ew);
 }
 
@@ -1003,7 +1003,7 @@ static Static* CreateStatic(HWND parent, const char* s = nullptr) {
     args.text = s;
     args.font = GetAppFont();
     HWND hwnd = w->Create(args);
-    CrashIf(!hwnd);
+    ReportIf(!hwnd);
     return w;
 }
 
@@ -1070,7 +1070,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         args.font = fnt;
         auto w = new Edit();
         HWND hwnd = w->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
         w->maxDx = 150;
         w->onTextChanged = [ew]() { return ContentsChanged(ew); };
         ew->editContents = w;
@@ -1323,7 +1323,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
         HWND hwnd = w->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
 
         w->onClicked = [ew] { return ButtonSaveAttachment(ew); };
         ew->buttonSaveAttachment = w;
@@ -1339,7 +1339,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
         HWND hwnd = w->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
 
         w->onClicked = [ew] { return ButtonEmbedAttachment(ew); };
         ew->buttonEmbedAttachment = w;
@@ -1355,7 +1355,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto w = new Button();
         w->SetInsetsPt(11, 0, 0, 0);
         HWND hwnd = w->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
 
         // TODO: doesn't work
         // w->SetTextColor(MkColor(0xff, 0, 0));
@@ -1380,7 +1380,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
         auto w = new Button();
         HWND hwnd = w->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
 
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClicked = [ew] { return ButtonSaveToCurrentPDFHandler(ew); };
@@ -1398,7 +1398,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto w = new Button();
         w->SetInsetsPt(8, 0, 0, 0);
         HWND hwnd = w->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
 
         w->SetIsEnabled(false); // only enabled if there are changes
         w->onClicked = [ew] { return ButtonSaveToNewFileHandler(ew); };
@@ -1412,7 +1412,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 }
 
 void ShowEditAnnotationsWindow(WindowTab* tab) {
-    CrashIf(!tab->AsFixed()->GetEngine());
+    ReportIf(!tab->AsFixed()->GetEngine());
     EditAnnotationsWindow* ew = tab->editAnnotsWindow;
     if (ew) {
         HwndMakeVisible(ew->hwnd);

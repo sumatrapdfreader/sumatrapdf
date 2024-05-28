@@ -435,7 +435,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     int cmdId = (int)CmdFirst + 1;
     for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, cmdId)) {
         if (AllowCommand(ctx, (i32)cmdId)) {
-            CrashIf(str::Leni(strs) == 0);
+            ReportIf(str::Leni(strs) == 0);
             tempStrings.Append(strs);
         }
     }
@@ -733,7 +733,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         c->maxDx = 150;
         c->onTextChanged = std::bind(&CommandPaletteWnd::QueryChanged, this);
         HWND ok = c->Create(args);
-        CrashIf(!ok);
+        ReportIf(!ok);
         editQuery = c;
         vbox->AddChild(c);
     }
@@ -747,7 +747,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         auto wnd = c->Create(args);
-        CrashIf(!wnd);
+        ReportIf(!wnd);
         auto m = new ListBoxModelStrings();
         FilterStringsForQuery("", m->strings);
         c->SetModel(m);
@@ -763,7 +763,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
 
         auto c = new Static();
         auto wnd = c->Create(args);
-        CrashIf(!wnd);
+        ReportIf(!wnd);
         staticHelp = c;
         vbox->AddChild(c);
     }
@@ -794,13 +794,13 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
 }
 
 void RunCommandPallette(MainWindow* win, const char* prefix) {
-    CrashIf(gCommandPaletteWnd);
+    ReportIf(gCommandPaletteWnd);
 
     auto wnd = new CommandPaletteWnd();
     wnd->font = GetAppBiggerFont();
     wnd->win = win;
     bool ok = wnd->Create(win, prefix);
-    CrashIf(!ok);
+    ReportIf(!ok);
     gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;
 }

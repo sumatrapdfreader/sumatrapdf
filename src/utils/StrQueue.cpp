@@ -26,7 +26,7 @@ void StrQueue::Unlock() {
 
 void StrQueue::MarkFinished() {
     Lock();
-    CrashIf(isFinished);
+    ReportIf(isFinished);
     isFinished = true;
     Unlock();
     SetEvent(hEvent);

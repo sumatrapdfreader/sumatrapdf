@@ -53,7 +53,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
 
     for (int pageNo = dm->GetEngine()->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
-        CrashIf(!(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown));
+        ReportIf(!(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown));
         if (!pageInfo || !pageInfo->shown) {
             continue;
         }
@@ -134,7 +134,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
 }
 
 void PaintSelection(MainWindow* win, HDC hdc) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
 
     Vec<Rect> rects;
 
@@ -164,7 +164,7 @@ void PaintSelection(MainWindow* win, HDC hdc) {
             }
         }
 
-        CrashIf(!win->CurrentTab()->selectionOnPage);
+        ReportIf(!win->CurrentTab()->selectionOnPage);
         if (!win->CurrentTab()->selectionOnPage) {
             return;
         }
@@ -212,7 +212,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
         return nullptr;
     }
     DisplayModel* dm = tab->AsFixed();
-    CrashIf(!dm);
+    ReportIf(!dm);
     if (!dm) {
         return nullptr;
     }
@@ -244,7 +244,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
 
 void CopySelectionToClipboard(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-    CrashIf(tab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
+    ReportIf(tab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
 
     if (!OpenClipboard(nullptr)) {
         return;
@@ -353,9 +353,9 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
         dy = SELECT_AUTOSCROLL_STEP_LENGTH;
     }
 
-    CrashIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
+    ReportIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
     if (dx != 0 || dy != 0) {
-        CrashIf(!win->AsFixed());
+        ReportIf(!win->AsFixed());
         DisplayModel* dm = win->AsFixed();
         Point oldOffset = dm->GetViewPort().TL();
         win->MoveDocBy(dx, dy);
@@ -370,7 +370,7 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
 }
 
 void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     DeleteOldSelectionInfo(win, true);
 
     win->selectionRect = Rect(x, y, 0, 0);

@@ -61,7 +61,7 @@ static int GetWeekCount() {
     date20110101.wDay = 1;
     FILETIME origTime, currTime;
     BOOL ok = SystemTimeToFileTime(&date20110101, &origTime);
-    CrashIf(!ok);
+    ReportIf(!ok);
     GetSystemTimeAsFileTime(&currTime);
     return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
@@ -96,7 +96,7 @@ static void setMinMax(int& i, int minVal, int maxVal) {
 
 /* Caller needs to CleanUpSettings() */
 bool LoadSettings() {
-    CrashIf(gGlobalPrefs);
+    ReportIf(gGlobalPrefs);
 
     auto timeStart = TimeGet();
 
@@ -118,7 +118,7 @@ bool LoadSettings() {
     gprefs->lastPrefUpdate = file::GetModificationTime(settingsPath);
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
-    CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
+    ReportIf(!IsValidZoom(gprefs->defaultZoomFloat));
 
     int weekDiff = GetWeekCount() - gprefs->openCountWeek;
     gprefs->openCountWeek = GetWeekCount();
@@ -272,7 +272,7 @@ bool SaveSettings() {
         str::Free(prevPrefs.data());
         str::Free(prefs.data());
     };
-    CrashIf(prefs.empty());
+    ReportIf(prefs.empty());
     if (prefs.empty()) {
         return false;
     }
@@ -371,7 +371,7 @@ void RegisterSettingsForFileChanges() {
         return;
     }
 
-    CrashIf(gWatchedSettingsFile); // only call me once
+    ReportIf(gWatchedSettingsFile); // only call me once
     TempStr path = GetSettingsPathTemp();
     gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }

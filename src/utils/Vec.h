@@ -169,41 +169,41 @@ class Vec {
     }
 
     T& operator[](size_t idx) const {
-        CrashIf(idx >= len);
+        ReportIf(idx >= len);
         return els[idx];
     }
 
     T& operator[](long idx) const {
-        CrashIf(idx < 0);
-        CrashIf((size_t)idx >= len);
+        ReportIf(idx < 0);
+        ReportIf((size_t)idx >= len);
         return els[idx];
     }
 
     T& operator[](ULONG idx) const {
-        CrashIf((size_t)idx >= len);
+        ReportIf((size_t)idx >= len);
         return els[idx];
     }
 
     T& operator[](int idx) const {
-        CrashIf(idx < 0);
-        CrashIf((size_t)idx >= len);
+        ReportIf(idx < 0);
+        ReportIf((size_t)idx >= len);
         return els[idx];
     }
 
     T& at(size_t idx) const {
-        CrashIf(idx >= len);
+        ReportIf(idx >= len);
         return els[idx];
     }
 
     T& at(int idx) const {
-        CrashIf(idx < 0);
-        CrashIf(idx >= (int)len);
+        ReportIf(idx < 0);
+        ReportIf(idx >= (int)len);
         return els[idx];
     }
 
     T& At(int idx) const {
-        CrashIf(idx < 0);
-        CrashIf(idx >= (int)len);
+        ReportIf(idx < 0);
+        ReportIf(idx >= (int)len);
         return els[idx];
     }
 
@@ -278,7 +278,7 @@ class Vec {
     // can be copied via memcpy()
     // TODO: could be extend to take number of elements to remove
     void RemoveAtFast(size_t idx) {
-        CrashIf(idx >= len);
+        ReportIf(idx >= len);
         if (idx >= len) {
             return;
         }
@@ -292,21 +292,21 @@ class Vec {
     }
 
     T Pop() {
-        CrashIf(0 == len);
+        ReportIf(0 == len);
         T el = at(len - 1);
         RemoveAtFast(len - 1);
         return el;
     }
 
     T PopAt(size_t idx) {
-        CrashIf(idx >= len);
+        ReportIf(idx >= len);
         T el = at(idx);
         RemoveAt(idx);
         return el;
     }
 
     T& Last() const {
-        CrashIf(0 == len);
+        ReportIf(0 == len);
         return at(len - 1);
     }
 

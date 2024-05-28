@@ -37,7 +37,7 @@ struct ISzCrtAlloc : ISzAlloc {
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
 static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize) {
-    CrashIf(*compressedSize < uncompressedSize + 1);
+    ReportIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1)
         return false;
 
@@ -82,7 +82,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
 static bool AppendEntry(str::Str& data, str::Str& content, const char* filePath, const char* inArchiveName,
                         lzma::FileInfo* fi = nullptr) {
     size_t nameLen = str::Len(inArchiveName);
-    CrashIf(nameLen > UINT32_MAX - 25);
+    ReportIf(nameLen > UINT32_MAX - 25);
     u32 headerSize = 25 + (u32)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
 
@@ -97,7 +97,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const char* filePath,
         meta.Write32(fi->uncompressedCrc32);
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
-        CrashIf(meta.Size() != kBufSize);
+        ReportIf(meta.Size() != kBufSize);
         data.AppendSlice(meta.AsByteSlice());
         data.Append(inArchiveName, nameLen + 1);
         return content.Append(fi->compressedData, fi->compressedSize);
@@ -128,7 +128,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const char* filePath,
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
-    CrashIf(meta.Size() != kBufSize);
+    ReportIf(meta.Size() != kBufSize);
     data.AppendSlice(meta.AsByteSlice());
     data.Append(inArchiveName, nameLen + 1);
     return content.Append(compressed, compressedSize);
@@ -153,7 +153,7 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
     ByteWriterLE lzsaHeader(kBufSize);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((u32)(files.Size() - skipFiles));
-    CrashIf(lzsaHeader.Size() != kBufSize);
+    ReportIf(lzsaHeader.Size() != kBufSize);
     data.AppendSlice(lzsaHeader.AsByteSlice());
 
     for (int i = skipFiles; i < files.Size(); i++) {
@@ -184,7 +184,7 @@ bool CreateArchive(const char* archivePath, StrVec& files, size_t skipFiles = 0)
     u32 headerCrc32 = crc32(0, (const u8*)data.Get(), (u32)data.size());
     ByteWriterLE buf(4);
     buf.Write32(headerCrc32);
-    CrashIf(buf.Size() != 4);
+    ReportIf(buf.Size() != 4);
     data.AppendSlice(buf.AsByteSlice());
     if (!data.Append(content.Get(), content.size()))
         return false;

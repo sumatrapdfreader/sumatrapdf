@@ -67,8 +67,8 @@ void EditSelectAll(HWND hwnd) {
 }
 
 int EditIdealDy(HWND hwnd, bool hasBorder, int lines) {
-    CrashIf(lines < 1);
-    CrashIf(lines > 256);
+    ReportIf(lines < 1);
+    ReportIf(lines > 256);
 
     HFONT hfont = HwndGetFont(hwnd);
     Size s1 = HwndMeasureText(hwnd, "Minimal", hfont);
@@ -170,7 +170,7 @@ Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
 }
 
 int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
-    CrashIf(nPoints > 64);
+    ReportIf(nPoints > 64);
     POINT pnts[64];
     for (int i = 0; i < nPoints; i++) {
         pnts[i].x = points[i].x;
@@ -287,7 +287,7 @@ TempStr GetEnvVariableTemp(const char* name) {
         cchBufSize = res + 4; // +4 jic
         buf = AllocArrayTemp<WCHAR>(cchBufSize);
         res = GetEnvironmentVariableW(nameW, buf, cchBufSize);
-        CrashIf(res == 0 || res > cchBufSize);
+        ReportIf(res == 0 || res > cchBufSize);
     }
     return ToUtf8Temp(buf);
 }
@@ -616,7 +616,7 @@ TempStr GetTempDirTemp() {
         return {};
     }
     // TODO: should handle this
-    CrashIf(cch >= dimof(dir));
+    ReportIf(cch >= dimof(dir));
     return ToUtf8Temp(dir, cch);
 }
 
@@ -1252,7 +1252,7 @@ bool IsCursorOverWindow(HWND hwnd) {
 TempStr HwndGetClassName(HWND hwnd) {
     WCHAR buf[512] = {0};
     int n = GetClassNameW(hwnd, buf, dimof(buf));
-    CrashIf(n == 0);
+    ReportIf(n == 0);
     return ToUtf8Temp(buf);
 }
 
@@ -1308,7 +1308,7 @@ char* GetDefaultPrinterNameTemp() {
 }
 
 static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
-    CrashIf(!text);
+    ReportIf(!text);
     if (!text) {
         return false;
     }
@@ -1649,7 +1649,7 @@ HDC DoubleBuffer::GetDC() const {
 }
 
 void DoubleBuffer::Flush(HDC hdc) const {
-    CrashIf(hdc == hdcBuffer);
+    ReportIf(hdc == hdcBuffer);
     if (hdcBuffer) {
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
     }
@@ -1691,18 +1691,18 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, Rect r) {
 }
 
 void MenuSetChecked(HMENU m, int id, bool isChecked) {
-    CrashIf(id < 0);
+    ReportIf(id < 0);
     CheckMenuItem(m, (UINT)id, MF_BYCOMMAND | (isChecked ? MF_CHECKED : MF_UNCHECKED));
 }
 
 bool MenuSetEnabled(HMENU m, int id, bool isEnabled) {
-    CrashIf(id < 0);
+    ReportIf(id < 0);
     BOOL ret = EnableMenuItem(m, (UINT)id, MF_BYCOMMAND | (isEnabled ? MF_ENABLED : MF_GRAYED));
     return ret != -1;
 }
 
 void MenuRemove(HMENU m, int id) {
-    CrashIf(id < 0);
+    ReportIf(id < 0);
     RemoveMenu(m, (UINT)id, MF_BYCOMMAND);
 }
 
@@ -1713,7 +1713,7 @@ void MenuEmpty(HMENU m) {
 }
 
 void MenuSetText(HMENU m, int id, const WCHAR* s) {
-    CrashIf(id < 0);
+    ReportIf(id < 0);
     MENUITEMINFOW mii{};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
@@ -2021,8 +2021,8 @@ static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
 }
 
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
-    CrashIf(x < 0 || x >= bitmap->size.dx);
-    CrashIf(y < 0 || y >= bitmap->size.dy);
+    ReportIf(x < 0 || x >= bitmap->size.dx);
+    ReportIf(y < 0 || y >= bitmap->size.dy);
     u8* pixels = bitmap->pixels;
     u8* pixel = pixels + y * bitmap->nBytesPerRow + x * bitmap->nBytesPerPixel;
     // color order in DIB is blue-green-red-alpha
@@ -2032,7 +2032,7 @@ COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
     } else if (4 == bitmap->nBytesPerPixel) {
         c = RGB(pixel[3], pixel[2], pixel[1]);
     } else {
-        CrashIf(true);
+        ReportIf(true);
     }
     return c;
 }
@@ -2042,7 +2042,7 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
 
     DIBSECTION info{};
     int nBytes = GetObject(hbmp, sizeof(info), &info);
-    CrashIf(nBytes < sizeof(info.dsBm));
+    ReportIf(nBytes < sizeof(info.dsBm));
     Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
 
     res->size = size;
@@ -2085,7 +2085,7 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
     HDC hdc = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
     ScopedMem<u8> bmpData((u8*)malloc(bmpBytes));
-    CrashIf(!bmpData);
+    ReportIf(!bmpData);
 
     if (!GetDIBits(hdc, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         DeleteDC(hdc);
@@ -2111,7 +2111,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 
     DIBSECTION info{};
     int ret = GetObject(hbmp, sizeof(info), &info);
-    CrashIf(ret < sizeof(info.dsBm));
+    ReportIf(ret < sizeof(info.dsBm));
     Size size(info.dsBm.bmWidth, info.dsBm.bmHeight);
 
     // for mapped 32-bit DI bitmaps: directly access the pixel data
@@ -2142,7 +2142,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 
     // for paletted DI bitmaps: only update the color palette
     if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
-        CrashIf(info.dsBmih.biBitCount != 8);
+        ReportIf(info.dsBmih.biBitCount != 8);
         RGBQUAD palette[256];
         HDC hDC = CreateCompatibleDC(nullptr);
         DeleteObject(SelectObject(hDC, hbmp));
@@ -2170,7 +2170,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     HDC hDC = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
     ScopedMem<u8> bmpData((u8*)malloc(bmpBytes));
-    CrashIf(!bmpData);
+    ReportIf(!bmpData);
 
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
@@ -2397,18 +2397,18 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
 
 ByteSlice LoadDataResource(int resId) {
     HRSRC resSrc = FindResourceW(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
-    CrashIf(!resSrc);
+    ReportIf(!resSrc);
     if (!resSrc) {
         return {};
     }
     HGLOBAL res = LoadResource(nullptr, resSrc);
-    CrashIf(!res);
+    ReportIf(!res);
     if (!res) {
         return {};
     }
     DWORD size = SizeofResource(nullptr, resSrc);
     const char* resData = (const char*)LockResource(res);
-    CrashIf(!resData);
+    ReportIf(!resData);
     if (!resData) {
         return {};
     }
@@ -2430,7 +2430,7 @@ bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     DWORD cbLen = 0;
     HDDEDATA answer;
 
-    CrashIf(str::Len(command) >= INT_MAX - 1);
+    ReportIf(str::Len(command) >= INT_MAX - 1);
     if (str::Len(command) >= INT_MAX - 1) {
         return false;
     }
@@ -2543,13 +2543,13 @@ static void LogCursor(LPWSTR) {
 
 HCURSOR GetCachedCursor(LPWSTR cursorId) {
     int i = GetCursorIndex(cursorId);
-    CrashIf(i < 0);
+    ReportIf(i < 0);
     if (i < 0) {
         return nullptr;
     }
     if (nullptr == cachedCursors[i]) {
         cachedCursors[i] = LoadCursor(nullptr, cursorId);
-        CrashIf(cachedCursors[i] == nullptr);
+        ReportIf(cachedCursors[i] == nullptr);
     }
     return cachedCursors[i];
 }
@@ -2735,11 +2735,11 @@ void HwndResizeClientSize(HWND hwnd, int dx, int dy) {
     DWORD exStyle = GetWindowExStyle(hwnd);
     RECT r = {x, y, x + dx, y + dy};
     BOOL ok = AdjustWindowRectEx(&r, style, false, exStyle);
-    CrashIf(!ok);
+    ReportIf(!ok);
     int dx2 = RectDx(r);
     int dy2 = RectDy(r);
     ok = SetWindowPos(hwnd, nullptr, 0, 0, dx2, dy2, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREPOSITION);
-    CrashIf(!ok);
+    ReportIf(!ok);
 }
 
 // position hwnd on the right of hwndRelative
@@ -2784,7 +2784,7 @@ void HwndDestroyWindowSafe(HWND* hwndPtr) {
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
     auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
-    CrashIf(0 == res);
+    ReportIf(0 == res);
 }
 
 void TbGetPadding(HWND hwnd, int* padX, int* padY) {
@@ -2796,13 +2796,13 @@ void TbGetPadding(HWND hwnd, int* padX, int* padY) {
 void TbSetPadding(HWND hwnd, int padX, int padY) {
     LPARAM lp = MAKELPARAM(padX, padY);
     auto res = SendMessageW(hwnd, TB_SETPADDING, 0, lp);
-    CrashIf(0 == res);
+    ReportIf(0 == res);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/tb-getrect
 void TbGetRect(HWND hwnd, int buttonId, RECT* rc) {
     auto res = SendMessageW(hwnd, TB_GETRECT, buttonId, (LPARAM)rc);
-    CrashIf(res == 0);
+    ReportIf(res == 0);
 }
 
 void TbGetMetrics(HWND hwnd, TBMETRICS* metrics) {

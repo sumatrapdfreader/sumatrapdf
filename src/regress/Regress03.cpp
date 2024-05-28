@@ -25,12 +25,12 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
          tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
         if (0 == expected[expIndex].len) {
             wprintf(L"Found %s %i times, not expecting another match\n", searchTerm, expIndex);
-            CrashIf(true);
+            ReportIf(true);
         }
         if (expected[expIndex].len != tsel->len) {
             wprintf(L"Text selection length mismatch for %s at occurence %i: got %i, wanted %i\n", searchTerm,
                     findCount, expected[expIndex].len, tsel->len);
-            CrashIf(true);
+            ReportIf(true);
         }
         for (int i = 0; i < tsel->len; ++i) {
             if ((expected[expIndex].pages[i] != tsel->pages[i]) || (expected[expIndex].rects[i] != tsel->rects[i])) {
@@ -41,20 +41,20 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
                     searchTerm, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
                     expected[expIndex].rects[i].y, expected[expIndex].rects[i].dx, expected[expIndex].rects[i].dy,
                     tsel->pages[i], tsel->rects[i].x, tsel->rects[i].y, tsel->rects[i].dx, tsel->rects[i].dy);
-                CrashIf(true);
+                ReportIf(true);
             }
         }
     }
     if (TextSearchDirection::Forward == direction) {
         if (findCount != expectedLen) {
             wprintf(L"Found only %d matches of '%s', expected %d\n", expIndex, searchTerm, expectedLen);
-            CrashIf(true);
+            ReportIf(true);
         }
     } else {
         if (findCount != expectedLen) {
             wprintf(L"Found only %d matches of '%s', expected %d\n", expectedLen - expIndex - 1, searchTerm,
                     expectedLen);
-            CrashIf(true);
+            ReportIf(true);
         }
     }
     delete tsrch;

@@ -111,7 +111,7 @@ static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
 }
 
 char* NormalizeURL(const char* url, const char* base) {
-    CrashIf(!url || !base);
+    ReportIf(!url || !base);
     if (*url == '/' || str::FindChar(url, ':')) {
         return str::Dup(url);
     }
@@ -523,7 +523,7 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     ScopedCritSec scope(&zipAccess);
 
     if (!pagePath) {
-        CrashIf(true);
+        ReportIf(true);
         // if we're reparsing, we might not have pagePath, which is needed to
         // build the exact url so try to find a partial match
         // TODO: the correct approach would be to extend reparseIdx into a
@@ -577,7 +577,7 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
 
 ByteSlice EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     if (!pagePath) {
-        CrashIf(true);
+        ReportIf(true);
         return {};
     }
 
@@ -836,7 +836,7 @@ static ByteSlice loadFromStream(Fb2Doc* doc) {
 }
 
 bool Fb2Doc::Load() {
-    CrashIf(!stream && !fileName);
+    ReportIf(!stream && !fileName);
 
     ByteSlice data;
     if (fileName) {
@@ -1382,7 +1382,7 @@ TxtDoc::TxtDoc(const char* fileName) {
 #define TCR_HEADER "!!8-Bit!!"
 
 static char* DecompressTcrText(const char* data, size_t dataLen) {
-    CrashIf(!str::StartsWith(data, TCR_HEADER));
+    ReportIf(!str::StartsWith(data, TCR_HEADER));
     const char* curr = data + str::Len(TCR_HEADER);
     const char* end = data + dataLen;
 
@@ -1471,7 +1471,7 @@ static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
         }
         beforeAt.SetCopy(&htmlData.at(idx));
     } else {
-        CrashIf(!str::StartsWith(curr, "mailto:"));
+        ReportIf(!str::StartsWith(curr, "mailto:"));
         end = curr = curr + 7; // skip mailto:
         if (!IsEmailUsernameChar(*end)) {
             return nullptr;

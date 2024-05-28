@@ -99,7 +99,7 @@ EngineMulti::~EngineMulti() {
 
 EngineBase* EngineMulti::Clone() {
     // TODO: support CreateFromFiles()
-    CrashIf(true);
+    ReportIf(true);
     return nullptr;
 }
 
@@ -162,7 +162,7 @@ IPageElement* EngineMulti::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 RenderedBitmap* EngineMulti::GetImageForPageElement(IPageElement* ipel) {
-    CrashIf(kindPageElementImage != ipel->GetKind());
+    ReportIf(kindPageElementImage != ipel->GetKind());
     PageElementImage* pel = (PageElementImage*)ipel;
     EngineBase* e = PageToEngine(pel->pageNo);
     return e->GetImageForPageElement(pel);
@@ -215,7 +215,7 @@ static void updateTocItemsPageNo(TocItem* ti, int nPageNoAdd, bool root) {
 }
 
 TocTree* EngineMulti::GetToc() {
-    CrashIf(!tocTree);
+    ReportIf(!tocTree);
     return tocTree;
 }
 
@@ -388,14 +388,14 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
         nTotalPages += nPages;
     }
     pageCount = nTotalPages;
-    CrashIf((size_t)pageCount != pageToEngine.size());
+    ReportIf((size_t)pageCount != pageToEngine.size());
 
     auto verifyPages = [&nTotalPages](TocItem* ti) -> bool {
         if (!IsPageNavigationDestination(ti->dest)) {
             return true;
         }
         int pageNo = ti->pageNo;
-        CrashIf(pageNo > nTotalPages);
+        ReportIf(pageNo > nTotalPages);
         return true;
     };
 

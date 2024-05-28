@@ -119,7 +119,7 @@ void ParseColor(ParsedColor& parsed, const char* txt) {
 
 /* Parse 's' as hex color and return the result in 'destColor' */
 bool ParseColor(COLORREF* destColor, const char* s) {
-    CrashIf(!destColor);
+    ReportIf(!destColor);
     ParsedColor p;
     ParseColor(p, s);
     *destColor = p.col;

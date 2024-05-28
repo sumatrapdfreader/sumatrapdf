@@ -258,7 +258,7 @@ void EngineEbook::GetTransform(Matrix& m, float zoom, int rotation) {
 }
 
 Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
-    CrashIf(pageNo < 1 || PageCount() < pageNo);
+    ReportIf(pageNo < 1 || PageCount() < pageNo);
     if (pageNo < 1 || PageCount() < pageNo) {
         return nullptr;
     }
@@ -266,7 +266,7 @@ Vec<DrawInstr>* EngineEbook::GetHtmlPage(int pageNo) {
 }
 
 HtmlPage* EngineEbook::GetHtmlPage2(int pageNo) {
-    CrashIf(pageNo < 1 || PageCount() < pageNo);
+    ReportIf(pageNo < 1 || PageCount() < pageNo);
     if (pageNo < 1 || PageCount() < pageNo) {
         return nullptr;
     }
@@ -296,7 +296,7 @@ bool EngineEbook::ExtractPageAnchors() {
         baseAnchors.Append(baseAnchor);
     }
 
-    CrashIf(baseAnchors.size() != pages->size());
+    ReportIf(baseAnchors.size() != pages->size());
     return true;
 }
 
@@ -394,7 +394,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(str::Len(lineSep));
-                    CrashIf(*lineSep && !coords.Last().IsEmpty());
+                    ReportIf(*lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = bbox.x - coords.Last().BR().x;
                     if (swidth > 0) {
@@ -418,7 +418,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
                     coords.AppendBlanks(str::Len(lineSep));
-                    CrashIf(*lineSep && !coords.Last().IsEmpty());
+                    ReportIf(*lineSep && !coords.Last().IsEmpty());
                 } else if (insertSpace && coords.size() > 0) {
                     int swidth = coords.Last().x - bbox.BR().x;
                     if (swidth > 0) {
@@ -447,7 +447,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         content.Append(lineSep);
         coords.AppendBlanks(str::Len(lineSep));
     }
-    CrashIf(coords.size() != content.size());
+    ReportIf(coords.size() != content.size());
 
     PageText res;
     res.len = (int)content.size();
@@ -517,13 +517,13 @@ static RenderedBitmap* getImageFromData(const ByteSlice& imageData) {
 }
 
 RenderedBitmap* EngineEbook::GetImageForPageElement(IPageElement* iel) {
-    CrashIf(iel->GetKind() != kindPageElementImage);
+    ReportIf(iel->GetKind() != kindPageElementImage);
     PageElementImage* el = (PageElementImage*)iel;
     int pageNo = el->pageNo;
     int idx = el->imageID;
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     auto&& i = pageInstrs->at(idx);
-    CrashIf(i.type != DrawInstrType::Image);
+    ReportIf(i.type != DrawInstrType::Image);
     return getImageFromData(i.GetImage());
 }
 
@@ -611,7 +611,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
             FontFamily family;
             if (!i.font->font) {
                 // TODO: handle gdi
-                CrashIf(!i.font->GetHFont());
+                ReportIf(!i.font->GetHFont());
                 continue;
             }
             Status ok = i.font->font->GetFamily(&family);
@@ -1083,7 +1083,7 @@ IPageDestination* EngineMobi::GetNamedDest(const char* name) {
             break;
         }
     }
-    CrashIf(pageNo < 1 || pageNo > PageCount());
+    ReportIf(pageNo < 1 || pageNo > PageCount());
 
     ByteSlice htmlData = doc->GetHtmlData();
     size_t htmlLen = htmlData.size();
@@ -1312,7 +1312,7 @@ class ChmFormatter : public HtmlFormatter {
 };
 
 void ChmFormatter::HandleTagImg(HtmlToken* t) {
-    CrashIf(!chmDoc);
+    ReportIf(!chmDoc);
     if (t->IsEndTag()) {
         return;
     }
@@ -1344,7 +1344,7 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
 }
 
 void ChmFormatter::HandleTagLink(HtmlToken* t) {
-    CrashIf(!chmDoc);
+    ReportIf(!chmDoc);
     if (t->IsEndTag()) {
         return;
     }

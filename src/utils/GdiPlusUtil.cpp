@@ -41,7 +41,7 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
 // underreports the width
 RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
-    CrashIf(0 >= len);
+    ReportIf(0 >= len);
     FixedArray<Region, 1024> regionBuf(len);
     Region* r = regionBuf.Get();
     StringFormat sf(StringFormat::GenericTypographic());
@@ -55,7 +55,7 @@ RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
     }
     sf.SetMeasurableCharacterRanges(len, charRanges);
     Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, len, r);
-    CrashIf(status != Ok);
+    ReportIf(status != Ok);
     Gdiplus::RectF bbox;
     float maxDy = 0;
     float totalDx = 0;
@@ -101,7 +101,7 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
             s2[256] = 0;
         }
         logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2);
-        // CrashIf(status != Ok);
+        // ReportIf(status != Ok);
     }
     Gdiplus::RectF bbox;
     r.GetBounds(&bbox, g);
@@ -120,7 +120,7 @@ RectF MeasureTextStandard(Graphics* g, Font* f, const WCHAR* s, int len) {
 }
 
 RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
-    CrashIf(0 >= len);
+    ReportIf(0 >= len);
 
     static Vec<Font*> fontCache;
     static Vec<bool> fixCache;
@@ -172,7 +172,7 @@ RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureA
     if (-1 == len || 0 == len) {
         len = str::Len(s);
     }
-    CrashIf((len == 0) || (len > INT_MAX));
+    ReportIf((len == 0) || (len > INT_MAX));
     if (algo) {
         return algo(g, f, s, (int)len);
     }
@@ -193,7 +193,7 @@ size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float
     }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.dx) * (float)len);
-    CrashIf((0 == n) || (n > len));
+    ReportIf((0 == n) || (n > len));
     r = MeasureText(g, f, s, n, algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
@@ -253,7 +253,7 @@ void GetBaseTransform(Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotati
     } else if (0 == rotation) {
         m.Translate(0, 0, MatrixOrderAppend);
     } else {
-        CrashIf(true);
+        ReportIf(true);
     }
 
     m.Scale(zoom, zoom, MatrixOrderAppend);
@@ -330,7 +330,7 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
         bmp->GetLastStatus(); // clear last status
         return;
     }
-    CrashIf(propSize > dimof(buf));
+    ReportIf(propSize > dimof(buf));
 
     auto status = bmp->GetPropertyItem(PropertyTagOrientation, propSize, (Gdiplus::PropertyItem*)buf);
     if (status != Status::Ok) {
@@ -425,7 +425,7 @@ static bool BmpSizeFromData(ByteReader r, Size& result) {
     }
     BITMAPINFOHEADER bmi;
     bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
-    CrashIf(!ok);
+    ReportIf(!ok);
     result.dx = bmi.biWidth;
     result.dy = bmi.biHeight;
     return true;
@@ -495,7 +495,7 @@ static bool TiffSizeFromData(ByteReader r, Size& result) {
         return false;
     }
     bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
-    CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
+    ReportIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
     const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
     size_t idx = r.DWord(4, isBE);
     WORD count = idx <= r.len - 2 ? r.Word(idx, isBE) : 0;

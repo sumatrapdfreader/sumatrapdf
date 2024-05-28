@@ -1059,11 +1059,11 @@ static TempStr ShortenStringUtf8Temp(char* s, int maxRunes) {
     int n;
     for (int i = 0; i < nRunes; i++) {
         n = utf8RuneLen((const u8*)s);
-        CrashIf(n <= 0);
+        ReportIf(n <= 0);
         if (i < removeStartingAt || i >= removeStartingAt + toRemove) {
             switch (n) {
                 default:
-                    CrashIf(true);
+                    ReportIf(true);
                     break;
                 case 4:
                     *tmp++ = *s++;
@@ -1303,7 +1303,7 @@ static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
 }
 
 HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
-    CrashIf(!menu);
+    ReportIf(!menu);
 
     bool isDebugMenu = menuDef == menuDefDebug;
     int i = 0;
@@ -1463,12 +1463,12 @@ float ZoomMenuItemToZoom(int menuItemId) {
             return it.zoom;
         }
     }
-    CrashIf(true);
+    ReportIf(true);
     return 100.0;
 }
 
 static void ZoomMenuItemCheck(HMENU m, int menuItemId, bool canZoom) {
-    CrashIf((CmdZoomFirst > menuItemId) || (menuItemId > CmdZoomLast));
+    ReportIf((CmdZoomFirst > menuItemId) || (menuItemId > CmdZoomLast));
 
     for (auto&& it : gZoomMenuIds) {
         MenuSetEnabled(m, it.itemId, canZoom);
@@ -1559,7 +1559,7 @@ void MenuUpdateDisplayMode(MainWindow* win) {
     } else if (IsBookView(displayMode)) {
         id = CmdBookView;
     } else {
-        CrashIf(win->ctrl || DisplayMode::Automatic != displayMode);
+        ReportIf(win->ctrl || DisplayMode::Automatic != displayMode);
     }
 
     CheckMenuRadioItem(win->menu, CmdViewLayoutFirst, CmdViewLayoutLast, id, MF_BYCOMMAND);
@@ -1647,7 +1647,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     }
 
     FileState* fs = gFileHistory.FindByPath(path);
-    CrashIf(!fs);
+    ReportIf(!fs);
     if (!fs) {
         return;
     }
@@ -1705,7 +1705,7 @@ static TempStr CleanupURLForClipbardCopyTemp(const char* s) {
 
 void OnWindowContextMenu(MainWindow* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
-    CrashIf(!dm);
+    ReportIf(!dm);
     if (!dm) {
         return;
     }
@@ -1839,7 +1839,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             // note: those are duplicated in SumatraPDF.cpp to enable keyboard shortcuts for them
 #if 0
         case CmdSelectAnnotation:
-            CrashIf(!buildCtx.annotationUnderCursor);
+            ReportIf(!buildCtx.annotationUnderCursor);
             [[fallthrough]];
 #endif
 
@@ -1968,7 +1968,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     for (int i = 0; i < n; i++) {
         mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_SUBMENU;
         BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
-        CrashIf(!ok);
+        ReportIf(!ok);
         auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
         if (modi != nullptr) {
             FreeMenuOwnerDrawInfo(modi);
@@ -2023,7 +2023,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         mii.dwTypeData = &(buf[0]);
         mii.cch = dimof(buf);
         BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
-        CrashIf(!ok);
+        ReportIf(!ok);
         mii.fMask = MIIM_FTYPE | MIIM_DATA;
         mii.fType |= MFT_OWNERDRAW;
         if (mii.dwItemData != 0) {
@@ -2190,7 +2190,7 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     };
 
     if (isSeparator) {
-        CrashIf(modi->text);
+        ReportIf(modi->text);
         int sx = rc.left + cxCheckMark;
         int y = rc.top + (rcDy / 2);
         int ex = rc.right - padX;
@@ -2265,7 +2265,7 @@ HMENU BuildMenu(MainWindow* win) {
 }
 
 void UpdateAppMenu(MainWindow* win, HMENU m) {
-    CrashIf(!win);
+    ReportIf(!win);
     if (!win) {
         return;
     }
@@ -2284,7 +2284,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
 void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
-    CrashIf(!win->menu);
+    ReportIf(!win->menu);
 
     if (win->presentation || win->isFullScreen) {
         return;

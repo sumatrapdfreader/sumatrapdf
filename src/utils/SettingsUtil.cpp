@@ -33,7 +33,7 @@ static bool NeedsEscaping(const char* s) {
 }
 
 static void EscapeStr(str::Str& out, const char* s) {
-    CrashIf(!NeedsEscaping(s));
+    ReportIf(!NeedsEscaping(s));
     if (str::IsWs(*s) && *s != '\n' && *s != '\r') {
         out.AppendChar('$');
     }
@@ -210,7 +210,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
         case SettingType::String:
         case SettingType::Color:
             if (!*(const char**)fieldPtr) {
-                CrashIf(field.value);
+                ReportIf(field.value);
                 return false; // skip empty strings
             }
             if (!NeedsEscaping(*(const char**)fieldPtr)) {
@@ -220,7 +220,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             }
             return true;
         case SettingType::Compact:
-            CrashIf(!IsCompactable(GetSubstruct(field)));
+            ReportIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                 if (i > 0) {
                     out.AppendChar(' ');
@@ -254,7 +254,7 @@ static bool SerializeField(str::Str& out, const u8* base, const FieldInfo& field
             // prevent empty arrays from being replaced with the defaults
             return (*(Vec<char*>**)fieldPtr)->size() > 0 || field.value != 0;
         default:
-            CrashIf(true);
+            ReportIf(true);
             return false;
     }
 }
@@ -313,7 +313,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             }
             break;
         case SettingType::Compact:
-            CrashIf(!IsCompactable(GetSubstruct(field)));
+            ReportIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                 if (value) {
                     for (; str::IsWs(*value); value++) {
@@ -363,7 +363,7 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             }
             break;
         default:
-            CrashIf(true);
+            ReportIf(true);
     }
 }
 
@@ -421,8 +421,8 @@ static void SerializeStructRec(str::Str& out, const StructInfo* info, const void
     const char* fieldName = info->fieldNames;
     for (size_t i = 0; i < info->fieldCount; i++, fieldName += str::Len(fieldName) + 1) {
         const FieldInfo& field = info->fields[i];
-        CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || str::FindChar(fieldName, '[') ||
-                str::FindChar(fieldName, ']') || NeedsEscaping(fieldName));
+        ReportIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || str::FindChar(fieldName, '[') ||
+                 str::FindChar(fieldName, ']') || NeedsEscaping(fieldName));
         if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
 #if !(defined(PRE_RELEASE_VER) || defined(DEBUG))
             if (SettingType::Prerelease == field.type) {

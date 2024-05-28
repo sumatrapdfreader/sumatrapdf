@@ -102,8 +102,8 @@ static u32 zip_compress(void* dst, u32 dstlen, const void* src, u32 srclen) {
 }
 
 bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size, u32 dosdate) {
-    CrashIf(size >= UINT32_MAX);
-    CrashIf(str::Len(nameUtf8) >= UINT16_MAX);
+    ReportIf(size >= UINT32_MAX);
+    ReportIf(str::Len(nameUtf8) >= UINT16_MAX);
     if (size >= UINT32_MAX) {
         return false;
     }
@@ -141,7 +141,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     local.Write32((u32)size);
     local.Write16((u16)namelen);
     local.Write16(0); // extra field length
-    CrashIf(local.d.size() != kHdrSize);
+    ReportIf(local.d.size() != kHdrSize);
 
     char* localHeader = local.d.Get();
     bool ok = WriteData(localHeader, kHdrSize);
@@ -166,7 +166,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
     central.Write16(0); // internal file attributes
     central.Write32(0); // external file attributes
     central.Write32((u32)fileOffset);
-    CrashIf(central.d.size() != kCentralSize);
+    ReportIf(central.d.size() != kCentralSize);
 
     centraldir.Append(central.d.Get(), kCentralSize);
     centraldir.Append(nameUtf8, namelen);
@@ -227,8 +227,8 @@ bool ZipCreator::AddDir(const char* dir, bool recursive) {
 }
 
 bool ZipCreator::Finish() {
-    CrashIf(bytesWritten >= UINT32_MAX);
-    CrashIf(fileCount >= UINT16_MAX);
+    ReportIf(bytesWritten >= UINT32_MAX);
+    ReportIf(fileCount >= UINT16_MAX);
     if (bytesWritten >= UINT32_MAX || fileCount >= UINT16_MAX) {
         return false;
     }
@@ -243,7 +243,7 @@ bool ZipCreator::Finish() {
     eocd.Write32((u32)centraldir.size());
     eocd.Write32((u32)bytesWritten);
     eocd.Write16(0); // comment len
-    CrashIf(eocd.d.size() != kDirSize);
+    ReportIf(eocd.d.size() != kDirSize);
 
     bool ok = WriteData(centraldir.Get(), centraldir.size());
     ok = ok && WriteData(eocd.d.Get(), kDirSize);

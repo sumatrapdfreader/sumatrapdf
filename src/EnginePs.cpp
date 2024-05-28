@@ -356,7 +356,7 @@ class EnginePs : public EngineBase {
 
     bool Load(const char* fileName) {
         pageCount = 0;
-        CrashIf(FilePath() || pdfEngine);
+        ReportIf(FilePath() || pdfEngine);
         if (!fileName) {
             return false;
         }

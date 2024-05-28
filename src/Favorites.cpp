@@ -114,13 +114,13 @@ bool FavTreeModel::IsChecked(TreeItem ti) {
 }
 
 void FavTreeModel::SetHandle(TreeItem ti, HTREEITEM hItem) {
-    CrashIf(ti < 0);
+    ReportIf(ti < 0);
     FavTreeItem* treeItem = (FavTreeItem*)ti;
     treeItem->hItem = hItem;
 }
 
 HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
-    CrashIf(ti < 0);
+    ReportIf(ti < 0);
     FavTreeItem* treeItem = (FavTreeItem*)ti;
     return treeItem->hItem;
 }
@@ -314,7 +314,7 @@ static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isC
 }
 
 static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
-    CrashIf(!f);
+    ReportIf(!f);
     if (!f) {
         return;
     }
@@ -408,7 +408,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     for (int i = 0; i < menusCount; i++) {
         const char* filePath = filePathsSorted.At(i);
         FileState* f = gFavorites.GetFavByFilePath(filePath);
-        CrashIf(!f);
+        ReportIf(!f);
         if (!f) {
             continue;
         }
@@ -489,7 +489,7 @@ static void GoToFavorite(MainWindow* win, int pageNo) {
 // Going to a bookmark in another file, loads the file and scrolls to a page
 // (similar to how invoking one of the recently opened files works)
 static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
-    CrashIf(!fs || !fn);
+    ReportIf(!fs || !fn);
     if (!fs || !fn) {
         return;
     }
@@ -602,7 +602,7 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
     GetSortedFilePaths(filePathsSorted);
     for (char* path : filePathsSorted) {
         FileState* f = gFavorites.GetFavByFilePath(path);
-        CrashIf(!f);
+        ReportIf(!f);
         if (!f) {
             continue;
         }
@@ -762,14 +762,14 @@ void RememberFavTreeExpansionStateForAllWindows() {
 static void FavTreeItemClicked(TreeClickEvent* ev) {
     ev->didHandle = true;
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    CrashIf(!win);
+    ReportIf(!win);
     GoToFavForTreeItem(win, ev->treeItem);
 }
 #endif
 
 static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
-    CrashIf(!win);
+    ReportIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
     // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
@@ -901,7 +901,7 @@ void CreateFavorites(MainWindow* win) {
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeView->Create(args);
-    CrashIf(!treeView->hwnd);
+    ReportIf(!treeView->hwnd);
 
     win->favTreeView = treeView;
 

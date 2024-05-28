@@ -47,7 +47,7 @@ static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {
 }
 
 bool PdbReader::ParseHeader() {
-    CrashIf(recInfos.size() > 0);
+    ReportIf(recInfos.size() > 0);
 
     ByteOrderDecoder dec(data, dataSize, ByteOrderDecoder::BigEndian);
     bool ok = DecodePdbHeader(dec, &hdr);
@@ -105,7 +105,7 @@ size_t PdbReader::GetRecordCount() {
 // don't free, memory is owned by us
 ByteSlice PdbReader::GetRecord(size_t recNo) {
     size_t nRecs = recInfos.size();
-    CrashIf(recNo >= nRecs);
+    ReportIf(recNo >= nRecs);
     if (recNo >= nRecs) {
         return {};
     }
@@ -114,7 +114,7 @@ ByteSlice PdbReader::GetRecord(size_t recNo) {
     if (recNo != nRecs - 1) {
         nextOff = recInfos[recNo + 1].offset;
     }
-    CrashIf(off > nextOff);
+    ReportIf(off > nextOff);
     size_t size = nextOff - off;
     return {(u8*)data + off, size};
 }

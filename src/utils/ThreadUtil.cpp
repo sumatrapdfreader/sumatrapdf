@@ -85,7 +85,7 @@ DWORD WINAPI ThreadBase::ThreadProc(void* data) {
 }
 
 void ThreadBase::Start() {
-    CrashIf(hThread);
+    ReportIf(hThread);
     hThread = CreateThread(nullptr, 0, ThreadProc, this, 0, nullptr);
 }
 

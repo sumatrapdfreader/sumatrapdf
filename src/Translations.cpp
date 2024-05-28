@@ -121,7 +121,7 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
     int nTrans = 0;
     while (i < nLines) {
         orig = lines[i];
-        CrashIf(*orig != ':');
+        ReportIf(*orig != ':');
         orig += 1; // skip the ':' at the beginning
         i++;
         trans = nullptr;
@@ -140,7 +140,7 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
         Translation& translation = c->translations[nTrans++];
         int idxStr = c->allStrings.Size();
         // when this fires, we'll have to bump strIdx form u16 to u32
-        CrashIf(idxStr > 64 * 1024);
+        ReportIf(idxStr > 64 * 1024);
         translation.idxStr = (u16)idxStr;
         TempStr unescaped = UnescapeTemp(orig);
         c->allStrings.Append(unescaped);
@@ -149,20 +149,20 @@ static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
             continue;
         }
         int idxTrans = c->allTranslations.Size();
-        CrashIf(idxTrans > 64 * 1024);
+        ReportIf(idxTrans > 64 * 1024);
         translation.idxTrans = (u16)idxTrans;
         unescaped = UnescapeTemp(trans);
         c->allTranslations.Append(unescaped);
     }
-    CrashIf(nTrans != c->nTranslations);
+    ReportIf(nTrans != c->nTranslations);
     if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
         logf("Untranslated strings: %d for lang '%s'\n", c->nUntranslated, langCode);
     }
 }
 
 static Translation* FindTranslation(const char* s) {
-    CrashIf(!s);
-    CrashIf(!gTranslationCache);
+    ReportIf(!s);
+    ReportIf(!gTranslationCache);
     auto c = gTranslationCache;
     for (int i = 0; i < c->nTranslations; i++) {
         Translation& trans = c->translations[i];
@@ -210,12 +210,12 @@ void SetCurrentLangByCode(const char* langCode) {
         // set to English
         idx = 0;
     }
-    CrashIf(-1 == idx);
+    ReportIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
 
     ByteSlice d = LoadDataResource(2);
-    CrashIf(d.empty());
+    ReportIf(d.empty());
     ParseTranslationsTxt(d, langCode);
     free(d.data());
 }

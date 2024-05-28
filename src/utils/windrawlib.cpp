@@ -286,7 +286,7 @@ static int wd_init_string_api(void) {
 
 static void dwrite_fini(void) {
     auto refCnt = dwrite_factory->Release();
-    CrashIf(refCnt != 0);
+    ReportIf(refCnt != 0);
     dwrite_factory = nullptr;
 }
 

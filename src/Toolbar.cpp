@@ -889,7 +889,7 @@ constexpr int kDefaultIconSize = 18;
 
 static int SetToolbarIconsImageList(MainWindow* win) {
     HWND hwndToolbar = win->hwndToolbar;
-    CrashIf(!hwndToolbar);
+    ReportIf(!hwndToolbar);
     HWND hwndParent = GetParent(hwndToolbar);
 
     // we call it ToolbarSize for users, but it's really size of the icon
@@ -961,7 +961,7 @@ void CreateToolbar(MainWindow* win) {
         }
     }
     BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
-    CrashIf(!ok);
+    ReportIf(!ok);
 
     SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
 

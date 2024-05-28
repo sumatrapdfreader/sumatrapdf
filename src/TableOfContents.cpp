@@ -80,7 +80,7 @@ static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
     bool isOk = (k == kindDestinationLaunchURL) || (k == kindDestinationLaunchFile) ||
                 (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k = kindDestinationDjVu) ||
                 (k == kindDestinationAttachment);
-    CrashIf(!isOk);
+    ReportIf(!isOk);
 
     str::Str infotip;
 
@@ -445,7 +445,7 @@ static void OpenAttachment(WindowTab* tab, const char* fileName, int attachmentN
 }
 
 static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
-    CrashIf(!tab || !dest);
+    ReportIf(!tab || !dest);
     if (!tab || !dest) {
         return;
     }
@@ -686,7 +686,7 @@ static void AutoExpandTopLevelItems(TocItem* root) {
 
 void LoadTocTree(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
-    CrashIf(!tab);
+    ReportIf(!tab);
 
     if (win->tocLoaded) {
         return;
@@ -795,7 +795,7 @@ LRESULT TocTreeClick(TreeClickEvent* ev) {
         return;
     }
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    CrashIf(!win);
+    ReportIf(!win);
     bool allowExternal = false;
     GoToTocTreeItem(win, ev->treeItem, allowExternal);
 #endif
@@ -804,7 +804,7 @@ LRESULT TocTreeClick(TreeClickEvent* ev) {
 
 static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
-    CrashIf(!win);
+    ReportIf(!win);
 
     // When the focus is set to the toc window the first item in the treeview is automatically
     // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
@@ -913,7 +913,7 @@ static void SubclassToc(MainWindow* win) {
     if (win->tocBoxSubclassId == 0) {
         win->tocBoxSubclassId = NextSubclassId();
         BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
-        CrashIf(!ok);
+        ReportIf(!ok);
     }
 }
 
@@ -928,7 +928,7 @@ void UnsubclassToc(MainWindow* win) {
 #if 0
 void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
-    CrashIf(!win);
+    ReportIf(!win);
     if (!win) {
         return;
     }
@@ -944,7 +944,7 @@ void TocTreeMouseWheelHandler(MouseWheelEvent* ev) {
 #if 0
 void TocTreeCharHandler(CharEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->hwnd);
-    CrashIf(!win);
+    ReportIf(!win);
     if (!win) {
         return;
     }
@@ -999,7 +999,7 @@ void CreateToc(MainWindow* win) {
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeView->Create(args);
-    CrashIf(!treeView->hwnd);
+    ReportIf(!treeView->hwnd);
     win->tocTreeView = treeView;
 
     SubclassToc(win);

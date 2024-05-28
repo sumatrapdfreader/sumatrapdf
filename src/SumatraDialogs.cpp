@@ -42,12 +42,12 @@ struct DLGTEMPLATEEX {
 
 DLGTEMPLATE* DupTemplate(int dlgId) {
     HRSRC dialogRC = FindResourceW(nullptr, MAKEINTRESOURCE(dlgId), RT_DIALOG);
-    CrashIf(!dialogRC);
+    ReportIf(!dialogRC);
     HGLOBAL dlgTemplate = LoadResource(nullptr, dialogRC);
-    CrashIf(!dlgTemplate);
+    ReportIf(!dlgTemplate);
     void* orig = LockResource(dlgTemplate);
     size_t size = SizeofResource(nullptr, dialogRC);
-    CrashIf(size == 0);
+    ReportIf(size == 0);
     DLGTEMPLATE* ret = (DLGTEMPLATE*)memdup(orig, size);
     UnlockResource(orig);
     return ret;
@@ -119,12 +119,12 @@ static int ToFontPointSize(int fontSize) {
 // TODO: if changing font name would have do more complicated dance of replacing
 // variable string in the middle of the struct
 static void SetDlgTemplateExFont(DLGTEMPLATE* tmp, bool isRtl, int fontSize) {
-    CrashIf(!IsDlgTemplateEx(tmp));
+    ReportIf(!IsDlgTemplateEx(tmp));
     if (isRtl) {
         SetDlgTemplateRtl(tmp);
     }
     DLGTEMPLATEEX* tpl = (DLGTEMPLATEEX*)tmp;
-    CrashIf(!HasDlgTemplateExFont(tpl));
+    ReportIf(!HasDlgTemplateExFont(tpl));
     u8* d = (u8*)tpl;
     d += sizeof(DLGTEMPLATEEX);
     // sz_Or_Ord menu
@@ -266,7 +266,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         if (!data->onlyNumeric) {
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
         }
-        CrashIf(!data->currPageLabel);
+        ReportIf(!data->currPageLabel);
         HwndSetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
         TempStr totalCount = str::FormatTemp(_TRA("(of %d)"), data->pageCount);
         HwndSetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
@@ -506,9 +506,9 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         case WM_COMMAND:
             data = (Dialog_ChangeLanguage_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             if (HIWORD(wp) == LBN_DBLCLK) {
-                CrashIf(IDC_CHANGE_LANG_LANG_LIST != LOWORD(wp));
+                ReportIf(IDC_CHANGE_LANG_LANG_LIST != LOWORD(wp));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-                CrashIf(langList != (HWND)lp);
+                ReportIf(langList != (HWND)lp);
                 int langIdx = (int)ListBox_GetCurSel(langList);
                 data->langCode = trans::GetLangCodeByIdx(langIdx);
                 EndDialog(hDlg, IDOK);

@@ -59,12 +59,12 @@ void TestApp(HINSTANCE hInstance) {
     gHinst = hInstance;
 
     auto w = new TestWnd();
-    //w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
+    // w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
     args.title = "a little test app";
     HWND hwnd = w->CreateCustom(args);
-    CrashIf(!hwnd);
+    ReportIf(!hwnd);
 
     w->layout = CreateMainLayout(w->hwnd);
     LayoutToSize(w->layout, {480, 640});

@@ -96,7 +96,7 @@ class FilterClassFactory : public IClassFactory {
 
 STDAPI_(BOOL) DllMain(__unused HINSTANCE hInstance, DWORD dwReason, __unused LPVOID lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH) {
-        CrashIf(hInstance != GetInstance());
+        ReportIf(hInstance != GetInstance());
     }
     gLogAppName = "PdfFilter";
     gLogToConsole = false;

@@ -246,7 +246,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     BOOL verificationFlagChecked = false;
 
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, &verificationFlagChecked);
-    CrashIf(hr == E_INVALIDARG);
+    ReportIf(hr == E_INVALIDARG);
     bool doInstall = (hr == S_OK) && (buttonPressedId == kBtnIdInstall);
 
     auto installerPath = updateInfo->installerPath;
@@ -473,7 +473,7 @@ void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
 // we should copy ourselves over the existing file, launch ourselves and
 // tell our new copy to delete ourselves
 void UpdateSelfTo(const char* path) {
-    CrashIf(!path);
+    ReportIf(!path);
     if (!file::Exists(path)) {
         logf("UpdateSelfTo: failed because destination doesn't exist\n");
         return;

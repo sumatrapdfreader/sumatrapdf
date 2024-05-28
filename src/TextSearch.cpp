@@ -360,7 +360,7 @@ TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tr
 }
 
 TextSel* TextSearch::FindNext(ProgressUpdateUI* tracker) {
-    CrashIf(!findText);
+    ReportIf(!findText);
     if (!findText) {
         return nullptr;
     }

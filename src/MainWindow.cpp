@@ -49,7 +49,7 @@ struct LinkHandler : ILinkHandler {
     MainWindow* win = nullptr;
 
     explicit LinkHandler(MainWindow* w) {
-        CrashIf(!w);
+        ReportIf(!w);
         win = w;
     }
     ~LinkHandler() override;
@@ -110,17 +110,17 @@ void CreateMovePatternLazy(MainWindow* win) {
         return;
     }
     win->bmpMovePattern = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
-    CrashIf(!win->bmpMovePattern);
+    ReportIf(!win->bmpMovePattern);
     win->brMovePattern = CreatePatternBrush(win->bmpMovePattern);
-    CrashIf(!win->brMovePattern);
+    ReportIf(!win->brMovePattern);
 }
 
 MainWindow::~MainWindow() {
     FinishStressTest(this);
 
-    CrashIf(TabCount() > 0);
-    // CrashIf(ctrl); // TODO: seen in crash report
-    CrashIf(linkOnLastButtonDown);
+    ReportIf(TabCount() > 0);
+    // ReportIf(ctrl); // TODO: seen in crash report
+    ReportIf(linkOnLastButtonDown);
 
     UnsubclassToc(this);
 
@@ -214,7 +214,7 @@ WindowTab* MainWindow::CurrentTab() const {
     }
 #if 0
     int nTabs = TabCount();
-    CrashIf(nTabs > 0);
+    ReportIf(nTabs > 0);
     if (nTabs > 0) {
         curr = GetTab(0);
         return curr;
@@ -297,7 +297,7 @@ Size MainWindow::GetViewPortSize() const {
     if ((style & WS_HSCROLL)) {
         size.dy += GetSystemMetrics(SM_CYHSCROLL);
     }
-    CrashIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
+    ReportIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
     return size;
 }
 
@@ -362,7 +362,7 @@ void MainWindow::ToggleZoom() const {
 }
 
 void MainWindow::MoveDocBy(int dx, int dy) const {
-    CrashIf(!CurrentTab());
+    ReportIf(!CurrentTab());
     CurrentTab()->MoveDocBy(dx, dy);
 }
 
@@ -394,7 +394,7 @@ bool MainWindow::CreateUIAProvider() {
 }
 
 void LinkHandler::GotoLink(IPageDestination* dest) {
-    CrashIf(!win || win->linkHandler != this);
+    ReportIf(!win || win->linkHandler != this);
     if (!dest || !win || !win->IsDocLoaded()) {
         return;
     }
@@ -608,7 +608,7 @@ IPageDestination* LinkHandler::FindTocItem(TocItem* item, const char* name, bool
 }
 
 void LinkHandler::GotoNamedDest(const char* name) {
-    CrashIf(!win || win->linkHandler != this);
+    ReportIf(!win || win->linkHandler != this);
     DocController* ctrl = win->ctrl;
     if (!ctrl) {
         return;

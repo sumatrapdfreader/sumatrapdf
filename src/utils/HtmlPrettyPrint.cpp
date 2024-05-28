@@ -7,7 +7,7 @@
 #include "HtmlPullParser.h"
 
 static void HtmlAddWithNesting(str::Str* out, HtmlToken* tok, size_t nesting) {
-    CrashIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
+    ReportIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
     bool isInline = IsInlineTag(tok->tag);
     // add a newline before block start tags (unless there already is one)
     bool onNewLine = out->size() == 0 || out->Last() == '\n';

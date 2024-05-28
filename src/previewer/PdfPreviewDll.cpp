@@ -155,7 +155,7 @@ static const char* GetReason(DWORD dwReason) {
 
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void*) {
     if (dwReason == DLL_PROCESS_ATTACH) {
-        CrashIf(hInstance != GetInstance());
+        ReportIf(hInstance != GetInstance());
     }
     gLogAppName = "PdfPreview";
     logf("PdfPreview: DllMain %s\n", GetReason(dwReason));

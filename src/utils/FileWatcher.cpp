@@ -212,7 +212,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
 
     // logf("ReadDirectoryChangesNotification() dir: %s, numBytes: %d\n", wd->dirPath, (int)bytesTransfered);
 
-    CrashIf(wd != wd->overlapped.data);
+    ReportIf(wd != wd->overlapped.data);
 
     if (errCode == ERROR_OPERATION_ABORTED) {
         // logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
@@ -274,7 +274,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
         logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
     }
 
-    CrashIf(gThreadId != GetCurrentThreadId());
+    ReportIf(gThreadId != GetCurrentThreadId());
 
     DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
     ReadDirectoryChangesW(wd->hDir,
@@ -344,7 +344,7 @@ static DWORD WINAPI FileWatcherThread(void*) {
             // logf("FileWatcherThread(): gThreadControlHandle signalled\n");
         } else {
             logf("FileWatcherThread(): n=%d\n", n);
-            CrashIf(true);
+            ReportIf(true);
         }
     }
     DestroyTempAllocator();
@@ -492,7 +492,7 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
     }
 
     bool ok = ListRemove(&gWatchedDirs, wd);
-    CrashIf(!ok);
+    ReportIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
     InterlockedIncrement(&gRemovalsPending);
     QueueUserAPC(StopMonitoringDirAPC, gThreadHandle, (ULONG_PTR)wd);
@@ -501,8 +501,8 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir* wd) {
 void FileWatcherWaitForShutdown() {
     // this is meant to be called at the end so we shouldn't
     // have any file watching subscriptions pending
-    CrashIf(gWatchedFiles != nullptr);
-    CrashIf(gWatchedDirs != nullptr);
+    ReportIf(gWatchedFiles != nullptr);
+    ReportIf(gWatchedDirs != nullptr);
     QueueUserAPC(ExitMonitoringThread, gThreadHandle, (ULONG_PTR)0);
 
     // wait for ReadDirectoryChangesNotification() process actions triggered
@@ -524,7 +524,7 @@ void FileWatcherWaitForShutdown() {
 static void RemoveWatchedFile(WatchedFile* wf) {
     WatchedDir* wd = wf->watchedDir;
     bool ok = ListRemove(&gWatchedFiles, wf);
-    CrashIf(!ok);
+    ReportIf(!ok);
 
     bool needsAwakeThread = wf->isManualCheck;
     DeleteWatchedFile(wf);
@@ -539,7 +539,7 @@ void FileWatcherUnsubscribe(WatchedFile* wf) {
     if (!wf) {
         return;
     }
-    CrashIf(!gThreadHandle);
+    ReportIf(!gThreadHandle);
 
     ScopedCritSec cs(&gThreadCritSec);
 

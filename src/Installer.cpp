@@ -736,7 +736,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     eargs.withBorder = true;
     wnd->editInstallationDir = new Edit();
     HWND ehwnd = wnd->editInstallationDir->Create(eargs);
-    CrashIf(!ehwnd);
+    ReportIf(!ehwnd);
 
     wnd->editInstallationDir->SetText(gCli->installDir);
     rc = {x, y, x + dx, y + staticDy};
@@ -873,7 +873,7 @@ static bool CreateInstallerWindow() {
         wcex.hIcon = LoadIconW(h, resName);
 
         ATOM atom = RegisterClassExW(&wcex);
-        CrashIf(!atom);
+        ReportIf(!atom);
         if (atom == 0) {
             logf("CreateInstallerWindow: RegisterClassExW() failed\n");
             return false;
@@ -1047,7 +1047,7 @@ bool MaybeMismatchedOSDialog(HWND hwndParent) {
     int buttonPressedId = 0;
 
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
-    CrashIf(hr == E_INVALIDARG);
+    ReportIf(hr == E_INVALIDARG);
     if (buttonPressedId == kBtnIdDownload) {
         const char* url = "https://www.sumatrapdfreader.org/download-free-pdf-viewer";
         if (gIsPreReleaseBuild) {

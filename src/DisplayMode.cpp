@@ -62,7 +62,7 @@ const char* DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
     const char* s = seqstrings::IdxToStr(displayModeNames, idx);
     if (!s) {
-        CrashIf(true);
+        ReportIf(true);
         return "unknown display mode";
     }
     return s;
@@ -112,7 +112,7 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
         logf("DisplayMode: %s\n", stateForIssue2140->displayMode);
         logf("PageNo: %d\n", stateForIssue2140->pageNo);
     }
-    CrashIf(!IsValidZoom(zoom));
+    ReportIf(!IsValidZoom(zoom));
     str::FreePtr(dst);
     if (kZoomFitPage == zoom) {
         *dst = str::Dup("fit page");

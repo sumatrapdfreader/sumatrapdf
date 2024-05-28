@@ -263,7 +263,7 @@ static bool RegisterWinClass() {
     wcex.hIcon = LoadIconW(h, iconName);
 
     ATOM atom = RegisterClassExW(&wcex);
-    CrashIf(!atom);
+    ReportIf(!atom);
     return atom != 0;
 }
 

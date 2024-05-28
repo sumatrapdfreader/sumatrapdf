@@ -129,7 +129,7 @@ static void EnumeratePrinters() {
 
         DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
         DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
-        CrashIf(bins != binNames);
+        ReportIf(bins != binNames);
         if (0 == bins) {
             out.Append(" - no paper bins available\n");
         } else if (bins == (DWORD)-1) {

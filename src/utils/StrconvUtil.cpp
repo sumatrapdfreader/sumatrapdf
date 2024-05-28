@@ -62,7 +62,7 @@ char* WStrToUtf8(const WCHAR* s, size_t cch, Allocator* a) {
 
 // caller needs to free() the result
 WCHAR* StrToWStr(const char* src, uint codePage, int cbSrc) {
-    CrashIf(!src);
+    ReportIf(!src);
     if (!src) {
         return nullptr;
     }
@@ -80,7 +80,7 @@ WCHAR* StrToWStr(const char* src, uint codePage, int cbSrc) {
 }
 
 TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
-    CrashIf(!src);
+    ReportIf(!src);
     if (!src) {
         return nullptr;
     }

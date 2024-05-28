@@ -69,7 +69,7 @@ TextRenderGdi::~TextRenderGdi() {
     FreeMemBmp();
     DeleteDC(memHdc);
     DeleteDC(hdcForTextMeasure);
-    CrashIf(hdcGfxLocked); // hasn't been Unlock()ed
+    ReportIf(hdcGfxLocked); // hasn't been Unlock()ed
 }
 
 void TextRenderGdi::RestoreMemHdcPrevBitmap() {
@@ -113,7 +113,7 @@ float TextRenderGdi::GetCurrFontLineSpacing() {
 #if 1
     return currFont->font->GetHeight(gfx);
 #else
-    CrashIf(!currFont);
+    ReportIf(!currFont);
     TEXTMETRIC tm;
     GetTextMetrics(hdcForTextMeasure, &tm);
     return (float)tm.tmHeight;
@@ -154,10 +154,10 @@ void TextRenderGdi::SetTextBgColor(Gdiplus::Color col) {
 }
 
 void TextRenderGdi::Lock() {
-    CrashIf(hdcGfxLocked);
+    ReportIf(hdcGfxLocked);
     Region r;
     Status st = gfx->GetClip(&r); // must call before GetHDC(), which locks gfx
-    CrashIf(st != Ok);
+    ReportIf(st != Ok);
     HRGN hrgn = r.GetHRGN(gfx);
 
     hdcGfxLocked = gfx->GetHDC();
@@ -170,7 +170,7 @@ void TextRenderGdi::Lock() {
 }
 
 void TextRenderGdi::Unlock() {
-    CrashIf(!hdcGfxLocked);
+    ReportIf(!hdcGfxLocked);
     gfx->ReleaseHDC(hdcGfxLocked);
     hdcGfxLocked = nullptr;
 }
@@ -179,7 +179,7 @@ void TextRenderGdi::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl
 #if 0
     DrawTransparent(s, sLen, bb, isRtl);
 #else
-    CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
+    ReportIf(!hdcGfxLocked); // hasn't been Lock()ed
     int x = (int)bb.x;
     int y = (int)bb.y;
     uint opts = ETO_OPAQUE;
@@ -253,7 +253,7 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy) {
 // maybe draw to in-memory bitmap, convert to Graphics bitmap and blit that bitmap to
 // Graphics object
 void TextRenderGdi::DrawTransparent(const WCHAR* s, size_t sLen, const RectF bb, bool isRtl) {
-    CrashIf(!hdcGfxLocked); // hasn't been Lock()ed
+    ReportIf(!hdcGfxLocked); // hasn't been Lock()ed
 
     int x = (int)bb.x;
     int y = (int)bb.y;
@@ -308,7 +308,7 @@ TextRenderGdiplus* TextRenderGdiplus::Create(Graphics* gfx, TextMeasureAlgorithm
 }
 
 void TextRenderGdiplus::SetFont(mui::CachedFont* font) {
-    CrashIf(!font->font);
+    ReportIf(!font->font);
     currFont = font;
 }
 
@@ -317,12 +317,12 @@ float TextRenderGdiplus::GetCurrFontLineSpacing() {
 }
 
 RectF TextRenderGdiplus::Measure(const WCHAR* s, size_t sLen) {
-    CrashIf(!currFont);
+    ReportIf(!currFont);
     return MeasureText(gfx, currFont->font, s, sLen, measureAlgo);
 }
 
 RectF TextRenderGdiplus::Measure(const char* s, size_t sLen) {
-    CrashIf(!currFont);
+    ReportIf(!currFont);
     WCHAR* buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     return MeasureText(gfx, currFont->font, buf, strLen, measureAlgo);
@@ -405,7 +405,7 @@ TextRenderHdc* TextRenderHdc::Create(Graphics* gfx, int dx, int dy) {
 }
 
 void TextRenderHdc::SetFont(CachedFont* font) {
-    CrashIf(!hdc);
+    ReportIf(!hdc);
     // I'm not sure how expensive SelectFont() is so avoid it just in case
     if (currFont == font) {
         return;
@@ -415,7 +415,7 @@ void TextRenderHdc::SetFont(CachedFont* font) {
 }
 
 void TextRenderHdc::SetTextColor(Gdiplus::Color col) {
-    CrashIf(!hdc);
+    ReportIf(!hdc);
     if (textColor.GetValue() == col.GetValue()) {
         return;
     }
@@ -424,7 +424,7 @@ void TextRenderHdc::SetTextColor(Gdiplus::Color col) {
 }
 
 void TextRenderHdc::SetTextBgColor(Gdiplus::Color col) {
-    CrashIf(!hdc);
+    ReportIf(!hdc);
     if (textBgColor.GetValue() == col.GetValue()) {
         return;
     }
@@ -437,8 +437,8 @@ float TextRenderHdc::GetCurrFontLineSpacing() {
 }
 
 RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
-    CrashIf(!currFont);
-    CrashIf(!hdc);
+    ReportIf(!currFont);
+    ReportIf(!hdc);
     WCHAR* buf = ToWStrTemp(s, sLen);
     size_t strLen = str::Len(buf);
     return Measure(buf, strLen);
@@ -446,7 +446,7 @@ RectF TextRenderHdc::Measure(const char* s, size_t sLen) {
 
 RectF TextRenderHdc::Measure(const WCHAR* s, size_t sLen) {
     SIZE txtSize;
-    CrashIf(!hdc);
+    ReportIf(!hdc);
     GetTextExtentPoint32W(hdc, s, (int)sLen, &txtSize);
     RectF res(0.0f, 0.0f, (float)txtSize.cx, (float)txtSize.cy);
     return res;
@@ -459,7 +459,7 @@ void TextRenderHdc::Draw(const char* s, size_t sLen, const RectF bb, bool isRtl)
 }
 
 void TextRenderHdc::Draw(const WCHAR* s, size_t sLen, const RectF bb, bool /* isRtl */) {
-    CrashIf(!hdc);
+    ReportIf(!hdc);
     int x = (int)bb.x;
     int y = (int)bb.y;
     uint opts = ETO_OPAQUE;
@@ -491,7 +491,7 @@ ITextRender* CreateTextRender(TextRenderMethod method, Graphics* gfx, int dx, in
     if (TextRenderMethod::Hdc == method) {
         res = TextRenderHdc::Create(gfx, dx, dy);
     }
-    CrashIf(!res);
+    ReportIf(!res);
     if (res) {
         res->method = method;
     }
@@ -511,7 +511,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
     }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.dx) * (float)len);
-    CrashIf(n > len);
+    ReportIf(n > len);
     r = textMeasure->Measure(s, n);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length

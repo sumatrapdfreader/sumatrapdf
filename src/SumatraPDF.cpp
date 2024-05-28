@@ -188,8 +188,8 @@ void SetCurrentLang(const char* langCode) {
 
 void InitializePolicies(bool restrict) {
     // default configuration should be to restrict everything
-    CrashIf(gPolicyRestrictions != Perm::RestrictedUse);
-    CrashIf(gAllowedLinkProtocols.Size() != 0 || gAllowedFileTypes.Size() != 0);
+    ReportIf(gPolicyRestrictions != Perm::RestrictedUse);
+    ReportIf(gAllowedLinkProtocols.Size() != 0 || gAllowedFileTypes.Size() != 0);
 
     // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
     if (restrict) {
@@ -265,7 +265,7 @@ bool HasPermission(Perm permission) {
 bool SumatraLaunchBrowser(const char* url) {
     if (gPluginMode) {
         // pass the URI back to the browser
-        CrashIf(gWindows.empty());
+        ReportIf(gWindows.empty());
         if (gWindows.empty()) {
             return false;
         }
@@ -481,7 +481,7 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
-        CrashIf(true);
+        ReportIf(true);
         hwnd = GetForegroundWindow();
     }
     // make sure that the password dialog is visible
@@ -530,7 +530,7 @@ static void UpdateDisplayStateWindowRect(MainWindow* win, FileState* fs, bool up
 }
 
 static void UpdateSidebarDisplayState(WindowTab* tab, FileState* fs) {
-    CrashIf(!tab);
+    ReportIf(!tab);
     MainWindow* win = tab->win;
     fs->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->CurrentTab()) {
@@ -733,7 +733,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
         return;
     }
 
-    CrashIf(!win->IsDocLoaded());
+    ReportIf(!win->IsDocLoaded());
     if (!win->IsDocLoaded()) {
         return;
     }
@@ -764,7 +764,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
 
 /* Send the request to render a given page to a rendering thread */
 void ControllerCallbackHandler::RequestRendering(int pageNo) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     if (!win->AsFixed()) {
         return;
     }
@@ -796,7 +796,7 @@ void ControllerCallbackHandler::SaveDownload(const char* url, const ByteSlice& d
 }
 
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
 
     SCROLLINFO si{};
@@ -907,7 +907,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         return;
     }
 
-    CrashIf(!win->ctrl || win->ctrl->PageCount() <= 0);
+    ReportIf(!win->ctrl || win->ctrl->PageCount() <= 0);
     if (!win->ctrl || win->ctrl->PageCount() == 0) {
         return;
     }
@@ -931,7 +931,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     if (!wnd) {
         return;
     }
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
 }
 
@@ -947,7 +947,7 @@ static NO_INLINE void VerifyController(DocController* ctrl, const char* path) {
     const char* s1 = ctrlFilePath ? ctrlFilePath : "<null>";
     const char* s2 = path ? path : "<null>";
     logf("VerifyController: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
-    CrashIf(true);
+    ReportIf(true);
 }
 
 static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI, MainWindow* win) {
@@ -975,16 +975,16 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
         if (!engine) {
             return nullptr;
         }
-        CrashIf(engine->kind != kindEngineChm);
+        ReportIf(engine->kind != kindEngineChm);
         ctrl = new DisplayModel(engine, win->cbHandler);
-        CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+        ReportIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
     } else {
         // another ChmModel might still be active
         chmModel->RemoveParentHwnd();
         ctrl = chmModel;
-        CrashIf(!ctrl->AsChm() || ctrl->AsFixed());
+        ReportIf(!ctrl->AsChm() || ctrl->AsFixed());
     }
-    CrashIf(!ctrl);
+    ReportIf(!ctrl);
     VerifyController(ctrl, path);
     return ctrl;
 }
@@ -1022,7 +1022,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
         return nullptr;
     }
     DocController* ctrl = new DisplayModel(engine, win->cbHandler);
-    CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
+    ReportIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
     VerifyController(ctrl, path);
     gMostRecentlyOpenedDoc = ctrl;
     return ctrl;
@@ -1110,12 +1110,12 @@ static bool showTocByDefault(const char* path) {
 //   before (isNewWindow=false)
 static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, FileState* fs) {
     MainWindow* win = args->win;
-    CrashIf(!win);
+    ReportIf(!win);
     if (!win) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    CrashIf(!tab);
+    ReportIf(!tab);
 
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
@@ -1175,7 +1175,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     ClearMouseState(win);
 
     // TODO: this crashes with new tabs
-    // CrashIf(win->IsAboutWindow() || win->IsDocLoaded() != (win->ctrl != nullptr));
+    // ReportIf(win->IsAboutWindow() || win->IsDocLoaded() != (win->ctrl != nullptr));
     // TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (win->ctrl) {
         DisplayModel* dm = win->AsFixed();
@@ -1204,7 +1204,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
             win->ctrl->GoToPage(ss.page, false);
         } else {
-            CrashIf(true);
+            ReportIf(true);
         }
     } else {
         fs = nullptr;
@@ -1212,7 +1212,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     delete prevCtrl;
 
     if (fs) {
-        CrashIf(!win->IsDocLoaded());
+        ReportIf(!win->IsDocLoaded());
         zoomVirtual = ZoomFromString(fs->zoom, kZoomFitPage);
         if (win->ctrl->ValidPageNo(ss.page)) {
             if (kZoomFitContent != zoomVirtual) {
@@ -1245,7 +1245,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     UpdateUiForCurrentTab(win);
 
     if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEngineMupdf) {
-        CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
+        ReportIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         path = args->FilePath();
         int res = Synchronizer::Create(path, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
@@ -1277,7 +1277,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // if the window isn't shown and win.canvasRc is still empty, zoom
     // has not been determined yet
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
-    // CrashIf(win->IsDocLoaded() && args->showWin && win->canvasRc.IsEmpty() && !win->AsChm());
+    // ReportIf(win->IsDocLoaded() && args->showWin && win->canvasRc.IsEmpty() && !win->AsChm());
 
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     // restore scroll state after the canvas size has been restored
@@ -1481,7 +1481,7 @@ static MainWindow* CreateMainWindow() {
         return nullptr;
     }
 
-    CrashIf(nullptr != FindMainWindowByHwnd(hwndFrame));
+    ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
 
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
@@ -1506,7 +1506,7 @@ static MainWindow* CreateMainWindow() {
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
 
-    CrashIf(win->menu);
+    ReportIf(win->menu);
     win->menu = BuildMenu(win);
     win->isMenuHidden = !gGlobalPrefs->showMenubar;
     if (!win->isMenuHidden) {
@@ -1555,7 +1555,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
         return nullptr;
     }
     // CreateMainWindow shouldn't change the windowState value
-    CrashIf(windowState != gGlobalPrefs->windowState);
+    ReportIf(windowState != gGlobalPrefs->windowState);
 
     if (data) {
         windowState = data->windowState;
@@ -1589,8 +1589,8 @@ void DeleteMainWindow(MainWindow* win) {
     ImageList_Destroy((HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
-    CrashIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
-    CrashIf(win->printThread && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT);
+    ReportIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
+    ReportIf(win->printThread && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT);
 
     if (win->uiaProvider) {
         // tell UIA to release all objects cached in its store
@@ -1751,7 +1751,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     const char* fullPath = args->FilePath();
 
     bool openNewTab = gGlobalPrefs->useTabs && !args->forceReuse;
-    CrashIf(openNewTab && args->forceReuse);
+    ReportIf(openNewTab && args->forceReuse);
 
     if (win->IsCurrentTabAbout()) {
         // TODO: probably need to do it when switching tabs
@@ -1831,7 +1831,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
-        CrashIf(!str::Eq(fullPath, path));
+        ReportIf(!str::Eq(fullPath, path));
         FileState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (!lazyLoad && gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, ds);
@@ -1894,6 +1894,11 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
 }
 
 void LoadDocumentAsync(LoadArgs* argsIn) {
+    if (gCrashOnOpen) {
+        log("LoadDocumentAsync: about to call CrashMe()\n");
+        CrashMe();
+    }
+
     MainWindow* win = argsIn->win;
     bool failEarly = AdjustPathForMaybeMovedFile(argsIn);
     const char* path = argsIn->FilePath();
@@ -2152,7 +2157,7 @@ static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, Measureme
 
 static auto cursorPosUnit = MeasurementUnit::pt;
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
     PointF pt = win->AsFixed()->CvtFromScreen(pos);
     char* posStr = FormatCursorPositionTemp(engine, pt, cursorPosUnit);
@@ -2330,7 +2335,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
         HwndSetText(win->hwndFrame, kSumatraWindowTitle);
-        CrashIf(win->TabCount() != 0 || win->CurrentTab());
+        ReportIf(win->TabCount() != 0 || win->CurrentTab());
     }
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
@@ -2522,7 +2527,7 @@ SaveChoice ShouldSaveAnnotationsDialog(HWND hwndParent, const char* filePath) {
     int buttonPressedId = 0;
 
     auto hr = TaskDialogIndirect(&dialogConfig, &buttonPressedId, nullptr, nullptr);
-    CrashIf(hr == E_INVALIDARG);
+    ReportIf(hr == E_INVALIDARG);
     bool discard = (hr != S_OK) || (buttonPressedId == kBtnIdDiscard);
     if (discard) {
         return SaveChoice::Discard;
@@ -2589,7 +2594,7 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
             tab->askedToSaveAnnotations = false;
             return false;
         default:
-            CrashIf(true);
+            ReportIf(true);
     }
     return true;
 }
@@ -2620,7 +2625,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
             return;
         }
     } else {
-        CrashIf(gPluginMode && !gWindows.Contains(win));
+        ReportIf(gPluginMode && !gWindows.Contains(win));
         RemoveTab(tab);
         delete tab;
     }
@@ -2684,7 +2689,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         return;
     }
 
-    CrashIf(forceClose && !quitIfLast);
+    ReportIf(forceClose && !quitIfLast);
     if (forceClose) {
         quitIfLast = true;
     }
@@ -2747,7 +2752,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         /* last window - don't delete it */
         CloseDocumentInCurrentTab(win, false, false);
         SetFocus(win->hwndFrame);
-        CrashIf(!gWindows.Contains(win));
+        ReportIf(!gWindows.Contains(win));
     } else {
         FreeMenuOwnerDrawInfoData(win->menu);
         HWND hwndToDestroy = win->hwndFrame;
@@ -2757,7 +2762,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
     if (lastWindow && quitIfLast) {
         logf("Calling PostQuitMessage() in CloseWindow() because closing lastWindow\n");
-        CrashIf(gWindows.size() != 0);
+        ReportIf(gWindows.size() != 0);
         PostQuitMessage(0);
     }
 }
@@ -2823,7 +2828,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
         }
     }
 
-    CrashIf(!srcFileName);
+    ReportIf(!srcFileName);
     if (!srcFileName) {
         return;
     }
@@ -2997,7 +3002,7 @@ static void RenameCurrentFile(MainWindow* win) {
     TempWStr defExtW = ToWStrTemp(defExt);
     str::Str fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
-    CrashIf(!ok);
+    ReportIf(!ok);
     fileFilter.AppendFmt("\1*%s\1", defExt);
     str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
 
@@ -3297,7 +3302,7 @@ static TempWStr GetFileFilterTemp() {
             fileFilter.AppendChar(';');
         }
     }
-    CrashIf(fileFilter.Last() != ';');
+    ReportIf(fileFilter.Last() != ';');
     fileFilter.Last() = '\1';
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available && fileFormats[i].name) {
@@ -3410,7 +3415,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
 }
 
 static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
-    CrashIf(win->IsCurrentTabAbout());
+    ReportIf(win->IsCurrentTabAbout());
     if (win->IsCurrentTabAbout()) {
         return;
     }
@@ -3939,9 +3944,9 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         return;
     }
 
-    CrashIf(presentation ? win->isFullScreen : win->presentation);
+    ReportIf(presentation ? win->isFullScreen : win->presentation);
     if (presentation) {
-        CrashIf(!win->ctrl);
+        ReportIf(!win->ctrl);
         if (!win->IsDocLoaded()) {
             return;
         }
@@ -4038,8 +4043,8 @@ void ExitFullScreen(MainWindow* win) {
     uint flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
     SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
     MoveWindow(win->hwndFrame, win->nonFullScreenFrameRect);
-    // TODO: this CrashIf() fires in pre-release e.g. 64011
-    // CrashIf(WindowRect(win.hwndFrame) != win.nonFullScreenFrameRect);
+    // TODO: this ReportIf() fires in pre-release e.g. 64011
+    // ReportIf(WindowRect(win.hwndFrame) != win.nonFullScreenFrameRect);
     // We have to relayout here, because it isn't done in the SetWindowPos nor MoveWindow,
     // if the client rectangle hasn't changed.
     if (ClientRect(win->hwndFrame) == cr) {
@@ -4096,7 +4101,7 @@ void AdvanceFocus(MainWindow* win) {
     if (gGlobalPrefs->showFavorites) {
         tabOrder[nWindows++] = win->favTreeView->hwnd;
     }
-    CrashIf(nWindows > MAX_WINDOWS);
+    ReportIf(nWindows > MAX_WINDOWS);
 
     // find the currently focused element
     HWND focused = GetFocus();
@@ -4543,7 +4548,7 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
     // make sure to keep this in sync with the calculations in RelayoutFrame
     Rect rFrame = ClientRect(win->hwndFrame);
     Rect rToc = ClientRect(win->hwndTocBox);
-    CrashIf(rToc.dx != ClientRect(win->hwndFavBox).dx);
+    ReportIf(rToc.dx != ClientRect(win->hwndFavBox).dx);
     int minDy = std::min(kTocMinDy, rToc.dy);
     int maxDy = std::max(rFrame.dy - kTocMinDy, rToc.dy);
     if (tocDy < minDy || tocDy > maxDy) {
@@ -4570,7 +4575,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
 
     if (tocVisible) {
         LoadTocTree(win);
-        CrashIf(!win->tocLoaded);
+        ReportIf(!win->tocLoaded);
     }
 
     if (showFavorites) {
@@ -4578,7 +4583,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     }
 
     if (!win->CurrentTab()) {
-        CrashIf(tocVisible);
+        ReportIf(tocVisible);
     } else if (!win->presentation) {
         win->CurrentTab()->showToc = tocVisible;
     } else if (PM_ENABLED == win->presentation) {
@@ -4975,7 +4980,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
 }
 
 static bool MaybeDeleteStaleDirectory(WIN32_FIND_DATAW* fd, const char* dir) {
-    CrashIf(!IsDirectory(fd->dwFileAttributes));
+    ReportIf(!IsDirectory(fd->dwFileAttributes));
     TempStr name = ToUtf8Temp(fd->cFileName);
     bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
     if (!maybeDelete) {
@@ -6073,7 +6078,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             if (win->AsChm()) {
                 return win->AsChm()->PassUIMsg(msg, wp, lp);
             }
-            CrashIf(!win->AsFixed());
+            ReportIf(!win->AsFixed());
             // Pass the message to the canvas' window procedure
             // (required since the canvas itself never has the focus and thus
             // never receives WM_MOUSEWHEEL messages)

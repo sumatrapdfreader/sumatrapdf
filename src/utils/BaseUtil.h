@@ -251,8 +251,6 @@ inline void CrashMe() {
     } while (0)
 #endif
 
-// TODO: replace CrashIf() with ReportIf()
-#define CrashIf(cond) ReportIfCond(cond, #cond, false, true)
 #define ReportIf(cond) ReportIfCond(cond, #cond, false, true)
 #define ReportIfQuick(cond) ReportIfCond(cond, #cond, false, false)
 
@@ -284,7 +282,7 @@ inline T limitValue(T val, T min, T max) {
     if (min > max) {
         std::swap(min, max);
     }
-    CrashIf(min > max);
+    ReportIf(min > max);
     if (val < min) {
         return min;
     }
@@ -297,7 +295,7 @@ inline T limitValue(T val, T min, T max) {
 // return true if adding n to val overflows. Only valid for n > 0
 template <typename T>
 inline bool addOverflows(T val, T n) {
-    CrashIf(!(n > 0));
+    ReportIf(!(n > 0));
     T res = val + n;
     return val > res;
 }

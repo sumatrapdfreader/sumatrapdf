@@ -45,7 +45,7 @@ RenderCache::RenderCache() {
 
     startRendering = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, nullptr);
-    CrashIf(nullptr == renderThread);
+    ReportIf(nullptr == renderThread);
 }
 
 RenderCache::~RenderCache() {
@@ -77,7 +77,7 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
         if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
             (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile)) {
             e->refs++;
-            CrashIf(i != e->cacheIdx);
+            ReportIf(i != e->cacheIdx);
             return e;
         }
     }
@@ -94,23 +94,23 @@ bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom,
 
 bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     ScopedCritSec scope(&cacheAccess);
-    CrashIf(!entry);
+    ReportIf(!entry);
     if (!entry) {
         return false;
     }
     int idx = entry->cacheIdx;
-    CrashIf(idx < 0);
-    CrashIf(idx >= cacheCount);
+    ReportIf(idx < 0);
+    ReportIf(idx >= cacheCount);
     if ((idx < 0) || (idx >= cacheCount)) {
         return false;
     }
-    CrashIf(entry->refs <= 0);
+    ReportIf(entry->refs <= 0);
     --entry->refs;
     if (entry->refs > 0) {
         return false;
     }
-    CrashIf(entry->refs != 0);
-    CrashIf(cache[idx] != entry);
+    ReportIf(entry->refs != 0);
+    ReportIf(cache[idx] != entry);
     logf("RenderCache::DropCacheEntry: pageNo: %d, rotation: %d, zoom: %.2f\n", entry->pageNo, entry->rotation,
          entry->zoom);
 
@@ -125,7 +125,7 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
         cache[lastIdx] = nullptr;
     }
     cacheCount--;
-    CrashIf(cacheCount < 0);
+    ReportIf(cacheCount < 0);
     return true;
 }
 
@@ -167,17 +167,17 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
 
 void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
     ScopedCritSec scope(&cacheAccess);
-    CrashIf(!req.dm);
+    ReportIf(!req.dm);
 
     req.rotation = NormalizeRotation(req.rotation);
-    CrashIf(cacheCount > MAX_BITMAPS_CACHED);
+    ReportIf(cacheCount > MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
     FreePage(req.dm, req.pageNo, &req.tile);
 
     bool hasSpace = FreeIfFull(this, req);
-    CrashIf(!hasSpace); // TODO: FreeIfFull() might actually fail to free
-    CrashIf(cacheCount > MAX_BITMAPS_CACHED);
+    ReportIf(!hasSpace); // TODO: FreeIfFull() might actually fail to free
+    ReportIf(cacheCount > MAX_BITMAPS_CACHED);
 
     // Copy the PageRenderRequest as it will be reused
     auto entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
@@ -187,7 +187,7 @@ void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
 }
 
 static RectF GetTileRect(RectF pagerect, TilePosition tile) {
-    CrashIf(tile.res > 30);
+    ReportIf(tile.res > 30);
     RectF rect;
     rect.dx = pagerect.dx / (1ULL << tile.res);
     rect.dy = pagerect.dy / (1ULL << tile.res);
@@ -419,7 +419,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
     logf("RenderCache::RequestRendering(): pageNo %d\n", pageNo);
     ScopedCritSec scope(&requestAccess);
-    CrashIf(!dm);
+    ReportIf(!dm);
     if (!dm || dm->dontRenderFlag) {
         return;
     }
@@ -483,12 +483,12 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                          RenderingCallback* renderCb) {
     logf("RenderCache::Render(): pageNo %d\n", pageNo);
-    CrashIf(!dm);
+    ReportIf(!dm);
     if (!dm || dm->dontRenderFlag) {
         return false;
     }
 
-    CrashIf(!(tile || pageRect && renderCb));
+    ReportIf(!(tile || pageRect && renderCb));
     if (!tile && !(pageRect && renderCb)) {
         return false;
     }
@@ -508,7 +508,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
         newRequest = &(requests[requestCount]);
         requestCount++;
     }
-    CrashIf(requestCount > MAX_PAGE_REQUESTS);
+    ReportIf(requestCount > MAX_PAGE_REQUESTS);
 
     newRequest->dm = dm;
     newRequest->pageNo = pageNo;
@@ -520,7 +520,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     } else if (pageRect) {
         newRequest->pageRect = *pageRect;
         // can't cache bitmaps that aren't for a given tile
-        CrashIf(!renderCb);
+        ReportIf(!renderCb);
     } else {
         CrashMe();
     }
@@ -557,13 +557,13 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req) {
         return false;
     }
 
-    CrashIf(requestCount < 0);
-    CrashIf(requestCount > MAX_PAGE_REQUESTS);
+    ReportIf(requestCount < 0);
+    ReportIf(requestCount > MAX_PAGE_REQUESTS);
     requestCount--;
     *req = requests[requestCount];
     curReq = req;
-    CrashIf(requestCount < 0);
-    CrashIf(req->abort);
+    ReportIf(requestCount < 0);
+    ReportIf(req->abort);
 
     return true;
 }
@@ -672,7 +672,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             dm->textCache->GetTextForPage(req.pageNo);
         }
 
-        CrashIf(req.abortCookie != nullptr);
+        ReportIf(req.abortCookie != nullptr);
         EngineBase* engine = dm->GetEngine();
         engine->AddRef();
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
@@ -783,7 +783,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
         if (renderOutOfDateCue) {
             *renderOutOfDateCue = true;
         }
-        CrashIf(renderedReplacement && !*renderedReplacement);
+        ReportIf(renderedReplacement && !*renderedReplacement);
     }
 
     DropCacheEntry(entry);
@@ -797,7 +797,7 @@ static int cmpTilePosition(const void* a, const void* b) {
 
 int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo,
                        bool* renderOutOfDateCue) {
-    CrashIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
+    ReportIf(!pageInfo->shown || 0.0 == pageInfo->visibleRatio);
 
 #if 0
     auto timeStart = TimeGet();

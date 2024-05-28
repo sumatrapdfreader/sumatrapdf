@@ -118,7 +118,7 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
     if (!s) {
-        CrashIf((int)cch > 0);
+        ReportIf((int)cch > 0);
         return nullptr;
     }
     return strconv::WStrToUtf8(s, cch, GetTempAllocator());
@@ -126,7 +126,7 @@ TempStr ToUtf8Temp(const WCHAR* s, size_t cch) {
 
 TempWStr ToWStrTemp(const char* s, size_t cb) {
     if (!s) {
-        CrashIf((int)cb > 0);
+        ReportIf((int)cb > 0);
         return nullptr;
     }
     return strconv::Utf8ToWStr(s, cb, GetTempAllocator());

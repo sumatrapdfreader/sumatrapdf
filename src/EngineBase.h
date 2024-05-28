@@ -120,7 +120,7 @@ struct PageDestinationURL : IPageDestination {
     PageDestinationURL() = delete;
 
     PageDestinationURL(const char* u) {
-        CrashIf(!u);
+        ReportIf(!u);
         kind = kindDestinationLaunchURL;
         url = str::Dup(u);
     }
@@ -141,7 +141,7 @@ struct PageDestinationFile : IPageDestination {
     PageDestinationFile() = delete;
 
     PageDestinationFile(const char* u, const char* dest) {
-        CrashIf(!u);
+        ReportIf(!u);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
         dest = str::Dup(dest);

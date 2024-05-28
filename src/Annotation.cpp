@@ -109,12 +109,12 @@ static const char* gAnnotReadableNames =
 /*
 const char* AnnotationName(AnnotationType tp) {
     int n = (int)tp;
-    CrashIf(n < -1 || n > (int)AnnotationType::ThreeD);
+    ReportIf(n < -1 || n > (int)AnnotationType::ThreeD);
     if (n < 0) {
         return "Unknown";
     }
     const char* s = seqstrings::IdxToStr(gAnnotNames, n);
-    CrashIf(!s);
+    ReportIf(!s);
     return s;
 }
 */
@@ -132,7 +132,7 @@ TempStr AnnotationReadableNameTemp(AnnotationType tp) {
         return (char*)"Unknown";
     }
     char* s = (char*)seqstrings::IdxToStr(gAnnotReadableNames, n);
-    CrashIf(!s);
+    ReportIf(!s);
     return s;
 }
 
@@ -144,12 +144,12 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2) {
 }
 
 AnnotationType Type(Annotation* annot) {
-    CrashIf((int)annot->type < 0);
+    ReportIf((int)annot->type < 0);
     return annot->type;
 }
 
 int PageNo(Annotation* annot) {
-    CrashIf(annot->pageNo < 1);
+    ReportIf(annot->pageNo < 1);
     return annot->pageNo;
 }
 
@@ -246,7 +246,7 @@ bool SetQuadding(Annotation* annot, int newQuadding) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(e->ctxAccess);
-        CrashIf(!IsValidQuadding(newQuadding));
+        ReportIf(!IsValidQuadding(newQuadding));
         bool didChange = Quadding(annot) != newQuadding;
         if (!didChange) {
             return false;
@@ -513,7 +513,7 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
         }
         return MkPdfColorFromFloat(rgb[0], rgb[1], rgb[2]);
     }
-    CrashIf(true);
+    ReportIf(true);
     return 0;
 }
 
@@ -872,7 +872,7 @@ void SetOpacity(Annotation* annot, int newOpacity) {
     {
         auto ctx = e->Ctx();
         ScopedCritSec cs(e->ctxAccess);
-        CrashIf(newOpacity < 0 || newOpacity > 255);
+        ReportIf(newOpacity < 0 || newOpacity > 255);
         newOpacity = std::clamp(newOpacity, 0, 255);
         float fopacity = (float)newOpacity / 255.f;
 

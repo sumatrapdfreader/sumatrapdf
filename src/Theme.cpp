@@ -194,7 +194,7 @@ int GetCurrentThemeIndex() {
 extern void UpdateAfterThemeChange();
 
 void SetThemeByIndex(int themeIdx) {
-    CrashIf((themeIdx < 0) || (themeIdx >= kThemeCount));
+    ReportIf((themeIdx < 0) || (themeIdx >= kThemeCount));
     if (themeIdx >= kThemeCount) {
         themeIdx = 0;
     }

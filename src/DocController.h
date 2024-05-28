@@ -53,7 +53,7 @@ struct DocController {
     DocControllerCallback* cb;
 
     explicit DocController(DocControllerCallback* cb) : cb(cb) {
-        CrashIf(!cb);
+        ReportIf(!cb);
     }
     virtual ~DocController() = default;
 

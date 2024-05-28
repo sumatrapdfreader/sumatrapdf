@@ -133,7 +133,7 @@ struct DjVuContext {
         ctx = ddjvu_context_create("DjVuEngine");
         // reset the locale to "C" as most other code expects
         setlocale(LC_ALL, "C");
-        CrashIf(!ctx);
+        ReportIf(!ctx);
     }
 
     int AddRef() {
@@ -146,7 +146,7 @@ struct DjVuContext {
 
     int Release() {
         EnterCriticalSection(&lock);
-        CrashIf(refCount <= 0);
+        ReportIf(refCount <= 0);
         --refCount;
         LeaveCriticalSection(&lock);
         return refCount;
@@ -212,7 +212,7 @@ static DjVuContext* GetDjVuContext() {
 }
 
 static void ReleaseDjVuContext() {
-    CrashIf(!gDjVuContext);
+    ReportIf(!gDjVuContext);
     int refCount = gDjVuContext->Release();
     if (refCount != 0) {
         return;
@@ -221,7 +221,7 @@ static void ReleaseDjVuContext() {
 
 void CleanupEngineDjVu() {
     if (gDjVuContext) {
-        CrashIf(gDjVuContext->refCount != 0);
+        ReportIf(gDjVuContext->refCount != 0);
         delete gDjVuContext;
         gDjVuContext = nullptr;
     }
@@ -338,7 +338,7 @@ EngineBase* EngineDjVu::Clone() {
 }
 
 RectF EngineDjVu::PageMediabox(int pageNo) {
-    CrashIf(pageNo < 1 || pageNo > pageCount);
+    ReportIf(pageNo < 1 || pageNo > pageCount);
     DjVuPageInfo* pi = pages[pageNo - 1];
     return pi->mediabox;
 }
@@ -421,7 +421,7 @@ bool EngineDjVu::LoadMediaboxes() {
             }
             DjVuInfoChunk info;
             bool ok = r.UnpackBE(&info, sizeof(info), "2w6b", 4);
-            CrashIf(!ok);
+            ReportIf(!ok);
             int dpi = MAKEWORD(info.dpiLo, info.dpiHi); // dpi is little-endian
             // DjVuLibre ignores DPI values outside 25 to 6000 in DjVuInfo::decode
             if (dpi < 25 || 6000 < dpi) {
@@ -598,7 +598,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
             rot = DDJVU_ROTATE_90;
             break;
         default:
-            CrashIf("invalid rotation");
+            ReportIf("invalid rotation");
             break;
     }
     ddjvu_page_set_rotation(page, rot);
@@ -721,7 +721,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
 }
 
 PointF EngineDjVu::TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
-    CrashIf(zoom <= 0);
+    ReportIf(zoom <= 0);
     if (zoom <= 0) {
         return pt;
     }
@@ -875,7 +875,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 
     PageText res;
 
-    CrashIf(str::Len(extracted.Get()) != coords.size());
+    ReportIf(str::Len(extracted.Get()) != coords.size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
@@ -901,7 +901,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
             coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
         }
     }
-    CrashIf(coords.size() != extracted.size());
+    ReportIf(coords.size() != extracted.size());
     res.len = (int)extracted.size();
     res.text = extracted.StealData();
     res.coords = coords.StealData();
@@ -909,7 +909,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
 }
 
 Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
-    CrashIf(pageNo < 1 || pageNo > PageCount());
+    ReportIf(pageNo < 1 || pageNo > PageCount());
     auto pi = pages[pageNo - 1];
     if (pi->gotAllElements) {
         return pi->allElements;

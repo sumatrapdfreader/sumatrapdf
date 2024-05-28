@@ -92,18 +92,18 @@ bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const {
 }
 
 DisplayModel* SumatraUIAutomationDocumentProvider::GetDM() {
-    CrashIf(!IsDocumentLoaded());
-    CrashIf(!dm);
+    ReportIf(!IsDocumentLoaded());
+    ReportIf(!dm);
     return dm;
 }
 
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage() {
-    CrashIf(!IsDocumentLoaded());
+    ReportIf(!IsDocumentLoaded());
     return child_first;
 }
 
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage() {
-    CrashIf(!IsDocumentLoaded());
+    ReportIf(!IsDocumentLoaded());
     return child_last;
 }
 
@@ -122,7 +122,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef() {
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release() {
     LONG res = InterlockedDecrement(&refCount);
-    CrashIf(res < 0);
+    ReportIf(res < 0);
     if (0 == res) {
         delete this;
     }
@@ -175,7 +175,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     LONG rId[] = {(LONG)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID};
     for (LONG i = 0; i < 2; i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
-        CrashIf(FAILED(hr));
+        ReportIf(FAILED(hr));
     }
 
     *pRetVal = psa;
@@ -305,7 +305,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
 
     LONG index = 0;
     HRESULT hr = SafeArrayPutElement(psa, &index, selection);
-    CrashIf(FAILED(hr));
+    ReportIf(FAILED(hr));
     // the array now owns the selection
     selection->Release();
 
@@ -331,7 +331,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
         }
         it = it->sibling_next;
     }
-    CrashIf(ULONG_MAX == rangeArray.size());
+    ReportIf(ULONG_MAX == rangeArray.size());
 
     SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.size());
     if (!psa) {
@@ -343,7 +343,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
 
     for (LONG i = 0; i < (LONG)rangeArray.size(); i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, rangeArray[i]);
-        CrashIf(FAILED(hr));
+        ReportIf(FAILED(hr));
         rangeArray[i]->Release();
     }
 

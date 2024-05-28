@@ -1074,7 +1074,7 @@ Insets DefaultInsets() {
 }
 
 Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
-    CrashIf(top < 0);
+    ReportIf(top < 0);
     if (right == -1) {
         // only first given, consider all to be the same
         right = top;
@@ -1086,7 +1086,7 @@ Insets DpiScaledInsets(HWND hwnd, int top, int right, int bottom, int left) {
         bottom = top;
         left = right;
     }
-    CrashIf(left == -1);
+    ReportIf(left == -1);
     Insets res = {DpiScale(hwnd, top), DpiScale(hwnd, right), DpiScale(hwnd, bottom), DpiScale(hwnd, left)};
     return res;
 }
@@ -1194,18 +1194,18 @@ void TableLayout::SetBounds(Rect) {
 }
 
 void TableLayout::SetSize(int rows, int cols) {
-    CrashIf(cells);     // TODO: maybe allow re-sizing
-    CrashIf(rows <= 0); // TODO: maybe allow empty
-    CrashIf(cols <= 0); // TODO: maybe allow empty
+    ReportIf(cells);     // TODO: maybe allow re-sizing
+    ReportIf(rows <= 0); // TODO: maybe allow empty
+    ReportIf(cols <= 0); // TODO: maybe allow empty
     int n = rows * cols;
     cells = AllocArray<Cell>(n);
     maxColWidths = AllocArray<int>(cols);
 }
 
 int TableLayout::CellIdx(int row, int col) {
-    CrashIf(!cells);
-    CrashIf(row < 0 || row >= rows);
-    CrashIf(col < 0 || col >= cols);
+    ReportIf(!cells);
+    ReportIf(row < 0 || row >= rows);
+    ReportIf(col < 0 || col >= cols);
     int idx = col * cols + row;
     return idx;
 }

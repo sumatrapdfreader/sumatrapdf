@@ -44,7 +44,7 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer {
   public:
     Pdfsync(const char* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
-        CrashIf(!str::EndsWithI(syncfilename, ".pdfsync"));
+        ReportIf(!str::EndsWithI(syncfilename, ".pdfsync"));
     }
 
     int DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line, int* col) override;
@@ -68,7 +68,7 @@ class SyncTex : public Synchronizer {
     SyncTex(const char* syncfilename, EngineBase* engineIn) : Synchronizer(syncfilename) {
         engine = engineIn;
         scanner = nullptr;
-        CrashIf(!str::EndsWithI(syncfilename, ".synctex"));
+        ReportIf(!str::EndsWithI(syncfilename, ".synctex"));
     }
 
     ~SyncTex() override {
@@ -364,7 +364,7 @@ int Pdfsync::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     cmp.record = selected_record;
     PdfsyncLine* found =
         (PdfsyncLine*)bsearch(&cmp, lines.LendData(), lines.size(), sizeof(PdfsyncLine), cmpLineRecords);
-    CrashIf(!found);
+    ReportIf(!found);
     if (!found) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }

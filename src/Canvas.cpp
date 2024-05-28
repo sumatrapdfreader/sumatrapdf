@@ -89,7 +89,7 @@ void UpdateDeltaPerLine() {
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
 static void OnVScroll(MainWindow* win, WPARAM wp) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
 
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
@@ -154,7 +154,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 }
 
 static void OnHScroll(MainWindow* win, WPARAM wp) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
 
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
@@ -307,7 +307,7 @@ static bool gShowAnnotationNotification = true;
 
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     DisplayModel* dm = win->AsFixed();
-    CrashIf(!dm);
+    ReportIf(!dm);
 
     if (win->InPresentation()) {
         if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
@@ -471,7 +471,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     if (isMoveableAnnot) {
         StartAnnotationDrag(win, annot, pt);
     } else {
-        CrashIf(win->linkOnLastButtonDown);
+        ReportIf(win->linkOnLastButtonDown);
         IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
         if (pageEl) {
             if (pageEl->Is(kindPageElementDest)) {
@@ -502,7 +502,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 
 static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
-    CrashIf(!dm);
+    ReportIf(!dm);
     auto ma = win->mouseAction;
     if (MouseAction::None == ma || IsRightDragging(win)) {
         return;
@@ -691,7 +691,7 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
     } else if (win->mouseAction != MouseAction::None) {
         return;
     }
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
 
     SetFocus(win->hwndFrame);
 
@@ -702,7 +702,7 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
 }
 
 static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     if (!IsRightDragging(win)) {
         return;
     }
@@ -883,7 +883,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
 }
 
 static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
-    CrashIf(!win->AsFixed());
+    ReportIf(!win->AsFixed());
     if (!win->AsFixed()) {
         return;
     }
@@ -970,7 +970,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (!pageInfo || 0.0f == pageInfo->visibleRatio) {
             continue;
         }
-        CrashIf(!pageInfo->shown);
+        ReportIf(!pageInfo->shown);
         if (!pageInfo->shown) {
             continue;
         }
@@ -1121,7 +1121,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
 }
 
 static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
-    CrashIf(win->hwndCanvas != hwnd);
+    ReportIf(win->hwndCanvas != hwnd);
     if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();
     }
@@ -1851,7 +1851,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     MainWindow* win = FindMainWindowByHwnd(hwnd);
     switch (msg) {
         case WM_DROPFILES:
-            CrashIf(lp != 0 && lp != 1);
+            ReportIf(lp != 0 && lp != 1);
             OnDropFiles(win, (HDROP)wp, !lp);
             return 0;
 

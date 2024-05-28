@@ -186,8 +186,8 @@ static int FzGetPageNo(fz_context* ctx, fz_document* doc, fz_link* link, fz_outl
 
 static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* doc, fz_link* link,
                                                  fz_outline* outline) {
-    CrashIf(link && outline);
-    CrashIf(!link && !outline);
+    ReportIf(link && outline);
+    ReportIf(!link && !outline);
     char* uri = FzGetURL(link, outline);
 
     const char* maybePath = (const char*)uri;
@@ -265,7 +265,7 @@ static bool IsPointInRect(fz_rect rect, fz_point pt) {
 fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
-    CrashIf(0 != mediabox.x0 || 0 != mediabox.y0);
+    ReportIf(0 != mediabox.x0 || 0 != mediabox.y0);
     rotation = (rotation + 360) % 360;
     if (90 == rotation) {
         ctm = fz_pre_translate(ctm, 0, -mediabox.y1);
@@ -275,7 +275,7 @@ fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
         ctm = fz_pre_translate(ctm, -mediabox.x1, 0);
     }
 
-    CrashIf(fz_matrix_expansion(ctm) <= 0);
+    ReportIf(fz_matrix_expansion(ctm) <= 0);
     if (fz_matrix_expansion(ctm) == 0) {
         return fz_identity;
     }
@@ -285,7 +285,7 @@ fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
 
 // TODO: maybe make dpi a float as well
 static float DpiScale(float x, int dpi) {
-    CrashIf(dpi < 70.f);
+    ReportIf(dpi < 70.f);
     // TODO: maybe implement step scaling like mupdf
     float res = x * (float)dpi;
     res = res / 96.f;
@@ -477,10 +477,10 @@ static void FzStreamFingerprint(fz_context* ctx, fz_stream* stm, u8 digest[16]) 
         fz_report_error(ctx);
         return;
     }
-    CrashIf(nullptr == buf);
+    ReportIf(nullptr == buf);
     u8* data;
     size_t size = fz_buffer_extract(ctx, buf, &data);
-    CrashIf((size_t)fileLen != size);
+    ReportIf((size_t)fileLen != size);
     fz_drop_buffer(ctx, buf);
 
     fz_md5 md5;
@@ -498,7 +498,7 @@ static ByteSlice FzExtractStreamData(fz_context* ctx, fz_stream* stream) {
 
     u8* data = nullptr;
     size_t size = fz_buffer_extract(ctx, buf, &data);
-    CrashIf((size_t)fileLen != size);
+    ReportIf((size_t)fileLen != size);
     fz_drop_buffer(ctx, buf);
     if (!data || size == 0) {
         return {};
@@ -598,7 +598,7 @@ static WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
         block = block->next;
     }
 
-    CrashIf(content.size() != rects.size());
+    ReportIf(content.size() != rects.size());
 
     if (coordsOut) {
         *coordsOut = rects.StealData();
@@ -981,7 +981,7 @@ static bool RectFullyContains(RectF r1, RectF r2) {
 // if an elements fully obscures another, remove it from the list
 static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
     int n = els.Size();
-    CrashIf(n < 2);
+    ReportIf(n < 2);
     for (int i = 0; i < n; i++) {
         RectF r1 = els[i]->GetRect();
         for (int j = 0; j < n; j++) {
@@ -1014,7 +1014,7 @@ Encore:
     }
     bool didRemove = RemoveHeWhoFullyContains(els);
     if (didRemove) {
-        CrashIf(els.Size() != n - 1);
+        ReportIf(els.Size() != n - 1);
         goto Encore;
     }
     return els[0];
@@ -1225,8 +1225,8 @@ static fz_link* FixupPageLinks(fz_link* root) {
         if (link->rect.y0 > link->rect.y1) {
             std::swap(link->rect.y0, link->rect.y1);
         }
-        CrashIf(link->rect.x1 < link->rect.x0);
-        CrashIf(link->rect.y1 < link->rect.y0);
+        ReportIf(link->rect.x1 < link->rect.x0);
+        ReportIf(link->rect.y1 < link->rect.y0);
     }
     return new_root;
 }
@@ -1528,7 +1528,7 @@ static Vec<ContextThreadID>* gPerThreadContexts;
 static CRITICAL_SECTION gPerThreadContextsCs;
 
 void InitializeEngineMupdf() {
-    CrashIf(gPerThreadContexts);
+    ReportIf(gPerThreadContexts);
     InitializeCriticalSection(&gPerThreadContextsCs);
     gPerThreadContexts = new Vec<ContextThreadID>();
 }
@@ -1687,7 +1687,7 @@ const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
     if (streamNoStr) {
         char* rest = (char*)str::Parse(streamNoStr, ":%d", &streamNo);
         // there shouldn't be any left unparsed data
-        CrashIf(!rest);
+        ReportIf(!rest);
         if (!rest) {
             streamNo = -1;
         }
@@ -1806,7 +1806,7 @@ static ByteSlice PalmDocToHTML(const char* path) {
 bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     const char* pathA = path;
     auto ctx = Ctx();
-    CrashIf(FilePath() || _doc || !ctx);
+    ReportIf(FilePath() || _doc || !ctx);
     SetFilePath(path);
 
     auto ext = path::GetExtTemp(path);
@@ -1928,7 +1928,7 @@ font-family: "Consolas";
 // TODO: need to do stuff to support .txt etc.
 bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     auto ctx = Ctx();
-    CrashIf(FilePath() || _doc || !ctx);
+    ReportIf(FilePath() || _doc || !ctx);
     if (!ctx) {
         return false;
     }
@@ -2327,7 +2327,7 @@ bool EngineMupdf::FinishLoading() {
     }
 
     // TODO: support javascript
-    CrashIf(pdf_js_supported(ctx, pdfdoc));
+    ReportIf(pdf_js_supported(ctx, pdfdoc));
 
     return true;
 }
@@ -2394,7 +2394,7 @@ TocItem* EngineMupdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& id
             root = item;
             curr = item;
         } else {
-            CrashIf(!curr);
+            ReportIf(!curr);
             if (curr) {
                 curr->next = item;
             }
@@ -2521,7 +2521,7 @@ IPageDestination* EngineMupdf::GetNamedDest(const char* name) {
 // return a page but only if is fully loaded
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
     ScopedCritSec scope(&pagesAccess);
-    CrashIf(pageNo < 1 || pageNo > pageCount);
+    ReportIf(pageNo < 1 || pageNo > pageCount);
     FzPageInfo* pageInfo = pages[pageNo - 1];
     if (!pageInfo->page || !pageInfo->fullyLoaded) {
         return nullptr;
@@ -2701,7 +2701,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     // TODO: minimize time spent under pagesAccess when fully loading
     ScopedCritSec scope(&pagesAccess);
 
-    CrashIf(pageNo < 1 || pageNo > pageCount);
+    ReportIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = pages[pageIdx];
 
@@ -2743,7 +2743,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
         return pageInfo;
     }
 
-    CrashIf(pageInfo->pageNo != pageNo);
+    ReportIf(pageInfo->pageNo != pageNo);
 
     pageInfo->fullyLoaded = true;
 
@@ -2981,9 +2981,9 @@ Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
 }
 
 void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkHandler) {
-    CrashIf(kindDestinationMupdf != dest->GetKind());
+    ReportIf(kindDestinationMupdf != dest->GetKind());
     PageDestinationMupdf* link = (PageDestinationMupdf*)dest;
-    CrashIf(!(link->outline || link->link));
+    ReportIf(!(link->outline || link->link));
     const char* uri = link->outline ? link->outline->uri : nullptr;
     if (!link->outline) {
         uri = link->link->uri;
@@ -3013,7 +3013,7 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     }
     if (pageNo < 0) {
         // TODO: more?
-        // CrashIf(true);
+        // ReportIf(true);
         return;
     }
 
@@ -3041,7 +3041,7 @@ bool EngineMupdf::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) 
 }
 
 RenderedBitmap* EngineMupdf::GetImageForPageElement(IPageElement* ipel) {
-    CrashIf(kindPageElementImage != ipel->GetKind());
+    ReportIf(kindPageElementImage != ipel->GetKind());
     auto pel = (PageElementImage*)ipel;
     auto r = pel->rect;
     int pageNo = pel->pageNo;
@@ -3087,8 +3087,8 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     bool outOfBounds = imageIdx >= images.Size();
     fz_rect imgRect = images.at(imageIdx)->rect;
     bool badRect = ToRectF(imgRect) != rect;
-    CrashIf(outOfBounds);
-    CrashIf(badRect);
+    ReportIf(outOfBounds);
+    ReportIf(badRect);
     if (outOfBounds || badRect) {
         return nullptr;
     }
@@ -3096,7 +3096,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     ScopedCritSec scope(ctxAccess);
 
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
-    CrashIf(!image);
+    ReportIf(!image);
     if (!image) {
         return nullptr;
     }
@@ -3276,7 +3276,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
             fz_report_error(ctx);
             continue;
         }
-        CrashIf(!name || !type || !encoding);
+        ReportIf(!name || !type || !encoding);
 
         str::Str info;
         if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0)) {
@@ -3375,7 +3375,7 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
             int n = pdf_array_len(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"));
             for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, pdfInfo, "OutputIntents"), i);
-                CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
+                ReportIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
                 const char* s = pdf_to_name(ctx, intent) + 4;
                 fstruct.Append(s);
             }
@@ -3492,7 +3492,7 @@ const pdf_write_options pdf_default_write_options2 = {
 // if filePath is not given, we save under the same name
 // TODO: if the file is locked, this might fail.
 bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc) {
-    CrashIf(!engine);
+    ReportIf(!engine);
     if (!engine) {
         return false;
     }
@@ -3750,7 +3750,7 @@ ByteSlice EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
 // if an elements fully obscures another, remove it from the list
 static bool RemoveHeWhoFullyContains(Vec<Annotation*>& els) {
     int n = els.Size();
-    CrashIf(n < 2);
+    ReportIf(n < 2);
     for (int i = 0; i < n; i++) {
         RectF r1 = els[i]->bounds;
         for (int j = 0; j < n; j++) {
@@ -3805,7 +3805,7 @@ Encore:
     }
     bool didRemove = RemoveHeWhoFullyContains(els);
     if (didRemove) {
-        CrashIf(els.Size() != n - 1);
+        ReportIf(els.Size() != n - 1);
         goto Encore;
     }
     return els[0];
@@ -3832,7 +3832,7 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
         return;
     }
     int pageNo = annot->pageNo;
-    CrashIf(pageNo < 1 || pageNo > e->pageCount);
+    ReportIf(pageNo < 1 || pageNo > e->pageCount);
     int pageIdx = pageNo - 1;
 
     // EngineMupdf is the ultimate source of truth for Annotation* list
@@ -3848,20 +3848,20 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     if (change == AnnotationChange::Remove) {
         int sizeBefore = pageInfo->annotations.Size();
         int removedPos = pageInfo->annotations.Remove(annot);
-        CrashIf(removedPos < 0); // must exist
+        ReportIf(removedPos < 0); // must exist
         int sizeNow = pageInfo->annotations.Size();
-        CrashIf(sizeBefore != sizeNow + 1);
+        ReportIf(sizeBefore != sizeNow + 1);
         ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
         int sizeBefore = pageInfo->annotations.Size();
         int pos = pageInfo->annotations.Find(annot);
-        CrashIf(pos >= 0); // shouldn't exist
+        ReportIf(pos >= 0); // shouldn't exist
         pageInfo->annotations.Append(annot);
         int sizeNow = pageInfo->annotations.Size();
-        CrashIf(sizeBefore != sizeNow - 1);
+        ReportIf(sizeBefore != sizeNow - 1);
         ValidateAnnotationsInSync(e, pageInfo);
     } else {
-        CrashIf(change != AnnotationChange::Modify);
+        ReportIf(change != AnnotationChange::Modify);
     }
     auto ctx = e->Ctx();
     RebuildCommentsFromAnnotations(ctx, pageInfo);
@@ -3870,8 +3870,8 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
 
 // creates Annotation wrapper around pdf_annot
 Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pageNo) {
-    CrashIf(pageNo < 1);
-    CrashIf(!engine->pdfdoc);
+    ReportIf(pageNo < 1);
+    ReportIf(!engine->pdfdoc);
     ScopedCritSec cs(engine->ctxAccess);
 
     AnnotationType typ = AnnotationType::Unknown;

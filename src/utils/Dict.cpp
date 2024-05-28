@@ -85,7 +85,7 @@ struct HashTable {
 };
 
 static HashTable* NewHashTable(size_t size, Allocator* allocator) {
-    CrashIf(!allocator); // we'll leak otherwise
+    ReportIf(!allocator); // we'll leak otherwise
     HashTable* h = Allocator::AllocArray<HashTable>(allocator, 1);
     // number of hash table entries should be power of 2
     size = RoundToPowerOf2(size);
@@ -103,7 +103,7 @@ static void DeleteHashTable(HashTable* h) {
 
 static void HashTableResize(HashTable* h, HasherComparator* hc) {
     size_t newSize = RoundToPowerOf2(h->nEntries + 1);
-    CrashIf(newSize <= h->nEntries);
+    ReportIf(newSize <= h->nEntries);
     HashTableEntry** newEntries = AllocArray<HashTableEntry*>(newSize);
     HashTableEntry *e, *next;
     size_t hash, pos;
@@ -123,7 +123,7 @@ static void HashTableResize(HashTable* h, HasherComparator* hc) {
     h->nEntries = newSize;
     h->nResizes += 1;
 
-    CrashIf(h->nUsed >= (h->nEntries * 3) / 2);
+    ReportIf(h->nUsed >= (h->nEntries * 3) / 2);
 }
 
 // micro optimization: this is called often, so we want this check inlined. Resizing logic
@@ -198,7 +198,7 @@ static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintp
     e->next = h->freeList;
     h->freeList = e;
     *removedValOut = e->val;
-    CrashIf(0 == h->nUsed);
+    ReportIf(0 == h->nUsed);
     h->nUsed -= 1;
     return true;
 }

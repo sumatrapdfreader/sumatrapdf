@@ -37,12 +37,12 @@ void TestUngzip() {
     const char* pathGz = R"(C:\Users\kjk\Downloads\AUTOSAR_TPS_SoftwareComponentTemplate.synctex.gz)";
     const char* path = R"(C:\Users\kjk\Downloads\AUTOSAR_TPS_SoftwareComponentTemplate.synctex)";
     ByteSlice uncomprFile = file::ReadFile(path);
-    CrashIf(uncomprFile.empty());
+    ReportIf(uncomprFile.empty());
     ByteSlice compr = file::ReadFile(pathGz);
-    CrashIf(compr.empty());
+    ReportIf(compr.empty());
     ByteSlice uncompr = Ungzip(compr);
     bool same = IsEqual(uncomprFile, uncompr);
-    CrashIf(!same);
+    ReportIf(!same);
 }
 
 struct BrowserTestWnd : Wnd {
@@ -84,7 +84,7 @@ void TestBrowser() {
         // TODO: if set, navigate to url doesn't work
         // args.visible = false;
         HWND hwnd = w->CreateCustom(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
     }
 
     {
@@ -97,7 +97,7 @@ void TestBrowser() {
         dy = rc.dy;
         args.pos = {10, 10, dx - 20, dy - 20};
         HWND hwnd = w->webView->Create(args);
-        CrashIf(!hwnd);
+        ReportIf(!hwnd);
         w->webView->SetIsVisible(true);
     }
 

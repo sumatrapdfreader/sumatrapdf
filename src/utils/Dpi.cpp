@@ -47,7 +47,7 @@ int DpiGetForHwnd(HWND hwnd) {
         uint dpi = DynGetDpiForWindow(hwnd);
         // returns 0 for HWND_DESKTOP
         if (dpi > 0) {
-            CrashIf(dpi < 72);
+            ReportIf(dpi < 72);
             return (int)dpi;
         }
     }

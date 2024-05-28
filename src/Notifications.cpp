@@ -212,7 +212,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
 }
 
 void NotificationWnd::UpdateProgress(int current, int total) {
-    CrashIf(total <= 0);
+    ReportIf(total <= 0);
     if (total <= 0) {
         total = 1;
     }
@@ -387,7 +387,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 }
 
 void NotificationWnd::OnTimer(UINT_PTR timerId) {
-    CrashIf(kNotifTimerTimeoutId != timerId);
+    ReportIf(kNotifTimerTimeoutId != timerId);
     // TODO a better way to delete myself
     if (wndRemovedCb) {
         uitask::Post(TaskNotifOnTimerRemove, [this] { wndRemovedCb(this); });
@@ -442,7 +442,7 @@ DoDefault:
 }
 
 static void NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
-    CrashIf(groupId == nullptr);
+    ReportIf(groupId == nullptr);
     Vec<NotificationWnd*> toRemove;
     for (auto* wnd : wnds) {
         if (wnd->groupId == groupId) {
@@ -470,7 +470,7 @@ static void NotifsAdd(NotificationWnd* wnd, Kind groupId) {
 }
 
 NotificationWnd* NotifsGetForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
-    CrashIf(!groupId);
+    ReportIf(!groupId);
     for (auto* wnd : wnds) {
         if (wnd->groupId == groupId) {
             return wnd;
@@ -480,7 +480,7 @@ NotificationWnd* NotifsGetForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
 }
 
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
-    CrashIf(!args.hwndParent);
+    ReportIf(!args.hwndParent);
 
     NotificationWnd* wnd = new NotificationWnd();
     wnd->Create(args);

@@ -189,7 +189,7 @@ bool IsEqual(const ByteSlice& d1, const ByteSlice& d2) {
     if (d1.sz == 0) {
         return true;
     }
-    CrashIf(!d1.d || !d2.d);
+    ReportIf(!d1.d || !d2.d);
     int res = memcmp(d1.d, d2.d, d1.sz);
     return res == 0;
 }
@@ -666,7 +666,7 @@ char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args) {
         int count = vsnprintf(buf, (size_t)bufCchSize, fmt, args);
         // happened in https://github.com/sumatrapdfreader/sumatrapdf/issues/878
         // when %S string had certain Unicode characters
-        CrashIf(count == -1);
+        ReportIf(count == -1);
         if (count < 0) {
             str::BufSet(buf, bufCchSize, "vsnprintf() returned -1");
             break;
@@ -1255,7 +1255,7 @@ int StrToIdxIS(SeqStrings strs, const char* toFind) {
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
 const char* IdxToStr(SeqStrings strs, int idx) {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     const char* s = strs;
     while (idx > 0) {
         Next(s);
@@ -1324,7 +1324,7 @@ static char* EnsureCap(Str* s, size_t needed) {
 }
 
 static char* MakeSpaceAt(Str* s, size_t idx, size_t count) {
-    CrashIf(count == 0);
+    ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     char* buf = EnsureCap(s, newLen);
     if (!buf) {
@@ -1409,22 +1409,22 @@ Str::~Str() {
 }
 
 char& Str::at(size_t idx) const {
-    CrashIf(idx >= (u32)len);
+    ReportIf(idx >= (u32)len);
     return els[idx];
 }
 
 char& Str::at(int idx) const {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
 char& Str::operator[](long idx) const {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
 char& Str::operator[](int idx) const {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
@@ -1499,7 +1499,7 @@ char Str::RemoveLast() {
 }
 
 char& Str::Last() const {
-    CrashIf(0 == len);
+    ReportIf(0 == len);
     return at(len - 1);
 }
 
@@ -1674,7 +1674,7 @@ static WCHAR* EnsureCap(WStr* s, size_t needed) {
 }
 
 static WCHAR* MakeSpaceAt(WStr* s, size_t idx, size_t count) {
-    CrashIf(count == 0);
+    ReportIf(count == 0);
     u32 newLen = std::max(s->len, (u32)idx) + (u32)count;
     WCHAR* buf = EnsureCap(s, newLen);
     if (!buf) {
@@ -1757,12 +1757,12 @@ WStr::~WStr() {
 }
 
 WCHAR& WStr::at(size_t idx) const {
-    CrashIf(idx >= len);
+    ReportIf(idx >= len);
     return els[idx];
 }
 
 WCHAR& WStr::at(int idx) const {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
@@ -1771,7 +1771,7 @@ WCHAR& WStr::operator[](size_t idx) const {
 }
 
 WCHAR& WStr::operator[](long idx) const {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
@@ -1780,7 +1780,7 @@ WCHAR& WStr::operator[](ULONG idx) const {
 }
 
 WCHAR& WStr::operator[](int idx) const {
-    CrashIf(idx < 0);
+    ReportIf(idx < 0);
     return at((size_t)idx);
 }
 
@@ -1849,7 +1849,7 @@ WCHAR WStr::RemoveLast() {
 }
 
 WCHAR& WStr::Last() const {
-    CrashIf(0 == len);
+    ReportIf(0 == len);
     return at(len - 1);
 }
 
@@ -2294,7 +2294,7 @@ int BufSet(char* dst, int cchDst, const char* src) {
     int toCopy = std::min(cchDst - 1, srcCchSize);
 
     errno_t err = strncpy_s(dst, (size_t)cchDst, src, (size_t)toCopy);
-    CrashIf(err || dst[toCopy] != '\0');
+    ReportIf(err || dst[toCopy] != '\0');
 
     return toCopy;
 }
@@ -2330,7 +2330,7 @@ int BufAppend(WCHAR* dst, int cchDst, const WCHAR* s) {
     int toCopy = std::min(left, srcCchSize);
 
     errno_t err = wcsncat_s(dst, cchDst, s, toCopy);
-    CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
+    ReportIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
 }
@@ -2349,7 +2349,7 @@ int BufAppend(char* dst, int dstCch, const char* s) {
     int toCopy = std::min(left, srcCchSize);
 
     errno_t err = strncat_s(dst, dstCch, s, toCopy);
-    CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
+    ReportIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
 }

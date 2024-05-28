@@ -280,7 +280,7 @@ static char* GetPDFXChangePathTemp() {
 }
 
 void DetectExternalViewers() {
-    CrashIf(gExternalViewersCount > 0); // only call once
+    ReportIf(gExternalViewersCount > 0); // only call once
 
     ExternalViewerInfo* info = nullptr;
     for (ExternalViewerInfo& i : gExternalViewers) {

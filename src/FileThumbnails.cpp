@@ -123,7 +123,7 @@ bool HasThumbnail(FileState* ds) {
 
 // takes ownership of bmp
 void SetThumbnail(FileState* ds, RenderedBitmap* bmp) {
-    CrashIf(bmp && bmp->GetSize().IsEmpty());
+    ReportIf(bmp && bmp->GetSize().IsEmpty());
     if (!ds || !bmp || bmp->GetSize().IsEmpty()) {
         delete bmp;
         return;
@@ -145,7 +145,7 @@ void SaveThumbnail(FileState* ds) {
     }
     char* thumbsPath = path::GetDirTemp(bmpPath);
     if (dir::Create(thumbsPath)) {
-        CrashIf(!str::EndsWithI(bmpPath, ".png"));
+        ReportIf(!str::EndsWithI(bmpPath, ".png"));
         Gdiplus::Bitmap bmp(ds->thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
         WCHAR* bmpPathW = ToWStrTemp(bmpPath);

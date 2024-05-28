@@ -44,7 +44,7 @@ static bool SkipQuotedString(const char*& s, const char* end) {
 }
 
 static bool SkipBlock(const char*& s, const char* end) {
-    CrashIf(s >= end || *s != '{');
+    ReportIf(s >= end || *s != '{');
     s++;
     while (s < end && *s != '}') {
         if (*s == '"' || *s == '\'') {
@@ -74,7 +74,7 @@ bool CssPullParser::NextRule() {
             ;
         }
     }
-    CrashIf(inProps && currPos < end);
+    ReportIf(inProps && currPos < end);
     if (inlineStyle || currPos == end) {
         return false;
     }
@@ -127,7 +127,7 @@ const CssSelector* CssPullParser::NextSelector() {
     while (currSel < selEnd && *currSel != ',') {
         if (*currSel == '"' || *currSel == '\'') {
             bool ok = SkipQuotedString(currSel, selEnd);
-            CrashIf(!ok);
+            ReportIf(!ok);
             sEnd = currSel;
         } else if (*currSel == '\\' && currSel < selEnd - 1) {
             currSel += 2;

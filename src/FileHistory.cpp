@@ -56,7 +56,7 @@ static int cmpOpenCount(const void* a, const void* b) {
 }
 
 void FileHistory::Append(FileState* fs) const {
-    CrashIf(!fs->filePath);
+    ReportIf(!fs->filePath);
     states->Append(fs);
 }
 
@@ -135,7 +135,7 @@ FileState* FileHistory::FindByName(const char* filePath, size_t* idxOut) const {
 }
 
 FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
-    CrashIf(!filePath);
+    ReportIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
@@ -153,7 +153,7 @@ FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
 }
 
 bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
-    CrashIf(!filePath);
+    ReportIf(!filePath);
     FileState* state = FindByPath(filePath);
     if (!state) {
         return false;
@@ -187,7 +187,7 @@ bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
 // and with all missing states filtered out
 // caller needs to delete the result (but not the contained states)
 void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
-    CrashIf(list.size() > 0);
+    ReportIf(list.size() > 0);
     size_t i = 0;
     for (FileState* ds : *states) {
         ds->index = i++;

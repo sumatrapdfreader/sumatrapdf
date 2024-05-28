@@ -113,7 +113,7 @@ void MobiFormatter::HandleTagImg(HtmlToken* t) {
 }
 
 void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
-    CrashIf(!t->IsTag());
+    ReportIf(!t->IsTag());
 
     if (Tag_P == t->tag || Tag_Blockquote == t->tag) {
         HtmlFormatter::HandleHtmlTag(t);
@@ -139,7 +139,7 @@ void MobiFormatter::HandleHtmlTag(HtmlToken* t) {
 /* EPUB-specific formatting methods */
 
 void EpubFormatter::HandleTagImg(HtmlToken* t) {
-    CrashIf(!epubDoc);
+    ReportIf(!epubDoc);
     if (t->IsEndTag()) {
         return;
     }
@@ -171,7 +171,7 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken* t) {
 }
 
 void EpubFormatter::HandleTagLink(HtmlToken* t) {
-    CrashIf(!epubDoc);
+    ReportIf(!epubDoc);
     if (t->IsEndTag()) {
         return;
     }
@@ -198,7 +198,7 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
 }
 
 void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
-    CrashIf(!epubDoc);
+    ReportIf(!epubDoc);
     if (t->IsEndTag()) {
         return;
     }
@@ -218,7 +218,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
 }
 
 void EpubFormatter::HandleHtmlTag(HtmlToken* t) {
-    CrashIf(!t->IsTag());
+    ReportIf(!t->IsTag());
     if (hiddenDepth && t->IsEndTag() && tagNesting.size() == hiddenDepth && t->tag == tagNesting.Last()) {
         hiddenDepth = 0;
         UpdateTagNesting(t);
@@ -264,7 +264,7 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
 }
 
 void Fb2Formatter::HandleTagImg(HtmlToken* t) {
-    CrashIf(!fb2Doc);
+    ReportIf(!fb2Doc);
     if (t->IsEndTag()) {
         return;
     }
@@ -338,7 +338,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
 /* standalone HTML-specific formatting methods */
 
 void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
-    CrashIf(!htmlDoc);
+    ReportIf(!htmlDoc);
     if (t->IsEndTag()) {
         return;
     }
@@ -356,7 +356,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
 }
 
 void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
-    CrashIf(!htmlDoc);
+    ReportIf(!htmlDoc);
     if (t->IsEndTag()) {
         return;
     }

@@ -57,13 +57,13 @@ void Initialize() {
     FillWndClassEx(wcex, UITASK_CLASS_NAME, WndProcTaskDispatch);
     RegisterClassEx(&wcex);
 
-    CrashIf(gTaskDispatchHwnd);
+    ReportIf(gTaskDispatchHwnd);
     gTaskDispatchHwnd = CreateWindow(UITASK_CLASS_NAME, L"UITask Dispatch Window", WS_OVERLAPPED, 0, 0, 0, 0,
                                      HWND_MESSAGE, nullptr, GetModuleHandle(nullptr), nullptr);
 }
 
 void DrainQueue() {
-    CrashIf(!gTaskDispatchHwnd);
+    ReportIf(!gTaskDispatchHwnd);
     MSG msg;
     UINT wmExecTask = GetExecuteTaskMessage();
     while (PeekMessage(&msg, gTaskDispatchHwnd, wmExecTask, wmExecTask, PM_REMOVE)) {

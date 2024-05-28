@@ -266,7 +266,7 @@ static WORD ParseVirtKey(const char* s) {
     if (idx < 0) {
         return 0;
     }
-    CrashIf(idx >= dimof(gVirtKeysIds));
+    ReportIf(idx >= dimof(gVirtKeysIds));
     WORD keyId = gVirtKeysIds[idx];
     return keyId;
 }
@@ -600,7 +600,7 @@ static HACCEL gAccelTables[3] = {
 /* returns a pointer to HACCEL so that we can update it and message loop will use
 the latest version */
 static void CreateSumatraAcceleratorTable() {
-    CrashIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
+    ReportIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
 
     int nBuiltIn = (int)dimof(gBuiltInAccelerators);
 
@@ -671,11 +671,11 @@ static void CreateSumatraAcceleratorTable() {
     gAccelsCount = nAccels;
 
     gAccelTables[0] = CreateAcceleratorTableW(gAccels, gAccelsCount);
-    CrashIf(gAccelTables[0] == nullptr);
+    ReportIf(gAccelTables[0] == nullptr);
     gAccelTables[1] = CreateAcceleratorTableW(editAccels, nEditAccels);
-    CrashIf(gAccelTables[1] == nullptr);
+    ReportIf(gAccelTables[1] == nullptr);
     gAccelTables[2] = CreateAcceleratorTableW(treeViewAccels, nTreeViewAccels);
-    CrashIf(gAccelTables[2] == nullptr);
+    ReportIf(gAccelTables[2] == nullptr);
 
     free(toFreeAccels);
 }

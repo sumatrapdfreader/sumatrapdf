@@ -100,7 +100,7 @@ TabState* NewTabState(FileState* fs) {
 }
 
 void ResetSessionState(Vec<SessionData*>* sessionData) {
-    CrashIf(!sessionData);
+    ReportIf(!sessionData);
     if (!sessionData) {
         return;
     }

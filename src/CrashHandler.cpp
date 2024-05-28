@@ -708,7 +708,7 @@ static char* BuildSymbolsUrl() {
 }
 
 void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, const char* symDir) {
-    CrashIf(gDumpEvent || gDumpThread);
+    ReportIf(gDumpEvent || gDumpThread);
 
     if (!crashDumpPath) {
         log("InstallCrashHandler: skipping because !crashDumpPath\n");

@@ -52,8 +52,8 @@ void _uploadDebugReportIfFunc(__unused bool cond, __unused const char* condStr) 
     // no-op implementation to satisfy SubmitBugReport()
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, __unused  HINSTANCE hPrevInstance, __unused  LPSTR lpCmdLine,
-                     __unused  int nCmdShow) {
+int APIENTRY WinMain(HINSTANCE hInstance, __unused HINSTANCE hPrevInstance, __unused LPSTR lpCmdLine,
+                     __unused int nCmdShow) {
     // SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
     // SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #if 0
@@ -73,7 +73,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, __unused  HINSTANCE hPrevInstance, __u
     w->initialPos = {100, 100};
     w->initialSize = {480, 640};
     bool ok = w->Create();
-    CrashIf(!ok);
+    ReportIf(!ok);
 
     auto l = CreateMainLayout(w->hwnd);
     w->onSize = [&](SizeEvent* args) {

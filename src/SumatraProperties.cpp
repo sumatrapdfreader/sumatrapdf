@@ -322,7 +322,7 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
         lineCount++;
     }
 
-    CrashIf(!(lineCount > 0 && textDy > 0));
+    ReportIf(!(lineCount > 0 && textDy > 0));
     int totalDx = leftMaxDx + kLeftRightPaddingDx + rightMaxDx;
 
     int totalDy = 4;
@@ -403,13 +403,13 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
         FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
         WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
         wcex.hIcon = LoadIconW(h, iconName);
-        CrashIf(!wcex.hIcon);
+        ReportIf(!wcex.hIcon);
         ATOM atom = RegisterClassEx(&wcex);
-        CrashIf(!atom);
+        ReportIf(!atom);
         gDidRegister = true;
     }
 
-    CrashIf(layoutData->hwnd);
+    ReportIf(layoutData->hwnd);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     auto clsName = kPropertiesWinClassName;
     auto title = ToWStrTemp(_TRA("Document Properties"));
@@ -487,7 +487,7 @@ static const char* propToName[] = {
 
 static void AddPropTranslated(PropertiesLayout* layoutData, const char* propName, const char* val) {
     const char* s = GetMatchingString(propToName, propName);
-    CrashIf(!s);
+    ReportIf(!s);
     const char* trans = trans::GetTranslation(s);
     layoutData->AddProperty(trans, val);
 }
@@ -535,7 +535,7 @@ static void AddPdfFileStructure(DocController* ctrl, PropertiesLayout* layoutDat
 }
 
 static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool extended) {
-    CrashIf(!ctrl);
+    ReportIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
     layoutData->AddProperty(_TRA("File:"), path, true);
@@ -725,7 +725,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_DESTROY:
             pl = FindPropertyWindowByHwnd(hwnd);
-            CrashIf(!pl);
+            ReportIf(!pl);
             gPropertiesWindows.Remove(pl);
             delete pl;
             break;

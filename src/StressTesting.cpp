@@ -146,7 +146,7 @@ static void BenchFile(const char* path, const char* pagesSpec) {
         }
     }
 
-    CrashIf(pagesSpec && !IsBenchPagesInfo(pagesSpec));
+    ReportIf(pagesSpec && !IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
         for (size_t i = 0; i < ranges.size(); i++) {
@@ -384,10 +384,10 @@ again:
             path = q->strings.RemoveAtFast(idx);
         });
         if (isFinished) {
-            CrashIf(path);
+            ReportIf(path);
             return nullptr;
         }
-        CrashIf(!path);
+        ReportIf(!path);
         if (!IsStressTestSupportedFile(path, fileFilter.Get())) {
             goto again;
         }
@@ -438,7 +438,7 @@ struct StressTest {
 template <typename T>
 T RemoveRandomElementFromVec(Vec<T>& v) {
     auto n = v.Size();
-    CrashIf(n <= 0);
+    ReportIf(n <= 0);
     int idx = rand() % n;
     int res = v.PopAt((size_t)idx);
     return res;
@@ -543,7 +543,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
 #if 0
     // transfer ownership of stressTest object to a new window and close the
     // current one
-    CrashIf(st != st->win->stressTest);
+    ReportIf(st != st->win->stressTest);
     if (w != st->win) {
         if (st->win->IsDocLoaded()) {
             // try to provoke a crash in RenderCache cleanup code
@@ -782,7 +782,7 @@ static void OnTimer(StressTest* st, int timerIdGot) {
     DisplayModel* dm;
     bool didRender;
 
-    CrashIf(st->timerId != timerIdGot);
+    ReportIf(st->timerId != timerIdGot);
     KillTimer(st->win->hwndFrame, st->timerId);
     if (!st->win->IsDocLoaded()) {
         if (!GoToNextFile(st)) {

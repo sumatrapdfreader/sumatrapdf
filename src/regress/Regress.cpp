@@ -7,7 +7,7 @@ are too time consuming to be part of unit tests. The tests can rely
 on presence of shared test files.
 
 Note: because it can be run as both release and debug, we can't use
-assert() or CrashIf() but ReportIf().
+assert() or ReportIf() but ReportIf().
 
 To write new regression test:
 - add a file src/regress/Regress${NN}.cpp with Regress${NN} function
@@ -65,7 +65,7 @@ static void printflush(const char* s) {
 option to specify this directory, for now just add your location(s) to the list */
 static bool FindTestFilesDir() {
     const char* dirsToCheck[] = {"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
-                            "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
+                                 "C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"};
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
         const char* dir = dirsToCheck[i];
         if (dir::Exists(dir)) {

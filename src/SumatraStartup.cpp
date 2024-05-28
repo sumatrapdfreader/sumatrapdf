@@ -131,7 +131,7 @@ void FileExistenceChecker::Run() {
     }
 
     uitask::Post(TaskHideMissingFiles, [=] {
-        CrashIf(WasCancelRequested());
+        ReportIf(WasCancelRequested());
         HideMissingFiles();
 
         gFileExistenceChecker = nullptr;
@@ -147,7 +147,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     }
     logfa("MakePluginWindow: win: 0x%p, hwndParent: 0x%x (isWindow: %d), gPluginURL: %s\n", win, hwndParent,
           (int)IsWindow(hwndParent), gPluginURL ? gPluginURL : "<nulL>");
-    CrashIf(!gPluginMode);
+    ReportIf(!gPluginMode);
 
     if (!IsWindow(hwndParent)) {
         // we validated hwndParent for validity at startup but I'm seeing cases
@@ -180,16 +180,16 @@ static bool RegisterWinClass() {
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
     wcex.hIcon = LoadIconW(h, iconName);
-    CrashIf(!wcex.hIcon);
+    ReportIf(!wcex.hIcon);
     // For the extended translucent frame to be visible, we need black background.
     wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
+    ReportIf(!atom);
 
     FillWndClassEx(wcex, CANVAS_CLASS_NAME, WndProcCanvas);
     wcex.style |= CS_DBLCLKS;
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
+    ReportIf(!atom);
 
     RegisterCaptionWndClass();
     return true;
@@ -197,10 +197,10 @@ static bool RegisterWinClass() {
 
 static bool InstanceInit() {
     gCursorDrag = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSORDRAG));
-    CrashIf(!gCursorDrag);
+    ReportIf(!gCursorDrag);
 
     gBitmapReloadingCue = LoadBitmap(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDB_RELOADING_CUE));
-    CrashIf(!gBitmapReloadingCue);
+    ReportIf(!gBitmapReloadingCue);
     return true;
 }
 
@@ -810,7 +810,7 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     dialogConfig.pszMainIcon = TD_ERROR_ICON;
 
     auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-    CrashIf(hr == E_INVALIDARG);
+    ReportIf(hr == E_INVALIDARG);
     HandleRedirectedConsoleOnShutdown();
     ::ExitProcess(1);
 }
@@ -863,7 +863,7 @@ static void ShowInstallerHelp() {
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
 
     auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-    CrashIf(hr == E_INVALIDARG);
+    ReportIf(hr == E_INVALIDARG);
 }
 
 // in Installer.cpp
@@ -912,7 +912,7 @@ static void ShowNoAdminErrorMessage() {
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
 
     auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-    CrashIf(hr == E_INVALIDARG);
+    ReportIf(hr == E_INVALIDARG);
 }
 
 // non-admin process cannot send DDE messages to admin process
@@ -978,7 +978,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     const char* logFilePath = nullptr;
     Vec<SessionData*>* sessionData = nullptr;
 
-    CrashIf(hInstance != GetInstance());
+    ReportIf(hInstance != GetInstance());
 
     supressThrowFromNew();
 
@@ -1194,7 +1194,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         goto Exit;
     }
 
-    CrashIf(hInstance != GetModuleHandle(nullptr));
+    ReportIf(hInstance != GetModuleHandle(nullptr));
     if (!InstanceInit()) {
         goto Exit;
     }

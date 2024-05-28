@@ -211,7 +211,7 @@ static void SetImageProperty(Gdiplus::Bitmap* bmp, PROPID id, const char* asciiV
     item.value = (void*)asciiValue;
     item.length = (ULONG)(str::Len(asciiValue) + 1);
     Gdiplus::Status ok = bmp->SetPropertyItem(&item);
-    CrashIf(ok != Gdiplus::Ok);
+    ReportIf(ok != Gdiplus::Ok);
 }
 
 static bool IsFieldSet(const char* field, size_t len, bool isBinary = false) {
@@ -289,7 +289,7 @@ static inline void CopyPixel(u8* dst, const u8* src, int n) {
             *(u32*)dst = *(u32*)src;
             break;
         default:
-            CrashIf(true);
+            ReportIf(true);
     }
 }
 

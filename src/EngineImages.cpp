@@ -135,7 +135,7 @@ EngineImages::~EngineImages() {
     EnterCriticalSection(&cacheAccess);
     while (pageCache.size() > 0) {
         ImagePage* lastPage = pageCache.Last();
-        CrashIf(lastPage->refs != 1);
+        ReportIf(lastPage->refs != 1);
         DropPage(lastPage, true);
     }
     DeleteVecMembers(pages);
@@ -144,7 +144,7 @@ EngineImages::~EngineImages() {
 }
 
 RectF EngineImages::PageMediabox(int pageNo) {
-    CrashIf((pageNo < 1) || (pageNo > pageCount));
+    ReportIf((pageNo < 1) || (pageNo > pageCount));
     int n = pageNo - 1;
     ImagePageInfo* pi = pages[n];
     RectF& mbox = pi->mediabox;
@@ -248,7 +248,7 @@ static IPageElement* NewImageElement(int pageNo, float dx, float dy) {
 
 // don't delete the result
 Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
-    CrashIf(pageNo < 1 || pageNo > pageCount);
+    ReportIf(pageNo < 1 || pageNo > pageCount);
     auto* pi = pages[pageNo - 1];
     if (pi->allElements.size() > 0) {
         return pi->allElements;
@@ -276,7 +276,7 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
-    CrashIf(pel->GetKind() != kindPageElementImage);
+    ReportIf(pel->GetKind() != kindPageElementImage);
     auto ipel = (PageElementImage*)pel;
     int pageNo = ipel->pageNo;
     auto page = GetPage(pageNo);
@@ -334,7 +334,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
     if (!result) {
         // TODO: drop most memory intensive pages first
         if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
-            CrashIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
+            ReportIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
             DropPage(pageCache.Last(), true);
         }
         result = new ImagePage(pageNo, nullptr);
@@ -360,7 +360,7 @@ ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
 void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     ScopedCritSec scope(&cacheAccess);
     page->refs--;
-    CrashIf(page->refs < 0);
+    ReportIf(page->refs < 0);
 
     if (0 == page->refs || forceRemove) {
         pageCache.Remove(page);
@@ -417,7 +417,7 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget target) {
     }
 
     auto getPixel = [&bmpData, bytesPerPixel](int x, int y) -> uint32_t {
-        CrashIf(x < 0 || x >= (int)bmpData.Width || y < 0 || y >= (int)bmpData.Height);
+        ReportIf(x < 0 || x >= (int)bmpData.Width || y < 0 || y >= (int)bmpData.Height);
         auto data = static_cast<const uint8_t*>(bmpData.Scan0);
         unsigned idx = bytesPerPixel * x + bmpData.Stride * y;
         uint32_t rgb = (data[idx + 2] << 16) | (data[idx + 1] << 8) | data[idx];
@@ -618,7 +618,7 @@ bool EngineImage::FinishLoading() {
     auto pi = new ImagePageInfo();
     pi->mediabox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
     pages.Append(pi);
-    CrashIf(pages.size() != 1);
+    ReportIf(pages.size() != 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
     // TODO: do the same for .avif and .heic formats
@@ -700,7 +700,7 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     ReportIfNotMultiImage(this);
     const GUID* dim = imageFormat == kindFileTiff ? &FrameDimensionPage : &FrameDimensionTime;
     uint frameCount = image->GetFrameCount(dim);
-    CrashIf((unsigned int)pageNo > frameCount);
+    ReportIf((unsigned int)pageNo > frameCount);
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!frame) {
         return nullptr;
@@ -965,7 +965,7 @@ RectF EngineImageDir::LoadMediabox(int pageNo) {
 }
 
 EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
-    CrashIf(!dir::Exists(fileName));
+    ReportIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
     if (!LoadImageDir(engine, fileName)) {
         engine->Release();
@@ -1183,12 +1183,12 @@ static const char* GetExtFromArchiveType(MultiFormatArchive* cbxFile) {
         case MultiFormatArchive::Format::Tar:
             return ".cbt";
     }
-    CrashIf(true);
+    ReportIf(true);
     return nullptr;
 }
 
 bool EngineCbx::FinishLoading() {
-    CrashIf(!cbxFile);
+    ReportIf(!cbxFile);
     if (!cbxFile) {
         return false;
     }
@@ -1286,7 +1286,7 @@ TocTree* EngineCbx::GetToc() {
 }
 
 ByteSlice EngineCbx::GetImageData(int pageNo) {
-    CrashIf((pageNo < 1) || (pageNo > PageCount()));
+    ReportIf((pageNo < 1) || (pageNo > PageCount()));
     size_t fileId = files[pageNo - 1]->fileId;
     ByteSlice d = cbxFile->GetFileDataById(fileId);
     return d;

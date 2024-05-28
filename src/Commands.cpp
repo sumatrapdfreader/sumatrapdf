@@ -23,7 +23,7 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s
     if (idx < 0) {
         return -1;
     }
-    CrashIf(idx >= dimof(gCommandIds));
+    ReportIf(idx >= dimof(gCommandIds));
     int cmdId = gCommandIds[idx];
     return (int)cmdId;
 }

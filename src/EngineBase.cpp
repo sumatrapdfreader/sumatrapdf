@@ -248,13 +248,13 @@ bool TocTree::IsChecked(TreeItem ti) {
 }
 
 void TocTree::SetHandle(TreeItem ti, HTREEITEM hItem) {
-    CrashIf(ti < 0);
+    ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
     tocItem->hItem = hItem;
 }
 
 HTREEITEM TocTree::GetHandle(TreeItem ti) {
-    CrashIf(ti < 0);
+    ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
     return tocItem->hItem;
 }
@@ -332,7 +332,7 @@ EngineBase::~EngineBase() {
 }
 
 int EngineBase::PageCount() const {
-    CrashIf(pageCount < 0);
+    ReportIf(pageCount < 0);
     return pageCount;
 }
 

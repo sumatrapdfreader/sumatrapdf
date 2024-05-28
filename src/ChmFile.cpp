@@ -96,7 +96,7 @@ static char* GetCharZ(const ByteSlice& d, size_t off) {
     if (off >= len) {
         return nullptr;
     }
-    CrashIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
+    ReportIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
     u8* str = data + off;
     if (str::IsEmpty((const char*)str)) {
         return nullptr;
@@ -367,7 +367,7 @@ void ChmFile::GetAllPaths(StrVec* v) const {
   ... siblings ...
 */
 static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
-    CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
+    ReportIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     AutoFreeWStr name, local;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
@@ -416,7 +416,7 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
   ... siblings ...
 */
 static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, int level) {
-    CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
+    ReportIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     StrVec references;
     AutoFreeWStr keyword, name;
@@ -471,7 +471,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
 }
 
 static void WalkChmTocOrIndex(EbookTocVisitor* visitor, HtmlElement* list, uint cp, bool isIndex, int level = 1) {
-    CrashIf(Tag_Ul != list->tag);
+    ReportIf(Tag_Ul != list->tag);
 
     // some broken ToCs wrap every <li> into its own <ul>
     for (; list && Tag_Ul == list->tag; list = list->next) {
