@@ -578,7 +578,7 @@ static MenuDef menuDefSelection[] = {
         CmdSearchSelectionWithWikipedia,
     },
     {
-        _TRN("Searche with &GoogleScholar"),
+        _TRN("Search with &Google Scholar"),
         CmdSearchSelectionWithGoogleScholar,
     },
     {
@@ -619,7 +619,7 @@ static MenuDef menuDefMainSelection[] = {
         CmdSearchSelectionWithWikipedia,
     },
     {
-        _TRN("Searche with &GoogleScholar"),
+        _TRN("Search with &Google Scholar"),
         CmdSearchSelectionWithGoogleScholar,
     },
     {
