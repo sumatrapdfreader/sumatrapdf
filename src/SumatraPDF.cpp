@@ -4670,15 +4670,16 @@ static bool NeedsURLEncoding(WCHAR c) {
 }
 #endif
 
-static TempWStr URLEncodeTemp(const WCHAR* s) {
+static TempStr URLEncodeTemp(const char* s) {
+    TempWStr ws = ToWStrTemp(s);
     WCHAR buf[INTERNET_MAX_URL_LENGTH + 16]{}; // +16 jic
     DWORD cchSizeInOut = dimof(buf) - 1;
     DWORD flags = URL_ESCAPE_AS_UTF8;
-    HRESULT hr = UrlEscapeW(s, buf, &cchSizeInOut, flags);
+    HRESULT hr = UrlEscapeW(ws, buf, &cchSizeInOut, flags);
     if (FAILED(hr)) {
         return nullptr;
     }
-    return str::DupTemp(buf);
+    return ToUtf8Temp(buf);
 #if 0
     str::WStr res;
     size_t n = sv.size();
@@ -4697,10 +4698,10 @@ static TempWStr URLEncodeTemp(const WCHAR* s) {
 #endif
 }
 
-constexpr const WCHAR* kUserLangStr = L"${userlang}";
-constexpr const WCHAR* kSelectionStr = L"${selection}";
+constexpr const char* kUserLangStr = "${userlang}";
+constexpr const char* kSelectionStr = "${selection}";
 
-static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) {
+static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
     }
@@ -4712,26 +4713,18 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const WCHAR* urlPattern) 
     }
 #endif
 
+    // TODO: limit the size of the selection to e.g. 1 kB?
     bool isTextOnlySelectionOut; // if false, a rectangular selection
     TempStr selText = GetSelectedTextTemp(tab, "\n", isTextOnlySelectionOut);
     if (!selText) {
         return;
     }
-    // TODO: limit the size of the selection to e.g. 1 kB?
-    TempWStr selTextW = ToWStrTemp(selText);
-    TempWStr encodedSelection = URLEncodeTemp(selTextW);
-    str::WStr url(urlPattern);
-    // assume that user might typo and use e.g. ${userLang} in url
-    // so replace with cannonical lower-cased version
-    const WCHAR* pos = str::FindI(url.LendData(), kUserLangStr);
-    if (pos) {
-        memcpy((void*)pos, (void*)kUserLangStr, str::Len(kUserLangStr) * sizeof(kUserLangStr[0]));
-    }
-    Replace(url, kSelectionStr, encodedSelection);
+    TempStr encodedSelection = URLEncodeTemp(selText);
+    // ${userLang} and and ${selectin} are typed by user in settings file
+    // to be shomewhat resilient against typos, we'll accept a different case
     const char* lang = trans::GetCurrentLangCode();
-    auto langW = ToWStrTemp(lang);
-    Replace(url, kUserLangStr, langW);
-    char* uri = ToUtf8Temp(url.Get());
+    TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, lang);
+    uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);
     LaunchBrowser(uri);
 }
 
@@ -5125,11 +5118,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             logf("FrameOnCommand: missing selectedSH for wmId %d\n", wmId);
             return 0;
         }
-        WCHAR* url = ToWStrTemp(selectedSH->url);
+        const char* url = selectedSH->url;
         // try to auto-fix url
-        bool isValidURL = str::Find(url, L"://") != nullptr;
+        bool isValidURL = str::Find(url, "://") != nullptr;
         if (!isValidURL) {
-            url = str::JoinTemp(L"https://", url);
+            url = str::JoinTemp("https://", url);
         }
         LaunchBrowserWithSelection(tab, url);
         return 0;
@@ -5631,27 +5624,27 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdTranslateSelectionWithGoogle:
             LaunchBrowserWithSelection(
-                tab, L"https://translate.google.com/?op=translate&sl=auto&tl=${userlang}&text=${selection}");
+                tab, "https://translate.google.com/?op=translate&sl=auto&tl=${userlang}&text=${selection}");
             break;
 
         case CmdTranslateSelectionWithDeepL:
-            LaunchBrowserWithSelection(tab, L"https://www.deepl.com/translator#-/${userlang}/${selection}");
+            LaunchBrowserWithSelection(tab, "https://www.deepl.com/translator#-/${userlang}/${selection}");
             break;
 
         case CmdSearchSelectionWithGoogle:
-            LaunchBrowserWithSelection(tab, L"https://www.google.com/search?q=${selection}");
+            LaunchBrowserWithSelection(tab, "https://www.google.com/search?q=${selection}");
             break;
 
         case CmdSearchSelectionWithBing:
-            LaunchBrowserWithSelection(tab, L"https://www.bing.com/search?q=${selection}");
+            LaunchBrowserWithSelection(tab, "https://www.bing.com/search?q=${selection}");
             break;
 
         case CmdSearchSelectionWithWikipedia:
-            LaunchBrowserWithSelection(tab, L"https://wikipedia.org/w/index.php?search=${selection}");
+            LaunchBrowserWithSelection(tab, "https://wikipedia.org/w/index.php?search=${selection}");
             break;
 
         case CmdSearchSelectionWithGoogleScholar:
-            LaunchBrowserWithSelection(tab, L"https://scholar.google.com/scholar?q=${selection}");
+            LaunchBrowserWithSelection(tab, "https://scholar.google.com/scholar?q=${selection}");
             break;
 
         case CmdCopySelection:
