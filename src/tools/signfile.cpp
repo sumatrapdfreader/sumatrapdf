@@ -32,7 +32,7 @@ void ShowUsage(const char* exeName) {
     ErrOut1("");
 
     HCERTSTORE hStore = CertOpenSystemStore(NULL, L"My");
-    CrashAlwaysIf(!hStore);
+    ReportIf(!hStore);
     bool hasCert = false;
     PCCERT_CONTEXT pCertCtx = nullptr;
     while ((pCertCtx = CertEnumCertificatesInStore(hStore, pCertCtx)) != nullptr) {
@@ -109,7 +109,7 @@ int main() {
 
     // find certificate
     hStore = CertOpenSystemStoreW(NULL, L"My");
-    CrashAlwaysIf(!hStore);
+    ReportIf(!hStore);
 
 #define QuitIfNot(cond, msg, ...) \
     if (!(cond)) {                \

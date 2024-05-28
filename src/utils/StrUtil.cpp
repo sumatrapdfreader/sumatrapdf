@@ -1059,7 +1059,7 @@ bool IsAlNum(char c) {
    // TODO: this should be utf8-aware, see e.g. cbx\bug1234-*.cbr file
 */
 int CmpNatural(const char* a, const char* b) {
-    CrashAlwaysIf(!a || !b);
+    ReportIf(!a || !b);
     const char *aStart = a, *bStart = b;
     int diff = 0;
 
@@ -1315,7 +1315,7 @@ static char* EnsureCap(Str* s, size_t needed) {
         newEls = (char*)Allocator::Realloc(s->allocator, s->els, allocSize);
     }
     if (!newEls) {
-        CrashAlwaysIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
+        ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
         return nullptr;
     }
     s->els = newEls;
@@ -1665,7 +1665,7 @@ static WCHAR* EnsureCap(WStr* s, size_t needed) {
     }
 
     if (!newEls) {
-        CrashAlwaysIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
+        ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
         return nullptr;
     }
     s->els = newEls;
@@ -2284,7 +2284,7 @@ size_t NormalizeWSInPlace(WCHAR* str) {
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
 int BufSet(char* dst, int cchDst, const char* src) {
-    CrashAlwaysIf(0 == cchDst || !dst);
+    ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
         return 0;
@@ -2300,7 +2300,7 @@ int BufSet(char* dst, int cchDst, const char* src) {
 }
 
 int BufSet(WCHAR* dst, int cchDst, const WCHAR* src) {
-    CrashAlwaysIf(0 == cchDst || !dst);
+    ReportIf(0 == cchDst || !dst);
     if (!src) {
         *dst = 0;
         return 0;
@@ -2319,7 +2319,7 @@ int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
 }
 
 int BufAppend(WCHAR* dst, int cchDst, const WCHAR* s) {
-    CrashAlwaysIf(0 == cchDst);
+    ReportIf(0 == cchDst);
 
     int currDstCchLen = str::Leni(dst);
     if (currDstCchLen + 1 >= cchDst) {
@@ -2338,7 +2338,7 @@ int BufAppend(WCHAR* dst, int cchDst, const WCHAR* s) {
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
 int BufAppend(char* dst, int dstCch, const char* s) {
-    CrashAlwaysIf(0 == dstCch);
+    ReportIf(0 == dstCch);
 
     int currDstCchLen = str::Leni(dst);
     if (currDstCchLen + 1 >= dstCch) {
@@ -2434,7 +2434,7 @@ TempStr FormatRomanNumeralTemp(int n) {
    (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
 */
 int CmpNatural(const WCHAR* a, const WCHAR* b) {
-    CrashAlwaysIf(!a || !b);
+    ReportIf(!a || !b);
     const WCHAR *aStart = a, *bStart = b;
     int diff = 0;
 

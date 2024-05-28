@@ -212,67 +212,49 @@ inline void CrashMe() {
 #pragma warning(pop)
 #endif
 
-#ifdef ENABLE_CRASH_REPORTING
-void _uploadDebugReport(const char*, bool);
-#else
-// must be a macro that expands to nothing
-// can't be a function because we might mix compilation units
-// with ENABLE_CRASH_REPORTING defined and not defined
-#define _uploadDebugReport(x, y) \
-    do {                         \
-    } while (0)
-#endif
-
-// CrashIf() is like assert() except it crashes in debug and pre-release builds.
+// ReportIf() is like assert() except it sends crash report in pre-release and debug
+// builds.
 // The idea is that assert() indicates "can't possibly happen" situation and if
 // it does happen, we would like to fix the underlying cause.
 // In practice in our testing we rarely get notified when an assert() is triggered
 // and they are disabled in builds running on user's computers.
-// Now that we have crash reporting, we can get notified about such cases if we
-// use CrashIf() instead of assert(), which we should be doing from now on.
 //
+// ReportAlwaysIf() sends a report even in release builds. This is to catch the most
+// thorny scenarios.
 // Enabling it in pre-release builds but not in release builds is trade-off between
-// shipping small executables (each CrashIf() adds few bytes of code) and having
+// shipping small executables (each ReportIf() adds few bytes of code) and having
 // more testing on user's machines and not only in our personal testing.
-// To crash uncoditionally use CrashAlwaysIf(). It should only be used in
+// To crash uncoditionally use ReportIf(). It should only be used in
 // rare cases where we really want to know a given condition happens. Before
-// each release we should audit the uses of CrashAlawysIf()
+// each release we should audit the uses of ReportAlwaysIf()
 //
-// Just as with assert(), the condition is not guaranteed to be executed
-// in some builds, so it shouldn't contain the actual logic of the code
+// The condition is always evaluated but we shouldn't rely on that.
 
-void CrashIfFunc(bool cond, const char* condStr);
+// exclude ReportIfCond() from release builds
+#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
+#undef ENABLE_CRASH_REPORTING
+#endif
 
-// trigger a crash if cond is true and we're pre-release, debug or asan build
-#define CrashIf(cond)             \
-    __analysis_assume(!(cond));   \
-    do {                          \
-        CrashIfFunc(cond, #cond); \
+#ifdef ENABLE_CRASH_REPORTING
+#define ReportIfCond(cond, condStr, isCrash, captureCallstack)      \
+    __analysis_assume(!(cond));                                     \
+    do {                                                            \
+        if (cond) {                                                 \
+            _uploadDebugReport(condStr, isCrash, captureCallstack); \
+        }                                                           \
     } while (0)
-
-// trigger a crash always, even in release builds
-#define CrashAlwaysIf(cond)     \
-    __analysis_assume(!(cond)); \
-    do {                        \
-        if (cond) {             \
-            CrashMe();          \
-        }                       \
+#else
+#define ReportIfCond(cond, x, y, z) \
+    do {                            \
+        if (cond) {                 \
+        }                           \
     } while (0)
+#endif
 
-#define ReportIf(cond)                        \
-    __analysis_assume(!(cond));               \
-    do {                                      \
-        if (cond) {                           \
-            _uploadDebugReport(#cond, false); \
-        }                                     \
-    } while (0)
-
-#define ReportIfQuick(cond)                  \
-    do {                                     \
-        if (cond) {                          \
-            _uploadDebugReport(#cond, true); \
-        }                                    \
-    } while (0)
+// TODO: replace CrashIf() with ReportIf()
+#define CrashIf(cond) ReportIfCond(cond, #cond, false, true)
+#define ReportIf(cond) ReportIfCond(cond, #cond, false, true)
+#define ReportIfQuick(cond) ReportIfCond(cond, #cond, false, false)
 
 void* AllocZero(size_t count, size_t size);
 

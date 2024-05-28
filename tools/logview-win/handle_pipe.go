@@ -11,7 +11,7 @@ import (
 )
 
 const kPipeName = "\\\\.\\pipe\\LOCAL\\ArsLexis-Logger"
-const kBufSize = 1024 * 16
+const kBufSize = 1024 * 64
 const PIPE_UNLIMITED_INSTANCES = 255
 const INVALID_HANDLE_VALUE = -1
 
@@ -29,9 +29,11 @@ func handlePipe(hPipe win.HPIPE, no int) {
 	var buf [kBufSize]byte
 	var cbBytesRead = 0
 	for {
+		// TODO: this can return "more bytes needed". I improved things by incrasing kBufSize
+		// hPipe.ReadFile() sets n to 0 if error, which is probably a mistake
 		n, err := hPipe.ReadFile(buf[:], nil)
 		if err != nil {
-			s := fmt.Sprintf("ReadFile: returned %s\n", err)
+			s := fmt.Sprintf("ReadFile: failed with '%s', n=%d\n", err, n)
 			runtime.EventsEmit(ctx, "plog", s, no)
 			break
 		}

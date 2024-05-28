@@ -106,7 +106,7 @@ bool LoadSettings() {
         ByteSlice prefsData = file::ReadFile(settingsPath);
 
         gGlobalPrefs = NewGlobalPrefs(prefsData);
-        CrashAlwaysIf(!gGlobalPrefs);
+        ReportIf(!gGlobalPrefs);
         gprefs = gGlobalPrefs;
         prefsData.Free();
     }
@@ -329,7 +329,7 @@ bool ReloadSettings() {
     CleanUpSettings();
 
     ok = LoadSettings();
-    CrashAlwaysIf(!ok || !gGlobalPrefs);
+    ReportIf(!ok || !gGlobalPrefs);
 
     // TODO: about window doesn't have to be at position 0
     if (gWindows.size() > 0 && gWindows.at(0)->IsCurrentTabAbout()) {

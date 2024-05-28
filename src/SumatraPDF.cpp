@@ -966,7 +966,7 @@ static DocController* CreateControllerForChm(const char* path, PasswordUI* pwdUI
     // advertise itself for Chm documents but could be tricked into
     // loading one nonetheless); note: this crash should never happen,
     // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
-    CrashAlwaysIf(gPluginMode);
+    ReportIf(gPluginMode);
     // if CLSID_WebBrowser isn't available, fall back on ChmEngine
     DocController* ctrl = nullptr;
     if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
@@ -1980,7 +1980,10 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
 static StrVec gFilesFailedToOpen;
 
 MainWindow* LoadDocument(LoadArgs* args) {
-    CrashAlwaysIf(gCrashOnOpen);
+    if (gCrashOnOpen) {
+        log("LoadDocument: about to call CrashMe()\n");
+        CrashMe();
+    }
 
     const char* path = args->FilePath();
     if (args->activateExisting) {
@@ -4422,7 +4425,7 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
                 return;
             default:
-                CrashAlwaysIf(true);
+                ReportIf(true);
         }
     }
     Point pt = HwndGetCursorPos(win->hwndCanvas);

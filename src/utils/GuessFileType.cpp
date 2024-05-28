@@ -141,8 +141,8 @@ static void VerifyExtsMatch() {
     if (gDidVerifyExtsMatch) {
         return;
     }
-    CrashAlwaysIf(kindFileEpub != GetKindByFileExt("foo.epub"));
-    CrashAlwaysIf(kindFileJp2 != GetKindByFileExt("foo.JP2"));
+    ReportIf(kindFileEpub != GetKindByFileExt("foo.epub"));
+    ReportIf(kindFileJp2 != GetKindByFileExt("foo.JP2"));
     gDidVerifyExtsMatch = true;
 }
 

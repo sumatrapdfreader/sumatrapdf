@@ -214,8 +214,8 @@ static bool IsNameWithNS(const char* s, size_t sLen, const char* nameToCheck) {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "xlink:href" with name="href" and any value of attrNS)
 // TODO: add proper namespace support
-bool AttrInfo::NameIsNS(const char* nameToCheck, const char* ns) const {
-    CrashIf(!ns);
+bool AttrInfo::NameIsNS(const char* nameToCheck, const char*) const {
+    // CrashIf(!ns);
     return IsNameWithNS(name, nameLen, nameToCheck);
 }
 
@@ -252,9 +252,9 @@ bool HtmlToken::NameIs(const char* nameToFind) const {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlToken::NameIsNS(const char* nameToCheck, const char* ns) const {
-    CrashIf(!ns);
-    // nLen is 'nameLen' i.e. first nLen characters of s is a name
+bool HtmlToken::NameIsNS(const char* nameToCheck, const char*) const {
+    // CrashIf(!ns);
+    //  nLen is 'nameLen' i.e. first nLen characters of s is a name
     return IsNameWithNS(s, nLen, nameToCheck);
 }
 

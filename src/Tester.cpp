@@ -58,7 +58,7 @@ static int Usage() {
 }
 
 static void MobiSaveHtml(const char* filePathBase, MobiDoc* mb) {
-    CrashAlwaysIf(!gSaveHtml);
+    ReportIf(!gSaveHtml);
 
     char* outFile = str::JoinTemp(filePathBase, "_pp.html");
 
@@ -77,7 +77,7 @@ static void MobiSaveImage(const char* filePathBase, size_t imgNo, ByteSlice img)
         return;
     }
     const char* ext = GfxFileExtFromData(img);
-    CrashAlwaysIf(!ext);
+    ReportIf(!ext);
     TempStr path = str::FormatTemp("%s_img_%d%s", filePathBase, (int)imgNo, ext);
     file::WriteFile(path, img);
 }

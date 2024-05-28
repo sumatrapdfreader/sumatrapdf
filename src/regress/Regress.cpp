@@ -7,7 +7,7 @@ are too time consuming to be part of unit tests. The tests can rely
 on presence of shared test files.
 
 Note: because it can be run as both release and debug, we can't use
-assert() or CrashIf() but CrashAlwaysIf().
+assert() or CrashIf() but ReportIf().
 
 To write new regression test:
 - add a file src/regress/Regress${NN}.cpp with Regress${NN} function

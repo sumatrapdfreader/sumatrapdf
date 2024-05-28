@@ -11,22 +11,6 @@ Kind kindNone = "none";
 // if > 1 we won't crash when memory allocation fails
 LONG gAllowAllocFailure = 0;
 
-// TODO: maybe change to NO_INLINE since now I can filter callstack
-// on the server
-void CrashIfFunc(bool cond, const char* condStr) {
-    if (!cond) {
-        return;
-    }
-    log(condStr);
-    if (IsDebuggerPresent()) {
-        DebugBreak();
-        return;
-    }
-#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
-    CrashMe();
-#endif
-}
-
 // returns previous value
 int AtomicInt::Set(int n) {
     auto res = InterlockedExchange((LONG*)&val, n);

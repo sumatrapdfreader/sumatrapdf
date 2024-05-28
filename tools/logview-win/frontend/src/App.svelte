@@ -16,6 +16,9 @@
    * @param {string} searchTerm
    */
   function matches(s, searchTerm) {
+    if (searchTerm === "") {
+      return false;
+    }
     return s.includes(searchTerm);
   }
 
@@ -24,18 +27,28 @@
    * @param {number} no
    */
   function plog(s, no) {
-    /** @type {[string, number]}*/
-    let el = [s, idx];
-    idx = idx + 1;
-    logs.push(el);
+    // a single write can contain multiple lines
+    s = s.trimEnd();
+    let lines = s.split("\n");
+    let didMatch = false;
+    for (let l of lines) {
+      /** @type {[string, number]}*/
+      let el = [l, idx];
+      idx = idx + 1;
+      logs.push(el);
+      if (matches(l, searchTerm)) {
+        filteredLogs.push(el);
+        didMatch = true;
+      }
+    }
     if (searchTerm === "") {
+      logs = logs;
       filteredLogs = logs;
       return;
     }
-    if (matches(s, searchTerm)) {
-      filteredLogs.push(el);
+    if (didMatch) {
+      filteredLogs = filteredLogs;
     }
-    filteredLogs = filteredLogs;
   }
 
   $: filterLogs(searchTerm);
@@ -109,7 +122,7 @@
     <input type="text" placeholder="search term..." bind:value={searchTerm} />
     <button class="btn-pause" on:click={pauseClicked}>{btnText}</button>
     <button on:click={clearLogs}>clear</button>
-    <div>{len(logs)} line, {len(filterLogs)} shown</div>
+    <div>{len(logs)} line, {len(filteredLogs)} shown</div>
     <div style="flex-grow: 1" />
     <a on:click|preventDefault={aboutClicked} href="#">about</a>
   </div>

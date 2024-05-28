@@ -33,7 +33,9 @@ static NO_INLINE void CalcDigestWin(const void* data, int dataSize, u8* digest, 
     ok = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashLen, &argSize, 0);
     CrashIf(sizeof(DWORD) != argSize);
     CrashIf(!ok);
-    CrashIf(digestSize != hashLen);
+    if (digestSize != hashLen) {
+        CrashIf(digestSize != hashLen);
+    }
     ok = CryptGetHashParam(hHash, HP_HASHVAL, digest, &hashLen, 0);
     CrashIf(!ok);
     CrashIf(digestSize != hashLen);

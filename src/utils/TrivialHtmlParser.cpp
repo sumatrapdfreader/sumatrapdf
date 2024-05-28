@@ -28,8 +28,8 @@ bool HtmlElement::NameIs(const char* nameIn) const {
 // for now just ignores any namespace qualifier
 // (i.e. succeeds for "opf:content" with name="content" and any value of ns)
 // TODO: add proper namespace support
-bool HtmlElement::NameIsNS(const char* nameIn, const char* ns) const {
-    CrashIf(!ns);
+bool HtmlElement::NameIsNS(const char* nameIn, const char*) const {
+    // CrashIf(!ns);
     const char* nameStart = nullptr;
     if (name) {
         nameStart = str::FindChar(name, ':');

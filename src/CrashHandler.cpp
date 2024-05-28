@@ -111,35 +111,38 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     return isWine;
 }
 
-// if reportCond this is building for ReportIf() / ReportIfQuick()
-// otherwise this is a crsah
-static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
+static char* BuildCrashInfoText(const char* condStr, bool isCrash, bool captureCallstack) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
-    if (reportCond) {
+    if (!isCrash) {
+        captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
+    }
+    if (condStr) {
         s.Append("Cond: ");
-        s.Append(reportCond);
+        s.Append(condStr);
         s.Append("\n");
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
+        s.Append("\n");
     }
 
-    GetStressTestInfo(&s);
-    s.Append("\n");
+    //    GetStressTestInfo(&s);
 
-    bool addCallstack = !noCallstack;
-    if (reportCond) {
-        // this is not a crash but debug report, we don't have an exception
-        if (addCallstack) {
+    if (gMei.ExceptionPointers) {
+        // those are only set when we capture exception
+        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
+        s.Append("\n");
+    } else {
+        // GetExceptionInfo() also adds current thread callstack
+        if (captureCallstack) {
             s.Append("\nCrashed thread:\n");
             dbghelp::GetCurrentThreadCallstack(s);
+            s.Append("\n");
         }
-    } else {
-        dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     }
 
-    s.Append("\n\n-------- Log -----------------\n\n");
+    s.Append("\n-------- Log -----------------\n\n");
     s.Append(gLogBuf->LendData());
 
     if (gSettingsFile) {
@@ -148,14 +151,16 @@ static char* BuildCrashInfoText(const char* reportCond, bool noCallstack) {
         s.Append("\n\n");
     }
 
-    if (addCallstack) {
-        dbghelp::GetAllThreadsCallstacks(s);
-        s.Append("\n");
-    }
-
+    s.Append("\n-------- Modules   ----------\n\n");
     s.Append(gModulesInfo);
     s.Append("\nModules loaded later:\n");
     GetModules(s, true);
+
+    if (captureCallstack) {
+        s.Append("\n-------- All Threads ----------\n\n");
+        dbghelp::GetAllThreadsCallstacks(s);
+        s.Append("\n");
+    }
 
     return s.StealData();
 }
@@ -164,6 +169,7 @@ static void SaveCrashInfo(const ByteSlice& d) {
     if (!gCrashFilePath) {
         return;
     }
+    dir::CreateForFile(gCrashFilePath);
     file::WriteFile(gCrashFilePath, d);
 }
 
@@ -263,10 +269,19 @@ bool CrashHandlerDownloadSymbols() {
 }
 
 bool AreSymbolsDownloaded(const char* symDir) {
-    auto path = path::JoinTemp(gSymbolsDir, "SumatraPDF.pdb");
-    bool areDownloaded = file::Exists(path);
-    logf("AreSymbolsDownloaded(), symDir: '%s', path: '%s', areDownloaded: %d\n", symDir, path, (int)areDownloaded);
-    return areDownloaded;
+    TempStr path = path::JoinTemp(symDir, "SumatraPDF.pdb");
+    if (file::Exists(path)) {
+        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
+        return true;
+    }
+    TempStr exePath = GetExePathTemp();
+    exePath = str::ReplaceTemp(exePath, ".exe", ".pdb");
+    if (file::Exists(exePath)) {
+        logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath, symDir);
+        return true;
+    }
+    logf("AreSymbolsDownloaded(): not downloaded, symDir: '%s'\n", symDir);
+    return false;
 }
 
 bool InitializeDbgHelp(bool force) {
@@ -286,7 +301,7 @@ bool InitializeDbgHelp(bool force) {
 }
 
 static bool DownloadSymbolsIfNeeded() {
-    log("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir);
+    logf("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir);
     if (!AreSymbolsDownloaded(gSymbolsDir)) {
         bool ok = CrashHandlerDownloadSymbols();
         if (!ok) {
@@ -297,85 +312,68 @@ static bool DownloadSymbolsIfNeeded() {
 }
 
 // like crash report, but can be triggered without a crash
-void _uploadDebugReport(const char* condStr, bool noCallstack) {
+void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack) {
     // we want to avoid submitting multiple reports for the same
     // condition. I'm too lazy to implement tracking this granularly
     // so only allow once submission in a given session
     static bool didSubmitDebugReport = false;
 
-    if (didSubmitDebugReport) {
-        return;
+    log("_uploadDebugReport");
+    if (condStr) {
+        log(condStr);
     }
 
-    didSubmitDebugReport = true;
     // don't send report if this is me debugging
     if (IsDebuggerPresent()) {
         DebugBreak();
         return;
     }
 
-    if (!gIsPreReleaseBuild) {
-        // only enabled for pre-release builds, don't want lots of non-crash
-        // reports from official release
+    if (didSubmitDebugReport) {
         return;
     }
+    didSubmitDebugReport = true;
 
-    if (gIsDebugBuild) {
-        // exclude debug builds. Those are most likely other people modyfing Sumatra
-        return;
+    // no longer can happen i.e. we exclude non-crashes from release builds via #ifdef
+#if 0
+    if (!isCrash) {
+        if (!gIsPreReleaseBuild) {
+            // only enabled for pre-release builds, don't want lots of non-crash
+            // reports from official release
+            return;
+        }
+
+        if (gIsDebugBuild) {
+            // exclude debug builds. Those are most likely other people modyfing Sumatra
+            return;
+        }
     }
+#endif
 
-    logf("uploadDebugReport: %s\n", condStr);
     if (!CrashHandlerCanUseNet()) {
         return;
     }
 
-    logf("_uploadDebugReport: noCallstack: %d, gSymbolPath: '%s'\n", (int)noCallstack, gSymbolPath);
+    logf("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolPath: '%s'\n", (int)isCrash,
+         (int)captureCallstack, gSymbolPath);
 
-    bool needsSymbols = !noCallstack;
-    if (needsSymbols) {
+    if (captureCallstack) {
         // we proceed even if we fail to download symbols
         DownloadSymbolsIfNeeded();
     }
 
-    auto s = BuildCrashInfoText(condStr, noCallstack);
+    auto s = BuildCrashInfoText(condStr, isCrash, captureCallstack);
     if (str::IsEmpty(s)) {
         log("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
         return;
     }
+
     ByteSlice d(s);
-    // SaveCrashInfo(d);
     UploadCrashReport(d);
+    SaveCrashInfo(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
     log(s);
     log("_uploadDebugReport() finished\n");
-}
-
-// If we can't resolve the symbols, we assume it's because we don't have symbols
-// so we'll try to download them and retry. If we can resolve symbols, we'll
-// get the callstacks etc. and submit to our server for analysis.
-void TryUploadCrashReport() {
-    log("TryUploadCrashReport()\n");
-    if (!CrashHandlerCanUseNet()) {
-        log("TryUploadCrashReport(): skipping because !CrashHandlerCanUseNet()\n");
-        return;
-    }
-
-    logf("TryUploadCrashReport: gSymbolPathW: '%s'\n", gSymbolPath);
-
-    // we preceed even if we can't download symbols or initialize dbghelp
-    DownloadSymbolsIfNeeded();
-
-    char* sv = BuildCrashInfoText(nullptr, true);
-    if (str::IsEmpty(sv)) {
-        log("TryUploadCrashReport(): skipping because !BuildCrashInfoText()\n");
-        return;
-    }
-    ByteSlice d = sv;
-    SaveCrashInfo(d);
-    UploadCrashReport(d);
-    // gCrashHandlerAllocator->Free((const void*)d.data());
-    log("TryUploadCrashReport() finished\n");
 }
 
 static DWORD WINAPI CrashDumpThread(LPVOID) {
@@ -384,7 +382,8 @@ static DWORD WINAPI CrashDumpThread(LPVOID) {
         return 0;
     }
 
-    TryUploadCrashReport();
+    log("CrashDumpThread\n");
+    _uploadDebugReport(nullptr, true, true);
 
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
@@ -403,7 +402,7 @@ static LONG WINAPI CrashDumpVectoredExceptionHandler(EXCEPTION_POINTERS* excepti
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    gReducedLogging = true;
+    //    gReducedLogging = true;
     log("CrashDumpVectoredExceptionHandler\n");
 
     static bool wasHere = false;
@@ -436,7 +435,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    gReducedLogging = true;
+    //    gReducedLogging = true;
     log("CrashDumpExceptionHandler\n");
 
     static bool wasHere = false;
@@ -609,8 +608,8 @@ dbghelp.dll should be installed with os but might be outdated
 for symbols server symsrv.dll is needed, installed with debug tools for windows
 */
 
-static bool gAddNtSymbolPath = true;
-static bool gAddSymbolServer = true;
+static bool gAddNtSymbolPath = false;
+static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static void BuildSymbolPath(const char* symDir) {

@@ -299,7 +299,7 @@ int TestLayout(HINSTANCE hInstance, int nCmdShow) {
     RegisterWinClass(hInstance);
 
     if (!CreateMainWindow(hInstance, nCmdShow)) {
-        CrashAlwaysIf(true);
+        ReportIf(true);
         return FALSE;
     }
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
