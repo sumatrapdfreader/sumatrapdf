@@ -617,10 +617,9 @@ static void BuildSymbolPath(const char* symDir) {
 
     bool symDirExists = dir::Exists(symDir);
 
-    if (symDirExists) {
-        path.Append(symDir);
-        path.Append(";");
-    }
+    // at this point symDir might not exist but we add it anyway
+    path.Append(symDir);
+    path.Append(";");
 
     // in debug builds the symbols are in the same directory as .exe
     if (gIsDebugBuild || gAddExeDir) {
