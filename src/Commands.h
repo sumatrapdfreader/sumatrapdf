@@ -46,6 +46,8 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdTranslateSelectionWithDeepL, "Translate Selection With DeepL")   \
     V(CmdSearchSelectionWithGoogle, "Search Selection with Google")       \
     V(CmdSearchSelectionWithBing, "Search Selection with Bing")           \
+    V(CmdSearchSelectionWithWikipedia, "Search Selection with Wikipedia")           \
+    V(CmdSearchSelectionWithGoogleScholar, "Search Selection with GoogleScholar")           \
     V(CmdSelectAll, "Select All")                                         \
     V(CmdNewWindow, "Open New SumatraPDF Window")                         \
     V(CmdDuplicateInNewWindow, "Open Current Document In New Window")     \
