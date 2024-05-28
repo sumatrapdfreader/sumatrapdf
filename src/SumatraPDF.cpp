@@ -4680,22 +4680,6 @@ static TempStr URLEncodeTemp(const char* s) {
         return nullptr;
     }
     return ToUtf8Temp(buf);
-#if 0
-    str::WStr res;
-    size_t n = sv.size();
-    const WCHAR* s = sv.data();
-    for (size_t i = 0; i < n; i++) {
-        WCHAR c = s[i];
-        if (NeedsURLEncoding(c)) {
-            // TODO: implement me
-            res.AppendChar(c);
-        }
-        else {
-            res.AppendChar(c);
-        }
-    }
-    return res;
-#endif
 }
 
 constexpr const char* kUserLangStr = "${userlang}";
