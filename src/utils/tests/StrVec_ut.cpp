@@ -11,7 +11,19 @@ static void strEq(const char* s1, const char* s2) {
     utassert(ok);
 }
 
-static void CheckRemoveAt(StrVec& v) {
+static void TestRandomRemove(StrVec& v) {
+    while (!v.IsEmpty()) {
+        int n = v.Size();
+        int idx = rand() % n;
+        const char* s = v.At(idx);
+        bool ok = v.Remove(s);
+        utassert(ok);
+    }
+}
+
+static void TestRemoveAt(StrVec& v) {
+    auto v2 = v;
+    TestRandomRemove(v2);
     while (v.Size() > 0) {
         int n = v.Size();
         int idx = v.Size() / 2;
@@ -75,6 +87,7 @@ static void StrVecTest1() {
         v.InsertAt(0, s);
         utassert(v.Size() == 1);
         utassert(str::Eq(v.At(0), s));
+        TestRandomRemove(v);
     }
     // order in strs
     int unsortedOrder[] = {0, 1, 2, 3, 4};
@@ -120,6 +133,7 @@ static void StrVecTest1() {
         auto exp = strs[sortedNoCaseOrder[i]];
         strEq(got, exp);
     }
+    TestRandomRemove(sortedView);
 
     Sort(v);
     for (int i = 0; i < n; i++) {
@@ -136,7 +150,7 @@ static void StrVecTest1() {
     }
     v.SetAt(3, nullptr);
     utassert(nullptr == v[3]);
-    CheckRemoveAt(v);
+    TestRemoveAt(v);
 }
 
 static void StrVecTest2() {
@@ -187,7 +201,7 @@ static void StrVecTest2() {
         utassert(str::Eq(v2.At(1), v.At(1)));
         s = v2.At(2);
         utassert(str::Eq(s, "foo"));
-        CheckRemoveAt(v2);
+        TestRemoveAt(v2);
     }
 
     {
@@ -200,7 +214,7 @@ static void StrVecTest2() {
         utassert(v2.Find("B") == -1 && v2.FindI("B") == 1);
         TempStr joined = JoinTemp(v2, ";");
         utassert(str::Eq(joined, "a;b;;c;"));
-        CheckRemoveAt(v2);
+        TestRemoveAt(v2);
     }
 
     {
@@ -215,9 +229,9 @@ static void StrVecTest2() {
         AutoFreeWStr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
         #endif
-        CheckRemoveAt(v2);
+        TestRemoveAt(v2);
     }
-    CheckRemoveAt(v);
+    TestRemoveAt(v);
 }
 
 static void StrVecTest3() {
@@ -233,7 +247,7 @@ static void StrVecTest3() {
     utassert(v.FindI("One") == 0);
     utassert(v.Find("Two") == -1);
     StrVecCheckIter(v, nullptr);
-    CheckRemoveAt(v);
+    TestRemoveAt(v);
 }
 
 static void StrVecTest4() {

@@ -48,6 +48,7 @@ int main(int, char**) {
     SquareTreeTest();
     StrFormatTest();
     StrTest();
+    StrVecTest();
     TrivialHtmlParser_UnitTests();
     VecTest();
     WinUtilTest();
