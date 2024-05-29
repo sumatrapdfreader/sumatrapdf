@@ -1,11 +1,11 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "Dpi.h"
-#include "ScopedWin.h"
-#include "WinUtil.h"
-#include "GuessFileType.h"
+#include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
+#include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
+#include "utils/GuessFileType.h"
 
 #include <mshtml.h>
 #include <mshtmhst.h>

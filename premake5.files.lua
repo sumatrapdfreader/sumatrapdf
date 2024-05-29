@@ -737,7 +737,6 @@ function utils_files()
     "FileWatcher.*",
     "FzImgReader.*",
     "GdiPlusUtil.*",
-    "HtmlWindow.*",
     "HtmlParserLookup.*",
     "HtmlPullParser.*",
     "HtmlPrettyPrint.*",

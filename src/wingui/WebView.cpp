@@ -32,6 +32,16 @@ TempStr GetWebView2VersionTemp() {
     return res;
 }
 
+bool HasWebView() {
+    WCHAR* ver = nullptr;
+    HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
+    if (FAILED(hr) || str::IsEmpty(ver)) {
+        logf("WebView2 is not available\n");
+        return false;
+    }
+    return true;
+}
+
 class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
                              public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
                              public ICoreWebView2WebMessageReceivedEventHandler,
@@ -204,9 +214,12 @@ void Webview2Wnd::OnBrowserMessage(const char* msg) {
     log(msg);
 }
 
-HWND Webview2Wnd::Create(const CreateCustomArgs& args) {
+HWND Webview2Wnd::Create(const CreateWebViewArgs& args) {
     ReportIf(!dataDir);
-    CreateCustom(args);
+    CreateCustomArgs cargs;
+    cargs.parent = args.parent;
+    cargs.pos = args.pos;
+    CreateCustom(cargs);
     if (!hwnd) {
         return nullptr;
     }

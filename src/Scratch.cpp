@@ -80,7 +80,7 @@ void TestBrowser() {
         Rect rc = ClientRect(w->hwnd);
         w->webView = new Webview2Wnd();
         w->webView->dataDir = str::Dup(AppGenDataFilenameTemp("webViewData"));
-        CreateCustomArgs args;
+        CreateWebViewArgs args;
         args.parent = w->hwnd;
         dx = rc.dx;
         dy = rc.dy;

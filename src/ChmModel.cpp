@@ -3,11 +3,11 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dict.h"
-#include "utils/HtmlWindow.h"
 #include "utils/UITask.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/HtmlWindow.h"
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
