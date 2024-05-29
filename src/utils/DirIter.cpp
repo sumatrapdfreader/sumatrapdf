@@ -89,7 +89,7 @@ bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb) {
     return ok;
 }
 
-bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInsteadOfFiles) {
+bool CollectPathsFromDirectory(const char* pattern, StrVec& paths) {
     TempStr dir = path::GetDirTemp(pattern);
 
     WIN32_FIND_DATAW fdata{};
@@ -105,12 +105,7 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths, bool dirsInst
         char* name = ToUtf8Temp(fdata.cFileName);
         DWORD attrs = fdata.dwFileAttributes;
         if (IsRegularFile(attrs)) {
-            append = !dirsInsteadOfFiles;
-        } else if (IsDirectory(attrs)) {
-            append = dirsInsteadOfFiles && !IsSpecialDir(name);
-        }
-        if (append) {
-            char* path = path::JoinTemp(dir, name);
+            TempStr path = path::JoinTemp(dir, name);
             paths.Append(path);
         }
     } while (FindNextFileW(hfind, &fdata));

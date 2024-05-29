@@ -387,6 +387,10 @@ int StrVec::Size() const {
     return size;
 }
 
+bool StrVec::IsEmpty() const {
+    return size == 0;
+}
+
 static int CalcNextPageSize(int currSize) {
     // at the beginning grow faster
     if (currSize == 256) {

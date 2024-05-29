@@ -16,6 +16,8 @@
 #include "AppTools.h"
 #include "FileThumbnails.h"
 
+#include "utils/Log.h"
+
 constexpr const char* kThumbnailsDirName = "sumatrapdfcache";
 constexpr const char* kPngExt = "*.png";
 
@@ -57,9 +59,8 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     TempStr pattern = path::JoinTemp(thumbsDir, kPngExt);
 
     StrVec filePaths;
-
-    bool ok = CollectPathsFromDirectory(pattern, filePaths, false);
-    if (!ok) {
+    bool ok = CollectPathsFromDirectory(pattern, filePaths);
+    if (!ok || filePaths.IsEmpty()) {
         return;
     }
 
@@ -71,13 +72,18 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
         if (n++ > kFileHistoryMaxFrequent * 2) {
             break;
         }
-        char* path = GetThumbnailPathTemp(fs->filePath);
-        if (path) {
-            filePaths.Remove(path);
+        TempStr path = GetThumbnailPathTemp(fs->filePath);
+        if (!path) {
+            continue;
+        }
+        ok = filePaths.Remove(path);
+        if (!ok) {
+            logf("CleanUpThumbnailCache: failed to remove '%s'\n", path);
         }
     }
 
     for (char* path : filePaths) {
+        logf("CleanUpThumbnailCache: deleting '%s'\n", path);
         file::Delete(path);
     }
 }

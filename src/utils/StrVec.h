@@ -22,6 +22,7 @@ struct StrVec {
     void Reset(StrVecPage* = nullptr);
 
     int Size() const;
+    bool IsEmpty() const;
     char* At(int i) const;
     StrSpan AtSpan(int i) const;
     char* operator[](int) const;
