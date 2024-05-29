@@ -12,6 +12,7 @@
 #include "wingui/Layout.h"
 #include "wingui/UIModels.h"
 #include "wingui/WinGui.h"
+#include "wingui/WebView.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"

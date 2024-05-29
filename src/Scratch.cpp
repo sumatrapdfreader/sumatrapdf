@@ -18,6 +18,7 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/WebView.h"
 
 #include "Settings.h"
 #include "DocProperties.h"

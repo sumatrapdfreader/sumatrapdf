@@ -14,6 +14,11 @@
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
 
+#include "wingui/UIModels.h"
+#include "wingui/Layout.h"
+#include "wingui/WinGui.h"
+#include "wingui/WebView.h"
+
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "AppTools.h"
@@ -499,21 +504,6 @@ static void GetProcessorName(str::Str& s) {
     }
 }
 
-static void GetMachineName(str::Str& s) {
-    char* s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
-    char* s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
-
-    if (!s1 && !s2) {
-        // no-op
-    } else if (!s1) {
-        s.AppendFmt("Machine: %s\n", s2);
-    } else if (!s2 || str::EqI(s1, s2)) {
-        s.AppendFmt("Machine: %s\n", s1);
-    } else {
-        s.AppendFmt("Machine: %s %s\n", s1, s2);
-    }
-}
-
 #define GFX_DRIVER_KEY_FMT "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
 
 static void GetGraphicsDriverInfo(str::Str& s) {
@@ -547,31 +537,53 @@ static void GetGraphicsDriverInfo(str::Str& s) {
     }
 }
 
-static void GetLanguage(str::Str& s) {
-    char country[32] = {}, lang[32]{};
-    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
-    GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-    s.AppendFmt("Lang: %s %s\n", lang, country);
-}
-
 static void GetSystemInfo(str::Str& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     s.AppendFmt("Number Of Processors: %d\n", si.dwNumberOfProcessors);
     GetProcessorName(s);
 
-    MEMORYSTATUSEX ms;
-    ms.dwLength = sizeof(ms);
-    GlobalMemoryStatusEx(&ms);
+    {
 
-    float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
-    float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
-    DWORD usedPerc = ms.dwMemoryLoad;
-    s.AppendFmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB, totalPageGB,
-                usedPerc);
+        MEMORYSTATUSEX ms;
+        ms.dwLength = sizeof(ms);
+        GlobalMemoryStatusEx(&ms);
 
-    GetMachineName(s);
-    GetLanguage(s);
+        float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
+        float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
+        DWORD usedPerc = ms.dwMemoryLoad;
+        s.AppendFmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB, totalPageGB,
+                    usedPerc);
+    }
+    {
+        TempStr ver = GetWebView2VersionTemp();
+        if (str::IsEmpty(ver)) {
+            ver = (TempStr)"no WebView2 installed";
+        }
+        s.AppendFmt("WebView2: %s\n", ver);
+    }
+    {
+        // get computer name
+        char* s1 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemFamily");
+        char* s2 = ReadRegStrTemp(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", "SystemVersion");
+
+        if (!s1 && !s2) {
+            // no-op
+        } else if (!s1) {
+            s.AppendFmt("Machine: %s\n", s2);
+        } else if (!s2 || str::EqI(s1, s2)) {
+            s.AppendFmt("Machine: %s\n", s1);
+        } else {
+            s.AppendFmt("Machine: %s %s\n", s1, s2);
+        }
+    }
+    {
+        // get language
+        char country[32] = {}, lang[32]{};
+        GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
+        GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
+        s.AppendFmt("Lang: %s %s\n", lang, country);
+    }
     GetGraphicsDriverInfo(s);
 
     // Note: maybe more information, like:
