@@ -1,10 +1,10 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 // this is for adding temporary code for testing
 
 // TODO: remove this
-#define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+// #define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 
 #include "utils/BaseUtil.h"
 #include "utils/Archive.h"
@@ -22,6 +22,7 @@
 
 #include "Settings.h"
 #include "DocProperties.h"
+#include "SimpleBrowserWindow.h"
 #include "DocController.h"
 #include "PalmDbReader.h"
 #include "EbookBase.h"
@@ -34,66 +35,13 @@
 
 // ----------------
 
-struct BrowserTestWnd : Wnd {
-    Webview2Wnd* webView = nullptr;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    ~BrowserTestWnd() {
-        delete webView;
-    }
-};
-
-LRESULT BrowserTestWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_CLOSE) {
-        OnClose();
-        return 0;
-    }
-    if (msg == WM_DESTROY) {
-        PostQuitMessage(0);
-        return 0;
-    }
-    if (msg == WM_SIZE && webView) {
-        Rect rc = ClientRect(hwnd);
-        rc.x += 10;
-        rc.y += 10;
-        rc.dx -= 20;
-        rc.dy -= 20;
-        webView->SetBounds(rc);
-    }
-    return WndProcDefault(hwnd, msg, wparam, lparam);
-}
-
 void TestBrowser() {
-    int dx = 480;
-    int dy = 640;
-    auto w = new BrowserTestWnd();
-    {
-        CreateCustomArgs args;
-        args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, dx, dy};
-        args.title = "test browser";
-        // TODO: if set, navigate to url doesn't work
-        // args.visible = false;
-        HWND hwnd = w->CreateCustom(args);
-        ReportIf(!hwnd);
-    }
-
-    {
-        Rect rc = ClientRect(w->hwnd);
-        w->webView = new Webview2Wnd();
-        w->webView->dataDir = str::Dup(AppGenDataFilenameTemp("webViewData"));
-        CreateWebViewArgs args;
-        args.parent = w->hwnd;
-        dx = rc.dx;
-        dy = rc.dy;
-        args.pos = {10, 10, dx - 20, dy - 20};
-        HWND hwnd = w->webView->Create(args);
-        ReportIf(!hwnd);
-        w->webView->SetIsVisible(true);
-    }
-
-    // important to call this after hooking up onSize to ensure
-    // first layout is triggered
-    w->webView->Navigate("https://blog.kowalczyk.info/");
-    w->SetIsVisible(true);
-    RunMessageLoop(nullptr, w->hwnd);
-    delete w;
+    SimpleBrowserCreateArgs args;
+    args.title = "Test Browser Window";
+    args.url = "https://blog.kowalczyk.info/";
+    args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};
+    auto w = new SimpleBrowserWindow();
+    w->Create(args);
+    // RunMessageLoop(nullptr, w->hwnd);
+    // delete w;
 }

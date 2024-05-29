@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
@@ -125,6 +125,10 @@ Rect Rect::FromXY(int xs, int ys, int xe, int ye) {
 
 Rect Rect::FromXY(Point TL, Point BR) {
     return FromXY(TL.x, TL.y, BR.x, BR.y);
+}
+
+bool Rect::IsZero() const {
+    return x == 0 && y == 0 && dx == 0 && dy == 0;
 }
 
 bool Rect::IsEmpty() const {

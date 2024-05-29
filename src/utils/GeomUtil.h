@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 // note: include BaseUtil.h instead of including directly
@@ -76,6 +76,7 @@ struct Rect {
     int Bottom() const;
     static Rect FromXY(int xs, int ys, int xe, int ye);
     static Rect FromXY(const Point TL, const Point BR);
+    bool IsZero() const;
     bool IsEmpty() const;
     bool Contains(int x, int y) const;
     bool Contains(const Point pt) const;

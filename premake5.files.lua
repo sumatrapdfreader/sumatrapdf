@@ -645,6 +645,7 @@ function sumatrapdf_files()
     "Selection.*",
     "Settings.h",
     "SettingsStructs.*",
+    "SimpleBrowserWindow.*",
     "SumatraPDF.cpp",
     "SumatraPDF.h",
     "SumatraPDF.rc",

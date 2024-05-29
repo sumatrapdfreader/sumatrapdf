@@ -159,6 +159,9 @@
     <ClInclude Include="..\src\Settings.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SimpleBrowserWindow.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\StressTesting.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -384,6 +387,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Selection.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SimpleBrowserWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\StressTesting.cpp">
