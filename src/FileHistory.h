@@ -30,6 +30,10 @@ struct FileHistory {
     void UpdateStatesSource(Vec<FileState*>* states);
 };
 
+extern FileHistory gFileHistory;
+
 int RecentlyCloseDocumentsCount();
 void RememberRecentlyClosedDocument(const char* path);
 char* PopRecentlyClosedDocument();
+void RemoveNonExistentFilesAsync();
+bool DocumentPathExists(const char* path);

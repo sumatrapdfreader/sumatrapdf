@@ -463,7 +463,7 @@ WatchedFile* FileWatcherSubscribe(const char* path, const std::function<void()>&
     }
 
     if (!gThreadHandle) {
-        logf("StartFileThreadIfNecessary: starting a thread\n");
+        logf("FileWatcherSubscribe: starting a thread\n");
         InitializeCriticalSection(&gThreadCritSec);
         gThreadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 

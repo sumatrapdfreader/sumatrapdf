@@ -109,7 +109,6 @@ static Kind kNotifGroupPersistentWarning = "persistentWarning";
 static Kind kNotifGroupPageInfo = "pageInfoHelper";
 static Kind kNotifZoom = "zoom";
 
-FileHistory gFileHistory;
 Favorites gFavorites;
 
 HBITMAP gBitmapReloadingCue;
@@ -1649,22 +1648,6 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
         delete fs->thumbnail;
         fs->thumbnail = nullptr;
     }
-}
-
-// document path is either a file or a directory
-// (when browsing images inside directory).
-bool DocumentPathExists(const char* path) {
-    if (file::Exists(path) || dir::Exists(path)) {
-        return true;
-    }
-    if (str::FindChar(path + 2, ':')) {
-        // remove information needed for pointing at embedded documents
-        // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
-        // container document exists
-        char* realPath = str::DupTemp(path, str::FindChar(path + 2, ':') - path);
-        return file::Exists(realPath);
-    }
-    return false;
 }
 
 static void scheduleReloadTab(WindowTab* tab) {
@@ -3690,11 +3673,17 @@ static void ShowOptionsDialog(HWND hwnd) {
     SaveSettings();
 }
 
-static void ShowOptionsDialog(MainWindow* win) {
-    ShowOptionsDialog(win->hwndFrame);
+// TODO: should use currently active window, but most of the time
+// there's only one window
+void MaybeRedrawHomePage() {
     if (!gWindows.empty() && gWindows.at(0)->IsCurrentTabAbout()) {
         gWindows.at(0)->RedrawAll(true);
     }
+}
+
+static void ShowOptionsDialog(MainWindow* win) {
+    ShowOptionsDialog(win->hwndFrame);
+    MaybeRedrawHomePage();
 }
 
 // toggles 'show pages continuously' state

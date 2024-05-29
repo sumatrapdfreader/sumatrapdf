@@ -3,11 +3,15 @@ License: GPLv3 */
 
 #include "utils/BaseUtil.h"
 #include "utils/FileUtil.h"
+#include "utils/ThreadUtil.h"
+#include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
 #include "FileHistory.h"
+
+#include "utils/Log.h"
 
 /* Handling of file history list.
 
@@ -34,6 +38,8 @@ quits.
 // maximum number of files to remember in total
 // (to keep the settings file within reasonable bounds)
 constexpr size_t kFileHistoryMaxFiles = 1000;
+
+FileHistory gFileHistory;
 
 // sorts the most often used files first
 static int cmpOpenCount(const void* a, const void* b) {
@@ -257,4 +263,103 @@ char* PopRecentlyClosedDocument() {
         return gClosedDocuments.RemoveAtFast(n - 1);
     }
     return nullptr;
+}
+
+// ---- file existence check
+
+struct FileExistenceData {
+    FileExistenceData() = default;
+    ~FileExistenceData() = default;
+
+    StrVec toCheck;
+    StrVec missing;
+};
+
+extern void MaybeRedrawHomePage();
+
+static void HideMissingFiles(const StrVec& missing) {
+    if (missing.Size() == 0) {
+        return;
+    }
+    for (const char* path : missing) {
+        gFileHistory.MarkFileInexistent(path, true);
+    }
+    // update the Frequently Read page in case it's been displayed already
+    MaybeRedrawHomePage();
+}
+
+// document path is either a file or a directory
+// (when browsing images inside directory).
+bool DocumentPathExists(const char* path) {
+    if (file::Exists(path) || dir::Exists(path)) {
+        return true;
+    }
+    auto pos = str::FindCharLast(path + 2, ':');
+    if (!pos) {
+        return false;
+    }
+    // remove information needed for pointing at embedded documents
+    // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
+    // container document exists
+    TempStr realPath = str::DupTemp(path, pos - path);
+    return file::Exists(realPath);
+}
+
+static void FileExistenceCheckerThread(FileExistenceData* d) {
+    StrVec& toCheck = d->toCheck;
+    // filters all file paths on network drives, removable drives and
+    // all paths which still exist from the list (remaining paths will
+    // be marked as inexistent in gFileHistory)
+    int n = toCheck.Size();
+    for (int i = 0; i < n; i++) {
+        const char* path = toCheck[i];
+        if (!path) {
+            continue;
+        }
+        // files on network / removable drives can be temporarily missing
+        if (!path::IsOnFixedDrive(path)) {
+            continue;
+        }
+        if (DocumentPathExists(path)) {
+            continue;
+        }
+        d->missing.Append(path);
+        logf("FileExistenceChecker: missing '%s' at %d\n", path, i+1);
+    }
+
+    uitask::Post(TaskHideMissingFiles, [d] {
+        HideMissingFiles(d->missing);
+    });
+}
+
+static void GetFilePathsToCheck(StrVec& toCheck) {
+    FileState* fs;
+    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
+        if (!fs->isMissing) {
+            char* fp = fs->filePath;
+            toCheck.Append(fp);
+        }
+    }
+    // add missing paths from the list of most frequently opened documents
+    Vec<FileState*> frequencyList;
+    gFileHistory.GetFrequencyOrder(frequencyList);
+    size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
+    for (size_t i = 0; i < iMax; i++) {
+        fs = frequencyList.at(i);
+        char* fp = fs->filePath;
+        AppendIfNotExists(toCheck, fp);
+    }
+}
+
+void RemoveNonExistentFilesAsync() {
+    auto d = new FileExistenceData();
+    GetFilePathsToCheck(d->toCheck);
+    if (d->toCheck.Size() == 0) {
+        return;
+    }
+    logf("RemoveNonExistentFilesAsync: starting FileExistenceCheckerThread to check %d files\n", d->toCheck.Size());
+    auto fn = [d] {
+        FileExistenceCheckerThread(d); 
+    };
+    RunAsync(fn, "FileExistenceThread");
 }

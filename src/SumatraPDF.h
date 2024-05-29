@@ -85,7 +85,6 @@ extern bool gShowFrameRate;
 
 extern const char* gPluginURL;
 extern Favorites gFavorites;
-extern FileHistory gFileHistory;
 extern WNDPROC DefWndProcCloseButton;
 extern RenderCache gRenderCache;
 
@@ -186,7 +185,6 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
 uint MbRtlReadingMaybe();
 void MessageBoxWarning(HWND hwnd, const char* msg, const char* title = nullptr);
 void UpdateCursorPositionHelper(MainWindow* win, Point pos, NotificationWnd* wnd);
-bool DocumentPathExists(const char* path);
 void EnterFullScreen(MainWindow* win, bool presentation = false);
 void ExitFullScreen(MainWindow* win);
 void SetCurrentLang(const char* langCode);

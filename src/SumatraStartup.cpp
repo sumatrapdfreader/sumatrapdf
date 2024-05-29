@@ -71,75 +71,6 @@
 
 #include "utils/Log.h"
 
-// gFileExistenceChecker is initialized at startup and should
-// terminate and delete itself asynchronously while the UI is
-// being set up
-class FileExistenceChecker : public ThreadBase {
-    StrVec paths;
-
-    void GetFilePathsToCheck();
-    void HideMissingFiles();
-
-  public:
-    FileExistenceChecker() {
-        GetFilePathsToCheck();
-    }
-    void Run() override;
-};
-
-static FileExistenceChecker* gFileExistenceChecker = nullptr;
-
-void FileExistenceChecker::GetFilePathsToCheck() {
-    FileState* fs;
-    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
-        if (!fs->isMissing) {
-            char* fp = fs->filePath;
-            paths.Append(fp);
-        }
-    }
-    // add missing paths from the list of most frequently opened documents
-    Vec<FileState*> frequencyList;
-    gFileHistory.GetFrequencyOrder(frequencyList);
-    size_t iMax = std::min<size_t>(2 * kFileHistoryMaxFrequent, frequencyList.size());
-    for (size_t i = 0; i < iMax; i++) {
-        fs = frequencyList.at(i);
-        char* fp = fs->filePath;
-        AppendIfNotExists(paths, fp);
-    }
-}
-
-void FileExistenceChecker::HideMissingFiles() {
-    for (const char* path : paths) {
-        gFileHistory.MarkFileInexistent(path, true);
-    }
-    // update the Frequently Read page in case it's been displayed already
-    if (paths.Size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsCurrentTabAbout()) {
-        gWindows.at(0)->RedrawAll(true);
-    }
-}
-
-void FileExistenceChecker::Run() {
-    // filters all file paths on network drives, removable drives and
-    // all paths which still exist from the list (remaining paths will
-    // be marked as inexistent in gFileHistory)
-    int n = paths.Size();
-    for (int i = n - 1; i >= 0; i--) {
-        const char* path = paths[i];
-        if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
-            paths.RemoveAt(i);
-        }
-    }
-
-    uitask::Post(TaskHideMissingFiles, [=] {
-        ReportIf(WasCancelRequested());
-        HideMissingFiles();
-
-        gFileExistenceChecker = nullptr;
-        Join(); // just to be safe
-        delete this;
-    });
-}
-
 // return false if failed in a way that should abort the app
 static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     if (!hwndParent) {
@@ -1399,8 +1330,7 @@ ContinueOpenWindow:
 
     // only hide newly missing files when showing the start page on startup
     if (showStartPage && gFileHistory.Get(0)) {
-        gFileExistenceChecker = new FileExistenceChecker();
-        gFileExistenceChecker->Start();
+        RemoveNonExistentFilesAsync();
     }
     // call this once it's clear whether Perm::SavePreferences has been granted
     RegisterSettingsForFileChanges();
@@ -1462,12 +1392,17 @@ Exit:
     CleanupEngineDjVu();
     destroy_system_font_list();
 
+    // TODO: if needed, I could replace it with AtomicBool gFileExistenceInProgress
+    // alternatively I can set AtomicBool gAppShutdown and have various threads
+    // abort quickly if IsAppShuttingDown()
+#if 0
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)
     while (gFileExistenceChecker) {
         Sleep(10);
         uitask::DrainQueue();
     }
+#endif
 
     mui::Destroy();
     uitask::Destroy();

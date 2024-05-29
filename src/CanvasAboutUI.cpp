@@ -16,6 +16,7 @@
 #include "DocController.h"
 #include "GlobalPrefs.h"
 #include "SumatraConfig.h"
+#include "FileHistory.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "resource.h"
