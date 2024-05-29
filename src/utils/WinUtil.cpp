@@ -1308,7 +1308,6 @@ char* GetDefaultPrinterNameTemp() {
 }
 
 static bool CopyOrAppendTextToClipboard(const WCHAR* text, bool appendOnly) {
-    ReportIf(!text);
     if (!text) {
         return false;
     }
