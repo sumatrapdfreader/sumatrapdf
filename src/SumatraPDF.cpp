@@ -3662,7 +3662,7 @@ static void ShowOptionsDialog(HWND hwnd) {
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
         gFileHistory.Clear(true);
-        CleanUpThumbnailCache(gFileHistory);
+        DeleteThumbnailCacheDirectory();
     }
     UpdateDocumentColors();
 

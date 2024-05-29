@@ -37,3 +37,4 @@ void RememberRecentlyClosedDocument(const char* path);
 char* PopRecentlyClosedDocument();
 void RemoveNonExistentFilesAsync();
 bool DocumentPathExists(const char* path);
+void CleanUpThumbnailCache();

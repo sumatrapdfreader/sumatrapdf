@@ -11,5 +11,7 @@ void SetThumbnail(FileState* ds, RenderedBitmap* bmp);
 void SaveThumbnail(FileState* ds);
 void RemoveThumbnail(FileState* ds);
 
+TempStr GetThumbnailCacheDirTemp();
+char* GetThumbnailPathTemp(const char* filePath);
+void DeleteThumbnailForFile(const char* path);
 void DeleteThumbnailCacheDirectory();
-void CleanUpThumbnailCache(const FileHistory& fileHistory);

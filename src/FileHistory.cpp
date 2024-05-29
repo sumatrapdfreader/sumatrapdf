@@ -2,6 +2,7 @@
 License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/DirIter.h"
 #include "utils/FileUtil.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
@@ -9,6 +10,7 @@ License: GPLv3 */
 
 #include "Settings.h"
 #include "GlobalPrefs.h"
+#include "FileThumbnails.h"
 #include "FileHistory.h"
 
 #include "utils/Log.h"
@@ -265,7 +267,57 @@ char* PopRecentlyClosedDocument() {
     return nullptr;
 }
 
-// ---- file existence check
+// --- thumbnail cache delete
+
+static bool shouldDeleteThumbnail = false;
+
+// TODO: https://github.com/sumatrapdfreader/sumatrapdf/issues/4286
+// Not sure why the behavior started changing after I re-wrote StrVec
+// is the issue that files are marked as isMissing in FileExistenceCheckerThread?
+// is it because we don't return enough itms if GetFrequencyOrder()? Is it a bug
+// in StrVec::Remove()?
+// either way, I just disabled deleting of stale thumbnail because it seems fishy
+// Should probably change the logic to: remove thumbnails for files marked as missing
+
+// removes thumbnails that don't belong to any frequently used item in file history
+void CleanUpThumbnailCache() {
+    const FileHistory& fileHistory = gFileHistory;
+    TempStr thumbsDir = GetThumbnailCacheDirTemp();
+    TempStr pattern = path::JoinTemp(thumbsDir, "*.png");
+
+    StrVec filePaths;
+    bool ok = CollectPathsFromDirectory(pattern, filePaths);
+    if (!ok || filePaths.IsEmpty()) {
+        return;
+    }
+
+    // remove files that should not be deleted
+    Vec<FileState*> list;
+    fileHistory.GetFrequencyOrder(list);
+    int n = 0;
+    for (auto& fs : list) {
+        if (n++ > kFileHistoryMaxFrequent * 2) {
+            break;
+        }
+        TempStr path = GetThumbnailPathTemp(fs->filePath);
+        if (!path) {
+            continue;
+        }
+        ok = filePaths.Remove(path);
+        if (!ok) {
+            logf("CleanUpThumbnailCache: failed to remove '%s'\n", path);
+        }
+    }
+
+    for (char* path : filePaths) {
+        logf("CleanUpThumbnailCache: deleting '%s'\n", path);
+        if (shouldDeleteThumbnail) {
+            file::Delete(path);
+        }
+    }
+}
+
+// --- file existence check
 
 struct FileExistenceData {
     FileExistenceData() = default;
@@ -324,12 +376,10 @@ static void FileExistenceCheckerThread(FileExistenceData* d) {
             continue;
         }
         d->missing.Append(path);
-        logf("FileExistenceChecker: missing '%s' at %d\n", path, i+1);
+        logf("FileExistenceChecker: missing '%s' at %d\n", path, i + 1);
     }
 
-    uitask::Post(TaskHideMissingFiles, [d] {
-        HideMissingFiles(d->missing);
-    });
+    uitask::Post(TaskHideMissingFiles, [d] { HideMissingFiles(d->missing); });
 }
 
 static void GetFilePathsToCheck(StrVec& toCheck) {
@@ -358,8 +408,6 @@ void RemoveNonExistentFilesAsync() {
         return;
     }
     logf("RemoveNonExistentFilesAsync: starting FileExistenceCheckerThread to check %d files\n", d->toCheck.Size());
-    auto fn = [d] {
-        FileExistenceCheckerThread(d); 
-    };
+    auto fn = [d] { FileExistenceCheckerThread(d); };
     RunAsync(fn, "FileExistenceThread");
 }

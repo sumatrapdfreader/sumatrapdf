@@ -18,10 +18,7 @@
 
 #include "utils/Log.h"
 
-constexpr const char* kThumbnailsDirName = "sumatrapdfcache";
-constexpr const char* kPngExt = "*.png";
-
-static char* GetThumbnailPathTemp(const char* filePath) {
+char* GetThumbnailPathTemp(const char* filePath) {
     // create a fingerprint of a (normalized) path for the file name
     // I'd have liked to also include the file's last modification time
     // in the fingerprint (much quicker than hashing the entire file's
@@ -39,7 +36,7 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     CalcMD5Digest((u8*)path, str::Leni(path), digest);
     AutoFreeStr fingerPrint = str::MemToHex(digest, dimof(digest));
 
-    TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    TempStr thumbsDir = GetThumbnailCacheDirTemp();
     if (!thumbsDir) {
         return nullptr;
     }
@@ -48,44 +45,22 @@ static char* GetThumbnailPathTemp(const char* filePath) {
     return res;
 }
 
-void DeleteThumbnailCacheDirectory() {
+TempStr GetThumbnailCacheDirTemp() {
+    constexpr const char* kThumbnailsDirName = "sumatrapdfcache";
     TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    return thumbsDir;
+}
+
+void DeleteThumbnailCacheDirectory() {
+    TempStr thumbsDir = GetThumbnailCacheDirTemp();
     dir::RemoveAll(thumbsDir);
 }
 
-// removes thumbnails that don't belong to any frequently used item in file history
-void CleanUpThumbnailCache(const FileHistory& fileHistory) {
-    TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
-    TempStr pattern = path::JoinTemp(thumbsDir, kPngExt);
-
-    StrVec filePaths;
-    bool ok = CollectPathsFromDirectory(pattern, filePaths);
-    if (!ok || filePaths.IsEmpty()) {
-        return;
-    }
-
-    // remove files that should not be deleted
-    Vec<FileState*> list;
-    fileHistory.GetFrequencyOrder(list);
-    int n = 0;
-    for (auto& fs : list) {
-        if (n++ > kFileHistoryMaxFrequent * 2) {
-            break;
-        }
-        TempStr path = GetThumbnailPathTemp(fs->filePath);
-        if (!path) {
-            continue;
-        }
-        ok = filePaths.Remove(path);
-        if (!ok) {
-            logf("CleanUpThumbnailCache: failed to remove '%s'\n", path);
-        }
-    }
-
-    for (char* path : filePaths) {
-        logf("CleanUpThumbnailCache: deleting '%s'\n", path);
-        file::Delete(path);
-    }
+void DeleteThumbnailForFile(const char* filePath) {
+    TempStr thumbPath = GetThumbnailPathTemp(filePath);
+    bool ok = file::Delete(thumbPath);
+    auto status = ok ? "ok" : "failed";
+    logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, status);
 }
 
 bool LoadThumbnail(FileState* ds) {
@@ -144,19 +119,20 @@ void SaveThumbnail(FileState* ds) {
         return;
     }
 
-    char* path = ds->filePath;
-    char* bmpPath = GetThumbnailPathTemp(path);
-    if (!bmpPath) {
+    TempStr thumbnailPath = GetThumbnailPathTemp(ds->filePath);
+    if (!thumbnailPath) {
         return;
     }
-    char* thumbsPath = path::GetDirTemp(bmpPath);
-    if (dir::Create(thumbsPath)) {
-        ReportIf(!str::EndsWithI(bmpPath, ".png"));
-        Gdiplus::Bitmap bmp(ds->thumbnail->GetBitmap(), nullptr);
-        CLSID tmpClsid = GetEncoderClsid(L"image/png");
-        WCHAR* bmpPathW = ToWStrTemp(bmpPath);
-        bmp.Save(bmpPathW, &tmpClsid, nullptr);
+    if (!dir::CreateForFile(thumbnailPath)) {
+        logf("SaveThumbnail: dir::CreateForFile('%s') failed, file path: '%s'\n", thumbnailPath, ds->filePath);
+        ReportIfQuick(true);
     }
+    ReportIfQuick(!str::EndsWithI(thumbnailPath, ".png"));
+
+    Gdiplus::Bitmap bmp(ds->thumbnail->GetBitmap(), nullptr);
+    CLSID tmpClsid = GetEncoderClsid(L"image/png");
+    TempWStr pathW = ToWStrTemp(thumbnailPath);
+    bmp.Save(pathW, &tmpClsid, nullptr);
 }
 
 void RemoveThumbnail(FileState* ds) {

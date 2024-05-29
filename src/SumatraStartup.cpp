@@ -1356,7 +1356,7 @@ ContinueOpenWindow:
 
     exitCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
-    CleanUpThumbnailCache(gFileHistory);
+    CleanUpThumbnailCache();
 
 Exit:
     logf("Exiting with exit code: %d\n", exitCode);

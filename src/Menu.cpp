@@ -1703,14 +1703,15 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     }
 
     if (CmdForgetSelectedDocument == cmd) {
-        if (fs->favorites->size() > 0) {
-            // just hide documents with favorites
+        if (!fs->favorites->IsEmpty()) {
+            // only hide documents with favorites
             gFileHistory.MarkFileInexistent(fs->filePath, true);
         } else {
             gFileHistory.Remove(fs);
             DeleteDisplayState(fs);
         }
-        CleanUpThumbnailCache(gFileHistory);
+        DeleteThumbnailForFile(fs->filePath);
+        SaveSettings();
         win->DeleteToolTip();
         win->RedrawAll(true);
         return;
