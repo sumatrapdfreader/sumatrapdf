@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 //--- Wnd
@@ -53,6 +53,29 @@ struct CreateCustomArgs {
     COLORREF bgColor = ColorUnset;
 };
 
+struct WmEvent {
+    HWND hwnd = nullptr;
+    UINT msg = 0;
+    WPARAM wp = 0;
+    LPARAM lp = 0;
+    uintptr_t userData = 0;
+    Wnd* self = nullptr;
+
+    bool didHandle = true; // common case so set as default
+};
+
+struct WmCloseEvent {
+    WmEvent* e = nullptr;
+};
+
+typedef void (*WmCloseHandler)(WmCloseEvent&);
+
+struct WmDestroyEvent {
+    WmEvent* e = nullptr;
+};
+
+typedef void (*WmDestroyHandler)(WmDestroyEvent&);
+
 struct Wnd : public ILayout {
     Wnd();
     Wnd(HWND hwnd);
@@ -94,9 +117,7 @@ struct Wnd : public ILayout {
     virtual void OnAttach();
     virtual void OnFocus();
     virtual bool OnCommand(WPARAM wparam, LPARAM lparam);
-    virtual void OnClose();
     virtual int OnCreate(CREATESTRUCT*);
-    virtual void OnDestroy();
     virtual void OnContextMenu(Point pt);
     virtual void OnDropFiles(HDROP drop_info);
     virtual void OnGetMinMaxInfo(MINMAXINFO* mmi);
@@ -134,6 +155,7 @@ struct Wnd : public ILayout {
     LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
 
     Kind kind = nullptr;
+    uintptr_t userData = 0;
 
     Insets insets{};
     Size childSize{};
@@ -152,6 +174,9 @@ struct Wnd : public ILayout {
     ILayout* layout = nullptr;
 
     ContextMenuHandler onContextMenu;
+
+    WmCloseHandler onClose = nullptr;
+    WmDestroyHandler onDestroy = nullptr;
 };
 
 bool PreTranslateMessage(MSG& msg);

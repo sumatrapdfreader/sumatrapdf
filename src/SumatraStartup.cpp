@@ -895,6 +895,7 @@ static void testLogf() {
 
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
+extern void DeleteManualBrowserWindow();
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     int exitCode = 1; // by default it's error
@@ -1349,6 +1350,7 @@ Exit:
     UnregisterSettingsForFileChanges();
 
     HandleRedirectedConsoleOnShutdown();
+    DeleteManualBrowserWindow();
 
     LaunchFileIfExists(logFilePath);
     if (AreDangerousThreadsPending()) {

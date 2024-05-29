@@ -4992,11 +4992,19 @@ static lzma::SimpleArchive gManualArchive{};
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
 static bool gUseOurWindowForManual = false;
 
+static void OnDestroyManualBrowserWindow(WmDestroyEvent&) {
+    gManualBrowserWindow = nullptr;
+}
+
+void DeleteManualBrowserWindow() {
+    delete gManualBrowserWindow;
+}
+
 static void OpenManualAtFile(const char* htmlFileName) {
     TempStr dataDir = GetNotImportantDataDirTemp();
     TempStr dirName = GetVerDirNameTemp("crashinfo-");
     TempStr dir = path::JoinTemp(dataDir, dirName);
-    TempStr htmlFilePath = path::JoinTemp(dir, kManualIndex);
+    TempStr htmlFilePath = path::JoinTemp(dir, htmlFileName);
     // in debug build we force extraction because those could be stale files
     bool ok = !gIsDebugBuild && file::Exists(htmlFilePath);
     if (ok) {
@@ -5033,7 +5041,7 @@ static void OpenManualAtFile(const char* htmlFileName) {
 OpenFileInBrowser:
     TempStr url = str::JoinTemp("file://", htmlFilePath);
 
-if (gUseOurWindowForManual) {
+    if (gUseOurWindowForManual) {
         if (gManualBrowserWindow) {
             // re-use existing manual window
             gManualBrowserWindow->webView->Navigate(url);
@@ -5047,6 +5055,7 @@ if (gUseOurWindowForManual) {
             // TODO: dataDir
             gManualBrowserWindow = SimpleBrowserWindowCreate(args);
             if (gManualBrowserWindow != nullptr) {
+                gManualBrowserWindow->onDestroy = OnDestroyManualBrowserWindow;
                 return;
             }
         }

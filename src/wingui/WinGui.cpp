@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
@@ -366,28 +366,12 @@ int Wnd::OnCreate(CREATESTRUCT*) {
     return 0;
 }
 
-// This function is called when a window is destroyed.
-// Override it to do additional tasks, such as ending the application
-//  with PostQuitMessage.
-void Wnd::OnDestroy() {
-}
-
 // Called when the background of the window's client area needs to be erased.
 // Override this function in your derived class to perform drawing tasks.
 // Return Value: Return FALSE to also permit default erasure of the background
 //               Return TRUE to prevent default erasure of the background
 bool Wnd::OnEraseBkgnd(HDC) {
     return false;
-}
-
-// Called in response to WM_CLOSE, before the window is destroyed.
-// Override this function to suppress destroying the window.
-// WM_CLOSE is sent by SendMessage(WM_CLOSE, 0, 0) or by clicking X
-//  in the top right corner.
-// Child windows don't receive WM_CLOSE unless they are closed using
-//  the Close function.
-void Wnd::OnClose() {
-    Destroy();
 }
 
 void Wnd::OnContextMenu(Point ptScreen) {
@@ -681,12 +665,32 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     LRESULT result = 0;
 
-    switch (msg) {
-        case WM_CLOSE: {
-            OnClose();
-            return 0;
-        }
+    WmEvent e{hwnd, msg, wparam, lparam, this->userData, this};
 
+    if (msg == WM_CLOSE) {
+        if (onClose) {
+            WmCloseEvent ev;
+            ev.e = &e;
+            onClose(ev);
+            if (ev.e->didHandle) {
+                return 0;
+            }
+        }
+        // TODO: should only send WM_DESTROY, the rest should be hooked in OnDestroy
+        Destroy();
+        return 0;
+    }
+
+    if (msg == WM_DESTROY) {
+        if (onDestroy) {
+            WmDestroyEvent ev;
+            ev.e = &e;
+            onDestroy(ev);
+        }
+        // Note: Some controls require default processing.
+    }
+
+    switch (msg) {
         // windows don't support WM_GETFONT / WM_SETFONT
         // only controls do. not sure if we won't interfere
         // with control handling
@@ -721,11 +725,6 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_CREATE: {
             OnCreate((CREATESTRUCT*)lparam);
             break;
-        }
-
-        case WM_DESTROY: {
-            OnDestroy();
-            break; // Note: Some controls require default processing.
         }
 
         case WM_SETFOCUS: {

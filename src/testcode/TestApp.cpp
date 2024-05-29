@@ -45,10 +45,9 @@ static ILayout* CreateMainLayout(HWND hwnd) {
 }
 
 struct TestWnd : Wnd {
-    void OnDestroy() override;
 };
 
-void TestWnd::OnDestroy() {
+static void OnDestroy(WmDestroyEvent&) {
     ::PostQuitMessage(0);
 }
 
@@ -59,6 +58,8 @@ void TestApp(HINSTANCE hInstance) {
     gHinst = hInstance;
 
     auto w = new TestWnd();
+    w->onDestroy = OnDestroy;
+
     // w->backgroundColor = MkColor((u8)0xae, (u8)0xae, (u8)0xae);
     CreateCustomArgs args;
     args.pos = {CW_USEDEFAULT, CW_USEDEFAULT, 480, 640};

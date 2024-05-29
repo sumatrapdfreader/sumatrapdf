@@ -170,7 +170,6 @@ struct EditAnnotationsWindow : Wnd {
     str::Str currCustomInteriorColor;
 
     void OnSize(UINT msg, UINT type, SIZE size) override;
-    void OnClose() override;
     void OnFocus() override;
     bool PreTranslateMessage(MSG&) override;
 
@@ -384,10 +383,12 @@ static void RebuildAnnotationsListBox(EditAnnotationsWindow* ew) {
     EnableSaveIfAnnotationsChanged(ew);
 }
 
-void EditAnnotationsWindow::OnClose() {
-    HWND toActivate = tab->win->hwndFrame;
-    tab->editAnnotsWindow = nullptr;
-    delete this; // sketchy
+// TODO: this should be OnDestroy()
+static void OnClose(WmCloseEvent& ev) {
+    auto w = (EditAnnotationsWindow*)ev.e->self;
+    HWND toActivate = w->tab->win->hwndFrame;
+    w->tab->editAnnotsWindow = nullptr;
+    delete w; // TODO: sketchy
     SetActiveWindow(toActivate);
 }
 
@@ -1419,6 +1420,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
         return;
     }
     ew = new EditAnnotationsWindow();
+    ew->onClose = OnClose;
     CreateCustomArgs args;
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());

@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
@@ -18,18 +18,6 @@ System DPI Aware:
 Per-Monitor DPI Aware:
  These apps render themselves for any DPI, and re-render when the DPI changes
  (as indicated by the WM_DPICHANGED window message).
-*/
-
-/*
-If you have HWND, call DpiScaleX(HWND, x) or DpiScaleY(HWND, y).
-If we don't have dpi information for this HWND, we'll create it.
-
-On WM_DPICHANGED call DpiUpdate(HWND) so that we can update
-dpi information for that window.
-
-On WM_DESTROY call DpiRemove(HWND) so that we remove it.
-
-For even faster access you can cache struct Dpi somewhere.
 */
 
 #include <shellscalingapi.h>

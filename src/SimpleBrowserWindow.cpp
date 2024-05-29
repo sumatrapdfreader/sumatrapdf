@@ -24,10 +24,6 @@ SimpleBrowserWindow::~SimpleBrowserWindow() {
 }
 
 LRESULT SimpleBrowserWindow::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    if (msg == WM_CLOSE) {
-        OnClose();
-        return 0;
-    }
     if (msg == WM_SIZE && webView) {
         Rect rc = ClientRect(hwnd);
         rc.x += 10;

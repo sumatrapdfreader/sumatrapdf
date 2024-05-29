@@ -166,11 +166,9 @@ struct CommandPaletteWnd : Wnd {
 
     int currTabPos = 0;
 
-    void OnDestroy() override;
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
-    void ScheduleDelete();
     void CollectStrings(MainWindow*);
     void FilterStringsForQuery(const char*, StrVec&);
 
@@ -445,6 +443,27 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 }
 
+static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
+static HWND gHwndToActivateOnClose = nullptr;
+
+void SafeDeleteCommandPaletteWnd() {
+    if (!gCommandPaletteWnd) {
+        return;
+    }
+
+    auto tmp = gCommandPaletteWnd;
+    gCommandPaletteWnd = nullptr;
+    delete tmp;
+    if (gHwndToActivateOnClose) {
+        SetActiveWindow(gHwndToActivateOnClose);
+        gHwndToActivateOnClose = nullptr;
+    }
+}
+
+static void ScheduleDelete() {
+    uitask::Post(TaskCommandPaletteDelete, &SafeDeleteCommandPaletteWnd);
+}
+
 LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch (msg) {
         case WM_ACTIVATE:
@@ -584,27 +603,6 @@ void CommandPaletteWnd::QueryChanged() {
     }
 }
 
-static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
-static HWND gHwndToActivateOnClose = nullptr;
-
-void SafeDeleteCommandPaletteWnd() {
-    if (!gCommandPaletteWnd) {
-        return;
-    }
-
-    auto tmp = gCommandPaletteWnd;
-    gCommandPaletteWnd = nullptr;
-    delete tmp;
-    if (gHwndToActivateOnClose) {
-        SetActiveWindow(gHwndToActivateOnClose);
-        gHwndToActivateOnClose = nullptr;
-    }
-}
-
-void CommandPaletteWnd::ScheduleDelete() {
-    uitask::Post(TaskCommandPaletteDelete, &SafeDeleteCommandPaletteWnd);
-}
-
 static WindowTab* FindOpenedFile(const char* s) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
@@ -689,7 +687,7 @@ void CommandPaletteWnd::ListDoubleClick() {
     ExecuteCurrentSelection();
 }
 
-void CommandPaletteWnd::OnDestroy() {
+void OnDestroy(WmDestroyEvent&) {
     ScheduleDelete();
 }
 
@@ -797,6 +795,7 @@ void RunCommandPallette(MainWindow* win, const char* prefix) {
     ReportIf(gCommandPaletteWnd);
 
     auto wnd = new CommandPaletteWnd();
+    wnd->onDestroy = OnDestroy;
     wnd->font = GetAppBiggerFont();
     wnd->win = win;
     bool ok = wnd->Create(win, prefix);
