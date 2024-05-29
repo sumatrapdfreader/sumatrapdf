@@ -360,7 +360,7 @@ TempStr GetLastErrorStrTemp(DWORD err) {
 void LogLastError(DWORD err) {
     TempStr msg = GetLastErrorStrTemp(err);
     if (msg == nullptr) {
-        msg = (TmpStr)"";
+        msg = (TempStr)"";
     }
     logf("LogLastError: 0x%x '%s'\n", (int)err, msg);
 }
