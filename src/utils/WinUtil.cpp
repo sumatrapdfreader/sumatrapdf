@@ -331,13 +331,15 @@ bool IsProcessAndOsArchSame() {
 }
 
 TempStr GetLastErrorStrTemp(DWORD err) {
-    err = (err == 0) ? GetLastError() : err;
+    if (err == 0) {
+        err = GetLastError();
+    }
     if (err == 0) {
         return str::DupTemp("");
     }
     if (err == ERROR_INTERNET_EXTENDED_ERROR) {
-        char buf[4096] = {0};
-        DWORD bufSize = dimof(buf);
+        char buf[4096]{};
+        DWORD bufSize = dimof(buf)-1;
         // TODO: ignoring a case where buffer is too small. 4 kB should be enough for everybody
         InternetGetLastResponseInfoA(&err, buf, &bufSize);
         buf[4095] = 0;
@@ -357,9 +359,10 @@ TempStr GetLastErrorStrTemp(DWORD err) {
 
 void LogLastError(DWORD err) {
     TempStr msg = GetLastErrorStrTemp(err);
-    if (str::Len(msg) > 0) {
-        logf("LogLastError: %s\n", msg);
+    if (msg == nullptr) {
+        msg = (TmpStr)"";
     }
+    logf("LogLastError: 0x%x '%s'\n", (int)err, msg);
 }
 
 void DbgOutLastError(DWORD err) {
