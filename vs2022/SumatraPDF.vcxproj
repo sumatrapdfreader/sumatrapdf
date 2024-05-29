@@ -1369,6 +1369,8 @@
     <None Include="..\do\util.go" />
     <None Include="..\do\vs.go" />
     <None Include="..\do\wc.go" />
+    <None Include="..\docs\manual.tmpl.html" />
+    <None Include="..\docs\manual.website.tmpl.html" />
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md" />
     <None Include="..\docs\md\Add-Favorite.md" />
     <None Include="..\docs\md\Advanced-options-settings.md" />
