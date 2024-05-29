@@ -14,3 +14,5 @@ struct SimpleBrowserWindow : Wnd {
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     ~SimpleBrowserWindow() override;
 };
+
+SimpleBrowserWindow* SimpleBrowserWindowCreate(const SimpleBrowserCreateArgs&);

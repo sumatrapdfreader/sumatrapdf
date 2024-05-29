@@ -25,9 +25,12 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/WebView.h"
 
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
+
+#include "SimpleBrowserWindow.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -4986,6 +4989,8 @@ constexpr const char* kManualKeyboard = "Keyboard-shortcuts.html";
 
 static LoadedDataResource gManualArchiveData;
 static lzma::SimpleArchive gManualArchive{};
+static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
+static bool gUseOurWindowForManual = false;
 
 static void OpenManualAtFile(const char* htmlFileName) {
     TempStr dataDir = GetNotImportantDataDirTemp();
@@ -5027,6 +5032,26 @@ static void OpenManualAtFile(const char* htmlFileName) {
     }
 OpenFileInBrowser:
     TempStr url = str::JoinTemp("file://", htmlFilePath);
+
+if (gUseOurWindowForManual) {
+        if (gManualBrowserWindow) {
+            // re-use existing manual window
+            gManualBrowserWindow->webView->Navigate(url);
+            return;
+        }
+        if (!gManualBrowserWindow) {
+            // try to launch in our window
+            SimpleBrowserCreateArgs args;
+            args.title = "SumatraPDF Documentation";
+            args.url = url;
+            // TODO: dataDir
+            gManualBrowserWindow = SimpleBrowserWindowCreate(args);
+            if (gManualBrowserWindow != nullptr) {
+                return;
+            }
+        }
+    }
+    // couldn't create WebView2 window so fallback to default web browser
     SumatraLaunchBrowser(url);
 }
 

@@ -80,3 +80,17 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
     SetIsVisible(true);
     return hwnd;
 }
+
+SimpleBrowserWindow* SimpleBrowserWindowCreate(const SimpleBrowserCreateArgs& args) {
+    if (!HasWebView()) {
+        return nullptr;
+    }
+    auto res = new SimpleBrowserWindow();
+    auto hwnd = res->Create(args);
+    ReportIfQuick(!hwnd);
+    if (!hwnd) {
+        delete res;
+        return nullptr;
+    }
+    return res;
+}
