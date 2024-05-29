@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b0fc5831a42abe1d349eed548e1001f665749257
+2c7868dae3cc20d527efd70bd68cce36e248b7f8
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -910,6 +910,7 @@ pl:Strony &parzyste
 pt:&Só as páginas pares
 ro:&Doar paginile pare
 ru:Только ч&ётные страницы
+sat:&ᱥᱚᱢᱟᱱ ᱥᱟᱦᱴᱟ ᱠᱷᱟᱹᱞᱤ
 si:&ඉරට්ටෙ පිටු පමණි
 sk:&Tlačiť iba párne strany
 sl:Samo &parne strani
@@ -1208,6 +1209,7 @@ pl:Dopasuj strony do rozmiaru &wydruku
 pt:A&justar páginas à área de impressão
 ro:&Potrivire pagini cu aria de imprimare
 ru:Подо&гнать страницы под область печати
+sat:ᱪᱷᱟᱯᱟ ᱡᱟᱭᱜᱟ ᱨᱮ ᱥᱟᱦᱴᱟ &ᱯᱮᱨᱮᱡᱽ ᱢᱮ
 si:මෘද්‍රණ කලාපය සදහා සුදුසු ලෙස පිටු &සකසන්න
 sk:&Prispôsobiť strany na tlačiteľnú plochu
 sl:Prilagodi strani na področje tiskanja
@@ -1987,6 +1989,7 @@ pl:Strony &nieparzyste
 pt:&Apenas páginas ímpares
 ro:&Doar paginile impare
 ru:Только нечётн&ые страницы
+sat:&ᱯᱷᱩᱴᱭᱟᱹ ᱥᱟᱦᱴᱟ ᱜᱮ
 si:&ඔත්තෙ පිටු පමණි
 sk:&Tlačiť iba nepárne strany
 sl:Samo &lihe strani
@@ -3032,6 +3035,7 @@ pl:&Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)
 pt:&Reduzir páginas à área de impressão (se necessário)
 ro:&Micșorează paginile la aria de imprimare (dacă e necesar)
 ru:Уменьшить страницы до области печати (если нужно)
+sat:ᱪᱷᱟᱯᱟ ᱡᱟᱭᱜᱟ ᱞᱮᱠᱟᱛᱮ ᱥᱟᱦᱴᱟ ᱦ&ᱩᱰᱤᱧ ᱢᱮ (ᱡᱩᱫᱤ ᱞᱟᱹᱠᱛᱤ ᱠᱷᱟᱱ)
 si:මෘද්‍රණ කළාපයේ පිටු &හකුලුවන්න (ඇවැසිනම්)
 sk:&Zmenšiť strany na tlačiteľnú plochu (ak je to potrebné)
 sl:&Skrči strani na področje tiskanja (če je potrebno)
@@ -14926,6 +14930,7 @@ pl:Otwórz katalog w &Double Commanderze
 pt:Abrir pasta no &Double Commander
 ro:Deschide folder în &Double Commander
 ru:Открыть папку в &Double Commander
+sat:&ᱰᱚᱵᱚᱞ ᱟᱫᱮᱥᱤᱭᱟᱹ ᱨᱮ ᱯᱚᱴᱚᱢ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v aplikácii &Double Commander
 sr-rs:Отвори фасциклу у Double Commander-у (&К)
 ta:டபுள் கமாண்டரில் கோப்புறை திற
@@ -15007,6 +15012,7 @@ pl:Otwórz katalog w &Total Commanderze
 pt:Abrir pasta no &Total Commander
 ro:Deschide folder în &Total Commander
 ru:Открыть папку в &Total Commander
+sat:&ᱢᱩᱴ ᱠᱚᱢᱟᱱᱰᱚᱨ ᱨᱮ ᱯᱚᱴᱚᱢ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v aplikácii &Total Commander
 sr-rs:Отвори фасциклу у Total Commander-у (&Т)
 ta:டோட்டல் கமாண்டரில் கோப்புறை திற
@@ -18302,6 +18308,7 @@ pl:Zapisz s&krót...
 pt:Guardar atal&ho...
 ro:Salvează s&curtătură...
 ru:Сохранить &ярлык...
+sat:ᱠᱷ&ᱴᱚᱢᱟᱪᱷᱟ ᱥᱟᱧᱪᱟᱣ ᱢᱮ ᱹᱹᱹ
 sk:Uložiť skra&tku
 sl:S&hrani bližnjico …
 sr-rs:Сачувај пре&чицу...
@@ -18719,7 +18726,17 @@ tw:使用 Google 搜尋(&G)
 uk:Пошук за допомогою &Google
 vn:Tìm Kiếm Với &Google
 :Search with &Google Scholar
+br:Procurar com o &Google Scholar
+fr:Rechercher avec &Google Scholar
+pt:Procurar com o &Google Scholar
+sat:&Google Scholar ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
+sk:Vyhľadať na &Google Scholar
 :Search with &Wikipedia
+br:Procurar com a &Wikipedia
+fr:Rechercher avec &Wikipedia
+pt:Procurar com a &Wikipedia
+sat:&Wikipedia ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
+sk:Vyhľadať na &Wikipedii
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
