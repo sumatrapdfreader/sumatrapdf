@@ -362,7 +362,7 @@ void LogLastError(DWORD err) {
     if (msg == nullptr) {
         msg = (TempStr)"";
     }
-    logf("LogLastError: 0x%x '%s'\n", (int)err, msg);
+    logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);
 }
 
 void DbgOutLastError(DWORD err) {
