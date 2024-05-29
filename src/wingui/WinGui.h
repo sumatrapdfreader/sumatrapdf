@@ -484,7 +484,6 @@ struct Splitter : public Wnd {
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 };
 
-
 //--- TreeView
 
 struct TreeView;

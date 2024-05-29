@@ -905,6 +905,7 @@
     <ClInclude Include="..\src\utils\Log.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EngineBase.cpp" />

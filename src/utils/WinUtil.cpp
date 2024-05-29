@@ -339,7 +339,7 @@ TempStr GetLastErrorStrTemp(DWORD err) {
     }
     if (err == ERROR_INTERNET_EXTENDED_ERROR) {
         char buf[4096]{};
-        DWORD bufSize = dimof(buf)-1;
+        DWORD bufSize = dimof(buf) - 1;
         // TODO: ignoring a case where buffer is too small. 4 kB should be enough for everybody
         InternetGetLastResponseInfoA(&err, buf, &bufSize);
         buf[4095] = 0;
@@ -360,7 +360,7 @@ TempStr GetLastErrorStrTemp(DWORD err) {
 void LogLastError(DWORD err) {
     TempStr msg = GetLastErrorStrTemp(err);
     if (msg == nullptr) {
-        msg = (TempStr)"";
+        msg = (TempStr) "";
     }
     logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);
 }

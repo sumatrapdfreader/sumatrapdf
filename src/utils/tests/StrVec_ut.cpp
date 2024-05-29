@@ -225,10 +225,10 @@ static void StrVecTest2() {
         utassert(str::Eq(joined, "a;b;c"));
         StrVecCheckIter(v2, nullptr);
 
-        #if 0
+#if 0
         AutoFreeWStr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
-        #endif
+#endif
         TestRemoveAt(v2);
     }
     TestRemoveAt(v);

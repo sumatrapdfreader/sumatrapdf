@@ -19,6 +19,7 @@ function preview_test_files()
   })
   files {
     "src/tools/preview_test.cpp",
+    "src/CrashHandlerNoOp.cpp",
   }
 end
 
@@ -1121,6 +1122,7 @@ function efi_files()
     "tools/efi/*.h",
     "tools/efi/*.cpp",
     "src/utils/BaseUtil*",
+    "CrashHandlerNoOp.cpp",
     "src/utils/BitManip.h",
     "src/utils/Dict*",
     "src/utils/StrUtil.*",
@@ -1130,6 +1132,7 @@ end
 function sizer_files()
   files {
     "tools/sizer/*",
+    "src/CrashHandlerNoOp.cpp",
   }
 end
 
@@ -1170,6 +1173,7 @@ function test_util_files()
   files_in_dir("src", {
     --"StressTesting.*",
     --"AppTools.*",
+    "CrashHandlerNoOp.cpp",
     "DisplayMode.*",
     "Flags.*",
     "SumatraConfig.*",
@@ -1181,12 +1185,20 @@ end
 
 function engine_dump_files()
   files_in_dir("src", {
+    "CrashHandlerNoOp.cpp",
     "EngineDump.cpp",
     "SumatraConfig.*",
     "FzImgReader.*",
     "mui/Mui.*",
     "mui/TextRender.*"
   })
+end
+
+function plugin_test_files()
+    files {
+        "src/tools/plugin-test.cpp",
+        "src/CrashHandlerNoOp.cpp"
+    }
 end
 
 function pdf_preview_files()
@@ -1200,6 +1212,7 @@ function pdf_preview_files()
     "utils/Log.*",
     "mui/Mui.*",
     "mui/TextRender.*",
+    "CrashHandlerNoOp.cpp",
     "ChmFile.*",
     "DocProperties.*",
     "EbookDoc.*",
@@ -1232,6 +1245,7 @@ function search_filter_files()
   files_in_dir("src", {
     "utils/Log.*",
     "MUPDF_Exports.cpp",
+    "CrashHandlerNoOp.cpp",
     "DocProperties.*",
     "EbookDoc.*",
     "EngineBase.*",
@@ -1255,65 +1269,6 @@ function search_filter_files()
     }
   filter {}
 end
-
-
---[[
-function wdl_files()
-  files_in_dir("ext/WDL", {
-    "projectcontext.cpp",
-  })
-
-  files_in_dir("ext/WDL/tinyxml", {
-    "*.cpp",
-    "*.c",
-    "*.h",
-  })
-
-  files_in_dir("ext/WDL/lice", {
-    "lice.*",
-    "lice_arc.cpp",
-    "lice_bezier.h",
-    -- "lice_bmp.cpp",
-    "lice_colorspace.*",
-    "lice_combine.h",
-    "lice_extended.h",
-    -- "lice_gif.cpp",
-    -- "lice_gif_write.cpp",
-    -- "lice_gl_ctx.*",
-    -- "lice_glbitmap.*",
-    -- "lice_ico.cpp",
-    -- "lice_image.cpp",
-    "lice_import.h",
-    -- "lice_jpg.cpp",
-    -- "lice_jpg_write.cpp",
-    -- "lice_lcf.*",
-    "lice_line.cpp",
-    "lice_lvg.cpp",
-    "lice_palette.cpp",
-    -- "lice_pcx.cpp",
-    -- "lice_png.cpp",
-    -- "lice_png_write.cpp",
-    "lice_svg.cpp",
-    -- "lice_texgen.cpp",
-    "lice_text.*",
-    "lice_textnew.cpp",
-  })
-
-  files_in_dir("ext/WDL/wingui", {
-    "dlgitemborder.h",
-    "membitmap.h",
-    "riceditctrl.h",
-    "virtwnd.*",
-    "virtwnd-controls.h",
-    "virtwnd-iaccessible.cpp",
-    "virtwnd-iconbutton.cpp",
-    "virtwnd-listbox.cpp",
-    "virtwnd-skin.h",
-    "virtwnd-slider.cpp",
-    "wndsize.*",
-  })
-end
---]]
 
 function gumbo_files()
   files_in_dir("ext/gumbo-parser/src", {

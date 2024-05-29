@@ -816,6 +816,7 @@
     <ClInclude Include="..\tools\sizer\types.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\tools\sizer\debuginfo.cpp" />
     <ClCompile Include="..\tools\sizer\main.cpp" />
     <ClCompile Include="..\tools\sizer\parg.c" />

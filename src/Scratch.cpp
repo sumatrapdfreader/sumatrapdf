@@ -34,18 +34,6 @@
 
 // ----------------
 
-void TestUngzip() {
-    const char* pathGz = R"(C:\Users\kjk\Downloads\AUTOSAR_TPS_SoftwareComponentTemplate.synctex.gz)";
-    const char* path = R"(C:\Users\kjk\Downloads\AUTOSAR_TPS_SoftwareComponentTemplate.synctex)";
-    ByteSlice uncomprFile = file::ReadFile(path);
-    ReportIf(uncomprFile.empty());
-    ByteSlice compr = file::ReadFile(pathGz);
-    ReportIf(compr.empty());
-    ByteSlice uncompr = Ungzip(compr);
-    bool same = IsEqual(uncomprFile, uncompr);
-    ReportIf(!same);
-}
-
 struct BrowserTestWnd : Wnd {
     Webview2Wnd* webView = nullptr;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;

@@ -140,12 +140,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdFavoriteDel, "Delete Favorite")                                           \
     V(CmdFavoriteToggle, "Toggle Favorites")                                       \
     V(CmdToggleLinks, "Toggle Show Links")                                         \
-    V(CmdDebugCrashMe, "Debug: Crash Me")                                          \
-    V(CmdDebugCorruptMemory, "Debug: Corrupt Memory")                              \
-    V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                          \
-    V(CmdDebugTestApp, "Debug: Test App")                                          \
-    V(CmdDebugShowNotif, "Debug: Show Notification")                               \
-    V(CmdDebugStartStressTest, "Debug: Start Stress Test")                         \
     V(CmdCreateAnnotText, "Create Text Annotation")                                \
     V(CmdCreateAnnotLink, "Create Link Annotation")                                \
     V(CmdCreateAnnotFreeText, "Create Free Text Annotation")                       \
@@ -183,6 +177,12 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdSelectNextTheme, "Select next theme")                                     \
     V(CmdToggleFrequentlyRead, "Toggle Frequently Read")                           \
     V(CmdInvokeInverseSearch, "Invoke Inverse Search")                             \
+    V(CmdDebugCorruptMemory, "Debug: Corrupt Memory")                              \
+    V(CmdDebugCrashMe, "Debug: Crash Me")                                          \
+    V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                          \
+    V(CmdDebugTestApp, "Debug: Test App")                                          \
+    V(CmdDebugShowNotif, "Debug: Show Notification")                               \
+    V(CmdDebugStartStressTest, "Debug: Start Stress Test")                         \
     V(CmdNone, "Do nothing")
 
 //V(CmdSelectAnnotation, "Select Annotation")                           \

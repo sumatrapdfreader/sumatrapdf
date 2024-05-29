@@ -107,6 +107,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />

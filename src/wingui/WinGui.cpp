@@ -2466,7 +2466,6 @@ std::string html_from_uri(const std::string s) {
 }
 #endif
 
-
 //--- TreeView
 
 /*

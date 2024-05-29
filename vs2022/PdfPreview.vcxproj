@@ -911,6 +911,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChmFile.cpp" />
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />

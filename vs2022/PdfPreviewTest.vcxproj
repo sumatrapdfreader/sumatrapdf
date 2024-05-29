@@ -818,6 +818,7 @@
     <ClInclude Include="..\src\utils\TempAllocator.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\tools\preview_test.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />

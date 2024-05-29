@@ -113,8 +113,6 @@ struct Flags {
     // before proceeding
     int sleepMs = 0;
 
-    bool testBrowser = false;
-
     Flags() = default;
     ~Flags();
 };

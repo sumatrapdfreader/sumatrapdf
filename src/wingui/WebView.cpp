@@ -13,7 +13,7 @@
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
-//#include "Theme.h"
+// #include "Theme.h"
 
 #include "webview2.h"
 #include "wingui/WebView.h"
@@ -33,14 +33,14 @@ TempStr GetWebView2VersionTemp() {
 }
 
 class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
-public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
-public ICoreWebView2WebMessageReceivedEventHandler,
-public ICoreWebView2PermissionRequestedEventHandler {
+                             public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
+                             public ICoreWebView2WebMessageReceivedEventHandler,
+                             public ICoreWebView2PermissionRequestedEventHandler {
     using webview2_com_handler_cb_t = std::function<void(ICoreWebView2Controller*)>;
 
-public:
+  public:
     webview2_com_handler(HWND hwnd, WebViewMsgCb msgCb, webview2_com_handler_cb_t cb)
-    : m_window(hwnd), msgCb(msgCb), m_cb(cb) {
+        : m_window(hwnd), msgCb(msgCb), m_cb(cb) {
     }
     ULONG STDMETHODCALLTYPE AddRef() {
         return 1;
@@ -94,7 +94,7 @@ public:
         return S_OK;
     }
 
-private:
+  private:
     HWND m_window;
     WebViewMsgCb msgCb;
     webview2_com_handler_cb_t m_cb;
@@ -118,15 +118,15 @@ void Webview2Wnd::Eval(const char* js) {
 }
 
 void Webview2Wnd::SetHtml(const char* html) {
-    #if 0
+#if 0
     std::string s = "data:text/html,";
     s += url_encode(html);
     WCHAR* html2 = ToWStrTemp(s.c_str());
     m_webview->Navigate(html2);
-    #else
+#else
     WCHAR* html2 = ToWStrTemp(html);
     webview->NavigateToString(html2);
-    #endif
+#endif
 }
 
 void Webview2Wnd::Init(const char* js) {
@@ -163,7 +163,7 @@ bool Webview2Wnd::Embed(WebViewMsgCb cb) {
             controller->get_CoreWebView2(&webview);
             webview->AddRef();
             InterlockedAdd(&flag, 1);
-    }));
+        }));
     if (hr != S_OK) {
         return false;
     }

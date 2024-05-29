@@ -210,6 +210,16 @@ static bool IsOpenExternalViewerCommand(i32 cmdId) {
 }
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
+    switch (cmdId) {
+        case CmdDebugCorruptMemory:
+        case CmdDebugCrashMe:
+        case CmdDebugDownloadSymbols:
+        case CmdDebugTestApp:
+        case CmdDebugShowNotif:
+        case CmdDebugStartStressTest:
+            return gIsDebugBuild;
+    }
+
     if (IsCmdInList(gBlacklistCommandsFromPalette)) {
         return false;
     }
@@ -320,16 +330,6 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
     if ((cmdId == CmdToggleScrollbars) && !gGlobalPrefs->fixedPageUI.hideScrollbars) {
         return false;
-    }
-
-    switch (cmdId) {
-        case CmdDebugTestApp:
-        case CmdDebugShowNotif:
-        case CmdDebugStartStressTest:
-        case CmdDebugCorruptMemory:
-        case CmdDebugCrashMe: {
-            return gIsDebugBuild;
-        }
     }
     return true;
 }

@@ -660,7 +660,7 @@ workspace "SumatraPDF"
     cppdialect "C++latest"
     regconf()
     includedirs { "src", "mupdf/include"}
-    files { "src/tools/signfile.cpp" }
+    files { "src/tools/signfile.cpp", "src/CrashHandlerNoOp.cpp" }
     links { "utils", "mupdf" }
     links { "crypt32", "shlwapi", "version", "Comctl32", "wininet" }
 
@@ -672,7 +672,7 @@ workspace "SumatraPDF"
     regconf()
     entrypoint "WinMainCRTStartup"
     includedirs { "src" }
-    files { "src/tools/plugin-test.cpp" }
+    plugin_test_files()
     links { "utils", "mupdf" }
     links { "shlwapi", "version", "comctl32", "wininet" }
 
@@ -790,7 +790,6 @@ workspace "SumatraPDF"
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
-    defines { "ENABLE_CRASH_REPORTING" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
@@ -844,7 +843,6 @@ workspace "SumatraPDF"
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
     defines { "DISABLE_DOCUMENT_RESTRICTIONS" }
-    defines { "ENABLE_CRASH_REPORTING" }
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about

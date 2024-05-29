@@ -16,6 +16,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\FzImgReader.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />

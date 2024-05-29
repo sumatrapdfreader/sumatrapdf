@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
 #include "utils/BaseUtil.h"
@@ -116,7 +116,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
     return isWine;
 }
 
-static char* BuildCrashInfoText(const char* condStr, bool isCrash, bool captureCallstack) {
+char* BuildCrashInfoText(const char* condStr, bool isCrash, bool captureCallstack) {
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (!isCrash) {
         captureCallstack = true;
@@ -170,7 +170,7 @@ static char* BuildCrashInfoText(const char* condStr, bool isCrash, bool captureC
     return s.StealData();
 }
 
-static void SaveCrashInfo(const ByteSlice& d) {
+void SaveCrashInfo(const ByteSlice& d) {
     if (!gCrashFilePath) {
         return;
     }
@@ -178,7 +178,7 @@ static void SaveCrashInfo(const ByteSlice& d) {
     file::WriteFile(gCrashFilePath, d);
 }
 
-static void UploadCrashReport(const ByteSlice& d) {
+void UploadCrashReport(const ByteSlice& d) {
     log("UploadCrashReport()\n");
     if (d.empty()) {
         return;
@@ -305,7 +305,7 @@ bool InitializeDbgHelp(bool force) {
     return true;
 }
 
-static bool DownloadSymbolsIfNeeded() {
+bool DownloadSymbolsIfNeeded() {
     logf("DownloadSymbolsIfNeeded(), gSymbolsDir: '%s'\n", gSymbolsDir);
     if (!AreSymbolsDownloaded(gSymbolsDir)) {
         bool ok = CrashHandlerDownloadSymbols();
@@ -316,6 +316,11 @@ static bool DownloadSymbolsIfNeeded() {
     return InitializeDbgHelp(false);
 }
 
+#if !defined(UPLOAD_REPORT)
+void _uploadDebugReport(const char*, bool, bool) {
+    // no-op in
+}
+#else
 // like crash report, but can be triggered without a crash
 void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack) {
     // we want to avoid submitting multiple reports for the same
@@ -380,6 +385,7 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     log(s);
     log("_uploadDebugReport() finished\n");
 }
+#endif
 
 static DWORD WINAPI CrashDumpThread(LPVOID) {
     WaitForSingleObject(gDumpEvent, INFINITE);
@@ -544,7 +550,6 @@ static void GetSystemInfo(str::Str& s) {
     GetProcessorName(s);
 
     {
-
         MEMORYSTATUSEX ms;
         ms.dwLength = sizeof(ms);
         GlobalMemoryStatusEx(&ms);
@@ -552,13 +557,13 @@ static void GetSystemInfo(str::Str& s) {
         float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
         float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
         DWORD usedPerc = ms.dwMemoryLoad;
-        s.AppendFmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB, totalPageGB,
-                    usedPerc);
+        s.AppendFmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB,
+                    totalPageGB, usedPerc);
     }
     {
         TempStr ver = GetWebView2VersionTemp();
         if (str::IsEmpty(ver)) {
-            ver = (TempStr)"no WebView2 installed";
+            ver = (TempStr) "no WebView2 installed";
         }
         s.AppendFmt("WebView2: %s\n", ver);
     }

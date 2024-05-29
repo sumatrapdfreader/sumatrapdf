@@ -810,6 +810,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\tools\signfile.cpp" />
   </ItemGroup>
   <ItemGroup>

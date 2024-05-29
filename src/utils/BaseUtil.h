@@ -228,14 +228,17 @@ inline void CrashMe() {
 // rare cases where we really want to know a given condition happens. Before
 // each release we should audit the uses of ReportAlwaysIf()
 //
-// The condition is always evaluated but we shouldn't rely on that.
+// The condition is not guaranteed to be evaluated
 
 // exclude ReportIfCond() from release builds
+#undef UPLOAD_REPORT
 #if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
-#undef ENABLE_CRASH_REPORTING
+#define UPLOAD_REPORT
 #endif
 
-#ifdef ENABLE_CRASH_REPORTING
+extern void _uploadDebugReport(const char*, bool, bool);
+
+#ifdef UPLOAD_REPORT
 #define ReportIfCond(cond, condStr, isCrash, captureCallstack)      \
     __analysis_assume(!(cond));                                     \
     do {                                                            \
@@ -244,10 +247,10 @@ inline void CrashMe() {
         }                                                           \
     } while (0)
 #else
+// version that is a no-op
 #define ReportIfCond(cond, x, y, z) \
+    __analysis_assume(!(cond));     \
     do {                            \
-        if (cond) {                 \
-        }                           \
     } while (0)
 #endif
 

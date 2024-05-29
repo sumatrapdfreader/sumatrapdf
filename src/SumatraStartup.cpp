@@ -1089,20 +1089,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
 
-#if defined(DEBUG)
-    void TestBrowser(); // scratch.cpp
-    if (flags.testBrowser) {
-        TestBrowser();
-        return 0;
-    }
-
-    void TestUngzip();
-    if (false) {
-        TestUngzip();
-        return 0;
-    }
-#endif
-
     if (flags.showConsole) {
         RedirectIOToConsole();
     }
