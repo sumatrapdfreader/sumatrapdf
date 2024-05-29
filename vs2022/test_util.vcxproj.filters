@@ -237,6 +237,9 @@
     <ClCompile Include="..\src\utils\tests\StrUtil_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\tests\StrVec_ut.cpp">
+      <Filter>utils\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\tests\TrivialHtmlParser_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>
