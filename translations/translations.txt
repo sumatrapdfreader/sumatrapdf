@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2c7868dae3cc20d527efd70bd68cce36e248b7f8
+7055cbdae7d2953285887ac7ee88d115dbc44547
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -18662,7 +18662,7 @@ no:Søk med &Bing
 pl:Szukaj za pomocą &Bing
 pt:Pesquisar com &Bing
 ro:Caută cu &Bing
-ru:Н&айти в Bing
+ru:Найти в &Bing
 sat:&ᱵᱤᱨ(Bing) ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadávanie pomocou &Bing
 sl:Išči z &Bing
@@ -18713,7 +18713,7 @@ no:Søk med &Google
 pl:Szukaj za pomocą &Google
 pt:Pesquisar com &Google
 ro:Caută cu &Google
-ru:&Найти в Google
+ru:Найти в &Google
 sat:ᱜᱩᱜᱩᱞ(Google) ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Hľadať pomocou &Google
 sl:Išči z &Google
@@ -18729,12 +18729,16 @@ vn:Tìm Kiếm Với &Google
 br:Procurar com o &Google Scholar
 fr:Rechercher avec &Google Scholar
 pt:Procurar com o &Google Scholar
+ro: Caută cu &Google Academic
+ru:  Найти в &Google Scholar
 sat:&Google Scholar ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Google Scholar
 :Search with &Wikipedia
 br:Procurar com a &Wikipedia
 fr:Rechercher avec &Wikipedia
 pt:Procurar com a &Wikipedia
+ro:Caută pe &Wikipedia
+ru:Найти в &Wikipedia
 sat:&Wikipedia ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Wikipedii
 :Searching %d of %d...
