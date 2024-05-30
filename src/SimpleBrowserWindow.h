@@ -9,7 +9,7 @@ struct SimpleBrowserCreateArgs {
 };
 
 struct SimpleBrowserWindow : Wnd {
-    Webview2Wnd* webView = nullptr;
+    WebviewWnd* webView = nullptr;
     HWND Create(const SimpleBrowserCreateArgs&);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     ~SimpleBrowserWindow() override;

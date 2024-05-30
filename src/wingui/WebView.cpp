@@ -110,11 +110,11 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
     webview2_com_handler_cb_t m_cb;
 };
 
-Webview2Wnd::Webview2Wnd() {
+WebviewWnd::WebviewWnd() {
     kind = kindWebView;
 }
 
-void Webview2Wnd::UpdateWebviewSize() {
+void WebviewWnd::UpdateWebviewSize() {
     if (controller == nullptr) {
         return;
     }
@@ -122,12 +122,12 @@ void Webview2Wnd::UpdateWebviewSize() {
     controller->put_Bounds(bounds);
 }
 
-void Webview2Wnd::Eval(const char* js) {
+void WebviewWnd::Eval(const char* js) {
     TempWStr ws = ToWStrTemp(js);
     webview->ExecuteScript(ws, nullptr);
 }
 
-void Webview2Wnd::SetHtml(const char* html) {
+void WebviewWnd::SetHtml(const char* html) {
 #if 0
     std::string s = "data:text/html,";
     s += url_encode(html);
@@ -139,12 +139,12 @@ void Webview2Wnd::SetHtml(const char* html) {
 #endif
 }
 
-void Webview2Wnd::Init(const char* js) {
+void WebviewWnd::Init(const char* js) {
     TempWStr ws = ToWStrTemp(js);
     webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
 }
 
-void Webview2Wnd::Navigate(const char* url) {
+void WebviewWnd::Navigate(const char* url) {
     TempWStr ws = ToWStrTemp(url);
     webview->Navigate(ws);
 }
@@ -161,7 +161,7 @@ void Webview2Wnd::Navigate(const char* url) {
     put_IsBuiltInErrorPageEnabled(BOOL enabled)
     */
 
-bool Webview2Wnd::Embed(WebViewMsgCb cb) {
+bool WebviewWnd::Embed(WebViewMsgCb cb) {
     // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
     // called on a different thread?
     volatile LONG flag = 0;
@@ -200,7 +200,7 @@ bool Webview2Wnd::Embed(WebViewMsgCb cb) {
     return true;
 }
 
-void Webview2Wnd::OnBrowserMessage(const char* msg) {
+void WebviewWnd::OnBrowserMessage(const char* msg) {
     /*
     auto seq = json_parse(msg, "id", 0);
     auto name = json_parse(msg, "method", 0);
@@ -214,7 +214,7 @@ void Webview2Wnd::OnBrowserMessage(const char* msg) {
     log(msg);
 }
 
-HWND Webview2Wnd::Create(const CreateWebViewArgs& args) {
+HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     ReportIf(!dataDir);
     CreateCustomArgs cargs;
     cargs.parent = args.parent;
@@ -224,19 +224,19 @@ HWND Webview2Wnd::Create(const CreateWebViewArgs& args) {
         return nullptr;
     }
 
-    auto cb = std::bind(&Webview2Wnd::OnBrowserMessage, this, std::placeholders::_1);
+    auto cb = std::bind(&WebviewWnd::OnBrowserMessage, this, std::placeholders::_1);
     Embed(cb);
     UpdateWebviewSize();
     return hwnd;
 }
 
-LRESULT Webview2Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     if (msg == WM_SIZE) {
         UpdateWebviewSize();
     }
     return WndProcDefault(hwnd, msg, wparam, lparam);
 }
 
-Webview2Wnd::~Webview2Wnd() {
+WebviewWnd::~WebviewWnd() {
     str::Free(dataDir);
 }

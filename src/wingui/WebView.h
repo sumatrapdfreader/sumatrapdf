@@ -16,9 +16,9 @@ struct CreateWebViewArgs {
     Rect pos;
 };
 
-struct Webview2Wnd : Wnd {
-    Webview2Wnd();
-    ~Webview2Wnd() override;
+struct WebviewWnd : Wnd {
+    WebviewWnd();
+    ~WebviewWnd() override;
 
     HWND Create(const CreateWebViewArgs&);
 
