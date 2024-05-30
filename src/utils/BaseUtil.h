@@ -227,16 +227,16 @@ inline void CrashMe() {
 // To crash uncoditionally use ReportIf(). It should only be used in
 // rare cases where we really want to know a given condition happens. Before
 // each release we should audit the uses of ReportAlwaysIf()
-//
-// The condition is not guaranteed to be evaluated
 
-// exclude ReportIfCond() from release builds
+// in release builds ReportIf()/ReportIfQuick() will break if running under
+// the debugger. In other builds it send a debug report
 #undef UPLOAD_REPORT
 #if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
 #define UPLOAD_REPORT
 #endif
 
 extern void _uploadDebugReport(const char*, bool, bool);
+void BreakIfUnderDebugger();
 
 #ifdef UPLOAD_REPORT
 #define ReportIfCond(cond, condStr, isCrash, captureCallstack)      \
@@ -251,6 +251,9 @@ extern void _uploadDebugReport(const char*, bool, bool);
 #define ReportIfCond(cond, x, y, z) \
     __analysis_assume(!(cond));     \
     do {                            \
+        if (cond) {                 \
+            BreakIfUnderDebugger(); \
+        }                           \
     } while (0)
 #endif
 
@@ -280,20 +283,9 @@ inline void ZeroArray(T& a) {
     ZeroMemory((void*)&a, size);
 }
 
-template <typename T>
-inline T limitValue(T val, T min, T max) {
-    if (min > max) {
-        std::swap(min, max);
-    }
-    ReportIf(min > max);
-    if (val < min) {
-        return min;
-    }
-    if (val > max) {
-        return max;
-    }
-    return val;
-}
+int limitValue(int val, int min, int max);
+DWORD limitValue(DWORD val, DWORD min, DWORD max);
+float limitValue(float val, float min, float max);
 
 // return true if adding n to val overflows. Only valid for n > 0
 template <typename T>

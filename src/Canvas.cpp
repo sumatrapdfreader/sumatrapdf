@@ -984,7 +984,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         }
 
         bool renderOutOfDateCue = false;
-        int renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
+        int renderDelay = gRenderCache->Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay != 0) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);

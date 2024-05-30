@@ -115,7 +115,7 @@ static Kind kNotifZoom = "zoom";
 Favorites gFavorites;
 
 HBITMAP gBitmapReloadingCue;
-RenderCache gRenderCache;
+RenderCache* gRenderCache;
 HCURSOR gCursorDrag;
 
 // set after mouse shortcuts involving the Alt key (so that the menu bar isn't activated)
@@ -726,7 +726,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 
     // TODO: this is leaking?
     RenderingCallback* callback = new ThumbnailRenderingTask(saveThumbnail);
-    gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
+    gRenderCache->Render(dm, 1, 0, zoom, pageRect, *callback);
     // cppcheck-suppress memleak
 }
 
@@ -788,13 +788,13 @@ void ControllerCallbackHandler::RequestRendering(int pageNo) {
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
     if (dm->ShouldCacheRendering(pageNo)) {
-        gRenderCache.RequestRendering(dm, pageNo);
+        gRenderCache->RequestRendering(dm, pageNo);
     }
 }
 
 void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
-    gRenderCache.CancelRendering(dm);
-    gRenderCache.FreeForDisplayModel(dm);
+    gRenderCache->CancelRendering(dm);
+    gRenderCache->FreeForDisplayModel(dm);
 }
 
 void ControllerCallbackHandler::FocusFrame(bool always) {
@@ -1204,7 +1204,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetDisplayR2L(fs ? fs->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             }
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->GetFilePath(), prevCtrl->GetFilePath())) {
-                gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
+                gRenderCache->KeepForDisplayModel(prevCtrl->AsFixed(), dm);
                 dm->CopyNavHistory(*prevCtrl->AsFixed());
             }
             // tell UI Automation about content change
@@ -2178,8 +2178,8 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
     if (!dm) {
         return;
     }
-    gRenderCache.CancelRendering(dm);
-    gRenderCache.KeepForDisplayModel(dm, dm);
+    gRenderCache->CancelRendering(dm);
+    gRenderCache->KeepForDisplayModel(dm, dm);
     if (includeNonClientArea) {
         win->RedrawAllIncludingNonClient();
     } else {
@@ -2206,12 +2206,12 @@ void UpdateDocumentColors() {
     COLORREF text = ThemeDocumentColors(bg);
     // logfa("retrieved doc colors in UpdateDocumentColors: 0x%x 0x%x\n", text, bg);
 
-    if ((text == gRenderCache.textColor) && (bg == gRenderCache.backgroundColor)) {
+    if ((text == gRenderCache->textColor) && (bg == gRenderCache->backgroundColor)) {
         return; // colors didn't change
     }
 
-    gRenderCache.textColor = text;
-    gRenderCache.backgroundColor = bg;
+    gRenderCache->textColor = text;
+    gRenderCache->backgroundColor = bg;
     RerenderEverything();
 }
 
@@ -3543,7 +3543,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sideb
             } else {
                 toc.dy = gGlobalPrefs->tocDy;
                 if (toc.dy > 0) {
-                    toc.dy = limitValue<int>(gGlobalPrefs->tocDy, 0, rc.dy);
+                    toc.dy = limitValue(gGlobalPrefs->tocDy, 0, rc.dy);
                 } else {
                     toc.dy = rc.dy / 2; // default value
                 }

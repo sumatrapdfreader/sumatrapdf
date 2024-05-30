@@ -64,6 +64,12 @@ bool AtomicRefCount::Dec() {
     return res == 0;
 }
 
+void BreakIfUnderDebugger() {
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    }
+}
+
 void* Allocator::Alloc(Allocator* a, size_t size) {
     if (!a) {
         return malloc(size);
@@ -469,4 +475,46 @@ u32 MurmurHashStrI(const char* s) {
         *dst++ = c;
     }
     return MurmurHash2(dst - len, len);
+}
+
+int limitValue(int val, int min, int max) {
+    if (min > max) {
+        std::swap(min, max);
+    }
+    ReportIf(min > max);
+    if (val < min) {
+        return min;
+    }
+    if (val > max) {
+        return max;
+    }
+    return val;
+}
+
+DWORD limitValue(DWORD val, DWORD min, DWORD max) {
+    if (min > max) {
+        std::swap(min, max);
+    }
+    ReportIf(min > max);
+    if (val < min) {
+        return min;
+    }
+    if (val > max) {
+        return max;
+    }
+    return val;
+}
+
+float limitValue(float val, float min, float max) {
+    if (min > max) {
+        std::swap(min, max);
+    }
+    ReportIf(min > max);
+    if (val < min) {
+        return min;
+    }
+    if (val > max) {
+        return max;
+    }
+    return val;
 }

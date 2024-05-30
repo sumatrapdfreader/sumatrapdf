@@ -86,7 +86,7 @@ extern bool gShowFrameRate;
 extern const char* gPluginURL;
 extern Favorites gFavorites;
 extern WNDPROC DefWndProcCloseButton;
-extern RenderCache gRenderCache;
+extern RenderCache* gRenderCache;
 
 extern bool gSupressNextAltMenuTrigger;
 extern HBITMAP gBitmapReloadingCue;

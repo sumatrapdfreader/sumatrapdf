@@ -807,7 +807,7 @@ static void OnTimer(StressTest* st, int timerIdGot) {
     // Image files are always fully rendered in WM_PAINT, so we know the page
     // has already been rendered.
     dm = st->win->AsFixed();
-    didRender = gRenderCache.Exists(dm, st->currPageNo, dm->GetRotation());
+    didRender = gRenderCache->Exists(dm, st->currPageNo, dm->GetRotation());
     if (!didRender && dm->ShouldCacheRendering(st->currPageNo)) {
         double timeInMs = TimeSinceInMs(st->currPageRenderTime);
         if (timeInMs > 3.0 * 1000) {
