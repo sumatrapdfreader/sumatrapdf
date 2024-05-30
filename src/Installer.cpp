@@ -585,28 +585,27 @@ static void PositionInstallButton(Button* b) {
     b->SetBounds({x, y, size.dx, size.dy});
 }
 
-// caller needs to str::Free()
-static char* GetDefaultInstallationDir(bool forAllUsers, bool ignorePrev) {
+static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) {
     logf("GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
     char* dir;
     char* dirPrevInstall = gWnd->prevInstall.installationDir;
-    TempStr dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
-    TempStr dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
 
     if (dirPrevInstall && !ignorePrev) {
         logf("  using %s from previous install\n", dirPrevInstall);
-        return str::Dup(dirPrevInstall);
+        return (TempStr)dirPrevInstall;
     }
 
     if (forAllUsers) {
-        dir = path::Join(dirAll, kAppName);
+        TempStr dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
+        dir = path::JoinTemp(dirAll, kAppName);
         logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
         return dir;
     }
 
     // %APPLOCALDATA%\SumatraPDF
-    dir = path::Join(dirUser, kAppName);
+    TempStr dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
+    dir = path::JoinTemp(dirUser, kAppName);
     logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
     return dir;
 }
@@ -617,7 +616,8 @@ void ForAllUsersStateChanged() {
     Button_SetElevationRequiredState(gWnd->btnInstall->hwnd, checked);
     gCli->allUsers = checked;
     str::Free(gCli->installDir);
-    gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, true);
+    auto dir = GetDefaultInstallationDirTemp(gCli->allUsers, true);
+    gCli->installDir = str::Dup(dir);
     gWnd->editInstallationDir->SetText(gCli->installDir);
 }
 
@@ -1074,7 +1074,8 @@ int RunInstaller() {
     GetPreviousInstallInfo(&gWnd->prevInstall);
 
     if (!gCli->installDir) {
-        gCli->installDir = GetDefaultInstallationDir(gCli->allUsers, false);
+        auto dir = GetDefaultInstallationDirTemp(gCli->allUsers, false);
+        gCli->installDir = str::Dup(dir);
     }
     char* cmdLine = ToUtf8Temp(GetCommandLineW());
     logf("Running'%s', cmdLine: '%s', installing into dir '%s'\n", GetExePathTemp(), cmdLine, gCli->installDir);

@@ -730,6 +730,21 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     // cppcheck-suppress memleak
 }
 
+struct CreateThumbnailData {
+    char* filePath = nullptr;
+    RenderedBitmap* bmp = nullptr;
+};
+
+static void CreateThumbnailFinish(CreateThumbnailData* d) {
+    char* path = d->filePath;
+    logf("CreateThumbnailFinish: path: '%s', 0x%p, d: 0x%p\n", path, path, d);
+    if (d->bmp) {
+        SetThumbnail(gFileHistory.FindByPath(path), d->bmp);
+    }
+    str::Free(path);
+    delete d;
+}
+
 static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     if (!ShouldSaveThumbnail(ds)) {
         return;
@@ -753,15 +768,12 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
         }
     }
 
+    auto size = Size(kThumbnailDx, kThumbnailDy);
     char* filePath = str::Dup(win->ctrl->GetFilePath());
-    win->ctrl->CreateThumbnail(Size(kThumbnailDx, kThumbnailDy), [=](RenderedBitmap* bmp) {
-        uitask::Post(TaskSetThumbnail, [=] {
-            if (bmp) {
-                SetThumbnail(gFileHistory.FindByPath(filePath), bmp);
-            }
-            str::Free(filePath);
-        });
-    });
+    auto d = new CreateThumbnailData{filePath, nullptr};
+    logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
+    win->ctrl->CreateThumbnail(
+        size, [d](RenderedBitmap* bmp) { uitask::Post(TaskSetThumbnail, [d] { CreateThumbnailFinish(d); }); });
 }
 
 /* Send the request to render a given page to a rendering thread */
