@@ -747,7 +747,8 @@ void HandleRedirectedConsoleOnShutdown() {
 // Return the full exe path of my own executable
 TempStr GetExePathTemp() {
     WCHAR buf[MAX_PATH]{};
-    GetModuleFileNameW(nullptr, buf, dimof(buf) - 1);
+    auto h = GetInstance();
+    GetModuleFileNameW(h, buf, dimof(buf) - 1);
     return ToUtf8Temp(buf);
 }
 

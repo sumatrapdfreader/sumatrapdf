@@ -76,7 +76,7 @@ TempStr GetSettingsFileNameTemp() {
 }
 
 TempStr GetSettingsPathTemp() {
-    return AppGenDataFilenameTemp(GetSettingsFileNameTemp());
+    return GetPathInAppDataDirTemp(GetSettingsFileNameTemp());
 }
 
 static void setMin(int& i, int minVal) {

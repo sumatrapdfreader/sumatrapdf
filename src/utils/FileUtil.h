@@ -30,9 +30,6 @@ bool IsAbsolute(const char* path);
 
 bool Match(const char* path, const char* filter);
 
-TempStr GetTempFilePathTemp(const char* filePrefix = nullptr);
-TempStr GetPathOfFileInAppDirTemp(const char* fileName = nullptr);
-
 enum Type {
     None, // path doesn't exist
     File,
@@ -41,6 +38,9 @@ enum Type {
 Type GetType(const char* path);
 
 } // namespace path
+
+TempStr GetTempFilePathTemp(const char* filePrefix = nullptr);
+TempStr GetPathInExeDirTemp(const char* fileName = nullptr);
 
 namespace file {
 

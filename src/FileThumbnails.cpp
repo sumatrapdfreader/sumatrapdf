@@ -46,8 +46,7 @@ char* GetThumbnailPathTemp(const char* filePath) {
 }
 
 TempStr GetThumbnailCacheDirTemp() {
-    constexpr const char* kThumbnailsDirName = "sumatrapdfcache";
-    TempStr thumbsDir = AppGenDataFilenameTemp(kThumbnailsDirName);
+    TempStr thumbsDir = GetPathInAppDataDirTemp("sumatrapdfcache");
     return thumbsDir;
 }
 

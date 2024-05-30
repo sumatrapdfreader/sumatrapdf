@@ -466,6 +466,7 @@ bool IsAbsolute(const char* path) {
     TempWStr ws = ToWStrTemp(path);
     return !PathIsRelativeW(ws);
 }
+} // namespace path
 
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
@@ -489,22 +490,12 @@ TempStr GetTempFilePathTemp(const char* filePrefix) {
 // returns a path to the application module's directory
 // with either the given fileName or the module's name
 // (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
-TempStr GetPathOfFileInAppDirTemp(const char* fileName) {
-    WCHAR modulePath[MAX_PATH]{};
-    GetModuleFileNameW(GetInstance(), modulePath, dimof(modulePath));
-    modulePath[dimof(modulePath) - 1] = '\0';
-    if (!fileName) {
-        return ToUtf8Temp(modulePath);
-    }
-    TempWStr moduleDir = path::GetDirTemp(modulePath);
-    TempWStr fileNameW = ToWStrTemp(fileName);
-    TempWStr path = path::JoinTemp(moduleDir, fileNameW);
-    path = path::Normalize(path);
-    TempStr res = ToUtf8Temp(path);
-    str::Free(path);
-    return res;
+TempStr GetPathInExeDirTemp(const char* fileName) {
+    TempStr dir = GetExeDirTemp();
+    TempStr path = path::JoinTemp(dir, fileName);
+    path = path::NormalizeTemp(path);
+    return path;
 }
-} // namespace path
 
 namespace file {
 

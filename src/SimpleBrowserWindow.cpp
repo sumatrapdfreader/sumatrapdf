@@ -57,7 +57,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         webView = new WebviewWnd();
         const char* dataDir = args.dataDir;
         if (!dataDir) {
-            dataDir = AppGenDataFilenameTemp("webViewData");
+            dataDir = GetPathInAppDataDirTemp("webViewData");
         }
         webView->dataDir = str::Dup(dataDir);
         CreateWebViewArgs cargs;

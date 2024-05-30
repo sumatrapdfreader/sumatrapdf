@@ -1062,7 +1062,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 #endif
 
     if (flags.appdataDir) {
-        SetAppDataPath(flags.appdataDir);
+        SetAppDataDir(flags.appdataDir);
     }
 
 #if defined(DEBUG)

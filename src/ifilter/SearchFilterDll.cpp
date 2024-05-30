@@ -119,7 +119,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
 
 STDAPI DllRegisterServer() {
     log("DllRegisterServer\n");
-    TempStr dllPath = path::GetPathOfFileInAppDirTemp((const char*)nullptr);
+    TempStr dllPath = GetPathInExeDirTemp((const char*)nullptr);
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
     }

@@ -201,7 +201,7 @@ void InitializePolicies(bool restrict) {
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (see ../docs/sumatrapdfrestrict.ini)
     // (if the file isn't there, everything is allowed)
-    TempStr restrictPath = path::GetPathOfFileInAppDirTemp(kRestrictionsFileName);
+    TempStr restrictPath = GetPathInExeDirTemp(kRestrictionsFileName);
     if (!file::Exists(restrictPath)) {
         gPolicyRestrictions = Perm::All;
         Split(gAllowedLinkProtocols, DEFAULT_LINK_PROTOCOLS, ",");

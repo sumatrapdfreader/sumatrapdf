@@ -29,9 +29,9 @@ bool HasBeenInstalled();
 bool IsRunningInPortableMode();
 bool IsDllBuild();
 
-TempStr AppGenDataFilenameTemp(const char* fileName);
+TempStr GetPathInAppDataDirTemp(const char* fileName);
 
-void SetAppDataPath(const char* path);
+void SetAppDataDir(const char* path);
 
 void DetectTextEditors(Vec<TextEditor*>&);
 char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col);

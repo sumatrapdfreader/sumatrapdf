@@ -95,7 +95,7 @@ bool IsDllBuild() {
 // TODO: leaks
 static char* gAppDataDir = nullptr;
 
-void SetAppDataPath(const char* path) {
+void SetAppDataDir(const char* path) {
     path = path::NormalizeTemp(path);
     bool ok = dir::CreateAll(path);
     ReportIfQuick(!ok);
@@ -103,40 +103,40 @@ void SetAppDataPath(const char* path) {
 }
 
 // Generate full path for a file or directory for storing data
-TempStr AppGenDataFilenameTemp(const char* name) {
+TempStr GetPathInAppDataDirTemp(const char* name) {
     if (!name) {
         return nullptr;
     }
 
-    if (gAppDataDir && dir::Exists(gAppDataDir)) {
+    if (gAppDataDir) {
         return path::JoinTemp(gAppDataDir, name);
     }
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return path::GetPathOfFileInAppDirTemp(name);
+        return GetPathInExeDirTemp(name);
     }
 
-    TempStr path = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
-    if (!path) {
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (!dir) {
         return nullptr;
     }
-    path = path::JoinTemp(path, kAppName);
+    dir = path::JoinTemp(dir, kAppName);
 
     // use a different path for store builds
     if (gIsStoreBuild) {
         // %APPLOCALDATA%/SumatraPDF Store
         // %APPLOCALDATA%/SumatraPDF Store Preview
-        path = str::JoinTemp(path, " Store");
+        dir = str::JoinTemp(dir, " Store");
         if (gIsPreReleaseBuild) {
-            path = str::JoinTemp(path, " Preview");
+            dir = str::JoinTemp(dir, " Preview");
         }
     }
-    bool ok = dir::Create(path);
+    bool ok = dir::CreateAll(dir);
     if (!ok) {
         return nullptr;
     }
-    return path::JoinTemp(path, name);
+    return path::JoinTemp(dir, name);
 }
 
 // List of rules used to detect TeX editors.
@@ -505,7 +505,7 @@ void SaveCallstackLogs() {
     if (s.empty()) {
         return;
     }
-    TempStr filePath = AppGenDataFilenameTemp("callstacks.txt");
+    TempStr filePath = GetPathInAppDataDirTemp("callstacks.txt");
     file::WriteFile(filePath, s);
     s.Free();
 }
