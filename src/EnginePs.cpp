@@ -20,7 +20,7 @@
 
 Kind kindEnginePostScript = "enginePostScript";
 
-static char* GetGhostscriptPath() {
+static TempStr GetGhostscriptPathTemp() {
     const char* gsProducts[] = {
         "AFPL Ghostscript",
         "Aladdin Ghostscript",
@@ -70,11 +70,11 @@ TryAgain64Bit:
             TempStr dir = path::GetDirTemp(GS_DLL);
             TempStr exe = path::JoinTemp(dir, "gswin32c.exe");
             if (file::Exists(exe)) {
-                return str::Dup(exe);
+                return exe;
             }
             exe = path::JoinTemp(dir, "gswin64c.exe");
             if (file::Exists(exe)) {
-                return str::Dup(exe);
+                return exe;
             }
         }
     }
@@ -96,7 +96,7 @@ TryAgain64Bit:
         if (!file::Exists(exe)) {
             continue;
         }
-        return str::Dup(exe);
+        return exe;
     }
     return nullptr;
 }
@@ -148,7 +148,7 @@ static EngineBase* ps2pdf(const char* path) {
     TempStr shortPath = path::ShortPathTemp(path);
     TempStr tmpFile = GetTempFilePathTemp("PsE");
     ScopedFile tmpFileScope(tmpFile);
-    AutoFreeStr gswin32c = GetGhostscriptPath();
+    TempStr gswin32c = GetGhostscriptPathTemp();
     if (!shortPath || !tmpFile || !gswin32c) {
         return nullptr;
     }
@@ -165,13 +165,12 @@ static EngineBase* ps2pdf(const char* path) {
     TempStr cmdLine = str::FormatTemp(
         "\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite "
         "-f \"%s\"",
-        gswin32c.Get(), tmpFile, shortPath);
+        gswin32c, tmpFile, shortPath);
 
     {
         TempStr fileName = path::GetBaseNameTemp(__FILE__);
-        char* gswin = gswin32c.Get();
         TempStr tmpFileName = path::GetBaseNameTemp(tmpFile);
-        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin, tmpFileName);
+        logf("- %s:%d: using '%s' for creating '%%TEMP%%\\%s'\n", fileName, __LINE__, gswin32c, tmpFileName);
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
@@ -396,8 +395,8 @@ EngineBase* EnginePs::CreateFromFile(const char* fileName) {
 }
 
 bool IsEnginePsAvailable() {
-    AutoFreeStr gswin32c = GetGhostscriptPath();
-    return gswin32c.Get() != nullptr;
+    TempStr gswin32c = GetGhostscriptPathTemp();
+    return gswin32c != nullptr;
 }
 
 bool IsEnginePsSupportedFileType(Kind kind) {
