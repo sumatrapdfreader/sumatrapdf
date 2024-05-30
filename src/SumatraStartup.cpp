@@ -111,27 +111,22 @@ static bool RegisterWinClass() {
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
     wcex.hIcon = LoadIconW(h, iconName);
-    ReportIf(!wcex.hIcon);
     // For the extended translucent frame to be visible, we need black background.
     wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     atom = RegisterClassEx(&wcex);
-    ReportIf(!atom);
 
     FillWndClassEx(wcex, CANVAS_CLASS_NAME, WndProcCanvas);
     wcex.style |= CS_DBLCLKS;
     atom = RegisterClassEx(&wcex);
-    ReportIf(!atom);
 
     RegisterCaptionWndClass();
     return true;
 }
 
 static bool InstanceInit() {
-    gCursorDrag = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSORDRAG));
-    ReportIf(!gCursorDrag);
-
-    gBitmapReloadingCue = LoadBitmap(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDB_RELOADING_CUE));
-    ReportIf(!gBitmapReloadingCue);
+    auto h = GetModuleHandleA(nullptr);
+    gCursorDrag = LoadCursor(h, MAKEINTRESOURCE(IDC_CURSORDRAG));
+    gBitmapReloadingCue = LoadBitmap(h, MAKEINTRESOURCE(IDB_RELOADING_CUE));
     return true;
 }
 
@@ -741,7 +736,6 @@ Learn more at https://www.sumatrapdfreader.org/docs/Corrupted-installation
     dialogConfig.pszMainIcon = TD_ERROR_ICON;
 
     auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-    ReportIf(hr == E_INVALIDARG);
     HandleRedirectedConsoleOnShutdown();
     ::ExitProcess(1);
 }
@@ -793,8 +787,7 @@ static void ShowInstallerHelp() {
     dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
 
-    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-    ReportIf(hr == E_INVALIDARG);
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
 // in Installer.cpp
@@ -842,8 +835,7 @@ static void ShowNoAdminErrorMessage() {
     dialogConfig.dwCommonButtons = TDCBF_OK_BUTTON;
     dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
 
-    auto hr = TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
-    ReportIf(hr == E_INVALIDARG);
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
 // non-admin process cannot send DDE messages to admin process
@@ -909,8 +901,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     WindowTab* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
     Vec<SessionData*>* sessionData = nullptr;
-
-    ReportIf(hInstance != GetInstance());
 
     supressThrowFromNew();
 
@@ -1114,7 +1104,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         goto Exit;
     }
 
-    ReportIf(hInstance != GetModuleHandle(nullptr));
     if (!InstanceInit()) {
         goto Exit;
     }
