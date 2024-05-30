@@ -403,7 +403,7 @@ TryAgainWOW64:
             val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
             res = RegQueryValueEx(hKey, valNameW, nullptr, nullptr, (LPBYTE)val, &valLen);
             if (ERROR_SUCCESS != res) {
-                str::ReplaceWithCopy(&val, nullptr);
+                str::FreePtr(&val);
             }
         }
         RegCloseKey(hKey);

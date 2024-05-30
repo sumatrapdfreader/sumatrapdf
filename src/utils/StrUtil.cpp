@@ -462,13 +462,6 @@ void ReplacePtr(char** s, const char* snew) {
     ReplacePtr((const char**)s, snew);
 }
 
-void ReplacePtr(const WCHAR** s, const WCHAR* snew) {
-    if (*s != snew) {
-        str::Free(*s);
-        *s = (WCHAR*)snew;
-    }
-}
-
 void ReplaceWithCopy(const char** s, const char* snew) {
     if (*s != snew) {
         str::Free(*s);
@@ -488,17 +481,6 @@ void ReplaceWithCopy(char** s, const char* snew) {
         str::Free(*s);
         *s = str::Dup(snew);
     }
-}
-
-void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew) {
-    if (*s != snew) {
-        str::Free(*s);
-        *s = str::Dup(snew);
-    }
-}
-
-void ReplaceWithCopy(WCHAR** s, const WCHAR* snew) {
-    ReplaceWithCopy((const WCHAR**)s, snew);
 }
 
 char* Join(Allocator* allocator, const char* s1, const char* s2, const char* s3, const char* s4, const char* s5) {
@@ -2034,16 +2016,6 @@ bool EqN(const WCHAR* s1, const WCHAR* s2, size_t len) {
     return 0 == wcsncmp(s1, s2, len);
 }
 
-bool EqNI(const WCHAR* s1, const WCHAR* s2, size_t len) {
-    if (s1 == s2) {
-        return true;
-    }
-    if (!s1 || !s2) {
-        return false;
-    }
-    return 0 == _wcsnicmp(s1, s2, len);
-}
-
 bool IsEmpty(const WCHAR* s) {
     return !s || (0 == *s);
 }
@@ -2095,37 +2067,8 @@ WCHAR* FindChar(WCHAR* str, WCHAR c) {
     return (WCHAR*)wcschr(str, c);
 }
 
-const WCHAR* FindCharLast(const WCHAR* str, WCHAR c) {
-    return (const WCHAR*)wcsrchr(str, c);
-}
-
-WCHAR* FindCharLast(WCHAR* str, const WCHAR c) {
-    return wcsrchr(str, c);
-}
-
 const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
     return wcsstr(str, find);
-}
-
-const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
-    if (!s || !toFind) {
-        return nullptr;
-    }
-
-    WCHAR first = towlower(*toFind);
-    if (!first) {
-        return s;
-    }
-    while (*s) {
-        WCHAR c = towlower(*s);
-        if (c == first) {
-            if (str::StartsWithI(s, toFind)) {
-                return s;
-            }
-        }
-        s++;
-    }
-    return nullptr;
 }
 
 char* ToUpperInPlace(char* s) {
@@ -2147,12 +2090,6 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
 WCHAR* ToLower(const WCHAR* s) {
     WCHAR* s2 = str::Dup(s);
     return ToLowerInPlace(s2);
-}
-
-bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args) {
-    int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
-    buf[bufCchSize - 1] = 0;
-    return (count >= 0) && ((size_t)count < bufCchSize);
 }
 
 WCHAR* FmtV(const WCHAR* fmt, va_list args) {
@@ -2190,33 +2127,6 @@ WCHAR* Format(const WCHAR* fmt, ...) {
     WCHAR* res = FmtV(fmt, args);
     va_end(args);
     return res;
-}
-
-// Trim whitespace characters, in-place, inside s.
-// Returns number of trimmed characters.
-size_t TrimWSInPlace(WCHAR* s, TrimOpt opt) {
-    size_t sLen = str::Len(s);
-    WCHAR* ns = s;
-    WCHAR* e = s + sLen;
-    WCHAR* ne = e;
-    if ((TrimOpt::Left == opt) || (TrimOpt::Both == opt)) {
-        while (IsWs(*ns)) {
-            ++ns;
-        }
-    }
-
-    if ((TrimOpt::Right == opt) || (TrimOpt::Both == opt)) {
-        while (((ne - 1) >= ns) && IsWs(ne[-1])) {
-            --ne;
-        }
-    }
-    *ne = 0;
-    size_t trimmed = (ns - s) + (e - ne);
-    if (ns != s) {
-        size_t toCopy = (sLen - trimmed + 1) * sizeof(WCHAR); // +1 for terminating 0
-        memmove(s, ns, toCopy);
-    }
-    return trimmed;
 }
 
 size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {

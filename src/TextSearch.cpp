@@ -35,9 +35,9 @@ TextSearch::~TextSearch() {
 }
 
 void TextSearch::Clear() {
-    str::ReplaceWithCopy(&findText, nullptr);
-    str::ReplaceWithCopy(&anchor, nullptr);
-    str::ReplaceWithCopy(&lastText, nullptr);
+    str::FreePtr(&findText);
+    str::FreePtr(&anchor);
+    str::FreePtr(&lastText);
     Reset();
 }
 

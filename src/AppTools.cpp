@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
@@ -92,11 +92,14 @@ bool IsDllBuild() {
     return resSrc != nullptr;
 }
 
-static AutoFreeStr gAppDataDir;
+// TODO: leaks
+static char* gAppDataDir = nullptr;
 
 void SetAppDataPath(const char* path) {
     path = path::NormalizeTemp(path);
-    gAppDataDir.SetCopy(path);
+    bool ok = dir::CreateAll(path);
+    ReportIfQuick(!ok);
+    str::ReplaceWithCopy(&gAppDataDir, path);
 }
 
 // Generate full path for a file or directory for storing data

@@ -234,7 +234,6 @@ void StrTest() {
     utassert(str::EqI(str, L"A String") && str::EqI(str, str));
     utassert(!str::EqI(str, nullptr) && str::EqI((char*)nullptr, (char*)nullptr));
     utassert(str::EqN(L"abcd", L"abce", 3) && !str::EqN(L"abcd", L"Abcd", 3));
-    utassert(str::EqNI(L"abcd", L"ABCE", 3) && !str::EqNI(L"abcd", L"Ebcd", 3));
     utassert(str::StartsWith(str, L"a s") && str::StartsWithI(str, L"A Str"));
     utassert(!str::StartsWith(str, L"Astr"));
     utassert(str::EndsWith(str, L"ing") && str::EndsWithI(str, L"ING"));
@@ -621,26 +620,6 @@ void StrTest() {
         for (int c = 0x00; c < 0x10000; c++) {
             utassert(!!iswspace((WCHAR)c) == str::IsWs((WCHAR)c));
         }
-    }
-
-    {
-        utassert(str::Eq(str::FindI(L"test", nullptr), nullptr));
-        utassert(str::Eq(str::FindI(nullptr, L"test"), nullptr));
-        utassert(str::Eq(str::FindI(L"test", L""), L"test"));
-        utassert(str::Eq(str::FindI(L"test", L"ES"), L"est"));
-        utassert(str::Eq(str::FindI(L"test", L"Te"), L"test"));
-        utassert(str::Eq(str::FindI(L"testx", L"X"), L"x"));
-        utassert(str::Eq(str::FindI(L"test", L"st"), L"st"));
-        utassert(str::Eq(str::FindI(L"t\xE4st", L"\xC4s"), nullptr));
-        utassert(str::Eq(str::FindI(L"t\xE4st", L"T\xC5"), nullptr));
-
-        utassert(str::Eq(str::FindI("test", nullptr), nullptr));
-        utassert(str::Eq(str::FindI(nullptr, "test"), nullptr));
-        utassert(str::Eq(str::FindI("test", ""), "test"));
-        utassert(str::Eq(str::FindI("test", "ES"), "est"));
-        utassert(str::Eq(str::FindI("test", "Te"), "test"));
-        utassert(str::Eq(str::FindI("testx", "X"), "x"));
-        utassert(str::Eq(str::FindI("test", "st"), "st"));
     }
 
     strStrTest();

@@ -137,23 +137,16 @@ char* Dup(Allocator*, const char* str, size_t cch = (size_t)-1);
 char* Dup(const char* s, size_t cch = (size_t)-1);
 char* Dup(const ByteSlice&);
 
-WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
-WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
-
 void ReplacePtr(const char** s, const char* snew);
 void ReplacePtr(char** s, const char* snew);
-void ReplacePtr(const WCHAR** s, const WCHAR* snew);
+
 void ReplaceWithCopy(const char** s, const char* snew);
 void ReplaceWithCopy(const char** s, const ByteSlice&);
 void ReplaceWithCopy(char** s, const char* snew);
-void ReplaceWithCopy(const WCHAR** s, const WCHAR* snew);
-void ReplaceWithCopy(WCHAR** s, const WCHAR* snew);
 
 char* Join(Allocator*, const char*, const char*, const char*);
 char* Join(Allocator*, const char*, const char*, const char*, const char*, const char*);
-WCHAR* Join(Allocator*, const WCHAR*, const WCHAR*, const WCHAR* s3);
 char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
-WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 
 bool Eq(const char* s1, const char* s2);
 bool Eq(const ByteSlice& sp1, const ByteSlice& sp2);
@@ -165,30 +158,16 @@ bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* prefix);
 bool StartsWith(const u8* str, const char* prefix);
 
-bool Eq(const WCHAR*, const WCHAR*);
-bool EqI(const WCHAR*, const WCHAR*);
-bool EqIS(const WCHAR*, const WCHAR*);
-bool EqN(const WCHAR*, const WCHAR*, size_t);
-bool EqNI(const WCHAR*, const WCHAR*, size_t);
-bool IsEmpty(const WCHAR*);
-bool StartsWith(const WCHAR* str, const WCHAR* prefix);
-
 bool StartsWithI(const char* str, const char* prefix);
 bool EndsWith(const char* txt, const char* end);
 bool EndsWithI(const char* txt, const char* end);
 bool EqNIx(const char* s, size_t len, const char* s2);
 
 char* ToLowerInPlace(char*);
-WCHAR* ToLowerInPlace(WCHAR*);
 
 char* ToLower(const char*);
-WCHAR* ToLower(const WCHAR*);
 
 char* ToUpperInPlace(char*);
-
-bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
-bool EndsWith(const WCHAR* txt, const WCHAR* end);
-bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 
 void Utf8Encode(char*& dst, int c);
 
@@ -212,52 +191,26 @@ char* FmtVWithAllocator(Allocator* a, const char* fmt, va_list args);
 char* FmtV(const char* fmt, va_list args);
 char* Format(const char* fmt, ...);
 
-const WCHAR* FindChar(const WCHAR* str, WCHAR c);
-WCHAR* FindChar(WCHAR* str, WCHAR c);
-const WCHAR* FindCharLast(const WCHAR* str, WCHAR c);
-WCHAR* FindCharLast(WCHAR* str, WCHAR c);
-const WCHAR* Find(const WCHAR* str, const WCHAR* find);
-
-const WCHAR* FindI(const WCHAR* str, const WCHAR* find);
-bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args);
-WCHAR* FmtV(const WCHAR* fmt, va_list args);
-WCHAR* Format(const WCHAR* fmt, ...);
-
-bool IsWs(WCHAR c);
-bool IsDigit(WCHAR c);
-bool IsNonCharacter(WCHAR c);
-
 size_t TrimWSInPlace(char* s, TrimOpt opt);
-size_t TrimWSInPlace(WCHAR* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
 size_t TransCharsInPlace(char* str, const char* oldChars, const char* newChars);
-size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
-
-WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 
 size_t NormalizeWSInPlace(char* str);
-size_t NormalizeWSInPlace(WCHAR* str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);
 size_t NormalizeNewlinesInPlace(char* s);
 size_t RemoveCharsInPlace(char* str, const char* toRemove);
-size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 
 int BufSet(char* dst, int dstCchSize, const char* src);
-int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src);
-int BufSet(WCHAR* dst, int dstCchSize, const char* src);
 int BufAppend(char* dst, int dstCchSize, const char* s);
-int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s);
 
 char* MemToHex(const u8* buf, size_t len);
 bool HexToMem(const char* s, u8* buf, size_t bufLen);
 
 const char* Parse(const char* str, const char* fmt, ...);
 const char* Parse(const char* str, size_t len, const char* fmt, ...);
-const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 
 int CmpNatural(const char*, const char*);
-int CmpNatural(const WCHAR*, const WCHAR*);
 
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
@@ -265,6 +218,40 @@ TempStr FormatRomanNumeralTemp(int number);
 
 bool EmptyOrWhiteSpaceOnly(const char*);
 bool Skip(const char*& s, const char* toSkip);
+
+WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
+WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);
+WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
+WCHAR* Join(Allocator*, const WCHAR*, const WCHAR*, const WCHAR* s3);
+bool Eq(const WCHAR*, const WCHAR*);
+bool EqI(const WCHAR*, const WCHAR*);
+bool EqIS(const WCHAR*, const WCHAR*);
+bool EqN(const WCHAR*, const WCHAR*, size_t);
+bool IsEmpty(const WCHAR*);
+bool StartsWith(const WCHAR* str, const WCHAR* prefix);
+bool StartsWithI(const WCHAR* str, const WCHAR* prefix);
+bool EndsWith(const WCHAR* txt, const WCHAR* end);
+bool EndsWithI(const WCHAR* txt, const WCHAR* end);
+WCHAR* ToLower(const WCHAR*);
+WCHAR* ToLowerInPlace(WCHAR*);
+int CmpNatural(const WCHAR*, const WCHAR*);
+const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
+int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s);
+int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src);
+int BufSet(WCHAR* dst, int dstCchSize, const char* src);
+size_t NormalizeWSInPlace(WCHAR* str);
+size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
+const WCHAR* FindChar(const WCHAR* str, WCHAR c);
+WCHAR* FindChar(WCHAR* str, WCHAR c);
+const WCHAR* Find(const WCHAR* str, const WCHAR* find);
+WCHAR* FmtV(const WCHAR* fmt, va_list args);
+WCHAR* Format(const WCHAR* fmt, ...);
+bool IsWs(WCHAR c);
+bool IsDigit(WCHAR c);
+bool IsNonCharacter(WCHAR c);
+size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
+WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
+
 } // namespace str
 
 namespace url {
