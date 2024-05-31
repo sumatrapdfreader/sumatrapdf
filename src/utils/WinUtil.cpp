@@ -747,9 +747,17 @@ void HandleRedirectedConsoleOnShutdown() {
 // Return the full exe path of my own executable
 TempStr GetExePathTemp() {
     WCHAR buf[MAX_PATH]{};
+    DWORD nSize = dimof(buf) - 1;
     auto h = GetInstance();
-    GetModuleFileNameW(h, buf, dimof(buf) - 1);
-    return ToUtf8Temp(buf);
+    DWORD res = GetModuleFileNameW(h, buf, nSize);
+    if (res < nSize) {
+        return ToUtf8Temp(buf);
+    }
+    nSize = res + 2;
+    WCHAR* buf2 = Allocator::AllocArray<WCHAR>(nullptr, (size_t)nSize);
+    res = GetModuleFileNameW(h, buf, nSize);
+    ReportIf(res < nSize);
+    return ToUtf8Temp(buf2);
 }
 
 // Return directory where our executable is located
@@ -817,14 +825,10 @@ char* ResolveLnkTemp(const char* path) {
     return ToUtf8Temp(newPath);
 }
 
-bool CreateShortcut(const char* shortcutPathA, const char* exePathA, const char* argsA, const char* descriptionA,
+bool CreateShortcut(const char* shortcutPath, const char* exePath, const char* args, const char* description,
                     int iconIndex) {
+    TempWStr ws;
     ScopedCom com;
-
-    WCHAR* shortcutPath = ToWStrTemp(shortcutPathA);
-    WCHAR* exePath = ToWStrTemp(exePathA);
-    WCHAR* args = ToWStrTemp(argsA);
-    WCHAR* description = ToWStrTemp(descriptionA);
 
     ScopedComPtr<IShellLink> lnk;
     if (!lnk.Create(CLSID_ShellLink)) {
@@ -836,23 +840,27 @@ bool CreateShortcut(const char* shortcutPathA, const char* exePathA, const char*
         return false;
     }
 
-    HRESULT hr = lnk->SetPath(exePath);
+    ws = ToWStrTemp(exePath);
+    HRESULT hr = lnk->SetPath(ws);
     if (FAILED(hr)) {
         return false;
     }
 
-    lnk->SetWorkingDirectory(path::GetDirTemp(exePath));
+    lnk->SetWorkingDirectory(path::GetDirTemp(ws));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
-    lnk->SetIconLocation(exePath, iconIndex);
+    lnk->SetIconLocation(ws, iconIndex);
     if (args) {
-        lnk->SetArguments(args);
+        ws = ToWStrTemp(args);
+        lnk->SetArguments(ws);
     }
     if (description) {
-        lnk->SetDescription(description);
+        ws = ToWStrTemp(description);
+        lnk->SetDescription(ws);
     }
 
-    hr = file->Save(shortcutPath, TRUE);
+    ws = ToWStrTemp(shortcutPath);
+    hr = file->Save(ws, TRUE);
     return SUCCEEDED(hr);
 }
 

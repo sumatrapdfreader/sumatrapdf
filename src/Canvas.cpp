@@ -83,7 +83,7 @@ void UpdateDeltaPerLine() {
     } else if (ulScrollLines != 0) {
         gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
     }
-    logf("SPI_GETWHEELSCROLLLINES: ulScrollLines=%d, gDeltaPerLine=%d\n", (int)ulScrollLines, gDeltaPerLine);
+    // logf("SPI_GETWHEELSCROLLLINES: ulScrollLines=%d, gDeltaPerLine=%d\n", (int)ulScrollLines, gDeltaPerLine);
 }
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
