@@ -3,6 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+
+#include "SumatraConfig.h"
+
 #include "Translations.h"
 
 #include "utils/Log.h"
@@ -17,28 +20,13 @@ extern const LANGID* GetLangIds();
 extern bool IsLangRtl(int langIdx);
 } // namespace trans
 
-constexpr u16 kIdxMissing = 0xffff;
-
 namespace trans {
-
-// translation info about a single string
-// we set str/trans once by parsing translations.txt file
-// after the user changes the language
-struct Translation {
-    // index in allStrings;
-    u16 idxStr = 0;
-    // translation of str/origStr in gCurrLangCode
-    // index in allTranslations
-    u16 idxTrans = 0;
-};
 
 struct TranslationCache {
     // english string from translations.txt file
     // we lazily match it to origStr
     StrVec allStrings;
     StrVec allTranslations;
-    Translation* translations = nullptr;
-    int nTranslations = 0;
     int nUntranslated = 0;
 };
 
@@ -83,9 +71,6 @@ static TempStr UnescapeTemp(char* sOrig) {
 }
 
 static void FreeTranslations() {
-    if (!gTranslationCache) {
-        return;
-    }
     delete gTranslationCache;
     gTranslationCache = nullptr;
 }
@@ -94,10 +79,8 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
     langCode = str::JoinTemp(langCode, ":");
     int nLangCode = str::Len(langCode);
 
-    // parse into lines
-    char* s = d.CStr();
     StrVec lines;
-    Split(lines, s, "\n", true);
+    Split(lines, d.CStr(), "\n", true);
     int nStrings = 0;
     for (char* l : lines) {
         if (l[0] == ':') {
@@ -110,15 +93,12 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
     FreeTranslations();
     gTranslationCache = new TranslationCache();
     auto c = gTranslationCache;
-    c->nTranslations = nStrings;
-    c->translations = AllocArray<Translation>(c->nTranslations);
     c->nUntranslated = 0;
 
     char* orig;
     char* trans;
     char* line;
     int i = 2; // skip first 2 header lines
-    int nTrans = 0;
     while (i < nLines) {
         orig = lines[i];
         ReportIf(*orig != ':');
@@ -137,42 +117,20 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
         if (!trans) {
             c->nUntranslated++;
         }
-        Translation& translation = c->translations[nTrans++];
-        int idxStr = c->allStrings.Size();
-        // when this fires, we'll have to bump strIdx form u16 to u32
-        ReportIf(idxStr > 64 * 1024);
-        translation.idxStr = (u16)idxStr;
         TempStr unescaped = UnescapeTemp(orig);
         c->allStrings.Append(unescaped);
         if (!trans) {
-            translation.idxTrans = kIdxMissing;
+            c->allTranslations.Append(nullptr);
             continue;
         }
-        int idxTrans = c->allTranslations.Size();
-        ReportIf(idxTrans > 64 * 1024);
-        translation.idxTrans = (u16)idxTrans;
         unescaped = UnescapeTemp(trans);
         c->allTranslations.Append(unescaped);
     }
-    ReportIf(nTrans != c->nTranslations);
+    int nTrans = c->allStrings.Size();
+    ReportIf(nTrans != nStrings);
     if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
         logf("Untranslated strings: %d for lang '%s'\n", c->nUntranslated, langCode);
     }
-}
-
-static Translation* FindTranslation(const char* s) {
-    ReportIf(!s);
-    ReportIf(!gTranslationCache);
-    auto c = gTranslationCache;
-    for (int i = 0; i < c->nTranslations; i++) {
-        Translation& trans = c->translations[i];
-        int idx = (int)trans.idxStr;
-        char* s2 = c->allStrings.At(idx);
-        if (str::Eq(s, s2)) {
-            return &trans;
-        }
-    }
-    return nullptr;
 }
 
 // don't free
@@ -181,14 +139,18 @@ const char* GetTranslation(const char* s) {
         // 0 is english, no translation needed
         return s;
     }
-    Translation* trans = FindTranslation(s);
-    // we don't have a translation for this string
-    u32 idx = trans ? trans->idxTrans : kIdxMissing;
-    if (idx == kIdxMissing) {
+    auto c = gTranslationCache;
+    auto idx = c->allStrings.Find(s);
+    ReportIf(idx < 0);
+    if (idx < 0) {
+        return s;
+    }
+    const char* translation = c->allTranslations.At(idx);
+    if (!translation) {
         logf("Didn't find translation for '%s'\n", s);
         return s;
     }
-    return gTranslationCache->allTranslations.At((int)idx);
+    return translation;
 }
 
 int GetLangsCount() {
@@ -213,11 +175,14 @@ void SetCurrentLangByCode(const char* langCode) {
     ReportIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
-
+    if (idx == 0 && !gIsDebugBuild) {
+        // perf: in release builds we skip parsing translations for english
+        // in debug we want to execute this code to catch errors
+        return;
+    }
     StrSpan d = LoadDataResource(2);
-    ReportIf(d.IsEmpty());
     ParseTranslationsTxt(d, langCode);
-    str::Free(d.CStr());
+    str::Free(d);
 }
 
 const char* ValidateLangCode(const char* langCode) {

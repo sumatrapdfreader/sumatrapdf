@@ -419,7 +419,7 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
     ReportIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     StrVec references;
-    char* keyword = nullptr; 
+    char* keyword = nullptr;
     char* name = nullptr;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {
@@ -429,8 +429,8 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
         TempStr attrVal = el->GetAttributeTemp("value");
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             // TODO: convert attrVal to CP_CHM_DEFAULT
-            //AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
-            //attrVal.Set(strconv::StrToWStr(bytes.Get(), cp));
+            // AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
+            // attrVal.Set(strconv::StrToWStr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
