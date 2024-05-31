@@ -419,50 +419,51 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp
     ReportIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     StrVec references;
-    AutoFreeWStr keyword, name;
+    char* keyword = nullptr; 
+    char* name = nullptr;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag) {
             continue;
         }
-        AutoFreeWStr attrName(el->GetAttribute("name"));
-        AutoFreeWStr attrVal(el->GetAttribute("value"));
+        TempStr attrName = el->GetAttributeTemp("name");
+        TempStr attrVal = el->GetAttributeTemp("value");
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
-            attrVal.Set(strconv::StrToWStr(bytes.Get(), cp));
+            // TODO: convert attrVal to CP_CHM_DEFAULT
+            //AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
+            //attrVal.Set(strconv::StrToWStr(bytes.Get(), cp));
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
-        } else if (str::EqI(attrName, L"Keyword")) {
-            keyword.Set(attrVal.StealData());
-        } else if (str::EqI(attrName, L"Name")) {
-            name.Set(attrVal.StealData());
+        } else if (str::EqI(attrName, "Keyword")) {
+            keyword = attrVal;
+        } else if (str::EqI(attrName, "Name")) {
+            name = attrVal;
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword) {
-                keyword.SetCopy(name);
+                keyword = name;
             }
-        } else if (str::EqI(attrName, L"Local") && name) {
+        } else if (str::EqI(attrName, "Local") && name) {
             // remove the ITS protocol and any filename references from the URLs
-            if (str::Find(attrVal, L"::/")) {
-                attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
+            auto s = str::Find(attrVal, "::/");
+            if (s) {
+                attrVal = (char*)s + 3;
             }
-            char* nameA = ToUtf8Temp(name);
-            char* attrValA = ToUtf8Temp(attrVal);
-            references.Append(nameA);
-            references.Append(attrValA);
+            references.Append(name);
+            references.Append(attrVal);
         }
     }
     if (!keyword) {
         return false;
     }
 
-    char* keywordA = ToUtf8Temp(keyword);
     if (references.Size() == 2) {
         char* refs = references[1];
-        visitor->Visit(keywordA, refs, level);
+        visitor->Visit(keyword, refs, level);
         return true;
     }
-    visitor->Visit(keywordA, nullptr, level);
-    for (int i = 0; i < references.Size(); i += 2) {
+    visitor->Visit(keyword, nullptr, level);
+    int n = references.Size();
+    for (int i = 0; i < n; i += 2) {
         char* ref1 = references[i];
         char* ref2 = references[i + 1];
         visitor->Visit(ref1, ref2, level + 1);
