@@ -22,18 +22,11 @@ extern bool IsLangRtl(int langIdx);
 
 namespace trans {
 
-struct TranslationCache {
-    // english string from translations.txt file
-    // we lazily match it to origStr
-    StrVec allStrings;
-    StrVec allTranslations;
-    int nUntranslated = 0;
-};
-
 // used locally, gCurrLangCode points into gLangCodes
 static const char* gCurrLangCode = nullptr;
 static int gCurrLangIdx = 0;
-static TranslationCache* gTranslationCache = nullptr;
+// for each translation: english string followed by a translation
+static StrVec* gTranslationCache = nullptr;
 
 static TempStr UnescapeTemp(char* sOrig) {
     char* s = str::DupTemp(sOrig);
@@ -90,10 +83,10 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
     int nLines = lines.Size();
     logf("ParseTranslationsTxt: %d lines, nStrings: %d\n", nLines, nStrings);
 
-    FreeTranslations();
-    gTranslationCache = new TranslationCache();
+    delete gTranslationCache;
+    gTranslationCache = new StrVec();
     auto c = gTranslationCache;
-    c->nUntranslated = 0;
+    int nUntranslated = 0;
 
     char* orig;
     char* trans;
@@ -115,21 +108,21 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
             i++;
         }
         if (!trans) {
-            c->nUntranslated++;
+            nUntranslated++;
         }
         TempStr unescaped = UnescapeTemp(orig);
-        c->allStrings.Append(unescaped);
+        c->Append(unescaped);
         if (!trans) {
-            c->allTranslations.Append(nullptr);
+            c->Append(nullptr);
             continue;
         }
         unescaped = UnescapeTemp(trans);
-        c->allTranslations.Append(unescaped);
+        c->Append(unescaped);
     }
-    int nTrans = c->allStrings.Size();
-    ReportIf(nTrans != nStrings);
-    if (c->nUntranslated > 0 && !str::Eq(langCode, "en:")) {
-        logf("Untranslated strings: %d for lang '%s'\n", c->nUntranslated, langCode);
+    int nTrans = c->Size();
+    ReportIf(nTrans != nStrings * 2);
+    if (nUntranslated > 0 && !str::Eq(langCode, "en:")) {
+        logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCode);
     }
 }
 
@@ -140,17 +133,24 @@ const char* GetTranslation(const char* s) {
         return s;
     }
     auto c = gTranslationCache;
-    auto idx = c->allStrings.Find(s);
-    ReportIf(idx < 0);
-    if (idx < 0) {
-        return s;
+    int n = c->Size();
+    ReportIf(n % 2 != 0);
+    n = n / 2;
+    int sLen = str::Leni(s);
+    for (int i = 0; i < n; i++) {
+        int idx = i * 2;
+        StrSpan s2 = c->AtSpan(idx);
+        if (s2.Len() == sLen && str::Eq(s, s2.CStr())) {
+            auto tr = c->At(idx + 1);
+            if (!tr) {
+                logf("Didn't find translation for '%s'\n", s);
+                return s;
+            }
+            return tr;
+        }
     }
-    const char* translation = c->allTranslations.At(idx);
-    if (!translation) {
-        logf("Didn't find translation for '%s'\n", s);
-        return s;
-    }
-    return translation;
+    ReportIf(true);
+    return s;
 }
 
 int GetLangsCount() {
