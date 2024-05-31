@@ -89,7 +89,7 @@ static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
     int i = 0;
     for (auto it = v.begin(); it != v.end(); it++) {
         auto s = it.Span();
-        if (!s.Str()) {
+        if (!s.CStr()) {
             firstForJoint++;
             i++;
             continue;
@@ -97,7 +97,7 @@ static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
         if (i > firstForJoint && jointLen > 0) {
             res.Append(joint, jointLen);
         }
-        res.Append(s.Str(), s.Len());
+        res.Append(s.CStr(), s.Len());
         i++;
     }
     return res.StealData();
@@ -120,6 +120,7 @@ struct StrVecPage {
     char* AtHelper(int, int& sLen) const;
     int BytesLeft();
     char* Append(const char* s, int sLen);
+    char* Append(const StrSpan&);
     char* SetAt(int idxSet, const char* s, int sLen);
     char* InsertAt(int idxSet, const char* s, int sLen);
 };
@@ -237,6 +238,9 @@ char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
     nStrings++;
     return (char*)s;
 }
+char* StrVecPage::Append(const StrSpan& s) {
+    return InsertAt(nStrings, s.CStr(), s.Len());
+}
 
 char* StrVecPage::Append(const char* s, int sLen) {
     return InsertAt(nStrings, s, sLen);
@@ -341,7 +345,7 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         // TODO(perf): could optimize slightly
         for (int i = 0; i < n; i++) {
             s = curr->AtSpan(i);
-            page->Append(s.Str(), s.Len());
+            page->Append(s);
         }
         curr = curr->next;
     }

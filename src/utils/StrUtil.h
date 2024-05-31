@@ -33,11 +33,14 @@ struct StrSpan : Span<char> {
     StrSpan() = default;
     StrSpan(const char* s);
     StrSpan(const char* s, int sLen);
-    char* Str() const {
+    char* CStr() const {
         return d;
     }
     int Len() const {
         return size;
+    }
+    bool IsEmpty() const {
+        return !d || size == 0;
     }
 };
 
@@ -125,6 +128,7 @@ int Leni(const char* s);
 
 void Free(const char*);
 void Free(const u8*);
+void Free(const StrSpan& s);
 
 void Free(const WCHAR* s);
 
@@ -313,6 +317,7 @@ struct Str {
     bool InsertAt(size_t idx, char el);
     bool AppendChar(char c);
     bool Append(const char* src, size_t count = -1);
+    bool Append(const StrSpan&);
     bool Append(const Str& s);
     char RemoveAt(size_t idx, size_t count = 1);
     char RemoveLast();

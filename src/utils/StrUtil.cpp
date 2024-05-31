@@ -234,6 +234,10 @@ void Free(const WCHAR* s) {
     free((void*)s);
 }
 
+void Free(const StrSpan& s) {
+    free(s.CStr());
+}
+
 void FreePtr(const char** s) {
     str::Free(*s);
     *s = nullptr;
@@ -1439,6 +1443,10 @@ bool Str::InsertAt(size_t idx, char el) {
 
 bool Str::AppendChar(char c) {
     return InsertAt(len, c);
+}
+
+bool Str::Append(const StrSpan& s) {
+    return Append(s.CStr(), (size_t)s.Len());
 }
 
 bool Str::Append(const char* src, size_t count) {

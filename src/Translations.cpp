@@ -90,12 +90,12 @@ static void FreeTranslations() {
     gTranslationCache = nullptr;
 }
 
-static void ParseTranslationsTxt(const ByteSlice& d, const char* langCode) {
+static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
     langCode = str::JoinTemp(langCode, ":");
     int nLangCode = str::Len(langCode);
 
     // parse into lines
-    char* s = (char*)d.data();
+    char* s = d.CStr();
     StrVec lines;
     Split(lines, s, "\n", true);
     int nStrings = 0;
@@ -214,10 +214,10 @@ void SetCurrentLangByCode(const char* langCode) {
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
 
-    ByteSlice d = LoadDataResource(2);
-    ReportIf(d.empty());
+    StrSpan d = LoadDataResource(2);
+    ReportIf(d.IsEmpty());
     ParseTranslationsTxt(d, langCode);
-    free(d.data());
+    str::Free(d.CStr());
 }
 
 const char* ValidateLangCode(const char* langCode) {
