@@ -1984,36 +1984,6 @@ bool EqI(const WCHAR* s1, const WCHAR* s2) {
     return 0 == _wcsicmp(s1, s2);
 }
 
-// compares two strings ignoring case and whitespace
-bool EqIS(const WCHAR* s1, const WCHAR* s2) {
-    if (s1 == s2) {
-        return true;
-    }
-    if (!s1 || !s2) {
-        return false;
-    }
-
-    while (*s1 && *s2) {
-        // skip whitespace
-        for (; IsWs(*s1); s1++) {
-            // do nothing
-        }
-        for (; IsWs(*s2); s2++) {
-            // do nothing
-        }
-
-        if (towlower(*s1) != towlower(*s2)) {
-            return false;
-        }
-        if (*s1) {
-            s1++;
-            s2++;
-        }
-    }
-
-    return !*s1 && !*s2;
-}
-
 bool EqN(const WCHAR* s1, const WCHAR* s2, size_t len) {
     if (s1 == s2) {
         return true;

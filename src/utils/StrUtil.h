@@ -229,7 +229,6 @@ WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
 WCHAR* Join(Allocator*, const WCHAR*, const WCHAR*, const WCHAR* s3);
 bool Eq(const WCHAR*, const WCHAR*);
 bool EqI(const WCHAR*, const WCHAR*);
-bool EqIS(const WCHAR*, const WCHAR*);
 bool EqN(const WCHAR*, const WCHAR*, size_t);
 bool IsEmpty(const WCHAR*);
 bool StartsWith(const WCHAR* str, const WCHAR* prefix);
