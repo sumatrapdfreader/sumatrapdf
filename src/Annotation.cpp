@@ -337,6 +337,9 @@ TempStr Contents(Annotation* annot) {
 }
 
 bool SetContents(Annotation* annot, const char* sv) {
+    if (!annot) {
+        return false;
+    }
     EngineMupdf* e = annot->engine;
     const char* currValue = Contents(annot);
     if (str::Eq(sv, currValue)) {

@@ -954,8 +954,14 @@ static MainWindow* gMainWindowForRender = nullptr;
 
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* ew) {
+    auto a = ew->tab->selectedAnnotation;
+    // TODO: saw a crash when this was null
+    ReportIf(!a);
+    if (!a) {
+        return;
+    }
     auto txt = ew->editContents->GetTextTemp();
-    SetContents(ew->tab->selectedAnnotation, txt);
+    SetContents(a, txt);
     EnableSaveIfAnnotationsChanged(ew);
 
     MainWindow* win = ew->tab->win;
