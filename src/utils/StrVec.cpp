@@ -566,10 +566,11 @@ char* StrVec::operator[](int idx) const {
 }
 
 int StrVec::Find(const char* s, int startAt) const {
+    int sLen = str::Leni(s);
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
-        char* s2 = *it;
-        if (str::Eq(s, s2)) {
+        StrSpan s2 = it.Span();
+        if (s2.Len() == sLen && str::Eq(s, s2.CStr())) {
             return it.idx;
         }
     }

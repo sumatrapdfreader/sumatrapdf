@@ -21,7 +21,26 @@ static void TestRandomRemove(StrVec& v) {
     }
 }
 
+static void TestFind(const StrVec& v) {
+    int n = v.Size();
+    char *s, *s2;
+    for (int i = 0; i < n; i++) {
+        s = v.At(i);
+        int i2 = v.Find(s);
+        if (i != i2) {
+            s2 = v.At(i2);
+            utassert(str::Eq(s, s2));
+        }
+        i2 = v.FindI(s);
+        if (i != i2) {
+            s2 = v.At(i2);
+            utassert(str::EqI(s, s2));
+        }
+    }
+}
+
 static void TestRemoveAt(StrVec& v) {
+    TestFind(v);
     auto v2 = v;
     TestRandomRemove(v2);
     while (v.Size() > 0) {
@@ -40,6 +59,8 @@ static void TestRemoveAt(StrVec& v) {
 }
 
 static void StrVecCheckIter(StrVec& v, const char** strings, int start = 0) {
+    TestFind(v);
+
     int i = 0;
     for (char* s : v) {
         if (i < start) {
