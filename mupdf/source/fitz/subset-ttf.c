@@ -574,37 +574,52 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	enc = fz_calloc(ctx, 1, sizeof(encoding_t) + sizeof(uint16_t) * (65536 - 256));
 	enc->max = 65536;
 
-	/* Run through the segments, counting how many are used. */
-	for (i = 0; i < seg_count; i++)
+	fz_try(ctx)
 	{
-		uint16_t seg_end = get16(d + offset + 14 + 2 * i);
-		uint16_t seg_start = get16(d + offset + 14 + 2 * seg_count + 2 + 2 * i);
-		uint16_t delta = get16(d + offset + 14 + 4 * seg_count + 2 + 2 * i);
-		uint32_t offset_ptr = offset + 14 + 6 * seg_count + 2 + 2 * i;
-		uint16_t offset = get16(d + offset_ptr);
-		uint16_t target;
-		uint32_t s;
-
-		if (seg_start >= enc->max || seg_end >= enc->max)
-			fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap4 table.");
-
-		for (s = seg_start; s <= seg_end; s++)
+		/* Run through the segments, counting how many are used. */
+		for (i = 0; i < seg_count; i++)
 		{
-			if (offset == 0)
-			{
-				target = delta + s;
-			}
-			else
-			{
-				/* Yes. This is very screwy. The offset is from the offset_ptr in use. */
-				target = get16(d + offset_ptr + offset + 2 * (s - seg_start));
-				if (target != 0)
-					target += delta;
-			}
+			uint16_t seg_end, seg_start, delta, offset, target;
+			uint32_t offset_ptr, s;
 
-			if (target != 0)
-				enc->gid[s] = target;
+			if (data_size < offset + 14 + 6 * seg_count + 2 + 2 * i + 2)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "cmap4 too small");
+
+			seg_end = get16(d + offset + 14 + 2 * i);
+			seg_start = get16(d + offset + 14 + 2 * seg_count + 2 + 2 * i);
+			delta = get16(d + offset + 14 + 4 * seg_count + 2 + 2 * i);
+			offset_ptr = offset + 14 + 6 * seg_count + 2 + 2 * i;
+			offset = get16(d + offset_ptr);
+
+			if (seg_start >= enc->max || seg_end >= enc->max)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed cmap4 table.");
+
+			for (s = seg_start; s <= seg_end; s++)
+			{
+				if (offset == 0)
+				{
+					target = delta + s;
+				}
+				else
+				{
+					if (data_size < offset_ptr + offset + 2 * (s - seg_start) + 2)
+						fz_throw(ctx, FZ_ERROR_FORMAT, "cmap4 too small");
+
+					/* Yes. This is very screwy. The offset is from the offset_ptr in use. */
+					target = get16(d + offset_ptr + offset + 2 * (s - seg_start));
+					if (target != 0)
+						target += delta;
+				}
+
+				if (target != 0)
+					enc->gid[s] = target;
+			}
 		}
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, enc);
+		fz_rethrow(ctx);
 	}
 
 	return enc;

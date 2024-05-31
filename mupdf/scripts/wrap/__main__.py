@@ -1259,6 +1259,9 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             elif flag == 'tesseract':
                 make_args += ' HAVE_LEPTONICA=yes HAVE_TESSERACT=yes'
                 build_prefix += f'{flag}-'
+            elif flag == 'bsymbolic':
+                make_env += ' XLIB_LDFLAGS=-Wl,-Bsymbolic'
+                build_prefix += f'{flag}-'
             else:
                 if not in_prefix:
                     raise Exception( f'Unrecognised flag {flag!r} in {flags!r} in {build_dirs.dir_so!r}')

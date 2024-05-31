@@ -158,6 +158,8 @@ fz_document_writer *fz_new_pkm_pixmap_writer(fz_context *ctx, const char *path, 
 
 static int is_extension(const char *a, const char *ext)
 {
+	if (!a)
+		return 0;
 	if (a[0] == '.')
 		++a;
 	return !fz_strcasecmp(a, ext);

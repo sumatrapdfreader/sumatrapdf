@@ -457,7 +457,7 @@ With :title:`MuPDF` it is also possible to create, edit and manipulate :title:`P
 
     Begin a journal operation.
 
-    :arg length: `String` The name of the operation.
+    :arg op: `String` The name of the operation.
 
 
     |example_tag|
@@ -484,7 +484,8 @@ With :title:`MuPDF` it is also possible to create, edit and manipulate :title:`P
 
     .. code-block:: javascript
 
-        pdfDocument.beginImplicitOperation();
+        pdfDocument.
+        endOperation();
 
 .. method:: abandonOperation()
 

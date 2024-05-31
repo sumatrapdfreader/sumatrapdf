@@ -27,7 +27,7 @@ ifeq ($(OS),MACOS)
 endif
 
 ifeq ($(OS),Linux)
-  USE_SYSTEM_CURL := yes
+  USE_SYSTEM_CURL ?= yes
 endif
 
 # Use of Tesseract is optional:

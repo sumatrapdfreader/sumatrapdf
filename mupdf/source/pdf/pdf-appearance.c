@@ -2324,7 +2324,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 			}
 			else
 			{
-				fz_rect dummy;
+				fz_rect dummy = fz_empty_rect;
 
 				if (n < 6)
 				{

@@ -601,8 +601,8 @@ fz_scan_convert_aa(fz_context *ctx, fz_gel *gel, int eofill, const fz_irect *cli
 		fz_free(ctx, gel->deltas);
 		gel->alphas = NULL;
 		gel->deltas = NULL;
-		alphas = gel->alphas = Memento_label(fz_malloc_array(ctx, bcap, unsigned char), "gel_alphas");
-		deltas = gel->deltas = Memento_label(fz_malloc_array(ctx, bcap, int), "gel_deltas");
+		gel->alphas = Memento_label(fz_malloc_array(ctx, bcap, unsigned char), "gel_alphas");
+		gel->deltas = Memento_label(fz_malloc_array(ctx, bcap, int), "gel_deltas");
 	}
 	alphas = gel->alphas;
 	deltas = gel->deltas;

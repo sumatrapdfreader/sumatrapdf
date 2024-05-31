@@ -18,11 +18,16 @@ include Makethird
 
 # --- Configuration ---
 
-# Do not specify CFLAGS or LIBS on the make invocation line - specify
-# XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
-# set a variable that was set on the command line.
+# Do not specify CFLAGS, LDFLAGS, LIB_LDFLAGS, EXE_LDFLAGS or LIBS on the make
+# invocation line - specify XCFLAGS, XLDFLAGS, XLIB_LDFLAGS, XEXE_LDFLAGS or
+# XLIBS instead. Make ignores any lines in the makefile that set a variable
+# that was set on the command line.
 CFLAGS += $(XCFLAGS) -Iinclude
 LIBS += $(XLIBS) -lm
+
+LDFLAGS += $(XLDFLAGS)
+LIB_LDFLAGS += $(XLIB_LDFLAGS)
+EXE_LDFLAGS += $(XEXE_LDFLAGS)
 
 ifneq ($(threading),no)
   ifeq ($(HAVE_PTHREAD),yes)

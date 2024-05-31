@@ -1349,7 +1349,7 @@ fz_draw_clip_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, 
 	fz_draw_device *dev = (fz_draw_device*)devp;
 	fz_matrix ctm = fz_concat(in_ctm, dev->transform);
 	fz_irect bbox;
-	fz_pixmap *mask, *dest, *shape, *group_alpha;
+	fz_pixmap *mask, *shape, *group_alpha;
 	fz_matrix tm, trm;
 	fz_glyph *glyph;
 	int i, gid;
@@ -1376,7 +1376,7 @@ fz_draw_clip_stroke_text(fz_context *ctx, fz_device *devp, const fz_text *text, 
 	 * we have a choice. We can either create the new destination WITH alpha, or
 	 * we can copy the old pixmap contents in. We opt for the latter here, but
 	 * may want to revisit this decision in the future. */
-	state[1].dest = dest = fz_new_pixmap_with_bbox(ctx, model, bbox, state[0].dest->seps, state[0].dest->alpha);
+	state[1].dest = fz_new_pixmap_with_bbox(ctx, model, bbox, state[0].dest->seps, state[0].dest->alpha);
 	if (state[0].dest->alpha)
 		fz_clear_pixmap(ctx, state[1].dest);
 	else

@@ -460,6 +460,21 @@ enum
 fz_pixmap *
 fz_warp_pixmap(fz_context *ctx, fz_pixmap *src, const fz_point points[4], int width, int height);
 
+/* As for fz_warp_pixmap, where width/height are automatically 'guessed'. */
+fz_pixmap *
+fz_autowarp_pixmap(fz_context *ctx, fz_pixmap *src, const fz_point points[4]);
+
+/* Search for a "document" within a pixmap (greyscale or rgb, no alpha).
+ *
+ * points should point to an array of 4 fz_points.
+ *
+ * If the function return false, no document was found.
+ * If true, points has been updated to include the corner positions of
+ * the detected document within the src image.
+ */
+int
+fz_detect_document(fz_context *ctx, fz_point *points, fz_pixmap *src);
+
 /*
 	Convert between different separation results.
 */

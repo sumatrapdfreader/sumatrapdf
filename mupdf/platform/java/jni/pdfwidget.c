@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -329,17 +329,16 @@ FUN(PDFWidget_checkDigest)(JNIEnv *env, jobject self, jobject jverifier)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFWidget_incrementalChangeAfterSigning)(JNIEnv *env, jobject self)
+FUN(PDFWidget_incrementalChangeSinceSigning)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *widget = from_PDFWidget_safe(env, self);
-	pdf_document *pdf = pdf_annot_page(ctx, widget)->doc;
 	jboolean change = JNI_FALSE;
 
-	if (!ctx || !widget || !pdf) return JNI_FALSE;
+	if (!ctx || !widget) return JNI_FALSE;
 
 	fz_try(ctx)
-		change = pdf_signature_incremental_change_since_signing(ctx, pdf, pdf_annot_obj(ctx, widget));
+		change = pdf_incremental_change_since_signing_widget(ctx, widget);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

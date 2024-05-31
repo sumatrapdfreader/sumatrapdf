@@ -514,3 +514,21 @@ FUN(Pixmap_skewDetect)(JNIEnv *env, jobject self)
 
 	return (jfloat)ang;
 }
+
+JNIEXPORT jfloatArray JNICALL
+FUN(Pixmap_detectDocument)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_point points[4];
+	int found;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		found = fz_detect_document(ctx, &points[0], pixmap);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_floatArray(ctx, env, (float *)&points[0], 8);
+}

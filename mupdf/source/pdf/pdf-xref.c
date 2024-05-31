@@ -2917,6 +2917,9 @@ pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *newobj)
 {
 	pdf_xref_entry *x;
 
+	if (!doc)
+		return;
+
 	if (doc->local_xref && doc->local_xref_nesting > 0)
 	{
 		pdf_update_local_object(ctx, doc, num, newobj);
@@ -5024,13 +5027,18 @@ int pdf_find_version_for_obj(fz_context *ctx, pdf_document *doc, pdf_obj *obj)
 
 int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
 {
-	pdf_document *doc = widget->page->doc;
-	int unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
-	int num_versions = pdf_count_versions(ctx, doc) + unsaved_versions;
-	int version = pdf_find_version_for_obj(ctx, doc, widget->obj);
-	int i;
+	pdf_document *doc;
+	int unsaved_versions, num_versions, version, i;
 	pdf_locked_fields *locked = NULL;
 	int o_xref_base;
+
+	if (!widget->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+
+	doc = widget->page->doc;
+	unsaved_versions = pdf_count_unsaved_versions(ctx, doc);
+	num_versions = pdf_count_versions(ctx, doc) + unsaved_versions;
+	version = pdf_find_version_for_obj(ctx, doc, widget->obj);
 
 	if (version > num_versions-1)
 		version = num_versions-1;

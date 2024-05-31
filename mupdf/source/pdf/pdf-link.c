@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -213,25 +213,58 @@ pdf_parse_link_dest_to_file_with_path(fz_context *ctx, pdf_document *doc, const 
 	}
 }
 
+/* Look at an FS object, and find a name. Find any embedded
+ * file stream object that corresponds to that and return it.
+ * Optionally return the name.
+ *
+ * Note that for NON-embedded files, this function will return
+ * NULL, but may still return a filename.
+ *
+ * We will never return a file unless we also found a name.
+ */
+static pdf_obj *
+get_file_stream_and_name(fz_context *ctx, pdf_obj *fs, pdf_obj **namep)
+{
+	pdf_obj *ef = pdf_dict_get(ctx, fs, PDF_NAME(EF));
+	pdf_obj *name = pdf_dict_get(ctx, fs, PDF_NAME(UF));
+	pdf_obj *file = pdf_dict_get(ctx, ef, PDF_NAME(UF));
+
+	if (!name && !file)
+	{
+		name = pdf_dict_get(ctx, fs, PDF_NAME(F));
+		file = pdf_dict_get(ctx, ef, PDF_NAME(F));
+	}
+	if (!name && !file)
+	{
+		name = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
+		file = pdf_dict_get(ctx, ef, PDF_NAME(Unix));
+	}
+	if (!name && !file)
+	{
+		name = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
+		file = pdf_dict_get(ctx, ef, PDF_NAME(DOS));
+	}
+	if (!name && !file)
+	{
+		name = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
+		file = pdf_dict_get(ctx, ef, PDF_NAME(Mac));
+	}
+	if (namep)
+		*namep = name;
+
+	return name ? file : NULL;
+}
+
 static char *
-pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_obj *dest, int is_remote)
+convert_file_spec_to_URI(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_obj *dest, int is_remote)
 {
 	pdf_obj *str = NULL;
 	int is_url;
 
 	if (pdf_is_string(ctx, file_spec))
 		str = file_spec;
-	else if (pdf_is_dict(ctx, file_spec)) {
-		str = pdf_dict_get(ctx, file_spec, PDF_NAME(UF));
-		if (!str)
-			str = pdf_dict_get(ctx, file_spec, PDF_NAME(F));
-		if (!str)
-			str = pdf_dict_get(ctx, file_spec, PDF_NAME(Unix));
-		if (!str)
-			str = pdf_dict_get(ctx, file_spec, PDF_NAME(DOS));
-		if (!str)
-			str = pdf_dict_get(ctx, file_spec, PDF_NAME(Mac));
-	}
+	else if (pdf_is_dict(ctx, file_spec))
+		(void)get_file_stream_and_name(ctx, file_spec, &str);
 
 	if (!pdf_is_string(ctx, str))
 	{
@@ -247,40 +280,27 @@ pdf_parse_file_spec(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_
 		return pdf_parse_link_dest_to_file_with_path(ctx, doc, pdf_to_text_string(ctx, str), dest, is_remote);
 }
 
-static pdf_obj *
-pdf_embedded_file_stream(fz_context *ctx, pdf_obj *fs)
-{
-	pdf_obj *ef = pdf_dict_get(ctx, fs, PDF_NAME(EF));
-	pdf_obj *file = pdf_dict_get(ctx, ef, PDF_NAME(UF));
-	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(F));
-	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(Unix));
-	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(DOS));
-	if (!file) file = pdf_dict_get(ctx, ef, PDF_NAME(Mac));
-	return file;
-}
 
 int
 pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs)
 {
-	return pdf_is_stream(ctx, pdf_embedded_file_stream(ctx, fs));
+	return pdf_is_stream(ctx, get_file_stream_and_name(ctx, fs, NULL));
 }
 
 void
 pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_params *out)
 {
 	pdf_obj *file, *params, *filename, *subtype;
-
-	if (!pdf_is_embedded_file(ctx, fs) || !out)
+	if (!out)
 		return;
 
-	file = pdf_embedded_file_stream(ctx, fs);
-	params = pdf_dict_get(ctx, file, PDF_NAME(Params));
+	memset(out, 0, sizeof(*out));
 
-	filename = pdf_dict_get(ctx, fs, PDF_NAME(UF));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(F));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
-	if (!filename) filename = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
+	file = get_file_stream_and_name(ctx, fs, &filename);
+	if (!pdf_is_stream(ctx, file))
+		return;
+
+	params = pdf_dict_get(ctx, file, PDF_NAME(Params));
 	out->filename = pdf_to_text_string(ctx, filename);
 
 	subtype = pdf_dict_get(ctx, file, PDF_NAME(Subtype));
@@ -296,25 +316,28 @@ pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_par
 fz_buffer *
 pdf_load_embedded_file_contents(fz_context *ctx, pdf_obj *fs)
 {
-	if (!pdf_is_embedded_file(ctx, fs))
+	pdf_obj *file = get_file_stream_and_name(ctx, fs, NULL);
+
+	if (!pdf_is_stream(ctx, file))
 		return NULL;
-	return pdf_load_stream(ctx, pdf_embedded_file_stream(ctx, fs));
+
+	return pdf_load_stream(ctx, file);
 }
 
 int
 pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs)
 {
 	unsigned char digest[16];
-	pdf_obj *file, *params;
+	pdf_obj *params;
 	const char *checksum;
 	fz_buffer *contents;
 	int valid = 0;
 	size_t len;
+	pdf_obj *file = get_file_stream_and_name(ctx, fs, NULL);
 
-	if (!pdf_is_embedded_file(ctx, fs))
+	if (!pdf_is_stream(ctx, file))
 		return 1;
 
-	file = pdf_embedded_file_stream(ctx, fs);
 	params = pdf_dict_get(ctx, file, PDF_NAME(Params));
 	checksum = pdf_dict_get_string(ctx, params, PDF_NAME(CheckSum), &len);
 	if (!checksum || strlen(checksum) == 0)
@@ -324,7 +347,6 @@ pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs)
 
 	fz_try(ctx)
 	{
-		file = pdf_embedded_file_stream(ctx, fs);
 		contents = pdf_load_stream(ctx, file);
 		fz_md5_buffer(ctx, contents, digest);
 		if (len == nelem(digest) && !memcmp(digest, checksum, nelem(digest)))
@@ -475,13 +497,13 @@ pdf_parse_link_action(fz_context *ctx, pdf_document *doc, pdf_obj *action, int p
 	else if (pdf_name_eq(ctx, PDF_NAME(Launch), obj))
 	{
 		file_spec = pdf_dict_get(ctx, action, PDF_NAME(F));
-		return pdf_parse_file_spec(ctx, doc, file_spec, NULL, 0);
+		return convert_file_spec_to_URI(ctx, doc, file_spec, NULL, 0);
 	}
 	else if (pdf_name_eq(ctx, PDF_NAME(GoToR), obj))
 	{
 		dest = pdf_dict_get(ctx, action, PDF_NAME(D));
 		file_spec = pdf_dict_get(ctx, action, PDF_NAME(F));
-		return pdf_parse_file_spec(ctx, doc, file_spec, dest, 1);
+		return convert_file_spec_to_URI(ctx, doc, file_spec, dest, 1);
 	}
 	else if (pdf_name_eq(ctx, PDF_NAME(Named), obj))
 	{
@@ -521,6 +543,9 @@ static void pdf_set_link_rect(fz_context *ctx, fz_link *link_, fz_rect rect)
 	if (link == NULL)
 		return;
 
+	if (!link->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "link not bound to a page");
+
 	pdf_begin_operation(ctx, link->page->doc, "Set link rectangle");
 
 	fz_try(ctx)
@@ -541,6 +566,9 @@ static void pdf_set_link_uri(fz_context *ctx, fz_link *link_, const char *uri)
 	pdf_link *link = (pdf_link *) link_;
 	if (link == NULL)
 		return;
+
+	if (!link->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "link not bound to a page");
 
 	pdf_begin_operation(ctx, link->page->doc, "Set link uri");
 

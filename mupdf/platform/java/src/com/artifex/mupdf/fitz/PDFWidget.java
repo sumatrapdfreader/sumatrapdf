@@ -49,34 +49,34 @@ public class PDFWidget extends PDFAnnotation
 	public static final int TX_FORMAT_TIME = 4;
 
 	/* Field flags */
-	public static final int PDF_FIELD_IS_READ_ONLY = 1;
-	public static final int PDF_FIELD_IS_REQUIRED = 1 << 1;
-	public static final int PDF_FIELD_IS_NO_EXPORT = 1 << 2;
+	public static final int FIELD_IS_READ_ONLY = 1;
+	public static final int FIELD_IS_REQUIRED = 1 << 1;
+	public static final int FIELD_IS_NO_EXPORT = 1 << 2;
 
 	/* Text fields */
-	public static final int PDF_TX_FIELD_IS_MULTILINE = 1 << 12;
-	public static final int PDF_TX_FIELD_IS_PASSWORD = 1 << 13;
-	public static final int PDF_TX_FIELD_IS_COMB = 1 << 24;
+	public static final int TX_FIELD_IS_MULTILINE = 1 << 12;
+	public static final int TX_FIELD_IS_PASSWORD = 1 << 13;
+	public static final int TX_FIELD_IS_COMB = 1 << 24;
 
 	/* Button fields */
-	public static final int PDF_BTN_FIELD_IS_NO_TOGGLE_TO_OFF = 1 << 14;
-	public static final int PDF_BTN_FIELD_IS_RADIO = 1 << 15;
-	public static final int PDF_BTN_FIELD_IS_PUSHBUTTON = 1 << 16;
+	public static final int BTN_FIELD_IS_NO_TOGGLE_TO_OFF = 1 << 14;
+	public static final int BTN_FIELD_IS_RADIO = 1 << 15;
+	public static final int BTN_FIELD_IS_PUSHBUTTON = 1 << 16;
 
 	/* Choice fields */
-	public static final int PDF_CH_FIELD_IS_COMBO = 1 << 17;
-	public static final int PDF_CH_FIELD_IS_EDIT = 1 << 18;
-	public static final int PDF_CH_FIELD_IS_SORT = 1 << 19;
-	public static final int PDF_CH_FIELD_IS_MULTI_SELECT = 1 << 21;
+	public static final int CH_FIELD_IS_COMBO = 1 << 17;
+	public static final int CH_FIELD_IS_EDIT = 1 << 18;
+	public static final int CH_FIELD_IS_SORT = 1 << 19;
+	public static final int CH_FIELD_IS_MULTI_SELECT = 1 << 21;
 
 	/* Signature appearance */
-	public static final int PDF_SIGNATURE_SHOW_LABELS = 1;
-	public static final int PDF_SIGNATURE_SHOW_DN = 2;
-	public static final int PDF_SIGNATURE_SHOW_DATE = 4;
-	public static final int PDF_SIGNATURE_SHOW_TEXT_NAME = 8;
-	public static final int PDF_SIGNATURE_SHOW_GRAPHIC_NAME = 16;
-	public static final int PDF_SIGNATURE_SHOW_LOGO = 32;
-	public static final int PDF_SIGNATURE_DEFAULT_APPEARANCE = 63;
+	public static final int SIGNATURE_SHOW_LABELS = 1;
+	public static final int SIGNATURE_SHOW_DN = 2;
+	public static final int SIGNATURE_SHOW_DATE = 4;
+	public static final int SIGNATURE_SHOW_TEXT_NAME = 8;
+	public static final int SIGNATURE_SHOW_GRAPHIC_NAME = 16;
+	public static final int SIGNATURE_SHOW_LOGO = 32;
+	public static final int SIGNATURE_DEFAULT_APPEARANCE = 63;
 
 	public static final int SIGNATURE_ERROR_OKAY = 0;
 	public static final int SIGNATURE_ERROR_NO_SIGNATURES = 1;
@@ -85,7 +85,8 @@ public class PDFWidget extends PDFAnnotation
 	public static final int SIGNATURE_ERROR_SELF_SIGNED = 4;
 	public static final int SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN = 5;
 	public static final int SIGNATURE_ERROR_NOT_TRUSTED = 6;
-	public static final int SIGNATURE_ERROR_UNKNOWN = 7;
+	public static final int SIGNATURE_ERROR_NOT_SIGNED = 7;
+	public static final int SIGNATURE_ERROR_UNKNOWN = 8;
 
 	// These don't change after creation, so are cached in java fields.
 	private int fieldType;
@@ -103,7 +104,7 @@ public class PDFWidget extends PDFAnnotation
 		return fieldFlags;
 	}
 	public boolean isReadOnly() {
-		return (getFieldFlags() & PDF_FIELD_IS_READ_ONLY) != 0;
+		return (getFieldFlags() & FIELD_IS_READ_ONLY) != 0;
 	}
 	public native String getValue();
 	public native boolean setValue(String val);
@@ -132,13 +133,13 @@ public class PDFWidget extends PDFAnnotation
 		return getFieldType() == TYPE_TEXT;
 	}
 	public boolean isMultiline() {
-		return (getFieldFlags() & PDF_TX_FIELD_IS_MULTILINE) != 0;
+		return (getFieldFlags() & TX_FIELD_IS_MULTILINE) != 0;
 	}
 	public boolean isPassword() {
-		return (getFieldFlags() & PDF_TX_FIELD_IS_PASSWORD) != 0;
+		return (getFieldFlags() & TX_FIELD_IS_PASSWORD) != 0;
 	}
 	public boolean isComb() {
-		return (getFieldFlags() & PDF_TX_FIELD_IS_COMB) != 0;
+		return (getFieldFlags() & TX_FIELD_IS_COMB) != 0;
 	}
 	public int getMaxLen() {
 		return maxLen;
@@ -196,16 +197,16 @@ public class PDFWidget extends PDFAnnotation
 		return previewSignatureNative(width, height, lang, signer, flags, image, reason, location);
 	}
 	public static Pixmap previewSignature(int width, int height, int lang, PKCS7Signer signer, Image image) {
-		return previewSignatureNative(width, height, lang, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+		return previewSignatureNative(width, height, lang, signer, SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, int lang, PKCS7Signer signer) {
-		return previewSignatureNative(width, height, lang, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+		return previewSignatureNative(width, height, lang, signer, SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer, Image image) {
-		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
 	}
 	public static Pixmap previewSignature(int width, int height, PKCS7Signer signer) {
-		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+		return previewSignatureNative(width, height, PDFDocument.LANGUAGE_UNSET, signer, SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public Pixmap previewSignature(float dpi, PKCS7Signer signer, int flags, Image image, String reason, String location) {
 		Rect r = getBounds();
@@ -233,22 +234,26 @@ public class PDFWidget extends PDFAnnotation
 		return signNative(signer, flags, image, reason, location);
 	}
 	public boolean sign(PKCS7Signer signer, Image image) {
-		return signNative(signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
+		return signNative(signer, SIGNATURE_DEFAULT_APPEARANCE, image, null, null);
 	}
 	public boolean sign(PKCS7Signer signer) {
-		return signNative(signer, PDF_SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
+		return signNative(signer, SIGNATURE_DEFAULT_APPEARANCE, null, null, null);
 	}
 	public native int checkCertificate(PKCS7Verifier verifier);
 	public native int checkDigest(PKCS7Verifier verifier);
-	public native boolean incrementalChangeAfterSigning();
+	public native boolean incrementalChangeSinceSigning();
+	public boolean incrementalChangeAfterSigning() {
+		return incrementalChangeSinceSigning();
+	}
 	public boolean verify(PKCS7Verifier verifier) {
 		if (checkDigest(verifier) != PKCS7Verifier.PKCS7VerifierOK)
 			return false;
 		if (checkCertificate(verifier) != PKCS7Verifier.PKCS7VerifierOK)
 			return false;
-		return !incrementalChangeAfterSigning();
+		return !incrementalChangeSinceSigning();
 	}
 	public native PKCS7DistinguishedName getDistinguishedName(PKCS7Verifier verifier);
+	public native boolean incrementalChangesSinceSigning();
 
 	public native int validateSignature();
 	public native void clearSignature();

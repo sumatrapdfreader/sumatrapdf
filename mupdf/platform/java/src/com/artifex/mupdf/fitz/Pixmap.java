@@ -135,4 +135,23 @@ public class Pixmap
 	}
 
 	public native float skewDetect();
+
+	private native float[] nativeDetectDocument();
+
+	public Point[] detectDocument()
+	{
+		float coords[] = nativeDetectDocument();
+		Point points[];
+
+		if (coords == null)
+			return null;
+
+		points = new Point[4];
+		points[0] = new Point(coords[0], coords[1]);
+		points[1] = new Point(coords[2], coords[3]);
+		points[2] = new Point(coords[4], coords[5]);
+		points[3] = new Point(coords[5], coords[6]);
+
+		return points;
+	}
 }

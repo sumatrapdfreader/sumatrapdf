@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -31,6 +31,27 @@ enum
 	PDF_SIGFLAGS_SIGSEXIST = 1,
 	PDF_SIGFLAGS_APPENDONLY = 2
 };
+
+static void
+begin_widget_op(fz_context *ctx, pdf_annot *annot, const char *op)
+{
+	if (!annot->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+
+	pdf_begin_operation(ctx, annot->page->doc, op);
+}
+
+static void
+end_widget_op(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_end_operation(ctx, annot->page->doc);
+}
+
+static void
+abandon_widget_op(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_abandon_operation(ctx, annot->page->doc);
+}
 
 void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_obj *field, size_t hexdigest_offset, size_t hexdigest_length, pdf_pkcs7_signer *signer)
 {
@@ -215,12 +236,15 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 void
 pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7_signer *signer, int64_t t, fz_display_list *disp_list)
 {
-	pdf_document *doc = widget->page->doc;
+	pdf_document *doc;
 
+	if (pdf_dict_get(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (pdf_widget_is_readonly(ctx, widget))
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Signature is read only, it cannot be signed.");
 
-	pdf_begin_operation(ctx, doc, "Sign signature");
+	begin_widget_op(ctx, widget, "Sign signature");
+	doc = widget->page->doc;
 
 	fz_try(ctx)
 	{
@@ -250,11 +274,11 @@ pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7
 			pdf_dict_put_int(ctx, form, PDF_NAME(SigFlags), sf | PDF_SIGFLAGS_SIGSEXIST | PDF_SIGFLAGS_APPENDONLY);
 
 		pdf_signature_set_value(ctx, doc, wobj, signer, t);
-		pdf_end_operation(ctx, doc);
+		end_widget_op(ctx, widget);
 	}
 	fz_catch(ctx)
 	{
-		pdf_abandon_operation(ctx, doc);
+		abandon_widget_op(ctx, widget);
 		fz_rethrow(ctx);
 	}
 }
@@ -413,6 +437,13 @@ void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 	int flags;
 	fz_display_list *dlist = NULL;
 
+	if (pdf_dict_get(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+	if (pdf_widget_is_readonly(ctx, widget))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "read only signature cannot be cleared");
+
+	begin_widget_op(ctx, widget, "Clear Signature");
+
 	fz_var(dlist);
 	fz_try(ctx)
 	{
@@ -438,13 +469,15 @@ void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 
 		dlist = pdf_signature_appearance_unsigned(ctx, rect, lang);
 		pdf_set_annot_appearance_from_display_list(ctx, widget, "N", NULL, fz_identity, dlist);
-		pdf_end_operation(ctx, widget->page->doc);
+		end_widget_op(ctx, widget);
 	}
 	fz_always(ctx)
+	{
 		fz_drop_display_list(ctx, dlist);
+	}
 	fz_catch(ctx)
 	{
-		pdf_abandon_operation(ctx, widget->page->doc);
+		abandon_widget_op(ctx, widget);
 		fz_rethrow(ctx);
 	}
 }
@@ -535,6 +568,8 @@ char *pdf_signature_format_distinguished_name(fz_context *ctx, pdf_pkcs7_disting
 
 pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget)
 {
+	if (!widget->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
 	return pdf_signature_get_signatory(ctx, verifier, widget->page->doc, widget->obj);
 }
 
@@ -543,6 +578,11 @@ pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_p
 	char *contents = NULL;
 	size_t contents_len;
 	pdf_pkcs7_distinguished_name *dn;
+
+	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+	if (!pdf_signature_is_signed(ctx, doc, signature))
+		return NULL;
 
 	contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
 	if (contents_len == 0)
@@ -560,6 +600,8 @@ pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_p
 
 pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget)
 {
+	if (!widget->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
 	return pdf_check_digest(ctx, verifier, widget->page->doc, widget->obj);
 }
 
@@ -568,7 +610,15 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
 	fz_stream *bytes = NULL;
 	char *contents = NULL;
-	size_t contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+	size_t contents_len;
+
+	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+	if (!pdf_signature_is_signed(ctx, doc, signature))
+		return PDF_SIGNATURE_ERROR_NOT_SIGNED;
+
+	contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+
 	fz_var(bytes);
 	fz_try(ctx)
 	{
@@ -590,14 +640,24 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 
 pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *w)
 {
+	if (!w->page)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
 	return pdf_check_certificate(ctx, verifier, w->page->doc, w->obj);
 }
 
 pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_document *doc, pdf_obj *signature)
 {
 	char *contents = NULL;
-	size_t contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+	size_t contents_len;
 	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
+
+	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+	if (!pdf_signature_is_signed(ctx, doc, signature))
+		return PDF_SIGNATURE_ERROR_NOT_SIGNED;
+
+	contents_len = pdf_signature_contents(ctx, doc, signature, &contents);
+
 	fz_try(ctx)
 		result = verifier->check_certificate(ctx, verifier, (unsigned char *)contents, contents_len);
 	fz_always(ctx)

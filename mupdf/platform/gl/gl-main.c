@@ -2531,6 +2531,8 @@ static char *short_signature_error_desc(pdf_signature_error err)
 		return "Self-signed in chain";
 	case PDF_SIGNATURE_ERROR_NOT_TRUSTED:
 		return "Untrusted";
+	case PDF_SIGNATURE_ERROR_NOT_SIGNED:
+		return "Not signed";
 	default:
 	case PDF_SIGNATURE_ERROR_UNKNOWN:
 		return "Unknown error";

@@ -4464,6 +4464,60 @@ static void ffi_Pixmap_asPNG(js_State *J)
 	ffi_pushbuffer(J, buf);
 }
 
+static void ffi_Pixmap_autowarp(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
+	/* 1 = array of 8 floats for points */
+	fz_pixmap *dest = NULL;
+	fz_point points[4];
+	int i;
+
+	if (!js_isarray(J, 1) || js_getlength(J, 1) != 8)
+		js_throw(J);
+
+	for (i = 0; i < 8; i++)
+	{
+		float *f = i&1 ? &points[i>>1].y : &points[i>>1].x;
+		js_getindex(J, 1, i);
+		*f = js_tonumber(J, -1);
+		js_pop(J, 1);
+	}
+
+	fz_try(ctx)
+		dest = fz_autowarp_pixmap(ctx, pixmap, points);
+	fz_catch(ctx)
+		rethrow(J);
+
+	ffi_pushpixmap(J, dest);
+}
+
+static void ffi_Pixmap_detect_document(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_pixmap *pixmap = js_touserdata(J, 0, "fz_pixmap");
+	fz_point points[4];
+	int i, found;
+
+	fz_try(ctx)
+		found = fz_detect_document(ctx, &points[0], pixmap);
+	fz_catch(ctx)
+		rethrow(J);
+
+	if (found)
+	{
+		js_newarray(J);
+		for (i = 0; i < 8; ++i) {
+			js_pushnumber(J, i&1 ? points[i>>1].y : points[i>>1].x);
+			js_setindex(J, -2, (int)i);
+		}
+	} else {
+		/* Do nothing and Javascript will put undefined.
+		 * Apparently this is the kind of thing Javascript
+		 * does. */
+	}
+}
+
 static void ffi_Pixmap_saveAsPNG(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -9793,6 +9847,18 @@ static void ffi_PDFWidget_checkDigest(js_State *J)
 	js_pushstring(J, pdf_signature_error_description(val));
 }
 
+static void ffi_PDFWidget_incrementalChangesSinceSigning(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_annot *widget = js_touserdata(J, 0, "pdf_widget");
+	int changed = 0;
+	fz_try(ctx)
+		changed = pdf_incremental_change_since_signing_widget(ctx, widget);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushboolean(J, changed);
+}
+
 static void ffi_PDFWidget_getSignatory(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -9932,6 +9998,10 @@ static void ffi_PDFWidget_previewSignature(js_State *J)
 	fz_try(ctx) {
 		fz_rect rect = pdf_annot_rect(ctx, widget);
 		fz_text_language lang = pdf_annot_language(ctx, widget);
+
+		if (pdf_dict_get(ctx, pdf_annot_obj(ctx, widget), PDF_NAME(FT)) != PDF_NAME(Sig))
+			fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+
 		pixmap = pdf_preview_signature_as_pixmap(ctx,
 			rect.x1-rect.x0, rect.y1-rect.y0, lang,
 			signer,
@@ -10552,6 +10622,8 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Pixmap.skewDetect", ffi_Pixmap_skewDetect, 0);
 		jsB_propfun(J, "Pixmap.deskew", ffi_Pixmap_deskew, 2);
 		jsB_propfun(J, "Pixmap.convertToColorSpace", ffi_Pixmap_convertToColorSpace, 5);
+		jsB_propfun(J, "Pixmap.autowarp", ffi_Pixmap_autowarp, 1);
+		jsB_propfun(J, "Pixmap.detectdocument", ffi_Pixmap_detect_document, 0);
 
 		// Pixmap.getPixels() - Buffer
 		// Pixmap.scale()
@@ -10823,6 +10895,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFWidget.validateSignature", ffi_PDFWidget_validateSignature, 0);
 		jsB_propfun(J, "PDFWidget.checkCertificate", ffi_PDFWidget_checkCertificate, 0);
 		jsB_propfun(J, "PDFWidget.checkDigest", ffi_PDFWidget_checkDigest, 0);
+		jsB_propfun(J, "PDFWidget.incrementalChangesSinceSigning", ffi_PDFWidget_incrementalChangesSinceSigning, 0);
 		jsB_propfun(J, "PDFWidget.getSignatory", ffi_PDFWidget_getSignatory, 0);
 		jsB_propfun(J, "PDFWidget.clearSignature", ffi_PDFWidget_clearSignature, 0);
 		jsB_propfun(J, "PDFWidget.sign", ffi_PDFWidget_sign, 5);

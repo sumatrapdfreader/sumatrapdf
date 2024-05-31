@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
 ----
@@ -389,6 +389,19 @@ Signature Methods
 
 
     .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+
+
+.. method:: incrementalChangesSinceSigning()
+
+    |mutool_tag_wasm_soon|
+
+    Returns true if there have been incremental changes since the signature widget was signed.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var changed = widget.incrementalChangesSinceSigning();
 
 
 Widget Events

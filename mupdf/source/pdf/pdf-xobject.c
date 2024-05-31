@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -85,9 +85,10 @@ pdf_xobject_colorspace(fz_context *ctx, pdf_obj *xobj)
 				fz_report_error(ctx);
 				fz_warn(ctx, "Ignoring XObject blending colorspace.");
 			}
+
 			if (!fz_is_valid_blend_colorspace(ctx, colorspace))
 			{
-				fz_warn(ctx, "Ignoring invalid XObject blending colorspace: %s.", colorspace->name);
+				fz_warn(ctx, "Ignoring invalid XObject blending colorspace: %s.", fz_colorspace_name(ctx, colorspace));
 				fz_drop_colorspace(ctx, colorspace);
 				return NULL;
 			}

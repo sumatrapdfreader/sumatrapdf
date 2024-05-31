@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2023 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -93,6 +93,7 @@ int pdf_signature_byte_range(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 fz_stream *pdf_signature_hash_bytes(fz_context *ctx, pdf_document *doc, pdf_obj *signature);
 
 int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document *doc, pdf_obj *signature);
+int pdf_incremental_change_since_signing_widget(fz_context *ctx, pdf_annot *widget);
 
 /*
 	Retrieve the contents of a signature as a counted allocated
