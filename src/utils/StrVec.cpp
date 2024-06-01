@@ -648,11 +648,11 @@ StrVec::iterator& StrVec::iterator::operator+(int n) {
 }
 
 bool operator==(const StrVec::iterator& a, const StrVec::iterator& b) {
-    return a.idx == b.idx;
+    return (a.v == b.v) && (a.idx == b.idx);
 };
 
 bool operator!=(const StrVec::iterator& a, const StrVec::iterator& b) {
-    return a.idx != b.idx;
+    return (a.v != b.v) || (a.idx != b.idx);
 };
 
 void Sort(StrVec& v, StrLessFunc lessFn) {
