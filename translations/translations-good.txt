@@ -15867,6 +15867,7 @@ vn:Tìm Kiếm Với &Google
 br:Procurar com o &Google Scholar
 de:Suche mit &Google Scholar
 fr:Rechercher avec &Google Scholar
+nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
 pt:Procurar com o &Google Scholar
 ro: Caută cu &Google Academic
@@ -15877,6 +15878,7 @@ sk:Vyhľadať na &Google Scholar
 br:Procurar com a &Wikipedia
 de:Suche mit &Wikipedia
 fr:Rechercher avec &Wikipedia
+nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
 pt:Procurar com a &Wikipedia
 ro:Caută pe &Wikipedia
