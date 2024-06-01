@@ -362,6 +362,8 @@ struct GlobalPrefs {
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
+    // number of most recently used files that will be displayed in the menu
+    int maxRecentlyUsedFiles;
     // width of favorites/bookmarks sidebar (if shown)
     int sidebarDx;
     // if true, implements smooth scrolling
@@ -682,6 +684,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showLinks), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showStartPage), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, maxRecentlyUsedFiles), SettingType::Int, 10},
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
@@ -731,11 +734,11 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 69, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 70, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
     "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0ReloadModifiedDocuments\0RememberOpene"
     "dFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowToolbar\0ShowFavorites\0ShowToc"
-    "\0ShowLinks\0ShowStartPage\0SidebarDx\0SmoothScroll\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSi"
+    "\0ShowLinks\0ShowStartPage\0MaxRecentlyUsedFiles\0SidebarDx\0SmoothScroll\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSi"
     "ze\0UIFontSize\0UseSysColors\0UseTabs\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0ComicBookUI\0\0ChmUI\0\0Annotat"
     "ions\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0\0\0DefaultPassword"
     "s\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"

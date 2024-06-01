@@ -163,7 +163,7 @@ bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
     // so that the user could still try opening it again
     // and so that we don't completely forget the settings,
     // should the file reappear later on
-    int newIdx = hide ? INT_MAX : kFileHistoryMaxRecent - 1;
+    int newIdx = hide ? INT_MAX : gGlobalPrefs->maxRecentlyUsedFiles - 1;
     int idx = states->Find(state);
     if (idx < newIdx && state != states->Last()) {
         states->Remove(state);
@@ -208,7 +208,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
     if (alwaysUseDefaultState) {
         Vec<FileState*> frequencyList;
         GetFrequencyOrder(frequencyList);
-        if (frequencyList.size() > kFileHistoryMaxFrequent) {
+        if (frequencyList.size() > static_cast<size_t>(gGlobalPrefs->maxRecentlyUsedFiles) || gGlobalPrefs->maxRecentlyUsedFiles < 0 ) {
             auto el = frequencyList.at(kFileHistoryMaxFrequent);
             minOpenCount = el->openCount / 2;
         }
@@ -227,7 +227,9 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         } else if (j > kFileHistoryMaxFiles) {
             // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
             states->RemoveAt(j - 1);
-        } else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > kFileHistoryMaxRecent) {
+        }  else if (alwaysUseDefaultState &&
+                    state->openCount < minOpenCount &&
+                    (gGlobalPrefs->maxRecentlyUsedFiles < 0 || j > static_cast<size_t>(gGlobalPrefs->maxRecentlyUsedFiles))) {
             // forget about files that were hardly used (and without valuable state)
             states->RemoveAt(j - 1);
         } else {

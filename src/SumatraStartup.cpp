@@ -91,11 +91,12 @@ class FileExistenceChecker : public ThreadBase {
 static FileExistenceChecker* gFileExistenceChecker = nullptr;
 
 void FileExistenceChecker::GetFilePathsToCheck() {
-    FileState* fs;
-    for (size_t i = 0; i < 2 * kFileHistoryMaxRecent && (fs = gFileHistory.Get(i)) != nullptr; i++) {
-        if (!fs->isMissing) {
-            char* fp = fs->filePath;
-            paths.Append(fp);
+    DisplayState* state;
+    if (gGlobalPrefs->maxRecentlyUsedFiles > 0) {
+        for (size_t i = 0; i < 2 * static_cast<size_t>(gGlobalPrefs->maxRecentlyUsedFiles) &&(state = gFileHistory.Get(i)) != nullptr; i++) {
+            if (!state->isMissing) {
+                paths.Append(str::Dup(state->filePath));
+            }
         }
     }
     // add missing paths from the list of most frequently opened documents

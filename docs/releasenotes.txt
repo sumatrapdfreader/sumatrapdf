@@ -2,6 +2,7 @@
 the release notes, as we make them, to make the release process easier.
 
 Next version:
+* number of most recently used files is now configurable in expert mode
 
 3.6
 * add `ShowLinks` advanced setting and `Toggle Show Links` for command palette (`Ctrl + K`)

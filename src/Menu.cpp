@@ -1101,7 +1101,7 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     menuString = ShortenStringUtf8Temp(menuString, kMaxRunes);
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
-    int menuIdx = (int)((index + 1) % 10);
+    int menuIdx = (int)((index + 1));
     menuString = str::FormatTemp("&%d) %s", menuIdx, fileName);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
@@ -1114,7 +1114,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 
     int i;
-    for (i = 0; i < kFileHistoryMaxRecent; i++) {
+    for (i = 0; i < gGlobalPrefs->maxRecentlyUsedFiles; i++) {
         FileState* fs = gFileHistory.Get(i);
         if (!fs || fs->isMissing) {
             break;
