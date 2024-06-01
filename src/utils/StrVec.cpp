@@ -108,9 +108,10 @@ struct StrVecPage {
     int pageSize;
     int nStrings;
     char* currEnd;
-    // now follows u32[nStrings] offsets since the beginning of StrVecPage
-
-    // strings are allocated from the end
+    // now follows:
+    // struct { size u32; offset u32}[nStrings] }
+    // ... free space
+    // strings (allocated from the end)
 
     char* At(int) const;
     StrSpan AtSpan(int i) const;
