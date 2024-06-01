@@ -772,8 +772,10 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     char* filePath = str::Dup(win->ctrl->GetFilePath());
     auto d = new CreateThumbnailData{filePath, nullptr};
     logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
-    win->ctrl->CreateThumbnail(
-        size, [d](RenderedBitmap* bmp) { uitask::Post(TaskSetThumbnail, [d] { CreateThumbnailFinish(d); }); });
+    win->ctrl->CreateThumbnail(size, [d](RenderedBitmap* bmp) {
+        d->bmp = bmp;
+        uitask::Post(TaskSetThumbnail, [d] { CreateThumbnailFinish(d); });
+    });
 }
 
 /* Send the request to render a given page to a rendering thread */
