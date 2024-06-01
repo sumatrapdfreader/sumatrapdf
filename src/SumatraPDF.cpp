@@ -733,15 +733,18 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
 struct CreateThumbnailData {
     char* filePath = nullptr;
     RenderedBitmap* bmp = nullptr;
+
+    ~CreateThumbnailData() {
+        str::Free(filePath);
+    }
 };
 
 static void CreateThumbnailFinish(CreateThumbnailData* d) {
     char* path = d->filePath;
-    logf("CreateThumbnailFinish: path: '%s', 0x%p, d: 0x%p\n", path, path, d);
+    logf("CreateThumbnailFinish: path: '%s', 0x%p, d: 0x%p, d->bmp: 0x%p\n", path, path, d, d->bmp);
     if (d->bmp) {
         SetThumbnail(gFileHistory.FindByPath(path), d->bmp);
     }
-    str::Free(path);
     delete d;
 }
 
