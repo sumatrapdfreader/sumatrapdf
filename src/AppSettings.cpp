@@ -188,7 +188,7 @@ bool LoadSettings() {
     }
     ResetCachedFonts();
 
-    logf("LoadSettings() took %.2f ms\n", TimeSinceInMs(timeStart));
+    logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;
 }
 
