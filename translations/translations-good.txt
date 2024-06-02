@@ -11550,6 +11550,7 @@ vn:Kiểu &Manga
 :Manual On Website
 am:Ձեռնարկը կայքում
 br:Manual no Site da Web
+ca:Manual al lloc web
 cn:在线手册
 co:Manuale nant’à u situ web
 de:Handbuch im Internet
@@ -11884,6 +11885,7 @@ vn:Trang sau
 :No
 am:Ոչ
 br:Não
+ca:No
 de:Nein
 es:No
 fr:Non
@@ -15865,7 +15867,9 @@ uk:Пошук за допомогою &Google
 vn:Tìm Kiếm Với &Google
 :Search with &Google Scholar
 br:Procurar com o &Google Scholar
+ca:Cerca amb el &Google Scholar
 de:Suche mit &Google Scholar
+es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
 nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
@@ -15876,7 +15880,9 @@ sat:&Google Scholar ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Google Scholar
 :Search with &Wikipedia
 br:Procurar com a &Wikipedia
+ca:Cerca amb el &Wikipedia
 de:Suche mit &Wikipedia
+es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
 nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
@@ -18900,6 +18906,7 @@ vn:Tập tin XPS
 :Yes
 am:Այո
 br:Sim
+ca:Sí
 de:Ja
 es:Sí
 fr:Oui
