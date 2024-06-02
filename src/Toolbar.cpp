@@ -3,7 +3,6 @@
 
 extern "C" {
 #include <mupdf/fitz.h>
-#include <mupdf/pdf.h>
 }
 
 #include "utils/BaseUtil.h"
@@ -21,6 +20,7 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
+#include "FzImgReader.h"
 #include "AppColors.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
@@ -758,41 +758,6 @@ void LogBitmapInfo(HBITMAP hbmp) {
     }
 }
 
-struct MupdfContext {
-    fz_locks_context fz_locks_ctx{};
-    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
-    fz_context* ctx = nullptr;
-    MupdfContext();
-    ~MupdfContext();
-};
-
-static void fz_lock_context_cs(void* user, int lock) {
-    MupdfContext* ctx = (MupdfContext*)user;
-    EnterCriticalSection(&ctx->mutexes[lock]);
-}
-
-static void fz_unlock_context_cs(void* user, int lock) {
-    MupdfContext* ctx = (MupdfContext*)user;
-    LeaveCriticalSection(&ctx->mutexes[lock]);
-}
-
-MupdfContext::MupdfContext() {
-    for (int i = 0; i < FZ_LOCK_MAX; i++) {
-        InitializeCriticalSection(&mutexes[i]);
-    }
-    fz_locks_ctx.user = this;
-    fz_locks_ctx.lock = fz_lock_context_cs;
-    fz_locks_ctx.unlock = fz_unlock_context_cs;
-    ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
-}
-
-MupdfContext::~MupdfContext() {
-    fz_drop_context(ctx);
-    for (int i = 0; i < FZ_LOCK_MAX; i++) {
-        DeleteCriticalSection(&mutexes[i]);
-    }
-}
-
 static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int dstX, int dstY, COLORREF bgCol) {
     int dx = src->w;
     int dy = src->h;
@@ -824,8 +789,7 @@ static void BlitPixmap(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src, int 
 }
 
 static HBITMAP BuildIconsBitmap(int dx, int dy) {
-    MupdfContext* muctx = new MupdfContext();
-    fz_context* ctx = muctx->ctx;
+    fz_context* ctx = fz_new_context_windows();
     int nIcons = (int)TbIcon::kMax;
     int destDx = dx * nIcons;
     ptrdiff_t dstStride;
@@ -881,7 +845,7 @@ static HBITMAP BuildIconsBitmap(int dx, int dy) {
         fz_drop_buffer(ctx, buf);
     }
 
-    delete muctx;
+    fz_drop_context_windows(ctx);
     return hbmp;
 }
 

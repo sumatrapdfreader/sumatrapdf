@@ -16,9 +16,11 @@ extern "C" {
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "Translations.h"
-#include "SaveAsPdf.h"
 #include "resource.h"
 #include "Commands.h"
+#include "FzImgReader.h"
+
+#include "SaveAsPdf.h"
 
 #include "utils/Log.h"
 
@@ -74,7 +76,7 @@ struct PdfMerger {
 PdfMerger::~PdfMerger() {
     pdf_drop_document(ctx, doc_des);
     fz_flush_warnings(ctx);
-    fz_drop_context(ctx);
+    fz_drop_context_windows(ctx);
 }
 
 void PdfMerger::MergePdfPage(int page_from, int page_to, pdf_graft_map* graft_map) const {
@@ -158,7 +160,7 @@ bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
         return false;
     }
 
-    ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
+    ctx = fz_new_context_windows(); // freed in the destructor
 
     // TODO: install warnigngs redirect
     fz_try(ctx) {

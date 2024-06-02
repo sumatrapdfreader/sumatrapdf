@@ -19,6 +19,7 @@ extern "C" {
 #include "EngineBase.h"
 #include "Annotation.h"
 #include "EngineMupdf.h"
+#include "FzImgReader.h"
 #include "PdfCreator.h"
 
 #include "utils/Log.h"
@@ -106,7 +107,7 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 }
 
 PdfCreator::PdfCreator() {
-    ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
+    ctx = fz_new_context_windows(kFzStoreUnlimited);
     if (!ctx) {
         return;
     }
@@ -124,7 +125,7 @@ PdfCreator::PdfCreator() {
 PdfCreator::~PdfCreator() {
     pdf_drop_document(ctx, doc);
     fz_flush_warnings(ctx);
-    fz_drop_context(ctx);
+    fz_drop_context_windows(ctx);
 }
 
 pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, char* name, fz_image* image) {

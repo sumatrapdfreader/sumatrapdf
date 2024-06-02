@@ -5,6 +5,7 @@
 
 extern "C" {
 #include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
 #include "../mupdf/source/fitz/color-imp.h"
 #include "../mupdf/source/fitz/image-imp.h"
 }
@@ -15,6 +16,44 @@ extern "C" {
 #include "utils/FileUtil.h"
 
 #include "FzImgReader.h"
+
+struct MupdfContext {
+    fz_locks_context fz_locks_ctx{};
+    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
+    fz_context* ctx = nullptr;
+};
+
+static void fz_lock_context_cs(void* user, int lock) {
+    MupdfContext* ctx = (MupdfContext*)user;
+    EnterCriticalSection(&ctx->mutexes[lock]);
+}
+
+static void fz_unlock_context_cs(void* user, int lock) {
+    MupdfContext* ctx = (MupdfContext*)user;
+    LeaveCriticalSection(&ctx->mutexes[lock]);
+}
+
+fz_context* fz_new_context_windows(size_t maxStore) {
+    auto c = new MupdfContext();
+    for (int i = 0; i < FZ_LOCK_MAX; i++) {
+        InitializeCriticalSection(&c->mutexes[i]);
+    }
+    c->fz_locks_ctx.user = c;
+    c->fz_locks_ctx.lock = fz_lock_context_cs;
+    c->fz_locks_ctx.unlock = fz_unlock_context_cs;
+    c->ctx = fz_new_context(nullptr, &c->fz_locks_ctx, maxStore);
+    return c->ctx;
+}
+
+void fz_drop_context_windows(fz_context* ctx) {
+    auto c = (MupdfContext*)ctx->locks.user;
+    ReportIf(ctx != c->ctx);
+    fz_drop_context(ctx);
+    for (int i = 0; i < FZ_LOCK_MAX; i++) {
+        DeleteCriticalSection(&c->mutexes[i]);
+    }
+    delete c;
+}
 
 static Gdiplus::Bitmap* ImageFromJpegData(fz_context* ctx, const u8* data, int len) {
     int w = 0, h = 0, xres = 0, yres = 0;
@@ -196,7 +235,7 @@ Gdiplus::Bitmap* FzImageFromData(const ByteSlice& d) {
         return nullptr;
     }
 
-    fz_context* ctx = fz_new_context(nullptr, nullptr, 0);
+    fz_context* ctx = fz_new_context_windows();
     if (!ctx) {
         return nullptr;
     }
@@ -208,7 +247,7 @@ Gdiplus::Bitmap* FzImageFromData(const ByteSlice& d) {
         result = ImageFromJp2Data(ctx, data, (int)len);
     }
 
-    fz_drop_context(ctx);
+    fz_drop_context_windows(ctx);
 
     return result;
 }
