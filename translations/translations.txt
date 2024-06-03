@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a3f91be385d90f9dd5cb072d8899826d8dee30e5
+797e2790205ec6d8ba419323c4c9fe7232d6e4aa
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -2878,7 +2878,7 @@ br:&Procurar com o Google
 by:&Шукаць праз Google
 ca-xv:&Cerca amb el Google
 ca:&Cerca amb el Google
-cn:使用谷歌搜索(&S)
+cn:谷歌搜索(&S)
 co:&Circà cù Google
 cy:&Chwilio gyda Google
 cz:&Vyhledat Googlem
@@ -3320,7 +3320,7 @@ br:&Traduzir com o Google
 by:&Перакласці з дапамогай Google
 ca-xv:Tradueix amb el &Google
 ca:Tradueix amb el &Google
-cn:使用谷歌翻译(&T)
+cn:谷歌翻译(&T)
 co:&Traduce cù Google
 cy:&Cyfieithu gyda Google
 cz:&Přeložit Googlem
@@ -14191,6 +14191,7 @@ vn:Trang sau
 am:Ոչ
 br:Não
 ca:No
+cn:否
 de:Nein
 es:No
 fr:Non
@@ -18634,7 +18635,7 @@ br:Procurar com o &Bing
 by:Шукаць у &Bing
 ca-xv:Cerca amb el &Bing
 ca:Cerca amb el &Bing
-cn:使用必应搜索(&B)
+cn:必应搜索(&B)
 co:Circà cù &Bing
 cy:Chwilio gyda &Bing
 cz:Vyhledat &Bingem
@@ -18685,7 +18686,7 @@ br:Procurar com o &Google
 by:Шукаць у &Google
 ca-xv:Cerca amb el &Google
 ca:Cerca amb el &Google
-cn:使用谷歌搜索(&G)
+cn:谷歌搜索(&G)
 co:Circà cù &Google
 cy:Chwilio gyda &Google
 cz:Vyhledat &Googlem
@@ -18730,6 +18731,7 @@ vn:Tìm Kiếm Với &Google
 :Search with &Google Scholar
 br:Procurar com o &Google Scholar
 ca:Cerca amb el &Google Scholar
+cn:谷歌学术搜索(&G)
 de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
@@ -18743,6 +18745,7 @@ sk:Vyhľadať na &Google Scholar
 :Search with &Wikipedia
 br:Procurar com a &Wikipedia
 ca:Cerca amb el &Wikipedia
+cn:维基百科搜索(&W)
 de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
@@ -21564,7 +21567,7 @@ br:Traduzir com o &DeepL
 by:Перакласці ў &DeepL
 ca-xv:Tradueix amb el &Deepl
 ca:Tradueix amb el &Deepl
-cn:使用 DeepL 翻译(&D)
+cn:DeepL 翻译(&D)
 co:Traduce cù &DeepL
 cy:Llinyn
 cz:Přeložit s &DeepL
@@ -22314,6 +22317,7 @@ vn:Tập tin XPS
 am:Այո
 br:Sim
 ca:Sí
+cn:是
 de:Ja
 es:Sí
 fr:Oui
