@@ -5678,7 +5678,7 @@ pl:Zawartość:
 pt:Conteúdo:
 ro:Сonţinut:
 ru:Содержимое:
-sat:ᱡᱚᱱᱤᱥᱠᱚᱺ
+sat:ᱡᱤᱱᱤᱥᱠᱚᱺ
 sk:Obsah:
 sl:Vsebina:
 sr-rs:Садржај:
@@ -6940,7 +6940,7 @@ pl:Utwórz adnotację z zaznaczenia
 pt:Criar Anotação na Seleção
 ro:Creează adnotare din selecție
 ru:Создать аннотацию из выделения
-sat:ᱵᱟᱪᱷᱟᱣᱟᱜ ᱠᱷᱚᱱ ᱪᱤᱱᱦᱟᱹ ᱪᱮᱭᱟᱨ ᱢᱮ
+sat:ᱵᱟᱪᱷᱟᱣᱟᱜ ᱠᱷᱚᱱ ᱪᱤᱱᱦᱟᱹ ᱛᱮᱭᱟᱨ ᱢᱮ
 sk:Vytvoriť anotáciu z výberu
 sl:Ustvari pripombo iz izbire
 sr-rs:Направи белешку из селекције

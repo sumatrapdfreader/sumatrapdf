@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-acff89e21b490fca1cb11b2b4e2334904da1ef42
+a3f91be385d90f9dd5cb072d8899826d8dee30e5
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6770,7 +6770,7 @@ pl:Zawartość:
 pt:Conteúdo:
 ro:Сonţinut:
 ru:Содержимое:
-sat:ᱡᱚᱱᱤᱥᱠᱚᱺ
+sat:ᱡᱤᱱᱤᱥᱠᱚᱺ
 sk:Obsah:
 sl:Vsebina:
 sr-rs:Садржај:
@@ -8310,7 +8310,7 @@ pl:Utwórz adnotację z zaznaczenia
 pt:Criar Anotação na Seleção
 ro:Creează adnotare din selecție
 ru:Создать аннотацию из выделения
-sat:ᱵᱟᱪᱷᱟᱣᱟᱜ ᱠᱷᱚᱱ ᱪᱤᱱᱦᱟᱹ ᱪᱮᱭᱟᱨ ᱢᱮ
+sat:ᱵᱟᱪᱷᱟᱣᱟᱜ ᱠᱷᱚᱱ ᱪᱤᱱᱦᱟᱹ ᱛᱮᱭᱟᱨ ᱢᱮ
 sk:Vytvoriť anotáciu z výberu
 sl:Ustvari pripombo iz izbire
 sr-rs:Направи белешку из селекције
