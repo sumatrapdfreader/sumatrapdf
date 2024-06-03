@@ -233,6 +233,20 @@ and setting their properties.
         var val = pdfObj.asIndirect();
 
 
+.. method:: isFilespec()
+
+    Is the object a file specification (or a reference to a file specification).
+
+    :return: `Boolean`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var val = pdfObj.isFilespec();
+
+
 
 
 :title:`PDF` streams

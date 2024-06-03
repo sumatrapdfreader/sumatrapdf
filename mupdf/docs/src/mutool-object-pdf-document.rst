@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -484,8 +484,7 @@ With :title:`MuPDF` it is also possible to create, edit and manipulate :title:`P
 
     .. code-block:: javascript
 
-        pdfDocument.
-        endOperation();
+        pdfDocument.endOperation();
 
 .. method:: abandonOperation()
 
@@ -1055,7 +1054,7 @@ The following functions can be used to copy objects from one :title:`PDF` docume
 
 .. _mutool_object_pdf_document_embedded_files:
 
-Embedded files in :title:`PDFs`
+Embedded/Associated files in :title:`PDFs`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -1103,17 +1102,23 @@ Embedded files in :title:`PDFs`
 
 .. method:: getEmbeddedFileParams(fileSpecObject)
 
+    Historical alias for getFilespecParams.
+
+
+
+.. method:: getFilespecParams(fileSpecObject)
+
     Return an object describing the file referenced by the `fileSpecObject`.
 
     :arg fileSpecObject: `Object` :ref:`File Specification Object<mutool_run_js_api_file_spec_object>`.
 
-    :return: `Object` :ref:`Embedded File Object<mutool_run_js_api_pdf_document_embedded_file_object>`.
+    :return: `Object` :ref:`Filespec Params Object<mutool_run_js_api_pdf_document_filespec_params_object>`.
 
     |example_tag|
 
     .. code-block:: javascript
 
-        var obj = pdfDocument.getEmbeddedFileParams(fileSpecObject);
+        var obj = pdfDocument.getFilespecParams(fileSpecObject);
 
 
 .. method:: getEmbeddedFileContents(fileSpecObject)
@@ -1151,6 +1156,97 @@ Embedded files in :title:`PDFs`
 
         var fileChecksumValid = pdfDocument.verifyEmbeddedFileChecksum(fileSpecObject);
 
+
+
+
+.. method:: countAssociatedFiles()
+
+    Return the number of Associated Files on this document. Note that this is the number of files associated at the document level, not necessarily the total number of files associated with elements throughout the entire document.
+
+    :return: `Integer`
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var count = pdfDocument.countAssociatedFiles();
+
+
+
+
+.. method:: associatedFile(n)
+
+    Return the Filespec object that represents the nth Associated File on this document. 0 <= n < count, where count is the value given by countAssociatedFiles().
+
+    :return fileSpecObject: `Object` :ref:`File Specification Object<mutool_run_js_api_file_spec_object>`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var obj = pdfDocument.associatedFile(0);
+
+
+
+
+
+
+
+----
+
+
+.. _mutool_object_pdf_document_zugferd:
+
+ZUGFeRD support in :title:`PDFs`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+.. method:: zugferdProfile()
+
+    Determine if the current PDF is a ZUGFeRD PDF, and, if so, return the profile type in use. Possible return values include: "NOT ZUGFERD", "COMFORT", "BASIC", "EXTENDED", "BASIC WL", "MINIMUM", "XRECHNUNG", and "UNKNOWN".
+
+    :return: `String`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var profile = pdfDocument.zugferdProfile();
+
+
+
+.. method:: zugferdVersion()
+
+    Determine if the current PDF is a ZUGFeRD PDF, and, if so, return the version of the spec it claims to conforms to.
+    This will return 0 for non-zugferd PDFs.
+
+    :return: `Float`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var version = pdfDocument.zugferdVersion();
+
+
+
+.. method:: zugferdXML()
+
+    Return a buffer containing the embedded ZUGFeRD XML data from this PDF.
+
+    :return: `Buffer`.
+
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var buf = pdfDocument.zugferdXML();
 
 
 

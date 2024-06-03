@@ -823,6 +823,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\pdf\parse.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\resource.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf\xref.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\zugferd.h" />
     <ClInclude Include="..\mupdf\include\mupdf\ucdn.h" />
     <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h" />
     <ClInclude Include="..\mupdf\source\fitz\color-imp.h" />
@@ -999,6 +1000,7 @@
     <ClCompile Include="..\mupdf\source\html\story-writer.c" />
     <ClCompile Include="..\mupdf\source\html\txt.c" />
     <ClCompile Include="..\mupdf\source\html\xml-dom.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-af.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-clean-file.c" />
@@ -1047,6 +1049,7 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-write.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xobject.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-zugferd.c" />
     <ClCompile Include="..\mupdf\source\reflow\reflow-doc.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-color.c" />
     <ClCompile Include="..\mupdf\source\svg\svg-doc.c" />

@@ -316,4 +316,6 @@ public class PDFObject implements Iterable<PDFObject>
 			throw new UnsupportedOperationException();
 		}
 	}
+
+	public native boolean isFilespec();
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -280,15 +280,39 @@ convert_file_spec_to_URI(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec,
 		return pdf_parse_link_dest_to_file_with_path(ctx, doc, pdf_to_text_string(ctx, str), dest, is_remote);
 }
 
+int
+pdf_is_filespec(fz_context *ctx, pdf_obj *fs)
+{
+	pdf_obj *name;
+	pdf_obj *type = pdf_dict_get(ctx, fs, PDF_NAME(Type));
+
+	if (type != NULL && pdf_name_eq(ctx, type, PDF_NAME(Filespec)))
+		return 0;
+
+	(void)get_file_stream_and_name(ctx, fs, &name);
+
+	return name != NULL;
+}
 
 int
 pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs)
 {
+	pdf_obj *type = pdf_dict_get(ctx, fs, PDF_NAME(Type));
+
+	if (type != NULL && pdf_name_eq(ctx, type, PDF_NAME(Filespec)))
+		return 0;
+
 	return pdf_is_stream(ctx, get_file_stream_and_name(ctx, fs, NULL));
 }
 
 void
 pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_params *out)
+{
+	pdf_get_filespec_params(ctx, fs, out);
+}
+
+void
+pdf_get_filespec_params(fz_context *ctx, pdf_obj *fs, pdf_filespec_params *out)
 {
 	pdf_obj *file, *params, *filename, *subtype;
 	if (!out)

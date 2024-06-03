@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -20,39 +20,30 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#ifndef MUPDF_PDF_H
-#define MUPDF_PDF_H
+#ifndef MUPDF_PDF_ZUGFERD_H
+#define MUPDF_PDF_ZUGFERD_H
 
-#include "mupdf/fitz.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "mupdf/pdf/object.h"
 #include "mupdf/pdf/document.h"
-#include "mupdf/pdf/parse.h"
-#include "mupdf/pdf/xref.h"
-#include "mupdf/pdf/crypt.h"
 
-#include "mupdf/pdf/page.h"
-#include "mupdf/pdf/resource.h"
-#include "mupdf/pdf/cmap.h"
-#include "mupdf/pdf/font.h"
-#include "mupdf/pdf/interpret.h"
+enum pdf_zugferd_profile
+{
+	PDF_NOT_ZUGFERD = 0,
+	/* ZUGFeRD 1.0 */
+	PDF_ZUGFERD_COMFORT,
+	PDF_ZUGFERD_BASIC,
+	PDF_ZUGFERD_EXTENDED,
+	/* ZUGFeRD 2.01 */
+	PDF_ZUGFERD_BASIC_WL,
+	PDF_ZUGFERD_MINIMUM,
+	/* ZUGFeRD 2.2 */
+	PDF_ZUGFERD_XRECHNUNG,
+	PDF_ZUGFERD_UNKNOWN
+};
 
-#include "mupdf/pdf/annot.h"
-#include "mupdf/pdf/form.h"
-#include "mupdf/pdf/event.h"
-#include "mupdf/pdf/javascript.h"
+enum pdf_zugferd_profile pdf_zugferd_profile(fz_context *ctx, pdf_document *doc, float *version);
 
-#include "mupdf/pdf/clean.h"
-#include "mupdf/pdf/image-rewriter.h"
-#include "mupdf/pdf/zugferd.h"
+fz_buffer *pdf_zugferd_xml(fz_context *ctx, pdf_document *doc);
 
-
-#ifdef __cplusplus
-}
-#endif
+const char *pdf_zugferd_profile_to_string(fz_context *ctx, enum pdf_zugferd_profile profile);
 
 #endif

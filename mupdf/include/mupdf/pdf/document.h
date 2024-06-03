@@ -818,5 +818,36 @@ fz_structure pdf_structure_type(fz_context *ctx, pdf_obj *role_map, pdf_obj *tag
 */
 void pdf_run_document_structure(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_cookie *cookie);
 
+/*
+	Return the count of the associated files on a document.
+	Note, that this is the count of files associated at the document
+	level and does not necessarily include files associated at other
+	levels.
+*/
+int pdf_count_document_associated_files(fz_context *ctx, pdf_document *doc);
+
+/*
+	Return a borrowed pointer to the PDF object that represents a
+	given associated file on a document.
+
+	Indexed from 0 to count-1.
+*/
+pdf_obj *pdf_document_associated_file(fz_context *ctx, pdf_document *doc, int idx);
+
+/*
+	Return the count of the associated files on a given page.
+	Note, that this is the count of files associated at the page
+	level and does not necessarily include files associated at other
+	levels.
+*/
+int pdf_count_page_associated_files(fz_context *ctx, pdf_page *page);
+
+/*
+	Return a borrowed pointer to the PDF object that represents a
+	given associated file on a page.
+
+	Indexed from 0 to count-1.
+*/
+pdf_obj *pdf_page_associated_file(fz_context *ctx, pdf_page *page, int idx);
 
 #endif

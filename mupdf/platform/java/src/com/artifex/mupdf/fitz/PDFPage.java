@@ -115,5 +115,8 @@ public class PDFPage extends Page
 		setPageBox(Page.CROP_BOX, rect);
 	}
 
+	public native int countAssociatedFiles();
+	public native PDFObject associatedFile(int idx);
+
 	// TODO: toPixmap with usage and page box
 }

@@ -873,23 +873,32 @@ fz_stext_page *pdf_new_stext_page_from_annot(fz_context *ctx, pdf_annot *annot, 
 
 fz_layout_block *pdf_layout_text_widget(fz_context *ctx, pdf_annot *annot);
 
-typedef struct pdf_embedded_file_params pdf_embedded_file_params;
+/*
+	Historical alias for pdf_filespec_params;
+*/
+typedef struct pdf_filespec_params pdf_embedded_file_params;
 
 /*
 	Parameters for and embedded file. Obtained through
 	pdf_get_embedded_file_params(). The creation and
 	modification date fields are < 0 if unknown.
 */
-struct pdf_embedded_file_params {
+typedef struct pdf_filespec_params {
 	const char *filename;
 	const char *mimetype;
 	int size;
 	int64_t created;
 	int64_t modified;
-};
+} pdf_filespec_params;
 
 /*
 	Check if pdf object is a file specification.
+*/
+int pdf_is_filespec(fz_context *ctx, pdf_obj *fs);
+
+/*
+	Check if pdf object is a file specification where the data
+	is embedded within the file.
 */
 int pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs);
 
@@ -903,8 +912,13 @@ int pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs);
 pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *filename, const char *mimetype, fz_buffer *contents, int64_t created, int64_t modifed, int add_checksum);
 
 /*
-	Obtain parameters for embedded file: name, size,
+	Obtain parameters for a filespec: name, size,
 	creation and modification dates cnad MIME type.
+*/
+void pdf_get_filespec_params(fz_context *ctx, pdf_obj *fs, pdf_filespec_params *out);
+
+/*
+	Historical alias for pdf_get_filespec_params.
 */
 void pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_params *out);
 

@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
 ----
@@ -70,12 +70,35 @@ In order to retrieve information from this object see methods described within :
 
 
 
-.. _mutool_run_js_api_pdf_document_embedded_file_object:
+.. _mutool_run_js_api_pdf_document_embedded_file_params_object:
 
-Embedded File Object
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Embedded File Params Object
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This `Object` contains metadata about an embedded file, it has properties for:
+Historical equivalent to Filespec Params Object. This `Object` contains metadata about a filespec, it has properties for:
+
+`filename`
+    The name of the embedded file.
+
+`mimetype`
+    The :title:`MIME` type of the embedded file, or `undefined` if none exists.
+
+`size`
+    The size in bytes of the embedded file contents.
+
+`creationDate`
+    The creation date of the embedded file.
+
+`modificationDate`
+    The modification date of the embedded file.
+
+
+.. _mutool_run_js_api_pdf_document_filespec_params_object:
+
+Filespec Params Object
+~~~~~~~~~~~~~~~~~~~~~~
+
+This `Object` contains metadata about a filespec, it has properties for:
 
 `filename`
     The name of the embedded file.

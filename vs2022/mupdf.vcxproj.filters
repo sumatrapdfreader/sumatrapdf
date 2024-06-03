@@ -297,6 +297,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\pdf\xref.h">
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\zugferd.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\ucdn.h">
       <Filter>mupdf\include\mupdf</Filter>
     </ClInclude>
@@ -821,6 +824,9 @@
     <ClCompile Include="..\mupdf\source\html\xml-dom.c">
       <Filter>mupdf\source\html</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-af.c">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
@@ -963,6 +969,9 @@
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-zugferd.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\reflow\reflow-doc.c">

@@ -591,6 +591,14 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh == FZ_LANG_zh;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hans == FZ_LANG_zh_Hans;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hant == FZ_LANG_zh_Hant;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_NOT_ZUGFERD == PDF_NOT_ZUGFERD;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_COMFORT == PDF_ZUGFERD_COMFORT;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC == PDF_ZUGFERD_BASIC;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_EXTENDED == PDF_ZUGFERD_EXTENDED;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC_WL == PDF_ZUGFERD_BASIC_WL;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_MINIMUM == PDF_ZUGFERD_MINIMUM;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_XRECHNUNG == PDF_ZUGFERD_XRECHNUNG;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_UNKNOWN == PDF_ZUGFERD_UNKNOWN;
 
 	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT == FZ_LINK_DEST_FIT;
 	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_B == FZ_LINK_DEST_FIT_B;

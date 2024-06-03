@@ -40,7 +40,8 @@ enum
 	SHADINGS = 0x08,
 	PATTERNS = 0x10,
 	XOBJS = 0x20,
-	ALL = DIMENSIONS | FONTS | IMAGES | SHADINGS | PATTERNS | XOBJS
+	ZUGFERD = 0x40,
+	ALL = DIMENSIONS | FONTS | IMAGES | SHADINGS | PATTERNS | XOBJS | ZUGFERD
 };
 
 struct info
@@ -193,6 +194,7 @@ infousage(void)
 		"\t-P\tlist patterns\n"
 		"\t-S\tlist shadings\n"
 		"\t-X\tlist form and postscript xobjects\n"
+		"\t-Z\tlist ZUGFeRD info\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n"
 		);
 }
@@ -960,6 +962,30 @@ showinfo(fz_context *ctx, globals *glo, char *filename, int show, const char *pa
 }
 
 static void
+showzugferd(fz_context *ctx, globals *glo)
+{
+	float version;
+	fz_output *out = glo->out;
+	enum pdf_zugferd_profile profile = pdf_zugferd_profile(ctx, glo->doc, &version);
+	fz_buffer *buf;
+
+	if (profile == PDF_NOT_ZUGFERD)
+	{
+		fz_write_printf(ctx, out, "Not a ZUGFeRD file.\n");
+		return;
+	}
+
+	fz_write_printf(ctx, out, "ZUGFeRD version %g\n", version);
+	fz_write_printf(ctx, out, "%s profile\n", pdf_zugferd_profile_to_string(ctx, profile));
+
+	fz_write_printf(ctx, out, "Embedded XML:\n");
+	buf = pdf_zugferd_xml(ctx, glo->doc);
+	fz_write_buffer(ctx, out, buf);
+	fz_drop_buffer(ctx, buf);
+	fz_write_printf(ctx, out, "\n\n");
+}
+
+static void
 pdfinfo_info(fz_context *ctx, fz_output *out, char *filename, char *password, int show, char *argv[], int argc)
 {
 	enum { NO_FILE_OPENED, NO_INFO_GATHERED, INFO_SHOWN } state;
@@ -994,6 +1020,9 @@ pdfinfo_info(fz_context *ctx, fz_output *out, char *filename, char *password, in
 
 				showglobalinfo(ctx, &glo);
 				state = NO_INFO_GATHERED;
+
+				if (show & ZUGFERD)
+					showzugferd(ctx, &glo);
 			}
 			else
 			{
@@ -1022,7 +1051,7 @@ int pdfinfo_main(int argc, char **argv)
 	int ret;
 	fz_context *ctx;
 
-	while ((c = fz_getopt(argc, argv, "FISPXMp:")) != -1)
+	while ((c = fz_getopt(argc, argv, "FISPXMZp:")) != -1)
 	{
 		switch (c)
 		{
@@ -1032,6 +1061,7 @@ int pdfinfo_main(int argc, char **argv)
 		case 'P': if (show == ALL) show = PATTERNS; else show |= PATTERNS; break;
 		case 'X': if (show == ALL) show = XOBJS; else show |= XOBJS; break;
 		case 'M': if (show == ALL) show = DIMENSIONS; else show |= DIMENSIONS; break;
+		case 'Z': if (show == ALL) show = ZUGFERD; else show |= ZUGFERD; break;
 		case 'p': password = fz_optarg; break;
 		default:
 			infousage();

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -20,39 +20,33 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#ifndef MUPDF_PDF_H
-#define MUPDF_PDF_H
-
 #include "mupdf/fitz.h"
+#include "mupdf/pdf.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+int pdf_count_document_associated_files(fz_context *ctx, pdf_document *doc)
+{
+	pdf_obj *af = pdf_dict_getl(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), PDF_NAME(AF), NULL);
 
-#include "mupdf/pdf/object.h"
-#include "mupdf/pdf/document.h"
-#include "mupdf/pdf/parse.h"
-#include "mupdf/pdf/xref.h"
-#include "mupdf/pdf/crypt.h"
-
-#include "mupdf/pdf/page.h"
-#include "mupdf/pdf/resource.h"
-#include "mupdf/pdf/cmap.h"
-#include "mupdf/pdf/font.h"
-#include "mupdf/pdf/interpret.h"
-
-#include "mupdf/pdf/annot.h"
-#include "mupdf/pdf/form.h"
-#include "mupdf/pdf/event.h"
-#include "mupdf/pdf/javascript.h"
-
-#include "mupdf/pdf/clean.h"
-#include "mupdf/pdf/image-rewriter.h"
-#include "mupdf/pdf/zugferd.h"
-
-
-#ifdef __cplusplus
+	return pdf_array_len(ctx, af);
 }
-#endif
 
-#endif
+pdf_obj *pdf_document_associated_file(fz_context *ctx, pdf_document *doc, int idx)
+{
+	pdf_obj *af = pdf_dict_getl(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), PDF_NAME(AF), NULL);
+
+	return pdf_array_get(ctx, af, idx);
+}
+
+int pdf_count_page_associated_files(fz_context *ctx, pdf_page *page)
+{
+	pdf_obj *af = pdf_dict_get(ctx, page->obj, PDF_NAME(AF));
+
+	return pdf_array_len(ctx, af);
+}
+
+pdf_obj *pdf_page_associated_file(fz_context *ctx, pdf_page *page, int idx)
+{
+	pdf_obj *af = pdf_dict_get(ctx, page->obj, PDF_NAME(AF));
+
+	return pdf_array_get(ctx, af, idx);
+}

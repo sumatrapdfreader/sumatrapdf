@@ -982,6 +982,7 @@ function mupdf_files()
   })
 
   files_in_dir("mupdf/source/pdf", {
+    "pdf-af.c",
     "pdf-annot.c",
     "pdf-appearance.c",
     "pdf-clean.c",
@@ -1030,6 +1031,7 @@ function mupdf_files()
     "pdf-write.c",
     "pdf-xobject.c",
     "pdf-xref.c",
+    "pdf-zugferd.c",
     "*.h",
   })
 

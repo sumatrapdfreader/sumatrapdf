@@ -1355,3 +1355,20 @@ FUN(PDFObject_equals)(JNIEnv *env, jobject self, jobject jother)
 
 	return result == 0 ? JNI_TRUE : JNI_FALSE;
 }
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFObject_isFilespec)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *obj = from_PDFObject_safe(env, self);
+	int result = 0;
+
+	if (!ctx) return JNI_FALSE;
+
+	fz_try(ctx)
+		result = pdf_is_filespec(ctx, obj);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return result ? JNI_TRUE : JNI_FALSE;
+}
