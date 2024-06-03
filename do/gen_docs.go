@@ -121,7 +121,10 @@ func renderCodeBlock(w io.Writer, cb *ast.CodeBlock, entering bool) {
 	// os.WriteFile("temp.csv", csvContent, 0644)
 	r := csv.NewReader(bytes.NewReader(csvContent))
 	records, err := r.ReadAll()
-	must(err)
+	if (err != nil) {
+		logf("csv:\n%s\n\n", string(csvContent))
+		must(err)
+	}
 	s := genCsvTableHTML(records, false)
 	io.WriteString(w, s)
 }

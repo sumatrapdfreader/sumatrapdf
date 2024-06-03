@@ -16,6 +16,10 @@ You can:
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdClose,"Ctrl + W, Ctrl + F4",Close Document,
 CmdCloseCurrentDocument,q,Close Current Document,
+CmdCloseAllTabs,,Close All Tabs,ver 3.6+
+CmdCloseTabsToTheLeft,,Close Tabs To The Left,ver 3.6+
+CmdCloseTabsToTheRight,,Close Tabs To The Right,ver 3.6+
+CmdCloseOtherTabs,,Close Other Tabs,ver 3.6+
 CmdCommandPalette,Ctrl + K,Command Palette,
 CmdCommandPaletteNoFiles,Shift + Ctrl + K,Command Palette No Files,
 CmdCommandPaletteOnlyTabs,Alt + K,Command Palette Only Tabs,ver 3.5+
@@ -38,6 +42,7 @@ CmdSaveAs,Ctrl + S,Save File As...,
 CmdToggleCursorPosition,m,Toggle Cursor Position,
 CmdShowInFolder,,Show File In Folder...,
 CmdToggleBookmarks,"Shift + F12, F12",Toggle Bookmarks,
+CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
 CmdCollapseAll,,Collapse All,
 CmdExpandAll,,Expand All,
 CmdOpenEmbeddedPDF,,Open Embedded PDF,
@@ -49,6 +54,7 @@ CmdCopyImage,,Copy Image,
 CmdCopyLinkTarget,,Copy Link Target,
 CmdCopySelection,"Ctrl + C, Ctrl + Insert",Copy Selection,
 CmdCopyFilePath,,Copy File Path,ver 3.5+
+CmdDeleteFile,,Delete Currently Opened File, ver 3.6+
 ```
 
 ### **Search**
@@ -131,28 +137,29 @@ CmdPresentationWhiteBackground,w,Presentation White Background
 ### **Annotation**
 
 ```commands
-Command IDs,Keyboard shortcuts,Command Palette
-CmdCreateAnnotCaret,,Create Caret Annotation
-CmdCreateAnnotCircle,,Create Circle Annotation
-CmdCreateAnnotFileAttachment,,Create File Attachment Annotation
-CmdCreateAnnotFreeText,,Create Free Text Annotation
-CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation
-CmdCreateAnnotInk,,Create Ink Annotation
-CmdCreateAnnotLine,,Create Line Annotation
-CmdCreateAnnotLink,,Create Link Annotation
-CmdCreateAnnotPolygon,,Create Polygon Annotation
-CmdCreateAnnotPolyLine,,Create Poly Line Annotation
-CmdCreateAnnotPopup,,Create Popup Annotation
-CmdCreateAnnotRedact,,Create Redact Annotation
-CmdCreateAnnotSquare,,Create Square Annotation
-CmdCreateAnnotSquiggly,,Create Squiggly Annotation
-CmdCreateAnnotStamp,,Create Stamp Annotation
-CmdCreateAnnotStrikeOut,,Create Strike Out Annotation
-CmdCreateAnnotText,,Create Text Annotation
-CmdCreateAnnotUnderline,"u, U",Create Underline Annotation
-CmdDeleteAnnotation,Delete,Delete Annotation
-CmdEditAnnotations,,Edit Annotations
-CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF
+Command IDs,Keyboard shortcuts,Command Palette,Notes
+CmdCreateAnnotCaret,,Create Caret Annotation,
+CmdCreateAnnotCircle,,Create Circle Annotation,
+CmdCreateAnnotFileAttachment,,Create File Attachment Annotation,
+CmdCreateAnnotFreeText,,Create Free Text Annotation,
+CmdCreateAnnotHighlight,"a, A",Create Highlight Annotation,
+CmdCreateAnnotInk,,Create Ink Annotation,
+CmdCreateAnnotLine,,Create Line Annotation,
+CmdCreateAnnotLink,,Create Link Annotation,
+CmdCreateAnnotPolygon,,Create Polygon Annotation,
+CmdCreateAnnotPolyLine,,Create Poly Line Annotation,
+CmdCreateAnnotPopup,,Create Popup Annotation,
+CmdCreateAnnotRedact,,Create Redact Annotation,
+CmdCreateAnnotSquare,,Create Square Annotation,
+CmdCreateAnnotSquiggly,,Create Squiggly Annotation,
+CmdCreateAnnotStamp,,Create Stamp Annotation,
+CmdCreateAnnotStrikeOut,,Create Strike Out Annotation,
+CmdCreateAnnotText,,Create Text Annotation,
+CmdCreateAnnotUnderline,"u, U",Create Underline Annotation,
+CmdDeleteAnnotation,Delete,Delete Annotation,
+CmdEditAnnotations,,Edit Annotations,
+CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF,
+CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
 ```
 
 ### **Zoom menu**
@@ -203,14 +210,19 @@ CmdTranslateSelectionWithDeepL,,Translate Selection With DeepL,
 CmdTranslateSelectionWithGoogle,,Translate Selection with Google,
 CmdSearchSelectionWithBing,,Search Selection with Bing,
 CmdSearchSelectionWithGoogle,,Search Selection with Google,
+CmdSearchSelectionWithWikipedia,,Search Selection with Wikipedia,ver 3.6+
+CmdSearchSelectionWithGoogleScholar,,Search Selection with Goolge Scholar,ver 3.6+
 CmdSendByEmail,,Send Document By Email...,
+CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
+
 ```
 
 ### **System**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
-CmdAdvancedOptions,,Advanced Options...
+CmdAdvancedOptions,,Advanced Options (Settings)...
+CmdAdvancedSettings,,Advanced Options (Settings)...
 CmdChangeLanguage,,Change Language...
 CmdCheckUpdate,,Check For Updates
 CmdClearHistory,,Clear History
