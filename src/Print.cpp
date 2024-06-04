@@ -71,14 +71,19 @@ struct PrintData {
     int rotation = 0;
     ProgressUpdateUI* progressUI = nullptr;
     AbortCookieManager* abortCookie = nullptr;
+    bool failedEngineClone = false;
 
     PrintData(EngineBase* engine, Printer* printer, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
               int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
         this->printer = printer;
         this->advData = advData;
         this->rotation = rotation;
-        if (engine) {
-            this->engine = engine->Clone();
+        this->engine = engine->Clone();
+        if (!this->engine) {
+            logf("PrintData: engine->Clone() failed for '%s'\n", engine->FilePath());
+            this->failedEngineClone = true;
+            engine->AddRef();
+            this->engine = engine;
         }
 
         if (!sel) {
@@ -743,12 +748,16 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     if (!dm) {
         return;
     }
-    int rotation = dm->GetRotation();
     auto engine = dm->GetEngine();
+    ReportIf(!engine);
+    if (!engine) {
+        return;
+    }
+    int rotation = dm->GetRotation();
     int nPages = dm->PageCount();
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
-    if (!dm->GetEngine()->AllowsPrinting()) {
+    if (!engine->AllowsPrinting()) {
         return;
     }
 #endif
@@ -767,7 +776,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     // the Print dialog allows access to the file system, so fall back
     // to printing the entire document without dialog if that isn't desired
     if (!HasPermission(Perm::DiskAccess)) {
-        PrintFile2(dm->GetEngine());
+        PrintFile2(engine);
         return;
     }
 
@@ -796,7 +805,6 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     pdex.lphPropertyPages = &hPsp;
     pdex.nPropertyPages = 1;
 
-    bool failedEngineClone = false;
     PrintData* pd = nullptr;
     DEVMODE* devMode = nullptr;
     // restore remembered settings
@@ -807,7 +815,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
 
     HRESULT res = PrintDlgExW(&pdex);
     if (res != S_OK) {
-        logf("OnMenuPrint: PrintDlgEx failed\n");
+        logf("PrintCurrentFile: PrintDlgEx failed\n");
         MessageBoxWarning(win->hwndFrame, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
     }
     auto action = pdex.dwResultAction;
@@ -876,24 +884,10 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
     pd = new PrintData(engine, printer, ranges, advanced, rotation, sel);
 
-    // if a file is missing and the engine can't thus be cloned,
-    // we print using the original engine on the main thread
-    // so that the document can't be closed and the original engine
-    // unexpectedly deleted
-    // TODO: instead prevent closing the document so that printing
-    // can still happen on a separate thread and be interruptible
-    failedEngineClone = dm->GetEngine() && !pd->engine;
-    if (failedEngineClone) {
-        pd->engine = dm->GetEngine();
-    }
-
-    if (!waitForCompletion && !failedEngineClone) {
+    if (!waitForCompletion && !pd->failedEngineClone) {
         PrintToDeviceOnThread(win, pd);
     } else {
         PrintToDevice(*pd);
-        if (failedEngineClone) {
-            pd->engine = nullptr;
-        }
         delete pd;
     }
 
