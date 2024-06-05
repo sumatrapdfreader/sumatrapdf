@@ -14,7 +14,15 @@
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
 
 bool HttpRspOk(const HttpRsp* rsp) {
-    return (rsp->error == ERROR_SUCCESS) && (rsp->httpStatusCode == 200);
+    if (rsp->error != ERROR_SUCCESS) {
+        logf("HttpRspOk: rsp->error %d, should be %d (ERROR_SUCCESS)\n", (int)rsp->error, (int)ERROR_SUCCESS);
+        return false;
+    }
+    if (rsp->httpStatusCode >= 300) {
+        logf("HttpRspOk: rsp->httpStatusCode: %d\n", (int)rsp->httpStatusCode);
+        return false;
+    }
+    return true;
 }
 
 // returns false if failed to download or status code is not 200
