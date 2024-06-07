@@ -2088,7 +2088,7 @@ fz_subset_cff_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 		cff.headersize = base[2];
 		cff.offsize = base[3];
 
-		if (cff.offsize < 0 || cff.offsize > 4)
+		if (cff.offsize > 4)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid offsize in CFF");
 
 		if (len > UINT32_MAX)

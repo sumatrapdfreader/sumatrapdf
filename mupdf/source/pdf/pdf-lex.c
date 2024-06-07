@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -159,10 +159,10 @@ static float acrobat_compatible_atof(char *s)
 }
 
 /* Fast but inaccurate atoi. */
-static int fast_atoi(char *s)
+static int64_t fast_atoi(char *s)
 {
 	int neg = 0;
-	int i = 0;
+	int64_t i = 0;
 
 	while (*s == '-')
 	{

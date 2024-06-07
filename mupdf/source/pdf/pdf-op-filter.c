@@ -130,7 +130,6 @@ typedef struct
 	/* Has any marking text been removed so far this text object? */
 	int text_removed;
 	pdf_filter_options *global_options;
-	/* path is only constructed if we are using culling. */
 	fz_path *path;
 } pdf_sanitize_processor;
 
@@ -1259,12 +1258,6 @@ pdf_filter_m(fz_context *ctx, pdf_processor *proc, float x, float y)
 		return;
 
 	fz_moveto(ctx, p->path, x, y);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_m)
-		p->chain->op_m(ctx, p->chain, x, y);
 }
 
 static void
@@ -1276,12 +1269,6 @@ pdf_filter_l(fz_context *ctx, pdf_processor *proc, float x, float y)
 		return;
 
 	fz_lineto(ctx, p->path, x, y);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_l)
-		p->chain->op_l(ctx, p->chain, x, y);
 }
 
 static void
@@ -1293,12 +1280,6 @@ pdf_filter_c(fz_context *ctx, pdf_processor *proc, float x1, float y1, float x2,
 		return;
 
 	fz_curveto(ctx, p->path, x1, y1, x2, y2, x3, y3);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_c)
-		p->chain->op_c(ctx, p->chain, x1, y1, x2, y2, x3, y3);
 }
 
 static void
@@ -1310,12 +1291,6 @@ pdf_filter_v(fz_context *ctx, pdf_processor *proc, float x2, float y2, float x3,
 		return;
 
 	fz_curvetov(ctx, p->path, x2, y2, x3, y3);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_v)
-		p->chain->op_v(ctx, p->chain, x2, y2, x3, y3);
 }
 
 static void
@@ -1327,12 +1302,6 @@ pdf_filter_y(fz_context *ctx, pdf_processor *proc, float x1, float y1, float x3,
 		return;
 
 	fz_curvetoy(ctx, p->path, x1, y1, x3, y3);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_y)
-		p->chain->op_y(ctx, p->chain, x1, y1, x3, y3);
 }
 
 static void
@@ -1344,12 +1313,6 @@ pdf_filter_h(fz_context *ctx, pdf_processor *proc)
 		return;
 
 	fz_closepath(ctx, p->path);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_h)
-		p->chain->op_h(ctx, p->chain);
 }
 
 static void
@@ -1361,12 +1324,6 @@ pdf_filter_re(fz_context *ctx, pdf_processor *proc, float x, float y, float w, f
 		return;
 
 	fz_rectto(ctx, p->path, x, y, x+w, y+h);
-	if (p->options->culler)
-		return;
-
-	filter_flush(ctx, p, FLUSH_CTM);
-	if (p->chain->op_re)
-		p->chain->op_re(ctx, p->chain, x, y, w, h);
 }
 
 /* path painting */
@@ -1441,21 +1398,23 @@ typedef struct
 	fz_matrix ctm;
 	int any_sent;
 	int type;
+	int flush;
 } segmenter_data_t;
+
+static const fz_path_walker cull_replay_walker = {
+	cull_replay_moveto,
+	cull_replay_lineto,
+	cull_replay_curveto,
+	cull_replay_closepath,
+	NULL /* quad */,
+	cull_replay_curvetov,
+	cull_replay_curvetoy,
+	cull_replay_rectto
+};
 
 static void
 end_segment(fz_context *ctx, segmenter_data_t *sd)
 {
-	static const fz_path_walker walker = {
-		cull_replay_moveto,
-		cull_replay_lineto,
-		cull_replay_curveto,
-		cull_replay_closepath,
-		NULL /* quad */,
-		cull_replay_curvetov,
-		cull_replay_curvetoy,
-		cull_replay_rectto
-	};
 	fz_rect r;
 	const fz_stroke_state *st;
 
@@ -1472,7 +1431,13 @@ end_segment(fz_context *ctx, segmenter_data_t *sd)
 	else
 	{
 		/* Better send this segment then! */
-		fz_walk_path(ctx, sd->segment, &walker, sd->p);
+		/* Flush, just once, at the last possible minute. */
+		if (sd->flush)
+		{
+			filter_flush(ctx, sd->p, sd->flush);
+			sd->flush = 0;
+		}
+		fz_walk_path(ctx, sd->segment, &cull_replay_walker, sd->p);
 		sd->any_sent = 1;
 	}
 	fz_drop_path(ctx, sd->segment);
@@ -1541,7 +1506,7 @@ cull_segmenter_rectto(fz_context *ctx, void *arg, float x1, float y1, float x2, 
 
 
 static int
-cull_path(fz_context *ctx, pdf_sanitize_processor *p, int type)
+cull_path(fz_context *ctx, pdf_sanitize_processor *p, int type, int flush)
 {
 	segmenter_data_t sd = { 0 };
 	static const fz_path_walker segmenter = {
@@ -1557,6 +1522,12 @@ cull_path(fz_context *ctx, pdf_sanitize_processor *p, int type)
 
 	if (p->options->culler == NULL)
 	{
+		filter_flush(ctx, p, flush);
+		fz_walk_path(ctx, p->path, &cull_replay_walker, p);
+		/* Even in the case of a clip path, we want to drop the path here.
+		 * This is because we've sent it already. The only thing that's
+		 * supposed to follow a clipping operator is either a path painting
+		 * operator, or 'n'. */
 		fz_drop_path(ctx, p->path);
 		p->path = NULL;
 		p->path = fz_new_path(ctx);
@@ -1583,6 +1554,7 @@ cull_path(fz_context *ctx, pdf_sanitize_processor *p, int type)
 	sd.p = p;
 	sd.segment = NULL;
 	sd.type = type;
+	sd.flush = flush;
 	fz_try(ctx)
 	{
 		fz_walk_path(ctx, p->path, &segmenter, &sd);
@@ -1609,10 +1581,9 @@ pdf_filter_S(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_STROKE))
+	if (cull_path(ctx, p, FZ_CULL_PATH_STROKE, FLUSH_STROKE))
 		return;
 
-	filter_flush(ctx, p, FLUSH_STROKE);
 	if (p->chain->op_S)
 		p->chain->op_S(ctx, p->chain);
 }
@@ -1625,10 +1596,9 @@ pdf_filter_s(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_STROKE))
+	if (cull_path(ctx, p, FZ_CULL_PATH_STROKE, FLUSH_STROKE))
 		return;
 
-	filter_flush(ctx, p, FLUSH_STROKE);
 	if (p->chain->op_s)
 		p->chain->op_s(ctx, p->chain);
 }
@@ -1641,10 +1611,9 @@ pdf_filter_F(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL, FLUSH_FILL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_FILL);
 	if (p->chain->op_F)
 		p->chain->op_F(ctx, p->chain);
 }
@@ -1657,10 +1626,9 @@ pdf_filter_f(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL, FLUSH_FILL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_FILL);
 	if (p->chain->op_f)
 		p->chain->op_f(ctx, p->chain);
 }
@@ -1673,10 +1641,9 @@ pdf_filter_fstar(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL, FLUSH_FILL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_FILL);
 	if (p->chain->op_fstar)
 		p->chain->op_fstar(ctx, p->chain);
 }
@@ -1689,10 +1656,9 @@ pdf_filter_B(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE, FLUSH_ALL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_ALL);
 	if (p->chain->op_B)
 		p->chain->op_B(ctx, p->chain);
 }
@@ -1705,10 +1671,9 @@ pdf_filter_Bstar(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE, FLUSH_ALL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_ALL);
 	if (p->chain->op_Bstar)
 		p->chain->op_Bstar(ctx, p->chain);
 }
@@ -1721,10 +1686,9 @@ pdf_filter_b(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE, FLUSH_ALL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_ALL);
 	if (p->chain->op_b)
 		p->chain->op_b(ctx, p->chain);
 }
@@ -1737,10 +1701,9 @@ pdf_filter_bstar(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE))
+	if (cull_path(ctx, p, FZ_CULL_PATH_FILL_STROKE, FLUSH_ALL))
 		return;
 
-	filter_flush(ctx, p, FLUSH_ALL);
 	if (p->chain->op_bstar)
 		p->chain->op_bstar(ctx, p->chain);
 }
@@ -1757,7 +1720,6 @@ pdf_filter_n(fz_context *ctx, pdf_processor *proc)
 	p->path = NULL;
 	p->path = fz_new_path(ctx);
 
-	filter_flush(ctx, p, FLUSH_CTM);
 	if (p->chain->op_n)
 		p->chain->op_n(ctx, p->chain);
 }
@@ -1779,10 +1741,9 @@ pdf_filter_W(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_CLIP_PATH))
+	if (cull_path(ctx, p, FZ_CULL_CLIP_PATH, FLUSH_CTM))
 		return;
 
-	filter_flush(ctx, p, FLUSH_CTM);
 	if (p->chain->op_W)
 		p->chain->op_W(ctx, p->chain);
 }
@@ -1802,10 +1763,9 @@ pdf_filter_Wstar(fz_context *ctx, pdf_processor *proc)
 	if (fz_is_empty_rect(p->gstate->clip_rect))
 		return;
 
-	if (cull_path(ctx, p, FZ_CULL_CLIP_PATH))
+	if (cull_path(ctx, p, FZ_CULL_CLIP_PATH, FLUSH_CTM))
 		return;
 
-	filter_flush(ctx, p, FLUSH_CTM);
 	if (p->chain->op_Wstar)
 		p->chain->op_Wstar(ctx, p->chain);
 }

@@ -751,7 +751,11 @@ def build_swig(
     # Ignore all C MuPDF functions; SWIG will still look at the C++ API in
     # namespace mudf.
     for fnname in generated.c_functions:
-        if fnname in ('pdf_annot_type', 'pdf_widget_type'):
+        if fnname in (
+                    'pdf_annot_type',
+                    'pdf_widget_type',
+                    'pdf_zugferd_profile',
+                    ):
             # These are also enums which we don't want to ignore. SWIGing the
             # functions is hopefully harmless.
             pass

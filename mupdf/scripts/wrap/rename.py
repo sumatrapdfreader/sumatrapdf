@@ -76,13 +76,16 @@ def ll_fn( fnname):
         ret += '_'
     return ret
 
+def namespace():
+    return 'mupdf'
+
 def namespace_ll_fn( fnname):
     '''
     Returns full-qualified name of low-level wrapper function for MuPDF C
     function `fnname()`, adding a `ctx` arg and converting MuPDF exceptions
     into C++ exceptions.
     '''
-    return f'mupdf::{ll_fn(fnname)}'
+    return f'{namespace()}::{ll_fn(fnname)}'
 
 def fn( fnname):
     '''
@@ -96,7 +99,7 @@ def namespace_fn( fnname):
     Returns fully-qualified name of wrapper function for MuPDF C function
     `fnname()`, using wrapper classes for args and return values.
     '''
-    return f'mupdf::{fn(fnname)}'
+    return f'{namespace()}::{fn(fnname)}'
 
 def class_( structname):
     '''
@@ -124,7 +127,7 @@ def namespace_class( structname):
     '''
     Returns fully-qualified name of class that wraps MuPDF struct `structname`.
     '''
-    return f'mupdf::{class_(structname)}'
+    return f'{namespace()}::{class_(structname)}'
 
 def method( structname, fnname):
     '''

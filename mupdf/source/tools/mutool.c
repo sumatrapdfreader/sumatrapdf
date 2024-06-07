@@ -52,6 +52,7 @@ int pdftrim_main(int argc, char *argv[]);
 int pdfbake_main(int argc, char *argv[]);
 
 int cmapdump_main(int argc, char *argv[]);
+int pdfaudit_main(int argc, char *argv[]);
 
 static struct {
 	int (*func)(int argc, char *argv[]);
@@ -86,6 +87,7 @@ static struct {
 #ifndef NDEBUG
 	{ cmapdump_main, "cmapdump", "dump CMap resource as C source file" },
 #endif
+	{ pdfaudit_main, "audit", "Produce usage stats from PDF files" },
 #endif
 };
 

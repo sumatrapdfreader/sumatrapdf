@@ -1851,7 +1851,7 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 		discard_journal_entries(ctx, doc->journal->current ? &doc->journal->current->next : &doc->journal->head);
 
 		/* We should be collating into a pending block. */
-		entry = doc->journal->pending;
+		entry = doc->journal->pending_tail;
 		assert(entry);
 
 		/* If we've already stashed a value for this object in this fragment,
@@ -1885,6 +1885,10 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 	{
 		if (was_empty)
 		{
+			/* was_empty = 1 iff, the the entry in the incremental xref was empty,
+			 * and we copied any older value for that object forwards from an old xref.
+			 * When we undo, we just want to blank the one in the incremental section.
+			 * Effectively this is a "new object". */
 			copy = NULL;
 			copy_stream = NULL;
 		}
@@ -3560,7 +3564,7 @@ static void fmt_obj(fz_context *ctx, struct fmt *fmt, pdf_obj *obj)
 	}
 	else if (pdf_is_int(ctx, obj))
 	{
-		fz_snprintf(buf, sizeof buf, "%d", pdf_to_int(ctx, obj));
+		fz_snprintf(buf, sizeof buf, "%ld", pdf_to_int64(ctx, obj));
 		fmt_puts(ctx, fmt, buf);
 		fmt->sep = 1;
 		return;

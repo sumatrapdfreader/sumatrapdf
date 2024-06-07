@@ -153,11 +153,16 @@ font_analysis_q(fz_context *ctx, pdf_processor *proc)
 	pdf_font_analysis_processor *p = (pdf_font_analysis_processor*)proc;
 	gstate *gs = p->gs;
 	gstate *new_gs = fz_malloc_struct(ctx, gstate);
-	*new_gs = *gs;
-	new_gs->next = gs;
 	p->gs = new_gs;
 
+	if (gs)
+	{
+		*new_gs = *gs;
+		new_gs->next = gs;
+	}
+
 	pdf_keep_font(ctx, new_gs->font);
+
 }
 
 static void

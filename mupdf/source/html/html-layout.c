@@ -2601,7 +2601,7 @@ static int enumerate_block_box(fz_context *ctx, fz_html_box *box, float page_top
 			/* We have a box worthy of a callback. */
 			char *text = NULL;
 			pos.text = NULL;
-			if (heading)
+			if (heading && box->down)
 				pos.text = text = gather_text(ctx, box->down);
 			pos.depth = depth;
 			pos.heading = heading;

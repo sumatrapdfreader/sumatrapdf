@@ -430,6 +430,7 @@
     <ClCompile Include="..\..\source\tools\murun.c" />
     <ClCompile Include="..\..\source\tools\mutrace.c" />
     <ClCompile Include="..\..\source\tools\pdfbake.c" />
+    <ClCompile Include="..\..\source\tools\pdfaudit.c" />
     <ClCompile Include="..\..\source\tools\pdfclean.c" />
     <ClCompile Include="..\..\source\tools\pdfcreate.c" />
     <ClCompile Include="..\..\source\tools\pdfextract.c" />

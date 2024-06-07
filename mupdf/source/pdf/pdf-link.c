@@ -286,7 +286,7 @@ pdf_is_filespec(fz_context *ctx, pdf_obj *fs)
 	pdf_obj *name;
 	pdf_obj *type = pdf_dict_get(ctx, fs, PDF_NAME(Type));
 
-	if (type != NULL && pdf_name_eq(ctx, type, PDF_NAME(Filespec)))
+	if (type == NULL || !pdf_name_eq(ctx, type, PDF_NAME(Filespec)))
 		return 0;
 
 	(void)get_file_stream_and_name(ctx, fs, &name);
@@ -299,7 +299,7 @@ pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs)
 {
 	pdf_obj *type = pdf_dict_get(ctx, fs, PDF_NAME(Type));
 
-	if (type != NULL && pdf_name_eq(ctx, type, PDF_NAME(Filespec)))
+	if (type == NULL || !pdf_name_eq(ctx, type, PDF_NAME(Filespec)))
 		return 0;
 
 	return pdf_is_stream(ctx, get_file_stream_and_name(ctx, fs, NULL));

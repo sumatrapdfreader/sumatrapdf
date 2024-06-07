@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -120,7 +120,7 @@ static void fmtfloat_f(struct fmtbuf *out, double f, int w, int p)
 		fmtputc(out, *s++);
 }
 
-static void fmtuint32(struct fmtbuf *out, unsigned int a, int s, int z, int w, int base)
+static void fmtuint32(struct fmtbuf *out, unsigned int a, int s, int z, int w, int base, int q)
 {
 	char buf[40];
 	int i;
@@ -148,10 +148,14 @@ static void fmtuint32(struct fmtbuf *out, unsigned int a, int s, int z, int w, i
 	while (i < w)
 		buf[i++] = z;
 	while (i > 0)
+	{
 		fmtputc(out, buf[--i]);
+		if (q && i != 0 && i % 3 == 0)
+			fmtputc(out, q);
+	}
 }
 
-static void fmtuint64(struct fmtbuf *out, uint64_t a, int s, int z, int w, int base)
+static void fmtuint64(struct fmtbuf *out, uint64_t a, int s, int z, int w, int base, int q)
 {
 	char buf[80];
 	int i;
@@ -179,10 +183,14 @@ static void fmtuint64(struct fmtbuf *out, uint64_t a, int s, int z, int w, int b
 	while (i < w)
 		buf[i++] = z;
 	while (i > 0)
+	{
 		fmtputc(out, buf[--i]);
+		if (q && i != 0 && i % 3 == 0)
+			fmtputc(out, q);
+	}
 }
 
-static void fmtint32(struct fmtbuf *out, int value, int s, int z, int w, int base)
+static void fmtint32(struct fmtbuf *out, int value, int s, int z, int w, int base, int q)
 {
 	unsigned int a;
 
@@ -201,10 +209,10 @@ static void fmtint32(struct fmtbuf *out, int value, int s, int z, int w, int bas
 		s = 0;
 		a = value;
 	}
-	fmtuint32(out, a, s, z, w, base);
+	fmtuint32(out, a, s, z, w, base, q);
 }
 
-static void fmtint64(struct fmtbuf *out, int64_t value, int s, int z, int w, int base)
+static void fmtint64(struct fmtbuf *out, int64_t value, int s, int z, int w, int base, int q)
 {
 	uint64_t a;
 
@@ -223,7 +231,7 @@ static void fmtint64(struct fmtbuf *out, int64_t value, int s, int z, int w, int
 		s = 0;
 		a = value;
 	}
-	fmtuint64(out, a, s, z, w, base);
+	fmtuint64(out, a, s, z, w, base, q);
 }
 
 static void fmtquote(struct fmtbuf *out, const char *s, int sq, int eq, int verbatim)
@@ -329,7 +337,7 @@ void
 fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void *user, int c), const char *fmt, va_list args)
 {
 	struct fmtbuf out;
-	int c, s, z, p, w;
+	int c, s, z, p, w, q;
 	int32_t i32;
 	int64_t i64;
 	const char *str;
@@ -343,6 +351,7 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 	{
 		if (c == '%')
 		{
+			q = 0;
 			s = 0;
 			z = ' ';
 
@@ -358,6 +367,13 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				/* zero padding */
 				else if (c == '0')
 					z = '0';
+				/* comma separators */
+				else if (c == '\'')
+					q = '\'';
+				else if (c == ',')
+					q = ',';
+				else if (c == '_')
+					q = '_';
 				/* TODO: '-' to left justify */
 				else
 					break;
@@ -489,29 +505,30 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				z = '0';
 				fmtputc(&out, '0');
 				fmtputc(&out, 'x');
+				q = 0;
 				/* fallthrough */
 			case 'x':
 				if (bits == 64)
 				{
 					i64 = va_arg(args, int64_t);
-					fmtuint64(&out, i64, 0, z, w, 16);
+					fmtuint64(&out, i64, 0, z, w, 16, q);
 				}
 				else
 				{
 					i32 = va_arg(args, int);
-					fmtuint32(&out, i32, 0, z, w, 16);
+					fmtuint32(&out, i32, 0, z, w, 16, q);
 				}
 				break;
 			case 'X':
 				if (bits == 64)
 				{
 					i64 = va_arg(args, int64_t);
-					fmtuint64(&out, i64, 0, z, w, -16);
+					fmtuint64(&out, i64, 0, z, w, -16, q);
 				}
 				else
 				{
 					i32 = va_arg(args, int);
-					fmtuint32(&out, i32, 0, z, w, -16);
+					fmtuint32(&out, i32, 0, z, w, -16, q);
 				}
 				break;
 			case 'd':
@@ -519,24 +536,24 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				if (bits == 64)
 				{
 					i64 = va_arg(args, int64_t);
-					fmtint64(&out, i64, s, z, w, 10);
+					fmtint64(&out, i64, s, z, w, 10, q);
 				}
 				else
 				{
 					i32 = va_arg(args, int);
-					fmtint32(&out, i32, s, z, w, 10);
+					fmtint32(&out, i32, s, z, w, 10, q);
 				}
 				break;
 			case 'u':
 				if (bits == 64)
 				{
 					i64 = va_arg(args, int64_t);
-					fmtuint64(&out, i64, 0, z, w, 10);
+					fmtuint64(&out, i64, 0, z, w, 10, q);
 				}
 				else
 				{
 					i32 = va_arg(args, int);
-					fmtuint32(&out, i32, 0, z, w, 10);
+					fmtuint32(&out, i32, 0, z, w, 10, q);
 				}
 				break;
 

@@ -141,6 +141,13 @@ def make_outparam_helper_csharp(
             elif text == 'int64_t':         text = 'long'
             elif text == 'size_t':          text = 'ulong'
             elif text == 'unsigned int':    text = 'uint'
+            elif text.startswith('enum '):
+                # This is primarily for enum pdf_zugferd_profile; C# does not
+                # like `enum` prefix, and we need to specify namespace name
+                # `mupdf`.
+                text = text[5:]
+                if text.startswith('pdf_') or text.startswith('fz_'):
+                    text = f'{rename.namespace()}.{text}'
             write(f'{text}')
 
     # Generate the returned tuple.

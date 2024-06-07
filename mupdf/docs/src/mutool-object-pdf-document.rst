@@ -540,8 +540,17 @@ With :title:`MuPDF` it is also possible to create, edit and manipulate :title:`P
 
         pdfDocument.redo();
 
+.. method:: saveJournal(filename)
 
+    Save the journal to a file.
 
+    :arg filename: File to save the journal to.
+
+   |example_tag|
+
+    .. code-block:: javascript
+
+        pdfDocument.saveJournal("test.journal");
 
 
 ----

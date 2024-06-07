@@ -875,7 +875,13 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 		offset = 14 + segs * 2 * 3 + 2 + seg * 2;
 		put16(d + offset - segs * 2, 0); /* Delta - always 0 for now. */
 		put16(d + offset, entries - offset); /* offset */
-		put16(d + entries, ttf->is_otf ? enc->gid[i] : ttf->gid_renum[enc->gid[i]]); /* Insert an entry */
+
+		/* Insert an entry */
+		if (!ttf->is_otf && ttf->gid_renum && i < ttf->orig_num_glyphs && enc->gid[i] < ttf->orig_num_glyphs)
+			put16(d + entries, (ttf->is_otf || ttf->gid_renum == NULL) ? enc->gid[i] : ttf->gid_renum[enc->gid[i]]);
+		else
+			put16(d + entries, enc->gid[i]);
+
 		entries += 2;
 		for (i++; i < n; i++)
 		{
@@ -886,7 +892,10 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 				while (seg_end < i)
 				{
 					seg_end++;
-					put16(d + entries, ttf->is_otf ? enc->gid[seg_end] : ttf->gid_renum[enc->gid[seg_end]]);
+					if (!ttf->is_otf && ttf->gid_renum && seg_end < ttf->orig_num_glyphs && enc->gid[seg_end] < ttf->orig_num_glyphs)
+						put16(d + entries, ttf->gid_renum[enc->gid[seg_end]]);
+					else
+						put16(d + entries, enc->gid[seg_end]);
 					entries += 2;
 				}
 			}
