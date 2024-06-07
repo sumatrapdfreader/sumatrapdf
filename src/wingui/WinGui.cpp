@@ -3693,6 +3693,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
     withToolTips = argsIn.withToolTips;
+    tabDefaultDx = argsIn.tabDefaultDx;
 
     CreateControlArgs args;
     args.parent = argsIn.parent;

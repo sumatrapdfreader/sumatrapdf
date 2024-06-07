@@ -78,6 +78,10 @@ void UpdateTabWidth(MainWindow* win) {
     int nTabs = (int)win->TabCount();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     bool showTabs = (nTabs > 1) || (showSingleTab && (nTabs > 0));
+    int tabWidth = gGlobalPrefs->tabWidth;
+    if (win->tabsCtrl) {
+        win->tabsCtrl->tabDefaultDx = tabWidth;
+    }
     if (!showTabs) {
         ShowTabBar(win, false);
         return;
@@ -407,6 +411,8 @@ void CreateTabbar(MainWindow* win) {
     args.parent = win->hwndFrame;
     args.withToolTips = true;
     args.font = GetAppFont();
+    int tabWidth = gGlobalPrefs->tabWidth;
+    args.tabDefaultDx = tabWidth;
     tabsCtrl->Create(args);
     win->tabsCtrl = tabsCtrl;
     win->tabSelectionHistory = new Vec<WindowTab*>();
