@@ -11887,6 +11887,7 @@ am:Ոչ
 br:Não
 ca:No
 cn:否
+co:Nò
 de:Nein
 es:No
 fr:Non
