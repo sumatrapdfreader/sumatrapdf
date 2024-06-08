@@ -15871,6 +15871,7 @@ vn:Tìm Kiếm Với &Google
 br:Procurar com o &Google Scholar
 ca:Cerca amb el &Google Scholar
 cn:谷歌学术搜索(&G)
+co:Circà cù Google &Scholar
 de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
@@ -15885,6 +15886,7 @@ sk:Vyhľadať na &Google Scholar
 br:Procurar com a &Wikipedia
 ca:Cerca amb el &Wikipedia
 cn:维基百科搜索(&W)
+co:Circà cù &Wikipedia
 de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
@@ -18912,6 +18914,7 @@ am:Այո
 br:Sim
 ca:Sí
 cn:是
+co:Sì
 de:Ja
 es:Sí
 fr:Oui
