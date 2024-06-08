@@ -876,7 +876,6 @@ These properties are only present for some annotation types, so support for them
 
 .. method:: hasLine()
 
-    |mutool_tag_wasm_soon|
 
     Checks the support for annotation line.
 
