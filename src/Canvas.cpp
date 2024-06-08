@@ -1170,7 +1170,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
     bool isAlt = (LOWORD(wp) & MK_ALT) || IsAltPressed();
     bool isRightButton = (LOWORD(wp) & MK_RBUTTON);
-    if (isCtrl || isRightButton) {
+    bool isZooming = isCtrl || isRightButton;
+    if (isZooming) {
         Point pt = HwndGetCursorPos(win->hwndCanvas);
 
         float newZoom;
@@ -1204,10 +1205,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             if (factor > 0.5f) {
                 factor = 0.5f;
             }
+            factor = 1.f + factor;
             if (negative) {
-                factor = 1.f - factor;
-            } else {
-                factor = 1.f + factor;
+                factor = 1 / factor;
             }
             newZoom = ScaleZoomBy(win, factor);
         } else {
