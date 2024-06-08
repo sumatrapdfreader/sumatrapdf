@@ -8,6 +8,8 @@
 
 Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 
+* improved zooming:
+  * zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
 * include manual (`F1` to launch browser with documentation)
 * add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
 * new commands and their command palette (`Ctrl + K`) texts:
@@ -22,7 +24,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 * increase number of thumbnails on home page from 10 => 30
 * add `ShowLinks` advanced setting and  "Toggle Show Links" (`CmdToggleLinks`) for command palette
 * default `ReuseInstance` setting to true
-* improvements to scrolling and zooming
+* improved scrolling with mouse wheel and touch gestures
 * theming improvements
 * go back to opening settings file with default .txt editor (notepad most likely)
 * don't exit fullscreen on double-click. must double-click in upper-right corner
