@@ -32,39 +32,4 @@ class MapStrToInt {
     bool Get(const char* key, int* valOut) const;
 };
 
-class MapWStrToInt {
-  public:
-    PoolAllocator allocator;
-    HashTable* h = nullptr;
-
-    explicit MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
-    ~MapWStrToInt();
-
-    size_t Count() const;
-
-    // if a key doesn't exist, inserts a key with a given value and return true
-    // if a key exists, returns false and sets prevValOut to existing value
-    bool Insert(const WCHAR* key, int val, int* prevValOut);
-    bool Remove(const WCHAR* key, int* removedValOut) const;
-    bool Get(const WCHAR* key, int* valOut) const;
-};
-
 } // namespace dict
-
-class StringInterner {
-    dict::MapStrToInt strToInt;
-    Vec<const char*> intToStr;
-
-  public:
-    StringInterner() = default;
-
-    int Intern(const char* s, bool* alreadyPresent = nullptr);
-    size_t StringsCount() const {
-        return intToStr.size();
-    }
-    const char* GetByIndex(size_t n) const {
-        return intToStr.at(n);
-    }
-
-    int nInternCalls = 0; // so we know how effective interning is
-};

@@ -315,7 +315,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     StrVec* pages = nullptr;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
     Allocator* allocator = nullptr;
-    // TODO: could use dict::MapWStrToInt instead of StrList in the caller as well
+    // TODO: could use dict::MapStrToInt instead of StrList in the caller as well
     dict::MapStrToInt urlsSet;
 
     // We fake page numbers by doing a depth-first traversal of
