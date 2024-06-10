@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -529,7 +529,10 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 	{
 		fz_report_error(ctx);
 		if (!reload || make_fake_doc(app))
+		{
+			fz_report_error(ctx);
 			pdfapp_error(app, "cannot open document");
+		}
 	}
 
 	idoc = pdf_specifics(app->ctx, app->doc);

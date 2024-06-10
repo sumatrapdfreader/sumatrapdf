@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -79,7 +79,7 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 
 		ctm = fz_concat(page_ctm, ctm);
 
-		struct_parent = pdf_dict_getl(ctx, page->obj, PDF_NAME(StructParent));
+		struct_parent = pdf_dict_getl(ctx, page->obj, PDF_NAME(StructParent), NULL);
 		struct_parent_num = pdf_to_int_default(ctx, struct_parent, -1);
 
 		proc = pdf_new_run_processor(ctx, page->doc, dev, ctm, struct_parent_num, usage, NULL, default_cs, cookie);
