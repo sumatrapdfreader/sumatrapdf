@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-24fd8db1b1c68b0178f8c48a8015d29ce75bb286
+9c5dadd1acfdcad77a1544957a8a33ffe68734fd
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6278,6 +6278,7 @@ uz:Yopish
 vn:Đóng lại
 :Close All Tabs
 am:Փակել բոլոր ներդիրները
+ar:اغلق كل علامات التبويب
 br:Fechar Todas as Abas
 ca:Tanca totes les pestanyes
 cn:关闭所有标签页
@@ -6352,6 +6353,7 @@ uk:Закрити інші вкладки
 vn:Đóng các tab khác
 :Close Tabs To The Left
 am:Փակել ձախ կողմի ներդիրները
+ar:اغلق علامة التبويب اليسري
 br:Fechar Abas a Esquerda
 ca:Tanca totes les pestanyes de l'esquerra
 cn:关闭左侧标签页
@@ -6375,6 +6377,7 @@ sk:Zatvoriť karty vľavo
 tw:關閉左側分頁
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
+ar:اغلق علامة التبويب اليمنى
 az:Sağdakı tabları bağla
 bg:Затвори табовете в дясно
 br:Fechar Abas a Direita
@@ -13790,6 +13793,7 @@ br:Manual no Site da Web
 ca:Manual al lloc web
 cn:在线手册
 co:Manuale nant’à u situ web
+cz:Manuál na webové stránce
 de:Handbuch im Internet
 es:Manual en la Web
 fr:Manuel sur le site web
@@ -14193,6 +14197,7 @@ br:Não
 ca:No
 cn:否
 co:Nò
+cz:Ne
 de:Nein
 es:No
 fr:Non
@@ -18734,6 +18739,7 @@ br:Procurar com o &Google Scholar
 ca:Cerca amb el &Google Scholar
 cn:谷歌学术搜索(&G)
 co:Circà cù Google &Scholar
+cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
@@ -18749,6 +18755,7 @@ br:Procurar com a &Wikipedia
 ca:Cerca amb el &Wikipedia
 cn:维基百科搜索(&W)
 co:Circà cù &Wikipedia
+cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
@@ -22322,6 +22329,7 @@ br:Sim
 ca:Sí
 cn:是
 co:Sì
+cz:Ano
 de:Ja
 es:Sí
 fr:Oui
