@@ -21,6 +21,7 @@ gl:%s anotación. Ctrl+clic para editar.
 he:.כדי לערוך Ctrl +  הערה. לחץ על %s
 hi:%s एनोटेशन । संपादित करने के लिए Ctrl+क्लिक करें।
 hu:Megjegyzés: %s. Szerkesztés: Ctrl+kattintás.
+id:%s anotasi. Ctrl+click untuk mengedit.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
@@ -1333,6 +1334,7 @@ ga:&Aicearraí méarchláir
 gl:Atallos de &teclado
 he:קיצורי דרך במקלדת
 hu:&Gyorsbillentyűk
+id:&Pintasan Kibor
 it:&Tasti rapidi
 ja:キーボード ショートカット(&K)
 kr:키보드 단축키(&K)
@@ -5132,6 +5134,7 @@ gl:Limpado historial de %d ficheiros, eliminadas miniaturas.
 he:.קבצים, תמונות ממוזערות נמחקו %d נוקתה היסטוריה של
 hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
+id:Riwayat %d file dibersihkan, thumbnail dihapus.
 it:Svuotata la cronologia di %d file, anteprime eliminate
 ja:%d 個の履歴を削除し、サムネイルを削除しました。
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
@@ -5168,6 +5171,7 @@ he:...מנקה היסטוריה
 hi:इतिहास मिटाया  जा रहा है...
 hr:Brisanje povijesti...
 hu:Előzmények törlése...
+id:Membersihkan riwayat...
 it:Svuotamento cronologia in corso...
 ja:履歴を削除中...
 kr:내역 초기화...
@@ -5250,6 +5254,7 @@ fr:Fermer tous les onglets
 ga:Dún Gach Cluaisín
 he:סגור את כל הכרטיסיות
 hi:सभी टैब को बंद करें
+id:Tutup Semua Tab
 it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
 nl:Sluit Alle Tabbladen
@@ -5321,6 +5326,7 @@ es:Cerrar pestañas a la izquierda
 fr:Fermer les onglets sur la gauche
 ga:Dún cluaisíní ar chlé
 he:סגור כרטיסיות משמאל
+id:Tutup Tab ke Kiri
 it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
 nl:Sluit Tabbladen aan de Linkerkant
@@ -6091,6 +6097,7 @@ he:העתק את נתיב הקובץ
 hi:फाइल पाथ को कॉपी करे
 hr:Kopiraj putanju datoteke
 hu:Útvonal másolása
+id:Salin Jalur File
 it:Copia percorso file
 ja:ファイルパスをコピー
 kr:파일 경로 복사
@@ -7444,6 +7451,7 @@ fr:Supprimer
 ga:Scrios
 he:מחק
 hi:मिटाओ
+id:Hapus
 it:Cancella
 ja:削除
 nl:Verwijderen
@@ -7475,6 +7483,7 @@ he:מחק הערה
 hi:टिप्पणी मिटाए
 hr:Izbriši bilješku
 hu:Megjegyzés törlése
+id:Hapus Anotasi
 it:Elimina Annotazione
 ja:注釈を削除
 kr:주석 삭제
@@ -7931,6 +7940,7 @@ gl:Editar %s anotación
 he:ערוך את הערה %s
 hr:Uredi %s bilješku
 hu:%s. megjegyzés szerkesztése
+id:Edit %s Anotasi
 it:Modifica annotazione %s
 ja:注釈 %s を編集
 kr:주석 편집 (%s)
@@ -8177,6 +8187,7 @@ gl:Erro
 he:שגיאה
 hi:त्रुटि
 hu:Hiba
+id:Kesalahan
 it:Errore
 ja:エラー
 kr:오류
@@ -11561,6 +11572,7 @@ de:Handbuch im Internet
 es:Manual en la Web
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
+id:Manual di Situs Web
 it:Manuale (sito web)
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
@@ -11897,6 +11909,7 @@ de:Nein
 es:No
 fr:Non
 ga:Níl
+id:Tidak
 it:No
 nl:Nee
 pl:Nie
@@ -12721,6 +12734,7 @@ he:פתח בחלון חדש
 hi:नई विंडो में खोलें
 hr:Otvori u novom prozoru
 hu:Megnyitás új ablakban
+id:Buka di Tab Baru
 it:Apri in una nuova finestra
 ja:新しいウィンドウで開く
 kr:새 창에서 열기
@@ -14650,6 +14664,7 @@ he:מאפיינים...
 hi:प्रकृति...
 hr:Svojstva...
 hu:Tulajdonságok
+id:Properti...
 it:Proprietà
 ja:プロパティ
 kr:속성들...
@@ -15881,6 +15896,7 @@ cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
+id:Cari dengan &Google Scholar
 nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
 pt:Procurar com o &Google Scholar
@@ -15897,6 +15913,7 @@ cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
+id:Cari dengan &Wikipedia
 nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
 pt:Procurar com a &Wikipedia
@@ -18927,6 +18944,7 @@ de:Ja
 es:Sí
 fr:Oui
 ga:Tá
+id:Ya
 it:Sì
 nl:Ja
 pl:Tak
