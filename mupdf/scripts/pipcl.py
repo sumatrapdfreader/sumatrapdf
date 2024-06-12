@@ -516,13 +516,7 @@ class Package:
         assert re.match('([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$', name, re.IGNORECASE), \
                 f'Bad name: {name!r}'
 
-
-        # PEP-440.
-        assert re.match(
-                    r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$',
-                    version,
-                ), \
-                f'Bad version: {version!r}.'
+        _assert_version_pep_440(version)
 
         # https://packaging.python.org/en/latest/specifications/binary-distribution-format/
         if tag_python:
@@ -2232,6 +2226,15 @@ def _fs_mtime( filename, default=0):
         return os.path.getmtime( filename)
     except OSError:
         return default
+
+def _assert_version_pep_440(version):
+    assert re.match(
+                r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$',
+                version,
+            ), \
+            f'Bad version: {version!r}.'
+
+
 
 g_verbose = int(os.environ.get('PIPCL_VERBOSE', '1'))
 

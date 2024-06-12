@@ -219,7 +219,7 @@ With :title:`MuPDF` it is also possible to create, edit and manipulate :title:`P
 
 .. method:: hasUnsavedChanges()
 
-    Returns *true* if the document has been saved since it was last opened or saved.
+    Returns *true* if the document has been changed since it was last opened or saved.
 
     :return: `Boolean`.
 

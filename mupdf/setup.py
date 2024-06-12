@@ -118,6 +118,20 @@ def mupdf_version():
     time to the base version in include/mupdf/fitz/version.h. For example
     '1.18.0.20210330.1800'.
     '''
+    return mupdf_version_internal()
+
+
+def mupdf_version_internal(t_tuple=None):
+    '''
+    Return version number, with doctest check for broken behaviour with leading
+    zeros.
+
+    >>> t0str = '2024-06-06-00:00'
+    >>> t0tuple = time.strptime(t0str, '%Y-%m-%d-%H:%M')
+    >>> v = mupdf_version_internal(t0tuple)
+    >>> print(v, file=sys.stderr)
+    >>> assert v.endswith('.202406060000')
+    '''
     with open(f'{root_dir()}/include/mupdf/fitz/version.h') as f:
         text = f.read()
     m = re.search('\n#define FZ_VERSION "([^"]+)"\n', text)
@@ -150,12 +164,16 @@ def mupdf_version():
     #
     # This also allows us to easily experiment on test.pypi.org.
     #
-    # We have to protect against the time component containing `.0` as this is
+    # We have to avoid the time component(s) containing `.0` as this is
     # prohibited by PEP-440.
     #
-    tail = time.strftime(".%Y%m%d.%H%M").replace('.0', '.')
+    if t_tuple is None:
+        t_tuple = time.localtime()
+    tt = time.strftime(".%Y%m%d%H%M", t_tuple)
+    tail = tt.replace('.0', '.')
     ret = base_version + tail
     #log(f'Have created version number: {ret}')
+    pipcl._assert_version_pep_440(ret)
     return ret
 
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -2093,7 +2093,7 @@ make_hough(fz_context *ctx, const fz_pixmap *src, fz_point *corners)
 		r = fz_include_point_in_rect(r, corners[1]);
 		r = fz_include_point_in_rect(r, corners[2]);
 		r = fz_include_point_in_rect(r, corners[3]);
-		if ((r.x1 - r.x0) * (r.y1 - r.y0) < (src->w * src->h)/8)
+		if ((r.x1 - r.x0) * (r.y1 - r.y0) * 8 < (src->w * src->h))
 			return 0;
 	}
 

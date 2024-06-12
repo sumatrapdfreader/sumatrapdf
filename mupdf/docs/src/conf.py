@@ -26,6 +26,8 @@ if hasattr(os, "uname") and os.uname()[0] in ("OpenBSD", "Darwin"):
 else:
     extensions.append("rst2pdf.pdfbuilder")
 
+extensions.append("sphinx.ext.graphviz")
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 

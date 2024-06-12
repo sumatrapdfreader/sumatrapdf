@@ -1581,7 +1581,9 @@ def system(
                 out_frame_record = inspect.stack()[caller]
                 o_fn = lambda text: log( text, caller=out_frame_record, nv=False, raw=True)
             elif isinstance(o, int):
-                o_fn = lambda text: os.write( o, text)
+                def fn(text, o=o):
+                    os.write(o, text.encode())
+                o_fn = fn
             elif callable(o):
                 o_fn = o
             else:
