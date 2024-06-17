@@ -243,7 +243,6 @@ fz_output *
 fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 {
 	FILE *file;
-	fz_output *out;
 
 	if (filename == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no output to write to");
@@ -292,6 +291,17 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 #endif
 	if (!file)
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open file '%s': %s", filename, strerror(errno));
+
+	return fz_new_output_with_file_ptr(ctx, file);
+}
+
+fz_output *
+fz_new_output_with_file_ptr(fz_context *ctx, FILE *file)
+{
+	fz_output *out;
+
+	if (!file)
+		return fz_new_output(ctx, 0, NULL, null_write, NULL, NULL);
 
 	setvbuf(file, NULL, _IONBF, 0); /* we do our own buffering */
 	out = fz_new_output(ctx, 8192, file, file_write, NULL, file_drop);
@@ -835,4 +845,16 @@ void fz_write_bits_sync(fz_context *ctx, fz_output *out)
 	if (out->buffered == 0)
 		return;
 	fz_write_bits(ctx, out, 0, 8 - out->buffered);
+}
+
+void
+fz_write_stream(fz_context *ctx, fz_output *out, fz_stream *in)
+{
+	size_t z;
+
+	while ((z = fz_available(ctx, in, 4096)) != 0)
+	{
+		fz_write_data(ctx, out, in->rp, z);
+		in->rp += z;
+	}
 }

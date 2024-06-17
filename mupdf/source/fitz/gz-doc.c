@@ -27,7 +27,7 @@
 #endif
 
 static fz_document *
-gz_open_document(fz_context *ctx, fz_stream *ostm, fz_stream *accel, fz_archive *dir)
+gz_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *ostm, fz_stream *accel, fz_archive *dir)
 {
 	fz_stream *stm = fz_open_flated(ctx, ostm, 16 + MAX_WBITS);
 	fz_buffer *buf = NULL;
@@ -66,7 +66,7 @@ static const char *gz_mimetypes[] =
 };
 
 static int
-gz_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
+gz_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir)
 {
 	int ret = 0;
 	uint8_t data[10];

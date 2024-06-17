@@ -2090,7 +2090,7 @@ def fs_newer( pattern, t):
     paths = glob.glob(pattern)
     paths_new = []
     for path in paths:
-        tt = os.path.getmtime(path)
+        tt = fs_mtime(path)
         if tt >= t:
             paths_new.append(path)
     return paths_new

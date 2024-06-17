@@ -522,7 +522,7 @@ static const char *xps_mimetypes[] =
 };
 
 static int
-xps_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
+xps_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;
@@ -567,7 +567,7 @@ xps_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
 }
 
 static fz_document *
-xps_open(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *dir)
+xps_open(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *dir)
 {
 	if (file)
 		return xps_open_document_with_stream(ctx, file);

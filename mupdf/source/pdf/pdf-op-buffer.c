@@ -856,168 +856,197 @@ pdf_out_BI(fz_context *ctx, pdf_processor *proc_, fz_image *img, const char *col
 	fz_output *out = proc->out;
 	int ahx = proc->ahxencode;
 	fz_compressed_buffer *cbuf;
-	fz_buffer *buf;
-	int i;
+	fz_buffer *buf = NULL;
+	int i, w, h, bpc;
 	unsigned char *data;
 	size_t len;
+	fz_pixmap *pix = NULL;
+	fz_colorspace *cs;
+	int type;
 
 	if (img == NULL)
 		return;
 	cbuf = fz_compressed_image_buffer(ctx, img);
 	if (cbuf == NULL)
-		return;
-	buf = cbuf->buffer;
-	if (buf == NULL)
-		return;
-
-	if (proc->sep)
-		fz_write_byte(ctx, out, ' ');
-	fz_write_string(ctx, out, "BI ");
-	fz_write_printf(ctx, out, "/W %d", img->w);
-	fz_write_printf(ctx, out, "/H %d", img->h);
-	fz_write_printf(ctx, out, "/BPC %d", img->bpc);
-	if (img->imagemask)
-		fz_write_string(ctx, out, "/IM true");
-	else if (img->colorspace == fz_device_gray(ctx))
-		fz_write_string(ctx, out, "/CS/G");
-	else if (img->colorspace == fz_device_rgb(ctx))
-		fz_write_string(ctx, out, "/CS/RGB");
-	else if (img->colorspace == fz_device_cmyk(ctx))
-		fz_write_string(ctx, out, "/CS/CMYK");
-	else if (colorspace)
-		fz_write_printf(ctx, out, "/CS%n", colorspace);
-	else
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "BI operator can only show ImageMask, Gray, RGB, or CMYK images");
-	if (img->interpolate)
-		fz_write_string(ctx, out, "/I true");
-	fz_write_string(ctx, out, "/D[");
-	for (i = 0; i < img->n * 2; ++i)
 	{
-		if (i > 0)
-			fz_write_byte(ctx, out, ' ');
-		fz_write_printf(ctx, out, "%g", img->decode[i]);
+		pix = fz_get_pixmap_from_image(ctx, img, NULL, NULL, &w, &h);
+		bpc = 8;
+		cs = pix->colorspace;
+		type = FZ_IMAGE_RAW;
 	}
-	fz_write_string(ctx, out, "]");
-	proc->sep = 0;
-
-	switch (cbuf->params.type)
+	else
 	{
-	default:
-		fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown compressed buffer type");
-		break;
+		buf = cbuf->buffer;
+		if (buf == NULL)
+			return;
+		w = img->w;
+		h = img->h;
+		bpc = img->bpc;
+		cs = img->colorspace;
+		type = cbuf->params.type;
+	}
 
-	case FZ_IMAGE_JPEG:
-		fz_write_string(ctx, out, ahx ? "/F[/AHx/DCT]" : "/F/DCT");
-		proc->sep = !ahx;
-		if (cbuf->params.u.jpeg.color_transform >= 0)
+	fz_try(ctx)
+	{
+		if (proc->sep)
+			fz_write_byte(ctx, out, ' ');
+		fz_write_string(ctx, out, "BI ");
+		fz_write_printf(ctx, out, "/W %d", w);
+		fz_write_printf(ctx, out, "/H %d", h);
+		fz_write_printf(ctx, out, "/BPC %d", bpc);
+		if (img->imagemask)
+			fz_write_string(ctx, out, "/IM true");
+		else if (cs == fz_device_gray(ctx))
+			fz_write_string(ctx, out, "/CS/G");
+		else if (cs == fz_device_rgb(ctx))
+			fz_write_string(ctx, out, "/CS/RGB");
+		else if (cs == fz_device_cmyk(ctx))
+			fz_write_string(ctx, out, "/CS/CMYK");
+		else if (cs)
+			fz_write_printf(ctx, out, "/CS%n", colorspace);
+		else
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "BI operator can only show ImageMask, Gray, RGB, or CMYK images");
+		if (img->interpolate)
+			fz_write_string(ctx, out, "/I true");
+		fz_write_string(ctx, out, "/D[");
+		for (i = 0; i < img->n * 2; ++i)
 		{
-			fz_write_printf(ctx, out, "/DP<</ColorTransform %d>>", cbuf->params.u.jpeg.color_transform);
-			proc->sep = 0;
+			if (i > 0)
+				fz_write_byte(ctx, out, ' ');
+			fz_write_printf(ctx, out, "%g", img->decode[i]);
 		}
-		if (cbuf->params.u.jpeg.invert_cmyk && img->n == 4)
-		{
-			fz_write_string(ctx, out, "/D[1 0 1 0 1 0 1 0]");
-			proc->sep = 0;
-		}
-		break;
-
-	case FZ_IMAGE_FAX:
-		fz_write_string(ctx, out, ahx ? "/F[/AHx/CCF]/DP[null<<" : "/F/CCF/DP<<");
-		fz_write_printf(ctx, out, "/K %d", cbuf->params.u.fax.k);
-		if (cbuf->params.u.fax.columns != 1728)
-			fz_write_printf(ctx, out, "/Columns %d", cbuf->params.u.fax.columns);
-		if (cbuf->params.u.fax.rows > 0)
-			fz_write_printf(ctx, out, "/Rows %d", cbuf->params.u.fax.rows);
-		if (cbuf->params.u.fax.end_of_line)
-			fz_write_string(ctx, out, "/EndOfLine true");
-		if (cbuf->params.u.fax.encoded_byte_align)
-			fz_write_string(ctx, out, "/EncodedByteAlign true");
-		if (!cbuf->params.u.fax.end_of_block)
-			fz_write_string(ctx, out, "/EndOfBlock false");
-		if (cbuf->params.u.fax.black_is_1)
-			fz_write_string(ctx, out, "/BlackIs1 true");
-		if (cbuf->params.u.fax.damaged_rows_before_error > 0)
-			fz_write_printf(ctx, out, "/DamagedRowsBeforeError %d",
-				cbuf->params.u.fax.damaged_rows_before_error);
-		fz_write_string(ctx, out, ahx ? ">>]" : ">>");
+		fz_write_string(ctx, out, "]");
 		proc->sep = 0;
-		break;
 
-	case FZ_IMAGE_RAW:
+		switch (type)
+		{
+		default:
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "unknown compressed buffer type");
+			break;
+
+		case FZ_IMAGE_JPEG:
+			fz_write_string(ctx, out, ahx ? "/F[/AHx/DCT]" : "/F/DCT");
+			proc->sep = !ahx;
+			if (cbuf->params.u.jpeg.color_transform >= 0)
+			{
+				fz_write_printf(ctx, out, "/DP<</ColorTransform %d>>", cbuf->params.u.jpeg.color_transform);
+				proc->sep = 0;
+			}
+			if (cbuf->params.u.jpeg.invert_cmyk && img->n == 4)
+			{
+				fz_write_string(ctx, out, "/D[1 0 1 0 1 0 1 0]");
+				proc->sep = 0;
+			}
+			break;
+
+		case FZ_IMAGE_FAX:
+			fz_write_string(ctx, out, ahx ? "/F[/AHx/CCF]/DP[null<<" : "/F/CCF/DP<<");
+			fz_write_printf(ctx, out, "/K %d", cbuf->params.u.fax.k);
+			if (cbuf->params.u.fax.columns != 1728)
+				fz_write_printf(ctx, out, "/Columns %d", cbuf->params.u.fax.columns);
+			if (cbuf->params.u.fax.rows > 0)
+				fz_write_printf(ctx, out, "/Rows %d", cbuf->params.u.fax.rows);
+			if (cbuf->params.u.fax.end_of_line)
+				fz_write_string(ctx, out, "/EndOfLine true");
+			if (cbuf->params.u.fax.encoded_byte_align)
+				fz_write_string(ctx, out, "/EncodedByteAlign true");
+			if (!cbuf->params.u.fax.end_of_block)
+				fz_write_string(ctx, out, "/EndOfBlock false");
+			if (cbuf->params.u.fax.black_is_1)
+				fz_write_string(ctx, out, "/BlackIs1 true");
+			if (cbuf->params.u.fax.damaged_rows_before_error > 0)
+				fz_write_printf(ctx, out, "/DamagedRowsBeforeError %d",
+					cbuf->params.u.fax.damaged_rows_before_error);
+			fz_write_string(ctx, out, ahx ? ">>]" : ">>");
+			proc->sep = 0;
+			break;
+
+		case FZ_IMAGE_RAW:
+			if (ahx)
+			{
+				fz_write_string(ctx, out, "/F/AHx");
+				proc->sep = 1;
+			}
+			break;
+
+		case FZ_IMAGE_RLD:
+			fz_write_string(ctx, out, ahx ? "/F[/AHx/RL]" : "/F/RL");
+			proc->sep = !ahx;
+			break;
+
+		case FZ_IMAGE_FLATE:
+			fz_write_string(ctx, out, ahx ? "/F[/AHx/Fl]" : "/F/Fl");
+			proc->sep = !ahx;
+			if (cbuf->params.u.flate.predictor > 1)
+			{
+				fz_write_string(ctx, out, ahx ? "/DP[null<<" : "/DP<<");
+				fz_write_printf(ctx, out, "/Predictor %d", cbuf->params.u.flate.predictor);
+				if (cbuf->params.u.flate.columns != 1)
+					fz_write_printf(ctx, out, "/Columns %d", cbuf->params.u.flate.columns);
+				if (cbuf->params.u.flate.colors != 1)
+					fz_write_printf(ctx, out, "/Colors %d", cbuf->params.u.flate.colors);
+				if (cbuf->params.u.flate.bpc != 8)
+					fz_write_printf(ctx, out, "/BitsPerComponent %d", cbuf->params.u.flate.bpc);
+				fz_write_string(ctx, out, ahx ? ">>]" : ">>");
+				proc->sep = 0;
+			}
+			break;
+
+		case FZ_IMAGE_LZW:
+			fz_write_string(ctx, out, ahx ? "/F[/AHx/LZW]" : "/F/LZW");
+			proc->sep = !ahx;
+			if (cbuf->params.u.lzw.predictor > 1)
+			{
+				fz_write_string(ctx, out, ahx ? "/DP[<<null" : "/DP<<");
+				fz_write_printf(ctx, out, "/Predictor %d", cbuf->params.u.lzw.predictor);
+				if (cbuf->params.u.lzw.columns != 1)
+					fz_write_printf(ctx, out, "/Columns %d", cbuf->params.u.lzw.columns);
+				if (cbuf->params.u.lzw.colors != 1)
+					fz_write_printf(ctx, out, "/Colors %d", cbuf->params.u.lzw.colors);
+				if (cbuf->params.u.lzw.bpc != 8)
+					fz_write_printf(ctx, out, "/BitsPerComponent %d", cbuf->params.u.lzw.bpc);
+				if (cbuf->params.u.lzw.early_change != 1)
+					fz_write_printf(ctx, out, "/EarlyChange %d", cbuf->params.u.lzw.early_change);
+				fz_write_string(ctx, out, ahx ? ">>]" : ">>");
+				proc->sep = 0;
+			}
+			break;
+		}
+
+		if (proc->sep)
+			fz_write_byte(ctx, out, ' ');
+		fz_write_string(ctx, out, "ID ");
+		if (buf)
+			len = fz_buffer_storage(ctx, buf, &data);
+		else
+		{
+			data = pix->samples;
+			len = ((size_t)w) * h * pix->n;
+		}
 		if (ahx)
 		{
-			fz_write_string(ctx, out, "/F/AHx");
-			proc->sep = 1;
+			size_t z;
+			for (z = 0; z < len; ++z)
+			{
+				int c = data[z];
+				fz_write_byte(ctx, out, "0123456789abcdef"[(c >> 4) & 0xf]);
+				fz_write_byte(ctx, out, "0123456789abcdef"[c & 0xf]);
+				if ((z & 31) == 31)
+					fz_write_byte(ctx, out, '\n');
+			}
+			fz_write_byte(ctx, out, '>');
 		}
-		break;
-
-	case FZ_IMAGE_RLD:
-		fz_write_string(ctx, out, ahx ? "/F[/AHx/RL]" : "/F/RL");
-		proc->sep = !ahx;
-		break;
-
-	case FZ_IMAGE_FLATE:
-		fz_write_string(ctx, out, ahx ? "/F[/AHx/Fl]" : "/F/Fl");
-		proc->sep = !ahx;
-		if (cbuf->params.u.flate.predictor > 1)
+		else
 		{
-			fz_write_string(ctx, out, ahx ? "/DP[null<<" : "/DP<<");
-			fz_write_printf(ctx, out, "/Predictor %d", cbuf->params.u.flate.predictor);
-			if (cbuf->params.u.flate.columns != 1)
-				fz_write_printf(ctx, out, "/Columns %d", cbuf->params.u.flate.columns);
-			if (cbuf->params.u.flate.colors != 1)
-				fz_write_printf(ctx, out, "/Colors %d", cbuf->params.u.flate.colors);
-			if (cbuf->params.u.flate.bpc != 8)
-				fz_write_printf(ctx, out, "/BitsPerComponent %d", cbuf->params.u.flate.bpc);
-			fz_write_string(ctx, out, ahx ? ">>]" : ">>");
-			proc->sep = 0;
+			fz_write_data(ctx, out, data, len);
 		}
-		break;
-
-	case FZ_IMAGE_LZW:
-		fz_write_string(ctx, out, ahx ? "/F[/AHx/LZW]" : "/F/LZW");
-		proc->sep = !ahx;
-		if (cbuf->params.u.lzw.predictor > 1)
-		{
-			fz_write_string(ctx, out, ahx ? "/DP[<<null" : "/DP<<");
-			fz_write_printf(ctx, out, "/Predictor %d", cbuf->params.u.lzw.predictor);
-			if (cbuf->params.u.lzw.columns != 1)
-				fz_write_printf(ctx, out, "/Columns %d", cbuf->params.u.lzw.columns);
-			if (cbuf->params.u.lzw.colors != 1)
-				fz_write_printf(ctx, out, "/Colors %d", cbuf->params.u.lzw.colors);
-			if (cbuf->params.u.lzw.bpc != 8)
-				fz_write_printf(ctx, out, "/BitsPerComponent %d", cbuf->params.u.lzw.bpc);
-			if (cbuf->params.u.lzw.early_change != 1)
-				fz_write_printf(ctx, out, "/EarlyChange %d", cbuf->params.u.lzw.early_change);
-			fz_write_string(ctx, out, ahx ? ">>]" : ">>");
-			proc->sep = 0;
-		}
-		break;
+		fz_write_string(ctx, out, " EI");
+		proc->sep = 1;
 	}
-
-	if (proc->sep)
-		fz_write_byte(ctx, out, ' ');
-	fz_write_string(ctx, out, "ID ");
-	len = fz_buffer_storage(ctx, buf, &data);
-	if (ahx)
-	{
-		size_t z;
-		for (z = 0; z < len; ++z)
-		{
-			int c = data[z];
-			fz_write_byte(ctx, out, "0123456789abcdef"[(c >> 4) & 0xf]);
-			fz_write_byte(ctx, out, "0123456789abcdef"[c & 0xf]);
-			if ((z & 31) == 31)
-				fz_write_byte(ctx, out, '\n');
-		}
-		fz_write_byte(ctx, out, '>');
-	}
-	else
-	{
-		fz_write_data(ctx, out, data, len);
-	}
-	fz_write_string(ctx, out, " EI");
-	proc->sep = 1;
+	fz_always(ctx)
+		fz_drop_pixmap(ctx, pix);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void

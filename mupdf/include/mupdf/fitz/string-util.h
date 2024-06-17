@@ -254,6 +254,11 @@ int fz_utflen(const char *s);
 */
 char *fz_utf8_from_wchar(fz_context *ctx, const wchar_t *s);
 
+/*
+	Convert a utf8 string into a new heap allocated wchar one.
+*/
+wchar_t *fz_wchar_from_utf8(fz_context *ctx, const char *path);
+
 
 /**
 	Locale-independent decimal to binary conversion. On overflow

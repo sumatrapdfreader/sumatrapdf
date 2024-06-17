@@ -34,6 +34,10 @@
 #include "mupdf/helpers/mu-threads.h"
 #endif
 
+#ifdef HAVE_SMARTOFFICE
+#include "sodochandler.h"
+#endif
+
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -2527,6 +2531,12 @@ int mudraw_main(int argc, char **argv)
 			if (!output_file_per_page)
 				file_level_headers(ctx);
 			fz_register_document_handlers(ctx);
+#ifdef HAVE_SMARTOFFICE
+			{
+				void *cfg = so_doc_handler_enable(ctx, "en-gb");
+				so_doc_handler_configure(ctx, cfg, SO_DOC_HANDLER_MODE, SO_DOC_HANDLER_MODE_HTML);
+			}
+#endif
 
 			while (fz_optind < argc)
 			{

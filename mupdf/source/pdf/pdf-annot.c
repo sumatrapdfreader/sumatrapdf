@@ -24,6 +24,7 @@
 #include "pdf-annot-imp.h"
 
 #include <string.h>
+#include <float.h>
 
 pdf_annot *
 pdf_keep_annot(fz_context *ctx, pdf_annot *annot)
@@ -1688,10 +1689,19 @@ pdf_annot_border_effect_intensity(fz_context *ctx, pdf_annot *annot)
 	return intensity;
 }
 
+static int
+float_eq(float a, float b)
+{
+	const float epsilon = FLT_EPSILON * 1000;
+	return (a - epsilon <= b && b <= a + epsilon);
+}
+
 void
 pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width)
 {
 	pdf_obj *bs;
+	float oldwidth;
+	fz_rect rd;
 
 	begin_annot_op(ctx, annot, "Set border width");
 
@@ -1702,8 +1712,25 @@ pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width)
 		if (!pdf_is_dict(ctx, bs))
 			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
 		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
+		oldwidth = pdf_dict_get_real(ctx, bs, PDF_NAME(W));
 		pdf_dict_put_real(ctx, bs, PDF_NAME(W), width);
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(Border)); /* deprecated */
+
+		/* If the rect diff matched the old linewidth, then update it to match
+		 * the new linewidth. This copes with the 'just created, there is no
+		 * rect diff' case too. */
+		rd = pdf_annot_rect_diff(ctx, annot);
+		oldwidth /= 2;
+		width /= 2;
+		if (float_eq(rd.x0, oldwidth))
+			rd.x0 = width;
+		if (float_eq(rd.x1, oldwidth))
+			rd.x1 = width;
+		if (float_eq(rd.y0, oldwidth))
+			rd.y0 = width;
+		if (float_eq(rd.y1, oldwidth))
+			rd.y1 = width;
+		pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
 		end_annot_op(ctx, annot);
 	}
 	fz_catch(ctx)

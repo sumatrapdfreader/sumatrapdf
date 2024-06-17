@@ -95,6 +95,8 @@ wchar_from_utf8(const char *s)
 {
 	wchar_t *d, *r;
 	int c;
+	/* This allocation is larger than we need, but it's guaranteed
+	 * to be safe. */
 	r = d = malloc((strlen(s) + 1) * sizeof(wchar_t));
 	if (!r)
 		return NULL;
@@ -103,7 +105,11 @@ wchar_from_utf8(const char *s)
 		/* Truncating c to a wchar_t can be problematic if c
 		 * is 0x10000. */
 		if (c >= 0x10000)
-			c = FZ_REPLACEMENT_CHARACTER;
+		{
+			c -= 0x10000;
+			*d++ = 0xd800 + (c>>10);
+			c = 0xdc00 + (c&1023);
+		}
 		*d++ = c;
 	}
 	*d = 0;

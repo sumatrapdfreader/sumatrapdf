@@ -682,20 +682,60 @@ int fz_is_point_inside_irect(int x, int y, fz_irect r)
 	return (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1);
 }
 
+/* cross (b-a) with (p-a) */
+static float
+cross(fz_point a, fz_point b, fz_point p)
+{
+	b.x -= a.x;
+	b.y -= a.y;
+	p.x -= a.x;
+	p.y -= a.y;
+	return b.x * p.y - b.y * p.x;
+}
+
 static int fz_is_point_inside_triangle(fz_point p, fz_point a, fz_point b, fz_point c)
 {
-	float s, t, area;
-	s = a.y * c.x - a.x * c.y + (c.y - a.y) * p.x + (a.x - c.x) * p.y;
-	t = a.x * b.y - a.y * b.x + (a.y - b.y) * p.x + (b.x - a.x) * p.y;
+	/* Consider the following:
+	 *
+	 *       P
+	 *      /|
+	 *     / |
+	 *    /  |
+	 * A +---+-------+ B
+	 *       M
+	 *
+	 * The cross product of vector AB and vector AP is the distance PM.
+	 * The sign of this distance depends on what side of the line AB, P lies on.
+	 *
+	 * So, for a triangle ABC, if we take cross products of:
+	 *
+	 *  AB and AP
+	 *  BC and BP
+	 *  CA and CP
+	 *
+	 * P can only be inside the triangle if the signs are all identical.
+	 *
+	 * One of the cross products being 0 indicates that the point is on a line.
+	 * Two of the cross products being 0 indicates that the point is on a vertex.
+	 *
+	 * If 2 of the vertexes are the same, the algorithm still works.
+	 * Iff all 3 of the vertexes are the same, the cross products are all zero. The
+	 * value of p is irrelevant.
+	 */
+	float crossa = cross(a, b, p);
+	float crossb = cross(b, c, p);
+	float crossc = cross(c, a, p);
 
-	if ((s < 0) != (t < 0))
-		return 0;
+	/* Check for degenerate case. All vertexes the same. */
+	if (crossa == 0 && crossb == 0 && crossc == 0)
+		return a.x == p.x && a.y == p.y;
 
-	area = -b.y * c.x + a.y * (c.x - b.x) + a.x * (b.y - c.y) + b.x * c.y;
+	if (crossa >= 0 && crossb >= 0 && crossc >= 0)
+		return 1;
+	if (crossa <= 0 && crossb <= 0 && crossc <= 0)
+		return 1;
 
-	return area < 0 ?
-		(s <= 0 && s + t >= area) :
-		(s >= 0 && s + t <= area);
+	return 0;
 }
 
 int fz_is_point_inside_quad(fz_point p, fz_quad q)

@@ -56,6 +56,11 @@ typedef struct fz_stream fz_stream;
 fz_stream *fz_open_file(fz_context *ctx, const char *filename);
 
 /**
+	Do the same as fz_open_file, but delete the file upon close.
+*/
+fz_stream *fz_open_file_autodelete(fz_context *ctx, const char *filename);
+
+/**
 	Open the named file and wrap it in a stream.
 
 	Does the same as fz_open_file, but in the event the file
@@ -75,6 +80,14 @@ fz_stream *fz_try_open_file(fz_context *ctx, const char *name);
 */
 fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename);
 #endif /* _WIN32 */
+
+/**
+	Return the filename (UTF-8 encoded) from which a stream was opened.
+
+	Returns NULL if the filename is not available (or the stream was
+	opened from a source other than a file).
+*/
+const char *fz_stream_filename(fz_context *ctx, fz_stream *stm);
 
 /**
 	Open a block of memory as a stream.

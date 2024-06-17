@@ -298,3 +298,17 @@ else
   THIRD_SRC += $(LIBARCHIVE_SRC)
 endif
 endif
+
+# --- HAVE_SMARTOFFICE ---
+
+ifeq ($(HAVE_SMARTOFFICE),yes)
+  THIRD_CFLAGS += -DHAVE_SMARTOFFICE -Ithirdparty/so/include
+  SODOCHANDLER_LIB = $(OUT)/libsodochandler.a
+  COMMERCIAL_LIBS = $(SODOCHANDLER_LIB)
+  SOLIB_PATH ?= thirdparty/so/lib/linux/x64/
+  THIRD_LIBS += -L$(OUT) -L$(SOLIB_PATH) -lsodochandler -l:smart-office-lib.a
+endif
+
+SODOCHANDLER_SRC := $(sort $(wildcard thirdparty/so/source/*.c))
+SODOCHANDLER_OBJ := $(SODOCHANDLER_SRC:%.c=$(OUT)/%.o)
+$(SODOCHANDLER_LIB) : $(SODOCHANDLER_OBJ)

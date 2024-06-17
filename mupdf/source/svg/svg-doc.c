@@ -163,7 +163,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
 }
 
 static fz_document *
-svg_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *zip)
+svg_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *zip)
 {
 	fz_buffer *buf = fz_read_all(ctx, file, 0);
 	fz_document *doc = NULL;
@@ -267,7 +267,7 @@ static const char *svg_mimetypes[] =
 };
 
 static int
-svg_recognize_doc_content(fz_context *ctx, fz_stream *stm, fz_archive *dir)
+svg_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stm, fz_archive *dir)
 {
 	// A standalone SVG document is an XML document with an <svg> root element.
 	//

@@ -67,6 +67,7 @@
 typedef struct
 {
 	pdf_obj *obj;
+	int n;
 	int state;
 } pdf_ocg_entry;
 
@@ -165,6 +166,39 @@ get_ocg_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill)
 }
 
 static int
+ocgcmp(const void *a_, const void *b_)
+{
+	const pdf_ocg_entry *a = a_;
+	const pdf_ocg_entry *b = b_;
+
+	return (b->n - a->n);
+}
+
+static int
+find_ocg(fz_context *ctx, pdf_ocg_descriptor *desc, pdf_obj *obj)
+{
+	int n = pdf_to_num(ctx, obj);
+	int l = 0;
+	int r = desc->len-1;
+
+	if (n <= 0)
+		return -1;
+
+	while (l <= r)
+	{
+		int m = (l + r) >> 1;
+		int c = desc->ocgs[m].n - n;
+		if (c < 0)
+			r = m - 1;
+		else if (c > 0)
+			l = m + 1;
+		else
+			return c;
+	}
+	return -1;
+}
+
+static int
 populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order, int depth, pdf_obj *rbgroups, pdf_obj *locked,
 	pdf_cycle_list *cycle_up)
 {
@@ -195,12 +229,8 @@ populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order,
 			continue;
 		}
 
-		for (j = 0; j < desc->len; j++)
-		{
-			if (!pdf_objcmp_resolve(ctx, o, desc->ocgs[j].obj))
-				break;
-		}
-		if (j == desc->len)
+		j = find_ocg(ctx, desc, o);
+		if (j < 0)
 			continue; /* OCG not found in main list! Just ignore it */
 		ui = get_ocg_ui(ctx, desc, fill++);
 		ui->depth = depth;
@@ -763,8 +793,10 @@ pdf_read_ocg(fz_context *ctx, pdf_document *doc)
 		{
 			pdf_obj *o = pdf_array_get(ctx, ocgs, i);
 			doc->ocg->ocgs[i].obj = pdf_keep_obj(ctx, o);
+			doc->ocg->ocgs[i].n = pdf_to_num(ctx, o);
 			doc->ocg->ocgs[i].state = 1;
 		}
+		qsort(doc->ocg->ocgs, len, sizeof(doc->ocg->ocgs[0]), ocgcmp);
 
 		pdf_select_layer_config(ctx, doc, 0);
 	}

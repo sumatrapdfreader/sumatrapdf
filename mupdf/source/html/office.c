@@ -1247,7 +1247,7 @@ static const fz_htdoc_format_t fz_htdoc_office =
 };
 
 static fz_document *
-office_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *zip)
+office_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *zip)
 {
 	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, zip, &fz_htdoc_office);
 }
@@ -1276,7 +1276,7 @@ static const char *office_mimetypes[] =
 };
 
 static int
-office_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *zip)
+office_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *zip)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;

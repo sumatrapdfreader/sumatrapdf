@@ -72,6 +72,9 @@ image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm, pd
 
 	fz_var(pix);
 
+	if ((*image)->imagemask)
+		return;
+
 	dst_cs = outcs;
 	pix = fz_get_unscaled_pixmap_from_image(ctx, orig);
 

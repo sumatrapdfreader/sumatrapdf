@@ -95,12 +95,25 @@ static int has_dir_entry(fz_context *ctx, fz_archive *arch, const char *name)
 int
 fz_is_directory(fz_context *ctx, const char *path)
 {
+#ifdef _WIN32
+	wchar_t *wpath = fz_wchar_from_utf8(ctx, path);
+	struct stat info;
+	int ret;
+
+	ret = _wstat(wpath, &info);
+	fz_free(ctx, wpath);
+	if (ret < 0)
+		return 0;
+
+	return S_ISDIR(info.st_mode);
+#else
 	struct stat info;
 
 	if (stat(path, &info) < 0)
 		return 0;
 
 	return S_ISDIR(info.st_mode);
+#endif
 }
 
 static int

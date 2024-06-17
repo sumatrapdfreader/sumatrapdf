@@ -2420,14 +2420,17 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 		contents = pdf_dict_get(ctx, page, PDF_NAME(Contents));
 		pdf_count_q_balance(ctx, doc, res, contents, &prepend, &append);
 
-		// Prepend enough 'q' to ensure we can get back to initial state.
-		buf = fz_new_buffer(ctx, 1024);
-		while (prepend-- > 0)
-			fz_append_string(ctx, buf, "q\n");
+		if (prepend)
+		{
+			// Prepend enough 'q' to ensure we can get back to initial state.
+			buf = fz_new_buffer(ctx, 1024);
+			while (prepend-- > 0)
+				fz_append_string(ctx, buf, "q\n");
 
-		prologue = pdf_add_stream(ctx, doc, buf, NULL, 0);
-		fz_drop_buffer(ctx, buf);
-		buf = NULL;
+			prologue = pdf_add_stream(ctx, doc, buf, NULL, 0);
+			fz_drop_buffer(ctx, buf);
+			buf = NULL;
+		}
 
 		// Append enough 'Q' to get back to initial state.
 		buf = fz_new_buffer(ctx, 1024);
@@ -2471,14 +2474,16 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 		if (!pdf_is_array(ctx, contents))
 		{
 			new_contents = pdf_new_array(ctx, doc, 10);
-			pdf_array_push(ctx, new_contents, prologue);
-			pdf_array_push(ctx, new_contents, contents);
+			if (prologue)
+				pdf_array_push(ctx, new_contents, prologue);
+			if (contents)
+				pdf_array_push(ctx, new_contents, contents);
 			pdf_dict_put(ctx, page, PDF_NAME(Contents), new_contents);
 			pdf_drop_obj(ctx, new_contents);
 			contents = new_contents;
 			new_contents = NULL;
 		}
-		else
+		else if (prologue)
 		{
 			pdf_array_insert(ctx, contents, prologue, 0);
 		}

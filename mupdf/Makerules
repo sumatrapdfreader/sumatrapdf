@@ -46,6 +46,12 @@ ifeq ($(archive),yes)
   HAVE_LIBARCHIVE := yes
 endif
 
+ifeq ($(commercial),yes)
+  build_suffix := $(build_suffix)-commercial
+  XCFLAGS += -DHAVE_SMARTOFFICE
+  HAVE_SMARTOFFICE := yes
+endif
+
 # System specific features
 
 ifeq ($(findstring -fembed-bitcode,$(XCFLAGS)),)

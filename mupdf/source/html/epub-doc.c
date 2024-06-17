@@ -1036,7 +1036,7 @@ epub_init(fz_context *ctx, fz_archive *zip, fz_stream *accel)
 }
 
 static fz_document *
-epub_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *dir)
+epub_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *dir)
 {
 	fz_stream *file2 = NULL;
 	fz_document *doc;
@@ -1071,7 +1071,7 @@ epub_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archiv
 }
 
 static int
-epub_recognize(fz_context *doc, const char *magic)
+epub_recognize(fz_context *doc, const fz_document_handler *handler, const char *magic)
 {
 	if (strstr(magic, "META-INF/container.xml") || strstr(magic, "META-INF\\container.xml"))
 		return 200;
@@ -1079,7 +1079,7 @@ epub_recognize(fz_context *doc, const char *magic)
 }
 
 static int
-epub_recognize_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
+epub_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;

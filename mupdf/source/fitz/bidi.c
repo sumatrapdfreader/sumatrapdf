@@ -542,7 +542,7 @@ void fz_bidi_fragment_text(fz_context *ctx,
 	if (text == NULL || callback == NULL || textlen == 0)
 		return;
 
-	DBUGH(("fz_bidi_fragment_text('%S', len = %d)\n", text, textlen));
+	DBUGH((ctx, "fz_bidi_fragment_text('%S', len = %d)\n", text, textlen));
 
 	levels = create_levels(ctx, text, textlen, baseDir, FALSE, flags);
 

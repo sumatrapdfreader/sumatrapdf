@@ -1954,7 +1954,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                 f'cd {build_dirs.dir_mupdf}&&'
                                 f'"{devenv}"'
                                 f' platform/{win32_infix}/mupdfcsharpswig.sln'
-                                f' /Build "ReleaseCsharp|{build_dirs.cpu.windows_config}"'
+                                f' /Build "{windows_build_type}Csharp|{build_dirs.cpu.windows_config}"'
                                 f' /Project mupdfcsharpswig'
                                 )
                         jlib.system(command, verbose=1, out='log')

@@ -151,6 +151,15 @@ fz_output *fz_new_output(fz_context *ctx, int bufsiz, void *state, fz_output_wri
 fz_output *fz_new_output_with_path(fz_context *, const char *filename, int append);
 
 /**
+	Open an output stream that writes to a
+	given FILE *.
+
+	file: The file pointers to write to. NULL is interpreted as effectively
+	meaning /dev/null or similar.
+*/
+fz_output *fz_new_output_with_file_ptr(fz_context *ctx, FILE *file);
+
+/**
 	Open an output stream that appends
 	to a buffer.
 
@@ -325,6 +334,11 @@ void fz_write_bits(fz_context *ctx, fz_output *out, unsigned int data, int num_b
 	Sync to byte boundary after writing bits.
 */
 void fz_write_bits_sync(fz_context *ctx, fz_output *out);
+
+/**
+	Copy the stream contents to the output.
+*/
+void fz_write_stream(fz_context *ctx, fz_output *out, fz_stream *in);
 
 /**
 	Our customised 'printf'-like string formatter.

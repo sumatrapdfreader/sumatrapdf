@@ -23,6 +23,10 @@
 #include "mupdf/fitz.h"
 
 #include <string.h>
+#ifndef _WIN32
+#include <unistd.h> /* For unlink */
+#endif
+#include <errno.h>
 
 enum
 {
@@ -32,6 +36,115 @@ enum
 #define DEFW (450)
 #define DEFH (600)
 #define DEFEM (12)
+
+static fz_output *
+fz_new_output_to_tempfile(fz_context *ctx, char **namep)
+{
+	fz_output *out = NULL;
+#ifdef _WIN32
+	char namebuf[L_tmpnam];
+	int attempts = 0;
+#else
+	char namebuf[] = "/tmp/fztmpXXXXXX";
+#endif
+
+
+	fz_var(out);
+
+#ifdef _WIN32
+	/* Windows has no mkstemp command, so we have to use the old-style
+	 * tmpnam based system, and retry in the case of races. */
+	do
+	{
+		if (tmpnam(namebuf) == NULL)
+			fz_throw(ctx, FZ_ERROR_SYSTEM, "tmpnam failed");
+		fz_try(ctx)
+			out = fz_new_output_with_path(ctx, namebuf, 0);
+		fz_catch(ctx)
+		{
+			/* We might hit a race condition and not be able to
+			 * open the file because someone beats us to it. We'd
+			 * be unbearably unlucky to hit this 10 times in a row. */
+			attempts++;
+			if (attempts >= 10)
+				fz_rethrow(ctx);
+			else
+				fz_ignore_error(ctx);
+		}
+	}
+	while (out == NULL);
+#else
+	{
+		FILE *file;
+		int fd = mkstemp(namebuf);
+
+		if (fd == -1)
+			fz_throw(ctx, FZ_ERROR_SYSTEM, "Cannot mkstemp: %s", strerror(errno));
+		file = fdopen(fd, "w");
+		if (file == NULL)
+			fz_throw(ctx, FZ_ERROR_SYSTEM, "Failed to open temporary file");
+		out = fz_new_output_with_file_ptr(ctx, file);
+	}
+#endif
+
+	if (namep)
+	{
+		fz_try(ctx)
+			*namep = fz_strdup(ctx, namebuf);
+		fz_catch(ctx)
+		{
+			fz_drop_output(ctx, out);
+			unlink(namebuf);
+			fz_rethrow(ctx);
+		}
+	}
+
+	return out;
+}
+
+static char *
+fz_new_tmpfile_from_stream(fz_context *ctx, fz_stream *stm)
+{
+	char *name;
+	fz_output *out = fz_new_output_to_tempfile(ctx, &name);
+
+	fz_try(ctx)
+	{
+		fz_write_stream(ctx, out, stm);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+		fz_drop_output(ctx, out);
+	fz_catch(ctx)
+	{
+		fz_free(ctx, name);
+		fz_rethrow(ctx);
+	}
+
+	return name;
+}
+
+static fz_stream *
+fz_file_backed_stream(fz_context *ctx, fz_stream *stream)
+{
+	const char *oname = fz_stream_filename(ctx, stream);
+	char *name;
+
+	/* If the file has a name, it's already a file-backed stream.*/
+	if (oname)
+		return stream;
+
+	/* Otherwise we need to make it one. */
+	name = fz_new_tmpfile_from_stream(ctx, stream);
+	fz_try(ctx)
+		stream = fz_open_file_autodelete(ctx, name);
+	fz_always(ctx)
+		fz_free(ctx, name);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return stream;
+}
 
 struct fz_document_handler_context
 {
@@ -55,8 +168,21 @@ fz_document_handler_context *fz_keep_document_handler_context(fz_context *ctx)
 
 void fz_drop_document_handler_context(fz_context *ctx)
 {
-	if (!ctx)
+	int i;
+
+	if (!ctx || !ctx->handler)
 		return;
+
+	for (i = 0; i < ctx->handler->count; i++)
+	{
+		if (ctx->handler->handler[i]->fin)
+		{
+			fz_try(ctx)
+				ctx->handler->handler[i]->fin(ctx, ctx->handler->handler[i]);
+			fz_catch(ctx)
+				fz_ignore_error(ctx);
+		}
+	}
 
 	if (fz_drop_imp(ctx, ctx->handler, &ctx->handler->refs))
 	{
@@ -94,11 +220,13 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 }
 
 const fz_document_handler *
-fz_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream *stream, fz_archive *dir, const char *magic)
+do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **streamp, fz_archive *dir, const char *magic)
 {
 	fz_document_handler_context *dc;
 	int i, best_score, best_i;
 	const char *ext;
+	int drop_stream = 0;
+	fz_stream *stream = *streamp;
 
 	dc = ctx->handler;
 	if (dc->count == 0)
@@ -113,77 +241,125 @@ fz_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream *stream,
 	best_score = 0;
 	best_i = -1;
 
-	if ((stream && stream->seek != NULL) || (stream == NULL && dir != NULL))
+	/* If we're handed a stream, check to see if any of our document handlers
+	 * need a file. If so, change the stream to be a file-backed one. */
+	if (stream)
 	{
+		int wants_file = 0;
 		for (i = 0; i < dc->count; i++)
-		{
-			int score = 0;
+			wants_file |= dc->handler[i]->wants_file;
 
-			if (dc->handler[i]->recognize_content)
-			{
-				if (stream)
-					fz_seek(ctx, stream, 0, SEEK_SET);
-				fz_try(ctx)
-				{
-					score = dc->handler[i]->recognize_content(ctx, stream, dir);
-				}
-				fz_catch(ctx)
-				{
-					/* in case of zip errors when recognizing EPUB/XPS/DOCX files */
-					fz_rethrow_unless(ctx, FZ_ERROR_FORMAT);
-					(void)fz_convert_error(ctx, NULL); /* ugly hack to silence the error message */
-					score = 0;
-				}
-			}
-			if (best_score < score)
-			{
-				best_score = score;
-				best_i = i;
-			}
+		/* Convert the stream into a file_backed stream. */
+		if (wants_file)
+		{
+			stream = fz_file_backed_stream(ctx, stream);
+			/* Either we need to pass this back to our caller, or we
+			 * need to drop it. */
+			drop_stream = 1;
 		}
-		if (stream)
-			fz_seek(ctx, stream, 0, SEEK_SET);
 	}
 
-	if (best_score < 100)
+	fz_try(ctx)
 	{
-		for (i = 0; i < dc->count; i++)
+		if ((stream && stream->seek != NULL) || (stream == NULL && dir != NULL))
 		{
-			int score = 0;
-			const char **entry;
-
-			if (dc->handler[i]->recognize)
-				score = dc->handler[i]->recognize(ctx, magic);
-
-			for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
-				if (!fz_strcasecmp(magic, *entry) && score < 100)
-				{
-					score = 100;
-					break;
-				}
-
-			if (ext)
+			for (i = 0; i < dc->count; i++)
 			{
-				for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
-					if (!fz_strcasecmp(ext, *entry) && score < 100)
+				int score = 0;
+
+				if (dc->handler[i]->recognize_content)
+				{
+					if (stream)
+						fz_seek(ctx, stream, 0, SEEK_SET);
+					fz_try(ctx)
+					{
+						score = dc->handler[i]->recognize_content(ctx, dc->handler[i], stream, dir);
+					}
+					fz_catch(ctx)
+					{
+						/* in case of zip errors when recognizing EPUB/XPS/DOCX files */
+						fz_rethrow_unless(ctx, FZ_ERROR_FORMAT);
+						(void)fz_convert_error(ctx, NULL); /* ugly hack to silence the error message */
+						score = 0;
+					}
+				}
+				if (best_score < score)
+				{
+					best_score = score;
+					best_i = i;
+				}
+			}
+			if (stream)
+				fz_seek(ctx, stream, 0, SEEK_SET);
+		}
+
+		if (best_score < 100)
+		{
+			for (i = 0; i < dc->count; i++)
+			{
+				int score = 0;
+				const char **entry;
+
+				if (dc->handler[i]->recognize)
+					score = dc->handler[i]->recognize(ctx, dc->handler[i], magic);
+
+				for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
+					if (!fz_strcasecmp(magic, *entry) && score < 100)
 					{
 						score = 100;
 						break;
 					}
-			}
 
-			if (best_score < score)
-			{
-				best_score = score;
-				best_i = i;
+				if (ext)
+				{
+					for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
+						if (!fz_strcasecmp(ext, *entry) && score < 100)
+						{
+							score = 100;
+							break;
+						}
+				}
+
+				if (best_score < score)
+				{
+					best_score = score;
+					best_i = i;
+				}
 			}
 		}
 	}
+	fz_catch(ctx)
+	{
+		if (drop_stream)
+			fz_drop_stream(ctx, stream);
+		fz_rethrow(ctx);
+	}
 
 	if (best_i < 0)
+	{
+		if (drop_stream)
+			fz_drop_stream(ctx, stream);
 		return NULL;
+	}
 
+	/* Only if we found a handler, do we make our modified stream available to the
+	 * caller. */
+	*streamp = stream;
 	return dc->handler[best_i];
+}
+
+const fz_document_handler *
+fz_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream *stream, fz_archive *dir, const char *magic)
+{
+	fz_stream *stm = stream;
+	const fz_document_handler *res;
+
+	res = do_recognize_document_stream_and_dir_content(ctx, &stm, dir, magic);
+
+	if (stm != stream)
+		fz_drop_stream(ctx, stm);
+
+	return res;
 }
 
 const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const char *filename)
@@ -224,16 +400,30 @@ fz_document *
 fz_open_accelerated_document_with_stream_and_dir(fz_context *ctx, const char *magic, fz_stream *stream, fz_stream *accel, fz_archive *dir)
 {
 	const fz_document_handler *handler;
+	fz_stream *wrapped_stream = stream;
+	fz_document *ret;
 
 	if (stream == NULL && dir == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no document to open");
 	if (magic == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "missing file type");
 
-	handler = fz_recognize_document_stream_and_dir_content(ctx, stream, dir, magic);
+	/* If this finds a handler, then this might wrap stream. If it does, we reuse the wrapped one in
+	 * the open call (hence avoiding us having to 'file-back' a stream twice), but we must free it. */
+	handler = do_recognize_document_stream_and_dir_content(ctx, &wrapped_stream, dir, magic);
 	if (!handler)
 		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot find document handler for file type: '%s'", magic);
-	return handler->open(ctx, stream, accel, dir);
+	fz_try(ctx)
+		ret = handler->open(ctx, handler, wrapped_stream, accel, dir);
+	fz_always(ctx)
+	{
+		if (wrapped_stream != stream)
+			fz_drop_stream(ctx, wrapped_stream);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return ret;
 }
 
 fz_document *
@@ -313,7 +503,7 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 			fz_dirname(dirname, filename, sizeof dirname);
 			dir = fz_open_directory(ctx, dirname);
 		}
-		doc = handler->open(ctx, file, afile, dir);
+		doc = handler->open(ctx, handler, file, afile, dir);
 	}
 	fz_always(ctx)
 	{

@@ -470,7 +470,7 @@ pdf_write_line_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_
 
 /* The rect diff is NOT an fz_rect. It's differences between
  * 2 rects. We return it as a rect for convenience. */
-static fz_rect
+fz_rect
 pdf_annot_rect_diff(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_obj *rd_obj = pdf_dict_get(ctx, annot->obj, PDF_NAME(RD));
@@ -2273,7 +2273,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	pdf_write_dash_pattern(ctx, annot, buf, res);
 
 	if (pdf_write_fill_color_appearance(ctx, annot, buf))
-		fz_append_printf(ctx, buf, "%g %g %g %g re\nS\n", rd.x0, rd.y0, w - rd.x1 - rd.x0, h - rd.y1 - rd.y0);
+		fz_append_printf(ctx, buf, "%g %g %g %g re\nf\n", rd.x0, rd.y0, w - rd.x1 - rd.x0, h - rd.y1 - rd.y0);
 
 	b = pdf_write_border_appearance(ctx, annot, buf);
 	if (b > 0)

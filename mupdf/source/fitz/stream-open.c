@@ -31,6 +31,13 @@
 #include <errno.h>
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <wchar.h>
+#else
+#include <unistd.h>
+#endif
+
 int
 fz_file_exists(fz_context *ctx, const char *path)
 {
@@ -105,6 +112,11 @@ fz_drop_stream(fz_context *ctx, fz_stream *stm)
 typedef struct
 {
 	FILE *file;
+	char *filename;
+#ifdef _WIN32
+	wchar_t *filename_w;
+#endif
+	int del_on_drop;
 	unsigned char buffer[4096];
 } fz_file_stream;
 
@@ -147,21 +159,78 @@ static void seek_file(fz_context *ctx, fz_stream *stm, int64_t offset, int whenc
 static void drop_file(fz_context *ctx, void *state_)
 {
 	fz_file_stream *state = state_;
-	int n = fclose(state->file);
-	if (n < 0)
-		fz_warn(ctx, "close error: %s", strerror(errno));
+	if (state->filename && state->del_on_drop)
+	{
+#ifdef _WIN32
+		if (state->filename_w)
+			_wunlink(state->filename_w);
+		else
+#endif
+		unlink(state->filename);
+	}
+#ifdef _WIN32
+	fz_free(ctx, state->filename_w);
+#endif
+	fz_free(ctx, state->filename);
 	fz_free(ctx, state);
 }
 
+static void close_and_drop_file(fz_context *ctx, void *state_)
+{
+	fz_file_stream *state = state_;
+	int n = fclose(state->file);
+	if (n < 0)
+		fz_warn(ctx, "close error: %s", strerror(errno));
+	drop_file(ctx, state_);
+}
+
 static fz_stream *
-fz_open_file_ptr(fz_context *ctx, FILE *file)
+fz_open_file_ptr(fz_context *ctx, FILE *file, const char *name, int wide, int del_on_drop)
 {
 	fz_stream *stm;
-	fz_file_stream *state = fz_malloc_struct(ctx, fz_file_stream);
-	state->file = file;
+	fz_file_stream *state = NULL;
 
-	stm = fz_new_stream(ctx, state, next_file, drop_file);
-	stm->seek = seek_file;
+	fz_var(state);
+
+#ifndef _WIN32
+	assert(!wide);
+#endif
+	fz_try(ctx)
+	{
+		state = fz_malloc_struct(ctx, fz_file_stream);
+		state->file = file;
+#ifdef _WIN32
+		if (wide)
+		{
+			size_t z = wcslen((const wchar_t *)name)+1;
+			state->filename_w = fz_malloc(ctx, z*2);
+			memcpy(state->filename_w, name, z*2);
+			state->filename = fz_utf8_from_wchar(ctx, (const wchar_t *)name);
+		}
+		else
+#endif
+		state->filename = fz_strdup(ctx, name);
+		state->del_on_drop = del_on_drop;
+
+		stm = fz_new_stream(ctx, state, next_file, close_and_drop_file);
+		stm->seek = seek_file;
+	}
+	fz_catch(ctx)
+	{
+		if (state == NULL && del_on_drop)
+		{
+			fclose(file);
+#ifdef _WIN32
+			if (wide)
+				_wunlink((const wchar_t *)name);
+			else
+#endif
+				unlink(name);
+		}
+		else
+			close_and_drop_file(ctx, state);
+		fz_rethrow(ctx);
+	}
 
 	return stm;
 }
@@ -173,7 +242,7 @@ fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file)
 	state->file = file;
 
 	/* We don't own the file ptr. Ensure we don't close it */
-	stm = fz_new_stream(ctx, state, next_file, fz_free);
+	stm = fz_new_stream(ctx, state, next_file, drop_file);
 	stm->seek = seek_file;
 
 	return stm;
@@ -190,7 +259,21 @@ fz_open_file(fz_context *ctx, const char *name)
 #endif
 	if (file == NULL)
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open %s: %s", name, strerror(errno));
-	return fz_open_file_ptr(ctx, file);
+	return fz_open_file_ptr(ctx, file, name, 0, 0);
+}
+
+fz_stream *
+fz_open_file_autodelete(fz_context *ctx, const char *name)
+{
+	FILE *file;
+#ifdef _WIN32
+	file = fz_fopen_utf8(name, "rb");
+#else
+	file = fopen(name, "rb");
+#endif
+	if (file == NULL)
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open %s: %s", name, strerror(errno));
+	return fz_open_file_ptr(ctx, file, name, 0, 1);
 }
 
 fz_stream *
@@ -204,7 +287,7 @@ fz_try_open_file(fz_context *ctx, const char *name)
 #endif
 	if (file == NULL)
 		return NULL;
-	return fz_open_file_ptr(ctx, file);
+	return fz_open_file_ptr(ctx, file, name, 0, 0);
 }
 
 #ifdef _WIN32
@@ -214,9 +297,19 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 	FILE *file = _wfopen(name, L"rb");
 	if (file == NULL)
 		fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot open file %ls: %s", name, strerror(errno));
-	return fz_open_file_ptr(ctx, file);
+
+	return fz_open_file_ptr(ctx, file, (const char *)name, 1, 0);
 }
 #endif
+
+const char *
+fz_stream_filename(fz_context *ctx, fz_stream *stm)
+{
+	if (!stm || stm->next != next_file)
+		return NULL;
+
+	return ((fz_file_stream *)stm->state)->filename;
+}
 
 /* Memory stream */
 

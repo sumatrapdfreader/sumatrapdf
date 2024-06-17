@@ -237,23 +237,25 @@
 #endif /* FZ_ENABLE_ICC */
 
 #ifdef FZ_ENABLE_HTML_ENGINE
-#if FZ_ENABLE_HTML == 0
+#if FZ_ENABLE_HTML_ENGINE == 0
+#if FZ_ENABLE_HTML == 1
 #error FZ_ENABLE_HTML cannot work without FZ_ENABLE_HTML_ENGINE
 #endif
-#if FZ_ENABLE_EPUB == 0
+#if FZ_ENABLE_EPUB == 1
 #error FZ_ENABLE_EPUB cannot work without FZ_ENABLE_HTML_ENGINE
 #endif
-#if FZ_ENABLE_MOBI == 0
+#if FZ_ENABLE_MOBI == 1
 #error FZ_ENABLE_MOBI cannot work without FZ_ENABLE_HTML_ENGINE
 #endif
-#if FZ_ENABLE_FB2 == 0
+#if FZ_ENABLE_FB2 == 1
 #error FZ_ENABLE_FB2 cannot work without FZ_ENABLE_HTML_ENGINE
 #endif
-#if FZ_ENABLE_TXT == 0
+#if FZ_ENABLE_TXT == 1
 #error FZ_ENABLE_TXT cannot work without FZ_ENABLE_HTML_ENGINE
 #endif
-#if FZ_ENABLE_OFFICE == 0
+#if FZ_ENABLE_OFFICE == 1
 #error FZ_ENABLE_OFFICE cannot work without FZ_ENABLE_HTML_ENGINE
+#endif
 #endif
 #else
 #if FZ_ENABLE_HTML || FZ_ENABLE_EPUB || FZ_ENABLE_MOBI || FZ_ENABLE_FB2 || FZ_ENABLE_TXT || FZ_ENABLE_OFFICE

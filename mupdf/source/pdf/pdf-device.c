@@ -1245,8 +1245,8 @@ fz_device *pdf_new_pdf_device(fz_context *ctx, pdf_document *doc, fz_matrix topc
 		dev->gstates[0].ctm = fz_identity; // XXX
 		dev->gstates[0].colorspace[0] = fz_device_gray(ctx);
 		dev->gstates[0].colorspace[1] = fz_device_gray(ctx);
-		dev->gstates[0].color[0][0] = 1;
-		dev->gstates[0].color[1][0] = 1;
+		dev->gstates[0].color[0][0] = 0;
+		dev->gstates[0].color[1][0] = 0;
 		dev->gstates[0].alpha[0] = 1.0f;
 		dev->gstates[0].alpha[1] = 1.0f;
 		dev->gstates[0].font = -1;

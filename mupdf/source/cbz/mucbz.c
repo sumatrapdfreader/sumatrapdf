@@ -276,7 +276,7 @@ cbz_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *b
 }
 
 static fz_document *
-cbz_open_document(fz_context *ctx, fz_stream *file, fz_stream *accel, fz_archive *dir)
+cbz_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *dir)
 {
 	cbz_document *doc = fz_new_derived_document(ctx, cbz_document);
 
@@ -330,7 +330,7 @@ static const char *cbz_mimetypes[] =
 };
 
 static int
-cbz_recognize_doc_content(fz_context *ctx, fz_stream *stream, fz_archive *dir)
+cbz_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;

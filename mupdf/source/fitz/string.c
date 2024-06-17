@@ -967,3 +967,41 @@ fz_utf8_from_wchar(fz_context *ctx, const wchar_t *s)
 
 	return d;
 }
+
+wchar_t *
+fz_wchar_from_utf8(fz_context *ctx, const char *path)
+{
+	size_t z = 0;
+	const char *p = path;
+	wchar_t *wpath, *w;
+
+	if (!path)
+		return NULL;
+
+	while (*p)
+	{
+		int c;
+		p += fz_chartorune(&c, p);
+		z++;
+		if (c >= 0x10000)
+			z++;
+	}
+
+	w = wpath = fz_malloc(ctx, 2*(z+1));
+	while (*path)
+	{
+		int c;
+		path += fz_chartorune(&c, path);
+		if (c >= 0x10000)
+		{
+			c -= 0x10000;
+			*w++ = 0xd800 + (c>>10);
+			*w++ = 0xdc00 + (c&1023);
+		}
+		else
+			*w++ = c;
+	}
+	*w = 0;
+
+	return wpath;
+}
