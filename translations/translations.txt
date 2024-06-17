@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-646f82021003458ec08e7c59aec8f304bafc406d
+23cd35718ae8aaf101eb8ac0d6bd1cb5d41af5cb
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -2897,6 +2897,7 @@ fr:&Rechercher avec Google
 ga:&Cuardaigh le Google
 gl:Bu&scar con Google
 he:חפש באמצעות Google
+hi:&गूगल में ढूंढें
 hr:Pretraži &sa Google-om
 hu:Keresés Google-el
 id:&Cari dengan Google
@@ -3077,6 +3078,7 @@ fr:&Une page
 ga:&Leathanach amháin
 gl:Páxina &única
 he:עמוד בודד
+hi:अकेला पृष्ठ
 hr:Jedna &stranica
 hu:&Egyetlen oldal
 id:Halaman Tunggal
@@ -3225,6 +3227,7 @@ fr:&Texte
 ga:&Téacs
 gl:&Texto
 he:טקסט
+hi:&लेख
 hr:&Tekst
 hu:Szöveg
 id:&Teks
@@ -6116,6 +6119,7 @@ lt:Apskritimas
 lv:Aplis
 mk:Круг
 ml:വൃത്തം
+my:Bulat
 ne:बृत्त
 nl:Cirkel
 nn:Sirkel
@@ -6370,6 +6374,7 @@ es:Cerrar pestañas a la izquierda
 fr:Fermer les onglets sur la gauche
 ga:Dún cluaisíní ar chlé
 he:סגור כרטיסיות משמאל
+hi:बाईं ओर के टैब बंद करें
 id:Tutup Tab ke Kiri
 it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
@@ -8753,6 +8758,7 @@ kw:Dedhyas:
 lt:Data:
 lv:Datums:
 ml:തീയ്യതി:
+my:Tarikh:
 ne:मिति:
 nl:Datum:
 nn:Dato:
@@ -13353,6 +13359,7 @@ fr:Clair
 ga:éadroime
 gl:Claro
 he:בהירה
+hi:उज्जवल मोड
 hr:Svijetla
 hu:Világos
 id:Terang
@@ -13519,6 +13526,7 @@ fr:Début de ligne :
 ga:Tús an líne:
 gl:Liña inicial:
 he::תחילת שורה
+hi:पंक्ति शुरू करें
 hr:Početak linije:
 hu:Vonalkezdet:
 id:Garis Awal:
@@ -14214,6 +14222,7 @@ de:Nein
 es:No
 fr:Non
 ga:Níl
+hi:नहीं
 id:Tidak
 it:No
 nl:Nee
@@ -14904,6 +14913,7 @@ id:Buka Lampiran
 it:Apri allegato
 ja:添付を開く
 kr:첨부 파일 열기
+my:Buka Lampiran
 nl:Open Bijlage
 nn:Opne Vedlegg
 no:Åpne vedlegg
@@ -17928,6 +17938,7 @@ fr:Rotation vers la &gauche
 ga:Rothlaigh tuathal é
 gl:Rotar &esquerda
 he:סובב שמאלה
+hi:बाईं ओर घुमाएं
 hr:Rotiraj &lijevo
 hu:Forgatás &balra
 id:Putar Ke Kiri
@@ -18673,6 +18684,7 @@ fr:Rechercher avec &Bing
 ga:Cuardaigh le &Bing
 gl:Buscar con &Bing
 he:חפש באמצעות Bing
+hi:&बिंग में ढूंढें
 hr:Pretraži sa &Bing-om
 hu:Keresés &Bing-el
 id:Cari menggunakan &Bing
@@ -18724,6 +18736,7 @@ fr:Rechercher avec &Google
 ga:Cuardaigh le &Google
 gl:Buscar con &Google
 he:חפש באמצעות Google
+hi:&गूगल में ढूंढें
 hr:Pretraži sa &Google-om
 hu:Keresés &Google-el
 id:Cari menggunakan &Google
@@ -19814,6 +19827,7 @@ fr:Ouvrir le &dossier
 ga:Taispeáin san &fillteán
 gl:Amosar no carta&fol
 he:פתח תיקייה מכילה...
+hi:&फोल्डर में दिखाएं
 hr:Prikaži u mapi
 hu:Megjelenítés &mappában
 id:Tampilkan dalam &folder
@@ -19865,6 +19879,7 @@ fr:Ouvrir le dossier
 ga:Taispeáin san fhillteán é
 gl:Amosar no cartafol
 he:הצג בתיקייה
+hi:फोल्डर में दिखाएं
 hr:Prikaži u mapi
 hu:Megjelenítés a mappában
 id:Perlihatkan Di Folder
@@ -20050,6 +20065,7 @@ fr:Ignorer cette version
 ga:Ná bac leis an leagan sin
 gl:Omitir esta versión
 he:דלג על גרסה זו
+hi:इस वर्ज़न को छोड़ें
 hr:Preskoči ovu verziju
 hu:Ezen verzió kihagyása
 id:Lewatkan versi ini
@@ -21059,6 +21075,7 @@ fr:Couleur du texte :
 ga:Dath an téacs:
 gl:Cor do texto:
 he::צבע טקסט
+hi:लेख का रंग
 hr:Boja teksta:
 hu:Szöveg színe:
 id:Warna Teks:
@@ -21112,6 +21129,7 @@ fr:Taille du texte :
 ga:Méid an téacs:
 gl:Tamaño do texto:
 he::גודל טקסט
+hi:लेख का साइज़
 hr:Veličina teksta:
 hu:Szövegméret:
 id:Ukuran Teks:
@@ -21164,6 +21182,7 @@ fr:Taille du texte : %d
 ga:Méid an téacs: %d
 gl:Tamaño do texto: %d
 he:%d :גודל טקסט
+hi:लेख का साइज़: %d
 hr:Veličina teksta: %d
 hu:Szövegméret: %d
 id:Ukuran Teks: %d
@@ -22351,6 +22370,7 @@ de:Ja
 es:Sí
 fr:Oui
 ga:Tá
+hi:हाँ
 id:Ya
 it:Sì
 nl:Ja
