@@ -606,8 +606,12 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot) {
+        return;
+    }
     int fontSize = ev->pos;
-    SetDefaultAppearanceTextSize(ew->tab->selectedAnnotation, fontSize);
+    SetDefaultAppearanceTextSize(annot, fontSize);
     TempStr s = str::FormatTemp(_TRA("Text Size: %d"), fontSize);
     ew->staticTextSize->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
