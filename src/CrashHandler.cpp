@@ -590,6 +590,34 @@ static void GetSystemInfo(str::Str& s) {
         s.AppendFmt("Lang: %s %s\n", lang, country);
     }
     GetGraphicsDriverInfo(s);
+    {
+        auto cpu = CpuID();
+        s.Append("CPU: ");
+        if (cpu & kCpuMMX) {
+            s.Append("MMX ");
+        }
+        if (cpu & kCpuSSE) {
+            s.Append("SSE ");
+        }
+        if (cpu & kCpuSSE2) {
+            s.Append("SSE2 ");
+        }
+        if (cpu & kCpuSSE3) {
+            s.Append("SSE3 ");
+        }
+        if (cpu & kCpuSSE41) {
+            s.Append("SSE41 ");
+        }
+        if (cpu & kCpuSSE42) {
+            s.Append("SSE42 ");
+        }
+        if (cpu & kCpuAVX) {
+            s.Append("AVX ");
+        }
+        if (cpu & kCpuAVX2) {
+            s.Append("AVX2 ");
+        }
+    }
 
     // Note: maybe more information, like:
     // * processor capabilities (mmx, sse, sse2 etc.)

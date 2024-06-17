@@ -3043,7 +3043,7 @@ u32 CpuID() {
         f_1_EDX_ = cpuInfo[3];
     }
     if (nIds >= 7) {
-        __cpuid(cpuInfo, 1);
+        __cpuid(cpuInfo, 7);
         f_7_EBX_ = cpuInfo[1];
         f_7_ECX_ = cpuInfo[2];
     }
