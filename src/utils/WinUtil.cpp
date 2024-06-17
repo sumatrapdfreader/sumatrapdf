@@ -9,6 +9,8 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+#include <bitset>
+#include <intrin.h>
 #include <mlang.h>
 
 #include "utils/Log.h"
@@ -3022,4 +3024,56 @@ int MsgBox(HWND hwnd, const char* text, const char* caption, UINT flags) {
     TempWStr textW = ToWStrTemp(text);
     TempWStr captionW = ToWStrTemp(caption);
     return MessageBoxW(hwnd, textW, captionW, flags);
+}
+
+// https://learn.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
+u32 CpuID() {
+    std::bitset<32> f_1_ECX_;
+    std::bitset<32> f_1_EDX_;
+    std::bitset<32> f_7_EBX_;
+    std::bitset<32> f_7_ECX_;
+
+    u32 res = 0;
+    int cpuInfo[4]{};
+    __cpuid(cpuInfo, 0);
+    int nIds = cpuInfo[0];
+    if (nIds >= 1) {
+        __cpuid(cpuInfo, 1);
+        f_1_ECX_ = cpuInfo[2];
+        f_1_EDX_ = cpuInfo[3];
+    }
+    if (nIds >= 7) {
+        __cpuid(cpuInfo, 1);
+        f_7_EBX_ = cpuInfo[1];
+        f_7_ECX_ = cpuInfo[2];
+    }
+
+    if (f_1_EDX_[23]) {
+        res = res | kCpuMMX;
+    }
+    if (f_1_EDX_[25]) {
+        res = res | kCpuSSE;
+    }
+    if (f_1_EDX_[26]) {
+        res = res | kCpuSSE2; 
+    }
+    if (f_1_ECX_[0]) {
+        res = res | kCpuSSE3; 
+    }
+    if (f_1_ECX_[9]) {
+        res = res | kCpuSSE3; 
+    }
+    if (f_1_ECX_[19]) {
+        res = res | kCpuSSE41 ; 
+    }
+    if (f_1_ECX_[20]) {
+        res = res | kCpuSSE42; 
+    }
+    if (f_1_ECX_[28]) {
+        res = res | kCpuAVX; 
+    }
+    if (f_7_EBX_[5]) {
+        res = res | kCpuAVX2;
+    }
+    return res;
 }

@@ -358,3 +358,14 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags = GMEM_MOVEABLE);
 HGLOBAL StrToHGLOBAL(const char* s, UINT flags = GMEM_MOVEABLE);
 TempStr AtomToStrTemp(ATOM a);
 int MsgBox(HWND, const char*, const char*, UINT);
+
+constexpr u32 kCpuMMX = 1 << 1;
+constexpr u32 kCpuSSE = 1 << 2;
+constexpr u32 kCpuSSE2 = 1 << 2;
+constexpr u32 kCpuSSE3 = 1 << 3;
+constexpr u32 kCpuSSE41 = 1 << 4;
+constexpr u32 kCpuSSE42 = 1 << 5;
+constexpr u32 kCpuAVX = 1 << 6;
+constexpr u32 kCpuAVX2 = 1 << 7;
+
+u32 CpuID();
