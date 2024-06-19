@@ -25,6 +25,7 @@
 
 #include "mupdf/fitz/system.h"
 
+#include <math.h>
 #include <assert.h>
 
 /**
@@ -768,6 +769,24 @@ static inline fz_quad fz_make_quad(
 	};
 	return q;
 }
+
+FZ_DATA extern const fz_quad fz_invalid_quad;
+FZ_DATA extern const fz_quad fz_infinite_quad;
+
+/**
+	Is a quad valid?
+*/
+int fz_is_valid_quad(fz_quad q);
+
+/**
+	Is a quad empty?
+*/
+int fz_is_empty_quad(fz_quad q);
+
+/**
+	Is a quad infinite?
+*/
+int fz_is_infinite_quad(fz_quad q);
 
 /**
 	Convert a rect to a quad (losslessly).

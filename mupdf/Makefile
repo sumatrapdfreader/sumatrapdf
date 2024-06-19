@@ -515,7 +515,6 @@ install-docs-html:
 	install -m 644 build/docs/html/_static/*.ico $(DESTDIR)$(docdir)/_static
 	install -m 644 build/docs/html/_static/*.js $(DESTDIR)$(docdir)/_static
 	install -m 644 build/docs/html/_static/*.png $(DESTDIR)$(docdir)/_static
-	install -m 644 build/docs/html/_static/*.svg $(DESTDIR)$(docdir)/_static
 
 tarball:
 	bash scripts/archive.sh

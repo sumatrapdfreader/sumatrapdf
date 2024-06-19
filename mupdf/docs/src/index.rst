@@ -10,7 +10,7 @@
 Welcome to :title:`MuPDF`
 ================================
 
-.. image:: images/mupdf-icon.png
+.. image:: images/mupdf-web-icon.png
    :align: left
    :scale: 20%
 

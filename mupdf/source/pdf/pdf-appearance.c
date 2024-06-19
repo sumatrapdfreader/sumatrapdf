@@ -2202,7 +2202,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	const char *font;
 	float size, color[4];
 	const char *text;
-	float w, h, t, b;
+	float w, h, b;
 	int q, r, n;
 	int lang;
 	fz_rect rd;
@@ -2211,7 +2211,10 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	char *free_rc = NULL;
 #endif
 
-	/* /Rotate is an undocumented annotation property supported by Adobe */
+	/* /Rotate is an undocumented annotation property supported by Adobe.
+	 * When Rotate is used, neither the box, nor the arrow move at all.
+	 * Only the position of the text moves within the box. Thus we don't
+	 * need to adjust rd at all! */
 	text = pdf_annot_contents(ctx, annot);
 	r = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(Rotate));
 	q = pdf_annot_quadding(ctx, annot);
@@ -2221,52 +2224,8 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 	w = rect->x1 - rect->x0;
 	h = rect->y1 - rect->y0;
-	if (r == 90 || r == 270)
-		t = h, h = w, w = t;
 
-	/*	rd shows the indentation of the actual content (border and text) inside the
-		supplied rectangle.
-		+----------------+
-		|       y1       |
-		|    +------+    |
-		| x0 |      | x1 |
-		|    +------+    |
-		|       y0       |
-		+----------------+
-
-		Rotated by 90 degrees that goes to:
-		+----------------+
-		|       x0       |
-		|    +------+    |
-		| y0 |      | y1 |
-		|    +------+    |
-		|       x1       |
-		+----------------+
-
-		Rotated by 270 degrees that goes to:
-		+----------------+
-		|       x1       |
-		|    +------+    |
-		| y1 |      | y0 |
-		|    +------+    |
-		|       x0       |
-		+----------------+
-*/
-
-	if (r == 90)
-	{
-		t = rd.x0;
-		rd.x0 = rd.y0; rd.y0 = rd.x1;
-		rd.x1 = rd.y1; rd.y1 = t;
-	}
-	else if (r == 270)
-	{
-		t = rd.x0;
-		rd.x0 = rd.y1; rd.y1 = rd.x1;
-		rd.x1 = rd.y0; rd.y0 = t;
-	}
-
-	*matrix = fz_rotate(r);
+	*matrix = fz_identity;
 	*bbox = fz_make_rect(0, 0, w, h);
 
 	pdf_write_opacity(ctx, annot, buf, res);
@@ -2285,19 +2244,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 	if (pdf_name_eq(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(IT)), PDF_NAME(FreeTextCallout)))
 	{
 		pdf_obj *cl = pdf_dict_get(ctx, annot->obj, PDF_NAME(CL));
-		fz_matrix inv = fz_invert_matrix(*matrix);
-		fz_matrix rot;
-
-		if (r == 270)
-			rot = fz_translate(-rect->x0, -rect->y1);
-		else if (r == 90)
-			rot = fz_translate(-rect->x1, -rect->y0);
-		else if (r == 180)
-			rot = fz_translate(-rect->x1, -rect->y1);
-		else /* r == 0 */
-			rot = fz_translate(-rect->x0, -rect->y0);
-
-		rot = fz_concat(rot, inv);
+		fz_matrix tfm = fz_translate(-rect->x0, -rect->y0);
 
 		if (cl)
 		{
@@ -2305,16 +2252,13 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 			float points[6];
 			fz_point p;
 
-			p = fz_transform_point_xy(rect->x0, rect->y0, rot);
-			p = fz_transform_point_xy(rect->x1, rect->y1, rot);
-
 			if (n > 6)
 				n = 6;
 			for (i = 0; i < n; i += 2)
 			{
 				p.x = pdf_array_get_real(ctx, cl, i);
 				p.y = pdf_array_get_real(ctx, cl, i+1);
-				p = fz_transform_point(p, rot);
+				p = fz_transform_point(p, tfm);
 				points[i] = p.x;
 				points[i + 1] = p.y;
 			}
@@ -2349,8 +2293,26 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 	fz_append_printf(ctx, buf, "%g %g %g %g re\nW\nn\n", b, b, w-b*2, h-b*2);
 
-	if (rd.x0 != 0 || rd.y0 != 0)
-		fz_append_printf(ctx, buf, "q 1 0 0 1 %g %g cm\n", rd.x0, -rd.y1);
+	w -= rd.x0 + rd.x1;
+	h -= rd.y0 + rd.y1;
+	if (r == 90 || r == 270)
+	{
+		float t = w; w = h; h = t;
+	}
+
+	if (rd.x0 != 0 || rd.y0 != 0 || r != 0)
+	{
+		fz_matrix tfm = fz_rotate(r);
+		if (r == 270)
+			tfm.e += 0, tfm.f += w;
+		else if (r == 90)
+			tfm.e += h, tfm.f -= 0;
+		else if (r == 180)
+			tfm.e += w, tfm.f += h;
+		tfm.e += rd.x0;
+		tfm.f += rd.y0;
+		fz_append_printf(ctx, buf, "q %g %g %g %g %g %g cm\n", tfm.a, tfm.b, tfm.c, tfm.d, tfm.e, tfm.f);
+	}
 
 #if FZ_ENABLE_HTML_ENGINE
 	ds = pdf_dict_get_text_string_opt(ctx, annot->obj, PDF_NAME(DS));
@@ -2370,7 +2332,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 #endif
 		write_variable_text(ctx, annot, buf, res, lang, text, font, size, n, color, q, w, h, b*2,
 			0.8f, 1.2f, 1, 0, 0);
-	if (rd.x0 != 0 || rd.y0 != 0)
+	if (rd.x0 != 0 || rd.y0 != 0 || r != 0)
 		fz_append_printf(ctx, buf, "Q\n");
 }
 
