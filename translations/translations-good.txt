@@ -64,7 +64,7 @@ hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:&Informazioni su...
+it:&Info sul programma...
 ja:バージョン情報(&A)
 kr:정보(&A)
 kw:&A-dro dhe...
@@ -15907,6 +15907,7 @@ de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
 id:Cari dengan &Google Scholar
+it:Cerca con &Google Scholar
 nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
 pt:Procurar com o &Google Scholar
@@ -15924,6 +15925,7 @@ de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
 id:Cari dengan &Wikipedia
+it:Cerca con &Wikipedia
 nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
 pt:Procurar com a &Wikipedia

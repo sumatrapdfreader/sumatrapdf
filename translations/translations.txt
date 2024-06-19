@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-23cd35718ae8aaf101eb8ac0d6bd1cb5d41af5cb
+c667ebf880be5dc8c828c630210655c061ea8f28
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -68,7 +68,7 @@ hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
-it:&Informazioni su...
+it:&Info sul programma...
 ja:バージョン情報(&A)
 jv:&Babagan
 ka:&პროგრამის შესახებ...
@@ -18772,6 +18772,7 @@ de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
 id:Cari dengan &Google Scholar
+it:Cerca con &Google Scholar
 nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
 pt:Procurar com o &Google Scholar
@@ -18789,6 +18790,7 @@ de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
 id:Cari dengan &Wikipedia
+it:Cerca con &Wikipedia
 nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
 pt:Procurar com a &Wikipedia
