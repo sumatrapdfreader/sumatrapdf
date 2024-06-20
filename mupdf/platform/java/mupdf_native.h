@@ -3694,19 +3694,19 @@ extern "C" {
 #undef com_artifex_mupdf_fitz_PDFDocument_NOT_ZUGFERD
 #define com_artifex_mupdf_fitz_PDFDocument_NOT_ZUGFERD 0L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_COMFORT
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_COMFORT 0L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_COMFORT 1L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC 1L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC 2L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_EXTENDED
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_EXTENDED 2L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_EXTENDED 3L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC_WL
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC_WL 3L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC_WL 4L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_MINIMUM
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_MINIMUM 4L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_MINIMUM 5L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_XRECHNUNG
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_XRECHNUNG 5L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_XRECHNUNG 6L
 #undef com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_UNKNOWN
-#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_UNKNOWN 6L
+#define com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_UNKNOWN 7L
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    newNative
@@ -6111,10 +6111,10 @@ JNIEXPORT jfloatArray JNICALL Java_com_artifex_mupdf_fitz_Pixmap_nativeDetectDoc
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef com_artifex_mupdf_fitz_Rect_FZ_MIN_INF_RECT
-#define com_artifex_mupdf_fitz_Rect_FZ_MIN_INF_RECT -2147483648L
-#undef com_artifex_mupdf_fitz_Rect_FZ_MAX_INF_RECT
-#define com_artifex_mupdf_fitz_Rect_FZ_MAX_INF_RECT 2147483520L
+#undef com_artifex_mupdf_fitz_Rect_MIN_INF_RECT
+#define com_artifex_mupdf_fitz_Rect_MIN_INF_RECT -2147483648L
+#undef com_artifex_mupdf_fitz_Rect_MAX_INF_RECT
+#define com_artifex_mupdf_fitz_Rect_MAX_INF_RECT 2147483520L
 /*
  * Class:     com_artifex_mupdf_fitz_Rect
  * Method:    adjustForStroke

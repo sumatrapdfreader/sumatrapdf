@@ -261,7 +261,8 @@
     <Lib>
       <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>../../thirdparty/so/lib/win/x86/Release/smart-office-lib.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -297,11 +298,16 @@
     <Lib>
       <OutputFile>$(OutDir)$(ProjectName).lib</OutputFile>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
-      <AdditionalDependencies>../../thirdparty/so/lib/win/x64/Release/smart-office-lib.lib;winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\thirdparty\so\source\sodochandler.c" />
+    <ClCompile Include="..\..\source\helpers\dummy.c" />
+    <ClCompile Include="..\..\thirdparty\so\source\sodochandler.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libmupdf.vcxproj">

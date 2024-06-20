@@ -600,6 +600,9 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_XRECHNUNG == PDF_ZUGFERD_XRECHNUNG;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_UNKNOWN == PDF_ZUGFERD_UNKNOWN;
 
+	valid &= com_artifex_mupdf_fitz_Rect_MIN_INF_RECT == FZ_MIN_INF_RECT;
+	valid &= com_artifex_mupdf_fitz_Rect_MAX_INF_RECT == FZ_MAX_INF_RECT;
+
 	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT == FZ_LINK_DEST_FIT;
 	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_B == FZ_LINK_DEST_FIT_B;
 	valid &= com_artifex_mupdf_fitz_LinkDestination_LINK_DEST_FIT_H == FZ_LINK_DEST_FIT_H;

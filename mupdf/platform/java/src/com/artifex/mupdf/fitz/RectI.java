@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -29,17 +29,12 @@ public class RectI
 	public int x1;
 	public int y1;
 
-	// Minimum and Maximum values that can survive round trip
-	// from int to float.
-	private static final int FZ_MIN_INF_RECT = 0x80000000;
-	private static final int FZ_MAX_INF_RECT = 0x7fffff80;
-
 	public RectI()
 	{
 		// Invalid (hence zero area) rectangle. Unioning
 		// this with any rectangle (or point) will 'cure' it
-		x0 = y0 = FZ_MAX_INF_RECT;
-		x1 = y1 = FZ_MIN_INF_RECT;
+		x0 = y0 = Rect.MAX_INF_RECT;
+		x1 = y1 = Rect.MIN_INF_RECT;
 	}
 
 	public RectI(int x0, int y0, int x1, int y1) {
@@ -66,10 +61,10 @@ public class RectI
 
 	public boolean isInfinite()
 	{
-		return this.x0 == FZ_MIN_INF_RECT &&
-			this.y0 == FZ_MIN_INF_RECT &&
-			this.x1 == FZ_MAX_INF_RECT &&
-			this.y1 == FZ_MAX_INF_RECT;
+		return this.x0 == Rect.MIN_INF_RECT &&
+			this.y0 == Rect.MIN_INF_RECT &&
+			this.x1 == Rect.MAX_INF_RECT &&
+			this.y1 == Rect.MAX_INF_RECT;
 	}
 
 	public RectI transform(Matrix tm)

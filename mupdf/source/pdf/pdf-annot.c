@@ -830,7 +830,9 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 		case PDF_ANNOT_CIRCLE:
 			{
 				fz_rect shape_rect = { 12, 12, 12+100, 12+50 };
+				fz_rect rd = { 0.5, 0.5, 0.5, 0.5 };
 				pdf_set_annot_rect(ctx, annot, shape_rect);
+				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
 				pdf_set_annot_border_width(ctx, annot, 1);
 				pdf_set_annot_color(ctx, annot, 3, red);
 			}
@@ -839,8 +841,12 @@ pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type)
 		case PDF_ANNOT_POLYGON:
 		case PDF_ANNOT_POLY_LINE:
 		case PDF_ANNOT_INK:
-			pdf_set_annot_border_width(ctx, annot, 1);
-			pdf_set_annot_color(ctx, annot, 3, red);
+			{
+				fz_rect rd = { 0.5, 0.5, 0.5, 0.5 };
+				pdf_set_annot_border_width(ctx, annot, 1);
+				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
+				pdf_set_annot_color(ctx, annot, 3, red);
+			}
 			break;
 
 		case PDF_ANNOT_HIGHLIGHT:
@@ -1689,19 +1695,13 @@ pdf_annot_border_effect_intensity(fz_context *ctx, pdf_annot *annot)
 	return intensity;
 }
 
-static int
-float_eq(float a, float b)
-{
-	const float epsilon = FLT_EPSILON * 1000;
-	return (a - epsilon <= b && b <= a + epsilon);
-}
-
 void
 pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width)
 {
 	pdf_obj *bs;
-	float oldwidth;
-	fz_rect rd;
+	pdf_obj *type;
+	float old_width, adj;
+	pdf_obj *rectobj;
 
 	begin_annot_op(ctx, annot, "Set border width");
 
@@ -1712,25 +1712,33 @@ pdf_set_annot_border_width(fz_context *ctx, pdf_annot *annot, float width)
 		if (!pdf_is_dict(ctx, bs))
 			bs = pdf_dict_put_dict(ctx, annot->obj, PDF_NAME(BS), 1);
 		pdf_dict_put(ctx, bs, PDF_NAME(Type), PDF_NAME(Border));
-		oldwidth = pdf_dict_get_real(ctx, bs, PDF_NAME(W));
+		old_width = pdf_dict_get_real(ctx, bs, PDF_NAME(W));
 		pdf_dict_put_real(ctx, bs, PDF_NAME(W), width);
+		rectobj = pdf_dict_get(ctx, annot->obj, PDF_NAME(Rect));
+		if (pdf_is_array(ctx, rectobj)) {
+			fz_rect rect = pdf_to_rect(ctx, rectobj);
+			adj = (width - old_width)/2;
+			rect.x0 -= adj;
+			rect.x1 += adj;
+			rect.y0 -= adj;
+			rect.y1 += adj;
+			pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(Rect), rect);
+			/* For any of these types, we want to adjust the Rect and RD
+			 * together so that Rect+RD doesn't change, but the border stroke
+			 * stays centred on the same point. */
+			type = pdf_dict_get(ctx, annot->obj, PDF_NAME(Subtype));
+			if (pdf_name_eq(ctx, type, PDF_NAME(Square)) ||
+				pdf_name_eq(ctx, type, PDF_NAME(Circle)))
+			{
+				fz_rect rd = pdf_annot_rect_diff(ctx, annot);
+				rd.x0 += adj;
+				rd.x1 += adj;
+				rd.y0 += adj;
+				rd.y1 += adj;
+				pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
+			}
+		}
 		pdf_dict_del(ctx, annot->obj, PDF_NAME(Border)); /* deprecated */
-
-		/* If the rect diff matched the old linewidth, then update it to match
-		 * the new linewidth. This copes with the 'just created, there is no
-		 * rect diff' case too. */
-		rd = pdf_annot_rect_diff(ctx, annot);
-		oldwidth /= 2;
-		width /= 2;
-		if (float_eq(rd.x0, oldwidth))
-			rd.x0 = width;
-		if (float_eq(rd.x1, oldwidth))
-			rd.x1 = width;
-		if (float_eq(rd.y0, oldwidth))
-			rd.y0 = width;
-		if (float_eq(rd.y1, oldwidth))
-			rd.y1 = width;
-		pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
 		end_annot_op(ctx, annot);
 	}
 	fz_catch(ctx)

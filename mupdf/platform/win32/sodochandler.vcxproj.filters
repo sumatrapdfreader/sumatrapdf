@@ -9,13 +9,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\sodochandler\sodochandler.c">
-      <Filter>source</Filter>
-    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\so\source\sodochandler.c" />
+    <ClCompile Include="..\..\source\helpers\dummy.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\mupdf\helpers\sodochandler.h">
-      <Filter>include</Filter>
-    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\so\include\sodochandler.h" />
   </ItemGroup>
 </Project>

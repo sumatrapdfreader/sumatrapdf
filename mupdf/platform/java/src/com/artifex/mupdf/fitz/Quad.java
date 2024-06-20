@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -43,14 +43,39 @@ public class Quad
 	}
 
 	public Quad(Rect r) {
-		this.ul_x = r.x0;
-		this.ul_y = r.y0;
-		this.ur_x = r.x1;
-		this.ur_y = r.y0;
-		this.ll_x = r.x0;
-		this.ll_y = r.y1;
-		this.lr_x = r.x1;
-		this.lr_y = r.y1;
+		if (!r.isValid())
+		{
+			this.ul_x = Float.NaN;
+			this.ul_y = Float.NaN;
+			this.ur_x = Float.NaN;
+			this.ur_y = Float.NaN;
+			this.ll_x = Float.NaN;
+			this.ll_y = Float.NaN;
+			this.lr_x = Float.NaN;
+			this.lr_y = Float.NaN;
+		}
+		else if (!r.isInfinite())
+		{
+			this.ul_x = Float.NEGATIVE_INFINITY;
+			this.ul_y = Float.POSITIVE_INFINITY;
+			this.ur_x = Float.POSITIVE_INFINITY;
+			this.ur_y = Float.POSITIVE_INFINITY;
+			this.ll_x = Float.NEGATIVE_INFINITY;
+			this.ll_y = Float.NEGATIVE_INFINITY;
+			this.lr_x = Float.POSITIVE_INFINITY;
+			this.lr_y = Float.NEGATIVE_INFINITY;
+		}
+		else
+		{
+			this.ul_x = r.x0;
+			this.ul_y = r.y0;
+			this.ur_x = r.x1;
+			this.ur_y = r.y0;
+			this.ll_x = r.x0;
+			this.ll_y = r.y1;
+			this.lr_x = r.x1;
+			this.lr_y = r.y1;
+		}
 	}
 
 	public Rect toRect() {
@@ -62,6 +87,10 @@ public class Quad
 	}
 
 	public Quad transformed(Matrix m) {
+		if (!isValid())
+			return this;
+		if (!isInfinite())
+			return this;
 		float t_ul_x = ul_x * m.a + ul_y * m.c + m.e;
 		float t_ul_y = ul_x * m.b + ul_y * m.d + m.f;
 		float t_ur_x = ur_x * m.a + ur_y * m.c + m.e;
@@ -98,19 +127,27 @@ public class Quad
 		return this;
 	}
 
+	protected float cross(float ax, float ay, float bx, float by, float px, float py) {
+		bx -= ax;
+		by -= ay;
+		px -= ax;
+		py -= ay;
+		return bx * py - by * px;
+	}
+
 	protected boolean triangleContainsPoint(float x, float y, float ax, float ay, float bx, float by, float cx, float cy) {
-		float s, t, area;
-		s = ay * cx - ax * cy + (cy - ay) * x + (ax - cx) * y;
-		t = ax * by - ay * bx + (ay - by) * x + (bx - ax) * y;
+		float crossa = cross(ax, ay, bx, by, x, y);
+		float crossb = cross(bx, by, cx, cy, x, y);
+		float crossc = cross(cx, cy, ax, ay, x, y);
 
-		if ((s < 0) != (t < 0))
-			return false;
+		if (crossa == 0 && crossb == 0 && crossc == 0)
+			return ax == x && ay == y;
+		if (crossa >= 0 && crossb >= 0 && crossc >= 0)
+			return true;
+		if (crossa <= 0 && crossb <= 0 && crossc <= 0)
+			return true;
 
-		area = -by * cx + ay * (cx - bx) + ax * (by - cy) + bx * cy;
-
-		return area < 0 ?
-			(s <= 0 && s + t >= area) :
-			(s >= 0 && s + t <= area);
+		return false;
 	}
 
 	public boolean contains(float x, float y) {
@@ -120,6 +157,10 @@ public class Quad
 	}
 
 	public boolean contains(Point p) {
+		if (!isValid())
+			return false;
+		if (isInfinite())
+			return true;
 		return contains(p.x, p.y);
 	}
 
@@ -145,5 +186,54 @@ public class Quad
 	@Override
 	public int hashCode() {
 		return Objects.hash(ul_x, ul_y, ur_x, ur_y, ll_x, ll_y, lr_x, lr_y);
+	}
+
+	public boolean isValid()
+	{
+		return !Float.isNaN(ll_x) &&
+			!Float.isNaN(ll_y) &&
+			!Float.isNaN(ul_x) &&
+			!Float.isNaN(ul_y) &&
+			!Float.isNaN(lr_x) &&
+			!Float.isNaN(lr_y) &&
+			!Float.isNaN(ur_x) &&
+			!Float.isNaN(ur_y);
+	}
+
+	private boolean infQuadTest(float ax, float ay, float bx, float by, float cx, float cy, float dx, float dy)
+	{
+		return ax < 0 && ay < 0 && bx < 0 && by > 0 && cx > 0 && cy > 0 && dx > 0 && dy < 0;
+	}
+
+	public boolean isInfinite()
+	{
+		if (!Float.isInfinite(ll_x) ||
+			!Float.isInfinite(ll_y) ||
+			!Float.isInfinite(ul_x) ||
+			!Float.isInfinite(ul_y) ||
+			!Float.isInfinite(lr_x) ||
+			!Float.isInfinite(lr_y) ||
+			!Float.isInfinite(ur_x) ||
+			!Float.isInfinite(ur_y))
+			return false;
+
+		if (infQuadTest(ll_x, ll_y, ul_x, ul_y, ur_x, ur_y, lr_x, lr_y)) return true;
+		if (infQuadTest(ul_x, ul_y, ur_x, ur_y, lr_x, lr_y, ll_x, ll_y)) return true;
+		if (infQuadTest(ur_x, ur_y, lr_x, lr_y, ll_x, ll_y, ul_x, ul_y)) return true;
+		if (infQuadTest(lr_x, lr_y, ll_x, ll_y, ul_x, ul_y, ur_x, ur_y)) return true;
+		if (infQuadTest(ll_x, ll_y, lr_x, lr_y, ur_x, ur_y, ul_x, ul_y)) return true;
+		if (infQuadTest(lr_x, lr_y, ur_x, ur_y, ul_x, ul_y, ll_x, ll_y)) return true;
+		if (infQuadTest(ur_x, ur_y, ul_x, ul_y, ll_x, ll_y, lr_x, lr_y)) return true;
+		if (infQuadTest(ul_x, ul_y, ll_x, ll_y, lr_x, lr_y, ur_x, ur_y)) return true;
+
+		return false;
+	}
+
+	public static Quad Infinite() {
+		return new Quad(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY);
+	}
+
+	public static Quad Invalid() {
+		return new Quad(Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN, Float.NaN);
 	}
 }

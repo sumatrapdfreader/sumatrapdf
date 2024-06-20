@@ -59,13 +59,7 @@ pdf_remap_cmap(fz_context *ctx, pdf_cmap *gid_from_cpt, pdf_cmap *ucs_from_cpt)
 		if (gid_from_cpt->usecmap)
 			ucs_from_gid->usecmap = pdf_remap_cmap(ctx, gid_from_cpt->usecmap, ucs_from_cpt);
 
-		for (i = 0; i < gid_from_cpt->codespace_len; i++)
-		{
-			pdf_add_codespace(ctx, ucs_from_gid,
-					gid_from_cpt->codespace[i].low,
-					gid_from_cpt->codespace[i].high,
-					gid_from_cpt->codespace[i].n);
-		}
+		pdf_add_codespace(ctx, ucs_from_gid, 0, 0x7fffffff, 4);
 
 		for (i = 0; i < gid_from_cpt->rlen; ++i)
 		{

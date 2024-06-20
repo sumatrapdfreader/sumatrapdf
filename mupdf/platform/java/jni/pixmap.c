@@ -530,5 +530,8 @@ FUN(Pixmap_detectDocument)(JNIEnv *env, jobject self)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
+	if (!found)
+		return NULL;
+
 	return to_floatArray(ctx, env, (float *)&points[0], 8);
 }

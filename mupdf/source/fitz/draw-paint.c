@@ -573,7 +573,7 @@ static void paint_solid_color_N_da(byte * FZ_RESTRICT dp, int n, int w, const by
 }
 #endif /* FZ_PLOTTERS_N */
 
-#ifdef FZ_ENABLE_SPOT_RENDERING
+#if FZ_ENABLE_SPOT_RENDERING
 static void paint_solid_color_N_alpha_op(byte * FZ_RESTRICT dp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {
 	TRACK_FN();
@@ -1082,7 +1082,7 @@ paint_span_with_color_N_da_alpha(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT
 }
 #endif /* FZ_PLOTTERS_N */
 
-#ifdef FZ_ENABLE_SPOT_RENDERING
+#if FZ_ENABLE_SPOT_RENDERING
 static void
 paint_span_with_color_N_op_solid(byte * FZ_RESTRICT dp, const byte * FZ_RESTRICT mp, int n, int w, const byte * FZ_RESTRICT color, int da, const fz_overprint * FZ_RESTRICT eop)
 {

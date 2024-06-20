@@ -1861,11 +1861,10 @@ FUN(PDFDocument_zugferdVersion)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_document *doc = from_PDFDocument(env, self);
-	enum pdf_zugferd_profile p;
 	float version;
 
 	fz_try(ctx)
-		p = pdf_zugferd_profile(ctx, doc, &version);
+		(void) pdf_zugferd_profile(ctx, doc, &version);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

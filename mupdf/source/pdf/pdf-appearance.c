@@ -646,7 +646,7 @@ static void
 pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	struct cloud_list cloud_list;
-	fz_rect rd;
+	fz_rect orect, rd;
 	float x, y, w, h;
 	float lw;
 	int sc;
@@ -659,15 +659,30 @@ pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
-
+	orect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
 	rd = pdf_annot_rect_diff(ctx, annot);
 
-	x = rect->x0 + lw/2 + rd.x0;
-	y = rect->y0 + lw/2 + rd.y0;
-	w = rect->x1 - rect->x0 - lw - (rd.x0 + rd.x1);
-	h = rect->y1 - rect->y0 - lw - (rd.y0 + rd.y1);
+	/* We have various rules that we need to follow here:
+	 * 1) No part of what we draw should extend outside of 'Rect'.
+	 * 2) The 'centre' of the border should be on 'Rect+RD'.
+	 * 3) RD and linewidth will therefore have problems if they are too large.
+	 * We do our best to cope with all of these.
+	 */
 
 	exp = lw/2;
+	if (rd.x0 < exp)
+		rd.x0 = exp;
+	if (rd.x1 < exp)
+		rd.x1 = exp;
+	if (rd.y0 < exp)
+		rd.y0 = exp;
+	if (rd.y1 < exp)
+		rd.y1 = exp;
+
+	x = orect.x0 + rd.x0;
+	y = orect.y0 + rd.y0;
+	w = orect.x1 - orect.x0 - rd.x0 - rd.x1;
+	h = orect.y1 - orect.y0 - rd.y0 - rd.y1;
 
 	if (w < 1) w = 1;
 	if (h < 1) h = 1;
@@ -687,6 +702,15 @@ pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 
 		end_cloud(ctx, &cloud_list, buf);
 		exp += cloud_list.radius;
+
+		if (rd.x0 < exp)
+			rd.x0 = exp;
+		if (rd.x1 < exp)
+			rd.x1 = exp;
+		if (rd.y0 < exp)
+			rd.y0 = exp;
+		if (rd.y1 < exp)
+			rd.y1 = exp;
 	}
 	else
 	{
@@ -694,18 +718,18 @@ pdf_write_square_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 	}
 	maybe_stroke_and_fill(ctx, buf, sc, ic);
 
-	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(exp, exp, exp, exp));
-	rect->x0 = x - exp - lw/2;
-	rect->y0 = y - exp - lw/2;
-	rect->x1 = x + w + exp + lw/2;
-	rect->y1 = y + h + exp + lw/2;
+	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
+	rect->x0 = x - rd.x0;
+	rect->y0 = y - rd.y0;
+	rect->x1 = x + w + rd.x1;
+	rect->y1 = y + h + rd.y1;
 }
 
 static void
 pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, pdf_obj **res)
 {
 	struct cloud_list cloud_list;
-	fz_rect rd;
+	fz_rect orect, rd;
 	float x, y, w, h;
 	float lw;
 	int sc;
@@ -718,15 +742,30 @@ pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 	lw = pdf_write_border_appearance(ctx, annot, buf);
 	sc = pdf_write_stroke_color_appearance(ctx, annot, buf);
 	ic = pdf_write_interior_fill_color_appearance(ctx, annot, buf);
-
+	orect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
 	rd = pdf_annot_rect_diff(ctx, annot);
 
-	x = rect->x0 + lw/2 + rd.x0;
-	y = rect->y0 + lw/2 + rd.y0;
-	w = rect->x1 - rect->x0 - lw - (rd.x0 + rd.x1);
-	h = rect->y1 - rect->y0 - lw - (rd.y0 + rd.y1);
+	/* We have various rules that we need to follow here:
+	 * 1) No part of what we draw should extend outside of 'Rect'.
+	 * 2) The 'centre' of the border should be on 'Rect+RD'.
+	 * 3) RD and linewidth will therefore have problems if they are too large.
+	 * We do our best to cope with all of these.
+	 */
 
 	exp = lw/2;
+	if (rd.x0 < exp)
+		rd.x0 = exp;
+	if (rd.x1 < exp)
+		rd.x1 = exp;
+	if (rd.y0 < exp)
+		rd.y0 = exp;
+	if (rd.y1 < exp)
+		rd.y1 = exp;
+
+	x = orect.x0 + rd.x0;
+	y = orect.y0 + rd.y0;
+	w = orect.x1 - orect.x0 - rd.x0 - rd.x1;
+	h = orect.y1 - orect.y0 - rd.y0 - rd.y1;
 
 	if (w < 1) w = 1;
 	if (h < 1) h = 1;
@@ -738,6 +777,15 @@ pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 		add_cloud_circle(ctx, &cloud_list, buf, x, y, x+w, y+h);
 		end_cloud(ctx, &cloud_list, buf);
 		exp += cloud_list.radius;
+
+		if (rd.x0 < exp)
+			rd.x0 = exp;
+		if (rd.x1 < exp)
+			rd.x1 = exp;
+		if (rd.y0 < exp)
+			rd.y0 = exp;
+		if (rd.y1 < exp)
+			rd.y1 = exp;
 	}
 	else
 	{
@@ -745,11 +793,11 @@ pdf_write_circle_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, f
 	}
 	maybe_stroke_and_fill(ctx, buf, sc, ic);
 
-	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(exp, exp, exp, exp));
-	rect->x0 = x - exp - lw/2;
-	rect->y0 = y - exp - lw/2;
-	rect->x1 = x + w + exp + lw/2;
-	rect->y1 = y + h + exp + lw/2;
+	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), rd);
+	rect->x0 = x - rd.x0;
+	rect->y0 = y - rd.x1;
+	rect->x1 = x + w + rd.x1;
+	rect->y1 = y + h + rd.y1;
 }
 
 /*
@@ -812,6 +860,7 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 	float lw;
 	int sc, ic;
 	int i0, i1, is;
+	float exp = 0;
 
 	pdf_write_opacity(ctx, annot, buf, res);
 	pdf_write_dash_pattern(ctx, annot, buf, res);
@@ -884,10 +933,11 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 		else
 			maybe_stroke(ctx, buf, sc);
 
-		*rect = fz_expand_rect(*rect, lw);
-
+		exp = lw;
 		if (cloud > 0)
-			*rect = fz_expand_rect(*rect, cloud_list.radius);
+			exp += cloud_list.radius;
+
+		*rect = fz_expand_rect(*rect, exp);
 	}
 
 	le = pdf_dict_get(ctx, annot->obj, PDF_NAME(LE));
@@ -918,6 +968,11 @@ pdf_write_polygon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, 
 
 		pdf_write_line_cap_appearance(ctx, buf, rect, a.x, a.y, dx/l, dy/l, lw, sc, ic, pdf_array_get(ctx, le, 1));
 	}
+
+	if (exp == 0)
+		pdf_dict_del(ctx, annot->obj, PDF_NAME(RD));
+	else
+		pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(exp, exp, exp, exp));
 }
 
 static void
@@ -968,6 +1023,8 @@ pdf_write_ink_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_r
 	 * we need some extra size to allow selecting it easily.
 	 */
 	*rect = fz_expand_rect(*rect, lw + 6);
+
+	pdf_dict_put_rect(ctx, annot->obj, PDF_NAME(RD), fz_make_rect(lw + 6, lw + 6, lw + 6, lw + 6));
 }
 
 /* Contrary to the specification, the points within a QuadPoint are NOT
@@ -2143,6 +2200,7 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
 }
 #endif
 
+#if FZ_ENABLE_HTML_ENGINE
 static char *
 escape_text(fz_context *ctx, const char *s)
 {
@@ -2194,6 +2252,7 @@ escape_text(fz_context *ctx, const char *s)
 
 	return d2;
 }
+#endif
 
 static void
 pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
@@ -2338,7 +2397,7 @@ pdf_write_free_text_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 static void
 pdf_write_tx_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
-	fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res,
+	const fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res,
 	const char *text, int ff)
 {
 	fz_text_language lang;
@@ -2468,7 +2527,7 @@ pdf_layout_text_widget(fz_context *ctx, pdf_annot *annot)
 
 static void
 pdf_write_ch_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
-	fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res)
+	const fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res)
 {
 	int ff = pdf_field_flags(ctx, annot->obj);
 	if (ff & PDF_CH_FIELD_IS_COMBO)
@@ -2510,7 +2569,7 @@ pdf_write_ch_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf
 
 static void
 pdf_write_sig_widget_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf,
-	fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res)
+	const fz_rect *rect, fz_rect *bbox, fz_matrix *matrix, pdf_obj **res)
 {
 	float x0 = rect->x0 + 1;
 	float y0 = rect->y0 + 1;

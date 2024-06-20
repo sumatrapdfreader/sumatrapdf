@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,15 +35,15 @@ public class Rect
 
 	// Minimum and Maximum values that can survive round trip
 	// from int to float.
-	private static final int FZ_MIN_INF_RECT = 0x80000000;
-	private static final int FZ_MAX_INF_RECT = 0x7fffff80;
+	protected static final int MIN_INF_RECT = 0x80000000;
+	protected static final int MAX_INF_RECT = 0x7fffff80;
 
 	public Rect()
 	{
 		// Invalid (hence zero area) rectangle. Unioning
 		// this with any rectangle (or point) will 'cure' it
-		x0 = y0 = FZ_MAX_INF_RECT;
-		x1 = y1 = FZ_MIN_INF_RECT;
+		x0 = y0 = MAX_INF_RECT;
+		x1 = y1 = MIN_INF_RECT;
 	}
 
 	public Rect(float x0, float y0, float x1, float y1)
@@ -56,10 +56,23 @@ public class Rect
 
 	public Rect(Quad q)
 	{
-		this.x0 = q.ll_x;
-		this.y0 = q.ll_y;
-		this.x1 = q.ur_x;
-		this.y1 = q.ur_y;
+		if (!q.isValid())
+		{
+			this.x0 = this.y0 = MAX_INF_RECT;
+			this.x1 = this.y1 = MIN_INF_RECT;
+		}
+		else if (!q.isInfinite())
+		{
+			this.x0 = this.y0 = MIN_INF_RECT;
+			this.x1 = this.y1 = MAX_INF_RECT;
+		}
+		else
+		{
+			this.x0 = q.ll_x;
+			this.y0 = q.ll_y;
+			this.x1 = q.ur_x;
+			this.y1 = q.ur_y;
+		}
 	}
 
 	public Rect(Rect r)
@@ -81,10 +94,10 @@ public class Rect
 
 	public boolean isInfinite()
 	{
-		return this.x0 == FZ_MIN_INF_RECT &&
-			this.y0 == FZ_MIN_INF_RECT &&
-			this.x1 == FZ_MAX_INF_RECT &&
-			this.y1 == FZ_MAX_INF_RECT;
+		return this.x0 == MIN_INF_RECT &&
+			this.y0 == MIN_INF_RECT &&
+			this.x1 == MAX_INF_RECT &&
+			this.y1 == MAX_INF_RECT;
 	}
 
 	public Rect transform(Matrix tm)
