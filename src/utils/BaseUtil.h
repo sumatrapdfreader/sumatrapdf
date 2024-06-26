@@ -595,6 +595,30 @@ struct AtomicInt {
     volatile LONG val = 0;
 };
 
+typedef void (*funcPtr)(void*);
+
+// the simplest possible function that ties a function and a single argument to it
+// we get type safety and convenience with mkFunc()
+struct FuncWithArg {
+    funcPtr fn = nullptr;
+    void* data = nullptr;
+
+    FuncWithArg() = default;
+    ~FuncWithArg() = default;
+
+    void call() {
+        fn(data);
+    }
+};
+
+template <typename T>
+FuncWithArg mkFunc(void (*fn)(T*), T* d) {
+    auto res = FuncWithArg{};
+    res.fn = (funcPtr)fn;
+    res.data = (void*)d;
+    return res;
+}
+
 class AtomicBool {
   public:
     AtomicBool() = default;

@@ -6,6 +6,21 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
+struct TestFnData {
+    int n = 0;
+};
+
+static void testFn(TestFnData* d) {
+    d->n++;
+}
+
+static void FuncWithArgTest() {
+    TestFnData d;
+    auto fn = mkFunc(testFn, &d);
+    fn.call();
+    utassert(d.n == 1);
+}
+
 static void GeomTest() {
     PointF ptD(12.4f, -13.6f);
     utassert(ptD.x == 12.4f && ptD.y == -13.6f);
@@ -108,6 +123,8 @@ static int roundUpTestCases[] = {
 };
 
 void BaseUtilTest() {
+    FuncWithArgTest();
+
     PoolAllocatorTest();
 
     size_t n = dimof(roundUpTestCases) / 2;
@@ -142,5 +159,6 @@ void BaseUtilTest() {
     utassert(!addOverflows<u8>(127, 128));
     utassert(addOverflows<u8>(127, 129));
     utassert(addOverflows<u8>(127, 255));
+
     GeomTest();
 }
