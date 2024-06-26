@@ -687,6 +687,7 @@ bool MobiDoc::DecodeExthHeader(const u8* data, size_t dataLen) {
 #define DATP_REC 0x44415450 // 'DATP'
 #define SRCS_REC 0x53524353 // 'SRCS'
 #define VIDE_REC 0x56494445 // 'VIDE'
+#define RESC_REC 0x52455343 // 'RESC'
 
 static bool IsEofRecord(const ByteSlice& d) {
     return (4 == d.size()) && (EOF_REC == UInt32BE(d.data()));
@@ -705,6 +706,7 @@ static bool KnownNonImageRec(const ByteSlice& d) {
         case DATP_REC:
         case SRCS_REC:
         case VIDE_REC:
+        case RESC_REC:
             return true;
     }
     return false;
@@ -742,6 +744,7 @@ void MobiDoc::LoadImages() {
         return;
     }
     images = AllocArray<ByteSlice>(imagesCount);
+
     for (size_t i = 0; i < imagesCount; i++) {
         if (!LoadImage(i)) {
             return;
@@ -877,7 +880,7 @@ bool MobiDoc::LoadForPdbReader(PdbReader* pdbReader) {
     }
 
     // replace unexpected \0 with spaces
-    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
+    // https://code.google.com/p/sumatrapdf/issues/detail?id=2529
     char* s = doc->Get();
     char* end = s + doc->size();
     while ((s = (char*)memchr(s, '\0', end - s)) != nullptr) {
