@@ -168,7 +168,9 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logf("EngineImages::RenderPage() in %.2f ms\n", dur);
+        if (dur > 300.f) {
+            logf("EngineImages::RenderPage() in %.2f ms\n", dur);
+        }
     };
 
     RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);

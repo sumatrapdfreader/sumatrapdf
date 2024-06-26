@@ -3058,26 +3058,48 @@ u32 CpuID() {
         res = res | kCpuSSE;
     }
     if (f_1_EDX_[26]) {
-        res = res | kCpuSSE2; 
+        res = res | kCpuSSE2;
     }
     if (f_1_ECX_[0]) {
-        res = res | kCpuSSE3; 
+        res = res | kCpuSSE3;
     }
     if (f_1_ECX_[9]) {
-        res = res | kCpuSSE3; 
+        res = res | kCpuSSE3;
     }
     if (f_1_ECX_[19]) {
-        res = res | kCpuSSE41 ; 
+        res = res | kCpuSSE41;
     }
     if (f_1_ECX_[20]) {
-        res = res | kCpuSSE42; 
+        res = res | kCpuSSE42;
     }
     if (f_1_ECX_[28]) {
-        res = res | kCpuAVX; 
+        res = res | kCpuAVX;
     }
     if (f_7_EBX_[5]) {
         res = res | kCpuAVX2;
     }
     return res;
 #endif
+}
+
+LARGE_INTEGER TimeNow() {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    return now;
+}
+
+double TimeDiffSecs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+    auto diff = end.QuadPart - start.QuadPart;
+    double res = (double)(diff) / (double)(freq.QuadPart);
+    return res;
+}
+
+double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+    auto diff = end.QuadPart - start.QuadPart;
+    double res = (double)(diff) / (double)(freq.QuadPart);
+    return res * 1000;
 }

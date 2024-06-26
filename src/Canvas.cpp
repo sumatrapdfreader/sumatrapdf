@@ -1149,7 +1149,77 @@ float ScaleZoomBy(MainWindow* win, float factor) {
     return factor * zoomVirt;
 }
 
-static bool gWheelScrollRelative = true;
+static bool gWheelZoomRelative = true;
+
+// we guess this is part of continous zoom action if WM_MOUSEWHEEL
+bool IsFirstWheelMsg(LARGE_INTEGER& lastTime) {
+    auto currTime = TimeGet();
+    auto elapsedMs = TimeDiffMs(lastTime, currTime);
+    // 150 ms is a heuristic based on looking at logs
+    if (elapsedMs < 150.0) {
+        // logf("IsFirstWheelMsg: no, elapsed: %.f\n", (float)elapsedMs);
+        lastTime = currTime;
+        return false;
+    }
+    // logf("IsFirstWheelMsg: yes, elapsed: %.f\n", (float)elapsedMs);
+    lastTime = currTime;
+    return true;
+}
+
+// this does zooming via mouse wheel (with ctrl or right mouse buttone)
+static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
+    // don't show the context menu when zooming with the right mouse-button down
+    win->dragStartPending = false;
+    // Kill the smooth scroll timer when zooming
+    // We don't want to move to the new updated y offset after zooming
+    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    float newZoom;
+    float factor = 0;
+    if (!gWheelZoomRelative) {
+        // before 3.6 we were scrolling by steps
+        newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
+        bool smartZoom = false; // Note: if true will prioritze selection
+        SmartZoom(win, newZoom, &pt, smartZoom);
+        return;
+    }
+
+    static LARGE_INTEGER lastWheelMsgTime{0};
+    static int accumDelta = 0;
+    static float initialZoomVritual = 0;
+
+    if (IsFirstWheelMsg(lastWheelMsgTime)) {
+        initialZoomVritual = win->ctrl->GetZoomVirtual(true);
+        accumDelta = 0;
+    }
+
+    // special case the value coming from pinch gensture on thinkpad touchpad
+    // WHEEL_DELTA is 120, which is too fast, so we slow down zooming
+    // 10 is heuristic
+    if (delta == WHEEL_DELTA) {
+        delta = 10;
+    } else if (delta == -WHEEL_DELTA) {
+        delta = -10;
+    }
+
+    accumDelta += delta;
+    // calc zooming factor as centered around 1.f (1 is no change, > 1 is zoom in, < 1 is zoom out)
+    // from delta values that are centered around 0
+    bool negative = accumDelta < 0;
+
+    factor = (float)std::abs(accumDelta) / 100.f;
+    factor = 1.f + factor;
+    if (negative) {
+        factor = 1 / factor;
+    }
+    newZoom = initialZoomVritual * factor;
+    bool smartZoom = false; // Note: if true will prioritze selection
+    SmartZoom(win, newZoom, &pt, smartZoom);
+
+    // logf("delta: %d, accumDelta: %d, factor: %f, newZoom: %f\n", delta, accumDelta, factor, newZoom);
+}
 
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
@@ -1163,8 +1233,6 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return res;
     }
 
-    short delta = GET_WHEEL_DELTA_WPARAM(wp);
-
     // Note: not all mouse drivers correctly report the Ctrl key's state
     // isCtrl is also set if this is pinch gestore from touchpad (on thinkpad x1 at least).
     bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
@@ -1172,62 +1240,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     bool isRightButton = (LOWORD(wp) & MK_RBUTTON);
     bool isZooming = isCtrl || isRightButton;
     if (isZooming) {
-        Point pt = HwndGetCursorPos(win->hwndCanvas);
-
-        float newZoom;
-        float factor = 0;
-        short delta2 = delta;
-        if (gWheelScrollRelative) {
-            // calc zooming factor as centered around 1.f (1 is no change, > 1 is zoom in, < 1 is zoom out)
-            // from delta values that are centered around 0
-            bool negative = false;
-            // delta is 120 (WHEEL_DELTA) when pinch on thinkpad touchpad
-            // 4 - 248 when ctrl + scrollpoint
-
-            if (delta < 0) {
-                negative = true;
-                delta2 = -delta;
-            }
-
-            if (delta2 == WHEEL_DELTA) {
-                // special case the value coming from pinch gensture on thinkpad touchpad
-                // otherwise it's too slow (would end up 6)
-                delta = 16;
-            } else {
-                // logarithmically dampen delta because otherwise it zooms too fast
-                // the higher the value, the more we dampen
-                // 2 is chosen heuristically
-                double dampenFactor = 2;
-                double logX = log10((double)delta2) / log10(dampenFactor);
-                delta2 = (int)logX;
-            }
-            factor = (float)delta2 / 100.f;
-            if (factor > 0.5f) {
-                factor = 0.5f;
-            }
-            factor = 1.f + factor;
-            if (negative) {
-                factor = 1 / factor;
-            }
-            newZoom = ScaleZoomBy(win, factor);
-        } else {
-            // before 3.6 we were scrolling by steps
-            newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
-        }
-        // logf("delta: %d, delta2: %d, factor: %f, newZoom: %f, isRightButton: %d, isCtrl: %d\n", delta, delta2,
-        // factor, newZoom, (int)isRightButton, (int)isCtrl);
-        bool smartZoom = false; // Note: if true will prioritze selection
-        SmartZoom(win, newZoom, &pt, smartZoom);
-
-        // don't show the context menu when zooming with the right mouse-button down
-        if ((LOWORD(wp) & MK_RBUTTON)) {
-            win->dragStartPending = false;
-        }
-
-        // Kill the smooth scroll timer when zooming
-        // We don't want to move to the new updated y offset after zooming
-        KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
-
+        ZoomByMouseWheel(win, wp);
         return 0;
     }
 
@@ -1245,6 +1258,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         gSupressNextAltMenuTrigger = true;
     }
 
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
     if (vScroll && !isCont) {
         constexpr int pageFlipDelta = WHEEL_DELTA * 3;
         float zoomVirt = win->ctrl->GetZoomVirtual();
