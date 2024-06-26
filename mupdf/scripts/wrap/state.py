@@ -53,7 +53,7 @@ def get_name_canonical( type_):
     Wrap Clang's clang.cindex.Type.get_canonical() to avoid returning anonymous
     struct that clang spells as 'struct (unnamed at ...)'.
     '''
-    if type_.spelling == 'size_t':
+    if type_.spelling in ('size_t', 'int64_t'):
         #jlib.log( 'Not canonicalising {self.spelling=}')
         return type_
     ret = type_.get_canonical()

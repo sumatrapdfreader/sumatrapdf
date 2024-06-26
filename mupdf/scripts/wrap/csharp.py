@@ -10,6 +10,7 @@ from . import util
 import jlib
 
 import textwrap
+import os
 
 
 def make_outparam_helper_csharp(
@@ -277,3 +278,48 @@ def make_outparam_helper_csharp(
     write(';\n')
     write(f'    }}\n')
     write(f'}}\n')
+
+
+def csharp_settings(build_dirs):
+    '''
+    Returns (csc, mono, mupdf_cs).
+
+    csc: C# compiler.
+    mono: C# interpreter ("" on Windows).
+    mupdf_cs: MuPDF C# code.
+
+    `mupdf_cs` will be None if `build_dirs` is false.
+
+    E.g. on Windows `csc` can be: C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/Roslyn/csc.exe
+    '''
+    # On linux requires:
+    #   sudo apt install mono-devel
+    #
+    # OpenBSD:
+    #   pkg_add mono
+    # but we get runtime error when exiting:
+    #   mono:build/shared-release/libmupdfcpp.so: undefined symbol '_ZdlPv'
+    # which might be because of mixing gcc and clang?
+    #
+    if state.state_.windows:
+        import wdev
+        vs = wdev.WindowsVS()
+        jlib.log('{vs.description_ml()=}')
+        csc = vs.csc
+        jlib.log('{csc=}')
+        assert csc, f'Unable to find csc.exe'
+        mono = ''
+    else:
+        mono = 'mono'
+        if state.state_.linux:
+            csc = 'mono-csc'
+        elif state.state_.openbsd:
+            csc = 'csc'
+        else:
+            assert 0, f'Do not know where to find mono. {platform.platform()=}'
+
+    if build_dirs:
+        mupdf_cs = os.path.relpath(f'{build_dirs.dir_so}/mupdf.cs')
+    else:
+        mupdf_cs = None
+    return csc, mono, mupdf_cs

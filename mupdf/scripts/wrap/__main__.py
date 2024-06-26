@@ -955,6 +955,7 @@ import wdev
 
 from . import classes
 from . import cpp
+from . import csharp
 from . import make_cppyy
 from . import parse
 from . import state
@@ -1700,7 +1701,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                         -I {include1}
                                         -I {include2}
                                         {cpp_file}
-                                    ''').strip().replace( '\n', ' \\\n')
+                                    ''')
                             jlib.build(
                                     [include1, include2, cpp_file],
                                     o_file,
@@ -1718,7 +1719,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     -I {include2}
                                     {" ".join(o_files)}
                                     {link_l_flags(libmupdf)}
-                                ''').strip().replace( '\n', ' \\\n')
+                                ''')
                                 )
                         jlib.build(
                                 [include1, include2] + o_files,
@@ -1743,7 +1744,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     -I {include2}
                                     {cpp_files_text}
                                     {link_l_flags(libmupdf)}
-                                ''').strip().replace( '\n', ' \\\n')
+                                ''')
                                 )
                         command_was_run = jlib.build(
                                 [include1, include2] + cpp_files,
@@ -1780,7 +1781,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                         -I {include2}
                                         -o {ofile}
                                         {cpp_file}
-                                    ''').strip().replace( '\n', ' \\\n')
+                                    ''')
                                     )
                             jlib.build(
                                     [include1, include2, cpp_file],
@@ -1815,7 +1816,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     -o {libmupdfcpp_so}
                                     {' '.join(ofiles)}
                                     {' '.join(alibs)}
-                                ''').strip().replace( '\n', ' \\\n')
+                                ''')
                         jlib.build(
                                 ofiles + alibs,
                                 libmupdfcpp_so,
@@ -2078,7 +2079,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                         {flags_link2}
                                         {link_l_flags( [libmupdf, libmupdfcpp])}
                                         -Wno-deprecated-declarations
-                                    ''').strip().replace( '\n', ' \\\n')
+                                    ''')
                             )
                             infiles = [
                                     cpp2_path,
@@ -2129,7 +2130,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     -Wno-deprecated-declarations
                                     -Wno-free-nonheap-object
                                     -DSWIG_PYTHON_SILENT_MEMLEAK
-                                ''').strip().replace( '\n', ' \\\n')
+                                ''')
                                 )
                         infiles = [
                                 cpp_path,
@@ -2153,7 +2154,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     -shared
                                     {flags_link}
                                     {link_l_flags( sos)}
-                                ''').strip().replace( '\n', ' \\\n')
+                                ''')
                                 )
                         infiles = [
                                 o_file,
@@ -2187,7 +2188,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                                     -DSWIG_PYTHON_SILENT_MEMLEAK
                                     {flags_link}
                                     {link_l_flags( sos)}
-                                ''').strip().replace( '\n', ' \\\n')
+                                ''')
                                 )
                         infiles = [
                                 cpp_path,
@@ -2245,46 +2246,6 @@ def python_settings(build_dirs, startdir=None):
         #   env_extra[ 'LD_LIBRARY_PATH'] = os.path.abspath(build_dirs.dir_so)
         #
     return env_extra, command_prefix
-
-def csharp_settings(build_dirs):
-    '''
-    Returns (csc, mono, mupdf_cs).
-
-    csc: C# compiler.
-    mono: C# interpreter ("" on Windows).
-    mupdf_cs: MuPDF C# code.
-
-    E.g. on Windows `csc` can be: C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/Roslyn/csc.exe
-    '''
-    # On linux requires:
-    #   sudo apt install mono-devel
-    #
-    # OpenBSD:
-    #   pkg_add mono
-    # but we get runtime error when exiting:
-    #   mono:build/shared-release/libmupdfcpp.so: undefined symbol '_ZdlPv'
-    # which might be because of mixing gcc and clang?
-    #
-    if state.state_.windows:
-        import wdev
-        vs = wdev.WindowsVS()
-        jlib.log('{vs.description_ml()=}')
-        csc = vs.csc
-        jlib.log('{csc=}')
-        assert csc, f'Unable to find csc.exe'
-        mono = ''
-    else:
-        mono = 'mono'
-        if state.state_.linux:
-            csc = 'mono-csc'
-        elif state.state_.openbsd:
-            csc = 'csc'
-        else:
-            assert 0, f'Do not know where to find mono. {platform.platform()=}'
-
-    mupdf_cs = os.path.relpath(f'{build_dirs.dir_so}/mupdf.cs')
-    return csc, mono, mupdf_cs
-
 
 def make_docs( build_dirs, languages_original):
 
@@ -2769,8 +2730,7 @@ def main2():
                         f' -I {build_dirs.dir_mupdf}/include'
                         f' -I {build_dirs.dir_mupdf}/platform/c++/include'
                         )
-                # Enable asserts in this test.
-                cpp_flags = build_dirs.cpp_flags.replace( '-DNDEBUG', '')
+                cpp_flags = build_dirs.cpp_flags
                 if state.state_.windows:
                     win32_infix = _windows_vs_upgrade( vs_upgrade, build_dirs, devenv=None)
                     windows_build_type = build_dirs.windows_build_type()
@@ -2785,7 +2745,7 @@ def main2():
                                 /link
                                 {lib}
                                 /out:{exe}
-                            ''').replace('\n', ' ')
+                            ''')
                     jlib.system(command, verbose=1)
                     path = os.environ.get('PATH')
                     env_extra = dict(PATH = f'{build_dirs.dir_so}{os.pathsep}{path}' if path else build_dirs.dir_so)
@@ -2809,7 +2769,7 @@ def main2():
                                 {includes}
                                 {src}
                                 {link_l_flags( [libmupdf, libmupdfcpp])}
-                            ''').replace('\n', '\\\n')
+                            ''')
                     jlib.system(command, verbose=1)
                     jlib.system( 'pwd', verbose=1)
                     if state.state_.macos:
@@ -2865,13 +2825,19 @@ def main2():
                     jlib.log( 'Tests ran ok.')
 
             elif arg == '--test-csharp':
-                csc, mono, mupdf_cs = csharp_settings(build_dirs)
+                csc, mono, mupdf_cs = csharp.csharp_settings(build_dirs)
 
                 # Our tests look for zlib.3.pdf in their current directory.
+                testfile = f'{build_dirs.dir_so}/zlib.3.pdf' if state.state_.windows else 'zlib.3.pdf'
                 jlib.fs_copy(
                         f'{build_dirs.dir_mupdf}/thirdparty/zlib/zlib.3.pdf',
-                        f'{build_dirs.dir_so}/zlib.3.pdf' if state.state_.windows else 'zlib.3.pdf'
+                        testfile
                         )
+                testfile2 = testfile + b'\xf0\x90\x90\xb7'.decode() + '.pdf'
+                jlib.log(f'{testfile=}')
+                jlib.log(f'{testfile2=}')
+                jlib.log(f'{testfile2}')
+                shutil.copy2(testfile, testfile2)
 
                 if 1:
                     # Build and run simple test.
@@ -2894,9 +2860,13 @@ def main2():
                                 raise Exception( f'command failed: {command}')
                         else:
                             jlib.system(f'LD_LIBRARY_PATH={build_dirs.dir_so} {mono} ./{out}', verbose=1)
+                if 1:
+                    # Build and run test using minimal swig library to test
+                    # handling of Unicode strings.
+                    swig.test_swig_csharp()
 
             elif arg == '--test-csharp-gui':
-                csc, mono, mupdf_cs = csharp_settings(build_dirs)
+                csc, mono, mupdf_cs = csharp.csharp_settings(build_dirs)
 
                 # Build and run gui test.
                 #

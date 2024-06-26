@@ -698,17 +698,17 @@ int fz_is_empty_quad(fz_quad q)
 
 	if (fz_is_infinite_quad(q))
 		return 0;
-	if (!fz_is_valid_quad)
-		return 1;	/* All invalid quads are empty */
+	if (!fz_is_valid_quad(q))
+		return 1; /* All invalid quads are empty */
 
-	area =	q.ll.x * q.lr.y +
-		q.lr.x * q.ul.y +
-		q.ul.x * q.ur.y +
-		q.ur.x * q.ll.y -
+	area = q.ll.x * q.lr.y +
+		q.lr.x * q.ur.y +
+		q.ur.x * q.ul.y +
+		q.ul.x * q.ll.y -
 		q.lr.x * q.ll.y -
-		q.ul.x * q.lr.y -
-		q.ur.x * q.ul.y -
-		q.ll.x * q.ur.y;
+		q.ur.x * q.lr.y -
+		q.ul.x * q.ur.y -
+		q.ll.x * q.ul.y;
 
 	return area == 0;
 }

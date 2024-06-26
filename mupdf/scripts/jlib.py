@@ -1420,6 +1420,7 @@ def system(
         caller=1,
         bufsize=-1,
         env_extra=None,
+        multiline=True,
         ):
     '''
     Runs a command like `os.system()` or `subprocess.*`, but with more
@@ -1494,6 +1495,10 @@ def system(
         env_extra:
             If not `None`, a `dict` with extra items that are added to the
             environment passed to the child process.
+        multiline:
+            If true (the default) we convert a multiline command into a single
+            command, but preserve the multiline representation in verbose
+            diagnostics.
 
     Returns:
 
@@ -1614,6 +1619,19 @@ def system(
         stderr = subprocess.DEVNULL
     else:
         assert 0, f'Inconsistent out: {out}'
+
+    if multiline and '\n' in command:
+        command = textwrap.dedent(command)
+        lines = list()
+        for line in command.split( '\n'):
+            h = 0 if line.startswith( '#') else line.find(' #')
+            if h >= 0:
+                line = line[:h]
+            if line.strip():
+                line = line.rstrip()
+                lines.append(line)
+        sep = ' ' if platform.system() == 'Windows' else ' \\\n'
+        command = sep.join(lines)
 
     if verbose:
         log(f'running: {command_env_text( command, env_extra)}', nv=0, caller=caller+1)
