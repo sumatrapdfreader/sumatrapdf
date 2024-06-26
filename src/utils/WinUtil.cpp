@@ -3028,6 +3028,9 @@ int MsgBox(HWND hwnd, const char* text, const char* caption, UINT flags) {
 
 // https://learn.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
 u32 CpuID() {
+#if IS_ARM_64
+    return 0;
+#else
     std::bitset<32> f_1_ECX_;
     std::bitset<32> f_1_EDX_;
     std::bitset<32> f_7_EBX_;
@@ -3076,4 +3079,5 @@ u32 CpuID() {
         res = res | kCpuAVX2;
     }
     return res;
+#endif
 }
