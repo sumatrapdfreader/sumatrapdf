@@ -441,7 +441,7 @@ DoDefault:
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-static void NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
+static int NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
     ReportIf(groupId == nullptr);
     Vec<NotificationWnd*> toRemove;
     for (auto* wnd : wnds) {
@@ -452,6 +452,7 @@ static void NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
     for (auto* wnd : toRemove) {
         NotifsRemoveNotification(wnds, wnd);
     }
+    return toRemove.Size();
 }
 
 static void NotifsAdd(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd, Kind groupId) {
@@ -524,10 +525,11 @@ void RemoveNotification(NotificationWnd* wnd) {
     NotifsRemoveNotification(wnd);
 }
 
-void RemoveNotificationsForGroup(HWND hwnd, Kind kind) {
+bool RemoveNotificationsForGroup(HWND hwnd, Kind kind) {
     Vec<NotificationWnd*> wnds;
     GetForHwnd(hwnd, wnds);
-    NotifsRemoveForGroup(wnds, kind);
+    int n = NotifsRemoveForGroup(wnds, kind);
+    return n > 0;
 }
 
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {

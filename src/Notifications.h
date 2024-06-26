@@ -24,7 +24,7 @@ struct NotificationCreateArgs {
 
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
 void RemoveNotification(NotificationWnd*);
-void RemoveNotificationsForGroup(HWND hwnd, Kind);
+bool RemoveNotificationsForGroup(HWND hwnd, Kind);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, int, int);
 bool NotificationExists(NotificationWnd*);

@@ -364,16 +364,23 @@ static DWORD WINAPI FindThread(LPVOID data) {
     return 0;
 }
 
-void AbortFinding(MainWindow* win, bool hideMessage) {
+// returns true if did abort a thread or hidden the notification
+bool AbortFinding(MainWindow* win, bool hideMessage) {
+    bool res = false;
     if (win->findThread) {
+        res = true;
         win->findCanceled = true;
         WaitForSingleObject(win->findThread, INFINITE);
     }
     win->findCanceled = false;
 
     if (hideMessage) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+        bool didRemove = RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+        if (didRemove) {
+            res = true;
+        }
     }
+    return res;
 }
 
 // wasModified

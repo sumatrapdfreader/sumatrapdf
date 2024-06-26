@@ -4273,24 +4273,19 @@ static WCHAR SingleCharLowerW(WCHAR c) {
 }
 
 static void OnFrameKeyEsc(MainWindow* win) {
-    if (win->findThread) {
-        AbortFinding(win, true);
+    if (AbortFinding(win, true)) {
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupPersistentWarning)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPersistentWarning);
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPersistentWarning)) {
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo)) {
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
         return;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, kNotifZoom)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom)) {
         return;
     }
     if (win->showSelection) {
