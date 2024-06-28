@@ -13,6 +13,7 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "Annotation.h"
 #include "SumatraPdf.h"
 #include "AppTools.h"
 

@@ -66,6 +66,10 @@ struct Annotation {
     ~Annotation();
 };
 
+struct AnnotCreateArgs {
+    AnnotationType type = AnnotationType::Unknown;
+};
+
 int PageNo(Annotation*);
 RectF GetBounds(Annotation*);
 RectF GetRect(Annotation*);

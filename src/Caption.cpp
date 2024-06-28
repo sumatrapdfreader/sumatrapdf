@@ -13,6 +13,7 @@
 #include "AppColors.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
+#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "Caption.h"

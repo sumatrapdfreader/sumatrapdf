@@ -23,6 +23,7 @@
 #include "Settings.h"
 #include "Flags.h"
 #include "Version.h"
+#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "RegistryPreview.h"

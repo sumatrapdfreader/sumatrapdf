@@ -18,6 +18,7 @@
 #include "FileHistory.h"
 #include "AppColors.h"
 #include "GlobalPrefs.h"
+#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "resource.h"

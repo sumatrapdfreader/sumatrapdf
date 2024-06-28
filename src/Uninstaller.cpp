@@ -16,6 +16,7 @@
 #include "Settings.h"
 #include "SumatraConfig.h"
 #include "Flags.h"
+#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "Installer.h"
 #include "AppTools.h"

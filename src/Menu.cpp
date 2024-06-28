@@ -45,9 +45,6 @@
 
 #include "utils/Log.h"
 
-// SumatraPDF.cpp
-extern Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotType);
-
 struct BuildMenuCtx {
     WindowTab* tab = nullptr;
     bool isCbx = false;

@@ -21,6 +21,7 @@
 #include "Version.h"
 #include "SumatraConfig.h"
 #include "Translations.h"
+#include "Annotation.h"
 #include "SumatraPDF.h"
 #include "Flags.h"
 #include "ProgressUpdateUI.h"

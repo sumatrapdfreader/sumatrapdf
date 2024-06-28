@@ -204,3 +204,4 @@ void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetNotImportantDataDirTemp();
 TempStr GetCrashInfoDirTemp();
 void DeleteStaleFilesAsync();
+Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotType);
