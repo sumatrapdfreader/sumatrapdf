@@ -4352,7 +4352,7 @@ static void AddUniquePageNo(Vec<int>& v, int pageNo) {
 
 // create one or more annotations from current selection
 // returns last created annotations
-Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotType) {
+Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) {
     // converts current selection to annotation (or back to regular text
     // if it's already an annotation)
     DisplayModel* dm = tab->AsFixed();
@@ -4390,7 +4390,7 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotTyp
             }
             rects.Append(sel.rect);
         }
-        annot = EngineMupdfCreateAnnotation(engine, annotType, pageNo, PointF{});
+        annot = EngineMupdfCreateAnnotation(engine, pageNo, PointF{}, args);
         if (!annot) {
             // TODO: leaking if created annots before
             return nullptr;
@@ -5854,7 +5854,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             [[fallthrough]];
         case CmdCreateAnnotUnderline:
             if (win && tab) {
-                auto annot = MakeAnnotationsFromSelection(tab, annotType);
+                AnnotCreateArgs args{annotType};
+                auto annot = MakeAnnotationsFromSelection(tab, &args);
                 if (annot && IsShiftPressed()) {
                     ShowEditAnnotationsWindow(tab);
                     SetSelectedAnnotation(tab, annot);
@@ -5894,7 +5895,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
-            lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            AnnotCreateArgs args{annotType};
+            lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
         } break;
 
         case CmdSelectNextTheme:

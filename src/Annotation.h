@@ -67,7 +67,8 @@ struct Annotation {
 };
 
 struct AnnotCreateArgs {
-    AnnotationType type = AnnotationType::Unknown;
+    AnnotationType annotType = AnnotationType::Unknown;
+    // the following are set depending on type of the annotation
 };
 
 int PageNo(Annotation*);

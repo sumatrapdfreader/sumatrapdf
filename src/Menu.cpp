@@ -1905,24 +1905,29 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
-            annot = EngineMupdfCreateAnnotation(engine, annotType, pageNoUnderCursor, ptOnPage);
+            AnnotCreateArgs args{annotType};
+            annot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
             UpdateAnnotationsList(tab->editAnnotsWindow);
             break;
         }
         case CmdCreateAnnotHighlight: {
-            annot = MakeAnnotationsFromSelection(tab, AnnotationType::Highlight);
+            AnnotCreateArgs args{AnnotationType::Highlight};
+            annot = MakeAnnotationsFromSelection(tab, &args);
             break;
         }
         case CmdCreateAnnotSquiggly: {
-            annot = MakeAnnotationsFromSelection(tab, AnnotationType::Squiggly);
+            AnnotCreateArgs args{AnnotationType::Squiggly};
+            annot = MakeAnnotationsFromSelection(tab, &args);
             break;
         }
         case CmdCreateAnnotStrikeOut: {
-            annot = MakeAnnotationsFromSelection(tab, AnnotationType::StrikeOut);
+            AnnotCreateArgs args{AnnotationType::StrikeOut};
+            annot = MakeAnnotationsFromSelection(tab, &args);
             break;
         }
         case CmdCreateAnnotUnderline: {
-            annot = MakeAnnotationsFromSelection(tab, AnnotationType::Underline);
+            AnnotCreateArgs args{AnnotationType::Underline};
+            annot = MakeAnnotationsFromSelection(tab, &args);
             break;
         }
         case CmdCreateAnnotInk:

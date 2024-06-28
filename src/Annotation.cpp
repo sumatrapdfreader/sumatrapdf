@@ -994,7 +994,7 @@ bool IsMoveableAnnotation(AnnotationType tp) {
     return IsAnnotationInList(tp, moveableAnnotations);
 }
 
-Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, int pageNo, PointF pos) {
+Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF pos, AnnotCreateArgs* args) {
     static const float black[3] = {0, 0, 0};
 
     EngineMupdf* epdf = AsEngineMupdf(engine);
@@ -1002,7 +1002,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, AnnotationType typ, 
 
     auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
     pdf_annot* annot = nullptr;
-
+    auto typ = args->annotType;
     {
         ScopedCritSec cs(epdf->ctxAccess);
 

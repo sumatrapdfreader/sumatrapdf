@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct AnnotCreateArgs;
+
 #define CANVAS_CLASS_NAME L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME L"SUMATRA_PDF_FRAME"
 
@@ -204,4 +206,4 @@ void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetNotImportantDataDirTemp();
 TempStr GetCrashInfoDirTemp();
 void DeleteStaleFilesAsync();
-Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotationType annotType);
+Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args);

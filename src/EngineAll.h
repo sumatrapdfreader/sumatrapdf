@@ -5,6 +5,7 @@ struct Annotation;
 enum class AnnotationType;
 struct PasswordUI;
 struct FileArgs;
+struct AnnotCreateArgs;
 
 /* EngineDjVu.cpp */
 void CleanupEngineDjVu();
@@ -54,7 +55,7 @@ EngineBase* CreateEngineMupdfFromStream(IStream* stream, const char* nameHint, P
 EngineBase* CreateEngineMupdfFromData(const ByteSlice& data, const char* nameHint, PasswordUI* pwdUI);
 ByteSlice LoadEmbeddedPDFFile(const char* path);
 const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut);
-Annotation* EngineMupdfCreateAnnotation(EngineBase*, AnnotationType type, int pageNo, PointF pos);
+Annotation* EngineMupdfCreateAnnotation(EngineBase*, int pageNo, PointF pos, AnnotCreateArgs* args);
 void EngineMupdfGetAnnotations(EngineBase*, Vec<Annotation*>&);
 bool EngineMupdfHasUnsavedAnnotations(EngineBase*);
 bool EngineMupdfSupportsAnnotations(EngineBase*);
