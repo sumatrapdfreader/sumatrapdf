@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c667ebf880be5dc8c828c630210655c061ea8f28
+407d1547b1cc676082d07114953a1472440a2c4e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -190,7 +190,7 @@ gl:Opcións &avanzadas...
 he:הגדרות מתקדמות...
 hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
-hu:Speciális beállítások...
+hu:Haladó beállítások…
 id:&Pilihan Lanjutan...
 it:&Opzioni avanzate...
 ja:詳細設定(&A)
@@ -259,7 +259,7 @@ gl:Tod&as as páxinas seleccionadas
 he:כל העמודים הנבחרים
 hi:&सभी चयनित पृष्ठों
 hr:Sve obilježene str&anice
-hu:Az összes kiválasztott oldal
+hu:Az összes kijelölt oldal
 id:&Semua halaman terpilih
 it:&Tutte le pagine selezionate
 ja:すべての選択されたページ(&A)
@@ -6299,6 +6299,7 @@ fr:Fermer tous les onglets
 ga:Dún Gach Cluaisín
 he:סגור את כל הכרטיסיות
 hi:सभी टैब को बंद करें
+hu:Összes lap bezárása
 id:Tutup Semua Tab
 it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
@@ -6375,6 +6376,7 @@ fr:Fermer les onglets sur la gauche
 ga:Dún cluaisíní ar chlé
 he:סגור כרטיסיות משמאל
 hi:बाईं ओर के टैब बंद करें
+hu:Balra lévő lapok bezárása
 id:Tutup Tab ke Kiri
 it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
@@ -8928,6 +8930,7 @@ fr:Supprimer
 ga:Scrios
 he:מחק
 hi:मिटाओ
+hu:Törlés
 id:Hapus
 it:Cancella
 ja:削除
@@ -13817,6 +13820,7 @@ de:Handbuch im Internet
 es:Manual en la Web
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
+hu:Kézikönyv a weboldalon
 id:Manual di Situs Web
 it:Manuale (sito web)
 nl:Handleiding op Website
@@ -14223,6 +14227,7 @@ es:No
 fr:Non
 ga:Níl
 hi:नहीं
+hu:Nem
 id:Tidak
 it:No
 nl:Nee
@@ -18431,7 +18436,7 @@ gl:Gardar anotacións a un novo PDF
 he:חדש PDF שמור שינויים בקובץ
 hi:परिवर्तनों को एक नई पीडीएफ में सहेजें
 hr:Spremi promjene u novi PDF
-hu:Változtatások elmentése egy új PDF-be
+hu:Változások mentése egy új PDF-be
 id:Simpan perubahan ke PDF baru
 it:Salva modifiche in un nuovo PDF
 ja:変更を新しい PDF に保存
@@ -18485,7 +18490,7 @@ ga:Cuir na hathruithe i dtaisce in PDF atá ann
 gl:Gardar cambios nun PDF existente
 he:קיים PDF שמור שינויים במסמך
 hr:Spremi promjene u postojeći PDF
-hu:Változtatások mentése a meglévő PDF-be
+hu:Változások mentése a meglévő PDF-be
 id:Simpan perubahan ke PDF terkini
 it:Salva modifiche in questo PDF
 ja:変更を上書き保存
@@ -18771,6 +18776,7 @@ cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
 fr:Rechercher avec &Google Scholar
+hu:Keresés &Google Scholar-ral
 id:Cari dengan &Google Scholar
 it:Cerca con &Google Scholar
 nl:Zoek met Google Scholar
@@ -18789,6 +18795,7 @@ cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
 fr:Rechercher avec &Wikipedia
+hu:Keresés a &Wikipédián
 id:Cari dengan &Wikipedia
 it:Cerca con &Wikipedia
 nl:Zoek met Wikipedia
@@ -22373,6 +22380,7 @@ es:Sí
 fr:Oui
 ga:Tá
 hi:हाँ
+hu:Igen
 id:Ya
 it:Sì
 nl:Ja
