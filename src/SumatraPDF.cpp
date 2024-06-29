@@ -5897,7 +5897,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 AnnotCreateArgs args{annotType};
                 SetAnnotCreateArgs(args, cmdWithArg);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
-                if (annot && IsShiftPressed()) {
+                bool openEdit = IsShiftPressed() || cmdWithArg->argBool;
+                if (annot && openEdit) {
                     ShowEditAnnotationsWindow(tab);
                     SetSelectedAnnotation(tab, annot);
                 }
@@ -5937,6 +5938,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
             AnnotCreateArgs args{annotType};
+            SetAnnotCreateArgs(args, cmdWithArg);
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
         } break;
 

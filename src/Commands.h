@@ -266,6 +266,7 @@ struct CommandWithArg {
     int argInt = 0;
     char* argStr = nullptr;
     ParsedColor argColor;
+    bool argBool = false;
 
     CommandWithArg() = default;
     ~CommandWithArg();

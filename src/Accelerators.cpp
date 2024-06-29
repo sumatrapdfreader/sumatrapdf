@@ -618,7 +618,6 @@ static int ParseCommand(char* cmdWithArg) {
         // TODO: make it a notification
         logf("MaybeCreateCommandWithArg: unknown cmd name '%s'\n", cmdName);
     }
-    char* arg = parts.At(1);
     CommandWithArg* cmd = nullptr;
     switch (cmdId) {
         case CmdCreateAnnotText:
@@ -640,19 +639,36 @@ static int ParseCommand(char* cmdWithArg) {
         case CmdCreateAnnotPopup:
         case CmdCreateAnnotFileAttachment: {
             // color argument
+            int n = parts.Size();
+            bool openEdit = false;
             ParsedColor col;
-            ParseColor(col, arg);
+            const char* colStr = "";
+            for (int i = 1; i < n; i++) {
+                char* arg = parts.At(i);
+                if (str::EqI(arg, "openedit")) {
+                    openEdit = true;
+                    continue;
+                }
+                if (col.parsedOk) {
+                    continue;
+                }
+                ParseColor(col, arg);
+                colStr = arg;
+            }
+            // must have valid color, "openedit" is optional
             if (!col.parsedOk) {
-                logf("MaybeCreateCommandWithArg: '%s' is not a valid color argument to cmd '%s'\n", arg, cmdName);
+                logf("MaybeCreateCommandWithArg: '%s' is not a valid color argument to cmd '%s'\n", colStr, cmdName);
                 return -1;
             }
             cmd = CreateCommandWithArg(cmdId);
             cmd->argColor = col;
+            cmd->argBool = openEdit;
             break;
         }
         case CmdGoToNextPage:
         case CmdGoToPrevPage: {
             // int argument
+            char* arg = parts.At(1);
             int n = ParseInt(arg);
             if (cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
                 if (n <= 0 || n > 100) {
