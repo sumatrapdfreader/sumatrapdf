@@ -650,6 +650,19 @@ static int ParseCommand(char* cmdWithArg) {
             cmd->argColor = col;
             break;
         }
+        case CmdGoToNextPage:
+        case CmdGoToPrevPage: {
+            // int argument
+            int n = ParseInt(arg);
+            if (cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
+                if (n <= 0 || n > 100) {
+                    return -1;
+                }
+            }
+            cmd = CreateCommandWithArg(cmdId);
+            cmd->argInt = n;
+            break;
+        }
         default: {
             logf("MaybeCreateCommandWithArg: cmd '%s' doesn't accept arguments\n", cmdName);
         }

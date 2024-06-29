@@ -5477,11 +5477,23 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         } break;
 
         case CmdGoToPrevPage:
+        case CmdGoToNextPage: {
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            ctrl->GoToPrevPage();
+            int n = 1;
+            if (cmdWithArg) {
+                n = cmdWithArg->argInt;
+            }
+            for (int i = 0; i < n; i++) {
+                if (wmId == CmdGoToPrevPage) {
+                    ctrl->GoToPrevPage();
+                } else {
+                    ctrl->GoToNextPage();
+                }
+            }
             break;
+        }
 
         case CmdScrollDown: {
             if (!win->IsDocLoaded()) {
@@ -5519,12 +5531,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 win->ctrl->GoToNextPage();
             }
         } break;
-
-        case CmdGoToNextPage:
-            if (ctrl && win->IsDocLoaded()) {
-                ctrl->GoToNextPage();
-            }
-            break;
 
         // TODO: rename CmdScrollLeftOrPrevPage
         case CmdScrollLeft: {

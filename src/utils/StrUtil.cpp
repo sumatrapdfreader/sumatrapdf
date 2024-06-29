@@ -2508,3 +2508,20 @@ TempStr GetFileNameTemp(const char* url) {
 }
 
 } // namespace url
+
+int ParseInt(const char* bytes) {
+    bool negative = *bytes == '-';
+    if (negative) {
+        bytes++;
+    }
+    int value = 0;
+    int overflowCheck = negative ? 1 : 0;
+    for (; str::IsDigit(*bytes); bytes++) {
+        value = value * 10 + (*bytes - '0');
+        // return 0 on overflow
+        if (value - overflowCheck < 0) {
+            return 0;
+        }
+    }
+    return negative ? -value : value;
+}

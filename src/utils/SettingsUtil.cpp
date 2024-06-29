@@ -9,22 +9,6 @@ static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
     return (const StructInfo*)field.value;
 }
 
-static int ParseInt(const char* bytes) {
-    bool negative = *bytes == '-';
-    if (negative) {
-        bytes++;
-    }
-    int value = 0;
-    for (; str::IsDigit(*bytes); bytes++) {
-        value = value * 10 + (*bytes - '0');
-        // return 0 on overflow
-        if (value - (negative ? 1 : 0) < 0) {
-            return 0;
-        }
-    }
-    return negative ? -value : value;
-}
-
 // only escape characters which are significant to SquareTreeParser:
 // newlines and leading/trailing whitespace (and escape characters)
 static bool NeedsEscaping(const char* s) {
