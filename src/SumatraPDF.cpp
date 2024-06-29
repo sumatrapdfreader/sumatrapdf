@@ -5077,6 +5077,35 @@ OpenFileInBrowser:
     SumatraLaunchBrowser(url);
 }
 
+static void SetAnnotCreateArgs(AnnotCreateArgs& args, CommandWithArg* cmd) {
+    if (cmd) {
+        args.col = cmd->argColor;
+        ReportIf(!args.col.parsedOk);
+        return;
+    }
+    auto& a = gGlobalPrefs->annotations;
+    ParsedColor* col = nullptr;
+    auto typ = args.annotType;
+    if (typ == AnnotationType::Text) {
+        col = GetParsedColor(a.textIconColor, a.textIconColorParsed);
+    } else if (typ == AnnotationType::Underline) {
+        col = GetParsedColor(a.underlineColor, a.underlineColorParsed);
+    } else if (typ == AnnotationType::Highlight) {
+        col = GetParsedColor(a.highlightColor, a.highlightColorParsed);
+    } else if (typ == AnnotationType::Squiggly) {
+        col = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
+    } else if (typ == AnnotationType::StrikeOut) {
+        col = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
+    } else if (typ == AnnotationType::FreeText) {
+        col = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
+    } else {
+        ReportIf(true);
+    }
+    if (col && col->parsedOk) {
+        args.col = *col;
+    }
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int wmId = LOWORD(wp);
 
@@ -5152,6 +5181,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     DisplayModel* dm = win->AsFixed();
 
     Annotation* lastCreatedAnnot = nullptr;
+
+    CommandWithArg* cmdWithArg = FindCommandWithArg(wmId);
+    if (cmdWithArg != nullptr) {
+        wmId = cmdWithArg->origId;
+    }
 
     AnnotationType annotType = (AnnotationType)(wmId - CmdCreateAnnotText);
     switch (wmId) {
@@ -5855,6 +5889,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotUnderline:
             if (win && tab) {
                 AnnotCreateArgs args{annotType};
+                SetAnnotCreateArgs(args, cmdWithArg);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
                 if (annot && IsShiftPressed()) {
                     ShowEditAnnotationsWindow(tab);

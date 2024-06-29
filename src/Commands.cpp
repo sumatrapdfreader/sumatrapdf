@@ -37,3 +37,41 @@ int GetCommandIdByName(const char* cmdName) {
 int GetCommandIdByDesc(const char* cmdDesc) {
     return GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
 }
+
+CommandWithArg::~CommandWithArg() {
+    str::Free(argStr);
+}
+
+static int gNextCommandWithArgId = (int)CmdFirstWithArg;
+static CommandWithArg* gFirstCommandWithArg = nullptr;
+
+CommandWithArg* CreateCommandWithArg(int origCmdId) {
+    int id = gNextCommandWithArgId++;
+    auto cmd = new CommandWithArg();
+    cmd->id = id;
+    cmd->origId = origCmdId;
+    cmd->next = gFirstCommandWithArg;
+    gFirstCommandWithArg = cmd;
+    return cmd;
+}
+
+CommandWithArg* FindCommandWithArg(int cmdId) {
+    auto cmd = gFirstCommandWithArg;
+    while (cmd) {
+        if (cmd->id == cmdId) {
+            return cmd;
+        }
+        cmd = cmd->next;
+    }
+    return nullptr;
+}
+
+void FreeCommandsWithArg() {
+    auto cmd = gFirstCommandWithArg;
+    while (cmd) {
+        auto next = cmd->next;
+        delete cmd;
+        cmd = next;
+    }
+    gFirstCommandWithArg = nullptr;
+}

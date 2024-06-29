@@ -1003,6 +1003,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     auto pageInfo = epdf->GetFzPageInfo(pageNo, true);
     pdf_annot* annot = nullptr;
     auto typ = args->annotType;
+    auto col = args->col;
     {
         ScopedCritSec cs(epdf->ctxAccess);
 
@@ -1060,16 +1061,15 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     fontSize = 12;
                 }
                 int nCol = 3;
-                const float* col = black;
+                const float* fcol = black;
                 float textColor[3]{};
 
-                auto parsedCol = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
-                if (parsedCol && parsedCol->parsedOk) {
-                    PdfColorToFloat(parsedCol->pdfCol, textColor);
-                    col = textColor;
+                if (col.parsedOk) {
+                    PdfColorToFloat(col.pdfCol, textColor);
+                    fcol = textColor;
                 }
 
-                pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, col);
+                pdf_set_annot_default_appearance(ctx, annot, "Helv", (float)fontSize, nCol, fcol);
             }
 
             pdf_update_annot(ctx, annot);
@@ -1089,26 +1089,15 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     MarkNotificationAsModified(epdf, res, AnnotationChange::Add);
 
     auto& a = gGlobalPrefs->annotations;
-    ParsedColor* parsedCol = nullptr;
 
     if (typ == AnnotationType::Text) {
         TempStr iconName = GetAnnotationTextIconTemp();
         if (!str::EqI(iconName, "Note")) {
             SetIconName(res, iconName);
         }
-        parsedCol = GetParsedColor(a.textIconColor, a.textIconColorParsed);
-    } else if (typ == AnnotationType::Underline) {
-        parsedCol = GetParsedColor(a.underlineColor, a.underlineColorParsed);
-    } else if (typ == AnnotationType::Highlight) {
-        parsedCol = GetParsedColor(a.highlightColor, a.highlightColorParsed);
-    } else if (typ == AnnotationType::Squiggly) {
-        parsedCol = GetParsedColor(a.squigglyColor, a.squigglyColorParsed);
-    } else if (typ == AnnotationType::StrikeOut) {
-        parsedCol = GetParsedColor(a.strikeOutColor, a.strikeOutColorParsed);
-    } else if (typ == AnnotationType::FreeText) {
     }
-    if (parsedCol && parsedCol->parsedOk) {
-        SetColor(res, parsedCol->pdfCol);
+    if (col.parsedOk) {
+        SetColor(res, col.pdfCol);
     }
 
     pdf_drop_annot(ctx, annot);

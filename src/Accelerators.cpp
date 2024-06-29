@@ -597,6 +597,69 @@ static HACCEL gAccelTables[3] = {
     nullptr, // for tree view
 };
 
+// some commands can accept arguments. For those we have to create CommandWithArg that
+// binds original command id and an arg and creates a unique command id
+// we return -1 if unkown command or command doesn't take an argument or argument is invalid
+static int ParseCommand(char* cmdWithArg) {
+    int cmdId = GetCommandIdByName(cmdWithArg);
+    if (cmdId > 0) {
+        return cmdId;
+    }
+    // could be command with arg
+    bool hasArg = str::FindChar(cmdWithArg, ' ') != nullptr;
+    if (!hasArg) {
+        return -1;
+    }
+    StrVec parts;
+    Split(parts, cmdWithArg, " ", true);
+    char* cmdName = parts.At(0);
+    cmdId = GetCommandIdByName(cmdName);
+    if (cmdId < 0) {
+        // TODO: make it a notification
+        logf("MaybeCreateCommandWithArg: unknown cmd name '%s'\n", cmdName);
+    }
+    char* arg = parts.At(1);
+    CommandWithArg* cmd = nullptr;
+    switch (cmdId) {
+        case CmdCreateAnnotText:
+        case CmdCreateAnnotLink:
+        case CmdCreateAnnotFreeText:
+        case CmdCreateAnnotLine:
+        case CmdCreateAnnotSquare:
+        case CmdCreateAnnotCircle:
+        case CmdCreateAnnotPolygon:
+        case CmdCreateAnnotPolyLine:
+        case CmdCreateAnnotHighlight:
+        case CmdCreateAnnotUnderline:
+        case CmdCreateAnnotSquiggly:
+        case CmdCreateAnnotStrikeOut:
+        case CmdCreateAnnotRedact:
+        case CmdCreateAnnotStamp:
+        case CmdCreateAnnotCaret:
+        case CmdCreateAnnotInk:
+        case CmdCreateAnnotPopup:
+        case CmdCreateAnnotFileAttachment: {
+            // color argument
+            ParsedColor col;
+            ParseColor(col, arg);
+            if (!col.parsedOk) {
+                logf("MaybeCreateCommandWithArg: '%s' is not a valid color argument to cmd '%s'\n", arg, cmdName);
+                return -1;
+            }
+            cmd = CreateCommandWithArg(cmdId);
+            cmd->argColor = col;
+            break;
+        }
+        default: {
+            logf("MaybeCreateCommandWithArg: cmd '%s' doesn't accept arguments\n", cmdName);
+        }
+    }
+    if (!cmd) {
+        return -1;
+    }
+    return cmd->id;
+}
+
 /* returns a pointer to HACCEL so that we can update it and message loop will use
 the latest version */
 static void CreateSumatraAcceleratorTable() {
@@ -624,11 +687,8 @@ static void CreateSumatraAcceleratorTable() {
     int nTreeViewAccels = 0;
 
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
-        char* cmd = shortcut->cmd;
-        int cmdId = GetCommandIdByName(cmd);
+        int cmdId = ParseCommand(shortcut->cmd);
         if (cmdId < 0) {
-            // TODO: make it a notification
-            logf("CreateSumatraAcceleratorTable: unknown cmd name '%s'\n", cmd);
             continue;
         }
         ACCEL accel = {};
