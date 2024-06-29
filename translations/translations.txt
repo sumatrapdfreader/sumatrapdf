@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-407d1547b1cc676082d07114953a1472440a2c4e
+8d8f3be7f82c23d4403db9d8cc396d20938a52aa
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -2645,7 +2645,7 @@ by:Запомніць гэтыя параметры для &кожнага да�
 ca-xv:Conserva estes &preferències per a cada document
 ca:Recorda aquestes &preferències per a cada document
 cn:为每一个文档记住这些设置(&R)
-co:Arricurdassi di ste &preferenze per ogni ducumentu
+co:Arricurdassi di sti parametri per ogni ducumentu
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 cz:&Pamatovat si tato nastavení pro každý dokument
 de:Ansicht-&Einstellungen für jedes Dokument einzeln merken
@@ -2710,7 +2710,7 @@ by:&Выдаліць з гісторыі
 ca-xv:&Suprimeix de l'historial
 ca:&Suprimeix de l'historial
 cn:从历史记录删除(&R)
-co:&Caccià da a crunulogia
+co:&Caccià da a cronolugia
 cy:Tynnu o'&r Hanes
 cz:&Odstranit z historie
 de:Aus der Historie entfernen
@@ -2934,7 +2934,7 @@ by:Налады
 ca-xv:&Preferències
 ca:&Preferències
 cn:设置(&S)
-co:&Preferenze
+co:&Parametri
 cy:&Gosodiadau
 cz:&Nastavení
 de:&Einstellungen
@@ -5823,7 +5823,7 @@ by:Немагчыма здзейсніць зваротны пошук. Калі
 ca-xv:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia de comandes a les preferències.
 ca:No es pot iniciar l'ordre de cerca cap enrere. Comproveu la línia d'ordres a les preferències.
 cn:无法进行逆向搜索，请检查命令行是否在软件设置里正确配置了。
-co:Ùn pò micca lancià a cumanda di ricerca à l’arritrosa. Ci vole à verificà a linea di cumanda in e preferenze.
+co:Ùn pò micca lancià a cumanda di ricerca à l’arritrosa. Ci vole à verificà a linea di cumanda in i parametri.
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 de:Fehler beim Ausführen des Befehls für die Rückwärtssuche. Bitte überprüfen Sie die Einstellung.
