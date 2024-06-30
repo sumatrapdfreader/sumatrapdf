@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8d8f3be7f82c23d4403db9d8cc396d20938a52aa
+6d245b8094115d51e51f406ef25f592ea6745a2e
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -2645,7 +2645,7 @@ by:Запомніць гэтыя параметры для &кожнага да�
 ca-xv:Conserva estes &preferències per a cada document
 ca:Recorda aquestes &preferències per a cada document
 cn:为每一个文档记住这些设置(&R)
-co:Arricurdassi di sti parametri per ogni ducumentu
+co:Arricurdassi di sti &parametri per ogni ducumentu
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 cz:&Pamatovat si tato nastavení pro každý dokument
 de:Ansicht-&Einstellungen für jedes Dokument einzeln merken
@@ -5011,7 +5011,7 @@ by:&Аўтаматычная праверка абнаўленняў
 ca-xv:&Comprova les actualitzacions automàticament
 ca:&Comprova les actualitzacions automàticament
 cn:自动检查更新(&U)
-co:Cuntrollà autumaticamente i &rinnovi
+co:Cuntrollà autumaticamente e &messe à livellu
 cy:Gwirio'n awtomatig am &ddiweddariadau
 cz:&Automaticky kontrolovat aktualizace
 de:&Automatisch nach Updates suchen
@@ -5965,7 +5965,7 @@ by:Праверыць наяўнасць новай версіі
 ca-xv:&Comprova si hi ha una versió nova
 ca:&Comprova si hi ha una versió nova
 cn:检查更新(&U)
-co:&Cuntrollà e nove versioni
+co:&Cuntrollà e messe à livellu
 cy:Gwirio am &Ddiweddariadau
 cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
@@ -6034,7 +6034,7 @@ by:Праверка абнаўлення…
 ca-xv:S'està comprovant si hi ha actualitzacions...
 ca:S'està comprovant si hi ha actualitzacions...
 cn:正在检查更新...
-co:Cuntrollu di e nove versioni…
+co:Cuntrollu di e messe à livellu…
 cy:Gwirio am ddiweddariad...
 cz:Kontroluji aktualizace...
 de:Nach einem Update suchen...
@@ -14047,7 +14047,7 @@ br:Nova &janela
 by:Новае &акно
 ca:&Finestra nova
 cn:新建窗口(&W)
-co:Nova &finestra
+co:&Finestra nova
 cy:Ffenestr &newydd
 cz:Nové &okno
 de:Neues &Fenster
@@ -14098,7 +14098,7 @@ by:Даступная новая версія
 ca-xv:Hi ha una versió nova disponible
 ca:Hi ha una versió nova disponible
 cn:有新版本
-co:Nova versione dispunibule
+co:Versione nova dispunibule
 cy:Mae fersiwn newydd ar gael
 cz:Je k dispozici nová verze
 de:Neue Version verfügbar
@@ -18418,7 +18418,7 @@ by:Захаваць змены ў новы PDF
 ca-xv:Desa els canvis a un PDF nou
 ca:Desa els canvis a un PDF nou
 cn:另存为新的 PDF 文件
-co:Arregistrà i cambiamenti in un novu PDF
+co:Arregistrà i cambiamenti in un PDF novu
 cy:Cadw newidiadau i PDF newydd
 cz:Uložit změny do nového PDF souboru
 de:Änderungen in einer neuen PDF-Datei speichern
@@ -18526,7 +18526,7 @@ by:Захаваць &новы PDF
 ca-xv:Desa a un PDF &nou
 ca:Desa a un PDF &nou
 cn:保存至新的 PDF 文件(&N)
-co:Arregistrà in un &novu PDF
+co:Arregistrà in un PDF &novu
 cy:Cadw i PDF &newydd
 cz:Uložit do &nového PDF souboru
 de:In &neue PDF speichern
@@ -20629,7 +20629,7 @@ by:Абнаўленне SumatraPDF
 ca-xv:Actualització del SumatraPDF
 ca:Actualització del SumatraPDF
 cn:升级 SumatraPDF
-co:Rinnovu di SumatraPDF
+co:Messa à livellu di SumatraPDF
 cy:Diweddaru SumatraPDF
 cz:SumatraPDF - Aktualizace
 de:SumatraPDF-Update
@@ -22522,7 +22522,7 @@ by:У вас устаноўлена версія '%s'. Даступна верс
 ca-xv:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
 ca:Aquesta és la versió «%s». Està disponible la versió «%s».\nVoleu instal·lar la versió nova?
 cn:您已安装 '%s' 版本，'%s' 版本已经发布.\n是否安装新版本？
-co:Impiegate a versione « %s » è a versione « %s » hè dispunibule.\nVulete installà a nova versione ?
+co:Impiegate a versione « %s » è a versione « %s » hè dispunibule.\nVulete installà a versione nova ?
 cy:Mae fersiwn '%s' gennych ac mae fersiwn '%s' ar gael.\nHoffech chi osod y fersiwn newydd?
 cz:Používáte verzi '%s' a verze '%s' je k dispozici.\nChcete nainstalovat novou verzi?
 de:Sie haben Version '%s' und Version '%s' ist verfügbar.\nMöchten Sie die neue Version installieren?
