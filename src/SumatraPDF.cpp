@@ -5437,19 +5437,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleTocBox(win);
             break;
 
-        // TODO: rename CmdScrolUpLineOrPrevPage
-        case CmdScrollUp: {
-            if (!win->IsDocLoaded()) {
-                return 0;
-            }
-            if (dm && dm->NeedVScroll()) {
-                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
-            } else {
-                // in single page view, scrolls by page
-                win->ctrl->GoToPrevPage(true);
-            }
-        } break;
-
         case CmdScrollUpHalfPage: {
             if (!win->IsDocLoaded()) {
                 return 0;
@@ -5476,6 +5463,26 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
         } break;
 
+        case CmdScrollDown:
+        case CmdScrollUp: {
+            if (!win->IsDocLoaded()) {
+                return 0;
+            }
+            if (dm && dm->NeedVScroll()) {
+                int n = 1;
+                if (cmdWithArg) {
+                    n = cmdWithArg->argInt;
+                }
+                WPARAM dir = (wmId == CmdScrollUp) ? SB_LINEUP : SB_LINEDOWN;
+                for (int i = 0; i < n; i++) {
+                    SendMessageW(win->hwndCanvas, WM_VSCROLL, dir, 0);
+                }
+            } else {
+                // in single page view, scrolls by page
+                win->ctrl->GoToPrevPage(true);
+            }
+        } break;
+
         case CmdGoToPrevPage:
         case CmdGoToNextPage: {
             if (!win->IsDocLoaded()) {
@@ -5494,18 +5501,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
         }
-
-        case CmdScrollDown: {
-            if (!win->IsDocLoaded()) {
-                return 0;
-            }
-            if (dm && dm->NeedVScroll()) {
-                SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
-            } else {
-                // in single page view, scrolls by page
-                win->ctrl->GoToNextPage();
-            }
-        } break;
 
         case CmdScrollDownHalfPage: {
             if (!win->IsDocLoaded()) {

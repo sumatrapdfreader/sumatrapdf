@@ -665,15 +665,17 @@ static int ParseCommand(char* cmdWithArg) {
             cmd->argBool = openEdit;
             break;
         }
+        case CmdScrollUp:
+        case CmdScrollDown:
         case CmdGoToNextPage:
         case CmdGoToPrevPage: {
             // int argument
             char* arg = parts.At(1);
             int n = ParseInt(arg);
-            if (cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
-                if (n <= 0 || n > 100) {
-                    return -1;
-                }
+            // note: this validation currently applies to all commands
+            // but might need to be modified for other commands
+            if (n <= 0 || n > 100) {
+                return -1;
             }
             cmd = CreateCommandWithArg(cmdId);
             cmd->argInt = n;
