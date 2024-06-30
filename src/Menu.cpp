@@ -740,6 +740,10 @@ static MenuDef menuDefContext[] = {
         CmdCopySelection,
     },
     {
+        _TRN("Create Annotation From Selection"),
+        (UINT_PTR)menuDefCreateAnnotFromSelection,
+    },
+    {
         _TRN("S&election"),
         (UINT_PTR)menuDefSelection,
     },
@@ -788,10 +792,10 @@ static MenuDef menuDefContext[] = {
         _TRN("Edit Annotations"),
         CmdEditAnnotations,
     },
-    {
-        _TRN("Create Annotation From Selection"),
-        (UINT_PTR)menuDefCreateAnnotFromSelection,
-    },
+//    {
+//        _TRN("Create Annotation From Selection"),
+//        (UINT_PTR)menuDefCreateAnnotFromSelection,
+//    },
     {
         _TRN("Create Annotation &Under Cursor"),
         (UINT_PTR)menuDefCreateAnnotUnderCursor,
