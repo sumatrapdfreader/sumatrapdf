@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-95ad9eb6170d9e6ffe4f116d30bc56edb4707afa
+85e07b1c8380872aebd94799252aa7143bb83c26
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -15190,6 +15190,8 @@ sr-rs:Отвори у новом прозору
 ta:புதிய சாளரத்தில் திற
 tl:Buksan sa bagong Window
 tw:在新視窗中開啟
+:Open Next File In Folder
+:Open Previous File In Folder
 :Open a document...
 am:Բացել փաստաթուղթ...
 ar:فتح مستند...

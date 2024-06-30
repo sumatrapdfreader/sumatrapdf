@@ -108,6 +108,14 @@ static MenuDef menuDefFile[] = {
         CmdShowInFolder,
     },
     {
+        _TRN("Open Next File In Folder"),
+        CmdOpenNextFileInFolder,
+    },
+    {
+        _TRN("Open Previous File In Folder"),
+        CmdOpenPrevFileInFolder,
+    },
+    {
         _TRN("&Save As..."),
         CmdSaveAs,
     },
@@ -872,6 +880,8 @@ static UINT_PTR disableIfNoDocument[] = {
     CmdRenameFile,
     CmdDeleteFile,
     CmdShowInFolder,
+    CmdOpenNextFileInFolder,
+    CmdOpenPrevFileInFolder,
     CmdInvokeInverseSearch,
     // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
     // are removed instead of disabled (and can remain enabled
@@ -976,6 +986,8 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdNewWindow, // ???
     CmdOpenFile,
     CmdOpenFolder,
+    CmdOpenNextFileInFolder,
+    CmdOpenPrevFileInFolder,
     CmdClose, // ???
     CmdShowInFolder,
     CmdSaveAs,
