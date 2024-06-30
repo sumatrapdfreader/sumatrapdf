@@ -87,12 +87,14 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
     {TbIcon::MatchCase, CmdFindMatch, _TRN("Match Case")},
     {TbIcon::None, CmdInfoText, nullptr}, // info text
+    //{TbIcon::Text, CmdOpenNextFileInFolder, "▼"},
 };
+// unicode chars: https://www.compart.com/en/unicode/U+25BC
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
 
-static bool TbIsSeparator(ToolbarButtonInfo& tbi) {
-    return (int)tbi.bmpIndex < 0;
+static bool TbIsSeparator(const ToolbarButtonInfo& tbi) {
+    return (int)tbi.bmpIndex == (int)TbIcon::None;
 }
 
 static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
@@ -118,7 +120,8 @@ static bool NeedsInfo(MainWindow* win) {
 }
 
 static bool IsVisibleToolbarButton(MainWindow* win, int buttonNo) {
-    switch (gToolbarButtons[buttonNo].cmdId) {
+    ToolbarButtonInfo& bi = gToolbarButtons[buttonNo];
+    switch (bi.cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
             return !win->AsChm();
@@ -184,19 +187,27 @@ static bool IsToolbarButtonEnabled(MainWindow* win, int buttonNo) {
 }
 
 static TBBUTTON TbButtonFromButtonInfo(int i) {
-    auto& btInfo = gToolbarButtons[i];
-    TBBUTTON info{};
-    info.idCommand = btInfo.cmdId;
-    if (TbIsSeparator(btInfo)) {
-        info.fsStyle = TBSTYLE_SEP;
-    } else {
-        info.iBitmap = (int)btInfo.bmpIndex;
-        info.fsState = TBSTATE_ENABLED;
-        info.fsStyle = TBSTYLE_BUTTON;
-        auto s = trans::GetTranslation(btInfo.toolTip);
-        info.iString = (INT_PTR)ToWStrTemp(s);
+    const ToolbarButtonInfo& bi = gToolbarButtons[i];
+    TBBUTTON b{};
+    b.idCommand = bi.cmdId;
+    if (TbIsSeparator(bi)) {
+        b.fsStyle = BTNS_SEP;
+        return b;
     }
-    return info;
+    b.iBitmap = (int)bi.bmpIndex;
+    b.fsState = TBSTATE_ENABLED;
+    b.fsStyle = BTNS_BUTTON;
+    if (bi.cmdId == CmdFindMatch) {
+        b.fsStyle = BTNS_CHECK;
+    }
+    if (bi.bmpIndex == TbIcon::Text) {
+        // b.fsStyle = BTNS_DROPDOWN;
+        b.fsStyle |= BTNS_SHOWTEXT;
+        b.fsStyle |= BTNS_AUTOSIZE;
+    }
+    auto s = trans::GetTranslation(bi.toolTip);
+    b.iString = (INT_PTR)ToWStrTemp(s);
+    return b;
 }
 
 // Set toolbar button tooltips taking current language into account.
@@ -205,18 +216,19 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     HWND hwnd = win->hwndToolbar;
     ACCEL accel;
     for (int i = 0; i < kButtonsCount; i++) {
-        auto& tb = gToolbarButtons[i];
-
-        if (!tb.toolTip) {
+        const ToolbarButtonInfo& bi = gToolbarButtons[i];
+        if (!bi.toolTip) {
             continue;
         }
-
+        if (bi.bmpIndex == TbIcon::Text) {
+            continue;
+        }
         str::Str accelStr;
-        if (GetAccelByCmd(tb.cmdId, accel)) {
+        if (GetAccelByCmd(bi.cmdId, accel)) {
             AppendAccelKeyToMenuString(accelStr, accel);
         }
 
-        const char* s = trans::GetTranslation(tb.toolTip);
+        const char* s = trans::GetTranslation(bi.toolTip);
         if (accelStr.size() > 0) {
             accelStr[0] = '(';
             accelStr.Append(")");
@@ -853,7 +865,6 @@ constexpr int kDefaultIconSize = 18;
 
 static int SetToolbarIconsImageList(MainWindow* win) {
     HWND hwndToolbar = win->hwndToolbar;
-    ReportIf(!hwndToolbar);
     HWND hwndParent = GetParent(hwndToolbar);
 
     // we call it ToolbarSize for users, but it's really size of the icon
@@ -920,12 +931,8 @@ void CreateToolbar(MainWindow* win) {
     TBBUTTON tbButtons[kButtonsCount];
     for (int i = 0; i < kButtonsCount; i++) {
         tbButtons[i] = TbButtonFromButtonInfo(i);
-        if (gToolbarButtons[i].cmdId == CmdFindMatch) {
-            tbButtons[i].fsStyle = BTNS_CHECK;
-        }
     }
-    BOOL ok = SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
-    ReportIf(!ok);
+    SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
 
     SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
 

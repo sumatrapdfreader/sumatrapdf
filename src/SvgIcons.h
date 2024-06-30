@@ -3,6 +3,7 @@
 
 // must match order in gAllIcons
 enum class TbIcon {
+    Text = -2,
     None = -1,
     Open = 0,
     Print,
