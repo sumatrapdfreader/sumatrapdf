@@ -5897,7 +5897,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 AnnotCreateArgs args{annotType};
                 SetAnnotCreateArgs(args, cmdWithArg);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
-                bool openEdit = IsShiftPressed() || cmdWithArg->argBool;
+                bool openEdit = IsShiftPressed() || (cmdWithArg && cmdWithArg->argBool);
                 if (annot && openEdit) {
                     ShowEditAnnotationsWindow(tab);
                     SetSelectedAnnotation(tab, annot);
