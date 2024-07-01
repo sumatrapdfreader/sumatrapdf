@@ -365,20 +365,15 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
     return rect;
 }
 
-static void ShowExtendedProperties(HWND hwnd) {
-    PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
-    if (!pl) {
-        return;
-    }
-    MainWindow* win = FindMainWindowByHwnd(pl->hwndParent);
+static void ShowExtendedProperties(PropertiesLayout* pl) {
+    MainWindow* win = FindMainWindowByHwnd(pl ? pl->hwndParent : nullptr);
     if (win && !pl->HasProperty(_TRA("Fonts:"))) {
-        DestroyWindow(hwnd);
+        DestroyWindow(pl->hwnd);
         ShowProperties(win->hwndFrame, win->ctrl, true);
     }
 }
 
-static void CopyPropertiesToClipboard(HWND hwnd) {
-    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
+static void CopyPropertiesToClipboard(PropertiesLayout* layoutData) {
     if (!layoutData) {
         return;
     }
@@ -436,7 +431,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
 
         layoutData->btnCopyToClipboard = b;
         b->SetRtl(isRtl);
-        b->onClicked = [hwnd] { CopyPropertiesToClipboard(hwnd); };
+        b->onClicked = mkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
     if (!extended) {
@@ -449,7 +444,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
 
         b->SetRtl(isRtl);
         layoutData->btnGetFonts = b;
-        b->onClicked = [hwnd] { ShowExtendedProperties(hwnd); };
+        b->onClicked = mkFunc0(ShowExtendedProperties, layoutData);
     }
 
     // get the dimensions required for the about box's content
@@ -684,14 +679,15 @@ static void OnPaintProperties(HWND hwnd) {
 
 static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
     auto cmd = LOWORD(wp);
+    PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
     switch (cmd) {
         case CmdCopySelection:
-            CopyPropertiesToClipboard(hwnd);
+            CopyPropertiesToClipboard(pl);
             break;
 
         case CmdProperties:
             // make a repeated Ctrl+D display some extended properties
-            ShowExtendedProperties(hwnd);
+            ShowExtendedProperties(pl);
             break;
     }
 }

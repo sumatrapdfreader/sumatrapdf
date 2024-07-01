@@ -1270,12 +1270,8 @@ Button::Button() {
 bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
     if (code == BN_CLICKED) {
-        if (onClicked) {
-            onClicked();
-            return true;
-        }
-        if (!onClicked2.IsEmpty()) {
-            onClicked2.Call();
+        if (!onClicked.IsEmpty()) {
+            onClicked.Call();
             return true;
         }
     }
@@ -1323,7 +1319,7 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-Button* CreateButton(HWND parent, const char* s, const ClickedHandler& onClicked) {
+Button* CreateButton(HWND parent, const char* s, const Func0& onClicked) {
     ButtonCreateArgs args;
     args.parent = parent;
     args.text = s;

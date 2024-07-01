@@ -127,7 +127,7 @@ static DWORD WINAPI UninstallerThread(void*) {
     return 0;
 }
 
-static void OnButtonUninstall() {
+static void OnButtonUninstall(void*) {
     if (!CheckInstallUninstallPossible()) {
         return;
     }
@@ -140,7 +140,7 @@ static void OnButtonUninstall() {
     hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, nullptr);
 }
 
-static void OnButtonExit() {
+static void OnButtonExit(void*) {
     SendMessageW(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
@@ -148,7 +148,7 @@ void OnUninstallationFinished() {
     delete gButtonUninstaller;
     gButtonUninstaller = nullptr;
     gButtonExit = CreateDefaultButton(gHwndFrame, _TRA("Close"));
-    gButtonExit->onClicked = OnButtonExit;
+    gButtonExit->onClicked = mkFunc0<void>(OnButtonExit, nullptr);
     SetMsg(_TRA("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
@@ -159,7 +159,7 @@ void OnUninstallationFinished() {
 static bool UninstallerOnWmCommand(WPARAM wp) {
     switch (LOWORD(wp)) {
         case IDCANCEL:
-            OnButtonExit();
+            OnButtonExit(nullptr);
             break;
 
         default:
@@ -185,7 +185,7 @@ static void CreateUninstallerWindow() {
     HwndResizeClientSize(gHwndFrame, dx, dy);
 
     gButtonUninstaller = CreateDefaultButton(gHwndFrame, _TRA("Uninstall SumatraPDF"));
-    gButtonUninstaller->onClicked = OnButtonUninstall;
+    gButtonUninstaller->onClicked = mkFunc0<void>(OnButtonUninstall, nullptr);
 }
 
 static void ShowUsage() {

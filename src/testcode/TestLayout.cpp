@@ -112,7 +112,7 @@ static ProgressCtrl* CreateProgress(HWND parent, int maxRange) {
     return w;
 }
 
-static void ToggleMainAxis() {
+static void ToggleMainAxis(void*) {
     u8 n = (u8)vboxLayout->alignMain + 1;
     if (n > (u8)MainAxisAlign::Homogeneous) {
         n = 0;
@@ -122,7 +122,7 @@ static void ToggleMainAxis() {
     doMainLayout();
 }
 
-static void ToggleCrossAxis() {
+static void ToggleCrossAxis(void*) {
     u8 n = (u8)vboxLayout->alignCross + 1;
     if (n > (u8)CrossAxisAlign::CrossEnd) {
         n = 0;
@@ -132,7 +132,7 @@ static void ToggleCrossAxis() {
     doMainLayout();
 }
 
-static void AdvanceProgress() {
+static void AdvanceProgress(void*) {
     currProgress++;
     if (currProgress > maxProgress) {
         currProgress = 0;
@@ -147,12 +147,12 @@ static void CreateMainLayout(HWND hwnd) {
     vbox->alignMain = MainAxisAlign::MainEnd;
     vbox->alignCross = CrossAxisAlign::Stretch;
     {
-        auto b = CreateButton(hwnd, "toggle main axis", ToggleMainAxis);
+        auto b = CreateButton(hwnd, "toggle main axis", mkFunc0<void>(ToggleMainAxis, nullptr));
         vbox->AddChild(b);
     }
 
     {
-        auto b = CreateButton(hwnd, "advance progress", AdvanceProgress);
+        auto b = CreateButton(hwnd, "advance progress", mkFunc0<void>(AdvanceProgress, nullptr));
         vbox->AddChild(b);
     }
 
@@ -162,7 +162,7 @@ static void CreateMainLayout(HWND hwnd) {
     }
 
     {
-        auto b = CreateButton(hwnd, "toggle cross axis", ToggleCrossAxis);
+        auto b = CreateButton(hwnd, "toggle cross axis", mkFunc0<void>(ToggleCrossAxis, nullptr));
         vbox->AddChild(b);
     }
 

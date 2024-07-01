@@ -1336,7 +1336,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
 
-        w->onClicked2 = mkFunc0(ButtonSaveAttachment, ew);
+        w->onClicked = mkFunc0(ButtonSaveAttachment, ew);
         ew->buttonSaveAttachment = w;
         vbox->AddChild(w);
     }
@@ -1352,7 +1352,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
 
-        w->onClicked2 = mkFunc0(ButtonEmbedAttachment, ew);
+        w->onClicked = mkFunc0(ButtonEmbedAttachment, ew);
         ew->buttonEmbedAttachment = w;
         vbox->AddChild(w);
     }
@@ -1371,7 +1371,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         // TODO: doesn't work
         // w->SetTextColor(MkColor(0xff, 0, 0));
 
-        w->onClicked2 = mkFunc0(ButtonDeleteHandler, ew);
+        w->onClicked = mkFunc0(ButtonDeleteHandler, ew);
         ew->buttonDelete = w;
         vbox->AddChild(w);
     }
@@ -1394,7 +1394,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         ReportIf(!hwnd);
 
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClicked2 = mkFunc0(ButtonSaveToCurrentPDFHandler, ew);
+        w->onClicked = mkFunc0(ButtonSaveToCurrentPDFHandler, ew);
         ew->buttonSaveToCurrentFile = w;
         vbox->AddChild(w);
     }
@@ -1412,7 +1412,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         ReportIf(!hwnd);
 
         w->SetIsEnabled(false); // only enabled if there are changes
-        w->onClicked2 = mkFunc0(ButtonSaveToNewFileHandler, ew);
+        w->onClicked = mkFunc0(ButtonSaveToNewFileHandler, ew);
         ew->buttonSaveToNewFile = w;
         vbox->AddChild(w);
     }
