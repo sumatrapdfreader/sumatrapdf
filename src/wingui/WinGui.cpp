@@ -1217,8 +1217,8 @@ Size Static::GetIdealSize() {
 
 bool Static::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code == STN_CLICKED && onClicked) {
-        onClicked();
+    if (code == STN_CLICKED && !onClicked.IsEmpty()) {
+        onClicked.Call();
         return true;
     }
     return false;

@@ -183,8 +183,6 @@ bool PreTranslateMessage(MSG& msg);
 
 //--- Static
 
-using ClickedHandler = std::function<void()>;
-
 struct StaticCreateArgs {
     HWND parent = nullptr;
     HFONT font = nullptr;
@@ -194,8 +192,7 @@ struct StaticCreateArgs {
 struct Static : Wnd {
     Static();
 
-    ClickedHandler onClicked = nullptr;
-    Func0 onClicked2{};
+    Func0 onClicked;
 
     HWND Create(const StaticCreateArgs&);
 
