@@ -195,6 +195,7 @@ struct Static : Wnd {
     Static();
 
     ClickedHandler onClicked = nullptr;
+    Func0 onClicked2{};
 
     HWND Create(const StaticCreateArgs&);
 
@@ -214,6 +215,8 @@ struct ButtonCreateArgs {
 
 struct Button : Wnd {
     ClickedHandler onClicked = nullptr;
+    Func0 onClicked2{};
+
     bool isDefault = false;
 
     Button();

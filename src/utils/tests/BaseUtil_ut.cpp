@@ -14,10 +14,10 @@ static void testFn(TestFnData* d) {
     d->n++;
 }
 
-static void FuncWithArgTest() {
+static void Func0Test() {
     TestFnData d;
-    auto fn = mkFunc(testFn, &d);
-    fn.call();
+    auto fn = mkFunc0(testFn, &d);
+    fn.Call();
     utassert(d.n == 1);
 }
 
@@ -123,7 +123,7 @@ static int roundUpTestCases[] = {
 };
 
 void BaseUtilTest() {
-    FuncWithArgTest();
+    Func0Test();
 
     PoolAllocatorTest();
 

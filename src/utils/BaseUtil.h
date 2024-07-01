@@ -599,23 +599,51 @@ typedef void (*funcPtr)(void*);
 
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
-struct FuncWithArg {
+struct Func0 {
     funcPtr fn = nullptr;
-    void* data = nullptr;
+    void* userData = nullptr;
 
-    FuncWithArg() = default;
-    ~FuncWithArg() = default;
+    Func0() = default;
+    ~Func0() = default;
 
-    void call() {
-        fn(data);
+    bool IsEmpty() const {
+        return fn == nullptr;
+    }
+    void Call() {
+        fn(userData);
     }
 };
 
 template <typename T>
-FuncWithArg mkFunc(void (*fn)(T*), T* d) {
-    auto res = FuncWithArg{};
+Func0 mkFunc0(void (*fn)(T*), T* d) {
+    auto res = Func0{};
     res.fn = (funcPtr)fn;
-    res.data = (void*)d;
+    res.userData = (void*)d;
+    return res;
+}
+
+template <typename T>
+struct Func1 {
+    void (*fn)(void*, T*) = nullptr;
+    void* userData = nullptr;
+
+    Func1() = default;
+    ~Func1() = default;
+
+    bool IsEmpty() const {
+        return fn == nullptr;
+    }
+    void Call(T* arg) {
+        fn(userData, arg);
+    }
+};
+
+template <typename T1, typename T2>
+Func1<T2> mkFunc1(void (*fn)(T1*, T2*), T2* d) {
+    auto res = Func1<T1>{};
+    using fptr = void (*)(void*, T2*);
+    res.fn = (fptr)fn;
+    res.userData = (void*)d;
     return res;
 }
 

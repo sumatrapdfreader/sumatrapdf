@@ -1269,9 +1269,15 @@ Button::Button() {
 
 bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code == BN_CLICKED && onClicked) {
-        onClicked();
-        return true;
+    if (code == BN_CLICKED) {
+        if (onClicked) {
+            onClicked();
+            return true;
+        }
+        if (!onClicked2.IsEmpty()) {
+            onClicked2.Call();
+            return true;
+        }
     }
     return false;
 }
