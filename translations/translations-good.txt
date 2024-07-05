@@ -5253,6 +5253,7 @@ cy:Cau Pob Tab
 cz:Zavřít všechny karty
 de:Alle Tabs schließen
 es:Cerrar todas las pestañas
+fo:Sløkk øll varðabløð
 fr:Fermer tous les onglets
 ga:Dún Gach Cluaisín
 he:סגור את כל הכרטיסיות
@@ -5327,6 +5328,7 @@ cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
 de:Tabs links schließen
 es:Cerrar pestañas a la izquierda
+fo:Sløkk varðabløð vinstrumegin
 fr:Fermer les onglets sur la gauche
 ga:Dún cluaisíní ar chlé
 he:סגור כרטיסיות משמאל
@@ -7453,6 +7455,7 @@ cy:Dileu
 cz:Vymazat
 de:Löschen
 es:Eliminar
+fo:Strika
 fr:Supprimer
 ga:Scrios
 he:מחק
@@ -11579,6 +11582,7 @@ co:Manuale nant’à u situ web
 cz:Manuál na webové stránce
 de:Handbuch im Internet
 es:Manual en la Web
+fo:Vegleiðing á Vevsíðu
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
 hu:Kézikönyv a weboldalon
@@ -11917,6 +11921,7 @@ co:Nò
 cz:Ne
 de:Nein
 es:No
+fo:Nei
 fr:Non
 ga:Níl
 hi:नहीं
@@ -12765,13 +12770,19 @@ tl:Buksan sa bagong Window
 tw:在新視窗中開啟
 :Open Next File In Folder
 br:Abrir o Próximo Arquivo na Pasta
+de:Nächste Datei im Ordner öffnen
+fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
+nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
 sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
+de:Vorherige Datei im Ordner öffnen
+fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
+nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
 sk:Otvoriť predchádzajúci súbor v priečinku
@@ -15922,6 +15933,7 @@ co:Circà cù Google &Scholar
 cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
 es:Buscar con &Google Scholar
+fo:Leita við &Google Scholar
 fr:Rechercher avec &Google Scholar
 hu:Keresés &Google Scholar-ral
 id:Cari dengan &Google Scholar
@@ -15941,6 +15953,7 @@ co:Circà cù &Wikipedia
 cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
 es:Buscar con &Wikipedia
+fo:Leita við &Wikipedia
 fr:Rechercher avec &Wikipedia
 hu:Keresés a &Wikipédián
 id:Cari dengan &Wikipedia
@@ -18979,6 +18992,7 @@ co:Sì
 cz:Ano
 de:Ja
 es:Sí
+fo:Ja
 fr:Oui
 ga:Tá
 hi:हाँ
