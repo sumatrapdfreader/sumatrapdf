@@ -5479,7 +5479,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 }
             } else {
                 // in single page view, scrolls by page
-                win->ctrl->GoToPrevPage(true);
+                if (wmId == CmdScrollUp) {
+                    win->ctrl->GoToPrevPage(true);
+                } else {
+                    win->ctrl->GoToNextPage();
+                }
             }
         } break;
 
