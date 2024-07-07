@@ -7186,7 +7186,7 @@ br:Escuro
 by:Цёмны
 ca:Fosc
 ca-xv:Fosc
-cn:暗
+cn:蓝黑色
 co:Oscuru
 cy:Tywyll
 cz:Tmavý
@@ -7240,7 +7240,7 @@ br:Mais Escuro
 by:Больш цёмны
 ca:Més fosc
 ca-xv:Més fosc
-cn:更暗
+cn:黑色
 co:Più oscuru
 cy:Tywyllach
 cz:Tmavší
@@ -11166,7 +11166,7 @@ br:Claro
 by:Светлы
 ca:Clar
 ca-xv:Lleuger
-cn:明亮
+cn:白色
 co:Chjaru
 cy:Golau
 cz:Světlý
@@ -12770,18 +12770,22 @@ tl:Buksan sa bagong Window
 tw:在新視窗中開啟
 :Open Next File In Folder
 br:Abrir o Próximo Arquivo na Pasta
+cn:打开文件夹中的下一个文件
 de:Nächste Datei im Ordner öffnen
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
+it:Apri file successivo nella cartella
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
 sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
+cn:打开文件夹中的上一个文件
 de:Vorherige Datei im Ordner öffnen
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
+it:Apri file precedente nella cartella
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
