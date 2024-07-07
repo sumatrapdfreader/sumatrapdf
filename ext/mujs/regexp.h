@@ -32,7 +32,7 @@ enum {
  * code and the regexp.c compilation unit use the same value!
  */
 #ifndef REG_MAXSUB
-#define REG_MAXSUB 10
+#define REG_MAXSUB 16
 #endif
 
 struct Resub {

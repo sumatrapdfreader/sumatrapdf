@@ -185,7 +185,7 @@ static void fmtnum(js_State *J, js_Buffer **sb, double n)
 
 static void fmtstr(js_State *J, js_Buffer **sb, const char *s)
 {
-	static const char *HEX = "0123456789ABCDEF";
+	static const char *HEX = "0123456789abcdef";
 	int i, n;
 	Rune c;
 	js_putc(J, sb, '"');
@@ -200,7 +200,7 @@ static void fmtstr(js_State *J, js_Buffer **sb, const char *s)
 		case '\r': js_puts(J, sb, "\\r"); break;
 		case '\t': js_puts(J, sb, "\\t"); break;
 		default:
-			if (c < ' ') {
+			if (c < ' ' || (c >= 0xd800 && c <= 0xdfff)) {
 				js_putc(J, sb, '\\');
 				js_putc(J, sb, 'u');
 				js_putc(J, sb, HEX[(c>>12)&15]);

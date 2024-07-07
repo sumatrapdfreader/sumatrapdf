@@ -6,7 +6,7 @@
 
 JS_NORETURN void jsC_error(js_State *J, js_Ast *node, const char *fmt, ...) JS_PRINTFLIKE(3,4);
 
-static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body);
+static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body, int is_fun_exp);
 static void cexp(JF, js_Ast *exp);
 static void cstmlist(JF, js_Ast *list);
 static void cstm(JF, js_Ast *stm);
@@ -47,7 +47,7 @@ static void checkfutureword(JF, js_Ast *exp)
 	}
 }
 
-static js_Function *newfun(js_State *J, int line, js_Ast *name, js_Ast *params, js_Ast *body, int script, int default_strict)
+static js_Function *newfun(js_State *J, int line, js_Ast *name, js_Ast *params, js_Ast *body, int script, int default_strict, int is_fun_exp)
 {
 	js_Function *F = js_malloc(J, sizeof *F);
 	memset(F, 0, sizeof *F);
@@ -62,7 +62,7 @@ static js_Function *newfun(js_State *J, int line, js_Ast *name, js_Ast *params, 
 	F->strict = default_strict;
 	F->name = name ? name->string : "";
 
-	cfunbody(J, F, name, params, body);
+	cfunbody(J, F, name, params, body, is_fun_exp);
 
 	return F;
 }
@@ -347,12 +347,12 @@ static void cobject(JF, js_Ast *list)
 			emit(J, F, OP_INITPROP);
 			break;
 		case EXP_PROP_GET:
-			emitfunction(J, F, newfun(J, prop->line, NULL, NULL, kv->c, 0, F->strict));
+			emitfunction(J, F, newfun(J, prop->line, NULL, NULL, kv->c, 0, F->strict, 1));
 			emitline(J, F, kv);
 			emit(J, F, OP_INITGETTER);
 			break;
 		case EXP_PROP_SET:
-			emitfunction(J, F, newfun(J, prop->line, NULL, kv->b, kv->c, 0, F->strict));
+			emitfunction(J, F, newfun(J, prop->line, NULL, kv->b, kv->c, 0, F->strict, 1));
 			emitline(J, F, kv);
 			emit(J, F, OP_INITSETTER);
 			break;
@@ -623,7 +623,7 @@ static void cexp(JF, js_Ast *exp)
 
 	case EXP_FUN:
 		emitline(J, F, exp);
-		emitfunction(J, F, newfun(J, exp->line, exp->a, exp->b, exp->c, 0, F->strict));
+		emitfunction(J, F, newfun(J, exp->line, exp->a, exp->b, exp->c, 0, F->strict, 1));
 		break;
 
 	case EXP_IDENTIFIER:
@@ -1361,7 +1361,7 @@ static void cfundecs(JF, js_Ast *list)
 		js_Ast *stm = list->a;
 		if (stm->type == AST_FUNDEC) {
 			emitline(J, F, stm);
-			emitfunction(J, F, newfun(J, stm->line, stm->a, stm->b, stm->c, 0, F->strict));
+			emitfunction(J, F, newfun(J, stm->line, stm->a, stm->b, stm->c, 0, F->strict, 0));
 			emitline(J, F, stm);
 			emit(J, F, OP_SETLOCAL);
 			emitarg(J, F, addlocal(J, F, stm->a, 1));
@@ -1371,7 +1371,7 @@ static void cfundecs(JF, js_Ast *list)
 	}
 }
 
-static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body)
+static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body, int is_fun_exp)
 {
 	F->lightweight = 1;
 	F->arguments = 0;
@@ -1395,11 +1395,14 @@ static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body)
 
 	if (name) {
 		checkfutureword(J, F, name);
-		if (findlocal(J, F, name->string) < 0) {
-			emit(J, F, OP_CURRENT);
-			emit(J, F, OP_SETLOCAL);
-			emitarg(J, F, addlocal(J, F, name, 1));
-			emit(J, F, OP_POP);
+		if (is_fun_exp) {
+			if (findlocal(J, F, name->string) < 0) {
+				/* TODO: make this binding immutable! */
+				emit(J, F, OP_CURRENT);
+				emit(J, F, OP_SETLOCAL);
+				emitarg(J, F, addlocal(J, F, name, 1));
+				emit(J, F, OP_POP);
+			}
 		}
 	}
 
@@ -1416,10 +1419,10 @@ static void cfunbody(JF, js_Ast *name, js_Ast *params, js_Ast *body)
 
 js_Function *jsC_compilefunction(js_State *J, js_Ast *prog)
 {
-	return newfun(J, prog->line, prog->a, prog->b, prog->c, 0, J->default_strict);
+	return newfun(J, prog->line, prog->a, prog->b, prog->c, 0, J->default_strict, 1);
 }
 
 js_Function *jsC_compilescript(js_State *J, js_Ast *prog, int default_strict)
 {
-	return newfun(J, prog ? prog->line : 0, NULL, NULL, prog, 1, default_strict);
+	return newfun(J, prog ? prog->line : 0, NULL, NULL, prog, 1, default_strict, 0);
 }

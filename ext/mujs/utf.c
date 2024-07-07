@@ -194,26 +194,6 @@ runelen(int c)
 	return runetochar(str, &rune);
 }
 
-int
-utflen(const char *s)
-{
-	int c;
-	int n;
-	Rune rune;
-
-	n = 0;
-	for(;;) {
-		c = *(uchar*)s;
-		if(c < Runeself) {
-			if(c == 0)
-				return n;
-			s++;
-		} else
-			s += chartorune(&rune, s);
-		n++;
-	}
-}
-
 static const Rune *
 ucd_bsearch(Rune c, const Rune *t, int n, int ne)
 {

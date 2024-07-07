@@ -24,7 +24,7 @@
 #define REG_MAXSPAN 64
 #endif
 #ifndef REG_MAXCLASS
-#define REG_MAXCLASS 16
+#define REG_MAXCLASS 128
 #endif
 
 typedef struct Reclass Reclass;
@@ -39,9 +39,9 @@ struct Reclass {
 
 struct Reprog {
 	Reinst *start, *end;
+	Reclass *cclass;
 	int flags;
 	int nsub;
-	Reclass cclass[REG_MAXCLASS];
 };
 
 struct cstate {
@@ -60,6 +60,8 @@ struct cstate {
 
 	const char *error;
 	jmp_buf kaboom;
+
+	Reclass cclass[REG_MAXCLASS];
 };
 
 static void die(struct cstate *g, const char *message)
@@ -207,20 +209,50 @@ static int lexcount(struct cstate *g)
 
 static void newcclass(struct cstate *g)
 {
-	if (g->ncclass >= nelem(g->prog->cclass))
+	if (g->ncclass >= REG_MAXCLASS)
 		die(g, "too many character classes");
-	g->yycc = g->prog->cclass + g->ncclass++;
+	g->yycc = g->cclass + g->ncclass++;
 	g->yycc->end = g->yycc->spans;
 }
 
 static void addrange(struct cstate *g, Rune a, Rune b)
 {
+	Reclass *cc = g->yycc;
+	Rune *p;
+
 	if (a > b)
 		die(g, "invalid character class range");
-	if (g->yycc->end + 2 >= g->yycc->spans + nelem(g->yycc->spans))
+
+	/* extend existing ranges if they overlap */
+	for (p = cc->spans; p < cc->end; p += 2) {
+		/* completely inside old range */
+		if (a >= p[0] && b <= p[1])
+			return;
+
+		/* completely swallows old range */
+		if (a < p[0] && b >= p[1]) {
+			p[0] = a;
+			p[1] = b;
+			return;
+		}
+
+		/* extend at start */
+		if (b >= p[0] - 1 && b <= p[1] && a < p[0]) {
+			p[0] = a;
+			return;
+		}
+
+		/* extend at end */
+		if (a >= p[0] && a <= p[1] + 1 && b > p[1]) {
+			p[1] = b;
+			return;
+		}
+	}
+
+	if (cc->end + 2 >= cc->spans + nelem(cc->spans))
 		die(g, "too many character class ranges");
-	*g->yycc->end++ = a;
-	*g->yycc->end++ = b;
+	*cc->end++ = a;
+	*cc->end++ = b;
 }
 
 static void addranges_d(struct cstate *g)
@@ -422,7 +454,7 @@ struct Renode {
 	unsigned char type;
 	unsigned char ng, m, n;
 	Rune c;
-	Reclass *cc;
+	int cc;
 	Renode *x;
 	Renode *y;
 };
@@ -431,7 +463,7 @@ static Renode *newnode(struct cstate *g, int type)
 {
 	Renode *node = g->pend++;
 	node->type = type;
-	node->cc = NULL;
+	node->cc = -1;
 	node->c = 0;
 	node->ng = 0;
 	node->m = 0;
@@ -493,13 +525,13 @@ static Renode *parseatom(struct cstate *g)
 	}
 	if (g->lookahead == L_CCLASS) {
 		atom = newnode(g, P_CCLASS);
-		atom->cc = g->yycc;
+		atom->cc = g->yycc - g->cclass;
 		next(g);
 		return atom;
 	}
 	if (g->lookahead == L_NCCLASS) {
 		atom = newnode(g, P_NCCLASS);
-		atom->cc = g->yycc;
+		atom->cc = g->yycc - g->cclass;
 		next(g);
 		return atom;
 	}
@@ -761,11 +793,11 @@ loop:
 		break;
 	case P_CCLASS:
 		inst = emit(prog, I_CCLASS);
-		inst->cc = node->cc;
+		inst->cc = prog->cclass + node->cc;
 		break;
 	case P_NCCLASS:
 		inst = emit(prog, I_NCCLASS);
-		inst->cc = node->cc;
+		inst->cc = prog->cclass + node->cc;
 		break;
 	case P_REF:
 		inst = emit(prog, I_REF);
@@ -775,35 +807,38 @@ loop:
 }
 
 #ifdef TEST
-static void dumpnode(Renode *node)
+static void dumpnode(struct cstate *g, Renode *node)
 {
 	Rune *p;
+	Reclass *cc;
 	if (!node) { printf("Empty"); return; }
 	switch (node->type) {
-	case P_CAT: printf("Cat("); dumpnode(node->x); printf(", "); dumpnode(node->y); printf(")"); break;
-	case P_ALT: printf("Alt("); dumpnode(node->x); printf(", "); dumpnode(node->y); printf(")"); break;
+	case P_CAT: printf("Cat("); dumpnode(g, node->x); printf(", "); dumpnode(g, node->y); printf(")"); break;
+	case P_ALT: printf("Alt("); dumpnode(g, node->x); printf(", "); dumpnode(g, node->y); printf(")"); break;
 	case P_REP:
 		printf(node->ng ? "NgRep(%d,%d," : "Rep(%d,%d,", node->m, node->n);
-		dumpnode(node->x);
+		dumpnode(g, node->x);
 		printf(")");
 		break;
 	case P_BOL: printf("Bol"); break;
 	case P_EOL: printf("Eol"); break;
 	case P_WORD: printf("Word"); break;
 	case P_NWORD: printf("NotWord"); break;
-	case P_PAR: printf("Par(%d,", node->n); dumpnode(node->x); printf(")"); break;
-	case P_PLA: printf("PLA("); dumpnode(node->x); printf(")"); break;
-	case P_NLA: printf("NLA("); dumpnode(node->x); printf(")"); break;
+	case P_PAR: printf("Par(%d,", node->n); dumpnode(g, node->x); printf(")"); break;
+	case P_PLA: printf("PLA("); dumpnode(g, node->x); printf(")"); break;
+	case P_NLA: printf("NLA("); dumpnode(g, node->x); printf(")"); break;
 	case P_ANY: printf("Any"); break;
 	case P_CHAR: printf("Char(%c)", node->c); break;
 	case P_CCLASS:
 		printf("Class(");
-		for (p = node->cc->spans; p < node->cc->end; p += 2) printf("%02X-%02X,", p[0], p[1]);
+		cc = g->cclass + node->cc;
+		for (p = cc->spans; p < cc->end; p += 2) printf("%02X-%02X,", p[0], p[1]);
 		printf(")");
 		break;
 	case P_NCCLASS:
 		printf("NotClass(");
-		for (p = node->cc->spans; p < node->cc->end; p += 2) printf("%02X-%02X,", p[0], p[1]);
+		cc = g->cclass + node->cc;
+		for (p = cc->spans; p < cc->end; p += 2) printf("%02X-%02X,", p[0], p[1]);
 		printf(")");
 		break;
 	case P_REF: printf("Ref(%d)", node->n); break;
@@ -868,13 +903,20 @@ Reprog *regcompx(void *(*alloc)(void *ctx, void *p, int n), void *ctx,
 	if (setjmp(g.kaboom)) {
 		if (errorp) *errorp = g.error;
 		alloc(ctx, g.pstart, 0);
-		alloc(ctx, g.prog, 0);
+		if (g.prog) {
+			alloc(ctx, g.prog->cclass, 0);
+			alloc(ctx, g.prog->start, 0);
+			alloc(ctx, g.prog, 0);
+		}
 		return NULL;
 	}
 
 	g.prog = alloc(ctx, NULL, sizeof (Reprog));
 	if (!g.prog)
 		die(&g, "cannot allocate regular expression");
+	g.prog->start = NULL;
+	g.prog->cclass = NULL;
+
 	n = strlen(pattern) * 2;
 	if (n > REG_MAXPROG)
 		die(&g, "program too large");
@@ -900,7 +942,7 @@ Reprog *regcompx(void *(*alloc)(void *ctx, void *p, int n), void *ctx,
 		die(&g, "syntax error");
 
 #ifdef TEST
-	dumpnode(node);
+	dumpnode(&g, node);
 	putchar('\n');
 #endif
 
@@ -912,6 +954,15 @@ Reprog *regcompx(void *(*alloc)(void *ctx, void *p, int n), void *ctx,
 	g.prog->start = g.prog->end = alloc(ctx, NULL, n * sizeof (Reinst));
 	if (!g.prog->start)
 		die(&g, "cannot allocate regular expression instruction list");
+
+	if (g.ncclass > 0) {
+		g.prog->cclass = alloc(ctx, NULL, g.ncclass * sizeof (Reclass));
+		if (!g.prog->cclass)
+			die(&g, "cannot allocate regular expression character class list");
+		memcpy(g.prog->cclass, g.cclass, g.ncclass * sizeof (Reclass));
+		for (i = 0; i < g.ncclass; ++i)
+			g.prog->cclass[i].end = g.prog->cclass[i].spans + (g.cclass[i].end - g.cclass[i].spans);
+	}
 
 	split = emit(g.prog, I_SPLIT);
 	split->x = split + 3;
@@ -937,6 +988,8 @@ Reprog *regcompx(void *(*alloc)(void *ctx, void *p, int n), void *ctx,
 void regfreex(void *(*alloc)(void *ctx, void *p, int n), void *ctx, Reprog *prog)
 {
 	if (prog) {
+		if (prog->cclass)
+			alloc(ctx, prog->cclass, 0);
 		alloc(ctx, prog->start, 0);
 		alloc(ctx, prog, 0);
 	}

@@ -19,7 +19,6 @@ typedef int Rune;	/* 32 bits */
 #define chartorune	jsU_chartorune
 #define runetochar	jsU_runetochar
 #define runelen		jsU_runelen
-#define utflen		jsU_utflen
 
 #define isalpharune	jsU_isalpharune
 #define islowerrune	jsU_islowerrune
@@ -39,7 +38,6 @@ enum
 int	chartorune(Rune *rune, const char *str);
 int	runetochar(char *str, const Rune *rune);
 int	runelen(int c);
-int	utflen(const char *s);
 
 int		isalpharune(Rune c);
 int		islowerrune(Rune c);
