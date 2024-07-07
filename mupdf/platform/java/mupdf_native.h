@@ -3420,26 +3420,26 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setLine
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
- * Method:    hasFileSpecification
+ * Method:    hasFilespec
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasFileSpecification
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_hasFilespec
   (JNIEnv *, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
- * Method:    setFileSpecification
+ * Method:    setFilespec
  * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;)V
  */
-JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setFileSpecification
+JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_setFilespec
   (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFAnnotation
- * Method:    getFileSpecification
+ * Method:    getFilespec
  * Signature: ()Lcom/artifex/mupdf/fitz/PDFObject;
  */
-JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getFileSpecification
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_PDFAnnotation_getFilespec
   (JNIEnv *, jobject);
 
 /*

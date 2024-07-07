@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -578,8 +578,8 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 				if (cp->u.jbig2.embedded && cp->u.jbig2.globals)
 				{
 					pdf_obj *globals_ref = pdf_add_new_dict(ctx, doc, 1);
+					pdf_dict_put_drop(ctx, dp, PDF_NAME(JBIG2Globals), globals_ref);
 					pdf_update_stream(ctx, doc, globals_ref, fz_jbig2_globals_data(ctx, cp->u.jbig2.globals), 0);
-					pdf_dict_put(ctx, dp, PDF_NAME(JBIG2Globals), globals_ref);
 				}
 				else
 					buffer = pdf_jbig2_stream_from_file(ctx, cbuffer->buffer,

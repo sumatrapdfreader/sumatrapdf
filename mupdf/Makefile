@@ -469,6 +469,7 @@ SO_INSTALL_MODE ?= 644
 third: $(THIRD_LIB)
 extra-libs: $(THIRD_GLUT_LIB)
 libs: $(LIBS_TO_INSTALL_IN_BIN) $(LIBS_TO_INSTALL_IN_LIB) $(COMMERCIAL_LIBS)
+commercial-libs: $(COMMERCIAL_LIBS)
 tools: $(TOOL_APPS)
 apps: $(TOOL_APPS) $(VIEW_APPS)
 

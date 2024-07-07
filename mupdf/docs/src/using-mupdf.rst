@@ -274,7 +274,7 @@ Avoid using 'get' as this is a meaningless and redundant filler word.
 
 These words are reserved for reference counting schemes:
 
-- **new**, **create**, **find**, **load**, **open**, **keep** - return objects that you are responsible for freeing.
+- **new**, **create**, **add**, **find**, **load**, **open**, **keep** - return objects that you are responsible for freeing.
 - **drop** - relinquish ownership of the object passed in.
 
 When searching for an object or value, the name used depends on whether returning the value is passing ownership:

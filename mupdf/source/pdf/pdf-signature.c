@@ -238,7 +238,7 @@ pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7
 {
 	pdf_document *doc;
 
-	if (pdf_dict_get(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
+	if (pdf_dict_get_inheritable(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (pdf_widget_is_readonly(ctx, widget))
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Signature is read only, it cannot be signed.");
@@ -437,7 +437,7 @@ void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 	int flags;
 	fz_display_list *dlist = NULL;
 
-	if (pdf_dict_get(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
+	if (pdf_dict_get_inheritable(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (pdf_widget_is_readonly(ctx, widget))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "read only signature cannot be cleared");
@@ -579,7 +579,7 @@ pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_p
 	size_t contents_len;
 	pdf_pkcs7_distinguished_name *dn;
 
-	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return NULL;
@@ -612,7 +612,7 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 	char *contents = NULL;
 	size_t contents_len;
 
-	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return PDF_SIGNATURE_ERROR_NOT_SIGNED;
@@ -651,7 +651,7 @@ pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *v
 	size_t contents_len;
 	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
 
-	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return PDF_SIGNATURE_ERROR_NOT_SIGNED;

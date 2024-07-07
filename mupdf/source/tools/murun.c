@@ -3903,10 +3903,14 @@ static void ffi_Page_getBounds(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	fz_page *page = ffi_topage(J, 0);
+	fz_box_type box_type = FZ_CROP_BOX;
 	fz_rect bounds;
 
+	if (js_iscoercible(J, 1))
+		box_type = fz_box_type_from_string(js_tostring(J, 1));
+
 	fz_try(ctx)
-		bounds = fz_bound_page(ctx, page);
+		bounds = fz_bound_page_box(ctx, page, box_type);
 	fz_catch(ctx)
 		rethrow(J);
 
@@ -6399,7 +6403,11 @@ static void ffi_PDFDocument_addEmbeddedFile(js_State *J)
 	fz_always(ctx)
 		fz_drop_buffer(ctx, contents);
 	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, ind);
 		rethrow(J);
+	}
+
 	ffi_pushobj(J, ind);
 }
 
@@ -9495,19 +9503,17 @@ static void ffi_PDFAnnotation_getFilespec(js_State *J)
 	fz_catch(ctx)
 		rethrow(J);
 
-	ffi_pushobj(J, fs);
+	ffi_pushobj(J, pdf_keep_obj(ctx, fs));
 }
 
 static void ffi_PDFAnnotation_setFilespec(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
 	pdf_annot *annot = ffi_toannot(J, 0);
-	pdf_obj *fs = js_touserdata(J, 1, "pdf_obj");
+	pdf_obj *fs = js_iscoercible(J, 1) ? js_touserdata(J, 1, "pdf_obj") : NULL;
 
 	fz_try(ctx)
 		pdf_set_annot_filespec(ctx, annot, fs);
-	fz_always(ctx)
-		pdf_drop_obj(ctx, fs);
 	fz_catch(ctx)
 		rethrow(J);
 }
@@ -10124,7 +10130,7 @@ static void ffi_PDFWidget_previewSignature(js_State *J)
 		fz_rect rect = pdf_annot_rect(ctx, widget);
 		fz_text_language lang = pdf_annot_language(ctx, widget);
 
-		if (pdf_dict_get(ctx, pdf_annot_obj(ctx, widget), PDF_NAME(FT)) != PDF_NAME(Sig))
+		if (pdf_dict_get_inheritable(ctx, pdf_annot_obj(ctx, widget), PDF_NAME(FT)) != PDF_NAME(Sig))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 
 		pixmap = pdf_preview_signature_as_pixmap(ctx,
@@ -10492,7 +10498,7 @@ int murun_main(int argc, char **argv)
 	js_newobjectx(J);
 	{
 		jsB_propfun(J, "Page.isPDF", ffi_Page_isPDF, 0);
-		jsB_propfun(J, "Page.getBounds", ffi_Page_getBounds, 0);
+		jsB_propfun(J, "Page.getBounds", ffi_Page_getBounds, 1);
 		jsB_propfun(J, "Page.run", ffi_Page_run, 2);
 		jsB_propfun(J, "Page.runPageContents", ffi_Page_runPageContents, 2);
 		jsB_propfun(J, "Page.runPageAnnots", ffi_Page_runPageAnnots, 2);

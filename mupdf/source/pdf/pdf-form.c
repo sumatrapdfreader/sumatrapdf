@@ -1170,7 +1170,7 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_annot *widget, const char *upd
 		{
 			rc = pdf_set_annot_field_value(ctx, doc, widget, update, 1);
 		}
-		pdf_end_operation(ctx, doc);
+		end_annot_op(ctx, widget);
 	}
 	fz_always(ctx)
 	{
@@ -1179,11 +1179,10 @@ int pdf_set_text_field_value(fz_context *ctx, pdf_annot *widget, const char *upd
 		fz_free(ctx, new_change);
 		fz_free(ctx, evt.newChange);
 		fz_free(ctx, merged_value);
-		end_annot_op(ctx, widget);
 	}
 	fz_catch(ctx)
 	{
-		pdf_abandon_operation(ctx, doc);
+		abandon_annot_op(ctx, widget);
 		fz_warn(ctx, "could not set widget text");
 		rc = 0;
 	}
@@ -1532,7 +1531,7 @@ int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document
 	int byte_range_len;
 	int changed = 0;
 
-	if (pdf_dict_get(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
+	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
 		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return 0;

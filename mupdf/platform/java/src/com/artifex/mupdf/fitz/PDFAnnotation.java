@@ -293,9 +293,12 @@ public class PDFAnnotation
 	public native Point[] getLine();
 	public native void setLine(Point a, Point b);
 
-	public native boolean hasFileSpecification();
-	public native void setFileSpecification(PDFObject fs);
-	public native PDFObject getFileSpecification();
+	public native boolean hasFilespec();
+	public native void setFilespec(PDFObject fs);
+	public native PDFObject getFilespec();
+	public boolean hasFileSpecification() { return hasFilespec(); }
+	public void setFileSpecification(PDFObject fs) { setFilespec(fs); }
+	public PDFObject getFileSpecification() { return getFilespec(); }
 
 	public native boolean hasIntent();
 	public native int getIntent();

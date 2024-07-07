@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -289,16 +289,19 @@ FUN(Document_openNativeWithStream)(JNIEnv *env, jclass cls, jstring jmagic, jobj
 		jni_throw_run(env, "cannot create internal buffer for document stream");
 	}
 
-	accarray = (*env)->NewByteArray(env, sizeof accstate->buffer);
-	if (accarray)
-		accarray = (*env)->NewGlobalRef(env, accarray);
-	if (!accarray)
+	if (jacc)
 	{
-		(*env)->DeleteGlobalRef(env, docarray);
-		(*env)->DeleteGlobalRef(env, jacc);
-		(*env)->DeleteGlobalRef(env, jdoc);
-		if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
-		jni_throw_run(env, "cannot create internal buffer for accelerator stream");
+		accarray = (*env)->NewByteArray(env, sizeof accstate->buffer);
+		if (accarray)
+			accarray = (*env)->NewGlobalRef(env, accarray);
+		if (!accarray)
+		{
+			(*env)->DeleteGlobalRef(env, docarray);
+			(*env)->DeleteGlobalRef(env, jacc);
+			(*env)->DeleteGlobalRef(env, jdoc);
+			if (magic) (*env)->ReleaseStringUTFChars(env, jmagic, magic);
+			jni_throw_run(env, "cannot create internal buffer for accelerator stream");
+		}
 	}
 
 	fz_try(ctx)
