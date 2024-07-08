@@ -810,6 +810,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\Commands.h" />
     <ClInclude Include="..\src\DisplayMode.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
@@ -845,6 +846,7 @@
     <ClInclude Include="..\src\utils\WinUtil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Commands.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />

@@ -271,7 +271,8 @@ struct CommandArg {
     // for Bool, the presence means true, absence means false
     const char* name = nullptr;
 
-    // for Int and Color, this is parsed version for convenience
+    const char* strVal = nullptr;
+    bool boolVal = false;
     int intVal = 0;
     ParsedColor colorVal;
 
@@ -316,7 +317,7 @@ void FreeCommandsWithArg();
 int GetFrstIntArg(CommandWithArg* cmd, int defValue);
 bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
 
-int ParseCommand(char* definition);
+int ParseCommand(const char* definition);
 
 // for CmdCreateAnnot*
 constexpr const char* kCmdArgOpenEdit = "openedit";

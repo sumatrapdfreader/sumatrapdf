@@ -41,6 +41,7 @@ int GetCommandIdByDesc(const char* cmdDesc) {
 }
 
 CommandArg::~CommandArg() {
+    str::Free(strVal);
     str::Free(name);
 }
 
@@ -108,6 +109,20 @@ CommandArg* FindIntArg(CommandArg* first) {
     return FindFirstArgOfType(first, CommandArg::Type::Int);
 }
 
+static bool parseBool(const char* s) {
+    if (str::EqI(s, "1")) {
+        return true;
+    }
+    if (str::EqI(s, "true")) {
+        return true;
+    }
+    if (str::EqI(s, "yes")) {
+        return true;
+    }
+    // everything else, including invalid values, is false
+    return false;
+}
+
 // returns null if can't parse `arg` as a given type
 CommandArg* MkArg(const char* arg, CommandArg::Type type) {
     ReportIf(str::IsEmpty((arg)));
@@ -115,30 +130,51 @@ CommandArg* MkArg(const char* arg, CommandArg::Type type) {
         return nullptr;
     }
 
-    if (type == CommandArg::Type::Bool || type == CommandArg::Type::Bool) {
-        // for bool and string, all values are valid
-        // TODO: support foo=[true|false] syntax? or is it redundant
-        auto res = newArg(type, arg);
+    // note: this might break if values happen to contain '='
+    // in which case they should get explicit name
+    // maybe add heuristic for string values where we say
+    // wihch name we're looking for and undo '=' parsing
+    // if the name doesn't match
+    StrVec nameVal;
+    Split(nameVal, arg, "=", false, 2);
+    const char* val = nullptr;
+    const char* name = arg;
+    if (nameVal.Size() == 2) {
+        name = nameVal[0];
+        val = nameVal[1];
+    }
+    if (type == CommandArg::Type::Bool) {
+        auto res = newArg(type, name);
+        // if value is not explicitly given with =
+        // presence of value means "true"
+        res->boolVal = val ? parseBool(val) : true;
+        return res;
+    }
+
+    if (type == CommandArg::Type::String) {
+        auto res = newArg(type, name);
+        // if value is not explictly given with =
+        // we store nullptr and assume the name is the value
+        res->strVal = val ? str::Dup(val) : nullptr;
         return res;
     }
 
     if (type == CommandArg::Type::Int) {
+        auto res = newArg(type, name);
+        const char* valStr = val ? val : name;
         // permissive parsing, so always succeeds
-        // TODO: support foo=5 syntax to disambiguate args if more than one
-        int n = ParseInt(arg);
-        auto res = newArg(type, arg);
-        res->intVal = n;
+        res->intVal = ParseInt(valStr);
         return res;
     }
 
     ReportIf(type != CommandArg::Type::Color);
-    // TODO: support bg=#ffff00 syntax
+    const char* valStr = val ? val : name;
     ParsedColor col;
-    ParseColor(col, arg);
+    ParseColor(col, valStr);
     if (!col.parsedOk) {
         return nullptr;
     }
-    auto res = newArg(type, arg);
+    auto res = newArg(type, name);
     res->colorVal = col;
     return res;
 }
@@ -222,7 +258,7 @@ bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
 // some commands can accept arguments. For those we have to create CommandWithArg that
 // binds original command id and an arg and creates a unique command id
 // we return -1 if unkown command or command doesn't take an argument or argument is invalid
-int ParseCommand(char* definition) {
+int ParseCommand(const char* definition) {
     int cmdId = GetCommandIdByName(definition);
     if (cmdId > 0) {
         return cmdId;

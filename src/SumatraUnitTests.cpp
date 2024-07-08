@@ -17,6 +17,7 @@
 #include "EngineBase.h"
 #include "GlobalPrefs.h"
 #include "Flags.h"
+#include "Commands.h"
 
 #include <float.h>
 #include <math.h>
@@ -222,7 +223,26 @@ static void colorTest() {
     utassert(c == c2);
 }
 
+void parseCommandsTest() {
+    {
+        auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 openEdit");
+        auto cmd = FindCommandWithArg(cmdId);
+        utassert(cmd->origId == CmdCreateAnnotHighlight);
+
+        utassert(FindArg(cmd->firstArg, kCmdArgOpenEdit, CommandArg::Type::Bool) != nullptr);
+        utassert(GetBoolArg(cmd, kCmdArgOpenEdit, false) == true);
+        utassert(FindColorArg(cmd->firstArg) != nullptr);
+    }
+    {
+        auto cmdId = ParseCommand("CmdGoToNextPage 3");
+        auto cmd = FindCommandWithArg(cmdId);
+        utassert(cmd->origId == CmdGoToNextPage);
+        utassert(FindIntArg(cmd->firstArg)->intVal == 3);
+    }
+}
+
 void SumatraPDF_UnitTests() {
+    parseCommandsTest();
     colorTest();
     BenchRangeTest();
     ParseCommandLineTest();

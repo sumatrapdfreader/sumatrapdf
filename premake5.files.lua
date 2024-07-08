@@ -1176,6 +1176,7 @@ function test_util_files()
   files_in_dir("src", {
     --"StressTesting.*",
     --"AppTools.*",
+    "Commands.*",
     "CrashHandlerNoOp.cpp",
     "DisplayMode.*",
     "Flags.*",
