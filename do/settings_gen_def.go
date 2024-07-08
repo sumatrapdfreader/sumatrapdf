@@ -108,6 +108,7 @@ var (
 			"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
 		mkField("Filter", String, nil,
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
+		mkField("Shortcut", String, nil, "optional: keyboard shortcut e.g. Alt + 7").setVersion("3.6"),
 	}
 
 	selectionHandler = []*Field{

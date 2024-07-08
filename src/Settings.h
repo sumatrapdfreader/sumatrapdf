@@ -138,6 +138,8 @@ struct ExternalViewer {
     // separate multiple entries using ';' and don't include any spaces
     // (e.g. *.pdf;*.xps for all PDF and XPS documents)
     char* filter;
+    // optional: keyboard shortcut e.g. Alt + 7
+    char* shortcut;
 };
 
 // customization options for how we show forward search results (used
@@ -528,9 +530,10 @@ static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
     {offsetof(ExternalViewer, name), SettingType::String, 0},
     {offsetof(ExternalViewer, filter), SettingType::String, 0},
+    {offsetof(ExternalViewer, shortcut), SettingType::String, 0},
 };
-static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 3, gExternalViewerFields,
-                                               "CommandLine\0Name\0Filter"};
+static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 4, gExternalViewerFields,
+                                               "CommandLine\0Name\0Filter\0Shortcut"};
 
 static const FieldInfo gForwardSearchFields[] = {
     {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},

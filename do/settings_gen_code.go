@@ -43,7 +43,6 @@ type Field struct {
 	Expert     bool // expert prefs are not exposed by the UI
 	DocComment string
 	Version    string // version in which this setting was introduced
-	PreRelease bool   // prefs which aren't written out in release builds
 
 	StructName string // only valid for some types
 }
@@ -55,14 +54,6 @@ func (f *Field) setExpert() *Field {
 
 func (f *Field) setInternal() *Field {
 	f.Internal = true
-	return f
-}
-
-func (f *Field) setPreRelease() *Field {
-	f.PreRelease = true
-	if f.Type.Name == "Struct" {
-		f.Type.Name = "Prerelease"
-	}
 	return f
 }
 
@@ -535,7 +526,7 @@ func genAndSaveSettingsStructs() {
 
 	genSettingsHTML := func() {
 		prefs := globalPrefsStruct
-		inside := genStruct(prefs, "", false)
+		inside := genStruct(prefs, "")
 		s := strings.Replace(tmplHTML, "%INSIDE%", inside, -1)
 		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
 		s = strings.Replace(s, "langs.html", langsFileName, -1)
