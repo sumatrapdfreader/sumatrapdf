@@ -5079,9 +5079,12 @@ OpenFileInBrowser:
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CommandWithArg* cmd) {
     if (cmd) {
-        args.col = cmd->argColor;
-        ReportIf(!args.col.parsedOk);
-        return;
+        auto col = FindColorArg(cmd->firstArg);
+        ReportIf(!col || !col->colorVal.parsedOk);
+        if (col && col->colorVal.parsedOk) {
+            args.col = col->colorVal;
+            return;
+        }
     }
     auto& a = gGlobalPrefs->annotations;
     ParsedColor* col = nullptr;
@@ -5107,17 +5110,17 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CommandWithArg* cmd) {
 }
 
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    int wmId = LOWORD(wp);
+    int cmdId = LOWORD(wp);
 
-    if (wmId >= 0xF000) {
+    if (cmdId >= 0xF000) {
         // handle system menu messages for the Window menu (needed for Tabs in Titlebar)
         return SendMessageW(hwnd, WM_SYSCOMMAND, wp, lp);
     }
 
     // check if the menuId belongs to an entry in the list of
     // recently opened files and load the referenced file if it does
-    if ((wmId >= CmdFileHistoryFirst) && (wmId <= CmdFileHistoryLast)) {
-        FileState* state = gFileHistory.Get(wmId - CmdFileHistoryFirst);
+    if ((cmdId >= CmdFileHistoryFirst) && (cmdId <= CmdFileHistoryLast)) {
+        FileState* state = gFileHistory.Get(cmdId - CmdFileHistoryFirst);
         if (state && HasPermission(Perm::DiskAccess)) {
             LoadArgs args(state->filePath, win);
             LoadDocument(&args);
@@ -5127,8 +5130,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
     static_assert(CmdFavoriteLast - CmdFavoriteFirst == 256, "wrong number of favorite menu ids");
-    if ((wmId >= CmdFavoriteFirst) && (wmId <= CmdFavoriteLast)) {
-        GoToFavoriteByMenuId(win, wmId);
+    if ((cmdId >= CmdFavoriteFirst) && (cmdId <= CmdFavoriteLast)) {
+        GoToFavoriteByMenuId(win, cmdId);
         return 0;
     }
 
@@ -5138,33 +5141,33 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     WindowTab* tab = win->CurrentTab();
     if (!win->IsCurrentTabAbout()) {
-        if (CmdOpenWithExternalFirst <= wmId && wmId <= CmdOpenWithExternalLast) {
-            size_t idx = (size_t)wmId - (size_t)CmdOpenWithExternalFirst;
+        if (CmdOpenWithExternalFirst <= cmdId && cmdId <= CmdOpenWithExternalLast) {
+            size_t idx = (size_t)cmdId - (size_t)CmdOpenWithExternalFirst;
             ViewWithExternalViewer(tab, idx);
             return 0;
         }
-        if (CmdOpenWithFirst < wmId && wmId < CmdOpenWithLast) {
-            ViewWithKnownExternalViewer(tab, wmId);
+        if (CmdOpenWithFirst < cmdId && cmdId < CmdOpenWithLast) {
+            ViewWithKnownExternalViewer(tab, cmdId);
             return 0;
         }
     }
 
-    if ((wmId >= CmdThemeFirst) && (wmId <= CmdThemeLast)) {
-        int themeIdx = (wmId - CmdThemeFirst);
+    if ((cmdId >= CmdThemeFirst) && (cmdId <= CmdThemeLast)) {
+        int themeIdx = (cmdId - CmdThemeFirst);
         SetThemeByIndex(themeIdx);
         return 0;
     }
 
-    if (CmdSelectionHandlerFirst <= wmId && wmId < CmdSelectionHandlerLast) {
+    if (CmdSelectionHandlerFirst <= cmdId && cmdId < CmdSelectionHandlerLast) {
         SelectionHandler* selectedSH{nullptr};
         for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-            if (sh->cmdID == wmId) {
+            if (sh->cmdID == cmdId) {
                 selectedSH = sh;
                 break;
             }
         }
         if (!selectedSH || str::IsEmpty(selectedSH->url)) {
-            logf("FrameOnCommand: missing selectedSH for wmId %d\n", wmId);
+            logf("FrameOnCommand: missing selectedSH for cmdId %d\n", cmdId);
             return 0;
         }
         const char* url = selectedSH->url;
@@ -5182,13 +5185,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     Annotation* lastCreatedAnnot = nullptr;
 
-    CommandWithArg* cmdWithArg = FindCommandWithArg(wmId);
+    CommandWithArg* cmdWithArg = FindCommandWithArg(cmdId);
     if (cmdWithArg != nullptr) {
-        wmId = cmdWithArg->origId;
+        cmdId = cmdWithArg->origId;
     }
 
-    AnnotationType annotType = (AnnotationType)(wmId - CmdCreateAnnotText);
-    switch (wmId) {
+    AnnotationType annotType = (AnnotationType)(cmdId - CmdCreateAnnotText);
+    switch (cmdId) {
         case CmdCreateAnnotHighlight:
             annotType = AnnotationType::Highlight;
             break;
@@ -5204,7 +5207,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
 
     // most of them require a win, the few exceptions are no-ops
-    switch (wmId) {
+    switch (cmdId) {
         case CmdNewWindow:
             CreateAndShowMainWindow(nullptr);
             break;
@@ -5230,7 +5233,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsCurrentTabAbout()) {
                 // folder browsing should also work when an error page is displayed,
                 // so special-case it before the win->IsDocLoaded() check
-                bool forward = wmId == CmdOpenNextFileInFolder;
+                bool forward = cmdId == CmdOpenNextFileInFolder;
                 OpenNextPrevFileInFolder(win, forward);
             }
             break;
@@ -5305,10 +5308,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             Vec<WindowTab*> toCloseLeft;
             CollectTabsToClose(win, tab, toCloseOther, toCloseRight, toCloseLeft);
             Vec<WindowTab*>& toClose = toCloseOther;
-            if (wmId == CmdCloseTabsToTheRight) {
+            if (cmdId == CmdCloseTabsToTheRight) {
                 toClose = toCloseRight;
             }
-            if (wmId == CmdCloseTabsToTheLeft) {
+            if (cmdId == CmdCloseTabsToTheLeft) {
                 toClose = toCloseLeft;
             }
             for (WindowTab* t : toClose) {
@@ -5342,7 +5345,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            float towards = (wmId == CmdZoomIn) ? kZoomMax : kZoomMin;
+            float towards = (cmdId == CmdZoomIn) ? kZoomMax : kZoomMin;
             auto zoom = ctrl->GetNextZoomStep(towards);
             Point mousePos = HwndGetCursorPos(win->hwndCanvas);
             SmartZoom(win, zoom, &mousePos, true);
@@ -5365,7 +5368,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdZoomFitWidth:
         case CmdZoomFitContent:
         case CmdZoomActualSize:
-            OnMenuZoom(win, wmId);
+            OnMenuZoom(win, cmdId);
             break;
 
         case CmdZoomCustom:
@@ -5469,17 +5472,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             if (dm && dm->NeedVScroll()) {
-                int n = 1;
-                if (cmdWithArg) {
-                    n = cmdWithArg->argInt;
-                }
-                WPARAM dir = (wmId == CmdScrollUp) ? SB_LINEUP : SB_LINEDOWN;
+                int n = GetFrstIntArg(cmdWithArg, 1);
+                WPARAM dir = (cmdId == CmdScrollUp) ? SB_LINEUP : SB_LINEDOWN;
                 for (int i = 0; i < n; i++) {
                     SendMessageW(win->hwndCanvas, WM_VSCROLL, dir, 0);
                 }
             } else {
                 // in single page view, scrolls by page
-                if (wmId == CmdScrollUp) {
+                if (cmdId == CmdScrollUp) {
                     win->ctrl->GoToPrevPage(true);
                 } else {
                     win->ctrl->GoToNextPage();
@@ -5492,12 +5492,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int n = 1;
-            if (cmdWithArg) {
-                n = cmdWithArg->argInt;
-            }
+            int n = GetFrstIntArg(cmdWithArg, 1);
             for (int i = 0; i < n; i++) {
-                if (wmId == CmdGoToPrevPage) {
+                if (cmdId == CmdGoToPrevPage) {
                     ctrl->GoToPrevPage();
                 } else {
                     ctrl->GoToNextPage();
@@ -5896,10 +5893,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 AnnotCreateArgs args{annotType};
                 SetAnnotCreateArgs(args, cmdWithArg);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
-                bool openEdit = IsShiftPressed() || (cmdWithArg && cmdWithArg->argBool);
-                if (annot && openEdit) {
-                    ShowEditAnnotationsWindow(tab);
-                    SetSelectedAnnotation(tab, annot);
+                if (annot) {
+                    bool openEdit = GetBoolArg(cmdWithArg, kCmdArgOpenEdit, IsShiftPressed());
+                    if (openEdit) {
+                        ShowEditAnnotationsWindow(tab);
+                        SetSelectedAnnotation(tab, annot);
+                    }
                 }
             }
             break;

@@ -525,9 +525,9 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     }
 }
 
-void GoToFavoriteByMenuId(MainWindow* win, int wmId) {
+void GoToFavoriteByMenuId(MainWindow* win, int cmdId) {
     FileState* f;
-    Favorite* fn = gFavorites.GetByMenuId(wmId, &f);
+    Favorite* fn = gFavorites.GetByMenuId(cmdId, &f);
     if (fn) {
         GoToFavorite(win, f, fn);
     }
