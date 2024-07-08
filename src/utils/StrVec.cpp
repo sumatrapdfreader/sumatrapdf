@@ -45,14 +45,28 @@ static bool strLessNatural(const char* s1, const char* s2) {
     return n < 0; // TODO: verify it's < and not >
 }
 
+static bool reachedMax(int nAdded, int max) {
+    if (max < 0) {
+        return false;
+    }
+    if (max == 0) {
+        max = 1;
+    }
+    return nAdded >= max;
+}
+
 /* splits a string into several substrings, separated by the separator
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
+int Split(StrVec& v, const char* s, const char* separator, bool collapse, int max) {
     int startSize = v.Size();
     const char* next;
+    int nAdded = 0;
     while (true) {
+        if (reachedMax(nAdded, max)) {
+            return nAdded;
+        }
         next = str::Find(s, separator);
         if (!next) {
             break;
@@ -60,14 +74,15 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse) {
         if (!collapse || next > s) {
             int sLen = (int)(next - s);
             v.Append(s, sLen);
+            nAdded++;
         }
         s = next + str::Len(separator);
     }
     if (!collapse || *s) {
         v.Append(s);
+        nAdded++;
     }
-
-    return (size_t)(v.Size() - startSize);
+    return nAdded;
 }
 
 static int CalcCapForJoin(const StrVec& v, const char* joint) {

@@ -176,6 +176,7 @@ static void StrVecTest1() {
 
 static void StrVecTest2() {
     StrVec v;
+    int n;
     v.Append("foo");
     v.Append("bar");
     char* s = Join(v);
@@ -227,8 +228,8 @@ static void StrVecTest2() {
 
     {
         StrVec v2;
-        size_t count = Split(v2, "a,b,,c,", ",");
-        utassert(count == 5 && v2.Find("c") == 3);
+        n = Split(v2, "a,b,,c,", ",");
+        utassert(n == 5 && v2.Find("c") == 3);
         utassert(v2.Find("") == 2);
         utassert(v2.Find("", 3) == 4);
         utassert(v2.Find("", 5) == -1);
@@ -240,8 +241,8 @@ static void StrVecTest2() {
 
     {
         StrVec v2;
-        size_t count = Split(v2, "a,b,,c,", ",", true);
-        utassert(count == 3 && v2.Find("c") == 2);
+        n = Split(v2, "a,b,,c,", ",", true);
+        utassert(n == 3 && v2.Find("c") == 2);
         TempStr joined = JoinTemp(v2, ";");
         utassert(str::Eq(joined, "a;b;c"));
         StrVecCheckIter(v2, nullptr);
@@ -251,7 +252,31 @@ static void StrVecTest2() {
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
 #endif
         TestRemoveAt(v2);
+
     }
+    {
+        StrVec v2;
+        n = Split(v2, "a,b,,c,d", ",", true, 3);
+        TempStr joined = JoinTemp(v2, "__");
+        utassert(n == 3);
+        utassert(str::Eq(joined, "a__b__c"));
+
+        v2.Reset();
+        n = Split(v2, "a,b,,c,d", ",", false, 3);
+        joined = JoinTemp(v2, "__");
+        utassert(n == 3);
+        utassert(str::Eq(joined, "a__b__"));
+
+        v2.Reset();
+        n = Split(v2, "a,b,,c,d", ",", true, 1);
+        utassert(n == 1);
+
+        // max 0 is turned into 1
+        v2.Reset();
+        n = Split(v2, "a,b,,c,d", ",", true, 0);
+        utassert(n == 1);
+    }
+
     TestRemoveAt(v);
 }
 

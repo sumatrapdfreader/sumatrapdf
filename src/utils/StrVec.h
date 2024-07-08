@@ -65,6 +65,6 @@ void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
 void SortNoCase(StrVec&);
 void SortNatural(StrVec&);
 
-int Split(StrVec& v, const char* s, const char* separator, bool collapse = false);
+int Split(StrVec& v, const char* s, const char* separator, bool collapse = false, int max = -1);
 char* Join(StrVec& v, const char* sep = nullptr);
 TempStr JoinTemp(StrVec& v, const char* sep);
