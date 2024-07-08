@@ -608,10 +608,10 @@
     <None Include="..\do\main.go">
       <Filter>do</Filter>
     </None>
-    <None Include="..\do\settings_def.go">
+    <None Include="..\do\settings_gen_code.go">
       <Filter>do</Filter>
     </None>
-    <None Include="..\do\settings_gen_code.go">
+    <None Include="..\do\settings_gen_def.go">
       <Filter>do</Filter>
     </None>
     <None Include="..\do\settings_gen_html.go">

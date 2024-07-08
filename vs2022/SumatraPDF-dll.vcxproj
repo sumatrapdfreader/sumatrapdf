@@ -1405,8 +1405,8 @@
     <None Include="..\do\git.go" />
     <None Include="..\do\github_ci.go" />
     <None Include="..\do\main.go" />
-    <None Include="..\do\settings_def.go" />
     <None Include="..\do\settings_gen_code.go" />
+    <None Include="..\do\settings_gen_def.go" />
     <None Include="..\do\settings_gen_html.go" />
     <None Include="..\do\sign.go" />
     <None Include="..\do\trans_download.go" />
