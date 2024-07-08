@@ -222,6 +222,7 @@ TempStr FormatRomanNumeralTemp(int number);
 
 bool EmptyOrWhiteSpaceOnly(const char*);
 bool Skip(const char*& s, const char* toSkip);
+const char* SkipChar(const char* s, char toSkip);
 
 WCHAR* Dup(Allocator*, const WCHAR* str, size_t cch = (size_t)-1);
 WCHAR* Dup(const WCHAR* s, size_t cch = (size_t)-1);

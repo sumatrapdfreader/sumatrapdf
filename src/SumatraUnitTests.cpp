@@ -234,10 +234,27 @@ void parseCommandsTest() {
         utassert(FindColorArg(cmd->firstArg) != nullptr);
     }
     {
+        auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");
+        auto cmd = FindCommandWithArg(cmdId);
+        utassert(cmd->origId == CmdCreateAnnotHighlight);
+
+        utassert(FindArg(cmd->firstArg, kCmdArgOpenEdit, CommandArg::Type::Bool) != nullptr);
+        utassert(GetBoolArg(cmd, kCmdArgOpenEdit, false) == true);
+        utassert(FindColorArg(cmd->firstArg) != nullptr);
+    }
+    {
         auto cmdId = ParseCommand("CmdGoToNextPage 3");
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdGoToNextPage);
         utassert(FindIntArg(cmd->firstArg)->intVal == 3);
+    }
+    {
+        const char* arg = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        const char* s = str::JoinTemp("CmdExec   ", arg);
+        auto cmdId = ParseCommand(s);
+        auto cmd = FindCommandWithArg(cmdId);
+        utassert(cmd->origId == CmdExec);
+        utassert(str::Eq(cmd->firstArg->strVal, arg));
     }
 }
 

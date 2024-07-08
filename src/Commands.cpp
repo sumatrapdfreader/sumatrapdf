@@ -53,8 +53,15 @@ static CommandArg* newArg(CommandArg::Type type, const char* name) {
 }
 
 // arg names are case insensitive
-bool IsArgName(const char* name1, const char* name2) {
-    return str::EqI(name1, name2);
+bool IsArgName(const char* name, const char* argName) {
+    if (str::EqI(name, argName)) {
+        return true;
+    }
+    if (!str::StartsWithI(name, argName)) {
+        return false;
+    }
+    char c = name[str::Len(argName)];
+    return c == '=';
 }
 
 void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
@@ -97,6 +104,7 @@ CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) 
             logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, type,
                  curr->type);
         }
+        curr = curr->next;
     }
     return nullptr;
 }
@@ -264,10 +272,13 @@ int ParseCommand(const char* definition) {
         return cmdId;
     }
     // could be command with arg
-    bool hasArg = str::FindChar(definition, ' ') != nullptr;
-    if (!hasArg) {
+    const char* argsStart = str::FindChar(definition, ' ');
+    if (argsStart == nullptr) {
+        // should just return command?
         return -1;
     }
+    argsStart = str::SkipChar(argsStart, ' ');
+
     StrVec parts;
     Split(parts, definition, " ", true);
     if (parts.Size() < 2) {
@@ -320,6 +331,15 @@ int ParseCommand(const char* definition) {
                 logf("MaybeCreateCommandWithArg: invalid argument in '%s'\n", definition);
                 return -1;
             }
+            cmd = CreateCommandWithArg(definition, cmdId, firstArg);
+            break;
+        }
+        case CmdExec: {
+            // special case: we don't parse the string
+            // it's a spec of command to run and we don't want to force
+            // people to quote things properly
+            CommandArg* firstArg = MkArg("spec", CommandArg::Type::String);
+            firstArg->strVal = str::Dup(argsStart);
             cmd = CreateCommandWithArg(definition, cmdId, firstArg);
             break;
         }

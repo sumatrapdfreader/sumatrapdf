@@ -1130,6 +1130,13 @@ bool Skip(const char*& s, const char* toSkip) {
     return false;
 }
 
+const char* SkipChar(const char* s, char toSkip) {
+    while (*s == toSkip) {
+        s++;
+    }
+    return s;
+}
+
 } // namespace str
 
 namespace url {

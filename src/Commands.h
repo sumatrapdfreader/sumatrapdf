@@ -177,6 +177,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdSelectNextTheme, "Select next theme")                                     \
     V(CmdToggleFrequentlyRead, "Toggle Frequently Read")                           \
     V(CmdInvokeInverseSearch, "Invoke Inverse Search")                             \
+    V(CmdExec, "Execute a program")                                                \
     V(CmdDebugCorruptMemory, "Debug: Corrupt Memory")                              \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                          \
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                          \
@@ -282,7 +283,7 @@ struct CommandArg {
 
 CommandArg* MkArg(const char* name, CommandArg::Type type);
 CommandArg* FindArgByName(CommandArg* first, const char* name);
-bool IsArgName(const char* name1, const char* name2);
+bool IsArgName(const char* name, const char* argName);
 void FreeCommandArgs(CommandArg* first);
 void InsertArg(CommandArg** firstPtr, CommandArg* arg);
 CommandArg* FindColorArg(CommandArg* first);

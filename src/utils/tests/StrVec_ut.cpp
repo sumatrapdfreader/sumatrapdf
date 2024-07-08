@@ -252,7 +252,6 @@ static void StrVecTest2() {
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
 #endif
         TestRemoveAt(v2);
-
     }
     {
         StrVec v2;
