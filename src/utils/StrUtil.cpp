@@ -1131,6 +1131,9 @@ bool Skip(const char*& s, const char* toSkip) {
 }
 
 const char* SkipChar(const char* s, char toSkip) {
+    if (!s) {
+        return nullptr;
+    }
     while (*s == toSkip) {
         s++;
     }
@@ -2516,15 +2519,15 @@ TempStr GetFileNameTemp(const char* url) {
 
 } // namespace url
 
-int ParseInt(const char* bytes) {
-    bool negative = *bytes == '-';
+int ParseInt(const char* s) {
+    bool negative = *s == '-';
     if (negative) {
-        bytes++;
+        s++;
     }
     int value = 0;
     int overflowCheck = negative ? 1 : 0;
-    for (; str::IsDigit(*bytes); bytes++) {
-        value = value * 10 + (*bytes - '0');
+    for (; str::IsDigit(*s); s++) {
+        value = value * 10 + (*s - '0');
         // return 0 on overflow
         if (value - overflowCheck < 0) {
             return 0;
