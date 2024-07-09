@@ -76,11 +76,10 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse, int ma
             if (nAdded == max) {
                 // this is the last one
                 v.Append(s);
-            } else {
-                int sLen = (int)(next - s);
-                v.Append(s, sLen);
+                return nAdded;
             }
-            return nAdded;
+            int sLen = (int)(next - s);
+            v.Append(s, sLen);
         }
         s = next + str::Len(separator);
     }

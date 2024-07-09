@@ -256,24 +256,27 @@ static void StrVecTest2() {
     {
         StrVec v2;
         n = Split(v2, "a,b,,c,d", ",", true, 3);
-        TempStr joined = JoinTemp(v2, "__");
+        s = JoinTemp(v2, "__");
         utassert(n == 3);
-        utassert(str::Eq(joined, "a__b__c"));
+        utassert(str::Eq(s, "a__b__c,d"));
 
         v2.Reset();
         n = Split(v2, "a,b,,c,d", ",", false, 3);
-        joined = JoinTemp(v2, "__");
+        s = JoinTemp(v2, "__");
         utassert(n == 3);
-        utassert(str::Eq(joined, "a__b__"));
+        utassert(str::Eq(s, "a__b__c,d"));
 
         v2.Reset();
         n = Split(v2, "a,b,,c,d", ",", true, 1);
         utassert(n == 1);
+        s = v2[0];
+        utassert(str::Eq(s, "a,b,,c,d"));
 
         // max 0 is turned into 1
         v2.Reset();
         n = Split(v2, "a,b,,c,d", ",", true, 0);
-        utassert(n == 1);
+        s = v2[0];
+        utassert(str::Eq(s, "a,b,,c,d"));
     }
 
     TestRemoveAt(v);
