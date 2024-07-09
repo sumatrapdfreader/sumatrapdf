@@ -224,37 +224,53 @@ static void colorTest() {
 }
 
 void parseCommandsTest() {
+    CommandArg* arg;
     {
         auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 openEdit");
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
-        utassert(FindArg(cmd->firstArg, kCmdArgOpenEdit, CommandArg::Type::Bool) != nullptr);
+        arg = GetArg(cmd, kCmdArgColor);
+        utassert(arg != nullptr);
+        arg = GetArg(cmd, kCmdArgOpenEdit);
+        utassert(arg != nullptr);
         utassert(GetBoolArg(cmd, kCmdArgOpenEdit, false) == true);
-        utassert(FindColorArg(cmd->firstArg) != nullptr);
     }
     {
         auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
-        utassert(FindArg(cmd->firstArg, kCmdArgOpenEdit, CommandArg::Type::Bool) != nullptr);
+        utassert(GetArg(cmd, kCmdArgColor) != nullptr);
+        utassert(GetArg(cmd, kCmdArgOpenEdit) != nullptr);
         utassert(GetBoolArg(cmd, kCmdArgOpenEdit, false) == true);
-        utassert(FindColorArg(cmd->firstArg) != nullptr);
     }
     {
         auto cmdId = ParseCommand("CmdGoToNextPage 3");
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdGoToNextPage);
-        utassert(FindIntArg(cmd->firstArg)->intVal == 3);
+        arg = GetArg(cmd, kCmdArgN);
+        utassert(arg->intVal == 3);
     }
     {
-        const char* arg = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
-        const char* s = str::JoinTemp("CmdExec   ", arg);
+        const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        const char* s = str::JoinTemp("CmdExec   ", argStr);
         auto cmdId = ParseCommand(s);
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdExec);
-        utassert(str::Eq(cmd->firstArg->strVal, arg));
+        arg = GetArg(cmd, kCmdArgSpec);
+        utassert(str::Eq(arg->strVal, argStr));
+    }
+    {
+        const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
+        const char* s = str::JoinTemp("CmdExec  filter: *.jpeg ", argStr);
+        auto cmdId = ParseCommand(s);
+        auto cmd = FindCommandWithArg(cmdId);
+        utassert(cmd->origId == CmdExec);
+        arg = GetArg(cmd, kCmdArgSpec);
+        utassert(str::Eq(arg->strVal, argStr));
+        arg = GetArg(cmd, kCmdArgFilter);
+        utassert(str::Eq(arg->strVal, "*.jpeg"));
     }
 }
 

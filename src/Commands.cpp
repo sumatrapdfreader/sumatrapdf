@@ -19,7 +19,7 @@ static i32 gCommandIds[] = {COMMANDS(CMD_ID)};
 SeqStrings gCommandDescriptions = COMMANDS(CMD_DESC) "\0";
 #undef CMD_DESC
 
-/* returns -1 if not found */
+// returns -1 if not found
 static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
     int idx = seqstrings::StrToIdxIS(commands, s);
     if (idx < 0) {
@@ -30,12 +30,12 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s
     return (int)cmdId;
 }
 
-/* returns -1 if not found */
+// returns -1 if not found
 int GetCommandIdByName(const char* cmdName) {
     return GetCommandIdByNameOrDesc(gCommandNames, cmdName);
 }
 
-/* returns -1 if not found */
+// returns -1 if not found
 int GetCommandIdByDesc(const char* cmdDesc) {
     return GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
 }
@@ -45,15 +45,8 @@ CommandArg::~CommandArg() {
     str::Free(name);
 }
 
-static CommandArg* newArg(CommandArg::Type type, const char* name) {
-    auto res = new CommandArg();
-    res->type = type;
-    res->name = str::Dup(name);
-    return res;
-}
-
 // arg names are case insensitive
-bool IsArgName(const char* name, const char* argName) {
+static bool IsArgName(const char* name, const char* argName) {
     if (str::EqI(name, argName)) {
         return true;
     }
@@ -64,7 +57,7 @@ bool IsArgName(const char* name, const char* argName) {
     return c == '=';
 }
 
-void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
+static void insertArg(CommandArg** firstPtr, CommandArg* arg) {
     // for ease of use by callers, we shift null check here
     if (!arg) {
         return;
@@ -83,17 +76,6 @@ void FreeCommandArgs(CommandArg* first) {
     }
 }
 
-static CommandArg* FindFirstArgOfType(CommandArg* first, CommandArg::Type type) {
-    CommandArg* curr = first;
-    while (curr) {
-        if (curr->type == type) {
-            return curr;
-        }
-        curr = curr->next;
-    }
-    return nullptr;
-}
-
 CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) {
     CommandArg* curr = first;
     while (curr) {
@@ -103,95 +85,6 @@ CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) 
             }
             logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, type,
                  curr->type);
-        }
-        curr = curr->next;
-    }
-    return nullptr;
-}
-
-CommandArg* FindColorArg(CommandArg* first) {
-    return FindFirstArgOfType(first, CommandArg::Type::Color);
-}
-
-CommandArg* FindIntArg(CommandArg* first) {
-    return FindFirstArgOfType(first, CommandArg::Type::Int);
-}
-
-static bool parseBool(const char* s) {
-    if (str::EqI(s, "1")) {
-        return true;
-    }
-    if (str::EqI(s, "true")) {
-        return true;
-    }
-    if (str::EqI(s, "yes")) {
-        return true;
-    }
-    // everything else, including invalid values, is false
-    return false;
-}
-
-// returns null if can't parse `arg` as a given type
-CommandArg* MkArg(const char* arg, CommandArg::Type type) {
-    ReportIf(str::IsEmpty((arg)));
-    if (str::IsEmpty(arg)) {
-        return nullptr;
-    }
-
-    // note: this might break if values happen to contain '='
-    // in which case they should get explicit name
-    // maybe add heuristic for string values where we say
-    // wihch name we're looking for and undo '=' parsing
-    // if the name doesn't match
-    StrVec nameVal;
-    Split(nameVal, arg, "=", false, 2);
-    const char* val = nullptr;
-    const char* name = arg;
-    if (nameVal.Size() == 2) {
-        name = nameVal[0];
-        val = nameVal[1];
-    }
-    if (type == CommandArg::Type::Bool) {
-        auto res = newArg(type, name);
-        // if value is not explicitly given with =
-        // presence of value means "true"
-        res->boolVal = val ? parseBool(val) : true;
-        return res;
-    }
-
-    if (type == CommandArg::Type::String) {
-        auto res = newArg(type, name);
-        // if value is not explictly given with =
-        // we store nullptr and assume the name is the value
-        res->strVal = val ? str::Dup(val) : nullptr;
-        return res;
-    }
-
-    if (type == CommandArg::Type::Int) {
-        auto res = newArg(type, name);
-        const char* valStr = val ? val : name;
-        // permissive parsing, so always succeeds
-        res->intVal = ParseInt(valStr);
-        return res;
-    }
-
-    ReportIf(type != CommandArg::Type::Color);
-    const char* valStr = val ? val : name;
-    ParsedColor col;
-    ParseColor(col, valStr);
-    if (!col.parsedOk) {
-        return nullptr;
-    }
-    auto res = newArg(type, name);
-    res->colorVal = col;
-    return res;
-}
-
-CommandArg* FindArgByName(CommandArg* first, const char* name) {
-    CommandArg* curr = first;
-    while (curr) {
-        if (str::EqI(curr->name, name)) {
-            return curr;
         }
         curr = curr->next;
     }
@@ -241,56 +134,196 @@ void FreeCommandsWithArg() {
     gFirstCommandWithArg = nullptr;
 }
 
-int GetFrstIntArg(CommandWithArg* cmd, int defValue) {
-    if (!cmd) {
-        return defValue;
-    }
-    auto arg = FindIntArg(cmd->firstArg);
-    if (!arg) {
-        return defValue;
-    }
-    return arg->intVal;
+struct ArgSpec {
+    int cmdId;
+    const char* name;
+    CommandArg::Type type;
+};
+
+// arguments for the same command should follow each other
+// first argument is default and can be specified without a name
+static const ArgSpec argSpecs[] = {
+    {CmdExec, kCmdArgSpec, CommandArg::Type::String}, // default
+    {CmdExec, kCmdArgFilter, CommandArg::Type::String},
+    {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
+    {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
+    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
+    {CmdNone, "", CommandArg::Type::None},          // sentinel
+};
+
+static CommandArg* newArg(CommandArg::Type type, const char* name) {
+    auto res = new CommandArg();
+    res->type = type;
+    res->name = str::Dup(name);
+    return res;
 }
 
-bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
-    if (!cmd) {
-        return defValue;
+static CommandArg* parseArgOfType(const char* argName, CommandArg::Type type, const char* val) {
+    if (type == CommandArg::Type::Color) {
+        ParsedColor col;
+        ParseColor(col, val);
+        if (!col.parsedOk) {
+            // invalid value, skip it
+            logf("parseArgOfType: invalid color value '%s'\n", val);
+            return nullptr;
+        }
+        auto arg = newArg(type, argName);
+        arg->colorVal = col;
+        return arg;
     }
-    auto arg = FindArg(cmd->firstArg, name, CommandArg::Type::Bool);
-    if (!arg) {
-        return defValue;
+
+    if (type == CommandArg::Type::Int) {
+        int n = ParseInt(val);
+        auto arg = newArg(type, argName);
+        arg->intVal = ParseInt(val);
+        return arg;
     }
-    return true;
+
+    if (type == CommandArg::Type::String) {
+        auto arg = newArg(type, argName);
+        arg->strVal = str::Dup(val);
+        return arg;
+    }
+
+    ReportIf(true);
+    return nullptr;
+}
+
+CommandArg* tryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
+    // first is default value
+    const char* valStart = str::SkipChar(*argsInOut, ' ');
+    const char* valEnd = str::FindChar(valStart, ' ');
+    const char* argName = argSpecs[defaultArgIdx].name;
+    CommandArg::Type type = argSpecs[defaultArgIdx].type;
+    if (type == CommandArg::Type::String) {
+        // for strings we eat it all to avoid the need for proper quoting
+        // creates a problem: all named args must be before default string arg
+        valEnd = nullptr;
+    }
+    TempStr val = nullptr;
+    if (valEnd == nullptr) {
+        val = str::Dup(valStart);
+    } else {
+        val = str::Dup(valStart, valEnd - valStart);
+        valEnd = str::SkipChar(valEnd, ' ');
+    }
+    // no matter what, we advance past the value
+    *argsInOut = valEnd;
+
+    // we don't support bool because we don't have to yet
+    // (no command have default bool value)
+    return parseArgOfType(argName, type, val);
+}
+
+// 1  : true
+// 0  : false
+// -1 : not a known boolean string
+static int parseBool(const char* s) {
+    if (str::EqI(s, "1") || str::EqI(s, "true") || str::EqI(s, "yes")) {
+        return true;
+    }
+    if (str::EqI(s, "0") || str::EqI(s, "false") || str::EqI(s, "no")) {
+        return true;
+    }
+    return false;
+}
+
+// parse:
+//   <name> <value>
+//   <name>: <value>
+//   <name>=<value>
+// for booleans only <name> works as well and represents true
+CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
+    const char* args = *argsInOut;
+    const char* valStart = nullptr;
+    const char* argName = nullptr;
+    CommandArg::Type type = CommandArg::Type::None;
+    const char* s = *argsInOut;
+    int cmdId = argSpecs[firstArgIdx].cmdId;
+    for (int i = firstArgIdx;; i++) {
+        if (argSpecs[i].cmdId != cmdId) {
+            // not a known argument for this command
+            return nullptr;
+        }
+        argName = argSpecs[i].name;
+        if (!str::StartsWithI(s, argName)) {
+            continue;
+        }
+        type = argSpecs[i].type;
+        break;
+    }
+    s += str::Len(argName);
+    if (s[0] == 0) {
+        if (type == CommandArg::Type::Bool) {
+            // name of bool arg followed by nothing is true
+            *argsInOut = nullptr;
+            auto arg = newArg(type, argName);
+            arg->boolVal = true;
+            return arg;
+        }
+    } else if (s[0] == ' ') {
+        valStart = str::SkipChar(s, ' ');
+    } else if (s[0] == ':' && s[1] == ' ') {
+        valStart = str::SkipChar(s + 1, ' ');
+    } else if (s[0] == '=') {
+        valStart = s + 1;
+    }
+    if (valStart == nullptr) {
+        // <args> doesn't start with any of the available commands for this command
+        return nullptr;
+    }
+    const char* valEnd = str::FindChar(valStart, ' ');
+    TempStr val = nullptr;
+    if (valEnd == nullptr) {
+        val = str::DupTemp(valStart);
+    } else {
+        val = str::DupTemp(valStart, valEnd - valStart);
+        valEnd++;
+    }
+    if (type == CommandArg::Type::Bool) {
+        auto bv = parseBool(val);
+        bool b;
+        if (bv == 0) {
+            b = false;
+            *argsInOut = valEnd;
+        } else if (bv == 1) {
+            b = true;
+            *argsInOut = valEnd;
+        } else {
+            // bv is -1, which means not a recognized bool value, so assume
+            // it wasn't given
+            // TODO: should apply only if arg doesn't end with ':' or '='
+            b = true;
+            *argsInOut = valStart;
+        }
+        auto arg = newArg(type, argName);
+        arg->boolVal = bv;
+        return arg;
+    }
+
+    *argsInOut = valEnd;
+    return parseArgOfType(argName, type, val);
 }
 
 // some commands can accept arguments. For those we have to create CommandWithArg that
 // binds original command id and an arg and creates a unique command id
 // we return -1 if unkown command or command doesn't take an argument or argument is invalid
 int ParseCommand(const char* definition) {
-    int cmdId = GetCommandIdByName(definition);
-    if (cmdId > 0) {
-        return cmdId;
-    }
-    // could be command with arg
-    const char* argsStart = str::FindChar(definition, ' ');
-    if (argsStart == nullptr) {
-        // should just return command?
-        return -1;
-    }
-    argsStart = str::SkipChar(argsStart, ' ');
-
     StrVec parts;
-    Split(parts, definition, " ", true);
-    if (parts.Size() < 2) {
-        return -1;
-    }
-    char* cmdName = parts.At(0);
-    cmdId = GetCommandIdByName(cmdName);
+    Split(parts, definition, " ", true, 2);
+    const char* cmd = parts[0];
+    int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         // TODO: make it a notification
-        logf("MaybeCreateCommandWithArg: unknown cmd name '%s'\n", cmdName);
+        logf("ParseCommand: unknown cmd name in '%s'\n", definition);
+        return -1;
     }
-    CommandWithArg* cmd = nullptr;
+    if (parts.Size() == 1) {
+        return cmdId;
+    }
+
+    int argCmdId = cmdId;
+    // some commands share the same arguments, so cannonalize them
     switch (cmdId) {
         case CmdCreateAnnotText:
         case CmdCreateAnnotLink:
@@ -310,64 +343,92 @@ int ParseCommand(const char* definition) {
         case CmdCreateAnnotInk:
         case CmdCreateAnnotPopup:
         case CmdCreateAnnotFileAttachment: {
-            // args: color, "openedit" : bool
-            // color argument
-            int n = parts.Size();
-            CommandArg* firstArg = nullptr;
-            for (int i = 1; i < n; i++) {
-                char* argName = parts.At(i);
-                if (IsArgName(argName, kCmdArgOpenEdit)) {
-                    auto arg = MkArg(argName, CommandArg::Type::Bool);
-                    InsertArg(&firstArg, arg);
-                    continue;
-                }
-                // potentially a single color arg
-                auto arg = MkArg(argName, CommandArg::Type::Color);
-                InsertArg(&firstArg, arg);
-            }
-            // must have valid color, "openedit" is optional
-            if (!FindColorArg(firstArg)) {
-                FreeCommandArgs(firstArg);
-                logf("MaybeCreateCommandWithArg: invalid argument in '%s'\n", definition);
-                return -1;
-            }
-            cmd = CreateCommandWithArg(definition, cmdId, firstArg);
-            break;
-        }
-        case CmdExec: {
-            // special case: we don't parse the string
-            // it's a spec of command to run and we don't want to force
-            // people to quote things properly
-            CommandArg* firstArg = MkArg("spec", CommandArg::Type::String);
-            firstArg->strVal = str::Dup(argsStart);
-            cmd = CreateCommandWithArg(definition, cmdId, firstArg);
+            argCmdId = CmdCreateAnnotText;
             break;
         }
         case CmdScrollUp:
         case CmdScrollDown:
         case CmdGoToNextPage:
         case CmdGoToPrevPage: {
-            // int argument
-            char* argStr = parts.At(1);
-            CommandArg* firstArg = MkArg(argStr, CommandArg::Type::Int);
-            if (!firstArg) {
-                return -1;
-            }
-            int n = firstArg->intVal;
-            // note: this validation currently applies to all commands
-            // but might need to be custom for each command
-            if (n <= 0 || n > 100) {
-                firstArg->intVal = 1;
-            }
-            cmd = CreateCommandWithArg(definition, cmdId, firstArg);
+            argCmdId = CmdScrollUp;
             break;
         }
+        case CmdExec:
+            break;
         default: {
-            logf("MaybeCreateCommandWithArg: cmd '%s' doesn't accept arguments\n", cmdName);
+            logf("ParseCommand: cmd '%s' doesn't accept arguments\n", definition);
+            return -1;
         }
     }
-    if (!cmd) {
+
+    // find arguments for this cmdId
+    int firstArgIdx = -1;
+    for (int i = 0;; i++) {
+        int id = argSpecs[i].cmdId;
+        if (id == CmdNone) {
+            // the command doesn't accept any arguments
+            return -1;
+        }
+        if (id != argCmdId) {
+            continue;
+        }
+        firstArgIdx = i;
+        break;
+    }
+    if (firstArgIdx < 0) {
+        // shouldn't happen, we already filtered commands without arguments
+        logf("ParseCommand: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition, cmdId, argCmdId);
+        ReportIf(true);
         return -1;
     }
-    return cmd->id;
+
+    const char* currArg = parts[1];
+
+    CommandArg* firstArg = nullptr;
+    CommandArg* arg;
+    for (; currArg;) {
+        arg = tryParseNamedArg(firstArgIdx, &currArg);
+        if (!arg) {
+            arg = tryParseDefaultArg(firstArgIdx, &currArg);
+        }
+        if (arg) {
+            insertArg(&firstArg, arg);
+        }
+    }
+    if (!firstArg) {
+        logf("ParseCommand: failed to parse arguments for '%s'\n", definition);
+        return -1;
+    }
+    auto res = CreateCommandWithArg(definition, cmdId, firstArg);
+    return res->id;
+}
+
+CommandArg* GetArg(CommandWithArg* cmd, const char* name) {
+    if (!cmd) {
+        return nullptr;
+    }
+    CommandArg* curr = cmd->firstArg;
+    while (curr) {
+        if (str::EqI(curr->name, name)) {
+            return curr;
+        }
+        curr = curr->next;
+    }
+    return nullptr;
+}
+
+int GetIntArg(CommandWithArg* cmd, const char* name, int defValue) {
+    auto arg = GetArg(cmd, name);
+    if (arg) {
+        return arg->intVal;
+    }
+    return defValue;
+}
+
+bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
+    auto arg = GetArg(cmd, name);
+    if (arg) {
+        return arg->boolVal;
+    }
+    return defValue;
 }

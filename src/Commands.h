@@ -281,14 +281,7 @@ struct CommandArg {
     ~CommandArg();
 };
 
-CommandArg* MkArg(const char* name, CommandArg::Type type);
-CommandArg* FindArgByName(CommandArg* first, const char* name);
-bool IsArgName(const char* name, const char* argName);
 void FreeCommandArgs(CommandArg* first);
-void InsertArg(CommandArg** firstPtr, CommandArg* arg);
-CommandArg* FindColorArg(CommandArg* first);
-CommandArg* FindIntArg(CommandArg* first);
-CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type);
 
 struct CommandWithArg {
     struct CommandWithArg* next = nullptr;
@@ -315,10 +308,14 @@ struct CommandWithArg {
 CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* firstArg = nullptr);
 CommandWithArg* FindCommandWithArg(int cmdId);
 void FreeCommandsWithArg();
-int GetFrstIntArg(CommandWithArg* cmd, int defValue);
-bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
 
 int ParseCommand(const char* definition);
+CommandArg* GetArg(CommandWithArg*, const char* argName);
+int GetIntArg(CommandWithArg* cmd, const char* name, int defValue);
+bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
 
-// for CmdCreateAnnot*
+constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";
+constexpr const char* kCmdArgSpec = "spec";
+constexpr const char* kCmdArgFilter = "filter";
+constexpr const char* kCmdArgN = "n";

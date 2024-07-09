@@ -278,7 +278,6 @@ static void StrVecTest2() {
         n = Split(v2, "a,b,,c,d", ",", true, 0);
         s = v2[0];
         utassert(str::Eq(s, "a,b,,c,d"));
-
     }
 
     TestRemoveAt(v);
