@@ -4,6 +4,7 @@
 bool CouldBeArg(const char*);
 
 void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut);
+void ParseCmdLine(const char* cmdLine, StrVec& argsOut);
 TempStr QuoteCmdLineArgTemp(char* arg);
 
 struct CmdLineArgsIter {
@@ -13,7 +14,7 @@ struct CmdLineArgsIter {
     const char* currArg = nullptr;
 
     explicit CmdLineArgsIter(const WCHAR* cmdLine);
-    ~CmdLineArgsIter();
+    ~CmdLineArgsIter() = default;
 
     const char* NextArg();
     const char* EatParam();

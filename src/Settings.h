@@ -140,6 +140,8 @@ struct ExternalViewer {
     char* filter;
     // optional: keyboard shortcut e.g. Alt + 7
     char* shortcut;
+    // dynamic command id
+    int cmdId;
 };
 
 // customization options for how we show forward search results (used
@@ -175,8 +177,8 @@ struct SelectionHandler {
     char* url;
     // name shown in context menu
     char* name;
-    //
-    int cmdID;
+    // dynaic command id
+    int cmdId;
 };
 
 // custom keyboard shortcuts

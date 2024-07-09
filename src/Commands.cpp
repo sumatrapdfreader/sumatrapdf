@@ -19,6 +19,8 @@ static i32 gCommandIds[] = {COMMANDS(CMD_ID)};
 SeqStrings gCommandDescriptions = COMMANDS(CMD_DESC) "\0";
 #undef CMD_DESC
 
+static CommandWithArg* gFirstCommandWithArg = nullptr;
+
 // returns -1 if not found
 static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
     int idx = seqstrings::StrToIdxIS(commands, s);
@@ -30,14 +32,35 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s
     return (int)cmdId;
 }
 
+// cmdName is "CmdOpenFile" etc.
 // returns -1 if not found
 int GetCommandIdByName(const char* cmdName) {
-    return GetCommandIdByNameOrDesc(gCommandNames, cmdName);
+    int cmdId = GetCommandIdByNameOrDesc(gCommandNames, cmdName);
+    if (cmdId >= 0) {
+        return cmdId;
+    }
+    auto curr = gFirstCommandWithArg;
+    while (curr) {
+        if (curr->idStr && str::EqI(cmdName, curr->idStr)) {
+            return curr->id;
+        }
+    }
+    return -1;
 }
 
 // returns -1 if not found
 int GetCommandIdByDesc(const char* cmdDesc) {
-    return GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
+    int cmdId = GetCommandIdByNameOrDesc(gCommandDescriptions, cmdDesc);
+    if (cmdId >= 0) {
+        return cmdId;
+    }
+    auto curr = gFirstCommandWithArg;
+    while (curr) {
+        if (curr->name && str::EqI(cmdDesc, curr->name)) {
+            return curr->id;
+        }
+    }
+    return -1;
 }
 
 CommandArg::~CommandArg() {
@@ -92,7 +115,6 @@ CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) 
 }
 
 static int gNextCommandWithArgId = (int)CmdFirstWithArg;
-static CommandWithArg* gFirstCommandWithArg = nullptr;
 
 CommandWithArg::~CommandWithArg() {
     FreeCommandArgs(firstArg);

@@ -1219,10 +1219,10 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
             break;
         }
         WCHAR* name = ToWStrTemp(sh->name);
-        sh->cmdID = (int)CmdSelectionHandlerFirst + n;
+        sh->cmdId = (int)CmdSelectionHandlerFirst + n;
         UINT flags = MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-        AppendMenuW(m, flags, (UINT_PTR)sh->cmdID, name);
+        AppendMenuW(m, flags, (UINT_PTR)sh->cmdId, name);
         n++;
     }
 }

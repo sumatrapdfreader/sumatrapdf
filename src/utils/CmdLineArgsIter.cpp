@@ -60,12 +60,14 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     LocalFree(argsArr);
 }
 
+void ParseCmdLine(const char* cmdLine, StrVec& argsOut) {
+    TempWStr s = ToWStrTemp(cmdLine);
+    ParseCmdLine(s, argsOut);
+}
+
 bool CouldBeArg(const char* s) {
     char c = *s;
     return (c == L'-') || (c == L'/');
-}
-
-CmdLineArgsIter::~CmdLineArgsIter() {
 }
 
 CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {

@@ -24,7 +24,7 @@
 
 struct ExternalViewerInfo {
     const char* name; // shown to the user
-    int cmd;
+    int cmdId;
     const char* exts; // valid extensions
     const char* exePartialPath;
     const char* launchArgs;
@@ -173,7 +173,7 @@ static ExternalViewerInfo* FindExternalViewerInfoByCmd(int cmd) {
     int n = dimof(gExternalViewers);
     for (int i = 0; i < n; i++) {
         info = &gExternalViewers[i];
-        if (info->cmd == cmd) {
+        if (info->cmdId == cmd) {
             return info;
         }
     }
@@ -419,18 +419,18 @@ bool PathMatchFilter(const char* path, char* filter) {
     return matches;
 }
 
-bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
+bool ViewWithExternalViewer(WindowTab* tab, int idx) {
     if (!HasPermission(Perm::DiskAccess) || !tab || !file::Exists(tab->filePath)) {
         return false;
     }
 
+    char* path = tab->filePath;
     auto& viewers = gGlobalPrefs->externalViewers;
     ExternalViewer* ev = nullptr;
-    size_t n = viewers->size();
-    for (size_t i = 0; i < n && i <= idx; i++) {
+    int n = viewers->Size();
+    for (int i = 0; i < n && i <= idx; i++) {
         ev = viewers->at(i);
         // see AppendExternalViewersToMenu in Menu.cpp
-        char* path = tab->filePath;
         if (!ev->commandLine || !PathMatchFilter(path, ev->filter)) {
             idx++;
         }
@@ -444,7 +444,7 @@ bool ViewWithExternalViewer(WindowTab* tab, size_t idx) {
     }
 
     StrVec args;
-    ParseCmdLine(ToWStrTemp(ev->commandLine), args);
+    ParseCmdLine(ev->commandLine, args);
     int nArgs = args.Size();
     if (nArgs == 0) {
         return false;

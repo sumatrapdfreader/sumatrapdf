@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 bool HasExternalViewerForCmd(int cmd);
-bool ViewWithExternalViewer(WindowTab* tab, size_t idx);
+bool ViewWithExternalViewer(WindowTab* tab, int idx);
 
 void DetectExternalViewers();
 void FreeExternalViewers();

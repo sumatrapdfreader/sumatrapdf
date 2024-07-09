@@ -646,6 +646,10 @@ static void CreateSumatraAcceleratorTable() {
         }
     }
 
+    // shortucts for external viewers
+    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
+    }
+
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
     nCustomShortcuts = nAccels;
     for (ACCEL accel : gBuiltInAccelerators) {

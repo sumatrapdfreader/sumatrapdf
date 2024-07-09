@@ -89,7 +89,7 @@ WCHAR* GetSumatraExePath() {
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     StrVec argList;
-    ParseCmdLine(GetCommandLine(), argList);
+    ParseCmdLine(GetCommandLineW(), argList);
 
     if (argList.Size() == 1) {
         char* exe = argList.At(0);

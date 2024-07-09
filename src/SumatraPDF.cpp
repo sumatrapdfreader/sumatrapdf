@@ -5161,7 +5161,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     if (CmdSelectionHandlerFirst <= cmdId && cmdId < CmdSelectionHandlerLast) {
         SelectionHandler* selectedSH{nullptr};
         for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-            if (sh->cmdID == cmdId) {
+            if (sh->cmdId == cmdId) {
                 selectedSH = sh;
                 break;
             }
