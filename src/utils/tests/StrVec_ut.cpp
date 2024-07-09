@@ -373,10 +373,21 @@ static void StrVecTest5() {
     utassert(str::Eq(s2, s));
 }
 
+static void StrVecTest6() {
+    StrVec v;
+    Split(v, " CmdCreateAnnotHighlight   #00ff00 openEdit", " ", true, 2);
+    utassert(v.Size() == 2);
+    const char* s = v[0];
+    utassert(str::Eq(s, "CmdCreateAnnotHighlight"));
+    s = v[1];
+    utassert(str::Eq(s, "#00ff00 openEdit"));
+}
+
 void StrVecTest() {
     StrVecTest1();
     StrVecTest2();
     StrVecTest3();
     StrVecTest4();
     StrVecTest5();
+    StrVecTest6();
 }
