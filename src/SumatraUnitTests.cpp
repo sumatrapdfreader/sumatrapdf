@@ -223,6 +223,13 @@ static void colorTest() {
     utassert(c == c2);
 }
 
+static void assertGoToNextPage3(int cmdId) {
+    auto cmd = FindCommandWithArg(cmdId);
+    utassert(cmd->origId == CmdGoToNextPage);
+    auto arg = GetArg(cmd, kCmdArgN);
+    utassert(arg->intVal == 3);
+}
+
 void parseCommandsTest() {
     CommandArg* arg;
     {
@@ -247,10 +254,13 @@ void parseCommandsTest() {
     }
     {
         auto cmdId = ParseCommand("CmdGoToNextPage 3");
-        auto cmd = FindCommandWithArg(cmdId);
-        utassert(cmd->origId == CmdGoToNextPage);
-        arg = GetArg(cmd, kCmdArgN);
-        utassert(arg->intVal == 3);
+        assertGoToNextPage3(cmdId);
+        cmdId = ParseCommand("CmdGoToNextPage n 3");
+        assertGoToNextPage3(cmdId);
+        cmdId = ParseCommand("CmdGoToNextPage n: 3");
+        assertGoToNextPage3(cmdId);
+        cmdId = ParseCommand("CmdGoToNextPage n=3");
+        assertGoToNextPage3(cmdId);
     }
     {
         const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
