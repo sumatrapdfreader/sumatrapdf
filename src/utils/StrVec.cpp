@@ -73,7 +73,7 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse, int ma
         }
         if (!collapse || next > s) {
             nAdded++;
-            if (nAdded == max) {
+            if (reachedMax(nAdded, max)) {
                 // this is the last one
                 v.Append(s);
                 return nAdded;
