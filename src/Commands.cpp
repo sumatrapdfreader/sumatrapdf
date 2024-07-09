@@ -97,6 +97,7 @@ static CommandWithArg* gFirstCommandWithArg = nullptr;
 CommandWithArg::~CommandWithArg() {
     FreeCommandArgs(firstArg);
     str::Free(name);
+    str::Free(idStr);
     str::Free(definition);
 }
 
@@ -403,7 +404,7 @@ int ParseCommand(const char* definition) {
     return res->id;
 }
 
-CommandArg* GetArg(CommandWithArg* cmd, const char* name) {
+CommandArg* GetCommandArg(CommandWithArg* cmd, const char* name) {
     if (!cmd) {
         return nullptr;
     }
@@ -417,16 +418,16 @@ CommandArg* GetArg(CommandWithArg* cmd, const char* name) {
     return nullptr;
 }
 
-int GetIntArg(CommandWithArg* cmd, const char* name, int defValue) {
-    auto arg = GetArg(cmd, name);
+int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue) {
+    auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->intVal;
     }
     return defValue;
 }
 
-bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
-    auto arg = GetArg(cmd, name);
+bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
+    auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->boolVal;
     }

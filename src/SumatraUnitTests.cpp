@@ -226,7 +226,7 @@ static void colorTest() {
 static void assertGoToNextPage3(int cmdId) {
     auto cmd = FindCommandWithArg(cmdId);
     utassert(cmd->origId == CmdGoToNextPage);
-    auto arg = GetArg(cmd, kCmdArgN);
+    auto arg = GetCommandArg(cmd, kCmdArgN);
     utassert(arg->intVal == 3);
 }
 
@@ -237,20 +237,20 @@ void parseCommandsTest() {
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
-        arg = GetArg(cmd, kCmdArgColor);
+        arg = GetCommandArg(cmd, kCmdArgColor);
         utassert(arg != nullptr);
-        arg = GetArg(cmd, kCmdArgOpenEdit);
+        arg = GetCommandArg(cmd, kCmdArgOpenEdit);
         utassert(arg != nullptr);
-        utassert(GetBoolArg(cmd, kCmdArgOpenEdit, false) == true);
+        utassert(GetCommandBoolArg(cmd, kCmdArgOpenEdit, false) == true);
     }
     {
         auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
-        utassert(GetArg(cmd, kCmdArgColor) != nullptr);
-        utassert(GetArg(cmd, kCmdArgOpenEdit) != nullptr);
-        utassert(GetBoolArg(cmd, kCmdArgOpenEdit, false) == true);
+        utassert(GetCommandArg(cmd, kCmdArgColor) != nullptr);
+        utassert(GetCommandArg(cmd, kCmdArgOpenEdit) != nullptr);
+        utassert(GetCommandBoolArg(cmd, kCmdArgOpenEdit, false) == true);
     }
     {
         auto cmdId = ParseCommand("CmdGoToNextPage 3");
@@ -268,7 +268,7 @@ void parseCommandsTest() {
         auto cmdId = ParseCommand(s);
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdExec);
-        arg = GetArg(cmd, kCmdArgSpec);
+        arg = GetCommandArg(cmd, kCmdArgSpec);
         utassert(str::Eq(arg->strVal, argStr));
     }
     {
@@ -277,9 +277,9 @@ void parseCommandsTest() {
         auto cmdId = ParseCommand(s);
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdExec);
-        arg = GetArg(cmd, kCmdArgSpec);
+        arg = GetCommandArg(cmd, kCmdArgSpec);
         utassert(str::Eq(arg->strVal, argStr));
-        arg = GetArg(cmd, kCmdArgFilter);
+        arg = GetCommandArg(cmd, kCmdArgFilter);
         utassert(str::Eq(arg->strVal, "*.jpeg"));
     }
 }

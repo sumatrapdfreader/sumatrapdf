@@ -300,6 +300,9 @@ struct CommandWithArg {
     // it identifies a command with their fixed set of arguments
     int id = 0;
 
+    // optional
+    const char* idStr = nullptr;
+
     CommandArg* firstArg = nullptr;
     CommandWithArg() = default;
     ~CommandWithArg();
@@ -310,9 +313,9 @@ CommandWithArg* FindCommandWithArg(int cmdId);
 void FreeCommandsWithArg();
 
 int ParseCommand(const char* definition);
-CommandArg* GetArg(CommandWithArg*, const char* argName);
-int GetIntArg(CommandWithArg* cmd, const char* name, int defValue);
-bool GetBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
+CommandArg* GetCommandArg(CommandWithArg*, const char* argName);
+int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue);
+bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
 
 constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";

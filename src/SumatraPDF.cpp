@@ -5079,7 +5079,7 @@ OpenFileInBrowser:
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CommandWithArg* cmd) {
     if (cmd) {
-        auto col = GetArg(cmd, kCmdArgColor);
+        auto col = GetCommandArg(cmd, kCmdArgColor);
         ReportIf(!col || !col->colorVal.parsedOk);
         if (col && col->colorVal.parsedOk) {
             args.col = col->colorVal;
@@ -5472,7 +5472,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             if (dm && dm->NeedVScroll()) {
-                int n = GetIntArg(cmdWithArg, kCmdArgN, 1);
+                int n = GetCommandIntArg(cmdWithArg, kCmdArgN, 1);
                 WPARAM dir = (cmdId == CmdScrollUp) ? SB_LINEUP : SB_LINEDOWN;
                 for (int i = 0; i < n; i++) {
                     SendMessageW(win->hwndCanvas, WM_VSCROLL, dir, 0);
@@ -5492,7 +5492,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int n = GetIntArg(cmdWithArg, kCmdArgN, 1);
+            int n = GetCommandIntArg(cmdWithArg, kCmdArgN, 1);
             for (int i = 0; i < n; i++) {
                 if (cmdId == CmdGoToPrevPage) {
                     ctrl->GoToPrevPage();
@@ -5894,7 +5894,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SetAnnotCreateArgs(args, cmdWithArg);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
                 if (annot) {
-                    bool openEdit = GetBoolArg(cmdWithArg, kCmdArgOpenEdit, IsShiftPressed());
+                    bool openEdit = GetCommandBoolArg(cmdWithArg, kCmdArgOpenEdit, IsShiftPressed());
                     if (openEdit) {
                         ShowEditAnnotationsWindow(tab);
                         SetSelectedAnnotation(tab, annot);
