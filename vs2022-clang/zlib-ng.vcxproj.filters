@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="arch">
+      <UniqueIdentifier>{6332947C-4F69-950D-F855-7B10E46B110F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="arch\x86">
+      <UniqueIdentifier>{98777836-8444-D341-AD5D-C1E9998908D0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\zlib-ng\adler32.c" />
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\adler32_avx.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\adler32_ssse3.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\chunkset_avx.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\chunkset_sse.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\compare258_avx.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\compare258_sse.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\crc_folding.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\insert_string_sse.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\slide_avx.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\slide_sse.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\arch\x86\x86.c">
+      <Filter>arch\x86</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib-ng\chunkset.c" />
+    <ClCompile Include="..\ext\zlib-ng\compare258.c" />
+    <ClCompile Include="..\ext\zlib-ng\compress.c" />
+    <ClCompile Include="..\ext\zlib-ng\crc32.c" />
+    <ClCompile Include="..\ext\zlib-ng\crc32_comb.c" />
+    <ClCompile Include="..\ext\zlib-ng\deflate.c" />
+    <ClCompile Include="..\ext\zlib-ng\deflate_fast.c" />
+    <ClCompile Include="..\ext\zlib-ng\deflate_medium.c" />
+    <ClCompile Include="..\ext\zlib-ng\deflate_quick.c" />
+    <ClCompile Include="..\ext\zlib-ng\deflate_slow.c" />
+    <ClCompile Include="..\ext\zlib-ng\functable.c" />
+    <ClCompile Include="..\ext\zlib-ng\gzlib.c" />
+    <ClCompile Include="..\ext\zlib-ng\gzread.c" />
+    <ClCompile Include="..\ext\zlib-ng\gzwrite.c" />
+    <ClCompile Include="..\ext\zlib-ng\infback.c" />
+    <ClCompile Include="..\ext\zlib-ng\inffast.c" />
+    <ClCompile Include="..\ext\zlib-ng\inflate.c" />
+    <ClCompile Include="..\ext\zlib-ng\inftrees.c" />
+    <ClCompile Include="..\ext\zlib-ng\insert_string.c" />
+    <ClCompile Include="..\ext\zlib-ng\trees.c" />
+    <ClCompile Include="..\ext\zlib-ng\uncompr.c" />
+    <ClCompile Include="..\ext\zlib-ng\zutil.c" />
+  </ItemGroup>
+</Project>

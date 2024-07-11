@@ -84,6 +84,27 @@ func regenPremake() {
 		cmd := exec.Command(premakePath, "vs2022")
 		runCmdLoggedMust(cmd)
 	}
+	{
+		// copy files to vs2022-clang
+		srcDir := "vs2022"
+		dstDir := "vs2022-clang"
+		files, err := os.ReadDir(srcDir)
+		must(err)
+		copyFileMustOverwrite = true
+		for _, fi := range files {
+			if fi.IsDir() {
+				continue
+			}
+			srcPath := filepath.Join(srcDir, fi.Name())
+			dstPath := filepath.Join(dstDir, fi.Name())
+			copyFileMust(dstPath, srcPath)
+		}
+	}
+	// TODO: update toolset
+	// replace:
+	//     <PlatformToolset>v143</PlatformToolset>
+	// with
+	//     <PlatformToolset>ClangCL</PlatformToolset>
 }
 
 func openForAppend(name string) (*os.File, error) {

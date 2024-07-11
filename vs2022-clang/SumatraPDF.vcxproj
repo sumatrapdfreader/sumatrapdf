@@ -103,6 +103,7 @@
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>SumatraPDF</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -207,6 +208,30 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|ARM64'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|ARM64'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|ARM64'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|ARM64'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|Win32'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|Win32'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|Win32'">
+    <PlatformToolset>ClangCL</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|Win32'">
     <PlatformToolset>ClangCL</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -404,7 +429,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -437,7 +461,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -470,7 +493,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -503,7 +525,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/fsanitize=address -Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -536,7 +558,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -569,7 +590,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -602,7 +622,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -635,7 +654,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/fsanitize=address -Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -671,7 +690,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -708,7 +726,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -745,7 +762,6 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -782,7 +798,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/fsanitize=address -Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -818,7 +834,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include /analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -855,7 +871,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include /analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -892,7 +908,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>-Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include /analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
@@ -929,7 +945,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/fsanitize=address -Wno-unused-parameter -Wno-deprecated-non-prototype -Wno-deprecated-declarations -Wno-ignored-qualifiers -Wno-macro-redefined -Wno-switch -Wno-dangling-else -Wno-microsoft-include /analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/fsanitize=address /analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
