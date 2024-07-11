@@ -139,7 +139,7 @@ struct ExternalViewer {
     // (e.g. *.pdf;*.xps for all PDF and XPS documents)
     char* filter;
     // optional: keyboard shortcut e.g. Alt + 7
-    char* shortcut;
+    char* key;
     // dynamic command id
     int cmdId;
 };
@@ -177,7 +177,7 @@ struct SelectionHandler {
     char* url;
     // name shown in context menu
     char* name;
-    // dynaic command id
+    // dynamic command id
     int cmdId;
 };
 
@@ -532,10 +532,10 @@ static const FieldInfo gExternalViewerFields[] = {
     {offsetof(ExternalViewer, commandLine), SettingType::String, 0},
     {offsetof(ExternalViewer, name), SettingType::String, 0},
     {offsetof(ExternalViewer, filter), SettingType::String, 0},
-    {offsetof(ExternalViewer, shortcut), SettingType::String, 0},
+    {offsetof(ExternalViewer, key), SettingType::String, 0},
 };
 static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 4, gExternalViewerFields,
-                                               "CommandLine\0Name\0Filter\0Shortcut"};
+                                               "CommandLine\0Name\0Filter\0Key"};
 
 static const FieldInfo gForwardSearchFields[] = {
     {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},

@@ -108,14 +108,14 @@ var (
 			"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
 		mkField("Filter", String, nil,
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
-		mkField("Shortcut", String, nil, "optional: keyboard shortcut e.g. Alt + 7").setVersion("3.6"),
+		mkField("Key", String, nil, "optional: keyboard shortcut e.g. Alt + 7").setVersion("3.6"),
 		mkField("CmdId", Int, 0, "dynamic command id").setInternal(),
 	}
 
 	selectionHandler = []*Field{
 		mkField("URL", String, nil, "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)"),
 		mkField("Name", String, nil, "name shown in context menu"),
-		mkField("CmdId", Int, 0, "dynaic command id").setInternal(),
+		mkField("CmdId", Int, 0, "dynamic command id").setInternal(),
 	}
 
 	annotations = []*Field{
