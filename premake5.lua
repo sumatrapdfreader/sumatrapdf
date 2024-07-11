@@ -150,6 +150,12 @@ function uses_zlib()
   zlib_defines()
 end
 
+function warnings_as_errors()
+  filter {"configurations:not ReleaseAnalyze"}
+    flags { "FatalCompileWarnings" }
+  filter {}
+end
+
 workspace "SumatraPDF"
   configurations { "Debug", "DebugFull", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x64", "arm64", "x64_asan" }
@@ -239,10 +245,6 @@ workspace "SumatraPDF"
     "Maps", -- generate map file
     -- "Unicode", TODO: breaks libdjuv?
   }
-
-  filter {"configurations:not ReleaseAnalyze"}
-    flags { "FatalCompileWarnings" }
-  filter {}
 
   exceptionhandling "Off"
   rtti "Off"
@@ -637,6 +639,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
+    warnings_as_errors()
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
@@ -776,6 +779,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
+    warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
@@ -829,6 +833,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++latest"
     regconf()
+    warnings_as_errors()
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
