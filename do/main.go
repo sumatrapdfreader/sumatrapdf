@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"io"
 	"os"
@@ -100,11 +101,31 @@ func regenPremake() {
 			copyFileMust(dstPath, srcPath)
 		}
 	}
-	// TODO: update toolset
-	// replace:
-	//     <PlatformToolset>v143</PlatformToolset>
-	// with
-	//     <PlatformToolset>ClangCL</PlatformToolset>
+	{
+		// update toolset to clang-cl
+		// replace:
+		//     <PlatformToolset>v143</PlatformToolset>
+		// with
+		//     <PlatformToolset>ClangCL</PlatformToolset>
+		// in *.vcxproj files
+		dstDir := "vs2022-clang"
+		files, err := os.ReadDir(dstDir)
+		must(err)
+		for _, fi := range files {
+			if fi.IsDir() {
+				continue
+			}
+			if false && !strings.HasSuffix(fi.Name(), ".vcxproj") {
+				continue
+			}
+			path := filepath.Join(dstDir, fi.Name())
+			d, err := os.ReadFile(path)
+			must(err)
+			d2 := bytes.ReplaceAll(d, []byte("v143"), []byte("ClangCL"))
+			err = os.WriteFile(path, d2, 0644)
+			must(err)
+		}
+	}
 }
 
 func openForAppend(name string) (*os.File, error) {
