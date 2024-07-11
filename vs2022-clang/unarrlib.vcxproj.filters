@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="bzip2">
+      <UniqueIdentifier>{0C15310F-7829-59C0-41AB-FC1FAD7E55F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lzma">
+      <UniqueIdentifier>{D95D9A7C-C594-9B0D-6E81-81105A97170F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lzma\C">
+      <UniqueIdentifier>{6B3EA90C-57E0-D3E2-409B-E7362CDC5A33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr">
+      <UniqueIdentifier>{8D308210-F944-AAC1-C2C6-4D212E9AA6F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr\_7z">
+      <UniqueIdentifier>{8C102DF0-F87A-E166-41B9-920CAD62BFBB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr\common">
+      <UniqueIdentifier>{459164B3-31F4-F357-DA79-2C0EC6BBBFDA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr\lzmasdk">
+      <UniqueIdentifier>{321765EE-9ED7-E024-6712-2AA2D3912501}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr\rar">
+      <UniqueIdentifier>{C1662DF0-2DD1-E166-760F-930CE2B8BFBB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr\tar">
+      <UniqueIdentifier>{436F2DF0-AFD9-E166-F817-930C64C1BFBB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarr\zip">
+      <UniqueIdentifier>{CF892DF0-3BF4-E166-8432-930CF0DBBFBB}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\unarr\_7z\_7z.h">
+      <Filter>unarr\_7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\allocator.h">
+      <Filter>unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\unarr-imp.h">
+      <Filter>unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\lzss.h">
+      <Filter>unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rar.h">
+      <Filter>unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rarvm.h">
+      <Filter>unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\tar\tar.h">
+      <Filter>unarr\tar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\inflate.h">
+      <Filter>unarr\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\zip.h">
+      <Filter>unarr\zip</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\bzip2\bzip_all.c">
+      <Filter>bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zBuf.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zDec.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zIn.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zStream.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bcj2.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bra.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bra86.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzFind.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzFindMt.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Lzma2Dec.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzmaDec.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzmaEnc.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Threads.c">
+      <Filter>lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\_7z\_7z.c">
+      <Filter>unarr\_7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\conv.c">
+      <Filter>unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\crc32.c">
+      <Filter>unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\custalloc.c">
+      <Filter>unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\stream.c">
+      <Filter>unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\unarr.c">
+      <Filter>unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\CpuArch.c">
+      <Filter>unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd7.c">
+      <Filter>unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd7Dec.c">
+      <Filter>unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd8.c">
+      <Filter>unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd8Dec.c">
+      <Filter>unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\filter-rar.c">
+      <Filter>unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\huffman-rar.c">
+      <Filter>unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\parse-rar.c">
+      <Filter>unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\rar.c">
+      <Filter>unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\rarvm.c">
+      <Filter>unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\uncompress-rar.c">
+      <Filter>unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\tar\parse-tar.c">
+      <Filter>unarr\tar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\tar\tar.c">
+      <Filter>unarr\tar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\inflate.c">
+      <Filter>unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\parse-zip.c">
+      <Filter>unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\uncompress-zip.c">
+      <Filter>unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\zip.c">
+      <Filter>unarr\zip</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

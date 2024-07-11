@@ -14,10 +14,8 @@ out.txt
 out/
 builds/
 mupdf/generated/
-vs2017/.vs/
-vs2019/.vs/
-vs2019/.vs/
 vs2022/.vs/
+vs2022-clang/.vs/
 .vscode/db/
 .vscode/ipch/
 bin/cmapdump.exe
