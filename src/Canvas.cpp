@@ -629,8 +629,8 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     int elementPageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
-    WindowTab* tab = win->CurrentTab();
 #if 0
+    WindowTab* tab = win->CurrentTab();
     if (IsCtrlPressed() && win->annotationUnderCursor) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, win->annotationUnderCursor);
@@ -879,7 +879,7 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     // Gdiplus::Pen pen(col, 4);
     Gdiplus::Pen pen(&br, 4);
     Gdiplus::Graphics gs(hdc);
-    Gdiplus::Status stat = gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
+    gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
 }
 
 static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
@@ -1186,7 +1186,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
         return;
     }
 
-    static LARGE_INTEGER lastWheelMsgTime{0};
+    static LARGE_INTEGER lastWheelMsgTime{};
     static int accumDelta = 0;
     static float initialZoomVritual = 0;
 

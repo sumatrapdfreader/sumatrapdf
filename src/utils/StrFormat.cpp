@@ -314,7 +314,7 @@ char* Format(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, const A
     args[nArgs++] = &a4;
     args[nArgs++] = &a5;
     args[nArgs++] = &a6;
-    ReportIf(nArgs > dimof(args));
+    ReportIf(nArgs > dimofi(args));
     // arguments at the end could be empty
     while (nArgs > 0 && args[nArgs - 1]->t == Type::None) {
         nArgs--;
@@ -373,7 +373,7 @@ char* FormatTemp(const char* s, const Arg& a1, const Arg& a2, const Arg& a3, con
     args[nArgs++] = &a4;
     args[nArgs++] = &a5;
     args[nArgs++] = &a6;
-    ReportIf(nArgs > dimof(args));
+    ReportIf(nArgs > dimofi(args));
     return FormatTemp(s, args, nArgs);
 }
 

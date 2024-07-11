@@ -24,7 +24,6 @@ static NO_INLINE void CalcDigestWin(const void* data, int dataSize, u8* digest, 
         ReportIf(!ok);
     }
 #endif
-    ReportIf(dataSize > DWORD_MAX);
     ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)dataSize, 0);
     ReportIf(!ok);
 

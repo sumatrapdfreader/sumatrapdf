@@ -430,7 +430,7 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
     }
 
     DWORD res = SuspendThread(hThread);
-    if (-1 == res) {
+    if ((DWORD)(-1) == res) {
         s.Append("Failed to SuspendThread()\n");
     } else {
         CONTEXT ctx{};

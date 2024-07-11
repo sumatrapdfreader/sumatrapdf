@@ -714,7 +714,7 @@ RestartLayout:
         if (IsBookView(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1) {
             pageInARow++;
         }
-        ReportIf(pageInARow >= dimof(columnMaxWidth));
+        ReportIf(pageInARow >= dimofi(columnMaxWidth));
         if (columnMaxWidth[pageInARow] < pos.dx) {
             columnMaxWidth[pageInARow] = pos.dx;
         }
@@ -793,11 +793,11 @@ RestartLayout:
         }
         // leave first spot empty in cover page mode
         if (IsBookView(GetDisplayMode()) && pageNo == 1) {
-            ReportIf(pageInARow >= dimof(columnMaxWidth));
+            ReportIf(pageInARow >= dimofi(columnMaxWidth));
             pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
             ++pageInARow;
         }
-        ReportIf(pageInARow >= dimof(columnMaxWidth));
+        ReportIf(pageInARow >= dimofi(columnMaxWidth));
         // center pages in a single column but right/left align them when using two columns
         if (1 == columns) {
             pageInfo->pos.x = pageOffX + (columnMaxWidth[0] - pageInfo->pos.dx) / 2;
@@ -816,7 +816,7 @@ RestartLayout:
             pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
         }
 
-        ReportIf(pageInARow >= dimof(columnMaxWidth));
+        ReportIf(pageInARow >= dimofi(columnMaxWidth));
         pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
         ++pageInARow;
         ReportIf(!(pageOffX >= 0 && pageInfo->pos.x >= 0));

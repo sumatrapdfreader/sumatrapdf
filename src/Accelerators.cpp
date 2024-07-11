@@ -266,7 +266,7 @@ static WORD ParseVirtKey(const char* s) {
     if (idx < 0) {
         return 0;
     }
-    ReportIf(idx >= dimof(gVirtKeysIds));
+    ReportIf(idx >= dimofi(gVirtKeysIds));
     WORD keyId = gVirtKeysIds[idx];
     return keyId;
 }
@@ -275,7 +275,6 @@ static WORD ParseVirtKey(const char* s) {
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
 static bool ParseShortcut(const char* shortcut, ACCEL& accel) {
     BYTE fVirt = 0;
-    WORD key = 0;
 
 again:
     SkipWS(shortcut);
@@ -647,15 +646,14 @@ static void CreateSumatraAcceleratorTable() {
     }
 
     // shortucts for external viewers
-    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
-    }
+    //for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
+    //}
 
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
     nCustomShortcuts = nAccels;
     for (ACCEL accel : gBuiltInAccelerators) {
         bool shortcutExists = false;
         for (int i = 0; !shortcutExists && i < nAccels; i++) {
-            ACCEL accelExisting = accels[i];
             shortcutExists = SameAccelKey(accels[i], accel);
         }
         if (shortcutExists) {

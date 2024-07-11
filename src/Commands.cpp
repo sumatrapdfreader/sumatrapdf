@@ -46,7 +46,7 @@ static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s
     if (idx < 0) {
         return -1;
     }
-    ReportIf(idx >= dimof(gCommandIds));
+    ReportIf(idx >= dimofi(gCommandIds));
     int cmdId = gCommandIds[idx];
     return (int)cmdId;
 }
@@ -261,7 +261,6 @@ static int parseBool(const char* s) {
 //   <name>=<value>
 // for booleans only <name> works as well and represents true
 CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
-    const char* args = *argsInOut;
     const char* valStart = nullptr;
     const char* argName = nullptr;
     CommandArg::Type type = CommandArg::Type::None;
@@ -324,7 +323,7 @@ CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
             *argsInOut = valStart;
         }
         auto arg = newArg(type, argName);
-        arg->boolVal = bv;
+        arg->boolVal = b;
         return arg;
     }
 

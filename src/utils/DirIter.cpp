@@ -99,9 +99,7 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths) {
         return false;
     }
 
-    bool append;
     do {
-        append = false;
         char* name = ToUtf8Temp(fdata.cFileName);
         DWORD attrs = fdata.dwFileAttributes;
         if (IsRegularFile(attrs)) {
