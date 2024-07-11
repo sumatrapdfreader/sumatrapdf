@@ -660,7 +660,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     WCHAR s[2]{};
     Gdiplus::PointF origin(0.f, 0.f);
     Gdiplus::RectF bbox;
-    for (int i = 0; i < dimof(gLetters); i++) {
+    for (int i = 0; i < dimofi(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
         g.MeasureString(s, 1, f, origin, &sfmt, &bbox);
@@ -671,7 +671,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     }
 
     float x = ((float)dx - totalDx) / 2.f;
-    for (int i = 0; i < dimof(gLetters); i++) {
+    for (int i = 0; i < dimofi(gLetters); i++) {
         li = &gLetters[i];
         li->x = x;
         x += li->dx;
@@ -714,7 +714,7 @@ static float DrawMessage(Graphics& g, const char* msg, float y, float dx, Color 
 static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, float y) {
     LetterInfo* li;
     WCHAR s[2]{};
-    for (int i = 0; i < dimof(gLetters); i++) {
+    for (int i = 0; i < dimofi(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
         if (s[0] == ' ') {

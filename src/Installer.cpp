@@ -508,7 +508,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
         case BFFM_SELCHANGED: {
             WCHAR path[MAX_PATH];
             if (SHGetPathFromIDList((LPITEMIDLIST)lp, path) && dir::Exists(path)) {
-                SHFILEINFO sfi = {nullptr};
+                SHFILEINFO sfi{};
                 SHGetFileInfo((LPCWSTR)lp, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK)) {
                     break;
@@ -523,7 +523,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lp, LPARAM lp
 
 static TempStr BrowseForFolderTemp(HWND hwnd, const char* initialFolderA, const char* caption) {
     WCHAR* initialFolder = ToWStrTemp(initialFolderA);
-    BROWSEINFO bi = {0};
+    BROWSEINFO bi{};
     bi.hwndOwner = hwnd;
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = ToWStrTemp(caption);

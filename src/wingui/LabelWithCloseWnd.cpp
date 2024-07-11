@@ -164,7 +164,7 @@ HWND LabelWithCloseWnd::Create(const LabelWithCloseCreateArgs& args) {
     return hwnd;
 }
 
-Size LabelWithCloseWnd::GetIdealSize() const {
+Size LabelWithCloseWnd::GetIdealSize() {
     char* s = HwndGetTextTemp(this->hwnd);
     Size size = HwndMeasureText(this->hwnd, s);
     int btnDx = DpiScale(this->hwnd, kCloseBtnDx);

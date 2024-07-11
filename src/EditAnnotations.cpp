@@ -716,6 +716,9 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
         case AnnotationType::Stamp:
             items = gStampIcons;
             break;
+        default:
+            // no-op
+            break;
     }
     if (!items || str::IsEmpty(itemName)) {
         return;
@@ -987,7 +990,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     });
 }
 
-void EditAnnotationsWindow::OnSize(UINT msg, UINT type, SIZE size) {
+void EditAnnotationsWindow::OnSize(UINT msg, UINT, SIZE size) {
     if (msg != WM_SIZE) {
         return;
     }

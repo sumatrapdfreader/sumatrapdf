@@ -109,7 +109,7 @@ bool FavTreeModel::IsExpanded(TreeItem ti) {
     return fti->isExpanded;
 }
 
-bool FavTreeModel::IsChecked(TreeItem ti) {
+bool FavTreeModel::IsChecked(TreeItem) {
     return false;
 }
 
@@ -799,8 +799,8 @@ static MenuDef menuDefContextFav[] = {
 
 static void FavTreeContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    TreeView* treeView = (TreeView*)ev->w;
-    HWND hwnd = treeView->hwnd;
+    // TreeView* treeView = (TreeView*)ev->w;
+    // HWND hwnd = treeView->hwnd;
     // MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     POINT pt{};

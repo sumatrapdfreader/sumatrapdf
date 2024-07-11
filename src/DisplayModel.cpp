@@ -74,7 +74,10 @@ static int ColumnsFromDisplayMode(DisplayMode displayMode) {
     return 1;
 }
 
-ScrollState::ScrollState(int page, double x, double y) : page(page), x(x), y(y) {
+ScrollState::ScrollState(int page, double x, double y) {
+    this->page = page;
+    this->x = x;
+    this->y = y;
 }
 
 bool ScrollState::operator==(const ScrollState& other) const {
@@ -1288,6 +1291,9 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
             case DisplayMode::BookView:
                 newDisplayMode = DisplayMode::ContinuousBookView;
                 break;
+            default:
+                // no-op
+                break;
         }
     }
     if (displayMode == newDisplayMode) {
@@ -1904,7 +1910,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
     }
 }
 
-bool DisplayModel::ShouldCacheRendering(int pageNo) const {
+bool DisplayModel::ShouldCacheRendering(int) const {
     // recommend caching for all documents
     return true;
 }

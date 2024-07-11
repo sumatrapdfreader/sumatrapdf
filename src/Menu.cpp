@@ -1921,7 +1921,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdCreateAnnotSquare:
         case CmdCreateAnnotLine:
         case CmdCreateAnnotCircle: {
-            AnnotCreateArgs args{annotType};
+            AnnotCreateArgs args{annotType, {}};
             annot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
             UpdateAnnotationsList(tab->editAnnotsWindow);
             break;
@@ -2047,7 +2047,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         }
     }
 
-    MENUINFO mi = {0};
+    MENUINFO mi{};
     mi.cbSize = sizeof(MENUINFO);
     GetMenuInfo(hmenu, &mi);
     mi.hbrBack = hbrBrush;

@@ -27,7 +27,7 @@
 
 #define ABOUT_BG_GRAY_COLOR RGB(0xF2, 0xF2, 0xF2)
 
-COLORREF GetAppColor(AppColor col) {
+COLORREF GetAppColor(AppColor) {
     ReportIf(true);
     return 0;
 }

@@ -22,7 +22,7 @@ struct LabelWithCloseWnd : Wnd {
     void SetTextCol(COLORREF);
     void SetPaddingXY(int x, int y);
 
-    Size GetIdealSize() const;
+    Size GetIdealSize();
 
     int cmdId = 0;
 

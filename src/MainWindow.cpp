@@ -399,7 +399,6 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         return;
     }
 
-    HWND hwndFrame = win->hwndFrame;
     Kind kind = dest->GetKind();
 
     if (kindDestinationScrollTo == kind) {
