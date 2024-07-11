@@ -83,7 +83,14 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse, int ma
         }
         s = next + str::Len(separator);
     }
-    if (!collapse || *s) {
+    bool shouldAddRest = true;
+    if (!*s) {
+        // if we're collapsing, we're not adding empty string
+        // at the end, unless we haven't added any strings yet
+        // i.e. to match other languages, "".split(" ") => [""]
+        shouldAddRest = !collapse || v.Size() == 0;
+    }
+    if (shouldAddRest) {
         v.Append(s);
         nAdded++;
     }

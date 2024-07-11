@@ -387,6 +387,14 @@ static void StrVecTest6() {
     utassert(str::Eq(s, "#00ff00 openEdit"));
 }
 
+static void StrVecTest7() {
+    StrVec v;
+    Split(v, "", " ", true, 2);
+    utassert(v.Size() == 1);
+    const char* s = v[0];
+    utassert(*s == 0);
+}
+
 void StrVecTest() {
     StrVecTest1();
     StrVecTest2();
@@ -394,4 +402,5 @@ void StrVecTest() {
     StrVecTest4();
     StrVecTest5();
     StrVecTest6();
+    StrVecTest7();
 }
