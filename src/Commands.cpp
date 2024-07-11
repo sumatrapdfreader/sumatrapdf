@@ -19,6 +19,25 @@ static i32 gCommandIds[] = {COMMANDS(CMD_ID)};
 SeqStrings gCommandDescriptions = COMMANDS(CMD_DESC) "\0";
 #undef CMD_DESC
 
+struct ArgSpec {
+    int cmdId;
+    const char* name;
+    CommandArg::Type type;
+};
+
+// arguments for the same command should follow each other
+// first argument is default and can be specified without a name
+static const ArgSpec argSpecs[] = {
+    {CmdSelectionHandler, kCmdArgURL, CommandArg::Type::String}, // default
+    {CmdSelectionHandler, kCmdArgExe, CommandArg::Type::String},
+    {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
+    {CmdExec, kCmdArgFilter, CommandArg::Type::String},
+    {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
+    {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
+    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
+    {CmdNone, "", CommandArg::Type::None},          // sentinel
+};
+
 static CommandWithArg* gFirstCommandWithArg = nullptr;
 
 // returns -1 if not found
@@ -44,6 +63,7 @@ int GetCommandIdByName(const char* cmdName) {
         if (curr->idStr && str::EqI(cmdName, curr->idStr)) {
             return curr->id;
         }
+        curr = curr->next;
     }
     return -1;
 }
@@ -59,6 +79,7 @@ int GetCommandIdByDesc(const char* cmdDesc) {
         if (curr->name && str::EqI(cmdDesc, curr->name)) {
             return curr->id;
         }
+        curr = curr->next;
     }
     return -1;
 }
@@ -156,23 +177,6 @@ void FreeCommandsWithArg() {
     }
     gFirstCommandWithArg = nullptr;
 }
-
-struct ArgSpec {
-    int cmdId;
-    const char* name;
-    CommandArg::Type type;
-};
-
-// arguments for the same command should follow each other
-// first argument is default and can be specified without a name
-static const ArgSpec argSpecs[] = {
-    {CmdExec, kCmdArgSpec, CommandArg::Type::String}, // default
-    {CmdExec, kCmdArgFilter, CommandArg::Type::String},
-    {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
-    {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
-    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
-    {CmdNone, "", CommandArg::Type::None},          // sentinel
-};
 
 static CommandArg* newArg(CommandArg::Type type, const char* name) {
     auto res = new CommandArg();

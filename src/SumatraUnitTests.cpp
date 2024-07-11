@@ -268,7 +268,7 @@ void parseCommandsTest() {
         auto cmdId = ParseCommand(s);
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdExec);
-        arg = GetCommandArg(cmd, kCmdArgSpec);
+        arg = GetCommandArg(cmd, kCmdArgExe);
         utassert(str::Eq(arg->strVal, argStr));
     }
     {
@@ -277,7 +277,7 @@ void parseCommandsTest() {
         auto cmdId = ParseCommand(s);
         auto cmd = FindCommandWithArg(cmdId);
         utassert(cmd->origId == CmdExec);
-        arg = GetCommandArg(cmd, kCmdArgSpec);
+        arg = GetCommandArg(cmd, kCmdArgExe);
         utassert(str::Eq(arg->strVal, argStr));
         arg = GetCommandArg(cmd, kCmdArgFilter);
         utassert(str::Eq(arg->strVal, "*.jpeg"));

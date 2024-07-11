@@ -179,6 +179,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdInvokeInverseSearch, "Invoke Inverse Search")                             \
     V(CmdExec, "Execute a program")                                                \
     V(CmdViewWithExternalViewer, "View With Custom External Viewer")               \
+    V(CmdSelectionHandler, "Launch a browser or run command with selection")       \
     V(CmdDebugCorruptMemory, "Debug: Corrupt Memory")                              \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                          \
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                          \
@@ -320,6 +321,7 @@ bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
 
 constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";
-constexpr const char* kCmdArgSpec = "spec";
+constexpr const char* kCmdArgExe = "exe";
+constexpr const char* kCmdArgURL = "url";
 constexpr const char* kCmdArgFilter = "filter";
 constexpr const char* kCmdArgN = "n";
