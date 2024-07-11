@@ -200,7 +200,6 @@ static CommandArg* parseArgOfType(const char* argName, CommandArg::Type type, co
     }
 
     if (type == CommandArg::Type::Int) {
-        int n = ParseInt(val);
         auto arg = newArg(type, argName);
         arg->intVal = ParseInt(val);
         return arg;

@@ -160,7 +160,7 @@ static uint LcidToCodepage(DWORD lcid) {
         {1042, 949},  {1045, 1250}, {1049, 1251}, {1051, 1250}, {1060, 1250}, {1055, 1254}, {1026, 1251}, {4, 936},
     };
 
-    for (int i = 0; i < dimof(lcidToCodepage); i++) {
+    for (int i = 0; i < dimofi(lcidToCodepage); i++) {
         if (lcid == lcidToCodepage[i].lcid) {
             return lcidToCodepage[i].codepage;
         }

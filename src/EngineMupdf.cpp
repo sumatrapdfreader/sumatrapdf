@@ -1045,14 +1045,12 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
         }
     }
 
-    size_t imageIdx = 0;
     fz_point p = {(float)pt.x, (float)pt.y};
     for (auto& img : pageInfo->images) {
         fz_rect ir = img->rect;
         if (IsPointInRect(ir, p)) {
             res.Append(img->imageElement);
         }
-        imageIdx++;
     }
 
     if (false) {
@@ -2539,7 +2537,6 @@ static IPageElement* NewFzComment(const char* comment, int pageNo, RectF rect) {
 // must be called inside fz_try
 static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
     fz_rect rect = pdf_bound_annot(ctx, annot);
-    auto tp = pdf_annot_type(ctx, annot);
     const char* contents = pdf_annot_contents(ctx, annot);
     const char* label = pdf_annot_field_label(ctx, annot);
     const char* s = contents;

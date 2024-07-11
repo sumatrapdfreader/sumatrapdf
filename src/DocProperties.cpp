@@ -19,7 +19,7 @@ const char* kPropPdfProducer = "pdfProducer";
 const char* kPropPdfFileStructure = "pdfFileStructure";
 
 // clang-format off
-extern const char* gAllProps[] = {
+const char* gAllProps[] = {
      kPropTitle,
      kPropAuthor,
      kPropCopyright,

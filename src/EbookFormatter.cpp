@@ -243,7 +243,7 @@ bool EpubFormatter::IgnoreText() {
 /* FictionBook-specific formatting methods */
 
 Fb2Formatter::Fb2Formatter(HtmlFormatterArgs* args, Fb2Doc* doc)
-    : HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0) {
+    : HtmlFormatter(args), section(1), fb2Doc(doc), titleCount(0) {
     if (args->reparseIdx != 0) {
         return;
     }

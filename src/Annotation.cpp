@@ -1088,8 +1088,6 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
     auto res = MakeAnnotationWrapper(epdf, annot, pageNo);
     MarkNotificationAsModified(epdf, res, AnnotationChange::Add);
 
-    auto& a = gGlobalPrefs->annotations;
-
     if (typ == AnnotationType::Text) {
         TempStr iconName = GetAnnotationTextIconTemp();
         if (!str::EqI(iconName, "Note")) {
