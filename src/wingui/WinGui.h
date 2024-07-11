@@ -783,7 +783,7 @@ struct TabsCtrl : Wnd {
 
     HWND GetToolTipsHwnd();
 
-    void Layout();
+    void LayoutTabs();
     void ScheduleRepaint();
     TabMouseState TabStateFromMousePosition(const Point& p);
     void Paint(HDC hdc, RECT& rc);

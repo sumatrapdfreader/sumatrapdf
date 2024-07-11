@@ -3084,7 +3084,7 @@ void TabsCtrl::ScheduleRepaint() {
 
 // Calculates tab's elements, based on its width and height.
 // Generates a GraphicsPath, which is used for painting the tab, etc.
-void TabsCtrl::Layout() {
+void TabsCtrl::LayoutTabs() {
     Rect rect = ClientRect(hwnd);
     int dy = rect.dy;
     int nTabs = TabCount();
@@ -3402,7 +3402,7 @@ static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
         newSelected = tab2;
     }
     tabsCtrl->SetSelected(newSelected);
-    tabsCtrl->Layout();
+    tabsCtrl->LayoutTabs();
 }
 
 LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
@@ -3484,7 +3484,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_SIZE:
-            Layout();
+            LayoutTabs();
             break;
 
         case WM_MOUSELEAVE:
@@ -3754,7 +3754,7 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
         }
     }
     tabBeingClosed = -1;
-    Layout();
+    LayoutTabs();
     return insertedIdx;
 }
 
@@ -3762,7 +3762,7 @@ void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip)
     TabInfo* tab = GetTab(idx);
     str::ReplaceWithCopy(&tab->text, text);
     str::ReplaceWithCopy(&tab->tooltip, tooltip);
-    Layout();
+    LayoutTabs();
 }
 
 // returns userData because it's not owned by TabsCtrl
@@ -3782,7 +3782,7 @@ UINT_PTR TabsCtrl::RemoveTab(int idx) {
     } else if (idx == selectedTab) {
         SetSelected(0);
     }
-    Layout();
+    LayoutTabs();
     return userData;
 }
 
@@ -3794,7 +3794,7 @@ void TabsCtrl::RemoveAllTabs() {
     tabHighlightedClose = -1;
     DeleteVecMembers(tabs);
     tabs.Reset();
-    Layout();
+    LayoutTabs();
 }
 
 TabInfo* TabsCtrl::GetTab(int idx) {
