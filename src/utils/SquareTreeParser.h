@@ -11,7 +11,7 @@ class SquareTreeNode {
         union {
             const char* str;
             SquareTreeNode* child;
-        } value = nullptr;
+        } value;
         bool isChild = false;
 
         DataItem() = default;
