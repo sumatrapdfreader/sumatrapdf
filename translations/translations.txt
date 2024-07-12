@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-70e38ae94411c21601ff9becc06060eb914e4713
+69f8428e82ebaf17daa0c971253a7a12eb2a6415
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -944,7 +944,7 @@ el:Προσανατολισμός
 es:&Caras opuestas
 eu:A&urrean
 fi:&Kohtaaminen
-fo:&Standa Fyri
+fo:&Rulla glíðandi
 fr:&Deux pages
 ga:&Dhá leathanach
 gl:Páxina &dobre
@@ -10108,7 +10108,7 @@ et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
 fi:Rinnakkain
-fo:Standa Fyri
+fo:Rulla glíðandi
 fr:Deux pages
 fy-nl:Dûbele side
 ga:Dhá Leathanach
@@ -15205,6 +15205,7 @@ it:Apri file successivo nella cartella
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
+ro:Deschide următorul fișier în folder
 sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
@@ -15216,6 +15217,7 @@ it:Apri file precedente nella cartella
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
+ro:Deschide fișierul anterior în folder
 sk:Otvoriť predchádzajúci súbor v priečinku
 :Open a document...
 am:Բացել փաստաթուղթ...

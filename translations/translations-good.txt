@@ -822,7 +822,7 @@ el:Προσανατολισμός
 es:&Caras opuestas
 eu:A&urrean
 fi:&Kohtaaminen
-fo:&Standa Fyri
+fo:&Rulla glíðandi
 fr:&Deux pages
 ga:&Dhá leathanach
 gl:Páxina &dobre
@@ -8486,7 +8486,7 @@ et:Kaheleheküljeline
 eu:Bi Aldeetatik
 fa:نمایش دوصفحه‌ای
 fi:Rinnakkain
-fo:Standa Fyri
+fo:Rulla glíðandi
 fr:Deux pages
 ga:Dhá Leathanach
 gl:Páxina dobre
@@ -12778,6 +12778,7 @@ it:Apri file successivo nella cartella
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
+ro:Deschide următorul fișier în folder
 sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
@@ -12789,6 +12790,7 @@ it:Apri file precedente nella cartella
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
+ro:Deschide fișierul anterior în folder
 sk:Otvoriť predchádzajúci súbor v priečinku
 :Open a document...
 am:Բացել փաստաթուղթ...
