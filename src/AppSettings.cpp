@@ -217,6 +217,7 @@ bool LoadSettings() {
     FreeCommandsWithArg();
     // Note: some are also created in ReCreateSumatraAcceleratorTable()
     CreateUserSelectionHandlerCommands();
+    CreateThemeCommands();
     ReCreateSumatraAcceleratorTable();
 
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));

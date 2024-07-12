@@ -21,6 +21,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #include "utils/WinUtil.h"
 #include "Settings.h"
 #include "AppSettings.h"
+#include "Commands.h"
 #include "DisplayMode.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
@@ -193,12 +194,32 @@ int GetCurrentThemeIndex() {
 
 extern void UpdateAfterThemeChange();
 
+int gFirstSetThemeCmdId;
+int gLastSetThemeCmdId;
+int gCurrSetThemeCmdId;
+
+void CreateThemeCommands() {
+    CommandWithArg* cmd;
+    for (int i = 0; i < kThemeCount; i++) {
+        const char* themeName = gThemes[i]->name;
+        auto args = NewStringArg(kCmdArgName, themeName);
+        cmd = CreateCommandWithArg(themeName, CmdSetTheme, args);
+        if (i == 0) {
+            gFirstSetThemeCmdId = cmd->id;
+        } else if (i == kThemeCount - 1) {
+            gLastSetThemeCmdId = cmd->id;
+        }
+    }
+    gCurrSetThemeCmdId = gFirstSetThemeCmdId + 0;
+}
+
 void SetThemeByIndex(int themeIdx) {
     ReportIf((themeIdx < 0) || (themeIdx >= kThemeCount));
     if (themeIdx >= kThemeCount) {
         themeIdx = 0;
     }
     currentThemeIndex = themeIdx;
+    gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = gThemes[currentThemeIndex];
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     UpdateAfterThemeChange();
@@ -210,14 +231,13 @@ void SelectNextTheme() {
 }
 
 // not case sensitive
-static Theme* GetThemeByName(const char* name, int& idx) {
+static int GetThemeByName(const char* name) {
     for (int i = 0; i < kThemeCount; i++) {
         if (str::EqI(gThemes[i]->name, name)) {
-            idx = i;
-            return gThemes[i];
+            return i;
         }
     }
-    return nullptr;
+    return -1;
 }
 
 // this is the default aggressive yellow that we suppress
@@ -227,18 +247,19 @@ static bool IsDefaultMainWinColor(ParsedColor* col) {
     return col->parsedOk && col->col == kMainWinBgColDefault;
 }
 
-// call after loading settings
-void SetCurrentThemeFromSettings() {
-    const char* name = gGlobalPrefs->theme;
-    int idx = 0;
-    auto theme = GetThemeByName(name, idx);
-    if (!theme) {
+void SetTheme(const char* name) {
+    int idx = GetThemeByName(name);
+    if (idx < 0) {
         // invalid name, reset to light theme
         str::ReplaceWithCopy(&gGlobalPrefs->theme, gThemeLight.name);
-        return;
+        idx = 0;
     }
     SetThemeByIndex(idx);
+}
 
+// call after loading settings
+void SetCurrentThemeFromSettings() {
+    SetTheme(gGlobalPrefs->theme);
     ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
     bool isDefault = IsDefaultMainWinColor(bgParsed);
     if (isDefault) {

@@ -425,27 +425,13 @@ static MenuDef menuDefZoom[] = {
 };
 //] ACCESSKEY_GROUP Zoom Menu
 
-// TODO: build this dynamically
-//[ ACCESSKEY_GROUP Themes Menu
+// TODO: replace with CmdetTheme
 MenuDef menuDefThemes[] = {
-    {
-        _TRN("Light"),
-        CmdThemeFirst,
-    },
-    {
-        _TRN("Dark"),
-        CmdThemeFirst+1,
-    },
-    {
-        _TRN("Darker"),
-        CmdThemeFirst+2,
-    },
     {
         nullptr,
         0,
     },
 };
-//] ACCESSKEY_GROUP Favorites Menu
 
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
@@ -1200,22 +1186,34 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
     ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
 }
 
-static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
-    auto curr = gFirstCommandWithArg;
-    while (curr) {
-        if (curr->origId != CmdSelectionHandler) {
-            curr = curr->next;
+static void AppendThemesToMenu(HMENU m) {
+    Vec<CommandWithArg*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSetTheme);
+    for (auto& cmd : cmds) {
+        auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
+        ReportIf(!name);
+        if (!name) {
             continue;
         }
-        auto nameArg = GetCommandArg(curr, kCmdArgName);
-        ReportIf(!nameArg);
-        if (nameArg) {
-            WCHAR* name = ToWStrTemp(nameArg->strVal);
-            UINT flags = MF_STRING;
-            flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-            AppendMenuW(m, flags, (UINT_PTR)curr->id, name);
+        WCHAR* nameW = ToWStrTemp(name);
+        UINT flags = MF_STRING | MF_ENABLED;
+        AppendMenuW(m, flags, (UINT_PTR)cmd->id, nameW);
+    }
+}
+
+static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
+    Vec<CommandWithArg*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
+    for (auto& cmd : cmds) {
+        auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
+        ReportIf(!name);
+        if (!name) {
+            continue;
         }
-        curr = curr->next;
+        WCHAR* nameW = ToWStrTemp(name);
+        UINT flags = MF_STRING;
+        flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
+        AppendMenuW(m, flags, (UINT_PTR)cmd->id, nameW);
     }
 }
 
@@ -1338,6 +1336,10 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     // insert before built-in selection handlers
     if (menuDef == menuDefSelection) {
         AppendSelectionHandlersToMenu(menu, ctx ? ctx->hasSelection : false);
+    }
+
+    if (menuDef == menuDefThemes) {
+        AppendThemesToMenu(menu);
     }
 
     ACCEL accel;
@@ -1547,7 +1549,7 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
         MenuSetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
     }
 }
-
+    
 static bool IsFileCloseMenuEnabled() {
     for (size_t i = 0; i < gWindows.size(); i++) {
         if (gWindows.at(i)->IsDocLoaded()) {
@@ -1660,8 +1662,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
         MenuSetEnabled(win->menu, CmdDeleteFile, false);
     }
 
-    int themeCmdId = CmdThemeFirst + GetCurrentThemeIndex();
-    CheckMenuRadioItem(win->menu, CmdThemeFirst, CmdThemeLast, themeCmdId, MF_BYCOMMAND);
+    CheckMenuRadioItem(win->menu, gFirstSetThemeCmdId, gLastSetThemeCmdId, gCurrSetThemeCmdId, MF_BYCOMMAND);
 
     MenuSetChecked(win->menu, CmdToggleLinks, gGlobalPrefs->showLinks);
 }

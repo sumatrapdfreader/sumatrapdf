@@ -35,8 +35,9 @@ static const ArgSpec argSpecs[] = {
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},
     {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
     {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
-    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
-    {CmdNone, "", CommandArg::Type::None},          // sentinel
+    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int},       // default
+    {CmdSetTheme, kCmdArgName, CommandArg::Type::String}, // default
+    {CmdNone, "", CommandArg::Type::None},                // sentinel
 };
 
 CommandWithArg* gFirstCommandWithArg = nullptr;
@@ -145,13 +146,13 @@ CommandWithArg::~CommandWithArg() {
     str::Free(definition);
 }
 
-CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* firstArg) {
+CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args) {
     int id = gNextCommandWithArgId++;
     auto cmd = new CommandWithArg();
     cmd->id = id;
     cmd->origId = origCmdId;
     cmd->definition = str::Dup(definition);
-    cmd->firstArg = firstArg;
+    cmd->firstArg = args;
     cmd->next = gFirstCommandWithArg;
     gFirstCommandWithArg = cmd;
     return cmd;
@@ -177,6 +178,18 @@ void FreeCommandsWithArg() {
         curr = next;
     }
     gFirstCommandWithArg = nullptr;
+}
+
+void GetCommandsWithOrigId(Vec<CommandWithArg*>& commands, int origId) {
+    CommandWithArg* curr = gFirstCommandWithArg;
+    while (curr) {
+        if (curr->origId == origId) {
+            commands.Append(curr);
+        }
+        curr = curr->next;
+    }
+    // reverse so that they are returned in the order they were inserted
+    commands.Reverse();
 }
 
 static CommandArg* newArg(CommandArg::Type type, const char* name) {

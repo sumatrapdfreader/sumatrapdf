@@ -5152,12 +5152,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
     }
 
-    if ((cmdId >= CmdThemeFirst) && (cmdId <= CmdThemeLast)) {
-        int themeIdx = (cmdId - CmdThemeFirst);
-        SetThemeByIndex(themeIdx);
-        return 0;
-    }
-
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
 
@@ -5186,6 +5180,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
+        case CmdSetTheme: {
+            auto name = GetCommandStringArg(cmdWithArg, kCmdArgName, nullptr);
+            if (name) {
+                SetTheme(name);
+            }
+            return 0;
+        }
         case CmdSelectionHandler: {
             // TODO: handle kCmdArgExe
             auto url = GetCommandStringArg(cmdWithArg, kCmdArgURL, nullptr);

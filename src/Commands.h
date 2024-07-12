@@ -180,6 +180,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdExec, "Execute a program")                                                \
     V(CmdViewWithExternalViewer, "View With Custom External Viewer")               \
     V(CmdSelectionHandler, "Launch a browser or run command with selection")       \
+    V(CmdSetTheme, "Set theme")                                                    \
     V(CmdDebugCorruptMemory, "Debug: Corrupt Memory")                              \
     V(CmdDebugCrashMe, "Debug: Crash Me")                                          \
     V(CmdDebugDownloadSymbols, "Debug: Download Symbols")                          \
@@ -227,11 +228,7 @@ enum {
     CmdFavoriteFirst,
     CmdFavoriteLast = CmdFavoriteFirst + 256,
 
-    /* range for themes. We don't have themes yet. */
-    CmdThemeFirst,
-    CmdThemeLast = CmdThemeFirst + 20,
-
-    CmdLast = CmdThemeLast,
+    CmdLast = CmdFavoriteLast,
     CmdFirstWithArg = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
@@ -307,7 +304,7 @@ extern SeqStrings gCommandDescriptions;
 int GetCommandIdByName(const char*);
 int GetCommandIdByDesc(const char*);
 
-CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* firstArg = nullptr);
+CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args = nullptr);
 CommandWithArg* FindCommandWithArg(int cmdId);
 void FreeCommandsWithArg();
 CommandArg* NewStringArg(const char* name, const char* val);
@@ -318,6 +315,7 @@ CommandArg* GetCommandArg(CommandWithArg*, const char* argName);
 int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue);
 bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
 const char* GetCommandStringArg(CommandWithArg* cmd, const char* name, const char* defValue);
+void GetCommandsWithOrigId(Vec<CommandWithArg*>& commands, int origId);
 
 constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";
