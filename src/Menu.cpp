@@ -1201,29 +1201,21 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
 }
 
 static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
-    if (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
-        // TODO: when we add exe handlers, only filter the URL ones
-        return;
-    }
-    int maxEntries = CmdSelectionHandlerLast - CmdSelectionHandlerFirst;
-    int n = 0;
-    for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-        if (!sh || !sh->url || !sh->name) {
-            // can happen for bad selection handler definition
+    auto curr = gFirstCommandWithArg;
+    while (curr) {
+        if (curr->origId != CmdSelectionHandler) {
+            curr = curr->next;
             continue;
         }
-        if (str::EmptyOrWhiteSpaceOnly(sh->url) || str::EmptyOrWhiteSpaceOnly(sh->name)) {
-            continue;
+        auto nameArg = GetCommandArg(curr, kCmdArgName);
+        ReportIf(!nameArg);
+        if (nameArg) {
+            WCHAR* name = ToWStrTemp(nameArg->strVal);
+            UINT flags = MF_STRING;
+            flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
+            AppendMenuW(m, flags, (UINT_PTR)curr->id, name);
         }
-        if (n >= maxEntries) {
-            break;
-        }
-        WCHAR* name = ToWStrTemp(sh->name);
-        sh->cmdId = (int)CmdSelectionHandlerFirst + n;
-        UINT flags = MF_STRING;
-        flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-        AppendMenuW(m, flags, (UINT_PTR)sh->cmdId, name);
-        n++;
+        curr = curr->next;
     }
 }
 
@@ -1570,8 +1562,12 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     for (int id : disableIfNoSelection) {
         MenuSetEnabled(menu, id, isTextSelected);
     }
-    for (int id = CmdSelectionHandlerFirst; id < CmdSelectionHandlerLast; id++) {
-        MenuSetEnabled(menu, id, isTextSelected);
+    auto curr = gFirstCommandWithArg;
+    while (curr) {
+        if (curr->origId == CmdSelectionHandler) {
+            MenuSetEnabled(menu, curr->id, isTextSelected);
+        }
+        curr = curr->next;
     }
 }
 
@@ -1839,18 +1835,19 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
-    int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    int cmdId = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
-    if (cmd >= CmdSelectionHandlerFirst && cmd < CmdSelectionHandlerLast) {
-        HwndSendCommand(win->hwndFrame, cmd);
+    auto cmd = FindCommandWithArg(cmdId);
+    if (cmd && cmd->origId == CmdSelectionHandler) {
+        HwndSendCommand(win->hwndFrame, cmd->id);
         return;
     }
 
-    AnnotationType annotType = (AnnotationType)(cmd - CmdCreateAnnotText);
+    AnnotationType annotType = (AnnotationType)(cmdId - CmdCreateAnnotText);
     Annotation* annot = nullptr;
-    switch (cmd) {
+    switch (cmdId) {
         case CmdCopySelection:
         case CmdTranslateSelectionWithGoogle:
         case CmdTranslateSelectionWithDeepL:
@@ -1872,7 +1869,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdFavoriteAdd:
         case CmdToggleFullscreen:
             // handle in FrameOnCommand() in SumatraPDF.cpp
-            HwndSendCommand(win->hwndFrame, cmd);
+            HwndSendCommand(win->hwndFrame, cmdId);
             break;
 
             // note: those are duplicated in SumatraPDF.cpp to enable keyboard shortcuts for them

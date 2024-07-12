@@ -30,6 +30,7 @@ struct ArgSpec {
 static const ArgSpec argSpecs[] = {
     {CmdSelectionHandler, kCmdArgURL, CommandArg::Type::String}, // default
     {CmdSelectionHandler, kCmdArgExe, CommandArg::Type::String},
+    {CmdSelectionHandler, kCmdArgName, CommandArg::Type::String},
     {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},
     {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
@@ -38,7 +39,7 @@ static const ArgSpec argSpecs[] = {
     {CmdNone, "", CommandArg::Type::None},          // sentinel
 };
 
-static CommandWithArg* gFirstCommandWithArg = nullptr;
+CommandWithArg* gFirstCommandWithArg = nullptr;
 
 // returns -1 if not found
 static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
@@ -101,7 +102,7 @@ static bool IsArgName(const char* name, const char* argName) {
     return c == '=';
 }
 
-static void insertArg(CommandArg** firstPtr, CommandArg* arg) {
+void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
     // for ease of use by callers, we shift null check here
     if (!arg) {
         return;
@@ -182,6 +183,14 @@ static CommandArg* newArg(CommandArg::Type type, const char* name) {
     auto res = new CommandArg();
     res->type = type;
     res->name = str::Dup(name);
+    return res;
+}
+
+CommandArg* NewStringArg(const char* name, const char* val) {
+    auto res = new CommandArg();
+    res->type = CommandArg::Type::String;
+    res->name = str::Dup(name);
+    res->strVal = str::Dup(val);
     return res;
 }
 
@@ -417,7 +426,7 @@ int ParseCommand(const char* definition) {
             arg = tryParseDefaultArg(firstArgIdx, &currArg);
         }
         if (arg) {
-            insertArg(&firstArg, arg);
+            InsertArg(&firstArg, arg);
         }
     }
     if (!firstArg) {
@@ -454,6 +463,14 @@ bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->boolVal;
+    }
+    return defValue;
+}
+
+const char* GetCommandStringArg(CommandWithArg* cmd, const char* name, const char* defValue) {
+    auto arg = GetCommandArg(cmd, name);
+    if (arg) {
+        return arg->strVal;
     }
     return defValue;
 }

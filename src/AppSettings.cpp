@@ -12,6 +12,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
+#include "Commands.h"
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -91,6 +92,30 @@ static void setMinMax(int& i, int minVal, int maxVal) {
     }
     if (i > maxVal) {
         i = maxVal;
+    }
+}
+
+/* for every selection handler defined by user in advanced settings, create
+    a command that will be inserted into a menu item */
+static void CreateUserSelectionHandlerCommands() {
+    if (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
+        // TODO: when we add exe handlers, only filter the URL ones
+        return;
+    }
+
+    for (auto& sh : *gGlobalPrefs->selectionHandlers) {
+        if (!sh || !sh->url || !sh->name) {
+            // can happen for bad selection handler definition
+            continue;
+        }
+        if (str::EmptyOrWhiteSpaceOnly(sh->url) || str::EmptyOrWhiteSpaceOnly(sh->name)) {
+            continue;
+        }
+
+        CommandArg* args = NewStringArg(kCmdArgName, sh->name);
+        CommandArg* arg = NewStringArg(kCmdArgURL, sh->url);
+        InsertArg(&args, arg);
+        CreateCommandWithArg(sh->url, CmdSelectionHandler, args);
     }
 }
 
@@ -187,6 +212,12 @@ bool LoadSettings() {
         SaveSettings();
     }
     ResetCachedFonts();
+
+    // re-create commands
+    FreeCommandsWithArg();
+    // Note: some are also created in ReCreateSumatraAcceleratorTable()
+    CreateUserSelectionHandlerCommands();
+    ReCreateSumatraAcceleratorTable();
 
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;

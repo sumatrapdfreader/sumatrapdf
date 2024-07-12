@@ -5158,28 +5158,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return 0;
     }
 
-    if (CmdSelectionHandlerFirst <= cmdId && cmdId < CmdSelectionHandlerLast) {
-        SelectionHandler* selectedSH{nullptr};
-        for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-            if (sh->cmdId == cmdId) {
-                selectedSH = sh;
-                break;
-            }
-        }
-        if (!selectedSH || str::IsEmpty(selectedSH->url)) {
-            logf("FrameOnCommand: missing selectedSH for cmdId %d\n", cmdId);
-            return 0;
-        }
-        const char* url = selectedSH->url;
-        // try to auto-fix url
-        bool isValidURL = str::Find(url, "://") != nullptr;
-        if (!isValidURL) {
-            url = str::JoinTemp("https://", url);
-        }
-        LaunchBrowserWithSelection(tab, url);
-        return 0;
-    }
-
     auto* ctrl = win->ctrl;
     DisplayModel* dm = win->AsFixed();
 
@@ -5208,6 +5186,21 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
+        case CmdSelectionHandler: {
+            // TODO: handle kCmdArgExe
+            auto url = GetCommandStringArg(cmdWithArg, kCmdArgURL, nullptr);
+            if (!url) {
+                return 0;
+            }
+            // try to auto-fix url
+            bool isValidURL = (str::Find(url, "://") != nullptr);
+            if (!isValidURL) {
+                url = str::JoinTemp("https://", url);
+            }
+            LaunchBrowserWithSelection(tab, url);
+            return 0;
+        } break;
+
         case CmdNewWindow:
             CreateAndShowMainWindow(nullptr);
             break;

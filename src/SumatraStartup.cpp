@@ -1154,9 +1154,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         existingHwnd = existingInstanceHwnd;
     }
 
-    // call before creating first window and menu. Otherwise menu shortcuts will be missing
-    GetAcceleratorTables();
-
     if (flags.dde) {
         logf("sending flags.dde '%s', hwnd: 0x%p\n", flags.dde, existingHwnd);
         SendMyselfDDE(flags.dde, existingHwnd);

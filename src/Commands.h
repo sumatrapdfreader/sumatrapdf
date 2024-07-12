@@ -219,10 +219,6 @@ enum {
     CmdOpenWithExternalFirst,
     CmdOpenWithExternalLast = CmdOpenWithExternalFirst + 32,
 
-    /* range for "SelectionHandlers" setting */
-    CmdSelectionHandlerFirst,
-    CmdSelectionHandlerLast = CmdSelectionHandlerFirst + 32,
-
     /* range for file history */
     CmdFileHistoryFirst,
     CmdFileHistoryLast = CmdFileHistoryFirst + 32,
@@ -250,11 +246,6 @@ enum {
 };
 
 #undef DEF_CMD
-
-int GetCommandIdByName(const char*);
-int GetCommandIdByDesc(const char*);
-
-extern SeqStrings gCommandDescriptions;
 
 struct CommandArg {
     enum class Type {
@@ -310,18 +301,28 @@ struct CommandWithArg {
     ~CommandWithArg();
 };
 
+extern CommandWithArg* gFirstCommandWithArg;
+extern SeqStrings gCommandDescriptions;
+
+int GetCommandIdByName(const char*);
+int GetCommandIdByDesc(const char*);
+
 CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* firstArg = nullptr);
 CommandWithArg* FindCommandWithArg(int cmdId);
 void FreeCommandsWithArg();
+CommandArg* NewStringArg(const char* name, const char* val);
+void InsertArg(CommandArg** firstPtr, CommandArg* arg);
 
 int ParseCommand(const char* definition);
 CommandArg* GetCommandArg(CommandWithArg*, const char* argName);
 int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue);
 bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
+const char* GetCommandStringArg(CommandWithArg* cmd, const char* name, const char* defValue);
 
 constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";
 constexpr const char* kCmdArgExe = "exe";
 constexpr const char* kCmdArgURL = "url";
+constexpr const char* kCmdArgName = "name";
 constexpr const char* kCmdArgFilter = "filter";
 constexpr const char* kCmdArgN = "n";
