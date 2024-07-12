@@ -189,8 +189,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdDebugStartStressTest, "Debug: Start Stress Test")                         \
     V(CmdNone, "Do nothing")
 
-//V(CmdSelectAnnotation, "Select Annotation")                           \
-
 // order of CreateAnnot* must be the same as enum AnnotationType
 /*
     TOOD: maybe add commands for those annotations
@@ -273,8 +271,9 @@ struct CommandArg {
 
 void FreeCommandArgs(CommandArg* first);
 
-struct CommandWithArg {
-    struct CommandWithArg* next = nullptr;
+struct CustomCommand {
+    // all commands are stored as linked list
+    struct CustomCommand* next = nullptr;
 
     // the command id like CmdOpenFile
     int origId = 0;
@@ -294,28 +293,28 @@ struct CommandWithArg {
     const char* idStr = nullptr;
 
     CommandArg* firstArg = nullptr;
-    CommandWithArg() = default;
-    ~CommandWithArg();
+    CustomCommand() = default;
+    ~CustomCommand();
 };
 
-extern CommandWithArg* gFirstCommandWithArg;
+extern CustomCommand* gFirstCommandWithArg;
 extern SeqStrings gCommandDescriptions;
 
 int GetCommandIdByName(const char*);
 int GetCommandIdByDesc(const char*);
 
-CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args = nullptr);
-CommandWithArg* FindCommandWithArg(int cmdId);
+CustomCommand* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args = nullptr);
+CustomCommand* FindCommandWithArg(int cmdId);
 void FreeCommandsWithArg();
 CommandArg* NewStringArg(const char* name, const char* val);
 void InsertArg(CommandArg** firstPtr, CommandArg* arg);
 
 int ParseCommand(const char* definition);
-CommandArg* GetCommandArg(CommandWithArg*, const char* argName);
-int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue);
-bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue);
-const char* GetCommandStringArg(CommandWithArg* cmd, const char* name, const char* defValue);
-void GetCommandsWithOrigId(Vec<CommandWithArg*>& commands, int origId);
+CommandArg* GetCommandArg(CustomCommand*, const char* argName);
+int GetCommandIntArg(CustomCommand* cmd, const char* name, int defValue);
+bool GetCommandBoolArg(CustomCommand* cmd, const char* name, bool defValue);
+const char* GetCommandStringArg(CustomCommand* cmd, const char* name, const char* defValue);
+void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 
 constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";

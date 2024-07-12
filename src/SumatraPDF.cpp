@@ -5077,7 +5077,7 @@ OpenFileInBrowser:
     SumatraLaunchBrowser(url);
 }
 
-static void SetAnnotCreateArgs(AnnotCreateArgs& args, CommandWithArg* cmd) {
+static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     if (cmd) {
         auto col = GetCommandArg(cmd, kCmdArgColor);
         ReportIf(!col || !col->colorVal.parsedOk);
@@ -5157,7 +5157,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     Annotation* lastCreatedAnnot = nullptr;
 
-    CommandWithArg* cmdWithArg = FindCommandWithArg(cmdId);
+    CustomCommand* cmdWithArg = FindCommandWithArg(cmdId);
     if (cmdWithArg != nullptr) {
         cmdId = cmdWithArg->origId;
     }

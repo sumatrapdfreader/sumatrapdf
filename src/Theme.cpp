@@ -199,7 +199,7 @@ int gLastSetThemeCmdId;
 int gCurrSetThemeCmdId;
 
 void CreateThemeCommands() {
-    CommandWithArg* cmd;
+    CustomCommand* cmd;
     for (int i = 0; i < kThemeCount; i++) {
         const char* themeName = gThemes[i]->name;
         auto args = NewStringArg(kCmdArgName, themeName);

@@ -40,7 +40,7 @@ static const ArgSpec argSpecs[] = {
     {CmdNone, "", CommandArg::Type::None},                // sentinel
 };
 
-CommandWithArg* gFirstCommandWithArg = nullptr;
+CustomCommand* gFirstCommandWithArg = nullptr;
 
 // returns -1 if not found
 static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
@@ -139,16 +139,16 @@ CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) 
 
 static int gNextCommandWithArgId = (int)CmdFirstWithArg;
 
-CommandWithArg::~CommandWithArg() {
+CustomCommand::~CustomCommand() {
     FreeCommandArgs(firstArg);
     str::Free(name);
     str::Free(idStr);
     str::Free(definition);
 }
 
-CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args) {
+CustomCommand* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args) {
     int id = gNextCommandWithArgId++;
-    auto cmd = new CommandWithArg();
+    auto cmd = new CustomCommand();
     cmd->id = id;
     cmd->origId = origCmdId;
     cmd->definition = str::Dup(definition);
@@ -158,7 +158,7 @@ CommandWithArg* CreateCommandWithArg(const char* definition, int origCmdId, Comm
     return cmd;
 }
 
-CommandWithArg* FindCommandWithArg(int cmdId) {
+CustomCommand* FindCommandWithArg(int cmdId) {
     auto cmd = gFirstCommandWithArg;
     while (cmd) {
         if (cmd->id == cmdId) {
@@ -170,8 +170,8 @@ CommandWithArg* FindCommandWithArg(int cmdId) {
 }
 
 void FreeCommandsWithArg() {
-    CommandWithArg* next;
-    CommandWithArg* curr = gFirstCommandWithArg;
+    CustomCommand* next;
+    CustomCommand* curr = gFirstCommandWithArg;
     while (curr) {
         next = curr->next;
         delete curr;
@@ -180,8 +180,8 @@ void FreeCommandsWithArg() {
     gFirstCommandWithArg = nullptr;
 }
 
-void GetCommandsWithOrigId(Vec<CommandWithArg*>& commands, int origId) {
-    CommandWithArg* curr = gFirstCommandWithArg;
+void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
+    CustomCommand* curr = gFirstCommandWithArg;
     while (curr) {
         if (curr->origId == origId) {
             commands.Append(curr);
@@ -450,7 +450,7 @@ int ParseCommand(const char* definition) {
     return res->id;
 }
 
-CommandArg* GetCommandArg(CommandWithArg* cmd, const char* name) {
+CommandArg* GetCommandArg(CustomCommand* cmd, const char* name) {
     if (!cmd) {
         return nullptr;
     }
@@ -464,7 +464,7 @@ CommandArg* GetCommandArg(CommandWithArg* cmd, const char* name) {
     return nullptr;
 }
 
-int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue) {
+int GetCommandIntArg(CustomCommand* cmd, const char* name, int defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->intVal;
@@ -472,7 +472,7 @@ int GetCommandIntArg(CommandWithArg* cmd, const char* name, int defValue) {
     return defValue;
 }
 
-bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
+bool GetCommandBoolArg(CustomCommand* cmd, const char* name, bool defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->boolVal;
@@ -480,7 +480,7 @@ bool GetCommandBoolArg(CommandWithArg* cmd, const char* name, bool defValue) {
     return defValue;
 }
 
-const char* GetCommandStringArg(CommandWithArg* cmd, const char* name, const char* defValue) {
+const char* GetCommandStringArg(CustomCommand* cmd, const char* name, const char* defValue) {
     auto arg = GetCommandArg(cmd, name);
     if (arg) {
         return arg->strVal;

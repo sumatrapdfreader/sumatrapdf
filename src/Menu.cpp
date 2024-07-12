@@ -1187,7 +1187,7 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
 }
 
 static void AppendThemesToMenu(HMENU m) {
-    Vec<CommandWithArg*> cmds;
+    Vec<CustomCommand*> cmds;
     GetCommandsWithOrigId(cmds, CmdSetTheme);
     for (auto& cmd : cmds) {
         auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
@@ -1202,7 +1202,7 @@ static void AppendThemesToMenu(HMENU m) {
 }
 
 static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
-    Vec<CommandWithArg*> cmds;
+    Vec<CustomCommand*> cmds;
     GetCommandsWithOrigId(cmds, CmdSelectionHandler);
     for (auto& cmd : cmds) {
         auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
@@ -1549,7 +1549,7 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
         MenuSetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
     }
 }
-    
+
 static bool IsFileCloseMenuEnabled() {
     for (size_t i = 0; i < gWindows.size(); i++) {
         if (gWindows.at(i)->IsDocLoaded()) {
