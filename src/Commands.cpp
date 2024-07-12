@@ -40,7 +40,7 @@ static const ArgSpec argSpecs[] = {
     {CmdNone, "", CommandArg::Type::None},                // sentinel
 };
 
-CustomCommand* gFirstCommandWithArg = nullptr;
+CustomCommand* gFirstCustomCommand = nullptr;
 
 // returns -1 if not found
 static NO_INLINE int GetCommandIdByNameOrDesc(SeqStrings commands, const char* s) {
@@ -60,7 +60,7 @@ int GetCommandIdByName(const char* cmdName) {
     if (cmdId >= 0) {
         return cmdId;
     }
-    auto curr = gFirstCommandWithArg;
+    auto curr = gFirstCustomCommand;
     while (curr) {
         if (curr->idStr && str::EqI(cmdName, curr->idStr)) {
             return curr->id;
@@ -76,7 +76,7 @@ int GetCommandIdByDesc(const char* cmdDesc) {
     if (cmdId >= 0) {
         return cmdId;
     }
-    auto curr = gFirstCommandWithArg;
+    auto curr = gFirstCustomCommand;
     while (curr) {
         if (curr->name && str::EqI(cmdDesc, curr->name)) {
             return curr->id;
@@ -137,7 +137,7 @@ CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) 
     return nullptr;
 }
 
-static int gNextCommandWithArgId = (int)CmdFirstWithArg;
+static int gNextCustomCommandId = (int)CmdFirstCustom;
 
 CustomCommand::~CustomCommand() {
     FreeCommandArgs(firstArg);
@@ -146,20 +146,20 @@ CustomCommand::~CustomCommand() {
     str::Free(definition);
 }
 
-CustomCommand* CreateCommandWithArg(const char* definition, int origCmdId, CommandArg* args) {
-    int id = gNextCommandWithArgId++;
+CustomCommand* CreateCustomCommand(const char* definition, int origCmdId, CommandArg* args) {
+    int id = gNextCustomCommandId++;
     auto cmd = new CustomCommand();
     cmd->id = id;
     cmd->origId = origCmdId;
     cmd->definition = str::Dup(definition);
     cmd->firstArg = args;
-    cmd->next = gFirstCommandWithArg;
-    gFirstCommandWithArg = cmd;
+    cmd->next = gFirstCustomCommand;
+    gFirstCustomCommand = cmd;
     return cmd;
 }
 
-CustomCommand* FindCommandWithArg(int cmdId) {
-    auto cmd = gFirstCommandWithArg;
+CustomCommand* FindCustomCommand(int cmdId) {
+    auto cmd = gFirstCustomCommand;
     while (cmd) {
         if (cmd->id == cmdId) {
             return cmd;
@@ -169,19 +169,19 @@ CustomCommand* FindCommandWithArg(int cmdId) {
     return nullptr;
 }
 
-void FreeCommandsWithArg() {
+void freeCustomCommands() {
     CustomCommand* next;
-    CustomCommand* curr = gFirstCommandWithArg;
+    CustomCommand* curr = gFirstCustomCommand;
     while (curr) {
         next = curr->next;
         delete curr;
         curr = next;
     }
-    gFirstCommandWithArg = nullptr;
+    gFirstCustomCommand = nullptr;
 }
 
 void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
-    CustomCommand* curr = gFirstCommandWithArg;
+    CustomCommand* curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == origId) {
             commands.Append(curr);
@@ -352,7 +352,7 @@ CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     return parseArgOfType(argName, type, val);
 }
 
-// some commands can accept arguments. For those we have to create CommandWithArg that
+// some commands can accept arguments. For those we have to create CustomCommand that
 // binds original command id and an arg and creates a unique command id
 // we return -1 if unkown command or command doesn't take an argument or argument is invalid
 int ParseCommand(const char* definition) {
@@ -446,7 +446,7 @@ int ParseCommand(const char* definition) {
         logf("ParseCommand: failed to parse arguments for '%s'\n", definition);
         return -1;
     }
-    auto res = CreateCommandWithArg(definition, cmdId, firstArg);
+    auto res = CreateCustomCommand(definition, cmdId, firstArg);
     return res->id;
 }
 

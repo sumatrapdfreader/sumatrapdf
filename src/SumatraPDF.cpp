@@ -5157,9 +5157,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     Annotation* lastCreatedAnnot = nullptr;
 
-    CustomCommand* cmdWithArg = FindCommandWithArg(cmdId);
-    if (cmdWithArg != nullptr) {
-        cmdId = cmdWithArg->origId;
+    CustomCommand* cmd = FindCustomCommand(cmdId);
+    if (cmd != nullptr) {
+        cmdId = cmd->origId;
     }
 
     AnnotationType annotType = (AnnotationType)(cmdId - CmdCreateAnnotText);
@@ -5181,7 +5181,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
         case CmdSetTheme: {
-            auto name = GetCommandStringArg(cmdWithArg, kCmdArgName, nullptr);
+            auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
             if (name) {
                 SetTheme(name);
             }
@@ -5189,7 +5189,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
         case CmdSelectionHandler: {
             // TODO: handle kCmdArgExe
-            auto url = GetCommandStringArg(cmdWithArg, kCmdArgURL, nullptr);
+            auto url = GetCommandStringArg(cmd, kCmdArgURL, nullptr);
             if (!url) {
                 return 0;
             }
@@ -5466,7 +5466,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             if (dm && dm->NeedVScroll()) {
-                int n = GetCommandIntArg(cmdWithArg, kCmdArgN, 1);
+                int n = GetCommandIntArg(cmd, kCmdArgN, 1);
                 WPARAM dir = (cmdId == CmdScrollUp) ? SB_LINEUP : SB_LINEDOWN;
                 for (int i = 0; i < n; i++) {
                     SendMessageW(win->hwndCanvas, WM_VSCROLL, dir, 0);
@@ -5486,7 +5486,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int n = GetCommandIntArg(cmdWithArg, kCmdArgN, 1);
+            int n = GetCommandIntArg(cmd, kCmdArgN, 1);
             for (int i = 0; i < n; i++) {
                 if (cmdId == CmdGoToPrevPage) {
                     ctrl->GoToPrevPage();
@@ -5885,10 +5885,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdCreateAnnotUnderline:
             if (win && tab) {
                 AnnotCreateArgs args{annotType};
-                SetAnnotCreateArgs(args, cmdWithArg);
+                SetAnnotCreateArgs(args, cmd);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
                 if (annot) {
-                    bool openEdit = GetCommandBoolArg(cmdWithArg, kCmdArgOpenEdit, IsShiftPressed());
+                    bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, IsShiftPressed());
                     if (openEdit) {
                         ShowEditAnnotationsWindow(tab);
                         SetSelectedAnnotation(tab, annot);
@@ -5930,7 +5930,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             PointF ptOnPage = dm->CvtFromScreen(pt, pageNoUnderCursor);
             MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
             AnnotCreateArgs args{annotType};
-            SetAnnotCreateArgs(args, cmdWithArg);
+            SetAnnotCreateArgs(args, cmd);
             lastCreatedAnnot = EngineMupdfCreateAnnotation(engine, pageNoUnderCursor, ptOnPage, &args);
         } break;
 

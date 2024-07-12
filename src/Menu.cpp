@@ -1564,7 +1564,7 @@ static void SetMenuStateForSelection(WindowTab* tab, HMENU menu) {
     for (int id : disableIfNoSelection) {
         MenuSetEnabled(menu, id, isTextSelected);
     }
-    auto curr = gFirstCommandWithArg;
+    auto curr = gFirstCustomCommand;
     while (curr) {
         if (curr->origId == CmdSelectionHandler) {
             MenuSetEnabled(menu, curr->id, isTextSelected);
@@ -1840,7 +1840,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
-    auto cmd = FindCommandWithArg(cmdId);
+    auto cmd = FindCustomCommand(cmdId);
     if (cmd && cmd->origId == CmdSelectionHandler) {
         HwndSendCommand(win->hwndFrame, cmd->id);
         return;

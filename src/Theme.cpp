@@ -203,7 +203,7 @@ void CreateThemeCommands() {
     for (int i = 0; i < kThemeCount; i++) {
         const char* themeName = gThemes[i]->name;
         auto args = NewStringArg(kCmdArgName, themeName);
-        cmd = CreateCommandWithArg(themeName, CmdSetTheme, args);
+        cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
         } else if (i == kThemeCount - 1) {
