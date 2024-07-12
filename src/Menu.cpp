@@ -1225,13 +1225,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
         return;
     }
 
-    int maxEntries = CmdOpenWithExternalLast - CmdOpenWithExternalFirst;
-    int count = 0;
-
     for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
-        if (count >= maxEntries) {
-            break;
-        }
         if (str::EmptyOrWhiteSpaceOnly(ev->commandLine)) {
             continue;
         }
@@ -1255,13 +1249,12 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
         }
 
         TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
-        uint menuId = CmdOpenWithExternalFirst + count;
+        uint menuId = ev->cmdId;
         TempWStr ws = ToWStrTemp(menuString);
         InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, ws);
         if (!filePath) {
             MenuSetEnabled(menuFile, menuId, false);
         }
-        count++;
     }
 }
 

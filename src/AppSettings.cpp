@@ -24,6 +24,7 @@
 #include "ProgressUpdateUI.h"
 #include "SumatraPDF.h"
 #include "WindowTab.h"
+#include "ExternalViewers.h"
 #include "Flags.h"
 #include "MainWindow.h"
 #include "AppSettings.h"
@@ -218,6 +219,7 @@ bool LoadSettings() {
     // Note: some are also created in ReCreateSumatraAcceleratorTable()
     CreateUserSelectionHandlerCommands();
     CreateThemeCommands();
+    CreateExternalViewersCommands();
     ReCreateSumatraAcceleratorTable();
 
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));

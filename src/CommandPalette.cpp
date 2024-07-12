@@ -203,8 +203,10 @@ CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
 }
 
 static bool IsOpenExternalViewerCommand(i32 cmdId) {
-    return ((cmdId >= CmdOpenWithExternalFirst) && (cmdId <= CmdOpenWithExternalLast)) ||
-           ((cmdId >= CmdOpenWithFirst) && (cmdId <= CmdOpenWithLast));
+    if (IsCustomExternalViewerCmdId(cmdId)) {
+        return true;
+    }
+    return ((cmdId >= CmdOpenWithFirst) && (cmdId <= CmdOpenWithLast));
 }
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
@@ -237,7 +239,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
 
     if (IsOpenExternalViewerCommand(cmdId)) {
-        return HasExternalViewerForCmd(cmdId);
+        return HasKnownExternalViewerForCmd(cmdId);
     }
 
     // we only want to show this in home page

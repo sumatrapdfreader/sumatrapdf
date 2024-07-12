@@ -5141,11 +5141,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     WindowTab* tab = win->CurrentTab();
     if (!win->IsCurrentTabAbout()) {
-        if (CmdOpenWithExternalFirst <= cmdId && cmdId <= CmdOpenWithExternalLast) {
-            size_t idx = (size_t)cmdId - (size_t)CmdOpenWithExternalFirst;
-            ViewWithExternalViewer(tab, idx);
-            return 0;
-        }
         if (CmdOpenWithFirst < cmdId && cmdId < CmdOpenWithLast) {
             ViewWithKnownExternalViewer(tab, cmdId);
             return 0;
@@ -5180,6 +5175,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
+        case CmdViewWithExternalViewer: {
+            ViewWithCustomExternalViewer(tab, cmdId);
+            return 0;
+        }
+
         case CmdSetTheme: {
             auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
             if (name) {
@@ -5187,6 +5187,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             return 0;
         }
+
         case CmdSelectionHandler: {
             // TODO: handle kCmdArgExe
             auto url = GetCommandStringArg(cmd, kCmdArgURL, nullptr);
@@ -5200,7 +5201,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             LaunchBrowserWithSelection(tab, url);
             return 0;
-        } break;
+        }
 
         case CmdNewWindow:
             CreateAndShowMainWindow(nullptr);

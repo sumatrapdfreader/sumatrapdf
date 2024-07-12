@@ -212,12 +212,6 @@ enum {
 
     COMMANDS(DEF_CMD)
 
-        CmdLastCommand,
-
-    /* range for "external viewers" setting */
-    CmdOpenWithExternalFirst,
-    CmdOpenWithExternalLast = CmdOpenWithExternalFirst + 32,
-
     /* range for file history */
     CmdFileHistoryFirst,
     CmdFileHistoryLast = CmdFileHistoryFirst + 32,
