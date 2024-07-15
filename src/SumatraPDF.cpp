@@ -5176,7 +5176,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
         case CmdViewWithExternalViewer: {
-            ViewWithCustomExternalViewer(tab, cmdId);
+            if (cmd) {
+                ViewWithCustomExternalViewer(tab, cmd->id);
+            }
             return 0;
         }
 

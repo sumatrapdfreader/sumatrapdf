@@ -522,7 +522,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
 // filter matches if all words match, ignoring the case
 static bool FilterMatches(const char* str, const char* filter) {
     // empty filter matches all
-    if (str::EmptyOrWhiteSpaceOnly(filter)) {
+    if (str::IsEmptyOrWhiteSpaceOnly(filter)) {
         return true;
     }
     StrVec words;

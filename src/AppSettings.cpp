@@ -109,7 +109,7 @@ static void CreateUserSelectionHandlerCommands() {
             // can happen for bad selection handler definition
             continue;
         }
-        if (str::EmptyOrWhiteSpaceOnly(sh->url) || str::EmptyOrWhiteSpaceOnly(sh->name)) {
+        if (str::IsEmptyOrWhiteSpaceOnly(sh->url) || str::IsEmptyOrWhiteSpaceOnly(sh->name)) {
             continue;
         }
 
@@ -220,7 +220,9 @@ bool LoadSettings() {
     CreateUserSelectionHandlerCommands();
     CreateThemeCommands();
     CreateExternalViewersCommands();
-    ReCreateSumatraAcceleratorTable();
+
+    FreeAcceleratorTables();
+    CreateSumatraAcceleratorTable();
 
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;
@@ -387,7 +389,6 @@ bool ReloadSettings() {
 
     UpdateDocumentColors();
     UpdateFixedPageScrollbarsVisibility();
-    ReCreateSumatraAcceleratorTable();
     return true;
 }
 

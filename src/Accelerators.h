@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 void FreeAcceleratorTables();
-void ReCreateSumatraAcceleratorTable();
+void CreateSumatraAcceleratorTable();
 HACCEL* GetAcceleratorTables();
 void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a);
 bool GetAccelByCmd(int cmdId, ACCEL& accelOut);

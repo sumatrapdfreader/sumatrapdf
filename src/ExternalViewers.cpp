@@ -430,7 +430,7 @@ bool IsCustomExternalViewerCmdId(int cmdId) {
 
 void CreateExternalViewersCommands() {
     for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (!ev || str::EmptyOrWhiteSpaceOnly(ev->commandLine)) {
+        if (!ev || str::IsEmptyOrWhiteSpaceOnly(ev->commandLine)) {
             continue;
         }
         auto cmd = CreateCustomCommand("", CmdViewWithExternalViewer, nullptr);
@@ -450,6 +450,9 @@ bool ViewWithCustomExternalViewer(WindowTab* tab, int cmdId) {
             ev = ev2;
             break;
         }
+    }
+    if (!ev) {
+        return false;
     }
     if (!PathMatchFilter(path, ev->filter)) {
         return false;

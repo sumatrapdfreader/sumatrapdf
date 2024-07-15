@@ -215,7 +215,7 @@ const char* Author(Annotation* annot) {
         fz_report_error(ctx);
         s = nullptr;
     }
-    if (!s || str::EmptyOrWhiteSpaceOnly(s)) {
+    if (!s || str::IsEmptyOrWhiteSpaceOnly(s)) {
         return {};
     }
     return s;
@@ -1019,7 +1019,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 // if "(none)" we don't set it
                 if (!str::Eq(defAuthor, "(none)")) {
                     const char* author = getuser();
-                    if (!str::EmptyOrWhiteSpaceOnly(defAuthor)) {
+                    if (!str::IsEmptyOrWhiteSpaceOnly(defAuthor)) {
                         author = defAuthor;
                     }
                     pdf_set_annot_author(ctx, annot, author);

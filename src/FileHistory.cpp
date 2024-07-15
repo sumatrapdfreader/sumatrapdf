@@ -253,7 +253,7 @@ int RecentlyCloseDocumentsCount() {
 }
 
 void RememberRecentlyClosedDocument(const char* path) {
-    if (str::EmptyOrWhiteSpaceOnly(path)) {
+    if (str::IsEmptyOrWhiteSpaceOnly(path)) {
         return;
     }
     gClosedDocuments.Append(path);

@@ -598,17 +598,16 @@ static HACCEL gAccelTables[3] = {
 
 /* returns a pointer to HACCEL so that we can update it and message loop will use
 the latest version */
-static void CreateSumatraAcceleratorTable() {
+void CreateSumatraAcceleratorTable() {
     ReportIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
 
     int nBuiltIn = (int)dimof(gBuiltInAccelerators);
-
-    int nCustomShortcuts = 0;
-    nCustomShortcuts = gGlobalPrefs->shortcuts->Size();
+    int nCustomShortcuts = gGlobalPrefs->shortcuts->Size();
+    int nExternalViewers = gGlobalPrefs->externalViewers->Size();
 
     // build a combined accelerator table of those defined in settings file
     // and built-in shortcuts. Custom shortcuts over-ride built-in
-    int nMax = nBuiltIn + nCustomShortcuts;
+    int nMax = nBuiltIn + nCustomShortcuts + nExternalViewers;
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/2981
     // sizeof(ACCEL) is 6 so odd number will cause treeViewAccels to
     // be mis-aligined. Rounding to 2 should be enoug, do 4 for extra safety
@@ -622,12 +621,31 @@ static void CreateSumatraAcceleratorTable() {
     int nEditAccels = 0;
     int nTreeViewAccels = 0;
 
+    for (auto& ev : *gGlobalPrefs->externalViewers) {
+        if (str::IsEmptyOrWhiteSpaceOnly(ev->key)) {
+            continue;
+        }
+        ACCEL accel{};
+        accel.cmd = ev->cmdId;
+        if (!ParseShortcut(ev->key, accel)) {
+            // TODO: make it a notification
+            logf("CreateSumatraAcceleratorTable: bad shortcut '%s' for external viewer '%s'\n", ev->key,
+                 ev->commandLine);
+            continue;
+        }
+        accels[nAccels++] = accel;
+        if (IsSafeAccel(accel)) {
+            editAccels[nEditAccels++] = accel;
+            treeViewAccels[nTreeViewAccels++] = accel;
+        }
+    }
+
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
         int cmdId = ParseCommand(shortcut->cmd);
         if (cmdId < 0) {
             continue;
         }
-        ACCEL accel = {};
+        ACCEL accel{};
         accel.cmd = cmdId;
         if (!ParseShortcut(shortcut->key, accel)) {
             // TODO: make it a notification
@@ -688,11 +706,6 @@ void FreeAcceleratorTables() {
     gAccelTables[2] = nullptr;
     free(gAccels);
     gAccels = nullptr;
-}
-
-void ReCreateSumatraAcceleratorTable() {
-    FreeAcceleratorTables();
-    CreateSumatraAcceleratorTable();
 }
 
 HACCEL* GetAcceleratorTables() {
