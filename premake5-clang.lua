@@ -510,7 +510,6 @@ workspace "SumatraPDF"
 
   function fonts()
     files {
-
       "mupdf/resources/fonts/urw/Dingbats.cff",
       "mupdf/resources/fonts/urw/NimbusMonoPS-Regular.cff",
       "mupdf/resources/fonts/urw/NimbusMonoPS-Italic.cff",
@@ -539,6 +538,7 @@ workspace "SumatraPDF"
       "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerifDevanagari-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerifGeorgian-Regular.otf",
+      "mupdf/resources/fonts/noto/NotoSerifTelugu-Regular.otf",
     }
 
     filter {'files:**.cff'}
