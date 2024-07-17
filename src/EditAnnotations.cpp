@@ -95,7 +95,7 @@ static AnnotationType gAnnotsWithColor[] = {
     AnnotationType::Squiggly,
 };
 
-// list of annotaions where GetColor() returns background color
+// list of annotations where GetColor() returns background color
 // TODO: probably incomplete;
 static AnnotationType gAnnotsIsColorBackground[] = {
     AnnotationType::FreeText,

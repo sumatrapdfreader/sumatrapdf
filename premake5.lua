@@ -52,9 +52,14 @@ Reference for warnings:
 
 Prefast:
  28125 - function X must be called in try/except (InitializeCriticalSection)
- 28252 - Inconsistent annotaion
- 28253 - Inconsistent annotaion
+ 28252 - Inconsistent annotation
+ 28253 - Inconsistent annotation
 --]]
+
+newoption {
+   trigger = "with-clang",
+   description = "use clang-cl.exe instead of cl.exe"
+}
 
 include("premake5.files.lua")
 
@@ -188,6 +193,10 @@ workspace "SumatraPDF"
 
   filter "action:vs2022"
     location "vs2022"
+  filter {}
+  filter "options:with-clang"
+    location "vs2022-clang"
+    toolset "clang"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}
@@ -908,6 +917,10 @@ workspace "MakeLZSA"
 
   filter "action:vs2022"
     location "vs2022"
+  filter {}
+  filter "options:with-clang"
+    location "vs2022-clang"
+    toolset "clang"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}
