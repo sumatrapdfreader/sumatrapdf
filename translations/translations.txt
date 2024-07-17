@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-69f8428e82ebaf17daa0c971253a7a12eb2a6415
+fde9cce4d9881378f04d72841b9bcda1ba5b9700
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -15198,6 +15198,7 @@ tw:在新視窗中開啟
 :Open Next File In Folder
 br:Abrir o Próximo Arquivo na Pasta
 cn:打开文件夹中的下一个文件
+co:Apre u schedariu seguente in u cartulare
 de:Nächste Datei im Ordner öffnen
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
@@ -15210,6 +15211,7 @@ sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
 cn:打开文件夹中的上一个文件
+co:Apre u schedariu precedente in u cartulare
 de:Vorherige Datei im Ordner öffnen
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
