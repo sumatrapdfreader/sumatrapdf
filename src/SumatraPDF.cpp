@@ -266,6 +266,16 @@ bool CanAccessDisk() {
     return HasPermission(Perm::DiskAccess);
 }
 
+// TODO: could add a setting
+bool AnnotationsAreDisabled() {
+    if (!CanAccessDisk()) {
+        // annotations must be saved back to a file so lack of disk access
+        // implies no ability to edit annotations
+        return true;
+    }
+    return false;
+}
+
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
 bool SumatraLaunchBrowser(const char* url) {

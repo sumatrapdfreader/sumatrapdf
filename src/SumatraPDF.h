@@ -105,6 +105,7 @@ void InitializePolicies(bool restrict);
 void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);
 bool CanAccessDisk();
+bool AnnotationsAreDisabled();
 bool IsUIRightToLeft();
 bool SumatraLaunchBrowser(const char* url);
 bool OpenFileExternally(const char* path);

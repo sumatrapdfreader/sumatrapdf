@@ -57,6 +57,7 @@
 #include "EngineAll.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
+#include "SumatraPDF.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
@@ -1059,6 +1060,9 @@ IPageElement* DisplayModel::GetElementAtPos(Point pt, int* pageNoOut) {
 }
 
 Annotation* DisplayModel::GetAnnotationAtPos(Point pt, Annotation* annot) {
+    if (AnnotationsAreDisabled()) {
+        return nullptr;
+    }
     int pageNo = GetPageNoByPoint(pt);
     if (!ValidPageNo(pageNo)) {
         return nullptr;
