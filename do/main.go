@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"io"
 	"os"
@@ -75,67 +74,14 @@ func getSecrets() {
 
 func regenPremake() {
 	premakePath := filepath.Join("bin", "premake5.exe")
-	/*
-		{
-			cmd := exec.Command(premakePath, "vs2019")
-			runCmdLoggedMust(cmd)
-		}
-	*/
 	{
 		cmd := exec.Command(premakePath, "vs2022")
 		runCmdLoggedMust(cmd)
 	}
 
-	// note: disabled for now because the code doesn't yet compile with clang-cl
-	if false {
+	{
 		cmd := exec.Command(premakePath, "--with-clang", "vs2022")
 		runCmdLoggedMust(cmd)
-	}
-
-	// note: this does the exact same thing as `--with-clang` option
-	// TODO: remove this code
-	if false {
-		{
-			// copy files to vs2022-clang
-			srcDir := "vs2022"
-			dstDir := "vs2022-clang"
-			files, err := os.ReadDir(srcDir)
-			must(err)
-			copyFileMustOverwrite = true
-			for _, fi := range files {
-				if fi.IsDir() {
-					continue
-				}
-				srcPath := filepath.Join(srcDir, fi.Name())
-				dstPath := filepath.Join(dstDir, fi.Name())
-				copyFileMust(dstPath, srcPath)
-			}
-		}
-		{
-			// update toolset to clang-cl
-			// replace:
-			//     <PlatformToolset>v143</PlatformToolset>
-			// with
-			//     <PlatformToolset>ClangCL</PlatformToolset>
-			// in *.vcxproj files
-			dstDir := "vs2022-clang"
-			files, err := os.ReadDir(dstDir)
-			must(err)
-			for _, fi := range files {
-				if fi.IsDir() {
-					continue
-				}
-				if false && !strings.HasSuffix(fi.Name(), ".vcxproj") {
-					continue
-				}
-				path := filepath.Join(dstDir, fi.Name())
-				d, err := os.ReadFile(path)
-				must(err)
-				d2 := bytes.ReplaceAll(d, []byte("v143"), []byte("ClangCL"))
-				err = os.WriteFile(path, d2, 0644)
-				must(err)
-			}
-		}
 	}
 }
 
