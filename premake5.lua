@@ -153,6 +153,13 @@ function clang_conf()
   filter {}
 end
 
+
+function warnings_as_errors()
+  filter {"configurations:not ReleaseAnalyze" and "options:not with-clang"}
+    flags { "FatalCompileWarnings" }
+  filter {}
+end
+
 function zlib_defines()
   includedirs {
     "ext/zlib",
@@ -169,12 +176,6 @@ end
 function uses_zlib()
   --zlib_ng_defines()
   zlib_defines()
-end
-
-function warnings_as_errors()
-  filter {"configurations:not ReleaseAnalyze"}
-    flags { "FatalCompileWarnings" }
-  filter {}
 end
 
 workspace "SumatraPDF"
