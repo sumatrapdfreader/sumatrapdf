@@ -383,7 +383,7 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
 
     // sort the files with favorites by base file name of file path
     StrVec filePathsSorted;
-    if (HasPermission(Perm::DiskAccess)) {
+    if (CanAccessDisk()) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
     }
@@ -502,7 +502,7 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
         return;
     }
 
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return;
     }
 

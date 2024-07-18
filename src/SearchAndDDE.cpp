@@ -456,7 +456,7 @@ void PaintForwardSearchMark(MainWindow* win, HDC hdc) {
 
 // returns true if inverse search was performed
 bool OnInverseSearch(MainWindow* win, int x, int y) {
-    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
+    if (!CanAccessDisk() || gPluginMode) {
         return false;
     }
     WindowTab* tab = win->CurrentTab();

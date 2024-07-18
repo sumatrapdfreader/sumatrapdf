@@ -306,7 +306,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (!HasPermission(Perm::PrinterAccess)) {
         remove |= (cmdId == CmdPrint);
     }
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         remove |= IsCmdInMenuList(cmdId, removeIfNoDiskAccessPerm);
     }
     if (!HasPermission(Perm::CopySelection)) {
@@ -395,7 +395,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         }
     }
 
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         ctx.supportsAnnots = false;
         ctx.hasUnsavedAnnotations = false;
     }

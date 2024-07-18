@@ -189,7 +189,7 @@ bool HasKnownExternalViewerForCmd(int cmd) {
 }
 
 static bool CanViewExternally(WindowTab* tab) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return false;
     }
     // if tab is nullptr, we're queried for the
@@ -439,7 +439,7 @@ void CreateExternalViewersCommands() {
 }
 
 bool ViewWithCustomExternalViewer(WindowTab* tab, int cmdId) {
-    if (!HasPermission(Perm::DiskAccess) || !tab || !file::Exists(tab->filePath)) {
+    if (!CanAccessDisk() || !tab || !file::Exists(tab->filePath)) {
         return false;
     }
 

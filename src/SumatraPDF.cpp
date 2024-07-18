@@ -262,6 +262,10 @@ bool HasPermission(Perm permission) {
     return (permission & gPolicyRestrictions) == permission;
 }
 
+bool CanAccessDisk() {
+    return HasPermission(Perm::DiskAccess);
+}
+
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
 bool SumatraLaunchBrowser(const char* url) {

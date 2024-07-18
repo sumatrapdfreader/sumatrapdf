@@ -146,7 +146,7 @@ static bool IsToolbarButtonEnabled(MainWindow* win, int buttonNo) {
     bool isAllowed = true;
     switch (cmdId) {
         case CmdOpenFile:
-            isAllowed = HasPermission(Perm::DiskAccess);
+            isAllowed = CanAccessDisk();
             break;
         case CmdPrint:
             isAllowed = HasPermission(Perm::PrinterAccess);

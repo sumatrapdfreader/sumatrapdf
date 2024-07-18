@@ -136,7 +136,7 @@ LinkSaver::LinkSaver(WindowTab* tab, HWND parentHwnd, const WCHAR* fileName) {
 #endif
 
 bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return false;
     }
 

@@ -486,7 +486,7 @@ void LinkHandler::LaunchURL(const char* uri) {
 // (unless they're of an allowed perceived type) and never launch any external
 // file in plugin mode (where documents are supposed to be self-contained)
 void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink) {
-    if (gPluginMode || !HasPermission(Perm::DiskAccess)) {
+    if (gPluginMode || !CanAccessDisk()) {
         return;
     }
 

@@ -1130,7 +1130,7 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return;
     }
 
@@ -1221,7 +1221,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
     if (0 == gGlobalPrefs->externalViewers->size()) {
         return;
     }
-    if (!HasPermission(Perm::DiskAccess) || (filePath && !file::Exists(filePath))) {
+    if (!CanAccessDisk() || (filePath && !file::Exists(filePath))) {
         return;
     }
 
@@ -1366,7 +1366,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         if (!HasPermission(Perm::PrinterAccess)) {
             removeMenu |= (cmdId == CmdPrint);
         }
-        if (!HasPermission(Perm::DiskAccess)) {
+        if (!CanAccessDisk()) {
             removeMenu |= cmdIdInList(removeIfNoDiskAccessPerm);
             // editing annotations also requires disk access
             removeMenu |= cmdIdInList(removeIfAnnotsNotSupported);
@@ -1788,7 +1788,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     const char* filePath = win->ctrl->GetFilePath();
-    bool favsSupported = HasPermission(Perm::SavePreferences) && HasPermission(Perm::DiskAccess);
+    bool favsSupported = HasPermission(Perm::SavePreferences) && CanAccessDisk();
     if (favsSupported) {
         if (pageNoUnderCursor > 0) {
             TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);

@@ -270,7 +270,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLinkInfo*>& stati
     SelectObject(hdc, penLinkLine);
     DeleteVecMembers(staticLinks);
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        bool hasUrl = HasPermission(Perm::DiskAccess) && el->url;
+        bool hasUrl = CanAccessDisk() && el->url;
         if (hasUrl) {
             col = ThemeWindowLinkColor();
         } else {
@@ -413,7 +413,7 @@ static void CopyAboutInfoToClipboard() {
 }
 
 char* GetStaticLinkTemp(Vec<StaticLinkInfo*>& staticLinks, int x, int y, StaticLinkInfo** linkOut) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return nullptr;
     }
 
