@@ -3713,6 +3713,7 @@ HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
 
     if (withToolTips) {
         HWND ttHwnd = GetToolTipsHwnd();
+        SetWindowStyle(ttHwnd, TTS_NOPREFIX, true);
         TOOLINFO ti{0};
         ti.cbSize = sizeof(ti);
         ti.hwnd = hwnd;
