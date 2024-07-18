@@ -463,6 +463,15 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define CURRENT_HMODULE ((HMODULE) & __ImageBase)
 
+// clang-cl notices the mismatch in function parameters with qsort
+// as _stricmp is int _stricmp(const char *string1, const char *string2);
+// and qsort expects int (*compar)(const void*,const void*)).
+static int stricmp_wrapper(const void* ptr1, const void* ptr2) {
+    const char* string1 = (const char*)ptr1;
+    const char* string2 = (const char*)ptr2;
+    return _stricmp(string1, string2);
+}
+
 static void create_system_font_list(fz_context* ctx) {
     WCHAR szFontDir[MAX_PATH];
     UINT cch;
@@ -491,7 +500,7 @@ static void create_system_font_list(fz_context* ctx) {
 #endif
 
     // sort the font list, so that it can be searched binarily
-    qsort((void*)fontlistMS.fontmap, (size_t)fontlistMS.len, sizeof(sys_font_info), _stricmp);
+    qsort((void*)fontlistMS.fontmap, (size_t)fontlistMS.len, sizeof(sys_font_info), stricmp_wrapper);
 
 #ifdef DEBUG
     // allow to overwrite system fonts for debugging purposes
@@ -506,7 +515,7 @@ static void create_system_font_list(fz_context* ctx) {
             if (entry)
                 *entry = fontlistMS.fontmap[i];
         }
-        qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), _stricmp);
+        qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), stricmp_wrapper);
     }
 #endif
 }

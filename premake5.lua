@@ -197,6 +197,10 @@ workspace "SumatraPDF"
   filter "options:with-clang"
     location "vs2022-clang"
     toolset "clang"
+    buildoptions {"-fms-compatibility", "-fms-extensions", "-Wno-microsoft-include", "-march=x86-64-v3", "-maes"}
+    warnings "Off"
+    exceptionhandling "On"
+    rtti "Off"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}
@@ -255,8 +259,10 @@ workspace "SumatraPDF"
     -- "Unicode", TODO: breaks libdjuv?
   }
 
+  filter {'options:not with-clang'}
   exceptionhandling "Off"
   rtti "Off"
+  filter {}
 
   defines {
     "WIN32",
@@ -921,6 +927,10 @@ workspace "MakeLZSA"
   filter "options:with-clang"
     location "vs2022-clang"
     toolset "clang"
+    buildoptions {"-fms-compatibility", "-fms-extensions", "-Wno-microsoft-include", "-march=x86-64-v3", "-maes"}
+    warnings "Off"
+    exceptionhandling "On"
+    rtti "Off"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}
@@ -948,8 +958,10 @@ workspace "MakeLZSA"
     --"Unicode",
     "FatalCompileWarnings"
   }
+  filter "options:not with-clang"
   exceptionhandling "Off"
   rtti "Off"
+  filter{}
 
   defines {
     "WIN32",
