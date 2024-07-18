@@ -1110,7 +1110,7 @@ int CmpNatural(const char* a, const char* b) {
 }
 
 bool IsEmptyOrWhiteSpaceOnly(const char* s) {
-    if (!s || !*s) {
+    if (!s) {
         return true;
     }
     while (*s) {

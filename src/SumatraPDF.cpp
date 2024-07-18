@@ -5219,6 +5219,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             return 0;
         }
 
+        case CmdExec: {
+            auto filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+            auto cmdLine = GetCommandStringArg(cmd, kCmdArgExe, nullptr);
+            if (cmdLine == nullptr) {
+                return 0;
+            }
+            RunWithExe(tab, cmdLine, filter);
+            return 0;
+        }
+
         case CmdNewWindow:
             CreateAndShowMainWindow(nullptr);
             break;

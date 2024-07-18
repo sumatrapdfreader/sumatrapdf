@@ -369,6 +369,7 @@ int ParseCommand(const char* definition) {
         return cmdId;
     }
 
+    // those commands take arguments
     int argCmdId = cmdId;
     // some commands share the same arguments, so cannonalize them
     switch (cmdId) {
@@ -400,12 +401,6 @@ int ParseCommand(const char* definition) {
             argCmdId = CmdScrollUp;
             break;
         }
-        case CmdExec:
-            break;
-        default: {
-            logf("ParseCommand: cmd '%s' doesn't accept arguments\n", definition);
-            return -1;
-        }
     }
 
     // find arguments for this cmdId
@@ -414,7 +409,8 @@ int ParseCommand(const char* definition) {
         int id = argSpecs[i].cmdId;
         if (id == CmdNone) {
             // the command doesn't accept any arguments
-            return -1;
+            logf("ParseCommand: cmd '%s' doesn't accept arguments\n", definition);
+            return cmdId;
         }
         if (id != argCmdId) {
             continue;
