@@ -1436,7 +1436,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
         if (cmdId == CmdOpenWithHtmlHelp && ctx) {
             WindowTab* tab = ctx->tab;
-            char* path = tab ? tab->filePath : nullptr;
+            char* path = tab ? tab->filePath.Get() : nullptr;
             AppendExternalViewersToMenu(menu, path);
         }
     }
