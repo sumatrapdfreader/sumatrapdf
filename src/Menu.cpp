@@ -1218,14 +1218,15 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
 }
 
 static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
-    if (0 == gGlobalPrefs->externalViewers->size()) {
+    auto& externalViewers = *gGlobalPrefs->externalViewers;
+    if (0 == externalViewers.size()) {
         return;
     }
     if (!CanAccessDisk() || (filePath && !file::Exists(filePath))) {
         return;
     }
 
-    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
+    for (ExternalViewer* ev : externalViewers) {
         if (str::IsEmptyOrWhiteSpaceOnly(ev->commandLine)) {
             continue;
         }
@@ -1250,6 +1251,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
 
         TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
         uint menuId = ev->cmdId;
+
         TempWStr ws = ToWStrTemp(menuString);
         InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, ws);
         if (!filePath) {
@@ -1335,7 +1337,6 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         AppendThemesToMenu(menu);
     }
 
-    ACCEL accel;
     while (true) {
         MenuDef md = menuDef[i];
         if (md.title == nullptr) { // sentinel
@@ -1422,15 +1423,9 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, (UINT_PTR)subMenu, ws);
         } else {
-            str::Str title2 = title;
-            if (GetAccelByCmd(cmdId, accel)) {
-                // if this is an accelerator, append it to menu
-                if (!str::Find(title, "\t")) {
-                    AppendAccelKeyToMenuString(title2, accel);
-                }
-            }
+            title = (TempStr)AppendAccelKeyToMenuStringTemp((TempStr)title, cmdId);
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
-            TempWStr ws = ToWStrTemp(title2.Get());
+            TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
         }
 
@@ -1526,17 +1521,14 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
         if (def.idOrSubmenu != CmdPrint) {
             continue;
         }
-        str::Str printItem = trans::GetTranslation(def.title);
+        TempStr printItem = (TempStr)trans::GetTranslation(def.title);
         if (!filePrintAllowed) {
-            printItem = _TRA("&Print... (denied)");
+            printItem = (TempStr)_TRA("&Print... (denied)");
         } else {
-            ACCEL accel;
-            if (GetAccelByCmd(CmdPrint, accel)) {
-                AppendAccelKeyToMenuString(printItem, accel);
-            }
+            printItem = AppendAccelKeyToMenuStringTemp(printItem, CmdPrint);
         }
         if (!filePrintAllowed || !disableOnly) {
-            TempWStr ws = ToWStrTemp(printItem.Get());
+            TempWStr ws = ToWStrTemp(printItem);
             ModifyMenuW(menu, CmdPrint, MF_BYCOMMAND | MF_STRING, (UINT_PTR)CmdPrint, ws);
         }
         MenuSetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
@@ -1804,13 +1796,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                 MenuRemove(popup, CmdFavoriteDel);
 
                 // %s and not %d because re-using translation from RebuildFavMenu()
-                str::Str str = _TRA("Add page %s to favorites");
-                ACCEL a;
-                bool ok = GetAccelByCmd(CmdFavoriteAdd, a);
-                if (ok) {
-                    AppendAccelKeyToMenuString(str, a);
-                }
-                TempStr s = str::FormatTemp(str.Get(), pageLabel);
+                TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), pageLabel);
+                s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
                 MenuSetText(popup, CmdFavoriteAdd, s);
             }
         } else {

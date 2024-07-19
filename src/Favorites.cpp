@@ -449,13 +449,8 @@ void RebuildFavMenu(MainWindow* win, HMENU menu) {
             MenuSetText(menu, CmdFavoriteDel, s);
         } else {
             MenuSetEnabled(menu, CmdFavoriteDel, false);
-            str::Str str = _TRA("Add page %s to favorites");
-            ACCEL a;
-            bool ok = GetAccelByCmd(CmdFavoriteAdd, a);
-            if (ok) {
-                AppendAccelKeyToMenuString(str, a);
-            }
-            TempStr s = str::FormatTemp(str.Get(), label);
+            TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), label);
+            s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
             MenuSetText(menu, CmdFavoriteAdd, s);
         }
         AppendFavMenus(menu, win->ctrl->GetFilePath());

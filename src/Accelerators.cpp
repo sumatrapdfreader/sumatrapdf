@@ -217,8 +217,10 @@ ACCEL gBuiltInAccelerators[] = {
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
     {0, 'c', CmdToggleContinuousView},
-
 };
+
+ACCEL* gAccels = nullptr;
+int gAccelsCount = 0;
 
 static void SkipWS(const char*& s) {
     while (*s) {
@@ -466,11 +468,13 @@ static const char* getVirt(BYTE key, bool isEng) {
     return nullptr;
 }
 
-void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
+static TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
     bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
     bool isGerman = str::Eq(lang, "de");
+    bool isAscii = false;
 
+    str::Str str;
     str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if (virt & FALT) {
@@ -501,34 +505,50 @@ void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a) {
         if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
             WCHAR c = (WCHAR)key - VK_NUMPAD0 + '0';
             str.AppendChar(c);
-            return;
+            goto Exit;
         }
         if (key >= VK_F1 && key <= VK_F24) {
             int n = key - VK_F1 + 1;
             str.AppendFmt("F%d", n);
-            return;
+            goto Exit;
         }
         const char* s = getVirt(key, isEng);
         if (s) {
             str.Append(s);
-            return;
+            goto Exit;
         }
     }
 
     // virtual codes overlap with some ascii chars like '-' is VK_INSERT
     // so for non-virtual assume it's a single char
-    bool isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
+    isAscii = (key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9');
     static const char* otherAscii = "[]'`~@#$%^&*(){}/\\|?<>!,.+-=_;:\"";
     if (str::FindChar(otherAscii, key)) {
         isAscii = true;
     }
     if (isAscii) {
         str.AppendChar((char)key);
-        return;
+        goto Exit;
     }
 
     logf("Unknown key: 0x%x, virt: 0x%x\n", key, virt);
     ReportIf(true);
+    return menuStr;
+Exit:
+    TempStr res = str::JoinTemp(menuStr, str.Get());
+    return res;
+}
+
+TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
+    ACCEL a;
+    for (int i = 0; i < gAccelsCount; i++) {
+        a = gAccels[i];
+        if (a.cmd == cmdId) {
+            TempStr res = AppendAccelKeyToMenuStringTemp(menuStr, a);
+            return res;
+        }
+    }
+    return menuStr;
 }
 
 static bool SameAccelKey(const ACCEL& a1, const ACCEL& a2) {
@@ -586,9 +606,6 @@ static bool IsSafeAccel(const ACCEL& a) {
     }
     return true;
 }
-
-ACCEL* gAccels = nullptr;
-int gAccelsCount = 0;
 
 static HACCEL gAccelTables[3] = {
     nullptr, // for all but edit and tree view
@@ -713,15 +730,4 @@ HACCEL* GetAcceleratorTables() {
         CreateSumatraAcceleratorTable();
     }
     return gAccelTables;
-}
-
-bool GetAccelByCmd(int cmdId, ACCEL& accelOut) {
-    for (int i = 0; i < gAccelsCount; i++) {
-        ACCEL& a = gAccels[i];
-        if (a.cmd == cmdId) {
-            accelOut = a;
-            return true;
-        }
-    }
-    return false;
 }

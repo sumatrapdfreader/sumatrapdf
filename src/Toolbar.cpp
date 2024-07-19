@@ -214,7 +214,6 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
 void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
     TBBUTTONINFO binfo{};
     HWND hwnd = win->hwndToolbar;
-    ACCEL accel;
     for (int i = 0; i < kButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gToolbarButtons[i];
         if (!bi.toolTip) {
@@ -223,23 +222,16 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         if (bi.bmpIndex == TbIcon::Text) {
             continue;
         }
-        str::Str accelStr;
-        if (GetAccelByCmd(bi.cmdId, accel)) {
-            AppendAccelKeyToMenuString(accelStr, accel);
+        const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
+        TempStr s = (TempStr)trans::GetTranslation(bi.toolTip);
+        if (accelStr) {
+            TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
+            s = str::JoinTemp(s, s2);
         }
-
-        const char* s = trans::GetTranslation(bi.toolTip);
-        if (accelStr.size() > 0) {
-            accelStr[0] = '(';
-            accelStr.Append(")");
-            s = str::JoinTemp(s, "  ", accelStr.Get());
-        }
-
-        WCHAR* tmp = ToWStrTemp(s);
 
         binfo.cbSize = sizeof(TBBUTTONINFO);
         binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-        binfo.pszText = tmp;
+        binfo.pszText = ToWStrTemp(s);
         WPARAM buttonId = (WPARAM)i;
         TbSetButtonInfo(hwnd, buttonId, &binfo);
     }

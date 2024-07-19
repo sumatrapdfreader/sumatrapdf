@@ -4,5 +4,4 @@
 void FreeAcceleratorTables();
 void CreateSumatraAcceleratorTable();
 HACCEL* GetAcceleratorTables();
-void AppendAccelKeyToMenuString(str::Str& str, const ACCEL& a);
-bool GetAccelByCmd(int cmdId, ACCEL& accelOut);
+TempStr AppendAccelKeyToMenuStringTemp(TempStr str, int cmdId);

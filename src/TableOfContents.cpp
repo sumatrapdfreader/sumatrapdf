@@ -598,13 +598,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         } else {
             MenuRemove(popup, CmdFavoriteDel);
             // %s and not %d because re-using translation from RebuildFavMenu()
-            str::Str str = _TRA("Add page %s to favorites");
-            ACCEL a;
-            bool ok = GetAccelByCmd(CmdFavoriteAdd, a);
-            if (ok) {
-                AppendAccelKeyToMenuString(str, a);
-            }
-            TempStr s = str::FormatTemp(str.Get(), pageLabel);
+            TempStr s = str::FormatTemp(_TRA("Add page %s to favorites"), pageLabel);
+            s = AppendAccelKeyToMenuStringTemp(s, CmdFavoriteAdd);
             MenuSetText(popup, CmdFavoriteAdd, s);
         }
     } else {

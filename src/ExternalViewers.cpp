@@ -287,6 +287,11 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
         TempStr path = path::JoinTemp(dir, partialPath);
         if (file::Exists(path)) {
             ev->exeFullPath = str::Dup(path);
+            const char* args = ev->launchArgs;
+            if (!args) {
+                args = "";
+            }
+            logf("DetectExternalViewer: cmd %d, '%s' %s\n", ev->cmdId, ev->exeFullPath, args);
             return true;
         }
     }
