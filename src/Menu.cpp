@@ -1250,12 +1250,12 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
         }
 
         TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
-        uint menuId = ev->cmdId;
-
+        int cmdId = ev->cmdId;
+        menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         TempWStr ws = ToWStrTemp(menuString);
-        InsertMenuW(menuFile, menuId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, ws);
+        InsertMenuW(menuFile, cmdId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, (UINT_PTR)cmdId, ws);
         if (!filePath) {
-            MenuSetEnabled(menuFile, menuId, false);
+            MenuSetEnabled(menuFile, cmdId, false);
         }
     }
 }
@@ -1429,6 +1429,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
         }
 
+        // append user external viewers after menu item with CmdOpenWithHtmlHelp
         if (cmdId == CmdOpenWithHtmlHelp && ctx) {
             WindowTab* tab = ctx->tab;
             char* path = tab ? tab->filePath.Get() : nullptr;
