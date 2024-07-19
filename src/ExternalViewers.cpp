@@ -168,24 +168,18 @@ static ExternalViewerInfo gExternalViewers[] = {
 };
 // clang-format on
 
-static ExternalViewerInfo* FindKnownExternalViewerInfoByCmd(int cmd) {
-    ExternalViewerInfo* info = nullptr;
-    int n = dimof(gExternalViewers);
-    for (int i = 0; i < n; i++) {
-        info = &gExternalViewers[i];
-        if (info->cmdId == cmd) {
-            return info;
+static ExternalViewerInfo* FindKnownExternalViewerInfoByCmdId(int cmdId) {
+    for (ExternalViewerInfo& ev : gExternalViewers) {
+        if (ev.cmdId == cmdId) {
+            return &ev;
         }
     }
     return nullptr;
 }
 
-bool HasKnownExternalViewerForCmd(int cmd) {
-    auto* v = FindKnownExternalViewerInfoByCmd(cmd);
-    if (v == nullptr) {
-        return false;
-    }
-    return v->exeFullPath != nullptr;
+bool HasKnownExternalViewerForCmd(int cmdId) {
+    ExternalViewerInfo* info = FindKnownExternalViewerInfoByCmdId(cmdId);
+    return info && info->exeFullPath != nullptr;
 }
 
 static bool CanViewExternally(WindowTab* tab) {
@@ -198,24 +192,6 @@ static bool CanViewExternally(WindowTab* tab) {
         return true;
     }
     return file::Exists(tab->filePath);
-}
-
-static bool DetectExternalViewer(ExternalViewerInfo* ev) {
-    const char* partialPath = ev->exePartialPath;
-    if (!partialPath || !*partialPath) {
-        return false;
-    }
-
-    static int const csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
-    for (int csidl : csidls) {
-        TempStr dir = GetSpecialFolderTemp(csidl);
-        TempStr path = path::JoinTemp(dir, partialPath);
-        if (file::Exists(path)) {
-            ev->exeFullPath = str::Dup(path);
-            return true;
-        }
-    }
-    return false;
 }
 
 void FreeExternalViewers() {
@@ -289,43 +265,66 @@ static char* GetPDFXChangePathTemp() {
     return nullptr;
 }
 
+static void SetKnownExternalViewerExePath(int cmdId, const char* exePath) {
+    if (!exePath) {
+        return;
+    }
+    ExternalViewerInfo* info = FindKnownExternalViewerInfoByCmdId(cmdId);
+    if (info && info->exeFullPath == nullptr) {
+        info->exeFullPath = str::Dup(exePath);
+    }
+}
+
+static bool DetectExternalViewer(ExternalViewerInfo* ev) {
+    const char* partialPath = ev->exePartialPath;
+    if (!partialPath || !*partialPath) {
+        return false;
+    }
+
+    static int const csidls[] = {CSIDL_PROGRAM_FILES, CSIDL_PROGRAM_FILESX86, CSIDL_WINDOWS, CSIDL_SYSTEM};
+    for (int csidl : csidls) {
+        TempStr dir = GetSpecialFolderTemp(csidl);
+        TempStr path = path::JoinTemp(dir, partialPath);
+        if (file::Exists(path)) {
+            ev->exeFullPath = str::Dup(path);
+            return true;
+        }
+    }
+    return false;
+}
+
 void DetectExternalViewers() {
     ReportIf(gExternalViewersCount > 0); // only call once
 
-    ExternalViewerInfo* info = nullptr;
+    if (!CanAccessDisk()) {
+        return;
+    }
+
     for (ExternalViewerInfo& i : gExternalViewers) {
-        info = &i;
-        bool didDetect = DetectExternalViewer(info);
-        if (didDetect) {
+        if (DetectExternalViewer(&i)) {
             gExternalViewersCount++;
         }
     }
 
-    info = FindKnownExternalViewerInfoByCmd(CmdOpenWithAcrobat);
-    if (!info->exeFullPath) {
-        info->exeFullPath = str::Dup(GetAcrobatPathTemp());
-    }
+    const char* exePath = GetAcrobatPathTemp();
+    SetKnownExternalViewerExePath(CmdOpenWithAcrobat, exePath);
 
-    info = FindKnownExternalViewerInfoByCmd(CmdOpenWithFoxIt);
-    if (!info->exeFullPath) {
-        info->exeFullPath = str::Dup(GetFoxitPathTemp());
-    }
+    exePath = GetFoxitPathTemp();
+    SetKnownExternalViewerExePath(CmdOpenWithFoxIt, exePath);
 
-    info = FindKnownExternalViewerInfoByCmd(CmdOpenWithPdfXchange);
-    if (!info->exeFullPath) {
-        info->exeFullPath = str::Dup(GetPDFXChangePathTemp());
-    }
+    exePath = GetPDFXChangePathTemp();
+    SetKnownExternalViewerExePath(CmdOpenWithPdfXchange, exePath);
 }
 
 static bool filterMatchesEverything(const char* ext) {
     return str::IsEmptyOrWhiteSpaceOnly(ext) || str::Eq(ext, "*");
 }
 
-bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
+bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     if (!tab || !CanViewExternally(tab)) {
         return false;
     }
-    ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmd(cmd);
+    ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
     if (!ev || ev->exeFullPath == nullptr) {
         // logfa("CanViewWithKnownExternalViewer cmd: %d, !ev || ev->exeFullPath == nullptr\n", cmd);
         return false;
@@ -345,7 +344,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
     if (engineKind != nullptr) {
         if (ev->engineKind != nullptr) {
             if (ev->engineKind != engineKind) {
-                logfa("CanViewWithKnownExternalViewer cmd: %d, ev->engineKind '%s' != engineKind '%s'\n", cmd,
+                logfa("CanViewWithKnownExternalViewer cmd: %d, ev->engineKind '%s' != engineKind '%s'\n", cmdId,
                       ev->engineKind, engineKind);
                 return false;
             }
@@ -389,15 +388,15 @@ static TempStr GetDocumentPathQuoted(WindowTab* tab) {
     return path;
 }
 
-bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd) {
-    bool canView = CanViewWithKnownExternalViewer(tab, cmd);
+bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
+    bool canView = CanViewWithKnownExternalViewer(tab, cmdId);
     if (!canView) {
         // TODO: with command palette can send un-enforcable command
-        logfa("ViewWithKnownExternalViewer cmd: %d\n", cmd);
+        logfa("ViewWithKnownExternalViewer cmd: %d\n", cmdId);
         ReportIf(!canView);
         return false;
     }
-    ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmd(cmd);
+    ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
     if (ev->exeFullPath == nullptr) {
         return false;
     }
