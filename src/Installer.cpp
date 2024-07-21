@@ -719,31 +719,31 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     // a bit more space between text box and checkboxes
     y -= (DpiScale(hwnd, 4) + margin);
 
-    const char* s = "&...";
-    Size btnSize2 = HwndMeasureText(hwnd, s);
-    btnSize2.dx += DpiScale(hwnd, 4);
-    wnd->btnBrowseDir = CreateDefaultButton(hwnd, s);
+    wnd->btnBrowseDir = CreateDefaultButton(hwnd, "&...");
     wnd->btnBrowseDir->onClicked = mkFunc0(OnButtonBrowse, wnd);
-    // btnSize = btnBrowseDir->GetIdealSize();
-    x = r.dx - margin - btnSize2.dx;
-    SetWindowPos(wnd->btnBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
-                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
-    x = margin;
-    dx = r.dx - (2 * margin) - btnSize2.dx - DpiScale(hwnd, 4);
+    Size btnSize2 = wnd->btnBrowseDir->GetIdealSize();
 
     EditCreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
     wnd->editInstallationDir = new Edit();
     HWND ehwnd = wnd->editInstallationDir->Create(eargs);
-    ReportIf(!ehwnd);
-
     wnd->editInstallationDir->SetText(gCli->installDir);
-    rc = {x, y, x + dx, y + staticDy};
+
+    int editDy = wnd->editInstallationDir->GetIdealSize().dy;
+
+    int btnDx = editDy; // btnDx == btnDy
+    x = r.dx - margin - btnDx;
+    wnd->btnBrowseDir->SetBounds({x, y, btnDx, btnDx});
+
+    x = margin;
+    dx = r.dx - (2 * margin) - btnDx - DpiScale(hwnd, 4);
+
+    rc = {x, y, x + dx, y + editDy};
     wnd->editInstallationDir->SetBounds(rc);
 
-    y -= staticDy;
+    y -= editDy;
 
     const char* s2 = _TRA("Install SumatraPDF in &folder:");
     rc = {x, y, x + r.dx, y + staticDy};
