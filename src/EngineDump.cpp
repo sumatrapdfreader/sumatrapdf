@@ -38,6 +38,11 @@ static bool NeedsEscape(const WCHAR* s) {
     return false;
 }
 
+// TODO: dummy, duplicate with SumatraPDF.cpp
+bool AnnotationsAreDisabled() {
+    return false;
+}
+
 static bool NeedsEscape(const char* s) {
     // TODO: optimize to do a single loop over s
     if (str::FindChar(s, '<')) {
