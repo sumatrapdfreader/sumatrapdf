@@ -1064,7 +1064,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     if (flags.engineDump) {
         void EngineDump(const Flags& flags);
         EngineDump(flags);
-        ShutdownCommon();
         return 0;
     }
 
