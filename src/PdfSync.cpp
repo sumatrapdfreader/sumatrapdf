@@ -82,7 +82,7 @@ class SyncTex : public Synchronizer {
     int RebuildIndexIfNeeded();
 
     EngineBase* engine; // needed for converting between coordinate systems
-    synctex_scanner_t scanner;
+    synctex_scanner_p scanner;
 };
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
@@ -593,7 +593,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
 
-    synctex_node_t node = synctex_next_result(this->scanner);
+    synctex_node_p node = synctex_scanner_next_result(this->scanner);
     if (!node) {
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
     }
@@ -659,7 +659,7 @@ TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
-    int ret = synctex_display_query(this->scanner, mb_srcfilepath, line, col);
+    int ret = synctex_display_query(this->scanner, mb_srcfilepath, line, col, 0);
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
@@ -676,11 +676,11 @@ TryAgainAnsi:
         return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
     }
 
-    synctex_node_t node;
+    synctex_node_p node;
     int firstpage = -1;
     rects.Reset();
 
-    while ((node = synctex_next_result(this->scanner)) != nullptr) {
+    while ((node = synctex_scanner_next_result(this->scanner)) != nullptr) {
         if (firstpage == -1) {
             firstpage = synctex_node_page(node);
             if (firstpage <= 0 || firstpage > engine->PageCount()) {
