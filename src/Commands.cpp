@@ -33,9 +33,14 @@ static const ArgSpec argSpecs[] = {
     {CmdSelectionHandler, kCmdArgName, CommandArg::Type::String},
     {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},
+
+    // and all CmdCreateAnnot* commands
     {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
     {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
-    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int},       // default
+
+    // and  CmdScrollDown, CmdGoToNextPage, CmdGoToPrevPage
+    {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
+
     {CmdSetTheme, kCmdArgName, CommandArg::Type::String}, // default
     {CmdNone, "", CommandArg::Type::None},                // sentinel
 };

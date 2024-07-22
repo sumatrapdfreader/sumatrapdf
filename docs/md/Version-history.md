@@ -13,12 +13,17 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 * include manual (`F1` to launch browser with documentation)
 * add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
 * new commands and their command palette (`Ctrl + K`) texts:
-  *  `CmdCloseAllTabs` : "Close All Tabs"
-  *  `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
-  *  `CmdDeleteFile`: "Delete File"
-  *  `CmdInvokeInverseSearch`
-  *  `CmdToggleFrequentlyRead`
-  *  `CmdToggleLinks`
+  * `CmdCloseAllTabs` : "Close All Tabs"
+  * `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
+  * `CmdDeleteFile`: "Delete File"
+  * `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
+  * `CmdToggleLinks` : "Toggle Show Links"
+  * `CmdInvokeInverseSearch`
+  * `CmdExec`
+* add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
+  * CmdCreateAnnot* commands take a color argument and `openedit` to automatically open edit annotations window when creating an annotation
+  * `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
+  * `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
 * added `UIFontSize` advanced setting
 * removed `TreeFontWeightOffset` advanced setting
 * increase number of thumbnails on home page from 10 => 30
