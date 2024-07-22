@@ -1785,7 +1785,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     if (favsSupported) {
         if (pageNoUnderCursor > 0) {
             TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNoUnderCursor);
-            bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNoUnderCursor);
+            bool isBookmarked = IsPageInFavorites(filePath, pageNoUnderCursor);
             if (isBookmarked) {
                 MenuRemove(popup, CmdFavoriteAdd);
 

@@ -587,7 +587,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     if (pageNo > 0) {
         TempStr pageLabel = win->ctrl->GetPageLabeTemp(pageNo);
-        bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
+        bool isBookmarked = IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
             MenuRemove(popup, CmdFavoriteAdd);
 

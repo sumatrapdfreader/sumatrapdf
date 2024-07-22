@@ -112,8 +112,6 @@ static Kind kNotifGroupPersistentWarning = "persistentWarning";
 static Kind kNotifGroupPageInfo = "pageInfoHelper";
 static Kind kNotifZoom = "zoom";
 
-Favorites gFavorites;
-
 HBITMAP gBitmapReloadingCue;
 RenderCache* gRenderCache;
 HCURSOR gCursorDrag;
@@ -5131,15 +5129,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         return SendMessageW(hwnd, WM_SYSCOMMAND, wp, lp);
     }
 
-    // check if the menuId belongs to an entry in the list of
-    // recently opened files and load the referenced file if it does
-    if ((cmdId >= CmdFileHistoryFirst) && (cmdId <= CmdFileHistoryLast)) {
-        FileState* state = gFileHistory.Get(cmdId - CmdFileHistoryFirst);
-        if (state && HasPermission(Perm::DiskAccess)) {
-            LoadArgs args(state->filePath, win);
-            LoadDocument(&args);
+    if (CanAccessDisk()) {
+        // check if the menuId belongs to an entry in the list of
+        // recently opened files and load the referenced file if it does
+        if ((cmdId >= CmdFileHistoryFirst) && (cmdId <= CmdFileHistoryLast)) {
+            int idx = cmdId - (int)CmdFileHistoryFirst;
+            FileState* state = gFileHistory.Get(idx);
+            if (state) {
+                LoadArgs args(state->filePath, win);
+                LoadDocument(&args);
+            }
+            return 0;
         }
-        return 0;
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
