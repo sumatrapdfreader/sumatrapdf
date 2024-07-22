@@ -34,8 +34,8 @@
 // those commands never show up in command palette
 static i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
-    CmdOpenWithFirst,
-    CmdOpenWithLast,
+    CmdOpenWithKnownExternalViewerFirst,
+    CmdOpenWithKnownExternalViewerLast,
     CmdCommandPalette,
     CmdCommandPaletteNoFiles,
     CmdCommandPaletteOnlyTabs,
@@ -206,7 +206,7 @@ static bool IsOpenExternalViewerCommand(i32 cmdId) {
     if (IsCustomExternalViewerCmdId(cmdId)) {
         return true;
     }
-    return ((cmdId >= CmdOpenWithFirst) && (cmdId <= CmdOpenWithLast));
+    return ((cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast));
 }
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {

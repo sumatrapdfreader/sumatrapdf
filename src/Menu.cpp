@@ -1269,7 +1269,7 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
     WindowTab* tab = ctx->tab;
-    for (int cmd = CmdOpenWithFirst + 1; cmd < CmdOpenWithLast; cmd++) {
+    for (int cmd = CmdOpenWithKnownExternalViewerFirst + 1; cmd < CmdOpenWithKnownExternalViewerLast; cmd++) {
         if (!CanViewWithKnownExternalViewer(tab, cmd)) {
             MenuRemove(menu, cmd);
         }
@@ -1371,7 +1371,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             removeMenu |= cmdIdInList(removeIfNoDiskAccessPerm);
             // editing annotations also requires disk access
             removeMenu |= cmdIdInList(removeIfAnnotsNotSupported);
-            if (cmdId >= CmdOpenWithFirst && cmdId <= CmdOpenWithLast) {
+            if (cmdId >= CmdOpenWithKnownExternalViewerFirst && cmdId <= CmdOpenWithKnownExternalViewerLast) {
                 removeMenu = true;
             }
         }
@@ -1594,7 +1594,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
     bool hasDocument = tab && tab->IsDocLoaded();
-    for (UINT_PTR id = CmdOpenWithFirst; id < CmdOpenWithLast; id++) {
+    for (UINT_PTR id = CmdOpenWithKnownExternalViewerFirst; id < CmdOpenWithKnownExternalViewerLast; id++) {
         MenuSetEnabled(win->menu, id, hasDocument);
     }
     for (int id : disableIfNoDocument) {

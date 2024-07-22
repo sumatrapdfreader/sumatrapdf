@@ -103,7 +103,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdZoomFitWidthAndContinuous, "Zoom: Fit Width And Continuous")              \
     V(CmdZoomFitPageAndSinglePage, "Zoom: Fit Page and Single Page")               \
     V(CmdContributeTranslation, "Contribute Translation")                          \
-    V(CmdOpenWithFirst, "don't use")                                               \
+    V(CmdOpenWithKnownExternalViewerFirst, "don't use")                            \
     V(CmdOpenWithExplorer, "Open Directory In Explorer")                           \
     V(CmdOpenWithDirectoryOpus, "Open Directory In Directory Opus")                \
     V(CmdOpenWithTotalCommander, "Open Directory In Total Commander")              \
@@ -115,7 +115,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenWithXpsViewer, "Open With Xps Viewer")                                \
     V(CmdOpenWithHtmlHelp, "Open With HTML Help")                                  \
     V(CmdOpenWithPdfDjvuBookmarker, "Open With Pdf&Djvu Bookmarker")               \
-    V(CmdOpenWithLast, "don't use")                                                \
+    V(CmdOpenWithKnownExternalViewerLast, "don't use")                             \
     V(CmdOpenSelectedDocument, "Open Selected Document")                           \
     V(CmdPinSelectedDocument, "Pin Selected Document")                             \
     V(CmdForgetSelectedDocument, "Remove Selected Document From History")          \

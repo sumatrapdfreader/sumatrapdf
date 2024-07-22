@@ -5156,7 +5156,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
     WindowTab* tab = win->CurrentTab();
     if (!win->IsCurrentTabAbout()) {
-        if (CmdOpenWithFirst < cmdId && cmdId < CmdOpenWithLast) {
+        if (CmdOpenWithKnownExternalViewerFirst < cmdId && cmdId < CmdOpenWithKnownExternalViewerLast) {
             ViewWithKnownExternalViewer(tab, cmdId);
             return 0;
         }
