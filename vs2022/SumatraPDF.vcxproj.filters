@@ -320,6 +320,9 @@
     <ClCompile Include="..\src\EditAnnotations.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\EngineDump.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ExternalViewers.cpp">
       <Filter>src</Filter>
     </ClCompile>

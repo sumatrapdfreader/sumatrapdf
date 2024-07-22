@@ -701,21 +701,6 @@ workspace "SumatraPDF"
     links { "utils", "mupdf" }
     links { "shlwapi", "version", "comctl32", "wininet" }
 
-  project "enginedump"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    mixed_dbg_rel_conf()
-    includedirs { "src", "src/wingui", "mupdf/include" }
-    disablewarnings { "4100", "4267", "4457" }
-    engine_dump_files()
-    links_zlib()
-    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu", "dav1d", "libheif" }
-    links {
-      "comctl32", "gdiplus", "msimg32", "shlwapi",
-      "version", "windowscodecs", "wininet"
-    }
-
   project "test_util"
     kind "ConsoleApp"
     language "C++"

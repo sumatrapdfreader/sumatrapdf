@@ -619,6 +619,7 @@ function sumatrapdf_files()
     "DocController.h",
     "DocProperties.*",
     "EditAnnotations.*",
+    "EngineDump.cpp",
     "ExternalViewers.*",
     "Favorites.*",
     "FileHistory.*",
@@ -1184,17 +1185,6 @@ function test_util_files()
     "SettingsStructs.*",
     "SumatraUnitTests.cpp",
     "tools/test_util.cpp"
-  })
-end
-
-function engine_dump_files()
-  files_in_dir("src", {
-    "CrashHandlerNoOp.cpp",
-    "EngineDump.cpp",
-    "SumatraConfig.*",
-    "FzImgReader.*",
-    "mui/Mui.*",
-    "mui/TextRender.*"
   })
 end
 

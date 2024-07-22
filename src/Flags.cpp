@@ -86,6 +86,7 @@
     V(RunInstallNow, "run-install-now")          \
     V(Adobe, "a")                                \
     V(DDE, "dde")                                \
+    V(EngineDump, "engine-dump")                 \
     V(SetColorRange, "set-color-range")
 
 #define MAKE_ARG(__arg, __name) __arg,

@@ -1086,6 +1086,7 @@
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\EditAnnotations.cpp" />
+    <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileHistory.cpp" />

@@ -1061,6 +1061,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     }
 #endif
 
+    if (flags.engineDump) {
+        void EngineDump(const Flags& flags);
+        EngineDump(flags);
+        ShutdownCommon();
+        return 0;
+    }
+
     if (flags.appdataDir) {
         SetAppDataDir(flags.appdataDir);
     }
@@ -1129,6 +1136,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
             str::FreePtr(&flags.search);
         }
     }
+
     if (flags.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
@@ -1159,6 +1167,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         SendMyselfDDE(flags.dde, existingHwnd);
         goto Exit;
     }
+
     if (existingHwnd) {
         int nFiles = flags.fileNames.Size();
         // we allow -new-window on its own if no files given

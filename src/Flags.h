@@ -86,6 +86,7 @@ struct Flags {
     int testPageNo = 0;
     bool testApp = false;
     char* dde = nullptr;
+    bool engineDump = false; // -engine-dump
 
     bool crashOnOpen = false;
 

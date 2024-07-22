@@ -13,6 +13,7 @@
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
+#include "Flags.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -35,11 +36,6 @@ static bool NeedsEscape(const WCHAR* s) {
     if (str::FindChar(s, '"')) {
         return true;
     }
-    return false;
-}
-
-// TODO: dummy, duplicate with SumatraPDF.cpp
-bool AnnotationsAreDisabled() {
     return false;
 }
 
@@ -441,7 +437,8 @@ static bool CheckRenderPath(const char* path) {
     return true;
 }
 
-static bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f, bool silent = false) {
+// static
+bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f, bool silent = false) {
     if (!CheckRenderPath(renderPath)) {
         return false;
     }
@@ -513,7 +510,8 @@ class PasswordHolder : public PasswordUI {
     }
 };
 
-int main(int, char**) {
+void EngineDump(const Flags& flags) {
+#if 0
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
@@ -564,13 +562,14 @@ int main(int, char**) {
     if (!filePath) {
         goto Usage;
     }
-
-    if (silent) {
+#endif
+    if (flags.silent) {
         FILE* nul;
         freopen_s(&nul, "NUL", "w", stdout);
         freopen_s(&nul, "NUL", "w", stderr);
     }
 
+#if 0
     ScopedGdiPlus gdiPlus;
     ScopedMui miniMui;
 
@@ -596,9 +595,8 @@ int main(int, char**) {
         DumpData(engine, fullDump);
     }
     if (renderPath) {
-        RenderDocument(engine, renderPath, renderZoom, silent);
+        RenderDocument(engine, renderPath, renderZoom, flags.silent);
     }
     engine->Release();
-
-    return 0;
+#endif
 }
