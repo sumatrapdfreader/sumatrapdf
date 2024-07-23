@@ -172,6 +172,37 @@ body {
   border-radius: 0.5rem;
 }
 
+.nav-manual {
+  position: fixed;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+  font-weight: 500;
+  align-items: center;
+  background-color: white;
+  z-index: 99; /* needs to be higher than img */
+
+  padding: 0.25rem 0;
+}
+
+.nav-manual-top-space {
+  margin-top: 2rem;
+}
+
+.nav-btn-manual {
+  font-size: 14px;
+  padding: 2px 0.5rem;
+  margin-left: 0.5rem;
+  text-decoration: none;
+  color: black;
+  border-radius: 0.5rem;
+}
+
+.nav-btn-manual:hover {
+  background-color: rgba(255, 240, 0, 0.9);
+}
+
 .nav-logo {
   margin-left: 1rem;
   margin-top: 1px;
