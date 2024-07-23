@@ -4702,6 +4702,28 @@ static TempStr URLEncodeTemp(const char* s) {
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
 
+
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/4368
+// for Google translate tl= arg seems to be ISO-639 lang code
+// and we seem to use ISO-3166 country code
+// this translates between them but is a heuristic that might be wrong
+// https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
+// https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+
+// first entry is value in gLangCodes, second is ISO 639 lang code
+// I made it manually by looking at trans_lang.go and
+// https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+// but not fully and it might be incorrect anyway wrt. to other translation websites
+static const char* gLangsMap = "am\0hy\0by\0be\0ca-xv\0ca\0cz\0cs\0kr\0ko\0vn\0vi\0cn\0zh-CN\0tw\0zh-TW";
+static const char* GetISO639LangCodeFromLang(const char* lang) {
+    int idx = seqstrings::StrToIdx(gLangsMap, lang);
+    if (idx < 0 || idx % 2 != 0) {
+        return lang;
+    }
+    lang = seqstrings::IdxToStr(gLangsMap, idx + 1);
+    return lang;
+}
+
 static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     if (!tab || !HasPermission(Perm::InternetAccess) || !HasPermission(Perm::CopySelection)) {
         return;
@@ -4724,7 +4746,8 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
     const char* lang = trans::GetCurrentLangCode();
-    TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, lang);
+    auto contryCode = GetISO639LangCodeFromLang(lang);
+    TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, contryCode);
     uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);
     LaunchBrowser(uri);
 }
