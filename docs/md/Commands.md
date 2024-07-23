@@ -4,8 +4,8 @@ You can control SumatraPDF with commands:
 
 - use [command palette](Command-Palette.md) (`Ctrl + K`) to invoke a command by its description
 - [customize a keyboard shortcut](Customizing-keyboard-shortcuts.md) to invoke a command by its id
-- (since 3.5) [send a command via DDE](DDE-Commands.md) e.g. `[CmdClose]` to invoke `Close Document` command
-- (since 3.6) some commands accept arguments
+- **since 3.5:** [send a command via DDE](DDE-Commands.md) e.g. `[CmdClose]` to invoke `Close Document` command
+- **since 3.6:** some commands accept arguments
 
 :search:
 
@@ -255,6 +255,7 @@ CmdNone,,Do nothing
 ```
 
 ### **Deprecated or internal**
+
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
 CmdDebugCorruptMemory,,don't use
@@ -272,6 +273,7 @@ CmdOpenAttachment,,don't use
 Since 3.6, some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
 
 For example:
+
 ```
 Shortcuts [
     [
@@ -302,7 +304,8 @@ You can combine those rules: `CmdCreateAnnotHighlight #fafafa openedit` is the s
 ## `CmdScrollUp`, `CmdScrollDown`
 
 Arguments:
-* `n` : default, integer, how many lines to scroll up or down (default: 1)
+
+- `n` : default, integer, how many lines to scroll up or down (default: 1)
 
 Use case: if you want to speed up scrolling with `j`, `k` keys, you can re-assign them:
 
@@ -322,15 +325,17 @@ Shortcuts [
 ## `CmdGoToNextPage`, `CmdGoToPrevPage`
 
 Arguments:
-* `n` : default, integer, how many pages to advance by (default: 1)
+
+- `n` : default, integer, how many pages to advance by (default: 1)
 
 Use case: if you want to go forward, back by more than 1 page
 
 ## `CmdCreateAnnotHighlight` and other `CmdCreateAnnot*`
 
 Arguments:
-* `color` : default, color
-* `openedit` : boolean, `false` if not given
+
+- `color` : default, color
+- `openedit` : boolean, `false` if not given
 
 Use case: change default color for annotations. Create multiple shortcuts for different colors.
 

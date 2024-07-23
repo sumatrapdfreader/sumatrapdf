@@ -38,18 +38,18 @@ Explanation:
 - we added `Alt + O` keyboard shortcut for `CmdOpenFolder` command. It opens a folder for browsing.
 - by default SumatraPDF has `Ctrl + O` shortcut for `CmdOpen` (open a file) command. This changes the shortcut to `x`
 - by default `q` closes the document. By binding it to `CmdNone` we can disable a built-in shortcut
-- (since 3.6) `CmdCreateAnnotHighlight` takes a color argument (`#00ff00` is green) and boolean `openedit` argument. We re-assign `a` to create a highlight annotation with green color (different from default yellow) and to open annotations edit window (`openedit` boolean argument)
+- **since 3.6:**: `CmdCreateAnnotHighlight` takes a color argument (`#00ff00` is green) and boolean `openedit` argument. We re-assign `a` to create a highlight annotation with green color (different from default yellow) and to open annotations edit window (`openedit` boolean argument)
 
 ## **Format of `Key` section:**
 
 - just a key (like `a`, `Z`, `5`) i.e. letters `a` to `z`, `A` to `Z`, and numbers `0` to `9`
 - modifiers + key. Modifiers are: `Shift`, `Alt`, `Ctrl` e.g. `Alt + F1`, `Ctrl + Shift + Y`
 - there are some special keys (e.g. `Alt + F3`)
-    - `F1` - `F24`
-    - `numpad0` - `numpad9` : `0` to `9` but on a numerical keyboard
-    - `Delete`, `Backspace`, `Insert`, `Home`, `End`, `Escape`
-    - `Left`, `Right`, `Up`, `Down` for arrow keys
-    - full list of [special keys](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/Accelerators.cpp#L14)
+  - `F1` - `F24`
+  - `numpad0` - `numpad9` : `0` to `9` but on a numerical keyboard
+  - `Delete`, `Backspace`, `Insert`, `Home`, `End`, `Escape`
+  - `Left`, `Right`, `Up`, `Down` for arrow keys
+  - full list of [special keys](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/Accelerators.cpp#L14)
 - without modifiers, case do matter i.e. `a` and `A` are different
 - with modifiers, use `Shift` to select upper-case i.e. `Alt + a` is the same as `Alt + A` , use `Alt + Shift + A` to select the upper-case `A`
 
