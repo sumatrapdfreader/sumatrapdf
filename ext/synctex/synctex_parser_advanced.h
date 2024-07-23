@@ -476,6 +476,7 @@ extern "C" {
      */
     synctex_node_p synctex_node_target(synctex_node_p node);
     
+#define SYNCTEX_NO_UPDATER
 #ifndef SYNCTEX_NO_UPDATER
     /*  The main synctex updater object.
      *  This object is used to append information to the synctex file.

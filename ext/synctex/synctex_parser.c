@@ -8409,6 +8409,7 @@ SYNCTEX_INLINE static synctex_nd_lr_s _synctex_eq_get_closest_children_in_box_v2
     return nds;
 }
 
+#define SYNCTEX_NO_UPDATER
 #ifndef SYNCTEX_NO_UPDATER
 
 #	ifdef SYNCTEX_NOTHING
