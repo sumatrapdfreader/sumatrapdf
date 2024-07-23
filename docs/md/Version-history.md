@@ -8,35 +8,36 @@
 
 Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 
-* improved zooming:
-  * zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
-* include manual (`F1` to launch browser with documentation)
-* add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
-* new commands and their command palette (`Ctrl + K`) texts:
-  * `CmdCloseAllTabs` : "Close All Tabs"
-  * `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
-  * `CmdDeleteFile`: "Delete File"
-  * `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
-  * `CmdToggleLinks` : "Toggle Show Links"
-  * `CmdInvokeInverseSearch`
-  * `CmdExec`
-* add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
-  * CmdCreateAnnot* commands take a color argument and `openedit` to automatically open edit annotations window when creating an annotation
-  * `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
-  * `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
-* added `UIFontSize` advanced setting
-* removed `TreeFontWeightOffset` advanced setting
-* increase number of thumbnails on home page from 10 => 30
-* add `ShowLinks` advanced setting and  "Toggle Show Links" (`CmdToggleLinks`) for command palette
-* default `ReuseInstance` setting to true
-* improved scrolling with mouse wheel and touch gestures
-* theming improvements
-* go back to opening settings file with default .txt editor (notepad most likely)
-* don't exit fullscreen on double-click. must double-click in upper-right corner
-* when opening via double-click, if `Ctrl` is pressed will always open in new tab (vs. activating existing tab)
-* register for handling `.webp` files
-* bug fix: Del should not delete an annotation if editing content
-* bug fix: re-enable tree view full row select
+- improved zooming:
+  - zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
+- include manual (`F1` to launch browser with documentation)
+- add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
+- new commands and their command palette (`Ctrl + K`) texts:
+  - `CmdCloseAllTabs` : "Close All Tabs"
+  - `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
+  - `CmdDeleteFile`: "Delete File"
+  - `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
+  - `CmdToggleLinks` : "Toggle Show Links"
+  - `CmdInvokeInverseSearch`
+  - `CmdExec`
+- add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
+  - CmdCreateAnnot\* commands take a color argument and `openedit` to automatically open edit annotations window when creating an annotation
+  - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
+  - `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
+- added `UIFontSize` advanced setting
+- removed `TreeFontWeightOffset` advanced setting
+- increase number of thumbnails on home page from 10 => 30
+- add `ShowLinks` advanced setting and "Toggle Show Links" (`CmdToggleLinks`) for command palette
+- default `ReuseInstance` setting to true
+- added `Key` arg to `ExternalViewers` advanced setting (keyboard shortcut)
+- improved scrolling with mouse wheel and touch gestures
+- theming improvements
+- go back to opening settings file with default .txt editor (notepad most likely)
+- don't exit fullscreen on double-click. must double-click in upper-right corner
+- when opening via double-click, if `Ctrl` is pressed will always open in new tab (vs. activating existing tab)
+- register for handling `.webp` files
+- bug fix: Del should not delete an annotation if editing content
+- bug fix: re-enable tree view full row select
 
 ### 3.5.2 (2023-10-25)
 
@@ -106,7 +107,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 ### 3.4.2 (2022-05-27)
 
 - make keyboard accelerators work when tree view has focus
-- fix `-set-color-range` and  `-bg-color` replacing `MainWindowBackground`
+- fix `-set-color-range` and `-bg-color` replacing `MainWindowBackground`
 - fix crash with incorrectly defined selection handlers
 
 ### 3.4.1 (2022-05-25)
@@ -119,7 +120,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - [customizable keyboard shortcuts](Customizing-keyboard-shortcuts.md)
 - better support for epub files using mupdf's epub engine. Adds text selection and search in ebook files. Better rendering fidelity. On the downside, might be slower.
 - [search / translate selected text](Customize-search-translation-services.md) with web services
-    - we have few built-in and you can [add your own](https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers)
+  - we have few built-in and you can [add your own](https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers)
 - installer: `-all-users` cmd-line arg for system-wide install
 - added `Annotations.TextIconColor` and `TextIconType` advanced settings
 - added `Annotations.UnderlineColor` advanced setting
@@ -135,24 +136,28 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - add experimental smooth scrolling (enabled with `SmoothScroll` advanced setting)
 
 ### 3.3.3 (2021-07-20)
+
 - fix a crash in PdfFilter.dll
 
 ### 3.3.2 (2021-07-19)
+
 - restore showing Table Of Contents for .chm files
 - fix crashes
 
 ### 3.3.1 (2021-07-14)
+
 - fix rotation in DjVu documents
 
 ### 3.3 (2021-07-06)
 
 - added support for adding / removing / editing annotations in PDF files. Read [the tutorial](Editing-annotations.md)
 - new toolbar
-    - changed toolbar to scale with DPI by using new, vector icons
-    - added rotate left / right to the toolbar
-    - new toolbar:
 
-    ![Toolbar](img/toolbar.png)
+  - changed toolbar to scale with DPI by using new, vector icons
+  - added rotate left / right to the toolbar
+  - new toolbar:
+
+  ![Toolbar](img/toolbar.png)
 
 - added ability to hide scrollbar (more screen space for the document). Use right-click context menu.
 - add `-paperkind=${num}` printing option ([checkin](https://github.com/sumatrapdfreader/sumatrapdf/pull/1815/commits/2104e6104ea759dc4f839c7e8be5973f5a4f0488))
@@ -178,15 +183,15 @@ This release upgrades the core PDF parsing and rendering library mupdf to the la
 Added support multiple windows with tabs:
 
 - added `File / New Window` (`Ctrl-n`) which opens a new window
-- to compare the same file side-by-side, `Ctrl-Shift-n` shortcut opens current file a new window. The same file is now opened in  2 windows that you can re-arrange as needed
+- to compare the same file side-by-side, `Ctrl-Shift-n` shortcut opens current file a new window. The same file is now opened in 2 windows that you can re-arrange as needed
 - `-new-window` cmd-line option will open the document in new window
 - if you hold `SHIFT` when drag&dropping files from Explorer (and other apps), the file will be opened in a new window
 
 Improved management of favorites:
 
 - context menu (right mouse click) on the document area adds menu items for:
-    - showing / hiding favorites view
-    - adding current page to favorites (or removing if already is in favorites)
+  - showing / hiding favorites view
+  - adding current page to favorites (or removing if already is in favorites)
 - context menu in bookmarks view adds menu item for adding selected page to favorites
 
 This release no longer supports Windows XP. Latest version that support XP is 3.1.2 that you can download from
@@ -222,8 +227,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add support for LZMA and PPMd compression in CBZ comic books
 - allow saving Comic Book files as PDF
 - swapped keybindings:
-    - F11 : Fullscreen mode (still also Ctrl+Shift+L)
-    - F5 : Presentation mode (also Shift+F11, still also Ctrl+L)
+  - F11 : Fullscreen mode (still also Ctrl+Shift+L)
+  - F5 : Presentation mode (also Shift+F11, still also Ctrl+L)
 - added a document measurement UI. Press 'm' to start. Keep pressing 'm' to change measurement units
 - new advanced settings: FullPathInTitle, UseSysColors (no longer exposed through the Options dialog), UseTabs
 - replaced non-free UnRAR with a free RAR extraction library. If some CBR files fail to open for you, download unrar.dll from https://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe
@@ -242,8 +247,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 - 2 page view for ebooks
 - new keybindings:
-    - Ctrl+PgDn, Ctrl+Right : go to next page
-    - Ctrl+PgUp, Ctrl+Left : go to previous page
+  - Ctrl+PgDn, Ctrl+Right : go to next page
+  - Ctrl+PgUp, Ctrl+Left : go to previous page
 - 10x faster ebook layout
 - support JP2 images
 - new **[advanced settings](https://www.sumatrapdfreader.org/settings.html)**: ShowMenuBar, ReloadModifiedDocuments, CustomScreenDPI
@@ -254,8 +259,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 - full-screen mode for ebooks (Ctrl-L)
 - new key bindings:
-    - F9 - show/hide menu (not remembered after quitting)
-    - F8 - show/hide toolbar
+  - F9 - show/hide menu (not remembered after quitting)
+  - F8 - show/hide toolbar
 - support WebP images (standalone and in comic books)
 - support for RAR5 compressed comic books
 - fixed multiple crashes
@@ -274,8 +279,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - "Go To Page" in ebook ui
 - add View/Manga Mode menu item for Comic Book (CBZ/CBR) files
 - new key bindings:
-    - Ctrl-Up : page up
-    - Ctrl-Down : page down
+  - Ctrl-Up : page up
+  - Ctrl-Down : page down
 - add support for OpenXPS documents
 - support Deflate64 in Comic Book (CBZ/CBR) files
 - fixed missing paragraph indentation in EPUB documents
@@ -285,9 +290,9 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 ### 2.2.1 (2013-01-12)
 
-  - fixed ebooks sometimes not remembering the viewing position
-  - fixed Sumatra not exiting when opening files from a network drive
-  - fixes for most frequent crashes and PDF parsing robustness fixes
+- fixed ebooks sometimes not remembering the viewing position
+- fixed Sumatra not exiting when opening files from a network drive
+- fixes for most frequent crashes and PDF parsing robustness fixes
 
 ### 2.2 (2012-12-24)
 
@@ -338,6 +343,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - speedup handling some types of djvu files
 
 ### 1.7 (2011-07-18)
+
 - favorites
 - improved support for right-to-left languages e.g. Arabic
 - logical page numbers are displayed and used, if a document provides them (such as i, ii, iii, etc.)
@@ -348,6 +354,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - many minor improvements and bugfixes
 
 ### 1.6 (2011-05-30)
+
 - add support for displaying DjVu documents
 - display Frequently Read list when no document is open
 - add support for displaying Postscript documents (requires recent Ghostscript version to be already installed)
@@ -359,7 +366,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 ### 1.5.1 (2011-04-26)
 
-  - fixes for rare crashes
+- fixes for rare crashes
 
 ### 1.5 (2011-04-23)
 
@@ -386,7 +393,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - improved text selection and copying. We now mimic the way a browser or Adobe Reader works: just select text with mouse and use Ctrl-C to copy it to a clipboard
 - Shift+Left Mouse now scrolls the document, Ctrl+Left mouse still creates a rectangular selection (for copying images)
 - 'c' shortcut toggles continuous mode
-- '+' / '*' on the numeric keyboard now do zoom and rotation
+- '+' / '\*' on the numeric keyboard now do zoom and rotation
 - added toolbar icons for Fit Page and Fit Width and updated the look of toolbar icons
 - add support for back/forward mouse buttons for back/forward navigation
 - 1.2 introduces a new full screen mode and made it the default full screen mode. Old mode was still available but not easily discoverable. We've added View/Presentation menu item for new full screen mode and View/Fullscreen menu item for the old full screen mode, to make it more discoverable
