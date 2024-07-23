@@ -299,7 +299,8 @@ func main() {
 	}
 
 	if false {
-		genTranslationInfoCpp()
+		genHTMLDocsForApp()
+		// genTranslationInfoCpp()
 		return
 	}
 
