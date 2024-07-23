@@ -266,6 +266,7 @@ func removeNotionId(s string) string {
 }
 
 func getHTMLFileName(mdName string) string {
+	mdName, _ = parseMdFileName(mdName)
 	parts := strings.Split(mdName, ".")
 	panicIf(len(parts) != 2)
 	panicIf(parts[1] != "md")
@@ -287,6 +288,16 @@ func FsFileExistsMust(fsys fs.FS, name string) {
 func checkMdFileExistsMust(name string) {
 	path := path.Join(mdDocsDir, name)
 	FsFileExistsMust(fsys, path)
+}
+
+// Commands.md#foo => "Commands.md", "foo"
+func parseMdFileName(name string) (string, string) {
+	parts := strings.Split(name, "#")
+	if len(parts) == 1 {
+		return name, ""
+	}
+	panicIf(len(parts) != 2)
+	return parts[0], parts[1]
 }
 
 func astWalk(doc ast.Node) {
@@ -323,14 +334,15 @@ func astWalk(doc ast.Node) {
 				return ast.GoToNext
 			}
 			logvf("  link.Destination: %s\n", uri)
-			fileName := strings.Replace(uri, "%20", " ", -1)
-			logvf("  mdName          : %s\n", fileName)
-			if strings.HasPrefix(fileName, "Untitled Database") {
-				fileName = strings.Replace(fileName, ".md", ".csv", -1)
-				logvf("  mdName          : %s\n", fileName)
+			fileNameWithHash := strings.Replace(uri, "%20", " ", -1)
+			logvf("  mdName          : %s\n", fileNameWithHash)
+			if strings.HasPrefix(fileNameWithHash, "Untitled Database") {
+				fileNameWithHash = strings.Replace(fileNameWithHash, ".md", ".csv", -1)
+				logvf("  mdName          : %s\n", fileNameWithHash)
 				return ast.GoToNext
 			}
 
+			fileName, hash := parseMdFileName(fileNameWithHash)
 			checkMdFileExistsMust(fileName)
 			ext := getFileExt(fileName)
 			if ext == ".png" || ext == ".jpg" || ext == ".jpeg" {
@@ -341,7 +353,11 @@ func astWalk(doc ast.Node) {
 			}
 			panicIf(ext != ".md")
 			push(&mdToProcess, fileName)
-			link.Destination = []byte(getHTMLFileName(fileName))
+			dest := getHTMLFileName(fileName)
+			if hash != "" {
+				dest = dest + "#" + hash
+			}
+			link.Destination = []byte(dest)
 		}
 
 		return ast.GoToNext

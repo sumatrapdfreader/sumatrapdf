@@ -5,7 +5,7 @@ You can control SumatraPDF with commands:
 - use [command palette](Command-Palette.md) (`Ctrl + K`) to invoke a command by its description
 - [customize a keyboard shortcut](Customizing-keyboard-shortcuts.md) to invoke a command by its id
 - **since 3.5:** [send a command via DDE](DDE-Commands.md) e.g. `[CmdClose]` to invoke `Close Document` command
-- **since 3.6:** some commands accept arguments
+- **since 3.6:** some commands [accept arguments](Commands.md#commands-with-arguments)
 
 :search:
 
