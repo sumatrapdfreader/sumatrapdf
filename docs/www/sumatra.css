@@ -335,7 +335,6 @@ a.for-nav-icon:hover {
   margin-bottom: 2px;
 }
 
-
 @media only screen and (max-width: 600px) {
   html {
     font-size: 13px;
@@ -384,4 +383,13 @@ a.for-nav-icon:hover {
   .doc-columns {
     columns: 1;
   }
+}
+
+a.hlink {
+  text-decoration: none;
+  color: white;
+}
+
+a.hlink:hover {
+  color: lightgray;
 }

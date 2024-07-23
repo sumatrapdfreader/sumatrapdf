@@ -151,6 +151,15 @@ func makeRenderHook(r *mdhtml.Renderer, isMainPage bool) mdhtml.RenderNodeFunc {
 				renderFirstH1(w, h, entering, &seenFirstH1)
 				return ast.GoToNext, true
 			}
+			// add: <a class="hlink" href="#${id}">#</a>
+			if entering {
+				r.HeadingEnter(w, h)
+			} else {
+				href := `<a class="hlink" href="#` + h.HeadingID + `"> # </a>`
+				r.Outs(w, href)
+				r.HeadingExit(w, h)
+			}
+			return ast.GoToNext, true
 		}
 		if cb, ok := node.(*ast.CodeBlock); ok {
 			if string(cb.Info) != "commands" {
@@ -160,6 +169,7 @@ func makeRenderHook(r *mdhtml.Renderer, isMainPage bool) mdhtml.RenderNodeFunc {
 			return ast.GoToNext, true
 		}
 		if columns, ok := node.(*Columns); ok {
+			r.Outs(w, "<p>haha</p>")
 			renderColumns(w, columns, entering)
 			return ast.GoToNext, true
 		}
