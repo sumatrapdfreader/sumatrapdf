@@ -194,10 +194,10 @@ CmdZoom800,,Zoom: 800%
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
-CmdOpenWithExplorer,,Open Directory In Explorer,3.5 or later
-CmdOpenWithDirectoryOpus,,Open Directory In Directory Opu,3.5 or later
-CmdOpenWithTotalCommander,,Open Directory In Total Commander,3.5 or later
-CmdOpenWithDoubleCommander,,Open Directory In Double Commander,3.5 or later
+CmdOpenWithExplorer,,Open Directory In Explorer,ver 3.5+
+CmdOpenWithDirectoryOpus,,Open Directory In Directory Opu,ver 3.5+
+CmdOpenWithTotalCommander,,Open Directory In Total Commander,ver 3.5+
+CmdOpenWithDoubleCommander,,Open Directory In Double Commander,ver 3.5+
 CmdOpenWithAcrobat,,Open With Adobe Acrobat,
 CmdOpenWithFoxIt,,Open With FoxIt,
 CmdOpenWithFoxItPhantom,,Open With FoxIt Phantom,
