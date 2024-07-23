@@ -235,7 +235,7 @@ CmdShowLog,,Show Log
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
-CmdHelpOpenManual,,Help: Manual
+CmdHelpOpenManual,F1,Help: Manual
 CmdHelpOpenKeyboardShortcuts,,Help: Keyboard Shortcuts
 CmdHelpAbout,,Help: About SumatraPDF
 CmdHelpOpenManualOnWebsite,,Help: Manual On Website
@@ -254,11 +254,17 @@ CmdDebugTestApp,,Debug: Test App
 CmdNone,,Do nothing
 ```
 
-### **Deprecated**
+### **Deprecated or internal**
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
-CmdOpenWithFirst,,don't use
-CmdOpenWithLast,,don't use
+CmdDebugCorruptMemory,,don't use
+CmdOpenWithKnownExternalViewerFirst,,don't use
+CmdOpenWithKnownExternalViewerLast,,don't use
+CmdSelectionHandler,,don't use
+CmdSetTheme,,don't use
+CmdViewWithExternalViewer,,don't use
+CmdSaveAttachment,,don't use
+CmdOpenAttachment,,don't use
 ```
 
 ## Commands with arguments

@@ -120,6 +120,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Alt + Scroll Wheel` - Increase vertical scroll wheel steps (faster)
 - `Shift + Scroll Wheel` - Pan horizontally with scroll wheel
 - `Ctrl + Y` - Show dropdown zoom control
+- `F1` - Show documentation / manual
 
 ### **Tabs**
 

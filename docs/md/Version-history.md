@@ -4,7 +4,7 @@
 
 ## **Version history**
 
-### next
+### next (3.6)
 
 Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 
