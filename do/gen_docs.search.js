@@ -1,13 +1,15 @@
 function driver() {
-  let selectors = ["input#cmd_ids", "input#key_sht", "input#cmd_plt"];
   let q =
     "//table[contains(@class,'collection-content')]/tbody/tr[not(./td/input)]";
   let rows = getElementByXpath(q);
   // console.log("rows:", rows.length);
-  let lists = [],
-    inputs = [];
-  selectors.forEach((x, y) => {
-    inputs[y] = document.querySelector(x);
+  let lists = [];
+  let inputs = [];
+  let selectors = ["input#cmd_ids", "input#key_sht", "input#cmd_plt"];
+  selectors.forEach((sel, idx) => {
+    let el = document.querySelector(sel);
+    inputs[idx] = el;
+    setEvent(el, tableFilter);
   });
   for (let i = 1; i <= selectors.length; i++) {
     q =
@@ -18,15 +20,38 @@ function driver() {
     els = els.map((x) => x.innerText);
     lists[i - 1] = els;
   }
-
   lists[1] = lists[1].map((x) => x.replace(/(?:(?<!\+)|(?<=\+\+))\,/g, "")); //removing commas b/w shortcuts
+
+  /**
+   * @param {HTMLElement} el
+   */
+  function hideEl(el) {
+    el.setAttribute("style", "display: none;");
+  }
+
+  /**
+   * @param {HTMLElement} el
+   */
+  function showEl(el) {
+    el.removeAttribute("style");
+  }
+
+  /**
+   * @param {HTMLElement} el
+   */
+  function isVisible(el) {
+    return !el.hasAttribute("style");
+  }
+
+  // called when any of the 3 search input fields changes
+  // hides tr rows that don't match search query
   function tableFilter() {
     let regexs = [
       getRegex_cmdids(inputs[0]),
       getRegex_keysht(inputs[1]),
       getRegex_cmdplt(inputs[2]),
     ];
-    rows.forEach((row) => row.setAttribute("style", "display: none;"));
+    rows.forEach(hideEl);
     let shortlist = new Array(rows.length).fill(undefined);
     regexs.forEach((regex, list_index) => {
       if (!!regex)
@@ -37,14 +62,46 @@ function driver() {
             shortlist[row_index] = regex.test(item);
         });
     });
-    if (!regexs.some((x) => !!x))
-      rows.forEach((row) => row.removeAttribute("style"));
-    else
+    if (!regexs.some((x) => !!x)) {
+      rows.forEach(showEl);
+    } else {
       shortlist.forEach((flag, index) => {
-        if (flag) rows[index].removeAttribute("style");
+        if (flag) {
+          showEl(rows[index]);
+        }
       });
+    }
+
+    // TODO: hide h3 and table with no matches
+    let qTables = "//table[contains(@class,'collection-content')]";
+    let tables = getElementByXpath(qTables);
+    // console.log("tables:", tables);
+    for (let table of tables) {
+      let h = table.previousSibling;
+      if (h.nodeName == "#text") {
+        h = h.previousSibling;
+      }
+      // console.log("h:", h);
+      if (h.nodeName !== "H3") {
+        console.log("h.nodeName is not H3:", h.nodeName);
+        continue;
+      }
+      let rows = table.querySelectorAll("tbody > tr");
+      let nVisible = 0;
+      for (let row of rows) {
+        if (isVisible(row)) {
+          nVisible++;
+        }
+      }
+      if (nVisible > 0) {
+        showEl(table);
+        showEl(h);
+      } else {
+        hideEl(table);
+        hideEl(h);
+      }
+    }
   }
-  inputs.forEach((ele) => setEvent(ele, tableFilter));
 }
 
 function setEvent(target, callback) {
