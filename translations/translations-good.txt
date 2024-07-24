@@ -12780,6 +12780,7 @@ nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
 ro:Deschide următorul fișier în folder
+ru:Открыть следующий файл в папке
 sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
@@ -12793,6 +12794,7 @@ nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
 ro:Deschide fișierul anterior în folder
+ru:Открыть предыдущий файл в папке
 sk:Otvoriť predchádzajúci súbor v priečinku
 :Open a document...
 am:Բացել փաստաթուղթ...

@@ -362,11 +362,22 @@ Arguments:
 - `level` : default, string or intenger, zoom level
 
 `level` can be:
-- an number describing zoom level in percent e.g.:
-    - 50 means 50% zoom
-    - 125 means 125% zoom
+- a number describing zoom level in percent e.g.:
+    - `50` or `50%` means 50% zoom
+    - `125` means 125% zoom
 - one of the virtual zoom levels:
-  - actual size (100% zoom level)
-  - fit page
-  - fit width
-  - fit content
+  - `actual size` (100% zoom level)
+  - `fit page`
+  - `fit width`
+  - `fit content`
+
+Example:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdZoomCustom 50%
+        Key = z
+    ]
+]
+```

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fde9cce4d9881378f04d72841b9bcda1ba5b9700
+5a944898405e2a4c198f2af0eb01e44878266e93
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -15207,6 +15207,7 @@ nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
 ro:Deschide următorul fișier în folder
+ru:Открыть следующий файл в папке
 sk:Otvoriť nasledujúci súbor v priečinku
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
@@ -15220,6 +15221,7 @@ nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
 ro:Deschide fișierul anterior în folder
+ru:Открыть предыдущий файл в папке
 sk:Otvoriť predchádzajúci súbor v priečinku
 :Open a document...
 am:Բացել փաստաթուղթ...
