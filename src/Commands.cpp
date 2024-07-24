@@ -3,6 +3,8 @@
 
 #include "utils/BaseUtil.h"
 
+#include "Settings.h"
+#include "DisplayMode.h"
 #include "Commands.h"
 
 #include "utils/Log.h"
@@ -31,6 +33,7 @@ static const ArgSpec argSpecs[] = {
     {CmdSelectionHandler, kCmdArgURL, CommandArg::Type::String}, // default
     {CmdSelectionHandler, kCmdArgExe, CommandArg::Type::String},
     {CmdSelectionHandler, kCmdArgName, CommandArg::Type::String},
+
     {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},
 
@@ -42,7 +45,10 @@ static const ArgSpec argSpecs[] = {
     {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
 
     {CmdSetTheme, kCmdArgName, CommandArg::Type::String}, // default
-    {CmdNone, "", CommandArg::Type::None},                // sentinel
+
+    {CmdZoomCustom, kCmdArgLevel, CommandArg::Type::String}, // default
+
+    {CmdNone, "", CommandArg::Type::None}, // sentinel
 };
 
 CustomCommand* gFirstCustomCommand = nullptr;
@@ -446,6 +452,19 @@ int ParseCommand(const char* definition) {
     if (!firstArg) {
         logf("ParseCommand: failed to parse arguments for '%s'\n", definition);
         return -1;
+    }
+
+    if (cmdId == CmdZoomCustom) {
+        // special case: the argument is declared as string but it really is float
+        // we convert it in-place here
+        float zoomVal = ZoomFromString(firstArg->strVal, 0);
+        if (0 == zoomVal) {
+            FreeCommandArgs(firstArg);
+            logf("ParseCommand: failed to parse arguments in '%s'\n", definition);
+            return -1;
+        }
+        firstArg->type = CommandArg::Type::Float;
+        firstArg->floatVal = zoomVal;
     }
     auto res = CreateCustomCommand(definition, cmdId, firstArg);
     return res->id;

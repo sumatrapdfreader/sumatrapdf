@@ -164,30 +164,30 @@ CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
 ### **Zoom menu**
 
 ```commands
-Command IDs,Keyboard shortcuts,Command Palette
-CmdToggleZoom,z,Toggle Zoom
-CmdZoomActualSize,Ctrl + 1,Zoom: Actual Size
-CmdZoomCustom,Ctrl + Y,Zoom: Custom...
-CmdZoomFitContent,Ctrl + 3,Zoom: Fit Content
-CmdZoomFitPage,Ctrl + 0,Zoom: Fit Page
-CmdZoomFitPageAndSinglePage,,Zoom: Fit Page and Single Page
-CmdZoomFitWidth,Ctrl + 2,Zoom: Fit Width
-CmdZoomFitWidthAndContinuous,,Zoom: Fit Width And Continuous
-CmdZoomIn,Ctrl + Add,Zoom In
-CmdZoomOut,Ctrl + Subtract,Zoom Out
-CmdZoom100,,Zoom: 100%
-CmdZoom12_5,,Zoom: 12.5%
-CmdZoom125,,Zoom: 125%
-CmdZoom150,,Zoom: 150%
-CmdZoom1600,,Zoom: 1600%
-CmdZoom200,,Zoom: 200%
-CmdZoom25,,Zoom: 25%
-CmdZoom3200,,Zoom: 3200%
-CmdZoom400,,Zoom: 400%
-CmdZoom50,,Zoom: 50%
-CmdZoom6400,,Zoom: 6400%
-CmdZoom8_33,,Zoom: 8.33%
-CmdZoom800,,Zoom: 800%
+Command IDs,Keyboard shortcuts,Command Palette,Notes
+CmdToggleZoom,z,Toggle Zoom,
+CmdZoomActualSize,Ctrl + 1,Zoom: Actual Size,
+CmdZoomCustom,Ctrl + Y,Zoom: Custom...,
+CmdZoomFitContent,Ctrl + 3,Zoom: Fit Content,
+CmdZoomFitPage,Ctrl + 0,Zoom: Fit Page,
+CmdZoomFitPageAndSinglePage,,Zoom: Fit Page and Single Page,
+CmdZoomFitWidth,Ctrl + 2,Zoom: Fit Width,
+CmdZoomFitWidthAndContinuous,,Zoom: Fit Width And Continuous,
+CmdZoomIn,Ctrl + Add,Zoom In,
+CmdZoomOut,Ctrl + Subtract,Zoom Out,
+CmdZoom100,,Zoom: 100%,
+CmdZoom12_5,,Zoom: 12.5%,
+CmdZoom125,,Zoom: 125%,
+CmdZoom150,,Zoom: 150%,
+CmdZoom1600,,Zoom: 1600%,
+CmdZoom200,,Zoom: 200%,
+CmdZoom25,,Zoom: 25%,
+CmdZoom3200,,Zoom: 3200%,
+CmdZoom400,,Zoom: 400%,
+CmdZoom50,,Zoom: 50%,
+CmdZoom6400,,Zoom: 6400%,
+CmdZoom8_33,,Zoom: 8.33%,
+CmdZoom800,,Zoom: 800%,
 ```
 
 ### **External app**
@@ -270,7 +270,7 @@ CmdOpenAttachment,,don't use
 
 ## Commands with arguments
 
-Since 3.6, some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
+**Since 3.6**, some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
 
 For example:
 
@@ -303,6 +303,8 @@ You can combine those rules: `CmdCreateAnnotHighlight #fafafa openedit` is the s
 
 ## `CmdScrollUp`, `CmdScrollDown`
 
+**Ver 3.6+**
+
 Arguments:
 
 - `n` : default, integer, how many lines to scroll up or down (default: 1)
@@ -323,6 +325,8 @@ Shortcuts [
 ```
 
 ## `CmdGoToNextPage`, `CmdGoToPrevPage`
+
+**Ver 3.6+**
 
 Arguments:
 
@@ -349,3 +353,20 @@ Shortcuts [
     ]
 ]
 ```
+
+## `CmdZoomCustom`
+
+**Ver 3.6+**
+
+Arguments:
+- `level` : default, string or intenger, zoom level
+
+`level` can be:
+- an number describing zoom level in percent e.g.:
+    - 50 means 50% zoom
+    - 125 means 125% zoom
+- one of the virtual zoom levels:
+  - actual size (100% zoom level)
+  - fit page
+  - fit width
+  - fit content

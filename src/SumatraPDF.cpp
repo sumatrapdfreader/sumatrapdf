@@ -4702,7 +4702,6 @@ static TempStr URLEncodeTemp(const char* s) {
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
 
-
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/4368
 // for Google translate tl= arg seems to be ISO-639 lang code
 // and we seem to use ISO-3166 country code
@@ -4787,11 +4786,11 @@ static void OnMenuCustomZoom(MainWindow* win) {
         return;
     }
 
-    float zoom = win->ctrl->GetZoomVirtual();
-    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom)) {
+    float virtZoom = win->ctrl->GetZoomVirtual();
+    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &virtZoom)) {
         return;
     }
-    SmartZoom(win, zoom, nullptr, true);
+    SmartZoom(win, virtZoom, nullptr, true);
 }
 
 // this is a directory for not important data, like downloaded symbols
@@ -5416,9 +5415,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             OnMenuZoom(win, cmdId);
             break;
 
-        case CmdZoomCustom:
-            OnMenuCustomZoom(win);
-            break;
+        case CmdZoomCustom: {
+            if (cmd != nullptr) {
+                float virtZoom = cmd->firstArg->floatVal;
+                SmartZoom(win, virtZoom, nullptr, true);
+            } else {
+                OnMenuCustomZoom(win);
+            }
+        } break;
 
         case CmdSinglePageView:
             SwitchToDisplayMode(win, DisplayMode::SinglePage, true);

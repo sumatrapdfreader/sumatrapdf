@@ -237,26 +237,29 @@ enum {
 #undef DEF_CMD
 
 struct CommandArg {
-    enum class Type {
+    enum class Type : u16 {
         None,
         Bool,
         Int,
+        Float,
         String,
         Color,
     };
 
+    // arguments are a linked list for simplicity
     struct CommandArg* next = nullptr;
 
     Type type = Type::None;
 
-    // the argument in string format
-    // for String args, it's also the value
-    // for Bool, the presence means true, absence means false
+    // TODO: we have a fixed number of argument names
+    // we could use seqstrings and use u16 for arg name id
     const char* name = nullptr;
 
+    // TODO: could be a union
     const char* strVal = nullptr;
     bool boolVal = false;
     int intVal = 0;
+    float floatVal = 0.0;
     ParsedColor colorVal;
 
     CommandArg() = default;
@@ -315,5 +318,6 @@ constexpr const char* kCmdArgOpenEdit = "openedit";
 constexpr const char* kCmdArgExe = "exe";
 constexpr const char* kCmdArgURL = "url";
 constexpr const char* kCmdArgName = "name";
+constexpr const char* kCmdArgLevel = "level";
 constexpr const char* kCmdArgFilter = "filter";
 constexpr const char* kCmdArgN = "n";
