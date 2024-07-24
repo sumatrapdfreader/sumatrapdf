@@ -233,7 +233,7 @@ static void assertGoToNextPage3(int cmdId) {
 void parseCommandsTest() {
     CommandArg* arg;
     {
-        auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 openEdit");
+        auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 openEdit copytoclipboard");
         auto cmd = FindCustomCommand(cmdId);
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
@@ -242,6 +242,7 @@ void parseCommandsTest() {
         arg = GetCommandArg(cmd, kCmdArgOpenEdit);
         utassert(arg != nullptr);
         utassert(GetCommandBoolArg(cmd, kCmdArgOpenEdit, false) == true);
+        utassert(GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false) == true);
     }
     {
         auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");

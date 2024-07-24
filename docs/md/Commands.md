@@ -261,7 +261,7 @@ Command IDs,Keyboard shortcuts,Command Palette
 CmdDebugCorruptMemory,,don't use
 CmdOpenWithKnownExternalViewerFirst,,don't use
 CmdOpenWithKnownExternalViewerLast,,don't use
-CmdSelectionHandler,,don't use
+CmdSelectionHandler,,use SelectionHandlers advanced setting instead
 CmdSetTheme,,don't use
 CmdViewWithExternalViewer,,don't use
 CmdSaveAttachment,,don't use
