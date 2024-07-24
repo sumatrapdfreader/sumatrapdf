@@ -9,7 +9,7 @@ You can control SumatraPDF with commands:
 
 :search:
 
-### **File**
+## **File**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
@@ -56,7 +56,7 @@ CmdCopyFilePath,,Copy File Path,ver 3.5+
 CmdDeleteFile,,Delete Currently Opened File, ver 3.6+
 ```
 
-### **Search**
+## **Search**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -68,7 +68,7 @@ CmdFindPrev,Shift + F3,Find Previous
 CmdFindPrevSel,Shift + Ctrl + F3,Find Previous Selection
 ```
 
-### **Viewing**
+## **Viewing**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
@@ -92,7 +92,7 @@ CmdSelectNextTheme,,Select Next Theme,ver 3.5+
 CmdToggleLinks,,Toggle Show Links, Toggle drawing blue rectangle around links
 ```
 
-### **Navigation**
+## **Navigation**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -115,7 +115,7 @@ CmdNavigateBack,"Alt + Left, Backspace",Navigate Back
 CmdNavigateForward,"Alt + Right, Shift + Backspace",Navigate Forward
 ```
 
-### **Favorite**
+## **Favorite**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -124,7 +124,7 @@ CmdFavoriteDel,,Delete Favorite
 CmdFavoriteToggle,,Toggle Favorites
 ```
 
-### **Presentation**
+## **Presentation**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -133,7 +133,7 @@ CmdPresentationBlackBackground,.,Presentation Black Background
 CmdPresentationWhiteBackground,w,Presentation White Background
 ```
 
-### **Annotation**
+## **Annotation**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
@@ -161,7 +161,7 @@ CmdSaveAnnotations,Shift + Ctrl + S,Save Annotations to existing PDF,
 CmdSaveAnnotationsNewFile,,Save Annotations to new PDF,ver 3.6+
 ```
 
-### **Zoom menu**
+## **Zoom menu**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
@@ -190,7 +190,7 @@ CmdZoom8_33,,Zoom: 8.33%,
 CmdZoom800,,Zoom: 800%,
 ```
 
-### **External app**
+## **External app**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette,Notes
@@ -216,7 +216,7 @@ CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
 
 ```
 
-### **System**
+## **System**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -231,7 +231,7 @@ CmdOptions,,Options...
 CmdShowLog,,Show Log
 ```
 
-### **Help**
+## **Help**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -242,7 +242,7 @@ CmdHelpOpenManualOnWebsite,,Help: Manual On Website
 CmdHelpVisitWebsite,,Help: SumatraPDF Website
 ```
 
-### **Debug**
+## **Debug**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -254,7 +254,7 @@ CmdDebugTestApp,,Debug: Test App
 CmdNone,,Do nothing
 ```
 
-### **Deprecated or internal**
+## **Deprecated or internal**
 
 ```commands
 Command IDs,Keyboard shortcuts,Command Palette
@@ -268,7 +268,7 @@ CmdSaveAttachment,,don't use
 CmdOpenAttachment,,don't use
 ```
 
-## Commands with arguments
+# Commands with arguments
 
 **Since 3.6**, some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
 
@@ -340,8 +340,11 @@ Arguments:
 
 - `color` : default, color
 - `openedit` : boolean, `false` if not given
+- `copytoclipboard` : boolean, `false` if not given. For higlihgt/underline etc. annotations, copies the text of annotaiton to clipboard. This used to be default behavior for built-in `a` etc. keyboard shortcuts but now it has to be explicitly chosen.
 
-Use case: change default color for annotations. Create multiple shortcuts for different colors.
+Use cases: 
+- change default color for annotations
+- create multiple shortcuts for different colors
 
 Example: change `a` to create green highlight annotation:
 
@@ -381,3 +384,9 @@ Shortcuts [
     ]
 ]
 ```
+
+# Debugging
+
+If a custom shortcut defined in `Shortcuts` doesn't work it could be caused by invalid command name or invalid command arguments.
+
+We log information about unsuccessful parsing of a shortcut so [check the logs](Debugging-Sumatra.md#getting-logs) if things don't work as expected.

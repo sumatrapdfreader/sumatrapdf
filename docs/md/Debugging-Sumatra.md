@@ -12,7 +12,7 @@ Those instructions require SumatraPDF 3.2 or later.
 
 ## Getting logs
 
-We log information that might be helpful in debugging issues.
+We log information that might be helpful in diagnosing issues.
 
 To see the logs: `Ctrl + K` ([Command Palette](Command-Palette.md)), type `show log`
 

@@ -4413,7 +4413,9 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) 
     UpdateAnnotationsList(tab->editAnnotsWindow);
 
     // copy selection to clipboard so that user can use Ctrl-V to set contents
-    CopySelectionToClipboard(win);
+    if (args->copyToClipboard) {
+        CopySelectionToClipboard(win);
+    }
     DeleteOldSelectionInfo(win, true);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
@@ -5113,11 +5115,17 @@ OpenFileInBrowser:
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     if (cmd) {
-        auto col = GetCommandArg(cmd, kCmdArgColor);
-        ReportIf(!col || !col->colorVal.parsedOk);
-        if (col && col->colorVal.parsedOk) {
-            args.col = col->colorVal;
-            return;
+        {
+            auto copyToClip = GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false);
+            args.copyToClipboard = copyToClip;
+        }
+        {
+            auto col = GetCommandArg(cmd, kCmdArgColor);
+            ReportIf(!col || !col->colorVal.parsedOk);
+            if (col && col->colorVal.parsedOk) {
+                args.col = col->colorVal;
+                return;
+            }
         }
     }
     auto& a = gGlobalPrefs->annotations;

@@ -40,6 +40,7 @@ static const ArgSpec argSpecs[] = {
     // and all CmdCreateAnnot* commands
     {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
     {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
+    {CmdCreateAnnotText, kCmdArgCopyToClipboard, CommandArg::Type::Bool},
 
     // and  CmdScrollDown, CmdGoToNextPage, CmdGoToPrevPage
     {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
@@ -203,7 +204,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
     commands.Reverse();
 }
 
-static CommandArg* newArg(CommandArg::Type type, const char* name) {
+static CommandArg* NewArg(CommandArg::Type type, const char* name) {
     auto res = new CommandArg();
     res->type = type;
     res->name = str::Dup(name);
@@ -218,7 +219,7 @@ CommandArg* NewStringArg(const char* name, const char* val) {
     return res;
 }
 
-static CommandArg* parseArgOfType(const char* argName, CommandArg::Type type, const char* val) {
+static CommandArg* ParseArgOfType(const char* argName, CommandArg::Type type, const char* val) {
     if (type == CommandArg::Type::Color) {
         ParsedColor col;
         ParseColor(col, val);
@@ -227,19 +228,19 @@ static CommandArg* parseArgOfType(const char* argName, CommandArg::Type type, co
             logf("parseArgOfType: invalid color value '%s'\n", val);
             return nullptr;
         }
-        auto arg = newArg(type, argName);
+        auto arg = NewArg(type, argName);
         arg->colorVal = col;
         return arg;
     }
 
     if (type == CommandArg::Type::Int) {
-        auto arg = newArg(type, argName);
+        auto arg = NewArg(type, argName);
         arg->intVal = ParseInt(val);
         return arg;
     }
 
     if (type == CommandArg::Type::String) {
-        auto arg = newArg(type, argName);
+        auto arg = NewArg(type, argName);
         arg->strVal = str::Dup(val);
         return arg;
     }
@@ -248,7 +249,7 @@ static CommandArg* parseArgOfType(const char* argName, CommandArg::Type type, co
     return nullptr;
 }
 
-CommandArg* tryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
+CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
     // first is default value
     const char* valStart = str::SkipChar(*argsInOut, ' ');
     const char* valEnd = str::FindChar(valStart, ' ');
@@ -271,13 +272,13 @@ CommandArg* tryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
 
     // we don't support bool because we don't have to yet
     // (no command have default bool value)
-    return parseArgOfType(argName, type, val);
+    return ParseArgOfType(argName, type, val);
 }
 
 // 1  : true
 // 0  : false
 // -1 : not a known boolean string
-static int parseBool(const char* s) {
+static int ParseBool(const char* s) {
     if (str::EqI(s, "1") || str::EqI(s, "true") || str::EqI(s, "yes")) {
         return true;
     }
@@ -292,7 +293,7 @@ static int parseBool(const char* s) {
 //   <name>: <value>
 //   <name>=<value>
 // for booleans only <name> works as well and represents true
-CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
+CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     const char* valStart = nullptr;
     const char* argName = nullptr;
     CommandArg::Type type = CommandArg::Type::None;
@@ -315,11 +316,19 @@ CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
         if (type == CommandArg::Type::Bool) {
             // name of bool arg followed by nothing is true
             *argsInOut = nullptr;
-            auto arg = newArg(type, argName);
+            auto arg = NewArg(type, argName);
             arg->boolVal = true;
             return arg;
         }
     } else if (s[0] == ' ') {
+        if (type == CommandArg::Type::Bool) {
+            // name of bool arg followed by nothing is true
+            s = str::SkipChar(s, ' ');
+            *argsInOut = s;
+            auto arg = NewArg(type, argName);
+            arg->boolVal = true;
+            return arg;
+        }
         valStart = str::SkipChar(s, ' ');
     } else if (s[0] == ':' && s[1] == ' ') {
         valStart = str::SkipChar(s + 1, ' ');
@@ -339,7 +348,7 @@ CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
         valEnd++;
     }
     if (type == CommandArg::Type::Bool) {
-        auto bv = parseBool(val);
+        auto bv = ParseBool(val);
         bool b;
         if (bv == 0) {
             b = false;
@@ -354,13 +363,13 @@ CommandArg* tryParseNamedArg(int firstArgIdx, const char** argsInOut) {
             b = true;
             *argsInOut = valStart;
         }
-        auto arg = newArg(type, argName);
+        auto arg = NewArg(type, argName);
         arg->boolVal = b;
         return arg;
     }
 
     *argsInOut = valEnd;
-    return parseArgOfType(argName, type, val);
+    return ParseArgOfType(argName, type, val);
 }
 
 // some commands can accept arguments. For those we have to create CustomCommand that
@@ -441,9 +450,9 @@ int ParseCommand(const char* definition) {
     CommandArg* firstArg = nullptr;
     CommandArg* arg;
     for (; currArg;) {
-        arg = tryParseNamedArg(firstArgIdx, &currArg);
+        arg = TryParseNamedArg(firstArgIdx, &currArg);
         if (!arg) {
-            arg = tryParseDefaultArg(firstArgIdx, &currArg);
+            arg = TryParseDefaultArg(firstArgIdx, &currArg);
         }
         if (arg) {
             InsertArg(&firstArg, arg);

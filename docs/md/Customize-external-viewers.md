@@ -30,12 +30,12 @@ Example:
 
 ```
 ExternalViewers [
-	[
-		CommandLine = "C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1"
-		Name = Foxit &Reader
-		Filter = *.pdf
-        Key = Ctrl + m
-	]
+  [
+    CommandLine = "C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1"
+    Name = Foxit &Reader
+    Filter = *.pdf
+    Key = Ctrl + m
+  ]
 ]
 ```
 

@@ -61,6 +61,6 @@ You can see a [full list of commands](Commands.md) ([or in the source code](http
 
 The changes are applied right after you save settings file so that you can test changes without restarting SumatraPDF.
 
-There is no indication if you make a mistake (i.e. use invalid command or invalid syntax for `Key`).
+If a custom `Shortcut` doesn't work it could be caused by invalid command name or invalid command arguments.
 
-If the shortcut doesn’t work, double-check command name and keyboard shortcut syntax.
+We log information about unsuccessful parsing of a shortcut so [check the logs](Debugging-Sumatra.md#getting-logs) if things don't work as expected.

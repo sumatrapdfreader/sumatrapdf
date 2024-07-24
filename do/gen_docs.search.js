@@ -72,7 +72,6 @@ function driver() {
       });
     }
 
-    // TODO: hide h3 and table with no matches
     let qTables = "//table[contains(@class,'collection-content')]";
     let tables = getElementByXpath(qTables);
     // console.log("tables:", tables);
@@ -81,9 +80,9 @@ function driver() {
       if (h.nodeName == "#text") {
         h = h.previousSibling;
       }
-      // console.log("h:", h);
-      if (h.nodeName !== "H3") {
-        console.log("h.nodeName is not H3:", h.nodeName);
+      let isPrevHdr = h.nodeName === "H2" || h.nodeName === "H3";
+      if (!isPrevHdr) {
+        console.log("h.nodeName is not header:", h.nodeName);
         continue;
       }
       let rows = table.querySelectorAll("tbody > tr");

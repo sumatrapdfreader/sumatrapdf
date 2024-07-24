@@ -38,6 +38,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - register for handling `.webp` files
 - bug fix: Del should not delete an annotation if editing content
 - bug fix: re-enable tree view full row select
+- change: `CmdCreateAnnotHighlight` etc. no longer copies selection to clipboard by default. To get that behavior back, you can use `copytoclipboard` argument [instead](Commands.md#cmdcreateannothighlight-and-other-cmdcreateannot).
 
 ### 3.5.2 (2023-10-25)
 
