@@ -2,7 +2,7 @@
 
 SumatraPDF makes it easy for you to open current document in a different program.
 
-For example, if you also have Adobe Reader installed, you can use `File` menu to open PDF document you're viewing in Adobe Reader. We auto-detect some popular apps (Adobe, FoxIt, PDF X-Change etc.).
+For example, if you also have Adobe Reader installed, you can use `File` menu to open PDF document you're viewing in Adobe Reader. We auto-detect some popular apps (Adobe, Foxit, PDF X-Change etc.).
 
 You can add custom viewers using [advanced settings](https://www.sumatrapdfreader.org/settings/settings.html).
 

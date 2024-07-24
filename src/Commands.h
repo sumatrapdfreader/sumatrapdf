@@ -108,12 +108,12 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenWithDirectoryOpus, "Open Directory In Directory Opus")                \
     V(CmdOpenWithTotalCommander, "Open Directory In Total Commander")              \
     V(CmdOpenWithDoubleCommander, "Open Directory In Double Commander")            \
-    V(CmdOpenWithAcrobat, "Open With Adobe Acrobat")                               \
-    V(CmdOpenWithFoxIt, "Open With FoxIt")                                         \
-    V(CmdOpenWithFoxItPhantom, "Open With FoxIt Phantom")                          \
-    V(CmdOpenWithPdfXchange, "Open With PdfXchange")                               \
-    V(CmdOpenWithXpsViewer, "Open With Xps Viewer")                                \
-    V(CmdOpenWithHtmlHelp, "Open With HTML Help")                                  \
+    V(CmdOpenWithAcrobat, "Open in Adobe Acrobat")                                 \
+    V(CmdOpenWithFoxIt, "Open in Foxit Reader")                                    \
+    V(CmdOpenWithFoxItPhantom, "Open in Foxit PhantomPDF")                         \
+    V(CmdOpenWithPdfXchange, "Open in PDF-XChange")                                \
+    V(CmdOpenWithXpsViewer, "Open in Microsoft Xps Viewer")                        \
+    V(CmdOpenWithHtmlHelp, "Open in Microsoft HTML Help")                          \
     V(CmdOpenWithPdfDjvuBookmarker, "Open With Pdf&Djvu Bookmarker")               \
     V(CmdOpenWithKnownExternalViewerLast, "don't use")                             \
     V(CmdOpenSelectedDocument, "Open Selected Document")                           \

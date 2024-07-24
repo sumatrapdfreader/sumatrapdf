@@ -256,7 +256,7 @@ Software\Classes\SumatraPDF\shell\open\command = "$exePath" "%1"
   tells how to call sumatra to open PDF file. %1 is replaced by PDF file path
 
 Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.pdf\Progid
-  should be SumatraPDF (FoxIt takes it over); only needed for HKEY_CURRENT_USER
+  should be SumatraPDF (Foxit takes it over); only needed for HKEY_CURRENT_USER
   TODO: No other app seems to set this one, and only UserChoice seems to make
         a difference - is this still required for Windows XP?
 
