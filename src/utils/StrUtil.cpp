@@ -2216,23 +2216,6 @@ int BufSet(WCHAR* dst, int dstCchSize, const char* src) {
     return BufSet(dst, dstCchSize, ToWStrTemp(src));
 }
 
-int BufAppend(WCHAR* dst, int cchDst, const WCHAR* s) {
-    ReportIf(0 == cchDst);
-
-    int currDstCchLen = str::Leni(dst);
-    if (currDstCchLen + 1 >= cchDst) {
-        return 0;
-    }
-    int left = cchDst - currDstCchLen - 1;
-    int srcCchSize = str::Leni(s);
-    int toCopy = std::min(left, srcCchSize);
-
-    errno_t err = wcsncat_s(dst, cchDst, s, toCopy);
-    ReportIf(err || dst[currDstCchLen + toCopy] != '\0');
-
-    return toCopy;
-}
-
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit.
 int BufAppend(char* dst, int dstCch, const char* s) {

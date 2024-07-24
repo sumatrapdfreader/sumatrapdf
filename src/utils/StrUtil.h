@@ -240,7 +240,6 @@ WCHAR* ToLower(const WCHAR*);
 WCHAR* ToLowerInPlace(WCHAR*);
 int CmpNatural(const WCHAR*, const WCHAR*);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
-int BufAppend(WCHAR* dst, int dstCchSize, const WCHAR* s);
 int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src);
 int BufSet(WCHAR* dst, int dstCchSize, const char* src);
 size_t NormalizeWSInPlace(WCHAR* str);

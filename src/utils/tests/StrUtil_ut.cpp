@@ -599,21 +599,6 @@ void StrTest() {
     }
 
     {
-        WCHAR buf1[6]{};
-        size_t cnt = str::BufAppend(buf1, dimof(buf1), L"");
-        utassert(0 == cnt);
-        cnt = str::BufAppend(buf1, dimof(buf1), L"1234");
-        utassert(4 == cnt);
-        utassert(str::Eq(L"1234", buf1));
-        cnt = str::BufAppend(buf1, dimof(buf1), L"56");
-        utassert(1 == cnt);
-        utassert(str::Eq(L"12345", buf1));
-        cnt = str::BufAppend(buf1, dimof(buf1), L"6");
-        utassert(0 == cnt);
-        utassert(str::Eq(L"12345", buf1));
-    }
-
-    {
         for (int c = 0x00; c < 0x100; c++) {
             utassert(!!isspace((u8)c) == str::IsWs((char)c));
         }
