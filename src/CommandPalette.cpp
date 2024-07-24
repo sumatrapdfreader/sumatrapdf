@@ -95,10 +95,9 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdReopenLastClosedFile,
     CmdSelectNextTheme,
     CmdToggleFrequentlyRead,
-#if defined(DEBUG)
     CmdDebugCrashMe,
     CmdDebugCorruptMemory,
-#endif
+    0,
 };
 
 // for those commands do not activate main window
@@ -116,7 +115,19 @@ static i32 gCommandsNoActivate[] = {
     CmdOpenFolder,
     CmdProperties,
     // TOOD: probably more
+    0,
 };
+
+static i32 gCommandsDebugOnly[] = {
+    CmdDebugCorruptMemory,
+    CmdDebugCrashMe,
+    CmdDebugDownloadSymbols,
+    CmdDebugTestApp,
+    CmdDebugShowNotif,
+    CmdDebugStartStressTest,
+    0,
+};
+
 // clang-format on
 
 // those are shared with Menu.cpp
@@ -130,11 +141,12 @@ extern UINT_PTR removeIfNoDiskAccessPerm[];
 extern UINT_PTR removeIfNoCopyPerms[];
 extern UINT_PTR removeIfChm[];
 
-static bool __cmdInList(i32 cmdId, i32* ids, int nIds) {
-    for (int i = 0; i < nIds; i++) {
-        if (ids[i] == cmdId) {
+static bool IsCmdInList(i32 cmdId, i32* ids) {
+    while (*ids) {
+        if (cmdId == *ids) {
             return true;
         }
+        ids++;
     }
     return false;
 }
@@ -149,8 +161,6 @@ static bool IsCmdInMenuList(i32 cmdId, UINT_PTR* a) {
     }
     return false;
 }
-
-#define IsCmdInList(name) __cmdInList(cmdId, name, dimof(name))
 
 struct CommandPaletteWnd : Wnd {
     ~CommandPaletteWnd() override = default;
@@ -210,17 +220,11 @@ static bool IsOpenExternalViewerCommand(i32 cmdId) {
 }
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
-    switch (cmdId) {
-        case CmdDebugCorruptMemory:
-        case CmdDebugCrashMe:
-        case CmdDebugDownloadSymbols:
-        case CmdDebugTestApp:
-        case CmdDebugShowNotif:
-        case CmdDebugStartStressTest:
-            return gIsDebugBuild;
+    if (IsCmdInList(cmdId, gCommandsDebugOnly)) {
+        return gIsDebugBuild;
     }
 
-    if (IsCmdInList(gBlacklistCommandsFromPalette)) {
+    if (IsCmdInList(cmdId, gBlacklistCommandsFromPalette)) {
         return false;
     }
 
@@ -248,7 +252,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
 
     if (!ctx.isDocLoaded) {
-        if (!IsCmdInList(gDocumentNotOpenWhitelist)) {
+        if (!IsCmdInList(cmdId, gDocumentNotOpenWhitelist)) {
             return false;
         }
     }
@@ -630,7 +634,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     const char* s = m->Item(sel);
     int cmdId = GetCommandIdByDesc(s);
     if (cmdId >= 0) {
-        bool noActivate = IsCmdInList(gCommandsNoActivate);
+        bool noActivate = IsCmdInList(cmdId, gCommandsNoActivate);
         if (noActivate) {
             gHwndToActivateOnClose = nullptr;
         }
