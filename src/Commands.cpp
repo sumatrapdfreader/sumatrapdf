@@ -96,11 +96,6 @@ int GetCommandIdByDesc(const char* cmdDesc) {
         }
         curr = curr->next;
     }
-    for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (str::Eq(ev->name, cmdDesc)) {
-            return ev->cmdId;
-        }
-    }
     return -1;
 }
 

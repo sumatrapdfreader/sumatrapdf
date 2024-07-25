@@ -645,6 +645,15 @@ static WindowTab* FindOpenedFile(const char* s) {
     return nullptr;
 }
 
+static int ExternalViewerCmdIdByName(const char* name) {
+    for (auto& ev : *gGlobalPrefs->externalViewers) {
+        if (str::Eq(ev->name, name)) {
+            return ev->cmdId;
+        }
+    }
+    return -1;
+}
+
 void CommandPaletteWnd::ExecuteCurrentSelection() {
     int sel = listBox->GetCurrentSelection();
     if (sel < 0) {
@@ -653,6 +662,9 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     auto m = (ListBoxModelStrings*)listBox->model;
     const char* s = m->Item(sel);
     int cmdId = GetCommandIdByDesc(s);
+    if (cmdId <= 0) {
+        cmdId = ExternalViewerCmdIdByName(s);
+    }
     if (cmdId >= 0) {
         bool noActivate = IsCmdInList(cmdId, gCommandsNoActivate);
         if (noActivate) {
