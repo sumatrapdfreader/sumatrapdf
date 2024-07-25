@@ -683,7 +683,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
         pl = pageLabel;
     }
     WindowTab* tab = win->CurrentTab();
-    char* path = tab->filePath;
+    const char* path = tab->filePath;
     AddOrReplaceFav(path, pageNo, name, pl);
     // expand newly added favorites by default
     FileState* fav = GetFavByFilePath(path);

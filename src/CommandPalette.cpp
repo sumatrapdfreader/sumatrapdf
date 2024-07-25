@@ -190,6 +190,7 @@ struct CommandPaletteWnd : Wnd {
 };
 
 struct CommandPaletteBuildCtx {
+    const char* filePath = nullptr;
     bool isDocLoaded = false;
     bool supportsAnnots = false;
     bool hasSelection = false;
@@ -207,17 +208,8 @@ struct CommandPaletteBuildCtx {
     bool canCloseTabsToRight = false;
     bool canCloseTabsToLeft = false;
 
-    ~CommandPaletteBuildCtx();
+    ~CommandPaletteBuildCtx() = default;
 };
-CommandPaletteBuildCtx::~CommandPaletteBuildCtx() {
-}
-
-static bool IsOpenExternalViewerCommand(i32 cmdId) {
-    if (IsCustomExternalViewerCmdId(cmdId)) {
-        return true;
-    }
-    return ((cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast));
-}
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (IsCmdInList(cmdId, gCommandsDebugOnly)) {
@@ -242,8 +234,18 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return RecentlyCloseDocumentsCount() > 0;
     }
 
-    if (IsOpenExternalViewerCommand(cmdId)) {
-        return HasKnownExternalViewerForCmd(cmdId);
+    bool isCustomEV = IsCustomExternalViewerCmdId(cmdId);
+    bool isKnownEV = (cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast);
+    if (isCustomEV || isKnownEV) {
+        if (!ctx.isDocLoaded) {
+            return false;
+        }
+        if (isKnownEV) {
+            // TODO: match file name
+            return HasKnownExternalViewerForCmd(cmdId);
+        }
+        // TODO: match file name
+        return true;
     }
 
     // we only want to show this in home page
@@ -350,6 +352,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = mainWin->IsDocLoaded();
     WindowTab* tab = mainWin->CurrentTab();
+    ctx.filePath = tab->GetPath();
     ctx.hasSelection = ctx.isDocLoaded && tab && mainWin->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;
@@ -414,7 +417,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
                 if (tab2->IsAboutTab()) {
                     continue;
                 }
-                const char* name = tab2->filePath.Get();
+                const char* name = tab2->filePath;
                 name = path::GetBaseNameTemp(name);
                 AppendIfNotExists(filesInTabs, name);
                 // find current tab index
@@ -615,7 +618,7 @@ static WindowTab* FindOpenedFile(const char* s) {
             if (tab->IsAboutTab()) {
                 continue;
             }
-            const char* name = tab->filePath.Get();
+            const char* name = tab->filePath;
             name = path::GetBaseNameTemp(name);
             if (str::Eq(name, s)) {
                 return tab;
@@ -651,7 +654,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
             if (winTab->IsAboutTab()) {
                 continue;
             }
-            const char* name = winTab->filePath.Get();
+            const char* name = winTab->filePath;
             name = path::GetBaseNameTemp(name);
             if (str::Eq(name, s)) {
                 tab = winTab;

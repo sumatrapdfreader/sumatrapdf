@@ -337,7 +337,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     // must match file extension
 
     if (!filterMatchesEverything(ev->exts)) {
-        const char* filePath = tab->filePath.Get();
+        const char* filePath = tab->filePath;
         char* ext = path::GetExtTemp(filePath);
         const char* pos = str::FindI(ev->exts, ext);
         if (!pos) {
@@ -373,7 +373,7 @@ static TempStr FormatParamTemp(char* arg, WindowTab* tab) {
         TempStr pageNoStr = str::FormatTemp("%d", pageNo);
         arg = str::ReplaceTemp(arg, "%p", pageNoStr);
     }
-    char* path = tab->filePath;
+    const char* path = tab->filePath;
     if (str::Find(arg, "%d")) {
         TempStr dir = path::GetDirTemp(path);
         arg = str::ReplaceTemp(arg, "%d", dir);
@@ -388,9 +388,8 @@ static TempStr FormatParamTemp(char* arg, WindowTab* tab) {
 }
 
 static TempStr GetDocumentPathQuoted(WindowTab* tab) {
-    TempStr path = tab->filePath;
-    path = str::JoinTemp("\"", path, "\"");
-    return path;
+    auto path = tab->filePath;
+    return str::JoinTemp("\"", path, "\"");
 }
 
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
@@ -444,7 +443,7 @@ void CreateExternalViewersCommands() {
 
 // TODO: find a better file for this?
 bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter) {
-    char* path = tab->filePath;
+    const char* path = tab->filePath;
     if (!PathMatchFilter(path, filter)) {
         return false;
     }

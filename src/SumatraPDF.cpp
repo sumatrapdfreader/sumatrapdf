@@ -376,7 +376,7 @@ WindowTab* FindTabByFile(const char* file) {
 
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
-            char* fp = tab->filePath;
+            const char* fp = tab->filePath;
             if (!fp || !path::IsSame(fp, normFile)) {
                 continue;
             }
@@ -561,7 +561,7 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     MainWindow* win = tab->win;
     // TODO: this is called multiple times for each tab
     RememberDefaultWindowPosition(win);
-    char* fp = tab->filePath;
+    const char* fp = tab->filePath;
     FileState* fs = gFileHistory.FindByName(fp, nullptr);
     if (!fs) {
         return;
@@ -1087,9 +1087,9 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle.Get());
+        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle);
     }
-    tab->frameTitle.SetCopy(s);
+    str::ReplaceWithCopy(&tab->frameTitle, s);
 }
 
 static void UpdateUiForCurrentTab(MainWindow* win) {
@@ -1113,7 +1113,7 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
     FindToggleMatchCase(win);
     UpdateFindbox(win);
 
-    HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle.CStr());
+    HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
 
     // TODO: match either the toolbar (if shown) or background
     HwndScheduleRepaint(win->tabsCtrl->hwnd); // TODO: was RepaintNow() ?
@@ -1381,7 +1381,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
 
     HwndPasswordUI pwdUI(win->hwndFrame);
-    char* path = tab->filePath;
+    const char* path = tab->filePath;
     logfa("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
@@ -1390,7 +1390,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     // we postpone the reload until the next autorefresh event
     if (!ctrl && autoRefresh) {
         SetFrameTitleForTab(tab, true);
-        HwndSetText(win->hwndFrame, tab->frameTitle.CStr());
+        HwndSetText(win->hwndFrame, tab->frameTitle);
         return;
     }
 
@@ -1798,7 +1798,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
         // logf("LoadDocument: !forceReuse, created win->CurrentTab() at 0x%p\n", win->CurrentTab());
     } else {
-        win->CurrentTab()->filePath.SetCopy(fullPath);
+        str::ReplaceWithCopy(&win->CurrentTab()->filePath, fullPath);
 #if 0
         auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->CurrentTab() (0x%p) filePath to '%s'\n", win->CurrentTab(), path.Get());
@@ -3440,7 +3440,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     }
 
     WindowTab* tab = win->CurrentTab();
-    char* path = tab->filePath;
+    const char* path = tab->filePath;
     StrVec files = CollectNextPrevFilesIfChanged(path);
     if (files.Size() < 2) {
         return;

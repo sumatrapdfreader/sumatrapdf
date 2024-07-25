@@ -847,7 +847,7 @@ void GetStressTestInfo(str::Str* s) {
         }
 
         s->Append("File: ");
-        char* filePath = w->CurrentTab()->filePath;
+        const char* filePath = w->CurrentTab()->filePath;
         s->Append(filePath);
         GetLogInfo(w->stressTest, s);
         s->Append("\r\n");

@@ -1269,9 +1269,11 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
     WindowTab* tab = ctx->tab;
-    for (int cmd = CmdOpenWithKnownExternalViewerFirst + 1; cmd < CmdOpenWithKnownExternalViewerLast; cmd++) {
-        if (!CanViewWithKnownExternalViewer(tab, cmd)) {
-            MenuRemove(menu, cmd);
+    int cmdIdFirst = CmdOpenWithKnownExternalViewerFirst + 1;
+    int cmdIdLast = CmdOpenWithKnownExternalViewerLast;
+    for (int cmdId = cmdIdFirst; cmdId < cmdIdLast; cmdId++) {
+        if (!CanViewWithKnownExternalViewer(tab, cmdId)) {
+            MenuRemove(menu, cmdId);
         }
     }
 }
@@ -1432,7 +1434,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         // append user external viewers after menu item with CmdOpenWithHtmlHelp
         if (cmdId == CmdOpenWithHtmlHelp && ctx) {
             WindowTab* tab = ctx->tab;
-            char* path = tab ? tab->filePath.Get() : nullptr;
+            const char* path = tab ? tab->filePath : nullptr;
             AppendExternalViewersToMenu(menu, path);
         }
     }

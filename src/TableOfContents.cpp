@@ -452,7 +452,7 @@ static void OpenEmbeddedFile(WindowTab* tab, IPageDestination* dest) {
     MainWindow* win = tab->win;
     PageDestinationFile *destFile = (PageDestinationFile*)dest;
     char* path = destFile->path;
-    char* tabPath = tab->filePath.Get();
+    const char* tabPath = tab->filePath;
     if (!str::StartsWith(path, tabPath)) {
         return;
     }

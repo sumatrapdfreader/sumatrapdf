@@ -43,7 +43,7 @@ static void UpdateTabTitle(WindowTab* tab) {
     MainWindow* win = tab->win;
     int idx = win->GetTabIdx(tab);
     const char* title = tab->GetTabTitle();
-    const char* tooltip = tab->filePath.Get();
+    const char* tooltip = tab->filePath;
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
 }
 
@@ -497,7 +497,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
     tab->canvasRc = win->canvasRc;
     TabInfo* newTab = new TabInfo();
     newTab->text = str::Dup(tab->GetTabTitle());
-    newTab->tooltip = str::Dup(tab->filePath.Get());
+    newTab->tooltip = str::Dup(tab->filePath);
     newTab->userData = (UINT_PTR)tab;
 
     int insertedIdx = tabs->InsertTab(idx, newTab);

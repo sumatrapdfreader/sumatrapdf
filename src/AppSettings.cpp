@@ -246,7 +246,7 @@ static void RememberSessionState() {
             if (tab->IsAboutTab()) {
                 continue;
             }
-            char* fp = tab->filePath;
+            const char* fp = tab->filePath;
             FileState* fs = NewDisplayState(fp);
             if (tab->ctrl) {
                 tab->ctrl->GetDisplayState(fs);

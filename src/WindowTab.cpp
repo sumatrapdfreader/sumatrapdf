@@ -29,7 +29,7 @@ WindowTab::WindowTab(MainWindow* win) {
 
 void WindowTab::SetFilePath(const char* path) {
     type = Type::Document;
-    this->filePath.SetCopy(path);
+    str::ReplaceWithCopy(&filePath, path);
 }
 
 bool WindowTab::IsAboutTab() const {
@@ -49,6 +49,8 @@ WindowTab::~WindowTab() {
     // so doesn't need to be kept for long
     gMostRecentlyOpenedDoc = nullptr;
     delete ctrl;
+    str::FreePtr(&filePath);
+    str::FreePtr(&frameTitle);
 }
 
 bool WindowTab::IsDocLoaded() const {
