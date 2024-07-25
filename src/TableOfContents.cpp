@@ -704,7 +704,7 @@ void LoadTocTree(MainWindow* win) {
 
     TreeView* treeView = win->tocTreeView;
     HWND hwnd = treeView->hwnd;
-    SetRtl(hwnd, isRTL);
+    HwndSetRtl(hwnd, isRTL);
 
     UpdateControlsColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
@@ -765,7 +765,7 @@ LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
         if (!tocItem) {
             return CDRF_DODEFAULT;
         }
-        if (tocItem->color != ColorUnset) {
+        if (tocItem->color != kColorUnset) {
             tvcd->clrText = tocItem->color;
         }
         if (tocItem->fontFlags != 0) {

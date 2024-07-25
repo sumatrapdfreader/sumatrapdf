@@ -1125,13 +1125,8 @@ bool Wnd::IsFocused() const {
     return tobool(isFocused);
 }
 
-void Wnd::SetRtl(bool isRtl) const {
-    ReportIf(!hwnd);
-    SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
-}
-
 void Wnd::SetBackgroundColor(COLORREF col) {
-    if (col == ColorNoChange) {
+    if (col == kColorNoChange) {
         return;
     }
     backgroundColor = col;
@@ -1139,7 +1134,7 @@ void Wnd::SetBackgroundColor(COLORREF col) {
         DeleteBrush(backgroundColorBrush);
         backgroundColorBrush = nullptr;
     }
-    if (backgroundColor != ColorUnset) {
+    if (backgroundColor != kColorUnset) {
         backgroundColorBrush = CreateSolidBrush(backgroundColor);
     }
     // can be set before we create the window
@@ -1230,7 +1225,7 @@ void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
     uint msg = ev->msg;
     ReportIf(msg != WM_CTLCOLORSTATIC);
     HDC hdc = (HDC)ev->wp;
-    if (w->textColor != ColorUnset) {
+    if (w->textColor != kColorUnset) {
         SetTextColor(hdc, w->textColor);
     }
     // the brush we return is the background color for the whole
@@ -1757,7 +1752,7 @@ static void Handle_WM_CTLCOLOREDIT(void* user, WndEvent* ev) {
     HDC hdc = (HDC)ev->wp;
     // SetBkColor(hdc, w->bgCol);
     SetBkMode(hdc, TRANSPARENT);
-    if (w->textColor != ColorUnset) {
+    if (w->textColor != kColorUnset) {
         ::SetTextColor(hdc, w->textColor);
     }
     ev->didHandle = true;
@@ -2322,7 +2317,7 @@ HWND Splitter::Create(const SplitterCreateArgs& args) {
     isLive = args.isLive;
     type = args.type;
     backgroundColor = args.backgroundColor;
-    if (backgroundColor == ColorUnset) {
+    if (backgroundColor == kColorUnset) {
         backgroundColor = GetSysColor(COLOR_BTNFACE);
     }
 
@@ -3975,7 +3970,7 @@ void DrawCloseButton(const DrawCloseButtonArgs& args) {
     HWND hwnd = WindowFromDC(args.hdc);
     // GDI+ doesn't pick up the window's orientation through the device context,
     // so we have to explicitly mirror all rendering horizontally
-    if (IsRtl(hwnd)) {
+    if (HwndIsRtl(hwnd)) {
         g.ScaleTransform(-1, 1);
         g.TranslateTransform((float)ClientRect(hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
     }

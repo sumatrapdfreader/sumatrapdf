@@ -307,7 +307,7 @@ struct TocItem {
     int id = 0;
 
     int fontFlags = 0; // fontBitBold, fontBitItalic
-    COLORREF color{ColorUnset};
+    COLORREF color{kColorUnset};
 
     IPageDestination* dest = nullptr;
     bool destNotOwned = false;

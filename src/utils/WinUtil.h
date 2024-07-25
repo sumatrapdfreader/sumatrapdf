@@ -150,8 +150,8 @@ bool IsWindowStyleExSet(HWND hwnd, DWORD flags);
 void SetWindowStyle(HWND hwnd, DWORD flags, bool enable);
 void SetWindowExStyle(HWND hwnd, DWORD flags, bool enable);
 
-bool IsRtl(HWND hwnd);
-void SetRtl(HWND hwnd, bool isRtl);
+bool HwndIsRtl(HWND hwnd);
+void HwndSetRtl(HWND hwnd, bool isRtl);
 
 Rect ChildPosWithinParent(HWND);
 

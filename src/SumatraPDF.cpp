@@ -606,32 +606,26 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     }
 
     // https://www.microsoft.com/middleeast/msdn/mirror.aspx
-    SetRtl(win->hwndFrame, isRTL);
-
-    SetRtl(win->hwndTocBox, isRTL);
-    HWND tocBoxTitle = win->tocLabelWithClose->hwnd;
-    SetRtl(tocBoxTitle, isRTL);
-
-    SetRtl(win->hwndFavBox, isRTL);
-    HWND favBoxTitle = win->favLabelWithClose->hwnd;
-    SetRtl(favBoxTitle, isRTL);
-    win->favTreeView->SetRtl(isRTL);
-
-    SetRtl(win->hwndReBar, isRTL);
-    SetRtl(win->hwndToolbar, isRTL);
-    SetRtl(win->hwndFindEdit, isRTL);
-    SetRtl(win->hwndFindLabel, isRTL);
-    SetRtl(win->hwndTbInfoText, isRTL);
-    SetRtl(win->hwndPageLabel, isRTL);
-
-    SetRtl(win->hwndCaption, isRTL);
+    HwndSetRtl(win->hwndFrame, isRTL);
+    HwndSetRtl(win->hwndTocBox, isRTL);
+    HwndSetRtl(win->tocLabelWithClose->hwnd, isRTL);
+    HwndSetRtl(win->hwndFavBox, isRTL);
+    HwndSetRtl(win->favLabelWithClose->hwnd, isRTL);
+    HwndSetRtl(win->favTreeView->hwnd, isRTL);
+    HwndSetRtl(win->hwndReBar, isRTL);
+    HwndSetRtl(win->hwndToolbar, isRTL);
+    HwndSetRtl(win->hwndFindEdit, isRTL);
+    HwndSetRtl(win->hwndFindLabel, isRTL);
+    HwndSetRtl(win->hwndTbInfoText, isRTL);
+    HwndSetRtl(win->hwndPageLabel, isRTL);
+    HwndSetRtl(win->hwndCaption, isRTL);
     SetCaptionButtonsRtl(win->caption, isRTL);
 
     // TODO: why isn't SetWindowPos(..., SWP_FRAMECHANGED) enough?
     SendMessageW(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
     RelayoutCaption(win);
     // TODO: make tab bar RTL aware
-    // SetRtl(win->tabsCtrl->hwnd, isRTL);
+    // HwndSetRtl(win->tabsCtrl->hwnd, isRTL);
 
     RelayoutNotifications(win->hwndCanvas);
 

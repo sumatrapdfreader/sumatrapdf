@@ -1424,12 +1424,12 @@ bool IsWindowStyleExSet(HWND hwnd, DWORD flags) {
     return (style != flags) != 0;
 }
 
-bool IsRtl(HWND hwnd) {
+bool HwndIsRtl(HWND hwnd) {
     DWORD style = GetWindowLong(hwnd, GWL_EXSTYLE);
     return bit::IsMaskSet<DWORD>(style, WS_EX_LAYOUTRTL);
 }
 
-void SetRtl(HWND hwnd, bool isRtl) {
+void HwndSetRtl(HWND hwnd, bool isRtl) {
     SetWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 

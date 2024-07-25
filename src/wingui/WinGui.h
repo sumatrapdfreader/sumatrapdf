@@ -50,7 +50,7 @@ struct CreateCustomArgs {
     bool visible = true;
     HFONT font = nullptr;
     HICON icon = nullptr;
-    COLORREF bgColor = ColorUnset;
+    COLORREF bgColor = kColorUnset;
 };
 
 struct WmEvent {
@@ -144,7 +144,6 @@ struct Wnd : public ILayout {
     bool IsEnabled() const;
     void SetFocus() const;
     bool IsFocused() const;
-    void SetRtl(bool) const;
     void SetBackgroundColor(COLORREF);
 
     void SuspendRedraw() const;
@@ -168,7 +167,7 @@ struct Wnd : public ILayout {
     HFONT font = nullptr; // we don't own it
     UINT_PTR subclassId = 0;
 
-    COLORREF backgroundColor = ColorUnset;
+    COLORREF backgroundColor = kColorUnset;
     HBRUSH backgroundColorBrush = nullptr;
 
     ILayout* layout = nullptr;
@@ -484,7 +483,7 @@ struct SplitterCreateArgs {
     HWND parent = nullptr;
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
-    COLORREF backgroundColor = ColorUnset;
+    COLORREF backgroundColor = kColorUnset;
 };
 
 struct Splitter : public Wnd {

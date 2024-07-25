@@ -202,7 +202,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
 
     CreateCustom(cargs);
 
-    SetRtl(IsUIRightToLeft());
+    HwndSetRtl(hwnd, IsUIRightToLeft());
     Layout(args.msg);
     ShowWindow(hwnd, SW_SHOW);
 
@@ -232,7 +232,7 @@ void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlig
     HwndSetText(hwnd, msg);
     this->highlight = highlight;
     this->timeoutMs = timeoutMs;
-    SetRtl(IsUIRightToLeft());
+    HwndSetRtl(hwnd, IsUIRightToLeft());
     Layout(msg);
     InvalidateRect(hwnd, nullptr, FALSE);
     if (timeoutMs != 0) {

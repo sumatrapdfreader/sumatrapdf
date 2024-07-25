@@ -549,7 +549,7 @@ void ShowAboutWindow(MainWindow* win) {
         return;
     }
 
-    SetRtl(gHwndAbout, IsUIRightToLeft());
+    HwndSetRtl(gHwndAbout, IsUIRightToLeft());
 
     // get the dimensions required for the about box's content
     Rect rc;

@@ -172,7 +172,6 @@ struct CommandPaletteWnd : Wnd {
     StrVec filesInHistory;
     StrVec commands;
     ListBox* listBox = nullptr;
-    Static* staticHelp = nullptr;
 
     int currTabPos = 0;
 
@@ -469,6 +468,16 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 }
 
+static void SwitchToCommands(CommandPaletteWnd* wnd) {
+    logf("commands\n");
+}
+static void SwitchToTabs(CommandPaletteWnd* wnd) {
+    logf("tabs\n");
+}
+static void SwitchToFileHistory(CommandPaletteWnd* wnd) {
+    logf("file history\n");
+}
+
 static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 static HWND gHwndToActivateOnClose = nullptr;
 
@@ -741,13 +750,24 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
+    StaticCreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    args.text = s;
+    auto c = new Static();
+    auto wnd = c->Create(args);
+    ReportIf(!wnd);
+    return c;
+}
+
 bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     CollectStrings(win);
     {
         CreateCustomArgs args;
         args.visible = false;
         args.style = WS_POPUPWINDOW;
-        args.font = this->font;
+        args.font = font;
         CreateCustom(args);
     }
     if (!hwnd) {
@@ -764,7 +784,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         args.isMultiLine = false;
         args.withBorder = true;
         args.cueText = "enter search term";
-        args.font = this->font;
+        args.font = font;
         auto c = new Edit();
         c->maxDx = 150;
         c->onTextChanged = std::bind(&CommandPaletteWnd::QueryChanged, this);
@@ -774,10 +794,36 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         vbox->AddChild(c);
     }
 
+    if (false) {
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto pad = Insets{0, 4, 0, 4};
+        {
+            auto c = CreateStatic(hwnd, font, "# File History");
+            c->onClicked = mkFunc0(SwitchToFileHistory, this);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        {
+            auto c = CreateStatic(hwnd, font, "> Commands");
+            c->onClicked = mkFunc0(SwitchToCommands, this);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        {
+            auto c = CreateStatic(hwnd, font, "@ Tabs");
+            c->onClicked = mkFunc0(SwitchToTabs, this);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        vbox->AddChild(hbox);
+    }
+
     {
         ListBoxCreateArgs args;
         args.parent = hwnd;
-        args.font = this->font;
+        args.font = font;
         auto c = new ListBox();
         c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
         c->idealSizeLines = 32;
@@ -792,15 +838,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     }
 
     {
-        StaticCreateArgs args;
-        args.parent = hwnd;
-        args.font = this->font;
-        args.text = "↑ ↓ to navigate      Enter to select     Esc to close";
-
-        auto c = new Static();
-        auto wnd = c->Create(args);
-        ReportIf(!wnd);
-        staticHelp = c;
+        auto c = CreateStatic(hwnd, this->font, "↑ ↓ to navigate      Enter to select     Esc to close");
         vbox->AddChild(c);
     }
 

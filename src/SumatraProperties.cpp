@@ -420,7 +420,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     layoutData->hwnd = hwnd;
     layoutData->hwndParent = hParent;
     bool isRtl = IsUIRightToLeft();
-    SetRtl(hwnd, isRtl);
+    HwndSetRtl(hwnd, isRtl);
     {
         ButtonCreateArgs args;
         args.parent = hwnd;
@@ -430,7 +430,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
         b->Create(args);
 
         layoutData->btnCopyToClipboard = b;
-        b->SetRtl(isRtl);
+        HwndSetRtl(b->hwnd, isRtl);
         b->onClicked = mkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
@@ -442,7 +442,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
         auto b = new Button();
         b->Create(args);
 
-        b->SetRtl(isRtl);
+        HwndSetRtl(b->hwnd, isRtl);
         layoutData->btnGetFonts = b;
         b->onClicked = mkFunc0(ShowExtendedProperties, layoutData);
     }
