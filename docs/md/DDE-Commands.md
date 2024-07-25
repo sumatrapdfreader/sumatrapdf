@@ -16,6 +16,8 @@ You can either use windows api by sending DDE commands to server `SUMATRA` and t
 
 Or you can use `-dde` command-line argument to `SumatraPDF.exe` e.g. `SumatraPDF.exe -dde "[SetView(\"c:\\file.pdf\",\"continuous\",-3)]"`.
 
+Notice escaping of DDE command string: `"` and `\` with `\`.
+
 ## List of DDE commands:
 
 ### Named commands
