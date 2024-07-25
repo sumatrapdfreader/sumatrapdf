@@ -79,11 +79,6 @@ EngineBase* WindowTab::GetEngine() const {
     return nullptr;
 }
 
-// can be null for About tab
-const char* WindowTab::GetPath() const {
-    return this->filePath;
-}
-
 const char* WindowTab::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;

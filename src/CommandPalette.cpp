@@ -352,7 +352,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = mainWin->IsDocLoaded();
     WindowTab* tab = mainWin->CurrentTab();
-    ctx.filePath = tab->GetPath();
+    ctx.filePath = tab->filePath;
     ctx.hasSelection = ctx.isDocLoaded && tab && mainWin->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;

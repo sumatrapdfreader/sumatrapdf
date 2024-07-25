@@ -1798,7 +1798,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
         // logf("LoadDocument: !forceReuse, created win->CurrentTab() at 0x%p\n", win->CurrentTab());
     } else {
-        str::ReplaceWithCopy(&win->CurrentTab()->filePath, fullPath);
+        win->CurrentTab()->SetFilePath(fullPath);
 #if 0
         auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->CurrentTab() (0x%p) filePath to '%s'\n", win->CurrentTab(), path.Get());
@@ -3190,7 +3190,7 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     // so that the file is opened in the same state
     SaveSettings();
 
-    const char* path = tab->GetPath();
+    const char* path = tab->filePath;
     ReportIf(!path);
     if (!path) {
         return;
@@ -4857,7 +4857,7 @@ void CopyFilePath(WindowTab* tab) {
     if (!tab) {
         return;
     }
-    const char* path = tab->GetPath();
+    const char* path = tab->filePath;
     CopyTextToClipboard(path);
 }
 
