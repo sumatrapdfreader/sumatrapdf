@@ -271,7 +271,7 @@ using SeqStrings = const char*;
 namespace seqstrings {
 
 void Next(const char*& s);
-void Next(const char*& s, int& idx);
+void Next(const char*& s, int* idxInOut);
 int StrToIdx(SeqStrings strs, const char* toFind);
 int StrToIdxIS(SeqStrings strs, const char* toFind);
 const char* IdxToStr(SeqStrings strs, int idx);

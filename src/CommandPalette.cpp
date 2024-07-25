@@ -61,7 +61,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenAttachment,
 
     CmdCreateShortcutToFile, // not sure I want this at all
-
+    0,
 };
 
 // most commands are not valid when document is not opened
@@ -212,6 +212,9 @@ struct CommandPaletteBuildCtx {
 };
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
+    if (cmdId <= CmdFirst) {
+        return false;
+    }
     if (IsCmdInList(cmdId, gCommandsDebugOnly)) {
         return gIsDebugBuild;
     }
@@ -234,9 +237,18 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return RecentlyCloseDocumentsCount() > 0;
     }
 
-    bool isCustomEV = IsCustomExternalViewerCmdId(cmdId);
+    // when document is not loaded, most commands are not available
+    // except those white-listed
+    if (IsCmdInList(cmdId, gDocumentNotOpenWhitelist)) {
+        return true;
+    }
+    if (!ctx.isDocLoaded) {
+        return false;
+    }
+
+    ExternalViewer* ev = CustomExternalViewerForCmdId(cmdId);
     bool isKnownEV = (cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast);
-    if (isCustomEV || isKnownEV) {
+    if (ev != nullptr || isKnownEV) {
         if (!ctx.isDocLoaded) {
             return false;
         }
@@ -244,19 +256,12 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
             // TODO: match file name
             return HasKnownExternalViewerForCmd(cmdId);
         }
-        // TODO: match file name
-        return true;
+        return PathMatchFilter(ctx.filePath, ev->filter);
     }
 
     // we only want to show this in home page
     if (cmdId == CmdToggleFrequentlyRead) {
         return !ctx.isDocLoaded;
-    }
-
-    if (!ctx.isDocLoaded) {
-        if (!IsCmdInList(cmdId, gDocumentNotOpenWhitelist)) {
-            return false;
-        }
     }
 
     if (cmdId == CmdToggleMenuBar) {
@@ -352,7 +357,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = mainWin->IsDocLoaded();
     WindowTab* tab = mainWin->CurrentTab();
-    ctx.filePath = tab->filePath;
+    ctx.filePath = tab ? tab->filePath : nullptr;
     ctx.hasSelection = ctx.isDocLoaded && tab && mainWin->showSelection && tab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(tab);
     ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;
@@ -437,15 +442,27 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         filesInHistory.Append(s);
     }
 
-    // we want the commands sorted
     StrVec tempStrings;
     int cmdId = (int)CmdFirst + 1;
-    for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, cmdId)) {
+    for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, &cmdId)) {
+        if (cmdId == CmdAdvancedOptions) {
+            logf("advanced opts\n");
+        }
         if (AllowCommand(ctx, (i32)cmdId)) {
             ReportIf(str::Leni(strs) == 0);
             tempStrings.Append(strs);
         }
     }
+    for (auto& ev : *gGlobalPrefs->externalViewers) {
+        if (str::IsEmptyOrWhiteSpaceOnly(ev->name)) {
+            continue;
+        }
+        if (AllowCommand(ctx, ev->cmdId)) {
+            tempStrings.Append(ev->name);
+        }
+    }
+
+    // we want the commands sorted
     SortNoCase(tempStrings);
     for (char* s : tempStrings) {
         commands.Append(s);

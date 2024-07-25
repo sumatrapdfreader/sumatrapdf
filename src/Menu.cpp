@@ -1249,7 +1249,8 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
             }
         }
 
-        TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
+        // TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
+        TempStr menuString = name;
         int cmdId = ev->cmdId;
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         TempWStr ws = ToWStrTemp(menuString);

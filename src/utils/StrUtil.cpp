@@ -1167,10 +1167,11 @@ void DecodeInPlace(char* url) {
 // of L1 cache
 namespace seqstrings {
 
-void Next(const char*& s, int& idx) {
+void Next(const char*& s, int* idxInOut) {
+    int idx = *idxInOut;
     if (!s || !*s || idx < 0) {
         s = nullptr;
-        idx = -1;
+        *idxInOut = -1;
         return;
     }
     while (*s) {
@@ -1182,11 +1183,12 @@ void Next(const char*& s, int& idx) {
         return;
     }
     idx++;
+    *idxInOut = idx;
 }
 
 void Next(const char*& s) {
     int idxDummy = 0;
-    Next(s, idxDummy);
+    Next(s, &idxDummy);
 }
 
 // Returns nullptr if s is the same as toFind

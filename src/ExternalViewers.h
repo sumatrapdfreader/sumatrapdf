@@ -15,6 +15,6 @@ bool CouldBePDFDoc(WindowTab*);
 bool PathMatchFilter(const char* path, const char* filter);
 
 void CreateExternalViewersCommands();
-bool IsCustomExternalViewerCmdId(int cmdId);
+ExternalViewer* CustomExternalViewerForCmdId(int cmdId);
 bool ViewWithCustomExternalViewer(WindowTab* tab, int cmdId);
 bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter);

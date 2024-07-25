@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 
 #include "Settings.h"
+#include "GlobalPrefs.h"
 #include "DisplayMode.h"
 #include "Commands.h"
 
@@ -94,6 +95,11 @@ int GetCommandIdByDesc(const char* cmdDesc) {
             return curr->id;
         }
         curr = curr->next;
+    }
+    for (auto& ev : *gGlobalPrefs->externalViewers) {
+        if (str::Eq(ev->name, cmdDesc)) {
+            return ev->cmdId;
+        }
     }
     return -1;
 }
