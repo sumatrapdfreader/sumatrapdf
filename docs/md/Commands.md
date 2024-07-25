@@ -4,8 +4,8 @@ You can control SumatraPDF with commands:
 
 - use [command palette](Command-Palette.md) (`Ctrl + K`) to invoke a command by its description
 - [customize a keyboard shortcut](Customizing-keyboard-shortcuts.md) to invoke a command by its id
-- **since 3.5:** [send a command via DDE](DDE-Commands.md) e.g. `[CmdClose]` to invoke `Close Document` command
-- **since 3.6:** some commands [accept arguments](Commands.md#commands-with-arguments)
+- **ver 3.5+:** [send a command via DDE](DDE-Commands.md) e.g. `[CmdClose]` to invoke `Close Document` command
+- **ver 3.6+:** some commands [accept arguments](Commands.md#commands-with-arguments)
 
 :search:
 
@@ -270,7 +270,7 @@ CmdOpenAttachment,,don't use
 
 # Commands with arguments
 
-**Since 3.6**, some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
+**Ver 3.6+:** some commands accept arguments which provides more capabilities when creating [custom keyboard shortcut](Customizing-keyboard-shortcuts.md).
 
 For example:
 

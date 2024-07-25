@@ -14,16 +14,16 @@ Available options:
 - `-with-preview` : install shell preview for PDF files
 - `-uninstall` : uninstalls SumatraPDF
 
-**Since 3.2**
+**Ver 3.2+**
 
 - `-log`
 writes installation log to `%LOCALAPPDATA%\sumatra-install-log.txt`. At the end of installation will open the log file in notepad.
 
-**Since 3.4**
+**Ver 3.4+**
 
 - `-all-users` : installs system-wide, for all users
 installs to `%PROGRAMFILES%\SumatraPDF` and writes to `HKLM` registry
 
-**Since 3.6**
+**Ver 3.6+**
 
 - `-fast-install` : automatically starts installation with default options, starts the app when installation is finished

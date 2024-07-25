@@ -20,7 +20,7 @@ ExternalViewers [
     Name =
     Filter =
 
-    // since ver. 3.6:
+    // ver 3.6+:
     Key = 
   ]
 ]

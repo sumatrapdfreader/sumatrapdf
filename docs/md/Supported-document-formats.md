@@ -21,7 +21,7 @@ If [Ghostscript](https://ghostscript.com/) is installed, we support PostScript (
 
 ## HEIF support
 
-Since version 3.4 SumatraPDF can open [HEIF images](https://nokiatech.github.io/heif/) but only if Windows has a codec for the format.
+**Ver 3.4+**: SumatraPDF can open [HEIF images](https://nokiatech.github.io/heif/) but only if Windows has a codec for the format.
 
 You can use one of those codecs:
 

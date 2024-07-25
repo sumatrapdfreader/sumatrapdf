@@ -12,7 +12,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 - `-presentation` : start in presentation view
 - `-fullscreen` : start in full screen view
-- `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (since 3.2)
+- `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (**ver 3.2+**)
 - `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
 - `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. Read more detailed documentation.
 
@@ -34,11 +34,11 @@ Anything that is not recognized as a known option is interpreted as a file path 
     
 - `-zoom <zoom-level>` : Sets the zoom level for the first indicated file. Alternatives are "fit page", "fit width", "fit content" or any percentage value. Combine with -reuse-instance if the document is already open.
 - `-scroll <x,y>` : Scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
-- `search <term>` : Start a search for a given term when opening a document e.g. `SumatraPDF.exe -search "foo" bar.pdf`. Since 3.4
+- `search <term>` : Start a search for a given term when opening a document e.g. `SumatraPDF.exe -search "foo" bar.pdf`. **Ver 3.4+**
 
 ## Send DDE commands
 
-- `-dde cmd` : send [DDE commands](DDE-Commands.md) to currently running instance e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to properly quote arguments. File paths must be absolute. Since 3.5.
+- `-dde cmd` : send [DDE commands](DDE-Commands.md) to currently running instance e.g. `-dde '[Open("C:\Users\kjk\foo.pdf")]'`. Make sure to properly quote arguments. File paths must be absolute. **Ver 3.5+**.
 
 ## Printing options
 

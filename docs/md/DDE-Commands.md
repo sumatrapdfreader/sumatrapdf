@@ -10,11 +10,17 @@ Single DDE command: `[Command(parameter1, parameter2, ..., )]`
 
 Multiple DDE commands: `[Command1(parameter1, parameter2, ..., )][Command2(...)][...]`
 
+## Sending DDE commands
+
+You can either use windows api by sending DDE commands to server `SUMATRA` and topic `control`. See [this code](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/utils/WinUtil.cpp#L2437) for example of sending DDE command.
+
+Or you can use `-dde` command-line argument to `SumatraPDF.exe` e.g. `SumatraPDF.exe -dde "[SetView(\"c:\\file.pdf\",\"continuous\",-3)]"`.
+
 ## List of DDE commands:
 
 ### Named commands
 
-Since 3.5 you can send all [named commands](Commands.md).
+*Ver 3.5+**: you can send all [named commands](Commands.md) as DDE:
 
 - format `[<command_id>]` e.g. `[CmdClose]`
 

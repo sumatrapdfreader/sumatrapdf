@@ -131,7 +131,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 
 ### Annotations
 
-only available since version 3.3, some from 3.4
+**Ver 3.3+**, some in **ver 3.4+**:
 
 - `a` - create highlight annotation from selected text
 - `A` - like `a` plus opens annotation editor
