@@ -502,7 +502,7 @@ static void AddPdfFileStructure(DocController* ctrl, PropertiesLayout* layoutDat
         return;
     }
     StrVec parts;
-    Split(parts, fstruct, ",", true);
+    Split(&parts, fstruct, ",", true);
 
     StrVec props;
 

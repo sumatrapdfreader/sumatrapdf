@@ -159,7 +159,7 @@ bool ParsePageRanges(const char* ranges, Vec<PageRange>& result) {
     }
 
     StrVec rangeList;
-    Split(rangeList, ranges, ",", true);
+    Split(&rangeList, ranges, ",", true);
     SortNatural(rangeList);
 
     for (char* rangeStr : rangeList) {
@@ -266,19 +266,19 @@ void ParseAdobeFlags(FileArgs& i, const char* s) {
 
     // tha args can be separated with `#` or `?` or `:`
     // i.e. `foo#bar` or foo&bar` or `foo:bar`
-    Split(parts, s, "&", true);
+    Split(&parts, s, "&", true);
     if (parts.Size() == 1) {
         parts.Reset();
-        Split(parts, s, "#", true);
+        Split(&parts, s, "#", true);
     }
     if (parts.Size() == 1) {
         parts.Reset();
-        Split(parts, s, ";", true);
+        Split(&parts, s, ";", true);
     }
 
     for (char* part : parts) {
         parts2.Reset();
-        Split(parts2, part, "=", true);
+        Split(&parts2, part, "=", true);
         if (parts2.Size() != 2) {
             continue;
         }

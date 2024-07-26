@@ -59,8 +59,8 @@ static bool reachedMax(int nAdded, int max) {
 (optionally collapsing several consecutive separators into one);
 e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
 (resp. "a", "b", "c" if separators are collapsed) */
-int Split(StrVec& v, const char* s, const char* separator, bool collapse, int max) {
-    int startSize = v.Size();
+int Split(StrVec* v, const char* s, const char* separator, bool collapse, int max) {
+    int startSize = v->Size();
     const char* next;
     int nAdded = 0;
     while (true) {
@@ -75,11 +75,11 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse, int ma
             nAdded++;
             if (reachedMax(nAdded, max)) {
                 // this is the last one
-                v.Append(s);
+                v->Append(s);
                 return nAdded;
             }
             int sLen = (int)(next - s);
-            v.Append(s, sLen);
+            v->Append(s, sLen);
         }
         s = next + str::Len(separator);
     }
@@ -88,10 +88,10 @@ int Split(StrVec& v, const char* s, const char* separator, bool collapse, int ma
         // if we're collapsing, we're not adding empty string
         // at the end, unless we haven't added any strings yet
         // i.e. to match other languages, "".split(" ") => [""]
-        shouldAddRest = !collapse || v.Size() == 0;
+        shouldAddRest = !collapse || v->Size() == 0;
     }
     if (shouldAddRest) {
-        v.Append(s);
+        v->Append(s);
         nAdded++;
     }
     return nAdded;
@@ -134,6 +134,7 @@ struct StrVecPage {
     struct StrVecPage* next;
     int pageSize;
     int nStrings;
+    int dataSize;
     char* currEnd;
     // now follows:
     // struct { size u32; offset u32}[nStrings] }
@@ -142,6 +143,8 @@ struct StrVecPage {
 
     char* At(int) const;
     StrSpan AtSpan(int i) const;
+    void* AtDataRaw(int) const;
+
     char* RemoveAt(int);
     char* RemoveAtFast(int);
 
@@ -155,25 +158,28 @@ struct StrVecPage {
 
 constexpr int kStrVecPageHdrSize = (int)sizeof(StrVecPage);
 
-static int cbOffsetsSize(int nStrings) {
-    return nStrings * 2 * sizeof(u32);
+static int cbOffsetsSize(int nStrings, int dataSize) {
+    ReportIf(dataSize % 4 != 0);
+    int nOffsets = (2 * (int)sizeof(u32)) + dataSize;
+    return nStrings * nOffsets;
 }
 
 int StrVecPage::BytesLeft() {
     char* start = (char*)this;
     start += kStrVecPageHdrSize;
     int cbTotal = (int)(currEnd - start);
-    int cbOffsets = cbOffsetsSize(nStrings);
+    int cbOffsets = cbOffsetsSize(nStrings, dataSize);
     auto res = cbTotal - cbOffsets;
     ReportIf(res < 0);
     return res;
 }
 
-static StrVecPage* AllocStrVecPage(int pageSize) {
+static StrVecPage* AllocStrVecPage(int pageSize, int dataSize) {
     auto page = (StrVecPage*)Allocator::AllocZero(nullptr, pageSize);
     page->next = nullptr;
     page->nStrings = 0;
     page->pageSize = pageSize;
+    page->dataSize = dataSize;
     char* start = (char*)page;
     page->currEnd = start + pageSize;
     return page;
@@ -181,11 +187,17 @@ static StrVecPage* AllocStrVecPage(int pageSize) {
 
 #define kNoSpace (char*)-2
 
+int nOffsetsWithData(int dataSize) {
+    // dataSize is guaranteed multiple of sizeof(u32)
+    return 2 + dataSize / sizeof(u32);
+}
+
 u32* OffsetsForString(const StrVecPage* p, int idx) {
     ReportIf(idx < 0 || idx > p->nStrings);
     char* start = (char*)p;
     u32* offsets = (u32*)(start + kStrVecPageHdrSize);
-    return offsets + (idx * 2);
+    int n = nOffsetsWithData(p->dataSize);
+    return offsets + (idx * n);
 }
 
 // must have enough space
@@ -298,12 +310,17 @@ StrSpan StrVecPage::AtSpan(int idx) const {
     return {s, sLen};
 }
 
+void* StrVecPage::AtDataRaw(int idx) const {
+    u32* offsets = OffsetsForString(this, idx) + 2;
+    return (void*)(offsets);
+}
+
 // we don't de-allocate removed strings so we can safely return the string
 char* StrVecPage::RemoveAt(int idx) {
     int sLen;
     char* s = AtHelper(idx, sLen);
     nStrings--;
-    int nToCopy = cbOffsetsSize(nStrings - idx);
+    int nToCopy = cbOffsetsSize(nStrings - idx, dataSize);
     if (nToCopy == 0) {
         // last string
         // TODO(perf): removing the last string
@@ -312,7 +329,7 @@ char* StrVecPage::RemoveAt(int idx) {
         return s;
     }
     u32* dst = OffsetsForString(this, idx);
-    u32* src = dst + 2;
+    u32* src = OffsetsForString(this, idx + 1);
     memmove((void*)dst, (void*)src, nToCopy);
     return s;
 }
@@ -325,8 +342,8 @@ char* StrVecPage::RemoveAtFast(int idx) {
     // to free the space used by it
     u32* dst = OffsetsForString(this, idx);
     u32* src = OffsetsForString(this, nStrings - 1);
-    *dst++ = *src++;
-    *dst = *src;
+    int nToCopy = nOffsetsWithData(dataSize) * sizeof(u32);
+    memmove((void*)dst, (void*)src, nToCopy);
     nStrings--;
     return s;
 }
@@ -347,6 +364,7 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
     }
     int nStrings = 0;
     int cbStringsTotal = 0; // including 0-termination
+    int dataSize = first->dataSize;
     auto curr = first;
     char *pageStart, *pageEnd;
     int cbStrings;
@@ -359,12 +377,12 @@ static StrVecPage* CompactStrVecPages(StrVecPage* first, int extraSize) {
         curr = curr->next;
     }
     // strLenTotal might be more than needed if we removed strings, but that's ok
-    int pageSize = kStrVecPageHdrSize + cbOffsetsSize(nStrings) + cbStringsTotal;
+    int pageSize = kStrVecPageHdrSize + cbOffsetsSize(nStrings, dataSize) + cbStringsTotal;
     if (extraSize > 0) {
         pageSize += extraSize;
     }
     pageSize = RoundUp(pageSize, 64); // jic
-    auto page = AllocStrVecPage(pageSize);
+    auto page = AllocStrVecPage(pageSize, dataSize);
     int n;
     StrSpan s;
     curr = first;
@@ -399,12 +417,20 @@ void StrVec::Reset(StrVecPage* initWith) {
     size = first->nStrings;
 }
 
+StrVec::StrVec(int dataSize) {
+    if (dataSize == 0) {
+        return;
+    }
+    this->dataSize = RoundUp(dataSize, (int)sizeof(u32));
+}
+
 StrVec::~StrVec() {
     Reset(nullptr);
 }
 
 StrVec::StrVec(const StrVec& that) {
     Reset(that.first);
+    dataSize = that.dataSize;
 }
 
 StrVec& StrVec::operator=(const StrVec& that) {
@@ -412,6 +438,7 @@ StrVec& StrVec::operator=(const StrVec& that) {
         return *this;
     }
     Reset(that.first);
+    dataSize = that.dataSize;
     return *this;
 }
 
@@ -445,7 +472,7 @@ static StrVecPage* AllocatePage(StrVec* v, StrVecPage* last, int nBytesNeeded) {
         pageSize = v->nextPageSize;
         v->nextPageSize = CalcNextPageSize(v->nextPageSize);
     }
-    auto page = AllocStrVecPage(pageSize);
+    auto page = AllocStrVecPage(pageSize, v->dataSize);
     if (last) {
         ReportIf(!v->first);
         last->next = page;
@@ -583,6 +610,12 @@ char* StrVec::At(int idx) const {
     return page->At(idxInPage);
 }
 
+void* StrVec::AtDataRaw(int idx) const {
+    ReportIf(dataSize == 0);
+    auto [page, idxInPage] = PageForIdx(this, idx);
+    return page->AtDataRaw(idxInPage);
+}
+
 StrSpan StrVec::AtSpan(int idx) const {
     auto [page, idxInPage] = PageForIdx(this, idx);
     return page->AtSpan(idxInPage);
@@ -682,13 +715,7 @@ bool operator!=(const StrVec::iterator& a, const StrVec::iterator& b) {
     return (a.v != b.v) || (a.idx != b.idx);
 };
 
-void Sort(StrVec& v, StrLessFunc lessFn) {
-    if (!v.first) {
-        return;
-    }
-    if (lessFn == nullptr) {
-        lessFn = strLess;
-    }
+static void SortNoData(StrVec& v, StrLessFunc lessFn) {
     CompactPages(&v, 0);
     if (v.Size() == 0) {
         return;
@@ -705,6 +732,44 @@ void Sort(StrVec& v, StrLessFunc lessFn) {
         u32 off2 = (u32)(offLen2 & 0xffffffff);
         const char* s1 = (off1 == kNullOffset) ? nullptr : pageStart + off1;
         const char* s2 = (off2 == kNullOffset) ? nullptr : pageStart + off2;
+        bool ret = lessFn(s1, s2);
+        return ret;
+    });
+}
+
+void Sort(StrVec& v, StrLessFunc lessFn) {
+    if (v.IsEmpty()) {
+        return;
+    }
+    if (lessFn == nullptr) {
+        lessFn = strLess;
+    }
+    ReportIf(v.dataSize != 0);
+    SortNoData(v, lessFn);
+}
+
+StrVecIndex::~StrVecIndex() {
+    free((void*)indexes);
+}
+
+int* StrVecIndex::Alloc(int n) {
+    free((void*)indexes);
+    this->n = n;
+    indexes = AllocArray<int>(n);
+    for (int i = 0; i < n; i++) {
+        indexes[i] = i;
+    }
+    return indexes;
+}
+
+void Sort(StrVec* v, StrVecIndex& idxOut, StrLessFunc lessFn) {
+    int n = v->Size();
+    int* indexes = idxOut.Alloc(n);
+    int* b = indexes;
+    int* e = indexes + n;
+    std::sort(b, e, [v, lessFn](int idx1, int idx2) -> bool {
+        const char* s1 = v->At(idx1);
+        const char* s2 = v->At(idx2);
         bool ret = lessFn(s1, s2);
         return ret;
     });

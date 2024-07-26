@@ -378,7 +378,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
 // we return -1 if unkown command or command doesn't take an argument or argument is invalid
 int ParseCommand(const char* definition) {
     StrVec parts;
-    Split(parts, definition, " ", true, 2);
+    Split(&parts, definition, " ", true, 2);
     const char* cmd = parts[0];
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {

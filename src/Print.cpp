@@ -1097,7 +1097,7 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
 
     StrVec rangeList;
     if (settings) {
-        Split(rangeList, settings, ",", true);
+        Split(&rangeList, settings, ",", true);
     }
 
     for (char* s : rangeList) {

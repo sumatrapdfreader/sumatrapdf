@@ -13,8 +13,10 @@ struct StrVec {
     StrVecPage* first = nullptr;
     int nextPageSize = 256;
     int size = 0;
+    int dataSize = 0;
 
     StrVec() = default;
+    StrVec(int dataSize);
     StrVec(const StrVec& that);
     StrVec& operator=(const StrVec& that);
     ~StrVec();
@@ -25,6 +27,7 @@ struct StrVec {
     bool IsEmpty() const;
     char* At(int i) const;
     StrSpan AtSpan(int i) const;
+    void* AtDataRaw(int i) const;
     char* operator[](int) const;
 
     char* Append(const char*, int sLen = -1);
@@ -59,12 +62,32 @@ struct StrVec {
     iterator end() const;
 };
 
+template <typename T>
+struct StrVecWithData : StrVec {
+    StrVecWithData() : StrVec((int)sizeof(T)) {
+    }
+    T* AtData(int i) const {
+        void* res = AtDataRaw(i);
+        return (T*)(res);
+    }
+};
+
 int AppendIfNotExists(StrVec& v, const char* s, int sLen = -1);
 
 void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
 void SortNoCase(StrVec&);
 void SortNatural(StrVec&);
 
-int Split(StrVec& v, const char* s, const char* separator, bool collapse = false, int max = -1);
+int Split(StrVec* v, const char* s, const char* separator, bool collapse = false, int max = -1);
 char* Join(StrVec& v, const char* sep = nullptr);
 TempStr JoinTemp(StrVec& v, const char* sep);
+
+struct StrVecIndex {
+    int n = 0;
+    int* indexes = nullptr;
+    StrVecIndex() = default;
+    ~StrVecIndex();
+    int* Alloc(int n);
+};
+
+void Sort(StrVec* v, StrVecIndex& idxOut, StrLessFunc lessFn = nullptr);

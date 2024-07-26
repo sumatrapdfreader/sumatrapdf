@@ -87,7 +87,7 @@ TryAgain64Bit:
     }
     GetEnvironmentVariableW(L"PATH", envpath, size);
     StrVec paths;
-    Split(paths, ToUtf8Temp(envpath), ";", true);
+    Split(&paths, ToUtf8Temp(envpath), ";", true);
     for (char* path : paths) {
         char* exe = path::JoinTemp(path, "gswin32c.exe");
         if (!file::Exists(exe)) {

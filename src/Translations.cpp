@@ -73,7 +73,7 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
     int nLangCode = str::Len(langCode);
 
     StrVec lines;
-    Split(lines, d.CStr(), "\n", true);
+    Split(&lines, d.CStr(), "\n", true);
     int nStrings = 0;
     for (char* l : lines) {
         if (l[0] == ':') {

@@ -376,7 +376,7 @@ static bool SetupPluginMode(Flags& i) {
         TempStr args = str::DupTemp(str::FindChar(i.pluginURL, '#') + 1);
         str::TransCharsInPlace(args, "#", "&");
         StrVec parts;
-        Split(parts, args, "&", true);
+        Split(&parts, args, "&", true);
         for (int k = 0; k < parts.Size(); k++) {
             char* part = parts.At(k);
             int pageNo;
