@@ -215,7 +215,7 @@ char* StrVecPage::AtHelper(int idx, int* sLen) const {
         return nullptr;
     }
     char* s = (char*)(start + off);
-    //ReportIf(*sLen != str::Leni(s));
+    // ReportIf(*sLen != str::Leni(s));
     return s;
 }
 
@@ -350,7 +350,6 @@ int* StrVec::AllocateSortIndexes() {
     }
     return sortIndexes;
 }
-
 
 void StrVec::Reset(StrVecPage* initWith) {
     InvalidateSortIndexes(this);
@@ -654,7 +653,6 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
 
 char* StrVec::iterator::operator*() const {
     if (this->v->sortIndexes) {
-        int idx = this->v->sortIndexes[this->idx];
         return v->At(idx);
     }
     return page->At(idxInPage);
@@ -662,8 +660,7 @@ char* StrVec::iterator::operator*() const {
 
 StrSpan StrVec::iterator::Span() const {
     if (this->v->sortIndexes) {
-        int idx = this->v->sortIndexes[this->idx];
-        return v->At(idx);
+        return v->AtSpan(idx);
     }
     return page->AtSpan(idxInPage);
 }
@@ -690,9 +687,9 @@ static void AdvanceIter(StrVec::iterator& it, int n) {
 // postfix increment
 // TODO: should return previous state
 StrVec::iterator& StrVec::iterator::operator++(int) {
-    //auto res = *this;
+    // auto res = *this;
     AdvanceIter(*this, 1);
-    //return res;
+    // return res;
     return *this;
 }
 
@@ -756,8 +753,11 @@ void Sort(StrVec* v, StrLessFunc lessFn) {
     if (v->IsEmpty()) {
         return;
     }
-    ReportIf(v->dataSize != 0);
-    SortNoData(v, lessFn);
+    if (v->dataSize == 0) {
+        SortNoData(v, lessFn);
+        return;
+    }
+    SortIndex(v, lessFn);
 }
 
 void SortNoCase(StrVec* v) {

@@ -277,29 +277,81 @@ static void StrVecTest2_1(StrVec* v) {
     StrVecCheckIter(v, nullptr);
 }
 
+static void StrVecTest2_2(StrVec* v) {
+    Sort(v);
+    const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
+    StrVecCheckIter(v, strsSorted);
+
+    auto s = Join(v, "++");
+    utassert(v->Size() == 4);
+    utassert(str::Eq("bar++foo++glee", s));
+    str::Free(s);
+
+    s = Join(v);
+    utassert(str::Eq("barfooglee", s));
+    str::Free(s);
+}
+
+static void StrVecTest2_3(StrVec* v2) {
+    int n = Split(v2, "a,b,,c,", ",");
+    utassert(n == 5 && v2->Find("c") == 3);
+    utassert(v2->Find("") == 2);
+    utassert(v2->Find("", 3) == 4);
+    utassert(v2->Find("", 5) == -1);
+    utassert(v2->Find("B") == -1 && v2->FindI("B") == 1);
+    TempStr joined = JoinTemp(v2, ";");
+    utassert(str::Eq(joined, "a;b;;c;"));
+    TestRemoveAt(v2);
+}
+
+static void StrVecTest2_4(StrVec* v2) {
+    int n = Split(v2, "a,b,,c,", ",", true);
+    utassert(n == 3 && v2->Find("c") == 2);
+    TempStr joined = JoinTemp(v2, ";");
+    utassert(str::Eq(joined, "a;b;c"));
+    StrVecCheckIter(v2, nullptr);
+
+    TestRemoveAt(v2);
+}
+
+static void StrVecTest2_5(StrVec* v2) {
+    int n = Split(v2, "a,b,,c,d", ",", true, 3);
+    const char* s = JoinTemp(v2, "__");
+    utassert(n == 3);
+    utassert(str::Eq(s, "a__b__c,d"));
+
+    v2->Reset();
+    n = Split(v2, "a,b,,c,d", ",", false, 3);
+    s = JoinTemp(v2, "__");
+    utassert(n == 3);
+    // TODO: fix me
+    utassert(str::Eq(s, "a__b__,c,d"));
+
+    v2->Reset();
+    n = Split(v2, "a,b,,c,d", ",", true, 1);
+    utassert(n == 1);
+    s = v2->At(0);
+    utassert(str::Eq(s, "a,b,,c,d"));
+
+    // max 0 is turned into 1
+    v2->Reset();
+    n = Split(v2, "a,b,,c,d", ",", true, 0);
+    s = v2->At(0);
+    utassert(str::Eq(s, "a,b,,c,d"));
+}
+
 static void StrVecTest2() {
     int n;
     char* s;
 
     StrVec v;
     StrVecTest2_1(&v);
+    StrVecTest2_2(&v);
     {
         StrVecWithData<Data1> vd;
         StrVecTest2_1(&vd);
+        StrVecTest2_2(&vd);
     }
-
-    Sort(&v);
-    const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
-    StrVecCheckIter(&v, strsSorted);
-
-    s = Join(&v, "++");
-    utassert(v.Size() == 4);
-    utassert(str::Eq("bar++foo++glee", s));
-    str::Free(s);
-
-    s = Join(&v);
-    utassert(str::Eq("barfooglee", s));
-    str::Free(s);
 
     {
         StrVec v2(v);
@@ -318,52 +370,22 @@ static void StrVecTest2() {
 
     {
         StrVec v2;
-        n = Split(&v2, "a,b,,c,", ",");
-        utassert(n == 5 && v2.Find("c") == 3);
-        utassert(v2.Find("") == 2);
-        utassert(v2.Find("", 3) == 4);
-        utassert(v2.Find("", 5) == -1);
-        utassert(v2.Find("B") == -1 && v2.FindI("B") == 1);
-        TempStr joined = JoinTemp(&v2, ";");
-        utassert(str::Eq(joined, "a;b;;c;"));
-        TestRemoveAt(&v2);
+        StrVecTest2_3(&v2);
+        StrVecWithData<Data1> vd;
+        StrVecTest2_3(&vd);
     }
 
     {
         StrVec v2;
-        n = Split(&v2, "a,b,,c,", ",", true);
-        utassert(n == 3 && v2.Find("c") == 2);
-        TempStr joined = JoinTemp(&v2, ";");
-        utassert(str::Eq(joined, "a;b;c"));
-        StrVecCheckIter(&v2, nullptr);
-
-        TestRemoveAt(&v2);
+        StrVecTest2_4(&v2);
+        StrVecWithData<Data1> vd;
+        StrVecTest2_4(&vd);
     }
     {
         StrVec v2;
-        n = Split(&v2, "a,b,,c,d", ",", true, 3);
-        s = JoinTemp(&v2, "__");
-        utassert(n == 3);
-        utassert(str::Eq(s, "a__b__c,d"));
-
-        v2.Reset();
-        n = Split(&v2, "a,b,,c,d", ",", false, 3);
-        s = JoinTemp(&v2, "__");
-        utassert(n == 3);
-        // TODO: fix me
-        utassert(str::Eq(s, "a__b__,c,d"));
-
-        v2.Reset();
-        n = Split(&v2, "a,b,,c,d", ",", true, 1);
-        utassert(n == 1);
-        s = v2[0];
-        utassert(str::Eq(s, "a,b,,c,d"));
-
-        // max 0 is turned into 1
-        v2.Reset();
-        n = Split(&v2, "a,b,,c,d", ",", true, 0);
-        s = v2[0];
-        utassert(str::Eq(s, "a,b,,c,d"));
+        StrVecTest2_5(&v2);
+        StrVecWithData<Data1> vd;
+        StrVecTest2_5(&vd);
     }
 
     TestRemoveAt(&v);
@@ -534,7 +556,7 @@ static void StrVecTest7() {
 }
 
 static StrVec* stringsForNum;
-static constexpr int kMaxStringN = 10000;
+static constexpr int kMaxStringN = 1000;
 
 static const char* StrForN(int n) {
     ReportIf(n > kMaxStringN);
@@ -669,9 +691,6 @@ static void RemoveRandData(StrVecWithData<T>* v) {
         int sizeExp = v->Size() - 1;
         if (op == 0) {
             bool ok = v->Remove(got);
-            if (!ok) {
-                ok = v->Remove(got);
-            }
             utassert(ok);
         } else if (op == 1) {
             v->RemoveAt(idx);
@@ -703,7 +722,6 @@ static void StrVecTest8() {
     {
         StrVecWithData<Data1> v;
         InsertRandData2<Data1>(&v);
-        //CheckSortOrder(&v);
         RemoveRandData<Data1>(&v);
     }
     {
