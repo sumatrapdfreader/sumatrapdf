@@ -55,7 +55,7 @@ TryAgain64Bit:
 #endif
             goto TryAgain64Bit;
     }
-    SortNatural(versions);
+    SortNatural(&versions);
 
     // return the path to the newest installation
     int nVers = versions.Size();

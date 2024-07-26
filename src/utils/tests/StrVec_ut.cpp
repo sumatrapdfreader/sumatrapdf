@@ -17,6 +17,12 @@ static void ValidateSize(StrVec* v) {
     utassert(size1 == size2);
 }
 
+static void ValidateAtSpan(StrVec* v, int idx, const char* s) {
+    StrSpan sp = v->AtSpan(idx);
+    ReportIf(!str::Eq(s, sp.d));
+    ReportIf(str::Len(s) != sp.size);
+}
+
 static void strEq(const char* s1, const char* s2) {
     bool ok = str::Eq(s1, s2);
     utassert(ok);
@@ -209,7 +215,7 @@ static void StrVecTest1() {
     StrVecTest1_2(&vd);
 
     StrVec sortedView = v;
-    Sort(sortedView);
+    Sort(&sortedView);
 
     int n = dimofi(strs);
     for (int i = 0; i < n; i++) {
@@ -221,7 +227,7 @@ static void StrVecTest1() {
     StrVecTest1_3(&v);
     StrVecTest1_3(&vd);
 
-    SortNoCase(sortedView);
+    SortNoCase(&sortedView);
 
     for (int i = 0; i < n; i++) {
         auto got = sortedView.At(i);
@@ -230,14 +236,14 @@ static void StrVecTest1() {
     }
     TestRandomRemove(&sortedView);
 
-    Sort(v);
+    Sort(&v);
     for (int i = 0; i < n; i++) {
         char* got = v.At(i);
         auto exp = strs[sortedOrder[i]];
         strEq(got, exp);
     }
     StrVecCheckIter(&v, nullptr);
-    SortNoCase(v);
+    SortNoCase(&v);
     for (int i = 0; i < n; i++) {
         char* got = v.At(i);
         auto exp = strs[sortedNoCaseOrder[i]];
@@ -282,7 +288,7 @@ static void StrVecTest2() {
         StrVecTest2_1(&vd);
     }
 
-    Sort(v);
+    Sort(&v);
     const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
     StrVecCheckIter(&v, strsSorted);
 
@@ -535,7 +541,7 @@ static const char* StrForN(int n) {
     if (!stringsForNum) {
         stringsForNum = new StrVec();
         for (int i = 0; i < kMaxStringN + 1; i++) {
-            char* s = str::Format("%d", n);
+            char* s = str::Format("%d", i);
             stringsForNum->Append(s);
             str::Free(s);
         }
@@ -556,56 +562,66 @@ static void InsertRandData(StrVecWithData<T>* v) {
 }
 
 template <typename T>
+static void validateStringMatchesData(StrVecWithData<T>* v) {
+    int nStrings = v->Size();
+    StrSpan got;
+    const char* exp;
+    T* d;
+    int n;
+    for (int i = 0; i < nStrings; i++) {
+        d = v->AtData(i);
+        n = (int)d->n;
+        got = v->AtSpan(i);
+        exp = StrForN(n);
+        utassert(str::Eq(got.CStr(), exp));
+    }
+}
+
+template <typename T>
 static void InsertRandData2(StrVecWithData<T>* v) {
+    StrSpan got;
     for (int i = 0; i < kMaxStringN; i++) {
-        const char* s = StrForN(i);
         int op = rand() % 12;
         if (op <= 5) {
             T data;
             data.n = (decltype(data.n))i;
+            const char* s = StrForN(i);
             int idx = v->Append(s, data);
+            ValidateAtSpan(v, idx, s);
             T* d = v->AtData(idx);
             utassert(d->n == i);
-            ValidateSize(v);
         } else if (op <= 7) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
+                const char* s = StrForN(idx);
                 v->InsertAt(idx, s);
+                ValidateAtSpan(v, idx, s);
                 T* d = v->AtData(idx);
                 d->n = (decltype(d->n))idx;
-                ValidateSize(v);
             }
         } else if (op <= 9) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
+                const char* s = StrForN(idx);
                 v->SetAt(idx, s);
+                ValidateAtSpan(v, idx, s);
                 T* d = v->AtData(idx);
                 d->n = (decltype(d->n))idx;
-                ValidateSize(v);
             }
         } else if (op == 10) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
                 v->RemoveAt(idx);
-                ValidateSize(v);
             }
         } else {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
                 v->RemoveAtFast(idx);
-                ValidateSize(v);
             }
         }
     }
-
-    int nStrings = v->Size();
-    for (int i = 0; i < nStrings; i++) {
-        T* d = v->AtData(i);
-        int n = (int)d->n;
-        const char* exp = StrForN(n);
-        const char* got = v->At(i);
-        utassert(str::Eq(got, exp));
-    }
+    ValidateSize(v);
+    validateStringMatchesData(v);
 }
 
 static void InsertRandData3(StrVec* v) {
@@ -614,33 +630,29 @@ static void InsertRandData3(StrVec* v) {
         int op = rand() % 12;
         if (op <= 5) {
             v->Append(s);
-            ValidateSize(v);
         } else if (op <= 7) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
                 v->InsertAt(idx, s);
-                ValidateSize(v);
             }
         } else if (op <= 9) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
                 v->SetAt(idx, s);
-                ValidateSize(v);
             }
         } else if (op == 10) {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
                 v->RemoveAt(idx);
-                ValidateSize(v);
             }
         } else {
             if (!v->IsEmpty()) {
                 int idx = randIdx(v);
                 v->RemoveAtFast(idx);
-                ValidateSize(v);
             }
         }
     }
+    ValidateSize(v);
 }
 
 template <typename T>
@@ -657,6 +669,9 @@ static void RemoveRandData(StrVecWithData<T>* v) {
         int sizeExp = v->Size() - 1;
         if (op == 0) {
             bool ok = v->Remove(got);
+            if (!ok) {
+                ok = v->Remove(got);
+            }
             utassert(ok);
         } else if (op == 1) {
             v->RemoveAt(idx);
@@ -667,11 +682,34 @@ static void RemoveRandData(StrVecWithData<T>* v) {
     }
 }
 
+#if 0
+static void CheckSortOrder(StrVec* v, StrLessFunc lessFn = nullptr) {
+    int n = v->Size();
+    if (n < 2) {
+        return;
+    }
+    if (lessFn == nullptr) {
+        lessFn = StrLess;
+    }
+    for (int i = 1; i < n; i++) {
+        const char* prev = v->At(i - 1);
+        const char* cur = v->At(i);
+        utassert(lessFn(prev, cur) == true);
+    }
+}
+#endif
+
 static void StrVecTest8() {
     {
-        StrVec v;
-        InsertRandData3(&v);
-        TestRemoveAt(&v);
+        StrVecWithData<Data1> v;
+        InsertRandData2<Data1>(&v);
+        //CheckSortOrder(&v);
+        RemoveRandData<Data1>(&v);
+    }
+    {
+        StrVecWithData<Data2> v;
+        InsertRandData2<Data2>(&v);
+        RemoveRandData<Data2>(&v);
     }
     {
         StrVecWithData<Data1> v;
@@ -684,14 +722,9 @@ static void StrVecTest8() {
         RemoveRandData<Data2>(&v);
     }
     {
-        StrVecWithData<Data1> v;
-        InsertRandData2<Data1>(&v);
-        RemoveRandData<Data1>(&v);
-    }
-    {
-        StrVecWithData<Data2> v;
-        InsertRandData2<Data2>(&v);
-        RemoveRandData<Data2>(&v);
+        StrVec v;
+        InsertRandData3(&v);
+        TestRemoveAt(&v);
     }
 }
 

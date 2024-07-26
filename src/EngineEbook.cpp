@@ -631,7 +631,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
         return nullptr;
     }
 
-    SortNatural(fonts);
+    SortNatural(&fonts);
     return JoinTemp(&fonts, "\n");
 }
 

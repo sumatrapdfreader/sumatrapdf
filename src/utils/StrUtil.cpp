@@ -208,6 +208,18 @@ StrSpan::StrSpan(const char* s, int sLen) {
     }
 }
 
+bool IsEqual(const StrSpan& d1, const StrSpan& d2) {
+    if (d1.Len() != d2.Len()) {
+        return false;
+    }
+    if (d1.Len() == 0) {
+        return true;
+    }
+    ReportIf(!d1.d || !d2.d);
+    int res = memcmp(d1.d, d2.d, d1.Len());
+    return res == 0;
+}
+
 namespace str {
 
 size_t Len(const char* s) {

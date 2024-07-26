@@ -5,12 +5,17 @@
 
 typedef bool (*StrLessFunc)(const char* s1, const char* s2);
 
+bool StrLess(const char* s1, const char* s2);
+bool StrLessNoCase(const char* s1, const char* s2);
+bool StrLessNatural(const char* s1, const char* s2);
+
 ByteSlice ToByteSlice(const char* s);
 
 struct StrVecPage;
 
 struct StrVec {
     StrVecPage* first = nullptr;
+    int* sortIndexes = nullptr;
     int nextPageSize = 256;
     int size = 0;
     int dataSize = 0;
@@ -21,6 +26,7 @@ struct StrVec {
     StrVec& operator=(const StrVec& that);
     ~StrVec();
 
+    int* AllocateSortIndexes();
     void Reset(StrVecPage* = nullptr);
 
     int Size() const;
@@ -81,23 +87,14 @@ struct StrVecWithData : StrVec {
 
 int AppendIfNotExists(StrVec& v, const char* s, int sLen = -1);
 
-void Sort(StrVec& v, StrLessFunc lessFn = nullptr);
-void SortNoCase(StrVec&);
-void SortNatural(StrVec&);
+void Sort(StrVec* v, StrLessFunc lessFn = StrLess);
+void SortIndex(StrVec* v, StrLessFunc lessFn = StrLess);
+void SortNoCase(StrVec*);
+void SortNatural(StrVec*);
 
 int Split(StrVec* v, const char* s, const char* separator, bool collapse = false, int max = -1);
 char* Join(StrVec* v, const char* sep = nullptr);
 TempStr JoinTemp(StrVec* v, const char* sep);
-
-struct StrVecIndex {
-    int n = 0;
-    int* indexes = nullptr;
-    StrVecIndex() = default;
-    ~StrVecIndex();
-    int* Alloc(int n);
-};
-
-void Sort(StrVec* v, StrVecIndex& idxOut, StrLessFunc lessFn = nullptr);
 
 StrVecPage* StrVecPageNext(StrVecPage*);
 int StrVecPageSize(StrVecPage*);

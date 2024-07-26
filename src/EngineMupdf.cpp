@@ -1412,7 +1412,7 @@ static void EnsureLabelsUnique(StrVec* labels) {
     }
     // ensure that all page labels are unique (by appending a number to duplicates)
     StrVec dups(*labels);
-    Sort(dups);
+    Sort(&dups);
     int nDups = dups.Size();
     for (int i = 1; i < nDups; i++) {
         char* s = dups.At(i);
@@ -3307,7 +3307,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         return nullptr;
     }
 
-    SortNatural(fonts);
+    SortNatural(&fonts);
     return JoinTemp(&fonts, "\n");
 }
 

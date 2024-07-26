@@ -3420,7 +3420,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
         files.RemoveAt(i);
     }
     AppendIfNotExists(files, path);
-    SortNatural(files);
+    SortNatural(&files);
     return files;
 }
 
