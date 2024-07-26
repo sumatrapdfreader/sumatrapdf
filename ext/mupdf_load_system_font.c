@@ -371,7 +371,7 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
 }
 
 static void parseTTFs(fz_context* ctx, const char* path) {
-    fz_stream* file = nullptr; ;
+    fz_stream* file = nullptr;
     fz_try(ctx) {
         file = fz_open_file(ctx, path);
         parseTTF(ctx, file, 0, 0, path);

@@ -138,6 +138,33 @@ static void StrVecTest1_2(StrVec* v) {
     StrVecCheckIter(v, strs, 0);
 }
 
+static void StrVecTest1_3(StrVec* v) {
+    int n = v->Size();
+    // allocate a bunch to test allocating
+    const char* str = strs[4];
+    for (int i = 0; i < 1024; i++) {
+        v->Append(str);
+    }
+    utassert(v->Size() == 1024 + n);
+
+    for (int i = 0; i < n; i++) {
+        auto got = v->At(i);
+        auto exp = strs[unsortedOrder[i]];
+        strEq(got, exp);
+    }
+
+    for (int i = 0; i < 1024; i++) {
+        auto got = v->At(i + n);
+        strEq(got, str);
+    }
+}
+
+static void StrVecTest1_4(StrVec* v) {
+    v->SetAt(3, nullptr);
+    utassert(nullptr == v->At(3));
+    TestRemoveAt(v);
+}
+
 static void StrVecTest1() {
     {
         StrVec v;
@@ -154,6 +181,10 @@ static void StrVecTest1() {
     }
     StrVec v;
     StrVecTest1_2(&v);
+
+    StrVecWithData<Data1> vd;
+    StrVecTest1_2(&vd);
+
     StrVec sortedView = v;
     Sort(sortedView);
 
@@ -164,23 +195,9 @@ static void StrVecTest1() {
         strEq(got, exp);
     }
 
-    // allocate a bunch to test allocating
-    for (int i = 0; i < 1024; i++) {
-        v.Append(strs[4]);
-    }
-    utassert(v.Size() == 1024 + n);
+    StrVecTest1_3(&v);
+    StrVecTest1_3(&vd);
 
-    for (int i = 0; i < n; i++) {
-        auto got = v.At(i);
-        auto exp = strs[unsortedOrder[i]];
-        strEq(got, exp);
-    }
-
-    for (int i = 0; i < 1024; i++) {
-        auto got = v.At(i + n);
-        auto exp = strs[4];
-        strEq(got, exp);
-    }
     SortNoCase(sortedView);
 
     for (int i = 0; i < n; i++) {
@@ -203,9 +220,8 @@ static void StrVecTest1() {
         auto exp = strs[sortedNoCaseOrder[i]];
         strEq(got, exp);
     }
-    v.SetAt(3, nullptr);
-    utassert(nullptr == v[3]);
-    TestRemoveAt(&v);
+    StrVecTest1_4(&v);
+    StrVecTest1_4(&vd);
 }
 
 static void StrVecTest2() {

@@ -287,6 +287,7 @@ char* StrVecPage::Append(const char* s, int sLen) {
 }
 
 char* StrVecPage::AtHelper(int idx, int& sLen) const {
+    ReportIf(idx >= nStrings);
     u8* start = (u8*)this;
     u32* offsets = OffsetsForString(this, idx);
     u32 off = offsets[0];
@@ -317,6 +318,7 @@ void* StrVecPage::AtDataRaw(int idx) const {
 
 // we don't de-allocate removed strings so we can safely return the string
 char* StrVecPage::RemoveAt(int idx) {
+    ReportIf(nStrings <= 0 || idx >= nStrings);
     int sLen;
     char* s = AtHelper(idx, sLen);
     nStrings--;
@@ -335,6 +337,7 @@ char* StrVecPage::RemoveAt(int idx) {
 }
 
 char* StrVecPage::RemoveAtFast(int idx) {
+    ReportIf(nStrings <= 0 || idx >= nStrings);
     int sLen;
     char* s = AtHelper(idx, sLen);
     // TODO(perf): if removing the last string
@@ -518,7 +521,7 @@ int AppendIfNotExists(StrVec& v, const char* s, int sLen) {
 
 static std::pair<StrVecPage*, int> PageForIdx(const StrVec* v, int idx) {
     auto page = v->first;
-    while (page && idx > 0) {
+    while (page) {
         if (page->nStrings > idx) {
             return {page, idx};
         }
