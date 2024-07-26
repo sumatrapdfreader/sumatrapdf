@@ -397,7 +397,7 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
     for (size_t i = 0; i < iMax; i++) {
         fs = frequencyList.at(i);
         char* fp = fs->filePath;
-        AppendIfNotExists(toCheck, fp);
+        AppendIfNotExists(&toCheck, fp);
     }
 }
 

@@ -162,24 +162,45 @@ static bool IsCmdInMenuList(i32 cmdId, UINT_PTR* a) {
     return false;
 }
 
+struct ItemDataCP {
+    i32 cmdId = 0;
+    WindowTab* tab = nullptr;
+    const char* filePath = nullptr;
+};
+
+using StrVecCP = StrVecWithData<ItemDataCP>;
+
+struct ListBoxModelCP : ListBoxModel {
+    StrVecCP strings;
+
+    ListBoxModelCP() = default;
+    ~ListBoxModelCP() override = default;
+    int ItemsCount() override {
+        return strings.Size();
+    }
+    const char* Item(int i) override {
+        return strings.At(i);
+    }
+};
+
 struct CommandPaletteWnd : Wnd {
     ~CommandPaletteWnd() override = default;
     HFONT font = nullptr;
     MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
-    StrVec filesInTabs;
-    StrVec filesInHistory;
-    StrVec commands;
+    StrVecCP filesInTabs;
+    StrVecCP filesInHistory;
+    StrVecCP commands;
     ListBox* listBox = nullptr;
 
-    int currTabPos = 0;
+    int currTabIdx = 0;
 
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 
     void CollectStrings(MainWindow*);
-    void FilterStringsForQuery(const char*, StrVec&);
+    void FilterStringsForQuery(const char*, StrVecCP&);
 
     bool Create(MainWindow* win, const char* prefix);
     void QueryChanged();
@@ -414,7 +435,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     ctx.hasToc = mainWin->ctrl && mainWin->ctrl->HasToc();
 
     // append paths of opened files
-    int tabPos = 0;
+    int tabIdx = 0;
     for (MainWindow* mw : gWindows) {
         if (mw == mainWin) {
             for (WindowTab* tab2 : mainWin->Tabs()) {
@@ -423,12 +444,14 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
                 }
                 const char* name = tab2->filePath;
                 name = path::GetBaseNameTemp(name);
-                AppendIfNotExists(filesInTabs, name);
+                ItemDataCP data;
+                data.tab = tab2;
+                filesInTabs.Append(name, data);
                 // find current tab index
                 if (tab2 == mainWin->CurrentTab()) {
-                    currTabPos = tabPos;
+                    currTabIdx = tabIdx;
                 }
-                tabPos++;
+                tabIdx++;
             }
         }
     }
@@ -438,10 +461,12 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     for (FileState* fs : *gGlobalPrefs->fileStates) {
         char* s = fs->filePath;
         s = ConvertPathForDisplayTemp(s);
-        filesInHistory.Append(s);
+        ItemDataCP data;
+        data.filePath = fs->filePath;
+        filesInHistory.Append(s, data);
     }
 
-    StrVec tempStrings;
+    StrVecCP tempCommands;
     int cmdId = (int)CmdFirst + 1;
     for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, &cmdId)) {
         if (cmdId == CmdAdvancedOptions) {
@@ -449,7 +474,9 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         }
         if (AllowCommand(ctx, (i32)cmdId)) {
             ReportIf(str::Leni(strs) == 0);
-            tempStrings.Append(strs);
+            ItemDataCP data;
+            data.cmdId = (i32)cmdId;
+            tempCommands.Append(strs, data);
         }
     }
     for (auto& ev : *gGlobalPrefs->externalViewers) {
@@ -457,23 +484,28 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
             continue;
         }
         if (AllowCommand(ctx, ev->cmdId)) {
-            tempStrings.Append(ev->name);
+            ItemDataCP data;
+            data.cmdId = (i32)cmdId;
+            tempCommands.Append(ev->name, data);
         }
     }
 
     // we want the commands sorted
-    SortNoCase(&tempStrings);
-    for (char* s : tempStrings) {
-        commands.Append(s);
+    SortNoCase(&tempCommands);
+    int n = tempCommands.Size();
+    for (int i = 0; i < n; i++) {
+        commands.AppendFrom(&tempCommands, i);
     }
 }
 
 static void SwitchToCommands(CommandPaletteWnd* wnd) {
     logf("commands\n");
 }
+
 static void SwitchToTabs(CommandPaletteWnd* wnd) {
     logf("tabs\n");
 }
+
 static void SwitchToFileHistory(CommandPaletteWnd* wnd) {
     logf("file history\n");
 }
@@ -566,7 +598,7 @@ static bool FilterMatches(const char* str, const char* filter) {
         if (str::IsWs(*s)) {
             *s = 0;
             if (!wasWs) {
-                AppendIfNotExists(words, wordStart);
+                AppendIfNotExists(&words, wordStart);
                 wasWs = true;
             }
             wordStart = s + 1;
@@ -574,7 +606,7 @@ static bool FilterMatches(const char* str, const char* filter) {
         s++;
     }
     if (str::Leni(wordStart) > 0) {
-        AppendIfNotExists(words, wordStart);
+        AppendIfNotExists(&words, wordStart);
     }
     // all words must be present
     int nWords = words.Size();
@@ -587,12 +619,14 @@ static bool FilterMatches(const char* str, const char* filter) {
     return true;
 }
 
-static void FilterStrings(StrVec& strs, const char* filter, StrVec& matchedOut) {
-    for (char* s : strs) {
+static void FilterStrings(StrVecCP& strs, const char* filter, StrVecCP& matchedOut) {
+    int n = strs.Size();
+    for (int i = 0; i < n; i++) {
+        const char* s = strs.At(i);
         if (!FilterMatches(s, filter)) {
             continue;
         }
-        matchedOut.Append(s);
+        matchedOut.AppendFrom(&strs, i);
     }
 }
 
@@ -603,10 +637,9 @@ const char* SkipWS(const char* s) {
     return s;
 }
 
-void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVec& strings) {
-    filter = SkipWS(filter);
-    bool skipFiles = (filter[0] == '>');
-    bool onlyTabs = (filter[0] == '@');
+void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& strings) {
+    bool skipFiles = str::StartsWith(filter, kPalettePrefixCommands);
+    bool onlyTabs = str::StartsWith(filter, kPalettePrefixTabs);
     if (skipFiles || onlyTabs) {
         ++filter;
         filter = SkipWS(filter);
@@ -625,56 +658,29 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVec& string
 }
 
 void CommandPaletteWnd::QueryChanged() {
-    char* filter = editQuery->GetTextTemp();
-    auto m = (ListBoxModelStrings*)listBox->model;
+    const char* filter = editQuery->GetTextTemp();
+    filter = SkipWS(filter);
+    auto m = (ListBoxModelCP*)listBox->model;
     FilterStringsForQuery(filter, m->strings);
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
-        if (str::Eq(filter, "@")) {
-            listBox->SetCurrentSelection(currTabPos);
+        if (str::StartsWith(filter, kPalettePrefixTabs)) {
+            listBox->SetCurrentSelection(currTabIdx);
         } else {
             listBox->SetCurrentSelection(0);
         }
     }
 }
 
-static WindowTab* FindOpenedFile(const char* s) {
-    for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab->IsAboutTab()) {
-                continue;
-            }
-            const char* name = tab->filePath;
-            name = path::GetBaseNameTemp(name);
-            if (str::Eq(name, s)) {
-                return tab;
-            }
-        }
-    }
-    return nullptr;
-}
-
-static int ExternalViewerCmdIdByName(const char* name) {
-    for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (str::Eq(ev->name, name)) {
-            return ev->cmdId;
-        }
-    }
-    return -1;
-}
-
 void CommandPaletteWnd::ExecuteCurrentSelection() {
-    int sel = listBox->GetCurrentSelection();
-    if (sel < 0) {
+    int idx = listBox->GetCurrentSelection();
+    if (idx < 0) {
         return;
     }
-    auto m = (ListBoxModelStrings*)listBox->model;
-    const char* s = m->Item(sel);
-    int cmdId = GetCommandIdByDesc(s);
-    if (cmdId <= 0) {
-        cmdId = ExternalViewerCmdIdByName(s);
-    }
-    if (cmdId >= 0) {
+    auto m = (ListBoxModelCP*)listBox->model;
+    ItemDataCP* data = m->strings.AtData(idx);
+    i32 cmdId = data->cmdId;
+    if (cmdId != 0) {
         bool noActivate = IsCmdInList(cmdId, gCommandsNoActivate);
         if (noActivate) {
             gHwndToActivateOnClose = nullptr;
@@ -684,48 +690,25 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         return;
     }
 
-    bool isFromTab = filesInTabs.Contains(s);
-    if (isFromTab) {
-        WindowTab* tab = nullptr;
-        // First find opened file in current window
-        for (WindowTab* winTab : win->Tabs()) {
-            if (winTab->IsAboutTab()) {
-                continue;
-            }
-            const char* name = winTab->filePath;
-            name = path::GetBaseNameTemp(name);
-            if (str::Eq(name, s)) {
-                tab = winTab;
-            }
+    WindowTab* tab = data->tab;
+    if (tab != nullptr) {
+        MainWindow* mainWin = tab->win;
+        if (mainWin->CurrentTab() != tab) {
+            SelectTabInWindow(tab);
         }
-
-        // If not found, find it in other windows
-        if (tab == nullptr) {
-            tab = FindOpenedFile(s);
-        }
-
-        if (tab) {
-            if (tab->win->CurrentTab() != tab) {
-                SelectTabInWindow(tab);
-            }
-            gHwndToActivateOnClose = tab->win->hwndFrame;
-            ScheduleDelete();
-            return;
-        }
+        gHwndToActivateOnClose = mainWin->hwndFrame;
+        ScheduleDelete();
+        return;
     }
-
-    for (FileState* fs : *gGlobalPrefs->fileStates) {
-        char* path = fs->filePath;
-        char* converted = ConvertPathForDisplayTemp(path);
-        if (str::Eq(s, converted)) {
-            LoadArgs args(path, win);
-            args.forceReuse = false; // open in a new tab
-            LoadDocumentAsync(&args);
-            ScheduleDelete();
-            return;
-        }
+    auto filePath = data->filePath;
+    if (filePath) {
+        LoadArgs args(filePath, win);
+        args.forceReuse = false; // open in a new tab
+        LoadDocumentAsync(&args);
+        ScheduleDelete();
+        return;
     }
-    logf("CommandPaletteWnd::ExecuteCurrentSelection: no match for selection '%s'\n", s);
+    logf("CommandPaletteWnd::ExecuteCurrentSelection: no match for selection '%s'\n", m->strings.At(idx));
     ReportIf(true);
     ScheduleDelete();
 }
@@ -830,7 +813,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         c->SetInsetsPt(4, 0);
         auto wnd = c->Create(args);
         ReportIf(!wnd);
-        auto m = new ListBoxModelStrings();
+        auto m = new ListBoxModelCP();
         FilterStringsForQuery("", m->strings);
         c->SetModel(m);
         listBox = c;

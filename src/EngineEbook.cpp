@@ -624,7 +624,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
                 continue;
             }
             char* fontName = ToUtf8Temp(fontNameW);
-            AppendIfNotExists(fonts, fontName);
+            AppendIfNotExists(&fonts, fontName);
         }
     }
     if (fonts.Size() == 0) {

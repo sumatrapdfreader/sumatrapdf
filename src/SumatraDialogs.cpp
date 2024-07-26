@@ -750,10 +750,10 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 StrVec detected;
                 for (auto e : textEditors) {
                     const char* open = e->openFileCmd;
-                    AppendIfNotExists(detected, open);
+                    AppendIfNotExists(&detected, open);
                 }
                 if (cmdLine) {
-                    AppendIfNotExists(detected, cmdLine);
+                    AppendIfNotExists(&detected, cmdLine);
                 } else {
                     cmdLine = detected[0];
                 }

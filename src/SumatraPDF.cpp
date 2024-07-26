@@ -2036,7 +2036,7 @@ MainWindow* LoadDocument(LoadArgs* args) {
                 logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)durMs, nPages, path);
             } else {
                 logf("LoadDocument: failed to load '%s' in %.2f ms\n", path, (float)durMs);
-                AppendIfNotExists(gFilesFailedToOpen, path);
+                AppendIfNotExists(&gFilesFailedToOpen, path);
             }
         }
 
@@ -3419,7 +3419,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
         }
         files.RemoveAt(i);
     }
-    AppendIfNotExists(files, path);
+    AppendIfNotExists(&files, path);
     SortNatural(&files);
     return files;
 }
@@ -5309,11 +5309,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdCommandPaletteNoFiles:
-            RunCommandPallette(win, ">");
+            RunCommandPallette(win, kPalettePrefixCommands);
             break;
 
         case CmdCommandPaletteOnlyTabs:
-            RunCommandPallette(win, "@");
+            RunCommandPallette(win, kPalettePrefixTabs);
             break;
 
         case CmdClearHistory:

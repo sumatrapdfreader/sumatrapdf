@@ -243,7 +243,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         logf("ReadDirectoryChangesNotification: %s '%s'\n", actionName, fileName);
         if (notify->Action == FILE_ACTION_ADDED || notify->Action == FILE_ACTION_MODIFIED ||
             notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
-            AppendIfNotExists(changedFiles, fileName);
+            AppendIfNotExists(&changedFiles, fileName);
         }
 
         // step to the next entry if there is one

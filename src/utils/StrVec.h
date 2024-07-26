@@ -26,7 +26,6 @@ struct StrVec {
     StrVec& operator=(const StrVec& that);
     ~StrVec();
 
-    int* AllocateSortIndexes();
     void Reset(StrVecPage* = nullptr);
 
     int Size() const;
@@ -58,9 +57,9 @@ struct StrVec {
         iterator(const StrVec* v, int idx);
         char* operator*() const;
         StrSpan Span() const;
-        iterator& operator++();    // ++it
+        iterator& operator++();   // ++it
         iterator operator++(int); // it++
-        iterator& operator+(int);  // it += n
+        iterator& operator+(int); // it += n
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
     };
@@ -72,20 +71,35 @@ template <typename T>
 struct StrVecWithData : StrVec {
     StrVecWithData() : StrVec((int)sizeof(T)) {
     }
+
     T* AtData(int i) const {
         void* res = AtDataRaw(i);
         return (T*)(res);
     }
-    int Append(const char* s, const T& data) {
-        StrVec::Append(s);
+
+    int Append(const StrSpan& s, const T& data) {
+        StrVec::Append(s.CStr(), s.Size());
         int idx = Size() - 1;
         T* d = AtData(idx);
         *d = data;
         return idx;
     }
+
+    int Append(const char* s, const T& data) {
+        StrSpan sp(s);
+        int idx = this->Append(sp, data);
+        return idx;
+    }
+
+    int AppendFrom(StrVecWithData<T>* src, int srcIdx) {
+        StrSpan s = src->AtSpan(srcIdx);
+        T* data = src->AtData(srcIdx);
+        int idx = this->Append(s, *data);
+        return idx;
+    }
 };
 
-int AppendIfNotExists(StrVec& v, const char* s, int sLen = -1);
+int AppendIfNotExists(StrVec* v, const char* s, int sLen = -1);
 
 void Sort(StrVec* v, StrLessFunc lessFn = StrLess);
 void SortIndex(StrVec* v, StrLessFunc lessFn = StrLess);

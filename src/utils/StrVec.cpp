@@ -342,15 +342,6 @@ static inline void InvalidateSortIndexes(StrVec* v) {
     }
 }
 
-int* StrVec::AllocateSortIndexes() {
-    InvalidateSortIndexes(this);
-    sortIndexes = (int*)Allocator::Alloc(nullptr, size * sizeof(int));
-    for (int i = 0; i < size; i++) {
-        sortIndexes[i] = i;
-    }
-    return sortIndexes;
-}
-
 void StrVec::Reset(StrVecPage* initWith) {
     InvalidateSortIndexes(this);
     FreePages(first);
@@ -461,15 +452,15 @@ char* StrVec::Append(const char* s, int sLen) {
 }
 
 // returns index of inserted string, -1 if not inserted
-int AppendIfNotExists(StrVec& v, const char* s, int sLen) {
+int AppendIfNotExists(StrVec* v, const char* s, int sLen) {
     if (sLen < 0) {
         sLen = str::Leni(s);
     }
-    if (v.Contains(s, sLen)) {
+    if (v->Contains(s, sLen)) {
         return -1;
     }
-    int idx = v.Size();
-    v.Append(s, sLen);
+    int idx = v->Size();
+    v->Append(s, sLen);
     return idx;
 }
 
@@ -731,11 +722,21 @@ static void SortNoData(StrVec* v, StrLessFunc lessFn) {
     });
 }
 
+static int* AllocateSortIndexes(StrVec* v) {
+    InvalidateSortIndexes(v);
+    int n = v->Size();
+    auto res = AllocArray<int>(n);
+    for (int i = 0; i < n; i++) {
+        res[i] = i;
+    }
+    return res;
+}
+
 void SortIndex(StrVec* v, StrLessFunc lessFn) {
     if (v->IsEmpty()) {
         return;
     }
-    int* indexes = v->AllocateSortIndexes();
+    int* indexes = AllocateSortIndexes(v);
     int n = v->Size();
     int* b = indexes;
     int* e = indexes + n;
@@ -745,6 +746,7 @@ void SortIndex(StrVec* v, StrLessFunc lessFn) {
         bool ret = lessFn(s1, s2);
         return ret;
     });
+    v->sortIndexes = indexes;
 }
 
 void Sort(StrVec* v, StrLessFunc lessFn) {
