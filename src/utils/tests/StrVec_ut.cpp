@@ -19,10 +19,16 @@ static void TestRemoveFromStart(StrVec* v) {
     }
 }
 
+static int randIdx(StrVec* v) {
+    int n = v->Size();
+    int idx = rand() % n;
+    return idx;
+}
+
 static void TestRandomRemove(StrVec* v) {
+    int idx;
     while (!v->IsEmpty()) {
-        int n = v->Size();
-        int idx = rand() % n;
+        idx = randIdx(v);
         const char* s = v->At(idx);
         bool ok = v->Remove(s);
         utassert(ok);
@@ -119,10 +125,6 @@ static int unsortedOrder[] = {0, 1, 2, 3, 4};
 static int sortedOrder[]{3, 2, 1, 0, 4};
 static int sortedNoCaseOrder[]{3, 1, 2, 0, 4};
 
-struct Data1 {
-    u16 n;
-};
-
 static void StrVecTest1_1(StrVec* v) {
     const char* s = "lolda";
     v->InsertAt(0, s);
@@ -164,6 +166,16 @@ static void StrVecTest1_4(StrVec* v) {
     utassert(nullptr == v->At(3));
     TestRemoveAt(v);
 }
+
+struct Data1 {
+    u16 n;
+};
+
+struct Data2 {
+    char b;
+    void* p;
+    i64 n;
+};
 
 static void StrVecTest1() {
     {
@@ -223,6 +235,7 @@ static void StrVecTest1() {
     StrVecTest1_4(&v);
     StrVecTest1_4(&vd);
 }
+
 static void StrVecTest2_1(StrVec* v) {
     v->Append("foo");
     v->Append("bar");
@@ -503,7 +516,73 @@ static void StrVecTest7() {
     }
 }
 
+static StrVec* stringsForNum;
+static constexpr int kMaxStringN = 10000;
+
+static const char* StrForN(int n) {
+    ReportIf(n > kMaxStringN);
+    if (!stringsForNum) {
+        stringsForNum = new StrVec();
+        for (int i = 0; i < kMaxStringN + 1; i++) {
+            char* s = str::Format("%d", n);
+            stringsForNum->Append(s);
+            str::Free(s);
+        }
+    }
+    return (const char*)stringsForNum->At(n);
+}
+
+template <typename T>
+static void InsertRandData(StrVecWithData<T>* v) {
+    for (int i = 0; i < kMaxStringN; i++) {
+        const char* s = StrForN(i);
+        T data;
+        data.n = (decltype (data.n))i;
+        v->Append(s, data);
+        T* d = v->AtData(i);
+        utassert(d->n == i);
+    }
+}
+
+template <typename T>
+static void RemoveRandData(StrVecWithData<T>* v) {
+    int idx;
+    while (v->Size() > 0) {
+        idx = randIdx(v);
+        const char* got = v->At(idx);
+        T* d = v->AtData(idx);
+        int n = (int)d->n;
+        const char* exp = StrForN(n);
+        utassert(str::Eq(got, exp));
+        int op = idx % 3;
+        int sizeExp = v->Size() - 1;
+        if (op == 0) {
+            bool ok = v->Remove(got);
+            utassert(ok);
+        } else if (op == 1) {
+            v->RemoveAt(idx);
+        } else {
+            v->RemoveAtFast(idx);
+        }
+        utassert(v->Size() == sizeExp);
+    }
+}
+
+static void StrVecTest8() {
+    {
+        StrVecWithData<Data1> v;
+        InsertRandData<Data1>(&v);
+        RemoveRandData<Data1>(&v);
+    }
+    {
+        StrVecWithData<Data2> v;
+        InsertRandData<Data2>(&v);
+        RemoveRandData<Data2>(&v);
+    }
+}
+
 void StrVecTest() {
+    StrVecTest8();
     StrVecTest1();
     StrVecTest2();
     StrVecTest3();

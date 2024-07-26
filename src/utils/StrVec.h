@@ -70,6 +70,11 @@ struct StrVecWithData : StrVec {
         void* res = AtDataRaw(i);
         return (T*)(res);
     }
+    void Append(const char* s, const T& data) {
+        StrVec::Append(s);
+        T* d = AtData(Size() - 1);
+        *d = data;
+    }
 };
 
 int AppendIfNotExists(StrVec& v, const char* s, int sLen = -1);
