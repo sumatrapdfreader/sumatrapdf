@@ -685,12 +685,10 @@ static void AdvanceIter(StrVec::iterator& it, int n) {
 }
 
 // postfix increment
-// TODO: should return previous state
-StrVec::iterator& StrVec::iterator::operator++(int) {
-    // auto res = *this;
+StrVec::iterator StrVec::iterator::operator++(int) {
+    auto res = *this;
     AdvanceIter(*this, 1);
-    // return res;
-    return *this;
+    return res;
 }
 
 StrVec::iterator& StrVec::iterator::operator++() {

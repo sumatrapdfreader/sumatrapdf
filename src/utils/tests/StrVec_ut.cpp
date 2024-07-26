@@ -341,7 +341,6 @@ static void StrVecTest2_5(StrVec* v2) {
 }
 
 static void StrVecTest2() {
-    int n;
     char* s;
 
     StrVec v;

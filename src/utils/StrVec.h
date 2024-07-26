@@ -59,7 +59,7 @@ struct StrVec {
         char* operator*() const;
         StrSpan Span() const;
         iterator& operator++();    // ++it
-        iterator& operator++(int); // it++
+        iterator operator++(int); // it++
         iterator& operator+(int);  // it += n
         friend bool operator==(const iterator& a, const iterator& b);
         friend bool operator!=(const iterator& a, const iterator& b);
