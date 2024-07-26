@@ -45,91 +45,6 @@ static bool strLessNatural(const char* s1, const char* s2) {
     return n < 0; // TODO: verify it's < and not >
 }
 
-static bool reachedMax(int nAdded, int max) {
-    if (max < 0) {
-        return false;
-    }
-    if (max == 0) {
-        max = 1;
-    }
-    return nAdded >= max;
-}
-
-/* splits a string into several substrings, separated by the separator
-(optionally collapsing several consecutive separators into one);
-e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
-(resp. "a", "b", "c" if separators are collapsed) */
-int Split(StrVec* v, const char* s, const char* separator, bool collapse, int max) {
-    int startSize = v->Size();
-    const char* next;
-    int nAdded = 0;
-    while (true) {
-        if (reachedMax(nAdded, max)) {
-            return nAdded;
-        }
-        next = str::Find(s, separator);
-        if (!next) {
-            break;
-        }
-        if (!collapse || next > s) {
-            nAdded++;
-            if (reachedMax(nAdded, max)) {
-                // this is the last one
-                v->Append(s);
-                return nAdded;
-            }
-            int sLen = (int)(next - s);
-            v->Append(s, sLen);
-        }
-        s = next + str::Len(separator);
-    }
-    bool shouldAddRest = true;
-    if (!*s) {
-        // if we're collapsing, we're not adding empty string
-        // at the end, unless we haven't added any strings yet
-        // i.e. to match other languages, "".split(" ") => [""]
-        shouldAddRest = !collapse || v->Size() == 0;
-    }
-    if (shouldAddRest) {
-        v->Append(s);
-        nAdded++;
-    }
-    return nAdded;
-}
-
-static int CalcCapForJoin(const StrVec& v, const char* joint) {
-    // it's ok to over-estimate
-    int cap = 0;
-    int jointLen = str::Leni(joint);
-    for (auto it = v.begin(); it != v.end(); it++) {
-        auto s = it.Span();
-        cap += s.Size() + 1 + jointLen;
-    }
-    return cap + 32; // +32 arbitrary buffer
-}
-
-static char* JoinInner(const StrVec& v, const char* joint, str::Str& res) {
-    int len = v.Size();
-    int jointLen = str::Leni(joint);
-    // TODO: possibly not handling null values in the middle. need to add more tests and fix
-    int firstForJoint = 0;
-    int i = 0;
-    for (auto it = v.begin(); it != v.end(); it++) {
-        auto s = it.Span();
-        if (!s.CStr()) {
-            firstForJoint++;
-            i++;
-            continue;
-        }
-        if (i > firstForJoint && jointLen > 0) {
-            res.Append(joint, jointLen);
-        }
-        res.Append(s.CStr(), s.Len());
-        i++;
-    }
-    return res.StealData();
-}
-
 struct StrVecPage {
     struct StrVecPage* next;
     int pageSize;
@@ -786,13 +701,98 @@ void SortNatural(StrVec& v) {
     Sort(v, strLessNatural);
 }
 
-char* Join(StrVec& v, const char* joint) {
+static bool reachedMax(int nAdded, int max) {
+    if (max < 0) {
+        return false;
+    }
+    if (max == 0) {
+        max = 1;
+    }
+    return nAdded >= max;
+}
+
+/* splits a string into several substrings, separated by the separator
+    (optionally collapsing several consecutive separators into one);
+    e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
+    (resp. "a", "b", "c" if separators are collapsed) */
+int Split(StrVec* v, const char* s, const char* separator, bool collapse, int max) {
+    int startSize = v->Size();
+    const char* next;
+    int nAdded = 0;
+    while (true) {
+        if (reachedMax(nAdded, max)) {
+            return nAdded;
+        }
+        next = str::Find(s, separator);
+        if (!next) {
+            break;
+        }
+        if (!collapse || next > s) {
+            nAdded++;
+            if (reachedMax(nAdded, max)) {
+                // this is the last one
+                v->Append(s);
+                return nAdded;
+            }
+            int sLen = (int)(next - s);
+            v->Append(s, sLen);
+        }
+        s = next + str::Len(separator);
+    }
+    bool shouldAddRest = true;
+    if (!*s) {
+        // if we're collapsing, we're not adding empty string
+        // at the end, unless we haven't added any strings yet
+        // i.e. to match other languages, "".split(" ") => [""]
+        shouldAddRest = !collapse || v->Size() == 0;
+    }
+    if (shouldAddRest) {
+        v->Append(s);
+        nAdded++;
+    }
+    return nAdded;
+}
+
+static int CalcCapForJoin(const StrVec* v, const char* joint) {
+    // it's ok to over-estimate
+    int cap = 0;
+    int jointLen = str::Leni(joint);
+    for (auto it = v->begin(); it != v->end(); it++) {
+        auto s = it.Span();
+        cap += s.Size() + 1 + jointLen;
+    }
+    return cap + 32; // +32 arbitrary buffer
+}
+
+static char* JoinInner(const StrVec* v, const char* joint, str::Str& res) {
+    int len = v->Size();
+    int jointLen = str::Leni(joint);
+    // TODO: possibly not handling null values in the middle. need to add more tests and fix
+    int firstForJoint = 0;
+    int i = 0;
+    for (auto it = v->begin(); it != v->end(); it++) {
+        auto s = it.Span();
+        if (!s.CStr()) {
+            firstForJoint++;
+            i++;
+            continue;
+        }
+        if (i > firstForJoint && jointLen > 0) {
+            res.Append(joint, jointLen);
+        }
+        res.Append(s.CStr(), s.Len());
+        i++;
+    }
+    return res.StealData();
+}
+
+char* Join(StrVec* v, const char* joint) {
     int capHint = CalcCapForJoin(v, joint);
     str::Str tmp(capHint);
     return JoinInner(v, joint, tmp);
 }
 
-TempStr JoinTemp(StrVec& v, const char* joint) {
+TempStr JoinTemp(StrVec* v, const char* joint) {
     int capHint = CalcCapForJoin(v, joint);
     str::Str tmp(capHint, GetTempAllocator());
     return JoinInner(v, joint, tmp);

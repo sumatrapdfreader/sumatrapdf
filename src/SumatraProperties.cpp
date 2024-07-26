@@ -272,7 +272,7 @@ static TempStr FormatPermissionsTemp(DocController* ctrl) {
         denials.Append(_TRA("copying text"));
     }
 
-    return JoinTemp(denials, ", ");
+    return JoinTemp(&denials, ", ");
 }
 
 static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
@@ -525,7 +525,7 @@ static void AddPdfFileStructure(DocController* ctrl, PropertiesLayout* layoutDat
         props.Append("PDF/E (ISO 24517)");
     }
 
-    TempStr val = JoinTemp(props, ", ");
+    TempStr val = JoinTemp(&props, ", ");
     layoutData->AddProperty(_TRA("PDF Optimizations:"), val);
 }
 

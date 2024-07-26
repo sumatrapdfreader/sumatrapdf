@@ -632,7 +632,7 @@ TempStr EngineEbook::ExtractFontListTemp() {
     }
 
     SortNatural(fonts);
-    return JoinTemp(fonts, "\n");
+    return JoinTemp(&fonts, "\n");
 }
 
 static void AppendTocItem(TocItem*& root, TocItem* item, int level) {

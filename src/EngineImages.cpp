@@ -1303,7 +1303,7 @@ TempStr EngineCbx::GetPropertyTemp(const char* name) {
         if (cip.propAuthors.Size() == 0) {
             return nullptr;
         }
-        return JoinTemp(cip.propAuthors, ", ");
+        return JoinTemp(&cip.propAuthors, ", ");
     }
 
     if (str::Eq(name, kPropCreationDate)) {

@@ -223,41 +223,51 @@ static void StrVecTest1() {
     StrVecTest1_4(&v);
     StrVecTest1_4(&vd);
 }
-
-static void StrVecTest2() {
-    StrVec v;
-    int n;
-    v.Append("foo");
-    v.Append("bar");
+static void StrVecTest2_1(StrVec* v) {
+    v->Append("foo");
+    v->Append("bar");
     char* s = Join(v);
-    utassert(v.Size() == 2);
+    utassert(v->Size() == 2);
     utassert(str::Eq("foobar", s));
     str::Free(s);
 
     s = Join(v, ";");
-    utassert(v.Size() == 2);
+    utassert(v->Size() == 2);
     utassert(str::Eq("foo;bar", s));
     str::Free(s);
 
-    v.Append(nullptr);
-    utassert(v.Size() == 3);
+    v->Append(nullptr);
+    utassert(v->Size() == 3);
 
-    v.Append("glee");
+    v->Append("glee");
     s = JoinTemp(v, "_ _");
-    utassert(v.Size() == 4);
+    utassert(v->Size() == 4);
     utassert(str::Eq("foo_ _bar_ _glee", s));
 
-    StrVecCheckIter(&v, nullptr);
+    StrVecCheckIter(v, nullptr);
+}
+
+static void StrVecTest2() {
+    int n;
+    char* s;
+
+    StrVec v;
+    StrVecTest2_1(&v);
+    {
+        StrVecWithData<Data1> vd;
+        StrVecTest2_1(&vd);
+    }
+
     Sort(v);
     const char* strsSorted[] = {nullptr, "bar", "foo", "glee"};
     StrVecCheckIter(&v, strsSorted);
 
-    s = Join(v, "++");
+    s = Join(&v, "++");
     utassert(v.Size() == 4);
     utassert(str::Eq("bar++foo++glee", s));
     str::Free(s);
 
-    s = Join(v);
+    s = Join(&v);
     utassert(str::Eq("barfooglee", s));
     str::Free(s);
 
@@ -284,7 +294,7 @@ static void StrVecTest2() {
         utassert(v2.Find("", 3) == 4);
         utassert(v2.Find("", 5) == -1);
         utassert(v2.Find("B") == -1 && v2.FindI("B") == 1);
-        TempStr joined = JoinTemp(v2, ";");
+        TempStr joined = JoinTemp(&v2, ";");
         utassert(str::Eq(joined, "a;b;;c;"));
         TestRemoveAt(&v2);
     }
@@ -293,7 +303,7 @@ static void StrVecTest2() {
         StrVec v2;
         n = Split(&v2, "a,b,,c,", ",", true);
         utassert(n == 3 && v2.Find("c") == 2);
-        TempStr joined = JoinTemp(v2, ";");
+        TempStr joined = JoinTemp(&v2, ";");
         utassert(str::Eq(joined, "a;b;c"));
         StrVecCheckIter(&v2, nullptr);
 
@@ -302,13 +312,13 @@ static void StrVecTest2() {
     {
         StrVec v2;
         n = Split(&v2, "a,b,,c,d", ",", true, 3);
-        s = JoinTemp(v2, "__");
+        s = JoinTemp(&v2, "__");
         utassert(n == 3);
         utassert(str::Eq(s, "a__b__c,d"));
 
         v2.Reset();
         n = Split(&v2, "a,b,,c,d", ",", false, 3);
-        s = JoinTemp(v2, "__");
+        s = JoinTemp(&v2, "__");
         utassert(n == 3);
         // TODO: fix me
         utassert(str::Eq(s, "a__b__,c,d"));

@@ -3308,7 +3308,7 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     }
 
     SortNatural(fonts);
-    return JoinTemp(fonts, "\n");
+    return JoinTemp(&fonts, "\n");
 }
 
 // clang-format off
@@ -3380,7 +3380,7 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
         if (fstruct.Size() == 0) {
             return nullptr;
         }
-        return JoinTemp(fstruct, ",");
+        return JoinTemp(&fstruct, ",");
     }
 
     if (str::Eq(kPropUnsupportedFeatures, name)) {

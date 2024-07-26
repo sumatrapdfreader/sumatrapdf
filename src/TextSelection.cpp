@@ -311,7 +311,7 @@ WCHAR* TextSelection::ExtractText(const char* lineSep) {
         }
     }
 
-    TempStr res = JoinTemp(lines, lineSep);
+    TempStr res = JoinTemp(&lines, lineSep);
     return ToWStr(res);
 }
 

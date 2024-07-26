@@ -473,7 +473,7 @@ bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter) {
         TempStr paramQuoted = QuoteCmdLineArgTemp(param);
         argsQuoted.Append(paramQuoted);
     }
-    TempStr params = JoinTemp(argsQuoted, " ");
+    TempStr params = JoinTemp(&argsQuoted, " ");
     return LaunchFileShell(exePath, params);
 }
 

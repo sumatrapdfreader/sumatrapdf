@@ -238,7 +238,7 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
     if (selections.Size() == 0) {
         return nullptr;
     }
-    TempStr s = JoinTemp(selections, lineSep);
+    TempStr s = JoinTemp(&selections, lineSep);
     return s;
 }
 
