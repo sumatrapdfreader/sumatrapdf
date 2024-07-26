@@ -548,7 +548,7 @@ static void InsertRandData(StrVecWithData<T>* v) {
     for (int i = 0; i < kMaxStringN; i++) {
         const char* s = StrForN(i);
         T data;
-        data.n = (decltype (data.n))i;
+        data.n = (decltype(data.n))i;
         v->Append(s, data);
         T* d = v->AtData(i);
         utassert(d->n == i);

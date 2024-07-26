@@ -37,8 +37,8 @@ struct StrVec {
     char* RemoveAtFast(int);
     bool Remove(const char*);
 
-    int Find(const char*, int startAt = 0) const;
-    int FindI(const char*, int startAt = 0) const;
+    int Find(const StrSpan&, int startAt = 0) const;
+    int FindI(const StrSpan&, int startAt = 0) const;
     bool Contains(const char*, int sLen = -1) const;
 
     struct iterator {

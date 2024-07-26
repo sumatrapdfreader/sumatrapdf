@@ -201,7 +201,11 @@ StrSpan::StrSpan(const char* s) {
 
 StrSpan::StrSpan(const char* s, int sLen) {
     d = (char*)s;
-    size = sLen;
+    if (sLen < 0) {
+        size = str::Leni(s);
+    } else {
+        size = sLen;
+    }
 }
 
 namespace str {

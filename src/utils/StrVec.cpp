@@ -558,33 +558,33 @@ char* StrVec::operator[](int idx) const {
     return At(idx);
 }
 
-int StrVec::Find(const char* s, int startAt) const {
-    int sLen = str::Leni(s);
+int StrVec::Find(const StrSpan& s, int startAt) const {
+    int sLen = s.Len();
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
         StrSpan s2 = it.Span();
-        if (s2.Len() == sLen && str::Eq(s, s2.CStr())) {
+        if (s2.Len() == sLen && str::Eq(s.CStr(), s2.CStr())) {
             return it.idx;
         }
     }
     return -1;
 }
 
-int StrVec::FindI(const char* s, int startAt) const {
-    int sLen = str::Leni(s);
+int StrVec::FindI(const StrSpan& s, int startAt) const {
+    int sLen = s.Len();
     auto end = this->end();
     for (auto it = this->begin() + startAt; it != end; it++) {
         StrSpan s2 = it.Span();
-        if (s2.Len() == sLen && str::EqI(s, s2.CStr())) {
+        if (s2.Len() == sLen && str::EqI(s.CStr(), s2.CStr())) {
             return it.idx;
         }
     }
     return -1;
 }
 
-// TODO: needs to use sLen
-bool StrVec::Contains(const char* s, int) const {
-    int idx = Find(s);
+bool StrVec::Contains(const char* s, int sLen) const {
+    StrSpan span(s, sLen);
+    int idx = Find(span);
     return idx != -1;
 }
 
