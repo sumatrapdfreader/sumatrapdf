@@ -189,8 +189,8 @@ struct CommandPaletteWnd : Wnd {
     MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
-    StrVecCP filesInTabs;
-    StrVecCP filesInHistory;
+    StrVecCP tabs;
+    StrVecCP fileHistory;
     StrVecCP commands;
     ListBox* listBox = nullptr;
 
@@ -376,15 +376,15 @@ static TempStr ConvertPathForDisplayTemp(const char* s) {
 void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = mainWin->IsDocLoaded();
-    WindowTab* tab = mainWin->CurrentTab();
-    ctx.filePath = tab ? tab->filePath : nullptr;
-    ctx.hasSelection = ctx.isDocLoaded && tab && mainWin->showSelection && tab->selectionOnPage;
-    ctx.canSendEmail = CanSendAsEmailAttachment(tab);
+    WindowTab* currTab = mainWin->CurrentTab();
+    ctx.filePath = currTab ? currTab->filePath : nullptr;
+    ctx.hasSelection = ctx.isDocLoaded && currTab && mainWin->showSelection && currTab->selectionOnPage;
+    ctx.canSendEmail = CanSendAsEmailAttachment(currTab);
     ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;
 
     int nTabs = mainWin->TabCount();
-    int currTabIdx = mainWin->GetTabIdx(tab);
-    ctx.canCloseTabsToRight = currTabIdx < (nTabs - 1);
+    int tabIdx = mainWin->GetTabIdx(currTab);
+    ctx.canCloseTabsToRight = tabIdx < (nTabs - 1);
     ctx.canCloseTabsToLeft = false;
     int nFirstDocTab = 0;
     for (int i = 0; i < nTabs; i++) {
@@ -394,7 +394,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
             nFirstDocTab = 1;
             continue;
         }
-        if (t == tab) {
+        if (t == currTab) {
             if (i > nFirstDocTab) {
                 ctx.canCloseTabsToLeft = true;
             }
@@ -435,23 +435,19 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     ctx.hasToc = mainWin->ctrl && mainWin->ctrl->HasToc();
 
     // append paths of opened files
-    int tabIdx = 0;
-    for (MainWindow* mw : gWindows) {
-        if (mw == mainWin) {
-            for (WindowTab* tab2 : mainWin->Tabs()) {
-                if (tab2->IsAboutTab()) {
-                    continue;
-                }
-                const char* name = tab2->filePath;
-                name = path::GetBaseNameTemp(name);
-                ItemDataCP data;
-                data.tab = tab2;
-                filesInTabs.Append(name, data);
-                // find current tab index
-                if (tab2 == mainWin->CurrentTab()) {
-                    currTabIdx = tabIdx;
-                }
-                tabIdx++;
+    currTabIdx = 0;
+    for (MainWindow* w : gWindows) {
+        for (WindowTab* tab : w->Tabs()) {
+            if (tab->IsAboutTab()) {
+                continue;
+            }
+            auto name = path::GetBaseNameTemp(tab->filePath);
+            ItemDataCP data;
+            data.tab = tab;
+            tabs.Append(name, data);
+            if (tab == currTab) {
+                currTabIdx = tabs.Size() - 1;
+                logf("currTabIdx: %d\n", currTabIdx);
             }
         }
     }
@@ -463,7 +459,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         s = ConvertPathForDisplayTemp(s);
         ItemDataCP data;
         data.filePath = fs->filePath;
-        filesInHistory.Append(s, data);
+        fileHistory.Append(s, data);
     }
 
     StrVecCP tempCommands;
@@ -499,15 +495,18 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 }
 
 static void SwitchToCommands(CommandPaletteWnd* wnd) {
-    logf("commands\n");
+    wnd->editQuery->SetText(kPalettePrefixCommands);
+    wnd->editQuery->SetCursorPositionAtEnd();
 }
 
 static void SwitchToTabs(CommandPaletteWnd* wnd) {
-    logf("tabs\n");
+    wnd->editQuery->SetText(kPalettePrefixTabs);
+    wnd->editQuery->SetCursorPositionAtEnd();
 }
 
 static void SwitchToFileHistory(CommandPaletteWnd* wnd) {
-    logf("file history\n");
+    wnd->editQuery->SetText(kPalettePrefixFileHistory);
+    wnd->editQuery->SetCursorPositionAtEnd();
 }
 
 static CommandPaletteWnd* gCommandPaletteWnd = nullptr;
@@ -638,21 +637,20 @@ const char* SkipWS(const char* s) {
 }
 
 void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& strings) {
-    bool skipFiles = str::StartsWith(filter, kPalettePrefixCommands);
-    bool onlyTabs = str::StartsWith(filter, kPalettePrefixTabs);
-    if (skipFiles || onlyTabs) {
-        ++filter;
-        filter = SkipWS(filter);
-    }
     // for efficiency, reusing existing model
     strings.Reset();
-    if (onlyTabs) {
-        FilterStrings(filesInTabs, filter, strings);
+    if (str::StartsWith(filter, kPalettePrefixTabs)) {
+        filter++;
+        FilterStrings(tabs, filter, strings);
         return;
     }
-    if (!skipFiles) {
-        FilterStrings(filesInTabs, filter, strings);
-        FilterStrings(filesInHistory, filter, strings);
+    if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
+        filter++;
+        FilterStrings(fileHistory, filter, strings);
+        return;
+    }
+    if (str::StartsWith(filter, kPalettePrefixCommands)) {
+        filter++;
     }
     FilterStrings(commands, filter, strings);
 }
@@ -665,10 +663,13 @@ void CommandPaletteWnd::QueryChanged() {
     listBox->SetModel(m);
     if (m->ItemsCount() > 0) {
         if (str::StartsWith(filter, kPalettePrefixTabs)) {
-            listBox->SetCurrentSelection(currTabIdx);
-        } else {
-            listBox->SetCurrentSelection(0);
+            if (m->ItemsCount() == tabs.Size()) {
+                logf("QueryChanged(): selecting currTabIdx=%d\n", currTabIdx);
+                listBox->SetCurrentSelection(currTabIdx);
+                return;
+            }
         }
+        listBox->SetCurrentSelection(0);
     }
 }
 
@@ -777,7 +778,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         vbox->AddChild(c);
     }
 
-    if (false) {
+    if (true) {
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
