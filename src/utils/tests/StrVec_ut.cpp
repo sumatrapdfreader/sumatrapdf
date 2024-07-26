@@ -6,6 +6,17 @@ License: Simplified BSD (see COPYING.BSD) */
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
+static void ValidateSize(StrVec* v) {
+    int size1 = v->size;
+    int size2 = 0;
+    auto page = v->first;
+    while (page) {
+        size2 += StrVecPageSize(page);
+        page = StrVecPageNext(page);
+    }
+    utassert(size1 == size2);
+}
+
 static void strEq(const char* s1, const char* s2) {
     bool ok = str::Eq(s1, s2);
     utassert(ok);
@@ -545,6 +556,94 @@ static void InsertRandData(StrVecWithData<T>* v) {
 }
 
 template <typename T>
+static void InsertRandData2(StrVecWithData<T>* v) {
+    for (int i = 0; i < kMaxStringN; i++) {
+        const char* s = StrForN(i);
+        int op = rand() % 12;
+        if (op <= 5) {
+            T data;
+            data.n = (decltype(data.n))i;
+            int idx = v->Append(s, data);
+            T* d = v->AtData(idx);
+            utassert(d->n == i);
+            ValidateSize(v);
+        } else if (op <= 7) {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->InsertAt(idx, s);
+                T* d = v->AtData(idx);
+                d->n = (decltype(d->n))idx;
+                ValidateSize(v);
+            }
+        } else if (op <= 9) {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->SetAt(idx, s);
+                T* d = v->AtData(idx);
+                d->n = (decltype(d->n))idx;
+                ValidateSize(v);
+            }
+        } else if (op == 10) {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->RemoveAt(idx);
+                ValidateSize(v);
+            }
+        } else {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->RemoveAtFast(idx);
+                ValidateSize(v);
+            }
+        }
+    }
+
+    int nStrings = v->Size();
+    for (int i = 0; i < nStrings; i++) {
+        T* d = v->AtData(i);
+        int n = (int)d->n;
+        const char* exp = StrForN(n);
+        const char* got = v->At(i);
+        utassert(str::Eq(got, exp));
+    }
+}
+
+static void InsertRandData3(StrVec* v) {
+    for (int i = 0; i < kMaxStringN; i++) {
+        const char* s = StrForN(i);
+        int op = rand() % 12;
+        if (op <= 5) {
+            v->Append(s);
+            ValidateSize(v);
+        } else if (op <= 7) {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->InsertAt(idx, s);
+                ValidateSize(v);
+            }
+        } else if (op <= 9) {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->SetAt(idx, s);
+                ValidateSize(v);
+            }
+        } else if (op == 10) {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->RemoveAt(idx);
+                ValidateSize(v);
+            }
+        } else {
+            if (!v->IsEmpty()) {
+                int idx = randIdx(v);
+                v->RemoveAtFast(idx);
+                ValidateSize(v);
+            }
+        }
+    }
+}
+
+template <typename T>
 static void RemoveRandData(StrVecWithData<T>* v) {
     int idx;
     while (v->Size() > 0) {
@@ -570,6 +669,11 @@ static void RemoveRandData(StrVecWithData<T>* v) {
 
 static void StrVecTest8() {
     {
+        StrVec v;
+        InsertRandData3(&v);
+        TestRemoveAt(&v);
+    }
+    {
         StrVecWithData<Data1> v;
         InsertRandData<Data1>(&v);
         RemoveRandData<Data1>(&v);
@@ -577,6 +681,16 @@ static void StrVecTest8() {
     {
         StrVecWithData<Data2> v;
         InsertRandData<Data2>(&v);
+        RemoveRandData<Data2>(&v);
+    }
+    {
+        StrVecWithData<Data1> v;
+        InsertRandData2<Data1>(&v);
+        RemoveRandData<Data1>(&v);
+    }
+    {
+        StrVecWithData<Data2> v;
+        InsertRandData2<Data2>(&v);
         RemoveRandData<Data2>(&v);
     }
 }

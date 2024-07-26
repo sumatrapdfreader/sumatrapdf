@@ -165,7 +165,8 @@ char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
 char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
     ReportIf(idx < 0 || idx > nStrings);
 
-    int cbNeeded = sizeof(u32) * 2; // for offset / size
+    int n = nOffsetsWithData(dataSize);
+    int cbNeeded = sizeof(u32) * n; // for offset / size
     if (s) {
         cbNeeded += sLen + 1; // +1 for zero termination
     }
@@ -179,7 +180,7 @@ char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
         // make space for idx
         u32* src = offsets;
         u32* dst = OffsetsForString(this, idx + 1);
-        size_t nToCopy = (nStrings - idx) * 2 * sizeof(u32);
+        size_t nToCopy = (nStrings - idx) * n * sizeof(u32);
         memmove(dst, src, nToCopy);
     }
 
@@ -368,6 +369,14 @@ bool StrVec::IsEmpty() const {
     return size == 0;
 }
 
+StrVecPage* StrVecPageNext(StrVecPage* page) {
+    return page->next;
+}
+
+int StrVecPageSize(StrVecPage* page) {
+    return page->nStrings;
+}
+
 static int CalcNextPageSize(int currSize) {
     // at the beginning grow faster
     if (currSize == 256) {
@@ -477,6 +486,7 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
     if (idx == size) {
         return Append(s, sLen);
     }
+
     {
         auto [page, idxInPage] = PageForIdx(this, idx);
         if (sLen < 0) {
@@ -484,15 +494,18 @@ char* StrVec::InsertAt(int idx, const char* s, int sLen) {
         }
         char* res = page->InsertAt(idxInPage, s, sLen);
         if (res != kNoSpace) {
+            size++;
             return res;
         }
     }
-    // perf: we assume that there will be more SetAt() calls so pre-allocate
+
+    // perf: we assume that there will be more InsertAt() calls so pre-allocate
     // extra space to make many SetAt() calls less expensive
     int extraSpace = RoundUp(sLen + 1, 2048);
     CompactPages(this, extraSpace);
     char* res = first->InsertAt(idx, s, sLen);
     ReportIf(res == kNoSpace);
+    size++;
     return res;
 }
 

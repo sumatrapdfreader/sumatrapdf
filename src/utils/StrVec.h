@@ -70,10 +70,12 @@ struct StrVecWithData : StrVec {
         void* res = AtDataRaw(i);
         return (T*)(res);
     }
-    void Append(const char* s, const T& data) {
+    int Append(const char* s, const T& data) {
         StrVec::Append(s);
-        T* d = AtData(Size() - 1);
+        int idx = Size() - 1;
+        T* d = AtData(idx);
         *d = data;
+        return idx;
     }
 };
 
@@ -96,3 +98,6 @@ struct StrVecIndex {
 };
 
 void Sort(StrVec* v, StrVecIndex& idxOut, StrLessFunc lessFn = nullptr);
+
+StrVecPage* StrVecPageNext(StrVecPage*);
+int StrVecPageSize(StrVecPage*);
