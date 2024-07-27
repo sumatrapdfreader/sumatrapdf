@@ -240,6 +240,12 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (cmdId <= CmdFirst) {
         return false;
     }
+    CustomCommand* cmd = FindCustomCommand(cmdId);
+    int origCmdId = cmd ? cmd->origId : 0;
+    if (origCmdId == CmdSetTheme) {
+        return true;
+    }
+
     if (IsCmdInList(cmdId, gCommandsDebugOnly)) {
         return gIsDebugBuild;
     }
@@ -271,9 +277,8 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return false;
     }
 
-    ExternalViewer* ev = CustomExternalViewerForCmdId(cmdId);
     bool isKnownEV = (cmdId >= CmdOpenWithKnownExternalViewerFirst) && (cmdId <= CmdOpenWithKnownExternalViewerLast);
-    if (ev != nullptr || isKnownEV) {
+    if (origCmdId == CmdViewWithExternalViewer || isKnownEV) {
         if (!ctx.isDocLoaded) {
             return false;
         }
@@ -281,7 +286,12 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
             // TODO: match file name
             return HasKnownExternalViewerForCmd(cmdId);
         }
-        return PathMatchFilter(ctx.filePath, ev->filter);
+        const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+        return PathMatchFilter(ctx.filePath, filter);
+    }
+
+    if ((origCmdId == CmdSelectionHandler) || IsCmdInMenuList(cmdId, disableIfNoSelection)) {
+        return ctx.hasSelection;
     }
 
     // we only want to show this in home page
@@ -299,16 +309,6 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         }
         if (IsCmdInMenuList(cmdId, removeIfAnnotsNotSupported)) {
             return false;
-        }
-    }
-
-    if (!ctx.hasSelection && IsCmdInMenuList(cmdId, disableIfNoSelection)) {
-        return false;
-    }
-
-    for (SelectionHandler* sh : *gGlobalPrefs->selectionHandlers) {
-        if (sh->cmdId == cmdId) {
-            return ctx.hasSelection;
         }
     }
 
@@ -488,28 +488,20 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         }
     }
 
-    for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (str::IsEmptyOrWhiteSpace(ev->name)) {
-            continue;
+    // includes externalViewers, selectionHandlers and keyboardShortcuts
+    auto curr = gFirstCustomCommand;
+    while (curr) {
+        TempStr name = (TempStr)curr->name;
+        cmdId = curr->id;
+        if (cmdId > 0 && !str::IsEmptyOrWhiteSpace(name)) {
+            if (AllowCommand(ctx, cmdId)) {
+                ItemDataCP data;
+                data.cmdId = cmdId;
+                name = RemovePrefixFromString(name);
+                tempCommands.Append(name, data);
+            }
         }
-        if (AllowCommand(ctx, ev->cmdId)) {
-            ItemDataCP data;
-            data.cmdId = (i32)ev->cmdId;
-            TempStr name = RemovePrefixFromString(ev->name);
-            tempCommands.Append(name, data);
-        }
-    }
-
-    for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-        if (str::IsEmptyOrWhiteSpace(sh->name)) {
-            continue;
-        }
-        if (AllowCommand(ctx, sh->cmdId)) {
-            ItemDataCP data;
-            data.cmdId = (i32)sh->cmdId;
-            TempStr name = RemovePrefixFromString(sh->name);
-            tempCommands.Append(name, data);
-        }
+        curr = curr->next;
     }
 
     // we want the commands sorted

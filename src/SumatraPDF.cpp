@@ -5216,16 +5216,19 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     // most of them require a win, the few exceptions are no-ops
     switch (cmdId) {
         case CmdViewWithExternalViewer: {
-            if (cmd) {
-                ViewWithCustomExternalViewer(tab, cmd->id);
+            const char* cmdLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
+            if (!cmdLine || !CanAccessDisk() || !tab || !file::Exists(tab->filePath)) {
+                return 0;
             }
+            const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+            RunWithExe(tab, cmdLine, filter);
             return 0;
         }
 
         case CmdSetTheme: {
-            auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
-            if (name) {
-                SetTheme(name);
+            auto theme = GetCommandStringArg(cmd, kCmdArgTheme, nullptr);
+            if (theme) {
+                SetTheme(theme);
             }
             return 0;
         }

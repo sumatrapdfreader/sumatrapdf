@@ -1186,74 +1186,67 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
     ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
 }
 
-static void AppendThemesToMenu(HMENU m) {
-    Vec<CustomCommand*> cmds;
-    GetCommandsWithOrigId(cmds, CmdSetTheme);
-    for (auto& cmd : cmds) {
-        auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
-        ReportIf(!name);
-        if (!name) {
+static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool isEnabled) {
+    for (CustomCommand* cmd : cmds) {
+        if (!cmd->name) {
             continue;
         }
-        WCHAR* nameW = ToWStrTemp(name);
-        UINT flags = MF_STRING | MF_ENABLED;
-        AppendMenuW(m, flags, (UINT_PTR)cmd->id, nameW);
-    }
-}
-
-static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
-    Vec<CustomCommand*> cmds;
-    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
-    for (auto& cmd : cmds) {
-        auto menuString = (TempStr)GetCommandStringArg(cmd, kCmdArgName, nullptr);
-        ReportIf(!menuString);
-        if (!menuString) {
-            continue;
-        }
+        TempStr menuString = (TempStr)cmd->name;
         int cmdId = cmd->id;
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         UINT flags = MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
         WCHAR* ws = ToWStrTemp(menuString);
-        AppendMenuW(m, flags, (UINT_PTR)cmdId, ws);
+        AppendMenuW(m, flags, (UINT_PTR)cmd->id, ws);
     }
 }
 
+static void AppendThemesToMenu(HMENU m) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSetTheme);
+    AppendCommandsToMenu(m, cmds, true);
+}
+
+static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
+    AppendCommandsToMenu(m, cmds, isEnabled);
+}
+
 static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
-    auto& externalViewers = *gGlobalPrefs->externalViewers;
-    if (0 == externalViewers.size()) {
-        return;
-    }
     if (!CanAccessDisk() || (filePath && !file::Exists(filePath))) {
         return;
     }
-
-    for (ExternalViewer* ev : externalViewers) {
-        if (str::IsEmptyOrWhiteSpace(ev->commandLine)) {
+    Vec<CustomCommand*> cmds;
+    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
+    for (CustomCommand* cmd : cmds) {
+        const char* commandLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
+        const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
+        if (str::IsEmptyOrWhiteSpace(commandLine)) {
             continue;
         }
-        if (ev->filter && !(filePath && PathMatchFilter(filePath, ev->filter))) {
+        if (filter && !(filePath && PathMatchFilter(filePath, filter))) {
             continue;
         }
-
-        char* name = ev->name;
-        if (str::IsEmptyOrWhiteSpace(name)) {
-            CmdLineArgsIter args(ToWStrTemp(ev->commandLine));
-            int nArgs = args.nArgs - 2;
-            if (nArgs <= 0) {
-                continue;
-            }
-            char* arg0 = args.at(2 + 0);
-            name = str::DupTemp(path::GetBaseNameTemp(arg0));
-            char* pos = str::FindChar(name, '.');
-            if (pos) {
-                *pos = 0;
+        char* name = (char*)cmd->name;
+        if (str::IsEmptyOrWhiteSpace(cmd->name)) {
+            if (str::IsEmptyOrWhiteSpace(name)) {
+                CmdLineArgsIter args(ToWStrTemp(commandLine));
+                int nArgs = args.nArgs - 2;
+                if (nArgs <= 0) {
+                    continue;
+                }
+                char* arg0 = args.at(2 + 0);
+                name = str::DupTemp(path::GetBaseNameTemp(arg0));
+                char* pos = str::FindChar(name, '.');
+                if (pos) {
+                    *pos = 0;
+                }
             }
         }
-
         // TempStr menuString = str::FormatTemp(_TRA("Open in %s"), name);
         TempStr menuString = name;
-        int cmdId = ev->cmdId;
+        int cmdId = cmd->id;
         menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         TempWStr ws = ToWStrTemp(menuString);
         InsertMenuW(menuFile, cmdId, MF_BYCOMMAND | MF_ENABLED | MF_STRING, (UINT_PTR)cmdId, ws);

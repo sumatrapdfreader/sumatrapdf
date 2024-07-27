@@ -232,9 +232,9 @@ static void assertGoToNextPage3(int cmdId) {
 
 void parseCommandsTest() {
     CommandArg* arg;
+
     {
-        auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 openEdit copytoclipboard");
-        auto cmd = FindCustomCommand(cmdId);
+        auto [cmdId, cmd] = CreateCommandFromDefinition(" CmdCreateAnnotHighlight   #00ff00 openEdit copytoclipboard");
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
         arg = GetCommandArg(cmd, kCmdArgColor);
@@ -245,8 +245,7 @@ void parseCommandsTest() {
         utassert(GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false) == true);
     }
     {
-        auto cmdId = ParseCommand(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");
-        auto cmd = FindCustomCommand(cmdId);
+        auto [cmdId, cmd] = CreateCommandFromDefinition(" CmdCreateAnnotHighlight   #00ff00 OpenEdit=yes");
         utassert(cmd->origId == CmdCreateAnnotHighlight);
 
         utassert(GetCommandArg(cmd, kCmdArgColor) != nullptr);
@@ -254,30 +253,40 @@ void parseCommandsTest() {
         utassert(GetCommandBoolArg(cmd, kCmdArgOpenEdit, false) == true);
     }
     {
-        auto cmdId = ParseCommand("CmdGoToNextPage 3");
-        assertGoToNextPage3(cmdId);
-        cmdId = ParseCommand("CmdGoToNextPage n 3");
-        assertGoToNextPage3(cmdId);
-        cmdId = ParseCommand("CmdGoToNextPage n: 3");
-        assertGoToNextPage3(cmdId);
-        cmdId = ParseCommand("CmdGoToNextPage n=3");
-        assertGoToNextPage3(cmdId);
+        {
+            auto [cmdId, _] = CreateCommandFromDefinition("CmdGoToNextPage 3");
+            assertGoToNextPage3(cmdId);
+        }
+        {
+            auto [cmdId, _] = CreateCommandFromDefinition("CmdGoToNextPage n 3");
+            assertGoToNextPage3(cmdId);
+        }
+        {
+            auto [cmdId, _] = CreateCommandFromDefinition("CmdGoToNextPage n: 3");
+            assertGoToNextPage3(cmdId);
+        }
+        {
+            auto [cmdId, _] = CreateCommandFromDefinition("CmdGoToNextPage n=3");
+            assertGoToNextPage3(cmdId);
+        }
     }
     {
         const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
         const char* s = str::JoinTemp("CmdExec   ", argStr);
-        auto cmdId = ParseCommand(s);
-        auto cmd = FindCustomCommand(cmdId);
+        auto [cmdId, cmd] = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
+        auto cmd2 = FindCustomCommand(cmdId);
+        utassert(cmd == cmd2);
         arg = GetCommandArg(cmd, kCmdArgExe);
         utassert(str::Eq(arg->strVal, argStr));
     }
     {
         const char* argStr = R"("C:\Program Files\FoxitReader\FoxitReader.exe" /A page=%p "%1)";
         const char* s = str::JoinTemp("CmdExec  filter: *.jpeg ", argStr);
-        auto cmdId = ParseCommand(s);
-        auto cmd = FindCustomCommand(cmdId);
+        auto [cmdId, cmd] = CreateCommandFromDefinition(s);
         utassert(cmd->origId == CmdExec);
+        auto cmd2 = FindCustomCommand(cmdId);
+        utassert(cmd == cmd2);
         arg = GetCommandArg(cmd, kCmdArgExe);
         utassert(str::Eq(arg->strVal, argStr));
         arg = GetCommandArg(cmd, kCmdArgFilter);

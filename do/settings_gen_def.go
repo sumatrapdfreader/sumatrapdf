@@ -13,6 +13,8 @@ var (
 	keyboardShortcut = []*Field{
 		mkField("Cmd", String, "", "command"),
 		mkField("Key", String, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
+		mkField("Name", String, nil, "name shown in command palette").setVersion("3.6"),
+		mkField("Id", String, nil, "command id").setVersion("3.6"),
 	}
 
 	scrollPos = []*Field{
@@ -109,14 +111,12 @@ var (
 		mkField("Filter", String, nil,
 			"optional filter for which file types the menu item is to be shown; separate multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)"),
 		mkField("Key", String, nil, "optional: keyboard shortcut e.g. Alt + 7").setVersion("3.6"),
-		mkField("CmdId", Int, 0, "dynamic command id").setInternal(),
 	}
 
 	selectionHandler = []*Field{
 		mkField("URL", String, nil, "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)"),
 		mkField("Name", String, nil, "name shown in context menu"),
 		mkField("Key", String, nil, "keyboard shortcut").setVersion("3.6"),
-		mkField("CmdId", Int, 0, "dynamic command id").setInternal(),
 	}
 
 	annotations = []*Field{

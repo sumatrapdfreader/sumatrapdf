@@ -202,8 +202,9 @@ void CreateThemeCommands() {
     CustomCommand* cmd;
     for (int i = 0; i < kThemeCount; i++) {
         const char* themeName = gThemes[i]->name;
-        auto args = NewStringArg(kCmdArgName, themeName);
+        auto args = NewStringArg(kCmdArgTheme, themeName);
         cmd = CreateCustomCommand(themeName, CmdSetTheme, args);
+        cmd->name = str::Format("Set theme '%s'", themeName);
         if (i == 0) {
             gFirstSetThemeCmdId = cmd->id;
         } else if (i == kThemeCount - 1) {

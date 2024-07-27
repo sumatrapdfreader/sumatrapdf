@@ -140,8 +140,6 @@ struct ExternalViewer {
     char* filter;
     // optional: keyboard shortcut e.g. Alt + 7
     char* key;
-    // dynamic command id
-    int cmdId;
 };
 
 // customization options for how we show forward search results (used
@@ -179,8 +177,6 @@ struct SelectionHandler {
     char* name;
     // keyboard shortcut
     char* key;
-    // dynamic command id
-    int cmdId;
 };
 
 // custom keyboard shortcuts
@@ -189,6 +185,10 @@ struct Shortcut {
     char* cmd;
     // keyboard shortcut (e.g. Ctrl-Alt-F)
     char* key;
+    // name shown in command palette
+    char* name;
+    // command id
+    char* id;
 };
 
 // Values which are persisted for bookmarks/favorites
@@ -564,8 +564,10 @@ static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 3, gS
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
     {offsetof(Shortcut, key), SettingType::String, (intptr_t) ""},
+    {offsetof(Shortcut, name), SettingType::String, 0},
+    {offsetof(Shortcut, id), SettingType::String, 0},
 };
-static const StructInfo gShortcutInfo = {sizeof(Shortcut), 2, gShortcutFields, "Cmd\0Key"};
+static const StructInfo gShortcutInfo = {sizeof(Shortcut), 4, gShortcutFields, "Cmd\0Key\0Name\0Id"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

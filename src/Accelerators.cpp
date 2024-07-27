@@ -314,6 +314,11 @@ again:
     return true;
 }
 
+bool IsValidShortcutString(const char* shortcut) {
+    ACCEL accel;
+    return ParseShortcut(shortcut, accel);
+}
+
 static const char* getVirt(BYTE key, bool isEng) {
     // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     // Note: might need to add if we add more shortcuts
@@ -618,24 +623,25 @@ the latest version */
 void CreateSumatraAcceleratorTable() {
     ReportIf(gAccelTables[0] || gAccelTables[1] || gAccelTables[2]);
 
-    int nBuiltIn = (int)dimof(gBuiltInAccelerators);
-    int nCustomShortcuts = gGlobalPrefs->shortcuts->Size();
-    int nExternalViewers = gGlobalPrefs->externalViewers->Size();
-    int nSelectionHandlers = gGlobalPrefs->selectionHandlers->Size();
+    int nMax = (int)dimof(gBuiltInAccelerators);
+    auto curr = gFirstCustomCommand;
+    while (curr) {
+        if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {
+            nMax++;
+        }
+        curr = curr->next;
+    }
 
-    // build a combined accelerator table of those defined in settings file
-    // and built-in shortcuts. Custom shortcuts over-ride built-in
-    int nMax = nBuiltIn + nCustomShortcuts + nExternalViewers + nSelectionHandlers;
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/2981
     // sizeof(ACCEL) is 6 so odd number will cause treeViewAccels to
     // be mis-aligined. Rounding to 2 should be enoug, do 4 for extra safety
     nMax = RoundUp(nMax, 4);
     ACCEL* accels = AllocArray<ACCEL>(nMax);
-    int nAccels = 0;
     // perf: only 1 allocation for 2 arrays
-    ACCEL* toFreeAccels = AllocArray<ACCEL>(nMax * 2);
-    ACCEL* editAccels = toFreeAccels;
-    ACCEL* treeViewAccels = toFreeAccels + nMax;
+    ACCEL* editAccels = AllocArray<ACCEL>(nMax * 2);
+    ACCEL* treeViewAccels = editAccels + nMax;
+
+    int nAccels = 0;
     int nEditAccels = 0;
     int nTreeViewAccels = 0;
 
@@ -658,50 +664,16 @@ void CreateSumatraAcceleratorTable() {
         }
     };
 
-    auto maybeAddShortcut = [&](const char* key, int cmdId) -> bool {
-        ReportIf(cmdId <= 0);
-
-        ACCEL accel{};
-        accel.cmd = cmdId;
-        if (str::IsEmptyOrWhiteSpace(key)) {
-            return true;
+    curr = gFirstCustomCommand;
+    while (curr) {
+        if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {
+            ACCEL accel{};
+            accel.cmd = curr->id;
+            if (ParseShortcut(curr->key, accel)) {
+                addShortcutIfNotExists(accel);
+            }
         }
-
-        if (!ParseShortcut(key, accel)) {
-            return false;
-        }
-        addShortcutIfNotExists(accel);
-        return true;
-    };
-
-    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
-        bool ok = maybeAddShortcut(ev->key, ev->cmdId);
-        if (!ok) {
-            // TODO: make it a notification
-            logf("CreateSumatraAcceleratorTable: bad shortcut '%s' for external viewer '%s'\n", ev->key,
-                 ev->commandLine);
-        }
-    }
-
-    for (SelectionHandler* sh : *gGlobalPrefs->selectionHandlers) {
-        bool ok = maybeAddShortcut(sh->key, sh->cmdId);
-        if (!ok) {
-            // TODO: make it a notification
-            logf("CreateSumatraAcceleratorTable: bad shortcut '%s' for selection handler'%s'\n", sh->key, sh->url);
-        }
-    }
-
-    for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
-        int cmdId = ParseCommand(shortcut->cmd);
-        if (cmdId < 0) {
-            continue;
-        }
-        bool ok = maybeAddShortcut(shortcut->key, cmdId);
-        if (!ok) {
-            // TODO: make it a notification
-            logf("CreateSumatraAcceleratorTable: bad shortcut '%s'\n", shortcut->key);
-            continue;
-        }
+        curr = curr->next;
     }
 
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
@@ -719,7 +691,7 @@ void CreateSumatraAcceleratorTable() {
     gAccelTables[2] = CreateAcceleratorTableW(treeViewAccels, nTreeViewAccels);
     ReportIf(gAccelTables[2] == nullptr);
 
-    free(toFreeAccels);
+    free(editAccels);
 }
 
 void FreeAcceleratorTables() {

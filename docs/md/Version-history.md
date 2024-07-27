@@ -45,6 +45,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - command palette no longer shows combined tabs/file history/commands. `CmdCommandPalette` only shows commands. Because of that removed `CmdCommandPaletteNoFiles` because now ``CmdCommandPalette` behaves like it
 - removed `CmdCommandPaletteOnlyTabs`, replaced by`CmdCommandPaletteNoFiles @`
 - `Ctrl + Shift + K` no longer active, use `Ctrl + K`. You can restore this shortcut by binding it to `CmdCommandPalette >` command.
+- add `Name` field for shortcuts. If given, the command will show up in Command Palette (`Ctrl + K`)
 
 ### 3.5.2 (2023-10-25)
 
