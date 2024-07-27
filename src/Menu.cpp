@@ -1229,7 +1229,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
     }
 
     for (ExternalViewer* ev : externalViewers) {
-        if (str::IsEmptyOrWhiteSpaceOnly(ev->commandLine)) {
+        if (str::IsEmptyOrWhiteSpace(ev->commandLine)) {
             continue;
         }
         if (ev->filter && !(filePath && PathMatchFilter(filePath, ev->filter))) {
@@ -1237,7 +1237,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
         }
 
         char* name = ev->name;
-        if (str::IsEmptyOrWhiteSpaceOnly(name)) {
+        if (str::IsEmptyOrWhiteSpace(name)) {
             CmdLineArgsIter args(ToWStrTemp(ev->commandLine));
             int nArgs = args.nArgs - 2;
             if (nArgs <= 0) {

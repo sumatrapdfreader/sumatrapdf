@@ -30,6 +30,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - add `ShowLinks` advanced setting and "Toggle Show Links" (`CmdToggleLinks`) for command palette
 - default `ReuseInstance` setting to true
 - added `Key` arg to `ExternalViewers` advanced setting (keyboard shortcut)
+- added `Key` arg to `SelectionHandlers` advanced setting (keyboard shortcut)
 - improved scrolling with mouse wheel and touch gestures
 - theming improvements
 - go back to opening settings file with default .txt editor (notepad most likely)

@@ -109,7 +109,7 @@ static void CreateUserSelectionHandlerCommands() {
             // can happen for bad selection handler definition
             continue;
         }
-        if (str::IsEmptyOrWhiteSpaceOnly(sh->url) || str::IsEmptyOrWhiteSpaceOnly(sh->name)) {
+        if (str::IsEmptyOrWhiteSpace(sh->url) || str::IsEmptyOrWhiteSpace(sh->name)) {
             continue;
         }
 

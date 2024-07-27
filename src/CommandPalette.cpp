@@ -489,7 +489,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (str::IsEmptyOrWhiteSpaceOnly(ev->name)) {
+        if (str::IsEmptyOrWhiteSpace(ev->name)) {
             continue;
         }
         if (AllowCommand(ctx, ev->cmdId)) {
@@ -501,7 +501,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     for (auto& sh : *gGlobalPrefs->selectionHandlers) {
-        if (str::IsEmptyOrWhiteSpaceOnly(sh->name)) {
+        if (str::IsEmptyOrWhiteSpace(sh->name)) {
             continue;
         }
         if (AllowCommand(ctx, sh->cmdId)) {
@@ -639,7 +639,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
 // filter matches if all words match, ignoring the case
 static bool FilterMatches(const char* str, const char* filter) {
     // empty filter matches all
-    if (str::IsEmptyOrWhiteSpaceOnly(filter)) {
+    if (str::IsEmptyOrWhiteSpace(filter)) {
         return true;
     }
     StrVec words;

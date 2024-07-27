@@ -322,7 +322,7 @@ void DetectExternalViewers() {
 }
 
 static bool filterMatchesEverything(const char* ext) {
-    return str::IsEmptyOrWhiteSpaceOnly(ext) || str::EqIS(ext, "*");
+    return str::IsEmptyOrWhiteSpace(ext) || str::EqIS(ext, "*");
 }
 
 bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
@@ -433,7 +433,7 @@ ExternalViewer* CustomExternalViewerForCmdId(int cmdId) {
 
 void CreateExternalViewersCommands() {
     for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (!ev || str::IsEmptyOrWhiteSpaceOnly(ev->commandLine)) {
+        if (!ev || str::IsEmptyOrWhiteSpace(ev->commandLine)) {
             continue;
         }
         auto cmd = CreateCustomCommand("", CmdViewWithExternalViewer, nullptr);

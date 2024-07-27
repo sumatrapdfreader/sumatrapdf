@@ -220,7 +220,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 TempStr FormatRomanNumeralTemp(int number);
 
-bool IsEmptyOrWhiteSpaceOnly(const char*);
+bool IsEmptyOrWhiteSpace(const char*);
 bool Skip(const char*& s, const char* toSkip);
 const char* SkipChar(const char* s, char toSkip);
 

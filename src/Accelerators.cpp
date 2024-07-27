@@ -663,7 +663,7 @@ void CreateSumatraAcceleratorTable() {
 
         ACCEL accel{};
         accel.cmd = cmdId;
-        if (str::IsEmptyOrWhiteSpaceOnly(key)) {
+        if (str::IsEmptyOrWhiteSpace(key)) {
             return true;
         }
 
