@@ -1252,6 +1252,11 @@ void DrawLine(HDC hdc, const Rect& rect) {
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
+// returns previously focused window
+HWND HwndSetFocus(HWND hwnd) {
+    return SetFocus(hwnd);
+}
+
 bool HwndIsFocused(HWND hwnd) {
     return GetFocus() == hwnd;
 }

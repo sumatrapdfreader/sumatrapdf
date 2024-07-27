@@ -242,7 +242,7 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
         case WM_APP_INSTALLATION_FINISHED: {
             OnUninstallationFinished();
             if (gButtonExit) {
-                gButtonExit->SetFocus();
+                HwndSetFocus(gButtonExit->hwnd);
             }
             SetForegroundWindow(hwnd);
             break;

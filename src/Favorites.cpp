@@ -467,7 +467,7 @@ void ToggleFavorites(MainWindow* win) {
         SetSidebarVisibility(win, win->tocVisible, false);
     } else {
         SetSidebarVisibility(win, win->tocVisible, true);
-        win->favTreeView->SetFocus();
+        HwndSetFocus(win->favTreeView->hwnd);
     }
 }
 

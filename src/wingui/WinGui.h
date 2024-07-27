@@ -142,8 +142,6 @@ struct Wnd : public ILayout {
 
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
-    void SetFocus() const;
-    bool IsFocused() const;
     void SetBackgroundColor(COLORREF);
 
     void SuspendRedraw() const;

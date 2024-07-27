@@ -420,10 +420,10 @@ static void OnInstallationFinished() {
     logf("OnInstallationFinished\n");
 
     if (gWnd->btnRunSumatra) {
-        gWnd->btnRunSumatra->SetFocus();
+        HwndSetFocus(gWnd->btnRunSumatra->hwnd);
     }
     if (gWnd->btnExit) {
-        gWnd->btnExit->SetFocus();
+        HwndSetFocus(gWnd->btnExit->hwnd);
     }
     SetForegroundWindow(gWnd->hwnd);
 
@@ -488,7 +488,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     //] ACCESSKEY_GROUP Installer
 
     HwndInvalidate(wnd->hwnd);
-    btnOptions->SetFocus();
+    HwndSetFocus(btnOptions->hwnd);
 }
 static void OnButtonOptions(InstallerWnd* wnd) {
     // toggle options ui
@@ -560,7 +560,7 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
     auto caption = _TRA("Select the folder where SumatraPDF should be installed:");
     char* installPath = BrowseForFolderTemp(wnd->hwnd, installDir, caption);
     if (!installPath) {
-        wnd->btnBrowseDir->SetFocus();
+        HwndSetFocus(wnd->btnBrowseDir->hwnd);
         return;
     }
 
@@ -572,7 +572,7 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
     }
     editDir->SetText(installPath);
     editDir->SetSelection(0, -1);
-    editDir->SetFocus();
+    HwndSetFocus(editDir->hwnd);
 }
 
 // bottom-right
@@ -779,7 +779,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     hwnds[nHwnds++] = wnd->btnOptions->hwnd;
     SetTabOrder(hwnds, nHwnds);
 
-    wnd->btnInstall->SetFocus();
+    HwndSetFocus(wnd->btnInstall->hwnd);
 }
 //] ACCESSKEY_GROUP Installer
 

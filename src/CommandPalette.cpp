@@ -500,19 +500,22 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 }
 
+static void EditSetTextAndFocus(Edit* e, const char* s) {
+    e->SetText(s);
+    e->SetCursorPositionAtEnd();
+    HwndSetFocus(e->hwnd);
+}
+
 static void SwitchToCommands(CommandPaletteWnd* wnd) {
-    wnd->editQuery->SetText(kPalettePrefixCommands);
-    wnd->editQuery->SetCursorPositionAtEnd();
+    EditSetTextAndFocus(wnd->editQuery, kPalettePrefixCommands);
 }
 
 static void SwitchToTabs(CommandPaletteWnd* wnd) {
-    wnd->editQuery->SetText(kPalettePrefixTabs);
-    wnd->editQuery->SetCursorPositionAtEnd();
+    EditSetTextAndFocus(wnd->editQuery, kPalettePrefixTabs);
 }
 
 static void SwitchToFileHistory(CommandPaletteWnd* wnd) {
-    wnd->editQuery->SetText(kPalettePrefixFileHistory);
-    wnd->editQuery->SetCursorPositionAtEnd();
+    EditSetTextAndFocus(wnd->editQuery, kPalettePrefixFileHistory);
 }
 
 static CommandPaletteWnd* gCommandPaletteWnd = nullptr;

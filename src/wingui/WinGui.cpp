@@ -1116,15 +1116,6 @@ bool Wnd::IsEnabled() const {
     return tobool(enabled);
 }
 
-void Wnd::SetFocus() const {
-    ::SetFocus(hwnd);
-}
-
-bool Wnd::IsFocused() const {
-    BOOL isFocused = HwndIsFocused(hwnd);
-    return tobool(isFocused);
-}
-
 void Wnd::SetBackgroundColor(COLORREF col) {
     if (col == kColorNoChange) {
         return;
