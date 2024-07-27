@@ -30,6 +30,9 @@
 
 #include "utils/Log.h"
 
+constexpr const char* kInfoRegular = "↑ ↓ to navigate      Enter to select     Esc to close";
+constexpr const char* kInfoSmartTab = "Ctrl+Tab to navigate         Release Ctrl to select";
+
 // clang-format off
 // those commands never show up in command palette
 static i32 gBlacklistCommandsFromPalette[] = {
@@ -193,8 +196,11 @@ struct CommandPaletteWnd : Wnd {
     StrVecCP fileHistory;
     StrVecCP commands;
     ListBox* listBox = nullptr;
+    Static* staticInfo = nullptr;
 
     int currTabIdx = 0;
+    bool smartTabMode = false;
+    bool shouldSelectTabOnCtrlUp = false;
 
     bool PreTranslateMessage(MSG&) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
@@ -561,6 +567,16 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         } else if (msg.wParam == VK_DOWN) {
             dir = 1;
         }
+
+        if (msg.wParam == VK_TAB) {
+            if (IsCtrlPressed()) {
+                if (smartTabMode) {
+                    shouldSelectTabOnCtrlUp = true;
+                    staticInfo->SetText(kInfoSmartTab);
+                }
+                dir = IsShiftPressed() ? -1 : 1;
+            }
+        }
         if (dir == 0) {
             return false;
         }
@@ -578,6 +594,20 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         }
         listBox->SetCurrentSelection(sel);
         return true;
+    }
+
+    if (smartTabMode) {
+        // in smart tab mode releasing ctrl + tab selects a tab
+        if (msg.message == WM_KEYUP) {
+            if (msg.wParam == VK_CONTROL) {
+                if (shouldSelectTabOnCtrlUp) {
+                    ExecuteCurrentSelection();
+                } else {
+                    staticInfo->SetText(kInfoRegular);
+                }
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -778,7 +808,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         vbox->AddChild(c);
     }
 
-    if (true) {
+    if (!smartTabMode) {
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
@@ -820,9 +850,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         listBox = c;
         vbox->AddChild(c, 1);
     }
-
     {
-        auto c = CreateStatic(hwnd, this->font, "↑ ↓ to navigate      Enter to select     Esc to close");
+        auto c = CreateStatic(hwnd, this->font, smartTabMode ? kInfoSmartTab : kInfoRegular);
+        staticInfo = c;
         vbox->AddChild(c);
     }
 
@@ -858,6 +888,10 @@ void RunCommandPallette(MainWindow* win, const char* prefix) {
     wnd->onDestroy = OnDestroy;
     wnd->font = GetAppBiggerFont();
     wnd->win = win;
+    if (str::Eq(prefix, kPalettePrefixTabsSmart)) {
+        prefix = kPalettePrefixTabs;
+        wnd->smartTabMode = true;
+    }
     bool ok = wnd->Create(win, prefix);
     ReportIf(!ok);
     gCommandPaletteWnd = wnd;

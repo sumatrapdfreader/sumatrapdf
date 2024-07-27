@@ -2628,7 +2628,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         return;
     }
 
-    size_t tabCount = win->TabCount();
+    int tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (CanCloseWindow(win)) {
             CloseWindow(win, quitIfLast, false);
@@ -4191,12 +4191,12 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
 
     bool isCtrl = IsCtrlPressed();
     bool isShift = IsShiftPressed();
-
+#if 0
     if (win->tabsVisible && isCtrl && VK_TAB == key) {
         TabsOnCtrlTab(win, isShift);
         return true;
     }
-
+#endif
     if (!win->IsDocLoaded()) {
         return false;
     }
@@ -5337,10 +5337,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdNextTab:
             TabsOnCtrlTab(win, false);
             break;
-
         case CmdPrevTab:
             TabsOnCtrlTab(win, true);
             break;
+        case CmdSmartTabSwitch: {
+            if (win && win->TabCount() > 1) {
+                RunCommandPallette(win, kPalettePrefixTabsSmart);
+            }
+            break;
+        }
 
         case CmdCloseAllTabs: {
             CloseAllTabs(win);

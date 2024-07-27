@@ -6,5 +6,7 @@
 void _uploadDebugReport(const char*, bool, bool) {
     // outside of SumatraPDF binary, this only breaks if running under debugger
     // for the benefit of test_util
-    BreakIfUnderDebugger();
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    }
 }

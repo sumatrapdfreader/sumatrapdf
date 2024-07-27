@@ -559,7 +559,7 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     if (!win) {
         return;
     }
-    int count = (int)win->TabCount();
+    int count = win->TabCount();
     if (count < 2) {
         return;
     }

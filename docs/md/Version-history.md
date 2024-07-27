@@ -12,18 +12,18 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
   - zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
 - include manual (`F1` to launch browser with documentation)
 - add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
-- new commands and their command palette (`Ctrl + K`) texts:
+- new commands in command palette (`Ctrl + K`):
   - `CmdCloseAllTabs` : "Close All Tabs"
   - `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
   - `CmdDeleteFile`: "Delete File"
   - `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
   - `CmdToggleLinks` : "Toggle Show Links"
   - `CmdInvokeInverseSearch`
-  - `CmdExec`
 - add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
   - CmdCreateAnnot\* commands take a color argument and `openedit` to automatically open edit annotations window when creating an annotation
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
   - `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
+  - `CmdSmartTabSwitch` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`
 - added `UIFontSize` advanced setting
 - removed `TreeFontWeightOffset` advanced setting
 - increase number of thumbnails on home page from 10 => 30
@@ -39,6 +39,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - bug fix: Del should not delete an annotation if editing content
 - bug fix: re-enable tree view full row select
 - change: `CmdCreateAnnotHighlight` etc. no longer copies selection to clipboard by default. To get that behavior back, you can use `copytoclipboard` argument [instead](Commands.md#cmdcreateannothighlight-and-other-cmdcreateannot).
+- change: `Ctrl + Tab` is now `CmdSmartTabSwitch`, was `CmdNextTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior.
 
 ### 3.5.2 (2023-10-25)
 

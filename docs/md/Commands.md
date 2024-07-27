@@ -85,8 +85,9 @@ CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,Shift + i,Show / Hide Current Page Number,
 CmdToggleScrollbars,,Toggle Scrollbars,
 CmdToggleToolbar,F8,Toggle Toolbar,
-CmdNextTab,Ctrl + Right,Next Tab,
-CmdPrevTab,Ctrl + Left,Previous Tab,
+CmdNextTab,Ctrl + PageUp,Next Tab,
+CmdPrevTab,Ctrl + PageDown,Previous Tab,
+CmdSmartTabSwitch,Ctrl + Tab,Smart Tab Switch,ver 3.6+
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
 CmdToggleLinks,,Toggle Show Links, Toggle drawing blue rectangle around links
@@ -108,8 +109,8 @@ CmdScrollLeftPage,Shift + Left,Scroll Left By Page
 CmdScrollRightPage,Shift + Right,Scroll Right By Page
 CmdGoToFirstPage,"Ctrl + Home, Home",First Page
 CmdGoToLastPage,"Ctrl + End, End",Last Page
-CmdGoToPrevPage,"p, Ctrl + PageUp",Previous Page
-CmdGoToNextPage,"n, Ctrl + PageDown",Next Page
+CmdGoToPrevPage,"p",Previous Page
+CmdGoToNextPage,"n",Next Page
 CmdGoToPage,"g, Ctrl + G",Go to Page...
 CmdNavigateBack,"Alt + Left, Backspace",Navigate Back
 CmdNavigateForward,"Alt + Right, Shift + Backspace",Navigate Forward

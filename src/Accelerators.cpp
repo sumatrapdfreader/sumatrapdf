@@ -191,6 +191,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},
     {FCONTROL | FVIRTKEY, VK_NEXT, CmdNextTab},
     {FCONTROL | FVIRTKEY, VK_PRIOR, CmdPrevTab},
+    {FCONTROL | FVIRTKEY, VK_TAB, CmdSmartTabSwitch},
     {FVIRTKEY, VK_F1, CmdHelpOpenManual},
 
     // need 2 entries for 'a' and 'Shift + a'
