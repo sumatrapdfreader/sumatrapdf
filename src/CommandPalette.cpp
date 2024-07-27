@@ -306,6 +306,12 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return false;
     }
 
+    for (SelectionHandler* sh : *gGlobalPrefs->selectionHandlers) {
+        if (sh->cmdId == cmdId) {
+            return ctx.hasSelection;
+        }
+    }
+
     if (ctx.isChm && IsCmdInMenuList(cmdId, removeIfChm)) {
         return false;
     }
@@ -376,6 +382,10 @@ static TempStr ConvertPathForDisplayTemp(const char* s) {
     TempStr res = str::JoinTemp(name, "  (", dir);
     res = str::JoinTemp(res, ")");
     return res;
+}
+
+static TempStr RemovePrefixFromString(const char* s) {
+    return str::ReplaceTemp(s, "&", "");
 }
 
 void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
@@ -469,25 +479,36 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     StrVecCP tempCommands;
     int cmdId = (int)CmdFirst + 1;
-    for (SeqStrings strs = gCommandDescriptions; strs; seqstrings::Next(strs, &cmdId)) {
-        if (cmdId == CmdAdvancedOptions) {
-            logf("advanced opts\n");
-        }
+    for (SeqStrings name = gCommandDescriptions; name; seqstrings::Next(name, &cmdId)) {
         if (AllowCommand(ctx, (i32)cmdId)) {
-            ReportIf(str::Leni(strs) == 0);
+            ReportIf(str::Leni(name) == 0);
             ItemDataCP data;
             data.cmdId = (i32)cmdId;
-            tempCommands.Append(strs, data);
+            tempCommands.Append(name, data);
         }
     }
+
     for (auto& ev : *gGlobalPrefs->externalViewers) {
         if (str::IsEmptyOrWhiteSpaceOnly(ev->name)) {
             continue;
         }
         if (AllowCommand(ctx, ev->cmdId)) {
             ItemDataCP data;
-            data.cmdId = (i32)cmdId;
-            tempCommands.Append(ev->name, data);
+            data.cmdId = (i32)ev->cmdId;
+            TempStr name = RemovePrefixFromString(ev->name);
+            tempCommands.Append(name, data);
+        }
+    }
+
+    for (auto& sh : *gGlobalPrefs->selectionHandlers) {
+        if (str::IsEmptyOrWhiteSpaceOnly(sh->name)) {
+            continue;
+        }
+        if (AllowCommand(ctx, sh->cmdId)) {
+            ItemDataCP data;
+            data.cmdId = (i32)sh->cmdId;
+            TempStr name = RemovePrefixFromString(sh->name);
+            tempCommands.Append(name, data);
         }
     }
 
