@@ -621,10 +621,11 @@ void CreateSumatraAcceleratorTable() {
     int nBuiltIn = (int)dimof(gBuiltInAccelerators);
     int nCustomShortcuts = gGlobalPrefs->shortcuts->Size();
     int nExternalViewers = gGlobalPrefs->externalViewers->Size();
+    int nSelectionHandlers = gGlobalPrefs->selectionHandlers->Size();
 
     // build a combined accelerator table of those defined in settings file
     // and built-in shortcuts. Custom shortcuts over-ride built-in
-    int nMax = nBuiltIn + nCustomShortcuts + nExternalViewers;
+    int nMax = nBuiltIn + nCustomShortcuts + nExternalViewers + nSelectionHandlers;
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/2981
     // sizeof(ACCEL) is 6 so odd number will cause treeViewAccels to
     // be mis-aligined. Rounding to 2 should be enoug, do 4 for extra safety
@@ -638,22 +639,55 @@ void CreateSumatraAcceleratorTable() {
     int nEditAccels = 0;
     int nTreeViewAccels = 0;
 
-    for (auto& ev : *gGlobalPrefs->externalViewers) {
-        if (str::IsEmptyOrWhiteSpaceOnly(ev->key)) {
-            continue;
+    auto addShortcutIfNotExists = [&](ACCEL accel) -> void {
+        bool shortcutExists = false;
+        for (int i = 0; !shortcutExists && i < nAccels; i++) {
+            shortcutExists = SameAccelKey(accels[i], accel);
         }
-        ACCEL accel{};
-        accel.cmd = ev->cmdId;
-        if (!ParseShortcut(ev->key, accel)) {
-            // TODO: make it a notification
-            logf("CreateSumatraAcceleratorTable: bad shortcut '%s' for external viewer '%s'\n", ev->key,
-                 ev->commandLine);
-            continue;
+        if (shortcutExists) {
+            return;
         }
         accels[nAccels++] = accel;
         if (IsSafeAccel(accel)) {
             editAccels[nEditAccels++] = accel;
             treeViewAccels[nTreeViewAccels++] = accel;
+        }
+        if (((int)accel.cmd == (int)CmdToggleBookmarks) && !IsSafeAccel(accel)) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
+            treeViewAccels[nTreeViewAccels++] = accel;
+        }
+    };
+
+    auto maybeAddShortcut = [&](const char* key, int cmdId) -> bool {
+        ReportIf(cmdId <= 0);
+
+        ACCEL accel{};
+        accel.cmd = cmdId;
+        if (str::IsEmptyOrWhiteSpaceOnly(key)) {
+            return true;
+        }
+
+        if (!ParseShortcut(key, accel)) {
+            return false;
+        }
+        addShortcutIfNotExists(accel);
+        return true;
+    };
+
+    for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
+        bool ok = maybeAddShortcut(ev->key, ev->cmdId);
+        if (!ok) {
+            // TODO: make it a notification
+            logf("CreateSumatraAcceleratorTable: bad shortcut '%s' for external viewer '%s'\n", ev->key,
+                 ev->commandLine);
+        }
+    }
+
+    for (SelectionHandler* sh : *gGlobalPrefs->selectionHandlers) {
+        bool ok = maybeAddShortcut(sh->key, sh->cmdId);
+        if (!ok) {
+            // TODO: make it a notification
+            logf("CreateSumatraAcceleratorTable: bad shortcut '%s' for selection handler'%s'\n", sh->key, sh->url);
         }
     }
 
@@ -662,43 +696,17 @@ void CreateSumatraAcceleratorTable() {
         if (cmdId < 0) {
             continue;
         }
-        ACCEL accel{};
-        accel.cmd = cmdId;
-        if (!ParseShortcut(shortcut->key, accel)) {
+        bool ok = maybeAddShortcut(shortcut->key, cmdId);
+        if (!ok) {
             // TODO: make it a notification
             logf("CreateSumatraAcceleratorTable: bad shortcut '%s'\n", shortcut->key);
             continue;
         }
-        accels[nAccels++] = accel;
-        if (IsSafeAccel(accel)) {
-            editAccels[nEditAccels++] = accel;
-            treeViewAccels[nTreeViewAccels++] = accel;
-        }
-        if (cmdId == CmdToggleBookmarks && !IsSafeAccel(accel)) {
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
-            treeViewAccels[nTreeViewAccels++] = accel;
-        }
     }
 
-    // shortucts for external viewers
-    // for (ExternalViewer* ev : *gGlobalPrefs->externalViewers) {
-    //}
-
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
-    nCustomShortcuts = nAccels;
     for (ACCEL accel : gBuiltInAccelerators) {
-        bool shortcutExists = false;
-        for (int i = 0; !shortcutExists && i < nAccels; i++) {
-            shortcutExists = SameAccelKey(accels[i], accel);
-        }
-        if (shortcutExists) {
-            continue;
-        }
-        accels[nAccels++] = accel;
-        if (IsSafeAccel(accel)) {
-            editAccels[nEditAccels++] = accel;
-            treeViewAccels[nTreeViewAccels++] = accel;
-        }
+        addShortcutIfNotExists(accel);
     }
 
     gAccels = accels;

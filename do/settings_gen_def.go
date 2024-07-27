@@ -115,6 +115,7 @@ var (
 	selectionHandler = []*Field{
 		mkField("URL", String, nil, "url to invoke for the selection. ${selection} will be replaced with current selection and ${userlang} with language code for current UI (e.g. 'de' for German)"),
 		mkField("Name", String, nil, "name shown in context menu"),
+		mkField("Key", String, nil, "keyboard shortcut").setVersion("3.6"),
 		mkField("CmdId", Int, 0, "dynamic command id").setInternal(),
 	}
 

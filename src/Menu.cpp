@@ -1205,15 +1205,17 @@ static void AppendSelectionHandlersToMenu(HMENU m, bool isEnabled) {
     Vec<CustomCommand*> cmds;
     GetCommandsWithOrigId(cmds, CmdSelectionHandler);
     for (auto& cmd : cmds) {
-        auto name = GetCommandStringArg(cmd, kCmdArgName, nullptr);
-        ReportIf(!name);
-        if (!name) {
+        auto menuString = (TempStr)GetCommandStringArg(cmd, kCmdArgName, nullptr);
+        ReportIf(!menuString);
+        if (!menuString) {
             continue;
         }
-        WCHAR* nameW = ToWStrTemp(name);
+        int cmdId = cmd->id;
+        menuString = AppendAccelKeyToMenuStringTemp(menuString, cmdId);
         UINT flags = MF_STRING;
         flags |= isEnabled ? MF_ENABLED : MF_DISABLED;
-        AppendMenuW(m, flags, (UINT_PTR)cmd->id, nameW);
+        WCHAR* ws = ToWStrTemp(menuString);
+        AppendMenuW(m, flags, (UINT_PTR)cmdId, ws);
     }
 }
 

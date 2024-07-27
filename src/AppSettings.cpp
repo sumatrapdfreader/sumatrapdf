@@ -116,7 +116,8 @@ static void CreateUserSelectionHandlerCommands() {
         CommandArg* args = NewStringArg(kCmdArgName, sh->name);
         CommandArg* arg = NewStringArg(kCmdArgURL, sh->url);
         InsertArg(&args, arg);
-        CreateCustomCommand(sh->url, CmdSelectionHandler, args);
+        auto cmd = CreateCustomCommand(sh->url, CmdSelectionHandler, args);
+        sh->cmdId = cmd->id;
     }
 }
 
@@ -215,12 +216,13 @@ bool LoadSettings() {
     ResetCachedFonts();
 
     // re-create commands
-    freeCustomCommands();
+    FreeCustomCommands();
     // Note: some are also created in ReCreateSumatraAcceleratorTable()
     CreateUserSelectionHandlerCommands();
     CreateThemeCommands();
     CreateExternalViewersCommands();
 
+    // re-create accelerators
     FreeAcceleratorTables();
     CreateSumatraAcceleratorTable();
 

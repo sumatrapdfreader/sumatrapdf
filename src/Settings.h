@@ -177,6 +177,8 @@ struct SelectionHandler {
     char* url;
     // name shown in context menu
     char* name;
+    // keyboard shortcut
+    char* key;
     // dynamic command id
     int cmdId;
 };
@@ -554,8 +556,10 @@ static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPri
 static const FieldInfo gSelectionHandlerFields[] = {
     {offsetof(SelectionHandler, url), SettingType::String, 0},
     {offsetof(SelectionHandler, name), SettingType::String, 0},
+    {offsetof(SelectionHandler, key), SettingType::String, 0},
 };
-static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 2, gSelectionHandlerFields, "URL\0Name"};
+static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 3, gSelectionHandlerFields,
+                                                 "URL\0Name\0Key"};
 
 static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},

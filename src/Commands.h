@@ -301,7 +301,7 @@ int GetCommandIdByDesc(const char*);
 
 CustomCommand* CreateCustomCommand(const char* definition, int origCmdId, CommandArg* args);
 CustomCommand* FindCustomCommand(int cmdId);
-void freeCustomCommands();
+void FreeCustomCommands();
 CommandArg* NewStringArg(const char* name, const char* val);
 void InsertArg(CommandArg** firstPtr, CommandArg* arg);
 

@@ -184,7 +184,7 @@ CustomCommand* FindCustomCommand(int cmdId) {
     return nullptr;
 }
 
-void freeCustomCommands() {
+void FreeCustomCommands() {
     CustomCommand* next;
     CustomCommand* curr = gFirstCustomCommand;
     while (curr) {
