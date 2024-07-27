@@ -15,10 +15,6 @@ You can control SumatraPDF with commands:
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdClose,"Ctrl + W, Ctrl + F4",Close Document,
 CmdCloseCurrentDocument,q,Close Current Document,
-CmdCloseAllTabs,,Close All Tabs,ver 3.6+
-CmdCloseTabsToTheLeft,,Close Tabs To The Left,ver 3.6+
-CmdCloseTabsToTheRight,,Close Tabs To The Right,ver 3.6+
-CmdCloseOtherTabs,,Close Other Tabs,ver 3.6+
 CmdCommandPalette,Ctrl + K,Command Palette,
 CmdDuplicateInNewWindow,Shift + Ctrl + N,Open Current Document In New Window,
 CmdExit,Ctrl + Q,Exit Application,
@@ -83,12 +79,21 @@ CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,Shift + i,Show / Hide Current Page Number,
 CmdToggleScrollbars,,Toggle Scrollbars,
 CmdToggleToolbar,F8,Toggle Toolbar,
-CmdNextTab,Ctrl + PageUp,Next Tab,
-CmdPrevTab,Ctrl + PageDown,Previous Tab,
-CmdSmartTabSwitch,Ctrl + Tab,Smart Tab Switch,ver 3.6+
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
 CmdToggleLinks,,Toggle Show Links, Toggle drawing blue rectangle around links
+```
+
+## **Tabs**
+```commands
+Command IDs,Keyboard shortcuts,Command Palette,Notes
+CmdCloseAllTabs,,Close All Tabs,ver 3.6+
+CmdCloseTabsToTheLeft,,Close Tabs To The Left,ver 3.6+
+CmdCloseTabsToTheRight,,Close Tabs To The Right,ver 3.6+
+CmdCloseOtherTabs,,Close Other Tabs,ver 3.6+
+CmdNextTab,Ctrl + PageUp,Next Tab,
+CmdPrevTab,Ctrl + PageDown,Previous Tab,
+CmdSmartTabSwitch,Ctrl + Tab,Smart Tab Switch,ver 3.6+
 ```
 
 ## **Navigation**
