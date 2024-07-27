@@ -40,8 +40,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithKnownExternalViewerFirst,
     CmdOpenWithKnownExternalViewerLast,
     CmdCommandPalette,
-    CmdCommandPaletteNoFiles,
-    CmdCommandPaletteOnlyTabs,
+    CmdSmartTabSwitch,
 
     // managing frequently list in home tab
     CmdOpenSelectedDocument,

@@ -39,7 +39,11 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - bug fix: Del should not delete an annotation if editing content
 - bug fix: re-enable tree view full row select
 - change: `CmdCreateAnnotHighlight` etc. no longer copies selection to clipboard by default. To get that behavior back, you can use `copytoclipboard` argument [instead](Commands.md#cmdcreateannothighlight-and-other-cmdcreateannot).
-- change: `Ctrl + Tab` is now `CmdSmartTabSwitch`, was `CmdNextTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior.
+- change: `Ctrl + Tab` is now `CmdSmartTabSwitch`, was `CmdNextTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior
+- `CmdCommandPalette` takes optional `mode` argument: `@` for tab selection, `#` for selecting from file history and `>` for commands.
+- command palette no longer shows combined tabs/file history/commands. `CmdCommandPalette` only shows commands. Because of that removed `CmdCommandPaletteNoFiles` because now ``CmdCommandPalette` behaves like it
+- removed `CmdCommandPaletteOnlyTabs`, replaced by`CmdCommandPaletteNoFiles @`
+- `Ctrl + Shift + K` no longer active, use `Ctrl + K`. You can restore this shortcut by binding it to `CmdCommandPalette >` command.
 
 ### 3.5.2 (2023-10-25)
 

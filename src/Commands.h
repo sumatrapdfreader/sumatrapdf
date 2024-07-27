@@ -167,9 +167,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdOpenNextFileInFolder, "Open Next File In Folder")                         \
     V(CmdOpenPrevFileInFolder, "Open Previous File In Folder")                     \
     V(CmdCommandPalette, "Command Palette")                                        \
-    V(CmdCommandPaletteNoFiles, "Command Palette No Files")                        \
-    V(CmdCommandPaletteOnlyTabs, "Command Palette Only Tabs")                      \
-    V(CmdShowLog, "Show Log")                                                      \
+    V(CmdShowLog, "Show Logs")                                                     \
     V(CmdClearHistory, "Clear History")                                            \
     V(CmdReopenLastClosedFile, "Reopen Last Closed")                               \
     V(CmdNextTab, "Next Tab")                                                      \
@@ -323,3 +321,4 @@ constexpr const char* kCmdArgName = "name";
 constexpr const char* kCmdArgLevel = "level";
 constexpr const char* kCmdArgFilter = "filter";
 constexpr const char* kCmdArgN = "n";
+constexpr const char* kCmdArgMode = "mode";

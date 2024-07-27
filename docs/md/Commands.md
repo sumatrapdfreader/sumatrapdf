@@ -20,8 +20,6 @@ CmdCloseTabsToTheLeft,,Close Tabs To The Left,ver 3.6+
 CmdCloseTabsToTheRight,,Close Tabs To The Right,ver 3.6+
 CmdCloseOtherTabs,,Close Other Tabs,ver 3.6+
 CmdCommandPalette,Ctrl + K,Command Palette,
-CmdCommandPaletteNoFiles,Shift + Ctrl + K,Command Palette No Files,
-CmdCommandPaletteOnlyTabs,Alt + K,Command Palette Only Tabs,ver 3.5+
 CmdDuplicateInNewWindow,Shift + Ctrl + N,Open Current Document In New Window,
 CmdExit,Ctrl + Q,Exit Application,
 CmdMoveFrameFocus,F6,Move Frame Focus,
@@ -229,7 +227,7 @@ CmdClearHistory,,Clear History
 CmdContributeTranslation,,Contribute Translation
 CmdForgetSelectedDocument,,Remove Selected Document From History
 CmdOptions,,Options...
-CmdShowLog,,Show Log
+CmdShowLog,,Show Logs
 ```
 
 ## **Help**
@@ -382,6 +380,30 @@ Shortcuts [
     [
         Cmd = CmdZoomCustom 50%
         Key = z
+    ]
+]
+```
+
+
+## `CmdCommandPalette`
+
+**Ver 3.6+**
+
+Argument:
+- `mode` : default, optional string, Values:
+  - `@` for opened files (tabs)
+  - `#` for history of files
+  - `>` for commands
+
+Without an argument it defaults to `>`.
+
+Example:
+
+```
+Shortcuts [
+    [
+        Cmd = CmdCommandPalette #
+        Key = Ctrl + h
     ]
 ]
 ```

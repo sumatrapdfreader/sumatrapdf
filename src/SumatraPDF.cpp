@@ -5304,17 +5304,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CopyFilePath(tab);
             break;
 
-        case CmdCommandPalette:
-            RunCommandPallette(win, nullptr);
-            break;
-
-        case CmdCommandPaletteNoFiles:
-            RunCommandPallette(win, kPalettePrefixCommands);
-            break;
-
-        case CmdCommandPaletteOnlyTabs:
-            RunCommandPallette(win, kPalettePrefixTabs);
-            break;
+        case CmdCommandPalette: {
+            const char* mode = nullptr;
+            if (cmd) {
+                mode = GetCommandStringArg(cmd, kCmdArgMode, nullptr);
+            }
+            RunCommandPallette(win, mode);
+        } break;
 
         case CmdClearHistory:
             ClearHistory(win);

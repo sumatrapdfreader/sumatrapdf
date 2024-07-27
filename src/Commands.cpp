@@ -50,6 +50,8 @@ static const ArgSpec argSpecs[] = {
 
     {CmdZoomCustom, kCmdArgLevel, CommandArg::Type::String}, // default
 
+    {CmdCommandPalette, kCmdArgMode, CommandArg::Type::String}, // default
+
     {CmdNone, "", CommandArg::Type::None}, // sentinel
 };
 
@@ -462,6 +464,17 @@ int ParseCommand(const char* definition) {
     if (!firstArg) {
         logf("ParseCommand: failed to parse arguments for '%s'\n", definition);
         return -1;
+    }
+
+    if (cmdId == CmdCommandPalette && firstArg) {
+        // validate mode
+        const char* s = firstArg->strVal;
+        static SeqStrings validModes = ">\0#\0@\0"; // TODO: "@@\0" ?
+        if (seqstrings::StrToIdx(validModes, s) < 0) {
+            logf("ParseCommand: invalid CmdCommandPalette mode in '%s'\n", definition);
+            FreeCommandArgs(firstArg);
+            firstArg = nullptr;
+        }
     }
 
     if (cmdId == CmdZoomCustom) {

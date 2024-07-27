@@ -145,8 +145,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'G', CmdGoToPage},
     {0, 'g', CmdGoToPage},
     {FCONTROL | FVIRTKEY, 'K', CmdCommandPalette},
-    {FSHIFT | FCONTROL | FVIRTKEY, 'K', CmdCommandPaletteNoFiles},
-    {FALT | FVIRTKEY, 'K', CmdCommandPaletteOnlyTabs},
+    //{FALT | FVIRTKEY, 'K', CmdCommandPaletteOnlyTabs}, // removed in 3.6
     {FSHIFT | FCONTROL | FVIRTKEY, 'S', CmdSaveAnnotations},
     {FCONTROL | FVIRTKEY, 'P', CmdPrint},
     {FCONTROL | FVIRTKEY, 'Q', CmdExit},
