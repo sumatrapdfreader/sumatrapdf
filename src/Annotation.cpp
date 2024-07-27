@@ -1027,6 +1027,14 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             }
 
             switch (typ) {
+                case AnnotationType::Highlight:
+                case AnnotationType::Underline:
+                case AnnotationType::Squiggly:
+                case AnnotationType::StrikeOut: {
+                    if (!str::IsEmptyOrWhiteSpace(args->content)) {
+                        pdf_set_annot_contents(ctx, annot, args->content);
+                    }
+                } break;
                 case AnnotationType::Text:
                 case AnnotationType::FreeText:
                 case AnnotationType::Stamp:

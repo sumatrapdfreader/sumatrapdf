@@ -71,6 +71,8 @@ struct AnnotCreateArgs {
     // the following are set depending on type of the annotation
     ParsedColor col;
     bool copyToClipboard = false;
+    bool setContent = false;
+    TempStr content = nullptr;
 };
 
 int PageNo(Annotation*);

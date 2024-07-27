@@ -20,7 +20,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
   - `CmdToggleLinks` : "Toggle Show Links"
   - `CmdInvokeInverseSearch`
 - add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
-  - CmdCreateAnnot\* commands take a color argument and `openedit` to automatically open edit annotations window when creating an annotation
+  - CmdCreateAnnot\* commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
   - `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
   - `CmdSmartTabSwitch` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`

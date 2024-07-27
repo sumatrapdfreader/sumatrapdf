@@ -345,7 +345,8 @@ Arguments:
 
 - `color` : default, color
 - `openedit` : boolean, `false` if not given
-- `copytoclipboard` : boolean, `false` if not given. For higlihgt/underline etc. annotations, copies the text of annotaiton to clipboard. This used to be default behavior for built-in `a` etc. keyboard shortcuts but now it has to be explicitly chosen.
+- `copytoclipboard` : boolean, `false` if not given. For highlight/underline/squiggly/strikeout  annotations, copies the selection (text of annotation) to clipboard. This used to be default behavior for built-in `a` etc. keyboard shortcuts but now it has to be explicitly chosen.
+- `setcontent` : boolean, false if not give. For highlight/underline/squiggly/strikeout sets content of annotation to the selection (text of annotation)
 
 Use cases: 
 - change default color for annotations

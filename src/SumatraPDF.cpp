@@ -4387,6 +4387,11 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) 
         return 0;
     }
 
+    if (args->setContent) {
+        bool isTextOnlySelection = false;
+        args->content = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
+    }
+
     int nCreated = 0;
     Annotation* annot = nullptr;
     for (auto pageNo : pageNos) {
@@ -5110,17 +5115,13 @@ OpenFileInBrowser:
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     if (cmd) {
-        {
-            auto copyToClip = GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false);
-            args.copyToClipboard = copyToClip;
-        }
-        {
-            auto col = GetCommandArg(cmd, kCmdArgColor);
-            ReportIf(!col || !col->colorVal.parsedOk);
-            if (col && col->colorVal.parsedOk) {
-                args.col = col->colorVal;
-                return;
-            }
+        args.copyToClipboard = GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false);
+        args.setContent = GetCommandBoolArg(cmd, kCmdArgSetContent, false);
+        auto col = GetCommandArg(cmd, kCmdArgColor);
+        ReportIf(!col || !col->colorVal.parsedOk);
+        if (col && col->colorVal.parsedOk) {
+            args.col = col->colorVal;
+            return;
         }
     }
     auto& a = gGlobalPrefs->annotations;

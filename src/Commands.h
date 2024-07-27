@@ -318,6 +318,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 constexpr const char* kCmdArgColor = "color";
 constexpr const char* kCmdArgOpenEdit = "openedit";
 constexpr const char* kCmdArgCopyToClipboard = "copytoclipboard";
+constexpr const char* kCmdArgSetContent = "setcontent";
 constexpr const char* kCmdArgExe = "exe";
 constexpr const char* kCmdArgURL = "url";
 constexpr const char* kCmdArgLevel = "level";

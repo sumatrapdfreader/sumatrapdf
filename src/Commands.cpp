@@ -41,6 +41,7 @@ static const ArgSpec argSpecs[] = {
     {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
     {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
     {CmdCreateAnnotText, kCmdArgCopyToClipboard, CommandArg::Type::Bool},
+    {CmdCreateAnnotText, kCmdArgSetContent, CommandArg::Type::Bool},
 
     // and  CmdScrollDown, CmdGoToNextPage, CmdGoToPrevPage
     {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
