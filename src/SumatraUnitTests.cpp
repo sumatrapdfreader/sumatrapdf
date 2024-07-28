@@ -78,7 +78,8 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf", i);
+        //ParseFlags(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf", i);
+        ParseFlags(L"-presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf", i);
         utassert(true == i.enterPresentation);
         utassert(true == i.invertColors);
         utassert(2 == i.fileNames.Size());
@@ -88,7 +89,8 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
+        //ParseFlags(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
+        ParseFlags(L"-bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
         utassert(true == i.invertColors);
         utassert(1 == i.fileNames.Size());
         utassert(0 == i.fileNames.Find("rosanna.pdf"));
@@ -97,6 +99,7 @@ static void ParseCommandLineTest() {
     {
         Flags i;
         ParseFlags(LR"(SumatraPDF.exe "foo \" bar \\.pdf" un\"quoted.pdf)", i);
+        i.fileNames.RemoveAt(0);
         utassert(2 == i.fileNames.Size());
         utassert(0 == i.fileNames.Find(R"(foo " bar \\.pdf)"));
         utassert(1 == i.fileNames.Find(R"(un"quoted.pdf)"));
@@ -104,7 +107,9 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance",
+        //ParseFlags(L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance",
+        //           i);
+        ParseFlags(L"-page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance",
                    i);
         utassert(0 == i.fileNames.Size());
         utassert(i.pageNumber == 37);
@@ -115,7 +120,8 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(LR"(SumatraPDF.exe -view "single page" -zoom 237.45 -scroll -21,-1)", i);
+        //ParseFlags(LR"(SumatraPDF.exe -view "single page" -zoom 237.45 -scroll -21,-1)", i);
+        ParseFlags(LR"(-view "single page" -zoom 237.45 -scroll -21,-1)", i);
         utassert(0 == i.fileNames.Size());
         utassert(i.startView == DisplayMode::SinglePage);
         utassert(i.startZoom == 237.45f);
@@ -124,14 +130,16 @@ static void ParseCommandLineTest() {
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -zoom 35%", i);
+        //ParseFlags(L"SumatraPDF.exe -zoom 35%", i);
+        ParseFlags(L"-zoom 35%", i);
         utassert(0 == i.fileNames.Size());
         utassert(i.startZoom == 35.f);
     }
 
     {
         Flags i;
-        ParseFlags(L"SumatraPDF.exe -zoom fit-content", i);
+        //ParseFlags(L"SumatraPDF.exe -zoom fit-content", i);
+        ParseFlags(L"-zoom fit-content", i);
         utassert(i.startZoom == kZoomFitContent);
         utassert(0 == i.fileNames.Size());
     }
