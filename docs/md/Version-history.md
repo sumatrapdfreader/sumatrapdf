@@ -2,7 +2,7 @@
 
 ## [RSS/Atom feed](https://github.com/sumatrapdfreader/sumatrapdf/releases)
 
-## **Version history**
+## Version history
 
 ### next (3.6)
 

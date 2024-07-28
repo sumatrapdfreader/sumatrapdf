@@ -4,13 +4,13 @@
 
 SumatraPDF prerelease supports experimental UIA accessibility API, which allows for example screen readers to read out loud the selected text in document.
 
-## **Accessibility in SumatraPDF plugin**
+## Accessibility in SumatraPDF plugin
 
 Accessibility features are considered experimental and accessibility is not enabled at the moment in the SumatraPDF plugin.
 
-## **Usage**
+## Usage
 
-### **Microsoft Narrator**
+### Microsoft Narrator
 
 - Start Microsoft Narrator
 - Start SumatraPDF
@@ -19,25 +19,25 @@ Accessibility features are considered experimental and accessibility is not enab
 
 Known issue: Sometimes Narrator does not read the selection. This seems to be a focus related problem and selecting another window and then back the SumatraPDF window may fix the problem.
 
-## **Supported configurations**
+## Supported configurations
 
-### **Supported file types**
+### Supported file types
 
 PDF, XPS, DjVu
 
-### **Supported Clients**
+### Supported Clients
 
 - Microsoft Narrator
 
-### **Unsupported Clients**
+### Unsupported Clients
 
 - [NVDA](https://community.nvda-project.org/)
 
-# **Technical Documentation**
+# Technical Documentation
 
 This section is documentation for SumatraPDF and other developers.
 
-## **UIAutomation element structure when a document is loaded**
+## UIAutomation element structure when a document is loaded
 
 ```
 Window
@@ -62,7 +62,7 @@ Window
                  Patterns: IValueProvider
 ```
 
-## **UIAutomation element structure when no document is loaded**
+## UIAutomation element structure when no document is loaded
 
 ```
 Window

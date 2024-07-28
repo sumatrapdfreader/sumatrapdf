@@ -42,7 +42,7 @@ Explanation:
 - **ver 3.6+:**: `CmdCreateAnnotHighlight` takes a color argument (`#00ff00` is green) and boolean `openedit` argument. We re-assign `a` to create a highlight annotation with green color (different from default yellow) and to open annotations edit window (`openedit` boolean argument)
 - **ver 3.6+:**: `Name` is optional. If given, the command will show up in command palette (`Ctrl + K`)
 
-## **Format of `Key` section:**
+## Format of `Key` section:
 
 - just a key (like `a`, `Z`, `5`) i.e. letters `a` to `z`, `A` to `Z`, and numbers `0` to `9`
 - modifiers + key. Modifiers are: `Shift`, `Alt`, `Ctrl` e.g. `Alt + F1`, `Ctrl + Shift + Y`
@@ -55,11 +55,11 @@ Explanation:
 - without modifiers, case do matter i.e. `a` and `A` are different
 - with modifiers, use `Shift` to select upper-case i.e. `Alt + a` is the same as `Alt + A` , use `Alt + Shift + A` to select the upper-case `A`
 
-## **Commands**
+## Commands
 
 You can see a [full list of commands](Commands.md) ([or in the source code](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/Commands.h#L9))
 
-## **Notes**
+## Notes
 
 The changes are applied right after you save settings file so that you can test changes without restarting SumatraPDF.
 

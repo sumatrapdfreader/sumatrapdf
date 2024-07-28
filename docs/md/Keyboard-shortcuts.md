@@ -3,7 +3,7 @@
 You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also see [standard Windows keyboard shortcuts](https://support.microsoft.com/en-us/windows/keyboard-shortcuts-in-windows-dcc61a57-8ff0-cffe-9796-cb9706c75eec) for controls like tree view or edit fields.
 
 :columns
-### **File menu**
+### File menu
 
 - `Ctrl + N` - Open a new window
 - `Ctrl + O` - Open a file
@@ -14,7 +14,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Ctrl + D` - Properties
 - `Ctrl + Q`, `Alt-F4` - Quit app
 
-### **Go To menu**
+### Go To menu
 
 - `Right Arrow` / `Left Arrow`- Next / Previous Page
     - scrolls left / right if page width > window width
@@ -29,7 +29,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 
 - `Ctrl + B` - Add current page to favorites
 
-### **View menu**
+### View menu
 
 - `Ctrl + 6` - Single Page
 - `Ctrl + 7` - Facing
@@ -43,7 +43,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Ctrl + A` - Select All
 - `Ctrl + C` - Copy Selection
 
-### **Zoom menu**
+### Zoom menu
 
 - `Ctrl + 0` - Fit Page
 - `Ctrl + 1` - Actual Size
@@ -51,7 +51,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Ctrl + 3` - Fit Content
 - `Ctrl + Y` - Custom Zoom...
 
-### **Navigation**
+### Navigation
 
 - `j` / `k` - Scroll up / down by line
 - `h` / `l` - Scroll left / right
@@ -72,7 +72,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Ctrl + Shift + Right` - Open next document in the directory
 - `Ctrl + Shift + Left` - Open previous document in the directory
 
-### **Viewing state**
+### Viewing state
 
 - `+` / `-` - zoom in/out
 - `Ctrl + scroll wheel` - zoom in/out
@@ -96,7 +96,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `w` - in presentation mode, make whole screen white
 - `.` - in presentation mode, make whole screen black
 
-### **Actions**
+### Actions
 
 - `Ctrl + O` - Open a new document
 - `Ctrl + W` - Close current document
@@ -122,7 +122,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Ctrl + Y` - Show dropdown zoom control
 - `F1` - Show documentation / manual
 
-### **Tabs**
+### Tabs
 
 - `Ctrl + Tab` - go to next tab
 - `Ctrl + Shift + Tab` - go to previous tab

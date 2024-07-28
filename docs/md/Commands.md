@@ -374,7 +374,7 @@ Arguments:
 - a number describing zoom level in percent e.g.:
     - `50` or `50%` means 50% zoom
     - `125` means 125% zoom
-- one of the virtual zoom levels:
+- a virtual zoom level:
   - `actual size` (100% zoom level)
   - `fit page`
   - `fit width`
