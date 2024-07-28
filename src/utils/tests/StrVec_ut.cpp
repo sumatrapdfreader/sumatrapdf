@@ -20,7 +20,7 @@ static void ValidateSize(StrVec* v) {
 static void ValidateAtSpan(StrVec* v, int idx, const char* s) {
     StrSpan sp = v->AtSpan(idx);
     ReportIf(!str::Eq(s, sp.d));
-    ReportIf(str::Len(s) != sp.size);
+    ReportIf(str::Leni(s) != sp.size);
 }
 
 static void strEq(const char* s1, const char* s2) {
