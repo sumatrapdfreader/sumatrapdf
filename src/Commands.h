@@ -308,7 +308,7 @@ void FreeCustomCommands();
 CommandArg* NewStringArg(const char* name, const char* val);
 void InsertArg(CommandArg** firstPtr, CommandArg* arg);
 
-std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definition);
+CustomCommand* CreateCommandFromDefinition(const char* definition);
 CommandArg* GetCommandArg(CustomCommand*, const char* argName);
 int GetCommandIntArg(CustomCommand* cmd, const char* name, int defValue);
 bool GetCommandBoolArg(CustomCommand* cmd, const char* name, bool defValue);

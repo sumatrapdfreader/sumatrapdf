@@ -376,10 +376,9 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     return ParseArgOfType(argName, type, val);
 }
 
-// some commands can accept arguments. For those we have to create CustomCommand that
-// binds original command id and an arg and creates a unique command id
-// we return -1 if unkown command or command doesn't take an argument or argument is invalid
-std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definition) {
+// create custom command as defined in Shortcuts section in advanced settings.
+// we return null if unkown command
+CustomCommand* CreateCommandFromDefinition(const char* definition) {
     StrVec parts;
     Split(&parts, definition, " ", true, 2);
     const char* cmd = parts[0];
@@ -387,15 +386,15 @@ std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definitio
     if (cmdId < 0) {
         // TODO: make it a notification
         logf("CreateCommandFromDefinition: unknown cmd name in '%s'\n", definition);
-        return {cmdId, nullptr};
+        return nullptr;
     }
     if (parts.Size() == 1) {
-        return {cmdId, nullptr};
+        // no arguments
+        return CreateCustomCommand(definition, cmdId, nullptr);
     }
 
-    // those commands take arguments
-    int argCmdId = cmdId;
     // some commands share the same arguments, so cannonalize them
+    int argCmdId = cmdId;
     switch (cmdId) {
         case CmdCreateAnnotText:
         case CmdCreateAnnotLink:
@@ -434,7 +433,7 @@ std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definitio
         if (id == CmdNone) {
             // the command doesn't accept any arguments
             logf("CreateCommandFromDefinition: cmd '%s' doesn't accept arguments\n", definition);
-            return {cmdId, nullptr};
+            return CreateCustomCommand(definition, cmdId, nullptr);
         }
         if (id != argCmdId) {
             continue;
@@ -447,7 +446,7 @@ std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definitio
         logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition,
              cmdId, argCmdId);
         ReportIf(true);
-        return {-1, nullptr};
+        return nullptr;
     }
 
     const char* currArg = parts[1];
@@ -465,7 +464,7 @@ std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definitio
     }
     if (!firstArg) {
         logf("CreateCommandFromDefinition: failed to parse arguments for '%s'\n", definition);
-        return {-1, nullptr};
+        return nullptr;
     }
 
     if (cmdId == CmdCommandPalette && firstArg) {
@@ -486,13 +485,13 @@ std::pair<int, CustomCommand*> CreateCommandFromDefinition(const char* definitio
         if (0 == zoomVal) {
             FreeCommandArgs(firstArg);
             logf("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", definition);
-            return {-1, nullptr};
+            return nullptr;
         }
         firstArg->type = CommandArg::Type::Float;
         firstArg->floatVal = zoomVal;
     }
     auto res = CreateCustomCommand(definition, cmdId, firstArg);
-    return {res->id, res};
+    return res;
 }
 
 CommandArg* GetCommandArg(CustomCommand* cmd, const char* name) {

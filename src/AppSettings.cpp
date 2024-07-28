@@ -151,7 +151,7 @@ static void CreateExternalViewersCommands() {
 
 static void CreateCustomCommands() {
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
-        auto [cmdId, cmd] = CreateCommandFromDefinition(shortcut->cmd);
+        auto cmd = CreateCommandFromDefinition(shortcut->cmd);
         SetCommandNameAndShortcut(cmd, shortcut->name, shortcut->key);
     }
 }
