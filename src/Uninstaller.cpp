@@ -369,11 +369,25 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     if (cli->allUsers) {
         cmdLine.Append(" -all-users");
     }
-    logf("  re-launching '%s' with args '%s' as elevated\n", installerTempPath, cmdLine.Get());
+    char* cl = cmdLine.CStr();
     if (cli->allUsers) {
-        LaunchElevated(installerTempPath, cmdLine.Get());
+        logf("LaunchElevated('%s', '%s')\n", installerTempPath, cl);
+        ok = LaunchElevated(installerTempPath, cl);
+        if (!ok) {
+            logf("LaunchElevated() failed to launch '%s' '%s'\n", installerTempPath, cl);
+            LogLastError();
+        } else {
+            logf("LaunchElevated() launched '%s' '%s' ok!\n", installerTempPath, cl);
+        }
     } else {
-        LaunchProcess(installerTempPath, cmdLine.Get());
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath, cl);
+        HANDLE h = LaunchProcessWithCmdLine(installerTempPath, cl);
+        if (!h) {
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath, cl);
+            LogLastError();
+        } else {
+            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath, cl);
+        }
     }
     ::ExitProcess(0);
 }
@@ -411,7 +425,7 @@ static void InitSelfDelete() {
     logf("Created self-delete batch script '%s'\n", scriptPath);
     TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath);
     DWORD flags = CREATE_NO_WINDOW;
-    LaunchProcess(cmdLine, nullptr, flags);
+    LaunchProcessInDir(cmdLine, nullptr, flags);
 }
 
 int RunUninstaller() {

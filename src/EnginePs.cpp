@@ -174,7 +174,7 @@ static EngineBase* ps2pdf(const char* path) {
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
-    HANDLE process = LaunchProcess(cmdLine, nullptr, CREATE_NO_WINDOW);
+    HANDLE process = LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
     if (!process) {
         return nullptr;
     }

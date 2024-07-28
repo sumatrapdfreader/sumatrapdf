@@ -967,7 +967,7 @@ void OpenPathInExplorer(const char* path) {
     CreateProcessHelper(process, args);
 }
 
-HANDLE LaunchProces(const char* exe, const char* cmdLine) {
+HANDLE LaunchProcessWithCmdLine(const char* exe, const char* cmdLine) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si{};
     si.cb = sizeof(si);
@@ -986,7 +986,7 @@ HANDLE LaunchProces(const char* exe, const char* cmdLine) {
 }
 
 // TODO: not sure why I decided to not use lpAplicationName arg to CreateProcessW()
-HANDLE LaunchProcess(const char* cmdLine, const char* currDir, DWORD flags) {
+HANDLE LaunchProcessInDir(const char* cmdLine, const char* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si{};
     si.cb = sizeof(si);
@@ -1008,7 +1008,7 @@ bool CreateProcessHelper(const char* exe, const char* args) {
         args = "";
     }
     TempStr cmd = str::FormatTemp("\"%s\" %s", exe, args);
-    AutoCloseHandle process = LaunchProcess(cmd);
+    AutoCloseHandle process = LaunchProcessInDir(cmd);
     return process != nullptr;
 }
 
@@ -2346,7 +2346,7 @@ void RunNonElevated(const char* exePath) {
     }
     cmd = str::FormatTemp("\"%s\" \"%s\"", explorerPath, exePath);
 Run:
-    HANDLE h = LaunchProcess(cmd ? cmd : exePath);
+    HANDLE h = LaunchProcessInDir(cmd ? cmd : exePath);
     SafeCloseHandle(&h);
 }
 

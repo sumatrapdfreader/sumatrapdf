@@ -42,6 +42,8 @@ static InstallerWnd* gWnd = nullptr;
 static lzma::SimpleArchive gArchive{};
 static bool gInstallStarted = false; // a bit of a hack
 
+static PreviousInstallationInfo prevInstall;
+
 struct InstallerWnd {
     HWND hwnd = nullptr;
 
@@ -62,13 +64,11 @@ struct InstallerWnd {
     bool showOptions = false;
     bool failed = false;
     HANDLE hThread = nullptr;
-
-    PreviousInstallationInfo prevInstall;
 };
 
 static void ProgressStep() {
     if (!gWnd) {
-        // when extracing with -x we don't create window
+        // when extracting with -x we don't create window
         return;
     }
     gWnd->currProgress++;
@@ -193,7 +193,7 @@ static bool CreateAppShortcut(int csidl) {
 // CSIDL_COMMON_DESKTOPDIRECTORY - files and folders on desktop for all users. C:\Documents and Settings\All
 // Users\Desktop
 // CSIDL_COMMON_STARTMENU - Start menu for all users, C:\Documents and Settings\All Users\Start Menu
-// CSIDL_DESKTOP - virutal folder, desktop for current user
+// CSIDL_DESKTOP - virtual folder, desktop for current user
 // CSIDL_STARTMENU - Start menu for current user. Settings\username\Start Menu
 static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP, CSIDL_STARTMENU};
 
@@ -252,8 +252,8 @@ static DWORD WINAPI InstallerThread(void*) {
     CopySettingsFile();
 
     // mark them as uninstalled
-    gWnd->prevInstall.searchFilterInstalled = false;
-    gWnd->prevInstall.previewInstalled = false;
+    prevInstall.searchFilterInstalled = false;
+    prevInstall.previewInstalled = false;
 
     if (gCli->withFilter) {
         RegisterSearchFilter(allUsers);
@@ -315,11 +315,17 @@ static void RestartElevatedForAllUsers() {
     char* dir = gCli->installDir;
     cmdLine = str::JoinTemp(cmdLine, " -install-dir \"", dir);
     cmdLine = str::JoinTemp(cmdLine, "\"");
-    logf("Re-launching '%s' as elevated, args\n%s\n", exePath, cmdLine);
-    LaunchElevated(exePath, cmdLine);
+    logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
+    bool ok = LaunchElevated(exePath, cmdLine);
+    if (!ok) {
+        logf("LaunchElevated('%s', '%s') failed!\n", exePath, cmdLine);
+        LogLastError();
+    } else {
+        logf("LaunchElevated() ok!\n");
+    }
 }
 
-// in pre-relase the window is wider to acommodate bigger version number
+// in pre-release the window is wider to accommodate bigger version number
 // TODO: instead of changing size of the window, change how we draw version number
 int GetInstallerWinDx() {
     if (gIsPreReleaseBuild) {
@@ -396,9 +402,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     gCli->withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
     gCli->allUsers = wnd->checkboxForAllUsers->IsChecked();
 
-    bool needsElevation = gCli->allUsers;
-    needsElevation |= (wnd->prevInstall.typ == PreviousInstallationType::Both);
-    needsElevation |= (wnd->prevInstall.typ == PreviousInstallationType::Machine);
+    bool needsElevation = gCli->allUsers || prevInstall.needsElevation;
     if (needsElevation && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers();
         ::ExitProcess(0);
@@ -477,7 +481,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
 
     auto btnOptions = wnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
-    //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
+    //[ ACCESSKEY_ALTERNATIVE // ideally, the same access key is used for both
     if (showOpts) {
         SetButtonTextAndResize(btnOptions, _TRA("Hide &Options"));
     } else {
@@ -590,7 +594,7 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
     logf("GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
     char* dir;
-    char* dirPrevInstall = gWnd->prevInstall.installationDir;
+    char* dirPrevInstall = prevInstall.installationDir;
 
     if (dirPrevInstall && !ignorePrev) {
         logf("  using %s from previous install\n", dirPrevInstall);
@@ -955,7 +959,7 @@ static bool OpenEmbeddedFilesArchive() {
     }
     bool ok = LockDataResource(IDR_DLL_PAK, &gLoadedArchive);
     if (!ok) {
-        ShowNoEmbeddedFiles("No embbedded files");
+        ShowNoEmbeddedFiles("No embedded files");
         return false;
     }
 
@@ -1078,8 +1082,7 @@ int RunInstaller() {
     logf("------------- Starting SumatraPDF installation\n");
 
     gWnd = new InstallerWnd();
-    GetPreviousInstallInfo(&gWnd->prevInstall);
-
+    GetPreviousInstallInfo(&prevInstall);
     if (!gCli->installDir) {
         auto dir = GetDefaultInstallationDirTemp(gCli->allUsers, false);
         gCli->installDir = str::Dup(dir);
@@ -1100,18 +1103,35 @@ int RunInstaller() {
 
     gDefaultMsg = _TRA("Thank you for choosing SumatraPDF!");
 
+    // restart as admin if necessary. in non-silent mode it happens after clicking
+    // Install button
+    bool requiresSilentElevation = gCli->silent || gCli->fastInstall;
+    bool isElevated = IsProcessRunningElevated();
+    if (requiresSilentElevation && !isElevated) {
+        bool needsElevation = gCli->allUsers || prevInstall.needsElevation;
+        if (needsElevation) {
+            logf(
+                "Restarting as elevated: gCli->silent: %d, gCli->fastInstall: %d, isElevated: %d, gCli->allUsers: %d, "
+                "prevInstall.needsElevation: %d\n",
+                (int)gCli->silent, (int)gCli->fastInstall, (int)isElevated, (int)gCli->allUsers,
+                (int)prevInstall.needsElevation);
+            RestartElevatedForAllUsers();
+            ::ExitProcess(0);
+        }
+    }
+
     auto autoStartInstall = gCli->runInstallNow || gCli->fastInstall;
     if (!autoStartInstall) {
         // if not set explicitly, default to state from previous installation
         if (!gCli->withFilter) {
-            gCli->withFilter = gWnd->prevInstall.searchFilterInstalled;
+            gCli->withFilter = prevInstall.searchFilterInstalled;
         }
         if (!gCli->withPreview) {
-            gCli->withPreview = gWnd->prevInstall.previewInstalled;
+            gCli->withPreview = prevInstall.previewInstalled;
         }
     }
     logf(
-        "RunInstaller: gClii->silent: %d, gCli->allUsers: %d, gCli->runInstallNow: %d, gCli->withFilter: %d, "
+        "RunInstaller: gCli->silent: %d, gCli->allUsers: %d, gCli->runInstallNow: %d, gCli->withFilter: %d, "
         "gCli->withPreview: %d, gCli->fastInstall: %d\n",
         (int)gCli->silent, (int)gCli->allUsers, (int)gCli->runInstallNow, (int)gCli->withFilter, (int)gCli->withPreview,
         (int)gCli->fastInstall);
@@ -1124,13 +1144,8 @@ int RunInstaller() {
     log("After UninstallPreviewDll\n");
 
     if (gCli->silent) {
-        if (gCli->allUsers && !IsProcessRunningElevated()) {
-            log("allUsers but not elevated: re-starting as elevated\n");
-            RestartElevatedForAllUsers();
-            ::ExitProcess(0);
-        }
         gInstallStarted = true;
-        logfa("gCli->silent, before runinng InstallerThread()\n");
+        logfa("gCli->silent, before running InstallerThread()\n");
         InstallerThread(nullptr);
         ret = gWnd->failed ? 1 : 0;
     } else {
@@ -1147,11 +1162,11 @@ int RunInstaller() {
     }
 
     // re-register if we un-registered but installation was cancelled
-    if (gWnd->prevInstall.searchFilterInstalled) {
+    if (prevInstall.searchFilterInstalled) {
         log("re-registering search filter\n");
         RegisterSearchFilter(gCli->allUsers);
     }
-    if (gWnd->prevInstall.previewInstalled) {
+    if (prevInstall.previewInstalled) {
         log("re-registering previewer\n");
         RegisterPreviewer(gCli->allUsers);
     }

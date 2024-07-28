@@ -199,8 +199,9 @@ void logfa(const char* fmt, ...) {
 
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
-    log(s.Get(), true);
+    char* s = str::FmtV(fmt, args);
+    log(s, true);
+    str::Free(s);
     va_end(args);
 }
 
