@@ -364,6 +364,7 @@ void LogLastError(DWORD err) {
     if (msg == nullptr) {
         msg = (TempStr) "";
     }
+    str::TrimWSInPlace(msg, str::TrimOpt::Both);
     logf("LogLastError: 0x%x (%d) '%s'\n", (int)err, (int)err, msg);
 }
 

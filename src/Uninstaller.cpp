@@ -448,6 +448,19 @@ int RunUninstaller() {
     TempStr exePath = GetExePathTemp();
     logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
+    if (false) {
+        const char* path = "C:\\Users\\kjk\\AppData\\Local\\Temp\\Sumatra-Uninstaller.exe";
+        const char* cl = "-uninstall";
+        logf("LaunchProcessWithCmdLine('%s' '%s')\n", path, cl);
+        HANDLE h = LaunchProcessWithCmdLine(path, cl);
+        if (!h) {
+            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", path, cl);
+            LogLastError();
+        } else {
+            logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", path, cl);
+        }
+    }
+
     int ret = 1;
     auto installerExists = file::Exists(exePath);
     if (!installerExists) {
