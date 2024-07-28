@@ -436,11 +436,11 @@ static void OnInstallationFinished() {
 
     if (gWnd->failed) {
         gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"));
-        gWnd->btnExit->onClicked = mkFunc0(OnButtonExit, gWnd);
+        gWnd->btnExit->onClicked = MkFunc0(OnButtonExit, gWnd);
         SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
     } else {
         gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"));
-        gWnd->btnRunSumatra->onClicked = mkFunc0<void>(OnButtonStartSumatra, nullptr);
+        gWnd->btnRunSumatra->onClicked = MkFunc0<void>(OnButtonStartSumatra, nullptr);
         SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     }
     gMsgError = gFirstError;
@@ -654,12 +654,12 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
 
     HWND hwnd = wnd->hwnd;
     wnd->btnInstall = CreateDefaultButton(hwnd, _TRA("Install SumatraPDF"));
-    wnd->btnInstall->onClicked = mkFunc0(OnButtonInstall, wnd);
+    wnd->btnInstall->onClicked = MkFunc0(OnButtonInstall, wnd);
     PositionInstallButton(wnd->btnInstall);
 
     Rect r = ClientRect(hwnd);
     wnd->btnOptions = CreateDefaultButton(hwnd, _TRA("&Options"));
-    wnd->btnOptions->onClicked = mkFunc0(OnButtonOptions, wnd);
+    wnd->btnOptions->onClicked = MkFunc0(OnButtonOptions, wnd);
     auto btnSize = wnd->btnOptions->GetIdealSize();
     int margin = DpiScale(hwnd, kInstallerWinMargin);
     int x = margin;
@@ -730,7 +730,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     y -= (DpiScale(hwnd, 4) + margin);
 
     wnd->btnBrowseDir = CreateDefaultButton(hwnd, "&...");
-    wnd->btnBrowseDir->onClicked = mkFunc0(OnButtonBrowse, wnd);
+    wnd->btnBrowseDir->onClicked = MkFunc0(OnButtonBrowse, wnd);
 
     Size btnSize2 = wnd->btnBrowseDir->GetIdealSize();
 

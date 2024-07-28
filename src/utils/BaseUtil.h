@@ -610,12 +610,14 @@ struct Func0 {
         return fn == nullptr;
     }
     void Call() {
-        fn(userData);
+        if (fn) {
+            fn(userData);
+        }
     }
 };
 
 template <typename T>
-Func0 mkFunc0(void (*fn)(T*), T* d) {
+Func0 MkFunc0(void (*fn)(T*), T* d) {
     auto res = Func0{};
     res.fn = (funcPtr)fn;
     res.userData = (void*)d;
@@ -634,13 +636,15 @@ struct Func1 {
         return fn == nullptr;
     }
     void Call(T* arg) {
-        fn(userData, arg);
+        if (fn) {
+            fn(userData, arg);
+        }
     }
 };
 
 template <typename T1, typename T2>
-Func1<T2> mkFunc1(void (*fn)(T1*, T2*), T2* d) {
-    auto res = Func1<T1>{};
+Func1<T2> MkFunc1(void (*fn)(T1*, T2*), T1* d) {
+    auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2*);
     res.fn = (fptr)fn;
     res.userData = (void*)d;

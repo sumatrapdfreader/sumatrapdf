@@ -148,7 +148,7 @@ void OnUninstallationFinished() {
     delete gButtonUninstaller;
     gButtonUninstaller = nullptr;
     gButtonExit = CreateDefaultButton(gHwndFrame, _TRA("Close"));
-    gButtonExit->onClicked = mkFunc0<void>(OnButtonExit, nullptr);
+    gButtonExit->onClicked = MkFunc0<void>(OnButtonExit, nullptr);
     SetMsg(_TRA("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gFirstError;
     HwndInvalidate(gHwndFrame);
@@ -185,7 +185,7 @@ static void CreateUninstallerWindow() {
     HwndResizeClientSize(gHwndFrame, dx, dy);
 
     gButtonUninstaller = CreateDefaultButton(gHwndFrame, _TRA("Uninstall SumatraPDF"));
-    gButtonUninstaller->onClicked = mkFunc0<void>(OnButtonUninstall, nullptr);
+    gButtonUninstaller->onClicked = MkFunc0<void>(OnButtonUninstall, nullptr);
 }
 
 static void ShowUsage() {

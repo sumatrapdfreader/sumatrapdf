@@ -830,19 +830,19 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         auto pad = Insets{0, 4, 0, 4};
         {
             auto c = CreateStatic(hwnd, font, "# File History");
-            c->onClicked = mkFunc0(SwitchToFileHistory, this);
+            c->onClicked = MkFunc0(SwitchToFileHistory, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, "> Commands");
-            c->onClicked = mkFunc0(SwitchToCommands, this);
+            c->onClicked = MkFunc0(SwitchToCommands, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, "@ Tabs");
-            c->onClicked = mkFunc0(SwitchToTabs, this);
+            c->onClicked = MkFunc0(SwitchToTabs, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }

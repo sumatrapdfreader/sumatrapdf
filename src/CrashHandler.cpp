@@ -258,7 +258,7 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
         log("DownloadAndUnzipSymbols: couldn't download symbols\n");
         return false;
     }
-    if (!HttpRspOk(&rsp)) {
+    if (!IsHttpRspOk(&rsp)) {
         log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
     }
 

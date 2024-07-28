@@ -13,7 +13,7 @@
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 constexpr const WCHAR* kUserAgent = L"SumatraPdfHTTP";
 
-bool HttpRspOk(const HttpRsp* rsp) {
+bool IsHttpRspOk(const HttpRsp* rsp) {
     if (rsp->error != ERROR_SUCCESS) {
         logf("HttpRspOk: rsp->error %d, should be %d (ERROR_SUCCESS)\n", (int)rsp->error, (int)ERROR_SUCCESS);
         return false;
@@ -88,7 +88,7 @@ Exit:
     if (hInet) {
         InternetCloseHandle(hInet);
     }
-    return HttpRspOk(rspOut);
+    return IsHttpRspOk(rspOut);
 
 Error:
     rspOut->error = GetLastError();
@@ -99,7 +99,7 @@ Error:
 }
 
 // Download content of a url to a file
-bool HttpGetToFile(const char* urlA, const char* destFilePath) {
+bool HttpGetToFile(const char* urlA, const char* destFilePath, Func1<HttpProgress>* cbProgress) {
     logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
@@ -108,6 +108,8 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath) {
     DWORD statusCode = 0;
     WCHAR* url = ToWStrTemp(urlA);
     char buf[1024];
+
+    HttpProgress progress{0};
 
     WCHAR* pathW = ToWStrTemp(destFilePath);
     HANDLE hf =
@@ -147,6 +149,10 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath) {
         BOOL wroteOk = WriteFile(hf, buf, (DWORD)dwRead, &size, nullptr);
         if (!wroteOk) {
             goto Exit;
+        }
+        progress.nBytes += (int)dwRead;
+        if (cbProgress) {
+            cbProgress->Call(&progress);
         }
 
         if (size != dwRead) {

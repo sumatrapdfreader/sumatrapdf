@@ -6,19 +6,37 @@
 // must be last due to assert() over-write
 #include "utils/UtAssert.h"
 
-struct TestFnData {
+struct TestFn0Data {
     int n = 0;
 };
 
-static void testFn(TestFnData* d) {
+static void testFn0(TestFn0Data* d) {
     d->n++;
 }
 
 static void Func0Test() {
-    TestFnData d;
-    auto fn = mkFunc0(testFn, &d);
+    TestFn0Data d;
+    auto fn = MkFunc0(testFn0, &d);
     fn.Call();
     utassert(d.n == 1);
+}
+
+struct TestFn1Data {
+    int p = 0;
+};
+
+static void testFn1(TestFn0Data* d0, TestFn1Data* d1) {
+    d0->n = 5;
+    d1->p = -8;
+}
+
+static void Func1Test() {
+    TestFn0Data d0;
+    TestFn1Data d1;
+    auto fn = MkFunc1<TestFn0Data, TestFn1Data>(testFn1, &d0);
+    fn.Call(&d1);
+    utassert(d0.n == 5);
+    utassert(d1.p == -8);
 }
 
 static void GeomTest() {
@@ -124,6 +142,7 @@ static int roundUpTestCases[] = {
 
 void BaseUtilTest() {
     Func0Test();
+    Func1Test();
 
     PoolAllocatorTest();
 

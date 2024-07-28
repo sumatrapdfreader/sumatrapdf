@@ -289,6 +289,24 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     PostQuitMessage(0);
 }
 
+struct UpdateProgressData {
+    HWND hwndForNotif;
+};
+
+void UpdateDownloadProgress(UpdateProgressData* d, HttpProgress* progress) {
+    NotificationWnd* wnd = GetNotificationForGroup(d->hwndForNotif, kindNotifUpdateCheckInProgress);
+    if (!wnd) {
+        return;
+    }
+    TempStr msg = str::FormatTemp("Downloaded %d", progress->nBytes);
+    NotificationUpdateMessage(wnd, msg);
+}
+
+static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
+    logf("UpdateProgressCb: n: %d\n", (int)progress->nBytes);
+    // TODO: send on a thread
+}
+
 static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
     gUpdateCheckInProgress = false;
 
@@ -374,7 +392,10 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         // the installer must be named .exe or it won't be able to self-elevate
         // with "runas"
         installerPath = str::JoinTemp(installerPath, ".exe");
-        bool ok = HttpGetToFile(updateInfo->dlURL, installerPath);
+        UpdateProgressData pd;
+        pd.hwndForNotif = hwndForNotif;
+        auto cb = MkFunc1<UpdateProgressData, HttpProgress>(UpdateProgressCb, &pd);
+        bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, &cb);
         logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
         if (ok) {
             updateInfo->installerPath = str::Dup(installerPath);
