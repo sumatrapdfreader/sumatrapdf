@@ -96,16 +96,22 @@ void RemoveTab(WindowTab* tab) {
     int idx = win->GetTabIdx(tab);
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
-    if (tab == win->CurrentTab()) {
+    bool closedCurrentTab = (tab == win->CurrentTab());
+    if (closedCurrentTab) {
         win->ctrl = nullptr;
         win->currentTabTemp = nullptr;
     }
     UpdateTabWidth(win);
 
-    // if the removed tab was the current one, select another
-    if (win->TabCount() < 1) {
+    int nTabs = win->TabCount();
+    if (nTabs < 1) {
         return;
     }
+    if (!closedCurrentTab) {
+        return;
+    }
+    // if the removed tab was the current one, select another
+#if 0
     WindowTab* curr = win->CurrentTab();
     WindowTab* newCurrent = curr;
     if (!curr || newCurrent == tab) {
@@ -120,6 +126,17 @@ void RemoveTab(WindowTab* tab) {
     win->tabsCtrl->SetSelected(newIdx);
     tab = win->CurrentTab();
     LoadModelIntoTab(tab);
+#else
+    // select tab to the right or to the left if nothing to the right
+    int newIdx = idx;
+    int lastIdx = nTabs - 1;
+    if (newIdx > lastIdx) {
+        newIdx = lastIdx;
+    }
+    win->tabsCtrl->SetSelected(newIdx);
+    tab = win->CurrentTab();
+    LoadModelIntoTab(tab);
+#endif
 }
 
 static void CloseWindowIfNoDocuments(MainWindow* win) {

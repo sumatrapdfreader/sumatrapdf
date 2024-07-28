@@ -46,6 +46,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - removed `CmdCommandPaletteOnlyTabs`, replaced by`CmdCommandPaletteNoFiles @`
 - `Ctrl + Shift + K` no longer active, use `Ctrl + K`. You can restore this shortcut by binding it to `CmdCommandPalette >` command.
 - add `Name` field for shortcuts. If given, the command will show up in Command Palette (`Ctrl + K`)
+- closing a current tab now behaves like in Chrome: selects next tab (to the right). We used to select previously active tab, but that's unpredicable and we prefer to align SumatraPDF behavior with other popular apps.
 
 ### 3.5.2 (2023-10-25)
 
