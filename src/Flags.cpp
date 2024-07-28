@@ -429,14 +429,17 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             continue;
         }
         if (arg == Arg::Install) {
+            logf("flags.iinstall = true\n");
             i.install = true;
             continue;
         }
         if (arg == Arg::FastInstall) {
+            logf("flags.fastInstall = true\n");
             i.fastInstall = true;
             continue;
         }
         if (arg == Arg::UnInstall) {
+            logf("flags.uninstall = true\n");
             i.uninstall = true;
             continue;
         }

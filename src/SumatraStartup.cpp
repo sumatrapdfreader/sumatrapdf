@@ -952,7 +952,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     {
         char* s = ToUtf8Temp(GetCommandLineW());
-        logf("Starting SumatraPDF %s, GetCommandLineW():\n%s\n", UPDATE_CHECK_VERA, s);
+        logf("Starting SumatraPDF %s, GetCommandLineW():'%s', flags.install: %d, flags.uninstall: %d\n", UPDATE_CHECK_VERA, s, (int)flags.install, (int)flags.uninstall);
     }
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
@@ -973,6 +973,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         return 0;
     }
 
+    logf("  flags.justExtractFiles: %d\n", (int)flags.justExtractFiles);
     if (flags.justExtractFiles) {
         RedirectIOToExistingConsole();
         if (!ExeHasInstallerResources()) {
@@ -990,6 +991,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         return exitCode;
     }
 
+    logf("  isInstaller: %d\n", (int)isInstaller);
     if (isInstaller) {
         if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
@@ -1001,12 +1003,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         ::ExitProcess(exitCode);
     }
 
+    logf("  isUninstaller: %d, flags.uninstaller: %d\n", (int)isUninstaller, (int)flags.uninstall);
     if (isUninstaller) {
         exitCode = RunUninstaller();
         ::ExitProcess(exitCode);
     }
 
     if (flags.updateSelfTo) {
+        logf(" flags.updateSelfTo: '%s'\n", flags.updateSelfTo);
         RedirectIOToExistingConsole();
         UpdateSelfTo(flags.updateSelfTo);
         if (flags.exitWhenDone) {
@@ -1016,6 +1020,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     }
 
     if (flags.deleteFile) {
+        logf(" flags.deleteFile: '%s'\n", flags.deleteFile);
         RedirectIOToExistingConsole();
         // sleeping for a bit to make sure that the program that launched us
         // had time to exit so that we can overwrite it
