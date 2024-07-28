@@ -2,6 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+
 #include "utils/CmdLineArgsIter.h"
 
 // TODO: quote '"' etc as per:
@@ -49,8 +52,15 @@ TempStr QuoteCmdLineArgTemp(char* arg) {
 void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    TempStr exePath = GetExePathTemp();
     for (int i = 0; i < nArgs; i++) {
         char* arg = ToUtf8Temp(argsArr[i]);
+        // sometimes cmd-line args have exe as first argument, sometimes not
+        // to handle both possibilities we filter out first arg if it is path
+        // of our executable, case-insensitive because not all filesystems
+        if (i == 0 && path::IsSame(arg, exePath)) {
+            continue;
+        }
         // ignore empty quoted strings ("")
         if (str::IsEmpty(arg)) {
             continue;

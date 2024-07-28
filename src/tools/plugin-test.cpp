@@ -91,18 +91,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
     StrVec argList;
     ParseCmdLine(GetCommandLineW(), argList);
 
-    if (argList.Size() == 1) {
-        char* exe = argList.At(0);
-        TempStr name = path::GetBaseNameTemp(exe);
+    if (argList.Size() == 0) {
+        TempStr name = path::GetBaseNameTemp(GetExePathTemp());
         TempStr msg = str::FormatTemp("Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", name);
         MsgBox(nullptr, msg, PLUGIN_TEST_NAMEA, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (argList.Size() == 2 || !str::EndsWithI(argList.At(1), ".exe")) {
-        argList.InsertAt(1, ToUtf8Temp(GetSumatraExePath()));
+    if (argList.Size() == 1 || !str::EndsWithI(argList.At(0), ".exe")) {
+        argList.InsertAt(0, ToUtf8Temp(GetSumatraExePath()));
     }
-    if (argList.Size() == 3) {
-        argList.InsertAt(2, nullptr);
+    if (argList.Size() == 2) {
+        argList.InsertAt(1, nullptr);
     }
 
     WNDCLASS wc{};

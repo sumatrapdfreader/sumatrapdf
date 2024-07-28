@@ -952,7 +952,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     {
         char* s = ToUtf8Temp(GetCommandLineW());
-        logf("Starting SumatraPDF %s, GetCommandLineW():'%s', flags.install: %d, flags.uninstall: %d\n", UPDATE_CHECK_VERA, s, (int)flags.install, (int)flags.uninstall);
+        logf("Starting SumatraPDF %s, GetCommandLineW(): '%s', flags.install: %d, flags.uninstall: %d\n",
+             UPDATE_CHECK_VERA, s, (int)flags.install, (int)flags.uninstall);
     }
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
@@ -973,7 +974,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         return 0;
     }
 
-    logf("  flags.justExtractFiles: %d\n", (int)flags.justExtractFiles);
     if (flags.justExtractFiles) {
         RedirectIOToExistingConsole();
         if (!ExeHasInstallerResources()) {

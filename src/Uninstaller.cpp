@@ -424,8 +424,7 @@ static void InitSelfDelete() {
     }
     logf("Created self-delete batch script '%s'\n", scriptPath);
     TempStr cmdLine = str::FormatTemp("cmd.exe /C \"%s\"", scriptPath);
-    DWORD flags = CREATE_NO_WINDOW;
-    LaunchProcessInDir(cmdLine, nullptr, flags);
+    LaunchProcessInDir(cmdLine, nullptr, CREATE_NO_WINDOW);
 }
 
 int RunUninstaller() {

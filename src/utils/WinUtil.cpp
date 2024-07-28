@@ -973,10 +973,12 @@ HANDLE LaunchProcessWithCmdLine(const char* exe, const char* cmdLine) {
     STARTUPINFOW si{};
     si.cb = sizeof(si);
 
+    // first cmd-line argument should be the exe name
+    TempStr cmd = str::FormatTemp("\"%s\" %s", exe, cmdLine);
+    WCHAR* cmdLineW = ToWStrTemp(cmd);
+
     WCHAR* exeW = ToWStrTemp(exe);
-    // CreateProcess() might modify cmd line argument, so make a copy
-    // in case caller provides a read-only string
-    WCHAR* cmdLineW = ToWStrTemp(cmdLine);
+    // note: cmdLineW is modified by CreateProcessW so must be writeable
     BOOL ok = CreateProcessW(exeW, cmdLineW, nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi);
     if (!ok) {
         return nullptr;
@@ -986,7 +988,7 @@ HANDLE LaunchProcessWithCmdLine(const char* exe, const char* cmdLine) {
     return pi.hProcess;
 }
 
-// TODO: not sure why I decided to not use lpAplicationName arg to CreateProcessW()
+// cmdLine must contain quoted exe path as first argument
 HANDLE LaunchProcessInDir(const char* cmdLine, const char* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {nullptr};
     STARTUPINFOW si{};

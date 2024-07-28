@@ -9,7 +9,7 @@ TempStr QuoteCmdLineArgTemp(char* arg);
 
 struct CmdLineArgsIter {
     StrVec args;
-    int curr = 1; // first argument is exe path, which we skip
+    int curr = 0;
     int nArgs = 0;
     const char* currArg = nullptr;
 
