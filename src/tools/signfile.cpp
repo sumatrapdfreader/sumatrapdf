@@ -85,7 +85,7 @@ int main() {
     const char* sig = nullptr;
 
 #define is_arg(name, var) (str::EqI(args[i], name) && i + 1 < args.Size() && !var)
-    for (int i = 0; i < args.Size(); i++) {
+    for (int i = 1; i < args.Size(); i++) {
         if (is_arg("-cert", certName))
             certName = args.At(++i);
         else if (is_arg("-out", signFilePath))

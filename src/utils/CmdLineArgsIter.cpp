@@ -7,6 +7,8 @@
 
 #include "utils/CmdLineArgsIter.h"
 
+#define REMOVE_FIRST_ARG
+
 // TODO: quote '"' etc as per:
 // https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments?view=msvc-170&redirectedfrom=MSDN
 TempStr QuoteCmdLineArgTemp(char* arg) {
@@ -49,6 +51,21 @@ TempStr QuoteCmdLineArgTemp(char* arg) {
     return res.StealData();
 }
 
+#if defined(REMOVE_FIRST_ARG)
+void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
+    int nArgs;
+    WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
+    for (int i = 0; i < nArgs; i++) {
+        char* arg = ToUtf8Temp(argsArr[i]);
+        // ignore empty quoted strings ("")
+        if (str::IsEmpty(arg)) {
+            continue;
+        }
+        argsOut.Append(arg);
+    }
+    LocalFree(argsArr);
+}
+#else
 void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
@@ -69,6 +86,7 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     }
     LocalFree(argsArr);
 }
+#endif
 
 void ParseCmdLine(const char* cmdLine, StrVec& argsOut) {
     TempWStr s = ToWStrTemp(cmdLine);
@@ -83,6 +101,10 @@ bool CouldBeArg(const char* s) {
 CmdLineArgsIter::CmdLineArgsIter(const WCHAR* cmdLine) {
     ParseCmdLine(cmdLine, args);
     nArgs = args.Size();
+#if defined(REMOVE_FIRST_ARG)
+    // first arg is executable name by convention, we skip it
+    curr = 1;
+#endif
 }
 
 const char* CmdLineArgsIter::NextArg() {
