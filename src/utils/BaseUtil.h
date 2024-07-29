@@ -596,11 +596,14 @@ struct AtomicInt {
 };
 
 using func0Ptr = void (*)(void*);
+using funcVoidPtr = void (*)();
+
+#define kVoidFunc0 (void*)-1
 
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
 struct Func0 {
-    func0Ptr fn = nullptr;
+    void* fn = nullptr;
     void* userData = nullptr;
 
     Func0() = default;
@@ -614,11 +617,19 @@ struct Func0 {
         return fn == nullptr;
     }
     void Call() {
-        if (fn) {
-            fn(userData);
+        if (!fn) {
+            return;
         }
+        if (userData == kVoidFunc0) {
+            auto func = (funcVoidPtr)fn;
+            func();
+            return;
+        }
+        auto func = (func0Ptr)fn;
+        func(userData);
     }
 };
+Func0 MkFuncVoid(funcVoidPtr fn);
 
 template <typename T>
 Func0 MkFunc0(void (*fn)(T*), T* d) {

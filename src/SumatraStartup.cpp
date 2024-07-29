@@ -858,7 +858,7 @@ static bool MaybeDeleteStaleDirectory(WIN32_FIND_DATAW* fd, const char* dir) {
 }
 
 // delete symbols and manual from possibly previous versions
-static void DeleteStaleFilesAsync(void*) {
+static void DeleteStaleFilesAsync() {
     TempStr dir = GetNotImportantDataDirTemp();
     VisitDir(dir, kVisitDirIncludeDirs, MaybeDeleteStaleDirectory);
 }
@@ -872,7 +872,7 @@ void StartDeleteStaleFiles() {
     TempStr dir = GetNotImportantDataDirTemp();
     TempStr ver = GetVerDirNameTemp("");
     logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
-    auto fn = MkFunc0<void>(DeleteStaleFilesAsync, nullptr);
+    auto fn = MkFuncVoid(DeleteStaleFilesAsync);
     RunAsync(fn, "DeleteStaleFilesThread");
 }
 
