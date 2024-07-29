@@ -54,7 +54,7 @@
 
 #include "utils/Log.h"
 
-Kind kNotifGroupAnnotation = "notifAnnotation";
+Kind kNotifAnnotation = "notifAnnotation";
 
 // Timer for mouse wheel smooth scrolling
 constexpr UINT_PTR kSmoothScrollTimerID = 6;
@@ -342,7 +342,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
 
     Point pos{x, y};
-    NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
 
     if (win->dragStartPending) {
         if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
@@ -367,10 +367,10 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     if (annot) {
                         // auto r = annot->bounds;
                         // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
-                        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
+                        RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
                         NotificationCreateArgs args;
                         args.hwndParent = win->hwndCanvas;
-                        args.groupId = kNotifGroupAnnotation;
+                        args.groupId = kNotifAnnotation;
                         args.timeoutMs = -1;
                         TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                         args.msg = str::FormatTemp(_TRN("%s annotation. Ctrl+click to edit."), name);
@@ -379,7 +379,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 }
             }
             if (!annot) {
-                RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
+                RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;
             break;
@@ -1080,7 +1080,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         win->DeleteToolTip();
         return FALSE;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
+    if (GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos)) {
         SetCursorCached(IDC_CROSS);
         return TRUE;
     }

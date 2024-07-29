@@ -11,7 +11,7 @@ struct HttpRsp {
 };
 
 struct HttpProgress {
-    int nBytes;
+    int nDownloaded;
 };
 
 bool IsHttpRspOk(const HttpRsp*);

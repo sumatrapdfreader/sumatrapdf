@@ -32,17 +32,19 @@
 
 #include "utils/Log.h"
 
-static const char* kindNotifUpdateCheckInProgress = "notifUpdateCheckInProgress";
+static const char* kNotifUpdateCheckInProgress = "notifUpdateCheckInProgress";
 
-// for testing. if true will ignore version checks etc. and act like there's an update
-constexpr bool gForceAutoUpdate = false;
+// for testing: if defined will ignore version checks etc. and act like there's an update
+// but only for user-initiated check
+// #define FORCE_AUTO_UPDATE
 
 // certificate on www.sumatrapdfreader.org is not supported by win7 and win8.1
 // (doesn't have the ciphers they understand)
 // so we first try sumatra-website.onrender.com which should work
+
+// https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt
 // clang-format off
-#if defined(PRE_RELEASE_VER)
-//https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt
+#if defined(PRE_RELEASE_VER) || defined(FORCE_AUTO_UPDATE)
 constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
 constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/updatecheck-pre-release.txt";
 #else
@@ -155,9 +157,15 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
         return false;
     }
 
-    if (gForceAutoUpdate) {
+    // when forcing, we download pre-release, which shows greater version than our build
+    // so we don't want to download during automatic check, only when user initiated
+#if defined(FORCE_AUTO_UPDATE)
+    if (updateCheckType == UpdateCheck::UserInitiated) {
         return true;
+    } else {
+        return false;
     }
+#endif
 
     if (!HasPermission(Perm::InternetAccess)) {
         logf("CheckForUpdate: skipping because no internet access\n");
@@ -290,27 +298,15 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 }
 
 struct UpdateProgressData {
-    HWND hwndForNotif;
+    HWND hwndForNotif = nullptr;
+    int nDownloaded = 0;
 };
-
-void UpdateDownloadProgress(UpdateProgressData* d, HttpProgress* progress) {
-    NotificationWnd* wnd = GetNotificationForGroup(d->hwndForNotif, kindNotifUpdateCheckInProgress);
-    if (!wnd) {
-        return;
-    }
-    TempStr msg = str::FormatTemp("Downloaded %d", progress->nBytes);
-    NotificationUpdateMessage(wnd, msg);
-}
-
-static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
-    logf("UpdateProgressCb: n: %d\n", (int)progress->nBytes);
-    // TODO: send on a thread
-}
 
 struct DownloadUpdateAsyncData {
     HWND hwndForNotif = nullptr;
     UpdateInfo* updateInfo = nullptr;
     DownloadUpdateAsyncData() = default;
+    HttpProgress httpProgress;
     ~DownloadUpdateAsyncData() {
         delete updateInfo;
     }
@@ -319,10 +315,31 @@ struct DownloadUpdateAsyncData {
 static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
     auto hwndForNotif = data->hwndForNotif;
     auto updateInfo = data->updateInfo;
-    RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
+    RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
     NotifyUserOfUpdate(updateInfo);
     gUpdateCheckInProgress = false;
     delete data;
+}
+
+static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
+    logf("UpdateDownloadProgressNotif: n: %d\n", (int)data->nDownloaded);
+    auto wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
+    if (wnd) {
+        TempStr msg = str::FormatTemp("Downloading update: %d bytes\n", data->nDownloaded);
+        NotificationUpdateMessage(wnd, msg, 0, true);
+    } else {
+        logf("UpdateDownloadProgressNotif: no wnd\n");
+    }
+    delete data;
+}
+
+static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
+    logf("UpdateProgressCb: n: %d\n", (int)progress->nDownloaded);
+    auto fnData = new UpdateProgressData;
+    fnData->hwndForNotif = data->hwndForNotif;
+    fnData->nDownloaded = progress->nDownloaded;
+    auto fn = MkFunc0<UpdateProgressData>(UpdateDownloadProgressNotif, fnData);
+    uitask::Post(fn, nullptr);
 }
 
 static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
@@ -349,7 +366,23 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     uitask::Post(fn, "TaskShowAutoUpdateDialog");
 }
 
-static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
+static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheckType) {
+    auto latestVer = updateInfo->latestVer;
+    const char* myVer = UPDATE_CHECK_VERA;
+    // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
+    bool hasUpdate = CompareVersion(latestVer, myVer) > 0;
+    if (hasUpdate && updateCheckType == UpdateCheck::Automatic) {
+        // if user wanted to skip this version, we skip it in automated check
+        if (str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {
+            logf("ShowAutoUpdateDialog: skipping auto-update of ver '%s' because of gGlobalPrefs->versionToSkip\n",
+                 latestVer);
+            return false;
+        }
+    }
+    return hasUpdate;
+}
+
+static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
     // for store builds we do update check but ignore the result
     if (gIsStoreBuild) {
         return 0;
@@ -390,36 +423,22 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         return 0;
     }
     HWND hwndForNotif = win->hwndCanvas;
-    if (!gForceAutoUpdate) {
-        auto latestVer = updateInfo->latestVer;
+    if (!ShouldDownloadUpdate(updateInfo, updateCheckType)) {
         const char* myVer = UPDATE_CHECK_VERA;
-        // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
-        bool hasUpdate = CompareVersion(latestVer, myVer) > 0;
-        if (!hasUpdate) {
-            logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, latestVer);
-            /* if automated => don't notify that there is no new version */
-            if (updateCheckType == UpdateCheck::UserInitiated) {
-                RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
-                uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
-                MsgBox(hwndParent, _TRA("You have the latest version."), _TRA("SumatraPDF Update"), flags);
-            }
-            return 0;
+        logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
+        /* if automated => don't notify that there is no new version */
+        if (updateCheckType == UpdateCheck::UserInitiated) {
+            RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
+            uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
+            MsgBox(hwndParent, _TRA("You have the latest version."), _TRA("SumatraPDF Update"), flags);
         }
-
-        if (updateCheckType == UpdateCheck::Automatic) {
-            // if user wanted to skip this version, we skip it in automated check
-            if (str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {
-                logf("ShowAutoUpdateDialog: skipping auto-update of ver '%s' because of gGlobalPrefs->versionToSkip\n",
-                     latestVer);
-                return 0;
-            }
-        }
+        return 0;
     }
 
     if (!updateInfo->dlURL) {
-        // shouldn't happen but it's fine, we just tell the user
+        // currently for release builds we don't set this and redirecto to a website instead
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
-        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         return 0;
     }
@@ -495,9 +514,9 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
         return;
     }
     HWND hwnd = win->hwndFrame;
-    DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
+    DWORD err = MaybeStartUpdateDownload(hwnd, rsp, updateCheckType);
     if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         // notify the user about network error during a manual update check
         TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x)."), err);
         MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
@@ -540,7 +559,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
         args.msg = _TRA("Checking for update...");
         args.warning = true;
         args.timeoutMs = 0;
-        args.groupId = kindNotifUpdateCheckInProgress;
+        args.groupId = kNotifUpdateCheckInProgress;
         ShowNotification(args);
     }
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);

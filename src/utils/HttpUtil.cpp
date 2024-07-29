@@ -98,6 +98,8 @@ Error:
     goto Exit;
 }
 
+constexpr const int kBufSize = 256 * 1024;
+
 // Download content of a url to a file
 bool HttpGetToFile(const char* urlA, const char* destFilePath, Func1<HttpProgress>* cbProgress) {
     logf("HttpGetToFile: url: '%s', file: '%s'\n", urlA, destFilePath);
@@ -107,7 +109,7 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath, Func1<HttpProgres
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
     WCHAR* url = ToWStrTemp(urlA);
-    char buf[1024];
+    char* buf = nullptr;
 
     HttpProgress progress{0};
 
@@ -117,6 +119,11 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath, Func1<HttpProgres
     if (INVALID_HANDLE_VALUE == hf) {
         logf("HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
         LogLastError();
+        goto Exit;
+    }
+
+    buf = AllocArray<char>(kBufSize);
+    if (!buf) {
         goto Exit;
     }
 
@@ -139,7 +146,7 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath, Func1<HttpProgres
     }
 
     for (;;) {
-        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead)) {
+        if (!InternetReadFile(hReq, buf, kBufSize, &dwRead)) {
             goto Exit;
         }
         if (dwRead == 0) {
@@ -150,7 +157,7 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath, Func1<HttpProgres
         if (!wroteOk) {
             goto Exit;
         }
-        progress.nBytes += (int)dwRead;
+        progress.nDownloaded += (int)dwRead;
         if (cbProgress) {
             cbProgress->Call(&progress);
         }
@@ -172,6 +179,7 @@ Exit:
     if (!ok) {
         file::Delete(destFilePath);
     }
+    free(buf);
     return ok;
 }
 

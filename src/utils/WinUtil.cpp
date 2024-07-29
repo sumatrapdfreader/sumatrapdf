@@ -2727,9 +2727,12 @@ HICON HwndGetIcon(HWND hwnd) {
 }
 
 void HwndInvalidate(HWND hwnd) {
-    if (hwnd) {
-        InvalidateRect(hwnd, nullptr, FALSE);
+    if (!hwnd) {
+        return;
     }
+    InvalidateRect(hwnd, nullptr, FALSE);
+    // send WM_PAINT right away (normally would wait for empty msg queue)
+    UpdateWindow(hwnd);
 }
 
 void HwndSetFont(HWND hwnd, HFONT font) {

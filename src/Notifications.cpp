@@ -27,8 +27,8 @@ using Gdiplus::Graphics;
 using Gdiplus::Pen;
 using Gdiplus::SolidBrush;
 
-Kind kNotifGroupCursorPos = "cursorPosHelper";
-Kind kNotifGroupActionResponse = "responseToAction";
+Kind kNotifCursorPos = "cursorPosHelper";
+Kind kNotifActionResponse = "responseToAction";
 
 constexpr int kPadding = 6;
 constexpr int kTopLeftMargin = 8;
@@ -181,7 +181,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
         wndRemovedCb = [](NotificationWnd* wnd) { NotifsRemoveNotification(wnd); };
     }
     // TODO: make shrinkLimit an arg
-    if (kNotifGroupCursorPos == args.groupId) {
+    if (kNotifCursorPos == args.groupId) {
         shrinkLimit = 0.7f;
     }
 
@@ -234,7 +234,7 @@ void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlig
     this->timeoutMs = timeoutMs;
     HwndSetRtl(hwnd, IsUIRightToLeft());
     Layout(msg);
-    InvalidateRect(hwnd, nullptr, FALSE);
+    HwndInvalidate(hwnd);
     if (timeoutMs != 0) {
         SetTimer(hwnd, kNotifTimerTimeoutId, timeoutMs, nullptr);
     }

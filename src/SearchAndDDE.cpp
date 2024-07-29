@@ -43,7 +43,7 @@
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
-Kind kNotifGroupFindProgress = "findProgress";
+Kind kNotifFindProgress = "findProgress";
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific
@@ -227,7 +227,7 @@ struct FindThreadData : public ProgressUpdateUI {
     void ShowUI(bool showProgress) {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
-        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
 
         if (showProgress && wnd == nullptr) {
             NotificationCreateArgs args;
@@ -236,7 +236,7 @@ struct FindThreadData : public ProgressUpdateUI {
             args.onRemoved = [](NotificationWnd* wnd) { RemoveNotification(wnd); };
 
             args.progressMsg = _TRA("Searching %d of %d...");
-            args.groupId = kNotifGroupFindProgress;
+            args.groupId = kNotifFindProgress;
             ShowNotification(args);
         }
 
@@ -252,7 +252,7 @@ struct FindThreadData : public ProgressUpdateUI {
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindNext, enable);
         SendMessageW(win->hwndToolbar, TB_ENABLEBUTTON, CmdFindMatch, enable);
 
-        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+        auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
 
         if (!wnd) {
             /* our notification has been replaced or closed (or never created) */;
@@ -275,7 +275,7 @@ struct FindThreadData : public ProgressUpdateUI {
 
     void UpdateProgress(int current, int total) override {
         uitask::Post("TaskFindUpdateStatus", [this, current, total] {
-            auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+            auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
             if (!wnd || WasCanceled()) {
                 return;
             }
@@ -375,7 +375,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
     win->findCanceled = false;
 
     if (hideMessage) {
-        bool didRemove = RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupFindProgress);
+        bool didRemove = RemoveNotificationsForGroup(win->hwndCanvas, kNotifFindProgress);
         if (didRemove) {
             res = true;
         }

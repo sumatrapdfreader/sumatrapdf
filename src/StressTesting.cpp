@@ -38,8 +38,8 @@
 
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
-static Kind kNotifGroupStressTestBenchmark = "stressTestBenchmark";
-static Kind kNotifGroupStressTestSummary = "stressTestSummary";
+static Kind kNotifStressTestBenchmark = "stressTestBenchmark";
+static Kind kNotifStressTestSummary = "stressTestSummary";
 
 bool IsStressTesting() {
     return gIsStressTesting;
@@ -486,7 +486,7 @@ static void Finished(StressTest* st, bool success) {
         args.hwndParent = st->win->hwndCanvas;
         args.msg = s;
         args.timeoutMs = 0;
-        args.groupId = kNotifGroupStressTestSummary;
+        args.groupId = kNotifStressTestSummary;
         ShowNotification(args);
     }
 
@@ -510,7 +510,7 @@ static void Start(StressTest* st, const char* path, const char* filter, const ch
         args.msg = s;
         args.warning = true;
         args.timeoutMs = 0;
-        args.groupId = kNotifGroupStressTestSummary;
+        args.groupId = kNotifStressTestSummary;
         ShowNotification(args);
         Finished(st, false);
     }
@@ -627,7 +627,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     nargs.hwndParent = st->win->hwndCanvas;
     nargs.msg = s;
     nargs.timeoutMs = 0;
-    nargs.groupId = kNotifGroupStressTestSummary;
+    nargs.groupId = kNotifStressTestSummary;
     ShowNotification(nargs);
     return true;
 }
@@ -709,7 +709,7 @@ static bool GoToNextPage(StressTest* st) {
     NotificationCreateArgs args;
     args.hwndParent = st->win->hwndCanvas;
     args.msg = s;
-    args.groupId = kNotifGroupStressTestBenchmark;
+    args.groupId = kNotifStressTestBenchmark;
     ShowNotification(args);
     if (pageRenderTime > 700) {
         st->nSlowPages += 1;

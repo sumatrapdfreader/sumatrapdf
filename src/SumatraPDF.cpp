@@ -108,8 +108,8 @@ bool gShowFrameRate = false;
 // embedded (e.g. in a web browser)
 const char* gPluginURL = nullptr; // owned by Flags in WinMain
 
-static Kind kNotifGroupPersistentWarning = "persistentWarning";
-static Kind kNotifGroupPageInfo = "pageInfoHelper";
+static Kind kNotifPersistentWarning = "persistentWarning";
+static Kind kNotifPageInfo = "pageInfoHelper";
 static Kind kNotifZoom = "zoom";
 
 HBITMAP gBitmapReloadingCue;
@@ -894,16 +894,16 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
 }
 
 static void TogglePageInfoHelper(MainWindow* win) {
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (wnd) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+        RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
         return;
     }
     NotificationCreateArgs args;
     args.hwndParent = win->hwndCanvas;
     args.timeoutMs = 0;
     args.msg = "";
-    args.groupId = kNotifGroupPageInfo;
+    args.groupId = kNotifPageInfo;
     wnd = ShowNotification(args);
     UpdatePageInfoHelper(win->ctrl, wnd, -1);
 }
@@ -914,7 +914,7 @@ void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float zoomVirtu
     if (win->ctrl != ctrl) {
         return;
     }
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (!wnd) {
         return;
     }
@@ -949,7 +949,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     UpdateTocSelection(win, pageNo);
     win->currPageNo = pageNo;
 
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (!wnd) {
         return;
     }
@@ -1322,7 +1322,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         nargs.hwndParent = win->hwndCanvas;
         nargs.warning = true;
         nargs.timeoutMs = 0;
-        nargs.groupId = kNotifGroupPersistentWarning;
+        nargs.groupId = kNotifPersistentWarning;
         nargs.msg = msg;
         ShowNotification(nargs);
     }
@@ -2305,9 +2305,9 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     } else {
         win->currentTabTemp = nullptr;
     }
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupActionResponse);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifActionResponse);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
 
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
@@ -2612,8 +2612,8 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     MainWindow* win = tab->win;
     AbortFinding(win, true);
     ClearFindBox(win);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupAnnotation);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
 
     RememberRecentlyClosedDocument(tab->filePath);
@@ -3828,7 +3828,7 @@ static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
 
 static void ShowZoomNotification(MainWindow* win, float zoomLevel) {
     // don't show zoom info if showing page info
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (wnd) {
         return;
     }
@@ -4279,13 +4279,13 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (AbortFinding(win, true)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPersistentWarning)) {
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifPersistentWarning)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupPageInfo)) {
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos)) {
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos)) {
         return;
     }
     if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom)) {
@@ -4424,11 +4424,11 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
     if (!win->AsFixed()) {
         return;
     }
-    auto notif = GetNotificationForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+    auto notif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
     if (!notif) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
-        args.groupId = kNotifGroupCursorPos;
+        args.groupId = kNotifCursorPos;
         args.timeoutMs = 0;
         notif = ShowNotification(args);
         cursorPosUnit = MeasurementUnit::pt;
@@ -4442,7 +4442,7 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
                 break;
             case MeasurementUnit::in:
                 cursorPosUnit = MeasurementUnit::pt;
-                RemoveNotificationsForGroup(win->hwndCanvas, kNotifGroupCursorPos);
+                RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
                 return;
             default:
                 ReportIf(true);
@@ -5760,7 +5760,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             {
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
-                args.groupId = kNotifGroupPersistentWarning;
+                args.groupId = kNotifPersistentWarning;
                 args.msg = "This is a second notification\nMy friend.";
                 args.warning = false;
                 args.timeoutMs = kNotifDefaultTimeOut;

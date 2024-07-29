@@ -3,8 +3,8 @@
 
 struct NotificationWnd;
 
-extern Kind kNotifGroupCursorPos;
-extern Kind kNotifGroupActionResponse;
+extern Kind kNotifCursorPos;
+extern Kind kNotifActionResponse;
 
 using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
 
@@ -14,7 +14,7 @@ constexpr const int kNotif5SecsTimeOut = 1000 * 5;
 struct NotificationCreateArgs {
     HWND hwndParent = nullptr;
     HFONT font = nullptr;
-    Kind groupId = kNotifGroupActionResponse;
+    Kind groupId = kNotifActionResponse;
     bool warning = false;
     int timeoutMs = 0; // if 0 => persists until closed manually
     const char* msg = nullptr;
