@@ -1899,7 +1899,49 @@ static MainWindow* MaybeCreateWindowForFileLoad(LoadArgs* args) {
     return win;
 }
 
-void LoadDocumentAsync(LoadArgs* argsIn) {
+struct LoadDocumentAsyncData {
+    NotificationWnd* wndNotif = nullptr;
+    LoadArgs* args = nullptr;
+    LoadDocumentAsyncData() = default;
+    ~LoadDocumentAsyncData() {
+        delete args;
+    }
+};
+
+static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
+    AutoDelete delData(d);
+
+    auto args = d->args;
+    RemoveNotification(d->wndNotif);
+    MainWindow* win = args->win;
+    const char* path = args->FilePath();
+    if (!args->ctrl) {
+        ShowErrorLoadingNotification(win, path, args->noSavePrefs);
+        return;
+    }
+    args->activateExisting = false;
+    LoadDocumentFinish(args);
+}
+
+static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
+    auto args = d->args;
+    gDangerousThreadCount.Inc();
+    DocController* ctrl = nullptr;
+    MainWindow* win = args->win;
+    HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
+    const char* path = args->FilePath();
+    EngineBase* engine = args->engine;
+    args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
+    if (args->ctrl && gIsDebugBuild) {
+        //::Sleep(5000);
+    }
+
+    auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsyncFinish, d);
+    uitask::Post(fn, "TaskLoadDocumentAsyncFinish");
+    gDangerousThreadCount.Dec();
+}
+
+void StartLoadDocument(LoadArgs* argsIn) {
     if (gCrashOnOpen) {
         log("LoadDocumentAsync: about to call CrashMe()\n");
         CrashMe();
@@ -1955,35 +1997,11 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
         }
     }
 
-    RunAsync(
-        [args, wndNotif] {
-            gDangerousThreadCount.Inc();
-            DocController* ctrl = nullptr;
-            MainWindow* win = args->win;
-            HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
-            const char* path = args->FilePath();
-            EngineBase* engine = args->engine;
-            args->ctrl = CreateControllerForEngineOrFile(engine, path, &pwdUI, win);
-            if (args->ctrl && gIsDebugBuild) {
-                //::Sleep(5000);
-            }
-
-            uitask::Post("TaskLoadDocumentAsyncFinish", [args, wndNotif] {
-                RemoveNotification(wndNotif);
-                MainWindow* win = args->win;
-                const char* path = args->FilePath();
-                if (!args->ctrl) {
-                    ShowErrorLoadingNotification(win, path, args->noSavePrefs);
-                    delete args;
-                    return;
-                }
-                args->activateExisting = false;
-                LoadDocumentFinish(args);
-                delete args;
-            });
-            gDangerousThreadCount.Dec();
-        },
-        "LoadDocumentThread");
+    auto data = new LoadDocumentAsyncData;
+    data->wndNotif = wndNotif;
+    data->args = args;
+    auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsync, data);
+    RunAsync(fn, "LoadDocumentThread");
 }
 
 // remember which files failed to open so that a failure to

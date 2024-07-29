@@ -750,7 +750,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     if (filePath) {
         LoadArgs args(filePath, win);
         args.forceReuse = false; // open in a new tab
-        LoadDocumentAsync(&args);
+        StartLoadDocument(&args);
         ScheduleDelete();
         return;
     }

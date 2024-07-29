@@ -95,7 +95,7 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         LoadArgs args(path, win);
         // ctrl forces always opening
         args.activateExisting = !IsCtrlPressed();
-        LoadDocumentAsync(&args);
+        StartLoadDocument(&args);
     }
     // SetFocus(win->hwndFrame);
 }
