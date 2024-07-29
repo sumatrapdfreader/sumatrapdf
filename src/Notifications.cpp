@@ -387,13 +387,23 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     buffer.Flush(hdcIn);
 }
 
+static void NotifRemove(NotificationWnd* wnd) {
+    wnd-> wndRemovedCb(wnd);
+}
+
+static void NotifDelete(NotificationWnd* wnd) {
+    delete wnd;
+}
+
 void NotificationWnd::OnTimer(UINT_PTR timerId) {
     ReportIf(kNotifTimerTimeoutId != timerId);
     // TODO a better way to delete myself
     if (wndRemovedCb) {
-        uitask::Post("TaskNotifOnTimerRemove", [this] { wndRemovedCb(this); });
+        auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
+        uitask::Post(fn, "TaskNotifOnTimerRemove");
     } else {
-        uitask::Post("TaskNotifOnTimerDelete", [this] { delete this; });
+        auto fn = MkFunc0<NotificationWnd>(NotifDelete, this);
+        uitask::Post(fn, "TaskNotifOnTimerDelete");
     }
 }
 
