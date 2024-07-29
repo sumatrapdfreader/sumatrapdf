@@ -411,14 +411,22 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     StartInstallation(wnd);
 }
 
-static void OnButtonExit(InstallerWnd* wnd) {
-    SendMessageW(wnd->hwnd, WM_CLOSE, 0, 0);
+static void OnButtonExit() {
+    if (gWnd) {
+        SendMessageW(gWnd->hwnd, WM_CLOSE, 0, 0);
+    } else {
+        log("OnButtonExit: gWnd is null\n");
+    }
 }
 
-static void OnButtonStartSumatra(void*) {
-    char* exePath = GetInstalledExePathTemp();
+static void StartSumatra() {
+    TempStr exePath = GetInstalledExePathTemp();
     RunNonElevated(exePath);
-    OnButtonExit(nullptr);
+}
+
+static void OnButtonStartSumatra() {
+    StartSumatra();
+    OnButtonExit();
 }
 
 static void OnInstallationFinished() {
@@ -437,11 +445,11 @@ static void OnInstallationFinished() {
 
     if (gWnd->failed) {
         gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"));
-        gWnd->btnExit->onClicked = MkFunc0(OnButtonExit, gWnd);
+        gWnd->btnExit->onClicked = MkFuncVoid(OnButtonExit);
         SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
     } else {
         gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"));
-        gWnd->btnRunSumatra->onClicked = MkFunc0<void>(OnButtonStartSumatra, nullptr);
+        gWnd->btnRunSumatra->onClicked = MkFuncVoid(OnButtonStartSumatra);
         SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     }
     gMsgError = gFirstError;
@@ -450,7 +458,8 @@ static void OnInstallationFinished() {
     CloseHandle(gWnd->hThread);
 
     if (gCli->fastInstall && !gWnd->failed) {
-        OnButtonStartSumatra(nullptr);
+        StartSumatra();
+        ::ExitProcess(0);
     }
 }
 
@@ -630,7 +639,7 @@ void ForAllUsersStateChanged() {
 static bool InstallerOnWmCommand(WPARAM wp) {
     switch (LOWORD(wp)) {
         case IDCANCEL:
-            OnButtonExit(nullptr);
+            OnButtonExit();
             break;
 
         default:

@@ -16,11 +16,11 @@ extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
 
 HINSTANCE gHinst = nullptr;
 
-static void LaunchTabs(void*) {
+static void LaunchTabs() {
     TestTab(gHinst, SW_SHOW);
 }
 
-static void LaunchLayout(void*) {
+static void LaunchLayout() {
     TestLayout(gHinst, SW_SHOW);
 }
 
@@ -31,12 +31,12 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     vbox->alignCross = CrossAxisAlign::CrossCenter;
 
     {
-        auto b = CreateButton(hwnd, "Tabs test", MkFunc0<void>(LaunchTabs, nullptr));
+        auto b = CreateButton(hwnd, "Tabs test", MkFuncVoid(LaunchTabs));
         vbox->AddChild(b);
     }
 
     {
-        auto b = CreateButton(hwnd, "Layout test", MkFunc0<void>(LaunchLayout, nullptr));
+        auto b = CreateButton(hwnd, "Layout test", MkFuncVoid(LaunchLayout));
         vbox->AddChild(b);
     }
 
