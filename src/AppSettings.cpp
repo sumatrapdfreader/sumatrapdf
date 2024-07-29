@@ -367,10 +367,10 @@ bool SaveSettings() {
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
-bool ReloadSettings() {
+static void ReloadSettings() {
     TempStr settingsPath = GetSettingsPathTemp();
     if (!file::Exists(settingsPath)) {
-        return false;
+        return;
     }
 
     // make sure that the settings file is readable - else wait
@@ -388,12 +388,12 @@ bool ReloadSettings() {
         }
     }
     if (!ok) {
-        return false;
+        return;
     }
 
     FILETIME time = file::GetModificationTime(settingsPath);
     if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
-        return true;
+        return;
     }
 
     const char* uiLanguage = str::DupTemp(gGlobalPrefs->uiLanguage);
@@ -427,7 +427,6 @@ bool ReloadSettings() {
 
     UpdateDocumentColors();
     UpdateFixedPageScrollbarsVisibility();
-    return true;
 }
 
 void CleanUpSettings() {
@@ -436,7 +435,8 @@ void CleanUpSettings() {
 }
 
 void schedulePrefsReload() {
-    uitask::Post("TaskReloadSettings", ReloadSettings);
+    auto fn = MkFuncVoid(ReloadSettings);
+    uitask::Post(fn, "TaskReloadSettings");
 }
 
 void RegisterSettingsForFileChanges() {

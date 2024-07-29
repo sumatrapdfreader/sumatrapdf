@@ -253,7 +253,7 @@ struct MainWindow {
 };
 
 void UpdateControlsColors(MainWindow*);
-void RepaintAsync(MainWindow*, int delay);
+void ScheduleRepaint(MainWindow*, int delay);
 void ClearFindBox(MainWindow*);
 void CreateMovePatternLazy(MainWindow*);
 void ClearMouseState(MainWindow*);

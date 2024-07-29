@@ -328,7 +328,7 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     }
 
     win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
-    RepaintAsync(win, 0);
+    ScheduleRepaint(win, 0);
 }
 
 #define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(win->hwndFrame, 15)
@@ -393,7 +393,7 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
 
     SetCapture(win->hwndCanvas);
     SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
-    RepaintAsync(win, 0);
+    ScheduleRepaint(win, 0);
 }
 
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
@@ -415,5 +415,5 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
         win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
         win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
     }
-    RepaintAsync(win, 0);
+    ScheduleRepaint(win, 0);
 }

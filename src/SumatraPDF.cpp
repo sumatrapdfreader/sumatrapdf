@@ -695,7 +695,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     ~ControllerCallbackHandler() override = default;
 
     void Repaint() override {
-        RepaintAsync(win, 0);
+        ScheduleRepaint(win, 0);
     }
     void PageNoChanged(DocController* ctrl, int pageNo) override;
     void ZoomChanged(DocController* ctrl, float zoomVirtual) override;

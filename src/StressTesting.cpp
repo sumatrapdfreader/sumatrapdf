@@ -553,7 +553,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
             if (st->win->AsFixed()) {
                 st->win->cbHandler->RequestRendering(1);
             }
-            RepaintAsync(st->win, 0);
+            ScheduleRepaint(st->win, 0);
         }
 
         MainWindow* toClose = st->win;
