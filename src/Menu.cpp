@@ -1218,7 +1218,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const char* filePath) {
         return;
     }
     Vec<CustomCommand*> cmds;
-    GetCommandsWithOrigId(cmds, CmdSelectionHandler);
+    GetCommandsWithOrigId(cmds, CmdViewWithExternalViewer);
     for (CustomCommand* cmd : cmds) {
         const char* commandLine = GetCommandStringArg(cmd, kCmdArgCommandLine, nullptr);
         const char* filter = GetCommandStringArg(cmd, kCmdArgFilter, nullptr);
