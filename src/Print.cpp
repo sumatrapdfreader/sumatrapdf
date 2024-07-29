@@ -581,6 +581,17 @@ static bool PrintToDevice(const PrintData& pd) {
     return true;
 }
 
+struct UpdatePrintProgressData {
+    NotificationWnd* wnd;
+    int current;
+    int total;
+};
+
+static void UpdatePrintProgress(UpdatePrintProgressData* d) {
+    UpdateNotificationProgress(d->wnd, d->current, d->total);
+    delete d;
+}
+
 class PrintThreadData : public ProgressUpdateUI {
   public:
     NotificationWnd* wnd = nullptr;
@@ -624,7 +635,12 @@ class PrintThreadData : public ProgressUpdateUI {
     }
 
     void UpdateProgress(int current, int total) override {
-        uitask::Post("TaskPrintUpdateProgress", [=] { UpdateNotificationProgress(wnd, current, total); });
+        auto data = new UpdatePrintProgressData;
+        data->wnd = wnd;
+        data->current = current;
+        data->total = total;
+        auto fn = MkFunc0<UpdatePrintProgressData>(UpdatePrintProgress, data);
+        uitask::Post(fn, "TaskPrintUpdateProgress");
     }
 
     bool WasCanceled() override {
@@ -632,8 +648,23 @@ class PrintThreadData : public ProgressUpdateUI {
     }
 };
 
-static DWORD WINAPI PrintThread(LPVOID data) {
-    PrintThreadData* threadData = (PrintThreadData*)data;
+struct DeletePrinterThreadData {
+    MainWindow* win;
+    HANDLE thread;
+    PrintThreadData* threadData;
+};
+
+static void DeletePrinterThread(DeletePrinterThreadData* d) {
+    auto win = d->win;
+    if (MainWindowStillValid(win) && d->thread == win->printThread) {
+        win->printThread = nullptr;
+    }
+    delete d->threadData;
+    delete d;
+}
+
+static DWORD WINAPI PrintThread(void* d) {
+    PrintThreadData* threadData = (PrintThreadData*)d;
     MainWindow* win = threadData->win;
     // wait for PrintToDeviceOnThread to return so that we
     // close the correct handle to the current printing thread
@@ -648,12 +679,12 @@ static DWORD WINAPI PrintThread(LPVOID data) {
     pd->abortCookie = &threadData->cookie;
     PrintToDevice(*pd);
 
-    uitask::Post("PrintDeleteThread", [=] {
-        if (MainWindowStillValid(win) && thread == win->printThread) {
-            win->printThread = nullptr;
-        }
-        delete threadData;
-    });
+    auto data = new DeletePrinterThreadData;
+    data->win = win;
+    data->thread = thread;
+    data->threadData = threadData;
+    auto fn = MkFunc0<DeletePrinterThreadData>(DeletePrinterThread, data);
+    uitask::Post(fn, "PrintDeleteThread");
     DestroyTempAllocator();
     return 0;
 }
