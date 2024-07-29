@@ -139,16 +139,16 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     char* dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, "InstallLocation");
     if (dirLM && dirCU) {
         info->typ = PreviousInstallationType::Both;
-        info->needsElevation = true;
+        info->allUsers = true;
     } else if (dirLM) {
         info->typ = PreviousInstallationType::Machine;
-        info->needsElevation = true;
+        info->allUsers = true;
     } else {
         info->typ = PreviousInstallationType::User;
     }
     logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d, needsElevation: %d\n",
          info->installationDir, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
-         (int)info->needsElevation);
+         (int)info->allUsers);
 }
 
 static char* GetExistingInstallationFilePathTemp(const char* name) {

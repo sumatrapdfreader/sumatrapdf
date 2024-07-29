@@ -42,7 +42,7 @@ static InstallerWnd* gWnd = nullptr;
 static lzma::SimpleArchive gArchive{};
 static bool gInstallStarted = false; // a bit of a hack
 
-static PreviousInstallationInfo prevInstall;
+static PreviousInstallationInfo gPrevInstall;
 
 struct InstallerWnd {
     HWND hwnd = nullptr;
@@ -232,7 +232,7 @@ static DWORD WINAPI InstallerThread(void*) {
     gWnd->failed = true;
     bool ok;
 
-    bool allUsers = gCli->allUsers;
+    bool allUsers = gCli->allUsers || gPrevInstall.allUsers;
     HKEY key = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     if (!ExtractInstallerFiles(gCli->installDir)) {
@@ -252,8 +252,8 @@ static DWORD WINAPI InstallerThread(void*) {
     CopySettingsFile();
 
     // mark them as uninstalled
-    prevInstall.searchFilterInstalled = false;
-    prevInstall.previewInstalled = false;
+    gPrevInstall.searchFilterInstalled = false;
+    gPrevInstall.previewInstalled = false;
 
     if (gCli->withFilter) {
         RegisterSearchFilter(allUsers);
@@ -403,7 +403,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     gCli->withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
     gCli->allUsers = wnd->checkboxForAllUsers->IsChecked();
 
-    bool needsElevation = gCli->allUsers || prevInstall.needsElevation;
+    bool needsElevation = gCli->allUsers || gPrevInstall.allUsers;
     if (needsElevation && !IsProcessRunningElevated()) {
         RestartElevatedForAllUsers();
         ::ExitProcess(0);
@@ -595,7 +595,7 @@ static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) 
     logf("GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
 
     char* dir;
-    char* dirPrevInstall = prevInstall.installationDir;
+    char* dirPrevInstall = gPrevInstall.installationDir;
 
     if (dirPrevInstall && !ignorePrev) {
         logf("  using %s from previous install\n", dirPrevInstall);
@@ -1083,7 +1083,7 @@ int RunInstaller() {
     logf("------------- Starting SumatraPDF installation\n");
 
     gWnd = new InstallerWnd();
-    GetPreviousInstallInfo(&prevInstall);
+    GetPreviousInstallInfo(&gPrevInstall);
     if (!gCli->installDir) {
         auto dir = GetDefaultInstallationDirTemp(gCli->allUsers, false);
         gCli->installDir = str::Dup(dir);
@@ -1109,13 +1109,13 @@ int RunInstaller() {
     bool requiresSilentElevation = gCli->silent || gCli->fastInstall;
     bool isElevated = IsProcessRunningElevated();
     if (requiresSilentElevation && !isElevated) {
-        bool needsElevation = gCli->allUsers || prevInstall.needsElevation;
+        bool needsElevation = gCli->allUsers || gPrevInstall.allUsers;
         if (needsElevation) {
             logf(
                 "Restarting as elevated: gCli->silent: %d, gCli->fastInstall: %d, isElevated: %d, gCli->allUsers: %d, "
                 "prevInstall.needsElevation: %d\n",
                 (int)gCli->silent, (int)gCli->fastInstall, (int)isElevated, (int)gCli->allUsers,
-                (int)prevInstall.needsElevation);
+                (int)gPrevInstall.allUsers);
             RestartElevatedForAllUsers();
             ::ExitProcess(0);
         }
@@ -1125,10 +1125,10 @@ int RunInstaller() {
     if (!autoStartInstall) {
         // if not set explicitly, default to state from previous installation
         if (!gCli->withFilter) {
-            gCli->withFilter = prevInstall.searchFilterInstalled;
+            gCli->withFilter = gPrevInstall.searchFilterInstalled;
         }
         if (!gCli->withPreview) {
-            gCli->withPreview = prevInstall.previewInstalled;
+            gCli->withPreview = gPrevInstall.previewInstalled;
         }
     }
     logf(
@@ -1163,11 +1163,11 @@ int RunInstaller() {
     }
 
     // re-register if we un-registered but installation was cancelled
-    if (prevInstall.searchFilterInstalled) {
+    if (gPrevInstall.searchFilterInstalled) {
         log("re-registering search filter\n");
         RegisterSearchFilter(gCli->allUsers);
     }
-    if (prevInstall.previewInstalled) {
+    if (gPrevInstall.previewInstalled) {
         log("re-registering previewer\n");
         RegisterPreviewer(gCli->allUsers);
     }

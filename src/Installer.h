@@ -10,7 +10,7 @@ struct PreviousInstallationInfo {
     PreviousInstallationType typ = PreviousInstallationType::None;
     bool searchFilterInstalled = false;
     bool previewInstalled = false;
-    bool needsElevation = false;
+    bool allUsers = false;
 
     PreviousInstallationInfo() = default;
     ~PreviousInstallationInfo();
