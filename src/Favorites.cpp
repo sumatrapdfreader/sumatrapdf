@@ -497,7 +497,7 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     MainWindow* existingWin = FindMainWindowByFile(fp, true);
     if (existingWin) {
         int pageNo = fn->pageNo;
-        uitask::Post(TaskGoToFavorite, [=] { GoToFavorite(existingWin, pageNo); });
+        uitask::Post("TaskGoToFavorite", [=] { GoToFavorite(existingWin, pageNo); });
         return;
     }
 
@@ -520,7 +520,7 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     LoadArgs args(fs->filePath, win);
     win = LoadDocument(&args);
     if (win) {
-        uitask::Post(TaskGoToFavorite2, [=] { GoToFavorite(win, pageNo); });
+        uitask::Post("TaskGoToFavorite2", [=] { GoToFavorite(win, pageNo); });
     }
 }
 

@@ -379,7 +379,7 @@ static void FileExistenceCheckerThread(FileExistenceData* d) {
         logf("FileExistenceChecker: missing '%s' at %d\n", path, i + 1);
     }
 
-    uitask::Post(TaskHideMissingFiles, [d] { HideMissingFiles(d->missing); });
+    uitask::Post("TaskHideMissingFiles", [d] { HideMissingFiles(d->missing); });
 }
 
 static void GetFilePathsToCheck(StrVec& toCheck) {

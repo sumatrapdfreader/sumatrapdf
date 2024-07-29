@@ -672,7 +672,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
                 saveThumbnail(bmp);
             }
             // TODO: why is destruction on the UI thread necessary?
-            uitask::Post(TaskChmModelOnDocumentComplete, [this] {
+            uitask::Post("TaskChmModelOnDocumentComplete", [this] {
                 logf("TaskChmModelOnDocumentComplete: about to delete ChmThumbnailTask: 0x%p\n", (void*)this);
                 delete this;
             });

@@ -624,7 +624,7 @@ class PrintThreadData : public ProgressUpdateUI {
     }
 
     void UpdateProgress(int current, int total) override {
-        uitask::Post(TaskPrintUpdateProgress, [=] { UpdateNotificationProgress(wnd, current, total); });
+        uitask::Post("TaskPrintUpdateProgress", [=] { UpdateNotificationProgress(wnd, current, total); });
     }
 
     bool WasCanceled() override {
@@ -648,7 +648,7 @@ static DWORD WINAPI PrintThread(LPVOID data) {
     pd->abortCookie = &threadData->cookie;
     PrintToDevice(*pd);
 
-    uitask::Post(PrintDeleteThread, [=] {
+    uitask::Post("PrintDeleteThread", [=] {
         if (MainWindowStillValid(win) && thread == win->printThread) {
             win->printThread = nullptr;
         }

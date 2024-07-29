@@ -595,15 +595,19 @@ struct AtomicInt {
     volatile LONG val = 0;
 };
 
-typedef void (*funcPtr)(void*);
+using func0Ptr = void (*)(void*);
 
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
 struct Func0 {
-    funcPtr fn = nullptr;
+    func0Ptr fn = nullptr;
     void* userData = nullptr;
 
     Func0() = default;
+    Func0(const Func0& that) {
+        this->fn = that.fn;
+        this->userData = that.userData;
+    }
     ~Func0() = default;
 
     bool IsEmpty() const {
@@ -619,7 +623,7 @@ struct Func0 {
 template <typename T>
 Func0 MkFunc0(void (*fn)(T*), T* d) {
     auto res = Func0{};
-    res.fn = (funcPtr)fn;
+    res.fn = (func0Ptr)fn;
     res.userData = (void*)d;
     return res;
 }

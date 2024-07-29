@@ -391,9 +391,9 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
     ReportIf(kNotifTimerTimeoutId != timerId);
     // TODO a better way to delete myself
     if (wndRemovedCb) {
-        uitask::Post(TaskNotifOnTimerRemove, [this] { wndRemovedCb(this); });
+        uitask::Post("TaskNotifOnTimerRemove", [this] { wndRemovedCb(this); });
     } else {
-        uitask::Post(TaskNotifOnTimerDelete, [this] { delete this; });
+        uitask::Post("TaskNotifOnTimerDelete", [this] { delete this; });
     }
 }
 
@@ -430,9 +430,9 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         if (rClose.Contains(pt)) {
             // TODO a better way to delete myself
             if (wndRemovedCb) {
-                uitask::Post(TaskNotifWndProcRemove, [this] { wndRemovedCb(this); });
+                uitask::Post("TaskNotifWndProcRemove", [this] { wndRemovedCb(this); });
             } else {
-                uitask::Post(TaskNotifWndProcDelete, [this] { delete this; });
+                uitask::Post("TaskNotifWndProcDelete", [this] { delete this; });
             }
             return 0;
         }

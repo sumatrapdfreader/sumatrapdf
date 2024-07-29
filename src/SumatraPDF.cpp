@@ -784,7 +784,7 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
     win->ctrl->CreateThumbnail(size, [d](RenderedBitmap* bmp) {
         d->bmp = bmp;
-        uitask::Post(TaskSetThumbnail, [d] { CreateThumbnailFinish(d); });
+        uitask::Post("TaskSetThumbnail", [d] { CreateThumbnailFinish(d); });
     });
 }
 
@@ -1678,7 +1678,7 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
 }
 
 static void scheduleReloadTab(WindowTab* tab) {
-    uitask::Post(TaskScheduleReloadTab, [=] {
+    uitask::Post("TaskScheduleReloadTab", [=] {
         // tab might have been closed, so first ensure it's still valid
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
         MainWindow* win = FindMainWindowByWindowTab(tab);
@@ -1972,7 +1972,7 @@ void LoadDocumentAsync(LoadArgs* argsIn) {
                 //::Sleep(5000);
             }
 
-            uitask::Post(TaskLoadDocumentAsyncFinish, [args, wndNotif] {
+            uitask::Post("TaskLoadDocumentAsyncFinish", [args, wndNotif] {
                 RemoveNotification(wndNotif);
                 MainWindow* win = args->win;
                 const char* path = args->FilePath();
@@ -4879,7 +4879,7 @@ void ClearHistoryAsyncPart(MainWindow* win, int nFiles) {
     TempStr symDir = GetCrashInfoDirTemp();
     dir::RemoveAll(symDir);
 
-    uitask::Post(TaksClearHistoryAsyncPart, [win, nFiles]() { ClearHistoryAfterAsync(win, nFiles); });
+    uitask::Post("TaksClearHistoryAsyncPart", [win, nFiles]() { ClearHistoryAfterAsync(win, nFiles); });
     DestroyTempAllocator();
 }
 

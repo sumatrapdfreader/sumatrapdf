@@ -274,7 +274,7 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     void UpdateProgress(int current, int total) override {
-        uitask::Post(TaskFindUpdateStatus, [this, current, total] {
+        uitask::Post("TaskFindUpdateStatus", [this, current, total] {
             auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifGroupFindProgress);
             if (!wnd || WasCanceled()) {
                 return;
@@ -356,9 +356,9 @@ static DWORD WINAPI FindThread(LPVOID data) {
     }
 
     if (!win->findCanceled && rect) {
-        uitask::Post(TaskFindEnd1, [=] { FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround); });
+        uitask::Post("TaskFindEnd1", [=] { FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround); });
     } else {
-        uitask::Post(TaskFindEnd2, [=] { FindEndTask(win, ftd, nullptr, win->findCanceled, false); });
+        uitask::Post("TaskFindEnd2", [=] { FindEndTask(win, ftd, nullptr, win->findCanceled, false); });
     }
     DestroyTempAllocator();
     return 0;

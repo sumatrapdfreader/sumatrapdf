@@ -404,7 +404,7 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
         }
 
         // process the rest on ui thread to avoid threading issues
-        uitask::Post(TaskShowAutoUpdateDialog, [hwndForNotif, updateInfo] {
+        uitask::Post("TaskShowAutoUpdateDialog", [hwndForNotif, updateInfo] {
             RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
             NotifyUserOfUpdate(updateInfo);
             gUpdateCheckInProgress = false;
@@ -480,7 +480,7 @@ void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
             rsp->url.SetCopy(uri);
             HttpGet(uri, rsp);
         }
-        uitask::Post(TaskCheckForUpdateAsync, [=] {
+        uitask::Post("TaskCheckForUpdateAsync", [=] {
             DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
             if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
