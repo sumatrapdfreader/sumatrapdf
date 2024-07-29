@@ -780,7 +780,8 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
     win->ctrl->CreateThumbnail(size, [d](RenderedBitmap* bmp) {
         d->bmp = bmp;
-        uitask::Post("TaskSetThumbnail", [d] { CreateThumbnailFinish(d); });
+        auto fn = MkFunc0<CreateThumbnailData>(CreateThumbnailFinish, d);
+        uitask::Post(fn, "TaskSetThumbnail");
     });
 }
 

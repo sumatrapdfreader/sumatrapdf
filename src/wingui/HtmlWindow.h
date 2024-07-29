@@ -9,8 +9,7 @@ bool IsBlankUrl(const char*);
 
 // HtmlWindowCallback allows HtmlWindow to notify other code about notable
 // events or delegate some of the functionality.
-class HtmlWindowCallback {
-  public:
+struct HtmlWindowCallback {
     // called when we're about to show a given url. Returning false will
     // stop loading this url
     virtual bool OnBeforeNavigate(const char* url, bool newWindow) = 0;

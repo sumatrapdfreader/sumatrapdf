@@ -4,7 +4,7 @@
 struct ChmFile;
 struct ChmTocTraceItem;
 class HtmlWindow;
-class HtmlWindowCallback;
+struct HtmlWindowCallback;
 struct ChmCacheEntry;
 
 struct ChmModel : DocController {
