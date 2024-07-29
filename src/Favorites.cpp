@@ -471,7 +471,7 @@ void ToggleFavorites(MainWindow* win) {
     }
 }
 
-static void GoToFavorite(MainWindow* win, int pageNo) {
+static void GoToFavoritePage(MainWindow* win, int pageNo) {
     if (!MainWindowStillValid(win)) {
         return;
     }
@@ -484,20 +484,33 @@ static void GoToFavorite(MainWindow* win, int pageNo) {
     win->Focus();
 }
 
+struct GoToFavoritePageData {
+    MainWindow* win;
+    int pageNo;
+};
+
+static void GoToFavoritePage(GoToFavoritePageData* d) {
+    GoToFavoritePage(d->win, d->pageNo);
+    delete d;
+}
+
 // Going to a bookmark within current file scrolls to a given page.
 // Going to a bookmark in another file, loads the file and scrolls to a page
 // (similar to how invoking one of the recently opened files works)
-static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
-    ReportIf(!fs || !fn);
-    if (!fs || !fn) {
+static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
+    ReportIf(!fs || !fav);
+    if (!fs || !fav) {
         return;
     }
 
     char* fp = fs->filePath;
     MainWindow* existingWin = FindMainWindowByFile(fp, true);
     if (existingWin) {
-        int pageNo = fn->pageNo;
-        uitask::Post("TaskGoToFavorite", [=] { GoToFavorite(existingWin, pageNo); });
+        auto data = new GoToFavoritePageData;
+        data->pageNo = fav->pageNo;
+        data->win = existingWin;
+        auto fn = MkFunc0<GoToFavoritePageData>(GoToFavoritePage, data);
+        uitask::Post(fn, "TaskGoToFavorite");
         return;
     }
 
@@ -509,10 +522,10 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     // first showing last seen page stored in file history
     // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
-    int pageNo = fn->pageNo;
+    int pageNo = fav->pageNo;
     FileState* ds = gFileHistory.FindByPath(fs->filePath);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
-        ds->pageNo = fn->pageNo;
+        ds->pageNo = fav->pageNo;
         ds->scrollPos = PointF(-1, -1); // don't scroll the page
         pageNo = -1;
     }
@@ -520,7 +533,11 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fn) {
     LoadArgs args(fs->filePath, win);
     win = LoadDocument(&args);
     if (win) {
-        uitask::Post("TaskGoToFavorite2", [=] { GoToFavorite(win, pageNo); });
+        auto data = new GoToFavoritePageData;
+        data->pageNo = pageNo;
+        data->win = win;
+        auto fn = MkFunc0<GoToFavoritePageData>(GoToFavoritePage, data);
+        uitask::Post(fn, "TaskGoToFavorite2");
     }
 }
 

@@ -388,7 +388,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 }
 
 static void NotifRemove(NotificationWnd* wnd) {
-    wnd-> wndRemovedCb(wnd);
+    wnd->wndRemovedCb(wnd);
 }
 
 static void NotifDelete(NotificationWnd* wnd) {
