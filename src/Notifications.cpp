@@ -440,9 +440,11 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         if (rClose.Contains(pt)) {
             // TODO a better way to delete myself
             if (wndRemovedCb) {
-                uitask::Post("TaskNotifWndProcRemove", [this] { wndRemovedCb(this); });
+                auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
+                uitask::Post(fn, "TaskNotifWndProcRemove");
             } else {
-                uitask::Post("TaskNotifWndProcDelete", [this] { delete this; });
+                auto fn = MkFunc0<NotificationWnd>(NotifDelete, this);
+                uitask::Post(fn, "TaskNotifWndProcDelete");
             }
             return 0;
         }
