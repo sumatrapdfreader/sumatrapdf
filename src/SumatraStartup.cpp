@@ -939,6 +939,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     gCli = &flags;
 
     CheckIsStoreBuild();
+
+    // do this before running installer etc. so that we have disk / net permissions
+    // (default policy is to disallow everything)
+    InitializePolicies(flags.restrictedUse);
+
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
     bool isUninstaller = flags.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
@@ -1047,10 +1052,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         // pull in libmupdf.dll which we don't have access to in the installer
         ::ExitProcess(exitCode);
     }
-
-    // do this before running installer etc. so that we have disk / net permissions
-    // (default policy is to disallow everything)
-    InitializePolicies(flags.restrictedUse);
 
 #if defined(DEBUG)
     if (flags.testRenderPage) {

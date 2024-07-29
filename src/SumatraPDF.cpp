@@ -215,21 +215,17 @@ void InitializePolicies(bool restrict) {
         return;
     }
 
-    static struct {
-        const char* name;
-        Perm perm;
-    } policies[] = {
-        {"InternetAccess", Perm::InternetAccess},     {"DiskAccess", Perm::DiskAccess},
-        {"SavePreferences", Perm::SavePreferences},   {"RegistryAccess", Perm::RegistryAccess},
-        {"PrinterAccess", Perm::PrinterAccess},       {"CopySelection", Perm::CopySelection},
-        {"FullscreenAccess", Perm::FullscreenAccess},
-    };
+    static Perm perms[] = {Perm::InternetAccess, Perm::DiskAccess,    Perm::SavePreferences, Perm::RegistryAccess,
+                           Perm::PrinterAccess,  Perm::CopySelection, Perm::FullscreenAccess};
+    static SeqStrings permNames =
+        "InternetAccess\0DiskAccess\0SavePreferences\0RegistryAccess\0PrinterAccess\0CopySelection\0FullscreenAccess\0";
 
     // enable policies as indicated in sumatrapdfrestrict.ini
-    for (size_t i = 0; i < dimof(policies); i++) {
-        const char* value = polsec->GetValue(policies[i].name);
-        if (value && atoi(value) != 0) {
-            gPolicyRestrictions = gPolicyRestrictions | policies[i].perm;
+    for (int i = 0; i < dimofi(perms); i++) {
+        const char* name = seqstrings::IdxToStr(permNames, i);
+        const char* val = polsec->GetValue(name);
+        if (val && atoi(val) != 0) {
+            gPolicyRestrictions = gPolicyRestrictions | perms[i];
         }
     }
 
