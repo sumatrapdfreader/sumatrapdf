@@ -294,7 +294,8 @@ Exit:
 static void RestartElevatedForAllUsers() {
     char* exePath = GetExePathTemp();
     const char* cmdLine = "-run-install-now";
-    if (gWnd->checkboxForAllUsers->IsChecked()) {
+    bool allUsers = gCli->allUsers || (gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked());
+    if (allUsers) {
         cmdLine = str::JoinTemp(cmdLine, " -all-users");
     }
     if (gCli->withFilter) {

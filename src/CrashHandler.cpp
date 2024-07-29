@@ -365,7 +365,7 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     }
 
     logfa("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolPath: '%s'\n", (int)isCrash,
-         (int)captureCallstack, gSymbolPath);
+          (int)captureCallstack, gSymbolPath);
 
     if (captureCallstack) {
         // we proceed even if we fail to download symbols
