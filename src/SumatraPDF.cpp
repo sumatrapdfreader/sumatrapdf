@@ -1673,20 +1673,23 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
     }
 }
 
-static void scheduleReloadTab(WindowTab* tab) {
-    uitask::Post("TaskScheduleReloadTab", [=] {
-        // tab might have been closed, so first ensure it's still valid
-        // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
-        MainWindow* win = FindMainWindowByWindowTab(tab);
-        if (win == nullptr) {
-            return;
-        }
-        tab->reloadOnFocus = true;
-        if (tab == win->CurrentTab()) {
-            // delay the reload slightly, in case we get another request immediately after this one
-            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
-        }
-    });
+static void ReloadTab(WindowTab* tab) {
+    // tab might have been closed, so first ensure it's still valid
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
+    MainWindow* win = FindMainWindowByWindowTab(tab);
+    if (win == nullptr) {
+        return;
+    }
+    tab->reloadOnFocus = true;
+    if (tab == win->CurrentTab()) {
+        // delay the reload slightly, in case we get another request immediately after this one
+        SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
+    }
+}
+
+static void ScheduleReloadTab(WindowTab* tab) {
+    auto fn = MkFunc0<WindowTab>(ReloadTab, tab);
+    uitask::Post(fn, "ReloadTab");
 }
 
 // return true if adjustd path
@@ -1833,7 +1836,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     ReportIf(currTab->watcher);
 
     if (gGlobalPrefs->reloadModifiedDocuments) {
-        currTab->watcher = FileWatcherSubscribe(path, [currTab] { scheduleReloadTab(currTab); });
+        currTab->watcher = FileWatcherSubscribe(path, [currTab] { ScheduleReloadTab(currTab); });
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {

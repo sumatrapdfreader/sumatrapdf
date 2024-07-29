@@ -227,7 +227,7 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
         auto data = new GoToTocLinkData;
         data->ctrl = win->ctrl;
         data->tocItem = tocItem;
-        data->tab = win->CurrentTab();;
+        data->tab = win->CurrentTab();
         auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
         uitask::Post(fn, "TaskGoToTocTreeItem");
     }
