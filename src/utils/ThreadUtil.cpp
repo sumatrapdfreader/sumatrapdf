@@ -99,7 +99,7 @@ bool ThreadBase::Join(DWORD waitMs) {
     return false;
 }
 
-static DWORD WINAPI ThreadFunc(void* data) {
+static DWORD WINAPI ThreadFuncStdFunction(void* data) {
     auto* func = reinterpret_cast<std::function<void()>*>(data);
     (*func)();
     delete func;
@@ -110,7 +110,28 @@ static DWORD WINAPI ThreadFunc(void* data) {
 void RunAsync(const std::function<void()>& func, const char* threadName) {
     auto fp = new std::function<void()>(func);
     DWORD threadId = 0;
-    HANDLE hThread = CreateThread(nullptr, 0, ThreadFunc, (void*)fp, 0, &threadId);
+    HANDLE hThread = CreateThread(nullptr, 0, ThreadFuncStdFunction, (void*)fp, 0, &threadId);
+    if (!hThread) {
+        return;
+    }
+    if (threadName != nullptr) {
+        SetThreadName(threadName, threadId);
+    }
+    CloseHandle(hThread);
+}
+
+static DWORD WINAPI ThreadFunc0(void* data) {
+    auto* func = (Func0*)(data);
+    func->Call();
+    delete func;
+    DestroyTempAllocator();
+    return 0;
+}
+
+void RunAsync(const Func0& func, const char* threadName) {
+    auto fp = new Func0(func);
+    DWORD threadId = 0;
+    HANDLE hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
     if (!hThread) {
         return;
     }

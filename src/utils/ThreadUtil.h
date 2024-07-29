@@ -70,6 +70,7 @@ class ThreadBase {
 void SetThreadName(const char* threadName, DWORD threadId = 0);
 
 void RunAsync(const std::function<void()>&, const char* threadName = nullptr);
+void RunAsync(const Func0&, const char* threadName = nullptr);
 
 extern AtomicInt gDangerousThreadCount;
 

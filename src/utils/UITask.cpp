@@ -43,6 +43,7 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wp, LPAR
         delete func;
         return 0;
     }
+
     UINT wmExecTask2 = GetExecuteTask2Message();
     if (wmExecTask2 == msg) {
         Kind kind = (Kind)wp;

@@ -329,15 +329,13 @@ struct FileExistenceData {
 
 extern void MaybeRedrawHomePage();
 
-static void HideMissingFiles(const StrVec& missing) {
-    if (missing.Size() == 0) {
-        return;
-    }
-    for (const char* path : missing) {
+static void HideMissingFiles(FileExistenceData* d) {
+    for (const char* path : d->missing) {
         gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
     MaybeRedrawHomePage();
+    delete d;
 }
 
 // document path is either a file or a directory
@@ -379,7 +377,8 @@ static void FileExistenceCheckerThread(FileExistenceData* d) {
         logf("FileExistenceChecker: missing '%s' at %d\n", path, i + 1);
     }
 
-    uitask::Post("TaskHideMissingFiles", [d] { HideMissingFiles(d->missing); });
+    Func0 fn = MkFunc0<FileExistenceData>(HideMissingFiles, d);
+    uitask::Post("TaskHideMissingFiles", fn);
 }
 
 static void GetFilePathsToCheck(StrVec& toCheck) {
@@ -408,6 +407,6 @@ void RemoveNonExistentFilesAsync() {
         return;
     }
     logf("RemoveNonExistentFilesAsync: starting FileExistenceCheckerThread to check %d files\n", d->toCheck.Size());
-    auto fn = [d] { FileExistenceCheckerThread(d); };
+    Func0 fn = MkFunc0<FileExistenceData>(FileExistenceCheckerThread, d);
     RunAsync(fn, "FileExistenceThread");
 }
