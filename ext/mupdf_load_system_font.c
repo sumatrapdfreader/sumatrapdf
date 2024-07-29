@@ -103,6 +103,20 @@ static pdf_fontlistMS fontlistMS;
 static int did_init = 0;
 static CRITICAL_SECTION cs_fonts;
 
+static int streq(const char* s1, const char* s2) {
+    if (strcmp(s1, s2) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+static int streqi(const char* s1, const char* s2) {
+    if (_stricmp(s1, s2) == 0) {
+        return 1;
+    }
+    return 0;
+}
+
 static inline USHORT BEtoHs(USHORT x) {
     BYTE* data = (BYTE*)&x;
     return (data[0] << 8) | data[1];
@@ -123,7 +137,7 @@ static int lookup_compare(const void* elem1, const void* elem2) {
 
     if (len1 != len2) {
         const char* rest = len1 > len2 ? val1 + len2 : val2 + len1;
-        if (',' == *rest || !_stricmp(rest, "-roman"))
+        if (',' == *rest || streqi(rest, "-roman"))
             return _strnicmp(val1, val2, fz_mini(len1, len2));
     }
 
@@ -143,7 +157,7 @@ static int str_ends_with(const char* str, const char* end) {
     size_t len1 = strlen(str);
     size_t len2 = strlen(end);
 
-    return len1 >= len2 && !strcmp(str + len1 - len2, end);
+    return len1 >= len2 && streq(str + len1 - len2, end);
 }
 
 static sys_font_info* pdf_find_windows_font_path(const char* fontname) {
@@ -208,7 +222,7 @@ static void decode_platform_string(fz_context* ctx, int platform, int enctype, c
 static void append_mapping(fz_context* ctx, const char* facename, const char* path, int index) {
     pdf_fontlistMS* fl = &fontlistMS;
     if (fl->len >= fl->cap) {
-        //fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : fontlist overflow");
+        // fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : fontlist overflow");
         return;
     }
 
@@ -273,11 +287,13 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
     for (i = 0; i < count; i++) {
         int entryOffset = offset + sizeof(TT_OFFSET_TABLE) + i * sizeof(TT_TABLE_DIRECTORY);
         safe_read(ctx, file, entryOffset, (char*)&tblDirBE, sizeof(TT_TABLE_DIRECTORY));
-        if (!BEtoHl(tblDirBE.uTag) || BEtoHl(tblDirBE.uTag) == TTAG_name)
+        if (!BEtoHl(tblDirBE.uTag) || BEtoHl(tblDirBE.uTag) == TTAG_name) {
             break;
+        }
     }
-    if (count == i || !BEtoHl(tblDirBE.uTag))
+    if (count == i || !BEtoHl(tblDirBE.uTag)) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : nameless font");
+    }
     tblOffset = BEtoHl(tblDirBE.uOffset);
 
     // read the 'name' table for record count and offsets
@@ -320,14 +336,15 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
     }
 
     // try to prevent non-Arial fonts from accidentally substituting Arial
-    if (!strcmp(szPSName, "ArialMT")) {
+    if (streq(szPSName, "ArialMT")) {
         // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2471
-        if (strcmp(szTTName, "Arial") != 0)
+        if (!streq(szTTName, "Arial")) {
             szPSName[0] = '\0';
-        // TODO: is there a better way to distinguish Arial Caps from Arial proper?
-        // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=1290
-        else if (strstr(path, "caps") || strstr(path, "Caps"))
+        } else if (strstr(path, "caps") || strstr(path, "Caps")) {
+            // TODO: is there a better way to distinguish Arial Caps from Arial proper?
+            // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=1290
             fz_throw(ctx, FZ_ERROR_GENERIC, "ignore %s, as it can't be distinguished from Arial,Regular", path);
+        }
     }
 
     if (szPSName[0]) {
@@ -374,8 +391,9 @@ static void parseTTCs(fz_context* ctx, const char* path) {
 
     fz_try(ctx) {
         safe_read(ctx, file, 0, (char*)&fontcollectionBE, sizeof(FONT_COLLECTION));
-        if (BEtoHl(fontcollectionBE.Tag) != TTAG_ttcf)
+        if (BEtoHl(fontcollectionBE.Tag) != TTAG_ttcf) {
             fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : wrong format %x", BEtoHl(fontcollectionBE.Tag));
+        }
         if (BEtoHl(fontcollectionBE.Version) != TTC_VERSION1 && BEtoHl(fontcollectionBE.Version) != TTC_VERSION2) {
             fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : invalid version %x", BEtoHl(fontcollectionBE.Version));
         }
@@ -408,8 +426,9 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
     hList = FindFirstFile(szPath, &FileData);
     if (hList == INVALID_HANDLE_VALUE) {
         // Don't complain about missing directories
-        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        if (GetLastError() == ERROR_FILE_NOT_FOUND) {
             return;
+        }
         fz_throw(ctx, FZ_ERROR_GENERIC, "extend_system_font_list: unknown error %d", GetLastError());
     }
     do {
@@ -424,9 +443,9 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
             }
             fileExt = szPathUtf8 + strlen(szPathUtf8) - 4;
             fz_try(ctx) {
-                if (!_stricmp(fileExt, ".ttc")) {
+                if (streqi(fileExt, ".ttc")) {
                     parseTTCs(ctx, szPathUtf8);
-                } else if (!_stricmp(fileExt, ".ttf") || !_stricmp(fileExt, ".otf")) {
+                } else if (streqi(fileExt, ".ttf") || streqi(fileExt, ".otf")) {
                     parseTTFs(ctx, szPathUtf8);
                 }
             }
@@ -462,8 +481,9 @@ static void create_system_font_list(fz_context* ctx) {
         extend_system_font_list(ctx, szFontDir);
     }
 
-    if (fontlistMS.len == 0)
+    if (fontlistMS.len == 0) {
         fz_warn(ctx, "couldn't find any usable system fonts");
+    }
 
 #ifdef NOCJKFONT
     {
@@ -492,8 +512,9 @@ static void create_system_font_list(fz_context* ctx) {
         for (i = prev_len; i < fontlistMS.len; i++) {
             sys_font_info* entry = bsearch(fontlistMS.fontmap[i].fontface, fontlistMS.fontmap, prev_len,
                                            sizeof(sys_font_info), lookup_compare);
-            if (entry)
+            if (entry) {
                 *entry = fontlistMS.fontmap[i];
+            }
         }
         qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), stricmp_wrapper);
     }
@@ -599,7 +620,7 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
     else {
         int i;
         for (i = 0; i < nelem(baseSubstitutes) && !found; i++)
-            if (!strcmp(fontname, baseSubstitutes[i].name)) {
+            if (streq(fontname, baseSubstitutes[i].name)) {
                 found = pdf_find_windows_font_path(baseSubstitutes[i].pattern);
             }
     }
@@ -665,7 +686,7 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
         fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
     }
 
-    int use_glyph_bbox = strcmp(found->fontface, "DroidSansFallback") != 0;
+    int use_glyph_bbox = !streq(found->fontface, "DroidSansFallback");
     font = fz_new_font_from_buffer(ctx, orig_name, buffer, found->index, use_glyph_bbox);
     font->flags.ft_substitute = 1;
     return font;
