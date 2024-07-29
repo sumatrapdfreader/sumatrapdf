@@ -228,6 +228,12 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
 static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    // seen crashes in TabCtrl::WndProc() which might be caused by handling drag&drop messages
+    // after parent window was destroyed. maybe this will fix it
+    if (!IsWindow(hwnd)) {
+        return 0;
+    }
+
     Wnd* window = WindowMapGetWindow(hwnd);
 
     if (msg == WM_NCCREATE) {
@@ -3608,15 +3614,17 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     logfa("TabsCtrl::WndProc: WM_LBUTTONUP, selectedTab: %d tabUnderMouse: %d\n", selectedTab,
                           tabUnderMouse);
                 }
-                if (tabUnderMouse != -1 && tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
-                    TriggerTabDragged(this, selectedTab, tabUnderMouse);
-                    UpdateAfterDrag(this, selectedTab, tabUnderMouse);
-                } else if (tabUnderMouse == -1) {
+                if (tabUnderMouse < 0) {
                     // migrate to new/different window
                     POINT p(mousePos.x, mousePos.y);
                     ClientToScreen(hwnd, &p);
                     Point scPoint(p.x, p.y);
                     TriggerTabMigration(this, selectedTab, scPoint);
+                    return 0;
+                }
+                if (tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
+                    TriggerTabDragged(this, selectedTab, tabUnderMouse);
+                    UpdateAfterDrag(this, selectedTab, tabUnderMouse);
                 }
             }
             return 0;
