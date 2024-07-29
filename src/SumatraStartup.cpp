@@ -6,6 +6,7 @@
 #include "utils/WinDynCalls.h"
 #include "utils/CmdLineArgsIter.h"
 #include "utils/DbgHelpDyn.h"
+#include "utils/DirIter.h"
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/FileWatcher.h"
@@ -838,6 +839,43 @@ static void ShowNoAdminErrorMessage() {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
+static bool MaybeDeleteStaleDirectory(WIN32_FIND_DATAW* fd, const char* dir) {
+    ReportIf(!IsDirectory(fd->dwFileAttributes));
+    TempStr name = ToUtf8Temp(fd->cFileName);
+    bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
+    if (!maybeDelete) {
+        logf("MaybeDeleteStaleDirectory: skipping '%s' because not manual-* or crsahinfo-*\n", name);
+        return true;
+    }
+    TempStr currVer = GetVerDirNameTemp("");
+    if (str::Contains(name, currVer)) {
+        logf("MaybeDeleteStaleDirectory: skipping '%s' because our ver '%s'\n", name, currVer);
+        return true;
+    }
+    bool ok = dir::RemoveAll(dir);
+    logf("MaybeDeleteStaleDirectory: dir::RemoveAll('%s') returned %d\n", dir, ok);
+    return true;
+}
+
+// delete symbols and manual from possibly previous versions
+static void DeleteStaleFilesAsync(void*) {
+    TempStr dir = GetNotImportantDataDirTemp();
+    VisitDir(dir, kVisitDirIncludeDirs, MaybeDeleteStaleDirectory);
+}
+
+void StartDeleteStaleFiles() {
+    // for now we only care about pre-release builds as they can be updated frequently
+    if (false && !gIsPreReleaseBuild) {
+        logf("DeleteStaleFiles: skipping because gIsPreRelaseBuild: %d\n", (int)gIsPreReleaseBuild);
+        return;
+    }
+    TempStr dir = GetNotImportantDataDirTemp();
+    TempStr ver = GetVerDirNameTemp("");
+    logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
+    auto fn = MkFunc0<void>(DeleteStaleFilesAsync, nullptr);
+    RunAsync(fn, "DeleteStaleFilesThread");
+}
+
 // non-admin process cannot send DDE messages to admin process
 // so when that happens we need to alert the user
 // TODO: maybe a better fix is to re-launch ourselves as admin?
@@ -1341,7 +1379,7 @@ ContinueOpenWindow:
 
     BringWindowToTop(win->hwndFrame);
 
-    DeleteStaleFilesAsync();
+    StartDeleteStaleFiles();
 
     exitCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);

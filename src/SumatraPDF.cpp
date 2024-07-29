@@ -4811,7 +4811,7 @@ TempStr GetLogFilePathTemp() {
 }
 
 // separate directory for each build number / type
-static TempStr GetVerDirNameTemp(const char* prefix) {
+TempStr GetVerDirNameTemp(const char* prefix) {
     auto variant = gIsPreReleaseBuild ? "prerel" : "rel";
     if (gIsDebugBuild) {
         variant = "dbg";
@@ -4992,42 +4992,6 @@ static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
     }
 
     return true;
-}
-
-static bool MaybeDeleteStaleDirectory(WIN32_FIND_DATAW* fd, const char* dir) {
-    ReportIf(!IsDirectory(fd->dwFileAttributes));
-    TempStr name = ToUtf8Temp(fd->cFileName);
-    bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
-    if (!maybeDelete) {
-        logf("MaybeDeleteStaleDirectory: skipping '%s' because not manual-* or crsahinfo-*\n", name);
-        return true;
-    }
-    TempStr currVer = GetVerDirNameTemp("");
-    if (str::Contains(name, currVer)) {
-        logf("MaybeDeleteStaleDirectory: skipping '%s' because our ver '%s'\n", name, currVer);
-        return true;
-    }
-    bool ok = dir::RemoveAll(dir);
-    logf("MaybeDeleteStaleDirectory: dir::RemoveAll('%s') returned %d\n", dir, ok);
-    return true;
-}
-
-// delete symbols and manual from possibly previous versions
-static void DeleteStaleFiles() {
-    TempStr dir = GetNotImportantDataDirTemp();
-    VisitDir(dir, kVisitDirIncludeDirs, MaybeDeleteStaleDirectory);
-}
-
-void DeleteStaleFilesAsync() {
-    // for now we only care about pre-release builds as they can be updated frequently
-    if (false && !gIsPreReleaseBuild) {
-        logf("DeleteStaleFiles: skipping because gIsPreRelaseBuild: %d\n", (int)gIsPreReleaseBuild);
-        return;
-    }
-    TempStr dir = GetNotImportantDataDirTemp();
-    TempStr ver = GetVerDirNameTemp("");
-    logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
-    RunAsync(DeleteStaleFiles, "DeleteStaleFilesThread");
 }
 
 constexpr const char* kManualIndex = "SumatraPDF-documentation.html";

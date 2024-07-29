@@ -307,6 +307,48 @@ static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
     // TODO: send on a thread
 }
 
+struct DownloadUpdateAsyncData {
+    HWND hwndForNotif = nullptr;
+    UpdateInfo* updateInfo = nullptr;
+    DownloadUpdateAsyncData() = default;
+    ~DownloadUpdateAsyncData() {
+        delete updateInfo;
+    }
+};
+
+static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
+    auto hwndForNotif = data->hwndForNotif;
+    auto updateInfo = data->updateInfo;
+    RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
+    NotifyUserOfUpdate(updateInfo);
+    gUpdateCheckInProgress = false;
+    delete data;
+}
+
+static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
+    auto hwndForNotif = data->hwndForNotif;
+    auto updateInfo = data->updateInfo;
+
+    TempStr installerPath = GetTempFilePathTemp("sumatra-installer");
+    // the installer must be named .exe or it won't be able to self-elevate
+    // with "runas"
+    installerPath = str::JoinTemp(installerPath, ".exe");
+    UpdateProgressData pd;
+    pd.hwndForNotif = hwndForNotif;
+    auto cb = MkFunc1<UpdateProgressData, HttpProgress>(UpdateProgressCb, &pd);
+    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, &cb);
+    logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
+    if (ok) {
+        updateInfo->installerPath = str::Dup(installerPath);
+    } else {
+        file::Delete(installerPath);
+    }
+
+    // process the rest on ui thread to avoid threading issues
+    auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateFinish, data);
+    uitask::Post(fn, "TaskShowAutoUpdateDialog");
+}
+
 static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
     // for store builds we do update check but ignore the result
     if (gIsStoreBuild) {
@@ -385,30 +427,12 @@ static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck upd
     // download the installer to make update feel instant to the user
     logf("ShowAutoUpdateDialog: starting to download '%s'\n", updateInfo->dlURL);
     gUpdateCheckInProgress = true;
-    RunAsync([hwndForNotif, updateInfo] { // NOLINT
-        TempStr installerPath = GetTempFilePathTemp("sumatra-installer");
-        // the installer must be named .exe or it won't be able to self-elevate
-        // with "runas"
-        installerPath = str::JoinTemp(installerPath, ".exe");
-        UpdateProgressData pd;
-        pd.hwndForNotif = hwndForNotif;
-        auto cb = MkFunc1<UpdateProgressData, HttpProgress>(UpdateProgressCb, &pd);
-        bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, &cb);
-        logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
-        if (ok) {
-            updateInfo->installerPath = str::Dup(installerPath);
-        } else {
-            file::Delete(installerPath);
-        }
 
-        // process the rest on ui thread to avoid threading issues
-        uitask::Post("TaskShowAutoUpdateDialog", [hwndForNotif, updateInfo] {
-            RemoveNotificationsForGroup(hwndForNotif, kindNotifUpdateCheckInProgress);
-            NotifyUserOfUpdate(updateInfo);
-            gUpdateCheckInProgress = false;
-            delete updateInfo;
-        });
-    });
+    auto fnData = new DownloadUpdateAsyncData;
+    fnData->hwndForNotif = hwndForNotif;
+    fnData->updateInfo = updateInfo;
+    auto fn = MkFunc0<DownloadUpdateAsyncData>(DownloadUpdateAsync, fnData);
+    RunAsync(fn, "DownloadUpdateAsync");
     return 0;
 }
 
@@ -526,8 +550,8 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
     auto data = new UpdateCheckAsyncData();
     data->win = win;
     data->updateCheckType = updateCheckType;
-    auto func = MkFunc0<UpdateCheckAsyncData>(UpdateCheckAsync, data);
-    RunAsync(func, "UpdateCheckAsync");
+    auto fn = MkFunc0<UpdateCheckAsyncData>(UpdateCheckAsync, data);
+    RunAsync(fn, "UpdateCheckAsync");
 }
 
 // the assumption is that this is a portable version downloaded to temp directory
