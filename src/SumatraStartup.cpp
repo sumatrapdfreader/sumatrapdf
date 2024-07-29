@@ -982,6 +982,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     // (default policy is to disallow everything)
     InitializePolicies(flags.restrictedUse);
 
+#if defined(DEBUG)
+    if (false) {
+        TempStr exePath = GetExePathTemp();
+        RunNonElevated(exePath);
+        return 0;
+    }
+#endif
+
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
     bool isUninstaller = flags.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
