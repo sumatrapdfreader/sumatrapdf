@@ -10,7 +10,6 @@ void Destroy();
 // call only from the same thread as Initialize() and Destroy()
 void DrainQueue();
 
-void Post(Kind kind, const std::function<void()>&);
 void Post(const Func0& fn, Kind kind = nullptr);
-// void PostOptimized(const std::function<void()>& f);
+// void PostOptimized(const Func0& fn, Kind kind = nullptr);
 } // namespace uitask

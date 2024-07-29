@@ -301,17 +301,31 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 };
 
-static void FindEndTask(MainWindow* win, FindThreadData* ftd, TextSel* textSel, bool wasModifiedCanceled,
-                        bool loopedAround) {
+struct FindEndTaskData {
+    MainWindow* win;
+    FindThreadData* ftd;
+    TextSel* textSel;
+    bool wasModifiedCanceled;
+    bool loopedAround;
+};
+
+static void FindEndTask(FindEndTaskData* d) {
+    auto win = d->win;
+    auto ftd = d->ftd;
+    auto textSel = d->textSel;
+    auto wasModifiedCanceled = d->wasModifiedCanceled;
+    auto loopedAround = d->loopedAround;
+
+    AutoDelete delData(d);
+    AutoDelete delFtd(ftd);
+
     if (!MainWindowStillValid(win)) {
-        delete ftd;
         return;
     }
     if (win->findThread != ftd->thread) {
         // Race condition: FindTextOnThread/AbortFinding was
         // called after the previous find thread ended but
         // before this FindEndTask could be executed
-        delete ftd;
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -325,11 +339,10 @@ static void FindEndTask(MainWindow* win, FindThreadData* ftd, TextSel* textSel, 
         ftd->HideUI(false, !wasModifiedCanceled);
     }
     win->findThread = nullptr;
-    delete ftd;
 }
 
-static DWORD WINAPI FindThread(LPVOID data) {
-    FindThreadData* ftd = (FindThreadData*)data;
+static DWORD WINAPI FindThread(LPVOID d) {
+    FindThreadData* ftd = (FindThreadData*)d;
     ReportIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
     MainWindow* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
@@ -368,11 +381,21 @@ static DWORD WINAPI FindThread(LPVOID data) {
         Sleep(1);
     }
 
+    auto data = new FindEndTaskData;
+    data->win = win;
+    data->ftd = ftd;
+    data->textSel = nullptr;
+    data->loopedAround = false;
+
     if (!win->findCancelled && rect) {
-        uitask::Post("TaskFindEnd1", [=] { FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround); });
+        data->textSel = rect;
+        data->wasModifiedCanceled = ftd->wasModified;
+        data->loopedAround = loopedAround;
     } else {
-        uitask::Post("TaskFindEnd2", [=] { FindEndTask(win, ftd, nullptr, win->findCancelled, false); });
+        data->wasModifiedCanceled = win->findCancelled;
     }
+    auto fn = MkFunc0<FindEndTaskData>(FindEndTask, data);
+    uitask::Post(fn, "TaskFindEnd");
     DestroyTempAllocator();
     return 0;
 }

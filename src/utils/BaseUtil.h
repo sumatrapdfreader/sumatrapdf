@@ -616,7 +616,7 @@ struct Func0 {
     bool IsEmpty() const {
         return fn == nullptr;
     }
-    void Call() {
+    void Call() const {
         if (!fn) {
             return;
         }
