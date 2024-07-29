@@ -7,7 +7,6 @@ extern bool gLogToConsole;
 extern bool gLogToDebugger;
 extern bool gReducedLogging;
 extern bool gLogToPipe;
-extern bool gStopLogging;
 extern const char* gLogAppName;
 extern char* gLogFilePath;
 void StartLogToFile(const char* path, bool removeIfExists);
@@ -41,7 +40,8 @@ void log(const char* s, bool always = false);
 void logf(const char* fmt, ...);
 #endif
 
-// always log, even if NO_LOG is defined
+// always log, even if NO_LOG is defined or reduced logging
 void logfa(const char* fmt, ...);
+void loga(const char* s);
 
 void DestroyLogging();

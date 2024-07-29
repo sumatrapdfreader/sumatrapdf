@@ -4946,14 +4946,15 @@ ShowMessage:
 // this can be used to test that crash handler still works
 // TODO: maybe corrupt some more
 void DebugCorruptMemory() {
-#if 0
+    if (!gIsDebugBuild) {
+        return;
+    }
     char* s = (char*)malloc(23);
     char* d = (char*)malloc(34);
     free(s);
     free(d);
     // this triggers ntdll.dll!RtlReportCriticalFailure()
     free(s);
-#endif
 }
 
 static bool ExtractFiles(lzma::SimpleArchive* archive, const char* destDir) {
