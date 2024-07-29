@@ -5696,7 +5696,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdCheckUpdate:
-            CheckForUpdateAsync(win, UpdateCheck::UserInitiated);
+            StartAsyncUpdateCheck(win, UpdateCheck::UserInitiated);
             break;
 
         case CmdOptions:

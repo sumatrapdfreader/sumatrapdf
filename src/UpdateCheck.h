@@ -6,5 +6,5 @@ enum class UpdateCheck {
     Automatic,     // an automatic, periodic check done at startup
 };
 
-void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType);
+void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType);
 void UpdateSelfTo(const char* path);

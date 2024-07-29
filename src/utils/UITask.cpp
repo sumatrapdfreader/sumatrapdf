@@ -103,7 +103,7 @@ void Post(Kind kind, const std::function<void()>& f) {
     PostMessageW(gTaskDispatchHwnd, wmExecTask, (WPARAM)kind, (LPARAM)func);
 } // NOLINT
 
-void Post(Kind kind, const Func0& f) {
+void Post(const Func0& f, Kind kind) {
     auto func = new Func0(f);
     // logf("uitask::Post: allocated func 0x%p\n", (void*)func);
     UINT wmExecTask = GetExecuteTask2Message();

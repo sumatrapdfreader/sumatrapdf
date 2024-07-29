@@ -378,7 +378,7 @@ static void FileExistenceCheckerAsync(FileExistenceData* d) {
     }
 
     Func0 fn = MkFunc0<FileExistenceData>(HideMissingFiles, d);
-    uitask::Post("TaskHideMissingFiles", fn);
+    uitask::Post(fn, "TaskHideMissingFiles");
 }
 
 static void GetFilePathsToCheck(StrVec& toCheck) {

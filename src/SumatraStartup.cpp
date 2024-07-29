@@ -1337,7 +1337,7 @@ ContinueOpenWindow:
     //  \Documents is a good directory to use
     ChangeCurrDirToDocuments();
 
-    CheckForUpdateAsync(win, UpdateCheck::Automatic);
+    StartAsyncUpdateCheck(win, UpdateCheck::Automatic);
 
     BringWindowToTop(win->hwndFrame);
 

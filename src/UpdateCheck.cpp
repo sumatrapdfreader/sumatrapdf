@@ -308,8 +308,6 @@ static void UpdateProgressCb(UpdateProgressData* data, HttpProgress* progress) {
 }
 
 static DWORD ShowAutoUpdateDialog(HWND hwndParent, HttpRsp* rsp, UpdateCheck updateCheckType) {
-    gUpdateCheckInProgress = false;
-
     // for store builds we do update check but ignore the result
     if (gIsStoreBuild) {
         return 0;
@@ -443,11 +441,71 @@ static void BuildUpdateURL(str::Str& url, const char* baseURL, UpdateCheck updat
     }
 }
 
+struct UpdateCheckAsyncData {
+    MainWindow* win = nullptr;
+    UpdateCheck updateCheckType = UpdateCheck::Automatic;
+    HttpRsp* rsp = nullptr;
+    UpdateCheckAsyncData() = default;
+    ~UpdateCheckAsyncData() {
+        delete rsp;
+    }
+};
+
+static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
+    log("UpdateCheckFinish\n");
+    gUpdateCheckInProgress = false;
+
+    AutoDelete delData(data);
+
+    auto updateCheckType = data->updateCheckType;
+    auto rsp = data->rsp;
+    MainWindow* win = nullptr;
+    if (MainWindowStillValid(data->win)) {
+        win = data->win;
+    } else {
+        if (gWindows.Size() > 0) {
+            win = gWindows.At(0);
+        }
+    }
+    if (!win) {
+        return;
+    }
+    HWND hwnd = win->hwndFrame;
+    DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
+    if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
+        RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
+        // notify the user about network error during a manual update check
+        TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x)."), err);
+        MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
+    }
+}
+
+static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
+    auto updateCheckType = data->updateCheckType;
+    str::Str url;
+    BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
+    char* uri = url.Get();
+    HttpRsp* rsp = new HttpRsp;
+    rsp->url.SetCopy(uri);
+    bool ok = HttpGet(uri, rsp);
+    if (!ok) {
+        delete rsp;
+        BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
+        uri = url.Get();
+        rsp = new HttpRsp;
+        rsp->url.SetCopy(uri);
+        HttpGet(uri, rsp);
+    }
+    data->rsp = rsp;
+    auto func = MkFunc0<UpdateCheckAsyncData>(UpdateCheckFinish, data);
+    uitask::Post(func, "TaskUpdateCheckFinish");
+}
+
 // start auto-update check by downloading auto-update information from url
 // on a background thread and processing the retrieved data on ui thread
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
-void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
+void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
     if (!ShouldCheckForUpdate(updateCheckType)) {
         return;
     }
@@ -464,32 +522,12 @@ void CheckForUpdateAsync(MainWindow* win, UpdateCheck updateCheckType) {
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
     gUpdateCheckInProgress = true;
 
-    HWND hwnd = win->hwndFrame;
-    RunAsync([=] {
-        str::Str url;
-        BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
-        char* uri = url.Get();
-        HttpRsp* rsp = new HttpRsp;
-        rsp->url.SetCopy(uri);
-        bool ok = HttpGet(uri, rsp);
-        if (!ok) {
-            delete rsp;
-            BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
-            uri = url.Get();
-            rsp = new HttpRsp;
-            rsp->url.SetCopy(uri);
-            HttpGet(uri, rsp);
-        }
-        uitask::Post("TaskCheckForUpdateAsync", [=] {
-            DWORD err = ShowAutoUpdateDialog(hwnd, rsp, updateCheckType);
-            if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
-                RemoveNotificationsForGroup(win->hwndCanvas, kindNotifUpdateCheckInProgress);
-                // notify the user about network error during a manual update check
-                TempStr msg = str::FormatTemp(_TRA("Can't connect to the Internet (error %#x)."), err);
-                MessageBoxWarning(hwnd, msg, _TRA("SumatraPDF Update"));
-            }
-        });
-    });
+    // data freed in UpdateCheckFinish()
+    auto data = new UpdateCheckAsyncData();
+    data->win = win;
+    data->updateCheckType = updateCheckType;
+    auto func = MkFunc0<UpdateCheckAsyncData>(UpdateCheckAsync, data);
+    RunAsync(func, "UpdateCheckAsync");
 }
 
 // the assumption is that this is a portable version downloaded to temp directory

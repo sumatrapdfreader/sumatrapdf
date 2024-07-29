@@ -11,6 +11,6 @@ void Destroy();
 void DrainQueue();
 
 void Post(Kind kind, const std::function<void()>&);
-void Post(Kind kind, const Func0& fn);
+void Post(const Func0& fn, Kind kind = nullptr);
 // void PostOptimized(const std::function<void()>& f);
 } // namespace uitask
