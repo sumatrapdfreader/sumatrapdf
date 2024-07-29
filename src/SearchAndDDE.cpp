@@ -197,13 +197,27 @@ void ClearSearchResult(MainWindow* win) {
     ScheduleRepaint(win, 0);
 }
 
-static void UpdateFindStatusTask(MainWindow* win, NotificationWnd* wnd, int current, int total) {
-    if (!MainWindowStillValid(win) || win->findCanceled) {
+struct UpdateFindStatusData {
+    MainWindow* win;
+    int current;
+    int total;
+};
+
+static void UpdateFindStatus(UpdateFindStatusData* d) {
+    AutoDelete delData(d);
+
+    auto win = d->win;
+    if (!MainWindowStillValid(win) || win->findCancelled) {
         return;
     }
-    if (!UpdateNotificationProgress(wnd, current, total)) {
+    auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
+    if (!wnd) {
+        win->findCancelled = true;
+        return;
+    }
+    if (!UpdateNotificationProgress(wnd, d->current, d->total)) {
         // the search has been canceled by closing the notification
-        win->findCanceled = true;
+        win->findCancelled = true;
     }
 }
 
@@ -273,18 +287,17 @@ struct FindThreadData : public ProgressUpdateUI {
         }
     }
 
-    void UpdateProgress(int current, int total) override {
-        uitask::Post("TaskFindUpdateStatus", [this, current, total] {
-            auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
-            if (!wnd || WasCanceled()) {
-                return;
-            }
-            UpdateFindStatusTask(win, wnd, current, total);
-        });
+    bool WasCanceled() override {
+        return !MainWindowStillValid(win) || win->findCancelled;
     }
 
-    bool WasCanceled() override {
-        return !MainWindowStillValid(win) || win->findCanceled;
+    void UpdateProgress(int current, int total) override {
+        auto data = new UpdateFindStatusData;
+        data->win = this->win;
+        data->current = current;
+        data->total = total;
+        auto fn = MkFunc0<UpdateFindStatusData>(UpdateFindStatus, data);
+        uitask::Post(fn, "UpdateFindStatus");
     }
 };
 
@@ -339,7 +352,7 @@ static DWORD WINAPI FindThread(LPVOID data) {
     }
 
     bool loopedAround = false;
-    if (!win->findCanceled && !rect) {
+    if (!win->findCancelled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
         int startPage = (TextSearchDirection::Forward == ftd->direction) ? 1 : ctrl->PageCount();
         if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
@@ -355,10 +368,10 @@ static DWORD WINAPI FindThread(LPVOID data) {
         Sleep(1);
     }
 
-    if (!win->findCanceled && rect) {
+    if (!win->findCancelled && rect) {
         uitask::Post("TaskFindEnd1", [=] { FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround); });
     } else {
-        uitask::Post("TaskFindEnd2", [=] { FindEndTask(win, ftd, nullptr, win->findCanceled, false); });
+        uitask::Post("TaskFindEnd2", [=] { FindEndTask(win, ftd, nullptr, win->findCancelled, false); });
     }
     DestroyTempAllocator();
     return 0;
@@ -369,10 +382,10 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
     bool res = false;
     if (win->findThread) {
         res = true;
-        win->findCanceled = true;
+        win->findCancelled = true;
         WaitForSingleObject(win->findThread, INFINITE);
     }
-    win->findCanceled = false;
+    win->findCancelled = false;
 
     if (hideMessage) {
         bool didRemove = RemoveNotificationsForGroup(win->hwndCanvas, kNotifFindProgress);

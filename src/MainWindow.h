@@ -201,7 +201,7 @@ struct MainWindow {
     bool printCanceled = false;
 
     HANDLE findThread = nullptr;
-    bool findCanceled = false;
+    bool findCancelled = false;
 
     ILinkHandler* linkHandler = nullptr;
     IPageElement* linkOnLastButtonDown = nullptr;

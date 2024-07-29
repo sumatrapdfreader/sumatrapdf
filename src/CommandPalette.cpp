@@ -548,7 +548,8 @@ void SafeDeleteCommandPaletteWnd() {
 }
 
 static void ScheduleDelete() {
-    uitask::Post("TaskCommandPaletteDelete", &SafeDeleteCommandPaletteWnd);
+    auto fn = MkFuncVoid(SafeDeleteCommandPaletteWnd);
+    uitask::Post(fn, "SafeDeleteCommandPaletteWnd");
 }
 
 LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
