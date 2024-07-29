@@ -2760,6 +2760,13 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     if (!lastWindow || quitIfLast) {
         ShowWindow(win->hwndFrame, SW_HIDE);
     }
+    if (!gDontSavePrefs) {
+        // if we are exiting the application by File->Exit,
+        // OnMenuExit will have called SaveSettings() already
+        // and we skip the call here to avoid saving incomplete session info
+        // (because some windows might have been closed already)
+        SaveSettings();
+    }
     TabsOnCloseWindow(win);
 
     if (forceClose) {
@@ -2775,14 +2782,6 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         HWND hwndToDestroy = win->hwndFrame;
         DeleteMainWindow(win);
         DestroyWindow(hwndToDestroy);
-    }
-
-    if (!gDontSavePrefs) {
-        // if we are exiting the application by File->Exit,
-        // OnMenuExit will have called SaveSettings() already
-        // and we skip the call here to avoid saving incomplete session info
-        // (because some windows might have been closed already)
-        SaveSettings();
     }
 
     if (lastWindow && quitIfLast) {
