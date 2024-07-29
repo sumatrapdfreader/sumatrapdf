@@ -329,15 +329,6 @@ struct FileExistenceData {
 
 extern void MaybeRedrawHomePage();
 
-static void HideMissingFiles(FileExistenceData* d) {
-    for (const char* path : d->missing) {
-        gFileHistory.MarkFileInexistent(path, true);
-    }
-    // update the Frequently Read page in case it's been displayed already
-    MaybeRedrawHomePage();
-    delete d;
-}
-
 // document path is either a file or a directory
 // (when browsing images inside directory).
 bool DocumentPathExists(const char* path) {
@@ -355,7 +346,16 @@ bool DocumentPathExists(const char* path) {
     return file::Exists(realPath);
 }
 
-static void FileExistenceCheckerThread(FileExistenceData* d) {
+static void HideMissingFiles(FileExistenceData* d) {
+    for (const char* path : d->missing) {
+        gFileHistory.MarkFileInexistent(path, true);
+    }
+    // update the Frequently Read page in case it's been displayed already
+    MaybeRedrawHomePage();
+    delete d;
+}
+
+static void FileExistenceCheckerAsync(FileExistenceData* d) {
     StrVec& toCheck = d->toCheck;
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
@@ -407,6 +407,6 @@ void RemoveNonExistentFilesAsync() {
         return;
     }
     logf("RemoveNonExistentFilesAsync: starting FileExistenceCheckerThread to check %d files\n", d->toCheck.Size());
-    Func0 fn = MkFunc0<FileExistenceData>(FileExistenceCheckerThread, d);
+    Func0 fn = MkFunc0<FileExistenceData>(FileExistenceCheckerAsync, d);
     RunAsync(fn, "FileExistenceThread");
 }
