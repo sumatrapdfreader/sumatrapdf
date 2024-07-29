@@ -174,7 +174,20 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
 }
 #endif
 
-static void GoToTocLinkTask(TocItem* tocItem, WindowTab* tab, DocController* ctrl) {
+struct GoToTocLinkData {
+    TocItem* tocItem;
+    WindowTab* tab;
+    DocController* ctrl;
+};
+
+// TocItem* tocItem, WindowTab* tab, DocController* ctrl
+static void GoToTocLink(GoToTocLinkData* d) {
+    AutoDelete delData(d);
+
+    auto tab = d->tab;
+    auto tocItem = d->tocItem;
+    auto ctrl = d->ctrl;
+
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
     if (!MainWindowStillValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
@@ -211,9 +224,12 @@ static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
-        WindowTab* tab = win->CurrentTab();
-        DocController* ctrl = win->ctrl;
-        uitask::Post("TaskGoToTocTreeItem", [=] { GoToTocLinkTask(tocItem, tab, ctrl); });
+        auto data = new GoToTocLinkData;
+        data->ctrl = win->ctrl;
+        data->tocItem = tocItem;
+        data->tab = win->CurrentTab();;
+        auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
+        uitask::Post(fn, "TaskGoToTocTreeItem");
     }
 }
 

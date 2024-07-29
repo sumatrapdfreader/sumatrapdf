@@ -540,8 +540,8 @@ static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
         HttpGet(uri, rsp);
     }
     data->rsp = rsp;
-    auto func = MkFunc0<UpdateCheckAsyncData>(UpdateCheckFinish, data);
-    uitask::Post(func, "TaskUpdateCheckFinish");
+    auto fn = MkFunc0<UpdateCheckAsyncData>(UpdateCheckFinish, data);
+    uitask::Post(fn, "TaskUpdateCheckFinish");
 }
 
 // start auto-update check by downloading auto-update information from url
