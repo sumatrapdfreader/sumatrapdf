@@ -293,7 +293,7 @@ bool SumatraLaunchBrowser(const char* url) {
         return SendMessageW(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return false;
     }
 
@@ -329,7 +329,7 @@ bool DocIsSupportedFileType(Kind kind) {
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
 bool OpenFileExternally(const char* path) {
-    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
+    if (!CanAccessDisk() || gPluginMode) {
         return false;
     }
 
@@ -1270,7 +1270,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     SetFrameTitleForTab(tab, false);
     UpdateUiForCurrentTab(win);
 
-    if (HasPermission(Perm::DiskAccess) && tab->GetEngineType() == kindEngineMupdf) {
+    if (CanAccessDisk() && tab->GetEngineType() == kindEngineMupdf) {
         ReportIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         path = args->FilePath();
         int res = Synchronizer::Create(path, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
@@ -1553,7 +1553,7 @@ static MainWindow* CreateMainWindow() {
     CreateToolbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
-    if (HasPermission(Perm::DiskAccess) && !gPluginMode) {
+    if (CanAccessDisk() && !gPluginMode) {
         DragAcceptFiles(win->hwndCanvas, TRUE);
     }
 
@@ -1855,7 +1855,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (HasPermission(Perm::DiskAccess) && !gPluginMode && !IsStressTesting()) {
+    if (CanAccessDisk() && !gPluginMode && !IsStressTesting()) {
         AddPathToRecentDocs(fullPath);
     }
 
@@ -2821,7 +2821,7 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Str& fileFilter) {
 }
 
 static void SaveCurrentFileAs(MainWindow* win) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -2953,7 +2953,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
 }
 
 void SumatraOpenPathInExplorer(const char* path) {
-    if (gPluginMode || !HasPermission(Perm::DiskAccess)) {
+    if (gPluginMode || !CanAccessDisk()) {
         return;
     }
     OpenPathInExplorer(path);
@@ -2968,7 +2968,7 @@ static void ShowCurrentFileInFolder(MainWindow* win) {
 }
 
 static void DeleteCurrentFile(MainWindow* win) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -2989,7 +2989,7 @@ static void DeleteCurrentFile(MainWindow* win) {
 }
 
 static void RenameCurrentFile(MainWindow* win) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -3077,7 +3077,7 @@ static void RenameCurrentFile(MainWindow* win) {
 }
 
 static void CreateLnkShortcut(MainWindow* win) {
-    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
+    if (!CanAccessDisk() || gPluginMode) {
         return;
     }
     if (!win->IsDocLoaded()) {
@@ -3330,7 +3330,7 @@ static TempWStr GetFileFilterTemp() {
 }
 
 static void OpenFile(MainWindow* win) {
-    if (!HasPermission(Perm::DiskAccess)) {
+    if (!CanAccessDisk()) {
         return;
     }
 
@@ -3430,7 +3430,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     if (win->IsCurrentTabAbout()) {
         return;
     }
-    if (!HasPermission(Perm::DiskAccess) || gPluginMode) {
+    if (!CanAccessDisk() || gPluginMode) {
         return;
     }
 
@@ -3533,7 +3533,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sideb
     }
 
     // ToC and Favorites sidebars at the left
-    bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm::DiskAccess);
+    bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && CanAccessDisk();
     bool tocVisible = win->tocVisible;
     if (tocVisible || showFavorites) {
         Size toc = ClientRect(win->hwndTocBox).Size();
@@ -3669,7 +3669,7 @@ static void OpenFileWithTextEditor(const char* path) {
 #endif
 
 static void OpenAdvancedOptions() {
-    if (!HasPermission(Perm::DiskAccess) || !HasPermission(Perm::SavePreferences)) {
+    if (!CanAccessDisk() || !HasPermission(Perm::SavePreferences)) {
         return;
     }
 
@@ -4579,7 +4579,7 @@ static void OnFavSplitterMove(SplitterMoveEvent* ev) {
 }
 
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) {
-    if (gPluginMode || !HasPermission(Perm::DiskAccess)) {
+    if (gPluginMode || !CanAccessDisk()) {
         showFavorites = false;
     }
 
@@ -6330,8 +6330,8 @@ void ShowCrashHandlerMessage() {
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
-    if (!HasPermission(Perm::DiskAccess)) {
-        log("ShowCrashHandlerMessage: skipping beacuse !HasPermission(Perm::DiskAccess)\n");
+    if (!CanAccessDisk()) {
+        log("ShowCrashHandlerMessage: skipping beacuse !CanAccessDisk()\n");
         return;
     }
 
