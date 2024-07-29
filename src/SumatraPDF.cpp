@@ -4859,23 +4859,29 @@ void CopyFilePath(WindowTab* tab) {
 
 Kind kNotifClearHistory = "clearHistry";
 
-void ClearHistoryAfterAsync(MainWindow* win, int nFiles) {
+struct ClearHistoryData {
+    MainWindow* win = nullptr;
+    int nFiles = 0;
+};
+
+static void ClearHistoryFinish(ClearHistoryData* d) {
+    AutoDelete delData(d);
+    MainWindow* win = d->win;
     if (!MainWindowStillValid(win)) {
         return;
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
-    ::InvalidateRect(win->hwndCanvas, nullptr, true);
-    ::UpdateWindow(win->hwndCanvas);
-    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), nFiles);
+    HwndInvalidate(win->hwndCanvas);
+    TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), d->nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
 }
 
-void ClearHistoryAsyncPart(MainWindow* win, int nFiles) {
+static void ClearHistoryAsync(ClearHistoryData* d) {
     DeleteThumbnailCacheDirectory();
     TempStr symDir = GetCrashInfoDirTemp();
     dir::RemoveAll(symDir);
-
-    uitask::Post("TaksClearHistoryAsyncPart", [win, nFiles]() { ClearHistoryAfterAsync(win, nFiles); });
+    auto fn = MkFunc0<ClearHistoryData>(ClearHistoryFinish, d);
+    uitask::Post(fn, "TaksClearHistoryAsyncPart");
     DestroyTempAllocator();
 }
 
@@ -4916,7 +4922,11 @@ void ClearHistory(MainWindow* win) {
     args.hwndParent = win->hwndCanvas;
     args.timeoutMs = kNotif5SecsTimeOut;
     ShowNotification(args);
-    RunAsync([win, nFiles]() { ClearHistoryAsyncPart(win, nFiles); }, "ClearHistoryThread");
+    auto data = new ClearHistoryData;
+    data->win = win;
+    data->nFiles = nFiles;
+    auto fn = MkFunc0<ClearHistoryData>(ClearHistoryAsync, data);
+    RunAsync(fn, "ClearHistoryAsync");
 }
 
 static void DownloadDebugSymbols() {
