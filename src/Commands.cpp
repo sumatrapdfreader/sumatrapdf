@@ -163,7 +163,19 @@ CustomCommand::~CustomCommand() {
 }
 
 CustomCommand* CreateCustomCommand(const char* definition, int origCmdId, CommandArg* args) {
-    int id = gNextCustomCommandId++;
+    // if no args we retain original command id
+    // only when we have unique args we have to create a new command id
+    int id = origCmdId;
+    if (args != nullptr) {
+        id = gNextCustomCommandId++;
+    } else {
+#if 0
+        auto existingCmd = FindCustomCommand(origCmdId);
+        if (existingCmd) {
+            return existingCmd;
+        }
+#endif
+    }
     auto cmd = new CustomCommand();
     cmd->id = id;
     cmd->origId = origCmdId;
@@ -389,7 +401,6 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
         return nullptr;
     }
     if (parts.Size() == 1) {
-        // no arguments
         return CreateCustomCommand(definition, cmdId, nullptr);
     }
 
