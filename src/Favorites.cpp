@@ -472,7 +472,7 @@ void ToggleFavorites(MainWindow* win) {
 }
 
 static void GoToFavoritePage(MainWindow* win, int pageNo) {
-    if (!MainWindowStillValid(win)) {
+    if (!IsMainWindowValid(win)) {
         return;
     }
     if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo)) {

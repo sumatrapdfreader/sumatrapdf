@@ -1568,9 +1568,10 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
 static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // DbgLogMsg("canvas:", hwnd, msg, wp, lp);
 
-    if (!MainWindowStillValid(win)) {
+    if (!IsMainWindowValid(win)) {
         bool hwndValid = IsWindow(hwnd);
-        logf("WndProcCanvasFixedPageUI: MainWindow win: 0x%p is no longer valid, msg: %d, hwnd valid: %d\n", win, (int)msg, (int)hwndValid);
+        logf("WndProcCanvasFixedPageUI: MainWindow win: 0x%p is no longer valid, msg: %d, hwnd valid: %d\n", win,
+             (int)msg, (int)hwndValid);
         ReportIfQuick(true);
         return 0;
     }
@@ -1742,7 +1743,7 @@ static void RepaintTask(RepaintTaskData* d) {
     AutoDelete delData(d);
 
     auto win = d->win;
-    if (!MainWindowStillValid(win)) {
+    if (!IsMainWindowValid(win)) {
         return;
     }
     if (!d->delayInMs) {

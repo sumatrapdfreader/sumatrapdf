@@ -503,7 +503,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
     auto rsp = data->rsp;
     MainWindow* win = nullptr;
-    if (MainWindowStillValid(data->win)) {
+    if (IsMainWindowValid(data->win)) {
         win = data->win;
     } else {
         if (gWindows.Size() > 0) {

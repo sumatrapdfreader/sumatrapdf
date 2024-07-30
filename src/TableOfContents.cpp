@@ -190,7 +190,7 @@ static void GoToTocLink(GoToTocLinkData* d) {
 
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
-    if (!MainWindowStillValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
+    if (!IsMainWindowValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
         return;
     }
 

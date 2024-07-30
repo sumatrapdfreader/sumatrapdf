@@ -628,7 +628,7 @@ class PrintThreadData : public ProgressUpdateUI {
     void RemovePrintNotification() {
         isCanceled = true;
         cookie.Abort();
-        if (this->wnd && MainWindowStillValid(win)) {
+        if (this->wnd && IsMainWindowValid(win)) {
             RemoveNotification(this->wnd);
         }
         this->wnd = nullptr;
@@ -644,7 +644,7 @@ class PrintThreadData : public ProgressUpdateUI {
     }
 
     bool WasCanceled() override {
-        return isCanceled || !MainWindowStillValid(win) || win->printCanceled;
+        return isCanceled || !IsMainWindowValid(win) || win->printCanceled;
     }
 };
 
@@ -656,7 +656,7 @@ struct DeletePrinterThreadData {
 
 static void DeletePrinterThread(DeletePrinterThreadData* d) {
     auto win = d->win;
-    if (MainWindowStillValid(win) && d->thread == win->printThread) {
+    if (IsMainWindowValid(win) && d->thread == win->printThread) {
         win->printThread = nullptr;
     }
     delete d->threadData;

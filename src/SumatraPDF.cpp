@@ -4888,7 +4888,7 @@ struct ClearHistoryData {
 static void ClearHistoryFinish(ClearHistoryData* d) {
     AutoDelete delData(d);
     MainWindow* win = d->win;
-    if (!MainWindowStillValid(win)) {
+    if (!IsMainWindowValid(win)) {
         return;
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);

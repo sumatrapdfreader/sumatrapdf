@@ -702,7 +702,10 @@ bool IsRightDragging(MainWindow* win) {
     return win->dragRightClick;
 }
 
-bool MainWindowStillValid(MainWindow* win) {
+// sometimes we stash MainWindow pointer, do something on a thread and
+// then go back on main thread to finish things. At that point MainWindow
+// could have been destroyed so we need to check if it's still valid
+bool IsMainWindowValid(MainWindow* win) {
     return gWindows.Contains(win);
 }
 

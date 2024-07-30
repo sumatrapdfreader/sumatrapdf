@@ -207,7 +207,7 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     AutoDelete delData(d);
 
     auto win = d->win;
-    if (!MainWindowStillValid(win) || win->findCancelled) {
+    if (!IsMainWindowValid(win) || win->findCancelled) {
         return;
     }
     auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
@@ -288,7 +288,7 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 
     bool WasCanceled() override {
-        return !MainWindowStillValid(win) || win->findCancelled;
+        return !IsMainWindowValid(win) || win->findCancelled;
     }
 
     void UpdateProgress(int current, int total) override {
@@ -319,7 +319,7 @@ static void FindEndTask(FindEndTaskData* d) {
     AutoDelete delData(d);
     AutoDelete delFtd(ftd);
 
-    if (!MainWindowStillValid(win)) {
+    if (!IsMainWindowValid(win)) {
         return;
     }
     if (win->findThread != ftd->thread) {

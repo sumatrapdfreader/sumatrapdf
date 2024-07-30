@@ -980,7 +980,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     UINT timeoutInMs = 1000;
     gMainWindowForRender = win;
     gMainWindowRerenderTimer = SetTimer(win->hwndCanvas, 1, timeoutInMs, [](HWND, UINT, UINT_PTR, DWORD) {
-        if (MainWindowStillValid(gMainWindowForRender)) {
+        if (IsMainWindowValid(gMainWindowForRender)) {
             // logf("ContentsChanged: re-rendering MainWindow\n");
             MainWindowRerender(gMainWindowForRender);
         } else {

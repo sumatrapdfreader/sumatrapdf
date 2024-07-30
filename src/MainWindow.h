@@ -260,7 +260,7 @@ void ClearMouseState(MainWindow*);
 bool IsRightDragging(MainWindow*);
 MainWindow* FindMainWindowByWindowTab(WindowTab*);
 MainWindow* FindMainWindowByHwnd(HWND);
-bool MainWindowStillValid(MainWindow*);
+bool IsMainWindowValid(MainWindow*);
 MainWindow* FindMainWindowByController(DocController*);
 
 extern Vec<MainWindow*> gWindows;
