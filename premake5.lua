@@ -324,21 +324,6 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4996" }
     files { "ext/CHMLib/*.c", "ext/CHMLib/*.h" }
 
-  project "engines"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++latest"
-    optimized_conf()
-    disablewarnings {
-      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457",
-      "4701", "4706", "4819", "4838"
-    }
-    includedirs { "src", "src/wingui" }
-    uses_zlib()
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "mupdf/include" }
-    engines_files()
-    links { "chm" }
-
   project "unarrlib"
     kind "StaticLib"
     language "C"
@@ -790,6 +775,7 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
 
     webview_conf()
 
@@ -797,6 +783,7 @@ workspace "SumatraPDF"
     mui_files()
     wingui_files()
     uia_files()
+    engines_files()
     sumatrapdf_files()
 
     defines { "_CRT_SECURE_NO_WARNINGS" }
@@ -819,7 +806,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "engines", "libdjvu",  "libwebp", "dav1d", "libheif", "mupdf", "unarrlib", "utils", "unrar"
+      "libdjvu",  "libwebp", "dav1d", "libheif", "mupdf", "unarrlib", "utils", "unrar", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -844,11 +831,13 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
 
     synctex_files()
     mui_files()
     wingui_files()
     uia_files()
+    engines_files()
     sumatrapdf_files()
 
     webview_conf()
@@ -878,7 +867,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "unarrlib", "utils", "engines"
+      "libmupdf", "unrar", "unarrlib", "utils", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
