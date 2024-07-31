@@ -5132,7 +5132,8 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     } else if (typ == AnnotationType::FreeText) {
         col = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
     } else {
-        ReportIf(true);
+        logf("SetAnnotCreateArgs: unexpected type %d for default prefs color\n", (int)typ);
+        //ReportIf(true);
     }
     if (col && col->parsedOk) {
         args.col = *col;
