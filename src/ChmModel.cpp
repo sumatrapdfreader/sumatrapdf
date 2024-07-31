@@ -691,7 +691,7 @@ void ChmThumbnailTask::OnDocumentComplete(const char* url) {
         HBITMAP hbmp = hw->TakeScreenshot(area, size);
         if (hbmp) {
             RenderedBitmap* bmp = new RenderedBitmap(hbmp, size);
-            saveThumbnail(bmp);
+            saveThumbnail.Call(bmp);
         }
         // TODO: why is destruction on the UI thread necessary?
         auto fn = MkFunc0<ChmThumbnailTask>(SafeDeleteChmThumbnailTask, this);

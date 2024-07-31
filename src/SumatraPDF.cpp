@@ -671,17 +671,15 @@ static bool ShouldSaveThumbnail(FileState* ds) {
 }
 
 // TODO: replace with std::function
-class ThumbnailRenderingTask : public RenderingCallback {
+struct ThumbnailRenderingTask : RenderingCallback {
     onBitmapRenderedCb saveThumbnail;
 
-  public:
-    explicit ThumbnailRenderingTask(const onBitmapRenderedCb& saveThumbnail)
-        : saveThumbnail(saveThumbnail) {
+    explicit ThumbnailRenderingTask(const onBitmapRenderedCb& saveThumbnail) : saveThumbnail(saveThumbnail) {
     }
     ~ThumbnailRenderingTask() override = default;
 
     void Callback(RenderedBitmap* bmp) override {
-        saveThumbnail(bmp);
+        saveThumbnail.Call(bmp);
         delete this;
     }
 };
@@ -715,7 +713,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     RectF pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
         // saveThumbnail must always be called for clean-up code
-        saveThumbnail(nullptr);
+        saveThumbnail.Call(nullptr);
         return;
     }
 
@@ -751,6 +749,12 @@ static void CreateThumbnailFinish(CreateThumbnailData* d) {
     delete d;
 }
 
+static void CreateThumbnailOnBitmapRendered(CreateThumbnailData* d, RenderedBitmap* bmp) {
+    d->bmp = bmp;
+    auto fn = MkFunc0<CreateThumbnailData>(CreateThumbnailFinish, d);
+    uitask::Post(fn, "TaskSetThumbnail");
+}
+
 static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     if (!ShouldSaveThumbnail(ds)) {
         return;
@@ -778,11 +782,8 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     char* filePath = str::Dup(win->ctrl->GetFilePath());
     auto d = new CreateThumbnailData{filePath, nullptr};
     logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
-    win->ctrl->CreateThumbnail(size, [d](RenderedBitmap* bmp) {
-        d->bmp = bmp;
-        auto fn = MkFunc0<CreateThumbnailData>(CreateThumbnailFinish, d);
-        uitask::Post(fn, "TaskSetThumbnail");
-    });
+    auto fn = MkFunc1(CreateThumbnailOnBitmapRendered, d);
+    win->ctrl->CreateThumbnail(size, fn);
 }
 
 /* Send the request to render a given page to a rendering thread */

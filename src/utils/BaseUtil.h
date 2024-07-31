@@ -650,7 +650,7 @@ struct Func1 {
     bool IsEmpty() const {
         return fn == nullptr;
     }
-    void Call(T* arg) {
+    void Call(T* arg) const {
         if (fn) {
             fn(userData, arg);
         }

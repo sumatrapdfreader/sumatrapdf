@@ -15,8 +15,7 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 
 struct PageInfo;
 
-class RenderingCallback {
-  public:
+struct RenderingCallback {
     virtual void Callback(RenderedBitmap* bmp = nullptr) = 0;
     virtual ~RenderingCallback() = default;
 };

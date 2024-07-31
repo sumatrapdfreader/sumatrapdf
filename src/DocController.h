@@ -12,7 +12,7 @@ struct MainWindow;
 struct FileState;
 enum class DisplayMode;
 
-using onBitmapRenderedCb = std::function<void(RenderedBitmap*)>;
+using onBitmapRenderedCb = Func1<RenderedBitmap>;
 
 struct ILinkHandler {
     virtual ~ILinkHandler(){};
