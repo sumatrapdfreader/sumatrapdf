@@ -469,27 +469,27 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
         return;
     }
 
-    Render(dm, pageNo, rotation, zoom, &tile);
+    Render(dm, pageNo, rotation, zoom, &tile, nullptr, nullptr);
 }
 
 void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                         RenderingCallback& callback) {
-    bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &callback);
+                         RenderingCallback& onRendered) {
+    bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &onRendered);
     if (!ok) {
-        callback.Callback();
+        onRendered.Callback(nullptr);
     }
 }
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                         RenderingCallback* renderCb) {
+                         RenderingCallback* onRendered) {
     logf("RenderCache::Render(): pageNo %d\n", pageNo);
     ReportIf(!dm);
     if (!dm || dm->dontRenderFlag) {
         return false;
     }
 
-    ReportIf(!(tile || pageRect && renderCb));
-    if (!tile && !(pageRect && renderCb)) {
+    ReportIf(!(tile || pageRect && onRendered));
+    if (!tile && !(pageRect && onRendered)) {
         return false;
     }
 
@@ -500,7 +500,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     if (requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
         if (requests[0].renderCb) {
-            requests[0].renderCb->Callback();
+            requests[0].renderCb->Callback(nullptr);
         }
         memmove(&(requests[0]), &(requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(requests[MAX_PAGE_REQUESTS - 1]);
@@ -520,14 +520,14 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     } else if (pageRect) {
         newRequest->pageRect = *pageRect;
         // can't cache bitmaps that aren't for a given tile
-        ReportIf(!renderCb);
+        ReportIf(!onRendered);
     } else {
         CrashMe();
     }
     newRequest->abort = false;
     newRequest->abortCookie = nullptr;
     newRequest->timestamp = GetTickCount();
-    newRequest->renderCb = renderCb;
+    newRequest->renderCb = onRendered;
 
     SetEvent(startRendering);
 
@@ -615,7 +615,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
         }
         if (shouldRemove) {
             if (req->renderCb) {
-                req->renderCb->Callback();
+                req->renderCb->Callback(nullptr);
             }
             requestCount--;
         } else {
@@ -660,7 +660,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
 
         if (dm->dontRenderFlag) {
             if (req.renderCb) {
-                req.renderCb->Callback();
+                req.renderCb->Callback(nullptr);
             }
             continue;
         }

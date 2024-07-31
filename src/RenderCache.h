@@ -16,7 +16,7 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 struct PageInfo;
 
 struct RenderingCallback {
-    virtual void Callback(RenderedBitmap* bmp = nullptr) = 0;
+    virtual void Callback(RenderedBitmap* bmp) = 0;
     virtual ~RenderingCallback() = default;
 };
 
@@ -139,8 +139,8 @@ struct RenderCache {
     }
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
-    bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
-                RectF* pageRect = nullptr, RenderingCallback* renderCb = nullptr);
+    bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
+                RenderingCallback* onRendered);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 

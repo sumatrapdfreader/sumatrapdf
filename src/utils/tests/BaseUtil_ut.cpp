@@ -33,7 +33,7 @@ static void testFn1(TestFn0Data* d0, TestFn1Data* d1) {
 static void Func1Test() {
     TestFn0Data d0;
     TestFn1Data d1;
-    auto fn = MkFunc1<TestFn0Data, TestFn1Data>(testFn1, &d0);
+    auto fn = MkFunc1<TestFn0Data, TestFn1Data*>(testFn1, &d0);
     fn.Call(&d1);
     utassert(d0.n == 5);
     utassert(d1.p == -8);

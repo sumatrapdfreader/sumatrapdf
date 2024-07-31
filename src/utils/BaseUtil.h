@@ -641,7 +641,7 @@ Func0 MkFunc0(void (*fn)(T*), T* d) {
 
 template <typename T>
 struct Func1 {
-    void (*fn)(void*, T*) = nullptr;
+    void (*fn)(void*, T) = nullptr;
     void* userData = nullptr;
 
     Func1() = default;
@@ -650,7 +650,7 @@ struct Func1 {
     bool IsEmpty() const {
         return fn == nullptr;
     }
-    void Call(T* arg) const {
+    void Call(T arg) const {
         if (fn) {
             fn(userData, arg);
         }
@@ -658,9 +658,9 @@ struct Func1 {
 };
 
 template <typename T1, typename T2>
-Func1<T2> MkFunc1(void (*fn)(T1*, T2*), T1* d) {
+Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = Func1<T2>{};
-    using fptr = void (*)(void*, T2*);
+    using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
     res.userData = (void*)d;
     return res;

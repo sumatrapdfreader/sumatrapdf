@@ -352,8 +352,8 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
     installerPath = str::JoinTemp(installerPath, ".exe");
     UpdateProgressData pd;
     pd.hwndForNotif = hwndForNotif;
-    auto cb = MkFunc1<UpdateProgressData, HttpProgress>(UpdateProgressCb, &pd);
-    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, &cb);
+    auto cb = MkFunc1<UpdateProgressData, HttpProgress*>(UpdateProgressCb, &pd);
+    bool ok = HttpGetToFile(updateInfo->dlURL, installerPath, cb);
     logf("ShowAutoUpdateDialog: HttpGetToFile(): ok=%d, downloaded to '%s'\n", (int)ok, installerPath);
     if (ok) {
         updateInfo->installerPath = str::Dup(installerPath);
