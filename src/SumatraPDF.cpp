@@ -672,10 +672,10 @@ static bool ShouldSaveThumbnail(FileState* ds) {
 
 // TODO: replace with std::function
 class ThumbnailRenderingTask : public RenderingCallback {
-    std::function<void(RenderedBitmap*)> saveThumbnail;
+    onBitmapRenderedCb saveThumbnail;
 
   public:
-    explicit ThumbnailRenderingTask(const std::function<void(RenderedBitmap*)>& saveThumbnail)
+    explicit ThumbnailRenderingTask(const onBitmapRenderedCb& saveThumbnail)
         : saveThumbnail(saveThumbnail) {
     }
     ~ThumbnailRenderingTask() override = default;
