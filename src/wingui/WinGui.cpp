@@ -3737,20 +3737,23 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     TCITEMW item{0};
     item.mask = TCIF_TEXT;
     item.pszText = ToWStrTemp(tab->text);
-    int insertedIdx = TabCtrl_InsertItem(hwnd, idx, &item);
+    int res = TabCtrl_InsertItem(hwnd, idx, &item);
+    if (res < 0) {
+        return res;
+    }
     tabs.InsertAt(idx, tab);
 
-    if (insertedIdx == 0) {
+    if (idx == 0) {
         SetSelected(0);
     } else {
         int selectedTab = GetSelected();
-        if (insertedIdx <= selectedTab) {
+        if (idx <= selectedTab) {
             SetSelected(selectedTab + 1);
         }
     }
     tabBeingClosed = -1;
     LayoutTabs();
-    return insertedIdx;
+    return idx;
 }
 
 void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip) {
