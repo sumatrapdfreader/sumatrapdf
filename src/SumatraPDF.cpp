@@ -686,7 +686,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void UpdateScrollbars(Size canvas) override;
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
-    void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRendered*) override;
+    void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) override;
     void GotoLink(IPageDestination* dest) override {
         win->linkHandler->GotoLink(dest);
     }
@@ -694,7 +694,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void SaveDownload(const char* url, const ByteSlice&) override;
 };
 
-void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRendered* saveThumbnail) {
+void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered* saveThumbnail) {
     auto engine = dm->GetEngine();
     RectF pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {

@@ -42,7 +42,7 @@ struct ChmModel : DocController {
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    void CreateThumbnail(Size size, const onBitmapRendered* saveThumbnail) override;
+    void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
     // for quick type determination and type-safe casting
     ChmModel* AsChm() override;

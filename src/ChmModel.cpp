@@ -621,12 +621,12 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     HWND hwnd = nullptr;
     HtmlWindow* hw = nullptr;
     Size size;
-    const onBitmapRendered* saveThumbnail;
+    const OnBitmapRendered* saveThumbnail;
     AutoFreeStr homeUrl;
     Vec<ByteSlice> data;
     CRITICAL_SECTION docAccess;
 
-    ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const onBitmapRendered* saveThumbnail);
+    ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnBitmapRendered* saveThumbnail);
     ~ChmThumbnailTask() override;
     void CreateThumbnail(HtmlWindow* hw);
     bool OnBeforeNavigate(const char*, bool newWindow) override;
@@ -641,7 +641,7 @@ static void SafeDeleteChmThumbnailTask(ChmThumbnailTask* d) {
     delete d;
 }
 
-ChmThumbnailTask::ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const onBitmapRendered* saveThumbnail) {
+ChmThumbnailTask::ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnBitmapRendered* saveThumbnail) {
     this->doc = doc;
     this->hwnd = hwnd;
     this->size = size;
@@ -705,7 +705,7 @@ void ChmThumbnailTask::OnLButtonDown() {
 void ChmThumbnailTask::DownloadData(const char*, const ByteSlice&) {
 }
 
-static void CreateChmThumbnail(const char* path, const Size& size, const onBitmapRendered* saveThumbnail) {
+static void CreateChmThumbnail(const char* path, const Size& size, const OnBitmapRendered* saveThumbnail) {
     // doc and window will be destroyed by the callback once it's invoked
     ChmFile* doc = ChmFile::CreateFromFile(path);
     if (!doc) {
@@ -739,7 +739,7 @@ static void CreateChmThumbnail(const char* path, const Size& size, const onBitma
 
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it.
-void ChmModel::CreateThumbnail(Size size, const onBitmapRendered* saveThumbnail) {
+void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
     CreateChmThumbnail(fileName, size, saveThumbnail);
 }
 

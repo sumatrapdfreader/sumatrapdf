@@ -90,7 +90,7 @@ static void RenderCacheThread(RenderCache* cache) {
         if (req.renderCb) {
             // the callback must free the RenderedBitmap
             req.renderCb->Call(bmp);
-            req.renderCb = (onBitmapRendered*)1; // will crash if accessed again, which should not happen
+            req.renderCb = (OnBitmapRendered*)1; // will crash if accessed again, which should not happen
         } else {
             // don't replace colors for individual images
             if (bmp && !engine->IsImageCollection()) {
@@ -549,7 +549,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
 }
 
 void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                         const onBitmapRendered& onRendered) {
+                         const OnBitmapRendered& onRendered) {
     bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &onRendered);
     if (!ok) {
         onRendered.Call(nullptr);
@@ -557,7 +557,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 }
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                         const onBitmapRendered* onRendered) {
+                         const OnBitmapRendered* onRendered) {
     logf("RenderCache::Render(): pageNo %d\n", pageNo);
     ReportIf(!dm);
     if (!dm || dm->dontRenderFlag) {

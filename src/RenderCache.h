@@ -79,7 +79,7 @@ struct PageRenderRequest {
     DWORD timestamp = 0;
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
-    const onBitmapRendered* renderCb = nullptr;
+    const OnBitmapRendered* renderCb = nullptr;
 };
 
 struct RenderCache {
@@ -111,7 +111,7 @@ struct RenderCache {
 
     void RequestRendering(DisplayModel* dm, int pageNo);
     void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                const onBitmapRendered& callback);
+                const OnBitmapRendered& callback);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
@@ -136,7 +136,7 @@ struct RenderCache {
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                const onBitmapRendered* onRendered);
+                const OnBitmapRendered* onRendered);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 

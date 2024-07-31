@@ -100,7 +100,7 @@ struct DisplayModel : DocController {
 
     void GetDisplayState(FileState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    void CreateThumbnail(Size size, const onBitmapRendered* saveThumbnail) override;
+    void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
     // page labels (optional)
     bool HasPageLabels() const override;

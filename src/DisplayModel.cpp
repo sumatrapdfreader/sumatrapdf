@@ -123,7 +123,7 @@ IPageDestination* DisplayModel::GetNamedDest(const char* name) {
     return engine->GetNamedDest(name);
 }
 
-void DisplayModel::CreateThumbnail(Size size, const onBitmapRendered* saveThumbnail) {
+void DisplayModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
     cb->RenderThumbnail(this, size, saveThumbnail);
 }
 
