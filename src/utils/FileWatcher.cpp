@@ -96,7 +96,6 @@ void WatchedFileSetIgnore(WatchedFile* wf, bool ignore) {
 }
 
 static HANDLE gThreadHandle = nullptr;
-static DWORD gThreadId = 0;
 
 static HANDLE gThreadControlHandle = nullptr;
 
@@ -274,8 +273,6 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
         logf("StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
     }
 
-    ReportIf(gThreadId != GetCurrentThreadId());
-
     DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
     ReadDirectoryChangesW(wd->hDir,
                           wd->buf,                           // read results buffer
@@ -315,7 +312,7 @@ static void RunManualChecks() {
     }
 }
 
-static DWORD WINAPI FileWatcherThread(void*) {
+static void FileWatcherThread() {
     HANDLE handles[1];
     // must be alertable to receive ReadDirectoryChangesW() callbacks and APCs
     BOOL alertable = TRUE;
@@ -348,7 +345,6 @@ static DWORD WINAPI FileWatcherThread(void*) {
         }
     }
     DestroyTempAllocator();
-    return 0;
 }
 
 static WatchedDir* FindExistingWatchedDir(const char* dirPath) {
@@ -467,10 +463,8 @@ WatchedFile* FileWatcherSubscribe(const char* path, const Func0& onFileChangedCb
         InitializeCriticalSection(&gThreadCritSec);
         gThreadControlHandle = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
-        gThreadHandle = CreateThread(nullptr, 0, FileWatcherThread, nullptr, 0, &gThreadId);
-        if (gThreadHandle) {
-            SetThreadName("FileWatcherThread", gThreadId);
-        }
+        auto fn = MkFuncVoid(FileWatcherThread);
+        gThreadHandle = StartThread(fn, "FileWatcherThread");
     }
 
     ScopedCritSec cs(&gThreadCritSec);

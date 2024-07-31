@@ -372,7 +372,7 @@ static void StartInstallation(InstallerWnd* wnd) {
 
     gInstallStarted = true;
     auto fn = MkFuncVoid(InstallerThread);
-    wnd->hThread = StartThread(fn);
+    wnd->hThread = StartThread(fn, "InstallerThread");
 }
 
 static void OnButtonOptions(InstallerWnd* wnd);
