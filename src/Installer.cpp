@@ -13,6 +13,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
+#include "utils/ThreadUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -228,7 +229,7 @@ void RemoveAppShortcuts() {
     }
 }
 
-static DWORD WINAPI InstallerThread(void*) {
+static void InstallerThread() {
     gWnd->failed = true;
     bool ok;
 
@@ -288,7 +289,6 @@ Exit:
             PostMessageW(gWnd->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
         }
     }
-    return 0;
 }
 
 static void RestartElevatedForAllUsers() {
@@ -371,7 +371,8 @@ static void StartInstallation(InstallerWnd* wnd) {
     HwndInvalidate(wnd->hwnd);
 
     gInstallStarted = true;
-    wnd->hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, nullptr);
+    auto fn = MkFuncVoid(InstallerThread);
+    wnd->hThread = StartThread(fn);
 }
 
 static void OnButtonOptions(InstallerWnd* wnd);
@@ -1160,7 +1161,7 @@ int RunInstaller() {
     if (gCli->silent) {
         gInstallStarted = true;
         logfa("gCli->silent, before running InstallerThread()\n");
-        InstallerThread(nullptr);
+        InstallerThread();
         ret = gWnd->failed ? 1 : 0;
     } else {
         log("Before CreateInstallerWindow()\n");
