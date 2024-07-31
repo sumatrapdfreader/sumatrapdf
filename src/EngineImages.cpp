@@ -838,16 +838,19 @@ class EngineImageDir : public EngineImages {
     TocTree* tocTree = nullptr;
 };
 
+static void LoadImageDirCb(EngineImageDir* e, VisitDirData* d) {
+    auto path = d->filePath;
+    Kind kind = GuessFileTypeFromName(path);
+    if (IsEngineImageSupportedFileType(e->kind)) {
+        e->pageFileNames.Append(path);
+    }
+}
+
 static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     e->SetFilePath(dir);
 
-    DirTraverse(dir, false, [e](WIN32_FIND_DATAW*, const char* path) -> bool {
-        Kind kind = GuessFileTypeFromName(path);
-        if (IsEngineImageSupportedFileType(kind)) {
-            e->pageFileNames.Append(path);
-        }
-        return true;
-    });
+    auto fn = MkFunc1(LoadImageDirCb, e);
+    DirTraverse(dir, false, fn);
 
     int nFiles = e->pageFileNames.Size();
     if (nFiles == 0) {

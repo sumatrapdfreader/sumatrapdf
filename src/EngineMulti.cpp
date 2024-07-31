@@ -429,15 +429,18 @@ static SeqStrings gSupportedExtsForMulti =
     ".jpg\0.jpeg\0.tga\0.gif\0.avif\0.heic\0";
 // clang-format on
 
-static bool isSupportedForMultis(WIN32_FIND_DATAW*, const char* path) {
-    char* ext = path::GetExtTemp(path);
+static void IsSupportedForMultis(void*, VisitDirData* d) {
+    char* ext = path::GetExtTemp(d->filePath);
     int idx = seqstrings::StrToIdxIS(gSupportedExtsForMulti, ext);
-    return idx >= 0;
+    if (idx < 0) {
+        d->stopTraversal = (idx < 0);
+    }
 };
 
 EngineBase* CreateEngineMultiFromDirectory(const char* dir) {
     StrVec files;
-    bool ok = CollectFilesFromDirectory(dir, files, isSupportedForMultis);
+    auto fn = MkFunc1<void, VisitDirData*>(IsSupportedForMultis, nullptr);
+    bool ok = CollectFilesFromDirectory(dir, files, fn);
     if (!ok) {
         // TODO: show error message
         return nullptr;

@@ -174,13 +174,16 @@ static bool IsFileToBench(const char* path) {
     return false;
 }
 
+static void CollectFilesToBenchCb(StrVec* files, VisitDirData* d) {
+    auto path = d->filePath;
+    if (IsFileToBench(path)) {
+        files->Append(path);
+    }
+}
+
 static void CollectFilesToBench(char* dir, StrVec& files) {
-    DirTraverse(dir, true, [&files](WIN32_FIND_DATAW*, const char* path) -> bool {
-        if (IsFileToBench(path)) {
-            files.Append(path);
-        }
-        return true;
-    });
+    auto fn = MkFunc1<StrVec, VisitDirData*>(CollectFilesToBenchCb, &files);
+    DirTraverse(dir, true, fn);
 }
 
 static void BenchDir(char* dir) {

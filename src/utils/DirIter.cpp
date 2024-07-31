@@ -58,17 +58,23 @@ bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb) {
     bool cont = true;
     char* name;
     char* path;
+    VisitDirData d;
+    d.fd = &fd;
     do {
         isFile = IsRegularFile(fd.dwFileAttributes);
         isDir = IsDirectory(fd.dwFileAttributes);
         name = ToUtf8Temp(fd.cFileName);
         path = path::JoinTemp(dir, name);
         if (isFile && includeFiles) {
-            cont = cb(&fd, path);
+            d.filePath = path;
+            cb.Call(&d);
+            cont = !d.stopTraversal;
         }
         if (isDir && !IsSpecialDir(name)) {
             if (includeDirs) {
-                cont = cb(&fd, path);
+                d.filePath = path;
+                cb.Call(&d);
+                cont = !d.stopTraversal;
             }
             if (cont && recur) {
                 cont = VisitDir(path, flg, cb);
@@ -111,14 +117,26 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths) {
     return paths.Size() > 0;
 }
 
+struct CollectFilesData {
+    StrVec* files = nullptr;
+    const VisitDirCb* fileMatches;
+};
+
+static void CollectFilesCb(CollectFilesData* d, VisitDirData* vd) {
+    d->fileMatches->Call(vd);
+    if (!vd->stopTraversal) {
+        d->files->Append(vd->filePath);
+    }
+}
+
 bool CollectFilesFromDirectory(const char* dir, StrVec& files, const VisitDirCb& fileMatches) {
     u32 flg = kVisitDirIncudeFiles;
-    bool ok = VisitDir(dir, flg, [&files, &fileMatches](WIN32_FIND_DATAW* fd, const char* path) -> bool {
-        if (fileMatches(fd, path)) {
-            files.Append(path);
-        }
-        return true;
-    });
+    auto data = new CollectFilesData;
+    data->files = &files;
+    data->fileMatches = &fileMatches;
+    auto fn = MkFunc1(CollectFilesCb, data);
+    bool ok = VisitDir(dir, flg, fn);
+    delete data;
     return ok;
 }
 
@@ -135,14 +153,15 @@ struct DirTraverseThreadData {
     bool recurse = false;
 };
 
+static void DirTraverseThreadCb(DirTraverseThreadData* td, VisitDirData* d) {
+    td->queue->Append(d->filePath);
+}
+
 static DWORD WINAPI DirTraverseThread(LPVOID data) {
     DirTraverseThreadData* td = (DirTraverseThreadData*)data;
     ReportIf(!td);
-
-    DirTraverse(td->dir, td->recurse, [td](WIN32_FIND_DATAW*, const char* path) -> bool {
-        td->queue->Append(path);
-        return true;
-    });
+    auto fn = MkFunc1(DirTraverseThreadCb, td);
+    DirTraverse(td->dir, td->recurse, fn);
     td->queue->MarkFinished();
     return 0;
 }

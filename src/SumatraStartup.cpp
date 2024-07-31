@@ -839,28 +839,30 @@ static void ShowNoAdminErrorMessage() {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
-static bool MaybeDeleteStaleDirectory(WIN32_FIND_DATAW* fd, const char* dir) {
+static void MaybeDeleteStaleDirectory(char* dir, VisitDirData* d) {
+    auto fd = d->fd;
     ReportIf(!IsDirectory(fd->dwFileAttributes));
     TempStr name = ToUtf8Temp(fd->cFileName);
     bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
     if (!maybeDelete) {
         logf("MaybeDeleteStaleDirectory: skipping '%s' because not manual-* or crsahinfo-*\n", name);
-        return true;
+        return;
     }
     TempStr currVer = GetVerDirNameTemp("");
     if (str::Contains(name, currVer)) {
         logf("MaybeDeleteStaleDirectory: skipping '%s' because our ver '%s'\n", name, currVer);
-        return true;
+        return;
     }
     bool ok = dir::RemoveAll(dir);
     logf("MaybeDeleteStaleDirectory: dir::RemoveAll('%s') returned %d\n", dir, ok);
-    return true;
+    return;
 }
 
 // delete symbols and manual from possibly previous versions
 static void DeleteStaleFilesAsync() {
     TempStr dir = GetNotImportantDataDirTemp();
-    VisitDir(dir, kVisitDirIncludeDirs, MaybeDeleteStaleDirectory);
+    auto fn = MkFunc1(MaybeDeleteStaleDirectory, dir);
+    VisitDir(dir, kVisitDirIncludeDirs, fn);
 }
 
 void StartDeleteStaleFiles() {

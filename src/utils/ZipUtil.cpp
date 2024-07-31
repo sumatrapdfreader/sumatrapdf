@@ -216,13 +216,25 @@ bool ZipCreator::AddFileFromDir(const char* filePath, const char* dir) {
     return AddFile(filePath, nameInZip);
 }
 
+struct AddZipFileData {
+    ZipCreator* zc;
+    const char* dir;
+};
+
+static void AddZipFile(AddZipFileData* d, VisitDirData* data) {
+    bool ok = d->zc->AddFileFromDir(data->filePath, d->dir);
+    if (!ok) {
+        data->stopTraversal = true;
+    }
+}
+
 bool ZipCreator::AddDir(const char* dir, bool recursive) {
-    DirTraverse(dir, recursive, [this, dir](WIN32_FIND_DATAW*, const char* path) -> bool {
-        if (!this->AddFileFromDir(path, dir)) {
-            return false;
-        }
-        return true;
-    });
+    auto data = new AddZipFileData;
+    data->dir = dir;
+    data->zc = this;
+    auto fn = MkFunc1(AddZipFile, data);
+    DirTraverse(dir, recursive, fn);
+    delete data;
     return true;
 }
 
