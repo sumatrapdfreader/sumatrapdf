@@ -536,7 +536,7 @@ static MenuDef menuDefContextToc[] = {
 };
 // clang-format on
 
-static void TocContextMenu(ContextMenuEvent* ev) {
+static void TocContextMenu(void*, ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     const char* filePath = win->ctrl->GetFilePath();
 
@@ -1001,7 +1001,8 @@ void CreateToc(MainWindow* win) {
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
-    treeView->onContextMenu = TocContextMenu;
+    auto fn = MkFunc1<void, ContextMenuEvent*>(TocContextMenu, nullptr);
+    treeView->onContextMenu = fn;
     treeView->onTreeSelectionChanged = TocTreeSelectionChanged;
     treeView->onTreeKeyDown = TocTreeKeyDown2;
     treeView->onGetTooltip = TocCustomizeTooltip;

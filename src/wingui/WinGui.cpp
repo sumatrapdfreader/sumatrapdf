@@ -381,7 +381,7 @@ bool Wnd::OnEraseBkgnd(HDC) {
 }
 
 void Wnd::OnContextMenu(Point ptScreen) {
-    if (!onContextMenu) {
+    if (!onContextMenu.IsValid()) {
         return;
     }
 
@@ -396,7 +396,7 @@ void Wnd::OnContextMenu(Point ptScreen) {
     }
     ev.mouseWindow.x = ptW.x;
     ev.mouseWindow.y = ptW.y;
-    onContextMenu(&ev);
+    onContextMenu.Call(&ev);
 }
 
 void Wnd::OnDropFiles(HDROP drop_info) {

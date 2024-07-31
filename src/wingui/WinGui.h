@@ -23,7 +23,7 @@ struct ContextMenuEvent {
     Point mouseScreen{};
 };
 
-using ContextMenuHandler = std::function<void(ContextMenuEvent*)>;
+using ContextMenuHandler = Func1<ContextMenuEvent*>;
 
 struct CreateControlArgs {
     HWND parent = nullptr;

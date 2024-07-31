@@ -813,7 +813,7 @@ static MenuDef menuDefContextFav[] = {
 };
 // clang-format on
 
-static void FavTreeContextMenu(ContextMenuEvent* ev) {
+static void FavTreeContextMenu(void*, ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     // TreeView* treeView = (TreeView*)ev->w;
     // HWND hwnd = treeView->hwnd;
@@ -909,7 +909,8 @@ void CreateFavorites(MainWindow* win) {
     args.fullRowSelect = true;
     args.exStyle = WS_EX_STATICEDGE;
 
-    treeView->onContextMenu = FavTreeContextMenu;
+    auto fn = MkFunc1<void, ContextMenuEvent*>(FavTreeContextMenu, nullptr);
+    treeView->onContextMenu = fn;
     treeView->onTreeSelectionChanged = FavTreeSelectionChanged;
     treeView->onTreeKeyDown = TocTreeKeyDown2;
     // treeView->onTreeClick = FavTreeItemClicked;

@@ -302,7 +302,7 @@ void CloseAllTabs(MainWindow* win) {
 }
 
 // TODO: add "Move to another window" sub-menu
-static void TabsContextMenu(ContextMenuEvent* ev) {
+static void TabsContextMenu(void*, ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     TabsCtrl* tabsCtrl = (TabsCtrl*)ev->w;
     TabMouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->mouseWindow);
@@ -405,7 +405,9 @@ void CreateTabbar(MainWindow* win) {
         WindowTab* tab = win->Tabs()[currentIdx];
         LoadModelIntoTab(tab);
     };
-    tabsCtrl->onContextMenu = TabsContextMenu;
+
+    auto fn = MkFunc1<void, ContextMenuEvent*>(TabsContextMenu, nullptr);
+    tabsCtrl->onContextMenu = fn;
 
     tabsCtrl->onTabMigration = [win](TabMigrationEvent* ev) {
         WindowTab* tab = win->GetTab(ev->tabIdx);
