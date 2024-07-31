@@ -3805,7 +3805,11 @@ int TabsCtrl::GetSelected() {
 }
 
 int TabsCtrl::SetSelected(int idx) {
-    ReportIf(idx < 0 || idx >= TabCount());
+    int nTabs = TabCount();
+    if (idx < 0 || idx >= nTabs) {
+        logf("TabsCtrl::SetSelected(): idx: %d, TabsCount(): %d\n", idx, nTabs);
+    }
+    ReportIf(idx < 0 || idx >= nTabs);
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     return prevSelectedIdx;
 }
