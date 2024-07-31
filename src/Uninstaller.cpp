@@ -8,6 +8,7 @@
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/GdiPlusUtil.h"
+#include "utils/ThreadUtil.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -87,7 +88,7 @@ static void RemoveInstalledFiles() {
     logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
-static DWORD WINAPI UninstallerThread(void*) {
+static void UninstallerThread() {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
@@ -124,7 +125,6 @@ static DWORD WINAPI UninstallerThread(void*) {
     if (!gCli->silent) {
         PostMessageW(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
-    return 0;
 }
 
 static void OnButtonUninstall() {
@@ -137,7 +137,8 @@ static void OnButtonUninstall() {
     SetMsg(_TRA("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     HwndInvalidate(gHwndFrame);
 
-    hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, nullptr);
+    auto fn = MkFuncVoid(UninstallerThread);
+    hThread = StartThread(fn, "UninstallerThread");
 }
 
 static void OnButtonExit() {
@@ -499,7 +500,7 @@ int RunUninstaller() {
     }
 
     if (gCli->silent) {
-        UninstallerThread(nullptr);
+        UninstallerThread();
         ret = success ? 0 : 1;
         goto Exit;
     }
