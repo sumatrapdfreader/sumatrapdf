@@ -15,11 +15,6 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 
 struct PageInfo;
 
-struct RenderingCallback {
-    virtual void Callback(RenderedBitmap* bmp) = 0;
-    virtual ~RenderingCallback() = default;
-};
-
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
    A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
 struct TilePosition {
@@ -84,7 +79,7 @@ struct PageRenderRequest {
     DWORD timestamp = 0;
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
-    RenderingCallback* renderCb = nullptr;
+    const onBitmapRendered* renderCb = nullptr;
 };
 
 struct RenderCache {
@@ -115,7 +110,8 @@ struct RenderCache {
     ~RenderCache();
 
     void RequestRendering(DisplayModel* dm, int pageNo);
-    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect, RenderingCallback& callback);
+    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
+                const onBitmapRendered& callback);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
@@ -140,7 +136,7 @@ struct RenderCache {
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                RenderingCallback* onRendered);
+                const onBitmapRendered* onRendered);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 

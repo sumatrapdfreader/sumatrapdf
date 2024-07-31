@@ -12,7 +12,7 @@ struct MainWindow;
 struct FileState;
 enum class DisplayMode;
 
-using onBitmapRenderedCb = Func1<RenderedBitmap*>;
+using onBitmapRendered = Func1<RenderedBitmap*>;
 
 struct ILinkHandler {
     virtual ~ILinkHandler(){};
@@ -39,7 +39,7 @@ struct DocControllerCallback {
     virtual void UpdateScrollbars(Size canvas) = 0;
     virtual void RequestRendering(int pageNo) = 0;
     virtual void CleanUp(DisplayModel* dm) = 0;
-    virtual void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb&) = 0;
+    virtual void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRendered*) = 0;
     // ChmModel //
     // tell the UI to move focus back to the main window
     // (if always == false, then focus is only moved if it's inside
@@ -91,7 +91,7 @@ struct DocController {
     // get display state (pageNo, zoom, scroll etc. of the document)
     virtual void GetDisplayState(FileState* ds) = 0;
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(Size size, const onBitmapRenderedCb& saveThumbnail) = 0;
+    virtual void CreateThumbnail(Size size, const onBitmapRendered* saveThumbnail) = 0;
 
     // page labels (optional)
     virtual bool HasPageLabels() const {

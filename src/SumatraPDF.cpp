@@ -670,20 +670,6 @@ static bool ShouldSaveThumbnail(FileState* ds) {
     return true;
 }
 
-// TODO: replace with std::function
-struct ThumbnailRenderingTask : RenderingCallback {
-    onBitmapRenderedCb saveThumbnail;
-
-    explicit ThumbnailRenderingTask(const onBitmapRenderedCb& saveThumbnail) : saveThumbnail(saveThumbnail) {
-    }
-    ~ThumbnailRenderingTask() override = default;
-
-    void Callback(RenderedBitmap* bmp) override {
-        saveThumbnail.Call(bmp);
-        delete this;
-    }
-};
-
 struct ControllerCallbackHandler : DocControllerCallback {
     MainWindow* win{nullptr};
 
@@ -700,7 +686,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void UpdateScrollbars(Size canvas) override;
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
-    void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb&) override;
+    void RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRendered*) override;
     void GotoLink(IPageDestination* dest) override {
         win->linkHandler->GotoLink(dest);
     }
@@ -708,12 +694,12 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void SaveDownload(const char* url, const ByteSlice&) override;
 };
 
-void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRenderedCb& saveThumbnail) {
+void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, const onBitmapRendered* saveThumbnail) {
     auto engine = dm->GetEngine();
     RectF pageRect = engine->PageMediabox(1);
     if (pageRect.IsEmpty()) {
         // saveThumbnail must always be called for clean-up code
-        saveThumbnail.Call(nullptr);
+        saveThumbnail->Call(nullptr);
         return;
     }
 
@@ -724,10 +710,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     }
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
 
-    // TODO: this is leaking?
-    RenderingCallback* callback = new ThumbnailRenderingTask(saveThumbnail);
-    gRenderCache->Render(dm, 1, 0, zoom, pageRect, *callback);
-    // cppcheck-suppress memleak
+    gRenderCache->Render(dm, 1, 0, zoom, pageRect, *saveThumbnail);
 }
 
 struct CreateThumbnailData {
@@ -782,7 +765,8 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     char* filePath = str::Dup(win->ctrl->GetFilePath());
     auto d = new CreateThumbnailData{filePath, nullptr};
     logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
-    auto fn = MkFunc1(CreateThumbnailOnBitmapRendered, d);
+    // TODO: this leaks
+    auto fn = NewFunc1(CreateThumbnailOnBitmapRendered, d);
     win->ctrl->CreateThumbnail(size, fn);
 }
 

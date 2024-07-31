@@ -55,7 +55,7 @@ static void RenderCacheThread(RenderCache* cache) {
 
         if (dm->dontRenderFlag) {
             if (req.renderCb) {
-                req.renderCb->Callback(nullptr);
+                req.renderCb->Call(nullptr);
             }
             continue;
         }
@@ -76,7 +76,7 @@ static void RenderCacheThread(RenderCache* cache) {
         if (req.abort) {
             delete bmp;
             if (req.renderCb) {
-                req.renderCb->Callback(nullptr);
+                req.renderCb->Call(nullptr);
             }
             engine->Release();
             continue;
@@ -89,8 +89,8 @@ static void RenderCacheThread(RenderCache* cache) {
 
         if (req.renderCb) {
             // the callback must free the RenderedBitmap
-            req.renderCb->Callback(bmp);
-            req.renderCb = (RenderingCallback*)1; // will crash if accessed again, which should not happen
+            req.renderCb->Call(bmp);
+            req.renderCb = (onBitmapRendered*)1; // will crash if accessed again, which should not happen
         } else {
             // don't replace colors for individual images
             if (bmp && !engine->IsImageCollection()) {
@@ -549,15 +549,15 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
 }
 
 void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                         RenderingCallback& onRendered) {
+                         const onBitmapRendered& onRendered) {
     bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &onRendered);
     if (!ok) {
-        onRendered.Callback(nullptr);
+        onRendered.Call(nullptr);
     }
 }
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                         RenderingCallback* onRendered) {
+                         const onBitmapRendered* onRendered) {
     logf("RenderCache::Render(): pageNo %d\n", pageNo);
     ReportIf(!dm);
     if (!dm || dm->dontRenderFlag) {
@@ -576,7 +576,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     if (requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
         if (requests[0].renderCb) {
-            requests[0].renderCb->Callback(nullptr);
+            requests[0].renderCb->Call(nullptr);
         }
         memmove(&(requests[0]), &(requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(requests[MAX_PAGE_REQUESTS - 1]);
@@ -691,7 +691,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
         }
         if (shouldRemove) {
             if (req->renderCb) {
-                req->renderCb->Callback(nullptr);
+                req->renderCb->Call(nullptr);
             }
             requestCount--;
         } else {

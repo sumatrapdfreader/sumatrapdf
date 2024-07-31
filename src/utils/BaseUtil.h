@@ -666,6 +666,15 @@ Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
     return res;
 }
 
+template <typename T1, typename T2>
+Func1<T2>* NewFunc1(void (*fn)(T1*, T2), T1* d) {
+    auto res = new Func1<T2>{};
+    using fptr = void (*)(void*, T2);
+    res->fn = (fptr)fn;
+    res->userData = (void*)d;
+    return res;
+}
+
 class AtomicBool {
   public:
     AtomicBool() = default;
