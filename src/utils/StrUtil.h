@@ -389,8 +389,6 @@ struct WStr {
     int Find(const WCHAR& el, size_t startAt = 0) const;
     bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
-    void Reverse() const;
-    WCHAR& FindEl(const std::function<bool(WCHAR&)>& check) const;
     bool IsEmpty() const;
     void AppendFmt(const WCHAR* fmt, ...);
     void Set(const WCHAR*);

@@ -1912,21 +1912,6 @@ int WStr::Remove(const WCHAR& el) {
     return i;
 }
 
-void WStr::Reverse() const {
-    for (size_t i = 0; i < len / 2; i++) {
-        std::swap(els[i], els[len - i - 1]);
-    }
-}
-
-WCHAR& WStr::FindEl(const std::function<bool(WCHAR&)>& check) const {
-    for (size_t i = 0; i < len; i++) {
-        if (check(els[i])) {
-            return els[i];
-        }
-    }
-    return els[len]; // nullptr-sentinel
-}
-
 bool WStr::IsEmpty() const {
     return len == 0;
 }
