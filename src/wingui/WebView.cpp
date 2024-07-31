@@ -46,7 +46,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
                              public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
                              public ICoreWebView2WebMessageReceivedEventHandler,
                              public ICoreWebView2PermissionRequestedEventHandler {
-    using webview2_com_handler_cb_t = std::function<void(ICoreWebView2Controller*)>;
+    using webview2_com_handler_cb_t = Func1<ICoreWebView2Controller*>;
 
   public:
     webview2_com_handler(HWND hwnd, WebViewMsgCb msgCb, webview2_com_handler_cb_t cb)
@@ -78,7 +78,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
         webview->add_WebMessageReceived(this, &token);
         webview->add_PermissionRequested(this, &token);
 
-        m_cb(controller);
+        m_cb.Call(controller);
         return S_OK;
     }
 
@@ -161,19 +161,18 @@ void WebviewWnd::Navigate(const char* url) {
     put_IsBuiltInErrorPageEnabled(BOOL enabled)
     */
 
+static void ComHandlerCb(WebviewWnd* self, ICoreWebView2Controller* ctrl) {
+    self->controller = ctrl;
+    self->controller->get_CoreWebView2(&self->webview);
+    self->webview->AddRef();
+    InterlockedAdd(&self->flag, 1);
+}
+
 bool WebviewWnd::Embed(WebViewMsgCb cb) {
-    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
-    // called on a different thread?
-    volatile LONG flag = 0;
-    // InterlockedCompareExchange()
     WCHAR* userDataFolder = ToWStrTemp(dataDir);
-    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(
-        nullptr, userDataFolder, nullptr, new webview2_com_handler(hwnd, cb, [&](ICoreWebView2Controller* ctrl) {
-            controller = ctrl;
-            controller->get_CoreWebView2(&webview);
-            webview->AddRef();
-            InterlockedAdd(&flag, 1);
-        }));
+    auto fn = MkFunc1(ComHandlerCb, this);
+    auto handler = new webview2_com_handler(hwnd, cb, fn);
+    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(nullptr, userDataFolder, nullptr, handler);
     if (hr != S_OK) {
         return false;
     }

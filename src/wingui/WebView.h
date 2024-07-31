@@ -42,4 +42,8 @@ struct WebviewWnd : Wnd {
     // DWORD m_main_thread = GetCurrentThreadId();
     ICoreWebView2* webview = nullptr;
     ICoreWebView2Controller* controller = nullptr;
+
+    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
+    // called on a different thread?
+    volatile LONG flag = 0;
 };
