@@ -2315,8 +2315,8 @@ bool IsValidHandle(HANDLE h) {
 // This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
 // but /analyze complains anyway
 bool SafeCloseHandle(HANDLE* h) {
-    if (!*h) {
-        return true;
+    if (IsValidHandle(*h)) {
+        return false;
     }
     BOOL ok = CloseHandle(*h);
     *h = nullptr;

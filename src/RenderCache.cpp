@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
+#include "utils/ThreadUtil.h"
 
 #include "wingui/UIModels.h"
 
@@ -30,6 +31,80 @@
 
 bool gShowTileLayout = false;
 
+static void RenderCacheThread(RenderCache* cache) {
+    PageRenderRequest req;
+    RenderedBitmap* bmp;
+
+    for (;;) {
+        if (cache->ClearCurrentRequest()) {
+            DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
+            // Is it not a page render request?
+            if (WAIT_OBJECT_0 != waitResult) {
+                continue;
+            }
+        }
+
+        if (!cache->GetNextRequest(&req)) {
+            continue;
+        }
+
+        auto dm = req.dm;
+        if (!dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
+            continue;
+        }
+
+        if (dm->dontRenderFlag) {
+            if (req.renderCb) {
+                req.renderCb->Callback(nullptr);
+            }
+            continue;
+        }
+
+        // make sure that we have extracted page text for
+        // all rendered pages to allow text selection and
+        // searching without any further delays
+        if (!dm->textCache->HasTextForPage(req.pageNo)) {
+            dm->textCache->GetTextForPage(req.pageNo);
+        }
+
+        ReportIf(req.abortCookie != nullptr);
+        EngineBase* engine = dm->GetEngine();
+        engine->AddRef();
+        RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+        auto timeStart = TimeGet();
+        bmp = engine->RenderPage(args);
+        if (req.abort) {
+            delete bmp;
+            if (req.renderCb) {
+                req.renderCb->Callback(nullptr);
+            }
+            engine->Release();
+            continue;
+        }
+        auto durMs = TimeSinceInMs(timeStart);
+        if (durMs > 100) {
+            auto path = engine->FilePath();
+            logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
+        }
+
+        if (req.renderCb) {
+            // the callback must free the RenderedBitmap
+            req.renderCb->Callback(bmp);
+            req.renderCb = (RenderingCallback*)1; // will crash if accessed again, which should not happen
+        } else {
+            // don't replace colors for individual images
+            if (bmp && !engine->IsImageCollection()) {
+                UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
+            }
+            cache->Add(req, bmp);
+            dm->RepaintDisplay();
+        }
+        engine->Release();
+        ResetTempAllocator();
+    }
+    DestroyTempAllocator();
+}
+
 RenderCache::RenderCache() {
     // enable when debugging RenderCache logic
     // gEnableDbgLog = true;
@@ -44,7 +119,8 @@ RenderCache::RenderCache() {
     InitializeCriticalSection(&requestAccess);
 
     startRendering = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, nullptr);
+    auto fn = MkFunc0(RenderCacheThread, this);
+    renderThread = StartThread(fn, "RenderCacheThread");
     ReportIf(nullptr == renderThread);
 }
 
@@ -52,8 +128,8 @@ RenderCache::~RenderCache() {
     EnterCriticalSection(&requestAccess);
     EnterCriticalSection(&cacheAccess);
 
-    CloseHandle(renderThread);
-    CloseHandle(startRendering);
+    SafeCloseHandle(&renderThread);
+    SafeCloseHandle(&startRendering);
     if (curReq || 0 != requestCount || cacheCount != 0) {
         logf("RenderCache::~RenderCache: curReq: 0x%p, requestCount: %d, cacheCount: %d\n", curReq, requestCount,
              cacheCount);
@@ -633,81 +709,6 @@ void RenderCache::AbortCurrentRequest() {
         curReq->abortCookie->Abort();
     }
     curReq->abort = true;
-}
-
-DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
-    RenderCache* cache = (RenderCache*)data;
-    PageRenderRequest req;
-    RenderedBitmap* bmp;
-
-    for (;;) {
-        if (cache->ClearCurrentRequest()) {
-            DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
-            // Is it not a page render request?
-            if (WAIT_OBJECT_0 != waitResult) {
-                continue;
-            }
-        }
-
-        if (!cache->GetNextRequest(&req)) {
-            continue;
-        }
-
-        auto dm = req.dm;
-        if (!dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
-            continue;
-        }
-
-        if (dm->dontRenderFlag) {
-            if (req.renderCb) {
-                req.renderCb->Callback(nullptr);
-            }
-            continue;
-        }
-
-        // make sure that we have extracted page text for
-        // all rendered pages to allow text selection and
-        // searching without any further delays
-        if (!dm->textCache->HasTextForPage(req.pageNo)) {
-            dm->textCache->GetTextForPage(req.pageNo);
-        }
-
-        ReportIf(req.abortCookie != nullptr);
-        EngineBase* engine = dm->GetEngine();
-        engine->AddRef();
-        RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
-        auto timeStart = TimeGet();
-        bmp = engine->RenderPage(args);
-        if (req.abort) {
-            delete bmp;
-            if (req.renderCb) {
-                req.renderCb->Callback(nullptr);
-            }
-            engine->Release();
-            continue;
-        }
-        auto durMs = TimeSinceInMs(timeStart);
-        if (durMs > 100) {
-            auto path = engine->FilePath();
-            logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req.pageNo, path);
-        }
-
-        if (req.renderCb) {
-            // the callback must free the RenderedBitmap
-            req.renderCb->Callback(bmp);
-            req.renderCb = (RenderingCallback*)1; // will crash if accessed again, which should not happen
-        } else {
-            // don't replace colors for individual images
-            if (bmp && !engine->IsImageCollection()) {
-                UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
-            }
-            cache->Add(req, bmp);
-            dm->RepaintDisplay();
-        }
-        engine->Release();
-        ResetTempAllocator();
-    }
-    DestroyTempAllocator();
 }
 
 // TODO: conceptually, RenderCache is not the right place for code that paints

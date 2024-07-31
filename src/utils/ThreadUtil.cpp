@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "ScopedWin.h"
 #include "WinDynCalls.h"
+#include "WinUtil.h"
 
 #include "ThreadUtil.h"
 
@@ -157,17 +158,22 @@ static DWORD WINAPI ThreadFunc0(void* data) {
     return 0;
 }
 
-void RunAsync(const Func0& fn, const char* threadName) {
+HANDLE StartThread(const Func0& fn, const char* threadName) {
     auto fp = new Func0(fn);
     DWORD threadId = 0;
     HANDLE hThread = CreateThread(nullptr, 0, ThreadFunc0, (void*)fp, 0, &threadId);
     if (!hThread) {
-        return;
+        return nullptr;
     }
     if (threadName != nullptr) {
         SetThreadName(threadName, threadId);
     }
-    CloseHandle(hThread);
+    return hThread;
+}
+
+void RunAsync(const Func0& fn, const char* threadName) {
+    HANDLE hThread = StartThread(fn, threadName);
+    SafeCloseHandle(&hThread);
 }
 
 AtomicInt gDangerousThreadCount;
