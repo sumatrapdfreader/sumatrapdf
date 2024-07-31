@@ -8,7 +8,7 @@ bool HasWebView();
 typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
-using WebViewMsgCb = std::function<void(const char*)>;
+using WebViewMsgCb = Func1<const char*>;
 // using dispatch_fn_t = std::function<void()>;
 
 struct CreateWebViewArgs {
@@ -26,7 +26,7 @@ struct WebviewWnd : Wnd {
     void SetHtml(const char* html);
     void Init(const char* js);
     void Navigate(const char* url);
-    bool Embed(WebViewMsgCb cb);
+    bool Embed(WebViewMsgCb& cb);
 
     virtual void OnBrowserMessage(const char* msg);
 

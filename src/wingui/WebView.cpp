@@ -49,7 +49,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
     using webview2_com_handler_cb_t = Func1<ICoreWebView2Controller*>;
 
   public:
-    webview2_com_handler(HWND hwnd, WebViewMsgCb msgCb, webview2_com_handler_cb_t cb)
+    webview2_com_handler(HWND hwnd, WebViewMsgCb& msgCb, webview2_com_handler_cb_t cb)
         : m_window(hwnd), msgCb(msgCb), m_cb(cb) {
     }
     ULONG STDMETHODCALLTYPE AddRef() {
@@ -89,7 +89,7 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
             return S_OK;
         }
         char* s = ToUtf8Temp(message);
-        msgCb(s);
+        msgCb.Call(s);
         sender->PostWebMessageAsString(message);
         CoTaskMemFree(message);
         return S_OK;
@@ -168,7 +168,7 @@ static void ComHandlerCb(WebviewWnd* self, ICoreWebView2Controller* ctrl) {
     InterlockedAdd(&self->flag, 1);
 }
 
-bool WebviewWnd::Embed(WebViewMsgCb cb) {
+bool WebviewWnd::Embed(WebViewMsgCb& cb) {
     WCHAR* userDataFolder = ToWStrTemp(dataDir);
     auto fn = MkFunc1(ComHandlerCb, this);
     auto handler = new webview2_com_handler(hwnd, cb, fn);
@@ -213,6 +213,10 @@ void WebviewWnd::OnBrowserMessage(const char* msg) {
     log(msg);
 }
 
+static void OnBrowserMessageCb(WebviewWnd* self, const char* msg) {
+    self->OnBrowserMessage(msg);
+}
+
 HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
     ReportIf(!dataDir);
     CreateCustomArgs cargs;
@@ -223,8 +227,8 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
         return nullptr;
     }
 
-    auto cb = std::bind(&WebviewWnd::OnBrowserMessage, this, std::placeholders::_1);
-    Embed(cb);
+    auto fn = MkFunc1(OnBrowserMessageCb, this);
+    Embed(fn);
     UpdateWebviewSize();
     return hwnd;
 }
