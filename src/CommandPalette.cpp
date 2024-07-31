@@ -791,6 +791,10 @@ static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
     return c;
 }
 
+static void CommandPaletteQueryChanged(CommandPaletteWnd* self) {
+    self->QueryChanged();
+}
+
 bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     CollectStrings(win);
     {
@@ -817,7 +821,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
         args.font = font;
         auto c = new Edit();
         c->maxDx = 150;
-        c->onTextChanged = std::bind(&CommandPaletteWnd::QueryChanged, this);
+        c->onTextChanged = MkFunc0(CommandPaletteQueryChanged, this);
         HWND ok = c->Create(args);
         ReportIf(!ok);
         editQuery = c;

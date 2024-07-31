@@ -258,7 +258,7 @@ struct Tooltip : Wnd {
 };
 
 //--- Edit
-using TextChangedHandler = std::function<void()>;
+using TextChangedHandler = Func0;
 
 struct EditCreateArgs {
     HWND parent = nullptr;
@@ -270,7 +270,7 @@ struct EditCreateArgs {
 };
 
 struct Edit : Wnd {
-    TextChangedHandler onTextChanged = nullptr;
+    TextChangedHandler onTextChanged;
 
     // set before Create()
     int idealSizeLines = 1;

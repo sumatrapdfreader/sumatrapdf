@@ -1086,7 +1086,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         HWND hwnd = w->Create(args);
         ReportIf(!hwnd);
         w->maxDx = 150;
-        w->onTextChanged = [ew]() { return ContentsChanged(ew); };
+        w->onTextChanged = MkFunc0(ContentsChanged, ew);
         ew->editContents = w;
         vbox->AddChild(w);
     }
