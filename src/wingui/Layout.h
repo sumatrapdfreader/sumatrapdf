@@ -45,7 +45,7 @@ Constraints Loose(Size size);
 Constraints Tight(Size size);
 Constraints TightHeight(int height);
 
-using NeedLayout = std::function<void()>;
+using NeedLayout = Func0;
 
 // works like css visibility property
 enum class Visibility {
