@@ -475,7 +475,7 @@ struct SplitterMoveEvent {
     bool resizeAllowed = true;
 };
 
-using SplitterMoveHandler = std::function<void(SplitterMoveEvent*)>;
+using SplitterMoveHandler = Func1<SplitterMoveEvent*>;
 
 struct SplitterCreateArgs {
     HWND parent = nullptr;
@@ -487,7 +487,7 @@ struct SplitterCreateArgs {
 struct Splitter : public Wnd {
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
-    SplitterMoveHandler onSplitterMove = nullptr;
+    SplitterMoveHandler onSplitterMove;
 
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;

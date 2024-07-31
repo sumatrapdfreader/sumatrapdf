@@ -2364,7 +2364,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         SplitterMoveEvent arg;
         arg.w = this;
         arg.finishedDragging = true;
-        onSplitterMove(&arg);
+        onSplitterMove.Call(&arg);
         HwndScheduleRepaint(hwnd);
         return 0;
     }
@@ -2378,7 +2378,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             SplitterMoveEvent arg;
             arg.w = this;
             arg.finishedDragging = false;
-            onSplitterMove(&arg);
+            onSplitterMove.Call(&arg);
             if (!arg.resizeAllowed) {
                 curId = IDC_NO;
             } else if (!isLive) {
