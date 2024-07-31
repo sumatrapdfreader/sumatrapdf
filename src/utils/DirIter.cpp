@@ -157,22 +157,15 @@ static void DirTraverseThreadCb(DirTraverseThreadData* td, VisitDirData* d) {
     td->queue->Append(d->filePath);
 }
 
-static DWORD WINAPI DirTraverseThread(LPVOID data) {
-    DirTraverseThreadData* td = (DirTraverseThreadData*)data;
-    ReportIf(!td);
+static void WINAPI DirTraverseThread(DirTraverseThreadData* td) {
     auto fn = MkFunc1(DirTraverseThreadCb, td);
     DirTraverse(td->dir, td->recurse, fn);
     td->queue->MarkFinished();
-    return 0;
+    delete td;
 }
 
 void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse) {
     auto td = new DirTraverseThreadData{queue, dir, recurse};
-    DWORD threadId = 0;
-    HANDLE hThread = CreateThread(nullptr, 0, DirTraverseThread, (void*)td, 0, &threadId);
-    if (!hThread) {
-        return;
-    }
-    SetThreadName("DirTraverseThread", threadId);
-    CloseHandle(hThread);
+    auto fn = MkFunc0(DirTraverseThread, td);
+    RunAsync(fn, "DirTraverseThread");
 }
