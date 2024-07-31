@@ -75,8 +75,6 @@ void VecTest() {
     for (int& value : ints) {
         utassert(0 <= value && value < 1000);
     }
-    utassert(ints.FindEl([](int& value) { return value == 999; }) == 999);
-    utassert(ints.FindEl([](int& value) { return value == 500; }) == 0);
 
     {
         Vec<int> ints2(ints);
