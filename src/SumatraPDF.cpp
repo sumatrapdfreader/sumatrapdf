@@ -2374,6 +2374,17 @@ void ShowSavedAnnotationsFailedNotification(HWND hwndParent, const char* path, c
     ShowWarningNotification(hwndParent, msg.Get(), 0);
 }
 
+struct ShowErrorData {
+    WindowTab* tab;
+    const char* path;
+};
+
+static void ShowSaveAnnotationError(ShowErrorData* d, const char* err) {
+    auto tab = d->tab;
+    auto path = d->path;
+    ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, err);
+}
+
 bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     if (!tab) {
         return false;
@@ -2381,9 +2392,9 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     EngineBase* engine = tab->AsFixed()->GetEngine();
     const char* path = engine->FilePath();
     tab->ignoreNextAutoReload = true;
-    bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
-    });
+    ShowErrorData data{tab, path};
+    auto fn = MkFunc1(ShowSaveAnnotationError, &data);
+    bool ok = EngineMupdfSaveUpdated(engine, nullptr, fn);
     if (!ok) {
         tab->ignoreNextAutoReload = false;
         return false;
@@ -2454,9 +2465,9 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
         return SaveAnnotationsToExistingFile(tab);
     }
 
-    ok = EngineMupdfSaveUpdated(engine, dstFilePath, [&tab, &dstFilePath](const char* mupdfErr) {
-        ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, dstFilePath, mupdfErr);
-    });
+    ShowErrorData data{tab, dstFilePath};
+    auto fn = MkFunc1(ShowSaveAnnotationError, &data);
+    ok = EngineMupdfSaveUpdated(engine, dstFilePath, fn);
     if (!ok) {
         return false;
     }
@@ -2600,9 +2611,9 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
         }
         case SaveChoice::SaveExisting: {
             // const char* path = engine->FileName();
-            bool ok = EngineMupdfSaveUpdated(engine, {}, [&tab, &path](const char* mupdfErr) {
-                ShowSavedAnnotationsFailedNotification(tab->win->hwndCanvas, path, mupdfErr);
-            });
+            ShowErrorData data{tab, path};
+            auto fn = MkFunc1(ShowSaveAnnotationError, &data);
+            bool ok = EngineMupdfSaveUpdated(engine, nullptr, fn);
         } break;
         case SaveChoice::Cancel:
             tab->askedToSaveAnnotations = false;

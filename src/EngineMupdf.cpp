@@ -3488,7 +3488,7 @@ const pdf_write_options pdf_default_write_options2 = {
 // annotations).
 // if filePath is not given, we save under the same name
 // TODO: if the file is locked, this might fail.
-bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<void(const char*)> showErrorFunc) {
+bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErrorCb& showErrorFunc) {
     ReportIf(!engine);
     if (!engine) {
         return false;
@@ -3532,8 +3532,8 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, std::function<
         fz_report_error(ctx);
         const char* mupdfErr = fz_caught_message(ctx);
         logf("Saving '%s' failed with: '%s'\n", path, mupdfErr);
-        if (showErrorFunc) {
-            showErrorFunc(mupdfErr);
+        if (showErrorFunc.IsValid()) {
+            showErrorFunc.Call(mupdfErr);
         }
     }
 
