@@ -1209,7 +1209,7 @@ Size Static::GetIdealSize() {
 
 bool Static::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code == STN_CLICKED && !onClicked.IsEmpty()) {
+    if (code == STN_CLICKED && onClicked.IsValid()) {
         onClicked.Call();
         return true;
     }
@@ -1262,7 +1262,7 @@ Button::Button() {
 bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
     if (code == BN_CLICKED) {
-        if (!onClicked.IsEmpty()) {
+        if (onClicked.IsValid()) {
             onClicked.Call();
             return true;
         }

@@ -607,14 +607,26 @@ struct Func0 {
     void* userData = nullptr;
 
     Func0() = default;
+    // copy constructor
     Func0(const Func0& that) {
         this->fn = that.fn;
         this->userData = that.userData;
+    }
+    // copy assignment operator
+    Func0& operator=(const Func0& that) {
+        if (this != &that) {
+            this->fn = that.fn;
+            this->userData = that.userData;
+        }
+        return *this;
     }
     ~Func0() = default;
 
     bool IsEmpty() const {
         return fn == nullptr;
+    }
+    bool IsValid() const {
+        return fn != nullptr;
     }
     void Call() const {
         if (!fn) {
@@ -645,8 +657,24 @@ struct Func1 {
     void* userData = nullptr;
 
     Func1() = default;
+    // copy constructor
+    Func1(const Func1& that) {
+        this->fn = that.fn;
+        this->userData = that.userData;
+    }
+    // copy assignment operator
+    Func1& operator=(const Func1& that) {
+        if (this != &that) {
+            this->fn = that.fn;
+            this->userData = that.userData;
+        }
+        return *this;
+    }
     ~Func1() = default;
 
+    bool IsValid() const {
+        return fn != nullptr;
+    }
     bool IsEmpty() const {
         return fn == nullptr;
     }
