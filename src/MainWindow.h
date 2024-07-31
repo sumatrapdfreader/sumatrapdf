@@ -258,7 +258,7 @@ void ClearFindBox(MainWindow*);
 void CreateMovePatternLazy(MainWindow*);
 void ClearMouseState(MainWindow*);
 bool IsRightDragging(MainWindow*);
-MainWindow* FindMainWindowByWindowTab(WindowTab*);
+MainWindow* FindMainWindowByTab(WindowTab*);
 MainWindow* FindMainWindowByHwnd(HWND);
 bool IsMainWindowValid(MainWindow*);
 MainWindow* FindMainWindowByController(DocController*);

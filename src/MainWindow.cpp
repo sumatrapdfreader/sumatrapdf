@@ -720,7 +720,7 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd) {
 
 // Find MainWindow using WindowTab. Diffrent than WindowTab->win in that
 // it validates that WindowTab is still valid
-MainWindow* FindMainWindowByWindowTab(WindowTab* tabToFind) {
+MainWindow* FindMainWindowByTab(WindowTab* tabToFind) {
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             if (tab == tabToFind) {

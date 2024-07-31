@@ -1662,7 +1662,7 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
 static void ReloadTab(WindowTab* tab) {
     // tab might have been closed, so first ensure it's still valid
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
-    MainWindow* win = FindMainWindowByWindowTab(tab);
+    MainWindow* win = FindMainWindowByTab(tab);
     if (win == nullptr) {
         return;
     }
@@ -1822,7 +1822,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     ReportIf(currTab->watcher);
 
     if (gGlobalPrefs->reloadModifiedDocuments) {
-        currTab->watcher = FileWatcherSubscribe(path, [currTab] { ScheduleReloadTab(currTab); });
+        auto fn = MkFunc0(ScheduleReloadTab, currTab);
+        currTab->watcher = FileWatcherSubscribe(path, fn);
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {

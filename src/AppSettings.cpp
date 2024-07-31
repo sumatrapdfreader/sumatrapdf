@@ -434,7 +434,7 @@ void CleanUpSettings() {
     gGlobalPrefs = nullptr;
 }
 
-void schedulePrefsReload() {
+static void SchedulePrefsReload() {
     auto fn = MkFuncVoid(ReloadSettings);
     uitask::Post(fn, "TaskReloadSettings");
 }
@@ -446,7 +446,8 @@ void RegisterSettingsForFileChanges() {
 
     ReportIf(gWatchedSettingsFile); // only call me once
     TempStr path = GetSettingsPathTemp();
-    gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
+    auto fn = MkFuncVoid(SchedulePrefsReload);
+    gWatchedSettingsFile = FileWatcherSubscribe(path, fn);
 }
 
 void UnregisterSettingsForFileChanges() {
