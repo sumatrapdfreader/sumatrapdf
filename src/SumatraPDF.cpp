@@ -5133,7 +5133,7 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         col = GetParsedColor(a.freeTextColor, a.freeTextColorParsed);
     } else {
         logf("SetAnnotCreateArgs: unexpected type %d for default prefs color\n", (int)typ);
-        //ReportIf(true);
+        // ReportIf(true);
     }
     if (col && col->parsedOk) {
         args.col = *col;

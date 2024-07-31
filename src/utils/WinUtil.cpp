@@ -1994,7 +1994,7 @@ TempWStr HwndGetTextWTemp(HWND hwnd) {
 // return text of window or edit control, nullptr in case of an error
 TempStr HwndGetTextTemp(HWND hwnd) {
     size_t cch = HwndGetTextLen(hwnd);
-    WCHAR* txt = AllocArrayTemp<WCHAR>(cch + 2); // +2 for extra room
+    WCHAR* txt = AllocArrayTemp<WCHAR>(cch + 2); // +2 jic
     if (nullptr == txt) {
         return nullptr;
     }

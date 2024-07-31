@@ -388,9 +388,13 @@ static void OnButtonInstall(InstallerWnd* wnd) {
         KillProcessesWithModule(exePath, true);
     }
 
+    logf("OnButtonInstall: before CheckInstallUninstallPossible()\n");
     if (!CheckInstallUninstallPossible()) {
         return;
     }
+    logf("OnButtonInstall: after CheckInstallUninstallPossible()\n");
+    logf("OnButtonInstall: wnd: 0x%p\n", wnd);
+    logf("OnButtonInstall: wnd->editInstallationDir: 0x%p\n", wnd->editInstallationDir);
 
     char* userInstallDir = HwndGetTextTemp(wnd->editInstallationDir->hwnd);
     if (!str::IsEmpty(userInstallDir)) {
