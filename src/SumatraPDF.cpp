@@ -710,7 +710,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     }
     pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
 
-    gRenderCache->Render(dm, 1, 0, zoom, pageRect, *saveThumbnail);
+    gRenderCache->QueueRenderingRequest(dm, 1, 0, zoom, pageRect, *saveThumbnail);
 }
 
 struct CreateThumbnailData {

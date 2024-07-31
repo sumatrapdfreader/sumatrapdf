@@ -6,7 +6,6 @@ constexpr int RENDER_DELAY_UNDEFINED = std::numeric_limits<int>::max() - 2;
 
 #define INVALID_TILE_RES ((USHORT)-1)
 
-#define MAX_PAGE_REQUESTS 8
 // keep this value reasonably low, else we'll run out of
 // GDI resources/memory when caching many larger bitmaps
 // TODO: this should be based on amount of memory taken by rendered pages
@@ -67,6 +66,7 @@ struct BitmapCacheEntry {
    separate for clarity in the code (PageRenderRequests are reused,
    while BitmapCacheEntries are ref-counted) */
 struct PageRenderRequest {
+    PageRenderRequest* next = nullptr;
     DisplayModel* dm = nullptr;
     int pageNo = 0;
     int rotation = 0;
@@ -89,8 +89,7 @@ struct RenderCache {
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION cacheAccess;
 
-    PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
-    int requestCount = 0;
+    PageRenderRequest* firstRequest = nullptr;
     PageRenderRequest* curReq = nullptr;
     CRITICAL_SECTION requestAccess;
     HANDLE renderThread = nullptr;
@@ -110,8 +109,11 @@ struct RenderCache {
     ~RenderCache();
 
     void RequestRendering(DisplayModel* dm, int pageNo);
-    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
-                const OnBitmapRendered& callback);
+    void QueueRenderingRequest(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
+                               const OnBitmapRendered& callback);
+    void RequestRenderingTile(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
+    bool QueueTileRenderingRequest(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile,
+                                   RectF* pageRect, const OnBitmapRendered* onRendered);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);
@@ -123,20 +125,17 @@ struct RenderCache {
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
 
     bool ClearCurrentRequest();
-    bool GetNextRequest(PageRenderRequest* req);
-    void Add(PageRenderRequest& req, RenderedBitmap* bmp);
+    PageRenderRequest* GetNextRequest();
+    void Add(PageRenderRequest* req, RenderedBitmap* bmp);
 
     USHORT GetTileRes(DisplayModel* dm, int pageNo) const;
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
 
     bool IsRenderQueueFull() const {
-        return requestCount == MAX_PAGE_REQUESTS;
+        return false;
     }
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
-    void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
-    bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                const OnBitmapRendered* onRendered);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 
