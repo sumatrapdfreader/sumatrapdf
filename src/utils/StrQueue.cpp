@@ -84,7 +84,7 @@ again:
 // returns true if we finished i.e. there was no more strings to access
 // and we finished adding. In that case fn was called
 // calls fn() and returns false if there are strings available
-bool StrQueue::Access(const std::function<void(StrQueue*)>& fn) {
+bool StrQueue::Access(const Func1<StrQueue*>& fn) {
 again:
     Lock();
     if (strings.Size() == 0) {
@@ -96,7 +96,7 @@ again:
         WaitForSingleObject(hEvent, INFINITE);
         goto again;
     }
-    fn(this);
+    fn.Call(this);
     Unlock();
     return false;
 }
