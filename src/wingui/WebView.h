@@ -9,7 +9,6 @@ typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
 using WebViewMsgCb = Func1<const char*>;
-// using dispatch_fn_t = std::function<void()>;
 
 struct CreateWebViewArgs {
     HWND parent = nullptr;
