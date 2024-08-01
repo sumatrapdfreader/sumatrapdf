@@ -144,15 +144,17 @@ bool PdfMerger::MergePdfFile(const char* path) {
     return true;
 }
 
+static void MergeAndSaveTocVisit(PdfMerger* self, VisitTocTreeData* d) {
+    auto ti = d->ti;
+    if (!ti->engineFilePath) {
+        return;
+    }
+    char* path = ti->engineFilePath;
+    self->filePaths.Append(path);
+}
+
 bool PdfMerger::MergeAndSave(TocItem* root, char* dstPath) {
-    VisitTocTree(root, [this](TocItem* ti) -> bool {
-        if (!ti->engineFilePath) {
-            return true;
-        }
-        char* path = ti->engineFilePath;
-        filePaths.Append(path);
-        return true;
-    });
+    VisitTocTree(root, MkFunc1(MergeAndSaveTocVisit, this));
 
     int nFiles = filePaths.Size();
     if (nFiles == 0) {

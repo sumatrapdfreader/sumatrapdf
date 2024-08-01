@@ -260,10 +260,13 @@ HTREEITEM TocTree::GetHandle(TreeItem ti) {
 }
 
 // TODO: speed up by removing recursion
-bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f) {
+bool VisitTocTree(TocItem* ti, const VisitTocTreeCb& f) {
     bool cont;
+    VisitTocTreeData d;
     while (ti) {
-        cont = f(ti);
+        d.ti = ti;
+        f.Call(&d);
+        cont = !d.stopTraversal;
         if (cont && ti->child) {
             cont = VisitTocTree(ti->child, f);
         }
@@ -275,11 +278,14 @@ bool VisitTocTree(TocItem* ti, const std::function<bool(TocItem*)>& f) {
     return true;
 }
 
-static bool VisitTocTreeWithParentRecursive(TocItem* ti, TocItem* parent,
-                                            const std::function<bool(TocItem* ti, TocItem* parent)>& f) {
+static bool VisitTocTreeWithParentRecursive(TocItem* ti, TocItem* parent, const VisitTocTreeCb& f) {
     bool cont;
+    VisitTocTreeData d;
     while (ti) {
-        cont = f(ti, parent);
+        d.ti = ti;
+        d.parent = parent;
+        f.Call(&d);
+        cont = !d.stopTraversal;
         if (cont && ti->child) {
             cont = VisitTocTreeWithParentRecursive(ti->child, ti, f);
         }
@@ -291,17 +297,17 @@ static bool VisitTocTreeWithParentRecursive(TocItem* ti, TocItem* parent,
     return true;
 }
 
-bool VisitTocTreeWithParent(TocItem* ti, const std::function<bool(TocItem* ti, TocItem* parent)>& f) {
+bool VisitTocTreeWithParent(TocItem* ti, const VisitTocTreeCb& f) {
     return VisitTocTreeWithParentRecursive(ti, nullptr, f);
 }
 
-static bool setTocItemParent(TocItem* ti, TocItem* parent) {
-    ti->parent = parent;
-    return true;
+static void SetTocItemParent(VisitTocTreeData* d) {
+    d->ti->parent = d->parent;
 }
 
 void SetTocTreeParents(TocItem* treeRoot) {
-    VisitTocTreeWithParent(treeRoot, setTocItemParent);
+    auto fn = MkFunc1Void(SetTocItemParent);
+    VisitTocTreeWithParent(treeRoot, fn);
 }
 
 RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectF* pageRect, RenderTarget target,

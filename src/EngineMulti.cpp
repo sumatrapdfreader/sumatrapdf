@@ -390,13 +390,12 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
     pageCount = nTotalPages;
     ReportIf((size_t)pageCount != pageToEngine.size());
 
-    auto verifyPages = [&nTotalPages](TocItem* ti) -> bool {
+    auto verifyPages = [](VisitTocTreeData* d) -> void {
+        auto ti = d->ti;
         if (!IsPageNavigationDestination(ti->dest)) {
-            return true;
+            return;
         }
         int pageNo = ti->pageNo;
-        ReportIf(pageNo > nTotalPages);
-        return true;
     };
 
     for (auto&& ei : enginesInfo) {
@@ -404,7 +403,8 @@ void EngineMulti::UpdatePagesForEngines(Vec<EngineInfo>& enginesInfo) {
         if (root->isUnchecked) {
             continue;
         }
-        VisitTocTree(root, verifyPages);
+        auto fn = MkFunc1Void<VisitTocTreeData*>(verifyPages);
+        VisitTocTree(root, fn);
     }
 }
 
