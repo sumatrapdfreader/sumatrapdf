@@ -605,7 +605,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->trackbarTextSize->SetIsVisible(true);
 }
 
-static void TextFontSizeChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
+static void TextFontSizeChanging(EditAnnotationsWindow* ew, Trackbar::PosChangingEvent* ev) {
     auto annot = ew->tab->selectedAnnotation;
     if (!annot) {
         return;
@@ -652,7 +652,7 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->trackbarBorder->SetIsVisible(true);
 }
 
-static void BorderWidthChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
+static void BorderWidthChanging(EditAnnotationsWindow* ew, Trackbar::PosChangingEvent* ev) {
     int borderWidth = ev->pos;
     SetBorderWidth(ew->tab->selectedAnnotation, borderWidth);
     TempStr s = str::FormatTemp(_TRA("Border: %d"), borderWidth);
@@ -807,7 +807,7 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->buttonEmbedAttachment->SetIsVisible(true);
 }
 
-static void OpacityChanging(EditAnnotationsWindow* ew, TrackbarPosChangingEvent* ev) {
+static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PosChangingEvent* ev) {
     int opacity = ev->pos;
     SetOpacity(ew->tab->selectedAnnotation, opacity);
     TempStr s = str::FormatTemp(_TRA("Opacity: %d"), opacity);

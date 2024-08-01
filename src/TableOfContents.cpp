@@ -822,7 +822,7 @@ LRESULT TocTreeClick(TreeClickEvent* ev) {
     return -1;
 }
 
-static void TocTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
+static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     ReportIf(!win);
 
@@ -1012,7 +1012,7 @@ void CreateToc(MainWindow* win) {
 
     auto fn = MkFunc1Void(TocContextMenu);
     treeView->onContextMenu = fn;
-    treeView->onTreeSelectionChanged = TocTreeSelectionChanged;
+    treeView->onTreeSelectionChanged = MkFunc1Void(TocTreeSelectionChanged);
     treeView->onTreeKeyDown = TocTreeKeyDown2;
     treeView->onGetTooltip = MkFunc1Void(TocCustomizeTooltip);
     // treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary

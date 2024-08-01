@@ -419,14 +419,14 @@ struct DropDown : Wnd {
 
 struct Trackbar;
 
-struct TrackbarPosChangingEvent {
-    Trackbar* trackbar = nullptr;
-    int pos = -1;
-    NMTRBTHUMBPOSCHANGING* info = nullptr;
-};
-
 struct Trackbar : Wnd {
-    using PositionChangingHandler = Func1<TrackbarPosChangingEvent*>;
+    struct PosChangingEvent {
+        Trackbar* trackbar = nullptr;
+        int pos = -1;
+        NMTRBTHUMBPOSCHANGING* info = nullptr;
+    };
+
+    using PositionChangingHandler = Func1<PosChangingEvent*>;
 
     struct CreateArgs {
         HWND parent = nullptr;
@@ -466,19 +466,19 @@ enum class SplitterType {
 
 struct Splitter;
 
-// called when user drags the splitter ('finishedDragging' is false) and when drag is finished ('finishedDragging' is
-// true). the owner can constrain splitter by using current cursor
-// position and setting resizeAllowed to false if it's not allowed to go there
-struct SplitterMoveEvent {
-    Splitter* w = nullptr;
-    bool finishedDragging = false;
-    // user can set to false to forbid resizing here
-    bool resizeAllowed = true;
-};
-
-using SplitterMoveHandler = Func1<SplitterMoveEvent*>;
-
 struct Splitter : public Wnd {
+    // called when user drags the splitter ('finishedDragging' is false) and when drag is finished ('finishedDragging'
+    // is true). the owner can constrain splitter by using current cursor position and setting resizeAllowed to false if
+    // it's not allowed to go there
+    struct MoveEvent {
+        Splitter* w = nullptr;
+        bool finishedDragging = false;
+        // user can set to false to forbid resizing here
+        bool resizeAllowed = true;
+    };
+
+    using MoveHandler = Func1<MoveEvent*>;
+
     struct CreateArgs {
         HWND parent = nullptr;
         SplitterType type = SplitterType::Horiz;
@@ -488,7 +488,7 @@ struct Splitter : public Wnd {
 
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
-    SplitterMoveHandler onSplitterMove;
+    MoveHandler onSplitterMove;
 
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;
@@ -517,17 +517,6 @@ struct TreeItemCustomDrawEvent {
 };
 
 using TreeItemCustomDrawHandler = std::function<LRESULT(TreeItemCustomDrawEvent*)>;
-
-struct TreeSelectionChangedEvent {
-    TreeView* treeView = nullptr;
-    TreeItem prevSelectedItem = 0;
-    TreeItem selectedItem = 0;
-    NMTREEVIEW* nmtv = nullptr;
-    bool byKeyboard = false;
-    bool byMouse = false;
-};
-
-using TreeSelectionChangedHandler = std::function<void(TreeSelectionChangedEvent*)>;
 
 struct TreeClickEvent {
     TreeView* treeView = nullptr;
@@ -565,7 +554,17 @@ struct TreeView : Wnd {
         NMTVGETINFOTIPW* info = nullptr;
     };
 
+    struct SelectionChangedEvent {
+        TreeView* treeView = nullptr;
+        TreeItem prevSelectedItem = 0;
+        TreeItem selectedItem = 0;
+        NMTREEVIEW* nmtv = nullptr;
+        bool byKeyboard = false;
+        bool byMouse = false;
+    };
+
     using GetTooltipHandler = Func1<TreeView::GetTooltipEvent*>;
+    using SelectionChangedHandler = Func1<SelectionChangedEvent*>;
 
     TreeView();
     ~TreeView() override;
@@ -611,7 +610,7 @@ struct TreeView : Wnd {
     TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
 
     // for WM_NOTIFY with TVN_SELCHANGED
-    TreeSelectionChangedHandler onTreeSelectionChanged = nullptr;
+    SelectionChangedHandler onTreeSelectionChanged;
 
     // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
     TreeClickHandler onTreeClick = nullptr;

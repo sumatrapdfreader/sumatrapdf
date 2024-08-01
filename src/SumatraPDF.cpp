@@ -139,8 +139,8 @@ static StrVec gAllowedFileTypes;
 static bool gDontSavePrefs = false;
 
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
-static void OnSidebarSplitterMove(SplitterMoveEvent*);
-static void OnFavSplitterMove(SplitterMoveEvent*);
+static void OnSidebarSplitterMove(Splitter::MoveEvent*);
+static void OnFavSplitterMove(Splitter::MoveEvent*);
 
 LoadArgs::LoadArgs(const char* origPath, MainWindow* win) {
     this->fileArgs = ParseFileArgs(origPath);
@@ -4547,7 +4547,7 @@ static bool FrameOnSysChar(MainWindow* win, WPARAM key) {
     return false;
 }
 
-static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
+static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
     Splitter* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     MainWindow* win = FindMainWindowByHwnd(hwnd);
@@ -4570,7 +4570,7 @@ static void OnSidebarSplitterMove(SplitterMoveEvent* ev) {
     RelayoutFrame(win, false, sidebarDx);
 }
 
-static void OnFavSplitterMove(SplitterMoveEvent* ev) {
+static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
     Splitter* splitter = ev->w;
     HWND hwnd = splitter->hwnd;
     MainWindow* win = FindMainWindowByHwnd(hwnd);

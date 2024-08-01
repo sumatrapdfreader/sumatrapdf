@@ -783,7 +783,7 @@ static void FavTreeItemClicked(TreeClickEvent* ev) {
 }
 #endif
 
-static void FavTreeSelectionChanged(TreeSelectionChangedEvent* ev) {
+static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     ReportIf(!win);
 
@@ -911,7 +911,7 @@ void CreateFavorites(MainWindow* win) {
 
     auto fn = MkFunc1Void(FavTreeContextMenu);
     treeView->onContextMenu = fn;
-    treeView->onTreeSelectionChanged = FavTreeSelectionChanged;
+    treeView->onTreeSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
     treeView->onTreeKeyDown = TocTreeKeyDown2;
     // treeView->onTreeClick = FavTreeItemClicked;
     // treeView->onChar = TocTreeCharHandler;

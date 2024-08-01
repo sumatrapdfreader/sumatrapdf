@@ -2188,7 +2188,7 @@ LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
                 default:
                     pos = GetValue();
             }
-            TrackbarPosChangingEvent a{};
+            Trackbar::PosChangingEvent a{};
             a.trackbar = this;
             a.pos = pos;
             onPosChanging.Call(&a);
@@ -2361,7 +2361,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             }
         }
         ReleaseCapture();
-        SplitterMoveEvent arg;
+        Splitter::MoveEvent arg;
         arg.w = this;
         arg.finishedDragging = true;
         onSplitterMove.Call(&arg);
@@ -2375,7 +2375,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             curId = IDC_SIZEWE;
         }
         if (hwnd == GetCapture()) {
-            SplitterMoveEvent arg;
+            Splitter::MoveEvent arg;
             arg.w = this;
             arg.finishedDragging = false;
             onSplitterMove.Call(&arg);
@@ -2964,10 +2964,10 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
         // log("tv: TVN_SELCHANGED\n");
-        if (!onTreeSelectionChanged) {
+        if (!onTreeSelectionChanged.IsValid()) {
             return 0;
         }
-        TreeSelectionChangedEvent ev;
+        TreeView::SelectionChangedEvent ev;
         ev.treeView = w;
         ev.nmtv = nmtv;
         auto action = ev.nmtv->action;
@@ -2978,7 +2978,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         }
         ev.prevSelectedItem = w->GetTreeItemByHandle(nmtv->itemOld.hItem);
         ev.selectedItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
-        onTreeSelectionChanged(&ev);
+        onTreeSelectionChanged.Call(&ev);
         return 0;
     }
 
