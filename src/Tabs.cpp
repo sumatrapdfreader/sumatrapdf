@@ -305,7 +305,7 @@ void CloseAllTabs(MainWindow* win) {
 static void TabsContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     TabsCtrl* tabsCtrl = (TabsCtrl*)ev->w;
-    TabMouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->mouseWindow);
+    TabsCtrl::MouseState tabState = tabsCtrl->TabStateFromMousePosition(ev->mouseWindow);
     int tabIdx = tabState.tabIdx;
     if (tabIdx < 0) {
         return;
@@ -403,30 +403,31 @@ static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionCh
     LoadModelIntoTab(tab);
 }
 
+static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev) {
+    WindowTab* tab = win->GetTab(ev->tabIdx);
+    MainWindow* releaseWnd = nullptr;
+    POINT p;
+    p.x = ev->releasePoint.x;
+    p.y = ev->releasePoint.y;
+    HWND hwnd = WindowFromPoint(p);
+    if (hwnd != nullptr) {
+        releaseWnd = FindMainWindowByHwnd(hwnd);
+    }
+    if (releaseWnd == win) {
+        // don't re-add to the same window
+        releaseWnd = nullptr;
+    }
+    MigrateTab(tab, releaseWnd);
+}
+
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
 
     tabsCtrl->onTabClosed = MkFunc1(MainWindowTabClosed, win);
     tabsCtrl->onSelectionChanging = MkFunc1(MainWindowTabSelectionChanging, win);
     tabsCtrl->onSelectionChanged = MkFunc1(MainWindowTabSelectionChanged, win);
-    tabsCtrl->onContextMenu = MkFunc1Void<ContextMenuEvent*>(TabsContextMenu);
-
-    tabsCtrl->onTabMigration = [win](TabMigrationEvent* ev) {
-        WindowTab* tab = win->GetTab(ev->tabIdx);
-        MainWindow* releaseWnd = nullptr;
-        POINT p;
-        p.x = ev->releasePoint.x;
-        p.y = ev->releasePoint.y;
-        HWND hwnd = WindowFromPoint(p);
-        if (hwnd != nullptr) {
-            releaseWnd = FindMainWindowByHwnd(hwnd);
-        }
-        if (releaseWnd == win) {
-            // don't re-add to the same window
-            releaseWnd = nullptr;
-        }
-        MigrateTab(tab, releaseWnd);
-    };
+    tabsCtrl->onContextMenu = MkFunc1Void(TabsContextMenu);
+    tabsCtrl->onTabMigration = MkFunc1(MainWindowTabMigration, win);
 
     TabsCtrl::CreateArgs args;
     args.parent = win->hwndFrame;

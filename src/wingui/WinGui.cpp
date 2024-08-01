@@ -3130,8 +3130,8 @@ void TabsCtrl::LayoutTabs() {
 }
 
 // Finds the index of the tab, which contains the given point.
-TabMouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
-    TabMouseState res;
+TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
+    TabsCtrl::MouseState res;
     if (p.x < 0 || p.y < 0) {
         return res;
     }
@@ -3174,7 +3174,7 @@ constexpr float closePenWidth = 1.0f;
 constexpr COLORREF circleColor = RgbToCOLORREF(0xC13535);
 
 void TabsCtrl::Paint(HDC hdc, RECT& rc) {
-    TabMouseState tabState = TabStateFromMousePosition(lastMousePos);
+    TabsCtrl::MouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
     bool overClose = tabState.overClose && tabState.tabInfo->canClose;
     int tabSelected = GetSelected();
@@ -3343,14 +3343,14 @@ static bool TriggerSelectionChanging(TabsCtrl* tabs) {
 }
 
 static void TriggerTabMigration(TabsCtrl* tabs, int tabIdx, Point p) {
-    if (!tabs->onTabMigration) {
+    if (!tabs->onTabMigration.IsValid()) {
         return;
     }
-    TabMigrationEvent ev;
+    TabsCtrl::MigrationEvent ev;
     ev.tabs = tabs;
     ev.tabIdx = tabIdx;
     ev.releasePoint = p;
-    tabs->onTabMigration(&ev);
+    tabs->onTabMigration.Call(&ev);
 }
 
 static void TriggerTabClosed(TabsCtrl* tabs, int tabIdx) {
@@ -3364,14 +3364,14 @@ static void TriggerTabClosed(TabsCtrl* tabs, int tabIdx) {
 }
 
 static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
-    if (!tabs->onTabDragged) {
+    if (!tabs->onTabDragged.IsValid()) {
         return;
     }
-    TabDraggedEvent ev;
+    TabsCtrl::DraggedEvent ev;
     ev.tabs = tabs;
     ev.tab1 = tab1;
     ev.tab2 = tab2;
-    tabs->onTabDragged(&ev);
+    tabs->onTabDragged.Call(&ev);
 }
 
 static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
@@ -3431,7 +3431,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         mousePos.y = p.y;
     }
 
-    TabMouseState tabState;
+    TabsCtrl::MouseState tabState;
 
     bool overClose = false;
     bool canClose = true;

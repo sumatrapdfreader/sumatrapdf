@@ -637,28 +637,6 @@ struct TabInfo;
 
 #define kTabDefaultBgCol (COLORREF) - 1
 
-struct TabMouseState {
-    int tabIdx = -1;
-    bool overClose = false;
-    TabInfo* tabInfo = nullptr;
-};
-
-struct TabMigrationEvent {
-    TabsCtrl* tabs = nullptr;
-    int tabIdx;
-    Point releasePoint;
-};
-
-using TabMigrationHandler = std::function<void(TabMigrationEvent*)>;
-
-struct TabDraggedEvent {
-    TabsCtrl* tabs = nullptr;
-    int tab1 = -1;
-    int tab2 = -1;
-};
-
-using TabDraggedHandler = std::function<void(TabDraggedEvent*)>;
-
 struct TabInfo {
     char* text = nullptr;
     char* tooltip = nullptr;
@@ -677,6 +655,12 @@ struct TabInfo {
 };
 
 struct TabsCtrl : Wnd {
+    struct MouseState {
+        int tabIdx = -1;
+        bool overClose = false;
+        TabInfo* tabInfo = nullptr;
+    };
+
     struct SelectionChangingEvent {
         TabsCtrl* tabs = nullptr;
         int tabIdx = -1;
@@ -694,9 +678,23 @@ struct TabsCtrl : Wnd {
         int tabIdx = -1;
     };
 
+    struct MigrationEvent {
+        TabsCtrl* tabs = nullptr;
+        int tabIdx;
+        Point releasePoint;
+    };
+
+    struct DraggedEvent {
+        TabsCtrl* tabs = nullptr;
+        int tab1 = -1;
+        int tab2 = -1;
+    };
+
     using SelectionChangingHandler = Func1<SelectionChangingEvent*>;
     using SelectionChangedHandler = Func1<SelectionChangedEvent*>;
     using ClosedHandler = Func1<ClosedEvent*>;
+    using MigrationHandler = Func1<MigrationEvent*>;
+    using DraggedHandler = Func1<DraggedEvent*>;
 
     struct CreateArgs {
         HWND parent = nullptr;
@@ -726,8 +724,8 @@ struct TabsCtrl : Wnd {
     ClosedHandler onTabClosed;
     SelectionChangingHandler onSelectionChanging;
     SelectionChangedHandler onSelectionChanged;
-    TabMigrationHandler onTabMigration = nullptr;
-    TabDraggedHandler onTabDragged = nullptr;
+    MigrationHandler onTabMigration;
+    DraggedHandler onTabDragged;
 
     COLORREF currBgCol = 0;
     COLORREF tabBackgroundBg = 0;
@@ -782,7 +780,7 @@ struct TabsCtrl : Wnd {
 
     void LayoutTabs();
     void ScheduleRepaint();
-    TabMouseState TabStateFromMousePosition(const Point& p);
+    TabsCtrl::MouseState TabStateFromMousePosition(const Point& p);
     void Paint(HDC hdc, RECT& rc);
     HBITMAP RenderForDragging(int idx);
 };
