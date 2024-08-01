@@ -980,6 +980,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     CheckIsStoreBuild();
 
+    if (false) {
+        const char* dir = "C:\\Users\\kjk\\Downloads\\test";
+        auto di = DirIter{dir};
+        for (VisitDirData* d : di) {
+            logf("d->filePath: '%s'\n", d->filePath);
+        }
+    }
+
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)
     InitializePolicies(flags.restrictedUse);

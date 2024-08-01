@@ -17,14 +17,20 @@ using VisitDirCb = Func1<VisitDirData*>;
 
 struct DirIter {
     const char* dir = nullptr;
-    u32 flags = 0;
+    u32 flags = kVisitDirIncudeFiles;
 
     struct iterator {
         const DirIter* di;
         bool didFinish = false;
+
+        StrVec dirsToVisit;
+        WCHAR* pattern = nullptr;
+        WIN32_FIND_DATAW fd{};
+        HANDLE h = nullptr;
         VisitDirData data;
 
         iterator(const DirIter*, bool);
+        ~iterator();
 
         VisitDirData* operator*();
         iterator& operator++();   // ++it
