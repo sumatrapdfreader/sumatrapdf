@@ -293,19 +293,20 @@ struct Edit : Wnd {
 };
 
 //--- ListBox
-using ListBoxSelectionChangedHandler = std::function<void()>;
-using ListBoxDoubleClickHandler = std::function<void()>;
-
-struct ListBoxCreateArgs {
-    HWND parent = nullptr;
-    int idealSizeLines = 0;
-    HFONT font = nullptr;
-};
 
 struct ListBox : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        int idealSizeLines = 0;
+        HFONT font = nullptr;
+    };
+
+    using SelectionChangedHandler = Func0;
+    using DoubleClickHandler = Func0;
+
     ListBoxModel* model = nullptr;
-    ListBoxSelectionChangedHandler onSelectionChanged = nullptr;
-    ListBoxDoubleClickHandler onDoubleClick = nullptr;
+    SelectionChangedHandler onSelectionChanged;
+    DoubleClickHandler onDoubleClick;
 
     Size idealSize = {};
     int idealSizeLines = 0;
@@ -313,7 +314,7 @@ struct ListBox : Wnd {
     ListBox();
     virtual ~ListBox();
 
-    HWND Create(const ListBoxCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
@@ -336,20 +337,20 @@ enum class CheckState {
     Indeterminate = BST_INDETERMINATE,
 };
 
-using CheckboxStateChangedHandler = std::function<void()>;
-
-struct CheckboxCreateArgs {
-    HWND parent = nullptr;
-    const char* text = nullptr;
-    CheckState initialState = CheckState::Unchecked;
-};
-
 struct Checkbox : Wnd {
-    CheckboxStateChangedHandler onCheckStateChanged = nullptr;
+    struct CreateArgs {
+        HWND parent = nullptr;
+        const char* text = nullptr;
+        CheckState initialState = CheckState::Unchecked;
+    };
+
+    using StateChangedHandler = Func0;
+
+    StateChangedHandler onCheckStateChanged;
 
     Checkbox();
 
-    HWND Create(const CheckboxCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 
@@ -387,22 +388,22 @@ struct Progress : Wnd {
 
 //--- DropDown
 
-using DropDownSelectionChangedHandler = std::function<void()>;
-
-struct DropDownCreateArgs {
-    HWND parent = nullptr;
-    HFONT font = nullptr;
-    // TODO: model or items
-};
-
 struct DropDown : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        HFONT font = nullptr;
+        // TODO: model or items
+    };
+
+    using SelectionChangedHandler = Func0;
+
     // TODO: use DropDownModel
     StrVec items;
-    DropDownSelectionChangedHandler onSelectionChanged = nullptr;
+    SelectionChangedHandler onSelectionChanged;
 
     DropDown();
     ~DropDown() override = default;
-    HWND Create(const DropDownCreateArgs&);
+    HWND Create(const DropDown::CreateArgs&);
 
     Size GetIdealSize() override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;

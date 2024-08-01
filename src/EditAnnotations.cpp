@@ -944,6 +944,10 @@ static void ButtonDeleteHandler(EditAnnotationsWindow* ew) {
     DeleteSelectedAnnotation(ew);
 }
 
+static void ListBoxSelectionChanged(EditAnnotationsWindow* ew) {
+    ew->ListBoxSelectionChanged();
+}
+
 void EditAnnotationsWindow::ListBoxSelectionChanged() {
     int itemNo = listBox->GetCurrentSelection();
     if (!annotations.isValidIndex(itemNo)) {
@@ -1029,7 +1033,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     HFONT fnt = GetAppFont();
 
     {
-        ListBoxCreateArgs args;
+        ListBox::CreateArgs args;
         args.parent = parent;
         args.idealSizeLines = 5;
         args.font = fnt;
@@ -1038,7 +1042,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->Create(args);
         auto lbModel = new ListBoxModelStrings();
         w->SetModel(lbModel);
-        w->onSelectionChanged = std::bind(&EditAnnotationsWindow::ListBoxSelectionChanged, ew);
+        w->onSelectionChanged = MkFunc0(ListBoxSelectionChanged, ew);
         ew->listBox = w;
         vbox->AddChild(w);
     }
@@ -1099,7 +1103,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1108,7 +1112,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->Create(args);
 
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = [ew]() { return TextAlignmentSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(TextAlignmentSelectionChanged, ew);
         ew->dropDownTextAlignment = w;
         vbox->AddChild(w);
     }
@@ -1121,7 +1125,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
         auto w = new DropDown();
@@ -1129,7 +1133,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
         w->Create(args);
         w->SetItemsSeqStrings(gQuaddingNames);
-        w->onSelectionChanged = [ew]() { return TextFontSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(TextFontSelectionChanged, ew);
         ew->dropDownTextFont = w;
         vbox->AddChild(w);
     }
@@ -1165,7 +1169,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1174,7 +1178,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->Create(args);
 
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = [ew]() { return TextColorSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(TextColorSelectionChanged, ew);
         ew->dropDownTextColor = w;
         vbox->AddChild(w);
     }
@@ -1187,7 +1191,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1195,7 +1199,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
-        w->onSelectionChanged = [ew]() { return LineStartSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(LineStartSelectionChanged, ew);
         ew->dropDownLineStart = w;
         vbox->AddChild(w);
     }
@@ -1208,7 +1212,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1216,7 +1220,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
-        w->onSelectionChanged = [ew]() { return LineEndSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(LineEndSelectionChanged, ew);
         ew->dropDownLineEnd = w;
         vbox->AddChild(w);
     }
@@ -1229,7 +1233,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1237,7 +1241,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
 
-        w->onSelectionChanged = [ew]() { return IconSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(IconSelectionChanged, ew);
         ew->dropDownIcon = w;
         vbox->AddChild(w);
     }
@@ -1271,7 +1275,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1279,7 +1283,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->SetInsetsPt(4, 0, 0, 0);
         w->Create(args);
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = [ew]() { return ColorSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(ColorSelectionChanged, ew);
         ew->dropDownColor = w;
         vbox->AddChild(w);
     }
@@ -1292,7 +1296,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        DropDownCreateArgs args;
+        DropDown::CreateArgs args;
         args.parent = parent;
         args.font = fnt;
 
@@ -1301,7 +1305,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         w->Create(args);
 
         w->SetItemsSeqStrings(gColors);
-        w->onSelectionChanged = [ew]() { return InteriorColorSelectionChanged(ew); };
+        w->onSelectionChanged = MkFunc0(InteriorColorSelectionChanged, ew);
         ew->dropDownInteriorColor = w;
         vbox->AddChild(w);
     }

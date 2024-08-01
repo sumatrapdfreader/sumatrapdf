@@ -80,7 +80,7 @@ static void ProgressStep() {
 }
 
 static Checkbox* CreateCheckbox(HWND hwndParent, const char* s, bool isChecked) {
-    CheckboxCreateArgs args;
+    Checkbox::CreateArgs args;
     args.parent = hwndParent;
     args.text = s;
     args.initialState = isChecked ? CheckState::Checked : CheckState::Unchecked;
@@ -733,7 +733,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
             showOptions = true;
         }
         wnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
-        wnd->checkboxForAllUsers->onCheckStateChanged = ForAllUsersStateChanged;
+        wnd->checkboxForAllUsers->onCheckStateChanged = MkFuncVoid(ForAllUsersStateChanged);
 
         checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
         rc = {x, y, x + dx, y + checkDy};

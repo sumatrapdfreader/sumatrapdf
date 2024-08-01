@@ -1778,7 +1778,7 @@ ListBox::~ListBox() {
     delete this->model;
 }
 
-HWND ListBox::Create(const ListBoxCreateArgs& args) {
+HWND ListBox::Create(const ListBox::CreateArgs& args) {
     idealSizeLines = args.idealSizeLines;
     if (idealSizeLines < 0) {
         idealSizeLines = 0;
@@ -1871,13 +1871,13 @@ void ListBox::SetModel(ListBoxModel* model) {
 bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
     // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-selchange
-    if (code == LBN_SELCHANGE && onSelectionChanged) {
-        onSelectionChanged();
+    if (code == LBN_SELCHANGE && onSelectionChanged.IsValid()) {
+        onSelectionChanged.Call();
         return true;
     }
     // https://docs.microsoft.com/en-us/windows/win32/controls/lbn-dblclk
-    if (code == LBN_DBLCLK && onDoubleClick) {
-        onDoubleClick();
+    if (code == LBN_DBLCLK && onDoubleClick.IsValid()) {
+        onDoubleClick.Call();
         return true;
     }
     return false;
@@ -1912,7 +1912,7 @@ Checkbox::Checkbox() {
     kind = kindCheckbox;
 }
 
-HWND Checkbox::Create(const CheckboxCreateArgs& args) {
+HWND Checkbox::Create(const Checkbox::CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.text = args.text;
@@ -1927,8 +1927,8 @@ HWND Checkbox::Create(const CheckboxCreateArgs& args) {
 
 bool Checkbox::OnCommand(WPARAM wp, LPARAM) {
     auto code = HIWORD(wp);
-    if (code == BN_CLICKED && onCheckStateChanged) {
-        onCheckStateChanged();
+    if (code == BN_CLICKED && onCheckStateChanged.IsValid()) {
+        onCheckStateChanged.Call();
         return true;
     }
     return false;
@@ -2028,15 +2028,15 @@ static void SetDropDownItems(HWND hwnd, StrVec& items) {
 
 bool DropDown::OnCommand(WPARAM wp, LPARAM) {
     auto code = HIWORD(wp);
-    if ((code == CBN_SELCHANGE) && onSelectionChanged) {
-        onSelectionChanged();
+    if ((code == CBN_SELCHANGE) && onSelectionChanged.IsValid()) {
+        onSelectionChanged.Call();
         // must return false or else the drop-down list will not close
         return false;
     }
     return false;
 }
 
-HWND DropDown::Create(const DropDownCreateArgs& args) {
+HWND DropDown::Create(const DropDown::CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;

@@ -209,7 +209,6 @@ struct CommandPaletteWnd : Wnd {
 
     bool Create(MainWindow* win, const char* prefix);
     void QueryChanged();
-    void ListDoubleClick();
 
     void ExecuteCurrentSelection();
 };
@@ -760,8 +759,8 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     ScheduleDelete();
 }
 
-void CommandPaletteWnd::ListDoubleClick() {
-    ExecuteCurrentSelection();
+static void ListDoubleClick(CommandPaletteWnd* w) {
+    w->ExecuteCurrentSelection();
 }
 
 void OnDestroy(WmDestroyEvent&) {
@@ -855,11 +854,11 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     }
 
     {
-        ListBoxCreateArgs args;
+        ListBox::CreateArgs args;
         args.parent = hwnd;
         args.font = font;
         auto c = new ListBox();
-        c->onDoubleClick = std::bind(&CommandPaletteWnd::ListDoubleClick, this);
+        c->onDoubleClick = MkFunc0(ListDoubleClick, this);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         auto wnd = c->Create(args);
