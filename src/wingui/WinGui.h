@@ -425,26 +425,26 @@ struct TrackbarPosChangingEvent {
     NMTRBTHUMBPOSCHANGING* info = nullptr;
 };
 
-using TrackbarPoschangingHandler = std::function<void(TrackbarPosChangingEvent*)>;
-
-struct TrackbarCreateArgs {
-    HWND parent = nullptr;
-    bool isHorizontal = true;
-    int rangeMin = 1;
-    int rangeMax = 5;
-    HFONT font = nullptr;
-};
-
 struct Trackbar : Wnd {
+    using PositionChangingHandler = Func1<TrackbarPosChangingEvent*>;
+
+    struct CreateArgs {
+        HWND parent = nullptr;
+        bool isHorizontal = true;
+        int rangeMin = 1;
+        int rangeMax = 5;
+        HFONT font = nullptr;
+    };
+
     Size idealSize{};
 
     // for WM_NOTIFY with TRBN_THUMBPOSCHANGING
-    TrackbarPoschangingHandler onPosChanging = nullptr;
+    PositionChangingHandler onPosChanging;
 
     Trackbar();
     ~Trackbar() override = default;
 
-    HWND Create(const TrackbarCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
 

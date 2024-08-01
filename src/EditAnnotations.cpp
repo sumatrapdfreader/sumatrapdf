@@ -1146,7 +1146,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        TrackbarCreateArgs args;
+        Trackbar::CreateArgs args;
         args.parent = parent;
         args.rangeMin = 8;
         args.rangeMax = 36;
@@ -1157,7 +1157,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
         w->Create(args);
 
-        w->onPosChanging = [ew](auto&& PH1) { return TextFontSizeChanging(ew, std::forward<decltype(PH1)>(PH1)); };
+        w->onPosChanging = MkFunc1(TextFontSizeChanging, ew);
         ew->trackbarTextSize = w;
         vbox->AddChild(w);
     }
@@ -1254,7 +1254,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        TrackbarCreateArgs args;
+        Trackbar::CreateArgs args;
         args.parent = parent;
         args.rangeMin = borderWidthMin;
         args.rangeMax = borderWidthMax;
@@ -1262,7 +1262,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
 
         auto w = new Trackbar();
         w->Create(args);
-        w->onPosChanging = [ew](auto&& PH1) { return BorderWidthChanging(ew, std::forward<decltype(PH1)>(PH1)); };
+        w->onPosChanging = MkFunc1(BorderWidthChanging, ew);
         ew->trackbarBorder = w;
         vbox->AddChild(w);
     }
@@ -1318,7 +1318,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        TrackbarCreateArgs args;
+        Trackbar::CreateArgs args;
         args.parent = parent;
         args.rangeMin = 0;
         args.rangeMax = 255;
@@ -1327,7 +1327,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         auto w = new Trackbar();
         w->Create(args);
 
-        w->onPosChanging = [ew](auto&& PH1) { return OpacityChanging(ew, std::forward<decltype(PH1)>(PH1)); };
+        w->onPosChanging = MkFunc1(OpacityChanging, ew);
         ew->trackbarOpacity = w;
         vbox->AddChild(w);
     }

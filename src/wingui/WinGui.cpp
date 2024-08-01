@@ -2135,7 +2135,7 @@ Trackbar::Trackbar() {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
-HWND Trackbar::Create(const TrackbarCreateArgs& args) {
+HWND Trackbar::Create(const Trackbar::CreateArgs& args) {
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     dwStyle |= TBS_AUTOTICKS; // tick marks for each increment
     dwStyle |= TBS_TOOLTIPS;  // show current value when dragging in a tooltip
@@ -2172,7 +2172,7 @@ HWND Trackbar::Create(const TrackbarCreateArgs& args) {
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
 LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
-    if (!onPosChanging) {
+    if (!onPosChanging.IsValid()) {
         return 0;
     }
     switch (msg) {
@@ -2191,7 +2191,7 @@ LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
             TrackbarPosChangingEvent a{};
             a.trackbar = this;
             a.pos = pos;
-            onPosChanging(&a);
+            onPosChanging.Call(&a);
             // per https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
             // "if an application processes this message, it should return zero"
             return 0;
