@@ -510,14 +510,6 @@ struct Splitter : public Wnd {
 
 struct TreeView;
 
-struct TreeItemCustomDrawEvent {
-    TreeView* treeView = nullptr;
-    TreeItem treeItem = 0;
-    NMTVCUSTOMDRAW* nm = nullptr;
-};
-
-using TreeItemCustomDrawHandler = std::function<LRESULT(TreeItemCustomDrawEvent*)>;
-
 struct TreeClickEvent {
     TreeView* treeView = nullptr;
     TreeItem treeItem = 0;
@@ -563,6 +555,16 @@ struct TreeView : Wnd {
         bool byMouse = false;
     };
 
+    struct CustomDrawEvent {
+        TreeView* treeView = nullptr;
+        TreeItem treeItem = 0;
+        NMTVCUSTOMDRAW* nm = nullptr;
+
+        LRESULT result = 0;
+    };
+
+    using CustomDrawHandler = Func1<CustomDrawEvent*>;
+
     using GetTooltipHandler = Func1<TreeView::GetTooltipEvent*>;
     using SelectionChangedHandler = Func1<SelectionChangedEvent*>;
 
@@ -607,7 +609,7 @@ struct TreeView : Wnd {
     GetTooltipHandler onGetTooltip;
 
     // for WM_NOTIFY wiht NM_CUSTOMDRAW
-    TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;
+    CustomDrawHandler onTreeItemCustomDraw;
 
     // for WM_NOTIFY with TVN_SELCHANGED
     SelectionChangedHandler onTreeSelectionChanged;

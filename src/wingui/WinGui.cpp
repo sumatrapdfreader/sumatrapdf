@@ -2939,10 +2939,10 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
     if (code == NM_CUSTOMDRAW) {
-        if (!onTreeItemCustomDraw) {
+        if (!onTreeItemCustomDraw.IsValid()) {
             return CDRF_DODEFAULT;
         }
-        TreeItemCustomDrawEvent ev;
+        TreeView::CustomDrawEvent ev;
         ev.treeView = w;
         ev.nm = (NMTVCUSTOMDRAW*)lp;
         HTREEITEM hItem = (HTREEITEM)ev.nm->nmcd.dwItemSpec;
@@ -2954,7 +2954,8 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         if (!ev.treeItem) {
             return CDRF_DODEFAULT;
         }
-        res = onTreeItemCustomDraw(&ev);
+        onTreeItemCustomDraw.Call(&ev);
+        res = ev.result;
         if (res < 0) {
             return CDRF_DODEFAULT;
         }

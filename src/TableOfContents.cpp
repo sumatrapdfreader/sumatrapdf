@@ -682,7 +682,7 @@ static bool ShouldCustomDraw(MainWindow* win) {
     return kind == kindEngineMupdf || kind == kindEngineMulti;
 }
 
-LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent*);
+void OnTocCustomDraw(TreeView::CustomDrawEvent*);
 
 // auto-expand root level ToC nodes if there are at most two
 static void AutoExpandTopLevelItems(TocItem* root) {
@@ -737,9 +737,8 @@ void LoadTocTree(MainWindow* win) {
 
     treeView->SetTreeModel(tocTree);
 
-    treeView->onTreeItemCustomDraw = nullptr;
     if (ShouldCustomDraw(win)) {
-        treeView->onTreeItemCustomDraw = OnTocCustomDraw;
+        treeView->onTreeItemCustomDraw = MkFunc1Void(OnTocCustomDraw);
     }
     LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeView->hwnd);
     // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
@@ -759,7 +758,7 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
+void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 #if defined(DISPLAY_TOC_PAGE_NUMBERS)
     if (false)
         return CDRF_DODEFAULT;
@@ -777,29 +776,32 @@ LRESULT OnTocCustomDraw(TreeItemCustomDrawEvent* ev) {
     break;
 #endif
 
+    ev->result = CDRF_DODEFAULT;
     NMTVCUSTOMDRAW* tvcd = ev->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);
     if (cd->dwDrawStage == CDDS_PREPAINT) {
         // ask to be notified about each item
-        return CDRF_NOTIFYITEMDRAW;
+        ev->result = CDRF_NOTIFYITEMDRAW;
+        return;
     }
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         // called before drawing each item
         TocItem* tocItem = (TocItem*)ev->treeItem;
         if (!tocItem) {
-            return CDRF_DODEFAULT;
+            return;
         }
         if (tocItem->color != kColorUnset) {
             tvcd->clrText = tocItem->color;
         }
         if (tocItem->fontFlags != 0) {
             UpdateFont(cd->hdc, tocItem->fontFlags);
-            return CDRF_NEWFONT;
+            ev->result = CDRF_NEWFONT;
+            return;
         }
-        return CDRF_DODEFAULT;
+        return;
     }
-    return CDRF_DODEFAULT;
+    return;
 }
 
 // disabled becaues of https://github.com/sumatrapdfreader/sumatrapdf/issues/2202
