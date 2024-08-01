@@ -371,7 +371,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     HwndInvalidate(wnd->hwnd);
 
     gInstallStarted = true;
-    auto fn = MkFuncVoid(InstallerThread);
+    auto fn = MkFunc0Void(InstallerThread);
     wnd->hThread = StartThread(fn, "InstallerThread");
 }
 
@@ -450,11 +450,11 @@ static void OnInstallationFinished() {
 
     if (gWnd->failed) {
         gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"));
-        gWnd->btnExit->onClicked = MkFuncVoid(OnButtonExit);
+        gWnd->btnExit->onClicked = MkFunc0Void(OnButtonExit);
         SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
     } else {
         gWnd->btnRunSumatra = CreateDefaultButton(gWnd->hwnd, _TRA("Start SumatraPDF"));
-        gWnd->btnRunSumatra->onClicked = MkFuncVoid(OnButtonStartSumatra);
+        gWnd->btnRunSumatra->onClicked = MkFunc0Void(OnButtonStartSumatra);
         SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     }
     gMsgError = gFirstError;
@@ -733,7 +733,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
             showOptions = true;
         }
         wnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
-        wnd->checkboxForAllUsers->onStateChanged = MkFuncVoid(ForAllUsersStateChanged);
+        wnd->checkboxForAllUsers->onStateChanged = MkFunc0Void(ForAllUsersStateChanged);
 
         checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
         rc = {x, y, x + dx, y + checkDy};

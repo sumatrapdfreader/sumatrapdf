@@ -547,7 +547,7 @@ void SafeDeleteCommandPaletteWnd() {
 }
 
 static void ScheduleDelete() {
-    auto fn = MkFuncVoid(SafeDeleteCommandPaletteWnd);
+    auto fn = MkFunc0Void(SafeDeleteCommandPaletteWnd);
     uitask::Post(fn, "SafeDeleteCommandPaletteWnd");
 }
 

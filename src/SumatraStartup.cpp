@@ -874,7 +874,7 @@ void StartDeleteStaleFiles() {
     TempStr dir = GetNotImportantDataDirTemp();
     TempStr ver = GetVerDirNameTemp("");
     logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
-    auto fn = MkFuncVoid(DeleteStaleFilesAsync);
+    auto fn = MkFunc0Void(DeleteStaleFilesAsync);
     RunAsync(fn, "DeleteStaleFilesThread");
 }
 

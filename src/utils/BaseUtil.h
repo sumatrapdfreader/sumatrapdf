@@ -640,7 +640,7 @@ struct Func0 {
         func(userData);
     }
 };
-Func0 MkFuncVoid(funcVoidPtr fn);
+Func0 MkFunc0Void(funcVoidPtr fn);
 
 template <typename T>
 Func0 MkFunc0(void (*fn)(T*), T* d) {
