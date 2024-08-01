@@ -1186,7 +1186,7 @@ Static::Static() {
     kind = kindStatic;
 }
 
-HWND Static::Create(const StaticCreateArgs& args) {
+HWND Static::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.className = WC_STATICW;
     cargs.parent = args.parent;
@@ -1278,7 +1278,7 @@ LRESULT Button::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
     return 0;
 }
 
-HWND Button::Create(const ButtonCreateArgs& args) {
+HWND Button::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.className = WC_BUTTONW;
     cargs.parent = args.parent;
@@ -1312,7 +1312,7 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 #endif
 
 Button* CreateButton(HWND parent, const char* s, const Func0& onClicked) {
-    ButtonCreateArgs args;
+    Button::CreateArgs args;
     args.parent = parent;
     args.text = s;
 
@@ -1325,7 +1325,7 @@ Button* CreateButton(HWND parent, const char* s, const Func0& onClicked) {
 #define kButtonMargin 8
 
 Button* CreateDefaultButton(HWND parent, const char* s) {
-    ButtonCreateArgs args;
+    Button::CreateArgs args;
     args.parent = parent;
     args.text = s;
 
@@ -1474,7 +1474,7 @@ Tooltip::Tooltip() {
     kind = kindTooltip;
 }
 
-HWND Tooltip::Create(const TooltipCreateArgs& args) {
+HWND Tooltip::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.className = TOOLTIPS_CLASS;
     cargs.font = args.font;
@@ -1631,7 +1631,7 @@ void Edit::SetCursorPositionAtEnd() {
     SetCursorPosition(pos);
 }
 
-HWND Edit::Create(const EditCreateArgs& editArgs) {
+HWND Edit::Create(const CreateArgs& editArgs) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/edit-control-styles
     CreateControlArgs args;
     args.className = WC_EDITW;
@@ -1778,7 +1778,7 @@ ListBox::~ListBox() {
     delete this->model;
 }
 
-HWND ListBox::Create(const ListBox::CreateArgs& args) {
+HWND ListBox::Create(const CreateArgs& args) {
     idealSizeLines = args.idealSizeLines;
     if (idealSizeLines < 0) {
         idealSizeLines = 0;
@@ -1898,12 +1898,12 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
 
 static Kind kindCheckbox = "checkbox";
 
-static CheckState GetButtonCheckState(HWND hwnd) {
+static Checkbox::State GetButtonState(HWND hwnd) {
     auto res = Button_GetCheck(hwnd);
-    return (CheckState)res;
+    return (Checkbox::State)res;
 }
 
-static void SetButtonCheckState(HWND hwnd, CheckState newState) {
+static void SetButtonState(HWND hwnd, Checkbox::State newState) {
     ReportIf(!hwnd);
     Button_SetCheck(hwnd, newState);
 }
@@ -1912,7 +1912,7 @@ Checkbox::Checkbox() {
     kind = kindCheckbox;
 }
 
-HWND Checkbox::Create(const Checkbox::CreateArgs& args) {
+HWND Checkbox::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.text = args.text;
@@ -1920,15 +1920,15 @@ HWND Checkbox::Create(const Checkbox::CreateArgs& args) {
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
 
     Wnd::CreateControl(cargs);
-    SetButtonCheckState(hwnd, args.initialState);
+    SetButtonState(hwnd, args.initialState);
     SizeToIdealSize(this);
     return hwnd;
 }
 
 bool Checkbox::OnCommand(WPARAM wp, LPARAM) {
     auto code = HIWORD(wp);
-    if (code == BN_CLICKED && onCheckStateChanged.IsValid()) {
-        onCheckStateChanged.Call();
+    if (code == BN_CLICKED && onStateChanged.IsValid()) {
+        onStateChanged.Call();
         return true;
     }
     return false;
@@ -1938,25 +1938,25 @@ Size Checkbox::GetIdealSize() {
     return ButtonGetIdealSize(hwnd);
 }
 
-void Checkbox::SetCheckState(CheckState newState) {
+void Checkbox::SetState(State newState) {
     ReportIf(!hwnd);
-    SetButtonCheckState(hwnd, newState);
+    SetButtonState(hwnd, newState);
 }
 
-CheckState Checkbox::GetCheckState() const {
-    return GetButtonCheckState(hwnd);
+Checkbox::State Checkbox::GetState() const {
+    return GetButtonState(hwnd);
 }
 
 void Checkbox::SetIsChecked(bool isChecked) {
     ReportIf(!hwnd);
-    CheckState newState = isChecked ? CheckState::Checked : CheckState::Unchecked;
-    SetButtonCheckState(hwnd, newState);
+    Checkbox::State newState = isChecked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
+    SetButtonState(hwnd, newState);
 }
 
 bool Checkbox::IsChecked() const {
     ReportIf(!hwnd);
-    auto state = GetCheckState();
-    return state == CheckState::Checked;
+    auto state = GetState();
+    return state == Checkbox::State::Checked;
 }
 
 //- Progress
@@ -1969,7 +1969,7 @@ Progress::Progress() {
     kind = kindProgress;
 }
 
-HWND Progress::Create(const ProgressCreateArgs& args) {
+HWND Progress::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.style = WS_CHILD | WS_VISIBLE;
@@ -2036,7 +2036,7 @@ bool DropDown::OnCommand(WPARAM wp, LPARAM) {
     return false;
 }
 
-HWND DropDown::Create(const DropDown::CreateArgs& args) {
+HWND DropDown::Create(const CreateArgs& args) {
     CreateControlArgs cargs;
     cargs.parent = args.parent;
     cargs.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
@@ -2135,7 +2135,7 @@ Trackbar::Trackbar() {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
-HWND Trackbar::Create(const Trackbar::CreateArgs& args) {
+HWND Trackbar::Create(const CreateArgs& args) {
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     dwStyle |= TBS_AUTOTICKS; // tick marks for each increment
     dwStyle |= TBS_TOOLTIPS;  // show current value when dragging in a tooltip
@@ -2308,7 +2308,7 @@ Splitter::~Splitter() {
     DeleteObject(bmp);
 }
 
-HWND Splitter::Create(const SplitterCreateArgs& args) {
+HWND Splitter::Create(const CreateArgs& args) {
     ReportIf(!args.parent);
 
     isLive = args.isLive;
@@ -2485,7 +2485,7 @@ TreeView::TreeView() {
 TreeView::~TreeView() {
 }
 
-HWND TreeView::Create(const TreeViewCreateArgs& argsIn) {
+HWND TreeView::Create(const CreateArgs& argsIn) {
     idealSize = {48, 120}; // arbitrary
     fullRowSelect = argsIn.fullRowSelect;
 
@@ -2851,13 +2851,13 @@ void TreeView::SetTreeModel(TreeModel* tm) {
     RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-void TreeView::SetCheckState(TreeItem item, bool enable) {
+void TreeView::SetState(TreeItem item, bool enable) {
     HTREEITEM hi = GetHandleByTreeItem(item);
     ReportIf(!hi);
     TreeView_SetCheckState(hwnd, hi, enable);
 }
 
-bool TreeView::GetCheckState(TreeItem item) {
+bool TreeView::GetState(TreeItem item) {
     HTREEITEM hi = GetHandleByTreeItem(item);
     ReportIf(!hi);
     auto res = TreeView_GetCheckState(hwnd, hi);
@@ -2926,14 +2926,14 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     auto code = nmtv->hdr.code;
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-getinfotip
     if (code == TVN_GETINFOTIP) {
-        if (!onGetTooltip) {
+        if (!onGetTooltip.IsValid()) {
             return 0;
         }
-        TreeItemGetTooltipEvent ev;
+        TreeView::GetTooltipEvent ev;
         ev.treeView = w;
         ev.info = (NMTVGETINFOTIPW*)(nmtv);
         ev.treeItem = GetTreeItemByHandle(ev.info->hItem);
-        onGetTooltip(&ev);
+        onGetTooltip.Call(&ev);
         return 0;
     }
 

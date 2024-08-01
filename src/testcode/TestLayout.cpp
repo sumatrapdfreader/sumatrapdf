@@ -33,16 +33,16 @@ static void doMainLayout() {
     InvalidateRect(g_hwnd, nullptr, false);
 }
 
-static void onCheckboxChanged(CheckState state) {
+static void onCheckboxChanged(Checkbox::State state) {
     const char* name = "";
     switch (state) {
-        case CheckState::Unchecked:
+        case Checkbox::State::Unchecked:
             name = "unchecked";
             break;
-        case CheckState::Checked:
+        case Checkbox::State::Checked:
             name = "checked";
             break;
-        case CheckState::Indeterminate:
+        case Checkbox::State::Indeterminate:
             name = "indeterminate";
             break;
         default:
@@ -56,7 +56,7 @@ static void onCheckboxChanged(CheckState state) {
 static CheckboxCtrl* CreateCheckbox(HWND parent, std::string_view s) {
     auto b = new CheckboxCtrl();
     b->SetText(s);
-    b->onCheckStateChanged = onCheckboxChanged;
+    b->onStateChanged = onCheckboxChanged;
     b->Create(parent);
     return b;
 }

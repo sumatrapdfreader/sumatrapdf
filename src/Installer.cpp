@@ -83,7 +83,7 @@ static Checkbox* CreateCheckbox(HWND hwndParent, const char* s, bool isChecked) 
     Checkbox::CreateArgs args;
     args.parent = hwndParent;
     args.text = s;
-    args.initialState = isChecked ? CheckState::Checked : CheckState::Unchecked;
+    args.initialState = isChecked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
 
     Checkbox* w = new Checkbox();
     w->Create(args);
@@ -346,7 +346,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     nInstallationSteps++; // for writing registry entries
     nInstallationSteps++; // to show progress at the beginning
 
-    ProgressCreateArgs args;
+    Progress::CreateArgs args;
     args.initialMax = nInstallationSteps;
     args.parent = wnd->hwnd;
     wnd->progressBar = new Progress();
@@ -733,7 +733,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
             showOptions = true;
         }
         wnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
-        wnd->checkboxForAllUsers->onCheckStateChanged = MkFuncVoid(ForAllUsersStateChanged);
+        wnd->checkboxForAllUsers->onStateChanged = MkFuncVoid(ForAllUsersStateChanged);
 
         checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
         rc = {x, y, x + dx, y + checkDy};
@@ -749,7 +749,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
 
     Size btnSize2 = wnd->btnBrowseDir->GetIdealSize();
 
-    EditCreateArgs eargs;
+    Edit::CreateArgs eargs;
     eargs.parent = hwnd;
     eargs.withBorder = true;
     wnd->editInstallationDir = new Edit();
@@ -773,7 +773,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd) {
     const char* s2 = _TRA("Install SumatraPDF in &folder:");
     rc = {x, y, x + r.dx, y + staticDy};
 
-    StaticCreateArgs args;
+    Static::CreateArgs args;
     args.parent = hwnd;
     args.text = s2;
     wnd->staticInstDir = new Static();

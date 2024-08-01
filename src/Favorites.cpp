@@ -903,7 +903,7 @@ void CreateFavorites(MainWindow* win) {
     // label is set in UpdateToolbarSidebarText()
 
     auto treeView = new TreeView();
-    TreeViewCreateArgs args;
+    TreeView::CreateArgs args;
     args.parent = win->hwndFavBox;
     args.font = GetAppTreeFont();
     args.fullRowSelect = true;

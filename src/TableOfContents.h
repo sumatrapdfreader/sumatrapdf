@@ -10,7 +10,7 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
 void UnsubclassToc(MainWindow*);
 
 // shared with Favorites.cpp
-// void TocCustomizeTooltip(TreeItemGetTooltipEvent*);
+// void TocCustomizeTooltip(TreeItem::GetTooltipEvent*);
 // LRESULT TocTreeKeyDown2(TreeKeyDownEvent*);
 
 // void TocTreeCharHandler(CharEvent* ev);

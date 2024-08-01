@@ -780,7 +780,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
 }
 
 static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
-    StaticCreateArgs args;
+    Static::CreateArgs args;
     args.parent = parent;
     args.font = font;
     args.text = s;
@@ -812,7 +812,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     {
-        EditCreateArgs args;
+        Edit::CreateArgs args;
         args.parent = hwnd;
         args.isMultiLine = false;
         args.withBorder = true;

@@ -180,18 +180,18 @@ bool PreTranslateMessage(MSG& msg);
 
 //--- Static
 
-struct StaticCreateArgs {
-    HWND parent = nullptr;
-    HFONT font = nullptr;
-    const char* text = nullptr;
-};
-
 struct Static : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        HFONT font = nullptr;
+        const char* text = nullptr;
+    };
+
     Static();
 
     Func0 onClicked;
 
-    HWND Create(const StaticCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     Size GetIdealSize() override;
 
@@ -201,20 +201,20 @@ struct Static : Wnd {
 
 //--- Button
 
-struct ButtonCreateArgs {
-    HWND parent = nullptr;
-    HFONT font = nullptr;
-    const char* text = nullptr;
-};
-
 struct Button : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        HFONT font = nullptr;
+        const char* text = nullptr;
+    };
+
     Func0 onClicked{};
 
     bool isDefault = false;
 
     Button();
 
-    HWND Create(const ButtonCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     Size GetIdealSize() override;
 
@@ -227,15 +227,15 @@ Button* CreateDefaultButton(HWND parent, const char* s);
 
 //--- Tooltip
 
-struct TooltipCreateArgs {
-    HWND parent = nullptr;
-    HFONT font = nullptr;
-};
-
 // a tooltip manages multiple areas within HWND
 struct Tooltip : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        HFONT font = nullptr;
+    };
+
     Tooltip();
-    HWND Create(const TooltipCreateArgs&);
+    HWND Create(const CreateArgs&);
     Size GetIdealSize() override;
 
     int Add(const char* s, const Rect& rc, bool multiline);
@@ -260,16 +260,16 @@ struct Tooltip : Wnd {
 //--- Edit
 using TextChangedHandler = Func0;
 
-struct EditCreateArgs {
-    HWND parent = nullptr;
-    bool isMultiLine = false;
-    bool withBorder = false;
-    const char* cueText = nullptr;
-    int idealSizeLines = 1;
-    HFONT font = nullptr;
-};
-
 struct Edit : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        bool isMultiLine = false;
+        bool withBorder = false;
+        const char* cueText = nullptr;
+        int idealSizeLines = 1;
+        HFONT font = nullptr;
+    };
+
     TextChangedHandler onTextChanged;
 
     // set before Create()
@@ -279,7 +279,7 @@ struct Edit : Wnd {
     Edit();
     ~Edit() override;
 
-    HWND Create(const EditCreateArgs&);
+    HWND Create(const CreateArgs&);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) override;
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
@@ -331,22 +331,22 @@ struct ListBox : Wnd {
 
 //--- CheckboxCtrl
 
-enum class CheckState {
-    Unchecked = BST_UNCHECKED,
-    Checked = BST_CHECKED,
-    Indeterminate = BST_INDETERMINATE,
-};
-
 struct Checkbox : Wnd {
+    enum class State {
+        Unchecked = BST_UNCHECKED,
+        Checked = BST_CHECKED,
+        Indeterminate = BST_INDETERMINATE,
+    };
+
     struct CreateArgs {
         HWND parent = nullptr;
         const char* text = nullptr;
-        CheckState initialState = CheckState::Unchecked;
+        State initialState = State::Unchecked;
     };
 
     using StateChangedHandler = Func0;
 
-    StateChangedHandler onCheckStateChanged;
+    StateChangedHandler onStateChanged;
 
     Checkbox();
 
@@ -356,8 +356,8 @@ struct Checkbox : Wnd {
 
     Size GetIdealSize() override;
 
-    void SetCheckState(CheckState);
-    CheckState GetCheckState() const;
+    void SetState(State);
+    State GetState() const;
 
     void SetIsChecked(bool isChecked);
     bool IsChecked() const;
@@ -365,18 +365,18 @@ struct Checkbox : Wnd {
 
 //--- Progress
 
-struct ProgressCreateArgs {
-    HWND parent = nullptr;
-    int initialMax = 0;
-};
-
 struct Progress : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        int initialMax = 0;
+    };
+
     Progress();
 
     int idealDx = 0;
     int idealDy = 0;
 
-    HWND Create(const ProgressCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     void SetMax(int);
     void SetCurrent(int);
@@ -478,14 +478,14 @@ struct SplitterMoveEvent {
 
 using SplitterMoveHandler = Func1<SplitterMoveEvent*>;
 
-struct SplitterCreateArgs {
-    HWND parent = nullptr;
-    SplitterType type = SplitterType::Horiz;
-    bool isLive = true;
-    COLORREF backgroundColor = kColorUnset;
-};
-
 struct Splitter : public Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        SplitterType type = SplitterType::Horiz;
+        bool isLive = true;
+        COLORREF backgroundColor = kColorUnset;
+    };
+
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
     SplitterMoveHandler onSplitterMove;
@@ -502,28 +502,13 @@ struct Splitter : public Wnd {
     Splitter();
     ~Splitter() override;
 
-    HWND Create(const SplitterCreateArgs&);
+    HWND Create(const CreateArgs&);
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
 };
 
 //--- TreeView
 
 struct TreeView;
-
-struct TreeViewCreateArgs {
-    HWND parent = nullptr;
-    HFONT font = nullptr;
-    DWORD exStyle = 0; // additional flags, will be OR with the rest
-    bool fullRowSelect = false;
-};
-
-struct TreeItemGetTooltipEvent {
-    TreeView* treeView = nullptr;
-    TreeItem treeItem = 0;
-    NMTVGETINFOTIPW* info = nullptr;
-};
-
-using TreeItemGetTooltipHandler = std::function<void(TreeItemGetTooltipEvent*)>;
 
 struct TreeItemCustomDrawEvent {
     TreeView* treeView = nullptr;
@@ -567,10 +552,25 @@ struct TreeKeyDownEvent {
 using TreeKeyDownHandler = std::function<void(TreeKeyDownEvent*)>;
 
 struct TreeView : Wnd {
+    struct CreateArgs {
+        HWND parent = nullptr;
+        HFONT font = nullptr;
+        DWORD exStyle = 0; // additional flags, will be OR with the rest
+        bool fullRowSelect = false;
+    };
+
+    struct GetTooltipEvent {
+        TreeView* treeView = nullptr;
+        TreeItem treeItem = 0;
+        NMTVGETINFOTIPW* info = nullptr;
+    };
+
+    using GetTooltipHandler = Func1<TreeView::GetTooltipEvent*>;
+
     TreeView();
     ~TreeView() override;
 
-    HWND Create(const TreeViewCreateArgs&);
+    HWND Create(const CreateArgs&);
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
@@ -595,8 +595,8 @@ struct TreeView : Wnd {
     TreeItem GetTreeItemByHandle(HTREEITEM item);
     bool UpdateItem(TreeItem ti);
     void SetTreeModel(TreeModel* tm);
-    void SetCheckState(TreeItem item, bool enable);
-    bool GetCheckState(TreeItem item);
+    void SetState(TreeItem item, bool enable);
+    bool GetState(TreeItem item);
     TreeItemState GetItemState(TreeItem ti);
 
     bool fullRowSelect = false;
@@ -605,7 +605,7 @@ struct TreeView : Wnd {
     TreeModel* treeModel = nullptr; // not owned by us
 
     // for WM_NOTIFY with TVN_GETINFOTIP
-    TreeItemGetTooltipHandler onGetTooltip = nullptr;
+    GetTooltipHandler onGetTooltip;
 
     // for WM_NOTIFY wiht NM_CUSTOMDRAW
     TreeItemCustomDrawHandler onTreeItemCustomDraw = nullptr;

@@ -437,7 +437,7 @@ static void CreateInfotipForLink(StaticLinkInfo* linkInfo) {
     }
 
     gAboutTooltip = new Tooltip();
-    TooltipCreateArgs args;
+    Tooltip::CreateArgs args;
     args.parent = gHwndAbout;
     gAboutTooltip->Create(args);
     gAboutTooltip->SetSingle(linkInfo->infotip, linkInfo->rect, false);

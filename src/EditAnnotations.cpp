@@ -1016,7 +1016,7 @@ void EditAnnotationsWindow::OnSize(UINT msg, UINT, SIZE size) {
 
 static Static* CreateStatic(HWND parent, const char* s = nullptr) {
     auto w = new Static();
-    StaticCreateArgs args;
+    Static::CreateArgs args;
     args.parent = parent;
     args.text = s;
     args.font = GetAppFont();
@@ -1081,7 +1081,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        EditCreateArgs args;
+        Edit::CreateArgs args;
         args.parent = parent;
         args.isMultiLine = true;
         args.idealSizeLines = 5;
@@ -1333,7 +1333,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = parent;
         args.text = "Save...";
         args.font = fnt;
@@ -1349,7 +1349,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = parent;
         args.text = "Embed...";
         args.font = fnt;
@@ -1365,7 +1365,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = parent;
         args.text = "Delete annotation";
         args.font = fnt;
@@ -1390,7 +1390,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = parent;
         // TODO: maybe  file name e.g. "Save changes to foo.pdf"
         args.text = _TRA("Save changes to existing PDF");
@@ -1407,7 +1407,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = parent;
         // TODO: maybe  file name e.g. "Save changes to foo.pdf"
         args.text = _TRA("Save changes to a new PDF");

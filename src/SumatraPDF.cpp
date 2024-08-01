@@ -1426,7 +1426,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
 static void CreateSidebar(MainWindow* win) {
     {
-        SplitterCreateArgs args;
+        Splitter::CreateArgs args;
         args.parent = win->hwndFrame;
         args.type = SplitterType::Vert;
         win->sidebarSplitter = new Splitter();
@@ -1437,7 +1437,7 @@ static void CreateSidebar(MainWindow* win) {
     CreateToc(win);
 
     {
-        SplitterCreateArgs args;
+        Splitter::CreateArgs args;
         args.parent = win->hwndFrame;
         args.type = SplitterType::Horiz;
         win->favSplitter = new Splitter();
@@ -1526,7 +1526,7 @@ static MainWindow* CreateMainWindow() {
     UpdateWindow(win->hwndCanvas);
 
     win->infotip = new Tooltip();
-    TooltipCreateArgs args;
+    Tooltip::CreateArgs args;
     args.parent = win->hwndCanvas;
     win->infotip->Create(args);
 

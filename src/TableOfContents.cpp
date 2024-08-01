@@ -50,7 +50,7 @@
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
-static void TocCustomizeTooltip(TreeItemGetTooltipEvent* ev) {
+static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
     auto treeView = ev->treeView;
     auto tm = treeView->treeModel;
     auto ti = ev->treeItem;
@@ -1004,7 +1004,7 @@ void CreateToc(MainWindow* win) {
     // label is set in UpdateToolbarSidebarText()
 
     auto treeView = new TreeView();
-    TreeViewCreateArgs args;
+    TreeView::CreateArgs args;
     args.parent = win->hwndTocBox;
     args.font = GetAppTreeFont();
     args.fullRowSelect = true;
@@ -1014,7 +1014,7 @@ void CreateToc(MainWindow* win) {
     treeView->onContextMenu = fn;
     treeView->onTreeSelectionChanged = TocTreeSelectionChanged;
     treeView->onTreeKeyDown = TocTreeKeyDown2;
-    treeView->onGetTooltip = TocCustomizeTooltip;
+    treeView->onGetTooltip = MkFunc1Void(TocCustomizeTooltip);
     // treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary
     // treeView->onChar = TocTreeCharHandler;
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;

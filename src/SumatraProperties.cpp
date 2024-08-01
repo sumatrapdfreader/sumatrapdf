@@ -422,7 +422,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     bool isRtl = IsUIRightToLeft();
     HwndSetRtl(hwnd, isRtl);
     {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = hwnd;
         args.text = _TRA("Copy To Clipboard");
 
@@ -435,7 +435,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
     }
 
     if (!extended) {
-        ButtonCreateArgs args;
+        Button::CreateArgs args;
         args.parent = hwnd;
         args.text = _TRA("Get Fonts Info");
 
