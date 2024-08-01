@@ -643,28 +643,6 @@ struct TabMouseState {
     TabInfo* tabInfo = nullptr;
 };
 
-struct TabClosedEvent {
-    TabsCtrl* tabs = nullptr;
-    int tabIdx = 0;
-};
-
-using TabClosedHandler = std::function<void(TabClosedEvent*)>;
-
-struct TabsSelectionChangingEvent {
-    TabsCtrl* tabs = nullptr;
-    int tabIdx;
-};
-
-// return true to prevent changing tabs
-using TabsSelectionChangingHandler = std::function<bool(TabsSelectionChangingEvent*)>;
-
-struct TabsSelectionChangedEvent {
-    TabsCtrl* tabs = nullptr;
-    int tabIdx;
-};
-
-using TabsSelectionChangedHandler = std::function<void(TabsSelectionChangedEvent*)>;
-
 struct TabMigrationEvent {
     TabsCtrl* tabs = nullptr;
     int tabIdx;
@@ -680,14 +658,6 @@ struct TabDraggedEvent {
 };
 
 using TabDraggedHandler = std::function<void(TabDraggedEvent*)>;
-
-struct TabsCreateArgs {
-    HWND parent = nullptr;
-    HFONT font = nullptr;
-    bool withToolTips = false;
-    int ctrlID = 0;
-    int tabDefaultDx = 300;
-};
 
 struct TabInfo {
     char* text = nullptr;
@@ -707,6 +677,35 @@ struct TabInfo {
 };
 
 struct TabsCtrl : Wnd {
+    struct SelectionChangingEvent {
+        TabsCtrl* tabs = nullptr;
+        int tabIdx = -1;
+        // set to true to prevent changing tabs
+        bool preventChanging = false;
+    };
+
+    struct SelectionChangedEvent {
+        TabsCtrl* tabs = nullptr;
+        int tabIdx;
+    };
+
+    struct ClosedEvent {
+        TabsCtrl* tabs = nullptr;
+        int tabIdx = -1;
+    };
+
+    using SelectionChangingHandler = Func1<SelectionChangingEvent*>;
+    using SelectionChangedHandler = Func1<SelectionChangedEvent*>;
+    using ClosedHandler = Func1<ClosedEvent*>;
+
+    struct CreateArgs {
+        HWND parent = nullptr;
+        HFONT font = nullptr;
+        bool withToolTips = false;
+        int ctrlID = 0;
+        int tabDefaultDx = 300;
+    };
+
     int ctrlID = 0;
     bool withToolTips = false;
     bool inTitleBar = false;
@@ -724,9 +723,9 @@ struct TabsCtrl : Wnd {
     // where we grabbed the tab with a leftclick, in tab coordinates
     Point grabLocation;
 
-    TabClosedHandler onTabClosed = nullptr;
-    TabsSelectionChangingHandler onSelectionChanging = nullptr;
-    TabsSelectionChangedHandler onSelectionChanged = nullptr;
+    ClosedHandler onTabClosed;
+    SelectionChangingHandler onSelectionChanging;
+    SelectionChangedHandler onSelectionChanged;
     TabMigrationHandler onTabMigration = nullptr;
     TabDraggedHandler onTabDragged = nullptr;
 
@@ -753,7 +752,7 @@ struct TabsCtrl : Wnd {
     TabsCtrl();
     ~TabsCtrl() override;
 
-    HWND Create(TabsCreateArgs&);
+    HWND Create(TabsCtrl::CreateArgs&);
 
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotifyReflect(WPARAM, LPARAM) override;

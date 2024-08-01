@@ -385,29 +385,31 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
     }
 }
 
+static void MainWindowTabClosed(MainWindow* win, TabsCtrl::ClosedEvent* ev) {
+    int closedTabIdx = ev->tabIdx;
+    WindowTab* tab = win->GetTab(closedTabIdx);
+    CloseTab(tab, false);
+}
+
+static void MainWindowTabSelectionChanging(MainWindow* win, TabsCtrl::SelectionChangingEvent* ev) {
+    // TODO: Should we allow the switch of the tab if we are in process of printing?
+    SaveCurrentWindowTab(win);
+    ev->preventChanging = false;
+}
+
+static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionChangedEvent* ev) {
+    int currentIdx = win->tabsCtrl->GetSelected();
+    WindowTab* tab = win->Tabs()[currentIdx];
+    LoadModelIntoTab(tab);
+}
+
 void CreateTabbar(MainWindow* win) {
     TabsCtrl* tabsCtrl = new TabsCtrl();
 
-    tabsCtrl->onTabClosed = [win](TabClosedEvent* ev) {
-        int closedTabIdx = ev->tabIdx;
-        WindowTab* tab = win->GetTab(closedTabIdx);
-        CloseTab(tab, false);
-    };
-
-    tabsCtrl->onSelectionChanging = [win](TabsSelectionChangingEvent* ev) -> bool {
-        // TODO: Should we allow the switch of the tab if we are in process of printing?
-        SaveCurrentWindowTab(win);
-        return false;
-    };
-
-    tabsCtrl->onSelectionChanged = [win](TabsSelectionChangedEvent* ev) {
-        int currentIdx = win->tabsCtrl->GetSelected();
-        WindowTab* tab = win->Tabs()[currentIdx];
-        LoadModelIntoTab(tab);
-    };
-
-    auto fn = MkFunc1Void<ContextMenuEvent*>(TabsContextMenu);
-    tabsCtrl->onContextMenu = fn;
+    tabsCtrl->onTabClosed = MkFunc1(MainWindowTabClosed, win);
+    tabsCtrl->onSelectionChanging = MkFunc1(MainWindowTabSelectionChanging, win);
+    tabsCtrl->onSelectionChanged = MkFunc1(MainWindowTabSelectionChanged, win);
+    tabsCtrl->onContextMenu = MkFunc1Void<ContextMenuEvent*>(TabsContextMenu);
 
     tabsCtrl->onTabMigration = [win](TabMigrationEvent* ev) {
         WindowTab* tab = win->GetTab(ev->tabIdx);
@@ -426,7 +428,7 @@ void CreateTabbar(MainWindow* win) {
         MigrateTab(tab, releaseWnd);
     };
 
-    TabsCreateArgs args;
+    TabsCtrl::CreateArgs args;
     args.parent = win->hwndFrame;
     args.withToolTips = true;
     args.font = GetAppFont();

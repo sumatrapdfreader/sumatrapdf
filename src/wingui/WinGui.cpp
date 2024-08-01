@@ -3323,24 +3323,23 @@ TabsCtrl::~TabsCtrl() {
 }
 
 static void TriggerSelectionChanged(TabsCtrl* tabs) {
-    if (!tabs->onSelectionChanged) {
+    if (!tabs->onSelectionChanged.IsValid()) {
         return;
     }
-    TabsSelectionChangedEvent ev;
+    TabsCtrl::SelectionChangedEvent ev;
     ev.tabs = tabs;
-    tabs->onSelectionChanged(&ev);
+    tabs->onSelectionChanged.Call(&ev);
 }
 
 static bool TriggerSelectionChanging(TabsCtrl* tabs) {
-    if (!tabs->onSelectionChanging) {
+    if (!tabs->onSelectionChanging.IsValid()) {
         // allow changing
         return false;
     }
 
-    TabsSelectionChangingEvent ev;
-    ev.tabs = tabs;
-    bool res = tabs->onSelectionChanging(&ev);
-    return (LRESULT)res;
+    TabsCtrl::SelectionChangingEvent ev;
+    tabs->onSelectionChanging.Call(&ev);
+    return (LRESULT)ev.preventChanging;
 }
 
 static void TriggerTabMigration(TabsCtrl* tabs, int tabIdx, Point p) {
@@ -3355,13 +3354,13 @@ static void TriggerTabMigration(TabsCtrl* tabs, int tabIdx, Point p) {
 }
 
 static void TriggerTabClosed(TabsCtrl* tabs, int tabIdx) {
-    if ((tabIdx < 0) || !tabs->onTabClosed) {
+    if ((tabIdx < 0) || !tabs->onTabClosed.IsValid()) {
         return;
     }
-    TabClosedEvent ev;
+    TabsCtrl::ClosedEvent ev;
     ev.tabs = tabs;
     ev.tabIdx = tabIdx;
-    tabs->onTabClosed(&ev);
+    tabs->onTabClosed.Call(&ev);
 }
 
 static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
@@ -3687,7 +3686,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return WndProcDefault(hwnd, msg, wp, lp);
 }
 
-HWND TabsCtrl::Create(TabsCreateArgs& argsIn) {
+HWND TabsCtrl::Create(TabsCtrl::CreateArgs& argsIn) {
     withToolTips = argsIn.withToolTips;
     tabDefaultDx = argsIn.tabDefaultDx;
 
