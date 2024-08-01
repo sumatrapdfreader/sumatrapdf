@@ -258,43 +258,52 @@ void ToggleTocBox(MainWindow* win) {
     }
 }
 
-// find the closest item in tree view to a given page number
-static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
+struct VistorForPageNoData {
+    int pageNo = -1;
+
     TocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
+    int nItems = 0;
+};
 
+void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd) {
+    auto tocItem = (TocItem*)vd->item;
+    if (!tocItem) {
+        return;
+    }
+    if (!d->bestMatch) {
+        // if nothing else matches, match the root node
+        d->bestMatch = tocItem;
+    }
+    ++d->nItems;
+    int page = tocItem->pageNo;
+    if ((page <= d->pageNo) && (page >= d->bestMatchPageNo) && (page >= 1)) {
+        d->bestMatch = tocItem;
+        d->bestMatchPageNo = page;
+        if (d->pageNo == d->bestMatchPageNo) {
+            // we can stop earlier if we found the exact match
+            vd->stopTraversal = true;
+            return;
+        }
+    }
+}
+
+// find the closest item in tree view to a given page number
+static TocItem* TreeItemForPageNo(TreeView* treeView, int pageNo) {
     TreeModel* tm = treeView->treeModel;
     if (!tm) {
         return 0;
     }
-    int nItems = 0;
-    VisitTreeModelItems(tm, [&](TreeModel* tm, TreeItem ti) {
-        auto tocItem = (TocItem*)ti;
-        if (!tocItem) {
-            return true;
-        }
-        if (!bestMatch) {
-            // if nothing else matches, match the root node
-            bestMatch = tocItem;
-        }
-        ++nItems;
-        int page = tocItem->pageNo;
-        if ((page <= pageNo) && (page >= bestMatchPageNo) && (page >= 1)) {
-            bestMatch = tocItem;
-            bestMatchPageNo = page;
-            if (pageNo == bestMatchPageNo) {
-                // we can stop earlier if we found the exact match
-                return false;
-            }
-        }
-        return true;
-    });
+    VistorForPageNoData d;
+    d.pageNo = pageNo;
+    auto fn = MkFunc1<VistorForPageNoData, TreeItemVisitorData*>(visitTree, &d);
+    VisitTreeModelItems(tm, fn);
     // if there's only one item, we want to unselect it so that it can
     // be selected by the user
-    if (nItems < 2) {
+    if (d.nItems < 2) {
         return 0;
     }
-    return bestMatch;
+    return d.bestMatch;
 }
 
 // TODO: I can't use TreeItem->IsExpanded() because it's not in sync with
