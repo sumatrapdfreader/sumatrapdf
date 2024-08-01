@@ -37,6 +37,55 @@ static bool IsSpecialDir(const char* s) {
     return str::Eq(s, ".") || str::Eq(s, "..");
 }
 
+DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
+    this->di = di;
+    this->didFinish = didFinish;
+}
+
+DirIter::iterator DirIter::begin() const {
+    return DirIter::iterator(this, false);
+}
+
+DirIter::iterator DirIter::end() const {
+    return DirIter::iterator(this, true);
+}
+
+VisitDirData* DirIter::iterator::operator*() {
+    if (didFinish) {
+        return nullptr;
+    }
+    return &data;
+}
+
+static void AdvanceDirIter(DirIter::iterator* it, int n) {
+    // TODO: implement me
+}
+
+// postfix increment
+DirIter::iterator DirIter::iterator::operator++(int) {
+    auto res = *this;
+    AdvanceDirIter(this, 1);
+    return res;
+}
+
+DirIter::iterator& DirIter::iterator::operator++() {
+    AdvanceDirIter(this, 1);
+    return *this;
+}
+
+DirIter::iterator& DirIter::iterator::operator+(int n) {
+    AdvanceDirIter(this, n);
+    return *this;
+}
+
+bool operator==(const DirIter::iterator& a, const DirIter::iterator& b) {
+    return (a.di == b.di) && (a.didFinish == b.didFinish);
+};
+
+bool operator!=(const DirIter::iterator& a, const DirIter::iterator& b) {
+    return (a.di != b.di) || (a.didFinish != b.didFinish);
+};
+
 // if cb returns false, we stop further traversal
 bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb) {
     ReportIf(flg == 0);
@@ -157,7 +206,7 @@ static void DirTraverseThreadCb(DirTraverseThreadData* td, VisitDirData* d) {
     td->queue->Append(d->filePath);
 }
 
-static void WINAPI DirTraverseThread(DirTraverseThreadData* td) {
+static void DirTraverseThread(DirTraverseThreadData* td) {
     auto fn = MkFunc1(DirTraverseThreadCb, td);
     DirTraverse(td->dir, td->recurse, fn);
     td->queue->MarkFinished();

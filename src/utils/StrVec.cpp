@@ -623,14 +623,6 @@ bool StrVec::Contains(const char* s, int sLen) const {
     return idx != -1;
 }
 
-StrVec::iterator StrVec::begin() const {
-    return StrVec::iterator(this, 0);
-}
-
-StrVec::iterator StrVec::end() const {
-    return StrVec::iterator(this, this->Size());
-}
-
 StrVec::iterator::iterator(const StrVec* v, int idx) {
     this->v = v;
     this->idx = idx;
@@ -640,6 +632,14 @@ StrVec::iterator::iterator(const StrVec* v, int idx) {
     auto [page, idxInPage] = PageForIdx(v, idx);
     this->page = page;
     this->idxInPage = idxInPage;
+}
+
+StrVec::iterator StrVec::begin() const {
+    return StrVec::iterator(this, 0);
+}
+
+StrVec::iterator StrVec::end() const {
+    return StrVec::iterator(this, this->Size());
 }
 
 char* StrVec::iterator::operator*() const {
@@ -656,7 +656,7 @@ StrSpan StrVec::iterator::Span() const {
     return page->AtSpan(idxInPage);
 }
 
-static void AdvanceIter(StrVec::iterator& it, int n) {
+static void AdvanceStrVecIter(StrVec::iterator& it, int n) {
     if (it.v->sortIndexes) {
         it.idx += n;
         return;
@@ -678,17 +678,17 @@ static void AdvanceIter(StrVec::iterator& it, int n) {
 // postfix increment
 StrVec::iterator StrVec::iterator::operator++(int) {
     auto res = *this;
-    AdvanceIter(*this, 1);
+    AdvanceStrVecIter(*this, 1);
     return res;
 }
 
 StrVec::iterator& StrVec::iterator::operator++() {
-    AdvanceIter(*this, 1);
+    AdvanceStrVecIter(*this, 1);
     return *this;
 }
 
 StrVec::iterator& StrVec::iterator::operator+(int n) {
-    AdvanceIter(*this, n);
+    AdvanceStrVecIter(*this, n);
     return *this;
 }
 

@@ -15,6 +15,28 @@ struct VisitDirData {
 
 using VisitDirCb = Func1<VisitDirData*>;
 
+struct DirIter {
+    const char* dir = nullptr;
+    u32 flags = 0;
+
+    struct iterator {
+        const DirIter* di;
+        bool didFinish = false;
+        VisitDirData data;
+
+        iterator(const DirIter*, bool);
+
+        VisitDirData* operator*();
+        iterator& operator++();   // ++it
+        iterator operator++(int); // it++
+        iterator& operator+(int); // it += n
+        friend bool operator==(const iterator& a, const iterator& b);
+        friend bool operator!=(const iterator& a, const iterator& b);
+    };
+    iterator begin() const;
+    iterator end() const;
+};
+
 bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb);
 bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb);
 bool VisitDirs(const char* dir, bool recurse, const VisitDirCb& cb);
