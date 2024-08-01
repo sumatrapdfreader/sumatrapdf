@@ -64,12 +64,6 @@ struct WmEvent {
     bool didHandle = true; // common case so set as default
 };
 
-struct WmCloseEvent {
-    WmEvent* e = nullptr;
-};
-
-typedef void (*WmCloseHandler)(WmCloseEvent&);
-
 struct WmDestroyEvent {
     WmEvent* e = nullptr;
 };
@@ -77,6 +71,12 @@ struct WmDestroyEvent {
 typedef void (*WmDestroyHandler)(WmDestroyEvent&);
 
 struct Wnd : public ILayout {
+    struct CloseEvent {
+        WmEvent* e = nullptr;
+    };
+
+    using CloseHandler = Func1<CloseEvent*>;
+
     Wnd();
     Wnd(HWND hwnd);
     virtual ~Wnd();
@@ -172,7 +172,7 @@ struct Wnd : public ILayout {
 
     ContextMenuHandler onContextMenu;
 
-    WmCloseHandler onClose = nullptr;
+    CloseHandler onClose;
     WmDestroyHandler onDestroy = nullptr;
 };
 
@@ -420,13 +420,13 @@ struct DropDown : Wnd {
 struct Trackbar;
 
 struct Trackbar : Wnd {
-    struct PosChangingEvent {
+    struct PositionChangingEvent {
         Trackbar* trackbar = nullptr;
         int pos = -1;
         NMTRBTHUMBPOSCHANGING* info = nullptr;
     };
 
-    using PositionChangingHandler = Func1<PosChangingEvent*>;
+    using PositionChangingHandler = Func1<PositionChangingEvent*>;
 
     struct CreateArgs {
         HWND parent = nullptr;
@@ -439,7 +439,7 @@ struct Trackbar : Wnd {
     Size idealSize{};
 
     // for WM_NOTIFY with TRBN_THUMBPOSCHANGING
-    PositionChangingHandler onPosChanging;
+    PositionChangingHandler onPositionChanging;
 
     Trackbar();
     ~Trackbar() override = default;
@@ -488,7 +488,7 @@ struct Splitter : public Wnd {
 
     SplitterType type = SplitterType::Horiz;
     bool isLive = true;
-    MoveHandler onSplitterMove;
+    MoveHandler onMove;
 
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;
@@ -509,28 +509,6 @@ struct Splitter : public Wnd {
 //--- TreeView
 
 struct TreeView;
-
-struct TreeClickEvent {
-    TreeView* treeView = nullptr;
-    TreeItem treeItem = 0;
-    bool isDblClick = false;
-
-    // mouse x,y position relative to the window
-    Point mouseWindow{};
-    // global (screen) mouse x,y position
-    Point mouseScreen{};
-};
-
-using TreeClickHandler = std::function<LRESULT(TreeClickEvent*)>;
-
-struct TreeKeyDownEvent {
-    TreeView* treeView = nullptr;
-    NMTVKEYDOWN* nmkd = nullptr;
-    int keyCode = 0;
-    u32 flags = 0;
-};
-
-using TreeKeyDownHandler = std::function<void(TreeKeyDownEvent*)>;
 
 struct TreeView : Wnd {
     struct CreateArgs {
@@ -563,8 +541,31 @@ struct TreeView : Wnd {
         LRESULT result = 0;
     };
 
-    using CustomDrawHandler = Func1<CustomDrawEvent*>;
+    struct ClickEvent {
+        TreeView* treeView = nullptr;
+        TreeItem treeItem = 0;
+        bool isDblClick = false;
 
+        // mouse x,y position relative to the window
+        Point mouseWindow{};
+        // global (screen) mouse x,y position
+        Point mouseScreen{};
+
+        LRESULT result = 0;
+    };
+
+    struct KeyDownEvent {
+        TreeView* treeView = nullptr;
+        NMTVKEYDOWN* nmkd = nullptr;
+        int keyCode = 0;
+        u32 flags = 0;
+
+        LRESULT result = 0;
+    };
+
+    using KeyDownHandler = Func1<KeyDownEvent*>;
+    using ClickHandler = Func1<ClickEvent*>;
+    using CustomDrawHandler = Func1<CustomDrawEvent*>;
     using GetTooltipHandler = Func1<TreeView::GetTooltipEvent*>;
     using SelectionChangedHandler = Func1<SelectionChangedEvent*>;
 
@@ -609,16 +610,16 @@ struct TreeView : Wnd {
     GetTooltipHandler onGetTooltip;
 
     // for WM_NOTIFY wiht NM_CUSTOMDRAW
-    CustomDrawHandler onTreeItemCustomDraw;
+    CustomDrawHandler onCustomDraw;
 
     // for WM_NOTIFY with TVN_SELCHANGED
-    SelectionChangedHandler onTreeSelectionChanged;
+    SelectionChangedHandler onSelectionChanged;
 
     // for WM_NOTIFY with NM_CLICK or NM_DBCLICK
-    TreeClickHandler onTreeClick = nullptr;
+    ClickHandler onClick;
 
     // for WM_NOITFY with TVN_KEYDOWN
-    TreeKeyDownHandler onTreeKeyDown = nullptr;
+    KeyDownHandler onKeyDown;
 
     // private
     TVITEMW item{};

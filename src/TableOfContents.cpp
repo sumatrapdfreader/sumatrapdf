@@ -738,7 +738,7 @@ void LoadTocTree(MainWindow* win) {
     treeView->SetTreeModel(tocTree);
 
     if (ShouldCustomDraw(win)) {
-        treeView->onTreeItemCustomDraw = MkFunc1Void(OnTocCustomDraw);
+        treeView->onCustomDraw = MkFunc1Void(OnTocCustomDraw);
     }
     LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeView->hwnd);
     // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
@@ -810,7 +810,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 // this calls GoToTocLinkTask) which will eventually call GoToPage()
 // which adds nav point. Maybe I should not add nav point
 // if going to the same page?
-LRESULT TocTreeClick(TreeClickEvent* ev) {
+void TocTreeClick(TreeView::ClickEvent* ev) {
 #if 0
     ev->didHandle = true;
     if (!ev->treeItem) {
@@ -821,7 +821,7 @@ LRESULT TocTreeClick(TreeClickEvent* ev) {
     bool allowExternal = false;
     GoToTocTreeItem(win, ev->treeItem, allowExternal);
 #endif
-    return -1;
+    ev->result = -1;
 }
 
 static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
@@ -842,7 +842,7 @@ static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     GoToTocTreeItem(win, ev->selectedItem, allowExternal);
 }
 
-LRESULT TocTreeKeyDown2(TreeKeyDownEvent* ev) {
+void TocTreeKeyDown2(TreeView::KeyDownEvent* ev) {
     // TODO: trying to fix https://github.com/sumatrapdfreader/sumatrapdf/issues/1841
     // doesn't work i.e. page up / page down seems to be processed anyway by TreeCtrl
 #if 0
@@ -859,16 +859,18 @@ LRESULT TocTreeKeyDown2(TreeKeyDownEvent* ev) {
     }
 #endif
     if (ev->keyCode != VK_TAB) {
-        return 0;
+        ev->result = 0;
+        return;
     }
 
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     if (win->tabsVisible && IsCtrlPressed()) {
         TabsOnCtrlTab(win, IsShiftPressed());
-        return 1;
+        ev->result = 1;
+        return;
     }
     AdvanceFocus(win);
-    return 1;
+    ev->result = 1;
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
@@ -1014,10 +1016,10 @@ void CreateToc(MainWindow* win) {
 
     auto fn = MkFunc1Void(TocContextMenu);
     treeView->onContextMenu = fn;
-    treeView->onTreeSelectionChanged = MkFunc1Void(TocTreeSelectionChanged);
-    treeView->onTreeKeyDown = TocTreeKeyDown2;
+    treeView->onSelectionChanged = MkFunc1Void(TocTreeSelectionChanged);
+    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
     treeView->onGetTooltip = MkFunc1Void(TocCustomizeTooltip);
-    // treeView->onTreeClick = TocTreeClick; // TODO: maybe not necessary
+    // treeView->onClick = TocTreeClick; // TODO: maybe not necessary
     // treeView->onChar = TocTreeCharHandler;
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 

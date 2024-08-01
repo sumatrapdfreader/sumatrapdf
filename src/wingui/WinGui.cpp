@@ -674,10 +674,10 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     WmEvent e{hwnd, msg, wparam, lparam, this->userData, this};
 
     if (msg == WM_CLOSE) {
-        if (onClose) {
-            WmCloseEvent ev;
+        if (onClose.IsValid()) {
+            Wnd::CloseEvent ev;
             ev.e = &e;
-            onClose(ev);
+            onClose.Call(&ev);
             if (ev.e->didHandle) {
                 return 0;
             }
@@ -2172,7 +2172,7 @@ HWND Trackbar::Create(const CreateArgs& args) {
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-hscroll--trackbar-
 // https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
 LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
-    if (!onPosChanging.IsValid()) {
+    if (!onPositionChanging.IsValid()) {
         return 0;
     }
     switch (msg) {
@@ -2188,10 +2188,10 @@ LRESULT Trackbar::OnMessageReflect(UINT msg, WPARAM wp, LPARAM) {
                 default:
                     pos = GetValue();
             }
-            Trackbar::PosChangingEvent a{};
+            Trackbar::PositionChangingEvent a{};
             a.trackbar = this;
             a.pos = pos;
-            onPosChanging.Call(&a);
+            onPositionChanging.Call(&a);
             // per https://docs.microsoft.com/en-us/windows/win32/controls/wm-vscroll--trackbar-
             // "if an application processes this message, it should return zero"
             return 0;
@@ -2364,7 +2364,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         Splitter::MoveEvent arg;
         arg.w = this;
         arg.finishedDragging = true;
-        onSplitterMove.Call(&arg);
+        onMove.Call(&arg);
         HwndScheduleRepaint(hwnd);
         return 0;
     }
@@ -2378,7 +2378,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             Splitter::MoveEvent arg;
             arg.w = this;
             arg.finishedDragging = false;
-            onSplitterMove.Call(&arg);
+            onMove.Call(&arg);
             if (!arg.resizeAllowed) {
                 curId = IDC_NO;
             } else if (!isLive) {
@@ -2939,7 +2939,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
     if (code == NM_CUSTOMDRAW) {
-        if (!onTreeItemCustomDraw.IsValid()) {
+        if (!onCustomDraw.IsValid()) {
             return CDRF_DODEFAULT;
         }
         TreeView::CustomDrawEvent ev;
@@ -2954,7 +2954,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         if (!ev.treeItem) {
             return CDRF_DODEFAULT;
         }
-        onTreeItemCustomDraw.Call(&ev);
+        onCustomDraw.Call(&ev);
         res = ev.result;
         if (res < 0) {
             return CDRF_DODEFAULT;
@@ -2965,7 +2965,7 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-selchanged
     if (code == TVN_SELCHANGED) {
         // log("tv: TVN_SELCHANGED\n");
-        if (!onTreeSelectionChanged.IsValid()) {
+        if (!onSelectionChanged.IsValid()) {
             return 0;
         }
         TreeView::SelectionChangedEvent ev;
@@ -2979,18 +2979,18 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         }
         ev.prevSelectedItem = w->GetTreeItemByHandle(nmtv->itemOld.hItem);
         ev.selectedItem = w->GetTreeItemByHandle(nmtv->itemNew.hItem);
-        onTreeSelectionChanged.Call(&ev);
+        onSelectionChanged.Call(&ev);
         return 0;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/nm-click-tree-view
     if (code == NM_CLICK || code == NM_DBLCLK) {
         // log("tv: NM_CLICK\n");
-        if (!onTreeClick) {
+        if (!onClick.IsValid()) {
             return 0;
         }
         NMHDR* nmhdr = (NMHDR*)lp;
-        TreeClickEvent ev{};
+        TreeView::ClickEvent ev{};
         ev.treeView = w;
         ev.isDblClick = (code == NM_DBLCLK);
 
@@ -3012,22 +3012,22 @@ LRESULT TreeView::OnNotifyReflect(WPARAM wp, LPARAM lp) {
         if ((ht.flags & TVHT_ONITEM)) {
             ev.treeItem = GetTreeItemByHandle(ht.hItem);
         }
-        res = onTreeClick(&ev);
-        return 0;
+        onClick.Call(&ev);
+        return ev.result;
     }
 
     // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-keydown
     if (code == TVN_KEYDOWN) {
-        if (!onTreeKeyDown) {
+        if (!onKeyDown.IsValid()) {
             return 0;
         }
         NMTVKEYDOWN* nmkd = (NMTVKEYDOWN*)nmtv;
-        TreeKeyDownEvent ev{};
+        TreeView::KeyDownEvent ev{};
         ev.treeView = w;
         ev.nmkd = nmkd;
         ev.keyCode = nmkd->wVKey;
         ev.flags = nmkd->flags;
-        onTreeKeyDown(&ev);
+        onKeyDown.Call(&ev);
         return 0;
     }
 

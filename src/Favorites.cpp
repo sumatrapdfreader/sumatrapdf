@@ -880,7 +880,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 // in TableOfContents.cpp
-extern LRESULT TocTreeKeyDown2(TreeKeyDownEvent*);
+extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
 
 void CreateFavorites(MainWindow* win) {
     HMODULE h = GetModuleHandleW(nullptr);
@@ -911,9 +911,9 @@ void CreateFavorites(MainWindow* win) {
 
     auto fn = MkFunc1Void(FavTreeContextMenu);
     treeView->onContextMenu = fn;
-    treeView->onTreeSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
-    treeView->onTreeKeyDown = TocTreeKeyDown2;
-    // treeView->onTreeClick = FavTreeItemClicked;
+    treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
+    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
+    // treeView->onClick = FavTreeItemClicked;
     // treeView->onChar = TocTreeCharHandler;
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 

@@ -1430,7 +1430,7 @@ static void CreateSidebar(MainWindow* win) {
         args.parent = win->hwndFrame;
         args.type = SplitterType::Vert;
         win->sidebarSplitter = new Splitter();
-        win->sidebarSplitter->onSplitterMove = MkFunc1Void(OnSidebarSplitterMove);
+        win->sidebarSplitter->onMove = MkFunc1Void(OnSidebarSplitterMove);
         win->sidebarSplitter->Create(args);
     }
 
@@ -1441,7 +1441,7 @@ static void CreateSidebar(MainWindow* win) {
         args.parent = win->hwndFrame;
         args.type = SplitterType::Horiz;
         win->favSplitter = new Splitter();
-        win->favSplitter->onSplitterMove = MkFunc1Void(OnFavSplitterMove);
+        win->favSplitter->onMove = MkFunc1Void(OnFavSplitterMove);
         win->favSplitter->Create(args);
     }
 
