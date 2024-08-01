@@ -6,7 +6,7 @@ struct NotificationWnd;
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
 
-using NotificationWndRemovedCallback = std::function<void(NotificationWnd*)>;
+using NotificationWndRemoved = Func1<NotificationWnd*>;
 
 constexpr const int kNotifDefaultTimeOut = 1000 * 3; // 3 seconds
 constexpr const int kNotif5SecsTimeOut = 1000 * 5;
@@ -19,7 +19,7 @@ struct NotificationCreateArgs {
     int timeoutMs = 0; // if 0 => persists until closed manually
     const char* msg = nullptr;
     const char* progressMsg = nullptr;
-    NotificationWndRemovedCallback onRemoved;
+    NotificationWndRemoved onRemoved;
 };
 
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);

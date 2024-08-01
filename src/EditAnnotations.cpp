@@ -40,8 +40,6 @@ extern "C" {
 
 #include "utils/Log.h"
 
-using std::placeholders::_1;
-
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 

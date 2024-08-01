@@ -65,7 +65,7 @@ struct NotificationWnd : ProgressUpdateUI, Wnd {
 
     bool highlight = false; // TODO: should really be a color
 
-    NotificationWndRemovedCallback wndRemovedCb = nullptr;
+    NotificationWndRemoved wndRemovedCb;
 
     // there can only be a single notification of a given group
     Kind groupId = nullptr;
@@ -175,10 +175,10 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     }
 
     highlight = args.warning;
-    if (args.onRemoved) {
+    if (args.onRemoved.IsValid()) {
         wndRemovedCb = args.onRemoved;
     } else {
-        wndRemovedCb = [](NotificationWnd* wnd) { NotifsRemoveNotification(wnd); };
+        wndRemovedCb = MkFunc1Void(NotifsRemoveNotification);
     }
     // TODO: make shrinkLimit an arg
     if (kNotifCursorPos == args.groupId) {
@@ -388,7 +388,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
 }
 
 static void NotifRemove(NotificationWnd* wnd) {
-    wnd->wndRemovedCb(wnd);
+    wnd->wndRemovedCb.Call(wnd);
 }
 
 static void NotifDelete(NotificationWnd* wnd) {
@@ -398,7 +398,7 @@ static void NotifDelete(NotificationWnd* wnd) {
 void NotificationWnd::OnTimer(UINT_PTR timerId) {
     ReportIf(kNotifTimerTimeoutId != timerId);
     // TODO a better way to delete myself
-    if (wndRemovedCb) {
+    if (wndRemovedCb.IsValid()) {
         auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
         uitask::Post(fn, "TaskNotifOnTimerRemove");
     } else {
@@ -439,7 +439,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (rClose.Contains(pt)) {
             // TODO a better way to delete myself
-            if (wndRemovedCb) {
+            if (wndRemovedCb.IsValid()) {
                 auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
                 uitask::Post(fn, "TaskNotifWndProcRemove");
             } else {

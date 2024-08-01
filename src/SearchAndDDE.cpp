@@ -247,7 +247,7 @@ struct FindThreadData : public ProgressUpdateUI {
             NotificationCreateArgs args;
             args.hwndParent = win->hwndCanvas;
             args.timeoutMs = 0;
-            args.onRemoved = [](NotificationWnd* wnd) { RemoveNotification(wnd); };
+            args.onRemoved = MkFunc1Void(RemoveNotification);
 
             args.progressMsg = _TRA("Searching %d of %d...");
             args.groupId = kNotifFindProgress;

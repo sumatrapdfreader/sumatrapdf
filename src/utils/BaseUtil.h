@@ -130,7 +130,6 @@
 // most common c++ includes
 #include <cstdint>
 #include <algorithm>
-#include <functional>
 #include <memory>
 #include <string>
 #include <array>

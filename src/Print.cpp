@@ -592,6 +592,9 @@ static void UpdatePrintProgress(UpdatePrintProgressData* d) {
     delete d;
 }
 
+class PrintThreadData;
+void RemovePrintNotif(PrintThreadData* self, NotificationWnd*);
+
 class PrintThreadData : public ProgressUpdateUI {
   public:
     NotificationWnd* wnd = nullptr;
@@ -602,13 +605,24 @@ class PrintThreadData : public ProgressUpdateUI {
     PrintData* data = nullptr;
     HANDLE thread = nullptr; // close the print thread handle after execution
 
+    // called when printing has been canceled
+    void RemovePrintNotification() {
+        isCanceled = true;
+        cookie.Abort();
+        if (this->wnd && IsMainWindowValid(win)) {
+            RemoveNotification(this->wnd);
+        }
+        this->wnd = nullptr;
+    }
+
     PrintThreadData(MainWindow* win, PrintData* data) {
         this->win = win;
         this->data = data;
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.timeoutMs = 0;
-        args.onRemoved = [this](NotificationWnd* wnd) { RemovePrintNotification(); };
+        auto fn = MkFunc1(RemovePrintNotif, this);
+        args.onRemoved = fn;
         args.progressMsg = _TRA("Printing page %d of %d...");
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
@@ -624,16 +638,6 @@ class PrintThreadData : public ProgressUpdateUI {
         RemovePrintNotification();
     }
 
-    // called when printing has been canceled
-    void RemovePrintNotification() {
-        isCanceled = true;
-        cookie.Abort();
-        if (this->wnd && IsMainWindowValid(win)) {
-            RemoveNotification(this->wnd);
-        }
-        this->wnd = nullptr;
-    }
-
     void UpdateProgress(int current, int total) override {
         auto data = new UpdatePrintProgressData;
         data->wnd = wnd;
@@ -647,6 +651,10 @@ class PrintThreadData : public ProgressUpdateUI {
         return isCanceled || !IsMainWindowValid(win) || win->printCanceled;
     }
 };
+
+void RemovePrintNotif(PrintThreadData* self, NotificationWnd*) {
+    self->RemovePrintNotification();
+}
 
 struct DeletePrinterThreadData {
     MainWindow* win;
