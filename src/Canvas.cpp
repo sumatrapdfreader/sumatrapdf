@@ -781,8 +781,11 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
 #else
 static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
-    auto col = ThemeMainWindowBackgroundColor();
-    AutoDeleteBrush brush(CreateSolidBrush(col));
+    auto bgCol = ThemeMainWindowBackgroundColor();
+    if (gGlobalPrefs->fixedPageUI.invertColors) {
+        ThemeDocumentColors(bgCol);
+    }
+    AutoDeleteBrush brush(CreateSolidBrush(bgCol));
     ScopedSelectPen restorePen(hdc, pen);
     ScopedSelectObject restoreBrush(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
@@ -989,8 +992,12 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (renderDelay != 0) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            auto col = ThemeWindowTextColor();
-            SetTextColor(hdc, col);
+            auto txtCol = ThemeWindowTextColor();
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                COLORREF dummy;
+                txtCol = ThemeDocumentColors(dummy);
+            }
+            SetTextColor(hdc, txtCol);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
                     ScheduleRepaint(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
