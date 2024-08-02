@@ -24,6 +24,7 @@
     V(VK_NUMPAD7, "numpad7")        \
     V(VK_NUMPAD8, "numpad8")        \
     V(VK_NUMPAD9, "numpad9")        \
+    V(VK_TAB, "Tab")                \
     V(VK_END, "End")                \
     V(VK_HOME, "Home")              \
     V(VK_LEFT, "Left")              \
