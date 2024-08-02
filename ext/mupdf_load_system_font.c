@@ -2,6 +2,7 @@
 // in libmupdf.dll, to avoid issues related to crossing .dll boundaries
 // It implements loading of Fonts included in windows
 #include "mupdf/fitz.h"
+#include "mupdf/ucdn.h"
 #include "mupdf/pdf.h"
 
 #ifdef _WIN32
@@ -693,7 +694,7 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
 }
 
 static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bold, int italic,
-                                      int needs_exact_metrics) {
+                                  int needs_exact_metrics) {
     fz_font* font;
     const char* clean_name = pdf_clean_font_name(fontname);
     int is_base_14 = clean_name != fontname;
@@ -801,9 +802,29 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
 }
 #endif
 
-static fz_font *load_windows_fallback_font(fz_context *ctx, int script, int language, int serif, int bold, int italic) {
+static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int language, int serif, int bold, int italic) {
+    fz_font* font = NULL;
+    const char* font_name = NULL;
+
     // TODO: implement me
-    return NULL;
+    if (script == UCDN_SCRIPT_TAMIL) {
+        font_name = "Nirmala UI Regular";
+        if (bold) {
+            font_name = "Nirmala UI Bold";
+        }
+    }
+    if (!font_name) {
+        return NULL;
+    }
+
+    /* try to find a matching system font before falling back to an approximate one */
+    fz_try(ctx) {
+        font = load_windows_font_by_name(ctx, font_name);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return font;
 }
 
 void init_system_font_list(void) {
