@@ -28,18 +28,16 @@
 
 #define MAX_FACENAME 128
 
-#define MAX_FONTS 2048
+#define MAX_FONTS 4096
 
-// Note: the font face must be the first field so that the structure
-//       can be treated like a simple string for searching
 typedef struct {
-    char fontface[MAX_FACENAME];
-    char fontpath[MAX_PATH];
+    const char* fontface;
+    const char* fontpath;
     int index;
-} sys_font_info;
+} win_font_info;
 
 typedef struct {
-    sys_font_info fontmap[MAX_FONTS];
+    win_font_info fontmap[MAX_FONTS];
     int len;
     int cap;
 } pdf_fontlistMS;
@@ -129,40 +127,40 @@ static inline ULONG BEtoHl(ULONG x) {
 }
 
 /* A little bit more sophisticated name matching so that e.g. "EurostileExtended"
-   matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
-static int lookup_compare(const void* elem1, const void* elem2) {
-    const char* val1 = (const char*)elem1;
-    const char* val2 = (const char*)elem2;
-    int len1 = strlen(val1);
-    int len2 = strlen(val2);
+    matches "EurostileExtended-Roman" or "Tahoma-Bold,Bold" matches "Tahoma-Bold" */
+static int cmp_font_name(const char* name1, const char* name2) {
+    int len1 = strlen(name1);
+    int len2 = strlen(name2);
 
     if (len1 != len2) {
-        const char* rest = len1 > len2 ? val1 + len2 : val2 + len1;
+        const char* rest = len1 > len2 ? name1 + len2 : name2 + len1;
         if (',' == *rest || streqi(rest, "-roman"))
-            return _strnicmp(val1, val2, fz_mini(len1, len2));
+            return _strnicmp(name1, name2, fz_mini(len1, len2));
     }
 
-    return _stricmp(val1, val2);
+    return _stricmp(name1, name2);
 }
 
-static void remove_spaces(char* srcDest) {
-    char* dest;
-
-    for (dest = srcDest; *srcDest; srcDest++)
-        if (*srcDest != ' ')
-            *dest++ = *srcDest;
-    *dest = '\0';
+static int font_name_eq(const char* name1, const char* name2) {
+    return cmp_font_name(name1, name2) == 0;
 }
 
-static int str_ends_with(const char* str, const char* end) {
-    size_t len1 = strlen(str);
-    size_t len2 = strlen(end);
-
-    return len1 >= len2 && streq(str + len1 - len2, end);
+static int cmp_win_font_info(const void* el1, const void* el2) {
+    win_font_info* i1 = (win_font_info*)el1;
+    win_font_info* i2 = (win_font_info*)el2;
+    return cmp_font_name(i1->fontface, i2->fontface);
 }
 
-static sys_font_info* pdf_find_windows_font_path(const char* fontname) {
-    return (sys_font_info*)bsearch(fontname, fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), lookup_compare);
+static win_font_info* pdf_find_windows_font_path(const char* fontname) {
+    win_font_info* map = &(fontlistMS.fontmap[0]);
+    size_t n = (size_t)fontlistMS.len;
+    size_t elSize = sizeof(win_font_info);
+    win_font_info el;
+    el.fontface = fontname;
+    el.fontpath = NULL;
+    el.index = 0;
+    win_font_info* res = (win_font_info*)bsearch(&el, map, n, elSize, cmp_win_font_info);
+    return res;
 }
 
 /* source and dest can be same */
@@ -220,6 +218,9 @@ static void decode_platform_string(fz_context* ctx, int platform, int enctype, c
     }
 }
 
+// on my machine it's ~32k for facename and path
+static int gFontAllocated = 0;
+
 static void append_mapping(fz_context* ctx, const char* facename, const char* path, int index) {
     pdf_fontlistMS* fl = &fontlistMS;
     if (fl->len >= fl->cap) {
@@ -227,8 +228,13 @@ static void append_mapping(fz_context* ctx, const char* facename, const char* pa
         return;
     }
 
-    fz_strlcpy(fl->fontmap[fl->len].fontface, facename, sizeof(fl->fontmap[0].fontface));
-    fz_strlcpy(fl->fontmap[fl->len].fontpath, path, sizeof(fl->fontmap[0].fontpath));
+    win_font_info* i = &fl->fontmap[fl->len];
+    gFontAllocated += strlen(facename);
+    gFontAllocated += strlen(path);
+    gFontAllocated += 2;
+    // TODO: allocate facename and path from a pool allocator
+    i->fontface = strdup(facename);
+    i->fontpath = strdup(path);
     fl->fontmap[fl->len].index = index;
     ++fl->len;
 }
@@ -254,9 +260,19 @@ static void read_ttf_string(fz_context* ctx, fz_stream* file, int offset, TT_NAM
                            buf, size);
 }
 
+static void remove_spaces(char* srcDest) {
+    char* dest;
+    for (dest = srcDest; *srcDest; srcDest++) {
+        if (*srcDest != ' ') {
+            *dest++ = *srcDest;
+        }
+    }
+    *dest = '\0';
+}
+
 static void makeFakePSName(char szName[MAX_FACENAME], const char* szStyle) {
     // append the font's subfamily, unless it's a Regular font
-    if (*szStyle && _stricmp(szStyle, "Regular") != 0) {
+    if (*szStyle && !streqi(szStyle, "Regular")) {
         fz_strlcat(szName, "-", MAX_FACENAME);
         fz_strlcat(szName, szStyle, MAX_FACENAME);
     }
@@ -354,15 +370,14 @@ static void parseTTF(fz_context* ctx, fz_stream* file, int offset, int index, co
     if (szTTName[0]) {
         // derive a PostScript-like name and add it, if it's different from the font's
         // included PostScript name; cf. https://code.google.com/p/sumatrapdf/issues/detail?id=376
-        makeFakePSName(szTTName, szStyle);
         // compare the two names before adding this one
-        if (lookup_compare(szTTName, szPSName)) {
+        if (!font_name_eq(szTTName, szPSName)) {
             append_mapping(ctx, szTTName, path, index);
         }
     }
     if (szCJKName[0]) {
         makeFakePSName(szCJKName, szStyle);
-        if (lookup_compare(szCJKName, szPSName) && lookup_compare(szCJKName, szTTName)) {
+        if (!font_name_eq(szCJKName, szPSName) && !font_name_eq(szCJKName, szTTName)) {
             append_mapping(ctx, szCJKName, path, index);
         }
     }
@@ -501,7 +516,10 @@ static void create_system_font_list(fz_context* ctx) {
 #endif
 
     // sort the font list, so that it can be searched binarily
-    qsort((void*)fontlistMS.fontmap, (size_t)fontlistMS.len, sizeof(sys_font_info), stricmp_wrapper);
+    void* map = (void*)&(fontlistMS.fontmap[0]);
+    size_t n = (size_t)fontlistMS.len;
+    size_t elSize = sizeof(win_font_info);
+    qsort(map, n, elSize, cmp_win_font_info);
 
 #ifdef DEBUG
     // allow to overwrite system fonts for debugging purposes
@@ -511,13 +529,16 @@ static void create_system_font_list(fz_context* ctx) {
         int i, prev_len = fontlistMS.len;
         extend_system_font_list(ctx, szFontDir);
         for (i = prev_len; i < fontlistMS.len; i++) {
-            sys_font_info* entry = bsearch(fontlistMS.fontmap[i].fontface, fontlistMS.fontmap, prev_len,
-                                           sizeof(sys_font_info), lookup_compare);
+            win_font_info* entry = bsearch(fontlistMS.fontmap[i].fontface, fontlistMS.fontmap, prev_len,
+                                           sizeof(win_font_info), cmp_win_font_info);
             if (entry) {
                 *entry = fontlistMS.fontmap[i];
             }
         }
-        qsort(fontlistMS.fontmap, fontlistMS.len, sizeof(sys_font_info), stricmp_wrapper);
+        void* map = (void*)&(fontlistMS.fontmap[0]);
+        size_t n = (size_t)fontlistMS.len;
+        size_t elSize = sizeof(win_font_info);
+        qsort(map, n, elSize, cmp_win_font_info);
     }
 #endif
 }
@@ -532,14 +553,14 @@ static void* fz_resize_array(fz_context* ctx, void* p, unsigned int count, unsig
 
 typedef struct cached_font {
     struct cached_font* next;
-    sys_font_info* fi;
+    win_font_info* fi;
     fz_context* ctx;
     fz_buffer* buffer;
 } cached_font;
 
 static cached_font* cached_fonts = 0;
 
-static fz_buffer* get_cached_font_buffer(fz_context* ctx, sys_font_info* fi) {
+static fz_buffer* get_cached_font_buffer(fz_context* ctx, win_font_info* fi) {
     EnterCriticalSection(&cs_fonts);
     cached_font* f = cached_fonts;
     fz_buffer* buffer = NULL;
@@ -585,8 +606,14 @@ void drop_cached_fonts_for_ctx(fz_context* ctx) {
     LeaveCriticalSection(&cs_fonts);
 }
 
+static int str_ends_with(const char* str, const char* end) {
+    size_t len1 = strlen(str);
+    size_t len2 = strlen(end);
+    return len1 >= len2 && streq(str + len1 - len2, end);
+}
+
 static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name) {
-    sys_font_info* found = NULL;
+    win_font_info* found = NULL;
     char *comma, *fontname;
     fz_font* font;
     fz_buffer* buffer;
