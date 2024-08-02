@@ -584,7 +584,7 @@ void drop_cached_fonts_for_ctx(fz_context* ctx) {
     LeaveCriticalSection(&cs_fonts);
 }
 
-static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_name) {
+static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name) {
     sys_font_info* found = NULL;
     char *comma, *fontname;
     fz_font* font;
@@ -692,7 +692,7 @@ static fz_font* pdf_load_windows_font_by_name(fz_context* ctx, const char* orig_
     return font;
 }
 
-static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int bold, int italic,
+static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bold, int italic,
                                       int needs_exact_metrics) {
     fz_font* font;
     const char* clean_name = pdf_clean_font_name(fontname);
@@ -724,19 +724,19 @@ static fz_font* pdf_load_windows_font(fz_context* ctx, const char* fontname, int
             return NULL;
     }
 
-    font = pdf_load_windows_font_by_name(ctx, fontname);
+    font = load_windows_font_by_name(ctx, fontname);
     /* use the font's own metrics for base 14 fonts */
     if (is_base_14)
         font->flags.ft_substitute = 0;
     return font;
 }
 
-static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname, int ros, int serif) {
+static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int ros, int serif) {
     fz_font* font = NULL;
 
     /* try to find a matching system font before falling back to an approximate one */
     fz_try(ctx) {
-        font = pdf_load_windows_font_by_name(ctx, fontname);
+        font = load_windows_font_by_name(ctx, fontname);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -749,16 +749,16 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
         if (serif) {
             switch (ros) {
                 case FZ_ADOBE_CNS:
-                    font = pdf_load_windows_font_by_name(ctx, "MingLiU");
+                    font = load_windows_font_by_name(ctx, "MingLiU");
                     break;
                 case FZ_ADOBE_GB:
-                    font = pdf_load_windows_font_by_name(ctx, "SimSun");
+                    font = load_windows_font_by_name(ctx, "SimSun");
                     break;
                 case FZ_ADOBE_JAPAN:
-                    font = pdf_load_windows_font_by_name(ctx, "MS-Mincho");
+                    font = load_windows_font_by_name(ctx, "MS-Mincho");
                     break;
                 case FZ_ADOBE_KOREA:
-                    font = pdf_load_windows_font_by_name(ctx, "Batang");
+                    font = load_windows_font_by_name(ctx, "Batang");
                     break;
                 default:
                     fz_throw(ctx, FZ_ERROR_GENERIC, "invalid serif ros");
@@ -766,22 +766,22 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
         } else {
             switch (ros) {
                 case FZ_ADOBE_CNS:
-                    font = pdf_load_windows_font_by_name(ctx, "DFKaiShu-SB-Estd-BF");
+                    font = load_windows_font_by_name(ctx, "DFKaiShu-SB-Estd-BF");
                     break;
                 case FZ_ADOBE_GB:
                     fz_try(ctx) {
-                        font = pdf_load_windows_font_by_name(ctx, "KaiTi");
+                        font = load_windows_font_by_name(ctx, "KaiTi");
                     }
                     fz_catch(ctx) {
-                        font = pdf_load_windows_font_by_name(ctx, "KaiTi_GB2312");
+                        font = load_windows_font_by_name(ctx, "KaiTi_GB2312");
                         fz_report_error(ctx);
                     }
                     break;
                 case FZ_ADOBE_JAPAN:
-                    font = pdf_load_windows_font_by_name(ctx, "MS-Gothic");
+                    font = load_windows_font_by_name(ctx, "MS-Gothic");
                     break;
                 case FZ_ADOBE_KOREA:
-                    font = pdf_load_windows_font_by_name(ctx, "Gulim");
+                    font = load_windows_font_by_name(ctx, "Gulim");
                     break;
                 default:
                     fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
@@ -791,7 +791,7 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
     fz_catch(ctx) {
 #ifdef NOCJKFONT
         /* If no CJK fallback font is builtin, maybe one has been shipped separately */
-        font = pdf_load_windows_font_by_name(ctx, "DroidSansFallback");
+        font = load_windows_font_by_name(ctx, "DroidSansFallback");
 #else
         fz_rethrow(ctx);
 #endif
@@ -800,6 +800,11 @@ static fz_font* pdf_load_windows_cjk_font(fz_context* ctx, const char* fontname,
     return font;
 }
 #endif
+
+static fz_font *load_windows_fallback_font(fz_context *ctx, int script, int language, int serif, int bold, int italic) {
+    // TODO: implement me
+    return NULL;
+}
 
 void init_system_font_list(void) {
     // this should always happen on main thread
@@ -818,10 +823,7 @@ void destroy_system_font_list(void) {
     DeleteCriticalSection(&cs_fonts);
 }
 
-void pdf_install_load_system_font_funcs(fz_context* ctx) {
-#ifdef _WIN32
-    // TODO(port): also fallback font?
+void install_load_windows_font_funcs(fz_context* ctx) {
     init_system_font_list();
-    fz_install_load_system_font_funcs(ctx, pdf_load_windows_font, pdf_load_windows_cjk_font, NULL);
-#endif
+    fz_install_load_system_font_funcs(ctx, load_windows_font, load_windows_cjk_font, load_windows_fallback_font);
 }

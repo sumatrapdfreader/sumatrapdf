@@ -71,7 +71,7 @@ EXPORTS
 	pdf_xobject_resources
 	pdf_page_resources
 	xps_drop_part
-	pdf_install_load_system_font_funcs
+	install_load_windows_font_funcs
 	pdf_page_transform
 	pdf_page_obj_transform
 	fz_close_device

@@ -55,7 +55,7 @@ constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
 
 // in mupdf_load_system_font.c
 extern "C" void drop_cached_fonts_for_ctx(fz_context*);
-extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
+extern "C" void install_load_windows_font_funcs(fz_context* ctx);
 
 static AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
     return (AnnotationType)tp;
@@ -1577,7 +1577,7 @@ EngineMupdf::EngineMupdf() {
     _ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
     InstallFitzErrorCallbacks(_ctx);
 
-    pdf_install_load_system_font_funcs(_ctx);
+    install_load_windows_font_funcs(_ctx);
     fz_register_document_handlers(_ctx);
 }
 
