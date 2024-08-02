@@ -533,6 +533,8 @@ workspace "SumatraPDF"
       "mupdf/resources/fonts/sil/CharisSIL-Bold.cff",
       "mupdf/resources/fonts/sil/CharisSIL-Italic.cff",
       "mupdf/resources/fonts/sil/CharisSIL-BoldItalic.cff",
+
+        
       "mupdf/resources/fonts/noto/NotoSans-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSansMath-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSansSymbols-Regular.otf",
@@ -540,9 +542,7 @@ workspace "SumatraPDF"
       "mupdf/resources/fonts/noto/NotoEmoji-Regular.ttf",
       "mupdf/resources/fonts/noto/NotoMusic-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerif-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoSerifDevanagari-Regular.otf",
       "mupdf/resources/fonts/noto/NotoSerifGeorgian-Regular.otf",
-      "mupdf/resources/fonts/noto/NotoSerifTelugu-Regular.otf",
     }
 
     filter {'files:**.cff'}

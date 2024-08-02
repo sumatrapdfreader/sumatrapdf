@@ -802,17 +802,46 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
 }
 #endif
 
+/*
+Sylfaen Regular
+Greek, Cyrillic, Armenian, Georgian
+
+UCDN_SCRIPT_GEORGIAN
+
+bangla, devanagari, gujarati, gurmukh, kannada, malayalam, odia, sinhala, telugu, ol chiki, sora sompeng
+
+
+Segoe UI Emoji Regular
+Cambria Math Regular - math symbols
+Segoe UI Symbol Regular - math and other symbols
+
+
+*/
 static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int language, int serif, int bold, int italic) {
     fz_font* font = NULL;
     const char* font_name = NULL;
 
-    // TODO: implement me
-    if (script == UCDN_SCRIPT_TAMIL) {
-        font_name = "Nirmala UI Regular";
-        if (bold) {
-            font_name = "Nirmala UI Bold";
-        }
+    // TODO: more scripts
+    switch (script) {
+        case UCDN_SCRIPT_BENGALI: // bangla
+        case UCDN_SCRIPT_GURMUKHI:
+        case UCDN_SCRIPT_GUJARATI:
+        case UCDN_SCRIPT_KANNADA:
+        case UCDN_SCRIPT_MALAYALAM:
+        case UCDN_SCRIPT_SINHALA:
+        case UCDN_SCRIPT_SORA_SOMPENG:
+        case UCDN_SCRIPT_OL_CHIKI:
+        case UCDN_SCRIPT_ORIYA: // odia
+        case UCDN_SCRIPT_TAMIL:
+        case UCDN_SCRIPT_TELUGU:
+        case UCDN_SCRIPT_DEVANAGARI: {
+            font_name = "Nirmala UI Regular";
+            if (bold) {
+                font_name = "Nirmala UI Bold";
+            }
+        } break;
     }
+
     if (!font_name) {
         return NULL;
     }
