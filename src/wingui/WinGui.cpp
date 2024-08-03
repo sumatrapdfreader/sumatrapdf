@@ -276,7 +276,7 @@ void Wnd::SetText(const char* s) {
         s = "";
     }
     HwndSetText(hwnd, s);
-    HwndInvalidate(hwnd); // TODO: move inside HwndSetText()?
+    HwndRepaintNow(hwnd); // TODO: move inside HwndSetText()?
 }
 
 TempStr Wnd::GetTextTemp() {
@@ -3827,7 +3827,7 @@ int TabsCtrl::SetSelected(int idx) {
 
 void TabsCtrl::SetHighlighted(int idx) {
     tabForceShowSelected = idx;
-    RepaintNow(hwnd);
+    HwndRepaintNow(hwnd);
 }
 
 HWND TabsCtrl::GetToolTipsHwnd() {

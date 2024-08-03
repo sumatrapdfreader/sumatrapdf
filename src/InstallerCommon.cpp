@@ -514,7 +514,7 @@ void SetDefaultMsg() {
 }
 
 void InvalidateFrame() {
-    HwndInvalidate(gHwndFrame);
+    HwndRepaintNow(gHwndFrame);
 }
 
 bool CheckInstallUninstallPossible(bool silent) {

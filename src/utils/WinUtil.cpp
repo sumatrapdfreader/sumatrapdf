@@ -2717,23 +2717,18 @@ HICON HwndGetIcon(HWND hwnd) {
     return res;
 }
 
+// schedule WM_PAINT at window's leasure
 void HwndScheduleRepaint(HWND hwnd) {
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
-// schedule WM_PAINT at window's leasure
-void HwndInvalidate(HWND hwnd) {
+// do WM_PAINT immediately
+void HwndRepaintNow(HWND hwnd) {
     if (!hwnd) {
         return;
     }
     InvalidateRect(hwnd, nullptr, FALSE);
     // send WM_PAINT right away (normally would wait for empty msg queue)
-    UpdateWindow(hwnd);
-}
-
-// do WM_PAINT immediately
-void RepaintNow(HWND hwnd) {
-    InvalidateRect(hwnd, nullptr, FALSE);
     UpdateWindow(hwnd);
 }
 

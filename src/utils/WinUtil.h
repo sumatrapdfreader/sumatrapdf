@@ -323,9 +323,8 @@ void CbSetCurrentSelection(HWND, int);
 HICON HwndGetIcon(HWND);
 HICON HwndSetIcon(HWND, HICON);
 
-void HwndInvalidate(HWND);
+void HwndRepaintNow(HWND);
 void HwndScheduleRepaint(HWND hwnd);
-void RepaintNow(HWND hwnd);
 
 HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);

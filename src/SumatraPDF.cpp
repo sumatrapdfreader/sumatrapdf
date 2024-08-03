@@ -1436,11 +1436,11 @@ static void CreateSidebar(MainWindow* win) {
     CreateFavorites(win);
 
     if (win->tocVisible) {
-        RepaintNow(win->hwndTocBox);
+        HwndRepaintNow(win->hwndTocBox);
     }
 
     if (gGlobalPrefs->showFavorites) {
-        RepaintNow(win->hwndFavBox);
+        HwndRepaintNow(win->hwndFavBox);
     }
 }
 
@@ -4829,7 +4829,7 @@ static void ClearHistoryFinish(ClearHistoryData* d) {
         return;
     }
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
-    HwndInvalidate(win->hwndCanvas);
+    HwndRepaintNow(win->hwndCanvas);
     TempStr msg2 = str::FormatTemp(_TRA("Cleared history of %d files, deleted thumbnails."), d->nFiles);
     ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
 }

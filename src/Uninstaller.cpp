@@ -135,7 +135,7 @@ static void OnButtonUninstall() {
     // disable the button during uninstallation
     gButtonUninstaller->SetIsEnabled(false);
     SetMsg(_TRA("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
-    HwndInvalidate(gHwndFrame);
+    HwndRepaintNow(gHwndFrame);
 
     auto fn = MkFunc0Void(UninstallerThread);
     hThread = StartThread(fn, "UninstallerThread");
@@ -152,7 +152,7 @@ void OnUninstallationFinished() {
     gButtonExit->onClicked = MkFunc0Void(OnButtonExit);
     SetMsg(_TRA("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gFirstError;
-    HwndInvalidate(gHwndFrame);
+    HwndRepaintNow(gHwndFrame);
 
     CloseHandle(hThread);
 }

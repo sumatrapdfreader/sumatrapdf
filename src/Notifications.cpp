@@ -234,7 +234,7 @@ void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlig
     this->timeoutMs = timeoutMs;
     HwndSetRtl(hwnd, IsUIRightToLeft());
     Layout(msg);
-    HwndInvalidate(hwnd);
+    HwndRepaintNow(hwnd);
     if (timeoutMs != 0) {
         SetTimer(hwnd, kNotifTimerTimeoutId, timeoutMs, nullptr);
     }

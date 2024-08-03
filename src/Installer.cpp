@@ -376,7 +376,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     wnd->btnInstall->SetIsEnabled(false);
 
     SetMsg(_TRA("Installation in progress..."), COLOR_MSG_INSTALLATION);
-    HwndInvalidate(wnd->hwnd);
+    HwndRepaintNow(wnd->hwnd);
 
     gInstallStarted = true;
     auto fn = MkFunc0Void(InstallerThread);
@@ -466,7 +466,7 @@ static void OnInstallationFinished() {
         SetMsg(_TRA("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     }
     gMsgError = gFirstError;
-    HwndInvalidate(gWnd->hwnd);
+    HwndRepaintNow(gWnd->hwnd);
 
     CloseHandle(gWnd->hThread);
 
@@ -556,7 +556,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
-    HwndInvalidate(wnd->hwnd);
+    HwndRepaintNow(wnd->hwnd);
     HwndSetFocus(btnOptions->hwnd);
 }
 
