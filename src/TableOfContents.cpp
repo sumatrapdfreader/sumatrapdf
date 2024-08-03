@@ -565,7 +565,7 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     }
 
     WindowTab* tab = win->CurrentTab();
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextToc, CreatePopupMenu(), nullptr);
+    HMENU popup = BuildMenuFromDef(menuDefContextToc, CreatePopupMenu(), nullptr);
 
     const char* path = nullptr;
     char* fileName = nullptr;

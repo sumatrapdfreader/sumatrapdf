@@ -3852,7 +3852,7 @@ static void ChangeZoomLevel(MainWindow* win, float newZoom, bool pagesContinuous
         if (mode != newMode) {
             SwitchToDisplayMode(win, newMode);
         }
-        OnMenuZoom(win, MenuIdFromVirtualZoom(newZoom));
+        OnMenuZoom(win, CmdIdFromVirtualZoom(newZoom));
 
         // remember the previous values for when the toolbar button is unchecked
         if (kInvalidZoom == prevZoom) {

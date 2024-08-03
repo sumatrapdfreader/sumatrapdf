@@ -28,6 +28,7 @@
 #include "AppColors.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
+#include "SumatraDialogs.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "resource.h"
@@ -337,6 +338,37 @@ static MenuDef menuDefGoTo[] = {
     },
 };
 //] ACCESSKEY_GROUP GoTo Menu
+
+static MenuDef menuDefZoomShort[] = {
+    {
+        _TRN("Fit &Page"),
+        CmdZoomFitPage,
+    },
+    {
+        _TRN("&Actual Size"),
+        CmdZoomActualSize,
+    },
+    {
+        _TRN("Fit &Width"),
+        CmdZoomFitWidth,
+    },
+    {
+        _TRN("Fit &Content"),
+        CmdZoomFitContent,
+    },
+    {
+        _TRN("Custom &Zoom..."),
+        CmdZoomCustom,
+    },
+    {
+        kMenuSeparator,
+        0,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
 
 //[ ACCESSKEY_GROUP Zoom Menu
 static MenuDef menuDefZoom[] = {
@@ -1308,16 +1340,7 @@ again3:
     }
 }
 
-static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
-    MenuEmpty(menu);
-    BuildMenuCtx buildCtx;
-    FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
-    BuildMenuFromMenuDef(menuDefFile, menu, &buildCtx);
-    DynamicPartOfFileMenu(menu, &buildCtx);
-    RemoveBadMenuSeparators(menu);
-}
-
-HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
+HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     ReportIf(!menu);
 
     bool isDebugMenu = menuDef == menuDefDebug;
@@ -1410,7 +1433,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
 
         if (isSubMenu) {
-            HMENU subMenu = BuildMenuFromMenuDef(subMenuDef, CreatePopupMenu(), ctx);
+            HMENU subMenu = BuildMenuFromDef(subMenuDef, CreatePopupMenu(), ctx);
             UINT flags = MF_POPUP | (disableMenu ? MF_DISABLED : MF_ENABLED);
             if (subMenuDef == menuDefFile) {
                 DynamicPartOfFileMenu(subMenu, ctx);
@@ -1437,7 +1460,7 @@ HMENU BuildMenuFromMenuDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
 
 // clang-format off
 static struct {
-    int itemId;
+    int cmdId;
     float zoom;
 } gZoomMenuIds[] = {
     { CmdZoom6400,        6400.0 },
@@ -1461,18 +1484,41 @@ static struct {
 };
 // clang-format on
 
-int MenuIdFromVirtualZoom(float virtualZoom) {
+static void BuildMenuZoom(HMENU m) {
+    auto prefs = gGlobalPrefs;
+    auto customZoomLevels = prefs->zoomLevels;
+    int n = customZoomLevels->Size();
+    if (n <= 0) {
+        return;
+    }
+    MenuEmpty(m);
+    TempStr title;
+    int cmdId;
+    BuildMenuFromDef(menuDefZoomShort, m, nullptr);
+    for (int i = 0; i < n; i++) {
+        int idx = n - i - 1; // largest first
+        float zl = customZoomLevels->At(idx);
+        cmdId = prefs->zoomLevelsCmdIds->At(idx);
+        title = ZoomLevelStr(zl);
+        title = (TempStr)AppendAccelKeyToMenuStringTemp((TempStr)title, cmdId);
+        UINT flags = MF_STRING | MF_ENABLED;
+        TempWStr ws = ToWStrTemp(title);
+        AppendMenuW(m, flags, cmdId, ws);
+    }
+}
+
+int CmdIdFromVirtualZoom(float virtualZoom) {
     for (auto&& it : gZoomMenuIds) {
         if (virtualZoom == it.zoom) {
-            return it.itemId;
+            return it.cmdId;
         }
     }
     return CmdZoomCustom;
 }
 
-float ZoomMenuItemToZoom(int menuItemId) {
+float ZoomMenuItemToZoom(int cmdId) {
     for (auto&& it : gZoomMenuIds) {
-        if (menuItemId == it.itemId) {
+        if (cmdId == it.cmdId) {
             return it.zoom;
         }
     }
@@ -1480,18 +1526,18 @@ float ZoomMenuItemToZoom(int menuItemId) {
     return 100.0;
 }
 
-static void ZoomMenuItemCheck(HMENU m, int menuItemId, bool canZoom) {
-    ReportIf((CmdZoomFirst > menuItemId) || (menuItemId > CmdZoomLast));
+static void ZoomMenuItemCheck(HMENU m, int cmdId, bool canZoom) {
+    ReportIf((CmdZoomFirst > cmdId) || (cmdId > CmdZoomLast));
 
     for (auto&& it : gZoomMenuIds) {
-        MenuSetEnabled(m, it.itemId, canZoom);
+        MenuSetEnabled(m, it.cmdId, canZoom);
     }
 
-    if (CmdZoom100 == menuItemId) {
-        menuItemId = CmdZoomActualSize;
+    if (CmdZoom100 == cmdId) {
+        cmdId = CmdZoomActualSize;
     }
-    CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, menuItemId, MF_BYCOMMAND);
-    if (CmdZoomActualSize == menuItemId) {
+    CheckMenuRadioItem(m, CmdZoomFirst, CmdZoomLast, cmdId, MF_BYCOMMAND);
+    if (CmdZoomActualSize == cmdId) {
         CheckMenuRadioItem(m, CmdZoom100, CmdZoom100, CmdZoom100, MF_BYCOMMAND);
     }
 }
@@ -1501,7 +1547,7 @@ void MenuUpdateZoom(MainWindow* win) {
     if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
     }
-    int menuId = MenuIdFromVirtualZoom(zoomVirtual);
+    int menuId = CmdIdFromVirtualZoom(zoomVirtual);
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
 
@@ -1529,6 +1575,15 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
         }
         MenuSetEnabled(menu, CmdPrint, filePrintEnabled && filePrintAllowed);
     }
+}
+
+static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
+    MenuEmpty(menu);
+    BuildMenuCtx buildCtx;
+    FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
+    BuildMenuFromDef(menuDefFile, menu, &buildCtx);
+    DynamicPartOfFileMenu(menu, &buildCtx);
+    RemoveBadMenuSeparators(menu);
 }
 
 static bool IsFileCloseMenuEnabled() {
@@ -1665,7 +1720,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
         return;
     }
 
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, CreatePopupMenu(), nullptr);
+    HMENU popup = BuildMenuFromDef(menuDefContextStart, CreatePopupMenu(), nullptr);
     MenuSetChecked(popup, CmdPinSelectedDocument, fs->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -1736,7 +1791,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
 
     BuildMenuCtx buildCtx;
     FillBuildMenuCtx(tab, &buildCtx, cursorPos);
-    HMENU popup = BuildMenuFromMenuDef(menuDefContext, CreatePopupMenu(), &buildCtx);
+    HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), &buildCtx);
 
     int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
     PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
@@ -2276,7 +2331,7 @@ HMENU BuildMenu(MainWindow* win) {
     BuildMenuCtx buildCtx;
     FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
 
-    HMENU mainMenu = BuildMenuFromMenuDef(menuDefMenubar, CreateMenu(), &buildCtx);
+    HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), &buildCtx);
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;
@@ -2292,8 +2347,10 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         RebuildFileMenu(win->CurrentTab(), m);
     } else if (id == menuDefFavorites[0].idOrSubmenu) {
         MenuEmpty(m);
-        BuildMenuFromMenuDef(menuDefFavorites, m, nullptr);
+        BuildMenuFromDef(menuDefFavorites, m, nullptr);
         RebuildFavMenu(win, m);
+    } else if (id == menuDefZoom[0].idOrSubmenu) {
+        BuildMenuZoom(m);
     }
     MenuUpdateStateForWindow(win);
     MarkMenuOwnerDraw(win->menu);

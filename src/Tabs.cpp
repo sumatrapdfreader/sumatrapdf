@@ -317,7 +317,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
         return;
     }
     POINT pt = ToPOINT(ev->mouseScreen);
-    HMENU popup = BuildMenuFromMenuDef(menuDefContextTab, CreatePopupMenu(), nullptr);
+    HMENU popup = BuildMenuFromDef(menuDefContextTab, CreatePopupMenu(), nullptr);
 
     Vec<WindowTab*> toCloseOther;
     Vec<WindowTab*> toCloseRight;
