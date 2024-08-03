@@ -17,6 +17,8 @@
 #include <windows.h>
 #include <assert.h>
 
+typedef uint32_t u32;
+
 // TODO: Use more of FreeType for TTF parsing (for performance reasons,
 //       the fonts can't be parsed completely, though)
 #include <ft2build.h>
@@ -26,21 +28,36 @@
 #define TTC_VERSION1 0x00010000
 #define TTC_VERSION2 0x00020000
 
-#define MAX_FACENAME 128
+#define MAX_FACENAME 256
 
+#define MAX_FONT_FILES 1024
 #define MAX_FONTS 4096
 
 typedef struct {
+    const char* file_path;
+    void* data;
+    size_t size;
+} font_file;
+
+typedef struct {
     const char* fontface;
-    const char* fontpath;
-    int index;
+    u32 index;
+    u32 file_idx;
 } win_font_info;
 
 typedef struct {
     win_font_info fontmap[MAX_FONTS];
     int len;
     int cap;
-} pdf_fontlistMS;
+} win_fonts;
+
+typedef struct {
+    font_file files[MAX_FONT_FILES];
+    int len;
+    int cap;
+} font_files;
+
+font_files g_font_files;
 
 typedef struct {
     ULONG uVersion;
@@ -97,7 +114,7 @@ static struct {
     {"Symbol", "SymbolMT"},
 };
 
-static pdf_fontlistMS fontlistMS;
+static win_fonts g_win_fonts;
 
 static int did_init = 0;
 static CRITICAL_SECTION cs_fonts;
@@ -152,12 +169,11 @@ static int cmp_win_font_info(const void* el1, const void* el2) {
 }
 
 static win_font_info* pdf_find_windows_font_path(const char* fontname) {
-    win_font_info* map = &(fontlistMS.fontmap[0]);
-    size_t n = (size_t)fontlistMS.len;
+    win_font_info* map = &(g_win_fonts.fontmap[0]);
+    size_t n = (size_t)g_win_fonts.len;
     size_t elSize = sizeof(win_font_info);
     win_font_info el;
     el.fontface = fontname;
-    el.fontpath = NULL;
     el.index = 0;
     win_font_info* res = (win_font_info*)bsearch(&el, map, n, elSize, cmp_win_font_info);
     return res;
@@ -218,25 +234,57 @@ static void decode_platform_string(fz_context* ctx, int platform, int enctype, c
     }
 }
 
-// on my machine it's ~32k for facename and path
-static int gFontAllocated = 0;
+// on my machine it's ~21k for facename and path
+static int g_font_allocated = 0;
+
+static int get_font_file(const char* file_path) {
+    int i;
+    font_file* ff;
+    for (i = 0; i < g_font_files.len; i++) {
+        ff = &(g_font_files.files[i]);
+        if (streq(file_path, ff->file_path)) {
+            return i;
+        }
+    }
+    return -1;
+}
+static int get_or_append_font_file(const char* file_path) {
+    font_file* ff;
+    int i = get_font_file(file_path);
+    if (i >= 0) {
+        return i;
+    }
+    if (g_font_files.len >= g_font_files.cap) {
+        return -1;
+    }
+    i = g_font_files.len;
+    ff = &g_font_files.files[i];
+    g_font_allocated += strlen(file_path) + 1;
+    ff->file_path = strdup(file_path);
+    ff->data = NULL;
+    ff->size = 0;
+    g_font_files.len++;
+    return i;
+}
 
 static void append_mapping(fz_context* ctx, const char* facename, const char* path, int index) {
-    pdf_fontlistMS* fl = &fontlistMS;
+    win_fonts* fl = &g_win_fonts;
+    int file_idx = get_or_append_font_file(path);
+    if (file_idx < 0) {
+        return;
+    }
     if (fl->len >= fl->cap) {
         // fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror : fontlist overflow");
         return;
     }
 
     win_font_info* i = &fl->fontmap[fl->len];
-    gFontAllocated += strlen(facename);
-    gFontAllocated += strlen(path);
-    gFontAllocated += 2;
+    g_font_allocated += strlen(facename) + 1;
     // TODO: allocate facename and path from a pool allocator
     i->fontface = strdup(facename);
-    i->fontpath = strdup(path);
-    fl->fontmap[fl->len].index = index;
-    ++fl->len;
+    i->file_idx = (u32)file_idx;
+    i->index = (u32)index;
+    fl->len++;
 }
 
 static void safe_read(fz_context* ctx, fz_stream* file, int offset, char* buf, int size) {
@@ -497,7 +545,7 @@ static void create_system_font_list(fz_context* ctx) {
         extend_system_font_list(ctx, szFontDir);
     }
 
-    if (fontlistMS.len == 0) {
+    if (g_win_fonts.len == 0) {
         fz_warn(ctx, "couldn't find any usable system fonts");
     }
 
@@ -516,8 +564,8 @@ static void create_system_font_list(fz_context* ctx) {
 #endif
 
     // sort the font list, so that it can be searched binarily
-    void* map = (void*)&(fontlistMS.fontmap[0]);
-    size_t n = (size_t)fontlistMS.len;
+    void* map = (void*)&(g_win_fonts.fontmap[0]);
+    size_t n = (size_t)g_win_fonts.len;
     size_t elSize = sizeof(win_font_info);
     qsort(map, n, elSize, cmp_win_font_info);
 
@@ -526,17 +574,17 @@ static void create_system_font_list(fz_context* ctx) {
     // (either pass a full path or a search pattern such as "fonts\*.ttf")
     cch = GetEnvironmentVariable(L"MUPDF_FONTS_PATTERN", szFontDir, nelem(szFontDir));
     if (0 < cch && cch < nelem(szFontDir)) {
-        int i, prev_len = fontlistMS.len;
+        int i, prev_len = g_win_fonts.len;
         extend_system_font_list(ctx, szFontDir);
-        for (i = prev_len; i < fontlistMS.len; i++) {
-            win_font_info* entry = bsearch(fontlistMS.fontmap[i].fontface, fontlistMS.fontmap, prev_len,
+        for (i = prev_len; i < g_win_fonts.len; i++) {
+            win_font_info* entry = bsearch(g_win_fonts.fontmap[i].fontface, g_win_fonts.fontmap, prev_len,
                                            sizeof(win_font_info), cmp_win_font_info);
             if (entry) {
-                *entry = fontlistMS.fontmap[i];
+                *entry = g_win_fonts.fontmap[i];
             }
         }
-        void* map = (void*)&(fontlistMS.fontmap[0]);
-        size_t n = (size_t)fontlistMS.len;
+        void* map = (void*)&(g_win_fonts.fontmap[0]);
+        size_t n = (size_t)g_win_fonts.len;
         size_t elSize = sizeof(win_font_info);
         qsort(map, n, elSize, cmp_win_font_info);
     }
@@ -617,9 +665,10 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     char *comma, *fontname;
     fz_font* font;
     fz_buffer* buffer;
+    const char* font_path;
 
     EnterCriticalSection(&cs_fonts);
-    if (fontlistMS.len == 0) {
+    if (g_win_fonts.len == 0) {
         fz_try(ctx) {
             create_system_font_list(ctx);
         }
@@ -629,7 +678,7 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     }
     LeaveCriticalSection(&cs_fonts);
 
-    if (fontlistMS.len == 0) {
+    if (g_win_fonts.len == 0) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "fonterror: couldn't find any fonts");
     }
 
@@ -691,11 +740,12 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     if (!found)
         fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
 
+    font_path = g_font_files.files[found->file_idx].file_path;
     buffer = get_cached_font_buffer(ctx, found);
     if (buffer) {
-        fz_warn(ctx, "found cached non-embedded buffer for font '%s' from '%s'", orig_name, found->fontpath);
+        fz_warn(ctx, "found cached non-embedded buffer for font '%s' from '%s'", orig_name, font_path);
     } else {
-        buffer = fz_read_file(ctx, found->fontpath);
+        buffer = fz_read_file(ctx, font_path);
         if (!buffer) {
             return NULL;
         }
@@ -711,7 +761,7 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
         cached_fonts = f;
         LeaveCriticalSection(&cs_fonts);
 
-        fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, found->fontpath);
+        fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, font_path);
     }
 
     int use_glyph_bbox = !streq(found->fontface, "DroidSansFallback");
@@ -889,14 +939,15 @@ void init_system_font_list(void) {
         return;
     }
     InitializeCriticalSection(&cs_fonts);
-    fontlistMS.len = 0;
-    fontlistMS.cap = MAX_FONTS;
+    g_win_fonts.len = 0;
+    g_win_fonts.cap = MAX_FONTS;
+    g_font_files.len = 0;
+    g_font_files.cap = MAX_FONT_FILES;
     did_init = 1;
 }
 
 void destroy_system_font_list(void) {
-    fontlistMS.len = 0;
-    fontlistMS.cap = MAX_FONTS;
+    // TODO: free names and file data
     DeleteCriticalSection(&cs_fonts);
 }
 
