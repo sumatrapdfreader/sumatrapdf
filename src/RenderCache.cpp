@@ -154,6 +154,7 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
         if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
             (kInvalidZoom == zoom || zoom == e->zoom) && (!tile || e->tile == *tile)) {
             e->refs++;
+            logf("RenderCache::Find: e: 0x%p dm: 0x%p new refs: %d\n", e, e->dm, e->refs);
             ReportIf(i != e->cacheIdx);
             return e;
         }
@@ -162,11 +163,26 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
 }
 
 bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
+    ScopedCritSec scope(&cacheAccess);
     BitmapCacheEntry* entry = Find(dm, pageNo, rotation, zoom, tile);
     if (entry) {
-        DropCacheEntry(entry);
+        entry->refs--;
+        if (entry->refs < 1) {
+            logf("RenderCache::Exists() entry 0x%p, refs: %d\n", entry, entry->refs);
+            ReportIf(true);
+        }
     }
     return entry != nullptr;
+}
+
+// assumes cacheAccess lock is taken
+// drops entry but only if is not used by anyone i.e. ref count is 1
+// TODO: should mark as "delete when refcount drops to 1?"
+bool RenderCache::DropCacheEntryIfNotUsed(BitmapCacheEntry* entry) {
+    if (!entry || entry->refs > 1) {
+        return false;
+    }
+    return DropCacheEntry(entry);
 }
 
 bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
@@ -181,15 +197,16 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     if ((idx < 0) || (idx >= cacheCount)) {
         return false;
     }
-    ReportIf(entry->refs <= 0);
+    bool willDelete = entry->refs <= 1;
+    logf("RenderCache::DropCacheEntry: pageNo: %d, rotation: %d, zoom: %.2f, refs: %d, willDelete: %d\n", entry->pageNo,
+         entry->rotation, entry->zoom, entry->refs, willDelete);
+    ReportIf(entry->refs < 1);
     --entry->refs;
-    if (entry->refs > 0) {
+    if (!willDelete) {
         return false;
     }
     ReportIf(entry->refs != 0);
     ReportIf(cache[idx] != entry);
-    logf("RenderCache::DropCacheEntry: pageNo: %d, rotation: %d, zoom: %.2f\n", entry->pageNo, entry->rotation,
-         entry->zoom);
 
     delete entry;
 
@@ -206,6 +223,7 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     return true;
 }
 
+// assumes cacheAccess lock is taken
 static bool FreeIfFull(RenderCache* rc, PageRenderRequest* req) {
     int n = rc->cacheCount;
     if (n < MAX_BITMAPS_CACHED) {
@@ -217,7 +235,7 @@ static bool FreeIfFull(RenderCache* rc, PageRenderRequest* req) {
     for (int i = 0; i < n; i++) {
         auto entry = rc->cache[i];
         if (entry->dm == dm && !dm->PageVisibleNearby(entry->pageNo)) {
-            bool didDrop = rc->DropCacheEntry(entry);
+            bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
             if (didDrop) {
                 return true;
             }
@@ -234,7 +252,7 @@ static bool FreeIfFull(RenderCache* rc, PageRenderRequest* req) {
             // in a different window, but it's harder to detect
             continue;
         }
-        bool didDrop = rc->DropCacheEntry(entry);
+        bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
         if (didDrop) {
             return true;
         }
@@ -352,7 +370,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
             }
         }
         if (shouldFree) {
-            DropCacheEntry(entry);
+            DropCacheEntryIfNotUsed(entry);
         }
     }
 }
