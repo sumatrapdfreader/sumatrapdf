@@ -3316,15 +3316,14 @@ static void OpenFile(MainWindow* win) {
     // several dozen file paths and hope that this is enough
     // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
     ofn.nMaxFile = MAX_PATH * 100;
+    if (false && !IsWindowsVistaOrGreater()) {
 #if 0
-    if (!IsWindowsVistaOrGreater())
-    {
         ofn.lpfnHook = FileOpenHook;
         ofn.Flags |= OFN_ENABLEHOOK;
         ofn.nMaxFile = MAX_PATH / 2;
+#endif
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
-#endif
 
     AutoFreeWStr file = AllocArray<WCHAR>(ofn.nMaxFile);
     ofn.lpstrFile = file;
@@ -5250,7 +5249,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (cmd) {
                 mode = GetCommandStringArg(cmd, kCmdArgMode, nullptr);
             }
-            RunCommandPallette(win, mode);
+            RunCommandPallette(win, mode, 0);
         } break;
 
         case CmdClearHistory:
@@ -5266,14 +5265,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdNextTab:
-            TabsOnCtrlTab(win, false);
-            break;
-        case CmdPrevTab:
-            TabsOnCtrlTab(win, true);
-            break;
-        case CmdSmartTabSwitch: {
+        case CmdPrevTab: {
+            bool reverse = cmdId == CmdPrevTab;
+            TabsOnCtrlTab(win, reverse);
+        } break;
+
+        case CmdNextTabSmart:
+        case CmdPrevTabSmart: {
             if (win && win->TabCount() > 1) {
-                RunCommandPallette(win, kPalettePrefixTabsSmart);
+                int advance = cmdId == CmdNextTabSmart ? 1 : -1;
+                RunCommandPallette(win, kPalettePrefixTabs, advance);
             }
             break;
         }

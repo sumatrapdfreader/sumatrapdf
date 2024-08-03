@@ -93,7 +93,8 @@ CmdCloseTabsToTheRight,,Close Tabs To The Right,ver 3.6+
 CmdCloseOtherTabs,,Close Other Tabs,ver 3.6+
 CmdNextTab,Ctrl + PageUp,Next Tab,
 CmdPrevTab,Ctrl + PageDown,Previous Tab,
-CmdSmartTabSwitch,Ctrl + Tab,Smart Tab Switch,ver 3.6+
+CmdNextTabSmart,Ctrl + Tab,Smart tab Switch,ver 3.6+
+CmdPrevTabSmart,Ctrl + Shift + Tab,Smart tab Switch,ver 3.6+
 ```
 
 ## Navigation

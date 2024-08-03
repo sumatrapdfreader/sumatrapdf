@@ -23,7 +23,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
   - CmdCreateAnnot\* commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
   - `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
-  - `CmdSmartTabSwitch` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`
+  - `CmdNextTabSmart`, `CmdPrevTabSmart` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`, `Ctrl + Shift + Tab``
 - added `UIFontSize` advanced setting
 - removed `TreeFontWeightOffset` advanced setting
 - increase number of thumbnails on home page from 10 => 30
@@ -40,7 +40,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - bug fix: Del should not delete an annotation if editing content
 - bug fix: re-enable tree view full row select
 - change: `CmdCreateAnnotHighlight` etc. no longer copies selection to clipboard by default. To get that behavior back, you can use `copytoclipboard` argument [instead](Commands.md#cmdcreateannothighlight-and-other-cmdcreateannot).
-- change: `Ctrl + Tab` is now `CmdSmartTabSwitch`, was `CmdNextTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior
+- change: `Ctrl + Tab` is now `CmdNextTabSmart`, was `CmdNextTab`. `Ctrl + Shift + Tab` is now `CmdPrevTabSmart`, was `CmdPrevTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior
 - `CmdCommandPalette` takes optional `mode` argument: `@` for tab selection, `#` for selecting from file history and `>` for commands.
 - command palette no longer shows combined tabs/file history/commands. `CmdCommandPalette` only shows commands. Because of that removed `CmdCommandPaletteNoFiles` because now ``CmdCommandPalette` behaves like it
 - removed `CmdCommandPaletteOnlyTabs`, replaced by`CmdCommandPaletteNoFiles @`

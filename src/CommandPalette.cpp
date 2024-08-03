@@ -40,7 +40,8 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithKnownExternalViewerFirst,
     CmdOpenWithKnownExternalViewerLast,
     CmdCommandPalette,
-    CmdSmartTabSwitch,
+    CmdNextTabSmart,
+    CmdPrevTabSmart,
 
     // managing frequently list in home tab
     CmdOpenSelectedDocument,
@@ -205,7 +206,7 @@ struct CommandPaletteWnd : Wnd {
     void CollectStrings(MainWindow*);
     void FilterStringsForQuery(const char*, StrVecCP&);
 
-    bool Create(MainWindow* win, const char* prefix);
+    bool Create(MainWindow* win, const char* prefix, int smartTabAdvance);
     void QueryChanged();
 
     void ExecuteCurrentSelection();
@@ -799,7 +800,10 @@ static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
     return c;
 }
 
-bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
+bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTabAdvance) {
+    if (str::Eq(prefix, kPalettePrefixTabs)) {
+        smartTabMode = smartTabAdvance != 0;
+    }
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -898,7 +902,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     editQuery->SetCursorPositionAtEnd();
     if (smartTabMode) {
         int nItems = listBox->model->ItemsCount();
-        int tabToSelect = (currTabIdx + 1) % nItems;
+        int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
         listBox->SetCurrentSelection(tabToSelect);
     }
 
@@ -907,18 +911,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix) {
     return true;
 }
 
-void RunCommandPallette(MainWindow* win, const char* prefix) {
+void RunCommandPallette(MainWindow* win, const char* prefix, int smartTabAdvance) {
     ReportIf(gCommandPaletteWnd);
 
     auto wnd = new CommandPaletteWnd();
     wnd->onDestroy = OnDestroy;
     wnd->font = GetAppBiggerFont();
     wnd->win = win;
-    if (str::Eq(prefix, kPalettePrefixTabsSmart)) {
-        prefix = kPalettePrefixTabs;
-        wnd->smartTabMode = true;
-    }
-    bool ok = wnd->Create(win, prefix);
+    bool ok = wnd->Create(win, prefix, smartTabAdvance);
     ReportIf(!ok);
     gCommandPaletteWnd = wnd;
     gHwndToActivateOnClose = win->hwndFrame;
