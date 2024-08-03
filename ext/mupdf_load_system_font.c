@@ -837,6 +837,8 @@ Segoe UI Emoji Regular
 Cambria Math Regular - math symbols
 Segoe UI Symbol Regular - math and other symbols
 Charis SIL => Times New Roman or Georgia
+
+https://learn.microsoft.com/en-us/windows/apps/design/globalizing/loc-international-fonts
 */
 static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int language, int serif, int bold, int italic) {
     fz_font* font = NULL;
