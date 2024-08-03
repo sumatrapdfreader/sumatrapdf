@@ -724,6 +724,9 @@ struct TabsCtrl : Wnd {
     // where we grabbed the tab with a leftclick, in tab coordinates
     Point grabLocation;
 
+    // if >= 0 will paint this tab as selected vs. the real selected
+    int tabForceShowSelected = -1;
+
     ClosedHandler onTabClosed;
     SelectionChangingHandler onSelectionChanging;
     SelectionChangedHandler onSelectionChanged;
@@ -778,6 +781,9 @@ struct TabsCtrl : Wnd {
 
     int GetSelected();
     int SetSelected(int idx);
+    bool IsValidIdx(int idx);
+
+    void SetHighlighted(int idx);
 
     HWND GetToolTipsHwnd();
 

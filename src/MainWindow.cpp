@@ -741,3 +741,15 @@ MainWindow* FindMainWindowByController(DocController* ctrl) {
     }
     return nullptr;
 }
+
+// temporarily highlight this tab
+void HighlightTab(MainWindow* win, WindowTab* tab) {
+    if (!win) {
+        return;
+    }
+    int idx = -1;
+    if (tab) {
+        idx = win->GetTabIdx(tab);
+    }
+    win->tabsCtrl->SetHighlighted(idx);
+}

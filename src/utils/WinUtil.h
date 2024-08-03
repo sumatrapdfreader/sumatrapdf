@@ -176,12 +176,6 @@ void ResizeWindow(HWND, int dx, int dy);
 void MessageBoxWarningSimple(HWND hwnd, const WCHAR* msg, const WCHAR* title = nullptr);
 void MessageBoxNYI(HWND hwnd);
 
-// schedule WM_PAINT at window's leasure
-void HwndScheduleRepaint(HWND hwnd);
-
-// do WM_PAINT immediately
-void RepaintNow(HWND hwnd);
-
 bool RegisterServerDLL(const char* dllPath, const char* args = nullptr);
 bool UnRegisterServerDLL(const char* dllPath, const char* args = nullptr);
 bool RegisterOrUnregisterServerDLL(const char* dllPath, bool install, const char* args = nullptr);
@@ -330,6 +324,8 @@ HICON HwndGetIcon(HWND);
 HICON HwndSetIcon(HWND, HICON);
 
 void HwndInvalidate(HWND);
+void HwndScheduleRepaint(HWND hwnd);
+void RepaintNow(HWND hwnd);
 
 HFONT HwndGetFont(HWND);
 void HwndSetFont(HWND, HFONT);

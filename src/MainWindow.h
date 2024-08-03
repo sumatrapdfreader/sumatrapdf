@@ -262,5 +262,5 @@ MainWindow* FindMainWindowByTab(WindowTab*);
 MainWindow* FindMainWindowByHwnd(HWND);
 bool IsMainWindowValid(MainWindow*);
 MainWindow* FindMainWindowByController(DocController*);
-
 extern Vec<MainWindow*> gWindows;
+void HighlightTab(MainWindow*, WindowTab*);

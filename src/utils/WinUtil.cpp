@@ -2401,16 +2401,6 @@ void MessageBoxNYI(HWND hwnd) {
     MessageBoxWarningSimple(hwnd, L"Not Yet Implemented!", L"NYI");
 }
 
-void HwndScheduleRepaint(HWND hwnd) {
-    InvalidateRect(hwnd, nullptr, FALSE);
-}
-
-// do WM_PAINT immediately
-void RepaintNow(HWND hwnd) {
-    InvalidateRect(hwnd, nullptr, FALSE);
-    UpdateWindow(hwnd);
-}
-
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
@@ -2727,12 +2717,23 @@ HICON HwndGetIcon(HWND hwnd) {
     return res;
 }
 
+void HwndScheduleRepaint(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+// schedule WM_PAINT at window's leasure
 void HwndInvalidate(HWND hwnd) {
     if (!hwnd) {
         return;
     }
     InvalidateRect(hwnd, nullptr, FALSE);
     // send WM_PAINT right away (normally would wait for empty msg queue)
+    UpdateWindow(hwnd);
+}
+
+// do WM_PAINT immediately
+void RepaintNow(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
     UpdateWindow(hwnd);
 }
 

@@ -547,6 +547,10 @@ void SafeDeleteCommandPaletteWnd() {
 }
 
 static void ScheduleDelete() {
+    if (!gCommandPaletteWnd) {
+        return;
+    }
+    HighlightTab(gCommandPaletteWnd->win, nullptr);
     auto fn = MkFunc0Void(SafeDeleteCommandPaletteWnd);
     uitask::Post(fn, "SafeDeleteCommandPaletteWnd");
 }
@@ -562,6 +566,22 @@ LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
     }
 
     return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
+static void SelectionChange(CommandPaletteWnd* wnd) {
+    int idx = wnd->listBox->GetCurrentSelection();
+    logf("Selection changed: %d\n", idx);
+    if (!wnd->smartTabMode) {
+        return;
+    }
+    auto m = (ListBoxModelCP*)wnd->listBox->model;
+    ItemDataCP* data = m->strings.AtData(idx);
+    HighlightTab(wnd->win, data->tab);
+}
+
+static void SetCurrentSelection(CommandPaletteWnd* wnd, int idx) {
+    wnd->listBox->SetCurrentSelection(idx);
+    SelectionChange(wnd);
 }
 
 bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
@@ -604,7 +624,7 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
         if (sel >= n) {
             sel = 0;
         }
-        listBox->SetCurrentSelection(sel);
+        SetCurrentSelection(this, sel);
         return true;
     }
 
@@ -718,10 +738,10 @@ void CommandPaletteWnd::QueryChanged() {
         return;
     }
     if (stickyMode && nItemsPrev == nItems) {
-        listBox->SetCurrentSelection(currSelIdx);
+        SetCurrentSelection(this, currSelIdx);
         return;
     }
-    listBox->SetCurrentSelection(0);
+    SetCurrentSelection(this, 0);
 }
 
 static void CommandPaletteQueryChanged(CommandPaletteWnd* self) {
@@ -871,8 +891,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         c->onDoubleClick = MkFunc0(ListDoubleClick, this);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
-        auto wnd = c->Create(args);
-        ReportIf(!wnd);
+        c->Create(args);
+        c->onSelectionChanged = MkFunc0(SelectionChange, this);
         auto m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);
         c->SetModel(m);
@@ -903,7 +923,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     if (smartTabMode) {
         int nItems = listBox->model->ItemsCount();
         int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
-        listBox->SetCurrentSelection(tabToSelect);
+        SetCurrentSelection(this, tabToSelect);
     }
 
     SetIsVisible(true);

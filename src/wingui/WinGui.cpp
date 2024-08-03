@@ -3177,13 +3177,21 @@ constexpr bool closeCircleEnabled = true;
 constexpr float closePenWidth = 1.0f;
 constexpr COLORREF circleColor = RgbToCOLORREF(0xC13535);
 
+bool TabsCtrl::IsValidIdx(int idx) {
+    return idx >= 0 && idx < TabCount();
+}
+
 void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     TabsCtrl::MouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
     bool overClose = tabState.overClose && tabState.tabInfo->canClose;
-    int tabSelected = GetSelected();
+    int selectedIdx = GetSelected();
+    if (IsValidIdx(tabForceShowSelected)) {
+        selectedIdx = tabForceShowSelected;
+    }
+
     // logfa("TabsCtrl::Paint, underMouse: %d, overClose: %d, selected: %d, rc: pos: (%d, %d), size: (%d, %d)\n",
-    // tabUnderMouse, (int)overClose, tabSelected, rc.left, rc.top, RectDx(rc), RectDy(rc));
+    //  tabUnderMouse, (int)overClose, selectedIdx, rc.left, rc.top, RectDx(rc), RectDy(rc));
 
     bool isTranslucentMode = inTitleBar && dwm::IsCompositionEnabled();
     if (isTranslucentMode) {
@@ -3230,7 +3238,7 @@ void TabsCtrl::Paint(HDC hdc, RECT& rc) {
     for (int i = 0; i < n; i++) {
         // Get the correct colors based on the state and the current theme
         tabBgCol = tabBgBackground;
-        if (tabSelected == i) {
+        if (selectedIdx == i) {
             tabBgCol = tabBgSelected;
         } else if (tabUnderMouse == i) {
             tabBgCol = tabBgHighlight;
@@ -3815,6 +3823,11 @@ int TabsCtrl::SetSelected(int idx) {
     ReportIf(idx < 0 || idx >= nTabs);
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
     return prevSelectedIdx;
+}
+
+void TabsCtrl::SetHighlighted(int idx) {
+    tabForceShowSelected = idx;
+    RepaintNow(hwnd);
 }
 
 HWND TabsCtrl::GetToolTipsHwnd() {
