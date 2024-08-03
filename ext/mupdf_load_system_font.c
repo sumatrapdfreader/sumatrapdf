@@ -833,19 +833,10 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
 #endif
 
 /*
-Sylfaen Regular
-Greek, Cyrillic, Armenian, Georgian
-
-UCDN_SCRIPT_GEORGIAN
-
-bangla, devanagari, gujarati, gurmukh, kannada, malayalam, odia, sinhala, telugu, ol chiki, sora sompeng
-
-
 Segoe UI Emoji Regular
 Cambria Math Regular - math symbols
 Segoe UI Symbol Regular - math and other symbols
-
-
+Charis SIL => Times New Roman or Georgia
 */
 static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int language, int serif, int bold, int italic) {
     fz_font* font = NULL;
@@ -868,6 +859,30 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
             font_name = "Nirmala UI Regular";
             if (bold) {
                 font_name = "Nirmala UI Bold";
+            }
+        } break;
+        //
+        case UCDN_SCRIPT_CYRILLIC:
+        case UCDN_SCRIPT_GREEK:
+        case UCDN_SCRIPT_ARMENIAN:
+        case UCDN_SCRIPT_GEORGIAN: {
+            font_name = "Sylfaen Regular";
+        } break;
+        // per chatgpt Times New Roman is closest to Noto Serif
+        case UCDN_SCRIPT_LATIN:
+        //case UCDN_SCRIPT_GREEK:
+        //case UCDN_SCRIPT_CYRILLIC:
+        case UCDN_SCRIPT_COMMON:
+        case UCDN_SCRIPT_INHERITED:
+        case UCDN_SCRIPT_UNKNOWN: {
+            font_name = "Times New Roman Regular";
+            if (bold) {
+                font_name = "Times New Roman Bold";
+                if (italic) {
+                    font_name = "Times New Roman Bold Italic";
+                }
+            } else if (italic) {
+                font_name = "Times New Roman Italic";
             }
         } break;
     }
