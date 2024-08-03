@@ -595,32 +595,58 @@ static float gZoomLevelsChm[] = {
 };
 // clang-format on
 
-static float* gCurrZoomLevels;
-static int gCurrZoomLevelsCount;
+static Vec<float>* gCurrZoomLevels = nullptr;
+
+static void AddZoomLevel(float zoomLevel, HWND hwnd, Vec<float>* levels) {
+    TempStr s = ZoomLevelStr(zoomLevel);
+    CbAddString(hwnd, s);
+    levels->Append(zoomLevel);
+}
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
     HWND hwnd = GetDlgItem(hDlg, idComboBox);
-    float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
-    int n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
-    int currIdx = -1;
-    for (int i = 0; i < n; i++) {
-        float zoomLevel = zoomLevels[i];
-        TempStr s = ZoomLevelStr(zoomLevel);
-        CbAddString(hwnd, s);
-        if (zoomLevel == currZoom) {
-            currIdx = i;
+
+    auto prefs = gGlobalPrefs;
+    auto customZoomLevels = prefs->zoomLevels;
+    auto currZoomLevels = new Vec<float>();
+    int n = customZoomLevels->Size();
+    if (n > 0) {
+        if (!forChm) {
+            float* zoomLevels = gZoomLevels;
+            for (int i = 0; i < 4; i++) {
+                AddZoomLevel(zoomLevels[i], hwnd, currZoomLevels);
+            }
+        }
+        float maxZoom = forChm ? 800 : kZoomMax;
+        float minZoom = forChm ? 16 : kZoomMin;
+        for (int i = 0; i < n; i++) {
+            float zl = customZoomLevels->At(n - i - 1); // largest first
+            if (zl >= minZoom && zl <= maxZoom) {
+                AddZoomLevel(zl, hwnd, currZoomLevels);
+            }
+        }
+    } else {
+        float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
+        n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
+        for (int i = 0; i < n; i++) {
+            AddZoomLevel(zoomLevels[i], hwnd, currZoomLevels);
         }
     }
-    if (currIdx >= 0) {
-        CbSetCurrentSelection(hwnd, currIdx);
+
+    n = currZoomLevels->Size();
+    for (int i = 0; i < n; i++) {
+        float zl = currZoomLevels->At(i);
+        if (zl == currZoom) {
+            CbSetCurrentSelection(hwnd, i);
+        }
     }
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
         TempStr customZoom = str::FormatTemp("%.0f%%", currZoom);
         SetDlgItemTextW(hDlg, idComboBox, ToWStrTemp(customZoom));
     }
-    gCurrZoomLevels = zoomLevels;
-    gCurrZoomLevelsCount = n;
+    delete gCurrZoomLevels;
+    gCurrZoomLevels = currZoomLevels;
 }
 
 static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom) {
@@ -632,7 +658,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom)
         newZoom = limitValue(zoom, kZoomMin, kZoomMax);
         return newZoom;
     }
-    newZoom = gCurrZoomLevels[idx];
+    newZoom = gCurrZoomLevels->At(idx);
     if (newZoom == 0) {
         newZoom = defaultZoom;
     }
