@@ -3850,7 +3850,7 @@ static void ShowZoomNotification(MainWindow* win, float zoomLevel) {
     }
     NotificationCreateArgs args;
     args.groupId = kNotifZoom;
-    args.timeoutMs = 300;
+    args.timeoutMs = 2000;
     args.hwndParent = win->hwndCanvas;
     args.msg = BuildZoomString(zoomLevel);
     ShowNotification(args);
