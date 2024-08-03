@@ -3555,7 +3555,7 @@ ta:பிடித்தவையில்  பக்கம் %s-ஐ (விர
 th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อมชื่อ (สามารถเลือกได้) :
 tl:Magdagdag ng pahina %s sa mga paborito na may (opsyonal) na pangalan:
 tr:%s. sayfayı şu (isteğe bağlı) adla sık kullanılanlara ekle:
-tw:將第 %s 頁加到我的最愛，並(選擇性的)提供名稱:
+tw:將第 %s 頁加到我的最愛，並命名(可留白):
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add to favorites
@@ -11595,6 +11595,7 @@ ro:Manual pe site
 ru:Руководство на веб-сайте
 sat:ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱟᱹᱠᱷᱤ
 sk:Manuál na webovej stránke
+tw:線上說明
 :Match Case
 am:Հաշվի առնել մեծատառ/փոքրատառը
 ar:مطابقة حالة الأحرف
@@ -11936,6 +11937,7 @@ ro:Nu
 ru:Нет
 sat:ᱵᱟᱝᱟ
 sk:Nie
+tw:否
 :No matches were found
 am:Ոչինչ չի գտնվել
 ar:لا توجد متطابقات
@@ -12784,6 +12786,7 @@ pt:Abrir o Próximo Arquivo na Pasta
 ro:Deschide următorul fișier în folder
 ru:Открыть следующий файл в папке
 sk:Otvoriť nasledujúci súbor v priečinku
+tw:開啟資料夾內的下一個檔案
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
 cn:打开文件夹中的上一个文件
@@ -12799,6 +12802,7 @@ pt:Abrir o Arquivo Anterior na Pasta
 ro:Deschide fișierul anterior în folder
 ru:Открыть предыдущий файл в папке
 sk:Otvoriť predchádzajúci súbor v priečinku
+tw:開啟資料夾內的上一個檔案
 :Open a document...
 am:Բացել փաստաթուղթ...
 ar:فتح مستند...
@@ -15958,6 +15962,7 @@ ro: Caută cu &Google Academic
 ru:  Найти в &Google Scholar
 sat:&Google Scholar ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Google Scholar
+tw:使用Google學術搜尋(&G)
 :Search with &Wikipedia
 br:Procurar com a &Wikipedia
 ca:Cerca amb el &Wikipedia
@@ -15978,6 +15983,7 @@ ro:Caută pe &Wikipedia
 ru:Найти в &Wikipedia
 sat:&Wikipedia ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Wikipedii
+tw:使用維基百科搜尋(&W)
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
 ar:يتم البحث %d من %d...
@@ -19020,6 +19026,7 @@ ro:Da
 ru:Да
 sat:ᱦᱚᱭ
 sk:Áno
+tw:是
 :You have the latest version.
 am:Սա վերջին տարբերակն է։
 ar:لديك آخر نسخة
@@ -19221,7 +19228,7 @@ ta:நீங்கள் 32-பிட் சுமத்ராPDFஐ 64-பி�
 th:คุณกำลังติดตั้ง SumatraPDF รุ่น 32-บิต บนระบปฏิบัติการ 64-บิต.\nคุณต้องการดาวน์โหลดหรือไม่\nรุ่น 64-บิต
 tl:Nag-i-install ka ng 32-bit na SumatraPDF sa 64-bit na OS.\nGusto mo bang mag-download ng\n64-bit na bersyon?
 tr:64 bit işletim sistemine 32 bit SumatraPDF kuruyorsunuz.\n64 bit sürümü indirmek\nister misiniz?
-tw:您正在一台64位元的電腦上安裝32位元的SumatraPDF。\n您想下載\n64位元的版本嗎?
+tw:您正在一台64位元的電腦上安裝32位元的SumatraPDF。\n您想下載64位元的版本嗎?
 uk:Ви встановлюєте 32-розрядну версію SumatraPDF на 64-розрядну ОС.\nБажаєте завантажити\n64-розрядну версію?
 vn:Bạn đang cài đặt SumatraPDF 32-bit trên hệ điều hành 64-bit.\nBạn có muốn tả \nphiên bản 64-bit?
 :Zoom
