@@ -870,8 +870,8 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
         } break;
         // per chatgpt Times New Roman is closest to Noto Serif
         case UCDN_SCRIPT_LATIN:
-        //case UCDN_SCRIPT_GREEK:
-        //case UCDN_SCRIPT_CYRILLIC:
+        // case UCDN_SCRIPT_GREEK:
+        // case UCDN_SCRIPT_CYRILLIC:
         case UCDN_SCRIPT_COMMON:
         case UCDN_SCRIPT_INHERITED:
         case UCDN_SCRIPT_UNKNOWN: {
