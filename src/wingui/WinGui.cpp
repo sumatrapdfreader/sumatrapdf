@@ -1663,6 +1663,9 @@ HWND Edit::Create(const CreateArgs& editArgs) {
     if (editArgs.cueText) {
         EditSetCueText(hwnd, editArgs.cueText);
     }
+    if (editArgs.text) {
+        SetText(editArgs.text);
+    }
     return hwnd;
 }
 

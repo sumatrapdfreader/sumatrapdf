@@ -266,6 +266,7 @@ struct Edit : Wnd {
         bool isMultiLine = false;
         bool withBorder = false;
         const char* cueText = nullptr;
+        const char* text = nullptr;
         int idealSizeLines = 1;
         HFONT font = nullptr;
     };
