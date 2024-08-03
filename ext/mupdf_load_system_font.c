@@ -599,59 +599,36 @@ static void* fz_resize_array(fz_context* ctx, void* p, unsigned int count, unsig
     return np;
 }
 
-typedef struct cached_font {
-    struct cached_font* next;
-    win_font_info* fi;
-    fz_context* ctx;
-    fz_buffer* buffer;
-} cached_font;
-
-static cached_font* cached_fonts = 0;
-
-static fz_buffer* get_cached_font_buffer(fz_context* ctx, win_font_info* fi) {
-    EnterCriticalSection(&cs_fonts);
-    cached_font* f = cached_fonts;
+static fz_buffer* load_and_cache_font(fz_context* ctx, win_font_info* fi, const char* font_name) {
     fz_buffer* buffer = NULL;
-    while (f) {
-        if (f->ctx == ctx && f->fi == fi) {
-            buffer = f->buffer;
-            break;
-        }
-        f = f->next;
-    }
-    LeaveCriticalSection(&cs_fonts);
-    return buffer;
-}
+    int file_idx = (int)fi->file_idx;
+    font_file* ff;
 
-void drop_cached_fonts_for_ctx(fz_context* ctx) {
     EnterCriticalSection(&cs_fonts);
-
-    cached_font** currp = &cached_fonts;
-    cached_font** nextp;
-    cached_font* curr;
-    cached_font* next;
-    int refs;
-    while (1) {
-        curr = *currp;
-        if (!curr) {
-            break;
-        }
-        nextp = &(curr->next);
-        if (curr->ctx == ctx) {
-            next = *nextp;
-            refs = curr->buffer->refs;
-            if (refs != 1) {
-                // TODO: crash?
-                fz_warn(ctx, "drop_cached_fonts_for_ctx: bad refcount %d", refs);
-            }
-            fz_drop_buffer(curr->ctx, curr->buffer);
-            free(curr);
-            *currp = next;
-        } else {
-            currp = nextp;
-        }
+    ff = &g_font_files.files[file_idx];
+    if (ff->data) {
+        buffer = fz_new_buffer_from_shared_data(ctx, ff->data, ff->size);
+        fz_warn(ctx, "found cached font '%s' from '%s'", font_name, ff->file_path);
     }
     LeaveCriticalSection(&cs_fonts);
+    if (buffer) {
+        return buffer;
+    }
+
+    // can fz_throw so load outside of cs
+    buffer = fz_read_file(ctx, ff->file_path);
+    if (!buffer) {
+        return NULL;
+    }
+
+    EnterCriticalSection(&cs_fonts);
+    // TODO: free this data. will have to make a copy using allocator
+    // not bound to ctx
+    ff->size = fz_buffer_extract(ctx, buffer, (unsigned char**)&ff->data);
+    buffer = fz_new_buffer_from_shared_data(ctx, ff->data, ff->size);
+    LeaveCriticalSection(&cs_fonts);
+    fz_warn(ctx, "loaded font '%s' from '%s'", font_name, ff->file_path);
+    return buffer;
 }
 
 static int str_ends_with(const char* str, const char* end) {
@@ -665,7 +642,6 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     char *comma, *fontname;
     fz_font* font;
     fz_buffer* buffer;
-    const char* font_path;
 
     EnterCriticalSection(&cs_fonts);
     if (g_win_fonts.len == 0) {
@@ -737,33 +713,10 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     }
 
     fz_free(ctx, fontname);
-    if (!found)
+    if (!found) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
-
-    font_path = g_font_files.files[found->file_idx].file_path;
-    buffer = get_cached_font_buffer(ctx, found);
-    if (buffer) {
-        fz_warn(ctx, "found cached non-embedded buffer for font '%s' from '%s'", orig_name, font_path);
-    } else {
-        buffer = fz_read_file(ctx, font_path);
-        if (!buffer) {
-            return NULL;
-        }
-        cached_font* f = (cached_font*)malloc(sizeof(cached_font));
-        if (!f) {
-            return NULL;
-        }
-        f->fi = found;
-        f->ctx = ctx;
-        f->buffer = buffer;
-        EnterCriticalSection(&cs_fonts);
-        f->next = cached_fonts;
-        cached_fonts = f;
-        LeaveCriticalSection(&cs_fonts);
-
-        fz_warn(ctx, "loading non-embedded font '%s' from '%s'", orig_name, font_path);
     }
-
+    buffer = load_and_cache_font(ctx, found, orig_name);
     int use_glyph_bbox = !streq(found->fontface, "DroidSansFallback");
     font = fz_new_font_from_buffer(ctx, orig_name, buffer, found->index, use_glyph_bbox);
     font->flags.ft_substitute = 1;

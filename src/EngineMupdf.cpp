@@ -54,7 +54,6 @@ static float layoutFontEm = 11.f;
 constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
 
 // in mupdf_load_system_font.c
-extern "C" void drop_cached_fonts_for_ctx(fz_context*);
 extern "C" void install_load_windows_font_funcs(fz_context* ctx);
 
 static AnnotationType AnnotationTypeFromPdfAnnot(enum pdf_annot_type tp) {
@@ -1614,7 +1613,6 @@ EngineMupdf::~EngineMupdf() {
     }
 
     fz_drop_document(ctx, _doc);
-    drop_cached_fonts_for_ctx(ctx);
     fz_drop_context(ctx);
 
     delete pageLabels;
