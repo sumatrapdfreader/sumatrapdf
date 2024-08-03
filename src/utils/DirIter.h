@@ -11,6 +11,7 @@ struct VisitDirData {
     WIN32_FIND_DATAW* fd = nullptr;
     const char* filePath = nullptr;
     bool stopTraversal = false;
+    bool fileMatches = false;
 };
 
 using VisitDirCb = Func1<VisitDirData*>;

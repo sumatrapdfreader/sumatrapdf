@@ -236,21 +236,27 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths) {
 
 struct CollectFilesData {
     StrVec* files = nullptr;
-    const VisitDirCb* fileMatches;
+    VisitDirCb fileMatches;
 };
 
 static void CollectFilesCb(CollectFilesData* d, VisitDirData* vd) {
-    d->fileMatches->Call(vd);
-    if (!vd->stopTraversal) {
-        d->files->Append(vd->filePath);
+    bool matches = true;
+    if (d->fileMatches.IsValid()) {
+        vd->fileMatches = false;
+        d->fileMatches.Call(vd);
+        matches = vd->fileMatches;
     }
+    if (!matches) {
+        return;
+    }
+    d->files->Append(vd->filePath);
 }
 
 bool CollectFilesFromDirectory(const char* dir, StrVec& files, const VisitDirCb& fileMatches) {
     u32 flg = kVisitDirIncudeFiles;
     auto data = new CollectFilesData;
     data->files = &files;
-    data->fileMatches = &fileMatches;
+    data->fileMatches = fileMatches;
     auto fn = MkFunc1(CollectFilesCb, data);
     bool ok = VisitDir(dir, flg, fn);
     delete data;
