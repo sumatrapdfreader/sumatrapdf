@@ -847,16 +847,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
 }
 
 static TempStr BuildZoomString(float zoomLevel) {
-    const char* zoomLevelStr;
-    if (zoomLevel == kZoomFitPage) {
-        zoomLevelStr = _TRA("Fit Page");
-    } else if (zoomLevel == kZoomFitWidth) {
-        zoomLevelStr = _TRA("Fit Width");
-    } else if (zoomLevel == kZoomFitContent) {
-        zoomLevelStr = _TRA("Fit Content");
-    } else {
-        zoomLevelStr = str::FormatTemp("%.f%%", zoomLevel);
-    }
+    TempStr zoomLevelStr = ZoomLevelStr(zoomLevel);
     const char* zoomStr = _TRA("Zoom");
     return str::FormatTemp("%s: %s", zoomStr, zoomLevelStr);
 }

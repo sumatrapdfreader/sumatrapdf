@@ -397,6 +397,8 @@ struct GlobalPrefs {
     // zoom levels which zooming steps through in addition to Fit Page, Fit
     // Width and the minimum and maximum allowed values (8.33 and 6400)
     Vec<float>* zoomLevels;
+    //
+    Vec<int>* zoomLevelsCmdIds;
     // zoom step size in percents relative to the current zoom level. if
     // zero or negative, the values from ZoomLevels are used instead
     float zoomIncrement;
@@ -704,9 +706,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, uIFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray,
-     (intptr_t) "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 "
-                "6400"},
+    {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t) ""},
     {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t) "0"},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},

@@ -546,66 +546,96 @@ const char* Dialog_ChangeLanguge(HWND hwnd, const char* currLangCode) {
     return data.langCode;
 }
 
-static float gItemZoom[] = {kZoomFitPage, kZoomFitWidth, kZoomFitContent, 0,     6400.0, 3200.0, 1600.0, 800.0, 400.0,
-                            200.0,        150.0,         125.0,           100.0, 50.0,   25.0,   12.5,   8.33f};
+TempStr ZoomLevelStr(float zoom) {
+    if (zoom == kZoomFitPage) {
+        return (TempStr)_TRA("Fit Page");
+    }
+    if (zoom == kZoomFitWidth) {
+        return (TempStr)_TRA("Fit Width");
+    }
+    if (zoom == kZoomFitContent) {
+        return (TempStr)_TRA("Fit Content");
+    }
+    if (zoom == 0) {
+        return (TempStr) "-";
+    }
+    TempStr res = str::FormatTemp("%.f%%", zoom);
+    return res;
+}
+
+// clang-format off
+static float gZoomLevels[] = {
+    kZoomFitPage,
+    kZoomFitWidth,
+    kZoomFitContent,
+    0,
+    6400.0,
+    3200.0,
+    1600.0,
+    800.0,
+    400.0,
+    200.0,
+    150.0,
+    125.0,
+    100.0,
+    50.0,
+    25.0,
+    12.5,
+    8.33f
+};
+static float gZoomLevelsChm[] = {
+    800.0,
+    400.0,
+    200.0,
+    150.0,
+    125.0,
+    100.0,
+    50.0,
+    25.0,
+};
+// clang-format on
+
+static float* gCurrZoomLevels;
+static int gCurrZoomLevelsCount;
 
 static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float currZoom) {
     HWND hwnd = GetDlgItem(hDlg, idComboBox);
-    if (!forChm) {
-        CbAddString(hwnd, _TRA("Fit Page"));
-        CbAddString(hwnd, _TRA("Fit Width"));
-        CbAddString(hwnd, _TRA("Fit Content"));
-        CbAddString(hwnd, "-");
-        CbAddString(hwnd, "6400%");
-        CbAddString(hwnd, "3200%");
-        CbAddString(hwnd, "1600%");
-    }
-    CbAddString(hwnd, "800%");
-    CbAddString(hwnd, "400%");
-    CbAddString(hwnd, "200%");
-    CbAddString(hwnd, "150%");
-    CbAddString(hwnd, "125%");
-    CbAddString(hwnd, "100%");
-    CbAddString(hwnd, "50%");
-    CbAddString(hwnd, "25%");
-    if (!forChm) {
-        CbAddString(hwnd, "12.5%");
-        CbAddString(hwnd, "8.33%");
-    }
-    int first = forChm ? 7 : 0;
-    int last = forChm ? dimof(gItemZoom) - 2 : dimof(gItemZoom);
-    for (int i = first; i < last; i++) {
-        if (gItemZoom[i] == currZoom) {
-            CbSetCurrentSelection(hwnd, i - first);
+    float* zoomLevels = forChm ? gZoomLevelsChm : gZoomLevels;
+    int n = forChm ? dimofi(gZoomLevelsChm) : dimofi(gZoomLevels);
+    int currIdx = -1;
+    for (int i = 0; i < n; i++) {
+        float zoomLevel = zoomLevels[i];
+        TempStr s = ZoomLevelStr(zoomLevel);
+        CbAddString(hwnd, s);
+        if (zoomLevel == currZoom) {
+            currIdx = i;
         }
+    }
+    if (currIdx >= 0) {
+        CbSetCurrentSelection(hwnd, currIdx);
     }
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
         TempStr customZoom = str::FormatTemp("%.0f%%", currZoom);
         SetDlgItemTextW(hDlg, idComboBox, ToWStrTemp(customZoom));
     }
+    gCurrZoomLevels = zoomLevels;
+    gCurrZoomLevelsCount = n;
 }
 
-static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float defaultZoom) {
+static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, float defaultZoom) {
     float newZoom = defaultZoom;
-
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
         char* customZoom = HwndGetTextTemp(GetDlgItem(hDlg, idComboBox));
         float zoom = (float)atof(customZoom);
-        if (zoom > 0) {
-            newZoom = limitValue(zoom, kZoomMin, kZoomMax);
-        }
-    } else {
-        if (forChm) {
-            idx += 7;
-        }
-
-        if (0 != gItemZoom[idx]) {
-            newZoom = gItemZoom[idx];
-        }
+        newZoom = limitValue(zoom, kZoomMin, kZoomMax);
+        return newZoom;
     }
-
+    newZoom = gCurrZoomLevels[idx];
+    if (newZoom == 0) {
+        newZoom = defaultZoom;
+    }
     return newZoom;
 }
 
@@ -640,7 +670,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, L
             switch (LOWORD(wp)) {
                 case IDOK:
                     data = (Dialog_CustomZoom_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
-                    data->zoomResult = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, data->forChm, data->zoomArg);
+                    data->zoomResult = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, data->zoomArg);
                     EndDialog(hDlg, IDOK);
                     return TRUE;
 
@@ -787,8 +817,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                     prefs->defaultDisplayModeEnum =
                         (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) +
                                       (int)DisplayMode::Automatic);
-                    prefs->defaultZoomFloat =
-                        GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, false, prefs->defaultZoomFloat);
+                    prefs->defaultZoomFloat = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, prefs->defaultZoomFloat);
 
                     prefs->showToc = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
                     prefs->rememberStatePerDocument =

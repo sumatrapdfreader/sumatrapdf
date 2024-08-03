@@ -235,6 +235,14 @@ CommandArg* NewStringArg(const char* name, const char* val) {
     return res;
 }
 
+CommandArg* NewFloatArg(const char* name, float val) {
+    auto res = new CommandArg();
+    res->type = CommandArg::Type::Float;
+    res->name = str::Dup(name);
+    res->floatVal = val;
+    return res;
+}
+
 static CommandArg* ParseArgOfType(const char* argName, CommandArg::Type type, const char* val) {
     if (type == CommandArg::Type::Color) {
         ParsedColor col;

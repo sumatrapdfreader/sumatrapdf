@@ -322,9 +322,10 @@ var (
 			"if true, we use Windows system colors for background/text color. Over-rides other settings").setExpert(),
 		mkField("UseTabs", Bool, true,
 			"if true, documents are opened in tabs instead of new windows").setVersion("3.0"),
-		mkCompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
+		mkCompactArray("ZoomLevels", Float, "",
 			"zoom levels which zooming steps through in addition to Fit Page, Fit Width and "+
 				"the minimum and maximum allowed values (8.33 and 6400)").setExpert().setDoc("sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
+		mkCompactArray("ZoomLevelsCmdIds", Int, "", "").setInternal(),
 		mkField("ZoomIncrement", Float, 0,
 			"zoom step size in percents relative to the current zoom level. "+
 				"if zero or negative, the values from ZoomLevels are used instead").setExpert(),

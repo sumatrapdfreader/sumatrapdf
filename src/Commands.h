@@ -306,6 +306,7 @@ CustomCommand* CreateCustomCommand(const char* definition, int origCmdId, Comman
 CustomCommand* FindCustomCommand(int cmdId);
 void FreeCustomCommands();
 CommandArg* NewStringArg(const char* name, const char* val);
+CommandArg* NewFloatArg(const char* name, float val);
 void InsertArg(CommandArg** firstPtr, CommandArg* arg);
 
 CustomCommand* CreateCommandFromDefinition(const char* definition);

@@ -149,6 +149,23 @@ static void CreateExternalViewersCommands() {
     }
 }
 
+static void CreateZoomCommands() {
+    auto prefs = gGlobalPrefs;
+    delete prefs->zoomLevelsCmdIds;
+    int n = prefs->zoomLevels->Size();
+    if (n <= 0) {
+        return;
+    }
+    Vec<int>* cmdIds = new Vec<int>(n);
+    prefs->zoomLevelsCmdIds = cmdIds;
+    for (int i = 0; i < n; i++) {
+        float zoomLevel = prefs->zoomLevels->At(i);
+        CommandArg* arg = NewFloatArg(kCmdArgLevel, zoomLevel);
+        auto cmd = CreateCustomCommand("CmdZoomCustom", CmdZoomCustom, arg);
+        cmdIds->InsertAt(i, cmd->id);
+    }
+}
+
 static void CreateCustomCommands() {
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
         auto cmd = CreateCommandFromDefinition(shortcut->cmd);
@@ -253,6 +270,7 @@ bool LoadSettings() {
     // re-create commands
     FreeCustomCommands();
     // Note: some are also created in ReCreateSumatraAcceleratorTable()
+    CreateZoomCommands();
     CreateThemeCommands();
     CreateExternalViewersCommands();
     CreateSelectionHandlerCommands();
