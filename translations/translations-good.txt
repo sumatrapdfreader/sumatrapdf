@@ -18,7 +18,7 @@ fo:%s viðmerking. Ctrl+Klikkja fyri at rætta.
 fr:Annotation %s. Ctrl+clic pour modifier.
 ga:%s nóta mínithe. Brúigh Ctrl+gliogáil chun é a chur in eagar.
 gl:%s anotación. Ctrl+clic para editar.
-he:.כדי לערוך Ctrl +  הערה. לחץ על %s
+he:%s הערה. כדי לערוך לחץ על Ctrl + קליק.
 hi:%s एनोटेशन । संपादित करने के लिए Ctrl+क्लिक करें।
 hu:Megjegyzés: %s. Szerkesztés: Ctrl+kattintás.
 id:%s anotasi. Ctrl+click untuk mengedit.
@@ -11924,6 +11924,7 @@ es:No
 fo:Nei
 fr:Non
 ga:Níl
+he:לא
 hi:नहीं
 hu:Nem
 id:Tidak
@@ -12775,6 +12776,7 @@ co:Apre u schedariu seguente in u cartulare
 de:Nächste Datei im Ordner öffnen
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
+he:פתח את הקובץ הבא שבתיקיה
 it:Apri file successivo nella cartella
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
@@ -12789,6 +12791,7 @@ co:Apre u schedariu precedente in u cartulare
 de:Vorherige Datei im Ordner öffnen
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
+he:פתח את הקובץ שלפני בתיקיה
 it:Apri file precedente nella cartella
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
@@ -19005,6 +19008,7 @@ es:Sí
 fo:Ja
 fr:Oui
 ga:Tá
+he:כן
 hi:हाँ
 hu:Igen
 id:Ya
