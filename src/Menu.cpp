@@ -97,8 +97,6 @@ static MenuDef menuDefFile[] = {
         _TRN("&Open..."),
         CmdOpenFile,
     },
-    // TODO: should make it available for everyone?
-    //{ "Open Folder",                        CmdOpenFolder,             },
     {
         _TRN("&Close"),
         CmdClose,
@@ -971,7 +969,6 @@ UINT_PTR removeIfNoCopyPerms[] = {
 UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdNewWindow, // ???
     CmdOpenFile,
-    CmdOpenFolder,
     CmdOpenNextFileInFolder,
     CmdOpenPrevFileInFolder,
     CmdClose, // ???

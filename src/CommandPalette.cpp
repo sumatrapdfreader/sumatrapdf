@@ -70,7 +70,6 @@ static i32 gBlacklistCommandsFromPalette[] = {
 // it's shorter to list the remaining commands
 static i32 gDocumentNotOpenWhitelist[] = {
     CmdOpenFile,
-    CmdOpenFolder,
     CmdExit,
     CmdNewWindow,
     CmdContributeTranslation,
@@ -114,7 +113,6 @@ static i32 gCommandsNoActivate[] = {
     CmdHelpOpenKeyboardShortcuts,
     CmdHelpVisitWebsite,
     CmdOpenFile,
-    CmdOpenFolder,
     CmdProperties,
     // TOOD: probably more
     0,

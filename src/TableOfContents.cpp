@@ -679,7 +679,7 @@ static bool ShouldCustomDraw(MainWindow* win) {
         return false;
     }
     Kind kind = dm->GetEngineType();
-    return kind == kindEngineMupdf || kind == kindEngineMulti;
+    return kind == kindEngineMupdf;
 }
 
 void OnTocCustomDraw(TreeView::CustomDrawEvent*);

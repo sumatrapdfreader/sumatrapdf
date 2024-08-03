@@ -177,9 +177,6 @@
     <ClInclude Include="..\src\RenderCache.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SaveAsPdf.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Scratch.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -383,9 +380,6 @@
     <ClCompile Include="..\src\EngineImages.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EngineMulti.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EngineMupdf.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -459,9 +453,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\RenderCache.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SaveAsPdf.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Scratch.cpp">

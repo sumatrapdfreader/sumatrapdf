@@ -110,7 +110,6 @@ TocItem::~TocItem() {
         next = tmp;
     }
     str::Free(title);
-    str::Free(engineFilePath);
 }
 
 void TocItem::AddSibling(TocItem* sibling) {

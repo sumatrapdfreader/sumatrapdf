@@ -41,12 +41,6 @@ bool IsEngineCbxSupportedFileType(Kind kind);
 EngineBase* CreateEngineCbxFromFile(const char* path);
 EngineBase* CreateEngineCbxFromStream(IStream* stream);
 
-/* EngineMulti.cpp */
-
-bool IsEngineMultiSupportedFileType(Kind);
-EngineBase* CreateEngineMultiFromDirectory(const char* dir);
-TocItem* CreateWrapperItem(EngineBase* engine);
-
 /* EngineMupdf.cpp */
 
 using ShowErrorCb = Func1<const char*>;

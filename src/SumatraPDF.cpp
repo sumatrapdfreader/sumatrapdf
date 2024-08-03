@@ -1321,7 +1321,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 }
 
 void ReloadDocument(MainWindow* win, bool autoRefresh) {
-    // TODO: must disable reload for EngineMulti representing a directory
     WindowTab* tab = win->CurrentTab();
 
     // we can't reload while having annotations window open because
@@ -3225,53 +3224,6 @@ static void DuplicateInNewWindow(MainWindow* win) {
     }
     WindowTab* tab = win->CurrentTab();
     DuplicateTabInNewWindow(tab);
-}
-
-// TODO: similar to Installer.cpp
-static char* BrowseForFolderTemp(HWND hwnd, const char* initialFolder, const char* caption) {
-    WCHAR dirW[MAX_PATH + 2] = {0};
-
-    AutoFreeWStr captionW = ToWStr(caption);
-    AutoFreeWStr initialFolderW = ToWStr(initialFolder);
-    BROWSEINFOW bi{};
-    bi.hwndOwner = hwnd;
-    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-    bi.lpszTitle = captionW.Get();
-    // bi.lpfn = BrowseCallbackProc;
-    bi.lParam = (LPARAM)initialFolderW.Get();
-
-    LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
-    if (!pidlFolder) {
-        return nullptr;
-    }
-    BOOL ok = SHGetPathFromIDListW(pidlFolder, dirW);
-    if (!ok) {
-        return nullptr;
-    }
-    IMalloc* pMalloc = nullptr;
-    HRESULT hr = SHGetMalloc(&pMalloc);
-    if (SUCCEEDED(hr) && pMalloc) {
-        pMalloc->Free(pidlFolder);
-        pMalloc->Release();
-    }
-
-    return ToUtf8Temp(dirW);
-}
-
-static void OpenFolder(MainWindow* win) {
-    HWND hwnd = win->hwndFrame;
-    char* dir = BrowseForFolderTemp(hwnd, nullptr, "Select folder with PDF files");
-    if (!dir) {
-        return;
-    }
-
-    EngineBase* engine = CreateEngineMultiFromDirectory(dir);
-    if (!engine) {
-        return;
-    }
-    LoadArgs args(dir, win);
-    args.engine = engine;
-    LoadDocument(&args);
 }
 
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
@@ -5257,10 +5209,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdOpenFile:
             OpenFile(win);
-            break;
-
-        case CmdOpenFolder:
-            OpenFolder(win);
             break;
 
         case CmdShowInFolder:

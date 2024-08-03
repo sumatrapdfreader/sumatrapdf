@@ -15,12 +15,8 @@ An example of customization:
 ```
 Shortcuts [
     [
-        Cmd = CmdOpenFolder
-        Key = Alt + O
-    ]
-    [
         Cmd = CmdOpen
-        Key = x
+        Key = Alt + o
     ]
     [
         Cmd = CmdNone
@@ -36,8 +32,7 @@ Shortcuts [
 
 Explanation:
 
-- we added `Alt + O` keyboard shortcut for `CmdOpenFolder` command. It opens a folder for browsing.
-- by default SumatraPDF has `Ctrl + O` shortcut for `CmdOpen` (open a file) command. This changes the shortcut to `x`
+- by default SumatraPDF has `Ctrl + O` shortcut for `CmdOpen` (open a file) command. This changes the shortcut to `Alt + o`
 - by default `q` closes the document. By binding it to `CmdNone` we can disable a built-in shortcut
 - **ver 3.6+:**: `CmdCreateAnnotHighlight` takes a color argument (`#00ff00` is green) and boolean `openedit` argument. We re-assign `a` to create a highlight annotation with green color (different from default yellow) and to open annotations edit window (`openedit` boolean argument)
 - **ver 3.6+:**: `Name` is optional. If given, the command will show up in command palette (`Ctrl + K`)

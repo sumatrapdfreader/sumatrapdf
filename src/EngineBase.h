@@ -5,7 +5,6 @@ struct fz_outline;
 struct fz_link;
 
 extern Kind kindEngineMupdf;
-extern Kind kindEngineMulti;
 extern Kind kindEngineDjVu;
 extern Kind kindEngineImage;
 extern Kind kindEngineImageDir;
@@ -320,14 +319,6 @@ struct TocItem {
     // caching to speed up ChildAt
     TocItem* currChild = nullptr;
     int currChildNo = 0;
-
-    // -- only for .EngineMulti
-    // marks a node that represents a file
-    char* engineFilePath = nullptr;
-    int nPages = 0;
-    // auto-calculated page number that tells us a span from
-    // pageNo => endPageNo
-    int endPageNo = 0;
 
     TocItem() = default;
 

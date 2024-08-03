@@ -8,7 +8,6 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
 */
 #define COMMANDS(V)                                                                \
     V(CmdOpenFile, "Open File...")                                                 \
-    V(CmdOpenFolder, "Open Folder...")                                             \
     V(CmdClose, "Close Document")                                                  \
     V(CmdCloseCurrentDocument, "Close Current Document")                           \
     V(CmdCloseOtherTabs, "Close Other Tabs")                                       \
