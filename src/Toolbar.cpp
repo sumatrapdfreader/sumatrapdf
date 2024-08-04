@@ -1076,3 +1076,26 @@ void CreateToolbar(MainWindow* win) {
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);
 }
+
+static void ReCreateToolbar(MainWindow* win) {
+    if (win->hwndReBar) {
+        HwndDestroyWindowSafe(&win->hwndPageLabel);
+        HwndDestroyWindowSafe(&win->hwndPageEdit);
+        HwndDestroyWindowSafe(&win->hwndPageBg);
+        HwndDestroyWindowSafe(&win->hwndPageTotal);
+        HwndDestroyWindowSafe(&win->hwndFindLabel);
+        HwndDestroyWindowSafe(&win->hwndFindEdit);
+        HwndDestroyWindowSafe(&win->hwndFindBg);
+        HwndDestroyWindowSafe(&win->hwndTbInfoText);
+        HwndDestroyWindowSafe(&win->hwndToolbar);
+        HwndDestroyWindowSafe(&win->hwndReBar);
+    }
+    CreateToolbar(win);
+    RelayoutWindow(win);
+}
+
+void ReCreateToolbars() {
+    for (MainWindow* win : gWindows) {
+        ReCreateToolbar(win);
+    }
+}

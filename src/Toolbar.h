@@ -4,6 +4,7 @@
 struct MainWindow;
 
 void CreateToolbar(MainWindow*);
+void ReCreateToolbars();
 void ToolbarUpdateStateForWindow(MainWindow*, bool setButtonsVisibility);
 void UpdateToolbarButtonsToolTipsForWindow(MainWindow*);
 void UpdateToolbarFindText(MainWindow*);

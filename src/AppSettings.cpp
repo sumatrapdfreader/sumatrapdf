@@ -284,6 +284,7 @@ bool LoadSettings() {
     FreeAcceleratorTables();
     CreateSumatraAcceleratorTable();
 
+    ReCreateToolbars();
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;
 }

@@ -96,6 +96,7 @@ struct MainWindow {
 
     HWND hwndFrame = nullptr;
     HWND hwndCanvas = nullptr;
+
     HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
     HWND hwndFindLabel = nullptr;

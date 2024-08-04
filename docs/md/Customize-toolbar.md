@@ -9,7 +9,6 @@ To customize toolbar:
 - use `Settings` / `Advanced Options...` menu (or `Ctrl + K` Command Palette, type `adv` to narrow down and select `Advanced Options...` command)
 - this opens default .txt editor with advanced settings file
 - find `Shortcuts` array and add new shortcut definitions
-- restart SumatraPDF for settings to take effect
 
 Example of customization:
 
