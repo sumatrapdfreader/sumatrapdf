@@ -169,7 +169,6 @@ func makeRenderHook(r *mdhtml.Renderer, isMainPage bool) mdhtml.RenderNodeFunc {
 			return ast.GoToNext, true
 		}
 		if columns, ok := node.(*Columns); ok {
-			r.Outs(w, "<p>haha</p>")
 			renderColumns(w, columns, entering)
 			return ast.GoToNext, true
 		}

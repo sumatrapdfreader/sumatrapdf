@@ -155,7 +155,9 @@ body {
   flex-direction: row;
   font-weight: 500;
   align-items: center;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  /* background-color: white; */
   z-index: 99; /* needs to be higher than img */
 
   justify-content: space-between;
