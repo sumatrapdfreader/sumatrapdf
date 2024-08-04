@@ -1492,6 +1492,8 @@
     <None Include="..\docs\notes.txt" />
     <None Include="..\docs\releasenotes.txt" />
     <None Include="..\docs\wishlist.txt" />
+    <None Include="..\docs\www\notion.css" />
+    <None Include="..\docs\www\sumatra.css" />
     <None Include="..\premake5.files.lua" />
     <None Include="..\premake5.lua" />
     <None Include="..\premake5.obsolete.lua" />

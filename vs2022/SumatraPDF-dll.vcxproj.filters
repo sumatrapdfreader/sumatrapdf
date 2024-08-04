@@ -10,6 +10,9 @@
     <Filter Include="docs\md">
       <UniqueIdentifier>{6E56AB1F-DA35-2ABB-E34D-B5914FAC901C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="docs\www">
+      <UniqueIdentifier>{A2511615-8E1E-7120-B737-5FC8A363A6AE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
@@ -856,6 +859,12 @@
     </None>
     <None Include="..\docs\wishlist.txt">
       <Filter>docs</Filter>
+    </None>
+    <None Include="..\docs\www\notion.css">
+      <Filter>docs\www</Filter>
+    </None>
+    <None Include="..\docs\www\sumatra.css">
+      <Filter>docs\www</Filter>
     </None>
     <None Include="..\premake5.files.lua" />
     <None Include="..\premake5.lua" />
