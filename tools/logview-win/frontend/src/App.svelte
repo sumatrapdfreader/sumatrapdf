@@ -4,7 +4,7 @@
 
   let idx = 2;
   /** @type {[string, number][]} */
-  let logs = [["Logview SumatraPDF", 1]];
+  let logs = [];
   let filteredLogs = [];
   let autoScrollPaused = false;
   let btnText = "pause scrolling";
@@ -109,9 +109,10 @@
     return o ? o.length : 0;
   }
   function clearLogs() {
-    logs = [["Logview SumatraPDF", 1]];
-    filteredLogs = logs;
+    logs = [];
+    filteredLogs = [];
   }
+
   function aboutClicked() {
     let uri = "https://www.sumatrapdfreader.org/docs/Logview";
     // @ts-ignore
