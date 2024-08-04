@@ -163,6 +163,11 @@ body {
   margin-bottom: 1.5rem;
 }
 
+/* https://csshint.com/css-box-shadow-examples/ */
+.nav-shadow {
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px 0px;
+}
+
 .nav-btn {
   font-size: 18px;
   padding: 8px 1rem;
@@ -170,6 +175,7 @@ body {
   text-decoration: none;
   color: black;
   border-radius: 0.5rem;
+  background-color: white;
 }
 
 .nav-logo {

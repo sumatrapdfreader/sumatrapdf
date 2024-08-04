@@ -664,7 +664,7 @@ blockquote {
   display: flex;
   flex-wrap: wrap;
   margin-left: -0.5em;
-  padding-bottom: 1em;
+  /* padding-bottom: 1em; */
   /* margin-bottom: 0 !important; */
   /* font-size: 1rem; */
 }
