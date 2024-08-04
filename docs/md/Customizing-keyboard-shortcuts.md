@@ -6,7 +6,7 @@ You can add new keyboard shortcuts or re-assign existing shortcut to a different
 
 To customize keyboard shortcuts:
 
-- use `Settings` / `Advanced Options...` menu (or `Ctrl + K` to invoke Command Palette, type `adv` to narrow down and select `Advanced Options...` command)
+- use `Settings` / `Advanced Options...` menu (or `Ctrl + K` Command Palette, type `adv` to narrow down and select `Advanced Options...` command)
 - this opens a notepad with advanced settings file
 - find `Shortcuts` array and add new shortcut definitions
 
@@ -26,6 +26,10 @@ Shortcuts [
         Name = Create green highlight
         Cmd = CmdCreateAnnotHighlight #00ff00 openedit
         Key = a
+    ]
+    [
+        Cmd = CmdNextTab
+        ToolbarText = Next Tab
     ]
 ]
 ```

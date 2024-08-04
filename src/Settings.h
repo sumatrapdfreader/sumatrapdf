@@ -187,8 +187,10 @@ struct Shortcut {
     char* key;
     // name shown in command palette
     char* name;
+    // if given, shows in toolbar
+    char* toolbarText;
     // command id
-    char* id;
+    int cmdId;
 };
 
 // Values which are persisted for bookmarks/favorites
@@ -567,9 +569,9 @@ static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
     {offsetof(Shortcut, key), SettingType::String, (intptr_t) ""},
     {offsetof(Shortcut, name), SettingType::String, 0},
-    {offsetof(Shortcut, id), SettingType::String, 0},
+    {offsetof(Shortcut, toolbarText), SettingType::String, 0},
 };
-static const StructInfo gShortcutInfo = {sizeof(Shortcut), 4, gShortcutFields, "Cmd\0Key\0Name\0Id"};
+static const StructInfo gShortcutInfo = {sizeof(Shortcut), 4, gShortcutFields, "Cmd\0Key\0Name\0ToolbarText"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},

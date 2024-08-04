@@ -93,6 +93,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
 
+static Vec<ToolbarButtonInfo>* gCustomToolbarButtons = nullptr;
+
 static bool TbIsSeparator(const ToolbarButtonInfo& tbi) {
     return (int)tbi.bmpIndex == (int)TbIcon::None;
 }
@@ -119,9 +121,8 @@ static bool NeedsInfo(MainWindow* win) {
     return show;
 }
 
-static bool IsVisibleToolbarButton(MainWindow* win, int buttonNo) {
-    ToolbarButtonInfo& bi = gToolbarButtons[buttonNo];
-    switch (bi.cmdId) {
+static bool IsVisibleToolbarButton(MainWindow* win, int cmdId) {
+    switch (cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
             return !win->AsChm();
@@ -140,9 +141,22 @@ static bool IsVisibleToolbarButton(MainWindow* win, int buttonNo) {
     }
 }
 
-static bool IsToolbarButtonEnabled(MainWindow* win, int buttonNo) {
-    int cmdId = gToolbarButtons[buttonNo].cmdId;
+static bool IsToolbarButtonEnabled(MainWindow* win, int cmdId) {
+    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
 
+    switch (cmdId) {
+        case CmdNextTab:
+        case CmdPrevTab:
+        case CmdNextTabSmart:
+        case CmdPrevTabSmart:
+            return gGlobalPrefs->useTabs;
+    }
+
+    auto [remove, disable] = GetCommandIdState(ctx, cmdId);
+    if (remove || disable) {
+        return false;
+    }
     bool isAllowed = true;
     switch (cmdId) {
         case CmdOpenFile:
@@ -186,8 +200,7 @@ static bool IsToolbarButtonEnabled(MainWindow* win, int buttonNo) {
     }
 }
 
-static TBBUTTON TbButtonFromButtonInfo(int i) {
-    const ToolbarButtonInfo& bi = gToolbarButtons[i];
+static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi) {
     TBBUTTON b{};
     b.idCommand = bi.cmdId;
     if (TbIsSeparator(bi)) {
@@ -235,6 +248,27 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
         WPARAM buttonId = (WPARAM)i;
         TbSetButtonInfo(hwnd, buttonId, &binfo);
     }
+    // TODO: need an explicit tooltip window https://chatgpt.com/c/18fb77c8-761c-4314-a1ac-e55b93edfeef
+#if 0
+    if (gCustomToolbarButtons) {
+        int n = gCustomToolbarButtons->Size();
+        for (int i = 0; i < n; i++) {
+            const ToolbarButtonInfo& bi = gCustomToolbarButtons->At(i);
+            const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, bi.cmdId);
+            TempStr s = (TempStr)bi.toolTip;
+            if (accelStr) {
+                TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
+                s = str::JoinTemp(s, s2);
+            }
+
+            binfo.cbSize = sizeof(TBBUTTONINFO);
+            binfo.dwMask = TBIF_TEXT | TBIF_BYINDEX;
+            binfo.pszText = ToWStrTemp(s);
+            WPARAM buttonId = (WPARAM)(kButtonsCount + i);
+            TbSetButtonInfo(hwnd, buttonId, &binfo);
+        }
+    }
+#endif
 }
 
 static void SetToolbarInfoText(MainWindow* win, const char* s) {
@@ -265,15 +299,33 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     HWND hwnd = win->hwndToolbar;
     for (int i = 0; i < kButtonsCount; i++) {
         auto& tb = gToolbarButtons[i];
+        int cmdId = tb.cmdId;
         if (setButtonsVisibility) {
-            bool hide = !IsVisibleToolbarButton(win, i);
-            SendMessageW(hwnd, TB_HIDEBUTTON, tb.cmdId, hide);
+            bool hide = !IsVisibleToolbarButton(win, cmdId);
+            SendMessageW(hwnd, TB_HIDEBUTTON, cmdId, hide);
         }
         if (TbIsSeparator(tb)) {
             continue;
         }
-        LPARAM buttonState = IsToolbarButtonEnabled(win, i) ? kStateEnabled : kStateDisabled;
-        SendMessageW(hwnd, TB_ENABLEBUTTON, tb.cmdId, buttonState);
+        bool isEnabled = IsToolbarButtonEnabled(win, cmdId);
+        LPARAM buttonState = isEnabled ? kStateEnabled : kStateDisabled;
+        SendMessageW(hwnd, TB_ENABLEBUTTON, cmdId, buttonState);
+    }
+
+    if (gCustomToolbarButtons) {
+        int n = gCustomToolbarButtons->Size();
+        for (int i = 0; i < n; i++) {
+            auto& tb = gCustomToolbarButtons->At(i);
+            int cmdId = tb.cmdId;
+            int origCmdId = cmdId;
+            auto cmd = FindCustomCommand(cmdId);
+            if (cmd) {
+                origCmdId = cmd->origId;
+            }
+            bool isEnabled = IsToolbarButtonEnabled(win, origCmdId);
+            LPARAM buttonState = isEnabled ? kStateEnabled : kStateDisabled;
+            SendMessageW(hwnd, TB_ENABLEBUTTON, cmdId, buttonState);
+        }
     }
 
     // Find labels may have to be repositioned if some
@@ -922,9 +974,39 @@ void CreateToolbar(MainWindow* win) {
 
     TBBUTTON tbButtons[kButtonsCount];
     for (int i = 0; i < kButtonsCount; i++) {
-        tbButtons[i] = TbButtonFromButtonInfo(i);
+        const ToolbarButtonInfo& bi = gToolbarButtons[i];
+        tbButtons[i] = TbButtonFromButtonInfo(bi);
     }
     SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
+
+    delete gCustomToolbarButtons;
+    gCustomToolbarButtons = nullptr;
+
+    char* text;
+    for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
+        text = shortcut->toolbarText;
+        if (str::IsEmptyOrWhiteSpace(text)) {
+            continue;
+        }
+        ToolbarButtonInfo tbi;
+        tbi.bmpIndex = TbIcon::Text;
+        tbi.cmdId = shortcut->cmdId;
+        tbi.toolTip = text;
+        if (!gCustomToolbarButtons) {
+            gCustomToolbarButtons = new Vec<ToolbarButtonInfo>();
+        }
+        gCustomToolbarButtons->Append(tbi);
+    }
+    if (gCustomToolbarButtons) {
+        int n = gCustomToolbarButtons->Size();
+        TBBUTTON* buttons = AllocArray<TBBUTTON>(n);
+        for (int i = 0; i < n; i++) {
+            ToolbarButtonInfo tbi = gCustomToolbarButtons->At(i);
+            buttons[i] = TbButtonFromButtonInfo(tbi);
+        }
+        SendMessageW(hwndToolbar, TB_ADDBUTTONS, n, (LPARAM)buttons);
+        free((void*)buttons);
+    }
 
     SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
 

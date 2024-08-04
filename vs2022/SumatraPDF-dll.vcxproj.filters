@@ -767,6 +767,9 @@
     <None Include="..\docs\md\Customize-search-translation-services.md">
       <Filter>docs\md</Filter>
     </None>
+    <None Include="..\docs\md\Customize-toolbar.md">
+      <Filter>docs\md</Filter>
+    </None>
     <None Include="..\docs\md\Customizing-eBook-UI.md">
       <Filter>docs\md</Filter>
     </None>

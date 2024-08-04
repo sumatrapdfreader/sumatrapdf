@@ -14,7 +14,8 @@ var (
 		mkField("Cmd", String, "", "command"),
 		mkField("Key", String, "", "keyboard shortcut (e.g. Ctrl-Alt-F)"),
 		mkField("Name", String, nil, "name shown in command palette").setVersion("3.6"),
-		mkField("Id", String, nil, "command id").setVersion("3.6"),
+		mkField("ToolbarText", String, nil, "if given, shows in toolbar").setVersion("3.6"),
+		mkField("CmdId", Int, nil, "command id").setVersion("3.6").setInternal(),
 	}
 
 	scrollPos = []*Field{

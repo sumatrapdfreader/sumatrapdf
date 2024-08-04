@@ -166,9 +166,13 @@ static void CreateZoomCommands() {
     }
 }
 
-static void CreateCustomCommands() {
+static void CreateCustomShortcuts() {
     for (Shortcut* shortcut : *gGlobalPrefs->shortcuts) {
         auto cmd = CreateCommandFromDefinition(shortcut->cmd);
+        if (!cmd) {
+            continue;
+        }
+        shortcut->cmdId = cmd->id;
         SetCommandNameAndShortcut(cmd, shortcut->name, shortcut->key);
     }
 }
@@ -274,7 +278,7 @@ bool LoadSettings() {
     CreateThemeCommands();
     CreateExternalViewersCommands();
     CreateSelectionHandlerCommands();
-    CreateCustomCommands();
+    CreateCustomShortcuts();
 
     // re-create accelerators
     FreeAcceleratorTables();

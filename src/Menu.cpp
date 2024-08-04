@@ -1068,7 +1068,7 @@ static bool __cmdIdInList(UINT_PTR cmdId, UINT_PTR* idsList, int n) {
     return false;
 }
 
-#define cmdIdInList(name) __cmdIdInList(md.idOrSubmenu, name, dimof(name))
+#define cmdIdInList(name) __cmdIdInList(cmdId, name, dimof(name))
 
 // shorten a string to maxLen characters, adding ellipsis in the middle
 // ascii version that doesn't handle UTF-8
@@ -1191,9 +1191,10 @@ static void AppendRecentFilesToMenu(HMENU m) {
     }
 }
 
-void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
+BuildMenuCtx* NewBuildMenuCtx(WindowTab* tab, Point pt) {
+    auto ctx = new BuildMenuCtx;
     if (!tab) {
-        return;
+        return ctx;
     }
     ctx->tab = tab;
     EngineBase* engine = tab->GetEngine();
@@ -1213,6 +1214,11 @@ void FillBuildMenuCtx(WindowTab* tab, BuildMenuCtx* ctx, Point pt) {
         ctx->annotationUnderCursor = dm->GetAnnotationAtPos(pt, nullptr);
     }
     ctx->hasSelection = tab->win->showSelection && tab->selectionOnPage;
+    return ctx;
+}
+
+void DeleteBuildMenuCtx(BuildMenuCtx* ctx) {
+    delete ctx;
 }
 
 static void AppendCommandsToMenu(HMENU m, const Vec<CustomCommand*>& cmds, bool isEnabled) {
@@ -1294,10 +1300,12 @@ static void DynamicPartOfFileMenu(HMENU menu, BuildMenuCtx* ctx) {
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
     WindowTab* tab = ctx->tab;
-    int cmdIdFirst = CmdOpenWithKnownExternalViewerFirst + 1;
-    int cmdIdLast = CmdOpenWithKnownExternalViewerLast;
-    for (int cmdId = cmdIdFirst; cmdId < cmdIdLast; cmdId++) {
-        if (!CanViewWithKnownExternalViewer(tab, cmdId)) {
+
+    int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
+    int idLast = CmdOpenWithKnownExternalViewerLast;
+    for (int cmdId = idFirst; cmdId < idLast; cmdId++) {
+        auto [remove, disable] = GetCommandIdState(ctx, cmdId);
+        if (remove || disable) {
             MenuRemove(menu, cmdId);
         }
     }
@@ -1340,6 +1348,62 @@ again3:
     }
 }
 
+// returns [remove, disable] state of the command
+std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
+    bool remove = false;
+    bool disable = false;
+    if (!HasPermission(Perm::InternetAccess)) {
+        remove |= cmdIdInList(removeIfNoInternetPerms);
+    }
+    if (!HasPermission(Perm::FullscreenAccess)) {
+        remove |= cmdIdInList(removeIfNoFullscreenPerms);
+    }
+    if (!HasPermission(Perm::SavePreferences)) {
+        remove |= cmdIdInList(removeIfNoPrefsPerms);
+    }
+    if (!HasPermission(Perm::PrinterAccess)) {
+        remove |= (cmdId == CmdPrint);
+    }
+    if (!CanAccessDisk()) {
+        remove |= cmdIdInList(removeIfNoDiskAccessPerm);
+        // editing annotations also requires disk access
+        remove |= cmdIdInList(removeIfAnnotsNotSupported);
+        if (cmdId >= CmdOpenWithKnownExternalViewerFirst && cmdId <= CmdOpenWithKnownExternalViewerLast) {
+            remove = true;
+        }
+    }
+    if (!HasPermission(Perm::CopySelection)) {
+        remove |= cmdIdInList(removeIfNoCopyPerms);
+    }
+    if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
+        remove = true;
+    }
+
+    if (!ctx) {
+        return {remove, disable};
+    }
+
+    {
+        int idFirst = CmdOpenWithKnownExternalViewerFirst + 1;
+        int idLast = CmdOpenWithKnownExternalViewerLast;
+        if (cmdId >= idFirst && cmdId <= idLast) {
+            remove = !CanViewWithKnownExternalViewer(ctx->tab, cmdId);
+            return {remove, disable};
+        }
+    }
+
+    remove |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(removeIfChm));
+    remove |= (!ctx->isCbx && (cmdId == CmdToggleMangaMode));
+    remove |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
+    remove |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
+
+    disable |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
+    // disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdSelectAnnotation));
+    disable |= (!ctx->annotationUnderCursor && (cmdId == CmdDeleteAnnotation));
+    disable |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
+    return {remove, disable};
+}
+
 HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
     ReportIf(!menu);
 
@@ -1371,46 +1435,8 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         // hacky but works: small number is command id, large is submenu (a pointer)
         bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
 
-        bool disableMenu = false;
-        bool removeMenu = false;
-        if (!HasPermission(Perm::InternetAccess)) {
-            removeMenu |= cmdIdInList(removeIfNoInternetPerms);
-        }
-        if (!HasPermission(Perm::FullscreenAccess)) {
-            removeMenu |= cmdIdInList(removeIfNoFullscreenPerms);
-        }
-        if (!HasPermission(Perm::SavePreferences)) {
-            removeMenu |= cmdIdInList(removeIfNoPrefsPerms);
-        }
-        if (!HasPermission(Perm::PrinterAccess)) {
-            removeMenu |= (cmdId == CmdPrint);
-        }
-        if (!CanAccessDisk()) {
-            removeMenu |= cmdIdInList(removeIfNoDiskAccessPerm);
-            // editing annotations also requires disk access
-            removeMenu |= cmdIdInList(removeIfAnnotsNotSupported);
-            if (cmdId >= CmdOpenWithKnownExternalViewerFirst && cmdId <= CmdOpenWithKnownExternalViewerLast) {
-                removeMenu = true;
-            }
-        }
-        if (!HasPermission(Perm::CopySelection)) {
-            removeMenu |= cmdIdInList(removeIfNoCopyPerms);
-        }
-        if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
-            removeMenu = true;
-        }
-
+        auto [removeMenu, disableMenu] = GetCommandIdState(ctx, cmdId);
         if (ctx) {
-            removeMenu |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(removeIfChm));
-            removeMenu |= (!ctx->isCbx && (cmdId == CmdToggleMangaMode));
-            removeMenu |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
-            removeMenu |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
-
-            disableMenu |= (!ctx->hasSelection && cmdIdInList(disableIfNoSelection));
-            // disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdSelectAnnotation));
-            disableMenu |= (!ctx->annotationUnderCursor && (cmdId == CmdDeleteAnnotation));
-            disableMenu |= !ctx->hasUnsavedAnnotations && (cmdId == CmdSaveAnnotations);
-
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
             removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);
         }
@@ -1579,10 +1605,10 @@ void MenuUpdatePrintItem(MainWindow* win, HMENU menu, bool disableOnly = false) 
 
 static void RebuildFileMenu(WindowTab* tab, HMENU menu) {
     MenuEmpty(menu);
-    BuildMenuCtx buildCtx;
-    FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
-    BuildMenuFromDef(menuDefFile, menu, &buildCtx);
-    DynamicPartOfFileMenu(menu, &buildCtx);
+    auto ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    AutoDelete delCtx(ctx);
+    BuildMenuFromDef(menuDefFile, menu, ctx);
+    DynamicPartOfFileMenu(menu, ctx);
     RemoveBadMenuSeparators(menu);
 }
 
@@ -1789,9 +1815,9 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         value = pageEl->GetValue();
     }
 
-    BuildMenuCtx buildCtx;
-    FillBuildMenuCtx(tab, &buildCtx, cursorPos);
-    HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), &buildCtx);
+    auto ctx = NewBuildMenuCtx(tab, cursorPos);
+    AutoDelete delCtx(ctx);
+    HMENU popup = BuildMenuFromDef(menuDefContext, CreatePopupMenu(), ctx);
 
     int pageNoUnderCursor = dm->GetPageNoByPoint(cursorPos);
     PointF ptOnPage = dm->CvtFromScreen(cursorPos, pageNoUnderCursor);
@@ -1822,10 +1848,10 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     MenuSetEnabled(popup, CmdFavoriteToggle, HasFavorites());
     MenuSetChecked(popup, CmdFavoriteToggle, gGlobalPrefs->showFavorites);
 
-    if (buildCtx.annotationUnderCursor) {
+    if (ctx->annotationUnderCursor) {
         // change from generic "Edit Annotations" to more specific
         // "Edit ${annotType} Annotation"
-        TempStr t = AnnotationReadableNameTemp(buildCtx.annotationUnderCursor->type);
+        TempStr t = AnnotationReadableNameTemp(ctx->annotationUnderCursor->type);
         TempStr s = str::FormatTemp(_TRN("Edit %s Annotation"), t);
         MenuSetText(popup, CmdEditAnnotations, s);
     }
@@ -1907,16 +1933,16 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             // note: those are duplicated in SumatraPDF.cpp to enable keyboard shortcuts for them
 #if 0
         case CmdSelectAnnotation:
-            ReportIf(!buildCtx.annotationUnderCursor);
+            ReportIf(!ctx->annotationUnderCursor);
             [[fallthrough]];
 #endif
 
         case CmdEditAnnotations:
             ShowEditAnnotationsWindow(tab);
-            SetSelectedAnnotation(tab, buildCtx.annotationUnderCursor);
+            SetSelectedAnnotation(tab, ctx->annotationUnderCursor);
             break;
         case CmdDeleteAnnotation: {
-            DeleteAnnotationAndUpdateUI(tab, buildCtx.annotationUnderCursor);
+            DeleteAnnotationAndUpdateUI(tab, ctx->annotationUnderCursor);
             break;
         }
         case CmdCopyLinkTarget: {
@@ -2328,10 +2354,9 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 HMENU BuildMenu(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
-    BuildMenuCtx buildCtx;
-    FillBuildMenuCtx(tab, &buildCtx, Point{0, 0});
-
-    HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), &buildCtx);
+    auto ctx = NewBuildMenuCtx(tab, Point{0, 0});
+    AutoDelete delCtx(ctx);
+    HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), ctx);
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;

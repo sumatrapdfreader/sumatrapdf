@@ -328,3 +328,4 @@ constexpr const char* kCmdArgN = "n";
 constexpr const char* kCmdArgMode = "mode";
 constexpr const char* kCmdArgTheme = "theme";
 constexpr const char* kCmdArgCommandLine = "cmdline";
+constexpr const char* kCmdArgToolbarText = "toolbartext";

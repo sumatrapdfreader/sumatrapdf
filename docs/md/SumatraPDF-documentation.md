@@ -11,6 +11,8 @@
 
 [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md)
 
+[Customizing toolbar](Customize-toolbar.md)
+
 [Commands](Commands.md)
 
 [Command-line arguments](Command-line-arguments.md)
