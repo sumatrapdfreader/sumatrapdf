@@ -1140,11 +1140,14 @@ void DisplayModel::RenderVisibleParts() {
         }
     }
 
+    // TODO: why the hell this is requesting pages again?
+#if 0
     // request the visible pages last so that the above requested
     // invisible pages are not rendered if the queue fills up
     for (int pageNo = lastVisiblePage; pageNo >= firstVisiblePage; pageNo--) {
         cb->RequestRendering(pageNo);
     }
+#endif
 }
 
 void DisplayModel::SetViewPortSize(Size newViewPortSize) {

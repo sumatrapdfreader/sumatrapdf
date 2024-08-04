@@ -1055,7 +1055,7 @@ void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd) {
     Rect bounds{min, max};
     layout->SetBounds(bounds);
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
-    InvalidateRect(hwnd, nullptr, false);
+    HwndScheduleRepaint(hwnd);
 }
 
 Size LayoutToSize(ILayout* layout, const Size size) {

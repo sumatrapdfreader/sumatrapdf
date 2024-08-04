@@ -1233,10 +1233,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
     }
 
+#if 0
     // TODO: why is this needed?
     if (!args->isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
     }
+#endif
 
     SetFrameTitleForTab(tab, false);
     UpdateUiForCurrentTab(win);
@@ -1577,11 +1579,15 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
 }
 
 void DeleteMainWindow(MainWindow* win) {
-    logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p\n", win, win->hwndFrame, win->hwndCanvas);
+    int winIdx = gWindows.Remove(win);
+
+    logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d\n", win, win->hwndFrame, win->hwndCanvas, winIdx);
+    if (winIdx) {
+        logf("  not deleting because not in gWindows, probably already deleted\n");
+        return;
+    }
+
     DeletePropertiesWindow(win->hwndFrame);
-
-    gWindows.Remove(win);
-
     ImageList_Destroy((HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
 
