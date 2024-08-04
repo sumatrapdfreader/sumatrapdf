@@ -9,6 +9,7 @@
   let autoScrollPaused = false;
   let btnText = "pause scrolling";
   let searchTerm = "";
+  let searchTermLC = "";
   let element;
 
   /**
@@ -19,6 +20,7 @@
     if (searchTerm === "") {
       return false;
     }
+    s = s.toLowerCase();
     return s.includes(searchTerm);
   }
 
@@ -31,21 +33,24 @@
     s = s.trimEnd();
     let lines = s.split("\n");
     let didMatch = false;
+    console.log(`lines: ${lines.length}`);
     for (let l of lines) {
       /** @type {[string, number]}*/
       let el = [l, idx];
       idx = idx + 1;
       logs.push(el);
-      if (matches(l, searchTerm)) {
+      if (matches(l, searchTermLC)) {
         filteredLogs.push(el);
         didMatch = true;
       }
     }
-    if (searchTerm === "") {
+
+    if (searchTermLC === "") {
       logs = logs;
       filteredLogs = logs;
       return;
     }
+
     if (didMatch) {
       filteredLogs = filteredLogs;
     }
@@ -58,13 +63,14 @@
    */
   function filterLogs(searchTerm) {
     searchTerm = searchTerm.trim();
-    if (searchTerm === "") {
+    searchTermLC = searchTerm.toLowerCase();
+    if (searchTermLC === "") {
       filteredLogs = logs;
       return;
     }
     let res = [];
     for (let el of logs) {
-      if (matches(el[0], searchTerm)) {
+      if (matches(el[0], searchTermLC)) {
         res.push(el);
       }
     }
