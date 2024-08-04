@@ -1153,7 +1153,7 @@ int RunInstaller() {
     }
 
     auto autoStartInstall = gCli->runInstallNow || gCli->fastInstall;
-    if (!autoStartInstall) {
+    if (autoStartInstall) {
         // if not set explicitly, default to state from previous installation
         if (!gCli->withFilter) {
             gCli->withFilter = gPrevInstall.searchFilterInstalled;
