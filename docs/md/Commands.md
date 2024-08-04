@@ -294,7 +294,7 @@ You can over-ride `a` shortcut to creat green (`#00ff00`) highlight annotation i
 
 You can create multiple keyboard shortcuts for multiple colors.
 
-Arguments can be: strings, numbers, booleans, colors (`#rrggbb` or `#rrggbbaa` format).
+Arguments can be: strings, numbers, booleans, colors (`#rrggbb` or `#aarrggbb` format).
 
 Arguments have names. For example `CmdCreateAnnotHighlight` has `color` argument of type color and optional `openedit` boolean argument.
 
