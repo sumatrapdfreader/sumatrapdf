@@ -8,6 +8,8 @@
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
+#include "utils/Log.h"
+
 #include "wingui/UIModels.h"
 
 #include "Settings.h"
@@ -183,6 +185,7 @@ void UpdateTextSelection(MainWindow* win, bool select) {
         return;
     }
 
+    logf("UpdateTextSelection: select: %d\n", (int)select);
     DisplayModel* dm = win->AsFixed();
     if (select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
@@ -199,6 +202,7 @@ void UpdateTextSelection(MainWindow* win, bool select) {
     if (win->uiaProvider) {
         win->uiaProvider->OnSelectionChanged();
     }
+    ToolbarUpdateStateForWindow(win, false);
 }
 
 // isTextSelectionOut is set to true if this is text-only selection (as opposed to

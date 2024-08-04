@@ -4257,6 +4257,7 @@ static void OnFrameKeyEsc(MainWindow* win) {
     }
     if (win->showSelection) {
         ClearSearchResult(win);
+        ToolbarUpdateStateForWindow(win, false);
         return;
     }
     if (gGlobalPrefs->escToExit && CanCloseWindow(win)) {

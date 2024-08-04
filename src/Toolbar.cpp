@@ -86,8 +86,6 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::SearchPrev, CmdFindPrev, _TRN("Find Previous")},
     {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
     {TbIcon::MatchCase, CmdFindMatch, _TRN("Match Case")},
-    {TbIcon::None, CmdInfoText, nullptr}, // info text
-    //{TbIcon::Text, CmdOpenNextFileInFolder, "▼"},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
@@ -282,10 +280,15 @@ static void SetToolbarInfoText(MainWindow* win, const char* s) {
         MoveWindow(hwnd, 0, 0, 0, 0, TRUE);
         return;
     }
-
     TbSetButtonDx(win->hwndToolbar, CmdInfoText, size.dx);
+    int lastButtonCmdId = (int)CmdFindMatch;
+    if (gCustomToolbarButtons) {
+        int n = gCustomToolbarButtons->Size();
+        ToolbarButtonInfo& last = gCustomToolbarButtons->At(n - 1);
+        lastButtonCmdId = last.cmdId;
+    }
     RECT r{};
-    TbGetRect(win->hwndToolbar, CmdFindMatch, &r);
+    TbGetRect(win->hwndToolbar, lastButtonCmdId, &r);
     int x = r.right + DpiScale(win->hwndToolbar, 10);
     int y = (r.bottom - size.dy) / 2;
     MoveWindow(hwnd, x, y, size.dx, size.dy, TRUE);
@@ -1006,6 +1009,13 @@ void CreateToolbar(MainWindow* win) {
         }
         SendMessageW(hwndToolbar, TB_ADDBUTTONS, n, (LPARAM)buttons);
         free((void*)buttons);
+    }
+
+    {
+        // info text for showing "unsaved annotations" text
+        ToolbarButtonInfo tbi { TbIcon::None, CmdInfoText, nullptr };
+        TBBUTTON tb = TbButtonFromButtonInfo(tbi);
+        SendMessageW(hwndToolbar, TB_ADDBUTTONS, 1, (LPARAM)&tb);
     }
 
     SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
