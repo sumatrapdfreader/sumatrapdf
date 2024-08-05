@@ -68,7 +68,9 @@ struct ImagePage {
 
 struct ImagePageInfo {
     Vec<IPageElement*> allElements;
-    RectF mediabox;
+    RectF mediabox{};
+    bool hasMediaBox = false;
+    ImagePageInfo() = default;
 };
 
 class EngineImages : public EngineBase {
@@ -148,8 +150,9 @@ RectF EngineImages::PageMediabox(int pageNo) {
     int n = pageNo - 1;
     ImagePageInfo* pi = pages[n];
     RectF& mbox = pi->mediabox;
-    if (mbox.IsEmpty()) {
+    if (!pi->hasMediaBox) {
         mbox = LoadMediabox(pageNo);
+        pi->hasMediaBox = true;
     }
     return mbox;
 }
@@ -620,6 +623,7 @@ bool EngineImage::FinishLoading() {
     auto pi = new ImagePageInfo();
     pi->mediabox = RectF(0, 0, (float)image->GetWidth(), (float)image->GetHeight());
     pages.Append(pi);
+    pi->hasMediaBox = true;
     ReportIf(pages.size() != 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
@@ -1348,6 +1352,9 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     if (!img.empty()) {
         Size size = BitmapSizeFromData(img);
         img.Free();
+        if (size.IsEmpty()) {;
+            logf("EngineCbx::LoadMediabox: empty media box for page: %d\n", pageNo);
+        }
         return RectF(0, 0, (float)size.dx, (float)size.dy);
     }
     img.Free();
