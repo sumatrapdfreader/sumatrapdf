@@ -662,7 +662,7 @@ void UpdateControlsColors(MainWindow* win) {
 
         win->tocLabelWithClose->SetBgCol(bgCol);
         win->tocLabelWithClose->SetTextCol(txtCol);
-        win->sidebarSplitter->SetBackgroundColor(splitterCol);
+        win->sidebarSplitter->SetColors(kColorNoChange, splitterCol);
         SetWindowExStyle(tocTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
         SetWindowPos(tocTreeView->hwnd, nullptr, 0, 0, 0, 0, flags);
@@ -676,7 +676,7 @@ void UpdateControlsColors(MainWindow* win) {
         win->favLabelWithClose->SetBgCol(bgCol);
         win->favLabelWithClose->SetTextCol(txtCol);
 
-        win->favSplitter->SetBackgroundColor(splitterCol);
+        win->favSplitter->SetColors(kColorNoChange, splitterCol);
 
         SetWindowExStyle(favTreeView->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         uint flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;

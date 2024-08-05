@@ -128,6 +128,8 @@ struct Wnd : public ILayout {
     virtual void OnTimer(UINT_PTR event_id);
     virtual void OnWindowPosChanging(WINDOWPOS* window_pos);
 
+    virtual void SetColors(COLORREF textColor, COLORREF bgColor);
+
     void Close();
     void SetPos(RECT* r);
     void SetIsVisible(bool isVisible);
@@ -140,7 +142,6 @@ struct Wnd : public ILayout {
 
     void SetIsEnabled(bool isEnabled) const;
     bool IsEnabled() const;
-    void SetBackgroundColor(COLORREF);
 
     void SuspendRedraw() const;
     void ResumeRedraw() const;
@@ -148,6 +149,8 @@ struct Wnd : public ILayout {
     LRESULT MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
     LRESULT FinalWindowProc(UINT msg, WPARAM wparam, LPARAM lparam);
+
+    HBRUSH BackgroundBrush();
 
     Kind kind = nullptr;
     uintptr_t userData = 0;
@@ -163,8 +166,10 @@ struct Wnd : public ILayout {
     HFONT font = nullptr; // we don't own it
     UINT_PTR subclassId = 0;
 
-    COLORREF backgroundColor = kColorUnset;
-    HBRUSH backgroundColorBrush = nullptr;
+    // used by all controls that inherit
+    COLORREF bgColor = kColorUnset;
+    HBRUSH bgBrush = nullptr;
+    COLORREF textColor = kColorUnset;
 
     ILayout* layout = nullptr;
 
@@ -309,6 +314,10 @@ struct ListBox : Wnd {
 
     Size idealSize = {};
     int idealSizeLines = 0;
+
+    COLORREF colTxt = kColorUnset;
+    COLORREF colBg = kColorUnset;
+    HBRUSH brBg = nullptr;
 
     ListBox();
     virtual ~ListBox();

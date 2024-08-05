@@ -264,7 +264,7 @@ Wnd::Wnd() {
 Wnd::~Wnd() {
     Destroy();
     delete layout;
-    DeleteBrush(backgroundColorBrush);
+    DeleteBrushSafe(&bgBrush);
 }
 
 Kind Wnd::GetKind() {
@@ -455,7 +455,7 @@ LRESULT Wnd::OnNotifyReflect(WPARAM, LPARAM) {
 }
 
 void Wnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
-    auto bgBrush = backgroundColorBrush;
+    auto bgBrush = BackgroundBrush();
     if (bgBrush != nullptr) {
         FillRect(hdc, &ps->rcPaint, bgBrush);
     }
@@ -1060,7 +1060,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     }
 
     // trigger creating a backgroundBrush
-    SetBackgroundColor(args.bgColor);
+    SetColors(kColorNoChange, args.bgColor);
     if (args.icon) {
         HwndSetIcon(hwnd, args.icon);
     }
@@ -1122,23 +1122,25 @@ bool Wnd::IsEnabled() const {
     return tobool(enabled);
 }
 
-void Wnd::SetBackgroundColor(COLORREF col) {
-    if (col == kColorNoChange) {
+void Wnd::SetColors(COLORREF textCol, COLORREF bgCol) {
+    if (textCol != kColorNoChange) {
+        this->textColor = textCol;
+    }
+    if (bgCol == kColorNoChange) {
         return;
     }
-    backgroundColor = col;
-    if (backgroundColorBrush != nullptr) {
-        DeleteBrush(backgroundColorBrush);
-        backgroundColorBrush = nullptr;
+    this->bgColor = bgCol;
+    DeleteBrushSafe(&bgBrush); // will be re-created in BackgroundBrush()
+    HwndScheduleRepaint(hwnd);
+}
+
+HBRUSH Wnd::BackgroundBrush() {
+    if (bgBrush == nullptr) {
+        if (bgColor != kColorUnset) {
+            bgBrush = CreateSolidBrush(bgColor);
+        }
     }
-    if (backgroundColor != kColorUnset) {
-        backgroundColorBrush = CreateSolidBrush(backgroundColor);
-    }
-    // can be set before we create the window
-    if (!hwnd) {
-        return;
-    }
-    InvalidateRect(hwnd, nullptr, FALSE);
+    return bgBrush;
 }
 
 void Wnd::SuspendRedraw() const {
@@ -1778,6 +1780,7 @@ ListBox::ListBox() {
 }
 
 ListBox::~ListBox() {
+    DeleteBrushSafe(&brBg);
     delete this->model;
 }
 
@@ -1886,11 +1889,20 @@ bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
     return false;
 }
 
-LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorlistbox
     if (msg == WM_CTLCOLORLISTBOX) {
-        // TOOD: implement me
-        return 0;
+        HDC hdc = (HDC)wp;
+        if (colTxt != kColorUnset) {
+            SetTextColor(hdc, colTxt);
+        }
+        if (colBg != kColorUnset) {
+            SetBkColor(hdc, colBg);
+            if (brBg == nullptr) {
+                brBg = CreateSolidBrush(colBg);
+            }
+        }
+        return (LRESULT)brBg;
     }
     return 0;
 }
@@ -2316,10 +2328,11 @@ HWND Splitter::Create(const CreateArgs& args) {
 
     isLive = args.isLive;
     type = args.type;
-    backgroundColor = args.backgroundColor;
-    if (backgroundColor == kColorUnset) {
-        backgroundColor = GetSysColor(COLOR_BTNFACE);
+    auto bgCol = args.backgroundColor;
+    if (bgCol == kColorUnset) {
+        bgCol = GetSysColor(COLOR_BTNFACE);
     }
+    SetColors(kColorUnset, bgCol);
 
     bmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
     ReportIf(!bmp);
@@ -2393,7 +2406,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 
     if (WM_PAINT == msg) {
-        OnSplitterPaint(hwnd, backgroundColor);
+        OnSplitterPaint(hwnd, bgColor);
         return 0;
     }
 
@@ -2685,7 +2698,7 @@ bool TreeView::SelectItem(TreeItem ti) {
 }
 
 void TreeView::SetBackgroundColor(COLORREF bgCol) {
-    backgroundColor = bgCol;
+    this->bgColor = bgCol;
     TreeView_SetBkColor(hwnd, bgCol);
 }
 

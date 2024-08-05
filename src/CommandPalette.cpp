@@ -18,6 +18,7 @@
 #include "GlobalPrefs.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
+#include "Theme.h"
 #include "WindowTab.h"
 #include "SumatraConfig.h"
 #include "Commands.h"
@@ -837,6 +838,10 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         return false;
     }
 
+    auto colBg = ThemeWindowControlBackgroundColor();
+    auto colTxt = ThemeWindowTextColor();
+    SetColors(colTxt, colBg);
+
     auto vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -893,6 +898,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         c->Create(args);
+        c->colBg = colBg;
+        c->colTxt = colTxt;
         c->onSelectionChanged = MkFunc0(SelectionChange, this);
         auto m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);

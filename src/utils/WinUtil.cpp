@@ -2741,12 +2741,15 @@ HICON HwndGetIcon(HWND hwnd) {
 
 // schedule WM_PAINT at window's leasure
 void HwndScheduleRepaint(HWND hwnd) {
+    if (!hwnd || !::IsWindow(hwnd)) {
+        return;
+    }
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
 // do WM_PAINT immediately
 void HwndRepaintNow(HWND hwnd) {
-    if (!hwnd) {
+    if (!hwnd || !::IsWindow(hwnd)) {
         return;
     }
     InvalidateRect(hwnd, nullptr, FALSE);
@@ -2865,6 +2868,10 @@ bool DeleteObjectSafe(HGDIOBJ* h) {
     auto res = ::DeleteObject(*h);
     *h = nullptr;
     return ToBool(res);
+}
+
+bool DeleteBrushSafe(HBRUSH* br) {
+    return DeleteObjectSafe((HGDIOBJ*)br);
 }
 
 bool DestroyIconSafe(HICON* h) {

@@ -337,6 +337,7 @@ void HwndToForeground(HWND hwnd);
 void HwndSetVisibility(HWND hwnd, bool visible);
 
 bool DeleteObjectSafe(HGDIOBJ*);
+bool DeleteBrushSafe(HBRUSH*);
 bool DestroyIconSafe(HICON*);
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info);
