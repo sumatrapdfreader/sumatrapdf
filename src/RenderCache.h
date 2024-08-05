@@ -112,7 +112,8 @@ struct RenderCache {
     ~RenderCache();
 
     void RequestRendering(DisplayModel* dm, int pageNo);
-    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect, const OnBitmapRendered& callback);
+    void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
+                const OnBitmapRendered& callback);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom, TilePosition* tile = nullptr);
     void FreeForDisplayModel(DisplayModel* dm);

@@ -690,7 +690,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         if (req.renderCb) {
             // the callback must free the RenderedBitmap
             req.renderCb->Call(bmp);
-            //req.renderCb = (RenderingCallback*)1; // will crash if accessed again, which should not happen
+            // req.renderCb = (RenderingCallback*)1; // will crash if accessed again, which should not happen
         } else {
             // don't replace colors for individual images
             if (bmp && !engine->IsImageCollection()) {

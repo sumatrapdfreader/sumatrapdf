@@ -894,7 +894,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         return false;
     }
     DisplayModel* dm = win->AsFixed();
-    //logf("DrawDocument RenderCache:\n");
+    // logf("DrawDocument RenderCache:\n");
 
     bool isImage = dm->GetEngine()->IsImageCollection();
     // draw comic books and single images on a black background
@@ -1781,7 +1781,7 @@ static void RepaintTask(RepaintTaskData* d) {
 }
 
 void ScheduleRepaint(MainWindow* win, int delayInMs) {
-    //logf("ScheduleRepaint RenderCache:\n");
+    // logf("ScheduleRepaint RenderCache:\n");
     auto data = new RepaintTaskData;
     data->win = win;
     data->delayInMs = delayInMs;

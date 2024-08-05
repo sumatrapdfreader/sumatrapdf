@@ -4987,7 +4987,7 @@ static lzma::SimpleArchive gManualArchive{};
 static SimpleBrowserWindow* gManualBrowserWindow = nullptr;
 static bool gUseOurWindowForManual = false;
 
-static void OnDestroyManualBrowserWindow(WmDestroyEvent&) {
+static void OnDestroyManualBrowserWindow(Wnd::DestroyEvent*) {
     gManualBrowserWindow = nullptr;
 }
 
@@ -5050,7 +5050,8 @@ OpenFileInBrowser:
             // TODO: dataDir
             gManualBrowserWindow = SimpleBrowserWindowCreate(args);
             if (gManualBrowserWindow != nullptr) {
-                gManualBrowserWindow->onDestroy = OnDestroyManualBrowserWindow;
+                auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroyManualBrowserWindow);
+                gManualBrowserWindow->onDestroy = fn;
                 return;
             }
         }

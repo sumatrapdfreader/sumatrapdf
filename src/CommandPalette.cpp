@@ -794,7 +794,7 @@ static void ListDoubleClick(CommandPaletteWnd* w) {
     w->ExecuteCurrentSelection();
 }
 
-void OnDestroy(WmDestroyEvent&) {
+void OnDestroy(Wnd::DestroyEvent*) {
     ScheduleDelete();
 }
 
@@ -936,7 +936,8 @@ void RunCommandPallette(MainWindow* win, const char* prefix, int smartTabAdvance
     ReportIf(gCommandPaletteWnd);
 
     auto wnd = new CommandPaletteWnd();
-    wnd->onDestroy = OnDestroy;
+    auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);
+    wnd->onDestroy = fn;
     wnd->font = GetAppBiggerFont();
     wnd->win = win;
     bool ok = wnd->Create(win, prefix, smartTabAdvance);

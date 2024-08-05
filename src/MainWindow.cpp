@@ -302,7 +302,7 @@ Size MainWindow::GetViewPortSize() const {
 }
 
 void MainWindow::RedrawAll(bool update) const {
-    //logf("MainWindow::RedrawAll, update: %d  RenderCache:\n", (int)update);
+    // logf("MainWindow::RedrawAll, update: %d  RenderCache:\n", (int)update);
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (update) {
         UpdateWindow(this->hwndCanvas);
@@ -310,7 +310,7 @@ void MainWindow::RedrawAll(bool update) const {
 }
 
 void MainWindow::RedrawAllIncludingNonClient() const {
-    //logf("MainWindow::RedrawAllIncludingNonClient RenderCache:\n");
+    // logf("MainWindow::RedrawAllIncludingNonClient RenderCache:\n");
     InvalidateRect(this->hwndCanvas, nullptr, false);
     RedrawWindow(this->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
 }

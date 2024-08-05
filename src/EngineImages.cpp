@@ -1352,7 +1352,8 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     if (!img.empty()) {
         Size size = BitmapSizeFromData(img);
         img.Free();
-        if (size.IsEmpty()) {;
+        if (size.IsEmpty()) {
+            ;
             logf("EngineCbx::LoadMediabox: empty media box for page: %d\n", pageNo);
         }
         return RectF(0, 0, (float)size.dx, (float)size.dy);

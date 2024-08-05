@@ -309,7 +309,7 @@ struct FindEndTaskData {
     bool wasModifiedCanceled = false;
     bool loopedAround = false;
     FindEndTaskData() = default;
-    ~FindEndTaskData(){
+    ~FindEndTaskData() {
         delete ftd;
         ftd = nullptr;
     }

@@ -688,12 +688,12 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 
     if (msg == WM_DESTROY) {
-        if (onDestroy) {
-            WmDestroyEvent ev;
+        if (onDestroy.IsValid()) {
+            DestroyEvent ev;
             ev.e = &e;
-            onDestroy(ev);
+            onDestroy.Call(&ev);
         }
-        // Note: Some controls require default processing.
+        // no break because some controls require default processing.
     }
 
     switch (msg) {

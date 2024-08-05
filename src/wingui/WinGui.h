@@ -64,18 +64,16 @@ struct WmEvent {
     bool didHandle = true; // common case so set as default
 };
 
-struct WmDestroyEvent {
-    WmEvent* e = nullptr;
-};
-
-typedef void (*WmDestroyHandler)(WmDestroyEvent&);
-
 struct Wnd : public ILayout {
     struct CloseEvent {
         WmEvent* e = nullptr;
     };
+    struct DestroyEvent {
+        WmEvent* e = nullptr;
+    };
 
     using CloseHandler = Func1<CloseEvent*>;
+    using DestroyHandler = Func1<DestroyEvent*>;
 
     Wnd();
     Wnd(HWND hwnd);
@@ -173,7 +171,7 @@ struct Wnd : public ILayout {
     ContextMenuHandler onContextMenu;
 
     CloseHandler onClose;
-    WmDestroyHandler onDestroy = nullptr;
+    DestroyHandler onDestroy;
 };
 
 bool PreTranslateMessage(MSG& msg);
