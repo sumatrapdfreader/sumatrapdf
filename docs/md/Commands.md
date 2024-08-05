@@ -256,6 +256,7 @@ CmdDebugDownloadSymbols,,Debug: Download Symbols
 CmdDebugShowNotif,,Debug: Show Notification
 CmdDebugStartStressTest,,Debug: Start Stress Test
 CmdDebugTestApp,,Debug: Test App
+CmdDebugTogglePredictiveRender,,Debug: Toggle Predictive Rendering
 CmdNone,,Do nothing
 ```
 

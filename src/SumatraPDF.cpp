@@ -4895,6 +4895,15 @@ void ClearHistory(MainWindow* win) {
     RunAsync(fn, "ClearHistoryAsync");
 }
 
+static void TogglePredictiveRender(MainWindow* win) {
+    gPredictiveRender = !gPredictiveRender;
+    NotificationCreateArgs args;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = gPredictiveRender ? "Enabled predictive render" : "Disabled predictie render";
+    args.timeoutMs = 3000;
+    ShowNotification(args);
+}
+
 static void DownloadDebugSymbols() {
     TempStr msg = (TempStr) "Symbols were already downloaded";
 
@@ -5700,6 +5709,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDebugDownloadSymbols:
             DownloadDebugSymbols();
+            break;
+
+        case CmdDebugTogglePredictiveRender:
+            TogglePredictiveRender(win);
             break;
 
         case CmdToggleLinks:

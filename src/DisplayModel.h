@@ -262,3 +262,5 @@ struct DisplayModel : DocController {
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
     bool dontRenderFlag = false;
 };
+
+extern bool gPredictiveRender;

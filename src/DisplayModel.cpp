@@ -66,7 +66,7 @@
 #include "utils/Log.h"
 
 // if true, we pre-render the pages right before and after the visible pages
-static bool gPredictiveRender = true;
+bool gPredictiveRender = true;
 
 static int ColumnsFromDisplayMode(DisplayMode displayMode) {
     if (!IsSingle(displayMode)) {
