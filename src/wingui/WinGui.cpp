@@ -1211,34 +1211,12 @@ Size Static::GetIdealSize() {
 
 bool Static::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
-    if (code == STN_CLICKED && onClicked.IsValid()) {
-        onClicked.Call();
+    if (code == STN_CLICKED && onClick.IsValid()) {
+        onClick.Call();
         return true;
     }
     return false;
 }
-
-#if 0
-void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
-    auto w = (StaticCtrl*)user;
-    uint msg = ev->msg;
-    ReportIf(msg != WM_CTLCOLORSTATIC);
-    HDC hdc = (HDC)ev->wp;
-    // the brush we return is the background color for the whole
-    // area of static control
-    // SetBkColor() is just for the part where the text is
-    // SetBkMode(hdc, TRANSPARENT) sets the part of the text to transparent
-    // (but the whole background is still controlled by the bruhs
-    auto bgBrush = w->backgroundColorBrush;
-    if (bgBrush != nullptr) {
-        SetBkColor(hdc, w->backgroundColor);
-        ev->result = (LRESULT)bgBrush;
-    } else {
-        SetBkMode(hdc, TRANSPARENT);
-    }
-    ev->didHandle = true;
-}
-#endif
 
 LRESULT Static::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
     if (msg == WM_CTLCOLORSTATIC) {
@@ -1268,8 +1246,8 @@ Button::Button() {
 bool Button::OnCommand(WPARAM wparam, LPARAM lparam) {
     auto code = HIWORD(wparam);
     if (code == BN_CLICKED) {
-        if (onClicked.IsValid()) {
-            onClicked.Call();
+        if (onClick.IsValid()) {
+            onClick.Call();
             return true;
         }
     }
@@ -1317,13 +1295,13 @@ Size Button::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-Button* CreateButton(HWND parent, const char* s, const Func0& onClicked) {
+Button* CreateButton(HWND parent, const char* s, const Func0& onClick) {
     Button::CreateArgs args;
     args.parent = parent;
     args.text = s;
 
     auto b = new Button();
-    b->onClicked = onClicked;
+    b->onClick = onClick;
     b->Create(args);
     return b;
 }
@@ -1745,30 +1723,18 @@ bool Edit::OnCommand(WPARAM wparam, LPARAM lparam) {
     return false;
 }
 
-#if 0
-// https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcoloredit
-static void Handle_WM_CTLCOLOREDIT(void* user, WndEvent* ev) {
-    auto w = (EditCtrl*)user;
-    ReportIf(ev->msg != WM_CTLCOLOREDIT);
-    HWND hwndCtrl = (HWND)ev->lp;
-    ReportIf(hwndCtrl != w->hwnd);
-    if (w->bgBrush == nullptr) {
-        return;
-    }
-    HDC hdc = (HDC)ev->wp;
-    // SetBkColor(hdc, w->bgCol);
-    SetBkMode(hdc, TRANSPARENT);
-    if (w->textColor != kColorUnset) {
-        ::SetTextColor(hdc, w->textColor);
-    }
-    ev->didHandle = true;
-    ev->result = (INT_PTR)w->bgBrush;
-}
-#endif
-
-LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT Edit::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
     if (msg == WM_CTLCOLOREDIT) {
-        // TOOD: return brush
+        HDC hdc = (HDC)wp;
+        if (!IsSpecialColor(textColor)) {
+            SetTextColor(hdc, textColor);
+        }
+        if (!IsSpecialColor(bgColor)) {
+            SetBkColor(hdc, bgColor);
+            SetBkMode(hdc, TRANSPARENT);
+        }
+        auto br = BackgroundBrush();
+        return (LRESULT)br;
         return 0;
     }
     return 0;

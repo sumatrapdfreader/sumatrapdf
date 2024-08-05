@@ -192,7 +192,7 @@ struct Static : Wnd {
 
     Static();
 
-    Func0 onClicked;
+    Func0 onClick;
 
     HWND Create(const CreateArgs&);
 
@@ -211,7 +211,7 @@ struct Button : Wnd {
         const char* text = nullptr;
     };
 
-    Func0 onClicked{};
+    Func0 onClick{};
 
     bool isDefault = false;
 
@@ -225,7 +225,7 @@ struct Button : Wnd {
     bool OnCommand(WPARAM wparam, LPARAM lparam) override;
 };
 
-Button* CreateButton(HWND parent, const char* s, const Func0& onClicked);
+Button* CreateButton(HWND parent, const char* s, const Func0& onClick);
 Button* CreateDefaultButton(HWND parent, const char* s);
 
 //--- Tooltip

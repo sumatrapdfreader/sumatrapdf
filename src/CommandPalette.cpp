@@ -43,6 +43,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdCommandPalette,
     CmdNextTabSmart,
     CmdPrevTabSmart,
+    CmdSetTheme,
 
     // managing frequently list in home tab
     CmdOpenSelectedDocument,
@@ -850,11 +851,12 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         Edit::CreateArgs args;
         args.parent = hwnd;
         args.isMultiLine = false;
-        args.withBorder = true;
+        args.withBorder = false;
         args.cueText = "enter search term";
         args.text = prefix;
         args.font = font;
         auto c = new Edit();
+        c->SetColors(colTxt, colBg);
         c->maxDx = 150;
         HWND ok = c->Create(args);
         ReportIf(!ok);
@@ -871,21 +873,21 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         {
             auto c = CreateStatic(hwnd, font, "# File History");
             c->SetColors(colTxt, colBg);
-            c->onClicked = MkFunc0(SwitchToFileHistory, this);
+            c->onClick = MkFunc0(SwitchToFileHistory, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, "> Commands");
             c->SetColors(colTxt, colBg);
-            c->onClicked = MkFunc0(SwitchToCommands, this);
+            c->onClick = MkFunc0(SwitchToCommands, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, "@ Tabs");
             c->SetColors(colTxt, colBg);
-            c->onClicked = MkFunc0(SwitchToTabs, this);
+            c->onClick = MkFunc0(SwitchToTabs, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }

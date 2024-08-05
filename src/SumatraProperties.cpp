@@ -431,7 +431,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
 
         layoutData->btnCopyToClipboard = b;
         HwndSetRtl(b->hwnd, isRtl);
-        b->onClicked = MkFunc0(CopyPropertiesToClipboard, layoutData);
+        b->onClick = MkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
     if (!extended) {
@@ -444,7 +444,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
 
         HwndSetRtl(b->hwnd, isRtl);
         layoutData->btnGetFonts = b;
-        b->onClicked = MkFunc0(ShowExtendedProperties, layoutData);
+        b->onClick = MkFunc0(ShowExtendedProperties, layoutData);
     }
 
     // get the dimensions required for the about box's content
