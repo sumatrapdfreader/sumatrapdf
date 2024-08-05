@@ -20,7 +20,7 @@
 #define kButtonSpaceDx 8
 
 static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
-    HBRUSH br = CreateSolidBrush(w->bgCol);
+    HBRUSH br = w->BackgroundBrush();
     FillRect(hdc, &ps.rcPaint, br);
 
     Rect cr = ClientRect(w->hwnd);
@@ -32,8 +32,12 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     if (w->font) {
         prevFont = SelectObject(hdc, w->font);
     }
-    SetTextColor(hdc, w->txtCol);
-    SetBkColor(hdc, w->bgCol);
+    if (!IsSpecialColor(w->textColor)) {
+        SetTextColor(hdc, w->textColor);
+    }
+    if (!IsSpecialColor(w->bgColor)) {
+        SetBkColor(hdc, w->bgColor);
+    }
 
     uint format = DT_SINGLELINE | DT_TOP | DT_LEFT;
     if (HwndIsRtl(w->hwnd)) {
@@ -55,7 +59,6 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     Point curPos = HwndGetCursorPos(w->hwnd);
     bool isHover = w->closeBtnPos.Contains(curPos);
     DrawCloseButton(hdc, w->closeBtnPos, isHover);
-    DeleteObject(br);
 
     if (w->font) {
         SelectObject(hdc, prevFont);
@@ -135,23 +138,11 @@ void LabelWithCloseWnd::SetLabel(const char* label) const {
     HwndScheduleRepaint(this->hwnd);
 }
 
-void LabelWithCloseWnd::SetBgCol(COLORREF c) {
-    this->bgCol = c;
-    HwndScheduleRepaint(this->hwnd);
-}
-
-void LabelWithCloseWnd::SetTextCol(COLORREF c) {
-    this->txtCol = c;
-    HwndScheduleRepaint(this->hwnd);
-}
-
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
 // caller needs to free() the result
 HWND LabelWithCloseWnd::Create(const LabelWithCloseCreateArgs& args) {
     cmdId = args.cmdId;
-    bgCol = GetSysColor(COLOR_BTNFACE);
-    txtCol = GetSysColor(COLOR_BTNTEXT);
 
     CreateCustomArgs cargs;
     cargs.parent = args.parent;
@@ -161,6 +152,11 @@ HWND LabelWithCloseWnd::Create(const LabelWithCloseCreateArgs& args) {
     cargs.cmdId = cmdId; // TODO: not sure if needed
     CreateCustom(cargs);
 
+#if 0
+    auto bgCol = GetSysColor(COLOR_BTNFACE);
+    auto txtCol = GetSysColor(COLOR_BTNTEXT);
+    SetColors(txtCol, bgCol);
+#endif
     return hwnd;
 }
 

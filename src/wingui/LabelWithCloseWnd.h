@@ -18,8 +18,6 @@ struct LabelWithCloseWnd : Wnd {
 
     void SetLabel(const char*) const;
     void SetFont(HFONT);
-    void SetBgCol(COLORREF);
-    void SetTextCol(COLORREF);
     void SetPaddingXY(int x, int y);
 
     Size GetIdealSize();
@@ -27,8 +25,6 @@ struct LabelWithCloseWnd : Wnd {
     int cmdId = 0;
 
     Rect closeBtnPos{};
-    COLORREF txtCol = 0;
-    COLORREF bgCol = 0;
 
     // in points
     int padX = 0;
