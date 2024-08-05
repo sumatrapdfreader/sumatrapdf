@@ -686,8 +686,9 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (!updateOnly) {
         HwndSetText(win->hwndPageLabel, text);
     }
+    int padX = DpiScale(win->hwndFrame, kTextPaddingRight);
     Size size = HwndMeasureText(win->hwndPageLabel, text);
-    size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
+    size.dx += padX;
     size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
     Rect pageWndRect = WindowRect(win->hwndPageBg);
@@ -699,27 +700,30 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 
     TempStr txt = nullptr;
     Size size2;
+    Size minSize = HwndMeasureText(win->hwndPageTotal, "9999 / 9999");
+    minSize.dx += padX * 2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
         txt = HwndGetTextTemp(win->hwndPageTotal);
         size2 = ClientRect(win->hwndPageTotal).Size();
-        size2.dx -= DpiScale(win->hwndFrame, kTextPaddingRight);
+        size2.dx -= padX;
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
     } else if (!pageCount) {
         txt = (TempStr) "";
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = str::FormatTemp(" / %d", pageCount);
     } else {
-        txt = str::FormatTemp(" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
-        TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
-        size2 = HwndMeasureText(win->hwndPageTotal, txt2);
+        txt = str::FormatTemp("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
+        //TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
+        size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
+    size2.dx = std::max(size2.dx, minSize.dx);
 
     HwndSetText(win->hwndPageTotal, txt);
     if (0 == size2.dx) {
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
-    size2.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
+    size2.dx += padX;
     size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
@@ -728,7 +732,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
     if (IsUIRightToLeft()) {
         currX += size2.dx;
-        currX -= DpiScale(win->hwndFrame, kTextPaddingRight);
+        currX -= padX;
         currX -= DpiScale(win->hwndFrame, kButtonSpacingX);
     }
     x = currX + size.dx;
