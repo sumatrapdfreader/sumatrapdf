@@ -2697,16 +2697,18 @@ bool TreeView::SelectItem(TreeItem ti) {
     return ok == TRUE;
 }
 
-void TreeView::SetBackgroundColor(COLORREF bgCol) {
-    this->bgColor = bgCol;
-    TreeView_SetBkColor(hwnd, bgCol);
-}
-
-void TreeView::SetTextColor(COLORREF col) {
-#if 0 // TODO: do I need this?
-    this->textColor = col;
-#endif
-    TreeView_SetTextColor(this->hwnd, col);
+void TreeView::SetColors(COLORREF textCol, COLORREF bgCol) {
+    Wnd::SetColors(textCol, bgCol);
+    if (!IsSpecialColor(textCol)) {
+        TreeView_SetTextColor(hwnd, textCol);
+    } else if (textColor == kColorUnset) {
+        TreeView_SetTextColor(hwnd, CLR_DEFAULT);
+    }
+    if (!IsSpecialColor(bgCol)) {
+        TreeView_SetBkColor(hwnd, bgCol);
+    } else if (bgCol == kColorUnset) {
+        TreeView_SetBkColor(hwnd, CLR_DEFAULT);
+    }
 }
 
 void TreeView::ExpandAll() {

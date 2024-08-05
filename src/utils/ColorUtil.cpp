@@ -5,6 +5,10 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
+bool IsSpecialColor(COLORREF col) {
+    return col == kColorUnset || col == kColorNoChange;
+}
+
 COLORREF MkColor(u8 r, u8 g, u8 b, u8 a) {
     COLORREF r2 = r;
     COLORREF g2 = (COLORREF)g << 8;

@@ -582,6 +582,8 @@ struct TreeView : Wnd {
 
     HWND Create(const CreateArgs&);
 
+    void SetColors(COLORREF col, COLORREF bgCol) override;
+
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
     LRESULT OnNotifyReflect(WPARAM, LPARAM) override;
 
@@ -593,8 +595,6 @@ struct TreeView : Wnd {
     bool GetItemRect(TreeItem ti, bool justText, RECT& r);
     TreeItem GetSelection();
     bool SelectItem(TreeItem ti);
-    void SetBackgroundColor(COLORREF bgCol);
-    void SetTextColor(COLORREF col);
     void ExpandAll();
     void CollapseAll();
     void Clear();

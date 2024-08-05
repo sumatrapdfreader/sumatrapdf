@@ -26,6 +26,8 @@ COLORREF MkColor(u8 r, u8 g, u8 b, u8 a = 0);
 void UnpackColor(COLORREF, u8& r, u8& g, u8& b);
 void UnpackColor(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
+bool IsSpecialColor(COLORREF col);
+
 void ParseColor(ParsedColor& parsed, const char* txt);
 bool ParseColor(COLORREF* destColor, const char* s);
 COLORREF ParseColor(const char* s, COLORREF defCol = 0);
