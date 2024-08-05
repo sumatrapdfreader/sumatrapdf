@@ -1006,8 +1006,16 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                 }
                 rendering = true;
             } else {
-                SetTextColor(hdc, colDocTxt);
+#if 0
+                AutoDeletePen pen(CreatePen(PS_SOLID, 2, RGB(0xff, 0, 0)));
+                ScopedSelectPen restorePen(hdc, pen);
+                auto x = bounds.x;
+                auto y = bounds.y;
+                Rectangle(hdc, x, y, x + bounds.dx, y + bounds.dy);
+#endif
+                auto prevCol = SetTextColor(hdc, colDocTxt);
                 DrawCenteredText(hdc, bounds, _TRA("Couldn't render the page"), isRtl);
+                SetTextColor(hdc, prevCol);
             }
             SelectObject(hdc, hPrevFont);
             continue;
