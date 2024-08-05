@@ -1224,9 +1224,6 @@ void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
     uint msg = ev->msg;
     ReportIf(msg != WM_CTLCOLORSTATIC);
     HDC hdc = (HDC)ev->wp;
-    if (w->textColor != kColorUnset) {
-        SetTextColor(hdc, w->textColor);
-    }
     // the brush we return is the background color for the whole
     // area of static control
     // SetBkColor() is just for the part where the text is
@@ -1243,10 +1240,17 @@ void Handle_WM_CTLCOLORSTATIC(void* user, WndEvent* ev) {
 }
 #endif
 
-LRESULT Static::OnMessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
+LRESULT Static::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
     if (msg == WM_CTLCOLORSTATIC) {
-        // TODO: implement me
-        return 0;
+        HDC hdc = (HDC)wp;
+        if (!IsSpecialColor(textColor)) {
+            SetTextColor(hdc, textColor);
+        }
+        if (!IsSpecialColor(bgColor)) {
+            SetBkColor(hdc, bgColor);
+        }
+        auto br = BackgroundBrush();
+        return (LRESULT)br;
     }
     return 0;
 }
@@ -1780,7 +1784,6 @@ ListBox::ListBox() {
 }
 
 ListBox::~ListBox() {
-    DeleteBrushSafe(&brBg);
     delete this->model;
 }
 
@@ -1893,16 +1896,14 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorlistbox
     if (msg == WM_CTLCOLORLISTBOX) {
         HDC hdc = (HDC)wp;
-        if (colTxt != kColorUnset) {
-            SetTextColor(hdc, colTxt);
+        if (!IsSpecialColor(textColor)) {
+            SetTextColor(hdc, textColor);
         }
-        if (colBg != kColorUnset) {
-            SetBkColor(hdc, colBg);
-            if (brBg == nullptr) {
-                brBg = CreateSolidBrush(colBg);
-            }
+        if (!IsSpecialColor(bgColor)) {
+            SetBkColor(hdc, bgColor);
         }
-        return (LRESULT)brBg;
+        auto br = BackgroundBrush();
+        return (LRESULT)br;
     }
     return 0;
 }

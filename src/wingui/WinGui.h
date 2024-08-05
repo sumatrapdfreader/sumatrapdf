@@ -315,10 +315,6 @@ struct ListBox : Wnd {
     Size idealSize = {};
     int idealSizeLines = 0;
 
-    COLORREF colTxt = kColorUnset;
-    COLORREF colBg = kColorUnset;
-    HBRUSH brBg = nullptr;
-
     ListBox();
     virtual ~ListBox();
 

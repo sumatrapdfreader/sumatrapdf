@@ -870,18 +870,21 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         auto pad = Insets{0, 4, 0, 4};
         {
             auto c = CreateStatic(hwnd, font, "# File History");
+            c->SetColors(colTxt, colBg);
             c->onClicked = MkFunc0(SwitchToFileHistory, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, "> Commands");
+            c->SetColors(colTxt, colBg);
             c->onClicked = MkFunc0(SwitchToCommands, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, "@ Tabs");
+            c->SetColors(colTxt, colBg);
             c->onClicked = MkFunc0(SwitchToTabs, this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
@@ -898,8 +901,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         c->Create(args);
-        c->colBg = colBg;
-        c->colTxt = colTxt;
+        c->SetColors(colTxt, colBg);
         c->onSelectionChanged = MkFunc0(SelectionChange, this);
         auto m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);
@@ -909,6 +911,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     }
     {
         auto c = CreateStatic(hwnd, this->font, smartTabMode ? kInfoSmartTab : kInfoRegular);
+        c->SetColors(colTxt, colBg);
         staticInfo = c;
         vbox->AddChild(c);
     }
