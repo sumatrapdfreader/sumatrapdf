@@ -1608,25 +1608,33 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         return zoom;
     }
 
-#if 0
     // differences to Adobe Reader: starts at 8.33 (instead of 1 and 6.25)
     // and has four additional intermediary zoom levels ("added")
-    static float zoomLevels[] = {
+    // clang-format off
+    static float defaultZooms2[] = {
         8.33f, 12.5f, 18 /* added */, 25, 33.33f, 50, 66.67f, 75,
         100, 125, 150, 200, 300, 400, 600, 800, 1000 /* added */,
         1200, 1600, 2000 /* added */, 2400, 3200, 4800 /* added */, 6400
     };
-    ReportIf(zoomLevels[0] != kZoomMin || zoomLevels[dimof(zoomLevels)-1] != kZoomMax);
-#endif
-    Vec<float>* zoomLevels = gGlobalPrefs->zoomLevels;
-    int nZooms = zoomLevels->Size();
-    ReportIf(nZooms != 0 && (zoomLevels->at(0) < kZoomMin || zoomLevels->Last() > kZoomMax));
-    ReportIf(nZooms != 0 && zoomLevels->at(0) > zoomLevels->Last());
+    // clang-format on
+    // ReportIf(defaultZooms[0] != kZoomMin || defaultZooms[dimof(defaultZooms)-1] != kZoomMax);
+
+    float* zoomLevels = defaultZooms2;
+    int nZoomLevels = dimofi(defaultZooms2);
+
+    int nCustomZooms = gGlobalPrefs->zoomLevels->Size();
+    if (nCustomZooms > 0) {
+        // ReportIf((defaultZooms->at(0) < kZoomMin || defaultZooms->Last() > kZoomMax));
+        // ReportIf(defaultZooms->at(0) > defaultZooms->Last());
+        zoomLevels = gGlobalPrefs->zoomLevels->LendData();
+        nZoomLevels = nCustomZooms;
+    }
 
     float currZoom = GetZoomVirtual(true);
     if (currZoom == towardsLevel) {
         return towardsLevel;
     }
+
     float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
     for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
         if (PageShown(pageNo)) {
@@ -1644,8 +1652,8 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
     if (currZoom + FUZZ < towardsLevel) {
-        for (int i = 0; i < nZooms; i++) {
-            float zoom = zoomLevels->at(i);
+        for (int i = 0; i < nZoomLevels; i++) {
+            float zoom = zoomLevels[i];
             if (zoom - FUZZ > currZoom) {
                 newZoom = zoom;
                 break;
@@ -1657,8 +1665,8 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
             newZoom = kZoomFitWidth;
         }
     } else if (currZoom - FUZZ > towardsLevel) {
-        for (int i = nZooms - 1; i >= 0; i--) {
-            float zoom = zoomLevels->at(i);
+        for (int i = nZoomLevels - 1; i >= 0; i--) {
+            float zoom = zoomLevels[i];
             if (zoom + FUZZ < currZoom) {
                 newZoom = zoom;
                 break;
