@@ -54,6 +54,11 @@
 
 #include "utils/Log.h"
 
+// if set instead of trying to render pages we don't have, we simply do nothing
+// this reduces the flickering when going quickly through pages but creates
+// impression of lag
+bool gNoFlickerRender = true;
+
 Kind kNotifAnnotation = "notifAnnotation";
 
 // Timer for mouse wheel smooth scrolling
@@ -883,10 +888,10 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
 }
 
-static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
+static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     ReportIf(!win->AsFixed());
     if (!win->AsFixed()) {
-        return;
+        return false;
     }
     DisplayModel* dm = win->AsFixed();
     //logf("DrawDocument RenderCache:\n");
@@ -902,6 +907,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         colDocTxt = 0xffffff;
     }
 
+    bool shouldPaint = false;
     auto gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = gcols->size();
     if (paintOnBlackWithoutShadow) {
@@ -993,7 +999,9 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
 
         bool renderOutOfDateCue = false;
         int renderDelay = gRenderCache->Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
-
+        if (renderDelay == 0) {
+            shouldPaint = true;
+        }
         if (renderDelay != 0) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
@@ -1055,6 +1063,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     if (!rendering) {
         DebugShowLinks(dm, hdc);
     }
+    return shouldPaint;
 }
 
 static void OnPaintDocument(MainWindow* win) {
@@ -1070,8 +1079,10 @@ static void OnPaintDocument(MainWindow* win) {
             FillRect(hdc, &ps.rcPaint, GetStockBrush(WHITE_BRUSH));
             break;
         default:
-            DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
-            win->buffer->Flush(hdc);
+            bool shouldFlush = DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
+            if (!gNoFlickerRender || shouldFlush) {
+                win->buffer->Flush(hdc);
+            }
     }
 
     EndPaint(win->hwndCanvas, &ps);
