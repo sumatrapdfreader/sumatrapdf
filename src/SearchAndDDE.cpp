@@ -303,11 +303,16 @@ struct FindThreadData : public ProgressUpdateUI {
 };
 
 struct FindEndTaskData {
-    MainWindow* win;
-    FindThreadData* ftd;
-    TextSel* textSel;
-    bool wasModifiedCanceled;
-    bool loopedAround;
+    MainWindow* win = nullptr;
+    FindThreadData* ftd = nullptr;
+    TextSel* textSel = nullptr;
+    bool wasModifiedCanceled = false;
+    bool loopedAround = false;
+    FindEndTaskData() = default;
+    ~FindEndTaskData(){
+        delete ftd;
+        ftd = nullptr;
+    }
 };
 
 static void FindEndTask(FindEndTaskData* d) {
@@ -318,8 +323,6 @@ static void FindEndTask(FindEndTaskData* d) {
     auto loopedAround = d->loopedAround;
 
     AutoDelete delData(d);
-    AutoDelete delFtd(ftd);
-
     if (!IsMainWindowValid(win)) {
         return;
     }
@@ -344,8 +347,6 @@ static void FindEndTask(FindEndTaskData* d) {
 
 static void FindThread(FindThreadData* ftd) {
     ReportIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
-
-    AutoDelete delThreadData(ftd);
 
     MainWindow* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
