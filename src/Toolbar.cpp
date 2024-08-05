@@ -1068,6 +1068,7 @@ void CreateToolbar(MainWindow* win) {
         logfa("CreateToolbar: setting toolbar font size to %d (default size: %d)\n", newSize, defFontSize);
     }
     auto font = GetDefaultGuiFontOfSize(newSize);
+    HwndSetFont(hwndToolbar, font);
 
     CreatePageBox(win, font, iconSize);
     CreateFindBox(win, font, iconSize);
