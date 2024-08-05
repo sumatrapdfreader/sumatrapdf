@@ -781,10 +781,8 @@ static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect& pageRect, bool 
 #else
 static void PaintPageFrameAndShadow(HDC hdc, Rect& bounds, Rect&, bool) {
     AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
-    auto bgCol = ThemeMainWindowBackgroundColor();
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
-        ThemeDocumentColors(bgCol);
-    }
+    COLORREF bgCol;
+    ThemeDocumentColors(bgCol);
     AutoDeleteBrush brush(CreateSolidBrush(bgCol));
     ScopedSelectPen restorePen(hdc, pen);
     ScopedSelectObject restoreBrush(hdc, brush);
@@ -891,12 +889,18 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
-    logf("DrawDocument RenderCache:\n");
+    //logf("DrawDocument RenderCache:\n");
 
     bool isImage = dm->GetEngine()->IsImageCollection();
     // draw comic books and single images on a black background
     // (without frame and shadow)
     bool paintOnBlackWithoutShadow = win->presentation || isImage;
+    COLORREF colDocBg;
+    COLORREF colDocTxt = ThemeDocumentColors(colDocBg);
+    if (isImage) {
+        colDocBg = 0x0;
+        colDocTxt = 0xffffff;
+    }
 
     auto gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = gcols->size();
@@ -993,20 +997,16 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         if (renderDelay != 0) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            auto txtCol = ThemeWindowTextColor();
-            if (gGlobalPrefs->fixedPageUI.invertColors) {
-                COLORREF dummy;
-                txtCol = ThemeDocumentColors(dummy);
-            }
-            SetTextColor(hdc, txtCol);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
                     ScheduleRepaint(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 } else {
+                    SetTextColor(hdc, colDocTxt);
                     DrawCenteredText(hdc, bounds, _TRA("Please wait - rendering..."), isRtl);
                 }
                 rendering = true;
             } else {
+                SetTextColor(hdc, colDocTxt);
                 DrawCenteredText(hdc, bounds, _TRA("Couldn't render the page"), isRtl);
             }
             SelectObject(hdc, hPrevFont);
@@ -1762,7 +1762,7 @@ static void RepaintTask(RepaintTaskData* d) {
 }
 
 void ScheduleRepaint(MainWindow* win, int delayInMs) {
-    logf("ScheduleRepaint RenderCache:\n");
+    //logf("ScheduleRepaint RenderCache:\n");
     auto data = new RepaintTaskData;
     data->win = win;
     data->delayInMs = delayInMs;

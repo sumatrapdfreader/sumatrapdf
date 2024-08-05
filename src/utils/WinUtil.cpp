@@ -2942,13 +2942,16 @@ Size HdcMeasureText(HDC hdc, const char* s, HFONT font) {
 
 void DrawCenteredText(HDC hdc, const Rect r, const char* txt, bool isRTL) {
     TempWStr ws = ToWStrTemp(txt);
-    SetBkMode(hdc, TRANSPARENT);
+    int prevMode = SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = ToRECT(r);
     uint format = DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
     if (isRTL) {
         format |= DT_RTLREADING;
     }
     DrawTextW(hdc, ws, -1, &tmpRect, format);
+    if (prevMode != 0) {
+        SetBkMode(hdc, prevMode);
+    }
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
