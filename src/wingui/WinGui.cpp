@@ -3957,31 +3957,6 @@ static LRESULT CALLBACK wndProcCustom(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 }
 #endif
 
-void DeleteWnd(Static** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-void DeleteWnd(Button** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-void DeleteWnd(Edit** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-void DeleteWnd(Checkbox** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
-void DeleteWnd(Progress** wnd) {
-    delete *wnd;
-    *wnd = nullptr;
-}
-
 void DrawCloseButton(const DrawCloseButtonArgs& args) {
     bool isHover = args.isHover;
     const Rect& r = args.r;

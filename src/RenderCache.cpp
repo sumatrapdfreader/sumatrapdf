@@ -27,7 +27,7 @@
 /* Define if you want to conserve memory by always freeing cached bitmaps
 for pages not visible. Disabling this might lead to pages not rendering
 due to insufficient (GDI) memory. */
-//#define CONSERVE_MEMORY
+// #define CONSERVE_MEMORY
 
 bool gShowTileLayout = false;
 
@@ -74,7 +74,8 @@ static void RenderCacheThread(RenderCache* cache) {
         RenderPageArgs args(req->pageNo, req->zoom, req->rotation, &req->pageRect, RenderTarget::View,
                             &req->abortCookie);
         auto timeStart = TimeGet();
-        logf("RenderCache: calling engine->RenderPage() page: %d, page rect: (%d, %d) (%d, %d)\n", req->pageNo, (int)req->pageRect.x, (int)req->pageRect.y, (int)req->pageRect.dx, (int)req->pageRect.dy);
+        logf("RenderCache: calling engine->RenderPage() page: %d, page rect: (%d, %d) (%d, %d)\n", req->pageNo,
+             (int)req->pageRect.x, (int)req->pageRect.y, (int)req->pageRect.dx, (int)req->pageRect.dy);
         bmp = engine->RenderPage(args);
         if (req->abort) {
             delete bmp;
@@ -90,7 +91,8 @@ static void RenderCacheThread(RenderCache* cache) {
             logfa("Slow rendering: %.2f ms, page: %d in '%s'\n", (float)durMs, req->pageNo, path);
         }
 
-        logf("RenderCache: finished rendering page: %d, page rect: (%d, %d) (%d, %d) in %.2f\n", req->pageNo, (int)req->pageRect.x, (int)req->pageRect.y, (int)req->pageRect.dx, (int)req->pageRect.dy, durMs);
+        logf("RenderCache: finished rendering page: %d, page rect: (%d, %d) (%d, %d) in %.2f\n", req->pageNo,
+             (int)req->pageRect.x, (int)req->pageRect.y, (int)req->pageRect.dx, (int)req->pageRect.dy, durMs);
         if (req->renderCb) {
             // the callback must free the RenderedBitmap
             req->renderCb->Call(bmp);
@@ -200,8 +202,8 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry, const char* from) {
         return false;
     }
     bool willDelete = entry->refs <= 1;
-    logf("RenderCache::DropCacheEntry: page: %d, rotation: %d, zoom: %.2f, refs: %d, willDelete: %d, from: %s\n", entry->pageNo,
-         entry->rotation, entry->zoom, entry->refs, willDelete, from);
+    logf("RenderCache::DropCacheEntry: page: %d, rotation: %d, zoom: %.2f, refs: %d, willDelete: %d, from: %s\n",
+         entry->pageNo, entry->rotation, entry->zoom, entry->refs, willDelete, from);
     ReportIf(entry->refs < 1);
     --entry->refs;
     if (!willDelete) {
@@ -232,7 +234,8 @@ static bool FreeIfFull(RenderCache* rc, PageRenderRequest* req) {
         return true;
     }
 
-    logf("FreeIfFull: trying to free because rc->cacheCount %d > kMaxBitmapsCached (%d)\n", rc->cacheCount, kMaxBitmapsCached);
+    logf("FreeIfFull: trying to free because rc->cacheCount %d > kMaxBitmapsCached (%d)\n", rc->cacheCount,
+         kMaxBitmapsCached);
     DisplayModel* dm = req->dm;
     // free an invisible page of the same DisplayModel ...
     for (int i = 0; i < n; i++) {
@@ -285,7 +288,8 @@ void RenderCache::Add(PageRenderRequest* req, RenderedBitmap* bmp) {
     auto entry = new BitmapCacheEntry(req->dm, req->pageNo, req->rotation, req->zoom, req->tile, bmp);
     entry->cacheIdx = cacheCount;
     cache[cacheCount] = entry;
-    logf("RenderCache::Add(): added page: %d at %d, size: (%d, %d)\n", req->pageNo, cacheCount, bmp->size.dx, bmp->size.dy);
+    logf("RenderCache::Add(): added page: %d at %d, size: (%d, %d)\n", req->pageNo, cacheCount, bmp->size.dx,
+         bmp->size.dy);
     cacheCount++;
 }
 
@@ -524,7 +528,8 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::RequestRenderingTile(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
-    logf("RenderCache::RequestRenderingTile(): page: %d, tile.row: %d tile.col: %d\n", pageNo, (int)tile.row, (int)tile.col);
+    logf("RenderCache::RequestRenderingTile(): page: %d, tile.row: %d tile.col: %d\n", pageNo, (int)tile.row,
+         (int)tile.col);
     ScopedCritSec scope(&requestAccess);
     ReportIf(!dm);
     if (!dm || dm->dontRenderFlag) {
@@ -603,7 +608,12 @@ bool RenderCache::QueueTileRenderingRequest(DisplayModel* dm, int pageNo, int ro
     if (!tile && !(pageRect && onRendered)) {
         return false;
     }
-    logf("RenderCache::QueueTileRenderingRequest(): page: %d, tile->row: %d, tile->col\n", pageNo, tile->row, tile->col);
+    if (tile) {
+        logf("RenderCache::QueueTileRenderingRequest(): page: %d, tile->row: %d, tile->col\n", pageNo, tile->row,
+             tile->col);
+    } else {
+        logf("RenderCache::QueueTileRenderingRequest(): page: %d\n", pageNo);
+    }
 
     ScopedCritSec scope(&requestAccess);
     PageRenderRequest* newRequest = new PageRenderRequest;
@@ -792,7 +802,8 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
             ySrc = (int)(ySrc * factor);
             int dxSrc = (int)(bounds.dx * factor);
             int dySrc = (int)(bounds.dy * factor);
-            logf("RenderCache::PaintTile: StretchBlt page: %d, factor: %.f, bmpSize: (%d,%d), tileOnScreen: (%d, %d)\n", pageNo, factor, bmpSize.dx, bmpSize.dy, tileOnScreen.dx, tileOnScreen.dy);
+            logf("RenderCache::PaintTile: StretchBlt page: %d, factor: %.f, bmpSize: (%d,%d), tileOnScreen: (%d, %d)\n",
+                 pageNo, factor, bmpSize.dx, bmpSize.dy, tileOnScreen.dx, tileOnScreen.dy);
             StretchBlt(hdc, xDst, yDst, dxDst, dyDst, bmpDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY);
         } else {
             logf("RenderCache::PaintTile: BitBlt page: %d\n", pageNo);
@@ -834,9 +845,9 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
     auto dur = TimeSinceInMs(timeStart);
 
     bool shouldCache = dm->ShouldCacheRendering(pageNo);
-    logf("RenderCache::Paint() page: %d, bounds=(%d,%d,%d,%d) should cache: %d\n", pageNo, bounds.x, bounds.y, bounds.dx,
-         bounds.dy, (int)shouldCache);
-        
+    logf("RenderCache::Paint() page: %d, bounds=(%d,%d,%d,%d) should cache: %d\n", pageNo, bounds.x, bounds.y,
+         bounds.dx, bounds.dy, (int)shouldCache);
+
     if (!shouldCache) {
         int rotation = dm->GetRotation();
         float zoom = dm->GetZoomReal(pageNo);

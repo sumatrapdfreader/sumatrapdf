@@ -1581,7 +1581,8 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
 void DeleteMainWindow(MainWindow* win) {
     int winIdx = gWindows.Remove(win);
 
-    logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d\n", win, win->hwndFrame, win->hwndCanvas, winIdx);
+    logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d\n", win, win->hwndFrame,
+         win->hwndCanvas, winIdx);
     if (winIdx) {
         logf("  not deleting because not in gWindows, probably already deleted\n");
         return;

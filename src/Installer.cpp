@@ -233,6 +233,9 @@ void RemoveAppShortcuts() {
 // or if previous installation was for all users
 static bool AllUsersInitial() {
     bool res = gCli->allUsers || gPrevInstall.allUsers;
+    if (gCli->runInstallNow) {
+        res = gCli->allUsers;
+    }
     logf("AllUsersInitial: %d\n", (int)res);
     return res;
 }
@@ -241,7 +244,13 @@ static void InstallerThread() {
     gWnd->failed = true;
     bool ok;
 
-    bool allUsers = gCli->allUsers || gPrevInstall.allUsers;
+    bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
+    bool allUsers = gCli->allUsers;
+    if (!gCli->fastInstall && !gCli->runInstallNow) {
+        allUsers = allUsersChecked;
+    }
+    logf("InstallerThread: allUsersChecked: %d, gCli->allUsers: %d, allUsers: %d\n", (int)allUsersChecked,
+         (int)gCli->allUsers, (int)allUsers);
     HKEY key = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     if (!ExtractInstallerFiles(gCli->installDir)) {
@@ -302,7 +311,10 @@ Exit:
 static void RestartElevatedForAllUsers() {
     char* exePath = GetExePathTemp();
     const char* cmdLine = "-run-install-now";
-    bool allUsers = gCli->allUsers || (gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked());
+    bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
+    bool allUsers = gCli->allUsers || allUsersChecked;
+    logf("RestartElevatedForAllUsers: gCli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)gCli->allUsers,
+         (int)allUsersChecked, (int)allUsers);
     if (allUsers) {
         cmdLine = str::JoinTemp(cmdLine, " -all-users");
     }
@@ -476,7 +488,7 @@ static void OnInstallationFinished() {
     }
 }
 
-static void EnableAndShow(Wnd* w, bool enable) {
+static void ShowAndEnable(Wnd* w, bool enable) {
     if (w) {
         HwndSetVisibility(w->hwnd, enable);
         w->SetIsEnabled(enable);
@@ -536,13 +548,13 @@ static void ForAllUsersStateChanged() {
 static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     bool showOpts = wnd->showOptions;
 
-    EnableAndShow(wnd->staticInstDir, showOpts);
-    EnableAndShow(wnd->editInstallationDir, showOpts);
-    EnableAndShow(wnd->btnBrowseDir, showOpts);
+    ShowAndEnable(wnd->staticInstDir, showOpts);
+    ShowAndEnable(wnd->editInstallationDir, showOpts);
+    ShowAndEnable(wnd->btnBrowseDir, showOpts);
 
-    EnableAndShow(wnd->checkboxForAllUsers, showOpts);
-    EnableAndShow(wnd->checkboxRegisterSearchFilter, showOpts);
-    EnableAndShow(wnd->checkboxRegisterPreview, showOpts);
+    ShowAndEnable(wnd->checkboxForAllUsers, showOpts);
+    ShowAndEnable(wnd->checkboxRegisterSearchFilter, showOpts);
+    ShowAndEnable(wnd->checkboxRegisterPreview, showOpts);
 
     auto btnOptions = wnd->btnOptions;
     //[ ACCESSKEY_GROUP Installer
@@ -1152,15 +1164,12 @@ int RunInstaller() {
         }
     }
 
-    auto autoStartInstall = gCli->runInstallNow || gCli->fastInstall;
-    if (autoStartInstall) {
+    // on -fast-install we inherit previous installation state
+    // this should be the only flag
+    if (gCli->fastInstall) {
         // if not set explicitly, default to state from previous installation
-        if (!gCli->withFilter) {
-            gCli->withFilter = gPrevInstall.searchFilterInstalled;
-        }
-        if (!gCli->withPreview) {
-            gCli->withPreview = gPrevInstall.previewInstalled;
-        }
+        gCli->withFilter = gPrevInstall.searchFilterInstalled;
+        gCli->withPreview = gPrevInstall.previewInstalled;
         gCli->allUsers = gPrevInstall.allUsers;
     }
     logf(
@@ -1217,7 +1226,7 @@ int RunInstaller() {
     log("Installer finished\n");
 Exit:
     if (installerLogPath) {
-        LaunchFileIfExists(installerLogPath);
+        RunNonElevated(installerLogPath);
     } else if (!gCli->silent && (ret != 0)) {
         // if installation failed, automatically show the log
         installerLogPath = GetInstallerLogPath();

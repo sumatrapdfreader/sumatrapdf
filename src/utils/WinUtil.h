@@ -88,6 +88,7 @@ bool LaunchFileShell(const char* path, const char* params = nullptr, const char*
 bool LaunchBrowser(const char* url);
 void OpenPathInExplorer(const char* path);
 
+void RunNonElevated(const char* exePath);
 bool LaunchElevated(const char* path, const char* cmdline);
 bool IsProcessRunningElevated();
 bool CanTalkToProcess(DWORD procId);
@@ -280,7 +281,6 @@ HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
-void RunNonElevated(const char* exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s);
 StrSpan LoadDataResource(int resId);
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command);

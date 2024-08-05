@@ -11,6 +11,7 @@
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/ThreadUtil.h"
 
 #include "wingui/UIModels.h"
 
@@ -341,9 +342,11 @@ static void FindEndTask(FindEndTaskData* d) {
     win->findThread = nullptr;
 }
 
-static DWORD WINAPI FindThread(LPVOID d) {
-    FindThreadData* ftd = (FindThreadData*)d;
+static void FindThread(FindThreadData* ftd) {
     ReportIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
+
+    AutoDelete delThreadData(ftd);
+
     MainWindow* win = ftd->win;
     DisplayModel* dm = win->AsFixed();
     auto textSearch = dm->textSearch;
@@ -397,7 +400,6 @@ static DWORD WINAPI FindThread(LPVOID d) {
     auto fn = MkFunc0<FindEndTaskData>(FindEndTask, data);
     uitask::Post(fn, "TaskFindEnd");
     DestroyTempAllocator();
-    return 0;
 }
 
 // returns true if did abort a thread or hidden the notification
@@ -432,7 +434,8 @@ void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);
     win->findThread = nullptr;
-    win->findThread = CreateThread(nullptr, 0, FindThread, ftd, 0, nullptr);
+    auto fn = MkFunc0(FindThread, ftd);
+    win->findThread = StartThread(fn, "FindThread");
     ftd->thread = win->findThread; // safe because only accesssed on ui thread
 }
 

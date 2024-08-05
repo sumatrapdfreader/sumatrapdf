@@ -2335,6 +2335,10 @@ bool SafeCloseHandle(HANDLE* h) {
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(const char* exePath) {
+    if (!file::Exists(exePath)) {
+        logf("RunNonElevated: file '%s' doesn't exist\n", exePath);
+        return;
+    }
     logf("RunNonElevated: '%s'\n", exePath);
     TempStr cmd = nullptr;
     char* explorerPath = nullptr;

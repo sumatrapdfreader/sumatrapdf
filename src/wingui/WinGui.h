@@ -800,11 +800,11 @@ T GetTabsUserData(TabsCtrl* tabs, int idx) {
     return (T)tabInfo->userData;
 }
 
-void DeleteWnd(Static**);
-void DeleteWnd(Button**);
-void DeleteWnd(Edit**);
-void DeleteWnd(Checkbox**);
-void DeleteWnd(Progress**);
+template <typename T>
+void DeleteWnd(T** wnd) {
+    delete *wnd;
+    *wnd = nullptr;
+}
 
 int RunMessageLoop(HACCEL accelTable, HWND hwndDialog);
 

@@ -1013,7 +1013,7 @@ void CreateToolbar(MainWindow* win) {
 
     {
         // info text for showing "unsaved annotations" text
-        ToolbarButtonInfo tbi { TbIcon::None, CmdInfoText, nullptr };
+        ToolbarButtonInfo tbi{TbIcon::None, CmdInfoText, nullptr};
         TBBUTTON tb = TbButtonFromButtonInfo(tbi);
         SendMessageW(hwndToolbar, TB_ADDBUTTONS, 1, (LPARAM)&tb);
     }
