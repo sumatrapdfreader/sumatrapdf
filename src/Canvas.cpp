@@ -999,7 +999,7 @@ static void DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                 txtCol = ThemeDocumentColors(dummy);
             }
             SetTextColor(hdc, txtCol);
-            if (renderDelay != kRenderDelayFailed) {
+            if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
                     ScheduleRepaint(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
                 } else {
