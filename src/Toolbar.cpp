@@ -700,8 +700,9 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 
     TempStr txt = nullptr;
     Size size2;
-    Size minSize = HwndMeasureText(win->hwndPageTotal, "9999 / 9999");
+    Size minSize = HwndMeasureText(win->hwndPageTotal, "999 / 999");
     minSize.dx += padX * 2;
+    int labelDx = 0;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
         txt = HwndGetTextTemp(win->hwndPageTotal);
@@ -717,6 +718,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         //TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
+    labelDx = size2.dx;
     size2.dx = std::max(size2.dx, minSize.dx);
 
     HwndSetText(win->hwndPageTotal, txt);
@@ -750,8 +752,9 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         MoveWindow(win->hwndPageTotal, x, y, size2.dx, size.dy, FALSE);
     } else {
         x = currX + size.dx + pageWndRect.dx;
+        int midX = (size2.dx - labelDx) / 2;
         y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
-        MoveWindow(win->hwndPageTotal, x, y, size2.dx, size.dy, FALSE);
+        MoveWindow(win->hwndPageTotal, x + midX, y, labelDx, size.dy, FALSE);
     }
 
     TBBUTTONINFOW bi{};
