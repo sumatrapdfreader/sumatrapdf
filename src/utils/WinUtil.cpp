@@ -459,9 +459,19 @@ bool WriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char
 }
 
 bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, const char* value) {
-    auto res = WriteRegStr(hkey, keyName, valName, value);
-    logf("WriteRegStr(%s, %s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, value, res);
-    return res;
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
+    WCHAR* valueW = ToWStrTemp(value);
+
+    DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
+    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
+    if (res != ERROR_SUCCESS) {
+        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, value, res);
+        LogLastError();
+        return false;
+    }
+    logf("WriteRegStr(%s, %s, %s, %s) failed with '%d' ok!\n", RegKeyNameWTemp(hkey), keyName, valName, value);
+    return true;
 }
 
 bool ReadRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD& value) {
@@ -479,10 +489,18 @@ bool WriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD va
     return ERROR_SUCCESS == res;
 }
 
-bool LoggedWriteRegDWORD(HKEY hkey, const char* key, const char* valName, DWORD value) {
-    auto res = WriteRegDWORD(hkey, key, valName, value);
-    logf("WriteRegDWORD(%s, %s, %s, %d) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, (int)value, res);
-    return res;
+bool LoggedWriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DWORD value) {
+    WCHAR* keyNameW = ToWStrTemp(keyName);
+    WCHAR* valNameW = ToWStrTemp(valName);
+    LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
+    if (res != ERROR_SUCCESS) {
+        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, (int)value,
+             res);
+        LogLastError();
+        return false;
+    }
+    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameWTemp(hkey), keyName, valName, (int)value);
+    return true;
 }
 
 bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName) {

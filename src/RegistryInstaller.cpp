@@ -52,13 +52,13 @@ static DWORD GetDirSize(const char* dir, bool recur) {
     return (DWORD)totalSize;
 }
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers) {
-    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d)\n", RegKeyNameTemp(hkey), (int)allUsers);
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, const char* installDir) {
+    logf("WriteUninstallerRegistryInfo(hKey: %s, allUsers: %d, installDir: '%s')\n", RegKeyNameTemp(hkey),
+         (int)allUsers, installDir);
     bool ok = true;
 
-    char* installedExePath = GetInstallationFilePathTemp(kExeName);
+    TempStr installedExePath = path::JoinTemp(installDir, kExeName);
     AutoFreeStr installDate = GetInstallDate();
-    char* installDir = GetInstallDirTemp();
     // uninstaller is the same executable with a different flag
     char* uninstallerPath = installedExePath;
     TempStr uninstallCmdLine = str::FormatTemp("\"%s\" -uninstall", uninstallerPath);
@@ -149,8 +149,8 @@ Then in:
 ShCtx\Software\Classes\${ext}\OpenWithProgids
   SumatraPDF.${ext} = "" (empty REG_SZ value)
 */
-bool RegisterForOpenWith(HKEY hkey) {
-    char* exePathQuoted = str::JoinTemp(R"(")", GetInstalledExePathTemp(), R"(")");
+static bool RegisterForOpenWith(HKEY hkey, const char* installedExePath) {
+    char* exePathQuoted = str::JoinTemp(R"(")", installedExePath, R"(")");
     char* cmdOpen = str::JoinTemp(exePathQuoted, R"( "%1" "%2" "%3" "%4")");
     char* cmdPrint = str::JoinTemp(exePathQuoted, " -print-to-default \"%1\"");
     char* cmdPrintTo = str::JoinTemp(exePathQuoted, " -print-to \"%2\" \"%1\"");
@@ -466,7 +466,7 @@ bool OldWriteFileAssoc(HKEY hkey) {
 #endif
 
 // http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
-bool WriteExtendedFileExtensionInfo(HKEY hkey) {
+bool WriteExtendedFileExtensionInfo(HKEY hkey, const char* installedExePath) {
     logf("WriteExtendedFileExtensionInfo('%s')\n", RegKeyNameTemp(hkey));
     bool ok = true;
     const char* key;
@@ -476,7 +476,7 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     if (IsWindows10OrGreater()) {
         ok &= RegisterForDefaultPrograms(hkey);
     }
-    ok &= RegisterForOpenWith(hkey);
+    ok &= RegisterForOpenWith(hkey, installedExePath);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= LoggedWriteRegStr(hkey, kRegClassesPdf, "Content Type", "application/pdf");

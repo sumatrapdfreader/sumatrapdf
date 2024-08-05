@@ -88,6 +88,11 @@ static void RemoveInstalledFiles() {
     logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
 
+static TempStr GetInstalledExePathTemp() {
+    TempStr dir = gCli->installDir;
+    return path::JoinTemp(dir, kExeName);
+}
+
 static void UninstallerThread() {
     log("UninstallerThread started\n");
     // also kill the original uninstaller, if it's just spawned
@@ -128,7 +133,7 @@ static void UninstallerThread() {
 }
 
 static void OnButtonUninstall() {
-    if (!CheckInstallUninstallPossible()) {
+    if (!CheckInstallUninstallPossible(gHwndFrame)) {
         return;
     }
 
@@ -314,7 +319,7 @@ static int RunApp() {
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
         if (dur > 10000 && gButtonUninstaller && gButtonUninstaller->IsEnabled()) {
-            CheckInstallUninstallPossible(true);
+            CheckInstallUninstallPossible(gHwndFrame, true);
             t = TimeGet();
         }
     }

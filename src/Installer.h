@@ -60,8 +60,6 @@ bool ExtractInstallerFiles(char* dir);
 
 char* GetExistingInstallationDir();
 
-char* GetInstallDirTemp();
-TempStr GetInstalledExePathTemp();
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
 
 char* GetInstallationFilePathTemp(const char* name);
@@ -74,7 +72,7 @@ void UnRegisterSearchFilter();
 
 void UninstallBrowserPlugin();
 
-bool CheckInstallUninstallPossible(bool silent = false);
+bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
 char* GetInstallerLogPath();
 
 TempStr GetRegPathUninstTemp(const char* appName);
@@ -84,8 +82,8 @@ void RemoveAppShortcuts();
 
 // RegistryInstaller.cpp
 
-bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers);
-bool WriteExtendedFileExtensionInfo(HKEY hkey);
+bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, const char* installedExePat);
+bool WriteExtendedFileExtensionInfo(HKEY hkey, const char* installedExePat);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
