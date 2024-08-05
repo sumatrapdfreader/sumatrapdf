@@ -713,6 +713,8 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         txt = (TempStr) "";
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = str::FormatTemp(" / %d", pageCount);
+        size2 = HwndMeasureText(win->hwndPageTotal, txt);
+        minSize.dx = size2.dx;
     } else {
         txt = str::FormatTemp("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
         //TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
@@ -779,7 +781,8 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
     auto hwndFrame = win->hwndFrame;
     auto hwndToolbar = win->hwndToolbar;
-    int boxWidth = HwndMeasureText(hwndFrame, "99999", font).dx;
+    // TODO: this is broken, result is way too small
+    int boxWidth = HwndMeasureText(hwndFrame, "999999", font).dx;
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto h = GetModuleHandle(nullptr);
     int dx = boxWidth;
