@@ -5285,8 +5285,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 int advance = cmdId == CmdNextTabSmart ? 1 : -1;
                 RunCommandPallette(win, kPalettePrefixTabs, advance);
             }
-            break;
-        }
+        } break;
+
+        case CmdMoveTabRight:
+        case CmdMoveTabLeft: {
+            int dir = (cmdId == CmdMoveTabRight) ? 1 : -1;
+            MoveTab(win, dir);
+        } break;
 
         case CmdCloseAllTabs: {
             CloseAllTabs(win);
@@ -5309,8 +5314,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             for (WindowTab* t : toClose) {
                 CloseTab(t, false);
             }
-            break;
-        }
+        } break;
 
         case CmdExit:
             OnMenuExit();

@@ -593,3 +593,20 @@ void TabsOnCtrlTab(MainWindow* win, bool reverse) {
     idx = idx % count;
     TabsSelect(win, idx);
 }
+
+void MoveTab(MainWindow* win, int dir) {
+    if (!win) {
+        return;
+    }
+    int nTabs = win->TabCount();
+    int idx = win->tabsCtrl->GetSelected();
+    int newIdx = idx + dir;
+    if (newIdx < 0) {
+        return;
+    }
+    if (newIdx >= nTabs) {
+        return;
+    }
+    win->tabsCtrl->SwapTabs(idx, newIdx);
+    win->tabsCtrl->SetSelected(newIdx);
+}

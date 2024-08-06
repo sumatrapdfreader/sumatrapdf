@@ -191,6 +191,8 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},
     {FCONTROL | FVIRTKEY, VK_NEXT, CmdNextTab},
     {FCONTROL | FVIRTKEY, VK_PRIOR, CmdPrevTab},
+    {FCONTROL | FSHIFT | FVIRTKEY, VK_NEXT, CmdMoveTabRight},
+    {FCONTROL | FSHIFT | FVIRTKEY, VK_PRIOR, CmdMoveTabLeft},
     {FCONTROL | FVIRTKEY, VK_TAB, CmdNextTabSmart},
     {FCONTROL | FSHIFT | FVIRTKEY, VK_TAB, CmdPrevTabSmart},
     {FVIRTKEY, VK_F1, CmdHelpOpenManual},

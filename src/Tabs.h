@@ -20,3 +20,4 @@ void RemoveTab(WindowTab*);
 void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& toCloseOther,
                         Vec<WindowTab*>& toCloseRight, Vec<WindowTab*>& toCloseLeft);
 void CloseAllTabs(MainWindow*);
+void MoveTab(MainWindow* win, int dir);

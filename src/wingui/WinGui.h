@@ -768,6 +768,7 @@ struct TabsCtrl : Wnd {
 
     int InsertTab(int idx, TabInfo*);
     TabInfo* GetTab(int idx);
+    void SwapTabs(int idx1, int idx2);
 
     void SetTextAndTooltip(int idx, const char* text, const char* tooltip);
 

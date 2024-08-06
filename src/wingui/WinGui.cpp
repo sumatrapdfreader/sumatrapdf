@@ -3783,6 +3783,13 @@ UINT_PTR TabsCtrl::RemoveTab(int idx) {
     return userData;
 }
 
+void TabsCtrl::SwapTabs(int idx1, int idx2) {
+    TabInfo* tmp = tabs[idx1];
+    tabs[idx1] = tabs[idx2];
+    tabs[idx2] = tmp;
+    LayoutTabs();
+}
+
 // Note: the caller should take care of deleting userData
 void TabsCtrl::RemoveAllTabs() {
     TabCtrl_DeleteAllItems(hwnd);

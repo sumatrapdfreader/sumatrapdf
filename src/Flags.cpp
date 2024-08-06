@@ -377,7 +377,7 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         // for some reason that makes Directory Opus "Open With" provide the file twice
         // and gives "%3" and "%4' on cmd-line.
         // this is a hack to ignore that
-        if (str::Eq(argName, "%2") || str::Eq(argName, "%3") || str::Eq(arg, "%4")) {
+        if (str::Eq(argName, "%2") || str::Eq(argName, "%3") || str::Eq(argName, "%4")) {
             logf("ParseFlags: skipping '%s'\n", argName);
             continue;
         }

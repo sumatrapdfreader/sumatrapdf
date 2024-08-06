@@ -724,7 +724,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         minSize.dx = size2.dx;
     } else {
         txt = str::FormatTemp("%d / %d", win->ctrl->CurrentPageNo(), pageCount);
-        //TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
+        // TempStr txt2 = str::FormatTemp(" (%d / %d)", pageCount, pageCount);
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
     labelDx = size2.dx;

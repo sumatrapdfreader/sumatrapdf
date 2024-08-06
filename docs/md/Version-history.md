@@ -19,6 +19,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
   - `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
   - `CmdToggleLinks` : "Toggle Show Links"
   - `CmdInvokeInverseSearch`
+  - `CmdMoveTabRight` (`Ctrl + Shift + PageUp`), `CmdMoveTabLeft` (`Ctrl + Shift + PageDown`) to move tabs left / right, like in Chrome
 - add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
   - CmdCreateAnnot\* commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
