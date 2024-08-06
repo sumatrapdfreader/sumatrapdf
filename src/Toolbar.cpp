@@ -701,16 +701,23 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     TempStr txt = nullptr;
     Size size2;
     Size minSize = HwndMeasureText(win->hwndPageTotal, "999 / 999");
-    minSize.dx += padX * 2;
+    minSize.dx += padX;
     int labelDx = 0;
     if (-1 == pageCount) {
+#if 0
         // preserve hwndPageTotal's text and size
         txt = HwndGetTextTemp(win->hwndPageTotal);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= padX;
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
+#endif
+        txt = (TempStr) "";
+        minSize.dx = 0;
+        size2.dx = 0;
     } else if (!pageCount) {
         txt = (TempStr) "";
+        minSize.dx = 0;
+        size2.dx = 0;
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
         txt = str::FormatTemp(" / %d", pageCount);
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
