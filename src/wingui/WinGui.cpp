@@ -3736,6 +3736,7 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     }
     tabs.InsertAt(idx, tab);
 
+#if 0 // WTF was I trying to do here?
     if (idx == 0) {
         SetSelected(0);
     } else {
@@ -3744,7 +3745,12 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
             SetSelected(selectedTab + 1);
         }
     }
+#else
+    SetSelected(idx);
+#endif
     tabBeingClosed = -1;
+    tabHighlighted = -1;
+    tabHighlightedClose = -1;
     LayoutTabs();
     return idx;
 }
