@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e6a488227d6c1efeedbd2052d870198c7d08c201
+b3aec76046a938aa9bd2bcfa4d9f52b08206e1eb
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -16726,7 +16726,7 @@ nn:Polygon
 no:Polygon
 pl:Wielokąt
 pt:Polígono
-ro:Polygon(grafică pe computer)
+ro:Poligon(grafică pe computer)
 ru:Многоугольник
 sat:ᱯᱚᱞᱤᱜᱚᱱ
 sk:Polygón
@@ -21505,7 +21505,7 @@ nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\n
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
 pt:O instalador está danificado.\nDescarregue novamente o ficheiro de instalação.\nDesculpe.
-ro:Programul de instalare este deteriorat. Rugăm descărcaţi-l din nou. \n Scuze pentru deranj!
+ro:Programul de instalare este deteriorat. Vă rugăm să îl descărcaţi din nou. \n Scuze pentru deranj!
 ru:Программа установки повреждена. Скачайте её повторно.\nИзвините за неудобства!
 sat:ᱤᱱᱥᱴᱚᱞᱚᱨ ᱫᱚ ᱠᱷᱟᱨᱟᱯ ᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱚᱱᱟ ᱫᱩᱦᱲᱟᱹ ᱰᱟᱣᱩᱱᱞᱚᱰ ᱢᱮ ᱾\nᱮᱴᱠᱮᱴᱚᱬᱮ ᱞᱟᱹᱜᱤᱫ ᱟᱹᱰᱤ ᱤᱠᱟᱹ ᱞᱮ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱᱟ!
 si:ස්ථාපනය කරනය අකර්මන්‍යයි. කරුණාකර නැවත බාගත කරන්න. \nඇතිවූ අපහසුතාවයට සමාවන්න!
@@ -21951,7 +21951,7 @@ nn:Ukjend kildefil (%s)
 no:Ukjent kildefil (%s)
 pl:Nieznany plik źródłowy (%s)
 pt:O ficheiro (%s) é desconhecido
-ro:Fișier sursă necunoscută (%s)
+ro:Fișier dintr-o sursă necunoscută (%s)
 ru:Неизвестный исходный файл (%s)
 sat:ᱵᱟᱝ ᱵᱟᱲᱟᱭ ᱥᱨᱚᱛ ᱨᱮᱫᱽ (%s)
 si:නොදත් මූලාශ්‍ර ගොනුව (%s)

@@ -14049,7 +14049,7 @@ nn:Polygon
 no:Polygon
 pl:Wielokąt
 pt:Polígono
-ro:Polygon(grafică pe computer)
+ro:Poligon(grafică pe computer)
 ru:Многоугольник
 sat:ᱯᱚᱞᱤᱜᱚᱱ
 sk:Polygón
@@ -18249,7 +18249,7 @@ nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\n
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
 pt:O instalador está danificado.\nDescarregue novamente o ficheiro de instalação.\nDesculpe.
-ro:Programul de instalare este deteriorat. Rugăm descărcaţi-l din nou. \n Scuze pentru deranj!
+ro:Programul de instalare este deteriorat. Vă rugăm să îl descărcaţi din nou. \n Scuze pentru deranj!
 ru:Программа установки повреждена. Скачайте её повторно.\nИзвините за неудобства!
 sat:ᱤᱱᱥᱴᱚᱞᱚᱨ ᱫᱚ ᱠᱷᱟᱨᱟᱯ ᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱚᱱᱟ ᱫᱩᱦᱲᱟᱹ ᱰᱟᱣᱩᱱᱞᱚᱰ ᱢᱮ ᱾\nᱮᱴᱠᱮᱴᱚᱬᱮ ᱞᱟᱹᱜᱤᱫ ᱟᱹᱰᱤ ᱤᱠᱟᱹ ᱞᱮ ᱠᱷᱚᱡᱚᱜ ᱠᱟᱱᱟ!
 sk:Inštalačný súbor je poškodený. Prosím stiahnite si ho ešte raz. \nOspravedlňujeme sa za ťažkosti!
@@ -18620,7 +18620,7 @@ nn:Ukjend kildefil (%s)
 no:Ukjent kildefil (%s)
 pl:Nieznany plik źródłowy (%s)
 pt:O ficheiro (%s) é desconhecido
-ro:Fișier sursă necunoscută (%s)
+ro:Fișier dintr-o sursă necunoscută (%s)
 ru:Неизвестный исходный файл (%s)
 sat:ᱵᱟᱝ ᱵᱟᱲᱟᱭ ᱥᱨᱚᱛ ᱨᱮᱫᱽ (%s)
 sk:Neznámy zdrojový súbor (%s)
