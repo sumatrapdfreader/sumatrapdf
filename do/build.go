@@ -582,7 +582,7 @@ func buildRelease() {
 
 func detectVersionsCodeQL() {
 	//ver := getGitLinearVersionMust()
-	ver := "16648" // we don't have git history in codeql checkout
+	ver := 16648 // we don't have git history in codeql checkout
 	preReleaseVerCached = strconv.Itoa(ver)
 	gitSha1Cached = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
