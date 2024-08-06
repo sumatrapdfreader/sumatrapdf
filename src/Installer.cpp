@@ -236,8 +236,11 @@ void RemoveAppShortcuts() {
 }
 
 static void InstallerThread(Flags* cli) {
-    gWnd->failed = true;
     bool ok;
+
+    if (gWnd) {
+        gWnd->failed = true;
+    }
 
     TempStr installedExePath = path::JoinTemp(cli->installDir, kExeName);
     auto allUsers = cli->allUsers;
@@ -279,9 +282,11 @@ static void InstallerThread(Flags* cli) {
 
     CreateAppShortcuts(allUsers, installedExePath);
 
-    // consider installation a success from here on
-    // (still warn, if we've failed to create the uninstaller, though)
-    gWnd->failed = false;
+    if (gWnd) {
+        // consider installation a success from here on
+        // (still warn, if we've failed to create the uninstaller, though)
+        gWnd->failed = false;
+    }
 
     ok = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
     if (!ok) {
@@ -296,7 +301,7 @@ static void InstallerThread(Flags* cli) {
     ProgressStep();
     log("Installer thread finished\n");
 Exit:
-    if (gWnd->hwnd) {
+    if (gWnd && gWnd->hwnd) {
         if (!gCli->silent) {
             Sleep(500); // allow a glimpse of the completed progress bar before hiding it
             PostMessageW(gWnd->hwnd, WM_APP_INSTALLATION_FINISHED, 0, 0);
