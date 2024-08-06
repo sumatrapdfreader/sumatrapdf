@@ -580,8 +580,20 @@ func buildRelease() {
 	copyBuiltManifest(dstDir, prefix)
 }
 
+func detectVersionsCodeQL() {
+	//ver := getGitLinearVersionMust()
+	ver = "16648" // we don't have git history in codeql checkout
+	preReleaseVerCached = strconv.Itoa(ver)
+	gitSha1Cached = getGitSha1Must()
+	sumatraVersion = extractSumatraVersionMust()
+	logf("preReleaseVer: '%s'\n", preReleaseVerCached)
+	logf("gitSha1: '%s'\n", gitSha1Cached)
+	logf("sumatraVersion: '%s'\n", sumatraVersion)
+}
+
 // build for codeql: just static 64-bit release build
 func buildCodeQL() {
+	detectVersionsCodeQL()
 	//cleanPreserveSettings()
 	msbuildPath := detectMsbuildPath()
 	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)

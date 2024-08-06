@@ -330,7 +330,53 @@ func main() {
 		return
 	}
 
+	if flgClangFormat {
+		clangFormatFiles()
+		return
+	}
+
+	if flgCppCheck || flgCppCheckAll {
+		runCppCheck(flgCppCheckAll)
+		return
+	}
+
+	if flgClangTidy || flgClangTidyFix {
+		runClangTidy(flgClangTidyFix)
+		return
+	}
+
+	if flgRegenPremake {
+		regenPremake()
+		return
+	}
+
+	if flgCheckAccessKeys {
+		checkAccessKeys()
+		return
+	}
+
+	if flgGenTranslationsInfoCpp {
+		genTranslationInfoCpp()
+		return
+	}
+
+	if flgBuildLzsa {
+		buildLzsa()
+		return
+	}
+
+	if flgBuildCodeQL {
+		buildCodeQL()
+		return
+	}
+
 	getSecrets()
+
+	if flgTransDownload {
+		downloadTranslations()
+		return
+	}
+
 	detectVersions()
 
 	if false {
@@ -429,51 +475,6 @@ func main() {
 
 	if flgClean {
 		cleanPreserveSettings()
-		return
-	}
-
-	if flgClangFormat {
-		clangFormatFiles()
-		return
-	}
-
-	if flgCppCheck || flgCppCheckAll {
-		runCppCheck(flgCppCheckAll)
-		return
-	}
-
-	if flgClangTidy || flgClangTidyFix {
-		runClangTidy(flgClangTidyFix)
-		return
-	}
-
-	if flgRegenPremake {
-		regenPremake()
-		return
-	}
-
-	if flgCheckAccessKeys {
-		checkAccessKeys()
-		return
-	}
-
-	if flgTransDownload {
-		downloadTranslations()
-		return
-	}
-
-	if flgGenTranslationsInfoCpp {
-		genTranslationInfoCpp()
-		return
-	}
-
-	if flgBuildLzsa {
-		buildLzsa()
-		return
-	}
-
-	if flgBuildCodeQL {
-		buildCodeQL()
 		return
 	}
 
