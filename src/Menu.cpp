@@ -1741,7 +1741,6 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     }
 
     FileState* fs = gFileHistory.FindByPath(path);
-    ReportIf(!fs);
     if (!fs) {
         return;
     }
