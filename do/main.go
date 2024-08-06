@@ -234,6 +234,7 @@ func main() {
 		flgBuildPreRelease bool
 		flgBuildRelease    bool
 		flgBuildSmoke      bool
+		flgBuildCodeQL     bool
 		flgCheckAccessKeys bool
 		flgCIBuild         bool
 		flgCIDailyBuild    bool
@@ -269,6 +270,7 @@ func main() {
 		flag.BoolVar(&flgBuildSmoke, "build-smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
+		flag.BoolVar(&flgBuildCodeQL, "build-codeql", false, "build for codeql")
 		//flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
 		flag.BoolVar(&flgClangFormat, "format", false, "format source files with clang-format")
@@ -467,6 +469,11 @@ func main() {
 
 	if flgBuildLzsa {
 		buildLzsa()
+		return
+	}
+
+	if flgBuildCodeQL {
+		buildCodeQL()
 		return
 	}
 

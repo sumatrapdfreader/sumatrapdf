@@ -580,6 +580,14 @@ func buildRelease() {
 	copyBuiltManifest(dstDir, prefix)
 }
 
+// build for codeql: just static 64-bit release build
+func buildCodeQL() {
+	//cleanPreserveSettings()
+	msbuildPath := detectMsbuildPath()
+	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	revertBuildConfig()
+}
+
 // smoke build is meant to be run locally to check that we can build everything
 // it does full installer build of 64-bit release build
 // We don't build other variants for speed. It takes about 5 mins locally
