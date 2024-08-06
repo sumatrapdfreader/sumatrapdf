@@ -611,6 +611,8 @@ function sumatrapdf_files()
     "premake5.obsolete.lua",
     "premake5.files.lua",
     ".gitignore",
+    ".github/*.yml",
+    ".github/workflows/*.yml",
   })
   files_in_dir("src", {
     "Accelerators.*",

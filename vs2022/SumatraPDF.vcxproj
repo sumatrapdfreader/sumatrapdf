@@ -1374,6 +1374,11 @@
     <ClCompile Include="..\src\wingui\WinGui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.github\codeql-config.yml" />
+    <None Include="..\.github\workflows\build.yml" />
+    <None Include="..\.github\workflows\codeql.yml" />
+    <None Include="..\.github\workflows\daily.yml" />
+    <None Include="..\.github\workflows\daily_manual.yml" />
     <None Include="..\.gitignore" />
     <None Include="..\do\build.go" />
     <None Include="..\do\check_accesskyes.go" />
