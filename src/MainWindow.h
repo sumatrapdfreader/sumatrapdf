@@ -57,7 +57,7 @@ struct TouchState {
 struct StaticLinkInfo {
     Rect rect;
     char* target = nullptr;
-    char* infotip = nullptr;
+    char* tooltip = nullptr;
 
     explicit StaticLinkInfo(Rect rect, const char* target, const char* infotip = nullptr);
     StaticLinkInfo() = default;

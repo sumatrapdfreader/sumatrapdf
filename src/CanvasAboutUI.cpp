@@ -119,7 +119,7 @@ static LRESULT OnSetCursorAbout(MainWindow* win, HWND hwnd) {
     if (!pt.IsEmpty()) {
         StaticLinkInfo* linkInfo;
         if (GetStaticLinkTemp(win->staticLinks, pt.x, pt.y, &linkInfo)) {
-            win->ShowToolTip(linkInfo->infotip, linkInfo->rect);
+            win->ShowToolTip(linkInfo->tooltip, linkInfo->rect);
             SetCursorCached(IDC_HAND);
         } else {
             win->DeleteToolTip();

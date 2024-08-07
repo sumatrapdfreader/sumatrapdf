@@ -74,13 +74,13 @@ Vec<MainWindow*> gWindows;
 StaticLinkInfo::StaticLinkInfo(Rect rect, const char* target, const char* infotip) {
     this->rect = rect;
     this->target = str::Dup(target);
-    this->infotip = str::Dup(infotip);
+    this->tooltip = str::Dup(infotip);
 }
 
 StaticLinkInfo::StaticLinkInfo(const StaticLinkInfo& other) {
     rect = other.rect;
     str::ReplaceWithCopy(&target, other.target);
-    str::ReplaceWithCopy(&infotip, other.infotip);
+    str::ReplaceWithCopy(&tooltip, other.tooltip);
 }
 
 StaticLinkInfo& StaticLinkInfo::operator=(const StaticLinkInfo& other) {
@@ -89,13 +89,13 @@ StaticLinkInfo& StaticLinkInfo::operator=(const StaticLinkInfo& other) {
     }
     rect = other.rect;
     str::ReplaceWithCopy(&target, other.target);
-    str::ReplaceWithCopy(&infotip, other.infotip);
+    str::ReplaceWithCopy(&tooltip, other.tooltip);
     return *this;
 }
 
 StaticLinkInfo::~StaticLinkInfo() {
     str::Free(target);
-    str::Free(infotip);
+    str::Free(tooltip);
 }
 
 MainWindow::MainWindow(HWND hwnd) {

@@ -44,6 +44,6 @@ struct VirtWndText : VirtWnd {
     Size Layout(const Constraints bc) override;
 
     Size MinIntrinsicSize(int width, int height);
-    Size Measure(bool onlyIfEmpty = false);
+    Size GetIdealSize(bool onlyIfEmpty = false);
     void Draw(HDC dc);
 };

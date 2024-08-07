@@ -162,7 +162,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     VirtWndText w(hwnd, txt, fontLeftTxt);
     w.isRtl = IsUIRightToLeft();
     w.withUnderline = true;
-    Size txtSize = w.Measure(true);
+    Size txtSize = w.GetIdealSize(true);
 
     auto col = ThemeWindowLinkColor();
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, col), true);
@@ -440,7 +440,7 @@ static void CreateInfotipForLink(StaticLinkInfo* linkInfo) {
     Tooltip::CreateArgs args;
     args.parent = gHwndAbout;
     gAboutTooltip->Create(args);
-    gAboutTooltip->SetSingle(linkInfo->infotip, linkInfo->rect, false);
+    gAboutTooltip->SetSingle(linkInfo->tooltip, linkInfo->rect, false);
 }
 
 static void DeleteInfotip() {
@@ -700,7 +700,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
     VirtWndText freqRead(hwnd, txt, fontFrequentlyRead);
     freqRead.isRtl = isRtl;
-    Size txtSize = freqRead.Measure(true);
+    Size txtSize = freqRead.GetIdealSize(true);
 
     Rect headerRect(offset.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
@@ -797,7 +797,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     VirtWndText openDoc(hwnd, txt, fontText);
     openDoc.isRtl = isRtl;
     openDoc.withUnderline = true;
-    txtSize = openDoc.Measure(true);
+    txtSize = openDoc.GetIdealSize(true);
     Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         rect.x = rectIcon.x - rect.dx - 3;

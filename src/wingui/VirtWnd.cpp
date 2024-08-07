@@ -55,25 +55,17 @@ VirtWndText::~VirtWndText() {
 }
 
 Size VirtWndText::Layout(const Constraints bc) {
-    Measure();
+    GetIdealSize();
     return bc.Constrain({sz.dx, sz.dy});
 }
 
-Size VirtWndText::Measure(bool onlyIfEmpty) {
-    if (onlyIfEmpty && !sz.IsEmpty()) {
-        return sz;
-    }
-    sz = HwndMeasureText(hwnd, s, font);
-    return sz;
-}
-
 int VirtWndText::MinIntrinsicHeight(int width) {
-    Measure(true);
+    GetIdealSize(true);
     return sz.dy;
 }
 
 int VirtWndText::MinIntrinsicWidth(int height) {
-    Measure(true);
+    GetIdealSize(true);
     return sz.dx;
 }
 
@@ -81,6 +73,14 @@ Size VirtWndText::MinIntrinsicSize(int width, int height) {
     int dx = MinIntrinsicWidth(height);
     int dy = MinIntrinsicHeight(width);
     return {dx, dy};
+}
+
+Size VirtWndText::GetIdealSize(bool onlyIfEmpty) {
+    if (onlyIfEmpty && !sz.IsEmpty()) {
+        return sz;
+    }
+    sz = HwndMeasureText(hwnd, s, font);
+    return sz;
 }
 
 void VirtWndText::Draw(HDC hdc) {
