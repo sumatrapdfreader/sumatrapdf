@@ -6227,7 +6227,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
 static TempStr GetFileSizeAsStrTemp(const char* path) {
     i64 fileSize = file::GetSize(path);
-    return FormatFileSizeNoTransTemp(fileSize);
+    return str::FormatFileSizeTemp(fileSize);
 }
 
 void GetProgramInfo(str::Str& s) {

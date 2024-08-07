@@ -218,6 +218,8 @@ int CmpNatural(const char*, const char*);
 
 TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
+TempStr FormatSizeShortTemp(i64 size, const char* sizeUnits[3]);
+TempStr FormatFileSizeTemp(i64);
 TempStr FormatRomanNumeralTemp(int number);
 
 bool IsEmptyOrWhiteSpace(const char*);

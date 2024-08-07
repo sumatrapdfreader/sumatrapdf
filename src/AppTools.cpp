@@ -643,79 +643,26 @@ const WCHAR* ExractUnrarDll() {
 }
 #endif
 
-constexpr double KB = 1024;
-constexpr double MB = (double)1024 * (double)1024;
-constexpr double GB = (double)1024 * (double)1024 * (double)1024;
-
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
-static TempStr FormatSizeSuccintTemp(i64 size) {
-    const char* unit = nullptr;
-    double s = (double)size;
-
-    if (s > GB) {
-        s = s / GB;
-        unit = _TRA("GB");
-    } else if (s > MB) {
-        s = s / MB;
-        unit = _TRA("MB");
-    } else {
-        s = s / KB;
-        unit = _TRA("KB");
-    }
-
-    char* sizestr = str::FormatFloatWithThousandSepTemp(s);
-    if (!unit) {
-        return sizestr;
-    }
-    return fmt::FormatTemp("%s %s", sizestr, unit);
-}
-
-// Format the file size in a short form that rounds to the largest size unit
-// e.g. "3.48 GB", "12.38 MB", "23 KB"
-// To be used in a context where translations are not yet available
-static TempStr FormatSizeSuccintNoTransTemp(i64 size) {
-    const char* unit = nullptr;
-    double s = (double)size;
-
-    if (s > GB) {
-        s = s / GB;
-        unit = "GB";
-    } else if (s > MB) {
-        s = s / MB;
-        unit = "MB";
-    } else {
-        s = s / KB;
-        unit = "KB";
-    }
-
-    char* sizestr = str::FormatFloatWithThousandSepTemp(s);
-    if (!unit) {
-        return sizestr;
-    }
-    return fmt::FormatTemp("%s %s", sizestr, unit);
+TempStr FormatSizeShortTransTemp(i64 size) {
+    const char* sizeUnits[3] = {
+        _TRA("GB"),
+        _TRA("MB"),
+        _TRA("KB"),
+    };
+    return str::FormatSizeShortTemp(size, sizeUnits);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
-TempStr FormatFileSizeTemp(i64 size) {
+TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
         return fmt::FormatTemp("%d", size);
     }
-    char* n1 = FormatSizeSuccintTemp(size);
+    char* n1 = FormatSizeShortTransTemp(size);
     char* n2 = str::FormatNumWithThousandSepTemp(size);
     return fmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes"));
-}
-
-// format file size in a readable way e.g. 1348258 is shown
-// as "1.29 MB (1,348,258 Bytes)"
-TempStr FormatFileSizeNoTransTemp(i64 size) {
-    if (size <= 0) {
-        return str::FormatTemp("%d", (int)size);
-    }
-    char* n1 = FormatSizeSuccintNoTransTemp(size);
-    char* n2 = str::FormatNumWithThousandSepTemp(size);
-    return fmt::FormatTemp("%s (%s %s)", n1, n2, "Bytes");
 }
 
 // returns true if file exists

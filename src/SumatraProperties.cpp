@@ -547,7 +547,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     }
     TempStr strTemp;
     if (-1 != fileSize) {
-        strTemp = FormatFileSizeTemp(fileSize);
+        strTemp = FormatFileSizeTransTemp(fileSize);
         layoutData->AddProperty(_TRA("File Size:"), strTemp);
     }
 

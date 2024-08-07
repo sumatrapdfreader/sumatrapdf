@@ -1133,7 +1133,7 @@ int RunInstaller() {
     gCliNew.allUsers = gCli->allUsers;
     gCliNew.withFilter = gCli->withFilter;
     gCliNew.withPreview = gCli->withPreview;
-    gCliNew.silent = gCli->silent   ;
+    gCliNew.silent = gCli->silent;
     gCliNew.runInstallNow = gCli->runInstallNow;
     gCliNew.fastInstall = gCli->fastInstall;
     if (gCli->log) {

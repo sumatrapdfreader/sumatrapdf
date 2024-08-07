@@ -296,7 +296,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
 
 struct UpdateProgressData {
     HWND hwndForNotif = nullptr;
-    int nDownloaded = 0;
+    i64 nDownloaded = 0;
 };
 
 struct DownloadUpdateAsyncData {
@@ -319,10 +319,11 @@ static void DownloadUpdateFinish(DownloadUpdateAsyncData* data) {
 }
 
 static void UpdateDownloadProgressNotif(UpdateProgressData* data) {
-    logf("UpdateDownloadProgressNotif: n: %d\n", (int)data->nDownloaded);
+    TempStr size = FormatFileSizeTransTemp(data->nDownloaded);
+    logf("UpdateDownloadProgressNotif: %s\n", size);
     auto wnd = GetNotificationForGroup(data->hwndForNotif, kNotifUpdateCheckInProgress);
     if (wnd) {
-        TempStr msg = str::FormatTemp("Downloading update: %d bytes\n", data->nDownloaded);
+        TempStr msg = str::FormatTemp("Downloading update: %s\n", size);
         NotificationUpdateMessage(wnd, msg, 0, true);
     } else {
         logf("UpdateDownloadProgressNotif: no wnd\n");
