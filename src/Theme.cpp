@@ -19,6 +19,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+
 #include "Settings.h"
 #include "AppSettings.h"
 #include "Commands.h"
@@ -27,6 +28,8 @@ Note: Colors are in format 0xBBGGRR, recommended to use RgbToCOLORREF
 #include "GlobalPrefs.h"
 #include "Translations.h"
 #include "Toolbar.h"
+
+#include "utils/Log.h"
 
 constexpr COLORREF kColBlack = 0x000000;
 constexpr COLORREF kColWhite = 0xFFFFFF;
@@ -381,4 +384,32 @@ bool ThemeColorizeControls() {
         return true;
     }
     return !IsMenuFontSizeDefault();
+}
+
+void dumpThemes() {
+    logf("Themes [\n");
+    for (Theme* theme : gThemes) {
+        logf("    [\n");
+        logf("        Name = '%s'\n", theme->name);
+
+        auto w = theme->window;
+        logf("        WindowColors = [\n");
+        logf("          Background = %s\n", SerializeColorTemp(w.backgroundColor));
+        logf("          Text = %s\n", SerializeColorTemp(w.textColor));
+        logf("          ControlBackground = %s\n", SerializeColorTemp(w.controlBackgroundColor));
+        logf("          Link = %s\n", SerializeColorTemp(w.linkColor));
+        logf("        ]\n");
+
+        auto n = theme->notifications;
+        logf("        NotificationColors = [\n");
+        logf("            Background = %s\n", SerializeColorTemp(n.backgroundColor));
+        logf("            Text = %s\n", SerializeColorTemp(n.textColor));
+        logf("            Highlight = %s\n", SerializeColorTemp(n.highlightColor));
+        logf("            HighlightText = %s\n", SerializeColorTemp(n.highlightTextColor));
+        logf("            Progress = %s\n", SerializeColorTemp(n.progressColor));
+        logf("        ]\n");
+
+        logf("    ]\n");
+    }
+    logf("]\n");
 }
