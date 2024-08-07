@@ -435,12 +435,12 @@ void StrTest() {
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));
     utassert(iswdigit(L'\u0660') && !str::IsDigit(L'\xB2'));
 
-    utassert(str::CmpNatural(L".hg", L"2.pdf") < 0);
-    utassert(str::CmpNatural(L"100.pdf", L"2.pdf") > 0);
-    utassert(str::CmpNatural(L"2.pdf", L"zzz") < 0);
-    utassert(str::CmpNatural(L"abc", L".svn") > 0);
-    utassert(str::CmpNatural(L"ab0200", L"AB333") < 0);
-    utassert(str::CmpNatural(L"a b", L"a  c") < 0);
+    utassert(str::CmpNatural(".hg", "2.pdf") < 0);
+    utassert(str::CmpNatural("100.pdf", "2.pdf") > 0);
+    utassert(str::CmpNatural("2.pdf", "zzz") < 0);
+    utassert(str::CmpNatural("abc", ".svn") > 0);
+    utassert(str::CmpNatural("ab0200", "AB333") < 0);
+    utassert(str::CmpNatural("a b", "a  c") < 0);
 
 #ifndef LOCALE_INVARIANT
 #define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))

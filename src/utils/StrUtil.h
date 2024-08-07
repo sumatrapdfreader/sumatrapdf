@@ -240,7 +240,6 @@ bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* ToLower(const WCHAR*);
 WCHAR* ToLowerInPlace(WCHAR*);
-int CmpNatural(const WCHAR*, const WCHAR*);
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 int BufSet(WCHAR* dst, int dstCchSize, const WCHAR* src);
 int BufSet(WCHAR* dst, int dstCchSize, const char* src);
