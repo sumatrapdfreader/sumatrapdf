@@ -1916,17 +1916,6 @@ bool WStr::IsEmpty() const {
     return len == 0;
 }
 
-void WStr::AppendFmt(const WCHAR* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    WCHAR* res = FmtV(fmt, args);
-    if (res) {
-        Append(res);
-        str::Free(res);
-    }
-    va_end(args);
-}
-
 // returns true if was replaced
 bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith) {
     // fast path: nothing to replace
@@ -2081,43 +2070,6 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
 WCHAR* ToLower(const WCHAR* s) {
     WCHAR* s2 = str::Dup(s);
     return ToLowerInPlace(s2);
-}
-
-WCHAR* FmtV(const WCHAR* fmt, va_list args) {
-    WCHAR message[256];
-    size_t bufCchSize = dimof(message);
-    WCHAR* buf = message;
-    for (;;) {
-        // TODO: _vsnwprintf_s fails for certain inputs (e.g. strings containing U+FFFF)
-        //       but doesn't correctly set errno, either, so there's no way of telling
-        //       the failures apart
-        int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
-        if ((count >= 0) && ((size_t)count < bufCchSize)) {
-            break;
-        }
-        // always grow the buffer exponentially (cf. TODO above)
-        if (buf != message) {
-            free(buf);
-        }
-        bufCchSize = bufCchSize / 2 * 3;
-        buf = AllocArray<WCHAR>(bufCchSize);
-        if (!buf) {
-            break;
-        }
-    }
-    if (buf == message) {
-        buf = str::Dup(message);
-    }
-
-    return buf;
-}
-
-WCHAR* Format(const WCHAR* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    WCHAR* res = FmtV(fmt, args);
-    va_end(args);
-    return res;
 }
 
 size_t TransCharsInPlace(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {

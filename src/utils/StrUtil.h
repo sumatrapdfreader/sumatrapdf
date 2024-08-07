@@ -248,8 +248,6 @@ size_t RemoveCharsInPlace(WCHAR* str, const WCHAR* toRemove);
 const WCHAR* FindChar(const WCHAR* str, WCHAR c);
 WCHAR* FindChar(WCHAR* str, WCHAR c);
 const WCHAR* Find(const WCHAR* str, const WCHAR* find);
-WCHAR* FmtV(const WCHAR* fmt, va_list args);
-WCHAR* Format(const WCHAR* fmt, ...);
 bool IsWs(WCHAR c);
 bool IsDigit(WCHAR c);
 bool IsNonCharacter(WCHAR c);
@@ -391,7 +389,6 @@ struct WStr {
     bool Contains(const WCHAR& el) const;
     int Remove(const WCHAR& el);
     bool IsEmpty() const;
-    void AppendFmt(const WCHAR* fmt, ...);
     void Set(const WCHAR*);
     WCHAR* Get() const;
     WCHAR LastChar() const;

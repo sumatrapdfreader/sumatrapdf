@@ -529,6 +529,11 @@ static void AddPdfFileStructure(DocController* ctrl, PropertiesLayout* layoutDat
     layoutData->AddProperty(_TRA("PDF Optimizations:"), val);
 }
 
+// https://www.compart.com/en/unicode/U+202A
+constexpr const char* leftToRightEmbeding = "\xe2\x80\xaa";
+// https://www.compart.com/en/unicode/U+202c
+constexpr const char* popDirectionalFormatting = "\xe2\x80\xac";
+
 static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool extended) {
     ReportIf(!ctrl);
 
@@ -586,10 +591,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
         if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            TempWStr ws = ToWStrTemp(strTemp);
-            ws = str::Format(L"\u202A%s\u202C", ws);
-            strTemp = ToUtf8Temp(ws);
-            str::Free(ws);
+            strTemp = str::JoinTemp(leftToRightEmbeding, strTemp, popDirectionalFormatting);
         }
         layoutData->AddProperty(_TRA("Page Size:"), strTemp);
     }
