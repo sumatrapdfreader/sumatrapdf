@@ -42,6 +42,7 @@ struct InstallerWnd;
 static InstallerWnd* gWnd = nullptr;
 static lzma::SimpleArchive gArchive{};
 static bool gInstallStarted = false; // a bit of a hack
+static bool gInstallFailed = false;
 
 static PreviousInstallationInfo gPrevInstall;
 Flags gCliNew;
@@ -64,7 +65,6 @@ struct InstallerWnd {
     Button* btnInstall = nullptr;
 
     bool showOptions = false;
-    bool failed = false;
     HANDLE hThread = nullptr;
 };
 
@@ -238,9 +238,7 @@ void RemoveAppShortcuts() {
 static void InstallerThread(Flags* cli) {
     bool ok;
 
-    if (gWnd) {
-        gWnd->failed = true;
-    }
+    gInstallFailed = true;
 
     TempStr installedExePath = path::JoinTemp(cli->installDir, kExeName);
     auto allUsers = cli->allUsers;
@@ -282,11 +280,9 @@ static void InstallerThread(Flags* cli) {
 
     CreateAppShortcuts(allUsers, installedExePath);
 
-    if (gWnd) {
-        // consider installation a success from here on
-        // (still warn, if we've failed to create the uninstaller, though)
-        gWnd->failed = false;
-    }
+    // consider installation a success from here on
+    // (still warn, if we've failed to create the uninstaller, though)
+    gInstallFailed = false;
 
     ok = WriteUninstallerRegistryInfo(key, allUsers, cli->installDir);
     if (!ok) {
@@ -475,7 +471,7 @@ static void OnInstallationFinished(Flags* cli) {
     DeleteWnd(&gWnd->btnInstall);
     DeleteWnd(&gWnd->progressBar);
 
-    if (gWnd->failed) {
+    if (gInstallFailed) {
         gWnd->btnExit = CreateDefaultButton(gWnd->hwnd, _TRA("Close"));
         gWnd->btnExit->onClick = MkFunc0Void(OnButtonExit);
         SetMsg(_TRA("Installation failed!"), COLOR_MSG_FAILED);
@@ -489,7 +485,7 @@ static void OnInstallationFinished(Flags* cli) {
 
     CloseHandle(gWnd->hThread);
 
-    if (cli->fastInstall && !gWnd->failed) {
+    if (cli->fastInstall && !gInstallFailed) {
         StartSumatra();
         ::ExitProcess(0);
     }
@@ -1137,7 +1133,7 @@ int RunInstaller() {
     gCliNew.allUsers = gCli->allUsers;
     gCliNew.withFilter = gCli->withFilter;
     gCliNew.withPreview = gCli->withPreview;
-    gCliNew.silent = gCli->silent;
+    gCliNew.silent = gCli->silent   ;
     gCliNew.runInstallNow = gCli->runInstallNow;
     gCliNew.fastInstall = gCli->fastInstall;
     if (gCli->log) {
@@ -1227,7 +1223,7 @@ int RunInstaller() {
         gInstallStarted = true;
         logfa("gCli->silent, before running InstallerThread()\n");
         InstallerThread(&gCliNew);
-        ret = gWnd->failed ? 1 : 0;
+        ret = gInstallFailed ? 1 : 0;
     } else {
         log("Before CreateInstallerWindow()\n");
         if (!CreateInstallerWindow(&gCliNew)) {
