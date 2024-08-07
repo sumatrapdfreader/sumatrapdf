@@ -36,7 +36,10 @@ constexpr COLORREF kColWhite = 0xFFFFFF;
 // #define kColWhiteish 0xEBEBF9
 // #define kColDarkGray 0x424242
 
-struct MainWindowStyle {
+struct Theme {
+    // Name of the theme
+    const char* name;
+
     // Background color of recently added, about, and properties menus
     COLORREF backgroundColor;
     // Background color of controls, menus, non-client areas, etc.
@@ -45,28 +48,19 @@ struct MainWindowStyle {
     COLORREF textColor;
     // Link color on recently added, about, and properties menus
     COLORREF linkColor;
-};
 
-struct NotificationStyle {
-    // Background color of the notification window
-    COLORREF backgroundColor;
-    // Text color of the notification window
-    COLORREF textColor;
-    // Color of the highlight box that surrounds the text when a notification is highlighted
-    COLORREF highlightColor;
-    // Color of the text when a notification is highlighted
-    COLORREF highlightTextColor;
-    // Background color of the progress bar in the notification window
-    COLORREF progressColor;
-};
-
-struct Theme {
-    // Name of the theme
-    const char* name;
-    // Style of the main window
-    MainWindowStyle window;
     // Style of notifications
-    NotificationStyle notifications;
+    // Background color of the notification window
+    COLORREF notifBackgroundColor;
+    // Text color of the notification window
+    COLORREF notifTextColor;
+    // Color of the highlight box that surrounds the text when a notification is highlighted
+    COLORREF notifHighlightColor;
+    // Color of the text when a notification is highlighted
+    COLORREF notifHighlightTextColor;
+    // Background color of the progress bar in the notification window
+    COLORREF notifProgressColor;
+
     // Whether or not we colorize standard Windows controls and window areas
     bool colorizeControls;
 };
@@ -75,41 +69,40 @@ struct Theme {
 static Theme gThemeLight = {
     // Theme Name
     _TRN("Light"),
-    // Window theme
-    {
-        // Main Background Color
-        // Background color comparison:
-        // Adobe Reader X   0x565656 without any frame border
-        // Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
-        // PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
-        // Google Chrome    0xCCCCCC with a symmetric gradient shadow
-        // Evince           0xD7D1CB with a pronounced frame shadow
-        // SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
 
-        // it's very light gray but not white so that there's contrast between
-        // background and thumbnail, which often have white background because
-        // most PDFs have white background.
-        RgbToCOLORREF(0xF2F2F2),
-        // Control background Color
-        kColWhite,
-        // Main Text Color
-        kColBlack,
-        // Main Link Color
-        RgbToCOLORREF(0x0020A0)
-    },
+    // Window theme
+    // Main Background Color
+    // Background color comparison:
+    // Adobe Reader X   0x565656 without any frame border
+    // Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
+    // PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
+    // Google Chrome    0xCCCCCC with a symmetric gradient shadow
+    // Evince           0xD7D1CB with a pronounced frame shadow
+    // SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
+
+    // it's very light gray but not white so that there's contrast between
+    // background and thumbnail, which often have white background because
+    // most PDFs have white background.
+    RgbToCOLORREF(0xF2F2F2),
+    // Control background Color
+    kColWhite,
+    // Main Text Color
+    kColBlack,
+    // Main Link Color
+    RgbToCOLORREF(0x0020A0),
+
     // Notifications
-    {
-        // Background color
-        kColWhite,
-        // Text color
-        gThemeLight.window.textColor,
-        // Highlight color
-        RgbToCOLORREF(0xFFEE70),
-        // Highlight text color
-        RgbToCOLORREF(0x8d0801),
-        // Progress bar color
-        gThemeLight.window.linkColor
-    },
+    // Background color
+    kColWhite,
+    // Text color
+    gThemeLight.textColor,
+    // Highlight color
+    RgbToCOLORREF(0xFFEE70),
+    // Highlight text color
+    RgbToCOLORREF(0x8d0801),
+    // Progress bar color
+    gThemeLight.linkColor,
+
     // Colorize standard controls
     false
 };
@@ -118,31 +111,29 @@ static Theme gThemeDark = {
     // Theme Name
     _TRN("Dark"),
     // Window theme
-    {
-        // Main Background Color
-        RgbToCOLORREF(0x263238),
-         // Control background Color
-        RgbToCOLORREF(0x263238),
-        // Main Text Color
-        //kColWhite,
-        AdjustLightness2(RgbToCOLORREF(0x263238), 150),
-        // Main Link Color
-        //RgbToCOLORREF(0x80CBAD)
-        AdjustLightness2(RgbToCOLORREF(0x263238), 110),
-    },
+    // Main Background Color
+    RgbToCOLORREF(0x263238),
+    // Control background Color
+    RgbToCOLORREF(0x263238),
+    // Main Text Color
+    //kColWhite,
+    AdjustLightness2(RgbToCOLORREF(0x263238), 150),
+    // Main Link Color
+    //RgbToCOLORREF(0x80CBAD)
+    AdjustLightness2(RgbToCOLORREF(0x263238), 110),
+
     // Notifications
-    {
-        // Background color
-        AdjustLightness2(gThemeDark.window.backgroundColor, 10),
-        // Text color
-        gThemeDark.window.textColor,
-        // Highlight color
-        /*AdjustLightness2*/(RgbToCOLORREF(0x33434B), 10),
-        // Highlight text color
-        gThemeDark.window.textColor,
-        // Progress bar color
-        gThemeDark.window.linkColor
-    },
+    // Background color
+    AdjustLightness2(gThemeDark.backgroundColor, 10),
+    // Text color
+    gThemeDark.textColor,
+    // Highlight color
+    /*AdjustLightness2*/(RgbToCOLORREF(0x33434B), 10),
+    // Highlight text color
+    gThemeDark.textColor,
+    // Progress bar color
+    gThemeDark.linkColor,
+
     // Colorize standard controls
     true
 };
@@ -151,30 +142,28 @@ static Theme gThemeDarker = {
     // Theme Name
     _TRN("Darker"),
     // Window theme
-    {
-        // Main Background Color
-        RgbToCOLORREF(0x2D2D30),
-         // Control background Color
-        RgbToCOLORREF(0x2D2D30),
-        // Main Text Color
-        AdjustLightness2(RgbToCOLORREF(0x2D2D30), 150),
-        //kColWhite,
-        // Main Link Color
-        AdjustLightness2(RgbToCOLORREF(0x2D2D30), 110),
-    },
+    // Main Background Color
+    RgbToCOLORREF(0x2D2D30),
+    // Control background Color
+    RgbToCOLORREF(0x2D2D30),
+    // Main Text Color
+    AdjustLightness2(RgbToCOLORREF(0x2D2D30), 150),
+    //kColWhite,
+    // Main Link Color
+    AdjustLightness2(RgbToCOLORREF(0x2D2D30), 110),
+
     // Notifications
-    {
-        // Background color
-        AdjustLightness2(gThemeDarker.window.backgroundColor, 10),
-        // Text color
-        gThemeDarker.window.textColor,
-        // Highlight color
-        AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
-        // Highlight text color
-        gThemeDarker.window.textColor,
-        // Progress bar color
-        gThemeDarker.window.linkColor
-    },
+    // Background color
+    AdjustLightness2(gThemeDarker.backgroundColor, 10),
+    // Text color
+    gThemeDarker.textColor,
+    // Highlight color
+    AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
+    // Highlight text color
+    gThemeDarker.textColor,
+    // Progress bar color
+    gThemeDarker.linkColor,
+
     // Colorize standard controls
     true
 };
@@ -268,10 +257,10 @@ void SetCurrentThemeFromSettings() {
     bool isDefault = IsDefaultMainWinColor(bgParsed);
     if (isDefault) {
         gThemeLight.colorizeControls = false;
-        gThemeLight.window.controlBackgroundColor = kColWhite;
+        gThemeLight.controlBackgroundColor = kColWhite;
     } else {
         gThemeLight.colorizeControls = true;
-        gThemeLight.window.controlBackgroundColor = bgParsed->col;
+        gThemeLight.controlBackgroundColor = bgParsed->col;
     }
 }
 
@@ -313,19 +302,19 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
     // if we're inverting in non-default themes, the colors
     // should match the colors of the window
     text = ThemeWindowTextColor();
-    bg = gCurrentTheme->window.backgroundColor;
+    bg = gCurrentTheme->backgroundColor;
     bg = AdjustLightOrDark(bg, 8);
     return text;
 }
 
 COLORREF ThemeControlBackgroundColor() {
     // note: we can change it in ThemeUpdateAfterLoadSettings()
-    return gCurrentTheme->window.controlBackgroundColor;
+    return gCurrentTheme->controlBackgroundColor;
 }
 
 // TODO: migrate from prefs to theme.
 COLORREF ThemeMainWindowBackgroundColor() {
-    COLORREF bgColor = gCurrentTheme->window.backgroundColor;
+    COLORREF bgColor = gCurrentTheme->backgroundColor;
     if (currentThemeIndex == 0) {
         // Special behavior for light theme.
         ParsedColor* bgParsed = GetPrefsColor(gGlobalPrefs->mainWindowBackground);
@@ -337,46 +326,46 @@ COLORREF ThemeMainWindowBackgroundColor() {
 }
 
 COLORREF ThemeWindowBackgroundColor() {
-    return gCurrentTheme->window.backgroundColor;
+    return gCurrentTheme->backgroundColor;
 }
 
 COLORREF ThemeWindowTextColor() {
-    return gCurrentTheme->window.textColor;
+    return gCurrentTheme->textColor;
 }
 
 COLORREF ThemeWindowTextDisabledColor() {
-    auto col = gCurrentTheme->window.textColor;
+    auto col = gCurrentTheme->textColor;
     // TODO: probably add textDisabledColor
     auto col2 = AdjustLightOrDark(col, 0x7f);
     return col2;
 }
 
 COLORREF ThemeWindowControlBackgroundColor() {
-    return gCurrentTheme->window.controlBackgroundColor;
+    return gCurrentTheme->controlBackgroundColor;
 }
 
 COLORREF ThemeWindowLinkColor() {
-    return gCurrentTheme->window.linkColor;
+    return gCurrentTheme->linkColor;
 }
 
 COLORREF ThemeNotificationsBackgroundColor() {
-    return gCurrentTheme->notifications.backgroundColor;
+    return gCurrentTheme->notifBackgroundColor;
 }
 
 COLORREF ThemeNotificationsTextColor() {
-    return gCurrentTheme->notifications.textColor;
+    return gCurrentTheme->notifTextColor;
 }
 
 COLORREF ThemeNotificationsHighlightColor() {
-    return gCurrentTheme->notifications.highlightColor;
+    return gCurrentTheme->notifHighlightColor;
 }
 
 COLORREF ThemeNotificationsHighlightTextColor() {
-    return gCurrentTheme->notifications.highlightTextColor;
+    return gCurrentTheme->notifHighlightTextColor;
 }
 
 COLORREF ThemeNotificationsProgressColor() {
-    return gCurrentTheme->notifications.progressColor;
+    return gCurrentTheme->notifProgressColor;
 }
 
 bool ThemeColorizeControls() {
@@ -392,7 +381,7 @@ void dumpThemes() {
         logf("    [\n");
         logf("        Name = '%s'\n", theme->name);
 
-        auto w = theme->window;
+        auto w = *theme;
         logf("        WindowColors = [\n");
         logf("          Background = %s\n", SerializeColorTemp(w.backgroundColor));
         logf("          Text = %s\n", SerializeColorTemp(w.textColor));
@@ -400,13 +389,13 @@ void dumpThemes() {
         logf("          Link = %s\n", SerializeColorTemp(w.linkColor));
         logf("        ]\n");
 
-        auto n = theme->notifications;
+        auto n = *theme;
         logf("        NotificationColors = [\n");
-        logf("            Background = %s\n", SerializeColorTemp(n.backgroundColor));
-        logf("            Text = %s\n", SerializeColorTemp(n.textColor));
-        logf("            Highlight = %s\n", SerializeColorTemp(n.highlightColor));
-        logf("            HighlightText = %s\n", SerializeColorTemp(n.highlightTextColor));
-        logf("            Progress = %s\n", SerializeColorTemp(n.progressColor));
+        logf("            Background = %s\n", SerializeColorTemp(n.notifBackgroundColor));
+        logf("            Text = %s\n", SerializeColorTemp(n.notifTextColor));
+        logf("            Highlight = %s\n", SerializeColorTemp(n.notifHighlightColor));
+        logf("            HighlightText = %s\n", SerializeColorTemp(n.notifHighlightTextColor));
+        logf("            Progress = %s\n", SerializeColorTemp(n.notifProgressColor));
         logf("        ]\n");
 
         logf("    ]\n");
