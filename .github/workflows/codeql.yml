@@ -64,13 +64,13 @@ jobs:
         patterns: |
           -**/*
           src/**/*
-        input: sarif-results/c-cpp.sarif
-        output: sarif-results/c-cpp.sarif
+        input: sarif-results/cpp.sarif
+        output: sarif-results/cpp.sarif
 
     - name: Upload SARIF
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: sarif-results/c-cpp.sarif
+        sarif_file: sarif-results/cpp.sarif
 
     - name: Upload loc as a Build Artifact
       uses: actions/upload-artifact@v4
