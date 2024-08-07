@@ -594,7 +594,7 @@ struct AtomicInt {
 using func0Ptr = void (*)(void*);
 using funcVoidPtr = void (*)();
 
-#define kVoidFuncNoArg (void*)-1
+#define kFuncNoArg (void*)-1
 
 // the simplest possible function that ties a function and a single argument to it
 // we get type safety and convenience with mkFunc()
@@ -628,7 +628,7 @@ struct Func0 {
         if (!fn) {
             return;
         }
-        if (userData == kVoidFuncNoArg) {
+        if (userData == kFuncNoArg) {
             auto func = (funcVoidPtr)fn;
             func();
             return;
@@ -678,7 +678,7 @@ struct Func1 {
         if (!fn) {
             return;
         }
-        if (userData == kVoidFuncNoArg) {
+        if (userData == kFuncNoArg) {
             using fptr = void (*)(T);
             auto func = (fptr)fn;
             func(arg);
@@ -702,7 +702,7 @@ Func1<T2> MkFunc1Void(void (*fn)(T2)) {
     auto res = Func1<T2>{};
     using fptr = void (*)(void*, T2);
     res.fn = (fptr)fn;
-    res.userData = kVoidFuncNoArg;
+    res.userData = kFuncNoArg;
     return res;
 }
 
