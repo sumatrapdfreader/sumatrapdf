@@ -86,7 +86,7 @@ static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
         // convert from utf16 big endian to utf16
         s += 2;
         int n = str::Leni((WCHAR*)s);
-        char *tmp = (char*)s;
+        char* tmp = (char*)s;
         for (int i = 0; i < n; i++) {
             int idx = i * 2;
             std::swap(tmp[idx], tmp[idx + 1]);

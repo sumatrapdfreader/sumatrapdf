@@ -382,15 +382,15 @@ void StrTest() {
     }
 
     {
-        // the test string should only contain ASCII characters,
-        // as all others might not be available in all code pages
-        #define TEST_STRING "aBc"
+// the test string should only contain ASCII characters,
+// as all others might not be available in all code pages
+#define TEST_STRING "aBc"
         AutoFree strA = strconv::WStrToAnsi(TEXT(TEST_STRING));
         utassert(str::Eq(strA.Get(), TEST_STRING));
         auto res = strconv::AnsiToWStr(strA.Get());
         utassert(str::Eq(res, TEXT(TEST_STRING)));
         str::Free(res);
-        #undef TEST_STRING
+#undef TEST_STRING
     }
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));

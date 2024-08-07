@@ -5,6 +5,7 @@ struct NotificationWnd;
 
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
+extern Kind kNotifPageInfo;
 
 using NotificationWndRemoved = Func1<NotificationWnd*>;
 

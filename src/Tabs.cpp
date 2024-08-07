@@ -24,6 +24,7 @@
 #include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "SumatraProperties.h"
+#include "Notifications.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "resource.h"
@@ -204,6 +205,8 @@ void TabsSelect(MainWindow* win, int tabIndex) {
         return;
     }
 
+    bool isShowingPageInfo = (GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo) != nullptr);
+
     // same work as in onSelectionChanging and onSelectionChanged
     SaveCurrentWindowTab(win);
     int prevIdx = tabsCtrl->SetSelected(tabIndex);
@@ -212,6 +215,9 @@ void TabsSelect(MainWindow* win, int tabIndex) {
     }
     WindowTab* tab = tabs[tabIndex];
     LoadModelIntoTab(tab);
+    if (isShowingPageInfo) {
+        PostMessageW(win->hwndFrame, WM_COMMAND, CmdTogglePageInfo, 0);
+    }
 }
 
 // clang-format off
@@ -398,9 +404,13 @@ static void MainWindowTabSelectionChanging(MainWindow* win, TabsCtrl::SelectionC
 }
 
 static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionChangedEvent* ev) {
+    bool isShowingPageInfo = (GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo) != nullptr);
     int currentIdx = win->tabsCtrl->GetSelected();
     WindowTab* tab = win->Tabs()[currentIdx];
     LoadModelIntoTab(tab);
+    if (isShowingPageInfo) {
+        PostMessageW(win->hwndFrame, WM_COMMAND, CmdTogglePageInfo, 0);
+    }
 }
 
 static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev) {

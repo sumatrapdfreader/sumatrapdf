@@ -29,6 +29,7 @@ using Gdiplus::SolidBrush;
 
 Kind kNotifCursorPos = "cursorPosHelper";
 Kind kNotifActionResponse = "responseToAction";
+Kind kNotifPageInfo = "pageInfoHelper";
 
 constexpr int kPadding = 6;
 constexpr int kTopLeftMargin = 8;

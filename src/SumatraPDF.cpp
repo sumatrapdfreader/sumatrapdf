@@ -107,7 +107,6 @@ bool gShowFrameRate = false;
 const char* gPluginURL = nullptr; // owned by Flags in WinMain
 
 static Kind kNotifPersistentWarning = "persistentWarning";
-static Kind kNotifPageInfo = "pageInfoHelper";
 static Kind kNotifZoom = "zoom";
 
 HBITMAP gBitmapReloadingCue;
