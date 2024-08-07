@@ -300,5 +300,4 @@ void SumatraPDF_UnitTests() {
     ParseCommandLineTest();
     versioncheck_test();
     hexstrTest();
-    logf("finished tests\n");
 }

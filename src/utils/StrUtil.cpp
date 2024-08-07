@@ -927,9 +927,9 @@ static const char* ParseLimitedNumber(const char* str, const char* format, const
      %d - parses a signed int
      %x - parses an unsigned hex-int
      %f - parses a float
-     %c - parses a single WCHAR
-     %s - parses a string (pass in a WCHAR**, free after use - also on failure!)
-     %S - parses a string into a AutoFreeW
+     %c - parses a single char
+     %s - parses a string (pass in a char**, free after use - also on failure!)
+     %S - parses a string into a AutoFree
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %$ - causes the parsing to fail if it's encountered when not at the end of the string
      %  - skips a single whitespace character

@@ -255,11 +255,12 @@ void StrTest() {
     utassert(str::Eq(str, buf));
     str::Free(str);
     {
-        AutoFreeWStr large(AllocArray<WCHAR>(2000));
+        char* str2;
+        AutoFreeStr large(AllocArray<char>(2000));
         memset(large, 0x11, 1998);
-        str = str::Format(L"%s", large.Get());
-        utassert(str::Eq(str, large));
-        str::Free(str);
+        str2 = str::Format("%s", large.Get());
+        utassert(str::Eq(str2, large));
+        str::Free(str2);
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly
@@ -306,59 +307,60 @@ void StrTest() {
     utassert(0 == count);
     utassert(str::Eq(buf, L"one two three"));
 
-    str = L"[Open(\"filename.pdf\",0,1,0)]";
     {
-        uint u1 = 0;
-        WCHAR* str1 = nullptr;
-        const WCHAR* end = str::Parse(str, L"[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
-        utassert(end && !*end);
-        utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
-        free(str1);
+        const char* str2 = "[Open(\"filename.pdf\",0,1,0)]";
+        {
+            uint u1 = 0;
+            char* str1 = nullptr;
+            const char* end = str::Parse(str2, "[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
+            utassert(end && !*end);
+            utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
+            free(str1);
+        }
+
+        {
+            uint u1 = 0;
+            AutoFreeStr str1;
+            const char* end = str::Parse(str2, "[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
+            utassert(end && !*end);
+            utassert(u1 == 1 && str::Eq(str1, "filename.pdf"));
+
+            utassert(str::Parse("0xABCD", "%x", &u1));
+            utassert(u1 == 0xABCD);
+            utassert(str::Parse("ABCD", "%2x%S", &u1, &str1));
+            utassert(u1 == 0xAB && str::Eq(str1, "CD"));
+        }
     }
-
-    {
-        uint u1 = 0;
-        AutoFreeWStr str1;
-        const WCHAR* end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
-        utassert(end && !*end);
-        utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
-
-        utassert(str::Parse(L"0xABCD", L"%x", &u1));
-        utassert(u1 == 0xABCD);
-        utassert(str::Parse(L"ABCD", L"%2x%S", &u1, &str1));
-        utassert(u1 == 0xAB && str::Eq(str1, L"CD"));
-    }
-
     {
         int i1, i2;
-        const WCHAR* end = str::Parse(L"1, 2+3", L"%d,%d", &i1, &i2);
-        utassert(end && str::Eq(end, L"+3"));
+        const char* end = str::Parse("1, 2+3", "%d,%d", &i1, &i2);
+        utassert(end && str::Eq(end, "+3"));
         utassert(i1 == 1 && i2 == 2);
-        end = str::Parse(end, L"+3");
+        end = str::Parse(end, "+3");
         utassert(end && !*end);
 
-        utassert(str::Parse(L" -2", L"%d", &i1));
+        utassert(str::Parse(" -2", "%d", &i1));
         utassert(i1 == -2);
-        utassert(str::Parse(L" 2", L" %u", &i1));
+        utassert(str::Parse(" 2", " %u", &i1));
         utassert(i1 == 2);
-        utassert(str::Parse(L"123-456", L"%3d%3d6", &i1, &i2));
+        utassert(str::Parse("123-456", "%3d%3d6", &i1, &i2));
         utassert(i1 == 123 && i2 == -45);
-        utassert(!str::Parse(L"123", L"%4d", &i1));
-        utassert(str::Parse(L"654", L"%3d", &i1));
+        utassert(!str::Parse("123", "%4d", &i1));
+        utassert(str::Parse("654", "%3d", &i1));
         utassert(i1 == 654);
     }
 
-    utassert(str::Parse(L"abc", L"abc%$"));
-    utassert(str::Parse(L"abc", L"a%?bc%?d%$"));
-    utassert(!str::Parse(L"abc", L"ab%$"));
-    utassert(str::Parse(L"a \r\n\t b", L"a%_b"));
-    utassert(str::Parse(L"ab", L"a%_b"));
-    utassert(!str::Parse(L"a,b", L"a%_b"));
-    utassert(str::Parse(L"a\tb", L"a% b"));
-    utassert(!str::Parse(L"a\r\nb", L"a% b"));
-    utassert(str::Parse(L"a\r\nb", L"a% %_b"));
-    utassert(!str::Parse(L"ab", L"a% b"));
-    utassert(!str::Parse(L"%+", L"+") && !str::Parse(L"%+", L"%+"));
+    utassert(str::Parse("abc", "abc%$"));
+    utassert(str::Parse("abc", "a%?bc%?d%$"));
+    utassert(!str::Parse("abc", "ab%$"));
+    utassert(str::Parse("a \r\n\t b", "a%_b"));
+    utassert(str::Parse("ab", "a%_b"));
+    utassert(!str::Parse("a,b", "a%_b"));
+    utassert(str::Parse("a\tb", "a% b"));
+    utassert(!str::Parse("a\r\nb", "a% b"));
+    utassert(str::Parse("a\r\nb", "a% %_b"));
+    utassert(!str::Parse("ab", "a% b"));
+    utassert(!str::Parse("%+", "+") && !str::Parse("%+", "%+"));
 
     utassert(str::Parse("abcd", 3, "abc%$"));
     utassert(str::Parse("abc", 3, "a%?bc%?d%$"));
@@ -369,7 +371,7 @@ void StrTest() {
         utassert(str::Parse(str1, 4, "str") == str1 + 3);
 
         float f1, f2;
-        const WCHAR* end = str::Parse(L"%1.23y -2e-3z", L"%%%fy%fz%$", &f1, &f2);
+        const char* end = str::Parse("%1.23y -2e-3z", "%%%fy%fz%$", &f1, &f2);
         utassert(end && !*end);
         utassert(f1 == 1.23f && f2 == -2e-3f);
         f1 = 0;
@@ -380,13 +382,13 @@ void StrTest() {
     }
 
     {
-        WCHAR* str1 = nullptr;
-        WCHAR c1;
-        utassert(!str::Parse(L"no exclamation mark?", L"%s!", &str1));
+        char* str1 = nullptr;
+        char c1;
+        utassert(!str::Parse("no exclamation mark?", "%s!", &str1));
         utassert(!str1);
-        utassert(str::Parse(L"xyz", L"x%cz", &c1));
+        utassert(str::Parse("xyz", "x%cz", &c1));
         utassert(c1 == 'y');
-        utassert(!str::Parse(L"leaks memory!?", L"%s!%$", &str1));
+        utassert(!str::Parse("leaks memory!?", "%s!%$", &str1));
         free(str1);
     }
 
@@ -398,11 +400,11 @@ void StrTest() {
         utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
-        AutoFreeWStr str1;
+        AutoFreeStr str1;
         int i, j;
         float f;
-        utassert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
-        utassert(str::Eq(str1, L"wide string") && i == -30 && j == 20 && f == 1.5f);
+        utassert(str::Parse("wide string, -30-20 1.5%", "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
+        utassert(str::Eq(str1, "wide string") && i == -30 && j == 20 && f == 1.5f);
     }
 
     {
