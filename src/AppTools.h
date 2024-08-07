@@ -47,8 +47,6 @@ TempStr FormatFileSizeNoTransTemp(i64);
 
 bool LaunchFileIfExists(const char* path);
 
-bool IsValidProgramVersion(const char* txt);
-int CompareVersion(const char* txt1, const char* txt2);
 bool AdjustVariableDriveLetter(char* path);
 
 bool IsUntrustedFile(const char* filePath, const char* fileUrl = nullptr);

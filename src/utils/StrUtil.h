@@ -412,3 +412,5 @@ bool Replace(WStr& s, const WCHAR* toReplace, const WCHAR* replaceWith);
 } // namespace str
 
 int ParseInt(const char* bytes);
+bool IsValidProgramVersion(const char* ver);
+int CompareProgramVersion(const char* ver1, const char* ver2);

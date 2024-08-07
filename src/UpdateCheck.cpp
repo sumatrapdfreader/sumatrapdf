@@ -34,22 +34,19 @@
 
 static const char* kNotifUpdateCheckInProgress = "notifUpdateCheckInProgress";
 
-// for testing: if defined will ignore version checks etc. and act like there's an update
-// but only for user-initiated check
-// #define FORCE_AUTO_UPDATE
-
 // certificate on www.sumatrapdfreader.org is not supported by win7 and win8.1
 // (doesn't have the ciphers they understand)
 // so we first try sumatra-website.onrender.com which should work
 
-// https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt
+// https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt
 // clang-format off
-#if defined(PRE_RELEASE_VER) || defined(FORCE_AUTO_UPDATE)
+#if defined(PRE_RELEASE_VER) || defined(DEBUG)
 constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
-constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/updatecheck-pre-release.txt";
+constexpr const char* kUpdateInfoURL2 = "https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt";
 #else
 constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/update-check-rel.txt";
-constexpr const char* kUpdateInfoURL2 = "https://sumatra-website.onrender.com/update-check-rel.txt";
+// Note: I don't have backup for this
+constexpr const char* kUpdateInfoURL2 = "https://www.sumatrapdfreader.org/update-check-rel.txt";
 #endif
 
 #ifndef kWebisteDownloadPageURL
@@ -370,7 +367,13 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheck
     auto latestVer = updateInfo->latestVer;
     const char* myVer = UPDATE_CHECK_VERA;
     // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
-    bool hasUpdate = CompareVersion(latestVer, myVer) > 0;
+    bool hasUpdate = CompareProgramVersion(latestVer, myVer) > 0;
+    if (gIsDebugBuild) {
+        // for easier testing, in debug build update check is never triggered
+        // by automatic update check and always triggers by user-initiated
+        // user can cancel the update
+        hasUpdate = updateCheckType == UpdateCheck::UserInitiated;
+    }
     if (hasUpdate && updateCheckType == UpdateCheck::Automatic) {
         // if user wanted to skip this version, we skip it in automated check
         if (str::EqI(gGlobalPrefs->versionToSkip, latestVer)) {

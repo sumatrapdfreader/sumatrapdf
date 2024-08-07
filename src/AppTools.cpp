@@ -730,57 +730,6 @@ bool LaunchFileIfExists(const char* path) {
     return true;
 }
 
-// the only valid chars are 0-9, . and newlines.
-// a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
-// Return false if it contains anything else.
-bool IsValidProgramVersion(const char* txt) {
-    if (!str::IsDigit(*txt)) {
-        return false;
-    }
-
-    for (; *txt; txt++) {
-        if (str::IsDigit(*txt)) {
-            continue;
-        }
-        if (*txt == '.' && str::IsDigit(*(txt + 1))) {
-            continue;
-        }
-        if (*txt == '\r' && *(txt + 1) == '\n') {
-            continue;
-        }
-        if (*txt == '\n' && !*(txt + 1)) {
-            continue;
-        }
-        return false;
-    }
-
-    return true;
-}
-
-static unsigned int ExtractNextNumber(const char** txt) {
-    unsigned int val = 0;
-    const char* next = str::Parse(*txt, "%u%?.", &val);
-    *txt = next ? next : *txt + str::Leni(*txt);
-    return val;
-}
-
-// compare two version string. Return 0 if they are the same,
-// > 0 if the first is greater than the second and < 0 otherwise.
-// e.g.
-//   0.9.3.900 is greater than 0.9.3
-//   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
-//   1.2.0 is the same as 1.2
-int CompareVersion(const char* txt1, const char* txt2) {
-    while (*txt1 || *txt2) {
-        unsigned int v1 = ExtractNextNumber(&txt1);
-        unsigned int v2 = ExtractNextNumber(&txt2);
-        if (v1 != v2) {
-            return v1 - v2;
-        }
-    }
-    return 0;
-}
-
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
 // returns true if the path has been changed

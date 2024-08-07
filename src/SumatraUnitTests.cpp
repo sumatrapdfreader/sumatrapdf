@@ -157,7 +157,6 @@ static void BenchRangeTest() {
 
 // TODO: disabled because they bring too many dependencies
 static void versioncheck_test() {
-#if 0
     utassert(IsValidProgramVersion("1"));
     utassert(IsValidProgramVersion("1.1"));
     utassert(IsValidProgramVersion("1.1.1\r\n"));
@@ -167,12 +166,11 @@ static void versioncheck_test() {
     utassert(!IsValidProgramVersion("1..1"));
     utassert(!IsValidProgramVersion("1.1\r\n.1"));
 
-    utassert(CompareVersion("0.9.3.900", "0.9.3") > 0);
-    utassert(CompareVersion("1.09.300", "1.09.3") > 0);
-    utassert(CompareVersion("1.9.1", "1.09.3") < 0);
-    utassert(CompareVersion("1.2.0", "1.2") == 0);
-    utassert(CompareVersion("1.3.0", "2662") < 0);
-#endif
+    utassert(CompareProgramVersion("0.9.3.900", "0.9.3") > 0);
+    utassert(CompareProgramVersion("1.09.300", "1.09.3") > 0);
+    utassert(CompareProgramVersion("1.9.1", "1.09.3") < 0);
+    utassert(CompareProgramVersion("1.2.0", "1.2") == 0);
+    utassert(CompareProgramVersion("1.3.0", "2662") < 0);
 }
 
 static void hexstrTest() {
