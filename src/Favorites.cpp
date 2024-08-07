@@ -56,7 +56,7 @@ FavTreeItem::~FavTreeItem() {
     DeleteVecMembers(children);
 }
 
-struct FavTreeModel : public TreeModel {
+struct FavTreeModel : TreeModel {
     ~FavTreeModel() override;
 
     TreeItem Root() override;

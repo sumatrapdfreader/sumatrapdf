@@ -680,8 +680,8 @@ function sumatrapdf_files()
     "TranslationLangs.cpp",
     "UpdateCheck.*",
     "Version.h",
+    "VirtWnd.*",
     "Uninstaller.cpp",
-    "Widget.*",
     "WindowTab.*",
 
     "ext/versions.txt",

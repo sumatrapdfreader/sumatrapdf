@@ -222,7 +222,7 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     }
 }
 
-struct FindThreadData : public ProgressUpdateUI {
+struct FindThreadData : ProgressUpdateUI {
     MainWindow* win = nullptr;
     TextSearchDirection direction{TextSearchDirection::Forward};
     bool wasModified = false;

@@ -64,7 +64,7 @@ struct WmEvent {
     bool didHandle = true; // common case so set as default
 };
 
-struct Wnd : public ILayout {
+struct Wnd : ILayout {
     struct CloseEvent {
         WmEvent* e = nullptr;
     };
@@ -470,7 +470,7 @@ enum class SplitterType {
 
 struct Splitter;
 
-struct Splitter : public Wnd {
+struct Splitter : Wnd {
     // called when user drags the splitter ('finishedDragging' is false) and when drag is finished ('finishedDragging'
     // is true). the owner can constrain splitter by using current cursor position and setting resizeAllowed to false if
     // it's not allowed to go there

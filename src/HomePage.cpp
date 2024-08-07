@@ -10,6 +10,7 @@
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/VirtWnd.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -28,7 +29,6 @@
 #include "Translations.h"
 #include "Version.h"
 #include "Theme.h"
-#include "Widget.h"
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2
@@ -159,7 +159,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
 static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     HFONT fontLeftTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
 
-    HwndWidgetText w(txt, hwnd, fontLeftTxt);
+    VirtWndText w(hwnd, txt, fontLeftTxt);
     w.isRtl = IsUIRightToLeft();
     w.withUnderline = true;
     Size txtSize = w.Measure(true);
@@ -698,7 +698,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
 
     const char* txt = _TRA("Frequently Read");
     HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
-    HwndWidgetText freqRead(txt, hwnd, fontFrequentlyRead);
+    VirtWndText freqRead(hwnd, txt, fontFrequentlyRead);
     freqRead.isRtl = isRtl;
     Size txtSize = freqRead.Measure(true);
 
@@ -794,7 +794,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
 
     txt = _TRA("Open a document...");
-    HwndWidgetText openDoc(txt, hwnd, fontText);
+    VirtWndText openDoc(hwnd, txt, fontText);
     openDoc.isRtl = isRtl;
     openDoc.withUnderline = true;
     txtSize = openDoc.Measure(true);

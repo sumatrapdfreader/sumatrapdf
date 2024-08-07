@@ -22,18 +22,6 @@ VirtWnd::VirtWnd() {
     kind = kindVirtWnd;
 }
 
-Kind VirtWnd::GetKind() {
-    return kind;
-}
-
-void VirtWnd::SetVisibility(Visibility v) {
-    visibility = v;
-}
-
-Visibility VirtWnd::GetVisibility() {
-    return visibility;
-}
-
 int VirtWnd::MinIntrinsicHeight(int) {
     return 0;
 }
@@ -46,9 +34,63 @@ Size VirtWnd::Layout(Constraints) {
     return {};
 }
 
-void VirtWnd::SetBounds(Rect b) {
-    bounds = b;
+Size VirtWnd::GetIdealSize() {
+    return {};
 }
 
 void VirtWnd::Paint(HDC) {
+}
+
+Kind kindVirWndText = "virtWndText";
+
+VirtWndText::VirtWndText(HWND hwnd, const char* s, HFONT font) {
+    kind = kindVirWndText;
+    this->s = str::Dup(s);
+    this->hwnd = hwnd;
+    this->font = font;
+}
+
+VirtWndText::~VirtWndText() {
+    str::Free(s);
+}
+
+Size VirtWndText::Layout(const Constraints bc) {
+    Measure();
+    return bc.Constrain({sz.dx, sz.dy});
+}
+
+Size VirtWndText::Measure(bool onlyIfEmpty) {
+    if (onlyIfEmpty && !sz.IsEmpty()) {
+        return sz;
+    }
+    sz = HwndMeasureText(hwnd, s, font);
+    return sz;
+}
+
+int VirtWndText::MinIntrinsicHeight(int width) {
+    Measure(true);
+    return sz.dy;
+}
+
+int VirtWndText::MinIntrinsicWidth(int height) {
+    Measure(true);
+    return sz.dx;
+}
+
+Size VirtWndText::MinIntrinsicSize(int width, int height) {
+    int dx = MinIntrinsicWidth(height);
+    int dy = MinIntrinsicHeight(width);
+    return {dx, dy};
+}
+
+void VirtWndText::Draw(HDC hdc) {
+    ReportIf(lastBounds.IsEmpty());
+    UINT fmt = DT_NOCLIP | DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
+    RECT dr = ToRECT(lastBounds);
+    HdcDrawText(hdc, s, &dr, fmt, font);
+    if (withUnderline) {
+        auto& r = lastBounds;
+        Rect lineRect = {r.x, r.y + sz.dy, sz.dx, 0};
+        DrawLine(hdc, lineRect);
+    }
 }

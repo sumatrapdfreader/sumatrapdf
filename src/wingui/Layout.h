@@ -69,7 +69,7 @@ struct ILayout {
 
 bool IsCollapsed(ILayout*);
 
-struct LayoutBase : public ILayout {
+struct LayoutBase : ILayout {
     Kind kind = nullptr;
     // allows easy way to hide / show elements
     // without rebuilding the whole layout
