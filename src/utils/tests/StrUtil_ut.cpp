@@ -179,79 +179,33 @@ void strStrTest() {
     }
 }
 
-void strWStrTest() {
-    {
-        // verify that we use buf for initial allocations
-        str::WStr str;
-        WCHAR* buf = str.Get();
-        str.Append(L"blah");
-        WCHAR* buf2 = str.Get();
-        utassert(buf == buf2);
-        utassert(str::Eq(buf2, L"blah"));
-        str.Append(L"lost");
-        buf2 = str.Get();
-        utassert(str::Eq(buf2, L"blahlost"));
-        utassert(buf == buf2);
-        str.Reset();
-        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
-            str.AppendChar((WCHAR)i);
-        }
-        buf2 = str.Get();
-        // we should have allocated buf on the heap
-        utassert(buf != buf2);
-        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
-            WCHAR c = str.at(i);
-            utassert(c == (WCHAR)i);
-        }
-    }
-
-    {
-        // verify that initialCapacity hint works
-        str::WStr str(1024);
-        WCHAR* buf = nullptr;
-
-        for (int i = 0; i < 50; i++) {
-            str.Append(L"01234567890123456789");
-            if (i == 2) {
-                // we filled Str::buf (32 bytes) by putting 20 bytes
-                // and allocated heap for 1024 bytes. Remember the
-                buf = str.Get();
-            }
-        }
-        // we've appended 100*10 = 1000 chars, which is less than 1024
-        // so WStr::buf should be the same as buf
-        WCHAR* buf2 = str.Get();
-        utassert(buf == buf2);
-    }
-}
-
 void StrTest() {
-    WCHAR buf[32];
-    const WCHAR* str = L"a string";
+    char buf[32];
+    const char* str = "a string";
     utassert(str::Len(str) == 8);
-    utassert(str::Eq(str, L"a string") && str::Eq(str, str));
-    utassert(!str::Eq(str, nullptr) && !str::Eq(str, L"A String"));
-    utassert(str::EqI(str, L"A String") && str::EqI(str, str));
+    utassert(str::Eq(str, "a string") && str::Eq(str, str));
+    utassert(!str::Eq(str, nullptr) && !str::Eq(str, "A String"));
+    utassert(str::EqI(str, "A String") && str::EqI(str, str));
     utassert(!str::EqI(str, nullptr) && str::EqI((char*)nullptr, (char*)nullptr));
-    utassert(str::EqN(L"abcd", L"abce", 3) && !str::EqN(L"abcd", L"Abcd", 3));
-    utassert(str::StartsWith(str, L"a s") && str::StartsWithI(str, L"A Str"));
-    utassert(!str::StartsWith(str, L"Astr"));
-    utassert(str::EndsWith(str, L"ing") && str::EndsWithI(str, L"ING"));
-    utassert(!str::EndsWith(str, L"ung"));
-    utassert(str::IsEmpty((char*)nullptr) && str::IsEmpty((WCHAR*)nullptr) && str::IsEmpty(L"") && !str::IsEmpty(str));
+    utassert(str::EqN("abcd", "abce", 3) && !str::EqN("abcd", "Abcd", 3));
+    utassert(str::StartsWith(str, "a s") && str::StartsWithI(str, "A Str"));
+    utassert(!str::StartsWith(str, "Astr"));
+    utassert(str::EndsWith(str, "ing") && str::EndsWithI(str, "ING"));
+    utassert(!str::EndsWith(str, "ung"));
+    utassert(str::IsEmpty((char*)nullptr) && str::IsEmpty((char*)nullptr) && str::IsEmpty("") && !str::IsEmpty(str));
     utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
     size_t len = str::BufSet(buf, dimof(buf), str);
     utassert(len == str::Len(buf) && str::Eq(buf, str));
     len = str::BufSet(buf, 6, str);
-    utassert(len == 5 && str::Eq(buf, L"a str"));
+    utassert(len == 5 && str::Eq(buf, "a str"));
 
     str = str::Dup(buf);
     utassert(str::Eq(str, buf));
     str::Free(str);
     str = str::Dup(buf, 4);
-    utassert(str::Eq(str, L"a st"));
+    utassert(str::Eq(str, "a st"));
     str::Free(str);
-    str = str::Format(L"%s", buf);
+    str = str::Format("%s", buf);
     utassert(str::Eq(str, buf));
     str::Free(str);
     {
@@ -264,48 +218,51 @@ void StrTest() {
     }
 #if 0
     // TODO: this test slows down DEBUG builds significantly
-    str = str::Format(L"%s", L"\uFFFF");
-    // TODO: in VS2015, str matches L"\uFFFF" instead of nullptr
+    str = str::Format("%s", "\uFFFF");
+    // TODO: in VS2015, str matches "\uFFFF" instead of nullptr
     utassert(str::Eq(str, nullptr));
     free(str);
 #endif
     str = str::Join(buf, buf);
     utassert(str::Len(str) == 2 * str::Len(buf));
     str::Free(str);
-    str = str::Join(nullptr, L"ab");
-    utassert(str::Eq(str, L"ab"));
-    str::Free(str);
-    str = str::Join(L"\uFDEF", L"\uFFFF");
-    utassert(str::Eq(str, L"\uFDEF\uFFFF"));
+    str = str::Join(nullptr, "ab");
+    utassert(str::Eq(str, "ab"));
     str::Free(str);
 
-    str::BufSet(buf, dimof(buf), L"abc\1efg\1");
-    size_t count = str::TransCharsInPlace(buf, L"ace", L"ACE");
-    utassert(str::Eq(buf, L"AbC\1Efg\1") && count == 3);
-    count = str::TransCharsInPlace(buf, L"\1", L"\0");
+#if 0
+    str = str::Join("\uFDEF", "\uFFFF");
+    utassert(str::Eq(str, "\uFDEF\uFFFF"));
+    str::Free(str);
+#endif
+
+    str::BufSet(buf, dimof(buf), "abc\1efg\1");
+    size_t count = str::TransCharsInPlace(buf, "ace", "ACE");
+    utassert(str::Eq(buf, "AbC\1Efg\1") && count == 3);
+    count = str::TransCharsInPlace(buf, "\1", "\0");
     utassert(count == 2);
-    utassert(str::Eq(buf, L"AbC") && str::Eq(buf + 4, L"Efg") && count == 2);
-    count = str::TransCharsInPlace(buf, L"", L"X");
-    utassert(str::Eq(buf, L"AbC") && count == 0);
+    utassert(str::Eq(buf, "AbC") && str::Eq(buf + 4, "Efg") && count == 2);
+    count = str::TransCharsInPlace(buf, "", "X");
+    utassert(str::Eq(buf, "AbC") && count == 0);
 
-    str::BufSet(buf, dimof(buf), L"blogarapato");
-    count = str::RemoveCharsInPlace(buf, L"bo");
+    str::BufSet(buf, dimof(buf), "blogarapato");
+    count = str::RemoveCharsInPlace(buf, "bo");
     utassert(3 == count);
-    utassert(str::Eq(buf, L"lgarapat"));
+    utassert(str::Eq(buf, "lgarapat"));
 
-    str::BufSet(buf, dimof(buf), L"one\r\ntwo\t\v\f\tthree");
+    str::BufSet(buf, dimof(buf), "one\r\ntwo\t\v\f\tthree");
     count = str::NormalizeWSInPlace(buf);
     utassert(4 == count);
-    utassert(str::Eq(buf, L"one two three"));
+    utassert(str::Eq(buf, "one two three"));
 
-    str::BufSet(buf, dimof(buf), L" one    two three ");
+    str::BufSet(buf, dimof(buf), " one    two three ");
     count = str::NormalizeWSInPlace(buf);
     utassert(5 == count);
-    utassert(str::Eq(buf, L"one two three"));
+    utassert(str::Eq(buf, "one two three"));
 
     count = str::NormalizeWSInPlace(buf);
     utassert(0 == count);
-    utassert(str::Eq(buf, L"one two three"));
+    utassert(str::Eq(buf, "one two three"));
 
     {
         const char* str2 = "[Open(\"filename.pdf\",0,1,0)]";
@@ -424,15 +381,17 @@ void StrTest() {
         utassert(s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
     }
 
-    // the test string should only contain ASCII characters,
-    // as all others might not be available in all code pages
-#define TEST_STRING "aBc"
-    AutoFree strA = strconv::WStrToAnsi(TEXT(TEST_STRING));
-    utassert(str::Eq(strA.Get(), TEST_STRING));
-    str = strconv::AnsiToWStr(strA.Get());
-    utassert(str::Eq(str, TEXT(TEST_STRING)));
-    str::Free(str);
-#undef TEST_STRING
+    {
+        // the test string should only contain ASCII characters,
+        // as all others might not be available in all code pages
+        #define TEST_STRING "aBc"
+        AutoFree strA = strconv::WStrToAnsi(TEXT(TEST_STRING));
+        utassert(str::Eq(strA.Get(), TEST_STRING));
+        auto res = strconv::AnsiToWStr(strA.Get());
+        utassert(str::Eq(res, TEXT(TEST_STRING)));
+        str::Free(res);
+        #undef TEST_STRING
+    }
 
     utassert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));
     utassert(iswdigit(L'\u0660') && !str::IsDigit(L'\xB2'));
@@ -448,26 +407,41 @@ void StrTest() {
 #define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))
 #endif
 
+    // clang-format off
     struct {
         size_t number;
         const char* result;
     } formatNumData[] = {
-        {1, "1"},          {12, "12"},          {123, "123"},           {1234, "1,234"},
-        {12345, "12,345"}, {123456, "123,456"}, {1234567, "1,234,567"}, {12345678, "12,345,678"},
+        {1, "1"},
+        {12, "12"},
+        {123, "123"},
+        {1234, "1,234"},
+        {12345, "12,345"},
+        {123456, "123,456"},
+        {1234567, "1,234,567"},
+        {12345678, "12,345,678"},
     };
+    // clang-format on
 
     for (int i = 0; i < dimof(formatNumData); i++) {
         char* tmp = str::FormatNumWithThousandSepTemp(formatNumData[i].number, LOCALE_INVARIANT);
         utassert(str::Eq(tmp, formatNumData[i].result));
     }
 
+    // clang-format off
     struct {
         double number;
         const char* result;
     } formatFloatData[] = {
-        {1, "1.0"},        {1.2, "1.2"},        {1.23, "1.23"},          {1.234, "1.23"},
-        {12.345, "12.35"}, {123.456, "123.46"}, {1234.5678, "1,234.57"},
+        {1, "1.0"},
+        {1.2, "1.2"},
+        {1.23, "1.23"},
+        {1.234, "1.23"},
+        {12.345, "12.35"},
+        {123.456, "123.46"},
+        {1234.5678, "1,234.57"},
     };
+    // clang-format on
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
         char* tmp = str::FormatFloatWithThousandSepTemp(formatFloatData[i].number, LOCALE_INVARIANT);
@@ -478,20 +452,27 @@ void StrTest() {
         char str1[] = "aAbBcC... 1-9";
         str::ToLowerInPlace(str1);
         utassert(str::Eq(str1, "aabbcc... 1-9"));
-
-        WCHAR wstr[] = L"aAbBcC... 1-9";
-        str::ToLowerInPlace(wstr);
-        utassert(str::Eq(wstr, L"aabbcc... 1-9"));
     }
 
+    // clang-format off
     struct {
         int number;
         const char* result;
     } formatRomanData[] = {
-        {1, "I"},        {3, "III"},      {6, "VI"},         {14, "XIV"},    {49, "XLIX"},
-        {176, "CLXXVI"}, {499, "CDXCIX"}, {1666, "MDCLXVI"}, {2011, "MMXI"}, {12345, "MMMMMMMMMMMMCCCXLV"},
-        {0, nullptr},    {-133, nullptr},
+        {1, "I"},
+        {3, "III"},
+        {6, "VI"},
+        {14, "XIV"},
+        {49, "XLIX"},
+        {176, "CLXXVI"},
+        {499, "CDXCIX"},
+        {1666, "MDCLXVI"},
+        {2011, "MMXI"},
+        {12345, "MMMMMMMMMMMMCCCXLV"},
+        {0, nullptr},
+        {-133, nullptr},
     };
+    // clang-format on
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
         TempStr tmp = str::FormatRomanNumeralTemp(formatRomanData[i].number);
@@ -610,7 +591,6 @@ void StrTest() {
     }
 
     strStrTest();
-    strWStrTest();
     StrIsDigitTest();
     StrReplaceTest();
     StrSeqTest();
