@@ -658,9 +658,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\.github\codeql-config.yml">
-      <Filter>.github</Filter>
-    </None>
     <None Include="..\.github\workflows\build.yml">
       <Filter>.github\workflows</Filter>
     </None>
@@ -674,6 +671,7 @@
       <Filter>.github\workflows</Filter>
     </None>
     <None Include="..\.gitignore" />
+    <None Include="..\codeql-config.yml" />
     <None Include="..\do\build.go">
       <Filter>do</Filter>
     </None>
