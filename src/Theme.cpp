@@ -54,10 +54,6 @@ struct Theme {
     COLORREF notifBackgroundColor;
     // Text color of the notification window
     COLORREF notifTextColor;
-    // Color of the highlight box that surrounds the text when a notification is highlighted
-    COLORREF notifHighlightColor;
-    // Color of the text when a notification is highlighted
-    COLORREF notifHighlightTextColor;
 
     // Whether or not we colorize standard Windows controls and window areas
     bool colorizeControls;
@@ -94,10 +90,6 @@ static Theme gThemeLight = {
     kColWhite,
     // Text color
     gThemeLight.textColor,
-    // Highlight color
-    RgbToCOLORREF(0xFFEE70),
-    // Highlight text color
-    RgbToCOLORREF(0x8d0801),
 
     // Colorize standard controls
     false
@@ -123,14 +115,21 @@ static Theme gThemeDark = {
     AdjustLightness2(gThemeDark.backgroundColor, 10),
     // Text color
     gThemeDark.textColor,
-    // Highlight color
-    /*AdjustLightness2*/(RgbToCOLORREF(0x33434B), 10),
-    // Highlight text color
-    gThemeDark.textColor,
-
     // Colorize standard controls
     true
 };
+
+/*
+// Highlight color
+AdjustLightness2(RgbToCOLORREF(0x33434B), 10),
+// Highlight text color
+gThemeDark.textColor,
+
+// Highlight color
+AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
+// Highlight text color
+gThemeDarker.textColor,
+*/
 
 static Theme gThemeDarker = {
     // Theme Name
@@ -150,10 +149,6 @@ static Theme gThemeDarker = {
     // Background color
     AdjustLightness2(gThemeDarker.backgroundColor, 10),
     // Text color
-    gThemeDarker.textColor,
-    // Highlight color
-    AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
-    // Highlight text color
     gThemeDarker.textColor,
 
     // Colorize standard controls
@@ -349,11 +344,11 @@ COLORREF ThemeNotificationsTextColor() {
 }
 
 COLORREF ThemeNotificationsHighlightColor() {
-    return gCurrentTheme->notifHighlightColor;
+    return RgbToCOLORREF(0xFFEE70); // yellowish
 }
 
 COLORREF ThemeNotificationsHighlightTextColor() {
-    return gCurrentTheme->notifHighlightTextColor;
+    return RgbToCOLORREF(0x8d0801); // reddish
 }
 
 COLORREF ThemeNotificationsProgressColor() {
@@ -370,25 +365,15 @@ bool ThemeColorizeControls() {
 void dumpThemes() {
     logf("Themes [\n");
     for (Theme* theme : gThemes) {
-        logf("    [\n");
-        logf("        Name = '%s'\n", theme->name);
-
         auto w = *theme;
-        logf("        WindowColors = [\n");
-        logf("          Background = %s\n", SerializeColorTemp(w.backgroundColor));
-        logf("          Text = %s\n", SerializeColorTemp(w.textColor));
-        logf("          ControlBackground = %s\n", SerializeColorTemp(w.controlBackgroundColor));
-        logf("          Link = %s\n", SerializeColorTemp(w.linkColor));
-        logf("        ]\n");
-
-        auto n = *theme;
-        logf("        NotificationColors = [\n");
-        logf("            Background = %s\n", SerializeColorTemp(n.notifBackgroundColor));
-        logf("            Text = %s\n", SerializeColorTemp(n.notifTextColor));
-        logf("            Highlight = %s\n", SerializeColorTemp(n.notifHighlightColor));
-        logf("            HighlightText = %s\n", SerializeColorTemp(n.notifHighlightTextColor));
-        logf("        ]\n");
-
+        logf("    [\n");
+        logf("        Name = '%s'\n", w.name);
+        logf("        BackgroundColor = %s\n", SerializeColorTemp(w.backgroundColor));
+        logf("        ControlBackgroundColor = %s\n", SerializeColorTemp(w.controlBackgroundColor));
+        logf("        TextColor = %s\n", SerializeColorTemp(w.textColor));
+        logf("        LinkColor = %s\n", SerializeColorTemp(w.linkColor));
+        logf("        NoitfBackgroundColor = %s\n", SerializeColorTemp(w.notifBackgroundColor));
+        logf("        NotifTextColor = %s\n", SerializeColorTemp(w.notifTextColor));
         logf("    ]\n");
     }
     logf("]\n");
