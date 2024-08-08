@@ -304,16 +304,14 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     return true;
 }
 
-bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
+bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateCb* tracker) {
     if (str::IsEmpty(findText)) {
         return false;
     }
 
     int next = forward ? 1 : -1;
-    while (1 <= pageNo && pageNo <= nPages && (!tracker || !tracker->WasCanceled())) {
-        if (tracker) {
-            tracker->UpdateProgress(pageNo, nPages);
-        }
+    while ((1 <= pageNo) && (pageNo <= nPages) && !WasCanceled(tracker)) {
+        UpdateProgress(tracker, pageNo, nPages);
 
         if (pagesToSkip[pageNo - 1]) {
             pageNo += next;
@@ -350,7 +348,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
     return false;
 }
 
-TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tracker) {
+TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateCb* tracker) {
     SetText(text);
 
     if (FindStartingAtPage(page, tracker)) {
@@ -359,18 +357,16 @@ TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tr
     return nullptr;
 }
 
-TextSel* TextSearch::FindNext(ProgressUpdateUI* tracker) {
+TextSel* TextSearch::FindNext(ProgressUpdateCb* tracker) {
     ReportIf(!findText);
     if (!findText) {
         return nullptr;
     }
 
-    if (tracker) {
-        if (tracker->WasCanceled()) {
-            return nullptr;
-        }
-        tracker->UpdateProgress(findPage, nPages);
+    if (WasCanceled(tracker)) {
+        return nullptr;
     }
+    UpdateProgress(tracker, findPage, nPages);
 
     PageAndOffset finalGlyph;
     if (FindTextInPage(findPage, &finalGlyph)) {

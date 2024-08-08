@@ -21,8 +21,8 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
         expIndex = expectedLen - 1;
         expIncr = -1;
     }
-    for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel;
-         tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
+    for (auto tsel = tsrch->FindFirst(startPage, searchTerm, nullptr); nullptr != tsel;
+         tsel = tsrch->FindNext(nullptr), ++findCount, expIndex += expIncr) {
         if (0 == expected[expIndex].len) {
             wprintf(L"Found %s %i times, not expecting another match\n", searchTerm, expIndex);
             ReportIf(true);

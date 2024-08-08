@@ -222,7 +222,7 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     }
 }
 
-struct FindThreadData : ProgressUpdateUI {
+struct FindThreadData {
     MainWindow* win = nullptr;
     TextSearchDirection direction{TextSearchDirection::Forward};
     bool wasModified = false;
@@ -235,7 +235,7 @@ struct FindThreadData : ProgressUpdateUI {
         this->text = ToWStr(text);
         this->wasModified = wasModified;
     }
-    ~FindThreadData() override {
+    ~FindThreadData() {
         CloseHandle(thread);
     }
 
@@ -288,11 +288,11 @@ struct FindThreadData : ProgressUpdateUI {
         }
     }
 
-    bool WasCanceled() override {
+    bool WasCanceled() {
         return !IsMainWindowValid(win) || win->findCancelled;
     }
 
-    void UpdateProgress(int current, int total) override {
+    void UpdateProgress(int current, int total) {
         auto data = new UpdateFindStatusData;
         data->win = this->win;
         data->current = current;
@@ -345,6 +345,15 @@ static void FindEndTask(FindEndTaskData* d) {
     win->findThread = nullptr;
 }
 
+static void UpdateProgress(FindThreadData* ftd, ProgressUpdateData* data) {
+    if (data->wasCancelled) {
+        bool wasCancelled = ftd->WasCanceled();
+        *data->wasCancelled = wasCancelled;
+        return;
+    }
+    ftd->UpdateProgress(data->current, data->total);
+}
+
 static void FindThread(FindThreadData* ftd) {
     ReportIf(!(ftd && ftd->win && ftd->win->ctrl && ftd->win->ctrl->AsFixed()));
 
@@ -359,13 +368,14 @@ static void FindThread(FindThreadData* ftd) {
         engine->Release();
     };
 
+    auto updateProgress = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateProgress, ftd);
     TextSel* rect;
     dm->textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
         !dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
-        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text, ftd);
+        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text, &updateProgress);
     } else {
-        rect = textSearch->FindNext(ftd);
+        rect = textSearch->FindNext(&updateProgress);
     }
 
     bool loopedAround = false;
@@ -374,7 +384,7 @@ static void FindThread(FindThreadData* ftd) {
         int startPage = (TextSearchDirection::Forward == ftd->direction) ? 1 : ctrl->PageCount();
         if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
-            rect = textSearch->FindFirst(startPage, ftd->text, ftd);
+            rect = textSearch->FindFirst(startPage, ftd->text, &updateProgress);
         }
     }
 
