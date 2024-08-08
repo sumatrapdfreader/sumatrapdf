@@ -265,10 +265,6 @@ bool LoadSettings() {
     //    auto fontName = ToWStrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
 
-    SetCurrentThemeFromSettings();
-    if (!file::Exists(settingsPath)) {
-        SaveSettings();
-    }
     ResetCachedFonts();
 
     // re-create commands
@@ -285,6 +281,12 @@ bool LoadSettings() {
     CreateSumatraAcceleratorTable();
 
     ReCreateToolbars();
+
+    SetCurrentThemeFromSettings();
+    if (!file::Exists(settingsPath)) {
+        SaveSettings();
+    }
+
     logf("LoadSettings('%s') took %.2f ms\n", settingsPath, TimeSinceInMs(timeStart));
     return true;
 }
