@@ -427,14 +427,24 @@ constexpr float kInvalidZoom = -99.0f;
 `
 
 func genSettingsStruct() string {
-	built := map[string]int{}
-	structDef := buildStruct(globalPrefsStruct, built)
-	structMetaData := buildMetaData(globalPrefsStruct, map[string]int{})
+	builtDef := map[string]int{}
+	builtMeta := map[string]int{}
+	structDef := buildStruct(globalPrefsStruct, builtDef)
+	structMetaData := buildMetaData(globalPrefsStruct, builtMeta)
+
+	{
+		s := buildStruct(themesStruct, builtDef);
+		structDef += s
+		s = buildMetaData(themesStruct, builtMeta)
+		structMetaData += s
+	}
 
 	content := settingsStructsHeader
 	content = strings.Replace(content, "{{structDef}}", structDef, -1)
 	content = strings.Replace(content, "{{structMetadata}}", structMetaData, -1)
-	return content
+
+
+return content
 }
 
 func getWebsiteDir() string {

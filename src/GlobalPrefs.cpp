@@ -129,3 +129,7 @@ void SetFileStatePath(FileState* fs, const WCHAR* path) {
     char* pathA = ToUtf8Temp(path);
     SetFileStatePath(fs, pathA);
 }
+
+Themes* ParseThemes(const char* data) {
+    return (Themes*)DeserializeStruct(&gThemesInfo, data);
+}

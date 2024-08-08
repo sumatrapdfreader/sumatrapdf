@@ -36,29 +36,55 @@ constexpr COLORREF kColWhite = 0xFFFFFF;
 // #define kColWhiteish 0xEBEBF9
 // #define kColDarkGray 0x424242
 
-struct Theme {
+static const char* themesTxt = R"(Themes [
+    [
+        Name = Light
+        TextColor = #000000
+        BackgroundColor = #f2f2f2
+        ControlBackgroundColor = #ffffff
+        LinkColor = #0020a0
+        ColorizeControls = false
+    ]
+    [
+        Name = Dark
+        TextColor = #bac9d0
+        BackgroundColor = #263238
+        ControlBackgroundColor = #263238
+        LinkColor = #8aa3b0
+        ColorizeControls = true
+    ]
+    [
+        Name = Darker
+        TextColor = #c3c3c6
+        BackgroundColor = #2d2d30
+        ControlBackgroundColor = #2d2d30
+        LinkColor = #9999a0
+        ColorizeControls = true
+    ]
+]
+)";
+
+struct ThemeOld {
     // Name of the theme
     const char* name;
 
+    // Text color of recently added, about, and properties menus
+    COLORREF textColor;
     // Background color of recently added, about, and properties menus
     COLORREF backgroundColor;
     // Background color of controls, menus, non-client areas, etc.
     COLORREF controlBackgroundColor;
-    // Text color of recently added, about, and properties menus
-    COLORREF textColor;
     // Link color on recently added, about, and properties menus
     COLORREF linkColor;
-
     // Whether or not we colorize standard Windows controls and window areas
     bool colorizeControls;
 };
 
 // clang-format off
-static Theme gThemeLight = {
+static ThemeOld gThemeLight = {
     // Theme Name
     _TRN("Light"),
 
-    // Window theme
     // Main Background Color
     // Background color comparison:
     // Adobe Reader X   0x565656 without any frame border
@@ -68,14 +94,14 @@ static Theme gThemeLight = {
     // Evince           0xD7D1CB with a pronounced frame shadow
     // SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
 
+    // Main Text Color
+    kColBlack,
     // it's very light gray but not white so that there's contrast between
     // background and thumbnail, which often have white background because
     // most PDFs have white background.
     RgbToCOLORREF(0xF2F2F2),
     // Control background Color
     kColWhite,
-    // Main Text Color
-    kColBlack,
     // Main Link Color
     RgbToCOLORREF(0x0020A0),
 
@@ -83,34 +109,30 @@ static Theme gThemeLight = {
     false
 };
 
-static Theme gThemeDark = {
+static ThemeOld gThemeDark = {
     // Theme Name
     _TRN("Dark"),
-    // Window theme
+    // Main Text Color
+    AdjustLightness2(RgbToCOLORREF(0x263238), 150),
     // Main Background Color
     RgbToCOLORREF(0x263238),
     // Control background Color
     RgbToCOLORREF(0x263238),
-    // Main Text Color
-    //kColWhite,
-    AdjustLightness2(RgbToCOLORREF(0x263238), 150),
     // Main Link Color
     AdjustLightness2(RgbToCOLORREF(0x263238), 110),
 
     true
 };
 
-static Theme gThemeDarker = {
+static ThemeOld gThemeDarker = {
     // Theme Name
     _TRN("Darker"),
-    // Window theme
+    // Main Text Color
+    AdjustLightness2(RgbToCOLORREF(0x2D2D30), 150),
     // Main Background Color
     RgbToCOLORREF(0x2D2D30),
     // Control background Color
     RgbToCOLORREF(0x2D2D30),
-    // Main Text Color
-    AdjustLightness2(RgbToCOLORREF(0x2D2D30), 150),
-    //kColWhite,
     // Main Link Color
     AdjustLightness2(RgbToCOLORREF(0x2D2D30), 110),
 
@@ -119,7 +141,7 @@ static Theme gThemeDarker = {
 };
 // clang-format on
 
-static Theme* gThemes[] = {
+static ThemeOld* gThemes[] = {
     &gThemeLight,
     &gThemeDark,
     &gThemeDarker,
@@ -127,7 +149,7 @@ static Theme* gThemes[] = {
 
 constexpr const int kThemeCount = dimofi(gThemes);
 
-Theme* gCurrentTheme = &gThemeLight;
+ThemeOld* gCurrentTheme = &gThemeLight;
 static int currentThemeIndex = 0;
 
 int GetCurrentThemeIndex() {
@@ -141,6 +163,8 @@ int gLastSetThemeCmdId;
 int gCurrSetThemeCmdId;
 
 void CreateThemeCommands() {
+    //auto themes = ParseThemes(themesTxt);
+    //logf("number of themes: %d\n", themes->themes->Size());
     CustomCommand* cmd;
     for (int i = 0; i < kThemeCount; i++) {
         const char* themeName = gThemes[i]->name;
@@ -326,17 +350,20 @@ bool ThemeColorizeControls() {
     return !IsMenuFontSizeDefault();
 }
 
+#if 0
 void dumpThemes() {
     logf("Themes [\n");
-    for (Theme* theme : gThemes) {
+    for (ThemeOld* theme : gThemes) {
         auto w = *theme;
         logf("    [\n");
-        logf("        Name = '%s'\n", w.name);
+        logf("        Name = %s\n", w.name);
+        logf("        TextColor = %s\n", SerializeColorTemp(w.textColor));
         logf("        BackgroundColor = %s\n", SerializeColorTemp(w.backgroundColor));
         logf("        ControlBackgroundColor = %s\n", SerializeColorTemp(w.controlBackgroundColor));
-        logf("        TextColor = %s\n", SerializeColorTemp(w.textColor));
         logf("        LinkColor = %s\n", SerializeColorTemp(w.linkColor));
+        logf("        ColorizeControls = %s\n", w.colorizeControls ? "true" : "false");
         logf("    ]\n");
     }
     logf("]\n");
 }
+#endif

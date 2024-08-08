@@ -3,6 +3,15 @@ package main
 // ##### setting definitions for SumatraPDF #####
 
 var (
+	theme = []*Field{
+		mkField("Name", String, "", "name of the theme"),
+		mkField("TextColor", Color, "", "text color"),
+		mkField("BackgroundColor", Color, "", "background color"),
+		mkField("ControlBackgroundColor", Color, "", "control background color"),
+		mkField("LinkColor", Color, "", "link color"),
+		mkField("ColorizeControls", Bool, false, "should we colorize Windows controls and window areas"),
+	}
+
 	windowPos = []*Field{
 		mkField("X", Int, 0, "y coordinate"),
 		mkField("Y", Int, 0, "y coordinate"),
@@ -360,6 +369,8 @@ var (
 		mkEmptyLine(),
 		mkArray("Shortcuts", keyboardShortcut, "custom keyboard shortcuts"),
 		mkEmptyLine(),
+		mkArray("Themes", theme, "color themes").setVersion("3.6"),
+		mkEmptyLine(),
 
 		// those are at the end because not expect user to change them manually
 		mkComment("You're not expected to change those manually"),
@@ -404,4 +415,10 @@ var (
 
 	globalPrefsStruct = mkStruct("GlobalPrefs", globalPrefs,
 		"Preferences are persisted in SumatraPDF-settings.txt")
+
+	themes = []*Field{
+		mkArray("Themes", theme, "color themes").setVersion("3.6"),
+	}
+	themesStruct = mkStruct("Themes", themes,
+		"for parsing themes")
 )

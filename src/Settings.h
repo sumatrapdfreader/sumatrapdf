@@ -193,6 +193,26 @@ struct Shortcut {
     int cmdId;
 };
 
+// color themes
+struct Theme {
+    // name of the theme
+    char* name;
+    // text color
+    char* textColor;
+    ParsedColor textColorParsed;
+    // background color
+    char* backgroundColor;
+    ParsedColor backgroundColorParsed;
+    // control background color
+    char* controlBackgroundColor;
+    ParsedColor controlBackgroundColorParsed;
+    // link color
+    char* linkColor;
+    ParsedColor linkColorParsed;
+    // should we colorize Windows controls and window areas
+    bool colorizeControls;
+};
+
 // Values which are persisted for bookmarks/favorites
 struct Favorite {
     // name of this favorite as shown in the menu
@@ -428,6 +448,8 @@ struct GlobalPrefs {
     Vec<SelectionHandler*>* selectionHandlers;
     // custom keyboard shortcuts
     Vec<Shortcut*>* shortcuts;
+    // color themes
+    Vec<Theme*>* themes;
     // passwords to try when opening a password protected document
     Vec<char*>* defaultPasswords;
     // ISO code of the current UI language
@@ -457,6 +479,11 @@ struct GlobalPrefs {
     DisplayMode defaultDisplayModeEnum;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
+};
+// for parsing themes
+struct Themes {
+    // color themes
+    Vec<Theme*>* themes;
 };
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
@@ -572,6 +599,18 @@ static const FieldInfo gShortcutFields[] = {
     {offsetof(Shortcut, toolbarText), SettingType::String, 0},
 };
 static const StructInfo gShortcutInfo = {sizeof(Shortcut), 4, gShortcutFields, "Cmd\0Key\0Name\0ToolbarText"};
+
+static const FieldInfo gThemeFields[] = {
+    {offsetof(Theme, name), SettingType::String, (intptr_t) ""},
+    {offsetof(Theme, textColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, linkColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, colorizeControls), SettingType::Bool, false},
+};
+static const StructInfo gThemeInfo = {
+    sizeof(Theme), 6, gThemeFields,
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0ColorizeControls"};
 
 static const FieldInfo gRectFields[] = {
     {offsetof(Rect, x), SettingType::Int, 0},
@@ -729,6 +768,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, shortcuts), SettingType::Array, (intptr_t)&gShortcutInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, themes), SettingType::Array, (intptr_t)&gThemeInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {(size_t)-1, SettingType::Comment, (intptr_t) "You're not expected to change those manually"},
     {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
@@ -744,14 +785,30 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 69, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 71, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
     "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0ReloadModifiedDocuments\0RememberOpene"
     "dFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowToolbar\0ShowFavorites\0ShowToc"
     "\0ShowLinks\0ShowStartPage\0SidebarDx\0SmoothScroll\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSi"
     "ze\0UIFontSize\0UseSysColors\0UseTabs\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0ComicBookUI\0\0ChmUI\0\0Annotat"
-    "ions\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0\0\0DefaultPassword"
-    "s\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
-    "OpenCountWeek\0\0"};
+    "ions\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0\0Defau"
+    "ltPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpd"
+    "ateCheck\0OpenCountWeek\0\0"};
+static const FieldInfo gTheme_1_Fields[] = {
+    {offsetof(Theme, name), SettingType::String, (intptr_t) ""},
+    {offsetof(Theme, textColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, linkColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, colorizeControls), SettingType::Bool, false},
+};
+static const StructInfo gTheme_1_Info = {
+    sizeof(Theme), 6, gTheme_1_Fields,
+    "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0LinkColor\0ColorizeControls"};
+
+static const FieldInfo gThemesFields[] = {
+    {offsetof(Themes, themes), SettingType::Array, (intptr_t)&gTheme_1_Info},
+};
+static const StructInfo gThemesInfo = {sizeof(Themes), 1, gThemesFields, "Themes"};
 
 #endif
