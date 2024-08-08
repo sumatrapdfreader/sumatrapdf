@@ -36,7 +36,7 @@ constexpr int kTopLeftMargin = 8;
 
 constexpr UINT_PTR kNotifTimerTimeoutId = 1;
 
-struct NotificationWnd : ProgressUpdateUI, Wnd {
+struct NotificationWnd : Wnd {
     NotificationWnd() = default;
     ~NotificationWnd() override;
 
@@ -49,9 +49,8 @@ struct NotificationWnd : ProgressUpdateUI, Wnd {
 
     void UpdateMessage(const char* msg, int timeoutMs = 0, bool highlight = false);
 
-    // ProgressUpdateUI methods
-    void UpdateProgress(int current, int total) override;
-    bool WasCanceled() override;
+    void UpdateProgress(int current, int total);
+    bool WasCanceled();
 
     bool HasClose() const {
         return true;
