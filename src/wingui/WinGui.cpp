@@ -372,14 +372,6 @@ int Wnd::OnCreate(CREATESTRUCT*) {
     return 0;
 }
 
-// Called when the background of the window's client area needs to be erased.
-// Override this function in your derived class to perform drawing tasks.
-// Return Value: Return FALSE to also permit default erasure of the background
-//               Return TRUE to prevent default erasure of the background
-bool Wnd::OnEraseBkgnd(HDC) {
-    return false;
-}
-
 void Wnd::OnContextMenu(Point ptScreen) {
     if (!onContextMenu.IsValid()) {
         return;
@@ -788,15 +780,6 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             // No more drawing required
             return 0;
         }
-
-        case WM_ERASEBKGND: {
-            HDC dc = (HDC)(wparam);
-            BOOL preventErasure;
-
-            preventErasure = OnEraseBkgnd(dc);
-            if (preventErasure)
-                return TRUE;
-        } break;
 
         // A set of messages to be reflected back to the control that generated them.
         case WM_CTLCOLORBTN:

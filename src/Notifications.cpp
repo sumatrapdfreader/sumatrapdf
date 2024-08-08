@@ -47,13 +47,8 @@ struct NotificationWnd : Wnd {
     void OnPaint(HDC hdc, PAINTSTRUCT* ps) override;
     void OnTimer(UINT_PTR event_id) override;
     LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) override;
-    bool OnEraseBkgnd(HDC) override;
 
     void UpdateMessage(const char* msg, int timeoutMs = 0, bool highlight = false);
-
-    bool HasClose() const {
-        return true;
-    }
 
     bool HasProgress() const {
         return progressPerc >= 0;
@@ -220,9 +215,9 @@ void NotificationWnd::Layout(const char* message) {
     int closeDx = DpiScale(hwnd, 16);
     int leftMargin = DpiScale(hwnd, kCloseLeftMargin - padX);
     rClose = {dx + leftMargin, padY, closeDx, closeDx + 2};
-    if (HasClose()) {
-        dx += leftMargin + closeDx + padX;
-    }
+
+    // close button
+    dx += leftMargin + closeDx + padX;
     int progressDy = DpiScale(hwnd, kProgressDy);
     rProgress = {padX, dy, szText.dx, progressDy};
     if (HasProgress()) {
@@ -311,19 +306,17 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     RECT rTmp = ToRECT(rTxt);
     HdcDrawText(hdc, text, &rTmp, format);
 
-    if (HasClose()) {
-        Point curPos = HwndGetCursorPos(hwnd);
-        bool isHover = rClose.Contains(curPos);
-        DrawCloseButton(hdc, rClose, isHover);
+    Point curPos = HwndGetCursorPos(hwnd);
+    bool isHover = rClose.Contains(curPos);
+    DrawCloseButton(hdc, rClose, isHover);
 #if 0
-        DrawCloseButtonArgs args;
-        args.hdc = hdc;
-        args.r = rClose;
-        args.r.Inflate(-5, -5);
-        args.isHover = isHover;
-        DrawCloseButton2(args);
+    DrawCloseButtonArgs args;
+    args.hdc = hdc;
+    args.r = rClose;
+    args.r.Inflate(-5, -5);
+    args.isHover = isHover;
+    DrawCloseButton2(args);
 #endif
-    }
 
     if (HasProgress()) {
         rc = rProgress;
@@ -389,18 +382,18 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
     }
 }
 
-bool NotificationWnd::OnEraseBkgnd(HDC) {
-    // avoid flicker by telling we took care of erasing background
-    return true;
-}
-
 LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_SETCURSOR == msg && HasClose()) {
+    if (WM_SETCURSOR == msg) {
         Point pt = HwndGetCursorPos(hwnd);
         if (!pt.IsEmpty() && rClose.Contains(pt)) {
             SetCursorCached(IDC_HAND);
             return TRUE;
         }
+    }
+
+    if (WM_ERASEBKGND == msg) {
+        // avoid flicker by telling we took care of erasing background
+        return TRUE;
     }
 
     if (WM_MOUSEMOVE == msg) {
@@ -417,7 +410,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    if (WM_LBUTTONUP == msg && HasClose()) {
+    if (WM_LBUTTONUP) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
         if (rClose.Contains(pt)) {
             // TODO a better way to delete myself

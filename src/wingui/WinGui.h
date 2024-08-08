@@ -122,7 +122,6 @@ struct Wnd : ILayout {
     virtual LRESULT OnMouseEvent(UINT msg, WPARAM wparam, LPARAM lparam);
     virtual void OnMove(POINTS* pts);
     virtual void OnPaint(HDC hdc, PAINTSTRUCT* ps);
-    virtual bool OnEraseBkgnd(HDC dc);
     virtual void OnSize(UINT msg, UINT type, SIZE size);
     virtual void OnTaskbarCallback(UINT msg, LPARAM lparam);
     virtual void OnTimer(UINT_PTR event_id);
