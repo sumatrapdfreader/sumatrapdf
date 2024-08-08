@@ -58,8 +58,6 @@ struct Theme {
     COLORREF notifHighlightColor;
     // Color of the text when a notification is highlighted
     COLORREF notifHighlightTextColor;
-    // Background color of the progress bar in the notification window
-    COLORREF notifProgressColor;
 
     // Whether or not we colorize standard Windows controls and window areas
     bool colorizeControls;
@@ -100,8 +98,6 @@ static Theme gThemeLight = {
     RgbToCOLORREF(0xFFEE70),
     // Highlight text color
     RgbToCOLORREF(0x8d0801),
-    // Progress bar color
-    gThemeLight.linkColor,
 
     // Colorize standard controls
     false
@@ -131,8 +127,6 @@ static Theme gThemeDark = {
     /*AdjustLightness2*/(RgbToCOLORREF(0x33434B), 10),
     // Highlight text color
     gThemeDark.textColor,
-    // Progress bar color
-    gThemeDark.linkColor,
 
     // Colorize standard controls
     true
@@ -161,8 +155,6 @@ static Theme gThemeDarker = {
     AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
     // Highlight text color
     gThemeDarker.textColor,
-    // Progress bar color
-    gThemeDarker.linkColor,
 
     // Colorize standard controls
     true
@@ -365,7 +357,7 @@ COLORREF ThemeNotificationsHighlightTextColor() {
 }
 
 COLORREF ThemeNotificationsProgressColor() {
-    return gCurrentTheme->notifProgressColor;
+    return gCurrentTheme->linkColor;
 }
 
 bool ThemeColorizeControls() {
@@ -395,7 +387,6 @@ void dumpThemes() {
         logf("            Text = %s\n", SerializeColorTemp(n.notifTextColor));
         logf("            Highlight = %s\n", SerializeColorTemp(n.notifHighlightColor));
         logf("            HighlightText = %s\n", SerializeColorTemp(n.notifHighlightTextColor));
-        logf("            Progress = %s\n", SerializeColorTemp(n.notifProgressColor));
         logf("        ]\n");
 
         logf("    ]\n");
