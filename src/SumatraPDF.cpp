@@ -5059,7 +5059,7 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
         args.copyToClipboard = GetCommandBoolArg(cmd, kCmdArgCopyToClipboard, false);
         args.setContent = GetCommandBoolArg(cmd, kCmdArgSetContent, false);
         auto col = GetCommandArg(cmd, kCmdArgColor);
-        ReportIf(!col || !col->colorVal.parsedOk);
+        ReportIf(col && !col->colorVal.parsedOk);
         if (col && col->colorVal.parsedOk) {
             args.col = col->colorVal;
             return;
@@ -5761,6 +5761,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 args.warning = true;
                 args.timeoutMs = 0;
                 ShowNotification(args);
+            }
+
+            {
+                NotificationCreateArgs args;
+                args.hwndParent = win->hwndCanvas;
+                args.msg = "";
+                args.warning = false;
+                args.timeoutMs = 0;
+                auto wnd = ShowNotification(args);
+                UpdateNotificationProgress(wnd, 50, 100);
             }
         } break;
 

@@ -185,7 +185,7 @@ void UpdateTextSelection(MainWindow* win, bool select) {
         return;
     }
 
-    logf("UpdateTextSelection: select: %d\n", (int)select);
+    //logf("UpdateTextSelection: select: %d\n", (int)select);
     DisplayModel* dm = win->AsFixed();
     if (select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
