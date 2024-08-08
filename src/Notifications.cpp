@@ -97,17 +97,21 @@ static void GetForHwnd(HWND hwnd, Vec<NotificationWnd*>& v) {
     }
 }
 
+// notification can be removed due to a timeout or manual closing
+bool IsNotificationValid(NotificationWnd* wnd) {
+    bool exists = gNotifs.Contains(wnd);
+    return exists;
+}
+
 static void GetForSameHwnd(NotificationWnd* wnd, Vec<NotificationWnd*>& v) {
     HWND parent = GetParent(wnd->hwnd);
     GetForHwnd(parent, v);
 }
 
-// TODO: better name
-bool NotifsContains(NotificationWnd* wnd) {
-    return gNotifs.Contains(wnd);
-}
-
-static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
+void RelayoutNotifications(HWND hwnd) {
+    Vec<NotificationWnd*> wnds;
+    HWND parent = HwndGetParent(hwnd);
+    GetForHwnd(parent, wnds);
     if (wnds.IsEmpty()) {
         return;
     }
@@ -118,7 +122,7 @@ static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
     int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
     int dyPadding = DpiScale(hwndCanvas, kPadding);
     int y = topLeftMargin;
-    for (auto* wnd : wnds) {
+    for (NotificationWnd* wnd : wnds) {
         Rect rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
@@ -133,31 +137,13 @@ static void NotifsRelayout(Vec<NotificationWnd*>& wnds) {
     }
 }
 
-static void NotifsRelayout(NotificationWnd* wnd) {
-    Vec<NotificationWnd*> wnds;
-    GetForSameHwnd(wnd, wnds);
-    NotifsRelayout(wnds);
-}
-
-void NotifsRemove(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd) {
+static void NotifsRemoveNotification(NotificationWnd* wnd) {
     int pos = gNotifs.Remove(wnd);
     if (pos < 0) {
         return;
     }
-    NotifsRelayout(wnd);
-}
-
-static void NotifsRemoveNotification(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd) {
-    if (wnds.Contains(wnd)) {
-        NotifsRemove(wnds, wnd);
-        delete wnd;
-    }
-}
-
-static void NotifsRemoveNotification(NotificationWnd* wnd) {
-    Vec<NotificationWnd*> wnds;
-    GetForSameHwnd(wnd, wnds);
-    NotifsRemoveNotification(wnds, wnd);
+    RelayoutNotifications(wnd->hwnd);
+    delete wnd;
 }
 
 int GetWndX(NotificationWnd* wnd) {
@@ -465,7 +451,7 @@ static int NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
         }
     }
     for (auto* wnd : toRemove) {
-        NotifsRemoveNotification(wnds, wnd);
+        NotifsRemoveNotification(wnd);
     }
     return toRemove.Size();
 }
@@ -477,7 +463,7 @@ static void NotifsAdd(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd, Kind gr
     }
     wnd->groupId = groupId;
     gNotifs.Append(wnd);
-    NotifsRelayout(wnd);
+    RelayoutNotifications(wnd->hwnd);
 }
 
 static void NotifsAdd(NotificationWnd* wnd, Kind groupId) {
@@ -572,10 +558,4 @@ void AddNotification(NotificationWnd* wnd, Kind kind) {
 
 bool NotificationExists(NotificationWnd* wnd) {
     return gNotifs.Contains(wnd);
-}
-
-void RelayoutNotifications(HWND hwnd) {
-    Vec<NotificationWnd*> wnds;
-    GetForHwnd(hwnd, wnds);
-    NotifsRelayout(wnds);
 }

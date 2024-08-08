@@ -37,3 +37,4 @@ void RelayoutNotifications(HWND hwnd);
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs);
+bool IsNotificationValid(NotificationWnd*);
