@@ -345,7 +345,7 @@ static void FindEndTask(FindEndTaskData* d) {
     win->findThread = nullptr;
 }
 
-static void UpdateProgress(FindThreadData* ftd, ProgressUpdateData* data) {
+static void UpdateSearchProgress(FindThreadData* ftd, ProgressUpdateData* data) {
     if (data->wasCancelled) {
         bool wasCancelled = ftd->WasCanceled();
         *data->wasCancelled = wasCancelled;
@@ -368,7 +368,7 @@ static void FindThread(FindThreadData* ftd) {
         engine->Release();
     };
 
-    auto updateProgress = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateProgress, ftd);
+    auto updateProgress = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
     TextSel* rect;
     dm->textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||

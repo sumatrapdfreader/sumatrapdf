@@ -69,7 +69,7 @@ struct PrintData {
     Vec<SelectionOnPage> sel;   // empty when printing a page range
     Print_Advanced_Data advData;
     int rotation = 0;
-    ProgressUpdateUI* progressUI = nullptr;
+    ProgressUpdateCb progressCb;
     AbortCookieManager* abortCookie = nullptr;
     bool failedEngineClone = false;
 
@@ -284,7 +284,7 @@ static bool PrintToDevice(const PrintData& pd) {
     }
 
     logf("PrintToDevice: printer: '%s', file: '%s'\n", pd.printer->name, pd.engine->FilePath());
-    auto progressUI = pd.progressUI;
+    auto progressCb = pd.progressCb;
     auto abortCookie = pd.abortCookie;
     int res;
 
@@ -333,9 +333,7 @@ static bool PrintToDevice(const PrintData& pd) {
         return false;
     }
 
-    if (progressUI) {
-        progressUI->UpdateProgress(current, total);
-    }
+    UpdateProgress(&progressCb, current, total);
 
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
@@ -395,9 +393,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 continue;
             }
 
-            if (progressUI) {
-                progressUI->UpdateProgress(current, total);
-            }
+            UpdateProgress(&progressCb, current, total);
 
             StartPage(hdc);
 
@@ -443,14 +439,14 @@ static bool PrintToDevice(const PrintData& pd) {
                     }
                     delete bmp;
                     shrink *= 2;
-                } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
+                } while (!ok && shrink < 32 && !WasCanceled(&progressCb));
             }
             // TODO: abort if !ok?
 
             res = EndPage(hdc);
-            if (res <= 0 || (progressUI && progressUI->WasCanceled())) {
-                bool wasCancelled = progressUI && progressUI->WasCanceled();
-                logf("PrintToDevice: EndPage() failed with %d or wasCancelled: %d\n", res, (int)wasCancelled);
+            bool wasCanceled = WasCanceled(&progressCb);
+            if (res <= 0 || wasCanceled) {
+                logf("PrintToDevice: EndPage() failed with %d or wasCanceled: %d\n", res, (int)wasCanceled);
                 AbortDoc(hdc);
                 return false;
             }
@@ -473,9 +469,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
                 continue;
             }
-            if (progressUI) {
-                progressUI->UpdateProgress(current, total);
-            }
+            UpdateProgress(&progressCb, current, total);
 
             res = StartPage(hdc);
             if (res <= 0) {
@@ -558,13 +552,13 @@ static bool PrintToDevice(const PrintData& pd) {
                 }
                 delete bmp;
                 shrink *= 2;
-            } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
+            } while (!ok && shrink < 32 && !WasCanceled(&progressCb));
             // TODO: abort if !ok?
 
             res = EndPage(hdc);
-            if (res <= 0 || (progressUI && progressUI->WasCanceled())) {
-                bool wasCancelled = progressUI && progressUI->WasCanceled();
-                logf("PrintToDevice: EndPage() failed with %d or wasCancelled: %d\n", res, (int)wasCancelled);
+            bool wasCanceled = WasCanceled(&progressCb);
+            if (res <= 0 || wasCanceled) {
+                logf("PrintToDevice: EndPage() failed with %d or wasCanceled: %d\n", res, (int)wasCanceled);
                 AbortDoc(hdc);
                 return false;
             }
@@ -595,7 +589,7 @@ static void UpdatePrintProgress(UpdatePrintProgressData* d) {
 class PrintThreadData;
 void RemovePrintNotif(PrintThreadData* self, NotificationWnd*);
 
-class PrintThreadData : public ProgressUpdateUI {
+class PrintThreadData {
   public:
     NotificationWnd* wnd = nullptr;
     AbortCookieManager cookie;
@@ -632,13 +626,13 @@ class PrintThreadData : public ProgressUpdateUI {
     PrintThreadData(PrintThreadData const&) = delete;
     PrintThreadData& operator=(PrintThreadData const&) = delete;
 
-    ~PrintThreadData() override {
+    ~PrintThreadData() {
         CloseHandle(thread);
         delete data;
         RemovePrintNotification();
     }
 
-    void UpdateProgress(int current, int total) override {
+    void UpdateProgress(int current, int total) {
         auto data = new UpdatePrintProgressData;
         data->wnd = wnd;
         data->current = current;
@@ -647,7 +641,7 @@ class PrintThreadData : public ProgressUpdateUI {
         uitask::Post(fn, "TaskPrintUpdateProgress");
     }
 
-    bool WasCanceled() override {
+    bool WasCanceled() {
         return isCanceled || !IsMainWindowValid(win) || win->printCanceled;
     }
 };
@@ -671,26 +665,36 @@ static void DeletePrinterThread(DeletePrinterThreadData* d) {
     delete d;
 }
 
+static void UpdatePrintProgress(PrintThreadData* ftd, ProgressUpdateData* data) {
+    if (data->wasCancelled) {
+        bool wasCancelled = ftd->WasCanceled();
+        *data->wasCancelled = wasCancelled;
+        return;
+    }
+    ftd->UpdateProgress(data->current, data->total);
+}
+
 static DWORD WINAPI PrintThread(void* d) {
-    PrintThreadData* threadData = (PrintThreadData*)d;
-    MainWindow* win = threadData->win;
+    PrintThreadData* ptd = (PrintThreadData*)d;
+    MainWindow* win = ptd->win;
     // wait for PrintToDeviceOnThread to return so that we
     // close the correct handle to the current printing thread
     while (!win->printThread) {
         Sleep(1);
     }
 
-    HANDLE thread = threadData->thread = win->printThread;
+    HANDLE thread = ptd->thread = win->printThread;
 
-    PrintData* pd = threadData->data;
-    pd->progressUI = threadData;
-    pd->abortCookie = &threadData->cookie;
+    PrintData* pd = ptd->data;
+    pd->progressCb = MkFunc1<PrintThreadData, ProgressUpdateData*>(UpdatePrintProgress, ptd);
+    ;
+    pd->abortCookie = &ptd->cookie;
     PrintToDevice(*pd);
 
     auto data = new DeletePrinterThreadData;
     data->win = win;
     data->thread = thread;
-    data->threadData = threadData;
+    data->threadData = ptd;
     auto fn = MkFunc0<DeletePrinterThreadData>(DeletePrinterThread, data);
     uitask::Post(fn, "PrintDeleteThread");
     DestroyTempAllocator();
