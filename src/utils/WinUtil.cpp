@@ -1289,6 +1289,10 @@ bool IsCursorOverWindow(HWND hwnd) {
     return rcWnd.Contains({pt.x, pt.y});
 }
 
+HWND HwndGetParent(HWND hwnd) {
+    return ::GetParent(hwnd);
+}
+
 TempStr HwndGetClassName(HWND hwnd) {
     WCHAR buf[512] = {0};
     int n = GetClassNameW(hwnd, buf, dimof(buf));

@@ -130,6 +130,7 @@ HWND HwndSetFocus(HWND hwnd);
 bool HwndIsFocused(HWND);
 bool IsCursorOverWindow(HWND);
 
+HWND HwndGetParent(HWND hwnd);
 TempStr HwndGetClassName(HWND hwnd);
 Point HwndGetCursorPos(HWND hwnd);
 int MapWindowPoints(HWND, HWND, Point*, int);

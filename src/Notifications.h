@@ -6,6 +6,7 @@ struct NotificationWnd;
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
 extern Kind kNotifPageInfo;
+extern Kind kNotifAdHoc;
 
 using NotificationWndRemoved = Func1<NotificationWnd*>;
 
@@ -18,6 +19,7 @@ struct NotificationCreateArgs {
     Kind groupId = kNotifActionResponse;
     bool warning = false;
     int timeoutMs = 0; // if 0 => persists until closed manually
+    float shrinkLimit = 1.0f;
     const char* msg = nullptr;
     const char* progressMsg = nullptr;
     NotificationWndRemoved onRemoved;
@@ -26,6 +28,7 @@ struct NotificationCreateArgs {
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutInMS = 0, bool highlight = false);
 void RemoveNotification(NotificationWnd*);
 bool RemoveNotificationsForGroup(HWND hwnd, Kind);
+bool RemoveNotificationsForHwnd(HWND hwnd);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
 bool UpdateNotificationProgress(NotificationWnd*, int curr, int total);
 bool NotificationExists(NotificationWnd*);

@@ -30,6 +30,8 @@ using Gdiplus::SolidBrush;
 Kind kNotifCursorPos = "cursorPosHelper";
 Kind kNotifActionResponse = "responseToAction";
 Kind kNotifPageInfo = "pageInfoHelper";
+// can have multiple of those
+Kind kNotifAdHoc = "notifAdHoc";
 
 constexpr int kPadding = 6;
 constexpr int kTopLeftMargin = 8;
@@ -88,7 +90,7 @@ Vec<NotificationWnd*> gNotifs;
 
 static void GetForHwnd(HWND hwnd, Vec<NotificationWnd*>& v) {
     for (auto* wnd : gNotifs) {
-        HWND parent = GetParent(wnd->hwnd);
+        HWND parent = HwndGetParent(wnd->hwnd);
         if (parent == hwnd) {
             v.Append(wnd);
         }
@@ -175,16 +177,16 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     }
 
     highlight = args.warning;
+    shrinkLimit = args.shrinkLimit;
+    if (shrinkLimit < 0.2f) {
+        ReportIf(shrinkLimit < 0.2f);
+        shrinkLimit = 1.f;
+    }
     if (args.onRemoved.IsValid()) {
         wndRemovedCb = args.onRemoved;
     } else {
         wndRemovedCb = MkFunc1Void(NotifsRemoveNotification);
     }
-    // TODO: make shrinkLimit an arg
-    if (kNotifCursorPos == args.groupId) {
-        shrinkLimit = 0.7f;
-    }
-
     timeoutMs = args.timeoutMs;
 
     CreateCustomArgs cargs;
@@ -469,7 +471,8 @@ static int NotifsRemoveForGroup(Vec<NotificationWnd*>& wnds, Kind groupId) {
 }
 
 static void NotifsAdd(Vec<NotificationWnd*>& wnds, NotificationWnd* wnd, Kind groupId) {
-    if (groupId != nullptr) {
+    bool skipRemove = (groupId == nullptr) || (groupId == kNotifAdHoc);
+    if (!skipRemove) {
         NotifsRemoveForGroup(wnds, groupId);
     }
     wnd->groupId = groupId;

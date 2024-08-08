@@ -4389,6 +4389,7 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
         NotificationCreateArgs args;
         args.hwndParent = win->hwndCanvas;
         args.groupId = kNotifCursorPos;
+        args.shrinkLimit = 0.7f;
         args.timeoutMs = 0;
         notif = ShowNotification(args);
         cursorPosUnit = MeasurementUnit::pt;
@@ -5758,6 +5759,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
                 args.msg = "This is a notification";
+                args.groupId = kNotifAdHoc;
                 args.warning = true;
                 args.timeoutMs = 0;
                 ShowNotification(args);
@@ -5766,7 +5768,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             {
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
-                args.msg = "";
+                args.groupId = kNotifAdHoc;
+                args.progressMsg = "Progress: %d out of %d";
                 args.warning = false;
                 args.timeoutMs = 0;
                 auto wnd = ShowNotification(args);
