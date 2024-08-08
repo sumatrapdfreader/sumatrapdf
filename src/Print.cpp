@@ -583,7 +583,9 @@ struct UpdatePrintProgressData {
 };
 
 static void UpdatePrintProgress(UpdatePrintProgressData* d) {
-    UpdateNotificationProgress(d->wnd, d->current, d->total);
+    int perc = CalcPerc(d->current, d->total);
+    TempStr msg = str::FormatTemp(_TRA("Printing page %d of %d..."), d->current, d->total);
+    UpdateNotificationProgress(d->wnd, msg, perc);
     delete d;
 }
 
@@ -618,7 +620,6 @@ class PrintThreadData {
         args.timeoutMs = 0;
         auto fn = MkFunc1(RemovePrintNotif, this);
         args.onRemoved = fn;
-        args.progressMsg = _TRA("Printing page %d of %d...");
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
         args.groupId = nullptr;

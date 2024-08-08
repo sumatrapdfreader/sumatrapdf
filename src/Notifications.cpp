@@ -51,15 +51,12 @@ struct NotificationWnd : Wnd {
 
     void UpdateMessage(const char* msg, int timeoutMs = 0, bool highlight = false);
 
-    void UpdateProgress(int current, int total);
-    bool WasCanceled();
-
     bool HasClose() const {
         return true;
     }
 
     bool HasProgress() const {
-        return progressMsg != nullptr;
+        return progressPerc >= 0;
     }
     void Layout(const char* message);
 
@@ -76,10 +73,7 @@ struct NotificationWnd : Wnd {
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
     float shrinkLimit = 1.0f;
 
-    // only used for progress notifications
-    bool isCanceled = false;
-    int progress = 0;
-    char* progressMsg = nullptr; // must contain two %d (for current and total)
+    int progressPerc = -1;
 
     Rect rTxt;
     Rect rClose;
@@ -154,14 +148,9 @@ int GetWndX(NotificationWnd* wnd) {
 
 NotificationWnd::~NotificationWnd() {
     Destroy();
-    str::Free(progressMsg);
 }
 
 HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
-    if (args.progressMsg != nullptr) {
-        progressMsg = str::Dup(args.progressMsg);
-    }
-
     highlight = args.warning;
     shrinkLimit = args.shrinkLimit;
     if (shrinkLimit < 0.2f) {
@@ -200,32 +189,15 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     return hwnd;
 }
 
-void NotificationWnd::UpdateProgress(int current, int total) {
-    ReportIf(total <= 0);
+// returns 0% - 100%
+int CalcPerc(int current, int total) {
+    ReportIf(total <= 0 || current < 0);
+    ReportIf(total < current);
     if (total <= 0) {
         total = 1;
     }
-    progress = limitValue(100 * current / total, 0, 100);
-    if (HasProgress()) {
-        TempStr msg = str::FormatTemp(progressMsg, current, total);
-        UpdateMessage(msg);
-    }
-}
-
-bool NotificationWnd::WasCanceled() {
-    return isCanceled;
-}
-
-void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlight) {
-    HwndSetText(hwnd, msg);
-    this->highlight = highlight;
-    this->timeoutMs = timeoutMs;
-    HwndSetRtl(hwnd, IsUIRightToLeft());
-    Layout(msg);
-    HwndRepaintNow(hwnd);
-    if (timeoutMs != 0) {
-        SetTimer(hwnd, kNotifTimerTimeoutId, timeoutMs, nullptr);
-    }
+    int perc = limitValue(100 * current / total, 0, 100);
+    return perc;
 }
 
 constexpr int kCloseLeftMargin = 16;
@@ -363,7 +335,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         graphics.DrawRectangle(&pen, grc);
 
         rc.x += 2;
-        rc.dx = (progressWidth - 3) * progress / 100;
+        rc.dx = (progressWidth - 3) * progressPerc / 100;
         rc.y += 2;
         rc.dy -= 3;
 
@@ -373,6 +345,28 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     }
 
     buffer.Flush(hdcIn);
+}
+
+void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlight) {
+    HwndSetText(hwnd, msg);
+    this->highlight = highlight;
+    this->timeoutMs = timeoutMs;
+    HwndSetRtl(hwnd, IsUIRightToLeft());
+    Layout(msg);
+    HwndRepaintNow(hwnd);
+    if (timeoutMs != 0) {
+        SetTimer(hwnd, kNotifTimerTimeoutId, timeoutMs, nullptr);
+    }
+}
+
+bool UpdateNotificationProgress(NotificationWnd* wnd, const char* msg, int perc) {
+    if (!IsNotificationValid(wnd)) {
+        return false;
+    }
+    ReportIf(perc < 0 || perc > 100);
+    wnd->progressPerc = perc;
+    wnd->UpdateMessage(msg);
+    return true;
 }
 
 static void NotifRemove(NotificationWnd* wnd) {
@@ -538,24 +532,4 @@ NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {
     Vec<NotificationWnd*> wnds;
     GetForHwnd(hwnd, wnds);
     return NotifsGetForGroup(wnds, kind);
-}
-
-bool UpdateNotificationProgress(NotificationWnd* wnd, int curr, int total) {
-    if (!gNotifs.Contains(wnd)) {
-        return false;
-    }
-    wnd->UpdateProgress(curr, total);
-    return true;
-}
-
-#if 0
-void AddNotification(NotificationWnd* wnd, Kind kind) {
-    Vec<NotificationWnd*> wnds;
-    GetForSameHwnd(wnd, wnds);
-    NotifsAdd(wnds, wnd, kind);
-}
-#endif
-
-bool NotificationExists(NotificationWnd* wnd) {
-    return gNotifs.Contains(wnd);
 }

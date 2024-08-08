@@ -5754,6 +5754,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 args.timeoutMs = kNotifDefaultTimeOut;
                 ShowNotification(args);
             }
+            {
+                NotificationCreateArgs args;
+                args.hwndParent = win->hwndCanvas;
+                args.groupId = kNotifAdHoc;
+                args.msg = "This is a second notification\nMy friend.";
+                args.warning = false;
+                args.timeoutMs = 0;
+                ShowNotification(args);
+            }
 
             {
                 NotificationCreateArgs args;
@@ -5769,11 +5778,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 NotificationCreateArgs args;
                 args.hwndParent = win->hwndCanvas;
                 args.groupId = kNotifAdHoc;
-                args.progressMsg = "Progress: %d out of %d";
                 args.warning = false;
                 args.timeoutMs = 0;
                 auto wnd = ShowNotification(args);
-                UpdateNotificationProgress(wnd, 50, 100);
+                UpdateNotificationProgress(wnd, "Progress", 50);
             }
         } break;
 

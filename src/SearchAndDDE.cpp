@@ -216,7 +216,9 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
         win->findCancelled = true;
         return;
     }
-    if (!UpdateNotificationProgress(wnd, d->current, d->total)) {
+    TempStr msg = str::FormatTemp(_TRA("Searching %d of %d..."), d->current, d->total);
+    int perc = CalcPerc(d->current, d->total);
+    if (!UpdateNotificationProgress(wnd, msg, perc)) {
         // the search has been canceled by closing the notification
         win->findCancelled = true;
     }
@@ -249,8 +251,6 @@ struct FindThreadData {
             args.hwndParent = win->hwndCanvas;
             args.timeoutMs = 0;
             args.onRemoved = MkFunc1Void(RemoveNotification);
-
-            args.progressMsg = _TRA("Searching %d of %d...");
             args.groupId = kNotifFindProgress;
             ShowNotification(args);
         }

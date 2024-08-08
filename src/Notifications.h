@@ -21,7 +21,6 @@ struct NotificationCreateArgs {
     int timeoutMs = 0; // if 0 => persists until closed manually
     float shrinkLimit = 1.0f;
     const char* msg = nullptr;
-    const char* progressMsg = nullptr;
     NotificationWndRemoved onRemoved;
 };
 
@@ -30,7 +29,7 @@ void RemoveNotification(NotificationWnd*);
 bool RemoveNotificationsForGroup(HWND hwnd, Kind);
 bool RemoveNotificationsForHwnd(HWND hwnd);
 NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind);
-bool UpdateNotificationProgress(NotificationWnd*, int curr, int total);
+bool UpdateNotificationProgress(NotificationWnd*, const char* msg, int perc);
 bool NotificationExists(NotificationWnd*);
 void RelayoutNotifications(HWND hwnd);
 
@@ -38,3 +37,5 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(HWND hwnd, const char* msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int timeoutMs);
 bool IsNotificationValid(NotificationWnd*);
+
+int CalcPerc(int current, int total);
