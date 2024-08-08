@@ -7,7 +7,6 @@ void SetTheme(const char* name);
 void SetCurrentThemeFromSettings();
 void SelectNextTheme();
 void CreateThemeCommands();
-int GetCurrentThemeCmdId(int* firstId, int* lastId);
 
 COLORREF ThemeDocumentColors(COLORREF&);
 COLORREF ThemeMainWindowBackgroundColor();
@@ -23,6 +22,7 @@ COLORREF ThemeNotificationsHighlightColor();
 COLORREF ThemeNotificationsHighlightTextColor();
 COLORREF ThemeNotificationsProgressColor();
 bool ThemeColorizeControls();
+bool IsCurrentThemeDefault();
 
 extern int gFirstSetThemeCmdId;
 extern int gLastSetThemeCmdId;

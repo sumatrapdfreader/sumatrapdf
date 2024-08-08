@@ -379,7 +379,7 @@ void UpdateFindbox(MainWindow* win) {
     }
 }
 
-LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
+LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
                                 DWORD_PTR dwRefData) {
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
         HDC hdc = (HDC)wParam;
@@ -393,8 +393,46 @@ LRESULT CALLBACK BgSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         DeleteObject(bgBrush);
         return 1;
     }
+    if (WM_NOTIFY == uMsg) {
+        auto win = FindMainWindowByHwnd(hWnd);
+            NMHDR* hdr = (NMHDR*)lParam;
+            HWND chwnd = hdr->hwndFrom;
+            if (hdr->code == NM_CUSTOMDRAW)
+            {
+                if (win && win->hwndToolbar == chwnd) {
+                    NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;
+                    switch (custDraw->nmcd.dwDrawStage)
+                    {
+                        case CDDS_PREPAINT:
+                            return CDRF_NOTIFYITEMDRAW;
+
+                        case CDDS_ITEMPREPAINT:
+                        {
+                            auto col = ThemeWindowTextColor();
+                            //col = RGB(255, 0, 0);
+                            //SetTextColor(custDraw->nmcd.hdc, col);
+                            UINT itemState = custDraw->nmcd.uItemState;
+                            if (itemState & CDIS_DISABLED) {
+                                // TODO: this doesn't work
+                                col = ThemeWindowTextDisabledColor();
+                                //col = RGB(255, 0, 0);
+                                custDraw->clrText = col;
+                            } else if (false && itemState & CDIS_SELECTED) {
+                                custDraw->clrText = RGB(0, 255, 0);
+                            } else if (false && itemState & CDIS_GRAYED) {
+                                custDraw->clrText = RGB(0, 0, 255);
+                            } else {
+                                custDraw->clrText = col;
+                            }
+                            return CDRF_DODEFAULT;
+                            //return CDRF_NEWFONT;
+                        }
+                    }
+                }
+        }
+    }
     if (WM_NCDESTROY == uMsg) {
-        RemoveWindowSubclass(hWnd, BgSubclassProc, uIdSubclass);
+        RemoveWindowSubclass(hWnd, ReBarWndProc, uIdSubclass);
     }
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -961,18 +999,38 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
     HwndScheduleRepaint(win->hwndToolbar);
 }
 
+#pragma comment(lib, "UxTheme.lib")
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 void CreateToolbar(MainWindow* win) {
     kButtonSpacingX = 0;
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
+
+    DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | RBS_BANDBORDERS;
+    dwStyle |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
+    win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParent,
+                                     (HMENU)IDC_REBAR, hinst, nullptr);
+    SetWindowSubclass(win->hwndReBar, ReBarWndProc, 0, 0);
+
+    REBARINFO rbi{};
+    rbi.cbSize = sizeof(REBARINFO);
+    rbi.fMask = 0;
+    rbi.himl = (HIMAGELIST) nullptr;
+    SendMessageW(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
+
     DWORD style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
     style |= TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN;
     const WCHAR* cls = TOOLBARCLASSNAME;
     HMENU cmd = (HMENU)IDC_TOOLBAR;
-    HWND hwndToolbar = CreateWindowExW(0, cls, nullptr, style, 0, 0, 0, 0, hwndParent, cmd, hinst, nullptr);
+    HWND hwndToolbar = CreateWindowExW(0, cls, nullptr, style, 0, 0, 0, 0, win->hwndReBar, cmd, hinst, nullptr);
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
+
+    if (!IsCurrentThemeDefault()) {
+        // without this custom draw code doesn't work
+        SetWindowTheme(hwndToolbar, L"", L"");
+    }
 
     int iconSize = SetToolbarIconsImageList(win);
 
@@ -1044,17 +1102,6 @@ void CreateToolbar(MainWindow* win) {
     }
 
     ShowWindow(hwndToolbar, SW_SHOW);
-    DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | RBS_BANDBORDERS;
-    dwStyle |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
-    win->hwndReBar = CreateWindowExW(WS_EX_TOOLWINDOW, REBARCLASSNAME, nullptr, dwStyle, 0, 0, 0, 0, hwndParent,
-                                     (HMENU)IDC_REBAR, hinst, nullptr);
-    SetWindowSubclass(win->hwndReBar, BgSubclassProc, 0, 0);
-
-    REBARINFO rbi{};
-    rbi.cbSize = sizeof(REBARINFO);
-    rbi.fMask = 0;
-    rbi.himl = (HIMAGELIST) nullptr;
-    SendMessageW(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
 
     REBARBANDINFOW rbBand{};
     rbBand.cbSize = sizeof(REBARBANDINFOW);

@@ -59,8 +59,8 @@ static int gCurrThemeIndex = 0;
 static Theme* gCurrentTheme = nullptr;
 static Theme* gThemeLight = nullptr;
 
-int GetCurrentThemeIndex() {
-    return gCurrThemeIndex;
+bool IsCurrentThemeDefault() {
+    return gCurrThemeIndex == 0;
 }
 
 void CreateThemeCommands() {
