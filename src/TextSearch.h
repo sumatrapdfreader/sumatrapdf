@@ -1,23 +1,23 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-enum class TextSearchDirection : bool { Backward = false, Forward = true };
+struct TextSearch : public TextSelection {
+    enum class Direction : bool { Backward = false, Forward = true };
 
-class TextSearch : public TextSelection {
-  public:
     TextSearch(EngineBase* engine, DocumentTextCache* textCache);
     ~TextSearch();
 
     void SetSensitive(bool sensitive);
-    void SetDirection(TextSearchDirection direction);
+    void SetDirection(Direction direction);
     void SetLastResult(TextSelection* sel);
-    TextSel* FindFirst(int page, const WCHAR* text, ProgressUpdateCb* tracker);
-    TextSel* FindNext(ProgressUpdateCb* tracker);
+    TextSel* FindFirst(int page, const WCHAR* text);
+    TextSel* FindNext();
 
     int GetCurrentPageNo() const;
     int GetSearchHitStartPageNo() const;
 
-  protected:
+    ProgressUpdateCb progressCb;
+
     // Lightweight container for page and offset within the page to use as return value of MatchEnd
     struct PageAndOffset {
         int page;
@@ -38,13 +38,12 @@ class TextSearch : public TextSelection {
 
     void SetText(const WCHAR* text);
     bool FindTextInPage(int pageNo, PageAndOffset* finalGlyph);
-    bool FindStartingAtPage(int pageNo, ProgressUpdateCb* tracker);
+    bool FindStartingAtPage(int pageNo);
     PageAndOffset MatchEnd(const WCHAR* start) const;
 
     void Clear();
     void Reset();
 
-  private:
     const WCHAR* pageText = nullptr;
     int findIndex = 0;
 

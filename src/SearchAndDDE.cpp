@@ -121,7 +121,7 @@ void FindFirst(MainWindow* win) {
         dm->textSearch->SetSensitive(matchCase);
     }
 
-    FindTextOnThread(win, TextSearchDirection::Forward, true);
+    FindTextOnThread(win, TextSearch::Direction::Forward, true);
 }
 
 void FindNext(MainWindow* win) {
@@ -129,7 +129,7 @@ void FindNext(MainWindow* win) {
         return;
     }
     if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, CmdFindNext, 0)) {
-        FindTextOnThread(win, TextSearchDirection::Forward, true);
+        FindTextOnThread(win, TextSearch::Direction::Forward, true);
     }
 }
 
@@ -138,7 +138,7 @@ void FindPrev(MainWindow* win) {
         return;
     }
     if (SendMessageW(win->hwndToolbar, TB_ISBUTTONENABLED, CmdFindPrev, 0)) {
-        FindTextOnThread(win, TextSearchDirection::Backward, true);
+        FindTextOnThread(win, TextSearch::Direction::Backward, true);
     }
 }
 
@@ -151,7 +151,7 @@ void FindToggleMatchCase(MainWindow* win) {
     Edit_SetModify(win->hwndFindEdit, TRUE);
 }
 
-void FindSelection(MainWindow* win, TextSearchDirection direction) {
+void FindSelection(MainWindow* win, TextSearch::Direction direction) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win)) {
         return;
     }
@@ -224,12 +224,12 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
 
 struct FindThreadData {
     MainWindow* win = nullptr;
-    TextSearchDirection direction{TextSearchDirection::Forward};
+    TextSearch::Direction direction = TextSearch::Direction::Forward;
     bool wasModified = false;
     AutoFreeWStr text;
     HANDLE thread = nullptr;
 
-    FindThreadData(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified) {
+    FindThreadData(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified) {
         this->win = win;
         this->direction = direction;
         this->text = ToWStr(text);
@@ -368,23 +368,23 @@ static void FindThread(FindThreadData* ftd) {
         engine->Release();
     };
 
-    auto updateProgress = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
     TextSel* rect;
-    dm->textSearch->SetDirection(ftd->direction);
+    textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
+    textSearch->SetDirection(ftd->direction);
     if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
         !dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
-        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text, &updateProgress);
+        rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text);
     } else {
-        rect = textSearch->FindNext(&updateProgress);
+        rect = textSearch->FindNext();
     }
 
     bool loopedAround = false;
     if (!win->findCancelled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
-        int startPage = (TextSearchDirection::Forward == ftd->direction) ? 1 : ctrl->PageCount();
+        int startPage = (TextSearch::Direction::Forward == ftd->direction) ? 1 : ctrl->PageCount();
         if (!ftd->wasModified || ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
-            rect = textSearch->FindFirst(startPage, ftd->text, &updateProgress);
+            rect = textSearch->FindFirst(startPage, ftd->text);
         }
     }
 
@@ -436,7 +436,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 //   if true, starting a search for new term
 //   if false, searching for the next occurence of previous term
 // TODO: should detect wasModified by comparing with the last search result
-void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified,
                       bool showProgress) {
     AbortFinding(win, false);
     if (str::IsEmpty(text)) {
@@ -463,7 +463,7 @@ char* ReverseTextTemp(char* s) {
     return ToUtf8Temp(ws);
 }
 
-void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showProgress) {
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress) {
     char* s = HwndGetTextTemp(win->hwndFindEdit);
     // if document is rtl, need to reverse the text
     // s = ReverseTextTemp(s);
@@ -768,7 +768,7 @@ static const char* HandleSearchCmd(const char* cmd, bool* ack) {
     }
     bool wasModified = true;
     bool showProgress = true;
-    FindTextOnThread(win, TextSearchDirection::Forward, term, wasModified, showProgress);
+    FindTextOnThread(win, TextSearch::Direction::Forward, term, wasModified, showProgress);
     win->Focus();
     *ack = true;
     return next;

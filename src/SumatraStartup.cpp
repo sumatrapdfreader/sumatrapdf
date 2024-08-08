@@ -220,7 +220,7 @@ static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
     HwndSetText(win->hwndFindEdit, searchTerm);
     bool wasModified = true;
     bool showProgress = true;
-    FindTextOnThread(win, TextSearchDirection::Forward, searchTerm, wasModified, showProgress);
+    FindTextOnThread(win, TextSearch::Direction::Forward, searchTerm, wasModified, showProgress);
 }
 
 static MainWindow* LoadOnStartup(const char* filePath, const Flags& flags, bool isFirstWin) {

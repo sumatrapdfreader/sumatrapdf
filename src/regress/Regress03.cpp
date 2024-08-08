@@ -3,7 +3,7 @@
    https://drive.google.com/file/d/0B2EXZJHDEYllMnkzMUZWWGdueDA/view?usp=sharing
  */
 
-void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const TextSearchDirection direction,
+void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const TextSearch::Direction direction,
                        const TextSel* expected, const int expectedLen) {
     EngineBase* engine = CreateEngineFromFile(searchFileA, nullptr, true);
     DocumentTextCache* textCache = new DocumentTextCache(engine);
@@ -12,7 +12,7 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
     int findCount = 0;
     int startPage;
     int expIndex, expIncr;
-    if (TextSearchDirection::Forward == direction) {
+    if (TextSearch::Direction::Forward == direction) {
         startPage = 1;
         expIndex = 0;
         expIncr = 1;
@@ -21,8 +21,8 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
         expIndex = expectedLen - 1;
         expIncr = -1;
     }
-    for (auto tsel = tsrch->FindFirst(startPage, searchTerm, nullptr); nullptr != tsel;
-         tsel = tsrch->FindNext(nullptr), ++findCount, expIndex += expIncr) {
+    for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel;
+         tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
         if (0 == expected[expIndex].len) {
             wprintf(L"Found %s %i times, not expecting another match\n", searchTerm, expIndex);
             ReportIf(true);
@@ -45,7 +45,7 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
             }
         }
     }
-    if (TextSearchDirection::Forward == direction) {
+    if (TextSearch::Direction::Forward == direction) {
         if (findCount != expectedLen) {
             wprintf(L"Found only %d matches of '%s', expected %d\n", expIndex, searchTerm, expectedLen);
             ReportIf(true);
@@ -81,8 +81,8 @@ const TextSel* BuildTextSelList(RegressSearchInfo& info) {
 void RegressSearch(const char* filePath, RegressSearchInfo& info) {
     const WCHAR* searchTerm = info.searchPhrase;
     const TextSel* expected = BuildTextSelList(info);
-    SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Forward, expected, info.count);
-    SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Backward, expected, info.count);
+    SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Forward, expected, info.count);
+    SearchTestWithDir(filePath, searchTerm, TextSearch::Direction::Backward, expected, info.count);
     delete[] expected;
 }
 

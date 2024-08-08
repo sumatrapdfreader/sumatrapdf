@@ -112,8 +112,8 @@ void TextSearch::SetSensitive(bool sensitive) {
     markAllPagesNonSkip(pagesToSkip);
 }
 
-void TextSearch::SetDirection(TextSearchDirection direction) {
-    bool fwd = TextSearchDirection::Forward == direction;
+void TextSearch::SetDirection(TextSearch::Direction direction) {
+    bool fwd = TextSearch::Direction::Forward == direction;
     if (fwd == forward) {
         return;
     }
@@ -304,14 +304,14 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     return true;
 }
 
-bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateCb* tracker) {
+bool TextSearch::FindStartingAtPage(int pageNo) {
     if (str::IsEmpty(findText)) {
         return false;
     }
 
     int next = forward ? 1 : -1;
-    while ((1 <= pageNo) && (pageNo <= nPages) && !WasCanceled(tracker)) {
-        UpdateProgress(tracker, pageNo, nPages);
+    while ((1 <= pageNo) && (pageNo <= nPages) && !WasCanceled(progressCb)) {
+        UpdateProgress(progressCb, pageNo, nPages);
 
         if (pagesToSkip[pageNo - 1]) {
             pageNo += next;
@@ -348,25 +348,25 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateCb* tracker) {
     return false;
 }
 
-TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateCb* tracker) {
+TextSel* TextSearch::FindFirst(int page, const WCHAR* text) {
     SetText(text);
 
-    if (FindStartingAtPage(page, tracker)) {
+    if (FindStartingAtPage(page)) {
         return &result;
     }
     return nullptr;
 }
 
-TextSel* TextSearch::FindNext(ProgressUpdateCb* tracker) {
+TextSel* TextSearch::FindNext() {
     ReportIf(!findText);
     if (!findText) {
         return nullptr;
     }
 
-    if (WasCanceled(tracker)) {
+    if (WasCanceled(progressCb)) {
         return nullptr;
     }
-    UpdateProgress(tracker, findPage, nPages);
+    UpdateProgress(progressCb, findPage, nPages);
 
     PageAndOffset finalGlyph;
     if (FindTextInPage(findPage, &finalGlyph)) {
@@ -379,7 +379,7 @@ TextSel* TextSearch::FindNext(ProgressUpdateCb* tracker) {
     }
 
     auto next = forward ? 1 : -1;
-    if (FindStartingAtPage(findPage + next, tracker)) {
+    if (FindStartingAtPage(findPage + next)) {
         return &result;
     }
     return nullptr;

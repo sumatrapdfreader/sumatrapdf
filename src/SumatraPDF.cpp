@@ -5611,11 +5611,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdFindNextSel:
-            FindSelection(win, TextSearchDirection::Forward);
+            FindSelection(win, TextSearch::Direction::Forward);
             break;
 
         case CmdFindPrevSel:
-            FindSelection(win, TextSearchDirection::Backward);
+            FindSelection(win, TextSearch::Direction::Backward);
             break;
 
         case CmdHelpVisitWebsite:

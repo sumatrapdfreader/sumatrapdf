@@ -622,7 +622,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     if (1 == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         HwndSetText(st->win->hwndFindEdit, "!z_yt");
-        FindTextOnThread(st->win, TextSearchDirection::Forward, true);
+        FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
     }
 
     int secs = SecsSinceSystemTime(st->stressStartTime);
@@ -764,7 +764,7 @@ static bool GoToNextPage(StressTest* st) {
     if (st->currPageNo == st->pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
         HwndSetText(st->win->hwndFindEdit, "!z_yt");
-        FindTextOnThread(st->win, TextSearchDirection::Forward, true);
+        FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
     }
 
     if (1 == rand() % 3) {

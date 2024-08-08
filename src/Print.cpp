@@ -334,7 +334,7 @@ static bool PrintToDevice(const PrintData& pd) {
         return false;
     }
 
-    UpdateProgress(&progressCb, current, total);
+    UpdateProgress(progressCb, current, total);
 
     auto devMode = pd.printer->devMode;
     // http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
@@ -394,7 +394,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 continue;
             }
 
-            UpdateProgress(&progressCb, current, total);
+            UpdateProgress(progressCb, current, total);
 
             StartPage(hdc);
 
@@ -440,12 +440,12 @@ static bool PrintToDevice(const PrintData& pd) {
                     }
                     delete bmp;
                     shrink *= 2;
-                } while (!ok && shrink < 32 && !WasCanceled(&progressCb));
+                } while (!ok && shrink < 32 && !WasCanceled(progressCb));
             }
             // TODO: abort if !ok?
 
             res = EndPage(hdc);
-            bool wasCanceled = WasCanceled(&progressCb);
+            bool wasCanceled = WasCanceled(progressCb);
             if (res <= 0 || wasCanceled) {
                 logf("PrintToDevice: EndPage() failed with %d or wasCanceled: %d\n", res, (int)wasCanceled);
                 AbortDoc(hdc);
@@ -470,7 +470,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
                 continue;
             }
-            UpdateProgress(&progressCb, current, total);
+            UpdateProgress(progressCb, current, total);
 
             res = StartPage(hdc);
             if (res <= 0) {
@@ -553,11 +553,11 @@ static bool PrintToDevice(const PrintData& pd) {
                 }
                 delete bmp;
                 shrink *= 2;
-            } while (!ok && shrink < 32 && !WasCanceled(&progressCb));
+            } while (!ok && shrink < 32 && !WasCanceled(progressCb));
             // TODO: abort if !ok?
 
             res = EndPage(hdc);
-            bool wasCanceled = WasCanceled(&progressCb);
+            bool wasCanceled = WasCanceled(progressCb);
             if (res <= 0 || wasCanceled) {
                 logf("PrintToDevice: EndPage() failed with %d or wasCanceled: %d\n", res, (int)wasCanceled);
                 AbortDoc(hdc);

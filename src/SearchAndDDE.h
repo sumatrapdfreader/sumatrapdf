@@ -25,10 +25,10 @@ void FindPrev(MainWindow* win);
 void FindNext(MainWindow* win);
 void FindFirst(MainWindow* win);
 void FindToggleMatchCase(MainWindow* win);
-void FindSelection(MainWindow* win, TextSearchDirection direction);
+void FindSelection(MainWindow* win, TextSearch::Direction direction);
 bool AbortFinding(MainWindow* win, bool hideMessage);
-void FindTextOnThread(MainWindow* win, TextSearchDirection direction, bool showProgress);
-void FindTextOnThread(MainWindow* win, TextSearchDirection direction, const char* text, bool wasModified,
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress);
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified,
                       bool showProgress);
 extern bool gIsStartup;
 extern StrVec gDdeOpenOnStartup;

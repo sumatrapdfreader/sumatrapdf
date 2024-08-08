@@ -429,7 +429,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         MainWindow* win = FindMainWindowByHwnd(hEdit);
         // "find as you type"
         if (EN_UPDATE == HIWORD(wp) && hEdit == win->hwndFindEdit && gGlobalPrefs->showToolbar) {
-            FindTextOnThread(win, TextSearchDirection::Forward, false);
+            FindTextOnThread(win, TextSearch::Direction::Forward, false);
         }
     }
     return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
@@ -481,7 +481,7 @@ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
         // TODO: if user re-binds F3 it'll not be picked up
         // we would have to either run accelerators after
         if (wp == VK_F3) {
-            auto searchDir = IsShiftPressed() ? TextSearchDirection::Backward : TextSearchDirection::Forward;
+            auto searchDir = IsShiftPressed() ? TextSearch::Direction::Backward : TextSearch::Direction::Forward;
             FindTextOnThread(win, searchDir, true);
             // Note: we don't return but let default processing take place
         }

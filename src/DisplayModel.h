@@ -52,7 +52,7 @@ struct ScrollState {
 
 struct DocumentTextCache;
 struct TextSelection;
-class TextSearch;
+struct TextSearch;
 struct TextSel;
 class Synchronizer;
 
