@@ -353,6 +353,8 @@ int GetInstallerWinDx() {
 }
 
 static void StartInstallation(InstallerWnd* wnd) {
+    gInstallStarted = true;
+
     // create a progress bar in place of the Options button
     int dx = DpiScale(wnd->hwnd, GetInstallerWinDx() / 2);
     Rect rc(0, 0, dx, gButtonDy);
@@ -382,12 +384,9 @@ static void StartInstallation(InstallerWnd* wnd) {
     DeleteWnd(&wnd->checkboxRegisterPreview);
     DeleteWnd(&wnd->btnOptions);
 
-    wnd->btnInstall->SetIsEnabled(false);
-
     SetMsg(_TRA("Installation in progress..."), COLOR_MSG_INSTALLATION);
     HwndRepaintNow(wnd->hwnd);
 
-    gInstallStarted = true;
     auto fn = MkFunc0(InstallerThread, &gCliNew);
     wnd->hThread = StartThread(fn, "InstallerThread");
 }
@@ -400,12 +399,22 @@ static TempStr GetInstalledExePathTemp(Flags* cli) {
 }
 
 static void OnButtonInstall(InstallerWnd* wnd) {
+    // gInstallStarted is set in StartInstallation because we might not proceed here
+    if (gInstallStarted) {
+        // I've seen crashes where somehow "Install" button was pressed twice
+        logf("OnButtonInstall: called but gInstallStarted is %d\n", (int)gInstallStarted);
+        ReportIfQuick(gInstallStarted);
+        return;
+    }
+
     Flags* cli = &gCliNew;
     if (wnd->showOptions) {
         // hide and disable "Options" button during installation
         OnButtonOptions(wnd);
     }
+    wnd->btnInstall->SetIsEnabled(false);
 
+    // TODO: if needs elevation, this might not have enough prermissions
     {
         /* if the app is running, we have to kill it so that we can over-write the executable */
         char* exePath = GetInstalledExePathTemp(cli);
@@ -414,8 +423,10 @@ static void OnButtonInstall(InstallerWnd* wnd) {
 
     logf("OnButtonInstall: before CheckInstallUninstallPossible()\n");
     if (!CheckInstallUninstallPossible(wnd->hwnd)) {
+        wnd->btnInstall->SetIsEnabled(true);
         return;
     }
+
     logf("OnButtonInstall: after CheckInstallUninstallPossible()\n");
     logf("OnButtonInstall: wnd: 0x%p\n", wnd);
     logf("OnButtonInstall: wnd->editInstallationDir: 0x%p\n", wnd->editInstallationDir);
