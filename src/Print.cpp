@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
+#include "utils/ThreadUtil.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -674,8 +675,7 @@ static void UpdatePrintProgress(PrintThreadData* ftd, ProgressUpdateData* data) 
     ftd->UpdateProgress(data->current, data->total);
 }
 
-static DWORD WINAPI PrintThread(void* d) {
-    PrintThreadData* ptd = (PrintThreadData*)d;
+static void PrintThread(PrintThreadData* ptd) {
     MainWindow* win = ptd->win;
     // wait for PrintToDeviceOnThread to return so that we
     // close the correct handle to the current printing thread
@@ -698,14 +698,14 @@ static DWORD WINAPI PrintThread(void* d) {
     auto fn = MkFunc0<DeletePrinterThreadData>(DeletePrinterThread, data);
     uitask::Post(fn, "PrintDeleteThread");
     DestroyTempAllocator();
-    return 0;
 }
 
 static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {
     ReportIf(win->printThread);
     PrintThreadData* threadData = new PrintThreadData(win, data);
     win->printThread = nullptr;
-    win->printThread = CreateThread(nullptr, 0, PrintThread, threadData, 0, nullptr);
+    auto fn = MkFunc0(PrintThread, threadData);
+    win->printThread = StartThread(fn, "PrintThread");
 }
 
 void AbortPrinting(MainWindow* win) {
