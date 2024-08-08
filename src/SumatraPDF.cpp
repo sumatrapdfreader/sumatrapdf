@@ -1753,11 +1753,6 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         // there's no tab to reuse at this point
         args->forceReuse = false;
     } else {
-        // TODO: figure out why happens. seen in 2019/12/11/3e06348ed000006.txt
-        if (!args->forceReuse && !openNewTab) {
-            logf("LoadDocument: got !args->forceReuse && !openNewTab\n");
-        }
-        ReportIf(!args->forceReuse && !openNewTab);
         if (openNewTab) {
             SaveCurrentWindowTab(args->win);
         }
