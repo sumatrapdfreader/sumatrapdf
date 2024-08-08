@@ -49,12 +49,6 @@ struct Theme {
     // Link color on recently added, about, and properties menus
     COLORREF linkColor;
 
-    // Style of notifications
-    // Background color of the notification window
-    COLORREF notifBackgroundColor;
-    // Text color of the notification window
-    COLORREF notifTextColor;
-
     // Whether or not we colorize standard Windows controls and window areas
     bool colorizeControls;
 };
@@ -85,12 +79,6 @@ static Theme gThemeLight = {
     // Main Link Color
     RgbToCOLORREF(0x0020A0),
 
-    // Notifications
-    // Background color
-    kColWhite,
-    // Text color
-    gThemeLight.textColor,
-
     // Colorize standard controls
     false
 };
@@ -107,29 +95,10 @@ static Theme gThemeDark = {
     //kColWhite,
     AdjustLightness2(RgbToCOLORREF(0x263238), 150),
     // Main Link Color
-    //RgbToCOLORREF(0x80CBAD)
     AdjustLightness2(RgbToCOLORREF(0x263238), 110),
 
-    // Notifications
-    // Background color
-    AdjustLightness2(gThemeDark.backgroundColor, 10),
-    // Text color
-    gThemeDark.textColor,
-    // Colorize standard controls
     true
 };
-
-/*
-// Highlight color
-AdjustLightness2(RgbToCOLORREF(0x33434B), 10),
-// Highlight text color
-gThemeDark.textColor,
-
-// Highlight color
-AdjustLightness2(RgbToCOLORREF(0x3E3E42), 10),
-// Highlight text color
-gThemeDarker.textColor,
-*/
 
 static Theme gThemeDarker = {
     // Theme Name
@@ -144,12 +113,6 @@ static Theme gThemeDarker = {
     //kColWhite,
     // Main Link Color
     AdjustLightness2(RgbToCOLORREF(0x2D2D30), 110),
-
-    // Notifications
-    // Background color
-    AdjustLightness2(gThemeDarker.backgroundColor, 10),
-    // Text color
-    gThemeDarker.textColor,
 
     // Colorize standard controls
     true
@@ -336,11 +299,12 @@ COLORREF ThemeWindowLinkColor() {
 }
 
 COLORREF ThemeNotificationsBackgroundColor() {
-    return gCurrentTheme->notifBackgroundColor;
+    auto col = gCurrentTheme->backgroundColor;
+    return AdjustLightness2(col, 10);
 }
 
 COLORREF ThemeNotificationsTextColor() {
-    return gCurrentTheme->notifTextColor;
+    return gCurrentTheme->textColor;
 }
 
 COLORREF ThemeNotificationsHighlightColor() {
@@ -372,8 +336,6 @@ void dumpThemes() {
         logf("        ControlBackgroundColor = %s\n", SerializeColorTemp(w.controlBackgroundColor));
         logf("        TextColor = %s\n", SerializeColorTemp(w.textColor));
         logf("        LinkColor = %s\n", SerializeColorTemp(w.linkColor));
-        logf("        NoitfBackgroundColor = %s\n", SerializeColorTemp(w.notifBackgroundColor));
-        logf("        NotifTextColor = %s\n", SerializeColorTemp(w.notifTextColor));
         logf("    ]\n");
     }
     logf("]\n");
