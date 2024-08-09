@@ -54,7 +54,7 @@ class DialogData {
     // We need the smallest to respond to the WM_GETMINMAXINFO message
     POINT ptSmallest;
 
-    // we need this to decide how much the window has changed size when we get a WM_SIZE message
+    // We need this to decide how much the window has changed size when we get a WM_SIZE message
     Size sizeClient;
     bool bMaximised;
 
