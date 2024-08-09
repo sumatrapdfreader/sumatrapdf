@@ -314,7 +314,17 @@ again:
             c -= ('a' - 'A');
         }
     }
+#if 1
     accel.key = c;
+#else
+    // trying to get cyryllic keyboard, doesn't work
+    HKL kl = GetKeyboardLayout(0);
+    SHORT key = VkKeyScanExW((WCHAR)c, kl);
+    if (key == -1) {
+        key = (SHORT)c;
+    }
+    accel.key = (WORD)key;
+#endif
     return true;
 }
 
