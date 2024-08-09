@@ -6199,8 +6199,8 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
+            SaveSettings();
             if (wp == TRUE) {
-                SaveSettings();
                 // we must quit so that we restore opened files on start.
                 DestroyWindow(hwnd);
             }
