@@ -67,12 +67,12 @@ static u8* SkipSzOrOrd(u8* d) {
     WORD* pw = (WORD*)d;
     WORD w = *pw++;
     if (w == 0x0000) {
-        // no menu
+        // No Menu
     } else if (w == 0xffff) {
-        // menu id followed by another WORD item
+        // Menu id followed by another WORD item
         pw++;
     } else {
-        // anything else: zero-terminated WCHAR*
+        // Anything else: zero-terminated WCHAR*
         WCHAR* s = (WCHAR*)pw;
         while (*s) {
             s++;
@@ -101,7 +101,7 @@ static bool HasDlgTemplateExFont(DLGTEMPLATEEX* tpl) {
     return style != 0;
 }
 
-// gets a dialog template from the resources and sets the RTL flag
+// Gets a dialog template from the resources and sets the RTL flag
 // cf. http://www.ureader.com/msg/1484387.aspx
 static void SetDlgTemplateRtl(DLGTEMPLATE* tpl) {
     if (IsDlgTemplateEx(tpl)) {
@@ -117,7 +117,7 @@ static int ToFontPointSize(int fontSize) {
 }
 
 // https://stackoverflow.com/questions/14370238/can-i-dynamically-change-the-font-size-of-a-dialog-window-created-with-c-in-vi
-// TODO: if changing font name would have do more complicated dance of replacing
+// TODO: If changing font name would have do more complicated dance of replacing
 // variable string in the middle of the struct
 static void SetDlgTemplateExFont(DLGTEMPLATE* tmp, bool isRtl, int fontSize) {
     ReportIf(!IsDlgTemplateEx(tmp));
@@ -146,7 +146,7 @@ DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
     return tpl;
 }
 
-// creates a dialog box that dynamically gets a right-to-left layout if needed
+// Creates a dialog box that dynamically gets a right-to-left layout if needed
 static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data) {
     bool isRtl = IsUIRightToLeft();
     bool isDefaultFont = IsAppFontSizeDefault();
