@@ -28,7 +28,7 @@ struct ArgSpec {
     CommandArg::Type type;
 };
 
-// arguments for the same command should follow each other
+// Arguments for the same command should follow each other
 // first argument is default and can be specified without a name
 static const ArgSpec argSpecs[] = {
     {CmdSelectionHandler, kCmdArgURL, CommandArg::Type::String}, // default
@@ -37,13 +37,13 @@ static const ArgSpec argSpecs[] = {
     {CmdExec, kCmdArgExe, CommandArg::Type::String}, // default
     {CmdExec, kCmdArgFilter, CommandArg::Type::String},
 
-    // and all CmdCreateAnnot* commands
+    // And all CmdCreateAnnot* commands
     {CmdCreateAnnotText, kCmdArgColor, CommandArg::Type::Color}, // default
     {CmdCreateAnnotText, kCmdArgOpenEdit, CommandArg::Type::Bool},
     {CmdCreateAnnotText, kCmdArgCopyToClipboard, CommandArg::Type::Bool},
     {CmdCreateAnnotText, kCmdArgSetContent, CommandArg::Type::Bool},
 
-    // and  CmdScrollDown, CmdGoToNextPage, CmdGoToPrevPage
+    // And  CmdScrollDown, CmdGoToNextPage, CmdGoToPrevPage
     {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
 
     {CmdSetTheme, kCmdArgTheme, CommandArg::Type::String}, // default
@@ -119,7 +119,7 @@ static bool IsArgName(const char* name, const char* argName) {
 }
 
 void InsertArg(CommandArg** firstPtr, CommandArg* arg) {
-    // for ease of use by callers, we shift null check here
+    // For ease of use by callers, we shift null check here
     if (!arg) {
         return;
     }
@@ -144,7 +144,7 @@ CommandArg* FindArg(CommandArg* first, const char* name, CommandArg::Type type) 
             if (curr->type == type) {
                 return curr;
             }
-            logf("FindArgByName: found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, type,
+            logf("FindArgByName: Found arg of name '%s' by different type (wanted: %d, is: %d)\n", name, type,
                  curr->type);
         }
         curr = curr->next;
@@ -163,7 +163,7 @@ CustomCommand::~CustomCommand() {
 }
 
 CustomCommand* CreateCustomCommand(const char* definition, int origCmdId, CommandArg* args) {
-    // if no args we retain original command id
+    // If no args we retain original command id
     // only when we have unique args we have to create a new command id
     int id = origCmdId;
     if (args != nullptr) {
@@ -216,7 +216,7 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId) {
         }
         curr = curr->next;
     }
-    // reverse so that they are returned in the order they were inserted
+    // Reverse so that they are returned in the order they were inserted
     commands.Reverse();
 }
 
@@ -274,13 +274,13 @@ static CommandArg* ParseArgOfType(const char* argName, CommandArg::Type type, co
 }
 
 CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
-    // first is default value
+    // First is default value
     const char* valStart = str::SkipChar(*argsInOut, ' ');
     const char* valEnd = str::FindChar(valStart, ' ');
     const char* argName = argSpecs[defaultArgIdx].name;
     CommandArg::Type type = argSpecs[defaultArgIdx].type;
     if (type == CommandArg::Type::String) {
-        // for strings we eat it all to avoid the need for proper quoting
+        // For strings we eat it all to avoid the need for proper quoting
         // creates a problem: all named args must be before default string arg
         valEnd = nullptr;
     }
@@ -291,10 +291,10 @@ CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
         val = str::Dup(valStart, valEnd - valStart);
         valEnd = str::SkipChar(valEnd, ' ');
     }
-    // no matter what, we advance past the value
+    // No matter what, we advance past the value
     *argsInOut = valEnd;
 
-    // we don't support bool because we don't have to yet
+    // We don't support bool because we don't have to yet
     // (no command have default bool value)
     return ParseArgOfType(argName, type, val);
 }
@@ -316,7 +316,7 @@ static int ParseBool(const char* s) {
 //   <name> <value>
 //   <name>: <value>
 //   <name>=<value>
-// for booleans only <name> works as well and represents true
+// For booleans only <name> works as well and represents true
 CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     const char* valStart = nullptr;
     const char* argName = nullptr;
@@ -325,7 +325,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     int cmdId = argSpecs[firstArgIdx].cmdId;
     for (int i = firstArgIdx;; i++) {
         if (argSpecs[i].cmdId != cmdId) {
-            // not a known argument for this command
+            // Not a known argument for this command
             return nullptr;
         }
         argName = argSpecs[i].name;
@@ -338,7 +338,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     s += str::Len(argName);
     if (s[0] == 0) {
         if (type == CommandArg::Type::Bool) {
-            // name of bool arg followed by nothing is true
+            // Name of bool arg followed by nothing is true
             *argsInOut = nullptr;
             auto arg = NewArg(type, argName);
             arg->boolVal = true;
@@ -346,7 +346,7 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
         }
     } else if (s[0] == ' ') {
         if (type == CommandArg::Type::Bool) {
-            // name of bool arg followed by nothing is true
+            // Name of bool arg followed by nothing is true
             s = str::SkipChar(s, ' ');
             *argsInOut = s;
             auto arg = NewArg(type, argName);
@@ -396,8 +396,8 @@ CommandArg* TryParseNamedArg(int firstArgIdx, const char** argsInOut) {
     return ParseArgOfType(argName, type, val);
 }
 
-// create custom command as defined in Shortcuts section in advanced settings.
-// we return null if unkown command
+// Create custom command as defined in Shortcuts section in advanced settings.
+// We return null if unkown command
 CustomCommand* CreateCommandFromDefinition(const char* definition) {
     StrVec parts;
     Split(&parts, definition, " ", true, 2);
@@ -405,14 +405,14 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         // TODO: make it a notification
-        logf("CreateCommandFromDefinition: unknown cmd name in '%s'\n", definition);
+        logf("CreateCommandFromDefinition: Unknown cmd name in '%s'\n", definition);
         return nullptr;
     }
     if (parts.Size() == 1) {
         return CreateCustomCommand(definition, cmdId, nullptr);
     }
 
-    // some commands share the same arguments, so cannonalize them
+    // Some commands share the same arguments, so cannonalize them
     int argCmdId = cmdId;
     switch (cmdId) {
         case CmdCreateAnnotText:
@@ -445,7 +445,7 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
         }
     }
 
-    // find arguments for this cmdId
+    // Find arguments for this cmdId
     int firstArgIdx = -1;
     for (int i = 0;; i++) {
         int id = argSpecs[i].cmdId;
@@ -461,8 +461,8 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
         break;
     }
     if (firstArgIdx < 0) {
-        // shouldn't happen, we already filtered commands without arguments
-        logf("CreateCommandFromDefinition: didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition,
+        // Shouldn't happen, we already filtered commands without arguments
+        logf("CreateCommandFromDefinition: Didn't find arguments for: '%s', cmdId: %d, argCmdId: '%d'\n", definition,
              cmdId, argCmdId);
         ReportIf(true);
         return nullptr;
@@ -482,28 +482,28 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
         }
     }
     if (!firstArg) {
-        logf("CreateCommandFromDefinition: failed to parse arguments for '%s'\n", definition);
+        logf("CreateCommandFromDefinition: Failed to parse arguments for '%s'\n", definition);
         return nullptr;
     }
 
     if (cmdId == CmdCommandPalette && firstArg) {
-        // validate mode
+        // Validate mode
         const char* s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0"; // TODO: "@@\0" ?
         if (seqstrings::StrToIdx(validModes, s) < 0) {
-            logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);
+            logf("CreateCommandFromDefinition: Invalid CmdCommandPalette mode in '%s'\n", definition);
             FreeCommandArgs(firstArg);
             firstArg = nullptr;
         }
     }
 
     if (cmdId == CmdZoomCustom) {
-        // special case: the argument is declared as string but it really is float
-        // we convert it in-place here
+        // Special case: the argument is declared as string but it really is float
+        // We convert it in-place here
         float zoomVal = ZoomFromString(firstArg->strVal, 0);
         if (0 == zoomVal) {
             FreeCommandArgs(firstArg);
-            logf("CreateCommandFromDefinition: failed to parse arguments in '%s'\n", definition);
+            logf("CreateCommandFromDefinition: Failed to parse arguments in '%s'\n", definition);
             return nullptr;
         }
         firstArg->type = CommandArg::Type::Float;
