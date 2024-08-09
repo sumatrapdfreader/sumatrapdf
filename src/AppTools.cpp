@@ -25,7 +25,7 @@
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
-    // see GetDefaultInstallationDir() in Installer.cpp
+    // See GetDefaultInstallationDir() in Installer.cpp
     TempStr regPathUninst = str::JoinTemp("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\", kAppName);
     TempStr installedPath = LoggedReadRegStr2Temp(regPathUninst, "InstallLocation");
     if (!installedPath) {
@@ -40,7 +40,7 @@ bool HasBeenInstalled() {
 }
 
 static char* PathStripBaseName(char* path) {
-    // base will either return path or a pointer inside path right after last "/"
+    // Base will either return path or a pointer inside path right after last "/"
     char* base = (char*)path::GetBaseNameTemp(path);
     if (base > path) {
         base[-1] = 0;
@@ -49,7 +49,7 @@ static char* PathStripBaseName(char* path) {
     return nullptr;
 }
 
-// return true if path is in a given dir, even if dir is a junction etc.
+// Return true if path is in a given dir, even if dir is a junction etc.
 static bool IsPathInDirSmart(const char* path, const char* dir) {
     char* dir2 = str::DupTemp(path);
     while (dir2) {
@@ -78,7 +78,7 @@ static bool IsExeInProgramFiles() {
    (which is an indicator that it has been installed) or from the last known
    location of a SumatraPDF installation: */
 bool IsRunningInPortableMode() {
-    // cache the result so that it will be consistent during the lifetime of the process
+    // Cache the result so that it will be consistent during the lifetime of the process
     static int sCacheIsPortable = -1; // -1 == uninitialized, 0 == installed, 1 == portable
     if (sCacheIsPortable != -1) {
         return sCacheIsPortable != 0;
@@ -126,10 +126,10 @@ TempStr GetAppDataDirTemp() {
         dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
         if (!dir) {
             ReportIf(!dir);
-            dir = GetTempDirTemp(); // shouldn't happen, last chance thing
+            dir = GetTempDirTemp(); // Shouldn't happen, last chance thing
         }
         dir = path::JoinTemp(dir, kAppName);
-        // use a different path for store builds
+        // Use a different path for store builds
         if (gIsStoreBuild) {
             // %APPLOCALDATA%/SumatraPDF Store
             // %APPLOCALDATA%/SumatraPDF Store Preview
@@ -332,7 +332,7 @@ static void FindTextEditors() {
         return;
     }
     StrVec found;
-    // all but last entry, which is notepad.exe
+    // All but last entry, which is notepad.exe
     int n = (int)dimof(editorRules) - 1;
     for (int i = 0; i < n; i++) {
         auto& rule = editorRules[i];
@@ -347,7 +347,7 @@ static void FindTextEditors() {
         const char* binaryFileName = rule.binaryFilename;
         const char* inverseSearchArgs = rule.inverseSearchArgs;
         if (rule.type == RegType::SiblingPath) {
-            // remove file part
+            // Remove file part
             char* dir = path::GetDirTemp(path);
             exePath = path::JoinTemp(dir, binaryFileName);
         } else if (rule.type == RegType::BinaryDir) {
@@ -355,11 +355,11 @@ static void FindTextEditors() {
         } else { // if (editor_rules[i].Type == BinaryPath)
             exePath = path;
         }
-        // don't show duplicate entries
+        // Don't show duplicate entries
         if (found.FindI(exePath) != -1) {
             continue;
         }
-        // don't show inexistent paths (and don't try again for them)
+        // Don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {
             found.Append(exePath);
             continue;
@@ -419,7 +419,7 @@ char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col)
 
 #define UWM_DELAYED_SET_FOCUS (WM_APP + 1)
 
-// selects all text in an edit box if it's selected either
+// Selects all text in an edit box if it's selected either
 // through a keyboard shortcut or a non-selecting mouse click
 // (or responds to Ctrl+Backspace as nowadays expected)
 bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
@@ -442,7 +442,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
         }
 
         case WM_KILLFOCUS:
-            return false; // for easier debugging (make setting a breakpoint possible)
+            return false; // For easier debugging (make setting a breakpoint possible)
 
         case WM_SETFOCUS: {
             if (!delayFocus) {
@@ -482,10 +482,10 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
 #define MIN_WIN_DY 50
 
 void EnsureAreaVisibility(Rect& r) {
-    // adjust to the work-area of the current monitor (not necessarily the primary one)
+    // Adjust to the work-area of the current monitor (not necessarily the primary one)
     Rect work = GetWorkAreaRect(r, nullptr);
 
-    // make sure that the window is neither too small nor bigger than the monitor
+    // Make sure that the window is neither too small nor bigger than the monitor
     if (r.dx < MIN_WIN_DX || r.dx > work.dx) {
         r.dx = std::min((int)((double)work.dy * DEF_PAGE_RATIO), work.dx);
     }
@@ -493,7 +493,7 @@ void EnsureAreaVisibility(Rect& r) {
         r.dy = work.dy;
     }
 
-    // check whether the lower half of the window's title bar is
+    // Check whether the lower half of the window's title bar is
     // inside a visible working area
     int captionDy = GetSystemMetrics(SM_CYCAPTION);
     Rect halfCaption(r.x, r.y + captionDy / 2, r.dx, captionDy / 2);
@@ -524,13 +524,13 @@ void SaveCallstackLogs() {
     s.Free();
 }
 
-// TODO: this can be used for extracting other data
+// TODO: This can be used for extracting other data
 #if 0
-// cache because calculating md5 of the whole executable
+// Cache because calculating md5 of the whole executable
 // might be relatively expensive
 static AutoFreeWStr gAppMd5;
 
-// return hex version of md5 of app's executable
+// Return hex version of md5 of app's executable
 // nullptr if there was an error
 // caller needs to free the result
 static const WCHAR* Md5OfAppExe() {
@@ -556,8 +556,8 @@ static const WCHAR* Md5OfAppExe() {
     return md5Hex.StealData();
 }
 
-// remove all directories except for ours
-//. need to avoid acuumulating the directories when testing
+// Remove all directories except for ours
+// need to avoid acuumulating the directories when testing
 // locally or using pre-release builds (both cases where
 // exe and its md5 changes frequently)
 void RemoveMd5AppDataDirectories() {
@@ -587,7 +587,7 @@ void RemoveMd5AppDataDirectories() {
     }
 }
 
-// return a path on disk to extracted unrar.dll or nullptr if couldn't extract
+// Return a path on disk to extracted unrar.dll or nullptr if couldn't extract
 // memory has to be freed by the caller
 const WCHAR* ExractUnrarDll() {
     RemoveMd5AppDataDirectories();
@@ -654,7 +654,7 @@ TempStr FormatSizeShortTransTemp(i64 size) {
     return str::FormatSizeShortTemp(size, sizeUnits);
 }
 
-// format file size in a readable way e.g. 1348258 is shown
+// Format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 TempStr FormatFileSizeTransTemp(i64 size) {
     if (size <= 0) {
@@ -665,7 +665,7 @@ TempStr FormatFileSizeTransTemp(i64 size) {
     return fmt::FormatTemp("%s (%s %s)", n1, n2, _TRA("Bytes"));
 }
 
-// returns true if file exists
+// Returns true if file exists
 bool LaunchFileIfExists(const char* path) {
     if (!path) {
         return false;
@@ -685,7 +685,7 @@ bool AdjustVariableDriveLetter(char* path) {
     if (file::Exists(path)) {
         return false;
     }
-    // only check absolute path on drives i.e. those that start with "d:\"
+    // Only check absolute path on drives i.e. those that start with "d:\"
     if (str::Leni(path) < 4 || path[1] != ':') {
         return false;
     }
@@ -706,7 +706,7 @@ bool AdjustVariableDriveLetter(char* path) {
     return false;
 }
 
-// files are considered untrusted, if they're either loaded from a
+// Files are considered untrusted, if they're either loaded from a
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)
 bool IsUntrustedFile(const char* filePath, const char* fileURL) {
@@ -721,7 +721,7 @@ bool IsUntrustedFile(const char* filePath, const char* fileURL) {
         return true;
     }
 
-    // check all parents of embedded files and ADSs as well
+    // Check all parents of embedded files and ADSs as well
     TempStr path = str::DupTemp(filePath);
     while (str::Leni(path) > 2 && str::FindChar(path + 2, ':')) {
         *str::FindCharLast(path, ':') = '\0';
