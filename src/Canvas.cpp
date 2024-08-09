@@ -54,7 +54,7 @@
 
 #include "utils/Log.h"
 
-// if set instead of trying to render pages we don't have, we simply do nothing
+// If set instead of trying to render pages we don't have, we simply do nothing
 // this reduces the flickering when going quickly through pages but creates
 // impression of lag
 bool gNoFlickerRender = true;
@@ -69,9 +69,9 @@ constexpr UINT_PTR kSmoothScrollTimerID = 6;
 // Therefore, a higher factor makes smooth scrolling faster.
 static const double gSmoothScrollingFactor = 0.2;
 
-// these can be global, as the mouse wheel can't affect more than one window at once
+// These can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
-// set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
+// Set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
 static bool gWheelMsgRedirect = false;
 
 void UpdateDeltaPerLine() {
@@ -91,7 +91,7 @@ void UpdateDeltaPerLine() {
     // logf("SPI_GETWHEELSCROLLLINES: ulScrollLines=%d, gDeltaPerLine=%d\n", (int)ulScrollLines, gDeltaPerLine);
 }
 
-///// methods needed for FixedPageUI canvases with document loaded /////
+///// Methods needed for FixedPageUI canvases with document loaded /////
 
 static void OnVScroll(MainWindow* win, WPARAM wp) {
     ReportIf(!win->AsFixed());
