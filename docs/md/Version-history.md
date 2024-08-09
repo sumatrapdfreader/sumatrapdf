@@ -49,7 +49,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - add `Name` field for shortcuts. If given, the command will show up in Command Palette (`Ctrl + K`)
 - closing a current tab now behaves like in Chrome: selects next tab (to the right). We used to select previously active tab, but that's unpredicable and we prefer to align SumatraPDF behavior with other popular apps.
 - swapped key bindings: 'i' is now CmdTogglePageInfo, 'I' is CmdInvertColors. Several people were confused by accidentally typing 'i' to invert colors, is less likely to type it accidentally
-- allow creating custom themes in advanced settings in `Themes` section
+- allow creating custom themes in advanced settings in `Themes` section. [See docs](https://www.sumatrapdfreader.org/docs/Customize-theme-colors).
 
 ### 3.5.2 (2023-10-25)
 
