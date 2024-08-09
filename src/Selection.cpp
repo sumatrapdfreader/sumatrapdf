@@ -41,7 +41,7 @@ SelectionOnPage::SelectionOnPage(int pageNo, const RectF* const rect) {
 }
 
 Rect SelectionOnPage::GetRect(DisplayModel* dm) const {
-    // if the page is not visible, we return an empty rectangle
+    // If the page is not visible, we return an empty rectangle
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
     if (!pageInfo || pageInfo->visibleRatio <= 0.0) {
         return Rect();
@@ -65,7 +65,7 @@ Vec<SelectionOnPage>* SelectionOnPage::FromRectangle(DisplayModel* dm, Rect rect
             continue;
         }
 
-        /* selection intersects with a page <pageNo> on the screen */
+        /* Selection intersects with a page <pageNo> on the screen */
         RectF isectD = dm->CvtFromScreen(intersect, pageNo);
         sel->Append(SelectionOnPage(pageNo, &isectD));
     }
@@ -111,7 +111,7 @@ void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel) {
 
 void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha,
                                 int margin) {
-    // create path from rectangles
+    // Create path from rectangles
     Gdiplus::GraphicsPath path(Gdiplus::FillModeWinding);
     screenRc.Inflate(margin, margin);
     for (size_t i = 0; i < rects.size(); i++) {
@@ -121,7 +121,7 @@ void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORR
         }
     }
 
-    // fill path (and draw optional outline margin)
+    // Fill path (and draw optional outline margin)
     Gdiplus::Graphics gs(hdc);
     u8 r, g, b;
     UnpackColor(selectionColor, r, g, b);
@@ -141,7 +141,7 @@ void PaintSelection(MainWindow* win, HDC hdc) {
     Vec<Rect> rects;
 
     if (win->mouseAction == MouseAction::Selecting) {
-        // during rectangle selection
+        // During rectangle selection
         Rect selRect = win->selectionRect;
         if (selRect.dx < 0) {
             selRect.x += selRect.dx;
@@ -154,7 +154,7 @@ void PaintSelection(MainWindow* win, HDC hdc) {
 
         rects.Append(selRect);
     } else {
-        // during text selection or after selection is done
+        // During text selection or after selection is done
         if (MouseAction::SelectingText == win->mouseAction) {
             UpdateTextSelection(win);
             if (!win->CurrentTab()->selectionOnPage) {
@@ -275,14 +275,14 @@ void CopySelectionToClipboard(MainWindow* win) {
     }
 
     if (isTextOnlySelectionOut) {
-        // don't also copy the first line of a text selection as an image
+        // Don't also copy the first line of a text selection as an image
         return;
     }
 
     if (!dm || !tab->selectionOnPage || tab->selectionOnPage->size() == 0) {
         return;
     }
-    /* also copy a screenshot of the current selection to the clipboard */
+    /* Also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage* selOnPage = &tab->selectionOnPage->at(0);
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
     int rotation = dm->GetRotation();
