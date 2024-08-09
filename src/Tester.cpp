@@ -32,17 +32,17 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
-// if true, we'll save html content of a mobi ebook as well
+// If true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to kMobiSaveDir. The name will be
 // ${file}.html and ${file}_pp.html
 static bool gSaveHtml = false;
-// if true, we'll also save images in mobi files. The name
+// If true, we'll also save images in mobi files. The name
 // will be ${file}_img_${imgNo}.[jpg|png]
 // gMobiSaveHtml must be true as well
 static bool gSaveImages = false;
-// if true, we'll do a layout of mobi files
+// If true, we'll do a layout of mobi files
 static bool gLayout = false;
-// directory to which we'll save mobi html and images
+// Directory to which we'll save mobi html and images
 #define kMobiSaveDir "..\\ebooks-converted"
 
 static int Usage() {
@@ -72,7 +72,7 @@ static void MobiSaveHtml(const char* filePathBase, MobiDoc* mb) {
 }
 
 static void MobiSaveImage(const char* filePathBase, size_t imgNo, ByteSlice img) {
-    // it's valid to not have image data at a given index
+    // It's valid to not have image data at a given index
     if (img.empty()) {
         return;
     }
@@ -150,7 +150,7 @@ static void MobiTestFile(const char* filePath) {
 static void MobiTestDir(char* dir) {
     printf("Testing mobi files in '%s'\n", dir);
     ReportIf(true);
-    // TODO: fix me
+    // TODO: Fix me
 #if 0
     DirTraverse(dir, true, [](WIN32_FIND_DATAW*, const char* path) -> bool {
         Kind kind = GuessFileTypeFromName(path);
@@ -171,7 +171,7 @@ static void MobiTest(char* dirOrFile) {
     }
 }
 
-// we assume this is called from main sumatradirectory, e.g. as:
+// We assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
 void ZipCreateTest() {
     const char* zipFileName = "tester-tmp.zip";
@@ -208,7 +208,7 @@ int TesterMain() {
     char* dirOrFile = nullptr;
 
     bool mobiTest = false;
-    int i = 2; // skip program name and "/tester"
+    int i = 2; // Skip program name and "/tester"
     while (i < nArgs) {
         char* arg = argv.at(i);
         if (str::Eq(arg, "-mobi")) {
@@ -232,12 +232,12 @@ int TesterMain() {
             ZipCreateTest();
             ++i;
         } else {
-            // unknown argument
+            // Unknown argument
             return Usage();
         }
     }
     if (2 == i) {
-        // no arguments
+        // No arguments
         return Usage();
     }
 
