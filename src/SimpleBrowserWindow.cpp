@@ -47,7 +47,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         if (!cargs.title) {
             cargs.title = "Browser Window";
         }
-        // TODO: if set, navigate to url doesn't work
+        // TODO: If set, navigate to url doesn't work
         // args.visible = false;
         hwnd = CreateCustom(cargs);
         ReportIf(!hwnd);
@@ -70,7 +70,7 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         }
         webView->SetIsVisible(true);
     }
-    // important to call this after hooking up onSize to ensure
+    // Important to call this after hooking up onSize to ensure
     // first layout is triggered
     webView->Navigate(args.url);
     SetIsVisible(true);

@@ -3,7 +3,7 @@
 
 struct SimpleBrowserCreateArgs {
     const char* title = nullptr;
-    Rect pos{}; // if empty, will use CW_USEDEFAULT
+    Rect pos{}; // If empty, will use CW_USEDEFAULT
     const char* url = nullptr;
     const char* dataDir = nullptr;
 };
