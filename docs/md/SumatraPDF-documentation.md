@@ -7,17 +7,19 @@
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
 
-[Scrolling, zooming, navigating](Scrolling-and-zooming.md)
-
 [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md)
 
-[Customizing toolbar](Customize-toolbar.md)
+[Scrolling, zooming, navigating](Scrolling-and-zooming.md)
 
 [Commands](Commands.md)
 
 [Command-line arguments](Command-line-arguments.md)
 
 [Advanced options / settings](Advanced-options-settings.md)
+
+[Customizing toolbar](Customize-toolbar.md)
+
+[Customizing UI colors / theme](Customize-theme-colors.md)
 
 [Customize external viewers](Customize-external-viewers.md)
 
