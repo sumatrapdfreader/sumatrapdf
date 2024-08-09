@@ -56,7 +56,7 @@ static bool CouldBeURL(const char* link) {
         return true;
     }
 
-    // very lenient heuristic
+    // Very lenient heuristic
     return str::Contains(link, ".");
 }
 
@@ -88,7 +88,7 @@ struct PageDestinationDjVu : IPageDestination {
     }
 };
 
-// the link format can be any of
+// The Link format can be any of
 //   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
 //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
 //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
@@ -131,7 +131,7 @@ struct DjVuContext {
     DjVuContext() {
         InitializeCriticalSection(&lock);
         ctx = ddjvu_context_create("DjVuEngine");
-        // reset the locale to "C" as most other code expects
+        // Reset the locale to "C" as most other code expects
         setlocale(LC_ALL, "C");
         ReportIf(!ctx);
     }
@@ -198,7 +198,7 @@ struct DjVuContext {
     }
 };
 
-// TODO: make it non-static because it accesses other static state
+// TODO: Make it non-static because it accesses other static state
 // in djvu which got deleted first
 static DjVuContext* gDjVuContext;
 
@@ -351,7 +351,7 @@ TempStr EngineDjVu::GetPropertyTemp(const char*) {
     return nullptr;
 }
 
-// we currently don't load pages lazily, so there's nothing to do here
+// We currently don't load pages lazily, so there's nothing to do here
 bool EngineDjVu::BenchLoadPage(int) {
     return true;
 }
@@ -482,7 +482,7 @@ bool EngineDjVu::FinishLoading() {
     }
     bool ok = LoadMediaboxes();
     if (!ok) {
-        // fall back to the slower but safer way to extract page mediaboxes
+        // Fall back to the slower but safer way to extract page mediaboxes
         for (int i = 0; i < pageCount; i++) {
             ddjvu_status_t status;
             ddjvu_pageinfo_t info;
@@ -586,7 +586,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
         case 0:
             rot = DDJVU_ROTATE_0;
             break;
-        // for whatever reason, 90 and 270 are reverased compared to what I expect
+        // For whatever reason, 90 and 270 are reverased compared to what I expect
         // maybe I'm doing other parts of the code wrong
         case 90:
             rot = DDJVU_ROTATE_270;
@@ -598,7 +598,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
             rot = DDJVU_ROTATE_90;
             break;
         default:
-            ReportIf("invalid rotation");
+            ReportIf("Invalid rotation");
             break;
     }
     ddjvu_page_set_rotation(page, rot);
@@ -631,7 +631,7 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
     int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, bmpData);
     if (!ok) {
-        // nothing was rendered, leave the page blank (same as WinDjView)
+        // Nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
         isBitonal = true;
     }
@@ -657,7 +657,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
     }
     ddjvu_page_set_rotation(page, DDJVU_ROTATE_0);
 
-    // render the page in 8-bit grayscale up to 250x250 px in size
+    // Render the page in 8-bit grayscale up to 250x250 px in size
     ddjvu_format_t* fmt = ddjvu_format_create(DDJVU_FORMAT_GREY8, 0, nullptr);
 
     defer {
@@ -681,7 +681,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         return pageRc;
     }
 
-    // determine the content box by counting white pixels from the edges
+    // Determine the content box by counting white pixels from the edges
     RectF content((float)full.dx, -1, 0, 0);
     for (int y = 0; y < full.dy; y++) {
         int x;
@@ -689,18 +689,18 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
             // no-op
         }
         if (x < full.dx) {
-            // narrow the left margin down (if necessary)
+            // Narrow the left margin down (if necessary)
             if (x < content.x) {
                 content.x = (float)x;
             }
-            // narrow the right margin down (if necessary)
+            // Narrow the right margin down (if necessary)
             for (x = full.dx - 1; x > content.x + content.dx && bmpData[y * full.dx + x] == '\xFF'; x--) {
                 // no-op
             }
             if (x > content.x + content.dx) {
                 content.dx = x - content.x + 1;
             }
-            // narrow either the top or the bottom margin down
+            // Narrow either the top or the bottom margin down
             if (content.y == -1) {
                 content.y = (float)y;
             } else {
@@ -709,7 +709,7 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         }
     }
     if (!content.IsEmpty()) {
-        // undo the zoom and round generously
+        // Undo the zoom and round generously
         content.x /= zoom;
         content.dx /= zoom;
         content.y /= zoom;
@@ -729,13 +729,13 @@ PointF EngineDjVu::TransformPoint(PointF pt, int pageNo, float zoom, int rotatio
     SizeF page = PageMediabox(pageNo).Size();
 
     if (inverse) {
-        // transform the page size to get a correct frame of reference
+        // Transform the page size to get a correct frame of reference
         page.dx *= zoom;
         page.dy *= zoom;
         if (rotation % 180 != 0) {
             std::swap(page.dx, page.dy);
         }
-        // invert rotation and zoom
+        // Invert rotation and zoom
         rotation = -rotation;
         zoom = 1.0f / zoom;
     }
@@ -830,7 +830,7 @@ bool EngineDjVu::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>
         TempWStr value = ToWStrTemp(content);
         if (value) {
             size_t len = str::Len(value);
-            // TODO: split the rectangle into individual parts per glyph
+            // TODO: Split the rectangle into individual parts per glyph
             for (size_t i = 0; i < len; i++) {
                 coords.Append(Rect(rect.x, rect.y, rect.dx, rect.dy));
             }
@@ -886,7 +886,7 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
         dpiFactor = GetFileDPI() / info.dpi;
     }
 
-    // TODO: the coordinates aren't completely correct yet
+    // TODO: The coordinates aren't completely correct yet
     Rect page = PageMediabox(pageNo).Round();
     for (size_t i = 0; i < coords.size(); i++) {
         if (!coords.at(i).IsEmpty()) {
@@ -1010,7 +1010,7 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
         }
         auto el = NewDjVuLink(pageNo, rect, link, commentUtf8);
         if (!el || el->GetKind() == kindDestinationNone) {
-            logf("invalid link '%s', pages in document: %d\n", link ? link : "", PageCount());
+            logf("Invalid link '%s', pages in document: %d\n", link ? link : "", PageCount());
             ReportIf(true);
             continue;
         }
@@ -1021,12 +1021,12 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
     return els;
 }
 
-// don't delete the result
+// Don't delete the result
 IPageElement* EngineDjVu::GetElementAtPos(int pageNo, PointF pt) {
     Vec<IPageElement*> els = GetElements(pageNo);
 
     int n = els.Size();
-    // elements are extracted bottom-to-top but are accessed
+    // Elements are extracted bottom-to-top but are accessed
     // in top-to-bottom order, so search bacwards
     for (int i = n - 1; i >= 0; i--) {
         auto el = els.at(i);
@@ -1064,7 +1064,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
 
     int pageNo = ParseDjVuLink(link);
     if ((pageNo < 1) || (pageNo > pageCount)) {
-        logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
+        logf("EngineDjVu::HandleLink: Invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
              pageCount);
         ReportIf(true);
         return false;
@@ -1075,7 +1075,7 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
 
 #if 0
     if (!res->kind) {
-        logf("unsupported djvu link: '%s'\n", link);
+        logf("Unsupported djvu link: '%s'\n", link);
     }
 
     res->kind = kindDestinationNone;
@@ -1134,7 +1134,7 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
         } else if (!str::IsEmpty(name) && !str::Eq(name, link + 1)) {
             tocItem = NewDjVuTocItem(parent, name, linkNo);
         } else {
-            // ignore generic (name-less) entries
+            // Ignore generic (name-less) entries
             TocItem* tmp = BuildTocTree(nullptr, miniexp_cddr(item), idCounter);
             delete tmp;
             continue;
