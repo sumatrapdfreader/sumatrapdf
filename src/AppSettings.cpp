@@ -37,6 +37,10 @@
 
 #include "utils/Log.h"
 
+// workaround for OnMenuExit
+// if this flag is set, CloseWindow will not save prefs before closing the window.
+bool gDontSaveSettings = false;
+
 // SumatraPDF.cpp
 extern void RememberDefaultWindowPosition(MainWindow* win);
 
@@ -340,6 +344,13 @@ static void RememberSessionState() {
 // added or removed from gFileHistory (in order to keep
 // the list of recently opened documents in sync)
 bool SaveSettings() {
+    if (!gDontSaveSettings) {
+        // if we are exiting the application by File->Exit,
+        // OnMenuExit will have called SaveSettings() already
+        // and we skip the call here to avoid saving incomplete session info
+        // (because some windows might have been closed already)
+    }
+
     // don't save preferences without the proper permission
     if (!HasPermission(Perm::SavePreferences)) {
         return false;

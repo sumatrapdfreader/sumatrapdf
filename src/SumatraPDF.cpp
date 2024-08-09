@@ -131,10 +131,6 @@ static StrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static StrVec gAllowedFileTypes;
 
-// workaround for OnMenuExit
-// if this flag is set, CloseWindow will not save prefs before closing the window.
-static bool gDontSavePrefs = false;
-
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
 static void OnSidebarSplitterMove(Splitter::MoveEvent*);
 static void OnFavSplitterMove(Splitter::MoveEvent*);
@@ -2258,7 +2254,7 @@ static void OnMenuExit() {
     // CloseWindow() must not save the session state every time
     // (or we will end up with just the last window)
     SaveSettings();
-    gDontSavePrefs = true;
+    gDontSaveSettings = true;
 
     // CloseWindow removes the MainWindow from gWindows,
     // so use a stable copy for iteration
@@ -2750,13 +2746,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     if (!lastWindow || quitIfLast) {
         ShowWindow(win->hwndFrame, SW_HIDE);
     }
-    if (!gDontSavePrefs) {
-        // if we are exiting the application by File->Exit,
-        // OnMenuExit will have called SaveSettings() already
-        // and we skip the call here to avoid saving incomplete session info
-        // (because some windows might have been closed already)
-        SaveSettings();
-    }
+    SaveSettings();
     TabsOnCloseWindow(win);
 
     if (forceClose) {
@@ -5863,9 +5853,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdCloseCurrentDocument: {
-            gDontSavePrefs = true;
+            gDontSaveSettings = true;
             CloseCurrentTab(win, true /* quitIfLast */);
-            gDontSavePrefs = false;
+            gDontSaveSettings = false;
             SaveSettings();
             break;
         }
@@ -6200,6 +6190,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
             SaveSettings();
+            gDontSaveSettings = true;
             if (wp == TRUE) {
                 // we must quit so that we restore opened files on start.
                 DestroyWindow(hwnd);
