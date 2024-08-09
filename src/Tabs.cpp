@@ -111,7 +111,7 @@ void RemoveTab(WindowTab* tab) {
     if (!closedCurrentTab) {
         return;
     }
-    // if the removed tab was the current one, select another
+    // If the removed tab was the current one, select another
 #if 0
     WindowTab* curr = win->CurrentTab();
     WindowTab* newCurrent = curr;
@@ -128,7 +128,7 @@ void RemoveTab(WindowTab* tab) {
     tab = win->CurrentTab();
     LoadModelIntoTab(tab);
 #else
-    // select tab to the right or to the left if nothing to the right
+    // Select tab to the right or to the left if nothing to the right
     int newIdx = idx;
     int lastIdx = nTabs - 1;
     if (newIdx > lastIdx) {
@@ -146,7 +146,7 @@ static void CloseWindowIfNoDocuments(MainWindow* win) {
             return;
         }
     }
-    // no tabs or only about tab
+    // No tabs or only about tab
     CloseWindow(win, true, true);
 }
 
@@ -207,7 +207,7 @@ void TabsSelect(MainWindow* win, int tabIndex) {
 
     bool isShowingPageInfo = (GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo) != nullptr);
 
-    // same work as in onSelectionChanging and onSelectionChanged
+    // Same work as in onSelectionChanging and onSelectionChanged
     SaveCurrentWindowTab(win);
     int prevIdx = tabsCtrl->SetSelected(tabIndex);
     if (prevIdx < 0) {
@@ -292,7 +292,7 @@ void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& to
 }
 
 void CloseAllTabs(MainWindow* win) {
-    // can't close while iterating over the tabs so collect them first
+    // Can't close while iterating over the tabs so collect them first
     Vec<WindowTab*> toClose;
     int nTabs = win->TabCount();
     for (int i = 0; i < nTabs; i++) {
@@ -307,7 +307,7 @@ void CloseAllTabs(MainWindow* win) {
     }
 }
 
-// TODO: add "Move to another window" sub-menu
+// TODO: Add "Move to another window" sub-menu
 static void TabsContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     TabsCtrl* tabsCtrl = (TabsCtrl*)ev->w;
@@ -424,7 +424,7 @@ static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev
         releaseWnd = FindMainWindowByHwnd(hwnd);
     }
     if (releaseWnd == win) {
-        // don't re-add to the same window
+        // Don't re-add to the same window
         releaseWnd = nullptr;
     }
     MigrateTab(tab, releaseWnd);
@@ -450,11 +450,11 @@ void CreateTabbar(MainWindow* win) {
     win->tabSelectionHistory = new Vec<WindowTab*>();
 }
 
-// verifies that WindowTab state is consistent with MainWindow state
+// Verifies that WindowTab state is consistent with MainWindow state
 static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
     ReportIf(tdata->ctrl != win->ctrl);
 #if 0
-    // disabling this check. best I can tell, external apps can change window
+    // Disabling this check. best I can tell, external apps can change window
     // title and trigger this
     auto winTitle = win::GetTextTemp(win->hwndFrame);
     if (!str::Eq(winTitle.Get(), tdata->frameTitle.Get())) {
@@ -485,7 +485,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
         return;
     }
     if (win->CurrentTab() != win->Tabs().at(current)) {
-        return; // TODO: restore ReportIf() ?
+        return; // TODO: Restore ReportIf() ?
     }
 
     WindowTab* tab = win->CurrentTab();
@@ -495,7 +495,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     }
     VerifyWindowTab(win, tab);
 
-    // update the selection history
+    // Update the selection history
     win->tabSelectionHistory->Remove(tab);
     win->tabSelectionHistory->Append(tab);
 }
@@ -577,7 +577,7 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
         CaptionUpdateUI(win, win->caption);
         RelayoutCaption(win);
     } else if (dwm::IsCompositionEnabled()) {
-        // remove the extended frame
+        // Remove the extended frame
         MARGINS margins{};
         dwm::ExtendFrameIntoClientArea(win->hwndFrame, &margins);
         win->extendedFrameHeight = 0;
