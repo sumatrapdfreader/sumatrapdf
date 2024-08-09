@@ -68,7 +68,7 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     bool ok = engine->BenchLoadPage(pagenum);
 
     if (!ok) {
-        logf("Error: failed to load page %d\n", pagenum);
+        logf("Error: Failed to load page %d\n", pagenum);
         return;
     }
     double timeMs = TimeSinceInMs(t);
@@ -79,7 +79,7 @@ static void BenchLoadRender(EngineBase* engine, int pagenum) {
     RenderedBitmap* rendered = engine->RenderPage(args);
 
     if (!rendered) {
-        logf("Error: failed to render page %d\n", pagenum);
+        logf("Error: Failed to render page %d\n", pagenum);
         return;
     }
     delete rendered;
@@ -94,7 +94,7 @@ static void BenchChmLoadOnly(const char* filePath) {
     auto t = TimeGet();
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
-        logf("Error: failed to load %s\n", filePath);
+        logf("Error: Failed to load %s\n", filePath);
         return;
     }
 
@@ -131,14 +131,14 @@ static void BenchFile(const char* path, const char* pagesSpec) {
     auto t = TimeGet();
     EngineBase* engine = CreateEngineFromFile(path, nullptr, true);
     if (!engine) {
-        logf("Error: failed to load %s\n", path);
+        logf("Error: Failed to load %s\n", path);
         return;
     }
 
     double timeMs = TimeSinceInMs(t);
-    logf("load: %.2f ms\n", timeMs);
+    logf("Load: %.2f ms\n", timeMs);
     int pages = engine->PageCount();
-    logf("page count: %d\n", pages);
+    logf("Page count: %d\n", pages);
 
     if (!pagesSpec) {
         for (int i = 1; i <= pages; i++) {
@@ -222,7 +222,7 @@ static bool IsStressTestSupportedFile(const char* filePath, const char* filter) 
     if (!filter) {
         return false;
     }
-    // sniff the file's content if it matches the filter but
+    // Sniff the file's content if it matches the filter but
     // doesn't have a known extension
     Kind kindSniffed = GuessFileType(filePath, true);
     if (!kindSniffed || kindSniffed == kind) {
@@ -285,7 +285,7 @@ static void MakeRandomSelection(MainWindow* win, int pageNo) {
         return;
     }
 
-    // try a random position in the page
+    // Try a random position in the page
     int x = rand() % 640;
     int y = rand() % 480;
     if (dm->textSelection->IsOverGlyph(pageNo, x, y)) {
@@ -314,7 +314,7 @@ struct FilesProvider : TestFileProvider {
         provided = 0;
     }
     FilesProvider(StrVec& filesIn, int n, int offset) {
-        // get every n-th file starting at offset
+        // Get every n-th file starting at offset
         for (int i = offset; i < filesIn.Size(); i += n) {
             const char* f = filesIn[i];
             files.Append(f);
@@ -346,7 +346,7 @@ struct DirFileProviderAsync : TestFileProvider {
     StrQueue queue;
     AutoFreeStr startDir;
     AutoFreeStr fileFilter;
-    // those are only set once and then only read so
+    // Those are only set once and then only read so
     // don't have to be atomic
     volatile int max = 0;
     volatile bool random = false;
@@ -421,7 +421,7 @@ struct StressTest {
     Vec<int> pagesToRender;
     int currPageNo = 0;
     int pageForSearchStart = 0;
-    int nFilesProcessed = 0; // number of files processed so far
+    int nFilesProcessed = 0; // Number of files processed so far
     int timerId = 0;
     bool exitWhenDone = false;
     int nSlowPages = 0;
@@ -429,12 +429,12 @@ struct StressTest {
     SYSTEMTIME stressStartTime{};
     int cycles = 1;
     Vec<PageRange> pageRanges;
-    // range of files to render (files get a new index when going through several cycles)
+    // Range of files to render (Files get a new index when going through several cycles)
     Vec<PageRange> fileRanges;
     int fileIndex = 0;
     bool gotToc = false;
 
-    // owned by StressTest
+    // Owned by StressTest
     TestFileProvider* fileProvider = nullptr;
 
     StressTest(MainWindow* win, bool exitWhenDone);
@@ -457,7 +457,7 @@ StressTest::StressTest(MainWindow* win, bool exitWhenDone) {
 }
 
 StressTest::~StressTest() {
-    // TODO: it can be shared so find a different way to free it
+    // TODO: It can be shared so find a different way to free it
     // delete fileProvider;
 }
 
@@ -482,7 +482,7 @@ static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
 }
 
 static void Finished(StressTest* st, bool success) {
-    st->win->stressTest = nullptr; // make sure we're not double-deleted
+    st->win->stressTest = nullptr; // Make sure we're not double-deleted
 
     if (success) {
         int secs = SecsSinceSystemTime(st->stressStartTime);
@@ -618,9 +618,9 @@ static bool OpenFile(StressTest* st, const char* fileName) {
     st->currPageRenderTime = TimeGet();
     ++st->nFilesProcessed;
 
-    // search immediately in single page documents
+    // Search immediately in single page documents
     if (1 == st->pageForSearchStart) {
-        // use text that is unlikely to be found, so that we search all pages
+        // Use text that is unlikely to be found, so that we search all pages
         HwndSetText(st->win->hwndFindEdit, "!z_yt");
         FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
     }
@@ -639,7 +639,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
 }
 
 static void RandomizeViewingState(StressTest* st) {
-    // every 10 pages change the viewing sate (zoom etc.)
+    // Every 10 pages change the viewing sate (zoom etc.)
     int every10 = RAND_MAX / 10;
     if (rand() > every10) {
         return;
@@ -722,7 +722,7 @@ static bool GoToNextPage(StressTest* st) {
     }
     bool goToNextFile = st->pagesToRender.size() == 0;
     if (st->nSlowPages >= 3) {
-        // some files are scanned .jpx images that are slow to render
+        // Some files are scanned .jpx images that are slow to render
         // not much to learn from rendering them so we skip those if
         // we see more than 3 slow pages
         goToNextFile = true;
@@ -737,7 +737,7 @@ static bool GoToNextPage(StressTest* st) {
 
     auto ctrl = st->win->ctrl;
     if (!st->gotToc) {
-        // trigger getting toc and props
+        // Trigger getting toc and props
         st->gotToc = true;
         ctrl->GetToc();
         const char** props = gAllProps;
@@ -756,7 +756,7 @@ static bool GoToNextPage(StressTest* st) {
     ctrl->GoToPage(st->currPageNo, false);
     st->currPageRenderTime = TimeGet();
 
-    // start text search when we're in the middle of the document, so that
+    // Start text search when we're in the middle of the document, so that
     // search thread touches both pages that were already rendered and not yet
     // rendered
     // TODO: it would be nice to also randomize search starting page but the
@@ -799,7 +799,7 @@ static void OnTimer(StressTest* st, int timerIdGot) {
         return;
     }
 
-    // chm documents aren't rendered and we block until we show them
+    // CHM documents aren't rendered and we block until we show them
     // so we can assume previous page has been shown and go to next page
     if (!st->win->AsFixed()) {
         if (!GoToNextPage(st)) {
@@ -830,14 +830,14 @@ Next:
     TickTimer(st);
 }
 
-// note: used from CrashHandler, shouldn't allocate memory
+// Note: Used from CrashHandler, shouldn't allocate memory
 static void GetLogInfo(StressTest* st, str::Str* s) {
     s->AppendFmt(", stress test rendered %d files in ", st->nFilesProcessed);
     FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
     s->AppendFmt(", currPage: %d", st->currPageNo);
 }
 
-// note: used from CrashHandler.cpp, should not allocate memory
+// Note: Used from CrashHandler.cpp, should not allocate memory
 void GetStressTestInfo(str::Str* s) {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
@@ -862,11 +862,11 @@ void GetStressTestInfo(str::Str* s) {
 
 void StartStressTest(Flags* i, MainWindow* win) {
     gIsStressTesting = true;
-    // TODO: for now stress testing only supports the non-ebook ui
+    // TODO: For now stress testing only supports the non-ebook ui
     gGlobalPrefs->chmUI.useFixedPageUI = true;
-    // TODO: make stress test work with tabs?
+    // TODO: Make stress test work with tabs?
     gGlobalPrefs->useTabs = false;
-    // forbid entering sleep mode during tests
+    // forbidden entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(nullptr));
 
