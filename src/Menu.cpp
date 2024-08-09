@@ -1419,6 +1419,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         AppendThemesToMenu(menu);
     }
 
+    bool addExternalViewersNext = false;
     while (true) {
         MenuDef md = menuDef[i];
         if (md.title == nullptr) { // sentinel
@@ -1426,7 +1427,21 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
         i++;
 
+        if (addExternalViewersNext && ctx) {
+            // append user external viewers after menu item with CmdOpenWithHtmlHelp
+            WindowTab* tab = ctx->tab;
+            const char* path = tab ? tab->filePath : nullptr;
+            AppendExternalViewersToMenu(menu, path);
+            addExternalViewersNext = false;
+            continue;
+        }
+
         int cmdId = (int)md.idOrSubmenu;
+
+        if (cmdId == CmdOpenWithHtmlHelp) {
+            addExternalViewersNext = true;
+        }
+
         if (menuDef == menuDefMainSelection && cmdId == CmdTranslateSelectionWithGoogle) {
             AppendSelectionHandlersToMenu(menu, true);
         }
@@ -1471,13 +1486,6 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             UINT flags = MF_STRING | (disableMenu ? MF_DISABLED : MF_ENABLED);
             TempWStr ws = ToWStrTemp(title);
             AppendMenuW(menu, flags, md.idOrSubmenu, ws);
-        }
-
-        // append user external viewers after menu item with CmdOpenWithHtmlHelp
-        if (cmdId == CmdOpenWithHtmlHelp && ctx) {
-            WindowTab* tab = ctx->tab;
-            const char* path = tab ? tab->filePath : nullptr;
-            AppendExternalViewersToMenu(menu, path);
         }
     }
     RemoveBadMenuSeparators(menu);
