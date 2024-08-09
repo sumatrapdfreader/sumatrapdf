@@ -13,7 +13,7 @@ To create a theme:
 Example of customization:
 
 ```
-Shortcuts [
+Themes [
     [
         Name = My Dark Theme
         TextColor = #bac9d0

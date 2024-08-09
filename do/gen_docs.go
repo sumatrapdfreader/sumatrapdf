@@ -39,30 +39,18 @@ var (
 	fsys        fs.FS
 )
 
-const h1BreadcrumbsEnd = `</div>
-</div>
-`
-
-func getH1BreadcrumbStart() string {
-	const h1BreadcrumbsStart = `
+const h1BreadcrumbsStart = `
 	<div class="breadcrumbs">
 		<div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div>
 		<div>/</div>
 		<div>`
-	const h1BreadcrumbsStartWebsite = `
-<div class="breadcrumbs">
-	<div><a href="SumatraPDF-documentation">SumatraPDF documentation</a></div>
-	<div>/</div>
-	<div>`
-	if docsForWebsite {
-		return h1BreadcrumbsStartWebsite
-	}
-	return h1BreadcrumbsStart
-}
+const h1BreadcrumbsEnd = `</div>
+</div>
+`
 
 func renderFirstH1(w io.Writer, h *ast.Heading, entering bool, seenFirstH1 *bool) {
 	if entering {
-		io.WriteString(w, getH1BreadcrumbStart())
+		io.WriteString(w, h1BreadcrumbsStart)
 	} else {
 		*seenFirstH1 = true
 		io.WriteString(w, h1BreadcrumbsEnd)
@@ -406,9 +394,6 @@ func mdToHTML(name string, force bool) ([]byte, error) {
 	editLink = strings.Replace(editLink, "{name}", name, -1)
 	innerHTML += editLink
 	filePath = "manual.tmpl.html"
-	if docsForWebsite {
-		filePath = "manual.website.tmpl.html"
-	}
 	tmplManual, err := fs.ReadFile(fsys, filePath)
 	must(err)
 	s := strings.Replace(string(tmplManual), "{{InnerHTML}}", innerHTML, -1)
@@ -426,11 +411,6 @@ func mdToHTML(name string, force bool) ([]byte, error) {
 	mdInfo.data = []byte(s)
 	return mdInfo.data, nil
 }
-
-var (
-	// if true, we generate docs for website, which requires slight changes
-	docsForWebsite = false
-)
 
 var searchJS = ``
 var searchHTML = ``
@@ -466,10 +446,6 @@ func removeHTMLFilesInDir(dir string) {
 }
 
 func getWWWOutDir() string {
-	if docsForWebsite {
-		dir := getWebsiteDir()
-		return filepath.Join(dir, "server", "www", "docs")
-	}
 	return filepath.Join("docs", "www")
 }
 
@@ -641,21 +617,12 @@ func copyDocsToWebsite() {
 	logf("\n%s\n", string(d))
 }
 
-func genHTMLDocsForWebsite() {
-	if false {
-		genHTMLDocsForWebsite2()
-	} else {
-		copyDocsToWebsite()
-	}
-}
-
 // TODO: for now we just copy .md files to sumatra-website repo and use
 // the existing md => html generation, which is duplicate of what we do here
 // if we improve html generation here a lot, we'll switch to generating
 // html files for sumatra-website here
-func genHTMLDocsForWebsite2() {
-	logf("genHTMLDocsForWebsite2 starting\n")
-	docsForWebsite = true
+func genHTMLDocsForWebsite() {
+	logf("genHTMLDocsForWebsite starting\n")
 	dir := updateSumatraWebsite()
 	currBranch := getCurrentBranchMust(dir)
 	panicIf(currBranch != "master")
@@ -663,7 +630,7 @@ func genHTMLDocsForWebsite2() {
 	// for docs we need them because they are shown from file system
 	// for website we prefer "clean" links because they are served via web server
 	mdHTMLExt = false
-	genHTMLDocsFromMarkdown()
+	copyDocsToWebsite()
 }
 
 func genHTMLDocsForApp() {

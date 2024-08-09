@@ -148,51 +148,6 @@ body {
   font-family: sans-serif;
 }
 
-.nav {
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: row;
-  font-weight: 500;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.5);
-  background: transparent;
-  /* background-color: white; */
-  z-index: 99; /* needs to be higher than img */
-
-  justify-content: space-between;
-  padding: 0.25rem 0;
-  margin-bottom: 1.5rem;
-}
-
-/* https://csshint.com/css-box-shadow-examples/ */
-.nav-shadow {
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px 0px;
-}
-
-.nav-btn {
-  font-size: 18px;
-  padding: 8px 1rem;
-  margin-left: 1rem;
-  text-decoration: none;
-  color: black;
-  border-radius: 0.5rem;
-  background-color: white;
-}
-
-.nav-logo {
-  margin-left: 1rem;
-  margin-top: 1px;
-}
-
-.nav-btn-selected {
-  background-color: rgba(255, 240, 0, 0.9);
-}
-
-.nav-btn:hover {
-  background-color: rgba(255, 240, 0, 0.9);
-}
-
 .page-wrap {
   margin-left: 1rem;
   margin-right: 1rem;
@@ -350,20 +305,6 @@ a.for-nav-icon:hover {
   .hide-on-small {
     visibility: collapse;
     display: none;
-  }
-  .nav-logo {
-    visibility: collapse;
-    display: none;
-  }
-  .nav {
-    justify-content: center;
-    padding: 2px 0;
-    margin-bottom: 0.5rem;
-  }
-  .nav-btn {
-    font-size: 14px;
-    margin-left: 0px;
-    padding: 2px 4px;
   }
 }
 
