@@ -601,17 +601,44 @@ struct ThumbnailLayout {
     Size szThumb;
     Rect rcText;
     FileState* fs = nullptr; // info needed to draw the thumbnail
+    StaticLinkInfo* sl = nullptr;
 };
 
 struct HomePageLayout {
+    // args in
+    HWND hwnd;
+    HDC hdc;
+    Rect rc;
+    MainWindow* win;
+
     Rect rcAppWithVer; // SumatraPDF colorful text + version
     Rect rcLine;       // line under bApp
+    Rect rcIconOpen;
 
+    HIMAGELIST himlOpen;
+    VirtWndText* freqRead;
+    VirtWndText* openDoc;
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
+    ~HomePageLayout();
 };
 
+HomePageLayout::~HomePageLayout() {
+    delete freqRead;
+    delete openDoc;
+}
+
 // layout homepage in r
-void LayoutHomePage(HDC hdc, Rect rc, HomePageLayout& l) {
+void LayoutHomePage(HomePageLayout& l) {
+    Vec<FileState*> fileStates;
+    gFileHistory.GetFrequencyOrder(fileStates);
+    auto hwnd = l.hwnd;
+    auto hdc = l.hdc;
+    auto rc = l.rc;
+    auto win = l.win;
+
+    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+
     Size sz = CalcSumatraVersionSize(hdc);
     {
         Rect& r = l.rcAppWithVer;
@@ -622,36 +649,11 @@ void LayoutHomePage(HDC hdc, Rect rc, HomePageLayout& l) {
 
     l.rcLine = {0, sz.dy, rc.dx, 0};
 
-    // TODO: the rest
-}
-
-void DrawHomePage(HDC hdc, const HomePageLayout& l) {
-    const Rect& r = l.rcAppWithVer;
-    DrawSumatraVersion(hdc, r);
-
-    auto color = ThemeWindowTextColor();
-    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
-    DrawLine(hdc, l.rcLine);
-}
-
-void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLORREF textColor,
-                  COLORREF backgroundColor) {
-    Vec<FileState*> fileStates;
-    fileHistory.GetFrequencyOrder(fileStates);
-
-    HWND hwnd = win->hwndFrame;
-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
-
-    HomePageLayout layout;
-    Rect rc = ClientRect(win->hwndCanvas);
-    LayoutHomePage(hdc, rc, layout);
-
     bool isRtl = IsUIRtl();
 
     /* render recent files list */
 
-    Rect& titleBox = layout.rcAppWithVer;
+    Rect& titleBox = l.rcAppWithVer;
     rc.SubTB(titleBox.dy, kThumbsBottomBoxDy);
 
     int dx =
@@ -661,9 +663,9 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         (rc.dy - kThumbsMarginTop - kThumbsMarginBottom + kThumbsSpaceBetweenY) / (kThumbnailDy + kThumbsSpaceBetweenY);
     int thumbsRows = std::min(dy, kFileHistoryMaxFrequent / thumbsCols);
     int x = rc.x + kThumbsMarginLeft +
-            (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
-             kThumbsMarginRight) /
-                2;
+        (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
+            kThumbsMarginRight) /
+        2;
     Point offset(x, rc.y + kThumbsMarginTop);
     if (offset.x < DpiScale(hdc, kInnerPadding)) {
         offset.x = DpiScale(hdc, kInnerPadding);
@@ -672,19 +674,18 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     }
 
     const char* txt = _TRA("Frequently Read");
-    VirtWndText freqRead(hwnd, txt, fontFrequentlyRead);
-    freqRead.isRtl = isRtl;
-    Size txtSize = freqRead.GetIdealSize(true);
+    VirtWndText* freqRead = new VirtWndText(hwnd, txt, fontFrequentlyRead);
+    l.freqRead = freqRead;
+    freqRead->isRtl = isRtl;
+    Size txtSize = freqRead->GetIdealSize(true);
 
     Rect headerRect(offset.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
-    freqRead.SetBounds(headerRect);
+    freqRead->SetBounds(headerRect);
 
-    DeleteVecMembers(win->staticLinks);
     int nFiles = fileStates.Size();
-    Vec<ThumbnailLayout> thumbnails;
     for (int row = 0; row < thumbsRows; row++) {
         for (int col = 0; col < thumbsCols; col++) {
             if (row * thumbsCols + col >= nFiles) {
@@ -693,7 +694,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
                 break;
             }
             int idx = row * thumbsCols + col;
-            ThumbnailLayout& thumb = *thumbnails.AppendBlanks(1);
+            ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
             FileState* fs = fileStates.at(row * thumbsCols + col);
             thumb.fs = fs;
 
@@ -719,8 +720,8 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
             }
             thumb.rcText = rcText;
             char* path = fs->filePath;
-            auto sl = new StaticLinkInfo(rcText.Union(rcPage), path, path);
-            win->staticLinks.Append(sl);
+            thumb.sl = new StaticLinkInfo(rcText.Union(rcPage), path, path);
+            win->staticLinks.Append(thumb.sl);
         }
     }
     /* bottom links */
@@ -728,53 +729,86 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
     rc.dy = kThumbsBottomBoxDy;
 
-    HIMAGELIST himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    l.himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
     Rect rcIconOpen(offset.x, rc.y, 0, 0);
-    ImageList_GetIconSize(himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
+    ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
     rcIconOpen.y += (rc.dy - rcIconOpen.dy) / 2;
     if (isRtl) {
         rcIconOpen.x = rc.dx - offset.x - rcIconOpen.dx;
     }
+    l.rcIconOpen = rcIconOpen;
 
     txt = _TRA("Open a document...");
-    VirtWndText openDoc(hwnd, txt, fontText);
-    openDoc.isRtl = isRtl;
-    openDoc.withUnderline = true;
-    txtSize = openDoc.GetIdealSize(true);
+    auto openDoc = new VirtWndText(hwnd, txt, fontText);
+    openDoc->isRtl = isRtl;
+    openDoc->withUnderline = true;
+    txtSize = openDoc->GetIdealSize(true);
     Rect rcOpenDoc(offset.x + rcIconOpen.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
     }
-    openDoc.SetBounds(rcOpenDoc);
+    openDoc->SetBounds(rcOpenDoc);
 
     // make the click target larger
     rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
     rcOpenDoc.Inflate(10, 10);
+    l.openDoc = openDoc;
     auto sl = new StaticLinkInfo(rcOpenDoc, kLinkOpenFile);
     win->staticLinks.Append(sl);
+}
+
+static void DrawHomePageLayout(HDC hdc, const HomePageLayout& l) {
+    const Rect& r = l.rcAppWithVer;
+    DrawSumatraVersion(hdc, r);
+
+    auto color = ThemeWindowTextColor();
+    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
+    DrawLine(hdc, l.rcLine);
+}
+
+void DrawHomePage(MainWindow* win, HDC hdc) {
+
+    auto textColor = ThemeWindowTextColor();
+    auto backgroundColor = ThemeMainWindowBackgroundColor();
+
+    HWND hwnd = win->hwndFrame;
+
+    DeleteVecMembers(win->staticLinks);
+
+    HomePageLayout l;
+    l.rc = ClientRect(win->hwndCanvas);;
+    l.hdc = hdc;
+    l.hwnd = hwnd;
+    l.win = win;
+    LayoutHomePage(l);
 
     // --------- drawing phase
+    bool isRtl = IsUIRtl();
+    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+
     auto color = ThemeWindowTextColor();
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
     color = ThemeWindowLinkColor();
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
 
-    rc = ClientRect(win->hwndCanvas);
-    color = ThemeMainWindowBackgroundColor();
-    FillRect(hdc, rc, color);
+    {
+        Rect rc = ClientRect(win->hwndCanvas);
+        color = ThemeMainWindowBackgroundColor();
+        FillRect(hdc, rc, color);
+    }
 
-    DrawHomePage(hdc, layout);
+    DrawHomePageLayout(hdc, l);
 
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
     color = ThemeWindowTextColor();
     SetTextColor(hdc, color);
 
-    freqRead.Draw(hdc);
+    l.freqRead->Draw(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
-    for (ThumbnailLayout& thumb : thumbnails) {
+    for (ThumbnailLayout& thumb : l.thumbnails) {
         FileState* fs = thumb.fs;
         const Rect& page = thumb.rcPage;
 
@@ -808,7 +842,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
         WCHAR* filePathW = ToWStrTemp(path);
         HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
-        x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
+        int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
         ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
     }
 
@@ -816,11 +850,14 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 
-    ImageList_Draw(himlOpen, 0 /* index of Open icon */, hdc, rcIconOpen.x, rcIconOpen.y, ILD_NORMAL);
+    int x = l.rcIconOpen.x;
+    int y = l.rcIconOpen.y;
+    int openIconIdx = 0;
+    ImageList_Draw(l.himlOpen, openIconIdx, hdc, x, y, ILD_NORMAL);
 
-    openDoc.Draw(hdc);
+    l.openDoc->Draw(hdc);
 
     Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
-    sl = new StaticLinkInfo(rcFreqRead, kLinkHideList);
+    auto sl = new StaticLinkInfo(rcFreqRead, kLinkHideList);
     win->staticLinks.Append(sl);
 }

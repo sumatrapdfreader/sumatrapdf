@@ -32,14 +32,14 @@ static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
-
-    auto txtCol = ThemeWindowTextColor();
-    auto bgCol = ThemeMainWindowBackgroundColor();
-    if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gGlobalPrefs->rememberOpenedFiles &&
-        gGlobalPrefs->showStartPage) {
-        DrawHomePage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);
+    HDC bufDC = win->buffer->GetDC();
+    GlobalPrefs* prefs = gGlobalPrefs;
+    bool hasPerms = HasPermission(Perm::SavePreferences | Perm::DiskAccess);
+    bool drawHome = hasPerms && prefs->rememberOpenedFiles && prefs->showStartPage;
+    if (drawHome) {
+        DrawHomePage(win, bufDC);
     } else {
-        DrawAboutPage(win, win->buffer->GetDC());
+        DrawAboutPage(win, bufDC);
     }
     win->buffer->Flush(hdc);
 
