@@ -604,42 +604,34 @@ struct ThumbnailLayout {
 };
 
 struct HomePageLayout {
-    Rect bAppWithVer; // SumatraPDF colorful text + version
-    Rect bLine;       // line under bApp
+    Rect rcAppWithVer; // SumatraPDF colorful text + version
+    Rect rcLine;       // line under bApp
 
-    Rect bFreqRead; // "Frequently Read" text
-
-    Rect bOpenDocIcon; // icon before "OpenDocument"
-    Rect bOpenDoc;     // "Open Document" link
-
-    Rect bHideFreqRead;              // "Hide/Show Frequently Read" link
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
-
-    Vec<FileState*>* fileStates;
 };
 
 // layout homepage in r
 void LayoutHomePage(HDC hdc, Rect rc, HomePageLayout& l) {
     Size sz = CalcSumatraVersionSize(hdc);
     {
-        Rect& r = l.bAppWithVer;
+        Rect& r = l.rcAppWithVer;
         r.x = rc.dx - sz.dx - 3;
         r.y = 0;
         r.SetSize(sz);
     }
 
-    l.bLine = {0, sz.dy, rc.dx, 0};
+    l.rcLine = {0, sz.dy, rc.dx, 0};
 
     // TODO: the rest
 }
 
 void DrawHomePage(HDC hdc, const HomePageLayout& l) {
-    const Rect& r = l.bAppWithVer;
+    const Rect& r = l.rcAppWithVer;
     DrawSumatraVersion(hdc, r);
 
     auto color = ThemeWindowTextColor();
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
-    DrawLine(hdc, l.bLine);
+    DrawLine(hdc, l.rcLine);
 }
 
 void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLORREF textColor,
@@ -648,7 +640,6 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     fileHistory.GetFrequencyOrder(fileStates);
 
     HomePageLayout layout;
-    layout.fileStates = &fileStates;
     Rect rc = ClientRect(win->hwndCanvas);
     LayoutHomePage(hdc, rc, layout);
 
@@ -676,7 +667,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     color = ThemeWindowTextColor();
     SetTextColor(hdc, color);
 
-    Rect& titleBox = layout.bAppWithVer;
+    Rect& titleBox = layout.rcAppWithVer;
     rc.SubTB(titleBox.dy, kThumbsBottomBoxDy);
 
     int dx =
@@ -707,9 +698,6 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         headerRect.x = rc.dx - offset.x - headerRect.dx;
     }
     freqRead.SetBounds(headerRect);
-    freqRead.Draw(hdc);
-
-    SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     DeleteVecMembers(win->staticLinks);
     int nFiles = fileStates.Size();
@@ -752,6 +740,38 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
             win->staticLinks.Append(sl);
         }
     }
+    /* bottom links */
+    rc.y +=
+        kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
+    rc.dy = kThumbsBottomBoxDy;
+
+    HIMAGELIST himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    Rect rcIconOpen(offset.x, rc.y, 0, 0);
+    ImageList_GetIconSize(himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
+    rcIconOpen.y += (rc.dy - rcIconOpen.dy) / 2;
+    if (isRtl) {
+        rcIconOpen.x = rc.dx - offset.x - rcIconOpen.dx;
+    }
+
+    txt = _TRA("Open a document...");
+    VirtWndText openDoc(hwnd, txt, fontText);
+    openDoc.isRtl = isRtl;
+    openDoc.withUnderline = true;
+    txtSize = openDoc.GetIdealSize(true);
+    Rect rcOpenDoc(offset.x + rcIconOpen.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    if (isRtl) {
+        rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
+    }
+    openDoc.SetBounds(rcOpenDoc);
+
+    // make the click target larger
+    rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
+    rcOpenDoc.Inflate(10, 10);
+    auto sl = new StaticLinkInfo(rcOpenDoc, kLinkOpenFile);
+    win->staticLinks.Append(sl);
+
+    freqRead.Draw(hdc);
+    SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     for (ThumbnailLayout& thumb : thumbnails) {
         FileState* fs = thumb.fs;
@@ -791,43 +811,15 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
     }
 
-    /* render bottom links */
-    rc.y +=
-        kThumbsMarginTop + thumbsRows * kThumbnailDy + (thumbsRows - 1) * kThumbsSpaceBetweenY + kThumbsMarginBottom;
-    rc.dy = kThumbsBottomBoxDy;
-
     color = ThemeWindowLinkColor();
     SetTextColor(hdc, color);
     SelectObject(hdc, penLinkLine);
 
-    HIMAGELIST himl = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
-    Rect rectIcon(offset.x, rc.y, 0, 0);
-    ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
-    rectIcon.y += (rc.dy - rectIcon.dy) / 2;
-    if (isRtl) {
-        rectIcon.x = rc.dx - offset.x - rectIcon.dx;
-    }
-    ImageList_Draw(himl, 0 /* index of Open icon */, hdc, rectIcon.x, rectIcon.y, ILD_NORMAL);
+    ImageList_Draw(himlOpen, 0 /* index of Open icon */, hdc, rcIconOpen.x, rcIconOpen.y, ILD_NORMAL);
 
-    txt = _TRA("Open a document...");
-    VirtWndText openDoc(hwnd, txt, fontText);
-    openDoc.isRtl = isRtl;
-    openDoc.withUnderline = true;
-    txtSize = openDoc.GetIdealSize(true);
-    Rect rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
-    if (isRtl) {
-        rect.x = rectIcon.x - rect.dx - 3;
-    }
-    openDoc.SetBounds(rect);
     openDoc.Draw(hdc);
 
-    // make the click target larger
-    rect = rect.Union(rectIcon);
-    rect.Inflate(10, 10);
-    auto sl = new StaticLinkInfo(rect, kLinkOpenFile);
-    win->staticLinks.Append(sl);
-
-    rect = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
-    sl = new StaticLinkInfo(rect, kLinkHideList);
+    Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
+    sl = new StaticLinkInfo(rcFreqRead, kLinkHideList);
     win->staticLinks.Append(sl);
 }
