@@ -5,8 +5,7 @@
 constexpr int kThumbnailDx = 212;
 constexpr int kThumbnailDy = 150;
 
-bool LoadThumbnail(FileState* ds);
-bool ReloadThumbnail(FileState* ds);
+RenderedBitmap* LoadThumbnail(FileState* ds);
 bool HasThumbnail(FileState* ds);
 void SetThumbnail(FileState* ds, RenderedBitmap* bmp);
 void SaveThumbnail(FileState* ds);

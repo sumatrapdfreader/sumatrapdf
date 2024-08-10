@@ -62,29 +62,23 @@ void DeleteThumbnailForFile(const char* filePath) {
     logf("DeleteThumbnailForFile: file::Remove('%s') %s\n", thumbPath, status);
 }
 
-bool LoadThumbnail(FileState* ds) {
+RenderedBitmap* LoadThumbnail(FileState* ds) {
     if (ds->thumbnail) {
-        return true;
+        return ds->thumbnail;
     }
     TempStr bmpPath = GetThumbnailPathTemp(ds->filePath);
     if (!bmpPath) {
-        return false;
+        return nullptr;
     }
 
     RenderedBitmap* bmp = LoadRenderedBitmap(bmpPath);
     if (!bmp || bmp->GetSize().IsEmpty()) {
         delete bmp;
-        return false;
+        return nullptr;
     }
 
     ds->thumbnail = bmp;
-    return true;
-}
-
-bool ReloadThumbnail(FileState* ds) {
-    delete ds->thumbnail;
-    ds->thumbnail = nullptr;
-    return LoadThumbnail(ds);
+    return ds->thumbnail;
 }
 
 bool HasThumbnail(FileState* ds) {

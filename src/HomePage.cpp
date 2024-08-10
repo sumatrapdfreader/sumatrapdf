@@ -604,8 +604,6 @@ struct ThumbnailLayout {
 };
 
 struct HomePageLayout {
-    int dx;
-    int dy;
     Rect bAppWithVer; // SumatraPDF colorful text + version
     Rect bLine;       // line under bApp
 
@@ -733,9 +731,9 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
             if (isRtl) {
                 rcPage.x = rc.dx - rcPage.x - rcPage.dx;
             }
-            bool hasThumb = LoadThumbnail(fs);
-            if (hasThumb) {
-                Size szThumb = fs->thumbnail->GetSize();
+            RenderedBitmap* thumbImg = LoadThumbnail(fs);
+            if (thumbImg) {
+                Size szThumb = thumbImg->GetSize();
                 if (szThumb.dx != kThumbnailDx || szThumb.dy != kThumbnailDy) {
                     rcPage.dy = szThumb.dy * kThumbnailDx / szThumb.dx;
                     rcPage.y += kThumbnailDy - rcPage.dy;
@@ -759,8 +757,8 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
         FileState* fs = thumb.fs;
         const Rect& page = thumb.rcPage;
 
-        bool hasThumb = LoadThumbnail(fs);
-        if (hasThumb) {
+        RenderedBitmap* thumbImg = LoadThumbnail(fs);
+        if (thumbImg) {
             HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
             SelectClipRgn(hdc, clip);
             // note: we used to invert bitmaps in dark theme but that doesn't
@@ -771,7 +769,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
                 clone->Blit(hdc, page);
                 delete clone;
             } else {
-                fs->thumbnail->Blit(hdc, page);
+                thumbImg->Blit(hdc, page);
             }
             SelectClipRgn(hdc, nullptr);
             DeleteObject(clip);
