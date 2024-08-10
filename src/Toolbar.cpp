@@ -380,7 +380,7 @@ void UpdateFindbox(MainWindow* win) {
 }
 
 LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
-                                DWORD_PTR dwRefData) {
+                              DWORD_PTR dwRefData) {
     if (WM_ERASEBKGND == uMsg && ThemeColorizeControls()) {
         HDC hdc = (HDC)wParam;
         RECT rect;
@@ -395,40 +395,37 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     }
     if (WM_NOTIFY == uMsg) {
         auto win = FindMainWindowByHwnd(hWnd);
-            NMHDR* hdr = (NMHDR*)lParam;
-            HWND chwnd = hdr->hwndFrom;
-            if (hdr->code == NM_CUSTOMDRAW)
-            {
-                if (win && win->hwndToolbar == chwnd) {
-                    NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;
-                    switch (custDraw->nmcd.dwDrawStage)
-                    {
-                        case CDDS_PREPAINT:
-                            return CDRF_NOTIFYITEMDRAW;
+        NMHDR* hdr = (NMHDR*)lParam;
+        HWND chwnd = hdr->hwndFrom;
+        if (hdr->code == NM_CUSTOMDRAW) {
+            if (win && win->hwndToolbar == chwnd) {
+                NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;
+                switch (custDraw->nmcd.dwDrawStage) {
+                    case CDDS_PREPAINT:
+                        return CDRF_NOTIFYITEMDRAW;
 
-                        case CDDS_ITEMPREPAINT:
-                        {
-                            auto col = ThemeWindowTextColor();
-                            //col = RGB(255, 0, 0);
-                            //SetTextColor(custDraw->nmcd.hdc, col);
-                            UINT itemState = custDraw->nmcd.uItemState;
-                            if (itemState & CDIS_DISABLED) {
-                                // TODO: this doesn't work
-                                col = ThemeWindowTextDisabledColor();
-                                //col = RGB(255, 0, 0);
-                                custDraw->clrText = col;
-                            } else if (false && itemState & CDIS_SELECTED) {
-                                custDraw->clrText = RGB(0, 255, 0);
-                            } else if (false && itemState & CDIS_GRAYED) {
-                                custDraw->clrText = RGB(0, 0, 255);
-                            } else {
-                                custDraw->clrText = col;
-                            }
-                            return CDRF_DODEFAULT;
-                            //return CDRF_NEWFONT;
+                    case CDDS_ITEMPREPAINT: {
+                        auto col = ThemeWindowTextColor();
+                        // col = RGB(255, 0, 0);
+                        // SetTextColor(custDraw->nmcd.hdc, col);
+                        UINT itemState = custDraw->nmcd.uItemState;
+                        if (itemState & CDIS_DISABLED) {
+                            // TODO: this doesn't work
+                            col = ThemeWindowTextDisabledColor();
+                            // col = RGB(255, 0, 0);
+                            custDraw->clrText = col;
+                        } else if (false && itemState & CDIS_SELECTED) {
+                            custDraw->clrText = RGB(0, 255, 0);
+                        } else if (false && itemState & CDIS_GRAYED) {
+                            custDraw->clrText = RGB(0, 0, 255);
+                        } else {
+                            custDraw->clrText = col;
                         }
+                        return CDRF_DODEFAULT;
+                        // return CDRF_NEWFONT;
                     }
                 }
+            }
         }
     }
     if (WM_NCDESTROY == uMsg) {
@@ -998,8 +995,6 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
     SetToolbarIconsImageList(win);
     HwndScheduleRepaint(win->hwndToolbar);
 }
-
-#pragma comment(lib, "UxTheme.lib")
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 void CreateToolbar(MainWindow* win) {

@@ -21,7 +21,6 @@ Per-Monitor DPI Aware:
 */
 
 #include <shellscalingapi.h>
-#pragma comment(lib, "Shcore")
 
 // get uncached dpi
 int DpiGetForHwnd(HWND hwnd) {

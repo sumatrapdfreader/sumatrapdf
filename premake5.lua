@@ -670,7 +670,7 @@ workspace "SumatraPDF"
     includedirs { "src", "mupdf/include"}
     files { "src/tools/signfile.cpp", "src/CrashHandlerNoOp.cpp" }
     links { "utils", "mupdf" }
-    links { "crypt32", "shlwapi", "version", "Comctl32", "wininet" }
+    links { "crypt32", "shlwapi", "version", "Comctl32", "wininet", "wintrust" }
 
 
   project "plugin-test"
@@ -682,7 +682,7 @@ workspace "SumatraPDF"
     includedirs { "src" }
     plugin_test_files()
     links { "utils", "mupdf" }
-    links { "shlwapi", "version", "comctl32", "wininet" }
+    links { "shlwapi", "version", "comctl32", "wininet", "wintrust" }
 
   project "test_util"
     kind "ConsoleApp"
@@ -692,7 +692,7 @@ workspace "SumatraPDF"
     disablewarnings { "4838" }
     includedirs { "src" }
     test_util_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet" }
+    links { "gdiplus", "comctl32", "shlwapi", "Version", "wininet", "shcore", "wintrust", "crypt32" }
 
   project "sizer"
     kind "ConsoleApp"
@@ -726,7 +726,7 @@ workspace "SumatraPDF"
     includedirs { "src", "src/wingui", "mupdf/include" }
     search_filter_files()
     links { "utils", "unrar", "libmupdf" }
-    links { "comctl32", "gdiplus", "shlwapi", "version", "wininet" }
+    links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust" }
 
   project "PdfPreview"
     kind "SharedLib"
@@ -750,7 +750,7 @@ workspace "SumatraPDF"
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
     links { "utils", "unrar", "libmupdf", "chm" }
-    links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet" }
+    links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust" }
 
     project "PdfPreviewTest"
       kind "ConsoleApp"
@@ -760,7 +760,7 @@ workspace "SumatraPDF"
       disablewarnings { "4838" }
       includedirs { "src" }
       preview_test_files()
-      links { "gdiplus", "comctl32", "shlwapi", "Version" }
+      links { "gdiplus", "comctl32", "shlwapi", "Version", "Ole32" }
       dependson { "PdfPreview" }
 
   -- a single static executable
@@ -808,7 +808,7 @@ workspace "SumatraPDF"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "windowscodecs", "wininet", "uiautomationcore.lib"
+      "version", "windowscodecs", "wininet", "uiautomationcore.lib", "uxtheme", "wintrust"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
@@ -869,7 +869,7 @@ workspace "SumatraPDF"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "wininet", "d2d1.lib", "uiautomationcore.lib"
+      "version", "wininet", "d2d1.lib", "uiautomationcore.lib", "uxtheme", "wintrust", "crypt32"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:libmupdf.dll" }

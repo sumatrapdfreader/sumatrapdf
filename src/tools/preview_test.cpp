@@ -12,9 +12,6 @@
 
 #include "utils/BaseUtil.h"
 
-#pragma comment(lib, "Shlwapi.lib")
-#pragma comment(lib, "Ole32.lib")
-
 #define kPdfPreviewClsid L"{3D3B1846-CC43-42AE-BFF9-D914083C2BA3}"
 #define kXpsPreviewClsid L"{D427A82C-6545-4FBE-8E87-030EDB3BE46D}"
 #define kDjVuPreviewClsid L"{6689D0D4-1E9C-400A-8BCA-FA6C56B2C3B5}"

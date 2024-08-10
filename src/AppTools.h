@@ -50,3 +50,5 @@ bool AdjustVariableDriveLetter(char* path);
 
 bool IsUntrustedFile(const char* filePath, const char* fileUrl = nullptr);
 void DrawCloseButton(HDC hdc, Rect& r, bool isHover);
+
+bool IsSumatraSigned();

@@ -737,9 +737,6 @@
     <None Include="..\docs\manual.tmpl.html">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\docs\manual.website.tmpl.html">
-      <Filter>docs</Filter>
-    </None>
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md">
       <Filter>docs\md</Filter>
     </None>
@@ -777,6 +774,9 @@
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\Customize-search-translation-services.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Customize-theme-colors.md">
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\Customize-toolbar.md">

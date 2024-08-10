@@ -742,3 +742,19 @@ void DrawCloseButton(HDC hdc, Rect& r, bool isHover) {
     args.isHover = isHover;
     DrawCloseButton(args);
 }
+
+// -1 : didn't check
+// 0  : checked and not signed
+// 1  : checked and signed
+static int gIsSigned = -1;
+
+bool IsSumatraSigned() {
+    if (gIsSigned < 0) {
+        gIsSigned = 0;
+        TempStr filePath = GetExePathTemp();
+        if (IsPEFileSigned(filePath)) {
+            gIsSigned = 1;
+        }
+    }
+    return gIsSigned ? true : false;
+}
