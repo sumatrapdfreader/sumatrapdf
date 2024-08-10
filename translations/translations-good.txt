@@ -12785,6 +12785,7 @@ pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
 ro:Deschide următorul fișier în folder
 ru:Открыть следующий файл в папке
+sat:ᱯᱚᱴᱚᱢ ᱨᱮ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱨᱮᱫᱽ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť nasledujúci súbor v priečinku
 tw:開啟資料夾內的下一個檔案
 :Open Previous File In Folder
@@ -12801,6 +12802,7 @@ pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
 ro:Deschide fișierul anterior în folder
 ru:Открыть предыдущий файл в папке
+sat:ᱯᱚᱴᱚᱢ ᱨᱮ ᱢᱟᱲᱟᱝᱟᱜ ᱨᱮᱫᱽ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť predchádzajúci súbor v priečinku
 tw:開啟資料夾內的上一個檔案
 :Open a document...
