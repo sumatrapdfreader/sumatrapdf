@@ -639,33 +639,17 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     Vec<FileState*> fileStates;
     fileHistory.GetFrequencyOrder(fileStates);
 
+    HWND hwnd = win->hwndFrame;
+    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+
     HomePageLayout layout;
     Rect rc = ClientRect(win->hwndCanvas);
     LayoutHomePage(hdc, rc, layout);
 
-    HWND hwnd = win->hwndFrame;
-    auto color = ThemeWindowTextColor();
-
-    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
-    color = ThemeWindowLinkColor();
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
-
-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
-
-    color = ThemeMainWindowBackgroundColor();
-    FillRect(hdc, rc, color);
-
     bool isRtl = IsUIRtl();
 
-    /* render title */
-
-    DrawHomePage(hdc, layout);
-
     /* render recent files list */
-    SelectObject(hdc, penThumbBorder);
-    SetBkMode(hdc, TRANSPARENT);
-    color = ThemeWindowTextColor();
-    SetTextColor(hdc, color);
 
     Rect& titleBox = layout.rcAppWithVer;
     rc.SubTB(titleBox.dy, kThumbsBottomBoxDy);
@@ -688,7 +672,6 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     }
 
     const char* txt = _TRA("Frequently Read");
-    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
     VirtWndText freqRead(hwnd, txt, fontFrequentlyRead);
     freqRead.isRtl = isRtl;
     Size txtSize = freqRead.GetIdealSize(true);
@@ -769,6 +752,24 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     rcOpenDoc.Inflate(10, 10);
     auto sl = new StaticLinkInfo(rcOpenDoc, kLinkOpenFile);
     win->staticLinks.Append(sl);
+
+    // --------- drawing phase
+    auto color = ThemeWindowTextColor();
+
+    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
+    color = ThemeWindowLinkColor();
+    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
+
+    rc = ClientRect(win->hwndCanvas);
+    color = ThemeMainWindowBackgroundColor();
+    FillRect(hdc, rc, color);
+
+    DrawHomePage(hdc, layout);
+
+    SelectObject(hdc, penThumbBorder);
+    SetBkMode(hdc, TRANSPARENT);
+    color = ThemeWindowTextColor();
+    SetTextColor(hdc, color);
 
     freqRead.Draw(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
