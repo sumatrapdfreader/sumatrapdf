@@ -30,10 +30,10 @@ static const char* themesTxt = R"(Themes [
     ]
     [
         Name = Dark
-        TextColor = #bac9d0
-        BackgroundColor = #263238
-        ControlBackgroundColor = #263238
-        LinkColor = #8aa3b0
+        TextColor = #F5F5F4
+        BackgroundColor = #000000
+        ControlBackgroundColor = #000000
+        LinkColor = #71717A
         ColorizeControls = true
     ]
     [
@@ -216,7 +216,6 @@ COLORREF ThemeControlBackgroundColor() {
     return col;
 }
 
-// TODO: migrate from prefs to theme.
 COLORREF ThemeMainWindowBackgroundColor() {
     COLORREF bgColor = GetThemeCol(gCurrentTheme->backgroundColor, kRedColor);
     if (gCurrThemeIndex == 0) {
