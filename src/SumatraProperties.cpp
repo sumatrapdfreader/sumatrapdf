@@ -419,7 +419,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData, b
 
     layoutData->hwnd = hwnd;
     layoutData->hwndParent = hParent;
-    bool isRtl = IsUIRightToLeft();
+    bool isRtl = IsUIRtl();
     HwndSetRtl(hwnd, isRtl);
     {
         Button::CreateArgs args;
@@ -588,7 +588,7 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
 
     if (dm) {
         strTemp = FormatPageSizeTemp(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
-        if (IsUIRightToLeft() && IsWindowsVistaOrGreater()) {
+        if (IsUIRtl() && IsWindowsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
             strTemp = str::JoinTemp(leftToRightEmbeding, strTemp, popDirectionalFormatting);

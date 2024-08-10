@@ -189,6 +189,7 @@ Cmd* enum (e.g. CmdOpen) and a human-readable name (not used yet).
     V(CmdDebugShowNotif, "Debug: Show Notification")                               \
     V(CmdDebugStartStressTest, "Debug: Start Stress Test")                         \
     V(CmdDebugTogglePredictiveRender, "Debug: Toggle Predictive Rendering")        \
+    V(CmdDebugToggleRtl, "Debug: Toggle Rtl")                                      \
     V(CmdNone, "Do nothing")
 
 // order of CreateAnnot* must be the same as enum AnnotationType

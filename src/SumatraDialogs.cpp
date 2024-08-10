@@ -148,7 +148,7 @@ DLGTEMPLATE* GetRtLDlgTemplate(int dlgId) {
 
 // creates a dialog box that dynamically gets a right-to-left layout if needed
 static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM data) {
-    bool isRtl = IsUIRightToLeft();
+    bool isRtl = IsUIRtl();
     bool isDefaultFont = IsAppFontSizeDefault();
     if (!isRtl && isDefaultFont) {
         return DialogBoxParam(nullptr, MAKEINTRESOURCE(dlgId), parent, DlgProc, data);
@@ -966,7 +966,7 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem
     auto s = _TRA("Advanced");
     psp.pszTitle = ToWStrTemp(s);
 
-    if (IsUIRightToLeft()) {
+    if (IsUIRtl()) {
         dlgTemplate.Set(GetRtLDlgTemplate(IDD_PROPSHEET_PRINT_ADVANCED));
         psp.pResource = dlgTemplate.Get();
         psp.dwFlags |= PSP_DLGINDIRECT;

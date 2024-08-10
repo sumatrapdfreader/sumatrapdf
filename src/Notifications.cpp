@@ -114,7 +114,7 @@ void RelayoutNotifications(HWND hwnd) {
     for (NotificationWnd* wnd : wnds) {
         Rect rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
-        if (IsUIRightToLeft()) {
+        if (IsUIRtl()) {
             int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
             rect.x = frame.dx - rect.dx - topLeftMargin - cxVScroll;
         } else {
@@ -174,7 +174,7 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
 
     CreateCustom(cargs);
 
-    HwndSetRtl(hwnd, IsUIRightToLeft());
+    HwndSetRtl(hwnd, IsUIRtl());
     Layout(args.msg);
     ShowWindow(hwnd, SW_SHOW);
 
@@ -257,7 +257,7 @@ void NotificationWnd::Layout(const char* message) {
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, flags);
 
     // move the window to the right for a right-to-left layout
-    if (IsUIRightToLeft()) {
+    if (IsUIRtl()) {
         HWND parent = GetParent(hwnd);
         Rect r = MapRectToWindow(WindowRect(hwnd), HWND_DESKTOP, parent);
         int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
@@ -344,7 +344,7 @@ void NotificationWnd::UpdateMessage(const char* msg, int timeoutMs, bool highlig
     HwndSetText(hwnd, msg);
     this->highlight = highlight;
     this->timeoutMs = timeoutMs;
-    HwndSetRtl(hwnd, IsUIRightToLeft());
+    HwndSetRtl(hwnd, IsUIRtl());
     Layout(msg);
     HwndRepaintNow(hwnd);
     if (timeoutMs != 0) {

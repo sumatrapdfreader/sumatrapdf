@@ -91,6 +91,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdDebugStartStressTest,
     CmdDebugTestApp,
     CmdDebugTogglePredictiveRender,
+    CmdDebugToggleRtl,
     CmdFavoriteToggle,
     CmdToggleFullscreen,
     CmdToggleMenuBar,

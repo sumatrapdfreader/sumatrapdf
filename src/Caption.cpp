@@ -940,7 +940,7 @@ static void MenuBarAsPopupMenu(MainWindow* win, int x, int y) {
         AppendMenuW(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
 
-    if (IsUIRightToLeft()) {
+    if (IsUIRtl()) {
         x += ClientRect(win->caption->btn[CB_MENU].hwnd).dx;
     }
 

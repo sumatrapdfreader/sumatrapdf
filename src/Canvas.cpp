@@ -978,7 +978,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     bool rendering = false;
     Rect screen(Point(), dm->GetViewPort().Size());
 
-    bool isRtl = IsUIRightToLeft();
+    bool isRtl = IsUIRtl();
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || 0.0f == pageInfo->visibleRatio) {
@@ -1737,7 +1737,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     const char* filePath = tab->filePath;
     TempStr msg = str::FormatTemp(_TRA("Error loading %s"), filePath);
-    DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRightToLeft());
+    DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     SelectObject(hdc, hPrevFont);
 
     EndPaint(win->hwndCanvas, &ps);

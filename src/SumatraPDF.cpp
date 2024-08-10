@@ -560,12 +560,17 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
     UpdateSidebarDisplayState(tab, fs);
 }
 
-bool IsUIRightToLeft() {
+static bool gForceRtl = false;
+
+bool IsUIRtl() {
+    if (gForceRtl) {
+        return true;
+    }
     return trans::IsCurrLangRtl();
 }
 
 uint MbRtlReadingMaybe() {
-    if (IsUIRightToLeft()) {
+    if (IsUIRtl()) {
         return MB_RTLREADING;
     }
     return 0;
@@ -580,9 +585,9 @@ void MessageBoxWarning(HWND hwnd, const char* msg, const char* title) {
 }
 
 // updates the layout for a window to either left-to-right or right-to-left
-// depending on the currently used language (cf. IsUIRightToLeft)
+// depending on the currently used language (see IsUIRtl)
 static void UpdateWindowRtlLayout(MainWindow* win) {
-    bool isRTL = IsUIRightToLeft();
+    bool isRTL = IsUIRtl();
     bool wasRTL = (GetWindowLongW(win->hwndFrame, GWL_EXSTYLE) & WS_EX_LAYOUTRTL) != 0;
     if (wasRTL == isRTL) {
         return;
@@ -1039,7 +1044,7 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     }
 
     TempStr s = nullptr;
-    if (!IsUIRightToLeft()) {
+    if (!IsUIRtl()) {
         s = str::FormatTemp("%s %s- %s", titlePath, docTitle, kSumatraWindowTitle);
     } else {
         // explicitly revert the title, so that filenames aren't garbled
@@ -1228,7 +1233,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
     }
 
-#if 0
+#if defined(ENABLE_REDRAW_ON_RELOAD)
     // TODO: why is this needed?
     if (!args->isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
@@ -3443,7 +3448,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars = true, int sideb
                     Rect wr = WindowRect(win->hwndFrame);
                     POINT pt = {wr.x + capButtons.left, wr.y + capButtons.top};
                     ScreenToClient(win->hwndFrame, &pt);
-                    if (IsUIRightToLeft()) {
+                    if (IsUIRtl()) {
                         captionWidth = rc.x + rc.dx - pt.x;
                     } else {
                         captionWidth = pt.x - rc.x;
@@ -5080,6 +5085,7 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     }
 }
 
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
 
@@ -5695,6 +5701,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSelectAll:
             OnSelectAll(win);
+            break;
+
+        case CmdDebugToggleRtl:
+            gForceRtl = !gForceRtl;
+            RelayoutWindow(win);
+            ScheduleRepaint(win, 0);
             break;
 
         case CmdDebugDownloadSymbols:

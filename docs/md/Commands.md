@@ -259,6 +259,7 @@ CmdDebugShowNotif,,Debug: Show Notification
 CmdDebugStartStressTest,,Debug: Start Stress Test
 CmdDebugTestApp,,Debug: Test App
 CmdDebugTogglePredictiveRender,,Debug: Toggle Predictive Rendering
+CmdDebugToggleRtl,,Debug: Toggle Rtl
 CmdNone,,Do nothing
 ```
 

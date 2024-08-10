@@ -160,7 +160,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     HFONT fontLeftTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
 
     VirtWndText w(hwnd, txt, fontLeftTxt);
-    w.isRtl = IsUIRightToLeft();
+    w.isRtl = IsUIRtl();
     w.withUnderline = true;
     Size txtSize = w.GetIdealSize(true);
 
@@ -549,7 +549,7 @@ void ShowAboutWindow(MainWindow* win) {
         return;
     }
 
-    HwndSetRtl(gHwndAbout, IsUIRightToLeft());
+    HwndSetRtl(gHwndAbout, IsUIRtl());
 
     // get the dimensions required for the about box's content
     Rect rc;
@@ -664,7 +664,7 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     color = ThemeMainWindowBackgroundColor();
     FillRect(hdc, rc, color);
 
-    bool isRtl = IsUIRightToLeft();
+    bool isRtl = IsUIRtl();
 
     /* render title */
 

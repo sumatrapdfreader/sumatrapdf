@@ -776,7 +776,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     int x = currX;
     int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
     MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
-    if (IsUIRightToLeft()) {
+    if (IsUIRtl()) {
         currX += size2.dx;
         currX -= padX;
         currX -= DpiScale(win->hwndFrame, kButtonSpacingX);
@@ -789,7 +789,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     int dx = pageWndRect.dx - 2 * padding;
     MoveWindow(win->hwndPageEdit, x, y, dx, size.dy, FALSE);
     // in right-to-left layout, the total comes "before" the current page number
-    if (IsUIRightToLeft()) {
+    if (IsUIRtl()) {
         currX -= size2.dx;
         x = currX + size.dx;
         y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
