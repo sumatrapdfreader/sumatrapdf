@@ -663,14 +663,14 @@ void LayoutHomePage(HomePageLayout& l) {
         (rc.dy - kThumbsMarginTop - kThumbsMarginBottom + kThumbsSpaceBetweenY) / (kThumbnailDy + kThumbsSpaceBetweenY);
     int thumbsRows = std::min(dy, kFileHistoryMaxFrequent / thumbsCols);
     int x = rc.x + kThumbsMarginLeft +
-        (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
-            kThumbsMarginRight) /
-        2;
-    Point offset(x, rc.y + kThumbsMarginTop);
-    if (offset.x < DpiScale(hdc, kInnerPadding)) {
-        offset.x = DpiScale(hdc, kInnerPadding);
+            (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
+             kThumbsMarginRight) /
+                2;
+    Point ptOff(x, rc.y + kThumbsMarginTop);
+    if (ptOff.x < DpiScale(hdc, kInnerPadding)) {
+        ptOff.x = DpiScale(hdc, kInnerPadding);
     } else if (fileStates.size() == 0) {
-        offset.x = kThumbsMarginLeft;
+        ptOff.x = kThumbsMarginLeft;
     }
 
     const char* txt = _TRA("Frequently Read");
@@ -679,11 +679,11 @@ void LayoutHomePage(HomePageLayout& l) {
     freqRead->isRtl = isRtl;
     Size txtSize = freqRead->GetIdealSize(true);
 
-    Rect headerRect(offset.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    Rect rcHdr(ptOff.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
-        headerRect.x = rc.dx - offset.x - headerRect.dx;
+        rcHdr.x = rc.dx - ptOff.x - rcHdr.dx;
     }
-    freqRead->SetBounds(headerRect);
+    freqRead->SetBounds(rcHdr);
 
     int nFiles = fileStates.Size();
     for (int row = 0; row < thumbsRows; row++) {
@@ -698,8 +698,8 @@ void LayoutHomePage(HomePageLayout& l) {
             FileState* fs = fileStates.at(row * thumbsCols + col);
             thumb.fs = fs;
 
-            Rect rcPage(offset.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
-                        offset.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
+            Rect rcPage(ptOff.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
+                        ptOff.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
             if (isRtl) {
                 rcPage.x = rc.dx - rcPage.x - rcPage.dx;
             }
@@ -730,11 +730,11 @@ void LayoutHomePage(HomePageLayout& l) {
     rc.dy = kThumbsBottomBoxDy;
 
     l.himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
-    Rect rcIconOpen(offset.x, rc.y, 0, 0);
+    Rect rcIconOpen(ptOff.x, rc.y, 0, 0);
     ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
     rcIconOpen.y += (rc.dy - rcIconOpen.dy) / 2;
     if (isRtl) {
-        rcIconOpen.x = rc.dx - offset.x - rcIconOpen.dx;
+        rcIconOpen.x = rc.dx - ptOff.x - rcIconOpen.dx;
     }
     l.rcIconOpen = rcIconOpen;
 
@@ -743,7 +743,7 @@ void LayoutHomePage(HomePageLayout& l) {
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
     txtSize = openDoc->GetIdealSize(true);
-    Rect rcOpenDoc(offset.x + rcIconOpen.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    Rect rcOpenDoc(ptOff.x + rcIconOpen.dx + 3, rc.y + (rc.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
     }
@@ -757,48 +757,30 @@ void LayoutHomePage(HomePageLayout& l) {
     win->staticLinks.Append(sl);
 }
 
-static void DrawHomePageLayout(HDC hdc, const HomePageLayout& l) {
+static void DrawHomePageLayout(const HomePageLayout& l) {
+    auto hdc = l.hdc;
+    auto win = l.win;
+    auto textColor = ThemeWindowTextColor();
+    auto backgroundColor = ThemeMainWindowBackgroundColor();
+
+    {
+        Rect rc = ClientRect(win->hwndCanvas);
+        auto color = ThemeMainWindowBackgroundColor();
+        FillRect(hdc, rc, color);
+    }
+
     const Rect& r = l.rcAppWithVer;
     DrawSumatraVersion(hdc, r);
 
     auto color = ThemeWindowTextColor();
     ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
     DrawLine(hdc, l.rcLine);
-}
-
-void DrawHomePage(MainWindow* win, HDC hdc) {
-
-    auto textColor = ThemeWindowTextColor();
-    auto backgroundColor = ThemeMainWindowBackgroundColor();
-
-    HWND hwnd = win->hwndFrame;
-
-    DeleteVecMembers(win->staticLinks);
-
-    HomePageLayout l;
-    l.rc = ClientRect(win->hwndCanvas);;
-    l.hdc = hdc;
-    l.hwnd = hwnd;
-    l.win = win;
-    LayoutHomePage(l);
-
-    // --------- drawing phase
     bool isRtl = IsUIRtl();
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
-
-    auto color = ThemeWindowTextColor();
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
     color = ThemeWindowLinkColor();
     AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
-
-    {
-        Rect rc = ClientRect(win->hwndCanvas);
-        color = ThemeMainWindowBackgroundColor();
-        FillRect(hdc, rc, color);
-    }
-
-    DrawHomePageLayout(hdc, l);
 
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
@@ -808,7 +790,7 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     l.freqRead->Draw(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
-    for (ThumbnailLayout& thumb : l.thumbnails) {
+    for (const ThumbnailLayout& thumb : l.thumbnails) {
         FileState* fs = thumb.fs;
         const Rect& page = thumb.rcPage;
 
@@ -858,6 +840,22 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     l.openDoc->Draw(hdc);
 
     Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
+
     auto sl = new StaticLinkInfo(rcFreqRead, kLinkHideList);
     win->staticLinks.Append(sl);
+}
+
+void DrawHomePage(MainWindow* win, HDC hdc) {
+    HWND hwnd = win->hwndFrame;
+    DeleteVecMembers(win->staticLinks);
+
+    HomePageLayout l;
+    l.rc = ClientRect(win->hwndCanvas);
+    ;
+    l.hdc = hdc;
+    l.hwnd = hwnd;
+    l.win = win;
+    LayoutHomePage(l);
+
+    DrawHomePageLayout(l);
 }
