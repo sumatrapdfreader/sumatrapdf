@@ -63,10 +63,10 @@ void DeleteThumbnailForFile(const char* filePath) {
 }
 
 bool LoadThumbnail(FileState* ds) {
-    delete ds->thumbnail;
-    ds->thumbnail = nullptr;
-
-    char* bmpPath = GetThumbnailPathTemp(ds->filePath);
+    if (ds->thumbnail) {
+        return true;
+    }
+    TempStr bmpPath = GetThumbnailPathTemp(ds->filePath);
     if (!bmpPath) {
         return false;
     }
@@ -81,12 +81,19 @@ bool LoadThumbnail(FileState* ds) {
     return true;
 }
 
+bool ReloadThumbnail(FileState* ds) {
+    delete ds->thumbnail;
+    ds->thumbnail = nullptr;
+    return LoadThumbnail(ds);
+}
+
 bool HasThumbnail(FileState* ds) {
+    // TODO: optimize, LoadThumbnail() is probably not necessary
     if (!ds->thumbnail && !LoadThumbnail(ds)) {
         return false;
     }
 
-    char* bmpPath = GetThumbnailPathTemp(ds->filePath);
+    TempStr bmpPath = GetThumbnailPathTemp(ds->filePath);
     if (!bmpPath) {
         return true;
     }

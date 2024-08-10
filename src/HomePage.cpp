@@ -596,14 +596,16 @@ constexpr int kThumbsBorderDx = 1;
 #define kThumbsSpaceBetweenY DpiScale(hdc, 50)
 #define kThumbsBottomBoxDy DpiScale(hdc, 50)
 
-struct ThumbnailLayot {
-    Rect bThumb;    // thumbnail
-    Rect bIcon;     // icon under the thumbnail
-    Rect bFileName; // file name next to icon
-    FileState* fs;  // info needed to draw the thumbnail
+struct ThumbnailLayout {
+    Rect rcPage;
+    Size szThumb;
+    Rect rcText;
+    FileState* fs = nullptr; // info needed to draw the thumbnail
 };
 
 struct HomePageLayout {
+    int dx;
+    int dy;
     Rect bAppWithVer; // SumatraPDF colorful text + version
     Rect bLine;       // line under bApp
 
@@ -612,8 +614,8 @@ struct HomePageLayout {
     Rect bOpenDocIcon; // icon before "OpenDocument"
     Rect bOpenDoc;     // "Open Document" link
 
-    Rect bHideFreqRead;             // "Hide/Show Frequently Read" link
-    Vec<ThumbnailLayot> thumbnails; // info for each thumbnail
+    Rect bHideFreqRead;              // "Hide/Show Frequently Read" link
+    Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
 
     Vec<FileState*>* fileStates;
 };
@@ -712,67 +714,83 @@ void DrawHomePage(MainWindow* win, HDC hdc, const FileHistory& fileHistory, COLO
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     DeleteVecMembers(win->staticLinks);
+    int nFiles = fileStates.Size();
+    Vec<ThumbnailLayout> thumbnails;
     for (int row = 0; row < thumbsRows; row++) {
         for (int col = 0; col < thumbsCols; col++) {
-            if (row * thumbsCols + col >= fileStates.Size()) {
+            if (row * thumbsCols + col >= nFiles) {
                 // display the "Open a document" link right below the last row
                 thumbsRows = col > 0 ? row + 1 : row;
                 break;
             }
-            FileState* state = fileStates.at(row * thumbsCols + col);
+            int idx = row * thumbsCols + col;
+            ThumbnailLayout& thumb = *thumbnails.AppendBlanks(1);
+            FileState* fs = fileStates.at(row * thumbsCols + col);
+            thumb.fs = fs;
 
-            Rect page(offset.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
-                      offset.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
+            Rect rcPage(offset.x + col * (kThumbnailDx + kThumbsSpaceBetweenX),
+                        offset.y + row * (kThumbnailDy + kThumbsSpaceBetweenY), kThumbnailDx, kThumbnailDy);
             if (isRtl) {
-                page.x = rc.dx - page.x - page.dx;
+                rcPage.x = rc.dx - rcPage.x - rcPage.dx;
             }
-            bool loadOk = true;
-            if (!state->thumbnail) {
-                loadOk = LoadThumbnail(state);
-            }
-            if (loadOk && state->thumbnail) {
-                Size thumbSize = state->thumbnail->GetSize();
-                if (thumbSize.dx != kThumbnailDx || thumbSize.dy != kThumbnailDy) {
-                    page.dy = thumbSize.dy * kThumbnailDx / thumbSize.dx;
-                    page.y += kThumbnailDy - page.dy;
+            bool hasThumb = LoadThumbnail(fs);
+            if (hasThumb) {
+                Size szThumb = fs->thumbnail->GetSize();
+                if (szThumb.dx != kThumbnailDx || szThumb.dy != kThumbnailDy) {
+                    rcPage.dy = szThumb.dy * kThumbnailDx / szThumb.dx;
+                    rcPage.y += kThumbnailDy - rcPage.dy;
                 }
-                HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
-                SelectClipRgn(hdc, clip);
-                // note: we used to invert bitmaps in dark theme but that doesn't
-                // make sense for thumbnails
-                RenderedBitmap* clone = nullptr; // state->thumbnail->Clone();
-                if (clone) {
-                    UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
-                    clone->Blit(hdc, page);
-                    delete clone;
-                } else {
-                    state->thumbnail->Blit(hdc, page);
-                }
-                SelectClipRgn(hdc, nullptr);
-                DeleteObject(clip);
+                thumb.szThumb = szThumb;
             }
-            RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
-
+            thumb.rcPage = rcPage;
             int iconSpace = DpiScale(hdc, 20);
-            Rect rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
+            Rect rcText(rcPage.x + iconSpace, rcPage.y + rcPage.dy + 3, rcPage.dx - iconSpace, iconSpace);
             if (isRtl) {
-                rect.x -= iconSpace;
+                rcText.x -= iconSpace;
             }
-            char* path = state->filePath;
-            TempStr fileName = path::GetBaseNameTemp(path);
-            UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
-            HdcDrawText(hdc, fileName, rect, fmt, fontText);
-
-            SHFILEINFO sfi{};
-            uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-            WCHAR* filePathW = ToWStrTemp(path);
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
-            x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
-            ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
-
-            auto sl = new StaticLinkInfo(rect.Union(page), path, path);
+            thumb.rcText = rcText;
+            char* path = fs->filePath;
+            auto sl = new StaticLinkInfo(rcText.Union(rcPage), path, path);
             win->staticLinks.Append(sl);
         }
+    }
+
+    for (ThumbnailLayout& thumb : thumbnails) {
+        FileState* fs = thumb.fs;
+        const Rect& page = thumb.rcPage;
+
+        bool hasThumb = LoadThumbnail(fs);
+        if (hasThumb) {
+            HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+            SelectClipRgn(hdc, clip);
+            // note: we used to invert bitmaps in dark theme but that doesn't
+            // make sense for thumbnails
+            RenderedBitmap* clone = nullptr; // state->thumbnail->Clone();
+            if (clone) {
+                UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
+                clone->Blit(hdc, page);
+                delete clone;
+            } else {
+                fs->thumbnail->Blit(hdc, page);
+            }
+            SelectClipRgn(hdc, nullptr);
+            DeleteObject(clip);
+        }
+        RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+
+        const Rect& rect = thumb.rcText;
+        char* path = fs->filePath;
+        TempStr fileName = path::GetBaseNameTemp(path);
+        UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
+        HdcDrawText(hdc, fileName, rect, fmt, fontText);
+
+        // TODO: cache this on FileState
+        SHFILEINFO sfi{};
+        uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+        WCHAR* filePathW = ToWStrTemp(path);
+        HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
+        x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
+        ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
     }
 
     /* render bottom links */
