@@ -15,6 +15,13 @@ License: GPLv3 */
 
 #include "utils/Log.h"
 
+/*
+preserve those translations:
+_TRN("Dark")
+_TRN("Darker")
+_TRN("Light")
+*/
+
 constexpr COLORREF kColBlack = 0x000000;
 constexpr COLORREF kColWhite = 0xFFFFFF;
 constexpr COLORREF kRedColor = RgbToCOLORREF(0xff0000);
