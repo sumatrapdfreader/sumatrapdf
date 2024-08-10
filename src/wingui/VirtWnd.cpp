@@ -85,7 +85,10 @@ Size VirtWndText::GetIdealSize(bool onlyIfEmpty) {
 
 void VirtWndText::Draw(HDC hdc) {
     ReportIf(lastBounds.IsEmpty());
-    UINT fmt = DT_NOCLIP | DT_NOPREFIX | (isRtl ? DT_RTLREADING : DT_LEFT);
+    UINT fmt = DT_NOCLIP | DT_NOPREFIX;
+    if (isRtl) {
+        fmt = fmt | DT_RTLREADING;
+    }
     RECT dr = ToRECT(lastBounds);
     HdcDrawText(hdc, s, &dr, fmt, font);
     if (withUnderline) {

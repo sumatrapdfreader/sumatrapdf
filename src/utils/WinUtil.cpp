@@ -2981,6 +2981,8 @@ static Size HwndMeasureText(HWND hwnd, const WCHAR* txt, HFONT font) {
     ScopedSelectFont prev(dc, font);
 
     RECT r{};
+    // TODO: DT_EDITCONTROL is probably not correct here
+    // TODO: what about DT_NOPREFIX?
     uint fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
     size_t txtLen = str::Len(txt);
     DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
@@ -2999,6 +3001,7 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
     return HwndMeasureText(hwnd, sw, font);
 }
 
+// return approximate height of font in pixels
 int FontDyPx(HWND hwnd, HFONT hfont) {
     Size s = HwndMeasureText(hwnd, "A", hfont);
     return s.dy;
