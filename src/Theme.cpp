@@ -29,14 +29,6 @@ static const char* themesTxt = R"(Themes [
         ColorizeControls = false
     ]
     [
-        Name = Dark
-        TextColor = #F9FAFB
-        BackgroundColor = #000000
-        ControlBackgroundColor = #000000
-        LinkColor = #6B7280
-        ColorizeControls = true
-    ]
-    [
         Name = Dark from 3.5
         TextColor = #bac9d0
         BackgroundColor = #263238
@@ -50,6 +42,14 @@ static const char* themesTxt = R"(Themes [
         BackgroundColor = #2d2d30
         ControlBackgroundColor = #2d2d30
         LinkColor = #9999a0
+        ColorizeControls = true
+    ]
+    [
+        Name = Dark
+        TextColor = #F9FAFB
+        BackgroundColor = #000000
+        ControlBackgroundColor = #000000
+        LinkColor = #6B7280
         ColorizeControls = true
     ]
 ]
@@ -206,7 +206,14 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
     // should match the colors of the window
     text = ThemeWindowTextColor();
     bg = ThemeMainWindowBackgroundColor();
-    bg = AdjustLightOrDark(bg, 8);
+
+    if (gCurrThemeIndex < 3) {
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/4465
+        // this is probably not expected for custom colors but we used to do
+        // it for built-in themes
+        // so do it for legacy themes but not for custom themes or new Dark theme
+        bg = AdjustLightOrDark(bg, 8);
+    }
     return text;
 }
 
