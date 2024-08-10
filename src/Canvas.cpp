@@ -514,11 +514,11 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     if (MouseAction::Scrolling == ma) {
+        win->mouseAction = MouseAction::None;
         // TODO: I'm seeing this in crash reports. Can we get button up without button down?
         // maybe when down happens on a different hwnd? How can I add more logging.
-        logfa("OnMouseLeftButtonUp: unexpected MouseAction::Scrolling (%d)\n", ma);
-        win->mouseAction = MouseAction::None;
-        ReportIf(true);
+        //logfa("OnMouseLeftButtonUp: unexpected MouseAction::Scrolling (%d)\n", ma);
+        //ReportIf(true);
         return;
     }
 
