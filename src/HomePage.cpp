@@ -590,7 +590,7 @@ constexpr int kThumbsSeparatorDy = 2;
 constexpr int kThumbsBorderDx = 1;
 #define kThumbsMarginLeft DpiScale(hdc, 40)
 #define kThumbsMarginRight DpiScale(hdc, 40)
-#define kThumbsMarginTop DpiScale(hdc, 60)
+#define kThumbsMarginTop DpiScale(hdc, 50)
 #define kThumbsMarginBottom DpiScale(hdc, 40)
 #define kThumbsSpaceBetweenX DpiScale(hdc, 30)
 #define kThumbsSpaceBetweenY DpiScale(hdc, 50)
@@ -636,6 +636,7 @@ void LayoutHomePage(HomePageLayout& l) {
     auto rc = l.rc;
     auto win = l.win;
 
+    bool isRtl = IsUIRtl();
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
     HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
 
@@ -648,10 +649,6 @@ void LayoutHomePage(HomePageLayout& l) {
     }
 
     l.rcLine = {0, sz.dy, rc.dx, 0};
-
-    bool isRtl = IsUIRtl();
-
-    /* render recent files list */
 
     Rect& titleBox = l.rcAppWithVer;
     rc.SubTB(titleBox.dy, kThumbsBottomBoxDy);
@@ -666,6 +663,7 @@ void LayoutHomePage(HomePageLayout& l) {
             (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
              kThumbsMarginRight) /
                 2;
+    rc.y = 0;
     Point ptOff(x, rc.y + kThumbsMarginTop);
     if (ptOff.x < DpiScale(hdc, kInnerPadding)) {
         ptOff.x = DpiScale(hdc, kInnerPadding);
@@ -758,6 +756,7 @@ void LayoutHomePage(HomePageLayout& l) {
 }
 
 static void DrawHomePageLayout(const HomePageLayout& l) {
+    bool isRtl = IsUIRtl();
     auto hdc = l.hdc;
     auto win = l.win;
     auto textColor = ThemeWindowTextColor();
@@ -769,13 +768,16 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
         FillRect(hdc, rc, color);
     }
 
-    const Rect& r = l.rcAppWithVer;
-    DrawSumatraVersion(hdc, r);
+    if (false) {
+        const Rect& r = l.rcAppWithVer;
+        DrawSumatraVersion(hdc, r);
+    }
 
     auto color = ThemeWindowTextColor();
-    ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
-    DrawLine(hdc, l.rcLine);
-    bool isRtl = IsUIRtl();
+    if (false) {
+        ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
+        DrawLine(hdc, l.rcLine);
+    }
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
 
     AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
@@ -839,10 +841,11 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
 
     l.openDoc->Draw(hdc);
 
-    Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
-
-    auto sl = new StaticLinkInfo(rcFreqRead, kLinkHideList);
-    win->staticLinks.Append(sl);
+    if (false) {
+        Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
+        auto sl = new StaticLinkInfo(rcFreqRead, kLinkHideList);
+        win->staticLinks.Append(sl);
+    }
 }
 
 void DrawHomePage(MainWindow* win, HDC hdc) {
