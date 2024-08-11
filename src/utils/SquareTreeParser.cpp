@@ -205,23 +205,12 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
     return node;
 }
 
-SquareTree::SquareTree(const char* data) : root(nullptr) {
-    // convert the file content to UTF-8
-    if (str::StartsWith(data, UTF8_BOM)) {
-        dataUtf8.SetCopy(data + 3);
-    } else if (str::StartsWith(data, UTF16_BOM)) {
-        auto tmp = ToUtf8((const WCHAR*)(data + 2));
-        dataUtf8.Set(tmp);
-    } else if (data) {
-        AutoFreeWStr tmp(strconv::AnsiToWStr(data));
-        auto tmp2 = ToUtf8(tmp.Get());
-        dataUtf8.Set(tmp2);
+SquareTreeNode* ParseSquareTree(const char* s) {
+    char* data = strconv::UnknownToUtf8Temp(s);
+    if (!data) {
+        return nullptr;
     }
-    if (!dataUtf8) {
-        return;
-    }
-
-    char* start = dataUtf8.Get();
-    root = ParseSquareTreeRec(start, true);
-    ReportIf(*start || !root);
+    char* tmp = data;
+    auto res = ParseSquareTreeRec(tmp, true);
+    return res;
 }

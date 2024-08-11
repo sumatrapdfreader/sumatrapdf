@@ -558,7 +558,7 @@ void StrTest() {
         utassert(!tmp.Get());
     }
     {
-        AutoFreeWStr tmp(strconv::StrToWStr("abc", 12345));
+        AutoFreeWStr tmp(strconv::StrCPToWStr("abc", 12345));
         utassert(str::IsEmpty(tmp.Get()));
     }
     {

@@ -82,6 +82,13 @@ static bool IsValidUtf8(const char* string) {
 }
 
 static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
+    if (str::StartsWith(s, UTF8_BOM)) {
+        return str::DupTemp(s + 3);
+    }
+    if (str::StartsWith(s, UTF16_BOM)) {
+        s += 2;
+        return ToUtf8Temp((WCHAR*)s);
+    }
     if (str::StartsWith(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
         s += 2;
@@ -92,13 +99,6 @@ static TempStr DecodeTextToUtf8Temp(const char* s, bool isXML = false) {
             std::swap(tmp[idx], tmp[idx + 1]);
         }
         return ToUtf8Temp((WCHAR*)s);
-    }
-    if (str::StartsWith(s, UTF16_BOM)) {
-        s += 2;
-        return ToUtf8Temp((WCHAR*)s);
-    }
-    if (str::StartsWith(s, UTF8_BOM)) {
-        return str::DupTemp(s + 3);
     }
     uint codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
     if (CP_ACP == codePage && IsValidUtf8(s)) {

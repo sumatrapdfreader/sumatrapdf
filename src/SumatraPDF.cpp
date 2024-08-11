@@ -201,8 +201,9 @@ void InitializePolicies(bool restrict) {
     }
 
     ByteSlice restrictData = file::ReadFile(restrictPath);
-    SquareTree sqt(restrictData);
-    SquareTreeNode* polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
+    SquareTreeNode* root = ParseSquareTree(restrictData);
+    AutoDelete delRoot(root);
+    SquareTreeNode* polsec = root ? root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
     if (!polsec) {
         return;

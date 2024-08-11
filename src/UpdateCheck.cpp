@@ -109,11 +109,12 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
         return nullptr;
     }
 
-    SquareTree tree(d);
-    if (!tree.root) {
+    SquareTreeNode* root = ParseSquareTree(d);
+    if (!root) {
         return nullptr;
     }
-    SquareTreeNode* node = tree.root->GetChild("SumatraPDF");
+    AutoDelete delRoot(root);
+    SquareTreeNode* node = root->GetChild("SumatraPDF");
     if (!node) {
         return nullptr;
     }

@@ -1,8 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-class SquareTreeNode {
-  public:
+struct SquareTreeNode {
     SquareTreeNode() = default;
     ~SquareTreeNode();
 
@@ -31,14 +30,4 @@ class SquareTreeNode {
     SquareTreeNode* GetChild(const char* key, size_t* startIdx = nullptr) const;
 };
 
-class SquareTree {
-    AutoFree dataUtf8;
-
-  public:
-    explicit SquareTree(const char* data);
-    ~SquareTree() {
-        delete root;
-    }
-
-    SquareTreeNode* root;
-};
+SquareTreeNode* ParseSquareTree(const char* s);

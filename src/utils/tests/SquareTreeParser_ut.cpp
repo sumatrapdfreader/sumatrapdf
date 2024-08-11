@@ -16,15 +16,17 @@ void SquareTreeTest() {
     };
 
     for (size_t i = 0; i < dimof(keyValueData); i++) {
-        SquareTree keyValue(keyValueData[i]);
-        utassert(keyValue.root && 1 == keyValue.root->data.size());
-        SquareTreeNode::DataItem& item = keyValue.root->data.at(0);
+        const char* data = keyValueData[i];
+        SquareTreeNode* root = ParseSquareTree(data);
+        utassert(root && 1 == root->data.size());
+        SquareTreeNode::DataItem& item = root->data.at(0);
         utassert(!item.isChild && str::Eq(item.key, "key") && str::Eq(item.value.str, "value"));
-        utassert(!keyValue.root->GetChild("key"));
-        utassert(str::Eq(keyValue.root->GetValue("KEY"), "value"));
+        utassert(!root->GetChild("key"));
+        utassert(str::Eq(root->GetValue("KEY"), "value"));
         size_t off = 0;
-        utassert(str::Eq(keyValue.root->GetValue("key", &off), "value"));
-        utassert(!keyValue.root->GetValue("key", &off));
+        utassert(str::Eq(root->GetValue("key", &off), "value"));
+        utassert(!root->GetValue("key", &off));
+        delete root;
     }
 
     static const char* nodeData[] = {
@@ -35,15 +37,17 @@ void SquareTreeTest() {
     };
 
     for (size_t i = 0; i < dimof(nodeData); i++) {
-        SquareTree node(nodeData[i]);
-        utassert(node.root && 1 == node.root->data.size());
-        SquareTreeNode::DataItem& item = node.root->data.at(0);
+        const char* s = nodeData[i];
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 1 == root->data.size());
+        SquareTreeNode::DataItem& item = root->data.at(0);
         utassert(item.isChild && str::Eq(item.key, "node"));
-        utassert(item.value.child == node.root->GetChild("NODE"));
+        utassert(item.value.child == root->GetChild("NODE"));
         size_t off = 0;
-        utassert(item.value.child == node.root->GetChild("node", &off));
-        utassert(!node.root->GetChild("node", &off));
+        utassert(item.value.child == root->GetChild("node", &off));
+        utassert(!root->GetChild("node", &off));
         utassert(str::Eq(item.value.child->GetValue("key"), "value"));
+        delete root;
     }
 
     static const char* arrayData[] = {
@@ -54,15 +58,17 @@ void SquareTreeTest() {
     };
 
     for (size_t i = 0; i < dimof(arrayData); i++) {
-        SquareTree array(arrayData[i]);
-        utassert(array.root && 2 == array.root->data.size());
+        const char* s = arrayData[i];
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 2 == root->data.size());
         size_t off = 0;
-        SquareTreeNode* node = array.root->GetChild("array", &off);
+        SquareTreeNode* node = root->GetChild("array", &off);
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "0"));
-        node = array.root->GetChild("array", &off);
+        node = root->GetChild("array", &off);
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "1"));
-        node = array.root->GetChild("array", &off);
+        node = root->GetChild("array", &off);
         utassert(!node && 2 == off);
+        delete root;
     }
 
     static const char* serArrayData[] = {
@@ -77,10 +83,10 @@ void SquareTreeTest() {
         UTF8_BOM "[array]\n[\n item = 0 \n] [\n item = 1 \n]",
     };
 
-    for (size_t i = 0; i < dimof(serArrayData); i++) {
-        SquareTree serArray(serArrayData[i]);
-        utassert(serArray.root && 1 == serArray.root->data.size());
-        SquareTreeNode* array = serArray.root->GetChild("array");
+    for (const char* s : serArrayData) {
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 1 == root->data.size());
+        SquareTreeNode* array = root->GetChild("array");
         utassert(2 == array->data.size());
         size_t off = 0;
         SquareTreeNode* node = array->GetChild("", &off);
@@ -89,6 +95,7 @@ void SquareTreeTest() {
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "1"));
         node = array->GetChild("", &off);
         utassert(!node && 2 == off);
+        delete root;
     }
 
     static const char* valueArrayData[] = {
@@ -97,16 +104,17 @@ void SquareTreeTest() {
         UTF8_BOM "# first:\n count : 0 \n#second:\n count : 1 \n",
     };
 
-    for (size_t i = 0; i < dimof(valueArrayData); i++) {
-        SquareTree valueArray(valueArrayData[i]);
-        utassert(valueArray.root && 2 == valueArray.root->data.size());
+    for (const char* s : valueArrayData) {
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 2 == root->data.size());
         size_t off = 0;
-        const char* value = valueArray.root->GetValue("count", &off);
+        const char* value = root->GetValue("count", &off);
         utassert(str::Eq(value, "0") && 1 == off);
-        value = valueArray.root->GetValue("count", &off);
+        value = root->GetValue("count", &off);
         utassert(str::Eq(value, "1") && 2 == off);
-        value = valueArray.root->GetValue("count", &off);
+        value = root->GetValue("count", &off);
         utassert(!value && 2 == off);
+        delete root;
     }
 
     static const char* emptyNodeData[] = {
@@ -114,11 +122,12 @@ void SquareTreeTest() {
         UTF8_BOM "[node]",    UTF8_BOM "  [  node  ]  ",
     };
 
-    for (size_t i = 0; i < dimof(emptyNodeData); i++) {
-        SquareTree emptyNode(emptyNodeData[i]);
-        utassert(emptyNode.root && 1 == emptyNode.root->data.size());
-        utassert(emptyNode.root->GetChild("node"));
-        utassert(0 == emptyNode.root->GetChild("node")->data.size());
+    for (const char* s : emptyNodeData) {
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 1 == root->data.size());
+        utassert(root->GetChild("node"));
+        utassert(0 == root->GetChild("node")->data.size());
+        delete root;
     }
 
     static const char* halfBrokenData[] = {
@@ -128,35 +137,54 @@ void SquareTreeTest() {
         "node [\r key = value\n node [\nchild\r\n] key = value",
     };
 
-    for (size_t i = 0; i < dimof(halfBrokenData); i++) {
-        SquareTree halfBroken(halfBrokenData[i]);
-        utassert(halfBroken.root && 2 == halfBroken.root->data.size());
-        utassert(halfBroken.root->GetChild("node") == halfBroken.root->data.at(0).value.child);
-        SquareTreeNode* node = halfBroken.root->GetChild("Node");
+    for (const char* s : halfBrokenData) {
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 2 == root->data.size());
+        utassert(root->GetChild("node") == root->data.at(0).value.child);
+        SquareTreeNode* node = root->GetChild("Node");
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("child"), ""));
-        utassert(str::Eq(halfBroken.root->GetValue("key"), "value"));
-        utassert(!halfBroken.root->GetValue("node") && !halfBroken.root->GetChild("key"));
+        utassert(str::Eq(root->GetValue("key"), "value"));
+        utassert(!root->GetValue("node") && !root->GetChild("key"));
+        delete root;
     }
 
-    SquareTree null(nullptr);
-    utassert(!null.root);
-
-    SquareTree empty("");
-    utassert(empty.root && 0 == empty.root->data.size());
-
-    SquareTree onlyBom(UTF8_BOM);
-    utassert(onlyBom.root && 0 == onlyBom.root->data.size());
-
-    SquareTree nested(UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]");
-    SquareTreeNode* node = nested.root;
-    for (size_t i = 0; i < 5; i++) {
-        utassert(node && 1 == node->data.size());
-        node = node->GetChild("node");
+    {
+        const char* s = nullptr;
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(!root);
     }
-    utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("depth"), "5"));
+    {
+        const char* s = "";
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 0 == root->data.size());
+        delete root;
+    }
 
-    SquareTree mixed(UTF8_BOM "node1 [\n [node2] \n key:value");
-    utassert(mixed.root && mixed.root->GetChild("node1") && mixed.root->GetChild("node2"));
-    utassert(0 == mixed.root->GetChild("node1")->data.size());
-    utassert(str::Eq(mixed.root->GetChild("node2")->GetValue("Key"), "value"));
+    {
+        const char* s = UTF8_BOM;
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && 0 == root->data.size());
+        delete root;
+    }
+
+    {
+        const char* s = UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]";
+        SquareTreeNode* root = ParseSquareTree(s);
+        SquareTreeNode* node = root;
+        for (size_t i = 0; i < 5; i++) {
+            utassert(node && 1 == node->data.size());
+            node = node->GetChild("node");
+        }
+        utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("depth"), "5"));
+        delete root;
+    }
+
+    {
+        const char* s = UTF8_BOM "node1 [\n [node2] \n key:value";
+        SquareTreeNode* root = ParseSquareTree(s);
+        utassert(root && root->GetChild("node1") && root->GetChild("node2"));
+        utassert(0 == root->GetChild("node1")->data.size());
+        utassert(str::Eq(root->GetChild("node2")->GetValue("Key"), "value"));
+        delete root;
+    }
 }

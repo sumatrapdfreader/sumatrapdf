@@ -166,11 +166,6 @@ struct AutoFree {
     char* StealData() {
         return this->Release();
     }
-
-    void TakeOwnershipOf(const char* s) {
-        free(data);
-        data = (char*)s;
-    }
 };
 
 // TODO: replace most of AutoFree with AutoFreeStr
