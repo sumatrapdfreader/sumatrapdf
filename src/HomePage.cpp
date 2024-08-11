@@ -37,6 +37,14 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
+constexpr const char* builtIn = R"(
+[
+    Name = Edna
+    URL = https://edna.arslexis.io
+    Info = note taking app for develelopers
+]
+)";
+
 constexpr COLORREF kAboutBorderCol = RGB(0, 0, 0);
 
 constexpr int kAboutLeftRightSpaceDx = 8;

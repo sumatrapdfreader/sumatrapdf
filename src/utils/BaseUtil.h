@@ -309,9 +309,53 @@ int RoundUp(int n, int rounding);
 char* RoundUp(char*, int rounding);
 
 template <typename T>
-void ListInsert(T** root, T* el) {
+void ListDelete(T* root) {
+    T* next;
+    T* curr = root;
+    while (curr) {
+        next = curr->next;
+        delete curr;
+        curr = next;
+    }
+}
+
+template <typename T>
+void ListInsertFront(T** root, T* el) {
     el->next = *root;
     *root = el;
+}
+
+template <typename T>
+void ListInsertEnd(T** root, T* el) {
+    el->next = nullptr;
+    if (!*root) {
+        *root = el;
+        return;
+    }
+    T** prevPtr = root;
+    T** currPtr = root;
+    T* curr;
+    while (*currPtr) {
+        prevPtr = currPtr;
+        curr = *currPtr;
+        currPtr = &(curr->next);
+    }
+    T* prev = *prevPtr;
+    prev->next = el;
+}
+
+template <typename T>
+void ListReverse(T** root) {
+    T* newRoot = nullptr;
+    T* next;
+    T* el = *root;
+    while (el) {
+        next = el->next;
+        el->next = newRoot;
+        newRoot = el;
+        el = next;
+    }
+    *root = newRoot;
 }
 
 template <typename T>

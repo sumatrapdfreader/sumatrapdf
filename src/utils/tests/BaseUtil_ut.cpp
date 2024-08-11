@@ -140,7 +140,52 @@ static int roundUpTestCases[] = {
     0, 0, 1, 8, 2, 8, 3, 8, 4, 8, 5, 8, 6, 8, 7, 8, 8, 8, 9, 16,
 };
 
+struct ListNode {
+    struct ListNode* next = nullptr;
+    int n = 0;
+    ListNode() = default;
+};
+
+static void CheckListOrder(ListNode* root, int* seq) {
+    ListNode* el = root;
+    for (int n = *seq; n >= 0; n = *(++seq)) {
+        utassert(el->n == n);
+        el = el->next;
+    }
+    utassert(!el);
+}
+
+static void ListTest() {
+    int n = 5;
+
+    static int orderReverse[] = {5, 4, 3, 2, 1, -1};
+    static int orderNormal[] = {1, 2, 3, 4, 5, -1};
+    {
+        ListNode* root = nullptr;
+        for (int i = 1; i <= n; i++) {
+            auto node = new ListNode();
+            node->n = i;
+            ListInsertFront(&root, node);
+        }
+        CheckListOrder(root, orderReverse);
+        ListReverse(&root);
+        CheckListOrder(root, orderNormal);
+        ListDelete(root);
+    }
+    {
+        ListNode* root = nullptr;
+        for (int i = 1; i <= n; i++) {
+            auto node = new ListNode();
+            node->n = i;
+            ListInsertEnd(&root, node);
+        }
+        CheckListOrder(root, orderNormal);
+        ListDelete(root);
+    }
+}
+
 void BaseUtilTest() {
+    ListTest();
     Func0Test();
     Func1Test();
 

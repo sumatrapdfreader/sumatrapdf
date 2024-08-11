@@ -1534,7 +1534,7 @@ static HFONT RememberCreatedFont(HFONT font, const char* name, int size, u16 fla
     cf->size = (u16)size;
     cf->flags = flags;
     cf->weightOffset = weightOffset;
-    ListInsert(&gFonts, cf);
+    ListInsertFront(&gFonts, cf);
     int n = ListLen(gFonts);
     name = name ? name : "";
     /* logf("RememberCreatedFont: added font '%s', size: %d, flags: %x, weightOffset: %d\n", name, size, (int)flags,

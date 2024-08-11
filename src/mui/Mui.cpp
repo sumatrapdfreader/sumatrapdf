@@ -227,7 +227,7 @@ CachedFont* GetCachedFont(const WCHAR* name, float sizePt, FontStyle style) {
     }
 
     FontListItem* item = new FontListItem(name, sizePt, style, font, nullptr);
-    ListInsert(&gFontsCache, item);
+    ListInsertFront(&gFontsCache, item);
     return &item->cf;
 }
 

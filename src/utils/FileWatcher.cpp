@@ -390,7 +390,7 @@ static WatchedDir* NewWatchedDir(const char* dirPath) {
     wd->hDir = hDir;
     wd->dirPath = str::Dup(dirPath);
 
-    ListInsert(&gWatchedDirs, wd);
+    ListInsertFront(&gWatchedDirs, wd);
     return wd;
 }
 
@@ -418,7 +418,7 @@ static WatchedFile* NewWatchedFile(const char* filePath, const Func0& onFileChan
     wf->watchedDir = wd;
     wf->isManualCheck = isManualCheck;
 
-    ListInsert(&gWatchedFiles, wf);
+    ListInsertFront(&gWatchedFiles, wf);
 
     if (wf->isManualCheck) {
         GetFileState(filePath, &wf->fileState);
