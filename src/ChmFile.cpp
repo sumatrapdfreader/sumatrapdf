@@ -86,10 +86,6 @@ TempStr ChmFile::SmartToUtf8Temp(const char* s, uint overrideCP) const {
     return res;
 }
 
-WCHAR* ChmFile::SmartToWStr(const char* text) const {
-    return strconv::StrCPToWStr(text, codepage);
-}
-
 static char* GetCharZ(const ByteSlice& d, size_t off) {
     u8* data = d.data();
     size_t len = d.size();

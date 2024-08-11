@@ -1470,8 +1470,9 @@ class ChmHtmlCollector : public EbookTocVisitor {
     char* GetHtml() {
         // first add the homepage
         const char* index = doc->GetHomePath();
-        AutoFreeWStr urlW(doc->SmartToWStr(index));
+        WCHAR* urlW = strconv::StrCPToWStr(index, doc->codepage);
         char* url = ToUtf8Temp(urlW);
+        str::Free(urlW);
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1485,8 +1486,9 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 if (*path == '/') {
                     path++;
                 }
-                urlW.Set(ToWStr(path));
+                urlW = ToWStr(path);
                 url = ToUtf8Temp(urlW);
+                str::Free(urlW);
                 Visit(nullptr, url, -1);
             }
         }
