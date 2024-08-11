@@ -755,6 +755,18 @@ void LayoutHomePage(HomePageLayout& l) {
     win->staticLinks.Append(sl);
 }
 
+static void GetFileStateIcon(FileState* fs) {
+    if (fs->himl) {
+        return;
+    }
+    SHFILEINFO sfi{};
+    sfi.iIcon = -1;
+    uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+    WCHAR* filePathW = ToWStrTemp(fs->filePath);
+    fs->himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
+    fs->iconIdx = sfi.iIcon;
+}
+
 static void DrawHomePageLayout(const HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto hdc = l.hdc;
@@ -821,13 +833,9 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
         UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
         HdcDrawText(hdc, fileName, rect, fmt, fontText);
 
-        // TODO: cache this on FileState
-        SHFILEINFO sfi{};
-        uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-        WCHAR* filePathW = ToWStrTemp(path);
-        HIMAGELIST himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
+        GetFileStateIcon(fs);
         int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
-        ImageList_Draw(himl, sfi.iIcon, hdc, x, rect.y, ILD_TRANSPARENT);
+        ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
     }
 
     color = ThemeWindowLinkColor();

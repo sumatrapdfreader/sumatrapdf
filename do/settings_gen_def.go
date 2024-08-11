@@ -225,6 +225,8 @@ var (
 			"thumbnails are saved as PNG files in sumatrapdfcache directory").setInternal(),
 		mkField("Index", &Type{"", "size_t"}, "0",
 			"temporary value needed for FileHistory::cmpOpenCount").setInternal(),
+		mkField("Himl", &Type{"", "HIMAGELIST"}, "NULL", "").setInternal(),
+		mkField("IconIdx", Int, -1, "").setInternal(),
 	}
 
 	// list of fields which aren't serialized when UseDefaultState is set

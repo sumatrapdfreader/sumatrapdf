@@ -290,6 +290,10 @@ struct FileState {
     RenderedBitmap* thumbnail;
     // temporary value needed for FileHistory::cmpOpenCount
     size_t index;
+    //
+    HIMAGELIST himl;
+    //
+    int iconIdx;
 };
 
 // a subset of FileState required for restoring the state of a single
