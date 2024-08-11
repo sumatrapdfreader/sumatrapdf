@@ -600,7 +600,7 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
             if (PageShown(pageNo)) {
                 float zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
                 PageInfo* pageInfo = GetPageInfo(pageNo);
-                ReportIf(zoom < 0.01f);
+                ReportDebugIf(zoom < 0.01f);
                 pageInfo->zoomReal = zoom;
                 if (minZoom > zoom) {
                     minZoom = zoom;

@@ -255,6 +255,11 @@ void BreakIfUnderDebugger();
 
 #define ReportIf(cond) ReportIfCond(cond, #cond, false, true)
 #define ReportIfQuick(cond) ReportIfCond(cond, #cond, false, false)
+#if defined(DEBUG)
+#define ReportDebugIf(cond) ReportIfCond(cond, #cond, false, true)
+#else
+#define ReportDebugIf(cond)
+#endif
 
 void* AllocZero(size_t count, size_t size);
 
