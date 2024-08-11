@@ -364,12 +364,12 @@ static void MarkFieldKnown(SquareTreeNode* node, const char* fieldName, SettingT
     size_t off = 0;
     if (SettingType::Struct == type || SettingType::Prerelease == type) {
         if (node->GetChild(fieldName, &off)) {
-            delete node->data.at(off - 1).value.child;
+            delete node->data.at(off - 1).child;
             node->data.RemoveAt(off - 1);
         }
     } else if (SettingType::Array == type) {
         while (node->GetChild(fieldName, &off)) {
-            delete node->data.at(off - 1).value.child;
+            delete node->data.at(off - 1).child;
             node->data.RemoveAt(off - 1);
             off--;
         }
@@ -386,14 +386,14 @@ static void SerializeUnknownFields(str::Str& out, SquareTreeNode* node, int inde
         SquareTreeNode::DataItem& item = node->data.at(i);
         Indent(out, indent);
         out.Append(item.key);
-        if (item.isChild) {
+        if (item.child) {
             out.Append(" [\r\n");
-            SerializeUnknownFields(out, item.value.child, indent + 1);
+            SerializeUnknownFields(out, item.child, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         } else {
             out.Append(" = ");
-            out.Append(item.value.str);
+            out.Append(item.str);
             out.Append("\r\n");
         }
     }

@@ -94,20 +94,18 @@ static bool IsBracketLine(char* s) {
 SquareTreeNode::~SquareTreeNode() {
     for (size_t i = 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
-        if (item.isChild) {
-            delete item.value.child;
-        }
+        delete item.child;
     }
 }
 
 const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
     for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
-        if (str::EqI(key, item.key) && !item.isChild) {
+        if (str::EqI(key, item.key) && !item.child) {
             if (startIdx) {
                 *startIdx = i + 1;
             }
-            return item.value.str;
+            return item.str;
         }
     }
     return nullptr;
@@ -116,11 +114,11 @@ const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
 SquareTreeNode* SquareTreeNode::GetChild(const char* key, size_t* startIdx) const {
     for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
-        if (str::EqI(key, item.key) && item.isChild) {
+        if (str::EqI(key, item.key) && item.child) {
             if (startIdx) {
                 *startIdx = i + 1;
             }
-            return item.value.child;
+            return item.child;
         }
     }
     return nullptr;

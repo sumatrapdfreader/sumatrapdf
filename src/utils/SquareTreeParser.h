@@ -7,21 +7,20 @@ struct SquareTreeNode {
 
     struct DataItem {
         const char* key = nullptr;
-        union {
-            const char* str;
-            SquareTreeNode* child;
-        } value;
-        bool isChild = false;
+        // only one of str or child are set
+        const char* str = nullptr;
+        SquareTreeNode* child = nullptr;
 
         DataItem() = default;
         DataItem(const char* k, const char* string) {
-            key = k;
-            value.str = string;
+            this->key = k;
+            this->str = string;
+            this->child = nullptr;
         }
         DataItem(const char* k, SquareTreeNode* node) {
-            key = k;
-            isChild = true;
-            value.child = node;
+            this->key = k;
+            this->str = nullptr;
+            this->child = node;
         }
     };
     Vec<DataItem> data;
