@@ -374,7 +374,8 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         AutoFreeWStr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             AutoFreeStr bytes = strconv::WStrToCodePage(CP_CHM_DEFAULT, attrVal);
-            attrVal.Set(strconv::StrCPToWStr(bytes.Get(), cp));
+            WCHAR* ws = strconv::StrCPToWStr(bytes.Get(), cp);
+            attrVal.Set(ws);
         }
         if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;

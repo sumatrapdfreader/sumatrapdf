@@ -1470,9 +1470,8 @@ class ChmHtmlCollector : public EbookTocVisitor {
     char* GetHtml() {
         // first add the homepage
         const char* index = doc->GetHomePath();
-        WCHAR* urlW = strconv::StrCPToWStr(index, doc->codepage);
+        TempWStr urlW = strconv::StrCPToWStrTemp(index, doc->codepage);
         char* url = ToUtf8Temp(urlW);
-        str::Free(urlW);
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents

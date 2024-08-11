@@ -79,6 +79,24 @@ WCHAR* StrCPToWStr(const char* src, uint codePage, int cbSrc) {
     return res;
 }
 
+TempWStr StrCPToWStrTemp(const char* src, uint codePage, int cbSrc) {
+    ReportIf(!src);
+    if (!src) {
+        return nullptr;
+    }
+
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrc, nullptr, 0);
+    if (0 == requiredBufSize) {
+        return nullptr;
+    }
+    WCHAR* res = AllocArrayTemp<WCHAR>((size_t)requiredBufSize + 1);
+    if (!res) {
+        return nullptr;
+    }
+    MultiByteToWideChar(codePage, 0, src, cbSrc, res, requiredBufSize);
+    return res;
+}
+
 TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
     ReportIf(!src);
     if (!src) {
