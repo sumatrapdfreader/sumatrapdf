@@ -387,9 +387,8 @@ void StrTest() {
 #define TEST_STRING "aBc"
         AutoFree strA = strconv::WStrToAnsi(TEXT(TEST_STRING));
         utassert(str::Eq(strA.Get(), TEST_STRING));
-        auto res = strconv::AnsiToWStr(strA.Get());
+        auto res = strconv::AnsiToWStrTemp(strA.Get());
         utassert(str::Eq(res, TEXT(TEST_STRING)));
-        str::Free(res);
 #undef TEST_STRING
     }
 
@@ -558,8 +557,8 @@ void StrTest() {
         utassert(!tmp.Get());
     }
     {
-        AutoFreeWStr tmp(strconv::StrCPToWStr("abc", 12345));
-        utassert(str::IsEmpty(tmp.Get()));
+        TempWStr tmp = strconv::StrCPToWStrTemp("abc", 12345);
+        utassert(str::IsEmpty(tmp));
     }
     {
         AutoFree tmp = strconv::WStrToCodePage(987654, L"abc");

@@ -17,7 +17,7 @@ char* UnknownToUtf8Temp(const char*);
 char* WStrToAnsi(const WCHAR*);
 char* Utf8ToAnsi(const char*);
 
-WCHAR* AnsiToWStr(const char* src, size_t cbLen = (size_t)-1);
+TempWStr AnsiToWStrTemp(const char* src, size_t cbLen = (size_t)-1);
 char* AnsiToUtf8(const char* src, size_t cbLen = (size_t)-1);
 
 } // namespace strconv

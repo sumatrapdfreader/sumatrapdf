@@ -114,14 +114,13 @@ TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
         return str::DupTemp(src);
     }
 
-    WCHAR* tmp = StrCPToWStr(src, codePageSrc);
+    TempWStr tmp = StrCPToWStrTemp(src, codePageSrc);
     if (!tmp) {
         return nullptr;
     }
     size_t tmpLen = str::Len(tmp);
     Allocator* a = GetTempAllocator();
     TempStr res = (TempStr)WStrToCodePage(codePageDest, tmp, tmpLen, a);
-    str::Free(tmp);
     return res;
 }
 
@@ -171,20 +170,18 @@ char* UnknownToUtf8Temp(const char* s) {
         return str::DupTemp(s, len);
     }
 
-    WCHAR* ws = strconv::AnsiToWStr(s, len);
+    TempWStr ws = strconv::AnsiToWStrTemp(s, len);
     auto res = ToUtf8Temp(ws);
-    str::Free(ws);
     return res;
 }
 
-WCHAR* AnsiToWStr(const char* src, size_t cbLen) {
-    return StrCPToWStr(src, CP_ACP, (int)cbLen);
+TempWStr AnsiToWStrTemp(const char* src, size_t cbLen) {
+    return StrCPToWStrTemp(src, CP_ACP, (int)cbLen);
 }
 
 char* AnsiToUtf8(const char* src, size_t cbLen) {
-    WCHAR* ws = StrCPToWStr(src, CP_ACP, (int)cbLen);
+    TempWStr ws = StrCPToWStrTemp(src, CP_ACP, (int)cbLen);
     char* res = ToUtf8(ws);
-    str::Free(ws);
     return res;
 }
 
