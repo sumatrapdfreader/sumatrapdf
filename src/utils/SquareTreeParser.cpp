@@ -99,11 +99,13 @@ SquareTreeNode::~SquareTreeNode() {
 }
 
 const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
-    for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
-        DataItem& item = data.at(i);
+    int start = startIdx ? (int)*startIdx : 0;
+    int n = data.Size();
+    for (int i = start; i < n; i++) {
+        DataItem& item = data.At(i);
         if (str::EqI(key, item.key) && !item.child) {
             if (startIdx) {
-                *startIdx = i + 1;
+                *startIdx = (size_t)(i + 1);
             }
             return item.str;
         }
@@ -112,11 +114,13 @@ const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
 }
 
 SquareTreeNode* SquareTreeNode::GetChild(const char* key, size_t* startIdx) const {
-    for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
-        DataItem& item = data.at(i);
+    int start = startIdx ? (int)*startIdx : 0;
+    int n = data.Size();
+    for (int i = start; i < n; i++) {
+        DataItem& item = data.At(i);
         if (str::EqI(key, item.key) && item.child) {
             if (startIdx) {
-                *startIdx = i + 1;
+                *startIdx = (size_t)(i + 1);
             }
             return item.child;
         }

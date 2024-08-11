@@ -85,6 +85,12 @@ Size VirtWndText::GetIdealSize(bool onlyIfEmpty) {
 
 void VirtWndText::Draw(HDC hdc) {
     ReportIf(lastBounds.IsEmpty());
+    COLORREF prevCol = kColorUnset;
+    int prevBkMode = 0;
+    if (textColor != kColorUnset) {
+        prevCol = SetTextColor(hdc, textColor);
+    }
+    prevBkMode = SetBkMode(hdc, TRANSPARENT);
     UINT fmt = DT_NOCLIP | DT_NOPREFIX;
     if (isRtl) {
         fmt = fmt | DT_RTLREADING;
@@ -94,6 +100,14 @@ void VirtWndText::Draw(HDC hdc) {
     if (withUnderline) {
         auto& r = lastBounds;
         Rect lineRect = {r.x, r.y + sz.dy, sz.dx, 0};
+        auto col = GetTextColor(hdc);
+        ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, col), true);
         DrawLine(hdc, lineRect);
+    }
+    if (textColor != kColorUnset) {
+        SetTextColor(hdc, prevCol);
+    }
+    if (prevBkMode != 0) {
+        SetBkMode(hdc, prevBkMode);
     }
 }

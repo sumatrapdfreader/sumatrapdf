@@ -32,6 +32,7 @@ struct VirtWndText : VirtWnd {
     HFONT font = nullptr;
     bool withUnderline = false;
     bool isRtl = false;
+    COLORREF textColor = kColorUnset;
 
     Size sz = {0, 0};
 

@@ -6,6 +6,7 @@
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/SquareTreeParser.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -37,11 +38,16 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
-constexpr const char* builtIn = R"(
+constexpr const char* promoteBuiltIn = R"(
 [
     Name = Edna
     URL = https://edna.arslexis.io
     Info = note taking app for develelopers
+]
+[
+    Name = "ArsLexis"
+    URL = https://arslexis.io
+    Info = Various web tools
 ]
 )";
 
@@ -612,20 +618,38 @@ struct ThumbnailLayout {
     StaticLinkInfo* sl = nullptr;
 };
 
+struct Promote {
+    struct Promote* next = nullptr;
+    const char* name = nullptr;
+    const char* url = nullptr;
+    const char* info = nullptr;
+    Promote() = default;
+    ~Promote();
+};
+
+Promote::~Promote() {
+    str::Free(name);
+    str::Free(url);
+    str::Free(info);
+}
+
 struct HomePageLayout {
     // args in
-    HWND hwnd;
-    HDC hdc;
+    HWND hwnd = nullptr;
+    HDC hdc = nullptr;
     Rect rc;
-    MainWindow* win;
+    MainWindow* win = nullptr;
+
+    Promote* promote = nullptr;
 
     Rect rcAppWithVer; // SumatraPDF colorful text + version
     Rect rcLine;       // line under bApp
     Rect rcIconOpen;
 
-    HIMAGELIST himlOpen;
-    VirtWndText* freqRead;
-    VirtWndText* openDoc;
+    HIMAGELIST himlOpen = nullptr;
+    VirtWndText* freqRead = nullptr;
+    VirtWndText* openDoc = nullptr;
+    VirtWndText* hideShowFreqRead = nullptr;
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
     ~HomePageLayout();
 };
@@ -633,10 +657,44 @@ struct HomePageLayout {
 HomePageLayout::~HomePageLayout() {
     delete freqRead;
     delete openDoc;
+    ListDelete(promote);
+}
+
+static Promote* ParsePromote(const char* s) {
+    if (str::IsEmptyOrWhiteSpace(s)) {
+        return nullptr;
+    }
+    SquareTreeNode* root = ParseSquareTree(s);
+    if (!root) {
+        return nullptr;
+    }
+    SquareTreeNode* node;
+    Promote* first = nullptr;
+    for (auto& i : root->data) {
+        node = i.child;
+        if (!node || node->data.Size() != 3) {
+            continue;
+        }
+        Promote* p = new Promote();
+        p->name = str::Dup(node->GetValue("Name"));
+        p->url = str::Dup(node->GetValue("URL"));
+        p->info = str::Dup(node->GetValue("Info"));
+        bool ok = !str::IsEmptyOrWhiteSpace(p->name) && !str::IsEmptyOrWhiteSpace(p->url) && !str::IsEmptyOrWhiteSpace(p->info);
+        if (!ok) {
+            delete p;
+            continue;
+        }
+        ListInsertEnd(&first, p);
+    }
+    delete root;
+    return first;
 }
 
 // layout homepage in r
 void LayoutHomePage(HomePageLayout& l) {
+
+    l.promote = ParsePromote(promoteBuiltIn);
+
     Vec<FileState*> fileStates;
     gFileHistory.GetFrequencyOrder(fileStates);
     auto hwnd = l.hwnd;
