@@ -94,7 +94,7 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
     int i = 2; // skip first 2 header lines
     while (i < nLines) {
         orig = lines[i];
-        ReportIf(*orig != ':');
+        ReportDebugIf(*orig != ':');
         orig += 1; // skip the ':' at the beginning
         i++;
         trans = nullptr;
@@ -120,7 +120,7 @@ static void ParseTranslationsTxt(const StrSpan& d, const char* langCode) {
         c->Append(unescaped);
     }
     int nTrans = c->Size();
-    ReportIf(nTrans != nStrings * 2);
+    ReportDebugIf(nTrans != nStrings * 2);
     if (nUntranslated > 0 && !str::Eq(langCode, "en:")) {
         logf("Untranslated strings: %d for lang '%s'\n", nUntranslated, langCode);
     }
@@ -134,7 +134,7 @@ const char* GetTranslation(const char* s) {
     }
     auto c = gTranslationCache;
     int n = c->Size();
-    ReportIf(n % 2 != 0);
+    ReportDebugIf(n % 2 != 0);
     n = n / 2;
     int sLen = str::Leni(s);
     for (int i = 0; i < n; i++) {
@@ -149,7 +149,7 @@ const char* GetTranslation(const char* s) {
             return tr;
         }
     }
-    ReportIf(true);
+    ReportDebugIf(true);
     return s;
 }
 
@@ -172,7 +172,7 @@ void SetCurrentLangByCode(const char* langCode) {
         // set to English
         idx = 0;
     }
-    ReportIf(-1 == idx);
+    ReportDebugIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
     if (idx == 0 && !gIsDebugBuild) {
