@@ -679,7 +679,8 @@ static Promote* ParsePromote(const char* s) {
         p->name = str::Dup(node->GetValue("Name"));
         p->url = str::Dup(node->GetValue("URL"));
         p->info = str::Dup(node->GetValue("Info"));
-        bool ok = !str::IsEmptyOrWhiteSpace(p->name) && !str::IsEmptyOrWhiteSpace(p->url) && !str::IsEmptyOrWhiteSpace(p->info);
+        bool ok = !str::IsEmptyOrWhiteSpace(p->name) && !str::IsEmptyOrWhiteSpace(p->url) &&
+                  !str::IsEmptyOrWhiteSpace(p->info);
         if (!ok) {
             delete p;
             continue;
@@ -692,7 +693,6 @@ static Promote* ParsePromote(const char* s) {
 
 // layout homepage in r
 void LayoutHomePage(HomePageLayout& l) {
-
     l.promote = ParsePromote(promoteBuiltIn);
 
     Vec<FileState*> fileStates;
