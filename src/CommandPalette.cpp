@@ -941,7 +941,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     }
 
     SetIsVisible(true);
-    ::SetFocus(editQuery->hwnd);
+    HwndSetFocus(editQuery->hwnd);
     return true;
 }
 

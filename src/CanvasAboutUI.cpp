@@ -97,12 +97,12 @@ static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
         args.activateExisting = !IsCtrlPressed();
         StartLoadDocument(&args);
     }
-    // SetFocus(win->hwndFrame);
+    // HwndSetFocus(win->hwndFrame);
 }
 
 static void OnMouseRightButtonDownAbout(MainWindow* win, int x, int y, WPARAM) {
     // lf("Right button clicked on %d %d", x, y);
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
     win->dragStart = Point(x, y);
 }
 

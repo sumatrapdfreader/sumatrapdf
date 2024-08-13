@@ -353,7 +353,7 @@ void ShowOrHideToolbar(MainWindow* win) {
     } else {
         // Move the focus out of the toolbar
         if (HwndIsFocused(win->hwndFindEdit) || HwndIsFocused(win->hwndPageEdit)) {
-            SetFocus(win->hwndFrame);
+            HwndSetFocus(win->hwndFrame);
         }
         ShowWindow(win->hwndReBar, SW_HIDE);
     }
@@ -485,7 +485,7 @@ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
                 if (win->findThread) {
                     AbortFinding(win, true);
                 } else {
-                    SetFocus(win->hwndFrame);
+                    HwndSetFocus(win->hwndFrame);
                 }
                 return 1;
 
@@ -687,12 +687,12 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                 int newPageNo = win->ctrl->GetPageByLabel(s);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
-                    SetFocus(win->hwndFrame);
+                    HwndSetFocus(win->hwndFrame);
                 }
                 return 1;
             }
             case VK_ESCAPE:
-                SetFocus(win->hwndFrame);
+                HwndSetFocus(win->hwndFrame);
                 return 1;
 
             case VK_TAB:

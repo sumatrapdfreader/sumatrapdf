@@ -193,7 +193,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
         CenterDialog(hDlg);
-        SetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
+        HwndSetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
         BringWindowToTop(hDlg);
         return FALSE;
     }
@@ -278,7 +278,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
         CenterDialog(hDlg);
-        SetFocus(editPageNo);
+        HwndSetFocus(editPageNo);
         return FALSE;
     }
     //] ACCESSKEY_GROUP GoTo Page Dialog
@@ -357,7 +357,7 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             EditSelectAll(GetDlgItem(hDlg, IDC_FIND_EDIT));
 
             CenterDialog(hDlg);
-            SetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
+            HwndSetFocus(GetDlgItem(hDlg, IDC_FIND_EDIT));
             return FALSE;
             //] ACCESSKEY_GROUP Find Dialog
         }
@@ -422,7 +422,7 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp,
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("&No"));
 
         CenterDialog(hDlg);
-        SetFocus(GetDlgItem(hDlg, IDOK));
+        HwndSetFocus(GetDlgItem(hDlg, IDOK));
         return FALSE;
     }
     //] ACCESSKEY_GROUP Associate Dialog
@@ -499,7 +499,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
         CenterDialog(hDlg);
-        SetFocus(langList);
+        HwndSetFocus(langList);
         return FALSE;
     }
 
@@ -688,7 +688,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, L
             HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
 
             CenterDialog(hDlg);
-            SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
+            HwndSetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
             return FALSE;
             //] ACCESSKEY_GROUP Zoom Dialog
 
@@ -832,7 +832,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
             }
 
             CenterDialog(hDlg);
-            SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
+            HwndSetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
             return FALSE;
             //] ACCESSKEY_GROUP Settings Dialog
 
@@ -998,7 +998,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
             EditSelectAll(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         }
         CenterDialog(hDlg);
-        SetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
+        HwndSetFocus(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT));
         return FALSE;
     }
 

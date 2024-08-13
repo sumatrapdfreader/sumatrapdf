@@ -170,7 +170,7 @@ static void MigrateTab(WindowTab* tab, MainWindow* newWin) {
     // newWin->ctrl = tab->ctrl;
     // UpdateUiForCurrentTab(newWin);
     // newWin->showSelection = tab->selectionOnPage != nullptr;
-    // SetFocus(newWin->hwndFrame);
+    // HwndSetFocus(newWin->hwndFrame);
     // newWin->RedrawAll(true);
     // TabsOnChangedDoc(newWin);
     WindowTab* newTab = new WindowTab(newWin);

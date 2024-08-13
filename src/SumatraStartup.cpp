@@ -100,7 +100,7 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     UpdateWindow(hwndFrame);
 
     // from here on, we depend on the plugin's host to resize us
-    SetFocus(hwndFrame);
+    HwndSetFocus(hwndFrame);
     return true;
 }
 

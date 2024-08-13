@@ -792,7 +792,7 @@ void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
 
 void ControllerCallbackHandler::FocusFrame(bool always) {
     if (always || !FindMainWindowByHwnd(GetFocus())) {
-        SetFocus(win->hwndFrame);
+        HwndSetFocus(win->hwndFrame);
     }
 }
 
@@ -2103,7 +2103,7 @@ void LoadModelIntoTab(WindowTab* tab) {
         win->uiaProvider->OnSelectionChanged();
     }
 
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
     if (!tab->IsAboutTab()) {
         if (gGlobalPrefs->lazyLoading && !tab->ctrl) {
             ReloadDocument(win, false);
@@ -2345,7 +2345,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
     // edit ctrl doesn't receive WM_KILLFOCUS if we do SetFocus() here, even if we call SetFocus() later on
-    // SetFocus(win->hwndFrame);
+    // HwndSetFocus(win->hwndFrame);
 }
 
 void ShowSavedAnnotationsNotification(HWND hwndParent, const char* path) {
@@ -2470,7 +2470,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     auto win = tab->win;
     UpdateTabFileDisplayStateForTab(tab);
     CloseDocumentInCurrentTab(win, true, true);
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
 
     char* newPath = path::NormalizeTemp(dstFilePath);
     // TODO: this should be 'duplicate FileInHistory"
@@ -2761,7 +2761,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     } else if (lastWindow && !quitIfLast) {
         /* last window - don't delete it */
         CloseDocumentInCurrentTab(win, false, false);
-        SetFocus(win->hwndFrame);
+        HwndSetFocus(win->hwndFrame);
         ReportIf(!gWindows.Contains(win));
     } else {
         FreeMenuOwnerDrawInfoData(win->menu);
@@ -3049,7 +3049,7 @@ static void RenameCurrentFile(MainWindow* win) {
 
     UpdateTabFileDisplayStateForTab(win->CurrentTab());
     CloseDocumentInCurrentTab(win, true, true);
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
     BOOL moveOk = MoveFileExW(srcPathW, dstFileName, flags);
@@ -3871,7 +3871,7 @@ static void FocusPageNoEdit(HWND hwndPageEdit) {
     if (HwndIsFocused(hwndPageEdit)) {
         SendMessageW(hwndPageEdit, WM_SETFOCUS, 0, 0);
     } else {
-        SetFocus(hwndPageEdit);
+        HwndSetFocus(hwndPageEdit);
     }
 }
 
@@ -3963,7 +3963,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     }
 
     // Make sure that no toolbar/sidebar keeps the focus
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
     // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
     gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
@@ -4086,7 +4086,7 @@ void AdvanceFocus(MainWindow* win) {
     }
     // focus the next available element
     i = wrapIdx(i + direction, nWindows);
-    SetFocus(tabOrder[i]);
+    HwndSetFocus(tabOrder[i]);
 }
 
 // allow to distinguish a '/' caused by VK_DIVIDE (rotates a document)
@@ -4568,7 +4568,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
 
     if ((!tocVisible && HwndIsFocused(win->tocTreeView->hwnd)) ||
         (!showFavorites && HwndIsFocused(win->favTreeView->hwnd))) {
-        SetFocus(win->hwndFrame);
+        HwndSetFocus(win->hwndFrame);
     }
 
     HwndSetVisibility(win->sidebarSplitter->hwnd, tocVisible || showFavorites);
@@ -5664,9 +5664,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdMoveFrameFocus:
             if (!HwndIsFocused(win->hwndFrame)) {
-                SetFocus(win->hwndFrame);
+                HwndSetFocus(win->hwndFrame);
             } else if (win->tocVisible) {
-                SetFocus(win->tocTreeView->hwnd);
+                HwndSetFocus(win->tocTreeView->hwnd);
             }
             break;
 

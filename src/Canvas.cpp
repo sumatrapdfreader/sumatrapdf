@@ -465,7 +465,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     }
     ReportIf(!win->AsFixed());
 
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
 
     DisplayModel* dm = win->AsFixed();
     Point pt{x, y};
@@ -698,7 +698,7 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
     }
     ReportIf(!win->AsFixed());
 
-    SetFocus(win->hwndFrame);
+    HwndSetFocus(win->hwndFrame);
 
     win->dragStartPending = true;
     win->dragStart = Point(x, y);

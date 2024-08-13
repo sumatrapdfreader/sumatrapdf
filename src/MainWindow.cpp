@@ -351,10 +351,10 @@ void MainWindow::Focus() const {
     // set focus to an owned modal dialog if there is one
     HWND hwnd = FindModalOwnedBy(hwndFrame);
     if (hwnd != nullptr) {
-        SetFocus(hwnd);
+        HwndSetFocus(hwnd);
         return;
     }
-    SetFocus(hwndFrame);
+    HwndSetFocus(hwndFrame);
 }
 
 void MainWindow::ToggleZoom() const {
@@ -686,7 +686,7 @@ void UpdateControlsColors(MainWindow* win) {
 void ClearFindBox(MainWindow* win) {
     HWND hwndFocused = GetFocus();
     if (hwndFocused == win->hwndFindEdit) {
-        SetFocus(win->hwndFrame);
+        HwndSetFocus(win->hwndFrame);
     }
     HwndSetText(win->hwndFindEdit, "");
 }

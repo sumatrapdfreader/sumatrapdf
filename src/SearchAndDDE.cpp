@@ -1,11 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-/* Code related to:
- * user-initiated search
- * DDE commands, including search
- */
-
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
@@ -93,7 +88,7 @@ void FindFirst(MainWindow* win) {
         if (HwndIsFocused(win->hwndFindEdit)) {
             SendMessageW(win->hwndFindEdit, WM_SETFOCUS, 0, 0);
         } else {
-            SetFocus(win->hwndFindEdit);
+            HwndSetFocus(win->hwndFindEdit);
         }
         return;
     }

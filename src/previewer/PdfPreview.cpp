@@ -295,7 +295,7 @@ static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         case WM_KEYDOWN:
             return OnKeydown(hwnd, wp);
         case WM_LBUTTONDOWN:
-            SetFocus(hwnd);
+            HwndSetFocus(hwnd);
             return 0;
         case WM_MOUSEWHEEL: {
             auto delta = GET_WHEEL_DELTA_WPARAM(wp);
