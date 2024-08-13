@@ -951,7 +951,7 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
     if (!annotations.isValidIndex(itemNo)) {
         logfa("EditAnnotationsWindow::ListBoxSelectionChanged: invalid itemNo=%d, annotations.size()=%d\n", itemNo,
               annotations.Size());
-        ReportIf(true);
+        ReportDebugIf(true);
         return;
     }
     Annotation* annot = annotations.at(itemNo);
