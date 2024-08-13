@@ -83,7 +83,7 @@ Size VirtWndText::GetIdealSize(bool onlyIfEmpty) {
     return sz;
 }
 
-void VirtWndText::Draw(HDC hdc) {
+void VirtWndText::Paint(HDC hdc) {
     ReportIf(lastBounds.IsEmpty());
     COLORREF prevCol = kColorUnset;
     int prevBkMode = 0;

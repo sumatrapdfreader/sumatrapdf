@@ -14,7 +14,7 @@ struct VirtWnd : LayoutBase {
 
     virtual Size GetIdealSize();
 
-    void Paint(HDC);
+    virtual void Paint(HDC);
 
     VirtWnd* next = nullptr;
     VirtWnd* firstChild = nullptr;
@@ -46,5 +46,6 @@ struct VirtWndText : VirtWnd {
 
     Size MinIntrinsicSize(int width, int height);
     Size GetIdealSize(bool onlyIfEmpty = false);
-    void Draw(HDC dc);
+
+    void Paint(HDC dc) override;
 };

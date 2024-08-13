@@ -190,7 +190,7 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
     PositionRB(rc, r);
     MoveXY(r, -innerPadding, -innerPadding);
     w.SetBounds(r);
-    w.Draw(hdc);
+    w.Paint(hdc);
 
     // make the click target larger
     r.Inflate(innerPadding, innerPadding);
@@ -867,7 +867,7 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
     color = ThemeWindowTextColor();
     SetTextColor(hdc, color);
 
-    l.freqRead->Draw(hdc);
+    l.freqRead->Paint(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
     for (const ThumbnailLayout& thumb : l.thumbnails) {
@@ -913,7 +913,7 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
     int openIconIdx = 0;
     ImageList_Draw(l.himlOpen, openIconIdx, hdc, x, y, ILD_NORMAL);
 
-    l.openDoc->Draw(hdc);
+    l.openDoc->Paint(hdc);
 
     if (false) {
         Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
