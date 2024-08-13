@@ -208,6 +208,7 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     }
     auto wnd = GetNotificationForGroup(win->hwndCanvas, kNotifFindProgress);
     if (!wnd) {
+        logf("UpdateFindStatus: no wnd, setting win->findCancelled to true\n");
         win->findCancelled = true;
         return;
     }
@@ -215,6 +216,7 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     int perc = CalcPerc(d->current, d->total);
     if (!UpdateNotificationProgress(wnd, msg, perc)) {
         // the search has been canceled by closing the notification
+        logf("UpdateFindStatus: UpdateNotificationProgress() returned false, setting win->findCancelled to true\n");
         win->findCancelled = true;
     }
 }
@@ -270,7 +272,7 @@ struct FindThreadData {
             // i.e. canceled
             RemoveNotification(wnd);
         } else if (!success && loopedAround) {
-            NotificationUpdateMessage(wnd, _TRA("No matches were found"), kNotifDefaultTimeOut);
+            NotificationUpdateMessage(wnd, _TRA("No matches were found"), 0);
         } else {
             auto pageNo = win->AsFixed()->textSearch->GetSearchHitStartPageNo();
             TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
@@ -279,12 +281,18 @@ struct FindThreadData {
                 buf = str::FormatTemp(_TRA("Found text at page %s (again)"), label);
                 MessageBeep(MB_ICONINFORMATION);
             }
-            NotificationUpdateMessage(wnd, buf, kNotifDefaultTimeOut, loopedAround);
+            NotificationUpdateMessage(wnd, buf, 0, loopedAround);
         }
     }
 
     bool WasCanceled() {
-        return !IsMainWindowValid(win) || win->findCancelled;
+        bool winValid = IsMainWindowValid(win);
+        auto res = !winValid || win->findCancelled;
+        if (res) {
+            logf("FindThreadData: WasCanceled() returns true, isMainWindowValid: %d, win->findCancelled: %d\n",
+                 (int)winValid, (int)win->findCancelled);
+        }
+        return res;
     }
 
     void UpdateProgress(int current, int total) {
@@ -293,7 +301,7 @@ struct FindThreadData {
         data->current = current;
         data->total = total;
         auto fn = MkFunc0<UpdateFindStatusData>(UpdateFindStatus, data);
-        uitask::Post(fn, "UpdateFindStatus");
+        uitask::Post(fn, nullptr);
     }
 };
 
@@ -413,6 +421,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
     bool res = false;
     if (win->findThread) {
         res = true;
+        logf("AboftFinding: setting win->findCancelled to true\n");
         win->findCancelled = true;
         WaitForSingleObject(win->findThread, INFINITE);
     }
