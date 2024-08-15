@@ -288,7 +288,7 @@ void MainWindow::UpdateCanvasSize() {
 
 Size MainWindow::GetViewPortSize() const {
     Size size = canvasRc.Size();
-    ReportIf(size.IsEmpty());
+    ReportDebugIf(size.IsEmpty());
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
     if ((style & WS_VSCROLL)) {
