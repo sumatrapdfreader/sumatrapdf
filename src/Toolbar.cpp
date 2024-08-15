@@ -361,7 +361,7 @@ void ShowOrHideToolbar(MainWindow* win) {
 }
 
 void UpdateFindbox(MainWindow* win) {
-    if (!ThemeColorizeControls()) {
+    if (IsCurrentThemeDefault()) {
         // this looks ugly in dark themes i.e. non-default i.e. non-colorized
         SetWindowStyle(win->hwndFindBg, SS_WHITERECT, win->IsDocLoaded());
         SetWindowStyle(win->hwndPageBg, SS_WHITERECT, win->IsDocLoaded());
@@ -370,11 +370,13 @@ void UpdateFindbox(MainWindow* win) {
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
     UpdateWindow(win->hwndToolbar);
 
-    if (!win->IsDocLoaded()) { // Avoid focus on Find box
-        SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(IDC_ARROW));
+
+    auto cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
+    SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
+    if (!win->IsDocLoaded()) {
+        // avoid focus on Find box
         HideCaret(nullptr);
     } else {
-        SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(IDC_IBEAM));
         ShowCaret(nullptr);
     }
 }
@@ -437,20 +439,20 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 static WNDPROC DefWndProcToolbar = nullptr;
 static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CTLCOLORSTATIC == msg || WM_CTLCOLOREDIT == msg) {
-        HWND hStatic = (HWND)lp;
+        HWND hwndCtrl = (HWND)lp;
         HDC hdc = (HDC)wp;
-        MainWindow* win = FindMainWindowByHwnd(hStatic);
+        MainWindow* win = FindMainWindowByHwnd(hwndCtrl);
         if (!win) {
             return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
         }
-        if (win->hwndTbInfoText == hStatic) {
+        if (win->hwndTbInfoText == hwndCtrl) {
             COLORREF col = RGB(0xff, 0x00, 0x00);
             SetTextColor(hdc, col);
             SetBkMode(hdc, TRANSPARENT);
             auto br = GetStockBrush(NULL_BRUSH);
             return (LRESULT)br;
         }
-        if ((win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed()) {
+        if ((win->hwndFindBg != hwndCtrl && win->hwndPageBg != hwndCtrl) || theme::IsAppThemed()) {
             // Set color used in "Page:" and "Find:" labels
             auto col = RGB(0x00, 0x00, 0x00);
             SetTextColor(hdc, ThemeWindowTextColor());
@@ -746,11 +748,13 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         size2.dx -= padX;
         size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
 #endif
-        txt = (TempStr) "";
+        // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
+        txt = (TempStr) " ";
         minSize.dx = 0;
         size2.dx = 0;
     } else if (!pageCount) {
-        txt = (TempStr) "";
+        // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
+        txt = (TempStr) " ";
         minSize.dx = 0;
         size2.dx = 0;
     } else if (!win->ctrl || !win->ctrl->HasPageLabels()) {
@@ -773,7 +777,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
 
     int padding = GetSystemMetrics(SM_CXEDGE);
-    int x = currX;
+    int x = currX - 1;
     int y = (pageWndRect.dy - size.dy + 1) / 2 + currY;
     MoveWindow(win->hwndPageLabel, x, y, size.dx, size.dy, FALSE);
     if (IsUIRtl()) {
@@ -808,14 +812,6 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     size2.dx += size.dx + pageWndRect.dx + 12;
     if (bi.cx != size2.dx || !updateOnly) {
         TbSetButtonDx(win->hwndToolbar, CmdPageInfo, size2.dx);
-    } else {
-        // TODO: we don't always refresh page numbers correctly (can be seen in stress test)
-        // maybe just InvalidateRect(win->hwndToolbar, nullptr, TRUE);
-        // at the end?
-        Rect rc = ClientRect(win->hwndPageTotal);
-        rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
-        RECT rTmp = ToRECT(rc);
-        InvalidateRect(win->hwndToolbar, &rTmp, TRUE);
     }
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
 }
