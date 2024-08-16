@@ -1325,6 +1325,7 @@ co:Accurtatoghji di &tastera
 cy:&Llwybrau Byr Bysellfwrdd
 cz:&Klávesové zkratky
 de:Tasten&kombinationen
+dk:&keyboard genveje
 el:Συντομεύσεις πληκτρολογίου
 es:Atajos de teclado
 fa:میانبرهای &صفحه کلید
@@ -5163,6 +5164,7 @@ co:Viutatura di a cronolugia…
 cy:Yn clirio hanes...
 cz:Mažu historii...
 de:Historie löschen...
+dk:Rydder historik
 el:Καθάρισμα Ιστορικού...
 es:Borrando historial...
 fa:پاک کردن تاریخجه
@@ -5252,6 +5254,7 @@ co:Chjode tutte l’unghjette
 cy:Cau Pob Tab
 cz:Zavřít všechny karty
 de:Alle Tabs schließen
+dk:Luk Alle Faner
 es:Cerrar todas las pestañas
 fo:Sløkk øll varðabløð
 fr:Fermer tous les onglets
@@ -5327,6 +5330,7 @@ co:Chjode l’unghjette versu a manca
 cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
 de:Tabs links schließen
+dk:Luk fane til venstre
 es:Cerrar pestañas a la izquierda
 fo:Sløkk varðabløð vinstrumegin
 fr:Fermer les onglets sur la gauche
@@ -6094,6 +6098,7 @@ co:Cupià u chjassu di u schedariu
 cy:Llwybr Copïo Ffeil
 cz:Kopírovat cestu k souboru
 de:Dateipfad kopieren
+dk:Kopiér Fil Sti
 el:Αντιγραφή Τοποθεσίας Αρχείου
 es:Copiar dirección del archivo
 fa:کپی کردن مسیر فایل
@@ -7454,6 +7459,7 @@ co:Squassà
 cy:Dileu
 cz:Vymazat
 de:Löschen
+dk:Slet
 es:Eliminar
 fo:Strika
 fr:Supprimer
@@ -7482,6 +7488,7 @@ co:Squassà l’annutazione
 cy:Dileu Nodiant
 cz:Smazat Poznámku
 de:Anmerkung löschen
+dk:Slet annotering
 el:Διαγραφή Σχολιασμού
 es:Eliminar anotación
 fa:حذف علامت‌گذاری‌
@@ -7940,6 +7947,7 @@ co:Mudificà l’annutazione %s
 cy:Golygu Nodiant %s
 cz:Upravit poznámku %s
 de:%s Anmerkung bearbeiten
+dk:Redigér %s annotering
 el:Επεξεργασία %s Σχολιασμού
 es:Editar %s anotación
 fa:ویرایش %s علامت‌گذاری‌
@@ -8188,6 +8196,7 @@ co:Sbagliu
 cy:Gwall
 cz:Chyba
 de:Fehler
+dk:Fejl
 el:Σφάλμα
 es:Error
 fo:Villa
@@ -10118,6 +10127,7 @@ co:Ottene infurmazioni di grafie
 cy:Derbyn Manylion Ffontiau
 cz:Použitá písma
 de:Schriftarten-Infos erhalten
+dk:Få skrifttype information
 el:Πληροφορίες γραμματοσειρών
 es:Información sobre las fuentes
 et:Hangi fondi infot
@@ -11581,6 +11591,7 @@ cn:在线手册
 co:Manuale nant’à u situ web
 cz:Manuál na webové stránce
 de:Handbuch im Internet
+dk:Manual på hjemmeside
 es:Manual en la Web
 fo:Vegleiðing á Vevsíðu
 fr:Manuel sur le site web
@@ -11921,6 +11932,7 @@ cn:否
 co:Nò
 cz:Ne
 de:Nein
+dk:Nej
 es:No
 fo:Nei
 fr:Non
@@ -12528,6 +12540,7 @@ co:Apre u cartulare cù &Double Commander
 cy:Agor Cyfeiriadur yn &Double Commander
 cz:Otevřít složku v &Double Commanderu
 de:Verzeichnis in &Double Commander öffnen
+dk:Åben sti i &Double Commander
 el:Άνοιγμα καταλόγου στο &Double Commander
 es:Abrir directorio en &Double Commander
 fa:باز کردن پوشه در &Double Commander
@@ -12568,6 +12581,7 @@ co:Apre u cartulare cù l’&espluratore
 cy:Agor Cyfeiriadur yn &Chwilotwr
 cz:Otevřít složku v &Průzkumníku
 de:Verzeichnis im &Explorer öffnen
+dk:Åben sti i &Explorer
 el:Άνοιγμα καταλόγου στην &Εξερεύνηση αρχείων
 es:Abrir directorio en &Explorador de Archivos
 fa:باز کردن پوشه در &Explorer
@@ -12609,6 +12623,7 @@ co:Apre u cartulare cù &Total Commander
 cy:Agor Cyfeiriadur yn &Total Commander
 cz:Otevřít složku v &Total Commanderu
 de:Verzeichnis in &Total Commander öffnen
+dk:Åben sti i &Total Commander
 el:Άνοιγμα κατακόγου στον &Total Commander
 es:Abrir directorio en &Total Commander
 fa:باز کردن پوشه در &Total Commander
@@ -12743,6 +12758,7 @@ co:Apre in una finestra nova
 cy:Agor Mewn Ffenestr Newydd
 cz:Otevřít v novém okně
 de:In neuem Fenster öffnen
+dk:Åben i nyt vindue
 el:Άνοιγμα Σε Νέο Παράθυρο
 es:Abrir en nueva ventana
 fa:بازکردن در پنجره جدید
@@ -12776,6 +12792,7 @@ br:Abrir o Próximo Arquivo na Pasta
 cn:打开文件夹中的下一个文件
 co:Apre u schedariu seguente in u cartulare
 de:Nächste Datei im Ordner öffnen
+dk:Åben næste fil i mappe
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
 he:פתח את הקובץ הבא שבתיקיה
@@ -12793,6 +12810,7 @@ br:Abrir o Arquivo Anterior na Pasta
 cn:打开文件夹中的上一个文件
 co:Apre u schedariu precedente in u cartulare
 de:Vorherige Datei im Ordner öffnen
+dk:Åbne tidligere fil i mappe
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
 he:פתח את הקובץ שלפני בתיקיה
@@ -13874,6 +13892,7 @@ co:Aspittate a fine di u caricamentu…
 cy:Arhoswch - wrthi'n llwytho...
 cz:Načítám soubor...
 de:Bitte auf das Laden warten...
+dk:Vent venligst - indlæser
 el:Παρακαλώ περιμένετε - φόρτωση...
 es:Por favor, espere - cargando...
 fa:لطفا صبر کنید - در حال بارگذاری...
@@ -14076,6 +14095,7 @@ co:Finestrinu : %d 0 R
 cy:Llamlen: %d 0 R
 cz:Vyskakovací okno: %d 0 R
 de:Pop-up: %d 0 R
+dk:Popup: %d 0 R
 el:Αναδυόμενο παράθυρο: %d 0 R
 es:Ventana Emergente: %d 0 R
 et:Hüpikaken: %d 0 R
@@ -14707,6 +14727,7 @@ co:Pruprietà…
 cy:Priodweddau...
 cz:Vlastnosti...
 de:Eigenschaften...
+dk:Egenskaber
 el:Ιδιότητες...
 es:Propiedades...
 fa:مشخصات
@@ -15951,6 +15972,7 @@ cn:谷歌学术搜索(&G)
 co:Circà cù Google &Scholar
 cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
+dk:Søg med &Google Scholar
 es:Buscar con &Google Scholar
 fo:Leita við &Google Scholar
 fr:Rechercher avec &Google Scholar
@@ -15972,6 +15994,7 @@ cn:维基百科搜索(&W)
 co:Circà cù &Wikipedia
 cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
+dk:Søg med &Wikipedia
 es:Buscar con &Wikipedia
 fo:Leita við &Wikipedia
 fr:Rechercher avec &Wikipedia
@@ -19012,6 +19035,7 @@ cn:是
 co:Sì
 cz:Ano
 de:Ja
+dk:Ja
 es:Sí
 fo:Ja
 fr:Oui
