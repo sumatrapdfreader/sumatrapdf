@@ -612,6 +612,11 @@ workspace "SumatraPDF"
     links { "mupdf-libs" }
     -- links { "mupdf-libs", "zlib", "freetype", "openjpeg", "libjpeg-turbo", "jbig2dec", "lcms2", "harfbuzz", "mujs", "gumbo" }
 
+    -- mupdf
+    -- this fixes "NAN" is not a constant in some version of msvc
+    -- without this it's #define _UCRT_NAN (__ucrt_int_to_float(0x7FC00000))
+    defines { "_UCRT_NOISY_NAN" }
+
   project "libmupdf"
     kind "SharedLib"
     language "C"
