@@ -5359,7 +5359,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdZoomCustom: {
-            if (cmd != nullptr) {
+            if (cmd && cmd->firstArg) {
                 float virtZoom = cmd->firstArg->floatVal;
                 SmartZoom(win, virtZoom, nullptr, true);
             } else {
