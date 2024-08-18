@@ -403,7 +403,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     if (gInstallStarted) {
         // I've seen crashes where somehow "Install" button was pressed twice
         logf("OnButtonInstall: called but gInstallStarted is %d\n", (int)gInstallStarted);
-        ReportIfQuick(gInstallStarted);
+        //ReportIfQuick(gInstallStarted);
         return;
     }
 
@@ -1232,7 +1232,6 @@ int RunInstaller() {
 
     if (gCli->silent) {
         gInstallStarted = true;
-        logfa("gCli->silent, before running InstallerThread()\n");
         InstallerThread(&gCliNew);
         ret = gInstallFailed ? 1 : 0;
     } else {
