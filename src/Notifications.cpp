@@ -478,6 +478,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
         delete wnd;
         return nullptr;
     }
+    BringWindowToTop(wnd->hwnd);
     NotifsAdd(wnd, args.groupId);
     return wnd;
 }

@@ -870,6 +870,9 @@ static void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int 
 }
 
 static void TogglePageInfoHelper(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
     NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
     if (wnd) {
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
@@ -929,7 +932,6 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     if (!wnd) {
         return;
     }
-    ReportIf(!win->AsFixed());
     UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
 }
 
@@ -5811,13 +5813,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFavorites(win);
             break;
 
-        case CmdTogglePageInfo:
-            if (dm) {
-                // "page info" tip: make figuring out current page and
-                // total pages count a one-key action (unless they're already visible)
-                TogglePageInfoHelper(win);
-            }
-            break;
+        case CmdTogglePageInfo: {
+            // "page info" tip: make figuring out current page and
+            // total pages count a one-key action (unless they're already visible)
+            TogglePageInfoHelper(win);
+        } break;
 
         case CmdInvertColors: {
             gGlobalPrefs->fixedPageUI.invertColors ^= true;
