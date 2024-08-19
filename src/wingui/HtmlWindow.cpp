@@ -1435,6 +1435,7 @@ void HtmlWindow::SubclassHwnd() {
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwndParent, WndProcParent2, subclassId, (DWORD_PTR)this);
     ReportIf(!ok);
+    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 }
 
 void HtmlWindow::UnsubclassHwnd() {
