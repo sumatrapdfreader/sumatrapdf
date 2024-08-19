@@ -11,3 +11,4 @@ const char* DisplayModeToString(DisplayMode mode);
 DisplayMode DisplayModeFromString(const char* s, DisplayMode defVal);
 float ZoomFromString(const char* s, float defVal);
 void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140);
+bool MaybeGetNextZoomByIncrement(float* currZoomInOut, float towardsLevel);

@@ -564,15 +564,7 @@ TocTree* ChmModel::GetToc() {
 // adapted from DisplayModel::NextZoomStep
 float ChmModel::GetNextZoomStep(float towardsLevel) const {
     float currZoom = GetZoomVirtual(true);
-
-    if (gGlobalPrefs->zoomIncrement > 0) {
-        float z1 = currZoom * (gGlobalPrefs->zoomIncrement / 100 + 1);
-        if (currZoom < towardsLevel) {
-            return std::min(z1, towardsLevel);
-        }
-        if (currZoom > towardsLevel) {
-            return std::max(z1, towardsLevel);
-        }
+    if (MaybeGetNextZoomByIncrement(&currZoom, towardsLevel)) {
         return currZoom;
     }
 
