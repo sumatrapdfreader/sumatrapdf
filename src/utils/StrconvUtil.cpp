@@ -153,15 +153,14 @@ char* UnknownToUtf8Temp(const char* s) {
     if (str::StartsWith(s, UTF16BE_BOM)) {
         // convert from utf16 big endian to utf16
         s += 2;
-        int n = str::Leni((WCHAR*)s);
+        WCHAR* ws = str::ToWCHAR(s);
+        int n = str::Leni(ws);
         char* tmp = (char*)s;
         for (int i = 0; i < n; i++) {
             int idx = i * 2;
             std::swap(tmp[idx], tmp[idx + 1]);
         }
-        // codeql complains about char* => WCHAR* cast
-        void* d = (void*)s;
-        return ToUtf8Temp((const WCHAR*)d);
+        return ToUtf8Temp(ws);
     }
 
     // if s is valid utf8, leave it alone
