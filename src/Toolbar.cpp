@@ -370,7 +370,6 @@ void UpdateFindbox(MainWindow* win) {
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
     UpdateWindow(win->hwndToolbar);
 
-
     auto cursorId = win->IsDocLoaded() ? IDC_IBEAM : IDC_ARROW;
     SetClassLongPtrW(win->hwndFindEdit, GCLP_HCURSOR, (LONG_PTR)GetCachedCursor(cursorId));
     if (!win->IsDocLoaded()) {

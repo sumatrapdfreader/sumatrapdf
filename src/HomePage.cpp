@@ -403,6 +403,14 @@ static void OnPaintAbout(HWND hwnd) {
     EndPaint(hwnd, &ps);
 }
 
+static void OnSizeAbout(HWND hwnd) {
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
+    if (!win) {
+        ReportDebugIf(true);
+        return;
+    }
+}
+
 static void CopyAboutInfoToClipboard() {
     str::Str info(512);
     char* ver = GetAppVersionTemp();
@@ -480,6 +488,10 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_ERASEBKGND:
             // do nothing, helps to avoid flicker
             return TRUE;
+
+        case WM_SIZE:
+            OnSizeAbout(hwnd);
+            break;
 
         case WM_PAINT:
             OnPaintAbout(hwnd);
