@@ -547,7 +547,12 @@ void TabsOnChangedDoc(MainWindow* win) {
         return;
     }
 
-    ReportIf(win->GetTabIdx(tab) != win->tabsCtrl->GetSelected());
+    int tabIdx = win->GetTabIdx(tab);
+    int selectedIdx = win->tabsCtrl->GetSelected();
+    if (tabIdx != selectedIdx) {
+        logf("TabsonChangeDoc: tabIdx (%d) != selectedIdx (%d)\n", tabIdx, selectedIdx);
+        ReportDebugIf(tabIdx != selectedIdx);
+    }
     VerifyWindowTab(win, tab);
     UpdateTabTitle(tab);
 }
