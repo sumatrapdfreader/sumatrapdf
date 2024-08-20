@@ -328,9 +328,10 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     // so only allow once submission in a given session
     static bool didSubmitDebugReport = false;
 
-    loga("_uploadDebugReport");
     if (condStr) {
-        loga(condStr);
+        logfa("_uploadDebugReport: %s\n", condStr);
+    } else {
+        loga("_uploadDebugReport\n");
     }
 
     // don't send report if this is me debugging
