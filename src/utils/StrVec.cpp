@@ -102,17 +102,19 @@ static StrVecPage* AllocStrVecPage(int pageSize, int dataSize) {
 
 #define kNoSpace (char*)-2
 
-int nOffsetsWithData(int dataSize) {
+// how many bytes per index entry with data
+// index entry is offset and size (both u32) + (optional) data
+static int cbIndexSize(int dataSize) {
     // dataSize is guaranteed multiple of sizeof(u32)
-    return 2 + dataSize / sizeof(u32);
+    return 2*sizeof(u32) + dataSize;
 }
 
 u32* OffsetsForString(const StrVecPage* p, int idx) {
     ReportIf(idx < 0 || idx > p->nStrings);
-    char* start = (char*)p;
-    u32* offsets = (u32*)(start + kStrVecPageHdrSize);
-    int n = nOffsetsWithData(p->dataSize);
-    return offsets + (idx * n);
+    char* off = (char*)p;
+    off += kStrVecPageHdrSize;
+    off += idx * cbIndexSize(p->dataSize);
+    return (u32*)off;
 }
 
 // must have enough space
@@ -166,8 +168,8 @@ char* StrVecPage::SetAt(int idx, const char* s, int sLen) {
 char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
     ReportIf(idx < 0 || idx > nStrings);
 
-    int n = nOffsetsWithData(dataSize);
-    int cbNeeded = sizeof(u32) * n; // for offset / size
+    int cbIndex = cbIndexSize(dataSize);
+    int cbNeeded = cbIndex;
     if (s) {
         cbNeeded += sLen + 1; // +1 for zero termination
     }
@@ -181,7 +183,7 @@ char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
         // make space for idx
         u32* src = offsets;
         u32* dst = OffsetsForString(this, idx + 1);
-        size_t nToCopy = (nStrings - idx) * n * sizeof(u32);
+        size_t nToCopy = (nStrings - idx) * cbIndex;
         memmove(dst, src, nToCopy);
     }
 
@@ -245,9 +247,6 @@ char* StrVecPage::RemoveAt(int idx) {
     int nToCopy = cbOffsetsSize(nStrings - idx, dataSize);
     if (nToCopy == 0) {
         // last string
-        // TODO(perf): removing the last string
-        // if currEnd is offset of this string, push it forward by sLen
-        // to free the space used by it
         return s;
     }
     u32* dst = OffsetsForString(this, idx);
@@ -256,18 +255,21 @@ char* StrVecPage::RemoveAt(int idx) {
     return s;
 }
 
+// we don't de-allocate removed strings so we can safely return the string
 char* StrVecPage::RemoveAtFast(int idx) {
     ReportIf(nStrings <= 0 || idx >= nStrings);
     int sLen = 0;
     char* s = AtHelper(idx, &sLen);
-    // TODO(perf): if removing the last string
-    // if currEnd is offset of this string, push it forward by sLen
-    // to free the space used by it
-    u32* dst = OffsetsForString(this, idx);
-    u32* src = OffsetsForString(this, nStrings - 1);
-    int nToCopy = nOffsetsWithData(dataSize) * sizeof(u32);
-    memmove((void*)dst, (void*)src, nToCopy);
     nStrings--;
+    if (idx == nStrings) {
+        // last string
+        return s;
+    }
+    // over-write idx with last string idx
+    u32* dst = OffsetsForString(this, idx);
+    u32* src = OffsetsForString(this, nStrings);
+    int nToCopy = cbIndexSize(dataSize);
+    memmove((void*)dst, (void*)src, nToCopy);
     return s;
 }
 
@@ -433,17 +435,17 @@ char* StrVec::Append(const char* s, int sLen) {
     if (sLen < 0) {
         sLen = str::Leni(s);
     }
-    int n = nOffsetsWithData(dataSize);
-    int nBytesNeeded = sizeof(u32) * n; // for index and size
+    int cbIndex = cbIndexSize(dataSize);
+    int cbNeeded = cbIndex;
     if (s) {
-        nBytesNeeded += (sLen + 1); // +1 for zero termination
+        cbNeeded += (sLen + 1); // +1 for zero termination
     }
     auto last = first;
     while (last && last->next) {
         last = last->next;
     }
-    if (!last || last->BytesLeft() < nBytesNeeded) {
-        last = AllocatePage(this, last, nBytesNeeded);
+    if (!last || last->BytesLeft() < cbNeeded) {
+        last = AllocatePage(this, last, cbNeeded);
     }
     auto res = last->Append(s, sLen);
     size++;

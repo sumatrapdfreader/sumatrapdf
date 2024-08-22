@@ -38,6 +38,7 @@ static bool IsSpecialDir(const char* s) {
 }
 
 static void AdvanceDirIter(DirIter::iterator* it, int n) {
+    ReportIf(n != 1);
     if (it->didFinish) {
         return;
     }
@@ -53,58 +54,67 @@ static void AdvanceDirIter(DirIter::iterator* it, int n) {
     bool recur = flg & kVisitDirRecurse;
 
     bool ok;
-    // TODO: pick up dir from dirsToVisit
+    bool isFile;
+    bool isDir;
+    char* name;
+    char* path;
+
+NextDir:
     if (!it->pattern) {
-        // first call
-        auto dirW = ToWStrTemp(it->di->dir);
+        int nDirs = it->dirsToVisit.Size();
+        if (nDirs == 0) {
+            goto DidFinish;
+        }
+        it->currDir = it->dirsToVisit.RemoveAt(nDirs - 1);
+        auto dirW = ToWStrTemp(it->currDir);
         it->pattern = path::Join(dirW, L"*");
         it->h = FindFirstFileW(it->pattern, &it->fd);
         if (!IsValidHandle(it->h)) {
-            it->didFinish = true;
-            return;
+            goto DidFinish;
         }
     } else {
         ok = FindNextFileW(it->h, &it->fd);
         if (!ok) {
             SafeCloseHandle(&it->h);
-            it->didFinish = true;
-            return;
+            str::FreePtr(&it->pattern);
+            goto NextDir;
         }
     }
-    bool isFile;
-    bool isDir;
-    bool cont = true;
-    char* name;
-    char* path;
     while (true) {
         isFile = IsRegularFile(it->fd.dwFileAttributes);
         isDir = IsDirectory(it->fd.dwFileAttributes);
         name = ToUtf8Temp(it->fd.cFileName);
-        path = path::JoinTemp(it->di->dir, name);
+        path = path::JoinTemp(it->currDir, name);
         if (isFile && includeFiles) {
             it->data.filePath = path;
             return;
         }
         if (isDir && !IsSpecialDir(name)) {
+            if (recur) {
+                it->dirsToVisit.Append(path);
+            }
             if (includeDirs) {
                 it->data.filePath = path;
                 return;
-            }
-            if (recur) {
-                it->dirsToVisit.Append(path);
             }
         }
         ok = FindNextFileW(it->h, &it->fd);
         if (!ok) {
             SafeCloseHandle(&it->h);
-            it->didFinish = true;
-            return;
+            str::FreePtr(&it->pattern);
+            goto NextDir;
         }
     };
+DidFinish:
+    str::FreePtr(&it->pattern);
+    SafeCloseHandle(&it->h);
+    it->didFinish = true;
+    return;
 }
 
 DirIter::iterator::iterator(const DirIter* di, bool didFinish) {
     this->di = di;
+    this->dirsToVisit.Append(di->dir);
     this->didFinish = didFinish;
     this->data.fd = &this->fd;
     AdvanceDirIter(this, 1);
