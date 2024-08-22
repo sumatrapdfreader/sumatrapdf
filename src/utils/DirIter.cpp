@@ -213,35 +213,6 @@ bool CollectPathsFromDirectory(const char* pattern, StrVec& paths) {
     return paths.Size() > 0;
 }
 
-struct CollectFilesData {
-    StrVec* files = nullptr;
-    VisitDirCb fileMatches;
-};
-
-static void CollectFilesCb(CollectFilesData* d, VisitDirData* vd) {
-    bool matches = true;
-    if (d->fileMatches.IsValid()) {
-        vd->fileMatches = false;
-        d->fileMatches.Call(vd);
-        matches = vd->fileMatches;
-    }
-    if (!matches) {
-        return;
-    }
-    d->files->Append(vd->filePath);
-}
-
-bool CollectFilesFromDirectory(const char* dir, StrVec& files, const VisitDirCb& fileMatches) {
-    u32 flg = kVisitDirIncudeFiles;
-    auto data = new CollectFilesData;
-    data->files = &files;
-    data->fileMatches = fileMatches;
-    auto fn = MkFunc1(CollectFilesCb, data);
-    bool ok = VisitDir(dir, flg, fn);
-    delete data;
-    return ok;
-}
-
 i64 GetFileSize(WIN32_FIND_DATAW* fd) {
     ULARGE_INTEGER ul;
     ul.HighPart = fd->nFileSizeHigh;
