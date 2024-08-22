@@ -163,19 +163,6 @@ bool operator!=(const DirIter::iterator& a, const DirIter::iterator& b) {
     return (a.di != b.di) || (a.didFinish != b.didFinish);
 };
 
-// if cb returns false, we stop further traversal
-bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb) {
-    DirIter di(dir);
-    di.recurse = recurse;
-    for (VisitDirData* de : di) {
-        cb.Call(de);
-        if (de->stopTraversal) {
-            return false;
-        }
-    }
-    return true;
-}
-
 i64 GetFileSize(WIN32_FIND_DATAW* fd) {
     ULARGE_INTEGER ul;
     ul.HighPart = fd->nFileSizeHigh;

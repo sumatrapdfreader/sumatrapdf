@@ -11,8 +11,6 @@ struct VisitDirData {
     bool fileMatches = false;
 };
 
-using VisitDirCb = Func1<VisitDirData*>;
-
 struct DirIter {
     const char* dir = nullptr;
     bool includeFiles = true;
@@ -44,7 +42,6 @@ struct DirIter {
     iterator end() const;
 };
 
-bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb);
 void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse);
 
 i64 GetFileSize(WIN32_FIND_DATAW*);

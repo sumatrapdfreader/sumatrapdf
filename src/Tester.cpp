@@ -149,17 +149,15 @@ static void MobiTestFile(const char* filePath) {
 
 static void MobiTestDir(char* dir) {
     printf("Testing mobi files in '%s'\n", dir);
-    ReportIf(true);
-    // TODO: fix me
-#if 0
-    DirTraverse(dir, true, [](WIN32_FIND_DATAW*, const char* path) -> bool {
+    DirIter di{dir};
+    di.recurse = true;
+    for (VisitDirData* de : di) {
+        const char* path = de->filePath;
         Kind kind = GuessFileTypeFromName(path);
         if (kind == kindFileMobi) {
             MobiTestFile(path);
         }
-        return true;
-    });
-#endif
+    }
 }
 
 static void MobiTest(char* dirOrFile) {

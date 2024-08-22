@@ -768,10 +768,10 @@ EngineBase* EngineImage::CreateFromStream(IStream* stream) {
 
 // clang-format off
 static Kind imageEngineKinds[] = {
-    kindFilePng, kindFileJpeg, kindFileGif,
-    kindFileTiff, kindFileBmp, kindFileTga,
-    kindFileJxr, kindFileHdp, kindFileWdp,
-    kindFileWebp, kindFileJp2, kindFileHeic,
+    kindFilePng,  kindFileJpeg, kindFileGif,
+    kindFileTiff, kindFileBmp,  kindFileTga,
+    kindFileJxr,  kindFileHdp,  kindFileWdp,
+    kindFileWebp, kindFileJp2,  kindFileHeic,
     kindFileAvif
 };
 // clang-format on
@@ -842,19 +842,17 @@ class EngineImageDir : public EngineImages {
     TocTree* tocTree = nullptr;
 };
 
-static void LoadImageDirCb(EngineImageDir* e, VisitDirData* d) {
-    auto path = d->filePath;
-    Kind kind = GuessFileTypeFromName(path);
-    if (IsEngineImageSupportedFileType(e->kind)) {
-        e->pageFileNames.Append(path);
-    }
-}
-
 static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     e->SetFilePath(dir);
 
-    auto fn = MkFunc1(LoadImageDirCb, e);
-    DirTraverse(dir, false, fn);
+    DirIter di{dir};
+    for (VistiDirData* de : di) {
+        auto path = de->filePath;
+        Kind kind = GuessFileTypeFromName(path);
+        if (IsEngineImageSupportedFileType(kind)) {
+            e->pageFileNames.Append(path);
+        }
+    }
 
     int nFiles = e->pageFileNames.Size();
     if (nFiles == 0) {

@@ -174,16 +174,15 @@ static bool IsFileToBench(const char* path) {
     return false;
 }
 
-static void CollectFilesToBenchCb(StrVec* files, VisitDirData* d) {
-    auto path = d->filePath;
-    if (IsFileToBench(path)) {
-        files->Append(path);
-    }
-}
-
 static void CollectFilesToBench(char* dir, StrVec& files) {
-    auto fn = MkFunc1<StrVec, VisitDirData*>(CollectFilesToBenchCb, &files);
-    DirTraverse(dir, true, fn);
+    DirIter di{dir};
+    di.recurse = true;
+    for (VisitDirData* de : di) {
+        auto path = de->filePath;
+        if (IsFileToBench(path)) {
+            files->Append(path);
+        }
+    }
 }
 
 static void BenchDir(char* dir) {
