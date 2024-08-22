@@ -151,7 +151,7 @@ static void MobiTestDir(char* dir) {
     printf("Testing mobi files in '%s'\n", dir);
     DirIter di{dir};
     di.recurse = true;
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         const char* path = de->filePath;
         Kind kind = GuessFileTypeFromName(path);
         if (kind == kindFileMobi) {

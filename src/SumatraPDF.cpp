@@ -3357,7 +3357,7 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
     }
     str::ReplaceWithCopy(&lastNextPrevFilesDir, dir);
     DirIter di{dir};
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         files.Append(de->filePath);
     }
     RemoveFailedFiles(files);

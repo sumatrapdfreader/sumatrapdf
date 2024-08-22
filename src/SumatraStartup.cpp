@@ -839,7 +839,7 @@ static void ShowNoAdminErrorMessage() {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
-static void MaybeDeleteStaleDirectory(char* dir, VisitDirData* d) {
+static void MaybeDeleteStaleDirectory(char* dir, DirIterEntry* d) {
     const char* name = d->name;
     bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
     if (!maybeDelete) {
@@ -862,7 +862,7 @@ static void DeleteStaleFilesAsync() {
     DirIter di{dir};
     di.includeFiles = false;
     di.includeDirs = true;
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         MaybeDeleteStaleDirectory(dir, de);
     }
 }
@@ -986,7 +986,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         const char* dir = "C:\\Users\\kjk\\Downloads";
         auto di = DirIter{dir};
         di.recurse = true;
-        for (VisitDirData* d : di) {
+        for (DirIterEntry* d : di) {
             logf("d->filePath: '%s'\n", d->filePath);
         }
     }

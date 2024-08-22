@@ -131,7 +131,7 @@ DirIter::iterator DirIter::end() const {
     return DirIter::iterator(this, true);
 }
 
-VisitDirData* DirIter::iterator::operator*() {
+DirIterEntry* DirIter::iterator::operator*() {
     if (didFinish) {
         return nullptr;
     }
@@ -184,7 +184,7 @@ static void DirTraverseThread(DirTraverseThreadData* td) {
     di.includeFiles = true;
     di.includeDirs = false;
     di.recurse = td->recurse;
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         td->queue->Append(de->filePath);
     }
     td->queue->MarkFinished();

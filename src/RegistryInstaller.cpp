@@ -44,9 +44,9 @@ static DWORD GetDirSize(const char* dir, bool recur) {
     i64 totalSize = 0;
     DirIter di{dir};
     di.recurse = recur;
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         i64 fileSize = GetFileSize(de->fd);
-        *totalSize += fileSize;
+        totalSize += fileSize;
     }
     return (DWORD)totalSize;
 }

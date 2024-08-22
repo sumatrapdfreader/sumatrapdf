@@ -286,7 +286,7 @@ void CleanUpThumbnailCache() {
 
     StrVec filePaths;
     DirIter di{thumbsDir};
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         if (path::Match(de->filePath, "*.png")) {
             filePaths.Append(de->filePath);
         }

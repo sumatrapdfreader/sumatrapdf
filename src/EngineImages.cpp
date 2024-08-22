@@ -846,7 +846,7 @@ static bool LoadImageDir(EngineImageDir* e, const char* dir) {
     e->SetFilePath(dir);
 
     DirIter di{dir};
-    for (VistiDirData* de : di) {
+    for (DirIterEntry* de : di) {
         auto path = de->filePath;
         Kind kind = GuessFileTypeFromName(path);
         if (IsEngineImageSupportedFileType(kind)) {

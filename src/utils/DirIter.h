@@ -3,7 +3,7 @@
 
 struct StrQueue;
 
-struct VisitDirData {
+struct DirIterEntry {
     WIN32_FIND_DATAW* fd = nullptr;
     const char* name = nullptr;
     const char* filePath = nullptr;
@@ -26,12 +26,12 @@ struct DirIter {
         WCHAR* pattern = nullptr;
         WIN32_FIND_DATAW fd{};
         HANDLE h = nullptr;
-        VisitDirData data;
+        DirIterEntry data;
 
         iterator(const DirIter*, bool);
         ~iterator();
 
-        VisitDirData* operator*();
+        DirIterEntry* operator*();
         iterator& operator++();   // ++it
         iterator operator++(int); // it++
         iterator& operator+(int); // it += n

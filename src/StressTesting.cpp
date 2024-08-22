@@ -177,10 +177,10 @@ static bool IsFileToBench(const char* path) {
 static void CollectFilesToBench(char* dir, StrVec& files) {
     DirIter di{dir};
     di.recurse = true;
-    for (VisitDirData* de : di) {
+    for (DirIterEntry* de : di) {
         auto path = de->filePath;
         if (IsFileToBench(path)) {
-            files->Append(path);
+            files.Append(path);
         }
     }
 }
