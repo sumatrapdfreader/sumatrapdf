@@ -163,21 +163,6 @@ bool operator!=(const DirIter::iterator& a, const DirIter::iterator& b) {
     return (a.di != b.di) || (a.didFinish != b.didFinish);
 };
 
-// if cb sets stopTraversal to true, we stop
-bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb) {
-    DirIter di(dir);
-    di.includeFiles = (flg & kVisitDirIncudeFiles) != 0;
-    di.includeDirs = (flg & kVisitDirIncludeDirs) != 0;
-    di.recurse = (flg & kVisitDirRecurse) != 0;
-    for (VisitDirData* de : di) {
-        cb.Call(de);
-        if (de->stopTraversal) {
-            return false;
-        }
-    }
-    return true;
-}
-
 // if cb returns false, we stop further traversal
 bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb) {
     DirIter di(dir);

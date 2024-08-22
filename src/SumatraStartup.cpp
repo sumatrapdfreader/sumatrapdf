@@ -840,9 +840,7 @@ static void ShowNoAdminErrorMessage() {
 }
 
 static void MaybeDeleteStaleDirectory(char* dir, VisitDirData* d) {
-    auto fd = d->fd;
-    ReportIf(!IsDirectory(fd->dwFileAttributes));
-    TempStr name = ToUtf8Temp(fd->cFileName);
+    const char* name = d->name;
     bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
     if (!maybeDelete) {
         logf("MaybeDeleteStaleDirectory: skipping '%s' because not manual-* or crsahinfo-*\n", name);
@@ -861,8 +859,12 @@ static void MaybeDeleteStaleDirectory(char* dir, VisitDirData* d) {
 // delete symbols and manual from possibly previous versions
 static void DeleteStaleFilesAsync() {
     TempStr dir = GetNotImportantDataDirTemp();
-    auto fn = MkFunc1(MaybeDeleteStaleDirectory, dir);
-    VisitDir(dir, kVisitDirIncludeDirs, fn);
+    DirIter di{dir};
+    di.includeFiles = false;
+    di.includeDirs = true;
+    for (VisitDirData* de : di) {
+        MaybeDeleteStaleDirectory(dir, de);
+    }
 }
 
 void StartDeleteStaleFiles() {

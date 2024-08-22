@@ -217,7 +217,7 @@ bool ZipCreator::AddFileFromDir(const char* filePath, const char* dir) {
 }
 
 bool ZipCreator::AddDir(const char* dir, bool recursive) {
-    DirIter di { dir };
+    DirIter di{dir};
     di.recurse = recursive;
     bool ok;
     for (VisitDirData* de : di) {
