@@ -191,28 +191,6 @@ bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb) {
     return true;
 }
 
-bool CollectPathsFromDirectory(const char* pattern, StrVec& paths) {
-    TempStr dir = path::GetDirTemp(pattern);
-
-    WIN32_FIND_DATAW fdata{};
-    WCHAR* patternW = ToWStr(pattern);
-    HANDLE hfind = FindFirstFileW(patternW, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind) {
-        return false;
-    }
-
-    do {
-        char* name = ToUtf8Temp(fdata.cFileName);
-        DWORD attrs = fdata.dwFileAttributes;
-        if (IsRegularFile(attrs)) {
-            TempStr path = path::JoinTemp(dir, name);
-            paths.Append(path);
-        }
-    } while (FindNextFileW(hfind, &fdata));
-    FindClose(hfind);
-    return paths.Size() > 0;
-}
-
 i64 GetFileSize(WIN32_FIND_DATAW* fd) {
     ULARGE_INTEGER ul;
     ul.HighPart = fd->nFileSizeHigh;

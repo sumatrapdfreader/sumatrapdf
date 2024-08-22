@@ -51,7 +51,6 @@ struct DirIter {
 bool VisitDir(const char* dir, u32 flg, const VisitDirCb& cb);
 bool DirTraverse(const char* dir, bool recurse, const VisitDirCb& cb);
 bool VisitDirs(const char* dir, bool recurse, const VisitDirCb& cb);
-bool CollectPathsFromDirectory(const char* pattern, StrVec& paths);
 void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse);
 
 i64 GetFileSize(WIN32_FIND_DATAW*);

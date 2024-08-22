@@ -3335,7 +3335,7 @@ static void OpenFile(MainWindow* win) {
 }
 
 static StrVec gLastNextPrevFiles;
-const char* lastNextPrevFilesPattern = nullptr;
+const char* lastNextPrevFilesDir = nullptr;
 
 static void RemoveFailedFiles(StrVec& files) {
     for (char* path : gFilesFailedToOpen) {
@@ -3349,17 +3349,16 @@ static void RemoveFailedFiles(StrVec& files) {
 static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
     StrVec& files = gLastNextPrevFiles;
 
-    char* pattern = path::GetDirTemp(path);
-    // TODO: make pattern configurable (for users who e.g. want to skip single images)?
-    pattern = path::JoinTemp(pattern, "*");
-    if (str::Eq(pattern, lastNextPrevFilesPattern)) {
+    char* dir = path::GetDirTemp(path);
+    if (str::Eq(dir, lastNextPrevFilesDir)) {
         // failed files could have changed
         RemoveFailedFiles(files);
         return files;
     }
-    str::ReplaceWithCopy(&lastNextPrevFilesPattern, pattern);
-    if (!CollectPathsFromDirectory(pattern, files)) {
-        return files;
+    str::ReplaceWithCopy(&lastNextPrevFilesDir, dir);
+    DirIter di{dir};
+    for (VisitDirData* de : di) {
+        files.Append(de->filePath);
     }
     RemoveFailedFiles(files);
 

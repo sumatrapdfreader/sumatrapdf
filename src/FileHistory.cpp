@@ -283,14 +283,19 @@ static bool shouldDeleteThumbnail = false;
 void CleanUpThumbnailCache() {
     const FileHistory& fileHistory = gFileHistory;
     TempStr thumbsDir = GetThumbnailCacheDirTemp();
-    TempStr pattern = path::JoinTemp(thumbsDir, "*.png");
 
     StrVec filePaths;
-    bool ok = CollectPathsFromDirectory(pattern, filePaths);
-    if (!ok || filePaths.IsEmpty()) {
+    DirIter di{thumbsDir};
+    for (VisitDirData* de : di) {
+        if (path::Match(de->filePath, "*.png")) {
+            filePaths.Append(de->filePath);
+        }
+    }
+    if (filePaths.IsEmpty()) {
         return;
     }
 
+    bool ok;
     // remove files that should not be deleted
     Vec<FileState*> list;
     fileHistory.GetFrequencyOrder(list);
