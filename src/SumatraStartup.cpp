@@ -981,8 +981,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     CheckIsStoreBuild();
 
     if (false) {
-        const char* dir = "C:\\Users\\kjk\\Downloads\\test";
+        const char* dir = "C:\\Users\\kjk\\Downloads";
         auto di = DirIter{dir};
+        di.recurse = true;
         for (VisitDirData* d : di) {
             logf("d->filePath: '%s'\n", d->filePath);
         }

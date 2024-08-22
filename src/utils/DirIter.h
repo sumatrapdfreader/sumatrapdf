@@ -9,6 +9,7 @@ constexpr u32 kVisitDirRecurse = 0x4;
 
 struct VisitDirData {
     WIN32_FIND_DATAW* fd = nullptr;
+    const char* name = nullptr;
     const char* filePath = nullptr;
     bool stopTraversal = false;
     bool fileMatches = false;
@@ -18,7 +19,9 @@ using VisitDirCb = Func1<VisitDirData*>;
 
 struct DirIter {
     const char* dir = nullptr;
-    u32 flags = kVisitDirIncudeFiles;
+    bool includeFiles = true;
+    bool includeDirs = false;
+    bool recurse = false;
 
     struct iterator {
         const DirIter* di;

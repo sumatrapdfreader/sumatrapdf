@@ -106,7 +106,7 @@ static StrVecPage* AllocStrVecPage(int pageSize, int dataSize) {
 // index entry is offset and size (both u32) + (optional) data
 static int cbIndexSize(int dataSize) {
     // dataSize is guaranteed multiple of sizeof(u32)
-    return 2*sizeof(u32) + dataSize;
+    return (2 * sizeof(u32)) + dataSize;
 }
 
 u32* OffsetsForString(const StrVecPage* p, int idx) {
