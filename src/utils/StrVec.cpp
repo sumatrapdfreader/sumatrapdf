@@ -109,7 +109,7 @@ static int cbIndexSize(int dataSize) {
     return (2 * sizeof(u32)) + dataSize;
 }
 
-u32* OffsetsForString(const StrVecPage* p, int idx) {
+static u32* OffsetsForString(const StrVecPage* p, int idx) {
     ReportIf(idx < 0 || idx > p->nStrings);
     char* off = (char*)p;
     off += kStrVecPageHdrSize;

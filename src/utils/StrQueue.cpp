@@ -81,7 +81,7 @@ again:
 }
 
 // is blocking
-// returns true if we finished i.e. there was no more strings to access
+// returns false if we finished i.e. there was no more strings to access
 // and we finished adding. In that case fn was called
 // calls fn() and returns false if there are strings available
 bool StrQueue::Access(const Func1<StrQueue*>& fn) {
@@ -91,12 +91,12 @@ again:
         bool end = isFinished;
         Unlock();
         if (end) {
-            return true;
+            return false;
         }
         WaitForSingleObject(hEvent, INFINITE);
         goto again;
     }
     fn.Call(this);
     Unlock();
-    return false;
+    return true;
 }

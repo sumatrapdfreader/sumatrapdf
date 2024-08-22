@@ -250,24 +250,28 @@ i64 GetFileSize(WIN32_FIND_DATAW* fd) {
 }
 
 struct DirTraverseThreadData {
-    StrQueue* queue = nullptr;
+    StrQueue* queue = nullptr; // we don't own it
     const char* dir = nullptr;
     bool recurse = false;
+    ~DirTraverseThreadData() {
+        str::FreePtr(&dir);
+    }
 };
 
-static void DirTraverseThreadCb(DirTraverseThreadData* td, VisitDirData* d) {
-    td->queue->Append(d->filePath);
-}
-
 static void DirTraverseThread(DirTraverseThreadData* td) {
-    auto fn = MkFunc1(DirTraverseThreadCb, td);
-    DirTraverse(td->dir, td->recurse, fn);
+    DirIter di(td->dir);
+    di.includeFiles = true;
+    di.includeDirs = false;
+    di.recurse = td->recurse;
+    for (VisitDirData* de : di) {
+        td->queue->Append(de->filePath);
+    }
     td->queue->MarkFinished();
     delete td;
 }
 
 void StartDirTraverseAsync(StrQueue* queue, const char* dir, bool recurse) {
-    auto td = new DirTraverseThreadData{queue, dir, recurse};
+    auto td = new DirTraverseThreadData{queue, str::Dup(dir), recurse};
     auto fn = MkFunc0(DirTraverseThread, td);
     RunAsync(fn, "DirTraverseThread");
 }
