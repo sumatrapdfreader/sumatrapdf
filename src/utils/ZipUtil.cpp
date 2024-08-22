@@ -216,25 +216,16 @@ bool ZipCreator::AddFileFromDir(const char* filePath, const char* dir) {
     return AddFile(filePath, nameInZip);
 }
 
-struct AddZipFileData {
-    ZipCreator* zc;
-    const char* dir;
-};
-
-static void AddZipFile(AddZipFileData* d, VisitDirData* data) {
-    bool ok = d->zc->AddFileFromDir(data->filePath, d->dir);
-    if (!ok) {
-        data->stopTraversal = true;
-    }
-}
-
 bool ZipCreator::AddDir(const char* dir, bool recursive) {
-    auto data = new AddZipFileData;
-    data->dir = dir;
-    data->zc = this;
-    auto fn = MkFunc1(AddZipFile, data);
-    DirTraverse(dir, recursive, fn);
-    delete data;
+    DirIter di { dir };
+    di.recurse = recursive;
+    bool ok;
+    for (VisitDirData* de : di) {
+        ok = this->AddFileFromDir(de->filePath, dir);
+        if (!ok) {
+            return false;
+        }
+    }
     return true;
 }
 
