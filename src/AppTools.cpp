@@ -32,7 +32,7 @@ bool HasBeenInstalled() {
         return false;
     }
 
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     if (!str::EndsWithI(installedPath, ".exe")) {
         installedPath = path::JoinTemp(installedPath, path::GetBaseNameTemp(exePath));
     }
@@ -62,7 +62,7 @@ static bool IsPathInDirSmart(const char* path, const char* dir) {
 }
 
 static bool IsExeInProgramFiles() {
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     TempStr dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
     if (IsPathInDirSmart(exePath, dir)) {
         return true;
@@ -121,7 +121,7 @@ TempStr GetAppDataDirTemp() {
 
     TempStr dir;
     if (IsRunningInPortableMode()) {
-        dir = GetExeDirTemp();
+        dir = GetSelfExeDirTemp();
     } else {
         dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
         if (!dir) {
@@ -538,7 +538,7 @@ static const WCHAR* Md5OfAppExe() {
         return str::Dup(gAppMd5.Get());
     }
 
-    auto appPath = GetExePathTemp();
+    auto appPath = GetSelfExePathTemp();
     if (appPath.empty()) {
         return {};
     }
@@ -751,7 +751,7 @@ static int gIsSigned = -1;
 bool IsSumatraSigned() {
     if (gIsSigned < 0) {
         gIsSigned = 0;
-        TempStr filePath = GetExePathTemp();
+        TempStr filePath = GetSelfExePathTemp();
         if (IsPEFileSigned(filePath)) {
             gIsSigned = 1;
         }

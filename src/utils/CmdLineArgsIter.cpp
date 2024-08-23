@@ -69,7 +69,7 @@ void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
 void ParseCmdLine(const WCHAR* cmdLine, StrVec& argsOut) {
     int nArgs;
     WCHAR** argsArr = CommandLineToArgvW(cmdLine, &nArgs);
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     for (int i = 0; i < nArgs; i++) {
         char* arg = ToUtf8Temp(argsArr[i]);
         // sometimes cmd-line args have exe as first argument, sometimes not

@@ -279,7 +279,7 @@ bool AreSymbolsDownloaded(const char* symDir) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", path, symDir);
         return true;
     }
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     exePath = str::ReplaceTemp(exePath, ".exe", ".pdb");
     if (file::Exists(exePath)) {
         logf("AreSymbolsDownloaded(): exist in '%s', symDir: '%s'\n", exePath, symDir);
@@ -669,7 +669,7 @@ static void BuildSymbolPath(const char* symDir) {
 
     // in debug builds the symbols are in the same directory as .exe
     if (gIsDebugBuild || gAddExeDir) {
-        TempStr dir = GetExeDirTemp();
+        TempStr dir = GetSelfExeDirTemp();
         path.Append(dir);
         path.Append(";");
     }

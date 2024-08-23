@@ -491,7 +491,7 @@ TempStr GetTempFilePathTemp(const char* filePrefix) {
 // with either the given fileName or the module's name
 // (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
 TempStr GetPathInExeDirTemp(const char* fileName) {
-    TempStr dir = GetExeDirTemp();
+    TempStr dir = GetSelfExeDirTemp();
     TempStr path = path::JoinTemp(dir, fileName);
     path = path::NormalizeTemp(path);
     return path;

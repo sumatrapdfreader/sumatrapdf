@@ -286,7 +286,7 @@ UnregisterFromBeingDefaultViewer() and RemoveInstallRegistryKeys() in Installer.
 // TODO: this method no longer valid
 #if 0
 void DoAssociateExeWithPdfExtension(HKEY hkey) {
-    auto exePath = GetExePathTemp();
+    auto exePath = GetSelfExePathTemp();
     if (exePath.empty()) {
         return;
     }
@@ -403,7 +403,7 @@ bool IsExeAssociatedWithPdfExtension() {
         return false;
     }
 
-    auto exePath = GetExePathTemp().Get();
+    auto exePath = GetSelfExePathTemp().Get();
     if (!exePath || !str::Find(tmp, LR"("%1")")) {
         return false;
     }

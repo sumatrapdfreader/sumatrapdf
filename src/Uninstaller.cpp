@@ -98,7 +98,7 @@ static void UninstallerThread() {
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     TempStr exePath = GetInstalledExePathTemp();
-    TempStr ownPath = GetExePathTemp();
+    TempStr ownPath = GetSelfExePathTemp();
     if (!path::IsSame(exePath, ownPath)) {
         KillProcessesWithModule(exePath, true);
     }
@@ -344,7 +344,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     }
 
     char* installerTempPath = GetUninstallerPathInTemp();
-    char* ownPath = GetExePathTemp();
+    char* ownPath = GetSelfExePathTemp();
     if (str::EqI(installerTempPath, ownPath)) {
         if (!gCli->allUsers) {
             log("  already running from temp dir\n");
@@ -410,7 +410,7 @@ static char* GetSelfDeleteBatchPathInTemp() {
 // we create a bash script that deletes us
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     str::Str script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
@@ -450,7 +450,7 @@ int RunUninstaller() {
     gCli->installDir = GetExistingInstallationDir();
     char* instDir = gCli->installDir;
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
 
     if (false) {

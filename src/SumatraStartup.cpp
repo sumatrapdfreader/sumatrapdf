@@ -403,7 +403,7 @@ static void SetupCrashHandler() {
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     str::ToLowerInPlace(exePath);
     u32 hash = MurmurHash2(exePath, str::Len(exePath));
     TempStr mapId = str::FormatTemp("SumatraPDF-%08x", hash);
@@ -603,7 +603,7 @@ static void UpdateGlobalPrefs(const Flags& i) {
 // we're in installer mode if the name of the executable
 // has "install" string in it e.g. SumatraPDF-installer.exe
 static bool ExeHasNameOfInstaller() {
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
     if (str::FindI(exeName, "uninstall")) {
         return false;
@@ -634,7 +634,7 @@ static bool IsOurExeInstalled() {
     if (!installedDir.Get()) {
         return false;
     }
-    TempStr exeDir = GetExeDirTemp();
+    TempStr exeDir = GetSelfExeDirTemp();
     return str::EqI(installedDir.Get(), exeDir);
 }
 
@@ -646,7 +646,7 @@ static bool IsInstallerButNotInstalled() {
 }
 
 static void CheckIsStoreBuild() {
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     TempStr exeName = path::GetBaseNameTemp(exePath);
     if (str::FindI(exeName, "store")) {
         gIsStoreBuild = true;
@@ -691,7 +691,7 @@ static bool ForceRunningAsInstaller() {
         return false;
     }
 
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     TempStr dir = path::GetDirTemp(exePath);
     TempStr path = path::JoinTemp(dir, "libmupdf.dll");
     auto realSize = file::GetSize(path);
@@ -997,7 +997,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
 #if defined(DEBUG)
     if (false) {
-        TempStr exePath = GetExePathTemp();
+        TempStr exePath = GetSelfExePathTemp();
         RunNonElevated(exePath);
         return 0;
     }

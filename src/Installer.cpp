@@ -143,7 +143,7 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, const char* dest
 
 static bool CopySelfToDir(const char* destDir) {
     logf("CopySelfToDir(%s)\n", destDir);
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     TempStr dstPath = path::JoinTemp(destDir, kExeName);
     bool failIfExists = false;
     bool ok = file::Copy(dstPath, exePath, failIfExists);
@@ -306,7 +306,7 @@ Exit:
 }
 
 static void RestartElevatedForAllUsers(Flags* cli) {
-    char* exePath = GetExePathTemp();
+    char* exePath = GetSelfExePathTemp();
     const char* cmdLine = "-run-install-now";
     bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
     bool allUsers = cli->allUsers || allUsersChecked;
@@ -1186,7 +1186,7 @@ int RunInstaller() {
         gCliNew.installDir = str::Dup(dir);
     }
     char* cmdLine = ToUtf8Temp(GetCommandLineW());
-    logf("Running'%s', cmdLine: '%s', installing into dir '%s'\n", GetExePathTemp(), cmdLine, gCliNew.installDir);
+    logf("Running'%s', cmdLine: '%s', installing into dir '%s'\n", GetSelfExePathTemp(), cmdLine, gCliNew.installDir);
 
     int ret = 0;
 

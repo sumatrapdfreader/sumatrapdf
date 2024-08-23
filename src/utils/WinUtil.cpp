@@ -768,7 +768,7 @@ void HandleRedirectedConsoleOnShutdown() {
 }
 
 // Return the full exe path of my own executable
-TempStr GetExePathTemp() {
+TempStr GetSelfExePathTemp() {
     WCHAR buf[MAX_PATH]{};
     DWORD nSize = dimof(buf) - 1;
     auto h = GetInstance();
@@ -784,8 +784,8 @@ TempStr GetExePathTemp() {
 }
 
 // Return directory where our executable is located
-TempStr GetExeDirTemp() {
-    auto path = GetExePathTemp();
+TempStr GetSelfExeDirTemp() {
+    TempStr path = GetSelfExePathTemp();
     return path::GetDirTemp(path);
 }
 

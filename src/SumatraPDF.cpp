@@ -3149,7 +3149,7 @@ static void CreateLnkShortcut(MainWindow* win) {
                                    zoomVirtual, (int)ss.x, (int)ss.y);
     TempStr label = ctrl->GetPageLabeTemp(ss.page);
     TempStr desc = str::FormatTemp(_TRA("Bookmark shortcut to page %s of %s"), label, path);
-    auto exePath = GetExePathTemp();
+    auto exePath = GetSelfExePathTemp();
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
 
@@ -3618,7 +3618,7 @@ static void OpenFileWithTextEditor(const char* path) {
 
     char* cmdLine = BuildOpenFileCmd(cmd, path, 1, 1);
     logf("OpenFileWithTextEditor: '%s'\n", cmdLine);
-    char* appDir = GetExeDirTemp();
+    char* appDir = GetSelfExeDirTemp();
     AutoCloseHandle process(LaunchProcess(cmdLine, appDir));
     str::Free(cmdLine);
 }
@@ -6254,7 +6254,7 @@ static TempStr GetFileSizeAsStrTemp(const char* path) {
 void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Crash file: %s\r\n", gCrashFilePath);
 
-    TempStr exePath = GetExePathTemp();
+    TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
     s.AppendFmt("Exe: %s %s\r\n", exePath, fileSizeExe);
     if (IsDllBuild()) {
