@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-aa05be2d7a065dda53d0760cc2cae7ca40ae072e
+da8a81de038ebe61179c0fe09084daabed3ef9aa
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -13835,6 +13835,7 @@ es:Manual en la Web
 fo:Vegleiðing á Vevsíðu
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
+he:מדריך למשתמש באתר
 hu:Kézikönyv a weboldalon
 id:Manual di Situs Web
 it:Manuale (sito web)
@@ -18841,6 +18842,7 @@ dk:Søg med &Google Scholar
 es:Buscar con &Google Scholar
 fo:Leita við &Google Scholar
 fr:Rechercher avec &Google Scholar
+he:חפש עם Google Scholar
 hu:Keresés &Google Scholar-ral
 id:Cari dengan &Google Scholar
 it:Cerca con &Google Scholar
@@ -18863,6 +18865,7 @@ dk:Søg med &Wikipedia
 es:Buscar con &Wikipedia
 fo:Leita við &Wikipedia
 fr:Rechercher avec &Wikipedia
+he:חפש בוויקיפדיה
 hu:Keresés a &Wikipédián
 id:Cari dengan &Wikipedia
 it:Cerca con &Wikipedia
