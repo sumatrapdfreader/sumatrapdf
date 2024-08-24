@@ -366,7 +366,11 @@ func createManifestMust() {
 // }
 
 func signFilesMust(dir string) {
-	logf("signFileMust: '%s'\n", dir)
+	if true {
+		logf("signFilesMust: '%s' DISABLED\n", dir)
+		return
+	}
+	logf("signFilesMust: '%s'\n", dir)
 	//listFilesInDir(dir)
 
 	if fileExists(filepath.Join(dir, "SumatraPDF.exe")) {
