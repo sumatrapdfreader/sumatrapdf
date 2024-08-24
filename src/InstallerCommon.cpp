@@ -239,7 +239,7 @@ constexpr const char* kSearchFilterDllName = "PdfFilter.dll";
 void RegisterSearchFilter(bool allUsers) {
     char* dllPath = GetInstallationFilePathTemp(kSearchFilterDllName);
     logf("RegisterSearchFilter() dllPath=%s\n", dllPath);
-    bool ok = InstallSearchFiler(dllPath, allUsers);
+    bool ok = InstallSearchFilter(dllPath, allUsers);
     if (ok) {
         log("  did registe\n");
         return;

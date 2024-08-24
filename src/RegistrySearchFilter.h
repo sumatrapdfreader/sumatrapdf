@@ -10,6 +10,6 @@
 #define kEpubFilterClsid "{FE4C7847-4260-43e3-A449-08ED76009F94}"
 #define kEpubFilterHandler "{FF68D1A0-DA54-4fbf-A406-06CFDB764CA9}"
 
-bool InstallSearchFiler(const char* dllPath, bool allUsers);
+bool InstallSearchFilter(const char* dllPath, bool allUsers);
 bool UninstallSearchFilter();
 bool IsSearchFilterInstalled();

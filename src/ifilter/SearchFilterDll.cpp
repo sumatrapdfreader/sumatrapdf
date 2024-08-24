@@ -123,7 +123,7 @@ STDAPI DllRegisterServer() {
     if (!dllPath) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
-    bool ok = InstallSearchFiler(dllPath, false);
+    bool ok = InstallSearchFilter(dllPath, false);
     return ok ? S_OK : E_FAIL;
 }
 

@@ -8,7 +8,7 @@
 
 #include "utils/Log.h"
 
-bool InstallSearchFiler(const char* dllPath, bool allUsers) {
+bool InstallSearchFilter(const char* dllPath, bool allUsers) {
     struct {
         const char *key, *value, *data;
     } regVals[] = {
