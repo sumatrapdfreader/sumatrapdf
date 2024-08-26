@@ -4,7 +4,7 @@ SumatraPDF is an open-source, [collaborative](https://github.com/sumatrapdfreade
 
 ## Getting the sources and compiling
 
-You'll need Visual Studio 2022. A [free Community edition](https://www.visualstudio.com/vs/community/) will work.
+You'll need latest Visual Studio. A [free Community edition](https://www.visualstudio.com/vs/community/) will work.
 
 Get the sources from [https://github.com/sumatrapdfreader/sumatrapdf](https://github.com/sumatrapdfreader/sumatrapdf)
 

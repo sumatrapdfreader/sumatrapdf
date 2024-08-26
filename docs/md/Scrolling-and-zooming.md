@@ -29,8 +29,17 @@ Actions that add navigation point:
 
 ## Navigating between tabs
 
-* `Ctrl + Right` : next tab
-* `Ctrl + Left` : previous tab
+* `Ctrl + Tab` : next tab
+* `Ctrl + Shift + Tab` : previous tab
+* `Ctrl + Page Down` : next tab
+* `Ctrl + Page Up` : previous tab
+
+## Moving tabs
+
+**v.3.6+**
+
+* `Ctrl + Shift + Page Down` : move tab right
+* `Ctrl + Shift + Page Up` : move tab left
 
 ## Navigating between files
 
@@ -83,7 +92,7 @@ You can [assign your own keyboard shortcuts](Customizing-keyboard-shortcuts.md).
 
 Tab commands:
 
-* `CmdNextTab`, `CmdPrevTab`
+* `CmdNextTab`, `CmdPrevTab`, `CmdNextTabSmart`, `CmdPrevTabSmart`
 
 Zooming and view commands:
 
