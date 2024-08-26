@@ -599,7 +599,7 @@ func copyDocsToWebsite() {
 	copyFilesExtsToNormalizeNL = []string{".md", ".css"}
 	copyFileMustOverwrite = true
 	copyFilesRecurMust(dstDir, srcDir)
-	files := []string{"notion.css", "sumatra.css"}
+	files := []string{"notion.css", "sumatra.css", "gen_toc.js"}
 	for _, name := range files {
 		srcPath := filepath.Join("docs", "www", name)
 		dstPath := filepath.Join(websiteDir, "server", "www", name)
