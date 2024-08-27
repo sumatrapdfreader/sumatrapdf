@@ -1293,6 +1293,7 @@ fr:&Surligner
 ga:&Aibhsigh
 gl:&Resaltado
 he:בולט
+hi:&उजागर करें
 hr:&Istakni
 hu:&Kiemelés
 id:Menyorot
@@ -2321,6 +2322,7 @@ fr:Supprimer de l'historique
 ga:&Bain ón stair
 gl:Elimina&r do historial
 he:מחק מההסטוריה
+hi:&इतिहास से हटाएँ
 hr:&Ukloni iz povijesti
 hu:&Eltávolítás a listából
 id:&Hapus dari Riwayat
@@ -2734,6 +2736,7 @@ fr:&Rayer
 ga:&Leag Amach
 gl:Ri&scado
 he:קו חוצה
+hi:&काटें
 hr:Za&crtati
 hu:Kihúzás
 id:Coret
@@ -2891,6 +2894,7 @@ fr:&Traduire avec Google
 ga:&Aistrigh le Google é
 gl:&Traducido con Google
 he:תרגם באמצעות google
+hi:&Google के साथ अनुवाद करें
 hr:&Prevedi sa Google-om
 hu:Fordítsd le a Google-el
 id:&Terjemahkan dengan Google
@@ -15393,6 +15397,7 @@ fr:Sauvegarder les annotations dans le PDF existant
 ga:Cuir na nótaí mínithe i dtaisce sa PDF atá ann
 gl:Gardar anotacións ó PDF existente
 he:שמור הערות במסמך PDF קיים
+hi:मौजूदा PDF में नोट करें
 hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
 id:Simpan catatan ke PDF terkini
@@ -15688,6 +15693,7 @@ fr:Enregistrer les modifications dans le PDF existant
 ga:Cuir na hathruithe i dtaisce in PDF atá ann
 gl:Gardar cambios nun PDF existente
 he:קיים PDF שמור שינויים במסמך
+hi:मौजूदा PDF में परिवर्तन करें
 hr:Spremi promjene u postojeći PDF
 hu:Változások mentése a meglévő PDF-be
 id:Simpan perubahan ke PDF terkini
@@ -18210,6 +18216,7 @@ fr:Merci ! SumatraPDF a été installé.
 ga:Go raibh maith agat! Suiteáladh SumatraPDF.
 gl:Parabéns! Xa tes SumatraPDF instalado.
 he:התקנת SumatraPDF הושלמה.
+hi:धन्यवाद! SumatraPDF डल गया है
 hr:Hvala Vam! SumatraPDF je instaliran.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 id:Terima kasih. SumatraPDF telah berhasil terinstal.
