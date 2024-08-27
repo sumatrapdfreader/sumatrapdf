@@ -4,7 +4,7 @@ There are many ways to navigate around the document.
 
 ## Scrolling with keyboard
 
-Below `Up`, `Down`, `Left`, `Right` refers to arrow keys.
+`Up`, `Down`, `Left`, `Right` refers to arrow keys.
 
 * `k`, `j`, `h`, `l` : scroll up / down / left / right
 * `Up`, `Down` : scroll up / down
@@ -14,6 +14,36 @@ Below `Up`, `Down`, `Left`, `Right` refers to arrow keys.
 * `Space`, `Shift + Space` : scroll forward / backward by a page
 * `Home`, `End` : go to first / last page
 * `g`, `Ctrl + g` : go to page (text field in toolbar or dialog if toolbar not shown)
+
+## Scrolling with mouse and touch pad
+
+* click on scrollbar to scroll up or down by page
+* `Shift` + click on scrollbar : scrolls to that position
+* scroll up / down with mouse scroll wheel or touch pad scrolling gesture
+* press `Alt` while scrolling : scrolls faster (by half page instead of by line)
+* mouse over scrollbar : scrolls faster (by half page instead of by line)
+
+# Zooming and changing view
+
+## With keyboard
+
+* `+`, `-` : zoom in / out
+* `Ctrl + +`, `Ctrl + -` : zoom in / out
+* `Ctrl + y` : dialog to set custom zoom level (between 8.3% and 6400%)
+* `c` : toggle continuous view
+* `Ctrl + 0` : set zoom to fit whole page (or pages in multi-column view)
+* `Ctrl + 1` : set 100% zoom
+* `Ctrl + 2` : set zoom to fit width of page (or pages in multi-column view)
+* `Ctrl + 3` : set zoom to fit content (like fit whole page but we auto-remove borders)
+* `Ctrl + 6` : single page view i.e. single column
+* `Ctrl + 7` : facing view i.e. 2 columns (pages)
+* `Ctrl + 8` : 2 columns (pages) but offset by one page
+
+## With mouse
+
+* `Ctrl` + mouse scroll wheel : zoom in / out
+* `Ctrl` + touch pad scroll gesture : zoom in / out
+* pinch zoom gesture on touch screen
 
 ## Navigating history
 
@@ -45,36 +75,6 @@ Actions that add navigation point:
 
 * `Shift + Control + Right` : go to next file in current folder
 * `Shift + Control + Left` : go to previous file in current folder
-
-## Scrolling with mouse and touch pad
-
-* click on scrollbar to scroll up or down by page
-* `Shift` + click on scrollbar : scrolls to that position
-* scroll up / down with mouse scroll wheel or touch pad scrolling gesture
-* press `Alt` while scrolling : scrolls faster (by half page instead of by line)
-* mouse over scrollbar : scrolls faster (by half page instead of by line)
-
-# Zooming and changing view
-
-## With keyboard
-
-* `+`, `-` : zoom in / out
-* `Ctrl + +`, `Ctrl + -` : zoom in / out
-* `Ctrl + y` : dialog to set custom zoom level (between 8.3% and 6400%)
-* `c` : toggle continuous view
-* `Ctrl + 0` : set zoom to fit whole page (or pages in multi-column view)
-* `Ctrl + 1` : set 100% zoom
-* `Ctrl + 2` : set zoom to fit width of page (or pages in multi-column view)
-* `Ctrl + 3` : set zoom to fit content (like fit whole page but we auto-remove borders)
-* `Ctrl + 6` : single page view i.e. single column
-* `Ctrl + 7` : facing view i.e. 2 columns (pages)
-* `Ctrl + 8` : 2 columns (pages) but offset by one page
-
-## With mouse
-
-* `Ctrl` + mouse scroll wheel : zoom in / out
-* `Ctrl` + touch pad scroll gesture : zoom in / out
-* pinch zoom gesture on touch screen
 
 # Related commands
 
