@@ -1918,6 +1918,10 @@ fz_run_display_list(fz_context *ctx, fz_display_list *list, fz_device *dev, fz_m
 			empty = fz_is_empty_rect(fz_intersect_rect(trans_rect, scissor));
 		}
 
+		/* clipped starts out as 0. It only goes non-zero here if we move inside
+		 * an 'empty' region. Whenever clipped is non zero, or we are in an empty
+		 * region, we therefore may need to increment clipped according to the
+		 * nesting. */
 		if (clipped || empty)
 		{
 			switch (n.cmd)
@@ -1931,6 +1935,13 @@ fz_run_display_list(fz_context *ctx, fz_display_list *list, fz_device *dev, fz_m
 			case FZ_CMD_BEGIN_GROUP:
 				clipped++;
 				continue;
+			case FZ_CMD_BEGIN_STRUCTURE:
+			case FZ_CMD_END_STRUCTURE:
+			case FZ_CMD_BEGIN_METATEXT:
+			case FZ_CMD_END_METATEXT:
+				/* These may not nest as nicely as we'd like. Just ignore them for
+				 * the purposes of clipping. */
+				break;
 			case FZ_CMD_POP_CLIP:
 			case FZ_CMD_END_GROUP:
 				if (!clipped)

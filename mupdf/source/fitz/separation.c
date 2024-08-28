@@ -441,7 +441,7 @@ fz_copy_pixmap_area_converting_seps(fz_context *ctx, fz_pixmap *src, fz_pixmap *
 		/* Now map the colorants down. */
 		n = fz_colorspace_n(ctx, src->colorspace);
 
-		fz_find_color_converter(ctx, &cc, src->colorspace, dst->colorspace, proof_cs, color_params);
+		fz_find_color_converter(ctx, &cc, src->colorspace, dst->colorspace, NULL, proof_cs, color_params);
 
 		fz_try(ctx)
 		{
@@ -1192,4 +1192,52 @@ fz_separation_equivalent(fz_context *ctx,
 	memset(colors, 0, sizeof(float) * fz_colorspace_n(ctx, seps->cs[i]));
 	colors[seps->cs_pos[i]] = 1;
 	fz_convert_color(ctx, seps->cs[i], colors, dst_cs, convert, prf, color_params);
+}
+
+static void
+convert_by_copying_separations(fz_context *ctx, fz_color_converter *cc, const float *src, float *dst)
+{
+	int i, o;
+	int n = cc->dst_n;
+	fz_separations *dseps = (fz_separations *)cc->opaque;
+
+	for (i = 0; i < n; i++)
+		dst[i] = 0;
+
+	n = dseps->num_separations;
+	o = cc->ds->n;
+	for (i = 0; i < n; i++)
+		if (dseps->cs[i] == cc->ss)
+			dst[o+i] = src[dseps->cs_pos[i]];
+}
+
+int
+fz_init_separation_copy_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *ss, fz_colorspace *ds, fz_separations *dseps, fz_colorspace *is, fz_color_params params)
+{
+	int i, n;
+
+	/* No idea how to cope with intermediate space here. Bale. */
+	if (is != NULL && is != ss)
+		return 0;
+
+	/* If all the separations for ss are catered for in dseps, we can just copy the values. */
+	n = 0;
+	for (i = 0; i < dseps->num_separations; i++)
+	{
+		if (dseps->cs[i] == ss)
+			n++;
+	}
+
+	/* If all of the components of ss were found, we're happy. (We assume the destination space
+	 * doesn't have any component twice.) */
+	if (n != ss->n)
+		return 0;
+
+	cc->ss = ss;
+	cc->ss_via = NULL;
+	cc->ds = ds;
+	cc->opaque = dseps;
+	cc->convert = convert_by_copying_separations;
+
+	return 1;
 }

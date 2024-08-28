@@ -274,7 +274,10 @@ Avoid using 'get' as this is a meaningless and redundant filler word.
 
 These words are reserved for reference counting schemes:
 
-- **new**, **create**, **add**, **find**, **load**, **open**, **keep** - return objects that you are responsible for freeing.
+..
+    See scripts/wrap/cpp.py:function_name_implies_kept_references()
+
+- **new**, **create**, **add**, **find**, **load**, **open**, **keep**, **read**, **parse**, **graft**, **copy**, **deep_copy** - return objects that you are responsible for freeing.
 - **drop** - relinquish ownership of the object passed in.
 
 When searching for an object or value, the name used depends on whether returning the value is passing ownership:

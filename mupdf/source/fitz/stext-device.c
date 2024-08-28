@@ -149,6 +149,7 @@ const char *fz_stext_options_usage =
 	"\tdehyphenate: attempt to join up hyphenated words\n"
 	"\tuse-cid-for-unknown-unicode: guess unicode from cid if normal mapping fails\n"
 	"\tmediabox-clip=no: include characters outside mediabox\n"
+	"\tstructured=no: don't collect structure data\n"
 	"\n";
 
 /* Find the current actualtext, if any. Will abort if dev == NULL. */
@@ -213,35 +214,71 @@ fz_new_stext_page(fz_context *ctx, fz_rect mediabox)
 	return page;
 }
 
+static void
+drop_run(fz_context *ctx, fz_stext_block *block)
+{
+	fz_stext_line *line;
+	fz_stext_char *ch;
+	while (block)
+	{
+		switch (block->type)
+		{
+		case FZ_STEXT_BLOCK_IMAGE:
+			fz_drop_image(ctx, block->u.i.image);
+			break;
+		case FZ_STEXT_BLOCK_TEXT:
+			for (line = block->u.t.first_line; line; line = line->next)
+				for (ch = line->first_char; ch; ch = ch->next)
+					fz_drop_font(ctx, ch->font);
+			break;
+		case FZ_STEXT_BLOCK_STRUCT:
+			drop_run(ctx, block->u.s.down->first_block);
+			break;
+		default:
+			break;
+		}
+		block = block->next;
+	}
+}
+
 void
 fz_drop_stext_page(fz_context *ctx, fz_stext_page *page)
 {
 	if (page)
 	{
-		fz_stext_block *block;
-		fz_stext_line *line;
-		fz_stext_char *ch;
-		for (block = page->first_block; block; block = block->next)
-		{
-			if (block->type == FZ_STEXT_BLOCK_IMAGE)
-				fz_drop_image(ctx, block->u.i.image);
-			else
-				for (line = block->u.t.first_line; line; line = line->next)
-					for (ch = line->first_char; ch; ch = ch->next)
-						fz_drop_font(ctx, ch->font);
-		}
+		drop_run(ctx, page->first_block);
 		fz_drop_pool(ctx, page->pool);
 	}
 }
 
+/*
+ * This adds a new block at the end of the page. This should not be used
+ * to add 'struct' blocks to the page as those have to be added internally,
+ * with more complicated pointer setup.
+ */
 static fz_stext_block *
 add_block_to_page(fz_context *ctx, fz_stext_page *page)
 {
 	fz_stext_block *block = fz_pool_alloc(ctx, page->pool, sizeof *page->first_block);
 	block->bbox = fz_empty_rect; /* Fixes bug 703267. */
 	block->prev = page->last_block;
-	if (!page->first_block)
-		page->first_block = page->last_block = block;
+	if (page->last_struct)
+	{
+		if (page->last_struct->last_block)
+		{
+			block->prev = page->last_struct->last_block;
+			block->prev->next = block;
+			page->last_struct->last_block = block;
+		}
+		else
+			page->last_struct->last_block = page->last_struct->first_block = block;
+	}
+	else if (!page->last_block)
+	{
+		page->last_block = block;
+		if (!page->first_block)
+			page->first_block = block;
+	}
 	else
 	{
 		page->last_block->next = block;
@@ -478,7 +515,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	}
 
 	/* Find current position to enter new text. */
-	cur_block = page->last_block;
+	cur_block = page->last_struct ? page->last_struct->last_block : page->last_block;
 	if (cur_block && cur_block->type != FZ_STEXT_BLOCK_TEXT)
 		cur_block = NULL;
 	cur_line = cur_block ? cur_block->u.t.last_line : NULL;
@@ -562,7 +599,12 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 						add_space = 1;
 					new_line = 0;
 				}
-
+				else if (spacing < 0 && spacing > -SPACE_MAX_DIST)
+				{
+					/* Motion is in line, but negative. We've probably got overlapping
+					 * chars here. Live with it. */
+					new_line = 0;
+				}
 				else if (spacing > 0 && spacing < SPACE_MAX_DIST)
 				{
 					bidi = 3; /* mark line as visual */
@@ -584,6 +626,12 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 				if (fabsf(spacing) < SPACE_DIST)
 				{
 					/* Motion is in line and small enough to ignore. */
+					new_line = 0;
+				}
+				else if (spacing < 0 && spacing > -SPACE_MAX_DIST)
+				{
+					/* Motion is in line, but negative. We've probably got overlapping
+					 * chars here. Live with it. */
 					new_line = 0;
 				}
 				else if (spacing > 0 && spacing < SPACE_MAX_DIST)
@@ -1328,6 +1376,8 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_DEHYPHENATE;
 	if (fz_has_option(ctx, string, "preserve-spans", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_PRESERVE_SPANS;
+	if (fz_has_option(ctx, string, "structured", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_COLLECT_STRUCTURE;
 	if (fz_has_option(ctx, string, "use-cid-for-unknown-unicode", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_USE_CID_FOR_UNKNOWN_UNICODE;
 
@@ -1359,6 +1409,181 @@ fz_stext_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int eve
 	fz_stext_stroke_path(ctx, dev, path, NULL, ctm, cs, color, alpha, cp);
 }
 
+static void
+new_stext_struct(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, fz_structure standard, const char *raw)
+{
+	fz_stext_struct *str;
+	size_t z;
+
+	if (raw == NULL)
+		raw = "";
+	z = strlen(raw);
+
+	str = fz_pool_alloc(ctx, page->pool, sizeof(*str) + z);
+	str->first_block = NULL;
+	str->last_block = NULL;
+	str->standard = standard;
+	str->parent = page->last_struct;
+	str->up = block;
+	memcpy(str->raw, raw, z+1);
+
+	block->u.s.down = str;
+}
+
+static void
+fz_stext_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int idx)
+{
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_stext_page *page = tdev->page;
+	fz_stext_block *block, *le, *gt, *newblock;
+
+	/* Find a pointer to the last block. */
+	if (page->last_block)
+	{
+		block = page->last_block;
+	}
+	else if (page->last_struct)
+	{
+		block = page->last_struct->last_block;
+	}
+	else
+	{
+		block = page->first_block;
+	}
+
+	/* So block is somewhere in the content chain. Let's try and find:
+	 *   le = the struct node <= idx before block in the content chain.
+	 *   ge = the struct node >= idx after block in the content chain.
+	 * Search backwards to start with.
+	 */
+	gt = NULL;
+	le = block;
+	while (le)
+	{
+		if (le->type == FZ_STEXT_BLOCK_STRUCT)
+		{
+			if (le->u.s.index > idx)
+				gt = le;
+			if (le->u.s.index <= idx)
+				break;
+		}
+		le = le->prev;
+	}
+	/* The following loop copes with finding gt (the smallest block with an index higher
+	 * than we want) if we haven't found it already. The while loop in here was designed
+	 * to cope with 'block' being in the middle of a list. In fact, the way the code is
+	 * currently, block will always be at the end of a list, so the while won't do anything.
+	 * But I'm loathe to remove it in case we ever change this code to start from wherever
+	 * we did the last insertion. */
+	if (gt == NULL)
+	{
+		gt = block;
+		while (gt)
+		{
+			if (gt->type == FZ_STEXT_BLOCK_STRUCT)
+			{
+				if (gt->u.s.index <= idx)
+					le = gt;
+				if (gt->u.s.index >= idx)
+					break;
+			}
+			block = gt;
+			gt = gt->next;
+		}
+	}
+
+	if (le && le->u.s.index == idx)
+	{
+		/* We want to move down into the le block. Does it have a struct
+		 * attached yet? */
+		if (le->u.s.down == NULL)
+		{
+			/* No. We need to create a new struct node. */
+			new_stext_struct(ctx, page, le, standard, raw);
+		}
+		else if (le->u.s.down->standard != standard ||
+				(raw == NULL && le->u.s.down->raw[0] != 0) ||
+				(raw != NULL && strcmp(raw, le->u.s.down->raw) != 0))
+		{
+			/* Yes, but it doesn't match the one we expect! */
+			fz_warn(ctx, "Mismatched structure type!");
+		}
+		page->last_struct = le->u.s.down;
+		page->last_block = le->u.s.down->last_block;
+
+		return;
+	}
+
+	/* We are going to need to create a new block. Create a complete unlinked one here. */
+	newblock = fz_pool_alloc(ctx, page->pool, sizeof *page->first_block);
+	newblock->bbox = fz_empty_rect;
+	newblock->prev = NULL;
+	newblock->next = NULL;
+	newblock->type = FZ_STEXT_BLOCK_STRUCT;
+	newblock->u.s.index = idx;
+	newblock->u.s.down = NULL;
+	/* If this throws, we leak newblock but it's within the pool, so it doesn't matter. */
+	new_stext_struct(ctx, page, newblock, standard, raw);
+
+	/* So now we just need to link it in somewhere. */
+	if (gt)
+	{
+		/* Link it in before gt. */
+		newblock->prev = gt->prev;
+		if (gt->prev)
+			gt->prev->next = newblock;
+		gt->prev = newblock;
+		newblock->next = gt;
+	}
+	else if (block)
+	{
+		/* Link it in at the end of the list (i.e. after 'block') */
+		newblock->prev = block;
+		block->next = newblock;
+	}
+	else if (page->last_struct)
+	{
+		/* We have no blocks at all at this level. */
+		page->last_struct->first_block = newblock;
+		page->last_struct->last_block = newblock;
+	}
+	else
+	{
+		/* We have no blocks at ANY level. */
+		page->first_block = newblock;
+	}
+	/* Whereever we linked it in, that's where we want to continue adding content. */
+	page->last_struct = newblock->u.s.down;
+	page->last_block = NULL;
+}
+
+static void
+fz_stext_end_structure(fz_context *ctx, fz_device *dev)
+{
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_stext_page *page = tdev->page;
+	fz_stext_struct *str = page->last_struct;
+
+	if (str == NULL)
+	{
+		fz_warn(ctx, "Structure out of sync");
+		return;
+	}
+
+	page->last_struct = str->parent;
+	if (page->last_struct == NULL)
+	{
+		page->last_block = page->first_block;
+		/* Yuck */
+		while (page->last_block->next)
+			page->last_block = page->last_block->next;
+	}
+	else
+	{
+		page->last_block = page->last_struct->last_block;
+	}
+}
+
 fz_device *
 fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options *opts)
 {
@@ -1383,7 +1608,14 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->super.fill_image_mask = fz_stext_fill_image_mask;
 
 	if (opts)
+	{
 		dev->flags = opts->flags;
+		if (opts->flags & FZ_STEXT_COLLECT_STRUCTURE)
+		{
+			dev->super.begin_structure = fz_stext_begin_structure;
+			dev->super.end_structure = fz_stext_end_structure;
+		}
+	}
 	dev->page = page;
 	dev->pen.x = 0;
 	dev->pen.y = 0;

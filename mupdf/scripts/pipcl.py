@@ -1465,7 +1465,7 @@ def build_extension(
         debug2 = ''
         if debug:
             debug2 = '/Zi'  # Generate .pdb.
-            # debug2 = '/Z7'    # Embded debug info in .obj files.
+            # debug2 = '/Z7'    # Embed debug info in .obj files.
 
         # As of 2023-08-23, it looks like VS tools create slightly
         # .dll's each time, even with identical inputs.
@@ -1487,7 +1487,7 @@ def build_extension(
 
                     # Input/output files:
                     {T}{path_cpp}               # /Tp specifies C++ source file.
-                    /Fo{path_obj}               # Output file.
+                    /Fo{path_obj}               # Output file. codespell:ignore
 
                     # Include paths:
                     {includes_text}
@@ -1780,7 +1780,7 @@ def git_items( directory, submodules=False):
     ret = []
     for path in text.decode('utf8').strip().split( '\n'):
         path2 = os.path.join(directory, path)
-        # Sometimes git ls-files seems to list empty/non-existant directories
+        # Sometimes git ls-files seems to list empty/non-existent directories
         # within submodules.
         #
         if not os.path.exists(path2):
@@ -1826,7 +1826,7 @@ def run( command, capture=False, check=1, verbose=1):
     nl = '\n'
     if verbose:
         log1( f'Running: {nl.join(lines)}')
-    sep = ' ' if windows() else '\\\n'
+    sep = ' ' if windows() else ' \\\n'
     command2 = sep.join( lines)
     cp = subprocess.run(
             command2,
@@ -1878,8 +1878,8 @@ class PythonFlags:
 
         if windows():
             wp = wdev.WindowsPython()
-            self.includes = f'/I"{wp.root}\\include"'
-            self.ldflags = f'/LIBPATH:"{wp.root}\\libs"'
+            self.includes = f'/I"{wp.include}"'
+            self.ldflags = f'/LIBPATH:"{wp.libs}"'
 
         elif pyodide():
             _include_dir = os.environ[ 'PYO3_CROSS_INCLUDE_DIR']
@@ -2069,49 +2069,63 @@ def run_if( command, out, *prerequisites):
         >>> out = 'run_if_test_out'
         >>> if os.path.exists( out):
         ...     os.remove( out)
+        >>> if os.path.exists( f'{out}.cmd'):
+        ...     os.remove( f'{out}.cmd')
         >>> run_if( f'touch {out}', out)
+        pipcl.py: run_if(): Running command because: File does not exist: 'run_if_test_out'
+        pipcl.py: run(): Running: touch run_if_test_out
         True
 
     If we repeat, the output file will be up to date so the command is not run:
 
         >>> run_if( f'touch {out}', out)
+        pipcl.py: run_if(): Not running command because up to date: 'run_if_test_out'
 
     If we change the command, the command is run:
 
         >>> run_if( f'touch  {out}', out)
+        pipcl.py: run_if(): Running command because: Command has changed
+        pipcl.py: run(): Running: touch  run_if_test_out
         True
 
     If we add a prerequisite that is newer than the output, the command is run:
 
+        >>> time.sleep(1)
         >>> prerequisite = 'run_if_test_prerequisite'
         >>> run( f'touch {prerequisite}')
-        >>> run_if( f'touch {out}', out, prerequisite)
+        pipcl.py: run(): Running: touch run_if_test_prerequisite
+        >>> run_if( f'touch  {out}', out, prerequisite)
+        pipcl.py: run_if(): Running command because: Prerequisite is new: 'run_if_test_prerequisite'
+        pipcl.py: run(): Running: touch  run_if_test_out
         True
 
     If we repeat, the output will be newer than the prerequisite, so the
     command is not run:
 
-        >>> run_if( f'touch {out}', out, prerequisite)
+        >>> run_if( f'touch  {out}', out, prerequisite)
+        pipcl.py: run_if(): Not running command because up to date: 'run_if_test_out'
     '''
     doit = False
+    cmd_path = f'{out}.cmd'
+
     if not doit:
         out_mtime = _fs_mtime( out)
         if out_mtime == 0:
             doit = f'File does not exist: {out!r}'
 
-    cmd_path = f'{out}.cmd'
-    if os.path.isfile( cmd_path):
-        with open( cmd_path) as f:
-            cmd = f.read()
-    else:
-        cmd = None
-    if command != cmd:
-        if cmd is None:
-            doit = 'No previous command stored'
+    if not doit:
+        if os.path.isfile( cmd_path):
+            with open( cmd_path) as f:
+                cmd = f.read()
         else:
-            doit = f'Command has changed'
-            if 0:
-                doit += f': {cmd!r} => {command!r}'
+            cmd = None
+        if command != cmd:
+            if cmd is None:
+                doit = 'No previous command stored'
+            else:
+                doit = f'Command has changed'
+                if 0:
+                    doit += f': {cmd!r} => {command!r}'
 
     if not doit:
         # See whether any prerequisites are newer than target.
@@ -2227,13 +2241,13 @@ def _fs_mtime( filename, default=0):
     except OSError:
         return default
 
+
 def _assert_version_pep_440(version):
     assert re.match(
                 r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$',
                 version,
             ), \
             f'Bad version: {version!r}.'
-
 
 
 g_verbose = int(os.environ.get('PIPCL_VERBOSE', '1'))

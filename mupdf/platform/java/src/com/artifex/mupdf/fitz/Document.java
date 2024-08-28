@@ -244,4 +244,6 @@ public class Document
 	public boolean isPDF() {
 		return false;
 	}
+
+	public native PDFDocument asPDF();
 }

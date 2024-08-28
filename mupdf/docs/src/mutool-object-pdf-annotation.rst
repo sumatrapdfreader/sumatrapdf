@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
 ----
@@ -115,8 +115,6 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
 .. method:: setAppearance(appearance, state, transform, displayList)
 
-
-
     Set the annotation appearance stream for the given appearance. The desired appearance is given as a transform along with a display list.
 
     :arg appearance: `String` Appearance stream ("N", "R" or "D").
@@ -132,8 +130,6 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
 .. method:: setAppearance(appearance, state, transform, bbox, resources, contents)
 
-
-
     Set the annotation appearance stream for the given appearance. The desired appearance is given as a transform along with a bounding box, a :title:`PDF` dictionary of resources and a content stream.
 
     :arg appearance: `String` Appearance stream ("N", "R" or "D").
@@ -148,6 +144,21 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
     .. code-block:: javascript
 
         annotation.setAppearance("N", null, mupdf.Matrix.identity, [0,0,100,100], resources, contents);
+
+.. method:: setAppearance(image)
+
+
+
+    Set a stamp annotation's appearance to that of an image.
+
+    :arg image: `Image` containing the desired appearance.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var img = new Image("photo.jpg");
+        annotation.setAppearance(img);
 
 
 **Appearance stream values**

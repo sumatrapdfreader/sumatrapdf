@@ -273,6 +273,7 @@ int Memento_failAt(int);
 int Memento_failThisEvent(void);
 void Memento_listBlocks(void);
 void Memento_listNewBlocks(void);
+void Memento_listLargeBlocks(void);
 void Memento_listPhasedBlocks(void);
 size_t Memento_setMax(size_t);
 void Memento_stats(void);
@@ -380,6 +381,7 @@ void Memento_showHash(unsigned int hash);
 #define Memento_failThisEvent()            0
 #define Memento_listBlocks()               do {} while (0)
 #define Memento_listNewBlocks()            do {} while (0)
+#define Memento_listLargeBlocks()          do {} while (0)
 #define Memento_listPhasedBlocks()         do {} while (0)
 #define Memento_setMax(A)                  0
 #define Memento_stats()                    do {} while (0)

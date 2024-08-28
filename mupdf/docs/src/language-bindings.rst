@@ -121,6 +121,24 @@ instead of MuPDF C structs:
 
 * Class-aware functions are declared in `mupdf/platform/c++/include/mupdf/classes2.h`.
 
+*
+  Wrapper classes for reference-counted MuPDF structs:
+
+  *
+    The C++ wrapper classes will have a public `m_internal` member that is a
+    pointer to the underlying MuPDF struct.
+
+  *
+    If a MuPDF C function returns a null pointer to a MuPDF struct, the
+    class-aware C++ wrapper will return an instance of the wrapper class with a
+    null `m_internal` member.
+
+  *
+    The C++ wrapper class will have an `operator bool()` that returns true if
+    the `m_internal` member is non-null.
+
+    [Introduced 2024-07-08.]
+
 Usually it is more convenient to use the class-aware C++ API rather than the
 low-level C++ API.
 

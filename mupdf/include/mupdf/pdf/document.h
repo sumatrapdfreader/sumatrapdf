@@ -202,6 +202,26 @@ pdf_document *pdf_specifics(fz_context *ctx, fz_document *doc);
 pdf_document *pdf_document_from_fz_document(fz_context *ctx, fz_document *ptr);
 pdf_page *pdf_page_from_fz_page(fz_context *ctx, fz_page *ptr);
 
+/*
+	Get a pdf_document handle from an fz_document handle.
+
+	This is superfically similar to pdf_document_from_fz_document
+	(and the older pdf_specifics).
+
+	For fz_documents that are actually pdf_documents, this will return
+	a kept version of the same pointer, just cast differently.
+
+	For fz_documents that have a pdf_document representation internally,
+	then you may get a kept version of a different pointer.
+
+	For fz_documents that have no pdf_document representation internally,
+	this will return NULL.
+
+	Note that this returns a kept pointer that the caller is responsible
+	for freeing, unlike pdf_specifics or pdf_document_from_fz_document.
+*/
+pdf_document *fz_new_pdf_document_from_fz_document(fz_context *ctx, fz_document *ptr);
+
 int pdf_needs_password(fz_context *ctx, pdf_document *doc);
 
 /*
@@ -218,7 +238,7 @@ int pdf_needs_password(fz_context *ctx, pdf_document *doc);
 int pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pw);
 
 int pdf_has_permission(fz_context *ctx, pdf_document *doc, fz_permission p);
-int pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *ptr, int size);
+int pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *ptr, size_t size);
 
 fz_outline *pdf_load_outline(fz_context *ctx, pdf_document *doc);
 

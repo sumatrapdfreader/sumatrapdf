@@ -629,6 +629,12 @@ pdf_bound_page(fz_context *ctx, pdf_page *page, fz_box_type box)
 	return fz_transform_rect(rect, page_ctm);
 }
 
+static fz_rect
+pdf_bound_page_imp(fz_context *ctx, fz_page *page, fz_box_type box)
+{
+	return pdf_bound_page(ctx, (pdf_page*)page, box);
+}
+
 void
 pdf_set_page_box(fz_context *ctx, pdf_page *page, fz_box_type box, fz_rect rect)
 {
@@ -664,6 +670,12 @@ fz_link *
 pdf_load_links(fz_context *ctx, pdf_page *page)
 {
 	return fz_keep_link(ctx, page->links);
+}
+
+static fz_link *
+pdf_load_links_imp(fz_context *ctx, fz_page *page)
+{
+	return pdf_load_links(ctx, (pdf_page*)page);
 }
 
 pdf_obj *
@@ -944,6 +956,16 @@ scan_page_seps(fz_context *ctx, pdf_obj *res, fz_separations **seps, res_finder_
 		fn(ctx, seps, pdf_dict_get(ctx, obj, PDF_NAME(ColorSpace)), clearme);
 	}
 
+	dict = pdf_dict_get(ctx, res, PDF_NAME(Pattern));
+	n = pdf_dict_len(ctx, dict);
+	for (i = 0; i < n; i++)
+	{
+		pdf_obj *obj2;
+		obj = pdf_dict_get_val(ctx, dict, i);
+		obj2 = pdf_dict_get(ctx, obj, PDF_NAME(Shading));
+		fn(ctx, seps, pdf_dict_get(ctx, obj2, PDF_NAME(ColorSpace)), clearme);
+	}
+
 	dict = pdf_dict_get(ctx, res, PDF_NAME(XObject));
 	n = pdf_dict_len(ctx, dict);
 	for (i = 0; i < n; i++)
@@ -1009,8 +1031,9 @@ pdf_page_uses_overprint(fz_context *ctx, pdf_page *page)
 }
 
 static void
-pdf_drop_page_imp(fz_context *ctx, pdf_page *page)
+pdf_drop_page_imp(fz_context *ctx, fz_page *page_)
 {
+	pdf_page *page = (pdf_page*)page_;
 	pdf_annot *widget;
 	pdf_annot *annot;
 	pdf_link *link;
@@ -1041,6 +1064,46 @@ pdf_drop_page_imp(fz_context *ctx, pdf_page *page)
 	pdf_drop_obj(ctx, page->obj);
 }
 
+static void pdf_run_page_contents_imp(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+{
+	pdf_run_page_contents(ctx, (pdf_page*)page, dev, ctm, cookie);
+}
+
+static void pdf_run_page_annots_imp(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+{
+	pdf_run_page_annots(ctx, (pdf_page*)page, dev, ctm, cookie);
+}
+
+static void pdf_run_page_widgets_imp(fz_context *ctx, fz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+{
+	pdf_run_page_widgets(ctx, (pdf_page*)page, dev, ctm, cookie);
+}
+
+static fz_transition * pdf_page_presentation_imp(fz_context *ctx, fz_page *page, fz_transition *transition, float *duration)
+{
+	return pdf_page_presentation(ctx, (pdf_page*)page, transition, duration);
+}
+
+static fz_separations * pdf_page_separations_imp(fz_context *ctx, fz_page *page)
+{
+	return pdf_page_separations(ctx, (pdf_page*)page);
+}
+
+static int pdf_page_uses_overprint_imp(fz_context *ctx, fz_page *page)
+{
+	return pdf_page_uses_overprint(ctx, (pdf_page*)page);
+}
+
+static fz_link * pdf_create_link_imp(fz_context *ctx, fz_page *page, fz_rect bbox, const char *uri)
+{
+	return pdf_create_link(ctx, (pdf_page*)page, bbox, uri);
+}
+
+static void pdf_delete_link_imp(fz_context *ctx, fz_page *page, fz_link *link)
+{
+	pdf_delete_link(ctx, (pdf_page*)page, link);
+}
+
 static pdf_page *
 pdf_new_page(fz_context *ctx, pdf_document *doc)
 {
@@ -1048,17 +1111,17 @@ pdf_new_page(fz_context *ctx, pdf_document *doc)
 
 	page->doc = doc; /* typecast alias for page->super.doc */
 
-	page->super.drop_page = (fz_page_drop_page_fn*)pdf_drop_page_imp;
-	page->super.load_links = (fz_page_load_links_fn*)pdf_load_links;
-	page->super.bound_page = (fz_page_bound_page_fn*)pdf_bound_page;
-	page->super.run_page_contents = (fz_page_run_page_fn*)pdf_run_page_contents;
-	page->super.run_page_annots = (fz_page_run_page_fn*)pdf_run_page_annots;
-	page->super.run_page_widgets = (fz_page_run_page_fn*)pdf_run_page_widgets;
-	page->super.page_presentation = (fz_page_page_presentation_fn*)pdf_page_presentation;
-	page->super.separations = (fz_page_separations_fn *)pdf_page_separations;
-	page->super.overprint = (fz_page_uses_overprint_fn *)pdf_page_uses_overprint;
-	page->super.create_link = (fz_page_create_link_fn *)pdf_create_link;
-	page->super.delete_link = (fz_page_delete_link_fn *)pdf_delete_link;
+	page->super.drop_page = pdf_drop_page_imp;
+	page->super.load_links = pdf_load_links_imp;
+	page->super.bound_page = pdf_bound_page_imp;
+	page->super.run_page_contents = pdf_run_page_contents_imp;
+	page->super.run_page_annots = pdf_run_page_annots_imp;
+	page->super.run_page_widgets = pdf_run_page_widgets_imp;
+	page->super.page_presentation = pdf_page_presentation_imp;
+	page->super.separations = pdf_page_separations_imp;
+	page->super.overprint = pdf_page_uses_overprint_imp;
+	page->super.create_link = pdf_create_link_imp;
+	page->super.delete_link = pdf_delete_link_imp;
 
 	page->obj = NULL;
 
