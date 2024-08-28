@@ -706,6 +706,9 @@ bool IsMainWindowValid(MainWindow* win) {
 }
 
 MainWindow* FindMainWindowByHwnd(HWND hwnd) {
+    if (!::IsWindow(hwnd)) {
+        return nullptr;
+    }
     for (MainWindow* win : gWindows) {
         if ((win->hwndFrame == hwnd) || ::IsChild(win->hwndFrame, hwnd)) {
             return win;
