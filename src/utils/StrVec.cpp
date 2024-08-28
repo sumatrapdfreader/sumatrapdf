@@ -183,8 +183,8 @@ char* StrVecPage::InsertAt(int idx, const char* s, int sLen) {
         // make space for idx
         u32* src = offsets;
         u32* dst = OffsetsForString(this, idx + 1);
-        size_t nToCopy = (nStrings - idx) * cbIndex;
-        memmove(dst, src, nToCopy);
+        int nToCopy = (nStrings - idx) * cbIndex;
+        memmove(dst, src, (size_t)nToCopy);
     }
 
     if (s) {
