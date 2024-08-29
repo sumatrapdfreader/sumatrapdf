@@ -18,6 +18,11 @@
 
 #include "utils/Log.h"
 
+struct EBookUI;
+EBookUI* GetEBookUI() {
+    return nullptr;
+}
+
 VOID PdfFilter::CleanUp() {
     logf("PdfFilter::Cleanup()\n");
     if (m_pdfEngine) {

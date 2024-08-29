@@ -135,6 +135,10 @@ static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool dele
 static void OnSidebarSplitterMove(Splitter::MoveEvent*);
 static void OnFavSplitterMove(Splitter::MoveEvent*);
 
+EBookUI* GetEBookUI() {
+    return &gGlobalPrefs->eBookUI;
+}
+
 LoadArgs::LoadArgs(const char* origPath, MainWindow* win) {
     this->fileArgs = ParseFileArgs(origPath);
     const char* cleanPath = origPath;

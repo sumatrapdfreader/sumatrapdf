@@ -70,6 +70,20 @@ struct FixedPageUI {
     bool hideScrollbars;
 };
 
+// customization options for eBookUI
+struct EBookUI {
+    // font size, default 8.0
+    float fontSize;
+    // default is 420
+    float layoutDx;
+    // default is 595
+    float layoutDy;
+    // if true, we ignore ebook's CSS
+    bool ignoreDocumentCSS;
+    // custom CSS. Might need to set IgnoreDocumentCSS = true
+    char* customCSS;
+};
+
 // customization options for Comic Book and images UI
 struct ComicBookUI {
     // top, right, bottom and left margin (in that order) between window
@@ -430,6 +444,8 @@ struct GlobalPrefs {
     float zoomIncrement;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
+    // customization options for eBookUI
+    EBookUI eBookUI;
     // customization options for Comic Book and images UI
     ComicBookUI comicBookUI;
     // customization options for CHM UI. If UseFixedPageUI is true,
@@ -519,6 +535,16 @@ static const FieldInfo gFixedPageUIFields[] = {
 static const StructInfo gFixedPageUIInfo = {sizeof(FixedPageUI), 8, gFixedPageUIFields,
                                             "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0Gra"
                                             "dientColors\0InvertColors\0HideScrollbars"};
+
+static const FieldInfo gEBookUIFields[] = {
+    {offsetof(EBookUI, fontSize), SettingType::Float, (intptr_t) "0"},
+    {offsetof(EBookUI, layoutDx), SettingType::Float, (intptr_t) "0"},
+    {offsetof(EBookUI, layoutDy), SettingType::Float, (intptr_t) "0"},
+    {offsetof(EBookUI, ignoreDocumentCSS), SettingType::Bool, false},
+    {offsetof(EBookUI, customCSS), SettingType::String, 0},
+};
+static const StructInfo gEBookUIInfo = {sizeof(EBookUI), 5, gEBookUIFields,
+                                        "FontSize\0LayoutDx\0LayoutDy\0IgnoreDocumentCSS\0CustomCSS"};
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
     {offsetof(WindowMargin, top), SettingType::Int, 0},
@@ -756,6 +782,8 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {(size_t)-1, SettingType::Comment, 0},
+    {offsetof(GlobalPrefs, eBookUI), SettingType::Struct, (intptr_t)&gEBookUIInfo},
+    {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, comicBookUI), SettingType::Struct, (intptr_t)&gComicBookUIInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, chmUI), SettingType::Struct, (intptr_t)&gChmUIInfo},
@@ -789,15 +817,15 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 71, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 73, gGlobalPrefsFields,
     "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
     "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0ReloadModifiedDocuments\0RememberOpene"
     "dFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowToolbar\0ShowFavorites\0ShowToc"
     "\0ShowLinks\0ShowStartPage\0SidebarDx\0SmoothScroll\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSi"
-    "ze\0UIFontSize\0UseSysColors\0UseTabs\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0ComicBookUI\0\0ChmUI\0\0Annotat"
-    "ions\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0\0Defau"
-    "ltPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpd"
-    "ateCheck\0OpenCountWeek\0\0"};
+    "ze\0UIFontSize\0UseSysColors\0UseTabs\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ChmUI"
+    "\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0\0Themes"
+    "\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0Ti"
+    "meOfLastUpdateCheck\0OpenCountWeek\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t) ""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t) ""},

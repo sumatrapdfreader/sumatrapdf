@@ -1898,29 +1898,6 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-#if 0
-const char* custom_css = R"(
-* {
-    background-color: #f3f3f3;
-    line-height: 1.3em;
-}
-@page{
-    margin:2em 2em;    
-}
-)";
-#endif
-
-const char* custom_css = nullptr;
-
-/*
-line-height: 2.5em;
-font-family: "Consolas";
-
-    line-height: 2.5em;
-    font-family: Consolas;
-
-*/
-
 // TODO: need to do stuff to support .txt etc.
 bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     auto ctx = Ctx();
@@ -1947,6 +1924,10 @@ bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI)
     return FinishLoading();
 }
 
+// is implemented in SumatraPDF.exe, PdfFilter and PdfPreview
+// TODO: allow setting per
+extern EBookUI* GetEBookUI();
+
 bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
@@ -1972,8 +1953,22 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         lfontDy = 8.f;
     }
 
-    if (custom_css) {
-        fz_set_user_css(ctx, custom_css);
+    auto eBookUI = GetEBookUI();
+    if (eBookUI) {
+        if (eBookUI->fontSize > 6 && eBookUI->fontSize < 30) {
+            lfontDy = eBookUI->fontSize;
+        }
+        if (eBookUI->layoutDx > 100) {
+            ldx = eBookUI->layoutDx;
+        }
+        if (eBookUI->layoutDy > 100) {
+            ldy = eBookUI->layoutDy;
+        }
+        if (eBookUI->customCSS) {
+            fz_set_user_css(ctx, eBookUI->customCSS);
+        }
+        bool useDocCss = !eBookUI->ignoreDocumentCSS;
+        fz_set_use_document_css(ctx, useDocCss);
     }
 
     float dx, dy, fontDy;

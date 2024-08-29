@@ -3,6 +3,14 @@ package main
 // ##### setting definitions for SumatraPDF #####
 
 var (
+	ebookUI = []*Field{
+		mkField("FontSize", Float, 0, "font size, default 8.0"),
+		mkField("LayoutDx", Float, 0, "default is 420"),
+		mkField("LayoutDy", Float, 0, "default is 595"),
+		mkField("IgnoreDocumentCSS", Bool, false, "if true, we ignore ebook's CSS"),
+		mkField("CustomCSS", String, nil, "custom CSS. Might need to set IgnoreDocumentCSS = true"),
+	}
+
 	theme = []*Field{
 		mkField("Name", String, "", "name of the theme"),
 		mkField("TextColor", Color, "", "text color"),
@@ -346,6 +354,9 @@ var (
 
 		mkStruct("FixedPageUI", fixedPageUI,
 			"customization options for PDF, XPS, DjVu and PostScript UI").setExpert(),
+		mkEmptyLine(),
+		mkStruct("EBookUI", ebookUI,
+			"customization options for eBookUI").setExpert(),
 		mkEmptyLine(),
 		mkStruct("ComicBookUI", comicBookUI,
 			"customization options for Comic Book and images UI").setExpert(),
