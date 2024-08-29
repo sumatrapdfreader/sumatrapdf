@@ -1469,6 +1469,14 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_Document_isUnencryptedPDF
 JNIEXPORT jstring JNICALL Java_com_artifex_mupdf_fitz_Document_formatLinkURI
   (JNIEnv *, jobject, jobject);
 
+/*
+ * Class:     com_artifex_mupdf_fitz_Document
+ * Method:    asPDF
+ * Signature: ()Lcom/artifex/mupdf/fitz/PDFDocument;
+ */
+JNIEXPORT jobject JNICALL Java_com_artifex_mupdf_fitz_Document_asPDF
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

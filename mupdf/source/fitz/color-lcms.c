@@ -423,7 +423,7 @@ fz_icc_transform_color(fz_context *ctx, fz_color_converter *cc, const float *src
 #else
 	uint16_t s16[FZ_MAX_COLORS];
 	uint16_t d16[FZ_MAX_COLORS];
-	int dn = cc->ds->n;
+	int dn = cc->dst_n;
 	int i;
 	if (cc->ss->type == FZ_COLORSPACE_LAB)
 	{

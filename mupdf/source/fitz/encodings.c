@@ -99,7 +99,27 @@ fz_unicode_from_glyph_name(const char *name)
 	p = strchr(buf, '.');
 	if (p) p[0] = 0;
 	p = strchr(buf, '_');
-	if (p) p[0] = 0;
+	if (p)
+	{
+		/* Hacky tests for alternative ligature names */
+		if (buf[0] == 'f')
+		{
+			if (!strcmp(buf, "f_f"))
+				strcpy(buf, "ff");
+			else if (!strcmp(buf, "f_f_i"))
+				strcpy(buf, "ffi");
+			else if (!strcmp(buf, "f_f_l"))
+				strcpy(buf, "ffl");
+			else if (!strcmp(buf, "f_i"))
+				strcpy(buf, "fi");
+			else if (!strcmp(buf, "f_l"))
+				strcpy(buf, "fl");
+			else
+				p[0] = 0;
+		}
+		else
+			p[0] = 0;
+	}
 
 	while (l <= r)
 	{

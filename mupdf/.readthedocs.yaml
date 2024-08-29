@@ -14,6 +14,8 @@ build:
     # nodejs: "16"
     # rust: "1.55"
     # golang: "1.17"
+  apt_packages:
+    - graphviz
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:

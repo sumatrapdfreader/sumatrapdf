@@ -1247,7 +1247,7 @@ static const fz_htdoc_format_t fz_htdoc_office =
 };
 
 static fz_document *
-office_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *zip)
+office_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *zip, void *state)
 {
 	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, zip, &fz_htdoc_office);
 }
@@ -1275,12 +1275,19 @@ static const char *office_mimetypes[] =
 	NULL
 };
 
+/* We are only ever 75% sure here, to allow a 'better' handler, such as sodochandler
+ * to override us by returning 100. */
 static int
-office_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *zip)
+office_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *zip, void **state, fz_document_recognize_state_free_fn **free_state)
 {
 	fz_archive *arch = NULL;
 	int ret = 0;
 	fz_xml *xml = NULL;
+
+	if (state)
+		*state = NULL;
+	if (free_state)
+		*free_state = NULL;
 
 	fz_var(arch);
 	fz_var(ret);
@@ -1301,7 +1308,7 @@ office_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler
 		if (xml)
 		{
 			if (fz_xml_find_dfs(xml, "rootfile", "media-type", "application/hwpml-package+xml"))
-				ret = 100; /* HWPX */
+				ret = 75; /* HWPX */
 			break;
 		}
 		xml = fz_try_parse_xml_archive_entry(ctx, arch, "_rels/.rels", 0);
@@ -1309,7 +1316,7 @@ office_recognize_doc_content(fz_context *ctx, const fz_document_handler *handler
 		{
 			if (fz_xml_find_dfs(xml, "Relationship", "Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"))
 			{
-				ret = 100; /* DOCX | PPTX | XLSX */
+				ret = 75; /* DOCX | PPTX | XLSX */
 			}
 			break;
 		}

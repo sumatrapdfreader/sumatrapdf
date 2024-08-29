@@ -208,6 +208,8 @@ xps_sample_gradient_stops(fz_context *ctx, xps_document *doc, fz_shade *shade, s
 	float offset, d;
 	int i, k;
 
+	shade->function = fz_malloc(ctx, sizeof(float) * 256 * 4);
+
 	k = 0;
 	for (i = 0; i < 256; i++)
 	{
@@ -217,10 +219,10 @@ xps_sample_gradient_stops(fz_context *ctx, xps_document *doc, fz_shade *shade, s
 
 		d = (offset - stops[k].offset) / (stops[k+1].offset - stops[k].offset);
 
-		shade->function[i][0] = lerp(stops[k].r, stops[k+1].r, d);
-		shade->function[i][1] = lerp(stops[k].g, stops[k+1].g, d);
-		shade->function[i][2] = lerp(stops[k].b, stops[k+1].b, d);
-		shade->function[i][3] = lerp(stops[k].a, stops[k+1].a, d);
+		shade->function[4*i + 0] = lerp(stops[k].r, stops[k+1].r, d);
+		shade->function[4*i + 1] = lerp(stops[k].g, stops[k+1].g, d);
+		shade->function[4*i + 2] = lerp(stops[k].b, stops[k+1].b, d);
+		shade->function[4*i + 3] = lerp(stops[k].a, stops[k+1].a, d);
 	}
 }
 
@@ -247,7 +249,7 @@ xps_draw_one_radial_gradient(fz_context *ctx, xps_document *doc, fz_matrix ctm,
 	shade->bbox = fz_infinite_rect;
 	shade->matrix = fz_identity;
 	shade->use_background = 0;
-	shade->use_function = 1;
+	shade->function_stride = 4;
 	shade->type = FZ_RADIAL;
 	shade->u.l_or_r.extend[0] = extend;
 	shade->u.l_or_r.extend[1] = extend;
@@ -289,7 +291,7 @@ xps_draw_one_linear_gradient(fz_context *ctx, xps_document *doc, fz_matrix ctm,
 	shade->bbox = fz_infinite_rect;
 	shade->matrix = fz_identity;
 	shade->use_background = 0;
-	shade->use_function = 1;
+	shade->function_stride = 4;
 	shade->type = FZ_LINEAR;
 	shade->u.l_or_r.extend[0] = extend;
 	shade->u.l_or_r.extend[1] = extend;

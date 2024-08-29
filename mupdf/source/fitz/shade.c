@@ -989,7 +989,7 @@ fz_process_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_rect scisso
 	painter.prepare = prepare;
 	painter.process = process;
 	painter.process_arg = process_arg;
-	painter.ncomp = (shade->use_function > 0 ? 1 : fz_colorspace_n(ctx, shade->colorspace));
+	painter.ncomp = (shade->function_stride > 0 ? 1 : fz_colorspace_n(ctx, shade->colorspace));
 
 	if (shade->type == FZ_FUNCTION_BASED)
 		fz_process_shade_type1(ctx, shade, ctm, &painter);
@@ -1112,6 +1112,7 @@ fz_drop_shade_imp(fz_context *ctx, fz_storable *shade_)
 	if (shade->type == FZ_FUNCTION_BASED)
 		fz_free(ctx, shade->u.f.fn_vals);
 	fz_drop_compressed_buffer(ctx, shade->buffer);
+	fz_free(ctx, shade->function);
 	fz_free(ctx, shade);
 }
 

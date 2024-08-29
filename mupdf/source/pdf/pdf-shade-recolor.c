@@ -171,7 +171,7 @@ fz_recolor_shade_type1(fz_context *ctx, pdf_obj *shade, pdf_function **func, rec
 }
 
 static void
-fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float samples[256][FZ_MAX_COLORS+1], recolor_details *rd)
+fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float *samples, int stride, recolor_details *rd)
 {
 	int i;
 	int n_in = fz_colorspace_n(ctx, rd->src_cs);
@@ -205,7 +205,7 @@ fz_recolor_shade_function(fz_context *ctx, pdf_obj *shade, float samples[256][FZ
 	for (t = 0; t < 256; t++)
 	{
 		for (i = 0; i < n_in; i++)
-			p[i] = samples[t][i];
+			p[i] = samples[t*stride+i];
 
 		rd->recolor(ctx, rd->opaque, rd->dst_cs, q, rd->src_cs, p);
 
@@ -881,7 +881,7 @@ pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade,
 	int type, i;
 	pdf_function *func[FZ_MAX_COLORS] = { NULL };
 	float d0, d1;
-	float samples[256][FZ_MAX_COLORS + 1];
+	float samples[256*(FZ_MAX_COLORS + 1)];
 	pdf_document *doc = pdf_get_bound_document(ctx, shade);
 
 	src_cs = pdf_load_colorspace(ctx, pdf_dict_get(ctx, shade, PDF_NAME(ColorSpace)));
@@ -989,7 +989,7 @@ pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade,
 		/* For all other function based shadings, we just rewrite the 1d function. */
 		if (rd.funcs)
 		{
-			fz_recolor_shade_function(ctx, rewritten, samples, &rd);
+			fz_recolor_shade_function(ctx, rewritten, samples, src_cs->n+1, &rd);
 			break;
 		}
 

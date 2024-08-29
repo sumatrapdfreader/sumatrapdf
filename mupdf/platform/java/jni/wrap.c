@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -691,6 +691,7 @@ static inline jobject to_Document_safe_own(fz_context *ctx, JNIEnv *env, fz_docu
 
 	pdf = pdf_document_from_fz_document(ctx, doc);
 	if (pdf)
+		/* This relies on the fact that pdf == doc! */
 		obj = (*env)->NewObject(env, cls_PDFDocument, mid_PDFDocument_init, jlong_cast(pdf));
 	else
 		obj = (*env)->NewObject(env, cls_Document, mid_Document_init, jlong_cast(doc));
@@ -742,6 +743,19 @@ static inline jobject to_Page_safe_own(fz_context *ctx, JNIEnv *env, fz_page *pa
 		fz_drop_page(ctx, page);
 
 	return jobj;
+}
+
+static inline jobject to_PDFDocument_safe_own(fz_context *ctx, JNIEnv *env, pdf_document *pdf)
+{
+	jobject obj;
+
+	if (!ctx || !pdf) return NULL;
+
+	obj = (*env)->NewObject(env, cls_PDFDocument, mid_PDFDocument_init, jlong_cast(pdf));
+	if (!obj)
+		fz_drop_document(ctx, &pdf->super);
+
+	return obj;
 }
 
 static inline jobject to_Link_safe_own(fz_context *ctx, JNIEnv *env, fz_link *link)

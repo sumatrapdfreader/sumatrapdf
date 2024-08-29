@@ -61,12 +61,14 @@ typedef struct
 	float background[FZ_MAX_COLORS];
 
 	/* Just to be confusing, PDF Shadings of Type 1 (Function Based
-	 * Shadings), do NOT use_function, but all the others do. This
+	 * Shadings), do NOT use function, but all the others do. This
 	 * is because Type 1 shadings take 2 inputs, whereas all the
 	 * others (when used with a function take 1 input. The type 1
 	 * data is in the 'f' field of the union below. */
-	int use_function;
-	float function[256][FZ_MAX_COLORS + 1];
+	/* If function_stride = 0, then function is not used. Otherwise
+	 * function points to 256*function_stride entries. */
+	int function_stride;
+	float *function;
 
 	int type; /* function, linear, radial, mesh */
 	union

@@ -290,6 +290,19 @@
         var isPDF = document.isPDF();
 
 
+.. method:: asPDF()
+
+    Returns a pdf version of the document (if possible). PDF documents return the same object. Documents that have an underlying PDF representation return that. Other document types return null.
+
+    :return: `PDFDocument`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var asPDF = document.asPDF();
+
+
 .. method:: formatLinkURI(linkDestination)
 
     Format a document internal link destination object to a :title:`URI` string suitable for :ref:`createLink()<mutool_run_js_api_page_create_link>`.

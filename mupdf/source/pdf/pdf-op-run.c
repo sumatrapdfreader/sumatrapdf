@@ -91,6 +91,7 @@ struct pdf_gstate
 	pdf_obj *softmask_resources;
 	pdf_obj *softmask_tr;
 	fz_matrix softmask_ctm;
+	fz_colorspace *softmask_cs;
 	float softmask_bc[FZ_MAX_COLORS];
 	int luminosity;
 };
@@ -157,6 +158,10 @@ struct pdf_run_processor
 	/* Pending begin layers */
 	begin_layer_stack *begin_layer;
 	begin_layer_stack **next_begin_layer;
+
+	int mc_depth;
+	int nest_depth;
+	int nest_mark[256];
 };
 
 /* Forward definition */
@@ -189,12 +194,47 @@ flush_begin_layer(fz_context *ctx, pdf_run_processor *proc)
 	while (proc->begin_layer)
 	{
 		s = proc->begin_layer;
+
+		if (proc->nest_depth == nelem(proc->nest_mark))
+			fz_throw(ctx, FZ_ERROR_LIMIT, "layer/clip nesting too deep");
+
+		proc->nest_mark[proc->nest_depth++] = ++proc->mc_depth;
+
 		fz_begin_layer(ctx, proc->dev, s->layer);
 		proc->begin_layer = s->next;
 		fz_free(ctx, s->layer);
 		fz_free(ctx, s);
 	}
 	proc->next_begin_layer = &proc->begin_layer;
+}
+
+#define CLIP_MARK -1
+
+static void nest_layer_clip(fz_context *ctx, pdf_run_processor *proc)
+{
+	if (proc->nest_depth == nelem(proc->nest_mark))
+		fz_throw(ctx, FZ_ERROR_LIMIT, "layer/clip nesting too deep");
+	proc->nest_mark[proc->nest_depth++] = CLIP_MARK;
+}
+
+static void
+do_end_layer(fz_context *ctx, pdf_run_processor *proc)
+{
+	if (proc->nest_depth > 0 && proc->nest_mark[proc->nest_depth-1] == proc->mc_depth)
+	{
+		fz_end_layer(ctx, proc->dev);
+		proc->nest_depth--;
+	}
+	else
+	{
+		/* If EMC is unbalanced with q/Q, we will emit the end layer
+		 * device call before or after the Q operator instead of its true location
+		 */
+		 fz_warn(ctx, "invalid marked content and clip nesting");
+	}
+
+	if (proc->mc_depth > 0)
+		proc->mc_depth--;
 }
 
 typedef struct
@@ -252,9 +292,9 @@ begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)
 
 	saved_blendmode = gstate->blendmode;
 
-	mask_colorspace = pdf_xobject_colorspace(ctx, softmask);
+	mask_colorspace = gstate->softmask_cs;
 	if (gstate->luminosity && !mask_colorspace)
-		mask_colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
+		mask_colorspace = fz_device_gray(ctx);
 
 	fz_try(ctx)
 	{
@@ -275,7 +315,6 @@ begin_softmask(fz_context *ctx, pdf_run_processor *pr, softmask_save *save)
 	fz_always(ctx)
 	{
 		fz_drop_function(ctx, tr);
-		fz_drop_colorspace(ctx, mask_colorspace);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
@@ -392,6 +431,12 @@ pdf_copy_pattern_gstate(fz_context *ctx, pdf_gstate *dst, const pdf_gstate *src)
 	pdf_drop_obj(ctx, dst->softmask);
 	dst->softmask = pdf_keep_obj(ctx, src->softmask);
 
+	pdf_drop_obj(ctx, dst->softmask_resources);
+	dst->softmask_resources = pdf_keep_obj(ctx, src->softmask_resources);
+
+	fz_drop_colorspace(ctx, dst->softmask_cs);
+	dst->softmask_cs = fz_keep_colorspace(ctx, src->softmask_cs);
+
 	fz_drop_stroke_state(ctx, dst->stroke_state);
 	dst->stroke_state = fz_keep_stroke_state(ctx, src->stroke_state);
 }
@@ -421,6 +466,8 @@ pdf_keep_gstate(fz_context *ctx, pdf_gstate *gs)
 		pdf_keep_obj(ctx, gs->softmask);
 	if (gs->softmask_resources)
 		pdf_keep_obj(ctx, gs->softmask_resources);
+	if (gs->softmask_cs)
+		fz_keep_colorspace(ctx, gs->softmask_cs);
 	fz_keep_stroke_state(ctx, gs->stroke_state);
 	pdf_keep_obj(ctx, gs->softmask_tr);
 }
@@ -433,6 +480,7 @@ pdf_drop_gstate(fz_context *ctx, pdf_gstate *gs)
 	pdf_drop_font(ctx, gs->text.font);
 	pdf_drop_obj(ctx, gs->softmask);
 	pdf_drop_obj(ctx, gs->softmask_resources);
+	fz_drop_colorspace(ctx, gs->softmask_cs);
 	fz_drop_stroke_state(ctx, gs->stroke_state);
 	pdf_drop_obj(ctx, gs->softmask_tr);
 }
@@ -475,7 +523,22 @@ pdf_grestore(fz_context *ctx, pdf_run_processor *pr)
 	{
 		fz_try(ctx)
 		{
+			// End layer early (before Q) if unbalanced Q appears between BMC and EMC.
+			while (pr->nest_depth > 0 && pr->nest_mark[pr->nest_depth-1] != CLIP_MARK)
+			{
+				fz_end_layer(ctx, pr->dev);
+				pr->nest_depth--;
+			}
+
 			fz_pop_clip(ctx, pr->dev);
+			pr->nest_depth--;
+
+			// End layer late (after Q) if unbalanced EMC appears between q and Q.
+			while (pr->nest_depth > 0 && pr->nest_mark[pr->nest_depth-1] > pr->mc_depth)
+			{
+				fz_end_layer(ctx, pr->dev);
+				pr->nest_depth--;
+			}
 		}
 		fz_catch(ctx)
 		{
@@ -860,6 +923,7 @@ pdf_show_path(fz_context *ctx, pdf_run_processor *pr, int doclose, int dofill, i
 
 		if (pr->clip)
 		{
+			nest_layer_clip(ctx, pr);
 			gstate->clip_depth++;
 			fz_clip_path(ctx, pr->dev, path, pr->clip_even_odd, gstate->ctm, bbox);
 			pr->clip = 0;
@@ -1018,6 +1082,7 @@ pdf_flush_text(fz_context *ctx, pdf_run_processor *pr)
 
 		if (doclip)
 		{
+			nest_layer_clip(ctx, pr);
 			gstate->clip_depth++;
 			fz_clip_text(ctx, pr->dev, text, gstate->ctm, tb);
 		}
@@ -1528,7 +1593,7 @@ end_oc(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val, pdf_cycle_list *c
 	if (obj)
 	{
 		flush_begin_layer(ctx, proc);
-		fz_end_layer(ctx, proc->dev);
+		do_end_layer(ctx, proc);
 		return;
 	}
 
@@ -1563,7 +1628,7 @@ end_layer(fz_context *ctx, pdf_run_processor *proc, pdf_obj *val)
 	pdf_obj *obj = pdf_dict_get(ctx, val, PDF_NAME(Title));
 	if (obj)
 	{
-		fz_end_layer(ctx, proc->dev);
+		do_end_layer(ctx, proc);
 	}
 }
 
@@ -2309,7 +2374,7 @@ static void pdf_run_gs_ca(fz_context *ctx, pdf_processor *proc, float alpha)
 	gstate->fill.alpha = fz_clamp(alpha, 0, 1);
 }
 
-static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, float *bc, int luminosity, pdf_obj *tr)
+static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, fz_colorspace *smask_cs, float *bc, int luminosity, pdf_obj *tr)
 {
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
 	pdf_gstate *gstate = pdf_flush_text(ctx, pr);
@@ -2321,14 +2386,13 @@ static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smas
 		gstate->softmask = NULL;
 		pdf_drop_obj(ctx, gstate->softmask_resources);
 		gstate->softmask_resources = NULL;
+		fz_drop_colorspace(ctx, gstate->softmask_cs);
+		gstate->softmask_cs = NULL;
 	}
 
 	if (smask)
 	{
-		fz_colorspace *cs = pdf_xobject_colorspace(ctx, smask);
-		int cs_n = 1;
-		if (cs)
-			cs_n = fz_colorspace_n(ctx, cs);
+		int cs_n = fz_colorspace_n(ctx, smask_cs);
 		gstate->softmask_ctm = gstate->ctm;
 		gstate->softmask = pdf_keep_obj(ctx, smask);
 		gstate->softmask_resources = pdf_keep_obj(ctx, pr->rstack->resources);
@@ -2339,8 +2403,8 @@ static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smas
 		}
 		for (i = 0; i < cs_n; ++i)
 			gstate->softmask_bc[i] = bc[i];
+		gstate->softmask_cs = fz_keep_colorspace(ctx, smask_cs);
 		gstate->luminosity = luminosity;
-		fz_drop_colorspace(ctx, cs);
 	}
 }
 
@@ -2856,10 +2920,13 @@ pdf_close_run_processor(fz_context *ctx, pdf_processor *proc)
 	while (pr->gtop)
 		pdf_grestore(ctx, pr);
 
-	while (pr->gstate[0].clip_depth)
+	while (pr->nest_depth > 0)
 	{
-		fz_pop_clip(ctx, pr->dev);
-		pr->gstate[0].clip_depth--;
+		if (pr->nest_mark[pr->nest_depth-1] == CLIP_MARK)
+			fz_pop_clip(ctx, pr->dev);
+		else
+			fz_end_layer(ctx, pr->dev);
+		pr->nest_depth--;
 	}
 
 	pop_structure_to(ctx, pr, NULL);

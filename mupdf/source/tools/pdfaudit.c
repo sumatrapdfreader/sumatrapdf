@@ -493,13 +493,13 @@ pdf_opcount_gs_ca(fz_context *ctx, pdf_processor *proc, float alpha)
 }
 
 static void
-pdf_opcount_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, float *bc, int luminosity, pdf_obj *obj)
+pdf_opcount_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, fz_colorspace *smask_cs, float *bc, int luminosity, pdf_obj *obj)
 {
 	pdf_opcount_processor *p = (pdf_opcount_processor*)proc;
 	size_t z = p->buffer->len;
 
 	if (p->mine->op_gs_SMask)
-		p->mine->op_gs_SMask(ctx, p->mine, smask, bc, luminosity, obj);
+		p->mine->op_gs_SMask(ctx, p->mine, smask, smask_cs, bc, luminosity, obj);
 
 	z = p->buffer->len - z;
 	p->op_usage->len[OP_gs_SMask] += z;

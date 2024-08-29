@@ -220,13 +220,20 @@ fz_recognize_document_stream_content(fz_context *ctx, fz_stream *stream, const c
 }
 
 const fz_document_handler *
-do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **streamp, fz_archive *dir, const char *magic)
+do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **streamp, fz_archive *dir, const char *magic, void **handler_state, fz_document_recognize_state_free_fn **handler_free_state)
 {
 	fz_document_handler_context *dc;
 	int i, best_score, best_i;
+	void *best_state = NULL;
+	fz_document_recognize_state_free_fn *best_free_state = NULL;
 	const char *ext;
 	int drop_stream = 0;
 	fz_stream *stream = *streamp;
+
+	if (handler_state)
+		*handler_state = NULL;
+	if (handler_free_state)
+		*handler_free_state = NULL;
 
 	dc = ctx->handler;
 	if (dc->count == 0)
@@ -265,6 +272,8 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 		{
 			for (i = 0; i < dc->count; i++)
 			{
+				void *state = NULL;
+				fz_document_recognize_state_free_fn *free_state = NULL;
 				int score = 0;
 
 				if (dc->handler[i]->recognize_content)
@@ -273,7 +282,7 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 						fz_seek(ctx, stream, 0, SEEK_SET);
 					fz_try(ctx)
 					{
-						score = dc->handler[i]->recognize_content(ctx, dc->handler[i], stream, dir);
+						score = dc->handler[i]->recognize_content(ctx, dc->handler[i], stream, dir, &state, &free_state);
 					}
 					fz_catch(ctx)
 					{
@@ -287,7 +296,13 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 				{
 					best_score = score;
 					best_i = i;
+					if (best_free_state)
+						best_free_state(ctx, best_state);
+					best_free_state = free_state;
+					best_state = state;
 				}
+				else if (free_state)
+					free_state(ctx, state);
 			}
 			if (stream)
 				fz_seek(ctx, stream, 0, SEEK_SET);
@@ -330,6 +345,8 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 	}
 	fz_catch(ctx)
 	{
+		if (best_free_state)
+			best_free_state(ctx, best_state);
 		if (drop_stream)
 			fz_drop_stream(ctx, stream);
 		fz_rethrow(ctx);
@@ -345,6 +362,15 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 	/* Only if we found a handler, do we make our modified stream available to the
 	 * caller. */
 	*streamp = stream;
+
+	if (handler_state && handler_free_state)
+	{
+		*handler_state = best_state;
+		*handler_free_state = best_free_state;
+	}
+	else if (best_free_state)
+		best_free_state(ctx, best_state);
+
 	return dc->handler[best_i];
 }
 
@@ -354,7 +380,7 @@ fz_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream *stream,
 	fz_stream *stm = stream;
 	const fz_document_handler *res;
 
-	res = do_recognize_document_stream_and_dir_content(ctx, &stm, dir, magic);
+	res = do_recognize_document_stream_and_dir_content(ctx, &stm, dir, magic, NULL, NULL);
 
 	if (stm != stream)
 		fz_drop_stream(ctx, stm);
@@ -362,21 +388,25 @@ fz_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream *stream,
 	return res;
 }
 
-const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const char *filename)
+static const fz_document_handler *do_recognize_document_content(fz_context *ctx, const char *filename, void **handler_state, fz_document_recognize_state_free_fn **handler_free_state)
 {
 	fz_stream *stream = NULL;
 	const fz_document_handler *handler = NULL;
 	fz_archive *zip = NULL;
+	fz_stream *stm;
 
 	if (fz_is_directory(ctx, filename))
 		zip = fz_open_directory(ctx, filename);
 	else
 		stream  = fz_open_file(ctx, filename);
 
+	stm = stream;
 	fz_try(ctx)
-		handler = fz_recognize_document_stream_and_dir_content(ctx, stream, zip, filename);
+		handler = do_recognize_document_stream_and_dir_content(ctx, &stm, zip, filename, handler_state, handler_free_state);
 	fz_always(ctx)
 	{
+		if (stm != stream)
+			fz_drop_stream(ctx, stm);
 		fz_drop_stream(ctx, stream);
 		fz_drop_archive(ctx, zip);
 	}
@@ -384,6 +414,11 @@ const fz_document_handler *fz_recognize_document_content(fz_context *ctx, const 
 		fz_rethrow(ctx);
 
 	return handler;
+}
+
+const fz_document_handler *fz_recognize_document_content(fz_context* ctx, const char* filename)
+{
+	return do_recognize_document_content(ctx, filename, NULL, NULL);
 }
 
 const fz_document_handler *
@@ -402,6 +437,8 @@ fz_open_accelerated_document_with_stream_and_dir(fz_context *ctx, const char *ma
 	const fz_document_handler *handler;
 	fz_stream *wrapped_stream = stream;
 	fz_document *ret;
+	void *state = NULL;
+	fz_document_recognize_state_free_fn *free_state = NULL;
 
 	if (stream == NULL && dir == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no document to open");
@@ -410,15 +447,17 @@ fz_open_accelerated_document_with_stream_and_dir(fz_context *ctx, const char *ma
 
 	/* If this finds a handler, then this might wrap stream. If it does, we reuse the wrapped one in
 	 * the open call (hence avoiding us having to 'file-back' a stream twice), but we must free it. */
-	handler = do_recognize_document_stream_and_dir_content(ctx, &wrapped_stream, dir, magic);
+	handler = do_recognize_document_stream_and_dir_content(ctx, &wrapped_stream, dir, magic, &state, &free_state);
 	if (!handler)
 		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot find document handler for file type: '%s'", magic);
 	fz_try(ctx)
-		ret = handler->open(ctx, handler, wrapped_stream, accel, dir);
+		ret = handler->open(ctx, handler, wrapped_stream, accel, dir, state);
 	fz_always(ctx)
 	{
 		if (wrapped_stream != stream)
 			fz_drop_stream(ctx, wrapped_stream);
+		if (free_state && state)
+			free_state(ctx, state);
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
@@ -462,20 +501,16 @@ fz_document *
 fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *accel)
 {
 	const fz_document_handler *handler;
-	fz_stream *file;
+	fz_stream *file = NULL;
 	fz_stream *afile = NULL;
 	fz_document *doc = NULL;
 	fz_archive *dir = NULL;
 	char dirname[PATH_MAX];
-
-	fz_var(afile);
+	void *state = NULL;
+	fz_document_recognize_state_free_fn *free_state = NULL;
 
 	if (filename == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no document to open");
-
-	handler = fz_recognize_document_content(ctx, filename);
-	if (!handler)
-		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot find document handler for file: %s", filename);
 
 	if (fz_is_directory(ctx, filename))
 	{
@@ -492,10 +527,17 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 		return doc;
 	}
 
-	file = fz_open_file(ctx, filename);
+	handler = do_recognize_document_content(ctx, filename, &state, &free_state);
+	if (!handler)
+		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot find document handler for file: %s", filename);
+
+	fz_var(afile);
+	fz_var(file);
 
 	fz_try(ctx)
 	{
+		file = fz_open_file(ctx, filename);
+
 		if (accel)
 			afile = fz_open_file(ctx, accel);
 		if (handler->wants_dir)
@@ -503,10 +545,12 @@ fz_open_accelerated_document(fz_context *ctx, const char *filename, const char *
 			fz_dirname(dirname, filename, sizeof dirname);
 			dir = fz_open_directory(ctx, dirname);
 		}
-		doc = handler->open(ctx, handler, file, afile, dir);
+		doc = handler->open(ctx, handler, file, afile, dir, state);
 	}
 	fz_always(ctx)
 	{
+		if (free_state)
+			free_state(ctx, state);
 		fz_drop_archive(ctx, dir);
 		fz_drop_stream(ctx, afile);
 		fz_drop_stream(ctx, file);

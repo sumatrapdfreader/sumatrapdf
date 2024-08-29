@@ -771,6 +771,9 @@ pdf_repair_obj_stms(fz_context *ctx, pdf_document *doc)
 		pdf_xref_entry *entry = pdf_get_populating_xref_entry(ctx, doc, i);
 
 		if (entry->type == 'o' && pdf_get_populating_xref_entry(ctx, doc, entry->ofs)->type != 'n')
-			fz_throw(ctx, FZ_ERROR_FORMAT, "invalid reference to non-object-stream: %d (%d 0 R)", (int)entry->ofs, i);
+		{
+			fz_warn(ctx, "invalid reference to non-object-stream: %d, assuming %d 0 R is a freed object", (int)entry->ofs, i);
+			entry->type = 'f';
+		}
 	}
 }

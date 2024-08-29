@@ -44,7 +44,7 @@ string_in_names_list(fz_context *ctx, pdf_obj *p, pdf_obj *names_list)
  * Recreate page tree to only retain specified pages.
  */
 
-static void retainpage(fz_context *ctx, pdf_document *doc, pdf_obj *parent, pdf_obj *kids, int page)
+static void retainpage(fz_context *ctx, pdf_document *doc, pdf_obj *parent, pdf_obj *kids, int page, pdf_obj *structparents, pdf_obj *ostructparents)
 {
 	pdf_obj *pageref = pdf_lookup_page_obj(ctx, doc, page);
 
@@ -54,6 +54,34 @@ static void retainpage(fz_context *ctx, pdf_document *doc, pdf_obj *parent, pdf_
 
 	/* Store page object in new kids array */
 	pdf_array_push(ctx, kids, pageref);
+
+	if (structparents)
+	{
+		int parentnum = pdf_dict_get_int(ctx, pageref, PDF_NAME(StructParents));
+		pdf_obj *parent = pdf_lookup_number(ctx, ostructparents, parentnum);
+		pdf_obj *nums = pdf_dict_get(ctx, structparents, PDF_NAME(Nums));
+		pdf_obj *limits = pdf_dict_get(ctx, structparents, PDF_NAME(Limits));
+		int min, max;
+		pdf_array_push_int(ctx, nums, parentnum);
+		pdf_array_push(ctx, nums, parent);
+		if (limits == NULL)
+		{
+			min = max = parentnum;
+			limits = pdf_new_array(ctx, doc, 2);
+			pdf_dict_put_drop(ctx, structparents, PDF_NAME(Limits), limits);
+		}
+		else
+		{
+			min = pdf_array_get_int(ctx, limits, 0);
+			max = pdf_array_get_int(ctx, limits, 1);
+			if (min > parentnum)
+				min = parentnum;
+			if (max < parentnum)
+				max = parentnum;
+		}
+		pdf_array_put_int(ctx, limits, 0, min);
+		pdf_array_put_int(ctx, limits, 1, max);
+	}
 }
 
 static int dest_is_valid_page(fz_context *ctx, pdf_obj *obj, int *page_object_nums, int pagecount)
@@ -238,6 +266,9 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 	int pagecount, i;
 	int *page_object_nums = NULL;
 	fz_page *page, *next;
+	pdf_obj *structtreeroot;
+	pdf_obj *ostructparents;
+	pdf_obj *structparents = NULL;
 
 	/* Keep only pages/type and (reduced) dest entries to avoid
 	 * references to unretained pages */
@@ -246,6 +277,10 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 	olddests = pdf_load_name_tree(ctx, doc, PDF_NAME(Dests));
 	outlines = pdf_dict_get(ctx, oldroot, PDF_NAME(Outlines));
 	ocproperties = pdf_dict_get(ctx, oldroot, PDF_NAME(OCProperties));
+	structtreeroot = pdf_dict_get(ctx, oldroot, PDF_NAME(StructTreeRoot));
+	ostructparents = pdf_dict_get(ctx, structtreeroot, PDF_NAME(ParentTree));
+	if (structtreeroot)
+		structparents = pdf_new_dict(ctx, doc, 3);
 
 	fz_var(root);
 	fz_var(names_list);
@@ -271,6 +306,12 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 		root = pdf_new_dict(ctx, doc, 3);
 		pdf_dict_put(ctx, root, PDF_NAME(Type), pdf_dict_get(ctx, oldroot, PDF_NAME(Type)));
 		pdf_dict_put(ctx, root, PDF_NAME(Pages), pdf_dict_get(ctx, oldroot, PDF_NAME(Pages)));
+		if (structtreeroot)
+		{
+			pdf_dict_put(ctx, root, PDF_NAME(StructTreeRoot), structtreeroot);
+			pdf_dict_put(ctx, structtreeroot, PDF_NAME(ParentTree), structparents);
+			pdf_dict_put_array(ctx, structparents, PDF_NAME(Nums), 2);
+		}
 		if (outlines)
 			pdf_dict_put(ctx, root, PDF_NAME(Outlines), outlines);
 		if (ocproperties)
@@ -283,7 +324,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 
 		/* Retain pages specified */
 		for (i = 0; i < count; ++i)
-			retainpage(ctx, doc, pages, kids, new_page_list[i]);
+			retainpage(ctx, doc, pages, kids, new_page_list[i], structparents, ostructparents);
 
 		/* Update page count */
 		pdf_dict_put_int(ctx, pages, PDF_NAME(Count), pdf_array_len(ctx, kids));
@@ -407,6 +448,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 		pdf_drop_obj(ctx, allfields);
 		pdf_drop_obj(ctx, root);
 		pdf_drop_obj(ctx, kids);
+		pdf_drop_obj(ctx, structparents);
 	}
 	fz_catch(ctx)
 	{

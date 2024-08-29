@@ -1063,76 +1063,6 @@ def compare_fz_usage(
     jlib.log( '{n_missing}')
 
 
-def windows_find_python_py( cpu=None, version=None):
-    '''
-    Windows only. Looks for python matching `cpu` and `version`, by parsing
-    output of `py -0p`.
-    '''
-    wp = wdev.WindowsPython(cpu=cpu, version=version)
-    command = f'{wp.path} -c "import sysconfig; print( sysconfig.get_path(\'include\'))"'
-    include = jlib.system( command, out='return').strip()
-    return wp.cpu, wp.version, wp.path, wp.root, include
-
-
-def windows_find_python( cpu=None, version=None):
-    '''
-    Windows only. Finds installed Python with specific word size and version.
-
-    cpu:
-        A Cpu instance. If None, we use whatever we are running on.
-    version:
-        Two-digit Python version as a string such as '3.8'. If None we use
-        current Python's version.
-
-    Returns (python, version, root, cpu, include):
-
-        python:
-            Path of python binary.
-        version:
-            Version as a string, e.g. '3.9'. Same as <version> if not None,
-            otherwise the inferred version.
-        root:
-            The parent directory of <python>; allows
-            Python headers to be found, for example
-            <root>/include/Python.h.
-        cpu:
-            A Cpu instance, same as <cpu> if not None, otherwise the inferred
-            cpu.
-        include:
-            Directory containing `Python.h`.
-
-    We look at current Python first; if that doesn't match, we use
-    windows_find_python_py() to parse the output from 'py -0p' to look at all
-    available python installations.
-    '''
-    assert state.state_.windows
-    if cpu is None:
-        cpu = state.Cpu()
-    if version is None:
-        version = state.python_version()
-    jlib.log( 'Looking for python matching {cpu=} {version=}')
-
-    current_cpu = state.Cpu()
-    current_version = f'{sys.version_info[0]}.{sys.version_info[1]}'
-    if cpu.name == current_cpu.name and version == current_version:
-        # Current python matches.
-        jlib.log( 'This invocation of Python matches {=cpu version}')
-        python = jlib.fs_find_in_paths( sys.executable)
-        root = os.path.dirname( python)
-        include = sysconfig.get_path('include')
-
-    else:
-        # Look for other installed python.
-        jlib.log( 'Current python {=current_cpu current_version} does not match {=cpu version}')
-        cpu, version, python, root, include = windows_find_python_py( cpu, version)
-
-    jlib.log( '{cpu=} {version=}. Returning:')
-    jlib.log( '    {python=}')
-    jlib.log( '    {root=}')
-    jlib.log( '    {include=}')
-    return cpu, version, python, root, include
-
-
 g_have_done_build_0 = False
 
 
@@ -1883,27 +1813,19 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
 
                 if state.state_.windows:
                     if build_python:
-                        cpu, python_version, python_path, python_root, include = windows_find_python(
-                                build_dirs.cpu,
-                                build_dirs.python_version,
-                                )
-                        jlib.log( '{include=}:')
+                        wp = wdev.WindowsPython(build_dirs.cpu, build_dirs.python_version)
+                        jlib.log( '{wp=}:')
                         if 0:
                             # Show contents of include directory.
-                            for dirpath, dirnames, filenames in os.walk( include):
+                            for dirpath, dirnames, filenames in os.walk( wp.include):
                                 for f in filenames:
                                     p = os.path.join( dirpath, f)
                                     jlib.log( '    {p!r}')
-                        assert os.path.isfile( os.path.join( include, 'Python.h'))
-                        python_root = python_root.replace('\\', '/')
-                        # Oddly there doesn't seem to be a
-                        # `sysconfig.get_path('libs')`, but it seems to be next
-                        # to `includes`:
-                        libs = os.path.abspath( f'{include}/../libs')
-                        jlib.log( 'Matching python for {build_dirs.cpu=} {python_version=}: {python_path=} {include=} {python_root=} {include=} {libs=}')
+                        assert os.path.isfile( os.path.join( wp.include, 'Python.h'))
+                        jlib.log( 'Matching python for {build_dirs.cpu=} {wp.version=}: {wp.path=} {wp.include=} {wp.libs=}')
                         env_extra = {
-                                'MUPDF_PYTHON_INCLUDE_PATH': f'{include}',
-                                'MUPDF_PYTHON_LIBRARY_PATH': f'{libs}',
+                                'MUPDF_PYTHON_INCLUDE_PATH': f'{wp.include}',
+                                'MUPDF_PYTHON_LIBRARY_PATH': f'{wp.libs}',
                                 }
                         jlib.log('{env_extra=}')
 
@@ -1923,6 +1845,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                         # the entire solution even if we specify
                         # /Project.]
                         #
+                        jlib.log(f'Touching file in case we are building for a different python version: {cpp_path=}')
                         os.utime(cpp_path)
 
                         win32_infix = _windows_vs_upgrade( vs_upgrade, build_dirs, devenv)
@@ -2230,11 +2153,8 @@ def python_settings(build_dirs, startdir=None):
         # python. Also, Windows appears to be able to find
         # _mupdf.pyd in same directory as mupdf.py.
         #
-        cpu, python_version, python_path, python_root, python_include = windows_find_python(
-                build_dirs.cpu,
-                build_dirs.python_version,
-                )
-        python_path = python_path.replace('\\', '/')    # Allows use on Cygwin.
+        wp = wdev.WindowsPython(build_dirs.cpu, build_dirs.python_version)
+        python_path = wp.path.replace('\\', '/')    # Allows use on Cygwin.
         command_prefix = f'"{python_path}"'
     else:
         pass

@@ -31,14 +31,14 @@
 // Text black color when converted from DeviceCMYK to RGB
 #define CMYK_BLACK 0x221f1f
 
-static void fz_scale_stext_page(fz_context *ctx, fz_stext_page *page, float scale)
+static void
+scale_run(fz_context *ctx, fz_stext_block *block, float scale)
 {
 	fz_matrix m = fz_scale(scale, scale);
-	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
 
-	for (block = page->first_block; block; block = block->next)
+	while (block)
 	{
 		block->bbox = fz_transform_rect(block->bbox, m);
 		switch (block->type)
@@ -59,8 +59,19 @@ static void fz_scale_stext_page(fz_context *ctx, fz_stext_page *page, float scal
 		case FZ_STEXT_BLOCK_IMAGE:
 			block->u.i.transform = fz_post_scale(block->u.i.transform, scale, scale);
 			break;
+
+		case FZ_STEXT_BLOCK_STRUCT:
+			if (block->u.s.down)
+				scale_run(ctx, block->u.s.down->first_block, scale);
+			break;
 		}
+		block = block->next;
 	}
+}
+
+static void fz_scale_stext_page(fz_context *ctx, fz_stext_page *page, float scale)
+{
+	scale_run(ctx, page->first_block, scale);
 }
 
 /* HTML output (visual formatting with preserved layout) */
@@ -520,20 +531,37 @@ static void fz_print_stext_block_as_xhtml(fz_context *ctx, fz_output *out, fz_st
 	fz_write_printf(ctx, out, "</%s>\n", tag);
 }
 
+static void
+run_to_xhtml(fz_context *ctx, fz_stext_block *block, fz_output *out)
+{
+	while (block)
+	{
+		switch(block->type)
+		{
+		case FZ_STEXT_BLOCK_IMAGE:
+			fz_print_stext_image_as_xhtml(ctx, out, block);
+			break;
+		case FZ_STEXT_BLOCK_TEXT:
+			fz_print_stext_block_as_xhtml(ctx, out, block);
+			break;
+		case FZ_STEXT_BLOCK_STRUCT:
+			fz_write_printf(ctx, out, "<struct idx=\"%d\" raw=\"%s\" std=\"%s\">\n",
+					block->u.s.index, block->u.s.down->raw, fz_structure_to_string(block->u.s.down->standard));
+			if (block->u.s.down)
+				run_to_xhtml(ctx, block->u.s.down->first_block, out);
+			fz_write_printf(ctx, out, "</struct>\n");
+			break;
+		}
+		block = block->next;
+	}
+}
+
 void
 fz_print_stext_page_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_page *page, int id)
 {
-	fz_stext_block *block;
-
 	fz_write_printf(ctx, out, "<div id=\"page%d\">\n", id);
 
-	for (block = page->first_block; block; block = block->next)
-	{
-		if (block->type == FZ_STEXT_BLOCK_IMAGE)
-			fz_print_stext_image_as_xhtml(ctx, out, block);
-		else if (block->type == FZ_STEXT_BLOCK_TEXT)
-			fz_print_stext_block_as_xhtml(ctx, out, block);
-	}
+	run_to_xhtml(ctx, page->first_block, out);
 
 	fz_write_string(ctx, out, "</div>\n");
 }
@@ -563,18 +591,13 @@ fz_print_stext_trailer_as_xhtml(fz_context *ctx, fz_output *out)
 
 /* Detailed XML dump of the entire structured text data */
 
-void
-fz_print_stext_page_as_xml(fz_context *ctx, fz_output *out, fz_stext_page *page, int id)
+static void
+as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 {
-	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
 
-	fz_write_printf(ctx, out, "<page id=\"page%d\" width=\"%g\" height=\"%g\">\n", id,
-		page->mediabox.x1 - page->mediabox.x0,
-		page->mediabox.y1 - page->mediabox.y0);
-
-	for (block = page->first_block; block; block = block->next)
+	while (block)
 	{
 		switch (block->type)
 		{
@@ -640,26 +663,46 @@ fz_print_stext_page_as_xml(fz_context *ctx, fz_output *out, fz_stext_page *page,
 			fz_write_printf(ctx, out, "<image bbox=\"%g %g %g %g\" />\n",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
 			break;
+
+		case FZ_STEXT_BLOCK_STRUCT:
+			fz_write_printf(ctx, out, "<struct idx=\"%d\" raw=\"%s\" std=\"%s\">\n",
+					block->u.s.index, block->u.s.down->raw, fz_structure_to_string(block->u.s.down->standard));
+			if (block->u.s.down)
+				as_xml(ctx, block->u.s.down->first_block, out);
+			fz_write_printf(ctx, out, "</struct>\n");
+			break;
 		}
+		block = block->next;
 	}
+}
+
+void
+fz_print_stext_page_as_xml(fz_context *ctx, fz_output *out, fz_stext_page *page, int id)
+{
+	fz_write_printf(ctx, out, "<page id=\"page%d\" width=\"%g\" height=\"%g\">\n", id,
+		page->mediabox.x1 - page->mediabox.x0,
+		page->mediabox.y1 - page->mediabox.y0);
+
+	as_xml(ctx, page->first_block, out);
+
 	fz_write_string(ctx, out, "</page>\n");
 }
 
 /* JSON dump */
 
-void
-fz_print_stext_page_as_json(fz_context *ctx, fz_output *out, fz_stext_page *page, float scale)
+static void
+as_json(fz_context *ctx, fz_stext_block *block, fz_output *out, float scale)
 {
-	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
+	int comma = 0;
 
-	fz_write_printf(ctx, out, "{%q:[", "blocks");
-
-	for (block = page->first_block; block; block = block->next)
+	while (block)
 	{
-		if (block != page->first_block)
+		if (comma)
 			fz_write_string(ctx, out, ",");
+		comma = 1;
+
 		switch (block->type)
 		{
 		case FZ_STEXT_BLOCK_TEXT:
@@ -726,8 +769,33 @@ fz_print_stext_page_as_json(fz_context *ctx, fz_output *out, fz_stext_page *page
 			fz_write_printf(ctx, out, "%q:%d,", "w", (int)((block->bbox.x1 - block->bbox.x0) * scale));
 			fz_write_printf(ctx, out, "%q:%d}}", "h", (int)((block->bbox.y1 - block->bbox.y0) * scale));
 			break;
+
+		case FZ_STEXT_BLOCK_STRUCT:
+			fz_write_printf(ctx, out, "{%q:%q,", "type", "structure");
+			fz_write_printf(ctx, out, "%q:%d", "index", block->u.s.index);
+			if (block->u.s.down)
+			{
+				fz_write_printf(ctx, out, ",%q:%q", "raw", block->u.s.down->raw);
+				fz_write_printf(ctx, out, ",%q:%q", "std", fz_structure_to_string(block->u.s.down->standard));
+				fz_write_printf(ctx, out, ",%q:[", "contents");
+				as_json(ctx, block->u.s.down->first_block, out, scale);
+				fz_write_printf(ctx, out, "]");
+			}
+			fz_write_printf(ctx, out, "}");
+			break;
+
 		}
+		block = block->next;
 	}
+}
+
+void
+fz_print_stext_page_as_json(fz_context *ctx, fz_output *out, fz_stext_page *page, float scale)
+{
+	fz_write_printf(ctx, out, "{%q:[", "blocks");
+
+	as_json(ctx, page->first_block, out, scale);
+
 	fz_write_string(ctx, out, "]}");
 }
 

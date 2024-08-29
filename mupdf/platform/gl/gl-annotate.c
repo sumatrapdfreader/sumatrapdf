@@ -540,8 +540,11 @@ static void open_stamp_image_dialog(void)
 			fz_var(img);
 			fz_try(ctx)
 			{
+				trace_action("tmp = new Image(%q);\n", stamp_image_filename);
 				img = fz_new_image_from_file(ctx, stamp_image_filename);
+				trace_action("annot.setAppearance(tmp);\n");
 				pdf_set_annot_stamp_image(ctx, ui.selected_annot, img);
+				trace_action("annot.setIcon(%q);\n", fz_basename(stamp_image_filename));
 				pdf_set_annot_icon_name(ctx, ui.selected_annot, fz_basename(stamp_image_filename));
 			}
 			fz_always(ctx)

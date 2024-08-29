@@ -317,48 +317,63 @@ pdf_process_extgstate(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, pdf_ob
 		{
 			pdf_obj *xobj, *s, *bc, *tr;
 			float softmask_bc[FZ_MAX_COLORS];
-			fz_colorspace *colorspace;
+			fz_colorspace *softmask_cs;
 			int colorspace_n = 1;
 			int k, luminosity;
 
 			xobj = pdf_dict_get(ctx, obj, PDF_NAME(G));
 
-			colorspace = pdf_xobject_colorspace(ctx, xobj);
-			if (colorspace)
-				colorspace_n = fz_colorspace_n(ctx, colorspace);
-
-			/* Default background color is black. */
-			for (k = 0; k < colorspace_n; k++)
-				softmask_bc[k] = 0;
-			/* Which in CMYK means not all zeros! This should really be
-			 * a test for subtractive color spaces, but this will have
-			 * to do for now. */
-			if (fz_colorspace_is_cmyk(ctx, colorspace))
-				softmask_bc[3] = 1.0f;
-			fz_drop_colorspace(ctx, colorspace);
-
-			bc = pdf_dict_get(ctx, obj, PDF_NAME(BC));
-			if (pdf_is_array(ctx, bc))
+			softmask_cs = pdf_xobject_colorspace(ctx, xobj);
+			fz_try(ctx)
 			{
+				if (softmask_cs)
+					colorspace_n = fz_colorspace_n(ctx, softmask_cs);
+
+				/* Default background color is black. */
 				for (k = 0; k < colorspace_n; k++)
-					softmask_bc[k] = pdf_array_get_real(ctx, bc, k);
+					softmask_bc[k] = 0;
+				/* Which in CMYK means not all zeros! This should really be
+				 * a test for subtractive color spaces, but this will have
+				 * to do for now. */
+				if (fz_colorspace_is_cmyk(ctx, softmask_cs))
+				{
+					/* Default background color is black. */
+					for (k = 0; k < colorspace_n; k++)
+						softmask_bc[k] = 0;
+					/* Which in CMYK means not all zeros! This should really be
+					 * a test for subtractive color spaces, but this will have
+					 * to do for now. */
+					if (fz_colorspace_is_cmyk(ctx, softmask_cs))
+						softmask_bc[3] = 1.0f;
+				}
+
+				bc = pdf_dict_get(ctx, obj, PDF_NAME(BC));
+				if (pdf_is_array(ctx, bc))
+				{
+					for (k = 0; k < colorspace_n; k++)
+						softmask_bc[k] = pdf_array_get_real(ctx, bc, k);
+				}
+
+				s = pdf_dict_get(ctx, obj, PDF_NAME(S));
+				if (pdf_name_eq(ctx, s, PDF_NAME(Luminosity)))
+					luminosity = 1;
+				else
+					luminosity = 0;
+
+				tr = pdf_dict_get(ctx, obj, PDF_NAME(TR));
+				if (tr && pdf_name_eq(ctx, tr, PDF_NAME(Identity)))
+					tr = NULL;
+
+				proc->op_gs_SMask(ctx, proc, xobj, softmask_cs, softmask_bc, luminosity, tr);
 			}
-
-			s = pdf_dict_get(ctx, obj, PDF_NAME(S));
-			if (pdf_name_eq(ctx, s, PDF_NAME(Luminosity)))
-				luminosity = 1;
-			else
-				luminosity = 0;
-
-			tr = pdf_dict_get(ctx, obj, PDF_NAME(TR));
-			if (tr && pdf_name_eq(ctx, tr, PDF_NAME(Identity)))
-				tr = NULL;
-
-			proc->op_gs_SMask(ctx, proc, xobj, softmask_bc, luminosity, tr);
+			fz_always(ctx)
+				fz_drop_colorspace(ctx, softmask_cs);
+			fz_catch(ctx)
+				fz_rethrow(ctx);
 		}
 		else if (pdf_is_name(ctx, obj) && pdf_name_eq(ctx, obj, PDF_NAME(None)))
 		{
-			proc->op_gs_SMask(ctx, proc, NULL, NULL, 0, NULL);
+			proc->op_gs_SMask(ctx, proc, NULL, NULL, NULL, 0, NULL);
 		}
 	}
 }
