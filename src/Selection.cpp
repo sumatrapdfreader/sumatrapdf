@@ -166,7 +166,7 @@ void PaintSelection(MainWindow* win, HDC hdc) {
             }
         }
 
-        ReportIf(!win->CurrentTab()->selectionOnPage);
+        ReportDebugIf(!win->CurrentTab()->selectionOnPage);
         if (!win->CurrentTab()->selectionOnPage) {
             return;
         }
