@@ -4940,6 +4940,7 @@ void DebugCorruptMemory() {
     free(s);
     free(d);
     // this triggers ntdll.dll!RtlReportCriticalFailure()
+    // cppcheck-suppress doubleFree
     free(s);
 }
 

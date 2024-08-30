@@ -18,7 +18,7 @@ int HtmlEntityNameToRune(const char* name, size_t nameLen) {
 // version, otherwise it wouldn't match anyway
 // returns -1 if didn't find
 int HtmlEntityNameToRune(const WCHAR* name, size_t nameLen) {
-    char asciiName[MAX_ENTITY_NAME_LEN];
+    char asciiName[MAX_ENTITY_NAME_LEN]{};
     if (nameLen > MAX_ENTITY_NAME_LEN) {
         return -1;
     }

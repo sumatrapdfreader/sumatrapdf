@@ -574,7 +574,7 @@ template <typename T>
 static void InsertRandData(StrVecWithData<T>* v) {
     for (int i = 0; i < kMaxStringN; i++) {
         const char* s = StrForN(i);
-        T data;
+        T data{};
         data.n = (decltype(data.n))i;
         v->Append(s, data);
         T* d = v->AtData(i);
@@ -604,7 +604,7 @@ static void InsertRandData2(StrVecWithData<T>* v) {
     for (int i = 0; i < kMaxStringN; i++) {
         int op = rand() % 12;
         if (op <= 5) {
-            T data;
+            T data{};
             data.n = (decltype(data.n))i;
             const char* s = StrForN(i);
             int idx = v->Append(s, data);

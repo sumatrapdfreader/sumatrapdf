@@ -164,7 +164,7 @@ func runCppCheck(all bool) {
 		args = append(args, "--suppress=CastIntegerToAddressAtReturn")
 		args = append(args, "--suppress=uselessOverride") // false positive
 	}
-	args = append(args, "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
+	args = append(args, "--check-level=exhaustive", "--inline-suppr", "-I", "src", "-I", "src/utils", "src")
 	cppcheckExe := detectCppcheckExe()
 	cmd = exec.Command(cppcheckExe, args...)
 	os.Remove(cppcheckLogFile)
