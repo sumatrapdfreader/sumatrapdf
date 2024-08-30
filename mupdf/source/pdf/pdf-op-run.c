@@ -161,7 +161,7 @@ struct pdf_run_processor
 
 	int mc_depth;
 	int nest_depth;
-	int nest_mark[256];
+	int nest_mark[1024];
 };
 
 /* Forward definition */
