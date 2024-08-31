@@ -691,8 +691,7 @@ static bool ForceRunningAsInstaller() {
         return false;
     }
 
-    TempStr exePath = GetSelfExePathTemp();
-    TempStr dir = path::GetDirTemp(exePath);
+    TempStr dir = GetSelfExeDirTemp();
     TempStr path = path::JoinTemp(dir, "libmupdf.dll");
     auto realSize = file::GetSize(path);
     if (realSize < 0) {

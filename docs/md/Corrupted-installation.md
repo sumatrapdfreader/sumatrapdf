@@ -8,9 +8,7 @@ SumatraPDF comes in two flavors: a portable version and an installer.
 
 A portable version is a self-contained executable and cannot be corrupted.
 
-An installer needs to be run to be properly installed. Part of it is extracting `libmupdf.dll` library needed by installable flavor.
-
-You cannot just rename the installer and run it.
+An installer needs to be run to be properly installed. Part of it is extracting `libmupdf.dll` library.
 
 There are 2 possible problem:
 
