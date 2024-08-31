@@ -38,6 +38,10 @@ func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
 
+	if true {
+		logf("signMust: signing disabled for now\n")
+		return
+	}
 	if certPwd == "" {
 		if flgSkipSign {
 			return

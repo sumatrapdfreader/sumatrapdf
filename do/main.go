@@ -601,7 +601,7 @@ func buildLogView() {
 
 	path := filepath.Join(logViewWinDir, "build", "bin", "logview.exe")
 	panicIf(!u.FileExists(path))
-	signMust(path)
+	// signMust(path)
 	logf("\n")
 	printFileSize(path)
 }
