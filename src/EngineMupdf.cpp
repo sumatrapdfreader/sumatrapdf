@@ -48,11 +48,6 @@ static float layoutA4DyPt = 842.f;
 
 static float layoutFontEm = 11.f;
 
-// maximum size of a file that's entirely loaded into memory before parsed
-// and displayed; larger files will be kept open while they're displayed
-// so that their content can be loaded on demand in order to preserve memory
-constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
-
 // in mupdf_load_system_font.c
 extern "C" void install_load_windows_font_funcs(fz_context* ctx);
 
@@ -410,7 +405,12 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
     return res;
 }
 
-static fz_stream* FzOpenFile2(fz_context* ctx, const char* path) {
+// maximum size of a file that's entirely loaded into memory before parsed
+// and displayed; larger files will be kept open while they're displayed
+// so that their content can be loaded on demand in order to preserve memory
+constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
+
+static fz_stream* FzOpenOrReadFile(fz_context* ctx, const char* path) {
     fz_stream* stm = nullptr;
     i64 fileSize = file::GetSize(path);
     // load small files entirely into memory so that they can be
@@ -1852,7 +1852,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
 
     fz_var(file);
     fz_try(ctx) {
-        file = FzOpenFile2(ctx, fnCopy);
+        file = FzOpenOrReadFile(ctx, fnCopy);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

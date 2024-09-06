@@ -38,16 +38,14 @@ func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
 
-	if true {
-		logf("signMust: signing disabled for now\n")
-		return
-	}
-	if certPwd == "" {
-		if flgSkipSign {
-			return
+	if false {
+		if certPwd == "" {
+			if flgSkipSign {
+				return
+			}
 		}
+		panicIf(certPwd == "", "CERT_PWD env variable not set")
 	}
-	panicIf(certPwd == "", "CERT_PWD env variable not set")
 
 	// retry 3 times because signing might fail due to temorary error
 	// ("The specified timestamp server either could not be reached or")
@@ -56,30 +54,31 @@ func signMust(path string) {
 		signtoolPath := detectSigntoolPath()
 		fileDir := filepath.Dir(path)
 		fileName := filepath.Base(path)
-		certSrc := filepath.Join("do", "scripts", "cert.pfx")
-		certDest := filepath.Join(fileDir, "cert.pfx")
-		must(copyFile(certDest, certSrc))
 		//signServer := "http://timestamp.verisign.com/scripts/timstamp.dll"
-		signServer := "http://timestamp.sectigo.com"
-		desc := "https://www.sumatrapdfreader.org"
+		//signServer := "http://timestamp.sectigo.com"
+		signServer := "http://time.certum.pl/"
+		//desc := "https://www.sumatrapdfreader.org"
 		{
 			// sign with sha1 for pre-win-7
 			// TODO: remove it? We no longer support pre-win7
 			cmd := exec.Command(signtoolPath, "sign", "/t", signServer,
-				"/du", desc, "/f", "cert.pfx", "/fd", "sha1",
-				"/p", certPwd, fileName)
+				"/n", "Open Source Developer, Krzysztof Kowalczyk",
+				//"/du", desc,
+				"/fd", "sha256",
+				fileName)
 			cmd.Dir = fileDir
 			err = runCmdLoggedRedacted(cmd, certPwd)
 		}
 
-		if err == nil {
+		if false && err == nil {
 			// double-sign with sha2 for win7+ ater Jan 2016
 			cmd := exec.Command(signtoolPath, "sign", "/fd", "sha256", "/tr", signServer,
-				"/td", "sha256", "/du", desc, "/f", "cert.pfx",
+				"/td", "sha256", "/f", "cert.pfx",
 				"/p", certPwd, "/as", fileName)
 			cmd.Dir = fileDir
 			err = runCmdLoggedRedacted(cmd, certPwd)
 		}
+
 		if err == nil {
 			return
 		}
