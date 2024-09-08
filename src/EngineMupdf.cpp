@@ -410,45 +410,54 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
 // so that their content can be loaded on demand in order to preserve memory
 constexpr i64 kMaxMemoryFileSize = 32 * 1024 * 1024;
 
-static fz_stream* FzOpenOrReadFile(fz_context* ctx, const char* path) {
+static fz_stream* FzReadFileIfSmall(fz_context* ctx, const char* path) {
     fz_stream* stm = nullptr;
     i64 fileSize = file::GetSize(path);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
-    if (fileSize > 0 && fileSize < kMaxMemoryFileSize) {
-        ByteSlice dataTmp = file::ReadFile(path);
-        if (dataTmp.empty()) {
-            // failed to read
-            return nullptr;
-        }
-
-        // TODO: we copy so that the memory ends up in chunk allocated
-        // by libmupdf so that it works across dll boundaries.
-        // We can either use  fz_new_buffer_from_shared_data
-        // and free the data on the side or create Allocator that
-        // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
-        size_t size = dataTmp.size();
-        void* data = FzMemdup(ctx, (void*)dataTmp.data(), size);
-        if (!data) {
-            return nullptr;
-        }
-        dataTmp.Free();
-
-        fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
-        fz_var(buf);
-        fz_try(ctx) {
-            stm = fz_open_buffer(ctx, buf);
-        }
-        fz_always(ctx) {
-            fz_drop_buffer(ctx, buf);
-        }
-        fz_catch(ctx) {
-            stm = nullptr;
-            fz_report_error(ctx);
-        }
-        return stm;
+    bool isSmallFile = fileSize > 0 && fileSize < kMaxMemoryFileSize;
+    if (!isSmallFile) {
+        return nullptr;
     }
 
+    ByteSlice dataTmp = file::ReadFile(path);
+    if (dataTmp.empty()) {
+        // failed to read
+        return nullptr;
+    }
+
+    // TODO: we copy so that the memory ends up in chunk allocated
+    // by libmupdf so that it works across dll boundaries.
+    // We can either use  fz_new_buffer_from_shared_data
+    // and free the data on the side or create Allocator that
+    // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
+    size_t size = dataTmp.size();
+    void* data = FzMemdup(ctx, (void*)dataTmp.data(), size);
+    if (!data) {
+        return nullptr;
+    }
+    dataTmp.Free();
+
+    fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
+    fz_var(buf);
+    fz_try(ctx) {
+        stm = fz_open_buffer(ctx, buf);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        stm = nullptr;
+        fz_report_error(ctx);
+    }
+    return stm;
+}
+
+static fz_stream* FzOpenOrReadFile(fz_context* ctx, const char* path) {
+    fz_stream* stm = FzReadFileIfSmall(ctx, path);
+    if (stm) {
+        return stm;
+    }
     WCHAR* pathW = ToWStrTemp(path);
     fz_try(ctx) {
         stm = fz_open_file_w(ctx, pathW);
