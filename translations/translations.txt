@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d869f667c325977b638815fe73183fc7372e0686
+c5395b0a226957761d36ee6cb38cc433b563a541
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -6301,6 +6301,7 @@ cy:Cau Pob Tab
 cz:Zavřít všechny karty
 de:Alle Tabs schließen
 dk:Luk Alle Faner
+el:Κλείσιμο όλων των καρτελών
 es:Cerrar todas las pestañas
 fo:Sløkk øll varðabløð
 fr:Fermer tous les onglets
@@ -6380,6 +6381,7 @@ cy:Cau Tabiau I'r Chwith
 cz:Zavřít karty doleva
 de:Tabs links schließen
 dk:Luk fane til venstre
+el:Κλείσιμο καρτελών στα αριστερά
 es:Cerrar pestañas a la izquierda
 fo:Sløkk varðabløð vinstrumegin
 fr:Fermer les onglets sur la gauche
@@ -8937,6 +8939,7 @@ cy:Dileu
 cz:Vymazat
 de:Löschen
 dk:Slet
+el:Διαγραφή
 es:Eliminar
 fo:Strika
 fr:Supprimer
@@ -13835,6 +13838,7 @@ co:Manuale nant’à u situ web
 cz:Manuál na webové stránce
 de:Handbuch im Internet
 dk:Manual på hjemmeside
+el:Εγχειρίδιο στον ιστότοπο
 es:Manual en la Web
 fo:Vegleiðing á Vevsíðu
 fr:Manuel sur le site web
@@ -14245,6 +14249,7 @@ co:Nò
 cz:Ne
 de:Nein
 dk:Nej
+el:Όχι
 es:No
 fo:Nei
 fr:Non
@@ -15225,9 +15230,11 @@ cn:打开文件夹中的下一个文件
 co:Apre u schedariu seguente in u cartulare
 de:Nächste Datei im Ordner öffnen
 dk:Åben næste fil i mappe
+el:Άνοιγμα επόμενου αρχείου στο φάκελο
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
 he:פתח את הקובץ הבא שבתיקיה
+hu:Következő fájl megnyitása a mappában
 it:Apri file successivo nella cartella
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
@@ -15243,9 +15250,11 @@ cn:打开文件夹中的上一个文件
 co:Apre u schedariu precedente in u cartulare
 de:Vorherige Datei im Ordner öffnen
 dk:Åbne tidligere fil i mappe
+el:Άνοιγμα προηγούμενου αρχείου στο φάκελο
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
 he:פתח את הקובץ שלפני בתיקיה
+hu:Előző fájl megnyitása a mappában
 it:Apri file precedente nella cartella
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
@@ -18845,6 +18854,7 @@ co:Circà cù Google &Scholar
 cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
 dk:Søg med &Google Scholar
+el:Αναζήτηση με &Google Scholar
 es:Buscar con &Google Scholar
 fo:Leita við &Google Scholar
 fr:Rechercher avec &Google Scholar
@@ -18868,6 +18878,7 @@ co:Circà cù &Wikipedia
 cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
 dk:Søg med &Wikipedia
+el:Αναζήτηση με &Wikipedia
 es:Buscar con &Wikipedia
 fo:Leita við &Wikipedia
 fr:Rechercher avec &Wikipedia
@@ -22456,6 +22467,7 @@ co:Sì
 cz:Ano
 de:Ja
 dk:Ja
+el:Ναι
 es:Sí
 fo:Ja
 fr:Oui
