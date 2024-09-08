@@ -86,7 +86,6 @@ class EngineMupdf : public EngineBase {
     int displayDPI{96};
     fz_document* _doc = nullptr;
     pdf_document* pdfdoc = nullptr;
-    fz_stream* docStream = nullptr;
     Vec<FzPageInfo*> pages;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;

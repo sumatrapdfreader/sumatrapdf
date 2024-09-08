@@ -185,6 +185,7 @@ const char* FindCharLast(const char* str, char c);
 char* FindCharLast(char* str, char c);
 const char* Find(const char* str, const char* find);
 const char* FindI(const char* str, const char* find);
+int BufFind(const char* buf, int bufSize, const char* toFind);
 
 bool Contains(const char* s, const char* txt);
 bool ContainsI(const char* s, const char* txt);

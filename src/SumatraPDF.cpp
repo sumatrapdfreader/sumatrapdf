@@ -1589,8 +1589,8 @@ void DeleteMainWindow(MainWindow* win) {
     int winIdx = gWindows.Remove(win);
 
     int nWindowsLeft = gWindows.Size();
-    logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d, nWindowsLeft: %d\n", win, win->hwndFrame,
-         win->hwndCanvas, winIdx, nWindowsLeft);
+    logf("DeleteMainWindow: win: 0x%p, hwndFrame: 0x%p, hwndCanvas: 0x%p, winIdx : %d, nWindowsLeft: %d\n", win,
+         win->hwndFrame, win->hwndCanvas, winIdx, nWindowsLeft);
     if (winIdx < 0) {
         logf("  not deleting because not in gWindows, probably already deleted\n");
         return;

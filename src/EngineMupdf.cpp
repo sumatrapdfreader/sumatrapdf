@@ -405,6 +405,33 @@ static void* FzMemdup(fz_context* ctx, void* p, size_t size) {
     return res;
 }
 
+static fz_stream* FzStreamFromData(fz_context* ctx, const u8* data, int size) {
+    fz_stream* stm = nullptr;
+    // TODO: we copy so that the memory ends up in chunk allocated
+    // by libmupdf so that it works across dll boundaries.
+    // We can either use  fz_new_buffer_from_shared_data
+    // and free the data on the side or create Allocator that
+    // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
+    void* dataCopy = FzMemdup(ctx, (void*)data, size);
+    if (!dataCopy) {
+        return nullptr;
+    }
+
+    fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)dataCopy, size);
+    fz_var(buf);
+    fz_try(ctx) {
+        stm = fz_open_buffer(ctx, buf);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        stm = nullptr;
+        fz_report_error(ctx);
+    }
+    return stm;
+}
+
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
@@ -420,36 +447,48 @@ static fz_stream* FzReadFileIfSmall(fz_context* ctx, const char* path) {
         return nullptr;
     }
 
-    ByteSlice dataTmp = file::ReadFile(path);
-    if (dataTmp.empty()) {
+    ByteSlice d = file::ReadFile(path);
+    if (d.empty()) {
         // failed to read
         return nullptr;
     }
 
-    // TODO: we copy so that the memory ends up in chunk allocated
-    // by libmupdf so that it works across dll boundaries.
-    // We can either use  fz_new_buffer_from_shared_data
-    // and free the data on the side or create Allocator that
-    // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
-    size_t size = dataTmp.size();
-    void* data = FzMemdup(ctx, (void*)dataTmp.data(), size);
-    if (!data) {
+    stm = FzStreamFromData(ctx, d.data(), d.Size());
+    d.Free();
+    return stm;
+}
+
+/*
+https://github.com/sumatrapdfreader/sumatrapdf/issues/4514
+Some PDF files have garbage at the beginning, before the %PDF- marker
+Sometimes removing this garbage fixes the file for mupdf
+*/
+static fz_stream* FzReadMaybeFixPDF(fz_context* ctx, const char* path) {
+    fz_stream* stm;
+    // fast fail: read enough to check if this is PDF file with garbage
+    char buf[1024];
+    size_t bufSize = dimof(buf);
+    int n = file::ReadN(path, buf, bufSize);
+    if (n < 1024) {
         return nullptr;
     }
-    dataTmp.Free();
+    n = str::BufFind(buf, (int)bufSize, "%PDF-");
+    if (n <= 0) {
+        // not PDF or no garbage at the beginning
+        return nullptr;
+    }
 
-    fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
-    fz_var(buf);
-    fz_try(ctx) {
-        stm = fz_open_buffer(ctx, buf);
+    ByteSlice d = file::ReadFile(path);
+    if (d.empty()) {
+        // failed to read
+        return nullptr;
     }
-    fz_always(ctx) {
-        fz_drop_buffer(ctx, buf);
-    }
-    fz_catch(ctx) {
-        stm = nullptr;
-        fz_report_error(ctx);
-    }
+
+    // strip garbage
+    const u8* data = d.data() + n;
+    int size = d.Size() - n;
+    stm = FzStreamFromData(ctx, data, size);
+    d.Free();
     return stm;
 }
 
@@ -1809,6 +1848,7 @@ static ByteSlice PalmDocToHTML(const char* path) {
 }
 
 bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
+    bool ok;
     const char* pathA = path;
     auto ctx = Ctx();
     ReportIf(FilePath() || _doc || !ctx);
@@ -1857,25 +1897,31 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
         return FinishLoading();
     }
 
-    fz_stream* file = nullptr;
-
-    fz_var(file);
-    fz_try(ctx) {
-        file = FzOpenOrReadFile(ctx, fnCopy);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        file = nullptr;
-    }
-
-    if (!LoadFromStream(file, FilePath(), pwdUI)) {
+    fz_stream* file = FzOpenOrReadFile(ctx, fnCopy);
+    ok = LoadFromStream(file, FilePath(), pwdUI);
+    if (!ok) {
         return false;
     }
 
     if (streamNo < 0) {
+        ok = FinishLoading();
+        if (ok) {
+            return true;
+        }
+        fz_drop_document(ctx, _doc);
+        _doc = nullptr;
+        file = FzReadMaybeFixPDF(ctx, FilePath());
+        if (!file) {
+            return false;
+        }
+        ok = LoadFromStream(file, FilePath(), pwdUI);
+        if (!ok) {
+            return false;
+        }
         return FinishLoading();
     }
 
+    // load a stream from inside a pdf document
     pdfdoc = pdf_specifics(ctx, _doc);
     if (pdfdoc) {
         if (!pdf_obj_num_is_stream(ctx, pdfdoc, streamNo)) {
@@ -1937,6 +1983,7 @@ bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI)
 // TODO: allow setting per
 extern EBookUI* GetEBookUI();
 
+// stm is either freed or retained via _doc
 bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
@@ -2004,8 +2051,6 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         return false;
     }
 
-    docStream = stm;
-
     isPasswordProtected = fz_needs_password(ctx, _doc);
     if (!isPasswordProtected) {
         return true;
@@ -2062,7 +2107,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
         memcpy(digest + 16, pdf_crypt_key(ctx, pdfdoc->crypt), 32);
         decryptionKey = _MemToHex(&digest);
     }
-
+    // TODO: if !ok,
     return ok;
 }
 

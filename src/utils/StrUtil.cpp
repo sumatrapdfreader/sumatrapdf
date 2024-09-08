@@ -642,6 +642,22 @@ const char* Find(const char* str, const char* find) {
     return strstr(str, find);
 }
 
+int BufFind(const char* buf, int bufSize, const char* toFind) {
+    int toFindLen = str::Leni(toFind);
+    char c = *toFind;
+    const char* end = buf + (bufSize - toFindLen);
+    const char* s = buf;
+    while (s < end) {
+        if (*s == c) {
+            if (memeq((const void*)s, (const void*)toFind, (size_t)toFindLen)) {
+                return (int)(s - buf);
+            }
+        }
+        s++;
+    }
+    return -1;
+}
+
 // format string to a buffer provided by the caller
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
