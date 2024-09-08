@@ -589,7 +589,7 @@ bool MobiDoc::ParseHeader() {
         }
         size_t cdicsCount = mobiHdr.huffmanRecCount - 1;
         if (cdicsCount > kCdicsMax) {
-            logf("MobiDoc::ParseHeader: cdicsCount: %d, kCdicsMax: %d\n", cdicsCount, kCdicsMax);
+            logf("MobiDoc::ParseHeader: cdicsCount: %d, kCdicsMax: %d\n", (int)cdicsCount, kCdicsMax);
             ReportDebugIf(true);
             return false;
         }
