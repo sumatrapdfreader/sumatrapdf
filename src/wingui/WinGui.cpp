@@ -164,7 +164,6 @@ TempStr WinMsgNameTemp(UINT msg) {
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 
-// window_map.h / window_map.cpp
 struct WindowToHwnd {
     Wnd* window = nullptr;
     HWND hwnd = nullptr;
@@ -182,7 +181,13 @@ static Wnd* WindowMapGetWindow(HWND hwnd) {
 }
 
 static void WindowMapAdd(HWND hwnd, Wnd* w) {
-    if (!hwnd || (WindowMapGetWindow(hwnd) != nullptr)) {
+    if (!hwnd) {
+        ReportIf(!hwnd);
+        return;
+    }
+    Wnd* existing = WindowMapGetWindow(hwnd);
+    if (existing) {
+        ReportIf(existing);
         return;
     }
     WindowToHwnd el = {w, hwnd};
@@ -225,33 +230,33 @@ const DWORD WM_TASKBARBUTTONCREATED = ::RegisterWindowMessage(L"TaskbarButtonCre
 
 const WCHAR* kDefaultClassName = L"SumatraWgDefaultWinClass";
 
-static LRESULT CALLBACK StaticWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+static LRESULT CALLBACK WndWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     // seen crashes in TabCtrl::WndProc() which might be caused by handling drag&drop messages
     // after parent window was destroyed. maybe this will fix it
     if (!IsWindow(hwnd)) {
         return 0;
     }
 
-    Wnd* window = WindowMapGetWindow(hwnd);
+    Wnd* wnd = WindowMapGetWindow(hwnd);
 
     if (msg == WM_NCCREATE) {
         CREATESTRUCT* cs = (CREATESTRUCT*)(lparam);
-        ReportIf(window);
-        window = (Wnd*)(cs->lpCreateParams);
-        window->hwnd = hwnd;
-        WindowMapAdd(hwnd, window);
+        ReportIf(wnd);
+        wnd = (Wnd*)(cs->lpCreateParams);
+        wnd->hwnd = hwnd;
+        WindowMapAdd(hwnd, wnd);
     }
 
-    if (window) {
-        return window->WndProc(hwnd, msg, wparam, lparam);
+    if (wnd) {
+        return wnd->WndProc(hwnd, msg, wparam, lparam);
     } else {
         return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
 }
 
-static LRESULT CALLBACK StaticWindowProcSubclassed(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
-                                                   DWORD_PTR data) {
-    return StaticWindowProc(hwnd, msg, wp, lp);
+static LRESULT CALLBACK WndSubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+                                                DWORD_PTR data) {
+    return WndWindowProc(hwnd, msg, wp, lp);
 }
 
 Wnd::Wnd() {
@@ -929,7 +934,7 @@ static void WndRegisterClass(const WCHAR* className) {
     wc.style = CS_DBLCLKS;
     wc.hInstance = inst;
     wc.lpszClassName = className;
-    wc.lpfnWndProc = StaticWindowProc;
+    wc.lpfnWndProc = WndWindowProc;
     wc.hCursor = ::LoadCursor(nullptr, IDC_ARROW);
     wc.hbrBackground = reinterpret_cast<HBRUSH>(::GetStockObject(WHITE_BRUSH));
     ATOM atom = ::RegisterClassExW(&wc);
@@ -1071,7 +1076,7 @@ void Wnd::Subclass() {
     WindowMapAdd(hwnd, this);
 
     subclassId = NextSubclassId();
-    BOOL ok = SetWindowSubclass(hwnd, StaticWindowProcSubclassed, subclassId, (DWORD_PTR)this);
+    BOOL ok = SetWindowSubclass(hwnd, WndSubclassedWindowProc, subclassId, (DWORD_PTR)this);
     ReportIf(!ok);
 }
 
@@ -1079,7 +1084,7 @@ void Wnd::UnSubclass() {
     if (!subclassId) {
         return;
     }
-    RemoveWindowSubclass(hwnd, StaticWindowProcSubclassed, subclassId);
+    RemoveWindowSubclass(hwnd, WndSubclassedWindowProc, subclassId);
     subclassId = 0;
 }
 
@@ -1140,10 +1145,9 @@ bool PreTranslateMessage(MSG& msg) {
         return false;
     }
     for (HWND hwnd = msg.hwnd; hwnd != nullptr; hwnd = ::GetParent(hwnd)) {
-        if (auto window = WindowMapGetWindow(hwnd)) {
-            if (window->PreTranslateMessage(msg)) {
-                return true;
-            }
+        auto wnd = WindowMapGetWindow(hwnd);
+        if (wnd && wnd->PreTranslateMessage(msg)) {
+            return true;
         }
     }
     return false;
@@ -2484,7 +2488,6 @@ HWND TreeView::Create(const CreateArgs& argsIn) {
     // must be done at the end. Doing  SetWindowStyle() sends bogus (?)
     // TVN_ITEMCHANGED notification. As an alternative we could ignore TVN_ITEMCHANGED
     // if hItem doesn't point to an TreeItem
-    // Subclass();
 
     return hwnd;
 }
