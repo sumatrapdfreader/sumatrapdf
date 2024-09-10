@@ -11596,6 +11596,7 @@ br:Manual no Site da Web
 ca:Manual al lloc web
 cn:在线手册
 co:Manuale nant’à u situ web
+cy:Llawlyfr ar y wefan
 cz:Manuál na webové stránce
 de:Handbuch im Internet
 dk:Manual på hjemmeside
@@ -11939,6 +11940,7 @@ br:Não
 ca:No
 cn:否
 co:Nò
+cy:Na
 cz:Ne
 de:Nein
 dk:Nej
@@ -12801,6 +12803,7 @@ tw:在新視窗中開啟
 br:Abrir o Próximo Arquivo na Pasta
 cn:打开文件夹中的下一个文件
 co:Apre u schedariu seguente in u cartulare
+cy:Agor y Ffeil Nesaf yn y Ffolder
 de:Nächste Datei im Ordner öffnen
 dk:Åben næste fil i mappe
 el:Άνοιγμα επόμενου αρχείου στο φάκελο
@@ -12821,6 +12824,7 @@ tw:開啟資料夾內的下一個檔案
 br:Abrir o Arquivo Anterior na Pasta
 cn:打开文件夹中的上一个文件
 co:Apre u schedariu precedente in u cartulare
+cy:Agor y Ffeil Blaenorol yn y Ffolder
 de:Vorherige Datei im Ordner öffnen
 dk:Åbne tidligere fil i mappe
 el:Άνοιγμα προηγούμενου αρχείου στο φάκελο
@@ -15986,6 +15990,7 @@ br:Procurar com o &Google Scholar
 ca:Cerca amb el &Google Scholar
 cn:谷歌学术搜索(&G)
 co:Circà cù Google &Scholar
+cy:Chwilio gyda &Google Scholar
 cz:Vyhledat pomocí &Google Scholar
 de:Suche mit &Google Scholar
 dk:Søg med &Google Scholar
@@ -16010,6 +16015,7 @@ br:Procurar com a &Wikipedia
 ca:Cerca amb el &Wikipedia
 cn:维基百科搜索(&W)
 co:Circà cù &Wikipedia
+cy:Chwilio gyda Wicipedia
 cz:Vyhledat na &Wikipedii
 de:Suche mit &Wikipedia
 dk:Søg med &Wikipedia
@@ -19054,6 +19060,7 @@ br:Sim
 ca:Sí
 cn:是
 co:Sì
+cy:Iawn
 cz:Ano
 de:Ja
 dk:Ja
