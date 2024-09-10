@@ -269,8 +269,8 @@ class EngineDjVu : public EngineBase {
     TempStr GetPageLabeTemp(int pageNo) const override;
     int GetPageByLabel(const char* label) const override;
 
-    static EngineBase* CreateFromFile(const char* path);
-    static EngineBase* CreateFromStream(IStream* stream);
+    bool Load(const char* fileName);
+    bool Load(IStream* stream);
 
   protected:
     IStream* stream = nullptr;
@@ -287,8 +287,6 @@ class EngineDjVu : public EngineBase {
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<Rect>& coords);
     TempStr ResolveNamedDestTemp(const char* name);
     TocItem* BuildTocTree(TocItem* parent, miniexp_t entry, int& idCounter);
-    bool Load(const char* fileName);
-    bool Load(IStream* stream);
     bool FinishLoading();
     bool LoadMediaboxes();
 };
@@ -328,11 +326,11 @@ EngineDjVu::~EngineDjVu() {
 
 EngineBase* EngineDjVu::Clone() {
     if (stream != nullptr) {
-        return CreateFromStream(stream);
+        return CreateEngineDjVuFromStream(stream);
     }
     const char* path = FilePath();
     if (path) {
-        return CreateFromFile(path);
+        return CreateEngineDjVuFromFile(path);
     }
     return nullptr;
 }
@@ -1193,32 +1191,24 @@ int EngineDjVu::GetPageByLabel(const char* label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-EngineBase* EngineDjVu::CreateFromFile(const char* path) {
-    EngineDjVu* engine = new EngineDjVu();
-    if (!engine->Load(path)) {
-        engine->Release();
-        return nullptr;
-    }
-    return engine;
-}
-
-EngineBase* EngineDjVu::CreateFromStream(IStream* stream) {
-    EngineDjVu* engine = new EngineDjVu();
-    if (!engine->Load(stream)) {
-        engine->Release();
-        return nullptr;
-    }
-    return engine;
-}
-
 bool IsEngineDjVuSupportedFileType(Kind kind) {
     return kind == kindFileDjVu;
 }
 
-EngineBase* CreateEngineDjVuFromFile(const char* path) {
-    return EngineDjVu::CreateFromFile(path);
+EngineBase* CreateEngineDjVuFromStream(IStream* stream) {
+    EngineDjVu* engine = new EngineDjVu();
+    if (engine->Load(stream)) {
+        return engine;
+    }
+    SafeEngineRelease(&engine);
+    return nullptr;
 }
 
-EngineBase* CreateEngineDjVuFromStream(IStream* stream) {
-    return EngineDjVu::CreateFromStream(stream);
+EngineBase* CreateEngineDjVuFromFile(const char* path) {
+    EngineDjVu* engine = new EngineDjVu();
+    if (engine->Load(path)) {
+        return engine;
+    }
+    SafeEngineRelease(&engine);
+    return nullptr;
 }

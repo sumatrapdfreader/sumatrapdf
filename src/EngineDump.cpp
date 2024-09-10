@@ -597,6 +597,6 @@ void EngineDump(const Flags& flags) {
     if (renderPath) {
         RenderDocument(engine, renderPath, renderZoom, flags.silent);
     }
-    engine->Release();
+    SafeEngineRelease(&engine);
 #endif
 }

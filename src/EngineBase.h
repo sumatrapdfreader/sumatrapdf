@@ -541,3 +541,12 @@ struct PasswordUI {
     virtual char* GetPassword(const char* fileName, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
     virtual ~PasswordUI() = default;
 };
+
+template <typename T>
+void SafeEngineRelease(T** enginePtr) {
+    T* engine = *enginePtr;
+    if (engine) {
+        engine->Release();
+        *enginePtr = nullptr;
+    }
+}

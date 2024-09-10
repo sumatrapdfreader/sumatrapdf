@@ -368,7 +368,7 @@ static void FindThread(FindThreadData* ftd) {
     auto engine = dm->GetEngine();
     engine->AddRef();
     defer {
-        engine->Release();
+        SafeEngineRelease(&engine);
     };
 
     TextSel* rect;

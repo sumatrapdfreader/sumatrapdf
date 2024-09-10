@@ -254,7 +254,9 @@ class EnginePs : public EngineBase {
     }
 
     ~EnginePs() override {
-        pdfEngine->Release();
+        if (pdfEngine) {
+            pdfEngine->Release();
+        }
     }
 
     EngineBase* Clone() override {
@@ -349,9 +351,6 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetToc();
     }
 
-    static EngineBase* CreateFromFile(const char* fileName);
-
-  protected:
     EngineBase* pdfEngine = nullptr;
 
     bool Load(const char* fileName) {
@@ -360,6 +359,7 @@ class EnginePs : public EngineBase {
         if (!fileName) {
             return false;
         }
+
         SetFilePath(fileName);
         if (file::StartsWith(fileName, "\x1F\x8B")) {
             pdfEngine = psgz2pdf(fileName);
@@ -367,12 +367,12 @@ class EnginePs : public EngineBase {
             pdfEngine = ps2pdf(fileName);
         }
 
-        if (str::EndsWithI(FilePath(), ".eps")) {
-            defaultExt = str::Dup(".eps");
-        }
-
         if (!pdfEngine) {
             return false;
+        }
+
+        if (str::EndsWithI(FilePath(), ".eps")) {
+            defaultExt = str::Dup(".eps");
         }
 
         preferredLayout = pdfEngine->preferredLayout;
@@ -386,10 +386,10 @@ class EnginePs : public EngineBase {
     }
 };
 
-EngineBase* EnginePs::CreateFromFile(const char* fileName) {
+EngineBase* CreateEnginePsFromFile(const char* fileName) {
     EnginePs* engine = new EnginePs();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -405,8 +405,4 @@ bool IsEnginePsSupportedFileType(Kind kind) {
         return false;
     }
     return kind == kindFilePS;
-}
-
-EngineBase* CreateEnginePsFromFile(const char* fileName) {
-    return EnginePs::CreateFromFile(fileName);
 }

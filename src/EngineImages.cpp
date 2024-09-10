@@ -751,7 +751,7 @@ EngineBase* EngineImage::CreateFromFile(const char* path) {
     logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
     if (!engine->LoadSingleFile(path)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -760,7 +760,7 @@ EngineBase* EngineImage::CreateFromFile(const char* path) {
 EngineBase* EngineImage::CreateFromStream(IStream* stream) {
     EngineImage* engine = new EngineImage();
     if (!engine->LoadFromStream(stream)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -975,7 +975,7 @@ EngineBase* EngineImageDir::CreateFromFile(const char* fileName) {
     ReportIf(!dir::Exists(fileName));
     EngineImageDir* engine = new EngineImageDir();
     if (!LoadImageDir(engine, fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1398,45 +1398,45 @@ EngineBase* EngineCbx::CreateFromFile(const char* path) {
     if (engine->LoadFromFile(path)) {
         return engine;
     }
-    engine->Release();
+    SafeEngineRelease(&engine);
     return nullptr;
 }
 
 EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
     auto* archive = OpenZipArchive(stream, false);
     if (archive) {
-        auto* engine = new EngineCbx(archive);
+        EngineCbx* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        engine->Release();
+        SafeEngineRelease(&engine);
     }
 
     archive = OpenRarArchive(stream);
     if (archive) {
-        auto* engine = new EngineCbx(archive);
+        EngineCbx* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        engine->Release();
+        SafeEngineRelease(&engine);
     }
 
     archive = Open7zArchive(stream);
     if (archive) {
-        auto* engine = new EngineCbx(archive);
+        EngineCbx* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        engine->Release();
+        SafeEngineRelease(&engine);
     }
 
     archive = OpenTarArchive(stream);
     if (archive) {
-        auto* engine = new EngineCbx(archive);
+        EngineCbx* engine = new EngineCbx(archive);
         if (engine->LoadFromStream(stream)) {
             return engine;
         }
-        engine->Release();
+        SafeEngineRelease(&engine);
     }
 
     return nullptr;

@@ -158,7 +158,7 @@ static void BenchFile(const char* path, const char* pagesSpec) {
         }
     }
 
-    engine->Release();
+    SafeEngineRelease(&engine);
 
     logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), path);
 }

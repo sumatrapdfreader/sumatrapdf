@@ -850,7 +850,7 @@ TocTree* EngineEpub::GetToc() {
 EngineBase* EngineEpub::CreateFromFile(const char* fileName) {
     EngineEpub* engine = new EngineEpub();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -859,7 +859,7 @@ EngineBase* EngineEpub::CreateFromFile(const char* fileName) {
 EngineBase* EngineEpub::CreateFromStream(IStream* stream) {
     EngineEpub* engine = new EngineEpub();
     if (!engine->Load(stream)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -971,7 +971,7 @@ TocTree* EngineFb2::GetToc() {
 EngineBase* EngineFb2::CreateFromFile(const char* fileName) {
     EngineFb2* engine = new EngineFb2();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -980,7 +980,7 @@ EngineBase* EngineFb2::CreateFromFile(const char* fileName) {
 EngineBase* EngineFb2::CreateFromStream(IStream* stream) {
     EngineFb2* engine = new EngineFb2();
     if (!engine->Load(stream)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1128,7 +1128,7 @@ TocTree* EngineMobi::GetToc() {
 EngineBase* EngineMobi::CreateFromFile(const char* fileName) {
     EngineMobi* engine = new EngineMobi();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1137,7 +1137,7 @@ EngineBase* EngineMobi::CreateFromFile(const char* fileName) {
 EngineBase* EngineMobi::CreateFromStream(IStream* stream) {
     EngineMobi* engine = new EngineMobi();
     if (!engine->Load(stream)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1235,7 +1235,7 @@ TocTree* EnginePdb::GetToc() {
 EngineBase* EnginePdb::CreateFromFile(const char* fileName) {
     EnginePdb* engine = new EnginePdb();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1616,7 +1616,7 @@ IPageElement* EngineChm::CreatePageLink(DrawInstr* link, Rect rect, int pageNo) 
 EngineBase* EngineChm::CreateFromFile(const char* fileName) {
     EngineChm* engine = new EngineChm();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1721,7 +1721,7 @@ IPageElement* EngineHtml::CreatePageLink(DrawInstr* link, Rect rect, int pageNo)
 EngineBase* EngineHtml::CreateFromFile(const char* fileName) {
     EngineHtml* engine = new EngineHtml();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;
@@ -1826,7 +1826,7 @@ TocTree* EngineTxt::GetToc() {
 EngineBase* EngineTxt::CreateFromFile(const char* fileName) {
     EngineTxt* engine = new EngineTxt();
     if (!engine->Load(fileName)) {
-        engine->Release();
+        SafeEngineRelease(&engine);
         return nullptr;
     }
     return engine;

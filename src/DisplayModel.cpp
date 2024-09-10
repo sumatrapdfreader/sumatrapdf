@@ -319,7 +319,7 @@ DisplayModel::~DisplayModel() {
     delete textSearch;
     delete textSelection;
     delete textCache;
-    engine->Release();
+    SafeEngineRelease(&engine);
     free(pagesInfo);
 }
 

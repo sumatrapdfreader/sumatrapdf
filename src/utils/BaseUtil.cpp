@@ -56,12 +56,9 @@ int AtomicRefCount::Add() {
     return (int)InterlockedIncrement(&val);
 }
 
-// returns true if counter reaches 0, meaning it has been released
-// by all who held a reference to it
-bool AtomicRefCount::Dec() {
+int AtomicRefCount::Dec() {
     auto res = InterlockedDecrement(&val);
-    ReportIf(res < 0);
-    return res == 0;
+    return res;
 }
 
 void BreakIfUnderDebugger() {

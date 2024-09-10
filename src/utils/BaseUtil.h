@@ -781,7 +781,7 @@ struct AtomicRefCount {
     int Add();
     // returns true if counter reaches 0, meaning it has been released
     // by all who held a reference to it
-    bool Dec();
+    int Dec();
 
   private:
     // starts life as acquired

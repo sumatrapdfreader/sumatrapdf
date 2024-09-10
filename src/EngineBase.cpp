@@ -324,7 +324,8 @@ int EngineBase::AddRef() {
 }
 
 bool EngineBase::Release() {
-    if (refCount.Dec()) {
+    int rc = refCount.Dec();
+    if (rc == 0) {
         delete this;
         return true;
     }
