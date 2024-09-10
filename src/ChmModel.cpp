@@ -624,15 +624,16 @@ struct ChmThumbnailTask : HtmlWindowCallback {
     ChmFile* doc = nullptr;
     HWND hwnd = nullptr;
     HtmlWindow* hw = nullptr;
+    bool didSave = false;
     Size size;
-    const OnBitmapRendered* saveThumbnail;
+    const OnBitmapRendered* saveThumbnail = nullptr;
     AutoFreeStr homeUrl;
     Vec<ByteSlice> data;
     CRITICAL_SECTION docAccess;
 
     ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnBitmapRendered* saveThumbnail);
     ~ChmThumbnailTask() override;
-    void CreateThumbnail(HtmlWindow* hw);
+    void StartCreateThumbnail(HtmlWindow* hw);
     bool OnBeforeNavigate(const char*, bool newWindow) override;
     void OnDocumentComplete(const char* url) override;
     ByteSlice GetDataForUrl(const char* url) override;
@@ -650,6 +651,7 @@ ChmThumbnailTask::ChmThumbnailTask(ChmFile* doc, HWND hwnd, Size size, const OnB
     this->hwnd = hwnd;
     this->size = size;
     this->saveThumbnail = saveThumbnail;
+    this->didSave = false;
     InitializeCriticalSection(&docAccess);
 }
 
@@ -669,7 +671,7 @@ bool ChmThumbnailTask::OnBeforeNavigate(const char*, bool newWindow) {
     return !newWindow;
 }
 
-void ChmThumbnailTask::CreateThumbnail(HtmlWindow* hw) {
+void ChmThumbnailTask::StartCreateThumbnail(HtmlWindow* hw) {
     this->hw = hw;
     homeUrl.Set(strconv::AnsiToUtf8(doc->GetHomePath()));
     if (*homeUrl == '/') {
@@ -690,17 +692,27 @@ void ChmThumbnailTask::OnDocumentComplete(const char* url) {
     if (url && *url == '/') {
         url++;
     }
-    if (str::Eq(url, homeUrl)) {
-        Rect area(0, 0, size.dx * 2, size.dy * 2);
-        HBITMAP hbmp = hw->TakeScreenshot(area, size);
-        if (hbmp) {
-            RenderedBitmap* bmp = new RenderedBitmap(hbmp, size);
-            saveThumbnail->Call(bmp);
-        }
-        // TODO: why is destruction on the UI thread necessary?
-        auto fn = MkFunc0<ChmThumbnailTask>(SafeDeleteChmThumbnailTask, this);
-        uitask::Post(fn, "SafeDeleteChmThumbnailTask");
+    if (!str::Eq(url, homeUrl)) {
+        return;
     }
+    logf("ChmThumbnailTask::OnDocumentComplete: '%s'\n", url);
+    if (didSave) {
+        // maybe prevent crash generating .chm thumbnails
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/4519
+        ReportIfQuick(didSave);
+        return;
+    }
+    Rect area(0, 0, size.dx * 2, size.dy * 2);
+    HBITMAP hbmp = hw->TakeScreenshot(area, size);
+    if (hbmp) {
+        RenderedBitmap* bmp = new RenderedBitmap(hbmp, size);
+        saveThumbnail->Call(bmp);
+    }
+    // delay deleting because ~ChmThumbnailTask() deletes HtmlWindow
+    // and we're currently processing HtmlWindow messages
+    // TODO: it's possible we still have timing issue
+    auto fn = MkFunc0<ChmThumbnailTask>(SafeDeleteChmThumbnailTask, this);
+    uitask::Post(fn, "SafeDeleteChmThumbnailTask");
 }
 
 void ChmThumbnailTask::OnLButtonDown() {
@@ -738,7 +750,7 @@ static void CreateChmThumbnail(const char* path, const Size& size, const OnBitma
         return;
     }
     // is deleted in ChmThumbnailTask::OnDocumentComplete
-    thumbnailTask->CreateThumbnail(hw);
+    thumbnailTask->StartCreateThumbnail(hw);
 }
 
 // Create a thumbnail of chm document by loading it again and rendering

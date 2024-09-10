@@ -74,7 +74,6 @@ void Post(const Func0& f, Kind kind) {
     PostMessageW(gTaskDispatchHwnd, wmExecTask, (WPARAM)kind, (LPARAM)func);
 } // NOLINT
 
-#if 0
 void PostOptimized(const Func0& f, Kind kind) {
     if (IsGUIThread(FALSE)) {
         // if we're already on ui thread, execute immediately
@@ -84,6 +83,5 @@ void PostOptimized(const Func0& f, Kind kind) {
     }
     Post(f, kind);
 } // NOLINT
-#endif
 
 } // namespace uitask
