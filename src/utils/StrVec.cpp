@@ -704,7 +704,7 @@ bool operator!=(const StrVec::iterator& a, const StrVec::iterator& b) {
 
 static void SortNoData(StrVec* v, StrLessFunc lessFn) {
     CompactPages(v, 0);
-    if (v->IsEmpty()) {
+    if (v->Size() < 2) {
         return;
     }
     ReportIf(!v->first);
@@ -735,7 +735,7 @@ static int* AllocateSortIndexes(StrVec* v) {
 }
 
 void SortIndex(StrVec* v, StrLessFunc lessFn) {
-    if (v->IsEmpty()) {
+    if (v->Size() < 2) {
         return;
     }
     int* indexes = AllocateSortIndexes(v);
@@ -752,7 +752,7 @@ void SortIndex(StrVec* v, StrLessFunc lessFn) {
 }
 
 void Sort(StrVec* v, StrLessFunc lessFn) {
-    if (v->IsEmpty()) {
+    if (v->Size() < 2) {
         return;
     }
     if (v->dataSize == 0) {

@@ -34,14 +34,14 @@ static TempStr GetGhostscriptPathTemp() {
 TryAgain64Bit:
     for (const char* gsProd : gsProducts) {
         HKEY hkey;
-        char* keyName = str::JoinTemp("Software\\", gsProd);
-        WCHAR* keyNameW = ToWStrTemp(keyName);
+        TempStr keyName = str::JoinTemp("Software\\", gsProd);
+        TempWStr keyNameW = ToWStrTemp(keyName);
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyNameW, 0, access, &hkey) != ERROR_SUCCESS) {
             continue;
         }
         WCHAR subkey[32];
         for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++) {
-            char* ver = ToUtf8Temp(subkey);
+            TempStr ver = ToUtf8Temp(subkey);
             versions.Append(ver);
         }
         RegCloseKey(hkey);
@@ -59,15 +59,15 @@ TryAgain64Bit:
 
     // return the path to the newest installation
     int nVers = versions.Size();
-    for (int ix = nVers; ix > 0; ix--) {
+    for (int i = nVers; i > 0; i--) {
         for (const char* gsProd : gsProducts) {
-            char* ver = versions.At(ix - 1);
+            char* ver = versions.At(i - 1);
             TempStr keyName = str::FormatTemp("Software\\%s\\%s", gsProd, ver);
-            char* GS_DLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
-            if (!GS_DLL) {
+            TempStr gsDLL = ReadRegStrTemp(HKEY_LOCAL_MACHINE, keyName, "GS_DLL");
+            if (!gsDLL) {
                 continue;
             }
-            TempStr dir = path::GetDirTemp(GS_DLL);
+            TempStr dir = path::GetDirTemp(gsDLL);
             TempStr exe = path::JoinTemp(dir, "gswin32c.exe");
             if (file::Exists(exe)) {
                 return exe;
@@ -81,15 +81,16 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariableW(L"PATH", nullptr, 0);
-    AutoFreeWStr envpath(AllocArray<WCHAR>(size + 1));
+    TempWStr envpathW = AllocArrayTemp<WCHAR>(size + 1);
     if (size == 0) {
         return nullptr;
     }
-    GetEnvironmentVariableW(L"PATH", envpath, size);
+    GetEnvironmentVariableW(L"PATH", envpathW, size);
+    TempStr envPath = ToUtf8Temp(envpathW);
     StrVec paths;
-    Split(&paths, ToUtf8Temp(envpath), ";", true);
+    Split(&paths, envPath, ";", true);
     for (char* path : paths) {
-        char* exe = path::JoinTemp(path, "gswin32c.exe");
+        TempStr exe = path::JoinTemp(path, "gswin32c.exe");
         if (!file::Exists(exe)) {
             exe = path::JoinTemp(path, "gswin64c.exe");
         }
@@ -101,19 +102,18 @@ TryAgain64Bit:
     return nullptr;
 }
 
-class ScopedFile {
-    AutoFreeStr path;
+struct AutoDeleteFile {
+    AutoFreeStr filePath;
 
-  public:
-    explicit ScopedFile(const WCHAR* pathW) {
-        path.Set(ToUtf8(pathW));
+    explicit AutoDeleteFile(const WCHAR* path) {
+        filePath.Set(ToUtf8(path));
     }
-    explicit ScopedFile(const char* pathA) {
-        path.SetCopy(pathA);
+    explicit AutoDeleteFile(const char* path) {
+        filePath.SetCopy(path);
     }
-    ~ScopedFile() {
-        if (path) {
-            file::Delete(path);
+    ~AutoDeleteFile() {
+        if (filePath) {
+            file::Delete(filePath);
         }
     }
 };
@@ -147,7 +147,7 @@ static EngineBase* ps2pdf(const char* path) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     TempStr shortPath = path::ShortPathTemp(path);
     TempStr tmpFile = GetTempFilePathTemp("PsE");
-    ScopedFile tmpFileScope(tmpFile);
+    AutoDeleteFile tmpFileScope(tmpFile);
     TempStr gswin32c = GetGhostscriptPathTemp();
     if (!shortPath || !tmpFile || !gswin32c) {
         return nullptr;
@@ -206,12 +206,13 @@ static EngineBase* ps2pdf(const char* path) {
         return nullptr;
     }
 
-    return CreateEngineMupdfFromStream(stream, tmpFile);
+    TempStr nameHint = str::Join(path, ".pdf");
+    return CreateEngineMupdfFromStream(stream, nameHint);
 }
 
 static EngineBase* psgz2pdf(const char* fileName) {
     TempStr tmpFile = GetTempFilePathTemp("PsE");
-    ScopedFile tmpFileScope(tmpFile);
+    AutoDeleteFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;
     }
