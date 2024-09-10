@@ -1493,6 +1493,12 @@ pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *font
 		if (fontdesc->descent == 0.0f)
 			fontdesc->descent = 1000.0f * face->descender / face->units_per_EM;
 	}
+
+	/* Prefer FontDescriptor Ascent/Descent values to embedded font's */
+	if (fontdesc->ascent)
+		fontdesc->font->ascender = fontdesc->ascent / 1000.0f;
+	if (fontdesc->descent)
+		fontdesc->font->descender = fontdesc->descent / 1000.0f;
 }
 
 static void

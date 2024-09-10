@@ -249,6 +249,7 @@ public class PDFDocument extends Document
 	public native PDFFilespecParams getFilespecParams(PDFObject fs);
 	public native Buffer loadEmbeddedFileContents(PDFObject fs);
 	public native boolean verifyEmbeddedFileChecksum(PDFObject fs);
+	public native boolean isEmbeddedFile(PDFObject fs);
 
 	public PDFObject addEmbeddedFile(String filename, String mimetype, InputStream stream, Date created, Date modified, boolean addChecksum) {
 		Buffer contents = new Buffer();

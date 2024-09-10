@@ -1589,6 +1589,21 @@ FUN(PDFDocument_verifyEmbeddedFileChecksum)(JNIEnv *env, jobject self, jobject j
 	return valid ? JNI_TRUE : JNI_FALSE;
 }
 
+JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_isEmbeddedFile)(JNIEnv *env, jobject self, jobject jfs)
+{
+	fz_context *ctx = get_context(env);
+	pdf_obj *fs = from_PDFObject_safe(env, jfs);
+	int embedded = 0;
+
+	fz_try(ctx)
+		embedded = pdf_is_embedded_file(ctx, fs);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return embedded ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT void JNICALL
 FUN(PDFDocument_setPageLabels)(JNIEnv *env, jobject self, jint index, jint style, jstring jprefix, jint start)
 {

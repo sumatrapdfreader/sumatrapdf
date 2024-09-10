@@ -768,8 +768,10 @@ int pdf_annot_has_intent(fz_context *ctx, pdf_annot *annot);
 enum pdf_intent pdf_annot_intent(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_intent(fz_context *ctx, pdf_annot *annot, enum pdf_intent it);
 
+void pdf_parse_default_appearance_unmapped(fz_context *ctx, const char *da, char *font_name, int font_name_len, float *size, int *n, float color[4]);
 void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4]);
 void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float *color);
+void pdf_annot_default_appearance_unmapped(fz_context *ctx, pdf_annot *annot, char *font_name, int font_name_len, float *size, int *n, float color[4]);
 void pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4]);
 void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float *color);
 

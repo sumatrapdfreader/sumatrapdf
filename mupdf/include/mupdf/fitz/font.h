@@ -748,13 +748,15 @@ struct fz_font
 	void *t3resources;
 	fz_buffer **t3procs; /* has 256 entries if used */
 	struct fz_display_list **t3lists; /* has 256 entries if used */
-	float *t3widths; /* has 256 entries if used */
 	unsigned short *t3flags; /* has 256 entries if used */
 	void *t3doc; /* a pdf_document for the callback */
 	void (*t3run)(fz_context *ctx, void *doc, void *resources, fz_buffer *contents, struct fz_device *dev, fz_matrix ctm, void *gstate, fz_default_colorspaces *default_cs);
 	void (*t3freeres)(fz_context *ctx, void *doc, void *resources);
 
 	fz_rect bbox;	/* font bbox is used only for t3 fonts */
+
+	float ascender;
+	float descender;
 
 	int glyph_count;
 

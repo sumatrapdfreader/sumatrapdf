@@ -3444,6 +3444,18 @@ static void ffi_Buffer_save(js_State *J)
 		rethrow(J);
 }
 
+static void ffi_Buffer_asString(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	fz_buffer *buf = js_touserdata(J, 0, "fz_buffer");
+	const char *str = NULL;
+	fz_try(ctx)
+		str = fz_string_from_buffer(ctx, buf);
+	fz_catch(ctx)
+		rethrow(J);
+	js_pushstring(J, str);
+}
+
 static void ffi_Buffer_slice(js_State *J)
 {
 	fz_context *ctx = js_getcontext(J);
@@ -6556,6 +6568,23 @@ static void ffi_PDFDocument_verifyEmbeddedFileChecksum(js_State *J)
 		rethrow(J);
 
 	js_pushboolean(J, valid);
+}
+
+static void ffi_PDFDocument_isEmbeddedFile(js_State *J)
+{
+	fz_context *ctx = js_getcontext(J);
+	pdf_document *pdf = js_touserdata(J, 0, "pdf_document");
+	pdf_obj *fs = ffi_toobj(J, pdf, 1);
+	int result = 0;
+
+	fz_try(ctx)
+		result = pdf_is_embedded_file(ctx, fs);
+	fz_always(ctx)
+		pdf_drop_obj(ctx, fs);
+	fz_catch(ctx)
+		rethrow(J);
+
+	js_pushboolean(J, result);
 }
 
 static void ffi_PDFDocument_addImage(js_State *J)
@@ -10486,6 +10515,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "Buffer.write", ffi_Buffer_write, 1);
 		jsB_propfun(J, "Buffer.save", ffi_Buffer_save, 1);
 		jsB_propfun(J, "Buffer.slice", ffi_Buffer_slice, 2);
+		jsB_propfun(J, "Buffer.asString", ffi_Buffer_asString, 0);
 	}
 	js_setregistry(J, "fz_buffer");
 
@@ -10873,6 +10903,7 @@ int murun_main(int argc, char **argv)
 		jsB_propfun(J, "PDFDocument.getFilespecParams", ffi_PDFDocument_getFilespecParams, 1);
 		jsB_propfun(J, "PDFDocument.getEmbeddedFileContents", ffi_PDFDocument_getEmbeddedFileContents, 1);
 		jsB_propfun(J, "PDFDocument.verifyEmbeddedFileChecksum", ffi_PDFDocument_verifyEmbeddedFileChecksum, 1);
+		jsB_propfun(J, "PDFDocument.isEmbeddedFile", ffi_PDFDocument_isEmbeddedFile, 1);
 
 		jsB_propfun(J, "PDFDocument.addPage", ffi_PDFDocument_addPage, 4);
 		jsB_propfun(J, "PDFDocument.insertPage", ffi_PDFDocument_insertPage, 2);

@@ -4349,6 +4349,14 @@ JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_verifyEmbedde
 
 /*
  * Class:     com_artifex_mupdf_fitz_PDFDocument
+ * Method:    isEmbeddedFile
+ * Signature: (Lcom/artifex/mupdf/fitz/PDFObject;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_artifex_mupdf_fitz_PDFDocument_isEmbeddedFile
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     com_artifex_mupdf_fitz_PDFDocument
  * Method:    countAssociatedFiles
  * Signature: ()I
  */

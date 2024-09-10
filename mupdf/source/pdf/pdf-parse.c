@@ -67,6 +67,15 @@ pdf_to_quad(fz_context *ctx, pdf_obj *array, int offset)
 	return q;
 }
 
+fz_point
+pdf_to_point(fz_context *ctx, pdf_obj *array, int offset)
+{
+	fz_point p;
+	p.x = pdf_array_get_real(ctx, array, offset+0);
+	p.y = pdf_array_get_real(ctx, array, offset+1);
+	return p;
+}
+
 fz_matrix
 pdf_to_matrix(fz_context *ctx, pdf_obj *array)
 {

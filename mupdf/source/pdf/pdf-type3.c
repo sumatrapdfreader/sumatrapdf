@@ -85,6 +85,9 @@ pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *d
 
 		fz_set_font_bbox(ctx, font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);
 
+		font->ascender = bbox.y1;
+		font->descender = bbox.y0;
+
 		/* Encoding */
 
 		for (i = 0; i < 256; i++)
@@ -156,7 +159,6 @@ pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *d
 		{
 			float w = pdf_array_get_real(ctx, widths, i - first);
 			w = font->t3matrix.a * w * 1000;
-			font->t3widths[i] = w * 0.001f;
 			pdf_add_hmtx(ctx, fontdesc, i, i, w);
 		}
 
