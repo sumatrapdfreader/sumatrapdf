@@ -366,7 +366,7 @@ FileArgs* ParseFileArgs(const char* path) {
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void ParseFlags(const WCHAR* cmdLine, Flags& i) {
-    logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
+    // logf("ParseFlags: cmdLine: '%s'\n", ToUtf8Temp(cmdLine));
     CmdLineArgsIter args(cmdLine);
 
     const char* param = nullptr;

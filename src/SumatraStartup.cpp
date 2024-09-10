@@ -981,6 +981,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     CheckIsStoreBuild();
 
+    // do this before running installer etc. so that we have disk / net permissions
+    // (default policy is to disallow everything)
+    InitializePolicies(flags.restrictedUse);
+
+#if defined(DEBUG)
     if (false) {
         const char* dir = "C:\\Users\\kjk\\Downloads";
         auto di = DirIter{dir};
@@ -989,12 +994,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
             logf("d->filePath: '%s'\n", d->filePath);
         }
     }
-
-    // do this before running installer etc. so that we have disk / net permissions
-    // (default policy is to disallow everything)
-    InitializePolicies(flags.restrictedUse);
-
-#if defined(DEBUG)
     if (false) {
         TempStr exePath = GetSelfExePathTemp();
         RunNonElevated(exePath);
@@ -1015,8 +1014,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     {
         char* s = ToUtf8Temp(GetCommandLineW());
-        logf("Starting SumatraPDF %s, GetCommandLineW(): '%s', flags.install: %d, flags.uninstall: %d\n",
-             UPDATE_CHECK_VERA, s, (int)flags.install, (int)flags.uninstall);
+        logf("Starting: '%s'\n  ver %s, flags.install: %d, flags.uninstall: %d\n", s, UPDATE_CHECK_VERA,
+             (int)flags.install, (int)flags.uninstall);
     }
 #if defined(DEBUG)
     if (gIsDebugBuild || gIsPreReleaseBuild) {
@@ -1054,7 +1053,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         return exitCode;
     }
 
-    logf("  isInstaller: %d\n", (int)isInstaller);
     if (isInstaller) {
         if (!ExeHasInstallerResources()) {
             ShowNotValidInstallerError();
@@ -1066,7 +1064,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         ::ExitProcess(exitCode);
     }
 
-    logf("  isUninstaller: %d, flags.uninstaller: %d\n", (int)isUninstaller, (int)flags.uninstall);
     if (isUninstaller) {
         exitCode = RunUninstaller();
         ::ExitProcess(exitCode);

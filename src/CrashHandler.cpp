@@ -699,7 +699,7 @@ static void BuildSymbolPath(const char* symDir) {
 
     char* p = path.CStr();
     str::ReplaceWithCopy(&gSymbolPath, p);
-    logf("BuildSymbolPath: gSymbolPath '%s', symDir '%s'\n", gSymbolPath, symDir);
+    logf("gSymbolPath: '%s'\n", gSymbolPath);
 }
 
 bool SetSymbolsDir(const char* symDir) {
@@ -765,8 +765,8 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
         return;
     }
 
-    logf("InstallCrashHandler crashDumpPath: '%s'\ncrashFilePath: '%s'\nsymDir: '%s'\n", crashDumpPath, crashFilePath,
-         symDir);
+    logf("InstallCrashHandler:\n  crashDumpPath: '%s'\n  crashFilePath: '%s'\n  symDir: '%s'\n", crashDumpPath,
+         crashFilePath, symDir);
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);
