@@ -640,7 +640,7 @@ class PrintThreadData {
         data->current = current;
         data->total = total;
         auto fn = MkFunc0<UpdatePrintProgressData>(UpdatePrintProgress, data);
-        uitask::Post(fn, "TaskPrintUpdateProgress");
+        uitask::Post(fn, nullptr);
     }
 
     bool WasCanceled() {

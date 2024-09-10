@@ -2836,7 +2836,7 @@ void HwndDestroyWindowSafe(HWND* hwndPtr) {
 
 void TbSetButtonInfo(HWND hwnd, int buttonId, TBBUTTONINFO* info) {
     auto res = SendMessageW(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)info);
-    ReportIf(0 == res);
+    ReportDebugIf(0 == res);
 }
 
 void TbGetPadding(HWND hwnd, int* padX, int* padY) {
