@@ -965,7 +965,7 @@ static MainWindow* gMainWindowForRender = nullptr;
 static void ContentsChanged(EditAnnotationsWindow* ew) {
     auto a = ew->tab->selectedAnnotation;
     // TODO: saw a crash when this was null
-    ReportIf(!a);
+    ReportDebugIf(!a);
     if (!a) {
         return;
     }
