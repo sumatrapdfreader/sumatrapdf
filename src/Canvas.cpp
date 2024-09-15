@@ -677,6 +677,7 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
         case MouseAction::None:
             win->mouseAction = MouseAction::Scrolling;
 
+            win->dragStartPending = true;
             // record current mouse position, the farther the mouse is moved
             // from this position, the faster we scroll the document
             win->dragStart = Point(x, y);
@@ -686,6 +687,17 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
         case MouseAction::Scrolling:
             win->mouseAction = MouseAction::None;
             break;
+    }
+}
+
+static void OnMouseMiddleButtonUp(MainWindow* win, int x, int y, WPARAM) {
+    switch (win->mouseAction) {
+        case MouseAction::Scrolling:
+            if (!win->dragStartPending) {
+                win->mouseAction = MouseAction::None;
+                SetCursorCached(IDC_ARROW);
+                break;
+            }
     }
 }
 
@@ -1630,6 +1642,10 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
             // TODO: Create window that shows location of initial click for reference
             OnMouseMiddleButtonDown(win, x, y, wp);
+            return 0;
+
+        case WM_MBUTTONUP:
+            OnMouseMiddleButtonUp(win, x, y, wp);
             return 0;
 
         case WM_RBUTTONDOWN:
