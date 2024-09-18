@@ -27,11 +27,11 @@ Anything that is not recognized as a known option is interpreted as a file path 
     - `"continuous facing"`
     - `"book view"`
     - `"continuous book view"`
-    
+
      Notice that options with space have to be surrounded by "" quotes.
-    
+
     Combine with `-reuse-instance` if the document is already open.
-    
+
 - `-zoom <zoom-level>` : Sets the zoom level for the first indicated file. Alternatives are "fit page", "fit width", "fit content" or any percentage value. Combine with -reuse-instance if the document is already open.
 - `-scroll <x,y>` : Scrolls to the given coordinates for the first indicated file. Combine with `-reuse-instance` if the document is already open.
 - `search <term>` : Start a search for a given term when opening a document e.g. `SumatraPDF.exe -search "foo" bar.pdf`. **Ver 3.4+**
@@ -61,8 +61,8 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 ## Options related to forward/inverse search (for LaTeX editors)
 
-- `-forward-search <sourcepath> <line>` : performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. -forward-search main.tex 123 highlights all text related to line 123 in main.tex.
-- `-reuse-instance` : tells an already open SumatraPDF to load the indicated files. If there are several running instances, behavior is undefined. Only needed when communicating with SumatraPDF through DDE (use the ReuseInstance setting instead otherwise).
+- `-forward-search "<sourcepath>" <line> "<pdfpath>"`: performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. -forward-search "/path/to/main.tex" 123 "/path/to/main.pdf" highlights all text related to line 123 in main.tex.
+- `-reuse-instance` : tells an already open SumatraPDF to load the indicated files. If there are several running instances, behavior is undefined. Only needed when communicating with SumatraPDF through DDE (use the ReuseInstance setting instead otherwise). OBS! This is a historic option, newer versions of SumatraPDF shall have it set by default.
 - `-inverse-search <command-line>` : sets the command line to be used for performing an inverse search from a PDF document (usually back to a LaTeX source file). The inverse search command line can also be set from the Setting dialog. Use the variable %f for the current filename and %l for the current line.
 [Deprecated]: This setting is exposed in the Options dialog after the first PDF document with corresponding .synctex or .pdfsync file has been loaded. Alternatively, use the corresponding advanced setting instead.
 - `-fwdsearch-offset <offset> -fwdsearch-width <width> -fwdsearch-color <hexcolor> -fwdsearch-permanent <flag>` : allows to customize the forward search highlight. Set the offset to a positive number to change the highlight style to a rectangle at the left of the page (instead of rectangles over the whole text). The flag for `-fwdsearch-permanent` can be 0 (make the highlight fade away, default) or 1.
@@ -73,15 +73,15 @@ Anything that is not recognized as a known option is interpreted as a file path 
 - `-console` : Opens a console window alongside SumatraPDF for accessing (MuPDF) debug output.
 - `-stress-test <path> [file-filter] [range] [cycle-count]`
     - Renders all pages of the indicated file/directory for stability and performance testing. E.g.:
-    
+
     ```
     -stress-test file1.pdf 25x
     -stress-test file2.pdf 1-3
     -stress-test dir *.pdf;*.xps 15- 3x
     ```
-    
+
     renders file1.pdf 25 times, renders pages 1 to 3 of file2.pdf and renders all but the first 14 PDF and XPS files from dir 3 times.
-    
+
 - `-bench <filepath> [page-range]` : Renders all pages (or just the indicated ones) for the given file and then outputs the required rendering times for performance testing and comparisons. Often used together with `-console`.
 
 ## Deprecated options
