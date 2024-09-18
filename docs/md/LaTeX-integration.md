@@ -20,26 +20,43 @@ Launch SumatraPDF from TeXStudio enabling forward and backward search:
 
 ## TeXnicCenter
 
-**Detailed instructions**: [https://tex.stackexchange.com/questions/116981/how-to-configure-texniccenter-2-0-with-sumatra-2013-2016-version](https://tex.stackexchange.com/questions/116981/how-to-configure-texniccenter-2-0-with-sumatra-2013-2016-version)
+**Detailed instructions**: [https://tex.stackexchange.com/questions/453670/adobe-reader-makes-texniccenter-crash-alternative-sumatra/453731#453731](https://tex.stackexchange.com/questions/453670/adobe-reader-makes-texniccenter-crash-alternative-sumatra/453731#453731)
 
 **Short instructions:**
 
 Configure viewer in [output profiles](https://texniccenter.sourceforge.net/configuration.html#viewer-tab).
 
-- Path of executable: `C:\Program Files\SumatraPDF\SumatraPDF.exe` on (or wherever you've installed SumatraPDF)
-- View project's output
-    - DDE command: `[Open("%bm.pdf",0,1,1)]`
-    - Server: `SUMATRA`
-    - Topic: `control`
-- Forward Search
-    - DDE command: `[ForwardSearch("%bm.pdf","%Wc",%l,0,0,1)]`
-    - Server: `SUMATRA`
-    - Topic: `control`
+- press Alt+F7 (Build > Define Output Profiles)
+- for any one of the PDF Profiles e.g. LaTeX > PDF
+- for Executable path it should have something like:
+  - `C:\Program Files\SumatraPDF\SumatraPDF.exe -inverse-search "\"C:\Program Files (x86)\TeXnicCenter\TeXnicCenter.exe\" /ddecmd \"[goto('%f','%l')]\""`
+  - `SumatraPDF.exe` path might be different on your computer
+- go back to the editor and using any simple .TeX press `Ctrl + Shift + F5` (Build and view)
+- SumatraPDF should have fired up with the compiled PDF
+- in SumatraPDF go To `Settings` > `Advanced Options`
+- make the following modifications and save the settings file:
 
-Some people reported better results when using `%sbm` instead of `%bm` in the above command.
+```
+ReuseInstance = true
+ReloadModifiedDocuments = true
 
-- Close document before running LaTeX: Do not close
-- To enable the inverse search, you also have to append to the LaTeX compiler arguments: `-synctex=1`
+InverseSearchCmdLine = "C:\Program Files\TeXnicCenter\TeXnicCenter.exe" /nosplash /ddecmd "[goto('%f', '%l')]"
+OR
+InverseSearchCmdLine = "C:\Program Files (x86)\TeXnicCenter\TeXnicCenter.exe" /nosplash /ddecmd "[goto('%f', '%l')]"
+
+EnableTeXEnhancements = true
+UseTabs = true
+```
+
+Now a double click in the PDF should take you back to TeXnicCenter either in an included file or the main file. IF not, check the syntax of the InverseSearchCmdLine = matches YOUR location for TeXnicCenter
+
+Back in the editor press Alt+F7 (Build > Define Output Profiles) and for each of the PDF options select viewer
+
+In the 1Executable path1 section REMOVE any thing after the .exe
+
+In the 1View project's Output1 select `Command line argument` and check it is `"%bm.pdf"`
+
+In Forward search change it to `-forward-search "%Wc" %l "%bm.pdf"`
 
 ## Vim
 
