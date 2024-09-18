@@ -502,7 +502,7 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
             lstrcpyn(lpFileName, FileData.cFileName, szPath + MAX_PATH - lpFileName);
             res = WideCharToMultiByte(CP_UTF8, 0, szPath, -1, szPathUtf8, sizeof(szPathUtf8), NULL, NULL);
             if (!res) {
-                fz_warn(ctx, "WideCharToMultiByte failed for %S", szPath);
+                fz_warn(ctx, "WideCharToMultiByte failed");
                 continue;
             }
             fileExt = szPathUtf8 + strlen(szPathUtf8) - 4;
@@ -667,35 +667,45 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
     if (comma) {
         *comma = '-';
         found = pdf_find_windows_font_path(fontname);
+        if (found) {
+            goto Exit;
+        }
         *comma = ',';
-    }
-    // second, substitute the font name with a known PostScript name
-    else {
+    } else {
+        // second, substitute the font name with a known PostScript name
         int i;
         for (i = 0; i < nelem(baseSubstitutes) && !found; i++)
             if (streq(fontname, baseSubstitutes[i].name)) {
                 found = pdf_find_windows_font_path(baseSubstitutes[i].pattern);
+                if (found) {
+                    goto Exit;
+                }
             }
     }
     // third, search for the font name without additional style information
-    if (!found) {
-        found = pdf_find_windows_font_path(fontname);
+    found = pdf_find_windows_font_path(fontname);
+    if (found) {
+        goto Exit;
     }
     // fourth, try to separate style from basename for prestyled fonts (e.g. "ArialBold")
-    if (!found && !comma && (str_ends_with(fontname, "Bold") || str_ends_with(fontname, "Italic"))) {
+    if (!comma && (str_ends_with(fontname, "Bold") || str_ends_with(fontname, "Italic"))) {
         int styleLen = str_ends_with(fontname, "Bold") ? 4 : str_ends_with(fontname, "BoldItalic") ? 10 : 6;
         fontname = (char*)fz_resize_array(ctx, fontname, strlen(fontname) + 2, sizeof(char));
         comma = fontname + strlen(fontname) - styleLen;
         memmove(comma + 1, comma, styleLen + 1);
         *comma = '-';
         found = pdf_find_windows_font_path(fontname);
+        if (found) {
+            goto Exit;
+        }
         *comma = ',';
-        if (!found) {
-            found = pdf_find_windows_font_path(fontname);
+        found = pdf_find_windows_font_path(fontname);
+        if (found) {
+            goto Exit;
         }
     }
     // fifth, try to convert the font name from the common Chinese codepage 936
-    if (!found && fontname[0] < 0) {
+    if (fontname[0] < 0) {
         WCHAR cjkNameW[MAX_FACENAME];
         char cjkName[MAX_FACENAME];
         if (MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, fontname, -1, cjkNameW, nelem(cjkNameW)) &&
@@ -704,14 +714,18 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
             if (comma) {
                 *comma = '-';
                 found = pdf_find_windows_font_path(cjkName);
+                if (found) {
+                    goto Exit;
+                }
                 *comma = ',';
             }
-            if (!found) {
-                found = pdf_find_windows_font_path(cjkName);
+            found = pdf_find_windows_font_path(cjkName);
+            if (found) {
+                goto Exit;
             }
         }
     }
-
+Exit:
     fz_free(ctx, fontname);
     if (!found) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
@@ -858,17 +872,16 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
         case UCDN_SCRIPT_TAMIL:
         case UCDN_SCRIPT_TELUGU:
         case UCDN_SCRIPT_DEVANAGARI: {
-            font_name = "Nirmala UI Regular";
+            font_name = "NirmalaUI";
             if (bold) {
-                font_name = "Nirmala UI Bold";
+                font_name = "NirmalaUI-Bold";
             }
         } break;
-        //
         case UCDN_SCRIPT_CYRILLIC:
         case UCDN_SCRIPT_GREEK:
         case UCDN_SCRIPT_ARMENIAN:
         case UCDN_SCRIPT_GEORGIAN: {
-            font_name = "Sylfaen Regular";
+            font_name = "Sylfaen";
         } break;
         // per chatgpt Times New Roman is closest to Noto Serif
         case UCDN_SCRIPT_LATIN:
@@ -877,19 +890,20 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
         case UCDN_SCRIPT_COMMON:
         case UCDN_SCRIPT_INHERITED:
         case UCDN_SCRIPT_UNKNOWN: {
-            font_name = "Times New Roman Regular";
+            font_name = "TimesNewRomanPSMT";
             if (bold) {
-                font_name = "Times New Roman Bold";
+                font_name = "TimesNewRomanPS-BoldMT";
                 if (italic) {
-                    font_name = "Times New Roman Bold Italic";
+                    font_name = "TimesNewRomanPS-BoldItalicMT";
                 }
             } else if (italic) {
-                font_name = "Times New Roman Italic";
+                font_name = "TimesNewRomanPS-ItalicMT";
             }
         } break;
     }
 
     if (!font_name) {
+        fz_warn(ctx, "couldn't find windows system font for script %d, language: %d, bold: %d, italic: %d", script, language, (int)bold, (int)italic);
         return NULL;
     }
 
