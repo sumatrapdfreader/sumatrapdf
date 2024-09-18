@@ -47,7 +47,7 @@ The easiest is to write a Vim function to forward-search and a callback
 function that is triggered on backward-search event, i.e. when you double
 click somewhere on the pdf.
 
-It is suggested to write such functions in `.vim/after/ftplugin/tex.vim` file
+It is suggested to write such functions in `C:\Users\<your_user_id>\vimfiles\after\ftplugin\tex.vim` file
 so that they exists only in `tex` filetypes, but you are free to define them
 in your `.vimrc` as well, although the first option is preferred.
 
