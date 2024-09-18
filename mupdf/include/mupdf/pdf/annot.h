@@ -488,7 +488,10 @@ int pdf_annot_has_author(fz_context *ctx, pdf_annot *annot);
 int pdf_annot_flags(fz_context *ctx, pdf_annot *annot);
 
 /*
-	Retrieve the annotation bounds in doc space.
+	Retrieve the annotation design rectangle in doc space.
+	Note: This is NOT the same as the bounding rectangle.
+	The design rectangle is the bounding rectangle adjusted
+	by the RD padding.
 */
 fz_rect pdf_annot_rect(fz_context *ctx, pdf_annot *annot);
 
@@ -602,7 +605,7 @@ void pdf_set_annot_flags(fz_context *ctx, pdf_annot *annot, int flags);
 void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *image);
 
 /*
-	Set the bounding box for an annotation, in doc space.
+	Set the design rectangle for an annotation, in doc space.
 */
 void pdf_set_annot_rect(fz_context *ctx, pdf_annot *annot, fz_rect rect);
 
@@ -745,6 +748,18 @@ int pdf_annot_is_standard_stamp(fz_context *ctx, pdf_annot *annot);
 void pdf_annot_line(fz_context *ctx, pdf_annot *annot, fz_point *a, fz_point *b);
 void pdf_set_annot_line(fz_context *ctx, pdf_annot *annot, fz_point a, fz_point b);
 
+float pdf_annot_line_leader(fz_context *ctx, pdf_annot *annot);
+float pdf_annot_line_leader_extension(fz_context *ctx, pdf_annot *annot);
+float pdf_annot_line_leader_offset(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_line_leader(fz_context *ctx, pdf_annot *annot, float ll);
+void pdf_set_annot_line_leader_extension(fz_context *ctx, pdf_annot *annot, float lle);
+void pdf_set_annot_line_leader_offset(fz_context *ctx, pdf_annot *annot, float llo);
+
+int pdf_annot_line_caption(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_line_caption(fz_context *ctx, pdf_annot *annot, int cap);
+fz_point pdf_annot_line_caption_offset(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_line_caption_offset(fz_context *ctx, pdf_annot *annot, fz_point offset);
+
 int pdf_annot_vertex_count(fz_context *ctx, pdf_annot *annot);
 fz_point pdf_annot_vertex(fz_context *ctx, pdf_annot *annot, int i);
 
@@ -767,6 +782,14 @@ void pdf_set_annot_creation_date(fz_context *ctx, pdf_annot *annot, int64_t time
 int pdf_annot_has_intent(fz_context *ctx, pdf_annot *annot);
 enum pdf_intent pdf_annot_intent(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_intent(fz_context *ctx, pdf_annot *annot, enum pdf_intent it);
+
+int pdf_annot_has_callout(fz_context *ctx, pdf_annot *annot);
+enum pdf_line_ending pdf_annot_callout_style(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_callout_style(fz_context *ctx, pdf_annot *annot, enum pdf_line_ending style);
+void pdf_annot_callout_line(fz_context *ctx, pdf_annot *annot, fz_point callout[3], int *n);
+void pdf_set_annot_callout_line(fz_context *ctx, pdf_annot *annot, fz_point callout[3], int n);
+fz_point pdf_annot_callout_point(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_callout_point(fz_context *ctx, pdf_annot *annot, fz_point p);
 
 void pdf_parse_default_appearance_unmapped(fz_context *ctx, const char *da, char *font_name, int font_name_len, float *size, int *n, float color[4]);
 void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4]);

@@ -325,8 +325,11 @@ add_line_to_block(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, c
 	return line;
 }
 
+#define NON_ACCURATE_GLYPH_ADDED_SPACE (-2)
+#define NON_ACCURATE_GLYPH (-1)
+
 static fz_stext_char *
-add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_matrix trm, fz_font *font, float size, int c, fz_point *p, fz_point *q, int bidi, int color)
+add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_matrix trm, fz_font *font, float size, int c, int glyph, fz_point *p, fz_point *q, int bidi, int color)
 {
 	fz_stext_char *ch = fz_pool_alloc(ctx, page->pool, sizeof *line->first_char);
 	fz_point a, d;
@@ -350,8 +353,24 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	{
 		a.x = 0;
 		d.x = 0;
-		a.y = fz_font_ascender(ctx, font);
-		d.y = fz_font_descender(ctx, font);
+		if (glyph == NON_ACCURATE_GLYPH_ADDED_SPACE)
+		{
+			/* Added space, in accurate mode. */
+			a.y = d.y = 0;
+		}
+		else if (glyph == NON_ACCURATE_GLYPH)
+		{
+			/* Non accurate mode. */
+			a.y = fz_font_ascender(ctx, font);
+			d.y = fz_font_descender(ctx, font);
+		}
+		else
+		{
+			/* Any glyph in accurate mode */
+			fz_rect bounds = fz_bound_glyph(ctx, font, glyph, fz_identity);
+			a.y = bounds.y1;
+			d.y = bounds.y0;
+		}
 	}
 	else
 	{
@@ -523,7 +542,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	if (cur_line && glyph < 0)
 	{
 		/* Don't advance pen or break lines for no-glyph characters in a cluster */
-		add_char_to_line(ctx, page, cur_line, trm, font, size, c, &dev->pen, &dev->pen, bidi, dev->color);
+		add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &dev->pen, &dev->pen, bidi, dev->color);
 		dev->lastbidi = bidi;
 		dev->lastchar = c;
 		return;
@@ -689,9 +708,9 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 
 	/* Add synthetic space */
 	if (add_space && !(dev->flags & FZ_STEXT_INHIBIT_SPACES))
-		add_char_to_line(ctx, page, cur_line, trm, font, size, ' ', &dev->pen, &p, bidi, dev->color);
+		add_char_to_line(ctx, page, cur_line, trm, font, size, ' ', (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? NON_ACCURATE_GLYPH_ADDED_SPACE : NON_ACCURATE_GLYPH, &dev->pen, &p, bidi, dev->color);
 
-	add_char_to_line(ctx, page, cur_line, trm, font, size, c, &p, &q, bidi, dev->color);
+	add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &p, &q, bidi, dev->color);
 	dev->lastchar = c;
 	dev->lastbidi = bidi;
 	dev->lag_pen = p;

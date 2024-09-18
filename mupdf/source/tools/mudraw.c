@@ -832,6 +832,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 						output_format == OUT_OCR_XHTML
 						) ? FZ_STEXT_PRESERVE_IMAGES : 0;
 			stext_options.flags |= FZ_STEXT_MEDIABOX_CLIP;
+			stext_options.flags |= FZ_STEXT_ACCURATE_BBOXES;
 			if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
 				stext_options.flags |= FZ_STEXT_PRESERVE_SPANS;
 			tmediabox = fz_transform_rect(mediabox, ctm);

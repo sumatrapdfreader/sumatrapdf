@@ -92,8 +92,8 @@ def _csharp_unicode_prefix():
 
 
 def build_swig(
-        state_,
-        build_dirs,
+        state_: state.State,
+        build_dirs: state.BuildDirs,
         generated,
         language='python',
         swig_command='swig',
@@ -173,7 +173,11 @@ def build_swig(
                 static std::string to_stdstring(PyObject* s)
                 {{
                     PyObject* repr_str = PyUnicode_AsEncodedString(s, "utf-8", "~E~");
-                    const char* repr_str_s = PyBytes_AS_STRING(repr_str);
+                    #ifdef Py_LIMITED_API
+                        const char* repr_str_s = PyBytes_AsString(repr_str);
+                    #else
+                        const char* repr_str_s = PyBytes_AS_STRING(repr_str);
+                    #endif
                     std::string ret = repr_str_s;
                     Py_DECREF(repr_str);
                     Py_DECREF(s);
@@ -644,6 +648,26 @@ def build_swig(
     text = ''
 
     text += '%module(directors="1") mupdf\n'
+
+    jlib.log(f'{build_dirs.Py_LIMITED_API=}')
+    if build_dirs.Py_LIMITED_API:  # e.g. 0x03080000
+        text += textwrap.dedent(f'''
+                %begin %{{
+                /* Use Python Stable ABI with earliest Python version that we
+                support. */
+                #define Py_LIMITED_API {build_dirs.Py_LIMITED_API}
+
+                /* These seem to be mistakenly undefined when Py_LIMITED_API
+                is defined, so we force the values from Python.h. Also see
+                https://github.com/python/cpython/issues/98680. */
+                #ifndef PyBUF_READ
+                    #define PyBUF_READ 0x100
+                #endif
+                #ifndef PyBUF_WRITE
+                    #define PyBUF_WRITE 0x200
+                #endif
+                %}}
+                ''')
 
     # https://www.mono-project.com/docs/advanced/pinvoke/
     #
@@ -1648,6 +1672,8 @@ def build_swig(
                             f_fallback,
                             )
                     fz_install_load_system_font_funcs2(g_fz_install_load_system_font_funcs_args)
+
+                Py_LIMITED_API = {repr(build_dirs.Py_LIMITED_API) if build_dirs.Py_LIMITED_API else 'None'}
                 ''')
 
         # Add __iter__() methods for all classes with begin() and end() methods.
@@ -1729,10 +1755,10 @@ def build_swig(
         assert oo != o
         jlib.fs_update( oo, f'{build_dirs.dir_mupdf}/platform/python/include/mupdf/pdf/object.h')
 
-    swig_i      = f'{build_dirs.dir_mupdf}/platform/{language}/mupdfcpp_swig.i'
+    swig_i      = build_dirs.mupdfcpp_swig_i(language)
+    swig_cpp    = build_dirs.mupdfcpp_swig_cpp(language)
     include1    = f'{build_dirs.dir_mupdf}/include/'
     include2    = f'{build_dirs.dir_mupdf}/platform/c++/include'
-    swig_cpp    = f'{build_dirs.dir_mupdf}/platform/{language}/mupdfcpp_swig.cpp'
     swig_py     = f'{build_dirs.dir_so}/mupdf.py'
 
     swig2_i     = f'{build_dirs.dir_mupdf}/platform/{language}/mupdfcpp2_swig.i'

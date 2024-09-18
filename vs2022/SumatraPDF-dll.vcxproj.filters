@@ -661,10 +661,8 @@
     <None Include="..\.github\workflows\codeql.yml">
       <Filter>.github\workflows</Filter>
     </None>
-    <None Include="..\.github\workflows\daily.yml">
-      <Filter>.github\workflows</Filter>
-    </None>
     <None Include="..\.gitignore" />
+    <None Include="..\daily.yml" />
     <None Include="..\do\build.go">
       <Filter>do</Filter>
     </None>

@@ -1423,8 +1423,8 @@
   <ItemGroup>
     <None Include="..\.github\workflows\build.yml" />
     <None Include="..\.github\workflows\codeql.yml" />
-    <None Include="..\.github\workflows\daily.yml" />
     <None Include="..\.gitignore" />
+    <None Include="..\daily.yml" />
     <None Include="..\do\build.go" />
     <None Include="..\do\check_accesskyes.go" />
     <None Include="..\do\clang_format.go" />

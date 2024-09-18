@@ -194,7 +194,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\csharp\mupdfcpp_swig.cpp">
+    <ClCompile Include="..\csharp\mupdfcpp_swig.i.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>

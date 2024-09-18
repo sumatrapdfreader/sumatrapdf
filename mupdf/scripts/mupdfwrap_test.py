@@ -476,6 +476,7 @@ def test(path):
 
 if __name__ == '__main__':
 
+    print(f'{mupdf.Py_LIMITED_API=}', flush=1)
     paths = sys.argv[1:]
     if not paths:
         paths = [

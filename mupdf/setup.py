@@ -289,7 +289,7 @@ def sdist():
             'platform/c++/include/mupdf/functions.h',
             'platform/c++/include/mupdf/internal.h',
             'platform/c++/windows_mupdf.def',
-            'platform/python/mupdfcpp_swig.cpp',
+            'platform/python/mupdfcpp_swig.i.cpp',
             ]
     return paths
 

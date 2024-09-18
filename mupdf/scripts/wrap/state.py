@@ -328,14 +328,13 @@ class BuildDirs:
         if state_.windows:
             # Infer cpu and python version from self.dir_so. And append current
             # cpu and python version if not already present.
-            leaf = os.path.basename(self.dir_so)
-            m = re.match( 'shared-([a-z]+)$', leaf)
-            if m:
+            m = re.search( '-(x[0-9]+)-py([0-9.]+)$', self.dir_so)
+            if not m:
                 suffix = f'-{Cpu(cpu_name())}-py{python_version()}'
-                jlib.log('Adding suffix to {leaf!r}: {suffix!r}')
+                jlib.log('Adding suffix to {self.dir_so=}: {suffix!r}')
                 self.dir_so += suffix
-                leaf = os.path.basename(self.dir_so)
-            m = re.search( '-(x[0-9]+)-py([0-9.]+)$', leaf)
+                m = re.search( '-(x[0-9]+)-py([0-9.]+)$', self.dir_so)
+                assert m
             #log(f'self.dir_so={self.dir_so} {os.path.basename(self.dir_so)} m={m}')
             assert m, f'Failed to parse dir_so={self.dir_so!r} - should be *-x32|x64-pyA.B'
             self.cpu = Cpu( m.group(1))
@@ -346,7 +345,27 @@ class BuildDirs:
             self.cpu = Cpu(cpu_name())
             self.python_version = python_version()
 
+        # Set Py_LIMITED_API if it occurs in dir_so.
+        self.Py_LIMITED_API = None
+        flags = os.path.basename(self.dir_so).split('-')
+        for flag in flags:
+            if flag == 'Py_LIMITED_API':
+                self.Py_LIMITED_API = '0x03080000'
+            elif flag.startswith('Py_LIMITED_API='):
+                self.Py_LIMITED_API = flag[len('Py_LIMITED_API='):]
+        jlib.log(f'{self.Py_LIMITED_API=}')
+
+        # Set swig .i and .cpp paths, including Py_LIMITED_API so that
+        # different values of Py_LIMITED_API can be tested without rebuilding
+        # unnecessarily.
+        Py_LIMITED_API_infix = f'-Py_LIMITED_API={self.Py_LIMITED_API}' if self.Py_LIMITED_API else ''
+        self.mupdfcpp_swig_i    = lambda language: f'{self.dir_mupdf}/platform/{language}/mupdfcpp_swig{Py_LIMITED_API_infix}.i'
+        self.mupdfcpp_swig_cpp  = lambda language: self.mupdfcpp_swig_i(language) + '.cpp'
+
     def windows_build_type(self):
+        '''
+        Returns `Release` or `Debug`.
+        '''
         dir_so_flags = os.path.basename( self.dir_so).split( '-')
         if 'debug' in dir_so_flags:
             return 'Debug'

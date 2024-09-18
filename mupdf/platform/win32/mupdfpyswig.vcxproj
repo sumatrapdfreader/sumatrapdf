@@ -198,7 +198,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\python\mupdfcpp_swig.cpp">
+    <ClCompile Include="..\python\mupdfcpp_swig.i.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Disabled|Win32'">true</ExcludedFromBuild>
     </ClCompile>
   </ItemGroup>

@@ -245,6 +245,8 @@ class WindowsPython:
         .cpu:
             A `WindowsCpu` instance, same as `cpu` passed to `__init__()` if
             not None, otherwise the inferred cpu.
+        .libs:
+            Python libs directory.
 
     We parse the output from `py -0p` to find all available python
     installations.
