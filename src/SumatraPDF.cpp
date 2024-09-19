@@ -1633,6 +1633,7 @@ void UpdateAfterThemeChange() {
 }
 
 static void RenameFileInHistory(const char* oldPath, const char* newPath) {
+    logf("RenameFileInHistory: oldPath: '%s', newPath: '%s'\n", oldPath, newPath);
     if (path::IsSame(oldPath, newPath)) {
         return;
     }
@@ -3027,13 +3028,13 @@ static void RenameCurrentFile(MainWindow* win) {
     fileFilter.AppendFmt("\1*%s\1", defExt);
     str::TransCharsInPlace(fileFilter.Get(), "\1", "\0");
 
-    WCHAR dstFileName[MAX_PATH];
+    WCHAR dstFilePathW[MAX_PATH];
     auto baseName = path::GetBaseNameTemp(srcPath);
-    str::BufSet(dstFileName, dimof(dstFileName), baseName);
+    str::BufSet(dstFilePathW, dimof(dstFilePathW), baseName);
     // Remove the extension so that it can be re-added depending on the chosen filter
-    if (str::EndsWithI(dstFileName, defExtW)) {
-        int idx = str::Leni(dstFileName) - str::Leni(defExtW);
-        dstFileName[idx] = '\0';
+    if (str::EndsWithI(dstFilePathW, defExtW)) {
+        int idx = str::Leni(dstFilePathW) - str::Leni(defExtW);
+        dstFilePathW[idx] = '\0';
     }
 
     WCHAR* srcPathW = ToWStrTemp(srcPath);
@@ -3042,8 +3043,8 @@ static void RenameCurrentFile(MainWindow* win) {
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = win->hwndFrame;
-    ofn.lpstrFile = dstFileName;
-    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFile = dstFilePathW;
+    ofn.nMaxFile = dimof(dstFilePathW);
     ofn.lpstrFilter = ToWStrTemp(fileFilter);
     ofn.nFilterIndex = 1;
     // note: the other two dialogs are named "Open" and "Save As"
@@ -3057,13 +3058,20 @@ static void RenameCurrentFile(MainWindow* win) {
     if (!ok) {
         return;
     }
+    TempStr dstFilePath = ToUtf8Temp(dstFilePathW);
+    TempStr dstPathNormalized = path::NormalizeTemp(dstFilePath);
+    logf("RenameCurrentFile: '%s' => '%s'\n", srcPath, dstFilePath);
+    logf("  dstPathNormalized: '%s'\n", dstPathNormalized);
+    if (path::IsSame(dstFilePath, dstPathNormalized)) {
+        return;
+    }
 
     UpdateTabFileDisplayStateForTab(win->CurrentTab());
     CloseDocumentInCurrentTab(win, true, true);
     HwndSetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
-    BOOL moveOk = MoveFileExW(srcPathW, dstFileName, flags);
+    BOOL moveOk = MoveFileExW(srcPathW, dstFilePathW, flags);
     if (!moveOk) {
         LogLastError();
         LoadArgs args(srcPath, win);
@@ -3077,11 +3085,9 @@ static void RenameCurrentFile(MainWindow* win) {
         ShowNotification(nargs);
         return;
     }
-    char* dstFilePath = ToUtf8Temp(dstFileName);
-    char* newPath = path::NormalizeTemp(dstFilePath);
-    RenameFileInHistory(srcPath, newPath);
+    RenameFileInHistory(srcPath, dstPathNormalized);
 
-    LoadArgs args(newPath, win);
+    LoadArgs args(dstPathNormalized, win);
     args.forceReuse = true;
     LoadDocument(&args);
 }

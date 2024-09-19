@@ -230,67 +230,67 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
-WCHAR* Normalize(const WCHAR* path) {
+static TempWStr NormalizeTemp(const WCHAR* path) {
     // convert to absolute path, change slashes into backslashes
     DWORD cch = GetFullPathNameW(path, 0, nullptr, nullptr);
     if (!cch) {
-        return str::Dup(path);
+        return str::DupTemp(path);
     }
 
-    AutoFreeWStr fullpath(AllocArray<WCHAR>(cch));
-    GetFullPathNameW(path, cch, fullpath, nullptr);
+    TempWStr fullPath = AllocArrayTemp<WCHAR>(cch);
+    GetFullPathNameW(path, cch, fullPath, nullptr);
     // convert to long form
-    cch = GetLongPathNameW(fullpath, nullptr, 0);
+    cch = GetLongPathNameW(fullPath, nullptr, 0);
     if (!cch) {
-        return fullpath.StealData();
+        return fullPath;
     }
 
-    AutoFreeWStr normpath(AllocArray<WCHAR>(cch));
-    GetLongPathNameW(fullpath, normpath, cch);
+    TempWStr normPath = AllocArrayTemp<WCHAR>(cch);
+    GetLongPathNameW(fullPath, normPath, cch);
     if (cch <= MAX_PATH) {
-        return normpath.StealData();
+        return normPath;
     }
 
     // handle overlong paths: first, try to shorten the path
-    cch = GetShortPathNameW(fullpath, nullptr, 0);
+    cch = GetShortPathNameW(fullPath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
-        AutoFreeWStr shortpath(AllocArray<WCHAR>(cch));
-        GetShortPathNameW(fullpath, shortpath, cch);
-        if (str::Len(path::GetBaseNameTemp(normpath)) + path::GetBaseNameTemp(shortpath) - shortpath < MAX_PATH) {
+        TempWStr shortPath = AllocArrayTemp<WCHAR>(cch);
+        GetShortPathNameW(fullPath, shortPath, cch);
+        TempWStr shortPathName = (TempWStr)path::GetBaseNameTemp(shortPath);
+        TempWStr normPathName = (TempWStr)path::GetBaseNameTemp(normPath);
+        if (str::Len(normPathName) + shortPathName - shortPath < MAX_PATH) {
             // keep the long filename if possible
-            *(WCHAR*)path::GetBaseNameTemp(shortpath) = '\0';
-            return str::Join(shortpath, path::GetBaseNameTemp(normpath));
+            *shortPathName = 0;
+            return str::JoinTemp(shortPath, path::GetBaseNameTemp(normPath));
         }
-        return shortpath.StealData();
+        return shortPath;
     }
     // else mark the path as overlong
-    if (str::StartsWith(normpath.Get(), L"\\\\?\\")) {
-        return normpath.StealData();
+    if (str::StartsWith(normPath, L"\\\\?\\")) {
+        return normPath;
     }
-    return str::Join(L"\\\\?\\", normpath);
+    return str::JoinTemp(L"\\\\?\\", normPath);
 }
 
-char* NormalizeTemp(const char* path) {
-    WCHAR* s = ToWStrTemp(path);
-    AutoFreeWStr ws = Normalize(s);
-    char* res = ToUtf8Temp(ws);
+TempStr NormalizeTemp(const char* path) {
+    TempWStr s = ToWStrTemp(path);
+    TempWStr ws = NormalizeTemp(s);
+    TempStr res = ToUtf8Temp(ws);
     return res;
 }
 
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
-TempStr ShortPathTemp(const char* pathA) {
-    WCHAR* path = ToWStrTemp(pathA);
-    AutoFreeWStr normpath = Normalize(path);
-    DWORD cch = GetShortPathNameW(normpath, nullptr, 0);
+TempStr ShortPathTemp(const char* path) {
+    TempWStr pathW = ToWStrTemp(path);
+    TempWStr normPath = NormalizeTemp(pathW);
+    DWORD cch = GetShortPathNameW(normPath, nullptr, 0);
     if (!cch) {
-        return ToUtf8(normpath.Get());
+        return ToUtf8Temp(normPath);
     }
-    WCHAR* shortPath = AllocArray<WCHAR>(cch + 1);
-    GetShortPathNameW(normpath, shortPath, cch);
-    char* res = ToUtf8Temp(shortPath);
-    str::Free(shortPath);
-    return res;
+    TempWStr shortPath = AllocArrayTemp<WCHAR>(cch + 1);
+    GetShortPathNameW(normPath, shortPath, cch);
+    return ToUtf8Temp(shortPath);
 }
 
 static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HANDLE_FILE_INFORMATION fi2) {
