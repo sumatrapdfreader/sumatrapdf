@@ -395,9 +395,9 @@ static TempStr GetDocumentPathQuoted(WindowTab* tab) {
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     bool canView = CanViewWithKnownExternalViewer(tab, cmdId);
     if (!canView) {
-        // TODO: with command palette can send un-enforcable command
         logfa("ViewWithKnownExternalViewer cmd: %d\n", cmdId);
-        ReportIf(!canView);
+        // with command palette can send un-enforcable command so not ReportIf
+        ReportDebugIf(!canView);
         return false;
     }
     ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
