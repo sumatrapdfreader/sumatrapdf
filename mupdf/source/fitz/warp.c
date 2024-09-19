@@ -25,7 +25,6 @@
 #include "pixmap-imp.h"
 
 #include <string.h>
-#include <math.h>
 
 /* Define TIMINGS to get timing information dumped to stdout. */
 #undef TIMINGS
@@ -1412,10 +1411,6 @@ clean(fz_context *ctx, fz_pixmap *src)
 #define SINTABLE_SHIFT 14
 static int16_t sintable[270];
 #define costable (&sintable[90])
-
-#ifndef M_PI
-#    define  M_PI  3.14159265358979323846
-#endif
 
 /* We have collected an array of edge data.
  * For each pixel, we know whether there is a 'strong' edge

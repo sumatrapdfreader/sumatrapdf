@@ -1705,32 +1705,6 @@ def build_swig(
 
         text += '%}\n'
 
-    text2_code = textwrap.dedent( '''
-            ''')
-
-    if text2_code.strip():
-        text2 = textwrap.dedent( f'''
-                %{{
-                    #include "mupdf/fitz.h"
-                    #include "mupdf/classes.h"
-                    #include "mupdf/classes2.h"
-                    #include <vector>
-
-                    {text2_code}
-                %}}
-
-                %include std_vector.i
-
-                namespace std
-                {{
-                    %template(vectori) vector<int>;
-                }};
-
-                {text2_code}
-                ''')
-    else:
-        text2 = ''
-
     if 1:   # lgtm [py/constant-conditional-expression]
         # This is a horrible hack to avoid swig failing because
         # include/mupdf/pdf/object.h defines an enum which contains a #include.
@@ -1768,10 +1742,7 @@ def build_swig(
     os.makedirs( f'{build_dirs.dir_mupdf}/platform/{language}', exist_ok=True)
     os.makedirs( f'{build_dirs.dir_so}', exist_ok=True)
     util.update_file_regress( text, swig_i, check_regress)
-    if text2:
-        util.update_file_regress( text2, swig2_i, check_regress)
-    else:
-        jlib.fs_update( '', swig2_i)
+    jlib.fs_update( '', swig2_i)
 
     # Disable some unhelpful SWIG warnings. Must not use -Wall as it overrides
     # all warning disables.
@@ -1815,7 +1786,7 @@ def build_swig(
             # include/mupdf/fitz/heap.h. Otherwise swig's preprocessor seems to
             # ignore #undef's in include/mupdf/fitz/heap-imp.h then complains
             # about redefinition of macros in include/mupdf/fitz/heap.h.
-            command = (f'''
+            command = f'''
                     "{swig_command}"
                         {"-D_WIN32" if state_.windows else ""}
                         -c++
@@ -1824,7 +1795,7 @@ def build_swig(
                         -Wextra
                         {disable_swig_warnings}
                         -module {module}
-                        -outdir {os.path.relpath(build_dirs.dir_so)}
+                        -outdir {os.path.relpath(build_dirs.dir_mupdf)}/platform/python
                         -o {cpp}
                         -includeall
                         {os.environ.get('XCXXFLAGS', '')}
@@ -1834,60 +1805,42 @@ def build_swig(
                         -ignoremissing
                         -DMUPDF_FITZ_HEAP_H
                         {swig_i}
-                    ''')
+                    '''
             return command
 
-        def modify_py( rebuilt, swig_py, do_enums):
-            if not rebuilt:
-                jlib.log(f'Not rebuilding {swig_py=} because {rebuilt=}.')
-                return
-            swig_py_leaf = os.path.basename( swig_py)
-            assert swig_py_leaf.endswith( '.py')
-            so = f'_{swig_py_leaf[:-3]}.so'
-            swig_py_tmp = f'{swig_py}-'
-            jlib.fs_remove( swig_py_tmp)
-            os.rename( swig_py, swig_py_tmp)
-            with open( swig_py_tmp) as f:
-                swig_py_content = f.read()
+        def modify_py( path_in, path_out):
+            with open( path_in) as f:
+                text = f.read()
 
-            if do_enums:
-                # Change all our PDF_ENUM_NAME_* enums so that they are actually
-                # PdfObj instances so that they can be used like any other PdfObj.
-                #
-                #jlib.log('{len(generated.c_enums)=}')
-                for enum_type, enum_names in generated.c_enums.items():
-                    for enum_name in enum_names:
-                        if enum_name.startswith( 'PDF_ENUM_NAME_'):
-                            swig_py_content += f'{enum_name} = {rename.class_("pdf_obj")}( obj_enum_to_obj( {enum_name}))\n'
+            # Change all our PDF_ENUM_NAME_* enums so that they are actually
+            # PdfObj instances so that they can be used like any other PdfObj.
+            #
+            #jlib.log('{len(generated.c_enums)=}')
+            for enum_type, enum_names in generated.c_enums.items():
+                for enum_name in enum_names:
+                    if enum_name.startswith( 'PDF_ENUM_NAME_'):
+                        text += f'{enum_name} = {rename.class_("pdf_obj")}( obj_enum_to_obj( {enum_name}))\n'
 
-            with open( swig_py_tmp, 'w') as f:
-                f.write( swig_py_content)
-            os.rename( swig_py_tmp, swig_py)
+            for name in ('NULL', 'TRUE', 'FALSE', 'LIMIT'):
+                text += f'PDF_{name} = {rename.class_("pdf_obj")}( obj_enum_to_obj( PDF_ENUM_{name}))\n'
 
-        if text2:
-            # Make mupdf2, for mupdfpy optimisations.
-            jlib.log( 'Running SWIG to generate mupdf2 .cpp')
-            command = make_command( 'mupdf2', swig2_cpp, swig2_i)
-            rebuilt = jlib.build(
-                    (swig2_i, include1, include2),
-                    (swig2_cpp, swig2_py),
-                    command,
-                    force_rebuild,
-                    )
-            modify_py( rebuilt, swig2_py, do_enums=False)
-        else:
-            jlib.fs_update( '', swig2_cpp)
-            jlib.fs_remove( swig2_py)
+            jlib.fs_update(text, path_out)
+
+        jlib.fs_update( '', swig2_cpp)
+        jlib.fs_remove( swig2_py)
 
         # Make main mupdf .so.
         command = make_command( 'mupdf', swig_cpp, swig_i)
+        swig_py_ = f'{build_dirs.dir_mupdf}/platform/python/mupdf.py'
         rebuilt = jlib.build(
                 (swig_i, include1, include2),
-                (swig_cpp, swig_py),
+                (swig_cpp, swig_py_),
                 command,
                 force_rebuild,
                 )
-        modify_py( rebuilt, swig_py, do_enums=True)
+        jlib.log(f'swig => {rebuilt=}.')
+        updated = modify_py( swig_py_, swig_py)
+        jlib.log(f'modify_py() => {updated=}.')
 
 
     elif language == 'csharp':

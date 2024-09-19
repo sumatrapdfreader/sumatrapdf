@@ -173,6 +173,8 @@ static void save_pdf_options(void)
 	ui_checkbox("Compress", &save_opts.do_compress);
 	ui_checkbox("Compress images", &save_opts.do_compress_images);
 	ui_checkbox("Compress fonts", &save_opts.do_compress_fonts);
+	ui_checkbox("Object streams", &save_opts.do_use_objstms);
+	ui_checkbox("Preserve metadata", &save_opts.do_preserve_metadata);
 
 	if (save_opts.do_incremental)
 	{

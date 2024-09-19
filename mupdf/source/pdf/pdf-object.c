@@ -3828,6 +3828,11 @@ void pdf_dict_put_text_string(fz_context *ctx, pdf_obj *dict, pdf_obj *key, cons
 	pdf_dict_put_drop(ctx, dict, key, pdf_new_text_string(ctx, x));
 }
 
+void pdf_dict_put_indirect(fz_context *ctx, pdf_obj *dict, pdf_obj *key, int num)
+{
+	pdf_dict_put_drop(ctx, dict, key, pdf_new_indirect(ctx, pdf_get_bound_document(ctx, dict), num, 0));
+}
+
 void pdf_dict_put_point(fz_context *ctx, pdf_obj *dict, pdf_obj *key, fz_point x)
 {
 	pdf_dict_put_drop(ctx, dict, key, pdf_new_point(ctx, pdf_get_bound_document(ctx, dict), x));

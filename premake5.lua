@@ -572,8 +572,6 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     mixed_dbg_rel_conf()
-    -- enable M_PI in <math.h>
-    defines { "_USE_MATH_DEFINES" }
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }

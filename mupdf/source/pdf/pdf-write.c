@@ -2278,10 +2278,14 @@ static void writexref(fz_context *ctx, pdf_document *doc, pdf_write_state *opts,
 				if (obj)
 					pdf_dict_put(ctx, trailer, PDF_NAME(ID), obj);
 
+				/* The encryption dictionary is kept in the writer state to handle
+				   the encryption dictionary object being renumbered during repair.*/
 				if (opts->crypt_obj)
 				{
+					/* If the encryption dictionary used to be an indirect reference from the trailer,
+					   store it the same way in the trailer in the saved file. */
 					if (pdf_is_indirect(ctx, opts->crypt_obj))
-						pdf_dict_put_drop(ctx, trailer, PDF_NAME(Encrypt), pdf_new_indirect(ctx, doc, opts->crypt_object_number, 0));
+						pdf_dict_put_indirect(ctx, trailer, PDF_NAME(Encrypt), opts->crypt_object_number);
 					else
 						pdf_dict_put(ctx, trailer, PDF_NAME(Encrypt), opts->crypt_obj);
 				}
@@ -2387,11 +2391,16 @@ static void writexrefstream(fz_context *ctx, pdf_document *doc, pdf_write_state 
 			if (obj)
 				pdf_dict_put(ctx, dict, PDF_NAME(ID), obj);
 
-			if (opts->do_incremental)
+			/* The encryption dictionary is kept in the writer state to handle
+			   the encryption dictionary object being renumbered during repair.*/
+			if (opts->crypt_obj)
 			{
-				obj = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Encrypt));
-				if (obj)
-					pdf_dict_put(ctx, dict, PDF_NAME(Encrypt), obj);
+				/* If the encryption dictionary used to be an indirect reference from the trailer,
+				   store it the same way in the xref stream in the saved file. */
+				if (pdf_is_indirect(ctx, opts->crypt_obj))
+					pdf_dict_put_indirect(ctx, dict, PDF_NAME(Encrypt), opts->crypt_object_number);
+				else
+					pdf_dict_put(ctx, dict, PDF_NAME(Encrypt), opts->crypt_obj);
 			}
 		}
 
@@ -3658,7 +3667,9 @@ objstm_gather(fz_context *ctx, pdf_xref_entry *x, int i, pdf_document *doc, void
 	pdf_cache_object(ctx, doc, i);
 
 	if (x->type != 'n' || x->stm_buf != NULL || x->stm_ofs != 0 || x->gen != 0)
-		return; /* Ineligible for using an objstm */
+		return; /* Stream objects, objects with generation number != 0 cannot be put in objstms */
+	if (i == data->opts->crypt_object_number)
+		return; /* Encryption dictionaries can also not be put in objstms */
 
 	/* FIXME: Can we do a pass through to check for such objects more exactly? */
 	if (pdf_is_int(ctx, x->obj))

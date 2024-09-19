@@ -28,6 +28,10 @@
 #include <math.h>
 #include <assert.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 /**
 	Multiply scaled two integers in the 0..255 range
 */
