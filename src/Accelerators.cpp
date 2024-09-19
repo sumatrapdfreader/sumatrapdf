@@ -458,6 +458,12 @@ static const char* getVirt(BYTE key, bool isEng) {
         case VK_SCROLL:
             // TODO: ???
             return "Scroll";
+        case VK_VOLUME_DOWN:
+            // TODO: ???
+            return "Volume Down";
+        case VK_VOLUME_UP:
+            // TODO: ???
+            return "Volume Up";
     }
     /*
     TOOD: add those as well?
@@ -470,8 +476,6 @@ static const char* getVirt(BYTE key, bool isEng) {
         #define VK_BROWSER_HOME        0xAC
 
         #define VK_VOLUME_MUTE         0xAD
-        #define VK_VOLUME_DOWN         0xAE
-        #define VK_VOLUME_UP           0xAF
         #define VK_MEDIA_NEXT_TRACK    0xB0
         #define VK_MEDIA_PREV_TRACK    0xB1
         #define VK_MEDIA_STOP          0xB2

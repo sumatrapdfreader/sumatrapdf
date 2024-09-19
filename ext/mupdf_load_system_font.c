@@ -903,7 +903,8 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
     }
 
     if (!font_name) {
-        fz_warn(ctx, "couldn't find windows system font for script %d, language: %d, bold: %d, italic: %d", script, language, (int)bold, (int)italic);
+        fz_warn(ctx, "couldn't find windows system font for script %d, language: %d, bold: %d, italic: %d", script,
+                language, (int)bold, (int)italic);
         return NULL;
     }
 
