@@ -116,7 +116,7 @@ static void dev_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_m
 						continue;
 
 				if (span->items[i].gid >= 0)
-					adv = fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode);
+					adv = span->items[i].adv;
 
 				bounds = fz_bound_glyph(ctx, span->font, span->items[i].gid, combined);
 				if (extract_add_char(dev->writer->extract, combined.e, combined.f, item->ucs, adv,

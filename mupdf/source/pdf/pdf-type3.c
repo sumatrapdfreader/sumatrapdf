@@ -159,6 +159,7 @@ pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *d
 		{
 			float w = pdf_array_get_real(ctx, widths, i - first);
 			w = font->t3matrix.a * w * 1000;
+			font->t3widths[i] = w * 0.001f;
 			pdf_add_hmtx(ctx, fontdesc, i, i, w);
 		}
 

@@ -669,7 +669,7 @@ rewrite_span(fz_context *ctx, fz_rewrite_device *dev, fz_matrix ctm, const fz_te
 
 	/* And do the actual rewriting */
 	for (i = 0; i < rspan->len; i++) {
-		float advance = fz_advance_glyph(ctx, span->font, rspan->items[i].gid, wmode);
+		float advance = rspan->items[i].adv;
 		fz_point vadv = { dir.x * advance, dir.y * advance };
 		rewrite_char(ctx, dev, ctm, &rspan->items[i], vadv);
 	}

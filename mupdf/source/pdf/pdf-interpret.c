@@ -1305,7 +1305,7 @@ pdf_tos_reset(fz_context *ctx, pdf_text_object_state *tos, int render)
 }
 
 int
-pdf_tos_make_trm(fz_context *ctx, pdf_text_object_state *tos, pdf_text_state *text, pdf_font_desc *fontdesc, int cid, fz_matrix *trm)
+pdf_tos_make_trm(fz_context *ctx, pdf_text_object_state *tos, pdf_text_state *text, pdf_font_desc *fontdesc, int cid, fz_matrix *trm, float *adv)
 {
 	fz_matrix tsm;
 
@@ -1319,7 +1319,7 @@ pdf_tos_make_trm(fz_context *ctx, pdf_text_object_state *tos, pdf_text_state *te
 	if (fontdesc->wmode == 0)
 	{
 		pdf_hmtx h = pdf_lookup_hmtx(ctx, fontdesc, cid);
-		float w0 = h.w * 0.001f;
+		float w0 = *adv = h.w * 0.001f;
 		tos->char_tx = (w0 * text->size + text->char_space) * text->scale;
 		tos->char_ty = 0;
 	}
@@ -1327,7 +1327,7 @@ pdf_tos_make_trm(fz_context *ctx, pdf_text_object_state *tos, pdf_text_state *te
 	if (fontdesc->wmode == 1)
 	{
 		pdf_vmtx v = pdf_lookup_vmtx(ctx, fontdesc, cid);
-		float w1 = v.w * 0.001f;
+		float w1 = *adv = v.w * 0.001f;
 		tsm.e -= v.x * fabsf(text->size) * 0.001f;
 		tsm.f -= v.y * text->size * 0.001f;
 		tos->char_tx = 0;

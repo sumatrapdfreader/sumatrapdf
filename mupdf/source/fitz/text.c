@@ -110,7 +110,7 @@ fz_grow_text_span(fz_context *ctx, fz_text_span *span, int n)
 }
 
 void
-fz_show_glyph_aux(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int gid, int ucs, int cid, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang)
+fz_show_glyph_aux(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, float adv, int gid, int ucs, int cid, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang)
 {
 	fz_text_span *span;
 
@@ -126,13 +126,14 @@ fz_show_glyph_aux(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, 
 	span->items[span->len].cid = cid;
 	span->items[span->len].x = trm.e;
 	span->items[span->len].y = trm.f;
+	span->items[span->len].adv = adv;
 	span->len++;
 }
 
 void
 fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int gid, int ucs, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang)
 {
-	fz_show_glyph_aux(ctx, text, font, trm, gid, ucs, ucs, wmode, bidi_level, markup_dir, lang);
+	fz_show_glyph_aux(ctx, text, font, trm, fz_advance_glyph(ctx, font, gid, wmode), gid, ucs, ucs, wmode, bidi_level, markup_dir, lang);
 }
 
 fz_matrix
@@ -147,8 +148,8 @@ fz_show_string(fz_context *ctx, fz_text *text, fz_font *user_font, fz_matrix trm
 	{
 		s += fz_chartorune(&ucs, s);
 		gid = fz_encode_character_with_fallback(ctx, user_font, ucs, 0, language, &font);
-		fz_show_glyph(ctx, text, font, trm, gid, ucs, wmode, bidi_level, markup_dir, language);
 		adv = fz_advance_glyph(ctx, font, gid, wmode);
+		fz_show_glyph_aux(ctx, text, font, trm, adv, gid, ucs, ucs, wmode, bidi_level, markup_dir, language);
 		if (wmode == 0)
 			trm = fz_pre_translate(trm, adv, 0);
 		else

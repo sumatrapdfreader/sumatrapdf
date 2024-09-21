@@ -833,7 +833,7 @@ do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix 
 
 		/* Calculate bounding box and new pen position based on font metrics */
 		if (span->items[i].gid >= 0)
-			adv = fz_advance_glyph(ctx, font, span->items[i].gid, span->wmode);
+			adv = span->items[i].adv;
 		else
 			adv = 0;
 
@@ -993,7 +993,7 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 
 		/* Calculate bounding box and new pen position based on font metrics */
 		if (item->gid >= 0)
-			adv = fz_advance_glyph(ctx, font, item->gid, span->wmode);
+			adv = item->adv;
 		else
 			adv = 0;
 

@@ -137,11 +137,7 @@ fz_xmltext_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix
 		for (i=0; i<span->len; ++i)
 		{
 			fz_text_item *item = &span->items[i];
-			float adv = 0;
-			if (span->items[i].gid >= 0)
-			{
-				adv = fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode);
-			}
+
 			s_xml_starttag_begin(ctx, dev->out, "char");
 			s_write_attribute_float(ctx, dev->out, "x", item->x);
 			s_write_attribute_float(ctx, dev->out, "y", item->y);
@@ -156,7 +152,7 @@ fz_xmltext_text(fz_context *ctx, fz_device *dev_, const fz_text *text, fz_matrix
 				(item->ucs >= 32 && item->ucs < 128 && item->ucs != '"')
 					? item->ucs : ' '
 				);
-			s_write_attribute_float(ctx, dev->out, "adv", adv);
+			s_write_attribute_float(ctx, dev->out, "adv", span->items[i].adv);
 			s_xml_starttag_empty_end(ctx, dev->out);
 		}
 

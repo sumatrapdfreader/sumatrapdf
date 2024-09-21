@@ -570,8 +570,9 @@ filter_show_char(fz_context *ctx, pdf_sanitize_processor *p, int cid, int *unico
 	int ucsbuf[PDF_MRANGE_CAP];
 	int ucslen;
 	int remove = 0;
+	float adv;
 
-	(void)pdf_tos_make_trm(ctx, &p->tos, &gstate->pending.text, fontdesc, cid, &trm);
+	(void)pdf_tos_make_trm(ctx, &p->tos, &gstate->pending.text, fontdesc, cid, &trm, &adv);
 
 	ucslen = 0;
 	if (fontdesc->to_unicode)

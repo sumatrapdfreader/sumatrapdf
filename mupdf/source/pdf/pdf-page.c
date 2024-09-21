@@ -700,7 +700,7 @@ void
 pdf_page_obj_transform_box(fz_context *ctx, pdf_obj *pageobj, fz_rect *outbox, fz_matrix *page_ctm, fz_box_type box)
 {
 	pdf_obj *obj;
-	fz_rect usedbox, tempbox, cropbox;
+	fz_rect usedbox, tempbox, cropbox, mediabox;
 	float userunit = 1;
 	int rotate;
 
@@ -708,6 +708,9 @@ pdf_page_obj_transform_box(fz_context *ctx, pdf_obj *pageobj, fz_rect *outbox, f
 		outbox = &tempbox;
 
 	userunit = pdf_dict_get_real_default(ctx, pageobj, PDF_NAME(UserUnit), 1);
+
+	obj = pdf_dict_get_inheritable(ctx, pageobj, PDF_NAME(MediaBox));
+	mediabox = pdf_to_rect(ctx, obj);
 
 	obj = NULL;
 	if (box == FZ_ART_BOX)
@@ -719,8 +722,12 @@ pdf_page_obj_transform_box(fz_context *ctx, pdf_obj *pageobj, fz_rect *outbox, f
 	if (box == FZ_CROP_BOX || !obj)
 		obj = pdf_dict_get_inheritable(ctx, pageobj, PDF_NAME(CropBox));
 	if (box == FZ_MEDIA_BOX || !obj)
-		obj = pdf_dict_get_inheritable(ctx, pageobj, PDF_NAME(MediaBox));
-	usedbox = pdf_to_rect(ctx, obj);
+		usedbox = mediabox;
+	else
+	{
+		// never use a box larger than fits the paper (mediabox)
+		usedbox = fz_intersect_rect(mediabox, pdf_to_rect(ctx, obj));
+	}
 
 	if (fz_is_empty_rect(usedbox))
 		usedbox = fz_make_rect(0, 0, 612, 792);

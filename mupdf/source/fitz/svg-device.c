@@ -368,7 +368,7 @@ svg_cluster_advance(fz_context *ctx, const fz_text_span *span, int i, int end)
 	while (i + n < end && span->items[i + n].gid == -1)
 		++n;
 	if (n > 1)
-		return fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode) / n;
+		return span->items[i].adv / n;
 	return 0; /* this value is never used (since n==1) */
 }
 

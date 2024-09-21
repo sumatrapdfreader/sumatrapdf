@@ -44,6 +44,7 @@
 typedef struct
 {
 	float x, y;
+	float adv; /* advance width given by input format */
 	int gid; /* -1 for one gid to many ucs mappings */
 	int ucs; /* -1 for one ucs to many gid mappings */
 	int cid; /* CID for CJK fonts, raw character code for other fonts; or unicode for non-PDF formats. */
@@ -134,7 +135,7 @@ void fz_drop_text(fz_context *ctx, const fz_text *text);
 	Throws exception on failure to allocate.
 */
 void fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int glyph, int unicode, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language language);
-void fz_show_glyph_aux(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int glyph, int unicode, int cid, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang);
+void fz_show_glyph_aux(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, float adv, int glyph, int unicode, int cid, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang);
 
 /**
 	Add a UTF8 string to a text object.

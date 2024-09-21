@@ -80,10 +80,6 @@ fz_trace_text_span(fz_context *ctx, fz_output *out, fz_text_span *span, int dept
 	for (i = 0; i < span->len; i++)
 	{
 		int ucs = span->items[i].ucs;
-		float adv = 0;
-		if (span->items[i].gid >= 0) {
-			adv = fz_advance_glyph(ctx, span->font, span->items[i].gid, span->wmode);
-		}
 
 		fz_trace_indent(ctx, out, depth+1);
 		fz_write_string(ctx, out, "<g");
@@ -113,7 +109,7 @@ fz_trace_text_span(fz_context *ctx, fz_output *out, fz_text_span *span, int dept
 			fz_write_printf(ctx, out, " glyph=\"%s\"", name);
 		}
 
-		fz_write_printf(ctx, out, " x=\"%g\" y=\"%g\" adv=\"%g\"/>\n", span->items[i].x, span->items[i].y, adv);
+		fz_write_printf(ctx, out, " x=\"%g\" y=\"%g\" adv=\"%g\"/>\n", span->items[i].x, span->items[i].y, span->items[i].adv);
 	}
 	fz_trace_indent(ctx, out, depth);
 	fz_write_string(ctx, out, "</span>\n");
