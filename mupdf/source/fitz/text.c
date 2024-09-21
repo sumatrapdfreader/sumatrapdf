@@ -133,7 +133,8 @@ fz_show_glyph_aux(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, 
 void
 fz_show_glyph(fz_context *ctx, fz_text *text, fz_font *font, fz_matrix trm, int gid, int ucs, int wmode, int bidi_level, fz_bidi_direction markup_dir, fz_text_language lang)
 {
-	fz_show_glyph_aux(ctx, text, font, trm, fz_advance_glyph(ctx, font, gid, wmode), gid, ucs, ucs, wmode, bidi_level, markup_dir, lang);
+	float adv = (gid >= 0) ? fz_advance_glyph(ctx, font, gid, wmode) : 0;
+	fz_show_glyph_aux(ctx, text, font, trm, adv, gid, ucs, ucs, wmode, bidi_level, markup_dir, lang);
 }
 
 fz_matrix
@@ -148,7 +149,10 @@ fz_show_string(fz_context *ctx, fz_text *text, fz_font *user_font, fz_matrix trm
 	{
 		s += fz_chartorune(&ucs, s);
 		gid = fz_encode_character_with_fallback(ctx, user_font, ucs, 0, language, &font);
-		adv = fz_advance_glyph(ctx, font, gid, wmode);
+		if (gid >= 0)
+			adv = fz_advance_glyph(ctx, font, gid, wmode);
+		else
+			adv = 0;
 		fz_show_glyph_aux(ctx, text, font, trm, adv, gid, ucs, ucs, wmode, bidi_level, markup_dir, language);
 		if (wmode == 0)
 			trm = fz_pre_translate(trm, adv, 0);
