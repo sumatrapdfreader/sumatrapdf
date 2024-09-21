@@ -1007,6 +1007,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
         win->cbHandler = new ControllerCallbackHandler(win);
     }
 
+    auto timeStart = TimeGet();
     bool chmInFixedUI = gGlobalPrefs->chmUI.useFixedPageUI;
     // TODO: sniff file content only once
     if (!engine) {
@@ -1019,7 +1020,8 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
         return ctrl;
     }
     int nPages = engine ? engine->pageCount : 0;
-    logf("CreateControllerForEngineOrFile: '%s', %d pages\n", path, nPages);
+    auto dur = TimeSinceInMs(timeStart);
+    logf("CreateControllerForEngineOrFile: '%s', %d pages, took %2.f ms\n", path, nPages, dur);
     if (nPages <= 0) {
         // seen nPages < 0 in a crash in epub file
         SafeEngineRelease(&engine);

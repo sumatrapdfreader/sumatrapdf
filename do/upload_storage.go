@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -306,7 +305,7 @@ func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType) {
 }
 
 func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bool) error {
-	files, err := ioutil.ReadDir(dirLocal)
+	files, err := os.ReadDir(dirLocal)
 	if err != nil {
 		return err
 	}
