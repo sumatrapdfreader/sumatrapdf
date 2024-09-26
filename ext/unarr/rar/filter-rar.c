@@ -325,7 +325,7 @@ static bool rar_execute_filter_e8(struct RARFilter *filter, RARVirtualMachine *v
     uint32_t filesize = 0x1000000;
     uint32_t i;
 
-    if (length > RARProgramWorkSize || length < 4)
+    if (length > RARProgramWorkSize || length <= 4)
         return false;
 
     for (i = 0; i <= length - 5; i++) {
