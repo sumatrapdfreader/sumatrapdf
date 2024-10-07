@@ -416,7 +416,7 @@ func getOutDirForPlatform(platform string) string {
 	return ""
 }
 
-func build(config, platform string, sign bool) {
+func build(config, platform string) {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
@@ -430,15 +430,12 @@ func build(config, platform string, sign bool) {
 	}
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
-	if sign {
-		signFilesMust(dir)
-	}
 	createPdbZipMust(dir)
 	createPdbLzsaMust(dir)
 }
 
 // builds more targets, even those not used, to prevent code rot
-func buildAll(config, platform string, sign bool) {
+func buildAll(config, platform string) {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
@@ -452,9 +449,6 @@ func buildAll(config, platform string, sign bool) {
 	}
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
-	if sign {
-		signFilesMust(dir)
-	}
 	createPdbZipMust(dir)
 	createPdbLzsaMust(dir)
 }
@@ -528,9 +522,9 @@ func buildPreRelease(platform string, all bool) {
 	defer revertBuildConfig()
 
 	if all {
-		buildAll("Release", platform, true)
+		buildAll("Release", platform)
 	} else {
-		build("Release", platform, true)
+		build("Release", platform)
 	}
 
 	suffix := getSuffixForPlatform(platform)
@@ -562,15 +556,15 @@ func buildRelease() {
 	setBuildConfigRelease()
 	defer revertBuildConfig()
 
-	build("Release", kPlatformIntel32, true)
+	build("Release", kPlatformIntel32)
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-32.exe", ver)
 	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
 
-	build("Release", kPlatformIntel64, true)
+	build("Release", kPlatformIntel64)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
 	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
 
-	build("Release", kPlatformArm64, true)
+	build("Release", kPlatformArm64)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-arm64.exe", ver)
 	createExeZipWithGoWithNameMust(relArm64Dir, nameInZip)
 
