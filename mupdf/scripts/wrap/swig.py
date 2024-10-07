@@ -1821,7 +1821,10 @@ def build_swig(
                     if enum_name.startswith( 'PDF_ENUM_NAME_'):
                         text += f'{enum_name} = {rename.class_("pdf_obj")}( obj_enum_to_obj( {enum_name}))\n'
 
-            for name in ('NULL', 'TRUE', 'FALSE', 'LIMIT'):
+            # 2024-09-28: important to not include PDF_LIMIT here, because
+            # pdf_drop_obj() treats all pdf_obj*'s as real pointers if they are
+            # >= PDF_LIMIT.
+            for name in ('NULL', 'TRUE', 'FALSE'):
                 text += f'PDF_{name} = {rename.class_("pdf_obj")}( obj_enum_to_obj( PDF_ENUM_{name}))\n'
 
             jlib.fs_update(text, path_out)

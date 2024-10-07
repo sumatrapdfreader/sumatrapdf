@@ -93,6 +93,7 @@ typedef struct fz_stext_char fz_stext_char;
 typedef struct fz_stext_line fz_stext_line;
 typedef struct fz_stext_block fz_stext_block;
 typedef struct fz_stext_struct fz_stext_struct;
+typedef struct fz_stext_grid_positions fz_stext_grid_positions;
 
 /**
 	FZ_STEXT_PRESERVE_LIGATURES: If this option is activated
@@ -130,6 +131,13 @@ typedef struct fz_stext_struct fz_stext_struct;
 	change the returned stext structure from being a simple list of blocks
 	into effectively being a 'tree' that should be walked in depth-first
 	order.
+
+	FZ_STEXT_COLLECT_VECTORS: If this option is set, we will collect
+	details (currently just the bbox) of vector graphics. This is intended
+	to be of use in segmentation analysis.
+
+	FZ_STEXT_IGNORE_ACTUALTEXT: If this option is set, we will no longer
+	replace text by the ActualText replacement specified in the document.
 */
 enum
 {
@@ -142,7 +150,9 @@ enum
 	FZ_STEXT_MEDIABOX_CLIP = 64,
 	FZ_STEXT_USE_CID_FOR_UNKNOWN_UNICODE = 128,
 	FZ_STEXT_COLLECT_STRUCTURE = 256,
-	FZ_STEXT_ACCURATE_BBOXES = 512
+	FZ_STEXT_ACCURATE_BBOXES = 512,
+	FZ_STEXT_COLLECT_VECTORS = 1024,
+	FZ_STEXT_IGNORE_ACTUALTEXT = 2048
 };
 
 /**
@@ -272,7 +282,9 @@ enum
 {
 	FZ_STEXT_BLOCK_TEXT = 0,
 	FZ_STEXT_BLOCK_IMAGE = 1,
-	FZ_STEXT_BLOCK_STRUCT = 2
+	FZ_STEXT_BLOCK_STRUCT = 2,
+	FZ_STEXT_BLOCK_VECTOR = 3,
+	FZ_STEXT_BLOCK_GRID = 4
 };
 
 /**
@@ -287,6 +299,7 @@ struct fz_stext_block
 		struct { fz_stext_line *first_line, *last_line; } t;
 		struct { fz_matrix transform; fz_image *image; } i;
 		struct { fz_stext_struct *down; int index; } s;
+		struct { fz_stext_grid_positions *xs; fz_stext_grid_positions *ys; } b;
 	} u;
 	fz_stext_block *prev, *next;
 };
@@ -310,13 +323,21 @@ struct fz_stext_line
 struct fz_stext_char
 {
 	int c; /* unicode character value */
-	int bidi; /* even for LTR, odd for RTL */
+	uint16_t bidi; /* even for LTR, odd for RTL - probably only needs 8 bits? */
+	uint16_t flags;
 	int color; /* sRGB hex color */
 	fz_point origin;
 	fz_quad quad;
 	float size;
 	fz_font *font;
 	fz_stext_char *next;
+};
+
+enum
+{
+	FZ_STEXT_STRIKEOUT = 1,
+	FZ_STEXT_UNDERLINE = 2,
+	FZ_STEXT_SYNTHETIC = 4
 };
 
 /**
@@ -380,6 +401,16 @@ struct fz_stext_struct
  *                       first_block|   |last_block
  *                                  :   :
  */
+
+ struct fz_stext_grid_positions
+ {
+	int len;
+	int max_uncertainty;
+	struct {
+		float pos;
+		int uncertainty;
+	} list[1];
+ };
 
 FZ_DATA extern const char *fz_stext_options_usage;
 

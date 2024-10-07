@@ -1403,6 +1403,7 @@ void pdf_abandon_operation(fz_context *ctx, pdf_document *doc)
 void pdf_undo(fz_context *ctx, pdf_document *doc)
 {
 	pdf_journal_entry *entry;
+	pdf_journal_fragment *frag;
 
 	if (ctx == NULL || doc == NULL)
 		return;
@@ -1421,6 +1422,12 @@ void pdf_undo(fz_context *ctx, pdf_document *doc)
 	fz_write_printf(ctx, fz_stddbg(ctx), "Undo!\n");
 #endif
 
+	// nuke all caches
+	pdf_drop_page_tree_internal(ctx, doc);
+	pdf_sync_open_pages(ctx, doc);
+	for (frag = entry->head; frag; frag = frag->next)
+		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
+
 	doc->journal->current = entry->prev;
 
 	swap_fragments(ctx, doc, entry);
@@ -1431,6 +1438,7 @@ void pdf_undo(fz_context *ctx, pdf_document *doc)
 void pdf_redo(fz_context *ctx, pdf_document *doc)
 {
 	pdf_journal_entry *entry;
+	pdf_journal_fragment *frag;
 
 	if (ctx == NULL || doc == NULL)
 		return;
@@ -1459,6 +1467,12 @@ void pdf_redo(fz_context *ctx, pdf_document *doc)
 
 	if (entry == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Already at end of history");
+
+	// nuke all caches
+	pdf_drop_page_tree_internal(ctx, doc);
+	pdf_sync_open_pages(ctx, doc);
+	for (frag = entry->head; frag; frag = frag->next)
+		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
 
 	doc->journal->current = entry;
 
@@ -1846,6 +1860,10 @@ static void prepare_object_for_alteration(fz_context *ctx, pdf_obj *obj, pdf_obj
 			pdf_drop_local_xref_and_resources(ctx, doc);
 		}
 	}
+
+	// Empty store of items keyed on the object being changed.
+	if (parent != 0)
+		pdf_purge_object_from_store(ctx, doc, parent);
 
 	entry = NULL;
 	if (doc->journal)

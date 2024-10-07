@@ -80,7 +80,7 @@ void pdf_reset_processor(fz_context *ctx, pdf_processor *proc)
 	proc->closed = 0;
 
 	if (proc->reset_processor == NULL)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Cannot reset PDF processor");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot reset PDF processor");
 
 	proc->reset_processor(ctx, proc);
 }

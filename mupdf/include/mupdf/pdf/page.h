@@ -313,4 +313,13 @@ struct pdf_page
 	pdf_annot *widgets, **widget_tailp;
 };
 
+/* Keep pdf_page, pdf_annot, and pdf_link structs in sync with underlying pdf objects. */
+void pdf_sync_open_pages(fz_context *ctx, pdf_document *doc);
+void pdf_sync_page(fz_context *ctx, pdf_page *page);
+void pdf_sync_links(fz_context *ctx, pdf_page *page);
+void pdf_sync_annots(fz_context *ctx, pdf_page *page);
+void pdf_nuke_page(fz_context *ctx, pdf_page *page);
+void pdf_nuke_links(fz_context *ctx, pdf_page *page);
+void pdf_nuke_annots(fz_context *ctx, pdf_page *page);
+
 #endif

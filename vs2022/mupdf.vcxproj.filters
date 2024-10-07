@@ -291,6 +291,9 @@
     <ClInclude Include="..\mupdf\include\mupdf\pdf\parse.h">
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
+    <ClInclude Include="..\mupdf\include\mupdf\pdf\recolor.h">
+      <Filter>mupdf\include\mupdf\pdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\mupdf\include\mupdf\pdf\resource.h">
       <Filter>mupdf\include\mupdf\pdf</Filter>
     </ClInclude>
@@ -927,6 +930,9 @@
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-pattern.c">
+      <Filter>mupdf\source\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\source\pdf\pdf-recolor.c">
       <Filter>mupdf\source\pdf</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\source\pdf\pdf-repair.c">

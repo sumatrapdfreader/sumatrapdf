@@ -136,3 +136,23 @@ void pdf_purge_locals_from_store(fz_context *ctx, pdf_document *doc)
 {
 	fz_filter_store(ctx, pdf_filter_locals, doc, &pdf_obj_store_type);
 }
+
+struct doc_num_info {
+	pdf_document *doc;
+	int num;
+};
+
+static int
+pdf_filter_object_number(fz_context *ctx, void *ref_, void *key_)
+{
+	struct doc_num_info *ref = ref_;
+	pdf_obj *key_obj = (pdf_obj *)key_;
+	pdf_document *key_doc = pdf_get_bound_document(ctx, key_obj);
+	return (ref->doc == key_doc && ref->num == pdf_to_num(ctx, key_obj));
+}
+
+void pdf_purge_object_from_store(fz_context *ctx, pdf_document *doc, int num)
+{
+	struct doc_num_info ref = { doc, num };
+	fz_filter_store(ctx, pdf_filter_object_number, &ref, &pdf_obj_store_type);
+}

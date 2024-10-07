@@ -407,13 +407,11 @@ void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page
 			options->complete(ctx, buffer, options->opaque);
 		if (!options->no_update)
 		{
-			/* If contents is not a stream it's an array of streams or missing. */
-			if (!pdf_is_stream(ctx, contents))
-			{
-				/* Create a new stream object to replace the array of streams or missing object. */
-				contents = pdf_add_object_drop(ctx, doc, pdf_new_dict(ctx, doc, 1));
-				pdf_dict_put_drop(ctx, page->obj, PDF_NAME(Contents), contents);
-			}
+			/* Always create a new stream object to replace the page contents. This is useful
+			   both if the contents is an array of streams, is entirely missing or if the contents
+			   are shared between pages. */
+			contents = pdf_add_object_drop(ctx, doc, pdf_new_dict(ctx, doc, 1));
+			pdf_dict_put_drop(ctx, page->obj, PDF_NAME(Contents), contents);
 			pdf_update_stream(ctx, doc, contents, buffer, 0);
 			pdf_dict_put(ctx, page->obj, PDF_NAME(Resources), new_res);
 		}

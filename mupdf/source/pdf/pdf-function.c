@@ -1002,7 +1002,11 @@ load_sample_func(fz_context *ctx, pdf_function *func_, pdf_obj *dict)
 	}
 
 	for (i = 0, samplecount = func->super.super.n; i < func->super.super.m; i++)
+	{
+		if (samplecount > MAX_SAMPLE_FUNCTION_SIZE / func->size[i])
+			fz_throw(ctx, FZ_ERROR_SYNTAX, "sample function too large");
 		samplecount *= func->size[i];
+	}
 
 	if (samplecount > MAX_SAMPLE_FUNCTION_SIZE)
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "sample function too large");

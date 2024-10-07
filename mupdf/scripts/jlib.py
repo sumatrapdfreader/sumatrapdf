@@ -1598,10 +1598,18 @@ def system(
                             ' or support o() or o.write().'
                             )
                 o_decoder = decoders_ensure(o.encoding)
-                def fn(text):
-                    o.write(text)
+                def o_fn(text, o=o):
+                    if errors == 'strict':
+                        o.write(text)
+                    else:
+                        # This is probably only necessary on Windows, where
+                        # sys.stdout can be cp1252 and will sometimes raise
+                        # UnicodeEncodeError. We hard-ignore these errors.
+                        try:
+                            o.write(text)
+                        except Exception as e:
+                            o.write(f'\n[Ignoring Exception: {e}]\n')
                     o.flush()   # Seems to be necessary on Windows.
-                o_fn = fn
             if o_prefix:
                 o_fn = StreamPrefix( o_fn, o_prefix).write
             if not o_decoder:

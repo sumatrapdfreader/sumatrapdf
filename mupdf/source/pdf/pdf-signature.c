@@ -36,7 +36,7 @@ static void
 begin_widget_op(fz_context *ctx, pdf_annot *annot, const char *op)
 {
 	if (!annot->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 
 	pdf_begin_operation(ctx, annot->page->doc, op);
 }
@@ -239,7 +239,7 @@ pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7
 	pdf_document *doc;
 
 	if (pdf_dict_get_inheritable(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation is not a signature widget");
 	if (pdf_widget_is_readonly(ctx, widget))
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Signature is read only, it cannot be signed.");
 
@@ -438,9 +438,9 @@ void pdf_clear_signature(fz_context *ctx, pdf_annot *widget)
 	fz_display_list *dlist = NULL;
 
 	if (pdf_dict_get_inheritable(ctx, widget->obj, PDF_NAME(FT)) != PDF_NAME(Sig))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation is not a signature widget");
 	if (pdf_widget_is_readonly(ctx, widget))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "read only signature cannot be cleared");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "read only signature cannot be cleared");
 
 	begin_widget_op(ctx, widget, "Clear Signature");
 
@@ -569,7 +569,7 @@ char *pdf_signature_format_distinguished_name(fz_context *ctx, pdf_pkcs7_disting
 pdf_pkcs7_distinguished_name *pdf_signature_get_widget_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget)
 {
 	if (!widget->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 	return pdf_signature_get_signatory(ctx, verifier, widget->page->doc, widget->obj);
 }
 
@@ -580,7 +580,7 @@ pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_p
 	pdf_pkcs7_distinguished_name *dn;
 
 	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return NULL;
 
@@ -601,7 +601,7 @@ pdf_pkcs7_distinguished_name *pdf_signature_get_signatory(fz_context *ctx, pdf_p
 pdf_signature_error pdf_check_widget_digest(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *widget)
 {
 	if (!widget->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 	return pdf_check_digest(ctx, verifier, widget->page->doc, widget->obj);
 }
 
@@ -613,7 +613,7 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 	size_t contents_len;
 
 	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return PDF_SIGNATURE_ERROR_NOT_SIGNED;
 
@@ -641,7 +641,7 @@ pdf_signature_error pdf_check_digest(fz_context *ctx, pdf_pkcs7_verifier *verifi
 pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_verifier *verifier, pdf_annot *w)
 {
 	if (!w->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 	return pdf_check_certificate(ctx, verifier, w->page->doc, w->obj);
 }
 
@@ -652,7 +652,7 @@ pdf_signature_error pdf_check_certificate(fz_context *ctx, pdf_pkcs7_verifier *v
 	pdf_signature_error result = PDF_SIGNATURE_ERROR_UNKNOWN;
 
 	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return PDF_SIGNATURE_ERROR_NOT_SIGNED;
 

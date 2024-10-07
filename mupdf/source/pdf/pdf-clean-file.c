@@ -265,7 +265,6 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 	pdf_obj *allfields = NULL;
 	int pagecount, i;
 	int *page_object_nums = NULL;
-	fz_page *page, *next;
 	pdf_obj *structtreeroot;
 	pdf_obj *ostructparents;
 	pdf_obj *structparents = NULL;
@@ -290,19 +289,6 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 
 	fz_try(ctx)
 	{
-		/* Adjust the fz layer of cached pages (by nuking it!) */
-		fz_lock(ctx, FZ_LOCK_ALLOC);
-		{
-			for (page = doc->super.open; page != NULL; page = next)
-			{
-				next = page->next;
-				page->prev = NULL;
-				page->next = NULL;
-			}
-			doc->super.open = NULL;
-		}
-		fz_unlock(ctx, FZ_LOCK_ALLOC);
-
 		root = pdf_new_dict(ctx, doc, 3);
 		pdf_dict_put(ctx, root, PDF_NAME(Type), pdf_dict_get(ctx, oldroot, PDF_NAME(Type)));
 		pdf_dict_put(ctx, root, PDF_NAME(Pages), pdf_dict_get(ctx, oldroot, PDF_NAME(Pages)));
@@ -467,8 +453,10 @@ void pdf_rearrange_pages(fz_context *ctx, pdf_document *doc, int count, const in
 	fz_catch(ctx)
 	{
 		pdf_abandon_operation(ctx, doc);
+		pdf_sync_open_pages(ctx, doc);
 		fz_rethrow(ctx);
 	}
+	pdf_sync_open_pages(ctx, doc);
 }
 
 void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_clean_options *opts, int argc, char *argv[])

@@ -1021,6 +1021,7 @@ function mupdf_files()
     "pdf-page.c",
     "pdf-parse.c",
     "pdf-pattern.c",
+    "pdf-recolor.c",
     "pdf-repair.c",
     "pdf-resources.c",
     "pdf-run.c",

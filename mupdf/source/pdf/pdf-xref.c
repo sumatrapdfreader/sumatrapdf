@@ -5096,7 +5096,7 @@ int pdf_validate_signature(fz_context *ctx, pdf_annot *widget)
 	int o_xref_base;
 
 	if (!widget->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 
 	doc = widget->page->doc;
 	unsaved_versions = pdf_count_unsaved_versions(ctx, doc);

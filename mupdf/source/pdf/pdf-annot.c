@@ -163,12 +163,73 @@ pdf_new_annot(fz_context *ctx, pdf_page *page, pdf_obj *obj)
 }
 
 void
-pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots)
+pdf_nuke_annots(fz_context *ctx, pdf_page *page)
 {
 	pdf_annot *annot;
+
+	for (annot = page->annots; annot; annot = annot->next)
+	{
+		pdf_drop_obj(ctx, annot->obj);
+		annot->obj = NULL;
+		pdf_drop_annot(ctx, annot);
+	}
+	for (annot = page->widgets; annot; annot = annot->next)
+	{
+		pdf_drop_obj(ctx, annot->obj);
+		annot->obj = NULL;
+		pdf_drop_annot(ctx, annot);
+	}
+
+	page->annots = NULL;
+	page->widgets = NULL;
+	page->annot_tailp = &page->annots;
+	page->widget_tailp = &page->widgets;
+}
+
+static pdf_annot *find_and_unlink_annot_from_list(fz_context *ctx, pdf_annot **prev, pdf_obj *obj)
+{
+	int num = pdf_to_num(ctx, obj);
+	pdf_annot *node;
+
+	node = *prev;
+	while (node)
+	{
+		if (pdf_to_num(ctx, node->obj) == num)
+		{
+			*prev = node->next;
+			node->next = NULL;
+			return node;
+		}
+		else
+		{
+			prev = &node->next;
+			node = node->next;
+		}
+	}
+
+	return NULL;
+}
+
+void
+pdf_sync_annots(fz_context *ctx, pdf_page *page)
+{
+	pdf_annot *old_annots;
+	pdf_annot *old_widgets;
+	pdf_annot *annot, *next;
+	pdf_obj *annots;
 	pdf_obj *subtype;
 	int i, n;
 
+	// Save list of annots loaded last time (if any).
+	old_annots = page->annots;
+	old_widgets = page->widgets;
+	page->annots = NULL;
+	page->widgets = NULL;
+	page->annot_tailp = &page->annots;
+	page->widget_tailp = &page->widgets;
+
+	// Create new list of annots (reusing old annots when possible)
+	annots = pdf_dict_get(ctx, page->obj, PDF_NAME(Annots));
 	n = pdf_array_len(ctx, annots);
 	for (i = 0; i < n; ++i)
 	{
@@ -181,19 +242,46 @@ pdf_load_annots(fz_context *ctx, pdf_page *page, pdf_obj *annots)
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(Popup)))
 				continue;
 
-			annot = pdf_new_annot(ctx, page, obj);
 			if (pdf_name_eq(ctx, subtype, PDF_NAME(Widget)))
 			{
+				annot = find_and_unlink_annot_from_list(ctx, &old_widgets, obj);
+				if (!annot)
+					annot = pdf_new_annot(ctx, page, obj);
 				*page->widget_tailp = annot;
 				page->widget_tailp = &annot->next;
 			}
 			else
 			{
+				annot = find_and_unlink_annot_from_list(ctx, &old_annots, obj);
+				if (!annot)
+					annot = pdf_new_annot(ctx, page, obj);
 				*page->annot_tailp = annot;
 				page->annot_tailp = &annot->next;
 			}
 		}
 	}
+
+	// Nuke the annot structs that are no longer used on the page
+	for (annot = old_annots; annot; annot = next)
+	{
+		next = annot->next;
+		pdf_drop_obj(ctx, annot->obj);
+		annot->obj = NULL;
+		pdf_drop_annot(ctx, annot);
+	}
+	for (annot = old_widgets; annot; annot = next)
+	{
+		next = annot->next;
+		pdf_drop_obj(ctx, annot->obj);
+		annot->obj = NULL;
+		pdf_drop_annot(ctx, annot);
+	}
+}
+
+void
+pdf_load_annots(fz_context *ctx, pdf_page *page)
+{
+	pdf_sync_annots(ctx, page);
 
 	/* We need to run a resynth pass on the annotations on this
 	 * page. That means rerunning it on the complete document. */

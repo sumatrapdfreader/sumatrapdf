@@ -28,6 +28,8 @@
 #endif
 #include <errno.h>
 
+static void fz_reap_dead_pages(fz_context *ctx, fz_document *doc);
+
 enum
 {
 	FZ_DOCUMENT_HANDLER_MAX = 32
@@ -616,6 +618,7 @@ fz_drop_document(fz_context *ctx, fz_document *doc)
 {
 	if (fz_drop_imp(ctx, doc, &doc->refs))
 	{
+		fz_reap_dead_pages(ctx, doc);
 		if (doc->open)
 			fz_warn(ctx, "There are still open pages in the document!");
 		if (doc->drop_document)
@@ -890,6 +893,28 @@ fz_document_output_intent(fz_context *ctx, fz_document *doc)
 	return NULL;
 }
 
+static void
+fz_reap_dead_pages(fz_context *ctx, fz_document *doc)
+{
+	fz_page *page;
+	fz_page *next_page;
+
+	for (page = doc->open; page; page = next_page)
+	{
+		next_page = page->next;
+		if (!page->doc)
+		{
+			if (page->next != NULL)
+				page->next->prev = page->prev;
+			if (page->prev != NULL)
+				*page->prev = page->next;
+			fz_free(ctx, page);
+			if (page == doc->open)
+				doc->open = next_page;
+		}
+	}
+}
+
 fz_page *
 fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 {
@@ -900,17 +925,19 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 
 	fz_ensure_layout(ctx, doc);
 
+	// Trigger reaping dead pages when we load a new page.
+	fz_reap_dead_pages(ctx, doc);
+
 	/* Protect modifications to the page list to cope with
 	 * destruction of pages on other threads. */
-	fz_lock(ctx, FZ_LOCK_ALLOC);
 	for (page = doc->open; page; page = page->next)
+	{
 		if (page->chapter == chapter && page->number == number)
 		{
-			fz_keep_page_locked(ctx, page);
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			fz_keep_page(ctx, page);
 			return page;
 		}
-	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	}
 
 	if (doc->load_page)
 	{
@@ -921,12 +948,10 @@ fz_load_chapter_page(fz_context *ctx, fz_document *doc, int chapter, int number)
 		/* Insert new page at the head of the list of open pages. */
 		if (!page->incomplete)
 		{
-			fz_lock(ctx, FZ_LOCK_ALLOC);
 			if ((page->next = doc->open) != NULL)
 				doc->open->prev = &page->next;
 			doc->open = page;
 			page->prev = &doc->open;
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
 		}
 		return page;
 	}
@@ -1053,31 +1078,22 @@ fz_keep_page(fz_context *ctx, fz_page *page)
 	return fz_keep_imp(ctx, page, &page->refs);
 }
 
-fz_page *
-fz_keep_page_locked(fz_context *ctx, fz_page *page)
-{
-	return fz_keep_imp_locked(ctx, page, &page->refs);
-}
-
 void
 fz_drop_page(fz_context *ctx, fz_page *page)
 {
 	if (fz_drop_imp(ctx, page, &page->refs))
 	{
-		/* Remove page from the list of open pages */
-		fz_lock(ctx, FZ_LOCK_ALLOC);
-		if (page->next != NULL)
-			page->next->prev = page->prev;
-		if (page->prev != NULL)
-			*page->prev = page->next;
-		fz_unlock(ctx, FZ_LOCK_ALLOC);
+		fz_document *doc = page->doc;
 
 		if (page->drop_page)
 			page->drop_page(ctx, page);
 
-		fz_drop_document(ctx, page->doc);
+		// Mark the page as dead so we can reap the struct allocation later.
+		page->doc = NULL;
+		page->chapter = -1;
+		page->number = -1;
 
-		fz_free(ctx, page);
+		fz_drop_document(ctx, doc);
 	}
 }
 
@@ -1149,51 +1165,20 @@ void *
 fz_process_opened_pages(fz_context *ctx, fz_document *doc, fz_process_opened_page_fn *process_opened_page, void *state)
 {
 	fz_page *page;
-	fz_page *kept = NULL;
-	fz_page *dropme = NULL;
-	void *ret = NULL;
+	void *ret;
 
-	fz_var(kept);
-	fz_var(dropme);
-	fz_var(page);
-	fz_try(ctx)
+	for (page = doc->open; page != NULL; page = page->next)
 	{
-		/* We can only walk the page list while the alloc lock is taken, so gymnastics are required. */
-		/* Loop invariant: at any point where we might throw, kept != NULL iff we are unlocked. */
-		fz_lock(ctx, FZ_LOCK_ALLOC);
-		for (page = doc->open; ret == NULL && page != NULL; page = page->next)
-		{
-			/* Keep an extra reference to the page so that no other thread can remove it. */
-			kept = fz_keep_page_locked(ctx, page);
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			/* Drop any extra reference we might still have to a previous page. */
-			fz_drop_page(ctx, dropme);
-			dropme = NULL;
+		// Skip dead pages.
+		if (page->doc == NULL)
+			continue;
 
-			ret = process_opened_page(ctx, page, state);
-
-			/* We can't drop kept here, because that would give us a race condition with
-			 * us taking the lock and hoping that 'page' would still be valid. So remember it
-			 * for dropping later. */
-			dropme = kept;
-			kept = NULL;
-			fz_lock(ctx, FZ_LOCK_ALLOC);
-		}
-		/* unlock (and final drop of dropme) happens in the always. */
-	}
-	fz_always(ctx)
-	{
-		if (kept == NULL)
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-		fz_drop_page(ctx, kept);
-		fz_drop_page(ctx, dropme);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
+		ret = process_opened_page(ctx, page, state);
+		if (ret)
+			return ret;
 	}
 
-	return ret;
+	return NULL;
 }
 
 const char *

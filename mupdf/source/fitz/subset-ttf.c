@@ -1284,7 +1284,7 @@ read_glyf(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids)
 		old_start = old_end;
 	}
 	put_loca(ctx, ttf, ttf->new_num_glyphs, new_start);
-	*ttf->loca_len = (ttf->new_num_glyphs+1) * (2<<ttf->index_to_loc_format);
+	*ttf->loca_len = (size_t) (ttf->new_num_glyphs+1) * (2<<ttf->index_to_loc_format);
 	t->len = new_start;
 }
 

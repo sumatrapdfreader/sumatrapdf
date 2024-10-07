@@ -684,6 +684,9 @@
     <ClCompile Include="..\..\source\pdf\pdf-zugferd.c">
       <Filter>pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-recolor.c">
+      <Filter>pdf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -966,6 +969,9 @@
       <Filter>fitz</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\zugferd.h">
+      <Filter>!include\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\pdf\recolor.h">
       <Filter>!include\pdf</Filter>
     </ClInclude>
   </ItemGroup>

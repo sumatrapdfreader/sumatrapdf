@@ -583,6 +583,27 @@ objects_dump(fz_context *ctx, pdf_document *doc, pdf_write_state *opts)
  * Garbage collect objects not reachable from the trailer.
  */
 
+static void bake_stream_length(fz_context *ctx, pdf_document *doc, int num)
+{
+	if (pdf_obj_num_is_stream(ctx, doc, num))
+	{
+		pdf_obj *len;
+		pdf_obj *obj = NULL;
+		fz_var(obj);
+		fz_try(ctx)
+		{
+			obj = pdf_load_object(ctx, doc, num);
+			len = pdf_dict_get(ctx, obj, PDF_NAME(Length));
+			if (pdf_is_indirect(ctx, len))
+				pdf_dict_put_int(ctx, obj, PDF_NAME(Length), pdf_to_int(ctx, len));
+		}
+		fz_always(ctx)
+			pdf_drop_obj(ctx, obj);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+	}
+}
+
 /* Mark a reference. If it's been marked already, return NULL (as no further
  * processing is required). If it's not, return the resolved object so
  * that we can continue our recursive marking. If it's a duff reference
@@ -604,27 +625,6 @@ static pdf_obj *markref(fz_context *ctx, pdf_document *doc, pdf_write_state *opt
 		return NULL;
 
 	opts->use_list[num] = 1;
-
-	/* Bake in /Length in stream objects */
-	fz_try(ctx)
-	{
-		if (pdf_obj_num_is_stream(ctx, doc, num))
-		{
-			pdf_obj *len = pdf_dict_get(ctx, obj, PDF_NAME(Length));
-			if (pdf_is_indirect(ctx, len))
-			{
-				int num2 = pdf_to_num(ctx, len);
-				expand_lists(ctx, opts, num2+1);
-				opts->use_list[num2] = 0;
-				len = pdf_resolve_indirect(ctx, len);
-				pdf_dict_put(ctx, obj, PDF_NAME(Length), len);
-			}
-		}
-	}
-	fz_catch(ctx)
-	{
-		/* Leave broken */
-	}
 
 	obj = pdf_resolve_indirect(ctx, obj);
 	if (obj == NULL || pdf_is_null(ctx, obj))
@@ -3810,10 +3810,18 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 
 		/* Sweep & mark objects from the trailer */
 		if (opts->do_garbage >= 1 || opts->do_linear)
+		{
+			/* Start by removing indirect /Length attributes on streams */
+			for (num = 0; num < xref_len; num++)
+				bake_stream_length(ctx, doc, num);
+
 			(void)markobj(ctx, doc, opts, pdf_trailer(ctx, doc));
+		}
 		else
+		{
 			for (num = 0; num < xref_len; num++)
 				opts->use_list[num] = 1;
+		}
 
 		/* Coalesce and renumber duplicate objects */
 		if (opts->do_garbage >= 3)

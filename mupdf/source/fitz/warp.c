@@ -655,7 +655,7 @@ gauss5x5(fz_context *ctx, fz_pixmap *src)
 	int y;
 
 	if (w < 5 || h < 5)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Pixmap too small");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Pixmap too small");
 
 	buf = fz_malloc(ctx, w*3*5 * sizeof(uint16_t));
 
@@ -735,7 +735,7 @@ gauss5x5_3(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int comp)
 	int y;
 
 	if (w < 5 || h < 5)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "Pixmap too small");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Pixmap too small");
 
 	buf = fz_malloc(ctx, w*3*5 * sizeof(uint16_t));
 

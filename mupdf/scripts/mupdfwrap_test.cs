@@ -95,8 +95,9 @@ public class HelloWorld
             System.Console.WriteLine("Not checking handling of exceptions because running on Mono.");
         }
 
-        // Check we can make MuPDF open filename containing 4-byte unicode
-        // character.
+        // Check we can make MuPDF open filename containing 4-byte
+        // unicode character. This file will have been created by
+        // `scripts/wrap/__main__.py --test-csharp`.
         byte[] text_utf8 =
         {
                 0xf0,

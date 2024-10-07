@@ -568,7 +568,7 @@ static void pdf_set_link_rect(fz_context *ctx, fz_link *link_, fz_rect rect)
 		return;
 
 	if (!link->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "link not bound to a page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "link not bound to a page");
 
 	pdf_begin_operation(ctx, link->page->doc, "Set link rectangle");
 
@@ -592,7 +592,7 @@ static void pdf_set_link_uri(fz_context *ctx, fz_link *link_, const char *uri)
 		return;
 
 	if (!link->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "link not bound to a page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "link not bound to a page");
 
 	pdf_begin_operation(ctx, link->page->doc, "Set link uri");
 
@@ -707,6 +707,36 @@ pdf_load_link_annots(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_obj
 	}
 
 	return head;
+}
+
+void pdf_nuke_links(fz_context *ctx, pdf_page *page)
+{
+	pdf_link *link;
+	link = (pdf_link *) page->links;
+	while (link)
+	{
+		pdf_drop_obj(ctx, link->obj);
+		link->obj = NULL;
+		link = (pdf_link *) link->super.next;
+	}
+	fz_drop_link(ctx, page->links);
+	page->links = NULL;
+}
+
+void pdf_sync_links(fz_context *ctx, pdf_page *page)
+{
+	pdf_obj *annots;
+
+	pdf_nuke_links(ctx, page);
+
+	annots = pdf_dict_get(ctx, page->obj, PDF_NAME(Annots));
+	if (annots)
+	{
+		fz_rect page_cropbox;
+		fz_matrix page_ctm;
+		pdf_page_transform(ctx, page, &page_cropbox, &page_ctm);
+		page->links = pdf_load_link_annots(ctx, page->doc, page, annots, page->super.number, page_ctm);
+	}
 }
 
 #define isnanorzero(x) (isnan(x) || (x) == 0)

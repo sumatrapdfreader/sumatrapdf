@@ -1521,7 +1521,7 @@ fz_stream *pdf_signature_hash_bytes(fz_context *ctx, pdf_document *doc, pdf_obj 
 int pdf_incremental_change_since_signing_widget(fz_context *ctx, pdf_annot *widget)
 {
 	if (!widget->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 	return pdf_signature_incremental_change_since_signing(ctx, widget->page->doc, widget->obj);
 }
 
@@ -1532,7 +1532,7 @@ int pdf_signature_incremental_change_since_signing(fz_context *ctx, pdf_document
 	int changed = 0;
 
 	if (pdf_dict_get_inheritable(ctx, signature, PDF_NAME(FT)) != PDF_NAME(Sig))
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation is not a signature widget");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation is not a signature widget");
 	if (!pdf_signature_is_signed(ctx, doc, signature))
 		return 0;
 
@@ -1592,7 +1592,7 @@ int pdf_widget_is_signed(fz_context *ctx, pdf_annot *widget)
 		return 0;
 
 	if (!widget->page)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "annotation not bound to any page");
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 
 	return pdf_signature_is_signed(ctx, widget->page->doc, widget->obj);
 }

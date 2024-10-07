@@ -149,6 +149,8 @@ const char *fz_stext_options_usage =
 	"\tuse-cid-for-unknown-unicode: guess unicode from cid if normal mapping fails\n"
 	"\tmediabox-clip=no: include characters outside mediabox\n"
 	"\tstructured=no: don't collect structure data\n"
+	"\taccurate-bboxes=no: calculate char bboxes for from the outlines\n"
+	"\tvectors=no: include vector bboxes in output\n"
 	"\n";
 
 /* Find the current actualtext, if any. Will abort if dev == NULL. */
@@ -328,7 +330,7 @@ add_line_to_block(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, c
 #define NON_ACCURATE_GLYPH (-1)
 
 static fz_stext_char *
-add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_matrix trm, fz_font *font, float size, int c, int glyph, fz_point *p, fz_point *q, int bidi, int color)
+add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_matrix trm, fz_font *font, float size, int c, int glyph, fz_point *p, fz_point *q, int bidi, int color, int synthetic)
 {
 	fz_stext_char *ch = fz_pool_alloc(ctx, page->pool, sizeof *line->first_char);
 	fz_point a, d;
@@ -347,6 +349,7 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	ch->origin = *p;
 	ch->size = size;
 	ch->font = fz_keep_font(ctx, font);
+	ch->flags = synthetic ? FZ_STEXT_SYNTHETIC : 0;
 
 	if (line->wmode == 0)
 	{
@@ -541,7 +544,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	if (cur_line && glyph < 0)
 	{
 		/* Don't advance pen or break lines for no-glyph characters in a cluster */
-		add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &dev->pen, &dev->pen, bidi, dev->color);
+		add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &dev->pen, &dev->pen, bidi, dev->color, 0);
 		dev->lastbidi = bidi;
 		dev->lastchar = c;
 		return;
@@ -707,9 +710,9 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 
 	/* Add synthetic space */
 	if (add_space && !(dev->flags & FZ_STEXT_INHIBIT_SPACES))
-		add_char_to_line(ctx, page, cur_line, trm, font, size, ' ', (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? NON_ACCURATE_GLYPH_ADDED_SPACE : NON_ACCURATE_GLYPH, &dev->pen, &p, bidi, dev->color);
+		add_char_to_line(ctx, page, cur_line, trm, font, size, ' ', (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? NON_ACCURATE_GLYPH_ADDED_SPACE : NON_ACCURATE_GLYPH, &dev->pen, &p, bidi, dev->color, 1);
 
-	add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &p, &q, bidi, dev->color);
+	add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &p, &q, bidi, dev->color, 0);
 	dev->lastchar = c;
 	dev->lastbidi = bidi;
 	dev->lag_pen = p;
@@ -1032,13 +1035,15 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 static void
 fz_stext_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix ctm)
 {
-	metatext_t *mt;
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	metatext_t *mt = NULL;
 
 	if (span->len == 0)
 		return;
 
 	/* Are we in an actualtext? */
-	mt = find_actualtext(dev);
+	if (!(tdev->opts.flags & FZ_STEXT_IGNORE_ACTUALTEXT))
+		mt = find_actualtext(dev);
 
 	if (mt)
 		do_extract_within_actualtext(ctx, dev, span, ctm, mt);
@@ -1398,6 +1403,12 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_COLLECT_STRUCTURE;
 	if (fz_has_option(ctx, string, "use-cid-for-unknown-unicode", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_USE_CID_FOR_UNKNOWN_UNICODE;
+	if (fz_has_option(ctx, string, "accurate-bboxes", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_ACCURATE_BBOXES;
+	if (fz_has_option(ctx, string, "vectors", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_COLLECT_VECTORS;
+	if (fz_has_option(ctx, string, "ignore-actualtext", & val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_IGNORE_ACTUALTEXT;
 
 	opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
 	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "no"))
@@ -1410,21 +1421,318 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 	return opts;
 }
 
-static void
-fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *ss, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp)
+typedef struct
 {
-	fz_rect *bounds = actualtext_bounds((fz_stext_device *)dev);
+	int fail;
+	int count;
+	fz_point corners[4];
+} is_rect_data;
 
-	if (bounds == NULL)
+static void
+stash_point(is_rect_data *rd, float x, float y)
+{
+	if (rd->count > 3)
+	{
+		rd->fail = 1;
+		return;
+	}
+
+	rd->corners[rd->count].x = x;
+	rd->corners[rd->count].y = y;
+	rd->count++;
+}
+
+static void
+is_rect_moveto(fz_context *ctx, void *arg, float x, float y)
+{
+	is_rect_data *rd = arg;
+	if (rd->fail)
 		return;
 
-	*bounds = fz_union_rect(*bounds, fz_bound_path(ctx, path, ss, ctm));
+	if (rd->count != 0)
+	{
+		rd->fail = 1;
+		return;
+	}
+	stash_point(rd, x, y);
+}
+
+static void
+is_rect_lineto(fz_context *ctx, void *arg, float x, float y)
+{
+	is_rect_data *rd = arg;
+	if (rd->fail)
+		return;
+
+	if (rd->count == 4 && rd->corners[0].x == x && rd->corners[1].y == y)
+		return;
+
+	stash_point(rd, x, y);
+}
+
+static void
+is_rect_curveto(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	is_rect_data *rd = arg;
+	rd->fail = 1;
+}
+
+static void
+is_rect_closepath(fz_context *ctx, void *arg)
+{
+	is_rect_data *rd = arg;
+	if (rd->fail)
+		return;
+	if (rd->count == 3)
+		stash_point(rd, rd->corners[0].x, rd->corners[0].y);
+	if (rd->count != 4)
+		rd->fail = 1;
+}
+
+static int feq(float a,float b)
+{
+#define EPSILON 0.00001
+	a -= b;
+	if (a < 0)
+		a = -a;
+	return a < EPSILON;
+}
+
+static int
+is_path_rect(fz_context *ctx, fz_path *path, fz_point *from, fz_point *to, float *thickness, fz_matrix ctm)
+{
+	float d01, d01x, d01y, d03, d03x, d03y, d32x, d32y;
+	is_rect_data rd = { 0 };
+	static const fz_path_walker walker =
+	{
+		is_rect_moveto, is_rect_lineto, is_rect_curveto, is_rect_closepath
+	};
+	int i;
+
+	fz_walk_path(ctx, path, &walker, &rd);
+
+	if (rd.fail)
+		return 0;
+
+	if (rd.count == 2)
+	{
+		stash_point(&rd, rd.corners[1].x, rd.corners[1].y);
+		stash_point(&rd, rd.corners[0].x, rd.corners[0].y);
+	}
+
+	for (i = 0 ; i < 4; i++)
+	{
+		fz_point p = fz_transform_point(rd.corners[i], ctm);
+
+		rd.corners[i].x = p.x;
+		rd.corners[i].y = p.y;
+	}
+
+	/* So we have a 4 cornered path. Hopefully something like:
+	 * 0---------1
+	 * |         |
+	 * 3---------2
+	 * but it might be:
+	 * 0---------3
+	 * |         |
+	 * 1---------2
+	*/
+	while (1)
+	{
+		d01x = rd.corners[1].x - rd.corners[0].x;
+		d01y = rd.corners[1].y - rd.corners[0].y;
+		d01 = d01x * d01x + d01y * d01y;
+		d03x = rd.corners[3].x - rd.corners[0].x;
+		d03y = rd.corners[3].y - rd.corners[0].y;
+		d03 = d03x * d03x + d03y * d03y;
+		if(d01 < d03)
+		{
+			/* We are the latter case. Transpose it. */
+			fz_point p = rd.corners[1];
+			rd.corners[1] = rd.corners[3];
+			rd.corners[3] = p;
+		}
+		else
+			break;
+	}
+	d32x = rd.corners[3].x - rd.corners[2].x;
+	d32y = rd.corners[3].y - rd.corners[2].y;
+
+	/* So d32x and d01x need to be the same for this to be a strikeout. */
+	if (!feq(d32x, d01x) || !feq(d32y, d01y))
+		return 0;
+
+	/* We are plausibly a rectangle. */
+	*thickness = sqrtf(d32x * d32x + d32y * d32y);
+
+	from->x = (rd.corners[0].x + rd.corners[3].x)/2;
+	from->y = (rd.corners[0].y + rd.corners[3].y)/2;
+	to->x = (rd.corners[1].x + rd.corners[2].x)/2;
+	to->y = (rd.corners[1].y + rd.corners[2].y)/2;
+
+	return 1;
+}
+
+static void
+advance_x(fz_point *a, fz_point b, float d)
+{
+	a->y += (b.y - a->y) * d / (b.x - a->x);
+	a->x += d;
+}
+
+static void
+advance_y(fz_point *a, fz_point b, float d)
+{
+	a->x += (b.x - a->x) * d / (b.y - a->y);
+	a->y += d;
+}
+
+static int
+line_crosses_rect(fz_point a, fz_point b, fz_rect r)
+{
+	/* Cope with trivial exclusions */
+	if (a.x < r.x0 && b.x < r.x0)
+		return 0;
+	if (a.x > r.x1 && b.x > r.x1)
+		return 0;
+	if (a.y < r.y0 && b.y < r.y0)
+		return 0;
+	if (a.y > r.y1 && b.y > r.y1)
+		return 0;
+
+	if (a.x < r.x0)
+		advance_x(&a, b, r.x0 - a.x);
+	if (a.x > r.x1)
+		advance_x(&a, b, r.x1 - a.x);
+	if (a.y < r.y0)
+		advance_y(&a, b, r.y0 - a.y);
+	if (a.y > r.y1)
+		advance_y(&a, b, r.y1 - a.y);
+
+	return fz_is_point_inside_rect(a, r);
+}
+
+static void
+check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page, const fz_path *path, fz_matrix ctm)
+{
+	fz_stext_block *block = page->last_block;
+	int is_rect;
+	float thickness;
+	fz_point from, to, dir;
+	union {
+		fz_path *p;
+		const fz_path *cp;
+	} u;
+
+	u.cp = path;
+
+	/* Is this path a thin rectangle (possibly rotated)? If so, then we need to
+	 * consider it as being a strikeout or underline. */
+	is_rect = is_path_rect(ctx, u.p, &from, &to, &thickness, ctm);
+	if (!is_rect)
+		return;
+
+	dir.x = to.x - from.x;
+	dir.y = to.y - from.y;
+	dir = fz_normalize_vector(dir);
+
+	/* Does this line nicely cover a recent span? */
+	while (block)
+	{
+		fz_stext_line *line;
+		if (block->type != FZ_STEXT_BLOCK_TEXT)
+		{
+			block = block->prev;
+			continue;
+		}
+		line = block->u.t.last_line;
+		while(line)
+		{
+			if ((feq(line->dir.x, dir.x) && feq(line->dir.y, dir.y)) ||
+				(feq(line->dir.x, -dir.x) && feq(line->dir.y, -dir.y)))
+			{
+				/* Matching directions... */
+
+				/* Unfortunately, we don't have a valid line->bbox at this point, so we need to check
+				 * chars. */
+				fz_stext_char *ch;
+				for (ch = line->first_char; ch; ch = ch->next)
+				{
+					fz_rect ch_box = fz_rect_from_quad(ch->quad);
+
+					if (line_crosses_rect(from, to, ch_box))
+					{
+						float dx, dy, dot;
+						/* Is this a strikeout or an underline? */
+
+						/* The baseline moves from ch->origin in the direction line->dir */
+						fz_point up;
+						up.x = line->dir.y;
+						up.y = -line->dir.x;
+
+						/* How far is our line displaced from the line through the origin? */
+						dx = from.x - ch->origin.x;
+						dy = from.y - ch->origin.y;
+						/* Dot product with up. up is normalised */
+						dot = dx * up.x + dy * up.y;
+
+						if (dot > 0)
+							ch->flags |= FZ_STEXT_STRIKEOUT;
+						else
+							ch->flags |= FZ_STEXT_UNDERLINE;
+					}
+				}
+			}
+			line = line->prev;
+		}
+
+		block = block->prev;
+	}
+}
+
+static void
+add_vector(fz_context *ctx, fz_stext_page *page, fz_rect bbox)
+{
+	fz_stext_block *b = add_block_to_page(ctx, page);
+
+	b->type = FZ_STEXT_BLOCK_VECTOR;
+	b->bbox = bbox;
 }
 
 static void
 fz_stext_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp)
 {
-	fz_stext_stroke_path(ctx, dev, path, NULL, ctm, cs, color, alpha, cp);
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_stext_page *page = tdev->page;
+	fz_rect path_bounds = fz_bound_path(ctx, path, NULL, ctm);
+	fz_rect *bounds = actualtext_bounds(tdev);
+
+	/* If we're in an actualttext, then update the bounds to include this content. */
+	if (bounds != NULL)
+		*bounds = fz_union_rect(*bounds, path_bounds);
+
+	check_for_strikeout(ctx, tdev, page, path, ctm);
+
+	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
+		add_vector(ctx, page, path_bounds);
+}
+
+static void
+fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *ss, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp)
+{
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_stext_page *page = tdev->page;
+	fz_rect path_bounds = fz_bound_path(ctx, path, ss, ctm);
+	fz_rect *bounds = actualtext_bounds((fz_stext_device *)dev);
+
+	/* If we're in an actualttext, then update the bounds to include this content. */
+	if (bounds != NULL)
+		*bounds = fz_union_rect(*bounds, path_bounds);
+
+	check_for_strikeout(ctx, tdev, page, path, ctm);
+
+	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
+		add_vector(ctx, page, path_bounds);
 }
 
 static void

@@ -607,6 +607,11 @@ Usage:
                     reference-checking code. For example use `--refcheck-if
                     '#if 1'` to always enable, `--refcheck-if '#if 0'` to
                     always disable. Default is '#ifndef NDEBUG'.
+                --trace-if <text>
+                    Set text used to determine whether to enabling
+                    runtime diagnostics code. For example use `--trace-if
+                    '#if 1'` to always enable, `--refcheck-if '#if 0'` to
+                    always disable. Default is '#ifndef NDEBUG'.
                 --python
                 --csharp
                     Whether to generated bindings for python or C#. Default is
@@ -1244,6 +1249,7 @@ def build_0(
         check_regress,
         clang_info_verbose,
         refcheck_if,
+        trace_if,
         cpp_files,
         h_files,
         ):
@@ -1291,6 +1297,7 @@ def build_0(
             check_regress,
             clang_info_verbose,
             refcheck_if,
+            trace_if,
             'debug' in build_dirs.dir_so,
             )
 
@@ -1470,6 +1477,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
     m_vars = None
     j = 0
     refcheck_if = '#ifndef NDEBUG'
+    trace_if = '#ifndef NDEBUG'
     pyodide = state.state_.pyodide
     if pyodide:
         # Looks like Pyodide sets CXX to (for example) /tmp/tmp8h1meqsj/c++. We
@@ -1502,7 +1510,10 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
     details = list()
 
     while 1:
-        actions = args.next()
+        try:
+            actions = args.next()
+        except StopIteration as e:
+            raise Exception(f'Expected more `-b ...` args such as --python or <actions>') from e
         if 0:
             pass
         elif actions == '-f':
@@ -1538,6 +1549,9 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
         elif actions == '--refcheck-if':
             refcheck_if = args.next()
             jlib.log( 'Have set {refcheck_if=}')
+        elif actions == '--trace-if':
+            trace_if = args.next()
+            jlib.log( 'Have set {trace_if=}')
         elif actions == '--m-target':
             m_target = args.next()
         elif actions == '--m-vars':
@@ -1594,6 +1608,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                         check_regress,
                         clang_info_verbose,
                         refcheck_if,
+                        trace_if,
                         cpp_files,
                         h_files,
                         )
@@ -2835,6 +2850,8 @@ def main2():
                         f'{build_dirs.dir_mupdf}/thirdparty/zlib/zlib.3.pdf',
                         testfile
                         )
+                # Create test file whose name contains unicode character, which
+                # scripts/mupdfwrap_test.cs will attempt to open.
                 testfile2 = testfile + b'\xf0\x90\x90\xb7'.decode() + '.pdf'
                 jlib.log(f'{testfile=}')
                 jlib.log(f'{testfile2=}')

@@ -34,6 +34,7 @@ void *pdf_find_item(fz_context *ctx, fz_store_drop_fn *drop, pdf_obj *key);
 void pdf_remove_item(fz_context *ctx, fz_store_drop_fn *drop, pdf_obj *key);
 void pdf_empty_store(fz_context *ctx, pdf_document *doc);
 void pdf_purge_locals_from_store(fz_context *ctx, pdf_document *doc);
+void pdf_purge_object_from_store(fz_context *ctx, pdf_document *doc, int num);
 
 /*
  * Structures used for managing resource locations and avoiding multiple

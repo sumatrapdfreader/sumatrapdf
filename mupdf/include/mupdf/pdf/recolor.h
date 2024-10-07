@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -20,40 +20,30 @@
 // Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco,
 // CA 94129, USA, for further information.
 
-#ifndef MUPDF_PDF_H
-#define MUPDF_PDF_H
+#ifndef MUPDF_PDF_RECOLOR_H
+#define MUPDF_PDF_RECOLOR_H
 
-#include "mupdf/fitz.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "mupdf/pdf/object.h"
 #include "mupdf/pdf/document.h"
-#include "mupdf/pdf/parse.h"
-#include "mupdf/pdf/xref.h"
-#include "mupdf/pdf/crypt.h"
 
-#include "mupdf/pdf/page.h"
-#include "mupdf/pdf/resource.h"
-#include "mupdf/pdf/cmap.h"
-#include "mupdf/pdf/font.h"
-#include "mupdf/pdf/interpret.h"
+typedef struct
+{
+	/* For gray, use num_comp = 1.
+	 * For rgb, use num_comp = 3.
+	 * For cmyk use num_comp = 4.
+	 * All other values reserved. */
+	int num_comp;
+} pdf_recolor_options;
 
-#include "mupdf/pdf/annot.h"
-#include "mupdf/pdf/form.h"
-#include "mupdf/pdf/event.h"
-#include "mupdf/pdf/javascript.h"
+/*
+	Recolor a given document page.
 
-#include "mupdf/pdf/clean.h"
-#include "mupdf/pdf/recolor.h"
-#include "mupdf/pdf/image-rewriter.h"
-#include "mupdf/pdf/zugferd.h"
+	All other values reserved.
+*/
+void pdf_recolor_page(fz_context *ctx, pdf_document *doc, int pagenum, const pdf_recolor_options *opts);
 
-
-#ifdef __cplusplus
-}
-#endif
+/*
+	Remove output intents from a document.
+*/
+void pdf_remove_output_intents(fz_context *ctx, pdf_document *doc);
 
 #endif

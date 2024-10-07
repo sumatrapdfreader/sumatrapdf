@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -178,10 +178,13 @@ static void drop_file(fz_context *ctx, void *state_)
 static void close_and_drop_file(fz_context *ctx, void *state_)
 {
 	fz_file_stream *state = state_;
-	int n = fclose(state->file);
-	if (n < 0)
-		fz_warn(ctx, "close error: %s", strerror(errno));
-	drop_file(ctx, state_);
+	if (state)
+	{
+		int n = fclose(state->file);
+		if (n < 0)
+			fz_warn(ctx, "close error: %s", strerror(errno));
+		drop_file(ctx, state_);
+	}
 }
 
 static fz_stream *
