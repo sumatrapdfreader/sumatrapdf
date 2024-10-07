@@ -33,15 +33,15 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     if (!mux) return 0;
 
     WebPData chunk;
-    WebPMuxGetChunk(mux, "EXIF", &chunk);
-    WebPMuxGetChunk(mux, "ICCP", &chunk);
-    WebPMuxGetChunk(mux, "FUZZ", &chunk);  // unknown
+    (void)WebPMuxGetChunk(mux, "EXIF", &chunk);
+    (void)WebPMuxGetChunk(mux, "ICCP", &chunk);
+    (void)WebPMuxGetChunk(mux, "FUZZ", &chunk);  // unknown
 
     uint32_t flags;
-    WebPMuxGetFeatures(mux, &flags);
+    (void)WebPMuxGetFeatures(mux, &flags);
 
     WebPMuxAnimParams params;
-    WebPMuxGetAnimationParams(mux, &params);
+    (void)WebPMuxGetAnimationParams(mux, &params);
 
     WebPMuxError status;
     WebPMuxFrameInfo info;
@@ -72,11 +72,11 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
 
     WebPChunkIterator chunk_iter;
     if (WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter)) {
-      WebPDemuxNextChunk(&chunk_iter);
+      (void)WebPDemuxNextChunk(&chunk_iter);
     }
     WebPDemuxReleaseChunkIterator(&chunk_iter);
     if (WebPDemuxGetChunk(demux, "ICCP", 0, &chunk_iter)) {  // 0 == last
-      WebPDemuxPrevChunk(&chunk_iter);
+      (void)WebPDemuxPrevChunk(&chunk_iter);
     }
     WebPDemuxReleaseChunkIterator(&chunk_iter);
     // Skips FUZZ because the Demux API has no concept of (un)known chunks.

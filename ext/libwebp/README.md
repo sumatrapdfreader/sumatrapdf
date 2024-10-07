@@ -7,7 +7,7 @@
       \__\__/\____/\_____/__/ ____  ___
             / _/ /    \    \ /  _ \/ _/
            /  \_/   / /   \ \   __/  \__
-           \____/____/\_____/_____/____/v1.3.2
+           \____/____/\_____/_____/____/v1.4.0
 ```
 
 WebP codec is a library to encode and decode images in WebP format. This package

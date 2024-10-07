@@ -33,7 +33,7 @@ libsharpyuv_la_SOURCES += sharpyuv_gamma.c sharpyuv_gamma.h
 libsharpyuv_la_SOURCES += sharpyuv.c sharpyuv.h
 
 libsharpyuv_la_CPPFLAGS = $(AM_CPPFLAGS)
-libsharpyuv_la_LDFLAGS = -no-undefined -version-info 0:1:0 -lm
+libsharpyuv_la_LDFLAGS = -no-undefined -version-info 1:0:1 -lm
 libsharpyuv_la_LIBADD =
 libsharpyuv_la_LIBADD += libsharpyuv_sse2.la
 libsharpyuv_la_LIBADD += libsharpyuv_neon.la

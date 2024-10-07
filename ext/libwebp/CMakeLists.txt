@@ -51,6 +51,8 @@ option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces."
        OFF)
 set(WEBP_BITTRACE "0" CACHE STRING "Bit trace mode (0=none, 1=bit, 2=bytes)")
 set_property(CACHE WEBP_BITTRACE PROPERTY STRINGS 0 1 2)
+option(WEBP_ENABLE_WUNUSED_RESULT "Add [[nodiscard]] to some functions. \
+       CMake must be at least 3.21 to force C23" OFF)
 
 if(WEBP_LINK_STATIC)
   if(WIN32)
@@ -133,7 +135,7 @@ if(WEBP_UNICODE)
   add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
-if(MSVC AND BUILD_SHARED_LIBS)
+if(WIN32 AND BUILD_SHARED_LIBS)
   add_definitions(-DWEBP_DLL)
 endif()
 
@@ -161,7 +163,20 @@ if(MSVC)
   set(CMAKE_STATIC_LIBRARY_PREFIX "${webp_libname_prefix}")
 endif()
 
-set(CMAKE_C_VISIBILITY_PRESET hidden)
+if(NOT WIN32)
+  set(CMAKE_C_VISIBILITY_PRESET hidden)
+endif()
+
+if(WEBP_ENABLE_WUNUSED_RESULT)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)
+    set(CMAKE_C_STANDARD 23)
+  else()
+    unset(CMAKE_C_STANDARD)
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu2x>)
+  endif()
+  add_compile_options(-Wunused-result)
+  add_definitions(-DWEBP_ENABLE_NODISCARD=1)
+endif()
 
 # ##############################################################################
 # Android only.
@@ -463,6 +478,7 @@ endif()
 if(WEBP_BUILD_ANIM_UTILS
    OR WEBP_BUILD_CWEBP
    OR WEBP_BUILD_DWEBP
+   OR WEBP_BUILD_EXTRAS
    OR WEBP_BUILD_GIF2WEBP
    OR WEBP_BUILD_IMG2WEBP
    OR WEBP_BUILD_VWEBP
@@ -499,6 +515,8 @@ if(WEBP_BUILD_ANIM_UTILS
     TARGET exampleutil imageioutil imagedec imageenc
     PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/src
              ${CMAKE_CURRENT_BINARY_DIR}/src)
+  target_include_directories(imagedec PRIVATE ${WEBP_DEP_IMG_INCLUDE_DIRS})
+  target_include_directories(imageenc PRIVATE ${WEBP_DEP_IMG_INCLUDE_DIRS})
 endif()
 
 if(WEBP_BUILD_DWEBP)
@@ -638,15 +656,30 @@ if(WEBP_BUILD_EXTRAS)
                                                   ${CMAKE_CURRENT_BINARY_DIR})
 
   # vwebp_sdl
-  find_package(SDL)
-  if(WEBP_BUILD_VWEBP AND SDL_FOUND)
+  find_package(SDL2 QUIET)
+  if(WEBP_BUILD_VWEBP AND SDL2_FOUND)
     add_executable(vwebp_sdl ${VWEBP_SDL_SRCS})
-    target_link_libraries(vwebp_sdl ${SDL_LIBRARY} imageioutil webp)
+    target_link_libraries(vwebp_sdl ${SDL2_LIBRARIES} imageioutil webp)
     target_include_directories(
       vwebp_sdl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-                        ${CMAKE_CURRENT_BINARY_DIR}/src ${SDL_INCLUDE_DIR})
+                        ${CMAKE_CURRENT_BINARY_DIR}/src ${SDL2_INCLUDE_DIRS})
     set(WEBP_HAVE_SDL 1)
     target_compile_definitions(vwebp_sdl PUBLIC WEBP_HAVE_SDL)
+
+    set(CMAKE_REQUIRED_INCLUDES "${SDL2_INCLUDE_DIRS}")
+    check_c_source_compiles(
+      "
+        #define SDL_MAIN_HANDLED
+        #include \"SDL.h\"
+        int main(void) {
+          return 0;
+        }
+      "
+      HAVE_JUST_SDL_H)
+    set(CMAKE_REQUIRED_INCLUDES)
+    if(HAVE_JUST_SDL_H)
+      target_compile_definitions(vwebp_sdl PRIVATE WEBP_HAVE_JUST_SDL_H)
+    endif()
   endif()
 endif()
 
@@ -661,31 +694,44 @@ if(WEBP_BUILD_WEBP_JS)
   else()
     set(emscripten_stack_size "-sTOTAL_STACK=5MB")
   endif()
+  find_package(SDL2 REQUIRED)
   # wasm2js does not support SIMD.
   if(NOT WEBP_ENABLE_SIMD)
     # JavaScript version
     add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
-    target_link_libraries(webp_js webpdecoder SDL)
+    target_link_libraries(webp_js webpdecoder SDL2)
     target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     set(WEBP_HAVE_SDL 1)
     set_target_properties(
       webp_js
-      PROPERTIES LINK_FLAGS "-sWASM=0 ${emscripten_stack_size} \
+      PROPERTIES
+        # Emscripten puts -sUSE_SDL2=1 in this variable, though it's needed at
+        # compile time to ensure the headers are downloaded.
+        COMPILE_OPTIONS "${SDL2_LIBRARIES}"
+        LINK_FLAGS
+        "-sWASM=0 ${emscripten_stack_size} \
          -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
-         -sEXPORTED_RUNTIME_METHODS=cwrap")
+         -sEXPORTED_RUNTIME_METHODS=cwrap ${SDL2_LIBRARIES} \
+         -sALLOW_MEMORY_GROWTH")
     set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
     target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
   endif()
 
   # WASM version
   add_executable(webp_wasm ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
-  target_link_libraries(webp_wasm webpdecoder SDL)
+  target_link_libraries(webp_wasm webpdecoder SDL2)
   target_include_directories(webp_wasm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(
     webp_wasm
-    PROPERTIES LINK_FLAGS "-sWASM=1 ${emscripten_stack_size} \
+    PROPERTIES
+      # Emscripten puts -sUSE_SDL2=1 in this variable, though it's needed at
+      # compile time to ensure the headers are downloaded.
+      COMPILE_OPTIONS "${SDL2_LIBRARIES}"
+      LINK_FLAGS
+      "-sWASM=1 ${emscripten_stack_size} \
        -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
-       -sEXPORTED_RUNTIME_METHODS=cwrap")
+       -sEXPORTED_RUNTIME_METHODS=cwrap ${SDL2_LIBRARIES} \
+       -sALLOW_MEMORY_GROWTH")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)

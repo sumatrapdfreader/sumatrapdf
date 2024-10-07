@@ -835,6 +835,7 @@
     <ClCompile Include="..\ext\libwebp\src\utils\filters_utils.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\huffman_encode_utils.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\huffman_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\palette.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_dec_utils.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_utils.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\random_utils.c" />

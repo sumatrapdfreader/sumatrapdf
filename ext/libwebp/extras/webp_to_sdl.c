@@ -20,88 +20,75 @@
 #include "webp_to_sdl.h"
 
 #include <stdio.h>
+
 #include "src/webp/decode.h"
 
 #if defined(WEBP_HAVE_JUST_SDL_H)
 #include <SDL.h>
 #else
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 static int init_ok = 0;
 int WebPToSDL(const char* data, unsigned int data_size) {
   int ok = 0;
   VP8StatusCode status;
-  WebPDecoderConfig config;
-  WebPBitstreamFeatures* const input = &config.input;
-  WebPDecBuffer* const output = &config.output;
-  SDL_Surface* screen = NULL;
-  SDL_Surface* surface = NULL;
-
-  if (!WebPInitDecoderConfig(&config)) {
-    fprintf(stderr, "Library version mismatch!\n");
-    return 0;
-  }
+  WebPBitstreamFeatures input;
+  uint8_t* output = NULL;
+  SDL_Window* window = NULL;
+  SDL_Renderer* renderer = NULL;
+  SDL_Texture* texture = NULL;
+  int width, height;
 
   if (!init_ok) {
     SDL_Init(SDL_INIT_VIDEO);
     init_ok = 1;
   }
 
-  status = WebPGetFeatures((uint8_t*)data, (size_t)data_size, &config.input);
+  status = WebPGetFeatures((uint8_t*)data, (size_t)data_size, &input);
   if (status != VP8_STATUS_OK) goto Error;
+  width = input.width;
+  height = input.height;
 
-  screen = SDL_SetVideoMode(input->width, input->height, 32, SDL_SWSURFACE);
-  if (screen == NULL) {
-    fprintf(stderr, "Unable to set video mode (32bpp %dx%d)!\n",
-            input->width, input->height);
+  SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
+  if (window == NULL || renderer == NULL) {
+    fprintf(stderr, "Unable to create window or renderer!\n");
     goto Error;
   }
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,
+              "linear");  // make the scaled rendering look smoother.
+  SDL_RenderSetLogicalSize(renderer, width, height);
 
-  surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-                                 input->width, input->height, 32,
-                                 0x000000ffu,   // R mask
-                                 0x0000ff00u,   // G mask
-                                 0x00ff0000u,   // B mask
-                                 0xff000000u);  // A mask
-
-  if (surface == NULL) {
-    fprintf(stderr, "Unable to create %dx%d RGBA surface!\n",
-            input->width, input->height);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,
+                              SDL_TEXTUREACCESS_STREAMING, width, height);
+  if (texture == NULL) {
+    fprintf(stderr, "Unable to create %dx%d RGBA texture!\n", width, height);
     goto Error;
   }
-  if (SDL_MUSTLOCK(surface)) SDL_LockSurface(surface);
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-  output->colorspace = MODE_BGRA;
+  output = WebPDecodeBGRA((const uint8_t*)data, (size_t)data_size, &width,
+                          &height);
 #else
-  output->colorspace = MODE_RGBA;
+  output = WebPDecodeRGBA((const uint8_t*)data, (size_t)data_size, &width,
+                          &height);
 #endif
-  output->width  = surface->w;
-  output->height = surface->h;
-  output->u.RGBA.rgba   = surface->pixels;
-  output->u.RGBA.stride = surface->pitch;
-  output->u.RGBA.size   = surface->pitch * surface->h;
-  output->is_external_memory = 1;
-
-  status = WebPDecode((const uint8_t*)data, (size_t)data_size, &config);
-  if (status != VP8_STATUS_OK) {
+  if (output == NULL) {
     fprintf(stderr, "Error decoding image (%d)\n", status);
     goto Error;
   }
 
-  if (SDL_MUSTLOCK(surface)) SDL_UnlockSurface(surface);
-  if (SDL_BlitSurface(surface, NULL, screen, NULL) ||
-      SDL_Flip(screen)) {
-    goto Error;
-  }
-
+  SDL_UpdateTexture(texture, NULL, output, width * sizeof(uint32_t));
+  SDL_RenderClear(renderer);
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
   ok = 1;
 
  Error:
-  SDL_FreeSurface(surface);
-  SDL_FreeSurface(screen);
-  WebPFreeDecBuffer(output);
+  // We should call SDL_DestroyWindow(window) but that makes .js fail.
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyTexture(texture);
+  WebPFree(output);
   return ok;
 }
 

@@ -41,6 +41,7 @@ readonly TARGETDIR="${TOPDIR}/WebP.framework"
 readonly DECTARGETDIR="${TOPDIR}/WebPDecoder.framework"
 readonly MUXTARGETDIR="${TOPDIR}/WebPMux.framework"
 readonly DEMUXTARGETDIR="${TOPDIR}/WebPDemux.framework"
+readonly SHARPYUVTARGETDIR="${TOPDIR}/SharpYuv.framework"
 readonly DEVELOPER=$(xcode-select --print-path)
 readonly PLATFORMSROOT="${DEVELOPER}/Platforms"
 readonly LIPO=$(xcrun -sdk iphoneos${SDK} -find lipo)
@@ -63,7 +64,8 @@ echo "Xcode Version: ${XCODE}"
 echo "iOS SDK Version: ${SDK}"
 
 if [[ -e "${BUILDDIR}" || -e "${TARGETDIR}" || -e "${DECTARGETDIR}" \
-      || -e "${MUXTARGETDIR}" || -e "${DEMUXTARGETDIR}" ]]; then
+      || -e "${MUXTARGETDIR}" || -e "${DEMUXTARGETDIR}" \
+      || -e "${SHARPYUVTARGETDIR}" ]]; then
   cat << EOF
 WARNING: The following directories will be deleted:
 WARNING:   ${BUILDDIR}
@@ -71,14 +73,16 @@ WARNING:   ${TARGETDIR}
 WARNING:   ${DECTARGETDIR}
 WARNING:   ${MUXTARGETDIR}
 WARNING:   ${DEMUXTARGETDIR}
+WARNING:   ${SHARPYUVTARGETDIR}
 WARNING: The build will continue in 5 seconds...
 EOF
   sleep 5
 fi
 rm -rf ${BUILDDIR} ${TARGETDIR} ${DECTARGETDIR} \
-    ${MUXTARGETDIR} ${DEMUXTARGETDIR}
+    ${MUXTARGETDIR} ${DEMUXTARGETDIR} ${SHARPYUVTARGETDIR}
 mkdir -p ${BUILDDIR} ${TARGETDIR}/Headers/ ${DECTARGETDIR}/Headers/ \
-    ${MUXTARGETDIR}/Headers/ ${DEMUXTARGETDIR}/Headers/
+    ${MUXTARGETDIR}/Headers/ ${DEMUXTARGETDIR}/Headers/ \
+    ${SHARPYUVTARGETDIR}/Headers/
 
 if [[ ! -e ${SRCDIR}/configure ]]; then
   if ! (cd ${SRCDIR} && sh autogen.sh); then
@@ -134,13 +138,14 @@ for PLATFORM in ${PLATFORMS}; do
   set +x
 
   # Build only the libraries, skip the examples.
-  make V=0 -C sharpyuv
+  make V=0 -C sharpyuv install
   make V=0 -C src install
 
   LIBLIST+=" ${ROOTDIR}/lib/libwebp.a"
   DECLIBLIST+=" ${ROOTDIR}/lib/libwebpdecoder.a"
   MUXLIBLIST+=" ${ROOTDIR}/lib/libwebpmux.a"
   DEMUXLIBLIST+=" ${ROOTDIR}/lib/libwebpdemux.a"
+  SHARPYUVLIBLIST+=" ${ROOTDIR}/lib/libsharpyuv.a"
 
   make clean
 
@@ -164,5 +169,10 @@ echo "DEMUXLIBLIST = ${DEMUXLIBLIST}"
 cp -a ${SRCDIR}/src/webp/{decode,types,mux_types,demux}.h \
     ${DEMUXTARGETDIR}/Headers/
 ${LIPO} -create ${DEMUXLIBLIST} -output ${DEMUXTARGETDIR}/WebPDemux
+
+echo "SHARPYUVLIBLIST = ${SHARPYUVLIBLIST}"
+cp -a ${SRCDIR}/sharpyuv/{sharpyuv,sharpyuv_csp}.h \
+    ${SHARPYUVTARGETDIR}/Headers/
+${LIPO} -create ${SHARPYUVLIBLIST} -output ${SHARPYUVTARGETDIR}/SharpYuv
 
 echo  "SUCCESS"

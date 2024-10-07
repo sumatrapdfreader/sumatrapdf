@@ -29,6 +29,8 @@ function decode(webp_data, canvas_id) {
   // clear previous picture (if any)
   Module.canvas = canvas;
   canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  // Map this canvas to the default selector used by emscripten/SDL2.
+  specialHTMLTargets["#canvas"] = Module.canvas;
   // decode and measure timing
   var start = new Date();
   var ret = WebpToCanvas(webp_data, webp_data.length);

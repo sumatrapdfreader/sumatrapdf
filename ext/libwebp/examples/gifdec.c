@@ -317,7 +317,7 @@ void GIFDisplayError(const GifFileType* const gif, int gif_error) {
 
 #else  // !WEBP_HAVE_GIF
 
-static void ErrorGIFNotAvailable() {
+static void ErrorGIFNotAvailable(void) {
   fprintf(stderr, "GIF support not compiled. Please install the libgif-dev "
           "package before building.\n");
 }

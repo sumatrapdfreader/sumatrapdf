@@ -130,7 +130,7 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
       }
       WebPIDelete(idec);
     } else {
-      WebPDecode(data, size, &config);
+      (void)WebPDecode(data, size, &config);
     }
 
     WebPFreeDecBuffer(&config.output);

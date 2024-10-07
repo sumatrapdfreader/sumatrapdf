@@ -14,25 +14,34 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "examples/anim_util.h"
-#include "imageio/imageio_util.h"
-#include "src/webp/demux.h"
+#include <cstddef>
+#include <cstdint>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+#include "imageio/imageio_util.h"
+#include "src/webp/decode.h"
+#include "src/webp/demux.h"
+#include "src/webp/mux_types.h"
+
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   // WebPAnimDecoderGetInfo() is too late to check the canvas size as
   // WebPAnimDecoderNew() will handle the allocations.
+  const size_t kMaxNumBytes = 2684354560;  // RSS (resident set size) limit.
+  const size_t kMaxNumPixels = kMaxNumBytes / 4;       // At most ARGB.
+  const size_t kMaxNumPixelsSafe = kMaxNumPixels / 2;  // Allow one buffer copy.
   WebPBitstreamFeatures features;
   if (WebPGetFeatures(data, size, &features) == VP8_STATUS_OK) {
     if (!ImgIoUtilCheckSizeArgumentsOverflow(features.width * 4,
-                                             features.height)) {
+                                             features.height) ||
+        static_cast<size_t>(features.width) * features.height >
+            kMaxNumPixelsSafe) {
       return 0;
     }
   }
 
   // decode everything as an animation
-  WebPData webp_data = { data, size };
-  WebPAnimDecoder* const dec = WebPAnimDecoderNew(&webp_data, NULL);
-  if (dec == NULL) return 0;
+  WebPData webp_data = {data, size};
+  WebPAnimDecoder* const dec = WebPAnimDecoderNew(&webp_data, nullptr);
+  if (dec == nullptr) return 0;
 
   WebPAnimInfo info;
   if (!WebPAnimDecoderGetInfo(dec, &info)) goto End;
@@ -46,7 +55,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     int timestamp;
     if (!WebPAnimDecoderGetNext(dec, &buf, &timestamp)) break;
   }
- End:
+End:
   WebPAnimDecoderDelete(dec);
   return 0;
 }

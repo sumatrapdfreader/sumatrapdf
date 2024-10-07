@@ -153,6 +153,9 @@
     <ClCompile Include="..\ext\libwebp\src\utils\huffman_utils.c">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\palette.c">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_dec_utils.c">
       <Filter>utils</Filter>
     </ClCompile>

@@ -173,6 +173,7 @@ model {
             include "color_cache_utils.c"
             include "filters_utils.c"
             include "huffman_utils.c"
+            include "palette.c"
             include "quant_levels_dec_utils.c"
             include "random_utils.c"
             include "rescaler_utils.c"

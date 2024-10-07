@@ -91,50 +91,70 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     const WebPEncodingError error_code = pic.error_code;
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
+        error_code == VP8_ENC_ERROR_BAD_WRITE) {
+      return 0;
+    }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
     abort();
   }
 
   // Try decoding the result.
-  int w, h;
   const uint8_t* const out_data = memory_writer.mem;
   const size_t out_size = memory_writer.size;
-  uint8_t* const rgba = WebPDecodeBGRA(out_data, out_size, &w, &h);
-  if (rgba == nullptr || w != pic.width || h != pic.height) {
-    fprintf(stderr, "WebPDecodeBGRA failed.\n");
-    WebPFree(rgba);
+  WebPDecoderConfig dec_config;
+  if (!WebPInitDecoderConfig(&dec_config)) {
+    fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
     abort();
   }
 
-  // Compare the results if exact encoding.
-  if (pic.use_argb && config.lossless && config.near_lossless == 100) {
-    const uint32_t* src1 = (const uint32_t*)rgba;
-    const uint32_t* src2 = pic.argb;
-    for (int y = 0; y < h; ++y, src1 += w, src2 += pic.argb_stride) {
-      for (int x = 0; x < w; ++x) {
-        uint32_t v1 = src1[x], v2 = src2[x];
-        if (!config.exact) {
-          if ((v1 & 0xff000000u) == 0 || (v2 & 0xff000000u) == 0) {
-            // Only keep alpha for comparison of fully transparent area.
-            v1 &= 0xff000000u;
-            v2 &= 0xff000000u;
+  dec_config.output.colorspace = MODE_BGRA;
+  const VP8StatusCode status = WebPDecode(out_data, out_size, &dec_config);
+  if ((status != VP8_STATUS_OK && status != VP8_STATUS_OUT_OF_MEMORY &&
+       status != VP8_STATUS_USER_ABORT) ||
+      (status == VP8_STATUS_OK && (dec_config.output.width != pic.width ||
+                                   dec_config.output.height != pic.height))) {
+    fprintf(stderr, "WebPDecode failed. status: %d.\n", status);
+    WebPFreeDecBuffer(&dec_config.output);
+    WebPMemoryWriterClear(&memory_writer);
+    WebPPictureFree(&pic);
+    abort();
+  }
+
+  if (status == VP8_STATUS_OK) {
+    const uint8_t* const rgba = dec_config.output.u.RGBA.rgba;
+    const int w = dec_config.output.width;
+    const int h = dec_config.output.height;
+
+    // Compare the results if exact encoding.
+    if (pic.use_argb && config.lossless && config.near_lossless == 100) {
+      const uint32_t* src1 = (const uint32_t*)rgba;
+      const uint32_t* src2 = pic.argb;
+      for (int y = 0; y < h; ++y, src1 += w, src2 += pic.argb_stride) {
+        for (int x = 0; x < w; ++x) {
+          uint32_t v1 = src1[x], v2 = src2[x];
+          if (!config.exact) {
+            if ((v1 & 0xff000000u) == 0 || (v2 & 0xff000000u) == 0) {
+              // Only keep alpha for comparison of fully transparent area.
+              v1 &= 0xff000000u;
+              v2 &= 0xff000000u;
+            }
           }
-        }
-        if (v1 != v2) {
-          fprintf(stderr, "Lossless compression failed pixel-exactness.\n");
-          WebPFree(rgba);
-          WebPMemoryWriterClear(&memory_writer);
-          WebPPictureFree(&pic);
-          abort();
+          if (v1 != v2) {
+            fprintf(stderr, "Lossless compression failed pixel-exactness.\n");
+            WebPFreeDecBuffer(&dec_config.output);
+            WebPMemoryWriterClear(&memory_writer);
+            WebPPictureFree(&pic);
+            abort();
+          }
         }
       }
     }
   }
 
-  WebPFree(rgba);
+  WebPFreeDecBuffer(&dec_config.output);
   WebPMemoryWriterClear(&memory_writer);
   WebPPictureFree(&pic);
   return 0;

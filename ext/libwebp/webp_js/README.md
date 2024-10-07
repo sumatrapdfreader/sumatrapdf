@@ -20,8 +20,7 @@ Emscripten and CMake.
 
     ```shell
     cd webp_js && \
-    emcmake cmake -DWEBP_BUILD_WEBP_JS=ON \
-          ../
+    emcmake cmake -DWEBP_BUILD_WEBP_JS=ON ../
     ```
 
 -   compile webp.js using 'emmake make'.
@@ -55,27 +54,7 @@ directory.
 See webp_js/index_wasm.html for a simple demo page using the WASM version of the
 library.
 
-You will need a fairly recent version of Emscripten (at least 2.0.18,
-latest-upstream is recommended) and of your WASM-enabled browser to run this
-version.
-
 ## Caveats
 
 -   First decoding using the library is usually slower, due to just-in-time
     compilation.
-
--   Some versions of llvm produce the following compile error when SSE2 is
-    enabled.
-
-    ```
-    "Unsupported:   %516 = bitcast <8 x i16> %481 to i128
-    LLVM ERROR: BitCast Instruction not yet supported for integer types larger than 64 bits"
-    ```
-
-    The corresponding Emscripten bug is at:
-    https://github.com/kripken/emscripten/issues/3788
-
-    Therefore, SSE2 optimization is currently disabled in CMakeLists.txt.
-
--   If WEBP_ENABLE_SIMD is set to 1 the JavaScript version (webp.js) will be
-    disabled as wasm2js does not support SIMD.

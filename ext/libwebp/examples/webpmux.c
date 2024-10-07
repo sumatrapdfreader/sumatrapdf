@@ -150,16 +150,20 @@ static const char* ErrorString(WebPMuxError err) {
 }
 
 #define RETURN_IF_ERROR(ERR_MSG)                                     \
-  if (err != WEBP_MUX_OK) {                                          \
-    fprintf(stderr, ERR_MSG);                                        \
-    return err;                                                      \
-  }
+  do {                                                               \
+    if (err != WEBP_MUX_OK) {                                        \
+      fprintf(stderr, ERR_MSG);                                      \
+      return err;                                                    \
+    }                                                                \
+  } while (0)
 
 #define RETURN_IF_ERROR3(ERR_MSG, FORMAT_STR1, FORMAT_STR2)          \
-  if (err != WEBP_MUX_OK) {                                          \
-    fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);              \
-    return err;                                                      \
-  }
+  do {                                                               \
+    if (err != WEBP_MUX_OK) {                                        \
+      fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);            \
+      return err;                                                    \
+    }                                                                \
+  } while (0)
 
 #define ERROR_GOTO1(ERR_MSG, LABEL)                                  \
   do {                                                               \
@@ -605,20 +609,26 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
 #define FEATURETYPE_IS_NIL (config->type_ == NIL_FEATURE)
 
 #define CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL)                              \
-  if (argc < i + (NUM)) {                                                \
-    fprintf(stderr, "ERROR: Too few arguments for '%s'.\n", argv[i]);    \
-    goto LABEL;                                                          \
-  }
+  do {                                                                   \
+    if (argc < i + (NUM)) {                                              \
+      fprintf(stderr, "ERROR: Too few arguments for '%s'.\n", argv[i]);  \
+      goto LABEL;                                                        \
+    }                                                                    \
+  } while (0)
 
 #define CHECK_NUM_ARGS_AT_MOST(NUM, LABEL)                               \
-  if (argc > i + (NUM)) {                                                \
-    fprintf(stderr, "ERROR: Too many arguments for '%s'.\n", argv[i]);   \
-    goto LABEL;                                                          \
-  }
+  do {                                                                   \
+    if (argc > i + (NUM)) {                                              \
+      fprintf(stderr, "ERROR: Too many arguments for '%s'.\n", argv[i]); \
+      goto LABEL;                                                        \
+    }                                                                    \
+  } while (0)
 
 #define CHECK_NUM_ARGS_EXACTLY(NUM, LABEL)                               \
-  CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL);                                   \
-  CHECK_NUM_ARGS_AT_MOST(NUM, LABEL);
+  do {                                                                   \
+    CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL);                                 \
+    CHECK_NUM_ARGS_AT_MOST(NUM, LABEL);                                  \
+  } while (0)
 
 // Parses command-line arguments to fill up config object. Also performs some
 // semantic checks. unicode_argv contains wchar_t arguments or is null.

@@ -12,6 +12,8 @@ LIBSHARPYUV_BASENAME = libsharpyuv
 ARCH = x86
 !ELSE IF ! [ cl 2>&1 | find "x64" > NUL ]
 ARCH = x64
+!ELSE IF ! [ cl 2>&1 | find "ARM64" > NUL ]
+ARCH = ARM64
 !ELSE IF ! [ cl 2>&1 | find "ARM" > NUL ]
 ARCH = ARM
 !ELSE
@@ -321,6 +323,7 @@ ENC_OBJS = \
 EXTRAS_OBJS = \
     $(DIROBJ)\extras\extras.obj \
     $(DIROBJ)\extras\quality_estimate.obj \
+    $(DIROBJ)\extras\sharpyuv_risk_table.obj \
 
 IMAGEIO_UTIL_OBJS = \
     $(DIROBJ)\imageio\imageio_util.obj \
@@ -336,6 +339,7 @@ UTILS_DEC_OBJS = \
     $(DIROBJ)\utils\color_cache_utils.obj \
     $(DIROBJ)\utils\filters_utils.obj \
     $(DIROBJ)\utils\huffman_utils.obj \
+    $(DIROBJ)\utils\palette.obj \
     $(DIROBJ)\utils\quant_levels_dec_utils.obj \
     $(DIROBJ)\utils\rescaler_utils.obj \
     $(DIROBJ)\utils\random_utils.obj \

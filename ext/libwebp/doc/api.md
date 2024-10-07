@@ -157,7 +157,7 @@ decoding is not finished yet or VP8_STATUS_OK when decoding is done. Any other
 status is an error condition.
 
 The 'idec' object must always be released (even upon an error condition) by
-calling: WebPDelete(idec).
+calling: WebPIDelete(idec).
 
 To retrieve partially decoded picture samples, one must use the corresponding
 method: WebPIDecGetRGB or WebPIDecGetYUVA. It will return the last displayable

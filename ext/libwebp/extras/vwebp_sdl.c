@@ -30,7 +30,7 @@
 #if defined(WEBP_HAVE_JUST_SDL_H)
 #include <SDL.h>
 #else
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #endif
 
 static void ProcessEvents(void) {

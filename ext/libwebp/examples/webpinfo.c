@@ -357,12 +357,12 @@ static WebPInfoStatus ParseLossyHeader(const ChunkData* const chunk_data,
   }
   data += 3;
   data_size -= 3;
-  printf("  Key frame:        %s\n"
-         "  Profile:          %d\n"
-         "  Display:          %s\n"
-         "  Part. 0 length:   %d\n",
-         key_frame ? "Yes" : "No", profile,
-         display ? "Yes" : "No", partition0_length);
+  printf(
+      "  Key frame:        %s\n"
+      "  Profile:          %d\n"
+      "  Display:          Yes\n"
+      "  Part. 0 length:   %d\n",
+      key_frame ? "Yes" : "No", profile, partition0_length);
   if (key_frame) {
     if (!(data[0] == 0x9d && data[1] == 0x01 && data[2] == 0x2a)) {
       LOG_ERROR("Invalid lossy bitstream signature.");

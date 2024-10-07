@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "March 17, 2022"
+.TH CWEBP 1 "March 26, 2024"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -135,7 +135,9 @@ are used, \fB\-size\fP value will prevail.
 Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10, default is 1.
 If options \fB\-size\fP or \fB\-psnr\fP were used, but \fB\-pass\fP wasn't
-specified, a default value of '6' passes will be used.
+specified, a default value of '6' passes will be used. If \fB\-pass\fP is
+specified, but neither \fB-size\fP nor \fB-psnr\fP are, a target PSNR of 40dB
+will be used.
 .TP
 .BI \-qrange " int int
 Specifies the permissible interval for the quality factor. This is particularly
@@ -202,7 +204,8 @@ In the VP8 format, the so\-called control partition has a limit of 512k and
 is used to store the following information: whether the macroblock is skipped,
 which segment it belongs to, whether it is coded as intra 4x4 or intra 16x16
 mode, and finally the prediction modes to use for each of the sub\-blocks.
-For a very large image, 512k only leaves room to few bits per 16x16 macroblock.
+For a very large image, 512k only leaves room for a few bits per 16x16
+macroblock.
 The absolute minimum is 4 bits per macroblock. Skip, segment, and mode
 information can use up almost all these 4 bits (although the case is unlikely),
 which is problematic for very large images. The partition_limit factor controls
@@ -211,7 +214,8 @@ useful in case the 512k limit is reached and the following message is displayed:
 \fIError code: 6 (PARTITION0_OVERFLOW: Partition #0 is too big to fit 512k)\fP.
 If using \fB\-partition_limit\fP is not enough to meet the 512k constraint, one
 should use less segments in order to save more header bits per macroblock.
-See the \fB\-segments\fP option.
+See the \fB\-segments\fP option. Note the \fB-m\fP and \fB-q\fP options also
+influence the encoder's decisions and ability to hit this limit.
 
 .SS LOGGING OPTIONS
 These options control the level of output:

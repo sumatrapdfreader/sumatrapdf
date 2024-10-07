@@ -9,6 +9,7 @@
       noInitialRun : true
     };
   </script>
+  <script src="./webp_wasm.js"></script>
   <script type="text/javascript">
 
 'use strict';
@@ -16,40 +17,27 @@
 // main wrapper for the function decoding a WebP into a canvas object
 var WebpToCanvas;
 
-function init() {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'webp_wasm.wasm', true);
-  xhr.responseType = 'arraybuffer';
-  xhr.onload = function() {
-    Module.wasmBinary = xhr.response;
-    var script = document.createElement('script');
-    script.src = "webp_wasm.js";
-    document.body.appendChild(script);
-  };
-  xhr.send(null);
-}
-window.onload = init;
+Module.onRuntimeInitialized = async () => {
+  // wrapper for the function decoding a WebP into a canvas object
+  WebpToCanvas = Module.cwrap('WebPToSDL', 'number', ['array', 'number']);
+};
 
 function decode(webp_data, canvas_id) {
   var result;
-  if (Module["asm"] != undefined) {
-    // wrapper for the function decoding a WebP into a canvas object
-    WebpToCanvas = Module.cwrap('WebPToSDL', 'number', ['array', 'number']);
-    // get the canvas to decode into
-    var canvas = document.getElementById(canvas_id);
-    if (canvas == null) return;
-    // clear previous picture (if any)
-    Module.canvas = canvas;
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-    // decode and measure timing
-    var start = new Date();
-    var ret = WebpToCanvas(webp_data, webp_data.length);
-    var end = new Date();
-    var decode_time = end - start;
-    result = 'decoding time: ' + decode_time +' ms.';
-  } else {
-    result = "WASM module not finished loading! Please retry";
-  }
+  // get the canvas to decode into
+  var canvas = document.getElementById(canvas_id);
+  if (canvas == null) return;
+  // clear previous picture (if any)
+  Module.canvas = canvas;
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  // Map this canvas to the default selector used by emscripten/SDL2.
+  specialHTMLTargets["#canvas"] = Module.canvas;
+  // decode and measure timing
+  var start = new Date();
+  var ret = WebpToCanvas(webp_data, webp_data.length);
+  var end = new Date();
+  var decodeTime = end - start;
+  result = 'decoding time: ' + decodeTime +' ms.';
   // display timing result
   var speed_result = document.getElementById('timing');
   if (speed_result != null) {

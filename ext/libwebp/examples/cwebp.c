@@ -306,6 +306,7 @@ static int MyWriter(const uint8_t* data, size_t data_size,
 // Dumps a picture as a PGM file using the IMC4 layout.
 static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   int y;
+  int ok = 0;
   const int uv_width = (picture->width + 1) / 2;
   const int uv_height = (picture->height + 1) / 2;
   const int stride = (picture->width + 1) & ~1;
@@ -320,23 +321,26 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   if (f == NULL) return 0;
   fprintf(f, "P5\n%d %d\n255\n", stride, height);
   for (y = 0; y < picture->height; ++y) {
-    if (fwrite(src_y, picture->width, 1, f) != 1) return 0;
+    if (fwrite(src_y, picture->width, 1, f) != 1) goto Error;
     if (picture->width & 1) fputc(0, f);  // pad
     src_y += picture->y_stride;
   }
   for (y = 0; y < uv_height; ++y) {
-    if (fwrite(src_u, uv_width, 1, f) != 1) return 0;
-    if (fwrite(src_v, uv_width, 1, f) != 1) return 0;
+    if (fwrite(src_u, uv_width, 1, f) != 1) goto Error;
+    if (fwrite(src_v, uv_width, 1, f) != 1) goto Error;
     src_u += picture->uv_stride;
     src_v += picture->uv_stride;
   }
   for (y = 0; y < alpha_height; ++y) {
-    if (fwrite(src_a, picture->width, 1, f) != 1) return 0;
+    if (fwrite(src_a, picture->width, 1, f) != 1) goto Error;
     if (picture->width & 1) fputc(0, f);  // pad
     src_a += picture->a_stride;
   }
+  ok = 1;
+
+ Error:
   fclose(f);
-  return 1;
+  return ok;
 }
 
 // -----------------------------------------------------------------------------

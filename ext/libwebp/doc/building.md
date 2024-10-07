@@ -96,6 +96,24 @@ make
 make install
 ```
 
+## Building libwebp - Using vcpkg
+
+You can download and install libwebp using the
+[vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+```shell
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+./vcpkg install libwebp
+```
+
+The libwebp port in vcpkg is kept up to date by Microsoft team members and
+community contributors. If the version is out of date, please
+[create an issue or pull request](https://github.com/Microsoft/vcpkg) on the
+vcpkg repository.
+
 ## CMake
 
 With CMake, you can compile libwebp, cwebp, dwebp, gif2webp, img2webp, webpinfo

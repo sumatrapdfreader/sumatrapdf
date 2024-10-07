@@ -49,17 +49,17 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     if (value % 0x10 == 0) buf_size--;
     uint8_t* const ext_buf = (uint8_t*)malloc(buf_size);
     if (value < 0x94) {
-      WebPDecodeRGBAInto(data, size, ext_buf, buf_size, stride);
+      (void)WebPDecodeRGBAInto(data, size, ext_buf, buf_size, stride);
 #if !defined(WEBP_REDUCE_CSP)
     } else if (value < 0xa9) {
-      WebPDecodeARGBInto(data, size, ext_buf, buf_size, stride);
+      (void)WebPDecodeARGBInto(data, size, ext_buf, buf_size, stride);
     } else if (value < 0xbe) {
-      WebPDecodeBGRInto(data, size, ext_buf, buf_size, stride);
+      (void)WebPDecodeBGRInto(data, size, ext_buf, buf_size, stride);
     } else if (value < 0xd3) {
-      WebPDecodeRGBInto(data, size, ext_buf, buf_size, stride);
+      (void)WebPDecodeRGBInto(data, size, ext_buf, buf_size, stride);
 #endif  // !defined(WEBP_REDUCE_CSP)
     } else {
-      WebPDecodeBGRAInto(data, size, ext_buf, buf_size, stride);
+      (void)WebPDecodeBGRAInto(data, size, ext_buf, buf_size, stride);
     }
     free(ext_buf);
   } else {
@@ -75,8 +75,9 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     uint8_t* const luma_buf = (uint8_t*)malloc(luma_size);
     uint8_t* const u_buf = (uint8_t*)malloc(u_size);
     uint8_t* const v_buf = (uint8_t*)malloc(v_size);
-    WebPDecodeYUVInto(data, size, luma_buf, luma_size, w /* luma_stride */,
-                      u_buf, u_size, uv_stride, v_buf, v_size, uv_stride);
+    (void)WebPDecodeYUVInto(data, size, luma_buf, luma_size,
+                            w /* luma_stride */, u_buf, u_size, uv_stride,
+                            v_buf, v_size, uv_stride);
     free(luma_buf);
     free(u_buf);
     free(v_buf);

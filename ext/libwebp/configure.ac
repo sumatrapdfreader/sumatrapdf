@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [1.3.2],
+AC_INIT([libwebp], [1.4.0],
         [https://bugs.chromium.org/p/webp],,
         [https://developers.google.com/speed/webp])
 AC_CANONICAL_HOST
@@ -106,6 +106,7 @@ TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wall])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wconstant-conversion])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wdeclaration-after-statement])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wextra-semi-stmt])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wfloat-conversion])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat -Wformat-nonliteral])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wformat -Wformat-security])
@@ -115,6 +116,7 @@ TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wold-style-definition])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wparentheses-equality])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshadow])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wshorten-64-to-32])
+TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wstrict-prototypes])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wundef])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunreachable-code-aggressive])
 TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wunreachable-code])
@@ -464,7 +466,7 @@ AC_ARG_ENABLE([sdl],
                               @<:@default=auto@:>@]))
 AS_IF([test "x$enable_sdl" != "xno"], [
   CLEAR_LIBVARS([SDL])
-  AC_PATH_PROGS([LIBSDL_CONFIG], [sdl-config])
+  AC_PATH_PROGS([LIBSDL_CONFIG], [sdl2-config])
   if test -n "$LIBSDL_CONFIG"; then
     SDL_INCLUDES=`$LIBSDL_CONFIG --cflags`
     SDL_LIBS="`$LIBSDL_CONFIG --libs`"
@@ -474,13 +476,12 @@ AS_IF([test "x$enable_sdl" != "xno"], [
 
   sdl_header="no"
   LIBCHECK_PROLOGUE([SDL])
-  AC_CHECK_HEADER([SDL/SDL.h], [sdl_header="SDL/SDL.h"],
-                  [AC_CHECK_HEADER([SDL.h], [sdl_header="SDL.h"],
-                  [AC_MSG_WARN(SDL library not available - no sdl.h)])])
+  AC_CHECK_HEADER([SDL2/SDL.h], [sdl_header="SDL2/SDL.h"],
+                  [AC_MSG_WARN(SDL2 library not available - no SDL.h)])
   if test x"$sdl_header" != "xno"; then
     AC_LANG_PUSH(C)
     SDL_SAVED_LIBS="$LIBS"
-    for lib in "" "-lSDL" "-lSDLmain -lSDL"; do
+    for lib in "" "-lSDL2" "-lSDL2main -lSDL2"; do
       LIBS="$SDL_SAVED_LIBS $lib"
       # Perform a full link to ensure SDL_main is resolved if needed.
       AC_LINK_IFELSE(
@@ -762,7 +763,8 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  src/libwebp.pc src/libwebpdecoder.pc \
                  src/demux/libwebpdemux.pc src/mux/libwebpmux.pc])
 
-
+dnl fix exports from MinGW builds
+AC_CONFIG_COMMANDS_POST([$SED -i 's/-DDLL_EXPORT/-DWEBP_DLL/' config.status])
 AC_OUTPUT
 
 AC_MSG_NOTICE([

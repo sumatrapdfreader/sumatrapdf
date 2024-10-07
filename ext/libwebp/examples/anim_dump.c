@@ -98,7 +98,11 @@ int main(int argc, const char* argv[]) {
       for (i = 0; !error && i < image.num_frames; ++i) {
         W_CHAR out_file[1024];
         WebPDecBuffer buffer;
-        WebPInitDecBuffer(&buffer);
+        if (!WebPInitDecBuffer(&buffer)) {
+          fprintf(stderr, "Cannot init dec buffer\n");
+          error = 1;
+          continue;
+        }
         buffer.colorspace = MODE_RGBA;
         buffer.is_external_memory = 1;
         buffer.width = image.canvas_width;

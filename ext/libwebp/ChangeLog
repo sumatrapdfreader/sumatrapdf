@@ -1,21 +1,171 @@
+8a6a55bb update NEWS
+cf7c5a5d provide a way to opt-out/override WEBP_NODISCARD
+cc34288a update ChangeLog (tag: v1.4.0-rc1)
+f13c0886 NEWS: fix date
+74555950 Merge "vwebp: fix window title when options are given" into 1.4.0
+d781646c vwebp: fix window title when options are given
+c2e394de update NEWS
+f6d15cb7 bump version to 1.4.0
+57c388b8 update AUTHORS
+b3d1b2cb Merge changes I26f4aa22,I83386b6c,I320ed1a2 into main
+07216886 webp-container-spec: fix VP8 chunk ref ('VP8'->'VP8 ')
+f88666eb webp_js/*.html: fix canvas mapping
+e2c8f233 cmake,wasm: simplify SDL2 related flags
+d537cd37 cmake: fix vwebp_sdl compile w/libsdl-org release
+6c484cbf CMakeLists.txt: add missing WEBP_BUILD_EXTRAS check
+7b0bc235 man/cwebp.1: add more detail to -partition_limit
+3c0011bb WebPMuxGetChunk: add an assert
+955a3d14 Merge "muxread,MuxGet: add an assert" into main
+00abc000 muxread,MuxGet: add an assert
+40e85a0b Have the window title reflect the filename.
+1bf46358 man/cwebp.1: clarify -pass > 1 behavior w/o -size/-psnr
+eba03acb webp-container-spec: replace 'above' with 'earlier'
+a16d30cb webp-container-spec: clarify chunk order requirements
+8a7e9112 Merge "CMakeLists.txt: apply cmake-format" into main
+7fac6c1b Merge "Copy C code to not have multiplication overflow" into main
+e2922e43 Merge "Check for the presence of the ANDROID_ABI variable" into main
+501d9274 Copy C code to not have multiplication overflow
+fba7d62e CMakeLists.txt: apply cmake-format
+661c1b66 Merge "windows exports: use dllexport attribute, instead of visibility." into main
+8487860a windows exports: use dllexport attribute, instead of visibility.
+8ea678b9 webp/mux.h: data lifetime note w/copy_data=0
+79e05c7f Check for the presence of the ANDROID_ABI variable
+45f995a3 Expose functions for managing non-image chunks on WebPAnimEncoder
+1fb9f3dc gifdec: fix ErrorGIFNotAvailable() declaration
+4723db65 cosmetics: s/SANITY_CHECK/DCHECK/
+f4b9bc9e clear -Wextra-semi-stmt warnings
+713982b8 Limit animdecoder_fuzzer to 320MB
+cbe825e4 cmake: fix sharpyuv simd files' build
+f99305e9 Makefile.vc: add ARM64 support
+5efd6300 mv SharpYuvEstimate420Risk to extras/
+e78e924f Makefile.vc: add sharpyuv_risk_table.obj
+d7a0506d Add YUV420 riskiness metric.
+89c5b917 Merge "BuildHuffmanTable check sorted[] array bounds before writing" into main
+34c80749 Remove alpha encoding pessimization.
+13d9c30b Add a WEBP_NODISCARD
+24d7f9cb Switch code to SDL2.
+0b56dedc BuildHuffmanTable check sorted[] array bounds before writing
+a429c0de sharpyuv: convert some for() to do/while
+f0cd7861 DoSharpArgbToYuv: remove constant from loop
+339231cc SharpYuvConvertWithOptions,cosmetics: fix formatting
+307071f1 Remove medium/large code model-specific inline asm
+deadc339 Fix transfer functions where toGamma and toLinear are swapped.
+e7b78d43 Merge "Fix bug in FromLinearLog100." into main
+15a1309e Merge "webp-lossless-bitstream-spec: delete extra blank line" into main
+54ca9752 Fix bug in FromLinearLog100.
+d2cb2d8c Dereference after NULL check.
+e9d50107 webp-lossless-bitstream-spec: delete extra blank line
+78657971 Merge changes Ief442c90,Ie6e9c9a5 into main
+e30a5884 webp-lossless-bitstream-spec: update variable names
+09ca1368 Merge "webp-container-spec: change assert to MUST be TRUE" into main
+38cb4fc0 iosbuild,xcframeworkbuild: add SharpYuv framework
+40afa926 webp-lossless-bitstream-spec: simplify abstract
+9db21143 webp-container-spec: change assert to MUST be TRUE
+cdbf88ae Fix typo in API docs for incremental decoding
+05c46984 Reformat vcpkg build instructions.
+8534f539 Merge "Never send VP8_STATUS_SUSPENDED back in non-incremental." into main
+35e197bd Never send VP8_STATUS_SUSPENDED back in non-incremental.
+61441425 Add vcpkg installation instructions
+dce8397f Fix next is invalid pointer when WebPSafeMalloc fails
+57c58105 Cmake: wrong public macro WEBP_INCLUDE_DIRS
+c1ffd9ac Merge "vp8l_enc: fix non-C90 code" into main
+a3965948 Merge changes If628bb93,Ic79f6309,I45f0db23 into main
+f80e9b7e vp8l_enc: fix non-C90 code
+accd141d Update lossless spec for two simple codes.
+ac17ffff Fix non-C90 code.
+433c7dca Fix static analyzer warnings.
+5fac76cf Merge tag 'v1.3.2'
+ca332209 update ChangeLog (tag: v1.3.2)
 1ace578c update NEWS
 63234c42 bump version to 1.3.2
+a35ea50d Add a fuzzer for ReadHuffmanCodes
+95ea5226 Fix invalid incremental decoding check.
 2af26267 Fix OOB write in BuildHuffmanTable.
+902bc919 Fix OOB write in BuildHuffmanTable.
+7ba44f80 Homogenize "__asm__ volatile" vs "asm volatile"
+68e27135 webp-container-spec: reorder example chunk layout
+943b932a Merge changes I6a4d0a04,Ibc37b91e into main
+1cc94f95 decode.h: wrap idec example in /* */
+63acdd1e decode.h: fix decode example
+aac5c5d0 ReadHuffmanCode: rm redundant num code lengths check
+a2de25f6 webp-lossless-bitstream-spec: normalize list item case
+68820f0e webp-lossless-bitstream-spec: normalize pixel ref
+cdb31aa8 webp-lossless-bitstream-spec: add missing periods
+0535a8cf webp-lossless-bitstream-spec: fix grammar
+b6c4ce26 normalize numbered list item format
+dd7364c3 Merge "palette.c: fix msvc warnings" into main
+c63c5df6 palette.c: fix msvc warnings
+0a2cad51 webp-container-spec: move terms from intro section
+dd88d2ff webp-lossless-bitstream-spec: color_cache -> color cache
+6e750547 Merge changes I644d7d39,Icf05491e,Ic02e6652,I63b11258 into main
+67a7cc2b webp-lossless-bitstream-spec: fix code blocks
+1432ebba Refactor palette sorting computation.
+cd436142 webp-lossless-bitstream-spec: block -> chunk
+3cb66f64 webp-lossless-bitstream-spec: add some missing commas
+56471a53 webp-lossless-bitstream-spec: normalize item text in 5.1
+af7fbfd2 vp8l_dec,ReadTransform: improve error status reporting
+7d8e0896 vp8l_dec: add VP8LSetError()
+a71ce1cf animencoder_fuzzer: fix error check w/Nallocfuzz
+e94b36d6 webp-lossless-bitstream-spec: relocate details from 5.1
+84628e56 webp-lossless-bitstream-spec: clarify image width changes
+ee722997 alpha_dec: add missing VP8SetError()
+0081693d enc_dec_fuzzer: use WebPDecode()
+0fcb311c enc_dec_fuzzer: fix WebPEncode/pic.error_code check
+982c177c webp-lossless-bitstream-spec: fix struct member refs
+56cf5625 webp-lossless-bitstream-spec: use RFC 7405 for ABNF
+6c6b3fd3 webp-lossless-bitstream-spec,cosmetics: delete blank lines
+29b9eb15 Merge changes Id56ca4fd,I662bd1d7 into main
+47c0af8d ReadHuffmanCodes: rm max_alphabet_size calc
+b92deba3 animencoder_fuzzer: no WebPAnimEncoderAssemble check w/nallocfuzz
+6be9bf8b animencoder_fuzzer: fix leak on alloc failure
+5c965e55 vp8l_dec,cosmetics: add some /*param=*/ comments
+e4fc2f78 webp-lossless-bitstream-spec: add validity note for max_symbol
+71916726 webp-lossless-bitstream-spec: fix max_symbol definition
+eac3bd5c Have the palette code be in its own file.
+e2c85878 Add an initializer for the SharpYuvOptions struct.
+4222b006 Merge tag 'v1.3.1'
+25d94f47 Implement more transfer functions in libsharpyuv
+2153a679 Merge changes Id0300937,I5dba5ccf,I57bb68e0,I2dba7b4e,I172aca36, ... into main
+4298e976 webp-lossless-bitstream-spec: add PredictorTransformOutput
+cd7e02be webp-lossless-bitstream-spec: fix RIFF-header ABNF
+6c3845f9 webp-lossless-bitstream-spec: split LZ77 Backward Ref section
+7f1b6799 webp-lossless-bitstream-spec: split Meta Prefix Codes section
+7b634d8f webp-lossless-bitstream-spec: note transform order
+6d6d4915 webp-lossless-bitstream-spec: update transformations text
 fd7bb21c update ChangeLog (tag: v1.3.1-rc2, tag: v1.3.1)
 e1adea50 update NEWS
+6b1c722a lossless_common.h,cosmetics: fix a typo
+08d60d60 webp-lossless-bitstream-spec: split code length section
+7a12afcc webp-lossless-bitstream-spec: rm unused anchor
 43393320 enc/*: normalize WebPEncodingSetError() calls
 287fdefe enc/*: add missing WebPEncodingSetError() calls
 c3bd7cff EncodeAlphaInternal: add missing error check
+14a9dbfb webp-lossless-bitstream-spec: refine single node text
+64819c7c Implement ExtractGreen_SSE2
 d49cfbb3 vp8l_enc,WriteImage: add missing error check
 2e5a9ec3 muxread,MuxImageParse: add missing error checks
 ebb6f949 cmake,emscripten: explicitly set stack size
 59a2b1f9 WebPDecodeYUV: check u/v/stride/uv_stride ptrs
 8e965ccb Call png_get_channels() to see if image has alpha
+fe80fbbd webp-container-spec: add some missing commas
+e8ed3176 Merge "treat FILTER_NONE as a regular Unfilter[] call" into main
+03a7a048 webp-lossless-bitstream-spec: rm redundant statement
+c437c7aa webp-lossless-bitstream-spec: mv up prefix code group def
+e4f17a31 webp-lossless-bitstream-spec: fix section reference
+e2ecd5e9 webp-lossless-bitstream-spec: clarify ABNF syntax
+8b55425a webp-lossless-bitstream-spec: refine pixel copy text
+29c9f2d4 webp-lossless-bitstream-spec: minor wording updates
+6b02f660 treat FILTER_NONE as a regular Unfilter[] call
+7f75c91c webp-container-spec: fix location of informative msg
+f6499943 webp-container-spec: consistently quote FourCCs
+49918af3 webp-container-spec: minor wording updates
 7f0a3419 update ChangeLog (tag: v1.3.1-rc1)
 bab7efbe update NEWS
 7138bf8f bump version to 1.3.1
 435b4ded update AUTHORS
 47351229 update .mailmap
+46bc4fc9 Merge "Switch ExtraCost to ints and implement it in SSE." into main
+828b4ce0 Switch ExtraCost to ints and implement it in SSE.
 ff6c7f4e CONTRIBUTING.md: add C style / cmake-format notes
 dd530437 add .cmake-format.py
 adbe2cb1 cmake,cosmetics: apply cmake-format
@@ -1213,7 +1363,7 @@ b016cb91 NEON: faster fancy upsampling
 f04eb376 Merge tag 'v0.5.2'
 341d711c NEON: 5% faster conversion to RGB565 and RGBA4444
 abb54827 remove Clang warnings with unused arch arguments.
-ece9684f update ChangeLog (tag: v0.5.2-rc2, tag: v0.5.2, origin/0.5.2)
+ece9684f update ChangeLog (tag: v0.5.2-rc2, tag: v0.5.2)
 aa7744ca anim_util: quiet implicit conv warnings in 32-bit
 d9120271 jpegdec: correct ContextFill signature
 24eb3940 Remove some errors when compiling the code as C++.
@@ -1500,7 +1650,7 @@ bbb6ecd9 Merge "Add MSA optimized distortion functions"
 c0991a14 io,EmitRescaledAlphaYUV: factor out a common expr
 48bf5ed1 build.gradle: remove tab
 bfef6c9f Merge tag 'v0.5.1'
-3d97bb75 update ChangeLog (tag: v0.5.1, origin/0.5.1)
+3d97bb75 update ChangeLog (tag: v0.5.1)
 deb54d91 Clarify the expected 'config' lifespan in WebPIDecode()
 435308e0 Add MSA optimized encoder transform functions
 dce64bfa Add MSA optimized alpha filter functions
