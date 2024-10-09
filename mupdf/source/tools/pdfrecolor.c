@@ -123,7 +123,7 @@ int pdfrecolor_main(int argc, char **argv)
 		n = fz_count_pages(ctx, doc);
 
 		for (i = 0; i < n; i++)
-			pdf_recolor_page(ctx, doc, i, &ropts);
+			pdf_recolor_page(ctx, pdf, i, &ropts);
 
 		if (remove_oi)
 			pdf_remove_output_intents(ctx, pdf);

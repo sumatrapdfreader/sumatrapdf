@@ -992,12 +992,25 @@ fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect r, const fz_stroke_state *str
 	if (!stroke)
 		return r;
 
-	expand = stroke->linewidth;
+	expand = stroke->linewidth/2;
 	if (expand == 0)
-		expand = 1.0f;
-	expand *= fz_matrix_max_expansion(ctm);
-	if ((stroke->linejoin == FZ_LINEJOIN_MITER || stroke->linejoin == FZ_LINEJOIN_MITER_XPS) && stroke->miterlimit > 1)
+		expand = 0.5f;
+	if (r.x1 == r.x0 || r.y1 == r.y0)
+	{
+		/* Mitring can't apply in this case. */
+	}
+	else if (stroke->linejoin == FZ_LINEJOIN_MITER && stroke->miterlimit > 0.5f)
+	{
+		/* miter limit is expressed in terms of the linewidth, not half the line width. */
+		expand *= stroke->miterlimit * 2;
+	}
+	else if (stroke->linejoin == FZ_LINEJOIN_MITER_XPS && stroke->miterlimit > 1.0f)
+	{
+		/* for xps, miter limit is expressed in terms of half the linewidth. */
 		expand *= stroke->miterlimit;
+	}
+
+	expand *= fz_matrix_max_expansion(ctm);
 
 	r.x0 -= expand;
 	r.y0 -= expand;

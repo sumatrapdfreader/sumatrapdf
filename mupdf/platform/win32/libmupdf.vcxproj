@@ -581,6 +581,7 @@
     <ClCompile Include="..\..\source\fitz\printf.c" />
     <ClCompile Include="..\..\source\fitz\random.c" />
     <ClCompile Include="..\..\source\fitz\skew.c" />
+    <ClCompile Include="..\..\source\fitz\stext-boxer.c" />
     <ClCompile Include="..\..\source\fitz\text-decoder.c" />
     <ClCompile Include="..\..\source\fitz\uncfb.c" />
     <ClCompile Include="..\..\source\fitz\unlibarchive.c" />

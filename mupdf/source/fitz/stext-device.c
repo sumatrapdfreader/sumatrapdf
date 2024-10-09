@@ -151,6 +151,7 @@ const char *fz_stext_options_usage =
 	"\tstructured=no: don't collect structure data\n"
 	"\taccurate-bboxes=no: calculate char bboxes for from the outlines\n"
 	"\tvectors=no: include vector bboxes in output\n"
+	"\tsegment=no: don't attempt to segment the page\n"
 	"\n";
 
 /* Find the current actualtext, if any. Will abort if dev == NULL. */
@@ -1368,6 +1369,9 @@ fz_stext_close_device(fz_context *ctx, fz_device *dev)
 
 	/* TODO: smart sorting of blocks and lines in reading order */
 	/* TODO: unicode NFC normalization */
+
+	if (tdev->opts.flags & FZ_STEXT_SEGMENT)
+		fz_segment_stext_page(ctx, page);
 }
 
 static void
@@ -1409,6 +1413,8 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 		opts->flags |= FZ_STEXT_COLLECT_VECTORS;
 	if (fz_has_option(ctx, string, "ignore-actualtext", & val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_IGNORE_ACTUALTEXT;
+	if (fz_has_option(ctx, string, "segment", &val) && fz_option_eq(val, "yes"))
+		opts->flags |= FZ_STEXT_SEGMENT;
 
 	opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
 	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "no"))

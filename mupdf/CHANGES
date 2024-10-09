@@ -1,3 +1,60 @@
+List of changes in MuPDF 1.25
+
+	New logo!
+
+	Redaction options:
+		- New "don't redact text" option
+		- New "redact line art" option
+
+	Structured Text options:
+		- Use "Tagged PDF" structure information
+		- Detect underlines and strikeouts
+		- Mark automatically inserted spaces
+		- Mark areas where line art (vectors) are present
+		- Use accurate glyph bounding boxes
+		- Ignore ActualText tags
+		- Scan page for 'grid' lines
+		- Segment page into areas (headers, columns, etc)
+
+	Annotation features:
+		- Intent property accessors.
+		- Rich Content styling on FreeText annotations.
+		- Callout arrows on FreeText annotations.
+		- Leader Line and Caption on Line annotations.
+		- Improved handling of Rect and RD.
+
+	Low level FDF format support.
+		- See docs/examples/import-fdf.js for how to use.
+
+	Improved FileSpec handling with new functions.
+
+	Functions for listing document and page Associated Files (AF).
+
+	Functions to create and write XML DOM trees (fz_xml).
+
+	Skew detection and deskew algorithms on pixmaps and PDFOCR device.
+
+	Document area detection in scanned images.
+
+	ZUGFeRD support.
+
+	New tool "mutool audit" to create summary of PDF file composition.
+
+	Noteworthy API changes:
+		- New "wants_file" member for fz_document_handler.
+		- fz_text_item now has an explicit pen "advance" member.
+		- mutool recolor can now be used as a function.
+		- pdf_annot_rect works with the "design" rectangle.
+
+	Important bug fixes:
+		- More robust font subsetting.
+		- More robust handling of page and annotation objects during
+		  undo and redo.
+		- Updated "gray.icc" profile to actual sGray gamma ramp.
+
+	Support for "SmartOffice" commercially licensed plugin to load office
+	documents.
+
 List of changes in MuPDF 1.24
 
 	Error handling changes:

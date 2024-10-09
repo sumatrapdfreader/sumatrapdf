@@ -138,6 +138,10 @@ typedef struct fz_stext_grid_positions fz_stext_grid_positions;
 
 	FZ_STEXT_IGNORE_ACTUALTEXT: If this option is set, we will no longer
 	replace text by the ActualText replacement specified in the document.
+
+	FZ_STEXT_SEGMENT: If this option is set, we will attempt to segment
+	the page into different regions. This will deliberately not do anything
+	to pages with structure information present.
 */
 enum
 {
@@ -152,7 +156,8 @@ enum
 	FZ_STEXT_COLLECT_STRUCTURE = 256,
 	FZ_STEXT_ACCURATE_BBOXES = 512,
 	FZ_STEXT_COLLECT_VECTORS = 1024,
-	FZ_STEXT_IGNORE_ACTUALTEXT = 2048
+	FZ_STEXT_IGNORE_ACTUALTEXT = 2048,
+	FZ_STEXT_SEGMENT = 4096
 };
 
 /**
@@ -512,6 +517,20 @@ typedef struct
 	string.
 */
 fz_stext_options *fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *string);
+
+/**
+	Perform segmentation analysis on an (unstructured) page to look for
+	recursive subdivisions.
+
+	Essentially this code attempts to split the page horizontally and/or
+	vertically repeatedly into smaller and smaller "segments" (divisions).
+
+	Returns 0 if no changes were made to the document.
+
+	This is experimental code, and may change (or be removed) in future
+	versions!
+*/
+int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page);
 
 /**
 	Create a device to extract the text on a page.

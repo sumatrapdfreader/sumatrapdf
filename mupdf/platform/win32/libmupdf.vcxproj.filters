@@ -687,6 +687,9 @@
     <ClCompile Include="..\..\source\pdf\pdf-recolor.c">
       <Filter>pdf</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\stext-boxer.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
