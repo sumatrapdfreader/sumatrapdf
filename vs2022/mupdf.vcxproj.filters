@@ -701,6 +701,9 @@
     <ClCompile Include="..\mupdf\source\fitz\skew.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\source\fitz\stext-boxer.c">
+      <Filter>mupdf\source\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\source\fitz\stext-device.c">
       <Filter>mupdf\source\fitz</Filter>
     </ClCompile>

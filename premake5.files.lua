@@ -936,6 +936,7 @@ function mupdf_files()
     "skew.c",
     "separation.c",
     "shade.c",
+    "stext-boxer.c",
     "stext-device.c",
     "stext-output.c",
     "stext-search.c",
