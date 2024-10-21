@@ -44,7 +44,7 @@ static ExternalViewerInfo gExternalViewers[] = {
         CmdOpenWithExplorer,
         "*",
         "explorer.exe",
-        R"("%d")",
+        R"(/select,"%1")",
         nullptr,
         nullptr,
     },
