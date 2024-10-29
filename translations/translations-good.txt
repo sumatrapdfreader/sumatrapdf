@@ -25,6 +25,7 @@ id:%s anotasi. Ctrl+click untuk mengedit.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:注釈 %s 。”Ctrl + クリック”で編集
 kr:%s 주석. Ctrl+클릭으로 편집
+my:%s anotasi. Ctrl+klik untuk edit.
 nl:%s aantekening. Ctrl+klik om te bewerken
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique pra editar.
@@ -70,6 +71,7 @@ kr:정보(&A)
 kw:&A-dro dhe...
 lt:Apie
 lv:&Par
+my:&Tentang
 nl:&Over...
 nn:&Om
 no:&Om
@@ -119,6 +121,7 @@ id:Ukuran Asli
 it:Dimensione &attuale
 ja:実際のサイズ(&A)
 kr:실제 크기(&A)
+my:&Saiz Sebenar
 nl:&Ware grootte
 no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
@@ -171,6 +174,7 @@ kr:고급 옵션(&A)...
 kw:Settyansow &avonsys...
 lt:&Išplėstiniai nustatymai...
 lv:&Papildu opcijas...
+my:&Tetapan terperinci...
 nl:&Geavanceerde Opties...
 nn:&Avanserte innstillingar
 no:&Avanserte innstillinger
@@ -225,6 +229,7 @@ kr:선택한 모든 페이지(&A)
 kw:Pub folen dewisys
 lt:&Visi pažymėti puslapiai
 lv:&Visas atlasītās lappuses
+my:&Semua mukasurat pilihan
 nl:&Alle geselecteerde pagina's
 nn:&Alle valde sider
 no:&Alle valgte sider
@@ -274,6 +279,7 @@ id:Kembali
 it:&Indietro
 ja:戻る(&B)
 kr:뒤로(&B)
+my:&Kembali
 nl:&Terug
 nn:&Tilbake
 no:&Tilbake
@@ -322,6 +328,7 @@ id:Tampilan Buku
 it:Vista &libro
 ja:ブック ビュー(&B)
 kr:책처럼 보기(&B)
+my:&Paparan Buku
 nl:&Boekweergave
 no:&Bokvisning
 pl:Widok o&dczytu
@@ -373,6 +380,7 @@ ja:キャンセル(&C)
 kr:취소
 kw:&Hedhi
 lt:&Atšaukti
+my:&Batal
 nl:&Annuleren
 nn:&Avbryt
 no:&Avbryt
@@ -427,6 +435,7 @@ kr:삽입 기호(&C)
 kw:&Karet
 lt:&Intarpas
 lv:&Norāde
+my:&Karet
 nl:&Invoegteken
 no:&Innsettingspunkt
 pl:&Kareta
@@ -476,6 +485,7 @@ it:&Chiudi
 ja:閉じる(&C)
 kr:닫기(&C)
 lt:&Uždaryti
+my:&Tutup
 nl:&Sluiten
 nn:&Lukk
 no:&Lukk
@@ -527,6 +537,7 @@ it:Continua installazione versione 32bit
 ja:32 ビット版をインストールする(&C)
 kr:32비트 버전 설치를 계속합니다(&C)
 kw:&Pesya lea gwersyon 32-byt
+my:&Teruskan memasang versi 32-bit
 nl:&Doorgaan met installeren van 32bit versie
 no:&Fortsett installasjon av 32-biters versjon
 pl:&Kontynuuj instalację wersji 32-bitowej
@@ -580,6 +591,7 @@ kr:선택한 부분 복사(&C)
 kw:&Kopia Dewis
 lt:&Kopijuoti pažymėtą sritį
 lv:&Kopēt atlasi
+my:&Salin Pilihan
 nl:Selectie kopiëren
 nn:&Kopier utval
 no:&Kopier valgt område
@@ -630,6 +642,7 @@ it:&Copia negli Appunti
 ja:クリップボードへコピー(&C)
 kr:클립보드에 복사(&C)
 lt:&Kopijuoti į iškarpinę
+my:&Salin Ke Papan Keratan
 nl:&Kopieer Naar Klembord
 no:&Kopier til utklippstavle
 pl:Kopiuj do s&chowka
@@ -680,6 +693,7 @@ ja:変更を破棄(&D)
 kr:변경사항 취소(&D)
 kw:&Tewlel chanjyow
 lt:A&tmesti pakeitimus
+my:&Buang perubahan
 nl:&Weggooien
 no:&Avvis endringer
 pl:O&drzuć zmiany
@@ -733,6 +747,7 @@ kr:다시는 묻지 않기(&D)
 kw:&Na wovyn orthiv arta
 lt:&Daugiau nebeklausti
 lv:&Vairs nejautāt
+my:&Jangan tanya saya lagi
 nl:Niet opnieuw vragen
 nn:Ikkje spør meg igjen
 no:&Ikke spør meg igjen
@@ -787,6 +802,7 @@ kr:짝수 페이지만(&E)
 kw:Folennow &parow hepken
 lt:Tik &lyginiai puslapiai
 lv:Tikai &pāra lappuses
+my:&Mukasurat genap sahaja
 nl:Alleen &Even pagina's
 nn:&Kun partalssider
 no:Bare &partallssider
@@ -833,6 +849,7 @@ id:Menghadap
 it:Pagine a&ffiancate
 ja:見開き(&F)
 kr:두 페이지(&F)
+my:&Menghadap
 nl:&Dubbele pagina
 no:&Side om side
 pl:&Wiele stron
@@ -885,6 +902,7 @@ kr:파일(&F)
 kw:&Restren
 lt:&Failas
 lv:&Fails
+my:&Fail
 nl:&Bestand
 nn:&Fil
 no:&Fil
@@ -939,6 +957,7 @@ kr:찾기(&F):
 kw:&Kavos pyth:
 lt:&Surasti
 lv:&Ko atrast:
+my:&carian:
 nl:&Zoek naar:
 nn:&Finn hvilke:
 no:&Søk etter:
@@ -988,6 +1007,7 @@ id:&Halaman Pertama
 it:&Prima pagina
 ja:最初のページ(&F)
 kr:첫 번째 페이지(&F)
+my:&Halaman Pertama
 nl:&Eerste Pagina
 no:&Første side
 pl:&Pierwsza strona
@@ -1040,6 +1060,7 @@ kr:인쇄 영역에 페이지 맞추기(&F)
 kw:&Desedha folennow dhe arenebedh pryntyadow
 lt:Pritaikyti puslapių dydį prie spausdinamo ploto
 lv:Ietilpināt lappuses &apdrukājamā zonā
+my:&Muatkan halaman pada kawasan boleh cetak
 nl:Pagina's in afdrukgebied passen
 nn:&Tilpass sider til utskrivbart område
 no:&Tilpass sider til utskriftsområde
@@ -1091,6 +1112,7 @@ kr:자유 텍스트(&F)
 kw:&Tekst Rydh
 lt:&Laisvas tekstas
 lv:&Brīvs teksts
+my:&Teks Bebas
 nl:&Vrije Tekst
 no:&Frigjør tekst
 pl:&Dowolny tekst
@@ -1144,6 +1166,7 @@ kr:이동(&G)
 kw:&Mos dhe
 lt:&Eiti į
 lv:&Doties uz
+my:&Pergi
 nl:&Ga naar
 nn:&Gå til
 no:&Gå til
@@ -1198,6 +1221,7 @@ kr:이동할 페이지(&G):
 kw:&Mos dhe folen:
 lt:&Eiti į puslapį:
 lv:&Doties uz lappusi:
+my:&Pergi ke halaman:
 nl:&Ga naar pagina:
 nn:&Hopp til side:
 no:&Gå til side:
@@ -1252,6 +1276,7 @@ kr:도움말(&H)
 kw:&Gweres
 lt:&Žinynas
 lv:&Palīdzība
+my:&Bantuan
 nl:&Help
 nn:&Hjelp
 no:&Hjelp
@@ -1300,6 +1325,7 @@ id:Menyorot
 it:Eviden&zia
 ja:ハイライト(&H)
 kr:강조(&H)
+my:&Sorot
 nl:&Markeren
 no:&Merk
 pl:&Wyróżnienie
@@ -1341,6 +1367,7 @@ it:&Tasti rapidi
 ja:キーボード ショートカット(&K)
 kr:키보드 단축키(&K)
 lt:&Spartieji klavišai
+my:&Pintasan Papan Kekunci
 nl:&Toetsenbord Sneltoetsen
 pl:Skróty &klawiaturowe
 pt:Atal&hos de teclado
@@ -1381,6 +1408,7 @@ id:Halaman Terakhir
 it:&Ultima pagina
 ja:最後のページ(&L)
 kr:마지막 페이지(&L)
+my:&Halaman Terakhir
 nl:&Laatste Pagina
 no:&Siste side
 pl:&Ostatnia strona
@@ -1433,6 +1461,7 @@ kr:확대(&M):
 kw:&Brasheans:
 lt:&Mastelis
 lv:&Palielinājums:
+my:&Pembesaran:
 nl:&Vergroting:
 nn:&Forstørring:
 no:&Forstørrelse:
@@ -1487,6 +1516,7 @@ kr:온라인 설명서(&M)
 kw:&Kowethlyver
 lt:Naudotojo &vadovas
 lv:&Rokasgrāmata
+my:&Manual
 nl:Handleiding
 nn:&Anvisning
 no:&Bruksanvisning
@@ -1541,6 +1571,7 @@ kr:대소문자 일치(&M)
 kw:An &Keth kas
 lt:&Skirti didžiąsias ir mažąsias raides
 lv:&Saskaņot reģistru
+my:&Padan case
 nl:Hoofd-/kleine letters toepassen
 nn:&Skil mellom store/små bokstaver
 no:&Skill mellom store og små bokstaver
@@ -1590,6 +1621,7 @@ id:Halaman selanjutnya
 it:Pagina &successiva
 ja:次のページ(&N)
 kr:다음 페이지(&N)
+my:&Halaman Seterusnya
 nl:&Volgende Pagina
 no:&Neste side
 pl:&Następna strona
@@ -1642,6 +1674,7 @@ kr:아니오(&N)
 kw:&Na
 lt:&Ne
 lv:&Nē
+my:&Tidak
 nl:&Nee
 nn:&Nei
 no:&Nei
@@ -1696,6 +1729,7 @@ kr:홀수 페이지만(&O)
 kw:Folennow &dibarow hepken
 lt:&Tik nelyginiai puslapiai
 lv:Tikai &nepāra lappuses
+my:&Mukasurat ganjil sahaja
 nl:Alleen &Oneven pagina's
 nn:&Kun oddetalssider
 no:Bare &oddetallssider
@@ -1750,6 +1784,7 @@ kr:문서 열기(&O)
 kw:&Ygeri Skriven
 lt:&Atverti dokumentą
 lv:&Atvērt dokumentu
+my:&Buka dokumen
 nl:Document &Openen
 nn:&Opne dokument
 no:&Åpne dokument
@@ -1800,6 +1835,7 @@ it:&Apri
 ja:開く(&O)...
 kr:열기(&O)...
 lt:&Atidaryti
+my:&Buka...
 nl:&Openen
 nn:&Opne...
 no:&Åpne...
@@ -1853,6 +1889,7 @@ kr:옵션(&O)
 kw:&Dewisyow
 lt:&Nuostatos
 lv:&Opcijas
+my:&Tetapan
 nl:&Opties
 nn:&Innstillingar
 no:&Tillegg
@@ -1907,6 +1944,7 @@ kr:옵션(&O)...
 kw:&Etholyow...
 lt:&Nuostatos...
 lv:&Opcijas...
+my:&Pilihan...
 nl:&Opties...
 nn:&Innstillingar...
 no:&Innstillinger...
@@ -1961,6 +1999,7 @@ kr:비밀번호(&P):
 kw:&Ger-tremena:
 lt:&Slaptažodis:
 lv:&Parole:
+my:&Kata laluan
 nl:&Wachtwoord:
 nn:&Passord:
 no:&Passord:
@@ -2015,6 +2054,7 @@ kr:문서 고정(&P)
 kw:&Pynna Skriven
 lt:Pasi&žymėti dokumentą
 lv:&Piespraust dokumentu
+my:&Pin Dokumen
 nl:Document &Vastpinnen
 nn:&Fest dokument
 no:Fes&t dokument
@@ -2064,6 +2104,7 @@ id:Halaman Sebelumnya
 it:Pagina &precedente
 ja:前のページ(&P)
 kr:이전 페이지(&P)
+my:&Halaman Sebelumnya
 nl:&Vorige Pagina
 no:&Forrige side
 pl:&Poprzednia strona
@@ -2116,6 +2157,7 @@ kr:인쇄(&P)...
 kw:&Pryntya...
 lt:&Spausdinti...
 lv:&Drukāt...
+my:&Cetak...
 nl:Afdrukken...
 nn:&Skriv ut
 no:&Skriv ut...
@@ -2170,6 +2212,7 @@ kr:인쇄(&P)... (거부됨)
 kw:&Pryntya... (neghys)
 lt:&Spausdinti... (neprieinama)
 lv:&Drukāt... (liegts)
+my:&Cetak... (dinafikan)
 nl:Afdrukken... (niet toegestaan)
 nn:&Skriv ut... (Blei nekta)
 no:&Skriv ut... (ikke tillatt)
@@ -2224,6 +2267,7 @@ kr:이 문서의 비밀번호 기억(&R)
 kw:&Perthi kov a'n ger tremena rag an skriven ma
 lt:Įsiminti šio dokumento &slaptažodį
 lv:&Atcerēties šī dokumenta paroli
+my:&Ingat katalaluan untuk dokumen ini
 nl:Wachtwoord onthouden voor dit document
 nn:&Husk passordet for dette dokumentet
 no:&Husk passordet for dette dokumentet
@@ -2278,6 +2322,7 @@ kr:각 문서의 설정 기억(&R)
 kw:Gwitha an etholy&ow ma rag pub restren
 lt:Įsiminti šias &nuostatas kiekvienam dokumentui
 lv:&Atcerēties šos iestatījumus katram dokumentam
+my:&Ingat tetapan-tetapan ini untuk setiap dokumen
 nl:&Bewaar deze instellingen voor elk document
 nn:&Husk innstillingane for kvart dokument
 no:&Husk disse innstillingene for hvert dokument
@@ -2332,6 +2377,7 @@ kr:히스토리에서 제거(&R)
 kw:&Removya A Istori
 lt:&Pašalinti iš istorijos
 lv:&Izņemt no vēstures
+my:&Buang Dari Sejarah
 nl:V&erwijder uit Geschiedenis
 no:&Fjern fra historikk
 pl:&Usuń z historii
@@ -2385,6 +2431,7 @@ kr:다른 이름으로 저장(&S)...
 kw:&Gwitha Avel...
 lt:Į&rašyti kaip...
 lv:&Saglabāt kā...
+my:&Simpan Sebagai...
 nl:Op&slaan als...
 nn:&Lagre som...
 no:&Lagre som...
@@ -2438,6 +2485,7 @@ ja:上書き保存(&S)
 kr:기존 PDF에 저장(&S)
 kw:&Gwitha dhe PDF seulabrys
 lt:&Išsaugoti į esamą PDF
+my:&Simpan pada PDF sedia ada
 nl:&Opslaan in deze PDF
 no:&Lagre til eksisterende PDF
 pl:&Zapisz w istniejącym pliku PDF
@@ -2489,6 +2537,7 @@ it:Cerca con Google
 ja:Google で検索(&S)
 kr:Google로 검색(&S)
 kw:&Hwilas Gans Google
+my:&Cari Dengan Google
 nl:&Zoeken met Google
 no:&Søk med Google
 pl:&Szukaj za pomocą Google
@@ -2542,6 +2591,7 @@ kr:설정(&S)
 kw:&Settyansow
 lt:&Nuostatos
 lv:&Iestatījumi
+my:&Tetapan
 nl:&Instellingen
 nn:&Innstillingar
 no:&Alternativer
@@ -2596,6 +2646,7 @@ kr:인쇄 가능 영역으로 페이지 축소(&S)(필요한 경우)
 kw:&Lehe folennow dhe arenebedh pryntyadow (mars yw res)
 lt:&Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
 lv:&Samazināt lappuses līdz apdrukājamai zonai (ja ir nepieciešams)
+my:&Kecilkan muka surat ke kawasan cetak (jika perlu)
 nl:Pagina's verkleinen tot afdrukgebied (indien nodig)
 nn:&Krymp sider til utskrivbart område (hvis nødvendig)
 no:&Krymp sider til utskriftsområde (om nødvendig)
@@ -2645,6 +2696,7 @@ id:Halaman Tunggal
 it:Pagina &singola
 ja:単一のページ(&S)
 kr:단일 페이지(&S)
+my:&Halaman Tunggal
 nl:&Enkele Pagina
 no:&Enkeltside
 pl:&Pojedyncza strona
@@ -2695,6 +2747,7 @@ kr:스탬프(&S)
 kw:&Stampa
 lt:&Antspaudas
 lv:&Zīmogs
+my:&Cop
 nl:&Stempel
 no:&Stemple
 pl:Pie&częć
@@ -2746,6 +2799,7 @@ kr:취소선(&S)
 kw:&Treuslinya
 lt:&Išbraukti
 lv:&Izsvītrot
+my:&Garis Lorek
 nl:&Doorhalen
 no:&Stryk over
 pl:&Skreślenie
@@ -2798,6 +2852,7 @@ kr:텍스트(&T)
 kw:&Tekst
 lt:&Tekstas
 lv:&Teksts
+my:&Teks
 nl:&Tekst
 no:&Tekst
 pl:&Tekst
@@ -2850,6 +2905,7 @@ kr:테마(&T)
 kw:&Thema
 lt:&Išvaizda
 lv:&Dizains
+my:&Tema
 nl:&Uiterlijk
 nn:&Tema
 no:&Tema
@@ -2903,6 +2959,7 @@ ja:Google を使って翻訳(&T)
 kr:Google로 번역(&T)
 kw:&Treylya Gans Google
 lt:&Versti su Google
+my:&Terjemah Dengan Google
 nl:&Vertalen met Google
 no:&Oversett med Google
 pl:&Tłumacz za pomocą Google
@@ -2952,6 +3009,7 @@ kr:밑줄(&U)
 kw:&Islinya
 lt:Pa&braukti
 lv:&Pasvītrojums
+my:&Garis Bawah
 nl:&Onderstrepen
 nn:&Understreking
 no:&Understrek
@@ -3006,6 +3064,7 @@ kr:원래 페이지 크기 사용(&U)
 kw:&Usya braster folen wreydhek
 lt:Na&udoti originalius puslapių dydžius
 lv:&Lietot sākotnējos lappušu izmērus
+my:&Gunakan saiz halaman asal
 nl:Originele paginagrootte gebruiken
 nn:&Bruk opprinnelige sidestorleikar
 no:&Benytt opprinnelige sidestørrelser
@@ -3060,6 +3119,7 @@ kr:보기(&V)
 kw:&Gweles
 lt:&Rodymas
 lv:&Skats
+my:&Lihat
 nl:&Beeld
 nn:&Vis
 no:&Visning
@@ -3113,6 +3173,7 @@ kr:창(&W)
 kw:&Fenester
 lt:&Langas
 lv:&Logs
+my:&Tetingkap
 nl:&Venster
 nn:&Vindauge
 no:&Vindu
@@ -3167,6 +3228,7 @@ kr:예(&Y)
 kw:&Ya
 lt:&Taip
 lv:&Jā
+my:&Ya
 nl:&Ja
 nn:&Ja
 no:&Ja
@@ -3221,6 +3283,7 @@ kr:확대/축소(&Z)
 kw:&Zoum
 lt:&Mastelis
 lv:&Tālummaiņa
+my:&Fokus
 nl:&Zoom
 nn:&Zoom
 no:&Zoom
@@ -3275,6 +3338,7 @@ kr:(/ %d)
 kw:(a %d)
 lt:(iš %d)
 lv:(no %d)
+my:(dari %d)
 nl:(van %d)
 nn:(av %d)
 no:(av %d)
@@ -3329,6 +3393,7 @@ kr:(%s 페이지)
 kw:(%s folen)
 lt:(%s psl.)
 lv:(%s lappuse)
+my:(halaman %s)
 nl:(pagina %s)
 nn:(side %s)
 no:(side %s)
@@ -3383,6 +3448,7 @@ kr:SumatraPDF 정보
 kw:A-dro dhe SumatraPDF
 lt:Apie „SumatraPDF“
 lv:Par SumatraPDF
+my:Tentang SumatraPDF
 nl:Over SumatraPDF
 nn:Om SumatraPDF
 no:Om SumatraPDF
@@ -3437,6 +3503,7 @@ kr:즐겨찾기 추가.
 kw:Keworra Tra Drudh
 lt:Sukurti žymę
 lv:Pievienošana izlasei
+my:Tambah Kegemaran
 nl:Voeg Favoriet toe
 nn:Legg til ein favoritt
 no:Legg til i Favoritter
@@ -3491,6 +3558,7 @@ kr:%s 페이지를 즐겨찾기에 추가
 kw:Keworra folen %s dhe daklow drudh
 lt:Sukurti žymę į %s puslapį
 lv:Pievienot %s lappusi izlasei
+my:Tambahkan halaman %s pada kegemaran
 nl:Voeg pagina %s toe aan Favorieten
 nn:Legg til side %s i favorittane
 no:Legg til side %s i favoritter
@@ -3545,6 +3613,7 @@ kr:(선택사항) 이름을 사용하여 즐겨찾기에 %s 페이지 추가:
 kw:Keworra folen %s dhe daklow drudh gans hanow (dewisel):
 lt:Sukurti žymę į %s puslapį, suteikiant jai pavadinimą (neprivalomas):
 lv:Pievienot %s lappusi izlasei ar (neobligātu) nosaukumu:
+my:Tambah halaman %s pada kegemaran dengan nama (pilihan):
 nl:Voeg pagina %s toe aan Favorieten met (optionele) naam:
 nn:Legg til side %s i favorittane med (valfritt) namn:
 no:Legg til side %s i favoritter med (valgfritt) navn:
@@ -3599,6 +3668,7 @@ kr:즐겨찾기에 추가
 kw:Keworra dhe daklow drudh
 lt:Sukurti žymą
 lv:Pievienot izlasei
+my:Tambah pada kegemaran
 nl:Voeg toe aan Favorieten
 nn:Legg til i favorittar
 no:Legg til i favoritter
@@ -3653,6 +3723,7 @@ kr:고급
 kw:Avonsys
 lt:Kitos
 lv:Papildu
+my:Lanjutan
 nl:Geavanceerd
 nn:Avansert
 no:Avansert
@@ -3707,6 +3778,7 @@ kr:모든 파일
 kw:Pub restren
 lt:Visi failai
 lv:Visi faili
+my:Semua fail
 nl:Alle bestanden
 nn:Alle filar
 no:Alle filer
@@ -3761,6 +3833,7 @@ kr:지원하는 모든 문서
 kw:Pub skriven skoodhys
 lt:Visų palaikomų tipų dokumentai
 lv:Visi atbalstītie dokumenti
+my:Semua dokumen yang disokong
 nl:Alle ondersteunde documenten
 nn:Alle støttede dokumentar
 no:Alle støttede dokumenter
@@ -3815,6 +3888,7 @@ kr:주석
 kw:Notenyans
 lt:Anotacijos
 lv:Anotācijas
+my:Anotasi
 nl:Aantekeningen
 no:Merknader
 pl:Adnotacje
@@ -3868,6 +3942,7 @@ kr:프로그램:
 kw:Towlen:
 lt:Programa:
 lv:Programma:
+my:Aplikasi
 nl:Programma:
 nn:Applikasjon:
 no:Program:
@@ -3922,6 +3997,7 @@ kr:SumatraPDF를 제거할까요?
 kw:Os ta sur bos hwans dhis anlea SumatraPDF?
 lt:Ar tikrai norite pašalinti SumatraPDF?
 lv:Vai jūs esat pārliecināti, ka vēlaties atinstalēt SumatraPDF?
+my:Adakah anda pasti anda mahu membuang SumatraPDF?
 nl:Weet u zeker dat u SumatraPDF wilt verwijderen?
 nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
@@ -3976,6 +4052,7 @@ kr:PDF 파일 확장자를 연결할까요?
 kw:Keskelmi orth restrennow PDF?
 lt:Susieti su PDF failais?
 lv:Vai piesaistīt PDF failiem?
+my:Kaitkan dengan fail PDF?
 nl:Associëren met PDF-bestanden?
 nn:Tilknytte PDF-filer?
 no:Tilknytt til PDF-filer?
@@ -4030,6 +4107,7 @@ kr:첨부: %s
 kw:Stagell: %s
 lt:Priedas: %s
 lv:Pielikums: %s
+my:Lampiran: %s
 nl:Bijlage: %s
 nn:Vedlegg: %s
 no:Vedlegg: %s
@@ -4084,6 +4162,7 @@ kr:저자:
 kw:Awtour:
 lt:Autorius:
 lv:Autors:
+my:Pengarang
 nl:Auteur:
 nn:Skapar:
 no:Forfatter:
@@ -4137,6 +4216,7 @@ kr:작성자: %s
 kw:Skrifer: %s
 lt:Autorius: %s
 lv:Autors: %s
+my:Pengarang: %s
 nl:Auteur: %s
 nn:Skapar: %s
 no:Forfatter: %s
@@ -4190,6 +4270,7 @@ kr:자동
 kw:Awtomatek
 lt:Automatinis
 lv:Automātisks
+my:Automatik
 nl:Automatisch
 nn:Automatisk
 no:Automatisk
@@ -4244,6 +4325,7 @@ kr:자동으로 업데이트 확인(&U)
 kw:Checkya rag nowedhyansow yn awtomatek
 lt:Automatiškai &tikrinti, ar yra naujinimų
 lv:Automātiski pārbaudīt &atjauninājumus
+my:Semak &kemas kini secara automatik
 nl:Automatisch controleren op &updates
 nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
@@ -4298,6 +4380,7 @@ kr:배경색
 kw:Liw Kilva:
 lt:Fono spalva:
 lv:Fona krāsa:
+my:Warna Latar Belakang:
 nl:Achtergrondkleur:
 nn:Bakgrunnsfarge:
 no:Bakgrunnsfarge:
@@ -4352,6 +4435,7 @@ kr:책처럼 보기
 kw:Gwel-lyver
 lt:Knyga
 lv:Grāmatas skats
+my:Paparan buku
 nl:Boekweergave
 nn:Bokvising
 no:Bokvisning
@@ -4406,6 +4490,7 @@ kr:북마크 바로가기
 kw:Folennotya Skochfordhow
 lt:Žymių nuorodos
 lv:Grāmatzīmju saīsnes
+my:Pintasan Penanda
 nl:Bladwijzer maken
 nn:Bokmerk snarveg
 no:Bokmerk snarveier
@@ -4460,6 +4545,7 @@ kr:페이지 %s/%s에 대한 북마크 바로가기
 kw:Folennotya skochfordhow dhe folen %s a %s
 lt:Žymės nuoroda į puslapį %s iš %s
 lv:Grāmatzīmju saīsne uz %s lappusi no %s
+my:Bookmark shortcut ke halaman %s daripada %s
 nl:Bladwijzer maken naar pagina %s van %s
 nn:Bokmerk snarveg til side %s av %s
 no:Bokmerk snarvei til side %s av %s
@@ -4514,6 +4600,7 @@ kr:북마크
 kw:Folennotennow
 lt:Žymės
 lv:Grāmatzīmes
+my:Penanda
 nl:Bladwijzers
 nn:Bokmerkar
 no:Bokmerker
@@ -4567,6 +4654,7 @@ kr:가장자리: %d
 kw:Amal: %d
 lt:Kraštas: %d
 lv:Apmale: %d
+my:Sempadan: %d
 nl:Rand %d
 no:Ramme: %d
 pl:Obramowanie: %d
@@ -4619,6 +4707,7 @@ kr:바이트
 kw:Baytys
 lt:baitų
 lv:baiti
+my:Bytes
 nl:Bytes
 nn:Bytes
 no:bytes
@@ -4673,6 +4762,7 @@ kr:CHM 문서
 kw:Skrivennow CHM
 lt:CHM dokumentai
 lv:CHM dokumenti
+my:Dokumen CHM
 nl:CHM-documenten
 nn:CHM-dokumentar
 no:CHM-dokumenter
@@ -4727,6 +4817,7 @@ kr:인터넷에 접속할 수 없습니다. (%#x 오류)
 kw:Ny yllir junya dhe'n kesrosweyth (gwall %#x).
 lt:Ryšys su internetu nutrūko (klaida %#x).
 lv:Nevar izveidot savienojumu ar internetu (kļūda %#x).
+my:Gagal menyambung ke Internet (ralat %#x).
 nl:Kan geen verbinding maken met internet (fout %#x).
 nn:Kan ikkje kople til internettet (Feilkode %#x).
 no:Kan ikke koble til Internett (feilmelding %#x).
@@ -4781,6 +4872,7 @@ kr:취소
 kw:Hedhi
 lt:Atsisakyti
 lv:Atcelt
+my:Batal
 nl:Annuleren
 nn:Lukk
 no:Avbryt
@@ -4835,6 +4927,7 @@ kr:이 파일을 인쇄할 수 없습니다.
 kw:Ny yllir pryntya an restren ma
 lt:Nepavyko išspausdinti failo
 lv:Nevar izdrukāt šo failu
+my:Tidak boleh cetak fail ini
 nl:Kan dit bestand niet afdrukken
 nn:Kan ikkje skrive ut denne fila
 no:Kan ikke skrive ut filen
@@ -4889,6 +4982,7 @@ kr:역방향 검색 명령을 시작할 수 없습니다.  설정에서 명령�
 kw:Ny yllir dalleth gorhemmyn gorthhwilas.  Check an linen gorhemmyn y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
 lv:Neizdevās palaist inversās meklēšanas komandu. Lūdzu pārbaudiet komandrindu iestatījumus.
+my:Tidak boleh memulakan arahan carian songsang. Sila periksa baris arahan dalam tetapan.
 nl:Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in de instellingen.
 nn:Kan ikkje starte invertert søkjekommando. Venligst sjekk kommandolinja i innstillingane.
 no:Kan ikke starte invertert søkekommando. Vennligst sjekk kommandolinjen i innstillingene.
@@ -4943,6 +5037,7 @@ kr:언어 바꾸기(Change Language)
 kw:Chanjya yeth (Change Language)
 lt:Keisti kalbą (Change Language)
 lv:Mainīt valodu (Change Language)
+my:Tukar Bahasa (Change Language)
 nl:Taal wijzigen (Change Language)
 nn:Byt språk (Change Language)
 no:Endre språk (Change Language)
@@ -4997,6 +5092,7 @@ kr:업데이트 확인(&U)
 kw:&Checkya rag versyon nowydh
 lt:Tikrinti, ar yra &naujinimų
 lv:Pārbaudīt, vai nav &atjauninājumi
+my:Semak &Kemaskini
 nl:Controleren op &Updates
 nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
@@ -5049,6 +5145,7 @@ it:Controllo aggiornamenti...
 ja:更新を確認中...
 kr:업데이트를 확인 중입니다...
 kw:Ow checkya rag nowedhans
+my:Menyemak kemas kini...
 nl:Controleer op Update...
 nn:Ser etter oppdatering...
 no:Ser etter oppdatering...
@@ -5103,6 +5200,7 @@ kr:원
 kw:Kylgh
 lt:Apskritimas
 lv:Aplis
+my:Bulat
 nl:Cirkel
 nn:Sirkel
 no:Sirkel
@@ -5146,6 +5244,7 @@ id:Riwayat %d file dibersihkan, thumbnail dihapus.
 it:Svuotata la cronologia di %d file, anteprime eliminate
 ja:%d 個の履歴を削除し、サムネイルを削除しました。
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
+my:Sejarah %d fail dikosongkan, imej kecil dipadamkan.
 nl:Geschiedenis van %d bestanden gewist, thumbnails verwijderd.
 pl:Wyczyszczono historię %d plików, usunięto miniatury.
 pt:Histórico de %d ficheiros limpo, miniaturas apagadas.
@@ -5184,6 +5283,7 @@ id:Membersihkan riwayat...
 it:Svuotamento cronologia in corso...
 ja:履歴を削除中...
 kr:내역 초기화...
+my:Mengosongkan sejarah...
 nl:Geschiedenis wissen...
 pl:Czyszczenie historii...
 pt:Limpando histórico...
@@ -5230,6 +5330,7 @@ kr:닫기
 kw:Degea
 lt:Uždaryti
 lv:Aizvērt
+my:Tutup
 nl:Sluiten
 nn:Lukk
 no:Lukk
@@ -5270,6 +5371,7 @@ hu:Összes lap bezárása
 id:Tutup Semua Tab
 it:Chiudi tutte le schede
 ja:すべてのタブを閉じる
+my:Tutup Semua Tab
 nl:Sluit Alle Tabbladen
 pl:Zamknij wszystkie karty
 pt:Fechar Todas as Abas
@@ -5309,6 +5411,7 @@ id:Tutup Tab Lain
 it:Chiudi altre schede
 ja:他のタブを閉じる
 kr:다른 탭 닫기
+my:Tutup Tab Lain
 nl:Andere Tabbladen Sluiten
 no:Lukk andre faner
 pl:Zamknij inne karty
@@ -5347,6 +5450,7 @@ hu:Balra lévő lapok bezárása
 id:Tutup Tab ke Kiri
 it:Chiudi schede a sinistra
 ja:左のタブをすべて閉じる
+my:Tutup Tab Di Sebelah Kiri
 nl:Sluit Tabbladen aan de Linkerkant
 pl:Zamknij karty po lewej stronie
 pt:Fechar as Abas a Esquerda
@@ -5386,6 +5490,7 @@ id:Tutup Tab Ke Kanan
 it:Chiudi schede a destra
 ja:右側のタブを閉じる
 kr:오른쪽 탭 닫기
+my:Tutup Tab Di Sebelah Kanan
 nl:Sluit Tabbladen Rechts
 no:Lukk faner til høyre
 pl:Zamknij karty po prawej stronie
@@ -5437,6 +5542,7 @@ kr:모두 접기
 kw:Diskara Oll
 lt:Suskleisti viską
 lv:Sakļaut visu
+my:Runtuhkan Semua
 nl:Alle Samenvouwen
 no:Fold sammen alle
 pl:Zwiń wszystko
@@ -5490,6 +5596,7 @@ kr:색상
 kw:Liw:
 lt:Spalva:
 lv:Krāsa:
+my:Warna:
 nl:Kleur
 nn:Farge:
 no:Farge:
@@ -5544,6 +5651,7 @@ kr:만화 책
 kw:Bondys Delinys
 lt:Komiksų knygelės
 lv:Komiksu grāmatas
+my:Buku komik
 nl:Stripboeken
 nn:Teikneseriebøkjer
 no:Tegneserier
@@ -5593,6 +5701,7 @@ id:Palet Perintah
 it:Elenco comandi
 ja:コマンドパレット
 kr:명령 팔레트
+my:Palet Perintah
 nl:Opdrachten
 no:Kommandopalett
 pl:Paleta poleceń
@@ -5645,6 +5754,7 @@ kr:호환성
 kw:Kesplegadewder
 lt:Suderinamumas
 lv:Saderība
+my:Kesesuaian
 nl:Compatibiliteit
 nn:Kompatibilitet
 no:Kompatibilitet
@@ -5698,6 +5808,7 @@ kr:내용:
 kw:Dalghow:
 lt:Turinys:
 lv:Saturs:
+my:Kandungan:
 nl:Inhoud
 nn:Innhald:
 no:Innhold:
@@ -5751,6 +5862,7 @@ kr:한 페이지씩 계속
 kw:Heb aswa
 lt:Nenutrūkstama
 lv:Nepārtraukts
+my:Bersambung
 nl:Doorlopend
 nn:Kontinuerleg
 no:Kontinuerlig
@@ -5805,6 +5917,7 @@ kr:이어서 책처럼 보기
 kw:Gwel-lyver heb aswa
 lt:Nenutrūkstama knygos peržiūra
 lv:Nepārtraukts grāmatas skats
+my:Paparan Buku Berterusan
 nl:Doorlopende boekweergave
 nn:Kontinuerleg bokvising
 no:Kontinuerlig bokvisning
@@ -5859,6 +5972,7 @@ kr:두 페이지씩 계속
 kw:A-dal heb aswa
 lt:Nenutrūkstama dviejų puslapių
 lv:Nepārtraukti divas lappuses
+my:Dua belah mukasurat bersambung
 nl:Dubbele pagina doorlopend
 nn:Kontunuerleg motståande
 no:Kontinuerlig - motstående
@@ -5913,6 +6027,7 @@ kr:번역 기여
 kw:Keworra treylyans
 lt:Prisidėti prie vertimo
 lv:Piedalīties tulkošanā
+my:Menyumbangkan alihbahasa
 nl:Help met Vertalen
 nn:Delta med omsetjing
 no:Bidra med oversetting
@@ -5967,6 +6082,7 @@ kr:이미지 복사(&I)
 kw:Kopia &Skeusen
 lt:Kopijuoti &paveikslą
 lv:Kopēt &attēlu
+my:Salin &Imej
 nl:Afbeelding kopiëren
 nn:Kopier &bilete
 no:Kopier &Bilde
@@ -6021,6 +6137,7 @@ kr:링크 주소 복사(&L)
 kw:Kopia Trigva &Kevren
 lt:Kopijuoti &saito adresą
 lv:Kopēt &saites adresi
+my:Salin &Alamat Pautan
 nl:&Verwijzing kopiëren
 nn:Kopier &lenkeadresse
 no:Kopier &lenkeadresse
@@ -6075,6 +6192,7 @@ kr:주석(설명) 복사(&M)
 kw:Kopia Ka&mpol
 lt:Kopijuoti ko&mentarą
 lv:Kopēt &komentāru
+my:Salin Ko&men
 nl:Notitie kopiëren
 nn:Kopier ko&mmentar
 no:Kopier ko&mmentar
@@ -6120,6 +6238,7 @@ id:Salin Jalur File
 it:Copia percorso file
 ja:ファイルパスをコピー
 kr:파일 경로 복사
+my:Salin Laluan Fail
 nl:Kopieer Bestand Pad
 nn:Kopier Filbane
 no:Kopier filbane
@@ -6165,6 +6284,7 @@ id:Salin ke Papan Klip
 it:Copia negli Appunti
 ja:クリップボードへコピー
 kr:클립보드에 복사
+my:Salin Ke Papan Keratan
 nl:Kopieer naar klembord
 no:Kopier til utklippstavle
 pl:Kopiuj do schowka
@@ -6217,6 +6337,7 @@ kr:텍스트 복사가 거부되었습니다 (이미지만 복사)
 kw:Ny yllir kopia an tekst (ow kopia avel skeusen hepken)
 lt:Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
 lv:Teksta kopēšana ir liegta (kopē tikai kā attēlu)
+my:Salinan teks telah ditolak (menyalin sebagai imej sahaja)
 nl:Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 nn:Kopiering av tekst blei nektast (Kopierer kun som bilete)
 no:Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
@@ -6271,6 +6392,7 @@ kr:저작권:
 kw:Gwirpryntyans:
 lt:Autorinės teisės:
 lv:Autortiesības:
+my:Hakcipta
 nl:Auteursrecht
 nn:Opphavsret:
 no:Opphavsrett:
@@ -6325,6 +6447,7 @@ kr:프린터 속성을 가져올 수 없습니다.
 kw:Ny yllir kavos gnasow an pryntyer
 lt:Spausdintuvo savybių sužinoti nepavyko
 lv:Nevar iegūt printera rekvizītus
+my:Gagal mendapatkan maklumat Pencetak
 nl:Kan geen printereigenschappen verkrijgen
 nn:Kunne ikkje hente utskrivaregenskapene
 no:Kunne ikke innhente skriveregenskaper
@@ -6379,6 +6502,7 @@ kr:설치 디렉토리를 만들 수 없습니다.
 kw:Ny yllir gwruthyl an arayel leans
 lt:Nepavyko sukurti įdiegimo katalogo
 lv:Nevarēja izveidot instalācijas direktoriju
+my:Tidak dapat mencipta direktori pemasangan
 nl:Kan de installatiemap niet aanmaken
 nn:Kunne ikkje lage installasjonsdirektivet
 no:Kunne ikke opprette installasjonsmappen
@@ -6429,6 +6553,7 @@ it:Impossibile ottenere il nome della stampante
 ja:プリンター名を取得できませんでした
 kr:프린터 이름을 확인할 수 없음
 kw:Ny yllir kavos hanow pryntyer
+my:Tidak dapat mendapatkan nama pencetak
 nl:Kan de naam van de printer niet vinden
 no:Kunne ikke hente skrivernavn
 pl:Nie można uzyskać nazwy drukarki
@@ -6482,6 +6607,7 @@ kr:프린터를 초기화할 수 없습니다.
 kw:Ny yllys darbari pryntyer
 lt:Nepavyko prisijungti prie spausdintuvo
 lv:Neizdevās inicializēt printeri
+my:Tidak dapat memulakan pencetak
 nl:Kan de printer niet initialiseren
 nn:Kunne ikkje starte utskrivaren
 no:Kunne ikke klargjøre skriveren
@@ -6536,6 +6662,7 @@ kr:PDF 미리보기를 설치할 수 없습니다.
 kw:Ny yllir lea ragweler PDF
 lt:Nepavyko įdiegti PDF peržiūros programą
 lv:Nevarēja instalēt PDF priekšskatījumu
+my:Tidak dapat memasang previewer PDF
 nl:Kan PDF-previewer niet installeren
 nn:Kunne ikkje installere PDF-forhandsvisar
 no:Kunne ikke installere PDF forhåndsvisning
@@ -6590,6 +6717,7 @@ kr:PDF 검색 필터를 설치할 수 없습니다.
 kw:Ny yllir lea sidhel hwilas PDF
 lt:Nepavyko įdiegti PDF paieškos filtro
 lv:Nevarēja instalēt PDF meklēšanas filtru
+my:Tidak dapat memasang penapis carian PDF
 nl:Kan PDF-zoekfilter niet installeren
 nn:Kunne ikkje installere PDF-søkjefilter
 no:Kunne ikke installere PDF søkefilter
@@ -6644,6 +6772,7 @@ kr:페이지를 렌더링할 수 없습니다.
 kw:Ny yllys rendra folen
 lt:Nepavyko atvaizduoti puslapio
 lv:Nevarēja atveidot lappusi
+my:Tidak dapat memuatkan halaman
 nl:Kan deze pagina niet weergegeven
 nn:Kunne ikkje rendre siden
 no:Kunne ikke vise siden
@@ -6698,6 +6827,7 @@ kr:PDF 미리보기를 제거할 수 없습니다.
 kw:Ny yllir anlea ragweler PDF
 lt:Nepavyko pašalinti PDF peržiūros programos
 lv:Nevarēja atinstalēt PDF priekšskatījumu
+my:Tidak dapat membuang previewer PDF
 nl:Kan PDF-previewer niet verwijderen
 nn:Kunne ikkje avinstallere PDF-forhandsvisar
 no:Kunne ikke avinstallere PDF forhåndsvisning
@@ -6752,6 +6882,7 @@ kr:Sumatra 검색 필터를 제거할 수 없습니다
 kw:Ny yllir anlea sidhel hwilas Sumatra
 lt:Nepavyko pašalinti Sumatra paieškos filtro
 lv:Nevarēja atinstalēt Sumatra meklēšanas filtru
+my:Tidak dapat membuang penapis carian Sumatra
 nl:Kan Sumatra zoekfilter niet verwijderen
 no:Kunne ikke avinstallere Sumatra-søkefilter
 pl:Nie można odinstalować filtru wyszukiwania Sumatry
@@ -6805,6 +6936,7 @@ kr:브라우저 플러그인을 제거할 수 없습니다.
 kw:Ny yllir anlea ebilyans peurel
 lt:Nepavyko pašalinti naršyklės įskiepio
 lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
+my:Tidak dapat membuang pelayar plugin
 nl:Kan browserplugin niet verwijderen
 nn:Kunne ikkje avinstallere nettlesartillegget
 no:Kunne ikke avinstallere nettlesertillegget
@@ -6859,6 +6991,7 @@ kr:%s(을)를 디스크에 쓸 수 없습니다.
 kw:Ny yllir skrifa %s dhe'n disk
 lt:Nepavyko %s įrašyti į diską
 lv:Nevarēja rakstīt %s diskā
+my:Tidak boleh memasukkan data %s ke cakera
 nl:Kon %s niet op schijf wegschrijven
 nn:Kunne ikkje lagre %s til disken
 no:Kunne ikke skrive %s til disk
@@ -6911,6 +7044,7 @@ ja:カーソル位置に注釈を作成(&U)
 kr:커서 아래 주석 생성(&U)
 kw:Gwruthyl Notenyans &Yn-Dann Resor
 lt:Sukurti anotaciją žymeklio &vietoje
+my:Cipta Anotasi &Bawah Kursor
 nl:Maak Aantekening Onder Cursor
 no:Lag merknad &under peker
 pl:Utwórz adnotację &pod kursorem
@@ -6963,6 +7097,7 @@ kr:선택한 곳에 주석 생성
 kw:Gwruthyl Notenyans a'th Tewis
 lt:Sukurti anotaciją iš pažymėtos vietos
 lv:Veidot anotāciju no atlases
+my:Cipta Anotasi Daripada Pilihan
 nl:Aantekening maken op basis van Selectie
 no:Lag merknad på merket område
 pl:Utwórz adnotację z zaznaczenia
@@ -7016,6 +7151,7 @@ kr:만든 날짜:
 kw:Gwrys:
 lt:Sukurtas:
 lv:Izveidots:
+my:Dicipta:
 nl:Gemaakt:
 nn:Skapt:
 no:Opprettet:
@@ -7070,6 +7206,7 @@ kr:현재 파일
 kw:Restren a-lemmyn
 lt:Esamasis failas
 lv:Pašreizējais fails
+my:Fail semasa
 nl:Huidig bestand
 nn:Nåverande fil
 no:Gjeldende fil
@@ -7124,6 +7261,7 @@ kr:커서 위치:
 kw:Le resor:
 lt:Žymeklio pozicija:
 lv:Kursora pozīcija:
+my:Kedudukan kursor:
 nl:Cursorpositie
 nn:Markørposisjon:
 no:Skrivemerkeposisjon:
@@ -7172,6 +7310,7 @@ id:Kustomisasi & Perbesar...
 it:&Zoom personalizzato...
 ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
+my:Suaikan &Zum...
 nl:Aangepaste &zoom...
 no:Tilpasset &zoom...
 pl:&Własne powiększenie...
@@ -7224,6 +7363,7 @@ kr:어두운
 kw:Tewl
 lt:Tamsi
 lv:Tumšs
+my:Gelap
 nl:Donker
 nn:Mørkt
 no:Mørkt
@@ -7278,6 +7418,7 @@ kr:더 어두운
 kw:Tewlla
 lt:Tamsesnė
 lv:Tumšāks
+my:Lebih Gelap
 nl:Zwart
 nn:Mørkare
 no:Mørkere
@@ -7331,6 +7472,7 @@ kr:날짜:
 kw:Dedhyas:
 lt:Data:
 lv:Datums:
+my:Tarikh:
 nl:Datum:
 nn:Dato:
 no:Dato:
@@ -7384,6 +7526,7 @@ kr:기본 구성(&L):
 kw:&Delinyans savonek:
 lt:Numatytasis iš&dėstymas:
 lv:Noklusējuma &izkārtojums
+my:Tataletak &Lalai:
 nl:Standaardopmaak:
 nn:Standard &oppsett:
 no:Standard sideoppsett:
@@ -7438,6 +7581,7 @@ kr:기본 확대/축소(&Z):
 kw:&Zoum savonek:
 lt:Numatytasis &mastelis
 lv:Noklusējuma &tālummaiņa
+my:Zum &Lalai:
 nl:Standaard &zoom:
 nn:Standard &zooming:
 no:Standard&zoom:
@@ -7477,6 +7621,7 @@ hu:Törlés
 id:Hapus
 it:Cancella
 ja:削除
+my:Padam
 nl:Verwijderen
 pl:Usuń
 pt:Apagar
@@ -7512,6 +7657,7 @@ it:Elimina Annotazione
 ja:注釈を削除
 kr:주석 삭제
 lt:Ištrinti anotaciją
+my:Padam Anotasi
 nl:Aantekening Verwijderen
 pl:Usuń adnotację
 pt:Apagar Anotação
@@ -7558,6 +7704,7 @@ kr:거부된 사용 권한:
 kw:Kumyasow Neghys:
 lt:Nesuteikti leidimai:
 lv:Atteiktas atļaujas:
+my:Kebenaran Dinafikan:
 nl:Niet toegestaan:
 nn:Permisjonar som blei nekta:
 no:Manglende tillatelser:
@@ -7612,6 +7759,7 @@ kr:DjVu 문서
 kw:Skrivennow DjVu
 lt:DjVu dokumentai
 lv:DjVu dokumenti
+my:Dokumen DjVu
 nl:DjVu-documenten
 nn:DjVu-dokumentar
 no:DjVu-dokumenter
@@ -7666,6 +7814,7 @@ kr:문서 속성
 kw:Gnasow Skriven
 lt:Dokumento savybės
 lv:Dokumenta rekvizīti
+my:Maklumat Dokumen
 nl:Documenteigenschappen
 nn:Dokumentegenskaper
 no:Dokumentegenskaper
@@ -7717,6 +7866,7 @@ it:Non installare
 ja:インストールしない
 kr:설치하지 마십시오
 kw:Ny wra lea
+my:Jangan pasang
 nl:Niet installeren
 nn:Ikkje installer
 no:Ikke installer
@@ -7769,6 +7919,7 @@ it:Download versione a 64bit
 ja:64-bit 版をダウンロード
 kr:64비트 버전 다운로드
 kw:Iskarga gwersyon 64-byt
+my:Muat turun versi 64-bit
 nl:Download 64-bit versie
 nn:Last ned 64-bit versjon
 no:Last ned 64-biters versjon
@@ -7819,6 +7970,7 @@ it:&Esci
 ja:終了(&X)
 kr:나가기(&X)
 lt:&Išeiti
+my:Ke&luar
 nl:A&fsluiten
 nn:A&vslutt
 no:A&vslutt
@@ -7872,6 +8024,7 @@ kr:전체화면 종료(&X)
 kw:Kwytya Skrin-leun
 lt:&Išeiti iš pilno ekrano režimo
 lv:&Iziet no pilnekrāna
+my:Ke&luar Skrin Penuh
 nl:Volledig scherm uit
 nn:A&vslutt Fullskjerm
 no:A&vslutt fullskjerm
@@ -7926,6 +8079,7 @@ kr:ePub 문서
 kw:E-lyvrow EPUB
 lt:EPUB dokumentai
 lv:EPUB elektroniskās grāmatas
+my:E-buku EPUB
 nl:EPUB-bestanden
 nn:EPUB digitale bøkjer
 no:EPUB-dokumenter
@@ -7969,6 +8123,7 @@ id:Edit %s Anotasi
 it:Modifica annotazione %s
 ja:注釈 %s を編集
 kr:주석 편집 (%s)
+my:Edit %s Anotasi
 nl:Bewerk %s Aantekening
 pl:Edytuj adnotację %s
 pt:Editar Anotação %s
@@ -8014,6 +8169,7 @@ kr:주석 편집
 kw:Golegi notenyans
 lt:Redaguoti anotacijas
 lv:Rediģēt anotācijas
+my:Edit Anotasi
 nl:Bewerk Aantekeningen
 no:Rediger merknader
 pl:Edytuj adnotacje
@@ -8067,6 +8223,7 @@ kr:비밀번호 입력
 kw:Ri ger-tremena
 lt:Įveskite slaptažodį
 lv:Ievadīt paroli
+my:Masukkan kata laluan
 nl:Wachtwoord invoeren
 nn:Skriv inn passord
 no:Skriv inn passord
@@ -8121,6 +8278,7 @@ kr:%s의 비밀번호를 입력하세요.
 kw:Ri ger-tremena rag %s
 lt:Įveskite %s slaptažodį
 lv:Ievadīt %s paroli
+my:Masukkan kata laluan untuk %s
 nl:Wachtwoord invoeren voor %s
 nn:Skriv inn passord for %s
 no:Skriv inn passord for %s
@@ -8175,6 +8333,7 @@ kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 kw:Enter an linen-gorhemmyn dh'y elwel pan wre'ta klyck dewblek war an skriven PDF:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 lv:Ievadiet komandrindu, izsaucamu ar dubultklikšķi uz PDF dokumenta:
+my:Masukkan baris arahan untuk digunakan apabila anda klik dua kali pada dokumen PDF:
 nl:Opdrachtregel die gestart moet worden bij het dubbelklikken van een PDF-document:
 nn:Gå inn i kommandolinja for å hentast, når du dobbeltklikkar på PDF-dokumentet:
 no:Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
@@ -8217,6 +8376,7 @@ id:Kesalahan
 it:Errore
 ja:エラー
 kr:오류
+my:Ralat
 nl:Fout
 pl:Błąd
 pt:Erro
@@ -8262,6 +8422,7 @@ kr:%s (을)를 불러오는 중에 오류가 발생했습니다!
 kw:Gwall karga %s
 lt:Nepavyko įkelti %s
 lv:%s ielādes kļūda
+my:Ralat memuatkan %s
 nl:Fout bij het laden van %s
 nn:Feil ved innlasting av %s
 no:Feil under innlasting av %s
@@ -8316,6 +8477,7 @@ kr:모두 확대하기
 kw:Lesa Oll
 lt:Išplėsti viską
 lv:Izvērst visu
+my:Kembangkan Semua
 nl:Alle Uitvouwen
 no:Utvid alle
 pl:Rozwiń wszystko
@@ -8369,6 +8531,7 @@ kr:즐겨찾기(&A)
 kw:T&aklow drudh
 lt:&Parankiniai
 lv:Grāmat&zīmes
+my:Kegem&aran
 nl:F&avorieten
 nn:F&avorittar
 no:F&avoritter
@@ -8417,6 +8580,7 @@ id:L&anjut
 it:&Avanti
 ja:進む(&O)
 kr:앞으로(&O)
+my:M&ajukan
 nl:V&ooruit
 no:F&ramover
 pl:&Dalej
@@ -8464,6 +8628,7 @@ id:Layar penuh
 it:Sc&hermo intero
 ja:全画面表示(&U)
 kr:전체화면(&U)
+my:S&krin Penuh
 nl:V&oledig Scherm
 nn:F&ullskjerm
 no:F&ullskjerm
@@ -8517,6 +8682,7 @@ kr:두 페이지씩
 kw:A-dal
 lt:Du puslapiai
 lv:Divas lappuses
+my:Dua belah mukasurat
 nl:Dubbele pagina
 nn:Fleire sider
 no:Flere sider
@@ -8571,6 +8737,7 @@ kr:레지스트리 키를 삭제하지 못했습니다.
 kw:Dilea alwedhow kovskrifva anleell
 lt:Nepavyko ištrinti šalinimo programos registro raktų
 lv:Neizdevās izdzēst atinstalēšanas programmas reģistra atslēgas
+my:Gagal untuk memadam kekunci pendaftaran uninstaller
 nl:Kon deinstallatie registersleutels niet verwijderen
 nn:Mislykkast i å slette avinstalleringsregisternøklane
 no:Kan ikke slette avinstalleringsnøkler i Registeret
@@ -8625,6 +8792,7 @@ kr:파일 이름을 바꾸지 못했습니다!
 kw:Dashenwel an restren a fyllis!
 lt:Nepavyko pervadinti failo!
 lv:Neizdevās pārdēvēt failu!
+my:Gagal menamakan semula fail!
 nl:Naam niet kunnen wijzigen!
 nn:Klarte ikkje å omdøpe fila!
 no:Kunne ikke endre navn på filen!
@@ -8679,6 +8847,7 @@ kr:파일을 저장하지 못했습니다.
 kw:Gwithyans restren a fyllis
 lt:Failo įrašyti nepavyko
 lv:Neizdevās saglabāt failu
+my:Gagal menyimpan fail
 nl:Fout bij opslaan bestand
 nn:Feil under lagring av fil
 no:Feil ved lagring av filen
@@ -8733,6 +8902,7 @@ kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습�
 kw:Skrifa kedhlow ystynnans restren ynstynnys dhe'n govskrifva a fyllis
 lt:Nepavyko į registrą įrašyti išplėstinės failo plėtinio informacijos
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
+my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
 nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
 nn:Mislykkast i å skrive den utvida filutvidingsinformasjonen til registeret
 no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
@@ -8787,6 +8957,7 @@ kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 kw:Skrifa an kedhlow anleans dhe'n govskrifva a fyllis!
 lt:Nepavyko į registrą įrašyti programos šalinimo informacijos
 lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
+my:Gagal untuk menulis maklumat pemasangan untuk registry
 nl:Kan deïnstallatie-informatie niet wegschrijven in het register
 nn:Mislykkast i å skrive avinstalleringsinformasjonen til registeret
 no:Kan ikke lagre avinstalleringsinformasjon i Registeret
@@ -8841,6 +9012,7 @@ kr:빠른 웹 보기
 kw:Gwel Wias Skav
 lt:Greita peržiūra tinkle
 lv:Ātrais tīmekļa skats
+my:Paparan Web Cepat
 nl:Snelle browserweergave
 nn:Rask nettvising
 no:Rask Nettvisning
@@ -8895,6 +9067,7 @@ kr:즐겨찾기
 kw:Taklow drudh
 lt:Parankiniai
 lv:Grāmatzīmes
+my:Kegemaran
 nl:Favorieten
 nn:Favorittar
 no:Favoritter
@@ -8949,6 +9122,7 @@ kr:FictionBook 문서
 kw:Skrivennow FictionBook
 lt:FictionBook dokumentai
 lv:FictionBook dokumenti
+my:Dokumen FictionBook
 nl:Fictie Boek documenten
 nn:FictionBook-dokumentar
 no:FictionBook-dokumenter
@@ -9003,6 +9177,7 @@ kr:%s 파일을 찾을 수 없습니다.
 kw:Ny gevir restren %s
 lt:Failas %s nerastas
 lv:Fails %s nav atrasts
+my:Fail %s tidak ditemui
 nl:Bestand %s niet gevonden
 nn:Filen %s blei ikkje funnet
 no:Filen %s finnes ikke
@@ -9057,6 +9232,7 @@ kr:파일 첨부
 kw:Stagel Restren
 lt:Failo priedas
 lv:Faila pielikums
+my:Lampiran Fail
 nl:Bestandsbijlage
 nn:Filvedlegg:
 no:Filvedlegg
@@ -9111,6 +9287,7 @@ kr:파일 크기:
 kw:Braster Restren:
 lt:Failo dydis:
 lv:Faila lielums:
+my:Saiz fail:
 nl:Bestandsgrootte
 nn:Filstørrelse:
 no:Filstørrelse:
@@ -9165,6 +9342,7 @@ kr:파일:
 kw:Restren:
 lt:Failas:
 lv:Fails:
+my:Fail:
 nl:Bestand:
 nn:Fil:
 no:Fil:
@@ -9214,6 +9392,7 @@ id:Pencarian
 it:&Trova
 ja:検索(&D)...
 kr:찾기(&D)...
+my:Car&i...
 nl:&Zoek
 no:Fin&n...
 pl:&Znajdź...
@@ -9266,6 +9445,7 @@ kr:찾기
 kw:Kavos
 lt:Ieškoti
 lv:Atrast
+my:Cari
 nl:Zoeken
 nn:Finn
 no:Søk etter
@@ -9320,6 +9500,7 @@ kr:다음 찾기
 kw:Kavos Nessa
 lt:Rasti kitą
 lv:Atrast nākamo
+my:Cari seterusnya
 nl:Volgende
 nn:Finn neste
 no:Neste
@@ -9374,6 +9555,7 @@ kr:이전 찾기
 kw:Kavos Kyns
 lt:Rasti ankstesnį
 lv:Atrast iepriekšējo
+my:Cari sebelumnya
 nl:Vorige
 nn:Finn førre
 no:Forrige
@@ -9428,6 +9610,7 @@ kr:찾기:
 kw:Kavos:
 lt:Ieškoti:
 lv:Atrast:
+my:Cari:
 nl:Zoeken:
 nn:Finn
 no:Søk etter:
@@ -9475,6 +9658,7 @@ id:Muat Sesuai Isi
 it:Adatta al &contenuto
 ja:内容に合わせる(&C)
 kr:내용에 맞춤(&C)
+my:Muatkan &Kandungan
 nl:&Inhoud Aanpassen
 no:Tilpass til &innhold
 pl:Dopasuj do &zawartości
@@ -9520,6 +9704,7 @@ id:Muat Sesuai Halaman
 it:Adatta alla &pagina
 ja:ページに合わせる(&P)
 kr:페이지에 맞춤(&P)
+my:Muatkan &Halaman
 nl:&Pagina Aanpassen
 no:Tilpass til &side
 pl:Dopasuj do s&trony
@@ -9565,6 +9750,7 @@ id:Muat Sesuai Lebar Halaman
 it:Adatta a &larghezza
 ja:幅に合わせる(&W)
 kr:너비에 맞춤(&W)
+my:Muatkan &Lebar
 nl:&Breedte Aanpassen
 no:Tilpass til &bredde
 pl:Dopasuj do sz&erokości
@@ -9617,6 +9803,7 @@ kr:내용에 맞춤
 kw:Desedha Dalgh
 lt:Visas puslapio turinys
 lv:Ietilpināt saturu
+my:Muatkan Kandungan
 nl:Passend maken
 nn:Tilpass innhald
 no:Tilpass innhold
@@ -9671,6 +9858,7 @@ kr:페이지(세로) 맞춤
 kw:Desedha Folen
 lt:Visas puslapis
 lv:Ietilpināt lappusi
+my:Muatkan Halaman
 nl:Hele pagina
 nn:Tilpass side
 no:Tilpass side
@@ -9725,6 +9913,7 @@ kr:너비(가로) 맞춤
 kw:Desedha Les
 lt:Visas puslapio plotis
 lv:Ietilpināt platumu
+my:Muatkan lebar
 nl:Passend in breedte
 nn:Tilpass breidde
 no:Tilpass til bredde
@@ -9779,6 +9968,7 @@ kr:지속적인 너비 맞춤과 페이지 보기
 kw:Desedha Les ha Diskwedhes Folennow Heb Aswa
 lt:Visas puslapio plotis, nenutrūkstama peržiūra
 lv:Ietilpināt platumu un rādīt lappuses nepārtraukti
+my:Muatkan Lebar dan Paparkan Halaman Berterusan
 nl:Passend in breedte en pagina's doorlopend
 nn:Tilpass bredde og vis sider kontinuerleg
 no:Tilpass bredde og vis sider kontinuerlig
@@ -9833,6 +10023,7 @@ kr:한 페이지 맞춤
 kw:Desedha Folen Unnik
 lt:Visas puslapis
 lv:Ietilpināt vienā lappusē
+my:Muatkan Halaman Tunggal
 nl:Hele pagina passend maken
 nn:Tilpass ein enkel side
 no:Tilpass til enkeltside
@@ -9887,6 +10078,7 @@ kr:글꼴:
 kw:Fontys:
 lt:Šriftai
 lv:Fonti:
+my:Fon:
 nl:Lettertypen:
 nn:Fontar:
 no:Skrifter:
@@ -9941,6 +10133,7 @@ kr:%s 페이지에서 텍스트 발견
 kw:Tekst kevys war folen %s
 lt:Ieškoti teksto %s puslapyje
 lv:%s lappusē atrasts teksts
+my:Menjumpai teks pada halaman %s
 nl:Tekst gevonden op pagina %s
 nn:Fann tekst på side %s
 no:Fant tekst på side %s
@@ -9995,6 +10188,7 @@ kr:%s 페이지에서 텍스트 발견(다시)
 kw:Y hevir tekst orth folen %s (arta)
 lt:Rastas tekstas %s puslapyje (vėl)
 lv:%s lappusē atrasts teksts (vēlreiz)
+my:Found teks pada halaman %s (lagi)
 nl:Tekst gevonden op pagina %s (opnieuw)
 nn:Fann tekst på side %s (igjen)
 no:Fant tekst på side %s (igjen)
@@ -10049,6 +10243,7 @@ kr:최근에 읽은 파일
 kw:Redys yn Fenowgh
 lt:Dažniausiai skaitomi
 lv:Biežāk lasītie
+my:Kerap Dibaca
 nl:Eerder Weergegeven
 nn:Ofte lesne
 no:Ofte leste
@@ -10103,6 +10298,7 @@ kr:GB
 kw:GB
 lt:GB
 lv:GB
+my:GB
 nl:GB
 nn:GB
 no:GB
@@ -10153,6 +10349,7 @@ id:Dapatkan Info Font
 it:Ottieni informazioni sui font
 ja:フォント情報を取得
 kr:글꼴 정보 확인
+my:Dapatkan Maklumat Fon
 nl:Informatie over lettertypen ophalen
 no:Hent skrifttypeinformasjon
 pl:Uzyskaj informacje o czcionkach
@@ -10205,6 +10402,7 @@ kr:페이지로 가기
 kw:Mos dhe folen
 lt:Eiti į puslapį
 lv:Doties uz lappusi
+my:Pergi ke halaman
 nl:Ga naar pagina
 nn:Gå til side
 no:Gå til side
@@ -10259,6 +10457,7 @@ kr:옵션 숨김(&O)
 kw:Kudha Settyans&ow
 lt:Slėpti &Nuostatas
 lv:Paslēpt &opcijas
+my:Sembunyi &Tetapan
 nl:Verberg &Opties
 nn:Skjul &innstillingar
 no:Skjule &Tillegg
@@ -10313,6 +10512,7 @@ kr:최근에 읽은 파일 감추기
 kw:Kudha redys yn fenowgh
 lt:Nerodyti dažniausiai skaitomų
 lv:Slēpt biežāk lasītos
+my:Sembunyikan Bacaan Kerap
 nl:'Eerder Weergegeven' verbergen
 nn:Skjul ofte lesne
 no:Skjult ofte leste
@@ -10367,6 +10567,7 @@ kr:힌트: 다시 찾으려면, F3 키를 누르세요.
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
 lv:Ieteikums: izmantojiet taustiņu F3, lai atrastu atkal
+my:Petunjuk: Gunakan kekunci F3 untuk mencari semula
 nl:Tip: Gebruik de functietoets F3 om verder te zoeken
 nn:Tips: Bruk F3-knappen for å finne igjen
 no:Tips: Bruk F3-tasten for å søke etter neste
@@ -10420,6 +10621,7 @@ kr:아이콘:
 kw:Ikon:
 lt:Ikona:
 lv:Ikona:
+my:Ikon:
 nl:Pictogram:
 nn:Ikon:
 no:Ikon:
@@ -10473,6 +10675,7 @@ kr:이미지 파일 (*.%s)
 kw:Restrennow skeusen (*.%s)
 lt:Grafiniai failai (*.%s)
 lv:Attēlu faili (*.%s)
+my:Imej Fail (*.%s)
 nl:Afbeeldingen (*.%s)
 nn:Biletfilar (*.%s)
 no:Bildefiler (*.%s)
@@ -10527,6 +10730,7 @@ kr:이미지
 kw:Skeusennow
 lt:Vaizdai
 lv:Attēli
+my:Imej
 nl:Afbeeldingen
 nn:Bilete
 no:Bilder
@@ -10581,6 +10785,7 @@ kr:잉크
 kw:Ynk
 lt:Rašalas
 lv:Tinte
+my:Dakwat
 nl:Snelkoppeling
 nn:Blekk
 no:Blekk
@@ -10635,6 +10840,7 @@ kr:SumatraPDF 설치
 kw:Lea SumatraPDF
 lt:Įdiegti SumatraPDF
 lv:Instalēt SumatraPDF
+my:Pasang SumatraPDF
 nl:Installeer SumatraPDF
 nn:Installer SumatraPDF
 no:Installer SumatraPDF
@@ -10689,6 +10895,7 @@ kr:SumatraPDF 설치 폴더(&F):
 kw:Lea SumatraPDF yn &restren:
 lt:Įdiegti SumatraPDF į &katalogą:
 lv:Instalēt SumatraPDF &mapē:
+my:Pasang SumatraPDF dalam &folder
 nl:Installeer SumatraPDF in &map
 nn:Installer SumatraPDF i mappa:
 no:Installere SumatraPDF i &mappe:
@@ -10740,6 +10947,7 @@ it:Installa e ri-esegui
 ja:インストールしてプログラムを再起動
 kr:설치 후 재실행
 kw:Lea ha daslonchya
+my:Pasang dan lancarkan semula
 nl:Installeren + opnieuw starten
 no:Installer og kjør på nytt
 pl:Zainstaluj i uruchom ponownie
@@ -10788,6 +10996,7 @@ id:Pasang untuk semua pengguna
 it:Installa per tutti gli utenti
 ja:すべてのユーザーに対してインストール
 kr:모든 사용자용 설치
+my:Pasang untuk semua pengguna
 nl:Installeer voor alle gebruikers
 nn:Installer for alle brukarar
 no:Installer for alle brukere
@@ -10841,6 +11050,7 @@ kr:설치 실패!
 kw:Ynstallyans fyllys!
 lt:Įdiegimas nepavyko!
 lv:Instalēšana neizdevās!
+my:Pemasangan gagal!
 nl:Installatie mislukt!
 nn:Installering mislykkast!
 no:Installasjon mislyktes!
@@ -10895,6 +11105,7 @@ kr:설치하는 중...
 kw:Ow lea...
 lt:Vyksta programos įdiegimas...
 lv:Notiek instalēšana...
+my:Pemasangan sedang dijalankan...
 nl:Installatie in uitvoering...
 nn:Installering under arbeid...
 no:Installasjon pågår...
@@ -10946,6 +11157,7 @@ it:Installa SumatraPDF a 32bit in S.O. a 64bit
 ja:64-bit 版の OS に 32-bit 版の SumatraPDF をインストール中
 kr:64비트 운영체제에 32비트 SumatraPDF 설치
 kw:Ow lea Sumatra PDF 32-byt war SO 64-byt
+my:Memasang SumatraPDF 32-bit pada OS 64-bit
 nl:32bit SumatraPDF installeren op 64bit OS
 no:Installerer 32-bit SumatraPDF på 64-bit OS
 pl:Instalowanie 32-bitowego programu SumatraPDF w 64-bitowym systemie operacyjnym
@@ -10996,6 +11208,7 @@ kr:내부 색상:
 kw:Liw A-Bervedh:
 lt:Vidaus spalva:
 lv:Iekšējā krāsa:
+my:Warna Dalaman:
 nl:Interieur Kleur
 no:Innvendig farge:
 pl:Kolor wnętrza:
@@ -11048,6 +11261,7 @@ kr:KB
 kw:KB
 lt:KB
 lv:KB
+my:KB
 nl:KB
 nn:KB
 no:KB
@@ -11102,6 +11316,7 @@ kr:Windows 데스크톱 검색에 PDF 문서 검색 기능 추가(&S)
 kw:Gasa Windows Desktop Search dhe &hwilas skrivennow PDF
 lt:Leisti Windows Desktop Search &ieškoti PDF dokumentų
 lv:&Meklēt PDF dokumentus ar Windows Desktop Search
+my:Biarkan Windows Desktop Search &mencari dokumen PDF
 nl:Laat Windows Bureaublad Zoeker PDF documenten &zoeken
 nn:Let Windows Skrivebordssøk &søkje gjennom PDF-dokumentar
 no:La Windows søkemotor &søke PDF dokumenter
@@ -11156,6 +11371,7 @@ kr:Windows 에 PDF 문서 미리보기 기능 추가(&P)
 kw:Gasa Windows dhe dhiskwedhes &ragwelyow a skrivennow PDF
 lt:Leisti Windows rodyti PDF dokumentų &peržiūras
 lv:Ļaut Windows rādīt PDF dokumentu &priekšskatījumus
+my:Biarkan Windows menunjukkan &preview dokumen PDF
 nl:Laat Windows &voorbeelden tonen van PDF documenten
 nn:Let Windows vise &forhandsvisingar av PDF-dokumentar
 no:La Windows vise &forhåndsvisning av PDF-dokumenter
@@ -11210,6 +11426,7 @@ kr:밝은
 kw:Golow
 lt:Šviesi
 lv:Gaišs
+my:Cerah
 nl:Wit
 nn:Lyst
 no:Lyst
@@ -11264,6 +11481,7 @@ kr:선
 kw:Linen
 lt:Linija
 lv:Līnija
+my:Baris
 nl:Regel
 nn:Linje
 no:Linje
@@ -11315,6 +11533,7 @@ ja:終端:
 kr:선 끝:
 kw:Diwedh Linen:
 lt:Linijos pabaiga:
+my:Baris Tamat:
 nl:Lijn Eind
 nn:Linje Slutt:
 no:Linjeslutt:
@@ -11365,6 +11584,7 @@ ja:始端:
 kr:선 시작:
 kw:Dalleth Linen:
 lt:Linijos pradžia:
+my:Baris Mula:
 nl:Lijn Begin
 nn:Linje Start:
 no:Linjestart:
@@ -11412,6 +11632,7 @@ id:Memuat %s
 it:Caricamento %s...
 ja:%s を読込中…
 kr:%s 불러오는 중 ...
+my:Memuatkan %s ...
 nl:Laden %s...
 nn:Laster %s ...
 no:Laster %s ...
@@ -11464,6 +11685,7 @@ kr:MB
 kw:MB
 lt:MB
 lv:MB
+my:MB
 nl:MB
 nn:MB
 no:MB
@@ -11518,6 +11740,7 @@ kr:SumatraPDF를 PDF 파일의 기본 프로그램으로 만들까요?
 kw:Gul SumatraPDF towlen savonek rag restrennow PDF?
 lt:Ar nustatyti „SumatraPDF“ kaip numatytąją PDF žiūryklę?
 lv:Vai iestatīt SumatraPDF kā noklusējuma lietojumprogrammu PDF failiem?
+my:Jadikan aplikasi SumatraPDF pembaca utama bagi fail PDF?
 nl:SumatraPDF standaard programma voor PDF-bestanden?
 nn:Gjere SumatraPDF til standardprogram for PDF-filer?
 no:Gjøre SumatraPDF til standard åpningsprogram for PDF-filer?
@@ -11572,6 +11795,7 @@ kr:만화 방식(&G)
 kw:Modh Man&ga
 lt:Man&ga režimas
 lv:&Manga režīms
+my:Mode Man&ga
 nl:Man&gamodus
 nn:Man&ga-vising
 no:Man&ga-modus
@@ -11609,6 +11833,7 @@ he:מדריך למשתמש באתר
 hu:Kézikönyv a weboldalon
 id:Manual di Situs Web
 it:Manuale (sito web)
+my:Manual Di Tapak Web
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
 pt:Manual no Site da Web
@@ -11653,6 +11878,7 @@ kr:대소문자 일치
 kw:An keth kas
 lt:Skirti didžiąsias ir mažąsias raides
 lv:Saskaņot reģistru
+my:Hampir sama
 nl:Hoofdlettergevoelig
 nn:Skil mellom store/små bokstavar
 no:Skill mellom store og små bokstaver
@@ -11707,6 +11933,7 @@ kr:Mobi 문서
 kw:Restrennow Mobi
 lt:Mobi dokumentai
 lv:Mobi dokumenti
+my:Dokumen Mobi
 nl:Mobi-documenten
 nn:Mobi-dokumentar
 no:Mobi-dokumenter
@@ -11761,6 +11988,7 @@ kr:고친 날짜:
 kw:Chanjys:
 lt:Keistas:
 lv:Modificēts:
+my:Diubah:
 nl:Aangepast:
 nn:Endrast:
 no:Endret:
@@ -11811,6 +12039,7 @@ it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 kr:새 창(&W)
 lt:&Naujas langas
+my:Tetingkap &baharu
 nl:Nieuw &Kader
 nn:Nytt &vindauge
 no:Nytt &vindu
@@ -11862,6 +12091,7 @@ it:Nuova versione disponibile
 ja:更新があります
 kr:새 버전이 있습니다
 kw:Gwersyon nowydh kavadow
+my:Versi baharu tersedia
 nl:Nieuwe versie beschikbaar
 nn:Ny versjon tilgjengeleg
 no:Ny versjon tilgjengelig
@@ -11916,6 +12146,7 @@ kr:다음 페이지
 kw:Nessa Folen
 lt:Kitas puslapis
 lv:Nākamā lappuse
+my:Mukasurat seterusnya
 nl:Volgende pagina
 nn:Neste side
 no:Neste side
@@ -11954,6 +12185,7 @@ hi:नहीं
 hu:Nem
 id:Tidak
 it:No
+my:Tidak
 nl:Nee
 pl:Nie
 pt:Não
@@ -11998,6 +12230,7 @@ kr:일치하는 항목을 찾을 수 없습니다.
 kw:Ny veu keyvys par vyth
 lt:Nerasta atitikmenų
 lv:Netika atrasta neviena atbilstība
+my:Tiada padanan dijumpai
 nl:Geen zoekresultaat gevonden
 nn:Ingen treff blei funnet
 no:Søkeelementet ble ikke funnet
@@ -12052,6 +12285,7 @@ kr:%u 행 (%s 파일) 주변에서 발견된 결과가 없습니다.
 kw:Ny veu kevys sywyans vyth a-dro dhe linen %u y'n restren %s
 lt:Aplink eilutę %u faile %s nerasta jokių rezultatų
 lv:Rezultāts nav atrasts %u līnijā %s failā
+my:Tiada hasil ditemui di sekitar baris %u dalam fail %s
 nl:Geen resultaat gevonden bij regel %u in bestand %s
 nn:Ingen resultat funnet omkring linje %u i fila %s
 no:Ingen resultater funnet rundt linje %u i filen %s
@@ -12106,6 +12340,7 @@ kr:동기화 파일을 찾을 수 없습니다.
 kw:Ny veu kevys restren gettermynegi vyth
 lt:Sinchronizacijos failas nerastas
 lv:Sinhrizācijas fails nav atrasts
+my:Tiada fail penyegerakan ditemui
 nl:Geen synchronisatiebestand gevonden
 nn:Ingen synkroniseringsfil blei funna
 no:Ingen synkroniseringsfil funnet
@@ -12160,6 +12395,7 @@ kr:이 위치의 동기화 정보가 없습니다.
 kw:Ny veu kevys derivadow kettermynegi y'n le ma
 lt:Nėra sinchronizacijos informacijos šioje pozicijoje
 lv:Sinhronizācijas fails nav atrasts šajā pozīcijā
+my:Tiada maklumat penyelarasan pada kedudukan ini
 nl:Geen synchronisatieinformatie beschikbaar
 nn:Ingen synkroniseringsinfo på denne posisjonen
 no:Ingen synkroniseringsinfo her
@@ -12214,6 +12450,7 @@ kr:페이지 수:
 kw:Niver a Folennow:
 lt:Puslapių skaičius:
 lv:Lappušu skaits:
+my:Jumlah mukasurat:
 nl:Aantal pagina's:
 nn:Antal sider:
 no:Antall sider:
@@ -12268,6 +12505,7 @@ kr:확인
 kw:Da lowr
 lt:Gerai
 lv:Labi
+my:OK
 nl:Ok
 nn:OK
 no:OK
@@ -12321,6 +12559,7 @@ kr:투명도:
 kw:Disklerder:
 lt:Nepermatomumas:
 lv:Necaurspīdīgums:
+my:Kelegapan:
 nl:Dekking
 no:Ugjennomsiktighet:
 pl:Nieprzezroczystość:
@@ -12371,6 +12610,7 @@ kr:투명도: %d
 kw:Disklerder: %d
 lt:Nepermatomumas: %d
 lv:Necaurspīdīgums: %d
+my:Kelegapan: %d
 nl:Dekking: %d
 no:Ugjennomsiktighet: %d
 pl:Nieprzezroczystość: %d
@@ -12423,6 +12663,7 @@ kr:열기
 kw:Ygeri
 lt:Atverti
 lv:Atvērt
+my:Buka
 nl:Openen
 nn:Opne
 no:Åpne
@@ -12477,6 +12718,7 @@ kr:PDF-XChange로 열기(&I)
 kw:Ygeri yn PDF-XChange
 lt:Atverti naudojant „PDF-&XChange“
 lv:Atvērt programmā &PDF-XChange
+my:Buka &menggunakan PDF-XChange
 nl:Openen met PDF-XChange
 nn:Opne &i PDF-XChange
 no:Åpne i PDF-XChange
@@ -12525,6 +12767,7 @@ id:Buka Lampiran
 it:Apri allegato
 ja:添付を開く
 kr:첨부 파일 열기
+my:Buka Lampiran
 nl:Open Bijlage
 nn:Opne Vedlegg
 no:Åpne vedlegg
@@ -12568,6 +12811,7 @@ id:Buka Direktori di &Double Commander
 it:Apri cartella in &Double Commander
 ja:Double Commanderでディレクトリを開く(&D)
 kr:더블 커맨더에서 디렉토리 열기
+my:Buka Direktori dalam &Double Commander
 nl:Open Map in &Double Commander
 no:Åpne mappe i &Double Commander
 pl:Otwórz katalog w &Double Commanderze
@@ -12610,6 +12854,7 @@ it:Apri cartella in &Explorer
 ja:エクスプローラーでディレクトリを開く(&E)
 kr:탐색기에서 디렉토리 열기
 lt:Atidaryti aplankalą "&Explorer"
+my:Buka Direktori dalam &Penjelajah
 nl:Open Map in &Verkenner
 no:Åpne mappe i &filutforsker
 pl:Otwórz katalog w &Eksploratorze
@@ -12652,6 +12897,7 @@ it:Apri cartella in &Total Commander
 ja:Total Commanderでディレクトリを開く(&T)
 kr:토탈 커맨더에서 디렉토리 열기
 lt:Atidaryti aplankalą "&Total Commander"
+my:Buka Direktori dalam &Total Commander
 nl:Open Map in &TotalCommander
 no:Åpne mappe i &Total Commander
 pl:Otwórz katalog w &Total Commanderze
@@ -12692,6 +12938,7 @@ id:Buka Direktori di Directory &Opus
 it:Apri cartella in Directory &Opus
 ja:Directory Opusでディレクトリを開く(&O)
 kr:오푸스에서 디렉토리 열기
+my:Buka Direktori dalam Directory &Opus
 nl:Open Map in Directory &Opus
 no:Åpne mappe i Directory &Opus
 pl:Otwórz katalog w Directory &Opus
@@ -12742,6 +12989,7 @@ kr:임베딩된 PDF 열기
 kw:Ygeri PDF Neythys
 lt:Atidaryti įdėtą PDF
 lv:Atvērt iegultu PDF
+my:Buka PDF Dibenamkan
 nl:Open Ingesloten Pdf
 no:Åpne innebygd PDF
 pl:Otwórz osadzony PDF
@@ -12786,6 +13034,7 @@ id:Buka di Tab Baru
 it:Apri in una nuova finestra
 ja:新しいウィンドウで開く
 kr:새 창에서 열기
+my:Buka Dalam Tetingkap Baharu
 nl:Open In Nieuw Venster
 nn:Opne i nytt vindauge
 no:Åpne i nytt vindu
@@ -12811,7 +13060,9 @@ fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
 he:פתח את הקובץ הבא שבתיקיה
 hu:Következő fájl megnyitása a mappában
+id:Buka Berkas Berikutnya Dalam Folder
 it:Apri file successivo nella cartella
+my:Buka Fail Seterusnya Dalam Folder
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
 pt:Abrir o Próximo Arquivo na Pasta
@@ -12832,7 +13083,9 @@ fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
 he:פתח את הקובץ שלפני בתיקיה
 hu:Előző fájl megnyitása a mappában
+id:Buka Berkas Sebelumnya Dalam Folder
 it:Apri file precedente nella cartella
+my:Buka Fail Sebelumnya Dalam Folder
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
 pt:Abrir o Arquivo Anterior na Pasta
@@ -12877,6 +13130,7 @@ kr:문서 열기...
 kw:Ygeri restren...
 lt:Atverti dokumentą...
 lv:Atvērt dokumentu...
+my:Buka dokumen...
 nl:Open een document...
 nn:Opne eit dokument
 no:Åpne et dokument...
@@ -12931,6 +13185,7 @@ kr:%s(으)로 열기
 kw:Ygeri yn %s
 lt:Atidaryti su %s
 lv:Atvērt programmā %s
+my:Buka dalam %s
 nl:Open in %s
 nn:Opne i %s
 no:Åpne i %s
@@ -12985,6 +13240,7 @@ kr:Adobe Reader로 열기(&A)
 kw:Ygeri yn &Adobe Reader
 lt:Atverti naudojant „&Adobe Reader“
 lv:Atvērt programmā &Adobe Reader
+my:Buka menggunakan &Adobe Reader
 nl:Openen met &Adobe Reader
 nn:Opne i &Adobe Reader
 no:Åpne i &Adobe Reader
@@ -13039,6 +13295,7 @@ kr:Foxit Reader로 열기(&F)
 kw:Ygeri yn &Foxit Reader
 lt:Atverti naudojant „&Foxit Reader“
 lv:Atvērt programmā &Foxit Reader
+my:Buka dengan &Foxit Reader
 nl:Openen met &Foxit Reader
 nn:Opne i &Foxit Reader
 no:Åpne i &Foxit Reader
@@ -13093,6 +13350,7 @@ kr:Microsoft XPS-Viewer로 열기(&M)
 kw:Ygeri yn Microsoft XPS-Viewer
 lt:Atverti su &Microsoft XPS-Viewer
 lv:Atvērt &Microsoft XPS skatītājā
+my:Buka menggunakan &Microsoft XPS-Viewer
 nl:Openen met Microsoft XPS-Viewer
 nn:Opne i &Microsoft XPS-visar
 no:Åpne i &Microsoft XPS-visning
@@ -13138,6 +13396,7 @@ id:Buka di Microsoft &HTML Bantuan
 it:Apri in Microsoft &HTML Help
 ja:Microsoft HTMLヘルプで開く(&H)
 kr:Microsoft HTML 도움말로 열기(&H)
+my:Buka dalam Bantuan &HTML Microsoft
 nl:Open in Microsoft &HTML Help
 no:Åpne i Microsoft &HTML Help
 pl:Otwórz w Microsoft &HTML Help
@@ -13187,6 +13446,7 @@ kr:속성(&R)
 kw:&Gnasow
 lt:&Savybės
 lv:&Rekvizīti
+my:P&roperties
 nl:E&igenschappen
 nn:E&genskaper
 no:E&genskaper
@@ -13241,6 +13501,7 @@ kr:PDF 문서
 kw:Restren PDF
 lt:PDF dokumentas
 lv:PDF dokuments
+my:Dokumen PDF
 nl:PDF-document
 nn:PDF-dokument
 no:PDF-dokument
@@ -13295,6 +13556,7 @@ kr:PDF 최적화:
 kw:Gwellheans PDF
 lt:PDF optimizacijos:
 lv:PDF optimizācija:
+my:Pengoptimuman PDF:
 nl:PDF Optimalisaties
 nn:PDF-optimaliseringer:
 no:PDF Optimalisering:
@@ -13349,6 +13611,7 @@ kr:PDF 제작자:
 kw:Askorrer PDF:
 lt:PDF leidėjas:
 lv:PDF veidotājs:
+my:PDF Producer:
 nl:PDF-maker:
 nn:PDF-lagar:
 no:PDF-produsent:
@@ -13403,6 +13666,7 @@ kr:PDF 버전:
 kw:Versyon PDF:
 lt:PDF versija:
 lv:PDF versija:
+my:Versi PDF:
 nl:PDF-versie:
 nn:PDF-versjon:
 no:PDF-versjon:
@@ -13457,6 +13721,7 @@ kr:PDF 문서
 kw:Restrennow PDF
 lt:PDF dokumentai
 lv:PDF dokumenti
+my:Dokumen-dokumen PDF
 nl:PDF-documenten
 nn:PDF-dokumentar
 no:PDF-dokumenter (*.pdf)
@@ -13505,6 +13770,7 @@ id:Halaman
 it:Pa&gina...
 ja:ページ(&G)...
 kr:페이지(&G)...
+my:Ha&laman...
 nl:Pa&gina
 nn:Si&de...
 no:Si&de...
@@ -13558,6 +13824,7 @@ kr:%s 페이지
 kw:Folen %s
 lt:%s puslapis
 lv:%s lappuse
+my:Halaman %s
 nl:Pagina %s
 nn:Side %s
 no:Side %s
@@ -13612,6 +13879,7 @@ kr:페이지 크기:
 kw:Braster Folen:
 lt:Puslapio dydis:
 lv:Lappuses lielums:
+my:Saiz mukasurat
 nl:Paginagrootte:
 nn:Sidestorleik:
 no:Sidestørrelse:
@@ -13666,6 +13934,7 @@ kr:%u 페이지가 없습니다.
 kw:Nyns eus folen %u
 lt:Puslapio numerio %u nėra
 lv:%u lappuse nepastāv
+my:Halaman bilangan %u tidak wujud
 nl:Paginanummer %u bestaat niet
 nn:Side nummer %u eksisterer ikkje
 no:Sidetallet '%u' finnes ikke i dokumentet
@@ -13720,6 +13989,7 @@ kr:페이지 배율 조정
 kw:Skeylyans an folen
 lt:Puslapio mastelis
 lv:Lappuses mērogošana
+my:Skala halaman
 nl:Pagina schalen
 nn:Sideskalering
 no:Sideskalering
@@ -13774,6 +14044,7 @@ kr:페이지:
 kw:Folen:
 lt:Puslapis:
 lv:Lappuse:
+my:Mukasurat:
 nl:Pagina:
 nn:Side:
 no:Side:
@@ -13827,6 +14098,7 @@ kr:PalmDoc 문서
 kw:Skrivennow PalmDoc
 lt:PalmDoc dokumentai
 lv:PalmDoc dokumenti
+my:Dokumen PalmDoc
 nl:PalmDoc documenten
 nn:PalmDoc-dokumentar
 no:PalmDoc dokumenter
@@ -13881,6 +14153,7 @@ kr:진행하려면, %s (을)를 닫으세요!
 kw:Gwra degea %s dhe besya, mar pleg!
 lt:Norėdami tęsti, uždarykite %s!
 lv:Lai turpinātu, lūdzu, aizveriet %s!
+my:Sila tutup %s untuk meneruskan!
 nl:Sluit %s om verder te gaan!
 nn:Vennlig lukk %s for å fortsetje!
 no:Vennligst lukk %s for å fortsette!
@@ -13927,6 +14200,7 @@ id:Mohon tunggu - sedang memuat...
 it:Caricamento...
 ja:読込中…
 kr:잠시 기다려 주세요. 로드 중입니다...
+my:Sila tunggu - memuatkan...
 nl:Even wachten - Laden
 nn:Ver vennleg og vent - lastar...
 no:Lastar, vent venligst...
@@ -13978,6 +14252,7 @@ kr:렌더링 중입니다, 기다리세요...
 kw:Gortos, mar pleg - ow rendra...
 lt:Prašome palaukti – atvaizduojama...
 lv:Lūdzu, uzgaidiet — notiek atveidošana...
+my:Sila tunggu - memaparkan...
 nl:Een ogenblik - weergeven...
 nn:Venligst vent - Visar...
 no:Vennligst vent - arbeider...
@@ -14030,6 +14305,7 @@ kr:다중 선형
 kw:Lieslinen
 lt:Laužtė
 lv:Lauzta līnija
+my:Garis Poli
 nl:Poly Regel
 no:Polylinje
 pl:Polilinia
@@ -14083,6 +14359,7 @@ kr:다각형
 kw:Liestuek
 lt:Daugiakampis
 lv:Daudzstūris
+my:Poligon
 nl:Veelhoek
 nn:Polygon
 no:Polygon
@@ -14133,6 +14410,7 @@ kr:팝업: %d 0 R
 kw:Tardhans: %d 0 R
 lt:Pranešimas: %d 0 R
 lv:Uznirstošs: %d 0 R
+my:Pop-timbul: %d 0 R
 nl:Popup: %d O R
 no:Sprettopp: %d 0 R
 pl:Wyskakujące okienko: %d 0 R
@@ -14185,6 +14463,7 @@ kr:Postscript 문서
 kw:Skrivennow Postscript
 lt:„PostScript“ dokumentai
 lv:PostScript dokumenti
+my:Dokumen PostScript
 nl:Postscript documenten
 nn:Etterskriv dokumentar
 no:Postscript-dokumenter
@@ -14233,6 +14512,7 @@ id:Presentasi
 it:Presentazione
 ja:プレゼンテーション(&E)
 kr:프레젠테이션(&E)
+my:Pe&rsembahan
 nl:Pr&esentatie
 no:Pr&esentasjon
 pl:&Prezentacja
@@ -14285,6 +14565,7 @@ kr:이전 페이지
 kw:Folen kyns
 lt:Ankstesnis puslapis
 lv:Iepriekšējā lappuse
+my:Mukasurat sebelumnya
 nl:Vorige pagina
 nn:Førre side
 no:Forrige side
@@ -14339,6 +14620,7 @@ kr:인쇄
 kw:Pryntya
 lt:Spausdinti
 lv:Drukāt
+my:Cetak
 nl:Afdrukken
 nn:Skriv ut
 no:Skriv ut
@@ -14393,6 +14675,7 @@ kr:인쇄 범위
 kw:Res pryntya
 lt:Spausdinimo intervalas
 lv:Drukas diapazons
+my:Cetak julat
 nl:Bereik afdrukken
 nn:Utskrivingsrekkevidde
 no:Utskriftsområde
@@ -14447,6 +14730,7 @@ kr:지정된 이름의 프린터가 없습니다.
 kw:Nyns eus pryntyer gans an hanow na
 lt:Spausdintuvo tokiu vardu nėra
 lv:Printeris ar šādu nosaukumu nepastāv
+my:Pencetak dengan nama yang diberikan tidak wujud
 nl:Printer met de opgegeven naam bestaat niet
 nn:Ein skriver med det namnet finnes ikkje
 no:Skriver med gjeldende navn eksisterer ikke
@@ -14501,6 +14785,7 @@ kr:인쇄 작업 중입니다.
 kw:Ow pryntya...
 lt:Vyksta spausdinimas
 lv:Notiek drukāšana.
+my:Cetakan sedang dijalankan.
 nl:Aan het printen.
 nn:Utskriving under arbeid.
 no:Utskrift pågår.
@@ -14555,6 +14840,7 @@ kr:아직 인쇄가 진행 중입니다.  중단하고 끝낼까요?
 kw:Ow pryntya hwath. Astel ha kwytya?
 lt:Spausdinimas vis dar vyksta. Nutraukti ir išeiti?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un beigt?
+my:Cetakan sedang dilakukan. Batal dan Henti?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 nn:Utskrivinga pågår framleis. Vil du stoppe og avslutte?
 no:Skriver ut fortsatt. Avbryte?
@@ -14609,6 +14895,7 @@ kr:아직 인쇄가 진행 중입니다.  중단하고 다시 시작할까요?
 kw:Ow pryntya hwath. Astel ha dastalleth?
 lt:Spausdinimas dar nebaigtas. Ar norite jį nutraukti ir pradėti iš naujo?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un sākt no jauna?
+my:Cetakan masih lagi dijalankan. Batalkan dan mulakan semula?
 nl:Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
 nn:Utskrivinga pågår framleis. Vil du stoppe og starte på nytt?
 no:Utskriften pågår fortsatt. Avbryte og starte på nytt?
@@ -14663,6 +14950,7 @@ kr:%d / %d 페이지 인쇄하는 중...
 kw:Ow pryntya folen %d a %d...
 lt:Spausdinamas %d puslapis iš %d...
 lv:Drukā %d lappusi no %d...
+my:Mencetak halaman %d daripada %d...
 nl:Pagina %d van %d afdrukken...
 nn:Skriver ut side %d av %d...
 no:Skriver ut side %d av %d...
@@ -14717,6 +15005,7 @@ kr:인쇄하는 중에 문제가 발생했습니다.
 kw:Kaletter ow pryntya
 lt:Spausdinimo problema.
 lv:Drukāšanas problēma.
+my:Masalah mencetak
 nl:Probleem bij het afdrukken
 nn:Skrivarfeil
 no:Problem med utskrift.
@@ -14761,6 +15050,7 @@ id:Properti...
 it:Proprietà
 ja:プロパティ
 kr:속성들...
+my:Sifat...
 nl:Eigenschappen...
 nn:Eigenskapar...
 no:Egenskaper...
@@ -14807,6 +15097,7 @@ it:Ri&nomina...
 ja:ファイル名の変更(&N)...
 kr:이름 바꾸기(&N)...
 lt:&Pervadinti
+my:Na&makan Semula...
 nl:Her&noem
 no:Gi nytt &navn...
 pl:Zmień &nazwę...
@@ -14856,6 +15147,7 @@ kr:사각형: x=%d y=%d dx=%d dy=%d
 kw:Hirbedrek: x=%d y=%d dx=%d dy=%d
 lt:Stačiakampis: x=%d y=%d dx=%d dy=%d
 lv:Taisnstūris: x=%d y=%d dx=%d dy=%d
+my:Segi: x=%d y=%d dx=%d dy=%d
 nl:Rect: x=%d y=%d dx=%d dy=%d
 no:Rekt: x=%d y=%d dx=%d dy=%d
 pl:Prostokąt: x=%d y=%d dx=%d dy=%d
@@ -14907,6 +15199,7 @@ kr:수정
 kw:Redaktya
 lt:Redaguoti
 lv:Rediģēt
+my:Sunting
 nl:Redigeren
 no:Endre
 pl:Redaguj
@@ -14960,6 +15253,7 @@ kr:열었던 파일(들) 기억(&O)
 kw:Kovhe restrennow ygerys
 lt:Įsiminti &atvertus failus
 lv:&Atcerēties atvērtos failus
+my:Ingat &fail yang telah dibuka
 nl:Onthoud ge&opende bestanden
 nn:Husk &opna filar
 no:Husk &åpnede filer
@@ -15014,6 +15308,7 @@ kr:즐겨찾기에서 제거
 kw:Removya a daklow drudh
 lt:Pašalinti iš parankinių
 lv:Noņemt no izlases
+my:Keluarkan daripada kegemaran
 nl:Verwijder uit favorieten
 nn:Fjern frå favorittar
 no:Fjern fra favoritter
@@ -15068,6 +15363,7 @@ kr:즐겨찾기에서 %s 페이지 제거
 kw:Removya folen %s a daklow drudh
 lt:Pašalinti %s puslapį iš parankinių
 lv:Noņemt %s lappusi no izlases
+my:Padam halaman %s dari kegemaran
 nl:Verwijder pagina %s uit favorieten
 nn:Fjern side %s frå favorittene
 no:Fjern side %s fra favoritter
@@ -15122,6 +15418,7 @@ kr:바꿀 이름
 kw:Dashenwel Dhe
 lt:Pervadinti į
 lv:Pārdēvēt uz
+my:Namakan sebagai
 nl:Naam wijzigen in
 nn:Gjev nytt namn
 no:Endre Navn Til
@@ -15170,6 +15467,7 @@ id:Putar Ke Kiri
 it:Ruota a &sinistra
 ja:左に回転(&L)
 kr:왼쪽으로 돌리기(&L)
+my:Putar Ke &Kiri
 nl:&Linksom Roteren
 nn:Roter &Venstre
 no:Roter til &venstre
@@ -15217,6 +15515,7 @@ id:Putar Ke Kanan
 it:Ruota a &destra
 ja:右に回転(&R)
 kr:오른쪽으로 돌리기(&R)
+my:Putar Ke &Kanan
 nl:&Rechtsom Roteren
 nn:Roter &Høgre
 no:Roter til &høyre
@@ -15267,6 +15566,7 @@ ja:選択範囲(&E)
 kr:선택(&E)
 kw:D&ewisans
 lt:&Pažymėtas tekstas
+my:P&ilihan
 nl:S&electie
 no:U&tvalg
 pl:Z&aznaczenie
@@ -15317,6 +15617,7 @@ kr:구불구불한
 kw:I&gam-ogam
 lt:Pabraukti &vingiuota linija
 lv:&Viļņaina
+my:B&erlekuk
 nl:Kr&onkelig
 no:S&nirklet understreking
 pl:&Falowanie
@@ -15367,6 +15668,7 @@ it:Documenti SVG
 ja:SVG ドキュメント
 kr:SVG 문서
 kw:Dogvennow SVG
+my:Dokumen SVG
 nl:SVG Documenten
 nn:SVG-dokument
 no:SVG-dokumenter
@@ -15418,6 +15720,7 @@ it:Salva annotazioni in questo PDF
 ja:注釈を上書き保存
 kr:주석을 현재 PDF에 저장하기
 lt:Išsaugoti anotacijas į esamą PDF failą
+my:Simpan Anotasi pada PDF sedia ada
 nl:Aantekeningen opslaan in deze PDF
 no:Lagre merknader til eksisterende PDF
 pl:Zapisz adnotacje do istniejącego pliku PDF
@@ -15464,6 +15767,7 @@ id:Simpan Lampiran...
 it:Salva allegato
 ja:添付を保存
 kr:첨부파일 저장...
+my:Simpan Lampiran...
 nl:Bijlage Opslaan...
 nn:Lagre vedlegg...
 no:Lagre vedlegg...
@@ -15514,6 +15818,7 @@ kr:임베딩된 파일 저장...
 kw:Gwitha Restren Neythys...
 lt:Išsaugoti įdėtą failą...
 lv:Saglabāt iegultu failu
+my:Simpan Fail Dibenamkan...
 nl:Ingesloten Bestand Opslaan...
 no:Lagre innebygd fil...
 pl:Zapisz osadzony plik...
@@ -15560,6 +15865,7 @@ id:Simpan
 it:Sal&va scorciatoia...
 ja:ショートカットを保存(&H)...
 kr:바로가기 저장(&H)...
+my:Simpan P&intasan...
 nl:S&neltoets Opslaan
 no:Lagre s&narvei...
 pl:Zapisz s&krót...
@@ -15609,6 +15915,7 @@ it:Vuoi salvare le annotazioni?
 ja:注釈を保存しますか？
 kr:주석을 저장할까요?
 kw:Gwitha notenyansow?
+my:Simpan anotasi?
 nl:Aantekeningen Opslaan?
 no:Lagre merknader?
 pl:Zapisać adnotacje?
@@ -15662,6 +15969,7 @@ kr:새 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF nowydh
 lt:Išsaugoti pakeitimus į naują PDF failą
 lv:Saglabāt izmaiņas jaunā PDF failā
+my:Simpan perubahan pada PDF baharu
 nl:Wijzigingen opslaan in een nieuwe PDF
 nn:Lagre endringar til ny PDF
 no:Lagre endringer til en ny PDF
@@ -15716,6 +16024,7 @@ kr:기존 PDF에 변경사항 저장
 kw:Gwitha chanjyow dhe PDF A-Lemmyn
 lt:Išsaugoti pakeitimus į esamą PDF failą
 lv:Saglabāt izmaiņas esošajā PDF failā
+my:Simpan perubahan pada PDF sedia ada
 nl:Wijzigingen opslaan in deze PDF
 nn:Lagre endringar til eksisterande PDF
 no:Lagre endringer til eksisterende PDF
@@ -15768,6 +16077,7 @@ ja:新しい PDF に保存(&N)
 kr:새 PDF로 저장(&N)
 kw:Gwitha dhe PDF &nowydh
 lt:Išsaugoti į &naują PDF
+my:Simpan pada &PDF baharu
 nl:Opslaan in &nieuwe PDF
 no:Lagre til &ny PDF
 pl:Zapisz w &nowym pliku PDF
@@ -15817,6 +16127,7 @@ kr:주석을 '%s'에 저장했습니다
 kw:Notenyansow gwithys dhe '%s'
 lt:Anotacijos išsaugotos į '%s'
 lv:Anotācijas ir saglabātas šeit: '%s'
+my:Anotasi disimpan pada '%s'
 nl:Aantekeningen opgeslagen in '%s'
 no:Lagret merknader i '%s'
 pl:Zapisano adnotacje w '%s'
@@ -15865,6 +16176,7 @@ kr:다음으로 인해 '%s' 저장 실패: '%s'
 kw:Gwitha '%s' re fyllis gans: '%s'
 lt:%s išsaugojimas nepavyko: '%s'
 lv:'%s' saglabāšana neizdevās ar: '%s'
+my:Gagal menyimpan '%s' dengan: '%s'
 nl:Opslaan van '%s' mislukt met: '%s'
 no:Lagring av '%s' mislyktes med: '%s'
 pl:Zapisywanie '%s' nie powiodło się z: '%s'
@@ -15916,6 +16228,7 @@ ja:Bing で検索(&B)
 kr:Bing으로 검색(&B)
 kw:Hwilas Gans &Bing
 lt:Ieškoti su &Bing
+my:Cari Dengan &Bing
 nl:Zoeken met &Bing
 no:Søk med &Bing
 pl:Szukaj za pomocą &Bing
@@ -15968,6 +16281,7 @@ ja:Google で検索(&G)
 kr:Google로 검색(&G)
 kw:Hwilas Gans &Google
 lt:Ieškoti su &Google
+my:Cari Dengan &Google
 nl:Zoeken met &Google
 no:Søk med &Google
 pl:Szukaj za pomocą &Google
@@ -16002,6 +16316,7 @@ he:חפש עם Google Scholar
 hu:Keresés &Google Scholar-ral
 id:Cari dengan &Google Scholar
 it:Cerca con &Google Scholar
+my:Cari dengan &Google Scholar
 nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
 pt:Procurar com o &Google Scholar
@@ -16027,6 +16342,7 @@ he:חפש בוויקיפדיה
 hu:Keresés a &Wikipédián
 id:Cari dengan &Wikipedia
 it:Cerca con &Wikipedia
+my:Cari dengan &Wikipedia
 nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
 pt:Procurar com a &Wikipedia
@@ -16071,6 +16387,7 @@ kr:%d / %d 페이지 검색하는 중...
 kw:Ow hwilas %d a %d...
 lt:Ieškoma %d iš %d...
 lv:%d no %d meklēšana...
+my:Mencari %d dari %d...
 nl:Zoek %d van %d...
 nn:Søkjer gjennom %d av %d...
 no:Søker %d av %d...
@@ -16125,6 +16442,7 @@ kr:모두 선택(&A)
 kw:Dewis &Oll
 lt:Pažymėti &viską
 lv:Atlasīt &visu
+my:Pilih &Semua
 nl:&Alles selecteren
 nn:Vel &alle
 no:Merk &alt
@@ -16179,6 +16497,7 @@ kr:Ctrl+마우스 왼쪽 버튼으로 내용을 선택하세요.
 kw:Dewis dalgh gans Ctrl+boton-logosen kledh
 lt:Turinį žymėkite su Ctrl+kairiuoju pelės klavišu
 lv:Atlasīt saturu ar Ctrl+peles kreiso pogu
+my:Pilih kandungan dengan Ctrl + butang kiri tetikus
 nl:Selecteer inhoud met Ctrl+linker muisknop
 nn:Vel innhald med Ctrl + venstre museknapp
 no:Velg innhold med Ctrl+Venstre museknapp
@@ -16233,6 +16552,7 @@ kr:SumatraPDF를 설치할 폴더 선택:
 kw:Dewis an restren le may fynnydh lea SumatraPDF:
 lt:Pasirinkite kur diegti SumatraPDF:
 lv:Atlasiet mapi, kurā ir jāinstalē SumatraPDF
+my:Pilih folder di mana SumatraPDF harus dipasang:
 nl:Kies de folder waar SumatraPDF geinstalleerd moet worden:
 nn:Vel mappa der SumatraPDF skal bli installert:
 no:Velg mappe der SumatraPDF skal installeres:
@@ -16287,6 +16607,7 @@ kr:선택:
 kw:Dewis:
 lt:Pasirinkimas:
 lv:Atlase:
+my:Pilihan
 nl:Selectie
 nn:Utval:
 no:Valg:
@@ -16341,6 +16662,7 @@ kr:이메일로 보내기(&E)...
 kw:Danvon der &e-bost...
 lt:Siųsti el. &paštu...
 lv:Nosūtīt pa &e-pastu
+my:Hantar melalui &Emel...
 nl:Verzend per &E-Mail...
 nn:Send med &E-post...
 no:Send med E-post...
@@ -16395,6 +16717,7 @@ kr:명령줄 역방향 탐색 설정
 kw:Settya linen-arhadow gorthhwilas
 lt:Nustatyti atvirkščios paieškos komandinę eilutę
 lv:Iestatīt inversās meklēšanas komandrindu
+my:Tetapkan pencarian songsang baris arahan
 nl:Omgekeerde zoekrichting instellen
 nn:Velg motsatt søk-kommandolinje
 no:Velg invertert kommandolinje for søk
@@ -16448,6 +16771,7 @@ ja:ブックマークを表示(&B)
 kr:북마크 표시(&B)
 lt:Rodyti ž&ymas
 lv:Rādīt &grāmatzīmes
+my:Papar &Bookmark
 nl:Bladwijzers tonen
 nn:Vis &bokmerkar
 no:Vis &bokmerker
@@ -16500,6 +16824,7 @@ kr:즐겨찾기 보이기(&F)
 kw:Diskwedhes &Taklow Drudh
 lt:Rodyti &mėgstamus
 lv:Rādīt &izlasi
+my:Tunjukkan &Kegemaran
 nl:Toon &Favorieten
 nn:Vis &Favorittar
 no:Vis &favoritter
@@ -16554,6 +16879,7 @@ kr:연속적으로 페이지 보이기(&P)
 kw:Diskwedhes folennow heb aswa
 lt:&Puslapius rodyti nenutrūkstamai
 lv:Rādīt &lappuses nepārtraukti
+my:Papar mukasurat secara berterusan
 nl:Toon pagina's doorlopend
 nn:Vis &sider kontinuerleg
 no:Vis sider kontinuerlig
@@ -16607,6 +16933,7 @@ kr:스크롤바 보이기(&S)
 kw:Diskwedhes &Skrolvarrys
 lt:Rodyti &slinkties juostas
 lv:Rādīt &ritjoslas
+my:Tunjukkan &Bar Tatalan
 nl:Toon S&chuifbalken
 no:Vis &rullefelt
 pl:Pokaż &paski przewijania
@@ -16660,6 +16987,7 @@ kr:도구모음 보이기(&T)
 kw:Diskwedhes toulvar
 lt:Rodyti &priemonių juostą
 lv:Rādīt &rīkjoslu
+my:Tunjukkan Bar Alat
 nl:Werkbalk tonen
 nn:Vis verktylinje
 no:Vis verktøylinje
@@ -16708,6 +17036,7 @@ id:Perlihatkan Penanda
 it:Visualizza &Preferiti
 ja:ブックマークを表示(&M)
 kr:북마크 보이기(&M)
+my:Tunjukkan Pe&nanda
 nl:Toon Blad&wijzers
 no:Vis bok&merker
 pl:Pokaż za&kładki
@@ -16760,6 +17089,7 @@ kr:즐겨찾기 보이기
 kw:Diskwedhes Taklow Drudh
 lt:Rodyti parankinius
 lv:Rādīt &izlasi
+my:Papar kegemaran
 nl:Toon Favorieten
 nn:Vis favorittar
 no:Vis favoritter
@@ -16813,6 +17143,7 @@ kr:스크롤바 보이기(&o)
 kw:Diskwedhes Skr&olvarrys
 lt:Rodyti &slinkties juostas
 lv:Rādīt rit&joslas
+my:Tunjukkan Bar &Tatalan
 nl:Toon Sch&uifbalken
 no:Vis rul&lefelt
 pl:Pokaż p&aski przewijania
@@ -16866,6 +17197,7 @@ kr:최근에 읽은 파일 보이기
 kw:Diskwedhes redys yn fenowgh
 lt:Rodyti dažniausiai skaitomus
 lv:Rādīt bieži lasītos
+my:Paparkan dokuman yang kerap dibaca
 nl:'Eerder Weergegeven' tonen
 nn:Vis ofte lesne
 no:Vis ofte leste
@@ -16920,6 +17252,7 @@ kr:탐색기에서 폴더 열기(&F)
 kw:Diskwedhes yn &restren
 lt:Rodyti ap&lankale
 lv:Rādīt &mapē
+my:Tunjukkan dalam &folder
 nl:Toon in &map
 nn:Vis i &mappe
 no:Vis i &mappe
@@ -16968,6 +17301,7 @@ id:Perlihatkan Di Folder
 it:Visualizza nella cartella
 ja:フォルダを表示
 kr:탐색기에서 폴더 열기
+my:Tunjukkan dalam folder
 nl:Toon in map
 nn:Vis i mappe
 no:Vis i mappe
@@ -17020,6 +17354,7 @@ kr:가능한 경우 북마크 사이드바 표시(&B)
 kw:Diskwedhes &amalvar an lyververkyow mars eus onan
 lt:Rodyti &žymų parankinę, kai yra žymų
 lv:Rādīt &grāmatzīmju sānjoslu, ja tā ir pieejama
+my:Tunjukkan &bookmark sidebar apabila ada
 nl:Toon de &bladwijzerwerkbalk indien beschikbaar
 nn:Vis &bokmerkesidelinja hvis den er tilgjengeleg
 no:Vis &bokmerkefanen om tilgjengelig
@@ -17074,6 +17409,7 @@ kr:한 페이지씩
 kw:Unn folen hepken
 lt:Atskirais puslapiais
 lv:Viena lappuse
+my:Satu Mukasurat
 nl:Enkele pagina
 nn:Enkel side
 no:Enkeltside
@@ -17125,6 +17461,7 @@ it:Salta questa versione
 ja:このバージョンをスキップ
 kr:이 버전 건너뛰기
 kw:Skyppya an gwersyon ma
+my:Langkau versi ini
 nl:Sla deze versie over
 nn:Hopp over denne versjonen
 no:Hopp over denne versjonen
@@ -17179,6 +17516,7 @@ kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 �
 kw:Drog yw genen, ny dalvia dhe henna hwarvos!\n\nGwra gweskel 'Hedhi', mars eus hwans dhis agan gweres dhe ewnhe skila an droglam.
 lt:Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
 lv:Piedodiet, šim nevajadzēja notikt!\n\nLūdzu, spiediet 'Atcelt', ja jūs vēlaties mums palīdzēt novērst šīs kļūmes cēloni.
+my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.
 nl:Sorry, dit had niet mogen gebeuren!\n\nSelecteer 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.
 nn:Beklager, dét skulle ikkje ha skjedd!\n\nVenligst trykk 'Lukk' hvis du vil hjelpe oss å fikse orsaka til dette krasjet.
 no:Beklager, dette skulle ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du ønsker å hjelpe oss med å fikse dette problemet.
@@ -17233,6 +17571,7 @@ kr:원본 파일 %s (은)는 동기화 지점이 없습니다.
 kw:Nyns eus poynt kettermynegi vyth y'n restren %s
 lt:Pradinis failas %s  neturi sinchronizacijos taško
 lv:Avota failam %s nav sinhronizācijas punkta
+my:Sumber fail %s tidak mempunyai titik penyegerakan
 nl:Bestand %s heeft geen synchronisatiepunt
 nn:Kildefila %s har ikkje nokre synkroniseringspunkt
 no:Kildefilen %s har ingen synkroniseringspunkt
@@ -17287,6 +17626,7 @@ kr:사각형
 kw:Pedrek
 lt:Kvadratas
 lv:Kvadrāts
+my:Petak
 nl:Vierkant
 nn:Firkant
 no:Firkant
@@ -17341,6 +17681,7 @@ kr:SumatraPDF 시작
 kw:Dalleth SumatraPDF
 lt:Paleisti SumatraPDF
 lv:Palaist SumatraPDF
+my:Mula SumatraPDF
 nl:Start SumatraPDF
 nn:Start SumatraPDF
 no:Start SumatraPDF
@@ -17395,6 +17736,7 @@ kr:주제:
 kw:Testen:
 lt:Tema:
 lv:Tēma:
+my:Subjek
 nl:Onderwerp:
 nn:Tema:
 no:Emne:
@@ -17449,6 +17791,7 @@ kr:SumatraPDF %s 설치 관리자
 kw:Leell %s SumatraPDF
 lt:SumatraPDF diegimo programa %s
 lv:SumatraPDF %s instalēšanas programma
+my:Installer SumatraPDF %s
 nl:SumatraPDF %s installatieprogramma
 nn:SumatraPDF %s-installerer
 no:SumatraPDF %s installering
@@ -17502,6 +17845,7 @@ kr:SumatraPDF %s 제거 관리자
 kw:Anleell %s SumatraPDF
 lt:SumatraPDF šalinimo programa %s
 lv:SumatraPDF %s atinstalēšanas programma
+my:SumatraPDF %s Uninstaller
 nl:SumatraPDF %s deinstallatieprogramma
 nn:SumatraPDF %s-avinstallerer
 no:SumatraPDF %s avinstallering
@@ -17556,6 +17900,7 @@ kr:SumatraPDF 옵션
 kw:Etholyow SumatraPDF
 lt:„SumatraPDF“ nuostatos
 lv:SumatraPDF opcijas
+my:Tetapan-tetapan SumatraPDF
 nl:SumatraPDF Opties
 nn:SumatraPDF-innstillingar
 no:SumatraPDF-innstillinger
@@ -17610,6 +17955,7 @@ kr:SumatraPDF 업데이트
 kw:Nowedhi SumatraPDF
 lt:„SumatraPDF“ naujinimas
 lv:SumatraPDF atjaunināšana
+my:Kemaskini SumatraPDF
 nl:SumatraPDF Update
 nn:SumatraPDF Oppdatering
 no:SumatraPDF-oppdatering
@@ -17664,6 +18010,7 @@ kr:SumatraPDF 충돌남
 kw:SumatraPDF a hedhas distowgh
 lt:„SumatraPDF“ strigo
 lv:SumatraPDF avarēja
+my:SumatraPDF crashed
 nl:SumatraPDF is vastgelopen
 nn:SumatraPDF har krasja
 no:SumatraPDF krasjet
@@ -17717,6 +18064,7 @@ kr:SumatraPDF가 제거됐습니다.
 kw:SumatraPDF a veu anleys
 lt:SumatraPDF buvo pašalinta.
 lv:SumatraPDF ir atinstalēta.
+my:SumatraPDF telah dibuang.
 nl:SumatraPDF werd verwijderd.
 nn:SumatraPDF har blitt avinstallert.
 no:SumatraPDF har blitt avinstallert.
@@ -17770,6 +18118,7 @@ kr:SumatraPDF 설치 파일을 찾을 수 없습니다.
 kw:Ny yllir trovya leans SumatraPDF.
 lt:SumatraPDF įdiegimas nerastas.
 lv:SumatraPDF instalācija nav atrasta.
+my:Pemasangan SumatraPDF tidak dijumpai.
 nl:SumatraPDF-installatie niet gevonden.
 nn:SumatraPDF-installeringa blei ikkje funnet.
 no:SumatraPDF installering ikke funnet.
@@ -17824,6 +18173,7 @@ kr:동기화 파일을 열 수 없습니다.
 kw:Ny yllir ygeri an restren gettermynegi
 lt:Sinchronizacijos failas negali būti atvertas
 lv:Sinhronizācijas failu nevar atvērt
+my:File penyegerakan tidak boleh dibuka
 nl:Het synchronisatiebestand kan niet worden geopend
 nn:Synkroniseringsfila kan ikkje opnes
 no:Synkroniserende fil kan ikke åpnes
@@ -17878,6 +18228,7 @@ kr:태그있는 PDF
 kw:PDF Taggys
 lt:Pažymėtas PDF
 lv:Atzīmēts PDF
+my:PDF ditanda
 nl:Tagged PDF
 nn:Merka PDF
 no:Merket PDF
@@ -17929,6 +18280,7 @@ kr:텍스트 정렬:
 kw:Alinyans Tekst:
 lt:Teksto lygiavimas:
 lv:Teksta līdzinājums:
+my:Penjajaran Teks:
 nl:Tekstuitlijning:
 nn:Tekstjustering:
 no:Tekstjustering:
@@ -17980,6 +18332,7 @@ kr:텍스트 색상:
 kw:Liw Tekst:
 lt:Teksto spalva:
 lv:Teksta krāsa:
+my:Warna Teks:
 nl:Tekstkleur
 nn:Tekstfarge:
 no:Tekstfarge:
@@ -18031,6 +18384,7 @@ kr:텍스트 크기:
 kw:Braster Tekst:
 lt:Teksto dydis:
 lv:Teksta lielums:
+my:Saiz Teks:
 nl:Tekstgrootte:
 nn:Tekststorleik:
 no:Tekststørrelse:
@@ -18082,6 +18436,7 @@ kr:텍스트 크기: %d
 kw:Braster Tekst: %d
 lt:Teksto dydis: %d
 lv:Teksta lielums: %d
+my:Saiz Teks: %d
 nl:Tekstgrootte: %d
 nn:Tekststorleik: %d
 no:Tekststørrelse: %d
@@ -18135,6 +18490,7 @@ kr:텍스트 문서
 kw:Restrennow tekst
 lt:Tekstiniai dokumentai
 lv:Teksta dokumenti
+my:Dokumen teks
 nl:Tekstdocumenten
 nn:Tekstdokumentar
 no:Tekstdokumenter
@@ -18189,6 +18545,7 @@ kr:SumatraPDF를 선택해 주셔서 고마워요!
 kw:Meur ras a dhewis SumatraPDF!
 lt:Ačiū, kad pasirinkote SumatraPDF!
 lv:Pateicamies par SumatraPDF izvēlēšanos!
+my:Terima kasih kerana memilih SumatraPDF!
 nl:Bedankt voor het kiezen van SumatraPDF!
 nn:Takk for at du valde SumatraPDF!
 no:Takk for at du valgte SumatraPDF!
@@ -18243,6 +18600,7 @@ kr:야호! SumatraPDF가 설치됐습니다.
 kw:Meur ras! SumatraPDF a veu leys.
 lt:Ačiū! SumatraPDF buvo įdiegta.
 lv:Paldies! SumatraPDF ir instalēta.
+my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
 nl:Bedankt! SumatraPDF is geïnstalleerd.
 nn:Tusen takk! SumatraPDF har blitt installert.
 no:Takk! SumatraPDF har blitt installert.
@@ -18296,6 +18654,7 @@ kr:설치 관리자가 손상됐습니다.  다시 다운로드하세요.\n불�
 kw:An jynnik-lea re beu legrys, Gwra y iskarga arta.\nDrog yw genen a'n ankombrynsi!
 lt:Diegimo programa sugadinta. Prašome atsisiųsti ją iš naujo.\nAtsiprašome už nepatogumus!
 lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēlreiz.\nPiedodiet par sagādātajām neērtībām!
+my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
 nl:Het installatieprogramma is beschadigd. Gelieve het opnieuw te downloaden.\nOnze excuses voor het ongemak!
 nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
@@ -18349,6 +18708,7 @@ kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌�
 kw:An skriven ma a us nasyow anskoodhys (%s) hag yth yw possybyl na wra hi rendra yn ta
 lt:Šis dokumentas naudoja nepalaikomas funkcijas (%s) ir gali būti atvaizduotas neteisingai
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
+my:Dokumen ini menggunakan ciri yang tidak disokong (%s) dan mungkin tidak dipaparkan dengan betul
 nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven
 nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
 no:Dette dokumentet bruker ustøttede funksjoner (%s) og kan muligens ikke bli vist riktig.
@@ -18403,6 +18763,7 @@ kr:제목:
 kw:Titel:
 lt:Pavadinimas:
 lv:Nosaukums:
+my:Tajuk:
 nl:Titel:
 nn:Tittel:
 no:Tittel:
@@ -18455,6 +18816,7 @@ ja:DeepL を使って翻訳(&D)
 kr:DeepL로 번역(&D)
 kw:Treylya gans &DeepL
 lt:Versti su &DeepL
+my:Terjemah dengan &DeepL
 nl:Vertalen met &Deepl
 no:Oversett med &DeepL
 pl:Tłumacz za pomocą &DeepL
@@ -18507,6 +18869,7 @@ kr:SumatraPDF 제거
 kw:Anlea SumatraPDF
 lt:Pašalinti SumatraPDF
 lv:Atinstalēt SumatraPDF
+my:Membuang SumatraPDF
 nl:Verwijder SumatraPDF
 nn:Avinstaller SumatraPDF
 no:Avinstaller SumatraPDF
@@ -18560,6 +18923,7 @@ kr:제거 실패
 kw:Anleans a fyllis
 lt:Programos šalinimas nepavyko
 lv:Atinstalēšana neizdevās
+my:Penyahpasangan gagal
 nl:Verwijderen mislukt
 nn:Avinstallering mislykkast
 no:Feil ved avinstallering
@@ -18613,6 +18977,7 @@ kr:제거하는 중...
 kw:Anleans ow pos gwrys...
 lt:Vyksta programos šalinimas...
 lv:Notiek atinstalēšana...
+my:Penyahpasangan sedang dijalankan ...
 nl:Verwijderen is bezig...
 nn:Avinstallasjon under arbeid...
 no:Avinstallering pågår...
@@ -18667,6 +19032,7 @@ kr:알 수 없는 원본 파일 (%s)
 kw:Restren-bennfenten anaswonnys (%s)
 lt:Nežinomas pradinis failas (%s)
 lv:Nezināmas izcelsmes fails (%s)
+my:Fail sumber tidak diketahui (%s)
 nl:Onbekend bronbestand (%s)
 nn:Ukjend kildefil (%s)
 no:Ukjent kildefil (%s)
@@ -18719,6 +19085,7 @@ kr:저장되지 않은 주석
 kw:Notenyansow anwithys
 lt:Neišsaugotos anotacijos
 lv:Nesaglabātās anotācijas
+my:Anotasi tidak disimpan
 nl:Niet-opgeslagen aantekening
 no:Merknader som ikke er lagret
 pl:Niezapisane adnotacje
@@ -18768,6 +19135,7 @@ it:Annotazioni non salvate in '%s'
 ja:'%s' に未保存の注釈があります
 kr:'%s'에 저장되지 않은 주석
 kw:Notenyansow anwithys yn '%s'
+my:Anotasi tidak disimpan pada '%s'
 nl:Niet opgeslagen aantekeningen in '%s'
 no:Merknader som ikke er lagret i '%s'
 pl:Niezapisane adnotacje w '%s'
@@ -18820,6 +19188,7 @@ kr:탭 사용(&T)
 kw:Usya &tabbys
 lt:Naudoti k&orteles
 lv:Lietot &cilnes
+my:Gunakan &tab
 nl:Gebruik &tabs
 nn:Bruk &faner
 no:Bruk &faner
@@ -18874,6 +19243,7 @@ kr:보기
 kw:Gwel
 lt:Rodymas
 lv:Skats
+my:Lihat
 nl:Beeld
 nn:Vis
 no:Vis
@@ -18928,6 +19298,7 @@ kr:웹 사이트 방문(&W)
 kw:&Mos dhe'n wiasva
 lt:Interneto &svetainė
 lv:Apmeklēt tīmekļa &vietni
+my:Lawat &Tapak Web
 nl:Bezoek de &Website
 nn:Vitj &heimeside
 no:Åpne &hjemmesiden
@@ -18982,6 +19353,7 @@ kr:경고
 kw:Gwarnyans
 lt:Įspėjimas
 lv:Brīdinājums
+my:Amaran
 nl:Waarschuwing
 nn:Fare
 no:Advarsel
@@ -19036,6 +19408,7 @@ kr:XPS 문서
 kw:Skrivennow XPS
 lt:XPS dokumentai
 lv:XPS dokumenti
+my:Dokumen XPS
 nl:XPS-documenten
 nn:XPS-dokumentar
 no:XPS-dokumenter
@@ -19074,6 +19447,7 @@ hi:हाँ
 hu:Igen
 id:Ya
 it:Sì
+my:Ya
 nl:Ja
 pl:Tak
 pt:Sim
@@ -19118,6 +19492,7 @@ kr:최신 버전을 사용하고 있습니다.
 kw:Yma'n versyon nowyttha genes.
 lt:Jūs naudojatės naujausia programos laida.
 lv:Jums ir jaunākā versija.
+my:Anda mempunyai versi terkini.
 nl:U gebruikt de meest recente versie.
 nn:Du har den siste versjonen.
 no:Du har den siste versjonen.
@@ -19171,6 +19546,7 @@ kr:저장하지 않은 주석이 있습니다.
 kw:Yma notenyansow anwithys dhis
 lt:Turite neišsaugotų anotacijų
 lv:Jums ir nesaglabātas anotācijas
+my:Anda mempunyai anotasi yang tidak disimpan
 nl:U heeft niet-opgeslagen aantekeningen
 no:Du har merknader som ikke er lagret
 pl:Masz niezapisane adnotacje
@@ -19220,6 +19596,7 @@ it:È installata la versione '%s' ed è disponibile la versione '%s'.\nVuoi inst
 ja:使用中のバージョン '%s' よりも新しいバージョン '%s' があります。\n新しいバージョンをインストールしますか？
 kr:현재 버전은 '%s' 이고 '%s' 버전을 사용할 수 있습니다.\n새 버전을 설치하시겠습니까?
 kw:Yma dhis gwersyon '%s' ha gwersyon '%s' yw kavadow.\nA vynn'ta lea gwersyon nowydh?
+my:Anda mempunyai versi '%s' dan versi '%s' tersedia.\nAdakah anda mahu memasang versi baharu?
 nl:U heeft versie '%s' en versie '%s' is beschikbaar.\nWilt u nieuwe versie installeren?
 no:Du har versjon '%s' og versjon '%s' er tilgjengelig.\nVil du installere ny versjon?
 pl:Masz wersję '%s', a dostępna jest wersja '%s'.\nCzy chcesz zainstalować nową wersję?
@@ -19269,6 +19646,7 @@ it:Stai per installare SumatraPDF a 32bit in un S.O. a 64bit\nVuoi invece scaric
 ja:現在 32 ビット版の SumatraPDF を 64 ビット版の OS で使用しています。\n64 ビット版の SumatraPDF をダウンロードしますか？
 kr:64비트 OS에 32비트 SumatraPDF를 설치하고 있습니다.\n64비트 버전을\n다운로드 하시겠습니까?
 kw:Yth esos ow lea SumatraPDF 32-byt war SO 64-byt.\n A vynn'ta iskarga\nan gwersyon 64-byt?
+my:Anda memasang SumatraPDF 32-bit pada OS 64-bit.\nAdakah anda mahu memuat turun\nversi 64-bit?
 nl:U installeert 32bit SumatraPDF op 64bit besturingssysteem.\nWilt u de\n64bit versie downloaden?
 no:Du installerer 32-bit SumatraPDF på 64-bit OS.\nVil du laste ned\n64-biters versjonen?
 pl:Instalujesz 32-bitowy program SumatraPDF w 64-bitowym systemie operacyjnym.\nCzy chcesz pobrać\nwersję 64-bitową?
@@ -19322,6 +19700,7 @@ kr:확대/축소
 kw:Zoumya
 lt:Mastelis
 lv:Tālummainīt
+my:Zum
 nl:Zoom
 nn:Zoom
 no:Zoom
@@ -19376,6 +19755,7 @@ kr:확대
 kw:Zoumya a-bervedh
 lt:Padidinti
 lv:Pietuvināt
+my:Zum Masuk
 nl:Inzoomen
 nn:Zoom inn
 no:Zoom inn
@@ -19430,6 +19810,7 @@ kr:축소
 kw:Zoumya dhe-ves
 lt:Sumažinti
 lv:Attālināt
+my:Zum Keluar
 nl:Uitzoomen
 nn:Zoom ut
 no:Zoom ut
@@ -19484,6 +19865,7 @@ kr:확대/축소 비율
 kw:Faktor-zoum
 lt:Mastelis
 lv:Tālummaiņas koeficients
+my:Faktor zum
 nl:Zoomniveau
 nn:Zoomfaktor
 no:Zoom til
@@ -19538,6 +19920,7 @@ kr:[변경 감지됨.  새로 고치는 중...] %s
 kw:[Nowedhyansow kevys; owth arnowedhi] %s
 lt:[Aptikta pakitimų; atnaujinama] %s
 lv:[Ir atklātas izmaiņas; notiek atsvaidzināšana] %s
+my:[Perubahan dikesan; refresh semula] %s
 nl:[Bestand gewijzigd; verversen] %s
 nn:[Endringar oppdaga; lastar inn på nytt] %s
 no:[Endringer oppdaget; oppdaterer] %s
@@ -19592,6 +19975,7 @@ kr:텍스트 복사 중
 kw:ow kopia tekst
 lt:kopijuojamas tekstas
 lv:teksta kopēšana
+my:menyalin teks
 nl:tekst kopiëren
 nn:Kopierer tekst
 no:kopierer tekst
@@ -19646,6 +20030,7 @@ kr:문서 인쇄
 kw:ow pryntya skriven
 lt:spausdinamas dokumentas
 lv:dokumenta drukāšana
+my:mencetak dokumen
 nl:document afdrukken
 nn:Skrivar ut dokument
 no:skriver ut dokument
