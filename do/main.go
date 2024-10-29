@@ -325,8 +325,8 @@ func main() {
 		defer measureDuration()()
 		u.UpdateGoDeps("do", true)
 		u.UpdateGoDeps(filepath.Join("tools", "regress"), true)
+		u.UpdateGoDeps(filepath.Join("tools", "logview-cli"), true)
 		u.UpdateGoDeps(filepath.Join("tools", "logview"), true)
-		u.UpdateGoDeps(filepath.Join("tools", "logview-win"), true)
 		return
 	}
 
@@ -590,7 +590,7 @@ func cmdRunLoggedInDir(dir string, args ...string) {
 	cmdRunLoggedMust(cmd)
 }
 
-var logViewWinDir = filepath.Join("tools", "logview-win")
+var logViewWinDir = filepath.Join("tools", "logview")
 
 func buildLogView() {
 	ver := extractLogViewVersion()

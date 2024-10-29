@@ -3,6 +3,6 @@ go 1.22.2
 use (
 	./do
 	./tools/logview
-	./tools/logview-win
+	./tools/logview-cli
 	./tools/regress
 )

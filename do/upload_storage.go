@@ -526,7 +526,7 @@ func uploadToStorage(buildType BuildType) {
 func uploadLogView() {
 	logf("uploadLogView\n")
 	ver := extractLogViewVersion()
-	path := filepath.Join("tools", "logview-win", "build", "bin", "logview.exe")
+	path := filepath.Join("tools", "logview", "build", "bin", "logview.exe")
 	panicIf(!fileExists(path), "file '%s' doesn't exist", path)
 	remotePath := "software/logview/rel/" + fmt.Sprintf("logview-%s.exe", ver)
 	mc := newMinioBackblazeClient()
