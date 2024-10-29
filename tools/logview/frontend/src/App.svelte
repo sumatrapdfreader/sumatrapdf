@@ -1,16 +1,17 @@
 <script>
-  import { afterUpdate, onMount } from "svelte";
+  import { run, preventDefault } from "svelte/legacy";
+
   import { version } from "./version";
 
   let idx = 2;
   /** @type {[string, number][]} */
-  let logs = [];
-  let filteredLogs = [];
+  let logs = $state([]);
+  let filteredLogs = $state([]);
   let autoScrollPaused = false;
-  let btnText = "pause scrolling";
-  let searchTerm = "";
+  let btnText = $state("pause scrolling");
+  let searchTerm = $state("");
   let searchTermLC = "";
-  let element;
+  let element = $state();
 
   /**
    * @param {string} s
@@ -56,8 +57,6 @@
     }
   }
 
-  $: filterLogs(searchTerm);
-
   /**
    * @param {string} searchTerm
    */
@@ -85,12 +84,13 @@
     node.scroll({ top: node.scrollHeight });
   }
 
-  afterUpdate(() => {
-    if (autoScrollPaused) {
-      return;
-    }
-    scrollToBottom(element);
-  });
+  // TODO(port): run on changes to logs
+  // afterUpdate(() => {
+  //   if (autoScrollPaused) {
+  //     return;
+  //   }
+  //   scrollToBottom(element);
+  // });
 
   let windowTitle = "Logview " + version;
   // @ts-ignore
@@ -120,18 +120,21 @@
   }
   // @ts-ignore
   window.runtime.EventsOn("plog", plog);
+  run(() => {
+    filterLogs(searchTerm);
+  });
 </script>
 
 <svelte:window title={windowTitle} />
 <main>
   <div class="top">
-    <div style="flex-grow: 1" />
+    <div style="flex-grow: 1"></div>
     <input type="text" placeholder="search term..." bind:value={searchTerm} />
-    <button class="btn-pause" on:click={pauseClicked}>{btnText}</button>
-    <button on:click={clearLogs}>clear</button>
+    <button class="btn-pause" onclick={pauseClicked}>{btnText}</button>
+    <button onclick={clearLogs}>clear</button>
     <div>{len(logs)} line, {len(filteredLogs)} shown</div>
-    <div style="flex-grow: 1" />
-    <a on:click|preventDefault={aboutClicked} href="#">about</a>
+    <div style="flex-grow: 1"></div>
+    <button onclick={preventDefault(aboutClicked)}>about</button>
   </div>
   <div bind:this={element} class="log">
     {#if len(filteredLogs) == 0}
