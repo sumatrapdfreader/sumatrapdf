@@ -11,7 +11,8 @@
   let btnText = $state("pause scrolling");
   let searchTerm = $state("");
   let searchTermLC = "";
-  let element = $state();
+  /** @type {HTMLElement} */
+  let logAreaEl;
 
   /**
    * @param {string} s
@@ -47,13 +48,18 @@
     }
 
     if (searchTermLC === "") {
-      logs = logs;
       filteredLogs = logs;
+      if (!autoScrollPaused) {
+        scrollToBottom(logAreaEl);
+      }
       return;
     }
 
     if (didMatch) {
       filteredLogs = filteredLogs;
+      if (!autoScrollPaused) {
+        scrollToBottom(logAreaEl);
+      }
     }
   }
 
@@ -83,14 +89,6 @@
     // node.scroll({ top: node.scrollHeight, behavior: "smooth" });
     node.scroll({ top: node.scrollHeight });
   }
-
-  // TODO(port): run on changes to logs
-  // afterUpdate(() => {
-  //   if (autoScrollPaused) {
-  //     return;
-  //   }
-  //   scrollToBottom(element);
-  // });
 
   let windowTitle = "Logview " + version;
   // @ts-ignore
@@ -134,14 +132,14 @@
     <button onclick={clearLogs}>clear</button>
     <div>{len(logs)} line, {len(filteredLogs)} shown</div>
     <div style="flex-grow: 1"></div>
-    <button onclick={preventDefault(aboutClicked)}>about</button>
+    <button onclick={aboutClicked}>about</button>
   </div>
-  <div bind:this={element} class="log">
+  <div bind:this={logAreaEl} class="log-area">
     {#if len(filteredLogs) == 0}
       <div class="no-results">No results matching '<b>{searchTerm}</b>'</div>
     {:else}
       {#each filteredLogs as log (log[1])}
-        <span>{log[0]}</span><br />
+        <span class="log-line">{log[0]}</span><br />
       {/each}
     {/if}
   </div>
@@ -172,14 +170,16 @@
     column-gap: 0.5rem;
   }
 
-  .log {
+  .log-area {
     overflow: auto;
     margin-top: 0.5rem;
     /* background: rgb(239, 250, 254); */
     height: 100%;
     background-color: rgb(255, 255, 255);
   }
-  span {
+  .log-line {
     font-family: monospace;
+    content-visibility: auto;
+    /* contain-intrinsic-size: 1rem; */
   }
 </style>
