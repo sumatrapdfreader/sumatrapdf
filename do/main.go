@@ -229,35 +229,36 @@ func main() {
 	)
 
 	var (
-		flgBuildLogview    bool
-		flgBuildNo         int
-		flgBuildPreRelease bool
-		flgBuildRelease    bool
-		flgBuildSmoke      bool
-		flgBuildCodeQL     bool
-		flgCheckAccessKeys bool
-		flgCIBuild         bool
-		flgCIDailyBuild    bool
-		flgClangFormat     bool
-		flgClean           bool
-		flgDiff            bool
-		flgDrMem           bool
-		flgExtractUtils    bool
-		flgFilesList       bool
-		flgFileUpload      string
-		flgGenDocs         bool
-		flgGenSettings     bool
-		flgGenWebsiteDocs  bool
-		flgLogView         bool
-		flgRegenPremake    bool
-		flgRunTests        bool
-		flgTransDownload   bool
-		flgTriggerCodeQL   bool
-		flgUpdateGoDeps    bool
-		flgUpdateVer       string
-		flgUpload          bool
-		flgUploadCiBuild   bool
-		flgWc              bool
+		flgBuildLogview                   bool
+		flgBuildNo                        int
+		flgBuildPreRelease                bool
+		flgBuildRelease                   bool
+		flgBuildSmoke                     bool
+		flgBuildCodeQL                    bool
+		flgCheckAccessKeys                bool
+		flgCIBuild                        bool
+		flgCIDailyBuild                   bool
+		flgClangFormat                    bool
+		flgClean                          bool
+		flgDiff                           bool
+		flgDrMem                          bool
+		flgExtractUtils                   bool
+		flgFilesList                      bool
+		flgFileUpload                     string
+		flgGenDocs                        bool
+		flgGenSettings                    bool
+		flgGenWebsiteDocs                 bool
+		flgLogView                        bool
+		flgRegenPremake                   bool
+		flgRunTests                       bool
+		flgTransDownload                  bool
+		flgTriggerCodeQL                  bool
+		flgUpdateGoDeps                   bool
+		flgUpdateVer                      string
+		flgUpload                         bool
+		flgUploadCiBuild                  bool
+		flgUploadBuildAndUploadPreRelease bool
+		flgWc                             bool
 	)
 
 	{
@@ -269,6 +270,7 @@ func main() {
 		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3 and do spaces")
 		flag.BoolVar(&flgBuildSmoke, "build-smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
+		flag.BoolVar(&flgUploadBuildAndUploadPreRelease, "upload-build-pre-rel", false, "build and upload pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
 		flag.BoolVar(&flgBuildCodeQL, "build-codeql", false, "build for codeql")
 		//flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
@@ -541,6 +543,11 @@ func main() {
 	if flgUpdateVer != "" {
 		ensureAllUploadCreds()
 		updateAutoUpdateVer(flgUpdateVer)
+		return
+	}
+
+	if flgUploadBuildAndUploadPreRelease {
+		buildAndUploadPreRelease()
 		return
 	}
 

@@ -502,17 +502,19 @@ func buildCi() {
 	}
 }
 
+func ensureManualIsBuilt() {
+	// make sure we've built manual
+	path := filepath.Join("docs", "manual.dat")
+	size, err := u.GetFileSize(path)
+	must(err)
+	panicIf(size < 2*2024, "size of '%s' is %d which indicates we didn't build it", path, size)
+}
+
 func buildPreRelease(platform string, all bool) {
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
 
-	{
-		// make sure we've built manual
-		path := filepath.Join("docs", "manual.dat")
-		size, err := u.GetFileSize(path)
-		must(err)
-		panicIf(size < 2*2024, "size of '%s' is %d which indicates we didn't build it", path, size)
-	}
+	ensureManualIsBuilt()
 
 	ver := getVerForBuildType(buildTypePreRel)
 	s := fmt.Sprintf("buidling pre-release version %s", ver)
@@ -639,4 +641,42 @@ func buildTestUtil() {
 	config := "Release"
 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, kPlatformIntel64)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
+}
+
+func buildAndUploadPreRelease() {
+	waitForEnter()
+
+	// make sure we can sign the executables, early exit if missing
+	detectSigntoolPath()
+	msbuildPath := detectMsbuildPath()
+
+	ver := getPreReleaseVer()
+	logf("building and uploading pre-release version %s\n", ver)
+
+	//mc := newMinioR2Client()
+
+	genHTMLDocsForApp()
+	ensureManualIsBuilt()
+
+	setBuildConfigPreRelease()
+	defer revertBuildConfig()
+
+	printAllBuildDur := makePrintDuration("all builds")
+	for _, platform := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
+		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release version %s", ver))
+		slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
+		//dir := getOutDirForPlatform(platform)
+		p := `/p:Configuration=Release;Platform=` + platform
+		runExeLoggedMust(msbuildPath, slnPath, `/t:PdfFilter:Rebuild;PdfPreview:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
+		printBBuildDur()
+	}
+	printAllBuildDur()
+
+	waitForEnter()
+}
+
+func waitForEnter() {
+	// wait for keyboard press
+	logf("Press Enter to continue\n")
+	fmt.Scanln()
 }
