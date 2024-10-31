@@ -79,6 +79,10 @@ func verifyOnReleaseBranchMust() {
 func isGithubMyMasterBranch() bool {
 	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
 	repo := os.Getenv("GITHUB_REPOSITORY")
+	if repo == "" {
+		branch := getCurrentBranchMust(".")
+		return branch == "master"
+	}
 	if repo != "sumatrapdfreader/sumatrapdf" {
 		return false
 	}
