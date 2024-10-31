@@ -19,18 +19,8 @@ jobs:
 
       - name: Build
         env:
-          CERT_PWD: ${{ secrets.CERT_PWD }}
           R2_SECRET: ${{ secrets.R2_SECRET }}
           R2_ACCESS: ${{ secrets.R2_ACCESS }}
           BB_SECRET: ${{ secrets.BB_SECRET }}
           BB_ACCESS: ${{ secrets.BB_ACCESS }}
         run: .\doit.bat -ci-daily
-
-      # a separate step from -ci to make logs easier to read
-      - name: Upload to spaces and s3
-        env:
-          R2_SECRET: ${{ secrets.R2_SECRET }}
-          R2_ACCESS: ${{ secrets.R2_ACCESS }}
-          BB_SECRET: ${{ secrets.BB_SECRET }}
-          BB_ACCESS: ${{ secrets.BB_ACCESS }}
-        run: .\doit.bat -ci-upload
