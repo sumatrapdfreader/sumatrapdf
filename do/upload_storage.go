@@ -527,9 +527,12 @@ func uploadLogView() {
 	logf("uploadLogView\n")
 	ver := extractLogViewVersion()
 	path := filepath.Join("tools", "logview", "build", "bin", "logview.exe")
-	panicIf(!fileExists(path), "file '%s' doesn't exist", path)
-	remotePath := "software/logview/rel/" + fmt.Sprintf("logview-%s.exe", ver)
-	mc := newMinioBackblazeClient()
+	if !fileExists(path) {
+		logf("file '%s' doesn't exist\n", path)
+		os.Exit(1)
+	}
+	remotePath := fmt.Sprintf("software/logview/rel/logview-%s.exe", ver)
+	mc := newMinioR2Client()
 	if mc.Exists(remotePath) {
 		logf("%s (%s) already uploaded\n", remotePath, mc.URLForPath(remotePath))
 		return
