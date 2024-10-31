@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kjk/u"
@@ -643,15 +644,24 @@ func buildTestUtil() {
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 }
 
+// TODO: remove old unsigned builds, keep only the last one
+// do it after
 func buildAndUploadPreRelease() {
-	// make sure we can sign the executables, early exit if missing
-	detectSigntoolPath()
 	msbuildPath := detectMsbuildPath()
 
 	ver := getPreReleaseVer()
 	logf("building and uploading pre-release version %s\n", ver)
 
-	//mc := newMinioR2Client()
+	keyPrefix := "software/sumatrapdf/prerel/" + ver + "-unsigned/"
+	mc := newMinioR2Client()
+
+	keyAllBuild := keyPrefix + "all-build.txt"
+	{
+		if mc.Exists(keyAllBuild) {
+			logf("buildAndUploadPreRelease: skipping build because already uploaded (key '%s' exists)\n", keyAllBuild)
+			return
+		}
+	}
 
 	genHTMLDocsForApp()
 	ensureManualIsBuilt()
@@ -659,18 +669,42 @@ func buildAndUploadPreRelease() {
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
+	var wgUploads sync.WaitGroup
+
 	printAllBuildDur := makePrintDuration("all builds")
 	for _, platform := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
 		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release %s version %s", platform, ver))
 		slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
-		//dir := getOutDirForPlatform(platform)
 		p := `/p:Configuration=Release;Platform=` + platform
-		//		runExeLoggedMust(msbuildPath, slnPath, `/t:PdfFilter:Rebuild;PdfPreview:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 		runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 		printBBuildDur()
+
+		wgUploads.Add(1)
+		go func(platform string) {
+			defer wgUploads.Done()
+			dir := getOutDirForPlatform(platform)
+			files := []string{
+				"SumatraPDF.exe",
+				"SumatraPDF-dll.exe",
+				"SumatraPDF.pdb",
+				"SumatraPDF-dll.pdb",
+			}
+			for _, file := range files {
+				path := filepath.Join(dir, file)
+				key := keyPrefix + platform + "/" + file
+				logf("uploading '%s' to '%s'\n", path, key)
+				printDur := makePrintDuration("uploaded  + key")
+				mc.UploadFile(key, path, true)
+				printDur()
+			}
+		}(platform)
 	}
 	revertBuildConfig() // can do twice
 	printAllBuildDur()
+
+	logf("uploading '%s'\n", keyAllBuild)
+	mc.UploadData(keyAllBuild, []byte("all builds"), true)
+	wgUploads.Wait()
 
 	waitForEnter("\nPress Enter to sign and upload\n")
 }
