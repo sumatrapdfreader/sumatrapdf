@@ -18,8 +18,12 @@ func runCmdLoggedRedacted(cmd *exec.Cmd, redact string) error {
 	return cmd.Run()
 }
 
-func hasCertPwd() bool {
-	return strings.TrimSpace(certPwd) != ""
+func runCmdLogged(cmd *exec.Cmd) error {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	s := cmd.String()
+	fmt.Printf("> %s\n", s)
+	return cmd.Run()
 }
 
 // https://zabkat.com/blog/code-signing-sha1-armageddon.htm
@@ -37,15 +41,6 @@ func hasCertPwd() bool {
 func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
-
-	if false {
-		if certPwd == "" {
-			if flgSkipSign {
-				return
-			}
-		}
-		panicIf(certPwd == "", "CERT_PWD env variable not set")
-	}
 
 	// retry 3 times because signing might fail due to temorary error
 	// ("The specified timestamp server either could not be reached or")
@@ -67,10 +62,11 @@ func signMust(path string) {
 				"/fd", "sha256",
 				fileName)
 			cmd.Dir = fileDir
-			err = runCmdLoggedRedacted(cmd, certPwd)
+			err = runCmdLogged(cmd)
 		}
 
 		if false && err == nil {
+			certPwd := ""
 			// double-sign with sha2 for win7+ ater Jan 2016
 			cmd := exec.Command(signtoolPath, "sign", "/fd", "sha256", "/tr", signServer,
 				"/td", "sha256", "/f", "cert.pfx",

@@ -383,13 +383,6 @@ func signFilesMust(dir string) {
 	signMust(filepath.Join(dir, "SumatraPDF-dll.exe"))
 }
 
-func signFilesOptional(dir string) {
-	if !hasCertPwd() {
-		return
-	}
-	signFilesMust(dir)
-}
-
 const (
 	kPlatformIntel32 = "Win32"
 	kPlatformIntel64 = "x64"
@@ -632,7 +625,6 @@ func buildSmoke() {
 
 // 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
 // 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
-// 	signFilesOptional(dir)
 // }
 
 func buildTestUtil() {

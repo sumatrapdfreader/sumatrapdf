@@ -20,7 +20,6 @@ var (
 	b2Access          string
 	b2Secret          string
 	transUploadSecret string
-	certPwd           string
 )
 
 func loadSecrets() bool {
@@ -49,7 +48,6 @@ func loadSecrets() bool {
 	getEnv("BB_ACCESS", &b2Access, 8)
 	getEnv("BB_SECRET", &b2Secret, 8)
 	getEnv("TRANS_UPLOAD_SECRET", &transUploadSecret, 4)
-	getEnv("CERT_PWD", &certPwd, 4)
 	return true
 }
 
@@ -69,7 +67,6 @@ func getSecrets() {
 	b2Access = os.Getenv("BB_ACCESS")
 	b2Secret = os.Getenv("BB_SECRET")
 	transUploadSecret = os.Getenv("TRANS_UPLOAD_SECRET")
-	certPwd = os.Getenv("CERT_PWD")
 }
 
 func regenPremake() {
@@ -190,9 +187,6 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 		ensureAllUploadCreds()
 	}
 
-	if opts.sign {
-		panicIf(!hasCertPwd(), "CERT_PWD env variable is not set")
-	}
 	if opts.verifyTranslationUpToDate {
 		verifyTranslationsMust()
 	}
