@@ -467,21 +467,21 @@ func getSuffixForPlatform(platform string) string {
 	return ""
 }
 
-func buildCiDaily(opts *BuildOptions) {
-	if opts.upload {
-		isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildTypePreRel)
-		if isUploaded {
-			logf("buildCiDaily: skipping build because already built and uploaded")
-			return
-		}
-	}
+// func buildCiDaily(opts *BuildOptions) {
+// 	if opts.upload {
+// 		isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildTypePreRel)
+// 		if isUploaded {
+// 			logf("buildCiDaily: skipping build because already built and uploaded")
+// 			return
+// 		}
+// 	}
 
-	cleanReleaseBuilds()
-	genHTMLDocsForApp()
-	buildPreRelease(kPlatformArm64, false)
-	buildPreRelease(kPlatformIntel32, false)
-	buildPreRelease(kPlatformIntel64, false)
-}
+// 	cleanReleaseBuilds()
+// 	genHTMLDocsForApp()
+// 	buildPreRelease(kPlatformArm64, false)
+// 	buildPreRelease(kPlatformIntel32, false)
+// 	buildPreRelease(kPlatformIntel64, false)
+// }
 
 func buildCi() {
 	gev := getGitHubEventType()
@@ -639,14 +639,19 @@ func buildTestUtil() {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
-	config := "Release"
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, kPlatformIntel64)
+	p := fmt.Sprintf(`/p:Configuration=Release;Platform=%s`, kPlatformIntel64)
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 }
 
-// TODO: remove old unsigned builds, keep only the last one
-// do it after
-func buildAndUploadPreRelease() {
+// build pre-release builds and upload unsigned binaries to r2
+// TODO: remove old unsigned builds, keep only the last one; do it after we check thie build doesn't exist
+// TODO: maybe compress files before uploading using zstd or brotli
+func buildCiDaily() {
+	if !isGithubMyMasterBranch() {
+		logf("buildCiDaily: skipping build because not on master branch\n")
+		return
+	}
+
 	msbuildPath := detectMsbuildPath()
 
 	ver := getPreReleaseVer()
@@ -658,11 +663,12 @@ func buildAndUploadPreRelease() {
 	keyAllBuild := keyPrefix + "all-build.txt"
 	{
 		if mc.Exists(keyAllBuild) {
-			logf("buildAndUploadPreRelease: skipping build because already uploaded (key '%s' exists)\n", keyAllBuild)
+			logf("buildCiDaily: skipping build because already uploaded (key '%s' exists)\n", keyAllBuild)
 			return
 		}
 	}
 
+	cleanReleaseBuilds()
 	genHTMLDocsForApp()
 	ensureManualIsBuilt()
 
@@ -692,8 +698,7 @@ func buildAndUploadPreRelease() {
 			for _, file := range files {
 				path := filepath.Join(dir, file)
 				key := keyPrefix + platform + "/" + file
-				logf("uploading '%s' to '%s'\n", path, key)
-				printDur := makePrintDuration("uploaded  + key")
+				printDur := makePrintDuration(fmt.Sprintf("uploading '%s' to '%s'\n", path, key))
 				mc.UploadFile(key, path, true)
 				printDur()
 			}
@@ -705,8 +710,6 @@ func buildAndUploadPreRelease() {
 	logf("uploading '%s'\n", keyAllBuild)
 	mc.UploadData(keyAllBuild, []byte("all builds"), true)
 	wgUploads.Wait()
-
-	waitForEnter("\nPress Enter to sign and upload\n")
 }
 
 func waitForEnter(s string) {
