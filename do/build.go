@@ -644,8 +644,6 @@ func buildTestUtil() {
 }
 
 func buildAndUploadPreRelease() {
-	waitForEnter()
-
 	// make sure we can sign the executables, early exit if missing
 	detectSigntoolPath()
 	msbuildPath := detectMsbuildPath()
@@ -663,20 +661,25 @@ func buildAndUploadPreRelease() {
 
 	printAllBuildDur := makePrintDuration("all builds")
 	for _, platform := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
-		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release version %s", ver))
+		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release %s version %s", platform, ver))
 		slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 		//dir := getOutDirForPlatform(platform)
 		p := `/p:Configuration=Release;Platform=` + platform
-		runExeLoggedMust(msbuildPath, slnPath, `/t:PdfFilter:Rebuild;PdfPreview:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
+		//		runExeLoggedMust(msbuildPath, slnPath, `/t:PdfFilter:Rebuild;PdfPreview:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
+		runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 		printBBuildDur()
 	}
+	revertBuildConfig() // can do twice
 	printAllBuildDur()
 
-	waitForEnter()
+	waitForEnter("\nPress Enter to sign and upload\n")
 }
 
-func waitForEnter() {
+func waitForEnter(s string) {
 	// wait for keyboard press
-	logf("Press Enter to continue\n")
+	if s == "" {
+		s = "\nPress Enter to continue\n"
+	}
+	logf(s)
 	fmt.Scanln()
 }
