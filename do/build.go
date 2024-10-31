@@ -626,14 +626,14 @@ func buildSmoke() {
 	signFilesMust(outDir)
 }
 
-func buildJustPortableExe(dir, config, platform string) {
-	msbuildPath := detectMsbuildPath()
-	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
+// func buildJustPortableExe(dir, config, platform string) {
+// 	msbuildPath := detectMsbuildPath()
+// 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
-	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
-	signFilesOptional(dir)
-}
+// 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
+// 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF`, p, `/m`)
+// 	signFilesOptional(dir)
+// }
 
 func buildTestUtil() {
 	msbuildPath := detectMsbuildPath()

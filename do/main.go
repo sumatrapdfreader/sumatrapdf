@@ -241,7 +241,6 @@ func main() {
 		flgClangFormat     bool
 		flgClean           bool
 		flgDiff            bool
-		flgDrMem           bool
 		flgExtractUtils    bool
 		flgFilesList       bool
 		flgFileUpload      string
@@ -286,7 +285,6 @@ func main() {
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenSettings, "gen-settings", false, "re-generate src/Settings.h")
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
-		flag.BoolVar(&flgDrMem, "drmem", false, "run drmemory of rel 64")
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
 		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
@@ -421,12 +419,6 @@ func main() {
 	}
 
 	opts := &BuildOptions{}
-	if flgUploadCiBuild {
-		// triggered via -ci-upload from .github workflow file
-		// only upload if this is my repo (not a fork)
-		// master branch (not work branches) and on push (not pull requests etc.)
-		opts.upload = isGithubMyMasterBranch()
-	}
 
 	if flgCIBuild {
 		// triggered via -ci from .github workflow file
@@ -527,14 +519,6 @@ func main() {
 	if flgUpdateVer != "" {
 		ensureAllUploadCreds()
 		updateAutoUpdateVer(flgUpdateVer)
-		return
-	}
-
-	if flgDrMem {
-		buildJustPortableExe(rel64Dir, "Release", kPlatformIntel64)
-		//cmd := exec.Command("drmemory.exe", "-light", "-check_leaks", "-possible_leaks", "-count_leaks", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
-		cmd := exec.Command("drmemory.exe", "-leaks_only", "-suppress", "drmem-sup.txt", "--", ".\\out\\rel64\\SumatraPDF.exe")
-		runCmdLoggedMust(cmd)
 		return
 	}
 
