@@ -91,6 +91,7 @@
 #include "Caption.h"
 
 #include "utils/Log.h"
+#include "PdfToImage.h" 
 
 constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 
@@ -5263,6 +5264,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSaveAs:
             SaveCurrentFileAs(win);
+            break;
+        
+        case CmdConvertPdfToImages:
+            if (win->IsDocLoaded()) {
+            const WCHAR* thepath = L"C:\\Users\\jsani\\Desktop\\SER_517\\sumatrapdf\\src\\convert.pdf";
+            ConvertPdfToImages(thepath);
+        }    
             break;
 
         case CmdPrint:
