@@ -635,6 +635,8 @@ func buildTestUtil() {
 	runExeLoggedMust(msbuildPath, slnPath, `/t:test_util:Rebuild`, p, `/m`)
 }
 
+const unsignedKeyPrefix = "software/sumatrapdf/prerel-unsigned/"
+
 // build pre-release builds and upload unsigned binaries to r2
 // TODO: remove old unsigned builds, keep only the last one; do it after we check thie build doesn't exist
 // TODO: maybe compress files before uploading using zstd or brotli
@@ -649,7 +651,7 @@ func buildCiDaily() {
 	ver := getPreReleaseVer()
 	logf("building and uploading pre-release version %s\n", ver)
 
-	keyPrefix := "software/sumatrapdf/prerel/" + ver + "-unsigned/"
+	keyPrefix := unsignedKeyPrefix + ver
 	mc := newMinioR2Client()
 
 	keyAllBuild := keyPrefix + "all-build.txt"
