@@ -226,6 +226,17 @@ func revertBuildConfig() {
 	runExeMust("git", "checkout", buildConfigPath())
 }
 
+func addZipDataStoreMust(w *zip.Writer, data []byte, nameInZip string) {
+	fih := &zip.FileHeader{
+		Name:   nameInZip,
+		Method: zip.Store,
+	}
+	fw, err := w.CreateHeader(fih)
+	must(err)
+	_, err = fw.Write(data)
+	must(err)
+}
+
 func addZipFileWithNameMust(w *zip.Writer, path, nameInZip string) {
 	fi, err := os.Stat(path)
 	must(err)
@@ -308,15 +319,19 @@ func createPdbZipMust(dir string) {
 	must(err)
 }
 
-func createPdbLzsaMust(dir string) {
-	args := []string{"SumatraPDF.pdb.lzsa"}
-	args = append(args, pdbFiles...)
+func createLzsaFromFiles(lzsaPath string, files []string, dir string) {
+	args := []string{lzsaPath}
+	args = append(args, files...)
 	curDir, err := os.Getwd()
 	must(err)
 	makeLzsaPath := filepath.Join(curDir, "bin", "MakeLZSA.exe")
 	cmd := exec.Command(makeLzsaPath, args...)
 	cmd.Dir = dir
 	runCmdLoggedMust(cmd)
+}
+
+func createPdbLzsaMust(dir string) {
+	createLzsaFromFiles("SumatraPDF.pdb.lzsa", pdbFiles, dir)
 }
 
 // manifest is build for pre-release builds and contains information about file sizes

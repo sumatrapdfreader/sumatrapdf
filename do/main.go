@@ -1,20 +1,27 @@
 package main
 
 import (
+	"archive/zip"
+	"bufio"
+	"bytes"
 	"flag"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/andybalholm/brotli"
 	"github.com/kjk/common/u"
+	"github.com/klauspost/compress/zstd"
+	"github.com/ulikunitz/xz/lzma"
 )
 
 var (
-	flgSkipSign       bool
 	r2Access          string
 	r2Secret          string
 	b2Access          string
@@ -171,7 +178,6 @@ func runCppCheck(all bool) {
 }
 
 type BuildOptions struct {
-	sign                      bool
 	upload                    bool
 	verifyTranslationUpToDate bool
 	doCleanCheck              bool
@@ -180,7 +186,6 @@ type BuildOptions struct {
 
 func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 	logf("upload: %v\n", opts.upload)
-	logf("sign: %v\n", opts.sign)
 	logf("verifyTranslationUpToDate: %v\n", opts.verifyTranslationUpToDate)
 
 	if opts.upload {
@@ -196,10 +201,6 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 	if opts.releaseBuild {
 		verifyOnReleaseBranchMust()
 		os.RemoveAll("out")
-	}
-
-	if !opts.sign {
-		flgSkipSign = true
 	}
 }
 
@@ -370,17 +371,13 @@ func main() {
 	detectVersions()
 
 	if false {
-		testGenUpdateTxt()
-		return
-	}
-
-	if false {
-		//buildPreRelease()
-		return
-	}
-
-	if false {
-		deleteFilesOneOff()
+		testCompressOneOff()
+		if false {
+			// make them reachable
+			testGenUpdateTxt()
+			buildPreRelease(kPlatformIntel64, true)
+			deleteFilesOneOff()
+		}
 		return
 	}
 
@@ -414,16 +411,8 @@ func main() {
 
 	opts := &BuildOptions{}
 
-	if flgCIBuild {
-		// triggered via -ci from .github workflow file
-		// only sign if this is my repo (not a fork)
-		// master branch (not work branches) and on push (not pull requests etc.)
-		opts.sign = isGithubMyMasterBranch()
-	}
-
 	if flgUpload {
 		// given by me from cmd-line
-		opts.sign = true
 		opts.upload = true
 	}
 
@@ -609,4 +598,142 @@ func printBuildNoInfo(buildNo int) {
 	n := len(lines) - (buildNo - 1000)
 	s := lines[n]
 	logf("%d: %s\n", buildNo, s)
+}
+
+func compressFileWithBrMust(path string) []byte {
+	buf := bytes.Buffer{}
+	w := brotli.NewWriterLevel(&buf, brotli.BestCompression)
+	f := u.Must2(os.Open(path))
+	u.Must2(io.Copy(w, f))
+	must(f.Close())
+	must(w.Close())
+	return buf.Bytes()
+}
+
+func compressWithZstdMust(path string) []byte {
+	buf := bytes.Buffer{}
+	w := u.Must2(zstd.NewWriter(&buf, zstd.WithEncoderLevel(zstd.SpeedBestCompression)))
+	f := u.Must2(os.Open(path))
+	u.Must2(io.Copy(w, f))
+	must(f.Close())
+	must(w.Close())
+	return buf.Bytes()
+}
+
+func compressWithLzma2Must(path string) []byte {
+	buf := bytes.Buffer{}
+	bw := bufio.NewWriter(&buf)
+	w := u.Must2(lzma.NewWriter2(bw))
+	f := u.Must2(os.Open(path))
+	u.Must2(io.Copy(w, f))
+	must(f.Close())
+	must(w.Close())
+	must(bw.Flush())
+	return buf.Bytes()
+}
+
+func compressWithLzma2BetterMust(path string) []byte {
+	buf := bytes.Buffer{}
+	bw := bufio.NewWriter(&buf)
+	var c lzma.Writer2Config
+	c.DictCap = (8 * 1024 * 1024) * 16
+	must(c.Verify())
+	w := u.Must2(c.NewWriter2(bw))
+	f := u.Must2(os.Open(path))
+	u.Must2(io.Copy(w, f))
+	must(f.Close())
+	must(w.Close())
+	must(bw.Flush())
+	return buf.Bytes()
+}
+
+func creaZipWithCompressFunction(zipPath string, files []string, dir string, compressFunc func(string) []byte, comprSuffix string) {
+	os.Remove(zipPath)
+	w := u.Must2(os.Create(zipPath))
+	zw := zip.NewWriter(w)
+	defer zw.Close()
+	var wg sync.WaitGroup
+	nConcurrent := runtime.NumCPU()
+	sem := make(chan bool, nConcurrent)
+	for _, f := range files {
+		path := filepath.Join(dir, f)
+		wg.Add(1)
+		sem <- true
+		go func() {
+			data := compressFunc(path)
+			addZipDataStoreMust(zw, data, f+comprSuffix)
+			<-sem
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	must(zw.Close())
+}
+
+func testCompressOneOff() {
+	dir := filepath.Join("out", "rel64")
+	files := []string{"SumatraPDF.exe", "SumatraPDF-dll.exe", "libmupdf.pdb", "SumatraPDF.pdb", "SumatraPDF-dll.pdb"}
+	{
+	}
+	origSize := int64(0)
+	for _, f := range files {
+		origSize += u.FileSize(filepath.Join(dir, f))
+	}
+	logf("origSize: %s\n", u.FormatSize(origSize))
+
+	{
+		archivePath := filepath.Join(dir, "rel64.lzma2.better.zip")
+		os.Remove(archivePath)
+		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
+		printDur := measureDuration()
+		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2BetterMust, ".lzma2")
+		printDur()
+		compressedSize := u.FileSize(archivePath)
+		ratio := float64(origSize) / float64(compressedSize)
+		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
+	}
+	{
+		archivePath := filepath.Join(dir, "rel64.lzma2.zip")
+		os.Remove(archivePath)
+		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
+		printDur := measureDuration()
+		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2Must, ".lzma2")
+		printDur()
+		compressedSize := u.FileSize(archivePath)
+		ratio := float64(origSize) / float64(compressedSize)
+		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
+	}
+	{
+		archivePath := filepath.Join(dir, "rel64.br.zip")
+		os.Remove(archivePath)
+		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
+		printDur := measureDuration()
+		creaZipWithCompressFunction(archivePath, files, dir, compressFileWithBrMust, ".br")
+		printDur()
+		compressedSize := u.FileSize(archivePath)
+		ratio := float64(origSize) / float64(compressedSize)
+		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
+	}
+	{
+		archivePath := filepath.Join(dir, "rel64.zstd.zip")
+		os.Remove(archivePath)
+		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
+		printDur := measureDuration()
+		creaZipWithCompressFunction(archivePath, files, dir, compressWithZstdMust, ".zstd")
+		printDur()
+		compressedSize := u.FileSize(archivePath)
+		ratio := float64(origSize) / float64(compressedSize)
+		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
+	}
+	{
+		logf("\nCreating rel64.lzsa using\n")
+		printDur := measureDuration()
+		archivePath := filepath.Join(dir, "rel64.lzsa")
+		os.Remove(archivePath)
+		createLzsaFromFiles("rel64.lzsa", files, dir)
+		printDur()
+		compressedSize := u.FileSize(archivePath)
+		ratio := float64(origSize) / float64(compressedSize)
+		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
+	}
 }
