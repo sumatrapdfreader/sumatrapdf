@@ -88,8 +88,8 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `F11`, `Ctrl + Shift + L`, `f` - Enter / Exit full screen mode
 - `ESC` - exit full screen or presentation mode
 - mouse double click - exit full screen or presentation mode
-- `i` - invert colors in the document
-- `Shift + i` - show current page number
+- `Shift + i` - invert colors in the document
+- `i` - show current page number
 - `m` - show cursor position in document coordinates
 - `F8` - show/hide toolbar
 - `F9` - show/hide menu
