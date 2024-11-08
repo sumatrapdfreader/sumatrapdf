@@ -5268,7 +5268,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         
         case CmdConvertPdfToImages:
             if (win->IsDocLoaded()) {
-            const WCHAR* thepath = L"C:\\Users\\jsani\\Desktop\\SER_517\\sumatrapdf\\src\\convert.pdf";
+            const WCHAR* thepath = L"C:\\Users\\Sainath\\Desktop\\Ser 517 pdf project\\sumatrapdf\\src\\Lab2.pdf";
             ConvertPdfToImages(thepath);
         }    
             break;

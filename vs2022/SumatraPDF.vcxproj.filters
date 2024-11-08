@@ -303,6 +303,7 @@
     <ClInclude Include="..\src\wingui\WinGui.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PdfToImage.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c">
@@ -650,6 +651,7 @@
     <ClCompile Include="..\src\wingui\WinGui.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\PdfToImage.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.github\workflows\build.yml">
@@ -879,6 +881,8 @@
     <None Include="..\src\scratch.txt">
       <Filter>src</Filter>
     </None>
+    <None Include="..\src\mutool.exe" />
+    <None Include="..\src\Lab2.pdf" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">
