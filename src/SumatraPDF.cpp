@@ -5268,11 +5268,31 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         
         case CmdConvertPdfToImages:
             if (win->IsDocLoaded()) {
-            const WCHAR* thepath = L"C:\\Users\\Sainath\\Desktop\\Ser 517 pdf project\\sumatrapdf\\src\\Lab2.pdf";
-            ConvertPdfToImages(thepath);
-        }    
+                // Set up the OPENFILENAME structure
+                OPENFILENAME ofn;
+                WCHAR filePath[MAX_PATH] = L"";
+                ZeroMemory(&ofn, sizeof(ofn));
+ 
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = win->hwndFrame; // Parent window handle
+                ofn.lpstrFile = filePath;       // File path buffer
+                ofn.nMaxFile = MAX_PATH;
+                ofn.lpstrFilter = L"PDF Files\0*.pdf\0All Files\0*.*\0"; // Filter for PDF files
+                ofn.nFilterIndex = 1;
+                ofn.lpstrTitle = L"Select PDF to Convert";
+                ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+ 
+                // Show the Open dialog box
+                if (GetOpenFileName(&ofn) == TRUE) {
+                    // If user selects a file, filePath will contain the selected path
+                    ConvertPdfToImages(filePath);
+                } else {
+                    // Handle the case where the user cancels the dialog or an error occurs
+                    MessageBox(win->hwndFrame, L"No file selected or operation canceled.", L"Warning", MB_ICONWARNING);
+                }
+            }
             break;
-
+        
         case CmdPrint:
             PrintCurrentFile(win);
             break;
