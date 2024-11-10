@@ -6,47 +6,38 @@
 #include <shlobj.h>
 #include <commdlg.h>
 #include <stdlib.h>
+#include <sstream> // Include this for std::wstringstream
+#include <string>
+#include <filesystem> // C++17 for file path handling
+
+// Helper function to convert std::wstring to std::string
+std::string ConvertWideToNarrow(const std::wstring& wideStr) {
+    return std::string(wideStr.begin(), wideStr.end());
+}
+
+// Helper function to extract the directory from a file path
+std::wstring GetDirectoryPath(const std::wstring& filePath) {
+    return std::filesystem::path(filePath).parent_path().wstring();
+}
+
 void ConvertPdfToImages(const WCHAR* pdfPath) {
+    // Display messages to confirm paths
     MessageBox(NULL, pdfPath, L"Success", MB_OK);
-    MessageBox(NULL, L"Conversion complete. Images saved in Downloads Folder", L"Success", MB_OK);
-    system("C:\\Users\\Sainath\\Downloads\\mupdf-1.24.0-windows\\mupdf-1.24.0-windows\\mutool.exe convert -o C:\\Users\\Sainath\\Downloads\\page%d.png -O resolution=300 C:\\Users\\Sainath\\Downloads\\mupdf-1.24.0-windows\\mupdf-1.24.0-windows\\Lab2.pdf 1-2");
-// // // Get output format
-//     // int format = MessageBox(NULL, L"Choose output format:\nYes for PNG, No for JPEG", L"Output Format", MB_YESNO);
-//     // const WCHAR* outputFormat = (format == IDYES) ? L"png" : L"jpeg";
+    MessageBox(NULL, L"Conversion complete. Images will be saved in the PDF's directory.", L"Success", MB_OK);
 
-//     // // Extract directory from pdfPath
-//     // WCHAR dirPath[MAX_PATH];
-//     // wcscpy_s(dirPath, MAX_PATH, pdfPath);
-//     // PathRemoveFileSpecW(dirPath);
+    // Get the directory path where the PDF file is located
+    std::wstring outputDirectory = GetDirectoryPath(pdfPath);
 
-//     const WCHAR* thepath = L"C:\\Users\\Sainath\\Desktop\\Ser 517 pdf project\\sumatrapdf\\src\\Lab2.pdf";
+    // Construct the output image path
+    std::wstringstream command;
+    command << L"C:\\Users\\jsani\\Desktop\\mutool.exe convert -o " << outputDirectory
+            << L"\\page%d.png -O "
+               L"resolution=300 \""
+            << pdfPath << L"\" 1-1";
 
-//     // Get output format
-//     int format = MessageBox(NULL, L"Choose output format:\nYes for PNG, No for JPEG", L"Output Format", MB_YESNO);
-//     const WCHAR* outputFormat = (format == IDYES) ? L"png" : L"jpeg";
+    // Convert the command to a narrow string for system() call
+    std::string commandStr = ConvertWideToNarrow(command.str());
 
-//     // Extract directory from pdfPath
-//     WCHAR dirPath[MAX_PATH];
-//     wcscpy_s(dirPath, MAX_PATH, thepath);  // Use thepath instead of pdfPath
-//     PathRemoveFileSpecW(dirPath);
-
-//     // Construct command
-//     WCHAR command[MAX_PATH * 2];
-//     swprintf_s(command, _countof(command),
-//         L"mupdf-1.24.0-windows>mutool.exe draw -o page-.png -r 300 Lab2.pdf");
-
-//     // Execute command
-//     STARTUPINFO si = { sizeof(STARTUPINFO) };
-//     PROCESS_INFORMATION pi;
-//     if (CreateProcess(NULL, command, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-//         WaitForSingleObject(pi.hProcess, INFINITE);
-//         CloseHandle(pi.hProcess);
-//         CloseHandle(pi.hThread);
-//         MessageBox(NULL, L"Conversion complete. Images saved in the same folder as the PDF.", L"Success", MB_OK);
-//     } else {
-//         DWORD error = GetLastError();
-//         WCHAR errorMsg[256];
-//         swprintf_s(errorMsg, _countof(errorMsg), L"Failed to start conversion process. Error code: %d", error);
-//         MessageBox(NULL, errorMsg, L"Error", MB_OK | MB_ICONERROR);
-//     }
+    // Execute the command
+    system(commandStr.c_str());
 }
