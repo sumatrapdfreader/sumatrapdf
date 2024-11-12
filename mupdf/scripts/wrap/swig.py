@@ -650,9 +650,11 @@ def build_swig(
     text += '%module(directors="1") mupdf\n'
 
     jlib.log(f'{build_dirs.Py_LIMITED_API=}')
+
+    text += f'%begin %{{\n'
+
     if build_dirs.Py_LIMITED_API:  # e.g. 0x03080000
         text += textwrap.dedent(f'''
-                %begin %{{
                 /* Use Python Stable ABI with earliest Python version that we
                 support. */
                 #define Py_LIMITED_API {build_dirs.Py_LIMITED_API}
@@ -666,8 +668,16 @@ def build_swig(
                 #ifndef PyBUF_WRITE
                     #define PyBUF_WRITE 0x200
                 #endif
-                %}}
                 ''')
+
+        text += textwrap.dedent(f'''
+                /* This seems to be necessary on some Windows machines with
+                Py_LIMITED_API, otherwise compilation can fail because free()
+                and malloc() are not declared. */
+                #include <stdlib.h>
+                ''')
+
+    text += f'%}}\n'
 
     # https://www.mono-project.com/docs/advanced/pinvoke/
     #
@@ -1000,6 +1010,7 @@ def build_swig(
                 %template(map_string_int) map<std::string, int>;
                 %template(vectorq) vector<{rename.namespace_class("fz_quad")}>;
                 %template(vector_search_page2_hit) vector<fz_search_page2_hit>;
+                %template(vector_fz_font_ucs_gid) vector<fz_font_ucs_gid>;
             }};
 
             // Make sure that operator++() gets converted to __next__().

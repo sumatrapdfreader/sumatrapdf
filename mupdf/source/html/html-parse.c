@@ -1118,7 +1118,7 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 		break;
 	}
 
-	if (tag && !strcmp(tag, "ol"))
+	if (tag && (!strcmp(tag, "ol") || !strcmp(tag, "ul") || !strcmp(tag, "dl")))
 	{
 		int save_list_counter = g->list_counter;
 		g->list_counter = 0;

@@ -90,6 +90,7 @@ static JavaVM *jvm = NULL;
 static jclass cls_AbortException;
 static jclass cls_AlertResult;
 static jclass cls_Archive;
+static jclass cls_ArrayList;
 static jclass cls_ArrayOfQuad;
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
@@ -277,6 +278,9 @@ static jfieldID fid_Text_pointer;
 static jfieldID fid_TreeArchive_pointer;
 
 static jmethodID mid_Archive_init;
+static jmethodID mid_ArrayList_add;
+static jmethodID mid_ArrayList_toArray;
+static jmethodID mid_ArrayList_init;
 static jmethodID mid_Buffer_init;
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
@@ -1319,6 +1323,11 @@ static int find_fids(JNIEnv *env)
 
 	cls_OutOfMemoryError = get_class(&err, env, "java/lang/OutOfMemoryError");
 
+	cls_ArrayList = get_class(&err, env, "java/util/ArrayList");
+	mid_ArrayList_init = get_method(&err, env, "<init>", "()V");
+	mid_ArrayList_add = get_method(&err, env, "add", "(Ljava/lang/Object;)Z");
+	mid_ArrayList_toArray = get_method(&err, env, "toArray", "()[Ljava/lang/Object;");
+
 	if (err)
 	{
 		LOGE("one or more class, member or field IDs could not be found");
@@ -1360,6 +1369,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_AbortException);
 	(*env)->DeleteGlobalRef(env, cls_AlertResult);
 	(*env)->DeleteGlobalRef(env, cls_Archive);
+	(*env)->DeleteGlobalRef(env, cls_ArrayList);
 	(*env)->DeleteGlobalRef(env, cls_ArrayOfQuad);
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
@@ -1475,6 +1485,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #endif
 
 #include "jni/wrap.c"
+#include "jni/helpers.c"
 
 #include "jni/context.c"
 #include "jni/device.c"

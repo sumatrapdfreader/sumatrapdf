@@ -1093,6 +1093,14 @@ g_extra_declarations = textwrap.dedent(f'''
         must end with one of 'efg' otherwise we throw an exception. */
         std::string fz_format_double(fz_context* ctx, const char* fmt, double value);
 
+        struct fz_font_ucs_gid
+        {{
+            unsigned long ucs;
+            unsigned int gid;
+        }};
+
+        /** SWIG-friendly wrapper for fz_enumerate_font_cmap(). */
+        std::vector<fz_font_ucs_gid> fz_enumerate_font_cmap2(fz_context* ctx, fz_font* font);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1309,6 +1317,20 @@ g_extra_definitions = textwrap.dedent(f'''
             fz_snprintf(buffer, sizeof(buffer), fmt, value);
             return buffer;
         }}
+
+        static void fz_enumerate_font_cmap2_cb(fz_context* ctx, void* opaque, unsigned long ucs, unsigned int gid)
+        {{
+            std::vector<fz_font_ucs_gid>& ret = *(std::vector<fz_font_ucs_gid>*) opaque;
+            fz_font_ucs_gid item = {{ucs, gid}};
+            ret.push_back(item);
+        }}
+
+        std::vector<fz_font_ucs_gid> fz_enumerate_font_cmap2(fz_context* ctx, fz_font* font)
+        {{
+            std::vector<fz_font_ucs_gid> ret;
+            fz_enumerate_font_cmap(ctx, font, fz_enumerate_font_cmap2_cb, &ret);
+            return ret;
+        }}
         ''')
 
 def make_extra( out_extra_h, out_extra_cpp):
@@ -1341,6 +1363,9 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
     out_h.write(
             textwrap.dedent(
             f'''
+            #define internal_assert(expression) (expression) ? (void) 0 : internal_assert_fail(__FILE__, __LINE__, __FUNCTION__, #expression)
+            FZ_FUNCTION void internal_assert_fail(const char* file, int line, const char* fn, const char* expression);
+
             /** Internal use only. Looks at environmental variable <name>; returns 0 if unset else int value. */
             FZ_FUNCTION int {rename.internal('env_flag')}(const char* name);
 
@@ -1373,6 +1398,14 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
 
     cpp_text = textwrap.dedent(
             f'''
+            FZ_FUNCTION void internal_assert_fail(const char* file, int line, const char* fn, const char* expression)
+            {{
+                std::cerr << file << ":" << line << ":" << fn << "(): "
+                        << "MuPDF C++ internal assert failure: " << expression
+                        << "\\n";
+                abort();
+            }}
+
             FZ_FUNCTION int {rename.internal('env_flag')}(const char* name)
             {{
                 const char* s = getenv( name);
@@ -1395,6 +1428,8 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                 static const int    s_trace = mupdf::internal_env_flag_check_unset("{trace_if}", "MUPDF_trace");
             #endif
 
+            static bool s_state_valid = false;
+
             struct {rename.internal("state")}
             {{
                 /* Constructor. */
@@ -1408,6 +1443,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                     const char* s = getenv( "MUPDF_mt_ctx");
                     if ( s && !strcmp( s, "0")) multithreaded = false;
                     reinit( multithreaded);
+                    s_state_valid = true;
                 }}
 
                 void reinit( bool multithreaded)
@@ -1435,13 +1471,13 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                 static void lock(void *user, int lock)
                 {{
                     {rename.internal("state")}*    self = ({rename.internal("state")}*) user;
-                    assert( self->m_multithreaded);
+                    internal_assert( self->m_multithreaded);
                     self->m_mutexes[lock].lock();
                 }}
                 static void unlock(void *user, int lock)
                 {{
                     {rename.internal("state")}*    self = ({rename.internal("state")}*) user;
-                    assert( self->m_multithreaded);
+                    internal_assert( self->m_multithreaded);
                     self->m_mutexes[lock].unlock();
                 }}
                 ~{rename.internal("state")}()
@@ -1453,6 +1489,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                     }}
                     fz_drop_context(m_ctx);
                     m_ctx = nullptr;
+                    s_state_valid = false;
                 }}
 
                 bool                m_multithreaded;
@@ -1475,7 +1512,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                 {{}}
                 fz_context* get_context()
                 {{
-                    assert( s_state.m_multithreaded);
+                    internal_assert( s_state.m_multithreaded);
 
                     /* The following code checks that we are not being called after
                     we have been destructed. This can happen if global mupdf
@@ -1497,7 +1534,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                                 << "***\\n"
                                 ;
                     }}
-                    assert( m_constructed);
+                    internal_assert( m_constructed);
                     if (!m_ctx)
                     {{
                         /* Make a context for this thread by cloning the global
@@ -1509,6 +1546,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                             std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
                                     << " calling fz_clone_context()\\n";
                         }}
+                        internal_assert(s_state_valid);
                         m_ctx = fz_clone_context(s_state.m_ctx);
                     }}
                     return m_ctx;
@@ -1517,7 +1555,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                 {{
                     if (m_ctx)
                     {{
-                        assert( s_state.m_multithreaded);
+                        internal_assert( s_state.m_multithreaded);
                         if (s_trace)
                         {{
                             std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
@@ -1554,7 +1592,10 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                 {{
                     /* This gives a small improvement in performance for
                     single-threaded use, e.g. from 552.4s to 548.1s. */
-                    return s_state.m_ctx;
+                    internal_assert(s_state_valid);
+                    fz_context* ret = s_state.m_ctx;
+                    internal_assert(ret);
+                    return ret;
                 }}
             }}
 
@@ -3958,12 +3999,15 @@ def class_wrapper_virtual_fnptrs(
     self_n = extras.virtual_fnptrs.pop( 'self_n', 1)
     alloc = extras.virtual_fnptrs.pop( 'alloc')
     free = extras.virtual_fnptrs.pop( 'free', None)
+    comment = extras.virtual_fnptrs.pop( 'comment', None)
     assert not extras.virtual_fnptrs, f'Unused items in virtual_fnptrs: {extras.virtual_fnptrs}'
 
     # Class definition beginning.
     #
     out_h.write( '\n')
     out_h.write( f'/** Wrapper class for struct {struct_name} with virtual fns for each fnptr; this is for use as a SWIG Director class. */\n')
+    if comment:
+        out_h.write(comment)
     out_h.write( f'struct {classname}2 : {classname}\n')
     out_h.write(  '{\n')
 

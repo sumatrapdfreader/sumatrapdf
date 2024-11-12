@@ -368,6 +368,7 @@ void fz_write_stream(fz_context *ctx, fz_output *out, fz_stream *in);
 	%q and %( output escaped strings in C/PDF syntax.
 	%l{d,u,x,X} indicates that the values are int64_t.
 	%z{d,u,x,X} indicates that the value is a size_t.
+	%< outputs a quoted (utf8) string (for XML).
 
 	user: An opaque pointer that is passed to the emit function.
 

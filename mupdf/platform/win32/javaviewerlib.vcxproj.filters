@@ -231,6 +231,9 @@
     <ClCompile Include="..\java\jni\font.c">
       <Filter>jni</Filter>
     </ClCompile>
+    <ClCompile Include="..\java\jni\helpers.c">
+      <Filter>jni</Filter>
+    </ClCompile>
     <ClCompile Include="..\java\jni\image.c">
       <Filter>jni</Filter>
     </ClCompile>
@@ -256,6 +259,9 @@
       <Filter>jni</Filter>
     </ClCompile>
     <ClCompile Include="..\java\jni\pdfdocument.c">
+      <Filter>jni</Filter>
+    </ClCompile>
+    <ClCompile Include="..\java\jni\pdffilespec.c">
       <Filter>jni</Filter>
     </ClCompile>
     <ClCompile Include="..\java\jni\pdfgraftmap.c">

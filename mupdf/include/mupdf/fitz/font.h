@@ -733,6 +733,16 @@ void fz_hb_lock(fz_context *ctx);
 */
 void fz_hb_unlock(fz_context *ctx);
 
+/**
+	Callback for use in font cmap enumeration.
+*/
+typedef void (fz_cmap_callback)(fz_context *ctx, void *opaque, unsigned long ucs, unsigned int gid);
+
+/**
+	Enumerate a cmap using a callback.
+*/
+void fz_enumerate_font_cmap(fz_context *ctx, fz_font *font, fz_cmap_callback *cb, void *opaque);
+
 struct fz_font
 {
 	int refs;

@@ -108,7 +108,7 @@ The `clean` command pretty prints and rewrites the syntax of a :title:`PDF` file
 ----
 
 `[pages]`
-   Comma separated list of page numbers and ranges. If no pages are supplied then all document pages will be considered for the output file.
+   Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page. If no pages are specified, then all pages will be included.
 
 
 .. include:: footer.rst

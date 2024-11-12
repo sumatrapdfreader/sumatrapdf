@@ -865,7 +865,8 @@ pdf_redact_image_filter_pixels(fz_context *ctx, void *opaque, fz_matrix ctm, con
 			fz_rethrow(ctx);
 		return image;
 	}
-	return image;
+
+	return fz_keep_image(ctx, image);
 }
 
 /* Returns 0 if area does not intersect with any of our redactions.

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -579,38 +579,74 @@ static const char *find_string(const char *s, const char *needle, const char **e
 	return *endp = NULL, NULL;
 }
 
-static void add_hit_char(fz_context *ctx, struct highlight *hits, int *hit_mark, fz_stext_line *line, fz_stext_char *ch, int is_at_start)
+struct search_data
+{
+	/* Number of hits so far.*/
+	int count_quads;
+	int count_hits;
+	int max_quads;
+	int quad_fill;
+	fz_quad locals[32];
+	fz_quad *quads;
+	float hfuzz, vfuzz;
+	fz_search_callback_fn *cb;
+	void *opaque;
+};
+
+static int hit_char(fz_context *ctx, struct search_data *hits, fz_stext_line *line, fz_stext_char *ch, int is_at_start)
 {
 	float vfuzz = ch->size * hits->vfuzz;
 	float hfuzz = ch->size * hits->hfuzz;
 
-	if (hits->len > 0 && !is_at_start)
+	/* Can we continue an existing quad? */
+	if (hits->quad_fill > 0 && !is_at_start)
 	{
-		fz_quad *end = &hits->box[hits->len-1];
+		fz_quad *end = &hits->quads[hits->quad_fill-1];
 		if (hdist(&line->dir, &end->lr, &ch->quad.ll) < hfuzz
 			&& vdist(&line->dir, &end->lr, &ch->quad.ll) < vfuzz
 			&& hdist(&line->dir, &end->ur, &ch->quad.ul) < hfuzz
 			&& vdist(&line->dir, &end->ur, &ch->quad.ul) < vfuzz)
 		{
+			/* Yes */
 			end->ur = ch->quad.ur;
 			end->lr = ch->quad.lr;
-			return;
+			return 0;
 		}
 	}
 
-	if (hits->len < hits->cap)
+	if (is_at_start && hits->quad_fill > 0)
 	{
-		if (hit_mark)
-			hit_mark[hits->len] = is_at_start;
-		hits->box[hits->len] = ch->quad;
-		hits->len++;
+		/* Send the quads we have queued. */
+		hits->count_hits++;
+		if (hits->cb && hits->cb(ctx, hits->opaque, hits->quad_fill, hits->quads))
+			return 1;
+		hits->quad_fill = 0;
 	}
+
+	if (hits->quad_fill == hits->max_quads)
+	{
+		int newmax = hits->max_quads * 2;
+		if (hits->quads == hits->locals)
+		{
+			hits->quads = fz_malloc(ctx, sizeof(hits->quads[0]) * newmax);
+			memcpy(hits->quads, hits->locals, sizeof(hits->quads[0]) * nelem(hits->locals));
+		}
+		else
+		{
+			hits->quads = fz_realloc(ctx, hits->quads, sizeof(hits->quads[0]) * newmax);
+		}
+		hits->max_quads = newmax;
+	}
+	hits->quads[hits->quad_fill++] = ch->quad;
+	hits->count_quads++;
+
+	return 0;
 }
 
 int
-fz_search_stext_page(fz_context *ctx, fz_stext_page *page, const char *needle, int *hit_mark, fz_quad *quads, int max_quads)
+fz_search_stext_page_cb(fz_context *ctx, fz_stext_page *page, const char *needle, fz_search_callback_fn *cb, void *opaque)
 {
-	struct highlight hits;
+	struct search_data hits;
 	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
@@ -621,11 +657,15 @@ fz_search_stext_page(fz_context *ctx, fz_stext_page *page, const char *needle, i
 	if (strlen(needle) == 0)
 		return 0;
 
-	hits.len = 0;
-	hits.cap = max_quads;
-	hits.box = quads;
+	hits.count_quads = 0;
+	hits.count_hits = 0;
+	hits.quad_fill = 0;
+	hits.max_quads = nelem(hits.locals);
+	hits.quads = hits.locals;
 	hits.hfuzz = 0.2f; /* merge kerns but not large gaps */
 	hits.vfuzz = 0.1f;
+	hits.cb = cb;
+	hits.opaque = opaque;
 
 	buffer = fz_new_buffer_from_stext_page(ctx, page);
 	fz_try(ctx)
@@ -654,7 +694,8 @@ try_new_match:
 					{
 						if (haystack < end)
 						{
-							add_hit_char(ctx, &hits, hit_mark, line, ch, haystack == begin);
+							if (hit_char(ctx, &hits, line, ch, haystack == begin))
+								goto no_more_matches;
 						}
 						else
 						{
@@ -674,12 +715,68 @@ try_new_match:
 			assert(*haystack == '\n');
 			++haystack;
 		}
-no_more_matches:;
+no_more_matches:
+		/* Send the quads we have queued. */
+		if (hits.quad_fill)
+		{
+			hits.count_hits++;
+			if (hits.cb)
+				(void)hits.cb(ctx, hits.opaque, hits.quad_fill, hits.quads);
+		}
 	}
 	fz_always(ctx)
+	{
 		fz_drop_buffer(ctx, buffer);
+		if (hits.quads != hits.locals)
+			fz_free(ctx, hits.quads);
+	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 
-	return hits.len;
+	return hits.count_hits;
+}
+
+typedef struct
+{
+	int *hit_mark;
+	fz_quad *quads;
+	int max_quads;
+	int fill;
+	int hit;
+} oldsearch_data;
+
+static int
+oldsearch_cb(fz_context *ctx, void *opaque, int num_quads, fz_quad *quads)
+{
+	oldsearch_data *data = (oldsearch_data *)opaque;
+	int i;
+	int hit = data->hit++;
+
+	for (i = 0; i < num_quads; i++)
+	{
+		if (data->fill == data->max_quads)
+			break;
+		if (data->hit_mark)
+			data->hit_mark[data->fill] = hit;
+		data->quads[data->fill] = quads[i];
+		data->fill++;
+	}
+
+	/* We never return 1 here, even if we fill up the buffer, as we
+	 * want the old API to get the correct total number of quads. */
+	return 0;
+}
+
+int
+fz_search_stext_page(fz_context *ctx, fz_stext_page *page, const char *needle, int *hit_mark, fz_quad *quads, int max_quads)
+{
+	oldsearch_data data;
+
+	data.hit_mark = hit_mark;
+	data.quads = quads;
+	data.max_quads = max_quads;
+	data.fill = 0;
+	data.hit = 0;
+	(void)fz_search_stext_page_cb(ctx, page, needle, oldsearch_cb, &data);
+	return data.fill; /* Return the number of quads we have read */
 }

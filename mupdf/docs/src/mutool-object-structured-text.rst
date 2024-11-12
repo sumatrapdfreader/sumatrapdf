@@ -55,7 +55,7 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
 
         var result = sText.highlight([100,100], [200,100]);
 
-    .. |tor_todo| WASM, "TODO"
+
 
 
 .. method:: copy(p, q)
@@ -75,7 +75,7 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
         var result = sText.copy([100,100], [200,100]);
 
 
-    .. |tor_todo| WASM, "TODO"
+
 
 
 
@@ -128,8 +128,8 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
 
     Returns the instance in :title:`JSON` format.
 
-    :arg scale: `Float` Default: `1`. Multiply all the coordinates by this
-    factor to get the coordinates at another resolution.
+    :arg scale: `Float` Default: `1`. Multiply all the coordinates by this factor to get the coordinates at another resolution. The structured text has all coordinates in points (72 DPI), however you may want to use the coordinates in the `StructuredText` data at another resolution.
+
     :return: `String`.
 
     |example_tag|
@@ -137,3 +137,7 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
     .. code-block:: javascript
 
         var json = sText.asJSON();
+
+    .. note::
+
+        If you want the coordinates to be 300 DPI then pass (300/72) as the `scale` parameter.

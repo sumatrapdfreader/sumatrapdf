@@ -506,66 +506,6 @@ static inline jobject to_String_safe(fz_context *ctx, JNIEnv *env, const char *v
 	return jval;
 }
 
-
-static int count_next_hits(const int *marks, int a, int end)
-{
-	int b = a + 1;
-	while (b < end && !marks[b])
-		++b;
-	return b - a;
-}
-
-/* Array of Array of Quad */
-static inline jobjectArray to_SearchHits_safe(fz_context *ctx, JNIEnv *env, const int *marks, const fz_quad *quads, jint n)
-{
-	jobjectArray toparr, arr;
-	int i, k, a, m;
-
-	if (!ctx || !marks || !quads)
-		return NULL;
-
-	/* Count total number of search hits */
-	i = a = 0;
-	while (a < n)
-	{
-		a += count_next_hits(marks, a, n);
-		++i;
-	}
-
-	toparr = (*env)->NewObjectArray(env, i, cls_ArrayOfQuad, NULL);
-	if (!toparr || (*env)->ExceptionCheck(env))
-		return NULL;
-
-	i = a = 0;
-	while (a < n)
-	{
-		m = count_next_hits(marks, a, n);
-
-		arr = (*env)->NewObjectArray(env, m, cls_Quad, NULL);
-		if (!arr || (*env)->ExceptionCheck(env))
-			return NULL;
-		(*env)->SetObjectArrayElement(env, toparr, i++, arr);
-		if ((*env)->ExceptionCheck(env))
-			return NULL;
-
-		for (k = 0; k < m; ++k) {
-			jobject jquad = to_Quad_safe(ctx, env, quads[a+k]);
-			if (!jquad || (*env)->ExceptionCheck(env))
-				return NULL;
-			(*env)->SetObjectArrayElement(env, arr, k, jquad);
-			if ((*env)->ExceptionCheck(env))
-				return NULL;
-			(*env)->DeleteLocalRef(env, jquad);
-		}
-
-		(*env)->DeleteLocalRef(env, arr);
-
-		a += m;
-	}
-
-	return toparr;
-}
-
 static inline jobject to_Rect_safe(fz_context *ctx, JNIEnv *env, fz_rect rect)
 {
 	if (!ctx) return NULL;

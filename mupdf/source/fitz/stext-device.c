@@ -147,7 +147,7 @@ const char *fz_stext_options_usage =
 	"\tpreserve-spans: do not merge spans on the same line\n"
 	"\tdehyphenate: attempt to join up hyphenated words\n"
 	"\tuse-cid-for-unknown-unicode: guess unicode from cid if normal mapping fails\n"
-	"\tmediabox-clip=no: include characters outside mediabox\n"
+	"\tclip: do not include text that is completely clipped\n"
 	"\tstructured=no: don't collect structure data\n"
 	"\taccurate-bboxes=no: calculate char bboxes for from the outlines\n"
 	"\tvectors=no: include vector bboxes in output\n"
@@ -676,7 +676,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 		{
 			/* Check indent to spot text-indent style paragraphs */
 			if (wmode == 0 && cur_line && dev->new_obj)
-				if (fabsf(p.x - dev->start.x) > 0.5f)
+				if ((p.x - dev->start.x) > 0.5f)
 					new_para = 1;
 			new_line = 1;
 		}
@@ -827,12 +827,16 @@ do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix 
 		}
 		dev->last.valid = 1;
 
-		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
-			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &dev->page->mediabox))
+		if (dev->flags & FZ_STEXT_CLIP)
+		{
+			fz_rect r = fz_device_current_scissor(ctx, &dev->super);
+			r = fz_intersect_rect(r, dev->page->mediabox);
+			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &r))
 			{
 				dev->last.clipped = 1;
 				continue;
 			}
+		}
 		dev->last.clipped = 0;
 
 		/* Calculate bounding box and new pen position based on font metrics */
@@ -888,7 +892,7 @@ flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, 
 		if (rune == 0)
 			break;
 
-		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
+		if (dev->flags & FZ_STEXT_CLIP)
 			if (dev->last.clipped)
 				continue;
 
@@ -987,12 +991,16 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 		}
 		dev->last.valid = 1;
 
-		if (dev->flags & FZ_STEXT_MEDIABOX_CLIP)
-			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &dev->page->mediabox))
+		if (dev->flags & FZ_STEXT_CLIP)
+		{
+			fz_rect r = fz_device_current_scissor(ctx, &dev->super);
+			r = fz_intersect_rect(r, dev->page->mediabox);
+			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &r))
 			{
 				dev->last.clipped = 1;
 				continue;
 			}
+		}
 		dev->last.clipped = 0;
 
 		/* Calculate bounding box and new pen position based on font metrics */
@@ -1326,6 +1334,7 @@ fz_stext_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix 
 
 	local_ctm = ctm;
 	scissor = fz_device_current_scissor(ctx, dev);
+	scissor = fz_intersect_rect(scissor, tdev->page->mediabox);
 	image = fz_new_image_from_shade(ctx, shade, &local_ctm, color_params, scissor);
 	fz_try(ctx)
 		fz_stext_fill_image(ctx, dev, image, local_ctm, alpha, color_params);
@@ -1416,9 +1425,15 @@ fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts, const char *stri
 	if (fz_has_option(ctx, string, "segment", &val) && fz_option_eq(val, "yes"))
 		opts->flags |= FZ_STEXT_SEGMENT;
 
-	opts->flags |= FZ_STEXT_MEDIABOX_CLIP;
-	if (fz_has_option(ctx, string, "mediabox-clip", &val) && fz_option_eq(val, "no"))
-		opts->flags ^= FZ_STEXT_MEDIABOX_CLIP;
+	opts->flags |= FZ_STEXT_CLIP;
+	if (fz_has_option(ctx, string, "mediabox-clip", &val))
+	{
+		fz_warn(ctx, "The 'mediabox-clip' option has been deprecated. Use 'clip' instead.");
+		if (fz_option_eq(val, "no"))
+			opts->flags ^= FZ_STEXT_CLIP;
+	}
+	if (fz_has_option(ctx, string, "clip", &val) && fz_option_eq(val, "no"))
+		opts->flags ^= FZ_STEXT_CLIP;
 
 	opts->scale = 1;
 	if (fz_has_option(ctx, string, "resolution", &val))
@@ -1561,15 +1576,15 @@ is_path_rect(fz_context *ctx, fz_path *path, fz_point *from, fz_point *to, float
 		else
 			break;
 	}
-	d32x = rd.corners[3].x - rd.corners[2].x;
-	d32y = rd.corners[3].y - rd.corners[2].y;
+	d32x = rd.corners[2].x - rd.corners[3].x;
+	d32y = rd.corners[2].y - rd.corners[3].y;
 
 	/* So d32x and d01x need to be the same for this to be a strikeout. */
 	if (!feq(d32x, d01x) || !feq(d32y, d01y))
 		return 0;
 
 	/* We are plausibly a rectangle. */
-	*thickness = sqrtf(d32x * d32x + d32y * d32y);
+	*thickness = sqrtf(d03x * d03x + d03y * d03y);
 
 	from->x = (rd.corners[0].x + rd.corners[3].x)/2;
 	from->y = (rd.corners[0].y + rd.corners[3].y)/2;
@@ -1696,13 +1711,30 @@ check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page,
 	}
 }
 
-static void
-add_vector(fz_context *ctx, fz_stext_page *page, fz_rect bbox)
+static uint8_t
+to255(float x)
 {
+	if (x <= 0)
+		return 0;
+	if (x >= 1)
+		return 255;
+	return (uint8_t)(x*255 + 0.5);
+}
+
+static void
+add_vector(fz_context *ctx, fz_stext_page *page, fz_rect bbox, int stroked, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp)
+{
+	float rgb[3];
 	fz_stext_block *b = add_block_to_page(ctx, page);
 
 	b->type = FZ_STEXT_BLOCK_VECTOR;
 	b->bbox = bbox;
+	b->u.v.stroked = stroked;
+	fz_convert_color(ctx, cs, color, fz_device_rgb(ctx), rgb, NULL, cp);
+	b->u.v.rgba[0] = to255(rgb[0]);
+	b->u.v.rgba[1] = to255(rgb[1]);
+	b->u.v.rgba[2] = to255(rgb[2]);
+	b->u.v.rgba[3] = to255(alpha);
 }
 
 static void
@@ -1720,7 +1752,7 @@ fz_stext_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int eve
 	check_for_strikeout(ctx, tdev, page, path, ctm);
 
 	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
-		add_vector(ctx, page, path_bounds);
+		add_vector(ctx, page, path_bounds, 0, cs, color, alpha, cp);
 }
 
 static void
@@ -1738,7 +1770,7 @@ fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const
 	check_for_strikeout(ctx, tdev, page, path, ctm);
 
 	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
-		add_vector(ctx, page, path_bounds);
+		add_vector(ctx, page, path_bounds, 1, cs, color, alpha, cp);
 }
 
 static void

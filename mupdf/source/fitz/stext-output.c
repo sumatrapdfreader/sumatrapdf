@@ -682,8 +682,9 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 			break;
 
 		case FZ_STEXT_BLOCK_VECTOR:
-			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" />\n",
-					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
+			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" stroke=\"%d\" rgba=\"%02x%02x%02x%02x\"/>\n",
+					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1,
+					!!block->u.v.stroked, block->u.v.rgba[0], block->u.v.rgba[1], block->u.v.rgba[2], block->u.v.rgba[3]);
 			break;
 
 		case FZ_STEXT_BLOCK_GRID:

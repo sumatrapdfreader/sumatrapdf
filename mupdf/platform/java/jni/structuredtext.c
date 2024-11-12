@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -37,10 +37,8 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 {
 	fz_context *ctx = get_context(env);
 	fz_stext_page *text = from_StructuredText(env, self);
-	fz_quad hits[500];
-	int marks[500];
 	const char *needle = NULL;
-	int n = 0;
+	search_state state = { env, NULL, 0 };
 
 	if (!ctx || !text) return NULL;
 	if (!jneedle) jni_throw_arg(env, "needle must not be null");
@@ -48,14 +46,20 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 	needle = (*env)->GetStringUTFChars(env, jneedle, NULL);
 	if (!needle) return NULL;
 
+	state.hits = (*env)->NewObject(env, cls_ArrayList, mid_ArrayList_init);
+	if (!state.hits || (*env)->ExceptionCheck(env)) return NULL;
+
 	fz_try(ctx)
-		n = fz_search_stext_page(ctx, text, needle, marks, hits, nelem(hits));
+		fz_search_stext_page_cb(ctx, text, needle, hit_callback, &state);
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	return to_SearchHits_safe(ctx, env, marks, hits, n);
+	if (state.error)
+		return NULL;
+
+	return (*env)->CallObjectMethod(env, state.hits, mid_ArrayList_toArray);
 }
 
 JNIEXPORT jobject JNICALL

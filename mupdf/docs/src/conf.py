@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("."))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.ifconfig"]
-extensions = []
+extensions = ["sphinx_copybutton"]
 if hasattr(os, "uname") and os.uname()[0] in ("OpenBSD", "Darwin"):
     # rst2pdf is not available on OpenBSD or MacOS.
     pass

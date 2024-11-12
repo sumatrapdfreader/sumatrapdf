@@ -62,8 +62,13 @@ The `sign` command reads an input :title:`PDF` file and by default prints inform
 ----
 
 
-Signing certificates
+
+
+Signing
 -------------------------
+
+Certificates
+~~~~~~~~~~~~~~~
 
 Signing digital signatures in :title:`MuPDF` requires that you have a PFX certificate. You can create a self-signed certificate using :title:`OpenSSL` by following these steps:
 
@@ -76,7 +81,42 @@ Signing digital signatures in :title:`MuPDF` requires that you have a PFX certif
 `$ openssl pkcs12 -export -in cert.pem -out cert.pfx`
 
 
+Examples
+~~~~~~~~~~
 
+
+The following command should show all signature fields in the PDF whether signed or unsigned:
+
+
+|example_tag|
+
+.. code-block:: bash
+
+   mutool sign -v unsigned.pdf
+
+
+----
+
+Once you know the object number of an unsigned signature field, then do the following:
+
+
+|example_tag|
+
+.. code-block:: bash
+
+   mutool sign -s certificate.pfx -P pasword123 -o signed.pdf unsigned.pdf 4242
+
+This assumes that object `4242 0 R` is the signature field. Re-running `sign -v` on `signed.pdf` should then show that the signature was signed.
+
+----
+
+To clear a signature use the `-c` option:
+
+|example_tag|
+
+.. code-block:: bash
+
+   mutool sign -c -o unsigned.pdf signed.pdf 4242
 
 
 .. include:: footer.rst

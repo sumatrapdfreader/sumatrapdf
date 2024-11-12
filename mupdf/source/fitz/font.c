@@ -2362,3 +2362,21 @@ fz_extract_ttf_from_ttc(fz_context *ctx, fz_font *font)
 
 	return buf;
 }
+
+void fz_enumerate_font_cmap(fz_context *ctx, fz_font *font, fz_cmap_callback *cb, void *opaque)
+{
+	unsigned long ucs;
+	unsigned int gid;
+
+	if (font == NULL || font->ft_face == NULL)
+		return;
+
+	fz_ft_lock(ctx);
+	for (ucs = FT_Get_First_Char(font->ft_face, &gid); gid > 0; ucs = FT_Get_Next_Char(font->ft_face, ucs, &gid))
+	{
+		fz_ft_unlock(ctx);
+		cb(ctx, opaque, ucs, gid);
+		fz_ft_lock(ctx);
+	}
+	fz_ft_unlock(ctx);
+}

@@ -34,6 +34,13 @@ https://github.com/pradyunsg/furo/blob/main/LICENSE
 This then creates the HTML documentation within the folder "build" in the root of "docs".
 
 
+- Alternatively you can also use [Sphinx Autobuild](https://pypi.org/project/sphinx-autobuild/) and do:
+
+`sphinx-autobuild src _build/html`
+
+This will ensure that the documentation runs in a localhost and will also hot-reload changes.
+
+
 ## Building PDF documentation
 
 

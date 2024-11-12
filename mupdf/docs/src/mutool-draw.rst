@@ -43,7 +43,7 @@ The `draw` command will render a document to image files, convert to another vec
    `-p` password
       Use the specified password if the file is encrypted.
    `-o` output
-      The output file name. The output format is inferred from the output filename. Embed `%d` in the name to indicate the page number (for example: "page%d.png"). Printf modifiers are supported, for example "%03d". If no output is specified, the output will go to `stdout`.
+      The output file name. The output format is inferred from the output filename. Embed `%d` in the name to indicate the page number (for example: "page%d.png"). Printf modifiers are supported, for example "%03d". If no output is specified, the output will go to `stdout` for text output formats, for image output formats nothing is outputted.
    `-F` format
       Enforce a specific output format. Only necessary when outputting to `stdout` since normally the output filename is used to infer the output format.
    `-R` angle

@@ -2409,11 +2409,10 @@ static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smas
 		gstate->softmask = pdf_keep_obj(ctx, smask);
 		gstate->softmask_cs = fz_keep_colorspace(ctx, smask_cs);
 		gstate->softmask_resources = pdf_keep_obj(ctx, pr->rstack->resources);
+		pdf_drop_obj(ctx, gstate->softmask_tr);
+		gstate->softmask_tr = NULL;
 		if (tr)
-		{
-			pdf_drop_obj(ctx, gstate->softmask_tr);
 			gstate->softmask_tr = pdf_keep_obj(ctx, tr);
-		}
 		for (i = 0; i < cs_n; ++i)
 			gstate->softmask_bc[i] = bc[i];
 		gstate->luminosity = luminosity;
@@ -2561,6 +2560,7 @@ static void pdf_run_n(fz_context *ctx, pdf_processor *proc)
 static void pdf_run_W(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
+	pdf_flush_text(ctx, pr);
 	pr->clip = 1;
 	pr->clip_even_odd = 0;
 }
@@ -2568,6 +2568,7 @@ static void pdf_run_W(fz_context *ctx, pdf_processor *proc)
 static void pdf_run_Wstar(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_run_processor *pr = (pdf_run_processor *)proc;
+	pdf_flush_text(ctx, pr);
 	pr->clip = 1;
 	pr->clip_even_odd = 1;
 }

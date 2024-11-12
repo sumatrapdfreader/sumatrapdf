@@ -237,6 +237,8 @@ class ClassExtra:
 
                     Should typically set up the MuPDF struct so that `self_()`
                     can return the original C++ wrapper class instance.
+                comment:
+                    Extra comment for the wrapper class.
                 free:
                     Optional code for freeing the virtual_fnptrs wrapper
                     class. If specified this causes creation of a destructor
@@ -1211,6 +1213,19 @@ classextras = ClassExtras(
                         *({rename.class_("fz_path_walker")}2**) (m_internal + 1) = this;
                         '''),
                     free = f'{rename.ll_fn("fz_free")}(m_internal);\n',
+                    comment = textwrap.dedent(f'''
+                            /*
+                            We require that the `void* arg` passed to callbacks
+                            is the original `fz_path_walker*`. So, for example,
+                            class-aware wrapper mupdf::fz_walk_path() should be
+                            called like:
+
+                                mupdf.FzPath path = ...;
+                                struct Walker : mupdf.FzPathWalker2 {...};
+                                Walker walker(...);
+                                mupdf::fz_walk_path(path, walker, walker.m_internal);
+                            */
+                            ''')
                     ),
                 ),
 
@@ -1930,6 +1945,10 @@ classextras = ClassExtras(
                         *(({rename.class_("pdf_processor")}2**) (m_internal + 1)) = this;
                         '''),
                     ),
+                ),
+
+        pdf_recolor_options = ClassExtra(
+                pod = 'inline',
                 ),
 
         pdf_redact_options = ClassExtra(

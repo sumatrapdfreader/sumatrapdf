@@ -372,6 +372,22 @@ fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needl
 }
 
 int
+fz_search_display_list_cb(fz_context *ctx, fz_display_list *list, const char *needle, fz_search_callback_fn *cb, void *opaque)
+{
+	fz_stext_page *text;
+	int count = 0;
+
+	text = fz_new_stext_page_from_display_list(ctx, list, NULL);
+	fz_try(ctx)
+		count = fz_search_stext_page_cb(ctx, text, needle, cb, opaque);
+	fz_always(ctx)
+		fz_drop_stext_page(ctx, text);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
 fz_search_page(fz_context *ctx, fz_page *page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max)
 {
 	fz_stext_options opts = { FZ_STEXT_DEHYPHENATE };
@@ -381,6 +397,23 @@ fz_search_page(fz_context *ctx, fz_page *page, const char *needle, int *hit_mark
 	text = fz_new_stext_page_from_page(ctx, page, &opts);
 	fz_try(ctx)
 		count = fz_search_stext_page(ctx, text, needle, hit_mark, hit_bbox, hit_max);
+	fz_always(ctx)
+		fz_drop_stext_page(ctx, text);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_search_page_cb(fz_context *ctx, fz_page *page, const char *needle, fz_search_callback_fn *cb, void *opaque)
+{
+	fz_stext_options opts = { FZ_STEXT_DEHYPHENATE };
+	fz_stext_page *text;
+	int count = 0;
+
+	text = fz_new_stext_page_from_page(ctx, page, &opts);
+	fz_try(ctx)
+		count = fz_search_stext_page_cb(ctx, text, needle, cb, opaque);
 	fz_always(ctx)
 		fz_drop_stext_page(ctx, text);
 	fz_catch(ctx)
@@ -405,6 +438,22 @@ fz_search_page_number(fz_context *ctx, fz_document *doc, int number, const char 
 }
 
 int
+fz_search_page_number_cb(fz_context *ctx, fz_document *doc, int number, const char *needle, fz_search_callback_fn *cb, void *opaque)
+{
+	fz_page *page;
+	int count = 0;
+
+	page = fz_load_page(ctx, doc, number);
+	fz_try(ctx)
+		count = fz_search_page_cb(ctx, page, needle, cb, opaque);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
 fz_search_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int number, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max)
 {
 	fz_page *page;
@@ -413,6 +462,22 @@ fz_search_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, in
 	page = fz_load_chapter_page(ctx, doc, chapter, number);
 	fz_try(ctx)
 		count = fz_search_page(ctx, page, needle, hit_mark, hit_bbox, hit_max);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_search_chapter_page_number_cb(fz_context *ctx, fz_document *doc, int chapter, int number, const char *needle, fz_search_callback_fn *cb, void *opaque)
+{
+	fz_page *page;
+	int count = 0;
+
+	page = fz_load_chapter_page(ctx, doc, chapter, number);
+	fz_try(ctx)
+		count = fz_search_page_cb(ctx, page, needle, cb, opaque);
 	fz_always(ctx)
 		fz_drop_page(ctx, page);
 	fz_catch(ctx)
