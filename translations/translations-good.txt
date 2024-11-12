@@ -13053,6 +13053,7 @@ br:Abrir o Próximo Arquivo na Pasta
 cn:打开文件夹中的下一个文件
 co:Apre u schedariu seguente in u cartulare
 cy:Agor y Ffeil Nesaf yn y Ffolder
+cz:Otevřít další soubor ve složce
 de:Nächste Datei im Ordner öffnen
 dk:Åben næste fil i mappe
 el:Άνοιγμα επόμενου αρχείου στο φάκελο
@@ -13076,6 +13077,7 @@ br:Abrir o Arquivo Anterior na Pasta
 cn:打开文件夹中的上一个文件
 co:Apre u schedariu precedente in u cartulare
 cy:Agor y Ffeil Blaenorol yn y Ffolder
+cz:Otevřít předchozí soubor ve složce
 de:Vorherige Datei im Ordner öffnen
 dk:Åbne tidligere fil i mappe
 el:Άνοιγμα προηγούμενου αρχείου στο φάκελο
