@@ -375,6 +375,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 // Execute the command
                 system(commandString.c_str());
+
+                // Close the GUI window after conversion
+                DestroyWindow(hwnd);
+                PostQuitMessage(0);
             }
             break;
 
