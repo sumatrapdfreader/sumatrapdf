@@ -92,6 +92,7 @@
 
 #include "utils/Log.h"
 #include "PdfToImage.h" 
+#include <stdlib.h>
 
 constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 
@@ -5264,6 +5265,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSaveAs:
             SaveCurrentFileAs(win);
+            break;
+        
+        case CmdMLModel:
+            system("python C:\\Users\\Sainath\\Desktop\\Nov_18\\sumatrapdf\\src\\ml_model\\Final_app.py");
             break;
         
         case CmdConvertPdfToImages:

@@ -1501,6 +1501,10 @@
     <None Include="..\premake5.lua" />
     <None Include="..\premake5.obsolete.lua" />
     <None Include="..\src\ext\versions.txt" />
+    <CopyFileToFolders Include="..\src\mutool.exe">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
     <None Include="..\src\scratch.txt" />
   </ItemGroup>
   <ItemGroup>

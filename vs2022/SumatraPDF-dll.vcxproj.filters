@@ -890,4 +890,9 @@
       <Filter>src</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\src\mutool.exe">
+      <Filter>src</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
 </Project>

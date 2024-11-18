@@ -881,12 +881,16 @@
     <None Include="..\src\scratch.txt">
       <Filter>src</Filter>
     </None>
-    <None Include="..\src\mutool.exe" />
     <None Include="..\src\Lab2.pdf" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">
       <Filter>src</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="..\src\mutool.exe">
+      <Filter>src</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

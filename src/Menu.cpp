@@ -91,6 +91,10 @@ static_assert(CmdZoomLast - CmdZoomFirst == 17, "zoom ids are not in a continuou
 //[ ACCESSKEY_GROUP File Menu
 static MenuDef menuDefFile[] = {
     {
+        _TRN("Open the ML_Model"),
+        CmdMLModel,
+    },
+    {
         _TRN("Convert to &Images..."),
         CmdConvertPdfToImages,
     },
