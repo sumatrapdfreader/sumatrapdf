@@ -507,9 +507,6 @@ add_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, 
 {
 	int current;
 	cmap_splay *tree;
-	int i;
-	int inrange = 0;
-	unsigned int k, count;
 
 	if (low > high)
 	{
@@ -521,22 +518,6 @@ add_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, 
 	{
 		fz_warn(ctx, "CMap is missing codespace range");
 		pdf_add_codespace(ctx, cmap, 0, 65535, 2);
-	}
-
-	count = high - low + 1;
-	for (k = 0; k < count; k++) {
-		unsigned int c = low + k;
-
-		inrange = 0;
-		for (i = 0; i < cmap->codespace_len; i++) {
-			if (cmap->codespace[i].low <= c && c <= cmap->codespace[i].high)
-				inrange = 1;
-		}
-		if (!inrange)
-		{
-			fz_warn(ctx, "ignoring CMap range (%u-%u) that is outside of the codespace", low, high);
-			return;
-		}
 	}
 
 	tree = cmap->tree;

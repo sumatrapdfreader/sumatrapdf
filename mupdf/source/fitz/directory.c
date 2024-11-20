@@ -26,7 +26,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <windows.h>
 #include <errno.h>
 #define stat _stat
@@ -139,7 +139,7 @@ fz_archive *
 fz_open_directory(fz_context *ctx, const char *path)
 {
 	fz_directory *dir;
-#ifdef _MSC_VER
+#ifdef _WIN32
 	WCHAR *wpath = NULL;
 	size_t z = 3;
 	HANDLE h = NULL;
@@ -168,7 +168,7 @@ fz_open_directory(fz_context *ctx, const char *path)
 
 	fz_try(ctx)
 	{
-#ifdef _MSC_VER
+#ifdef _WIN32
 		char const *p = path;
 		WCHAR *w;
 		while (*p)
@@ -254,7 +254,7 @@ fz_open_directory(fz_context *ctx, const char *path)
 	}
 	fz_always(ctx)
 	{
-#ifdef _MSC_VER
+#ifdef _WIN32
 		fz_free(ctx, wpath);
 		if (h)
 			(void)FindClose(h);

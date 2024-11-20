@@ -503,19 +503,26 @@ install-docs:
 
 install: install-libs install-apps install-docs
 
-install-docs-html:
+docs:
 	python3 scripts/build-docs.py
+
+install-docs-html: docs
 	install -d $(DESTDIR)$(docdir)
 	install -d $(DESTDIR)$(docdir)/_images
 	install -d $(DESTDIR)$(docdir)/_static
+	install -d $(DESTDIR)$(docdir)/_static/styles
+	install -d $(DESTDIR)$(docdir)/_static/scripts
 	install -m 644 build/docs/html/*.html $(DESTDIR)$(docdir)
 	install -m 644 build/docs/html/*.inv $(DESTDIR)$(docdir)
 	install -m 644 build/docs/html/*.js $(DESTDIR)$(docdir)
 	install -m 644 build/docs/html/_images/* $(DESTDIR)$(docdir)/_images
-	install -m 644 build/docs/html/_static/*.css $(DESTDIR)$(docdir)/_static
 	install -m 644 build/docs/html/_static/*.ico $(DESTDIR)$(docdir)/_static
 	install -m 644 build/docs/html/_static/*.js $(DESTDIR)$(docdir)/_static
 	install -m 644 build/docs/html/_static/*.png $(DESTDIR)$(docdir)/_static
+	install -m 644 build/docs/html/_static/*.css $(DESTDIR)$(docdir)/_static
+	install -m 644 build/docs/html/_static/scripts/*.js $(DESTDIR)$(docdir)/_static/scripts
+	install -m 644 build/docs/html/_static/scripts/*.map $(DESTDIR)$(docdir)/_static/scripts
+	install -m 644 build/docs/html/_static/styles/*.css $(DESTDIR)$(docdir)/_static/styles
 
 tarball:
 	bash scripts/archive.sh
@@ -668,7 +675,7 @@ install-% c++-% python-% csharp-%:
 
 endif
 
-.PHONY: all clean nuke install third libs apps generate tags
+.PHONY: all clean nuke install third libs apps generate tags docs
 .PHONY: shared shared-debug shared-clean
 .PHONY: c++-% python-% csharp-%
 .PHONY: c++-clean python-clean csharp-clean

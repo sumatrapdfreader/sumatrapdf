@@ -1,4 +1,4 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
@@ -33,6 +33,33 @@ To minimise the impact of such changes, we undertake to list the :title:`API` ch
 .. important::
 
    The changes listed below only affects *existing* :title:`APIs`.
+
+Changes from 1.24 to 1.25
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- New `wants_file` member for `fz_document_handler`.
+- `fz_text_item` now has an explicit pen `advance` member.
+- `pdf_annot_rect` works with the "design" rectangle.
+- mutool recolor can now be used as a function.
+
+
+Changes from 1.23 to 1.24
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- You must call `pdf_report_error` in the final `fz_catch`. Any unreported errors will be automatically reported when a new error is raised, or when closing the fitz context.
+- The deprecated pdf_check_signature was removed.
+
+
+Changes from 1.22 to 1.23
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- `pdf_field_name` renamed to `pdf_load_field_name`.
+- mutool run changed many methods to match Java and new WASM library.
+
+
+Changes from 1.21 to 1.22
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+None.
 
 
 Changes from 1.20 to 1.21

@@ -65,6 +65,10 @@ int fz_outline_iterator_down(fz_context *ctx, fz_outline_iterator *iter);
 
 	After an insert, we do not change where we are pointing.
 	The return code is the same as for next, it indicates the current iterator position.
+
+	Note that for PDF documents at least, the is_open field is ignored. All childless
+	nodes are considered closed by PDF, hence (given every newly inserted node is
+	childless by definition) all new nodes are inserted with is_open == false.
 */
 int fz_outline_iterator_insert(fz_context *ctx, fz_outline_iterator *iter, fz_outline_item *item);
 
@@ -107,6 +111,10 @@ void fz_drop_outline_iterator(fz_context *ctx, fz_outline_iterator *iter);
 
 	down: The outline items immediate children in the hierarchy.
 	May be NULL if no children exist.
+
+	is_open: If zero, the outline element is closed in the UI. If
+	1, it should be open, showing any child elements. All other
+	values reserved.
 */
 typedef struct fz_outline
 {

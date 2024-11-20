@@ -45,6 +45,7 @@ List of changes in MuPDF 1.25
 		- fz_text_item now has an explicit pen "advance" member.
 		- mutool recolor can now be used as a function.
 		- pdf_annot_rect works with the "design" rectangle.
+		- structured text "color" field renamed to "argb" and now includes alpha channel
 
 	Important bug fixes:
 		- More robust font subsetting.

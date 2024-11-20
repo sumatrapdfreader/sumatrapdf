@@ -42,7 +42,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef _MSC_VER
+#ifdef _WIN32
 struct timeval;
 struct timezone;
 int gettimeofday(struct timeval *tv, struct timezone *tz);
@@ -1358,6 +1358,20 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 	start = (showtime ? gettime() : 0);
 
+	if (output_file_per_page)
+	{
+		char text_buffer[512];
+
+		bgprint_flush();
+		if (out)
+		{
+			fz_close_output(ctx, out);
+			fz_drop_output(ctx, out);
+		}
+		fz_format_output_path(ctx, text_buffer, sizeof text_buffer, output, pagenum);
+		out = fz_new_output_with_path(ctx, text_buffer, 0);
+	}
+
 	page = fz_load_page(ctx, doc, pagenum - 1);
 
 	if (spots != SPOTS_NONE)
@@ -1456,20 +1470,6 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			fz_rethrow(ctx);
 		}
 		features = iscolor ? " color" : " grayscale";
-	}
-
-	if (output_file_per_page)
-	{
-		char text_buffer[512];
-
-		bgprint_flush();
-		if (out)
-		{
-			fz_close_output(ctx, out);
-			fz_drop_output(ctx, out);
-		}
-		fz_format_output_path(ctx, text_buffer, sizeof text_buffer, output, pagenum);
-		out = fz_new_output_with_path(ctx, text_buffer, 0);
 	}
 
 	if (bgprint.active)
@@ -2534,7 +2534,7 @@ int mudraw_main(int argc, char **argv)
 			fz_register_document_handlers(ctx);
 #ifdef HAVE_SMARTOFFICE
 			{
-				void *cfg = so_doc_handler_enable(ctx, "en-gb");
+				void *cfg = so_doc_handler_enable(ctx, "en-gb", NULL, 1);
 				so_doc_handler_configure(ctx, cfg, SO_DOC_HANDLER_MODE, SO_DOC_HANDLER_MODE_HTML);
 			}
 #endif

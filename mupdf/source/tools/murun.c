@@ -314,7 +314,7 @@ const char *postfix_js =
 	"mupdf.PDFDocument.prototype.getEmbeddedFiles = function () {\n"
 	"        function _getEmbeddedFilesRec(result, N) {\n"
 	"                var i, n\n"
-	"                if (N) {\n"
+	"                if (N.isDictionary()) {\n"
 	"                        var NN = N.get('Names')\n"
 	"                        if (NN)\n"
 	"                                for (i = 0, n = NN.length; i < n; i += 2)\n"
@@ -327,6 +327,29 @@ const char *postfix_js =
 	"                return result\n"
 	"        }\n"
 	"        return _getEmbeddedFilesRec({}, this.getTrailer().get('Root', 'Names', 'EmbeddedFiles'))\n"
+	"}\n"
+	"mupdf.PDFDocument.prototype.insertEmbeddedFile = function (filename, filespec) {\n"
+	"	var efs = this.getEmbeddedFiles()\n"
+	"	efs[filename] = filespec\n"
+	"	this._rewriteEmbeddedFiles(efs)\n"
+	"}\n"
+	"mupdf.PDFDocument.prototype.deleteEmbeddedFile = function (filename) {\n"
+	"	var efs = this.getEmbeddedFiles()\n"
+	"	delete efs[filename]\n"
+	"	this._rewriteEmbeddedFiles(efs)\n"
+	"}\n"
+	"mupdf.PDFDocument.prototype._rewriteEmbeddedFiles = function (efs) {\n"
+	"	var efs_keys = Object.keys(efs)\n"
+	"	var root = this.getTrailer().get('Root')\n"
+	"	var root_names = root.get('Names')\n"
+	"	if (!root_names.isDictionary())\n"
+	"		root_names = root.put('Names', this.newDictionary(1))\n"
+	"	var root_names_efs = root_names.put('EmbeddedFiles', this.newDictionary(1))\n"
+	"	var root_names_efs_names = root_names_efs.put('Names', this.newArray(efs_keys.length * 2))\n"
+	"	for (var i = 0; i < efs_keys.length; ++i) {\n"
+	"		root_names_efs_names.push(this.newString(efs_keys[i]))\n"
+	"		root_names_efs_names.push(efs[efs_keys[i]])\n"
+	"	}\n"
 	"}\n"
 ;
 
@@ -5571,7 +5594,7 @@ stext_walk(js_State *J, fz_stext_block *block)
 						ffi_pushfont(J, ch->font);
 						js_pushnumber(J, ch->size);
 						ffi_pushquad(J, ch->quad);
-						js_pushnumber(J, ch->color);
+						js_pushnumber(J, ch->argb);
 						js_call(J, 6);
 						js_pop(J, 1);
 					}

@@ -1886,6 +1886,7 @@ pdf_init_document(fz_context *ctx, pdf_document *doc)
 
 		if (repaired)
 		{
+			pdf_repair_obj_stms(ctx, doc);
 			pdf_repair_trailer(ctx, doc);
 		}
 	}
@@ -1903,7 +1904,6 @@ void pdf_repair_trailer(fz_context *ctx, pdf_document *doc)
 	int i;
 
 	int xref_len = pdf_xref_len(ctx, doc);
-	pdf_repair_obj_stms(ctx, doc);
 
 	hasroot = (pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)) != NULL);
 	hasinfo = (pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Info)) != NULL);
@@ -2224,6 +2224,12 @@ pdf_load_obj_stm(fz_context *ctx, pdf_document *doc, int num, pdf_lexbuf *buf, i
 				else
 				{
 					entry->obj = obj;
+					/* If we've just read a 'null' object, don't leave this as a NULL 'o' object,
+					 * as that will a) confuse the code that called us into thinking that nothing
+					 * was loaded, and b) cause the entire objstm to be reloaded every time that
+					 * object is acccessed. Instead, just mark it as an 'f'. */
+					if (obj == NULL)
+						entry->type = 'f';
 					fz_drop_buffer(ctx, entry->stm_buf);
 					entry->stm_buf = NULL;
 				}

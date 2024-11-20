@@ -129,14 +129,14 @@ static void decimatepages(fz_context *ctx, pdf_document *doc)
 		{
 			xf = y_factor;
 			yf = x_factor;
-			yd = x_dir;
+			yd = -x_dir;
 			xd = 1;
 		}
 		else
 		{
 			xf = x_factor;
 			yf = y_factor;
-			xd = -x_dir;
+			xd = x_dir;
 			yd = -1;
 		}
 

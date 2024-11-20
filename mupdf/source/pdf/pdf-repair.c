@@ -269,7 +269,7 @@ pdf_repair_obj_stm(fz_context *ctx, pdf_document *doc, int stm_num)
 				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
 				continue;
 			}
-			else if (n >= pdf_xref_len(ctx, doc))
+			else if (n >= PDF_MAX_OBJECT_NUMBER)
 			{
 				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
 				continue;

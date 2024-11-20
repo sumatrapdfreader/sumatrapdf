@@ -72,8 +72,8 @@ typedef struct
 	int is_otf;
 	int symbolic;
 	encoding_t *encoding;
-	uint32_t orig_num_glyphs;
-	uint32_t new_num_glyphs;
+	uint16_t orig_num_glyphs;
+	uint16_t new_num_glyphs;
 	uint16_t index_to_loc_format;
 	uint8_t *index_to_loc_formatp;
 	uint16_t orig_num_long_hor_metrics;
@@ -140,7 +140,7 @@ find_table(fz_context *ctx, fz_stream *stm, uint32_t tag, uint32_t *len)
 		uint32_t t = fz_read_uint32(ctx, stm);
 		uint32_t cs = fz_read_uint32(ctx, stm);
 		uint32_t off = fz_read_uint32(ctx, stm);
-		cs = cs; /* UNUSED */
+		(void) cs; /* UNUSED */
 		*len = fz_read_uint32(ctx, stm);
 		if (t == tag)
 			return off;
@@ -263,7 +263,7 @@ write_tables(fz_context *ctx, ttf_t *ttf, fz_output *out)
 	/* number of tables */
 	fz_write_uint16_be(ctx, out, ttf->len);
 
-	while (1<<(i+1) < ttf->len)
+	while (1<<(i+1) <= ttf->len)
 		i++;
 
 	/* searchRange */
@@ -303,7 +303,7 @@ fix_checksum(fz_context *ctx, fz_buffer *buf)
 	fz_stream *stm = fz_open_buffer(ctx, buf);
 	uint32_t csumpos = find_table(ctx, stm, TAG("head"), &namesize) + 8;
 
-	len = len; // UNUSED
+	(void) len; // UNUSED
 
 	fz_drop_stream(ctx, stm);
 
@@ -574,7 +574,7 @@ load_enc_tab4(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	uint16_t seg_count;
 	uint32_t i;
 
-	if (data_size < 26)
+	if (data_size < offset + 26)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "cmap4 too small");
 
 	seg_count = get16(d+offset+6); /* 2 * seg_count */
@@ -734,11 +734,10 @@ load_encoding(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	{
 		if (ttf->symbolic)
 		{
-			/* PDF Spec says that for symbolic fonts we look for (1,0). */
-			/* (3, 0) may also be present, but we'll just use (1, 0) for
-			 * now. If we find files with a (3,0), but not a (1,0), then
-			 * we'll deal with that then. */
+			/* For symbolic fonts, we look for (1,0) as per PDF Spec, then (3,0). */
 			enc = load_enc(ctx, t, 1, 0);
+			if (!enc)
+				enc = load_enc(ctx, t, 3, 0);
 		}
 		else
 		{
@@ -746,6 +745,8 @@ load_encoding(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 			enc = load_enc(ctx, t, 3, 1);
 			if (!enc)
 				enc = load_enc(ctx, t, 1, 0);
+			if (!enc)
+				enc = load_enc(ctx, t, 0, 1);
 		}
 		if (!enc)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "No suitable cmap table found");
@@ -792,7 +793,7 @@ reduce_encoding(fz_context *ctx, ttf_t *ttf, int *gids, int num_gids)
 		}
 
 		/* Not found */
-		enc->gid[0] = 0;
+		enc->gid[i] = 0;
 	found:
 		{}
 	}
@@ -833,9 +834,6 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 		segs++;
 	}
 	segs++; /* For the terminator */
-
-
-
 
 	len = 12 + 14 + 2 + segs * 2 * 4 + entries * 2;
 	buf = fz_new_buffer(ctx, len);
@@ -1205,8 +1203,8 @@ read_glyf(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids)
 	uint32_t len = get_loca(ctx, ttf, ttf->orig_num_glyphs);
 	fz_buffer *t = read_table(ctx, stm, TAG("glyf"), 1);
 	encoding_t *enc = ttf->encoding;
-	uint32_t i, j;
-	uint32_t new_start, old_start, old_end;
+	uint32_t last_loca, i, j, k;
+	uint32_t new_start, old_start, old_end, last_loca_ofs;
 
 	if (t->len < len)
 	{
@@ -1256,35 +1254,69 @@ read_glyf(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids)
 	}
 
 	/* Now subset the glyf table. */
-	new_start = 0;
-	old_start = get_loca(ctx, ttf, 0);
-	if (old_start >= t->len)
-		fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
-	for (i = 0; i < ttf->orig_num_glyphs; i++)
+	if (enc)
 	{
-		old_end = get_loca(ctx, ttf, i+1);
+		old_start = get_loca(ctx, ttf, 0);
+		if (old_start > t->len)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
+		old_end = get_loca(ctx, ttf, 1);
 		if (old_end > t->len || old_end < old_start)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
-		if ((old_end != old_start) && (i == 0 || ttf->gid_renum[i] != 0))
+		len = old_end - old_start;
+		new_start = 0;
+		put_loca(ctx, ttf, 0, new_start);
+		last_loca = 0;
+		last_loca_ofs = len;
+		for (i = 0; i < ttf->orig_num_glyphs; i++)
 		{
+			old_end = get_loca(ctx, ttf, i + 1);
+			if (old_end > t->len || old_end < old_start)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
 			len = old_end - old_start;
-			memmove(t->data + new_start, t->data + old_start, len);
-			if (enc)
+			if (len > 0 && (i == 0 || ttf->gid_renum[i] != 0))
 			{
+				memmove(t->data + new_start, t->data + old_start, len);
 				if ((int16_t)get16(t->data + new_start) < 0)
 					renumber_composite(ctx, ttf, t->data + new_start, len);
-				put_loca(ctx, ttf, ttf->gid_renum[i], new_start);
+				for (k = last_loca + 1; k <= ttf->gid_renum[i]; k++)
+					put_loca(ctx, ttf, k, last_loca_ofs);
+				new_start += len;
+				last_loca = ttf->gid_renum[i];
+				last_loca_ofs = new_start;
+			}
+			old_start = old_end;
+		}
+		for (k = last_loca + 1; k <= ttf->new_num_glyphs; k++)
+			put_loca(ctx, ttf, k, last_loca_ofs);
+	}
+	else
+	{
+		new_start = 0;
+		old_start = get_loca(ctx, ttf, 0);
+		if (old_start > t->len)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
+		for (i = 0; i < ttf->orig_num_glyphs; i++)
+		{
+			old_end = get_loca(ctx, ttf, i + 1);
+			if (old_end > t->len || old_end < old_start)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Bad loca value");
+			len = old_end - old_start;
+			if (len > 0 && ttf->gid_renum[i] != 0)
+			{
+				memmove(t->data + new_start, t->data + old_start, len);
+				put_loca(ctx, ttf, i, new_start);
+				new_start += len;
 			}
 			else
+			{
 				put_loca(ctx, ttf, i, new_start);
-			new_start += len;
+			}
+			old_start = old_end;
 		}
-		else if (!enc)
-			put_loca(ctx, ttf, i, new_start);
-		old_start = old_end;
+		put_loca(ctx, ttf, ttf->orig_num_glyphs, new_start);
 	}
-	put_loca(ctx, ttf, ttf->new_num_glyphs, new_start);
-	*ttf->loca_len = (size_t) (ttf->new_num_glyphs+1) * (2<<ttf->index_to_loc_format);
+
+	*ttf->loca_len = (size_t) (ttf->new_num_glyphs + 1) * (2<<ttf->index_to_loc_format);
 	t->len = new_start;
 }
 
@@ -1298,27 +1330,24 @@ static void
 subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 {
 	fz_buffer *t = read_table(ctx, stm, TAG("hmtx"), 1);
-	uint16_t i, max16;
+	uint16_t long_metrics, short_metrics, i, k;
 	uint8_t *s = t->data;
 	uint8_t *d = t->data;
 	int cidfont = (ttf->encoding == NULL);
-	size_t max = t->len;
 
-	if (ttf->orig_num_long_hor_metrics * 4 > max)
-	{
-		fz_drop_buffer(ctx, t);
-		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed hmtx table");
-	}
-	max -= ttf->orig_num_long_hor_metrics * 4;
-	max /= 2;
-	if (max > ttf->orig_num_glyphs)
-		max = ttf->orig_num_glyphs;
-	/* We know orig_num_glyphs is 16bit, so this cast safe. */
-	max16 = (uint16_t)max;
+	long_metrics = ttf->orig_num_long_hor_metrics;
+	if (long_metrics > ttf->orig_num_glyphs)
+		long_metrics = ttf->orig_num_glyphs;
+	if (long_metrics > t->len / 4)
+		long_metrics = t->len / 4;
 
-	for (i = 0; i < ttf->orig_num_long_hor_metrics; i++)
+	short_metrics = (t->len - long_metrics * 4) / 2;
+	if (short_metrics > ttf->orig_num_glyphs - long_metrics)
+		short_metrics = ttf->orig_num_glyphs - long_metrics;
+
+	for (i = 0; i < long_metrics; i++)
 	{
-		if (i == 0 || ttf->is_otf || ttf->gid_renum[i])
+		if (i == 0 || ttf->is_otf || (i < ttf->orig_num_glyphs && ttf->gid_renum[i]))
 		{
 			put32(d, get32(s));
 			d += 4;
@@ -1330,9 +1359,9 @@ subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 		}
 		s += 4;
 	}
-	for ( ; i < max16; i++)
+	for (k = 0 ; k < short_metrics; k++, i++)
 	{
-		if (i == 0 || ttf->is_otf || ttf->gid_renum[i])
+		if (i == 0 || ttf->is_otf || (i < ttf->orig_num_glyphs && ttf->gid_renum[i]))
 		{
 			put16(d, get16(s));
 			d += 2;
@@ -1382,12 +1411,12 @@ shrink_loca_if_possible(fz_context *ctx, ttf_t *ttf)
 static size_t
 subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int num_gids)
 {
-	int i, n;
+	int i, n, new_glyphs;
 	int j;
 	fz_int2_heap heap = { 0 };
-	uint8_t *d0, *e, *idx;
+	uint8_t *d0, *e, *idx , *p;
 
-	if (len < 2 + 2 * ttf->orig_num_glyphs)
+	if (len < (size_t) 2 + 2 * ttf->orig_num_glyphs)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated post table");
 
 	n = get16(d);
@@ -1397,27 +1426,35 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 	d0 = d;
 	d += 2; len -= 2;
 	idx = d;
+	e = d;
+	p = d;
 
-	/* Store all the indexes. */
-	j = 0;
+	/* Store all kept indexes. */
 	if (len < (size_t)n*2)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+	new_glyphs = 0;
+	j = 0;
 	len -= (size_t)n*2;
 	for (i = 0; i < n; i++)
 	{
 		uint16_t o = get16(d);
 		fz_int2 i2;
-		d += 2;
+		p += 2;
 
 		/* We're only keeping gids we want. */
-		if (j >= num_gids || gids[j] != i)
+		if (i != 0 && (j >= num_gids || gids[j] != i))
 		{
-			put16(d-2, 0);
+			memmove(d, d + 2, (n - i - 1) * 2);
 			continue;
 		}
+		if (i != 0)
+			j++;
+
+		d += 2;
+		e += 2;
 
 		/* We want this gid. */
-		j++;
+		new_glyphs++;
 
 		/* 257 or smaller: same as in the basic order. */
 		if (o <= 257)
@@ -1429,6 +1466,11 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		fz_int2_heap_insert(ctx, &heap, i2);
 	}
 
+	d = p;
+
+	/* Update number of indexes */
+	put16(d0, new_glyphs);
+
 	fz_int2_heap_sort(ctx, &heap);
 
 	/* So, the heap is sorted on i2.a (the string indexes we want to keep),
@@ -1436,7 +1478,6 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 
 	/* Run through the list moving the strings down that we care about. */
 	j = 0;
-	e = d;
 	n = heap.len;
 	for (i = 0; i < n; i++)
 	{
@@ -1453,13 +1494,14 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		{
 			/* Drop this one. */
 			d += slen;
+			continue;
 		}
 
 		memmove(e, d, slen);
 		d += slen;
 		e += slen;
 
-		put16(idx + 2*i, 258 + j);
+		put16(idx + 2*j, 258 + j);
 		j++;
 	}
 
@@ -1510,7 +1552,7 @@ subset_post(fz_context *ctx, ttf_t *ttf, fz_stream *stm, int *gids, int num_gids
 		fz_rethrow(ctx);
 	}
 
-	t->len = len;
+	t->len = 32 + len;
 
 	add_table(ctx, ttf, TAG("post"), t);
 }

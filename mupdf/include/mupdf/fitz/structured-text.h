@@ -311,7 +311,7 @@ struct fz_stext_block
 		struct { fz_stext_line *first_line, *last_line; } t;
 		struct { fz_matrix transform; fz_image *image; } i;
 		struct { fz_stext_struct *down; int index; } s;
-		struct { uint8_t stroked; uint8_t rgba[4]; } v;
+		struct { uint8_t stroked; uint32_t argb; } v;
 		struct { fz_stext_grid_positions *xs; fz_stext_grid_positions *ys; } b;
 	} u;
 	fz_stext_block *prev, *next;
@@ -338,7 +338,7 @@ struct fz_stext_char
 	int c; /* unicode character value */
 	uint16_t bidi; /* even for LTR, odd for RTL - probably only needs 8 bits? */
 	uint16_t flags;
-	int color; /* sRGB hex color */
+	uint32_t argb; /* sRGB hex color (alpha in top 8 bits, then r, then g, then b in low bits) */
 	fz_point origin;
 	fz_quad quad;
 	float size;

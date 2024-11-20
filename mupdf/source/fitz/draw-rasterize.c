@@ -148,7 +148,6 @@ fz_set_rasterizer_graphics_aa_level(fz_context *ctx, fz_aa_context *aa, int leve
 		aa->bits = 0;
 	}
 	aa->scale = 0xFF00 / (aa->hscale * aa->vscale);
-	fz_set_rasterizer_text_aa_level(ctx, aa, level);
 #endif
 }
 

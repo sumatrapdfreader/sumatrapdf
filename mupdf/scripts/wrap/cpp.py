@@ -5324,6 +5324,7 @@ def cpp_source(
 
             #include "mupdf/fitz/geometry.h"
 
+            #include <algorithm>
             #include <map>
             #include <mutex>
             #include <sstream>

@@ -244,7 +244,7 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 		pdf_obj *cobj = pdf_dict_get(ctx, parent, PDF_NAME(Count));
 		count = pdf_to_int(ctx, cobj);
 		if (open_delta || cobj == NULL)
-			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count >= 0 ? count + open_delta : count - open_delta);
+			pdf_dict_put_int(ctx, parent, PDF_NAME(Count), count > 0 ? count + open_delta : count - open_delta);
 		if (count < 0)
 			break;
 		parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));

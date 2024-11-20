@@ -298,7 +298,7 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 	fz_font *font = NULL;
 	float size = 0;
 	int sup = 0;
-	int color = 0;
+	uint32_t color = 0;
 
 	for (line = block->u.t.first_line; line; line = line->next)
 	{
@@ -318,13 +318,13 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 		for (ch = line->first_char; ch; ch = ch->next)
 		{
 			int ch_sup = detect_super_script(line, ch);
-			if (ch->font != font || ch->size != size || ch_sup != sup || ch->color != color)
+			if (ch->font != font || ch->size != size || ch_sup != sup || ch->argb != color)
 			{
 				if (font)
 					fz_print_style_end_html(ctx, out, font, size, sup, color);
 				font = ch->font;
 				size = ch->size;
-				color = ch->color;
+				color = ch->argb;
 				sup = ch_sup;
 				fz_print_style_begin_html(ctx, out, font, size, sup, color);
 			}
@@ -631,14 +631,15 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 						name = font_full_name(ctx, font);
 						fz_write_printf(ctx, out, "<font name=\"%s\" size=\"%g\">\n", name, size);
 					}
-					fz_write_printf(ctx, out, "<char quad=\"%g %g %g %g %g %g %g %g\" x=\"%g\" y=\"%g\" bidi=\"%d\" color=\"#%06x\" flags=\"%d\" c=\"",
+					fz_write_printf(ctx, out, "<char quad=\"%g %g %g %g %g %g %g %g\" x=\"%g\" y=\"%g\" bidi=\"%d\" color=\"#%06x\" alpha=\"#%02x\" flags=\"%d\" c=\"",
 							ch->quad.ul.x, ch->quad.ul.y,
 							ch->quad.ur.x, ch->quad.ur.y,
 							ch->quad.ll.x, ch->quad.ll.y,
 							ch->quad.lr.x, ch->quad.lr.y,
 							ch->origin.x, ch->origin.y,
 							ch->bidi,
-							ch->color,
+							ch->argb & 0xFFFFFF,
+							ch->argb>>24,
 							ch->flags);
 					switch (ch->c)
 					{
@@ -682,9 +683,9 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 			break;
 
 		case FZ_STEXT_BLOCK_VECTOR:
-			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" stroke=\"%d\" rgba=\"%02x%02x%02x%02x\"/>\n",
+			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" stroke=\"%d\" argba=\"%08x\"/>\n",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1,
-					!!block->u.v.stroked, block->u.v.rgba[0], block->u.v.rgba[1], block->u.v.rgba[2], block->u.v.rgba[3]);
+					!!block->u.v.stroked, block->u.v.argb);
 			break;
 
 		case FZ_STEXT_BLOCK_GRID:
