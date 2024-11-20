@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/andybalholm/brotli"
@@ -640,13 +641,19 @@ func compressWithLzma2BetterMust(path string) []byte {
 	return buf.Bytes()
 }
 
-func creaZipWithCompressFunction(zipPath string, files []string, dir string, compressFunc func(string) []byte, comprSuffix string) {
+func creaZipWithCompressFunction(zipPath string, files []string, dir string, compressFunc func(string) []byte, comprSuffix string) error {
 	os.Remove(zipPath)
-	w := u.Must2(os.Create(zipPath))
+	w, err := os.Create(zipPath)
+	if err != nil {
+		return err
+	}
 	zw := zip.NewWriter(w)
-	defer zw.Close()
+	defer func() {
+		err = zw.Close()
+	}()
 	var wg sync.WaitGroup
 	nConcurrent := runtime.NumCPU()
+	var err2 atomic.Value
 	sem := make(chan bool, nConcurrent)
 	for _, f := range files {
 		path := filepath.Join(dir, f)
@@ -654,20 +661,30 @@ func creaZipWithCompressFunction(zipPath string, files []string, dir string, com
 		sem <- true
 		go func() {
 			data := compressFunc(path)
-			addZipDataStoreMust(zw, data, f+comprSuffix)
+			err := addZipDataStore(zw, data, f+comprSuffix)
+			if err != nil {
+				err2.Store(err)
+			}
 			<-sem
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-	must(zw.Close())
+	err = zw.Close()
+	if err != nil {
+		return err
+	}
+	errVal := err2.Load()
+	if errVal != nil {
+		return errVal.(error)
+	}
+
+	return err // from defer
 }
 
 func testCompressOneOff() {
 	dir := filepath.Join("out", "rel64")
 	files := []string{"SumatraPDF.exe", "SumatraPDF-dll.exe", "libmupdf.pdb", "SumatraPDF.pdb", "SumatraPDF-dll.pdb"}
-	{
-	}
 	origSize := int64(0)
 	for _, f := range files {
 		origSize += u.FileSize(filepath.Join(dir, f))

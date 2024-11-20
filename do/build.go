@@ -226,51 +226,71 @@ func revertBuildConfig() {
 	runExeMust("git", "checkout", buildConfigPath())
 }
 
-func addZipDataStoreMust(w *zip.Writer, data []byte, nameInZip string) {
+func addZipDataStore(w *zip.Writer, data []byte, nameInZip string) error {
 	fih := &zip.FileHeader{
 		Name:   nameInZip,
 		Method: zip.Store,
 	}
 	fw, err := w.CreateHeader(fih)
-	must(err)
+	if err != nil {
+		return err
+	}
 	_, err = fw.Write(data)
-	must(err)
+	return err
 }
 
-func addZipFileWithNameMust(w *zip.Writer, path, nameInZip string) {
+func addZipFileWithName(w *zip.Writer, path, nameInZip string) error {
 	fi, err := os.Stat(path)
-	must(err)
+	if err != nil {
+		return err
+	}
 	fih, err := zip.FileInfoHeader(fi)
-	must(err)
+	if err != nil {
+		return err
+	}
 	fih.Name = nameInZip
 	fih.Method = zip.Deflate
 	d, err := os.ReadFile(path)
-	must(err)
+	if err != nil {
+		return err
+	}
 	fw, err := w.CreateHeader(fih)
-	must(err)
+	if err != nil {
+		return err
+	}
 	_, err = fw.Write(d)
-	must(err)
+	return err
 	// fw is just a io.Writer so we can't Close() it. It's not necessary as
 	// it's implicitly closed by the next Create(), CreateHeader()
 	// or Close() call on zip.Writer
 }
 
-func addZipFileMust(w *zip.Writer, path string) {
+func addZipFile(w *zip.Writer, path string) error {
 	nameInZip := filepath.Base(path)
-	addZipFileWithNameMust(w, path, nameInZip)
+	return addZipFileWithName(w, path, nameInZip)
 }
 
-func createExeZipWithGoWithNameMust(dir, nameInZip string) {
+func createExeZipWithGoWithName(dir, nameInZip string) error {
 	zipPath := filepath.Join(dir, "SumatraPDF.zip")
 	os.Remove(zipPath) // called multiple times during upload
 	f, err := os.Create(zipPath)
-	must(err)
-	defer f.Close()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = f.Close()
+	}()
 	zw := zip.NewWriter(f)
 	path := filepath.Join(dir, "SumatraPDF.exe")
-	addZipFileWithNameMust(zw, path, nameInZip)
+	err = addZipFileWithName(zw, path, nameInZip)
+	if err != nil {
+		return err
+	}
 	err = zw.Close()
-	must(err)
+	if err != nil {
+		return err
+	}
+	return err
 }
 
 // func createExeZipWithPigz(dir string) {
@@ -304,34 +324,47 @@ func createExeZipWithGoWithNameMust(dir, nameInZip string) {
 // 	must(err)
 // }
 
-func createPdbZipMust(dir string) {
+func createPdbZip(dir string) error {
 	path := filepath.Join(dir, "SumatraPDF.pdb.zip")
 	f, err := os.Create(path)
-	must(err)
-	defer f.Close()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = f.Close()
+	}()
 	w := zip.NewWriter(f)
 
 	for _, file := range pdbFiles {
-		addZipFileMust(w, filepath.Join(dir, file))
+		err = addZipFile(w, filepath.Join(dir, file))
+		if err != nil {
+			return err
+		}
 	}
 
 	err = w.Close()
-	must(err)
+	if err != nil {
+		return err
+	}
+	return err
 }
 
-func createLzsaFromFiles(lzsaPath string, files []string, dir string) {
+func createLzsaFromFiles(lzsaPath string, files []string, dir string) error {
 	args := []string{lzsaPath}
 	args = append(args, files...)
 	curDir, err := os.Getwd()
-	must(err)
+	if err != nil {
+		return err
+	}
 	makeLzsaPath := filepath.Join(curDir, "bin", "MakeLZSA.exe")
 	cmd := exec.Command(makeLzsaPath, args...)
 	cmd.Dir = dir
 	runCmdLoggedMust(cmd)
+	return nil
 }
 
-func createPdbLzsaMust(dir string) {
-	createLzsaFromFiles("SumatraPDF.pdb.lzsa", pdbFiles, dir)
+func createPdbLzsa(dir string) error {
+	return createLzsaFromFiles("SumatraPDF.pdb.lzsa", pdbFiles, dir)
 }
 
 // manifest is build for pre-release builds and contains information about file sizes
@@ -439,8 +472,10 @@ func build(config, platform string) {
 	}
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild;PdfFilter:Rebuild;PdfPreview:Rebuild`, p, `/m`)
-	createPdbZipMust(dir)
-	createPdbLzsaMust(dir)
+	err := createPdbZip(dir)
+	must(err)
+	err = createPdbLzsa(dir)
+	must(err)
 }
 
 // builds more targets, even those not used, to prevent code rot
@@ -458,8 +493,10 @@ func buildAll(config, platform string) {
 	}
 
 	runExeLoggedMust(msbuildPath, slnPath, `/t:signfile:Rebuild;sizer:Rebuild;PdfFilter:Rebuild;plugin-test:Rebuild;PdfPreview:Rebuild;PdfPreviewTest:Rebuild;SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
-	createPdbZipMust(dir)
-	createPdbLzsaMust(dir)
+	err := createPdbZip(dir)
+	must(err)
+	err = createPdbLzsa(dir)
+	must(err)
 }
 
 func getSuffixForPlatform(platform string) string {
@@ -541,7 +578,7 @@ func buildPreRelease(platform string, all bool) {
 	suffix := getSuffixForPlatform(platform)
 	outDir := getOutDirForPlatform(platform)
 	nameInZip := fmt.Sprintf("SumatraPDF-prerel-%s-%s.exe", ver, suffix)
-	createExeZipWithGoWithNameMust(outDir, nameInZip)
+	createExeZipWithGoWithName(outDir, nameInZip)
 
 	createManifestMust()
 
@@ -569,15 +606,15 @@ func buildRelease() {
 
 	build("Release", kPlatformIntel32)
 	nameInZip := fmt.Sprintf("SumatraPDF-%s-32.exe", ver)
-	createExeZipWithGoWithNameMust(rel32Dir, nameInZip)
+	createExeZipWithGoWithName(rel32Dir, nameInZip)
 
 	build("Release", kPlatformIntel64)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-64.exe", ver)
-	createExeZipWithGoWithNameMust(rel64Dir, nameInZip)
+	createExeZipWithGoWithName(rel64Dir, nameInZip)
 
 	build("Release", kPlatformArm64)
 	nameInZip = fmt.Sprintf("SumatraPDF-%s-arm64.exe", ver)
-	createExeZipWithGoWithNameMust(relArm64Dir, nameInZip)
+	createExeZipWithGoWithName(relArm64Dir, nameInZip)
 
 	createManifestMust()
 

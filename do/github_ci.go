@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -32,7 +31,7 @@ const (
 	githubEventCron       = "schedule"
 )
 
-//  "action": "build-pre-rel"
+// "action": "build-pre-rel"
 type gitHubEventJSON struct {
 	Action string `json:"action"`
 }
@@ -44,7 +43,7 @@ func getGitHubEventType() string {
 		return githubEventPush
 	}
 	path := os.Getenv("GITHUB_EVENT_PATH")
-	d, err := ioutil.ReadFile(path)
+	d, err := os.ReadFile(path)
 	must(err)
 	var js gitHubEventJSON
 	err = json.Unmarshal(d, &js)
@@ -56,14 +55,4 @@ func getGitHubEventType() string {
 	}
 	panicIf(true, "invalid js.Action of '%s'", js.Action)
 	return ""
-}
-
-// https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
-func dumpWebHookEventPayload() {
-	v := os.Getenv("GITHUB_EVENT_PATH")
-	d, err := ioutil.ReadFile(v)
-	if err != nil {
-		fmt.Printf("dumpWebHookEventPayload: GITHUB_EVENT_PATH='%s' and is not a file\n", v)
-	}
-	fmt.Printf("dumpWebHookEventPayload: GITHUB_EVENT_PATH='%s'. Content:\n%s\n", v, string(d))
 }
