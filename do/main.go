@@ -236,7 +236,6 @@ func main() {
 		flgClangFormat     bool
 		flgClean           bool
 		flgDiff            bool
-		flgExtractUtils    bool
 		flgFilesList       bool
 		flgFileUpload      string
 		flgGenDocs         bool
@@ -282,7 +281,6 @@ func main() {
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
 		flag.BoolVar(&flgLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
-		flag.BoolVar(&flgExtractUtils, "extract-utils", false, "extract utils")
 		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win. Use -upload to also upload it to backblaze")
 		flag.IntVar(&flgBuildNo, "build-no-info", 0, "print build number info for given build number")
 		flag.BoolVar(&flgUpdateGoDeps, "update-go-deps", false, "update go dependencies")
@@ -304,11 +302,6 @@ func main() {
 
 	if flgGenWebsiteDocs {
 		genHTMLDocsForWebsite()
-		return
-	}
-
-	if flgExtractUtils {
-		extractUtils(flgCIBuild)
 		return
 	}
 

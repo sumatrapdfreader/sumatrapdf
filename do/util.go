@@ -2,15 +2,13 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
-	"strconv"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -21,7 +19,6 @@ import (
 var (
 	must              = u.Must
 	panicIf           = u.PanicIf
-	panicIfErr        = u.PanicIfErr
 	urlify            = u.Slug
 	fileExists        = u.FileExists
 	dirExists         = u.DirExists
@@ -35,58 +32,11 @@ var (
 	toTrimmedLines    = u.ToTrimmedLines
 )
 
-func ctx() context.Context {
-	return context.Background()
-}
-
 func logf(s string, args ...interface{}) {
 	if len(args) > 0 {
 		s = fmt.Sprintf(s, args...)
 	}
 	fmt.Print(s)
-}
-
-func logFatalf(s string, args ...interface{}) {
-	logf(s, args...)
-	os.Exit(1)
-}
-
-func getCallstackFrames(skip int) []string {
-	var callers [32]uintptr
-	n := runtime.Callers(skip+1, callers[:])
-	frames := runtime.CallersFrames(callers[:n])
-	var cs []string
-	for {
-		frame, more := frames.Next()
-		if !more {
-			break
-		}
-		s := frame.File + ":" + strconv.Itoa(frame.Line)
-		cs = append(cs, s)
-	}
-	return cs
-}
-
-func getCallstack(skip int) string {
-	frames := getCallstackFrames(skip + 1)
-	return strings.Join(frames, "\n")
-}
-
-func logErrorf(ctx context.Context, s string, args ...interface{}) {
-	if len(args) > 0 {
-		s = fmt.Sprintf(s, args...)
-	}
-	cs := getCallstack(1)
-	fmt.Printf("%s\n%s\n", s, cs)
-}
-
-// return true if there was an error
-func logIfError(ctx context.Context, err error) bool {
-	if err == nil {
-		return false
-	}
-	logErrorf(ctx, "err.Error(): %s", err.Error())
-	return true
 }
 
 func absPathMust(path string) string {
@@ -132,14 +82,6 @@ func fileSizeMust(path string) int64 {
 	return size
 }
 
-func removeFileMust(path string) {
-	if !fileExists(path) {
-		return
-	}
-	err := os.Remove(path)
-	must(err)
-}
-
 func evalTmpl(s string, v interface{}) string {
 	tmpl, err := template.New("tmpl").Parse(s)
 	must(err)
@@ -147,17 +89,6 @@ func evalTmpl(s string, v interface{}) string {
 	err = tmpl.Execute(&buf, v)
 	must(err)
 	return buf.String()
-}
-
-// return true if file in path1 is newer than file in path2
-// also returns true if one or both files don't exist
-func fileNewerThan(path1, path2 string) bool {
-	stat1, err1 := os.Stat(path1)
-	stat2, err2 := os.Stat(path2)
-	if err1 != nil || err2 != nil {
-		return true
-	}
-	return stat1.ModTime().After(stat2.ModTime())
 }
 
 func cmdRunLoggedMust(cmd *exec.Cmd) {
@@ -266,30 +197,6 @@ func fmtCmdShort(cmd exec.Cmd) string {
 	return cmd.String()
 }
 
-func runCmdMust(cmd *exec.Cmd) string {
-	fmt.Printf("> %s\n", fmtCmdShort(*cmd))
-	canCapture := (cmd.Stdout == nil) && (cmd.Stderr == nil)
-	if canCapture {
-		out, err := cmd.CombinedOutput()
-		if err == nil {
-			if len(out) > 0 {
-				logf("Output:\n%s\n", string(out))
-			}
-			return string(out)
-		}
-		logf("cmd '%s' failed with '%s'. Output:\n%s\n", cmd, err, string(out))
-		must(err)
-		return string(out)
-	}
-	err := cmd.Run()
-	if err == nil {
-		return ""
-	}
-	logf("cmd '%s' failed with '%s'\n", cmd, err)
-	must(err)
-	return ""
-}
-
 func currDirAbsMust() string {
 	dir, err := filepath.Abs(".")
 	must(err)
@@ -314,4 +221,69 @@ func measureDuration() func() {
 	return func() {
 		logf("took %s\n", time.Since(timeStart))
 	}
+}
+
+func shouldCopyFile(dir string, de fs.DirEntry) bool {
+	name := de.Name()
+
+	bannedSuffixes := []string{".go", ".bat"}
+	for _, s := range bannedSuffixes {
+		if strings.HasSuffix(name, s) {
+			return false
+		}
+	}
+
+	bannedPrefixes := []string{"yarn", "go."}
+	for _, s := range bannedPrefixes {
+		if strings.HasPrefix(name, s) {
+			return false
+		}
+	}
+
+	doNotCopy := []string{"tests"}
+	return !slices.Contains(doNotCopy, name)
+}
+
+func copyFilesRecurMust(dstDir, srcDir string) {
+	files, err := os.ReadDir(srcDir)
+	must(err)
+
+	for _, de := range files {
+		if !shouldCopyFile(dstDir, de) {
+			continue
+		}
+		dstPath := filepath.Join(dstDir, de.Name())
+		srcPath := filepath.Join(srcDir, de.Name())
+		if de.IsDir() {
+			copyFilesRecurMust(dstPath, srcPath)
+			continue
+		}
+		copyFileMust(dstPath, srcPath)
+	}
+}
+
+var copyFileMustOverwrite = false
+var copyFilesExtsToNormalizeNL = []string{}
+
+func copyFileMust(dst, src string) {
+	if !copyFileMustOverwrite {
+		_, err := os.Stat(dst)
+		if err == nil {
+			logf("destination '%s' already exists, skipping\n", dst)
+			return
+		}
+	}
+	logf("copy %s => %s\n", src, dst)
+	dstDir := filepath.Dir(dst)
+	err := os.MkdirAll(dstDir, 0755)
+	must(err)
+	d, err := os.ReadFile(src)
+	must(err)
+	ext := filepath.Ext(dst)
+	ext = strings.ToLower(ext)
+	if slices.Contains(copyFilesExtsToNormalizeNL, ext) {
+		d = u.NormalizeNewlines(d)
+	}
+	err = os.WriteFile(dst, d, 0644)
+	must(err)
 }
