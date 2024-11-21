@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kjk/common/u"
 	"github.com/kjk/minioutil"
-	"github.com/kjk/u"
 )
 
 // we delete old daily and pre-release builds. This defines how many most recent
@@ -538,6 +538,6 @@ func uploadLogView() {
 		return
 	}
 	mc.UploadFile(remotePath, path, true)
-	sizeStr := u.FmtSizeHuman(getFileSize(path))
+	sizeStr := u.FormatSize(getFileSize(path))
 	logf("Uploaded %s of size %s as %s\n", path, sizeStr, mc.URLForPath(remotePath))
 }

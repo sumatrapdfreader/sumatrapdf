@@ -8,12 +8,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/kjk/u"
+	"github.com/kjk/common/u"
 )
 
 var (
@@ -445,16 +445,16 @@ var (
 )
 
 func getOutDirForPlatform(platform string) string {
-	if platform == kPlatformIntel32 {
+	switch platform {
+	case kPlatformIntel32:
 		return rel32Dir
-	}
-	if platform == kPlatformIntel64 {
+	case kPlatformIntel64:
 		return rel64Dir
-	}
-	if platform == kPlatformArm64 {
+	case kPlatformArm64:
 		return relArm64Dir
+	default:
+		panicIf(true, "unsupported platform '%s'", platform)
 	}
-	panicIf(true, "unsupported platform '%s'", platform)
 	return ""
 }
 
@@ -551,8 +551,7 @@ func buildCi() {
 func ensureManualIsBuilt() {
 	// make sure we've built manual
 	path := filepath.Join("docs", "manual.dat")
-	size, err := u.GetFileSize(path)
-	must(err)
+	size := u.FileSize(path)
 	panicIf(size < 2*2024, "size of '%s' is %d which indicates we didn't build it", path, size)
 }
 
@@ -721,8 +720,6 @@ func buildCiDaily() {
 	setBuildConfigPreRelease()
 	defer revertBuildConfig()
 
-	var wgUploads sync.WaitGroup
-
 	printAllBuildDur := makePrintDuration("all builds")
 	for _, platform := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
 		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release %s version %s", platform, ver))
@@ -730,32 +727,47 @@ func buildCiDaily() {
 		p := `/p:Configuration=Release;Platform=` + platform
 		runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
 		printBBuildDur()
-
-		wgUploads.Add(1)
-		go func(platform string) {
-			defer wgUploads.Done()
-			dir := getOutDirForPlatform(platform)
-			files := []string{
-				"SumatraPDF.exe",
-				"SumatraPDF-dll.exe",
-				"SumatraPDF.pdb",
-				"SumatraPDF-dll.pdb",
-			}
-			for _, file := range files {
-				path := filepath.Join(dir, file)
-				key := keyPrefix + platform + "/" + file
-				printDur := makePrintDuration(fmt.Sprintf("uploading '%s' to '%s'\n", path, key))
-				mc.UploadFile(key, path, true)
-				printDur()
-			}
-		}(platform)
 	}
 	revertBuildConfig() // can do twice
 	printAllBuildDur()
 
-	logf("uploading '%s'\n", keyAllBuild)
-	mc.UploadData(keyAllBuild, []byte("all builds"), true)
-	wgUploads.Wait()
+	files := []string{
+		"SumatraPDF.exe",
+		"SumatraPDF-dll.exe",
+		"SumatraPDF.pdb",
+		"SumatraPDF-dll.pdb",
+		"libmupdf.pdb",
+	}
+	allFiles := []string{}
+	for _, platform := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
+		dir := getOutDirForPlatform(platform)
+		for _, file := range files {
+			path := filepath.Join(dir, file)
+			allFiles = append(allFiles, path)
+		}
+	}
+	origSize := int64(0)
+	for _, f := range allFiles {
+		sz := u.FileSize(f)
+		panicIf(sz < 0)
+		origSize += sz
+	}
+	logf("origSize: %s\n", u.FormatSize(origSize))
+
+	archivePath := filepath.Join("out", "prerel-unsigned-"+ver+".zip")
+	os.Remove(archivePath)
+	logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
+	printDur := measureDuration()
+	creaZipWithCompressFunction(archivePath, files, "", compressFileWithBr, ".br")
+	printDur()
+	compressedSize := u.FileSize(archivePath)
+	ratio := float64(origSize) / float64(compressedSize)
+	logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
+
+	//key := keyPrefix + platform + "/" + file
+	//mc.UploadFile(key, path, true)
+	//logf("uploading '%s'\n", keyAllBuild)
+	//mc.UploadData(keyAllBuild, []byte("all builds"), true)
 }
 
 func waitForEnter(s string) {
