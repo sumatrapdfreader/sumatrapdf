@@ -594,54 +594,101 @@ func printBuildNoInfo(buildNo int) {
 	logf("%d: %s\n", buildNo, s)
 }
 
-func compressFileWithBrMust(path string) []byte {
+func compressFileWithBr(path string) ([]byte, error) {
 	buf := bytes.Buffer{}
 	w := brotli.NewWriterLevel(&buf, brotli.BestCompression)
-	f := u.Must2(os.Open(path))
-	u.Must2(io.Copy(w, f))
-	must(f.Close())
-	must(w.Close())
-	return buf.Bytes()
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(w, f); err != nil {
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
-func compressWithZstdMust(path string) []byte {
+func compressWithZstd(path string) ([]byte, error) {
 	buf := bytes.Buffer{}
-	w := u.Must2(zstd.NewWriter(&buf, zstd.WithEncoderLevel(zstd.SpeedBestCompression)))
-	f := u.Must2(os.Open(path))
-	u.Must2(io.Copy(w, f))
-	must(f.Close())
-	must(w.Close())
-	return buf.Bytes()
+	w, err := zstd.NewWriter(&buf, zstd.WithEncoderLevel(zstd.SpeedBestCompression))
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(w, f); err != nil {
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
-func compressWithLzma2Must(path string) []byte {
+func compressWithLzma2(path string) ([]byte, error) {
 	buf := bytes.Buffer{}
 	bw := bufio.NewWriter(&buf)
-	w := u.Must2(lzma.NewWriter2(bw))
-	f := u.Must2(os.Open(path))
-	u.Must2(io.Copy(w, f))
-	must(f.Close())
-	must(w.Close())
-	must(bw.Flush())
-	return buf.Bytes()
+	w, err := lzma.NewWriter2(bw)
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(w, f); err != nil {
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	if err := bw.Flush(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
-func compressWithLzma2BetterMust(path string) []byte {
+func compressWithLzma2Better(path string) ([]byte, error) {
 	buf := bytes.Buffer{}
 	bw := bufio.NewWriter(&buf)
 	var c lzma.Writer2Config
 	c.DictCap = (8 * 1024 * 1024) * 16
-	must(c.Verify())
-	w := u.Must2(c.NewWriter2(bw))
-	f := u.Must2(os.Open(path))
-	u.Must2(io.Copy(w, f))
-	must(f.Close())
-	must(w.Close())
-	must(bw.Flush())
-	return buf.Bytes()
+	if err := c.Verify(); err != nil {
+		return nil, err
+	}
+	w, err := c.NewWriter2(bw)
+	if err != nil {
+		return nil, err
+	}
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(w, f); err != nil {
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	if err := bw.Flush(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
-func creaZipWithCompressFunction(zipPath string, files []string, dir string, compressFunc func(string) []byte, comprSuffix string) error {
+func creaZipWithCompressFunction(zipPath string, files []string, dir string, compressFunc func(string) ([]byte, error), comprSuffix string) error {
 	os.Remove(zipPath)
 	w, err := os.Create(zipPath)
 	if err != nil {
@@ -653,17 +700,19 @@ func creaZipWithCompressFunction(zipPath string, files []string, dir string, com
 	}()
 	var wg sync.WaitGroup
 	nConcurrent := runtime.NumCPU()
-	var err2 atomic.Value
+	var perr atomic.Pointer[error]
 	sem := make(chan bool, nConcurrent)
 	for _, f := range files {
 		path := filepath.Join(dir, f)
 		wg.Add(1)
 		sem <- true
 		go func() {
-			data := compressFunc(path)
-			err := addZipDataStore(zw, data, f+comprSuffix)
+			data, err := compressFunc(path)
+			if err == nil {
+				err = addZipDataStore(zw, data, f+comprSuffix)
+			}
 			if err != nil {
-				err2.Store(err)
+				perr.Store(&err)
 			}
 			<-sem
 			wg.Done()
@@ -674,11 +723,10 @@ func creaZipWithCompressFunction(zipPath string, files []string, dir string, com
 	if err != nil {
 		return err
 	}
-	errVal := err2.Load()
+	errVal := perr.Load()
 	if errVal != nil {
-		return errVal.(error)
+		return *errVal
 	}
-
 	return err // from defer
 }
 
@@ -696,7 +744,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2BetterMust, ".lzma2")
+		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2Better, ".lzma2")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -707,7 +755,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2Must, ".lzma2")
+		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2, ".lzma2")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -718,7 +766,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressFileWithBrMust, ".br")
+		creaZipWithCompressFunction(archivePath, files, dir, compressFileWithBr, ".br")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -729,7 +777,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressWithZstdMust, ".zstd")
+		creaZipWithCompressFunction(archivePath, files, dir, compressWithZstd, ".zstd")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
