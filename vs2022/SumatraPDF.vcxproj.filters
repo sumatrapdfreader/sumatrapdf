@@ -892,5 +892,11 @@
     <CopyFileToFolders Include="..\src\mutool.exe">
       <Filter>src</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="..\src\ml_model\Final_app.py">
+      <Filter>src</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="..\src\ml_model\best.pt">
+      <Filter>src</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
