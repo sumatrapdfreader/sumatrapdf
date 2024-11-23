@@ -188,7 +188,7 @@ func buildLzsa() {
 	defer makePrintDuration("buildLzsa")()
 	cleanPreserveSettings()
 
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 	runExeLoggedMust(msbuildPath, `vs2022\MakeLZSA.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
@@ -459,7 +459,7 @@ func getOutDirForPlatform(platform string) string {
 }
 
 func build(config, platform string) {
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	dir := getOutDirForPlatform(platform)
@@ -480,7 +480,7 @@ func build(config, platform string) {
 
 // builds more targets, even those not used, to prevent code rot
 func buildAll(config, platform string) {
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	dir := getOutDirForPlatform(platform)
@@ -640,7 +640,7 @@ func detectVersionsCodeQL() {
 func buildCodeQL() {
 	detectVersionsCodeQL()
 	//cleanPreserveSettings()
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
 	revertBuildConfig()
 }
@@ -657,7 +657,7 @@ func buildSmoke() {
 	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
 	panicIf(!fileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
 	outDir := filepath.Join("out", "rel64")
 	runTestUtilMust(outDir)
@@ -679,7 +679,7 @@ func buildSmoke() {
 // }
 
 func buildTestUtil() {
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 	p := fmt.Sprintf(`/p:Configuration=Release;Platform=%s`, kPlatformIntel64)
@@ -705,7 +705,7 @@ func buildCiDaily(signAndUpload bool) {
 		return
 	}
 
-	msbuildPath := detectMsbuildPath()
+	msbuildPath := detectMsbuildPathMust()
 
 	ver := getPreReleaseVer()
 	logf("building and uploading pre-release version %s\n", ver)
@@ -718,7 +718,7 @@ func buildCiDaily(signAndUpload bool) {
 		return
 	}
 
-	cleanReleaseBuilds()
+	//cleanReleaseBuilds()
 	genHTMLDocsForApp()
 	ensureManualIsBuilt()
 
@@ -763,7 +763,8 @@ func buildCiDaily(signAndUpload bool) {
 	os.Remove(archivePath)
 	logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 	printDur := measureDuration()
-	creaZipWithCompressFunction(archivePath, files, "", compressFileWithBr, ".br")
+	err := creaZipWithCompressFunction(archivePath, files, "", compressFileWithBr, ".br")
+	must(err)
 	printDur()
 	compressedSize := u.FileSize(archivePath)
 	ratio := float64(origSize) / float64(compressedSize)

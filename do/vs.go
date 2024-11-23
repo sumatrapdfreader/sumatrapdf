@@ -51,14 +51,14 @@ func detectPathInSDK(name string) string {
 	panic(fmt.Sprintf("Didn't find %s", name))
 }
 
-var printedMsbuildPath bool
+var didPrintMsbuildPath bool
 
-func detectMsbuildPath() string {
+func detectMsbuildPathMust() string {
 	path := detectPath(vsBasePaths, msBuildName)
 	panicIf(path == "", fmt.Sprintf("Didn't find %s", msBuildName))
-	if !printedMsbuildPath {
+	if !didPrintMsbuildPath {
 		logf("msbuild.exe: %s\n", path)
-		printedMsbuildPath = true
+		didPrintMsbuildPath = true
 	}
 	return path
 }
