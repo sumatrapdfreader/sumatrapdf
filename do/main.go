@@ -688,7 +688,7 @@ func compressWithLzma2Better(path string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func creaZipWithCompressFunction(zipPath string, files []string, dir string, compressFunc func(string) ([]byte, error), comprSuffix string) error {
+func creaZipWithCompressFunction(zipPath string, dir string, fielPaths []string, compressFunc func(string) ([]byte, error), comprSuffix string) error {
 	os.Remove(zipPath)
 	w, err := os.Create(zipPath)
 	if err != nil {
@@ -702,14 +702,15 @@ func creaZipWithCompressFunction(zipPath string, files []string, dir string, com
 	nConcurrent := runtime.NumCPU()
 	var perr atomic.Pointer[error]
 	sem := make(chan bool, nConcurrent)
-	for _, f := range files {
+	for _, f := range fielPaths {
 		path := filepath.Join(dir, f)
 		wg.Add(1)
 		sem <- true
 		go func() {
 			data, err := compressFunc(path)
 			if err == nil {
-				err = addZipDataStore(zw, data, f+comprSuffix)
+				zipPath := filepath.ToSlash(f) + comprSuffix
+				err = addZipDataStore(zw, data, zipPath)
 			}
 			if err != nil {
 				perr.Store(&err)
@@ -744,7 +745,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2Better, ".lzma2")
+		creaZipWithCompressFunction(archivePath, dir, files, compressWithLzma2Better, ".lzma2")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -755,7 +756,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressWithLzma2, ".lzma2")
+		creaZipWithCompressFunction(archivePath, dir, files, compressWithLzma2, ".lzma2")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -766,7 +767,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressFileWithBr, ".br")
+		creaZipWithCompressFunction(archivePath, dir, files, compressFileWithBr, ".br")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -777,7 +778,7 @@ func testCompressOneOff() {
 		os.Remove(archivePath)
 		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, files, dir, compressWithZstd, ".zstd")
+		creaZipWithCompressFunction(archivePath, dir, files, compressWithZstd, ".zstd")
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)
@@ -788,7 +789,7 @@ func testCompressOneOff() {
 		printDur := measureDuration()
 		archivePath := filepath.Join(dir, "rel64.lzsa")
 		os.Remove(archivePath)
-		createLzsaFromFiles("rel64.lzsa", files, dir)
+		createLzsaFromFiles("rel64.lzsa", dir, files)
 		printDur()
 		compressedSize := u.FileSize(archivePath)
 		ratio := float64(origSize) / float64(compressedSize)

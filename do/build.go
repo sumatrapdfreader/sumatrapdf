@@ -349,7 +349,7 @@ func createPdbZip(dir string) error {
 	return err
 }
 
-func createLzsaFromFiles(lzsaPath string, files []string, dir string) error {
+func createLzsaFromFiles(lzsaPath string, dir string, files []string) error {
 	args := []string{lzsaPath}
 	args = append(args, files...)
 	curDir, err := os.Getwd()
@@ -364,7 +364,7 @@ func createLzsaFromFiles(lzsaPath string, files []string, dir string) error {
 }
 
 func createPdbLzsa(dir string) error {
-	return createLzsaFromFiles("SumatraPDF.pdb.lzsa", pdbFiles, dir)
+	return createLzsaFromFiles("SumatraPDF.pdb.lzsa", dir, pdbFiles)
 }
 
 // manifest is build for pre-release builds and contains information about file sizes
@@ -443,6 +443,20 @@ var (
 	relArm64Dir    = filepath.Join("out", "arm64")
 	finalPreRelDir = filepath.Join("out", "final-prerel")
 )
+
+func getBuildDirForPlatform(platform string) string {
+	switch platform {
+	case kPlatformIntel32:
+		return "rel32"
+	case kPlatformIntel64:
+		return "rel64"
+	case kPlatformArm64:
+		return "arm64"
+	default:
+		panicIf(true, "unsupported platform '%s'", platform)
+	}
+	return ""
+}
 
 func getOutDirForPlatform(platform string) string {
 	switch platform {
@@ -730,7 +744,7 @@ func buildCiDaily(signAndUpload bool) {
 		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release %s version %s", platform, ver))
 		slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 		p := `/p:Configuration=Release;Platform=` + platform
-		runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`, p, `/m`)
+		runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Build;SumatraPDF-dll:Build`, p, `/m`)
 		printBBuildDur()
 	}
 	revertBuildConfig() // can do twice
@@ -743,19 +757,18 @@ func buildCiDaily(signAndUpload bool) {
 		"SumatraPDF-dll.pdb",
 		"libmupdf.pdb",
 	}
+	origSize := int64(0)
 	allFiles := []string{}
 	for _, platform := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
-		dir := getOutDirForPlatform(platform)
+		buildDir := getBuildDirForPlatform(platform)
 		for _, file := range files {
-			path := filepath.Join(dir, file)
+			path := filepath.Join(buildDir, file)
 			allFiles = append(allFiles, path)
+			path = filepath.Join("out", path)
+			sz := u.FileSize(path)
+			panicIf(sz < 0)
+			origSize += sz
 		}
-	}
-	origSize := int64(0)
-	for _, f := range allFiles {
-		sz := u.FileSize(f)
-		panicIf(sz < 0)
-		origSize += sz
 	}
 	logf("origSize: %s\n", u.FormatSize(origSize))
 
@@ -763,7 +776,7 @@ func buildCiDaily(signAndUpload bool) {
 	os.Remove(archivePath)
 	logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
 	printDur := measureDuration()
-	err := creaZipWithCompressFunction(archivePath, files, "", compressFileWithBr, ".br")
+	err := creaZipWithCompressFunction(archivePath, "out", allFiles, compressFileWithBr, ".br")
 	must(err)
 	printDur()
 	compressedSize := u.FileSize(archivePath)
