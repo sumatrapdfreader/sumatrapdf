@@ -744,7 +744,9 @@ func buildCiDaily(signAndUpload bool) {
 		printBBuildDur := makePrintDuration(fmt.Sprintf("buidling pre-release %s version %s", platform, ver))
 		slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 		p := `/p:Configuration=Release;Platform=` + platform
-		runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF:Build;SumatraPDF-dll:Build`, p, `/m`)
+		// t := `/t:SumatraPDF:Rebuild;SumatraPDF-dll:Rebuild`
+		t := `/t:SumatraPDF;SumatraPDF-dll`
+		runExeLoggedMust(msbuildPath, slnPath, t, p, `/m`)
 		printBBuildDur()
 	}
 	revertBuildConfig() // can do twice
