@@ -455,7 +455,7 @@ func main() {
 	}
 
 	if flgCIDailyBuild {
-		buildCiDaily()
+		buildCiDaily(flgUpload)
 		return
 	}
 

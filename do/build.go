@@ -688,12 +688,20 @@ func buildTestUtil() {
 
 const unsignedKeyPrefix = "software/sumatrapdf/prerel-unsigned/"
 
+func unsignedArchivePreRelKey(ver string) string {
+	return unsignedKeyPrefix + ver + ".zip"
+}
+
 // build pre-release builds and upload unsigned binaries to r2
 // TODO: remove old unsigned builds, keep only the last one; do it after we check thie build doesn't exist
 // TODO: maybe compress files before uploading using zstd or brotli
-func buildCiDaily() {
+func buildCiDaily(signAndUpload bool) {
 	if !isGithubMyMasterBranch() {
 		logf("buildCiDaily: skipping build because not on master branch\n")
+		return
+	}
+	if !isGitClean(".") {
+		logf("buildCiDaily: skipping build because git is not clean\n")
 		return
 	}
 
@@ -702,15 +710,12 @@ func buildCiDaily() {
 	ver := getPreReleaseVer()
 	logf("building and uploading pre-release version %s\n", ver)
 
-	keyPrefix := unsignedKeyPrefix + ver
+	archiveKey := unsignedArchivePreRelKey(ver)
 	mc := newMinioR2Client()
 
-	keyAllBuild := keyPrefix + "all-build.txt"
-	{
-		if mc.Exists(keyAllBuild) {
-			logf("buildCiDaily: skipping build because already uploaded (key '%s' exists)\n", keyAllBuild)
-			return
-		}
+	if mc.Exists(archiveKey) {
+		logf("buildCiDaily: skipping build because already uploaded (key '%s' exists)\n", archiveKey)
+		return
 	}
 
 	cleanReleaseBuilds()
@@ -764,10 +769,17 @@ func buildCiDaily() {
 	ratio := float64(origSize) / float64(compressedSize)
 	logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
 
-	//key := keyPrefix + platform + "/" + file
-	//mc.UploadFile(key, path, true)
-	//logf("uploading '%s'\n", keyAllBuild)
-	//mc.UploadData(keyAllBuild, []byte("all builds"), true)
+	{
+		logf("Uploading %s to %s ", archivePath, archiveKey)
+		timeStart := time.Now()
+		mc.UploadFile(archiveKey, archivePath, true)
+		logf("  took %s\n", time.Since(timeStart))
+	}
+	if !signAndUpload {
+		return
+	}
+	waitForEnter("Press Enter to sign and upload the binaries\n")
+	// TODO: implement me
 }
 
 func waitForEnter(s string) {
