@@ -1,25 +1,16 @@
 package main
 
 import (
-	"archive/zip"
-	"bufio"
-	"bytes"
 	"flag"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"time"
 
-	"github.com/andybalholm/brotli"
 	"github.com/kjk/common/u"
-	"github.com/klauspost/compress/zstd"
-	"github.com/ulikunitz/xz/lzma"
 )
 
 var (
@@ -225,32 +216,33 @@ func main() {
 	)
 
 	var (
-		flgBuildLogview    bool
-		flgBuildNo         int
-		flgBuildPreRelease bool
-		flgBuildRelease    bool
-		flgBuildSmoke      bool
-		flgBuildCodeQL     bool
-		flgCheckAccessKeys bool
-		flgCIBuild         bool
-		flgCIDailyBuild    bool
-		flgClangFormat     bool
-		flgClean           bool
-		flgDiff            bool
-		flgFilesList       bool
-		flgFileUpload      string
-		flgGenDocs         bool
-		flgGenSettings     bool
-		flgGenWebsiteDocs  bool
-		flgLogView         bool
-		flgRegenPremake    bool
-		flgRunTests        bool
-		flgTransDownload   bool
-		flgTriggerCodeQL   bool
-		flgUpdateGoDeps    bool
-		flgUpdateVer       string
-		flgUpload          bool
-		flgWc              bool
+		flgBuildLogview         bool
+		flgBuildNo              int
+		flgBuildPreRelease      bool
+		flgBuildRelease         bool
+		flgBuildSmoke           bool
+		flgBuildCodeQL          bool
+		flgCheckAccessKeys      bool
+		flgCIBuild              bool
+		flgCIDailyBuild         bool
+		flgClangFormat          bool
+		flgClean                bool
+		flgDiff                 bool
+		flgFilesList            bool
+		flgFileUpload           string
+		flgGenDocs              bool
+		flgGenSettings          bool
+		flgGenWebsiteDocs       bool
+		flgLogView              bool
+		flgRegenPremake         bool
+		flgRunTests             bool
+		flgTransDownload        bool
+		flgTriggerCodeQL        bool
+		flgUpdateGoDeps         bool
+		flgUpdateVer            string
+		flgUpload               bool
+		flgWc                   bool
+		flgSignUploadPreRelease bool
 	)
 
 	{
@@ -260,6 +252,7 @@ func main() {
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgCIDailyBuild, "ci-daily", false, "run CI daily steps")
 		flag.BoolVar(&flgBuildSmoke, "build-smoke", false, "run smoke build (installer for 64bit release)")
+		flag.BoolVar(&flgSignUploadPreRelease, "sign-upload-pre-rel", false, "sign and upload pre-release")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
 		flag.BoolVar(&flgBuildCodeQL, "build-codeql", false, "build for codeql")
@@ -410,6 +403,11 @@ func main() {
 		opts.upload = true
 	}
 
+	if flgSignUploadPreRelease {
+		signAndUploadLatestPreRelease()
+		return
+	}
+
 	if flgBuildRelease {
 		// only when building locally, not on GitHub CI
 		opts.verifyTranslationUpToDate = true
@@ -446,7 +444,7 @@ func main() {
 	}
 
 	if flgBuildSmoke {
-		buildSmoke()
+		buildSmoke(false) // TODO: flgSign
 		return
 	}
 
@@ -592,207 +590,4 @@ func printBuildNoInfo(buildNo int) {
 	n := len(lines) - (buildNo - 1000)
 	s := lines[n]
 	logf("%d: %s\n", buildNo, s)
-}
-
-func compressFileWithBr(path string) ([]byte, error) {
-	buf := bytes.Buffer{}
-	w := brotli.NewWriterLevel(&buf, brotli.BestCompression)
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	if _, err := io.Copy(w, f); err != nil {
-		return nil, err
-	}
-	if err := w.Close(); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func compressWithZstd(path string) ([]byte, error) {
-	buf := bytes.Buffer{}
-	w, err := zstd.NewWriter(&buf, zstd.WithEncoderLevel(zstd.SpeedBestCompression))
-	if err != nil {
-		return nil, err
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	if _, err := io.Copy(w, f); err != nil {
-		return nil, err
-	}
-	if err := w.Close(); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func compressWithLzma2(path string) ([]byte, error) {
-	buf := bytes.Buffer{}
-	bw := bufio.NewWriter(&buf)
-	w, err := lzma.NewWriter2(bw)
-	if err != nil {
-		return nil, err
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	if _, err := io.Copy(w, f); err != nil {
-		return nil, err
-	}
-	if err := w.Close(); err != nil {
-		return nil, err
-	}
-	if err := bw.Flush(); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func compressWithLzma2Better(path string) ([]byte, error) {
-	buf := bytes.Buffer{}
-	bw := bufio.NewWriter(&buf)
-	var c lzma.Writer2Config
-	c.DictCap = (8 * 1024 * 1024) * 16
-	if err := c.Verify(); err != nil {
-		return nil, err
-	}
-	w, err := c.NewWriter2(bw)
-	if err != nil {
-		return nil, err
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	if _, err := io.Copy(w, f); err != nil {
-		return nil, err
-	}
-	if err := w.Close(); err != nil {
-		return nil, err
-	}
-	if err := bw.Flush(); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func creaZipWithCompressFunction(zipPath string, dir string, fielPaths []string, compressFunc func(string) ([]byte, error), comprSuffix string) error {
-	os.Remove(zipPath)
-	w, err := os.Create(zipPath)
-	if err != nil {
-		return err
-	}
-	zw := zip.NewWriter(w)
-	defer func() {
-		err = zw.Close()
-	}()
-	var wg sync.WaitGroup
-	nConcurrent := runtime.NumCPU()
-	var perr atomic.Pointer[error]
-	sem := make(chan bool, nConcurrent)
-	for _, f := range fielPaths {
-		path := filepath.Join(dir, f)
-		wg.Add(1)
-		sem <- true
-		go func() {
-			data, err := compressFunc(path)
-			if err == nil {
-				zipPath := filepath.ToSlash(f) + comprSuffix
-				err = addZipDataStore(zw, data, zipPath)
-			}
-			if err != nil {
-				perr.Store(&err)
-			}
-			<-sem
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-	err = zw.Close()
-	if err != nil {
-		return err
-	}
-	errVal := perr.Load()
-	if errVal != nil {
-		return *errVal
-	}
-	return err // from defer
-}
-
-func testCompressOneOff() {
-	dir := filepath.Join("out", "rel64")
-	files := []string{"SumatraPDF.exe", "SumatraPDF-dll.exe", "libmupdf.pdb", "SumatraPDF.pdb", "SumatraPDF-dll.pdb"}
-	origSize := int64(0)
-	for _, f := range files {
-		origSize += u.FileSize(filepath.Join(dir, f))
-	}
-	logf("origSize: %s\n", u.FormatSize(origSize))
-
-	{
-		archivePath := filepath.Join(dir, "rel64.lzma2.better.zip")
-		os.Remove(archivePath)
-		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
-		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, dir, files, compressWithLzma2Better, ".lzma2")
-		printDur()
-		compressedSize := u.FileSize(archivePath)
-		ratio := float64(origSize) / float64(compressedSize)
-		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
-	}
-	{
-		archivePath := filepath.Join(dir, "rel64.lzma2.zip")
-		os.Remove(archivePath)
-		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
-		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, dir, files, compressWithLzma2, ".lzma2")
-		printDur()
-		compressedSize := u.FileSize(archivePath)
-		ratio := float64(origSize) / float64(compressedSize)
-		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
-	}
-	{
-		archivePath := filepath.Join(dir, "rel64.br.zip")
-		os.Remove(archivePath)
-		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
-		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, dir, files, compressFileWithBr, ".br")
-		printDur()
-		compressedSize := u.FileSize(archivePath)
-		ratio := float64(origSize) / float64(compressedSize)
-		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
-	}
-	{
-		archivePath := filepath.Join(dir, "rel64.zstd.zip")
-		os.Remove(archivePath)
-		logf("\nCreating %s (%d threads)\n", archivePath, runtime.NumCPU())
-		printDur := measureDuration()
-		creaZipWithCompressFunction(archivePath, dir, files, compressWithZstd, ".zstd")
-		printDur()
-		compressedSize := u.FileSize(archivePath)
-		ratio := float64(origSize) / float64(compressedSize)
-		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
-	}
-	{
-		logf("\nCreating rel64.lzsa using\n")
-		printDur := measureDuration()
-		archivePath := filepath.Join(dir, "rel64.lzsa")
-		os.Remove(archivePath)
-		createLzsaFromFiles("rel64.lzsa", dir, files)
-		printDur()
-		compressedSize := u.FileSize(archivePath)
-		ratio := float64(origSize) / float64(compressedSize)
-		logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
-	}
 }

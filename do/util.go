@@ -287,3 +287,10 @@ func copyFileMust(dst, src string) {
 	err = os.WriteFile(dst, d, 0644)
 	must(err)
 }
+
+func recreateDirMust(dir string) {
+	err := os.RemoveAll(dir)
+	must(err)
+	err = os.MkdirAll(dir, 0755)
+	must(err)
+}

@@ -191,9 +191,10 @@ func buildLzsa() {
 	msbuildPath := detectMsbuildPathMust()
 	runExeLoggedMust(msbuildPath, `vs2022\MakeLZSA.sln`, `/t:MakeLZSA:Rebuild`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
-	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
-	signMust(path)
-	logf("build and signed '%s'\n", path)
+	dir := filepath.Join("out", "rel32")
+	files := []string{"MakeLZSA.exe"}
+	signFilesMust(dir, files)
+	logf("built and signed '%s'\n", filepath.Join(dir, files[0]))
 }
 
 func buildConfigPath() string {
@@ -414,23 +415,6 @@ func createManifestMust() {
 // 	}
 // }
 
-func signFilesMust(dir string) {
-	if true {
-		logf("signFilesMust: '%s' DISABLED\n", dir)
-		return
-	}
-	logf("signFilesMust: '%s'\n", dir)
-	//listFilesInDir(dir)
-
-	if fileExists(filepath.Join(dir, "SumatraPDF.exe")) {
-		signMust(filepath.Join(dir, "SumatraPDF.exe"))
-	}
-	signMust(filepath.Join(dir, "libmupdf.dll"))
-	signMust(filepath.Join(dir, "PdfFilter.dll"))
-	signMust(filepath.Join(dir, "PdfPreview.dll"))
-	signMust(filepath.Join(dir, "SumatraPDF-dll.exe"))
-}
-
 const (
 	kPlatformIntel32 = "Win32"
 	kPlatformIntel64 = "x64"
@@ -556,7 +540,7 @@ func buildCi() {
 		// code ql is just a regular build, I assume intercepted by
 		// by their tooling
 		// buildSmoke() runs genHTMLDocsForApp() so no need to do it here
-		buildSmoke()
+		buildSmoke(false)
 	default:
 		panic("unkown value from getGitHubEventType()")
 	}
@@ -662,7 +646,7 @@ func buildCodeQL() {
 // smoke build is meant to be run locally to check that we can build everything
 // it does full installer build of 64-bit release build
 // We don't build other variants for speed. It takes about 5 mins locally
-func buildSmoke() {
+func buildSmoke(sign bool) {
 	detectSigntoolPath()
 	defer makePrintDuration("smoke build")()
 	removeReleaseBuilds()
@@ -672,7 +656,10 @@ func buildSmoke() {
 	panicIf(!fileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
 	msbuildPath := detectMsbuildPathMust()
-	runExeLoggedMust(msbuildPath, `vs2022\SumatraPDF.sln`, `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	sln := `vs2022\SumatraPDF.sln`
+	t := `/t:SumatraPDF-dll:Rebuild;test_util:Rebuild`
+	p := `/p:Configuration=Release;Platform=x64`
+	runExeLoggedMust(msbuildPath, sln, t, p, `/m`)
 	outDir := filepath.Join("out", "rel64")
 	runTestUtilMust(outDir)
 
@@ -681,11 +668,14 @@ func buildSmoke() {
 		cmd.Dir = outDir
 		runCmdLoggedMust(cmd)
 	}
-	signFilesMust(outDir)
+	if sign {
+		files := []string{"SumatraPDF.exe", "SumatraPDF-dll.exe", "libmupdf.dll", "PdfFilter.dll", "PdfPreview.dll"}
+		signFilesMust(outDir, files)
+	}
 }
 
 // func buildJustPortableExe(dir, config, platform string) {
-// 	msbuildPath := detectMsbuildPath()
+// 	msbuildPath := detectMsbuildPathMust()
 // 	slnPath := filepath.Join("vs2022", "SumatraPDF.sln")
 
 // 	p := fmt.Sprintf(`/p:Configuration=%s;Platform=%s`, config, platform)
@@ -785,17 +775,166 @@ func buildCiDaily(signAndUpload bool) {
 	ratio := float64(origSize) / float64(compressedSize)
 	logf("compressedSize: %s, ratio: %.2f\n", u.FormatSize(compressedSize), ratio)
 
+	if signAndUpload {
+		// we skip the upload phase
+		waitForEnter("Press Enter to sign and upload the binaries\n")
+		signAndUploadFromArchiveMust(ver, archivePath)
+		return
+	}
+
 	{
 		logf("Uploading %s to %s ", archivePath, archiveKey)
 		timeStart := time.Now()
 		mc.UploadFile(archiveKey, archivePath, true)
 		logf("  took %s\n", time.Since(timeStart))
 	}
-	if !signAndUpload {
+}
+
+// /software/sumatrapdf/prerel-unsigned/16878.zip => "16878"
+func verFromUnsignedArchiveKey(key string) string {
+	parts := strings.Split(key, "/")
+	if len(parts) < 2 {
+		return ""
+	}
+	// "18078.zip" => "18078"
+	ver := parts[len(parts)-1]
+	return strings.TrimSuffix(ver, ".zip")
+}
+
+// returns "16878" or "" if no unsigned builds
+func getLatestPreRelUnsignedVersion() string {
+	mc := newMinioR2Client()
+	objectsCh := mc.ListObjects(unsignedKeyPrefix)
+	maxVer := 0
+	for f := range objectsCh {
+		must(f.Err)
+		ver := verFromUnsignedArchiveKey(f.Key)
+		n, err := strconv.Atoi(ver)
+		must(err)
+		if n > maxVer {
+			maxVer = n
+		}
+	}
+	if maxVer == 0 {
+		return ""
+	}
+	panicIf(maxVer < 16878 || maxVer > 99999)
+	return strconv.Itoa(maxVer)
+}
+
+// /software/sumatrapdf/prerel/16766/SumatraPDF-prerel-32.exe
+func verFromSignedKey(key string) string {
+	panicIf(!strings.Contains(key, "/prerel/"))
+	parts := strings.Split(key, "/")
+	if len(parts) < 3 {
+		return ""
+	}
+	// "18078" => "18078"
+	ver := parts[len(parts)-2]
+	return ver
+}
+
+func getLastestPreRelVersion() string {
+	mc := newMinioR2Client()
+	objectsCh := mc.ListObjects("software/sumatrapdf/prerel/")
+	maxVer := 0
+	for f := range objectsCh {
+		must(f.Err)
+		ver := verFromSignedKey(f.Key)
+		n, err := strconv.Atoi(ver)
+		must(err)
+		if n > maxVer {
+			maxVer = n
+		}
+	}
+	if maxVer == 0 {
+		return ""
+	}
+	panicIf(maxVer < 16878 || maxVer > 99999)
+	return strconv.Itoa(maxVer)
+}
+
+// download latest daily build, sign it and upload as pre-release
+func signAndUploadLatestPreRelease() {
+	unsignedVer := getLatestPreRelUnsignedVersion()
+	if unsignedVer == "" {
+		logf("no unsigned builds found\n")
 		return
 	}
-	waitForEnter("Press Enter to sign and upload the binaries\n")
-	// TODO: implement me
+	ver := getLastestPreRelVersion()
+	logf("unsignedVer: %s, ver: %s\n", unsignedVer, ver)
+	if ver != "" {
+		panicIf(ver > unsignedVer, "unsignedVer: %s > ver: %s", unsignedVer, ver)
+		if ver == unsignedVer {
+			logf("latest signed pre-release build already uploaded\n")
+			return
+		}
+	}
+	archivePath := filepath.Join("out", unsignedVer+".zip")
+	must(os.Remove(archivePath))
+	key := unsignedArchivePreRelKey(unsignedVer)
+	mc := newMinioR2Client()
+	logf("downloading %s to %s...", key, archivePath)
+	timeStart := time.Now()
+	mc.DownloadFileAtomically(archivePath, key)
+	logf("  took %s\n", time.Since(timeStart))
+	signAndUploadFromArchiveMust(ver, archivePath)
+}
+
+func signAndUploadFromArchiveMust(ver string, archivePath string) {
+	outDir := filepath.Join("out", "prerel-unsigned")
+	recreateDirMust(outDir)
+
+	// extract files from archive
+	zipData := readFileMust(archivePath)
+	toSign := []string{}
+	err := u.IterZipData(zipData, func(f *zip.File, data []byte) error {
+		relativePath := filepath.FromSlash(f.Name)
+		if strings.HasSuffix(relativePath, ".exe") {
+			toSign = append(toSign, relativePath)
+		}
+		dstPath := filepath.Join(outDir, relativePath)
+		must(os.MkdirAll(filepath.Dir(dstPath), 0755))
+		must(os.WriteFile(dstPath, data, 0644))
+		logf("extracted '%s' => '%s'\n", f.Name, dstPath)
+		return nil
+	})
+	must(err)
+	logf("toSign: %v, outDir: %s\n", toSign, outDir)
+	signFilesMust(outDir, toSign)
+
+	// TODO: create derived files like zip and lzsa
+	// for _, plat := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
+	// }
+
+	// build files to upload
+
+	srcDir := outDir
+	outDir = filepath.Join("out", "prerel-signed")
+	recreateDirMust(outDir)
+	for _, plat := range []string{kPlatformIntel32, kPlatformIntel64, kPlatformArm64} {
+		suffix := getSuffixForPlatform(plat)
+		fileSuffix := fmt.Sprintf("SumatraPDF-prerel-%s", suffix)
+		logf("suffix: %s\n", suffix)
+		{
+			src := filepath.Join(srcDir, "SumatraPDF.exe")
+			dst := filepath.Join(outDir, fileSuffix+".exe")
+			copyFileMust(dst, src)
+		}
+		{
+			src := filepath.Join(srcDir, "SumatraPDF-dll.exe")
+			dst := filepath.Join(outDir, fileSuffix+"-install.exe")
+			copyFileMust(dst, src)
+		}
+		// TODO: must create this first
+		if false {
+			src := filepath.Join(srcDir, "SumatraPDF.zip")
+			dst := filepath.Join(outDir, fileSuffix+".zip")
+			copyFileMust(dst, src)
+		}
+	}
+
+	// upload files
 }
 
 func waitForEnter(s string) {
