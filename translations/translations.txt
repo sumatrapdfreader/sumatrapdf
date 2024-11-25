@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fe678dda045157bfb316eaa12992a94e0daec761
+a8959490537e37e183769c81db73cc60bf2a5b97
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -959,6 +959,7 @@ fr:&Deux pages
 ga:&Dhá leathanach
 gl:Páxina &dobre
 he:זוג עמודים
+hi:&सामना करना
 hr:&Dvije stranice
 hu:Oldal&pár
 id:Menghadap
@@ -1262,6 +1263,7 @@ fr:&Texte libre
 ga:&Téacs Saor
 gl:Texto &libre
 he:טקסט חופשי
+hi:&निःशुल्क पाठ
 hr:&Slobodni tekst
 hu:Szabad szöveg
 id:Teks Bebas
@@ -1572,6 +1574,7 @@ fr:&Raccourcis clavier
 ga:&Aicearraí méarchláir
 gl:Atallos de &teclado
 he:קיצורי דרך במקלדת
+hi:&कीबोर्ड शॉर्टकट
 hu:&Gyorsbillentyűk
 id:&Pintasan Kibor
 it:&Tasti rapidi
@@ -3151,6 +3154,7 @@ fr:&Tampon
 ga:&Stampa
 gl:&Selo
 he:חותמת
+hi:&मुद्रांक
 hr:&Pečat
 hu:Bélyeg
 id:&Stempel
@@ -3310,6 +3314,7 @@ fr:Thème
 ga:&Téama
 gl:&Tema
 he:ערכת נושא
+hi:&थीम
 hr:&Tema
 hu:Kinézet
 id:Tema
@@ -3422,6 +3427,7 @@ fr:So&uligner
 ga:&Cuir líne faoi
 gl:S&ubliñado
 he:הדגש
+hi:&अंडरलाइन
 hr:Podv&ući
 hu:Alá&húzás
 id:Garis bawah
@@ -3614,6 +3620,7 @@ fr:F&enêtre
 ga:&Fuinneog
 gl:&Xanela
 he:&חלון
+hi:&विंडो
 hr:P&rozor
 hu:&Ablak
 id:&Jendela
@@ -6197,6 +6204,7 @@ fr:Historique de %d fichiers effacé, vignettes supprimées.
 ga:Glanadh an t-oireas de %d comhad, mionsamhlacha scriosta.
 gl:Limpado historial de %d ficheiros, eliminadas miniaturas.
 he:.קבצים, תמונות ממוזערות נמחקו %d נוקתה היסטוריה של
+hi:%d फ़ाइलों का इतिहास साफ़ किया गया, थंबनेल हटाये गये।
 hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
 id:Riwayat %d file dibersihkan, thumbnail dihapus.
@@ -9559,6 +9567,7 @@ fr:Modifier l'annotation %s
 ga:Cuir an nóta mínithe %s in eagar
 gl:Editar %s anotación
 he:ערוך את הערה %s
+hi:%s एनोटेशन संपादित करें
 hr:Uredi %s bilješku
 hu:%s. megjegyzés szerkesztése
 id:Edit %s Anotasi
@@ -11397,6 +11406,7 @@ fr:Ajuster au &contenu
 ga:Oiriúnaigh an t-inneachar
 gl:Axustar &contido
 he:התאמה לתוכן
+hi:फिट & सामग्री
 hr:Prilagodi &sadržaju
 hu:&Tartalomhoz illesztés
 id:Muat Sesuai Isi
@@ -11444,6 +11454,7 @@ fr:&Page entière
 ga:Oiriúnaigh don leathanach é
 gl:Axustar &páxina
 he:התאמה לעמוד
+hi:फिट और पेज
 hr:&Prilagodi stranici
 hu:&Oldalhoz illesztés
 id:Muat Sesuai Halaman
@@ -11491,6 +11502,7 @@ fr:Pleine &largeur
 ga:Oiriúnaigh don leithead é
 gl:Axustar &largura
 he:התאם לרוחב
+hi:फिट और चौड़ाई
 hr: Nam&jesti po širini
 hu:&Szélességhez illesztés
 id:Muat Sesuai Lebar Halaman
@@ -13926,6 +13938,7 @@ fo:Vegleiðing á Vevsíðu
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
 he:מדריך למשתמש באתר
+hi:वेबसाइट पर मैनुअल
 hu:Kézikönyv a weboldalon
 id:Manual di Situs Web
 it:Manuale (sito web)
@@ -15075,6 +15088,7 @@ fr:Ouvrir dans &Double Commander
 ga:Oscail an chomhadlann i gceannasaí &dúbailte
 gl:Abrir directorio no &Double Commander
 he:Double Commander -פתח מדריך ב
+hi:डबल कमांडर में डायरेक्ट्री खोलें
 hr:Otvori direktorij u &Double Commanderu
 hu:Mappa megnyitása Double Commander-ben
 id:Buka Direktori di &Double Commander
@@ -15117,6 +15131,7 @@ fr:Ouvrir dans l'&Explorateur
 ga:Oscail an Chomhadlann in &Explorer
 gl:Abrir directorio no &explorador
 he:הצג את הקובץ בסייר הקבצים
+hi:& एक्सप्लोरर में डायरेक्टरी खोलें
 hr:Otvori direktorij u &Exploreru
 hu:Tároló mappa megnyitása
 id:Buka Direktori di &Explorer
@@ -15160,6 +15175,7 @@ fr:Ouvrir dans &Total Commander
 ga:Oscail an chomhadlann i gceannasaí iomlán
 gl:Abrir directorio no &Total Commander
 he:Total Commander -פתח מדריך ב
+hi:और टोटल कमांडर में डायरेक्टरी खोलें
 hr:Otvori direktorij u &Total Commanderu
 hu:Mappa megnyitása Total Commander-ben
 id:Buka Direktori di &Total Commander
@@ -15202,6 +15218,7 @@ fr:Ouvrir dans Directory &Opus
 ga:Oscail an chomhadlann i saothar comhadlainne
 gl:Abrir directorio no Directory &Opus
 he:פתח מדריך בספריה Opus
+hi:डायरेक्टरी &Opus में डायरेक्टरी खोलें
 hr:Otvori direktorij u Directory &Opusu
 hu:Mappa megnyitása Opus-ban
 id:Buka Direktori di Directory &Opus
@@ -15331,6 +15348,7 @@ el:Άνοιγμα επόμενου αρχείου στο φάκελο
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
 he:פתח את הקובץ הבא שבתיקיה
+hi:फ़ोल्डर में अगली फ़ाइल खोलें
 hu:Következő fájl megnyitása a mappában
 id:Buka Berkas Berikutnya Dalam Folder
 it:Apri file successivo nella cartella
@@ -15355,6 +15373,7 @@ el:Άνοιγμα προηγούμενου αρχείου στο φάκελο
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
 he:פתח את הקובץ שלפני בתיקיה
+hi:फ़ोल्डर में पिछली फ़ाइल खोलें
 hu:Előző fájl megnyitása a mappában
 id:Buka Berkas Sebelumnya Dalam Folder
 it:Apri file precedente nella cartella
@@ -16560,6 +16579,7 @@ fr:Fichiers PalmDoc
 ga:Cáipéisí PalmDoc
 gl:Documentos PalmDoc
 he:קובצי PalmDoc
+hi:पामडॉक दस्तावेज़
 hr:PalmDoc dokumenti
 hu:PalmDoc dokumentumok
 id:Dokumen PalmDoc
@@ -16798,6 +16818,7 @@ fr:Ligne polygonale
 ga:Líne iolrach
 gl:Liña polivinílica
 he:קו פולי
+hi:पॉली लाइन
 hr:Poli-linija
 hu:Vonallánc
 id:Garis Poli
@@ -16907,6 +16928,7 @@ fr:Popup: %d 0 R
 ga:Mír aníos: %d 0 R
 gl:Aparecer: %d 0 R
 he:Popup: %d 0 R
+hi:पॉपअप: %d 0 R
 hr:Skočna obavijest: %d 0 R
 hu:Felugró: %d 0 R
 id:Munculkan: %d 0 R
@@ -17022,6 +17044,7 @@ fr:Prés&entation
 ga:Cur i láthair
 gl:Pr&esentación
 he:הצגה
+hi:pr&उच्चारण
 hr:Pr&ezentacija
 hu:&Bemutató
 id:Presentasi
@@ -17765,6 +17788,7 @@ fr:Rect : x=%d y=%d dx=%d dy=%d
 ga:Ceart: x=%d y=%d dx=%d dy=%d
 gl:Rectángulo: x=%d y=%d dx=%d dy=%d
 he:Rect: x=%d y=%d dx=%d dy=%d
+hi:आयत: x=%d y=%d dx=%d dy=%d
 hr:Pravokutnik: x=%d y=%d dx=%d dy=%d
 hu:Téglalap: x=%d y=%d dx=%d dy=%d
 id:Persegi: x=%d y=%d dx=%d dy=%d
@@ -18235,6 +18259,7 @@ fr:&Sélection
 ga:Roghnú
 gl:S&elección
 he:בחירה
+hi:s& चुनाव
 hr:O&dabir
 hu:K&iválasztás
 id:Pilihan
@@ -18285,6 +18310,7 @@ fr:&Ondulé
 ga:Catach
 gl:O&ndulado
 he:גלי ומתפתל
+hi:S&टेढ़ा-मेढ़ा
 hr:&Vrckava crta
 hu:Hullámos
 id:Lekukan
@@ -18338,6 +18364,7 @@ fr:Documents SVG
 ga:Cáipéisí SVG
 gl:documentos SVG
 he:SVG מסמכי
+hi:SVG दस्तावेज
 hr:SVG dokumenti
 hu:SVG dokumentumok
 id:Dokumen SVG
@@ -18486,6 +18513,7 @@ fr:Enregistrer le fichier incorporé...
 ga:Taisc comhad leabaithe...
 gl:Gardar ficheiro inserido...
 he:...שמור קובץ מוטבע
+hi:अंतर्निहित फ़ाइल सहेजें…
 hr:Spremi ugrađenu datoteku...
 hu:Beágyazott fájl mentése...
 id:Simpan File Tersemat
@@ -18537,6 +18565,7 @@ fr:Enregistrer le raccourci (&h)
 ga:Cuir an t-aicearra i dtaisce...
 gl:Gardar ata&llo...
 he:...שמור קיצור דרך
+hi:शॉर्टकट सहेजें...
 hr:Spre&mi prečac...
 hu:&Prancsikon mentése…
 id:Simpan
@@ -18748,6 +18777,7 @@ fr:Sauvegarder dans un &nouveau PDF
 ga:Cuir i dtaisce sa PDF &nua é
 gl:Gardar en PDF &novo
 he:חדש PDF שמירה במסמך
+hi:&नए PDF में सहेजें
 hr:Spremi u &novi PDF
 hu:Mentés új PDF-be
 id:Simpan ke PDF &baru
@@ -18797,6 +18827,7 @@ fr:Annotation enregistrée vers '%s'
 ga:Cuireadh na hathruithe i dtaisce in '%s'
 gl:Gardáronse as anotacións a '%s'
 he:'%s' -הערות שנשמרו ב
+hi:टिप्पणियाँ को '%s' में सहेजा गया
 hr:Bilješke spremljene u '%s'
 hu:Mentett megjegyzések ehhez: „%s”
 id:Catatan tersimpan di: %s'
@@ -18846,6 +18877,7 @@ fr:L'enregistrement de '%s' a échoué avec : '%s'
 ga:Níorbh fhéidir '%s' a chur i dtaisce le: '%s'
 gl:O gardado de '%s' fallou con: '%s'
 he:'%s' :נכשל עם '%s' :שמירה של
+hi:'%s' की बचत विफल रही: '%s' के साथ
 hr:Spremanje '%s' neuspjelo sa: '%s'
 hu:A(z) „%s” mentése sikertelen volt: „%s”
 id:Penyimpanan %s' gagal dengan: %s'
@@ -18992,6 +19024,7 @@ es:Buscar con &Google Scholar
 fo:Leita við &Google Scholar
 fr:Rechercher avec &Google Scholar
 he:חפש עם Google Scholar
+hi:Google Scholar से खोजें
 hu:Keresés &Google Scholar-ral
 id:Cari dengan &Google Scholar
 it:Cerca con &Google Scholar
@@ -19018,6 +19051,7 @@ es:Buscar con &Wikipedia
 fo:Leita við &Wikipedia
 fr:Rechercher avec &Wikipedia
 he:חפש בוויקיפדיה
+hi:&विकिपीडिया से खोजें
 hu:Keresés a &Wikipédián
 id:Cari dengan &Wikipedia
 it:Cerca con &Wikipedia
@@ -19586,6 +19620,7 @@ fr:Afficher les &favoris
 ga:Taispeáin na &Ceanáin
 gl:Amosar &favoritos
 he:הצג מועדפים
+hi:&पसंदीदा दिखाएँ
 hr:Prikaži &favorite
 hu:Kedvencek mutatása
 id:Tampilkan &Favorit
@@ -19707,6 +19742,7 @@ fr:Afficher les &barres de défilement
 ga:Taispeáin na barraí &scrollála
 gl:Amosr barra&s de desprazamento
 he:הצג פסי גלילה
+hi:स्क्रॉलबार दिखाएँ
 hr:Prikaži &klizače
 hu:Görgetősávok mutatása
 id:Tampilkan &Scrollbars
@@ -19831,6 +19867,7 @@ fr:&Afficher les signets
 ga:Taispeáin na Ceanáin
 gl:Amosar &marcadores
 he:הצג סימניות
+hi:पुस्तक&चिह्न दिखाएँ
 hr:Prikaži fa&vorite
 hu:Könyv&jelzők megjelenítése
 id:Perlihatkan Penanda
@@ -19946,6 +19983,7 @@ fr:Afficher les barres de &défilement
 ga:Taispeáin na barraí scr&ollála
 gl:Amosar barras de desprazament&o
 he:הצג פסי גלילה
+hi:स्क्रॉलबार दिखाएँ
 hr:Prikaži &klizače
 hu:Gör&getősávok megjelenítése
 id:Tampilkan Scr&ollbars
@@ -20747,6 +20785,7 @@ fr:Désinstalleur de SumatraPDF %s
 ga:Díshuiteálaí SumatraPDF %s
 gl:Desinstalador %s SumatraPDF
 he:הסרת SumatraPDF %s
+hi:सुमात्रापीडीएफ %s अनइंस्टॉलर
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
 id:Penghapus instalasi SumatraPDF %s
@@ -21009,6 +21048,7 @@ fr:SumatraPDF a été désinstallé.
 ga:Díshuiteáladh SumatraPDF.
 gl:Desintalouse SumatraPDF
 he:התקנת SumatraPDF הושלמה.
+hi:सुमात्रापीडीएफ को अनइंस्टॉल कर दिया गया है
 hr:SumatraPDF je deinstaliran.
 hu:SumatraPDF eltávolítása befejeződött.
 id:SumatraPDF telah dihapus
@@ -21073,6 +21113,7 @@ fr:Installation de SumatraPDF non trouvée
 ga:Níor aimsíodh suiteáil SumatraPDF.
 gl:Non se atopou ningunha instalación de SumatraPDF.
 he:התקנת SumatraPDF לא נמצאה.
+hi:सुमात्रापीडीएफ इंस्टालेशन नहीं मिला.
 hr:SumatraPDF instalacija nije pronađena.
 hu:SumatraPDF telepítő nem található.
 id:Instalasi SumatraPDF tidak ditemukan.
@@ -21266,6 +21307,7 @@ fr:Alignement du texte :
 ga:Ailíniú an téacs:
 gl:Aliñación do texto:
 he::יישור טקסט
+hi:टेक्स्ट संरेखण:
 hr:Poravnavanje teksta:
 hu:Szövegigazítás:
 id:Rata Teks:
@@ -21677,6 +21719,7 @@ fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé d
 ga:Tá an suiteálaí truaillithe. Déan é a íosluchtú arís le do thoil.\nIs dona linn aon mhíchuibhiúlacht!
 gl:O instalador danouse. Por favor, descárgueo de novo.\nDesculpe as molestias!
 he:קובץ ההתקנה פגום. אנא הורד שוב.
+hi:इंस्टॉलर दूषित हो गया है। कृपया इसे फिर से डाउनलोड करें। असुविधा के लिए खेद है!
 hr:Instaler je oštećen. Molim Vas preuzmite ga ponovno.\nIsprika za tu neugodnost!
 hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kellemetlenségért!
 id:Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!
@@ -21741,6 +21784,7 @@ fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne 
 ga:Baineann an cháipéis seo feidhm as gnéithe (%s) nach dtugtar tacaíocht dóibh agus b'fhéidir nach ndéanfar iad a thaispeáint i gceart
 gl:Este documento usa características non compatibles (%s) e pode non presentarse correctamente.
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
+hi:यह दस्तावेज़ असमर्थित सुविधाओं (%s) का उपयोग करता है और हो संभव है कि ठीक से प्रस्तुत न हो
 hr:Ovaj dokument koristi nepodržane značajke (%s) i možda se neće ispravno prikazati
 hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pontosan kerül megjelenítésre
 id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan kemungkinan tidak layak dijalankan
@@ -21875,6 +21919,7 @@ fr:Traduire avec &DeepL
 ga:Aistrigh le &DeepL é
 gl:Traducido con &DeepL
 he:תרגם באמצעות DeepL
+hi:&DeepL से अनुवाद करें
 hr:Prevedi sa &DeepL
 hu:Fordítsd le a DeepL-el
 id:Terjemahkan dengan &DeepL
@@ -21929,6 +21974,7 @@ fr:Désinstaller SumatraPDF
 ga:Déan SumatraPDF a dhíshuiteáil
 gl:Desinstalar SumatraPDF
 he:הסר את SumatraPDF
+hi:सुमात्रापीडीएफ को अनइंस्टॉल करें
 hr:Deinstaliraj SumatraPDF
 hu:SumatraPDF eltávolítása
 id:Uninstall SumatraPDF
@@ -21994,6 +22040,7 @@ fr:Échec de la désinstallation
 ga:Theip air díshuiteáil
 gl:Fallou a desinstalación
 he:.נכשלה SumatraPDF הסרת
+hi:अनइंस्टॉलेशन विफल रहा
 hr:Deinstalacija nije uspjela
 hu:Eltávolítás sikertelen
 id:Proses uninstall gagal.
@@ -22058,6 +22105,7 @@ fr:Désinstallation en cours…
 ga:Díshuiteáil ar siúl...
 gl:Desinstalación en procreso...
 he:מסיר את SumatraPDF...
+hi:अनइंस्टॉलेशन चल रहा है...
 hr:Deinstaliranje...
 hu:Eltávolítás folyamatban...
 id:Proses uninstall sedang berlangsung...
@@ -22187,6 +22235,7 @@ fr:Annotations non sauvegardées
 ga:Nótaí mínithe nach bhfuil curtha i dtaisce
 gl:Anotacións sen gardar
 he:הערות שלא נשמרו
+hi:सहेजी न गई टिप्पणियाँ
 hr:Nespremljene bilješke
 hu:Mentetlen megjegyzések
 id:Catatan tidak tersimpan
@@ -22239,6 +22288,7 @@ fr:Annotations non sauvegardées dans « %s »
 ga:Tá nótaí mínithe nach bhfuil i dtaisce i '%s'
 gl:Anotacións sen gardar en '%s'
 he:'%s' -הערות שלא נשמרו ב
+hi:'%s' में न सहेजे गए एनोटेशन
 hr:Nespremljene bilješke u '%s'
 hu:Mentetlen megjegyzések itt: '%s'
 id:Catatan tidak tersimpan di '%s'
@@ -22291,6 +22341,7 @@ fr:Utiliser les ongle&ts
 ga:Bain feidhm as &cluaisíní
 gl:Usar &lapelas
 he:השתמש בלשוניות
+hi:उपयोग &Tabs
 hr:Koristi &kartice
 hu:Fülek használata
 id:Gunakan &tab
@@ -22734,6 +22785,7 @@ fr:Vous avez des annotations non sauvegardées
 ga:Tá nótaí mínithe nach bhfuil curtha i dtaisce agat
 gl:Tes anotacións sen gardar
 he:יש לך הערות שלא נשמרו
+hi:आपके पास बिना सहेजे गए एनोटेशन हैं
 hr:Imate nespremljene bilješke
 hu:Mentetlen megjegyzéseid vannak
 id:Kamu memiliki catatan yang belum tersimpan
@@ -22786,6 +22838,7 @@ fr:Vous avez la version ‘%s’ et la version ‘%s’ est disponible. \nVoulez
 ga:Tá leagan '%s' agat agus tá leagan '%s' ar fáil.\nAn mian leat an leagan nua a shuiteáil?
 gl:Tes a versión '%s' e está dispoñíbel a versión '%s'.\nQueres instalar a nova versión?
 he:.זמינה '%s' וגרסה '%s' יש לך גרסה\n?האם ברצונך להתקין גרסה חדשה
+hi:आपके पास संस्करण '%s' है और संस्करण '%s' उपलब्ध है.\nक्या आप नया संस्करण स्थापित करना चाहते हैं?
 hr:Imate verziju '%s' a verzija '%s' je dostupna.\nŽelite li instalirati novu verziju?
 hu:A jelenlegi verziód '%s' és már a '%s' verzió is elérhető.\nSzeretnéd feltelepíteni az új verziót?
 id:Anda memiliki versi '%s' dan versi '%s' telah tersedia.\nApakah anda ingin memasang versi terbaru?
@@ -22836,6 +22889,7 @@ fr:Installation de SumatraPDF 32-bits sur un système 64-bits.\nVoulez-vous tél
 ga:Tá leagan 32-beart de SumatraPDF á shuiteáil ar chóras oibriúcháin 64-beart agat.\nAr mhaith leat an leagan 64-beart a íosluchtú?
 gl:Estas a instalar o SumatraPDF de 32-bit nun sistema de 64-bit.\nQueres descargar a versión\nde 64-bit?
 he:.בגרסת 32 סיביות, במערכת ההפעלה של 64 סיביות SumatraPDF אתה מתקין\nהאם ברצונך להוריד\n?גרסת 64 סיביות
+hi:आप 64-बिट OS पर 32-बिट सुमात्रापीडीएफ स्थापित कर रहे हैं।\nक्या आप 64-बिट संस्करण डाउनलोड करना चाहेंगे?
 hr:Instalirate 32-bitnu SumatraPDF on 64-bitni OS.\nŽelite li preuzeti 64-bit verziju?
 hu:A SumatraPDF 32-bites verzióját telepíted éppen egy 64-bites operációs rendszerre.\nSzeretnéd inkább letölteni a\n64-bites verziót?
 id:Anda memasang SumatraPDF versi 32-bit pada OS 64-bit.\nApakah Anda ingin mengunduh versi 64-bit?
