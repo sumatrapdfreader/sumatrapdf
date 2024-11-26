@@ -101,6 +101,12 @@
 #include <filesystem>
 #include <gdiplus.h>
  
+std::wstring GetProcessedImagePath(const std::wstring& originalPath) {
+    std::filesystem::path path(originalPath);
+    std::wstring newFileName = path.stem().wstring() + L"_processed" + L".png";
+    return (path.parent_path() / newFileName).wstring();
+}
+ 
 // Helper function to execute a command and capture its output
 std::wstring ExecuteCommandAndCaptureOutput(const std::wstring& command) {
     SECURITY_ATTRIBUTES saAttr;
@@ -5392,7 +5398,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SaveCurrentFileAs(win);
             break;
         #include <windows.h>
-
+ 
         case CmdMLModel: {
     // Open file dialog to select an image
     OPENFILENAME ofn;
@@ -5426,7 +5432,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         std::wstring output = ExecuteCommandAndCaptureOutput(command);
 
         // Parse the output to get the path of the processed image
-        std::wstring processedImagePath = ParseOutputForImagePath(output);
+        std::wstring processedImagePath = GetProcessedImagePath(ofn.lpstrFile);
 
         if (!processedImagePath.empty()) {
             // Open the processed image in a new tab using SumatraPDF's LoadDocument function
