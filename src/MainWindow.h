@@ -212,6 +212,11 @@ struct MainWindow {
 
     DocControllerCallback* cbHandler = nullptr;
 
+    // Seprate scroll thread for higher precision scrolling updates
+    HANDLE scrollTimerThread = nullptr;
+    bool scrollTimerCancelled = false;
+    HANDLE scrollTimer = nullptr;
+
     // The target y offset for smooth scrolling.
     // We use a timer to gradually scroll there.
     int scrollTargetY = 0;

@@ -61,9 +61,6 @@ bool gNoFlickerRender = true;
 
 Kind kNotifAnnotation = "notifAnnotation";
 
-// Timer for mouse wheel smooth scrolling
-constexpr UINT_PTR kSmoothScrollTimerID = 6;
-
 // Smooth scrolling factor. This is a value between 0 and 1.
 // Each step, we scroll the needed delta times this factor.
 // Therefore, a higher factor makes smooth scrolling faster.
@@ -151,7 +148,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         if (gGlobalPrefs->smoothScroll) {
             win->scrollTargetY = si.nPos;
-            SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
+            SetEvent(win->scrollTimer);
         } else {
             win->AsFixed()->ScrollYTo(si.nPos);
         }
@@ -1211,7 +1208,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     win->dragStartPending = false;
     // Kill the smooth scroll timer when zooming
     // We don't want to move to the new updated y offset after zooming
-    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+    ResetEvent(win->scrollTimer);
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -1875,7 +1872,7 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             int delta = target - current;
 
             if (delta == 0) {
-                KillTimer(hwnd, kSmoothScrollTimerID);
+                ResetEvent(win->scrollTimer);
             } else {
                 // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
 
