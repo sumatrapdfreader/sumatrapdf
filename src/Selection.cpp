@@ -396,7 +396,7 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
     }
 
     SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+    SetEvent(win->smoothscrollTimer);
     ScheduleRepaint(win, 0);
 }
 
@@ -404,7 +404,7 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     if (GetCapture() == win->hwndCanvas) {
         ReleaseCapture();
     }
-    KillTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID);
+    ResetEvent(win->smoothscrollTimer);
 
     // update the text selection before changing the selectionRect
     if (MouseAction::SelectingText == win->mouseAction) {
