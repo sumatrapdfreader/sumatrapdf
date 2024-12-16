@@ -215,7 +215,11 @@ struct MainWindow {
     // Seprate scroll thread for higher precision scrolling updates
     HANDLE scrollTimerThread = nullptr;
     bool scrollTimerCancelled = false;
+    // Scroll thread delta time (e.g. frame time) in ms
+    int scrollTimerDeltaTime = 0;
+
     HANDLE scrollTimer = nullptr;
+    HANDLE smoothscrollTimer = nullptr;
 
     // The target y offset for smooth scrolling.
     // We use a timer to gradually scroll there.

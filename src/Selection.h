@@ -2,8 +2,7 @@
    License: GPLv3 */
 
 #define SMOOTHSCROLL_TIMER_ID 2
-#define SMOOTHSCROLL_DELAY_IN_MS 20
-#define SMOOTHSCROLL_SLOW_DOWN_FACTOR 10
+#define SMOOTHSCROLL_FACTOR 10
 
 /* Represents selected area on given page */
 struct SelectionOnPage {
