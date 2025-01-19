@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a8959490537e37e183769c81db73cc60bf2a5b97
+8f25fc8e6e98bc82a8e7ac7a2ffa1440f9abfeb6
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:ملاحظة %s. اضغط Ctrl للتحرير.
@@ -33,6 +33,7 @@ ro:%s adnotare. Ctrl+clic să modifici
 ru:Аннотация %s. Ctrl+щелчок для изменения.
 sat:%s ᱪᱤᱱᱦᱟᱹ ᱾ ᱥᱟᱯᱲᱟᱣ ᱞᱟᱹᱜᱤᱫ Ctrl+ᱚᱛᱟᱭ ᱢᱮ ᱾
 sk:%s anotácia. Upravíte cez Ctrl+kliknutie.
+sl:Opomba %s. Ctrl+click za urejanje.
 sr-rs:%s белешка. Ctrl+клик за уређивање.
 tw:%s註解. 按 Ctrl+滑鼠左鍵進行編輯.
 :&About
@@ -131,7 +132,7 @@ fi:&Todellinen koko
 fo:&Verulig stødd
 fr:&Taille réelle
 ga:&Méid iarbhír
-gl:T&amaño actual
+gl:&Tamaño actual
 he:גודל אמיתי
 hi:वास्तविक आकार
 hr:Stv&arna veličina
@@ -1589,6 +1590,7 @@ ro:&Comandă rapidă de la tastatură
 ru:&Горячие клавиши
 sat:&ᱠᱟᱹᱴᱷᱤᱵᱚᱰ ᱥᱚᱴᱠᱚᱴᱠᱚ
 sk:&Klávesové skratky
+sl:Bližnjice tip&kovnice
 sr-rs:&Пречице на тастатури
 tw:鍵盤快速鍵(&K)
 :&Last Page
@@ -3374,7 +3376,7 @@ fi:&Käännä Googlen avulla
 fo:&Týða Við Google
 fr:&Traduire avec Google
 ga:&Aistrigh le Google é
-gl:&Traducido con Google
+gl:&Traducir con Google
 he:תרגם באמצעות google
 hi:&Google के साथ अनुवाद करें
 hr:&Prevedi sa Google-om
@@ -5068,7 +5070,7 @@ fo:Kanna sjálvvirkandi eftir &dagføringum
 fr:Vérifier a&utomatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
-gl:Comprobar se hai actualizacións a&utomaticamente
+gl:Comprobar se hai actualizacións &automaticamente
 he:בדוק עדכונים אוטומטית
 hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
@@ -6220,6 +6222,7 @@ ro:Istoricul șters pentru %d fișiere, miniaturi șterse.
 ru:Очищена история %d файлов, удалены миниатюры.
 sat:%d ᱨᱮᱫᱽ ᱨᱮᱱᱟᱜ ᱱᱟᱜᱟᱢ ᱯᱷᱟᱨᱪᱟ ᱟᱠᱟᱱᱟ, ᱛᱷᱤᱢᱵᱽᱱᱮᱞᱠᱚ ᱢᱮᱴᱟᱣ ᱟᱠᱟᱱᱟ ᱾
 sk:Vymazaná história %d súborov, odstránené náhľady.
+sl:Izbrisana zgodovina %d datotek, izbrisane sličice.
 sr-rs:Историја од %d датотека очишћена, сличице обрисане.
 tw:已清除 %d 個檔案的歷史記錄，已刪除縮圖。
 vn:Đã dọn lịch sử của %d tập tin, đã xóa hình thu nhỏ.
@@ -6260,6 +6263,7 @@ ro:Ștergere istoric...
 ru:Очистка истории...
 sat:ᱱᱟᱜᱟᱢ ᱢᱮᱴᱟᱣᱜ ᱠᱟᱱᱟ ...
 sk:Vymazávanie histórie…
+sl:Čiščenje zgodovine …
 sr-rs:Чишћење историје...
 tw:正在清除歷史記錄...
 vn:Đang dọn dẹp lịch sử...
@@ -6349,6 +6353,7 @@ es:Cerrar todas las pestañas
 fo:Sløkk øll varðabløð
 fr:Fermer tous les onglets
 ga:Dún Gach Cluaisín
+gl:Pechar todas as lapelas
 he:סגור את כל הכרטיסיות
 hi:सभी टैब को बंद करें
 hu:Összes lap bezárása
@@ -6363,6 +6368,7 @@ ro:Închide toate filele
 ru:Закрыть все вкладки
 sat:ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ
 sk:Zatvoriť všetky karty
+sl:Zapri vse zavihke
 tw:關閉全部分頁
 :Close Other Tabs
 am:Փակել այլ ներդիրները
@@ -6431,6 +6437,7 @@ es:Cerrar pestañas a la izquierda
 fo:Sløkk varðabløð vinstrumegin
 fr:Fermer les onglets sur la gauche
 ga:Dún cluaisíní ar chlé
+gl:Pechar lapelas á esquerda
 he:סגור כרטיסיות משמאל
 hi:बाईं ओर के टैब बंद करें
 hu:Balra lévő lapok bezárása
@@ -6445,6 +6452,7 @@ ro:Închide filele la stânga
 ru:Закрыть вкладки слева
 sat:ᱞᱮᱝᱜᱟᱛᱤ ᱯᱟᱦᱴᱟ ᱴᱮᱵᱽᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ
 sk:Zatvoriť karty vľavo
+sl:Zapri zavihke na levi
 tw:關閉左側分頁
 :Close Tabs To The Right
 am:Փակել աջի ներդիրները
@@ -7132,7 +7140,7 @@ ru:Помочь с переводом
 sat:ᱛᱚᱨᱡᱚᱢᱟ ᱨᱮ ᱮᱱᱮᱢ
 si:පරිවර්ථනයට දායකවන්න
 sk:Prispieť k prekladu programu
-sl:Prispevajte prevod
+sl:Prispevaj prevod
 sn:Batsira kuturikira
 sp-rs:Učestvuj u prevođenju
 sq:Kontribuoj në përkthim
@@ -7390,6 +7398,7 @@ ro:Copiază cale de fișier
 ru:Скопировать путь к файлу
 sat:ᱨᱮᱫᱽ ᱦᱚᱨ ᱱᱚᱠᱚᱞ ᱢᱮ
 sk:Kopírovať cestu k súboru
+sl:Kopiraj pot datoteke
 sr-rs:Копирај путању датотеке
 sv:Kopiera sökväg
 ta:கோப்பு பாதை நகலெடு
@@ -9003,6 +9012,7 @@ es:Eliminar
 fo:Strika
 fr:Supprimer
 ga:Scrios
+gl:Borrar
 he:מחק
 hi:मिटाओ
 hu:Törlés
@@ -9017,6 +9027,7 @@ ro:Șterge
 ru:Удалить
 sat:ᱢᱮᱴᱟᱣ
 sk:Odstrániť
+sl:Zbriši
 tw:刪除
 :Delete Annotation
 am:Ջնջել մեկնաբանությունը
@@ -9053,6 +9064,7 @@ ro:Șterge adnotarea
 ru:Удалить аннотацию
 sat:ᱪᱤᱱᱦᱟᱹ ᱢᱮᱴᱟᱣ ᱢᱮ
 sk:Odstrániť anotáciu
+sl:Izbriši opombo
 sr-rs:Обриши белешку
 tw:刪除註解
 uk:Видалити анотацію
@@ -9582,6 +9594,7 @@ ro:Modifică %s adnotare
 ru:Изменить аннотацию %s
 sat:%s ᱪᱤᱱᱦᱟᱹ ᱥᱟᱯᱲᱟᱣ ᱢᱮ
 sk:Upraviť %s anotáciu
+sl:Uredi opombo %s
 sr-rs:Уреди %s белешку
 tw:編輯 %s 註解
 :Edit Annotations
@@ -9632,7 +9645,7 @@ ro:Modifică adnotări
 ru:Изменить аннотации
 sat:ᱪᱤᱱᱦᱟᱹᱠᱚ ᱥᱟᱯᱲᱟᱣ ᱢᱮ
 sk:Upraviť anotáciu
-sl:Uredi pripombo
+sl:Uredi opombe
 sr-rs:&Уреди белешке
 ta:குறிப்புரைகளைத் திருத்துக
 th:ปรับแต่งคำอธิบายประกอบ
@@ -9883,6 +9896,7 @@ ro:Eroare
 ru:Ошибка
 sat:ᱵᱷᱩᱞ
 sk:Chyba
+sl:Napaka
 sr-rs:Грешка
 tw:錯誤
 :Error loading %s
@@ -13937,11 +13951,13 @@ es:Manual en la Web
 fo:Vegleiðing á Vevsíðu
 fr:Manuel sur le site web
 ga:Lámhleabhar ar an Láithreán Gréasáin
+gl:Manual no sitio web
 he:מדריך למשתמש באתר
 hi:वेबसाइट पर मैनुअल
 hu:Kézikönyv a weboldalon
 id:Manual di Situs Web
 it:Manuale (sito web)
+ja:Web サイトのマニュアル(&A)
 my:Manual Di Tapak Web
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
@@ -13950,6 +13966,7 @@ ro:Manual pe site
 ru:Руководство на веб-сайте
 sat:ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱟᱹᱠᱷᱤ
 sk:Manuál na webovej stránke
+sl:Priročnik na spletni strani
 tw:線上說明
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
@@ -14353,11 +14370,13 @@ es:No
 fo:Nei
 fr:Non
 ga:Níl
+gl:Non
 he:לא
 hi:नहीं
 hu:Nem
 id:Tidak
 it:No
+ja:いいえ
 my:Tidak
 nl:Nee
 pl:Nie
@@ -14366,6 +14385,7 @@ ro:Nu
 ru:Нет
 sat:ᱵᱟᱝᱟ
 sk:Nie
+sl:Ne
 tw:否
 :No matches were found
 am:Ոչինչ չի գտնվել
@@ -15104,6 +15124,7 @@ ro:Deschide folder în &Double Commander
 ru:Открыть папку в &Double Commander
 sat:&ᱰᱚᱵᱚᱞ ᱟᱫᱮᱥᱤᱭᱟᱹ ᱨᱮ ᱯᱚᱴᱚᱢ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v aplikácii &Double Commander
+sl:Odpri mapo v &Double Commander
 sr-rs:Отвори фасциклу у Double Commander-у (&К)
 ta:டபுள் கமாண்டரில் கோப்புறை திற
 tl:Buksan ang Directory sa &Double Commander
@@ -15148,6 +15169,7 @@ ro:Deschide folder în &exploratorul de fișiere în Windows
 ru:Открыть папку в &Проводнике
 sat:&ᱮᱠᱥᱯᱞᱚᱨᱤᱨ ᱨᱮ ᱯᱚᱴᱚᱢ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v Pri&eskumníkovi
+sl:Odpri mapo v &Explorerju
 sr-rs:Отвори фасциклу у Истра&живачу
 ta:எக்ஸ்ப்ளோரரில் கோப்புறை திற
 tl:Buksan ang Directory sa &Explorer
@@ -15192,6 +15214,7 @@ ro:Deschide folder în &Total Commander
 ru:Открыть папку в &Total Commander
 sat:&ᱢᱩᱴ ᱠᱚᱢᱟᱱᱰᱚᱨ ᱨᱮ ᱯᱚᱴᱚᱢ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v aplikácii &Total Commander
+sl:Odpri mapo v &Total Commanderju
 sr-rs:Отвори фасциклу у Total Commander-у (&Т)
 ta:டோட்டல் கமாண்டரில் கோப்புறை திற
 tl:Buksan ang Directory sa &Total Commander
@@ -15234,6 +15257,7 @@ ro:Deschide folder în Directory &Opus
 ru:Открыть папку в &Directory Opus
 sat:ᱰᱟᱭᱨᱮᱠᱴᱚᱨᱤ &Opus ᱨᱮ ᱰᱟᱭᱨᱮᱠᱴᱚᱨᱤ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť priečinok v aplikácii &Opus
+sl:Odpri mapo v Directory &Opus
 sr-rs:Отвори фасциклу у Directory Opus-у (&Д)
 ta:டைரக்டரி ஓபஸில் கோப்புறை திற
 tl:Buksan ang Directory sa Directory &Opus
@@ -15332,6 +15356,7 @@ ro:Deschide în fereastră nouă
 ru:Открыть в новом окне
 sat:ᱱᱟᱶᱟ ᱡᱷᱚᱨᱠᱟ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť v novom okne
+sl:Odpri v novem oknu
 sr-rs:Отвори у новом прозору
 ta:புதிய சாளரத்தில் திற
 tl:Buksan sa bagong Window
@@ -15347,11 +15372,13 @@ dk:Åben næste fil i mappe
 el:Άνοιγμα επόμενου αρχείου στο φάκελο
 fo:Opna Næstu Fílu í Mappuna
 fr:Ouvrir le fichier suivant dans le dossier
+gl:Abrir seguinte ficheiro en pasta
 he:פתח את הקובץ הבא שבתיקיה
 hi:फ़ोल्डर में अगली फ़ाइल खोलें
 hu:Következő fájl megnyitása a mappában
 id:Buka Berkas Berikutnya Dalam Folder
 it:Apri file successivo nella cartella
+ja:フォルダ内の次のファイルを開く
 my:Buka Fail Seterusnya Dalam Folder
 nl:Open Volgend Bestand in Map
 pl:Otwórz następny plik w folderze
@@ -15360,6 +15387,7 @@ ro:Deschide următorul fișier în folder
 ru:Открыть следующий файл в папке
 sat:ᱯᱚᱴᱚᱢ ᱨᱮ ᱤᱱᱟᱹ ᱛᱟᱭᱚᱢᱟᱜ ᱨᱮᱫᱽ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť nasledujúci súbor v priečinku
+sl:Odpri naslednjo datoteko v mapi
 tw:開啟資料夾內的下一個檔案
 :Open Previous File In Folder
 br:Abrir o Arquivo Anterior na Pasta
@@ -15372,11 +15400,13 @@ dk:Åbne tidligere fil i mappe
 el:Άνοιγμα προηγούμενου αρχείου στο φάκελο
 fo:Opna Fyrru Fílu í Mappuna
 fr:Ouvrir le fichier précédent dans le dossier
+gl:Abrir ficheiro previo na pasta
 he:פתח את הקובץ שלפני בתיקיה
 hi:फ़ोल्डर में पिछली फ़ाइल खोलें
 hu:Előző fájl megnyitása a mappában
 id:Buka Berkas Sebelumnya Dalam Folder
 it:Apri file precedente nella cartella
+ja:フォルダ内の前のファイルを開く
 my:Buka Fail Sebelumnya Dalam Folder
 nl:Open Vorig Bestand in Map
 pl:Otwórz poprzedni plik w folderze
@@ -15385,6 +15415,7 @@ ro:Deschide fișierul anterior în folder
 ru:Открыть предыдущий файл в папке
 sat:ᱯᱚᱴᱚᱢ ᱨᱮ ᱢᱟᱲᱟᱝᱟᱜ ᱨᱮᱫᱽ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť predchádzajúci súbor v priečinku
+sl:Odpri prejšnjo datoteko v mapi
 tw:開啟資料夾內的上一個檔案
 :Open a document...
 am:Բացել փաստաթուղթ...
@@ -15756,6 +15787,7 @@ ro:Deschide în Microsoft &HTML Help
 ru:Открыть в Microsoft &HTML Help
 sat:Microsoft &HTML ᱜᱚᱲᱚ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ
 sk:Otvoriť v Microsoft pomocník &HTML
+sl:Odpri s programom Microsoft &HTML Help
 sr-rs:Отвори у Microsoft HTML Help-у (&Х)
 ta:மைக்ரோசாப்ட் HTML ஹெல்பில் திற
 tl:Buksan sa Microsoft &HTML Help
@@ -16720,6 +16752,7 @@ ro:Vă rugăm așteptați - încărcare...
 ru:Подождите, идет загрузка..
 sat:ᱫᱟᱭᱟᱠᱟᱛᱮ ᱛᱟᱹᱝᱜᱤ ᱢᱮ ᱼ ᱞᱟᱫᱮᱜ ᱠᱟᱱᱟ …
 sk:Počkajte, prosím - načítava sa…
+sl:Prosimo počakajte - nalagam
 sr-rs:Молимо сачекајте – учитавање…
 ta:தயவுசெய்து காத்திருக்கவும் - செயல்பாட்டில்...
 tl:Mangyaring maghintay - naglo-loading...
@@ -17710,6 +17743,7 @@ ro:Proprietăți
 ru:Свойства...
 sat:ᱜᱩᱱᱠᱚ ...
 sk:Vlastnosti…
+sl:Lastnosti
 sr-rs:Својства...
 ta:பண்புகள்
 tl:Properties...
@@ -18631,7 +18665,7 @@ ro:Salvați adnotările?
 ru:Сохранить аннотации?
 sat:ᱪᱤᱱᱦᱟᱹ ᱥᱟᱧᱪᱟᱣᱟ ᱥᱮ ?
 sk:Uložiť anotácie?
-sl:Shraniti pripombe?
+sl:Shraniti opombe?
 sr-rs:Сачувати белешке?
 ta:குறிப்புரைகளை சேமித்திடவா?
 th:บันทึกคำอธิบายประกอบหรือไม่
@@ -18846,7 +18880,7 @@ ro:Adnotări salvate în '%s'
 ru:Аннотации сохранены в '%s'
 sat:'%s' ᱛᱮ ᱪᱤᱱᱦᱟᱹ ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱᱟ
 sk:Anotácie uložené do '%s'
-sl:Shrani pripombe v '%s'
+sl:Opombe shranjene v '%s'
 sr-rs:Белешке сачуване у "%s"
 ta:குறிப்புரைகள் '%s'இல் சேமிக்கப்பட்டுள்ளன
 tl:Nai-save ang mga anotasyon sa '%s'
@@ -19023,11 +19057,13 @@ el:Αναζήτηση με &Google Scholar
 es:Buscar con &Google Scholar
 fo:Leita við &Google Scholar
 fr:Rechercher avec &Google Scholar
+gl:Buscar con &Google Scholar
 he:חפש עם Google Scholar
 hi:Google Scholar से खोजें
 hu:Keresés &Google Scholar-ral
 id:Cari dengan &Google Scholar
 it:Cerca con &Google Scholar
+ja:Google Scholar で検索(&G)
 my:Cari dengan &Google Scholar
 nl:Zoek met Google Scholar
 pl:Szukaj za pomocą &Google Scholar
@@ -19036,6 +19072,7 @@ ro: Caută cu &Google Academic
 ru:  Найти в &Google Scholar
 sat:&Google Scholar ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Google Scholar
+sl:Išči z &Google Učenjak (Scholar)
 tw:使用Google學術搜尋(&G)
 :Search with &Wikipedia
 br:Procurar com a &Wikipedia
@@ -19050,11 +19087,13 @@ el:Αναζήτηση με &Wikipedia
 es:Buscar con &Wikipedia
 fo:Leita við &Wikipedia
 fr:Rechercher avec &Wikipedia
+gl:Buscar con &Wikipedia
 he:חפש בוויקיפדיה
 hi:&विकिपीडिया से खोजें
 hu:Keresés a &Wikipédián
 id:Cari dengan &Wikipedia
 it:Cerca con &Wikipedia
+ja:Wikipedia で検索(&W)
 my:Cari dengan &Wikipedia
 nl:Zoek met Wikipedia
 pl:Szukaj za pomocą &Wikipedii
@@ -19063,6 +19102,7 @@ ro:Caută pe &Wikipedia
 ru:Найти в &Wikipedia
 sat:&Wikipedia ᱥᱟᱶᱛᱮ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ
 sk:Vyhľadať na &Wikipedii
+sl:Išči z &Wikipedijo
 tw:使用維基百科搜尋(&W)
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -21917,7 +21957,7 @@ fi:Käännä &DeepL avulla
 fo:Týða við &Deepl.
 fr:Traduire avec &DeepL
 ga:Aistrigh le &DeepL é
-gl:Traducido con &DeepL
+gl:Traducir con &DeepL
 he:תרגם באמצעות DeepL
 hi:&DeepL से अनुवाद करें
 hr:Prevedi sa &DeepL
@@ -22254,7 +22294,7 @@ ro:Adnotări nesalvate
 ru:Не сохранены аннотации
 sat:ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣ ᱪᱤᱱᱦᱟᱹᱠᱚ
 sk:Neuložené anotácie
-sl:Neshranjene pripombe
+sl:Neshranjene opombe
 sr-rs:Несачуване белешке
 ta:சேமிக்கப்படாத குறிப்புரைகள்
 th:ไม่ได้บันทึกคำอธิบายประกอบ
@@ -22305,7 +22345,7 @@ ro:Adnotări nesalvate în '%s'
 ru:В '%s' есть несохранённые аннотации
 sat: '%s' ᱨᱮ ᱵᱟᱝᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱪᱤᱱᱦᱟᱹᱠᱚ
 sk:Neuložené anotácie v '%s'
-sl:Neshranjene pripombe v '%s'
+sl:Neshranjene opombe v '%s'
 sr-rs:Несачуване белешке у "%s"
 ta:'%s'இல் சேமிக்கப்படாத குறிப்புரைகள்
 th:ไม่บันทึกคำอธิบายประกอบ ภายใน '%s'
@@ -22674,11 +22714,13 @@ es:Sí
 fo:Ja
 fr:Oui
 ga:Tá
+gl:Si
 he:כן
 hi:हाँ
 hu:Igen
 id:Ya
 it:Sì
+ja:はい
 my:Ya
 nl:Ja
 pl:Tak
@@ -22687,6 +22729,7 @@ ro:Da
 ru:Да
 sat:ᱦᱚᱭ
 sk:Áno
+sl:Da
 tw:是
 :You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
@@ -22804,7 +22847,7 @@ ro:Aveți adnotări nesalvate
 ru:Аннотации не сохранены
 sat:ᱟᱢ ᱴᱷᱮᱱ ᱵᱟᱝᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱪᱤᱱᱦᱟᱹᱠᱚ ᱢᱮᱱᱟᱜ ᱠᱟᱫᱟ
 sk:Máte neuložené anotácie
-sl:Imate neshranjene pripombe
+sl:Imaš neshranjene opombe
 sr-rs:Имате несачуване белешке
 ta:உங்களிடம் சேமிக்கப்படாத குறிப்புரைகள் உள்ளன
 th:คุณไม่ได้บันทึกคำอธิบายประกอบ
