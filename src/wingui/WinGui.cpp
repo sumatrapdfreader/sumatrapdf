@@ -2461,7 +2461,7 @@ HWND TreeView::Create(const CreateArgs& argsIn) {
     args.className = WC_TREEVIEWW;
     args.parent = argsIn.parent;
     args.font = argsIn.font;
-    args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+    args.style = WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER;
     args.style |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     args.style |= TVS_TRACKSELECT | TVS_NOHSCROLL | TVS_INFOTIP;
     args.exStyle = argsIn.exStyle | TVS_EX_DOUBLEBUFFER;
