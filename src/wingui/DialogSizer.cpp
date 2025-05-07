@@ -5,6 +5,9 @@
 #include "utils/WinUtil.h"
 #include "DialogSizer.h"
 
+#include <Uxtheme.h>
+#include <vssym32.h>
+
 #define DIALOG_DATA_PROPERTY L"GipsySoftDialogSizerData"
 
 static LRESULT CALLBACK SizingProc(HWND, UINT, WPARAM, LPARAM);
@@ -12,7 +15,7 @@ static LRESULT CALLBACK SizingProc(HWND, UINT, WPARAM, LPARAM);
 class DialogData {
   public:
     DialogData(HWND hwnd, const DialogSizerSizingItem* psd, bool bShowSizingGrip)
-        : hwnd(hwnd), bMaximised(false), bShowSizingGrip(bShowSizingGrip) {
+        : hwnd(hwnd), hTheme(nullptr), bMaximised(false), bShowSizingGrip(bShowSizingGrip) {
         // Given an array of dialog item structures determine how many of them there
         // are by scanning along them until we reach the last.
         nItemCount = 0;
@@ -32,6 +35,10 @@ class DialogData {
         ptSmallest.x = rectWnd.dx;
         ptSmallest.y = rectWnd.dy;
 
+        if (hTheme == nullptr) {
+            hTheme = OpenThemeData(hwnd, WC_SCROLLBAR);
+        }
+
         Rect rectClient = ClientRect(hwnd);
         sizeClient = rectClient.Size();
         UpdateGripperRect();
@@ -42,6 +49,9 @@ class DialogData {
         wndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)SizingProc);
     }
     ~DialogData() {
+        if (hTheme != nullptr) {
+            CloseThemeData(hTheme);
+        }
         SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)wndProc);
         RemoveProp(hwnd, DIALOG_DATA_PROPERTY);
         free(this->psd);
@@ -75,7 +85,11 @@ class DialogData {
     void DrawGripper(HDC hdc) {
         if (bShowSizingGrip && !bMaximised) {
             RECT tmpRect = ToRECT(rcGrip);
-            DrawFrameControl(hdc, &tmpRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+            if (hTheme != nullptr) {
+                DrawThemeBackground(hTheme, hdc, SBP_SIZEBOX, 0, &tmpRect, nullptr);
+            } else {
+                DrawFrameControl(hdc, &tmpRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+            }
         }
     }
 
@@ -89,6 +103,7 @@ class DialogData {
   private:
     HWND hwnd;
     Rect rcGrip;
+    HTHEME hTheme;
     // Draw the sizing grip...or not
     bool bShowSizingGrip;
 
