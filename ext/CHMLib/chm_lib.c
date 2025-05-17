@@ -411,9 +411,9 @@ static int _unmarshal_lzxc_reset_table(uint8_t** pData, unsigned int* pDataLen, 
     if (dest->version != 2)
         return 0;
     /* SumatraPDF: sanity check (huge values are usually due to broken files) */
-    if (dest->uncompressed_len > UINT_MAX || dest->compressed_len > UINT_MAX)
+    if (dest->uncompressed_len > INT_MAX || dest->compressed_len > INT_MAX)
         return 0;
-    if (dest->block_len == 0 || dest->block_len > UINT_MAX)
+    if (dest->block_len == 0 || dest->block_len > INT_MAX)
         return 0;
 
     return 1;
