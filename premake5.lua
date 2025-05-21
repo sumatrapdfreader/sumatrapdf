@@ -2,7 +2,7 @@
 To generate Visual Studio files (in vs2019/ or vs2022/ directory), run:
 scripts\premake-regenerate-vs-projects.ps1
 
-I'm using premake5 beta1 from https://premake.github.io/download.html#v5
+I'm using premake5 beta6 from https://premake.github.io/download/
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -61,6 +61,13 @@ newoption {
    description = "use clang-cl.exe instead of cl.exe"
 }
 
+-- TODO: test this option
+-- usestandardpreprocessor 'On'
+
+-- TODO: try appmanifest
+-- files { "hello.appxmanifest" }
+-- https://github.com/premake/premake-core/pull/1750/files
+
 include("premake5.files.lua")
 
 -- TODO: could fold 9 libraries used by mupdf into a single
@@ -102,9 +109,7 @@ function mixed_dbg_rel_conf()
   -- * no ltcg
   -- TODO: or arm64 ?
   filter { "configurations:Release*", "platforms:x32 or x64" }
-    flags {
-      "LinkTimeOptimization",
-    }
+    linktimeoptimization "On"
   filter {}
 end
 
@@ -130,9 +135,7 @@ function optimized_conf()
   filter {}
 
   filter { "configurations:Release*", "platforms:x32 or x64 or arm64" }
-    flags {
-      "LinkTimeOptimization",
-    }
+    linktimeoptimization "On"
   filter {}
 end
 
@@ -156,7 +159,7 @@ end
 
 function warnings_as_errors()
   filter {"configurations:not ReleaseAnalyze" and "options:not with-clang"}
-    flags { "FatalCompileWarnings" }
+    fatalwarnings { "All" }
   filter {}
 end
 
@@ -188,7 +191,7 @@ workspace "SumatraPDF"
   filter {}
 
   filter "platforms:x64_asan"
-    buildoptions { "/fsanitize=address"}
+    sanitize { "Address" }
     defines { "ASAN_BUILD=1" }
     -- disablewarnings { "4731" }
   filter {}
@@ -928,11 +931,12 @@ workspace "MakeLZSA"
   symbols "Full"
   staticruntime  "On"
   -- https://github.com/premake/premake-core/wiki/flags
+
+  fatalwarnings { "All" }
   flags {
     "MultiProcessorCompile",
     "Maps", -- generate map file
     --"Unicode",
-    "FatalCompileWarnings"
   }
 
   defines {

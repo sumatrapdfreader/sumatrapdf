@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include=".github">
@@ -658,21 +658,20 @@
     <None Include="..\.github\workflows\codeql.yml">
       <Filter>.github\workflows</Filter>
     </None>
+    <None Include="..\.github\workflows\daily.yml">
+      <Filter>.github\workflows</Filter>
+    </None>
     <None Include="..\.gitignore" />
-    <None Include="..\daily.yml" />
     <None Include="..\do\build.go">
       <Filter>do</Filter>
     </None>
     <None Include="..\do\check_accesskyes.go">
       <Filter>do</Filter>
     </None>
-    <None Include="..\do\clang_format.go">
+    <None Include="..\do\clang_tidy_format.go">
       <Filter>do</Filter>
     </None>
-    <None Include="..\do\clang_tidy.go">
-      <Filter>do</Filter>
-    </None>
-    <None Include="..\do\extract_utils.go">
+    <None Include="..\do\compress.go">
       <Filter>do</Filter>
     </None>
     <None Include="..\do\file_upload.go">

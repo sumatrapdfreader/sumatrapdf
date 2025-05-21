@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
+# Visual Studio Version 17
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SumatraPDF", "SumatraPDF.vcxproj", "{DC1BAF9B-C8D3-F0E8-31DB-C9441DB28BD9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PdfFilter", "PdfFilter.vcxproj", "{85945DF9-F1FE-1170-3A3D-C315A6E6EFC4}"
