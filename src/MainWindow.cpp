@@ -652,8 +652,8 @@ void UpdateControlsColors(MainWindow* win) {
 
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
-    COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
-    bool flatTreeWnd = false;
+    COLORREF splitterCol = ThemeControlBackgroundColor();
+    bool flatTreeWnd = true;
 
     {
         auto tocTreeView = win->tocTreeView;
