@@ -203,6 +203,13 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
         return text;
     }
 
+    // if user did change those colors in advanced settings, respect them
+    bool userDidChange = text != kColBlack || bg != kColWhite;
+    if (userDidChange) {
+        std::swap(text, bg);
+        return text;
+    }
+
     // default colors
     if (gCurrentTheme == gThemeLight) {
         std::swap(text, bg);
