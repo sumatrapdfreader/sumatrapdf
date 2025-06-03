@@ -93,13 +93,13 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
     {"translations", "The Translators", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"},
     {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
-
-    // {"last change", "git commit " GIT_COMMIT_ID_STR,
-    //  "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
-
-     // #ifdef PRE_RELEASE_VER
-//     {"a note", "Pre-release version, for testing only!", nullptr},
-// #endif
+#if defined(GIT_COMMIT_ID_STR)
+    {"last change", "git commit " GIT_COMMIT_ID_STR,
+    "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
+#endif
+#if defined(PRE_RELEASE_VER)
+     {"a note", "Pre-release version, for testing only!", nullptr},
+ #endif
 #ifdef DEBUG
     {"a note", "Debug version, for testing only!", nullptr},
 #endif
