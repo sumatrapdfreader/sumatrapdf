@@ -531,14 +531,14 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
 static void UpdateCheckAsync(UpdateCheckAsyncData* data) {
     auto updateCheckType = data->updateCheckType;
     str::Str url;
-    BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
+    BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
     char* uri = url.Get();
     HttpRsp* rsp = new HttpRsp;
     rsp->url.SetCopy(uri);
     bool ok = HttpGet(uri, rsp);
     if (!ok) {
         delete rsp;
-        BuildUpdateURL(url, kUpdateInfoURL, updateCheckType);
+        BuildUpdateURL(url, kUpdateInfoURL2, updateCheckType);
         uri = url.Get();
         rsp = new HttpRsp;
         rsp->url.SetCopy(uri);
