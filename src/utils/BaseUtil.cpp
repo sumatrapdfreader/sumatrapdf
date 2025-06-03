@@ -61,12 +61,6 @@ int AtomicRefCount::Dec() {
     return res;
 }
 
-void BreakIfUnderDebugger() {
-    if (IsDebuggerPresent()) {
-        DebugBreak();
-    }
-}
-
 void* Allocator::Alloc(Allocator* a, size_t size) {
     if (!a) {
         return malloc(size);

@@ -51,7 +51,7 @@
 #endif
 #define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
-#define kCopyrightStr      "Copyright 2006-2024 all authors (GPLv3)"
+#define kCopyrightStr      "Copyright 2006-2025 all authors (GPLv3)"
 #define kPublisherStr      "Krzysztof Kowalczyk"
 
 #define kAppName        "SumatraPDF"

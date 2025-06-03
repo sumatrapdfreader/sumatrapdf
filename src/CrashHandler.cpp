@@ -316,9 +316,18 @@ bool DownloadSymbolsIfNeeded() {
     return InitializeDbgHelp(false);
 }
 
+// in release builds ReportIf()/ReportIfQuick() will break if running under
+// the debugger. In other builds it sends a debug report
+#undef UPLOAD_REPORT
+#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
+#define UPLOAD_REPORT
+#endif
+
 #if !defined(UPLOAD_REPORT)
 void _uploadDebugReport(const char*, bool, bool) {
-    // no-op in
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    }
 }
 #else
 // like crash report, but can be triggered without a crash
