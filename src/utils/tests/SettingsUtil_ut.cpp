@@ -20,7 +20,7 @@ struct SutStructNested {
 
 static const FieldInfo gSutStructNestedFields[] = {
     {offsetof(SutStructNested, point), SettingType::Struct, (intptr_t)&gSutPointIInfo},
-    {offsetof(SutStructNested, colorArray), SettingType::ColorArray, (intptr_t) "#000000 #ffffff"},
+    {offsetof(SutStructNested, colorArray), SettingType::ColorArray, (intptr_t)"#000000 #ffffff"},
 };
 static const StructInfo gSutStructNestedInfo = {sizeof(SutStructNested), 2, gSutStructNestedFields,
                                                 "Point\0ColorArray"};
@@ -60,19 +60,19 @@ struct SutStruct {
 };
 
 static const FieldInfo gSutStructFields[] = {
-    {(size_t)-1, SettingType::Comment, (intptr_t) "This file will be overwritten - modify at your own risk!\r\n"},
-    {offsetof(SutStruct, boolean), SettingType::Bool, (intptr_t) true},
-    {offsetof(SutStruct, color), SettingType::Color, (intptr_t) "0xffcc9933"},
-    {offsetof(SutStruct, floatingPoint), SettingType::Float, (intptr_t) "-3.14"},
+    {(size_t)-1, SettingType::Comment, (intptr_t)"This file will be overwritten - modify at your own risk!\r\n"},
+    {offsetof(SutStruct, boolean), SettingType::Bool, (intptr_t)true},
+    {offsetof(SutStruct, color), SettingType::Color, (intptr_t)"0xffcc9933"},
+    {offsetof(SutStruct, floatingPoint), SettingType::Float, (intptr_t)"-3.14"},
     {offsetof(SutStruct, integer), SettingType::Int, 27},
-    {offsetof(SutStruct, string), SettingType::String, (intptr_t) "String"},
+    {offsetof(SutStruct, string), SettingType::String, (intptr_t)"String"},
     {offsetof(SutStruct, nullString), SettingType::String, 0},
-    {offsetof(SutStruct, escapedString), SettingType::String, (intptr_t) "$\nstring "},
-    {offsetof(SutStruct, utf8String), SettingType::String, (intptr_t) "Utf-8 String"},
+    {offsetof(SutStruct, escapedString), SettingType::String, (intptr_t)"$\nstring "},
+    {offsetof(SutStruct, utf8String), SettingType::String, (intptr_t)"Utf-8 String"},
     {offsetof(SutStruct, nullUtf8String), SettingType::String, 0},
-    {offsetof(SutStruct, escapedUtf8String), SettingType::String, (intptr_t) "$\nstring "},
-    {offsetof(SutStruct, intArray), SettingType::IntArray, (intptr_t) "1 2 -3"},
-    {offsetof(SutStruct, strArray), SettingType::StringArray, (intptr_t) "one \"two three\" \"\""},
+    {offsetof(SutStruct, escapedUtf8String), SettingType::String, (intptr_t)"$\nstring "},
+    {offsetof(SutStruct, intArray), SettingType::IntArray, (intptr_t)"1 2 -3"},
+    {offsetof(SutStruct, strArray), SettingType::StringArray, (intptr_t)"one \"two three\" \"\""},
     {offsetof(SutStruct, emptyStrArray), SettingType::StringArray, 0},
     {offsetof(SutStruct, point), SettingType::Struct, (intptr_t)&gSutPointIInfo},
     {(size_t)-1, SettingType::Comment, 0},

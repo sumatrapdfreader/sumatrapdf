@@ -67,7 +67,6 @@ constexpr int kSumatraTxtFontSize = 24;
 constexpr const char* kVersionTxtFont = "Arial Black";
 constexpr int kVersionTxtFontSize = 12;
 
-
 #define LAYOUT_LTR 0
 
 static ATOM gAtomAbout;
@@ -95,11 +94,11 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
 #if defined(GIT_COMMIT_ID_STR)
     {"last change", "git commit " GIT_COMMIT_ID_STR,
-    "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
+     "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
 #endif
 #if defined(PRE_RELEASE_VER)
-     {"a note", "Pre-release version, for testing only!", nullptr},
- #endif
+    {"a note", "Pre-release version, for testing only!", nullptr},
+#endif
 #ifdef DEBUG
     {"a note", "Debug version, for testing only!", nullptr},
 #endif

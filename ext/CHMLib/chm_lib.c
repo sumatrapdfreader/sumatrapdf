@@ -203,7 +203,7 @@ struct chmItsfHeader {
     uint64_t dir_offset;     /* 48 */
     uint64_t dir_len;        /* 50 */
     uint64_t data_offset;    /* 58 (Not present before V3) */
-};                           /* __attribute__ ((aligned (1))); */
+}; /* __attribute__ ((aligned (1))); */
 
 static int _unmarshal_itsf_header(uint8_t** pData, unsigned int* pDataLen, struct chmItsfHeader* dest) {
     /* we only know how to deal with the 0x58 and 0x60 byte structures */
@@ -275,7 +275,7 @@ struct chmItspHeader {
     uint32_t lang_id;         /* 30 */
     uint8_t system_uuid[16];  /* 34 */
     uint8_t unknown_0044[16]; /* 44 */
-};                            /* __attribute__ ((aligned (1))); */
+}; /* __attribute__ ((aligned (1))); */
 
 static int _unmarshal_itsp_header(uint8_t** pData, unsigned int* pDataLen, struct chmItspHeader* dest) {
     /* we only know how to deal with a 0x54 byte structures */
@@ -322,7 +322,7 @@ struct chmPmglHeader {
     uint32_t unknown_0008; /*  8 */
     int32_t block_prev;    /*  c */
     int32_t block_next;    /* 10 */
-};                         /* __attribute__ ((aligned (1))); */
+}; /* __attribute__ ((aligned (1))); */
 
 static int _unmarshal_pmgl_header(uint8_t** pData, unsigned int* pDataLen, unsigned int blockLen,
                                   struct chmPmglHeader* dest) {
@@ -356,7 +356,7 @@ static const char* _chm_pmgi_marker = "PMGI";
 struct chmPmgiHeader {
     char signature[4];   /*  0 (PMGI) */
     uint32_t free_space; /*  4 */
-};                       /* __attribute__ ((aligned (1))); */
+}; /* __attribute__ ((aligned (1))); */
 
 static int _unmarshal_pmgi_header(uint8_t** pData, unsigned int* pDataLen, unsigned int blockLen,
                                   struct chmPmgiHeader* dest) {

@@ -66,7 +66,7 @@ struct IPageDestination : KindBase {
     float zoom = 0.f;
 
     IPageDestination() = default;
-    virtual ~IPageDestination(){};
+    virtual ~IPageDestination() {};
 
     // rectangle of the destination on the above returned page
     virtual RectF GetRect2() {

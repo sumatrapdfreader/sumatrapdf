@@ -8,8 +8,8 @@
 
 #define WD_SIZEOF_ARRAY(a) (sizeof((a)) / sizeof((a)[0]))
 
-#define WD_OFFSETOF(type, member) ((size_t) & ((type*)0)->member)
-#define WD_CONTAINEROF(ptr, type, member) ((type*)((BYTE*)(ptr)-WD_OFFSETOF(type, member)))
+#define WD_OFFSETOF(type, member) ((size_t)&((type*)0)->member)
+#define WD_CONTAINEROF(ptr, type, member) ((type*)((BYTE*)(ptr) - WD_OFFSETOF(type, member)))
 
 /***************
  ***  Color  ***

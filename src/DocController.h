@@ -15,7 +15,7 @@ enum class DisplayMode;
 using OnBitmapRendered = Func1<RenderedBitmap*>;
 
 struct ILinkHandler {
-    virtual ~ILinkHandler(){};
+    virtual ~ILinkHandler() {};
     virtual DocController* GetDocController() = 0;
     virtual void GotoLink(IPageDestination*) = 0;
     virtual void GotoNamedDest(const char*) = 0;

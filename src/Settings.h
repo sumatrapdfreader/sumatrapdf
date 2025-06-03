@@ -523,9 +523,9 @@ static const FieldInfo gSizeFields[] = {
 static const StructInfo gSizeInfo = {sizeof(Size), 2, gSizeFields, "Dx\0Dy"};
 
 static const FieldInfo gFixedPageUIFields[] = {
-    {offsetof(FixedPageUI, textColor), SettingType::Color, (intptr_t) "#000000"},
-    {offsetof(FixedPageUI, backgroundColor), SettingType::Color, (intptr_t) "#ffffff"},
-    {offsetof(FixedPageUI, selectionColor), SettingType::Color, (intptr_t) "#f5fc0c"},
+    {offsetof(FixedPageUI, textColor), SettingType::Color, (intptr_t)"#000000"},
+    {offsetof(FixedPageUI, backgroundColor), SettingType::Color, (intptr_t)"#ffffff"},
+    {offsetof(FixedPageUI, selectionColor), SettingType::Color, (intptr_t)"#f5fc0c"},
     {offsetof(FixedPageUI, windowMargin), SettingType::Compact, (intptr_t)&gWindowMarginInfo},
     {offsetof(FixedPageUI, pageSpacing), SettingType::Compact, (intptr_t)&gSizeInfo},
     {offsetof(FixedPageUI, gradientColors), SettingType::ColorArray, 0},
@@ -537,9 +537,9 @@ static const StructInfo gFixedPageUIInfo = {sizeof(FixedPageUI), 8, gFixedPageUI
                                             "dientColors\0InvertColors\0HideScrollbars"};
 
 static const FieldInfo gEBookUIFields[] = {
-    {offsetof(EBookUI, fontSize), SettingType::Float, (intptr_t) "0"},
-    {offsetof(EBookUI, layoutDx), SettingType::Float, (intptr_t) "0"},
-    {offsetof(EBookUI, layoutDy), SettingType::Float, (intptr_t) "0"},
+    {offsetof(EBookUI, fontSize), SettingType::Float, (intptr_t)"0"},
+    {offsetof(EBookUI, layoutDx), SettingType::Float, (intptr_t)"0"},
+    {offsetof(EBookUI, layoutDy), SettingType::Float, (intptr_t)"0"},
     {offsetof(EBookUI, ignoreDocumentCSS), SettingType::Bool, false},
     {offsetof(EBookUI, customCSS), SettingType::String, 0},
 };
@@ -575,16 +575,16 @@ static const FieldInfo gChmUIFields[] = {
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
 static const FieldInfo gAnnotationsFields[] = {
-    {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t) "#ffff00"},
-    {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t) "#00ff00"},
-    {offsetof(Annotations, squigglyColor), SettingType::Color, (intptr_t) "#ff00ff"},
-    {offsetof(Annotations, strikeOutColor), SettingType::Color, (intptr_t) "#ff0000"},
-    {offsetof(Annotations, freeTextColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t)"#ffff00"},
+    {offsetof(Annotations, underlineColor), SettingType::Color, (intptr_t)"#00ff00"},
+    {offsetof(Annotations, squigglyColor), SettingType::Color, (intptr_t)"#ff00ff"},
+    {offsetof(Annotations, strikeOutColor), SettingType::Color, (intptr_t)"#ff0000"},
+    {offsetof(Annotations, freeTextColor), SettingType::Color, (intptr_t)""},
     {offsetof(Annotations, freeTextSize), SettingType::Int, 12},
     {offsetof(Annotations, freeTextBorderWidth), SettingType::Int, 1},
-    {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Annotations, textIconType), SettingType::String, (intptr_t) ""},
-    {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t) ""},
+    {offsetof(Annotations, textIconColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Annotations, textIconType), SettingType::String, (intptr_t)""},
+    {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
 };
 static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations), 10, gAnnotationsFields,
@@ -603,14 +603,14 @@ static const StructInfo gExternalViewerInfo = {sizeof(ExternalViewer), 4, gExter
 static const FieldInfo gForwardSearchFields[] = {
     {offsetof(ForwardSearch, highlightOffset), SettingType::Int, 0},
     {offsetof(ForwardSearch, highlightWidth), SettingType::Int, 15},
-    {offsetof(ForwardSearch, highlightColor), SettingType::Color, (intptr_t) "#6581ff"},
+    {offsetof(ForwardSearch, highlightColor), SettingType::Color, (intptr_t)"#6581ff"},
     {offsetof(ForwardSearch, highlightPermanent), SettingType::Bool, false},
 };
 static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForwardSearchFields,
                                               "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent"};
 
 static const FieldInfo gPrinterDefaultsFields[] = {
-    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t) "shrink"},
+    {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t)"shrink"},
 };
 static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale"};
 
@@ -623,19 +623,19 @@ static const StructInfo gSelectionHandlerInfo = {sizeof(SelectionHandler), 3, gS
                                                  "URL\0Name\0Key"};
 
 static const FieldInfo gShortcutFields[] = {
-    {offsetof(Shortcut, cmd), SettingType::String, (intptr_t) ""},
-    {offsetof(Shortcut, key), SettingType::String, (intptr_t) ""},
+    {offsetof(Shortcut, cmd), SettingType::String, (intptr_t)""},
+    {offsetof(Shortcut, key), SettingType::String, (intptr_t)""},
     {offsetof(Shortcut, name), SettingType::String, 0},
     {offsetof(Shortcut, toolbarText), SettingType::String, 0},
 };
 static const StructInfo gShortcutInfo = {sizeof(Shortcut), 4, gShortcutFields, "Cmd\0Key\0Name\0ToolbarText"};
 
 static const FieldInfo gThemeFields[] = {
-    {offsetof(Theme, name), SettingType::String, (intptr_t) ""},
-    {offsetof(Theme, textColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Theme, linkColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, name), SettingType::String, (intptr_t)""},
+    {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gThemeInfo = {
@@ -658,8 +658,8 @@ static const FieldInfo gFavoriteFields[] = {
 static const StructInfo gFavoriteInfo = {sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel"};
 
 static const FieldInfo gPointFFields[] = {
-    {offsetof(PointF, x), SettingType::Float, (intptr_t) "0"},
-    {offsetof(PointF, y), SettingType::Float, (intptr_t) "0"},
+    {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
+    {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
 };
 static const StructInfo gPointFInfo = {sizeof(PointF), 2, gPointFFields, "X\0Y"};
 
@@ -679,10 +679,10 @@ static const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, openCount), SettingType::Int, 0},
     {offsetof(FileState, decryptionKey), SettingType::String, 0},
     {offsetof(FileState, useDefaultState), SettingType::Bool, false},
-    {offsetof(FileState, displayMode), SettingType::String, (intptr_t) "automatic"},
+    {offsetof(FileState, displayMode), SettingType::String, (intptr_t)"automatic"},
     {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointFInfo},
     {offsetof(FileState, pageNo), SettingType::Int, 1},
-    {offsetof(FileState, zoom), SettingType::String, (intptr_t) "fit page"},
+    {offsetof(FileState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(FileState, rotation), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
     {offsetof(FileState, windowPos), SettingType::Compact, (intptr_t)&gRect_1_Info},
@@ -698,16 +698,16 @@ static StructInfo gFileStateInfo = {
     "o\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState"};
 
 static const FieldInfo gPointF_1_Fields[] = {
-    {offsetof(PointF, x), SettingType::Float, (intptr_t) "0"},
-    {offsetof(PointF, y), SettingType::Float, (intptr_t) "0"},
+    {offsetof(PointF, x), SettingType::Float, (intptr_t)"0"},
+    {offsetof(PointF, y), SettingType::Float, (intptr_t)"0"},
 };
 static const StructInfo gPointF_1_Info = {sizeof(PointF), 2, gPointF_1_Fields, "X\0Y"};
 
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
-    {offsetof(TabState, displayMode), SettingType::String, (intptr_t) "automatic"},
+    {offsetof(TabState, displayMode), SettingType::String, (intptr_t)"automatic"},
     {offsetof(TabState, pageNo), SettingType::Int, 1},
-    {offsetof(TabState, zoom), SettingType::String, (intptr_t) "fit page"},
+    {offsetof(TabState, zoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(TabState, rotation), SettingType::Int, 0},
     {offsetof(TabState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
     {offsetof(TabState, showToc), SettingType::Bool, true},
@@ -742,18 +742,18 @@ static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "
 
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
-     (intptr_t) "For documentation, see https://www.sumatrapdfreader.org/settings/settings3-6.html"},
+     (intptr_t)"For documentation, see https://www.sumatrapdfreader.org/settings/settings3-6.html"},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, checkForUpdates), SettingType::Bool, true},
     {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
-    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t) "automatic"},
-    {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t) "fit page"},
+    {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t)"automatic"},
+    {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t)"fit page"},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
     {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
     {offsetof(GlobalPrefs, fullPathInTitle), SettingType::Bool, false},
     {offsetof(GlobalPrefs, inverseSearchCmdLine), SettingType::String, 0},
     {offsetof(GlobalPrefs, lazyLoading), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, (intptr_t) "#80fff200"},
+    {offsetof(GlobalPrefs, mainWindowBackground), SettingType::Color, (intptr_t)"#80fff200"},
     {offsetof(GlobalPrefs, noHomeTab), SettingType::Bool, false},
     {offsetof(GlobalPrefs, reloadModifiedDocuments), SettingType::Bool, true},
     {offsetof(GlobalPrefs, rememberOpenedFiles), SettingType::Bool, true},
@@ -769,16 +769,16 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, sidebarDx), SettingType::Int, 0},
     {offsetof(GlobalPrefs, smoothScroll), SettingType::Bool, false},
     {offsetof(GlobalPrefs, tabWidth), SettingType::Int, 300},
-    {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t) ""},
+    {offsetof(GlobalPrefs, theme), SettingType::String, (intptr_t)""},
     {offsetof(GlobalPrefs, tocDy), SettingType::Int, 0},
     {offsetof(GlobalPrefs, toolbarSize), SettingType::Int, 18},
-    {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t) "automatic"},
+    {offsetof(GlobalPrefs, treeFontName), SettingType::String, (intptr_t)"automatic"},
     {offsetof(GlobalPrefs, treeFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, uIFontSize), SettingType::Int, 0},
     {offsetof(GlobalPrefs, useSysColors), SettingType::Bool, false},
     {offsetof(GlobalPrefs, useTabs), SettingType::Bool, true},
-    {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t) ""},
-    {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t) "0"},
+    {offsetof(GlobalPrefs, zoomLevels), SettingType::FloatArray, (intptr_t)""},
+    {offsetof(GlobalPrefs, zoomIncrement), SettingType::Float, (intptr_t)"0"},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {(size_t)-1, SettingType::Comment, 0},
@@ -802,7 +802,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(GlobalPrefs, themes), SettingType::Array, (intptr_t)&gThemeInfo},
     {(size_t)-1, SettingType::Comment, 0},
-    {(size_t)-1, SettingType::Comment, (intptr_t) "You're not expected to change those manually"},
+    {(size_t)-1, SettingType::Comment, (intptr_t)"You're not expected to change those manually"},
     {offsetof(GlobalPrefs, defaultPasswords), SettingType::StringArray, 0},
     {offsetof(GlobalPrefs, uiLanguage), SettingType::String, 0},
     {offsetof(GlobalPrefs, versionToSkip), SettingType::String, 0},
@@ -814,7 +814,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, timeOfLastUpdateCheck), SettingType::Compact, (intptr_t)&gFILETIMEInfo},
     {offsetof(GlobalPrefs, openCountWeek), SettingType::Int, 0},
     {(size_t)-1, SettingType::Comment, 0},
-    {(size_t)-1, SettingType::Comment, (intptr_t) "Settings below are not recognized by the current version"},
+    {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
     sizeof(GlobalPrefs), 73, gGlobalPrefsFields,
@@ -827,11 +827,11 @@ static const StructInfo gGlobalPrefsInfo = {
     "\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0ReopenOnce\0Ti"
     "meOfLastUpdateCheck\0OpenCountWeek\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
-    {offsetof(Theme, name), SettingType::String, (intptr_t) ""},
-    {offsetof(Theme, textColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t) ""},
-    {offsetof(Theme, linkColor), SettingType::Color, (intptr_t) ""},
+    {offsetof(Theme, name), SettingType::String, (intptr_t)""},
+    {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, backgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, controlBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, linkColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gTheme_1_Info = {

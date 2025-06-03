@@ -30,7 +30,7 @@ bool ChmFile::HasData(const char* fileName) const {
         fileName += 2;
     }
 
-    struct chmUnitInfo info {};
+    struct chmUnitInfo info{};
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 

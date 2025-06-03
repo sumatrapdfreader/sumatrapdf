@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define Tag_Any ((HtmlTag)-1)
+#define Tag_Any ((HtmlTag) - 1)
 
 struct CssSelector {
     const char* s = nullptr;
