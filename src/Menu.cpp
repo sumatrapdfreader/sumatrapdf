@@ -74,13 +74,10 @@ struct MenuOwnerDrawInfo {
 
 constexpr UINT kMenuSeparatorID = (UINT)-13;
 
-bool gAddCrashMeMenu = false;
-
-#if defined(DEBUG) || defined(PRE_RELEASE_VER)
-bool gShowDebugMenu = true;
-#else
-bool gShowDebugMenu = false;
-#endif
+static bool gAddCrashMeMenu = false;
+static bool ShowDebugMenu() {
+    return gIsDebugBuild || gIsPreReleaseBuild;
+}
 
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
@@ -1455,7 +1452,7 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
             removeMenu |= !ctx->hasSelection && (subMenuDef == menuDefCreateAnnotFromSelection);
         }
-        removeMenu |= ((subMenuDef == menuDefDebug) && !gShowDebugMenu);
+        removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
         if (removeMenu) {
             continue;
         }

@@ -11,9 +11,6 @@ struct MenuDef {
 
 constexpr const char* kMenuSeparator = "-----";
 
-extern bool gShowDebugMenu;
-extern bool gAddCrashMeMenu;
-
 void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);
 void MarkMenuOwnerDraw(HMENU);

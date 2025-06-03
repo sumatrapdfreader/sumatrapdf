@@ -316,22 +316,18 @@ bool DownloadSymbolsIfNeeded() {
     return InitializeDbgHelp(false);
 }
 
-// in release builds ReportIf()/ReportIfQuick() will break if running under
-// the debugger. In other builds it sends a debug report
-#undef UPLOAD_REPORT
-#if defined(PRE_RELEASE_VER) || defined(DEBUG) || defined(ASAN_BUILD)
-#define UPLOAD_REPORT
-#endif
-
-#if !defined(UPLOAD_REPORT)
-void _uploadDebugReport(const char*, bool, bool) {
-    if (IsDebuggerPresent()) {
-        DebugBreak();
-    }
-}
-#else
 // like crash report, but can be triggered without a crash
 void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack) {
+    // in release builds ReportIf()/ReportIfQuick() will break if running under
+    // the debugger. In other builds it sends a debug report
+
+    bool shouldUpload = gIsDebugBuild || gIsPreReleaseBuild || gIsAsanBuild;
+    if (!shouldUpload) {
+        if (IsDebuggerPresent()) {
+            DebugBreak();
+        }
+        return;
+    }
     // we want to avoid submitting multiple reports for the same
     // condition. I'm too lazy to implement tracking this granularly
     // so only allow once submission in a given session
@@ -395,7 +391,6 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     loga(s);
     loga("_uploadDebugReport() finished\n");
 }
-#endif
 
 static DWORD WINAPI CrashDumpThread(LPVOID) {
     WaitForSingleObject(gDumpEvent, INFINITE);
