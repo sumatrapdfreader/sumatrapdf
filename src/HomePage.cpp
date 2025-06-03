@@ -67,15 +67,6 @@ constexpr int kSumatraTxtFontSize = 24;
 constexpr const char* kVersionTxtFont = "Arial Black";
 constexpr int kVersionTxtFontSize = 12;
 
-#ifdef PRE_RELEASE_VER
-#define VERSION_SUB_TXT "Pre-release"
-#else
-#define VERSION_SUB_TXT ""
-#endif
-
-#ifdef GIT_COMMIT_ID
-#define GIT_COMMIT_ID_STR QM(GIT_COMMIT_ID)
-#endif
 
 #define LAYOUT_LTR 0
 
@@ -102,14 +93,13 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
     {"translations", "The Translators", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"},
     {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
-#ifdef GIT_COMMIT_ID
-    // TODO: use short ID for rightTxt (only first 7 digits) with less hackery
-    {"last change", "git commit " GIT_COMMIT_ID_STR,
-     "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
-#endif
-#ifdef PRE_RELEASE_VER
-    {"a note", "Pre-release version, for testing only!", nullptr},
-#endif
+
+    // {"last change", "git commit " GIT_COMMIT_ID_STR,
+    //  "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
+
+     // #ifdef PRE_RELEASE_VER
+//     {"a note", "Pre-release version, for testing only!", nullptr},
+// #endif
 #ifdef DEBUG
     {"a note", "Debug version, for testing only!", nullptr},
 #endif
@@ -166,7 +156,9 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
     Point p = {x, y};
     HdcDrawText(hdc, ver, p, fmt, fontVersionTxt);
     p.y += DpiScale(hdc, 13);
-    HdcDrawText(hdc, VERSION_SUB_TXT, p, fmt);
+    if (gIsPreReleaseBuild) {
+        HdcDrawText(hdc, "Pre-release", p, fmt);
+    }
 }
 
 // draw on the bottom right

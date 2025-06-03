@@ -81,8 +81,6 @@
 // Windows headers use _unused
 #define __unused [[maybe_unused]]
 
-#include "BuildConfig.h"
-
 #define NOMINMAX
 #include <winsock2.h> // must include before <windows.h>
 #include <windows.h>

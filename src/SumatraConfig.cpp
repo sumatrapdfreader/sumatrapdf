@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/BuildConfig.h"
 
 #include "resource.h"
 #include "Commands.h"
@@ -56,4 +57,11 @@ bool gIsStoreBuild = false;
 
 int GetAppIconID() {
     return IDI_SUMATRAPDF;
+}
+
+const char* GetCommitID() {
+    if (gitCommidId) {
+        return gitCommidId;
+    }
+    return "unknown";
 }
