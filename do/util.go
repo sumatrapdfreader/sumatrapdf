@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -101,14 +100,19 @@ func cmdRunLoggedMust(cmd *exec.Cmd) {
 }
 
 func readFileMust(path string) []byte {
-	d, err := ioutil.ReadFile(path)
+	d, err := os.ReadFile(path)
 	must(err)
 	return d
 }
 
 func writeFileMust(path string, data []byte) {
-	err := ioutil.WriteFile(path, data, 0644)
+	err := os.WriteFile(path, data, 0644)
 	must(err)
+}
+
+func writeFileCreateDirMust(path string, data []byte) {
+	createDirForFile(path)
+	writeFileMust(path, data)
 }
 
 func findLargestFileByExt() {
@@ -181,6 +185,11 @@ func createDirMust(path string) string {
 func createDirForFile(path string) error {
 	dir := filepath.Dir(path)
 	return os.MkdirAll(dir, 0755)
+}
+
+func createDirForFileMust(path string) {
+	dir := filepath.Dir(path)
+	must(os.MkdirAll(dir, 0755))
 }
 
 func stringInSlice(a []string, toCheck string) bool {
@@ -266,7 +275,11 @@ var copyFileMustOverwrite = false
 var copyFilesExtsToNormalizeNL = []string{}
 
 func copyFileMust(dst, src string) {
-	if !copyFileMustOverwrite {
+	copyFile2Must(dst, src, copyFileMustOverwrite)
+}
+
+func copyFile2Must(dst, src string, overwrite bool) {
+	if !overwrite {
 		_, err := os.Stat(dst)
 		if err == nil {
 			logf("destination '%s' already exists, skipping\n", dst)

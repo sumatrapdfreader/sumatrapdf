@@ -41,7 +41,7 @@ func detectPath(paths []string, name string) string {
 	return ""
 }
 
-func detectPathInSDK(name string) string {
+func detectPathInSDKMust(name string) string {
 	for _, sdkVer := range sdkVersions {
 		path := filepath.Join(`C:\Program Files (x86)\Windows Kits\10\bin`, sdkVer, name)
 		if fileExists(path) {
@@ -55,7 +55,7 @@ var didPrintMsbuildPath bool
 
 func detectMsbuildPathMust() string {
 	path := detectPath(vsBasePaths, msBuildName)
-	panicIf(path == "", fmt.Sprintf("Didn't find %s", msBuildName))
+	panicIf(path == "", fmt.Sprintf("didn't find %s", msBuildName))
 	if !didPrintMsbuildPath {
 		logf("msbuild.exe: %s\n", path)
 		didPrintMsbuildPath = true
@@ -63,10 +63,10 @@ func detectMsbuildPathMust() string {
 	return path
 }
 
-func detectSigntoolPath() string {
-	return detectPathInSDK(`x64\signtool.exe`)
+func detectSigntoolPathMust() string {
+	return detectPathInSDKMust(`x64\signtool.exe`)
 }
 
-func detectMakeAppxPath() string {
-	return detectPathInSDK(`x64\makeappx.exe`)
+func detectMakeAppxPathMust() string {
+	return detectPathInSDKMust(`x64\makeappx.exe`)
 }

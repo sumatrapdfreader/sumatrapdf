@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -89,7 +89,7 @@ func getFilesToProcess() []string {
 
 	var res []string
 	for _, dir := range dirsToProcess {
-		files, err := ioutil.ReadDir(dir)
+		files, err := os.ReadDir(dir)
 		must(err)
 		for _, f := range files {
 			path := filepath.Join(dir, f.Name())

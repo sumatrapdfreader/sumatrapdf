@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -152,6 +153,20 @@ func creaZipWithCompressFunction(zipPath string, dir string, fielPaths []string,
 		return *errVal
 	}
 	return err // from defer
+}
+
+func createLzsaFromFiles(lzsaPath string, dir string, files []string) error {
+	args := []string{lzsaPath}
+	args = append(args, files...)
+	curDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	makeLzsaPath := filepath.Join(curDir, "bin", "MakeLZSA.exe")
+	cmd := exec.Command(makeLzsaPath, args...)
+	cmd.Dir = dir
+	runCmdLoggedMust(cmd)
+	return nil
 }
 
 func testCompressOneOff() {

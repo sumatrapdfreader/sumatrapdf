@@ -69,8 +69,7 @@ func getVerForBuildType(buildType BuildType) string {
 	return ""
 }
 
-func getRemoteDir(buildType BuildType) string {
-	ver := getVerForBuildType(buildType)
+func getRemoteDir(buildType BuildType, ver string) string {
 	return "software/sumatrapdf/" + string(buildType) + "/" + ver + "/"
 }
 
@@ -175,7 +174,7 @@ func getDownloadUrlsViaWebsite(buildType BuildType, ver string) *DownloadUrls {
 
 func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType BuildType, ver string) *DownloadUrls {
 	prefix := mc.URLBase()
-	prefix += getRemoteDir(buildType)
+	prefix += getRemoteDir(buildType, ver)
 	return getDownloadUrlsForPrefix(prefix, buildType, ver)
 }
 
@@ -251,7 +250,7 @@ var sumLatestInstallerArm64 = "{{.Host}}/{{.Prefix}}-arm64-install.exe";
 	return execTextTemplate(tmplText, d)
 }
 
-func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType) [][]string {
+func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType, ver string) [][]string {
 	panicIf(buildType == buildTypeRel)
 	remotePaths := getRemotePaths(buildType)
 	var res [][]string
@@ -262,7 +261,6 @@ func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType) [][
 		res = append(res, []string{remotePaths[0], s})
 	}
 
-	ver := getVerForBuildType(buildType)
 	{
 		// *-latest.txt : for older build
 		res = append(res, []string{remotePaths[1], ver})
@@ -283,9 +281,8 @@ func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType) [][
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func isBuildAlreadyUploaded(mc *minioutil.Client, buildType BuildType) bool {
-	dirRemote := getRemoteDir(buildType)
-	ver := getVerForBuildType(buildType)
+func isBuildAlreadyUploaded(mc *minioutil.Client, buildType BuildType, ver string) bool {
+	dirRemote := getRemoteDir(buildType, ver)
 	fname := "SumatraPDF-prerel-manifest.txt"
 	if buildType == buildTypeRel {
 		fname = fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
@@ -299,12 +296,46 @@ func isBuildAlreadyUploaded(mc *minioutil.Client, buildType BuildType) bool {
 	return exists
 }
 
-func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType) {
-	exists := isBuildAlreadyUploaded(mc, buildType)
+func verifyBuildNotInStorageMust(mc *minioutil.Client, buildType BuildType, ver string) {
+	exists := isBuildAlreadyUploaded(mc, buildType, ver)
 	panicIf(exists, "build already exists")
 }
 
-func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bool) error {
+var uploadDryRun = false
+
+func uploadFile(c *minioutil.Client, pathRemote string, pathLocal string, public bool) error {
+	if uploadDryRun {
+		logf("uploadFile: dry run, not uploading '%s' as '%s'\n", pathLocal, pathRemote)
+		return nil
+	}
+
+	timeStart := time.Now()
+	_, err := c.UploadFile(pathRemote, pathLocal, public)
+	if err != nil {
+		return err
+	}
+	uri := c.URLForPath(pathRemote)
+	logf("Uploaded %s => %s in %s\n", pathLocal, uri, time.Since(timeStart))
+	return nil
+}
+
+func uploadData(c *minioutil.Client, pathRemote string, data []byte, public bool) error {
+	if uploadDryRun {
+		logf("uploadData: dry run, not uploading '%s'\n", pathRemote)
+		return nil
+	}
+
+	timeStart := time.Now()
+	_, err := c.UploadData(pathRemote, data, public)
+	if err != nil {
+		return err
+	}
+	uri := c.URLForPath(pathRemote)
+	logf("Uploaded data to %s in %s\n", uri, time.Since(timeStart))
+	return nil
+}
+
+func uploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bool) error {
 	files, err := os.ReadDir(dirLocal)
 	if err != nil {
 		return err
@@ -313,43 +344,23 @@ func UploadDir(c *minioutil.Client, dirRemote string, dirLocal string, public bo
 		fname := f.Name()
 		pathLocal := filepath.Join(dirLocal, fname)
 		pathRemote := path.Join(dirRemote, fname)
-		timeStart := time.Now()
-		_, err := c.UploadFile(pathRemote, pathLocal, public)
+		err = uploadFile(c, pathRemote, pathLocal, public)
 		if err != nil {
 			return fmt.Errorf("upload of '%s' as '%s' failed with '%s'", pathLocal, pathRemote, err)
 		}
-		uri := c.URLForPath(pathRemote)
-		logf("Uploaded %s => %s in %s\n", pathLocal, uri, time.Since(timeStart))
 	}
 	return nil
 }
 
-func getFinalDirForBuildType(buildType BuildType) string {
-	var dir string
-	switch buildType {
-	case buildTypeRel:
-		dir = "final-rel"
-	case buildTypePreRel:
-		dir = "final-prerel"
-	// case buildTypeDaily:
-	// 	dir = "final-daily"
-	default:
-		panicIf(true, "invalid buildType '%s'", buildType)
-	}
-	return filepath.Join("out", dir)
-}
-
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/1024/SumatraPDF-prerelease-install.exe etc.
-func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
+func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType, ver string, dirLocal string) {
 	timeStart := time.Now()
 	defer func() {
 		logf("Uploaded build '%s' to %s in %s\n", buildType, mc.URLBase(), time.Since(timeStart))
 	}()
 
-	dirRemote := getRemoteDir(buildType)
-	dirLocal := getFinalDirForBuildType(buildType)
-
-	err := UploadDir(mc, dirRemote, dirLocal, true)
+	dirRemote := getRemoteDir(buildType, ver)
+	err := uploadDir(mc, dirRemote, dirLocal, true)
 	must(err)
 
 	// for release build we don't upload files with version info
@@ -359,12 +370,11 @@ func minioUploadBuildMust(mc *minioutil.Client, buildType BuildType) {
 	}
 
 	uploadBuildUpdateInfoMust := func(buildType BuildType) {
-		files := getVersionFilesForLatestInfo(mc, buildType)
+		files := getVersionFilesForLatestInfo(mc, buildType, ver)
 		for _, f := range files {
 			remotePath := f[0]
-			_, err := mc.UploadData(remotePath, []byte(f[1]), true)
+			err := uploadData(mc, remotePath, []byte(f[1]), true)
 			must(err)
-			logf("Uploaded `%s'\n", mc.URLForPath(remotePath))
 		}
 	}
 
@@ -474,8 +484,9 @@ func newMinioR2Client() *minioutil.Client {
 	return mc
 }
 
-func uploadToStorage(buildType BuildType) {
-	isUploaded := isBuildAlreadyUploaded(newMinioBackblazeClient(), buildType)
+func uploadToStorage(buildType BuildType, ver string, dirLocal string) {
+	mcBB := newMinioBackblazeClient()
+	isUploaded := isBuildAlreadyUploaded(mcBB, buildType, ver)
 	if isUploaded {
 		logf("uploadToStorage: skipping upload because already uploaded")
 		return
@@ -490,30 +501,17 @@ func uploadToStorage(buildType BuildType) {
 	wg.Add(1)
 	go func() {
 		mc := newMinioR2Client()
-		minioUploadBuildMust(mc, buildType)
+		minioUploadBuildMust(mc, buildType, ver, dirLocal)
 		if buildType != buildTypeRel {
 			minioDeleteOldBuildsPrefix(mc, buildType)
 		}
 		wg.Done()
 	}()
 
-	// downloads of pre-release 64-bit installer often fail
-	// I suspect cloudflare backblaze proxy is caching 404 responses and 64-bit are hit
-	// the most because they are most likely to be downloaded first
-	// I'm hoping by delaying uploading https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumatralatest.js
-	// (which drives /prelease.html page) is enough for backblaze to make the uploaded files visible to the
-	// world (including cloudflare)
-	// Alternatively: could do http get against the file until I can see it. Better than arbitrary delay but still
-	// no guarantees the files will be visible from other networks
-	// if buildType != buildTypeRel {
-	// 	logf("uploadToStorage: delay do spaces upload by 5 min to make backblaze files visible to cloudflare proxy\n")
-	// 	time.Sleep(time.Minute * 5)
-	// }
-
 	wg.Add(1)
 	go func() {
 		mc := newMinioBackblazeClient()
-		minioUploadBuildMust(mc, buildType)
+		minioUploadBuildMust(mc, buildType, ver, dirLocal)
 		if buildType != buildTypeRel {
 			minioDeleteOldBuildsPrefix(mc, buildType)
 		}

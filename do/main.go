@@ -216,33 +216,33 @@ func main() {
 	)
 
 	var (
-		flgBuildLogview         bool
-		flgBuildNo              int
-		flgBuildPreRelease      bool
-		flgBuildRelease         bool
-		flgBuildSmoke           bool
-		flgBuildCodeQL          bool
-		flgCheckAccessKeys      bool
-		flgCIBuild              bool
-		flgCIDailyBuild         bool
-		flgClangFormat          bool
-		flgClean                bool
-		flgDiff                 bool
-		flgFilesList            bool
-		flgFileUpload           string
-		flgGenDocs              bool
-		flgGenSettings          bool
-		flgGenWebsiteDocs       bool
-		flgLogView              bool
-		flgRegenPremake         bool
-		flgRunTests             bool
-		flgTransDownload        bool
-		flgTriggerCodeQL        bool
-		flgUpdateGoDeps         bool
-		flgUpdateVer            string
-		flgUpload               bool
-		flgWc                   bool
-		flgSignUploadPreRelease bool
+		flgBuildLogview              bool
+		flgBuildNo                   int
+		flgBuildPreRelease           bool
+		flgBuildRelease              bool
+		flgBuildSmoke                bool
+		flgBuildCodeQL               bool
+		flgCheckAccessKeys           bool
+		flgCIBuild                   bool
+		flgCIDailyBuild              bool
+		flgClangFormat               bool
+		flgClean                     bool
+		flgDiff                      bool
+		flgFilesList                 bool
+		flgFileUpload                string
+		flgGenDocs                   bool
+		flgGenSettings               bool
+		flgGenWebsiteDocs            bool
+		flgLogView                   bool
+		flgRegenPremake              bool
+		flgRunTests                  bool
+		flgTransDownload             bool
+		flgTriggerCodeQL             bool
+		flgUpdateGoDeps              bool
+		flgUpdateVer                 string
+		flgUpload                    bool
+		flgWc                        bool
+		flgBuildSignUploadPreRelease bool
 	)
 
 	{
@@ -252,7 +252,7 @@ func main() {
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgCIDailyBuild, "ci-daily", false, "run CI daily steps")
 		flag.BoolVar(&flgBuildSmoke, "build-smoke", false, "run smoke build (installer for 64bit release)")
-		flag.BoolVar(&flgSignUploadPreRelease, "sign-upload-pre-rel", false, "sign and upload pre-release")
+		flag.BoolVar(&flgBuildSignUploadPreRelease, "build-sign-upload-pre-rel", false, "build, sign and upload pre-release")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
 		flag.BoolVar(&flgBuildCodeQL, "build-codeql", false, "build for codeql")
@@ -360,9 +360,8 @@ func main() {
 	if false {
 		testCompressOneOff()
 		if false {
-			// make them reachable
+			// avoid "unused function" warnings
 			testGenUpdateTxt()
-			buildPreRelease(kPlatformIntel64, true)
 			deleteFilesOneOff()
 		}
 		return
@@ -403,8 +402,8 @@ func main() {
 		opts.upload = true
 	}
 
-	if flgSignUploadPreRelease {
-		signAndUploadLatestPreRelease()
+	if flgBuildSignUploadPreRelease {
+		buildSignAndUploadLatestPreRelease()
 		return
 	}
 
@@ -453,27 +452,18 @@ func main() {
 	}
 
 	if flgCIDailyBuild {
-		buildCiDaily(flgUpload)
+		buildCiDaily()
 		return
 	}
 
 	if flgCIBuild {
 		buildCi()
-		if opts.upload {
-			uploadToStorage(buildTypePreRel)
-		} else {
-			logf("uploadToStorage: skipping because opts.upload = false\n")
-		}
 		return
 	}
 
 	if flgBuildRelease {
+		// TODO: must fix signing and upload
 		buildRelease()
-		if opts.upload {
-			uploadToStorage(buildTypeRel)
-		} else {
-			logf("uploadToStorage: skipping because opts.upload = false\n")
-		}
 		return
 	}
 
@@ -482,12 +472,7 @@ func main() {
 	if flgBuildPreRelease {
 		cleanReleaseBuilds()
 		genHTMLDocsForApp()
-		buildPreRelease(kPlatformIntel64, true)
-		if opts.upload {
-			uploadToStorage(buildTypePreRel)
-		} else {
-			logf("uploadToStorage: skipping because opts.upload = false\n")
-		}
+		buildPreRelease(platform32)
 		return
 	}
 

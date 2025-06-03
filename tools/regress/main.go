@@ -102,7 +102,7 @@ func fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func panicIfcond bool, format string, args ...interface{}) {
+func panicIf(cond bool, format string, args ...interface{}) {
 	if cond {
 		if inFatal {
 			os.Exit(1)
@@ -162,14 +162,14 @@ func parseTest(lines []string) (*Test, []string) {
 		}
 
 		parts := strings.SplitN(l, ":", 2)
-		panicIflen(parts) != 2, "invalid line: '%s'", l)
+		panicIf(len(parts) != 2, "invalid line: '%s'", l)
 		name := strings.ToLower(parts[0])
 		val := strings.TrimSpace(parts[1])
 		switch name {
 		case "url":
 			t.FileURL = val
 		case "sha1":
-			panicIflen(val) != 40, "len(val) != 40 (%d)", len(val))
+			panicIf(len(val) != 40, "len(val) != 40 (%d)", len(val))
 			t.FileSha1Hex = val
 		case "cmd":
 			t.CmdUnparsed = val
@@ -177,10 +177,10 @@ func parseTest(lines []string) (*Test, []string) {
 			t.ExpectedOutput = val
 		}
 	}
-	panicIft.FileURL == "", "Url: filed missing")
-	panicIft.FileSha1Hex == "", "Sha1: field missing")
-	panicIft.CmdUnparsed == "", "Cmd: field missing")
-	panicIft.ExpectedOutput == "", "Out: field missing")
+	panicIf(t.FileURL == "", "Url: filed missing")
+	panicIf(t.FileSha1Hex == "", "Sha1: field missing")
+	panicIf(t.CmdUnparsed == "", "Cmd: field missing")
+	panicIf(t.ExpectedOutput == "", "Out: field missing")
 
 	parts := strings.Split(t.CmdUnparsed, " ")
 	t.CmdName = parts[0]
@@ -191,7 +191,7 @@ func parseTest(lines []string) (*Test, []string) {
 func parseTestsMust(path string) []*Test {
 	var res []*Test
 	var test *Test
-	d, err := ioutil.ReadFile(path)
+	d, err := os.ReadFile(path)
 	fatalIfErr(err)
 	lines := toTrimmedLines(d)
 	lines = collapseMultipleEmptyLines(lines)
@@ -342,7 +342,7 @@ func dlIfNotExistsMust(uri, sha1Hex string) {
 	fmt.Printf("downloading '%s'...", uri)
 	d := httpDlMust(uri)
 	realSha1Hex := sha1HexOfBytes(d)
-	panicIfsha1Hex != realSha1Hex, "sha1Hex != realSha1Hex (%s != %s)", sha1Hex, realSha1Hex)
+	panicIf(sha1Hex != realSha1Hex, "sha1Hex != realSha1Hex (%s != %s)", sha1Hex, realSha1Hex)
 	ext := filepath.Ext(uri)
 	fileName := sha1Hex + ext
 	path := filepath.Join(getCacheDirMust(), fileName)
@@ -377,15 +377,15 @@ func removeExt(s string) string {
 
 func verifyTestFiles() {
 	d := getCacheDirMust()
-	files, err := ioutil.ReadDir(d)
+	files, err := os.ReadDir(d)
 	fatalIfErr(err)
 	for _, fi := range files {
 		path := filepath.Join(d, fi.Name())
 		sha1HexFromName := removeExt(fi.Name())
-		panicIflen(sha1HexFromName) != 40, "len(sha1HexFromName) != 40 (%d)", len(sha1HexFromName))
+		panicIf(len(sha1HexFromName) != 40, "len(sha1HexFromName) != 40 (%d)", len(sha1HexFromName))
 		sha1Hex, err := sha1HexOfFile(path)
 		fatalIfErr(err)
-		panicIfsha1Hex != sha1HexFromName, "sha1Hex != sha1HexFromName (%s != %s)", sha1Hex, sha1HexFromName)
+		panicIf(sha1Hex != sha1HexFromName, "sha1Hex != sha1HexFromName (%s != %s)", sha1Hex, sha1HexFromName)
 		testFilesBySha1[sha1Hex] = &TestFile{
 			Path:    path,
 			Sha1Hex: sha1Hex,
@@ -424,7 +424,7 @@ func verifyCommandsMust(tests []*Test) {
 		dirsToCheck = append(dirsToCheck, "rel")
 	}
 	// TODO: also check dbg64 and dbg?
-	panicIflen(dirsToCheck) == 0, "there is no rel or rel64 directory with executables")
+	panicIf(len(dirsToCheck) == 0, "there is no rel or rel64 directory with executables")
 	for _, test := range tests {
 		cmds[test.CmdName] = true
 	}
@@ -445,7 +445,7 @@ func verifyCommandsMust(tests []*Test) {
 			fmt.Printf("dir '%s' has only %d out of %d commands\n", dir, len(cmdsFound), len(cmds))
 		}
 	}
-	panicIfdirWithCommands == "", "didn't find a directory with all tests commands %v\n", cmds)
+	panicIf(dirWithCommands == "", "didn't find a directory with all tests commands %v\n", cmds)
 	for _, test := range tests {
 		test.CmdPath = filepath.Join(dirWithCommands, test.CmdName)
 	}
@@ -465,7 +465,7 @@ func substFileVarAll(tests []*Test) {
 	for _, test := range tests {
 		sha1Hex := test.FileSha1Hex
 		tf := testFilesBySha1[sha1Hex]
-		panicIftf == nil, "no test file for '%s'\n", sha1Hex)
+		panicIf(tf == nil, "no test file for '%s'\n", sha1Hex)
 		test.FilePath = tf.Path
 		test.ExpectedOutput = substFileVar(test.ExpectedOutput, tf.Path)
 		for i, arg := range test.CmdArgs {
