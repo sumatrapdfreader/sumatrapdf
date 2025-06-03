@@ -740,7 +740,7 @@ int __cdecl _purecall() {
 static char* BuildSymbolsUrl() {
     const char* urlBase = "https://www.sumatrapdfreader.org/dl/";
     if (gIsPreReleaseBuild) {
-        const char* ver = QM(PRE_RELEASE_VER);
+        const char* ver = preReleaseVersion;
         urlBase = str::JoinTemp(urlBase, "prerel/", ver, "/SumatraPDF-prerel");
     } else {
         // assuming this is release version
