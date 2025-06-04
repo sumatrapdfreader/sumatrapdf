@@ -204,7 +204,7 @@ const char* gumbo_normalize_svg_tagname(const GumboStringPiece* tagname);
  * enum. The `tag` version expects `tagname` to be NULL-terminated
  */
 GumboTag gumbo_tag_enum(const char* tagname);
-GumboTag gumbo_tagn_enum(const char* tagname, unsigned int length);
+GumboTag gumbo_tagn_enum(const char* tagname, size_t length);
 
 /**
  * Attribute namespaces.

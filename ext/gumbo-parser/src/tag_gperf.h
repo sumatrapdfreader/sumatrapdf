@@ -1,5 +1,5 @@
 static unsigned int tag_hash(
-    register const char *str, register unsigned int len) {
+    register const char *str, register size_t len) {
   static unsigned short asso_values[] = {296, 296, 296, 296, 296, 296, 296, 296,
       296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296,
       296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296,
@@ -17,7 +17,7 @@ static unsigned int tag_hash(
       296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296,
       296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296,
       296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296, 296};
-  register unsigned int hval = len;
+  register unsigned int hval = (unsigned int)len;
 
   switch (hval) {
     default:

@@ -65,7 +65,7 @@ void gumbo_tag_from_original_text(GumboStringPiece* text) {
   }
 }
 
-static int case_memcmp(const char* s1, const char* s2, unsigned int n) {
+static int case_memcmp(const char* s1, const char* s2, size_t n) {
   while (n--) {
     unsigned char c1 = tolower(*s1++);
     unsigned char c2 = tolower(*s2++);
@@ -77,7 +77,7 @@ static int case_memcmp(const char* s1, const char* s2, unsigned int n) {
 #include "tag_gperf.h"
 #define TAG_MAP_SIZE (sizeof(kGumboTagMap) / sizeof(kGumboTagMap[0]))
 
-GumboTag gumbo_tagn_enum(const char* tagname, unsigned int length) {
+GumboTag gumbo_tagn_enum(const char* tagname, size_t length) {
   if (length) {
     unsigned int key = tag_hash(tagname, length);
     if (key < TAG_MAP_SIZE) {

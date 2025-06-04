@@ -33,7 +33,7 @@
 static int print_message(
     GumboParser* parser, GumboStringBuffer* output, const char* format, ...) {
   va_list args;
-  int remaining_capacity = output->capacity - output->length;
+  size_t remaining_capacity = output->capacity - output->length;
   va_start(args, format);
   int bytes_written = vsnprintf(
       output->data + output->length, remaining_capacity, format, args);
@@ -79,7 +79,7 @@ static void print_tag_stack(GumboParser* parser, const GumboParserError* error,
     if (i) {
       print_message(parser, output, ", ");
     }
-    GumboTag tag = (GumboTag) error->tag_stack.data[i];
+    GumboTag tag = (GumboTag) (intptr_t) error->tag_stack.data[i];
     print_message(parser, output, gumbo_normalized_tagname(tag));
   }
   gumbo_string_buffer_append_codepoint(parser, '.', output);

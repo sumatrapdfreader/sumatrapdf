@@ -10,8 +10,8 @@ freetype        2.10.4     2020-10-20
   https://www.freetype.org/
   https://git.ghostscript.com/?p=thirdparty-freetype2.git;a=shortlog;h=refs/tags/VER-2-10-4
 
-gumbo           0.10.1
-  https://github.com/google/gumbo-parser
+gumbo           ???
+  https://github.com/ArtifexSoftware/thirdparty-gumbo-parser
 
 harfbuzz        2.6.4      2019-10-29
   https://harfbuzz.org

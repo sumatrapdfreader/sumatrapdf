@@ -742,7 +742,7 @@ static GumboInsertionMode get_current_template_insertion_mode(
     return GUMBO_INSERTION_MODE_INITIAL;
   }
   return (GumboInsertionMode)
-      template_insertion_modes->data[(template_insertion_modes->length - 1)];
+      (intptr_t) template_insertion_modes->data[(template_insertion_modes->length - 1)];
 }
 
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/tree-construction.html#mathml-text-integration-point
@@ -2845,7 +2845,7 @@ static bool handle_in_body(GumboParser* parser, GumboToken* token) {
     text_state->_start_position = token->position;
     text_state->_type = GUMBO_NODE_TEXT;
     if (prompt_attr) {
-      int prompt_attr_length = strlen(prompt_attr->value);
+      size_t prompt_attr_length = strlen(prompt_attr->value);
       gumbo_string_buffer_destroy(parser, &text_state->_buffer);
       text_state->_buffer.data = gumbo_copy_stringz(parser, prompt_attr->value);
       text_state->_buffer.length = prompt_attr_length;
