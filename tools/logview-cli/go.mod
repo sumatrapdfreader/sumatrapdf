@@ -1,15 +1,15 @@
 module logview
 
-go 1.21
+go 1.22
 
-toolchain go1.22.2
+toolchain go1.24.3
 
 require (
-	github.com/kjk/common v0.0.0-20240614095155-da5732d4417d
-	github.com/rodrigocfd/windigo v0.0.0-20230809154420-8faa606d9f5f
+	github.com/kjk/common v0.0.0-20250101150952-60008e1089e4
+	github.com/rodrigocfd/windigo v0.2.0
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
-	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 )
