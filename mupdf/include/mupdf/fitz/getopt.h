@@ -125,4 +125,10 @@ FZ_DATA extern int fz_optitem;
 */
 int fz_opt_from_list(char *opt, const char *optlist);
 
+/**
+	Convert "-" to "/dev/stdout" for use with command lines.
+	Also converts "nul" and "con" on Windows.
+*/
+char *fz_optpath(char *opt);
+
 #endif

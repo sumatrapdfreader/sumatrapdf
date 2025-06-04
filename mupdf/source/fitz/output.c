@@ -247,8 +247,12 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 	if (filename == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "no output to write to");
 
-	if (!strcmp(filename, "/dev/null") || !fz_strcasecmp(filename, "nul:"))
+	if (!strcmp(filename, "/dev/null"))
 		return fz_new_output(ctx, 0, NULL, null_write, NULL, NULL);
+	if (!strcmp(filename, "/dev/stdout"))
+		return fz_stdout(ctx);
+	if (!strcmp(filename, "/dev/stderr"))
+		return fz_stderr(ctx);
 
 	/* If <append> is false, we use fopen()'s 'x' flag to force an error if
 	 * some other process creates the file immediately after we have removed

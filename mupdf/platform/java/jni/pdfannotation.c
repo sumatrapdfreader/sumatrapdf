@@ -1466,7 +1466,7 @@ FUN(PDFAnnotation_hasLine)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT void JNICALL
-FUN(PDFAnnotation_setFileSpec)(JNIEnv *env, jobject self, jobject jfs)
+FUN(PDFAnnotation_setFilespec)(JNIEnv *env, jobject self, jobject jfs)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
@@ -1479,7 +1479,7 @@ FUN(PDFAnnotation_setFileSpec)(JNIEnv *env, jobject self, jobject jfs)
 }
 
 JNIEXPORT jobject JNICALL
-FUN(PDFAnnotation_getFileSpec)(JNIEnv *env, jobject self)
+FUN(PDFAnnotation_getFilespec)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);
@@ -1698,7 +1698,7 @@ FUN(PDFAnnotation_setBorderEffectIntensity)(JNIEnv *env, jobject self, jfloat in
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFAnnotation_hasFileSpec)(JNIEnv *env, jobject self)
+FUN(PDFAnnotation_hasFilespec)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_annot *annot = from_PDFAnnotation(env, self);

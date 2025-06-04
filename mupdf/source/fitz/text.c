@@ -234,7 +234,7 @@ fz_text_language fz_text_language_from_string(const char *str)
 {
 	fz_text_language lang;
 
-	if (str == NULL)
+	if (str == NULL || strlen(str) == 0)
 		return FZ_LANG_UNSET;
 
 	if (!strcmp(str, "zh-Hant") ||
@@ -280,6 +280,8 @@ char *fz_string_from_text_language(char str[8], fz_text_language lang)
 
 	/* str is supposed to be at least 8 chars in size */
 	if (str == NULL)
+		return NULL;
+	if (lang == FZ_LANG_UNSET)
 		return NULL;
 
 	if (lang == FZ_LANG_zh_Hant)

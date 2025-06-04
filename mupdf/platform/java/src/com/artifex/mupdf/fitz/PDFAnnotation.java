@@ -330,12 +330,9 @@ public class PDFAnnotation
 	public native Point getLineCaptionOffset();
 	public native void setLineCaptionOffset(Point offset);
 
-	public native boolean hasFileSpec();
-	public native void setFileSpec(PDFObject fs);
-	public native PDFObject getFileSpec();
-	public boolean hasFileSpecification() { return hasFileSpec(); }
-	public void setFileSpecification(PDFObject fs) { setFileSpec(fs); }
-	public PDFObject getFileSpecification() { return getFileSpec(); }
+	public native boolean hasFilespec();
+	public native void setFilespec(PDFObject fs);
+	public native PDFObject getFilespec();
 
 	public native boolean hasIntent();
 	public native int getIntent();

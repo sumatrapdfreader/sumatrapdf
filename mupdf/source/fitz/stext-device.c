@@ -111,8 +111,16 @@ typedef struct metatext_t
 
 typedef struct
 {
+	fz_point from;
+	fz_point to;
+	float thickness;
+} rect_details;
+
+typedef struct
+{
 	fz_device super;
 	fz_stext_page *page;
+	int id;
 	fz_point pen, start;
 	fz_point lag_pen;
 	fz_matrix trm;
@@ -138,6 +146,11 @@ typedef struct
 		fz_font *font;
 		int flags;
 	} last;
+
+	/* The list of 'rects' seen during processing (if we're collecting styles). */
+	int rect_max;
+	int rect_len;
+	rect_details *rects;
 } fz_stext_device;
 
 const char *fz_stext_options_usage =
@@ -1237,10 +1250,10 @@ static uint32_t hexrgba_from_color(fz_context *ctx, fz_colorspace *colorspace, c
 	float rgb[3];
 	fz_convert_color(ctx, colorspace, color, fz_device_rgb(ctx), rgb, NULL, fz_default_color_params);
 	return
-		(fz_clampi(alpha * 255 + 0.5f, 0, 255) << 24) |
-		(fz_clampi(rgb[0] * 255 + 0.5f, 0, 255) << 16) |
-		(fz_clampi(rgb[1] * 255 + 0.5f, 0, 255) << 8) |
-		(fz_clampi(rgb[2] * 255 + 0.5f, 0, 255));
+		((uint32_t) (fz_clampi(alpha * 255 + 0.5f, 0, 255) << 24)) |
+		((uint32_t) (fz_clampi(rgb[0] * 255 + 0.5f, 0, 255) << 16)) |
+		((uint32_t) (fz_clampi(rgb[1] * 255 + 0.5f, 0, 255) << 8)) |
+		((uint32_t) (fz_clampi(rgb[2] * 255 + 0.5f, 0, 255)));
 }
 
 static void
@@ -1553,12 +1566,217 @@ fixup_bboxes_and_bidi(fz_context *ctx, fz_stext_block *block)
 }
 
 static void
+advance_x(fz_point *a, fz_point b, float d)
+{
+	a->y += (b.y - a->y) * d / (b.x - a->x);
+	a->x += d;
+}
+
+static void
+advance_y(fz_point *a, fz_point b, float d)
+{
+	a->x += (b.x - a->x) * d / (b.y - a->y);
+	a->y += d;
+}
+
+static int
+line_crosses_rect(fz_point a, fz_point b, fz_rect r)
+{
+	/* Cope with trivial exclusions */
+	if (a.x < r.x0 && b.x < r.x0)
+		return 0;
+	if (a.x > r.x1 && b.x > r.x1)
+		return 0;
+	if (a.y < r.y0 && b.y < r.y0)
+		return 0;
+	if (a.y > r.y1 && b.y > r.y1)
+		return 0;
+
+	if (a.x < r.x0)
+		advance_x(&a, b, r.x0 - a.x);
+	if (a.x > r.x1)
+		advance_x(&a, b, r.x1 - a.x);
+	if (a.y < r.y0)
+		advance_y(&a, b, r.y0 - a.y);
+	if (a.y > r.y1)
+		advance_y(&a, b, r.y1 - a.y);
+
+	return fz_is_point_inside_rect(a, r);
+}
+
+static float
+calculate_ascent(fz_point p, fz_point origin, fz_point dir)
+{
+	return fabsf((origin.x-p.x)*dir.y - (origin.y-p.y)*dir.x);
+}
+
+/* Create us a rect from the given quad, but extend it downwards
+ * to allow for underlines that pass under the glyphs. */
+static fz_rect expanded_rect_from_quad(fz_quad quad, fz_point dir, fz_point origin, float size)
+{
+	/* Consider the two rects from A and g respectively.
+	 *
+	 * ul +------+ ur   or
+	 *    |  /\  |         ul +------+ ur
+	 *    | /__\ |            | /''\ |
+	 *    |/    \|            |(    ||
+	 * ll +------+ lr         | ''''||
+	 *                        |  ''' | <-expected underline level
+	 *                     ll +------+ lr
+	 *
+	 * So an underline won't cross A's rect, but will cross g's.
+	 * We want to make a rect that includes a suitable amount of
+	 * space underneath. The information we have available to us
+	 * is summed up here:
+	 *
+	 *  ul +---------+ ur
+	 *     |         |
+	 *     | origin  |
+	 *     |+----------> dir
+	 *     |         |
+	 *  ll +---------+ lr
+	 *
+	 * Consider the distance from ul to the line that passes through
+	 * the origin with direction dir. Similarly, consider the distance
+	 * from ur to the same line. This can be thought of as the 'ascent'
+	 * of this character.
+	 *
+	 * We'd like the distance from ul to ll to be greater than this, so
+	 * as to ensure we cover the possible location where an underline
+	 * might reasonably go.
+	 *
+	 * If we have a line (l) through point A with direction vector u,
+	 * the distance between point P and line(l) is:
+	 *
+	 * d(P,l) = || AP x u || / || u ||
+	 *
+	 * where x is the cross product.
+	 *
+	 * For us, because || dir || = 1:
+	 *
+	 * d(ul, origin) = || (origin-ul) x dir ||
+	 *
+	 * The cross product is only defined in 3 (or 7!) dimensions, so
+	 * extend both vectors into 3d by defining a 0 z component.
+	 *
+	 * (origin-ul) x dir = [ (origin.y - ul.y) . 0     - 0                 . dir.y ]
+	 *                     [ 0                 . dir.x - (origin.x - ul.y) . 0     ]
+	 *                     [ (origin.x - ul.x) . dir.y - (origin.y - ul.y) . dir.x ]
+	 *
+	 * So d(ul, origin) = abs(D) where D = (origin.x-ul.x).dir.y - (origin.y-ul.y).dir.x
+	 */
+	float ascent = (calculate_ascent(quad.ul, origin, dir) + calculate_ascent(quad.ur, origin, dir)) / 2;
+	fz_point left = { quad.ll.x - quad.ul.x, quad.ll.y - quad.ul.y };
+	fz_point right = { quad.lr.x - quad.ur.x, quad.lr.y - quad.ur.y };
+	float height = (hypotf(left.x, left.y) + hypotf(right.x, right.y))/2;
+	int neg = 0;
+
+	/* We'd like height to be at least ascent + 1/4 size */
+	if (height < 0)
+		neg = 1, height = -height;
+	if (height < ascent + size * 0.25f)
+		height = ascent + size * 0.25f;
+
+	height -= ascent;
+	if (neg)
+		height = -height;
+	quad.ll.x += - height * dir.y;
+	quad.ll.y +=   height * dir.x;
+	quad.lr.x += - height * dir.y;
+	quad.lr.y +=   height * dir.x;
+
+	return fz_rect_from_quad(quad);
+}
+
+static int feq(float a,float b)
+{
+#define EPSILON 0.00001
+	a -= b;
+	if (a < 0)
+		a = -a;
+	return a < EPSILON;
+}
+
+static void
+check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point to, fz_point dir)
+{
+	for ( ; block; block = block->next)
+	{
+		fz_stext_line *line;
+
+		if (block->type != FZ_STEXT_BLOCK_TEXT)
+			continue;
+
+		for (line = block->u.t.first_line; line != NULL; line = line->next)
+		{
+			fz_stext_char *ch;
+
+			if ((!feq(line->dir.x, dir.x) || !feq(line->dir.y, dir.y)) &&
+				(!feq(line->dir.x, -dir.x) || !feq(line->dir.y, -dir.y)))
+				continue;
+
+			/* Matching directions... */
+
+			/* Unfortunately, we don't have a valid line->bbox at this point, so we need to check
+			 * chars. - FIXME: Now we do! */
+			for (ch = line->first_char; ch; ch = ch->next)
+			{
+				fz_point up;
+				float dx, dy, dot;
+				fz_rect ch_box = expanded_rect_from_quad(ch->quad, line->dir, ch->origin, ch->size);
+
+				if (!line_crosses_rect(from, to, ch_box))
+					continue;
+
+				/* Is this a strikeout or an underline? */
+
+				/* The baseline moves from ch->origin in the direction line->dir */
+				up.x = line->dir.y;
+				up.y = -line->dir.x;
+
+				/* How far is our line displaced from the line through the origin? */
+				dx = from.x - ch->origin.x;
+				dy = from.y - ch->origin.y;
+				/* Dot product with up. up is normalised */
+				dot = dx * up.x + dy * up.y;
+
+				if (dot > 0)
+					ch->flags |= FZ_STEXT_STRIKEOUT;
+				else
+					ch->flags |= FZ_STEXT_UNDERLINE;
+			}
+		}
+	}
+}
+
+static void
+check_rects_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page)
+{
+	int i, n = tdev->rect_len;
+
+	for (i = 0; i < n; i++)
+	{
+		fz_point from = tdev->rects[i].from;
+		fz_point to = tdev->rects[i].to;
+		fz_point dir;
+		dir.x = to.x - from.x;
+		dir.y = to.y - from.y;
+		dir = fz_normalize_vector(dir);
+
+		check_strikeout(ctx, page->first_block, from, to, dir);
+	}
+}
+
+static void
 fz_stext_close_device(fz_context *ctx, fz_device *dev)
 {
 	fz_stext_device *tdev = (fz_stext_device*)dev;
 	fz_stext_page *page = tdev->page;
 
 	fixup_bboxes_and_bidi(ctx, page->first_block);
+
+	if (tdev->opts.flags & FZ_STEXT_COLLECT_STYLES)
+		check_rects_for_strikeout(ctx, tdev, page);
 
 	/* TODO: smart sorting of blocks and lines in reading order */
 	/* TODO: unicode NFC normalization */
@@ -1581,6 +1799,8 @@ fz_stext_drop_device(fz_context *ctx, fz_device *dev)
 	fz_drop_font(ctx, tdev->last.font);
 	while (tdev->metatext)
 		pop_metatext(ctx, tdev);
+
+	fz_free(ctx, tdev->rects);
 }
 
 static int
@@ -1742,17 +1962,8 @@ is_rect_closepath(fz_context *ctx, void *arg)
 		rd->fail = 1;
 }
 
-static int feq(float a,float b)
-{
-#define EPSILON 0.00001
-	a -= b;
-	if (a < 0)
-		a = -a;
-	return a < EPSILON;
-}
-
 static int
-is_path_rect(fz_context *ctx, fz_path *path, fz_point *from, fz_point *to, float *thickness, fz_matrix ctm)
+is_path_rect(fz_context *ctx, const fz_path *path, fz_point *from, fz_point *to, float *thickness, fz_matrix ctm)
 {
 	float d01, d01x, d01y, d03, d03x, d03y, d32x, d32y;
 	is_rect_data rd = { 0 };
@@ -1827,204 +2038,30 @@ is_path_rect(fz_context *ctx, fz_path *path, fz_point *from, fz_point *to, float
 }
 
 static void
-advance_x(fz_point *a, fz_point b, float d)
-{
-	a->y += (b.y - a->y) * d / (b.x - a->x);
-	a->x += d;
-}
-
-static void
-advance_y(fz_point *a, fz_point b, float d)
-{
-	a->x += (b.x - a->x) * d / (b.y - a->y);
-	a->y += d;
-}
-
-static int
-line_crosses_rect(fz_point a, fz_point b, fz_rect r)
-{
-	/* Cope with trivial exclusions */
-	if (a.x < r.x0 && b.x < r.x0)
-		return 0;
-	if (a.x > r.x1 && b.x > r.x1)
-		return 0;
-	if (a.y < r.y0 && b.y < r.y0)
-		return 0;
-	if (a.y > r.y1 && b.y > r.y1)
-		return 0;
-
-	if (a.x < r.x0)
-		advance_x(&a, b, r.x0 - a.x);
-	if (a.x > r.x1)
-		advance_x(&a, b, r.x1 - a.x);
-	if (a.y < r.y0)
-		advance_y(&a, b, r.y0 - a.y);
-	if (a.y > r.y1)
-		advance_y(&a, b, r.y1 - a.y);
-
-	return fz_is_point_inside_rect(a, r);
-}
-
-static float
-calculate_ascent(fz_point p, fz_point origin, fz_point dir)
-{
-	return fabsf((origin.x-p.x)*dir.y - (origin.y-p.y)*dir.x);
-}
-
-/* Create us a rect from the given quad, but extend it downwards
- * to allow for underlines that pass under the glyphs. */
-static fz_rect expanded_rect_from_quad(fz_quad quad, fz_point dir, fz_point origin, float size)
-{
-	/* Consider the two rects from A and g respectively.
-	 *
-	 * ul +------+ ur   or
-	 *    |  /\  |         ul +------+ ur
-	 *    | /__\ |            | /''\ |
-	 *    |/    \|            |(    ||
-	 * ll +------+ lr         | ''''||
-	 *                        |  ''' | <-expected underline level
-	 *                     ll +------+ lr
-	 *
-	 * So an underline won't cross A's rect, but will cross g's.
-	 * We want to make a rect that includes a suitable amount of
-	 * space underneath. The information we have available to us
-	 * is summed up here:
-	 *
-	 *  ul +---------+ ur
-	 *     |         |
-	 *     | origin  |
-	 *     |+----------> dir
-	 *     |         |
-	 *  ll +---------+ lr
-	 *
-	 * Consider the distance from ul to the line that passes through
-	 * the origin with direction dir. Similarly, consider the distance
-	 * from ur to the same line. This can be thought of as the 'ascent'
-	 * of this character.
-	 *
-	 * We'd like the distance from ul to ll to be greater than this, so
-	 * as to ensure we cover the possible location where an underline
-	 * might reasonably go.
-	 *
-	 * If we have a line (l) through point A with direction vector u,
-	 * the distance between point P and line(l) is:
-	 *
-	 * d(P,l) = || AP x u || / || u ||
-	 *
-	 * where x is the cross product.
-	 *
-	 * For us, because || dir || = 1:
-	 *
-	 * d(ul, origin) = || (origin-ul) x dir ||
-	 *
-	 * The cross product is only defined in 3 (or 7!) dimensions, so
-	 * extend both vectors into 3d by defining a 0 z component.
-	 *
-	 * (origin-ul) x dir = [ (origin.y - ul.y) . 0     - 0                 . dir.y ]
-	 *                     [ 0                 . dir.x - (origin.x - ul.y) . 0     ]
-	 *                     [ (origin.x - ul.x) . dir.y - (origin.y - ul.y) . dir.x ]
-	 *
-	 * So d(ul, origin) = abs(D) where D = (origin.x-ul.x).dir.y - (origin.y-ul.y).dir.x
-	 */
-	float ascent = (calculate_ascent(quad.ul, origin, dir) + calculate_ascent(quad.ur, origin, dir)) / 2;
-	fz_point left = { quad.ll.x - quad.ul.x, quad.ll.y - quad.ul.y };
-	fz_point right = { quad.lr.x - quad.ur.x, quad.lr.y - quad.ur.y };
-	float height = (hypotf(left.x, left.y) + hypotf(right.x, right.y))/2;
-	int neg = 0;
-
-	/* We'd like height to be at least ascent + 1/4 size */
-	if (height < 0)
-		neg = 1, height = -height;
-	if (height < ascent + size * 0.25f)
-		height = ascent + size * 0.25f;
-
-	height -= ascent;
-	if (neg)
-		height = -height;
-	quad.ll.x += - height * dir.y;
-	quad.ll.y +=   height * dir.x;
-	quad.lr.x += - height * dir.y;
-	quad.lr.y +=   height * dir.x;
-
-	return fz_rect_from_quad(quad);
-}
-
-static void
 check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page, const fz_path *path, fz_matrix ctm)
 {
-	fz_stext_block *block = page->last_block;
-	int is_rect;
 	float thickness;
-	fz_point from, to, dir;
-	union {
-		fz_path *p;
-		const fz_path *cp;
-	} u;
-
-	u.cp = path;
+	fz_point from, to;
 
 	/* Is this path a thin rectangle (possibly rotated)? If so, then we need to
 	 * consider it as being a strikeout or underline. */
-	is_rect = is_path_rect(ctx, u.p, &from, &to, &thickness, ctm);
-	if (!is_rect)
+	if (!is_path_rect(ctx, path, &from, &to, &thickness, ctm))
 		return;
 
-	dir.x = to.x - from.x;
-	dir.y = to.y - from.y;
-	dir = fz_normalize_vector(dir);
-
-	/* Does this line nicely cover a recent span? */
-	while (block)
+	/* Add to the list of rects in the device. */
+	if (tdev->rect_len == tdev->rect_max)
 	{
-		fz_stext_line *line;
-		if (block->type != FZ_STEXT_BLOCK_TEXT)
-		{
-			block = block->prev;
-			continue;
-		}
-		line = block->u.t.last_line;
-		while(line)
-		{
-			if ((feq(line->dir.x, dir.x) && feq(line->dir.y, dir.y)) ||
-				(feq(line->dir.x, -dir.x) && feq(line->dir.y, -dir.y)))
-			{
-				/* Matching directions... */
+		int newmax = tdev->rect_max * 2;
+		if (newmax == 0)
+			newmax = 32;
 
-				/* Unfortunately, we don't have a valid line->bbox at this point, so we need to check
-				 * chars. */
-				fz_stext_char *ch;
-				for (ch = line->first_char; ch; ch = ch->next)
-				{
-					fz_rect ch_box = expanded_rect_from_quad(ch->quad, line->dir, ch->origin, ch->size);
-
-					if (line_crosses_rect(from, to, ch_box))
-					{
-						float dx, dy, dot;
-						/* Is this a strikeout or an underline? */
-
-						/* The baseline moves from ch->origin in the direction line->dir */
-						fz_point up;
-						up.x = line->dir.y;
-						up.y = -line->dir.x;
-
-						/* How far is our line displaced from the line through the origin? */
-						dx = from.x - ch->origin.x;
-						dy = from.y - ch->origin.y;
-						/* Dot product with up. up is normalised */
-						dot = dx * up.x + dy * up.y;
-
-						if (dot > 0)
-							ch->flags |= FZ_STEXT_STRIKEOUT;
-						else
-							ch->flags |= FZ_STEXT_UNDERLINE;
-					}
-				}
-			}
-			line = line->prev;
-		}
-
-		block = block->prev;
+		tdev->rects = fz_realloc(ctx, tdev->rects, sizeof(*tdev->rects) * newmax);
+		tdev->rect_max = newmax;
 	}
+	tdev->rects[tdev->rect_len].from = from;
+	tdev->rects[tdev->rect_len].to = to;
+	tdev->rects[tdev->rect_len].thickness = thickness;
+	tdev->rect_len++;
 }
 
 static void
@@ -2279,6 +2316,9 @@ fz_stext_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard,
 	fz_stext_page *page = tdev->page;
 	fz_stext_block *block, *le, *gt, *newblock;
 
+	if (raw == NULL)
+		raw = "";
+
 	/* Find a pointer to the last block. */
 	if (page->last_block)
 	{
@@ -2343,9 +2383,7 @@ fz_stext_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard,
 			/* No. We need to create a new struct node. */
 			new_stext_struct(ctx, page, le, standard, raw);
 		}
-		else if (le->u.s.down->standard != standard ||
-				(raw == NULL && le->u.s.down->raw[0] != 0) ||
-				(raw != NULL && strcmp(raw, le->u.s.down->raw) != 0))
+		else if (le->u.s.down->standard != standard || strcmp(raw, le->u.s.down->raw) != 0)
 		{
 			/* Yes, but it doesn't match the one we expect! */
 			fz_warn(ctx, "Mismatched structure type!");
@@ -2473,6 +2511,10 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 
 	if ((dev->flags & FZ_STEXT_PRESERVE_IMAGES) == 0)
 		dev->super.hints |= FZ_DONT_DECODE_IMAGES;
+
+	dev->rect_max = 0;
+	dev->rect_len = 0;
+	dev->rects = NULL;
 
 	return (fz_device*)dev;
 }

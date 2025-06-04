@@ -3124,7 +3124,7 @@ int main(int argc, char **argv)
 		case 'C': currenttint = 1; tint_white = strtol(fz_optarg, NULL, 16); break;
 		case 'B': currenttint = 1; tint_black = strtol(fz_optarg, NULL, 16); break;
 		case 'R': reflow_options = fz_optarg; break;
-		case 'T': trace_file_name = fz_optarg; break;
+		case 'T': trace_file_name = fz_optpath(fz_optarg); break;
 		case 'Y': scale = fz_atof(fz_optarg); break;
 		}
 	}
@@ -3152,10 +3152,7 @@ int main(int argc, char **argv)
 
 	if (trace_file_name)
 	{
-		if (!strcmp(trace_file_name, "-"))
-			trace_file = fz_stdout(ctx);
-		else
-			trace_file = fz_new_output_with_path(ctx, trace_file_name, 0);
+		trace_file = fz_new_output_with_path(ctx, trace_file_name, 0);
 		trace_action("var doc, page, annot, widget, widgetstr, hits, tmp;\n");
 		trace_action("function RegressionError() {\n");
 		trace_action("  var err = new Error(Array.prototype.join.call(arguments, ' '));\n");

@@ -1,3 +1,5 @@
+import * as mupdf from "mupdf"
+
 var Q = JSON.stringify
 
 var pathPrinter = {
@@ -127,7 +129,7 @@ var traceDevice = {
 if (scriptArgs.length != 2)
 	print("usage: mutool run trace-device.js document.pdf pageNumber")
 else {
-	var doc = Document.openDocument(scriptArgs[0]);
+	var doc = mupdf.Document.openDocument(scriptArgs[0]);
 	var page = doc.loadPage(parseInt(scriptArgs[1])-1);
-	page.run(traceDevice, Matrix.identity);
+	page.run(traceDevice, mupdf.Matrix.identity);
 }

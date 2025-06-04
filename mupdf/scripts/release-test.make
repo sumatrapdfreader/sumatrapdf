@@ -26,6 +26,8 @@ run-release-test:
 	$(MAKE) nuke
 	$(MAKE) -f scripts/release-test.make test-java-examples
 	$(MAKE) nuke
+	$(MAKE) -f scripts/release-test.make test-docs
+	$(MAKE) nuke
 	$(MAKE) -f scripts/release-test.make test-java-build
 
 make-release-build:
@@ -98,6 +100,12 @@ make-java-build:
 
 test-java-examples: make-java-build platform/java/pdfref17.pdf
 	/usr/bin/test 93ecea2a290429260f0fef4107012a51 == $$(MUPDF_ARGS="pdfref17.pdf 1140" $(MAKE) -C platform/java build=release run-example | grep -Ev '^(make|java)' | md5sum - | cut -d' ' -f1)
+
+make-docs:
+	$(MAKE) docs
+
+test-docs: make-docs
+	linkchecker file://$(PWD)/build/docs/index.html
 
 test-java-build: make-java-build
 	MUPDF_ARGS=pdfref17.pdf $(MAKE) -C platform/java build=release run

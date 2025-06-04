@@ -1,17 +1,21 @@
+import * as mupdf from "mupdf"
+
 // Create a PDF from scratch using helper functions.
 
 // This example creates a new PDF file from scratch, using helper
 // functions to create resources and page objects.
 // This assumes a basic working knowledge of the PDF file format.
 
+import mupdf from "mupdf"
+
 // Create a new empty document with no pages.
-var pdf = new PDFDocument()
+var pdf = new mupdf.PDFDocument()
 
 // Load built-in font and create WinAnsi encoded simple font resource.
-var font = pdf.addSimpleFont(new Font("Times-Roman"))
+var font = pdf.addSimpleFont(new mupdf.Font("Times-Roman"))
 
 // Load PNG file and create image resource.
-var image = pdf.addImage(new Image("example.png"))
+var image = pdf.addImage(new mupdf.Image("example.jpg"))
 
 // Create resource dictionary.
 var resources = pdf.addObject({

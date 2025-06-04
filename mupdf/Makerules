@@ -26,6 +26,8 @@ else
 endif
 
 ifeq ($(html),no)
+  USE_HARFBUZZ := no
+  USE_GUMBO := no
   CFLAGS += -DFZ_ENABLE_HTML_ENGINE=0
   CFLAGS += -DFZ_ENABLE_HTML=0
   CFLAGS += -DFZ_ENABLE_EPUB=0
@@ -33,6 +35,24 @@ ifeq ($(html),no)
   CFLAGS += -DFZ_ENABLE_MOBI=0
   CFLAGS += -DFZ_ENABLE_OFFICE=0
   CFLAGS += -DFZ_ENABLE_TXT=0
+else
+  USE_HARFBUZZ := yes
+  USE_GUMBO := yes
+endif
+
+ifeq ($(xps),no)
+  CFLAGS += -DFZ_ENABLE_XPS=0
+endif
+
+ifeq ($(svg),no)
+  CFLAGS += -DFZ_ENABLE_SVG=0
+endif
+
+ifeq ($(extract),no)
+  USE_EXTRACT := no
+  CFLAGS += -DFZ_ENABLE_DOCX_OUTPUT=0
+else
+  USE_EXTRACT := yes
 endif
 
 ifeq ($(tesseract),yes)
@@ -343,6 +363,9 @@ ifeq "$(OS)" "wasm"
   HAVE_X11=no
   HAVE_OBJCOPY=no
   HAVE_LIBCRYPTO=no
+  CFLAGS += -mno-nontrapping-fptoint
+  CFLAGS += -fwasm-exceptions
+  CFLAGS += -sSUPPORT_LONGJMP=wasm
 endif
 
 ifeq "$(OS)" "wasm-mt"
@@ -354,6 +377,9 @@ ifeq "$(OS)" "wasm-mt"
   HAVE_X11=no
   HAVE_OBJCOPY=no
   HAVE_LIBCRYPTO=no
+  CFLAGS += -mno-nontrapping-fptoint
+  CFLAGS += -fwasm-exceptions
+  CFLAGS += -sSUPPORT_LONGJMP=wasm
   CFLAGS += -pthread
 endif
 

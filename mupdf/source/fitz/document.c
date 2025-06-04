@@ -311,7 +311,7 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 				magic_score = dc->handler[i]->recognize(ctx, dc->handler[i], magic);
 
 			for (entry = &dc->handler[i]->mimetypes[0]; *entry; entry++)
-				if (!fz_strcasecmp(magic, *entry) && score < 100)
+				if (!fz_strcasecmp(magic, *entry))
 				{
 					magic_score = 100;
 					break;
@@ -320,7 +320,7 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 			if (ext)
 			{
 				for (entry = &dc->handler[i]->extensions[0]; *entry; entry++)
-					if (!fz_strcasecmp(ext, *entry) && score < 100)
+					if (!fz_strcasecmp(ext, *entry))
 					{
 						magic_score = 100;
 						break;
@@ -328,9 +328,10 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 			}
 
 			/* If we recognized the format (at least partially), and the magic_score matches, then that's
-			 * definitely the one we want to use. */
+			 * definitely the one we want to use. Use 100 + score here, to allow for having multiple
+			 * handlers that support a given magic, where one agent is better than the other. */
 			if (score > 0 && magic_score > 0)
-				score = 1000;
+				score = 100 + score;
 			/* Otherwise, if we didn't recognize the format, we'll weakly believe in the magic, but
 			 * we won't let it override anything that actually will cope. */
 			else if (magic_score > 0)

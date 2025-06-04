@@ -398,7 +398,7 @@ pdf_write_line_cap_appearance(fz_context *ctx, fz_buffer *buf, fz_rect *rect,
 		fz_append_printf(ctx, buf, "%g %g l\n", b.x, b.y);
 		maybe_stroke(ctx, buf, sc);
 		*rect = fz_include_point_in_rect(*rect, a);
-		*rect = fz_include_point_in_rect(*rect, a);
+		*rect = fz_include_point_in_rect(*rect, b);
 		*rect = fz_expand_rect(*rect, w);
 	}
 	else if (cap == PDF_NAME(ROpenArrow))

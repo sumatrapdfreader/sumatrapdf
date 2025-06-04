@@ -43,8 +43,13 @@ static int usage(void)
 		"Content stream special commands:\n"
 		"\t%%%%MediaBox LLX LLY URX URY\n"
 		"\t%%%%Rotate Angle\n"
-		"\t%%%%Font Name Filename (or base 14 font name)\n"
-		"\t%%%%CJKFont Name Language WMode Style (Language=zh-Hant|zh-Hans|ja|ko, WMode=H|V, Style=serif|sans)\n"
+		"\t%%%%Font Name Filename Encoding\n"
+		"\t\tFilename is either a file or a base 14 font name\n"
+		"\t\tEncoding=Latin|Greek|Cyrillic\n"
+		"\t%%%%CJKFont Name Language WMode Style\n"
+		"\t\tLanguage=zh-Hant|zh-Hans|ja|ko\n"
+		"\t\tWMode=H|V\n"
+		"\t\tStyle=serif|sans)\n"
 		"\t%%%%Image Name Filename\n\n"
 		);
 	fputs(fz_pdf_write_options_usage, stderr);
@@ -260,7 +265,7 @@ int pdfcreate_main(int argc, char **argv)
 	{
 		switch (c)
 		{
-		case 'o': output = fz_optarg; break;
+		case 'o': output = fz_optpath(fz_optarg); break;
 		case 'O': flags = fz_optarg; break;
 		default: return usage();
 		}

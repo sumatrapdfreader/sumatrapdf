@@ -27,6 +27,8 @@
 
 #include "mupdf/fitz.h"
 
+#if FZ_ENABLE_HTML_ENGINE
+
 #include "hb.h"
 
 #include <assert.h>
@@ -186,3 +188,5 @@ void fz_hb_free(void *ptr)
 
 	fz_free(ctx, ptr);
 }
+
+#endif

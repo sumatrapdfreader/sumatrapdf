@@ -1163,6 +1163,7 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 				process_rootfile(ctx, archive, file, &info);
 				pos = fz_xml_find_next_dfs(pos, "rootfile", "media-type", "application/hwpml-package+xml");
 			}
+			fz_close_output(ctx, info.out);
 			break;
 		}
 

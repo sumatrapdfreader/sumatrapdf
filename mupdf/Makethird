@@ -121,6 +121,7 @@ endif
 
 # --- GUMBO (HTML5 parser) ---
 
+ifeq ($(USE_GUMBO),yes)
 ifeq ($(USE_SYSTEM_GUMBO),yes)
   THIRD_CFLAGS += $(SYS_GUMBO_CFLAGS)
   THIRD_LIBS += $(SYS_GUMBO_LIBS)
@@ -131,9 +132,11 @@ else
 $(OUT)/thirdparty/gumbo-parser/%.o: thirdparty/gumbo-parser/%.c
 	$(CC_CMD) $(LIB_CFLAGS) $(GUMBO_CFLAGS) $(GUMBO_BUILD_CFLAGS)
 endif
+endif
 
 # --- HARFBUZZ ---
 
+ifeq ($(USE_HARFBUZZ),yes)
 ifeq ($(USE_SYSTEM_HARFBUZZ),yes)
   THIRD_CFLAGS += $(SYS_HARFBUZZ_CFLAGS)
   THIRD_LIBS += $(SYS_HARFBUZZ_LIBS)
@@ -143,6 +146,7 @@ else
   THIRD_SRC += $(HARFBUZZ_SRC)
 $(OUT)/thirdparty/harfbuzz/%.o: thirdparty/harfbuzz/%.cc
 	$(CXX_CMD) $(LIB_CFLAGS) $(HARFBUZZ_CFLAGS) $(HARFBUZZ_BUILD_CFLAGS)
+endif
 endif
 
 # --- JPEG-XR ---
@@ -328,6 +332,8 @@ endif
 
 # --- EXTRACT ---
 
+ifeq ($(USE_EXTRACT),yes)
+
 THIRD_CFLAGS += $(EXTRACT_CFLAGS)
 THIRD_LIBS += $(EXTRACT_LIBS)
 THIRD_SRC += $(EXTRACT_SRC)
@@ -358,6 +364,8 @@ thirdparty/extract/src/odt_template.c: thirdparty/extract/src/template.odt third
 	@touch $@
 
 generate: thirdparty/extract/src/docx_template.c
+
+endif
 
 # --- LIBARCHIVE ---
 

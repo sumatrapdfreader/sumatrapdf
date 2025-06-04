@@ -1,0 +1,37 @@
+{
+	"name": "mupdf",
+	"version": "1.26.2",
+	"description": "MuPDF.js",
+	"author": "Artifex Software, Inc.",
+	"license": "AGPL-3.0-or-later",
+	"keywords": [
+		"mupdf",
+		"pdf"
+	],
+	"homepage": "https://mupdf.readthedocs.io/en/latest/",
+	"repository": {
+		"type": "git",
+		"url": "https://cgit.ghostscript.com/mupdf.git/"
+	},
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/mupdf.d.ts",
+			"default": "./dist/mupdf.js"
+		}
+	},
+	"files": [
+		"dist/*"
+	],
+	"scripts": {
+		"prepack": "bash tools/build.sh && bash tools/compress.sh",
+		"simple-viewer": "npx http-server -c -1 -b -o examples/simple-viewer",
+		"super-simple-viewer": "npx http-server -c -1 -b -o examples/super-simple-viewer"
+	},
+	"devDependencies": {
+		"@types/node": "latest",
+		"http-server": "latest",
+		"terser": "^5.39.2",
+		"typescript": "^5.8.3"
+	}
+}

@@ -915,13 +915,8 @@ fz_stext_page *pdf_new_stext_page_from_annot(fz_context *ctx, pdf_annot *annot, 
 fz_layout_block *pdf_layout_text_widget(fz_context *ctx, pdf_annot *annot);
 
 /*
-	Historical alias for pdf_filespec_params;
-*/
-typedef struct pdf_filespec_params pdf_embedded_file_params;
-
-/*
 	Parameters for and embedded file. Obtained through
-	pdf_get_embedded_file_params(). The creation and
+	pdf_get_filespec_params(). The creation and
 	modification date fields are < 0 if unknown.
 */
 typedef struct pdf_filespec_params {
@@ -939,7 +934,7 @@ int pdf_is_filespec(fz_context *ctx, pdf_obj *fs);
 
 /*
 	Check if pdf object is a file specification where the data
-	is embedded within the file.
+	is embedded within the PDF file.
 */
 int pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs);
 
@@ -957,11 +952,6 @@ pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *f
 	creation and modification dates and MIME type.
 */
 void pdf_get_filespec_params(fz_context *ctx, pdf_obj *fs, pdf_filespec_params *out);
-
-/*
-	Historical alias for pdf_get_filespec_params.
-*/
-void pdf_get_embedded_file_params(fz_context *ctx, pdf_obj *fs, pdf_embedded_file_params *out);
 
 /*
 	Load embedded file contents in a buffer which

@@ -1357,7 +1357,7 @@ FUN(PDFObject_equals)(JNIEnv *env, jobject self, jobject jother)
 }
 
 JNIEXPORT jboolean JNICALL
-FUN(PDFObject_isFileSpec)(JNIEnv *env, jobject self)
+FUN(PDFObject_isFilespec)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_obj *obj = from_PDFObject_safe(env, self);

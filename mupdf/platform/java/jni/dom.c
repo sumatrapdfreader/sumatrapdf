@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -169,6 +169,45 @@ FUN(DOM_previous)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
+FUN(DOM_addAttribute)(JNIEnv *env, jobject self, jstring jatt, jstring jval)
+{
+	fz_context *ctx = get_context(env);
+	fz_xml *me = from_DOM_safe(env, self);
+	const char *att = NULL;
+	const char *val = NULL;
+
+	if (jatt)
+	{
+		att = (*env)->GetStringUTFChars(env, jatt, NULL);
+		if (!att) jni_throw_run(env, "cannot get characters in attribute name");
+	}
+	if (jval)
+	{
+		val = (*env)->GetStringUTFChars(env, jval, NULL);
+		if (!val)
+		{
+			if (jatt)
+				(*env)->ReleaseStringUTFChars(env, jatt, att);
+			jni_throw_run(env, "cannot get characters in attribute value");
+		}
+	}
+
+	fz_try(ctx)
+		fz_dom_add_attribute(ctx, me, att, val);
+	fz_always(ctx)
+	{
+		if (jval)
+			(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jatt)
+			(*env)->ReleaseStringUTFChars(env, jatt, att);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return self;
+}
+
+JNIEXPORT jobject JNICALL
 FUN(DOM_removeAttribute)(JNIEnv *env, jobject self, jstring jatt)
 {
 	fz_context *ctx = get_context(env);
@@ -285,26 +324,41 @@ FUN(DOM_find)(JNIEnv *env, jobject self, jstring jtag, jstring jatt, jstring jva
 	if (jtag)
 	{
 		tag = (*env)->GetStringUTFChars(env, jtag, NULL);
-		if (!tag) jni_throw_run(env, "cannot get characters in attribute name");
+		if (!tag) jni_throw_run(env, "cannot get characters in tag");
 	}
 	if (jatt)
 	{
 		att = (*env)->GetStringUTFChars(env, jatt, NULL);
-		if (!att) jni_throw_run(env, "cannot get characters in attribute name");
+		if (!att)
+		{
+			if (jtag)
+				(*env)->ReleaseStringUTFChars(env, jtag, tag);
+			jni_throw_run(env, "cannot get characters in attribute name");
+		}
 	}
 	if (jval)
 	{
 		val = (*env)->GetStringUTFChars(env, jval, NULL);
-		if (!val) jni_throw_run(env, "cannot get characters in attribute name");
+		if (!val)
+		{
+			if (jatt)
+				(*env)->ReleaseStringUTFChars(env, jatt, att);
+			if (jtag)
+				(*env)->ReleaseStringUTFChars(env, jtag, tag);
+			jni_throw_run(env, "cannot get characters in attribute value");
+		}
 	}
 
 	fz_try(ctx)
 		xml = fz_dom_find(ctx, me, tag, att, val);
 	fz_always(ctx)
 	{
-		(*env)->ReleaseStringUTFChars(env, jtag, tag);
-		(*env)->ReleaseStringUTFChars(env, jatt, att);
-		(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jval)
+			(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jatt)
+			(*env)->ReleaseStringUTFChars(env, jatt, att);
+		if (jtag)
+			(*env)->ReleaseStringUTFChars(env, jtag, tag);
 	}
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
@@ -325,26 +379,41 @@ FUN(DOM_findNext)(JNIEnv *env, jobject self, jstring jtag, jstring jatt, jstring
 	if (jtag)
 	{
 		tag = (*env)->GetStringUTFChars(env, jtag, NULL);
-		if (!tag) jni_throw_run(env, "cannot get characters in attribute name");
+		if (!tag) jni_throw_run(env, "cannot get characters in tag");
 	}
 	if (jatt)
 	{
 		att = (*env)->GetStringUTFChars(env, jatt, NULL);
-		if (!att) jni_throw_run(env, "cannot get characters in attribute name");
+		if (!att)
+		{
+			if (jtag)
+				(*env)->ReleaseStringUTFChars(env, jtag, tag);
+			jni_throw_run(env, "cannot get characters in attribute name");
+		}
 	}
 	if (jval)
 	{
 		val = (*env)->GetStringUTFChars(env, jval, NULL);
-		if (!val) jni_throw_run(env, "cannot get characters in attribute name");
+		if (!val)
+		{
+			if (jatt)
+				(*env)->ReleaseStringUTFChars(env, jatt, att);
+			if (jtag)
+				(*env)->ReleaseStringUTFChars(env, jtag, tag);
+			jni_throw_run(env, "cannot get characters in attribute value");
+		}
 	}
 
 	fz_try(ctx)
 		xml = fz_dom_find_next(ctx, me, tag, att, val);
 	fz_always(ctx)
 	{
-		(*env)->ReleaseStringUTFChars(env, jtag, tag);
-		(*env)->ReleaseStringUTFChars(env, jatt, att);
-		(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jval)
+			(*env)->ReleaseStringUTFChars(env, jval, val);
+		if (jatt)
+			(*env)->ReleaseStringUTFChars(env, jatt, att);
+		if (jtag)
+			(*env)->ReleaseStringUTFChars(env, jtag, tag);
 	}
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);

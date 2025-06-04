@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -49,7 +49,7 @@ int pdfrecolor_main(int argc, char **argv)
 	pdf_recolor_options ropts = { 0 };
 	int n, i, c;
 	char *infile = NULL;
-	char *outputfile = NULL;
+	char *outputfile = "out.pdf";
 	int code = EXIT_SUCCESS;
 	const char *colorspace = NULL;
 	int remove_oi = 0;
@@ -62,7 +62,7 @@ int pdfrecolor_main(int argc, char **argv)
 
 		// color convert
 		case 'c': colorspace = fz_optarg; break;
-		case 'o': outputfile = fz_optarg; break;
+		case 'o': outputfile = fz_optpath(fz_optarg); break;
 		case 'r': remove_oi = 1; break;
 		}
 	}

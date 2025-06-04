@@ -2,29 +2,19 @@
 
 LIBRARY libmupdf
 EXPORTS
-	pdf_annot_filespec
-	pdf_load_embedded_file_contents
-	pdf_get_embedded_file_params
+	fz_set_user_css
+	fz_set_use_document_css
 	fz_urldecode
-	fz_new_odt_writer
-	fz_new_odt_writer_with_output
-	fz_new_docx_writer
-	fz_new_docx_writer_with_output
-	pdf_string_from_annot_type
-	fz_page_number_from_location
-	fz_lookup_metadata
-	pdf_drop_annot
 	fz_open_document_with_stream
 	fz_authenticate_password
-	fz_set_use_document_css
-	fz_count_chapter_pages
-	fz_run_page_annots
-	fz_string_from_buffer
-	fz_open_document
-	fz_drop_separations
-	fz_set_user_css
-	fz_clone_pixmap_area_with_different_seps
 	fz_layout_document
+	fz_page_number_from_location
+	fz_lookup_metadata
+	pdf_get_filespec_params
+	pdf_load_embedded_file_contents
+	pdf_annot_filespec
+	pdf_drop_annot
+
 	fz_run_page_widgets
 	fz_register_document_handlers
 	fz_count_chapters

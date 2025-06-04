@@ -305,7 +305,7 @@ int pdfsign_main(int argc, char **argv)
 		switch (c)
 		{
 		case 'c': list = 0; clear = 1; break;
-		case 'o': outfile = fz_optarg; break;
+		case 'o': outfile = fz_optpath(fz_optarg); break;
 		case 'p': password = fz_optarg; break;
 		case 'P': certificatepassword = fz_optarg; break;
 		case 's': list = 0; sign = 1; certificatefile = fz_optarg; break;

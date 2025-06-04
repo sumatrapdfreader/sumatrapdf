@@ -210,3 +210,17 @@ fz_opt_from_list(char *opt, const char *optlist)
 	fprintf(stderr, "Unrecognised option argument: %s\n", opt);
 	return -1;
 }
+
+char *
+fz_optpath(char *opt)
+{
+	if (!strcmp(opt, "-"))
+		return "/dev/stdout";
+#ifdef _WIN32
+	if (!fz_strcasecmp(opt, "con"))
+		return "/dev/stdout";
+	if (!fz_strcasecmp(opt, "nul"))
+		return "/dev/null";
+#endif
+	return opt;
+}

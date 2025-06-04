@@ -105,7 +105,7 @@ int mubar_create(int argc, char **argv)
 			break;
 		case 'c': break;
 		case 'e': ec_level = fz_atoi(fz_optarg); break;
-		case 'o': output = fz_optarg; break;
+		case 'o': output = fz_optpath(fz_optarg); break;
 		case 'q': quiet = 1; break;
 		case 's': size = fz_atoi(fz_optarg); break;
 		case 't': hrt = 1; break;

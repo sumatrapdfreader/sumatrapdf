@@ -660,20 +660,20 @@ FUN(Pixmap_detectDocument)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_pixmap *pixmap = from_Pixmap(env, self);
-	fz_point points[4];
-	int found;
+	fz_quad points = { 0 };
+	int found = 0;
 
 	if (!ctx || !pixmap) return NULL;
 
 	fz_try(ctx)
-		found = fz_detect_document(ctx, &points[0], pixmap);
+		found = fz_detect_document(ctx, &points, pixmap);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
 	if (!found)
 		return NULL;
 
-	return to_floatArray(ctx, env, (float *)&points[0], 8);
+	return to_Quad_safe(ctx, env, points);
 }
 
 JNIEXPORT jobject JNICALL
@@ -681,23 +681,11 @@ FUN(Pixmap_warp)(JNIEnv *env, jobject self, jobject jpoints, jint width, jint he
 {
 	fz_context *ctx = get_context(env);
 	fz_pixmap *pixmap = from_Pixmap(env, self);
-	jobject jpoint;
-	fz_point points[4] = { 0 };
+	fz_quad points = from_Quad(env, jpoints);
 	fz_pixmap *dest = NULL;
-	jsize n, i;
 
 	if (!ctx || !pixmap) return NULL;
 	if (!jpoints) jni_throw_arg(env, "points not be null");
-
-	n = (*env)->GetArrayLength(env, jpoints);
-	if (n != 4) jni_throw_arg(env, "points must have exactly eight elements");
-
-	for (i = 0; i < n; i++)
-	{
-		jpoint = (*env)->GetObjectArrayElement(env, jpoints, i);
-		points[i].x = (*env)->GetFloatField(env, jpoint, fid_Point_x);
-		points[i].y = (*env)->GetFloatField(env, jpoint, fid_Point_y);
-	}
 
 	fz_try(ctx)
 		dest = fz_warp_pixmap(ctx, pixmap, points, width, height);
@@ -712,23 +700,11 @@ FUN(Pixmap_autowarp)(JNIEnv *env, jobject self, jobject jpoints)
 {
 	fz_context *ctx = get_context(env);
 	fz_pixmap *pixmap = from_Pixmap(env, self);
-	jobject jpoint;
-	fz_point points[4] = { 0 };
+	fz_quad points = from_Quad(env, jpoints);
 	fz_pixmap *dest = NULL;
-	jsize n, i;
 
 	if (!ctx || !pixmap) return NULL;
 	if (!jpoints) jni_throw_arg(env, "points not be null");
-
-	n = (*env)->GetArrayLength(env, jpoints);
-	if (n != 4) jni_throw_arg(env, "points must have exactly eight elements");
-
-	for (i = 0; i < n; i++)
-	{
-		jpoint = (*env)->GetObjectArrayElement(env, jpoints, i);
-		points[i].x = (*env)->GetFloatField(env, jpoint, fid_Point_x);
-		points[i].y = (*env)->GetFloatField(env, jpoint, fid_Point_y);
-	}
 
 	fz_try(ctx)
 		dest = fz_autowarp_pixmap(ctx, pixmap, points);

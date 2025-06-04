@@ -265,7 +265,7 @@ int pdfclean_main(int argc, char **argv)
 	if (argc - fz_optind > 0 &&
 		(strstr(argv[fz_optind], ".pdf") || strstr(argv[fz_optind], ".PDF")))
 	{
-		outfile = argv[fz_optind++];
+		outfile = fz_optpath(argv[fz_optind++]);
 	}
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);

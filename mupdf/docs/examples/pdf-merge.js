@@ -1,5 +1,7 @@
 // A re-implementation of "mutool merge" in JavaScript.
 
+import * as mupdf from "mupdf"
+
 function copyPage(dstDoc, srcDoc, pageNumber, dstFromSrc) {
 	var srcPage, dstPage
 	srcPage = srcDoc.findPage(pageNumber)
@@ -22,15 +24,15 @@ function copyAllPages(dstDoc, srcDoc) {
 function pdfmerge() {
 	var srcDoc, dstDoc, i
 
-	dstDoc = new PDFDocument()
-	for (i = 1; i < scriptArgs.length; ++i) {
-		srcDoc = Document.openDocument(scriptArgs[i])
+	dstDoc = new mupdf.PDFDocument()
+	for (i = 3; i < process.argv.length; ++i) {
+		srcDoc = mupdf.Document.openDocument(process.argv[i])
 		copyAllPages(dstDoc, srcDoc)
 	}
-	dstDoc.save(scriptArgs[0], "compress")
+	dstDoc.save(process.argv[2], "compress")
 }
 
-if (scriptArgs.length < 2)
+if (process.argv.length < 4)
 	print("usage: mutool run pdf-merge.js output.pdf input1.pdf input2.pdf ...")
 else
 	pdfmerge()

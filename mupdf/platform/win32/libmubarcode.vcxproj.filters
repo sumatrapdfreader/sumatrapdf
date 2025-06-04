@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\mubarcode\mubar.cpp">
+    <ClCompile Include="..\..\source\fitz\barcode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="135.229mm"
+   height="147.799mm"
+   viewBox="0 0 135.229 147.79899"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="line-caps.svg"
+   inkscape:export-xdpi="123.913"
+   inkscape:export-ydpi="123.913"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     showgrid="false" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g2401">
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="M 3.761596,44.504937 36.087974,7.589638 68.413339,44.504937"
+         id="path1193"
+         sodipodi:nodetypes="ccc" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+         d="m 3.761974,44.505347 32.326,-36.916 32.325,36.916"
+         id="path1193-2-9"
+         sodipodi:nodetypes="ccc" />
+      <ellipse
+         style="fill:#ededed;fill-opacity:1;stroke:#f2f2f2;stroke-width:0.216431;stroke-linecap:square;stroke-miterlimit:6.4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+         id="path1427"
+         ry="0.89178455"
+         rx="0.89178795"
+         cy="7.5893459"
+         cx="36.087978" />
+      <g
+         id="g2373">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+           d="M 3.761596,94.504937 36.087974,57.589638 68.413339,94.504937"
+           id="path1193-7"
+           sodipodi:nodetypes="ccc" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+           d="m 3.761974,94.505347 32.326,-36.916 32.325,36.916"
+           id="path1193-2-9-8"
+           sodipodi:nodetypes="ccc" />
+        <ellipse
+           style="fill:#ededed;fill-opacity:1;stroke:#f2f2f2;stroke-width:0.216431;stroke-linecap:square;stroke-miterlimit:6.4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           id="path1427-4"
+           ry="0.89178455"
+           rx="0.89178795"
+           cy="57.589348"
+           cx="36.087978" />
+      </g>
+      <g
+         id="g2368">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:bevel;stroke-dasharray:none;stroke-opacity:1"
+           d="m 3.761596,144.50494 32.326378,-36.9153 32.325365,36.9153"
+           id="path1193-0"
+           sodipodi:nodetypes="ccc" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+           d="m 3.761974,144.50535 32.326,-36.916 32.325,36.916"
+           id="path1193-2-9-3"
+           sodipodi:nodetypes="ccc" />
+        <ellipse
+           style="fill:#ededed;fill-opacity:1;stroke:#f2f2f2;stroke-width:0.216431;stroke-linecap:square;stroke-miterlimit:6.4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           id="path1427-6"
+           ry="0.89178455"
+           rx="0.89178795"
+           cy="107.58935"
+           cx="36.087978" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:55.1603px;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         x="80.193924"
+         y="17.667021"
+         id="text2380"><tspan
+           sodipodi:role="line"
+           id="tspan2378"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:'Droid Serif';-inkscape-font-specification:'Droid Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583px"
+           x="80.193924"
+           y="17.667021">Miter join</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:'Droid Serif';-inkscape-font-specification:'Droid Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583px"
+           x="80.193924"
+           y="73.067261"
+           id="tspan2382">Round join</tspan><tspan
+           sodipodi:role="line"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.5833px;font-family:'Droid Serif';-inkscape-font-specification:'Droid Serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583px"
+           x="80.193924"
+           y="128.4675"
+           id="tspan2384">Bevel join</tspan></text>
+    </g>
+  </g>
+</svg>

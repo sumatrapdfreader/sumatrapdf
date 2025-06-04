@@ -151,7 +151,7 @@ int muconvert_main(int argc, char **argv)
 		case 'U': layout_css = fz_optarg; break;
 		case 'X': layout_use_doc_css = 0; break;
 
-		case 'o': output = fz_optarg; break;
+		case 'o': output = fz_optpath(fz_optarg); break;
 		case 'F': format = fz_optarg; break;
 		case 'O': options = fz_optarg; break;
 

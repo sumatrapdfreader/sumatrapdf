@@ -1837,6 +1837,12 @@ fz_advance_ft_glyph_aux(fz_context *ctx, fz_font *font, int gid, int wmode, int 
 	FT_Fixed adv = 0;
 	int mask;
 
+	if (gid < 0)
+	{
+		fz_warn(ctx, "FT_Get_Advance(%s,%d): %s", font->name, gid, ft_error_string(FT_Err_Invalid_Argument));
+		return font->width_default / 1000.0f;
+	}
+
 	/* PDF and substitute font widths. */
 	if (font->flags.ft_stretch)
 	{

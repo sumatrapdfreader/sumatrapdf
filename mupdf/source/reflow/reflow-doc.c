@@ -22,6 +22,8 @@
 
 #include "mupdf/fitz.h"
 
+#if FZ_ENABLE_HTML_ENGINE
+
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
@@ -269,3 +271,13 @@ fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext
 
 	return &doc->base;
 }
+
+#else
+
+fz_document *
+fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext_options *opts)
+{
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "reflowed documents require html engine");
+}
+
+#endif

@@ -166,9 +166,6 @@ static int strip_outline(fz_context *ctx, pdf_document *doc, pdf_obj *outlines, 
 	pdf_obj *current;
 	int count = 0;
 
-	if (pdf_mark_bits_set(ctx, marks, outlines))
-		fz_throw(ctx, FZ_ERROR_FORMAT, "Cycle detected in outlines");
-
 	for (current = outlines; current != NULL; )
 	{
 		int nc;

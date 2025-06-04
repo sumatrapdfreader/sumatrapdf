@@ -1,10 +1,12 @@
+import * as mupdf from "mupdf"
+
 // Create a PDF from scratch.
 
 // This example creates a new PDF file from scratch, using only the low level APIs.
 // This assumes a basic working knowledge of the PDF file format.
 
 // Create a new empty document with no pages.
-var pdf = new PDFDocument()
+var pdf = new mupdf.PDFDocument()
 
 // Create and add a font resource.
 var font = pdf.addObject({

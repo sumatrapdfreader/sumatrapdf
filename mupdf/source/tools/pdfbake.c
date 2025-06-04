@@ -77,7 +77,7 @@ int pdfbake_main(int argc, char **argv)
 
 	input = argv[fz_optind++];
 	if (argc - fz_optind > 0)
-		output = argv[fz_optind++];
+		output = fz_optpath(argv[fz_optind++]);
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
 	if (!ctx)

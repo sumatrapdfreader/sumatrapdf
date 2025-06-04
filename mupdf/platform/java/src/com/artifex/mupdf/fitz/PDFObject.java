@@ -327,5 +327,5 @@ public class PDFObject implements Iterable<PDFObject>
 		}
 	}
 
-	public native boolean isFileSpec();
+	public native boolean isFilespec();
 }

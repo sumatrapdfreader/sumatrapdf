@@ -173,9 +173,15 @@ THIRD_GLUT_OBJ := $(THIRD_GLUT_SRC:%.c=$(OUT)/%.o)
 MUPDF_SRC := $(sort $(wildcard source/fitz/*.c))
 MUPDF_SRC += $(sort $(wildcard source/fitz/*.cpp))
 MUPDF_SRC += $(sort $(wildcard source/pdf/*.c))
+ifneq ($(xps),no)
 MUPDF_SRC += $(sort $(wildcard source/xps/*.c))
+endif
+ifneq ($(svg),no)
 MUPDF_SRC += $(sort $(wildcard source/svg/*.c))
+endif
+ifneq ($(html),no)
 MUPDF_SRC += $(sort $(wildcard source/html/*.c))
+endif
 MUPDF_SRC += $(sort $(wildcard source/reflow/*.c))
 MUPDF_SRC += $(sort $(wildcard source/cbz/*.c))
 
@@ -292,7 +298,7 @@ generate: source/html/css-properties.h
 
 ifeq ($(shared),yes)
   $(OUT)/libmupdf.$(SO)$(SO_VERSION): $(MUPDF_OBJ) $(THIRD_OBJ)
-	$(LINK_SO_CMD) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
+	$(LINK_SO_CMD) $(THIRD_LIBS) $(LIBCRYPTO_LIBS) $(LIBS)
   ifeq ($(OS),OpenBSD)
     # should never create symlink
     MUPDF_LIB = $(OUT)/libmupdf.$(SO)$(SO_VERSION)
@@ -463,6 +469,10 @@ else
 	install -m 644 $(THIRD_LIB) $(DESTDIR)$(libdir)
 endif
 
+install-tools: tools
+	install -d $(DESTDIR)$(bindir)
+	install -m 755 $(TOOL_APPS) $(DESTDIR)$(bindir)
+
 install-apps: apps
 	install -d $(DESTDIR)$(bindir)
 	install -m 755 $(TOOL_APPS) $(VIEW_APPS) $(DESTDIR)$(bindir)
@@ -483,29 +493,22 @@ install-docs:
 install: install-libs install-apps install-docs
 
 docs:
-	python3 scripts/build-docs.py
+	bash scripts/build-docs.sh
+
+docs-live:
+	bash scripts/build-docs-live.sh
+
+docs-markdown:
+	bash scripts/build-docs-markdown.sh
 
 docs-clean:
-	rm -rf build/docs/html
-	rm -rf build/docs/doctree
+	rm -rf build/docs
+	rm -rf build/venv-docs
+	rm -rf build/.doctrees
 
 install-docs-html: docs
-	install -d $(DESTDIR)$(docdir)
-	install -d $(DESTDIR)$(docdir)/_images
-	install -d $(DESTDIR)$(docdir)/_static
-	install -d $(DESTDIR)$(docdir)/_static/styles
-	install -d $(DESTDIR)$(docdir)/_static/scripts
-	install -m 644 build/docs/html/*.html $(DESTDIR)$(docdir)
-	install -m 644 build/docs/html/*.inv $(DESTDIR)$(docdir)
-	install -m 644 build/docs/html/*.js $(DESTDIR)$(docdir)
-	install -m 644 build/docs/html/_images/* $(DESTDIR)$(docdir)/_images
-	install -m 644 build/docs/html/_static/*.ico $(DESTDIR)$(docdir)/_static
-	install -m 644 build/docs/html/_static/*.js $(DESTDIR)$(docdir)/_static
-	install -m 644 build/docs/html/_static/*.png $(DESTDIR)$(docdir)/_static
-	install -m 644 build/docs/html/_static/*.css $(DESTDIR)$(docdir)/_static
-	install -m 644 build/docs/html/_static/scripts/*.js $(DESTDIR)$(docdir)/_static/scripts
-	install -m 644 build/docs/html/_static/scripts/*.map $(DESTDIR)$(docdir)/_static/scripts
-	install -m 644 build/docs/html/_static/styles/*.css $(DESTDIR)$(docdir)/_static/styles
+	mkdir -p $(DESTDIR)$(docdir)
+	cp -r build/docs/* $(DESTDIR)$(docdir)
 
 tarball:
 	bash scripts/archive.sh
@@ -524,6 +527,12 @@ java:
 
 java-clean:
 	$(MAKE) -C platform/java build=$(build) clean
+
+wasm:
+	$(MAKE) -C platform/wasm
+
+wasm-clean:
+	$(MAKE) -C platform/wasm clean
 
 extract-test:
 	$(MAKE) debug

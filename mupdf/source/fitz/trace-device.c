@@ -570,7 +570,9 @@ fz_trace_begin_structure(fz_context *ctx, fz_device *dev_, fz_structure standard
 	const char *str = fz_structure_to_string(standard);
 	fz_trace_indent(ctx, out, dev->depth);
 	fz_write_printf(ctx, out, "<structure standard=\"%s\"", str);
-	if (raw && strcmp(str, raw))
+	if (raw == NULL)
+		raw = "";
+	if (strcmp(str, raw))
 		fz_write_printf(ctx, out, " raw=\"%s\"", raw);
 	if (idx != 0)
 		fz_write_printf(ctx, out, " idx=\"%d\"", idx);

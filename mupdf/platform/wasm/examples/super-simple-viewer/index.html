@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<title>MuPDF Simplest Demo</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+<style>
+body { background-color: gainsboro; text-align: center; }
+img { margin: 12px; box-shadow: 1px 1px 4px #0008; }
+</style>
+
+<script type="module">
+
+"use strict"
+
+import * as mupdf from "../../dist/mupdf.js"
+
+window.openFile = async function openFile(file) {
+	console.log("OPEN DOCUMENT", file.name)
+
+	window.pageRoot.replaceChildren()
+
+	let pdf = mupdf.Document.openDocument(await file.arrayBuffer(), file.name)
+
+	document.title = pdf.getMetaData(mupdf.Document.META_INFO_TITLE) || file.name
+
+	// Fire off page renders on a timer to avoid blocking the browser.
+	let n = pdf.countPages()
+	for (let i = 0; i < n; ++i)
+		setTimeout(() => renderPage(pdf, i), 0)
+}
+
+function renderPage(pdf, i) {
+	console.log("RENDER PAGE", i+1)
+	let z = window.devicePixelRatio * 96 / 72
+	let png = pdf.loadPage(i).toPixmap([z,0,0,z,0,0], mupdf.ColorSpace.DeviceRGB).asPNG()
+	let img = new Image()
+	img.src = URL.createObjectURL(new Blob([png], { type: "image/png" }))
+	img.onload = function () {
+		img.style.width = img.width / window.devicePixelRatio + "px"
+		window.pageRoot.appendChild(img)
+	}
+}
+
+</script>
+
+<body>
+	<input type="file" accept=".pdf,.xps,application/pdf" onchange="openFile(event.target.files[0])">
+	<div id="pageRoot">
+	</div>
+</body>
+
+</html>

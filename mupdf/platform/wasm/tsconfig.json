@@ -1,0 +1,30 @@
+{
+	"compilerOptions": {
+		"target": "es2021",
+		"module": "nodenext",
+		"declaration": true,
+
+		"rootDir": "lib",
+		"outDir": "dist",
+
+		"strict": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictBindCallApply": true,
+		"strictPropertyInitialization": true,
+		"noImplicitThis": true,
+		"useUnknownInCatchVariables": true,
+		"alwaysStrict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"exactOptionalPropertyTypes": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": true
+	},
+	"include": [
+		"lib"
+	]
+}

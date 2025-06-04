@@ -245,8 +245,7 @@ public class PDFDocument extends Document
 	public native int countSignatures();
 
 	public native PDFObject addEmbeddedFile(String filename, String mimetype, Buffer contents, long created, long modified, boolean addChecksum);
-	public native PDFEmbeddedFileParams getEmbeddedFileParams(PDFObject fs);
-	public native PDFFileSpecParams getFileSpecParams(PDFObject fs);
+	public native PDFFilespecParams getFilespecParams(PDFObject fs);
 	public native Buffer loadEmbeddedFileContents(PDFObject fs);
 	public native boolean verifyEmbeddedFileChecksum(PDFObject fs);
 	public native boolean isEmbeddedFile(PDFObject fs);
@@ -259,14 +258,14 @@ public class PDFDocument extends Document
 		return addEmbeddedFile(filename, mimetype, contents, createdTime, modifiedTime, addChecksum);
 	}
 
-	public static class PDFFileSpecParams {
+	public static class PDFFilespecParams {
 		public final String filename;
 		public final String mimetype;
 		public final int size;
 		public final Date creationDate;
 		public final Date modificationDate;
 
-		protected PDFFileSpecParams(String filename, String mimetype, int size, long created, long modified) {
+		protected PDFFilespecParams(String filename, String mimetype, int size, long created, long modified) {
 			this.filename = filename;
 			this.mimetype = mimetype;
 			this.size = size;
@@ -275,7 +274,7 @@ public class PDFDocument extends Document
 		}
 	}
 
-	public static class PDFEmbeddedFileParams extends PDFFileSpecParams {
+	public static class PDFEmbeddedFileParams extends PDFFilespecParams {
 		protected PDFEmbeddedFileParams(String filename, String mimetype, int size, long created, long modified) {
 			super(filename, mimetype, size, created, modified);
 		}

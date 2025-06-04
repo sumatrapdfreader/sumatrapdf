@@ -198,7 +198,7 @@ int pdftrim_main(int argc, char **argv)
 		default: return usage();
 
 		case 'b': boxname = fz_optarg; break;
-		case 'o': outputfile = fz_optarg; break;
+		case 'o': outputfile = fz_optpath(fz_optarg); break;
 		case 'e': exclude = 1; break;
 		case 'f': fallback = 1; break;
 		case 'm': read_margins(margins, fz_optarg); break;
