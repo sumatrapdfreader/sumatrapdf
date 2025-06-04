@@ -5,7 +5,7 @@ How to prepare a new release
   `FREETYPE_MINOR`, and `FREETYPE_PATCH`.
 
 . Update version numbers in all files where necessary (for example, do
-  a grep for both '2.10.4' and '2104' for release 2.10.4).
+  a grep for both '2.13.2' and '2132' for release 2.13.2).
 
 . builds/unix/configure.raw: Update `version_info`.
 
@@ -15,32 +15,52 @@ How to prepare a new release
 
 . docs/VERSIONS.TXT: Document changed `version_info`.
 
-. Clone the git archive to another directory with
+. Update the 'dlg' submodule with
 
-    git clone -l -s . ../freetype.test
+    git submodule foreach git pull origin master
 
-  or something like this and run
+. Copy the submodule code with
 
-    make distclean; make devel; make
-    make distclean; make devel; make multi
-    make distclean; make devel CC=g++; make CC=g++
-    make distclean; make devel CC=g++; make multi CC=g++
+    make copy_submodule
+
+  and run
+
+    make distclean && make devel && make
+    make distclean && make devel && make multi
+    make distclean && make devel CC=g++ && make CC=g++ ANSIFLAGS=""
+    make distclean && make devel CC=g++ && make multi CC=g++ ANSIFLAGS=""
 
     sh autogen.sh
-    make distclean; ./configure CC=g++; make
+    make distclean && ./configure CC=g++ && make ANSIFLAGS=""
 
-  in the cloned repository to test compilation with both gcc and g++.
+  to test compilation with both gcc and g++ (you might also add the `-j`
+  flag to `make` for parallel compilation).
 
   Note that it is normally not necessary to test standard C
   compilation with the `configure`, `meson`, and `cmake` build tools
-  since this is done by the CI process of 'gitlab.freetype.org' for
+  since this is done by the CI process of 'gitlab.freedesktop.org' for
   every commit.
 
-. Test C++ compilation for 'freetype-demos' too (using `git clone` as
-  above).
+. Test C++ compilation for 'freetype-demos' too; this needs a compiled
+  FreeType library as described in the `README` file.
+
+    make distclean && make
+    make distclean && make CC=g++ ANSIFLAGS=""
 
 . Run `src/tools/chktrcmp.py` and check that there are no undefined
   `trace_XXXX` macros.
+
+. Update meson subproject files (for both the 'freetype' and
+  'freetype-demos' git repositories) with
+
+    meson subprojects update
+
+. Test meson compilation (for both the 'freetype' and 'freetype-demos'
+  git repositories) with
+
+    meson setup builddir && meson compile -C builddir
+
+. Commit everything.
 
 . After pushing the new release, tag the git repositories ('freetype',
   'freetype-demos') with
@@ -71,13 +91,14 @@ How to prepare a new release
   zip!
 
 . Run the following script (with updated `$VERSION`, `$SAVANNAH_USER`,
-  and `$SOURCEFORGE_USER` variables) to sign and upload the bundles to
-  both Savannah and SourceForge.  The signing code has been taken from
-  the `gnupload` script (part of the 'automake' bundle).
+  `$SOURCEFORGE_USER`, and `GPG_KEY_ID` variables) to sign and upload
+  the bundles to both Savannah and SourceForge.  The signing code has
+  been taken from the `gnupload` script (part of the 'automake'
+  bundle).
 
     #!/bin/sh
 
-    VERSION=2.12.0
+    VERSION=2.13.2
     SAVANNAH_USER=wl
     SOURCEFORGE_USER=wlemb
     GPG_KEY_ID=BE6C3AAC63AD8E3F
@@ -163,7 +184,7 @@ How to prepare a new release
 
     #!/bin/sh
 
-    VERSION=2.10.4
+    VERSION=2.13.2
     SOURCEFORGE_USER=wlemb
 
     #####################################################################
@@ -190,7 +211,7 @@ How to prepare a new release
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2003-2023 by
+Copyright (C) 2003-2024 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

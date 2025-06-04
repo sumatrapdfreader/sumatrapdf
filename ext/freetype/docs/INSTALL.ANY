@@ -72,9 +72,9 @@ I. Standard procedure
     -- rasterizers (optional; at least one is needed for vector
        formats)
 
+      src/smooth/smooth.c     -- anti-aliasing rasterizer
       src/raster/raster.c     -- monochrome rasterizer
       src/sdf/sdf.c           -- Signed Distance Field driver
-      src/smooth/smooth.c     -- anti-aliasing rasterizer
 
     -- auxiliary modules (optional)
 
@@ -127,7 +127,7 @@ II. Support for flat-directory compilation
   1. Copy all files in current directory
 
       cp freetype/src/base/*.[hc] .
-      cp freetype/src/raster1/*.[hc] .
+      cp freetype/src/raster/*.[hc] .
       cp freetype/src/smooth/*.[hc] .
       etc.
 
@@ -144,7 +144,7 @@ II. Support for flat-directory compilation
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2003-2023 by
+Copyright (C) 2003-2024 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

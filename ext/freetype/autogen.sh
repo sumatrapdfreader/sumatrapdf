@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2005-2023 by
+# Copyright (C) 2005-2024 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -190,8 +190,7 @@ if test -e ".git"; then
     :
   else
     echo "Checking out submodule in \`subprojects/dlg':"
-    git submodule init
-    git submodule update
+    git submodule update --init
   fi
 
   copy_submodule_files

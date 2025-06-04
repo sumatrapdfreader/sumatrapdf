@@ -270,12 +270,12 @@ to access them.
     `FT2_DEBUG' environment  variable.  Use this function  to override
     the value with `level'.  Use value `NULL' to disable tracing.
 
-  FT_Trace_Set_Default_Level():
+  FT_Trace_Set_Default_Level( void )
 
     Reset the tracing levels to the default value, i.e., the value of
     the `FT2_DEBUG' environment variable or no tracing if not set.
 
-  FT_Set_Log_Handler( ft_custom_log_handler  handler ):
+  FT_Set_Log_Handler( ft_custom_log_handler  handler )
 
     Use `handler' as a custom handler for formatting tracing and error
     messages.  The  `ft_custom_log_handler' typedef has  the following
@@ -290,14 +290,14 @@ to access them.
    first argument  of `FT_TRACE' or  `FT_ERROR', and `args'  holds the
    remaining arguments.
 
-  FT_Set_Default_Log_Handler():
+  FT_Set_Default_Log_Handler( void )
 
     Reset the log handler to the default version.
 
 
 ------------------------------------------------------------------------
 
-Copyright (C) 2002-2023 by
+Copyright (C) 2002-2024 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

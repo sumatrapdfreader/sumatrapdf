@@ -59,7 +59,7 @@ II. Normal installation and upgrades
 
       CMake   :: see `CMakeLists.txt` for more information
       Meson   :: see `meson.build` for more information
-      MSBuild :: see `builds/windows/vc2010/freetype.vcxproj`
+      MSBuild :: see `MSBuild.sln` for more information
       MMS     :: see `vms_make.com` and `docs/INSTALL.VMS`
 
 
@@ -101,7 +101,7 @@ III. Custom builds of the library
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2000-2023 by
+Copyright (C) 2000-2024 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

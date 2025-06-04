@@ -56,7 +56,7 @@ typedef unsigned long  ulg;
 #ifndef Z_FREETYPE
 extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* (size given to avoid silly warnings with Visual C++) */
-#endif  /* !Z_FREETYPE */
+#endif
 
 #define ERR_MSG(err) z_errmsg[Z_NEED_DICT-(err)]
 
@@ -195,9 +195,9 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 /* provide prototypes for these when building zlib without LFS */
 #if !defined(_WIN32) && \
     (!defined(_LARGEFILE64_SOURCE) || _LFS64_LARGEFILE-0 == 0)
-    ZEXTERN uLong ZEXPORT adler32_combine64 OF((uLong, uLong, z_off_t));
-    ZEXTERN uLong ZEXPORT crc32_combine64 OF((uLong, uLong, z_off_t));
-    ZEXTERN uLong ZEXPORT crc32_combine_gen64 OF((z_off_t));
+    ZEXTERN uLong ZEXPORT adler32_combine64(uLong, uLong, z_off_t);
+    ZEXTERN uLong ZEXPORT crc32_combine64(uLong, uLong, z_off_t);
+    ZEXTERN uLong ZEXPORT crc32_combine_gen64(z_off_t);
 #endif
 
 #endif  /* !Z_FREETYPE */
@@ -238,16 +238,16 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #    define zmemzero(dest, len) ft_memset(dest, 0, len)
 #  endif
 #else
-   void ZLIB_INTERNAL zmemcpy OF((Bytef* dest, const Bytef* source, uInt len));
-   int ZLIB_INTERNAL zmemcmp OF((const Bytef* s1, const Bytef* s2, uInt len));
-   void ZLIB_INTERNAL zmemzero OF((Bytef* dest, uInt len));
+   void ZLIB_INTERNAL zmemcpy(Bytef* dest, const Bytef* source, uInt len);
+   int ZLIB_INTERNAL zmemcmp(const Bytef* s1, const Bytef* s2, uInt len);
+   void ZLIB_INTERNAL zmemzero(Bytef* dest, uInt len);
 #endif
 
 /* Diagnostic functions */
 #ifdef ZLIB_DEBUG
 #  include <stdio.h>
    extern int ZLIB_INTERNAL z_verbose;
-   extern void ZLIB_INTERNAL z_error OF((char *m));
+   extern void ZLIB_INTERNAL z_error(char *m);
 #  define Assert(cond,msg) {if(!(cond)) z_error(msg);}
 #  define Trace(x) {if (z_verbose>=0) fprintf x ;}
 #  define Tracev(x) {if (z_verbose>0) fprintf x ;}
@@ -264,9 +264,9 @@ extern z_const char * const z_errmsg[10]; /* indexed by 2-zlib_error */
 #endif
 
 #ifndef Z_SOLO
-   voidpf ZLIB_INTERNAL zcalloc OF((voidpf opaque, unsigned items,
-                                    unsigned size));
-   void ZLIB_INTERNAL zcfree  OF((voidpf opaque, voidpf ptr));
+   voidpf ZLIB_INTERNAL zcalloc(voidpf opaque, unsigned items,
+                                unsigned size);
+   void ZLIB_INTERNAL zcfree(voidpf opaque, voidpf ptr);
 #endif
 
 #define ZALLOC(strm, items, size) \

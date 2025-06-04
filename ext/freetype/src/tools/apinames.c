@@ -10,7 +10,7 @@
  * accepted if you are using GCC for compilation (and probably by
  * other compilers too).
  *
- * Author: FreeType team, 2005-2019
+ * Author: FreeType team, 2005-2023
  *
  * This code is explicitly placed into the public domain.
  *
@@ -18,11 +18,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 
+#include "vms_shorten_symbol.c"
+
 #define  PROGRAM_NAME     "apinames"
-#define  PROGRAM_VERSION  "0.4"
+#define  PROGRAM_VERSION  "0.5"
 
 #define  LINEBUFF_SIZE  1024
 
@@ -41,9 +44,20 @@ typedef enum  OutputFormat_
 
 
 static void
-panic( const char*  message )
+panic( const char*  fmt,
+       ... )
 {
-  fprintf( stderr, "PANIC: %s\n", message );
+  va_list  ap;
+
+
+  fprintf( stderr, "PANIC: " );
+
+  va_start( ap, fmt );
+  vfprintf( stderr, fmt, ap );
+  va_end( ap );
+
+  fprintf( stderr, "\n" );
+
   exit(2);
 }
 
@@ -202,12 +216,24 @@ names_dump( FILE*         out,
     break;
 
   case OUTPUT_VMS_OPT:
-    fprintf( out, "GSMATCH=LEQUAL,2,0\n"
-                  "CASE_SENSITIVE=YES\n"
-                  "SYMBOL_VECTOR=(-\n" );
-    for ( nn = 0; nn < num_names - 1; nn++ )
-      fprintf( out, "    %s=PROCEDURE,-\n", the_names[nn].name );
-    fprintf( out, "    %s=PROCEDURE)\n", the_names[num_names - 1].name );
+    fprintf( out, "case_sensitive=YES\n" );
+
+    for ( nn = 0; nn < num_names; nn++ )
+    {
+      char  short_symbol[32];
+
+
+      if ( vms_shorten_symbol( the_names[nn].name, short_symbol, 1 ) == -1 )
+        panic( "could not shorten name '%s'", the_names[nn].name );
+      fprintf( out, "symbol_vector = ( %s = PROCEDURE)\n", short_symbol );
+
+      /* Also emit a 64-bit symbol, as created by the `vms_auto64` tool. */
+      /* It has the string '64__' appended to its name.                  */
+      strcat( the_names[nn].name , "64__" );
+      if ( vms_shorten_symbol( the_names[nn].name, short_symbol, 1 ) == -1 )
+        panic( "could not shorten name '%s'", the_names[nn].name );
+      fprintf( out, "symbol_vector = ( %s = PROCEDURE)\n", short_symbol );
+    }
 
     break;
 
@@ -269,7 +295,7 @@ read_header_file( FILE*  file,
     p = buff;
 
     /* skip leading whitespace */
-    while ( *p && ( *p == ' ' || *p == '\\' ) )
+    while ( *p == ' ' || *p == '\t' )
       p++;
 
     /* skip empty lines */

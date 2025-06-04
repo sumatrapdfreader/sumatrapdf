@@ -1,0 +1,42 @@
+How to update the FreeType web pages
+------------------------------------
+
+The 'freetype.org' website is hosted via the 'freetype-web' repo
+located at
+
+   https://gitlab.com/freetype/freetype-web  ,
+
+which in turn is a mirror from the master 'freetype-web' repository
+located at
+
+  https://gitlab.freedesktop.org/freetype/freetype-web  .
+
+Due to Cloudflare caching, changes take time to appear on
+'freetype.org', so visit
+
+  https://freetype.gitlab.io/freetype-web
+
+for instant feedback.
+
+All the commits should *only* be done to the 'freetype-web' repo at
+
+  https://gitlab.freedesktop.org/freetype/freetype-web
+
+When a commit is done to this repo, the CI pipeline runs and the
+website is deployed via gitlab pages at
+
+  https://freetype.pages.freedesktop.org/freetype-web  .
+
+The pull mirror automatically updates the repository in 'gitlab.com',
+and the CI pipeline deploys the website at:
+
+  https://freetype.gitlab.io/freetype-web
+
+Since the 'freetype.org' website uses Cloudflare caching, it will take
+a while for the changes to show up in 'freetype.org'.
+
+If you have access to the Cloudflare dashboard you can purge the
+cache from there; this will cause the cache to be fetched again
+resulting in the website being updated instantly.
+
+--- end of freetype-web.txt ---

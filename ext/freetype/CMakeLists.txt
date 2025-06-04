@@ -1,6 +1,6 @@
 # CMakeLists.txt
 #
-# Copyright (C) 2013-2023 by
+# Copyright (C) 2013-2024 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # Written originally by John Cary <cary@txcorp.com>
@@ -110,7 +110,7 @@
 
 # To minimize the number of cmake_policy() workarounds,
 # CMake >= 3 is requested.
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0...3.5)
 
 if (NOT CMAKE_VERSION VERSION_LESS 3.3)
   # Allow symbol visibility settings also on static libraries. CMake < 3.3
@@ -164,7 +164,7 @@ project(freetype C)
 
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "13")
-set(VERSION_PATCH "0")
+set(VERSION_PATCH "3")
 
 # Generate LIBRARY_VERSION and LIBRARY_SOVERSION.
 set(LIBTOOL_REGEX "version_info='([0-9]+):([0-9]+):([0-9]+)'")
@@ -265,6 +265,8 @@ if (NOT FT_DISABLE_PNG)
   else ()
     find_package(PNG)
   endif ()
+  # FreePNG calls FindZLIB so unset ZLIB_FOUND to respect FT_DISABLE_ZLIB
+  unset(ZLIB_FOUND)
 endif ()
 
 if (NOT FT_DISABLE_ZLIB)
@@ -297,7 +299,7 @@ if (NOT FT_DISABLE_BROTLI)
 endif ()
 
 # Create the configuration file
-if (UNIX)
+if (UNIX AND NOT WIN32)
   check_include_file("unistd.h" HAVE_UNISTD_H)
   check_include_file("fcntl.h" HAVE_FCNTL_H)
 
@@ -423,10 +425,10 @@ set(BASE_SRCS
   src/winfonts/winfnt.c
 )
 
-if (UNIX)
-  list(APPEND BASE_SRCS "builds/unix/ftsystem.c")
-elseif (WIN32)
+if (WIN32)
   list(APPEND BASE_SRCS "builds/windows/ftsystem.c")
+elseif (UNIX)
+  list(APPEND BASE_SRCS "builds/unix/ftsystem.c")
 else ()
   list(APPEND BASE_SRCS "src/base/ftsystem.c")
 endif ()

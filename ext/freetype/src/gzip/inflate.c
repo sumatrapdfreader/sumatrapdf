@@ -91,22 +91,7 @@
 #  endif
 #endif
 
-/* function prototypes */
-local int inflateStateCheck OF((z_streamp strm));
-local void fixedtables OF((struct inflate_state FAR *state));
-local int updatewindow OF((z_streamp strm, const unsigned char FAR *end,
-                           unsigned copy));
-#ifdef BUILDFIXED
-   void makefixed OF((void));
-#endif
-#ifndef Z_FREETYPE
-local unsigned syncsearch OF((unsigned FAR *have, const unsigned char FAR *buf,
-                              unsigned len));
-#endif
-
-local int inflateStateCheck(
-    z_streamp strm)
-{
+local int inflateStateCheck(z_streamp strm) {
     struct inflate_state FAR *state;
     if (strm == Z_NULL ||
         strm->zalloc == (alloc_func)0 || strm->zfree == (free_func)0)
@@ -118,9 +103,7 @@ local int inflateStateCheck(
     return 0;
 }
 
-int ZEXPORT inflateResetKeep(
-    z_streamp strm)
-{
+int ZEXPORT inflateResetKeep(z_streamp strm) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
@@ -144,9 +127,7 @@ int ZEXPORT inflateResetKeep(
     return Z_OK;
 }
 
-int ZEXPORT inflateReset(
-    z_streamp strm)
-{
+int ZEXPORT inflateReset(z_streamp strm) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
@@ -157,10 +138,7 @@ int ZEXPORT inflateReset(
     return inflateResetKeep(strm);
 }
 
-int ZEXPORT inflateReset2(
-    z_streamp strm,
-    int windowBits)
-{
+int ZEXPORT inflateReset2(z_streamp strm, int windowBits) {
     int wrap;
     struct inflate_state FAR *state;
 
@@ -197,12 +175,8 @@ int ZEXPORT inflateReset2(
     return inflateReset(strm);
 }
 
-int ZEXPORT inflateInit2_(
-    z_streamp strm,
-    int windowBits,
-    const char *version,
-    int stream_size)
-{
+int ZEXPORT inflateInit2_(z_streamp strm, int windowBits,
+                          const char *version, int stream_size) {
     int ret;
     struct inflate_state FAR *state;
 
@@ -243,22 +217,17 @@ int ZEXPORT inflateInit2_(
 
 #ifndef Z_FREETYPE
 
-int ZEXPORT inflateInit_(
-    z_streamp strm,
-    const char *version,
-    int stream_size)
-{
+int ZEXPORT inflateInit_(z_streamp strm, const char *version,
+                         int stream_size) {
     return inflateInit2_(strm, DEF_WBITS, version, stream_size);
 }
 
-int ZEXPORT inflatePrime(
-    z_streamp strm,
-    int bits,
-    int value)
-{
+int ZEXPORT inflatePrime(z_streamp strm, int bits, int value) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
+    if (bits == 0)
+        return Z_OK;
     state = (struct inflate_state FAR *)strm->state;
     if (bits < 0) {
         state->hold = 0;
@@ -284,9 +253,7 @@ int ZEXPORT inflatePrime(
    used for threaded applications, since the rewriting of the tables and virgin
    may not be thread-safe.
  */
-local void fixedtables(
-    struct inflate_state FAR *state)
-{
+local void fixedtables(struct inflate_state FAR *state) {
 #ifdef BUILDFIXED
     static int virgin = 1;
     static code *lenfix, *distfix;
@@ -348,7 +315,7 @@ local void fixedtables(
 
     a.out > inffixed.h
  */
-void makefixed()
+void makefixed(void)
 {
     unsigned low, size;
     struct inflate_state state;
@@ -402,11 +369,7 @@ void makefixed()
    output will fall in the output data, making match copies simpler and faster.
    The advantage may be dependent on the size of the processor's data caches.
  */
-local int updatewindow(
-    z_streamp strm,
-    const Bytef *end,
-    unsigned copy)
-{
+local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy) {
     struct inflate_state FAR *state;
     unsigned dist;
 
@@ -628,10 +591,7 @@ local int updatewindow(
    will return Z_BUF_ERROR if it has not reached the end of the stream.
  */
 
-int ZEXPORT inflate(
-    z_streamp strm,
-    int flush)
-{
+int ZEXPORT inflate(z_streamp strm, int flush) {
     struct inflate_state FAR *state;
     z_const unsigned char FAR *next;    /* next input */
     unsigned char FAR *put;     /* next output */
@@ -1307,9 +1267,7 @@ int ZEXPORT inflate(
     return ret;
 }
 
-int ZEXPORT inflateEnd(
-    z_streamp strm)
-{
+int ZEXPORT inflateEnd(z_streamp strm) {
     struct inflate_state FAR *state;
     if (inflateStateCheck(strm))
         return Z_STREAM_ERROR;
@@ -1323,11 +1281,8 @@ int ZEXPORT inflateEnd(
 
 #ifndef Z_FREETYPE
 
-int ZEXPORT inflateGetDictionary(
-    z_streamp strm,
-    Bytef *dictionary,
-    uInt *dictLength)
-{
+int ZEXPORT inflateGetDictionary(z_streamp strm, Bytef *dictionary,
+                                 uInt *dictLength) {
     struct inflate_state FAR *state;
 
     /* check state */
@@ -1346,11 +1301,8 @@ int ZEXPORT inflateGetDictionary(
     return Z_OK;
 }
 
-int ZEXPORT inflateSetDictionary(
-    z_streamp strm,
-    const Bytef *dictionary,
-    uInt dictLength)
-{
+int ZEXPORT inflateSetDictionary(z_streamp strm, const Bytef *dictionary,
+                                 uInt dictLength) {
     struct inflate_state FAR *state;
     unsigned long dictid;
     int ret;
@@ -1381,10 +1333,7 @@ int ZEXPORT inflateSetDictionary(
     return Z_OK;
 }
 
-int ZEXPORT inflateGetHeader(
-    z_streamp strm,
-    gz_headerp head)
-{
+int ZEXPORT inflateGetHeader(z_streamp strm, gz_headerp head) {
     struct inflate_state FAR *state;
 
     /* check state */
@@ -1409,11 +1358,8 @@ int ZEXPORT inflateGetHeader(
    called again with more data and the *have state.  *have is initialized to
    zero for the first call.
  */
-local unsigned syncsearch(
-    unsigned FAR *have,
-    const unsigned char FAR *buf,
-    unsigned len)
-{
+local unsigned syncsearch(unsigned FAR *have, const unsigned char FAR *buf,
+                          unsigned len) {
     unsigned got;
     unsigned next;
 
@@ -1432,9 +1378,7 @@ local unsigned syncsearch(
     return next;
 }
 
-int ZEXPORT inflateSync(
-    z_streamp strm)
-{
+int ZEXPORT inflateSync(z_streamp strm) {
     unsigned len;               /* number of bytes to look at or looked at */
     int flags;                  /* temporary to save header status */
     unsigned long in, out;      /* temporary to save total_in and total_out */
@@ -1490,9 +1434,7 @@ int ZEXPORT inflateSync(
    block. When decompressing, PPP checks that at the end of input packet,
    inflate is waiting for these length bytes.
  */
-int ZEXPORT inflateSyncPoint(
-    z_streamp strm)
-{
+int ZEXPORT inflateSyncPoint(z_streamp strm) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
@@ -1500,10 +1442,7 @@ int ZEXPORT inflateSyncPoint(
     return state->mode == STORED && state->bits == 0;
 }
 
-int ZEXPORT inflateCopy(
-    z_streamp dest,
-    z_streamp source)
-{
+int ZEXPORT inflateCopy(z_streamp dest, z_streamp source) {
     struct inflate_state FAR *state;
     struct inflate_state FAR *copy;
     unsigned char FAR *window;
@@ -1547,10 +1486,7 @@ int ZEXPORT inflateCopy(
     return Z_OK;
 }
 
-int ZEXPORT inflateUndermine(
-    z_streamp strm,
-    int subvert)
-{
+int ZEXPORT inflateUndermine(z_streamp strm, int subvert) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
@@ -1565,10 +1501,7 @@ int ZEXPORT inflateUndermine(
 #endif
 }
 
-int ZEXPORT inflateValidate(
-    z_streamp strm,
-    int check)
-{
+int ZEXPORT inflateValidate(z_streamp strm, int check) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm)) return Z_STREAM_ERROR;
@@ -1580,9 +1513,7 @@ int ZEXPORT inflateValidate(
     return Z_OK;
 }
 
-long ZEXPORT inflateMark(
-    z_streamp strm)
-{
+long ZEXPORT inflateMark(z_streamp strm) {
     struct inflate_state FAR *state;
 
     if (inflateStateCheck(strm))
@@ -1593,9 +1524,7 @@ long ZEXPORT inflateMark(
             (state->mode == MATCH ? state->was - state->length : 0));
 }
 
-unsigned long ZEXPORT inflateCodesUsed(
-    z_streamp strm)
-{
+unsigned long ZEXPORT inflateCodesUsed(z_streamp strm) {
     struct inflate_state FAR *state;
     if (inflateStateCheck(strm)) return (unsigned long)-1;
     state = (struct inflate_state FAR *)strm->state;

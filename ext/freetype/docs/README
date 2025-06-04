@@ -18,8 +18,6 @@ There are two ways to generate the documentation:
     - This may or may not require internet access every time depending on
     pip and system caching.
 
-This also works with Jam: Just type `jam refdoc' in the main directory.
-
 Some troubleshooting tips:
 
 * Regularly run `pip install --upgrade docwriter' to check for updates which

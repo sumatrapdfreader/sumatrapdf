@@ -1,4 +1,4 @@
-FreeType 2.13.0
+FreeType 2.13.3
 ===============
 
 Homepage: https://www.freetype.org
@@ -32,9 +32,9 @@ sites.  Go to
 
 and download one of the following files.
 
-  freetype-doc-2.13.0.tar.xz
-  freetype-doc-2.13.0.tar.gz
-  ftdoc2130.zip
+  freetype-doc-2.13.3.tar.xz
+  freetype-doc-2.13.3.tar.gz
+  ftdoc2133.zip
 
 To view the documentation online, go to
 
@@ -94,7 +94,7 @@ Enjoy!
 
 ----------------------------------------------------------------------
 
-Copyright (C) 2006-2023 by
+Copyright (C) 2006-2024 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

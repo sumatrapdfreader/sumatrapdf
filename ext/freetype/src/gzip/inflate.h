@@ -128,4 +128,4 @@ struct inflate_state {
     unsigned was;               /* initial length of match */
 };
 
-#endif  /* INFLATE_H */
+#endif  /* !INFLATE_H */

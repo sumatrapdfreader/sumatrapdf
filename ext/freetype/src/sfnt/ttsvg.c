@@ -4,7 +4,7 @@
  *
  *   OpenType SVG Color (specification).
  *
- * Copyright (C) 2022-2023 by
+ * Copyright (C) 2022-2024 by
  * David Turner, Robert Wilhelm, Werner Lemberg, and Moazin Khatti.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -405,7 +405,7 @@
 #else /* !FT_CONFIG_OPTION_SVG */
 
   /* ANSI C doesn't like empty source files */
-  typedef int  _tt_svg_dummy;
+  typedef int  tt_svg_dummy_;
 
 #endif /* !FT_CONFIG_OPTION_SVG */
 

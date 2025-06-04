@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType VERSIONINFO resource for Windows DLLs.                      */
 /*                                                                         */
-/*  Copyright (C) 2018-2023 by                                             */
+/*  Copyright (C) 2018-2024 by                                             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,8 +18,8 @@
 
 #include<windows.h>
 
-#define FT_VERSION      2,13,0,0
-#define FT_VERSION_STR  "2.13.0"
+#define FT_VERSION      2,13,3,0
+#define FT_VERSION_STR  "2.13.3"
 
 VS_VERSION_INFO      VERSIONINFO
 FILEVERSION          FT_VERSION
@@ -45,7 +45,7 @@ BEGIN
       VALUE "FileVersion",      FT_VERSION_STR
       VALUE "ProductName",      "FreeType"
       VALUE "ProductVersion",   FT_VERSION_STR
-      VALUE "LegalCopyright",   L"\x00A9 2000-2023 The FreeType Project www.freetype.org. All rights reserved."
+      VALUE "LegalCopyright",   L"\x00A9 2000-2024 The FreeType Project www.freetype.org. All rights reserved."
       VALUE "InternalName",     "freetype"
       VALUE "OriginalFilename", FT_FILENAME
     END

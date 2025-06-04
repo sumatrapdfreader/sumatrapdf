@@ -57,7 +57,7 @@ Notes
   (`*') in the table below.
 
   FreeType can  be configured to  support Mac  files (on older  Mac OS
-  versions, a `file' is stored as a data and a resource fork, this is,
+  versions, a `file' is stored as a data and a resource fork, that is,
   within two  separate data chunks).  If  a file can't be  opened as a
   font, FreeType then checks whether it  is a resource fork, trying to
   extract  the contained  font data  from  either a  `POST' or  `sfnt'
@@ -77,8 +77,8 @@ which isn't supported yet please send a mail too.
   ---     BDF     ---     ---        bdf      5005.BDF_Spec.pdf, X11
 
 
-  SFNT    PS      TYPE_1  ---        type1    Type 1 GX Font Format
-                                              (for the Mac) [3]
+  SFNT    PS      TYPE_1  ---        type1    Type 1 GX Font Format [7]
+                                              (for the Mac; not supported)
   SFNT    PS      TYPE_1  CID        cid      5180.sfnt.pdf (for the Mac) [3]
   SFNT    PS      CFF     ---        cff      OT spec, 5176.CFF.pdf
                                               (`OTTO' format)
@@ -198,9 +198,15 @@ which isn't supported yet please send a mail too.
 [6] Supported  font  formats  are   TrueType  and  OpenType  fonts  as
     defined in the OpenType specification 1.6 and newer.
 
+[7] `The Type 1 GX Font Format' (dated 1995-09-27)  was distributed in
+    Apple Developer CD-ROM in those days.  The content of `TYP1' table
+    is a PostScript Type 1 font without the eexec encryption.  Current
+    versions of FreeType don't not support this format,  but FontForge
+    can load it.
+
 ------------------------------------------------------------------------
 
-Copyright (C) 2004-2023 by
+Copyright (C) 2004-2024 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

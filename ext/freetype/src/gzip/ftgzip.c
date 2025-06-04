@@ -8,7 +8,7 @@
  * parse compressed PCF fonts, as found with many X11 server
  * distributions.
  *
- * Copyright (C) 2002-2023 by
+ * Copyright (C) 2002-2024 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -70,10 +70,9 @@
   /* so that configuration with `FT_CONFIG_OPTION_SYSTEM_ZLIB' might   */
   /* include the wrong `zconf.h' file, leading to errors.              */
 
-#if defined( __GNUC__ ) ||  defined( __clang__ )
 #define ZEXPORT
-#define ZEXTERN      static
-#endif
+  /* prevent zlib functions from being visible outside their object files */
+#define ZEXTERN  static
 
 #define HAVE_MEMCPY  1
 #define Z_SOLO       1

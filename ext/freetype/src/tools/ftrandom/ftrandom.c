@@ -520,7 +520,7 @@
     char        buffer[1024];
 
 
-    sprintf( buffer, "%s/test%d", results_dir, test_num++ );
+    snprintf( buffer, 1024, "%s/test%d", results_dir, test_num++ );
 
     if ( copyfont ( &fontlist[i], buffer ) )
     {
