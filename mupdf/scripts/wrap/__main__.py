@@ -1138,7 +1138,11 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             elif flag == 'bsymbolic':
                 make_env += ' XLIB_LDFLAGS=-Wl,-Bsymbolic'
                 build_prefix += f'{flag}-'
-            elif flag == 'Py_LIMITED_API' or flag.startswith('Py_LIMITED_API='):
+            elif flag == 'Py_LIMITED_API':
+                build_prefix += f'{flag}-'
+            elif flag.startswith('Py_LIMITED_API='):    # fixme: obsolete.
+                build_prefix += f'{flag}-'
+            elif flag.startswith('Py_LIMITED_API_'):
                 build_prefix += f'{flag}-'
             else:
                 if not in_prefix:

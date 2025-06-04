@@ -244,13 +244,14 @@ FUN(Page_getLinks)(JNIEnv *env, jobject self)
 	return jlinks;
 }
 
-JNIEXPORT jobject JNICALL
+JNIEXPORT jobjectArray JNICALL
 FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 {
 	fz_context *ctx = get_context(env);
 	fz_page *page = from_Page(env, self);
 	const char *needle = NULL;
 	search_state state = { env, NULL, 0 };
+	jobject jsample = NULL;
 
 	if (!ctx || !page) return NULL;
 	if (!jneedle) jni_throw_arg(env, "needle must not be null");
@@ -273,7 +274,8 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (state.error)
 		return NULL;
 
-	return (*env)->CallObjectMethod(env, state.hits, mid_ArrayList_toArray);
+	jsample = (*env)->NewObjectArray(env, 0, cls_ArrayOfQuad, NULL);
+	return (*env)->CallObjectMethod(env, state.hits, mid_ArrayList_toArray, jsample);
 }
 
 JNIEXPORT jobject JNICALL

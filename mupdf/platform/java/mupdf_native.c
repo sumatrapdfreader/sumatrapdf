@@ -1326,7 +1326,7 @@ static int find_fids(JNIEnv *env)
 	cls_ArrayList = get_class(&err, env, "java/util/ArrayList");
 	mid_ArrayList_init = get_method(&err, env, "<init>", "()V");
 	mid_ArrayList_add = get_method(&err, env, "add", "(Ljava/lang/Object;)Z");
-	mid_ArrayList_toArray = get_method(&err, env, "toArray", "()[Ljava/lang/Object;");
+	mid_ArrayList_toArray = get_method(&err, env, "toArray", "([Ljava/lang/Object;)[Ljava/lang/Object;");
 
 	if (err)
 	{

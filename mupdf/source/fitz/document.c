@@ -261,10 +261,14 @@ do_recognize_document_stream_and_dir_content(fz_context *ctx, fz_stream **stream
 		/* Convert the stream into a file_backed stream. */
 		if (wants_file)
 		{
-			stream = fz_file_backed_stream(ctx, stream);
-			/* Either we need to pass this back to our caller, or we
-			 * need to drop it. */
-			drop_stream = 1;
+			fz_stream *stream2 = fz_file_backed_stream(ctx, stream);
+			if (stream2 != stream)
+			{
+				/* Either we need to pass this back to our caller, or we
+				 * need to drop it. */
+				drop_stream = 1;
+				stream = stream2;
+			}
 		}
 	}
 

@@ -32,6 +32,7 @@ static int hit_callback(fz_context *ctx, void *opaque, int quads, fz_quad *quad)
 	JNIEnv *env = state->env;
 	jobjectArray arr;
 	int i;
+	jboolean changed = JNI_FALSE;
 
 	arr = (*env)->NewObjectArray(env, quads, cls_Quad, NULL);
 	if (!arr || (*env)->ExceptionCheck(env))
@@ -40,8 +41,8 @@ static int hit_callback(fz_context *ctx, void *opaque, int quads, fz_quad *quad)
 		return 1;
 	}
 
-	(*env)->CallVoidMethod(env, state->hits, mid_ArrayList_add, arr);
-	if ((*env)->ExceptionCheck(env))
+	changed = (*env)->CallBooleanMethod(env, state->hits, mid_ArrayList_add, arr);
+	if (!changed || (*env)->ExceptionCheck(env))
 	{
 		state->error = 1;
 		return 1;

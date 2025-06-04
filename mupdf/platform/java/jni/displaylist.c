@@ -134,13 +134,14 @@ FUN(DisplayList_toStructuredText)(JNIEnv *env, jobject self, jstring joptions)
 	return to_StructuredText_safe_own(ctx, env, text);
 }
 
-JNIEXPORT jobject JNICALL
+JNIEXPORT jobjectArray JNICALL
 FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 {
 	fz_context *ctx = get_context(env);
 	fz_display_list *list = from_DisplayList(env, self);
 	const char *needle = NULL;
 	search_state state = { env, NULL, 0 };
+	jobject jsample = NULL;
 
 	if (!ctx || !list) return NULL;
 	if (!jneedle) jni_throw_arg(env, "needle must not be null");
@@ -163,7 +164,8 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (state.error)
 		return NULL;
 
-	return (*env)->CallObjectMethod(env, state.hits, mid_ArrayList_toArray);
+	jsample = (*env)->NewObjectArray(env, 0, cls_ArrayOfQuad, NULL);
+	return (*env)->CallObjectMethod(env, state.hits, mid_ArrayList_toArray, jsample);
 }
 
 JNIEXPORT jobject JNICALL

@@ -351,14 +351,16 @@ class BuildDirs:
         for flag in flags:
             if flag == 'Py_LIMITED_API':
                 self.Py_LIMITED_API = '0x03080000'
-            elif flag.startswith('Py_LIMITED_API='):
+            elif flag.startswith('Py_LIMITED_API='):    # 2024-11-15: fixme: obsolete
                 self.Py_LIMITED_API = flag[len('Py_LIMITED_API='):]
+            elif flag.startswith('Py_LIMITED_API_'):
+                self.Py_LIMITED_API = flag[len('Py_LIMITED_API_'):]
         jlib.log(f'{self.Py_LIMITED_API=}')
 
         # Set swig .i and .cpp paths, including Py_LIMITED_API so that
         # different values of Py_LIMITED_API can be tested without rebuilding
         # unnecessarily.
-        Py_LIMITED_API_infix = f'-Py_LIMITED_API={self.Py_LIMITED_API}' if self.Py_LIMITED_API else ''
+        Py_LIMITED_API_infix = f'-Py_LIMITED_API_{self.Py_LIMITED_API}' if self.Py_LIMITED_API else ''
         self.mupdfcpp_swig_i    = lambda language: f'{self.dir_mupdf}/platform/{language}/mupdfcpp_swig{Py_LIMITED_API_infix}.i'
         self.mupdfcpp_swig_cpp  = lambda language: self.mupdfcpp_swig_i(language) + '.cpp'
 

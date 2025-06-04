@@ -1346,16 +1346,16 @@ fz_stext_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shade, fz_matrix 
 }
 
 static void
-fz_stext_close_device(fz_context *ctx, fz_device *dev)
+fixup_bboxes_and_bidi(fz_context *ctx, fz_stext_block *block)
 {
-	fz_stext_device *tdev = (fz_stext_device*)dev;
-	fz_stext_page *page = tdev->page;
-	fz_stext_block *block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
 
-	for (block = page->first_block; block; block = block->next)
+	for ( ; block != NULL; block = block->next)
 	{
+		if (block->type == FZ_STEXT_BLOCK_STRUCT)
+			if (block->u.s.down)
+				fixup_bboxes_and_bidi(ctx, block->u.s.down->first_block);
 		if (block->type != FZ_STEXT_BLOCK_TEXT)
 			continue;
 		for (line = block->u.t.first_line; line; line = line->next)
@@ -1376,6 +1376,15 @@ fz_stext_close_device(fz_context *ctx, fz_device *dev)
 				reverse_bidi_line(line);
 		}
 	}
+}
+
+static void
+fz_stext_close_device(fz_context *ctx, fz_device *dev)
+{
+	fz_stext_device *tdev = (fz_stext_device*)dev;
+	fz_stext_page *page = tdev->page;
+
+	fixup_bboxes_and_bidi(ctx, page->first_block);
 
 	/* TODO: smart sorting of blocks and lines in reading order */
 	/* TODO: unicode NFC normalization */

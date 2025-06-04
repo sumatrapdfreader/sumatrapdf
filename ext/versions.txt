@@ -43,8 +43,8 @@ mujs            1.0.6      Apr 4, 2019
   https://mujs.com/
   https://github.com/ArtifexSoftware/mujs/commit/00d4606c3baf813b7b1c176823b2729bf51002a2
 
-../mupdf        trunk
-  https://github.com/ArtifexSoftware/mupdf/commit/c27c17d7bb7bb0ea768724d6dbf9133764c02dd2
+../mupdf        1.25.0
+  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.25.0
 
 openjpeg        2.3.1      2020-02-07
   https://git.ghostscript.com/?p=thirdparty-openjpeg.git;a=commit;h=6596aacc8af6c940586ed0e81bed30c3c282bf82   

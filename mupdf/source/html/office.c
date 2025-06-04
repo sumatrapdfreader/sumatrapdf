@@ -1196,6 +1196,8 @@ fz_office_to_html(fz_context *ctx, fz_html_font_set *set, fz_buffer *buffer_in, 
 				pos = fz_xml_find_next_dfs(pos, "Relationship", "Type", schema);
 			}
 		}
+
+		fz_close_output(ctx, info.out);
 	}
 	fz_always(ctx)
 	{

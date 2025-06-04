@@ -40,6 +40,7 @@ Changes from 1.24 to 1.25
 - `fz_text_item` now has an explicit pen `advance` member.
 - `pdf_annot_rect` works with the "design" rectangle.
 - mutool recolor can now be used as a function.
+- structured text "color" field renamed to "argb" and now includes alpha channel
 
 
 Changes from 1.23 to 1.24
