@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -218,11 +218,14 @@ cmsBool ComputeChromaticAdaptation(cmsContext ContextID, cmsMAT3* Conversion,
     _cmsMAT3eval(ContextID, &ConeSourceRGB, Chad, &ConeSourceXYZ);
     _cmsMAT3eval(ContextID, &ConeDestRGB,   Chad, &ConeDestXYZ);
 
+    if ((fabs(ConeSourceRGB.n[0]) < MATRIX_DET_TOLERANCE) ||
+        (fabs(ConeSourceRGB.n[1]) < MATRIX_DET_TOLERANCE) ||
+        (fabs(ConeSourceRGB.n[2]) < MATRIX_DET_TOLERANCE)) return FALSE;
+
     // Build matrix
     _cmsVEC3init(ContextID, &Cone.v[0], ConeDestRGB.n[0]/ConeSourceRGB.n[0],    0.0,  0.0);
     _cmsVEC3init(ContextID, &Cone.v[1], 0.0,   ConeDestRGB.n[1]/ConeSourceRGB.n[1],   0.0);
     _cmsVEC3init(ContextID, &Cone.v[2], 0.0,   0.0,   ConeDestRGB.n[2]/ConeSourceRGB.n[2]);
-
 
     // Normalize
     _cmsMAT3per(ContextID, &Tmp, &Cone, Chad);

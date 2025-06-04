@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -122,10 +122,14 @@ cmsBool  BlackPointAsDarkerColorant(cmsContext ContextID,
     // Convert black to Lab
     cmsDoTransform(ContextID, xform, Black, &Lab, 1);
 
-    // Force it to be neutral, clip to max. L* of 50
+    // Force it to be neutral, check for inconsistencies
+    if (Lab.L > 95)
+        Lab.L = 0; // Synthetic negative profiles
+    else if (Lab.L > 50)
+        Lab.L = 50;
+    else if (Lab.L < 0)
+        Lab.L = 0;
     Lab.a = Lab.b = 0;
-    if (Lab.L > 50) Lab.L = 50;
-    if (Lab.L < 0) Lab.L = 0;
 
     // Free the resources
     cmsDeleteTransform(ContextID, xform);

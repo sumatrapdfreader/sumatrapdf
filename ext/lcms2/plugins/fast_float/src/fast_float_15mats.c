@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,11 +19,11 @@
 //
 //---------------------------------------------------------------------------------
 
-// Optimization for matrix-shaper in 15 bits. Numbers are operated in 1.15 usigned,
+// Optimization for matrix-shaper in 15 bits. Numbers are operated in 1.15 unsigned,
 
 #include "fast_float_internal.h"
 
-// An storage capable to keep 1.15 signed and some extra precission.
+// An storage capable to keep 1.15 signed and some extra precision.
 // Actually I use 32 bits integer (signed)
 typedef cmsInt32Number cmsS1Fixed15Number;
 
@@ -331,8 +331,8 @@ cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
               _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*)cmsStageData(ContextID, Curve1);
               _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*)cmsStageData(ContextID, Curve2);
 
-              // In this particular optimization, caché does not help as it takes more time to deal with
-              // the caché that with the pixel handling
+              // In this particular optimization, cache does not help as it takes more time to deal with 
+              // the cache than with the pixel handling
               *dwFlags |= cmsFLAGS_NOCACHE;
 
               // Setup the optimizarion routines

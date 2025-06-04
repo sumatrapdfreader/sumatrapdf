@@ -1,0 +1,7 @@
+option('jpeg', type: 'feature', value: 'auto', description: 'Use JPEG')
+option('tiff', type: 'feature', value: 'auto', description: 'Use LibTiff')
+
+option('utils', type: 'boolean', value: false, description: 'Build the utils')
+option('samples', type: 'boolean', value: false, description: 'Build the samples')
+option('fastfloat', type: 'boolean', value: false, description: 'Build and install the fast float plugin, use only if GPL 3.0 is acceptable')
+option('threaded', type: 'boolean', value: false, description: 'Build and install the multi threaded plugin, use only if GPL 3.0 is acceptable')

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -133,10 +133,9 @@ void FloatCLUTEval(cmsContext ContextID,
             py = g * p->Domain[1];
             pz = b * p->Domain[2];
 
-            x0 = _cmsQuickFloor(px); rx = (px - (cmsFloat32Number)x0);
-            y0 = _cmsQuickFloor(py); ry = (py - (cmsFloat32Number)y0);
-            z0 = _cmsQuickFloor(pz); rz = (pz - (cmsFloat32Number)z0);
-
+            x0 = (int) floorf(px); rx = (px - (cmsFloat32Number)x0);
+            y0 = (int) floorf(py); ry = (py - (cmsFloat32Number)y0);
+            z0 = (int) floorf(pz); rz = (pz - (cmsFloat32Number)z0);
 
             X0 = p->opta[2] * x0;
             X1 = X0 + (r >= 1.0 ? 0 : p->opta[2]);
@@ -297,6 +296,10 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
             if (lab_fix == NULL) goto Error;
 
             cmsPipelineInsertStage(OriginalLut, cmsAT_END, lab_fix);
+        }
+        else {
+            if (T_COLORSPACE(*OutputFormat) != PT_GRAY &&
+                T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
         }
 
 

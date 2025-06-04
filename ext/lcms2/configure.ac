@@ -7,7 +7,7 @@ AC_PREREQ(2.60)
 #
 # Set the package name and version
 #
-AC_INIT(lcms2mt,2.14)
+AC_INIT(lcms2mt,2.16)
 
 # Specify directory where m4 macros may be found.
 AC_CONFIG_MACRO_DIR([m4])
@@ -16,7 +16,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # Libtool library revision control info
 #
 LIBRARY_CURRENT=2
-LIBRARY_REVISION=14
+LIBRARY_REVISION=16
 LIBRARY_AGE=0
 
 AC_SUBST(LIBRARY_CURRENT)dnl
@@ -30,7 +30,7 @@ AM_INIT_AUTOMAKE([foreign 1.9 tar-ustar no-define dist-zip subdir-objects])
 
 
 # Check for programs
-AC_PROG_CC_STDC
+AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
 LT_INIT
@@ -183,9 +183,9 @@ have_threads=no
 if test "$with_threads" != 'no'
 then
 
-  ACX_PTHREAD()
-
-  if test "$acx_pthread_ok" = yes
+  AX_PTHREAD()
+ 
+  if test "$ax_pthread_ok" = yes
   then
     have_threads=yes
 

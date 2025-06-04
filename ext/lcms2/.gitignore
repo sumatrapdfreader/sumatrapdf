@@ -61,3 +61,4 @@ DerivedData
 *.iobj
 *.recipe
 *.idb
+*.lastcodeanalysissucceeded

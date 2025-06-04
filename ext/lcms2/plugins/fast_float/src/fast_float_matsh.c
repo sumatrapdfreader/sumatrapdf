@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -302,11 +302,11 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
         }
     }
 
-      // Allocate an empty LUT
+    // Allocate an empty LUT
     Dest =  cmsPipelineAlloc(ContextID, nChans, nChans);
     if (!Dest) return FALSE;
 
-    // Assamble the new LUT
+    // Assemble the new LUT
     cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageDup(ContextID, Curve1));
 
     if (!IdentityMat) {
@@ -331,11 +331,11 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
         _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve1);
         _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
 
-        // In this particular optimization, caché does not help as it takes more time to deal with
-        // the cachthat with the pixel handling
+        // In this particular optimization, cache does not help as it takes more time to deal with
+        // the cache than with the pixel handling
         *dwFlags |= cmsFLAGS_NOCACHE;
 
-        // Setup the optimizarion routines
+        // Setup the optimization routines
         *UserData = SetMatShaper(ContextID, mpeC1 ->TheCurves, &res, (cmsVEC3*) Data2 ->Offset, mpeC2->TheCurves);
         *FreeUserData = FreeMatShaper;
 

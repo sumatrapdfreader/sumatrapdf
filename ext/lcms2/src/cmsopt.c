@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -180,6 +180,7 @@ cmsBool  isFloatMatrixIdentity(cmsContext ContextID, const cmsMAT3* a)
 
        return TRUE;
 }
+
 // if two adjacent matrices are found, multiply them.
 static
 cmsBool _MultiplyMatrix(cmsContext ContextID, cmsPipeline* Lut)
@@ -1114,14 +1115,17 @@ cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut
 
         // Store result in curve
         for (t=0; t < OriginalLut ->InputChannels; t++)
-            Trans[t] ->Table16[i] = _cmsQuickSaturateWord(Out[t] * 65535.0);
+        {
+            if (Trans[t]->Table16 != NULL)
+                Trans[t] ->Table16[i] = _cmsQuickSaturateWord(Out[t] * 65535.0);
+        }
     }
 
     // Slope-limit the obtained curves
     for (t = 0; t < OriginalLut ->InputChannels; t++)
         SlopeLimiting(ContextID, Trans[t]);
 
-    // Check for validity
+    // Check for validity. lIsLinear is here for debug purposes
     lIsSuitable = TRUE;
     lIsLinear   = TRUE;
     for (t=0; (lIsSuitable && (t < OriginalLut ->InputChannels)); t++) {
@@ -1706,6 +1710,10 @@ cmsBool OptimizeMatrixShaper(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
               _cmsStageMatrixData* Data1 = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix1);
               _cmsStageMatrixData* Data2 = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix2);
 
+              // Only RGB to RGB
+              if (Matrix1->InputChannels != 3 || Matrix1->OutputChannels != 3 ||
+                  Matrix2->InputChannels != 3 || Matrix2->OutputChannels != 3) return FALSE;
+
               // Input offset should be zero
               if (Data1->Offset != NULL) return FALSE;
 
@@ -1730,6 +1738,8 @@ cmsBool OptimizeMatrixShaper(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
                      &Curve1, &Matrix1, &Curve2)) {
 
                      _cmsStageMatrixData* Data = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix1);
+
+                     if (Matrix1->InputChannels != 3 || Matrix1->OutputChannels != 3) return FALSE;
 
                      // Copy the matrix to our result
                      memcpy(&res, Data->Double, sizeof(res));
@@ -1775,7 +1785,7 @@ cmsBool OptimizeMatrixShaper(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
         _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
 
         // In this particular optimization, cache does not help as it takes more time to deal with
-        // the cache that with the pixel handling
+        // the cache than with the pixel handling
         *dwFlags |= cmsFLAGS_NOCACHE;
 
         // Setup the optimizarion routines
@@ -1932,7 +1942,7 @@ cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
     for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, *PtrLut);
         mpe != NULL;
         mpe = cmsStageNext(ContextID, mpe)) {
-        if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
+           if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
     // Try to get rid of identities and trivial conversions.

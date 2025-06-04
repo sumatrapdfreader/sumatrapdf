@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -400,7 +400,7 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
         _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
 
         // In this particular optimization, cache does not help as it takes more time to deal with
-        // the cache that with the pixel handling
+        // the cache than with the pixel handling
         *dwFlags |= cmsFLAGS_NOCACHE;
 
 

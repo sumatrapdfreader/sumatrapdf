@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -119,147 +119,147 @@ void PerformanceEval8(cmsContext ContextID,
                       const cmsStride* Stride)
 {
 
-       cmsUInt8Number         r, g, b;
-       cmsS15Fixed16Number    rx, ry, rz;
-       cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
-       cmsUInt32Number        OutChan, TotalPlusAlpha;
-       cmsS15Fixed16Number    X0, X1, Y0, Y1, Z0, Z1;
-       Performance8Data*      p8 = (Performance8Data*)_cmsGetTransformUserData(CMMcargo);
-       const cmsInterpParams* p = p8->p;
-       cmsUInt32Number        TotalOut = p->nOutputs;
-       const cmsUInt16Number* LutTable = (const cmsUInt16Number*)p->Table;
+    cmsUInt8Number         r, g, b;
+    cmsS15Fixed16Number    rx, ry, rz;
+    cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
+    cmsUInt32Number        OutChan, TotalPlusAlpha;
+    cmsS15Fixed16Number    X0, X1, Y0, Y1, Z0, Z1;
+    Performance8Data*      p8 = (Performance8Data*)_cmsGetTransformUserData(CMMcargo);
+    const cmsInterpParams* p = p8->p;
+    cmsUInt32Number        TotalOut = p->nOutputs;
+    const cmsUInt16Number* LutTable = (const cmsUInt16Number*)p->Table;
 
-       cmsUInt8Number* out[cmsMAXCHANNELS];
-       cmsUInt16Number res16;
+    cmsUInt8Number* out[cmsMAXCHANNELS];
+    cmsUInt16Number res16;
 
-       cmsUInt32Number i, ii;
+    cmsUInt32Number i, ii;
 
-       cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
-       cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
-       cmsUInt32Number DestStartingOrder[cmsMAXCHANNELS];
-       cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
+    cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
+    cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
+    cmsUInt32Number DestStartingOrder[cmsMAXCHANNELS];
+    cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
 
-       const cmsUInt8Number* rin;
-       const cmsUInt8Number* gin;
-       const cmsUInt8Number* bin;
-       const cmsUInt8Number* ain = NULL;
+    const cmsUInt8Number* rin;
+    const cmsUInt8Number* gin;
+    const cmsUInt8Number* bin;
+    const cmsUInt8Number* ain = NULL;
 
-       cmsUInt32Number nalpha, strideIn, strideOut;
+    cmsUInt32Number nalpha, strideIn, strideOut;
 
-       _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-       _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
-       if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
-           nalpha = 0;
+    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+        nalpha = 0;
 
-       strideIn = strideOut = 0;
-       for (i = 0; i < LineCount; i++) {
+    strideIn = strideOut = 0;
+    for (i = 0; i < LineCount; i++) {
 
-              rin = (const cmsUInt8Number*)Input + SourceStartingOrder[0] + strideIn;
-              gin = (const cmsUInt8Number*)Input + SourceStartingOrder[1] + strideIn;
-              bin = (const cmsUInt8Number*)Input + SourceStartingOrder[2] + strideIn;
-              if (nalpha)
-                     ain = (const cmsUInt8Number*)Input + SourceStartingOrder[3] + strideIn;
+        rin = (const cmsUInt8Number*)Input + SourceStartingOrder[0] + strideIn;
+        gin = (const cmsUInt8Number*)Input + SourceStartingOrder[1] + strideIn;
+        bin = (const cmsUInt8Number*)Input + SourceStartingOrder[2] + strideIn;
+        if (nalpha)
+            ain = (const cmsUInt8Number*)Input + SourceStartingOrder[3] + strideIn;
 
-              TotalPlusAlpha = TotalOut;
-              if (ain) TotalPlusAlpha++;
+        TotalPlusAlpha = TotalOut;
+        if (ain) TotalPlusAlpha++;
 
-              for (OutChan = 0; OutChan < TotalPlusAlpha; OutChan++) {
-                     out[OutChan] = (cmsUInt8Number*)Output + DestStartingOrder[OutChan] + strideOut;
-              }
-
-
-              for (ii = 0; ii < PixelsPerLine; ii++) {
-
-                     r = *rin; g = *gin; b = *bin;
-
-                     rin += SourceIncrements[0];
-                     gin += SourceIncrements[1];
-                     bin += SourceIncrements[2];
-
-                     X0 = X1 = p8->X0[r];
-                     Y0 = Y1 = p8->Y0[g];
-                     Z0 = Z1 = p8->Z0[b];
-
-                     rx = p8->rx[r];
-                     ry = p8->ry[g];
-                     rz = p8->rz[b];
-
-                     X1 = X0 + ((rx == 0) ? 0 : p->opta[2]);
-                     Y1 = Y0 + ((ry == 0) ? 0 : p->opta[1]);
-                     Z1 = Z0 + ((rz == 0) ? 0 : p->opta[0]);
+        for (OutChan = 0; OutChan < TotalPlusAlpha; OutChan++) {
+            out[OutChan] = (cmsUInt8Number*)Output + DestStartingOrder[OutChan] + strideOut;
+        }
 
 
-                     // These are the 6 Tetrahedral
-                     for (OutChan = 0; OutChan < TotalOut; OutChan++) {
+        for (ii = 0; ii < PixelsPerLine; ii++) {
 
-                            c0 = DENS(X0, Y0, Z0);
+            r = *rin; g = *gin; b = *bin;
 
-                            if (rx >= ry && ry >= rz)
+            rin += SourceIncrements[0];
+            gin += SourceIncrements[1];
+            bin += SourceIncrements[2];
+
+            X0 = X1 = p8->X0[r];
+            Y0 = Y1 = p8->Y0[g];
+            Z0 = Z1 = p8->Z0[b];
+
+            rx = p8->rx[r];
+            ry = p8->ry[g];
+            rz = p8->rz[b];
+
+            X1 = X0 + ((rx == 0) ? 0 : p->opta[2]);
+            Y1 = Y0 + ((ry == 0) ? 0 : p->opta[1]);
+            Z1 = Z0 + ((rz == 0) ? 0 : p->opta[0]);
+
+
+            // These are the 6 Tetrahedral
+            for (OutChan = 0; OutChan < TotalOut; OutChan++) {
+
+                c0 = DENS(X0, Y0, Z0);
+
+                if (rx >= ry && ry >= rz)
+                {
+                    c1 = DENS(X1, Y0, Z0) - c0;
+                    c2 = DENS(X1, Y1, Z0) - DENS(X1, Y0, Z0);
+                    c3 = DENS(X1, Y1, Z1) - DENS(X1, Y1, Z0);
+                }
+                else
+                    if (rx >= rz && rz >= ry)
+                    {
+                        c1 = DENS(X1, Y0, Z0) - c0;
+                        c2 = DENS(X1, Y1, Z1) - DENS(X1, Y0, Z1);
+                        c3 = DENS(X1, Y0, Z1) - DENS(X1, Y0, Z0);
+                    }
+                    else
+                        if (rz >= rx && rx >= ry)
+                        {
+                            c1 = DENS(X1, Y0, Z1) - DENS(X0, Y0, Z1);
+                            c2 = DENS(X1, Y1, Z1) - DENS(X1, Y0, Z1);
+                            c3 = DENS(X0, Y0, Z1) - c0;
+                        }
+                        else
+                            if (ry >= rx && rx >= rz)
                             {
-                                   c1 = DENS(X1, Y0, Z0) - c0;
-                                   c2 = DENS(X1, Y1, Z0) - DENS(X1, Y0, Z0);
-                                   c3 = DENS(X1, Y1, Z1) - DENS(X1, Y1, Z0);
+                                c1 = DENS(X1, Y1, Z0) - DENS(X0, Y1, Z0);
+                                c2 = DENS(X0, Y1, Z0) - c0;
+                                c3 = DENS(X1, Y1, Z1) - DENS(X1, Y1, Z0);
                             }
                             else
-                                   if (rx >= rz && rz >= ry)
-                                   {
-                                          c1 = DENS(X1, Y0, Z0) - c0;
-                                          c2 = DENS(X1, Y1, Z1) - DENS(X1, Y0, Z1);
-                                          c3 = DENS(X1, Y0, Z1) - DENS(X1, Y0, Z0);
-                                   }
-                                   else
-                                          if (rz >= rx && rx >= ry)
-                                          {
-                                                 c1 = DENS(X1, Y0, Z1) - DENS(X0, Y0, Z1);
-                                                 c2 = DENS(X1, Y1, Z1) - DENS(X1, Y0, Z1);
-                                                 c3 = DENS(X0, Y0, Z1) - c0;
-                                          }
-                                          else
-                                                 if (ry >= rx && rx >= rz)
-                                                 {
-                                                        c1 = DENS(X1, Y1, Z0) - DENS(X0, Y1, Z0);
-                                                        c2 = DENS(X0, Y1, Z0) - c0;
-                                                        c3 = DENS(X1, Y1, Z1) - DENS(X1, Y1, Z0);
-                                                 }
-                                                 else
-                                                        if (ry >= rz && rz >= rx)
-                                                        {
-                                                               c1 = DENS(X1, Y1, Z1) - DENS(X0, Y1, Z1);
-                                                               c2 = DENS(X0, Y1, Z0) - c0;
-                                                               c3 = DENS(X0, Y1, Z1) - DENS(X0, Y1, Z0);
-                                                        }
-                                                        else
-                                                               if (rz >= ry && ry >= rx)
-                                                               {
-                                                                      c1 = DENS(X1, Y1, Z1) - DENS(X0, Y1, Z1);
-                                                                      c2 = DENS(X0, Y1, Z1) - DENS(X0, Y0, Z1);
-                                                                      c3 = DENS(X0, Y0, Z1) - c0;
-                                                               }
-                                                               else  {
-                                                                      c1 = c2 = c3 = 0;
-                                                               }
+                                if (ry >= rz && rz >= rx)
+                                {
+                                    c1 = DENS(X1, Y1, Z1) - DENS(X0, Y1, Z1);
+                                    c2 = DENS(X0, Y1, Z0) - c0;
+                                    c3 = DENS(X0, Y1, Z1) - DENS(X0, Y1, Z0);
+                                }
+                                else
+                                    if (rz >= ry && ry >= rx)
+                                    {
+                                        c1 = DENS(X1, Y1, Z1) - DENS(X0, Y1, Z1);
+                                        c2 = DENS(X0, Y1, Z1) - DENS(X0, Y0, Z1);
+                                        c3 = DENS(X0, Y0, Z1) - c0;
+                                    }
+                                    else {
+                                        c1 = c2 = c3 = 0;
+                                    }
 
 
-                                                               Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
-                                                               res16 = (cmsUInt16Number)c0 + ((Rest + (Rest >> 16)) >> 16);
+                Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+                res16 = (cmsUInt16Number)c0 + ((Rest + (Rest >> 16)) >> 16);
 
-                                                               *out[OutChan] = FROM_16_TO_8(res16);
-                                                               out[OutChan] += DestIncrements[OutChan];
+                *out[OutChan] = FROM_16_TO_8(res16);
+                out[OutChan] += DestIncrements[OutChan];
 
-                     }
+            }
 
-                     if (ain) {
-                         *out[TotalOut] = *ain;
-                         ain += SourceIncrements[3];
-                         out[TotalOut] += DestIncrements[TotalOut];
-                     }
+            if (ain) {
+                *out[TotalOut] = *ain;
+                ain += SourceIncrements[3];
+                out[TotalOut] += DestIncrements[TotalOut];
+            }
 
-              }
+        }
 
-              strideIn += Stride->BytesPerLineIn;
-              strideOut += Stride->BytesPerLineOut;
-       }
+        strideIn += Stride->BytesPerLineIn;
+        strideOut += Stride->BytesPerLineOut;
+    }
 }
 
 #undef DENS
@@ -362,9 +362,8 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
     // Only on RGB
     if (T_COLORSPACE(*InputFormat)  != PT_RGB) return FALSE;
 
-    // This optimization only works on RGB8->RGB8 or RGB8->CMYK8
-    if (T_COLORSPACE(*OutputFormat) != PT_RGB &&
-        T_COLORSPACE(*OutputFormat) != PT_CMYK) return FALSE;
+    // This optimization only works on RGB8->RGB8
+    if (T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
 
     OriginalLut = *Lut;
 
@@ -429,7 +428,7 @@ cmsBool Optimize8BitRGBTransform( cmsContext ContextID,
         if (TransReverse[t] == NULL) goto Error;
     }
 
-    // Now inset the reversed curves at the begin of transform
+    // Now insert the reversed curves at the begin of transform
     LutPlusCurves = cmsPipelineDup(ContextID, OriginalLut);
     if (LutPlusCurves == NULL) goto Error;
 

@@ -36,6 +36,8 @@ static cmsBool lShowXYZ = TRUE;
 static cmsBool lShowLab = FALSE;
 static cmsBool lShowLCh = FALSE;
 
+#define SW '-'
+
 static
 void HandleSwitches(int argc, char *argv[])
 {

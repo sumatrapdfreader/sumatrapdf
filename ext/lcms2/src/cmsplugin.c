@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -363,13 +363,7 @@ cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, co
 // from Fixed point 8.8 to double
 cmsFloat64Number CMSEXPORT _cms8Fixed8toDouble(cmsContext ContextID, cmsUInt16Number fixed8)
 {
-       cmsUInt8Number  msb, lsb;
-       cmsUNUSED_PARAMETER(ContextID);
-
-       lsb = (cmsUInt8Number) (fixed8 & 0xff);
-       msb = (cmsUInt8Number) (((cmsUInt16Number) fixed8 >> 8) & 0xff);
-
-       return (cmsFloat64Number) ((cmsFloat64Number) msb + ((cmsFloat64Number) lsb / 256.0));
+    return fixed8 / 256.0;
 }
 
 cmsUInt16Number CMSEXPORT _cmsDoubleTo8Fixed8(cmsContext ContextID, cmsFloat64Number val)
@@ -381,20 +375,7 @@ cmsUInt16Number CMSEXPORT _cmsDoubleTo8Fixed8(cmsContext ContextID, cmsFloat64Nu
 // from Fixed point 15.16 to double
 cmsFloat64Number CMSEXPORT _cms15Fixed16toDouble(cmsContext ContextID, cmsS15Fixed16Number fix32)
 {
-    cmsFloat64Number floater, sign, mid;
-    int Whole, FracPart;
-    cmsUNUSED_PARAMETER(ContextID);
-
-    sign  = (fix32 < 0 ? -1 : 1);
-    fix32 = abs(fix32);
-
-    Whole     = (cmsUInt16Number)(fix32 >> 16) & 0xffff;
-    FracPart  = (cmsUInt16Number)(fix32 & 0xffff);
-
-    mid     = (cmsFloat64Number) FracPart / 65536.0;
-    floater = (cmsFloat64Number) Whole + mid;
-
-    return sign * floater;
+    return fix32 / 65536.0;
 }
 
 // from double to Fixed point 15.16
@@ -796,7 +777,7 @@ void* _cmsContextGetClientChunk(cmsContext ContextID, _cmsMemoryClient mc)
 // identify which plug-in to unregister.
 void CMSEXPORT cmsUnregisterPlugins(cmsContext ContextID)
 {
-    struct _cmsContext_struct* ctx = _cmsGetContext(ContextID);
+  //struct _cmsContext_struct* ctx = _cmsGetContext(ContextID);
 
     _cmsRegisterMemHandlerPlugin(ContextID, NULL);
     _cmsRegisterInterpPlugin(ContextID, NULL);
@@ -811,9 +792,6 @@ void CMSEXPORT cmsUnregisterPlugins(cmsContext ContextID)
     _cmsRegisterMutexPlugin(ContextID, NULL);
     _cmsRegisterParallelizationPlugin(ContextID, NULL);
 
-   if (ctx->MemPool != NULL)
-       _cmsSubAllocDestroy(ctx->MemPool);
-   ctx->MemPool = NULL;
 }
 
 
@@ -981,7 +959,14 @@ cmsContext CMSEXPORT cmsDupContext(cmsContext ContextID, void* NewUserData)
 // The ContextID can no longer be used in any THR operation.
 void CMSEXPORT cmsDeleteContext(cmsContext ContextID)
 {
-    if (ContextID != NULL) {
+    if (ContextID == NULL) {
+
+        cmsUnregisterPlugins(ContextID);
+        if (globalContext.MemPool != NULL)
+            _cmsSubAllocDestroy(globalContext.MemPool);
+        globalContext.MemPool = NULL;
+    }
+    else {
 
         struct _cmsContext_struct* ctx = (struct _cmsContext_struct*) ContextID;
         struct _cmsContext_struct  fakeContext;

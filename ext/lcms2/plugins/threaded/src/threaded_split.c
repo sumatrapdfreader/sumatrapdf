@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -100,7 +100,7 @@ cmsUInt32Number _cmsThrCountSlices(struct _cmstransform_struct* CMMcargo, cmsInt
         // We allow large number of threads, but this is not going to work well. Warn it. 
         if (MaxWorkers > MaxCPUs) {
             cmsSignalError(NULL, cmsERROR_RANGE,
-                "Warning: too many threads for actual processor (CPUs=%s, asked=%d)", MaxCPUs, MaxWorkers);
+                "Warning: too many threads for actual processor (CPUs=%d, asked=%d)", MaxCPUs, MaxWorkers);
         }
     }
 

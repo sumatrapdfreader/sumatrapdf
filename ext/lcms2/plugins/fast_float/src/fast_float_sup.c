@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,6 @@
 
 #include "fast_float_internal.h"
 
-
 // This is the main dispatcher
 static
 cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
@@ -39,6 +38,9 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
 
     // Special flags for reversing are not supported
     if (T_FLAVOR(*InputFormat) || T_FLAVOR(*OutputFormat)) return FALSE;
+
+    // Check consistency for alpha channel copy
+    if (*dwFlags & cmsFLAGS_COPY_ALPHA && (T_EXTRA(*InputFormat) != T_EXTRA(*OutputFormat))) return FALSE;        
 
     // Try to optimize as a set of curves plus a matrix plus a set of curves
     if (OptimizeMatrixShaper15(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;

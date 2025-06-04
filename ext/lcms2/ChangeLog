@@ -34,6 +34,31 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 	~~~~~~~~~~~~~~~~~~~~~~~~
 
 -----------------------
+2.16 Featured release
+-----------------------
+New import .CUBE files as RGB devicelinks
+New Read/Write MHC2 tags for Windows GPU access
+New Support for UTF8 on multilocalized unicode functions
+New Suppot for OkLab color space, built-in and formatter.
+Improved floating point transforms float -> integer are now honored as float
+Improved MSYS2, mingw is now supported
+Improved proferred CMM, platform and creator now survives profile edition.
+Fixed tificc now can deal with Lab TIFF
+Fixed code can now be compiled by a C++17 compiler, "register" keywork use detected at compile time.
+Fixed Reverted postcript creation that corrupted some interpreters.
+
+-----------------------
+2.15 Maintenance release
+-----------------------
+New MESON build system, many thanks to amispark and Lovell Fuller for bringing this.       
+Fixed a bug that caused memory corruption on colord
+cmsReadRawTag can read portions  of tags again. Removing this caused colord to segfault when dumping profiles
+Added more checks based of fuzzer discoveries.
+MSYS2 can now compile lcms2
+Checked on Apple Silicon M1 and M2 
+Fixed a bug of fastfloat plug-in that affected Krita CMYK color selector
+
+-----------------------
 2.14 Featured release
 -----------------------
 lcms2 now implements ICC specification 4.4

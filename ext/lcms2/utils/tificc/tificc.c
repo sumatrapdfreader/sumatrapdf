@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -47,6 +47,7 @@ static cmsBool EmbedProfile           = FALSE;
 static int     PixelDepth             = 8;
 static cmsBool GamutCheck             = FALSE;
 static cmsBool lIsDeviceLink          = FALSE;
+static cmsBool lIsCUBE                = FALSE;
 static cmsBool StoreAsAlpha           = FALSE;
 
 static int Intent                  = INTENT_PERCEPTUAL;
@@ -148,9 +149,9 @@ int FromLabV4ToLabV2(int x)
 // Formatter for 8bit Lab TIFF (photometric 8)
 static
 unsigned char* UnrollTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
-                              register cmsUInt16Number wIn[],
-                              register cmsUInt8Number* accum,
-                              register cmsUInt32Number Stride)
+                              CMSREGISTER cmsUInt16Number wIn[], 
+                              CMSREGISTER cmsUInt8Number* accum, 
+                              CMSREGISTER cmsUInt32Number Stride)
 {
     wIn[0] = (cmsUInt16Number) FromLabV2ToLabV4((accum[0]) << 8);
     wIn[1] = (cmsUInt16Number) FromLabV2ToLabV4(((accum[1] > 127) ? (accum[1] - 128) : (accum[1] + 128)) << 8);
@@ -165,9 +166,9 @@ unsigned char* UnrollTIFFLab8(cmsContext ContextID, struct _cmstransform_struct*
 // Formatter for 16bit Lab TIFF (photometric 8)
 static
 unsigned char* UnrollTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
-                              register cmsUInt16Number wIn[],
-                              register cmsUInt8Number* accum,
-                              register cmsUInt32Number Stride )
+                              CMSREGISTER cmsUInt16Number wIn[],
+                              CMSREGISTER cmsUInt8Number* accum,
+                              CMSREGISTER cmsUInt32Number Stride )
 {
     cmsUInt16Number* accum16 = (cmsUInt16Number*) accum;
 
@@ -183,10 +184,33 @@ unsigned char* UnrollTIFFLab16(cmsContext ContextID, struct _cmstransform_struct
 
 
 static
-unsigned char* PackTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
-                            register cmsUInt16Number wOut[],
-                            register cmsUInt8Number* output,
-                            register cmsUInt32Number Stride)
+unsigned char* PackTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo, 
+                            CMSREGISTER cmsUInt16Number wOut[], 
+                            CMSREGISTER cmsUInt8Number* output, 
+                            CMSREGISTER cmsUInt32Number Stride)
+{
+    int a, b;
+
+    *output++ = (cmsUInt8Number) (FromLabV4ToLabV2(wOut[0] + 0x0080) >> 8);
+
+    a = (FromLabV4ToLabV2(wOut[1]) + 0x0080) >> 8;
+    b = (FromLabV4ToLabV2(wOut[2]) + 0x0080) >> 8;
+
+    *output++ = (cmsUInt8Number) ((a < 128) ? (a + 128) : (a - 128));
+    *output++ = (cmsUInt8Number) ((b < 128) ? (b + 128) : (b - 128));
+    
+    return output;
+
+    UTILS_UNUSED_PARAMETER(Stride);
+    UTILS_UNUSED_PARAMETER(CMMcargo);
+}
+
+
+static
+unsigned char* PackTIFFLabA8(cmsContext ContextID, struct _cmstransform_struct* CMMcargo, 
+                            CMSREGISTER cmsUInt16Number wOut[], 
+                            CMSREGISTER cmsUInt8Number* output, 
+                            CMSREGISTER cmsUInt32Number Stride)
 {
     int a, b;
 
@@ -198,17 +222,20 @@ unsigned char* PackTIFFLab8(cmsContext ContextID, struct _cmstransform_struct* C
     *output++ = (cmsUInt8Number) ((a < 128) ? (a + 128) : (a - 128));
     *output++ = (cmsUInt8Number) ((b < 128) ? (b + 128) : (b - 128));
 
+    output++; // Alpha
+
     return output;
 
     UTILS_UNUSED_PARAMETER(Stride);
     UTILS_UNUSED_PARAMETER(CMMcargo);
 }
 
+
 static
-unsigned char* PackTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* CMMcargo,
-                            register cmsUInt16Number wOut[],
-                            register cmsUInt8Number* output,
-                            register cmsUInt32Number Stride)
+unsigned char* PackTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* CMMcargo, 
+                            CMSREGISTER cmsUInt16Number wOut[], 
+                            CMSREGISTER cmsUInt8Number* output, 
+                            CMSREGISTER cmsUInt32Number Stride)
 {
     int a, b;
     cmsUInt16Number* output16 = (cmsUInt16Number*) output;
@@ -220,6 +247,31 @@ unsigned char* PackTIFFLab16(cmsContext ContextID, struct _cmstransform_struct* 
 
     *output16++ = (cmsUInt16Number) ((a < 0x7f00) ? (a + 0x8000) : (a - 0x8000));
     *output16++ = (cmsUInt16Number) ((b < 0x7f00) ? (b + 0x8000) : (b - 0x8000));
+    
+    return (cmsUInt8Number*) output16;
+
+    UTILS_UNUSED_PARAMETER(Stride);
+    UTILS_UNUSED_PARAMETER(CMMcargo);
+}
+
+static
+unsigned char* PackTIFFLabA16(struct _cmstransform_struct* CMMcargo, 
+                            CMSREGISTER cmsUInt16Number wOut[], 
+                            CMSREGISTER cmsUInt8Number* output, 
+                            CMSREGISTER cmsUInt32Number Stride)
+{
+    int a, b;
+    cmsUInt16Number* output16 = (cmsUInt16Number*) output;
+
+    *output16++ = (cmsUInt16Number) FromLabV4ToLabV2(wOut[0]);
+
+    a = FromLabV4ToLabV2(wOut[1]);
+    b = FromLabV4ToLabV2(wOut[2]);
+
+    *output16++ = (cmsUInt16Number) ((a < 0x7f00) ? (a + 0x8000) : (a - 0x8000));
+    *output16++ = (cmsUInt16Number) ((b < 0x7f00) ? (b + 0x8000) : (b - 0x8000));
+
+    output16++; // Alpha
 
     return (cmsUInt8Number*) output16;
 
@@ -244,7 +296,13 @@ cmsFormatter TiffFormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
             Result.Fmt16 = (bps == 1) ? UnrollTIFFLab8 : UnrollTIFFLab16;
         }
         else
-            Result.Fmt16 = (bps == 1) ? PackTIFFLab8 : PackTIFFLab16;
+        {
+            if (T_EXTRA(Type) == 1)
+                Result.Fmt16 = (bps == 1) ? PackTIFFLabA8 : PackTIFFLabA16;
+            else
+                if (T_EXTRA(Type) == 0)
+                    Result.Fmt16 = (bps == 1) ? PackTIFFLab8 : PackTIFFLab16;
+        }
     }
 
     return Result;
@@ -349,7 +407,7 @@ cmsUInt32Number GetInputPixelType(TIFF *Bank)
 
      // Two Lab flavours
      case PHOTOMETRIC_ICCLAB:
-         pt = PT_LabV2;
+         pt = PT_Lab;         
          break;
 
      case PHOTOMETRIC_CIELAB:
@@ -586,7 +644,7 @@ void WriteOutputTags(TIFF* out, int Colorspace, int BytesPerSample, int AlphaCha
 
     case PT_Lab:
         if (BitsPerSample == 16)
-            TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_ICCLAB);
+            TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_CIELAB);
         else
             TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_CIELAB);
         break;
@@ -867,7 +925,10 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
 
     if (lIsDeviceLink) {
 
-        hIn = cmsOpenProfileFromFile(ContextID, cDefInpProf, "r");
+        if (lIsCUBE)
+            hIn = cmsCreateDeviceLinkFromCubeFile(ContextID, cDefInpProf);
+        else
+            hIn = cmsOpenProfileFromFile(ContextID, cDefInpProf, "r");
     }
     else {
 
@@ -890,7 +951,7 @@ int TransformImage(cmsContext ContextID, TIFF* in, TIFF* out, const char *cDefIn
 
     // Assure both, input profile and input TIFF are on same colorspace
     if (_cmsLCMScolorSpace(ContextID, cmsGetColorSpace(ContextID, hIn)) != (int) T_COLORSPACE(wInput))
-        FatalError("Input profile is not operating in proper color space");
+        FatalError("Input profile is not operating in proper color space (%d)", T_COLORSPACE(wInput));
 
 
     if (!lIsDeviceLink)
@@ -975,6 +1036,10 @@ void Help(cmsContext ContextID, int level)
 {
     UTILS_UNUSED_PARAMETER(level);
 
+    fprintf(stderr, "Little CMS ICC profile applier for TIFF - v8.0 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2023 Marti Maria Saguer. See COPYING file for details.\n");
+    fflush(stderr);
+
     fprintf(stderr, "usage: tificc [flags] input.tif output.tif\n");
 
     fprintf(stderr, "\nflags:\n\n");
@@ -982,6 +1047,7 @@ void Help(cmsContext ContextID, int level)
     fprintf(stderr, "-i<profile> - Input profile (defaults to sRGB)\n");
     fprintf(stderr, "-o<profile> - Output profile (defaults to sRGB)\n");
     fprintf(stderr, "-l<profile> - Transform by device-link profile\n");
+    fprintf(stderr, "-u<profile> - Transform by CUBE colormap\n");
 
     PrintBuiltins();
 
@@ -1034,7 +1100,6 @@ void Help(cmsContext ContextID, int level)
         "For suggestions, comments, bug reports etc. send mail to\n"
         "info@littlecms.com\n\n");
 
-
     exit(0);
 }
 
@@ -1046,7 +1111,7 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 {
     int s;
 
-    while ((s=xgetopt(argc,argv,"aAeEbBw:W:nNvVGgh:H:i:I:o:O:P:p:t:T:c:C:l:L:M:m:K:k:S:s:D:d:-:")) != EOF) {
+    while ((s=xgetopt(argc,argv,"aAeEbBw:W:nNvVGgh:H:i:I:o:O:P:p:t:T:c:C:l:L:u:U:M:m:K:k:S:s:D:d:-:")) != EOF) {
 
         switch (s) {
 
@@ -1123,6 +1188,17 @@ void HandleSwitches(cmsContext ContextID, int argc, char *argv[])
 
             cInpProf = xoptarg;
             lIsDeviceLink = TRUE;
+            lIsCUBE = FALSE;
+            break;
+
+        case 'u':
+        case 'U':
+            if (cInpProf != NULL || cOutProf != NULL)
+                FatalError("input/output profiles already specified");
+
+            cInpProf = xoptarg;
+            lIsDeviceLink = TRUE;
+            lIsCUBE = TRUE;
             break;
 
         case 'p':
@@ -1187,11 +1263,6 @@ int main(int argc, char* argv[])
 {
     cmsContext ContextID;
     TIFF *in, *out;
-
-
-    fprintf(stderr, "Little CMS ICC profile applier for TIFF - v7.2 [LittleCMS %2.2f]\n\n", cmsGetEncodedCMMversion() / 1000.0);
-    fprintf(stderr, "Copyright (c) 1998-2022 Marti Maria Saguer. See COPYING file for details.\n");
-    fflush(stderr);
 
     ContextID = cmsCreateContext(NULL, NULL);
 

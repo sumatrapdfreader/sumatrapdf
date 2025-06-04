@@ -1,0 +1,52 @@
+//---------------------------------------------------------------------------------
+//
+//  Little Color Management System, multithread extensions
+//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+//---------------------------------------------------------------------------------
+
+#include <windows.h>
+
+1 VERSIONINFO
+FILEVERSION @LCMS2_VERSION_MAJOR@, @LCMS2_VERSION_MINOR@, @LCMS2_VERSION_MICRO@, 0
+PRODUCTVERSION @LCMS2_VERSION_MAJOR@, @LCMS2_VERSION_MINOR@, @LCMS2_VERSION_MICRO@, 0
+FILEFLAGSMASK 0x0L
+#ifdef _DEBUG
+FILEFLAGS VS_FF_DEBUG
+#endif
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_DLL
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904e4"
+        {
+            VALUE "CompanyName", "Marti Maria"
+            VALUE "FileDescription", "Multithread plugin"
+            VALUE "FileVersion", @LCMS2_VERSION@
+            VALUE "InternalName", "lcms2_threaded"
+            VALUE "LegalCopyright", "Copyright (C) Marti Maria 2022, GPL-3.0-or-later"
+            VALUE "OriginalFilename", "lcms2_threaded.dll"
+            VALUE "ProductName", "LittleCMS color engine"
+            VALUE "ProductVersion", @LCMS2_VERSION@
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x409, 1252
+    }
+}

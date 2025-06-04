@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2023 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.14 rc1
+// Version 2.16
 //
 
 #ifndef _lcms2mt_H
@@ -76,17 +76,20 @@
 
 #ifndef CMS_USE_CPP_API
 #   ifdef __cplusplus
+#       if __cplusplus >= 201703L
+#            define CMS_NO_REGISTER_KEYWORD 1  
+#       endif
 extern "C" {
 #   endif
 #endif
 
 // Version/release
-// Vanilla LCMS2 uses values from 2000-2140. This is
+// Vanilla LCMS2 uses values from 2000-2160. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2140 - 2000)
+#define LCMS_VERSION              (2160 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -237,7 +240,7 @@ typedef int                  cmsBool;
 
 
 // Calling convention -- this is hardly platform and compiler dependent
-#ifdef CMS_IS_WINDOWS_
+#if defined(CMS_IS_WINDOWS_) && !defined(__GNUC__)
 #  if defined(CMS_DLL) || defined(CMS_DLL_BUILD)
 #     ifdef __BORLANDC__
 #        define CMSEXPORT       __stdcall _export
@@ -271,6 +274,468 @@ typedef int                  cmsBool;
 #    define CMS_NO_PTHREADS 1
 # endif
 #endif
+
+#ifdef LCMS2MT_PREFIX
+
+#define LCMS2MT_XCAT(A,B) A##B
+#define LCMS2MT_CAT(A,B) LCMS2MT_XCAT(A,B)
+#define LCMS2MT_PREF(B) LCMS2MT_CAT(LCMS2MT_PREFIX,B)
+
+#define _cms15Fixed16toDouble                    LCMS2MT_PREF(_cms15Fixed16toDouble)
+#define _cms8Fixed8toDouble                      LCMS2MT_PREF(_cms8Fixed8toDouble)
+#define cmsAdaptToIlluminant                     LCMS2MT_PREF(cmsAdaptToIlluminant)
+#define _cmsAdjustEndianess16                    LCMS2MT_PREF(_cmsAdjustEndianess16)
+#define _cmsAdjustEndianess32                    LCMS2MT_PREF(_cmsAdjustEndianess32)
+#define _cmsAdjustEndianess64                    LCMS2MT_PREF(_cmsAdjustEndianess64)
+#define cmsAllocNamedColorList                   LCMS2MT_PREF(cmsAllocNamedColorList)
+#define cmsAllocProfileSequenceDescription       LCMS2MT_PREF(cmsAllocProfileSequenceDescription)
+#define cmsAppendNamedColor                      LCMS2MT_PREF(cmsAppendNamedColor)
+#define cmsBFDdeltaE                             LCMS2MT_PREF(cmsBFDdeltaE)
+#define cmsBuildGamma                            LCMS2MT_PREF(cmsBuildGamma)
+#define cmsBuildParametricToneCurve              LCMS2MT_PREF(cmsBuildParametricToneCurve)
+#define cmsBuildSegmentedToneCurve               LCMS2MT_PREF(cmsBuildSegmentedToneCurve)
+#define cmsBuildTabulatedToneCurve16             LCMS2MT_PREF(cmsBuildTabulatedToneCurve16)
+#define cmsBuildTabulatedToneCurveFloat          LCMS2MT_PREF(cmsBuildTabulatedToneCurveFloat)
+#define _cmsCalloc                               LCMS2MT_PREF(_cmsCalloc)
+#define cmsChannelsOf                            LCMS2MT_PREF(cmsChannelsOf)
+#define cmsChannelsOfColorSpace                  LCMS2MT_PREF(cmsChannelsOfColorSpace)
+#define cmsCIE2000DeltaE                         LCMS2MT_PREF(cmsCIE2000DeltaE)
+#define cmsCIE94DeltaE                           LCMS2MT_PREF(cmsCIE94DeltaE)
+#define cmsCIECAM02Done                          LCMS2MT_PREF(cmsCIECAM02Done)
+#define cmsCIECAM02Forward                       LCMS2MT_PREF(cmsCIECAM02Forward)
+#define cmsCIECAM02Init                          LCMS2MT_PREF(cmsCIECAM02Init)
+#define cmsCIECAM02Reverse                       LCMS2MT_PREF(cmsCIECAM02Reverse)
+#define cmsCloseIOhandler                        LCMS2MT_PREF(cmsCloseIOhandler)
+#define cmsCloseProfile                          LCMS2MT_PREF(cmsCloseProfile)
+#define cmsCMCdeltaE                             LCMS2MT_PREF(cmsCMCdeltaE)
+#define cmsCreate_sRGBProfile                    LCMS2MT_PREF(cmsCreate_sRGBProfile)
+#define cmsCreateBCHSWabstractProfile            LCMS2MT_PREF(cmsCreateBCHSWabstractProfile)
+#define cmsCreateExtendedTransform               LCMS2MT_PREF(cmsCreateExtendedTransform)
+#define cmsCreateGrayProfile                     LCMS2MT_PREF(cmsCreateGrayProfile)
+#define cmsCreateInkLimitingDeviceLink           LCMS2MT_PREF(cmsCreateInkLimitingDeviceLink)
+#define cmsCreateLab2Profile                     LCMS2MT_PREF(cmsCreateLab2Profile)
+#define cmsCreateLab4Profile                     LCMS2MT_PREF(cmsCreateLab4Profile)
+#define cmsCreateLinearizationDeviceLink         LCMS2MT_PREF(cmsCreateLinearizationDeviceLink)
+#define cmsCreateMultiprofileTransform           LCMS2MT_PREF(cmsCreateMultiprofileTransform)
+#define cmsCreateNULLProfile                     LCMS2MT_PREF(cmsCreateNULLProfile)
+#define cmsCreateProfilePlaceholder              LCMS2MT_PREF(cmsCreateProfilePlaceholder)
+#define cmsCreateProofingTransform               LCMS2MT_PREF(cmsCreateProofingTransform)
+#define cmsCreateRGBProfile                      LCMS2MT_PREF(cmsCreateRGBProfile)
+#define cmsCreateTransform                       LCMS2MT_PREF(cmsCreateTransform)
+#define cmsCreateXYZProfile                      LCMS2MT_PREF(cmsCreateXYZProfile)
+#define cmsD50_xyY                               LCMS2MT_PREF(cmsD50_xyY)
+#define cmsD50_XYZ                               LCMS2MT_PREF(cmsD50_XYZ)
+#define _cmsDecodeDateTimeNumber                 LCMS2MT_PREF(_cmsDecodeDateTimeNumber)
+#define _cmsDefaultICCintents                    LCMS2MT_PREF(_cmsDefaultICCintents)
+#define cmsDeleteTransform                       LCMS2MT_PREF(cmsDeleteTransform)
+#define cmsDeltaE                                LCMS2MT_PREF(cmsDeltaE)
+#define cmsDetectBlackPoint                      LCMS2MT_PREF(cmsDetectBlackPoint)
+#define cmsDetectDestinationBlackPoint           LCMS2MT_PREF(cmsDetectDestinationBlackPoint)
+#define cmsDetectTAC                             LCMS2MT_PREF(cmsDetectTAC)
+#define cmsDesaturateLab                         LCMS2MT_PREF(cmsDesaturateLab)
+#define cmsDoTransform                           LCMS2MT_PREF(cmsDoTransform)
+#define cmsDoTransformStride                     LCMS2MT_PREF(cmsDoTransformStride)
+#define cmsDoTransformLineStride                 LCMS2MT_PREF(cmsDoTransformLineStride)
+#define _cmsDoubleTo15Fixed16                    LCMS2MT_PREF(_cmsDoubleTo15Fixed16)
+#define _cmsDoubleTo8Fixed8                      LCMS2MT_PREF(_cmsDoubleTo8Fixed8)
+#define _cmsDupMem                               LCMS2MT_PREF(_cmsDupMem)
+#define cmsDupNamedColorList                     LCMS2MT_PREF(cmsDupNamedColorList)
+#define cmsDupProfileSequenceDescription         LCMS2MT_PREF(cmsDupProfileSequenceDescription)
+#define cmsDupToneCurve                          LCMS2MT_PREF(cmsDupToneCurve)
+#define _cmsEncodeDateTimeNumber                 LCMS2MT_PREF(_cmsEncodeDateTimeNumber)
+#define cmsEstimateGamma                         LCMS2MT_PREF(cmsEstimateGamma)
+#define cmsGetToneCurveEstimatedTableEntries     LCMS2MT_PREF(cmsGetToneCurveEstimatedTableEntries)
+#define cmsGetToneCurveEstimatedTable            LCMS2MT_PREF(cmsGetToneCurveEstimatedTable)
+#define cmsEvalToneCurve16                       LCMS2MT_PREF(cmsEvalToneCurve16)
+#define cmsEvalToneCurveFloat                    LCMS2MT_PREF(cmsEvalToneCurveFloat)
+#define cmsfilelength                            LCMS2MT_PREF(cmsfilelength)
+#define cmsFloat2LabEncoded                      LCMS2MT_PREF(cmsFloat2LabEncoded)
+#define cmsFloat2LabEncodedV2                    LCMS2MT_PREF(cmsFloat2LabEncodedV2)
+#define cmsFloat2XYZEncoded                      LCMS2MT_PREF(cmsFloat2XYZEncoded)
+#define cmsFormatterForColorspaceOfProfile       LCMS2MT_PREF(cmsFormatterForColorspaceOfProfile)
+#define cmsFormatterForPCSOfProfile              LCMS2MT_PREF(cmsFormatterForPCSOfProfile)
+#define _cmsFree                                 LCMS2MT_PREF(_cmsFree)
+#define cmsFreeNamedColorList                    LCMS2MT_PREF(cmsFreeNamedColorList)
+#define cmsFreeProfileSequenceDescription        LCMS2MT_PREF(cmsFreeProfileSequenceDescription)
+#define cmsFreeToneCurve                         LCMS2MT_PREF(cmsFreeToneCurve)
+#define cmsFreeToneCurveTriple                   LCMS2MT_PREF(cmsFreeToneCurveTriple)
+#define cmsGBDAlloc                              LCMS2MT_PREF(cmsGBDAlloc)
+#define cmsGBDFree                               LCMS2MT_PREF(cmsGBDFree)
+#define cmsGDBAddPoint                           LCMS2MT_PREF(cmsGDBAddPoint)
+#define cmsGDBCheckPoint                         LCMS2MT_PREF(cmsGDBCheckPoint)
+#define cmsGDBCompute                            LCMS2MT_PREF(cmsGDBCompute)
+#define cmsGetAlarmCodes                         LCMS2MT_PREF(cmsGetAlarmCodes)
+#define cmsGetColorSpace                         LCMS2MT_PREF(cmsGetColorSpace)
+#define cmsGetDeviceClass                        LCMS2MT_PREF(cmsGetDeviceClass)
+#define cmsGetEncodedICCversion                  LCMS2MT_PREF(cmsGetEncodedICCversion)
+#define cmsGetHeaderAttributes                   LCMS2MT_PREF(cmsGetHeaderAttributes)
+#define cmsGetHeaderCreationDateTime             LCMS2MT_PREF(cmsGetHeaderCreationDateTime)
+#define cmsGetHeaderFlags                        LCMS2MT_PREF(cmsGetHeaderFlags)
+#define cmsGetHeaderManufacturer                 LCMS2MT_PREF(cmsGetHeaderManufacturer)
+#define cmsGetHeaderModel                        LCMS2MT_PREF(cmsGetHeaderModel)
+#define cmsGetHeaderProfileID                    LCMS2MT_PREF(cmsGetHeaderProfileID)
+#define cmsGetHeaderRenderingIntent              LCMS2MT_PREF(cmsGetHeaderRenderingIntent)
+#define cmsGetNamedColorList                     LCMS2MT_PREF(cmsGetNamedColorList)
+#define cmsGetPCS                                LCMS2MT_PREF(cmsGetPCS)
+#define cmsGetPostScriptColorResource            LCMS2MT_PREF(cmsGetPostScriptColorResource)
+#define cmsGetPostScriptCRD                      LCMS2MT_PREF(cmsGetPostScriptCRD)
+#define cmsGetPostScriptCSA                      LCMS2MT_PREF(cmsGetPostScriptCSA)
+#define cmsGetProfileInfo                        LCMS2MT_PREF(cmsGetProfileInfo)
+#define cmsGetProfileInfoASCII                   LCMS2MT_PREF(cmsGetProfileInfoASCII)
+#define cmsGetProfileInfoUTF8                    LCMS2MT_PREF(cmsGetProfileInfoUTF8)
+#define cmsGetProfileVersion                     LCMS2MT_PREF(cmsGetProfileVersion)
+#define cmsGetSupportedIntents                   LCMS2MT_PREF(cmsGetSupportedIntents)
+#define cmsGetTagCount                           LCMS2MT_PREF(cmsGetTagCount)
+#define cmsGetTagSignature                       LCMS2MT_PREF(cmsGetTagSignature)
+#define _cmsICCcolorSpace                        LCMS2MT_PREF(_cmsICCcolorSpace)
+#define _cmsIOPrintf                             LCMS2MT_PREF(_cmsIOPrintf)
+#define cmsIsCLUT                                LCMS2MT_PREF(cmsIsCLUT)
+#define cmsIsIntentSupported                     LCMS2MT_PREF(cmsIsIntentSupported)
+#define cmsIsMatrixShaper                        LCMS2MT_PREF(cmsIsMatrixShaper)
+#define cmsIsTag                                 LCMS2MT_PREF(cmsIsTag)
+#define cmsIsToneCurveDescending                 LCMS2MT_PREF(cmsIsToneCurveDescending)
+#define cmsIsToneCurveLinear                     LCMS2MT_PREF(cmsIsToneCurveLinear)
+#define cmsIsToneCurveMonotonic                  LCMS2MT_PREF(cmsIsToneCurveMonotonic)
+#define cmsIsToneCurveMultisegment               LCMS2MT_PREF(cmsIsToneCurveMultisegment)
+#define cmsGetToneCurveParametricType            LCMS2MT_PREF(cmsGetToneCurveParametricType)
+#define cmsIT8Alloc                              LCMS2MT_PREF(cmsIT8Alloc)
+#define cmsIT8DefineDblFormat                    LCMS2MT_PREF(cmsIT8DefineDblFormat)
+#define cmsIT8EnumDataFormat                     LCMS2MT_PREF(cmsIT8EnumDataFormat)
+#define cmsIT8EnumProperties                     LCMS2MT_PREF(cmsIT8EnumProperties)
+#define cmsIT8EnumPropertyMulti                  LCMS2MT_PREF(cmsIT8EnumPropertyMulti)
+#define cmsIT8Free                               LCMS2MT_PREF(cmsIT8Free)
+#define cmsIT8GetData                            LCMS2MT_PREF(cmsIT8GetData)
+#define cmsIT8GetDataDbl                         LCMS2MT_PREF(cmsIT8GetDataDbl)
+#define cmsIT8FindDataFormat                     LCMS2MT_PREF(cmsIT8FindDataFormat)
+#define cmsIT8GetDataRowCol                      LCMS2MT_PREF(cmsIT8GetDataRowCol)
+#define cmsIT8GetDataRowColDbl                   LCMS2MT_PREF(cmsIT8GetDataRowColDbl)
+#define cmsIT8GetPatchName                       LCMS2MT_PREF(cmsIT8GetPatchName)
+#define cmsIT8GetPatchByName                     LCMS2MT_PREF(cmsIT8GetPatchByName)
+#define cmsIT8GetProperty                        LCMS2MT_PREF(cmsIT8GetProperty)
+#define cmsIT8GetPropertyDbl                     LCMS2MT_PREF(cmsIT8GetPropertyDbl)
+#define cmsIT8GetPropertyMulti                   LCMS2MT_PREF(cmsIT8GetPropertyMulti)
+#define cmsIT8GetSheetType                       LCMS2MT_PREF(cmsIT8GetSheetType)
+#define cmsIT8LoadFromFile                       LCMS2MT_PREF(cmsIT8LoadFromFile)
+#define cmsIT8LoadFromMem                        LCMS2MT_PREF(cmsIT8LoadFromMem)
+#define cmsIT8SaveToFile                         LCMS2MT_PREF(cmsIT8SaveToFile)
+#define cmsIT8SaveToMem                          LCMS2MT_PREF(cmsIT8SaveToMem)
+#define cmsIT8SetComment                         LCMS2MT_PREF(cmsIT8SetComment)
+#define cmsIT8SetData                            LCMS2MT_PREF(cmsIT8SetData)
+#define cmsIT8SetDataDbl                         LCMS2MT_PREF(cmsIT8SetDataDbl)
+#define cmsIT8SetDataFormat                      LCMS2MT_PREF(cmsIT8SetDataFormat)
+#define cmsIT8SetDataRowCol                      LCMS2MT_PREF(cmsIT8SetDataRowCol)
+#define cmsIT8SetDataRowColDbl                   LCMS2MT_PREF(cmsIT8SetDataRowColDbl)
+#define cmsIT8SetPropertyDbl                     LCMS2MT_PREF(cmsIT8SetPropertyDbl)
+#define cmsIT8SetPropertyHex                     LCMS2MT_PREF(cmsIT8SetPropertyHex)
+#define cmsIT8SetPropertyStr                     LCMS2MT_PREF(cmsIT8SetPropertyStr)
+#define cmsIT8SetPropertyMulti                   LCMS2MT_PREF(cmsIT8SetPropertyMulti)
+#define cmsIT8SetPropertyUncooked                LCMS2MT_PREF(cmsIT8SetPropertyUncooked)
+#define cmsIT8SetSheetType                       LCMS2MT_PREF(cmsIT8SetSheetType)
+#define cmsIT8SetTable                           LCMS2MT_PREF(cmsIT8SetTable)
+#define cmsIT8SetTableByLabel                    LCMS2MT_PREF(cmsIT8SetTableByLabel)
+#define cmsIT8SetIndexColumn                     LCMS2MT_PREF(cmsIT8SetIndexColumn)
+#define cmsIT8TableCount                         LCMS2MT_PREF(cmsIT8TableCount)
+#define cmsJoinToneCurve                         LCMS2MT_PREF(cmsJoinToneCurve)
+#define cmsLab2LCh                               LCMS2MT_PREF(cmsLab2LCh)
+#define cmsLab2XYZ                               LCMS2MT_PREF(cmsLab2XYZ)
+#define cmsLabEncoded2Float                      LCMS2MT_PREF(cmsLabEncoded2Float)
+#define cmsLabEncoded2FloatV2                    LCMS2MT_PREF(cmsLabEncoded2FloatV2)
+#define cmsLCh2Lab                               LCMS2MT_PREF(cmsLCh2Lab)
+#define _cmsLCMScolorSpace                       LCMS2MT_PREF(_cmsLCMScolorSpace)
+#define cmsLinkTag                               LCMS2MT_PREF(cmsLinkTag)
+#define cmsTagLinkedTo                           LCMS2MT_PREF(cmsTagLinkedTo)
+#define cmsPipelineAlloc                         LCMS2MT_PREF(cmsPipelineAlloc)
+#define cmsPipelineCat                           LCMS2MT_PREF(cmsPipelineCat)
+#define cmsPipelineCheckAndRetreiveStages        LCMS2MT_PREF(cmsPipelineCheckAndRetreiveStages)
+#define cmsPipelineDup                           LCMS2MT_PREF(cmsPipelineDup)
+#define cmsPipelineStageCount                    LCMS2MT_PREF(cmsPipelineStageCount)
+#define cmsPipelineEval16                        LCMS2MT_PREF(cmsPipelineEval16)
+#define cmsPipelineEvalFloat                     LCMS2MT_PREF(cmsPipelineEvalFloat)
+#define cmsPipelineEvalReverseFloat              LCMS2MT_PREF(cmsPipelineEvalReverseFloat)
+#define cmsPipelineFree                          LCMS2MT_PREF(cmsPipelineFree)
+#define cmsPipelineGetPtrToFirstStage            LCMS2MT_PREF(cmsPipelineGetPtrToFirstStage)
+#define cmsPipelineGetPtrToLastStage             LCMS2MT_PREF(cmsPipelineGetPtrToLastStage)
+#define cmsPipelineInputChannels                 LCMS2MT_PREF(cmsPipelineInputChannels)
+#define cmsPipelineInsertStage                   LCMS2MT_PREF(cmsPipelineInsertStage)
+#define cmsPipelineOutputChannels                LCMS2MT_PREF(cmsPipelineOutputChannels)
+#define cmsPipelineSetSaveAs8bitsFlag            LCMS2MT_PREF(cmsPipelineSetSaveAs8bitsFlag)
+#define _cmsPipelineSetOptimizationParameters    LCMS2MT_PREF(_cmsPipelineSetOptimizationParameters)
+#define cmsPipelineUnlinkStage                   LCMS2MT_PREF(cmsPipelineUnlinkStage)
+#define _cmsMalloc                               LCMS2MT_PREF(_cmsMalloc)
+#define _cmsMallocZero                           LCMS2MT_PREF(_cmsMallocZero)
+#define _cmsMAT3eval                             LCMS2MT_PREF(_cmsMAT3eval)
+#define _cmsMAT3identity                         LCMS2MT_PREF(_cmsMAT3identity)
+#define _cmsMAT3inverse                          LCMS2MT_PREF(_cmsMAT3inverse)
+#define _cmsMAT3isIdentity                       LCMS2MT_PREF(_cmsMAT3isIdentity)
+#define _cmsMAT3per                              LCMS2MT_PREF(_cmsMAT3per)
+#define _cmsMAT3solve                            LCMS2MT_PREF(_cmsMAT3solve)
+#define cmsMD5computeID                          LCMS2MT_PREF(cmsMD5computeID)
+#define cmsMLUalloc                              LCMS2MT_PREF(cmsMLUalloc)
+#define cmsMLUdup                                LCMS2MT_PREF(cmsMLUdup)
+#define cmsMLUfree                               LCMS2MT_PREF(cmsMLUfree)
+#define cmsMLUgetASCII                           LCMS2MT_PREF(cmsMLUgetASCII)
+#define cmsMLUgetTranslation                     LCMS2MT_PREF(cmsMLUgetTranslation)
+#define cmsMLUgetWide                            LCMS2MT_PREF(cmsMLUgetWide)
+#define cmsMLUgetUTF8                            LCMS2MT_PREF(cmsMLUgetUTF8)
+#define cmsMLUsetASCII                           LCMS2MT_PREF(cmsMLUsetASCII)
+#define cmsMLUsetWide                            LCMS2MT_PREF(cmsMLUsetWide)
+#define cmsMLUsetUTF8                            LCMS2MT_PREF(cmsMLUsetUTF8)
+#define cmsStageAllocCLut16bit                   LCMS2MT_PREF(cmsStageAllocCLut16bit)
+#define cmsStageAllocCLut16bitGranular           LCMS2MT_PREF(cmsStageAllocCLut16bitGranular)
+#define cmsStageAllocCLutFloat                   LCMS2MT_PREF(cmsStageAllocCLutFloat)
+#define cmsStageAllocCLutFloatGranular           LCMS2MT_PREF(cmsStageAllocCLutFloatGranular)
+#define cmsStageAllocToneCurves                  LCMS2MT_PREF(cmsStageAllocToneCurves)
+#define cmsStageAllocIdentity                    LCMS2MT_PREF(cmsStageAllocIdentity)
+#define cmsStageAllocMatrix                      LCMS2MT_PREF(cmsStageAllocMatrix)
+#define _cmsStageAllocPlaceholder                LCMS2MT_PREF(_cmsStageAllocPlaceholder)
+#define cmsStageDup                              LCMS2MT_PREF(cmsStageDup)
+#define cmsStageFree                             LCMS2MT_PREF(cmsStageFree)
+#define cmsStageNext                             LCMS2MT_PREF(cmsStageNext)
+#define cmsStageInputChannels                    LCMS2MT_PREF(cmsStageInputChannels)
+#define cmsStageOutputChannels                   LCMS2MT_PREF(cmsStageOutputChannels)
+#define cmsStageSampleCLut16bit                  LCMS2MT_PREF(cmsStageSampleCLut16bit)
+#define cmsStageSampleCLutFloat                  LCMS2MT_PREF(cmsStageSampleCLutFloat)
+#define cmsStageType                             LCMS2MT_PREF(cmsStageType)
+#define cmsStageData                             LCMS2MT_PREF(cmsStageData)
+#define cmsNamedColorCount                       LCMS2MT_PREF(cmsNamedColorCount)
+#define cmsNamedColorIndex                       LCMS2MT_PREF(cmsNamedColorIndex)
+#define cmsNamedColorInfo                        LCMS2MT_PREF(cmsNamedColorInfo)
+#define cmsOpenIOhandlerFromFile                 LCMS2MT_PREF(cmsOpenIOhandlerFromFile)
+#define cmsOpenIOhandlerFromMem                  LCMS2MT_PREF(cmsOpenIOhandlerFromMem)
+#define cmsOpenIOhandlerFromNULL                 LCMS2MT_PREF(cmsOpenIOhandlerFromNULL)
+#define cmsOpenIOhandlerFromStream               LCMS2MT_PREF(cmsOpenIOhandlerFromStream)
+#define cmsOpenProfileFromFile                   LCMS2MT_PREF(cmsOpenProfileFromFile)
+#define cmsOpenProfileFromIOhandler              LCMS2MT_PREF(cmsOpenProfileFromIOhandler)
+#define cmsOpenProfileFromIOhandler2             LCMS2MT_PREF(cmsOpenProfileFromIOhandler2)
+#define cmsOpenProfileFromMem                    LCMS2MT_PREF(cmsOpenProfileFromMem)
+#define cmsOpenProfileFromStream                 LCMS2MT_PREF(cmsOpenProfileFromStream)
+#define cmsCreateDeviceLinkFromCubeFile		 LCMS2MT_PREF(cmsCreateDeviceLinkFromCubeFile)
+#define cmsPlugin                                LCMS2MT_PREF(cmsPlugin)
+#define _cmsRead15Fixed16Number                  LCMS2MT_PREF(_cmsRead15Fixed16Number)
+#define _cmsReadAlignment                        LCMS2MT_PREF(_cmsReadAlignment)
+#define _cmsReadFloat32Number                    LCMS2MT_PREF(_cmsReadFloat32Number)
+#define cmsReadRawTag                            LCMS2MT_PREF(cmsReadRawTag)
+#define cmsReadTag                               LCMS2MT_PREF(cmsReadTag)
+#define _cmsReadTypeBase                         LCMS2MT_PREF(_cmsReadTypeBase)
+#define _cmsReadUInt16Array                      LCMS2MT_PREF(_cmsReadUInt16Array)
+#define _cmsReadUInt16Number                     LCMS2MT_PREF(_cmsReadUInt16Number)
+#define _cmsReadUInt32Number                     LCMS2MT_PREF(_cmsReadUInt32Number)
+#define _cmsReadUInt64Number                     LCMS2MT_PREF(_cmsReadUInt64Number)
+#define _cmsReadUInt8Number                      LCMS2MT_PREF(_cmsReadUInt8Number)
+#define _cmsReadXYZNumber                        LCMS2MT_PREF(_cmsReadXYZNumber)
+#define _cmsRealloc                              LCMS2MT_PREF(_cmsRealloc)
+#define cmsReverseToneCurve                      LCMS2MT_PREF(cmsReverseToneCurve)
+#define cmsReverseToneCurveEx                    LCMS2MT_PREF(cmsReverseToneCurveEx)
+#define cmsSaveProfileToFile                     LCMS2MT_PREF(cmsSaveProfileToFile)
+#define cmsSaveProfileToIOhandler                LCMS2MT_PREF(cmsSaveProfileToIOhandler)
+#define cmsSaveProfileToMem                      LCMS2MT_PREF(cmsSaveProfileToMem)
+#define cmsSaveProfileToStream                   LCMS2MT_PREF(cmsSaveProfileToStream)
+#define cmsSetAdaptationState                    LCMS2MT_PREF(cmsSetAdaptationState)
+#define cmsSetAlarmCodes                         LCMS2MT_PREF(cmsSetAlarmCodes)
+#define cmsSetColorSpace                         LCMS2MT_PREF(cmsSetColorSpace)
+#define cmsSetDeviceClass                        LCMS2MT_PREF(cmsSetDeviceClass)
+#define cmsSetEncodedICCversion                  LCMS2MT_PREF(cmsSetEncodedICCversion)
+#define cmsSetHeaderAttributes                   LCMS2MT_PREF(cmsSetHeaderAttributes)
+#define cmsSetHeaderFlags                        LCMS2MT_PREF(cmsSetHeaderFlags)
+#define cmsSetHeaderManufacturer                 LCMS2MT_PREF(cmsSetHeaderManufacturer)
+#define cmsSetHeaderModel                        LCMS2MT_PREF(cmsSetHeaderModel)
+#define cmsSetHeaderProfileID                    LCMS2MT_PREF(cmsSetHeaderProfileID)
+#define cmsSetHeaderRenderingIntent              LCMS2MT_PREF(cmsSetHeaderRenderingIntent)
+#define cmsSetLogErrorHandler                    LCMS2MT_PREF(cmsSetLogErrorHandler)
+#define cmsSetPCS                                LCMS2MT_PREF(cmsSetPCS)
+#define cmsSetProfileVersion                     LCMS2MT_PREF(cmsSetProfileVersion)
+#define cmsSignalError                           LCMS2MT_PREF(cmsSignalError)
+#define cmsSmoothToneCurve                       LCMS2MT_PREF(cmsSmoothToneCurve)
+#define cmsstrcasecmp                            LCMS2MT_PREF(cmsstrcasecmp)
+#define cmsTempFromWhitePoint                    LCMS2MT_PREF(cmsTempFromWhitePoint)
+#define cmsTransform2DeviceLink                  LCMS2MT_PREF(cmsTransform2DeviceLink)
+#define cmsUnregisterPlugins                     LCMS2MT_PREF(cmsUnregisterPlugins)
+#define _cmsVEC3cross                            LCMS2MT_PREF(_cmsVEC3cross)
+#define _cmsVEC3distance                         LCMS2MT_PREF(_cmsVEC3distance)
+#define _cmsVEC3dot                              LCMS2MT_PREF(_cmsVEC3dot)
+#define _cmsVEC3init                             LCMS2MT_PREF(_cmsVEC3init)
+#define _cmsVEC3length                           LCMS2MT_PREF(_cmsVEC3length)
+#define _cmsVEC3minus                            LCMS2MT_PREF(_cmsVEC3minus)
+#define cmsWhitePointFromTemp                    LCMS2MT_PREF(cmsWhitePointFromTemp)
+#define _cmsWrite15Fixed16Number                 LCMS2MT_PREF(_cmsWrite15Fixed16Number)
+#define _cmsWriteAlignment                       LCMS2MT_PREF(_cmsWriteAlignment)
+#define _cmsWriteFloat32Number                   LCMS2MT_PREF(_cmsWriteFloat32Number)
+#define cmsWriteRawTag                           LCMS2MT_PREF(cmsWriteRawTag)
+#define cmsWriteTag                              LCMS2MT_PREF(cmsWriteTag)
+#define _cmsWriteTypeBase                        LCMS2MT_PREF(_cmsWriteTypeBase)
+#define _cmsWriteUInt16Array                     LCMS2MT_PREF(_cmsWriteUInt16Array)
+#define _cmsWriteUInt16Number                    LCMS2MT_PREF(_cmsWriteUInt16Number)
+#define _cmsWriteUInt32Number                    LCMS2MT_PREF(_cmsWriteUInt32Number)
+#define _cmsWriteUInt64Number                    LCMS2MT_PREF(_cmsWriteUInt64Number)
+#define _cmsWriteUInt8Number                     LCMS2MT_PREF(_cmsWriteUInt8Number)
+#define _cmsWriteXYZNumber                       LCMS2MT_PREF(_cmsWriteXYZNumber)
+#define cmsxyY2XYZ                               LCMS2MT_PREF(cmsxyY2XYZ)
+#define cmsXYZ2Lab                               LCMS2MT_PREF(cmsXYZ2Lab)
+#define cmsXYZ2xyY                               LCMS2MT_PREF(cmsXYZ2xyY)
+#define cmsXYZEncoded2Float                      LCMS2MT_PREF(cmsXYZEncoded2Float)
+#define cmsSliceSpace16                          LCMS2MT_PREF(cmsSliceSpace16)
+#define cmsSliceSpaceFloat                       LCMS2MT_PREF(cmsSliceSpaceFloat)
+#define cmsCloneTransformChangingFormats         LCMS2MT_PREF(cmsCloneTransformChangingFormats)
+#define cmsDictAlloc                             LCMS2MT_PREF(cmsDictAlloc)
+#define cmsDictFree                              LCMS2MT_PREF(cmsDictFree)
+#define cmsDictDup                               LCMS2MT_PREF(cmsDictDup)
+#define cmsDictAddEntry                          LCMS2MT_PREF(cmsDictAddEntry)
+#define cmsDictGetEntryList                      LCMS2MT_PREF(cmsDictGetEntryList)
+#define cmsDictNextEntry                         LCMS2MT_PREF(cmsDictNextEntry)
+#define _cmsGetTransformUserData                 LCMS2MT_PREF(_cmsGetTransformUserData)
+#define _cmsSetTransformUserData                 LCMS2MT_PREF(_cmsSetTransformUserData)
+#define _cmsGetTransformFormatters16             LCMS2MT_PREF(_cmsGetTransformFormatters16)
+#define _cmsGetTransformFormattersFloat          LCMS2MT_PREF(_cmsGetTransformFormattersFloat)
+#define cmsGetHeaderCreator                      LCMS2MT_PREF(cmsGetHeaderCreator)
+#define cmsPlugin                                LCMS2MT_PREF(cmsPlugin)
+#define cmsGetTransformInputFormat               LCMS2MT_PREF(cmsGetTransformInputFormat)
+#define cmsGetTransformOutputFormat              LCMS2MT_PREF(cmsGetTransformOutputFormat)
+#define cmsCreateContext                         LCMS2MT_PREF(cmsCreateContext)
+#define cmsDupContext                            LCMS2MT_PREF(cmsDupContext)
+#define cmsDeleteContext                         LCMS2MT_PREF(cmsDeleteContext)
+#define cmsGetContextUserData                    LCMS2MT_PREF(cmsGetContextUserData)
+#define cmsUnregisterPlugins                     LCMS2MT_PREF(cmsUnregisterPlugins)
+#define cmsSetAlarmCodes                         LCMS2MT_PREF(cmsSetAlarmCodes)
+#define cmsGetAlarmCodes                         LCMS2MT_PREF(cmsGetAlarmCodes)
+#define cmsSetAdaptationState                    LCMS2MT_PREF(cmsSetAdaptationState)
+#define cmsSetLogErrorHandler                    LCMS2MT_PREF(cmsSetLogErrorHandler)
+#define cmsGetSupportedIntents                   LCMS2MT_PREF(cmsGetSupportedIntents)
+#define cmsMLUtranslationsCount                  LCMS2MT_PREF(cmsMLUtranslationsCount)
+#define cmsMLUtranslationsCodes                  LCMS2MT_PREF(cmsMLUtranslationsCodes)
+#define _cmsCreateMutex                          LCMS2MT_PREF(_cmsCreateMutex)
+#define _cmsDestroyMutex                         LCMS2MT_PREF(_cmsDestroyMutex)
+#define _cmsLockMutex                            LCMS2MT_PREF(_cmsLockMutex)
+#define _cmsUnlockMutex                          LCMS2MT_PREF(_cmsUnlockMutex)
+#define cmsGetProfileIOhandler                   LCMS2MT_PREF(cmsGetProfileIOhandler)
+#define cmsGetEncodedCMMversion                  LCMS2MT_PREF(cmsGetEncodedCMMversion)
+#define _cmsFloat2Half                           LCMS2MT_PREF(_cmsFloat2Half)
+#define _cmsHalf2Float                           LCMS2MT_PREF(_cmsHalf2Float)
+#define _cmsFreeInterpParams                     LCMS2MT_PREF(_cmsFreeInterpParams)
+#define _cmsGetFormatter                         LCMS2MT_PREF(_cmsGetFormatter)
+#define _cmsGetTransformFormatters16             LCMS2MT_PREF(_cmsGetTransformFormatters16)
+#define _cmsGetTransformFormattersFloat          LCMS2MT_PREF(_cmsGetTransformFormattersFloat)
+#define _cmsQuantizeVal                          LCMS2MT_PREF(_cmsQuantizeVal)
+#define _cmsReadDevicelinkLUT                    LCMS2MT_PREF(_cmsReadDevicelinkLUT)
+#define _cmsReadInputLUT                         LCMS2MT_PREF(_cmsReadInputLUT)
+#define _cmsReadOutputLUT                        LCMS2MT_PREF(_cmsReadOutputLUT)
+#define _cmsStageAllocIdentityCLut               LCMS2MT_PREF(_cmsStageAllocIdentityCLut)
+#define _cmsStageAllocIdentityCurves             LCMS2MT_PREF(_cmsStageAllocIdentityCurves)
+#define _cmsStageAllocLab2XYZ                    LCMS2MT_PREF(_cmsStageAllocLab2XYZ)
+#define _cmsStageAllocLabV2ToV4                  LCMS2MT_PREF(_cmsStageAllocLabV2ToV4)
+#define _cmsStageAllocLabV4ToV2                  LCMS2MT_PREF(_cmsStageAllocLabV4ToV2)
+#define _cmsStageAllocNamedColor                 LCMS2MT_PREF(_cmsStageAllocNamedColor)
+#define _cmsStageAllocXYZ2Lab                    LCMS2MT_PREF(_cmsStageAllocXYZ2Lab)
+#define cmsMD5add                                LCMS2MT_PREF(cmsMD5add)
+#define cmsMD5alloc                              LCMS2MT_PREF(cmsMD5alloc)
+#define cmsMD5finish                             LCMS2MT_PREF(cmsMD5finish)
+#define _cmsComputeInterpParams                  LCMS2MT_PREF(_cmsComputeInterpParams)
+#define cmsGetToneCurveSegment                   LCMS2MT_PREF(cmsGetToneCurveSegment)
+#define cmsDetectRGBProfileGamma                 LCMS2MT_PREF(cmsDetectRGBProfileGamma)
+#define _cmsOptimizePipeline                     LCMS2MT_PREF(_cmsOptimizePipeline)
+#define _cmsReasonableGridpointsByColorspace     LCMS2MT_PREF(_cmsReasonableGridpointsByColorspace)
+#define _cmsGetTransformFlags                    LCMS2MT_PREF(_cmsGetTransformFlags)
+#define _cmsGetTransformWorker                   LCMS2MT_PREF(_cmsGetTransformWorker)
+#define _cmsGetTransformMaxWorkers               LCMS2MT_PREF(_cmsGetTransformMaxWorkers)
+#define _cmsGetTransformWorkerFlags              LCMS2MT_PREF(_cmsGetTransformWorkerFlags)
+
+#define _cmsQuickFloor                           LCMS2MT_PREF(_cmsQuickFloor)
+#define _cmsQuickFloorWord                       LCMS2MT_PREF(_cmsQuickFloorWord)
+#define _cmsQuickSaturateWord                    LCMS2MT_PREF(_cmsQuickSaturateWord)
+#define _cmsQuickSaturateByte                    LCMS2MT_PREF(_cmsQuickSaturateByte)
+#define _cmsHandleExtraChannels                  LCMS2MT_PREF(_cmsHandleExtraChannels)
+#define _cmsAllocIntentsPluginChunk              LCMS2MT_PREF(_cmsAllocIntentsPluginChunk)
+#define _cmsLinkProfiles                         LCMS2MT_PREF(_cmsLinkProfiles)
+#define _cmsRegisterRenderingIntentPlugin        LCMS2MT_PREF(_cmsRegisterRenderingIntentPlugin)
+#define _cmsAllocLogErrorChunk                   LCMS2MT_PREF(_cmsAllocLogErrorChunk)
+#define _cmsAllocMemPluginChunk                  LCMS2MT_PREF(_cmsAllocMemPluginChunk)
+#define _cmsAllocMutexPluginChunk                LCMS2MT_PREF(_cmsAllocMutexPluginChunk)
+#define _cmsAllocParallelizationPluginChunk      LCMS2MT_PREF(_cmsAllocParallelizationPluginChunk)
+#define _cmsCreateSubAlloc                       LCMS2MT_PREF(_cmsCreateSubAlloc)
+#define _cmsInstallAllocFunctions                LCMS2MT_PREF(_cmsInstallAllocFunctions)
+#define _cmsRegisterMemHandlerPlugin             LCMS2MT_PREF(_cmsRegisterMemHandlerPlugin)
+#define _cmsRegisterMutexPlugin                  LCMS2MT_PREF(_cmsRegisterMutexPlugin)
+#define _cmsRegisterParallelizationPlugin        LCMS2MT_PREF(_cmsRegisterParallelizationPlugin)
+#define _cmsSubAlloc                             LCMS2MT_PREF(_cmsSubAlloc)
+#define _cmsSubAllocDestroy                      LCMS2MT_PREF(_cmsSubAllocDestroy)
+#define _cmsSubAllocDup                          LCMS2MT_PREF(_cmsSubAllocDup)
+#define _cmsTagSignature2String                  LCMS2MT_PREF(_cmsTagSignature2String)
+#define _cmsAllocCurvesPluginChunk               LCMS2MT_PREF(_cmsAllocCurvesPluginChunk)
+#define _cmsRegisterParametricCurvesPlugin       LCMS2MT_PREF(_cmsRegisterParametricCurvesPlugin)
+#define _cmsBuildKToneCurve                      LCMS2MT_PREF(_cmsBuildKToneCurve)
+#define _cmsChain2Lab                            LCMS2MT_PREF(_cmsChain2Lab)
+#define _cmsCreateGamutCheckPipeline             LCMS2MT_PREF(_cmsCreateGamutCheckPipeline)
+#define _cmsAllocInterpPluginChunk               LCMS2MT_PREF(_cmsAllocInterpPluginChunk)
+#define _cmsComputeInterpParamsEx                LCMS2MT_PREF(_cmsComputeInterpParamsEx)
+#define _cmsRegisterInterpPlugin                 LCMS2MT_PREF(_cmsRegisterInterpPlugin)
+#define _cmsSetInterpolationRoutine              LCMS2MT_PREF(_cmsSetInterpolationRoutine)
+#define _cmsGetTagTrueType                       LCMS2MT_PREF(_cmsGetTagTrueType)
+#define _cmsReadHeader                           LCMS2MT_PREF(_cmsReadHeader)
+#define _cmsSearchTag                            LCMS2MT_PREF(_cmsSearchTag)
+#define _cmsWriteHeader                          LCMS2MT_PREF(_cmsWriteHeader)
+#define _cmsCompileProfileSequence               LCMS2MT_PREF(_cmsCompileProfileSequence)
+#define _cmsReadCHAD                             LCMS2MT_PREF(_cmsReadCHAD)
+#define _cmsReadMediaWhitePoint                  LCMS2MT_PREF(_cmsReadMediaWhitePoint)
+#define _cmsReadProfileSequence                  LCMS2MT_PREF(_cmsReadProfileSequence)
+#define _cmsWriteProfileSequence                 LCMS2MT_PREF(_cmsWriteProfileSequence)
+#define _cmsStageAllocLabPrelin                  LCMS2MT_PREF(_cmsStageAllocLabPrelin)
+#define _cmsStageAllocLabV2ToV4curves            LCMS2MT_PREF(_cmsStageAllocLabV2ToV4curves)
+#define _cmsStageClipNegatives                   LCMS2MT_PREF(_cmsStageClipNegatives)
+#define _cmsStageGetPtrToCurveSet                LCMS2MT_PREF(_cmsStageGetPtrToCurveSet)
+#define _cmsStageNormalizeFromLabFloat           LCMS2MT_PREF(_cmsStageNormalizeFromLabFloat)
+#define _cmsStageNormalizeFromXyzFloat           LCMS2MT_PREF(_cmsStageNormalizeFromXyzFloat)
+#define _cmsStageNormalizeToLabFloat             LCMS2MT_PREF(_cmsStageNormalizeToLabFloat)
+#define _cmsStageNormalizeToXyzFloat             LCMS2MT_PREF(_cmsStageNormalizeToXyzFloat)
+#define _cmsAllocOptimizationPluginChunk         LCMS2MT_PREF(_cmsAllocOptimizationPluginChunk)
+#define _cmsLutIsIdentity                        LCMS2MT_PREF(_cmsLutIsIdentity)
+#define _cmsRegisterOptimizationPlugin           LCMS2MT_PREF(_cmsRegisterOptimizationPlugin)
+#define _cmsAllocFormattersPluginChunk           LCMS2MT_PREF(_cmsAllocFormattersPluginChunk)
+#define _cmsFormatterIs8bit                      LCMS2MT_PREF(_cmsFormatterIs8bit)
+#define _cmsFormatterIsFloat                     LCMS2MT_PREF(_cmsFormatterIsFloat)
+#define _cmsRegisterFormattersPlugin             LCMS2MT_PREF(_cmsRegisterFormattersPlugin)
+#define _cmsEndPointsBySpace                     LCMS2MT_PREF(_cmsEndPointsBySpace)
+#define _cmsAdjustReferenceCount                 LCMS2MT_PREF(_cmsAdjustReferenceCount)
+#define _cmsContextGetClientChunk                LCMS2MT_PREF(_cmsContextGetClientChunk)
+#define _cmsGetContext                           LCMS2MT_PREF(_cmsGetContext)
+#define _cmsGetTime                              LCMS2MT_PREF(_cmsGetTime)
+#define _cmsPluginMalloc                         LCMS2MT_PREF(_cmsPluginMalloc)
+#define IsIdentity                               LCMS2MT_PREF(IsIdentity)
+#define Type_MHC2_Dup                            LCMS2MT_PREF(Type_MHC2_Dup)
+#define Type_VideoSignal_Dup                     LCMS2MT_PREF(Type_VideoSignal_Dup)
+#define _cmsAllocMPETypePluginChunk              LCMS2MT_PREF(_cmsAllocMPETypePluginChunk)
+#define _cmsAllocTagPluginChunk                  LCMS2MT_PREF(_cmsAllocTagPluginChunk)
+#define _cmsAllocTagTypePluginChunk              LCMS2MT_PREF(_cmsAllocTagTypePluginChunk)
+#define _cmsGetTagDescriptor                     LCMS2MT_PREF(_cmsGetTagDescriptor)
+#define _cmsGetTagTypeHandler                    LCMS2MT_PREF(_cmsGetTagTypeHandler)
+#define _cmsRegisterMultiProcessElementPlugin    LCMS2MT_PREF(_cmsRegisterMultiProcessElementPlugin)
+#define _cmsRegisterTagPlugin                    LCMS2MT_PREF(_cmsRegisterTagPlugin)
+#define _cmsRegisterTagTypePlugin                LCMS2MT_PREF(_cmsRegisterTagTypePlugin)
+#define cmsCreate_OkLabProfile                   LCMS2MT_PREF(cmsCreate_OkLabProfile)
+#define _cmsAdaptationMatrix                     LCMS2MT_PREF(_cmsAdaptationMatrix)
+#define _cmsBuildRGB2XYZtransferMatrix           LCMS2MT_PREF(_cmsBuildRGB2XYZtransferMatrix)
+#define _cmsAllocAdaptationStateChunk            LCMS2MT_PREF(_cmsAllocAdaptationStateChunk)
+#define _cmsAllocAlarmCodesChunk                 LCMS2MT_PREF(_cmsAllocAlarmCodesChunk)
+#define _cmsAllocTransformPluginChunk            LCMS2MT_PREF(_cmsAllocTransformPluginChunk)
+#define _cmsFindFormatter                        LCMS2MT_PREF(_cmsFindFormatter)
+#define _cmsRegisterTransformPlugin              LCMS2MT_PREF(_cmsRegisterTransformPlugin)
+
+#define _cmsIntentsPluginChunk                   LCMS2MT_PREF(_cmsIntentsPluginChunk)
+#define _cmsLogErrorChunk                        LCMS2MT_PREF(_cmsLogErrorChunk)
+#define _cmsMemPluginChunk                       LCMS2MT_PREF(_cmsMemPluginChunk)
+#define _cmsMutexPluginChunk                     LCMS2MT_PREF(_cmsMutexPluginChunk)
+#define _cmsParallelizationPluginChunk           LCMS2MT_PREF(_cmsParallelizationPluginChunk)
+#define _cmsCurvesPluginChunk                    LCMS2MT_PREF(_cmsCurvesPluginChunk)
+#define _cmsInterpPluginChunk                    LCMS2MT_PREF(_cmsInterpPluginChunk)
+#define _cmsOptimizationPluginChunk              LCMS2MT_PREF(_cmsOptimizationPluginChunk)
+#define _cmsFormattersPluginChunk                LCMS2MT_PREF(_cmsFormattersPluginChunk)
+#define _cmsMPETypePluginChunk                   LCMS2MT_PREF(_cmsMPETypePluginChunk)
+#define _cmsTagPluginChunk                       LCMS2MT_PREF(_cmsTagPluginChunk)
+#define _cmsTagTypePluginChunk                   LCMS2MT_PREF(_cmsTagTypePluginChunk)
+#define _cmsAdaptationStateChunk                 LCMS2MT_PREF(_cmsAdaptationStateChunk)
+#define _cmsAlarmCodesChunk                      LCMS2MT_PREF(_cmsAlarmCodesChunk)
+#define _cmsTransformPluginChunk                 LCMS2MT_PREF(_cmsTransformPluginChunk)
+
+#endif
+
 
 // Some common definitions
 #define cmsMAX_PATH     256
@@ -335,7 +800,8 @@ typedef enum {
     cmsSigUInt8ArrayType                    = 0x75693038,  // 'ui08'
     cmsSigVcgtType                          = 0x76636774,  // 'vcgt'
     cmsSigViewingConditionsType             = 0x76696577,  // 'view'
-    cmsSigXYZType                           = 0x58595A20   // 'XYZ '
+    cmsSigXYZType                           = 0x58595A20,  // 'XYZ '
+    cmsSigMHC2Type                          = 0x4D484332   // 'MHC2'
 
 
 } cmsTagTypeSignature;
@@ -413,7 +879,8 @@ typedef enum {
     cmsSigVcgtTag                           = 0x76636774,  // 'vcgt'
     cmsSigMetaTag                           = 0x6D657461,  // 'meta'
     cmsSigcicpTag                           = 0x63696370,  // 'cicp'
-    cmsSigArgyllArtsTag                     = 0x61727473   // 'arts'
+    cmsSigArgyllArtsTag                     = 0x61727473,  // 'arts'
+    cmsSigMHC2Tag                           = 0x4D484332   // 'MHC2'
 
 } cmsTagSignature;
 
@@ -959,6 +1426,7 @@ typedef void* cmsHTRANSFORM;
 #define TYPE_RGB_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0))
 #define TYPE_BGR_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0)|DOSWAP_SH(1))
 #define TYPE_CMYK_DBL         (FLOAT_SH(1)|COLORSPACE_SH(PT_CMYK)|CHANNELS_SH(4)|BYTES_SH(0))
+#define TYPE_OKLAB_DBL        (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|CHANNELS_SH(3)|BYTES_SH(0))
 
 // IEEE 754-2008 "half"
 #define TYPE_GRAY_HALF_FLT    (FLOAT_SH(1)|COLORSPACE_SH(PT_GRAY)|CHANNELS_SH(1)|BYTES_SH(2))
@@ -1058,6 +1526,19 @@ typedef struct {
     cmsUInt8Number  VideoFullRangeFlag;
 
 } cmsVideoSignalType;
+
+typedef struct {
+    cmsUInt32Number   CurveEntries;
+    cmsFloat64Number* RedCurve;
+    cmsFloat64Number* GreenCurve;
+    cmsFloat64Number* BlueCurve;
+
+    cmsFloat64Number  MinLuminance;         // ST.2086 min luminance in nits
+    cmsFloat64Number  PeakLuminance;        // ST.2086 peak luminance in nits
+
+    cmsFloat64Number XYZ2XYZmatrix[3][4];
+
+} cmsMHC2Type;
 
 
 
@@ -1221,14 +1702,15 @@ CMSAPI cmsToneCurve*     CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, c
 CMSAPI cmsToneCurve*     CMSEXPORT cmsJoinToneCurve(cmsContext ContextID, const cmsToneCurve* X,  const cmsToneCurve* Y, cmsUInt32Number nPoints);
 CMSAPI cmsBool           CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, cmsFloat64Number lambda);
 CMSAPI cmsFloat32Number  CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v);
-CMSAPI cmsUInt16Number   CMSEXPORT cmsEvalToneCurve16(cmsContext ContextID, const cmsToneCurve* Curve, cmsUInt16Number v);
+CMSAPI cmsUInt16Number   CMSEXPORT cmsEvalToneCurve16(const cmsContext ContextID, const cmsToneCurve* Curve, cmsUInt16Number v);
 CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveMultisegment(cmsContext ContextID, const cmsToneCurve* InGamma);
 CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveLinear(cmsContext ContextID, const cmsToneCurve* Curve);
 CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveDescending(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsInt32Number    CMSEXPORT cmsGetToneCurveParametricType(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsFloat64Number  CMSEXPORT cmsEstimateGamma(cmsContext ContextID, const cmsToneCurve* t, cmsFloat64Number Precision);
-CMSAPI cmsFloat64Number* CMSEXPORT cmsGetToneCurveParams(cmsContext ContextID, const cmsToneCurve* t);
+
+CMSAPI const cmsCurveSegment* CMSEXPORT cmsGetToneCurveSegment(cmsContext ContextID, cmsInt32Number n, const cmsToneCurve* t);
 
 // Tone curve tabular estimation
 CMSAPI cmsUInt32Number         CMSEXPORT cmsGetToneCurveEstimatedTableEntries(cmsContext ContextID, const cmsToneCurve* t);
@@ -1322,8 +1804,11 @@ CMSAPI cmsBool           CMSEXPORT cmsSliceSpaceFloat(cmsContext ContextID, cmsU
 
 typedef struct _cms_MLU_struct cmsMLU;
 
-#define  cmsNoLanguage "\0\0"
-#define  cmsNoCountry  "\0\0"
+#define  cmsNoLanguage    "\0\0"
+#define  cmsNoCountry     "\0\0"
+
+// Special language/country to retrieve unicode field for description in V2 profiles. Use with care.
+#define  cmsV2Unicode     "\xff\xff"
 
 CMSAPI cmsMLU*           CMSEXPORT cmsMLUalloc(cmsContext ContextID, cmsUInt32Number nItems);
 CMSAPI void              CMSEXPORT cmsMLUfree(cmsContext ContextID, cmsMLU* mlu);
@@ -1335,6 +1820,9 @@ CMSAPI cmsBool           CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* 
 CMSAPI cmsBool           CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
                                                   const wchar_t* WideString);
+CMSAPI cmsBool           CMSEXPORT cmsMLUsetUTF8(cmsContext ContextID, cmsMLU* mlu,
+                                                  const char LanguageCode[3], const char CountryCode[3],
+                                                  const char* UTF8String);
 
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
@@ -1343,6 +1831,10 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cm
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
                                                  const char LanguageCode[3], const char CountryCode[3],
                                                  wchar_t* Buffer, cmsUInt32Number BufferSize);
+CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetUTF8(cmsContext ContextID, const cmsMLU* mlu,
+                                                 const char LanguageCode[3], const char CountryCode[3],
+                                                 char* Buffer, cmsUInt32Number BufferSize);
+
 
 CMSAPI cmsBool           CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU* mlu,
                                                          const char LanguageCode[3], const char CountryCode[3],
@@ -1566,6 +2058,10 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsGetProfileInfoASCII(cmsContext ContextID, 
                                                             const char LanguageCode[3], const char CountryCode[3],
                                                             char* Buffer, cmsUInt32Number BufferSize);
 
+CMSAPI cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsContext ContextID, cmsHPROFILE hProfile, cmsInfoType Info,
+                                                            const char LanguageCode[3], const char CountryCode[3],
+                                                            char* Buffer, cmsUInt32Number BufferSize);
+
 // IO handlers ----------------------------------------------------------------------------------------------------------
 
 typedef struct _cms_io_handler cmsIOHANDLER;
@@ -1631,6 +2127,26 @@ CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext Conte
                                                                 cmsFloat64Number Saturation,
                                                                 cmsUInt32Number TempSrc,
                                                                 cmsUInt32Number TempDest);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, const char* cFileName);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint);
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateXYZProfile(cmsContext ContextID);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreate_sRGBProfile(cmsContext ContextID);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreate_OkLabProfile(cmsContext ctx);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
+                                                             cmsUInt32Number nLUTPoints,
+                                                             cmsFloat64Number Bright,
+                                                             cmsFloat64Number Contrast,
+                                                             cmsFloat64Number Hue,
+                                                             cmsFloat64Number Saturation,
+                                                             cmsUInt32Number TempSrc,
+                                                             cmsUInt32Number TempDest);
 
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateNULLProfile(cmsContext ContextID);
 
