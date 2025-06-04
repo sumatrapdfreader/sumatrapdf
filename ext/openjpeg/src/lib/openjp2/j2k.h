@@ -113,6 +113,9 @@ The functions in J2K.C have for goal to read/write the several parts of the code
 
 #define J2K_MAX_POCS    32      /**< Maximum number of POCs */
 
+#define J2K_TCD_MATRIX_MAX_LAYER_COUNT 10
+#define J2K_TCD_MATRIX_MAX_RESOLUTION_COUNT 10
+
 /* ----------------------------------------------------------------------- */
 
 /**
@@ -272,7 +275,7 @@ typedef struct opj_tcp {
     OPJ_UINT32 ppt_data_size;
     /** size of ppt_data*/
     OPJ_UINT32 ppt_len;
-    /** add fixed_quality */
+    /** PSNR values */
     OPJ_FLOAT32 distoratio[100];
     /** tile-component coding parameters */
     opj_tccp_t *tccps;
@@ -314,6 +317,14 @@ typedef struct opj_tcp {
 } opj_tcp_t;
 
 
+/**
+Rate allocation strategy
+*/
+typedef enum {
+    RATE_DISTORTION_RATIO = 0,    /** allocation by rate/distortion */
+    FIXED_DISTORTION_RATIO = 1,   /** allocation by fixed distortion ratio (PSNR) (fixed quality) */
+    FIXED_LAYER = 2,              /** allocation by fixed layer (number of passes per layer / resolution / subband) */
+} J2K_QUALITY_LAYER_ALLOCATION_STRATEGY;
 
 
 typedef struct opj_encoding_param {
@@ -325,12 +336,8 @@ typedef struct opj_encoding_param {
     OPJ_INT32 *m_matrice;
     /** Flag determining tile part generation*/
     OPJ_BYTE m_tp_flag;
-    /** allocation by rate/distortion */
-    OPJ_BITFIELD m_disto_alloc : 1;
-    /** allocation by fixed layer */
-    OPJ_BITFIELD m_fixed_alloc : 1;
-    /** add fixed_quality */
-    OPJ_BITFIELD m_fixed_quality : 1;
+    /** Quality layer allocation strategy */
+    J2K_QUALITY_LAYER_ALLOCATION_STRATEGY m_quality_layer_alloc_strategy;
     /** Enabling Tile part generation*/
     OPJ_BITFIELD m_tp_on : 1;
 }
@@ -459,6 +466,24 @@ typedef struct opj_cp {
     /* <<UniPG */
 } opj_cp_t;
 
+/** Entry of a TLM marker segment */
+typedef struct opj_j2k_tlm_tile_part_info {
+    /** Tile index of the tile part. Ttlmi field */
+    OPJ_UINT16 m_tile_index;
+    /** Length in bytes, from the beginning of the SOT marker to the end of
+     * the bit stream data for that tile-part. Ptlmi field */
+    OPJ_UINT32 m_length;
+} opj_j2k_tlm_tile_part_info_t;
+
+/** Information got from the concatenation of TLM marker semgnets. */
+typedef struct opj_j2k_tlm_info {
+    /** Number of entries in m_tile_part_infos. */
+    OPJ_UINT32 m_entries_count;
+    /** Array of m_entries_count values. */
+    opj_j2k_tlm_tile_part_info_t* m_tile_part_infos;
+
+    OPJ_BOOL m_is_invalid;
+} opj_j2k_tlm_info_t;
 
 typedef struct opj_j2k_dec {
     /** locate in which part of the codestream the decoder is (main header, tile header, end) */
@@ -491,6 +516,18 @@ typedef struct opj_j2k_dec {
 
     OPJ_UINT32   m_numcomps_to_decode;
     OPJ_UINT32  *m_comps_indices_to_decode;
+
+    opj_j2k_tlm_info_t m_tlm;
+
+    /** Below if used when there's TLM information available and we use
+     * opj_set_decoded_area() to a subset of all tiles.
+     */
+    /* Current index in m_intersecting_tile_parts_offset[] to seek to */
+    OPJ_UINT32  m_idx_intersecting_tile_parts;
+    /* Number of elements of m_intersecting_tile_parts_offset[] */
+    OPJ_UINT32  m_num_intersecting_tile_parts;
+    /* Start offset of contributing tile parts */
+    OPJ_OFF_T*  m_intersecting_tile_parts_offset;
 
     /** to tell that a tile can be decoded. */
     OPJ_BITFIELD m_can_decode : 1;

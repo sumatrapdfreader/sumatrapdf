@@ -44,7 +44,7 @@ if(DOXYGEN_FOUND)
 
   # install HTML documentation (install png files too):
   install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/html
-    DESTINATION ${OPENJPEG_INSTALL_DOC_DIR}
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
     PATTERN ".svn" EXCLUDE
   )
 else()

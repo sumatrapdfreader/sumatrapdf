@@ -167,9 +167,9 @@ static OPJ_BOOL opj_t2_init_seg(opj_tcd_cblk_dec_t* cblk,
 static void opj_t2_putcommacode(opj_bio_t *bio, OPJ_INT32 n)
 {
     while (--n >= 0) {
-        opj_bio_write(bio, 1, 1);
+        opj_bio_putbit(bio, 1);
     }
-    opj_bio_write(bio, 0, 1);
+    opj_bio_putbit(bio, 0);
 }
 
 static OPJ_UINT32 opj_t2_getcommacode(opj_bio_t *bio)
@@ -184,7 +184,7 @@ static OPJ_UINT32 opj_t2_getcommacode(opj_bio_t *bio)
 static void opj_t2_putnumpasses(opj_bio_t *bio, OPJ_UINT32 n)
 {
     if (n == 1) {
-        opj_bio_write(bio, 0, 1);
+        opj_bio_putbit(bio, 0);
     } else if (n == 2) {
         opj_bio_write(bio, 2, 2);
     } else if (n <= 5) {
@@ -801,7 +801,7 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
         }
     }
 #endif
-    opj_bio_write(bio, packet_empty ? 0 : 1, 1);           /* Empty header bit */
+    opj_bio_putbit(bio, packet_empty ? 0 : 1);           /* Empty header bit */
 
     /* Writing Packet header */
     band = res->bands;
@@ -849,7 +849,7 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
             if (!cblk->numpasses) {
                 opj_tgt_encode(bio, prc->incltree, cblkno, (OPJ_INT32)(layno + 1));
             } else {
-                opj_bio_write(bio, layer->numpasses != 0, 1);
+                opj_bio_putbit(bio, layer->numpasses != 0);
             }
 
             /* if cblk not included, go to the next cblk  */
@@ -978,7 +978,9 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
                 return OPJ_FALSE;
             }
 
-            memcpy(c, layer->data, layer->len);
+            if (p_t2_mode == FINAL_PASS) {
+                memcpy(c, layer->data, layer->len);
+            }
             cblk->numpasses += layer->numpasses;
             c += layer->len;
             length -= layer->len;
@@ -1109,6 +1111,7 @@ static OPJ_BOOL opj_t2_read_packet_header(opj_t2_t* p_t2,
     /* SOP markers */
 
     if (p_tcp->csty & J2K_CP_CSTY_SOP) {
+        /* SOP markers are allowed (i.e. optional), just warn */
         if (p_max_length < 6) {
             opj_event_msg(p_manager, EVT_WARNING,
                           "Not enough space for expected SOP marker\n");
@@ -1161,12 +1164,15 @@ static OPJ_BOOL opj_t2_read_packet_header(opj_t2_t* p_t2,
 
         /* EPH markers */
         if (p_tcp->csty & J2K_CP_CSTY_EPH) {
+            /* EPH markers are required */
             if ((*l_modified_length_ptr - (OPJ_UINT32)(l_header_data -
                     *l_header_data_start)) < 2U) {
-                opj_event_msg(p_manager, EVT_WARNING,
-                              "Not enough space for expected EPH marker\n");
+                opj_event_msg(p_manager, EVT_ERROR,
+                              "Not enough space for required EPH marker\n");
+                return OPJ_FALSE;
             } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
-                opj_event_msg(p_manager, EVT_WARNING, "Expected EPH marker\n");
+                opj_event_msg(p_manager, EVT_ERROR, "Expected EPH marker\n");
+                return OPJ_FALSE;
             } else {
                 l_header_data += 2;
             }
@@ -1227,9 +1233,17 @@ static OPJ_BOOL opj_t2_read_packet_header(opj_t2_t* p_t2,
                 while (!opj_tgt_decode(l_bio, l_prc->imsbtree, cblkno, (OPJ_INT32)i)) {
                     ++i;
                 }
-
                 l_cblk->Mb = (OPJ_UINT32)l_band->numbps;
-                l_cblk->numbps = (OPJ_UINT32)l_band->numbps + 1 - i;
+                if ((OPJ_UINT32)l_band->numbps + 1 < i) {
+                    /* Not totally sure what we should do in that situation,
+                     * but that avoids the integer overflow of
+                     * https://github.com/uclouvain/openjpeg/pull/1488
+                     * while keeping the regression test suite happy.
+                     */
+                    l_cblk->numbps = (OPJ_UINT32)(l_band->numbps + 1 - (int)i);
+                } else {
+                    l_cblk->numbps = (OPJ_UINT32)l_band->numbps + 1 - i;
+                }
                 l_cblk->numlenbits = 3;
             }
 
@@ -1330,12 +1344,15 @@ static OPJ_BOOL opj_t2_read_packet_header(opj_t2_t* p_t2,
 
     /* EPH markers */
     if (p_tcp->csty & J2K_CP_CSTY_EPH) {
+        /* EPH markers are required */
         if ((*l_modified_length_ptr - (OPJ_UINT32)(l_header_data -
                 *l_header_data_start)) < 2U) {
-            opj_event_msg(p_manager, EVT_WARNING,
-                          "Not enough space for expected EPH marker\n");
+            opj_event_msg(p_manager, EVT_ERROR,
+                          "Not enough space for required EPH marker\n");
+            return OPJ_FALSE;
         } else if ((*l_header_data) != 0xff || (*(l_header_data + 1) != 0x92)) {
-            opj_event_msg(p_manager, EVT_WARNING, "Expected EPH marker\n");
+            opj_event_msg(p_manager, EVT_ERROR, "Expected EPH marker\n");
+            return OPJ_FALSE;
         } else {
             l_header_data += 2;
         }
@@ -1343,6 +1360,9 @@ static OPJ_BOOL opj_t2_read_packet_header(opj_t2_t* p_t2,
 
     l_header_length = (OPJ_UINT32)(l_header_data - *l_header_data_start);
     JAS_FPRINTF(stderr, "hdrlen=%d \n", l_header_length);
+    if (!l_header_length) {
+        return OPJ_FALSE;
+    }
     JAS_FPRINTF(stderr, "packet body\n");
     *l_modified_length_ptr -= l_header_length;
     *l_header_data_start += l_header_length;
@@ -1394,18 +1414,21 @@ static OPJ_BOOL opj_t2_read_packet_data(opj_t2_t* p_t2,
         l_nb_code_blocks = l_prc->cw * l_prc->ch;
         l_cblk = l_prc->cblks.dec;
 
-        for (cblkno = 0; cblkno < l_nb_code_blocks; ++cblkno) {
+        for (cblkno = 0; cblkno < l_nb_code_blocks; ++cblkno, ++l_cblk) {
             opj_tcd_seg_t *l_seg = 00;
-
-            // if we have a partial data stream, set numchunks to zero
-            // since we have no data to actually decode.
-            if (partial_buffer) {
-                l_cblk->numchunks = 0;
-            }
 
             if (!l_cblk->numnewpasses) {
                 /* nothing to do */
-                ++l_cblk;
+                continue;
+            }
+
+            if (partial_buffer || l_cblk->corrupted) {
+                /* if a previous segment in this packet couldn't be decoded,
+                 * or if this code block was corrupted in a previous layer,
+                 * then mark it as corrupted.
+                 */
+                l_cblk->numchunks = 0;
+                l_cblk->corrupted = OPJ_TRUE;
                 continue;
             }
 
@@ -1438,18 +1461,13 @@ static OPJ_BOOL opj_t2_read_packet_data(opj_t2_t* p_t2,
                                       "read: segment too long (%d) with max (%d) for codeblock %d (p=%d, b=%d, r=%d, c=%d)\n",
                                       l_seg->newlen, p_max_length, cblkno, p_pi->precno, bandno, p_pi->resno,
                                       p_pi->compno);
-                        // skip this codeblock since it is a partial read
+                        /* skip this codeblock (and following ones in this
+                         * packet) since it is a partial read
+                         */
                         partial_buffer = OPJ_TRUE;
+                        l_cblk->corrupted = OPJ_TRUE;
                         l_cblk->numchunks = 0;
-
-                        l_seg->numpasses += l_seg->numnewpasses;
-                        l_cblk->numnewpasses -= l_seg->numnewpasses;
-                        if (l_cblk->numnewpasses > 0) {
-                            ++l_seg;
-                            ++l_cblk->numsegs;
-                            break;
-                        }
-                        continue;
+                        break;
                     }
                 }
 
@@ -1506,7 +1524,7 @@ static OPJ_BOOL opj_t2_read_packet_data(opj_t2_t* p_t2,
             } while (l_cblk->numnewpasses > 0);
 
             l_cblk->real_num_segs = l_cblk->numsegs;
-            ++l_cblk;
+
         } /* next code_block */
 
         ++l_band;
@@ -1590,6 +1608,9 @@ static OPJ_BOOL opj_t2_skip_packet_data(opj_t2_t* p_t2,
                                       "skip: segment too long (%d) with max (%d) for codeblock %d (p=%d, b=%d, r=%d, c=%d)\n",
                                       l_seg->newlen, p_max_length, cblkno, p_pi->precno, bandno, p_pi->resno,
                                       p_pi->compno);
+
+                        *p_data_read = p_max_length;
+                        return OPJ_TRUE;
                     }
                 }
 

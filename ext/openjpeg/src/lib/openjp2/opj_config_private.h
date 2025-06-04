@@ -1,11 +1,6 @@
 /* create opj_config_private.h for CMake */
-/*** SET BY GS CONFIGURE SCRIPT ****/
-/* #define OPJ_HAVE_INTTYPES_H 	1 */
 
-/*** SET BY GS CONFIGURE SCRIPT ****/
-/* #define OPJ_HAVE_INTTYPES_H 	1 */
-
-#define OPJ_PACKAGE_VERSION "2.5.0"
+#define OPJ_PACKAGE_VERSION "2.5.3"
 
 /* Not used by openjp2*/
 /*#define HAVE_MEMORY_H 1*/
@@ -15,10 +10,13 @@
 /*#define HAVE_SYS_STAT_H 1*/
 /*#define HAVE_SYS_TYPES_H 1 */
 /*#define HAVE_UNISTD_H 1*/
+/*#define HAVE_INTTYPES_H 1 */
+/*#define HAVE_STDINT_H 1 */
 
 /* #undef _LARGEFILE_SOURCE */
 /* #undef _LARGE_FILES */
 /* #undef _FILE_OFFSET_BITS */
+/* #undef OPJ_HAVE_FSEEKO */
 
 /*** SET BY GS CONFIGURE SCRIPT ****/
 /* #define OPJ_HAVE_FSEEKO ON */
@@ -27,6 +25,13 @@
 /* #define OPJ_HAVE_ALIGNED_MALLOC 	1 */
 /* #define OPJ_HAVE_MEMALIGN 	1 */
 /* #define OPJ_HAVE_POSIX_MEMALIGN 	1 */
+
+#if !defined(_POSIX_C_SOURCE)
+#if defined(OPJ_HAVE_FSEEKO) || defined(OPJ_HAVE_POSIX_MEMALIGN)
+/* Get declarations of fseeko, ftello, posix_memalign. */
+#define _POSIX_C_SOURCE 200112L
+#endif
+#endif
 
 /* Byte order.  */
 /* All compilers that support Mac OS X define either __BIG_ENDIAN__ or
