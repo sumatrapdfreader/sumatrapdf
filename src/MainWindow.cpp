@@ -245,6 +245,9 @@ int MainWindow::GetTabIdx(WindowTab* tab) const {
 
 Vec<WindowTab*> MainWindow::Tabs() const {
     Vec<WindowTab*> res;
+    if (!tabsCtrl) { // null seen in crash report
+        return res;
+    }
     int nTabs = tabsCtrl->TabCount();
     for (int i = 0; i < nTabs; i++) {
         WindowTab* tab = GetTabsUserData<WindowTab*>(tabsCtrl, i);
