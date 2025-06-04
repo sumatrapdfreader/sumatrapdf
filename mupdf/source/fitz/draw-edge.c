@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -249,26 +249,14 @@ fz_insert_gel_rect(fz_context *ctx, fz_rasterizer *ras, float fx0, float fy0, fl
 	const int hscale = fz_rasterizer_aa_hscale(ras);
 	const int vscale = fz_rasterizer_aa_vscale(ras);
 
-	if (fx0 <= fx1)
-	{
-		fx0 = floorf(fx0 * hscale);
-		fx1 = ceilf(fx1 * hscale);
-	}
-	else
-	{
-		fx0 = ceilf(fx0 * hscale);
-		fx1 = floorf(fx1 * hscale);
-	}
-	if (fy0 <= fy1)
-	{
-		fy0 = floorf(fy0 * vscale);
-		fy1 = ceilf(fy1 * vscale);
-	}
-	else
-	{
-		fy0 = ceilf(fy0 * vscale);
-		fy1 = floorf(fy1 * vscale);
-	}
+	fx0 = floorf(fx0 * hscale);
+	fx1 = floorf(fx1 * hscale);
+	if (fx1 == fx0)
+		fx1++;
+	fy0 = floorf(fy0 * vscale);
+	fy1 = floorf(fy1 * vscale);
+	if (fy1 == fy0)
+		fy1++;
 
 	fx0 = fz_clamp(fx0, ras->clip.x0, ras->clip.x1);
 	fx1 = fz_clamp(fx1, ras->clip.x0, ras->clip.x1);

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -209,7 +209,7 @@ typedef void (fz_shade_process_fn)(fz_context *ctx, void *arg, fz_vertex *av, fz
 
 	process: This function is passed 3 pointers to vertex
 	structures, and actually performs the processing (typically
-	filling the area between the vertexes).
+	filling the area between the vertices).
 
 	process_arg: An opaque argument passed through from caller
 	to callback functions.

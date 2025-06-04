@@ -1105,7 +1105,7 @@ epub_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_s
 
 		if (fz_has_archive_entry(ctx, arch, "META-INF/container.xml") ||
 			fz_has_archive_entry(ctx, arch, "META-INF\\container.xml"))
-			ret = 100;
+			ret = 74; /* One less than the 75 that HWPX files are detected as. */
 	}
 	fz_always(ctx)
 		fz_drop_archive(ctx, arch);

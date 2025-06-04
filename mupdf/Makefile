@@ -6,7 +6,7 @@ ifndef build
   build := release
 endif
 
-default: all
+default: apps libs
 
 include Makerules
 
@@ -31,27 +31,27 @@ EXE_LDFLAGS += $(XEXE_LDFLAGS)
 
 ifneq ($(threading),no)
   ifeq ($(HAVE_PTHREAD),yes)
-	THREADING_CFLAGS := $(PTHREAD_CFLAGS) -DHAVE_PTHREAD
-	THREADING_LIBS := $(PTHREAD_LIBS)
+    THREADING_CFLAGS := $(PTHREAD_CFLAGS) -DHAVE_PTHREAD
+    THREADING_LIBS := $(PTHREAD_LIBS)
   endif
-endif
-
-ifeq ($(HAVE_WIN32),yes)
-  WIN32_LIBS := -lcomdlg32 -lgdi32
-  WIN32_LDFLAGS := -Wl,-subsystem,windows
 endif
 
 VERSION_MAJOR = $(shell grep "define FZ_VERSION_MAJOR" include/mupdf/fitz/version.h | cut -d ' ' -f 3)
 VERSION_MINOR = $(shell grep "define FZ_VERSION_MINOR" include/mupdf/fitz/version.h | cut -d ' ' -f 3)
 VERSION_PATCH = $(shell grep "define FZ_VERSION_PATCH" include/mupdf/fitz/version.h | cut -d ' ' -f 3)
 
-ifeq ($(LINUX_OR_OPENBSD),yes)
+ifneq ($(OS),Darwin)
   ifneq ($(USE_SONAME),no)
+    SO_VERSION_MAJOR = .$(VERSION_MINOR)
     SO_VERSION = .$(VERSION_MINOR).$(VERSION_PATCH)
-    ifeq ($(OS),Linux)
-      SO_VERSION_LINUX := yes
-    endif
   endif
+endif
+
+# workaround argument list too long errors
+ifeq (4.0,$(firstword $(sort $(MAKE_VERSION) 4.0)))
+  USE_ARGUMENT_FILE=yes
+else
+  USE_ARGUMENT_FILE=no
 endif
 
 # --- Commands ---
@@ -63,34 +63,41 @@ ifneq ($(verbose),yes)
   QUIET_CXX = @ echo "    CXX $@" ;
   QUIET_GEN = @ echo "    GEN $@" ;
   QUIET_LINK = @ echo "    LINK $@" ;
+  QUIET_LINK_SO = @ echo "    LINK_SO $@" ;
   QUIET_RM = @ echo "    RM $@" ;
   QUIET_TAGS = @ echo "    TAGS $@" ;
-  QUIET_WINDRES = @ echo "    WINDRES $@" ;
   QUIET_OBJCOPY = @ echo "    OBJCOPY $@" ;
-  QUIET_DLLTOOL = @ echo "    DLLTOOL $@" ;
-  QUIET_GENDEF = @ echo "    GENDEF $@" ;
+  QUIET_SYMLINK = @ echo "    SYMLINK $@" ;
 endif
 
 MKTGTDIR = mkdir -p $(dir $@)
 CC_CMD = $(QUIET_CC) $(MKTGTDIR) ; $(CC) $(CFLAGS) -MMD -MP -o $@ -c $<
 CXX_CMD = $(QUIET_CXX) $(MKTGTDIR) ; $(CXX) $(CFLAGS) $(XCXXFLAGS) -MMD -MP -o $@ -c $<
-AR_CMD = $(QUIET_AR) $(MKTGTDIR) ; $(AR) cr $@ $^
+ifeq ($(USE_ARGUMENT_FILE),yes)
+  AR_CMD = $(QUIET_AR) $(MKTGTDIR) ; $(AR) cr $@ $(file > $@.in,$^) @$@.in
+else
+  AR_CMD = $(QUIET_AR) $(MKTGTDIR) ; $(AR) cr $@ $^
+endif
 ifdef RANLIB
   RANLIB_CMD = $(QUIET_RANLIB) $(RANLIB) $@
 endif
-LINK_CMD = $(QUIET_LINK) $(MKTGTDIR) ; $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+LINK_CMD = $(QUIET_LINK) $(MKTGTDIR) ; $(CC) $(EXE_LDFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 TAGS_CMD = $(QUIET_TAGS) ctags
-WINDRES_CMD = $(QUIET_WINDRES) $(MKTGTDIR) ; $(WINDRES) $< $@
 OBJCOPY_CMD = $(QUIET_OBJCOPY) $(MKTGTDIR) ; $(LD) -r -b binary -z noexecstack -o $@ $<
-GENDEF_CMD = $(QUIET_GENDEF) gendef - $< > $@
-DLLTOOL_CMD = $(QUIET_DLLTOOL) dlltool -d $< -D $(notdir $(^:%.def=%.dll)) -l $@
+SYMLINK_CMD = $(QUIET_SYMLINK) $(MKTGTDIR) ; ln -sf
 
 ifeq ($(shared),yes)
-LINK_CMD = $(QUIET_LINK) $(MKTGTDIR) ; $(CC) $(LDFLAGS) -o $@ \
-	$(filter-out %.$(SO)$(SO_VERSION),$^) \
-	$(sort $(patsubst %,-L%,$(dir $(filter %.$(SO)$(SO_VERSION),$^)))) \
-	$(patsubst lib%.$(SO)$(SO_VERSION),-l%,$(notdir $(filter %.$(SO)$(SO_VERSION),$^))) \
+  ifeq ($(USE_ARGUMENT_FILE),yes)
+    LINK_SO_CMD = $(QUIET_LINK_SO) $(MKTGTDIR) ; $(CC) $(LIB_LDFLAGS) $(LDFLAGS) -o $@ $(file > $@.in,$^) @$@.in
+  else
+    LINK_SO_CMD = $(QUIET_LINK_SO) $(MKTGTDIR) ; $(CC) $(LIB_LDFLAGS) $(LDFLAGS) -o $@ $^
+  endif
+  ifeq ($(OS),OpenBSD)
+    # OpenBSD linker magic doesn't use soname; so fake it by using -L$(OUT) and -lmupdf.
+    LINK_CMD = $(QUIET_LINK) $(MKTGTDIR) ; $(CC) $(EXE_LDFLAGS) $(LDFLAGS) -o $@ -L$(OUT) \
+	$(subst $(OUT)/libmupdf.$(SO)$(SO_VERSION),-lmupdf,$^) \
 	$(LIBS)
+  endif
 endif
 
 # --- Rules ---
@@ -98,23 +105,6 @@ endif
 $(OUT)/%.a :
 	$(AR_CMD)
 	$(RANLIB_CMD)
-
-$(OUT)/%.exe: %.c
-	$(LINK_CMD)
-
-$(OUT)/%.$(SO)$(SO_VERSION):
-ifeq ($(SO_VERSION_LINUX),yes)
-	$(LINK_CMD) -Wl,-soname,$(notdir $@) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
-	ln -sf $(notdir $@) $(patsubst %$(SO_VERSION), %, $@)
-else
-	$(LINK_CMD) $(LIB_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
-endif
-
-$(OUT)/%.def: $(OUT)/%.$(SO)$(SO_VERSION)
-	$(GENDEF_CMD)
-
-$(OUT)/%_$(SO)$(SO_VERSION).a: $(OUT)/%.def
-	$(DLLTOOL_CMD)
 
 $(OUT)/source/helpers/mu-threads/%.o : source/helpers/mu-threads/%.c
 	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THREADING_CFLAGS)
@@ -156,22 +146,21 @@ $(OUT)/source/%.o : source/%.cpp
 
 ifeq ($(HAVE_TESSERACT),yes)
 $(OUT)/source/fitz/tessocr.o : source/fitz/tessocr.cpp
-	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(TESSERACT_CFLAGS) $(TESSERACT_DEFINES) $(TESSERACT_LANGFLAGS)
+	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(TESSERACT_CFLAGS) $(TESSERACT_DEFINES) $(TESSERACT_LANGFLAGS) $(LEPTONICA_CFLAGS)
 endif
 
 ifeq ($(HAVE_LEPTONICA),yes)
 $(OUT)/source/fitz/leptonica-wrap.o : source/fitz/leptonica-wrap.c
-	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(LEPTONICA_CFLAGS) $(LEPTONICA_DEFINES) $(LEPTONICA_BUILD_CFLAGS)
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(LEPTONICA_CFLAGS) $(LEPTONICA_DEFINES)
 endif
+
+$(OUT)/source/fitz/barcode.o : source/fitz/barcode.cpp
+	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_LANGFLAGS)
 
 $(OUT)/platform/%.o : platform/%.c
 	$(CC_CMD) $(WARNING_CFLAGS)
 
-$(OUT)/%.o: %.rc
-	$(WINDRES_CMD)
-
 .PRECIOUS : $(OUT)/%.o # Keep intermediates from chained rules
-.PRECIOUS : $(OUT)/%.exe # Keep intermediates from chained rules
 
 # --- File lists ---
 
@@ -213,33 +202,33 @@ FONT_BIN += $(sort $(wildcard resources/fonts/sil/*.cff))
 
 # Note: The tests here must match the equivalent tests in noto.c
 
-ifneq ($(filter -DTOFU_CJK,$(XCFLAGS)),)
+ifneq ($(filter -DTOFU_CJK,$(CFLAGS)),)
   FONT_BIN := $(filter-out resources/fonts/han/%.ttc, $(FONT_BIN))
   FONT_BIN := $(filter-out resources/fonts/droid/DroidSansFallbackFull.ttf, $(FONT_BIN))
   FONT_BIN := $(filter-out resources/fonts/droid/DroidSansFallback.ttf, $(FONT_BIN))
 endif
 
-ifneq ($(filter -DTOFU_CJK_EXT,$(XCFLAGS)),)
+ifneq ($(filter -DTOFU_CJK_EXT,$(CFLAGS)),)
   FONT_BIN := $(filter-out resources/fonts/han/%.ttc, $(FONT_BIN))
   FONT_BIN := $(filter-out resources/fonts/droid/DroidSansFallbackFull.ttf, $(FONT_BIN))
 endif
 
-ifneq ($(filter -DTOFU_CJK_LANG,$(XCFLAGS)),)
+ifneq ($(filter -DTOFU_CJK_LANG,$(CFLAGS)),)
   FONT_BIN := $(filter-out resources/fonts/han/%.ttc, $(FONT_BIN))
 endif
 
-ifneq ($(filter -DTOFU,$(XCFLAGS)),)
+ifneq ($(filter -DTOFU,$(CFLAGS)),)
   FONT_BIN := $(filter-out resources/fonts/noto/%.otf,$(FONT_BIN))
   FONT_BIN := $(filter-out resources/fonts/noto/%.ttf,$(FONT_BIN))
   FONT_BIN := $(filter-out resources/fonts/sil/%.cff,$(FONT_BIN))
 endif
 
-ifneq ($(filter -DTOFU_NOTO,$(XCFLAGS)),)
+ifneq ($(filter -DTOFU_NOTO,$(CFLAGS)),)
   FONT_BIN := $(filter-out resources/fonts/noto/%.otf,$(FONT_BIN))
   FONT_BIN := $(filter-out resources/fonts/noto/%.ttf,$(FONT_BIN))
 endif
 
-ifneq ($(filter -DTOFU_SIL,$(XCFLAGS)),)
+ifneq ($(filter -DTOFU_SIL,$(CFLAGS)),)
   FONT_BIN := $(filter-out resources/fonts/sil/%.cff,$(FONT_BIN))
 endif
 
@@ -302,44 +291,35 @@ generate: source/html/css-properties.h
 # --- Library ---
 
 ifeq ($(shared),yes)
-MUPDF_LIB = $(OUT)/libmupdf.$(SO)$(SO_VERSION)
-ifeq ($(SO),dll)
-MUPDF_LIB_IMPORT = $(OUT)/libmupdf_$(SO).a
-LIBS_TO_INSTALL_IN_BIN = $(MUPDF_LIB)
-LIBS_TO_INSTALL_IN_LIB = $(MUPDF_LIB_IMPORT)
+  $(OUT)/libmupdf.$(SO)$(SO_VERSION): $(MUPDF_OBJ) $(THIRD_OBJ)
+	$(LINK_SO_CMD) $(THIRD_LIBS) $(LIBCRYPTO_LIBS)
+  ifeq ($(OS),OpenBSD)
+    # should never create symlink
+    MUPDF_LIB = $(OUT)/libmupdf.$(SO)$(SO_VERSION)
+  else
+    MUPDF_LIB = $(OUT)/libmupdf.$(SO)
+    ifneq ($(SO_VERSION),)
+      # create symlink with soname if needed
+      $(OUT)/libmupdf.$(SO): $(OUT)/libmupdf.$(SO)$(SO_VERSION)
+	$(SYMLINK_CMD) $(notdir $<) $@
+    endif
+  endif
 else
-LIBS_TO_INSTALL_IN_LIB = $(MUPDF_LIB)
+  MUPDF_LIB = $(OUT)/libmupdf.a
+  THIRD_LIB = $(OUT)/libmupdf-third.a
+  $(MUPDF_LIB) : $(MUPDF_OBJ)
+  $(THIRD_LIB) : $(THIRD_OBJ)
 endif
+
 ifneq ($(USE_SYSTEM_GLUT),yes)
-THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
+  THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
+  $(THIRD_GLUT_LIB) : $(THIRD_GLUT_OBJ)
 endif
+
 THREAD_LIB = $(OUT)/libmupdf-threads.a
+$(THREAD_LIB) : $(THREAD_OBJ)
+
 PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
-
-$(MUPDF_LIB) : $(MUPDF_OBJ) $(THIRD_OBJ)
-$(THIRD_GLUT_LIB) : $(THIRD_GLUT_OBJ)
-$(THREAD_LIB) : $(THREAD_OBJ)
-$(PKCS7_LIB) : $(PKCS7_OBJ)
-else
-MUPDF_LIB = $(OUT)/libmupdf.a
-LIBS_TO_INSTALL_IN_LIB = $(MUPDF_LIB) $(THIRD_LIB)
-THIRD_LIB = $(OUT)/libmupdf-third.a
-ifneq ($(USE_SYSTEM_GLUT),yes)
-THIRD_GLUT_LIB = $(OUT)/libmupdf-glut.a
-endif
-THREAD_LIB = $(OUT)/libmupdf-threads.a
-PKCS7_LIB = $(OUT)/libmupdf-pkcs7.a
-
-$(MUPDF_LIB) : $(MUPDF_OBJ)
-$(THIRD_LIB) : $(THIRD_OBJ)
-$(THIRD_GLUT_LIB) : $(THIRD_GLUT_OBJ)
-$(THREAD_LIB) : $(THREAD_OBJ)
-$(PKCS7_LIB) : $(PKCS7_OBJ)
-endif
-
-$(MUPDF_LIB) : $(MUPDF_OBJ)
-$(THIRD_LIB) : $(THIRD_OBJ)
-$(THREAD_LIB) : $(THREAD_OBJ)
 $(PKCS7_LIB) : $(PKCS7_OBJ)
 
 # --- Main tools and viewers ---
@@ -349,34 +329,32 @@ MUTOOL_SRC += source/tools/muconvert.c
 MUTOOL_SRC += source/tools/mudraw.c
 MUTOOL_SRC += source/tools/murun.c
 MUTOOL_SRC += source/tools/mutrace.c
+MUTOOL_SRC += source/tools/mubar.c
 MUTOOL_SRC += source/tools/cmapdump.c
 MUTOOL_SRC += $(sort $(wildcard source/tools/pdf*.c))
 MUTOOL_OBJ := $(MUTOOL_SRC:%.c=$(OUT)/%.o)
-MUTOOL_EXE := $(OUT)/mutool$(EXE)
+MUTOOL_EXE := $(OUT)/mutool
 $(MUTOOL_EXE) : $(MUTOOL_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(PKCS7_LIB) $(THREAD_LIB)
-	$(LINK_CMD) $(EXE_LDFLAGS) $(THIRD_LIBS) $(THREADING_LIBS) $(LIBCRYPTO_LIBS)
+	$(LINK_CMD) $(THIRD_LIBS) $(THREADING_LIBS) $(LIBCRYPTO_LIBS)
 TOOL_APPS += $(MUTOOL_EXE)
 
 MURASTER_OBJ := $(OUT)/source/tools/muraster.o
-MURASTER_EXE := $(OUT)/muraster$(EXE)
+MURASTER_EXE := $(OUT)/muraster
 $(MURASTER_EXE) : $(MURASTER_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(PKCS7_LIB) $(THREAD_LIB)
-	$(LINK_CMD) $(EXE_LDFLAGS) $(THIRD_LIBS) $(THREADING_LIBS) $(LIBCRYPTO_LIBS)
-TOOL_APPS += $(MURASTER_EXE)
+	$(LINK_CMD) $(THIRD_LIBS) $(THREADING_LIBS) $(LIBCRYPTO_LIBS)
+EXTRA_TOOL_APPS += $(MURASTER_EXE)
 
 ifeq ($(HAVE_GLUT),yes)
   MUVIEW_GLUT_SRC += $(sort $(wildcard platform/gl/*.c))
   MUVIEW_GLUT_OBJ := $(MUVIEW_GLUT_SRC:%.c=$(OUT)/%.o)
-ifeq ($(HAVE_WIN32),yes)
-  MUVIEW_GLUT_OBJ += $(OUT)/platform/gl/gl-winres.o
-endif
-  MUVIEW_GLUT_EXE := $(OUT)/mupdf-gl$(EXE)
+  MUVIEW_GLUT_EXE := $(OUT)/mupdf-gl
   $(MUVIEW_GLUT_EXE) : $(MUVIEW_GLUT_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(THIRD_GLUT_LIB) $(PKCS7_LIB)
-	$(LINK_CMD) $(EXE_LDFLAGS) $(THIRD_LIBS) $(LIBCRYPTO_LIBS) $(WIN32_LDFLAGS) $(THIRD_GLUT_LIBS)
+	$(LINK_CMD) $(THIRD_LIBS) $(LIBCRYPTO_LIBS) $(THIRD_GLUT_LIBS)
   VIEW_APPS += $(MUVIEW_GLUT_EXE)
 endif
 
 ifeq ($(HAVE_X11),yes)
-  MUVIEW_X11_EXE := $(OUT)/mupdf-x11$(EXE)
+  MUVIEW_X11_EXE := $(OUT)/mupdf-x11
   MUVIEW_X11_OBJ += $(OUT)/platform/x11/pdfapp.o
   MUVIEW_X11_OBJ += $(OUT)/platform/x11/x11_main.o
   MUVIEW_X11_OBJ += $(OUT)/platform/x11/x11_image.o
@@ -385,28 +363,18 @@ ifeq ($(HAVE_X11),yes)
   VIEW_APPS += $(MUVIEW_X11_EXE)
 endif
 
-ifeq ($(HAVE_WIN32),yes)
-  MUVIEW_WIN32_EXE := $(OUT)/mupdf-w32$(EXE)
-  MUVIEW_WIN32_OBJ += $(OUT)/platform/x11/pdfapp.o
-  MUVIEW_WIN32_OBJ += $(OUT)/platform/x11/win_main.o
-  MUVIEW_WIN32_OBJ += $(OUT)/platform/x11/win_res.o
-  $(MUVIEW_WIN32_EXE) : $(MUVIEW_WIN32_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(PKCS7_LIB)
-	$(LINK_CMD) $(THIRD_LIBS) $(WIN32_LDFLAGS) $(WIN32_LIBS) $(LIBCRYPTO_LIBS)
-  VIEW_APPS += $(MUVIEW_WIN32_EXE)
-endif
-
 ifeq ($(HAVE_X11),yes)
 ifeq ($(HAVE_CURL),yes)
 ifeq ($(HAVE_PTHREAD),yes)
-  MUVIEW_X11_CURL_EXE := $(OUT)/mupdf-x11-curl$(EXE)
+  MUVIEW_X11_CURL_EXE := $(OUT)/mupdf-x11-curl
   MUVIEW_X11_CURL_OBJ += $(OUT)/platform/x11/curl/pdfapp.o
   MUVIEW_X11_CURL_OBJ += $(OUT)/platform/x11/curl/x11_main.o
   MUVIEW_X11_CURL_OBJ += $(OUT)/platform/x11/curl/x11_image.o
   MUVIEW_X11_CURL_OBJ += $(OUT)/platform/x11/curl/curl_stream.o
   MUVIEW_X11_CURL_OBJ += $(OUT)/platform/x11/curl/prog_stream.o
   $(MUVIEW_X11_CURL_EXE) : $(MUVIEW_X11_CURL_OBJ) $(MUPDF_LIB) $(THIRD_LIB) $(PKCS7_LIB) $(CURL_LIB)
-	$(LINK_CMD) $(EXE_LDFLAGS) $(THIRD_LIBS) $(X11_LIBS) $(LIBCRYPTO_LIBS) $(CURL_LIBS) $(PTHREAD_LIBS)
-  VIEW_APPS += $(MUVIEW_X11_CURL_EXE)
+	$(LINK_CMD) $(THIRD_LIBS) $(X11_LIBS) $(LIBCRYPTO_LIBS) $(CURL_LIBS) $(PTHREAD_LIBS)
+  EXTRA_VIEW_APPS += $(MUVIEW_X11_CURL_EXE)
 endif
 endif
 endif
@@ -422,7 +390,6 @@ endif
 -include $(MUTOOL_OBJ:%.o=%.d)
 -include $(MUVIEW_GLUT_OBJ:%.o=%.d)
 -include $(MUVIEW_X11_OBJ:%.o=%.d)
--include $(MUVIEW_WIN32_OBJ:%.o=%.d)
 
 -include $(MURASTER_OBJ:%.o=%.d)
 -include $(MUVIEW_X11_CURL_OBJ:%.o=%.d)
@@ -468,10 +435,12 @@ SO_INSTALL_MODE ?= 644
 
 third: $(THIRD_LIB)
 extra-libs: $(THIRD_GLUT_LIB)
-libs: $(LIBS_TO_INSTALL_IN_BIN) $(LIBS_TO_INSTALL_IN_LIB) $(COMMERCIAL_LIBS)
+libs: $(MUPDF_LIB) $(THIRD_LIB) $(COMMERCIAL_LIBS)
 commercial-libs: $(COMMERCIAL_LIBS)
 tools: $(TOOL_APPS)
 apps: $(TOOL_APPS) $(VIEW_APPS)
+extra-apps: $(EXTRA_TOOL_APPS) $(EXTRA_VIEW_APPS)
+libmupdf-threads: $(THREAD_LIB)
 
 install-headers:
 	install -d $(DESTDIR)$(incdir)/mupdf
@@ -482,19 +451,29 @@ install-headers:
 	install -m 644 include/mupdf/pdf/*.h $(DESTDIR)$(incdir)/mupdf/pdf
 
 install-libs: libs install-headers
-ifneq ($(LIBS_TO_INSTALL_IN_LIB),)
 	install -d $(DESTDIR)$(libdir)
-	install -m 644 $(LIBS_TO_INSTALL_IN_LIB) $(DESTDIR)$(libdir)
+ifeq ($(shared),yes)
+	install -m $(SO_INSTALL_MODE) $(OUT)/libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)$(SO_VERSION)
+  ifneq ($(OS),OpenBSD)
+	ln -sf libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)$(SO_VERSION_MAJOR)
+	ln -sf libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)
+  endif
+else
+	install -m 644 $(MUPDF_LIB) $(DESTDIR)$(libdir)
+	install -m 644 $(THIRD_LIB) $(DESTDIR)$(libdir)
 endif
 
 install-apps: apps
 	install -d $(DESTDIR)$(bindir)
-	install -m 755 $(LIBS_TO_INSTALL_IN_BIN) $(TOOL_APPS) $(VIEW_APPS) $(DESTDIR)$(bindir)
+	install -m 755 $(TOOL_APPS) $(VIEW_APPS) $(DESTDIR)$(bindir)
+
+install-extra-apps: install-apps extra-apps
+	install -d $(DESTDIR)$(bindir)
+	install -m 755 $(EXTRA_TOOL_APPS) $(EXTRA_VIEW_APPS) $(DESTDIR)$(bindir)
 
 install-docs:
 	install -d $(DESTDIR)$(mandir)/man1
 	install -m 644 docs/man/*.1 $(DESTDIR)$(mandir)/man1
-
 	install -d $(DESTDIR)$(docdir)
 	install -d $(DESTDIR)$(docdir)/examples
 	install -m 644 README CHANGES $(DESTDIR)$(docdir)
@@ -505,6 +484,10 @@ install: install-libs install-apps install-docs
 
 docs:
 	python3 scripts/build-docs.py
+
+docs-clean:
+	rm -rf build/docs/html
+	rm -rf build/docs/doctree
 
 install-docs-html: docs
 	install -d $(DESTDIR)$(docdir)
@@ -563,7 +546,7 @@ cscope.files: $(shell find include source platform -name '*.[ch]')
 cscope.out: cscope.files
 	cscope -b
 
-all: libs apps
+all: libs apps extra-apps
 
 clean:
 	rm -rf $(OUT)
@@ -620,7 +603,7 @@ ifeq ($(shared),yes)
 
 # Assert that $(OUT) contains `shared`.
 ifeq ($(findstring shared, $(OUT)),)
-$(error OUT=$(OUT) does not contain shared)
+  $(error OUT=$(OUT) does not contain shared)
 endif
 
 # C++, Python and C# shared libraries.
@@ -641,23 +624,23 @@ csharp-%: c++-%
 # We only allow install of shared libraries if we are not using any libraries
 # in thirdparty/.
 install-shared-check:
+ifneq ($(shared),yes)
+	@ echo "install-shared-* requires that shared=yes."
+	@ false
+endif
 ifneq ($(USE_SYSTEM_LIBS),yes)
-	echo "install-shared-* requires that USE_SYSTEM_LIBS=yes."
-	false
+	@ echo "install-shared-* requires that USE_SYSTEM_LIBS=yes."
+	@ false
 endif
 
-install-shared-c: install-shared-check shared install-headers
-	install -d $(DESTDIR)$(libdir)
-	install -m $(SO_INSTALL_MODE) $(OUT)/libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
-ifneq ($(OS),OpenBSD)
-	ln -sf libmupdf.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdf.$(SO)
-endif
+install-shared-c: install-shared-check install-libs install-headers
 
 install-shared-c++: install-shared-c c++
 	install -m 644 platform/c++/include/mupdf/*.h $(DESTDIR)$(incdir)/mupdf
 	install -m $(SO_INSTALL_MODE) $(OUT)/libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/
 ifneq ($(OS),OpenBSD)
 	ln -sf libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdfcpp.$(SO)
+	ln -sf libmupdfcpp.$(SO)$(SO_VERSION) $(DESTDIR)$(libdir)/libmupdfcpp.$(SO)$(SO_VERSION_MAJOR)
 endif
 
 install-shared-python: install-shared-c++ python

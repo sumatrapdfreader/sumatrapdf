@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1142,6 +1142,8 @@ fz_new_image_of_size(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colo
 	image->colorspace = fz_keep_colorspace(ctx, colorspace);
 	image->interpolate = interpolate;
 	image->imagemask = imagemask;
+	image->intent = 0;
+	image->has_intent = 0;
 	image->use_colorkey = (colorkey != NULL);
 	if (colorkey)
 		memcpy(image->colorkey, colorkey, sizeof(int)*image->n*2);
@@ -1261,6 +1263,7 @@ fz_image_type_name(int type)
 	case FZ_IMAGE_FLATE: return "flate";
 	case FZ_IMAGE_LZW: return "lzw";
 	case FZ_IMAGE_RLD: return "rld";
+	case FZ_IMAGE_BROTLI: return "brotli";
 	case FZ_IMAGE_BMP: return "bmp";
 	case FZ_IMAGE_GIF: return "gif";
 	case FZ_IMAGE_JBIG2: return "jbig2";
@@ -1282,6 +1285,7 @@ fz_lookup_image_type(const char *type)
 	if (!strcmp(type, "flate")) return FZ_IMAGE_FLATE;
 	if (!strcmp(type, "lzw")) return FZ_IMAGE_LZW;
 	if (!strcmp(type, "rld")) return FZ_IMAGE_RLD;
+	if (!strcmp(type, "brotli")) return FZ_IMAGE_BROTLI;
 	if (!strcmp(type, "bmp")) return FZ_IMAGE_BMP;
 	if (!strcmp(type, "gif")) return FZ_IMAGE_GIF;
 	if (!strcmp(type, "jbig2")) return FZ_IMAGE_JBIG2;

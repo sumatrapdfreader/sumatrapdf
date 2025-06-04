@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -132,7 +132,7 @@ void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_
 typedef struct fieldname_prefix
 {
 	struct fieldname_prefix *prev;
-	char name[1];
+	char name[FZ_FLEXIBLE_ARRAY];
 } fieldname_prefix;
 
 typedef struct
@@ -165,7 +165,7 @@ check_field_locking(fz_context *ctx, pdf_obj *obj, void *data_, pdf_obj **ff)
 			n += 1;
 		if (data->prefix->name[0])
 			n += strlen(data->prefix->name);
-		prefix = fz_calloc(ctx, 1, sizeof(*prefix)+n);
+		prefix = fz_malloc_flexible(ctx, fieldname_prefix, name, n);
 		prefix->prev = data->prefix;
 		if (data->prefix->name[0])
 			strcpy(prefix->name, data->prefix->name);
@@ -213,7 +213,7 @@ static void enact_sig_locking(fz_context *ctx, pdf_document *doc, pdf_obj *sig)
 	pdf_obj *fields;
 	static pdf_obj *ff_names[2] = { PDF_NAME(Ff), NULL };
 	pdf_obj *ff = NULL;
-	static fieldname_prefix null_prefix = { NULL, "" };
+	static fieldname_prefix null_prefix = { NULL, { 0 } };
 	sig_locking_data data = { locked, &null_prefix };
 
 	if (locked == NULL)

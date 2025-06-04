@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -109,6 +109,7 @@ public class PDFWidget extends PDFAnnotation
 	public native String getValue();
 	public native boolean setValue(String val);
 	public native String getLabel();
+	public native String getName();
 
 	/* Button fields */
 
@@ -148,6 +149,9 @@ public class PDFWidget extends PDFAnnotation
 		return textFormat;
 	}
 	public native boolean setTextValue(String val);
+
+	public native boolean getEditingState();
+	public native void setEditingState(boolean editing);
 
 	/* WIP in-line text editing support */
 	public native Quad[] textQuads();
@@ -253,6 +257,7 @@ public class PDFWidget extends PDFAnnotation
 		return !incrementalChangeSinceSigning();
 	}
 	public native PKCS7DistinguishedName getDistinguishedName(PKCS7Verifier verifier);
+	public native String getSignatory(PKCS7Verifier verifier);
 	public native boolean incrementalChangesSinceSigning();
 
 	public native int validateSignature();
@@ -282,4 +287,5 @@ public class PDFWidget extends PDFAnnotation
 		public int index;
 		public Rect rect;
 	}
+
 }

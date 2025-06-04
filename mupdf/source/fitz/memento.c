@@ -1,4 +1,4 @@
-/* Copyright (C) 2009-2022 Artifex Software, Inc.
+/* Copyright (C) 2009-2024 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -3834,8 +3834,10 @@ static void *do_realloc(void *blk, size_t newsize, int type)
     int                flags, ret;
     size_t             oldsize;
 #ifdef MEMENTO_DETAILS
-    Memento_hashedST *st;
+    Memento_hashedST  *st;
 #endif
+    char              oldptrstr[100];
+
 
     if (Memento_failThisEventLocked()) {
         errno = ENOMEM;
@@ -3940,6 +3942,7 @@ static void *do_realloc(void *blk, size_t newsize, int type)
     Memento_removeBlock(&memento.used, memblk);
     VALGRIND_MAKE_MEM_DEFINED(memblk, sizeof(*memblk));
     flags = memblk->flags;
+    snprintf(oldptrstr, sizeof(oldptrstr), FMTP, MEMBLK_TOBLK(memblk));
     newmemblk  = MEMENTO_UNDERLYING_REALLOC(memblk, newsizemem);
     if (newmemblk == NULL)
     {
@@ -4012,15 +4015,15 @@ static void *do_realloc(void *blk, size_t newsize, int type)
             fprintf(stderr, "\n");
             memento.verboseNewlineSuppressed = 0;
         }
-        fprintf(stderr, "%s "FMTP"=>"FMTP":(size="FMTZ"=>"FMTZ", num=%d, now=%d",
+        fprintf(stderr, "%s %s=>"FMTP":(size="FMTZ"=>"FMTZ", num=%d, now=%d",
                 eventType[type],
-                MEMBLK_TOBLK(memblk), MEMBLK_TOBLK(newmemblk),
+                oldptrstr, MEMBLK_TOBLK(newmemblk),
                 (FMTZ_CAST)oldsize, (FMTZ_CAST)newsize,
                 newmemblk->sequence, memento.sequence);
 #ifdef MEMENTO_DETAILS
         fprintf(stderr, ",hash=%x", st->hash);
 #endif
-        if (memblk->label)
+        if (newmemblk->label)
             fprintf(stderr, ") (%s", newmemblk->label);
         fprintf(stderr, ")\n");
         break;
@@ -4035,7 +4038,7 @@ static void *do_realloc(void *blk, size_t newsize, int type)
 #ifdef MEMENTO_DETAILS
         fprintf(stderr, ",hash=%x", st->hash);
 #endif
-        if (memblk->label)
+        if (newmemblk->label)
             fprintf(stderr, ") (%s", newmemblk->label);
         fprintf(stderr, ")\n");
         break;

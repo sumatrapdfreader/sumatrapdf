@@ -1284,6 +1284,17 @@ color_from_property(fz_css_match *match, int property, fz_css_color initial)
 	return color_from_value(value_from_property(match, property), initial);
 }
 
+static fz_css_color
+color_from_properties(fz_css_match *match, int property, int property2, fz_css_color initial)
+{
+	fz_css_value *value = value_from_property(match, property);
+
+	if (value == NULL)
+		value = value_from_property(match, property2);
+
+	return color_from_value(value, initial);
+}
+
 int
 fz_get_css_match_display(fz_css_match *match)
 {
@@ -1485,6 +1496,7 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 	style->leading = number_from_property(match, PRO_LEADING, 0, N_UNDEFINED);
 
 	style->text_indent = number_from_property(match, PRO_TEXT_INDENT, 0, N_LENGTH);
+	style->text_stroke_width = number_from_property(match, PRO_TEXT_STROKE_WIDTH, 0, N_LENGTH);
 
 	style->width = number_from_property(match, PRO_WIDTH, 0, N_AUTO);
 	style->height = number_from_property(match, PRO_HEIGHT, 0, N_AUTO);
@@ -1500,6 +1512,8 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 	style->padding[3] = number_from_property(match, PRO_PADDING_LEFT, 0, N_LENGTH);
 
 	style->color = color_from_property(match, PRO_COLOR, black);
+	style->text_fill_color = color_from_properties(match, PRO_TEXT_FILL_COLOR, PRO_COLOR, black);
+	style->text_stroke_color = color_from_property(match, PRO_TEXT_STROKE_COLOR, transparent);
 	style->background_color = color_from_property(match, PRO_BACKGROUND_COLOR, transparent);
 
 	style->border_spacing = number_from_property(match, PRO_BORDER_SPACING, 0, N_LENGTH);

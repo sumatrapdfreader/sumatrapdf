@@ -166,7 +166,7 @@ fz_skew_process(fz_context *ctx, fz_skew *skew, const uint8_t *input)
 }
 
 static double
-do_skew_detect(fz_context *ctx, fz_skew *skew)
+do_detect_skew(fz_context *ctx, fz_skew *skew)
 {
 	int i, j, h, o, max_at;
 	int64_t max_sum, corr_at, corr_sum, avg_sum;
@@ -221,7 +221,7 @@ do_skew_detect(fz_context *ctx, fz_skew *skew)
 	return ang;
 }
 
-double fz_skew_detect(fz_context *ctx, fz_pixmap *pix)
+double fz_detect_skew(fz_context *ctx, fz_pixmap *pix)
 {
 	fz_skew *skew = fz_new_skew(ctx, pix->w, pix->h);
 	int y;
@@ -252,7 +252,7 @@ double fz_skew_detect(fz_context *ctx, fz_pixmap *pix)
 			ptr += stride;
 		}
 
-		angle = do_skew_detect(ctx, skew);
+		angle = do_detect_skew(ctx, skew);
 	}
 	fz_always(ctx)
 	{

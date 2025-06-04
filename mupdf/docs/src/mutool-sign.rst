@@ -1,9 +1,8 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -88,11 +87,11 @@ Examples
 The following command should show all signature fields in the PDF whether signed or unsigned:
 
 
-|example_tag|
+    |example_tag|
 
-.. code-block:: bash
+    .. code-block:: bash
 
-   mutool sign -v unsigned.pdf
+        mutool sign -v unsigned.pdf
 
 
 ----
@@ -100,11 +99,11 @@ The following command should show all signature fields in the PDF whether signed
 Once you know the object number of an unsigned signature field, then do the following:
 
 
-|example_tag|
+    |example_tag|
 
-.. code-block:: bash
+    .. code-block:: bash
 
-   mutool sign -s certificate.pfx -P pasword123 -o signed.pdf unsigned.pdf 4242
+        mutool sign -s certificate.pfx -P password123 -o signed.pdf unsigned.pdf 4242
 
 This assumes that object `4242 0 R` is the signature field. Re-running `sign -v` on `signed.pdf` should then show that the signature was signed.
 
@@ -112,14 +111,13 @@ This assumes that object `4242 0 R` is the signature field. Re-running `sign -v`
 
 To clear a signature use the `-c` option:
 
-|example_tag|
+    |example_tag|
 
-.. code-block:: bash
+    .. code-block:: bash
 
-   mutool sign -c -o unsigned.pdf signed.pdf 4242
+        mutool sign -c -o unsigned.pdf signed.pdf 4242
 
 
-.. include:: footer.rst
 
 
 

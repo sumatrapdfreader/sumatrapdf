@@ -1,17 +1,16 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-Android Library
+Using MuPDF with Android
 ===============================
 
 
@@ -55,6 +54,7 @@ components in your app. This includes (but is not limited to):
 - AdMob by Google
 - Crashlytics
 - Answers
+
 *etc.*
 
 Just because a library ships with :title:`Android` or is made by :title:`Google` does *not* make it :title:`AGPL` compatible!
@@ -84,7 +84,7 @@ The :title:`MuPDF` library needs :title:`Android` version 4.1 or newer.
 Make sure that the `minSdkVersion` in your app's `build.gradle` is at least 16.
 
 
-.. code-block::
+.. code-block:: groovy
 
    android {
       defaultConfig {
@@ -99,7 +99,7 @@ The :title:`MuPDF` library can be retrieved as a pre-built artifact from our :ti
 In your project's top `build.gradle`, add the line to the repositories section:
 
 
-.. code-block::
+.. code-block:: groovy
 
    allprojects {
       repositories {
@@ -113,7 +113,7 @@ In your project's top `build.gradle`, add the line to the repositories section:
 Then add the :title:`MuPDF` viewer library to your app's dependencies.
 In your app's `build.gradle`, add the line to the dependencies section:
 
-.. code-block::
+.. code-block:: groovy
 
    dependencies {
       api 'com.artifex.mupdf:viewer:1.15.+'
@@ -285,7 +285,6 @@ and `mupdf-android-fitz.git` repositories.
 
 
 
-.. include:: footer.rst
 
 
 

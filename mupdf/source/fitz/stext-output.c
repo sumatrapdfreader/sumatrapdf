@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -141,7 +141,7 @@ fz_print_style_begin_html(fz_context *ctx, fz_output *out, fz_font *font, float 
 	if (is_italic) fz_write_string(ctx, out, "<i>");
 	fz_write_printf(ctx, out, "<span style=\"font-family:%s;font-size:%.1fpt", family, size);
 	if (color != 0 && color != CMYK_BLACK)
-		fz_write_printf(ctx, out, ";color:#%06x", color);
+		fz_write_printf(ctx, out, ";color:#%06x", color & 0xffffff);
 	fz_write_printf(ctx, out, "\">");
 }
 
@@ -352,23 +352,115 @@ fz_print_stext_block_as_html(fz_context *ctx, fz_output *out, fz_stext_block *bl
 	}
 }
 
-void
-fz_print_stext_page_as_html(fz_context *ctx, fz_output *out, fz_stext_page *page, int id)
+static const char *
+html_tag_for_struct(fz_stext_struct *s)
 {
-	fz_stext_block *block;
+	const char *raw;
 
-	float w = page->mediabox.x1 - page->mediabox.x0;
-	float h = page->mediabox.y1 - page->mediabox.y0;
+	if (s == NULL)
+		return "DIV";
 
-	fz_write_printf(ctx, out, "<div id=\"page%d\" style=\"width:%.1fpt;height:%.1fpt\">\n", id, w, h);
+	raw = s->raw;
+	if (raw == NULL)
+		raw = fz_structure_to_string(s->standard);
 
-	for (block = page->first_block; block; block = block->next)
+	if (!fz_strcasecmp(raw, "blockquote"))
+		return "blockquote";
+	if (!fz_strcasecmp(raw, "title"))
+		return "h1";
+	if (!fz_strcasecmp(raw, "sub"))
+		return "sub";
+	if (!fz_strcasecmp(raw, "p"))
+		return "p";
+	if (!fz_strcasecmp(raw, "h"))
+		return "h1"; /* Pick one! */
+	if (!fz_strcasecmp(raw, "h1"))
+		return "h1";
+	if (!fz_strcasecmp(raw, "h2"))
+		return "h2";
+	if (!fz_strcasecmp(raw, "h3"))
+		return "h3";
+	if (!fz_strcasecmp(raw, "h4"))
+		return "h4";
+	if (!fz_strcasecmp(raw, "h5"))
+		return "h5";
+	if (!fz_strcasecmp(raw, "h6"))
+		return "h6";
+
+	if (!fz_strcasecmp(raw, "list"))
+		return "ul";
+	if (!fz_strcasecmp(raw, "listitem"))
+		return "li";
+	if (!fz_strcasecmp(raw, "table"))
+		return "table";
+	if (!fz_strcasecmp(raw, "tr"))
+		return "tr";
+	if (!fz_strcasecmp(raw, "th"))
+		return "th";
+	if (!fz_strcasecmp(raw, "td"))
+		return "td";
+	if (!fz_strcasecmp(raw, "thead"))
+		return "thead";
+	if (!fz_strcasecmp(raw, "tbody"))
+		return "tbody";
+	if (!fz_strcasecmp(raw, "tfoot"))
+		return "tfoot";
+
+	if (!fz_strcasecmp(raw, "span"))
+		return "span";
+	if (!fz_strcasecmp(raw, "code"))
+		return "code";
+	if (!fz_strcasecmp(raw, "em"))
+		return "em";
+	if (!fz_strcasecmp(raw, "strong"))
+		return "strong";
+
+	return "div";
+}
+
+static void
+print_blocks_as_html(fz_context *ctx, fz_output *out, fz_stext_block *block);
+
+static void
+fz_print_stext_struct_as_html(fz_context *ctx, fz_output *out, fz_stext_block *block)
+{
+	const char *tag;
+
+	if (block->u.s.down == NULL)
+		return;
+
+	tag = html_tag_for_struct(block->u.s.down);
+
+	fz_write_printf(ctx, out, "<%s>\n", tag);
+
+	print_blocks_as_html(ctx, out, block->u.s.down->first_block);
+
+	fz_write_printf(ctx, out, "</%s>\n", tag);
+}
+
+static void
+print_blocks_as_html(fz_context *ctx, fz_output *out, fz_stext_block *block)
+{
+	for (; block; block = block->next)
 	{
 		if (block->type == FZ_STEXT_BLOCK_IMAGE)
 			fz_print_stext_image_as_html(ctx, out, block);
 		else if (block->type == FZ_STEXT_BLOCK_TEXT)
 			fz_print_stext_block_as_html(ctx, out, block);
+		else if (block->type == FZ_STEXT_BLOCK_STRUCT)
+			fz_print_stext_struct_as_html(ctx, out, block);
 	}
+}
+
+void
+fz_print_stext_page_as_html(fz_context *ctx, fz_output *out, fz_stext_page *page, int id)
+{
+	float w = page->mediabox.x1 - page->mediabox.x0;
+	float h = page->mediabox.y1 - page->mediabox.y0;
+
+	fz_write_printf(ctx, out, "<div id=\"page%d\" style=\"width:%.1fpt;height:%.1fpt\">\n", id, w, h);
+
+	print_blocks_as_html(ctx, out, page->first_block);
 
 	fz_write_string(ctx, out, "</div>\n");
 }
@@ -396,6 +488,141 @@ fz_print_stext_trailer_as_html(fz_context *ctx, fz_output *out)
 }
 
 /* XHTML output (semantic, little layout, suitable for reflow) */
+
+static void
+find_table_pos(fz_stext_grid_positions *xs, float x0, float x1, int *ix0, int *ix1)
+{
+	int i;
+
+	*ix0 = -1;
+	*ix1 = -1;
+
+	for (i = 1; i < xs->len; i++)
+		if (x0 < xs->list[i].pos)
+		{
+			*ix0 = i-1;
+			break;
+		}
+	for (; i < xs->len; i++)
+		if (x1 < xs->list[i].pos)
+		{
+			*ix1 = i-1;
+			break;
+		}
+	if (i == xs->len)
+		*ix1 = i-1;
+}
+
+static void
+run_to_xhtml(fz_context *ctx, fz_stext_block *block, fz_output *out);
+
+static void
+fz_print_stext_table_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *block)
+{
+	fz_stext_block *grid, *tr, *td;
+	int w, h;
+	int x, y;
+	uint8_t *cells;
+	int malformed = 0;
+
+	for (grid = block; grid != NULL; grid = grid->next)
+		if (grid->type == FZ_STEXT_BLOCK_GRID)
+			break;
+	if (grid == NULL)
+	{
+		fz_warn(ctx, "Malformed table data");
+		return;
+	}
+	w = grid->u.b.xs->len;
+	h = grid->u.b.ys->len;
+	cells = fz_calloc(ctx, w, h);
+
+	fz_try(ctx)
+	{
+		fz_write_printf(ctx, out, "<table>\n");
+
+		y = 0;
+		for (tr = grid->next; tr != NULL; tr = tr->next)
+		{
+			if (tr->type != FZ_STEXT_BLOCK_STRUCT || tr->u.s.down == NULL || tr->u.s.down->standard != FZ_STRUCTURE_TR)
+			{
+				malformed = 1;
+				continue;
+			}
+			fz_write_printf(ctx, out, "<tr>\n");
+			x = 0;
+			for (td = tr->u.s.down->first_block; td != NULL; td = td->next)
+			{
+				int x0, y0, x1, y1;
+				if (td->type != FZ_STEXT_BLOCK_STRUCT || td->u.s.down == NULL || td->u.s.down->standard != FZ_STRUCTURE_TD)
+				{
+					malformed = 1;
+					continue;
+				}
+				find_table_pos(grid->u.b.xs, td->bbox.x0, td->bbox.x1, &x0, &x1);
+				find_table_pos(grid->u.b.ys, td->bbox.y0, td->bbox.y1, &y0, &y1);
+				if (x0 < 0 || x1 < 0 || x1 >= w)
+				{
+					malformed = 1;
+					x0 = x;
+					x1 = x+1;
+				}
+				if (y0 < 0 || y1 < 0 || y1 >= h)
+				{
+					malformed = 1;
+					y0 = y;
+					y1 = y+1;
+				}
+				if (y < y0)
+				{
+					malformed = 1;
+					continue;
+				}
+				if (x > x0)
+				{
+					malformed = 1;
+				}
+				while (x < x0)
+				{
+					uint8_t *c = &cells[x + w*y];
+					if (*c == 0)
+					{
+						fz_write_printf(ctx, out, "<td></td>");
+						*c = 1;
+					}
+					x++;
+				}
+				fz_write_string(ctx, out, "<td");
+				if (x1 > x0+1)
+					fz_write_printf(ctx, out, " rowspan=%d", x1-x0);
+				if (y1 > y0+1)
+					fz_write_printf(ctx, out, " colspan=%d", y1-y0);
+				fz_write_string(ctx, out, ">\n");
+				run_to_xhtml(ctx, td->u.s.down->first_block, out);
+				fz_write_printf(ctx, out, "</td>\n");
+				for ( ; y0 < y1; y0++)
+					for (x = x0; x < x1; x++)
+					{
+						uint8_t *c = &cells[x + w*y0];
+						if (*c != 0)
+							malformed = 1;
+						*c = 1;
+					}
+			}
+			fz_write_printf(ctx, out, "</tr>\n");
+			y++;
+		}
+
+		fz_write_printf(ctx, out, "</table>\n");
+	}
+	fz_always(ctx)
+		fz_free(ctx, cells);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	if (malformed)
+		fz_warn(ctx, "Malformed table data");
+}
 
 static void
 fz_print_stext_image_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *block)
@@ -532,6 +759,29 @@ static void fz_print_stext_block_as_xhtml(fz_context *ctx, fz_output *out, fz_st
 }
 
 static void
+fz_print_struct_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *block)
+{
+	const char *tag;
+
+	if (block->u.s.down == NULL)
+		return;
+
+	if (block->u.s.down->standard == FZ_STRUCTURE_TABLE)
+	{
+		fz_print_stext_table_as_xhtml(ctx, out, block->u.s.down->first_block);
+		return;
+	}
+
+	tag = html_tag_for_struct(block->u.s.down);
+
+	fz_write_printf(ctx, out, "<%s>\n", tag);
+
+	run_to_xhtml(ctx, block->u.s.down->first_block, out);
+
+	fz_write_printf(ctx, out, "</%s>\n", tag);
+}
+
+static void
 run_to_xhtml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 {
 	while (block)
@@ -545,15 +795,7 @@ run_to_xhtml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 			fz_print_stext_block_as_xhtml(ctx, out, block);
 			break;
 		case FZ_STEXT_BLOCK_STRUCT:
-			fz_write_printf(ctx, out, "<struct idx=\"%d\"",
-					block->u.s.index);
-			if (block->u.s.down)
-				fz_write_printf(ctx, out, " raw=\"%s\" std=\"%s\"",
-						block->u.s.down->raw, fz_structure_to_string(block->u.s.down->standard));
-			fz_write_printf(ctx, out, ">\n");
-			if (block->u.s.down)
-				run_to_xhtml(ctx, block->u.s.down->first_block, out);
-			fz_write_printf(ctx, out, "</struct>\n");
+			fz_print_struct_as_xhtml(ctx, out, block);
 			break;
 		}
 		block = block->next;
@@ -596,6 +838,25 @@ fz_print_stext_trailer_as_xhtml(fz_context *ctx, fz_output *out)
 /* Detailed XML dump of the entire structured text data */
 
 static void
+xml_write_char(fz_context *ctx, fz_output *out, int c)
+{
+	switch (c)
+	{
+	case '<': fz_write_string(ctx, out, "&lt;"); break;
+	case '>': fz_write_string(ctx, out, "&gt;"); break;
+	case '&': fz_write_string(ctx, out, "&amp;"); break;
+	case '"': fz_write_string(ctx, out, "&quot;"); break;
+	case '\'': fz_write_string(ctx, out, "&apos;"); break;
+	default:
+		if (c >= 32 && c <= 127)
+			fz_write_printf(ctx, out, "%c", c);
+		else
+			fz_write_printf(ctx, out, "&#x%x;", c);
+		break;
+	}
+}
+
+static void
 as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 {
 	fz_stext_line *line;
@@ -607,29 +868,78 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 		switch (block->type)
 		{
 		case FZ_STEXT_BLOCK_TEXT:
-			fz_write_printf(ctx, out, "<block bbox=\"%g %g %g %g\">\n",
+			fz_write_printf(ctx, out, "<block bbox=\"%g %g %g %g\"",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
+			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_UNKNOWN)
+				fz_write_printf(ctx, out, " justify=\"unknown\"");
+			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_LEFT)
+				fz_write_printf(ctx, out, " justify=\"left\"");
+			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_CENTRE)
+				fz_write_printf(ctx, out, " justify=\"centre\"");
+			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_RIGHT)
+				fz_write_printf(ctx, out, " justify=\"right\"");
+			if (block->u.t.flags == FZ_STEXT_TEXT_JUSTIFY_FULL)
+				fz_write_printf(ctx, out, " justify=\"full\"");
+			fz_write_printf(ctx, out, ">\n");
 			for (line = block->u.t.first_line; line; line = line->next)
 			{
 				fz_font *font = NULL;
 				float size = 0;
 				const char *name = NULL;
 
-				fz_write_printf(ctx, out, "<line bbox=\"%g %g %g %g\" wmode=\"%d\" dir=\"%g %g\">\n",
+				fz_write_printf(ctx, out, "<line bbox=\"%g %g %g %g\" wmode=\"%d\" dir=\"%g %g\"",
 						line->bbox.x0, line->bbox.y0, line->bbox.x1, line->bbox.y1,
 						line->wmode,
 						line->dir.x, line->dir.y);
+
+				/* This is duplication of information, but it makes it MUCH easier to search for
+				 * text fragments in large output. */
+				{
+					int valid = 1;
+					fz_write_printf(ctx, out, " text=\"");
+					for (ch = line->first_char; ch; ch = ch->next)
+					{
+						if (valid)
+							valid = fz_is_valid_xml_char(ch->c);
+						xml_write_char(ctx, out, fz_range_limit_xml_char(ch->c));
+					}
+					if (!valid)
+					{
+						fz_write_printf(ctx, out, "\" hextext=\"");
+						for (ch = line->first_char; ch; ch = ch->next)
+						{
+							char text[8];
+							int n = fz_runetochar(text, ch->c);
+							for (i = 0; i < n; i++)
+								fz_write_printf(ctx, out, "%02x", text[i]);
+						}
+					}
+					fz_write_printf(ctx, out, "\"");
+				}
+
+				fz_write_printf(ctx, out, ">\n");
 
 				for (ch = line->first_char; ch; ch = ch->next)
 				{
 					if (ch->font != font || ch->size != size)
 					{
+						const char *s;
 						if (font)
 							fz_write_string(ctx, out, "</font>\n");
 						font = ch->font;
 						size = ch->size;
-						name = font_full_name(ctx, font);
-						fz_write_printf(ctx, out, "<font name=\"%s\" size=\"%g\">\n", name, size);
+						s = name = font_full_name(ctx, font);
+						while (*s)
+						{
+							int c = *s++;
+							if (c < 32 || c >= 127)
+								break;
+						}
+						if (*s)
+							fz_write_printf(ctx, out, "<font hexname=%>", name);
+						else
+							fz_write_printf(ctx, out, "<font name=\"%s\"", name);
+						fz_write_printf(ctx, out, " size=\"%g\">\n", size);
 					}
 					fz_write_printf(ctx, out, "<char quad=\"%g %g %g %g %g %g %g %g\" x=\"%g\" y=\"%g\" bidi=\"%d\" color=\"#%06x\" alpha=\"#%02x\" flags=\"%d\" c=\"",
 							ch->quad.ul.x, ch->quad.ul.y,
@@ -641,19 +951,14 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 							ch->argb & 0xFFFFFF,
 							ch->argb>>24,
 							ch->flags);
-					switch (ch->c)
+					xml_write_char(ctx, out, ch->c);
+					if (!fz_is_valid_xml_char(ch->c))
 					{
-					case '<': fz_write_string(ctx, out, "&lt;"); break;
-					case '>': fz_write_string(ctx, out, "&gt;"); break;
-					case '&': fz_write_string(ctx, out, "&amp;"); break;
-					case '"': fz_write_string(ctx, out, "&quot;"); break;
-					case '\'': fz_write_string(ctx, out, "&apos;"); break;
-					default:
-						   if (ch->c >= 32 && ch->c <= 127)
-							   fz_write_printf(ctx, out, "%c", ch->c);
-						   else
-							   fz_write_printf(ctx, out, "&#x%x;", ch->c);
-						   break;
+						char text[8];
+						int n = fz_runetochar(text, ch->c);
+						fz_write_string(ctx, out, "\" hexc=\"");
+						for (i = 0; i < n; i++)
+							fz_write_printf(ctx, out, "%02x", text[i]);
 					}
 					fz_write_string(ctx, out, "\"/>\n");
 				}
@@ -672,7 +977,8 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 			break;
 
 		case FZ_STEXT_BLOCK_STRUCT:
-			fz_write_printf(ctx, out, "<struct idx=\"%d\"", block->u.s.index);
+			fz_write_printf(ctx, out, "<struct idx=\"%d\" bbox=\"%g %g %g %g\"", block->u.s.index,
+					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
 			if (block->u.s.down)
 				fz_write_printf(ctx, out, " raw=\"%s\" std=\"%s\"",
 						block->u.s.down->raw, fz_structure_to_string(block->u.s.down->standard));
@@ -683,9 +989,12 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 			break;
 
 		case FZ_STEXT_BLOCK_VECTOR:
-			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" stroke=\"%d\" argba=\"%08x\"/>\n",
+			fz_write_printf(ctx, out, "<vector bbox=\"%g %g %g %g\" stroke=\"%d\" rectangle=\"%d\" continues=\"%d\" argb=\"%08x\"/>\n",
 					block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1,
-					!!block->u.v.stroked, block->u.v.argb);
+					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED),
+					!!(block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE),
+					!!(block->u.v.flags & FZ_STEXT_VECTOR_CONTINUES),
+					block->u.v.argb);
 			break;
 
 		case FZ_STEXT_BLOCK_GRID:

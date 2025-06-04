@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -503,7 +503,7 @@ fz_autowarp_pixmap(fz_context *ctx, fz_pixmap *src, const fz_point points[4])
 
 /*
 	Corner detection: We shall steal the algorithm from the Dropbox
-	Document Scanner, as decribed here:
+	Document Scanner, as described here:
 
 	https://dropbox.tech/machine-learning/fast-and-accurate-document-detection-for-scanning
 
@@ -815,11 +815,12 @@ pregradcol(unsigned char *d, const int16_t *buf, int y, int w, uint32_t *max)
 
 	for (i = w; i > 0; i--)
 	{
-		int y = s0[w] - s2[w];
-		int x = *s0++ + 2 * *s1++ + *s2++;
-		uint32_t ax = x >= 0 ? x : -x;
-		uint32_t ay = y >= 0 ? y : -y;
-		uint32_t mag;
+		uint32_t ax, ay, mag;
+		int x;
+		y = s0[w] - s2[w];
+		x = *s0++ + 2 * *s1++ + *s2++;
+		ax = x >= 0 ? x : -x;
+		ay = y >= 0 ? y : -y;
 		/* x and y are now both in the range -1020..1020 */
 		/* Now we calculate slope and gradient.
 		 *   angle = atan2(y, x);
@@ -926,12 +927,12 @@ gradcol(unsigned char *d, const int16_t *buf, int y, int w, int scale)
 
 	for (i = w; i > 0; i--)
 	{
-		int y = s0[w] - s2[w];
-		int x = *s0++ + 2 * *s1++ + *s2++;
-		uint32_t ax = x >= 0 ? x : -x;
-		uint32_t ay = y >= 0 ? y : -y;
-		int angle;
-		uint32_t mag, scaled;
+		uint32_t ax, ay, mag, scaled;
+		int angle, x;
+		y = s0[w] - s2[w];
+		x = *s0++ + 2 * *s1++ + *s2++;
+		ax = x >= 0 ? x : -x;
+		ay = y >= 0 ? y : -y;
 		/* x and y are now both in the range -1020..1020 */
 		/* Now we calculate slope and gradient.
 		 *   angle = atan2(y, x);
@@ -1103,7 +1104,7 @@ nonmax(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int pass)
 			}
 			if (mag < q || mag < r)
 			{
-				/* Neighouring edges are stronger.
+				/* Neighbouring edges are stronger.
 				 * Lose this one. */
 				*d++ = 0;
 			}
@@ -1121,9 +1122,8 @@ nonmax(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int pass)
 		lastmag = mag;
 		for (x = w-2; x > 0; x--)
 		{
-			int ang = *s1++;
-			int mag = ang>>2;
-			int q, r;
+			ang = *s1++;
+			mag = ang>>2;
 			if (mag <= weak)
 			{
 				/* Not even a weak edge. We'll never keep it. */
@@ -1158,7 +1158,7 @@ nonmax(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int pass)
 				}
 				if (mag < q || mag < r)
 				{
-					/* Neighouring edges are stronger.
+					/* Neighbouring edges are stronger.
 					 * Lose this one. */
 					*d++ = 0;
 				}
@@ -1215,7 +1215,7 @@ nonmax(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int pass)
 			}
 			if (mag < q || mag < r)
 			{
-				/* Neighouring edges are stronger.
+				/* Neighbouring edges are stronger.
 				 * Lose this one. */
 				*d++ = 0;
 			}
@@ -1773,7 +1773,7 @@ score_by_area(const hough_point_t *points, const hough_route_t *route)
 	return (double_area_of_quad*4)/double_area;
 }
 
-/* The first n+1 edges of the route are filled in, as are rhe first n
+/* The first n+1 edges of the route are filled in, as are the first n
  * points.
  * 2*i   = edge number
  * 2*i+1 = point number

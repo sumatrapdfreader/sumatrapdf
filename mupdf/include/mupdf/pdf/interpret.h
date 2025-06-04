@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -178,6 +178,10 @@ struct pdf_processor
 	void (*op_gs_OPM)(fz_context *ctx, pdf_processor *proc, int i);
 	void (*op_gs_UseBlackPtComp)(fz_context *ctx, pdf_processor *proc, pdf_obj *name);
 
+	/* EOD is used to signify end of data (before any finalise/close down/
+	 * automatically added gstate pops). */
+	void (*op_EOD)(fz_context *ctx, pdf_processor *proc);
+
 	/* END is used to signify end of stream (finalise and close down) */
 	void (*op_END)(fz_context *ctx, pdf_processor *proc);
 
@@ -215,7 +219,7 @@ void pdf_count_q_balance(fz_context *ctx, pdf_document *doc, pdf_obj *res, pdf_o
 
 /* Functions to set up pdf_process structures */
 
-pdf_processor *pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_matrix ctm, int struct_parent, const char *usage, pdf_gstate *gstate, fz_default_colorspaces *default_cs, fz_cookie *cookie);
+pdf_processor *pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_matrix ctm, int struct_parent, const char *usage, pdf_gstate *gstate, fz_default_colorspaces *default_cs, fz_cookie *cookie, pdf_gstate *fill_gstate, pdf_gstate *stroke_gstate);
 
 /*
 	Create a buffer processor.
@@ -324,11 +328,15 @@ struct pdf_filter_options
 
 typedef enum
 {
-	FZ_CULL_PATH_FILL,
-	FZ_CULL_PATH_STROKE,
-	FZ_CULL_PATH_FILL_STROKE,
-	FZ_CULL_CLIP_PATH,
-	FZ_CULL_GLYPH,
+	FZ_CULL_PATH_DROP = 0,
+	FZ_CULL_PATH_FILL = 1,
+	FZ_CULL_PATH_STROKE = 2,
+	FZ_CULL_PATH_FILL_STROKE = 3,
+	FZ_CULL_CLIP_PATH_DROP = 4,
+	FZ_CULL_CLIP_PATH_FILL = 5,
+	FZ_CULL_CLIP_PATH_STROKE = 6,
+	FZ_CULL_CLIP_PATH_FILL_STROKE = 7,
+	FZ_CULL_GLYPH = 8,
 	FZ_CULL_IMAGE,
 	FZ_CULL_SHADING
 } fz_cull_type;

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -245,7 +245,6 @@ pdf_lookup_number_imp(fz_context *ctx, pdf_obj *node, int needle, pdf_cycle_list
 
 	if (pdf_is_array(ctx, nums))
 	{
-		pdf_obj *nums = pdf_dict_get(ctx, node, PDF_NAME(Nums));
 		int l = 0;
 		int r = (pdf_array_len(ctx, nums) / 2) - 1;
 

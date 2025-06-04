@@ -1,191 +1,44 @@
-/* main document page: ensures pages fit to the available width and height */
-.wy-nav-content {
-    min-width: 100%;
-    min-height: 100vh;
+/* brand */
+.sidebar-logo {
+    max-width: 80px;
+}
+.sidebar-brand-text {
+    font-size: 14px;
+    padding: 0;
+    margin: 10px 0;
 }
 
-/* Accessibility: Artifex color for main document links */
-.wy-nav-content a {
-    color: #007aff;
+/* theme icon buttons - invert color because they're on our blue background instead of white/black */
+.content-icon-container button {
+	filter: invert(100%);
 }
 
-/* Artifex blue color for background elements */
-.wy-side-nav-search, .wy-nav-top {
-    background-color: #007aff;
+/* discord link in footer */
+.discord-link {
+	font-size: 14px;
+}
+.discord-link img {
+	vertical-align: -4px;
+	margin-left: 2px;
 }
 
-/* Accessibility: ensures that the version number is readable against the background color */
-.wy-side-nav-search>div.version {
-    color:hsla(0,0%,100%,1);
-}
-
-.htmltag {
-    padding: 2px 5px;
-    background-color: #fbff68;
-    border-radius: 4px;
-    border: 1px solid #222;
-    color:#000;
-}
-
-.discordLink {
-    display:flex;
-    justify-content:flex-end;
-    margin:0;
-    padding:0;
-    font-size: 13px;
-}
-
-.discordLink img {
-    width: 30px;
-    height: 30px;
-    margin-left: 8px;
-}
-
-.feedbackLink {
-    display:flex;
-    justify-content:flex-end;
-    margin:0 0 10px;
-    padding:0;
-    font-size: 13px;
-}
-
-.intro-title {
-    font-size: 22px;
-    margin: 0 0 20px 0;
-}
-
+/* blue background top header */
 h1 {
-    padding: 10px !important;
-    background-color: #007aff !important;
-    color: #fff !important;
-    border-radius: 5px !important;
-    margin-top: 20px !important;
-    margin-left: -10px !important;
+    padding: 5px 15px;
+    background-color: #007aff !important; /* override :target highlighting */
+    color: #fff;
+    border-radius: 5px;
+    margin-top: 16px;
+    margin-left: -10px;
 }
 
+/* re-style jamie's :title: "thing" highlighting */
 cite {
     font-weight: bold;
     font-style: normal;
 }
 
-.red-color {
-    color: #cc0000;
-}
-
-.orange-color {
-    color: #ff6600;
-}
-
-.green-color {
-    color: #00cc00;
-}
-
-button.cta {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    border:0;
-    text-transform:uppercase;
-    border-radius:5px;
-    font-size:16px;
-    font-weight:500;
-    min-height:40px;
-    line-height:40px;
-    padding: 0 15px;
-    color:#fff;
-    cursor:pointer;
-}
-
-button.cta.orange {
-    width:auto;
-    background-image: linear-gradient(to right, #ea5842, #ec6343, #ed6d45, #ef7747, #f0804a) !important;
-}
-
-button.cta.orange:hover {
-    background:#ea5842 !important;
-}
-
-button.cta a {
-    color:#fff !important;
-}
-
-.footer-version {
-    font-weight: bold;
-    font-size: 12px;
-    color: #999;
-}
-
-
-/*** Furo theme overrides ***/
-/* This is to do with hiding the Furo link text and the "Made with" text */
-.bottom-of-page .left-details {
-    font-size:0;
-}
-
-.bottom-of-page .left-details a {
-    display:none;
-}
-
-/* Now ensure that the other copyright text is visible here */
-.bottom-of-page .left-details > * {
-    font-size:12px;
-}
-
-.sidebar-brand-text {
-    font-size: 13px;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar-logo {
-    width: 60px;
-    height: 60px;
-}
-
-.sidebar-container {
-    margin: 0;
-    padding: 0;
-}
-
-
-.sidebar-search-container.top {
-    /*position:sticky;
-    top:10px;*/
-    border-radius: 20px;
-    border: solid #333 1px;
-    /*background-color: #fff;*/
-}
-
-.sidebar-search-container.top .sidebar-search {
-    border-top: 0 !important;
-    border-bottom: 0 !important;
-}
-
-.sidebar-drawer .sidebar-search-container {
-    width: 95%;
-}
-
-.toc-drawer .toc-title {
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-:target>h1:first-of-type, span:target~h1:first-of-type {
-    background-color: #007aff !important;
-    color: #fff !important;
-    padding-top: 40px; /* accomodates header search blocking target */
-    margin-top: -40px;
-}
-
-
-:target>h2:first-of-type, :target>h3:first-of-type,
-:target>h4:first-of-type, :target>h5:first-of-type, :target>h6:first-of-type,
-span:target~h2:first-of-type, span:target~h3:first-of-type,
-span:target~h4:first-of-type, span:target~h5:first-of-type, span:target~h6:first-of-type {
-    background-color: transparent !important;
-    padding-top: 40px; /* accomodates header search blocking target */
-    margin-top: -40px;
-    text-decoration: underline;
-}
+/* custom [tags] for examples etc */
 
 .mutool_tag, .wasm_tag, .instance_props_tag, .instance_methods_tag, .example_tag {
     font-family: monospace;
@@ -196,13 +49,9 @@ span:target~h4:first-of-type, span:target~h5:first-of-type, span:target~h6:first
     font-weight: 600;
 }
 
-.mutool_tag {
-    background-color: #2ab57c;
-}
-
-.wasm_tag {
-    background-color: #2c5cbd;
-}
+.mutool_tag { background-color: #2ab57c; }
+.wasm_tag { background-color: #2c5cbd; }
+.instance_props_tag, .instance_methods_tag { background-color: #a5a5b5; }
 
 .example_tag {
     font-size: 9px;
@@ -210,21 +59,15 @@ span:target~h4:first-of-type, span:target~h5:first-of-type, span:target~h6:first
     background-color: #222;
 }
 
-.instance_props_tag, .instance_methods_tag {
-    color: black;
-    background-color: #a5a5b5;
+/* license disclaimer in footer */
+.footer-disclaimer {
+	margin-top: 30px;
+	padding: 10px;
+	border: 1px solid #0004;
+	color: #999;
 }
 
-/* Dark mode colors */
-@media (prefers-color-scheme: dark) {
-
-
-
-}
-
-/* small screens */
-@media all and (max-width : 550px)  {
-    .discordLink img {
-        display: none;
-    }
-}
+/* Hide the "Made with" text, but show the copyright and last-updated */
+.bottom-of-page .left-details { font-size: 0; }
+.bottom-of-page .left-details .copyright { font-size:12px; }
+.bottom-of-page .left-details .last-updated { font-size:12px; }

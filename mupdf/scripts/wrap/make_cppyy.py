@@ -562,7 +562,7 @@ def make_cppyy(
             #
             # fz_parse_page_range() leaves the out-params unchanged when it
             # returns null, so we can detect whether null was returned by
-            # initialsing the out-params with special values that would never
+            # initializing the out-params with special values that would never
             # be ordinarily be returned.
             #
             @override( 'cppyy.gbl.mupdf.parse_page_range', 'cppyy.gbl.mupdf.mfz_parse_page_range')

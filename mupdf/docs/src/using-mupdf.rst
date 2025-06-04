@@ -1,15 +1,14 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-Using :title:`MuPDF` with :title:`C`
+Using MuPDF with C
 ==========================================
 
 This intends to be an introductory guide into how to use :title:`MuPDF` with your :title:`C` code and as such assumes at least an intermediate knowledge of programming with :title:`C`.
@@ -210,6 +209,10 @@ The following simple rules should be followed to ensure that multi-threaded oper
 
    We strongly recommend that `fz_new_context` is called just once, and `fz_clone_context` is called to generate new contexts from that. This will automatically ensure that the same locking mechanism is used in all :title:`MuPDF` instances. For now, we do support multiple completely independent contexts being created using repeated calls to `fz_new_context`, but these MUST share the same `fz_locks_context` (or at least depend upon the same underlying locks). The facility to create different independent contexts may be removed in future.
 
+.. important::
+
+   Most of the :doc:`language-bindings` handle context creation/destruction/cloning, and provide locks for you (i.e. `1`, `4`, `5` above are handled for you). The restrictions on simultaneous use of documents and devices (`2` and `3` above) still apply.
+
 **So, how does a multi-threaded example differ from a non-multithreaded one?**
 
 Firstly, when we create the first context, we call `fz_new_context` as before, but the second argument should be a pointer to a set of locking functions.
@@ -320,7 +323,6 @@ Any objects returned by functions that do not have any of these special words, a
 
 
 
-.. include:: footer.rst
 
 
 

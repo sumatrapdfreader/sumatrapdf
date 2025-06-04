@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -279,7 +279,7 @@ FUN(PDFWidget_isSigned)(JNIEnv *env, jobject self)
 	pdf_annot *widget = from_PDFWidget_safe(env, self);
 	jboolean val = JNI_FALSE;
 
-	if (!ctx || !widget) return 0;
+	if (!ctx || !widget) return JNI_FALSE;
 
 	fz_try(ctx)
 		val = !!pdf_widget_is_signed(ctx, widget);
@@ -405,6 +405,44 @@ FUN(PDFWidget_getDistinguishedName)(JNIEnv *env, jobject self, jobject jverifier
 	(*env)->SetObjectField(env, jname, fid_PKCS7DistinguishedName_c, jc);
 
 	return jname;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFWidget_getSignatory)(JNIEnv *env, jobject self, jobject jverifier)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
+	java_pkcs7_verifier *verifier = from_PKCS7Verifier_safe(env, jverifier);
+	pdf_document *pdf = pdf_annot_page(ctx, widget)->doc;
+	pdf_pkcs7_distinguished_name *name;
+	char *s = NULL;
+	char buf[800];
+
+	if (!ctx || !widget || !pdf) return NULL;
+	if (!verifier) jni_throw_arg(env, "verifier must not be null");
+
+	fz_var(s);
+
+	fz_try(ctx)
+	{
+		name = pdf_signature_get_widget_signatory(ctx, &verifier->base, widget);
+		if (name)
+		{
+			s = pdf_signature_format_distinguished_name(ctx, name);
+			fz_strlcpy(buf, s, sizeof buf);
+			fz_free(ctx, s);
+		}
+		else
+		{
+			fz_strlcpy(buf, "Signature information missing.", sizeof buf);
+		}
+	}
+	fz_always(ctx)
+		pdf_signature_drop_distinguished_name(ctx, name);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_String_safe(ctx, env, &buf[0]);
 }
 
 JNIEXPORT jboolean JNICALL
@@ -666,4 +704,57 @@ FUN(PDFWidget_getLabel)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return (*env)->NewStringUTF(env, text);
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFWidget_getName)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
+	char *name = NULL;
+	jstring jname;
+
+	if (!ctx || !widget) return NULL;
+
+	fz_try(ctx)
+		name = pdf_load_field_name(ctx, pdf_annot_obj(ctx, widget));
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jname = (*env)->NewStringUTF(env, name);
+	fz_free(ctx, name);
+	if (!jname || (*env)->ExceptionCheck(env))
+		jni_throw_run(env, "cannot create widget name string");
+	return jname;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFWidget_getEditingState)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
+	jboolean editing = JNI_FALSE;
+
+	if (!ctx || !widget) return JNI_FALSE;
+
+	fz_try(ctx)
+		editing = pdf_get_widget_editing_state(ctx, widget);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return editing;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFWidget_setEditingState)(JNIEnv *env, jobject self, jboolean editing)
+{
+	fz_context *ctx = get_context(env);
+	pdf_annot *widget = from_PDFWidget_safe(env, self);
+
+	if (!ctx || !widget) return;
+
+	fz_try(ctx)
+		pdf_set_widget_editing_state(ctx, widget, editing);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }

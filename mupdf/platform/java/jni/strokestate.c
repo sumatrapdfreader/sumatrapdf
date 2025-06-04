@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -33,7 +33,7 @@ FUN(StrokeState_finalize)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jlong JNICALL
-FUN(StrokeState_newNativeStrokeState)(JNIEnv *env, jobject self, jint startCap, jint dashCap, jint endCap, jint lineJoin, jfloat lineWidth, jfloat miterLimit, jfloat dashPhase, jfloatArray dash)
+FUN(StrokeState_newNativeStrokeState)(JNIEnv *env, jobject self, jint lineCap, jint lineJoin, jfloat lineWidth, jfloat miterLimit, jfloat dashPhase, jfloatArray dash)
 {
 	fz_context *ctx = get_context(env);
 	fz_stroke_state *stroke = NULL;
@@ -47,9 +47,9 @@ FUN(StrokeState_newNativeStrokeState)(JNIEnv *env, jobject self, jint startCap, 
 	fz_try(ctx)
 	{
 		stroke = fz_new_stroke_state_with_dash_len(ctx, len);
-		stroke->start_cap = startCap;
-		stroke->dash_cap = dashCap;
-		stroke->end_cap = endCap;
+		stroke->start_cap = lineCap;
+		stroke->dash_cap = lineCap;
+		stroke->end_cap = lineCap;
 		stroke->linejoin = lineJoin;
 		stroke->linewidth = lineWidth;
 		stroke->miterlimit = miterLimit;
@@ -69,24 +69,10 @@ FUN(StrokeState_newNativeStrokeState)(JNIEnv *env, jobject self, jint startCap, 
 }
 
 JNIEXPORT jint JNICALL
-FUN(StrokeState_getStartCap)(JNIEnv *env, jobject self)
+FUN(StrokeState_getLineCap)(JNIEnv *env, jobject self)
 {
 	fz_stroke_state *stroke = from_StrokeState(env, self);
 	return stroke ? stroke->start_cap : 0;
-}
-
-JNIEXPORT jint JNICALL
-FUN(StrokeState_getDashCap)(JNIEnv *env, jobject self)
-{
-	fz_stroke_state *stroke = from_StrokeState(env, self);
-	return stroke ? stroke->dash_cap : 0;
-}
-
-JNIEXPORT jint JNICALL
-FUN(StrokeState_getEndCap)(JNIEnv *env, jobject self)
-{
-	fz_stroke_state *stroke = from_StrokeState(env, self);
-	return stroke ? stroke->end_cap : 0;
 }
 
 JNIEXPORT jint JNICALL
@@ -118,7 +104,7 @@ FUN(StrokeState_getDashPhase)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jfloatArray JNICALL
-FUN(StrokeState_getDashes)(JNIEnv *env, jobject self)
+FUN(StrokeState_getDashPattern)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_stroke_state *stroke = from_StrokeState(env, self);

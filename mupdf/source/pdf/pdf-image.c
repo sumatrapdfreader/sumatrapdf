@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -69,6 +69,7 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 	float decode[FZ_MAX_COLORS * 2];
 	int colorkey[FZ_MAX_COLORS * 2];
 	int stride;
+	pdf_obj *intent;
 
 	int i;
 	fz_compressed_buffer *buffer;
@@ -84,6 +85,7 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 		bpc = 8;
 	imagemask = pdf_to_bool(ctx, pdf_dict_geta(ctx, dict, PDF_NAME(ImageMask), PDF_NAME(IM)));
 	interpolate = pdf_to_bool(ctx, pdf_dict_geta(ctx, dict, PDF_NAME(Interpolate), PDF_NAME(I)));
+	intent = pdf_dict_get(ctx, dict, PDF_NAME(Intent));
 
 	indexed = 0;
 	use_colorkey = 0;
@@ -210,6 +212,14 @@ pdf_load_image_imp(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *di
 			image = fz_new_image_from_compressed_buffer(ctx, w, h, bpc, colorspace, 96, 96, interpolate, imagemask, decode, use_colorkey ? colorkey : NULL, NULL, mask);
 			pdf_load_compressed_inline_image(ctx, doc, dict, stride * h, cstm, indexed, (fz_compressed_image *)image);
 		}
+		if (pdf_name_eq(ctx, intent, PDF_NAME(Perceptual)))
+			image->has_intent = 1, image->intent = FZ_RI_PERCEPTUAL;
+		else if (pdf_name_eq(ctx, intent, PDF_NAME(AbsoluteColorimetric)))
+			image->has_intent = 1, image->intent = FZ_RI_ABSOLUTE_COLORIMETRIC;
+		else if (pdf_name_eq(ctx, intent, PDF_NAME(RelativeColorimetric)))
+			image->has_intent = 1, image->intent = FZ_RI_RELATIVE_COLORIMETRIC;
+		else if (pdf_name_eq(ctx, intent, PDF_NAME(Saturation)))
+			image->has_intent = 1, image->intent = FZ_RI_SATURATION;
 	}
 	fz_always(ctx)
 	{
@@ -584,11 +594,13 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 					pdf_update_stream(ctx, doc, globals_ref, fz_jbig2_globals_data(ctx, cp->u.jbig2.globals), 0);
 				}
 				else
+				{
 					buffer = pdf_jbig2_stream_from_file(ctx, cbuffer->buffer,
 						cp->u.jbig2.globals,
 						1);
-				if (!buffer)
-					goto unknown_compression;
+					if (!buffer)
+						goto unknown_compression;
+				}
 				pdf_dict_put(ctx, imobj, PDF_NAME(Filter), PDF_NAME(JBIG2Decode));
 				break;
 			case FZ_IMAGE_FAX:
@@ -620,6 +632,17 @@ pdf_add_image(fz_context *ctx, pdf_document *doc, fz_image *image)
 				if (cp->u.flate.bpc)
 					pdf_dict_put_int(ctx, dp, PDF_NAME(BitsPerComponent), cp->u.flate.bpc);
 				pdf_dict_put(ctx, imobj, PDF_NAME(Filter), PDF_NAME(FlateDecode));
+				break;
+			case FZ_IMAGE_BROTLI:
+				if (cp->u.brotli.columns)
+					pdf_dict_put_int(ctx, dp, PDF_NAME(Columns), cp->u.brotli.columns);
+				if (cp->u.brotli.colors)
+					pdf_dict_put_int(ctx, dp, PDF_NAME(Colors), cp->u.brotli.colors);
+				if (cp->u.brotli.predictor)
+					pdf_dict_put_int(ctx, dp, PDF_NAME(Predictor), cp->u.brotli.predictor);
+				if (cp->u.brotli.bpc)
+					pdf_dict_put_int(ctx, dp, PDF_NAME(BitsPerComponent), cp->u.brotli.bpc);
+				pdf_dict_put(ctx, imobj, PDF_NAME(Filter), PDF_NAME(BrotliDecode));
 				break;
 			case FZ_IMAGE_LZW:
 				if (cp->u.lzw.columns)
@@ -773,66 +796,8 @@ unknown_compression:
 		}
 		else
 		{
-			fz_colorspace *cs;
-
-			cs = pixmap ? pixmap->colorspace : image->colorspace;
-			switch (fz_colorspace_type(ctx, cs))
-			{
-			case FZ_COLORSPACE_INDEXED:
-				{
-					fz_colorspace *basecs;
-					unsigned char *lookup = NULL;
-					int high = 0;
-					int basen;
-					pdf_obj *arr;
-
-					basecs = cs->u.indexed.base;
-					high = cs->u.indexed.high;
-					lookup = cs->u.indexed.lookup;
-					basen = basecs->n;
-
-					arr = pdf_dict_put_array(ctx, imobj, PDF_NAME(ColorSpace), 4);
-
-					pdf_array_push(ctx, arr, PDF_NAME(Indexed));
-					switch (fz_colorspace_type(ctx, basecs))
-					{
-					case FZ_COLORSPACE_GRAY:
-						pdf_array_push(ctx, arr, PDF_NAME(DeviceGray));
-						break;
-					case FZ_COLORSPACE_RGB:
-						pdf_array_push(ctx, arr, PDF_NAME(DeviceRGB));
-						break;
-					case FZ_COLORSPACE_CMYK:
-						pdf_array_push(ctx, arr, PDF_NAME(DeviceCMYK));
-						break;
-					default:
-						// TODO: convert to RGB!
-						fz_throw(ctx, FZ_ERROR_ARGUMENT, "only indexed Gray, RGB, and CMYK colorspaces supported");
-						break;
-					}
-
-					pdf_array_push_int(ctx, arr, high);
-					pdf_array_push_string(ctx, arr, (char *) lookup, (size_t)basen * (high + 1));
-				}
-				break;
-			case FZ_COLORSPACE_NONE:
-			case FZ_COLORSPACE_GRAY:
-				pdf_dict_put(ctx, imobj, PDF_NAME(ColorSpace), PDF_NAME(DeviceGray));
-				break;
-			case FZ_COLORSPACE_RGB:
-				pdf_dict_put(ctx, imobj, PDF_NAME(ColorSpace), PDF_NAME(DeviceRGB));
-				break;
-			case FZ_COLORSPACE_CMYK:
-				pdf_dict_put(ctx, imobj, PDF_NAME(ColorSpace), PDF_NAME(DeviceCMYK));
-				break;
-			case FZ_COLORSPACE_LAB:
-				pdf_dict_put(ctx, imobj, PDF_NAME(ColorSpace), PDF_NAME(Lab));
-				break;
-			default:
-				// TODO: convert to RGB!
-				fz_throw(ctx, FZ_ERROR_ARGUMENT, "only Gray, RGB, and CMYK colorspaces supported");
-				break;
-			}
+			fz_colorspace *cs = pixmap ? pixmap->colorspace : image->colorspace;
+			pdf_dict_put_drop(ctx, imobj, PDF_NAME(ColorSpace), pdf_add_colorspace(ctx, doc, cs));
 		}
 
 		if (image->mask)

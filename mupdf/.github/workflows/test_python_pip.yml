@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: '13 5 * * *'
   workflow_dispatch:
+    inputs:
 
 jobs:
 
@@ -12,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-latest]
+        os: [ubuntu-latest, windows-2019, macos-latest]
 
       # Avoid cancelling of all runs after a single failure.
       fail-fast: false
@@ -63,7 +64,7 @@ jobs:
         shell: python
 
       - name: Archive generated code
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: generated-code

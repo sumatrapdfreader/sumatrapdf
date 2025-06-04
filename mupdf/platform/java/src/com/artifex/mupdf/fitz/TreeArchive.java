@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,7 +28,14 @@ public class TreeArchive extends Archive
 		Context.init();
 	}
 
-	private TreeArchive(long p) { super(p); }
+	private static native long newNativeTreeArchive();
+	private TreeArchive(long p) {
+		super(p);
+	}
+	public TreeArchive()
+	{
+		this(newNativeTreeArchive());
+	}
 
 	public native void add(String name, Buffer buf);
 }

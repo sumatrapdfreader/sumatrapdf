@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -833,6 +833,7 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 						) ? FZ_STEXT_PRESERVE_IMAGES : 0;
 			stext_options.flags |= FZ_STEXT_CLIP;
 			stext_options.flags |= FZ_STEXT_ACCURATE_BBOXES;
+			stext_options.flags |= FZ_STEXT_COLLECT_STYLES;
 			if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
 				stext_options.flags |= FZ_STEXT_PRESERVE_SPANS;
 			tmediabox = fz_transform_rect(mediabox, ctm);
@@ -1152,19 +1153,19 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 			{
 				if (num_workers > 0)
 				{
-					worker_t *w = &workers[band % num_workers];
+					worker_t *work = &workers[band % num_workers];
 #ifndef DISABLE_MUTHREADS
-					DEBUG_THREADS(("Waiting for worker %d to complete band %d\n", w->num, band));
-					mu_wait_semaphore(&w->stop);
+					DEBUG_THREADS(("Waiting for worker %d to complete band %d\n", work->num, band));
+					mu_wait_semaphore(&work->stop);
 #endif
-					w->running = 0;
-					cookie->errors += w->cookie.errors;
-					pix = w->pix;
-					bit = w->bit;
-					w->bit = NULL;
+					work->running = 0;
+					cookie->errors += work->cookie.errors;
+					pix = work->pix;
+					bit = work->bit;
+					work->bit = NULL;
 
-					if (w->error)
-						fz_throw(ctx, FZ_ERROR_GENERIC, "worker %d failed to render band %d", w->num, band);
+					if (work->error)
+						fz_throw(ctx, FZ_ERROR_GENERIC, "worker %d failed to render band %d", work->num, band);
 				}
 				else
 					drawband(ctx, page, list, ctm, tbounds, cookie, band * band_height, pix, &bit);
@@ -1187,16 +1188,16 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 
 				if (num_workers > 0 && band + num_workers < bands)
 				{
-					worker_t *w = &workers[band % num_workers];
-					w->band = band + num_workers;
-					w->pix->y = band_ibounds.y0 + w->band * band_height;
-					w->ctm = ctm;
-					w->tbounds = tbounds;
-					memset(&w->cookie, 0, sizeof(fz_cookie));
-					w->running = 1;
+					worker_t *work = &workers[band % num_workers];
+					work->band = band + num_workers;
+					work->pix->y = band_ibounds.y0 + work->band * band_height;
+					work->ctm = ctm;
+					work->tbounds = tbounds;
+					memset(&work->cookie, 0, sizeof(fz_cookie));
+					work->running = 1;
 #ifndef DISABLE_MUTHREADS
-					DEBUG_THREADS(("Triggering worker %d for band %d\n", w->num, w->band));
-					mu_trigger_semaphore(&w->start);
+					DEBUG_THREADS(("Triggering worker %d for band %d\n", work->num, work->band));
+					mu_trigger_semaphore(&work->start);
 #endif
 				}
 				if (num_workers <= 0)
@@ -1994,10 +1995,10 @@ static int convert_to_accel_path(fz_context *ctx, char outname[], char *absname,
 	return 0; /* Fail */
 }
 
-static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *filename, int create)
+static int get_accelerator_filename(fz_context *ctx, char outname[], size_t len, const char *fname, int create)
 {
 	char absname[PATH_MAX];
-	if (!fz_realpath(filename, absname))
+	if (!fz_realpath(fname, absname))
 		return 0;
 	if (!convert_to_accel_path(ctx, outname, absname, len, create))
 		return 0;
@@ -2265,11 +2266,7 @@ int mudraw_main(int argc, char **argv)
 #endif /* DISABLE_MUTHREADS */
 
 		if (layout_css)
-		{
-			fz_buffer *buf = fz_read_file(ctx, layout_css);
-			fz_set_user_css(ctx, fz_string_from_buffer(ctx, buf));
-			fz_drop_buffer(ctx, buf);
-		}
+			fz_load_user_css(ctx, layout_css);
 
 		fz_set_use_document_css(ctx, layout_use_doc_css);
 
@@ -2501,7 +2498,7 @@ int mudraw_main(int argc, char **argv)
 					output_format != OUT_OCR_XHTML &&
 					output_format != OUT_XMLTEXT)
 				{
-					setmode(fileno(stdout), O_BINARY);
+					(void)setmode(fileno(stdout), O_BINARY);
 				}
 #endif
 				out = fz_stdout(ctx);

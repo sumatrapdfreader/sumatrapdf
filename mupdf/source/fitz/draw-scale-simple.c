@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -208,7 +208,7 @@ typedef struct
 	int n;		/* number of components (src->n) */
 	int new_line;	/* True if no weights for the current output pixel */
 	int patch_l;	/* How many output pixels we skip over */
-	int index[1];
+	int index[FZ_FLEXIBLE_ARRAY];
 } fz_weights;
 
 struct fz_scale_cache
@@ -253,7 +253,7 @@ new_weights(fz_context *ctx, fz_scale_filter *filter, int src_w, float dst_w, in
 	 * plus (2+max_len)*sizeof(int) for the weights
 	 * plus room for an extra set of weights for reordering.
 	 */
-	weights = fz_malloc(ctx, sizeof(*weights)+(size_t)(max_len+3)*(patch_w+1)*sizeof(int));
+	weights = fz_malloc_flexible(ctx, fz_weights, index, (max_len+3) * (patch_w+1));
 	if (!weights)
 		return NULL;
 	weights->count = -1;

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -434,11 +434,7 @@ void pdfapp_open_progressive(pdfapp_t *app, char *filename, int reload, int kbps
 		fz_register_document_handlers(ctx);
 
 		if (app->layout_css)
-		{
-			fz_buffer *buf = fz_read_file(ctx, app->layout_css);
-			fz_set_user_css(ctx, fz_string_from_buffer(ctx, buf));
-			fz_drop_buffer(ctx, buf);
-		}
+			fz_load_user_css(ctx, app->layout_css);
 
 		fz_set_use_document_css(ctx, app->layout_use_doc_css);
 
@@ -792,9 +788,9 @@ int pdfapp_preclose(pdfapp_t *app)
 	return 1;
 }
 
-static void pdfapp_viewctm(fz_matrix *mat, pdfapp_t *app)
+static fz_matrix pdfapp_viewctm(pdfapp_t *app)
 {
-	*mat = fz_transform_page(app->page_bbox, app->resolution, app->rotate);
+	return fz_transform_page(app->page_bbox, app->resolution, app->rotate);
 }
 
 static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
@@ -1066,6 +1062,11 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		char buf2[64];
 		size_t len;
 
+		while (!winisresolutionacceptable(app, pdfapp_viewctm(app)))
+		{
+			app->resolution = zoom_out(app->resolution);
+		}
+
 		sprintf(buf2, " - %d/%d (%g dpi)",
 				app->pageno, app->pagecount, app->resolution);
 		len = MAX_TITLE-strlen(buf2);
@@ -1082,7 +1083,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		}
 		wintitle(app, buf);
 
-		pdfapp_viewctm(&ctm, app);
+		ctm = pdfapp_viewctm(app);
 		bounds = fz_transform_rect(app->page_bbox, ctm);
 		ibounds = fz_round_rect(bounds);
 		bounds = fz_rect_from_irect(ibounds);
@@ -1254,7 +1255,7 @@ void pdfapp_inverthit(pdfapp_t *app)
 	fz_matrix ctm;
 	int i;
 
-	pdfapp_viewctm(&ctm, app);
+	ctm = pdfapp_viewctm(app);
 
 	for (i = 0; i < app->hit_count; i++)
 	{
@@ -1432,7 +1433,7 @@ key_rewritten:
 		break;
 
 	case '<':
-		if (app->layout_em > 6)
+		if (fz_is_document_reflowable(app->ctx, app->doc) && app->layout_em > 6)
 		{
 			fz_bookmark mark = fz_make_bookmark(app->ctx, app->doc, fz_location_from_page_number(app->ctx, app->doc, app->pageno));
 			app->layout_em -= 1;
@@ -1443,7 +1444,7 @@ key_rewritten:
 		}
 		break;
 	case '>':
-		if (app->layout_em < 36)
+		if (fz_is_document_reflowable(app->ctx, app->doc) && app->layout_em < 36)
 		{
 			fz_bookmark mark = fz_make_bookmark(app->ctx, app->doc, fz_location_from_page_number(app->ctx, app->doc, app->pageno));
 			app->layout_em += 1;
@@ -1906,7 +1907,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 	p.x = x - app->panx + irect.x0;
 	p.y = y - app->pany + irect.y0;
 
-	pdfapp_viewctm(&ctm, app);
+	ctm = pdfapp_viewctm(app);
 	ctm = fz_invert_matrix(ctm);
 
 	p = fz_transform_point(p, ctm);
@@ -2079,7 +2080,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	fz_stext_char *ch;
 	fz_rect sel;
 
-	pdfapp_viewctm(&ctm, app);
+	ctm = pdfapp_viewctm(app);
 	ctm = fz_invert_matrix(ctm);
 	sel = fz_transform_rect(app->selr, ctm);
 

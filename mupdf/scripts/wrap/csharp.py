@@ -164,7 +164,7 @@ def make_outparam_helper_csharp(
         base_type_cursor, base_typename, extras = parse.get_extras( tu, cursor.result_type)
         if extras:
             if extras.opaque:
-                # E.g. we don't have access to defintion of fz_separation,
+                # E.g. we don't have access to definition of fz_separation,
                 # but it is marked in classextras with opaque=true, so
                 # there will be a wrapper class.
                 return_alt = base_type_cursor

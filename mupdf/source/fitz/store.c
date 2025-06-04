@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -385,9 +385,9 @@ ensure_space(fz_context *ctx, size_t tofree)
 
 	while (to_be_freed)
 	{
-		fz_item *item = to_be_freed;
 		int drop;
 
+		item = to_be_freed;
 		to_be_freed = to_be_freed->next;
 
 		/* Drop a reference to the value (freeing if required) */

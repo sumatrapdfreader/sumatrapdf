@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1312,7 +1312,7 @@ scan_charstrings(fz_context *ctx, cff_t *cff, int is_pdf_cidfont)
 {
 	uint32_t offset, end;
 	int num_charstrings = (int)cff->charstrings_index.count;
-	int i, gid;
+	int i, gid, font;
 	usage_t *gids = cff->gids_to_keep.list;
 	int num_gids = cff->gids_to_keep.len;
 	int changed;
@@ -1378,6 +1378,26 @@ scan_charstrings(fz_context *ctx, cff_t *cff, int is_pdf_cidfont)
 			local_usage = get_font_locals(ctx, cff, gid, is_pdf_cidfont, &subr_bias);
 			execute_charstring(ctx, cff, &cff->base[offset], &cff->base[end], subr_bias, local_usage);
 			changed = 1;
+		}
+
+		/* Now, run through the per-font locals, seeing what per-font locals and globals they call.  */
+		for (font = 0; font < cff->fdarray_index.count; font++)
+		{
+			for (i = 0; i < cff->fdarray[font].local_usage.len; i++)
+			{
+				gid = cff->fdarray[font].local_usage.list[i].num;
+
+				if (cff->fdarray[font].local_usage.list[i].scanned)
+					continue;
+				cff->fdarray[font].local_usage.list[i].scanned = 1;
+				gid = cff->fdarray[font].local_usage.list[i].num;
+				offset = index_get(ctx, &cff->fdarray[font].local_index, gid);
+				end = index_get(ctx, &cff->fdarray[font].local_index, gid+1);
+
+				local_usage = get_font_locals(ctx, cff, gid, is_pdf_cidfont, &subr_bias);
+				execute_charstring(ctx, cff, &cff->base[offset], &cff->base[end], subr_bias, local_usage);
+				changed = 1;
+			}
 		}
 
 		/* Now, run through the globals, seeing what globals they call.  */
@@ -1658,14 +1678,14 @@ load_charset_for_cidfont(fz_context *ctx, cff_t *cff)
 	}
 	else if (fmt == 2)
 	{
-		for (i = 1; i < n; i++)
+		for (i = 1; i < n;)
 		{
 			uint16_t first;
 			int32_t nleft;
 			if (d + 4 >= cff->base + cff->len)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "corrupt charset");
 			first = get16(d);
-			nleft = get16(d+2);
+			nleft = get16(d+2) + 1;
 			d += 4;
 			while (nleft-- && i < n)
 			{
@@ -1733,7 +1753,7 @@ rewrite_fdarray(fz_context *ctx, cff_t *cff, uint32_t offset0)
 	uint16_t n = cff->fdarray_index.count;
 	uint32_t len = 0;
 	uint8_t os;
-	uint32_t offset;
+	size_t offset;
 
 	if (cff->fdarray == NULL)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Expected to rewrite an fdarray");
@@ -1754,8 +1774,8 @@ rewrite_fdarray(fz_context *ctx, cff_t *cff, uint32_t offset0)
 	{
 		assert(cff->fdarray[i].rewritten_dict->data[cff->fdarray[i].fixup] == 29);
 		assert(cff->fdarray[i].rewritten_dict->data[cff->fdarray[i].fixup+5] == 29);
-		put32(&cff->fdarray[i].rewritten_dict->data[cff->fdarray[i].fixup+1], cff->fdarray[i].rewritten_private->len);
-		put32(&cff->fdarray[i].rewritten_dict->data[cff->fdarray[i].fixup+6], offset);
+		put32(&cff->fdarray[i].rewritten_dict->data[cff->fdarray[i].fixup+1], (uint32_t)cff->fdarray[i].rewritten_private->len);
+		put32(&cff->fdarray[i].rewritten_dict->data[cff->fdarray[i].fixup+6], (uint32_t)offset);
 		offset += cff->fdarray[i].rewritten_private->len;
 		if (cff->fdarray[i].local_subset)
 		{
@@ -1767,7 +1787,7 @@ rewrite_fdarray(fz_context *ctx, cff_t *cff, uint32_t offset0)
 		}
 	}
 
-	return offset;
+	return (uint32_t)offset;
 }
 
 static void
@@ -2182,7 +2202,7 @@ read_fdarray_and_privates(fz_context *ctx, cff_t *cff)
 
 		if (cff->fdarray[i].local_index_offset != 0)
 		{
-			index_load(ctx, &cff->fdarray[i].local_index, cff->base, cff->len, cff->fdarray[i].local_index_offset);
+			index_load(ctx, &cff->fdarray[i].local_index, cff->base, (uint32_t)cff->len, cff->fdarray[i].local_index_offset);
 			cff->fdarray[i].subr_bias = subr_bias(ctx, cff, cff->fdarray[i].local_index.count);
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -241,6 +241,15 @@ static void fz_xmltext_fill_image(fz_context *ctx, fz_device *dev_, fz_image *im
 				s_write_attribute_int(ctx, dev->out, "colors", compressed->params.u.flate.colors);
 				s_write_attribute_int(ctx, dev->out, "predictor", compressed->params.u.flate.predictor);
 				s_write_attribute_int(ctx, dev->out, "bpc", compressed->params.u.flate.bpc);
+			}
+			else if (compressed->params.type == FZ_IMAGE_BROTLI)
+			{
+				type = "brotli";
+				s_write_attribute_string(ctx, dev->out, "type", type);
+				s_write_attribute_int(ctx, dev->out, "columns", compressed->params.u.brotli.columns);
+				s_write_attribute_int(ctx, dev->out, "colors", compressed->params.u.brotli.colors);
+				s_write_attribute_int(ctx, dev->out, "predictor", compressed->params.u.brotli.predictor);
+				s_write_attribute_int(ctx, dev->out, "bpc", compressed->params.u.brotli.bpc);
 			}
 			else if (compressed->params.type == FZ_IMAGE_LZW)
 			{

@@ -40,7 +40,7 @@ fz_pixmap *fz_deskew_pixmap(fz_context *ctx,
 
 /* Skew detection */
 
-double fz_skew_detect(fz_context *ctx, fz_pixmap *pixmap);
+double fz_detect_skew(fz_context *ctx, fz_pixmap *pixmap);
 
 
 #endif /* MUPDF_FITZ_DESKEW_H */

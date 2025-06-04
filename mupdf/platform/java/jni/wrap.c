@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -494,6 +494,20 @@ static inline jobject to_DOM_safe(fz_context *ctx, JNIEnv *env, fz_xml *xml)
 	return jxml;
 }
 
+static inline jobject to_Shade_safe(fz_context *ctx, JNIEnv *env, fz_shade *sh)
+{
+	jobject jsh;
+
+	if (!ctx || !sh) return NULL;
+
+	fz_keep_shade(ctx, sh);
+	jsh = (*env)->NewObject(env, cls_Shade, mid_Shade_init, jlong_cast(sh));
+	if (!jsh) fz_drop_shade(ctx, sh);
+	if ((*env)->ExceptionCheck(env)) return NULL;
+
+	return jsh;
+}
+
 static inline jobject to_String_safe(fz_context *ctx, JNIEnv *env, const char *val)
 {
 	jstring jval;
@@ -594,6 +608,16 @@ static inline jobject to_PDFWidget_safe(fz_context *ctx, JNIEnv *env, pdf_annot 
 	return jwidget;
 }
 
+static inline jobject to_VectorInfo_safe(fz_context *ctx, JNIEnv *env, int flags)
+{
+	jobject jvecinfo;
+	if (!ctx) return NULL;
+	jvecinfo = (*env)->NewObject(env, cls_StructuredTextWalker_VectorInfo, mid_StructuredTextWalker_VectorInfo_init);
+	(*env)->SetBooleanField(env, jvecinfo, fid_StructuredTextWalker_VectorInfo_isStroked, flags & FZ_STEXT_VECTOR_IS_STROKED);
+	(*env)->SetBooleanField(env, jvecinfo, fid_StructuredTextWalker_VectorInfo_isRectangle, flags & FZ_STEXT_VECTOR_IS_RECTANGLE);
+	return jvecinfo;
+}
+
 /* Conversion functions: C to Java. Take ownership of fitz object. None of these throw fitz exceptions. */
 
 static inline jobject to_Buffer_safe_own(fz_context *ctx, JNIEnv *env, fz_buffer *buf)
@@ -652,6 +676,19 @@ static inline jobject to_DisplayList_safe_own(fz_context *ctx, JNIEnv *env, fz_d
 		fz_drop_display_list(ctx, list);
 
 	return jlist;
+}
+
+static inline jobject to_Image_safe_own(fz_context *ctx, JNIEnv *env, fz_image *img)
+{
+	jobject jimg;
+
+	if (!ctx || !img) return NULL;
+
+	jimg = (*env)->NewObject(env, cls_Image, mid_Image_init, jlong_cast(img));
+	if (!jimg)
+		fz_drop_image(ctx, img);
+
+	return jimg;
 }
 
 static inline jobject to_NativeDevice_safe_own(fz_context *ctx, JNIEnv *env, fz_device *device)
@@ -774,6 +811,18 @@ static inline jobject to_Pixmap_safe_own(fz_context *ctx, JNIEnv *env, fz_pixmap
 		fz_drop_pixmap(ctx, pixmap);
 
 	return jobj;
+}
+
+static inline jobject to_String_safe_own(fz_context *ctx, JNIEnv *env, char *val)
+{
+	jstring jval;
+	if (!ctx) return NULL;
+
+	jval = (*env)->NewStringUTF(env, val);
+
+	fz_free(ctx, val);
+
+	return jval;
 }
 
 static inline jobject to_StructuredText_safe_own(fz_context *ctx, JNIEnv *env, fz_stext_page *text)

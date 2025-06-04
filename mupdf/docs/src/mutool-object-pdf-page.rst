@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_pdf_page:
 
 
@@ -211,6 +202,8 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
 
 .. method:: process(processor)
 
+    |mutool_tag|
+
     Run through the page contents stream and call methods on the supplied :ref:`PDF processor<mutool_run_js_api_pdf_processor>`.
 
     :arg processor: User defined function.
@@ -263,6 +256,8 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
 
 .. method:: createSignature(name)
 
+    |mutool_tag|
+
     Create a new signature widget with the given name as field label.
 
     :arg name: `String` The desired field label.
@@ -276,6 +271,8 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
         var signatureWidget = pdfPage.createSignature("test");
 
 .. method:: countAssociatedFiles()
+
+    |mutool_tag|
 
     Return the number of Associated Files on this page. Note that this is the number of files associated to this page, not necessarily the total number of files associated with elements throughout the entire document.
 
@@ -293,7 +290,9 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
 
 .. method:: associatedFile(n)
 
-    Return the Filespec object that represents the nth Associated File on this page. 0 <= n < count, where count is the value given by countAssociatedFiles().
+    |mutool_tag|
+
+    Return the FileSpec object that represents the nth Associated File on this page. 0 <= n < count, where count is the value given by countAssociatedFiles().
 
     :return fileSpecObject: `Object` :ref:`File Specification Object<mutool_run_js_api_file_spec_object>`.
 
@@ -303,3 +302,49 @@ Extends :ref:`Page<mutool_run_js_api_page>`.
     .. code-block:: javascript
 
         var obj = pdfPage.associatedFile(0);
+
+
+
+.. method:: getObject()
+
+    Return the `PDFObject` that corresponds to this PDF page.
+
+    :return: `Object` :ref:`PDFObject<mutool_run_js_api_pdf_object>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var pageObj = pdfPage.getObject();
+
+
+
+.. method:: setPageBox(boxname, rect)
+
+    Modify the page boxes using fitz space coordinates.
+
+    Note that changing the CropBox will change the fitz coordinate space mapping,
+    invalidating all bounding boxes previously acquired.
+
+    :arg boxname: `String` representing :ref:`box type<mutool_run_js_api_box_types>`.
+    :arg rect: `Array`. `[ulx,uly,lrx,lry]` :ref:`Rectangle<mutool_run_js_api_rectangle>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pdfPage.setPageBox("MediaBox", [0, 0, 612, 792]);
+
+.. _mutool_run_js_api_box_types:
+
+**Box name values**
+
+.. list-table::
+   :header-rows: 1
+
+   * - **Box names**
+   * - "MediaBox"
+   * - "CropBox"
+   * - "BleedBox"
+   * - "TrimBox"
+   * - "ArtBox"

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,7 +35,17 @@ typedef struct {
 	char *title;
 	char *uri;
 	int is_open;
+	int flags;
+	float r;
+	float g;
+	float b;
 } fz_outline_item;
+
+enum
+{
+	FZ_OUTLINE_FLAG_BOLD = 1,
+	FZ_OUTLINE_FLAG_ITALIC = 2,
+};
 
 typedef struct fz_outline_iterator fz_outline_iterator;
 
@@ -113,8 +123,12 @@ void fz_drop_outline_iterator(fz_context *ctx, fz_outline_iterator *iter);
 	May be NULL if no children exist.
 
 	is_open: If zero, the outline element is closed in the UI. If
-	1, it should be open, showing any child elements. All other
-	values reserved.
+	1, it should be open, showing any child elements.
+
+	flags: Bit 0 set -> Bold, Bit 1 set -> Italic. All other bits
+	reserved.
+
+	r, g, b: The RGB components of the color of this entry.
 */
 typedef struct fz_outline
 {
@@ -125,7 +139,11 @@ typedef struct fz_outline
 	float x, y;
 	struct fz_outline *next;
 	struct fz_outline *down;
-	int is_open;
+	unsigned int is_open : 1;
+	unsigned int flags : 7;
+	unsigned int r : 8;
+	unsigned int g : 8;
+	unsigned int b : 8;
 } fz_outline;
 
 /**

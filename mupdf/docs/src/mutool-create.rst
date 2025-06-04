@@ -3,7 +3,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -149,7 +148,6 @@ An example input file, which adds an image, a triangle and some text:
 
 
 
-.. include:: footer.rst
 
 
 

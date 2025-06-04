@@ -99,6 +99,14 @@ svg_build_id_map(fz_context *ctx, svg_document *doc, fz_xml *root)
 		svg_build_id_map(ctx, doc, node);
 }
 
+static int
+svg_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, size_t size)
+{
+	if (!strcmp(key, FZ_META_FORMAT))
+		return 1 + (int)fz_strlcpy(buf, "SVG", size);
+	return -1;
+}
+
 static fz_document *
 svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, const char *base_uri, fz_archive *zip)
 {
@@ -108,6 +116,7 @@ svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, con
 	doc->super.drop_document = svg_drop_document;
 	doc->super.count_pages = svg_count_pages;
 	doc->super.load_page = svg_load_page;
+	doc->super.lookup_metadata = svg_lookup_metadata;
 
 	doc->idmap = NULL;
 	if (base_uri)
@@ -141,6 +150,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
 	doc->super.drop_document = svg_drop_document;
 	doc->super.count_pages = svg_count_pages;
 	doc->super.load_page = svg_load_page;
+	doc->super.lookup_metadata = svg_lookup_metadata;
 
 	doc->idmap = NULL;
 	if (base_uri)

@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2024 Artifex Software, Inc.
+// Copyright (C) 2023-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -369,8 +369,8 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
 	fz_libarchive_archive *arch = fz_new_derived_archive(ctx, file, fz_libarchive_archive);
 	int r;
-	int free_path = 0;
 	const char *path = NULL;
+	char *free_path = NULL;
 
 	fz_seek(ctx, file, 0, SEEK_SET);
 
@@ -389,7 +389,6 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 	arch->super.drop_archive = drop_libarchive_archive;
 
 	fz_var(free_path);
-	fz_var(path);
 
 	fz_try(ctx)
 	{
@@ -407,12 +406,11 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 			if (r != ARCHIVE_OK)
 				fz_throw(ctx, FZ_ERROR_LIBRARY, "Corrupt archive");
 
-			free_path = 0;
+			free_path = NULL;
 			path = archive_entry_pathname_utf8(entry);
 			if (!path)
 			{
-				path = fz_utf8_from_wchar(ctx, archive_entry_pathname_w(entry));
-				free_path = 1;
+				path = free_path = fz_utf8_from_wchar(ctx, archive_entry_pathname_w(entry));
 			}
 			if (!path)
 				continue;
@@ -432,8 +430,8 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 			memcpy(&arch->entries[arch->entries_len]->name[0], path, z+1);
 			if (free_path)
 			{
-				fz_free(ctx, path);
-				free_path = 0;
+				fz_free(ctx, free_path);
+				free_path = NULL;
 			}
 			arch->entries[arch->entries_len]->len = archive_entry_size(entry);
 
@@ -446,7 +444,7 @@ fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 	fz_always(ctx)
 	{
 		if (free_path)
-			fz_free(ctx, path);
+			fz_free(ctx, free_path);
 	}
 	fz_catch(ctx)
 	{
@@ -712,24 +710,18 @@ fz_archive *
 fz_open_libarchive_archive_with_stream(fz_context *ctx, fz_stream *file)
 {
 	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "libarchive support not included");
-
-	return NULL;
 }
 
 fz_archive *
 fz_open_libarchive_archive(fz_context *ctx, const char *filename)
 {
 	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "libarchive support not included");
-
-	return NULL;
 }
 
 fz_stream *
 fz_open_libarchived(fz_context *ctx, fz_stream *chain)
 {
 	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "libarchive support not included");
-
-	return NULL;
 }
 
 #endif

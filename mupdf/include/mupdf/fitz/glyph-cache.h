@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -57,7 +57,7 @@ fz_pixmap *fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_ma
 	glyphs that inherit current graphics state, or nested type3
 	glyphs).
 */
-void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, fz_default_colorspaces *def_cs);
+void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, fz_default_colorspaces *def_cs, void *fill_gstate, void *stroke_gstate);
 
 /**
 	Force a type3 font to cache the displaylist for a given glyph

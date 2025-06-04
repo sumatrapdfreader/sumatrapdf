@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -785,8 +785,6 @@ fz_structure_to_string(fz_structure type)
 	case FZ_STRUCTURE_ARTIFACT:
 		return "Artifact";
 	}
-
-	return NULL;
 }
 
 fz_structure

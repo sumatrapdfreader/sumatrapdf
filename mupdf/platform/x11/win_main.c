@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -751,6 +751,11 @@ void wincursor(pdfapp_t *app, int curs)
 		SetCursor(caretcurs);
 }
 
+int winisresolutionacceptable(pdfapp_t *app, fz_matrix ctm)
+{
+	return 1;
+}
+
 void wintitle(pdfapp_t *app, char *title)
 {
 	wchar_t wide[256], *dp;
@@ -1221,7 +1226,7 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			handlemouse(oldx, oldy, 0, 0);	/* update cursor */
 			return 0;
 		}
-		return 1;
+		break;
 
 	/* unicode encoded chars, including escape, backspace etc... */
 	case WM_CHAR:

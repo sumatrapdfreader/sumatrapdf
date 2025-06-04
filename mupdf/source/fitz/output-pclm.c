@@ -327,7 +327,7 @@ fz_band_writer *fz_new_pclm_band_writer(fz_context *ctx, fz_output *out, const f
 }
 
 void
-fz_save_pixmap_as_pclm(fz_context *ctx, fz_pixmap *pixmap, char *filename, int append, const fz_pclm_options *pclm)
+fz_save_pixmap_as_pclm(fz_context *ctx, fz_pixmap *pixmap, const char *filename, int append, const fz_pclm_options *pclm)
 {
 	fz_output *out = fz_new_output_with_path(ctx, filename, append);
 	fz_try(ctx)

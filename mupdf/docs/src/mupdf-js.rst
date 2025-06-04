@@ -1,16 +1,8 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
 .. default-domain:: js
-
-.. include:: html_tags.rst
-
-
-.. title:: MuPDF & JavaScript
-
-.. include:: header.rst
-.. include:: html_tags.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -21,7 +13,7 @@
 .. _mutool_run_javascript_api:
 .. _mupdf_javascript_api:
 
-:title:`MuPDF` & :title:`Javascript`
+Javascript Bindings
 ==========================================
 
 
@@ -69,6 +61,7 @@ Class A-Z Index
 - :ref:`PDFPage<mutool_run_js_api_pdf_page>`
 - :ref:`PDFWidget<mutool_run_js_api_object_pdf_widget>`
 - :ref:`Pixmap<mutool_run_js_api_pixmap>`
+- :ref:`Shade<mutool_run_js_api_shade>`
 - :ref:`Story<mutool_run_js_api_object_story>`
 - :ref:`StrokeState<mutool_run_js_api_stroke_state>`
 - :ref:`StructuredText<mutool_run_js_api_structured_text>`
@@ -204,7 +197,7 @@ This matrix is represented in :title:`JavaScript` as `[a,b,c,d,e,f]`.
 Rectangles
 ~~~~~~~~~~~~
 
-Rectangles are 4-element arrays, specifying the minimum and maximum corners (typically upper left and lower right, in a coordinate space with the origin at the top left with descending y): `[ulx,uly,lrx,lry]`. Rectangles are always X- and Y-axis aligned.
+Rectangles are 4-element arrays, describing axis-aligned rectangles by specifying the minimum and maximum corners (typically upper left and lower right, in a coordinate space with the origin at the top left with descending y): `[ulx,uly,lrx,lry]`. Rectangles are always X- and Y-axis aligned.
 
 If the minimum x coordinate is bigger than the maximum x coordinate, :title:`MuPDF` treats the rectangle as infinite in size.
 
@@ -280,6 +273,18 @@ If the minimum x coordinate is bigger than the maximum x coordinate, :title:`MuP
       var m = mupdf.Rect.transform([0,0,100,100], [1,0.5,1,1,1,1]);
 
 
+.. _mutool_run_js_api_quad:
+
+Quadrilaterals
+~~~~~~~~~~~~~~~~~
+
+Quads are 8-element arrays, describing quadrilaterals by specifying its four corners (in the order upper left, upper right, lower left and lower right, in a coordinate space with the origin at the top left with descending y): `[ulx,uly,urx,ury,llx,lly,lrx,lry]`.
+
+In contrast to rectangles, quads are not by definition axis-aligned.
+
+If all the coordinates are infinite and of the expected sign, :title:`MuPDF` considers the quad to be infinite in size.
+
+
 .. _mutool_run_js_api_colors:
 
 Colors
@@ -352,6 +357,8 @@ Alpha values are floats between `0` and `1`, whereby `0` denotes full transparen
 
 .. include:: mutool-object-device.rst
 
+.. include:: mutool-object-stroke-state.rst
+
 .. include:: mutool-object-path.rst
 
 .. include:: mutool-object-text.rst
@@ -378,9 +385,11 @@ Alpha values are floats between `0` and `1`, whereby `0` denotes full transparen
 
 .. include:: mutool-object-archive.rst
 
+.. include:: mutool-object-shade.rst
+
 .. include:: mutool-object-story.rst
 
-.. include:: mutool-object-xml.rst
+.. include:: mutool-object-dom.rst
 
 
 
@@ -500,7 +509,19 @@ Global :title:`MuPDF` methods
    :arg userStyleSheet: Link to :title:`CSS` stylesheet file.
    :arg usePublisherStyles: `Boolean`.
 
+.. method:: installLoadFontFunction(callback)
 
+   |mutool_tag|
+
+   Install a handler to load system (or missing) fonts.
+
+   The callback function will be called with four arguments:
+
+        `callback(fontName, scriptName, isBold, isItalic)`
+
+   The callback should return either a `Font` object for the requested font, or
+   `null` if an exact match cannot be found (so that the font loading machinery
+   can keep looking through the chain of fallback fonts).
 
 .. method:: quit(exitStatus)
 
@@ -678,7 +699,6 @@ Compatibility
 
 
 
-.. include:: footer.rst
 
 
 

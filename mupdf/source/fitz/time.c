@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -34,7 +34,7 @@
 
 #ifndef _WINRT
 
-#define DELTA_EPOCH_IN_MICROSECS 11644473600000000Ui64
+#define DELTA_EPOCH_IN_MICROSECS 11644473600000000ULL
 
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {

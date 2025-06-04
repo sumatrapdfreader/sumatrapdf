@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -223,11 +223,9 @@ fz_strdup(fz_context *ctx, const char *s)
 fz_string *
 fz_new_string(fz_context *ctx, const char *s)
 {
-	fz_string *str = fz_malloc(ctx, sizeof(int)+strlen(s)+1);
-
+	fz_string *str = fz_malloc_flexible(ctx, fz_string, str, strlen(s) + 1);
 	str->refs = 1;
 	strcpy(str->str, s);
-
 	return str;
 }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -151,6 +151,14 @@ build_compression_params(fz_context *ctx, pdf_obj *f, pdf_obj *p, fz_compression
 		params->u.flate.columns = pdf_dict_get_int_default(ctx, p, PDF_NAME(Columns), 1);
 		params->u.flate.colors = pdf_dict_get_int_default(ctx, p, PDF_NAME(Colors), 1);
 		params->u.flate.bpc = pdf_dict_get_int_default(ctx, p, PDF_NAME(BitsPerComponent), 8);
+	}
+	else if (pdf_name_eq(ctx, f, PDF_NAME(BrotliDecode)) || pdf_name_eq(ctx, f, PDF_NAME(Br)))
+	{
+		params->type = FZ_IMAGE_BROTLI;
+		params->u.brotli.predictor = pdf_dict_get_int_default(ctx, p, PDF_NAME(Predictor), 1);
+		params->u.brotli.columns = pdf_dict_get_int_default(ctx, p, PDF_NAME(Columns), 1);
+		params->u.brotli.colors = pdf_dict_get_int_default(ctx, p, PDF_NAME(Colors), 1);
+		params->u.brotli.bpc = pdf_dict_get_int_default(ctx, p, PDF_NAME(BitsPerComponent), 8);
 	}
 	else if (pdf_name_eq(ctx, f, PDF_NAME(LZWDecode)) || pdf_name_eq(ctx, f, PDF_NAME(LZW)))
 	{
@@ -528,6 +536,8 @@ pdf_guess_filter_length(size_t len, const char *filter)
 
 	if (!strcmp(filter, "FlateDecode"))
 		nlen = len * 3;
+	else if (!strcmp(filter, "BrotliDecode"))
+		nlen = len * 4;
 	else if (!strcmp(filter, "RunLengthDecode"))
 		nlen = len * 3;
 	else if (!strcmp(filter, "LZWDecode"))

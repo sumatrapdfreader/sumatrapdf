@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -172,8 +172,11 @@ enum
 	PRO_SRC,
 	PRO_TEXT_ALIGN,
 	PRO_TEXT_DECORATION,
+	PRO_TEXT_FILL_COLOR,
 	PRO_TEXT_INDENT,
 	PRO_TEXT_TRANSFORM,
+	PRO_TEXT_STROKE_WIDTH,
+	PRO_TEXT_STROKE_COLOR,
 	PRO_VERTICAL_ALIGN,
 	PRO_VISIBILITY,
 	PRO_WHITE_SPACE,
@@ -264,6 +267,7 @@ struct fz_css_style_s
 	fz_css_number border_width[4];
 	fz_css_number border_spacing;
 	fz_css_number text_indent;
+	fz_css_number text_stroke_width;
 	unsigned int visibility : 2;
 	unsigned int white_space : 3;
 	unsigned int text_align : 2;
@@ -286,6 +290,8 @@ struct fz_css_style_s
 	fz_css_color background_color;
 	fz_css_color border_color[4];
 	fz_css_color color;
+	fz_css_color text_fill_color;
+	fz_css_color text_stroke_color;
 	fz_font *font;
 };
 
@@ -374,7 +380,7 @@ typedef struct {
 struct fz_story
 {
 	/* fz_story is derived from fz_html_tree, so must start with */
-	/* that. Argubly 'tree' should be called 'super'. */
+	/* that. Arguably 'tree' should be called 'super'. */
 	fz_html_tree tree;
 
 	/* The user_css (or NULL) */

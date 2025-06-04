@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -78,12 +78,21 @@ public class Pixmap
 		clearWithValue(value);
 	}
 
+	public native Buffer asPNG();
+	public native Buffer asJPEG(int quality, boolean invertCMYK);
+	public native Buffer asPAM();
+	public native Buffer asPNM();
+	public native Buffer asPBM();
+	public native Buffer asPKM();
+	public native Buffer asJPX(int quality);
+
 	public native void saveAsPNG(String filename);
 	public native void saveAsJPEG(String filename, int quality);
 	public native void saveAsPAM(String filename);
 	public native void saveAsPNM(String filename);
 	public native void saveAsPBM(String filename);
 	public native void saveAsPKM(String filename);
+	public native void saveAsJPX(String filename, int quality);
 
 	public native int getX();
 	public native int getY();
@@ -134,7 +143,9 @@ public class Pixmap
 		return new Pixmap(newNativeDeskew(angle, border));
 	}
 
-	public native float skewDetect();
+	public native float detectSkew();
+	public native Pixmap warp(Point[] points, int width, int height);
+	public native Pixmap autowarp(Point[] points);
 
 	private native float[] nativeDetectDocument();
 
@@ -153,5 +164,24 @@ public class Pixmap
 		points[3] = new Point(coords[5], coords[6]);
 
 		return points;
+	}
+
+	public native BarcodeInfo decodeBarcode(float rotate);
+	public BarcodeInfo decodeBarcode() {
+		return decodeBarcode(0);
+	}
+
+	public static native Pixmap encodeBarcode(int type, String contents, int size, int errorCorrectionLevel, boolean quietZones, boolean humanReadableText);
+	public static Pixmap encodeBarcode(int type, String contents, int size, int errorCorrectionLevel, boolean quietZones) {
+		return encodeBarcode(type, contents, size, errorCorrectionLevel, quietZones, false);
+	}
+	public static Pixmap encodeBarcode(int type, String contents, int size, int errorCorrectionLevel) {
+		return encodeBarcode(type, contents, size, errorCorrectionLevel, false, false);
+	}
+	public static Pixmap encodeBarcode(int type, String contents, int size) {
+		return encodeBarcode(type, contents, size, 2, false, false);
+	}
+	public static Pixmap encodeBarcode(int type, String contents) {
+		return encodeBarcode(type, contents, 0, 2, false, false);
 	}
 }

@@ -74,4 +74,6 @@ void fz_new_archive_handler_context(fz_context *ctx);
 void fz_drop_archive_handler_context(fz_context *ctx);
 fz_archive_handler_context *fz_keep_archive_handler_context(fz_context *ctx);
 
+void fz_log_activity(fz_context *ctx, fz_activity_reason reason, void *arg);
+
 #endif

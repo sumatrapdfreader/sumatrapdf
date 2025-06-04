@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,7 +28,12 @@ public class MultiArchive extends Archive
 		Context.init();
 	}
 
+	private static native long newNativeMultiArchive();
 	private MultiArchive(long p) { super(p); }
+	public MultiArchive()
+	{
+		this(newNativeMultiArchive());
+	}
 
 	public native void mountArchive(Archive sub, String path);
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -35,7 +35,9 @@
 
 #include "mupdf/helpers/pkcs7-openssl.h"
 
+#if FZ_ENABLE_JS
 #include "mujs.h"
+#endif
 
 #ifndef _WIN32
 #include <sys/stat.h> /* for mkdir */
@@ -203,10 +205,8 @@ static int canvas_y = 0, canvas_h = 100;
 
 static int outline_w = 14; /* to be scaled by lineheight */
 static int annotate_w = 12; /* to be scaled by lineheight */
-static int console_h = 14; /* to be scaled by lineheight */
 
 static int outline_start_x = 0;
-static int console_start_y = 0;
 
 static int oldbox = FZ_CROP_BOX, currentbox = FZ_CROP_BOX;
 static int oldtint = 0, currenttint = 0;
@@ -228,11 +228,15 @@ static int showundo = 0;
 static int showlayers = 0;
 static int showlinks = 0;
 static int showsearch = 0;
-static int showconsole = 0;
 int showannotate = 0;
 int showform = 0;
 
+#if FZ_ENABLE_JS
+static int showconsole = 0;
+static int console_h = 14; /* to be scaled by lineheight */
 static pdf_js_console gl_js_console;
+static int console_start_y = 0;
+#endif
 
 static const char *tooltip = NULL;
 
@@ -271,17 +275,18 @@ static char *get_history_filename(void)
 	return history_path;
 }
 
-static int read_history_file_as_json(js_State *J)
+static fz_json *read_history_file_as_json(fz_pool *pool)
 {
 	fz_buffer *buf = NULL;
 	const char *json = "{}";
 	const char *history_file;
+	fz_json *result = NULL;
 
 	fz_var(buf);
 
 	history_file = get_history_filename();
 	if (strlen(history_file) == 0)
-		return 0;
+		return NULL;
 
 	if (fz_file_exists(ctx, history_file))
 	{
@@ -294,135 +299,124 @@ static int read_history_file_as_json(js_State *J)
 			;
 	}
 
-	js_getglobal(J, "JSON");
-	js_getproperty(J, -1, "parse");
-	js_pushnull(J);
-	js_pushstring(J, json);
-	if (js_pcall(J, 1))
+	fz_try(ctx)
 	{
-		fz_warn(ctx, "Can't parse history file: %s", js_trystring(J, -1, "error"));
-		js_pop(J, 1);
-		js_newobject(J);
+		result = fz_parse_json(ctx, pool, json);
 	}
-	else
+	fz_catch(ctx)
 	{
-		js_rot2pop1(J);
+		fz_report_error(ctx);
+		fz_warn(ctx, "can't parse history file");
+		result = NULL;
 	}
-
 	fz_drop_buffer(ctx, buf);
-	return 1;
+
+	if (result == NULL || result->type != FZ_JSON_OBJECT)
+		result = fz_json_new_object(ctx, pool);
+	return result;
 }
 
-static fz_location try_location(js_State *J)
+static fz_location load_location(fz_json *val)
 {
-	fz_location loc;
-	if (js_isnumber(J, -1))
-		loc = fz_make_location(0, js_tryinteger(J, -1, 1) - 1);
-	else
-	{
-		js_getindex(J, -1, 0);
-		loc.chapter = js_tryinteger(J, -1, 1) - 1;
-		js_pop(J, 1);
-		js_getindex(J, -1, 1);
-		loc.page = js_tryinteger(J, -1, 1) - 1;
-		js_pop(J, 1);
-	}
-	return loc;
+	if (fz_json_is_number(ctx, val))
+		return fz_make_location(0, fz_json_to_number(ctx, val) - 1);
+	if (fz_json_is_array(ctx, val))
+		return fz_make_location(
+			fz_json_to_number(ctx, fz_json_array_get(ctx, val, 0)) - 1,
+			fz_json_to_number(ctx, fz_json_array_get(ctx, val, 1)) - 1
+		);
+	return fz_make_location(0, 0);
 }
 
-static void push_location(js_State *J, fz_location loc)
+static fz_json *save_location(fz_pool *pool, fz_location loc)
 {
+	fz_json *arr;
 	if (loc.chapter == 0)
-		js_pushnumber(J, (double)loc.page+1);
+	{
+		return fz_json_new_number(ctx, pool, loc.page + 1);
+	}
 	else
 	{
-		js_newarray(J);
-		js_pushnumber(J, (double)loc.chapter+1);
-		js_setindex(J, -2, 0);
-		js_pushnumber(J, (double)loc.page+1);
-		js_setindex(J, -2, 1);
+		arr = fz_json_new_array(ctx, pool);
+		fz_json_array_push(ctx, pool, arr, fz_json_new_number(ctx, pool, loc.chapter + 1));
+		fz_json_array_push(ctx, pool, arr, fz_json_new_number(ctx, pool, loc.page + 1));
+		return arr;
 	}
 }
 
 static void load_history(void)
 {
-	js_State *J;
 	char absname[PATH_MAX];
+	fz_pool *pool = NULL;
+	fz_json *json, *item, *arr, *val;
 	int i, n;
+
+	fz_var(pool);
 
 	if (!fz_realpath(filename, absname))
 		return;
 
-	J = js_newstate(NULL, NULL, 0);
-
-	if (!read_history_file_as_json(J))
-		return;
-
-	if (js_hasproperty(J, -1, absname))
+	fz_try(ctx)
 	{
-		if (js_hasproperty(J, -1, "current"))
+		pool = fz_new_pool(ctx);
+		json = read_history_file_as_json(pool);
+		if (json)
 		{
-			currentpage = try_location(J);
-			js_pop(J, 1);
-		}
-
-		if (js_hasproperty(J, -1, "history"))
-		{
-			if (js_isarray(J, -1))
+			item = fz_json_object_get(ctx, json, absname);
+			if (item)
 			{
-				history_count = fz_clampi(js_getlength(J, -1), 0, nelem(history));
-				for (i = 0; i < history_count; ++i)
+				val = fz_json_object_get(ctx, item, "current");
+				if (val)
+					currentpage = load_location(val);
+
+				arr = fz_json_object_get(ctx, item, "history");
+				if (fz_json_is_array(ctx, arr))
 				{
-					js_getindex(J, -1, i);
-					history[i].loc = try_location(J);
-					js_pop(J, 1);
+					history_count = fz_clampi(fz_json_array_length(ctx, arr), 0, nelem(history));
+					for (i = 0; i < history_count; ++i)
+						history[i].loc = load_location(fz_json_array_get(ctx, arr, i));
+				}
+
+				arr = fz_json_object_get(ctx, item, "future");
+				if (fz_json_is_array(ctx, arr))
+				{
+					future_count = fz_clampi(fz_json_array_length(ctx, arr), 0, nelem(future));
+					for (i = 0; i < future_count; ++i)
+						future[i].loc = load_location(fz_json_array_get(ctx, arr, i));
+				}
+
+				arr = fz_json_object_get(ctx, item, "marks");
+				if (fz_json_is_array(ctx, arr))
+				{
+					n = fz_clampi(fz_json_array_length(ctx, arr), 0, nelem(marks));
+					for (i = 0; i < n; ++i)
+						marks[i].loc = load_location(fz_json_array_get(ctx, arr, i));
 				}
 			}
-			js_pop(J, 1);
-		}
 
-		if (js_hasproperty(J, -1, "future"))
-		{
-			if (js_isarray(J, -1))
-			{
-				future_count = fz_clampi(js_getlength(J, -1), 0, nelem(future));
-				for (i = 0; i < future_count; ++i)
-				{
-					js_getindex(J, -1, i);
-					future[i].loc = try_location(J);
-					js_pop(J, 1);
-				}
-			}
-			js_pop(J, 1);
-		}
-
-		if (js_hasproperty(J, -1, "marks"))
-		{
-			if (js_isarray(J, -1))
-			{
-				n = fz_clampi(js_getlength(J, -1), 0, nelem(marks));
-				for (i = 0; i < n; ++i)
-				{
-					js_getindex(J, -1, i);
-					marks[i].loc = try_location(J);
-					js_pop(J, 1);
-				}
-			}
-			js_pop(J, 1);
 		}
 	}
-
-	js_freestate(J);
+	fz_always(ctx)
+	{
+		fz_drop_pool(ctx, pool);
+	}
+	fz_catch(ctx)
+	{
+		fz_report_error(ctx);
+		fz_warn(ctx, "Can't read history file.");
+	}
 }
 
 static void save_history(void)
 {
-	js_State *J;
+	fz_pool *pool;
 	char absname[PATH_MAX];
 	fz_output *out = NULL;
-	const char *json;
+	fz_json *json, *item, *arr;
+	const char *history_file;
 	int i;
 
+	fz_var(pool);
 	fz_var(out);
 
 	if (!doc)
@@ -431,68 +425,51 @@ static void save_history(void)
 	if (!fz_realpath(filename, absname))
 		return;
 
-	J = js_newstate(NULL, NULL, 0);
-
-	if (!read_history_file_as_json(J))
-		return;
-
-	js_newobject(J);
-	{
-		push_location(J, currentpage);
-		js_setproperty(J, -2, "current");
-
-		js_newarray(J);
-		for (i = 0; i < history_count; ++i)
-		{
-			push_location(J, history[i].loc);
-			js_setindex(J, -2, i);
-		}
-		js_setproperty(J, -2, "history");
-
-		js_newarray(J);
-		for (i = 0; i < future_count; ++i)
-		{
-			push_location(J, future[i].loc);
-			js_setindex(J, -2, i);
-		}
-		js_setproperty(J, -2, "future");
-
-		js_newarray(J);
-		for (i = 0; i < (int)nelem(marks); ++i)
-		{
-			push_location(J, marks[i].loc);
-			js_setindex(J, -2, i);
-		}
-		js_setproperty(J, -2, "marks");
-	}
-	js_setproperty(J, -2, absname);
-
-	js_getglobal(J, "JSON");
-	js_getproperty(J, -1, "stringify");
-	js_pushnull(J);
-	js_copy(J, -4);
-	js_pushnull(J);
-	js_pushnumber(J, 0);
-	js_call(J, 3);
-	js_rot2pop1(J);
-	json = js_tostring(J, -1);
-
 	fz_try(ctx)
 	{
-		const char *history_file = get_history_filename();
-		if (strlen(history_file) > 0) {
-			out = fz_new_output_with_path(ctx, history_file, 0);
-			fz_write_string(ctx, out, json);
-			fz_write_byte(ctx, out, '\n');
-			fz_close_output(ctx, out);
+		pool = fz_new_pool(ctx);
+		json = read_history_file_as_json(pool);
+		if (json)
+		{
+			item = fz_json_new_object(ctx, pool);
+			fz_json_object_set(ctx, pool, item, "current", save_location(pool, currentpage));
+
+			arr = fz_json_new_array(ctx, pool);
+			for (i = 0; i < history_count; ++i)
+				fz_json_array_push(ctx, pool, arr, save_location(pool, history[i].loc));
+			fz_json_object_set(ctx, pool, item, "history", arr);
+
+			arr = fz_json_new_array(ctx, pool);
+			for (i = 0; i < future_count; ++i)
+				fz_json_array_push(ctx, pool, arr, save_location(pool, future[i].loc));
+			fz_json_object_set(ctx, pool, item, "future", arr);
+
+			arr = fz_json_new_array(ctx, pool);
+			for (i = 0; i < (int)nelem(marks); ++i)
+				fz_json_array_push(ctx, pool, arr, save_location(pool, marks[i].loc));
+			fz_json_object_set(ctx, pool, item, "marks", arr);
+
+			fz_json_object_set(ctx, pool, json, absname, item);
+
+			history_file = get_history_filename();
+			if (strlen(history_file) > 0) {
+				out = fz_new_output_with_path(ctx, history_file, 0);
+				fz_write_json(ctx, out, json);
+				fz_write_byte(ctx, out, '\n');
+				fz_close_output(ctx, out);
+			}
 		}
 	}
 	fz_always(ctx)
+	{
+		fz_drop_pool(ctx, pool);
 		fz_drop_output(ctx, out);
+	}
 	fz_catch(ctx)
+	{
+		fz_report_error(ctx);
 		fz_warn(ctx, "Can't write history file.");
-
-	js_freestate(J);
+	}
 }
 
 
@@ -1297,7 +1274,7 @@ static int count_outline(fz_outline *node, int end)
 
 static void do_outline_imp(struct list *list, int end, fz_outline *node, int depth)
 {
-	int is_selected, was_open, n, np;
+	int is_selected, is_open, was_open, n, np;
 
 	if (!node)
 		return;
@@ -1311,12 +1288,13 @@ static void do_outline_imp(struct list *list, int end, fz_outline *node, int dep
 		if (node->next && (np = fz_page_number_from_location(ctx, doc, node->next->page)) >= 0)
 			n = np;
 
-		was_open = node->is_open;
+		is_open = was_open = node->is_open;
 		is_selected = 0;
 		if (fz_count_chapters(ctx, doc) == 1)
 			is_selected = (p>=0) && (currentpage.page == p || (currentpage.page > p && currentpage.page < n));
-		if (ui_tree_item(list, node, node->title, is_selected, depth, !!node->down, &node->is_open))
+		if (ui_tree_item(list, node, node->title, is_selected, depth, !!node->down, &is_open))
 		{
+			node->is_open = is_open;
 			if (p < 0)
 			{
 				currentpage = fz_resolve_link(ctx, doc, node->uri, &node->x, &node->y);
@@ -1327,6 +1305,7 @@ static void do_outline_imp(struct list *list, int end, fz_outline *node, int dep
 				jump_to_page_xy(p, node->x, node->y);
 			}
 		}
+		node->is_open = is_open;
 
 		if (node->down && (was_open || is_selected))
 			do_outline_imp(list, n, node->down, depth + 1);
@@ -1634,8 +1613,10 @@ static void shrinkwrap(void)
 		w += outline_w + 4;
 	if (showannotate)
 		w += annotate_w;
+#if FZ_ENABLE_JS
 	if (showconsole)
 		h += console_h;
+#endif
 	if (screen_w > 0 && w > screen_w)
 		w = screen_w;
 	if (screen_h > 0 && h > screen_h)
@@ -1865,12 +1846,14 @@ static void load_document(void)
 
 	if (pdf)
 	{
+#if FZ_ENABLE_JS
 		if (enable_js)
 		{
 			trace_action("doc.enableJS();\n");
 			pdf_enable_js(ctx, pdf);
 			pdf_js_set_console(ctx, pdf, &gl_js_console, NULL);
 		}
+#endif
 
 		reload_or_start_journalling();
 
@@ -2098,6 +2081,8 @@ static void clear_search(void)
 	search_hit_count = 0;
 }
 
+#if FZ_ENABLE_JS
+
 #define MAX_CONSOLE_LINES 500
 
 static fz_buffer *console_buffer;
@@ -2299,6 +2284,8 @@ void do_console(void)
 	ui_panel_end();
 }
 
+#endif
+
 static void do_app(void)
 {
 	if (ui.mod == GLUT_ACTIVE_ALT)
@@ -2329,7 +2316,9 @@ static void do_app(void)
 		case 'L': showlinks = !showlinks; break;
 		case 'F': showform = !showform; break;
 		case 'i': ui.dialog = info_dialog; break;
+#if FZ_ENABLE_JS
 		case '`': case KEY_F12: toggle_console(); break;
+#endif
 		case 'r': reload(); break;
 		case 'q': quit(); break;
 		case 'S': do_save_pdf_file(); break;
@@ -2955,11 +2944,13 @@ void do_main(void)
 		ui_panel_end();
 	}
 
+#if FZ_ENABLE_JS
 	if (showconsole)
 	{
 		do_console();
 		ui_splitter(&console_start_y, &console_h, 6*ui.lineheight, 25*ui.lineheight, T);
 	}
+#endif
 
 	do_canvas();
 
@@ -3064,7 +3055,9 @@ static void cleanup(void)
 
 	fz_flush_warnings(ctx);
 
+#if FZ_ENABLE_JS
 	console_fin();
+#endif
 
 	fz_drop_output(ctx, trace_file);
 	fz_drop_stext_page(ctx, page_text);
@@ -3151,7 +3144,9 @@ int main(int argc, char **argv)
 	fz_set_stddbg(ctx, fz_stdods(ctx));
 #endif
 
+#if FZ_ENABLE_JS
 	console_init();
+#endif
 
 	fz_register_document_handlers(ctx);
 
@@ -3181,11 +3176,7 @@ int main(int argc, char **argv)
 	}
 
 	if (layout_css)
-	{
-		fz_buffer *buf = fz_read_file(ctx, layout_css);
-		fz_set_user_css(ctx, fz_string_from_buffer(ctx, buf));
-		fz_drop_buffer(ctx, buf);
-	}
+		fz_load_user_css(ctx, layout_css);
 	fz_set_use_document_css(ctx, layout_use_doc_css);
 
 	if (fz_optind < argc)
@@ -3266,7 +3257,9 @@ int main(int argc, char **argv)
 
 	annotate_w *= ui.lineheight;
 	outline_w *= ui.lineheight;
+#if FZ_ENABLE_JS
 	console_h *= ui.lineheight;
+#endif
 
 	glutMainLoop();
 

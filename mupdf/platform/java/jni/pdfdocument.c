@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1321,10 +1321,16 @@ FUN(PDFDocument_canUndo)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_document *pdf = from_PDFDocument(env, self);
+	jboolean can = JNI_FALSE;
 
 	if (!ctx || !pdf) return JNI_FALSE;
 
-	return pdf_can_undo(ctx, pdf);
+	fz_try(ctx)
+		can = pdf_can_undo(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return can;
 }
 
 JNIEXPORT jboolean JNICALL
@@ -1332,10 +1338,16 @@ FUN(PDFDocument_canRedo)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	pdf_document *pdf = from_PDFDocument(env, self);
+	jboolean can = JNI_FALSE;
 
 	if (!ctx || !pdf) return JNI_FALSE;
 
-	return pdf_can_redo(ctx, pdf);
+	fz_try(ctx)
+		can = pdf_can_redo(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return can;
 }
 
 JNIEXPORT void JNICALL
@@ -1530,11 +1542,11 @@ FUN(PDFDocument_addEmbeddedFile)(JNIEnv *env, jobject self, jstring jfilename, j
 JNIEXPORT jstring JNICALL
 FUN(PDFDocument_getEmbeddedFileParams)(JNIEnv *env, jobject self, jobject jfs)
 {
-	return FUN(PDFDocument_getFilespecParams)(env, self, jfs);
+	return FUN(PDFDocument_getFileSpecParams)(env, self, jfs);
 }
 
 JNIEXPORT jstring JNICALL
-FUN(PDFDocument_getFilespecParams)(JNIEnv *env, jobject self, jobject jfs)
+FUN(PDFDocument_getFileSpecParams)(JNIEnv *env, jobject self, jobject jfs)
 {
 	fz_context *ctx = get_context(env);
 	pdf_obj *fs = from_PDFObject_safe(env, jfs);
@@ -1818,7 +1830,7 @@ FUN(PDFDocument_rearrangePages)(JNIEnv *env, jobject self, jobject jpages)
 	}
 
 	fz_try(ctx)
-		pdf_rearrange_pages(ctx, pdf, len, pages);
+		pdf_rearrange_pages(ctx, pdf, len, pages, PDF_CLEAN_STRUCTURE_DROP);
 	fz_always(ctx)
 		fz_free(ctx, pages);
 	fz_catch(ctx)
@@ -1831,6 +1843,8 @@ FUN(PDFDocument_countAssociatedFiles)(JNIEnv *env, jobject self)
 	fz_context *ctx = get_context(env);
 	pdf_document *doc = from_PDFDocument(env, self);
 	int n;
+
+	if (!ctx) return 0;
 
 	fz_try(ctx)
 		n = pdf_count_document_associated_files(ctx, doc);
@@ -1846,6 +1860,8 @@ FUN(PDFDocument_associatedFile)(JNIEnv *env, jobject self, jint idx)
 	fz_context *ctx = get_context(env);
 	pdf_document *doc = from_PDFDocument(env, self);
 	pdf_obj *af;
+
+	if (!ctx) return NULL;
 
 	fz_try(ctx)
 		af = pdf_document_associated_file(ctx, doc, idx);
@@ -1863,6 +1879,8 @@ FUN(PDFDocument_zugferdProfile)(JNIEnv *env, jobject self)
 	enum pdf_zugferd_profile p;
 	float version;
 
+	if (!ctx) return 0;
+
 	fz_try(ctx)
 		p = pdf_zugferd_profile(ctx, doc, &version);
 	fz_catch(ctx)
@@ -1877,6 +1895,8 @@ FUN(PDFDocument_zugferdVersion)(JNIEnv *env, jobject self)
 	fz_context *ctx = get_context(env);
 	pdf_document *doc = from_PDFDocument(env, self);
 	float version;
+
+	if (!ctx) return 0;
 
 	fz_try(ctx)
 		(void) pdf_zugferd_profile(ctx, doc, &version);
@@ -1893,10 +1913,129 @@ FUN(PDFDocument_zugferdXML)(JNIEnv *env, jobject self)
 	pdf_document *doc = from_PDFDocument(env, self);
 	fz_buffer *buf;
 
+	if (!ctx) return NULL;
+
 	fz_try(ctx)
 		buf = pdf_zugferd_xml(ctx, doc);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
 	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFDocument_loadImage)(JNIEnv *env, jobject self, jobject jobj)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	pdf_obj *obj = from_PDFObject(env, jobj);
+	fz_image *img;
+
+	if (!ctx) return NULL;
+
+	fz_try(ctx)
+		img = pdf_load_image(ctx, doc, obj);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Image_safe_own(ctx, env, img);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFDocument_lookupDest)(JNIEnv *env, jobject self, jobject jdest)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	pdf_obj *dest = from_PDFObject(env, jdest);
+	pdf_obj *obj = NULL;
+
+	if (!ctx) return NULL;
+
+	fz_try(ctx)
+		obj = pdf_lookup_dest(ctx, doc, dest);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_PDFObject_safe_own(ctx, env, obj);
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_countLayers)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	jint layers = 0;
+
+	fz_try(ctx)
+		layers = pdf_count_layers(ctx, doc);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return layers;
+}
+
+JNIEXPORT jboolean JNICALL
+FUN(PDFDocument_isLayerVisible)(JNIEnv *env, jobject self, jint layer)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	jboolean visible = JNI_FALSE;
+
+	fz_try(ctx)
+		visible = pdf_layer_is_enabled(ctx, doc, layer);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return visible;
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_setLayerVisible)(JNIEnv *env, jobject self, jint layer, jboolean visible)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+
+	fz_try(ctx)
+		pdf_enable_layer(ctx, doc, layer, visible);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_getLayerName)(JNIEnv *env, jobject self, jint layer)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	const char *name = NULL;
+
+	fz_try(ctx)
+		name = pdf_layer_name(ctx, doc, layer);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return (*env)->NewStringUTF(env, name);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_subsetFonts)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+
+	fz_try(ctx)
+		pdf_subset_fonts(ctx, doc, 0, NULL);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_bake)(JNIEnv *env, jobject self, jboolean bake_annots, jboolean bake_widgets)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+
+	fz_try(ctx)
+		pdf_bake_document(ctx, doc, bake_annots, bake_widgets);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
 }

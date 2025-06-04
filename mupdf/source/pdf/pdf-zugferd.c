@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Artifex Software, Inc.
+// Copyright (C) 2024-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -62,7 +62,7 @@ do_zugferd_profile(fz_context *ctx, pdf_document *doc, float *version, char **fn
 	if (metadata == NULL)
 		return PDF_NOT_ZUGFERD;
 
-	buf = pdf_load_raw_stream_number(ctx, doc, pdf_to_num(ctx, metadata));
+	buf = pdf_load_stream(ctx, metadata);
 
 	fz_var(xml);
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2023-2024 Artifex Software, Inc.
+// Copyright (C) 2023-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -527,7 +527,7 @@ static int count_cfb_entries(fz_context *ctx, fz_archive *arch)
 }
 
 static const uint8_t sig[8] = { 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1 };
-static const uint8_t zeros[16];
+static const uint8_t zeros[16] = { 0 };
 
 int
 fz_is_cfb_archive(fz_context *ctx, fz_stream *file)
@@ -709,7 +709,7 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 		cfb->num_dir_sectors = fz_read_uint32_le(ctx, file);
 		cfb->num_fat_sectors = fz_read_uint32_le(ctx, file);
 		cfb->dir_sector0 = fz_read_uint32_le(ctx, file);
-		(void)fz_read_uint32_le(ctx, file); /* Transation signature number */
+		(void)fz_read_uint32_le(ctx, file); /* Transaction signature number */
 		expect32(ctx, file, 0x1000, "Bad mini stream cutoff size");
 		cfb->mini_fat_sector0 = fz_read_uint32_le(ctx, file);
 		cfb->num_mini_fat_sectors = fz_read_uint32_le(ctx, file);
@@ -717,8 +717,8 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 		cfb->num_difat_sectors = fz_read_uint32_le(ctx, file);
 		for (i = 0; i < 109; i++)
 			cfb->difat[i] = fz_read_uint32_le(ctx, file);
-		cfb->fatcache_sector = -1;
-		cfb->minifatcache_sector = -1;
+		cfb->fatcache_sector = (uint32_t)-1;
+		cfb->minifatcache_sector = (uint32_t)-1;
 
 		/* Read the directory entries. */
 		/* On our first pass through, EVERYTHING goes into the entries. */
@@ -736,7 +736,7 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 
 			for (off = 0; off < z; off += 128)
 			{
-				int i, count = 0;
+				int count = 0;
 				int type;
 				int namelen = get16(buffer+off+64);
 
@@ -760,23 +760,24 @@ fz_open_cfb_archive_with_stream(fz_context *ctx, fz_stream *file)
 				for (i = 0; i < 64; i += 2)
 				{
 					int ucs = get16(buffer+off+i);
-					count += fz_runelen(ucs);
 					if (ucs == 0)
 						break;
+					count += fz_runelen(ucs);
 				}
 				if (i+2 != namelen || i == 64)
 					fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed name in CFB directory");
 
 				/* Copy the name. */
-				cfb->entries[cfb->count++].name = fz_malloc(ctx, count);
+				cfb->entries[cfb->count++].name = fz_malloc(ctx, count + 1);
 				count = 0;
 				for (i = 0; i < 64; i += 2)
 				{
 					int ucs = buffer[off+i] + (buffer[off+i+1]<<8);
-					count += fz_runetochar(&cfb->entries[cfb->count-1].name[count], ucs);
 					if (ucs == 0)
 						break;
+					count += fz_runetochar(&cfb->entries[cfb->count-1].name[count], ucs);
 				}
+				cfb->entries[cfb->count-1].name[count] = 0;
 
 				cfb->entries[cfb->count-1].sector = get32(buffer+off+128-12);
 				cfb->entries[cfb->count-1].size = get_len(ctx, cfb, buffer+off+128-8);

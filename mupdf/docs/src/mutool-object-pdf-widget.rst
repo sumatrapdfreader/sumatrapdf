@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_pdf_widget:
 
 
@@ -157,7 +148,7 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
 
         var options = widget.getOptions();
 
-    .. |tor_todo| In both WASM & mutool this always returned undefined?, I tried checkboxes & radio buttons
+    .. TODO(tor): In both WASM & mutool this always returned undefined?, I tried checkboxes & radio buttons
 
 
 .. method:: layoutTextWidget()
@@ -174,7 +165,7 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
 
         var layout = widget.layoutTextWidget();
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 .. method:: isReadOnly()
@@ -219,7 +210,7 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
 
         var state = widget.getEditingState();
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 .. method:: setEditingState(state)
@@ -237,7 +228,7 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
         widget.getEditingState(false);
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. note::
 
@@ -252,6 +243,19 @@ To get the widgets on a page see: :ref:`PDFPage getWidgets()<mutool_run_js_api_p
     .. code-block:: javascript
 
         widget.update();
+
+.. method:: getName()
+
+    Retrieve the name for a field as a `String`.
+
+    :return: `String` name of field.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var fieldName = widget.getName();
+
 
 
 Signature Methods
@@ -271,7 +275,7 @@ Signature Methods
 
         var isSigned = widget.isSigned();
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 .. method:: validateSignature()
@@ -289,7 +293,7 @@ Signature Methods
         var validNum = widget.validateSignature();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. method:: checkCertificate()
 
@@ -306,8 +310,25 @@ Signature Methods
         var result = widget.checkCertificate();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
+
+.. method:: checkDigest()
+
+    |mutool_tag_wasm_soon|
+
+    Returns "OK" if digest checked out OK, otherwise a text string containing an error message.
+
+    :return: `String`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var result = widget.checkDigest();
+
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. method:: getSignatory()
 
@@ -323,7 +344,7 @@ Signature Methods
 
         var signatory = widget.getSignatory();
 
-    .. |tor_todo| Source file has a todo for "getSignature", should this be getSignatory ?
+    .. TODO(tor): Source file has a todo for "getSignature", should this be getSignatory ?
 
 .. method:: previewSignature(signer, signatureConfig, image, reason, location)
 
@@ -346,7 +367,7 @@ Signature Methods
         var pixmap = widget.previewSignature(signer, {showLabels:true, showDate:true}, image, "", "");
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 
@@ -372,7 +393,7 @@ Signature Methods
         widget.sign(signer, {showLabels:true, showDate:true}, image, "", "");
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 .. method:: clearSignature()
@@ -388,7 +409,7 @@ Signature Methods
         widget.clearSignature();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 .. method:: incrementalChangesSinceSigning()
@@ -421,7 +442,7 @@ Widget Events
         widget.eventEnter();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 .. method:: eventExit()
@@ -437,7 +458,7 @@ Widget Events
         widget.eventExit();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. method:: eventDown()
 
@@ -452,7 +473,7 @@ Widget Events
         widget.eventDown();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. method:: eventUp()
 
@@ -467,13 +488,13 @@ Widget Events
         widget.eventUp();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. method:: eventFocus()
 
     |mutool_tag_wasm_soon|
 
-    Trigger the event when the a widget gains input focus.
+    Trigger the event when a widget gains input focus.
 
     |example_tag|
 
@@ -482,13 +503,13 @@ Widget Events
         widget.eventFocus();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 .. method:: eventBlur()
 
     |mutool_tag_wasm_soon|
 
-    Trigger the event when the a widget loses input focus.
+    Trigger the event when a widget loses input focus.
 
     |example_tag|
 
@@ -497,7 +518,7 @@ Widget Events
         widget.eventBlur();
 
 
-    .. |tor_todo| WASM, Even says "TODO" in the mupdf.js source file :)
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
 
 
 
@@ -529,4 +550,4 @@ To create a signer object an instance of `PDFPKCS7Signer` is required.
         var signer = new PDFPKCS7Signer(<file_name>, <password>);
 
 
-    .. |tor_todo| WASM - no such class.
+    .. TODO(tor): WASM - no such class.

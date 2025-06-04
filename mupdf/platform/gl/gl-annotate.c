@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -497,7 +497,7 @@ static void save_attachment_dialog(void)
 				fz_buffer *buf = pdf_load_embedded_file_contents(ctx, fs);
 				fz_save_buffer(ctx, buf, attach_filename);
 				fz_drop_buffer(ctx, buf);
-				trace_action("tmp = annot.getFilespec()\n");
+				trace_action("tmp = annot.getFileSpec()\n");
 				trace_action("doc.getEmbeddedFileContents(tmp).save(\"%s\");\n", attach_filename);
 				trace_action("tmp = doc.verifyEmbeddedFileChecksum(tmp);\n");
 				trace_action("if (tmp != true)\n");
@@ -537,7 +537,7 @@ static void open_attachment_dialog(void)
 					created, modified, 0);
 				pdf_set_annot_filespec(ctx, ui.selected_annot, fs);
 				fz_drop_buffer(ctx, contents);
-				trace_action("annot.setFilespec(doc.addEmbeddedFile(\"%s\", null, readFile(\"%s\"), new Date(%d).getTime(), new Date(%d).getTime(), false));\n", filename, attach_filename, created, modified);
+				trace_action("annot.setFileSpec(doc.addEmbeddedFile(\"%s\", null, readFile(\"%s\"), new Date(%d).getTime(), new Date(%d).getTime(), false));\n", filename, attach_filename, created, modified);
 			}
 			fz_always(ctx)
 			{
@@ -566,10 +566,16 @@ static void open_stamp_image_dialog(void)
 			fz_var(img);
 			fz_try(ctx)
 			{
+				fz_rect rect = pdf_annot_rect(ctx, ui.selected_annot);
 				trace_action("tmp = new Image(%q);\n", stamp_image_filename);
 				img = fz_new_image_from_file(ctx, stamp_image_filename);
 				trace_action("annot.setAppearance(tmp);\n");
 				pdf_set_annot_stamp_image(ctx, ui.selected_annot, img);
+				pdf_set_annot_rect(ctx, ui.selected_annot, fz_make_rect(
+					rect.x0, rect.y0,
+					rect.x0 + img->w * 72 / img->xres,
+					rect.y0 + img->h * 72 / img->yres)
+				);
 				trace_action("annot.setIcon(%q);\n", fz_basename(stamp_image_filename));
 				pdf_set_annot_icon_name(ctx, ui.selected_annot, fz_basename(stamp_image_filename));
 			}
@@ -784,13 +790,20 @@ static const char *intent_names[] = {
 static enum pdf_intent do_annotate_intent(void)
 {
 	enum pdf_intent intent;
+	const char *intent_name;
 	int choice;
 
 	if (!pdf_annot_has_intent(ctx, ui.selected_annot))
 		return PDF_ANNOT_IT_DEFAULT;
 
 	intent = pdf_annot_intent(ctx, ui.selected_annot);
-	choice = label_select("Intent", "IT", intent_names[intent], intent_names, nelem(intent_names));
+
+	if (intent == PDF_ANNOT_IT_UNKNOWN)
+		intent_name = "Unknown";
+	else
+		intent_name = intent_names[intent];
+
+	choice = label_select("Intent", "IT", intent_name, intent_names, nelem(intent_names));
 	if (choice != -1)
 	{
 		trace_action("annot.setIntent(%d);\n", choice);
@@ -1093,6 +1106,11 @@ static void do_border(void)
 			trace_action("annot.setBorderEffectIntensity(%d);\n", intensity);
 		}
 	}
+}
+
+static int image_file_filter(const char *fn)
+{
+	return !!strstr(fn, ".jpg") || !!strstr(fn, ".jpeg") || !!strstr(fn, ".png");
 }
 
 void do_annotate_panel(void)
@@ -1449,7 +1467,7 @@ void do_annotate_panel(void)
 			if (ui_button("Image..."))
 			{
 				fz_dirname(attname, filename, sizeof attname);
-				ui_init_open_file(attname, NULL);
+				ui_init_open_file(attname, image_file_filter);
 				ui.dialog = open_stamp_image_dialog;
 			}
 		}

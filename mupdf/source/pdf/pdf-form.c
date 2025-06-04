@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -331,7 +331,7 @@ static void add_field_hierarchy_to_array(fz_context *ctx, pdf_obj *array, pdf_ob
 
 	if (kids)
 	{
-		int i, n = pdf_array_len(ctx, kids);
+		n = pdf_array_len(ctx, kids);
 
 		for (i = 0; i < n; i++)
 			add_field_hierarchy_to_array(ctx, array, pdf_array_get(ctx, kids, i), fields, exclude);
@@ -603,7 +603,6 @@ int pdf_toggle_widget(fz_context *ctx, pdf_annot *widget)
 		toggle_check_box(ctx, widget);
 		return 1;
 	}
-	return 0;
 }
 
 int

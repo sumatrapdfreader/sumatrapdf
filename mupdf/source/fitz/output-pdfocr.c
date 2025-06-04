@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -330,12 +330,10 @@ pdfocr_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	int s = writer->super.s;
 	int a = writer->super.alpha;
 	int sh = writer->options.strip_height;
-	int strips;
 
 	if (sh == 0)
 		sh = h;
 	assert(sh != 0 && "pdfocr_write_header() should not be given zero height input.");
-	strips = (h + sh-1)/sh;
 
 	if (a != 0)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "PDFOCR cannot write alpha channel");
@@ -420,7 +418,6 @@ flush_strip(fz_context *ctx, pdfocr_band_writer *writer, int fill)
 static void
 post_skew_write_band(fz_context *ctx, pdfocr_band_writer *writer, int stride, int band_start, int band_height, const unsigned char *sp)
 {
-	fz_output *out = writer->super.out;
 	int w = writer->deskewed_w;
 	int h = writer->deskewed_h;
 	int n = writer->super.n;
@@ -478,9 +475,7 @@ pdfocr_write_band(fz_context *ctx, fz_band_writer *writer_, int stride, int band
 	pdfocr_band_writer *writer = (pdfocr_band_writer *)writer_;
 	fz_output *out = writer->super.out;
 	int w = writer->super.w;
-	int h = writer->super.h;
 	int n = writer->super.n;
-	int sh = writer->options.strip_height;
 	unsigned char *d;
 
 	if (!out)
@@ -510,7 +505,7 @@ typedef struct word_t
 	float bbox[4];
 	int dirn;
 	int len;
-	int chars[1];
+	int chars[FZ_FLEXIBLE_ARRAY];
 } word_t;
 
 typedef struct
@@ -689,7 +684,7 @@ queue_word(fz_context *ctx, char_callback_data_t *cb)
 	if (cb->word_len == 0)
 		return;
 
-	word = fz_malloc(ctx, sizeof(*word) + (cb->word_len-1)*sizeof(int));
+	word = fz_malloc_flexible(ctx, word_t, chars, cb->word_len);
 	word->next = NULL;
 	word->len = cb->word_len;
 	memcpy(word->bbox, cb->word_bbox, 4*sizeof(float));
@@ -839,7 +834,7 @@ do_skew_correct(fz_context *ctx, pdfocr_band_writer *writer)
 	fz_pixmap *deskewed;
 
 	if (writer->options.skew_correct == 1)
-		writer->options.skew_angle = fz_skew_detect(ctx, writer->skew_bitmap);
+		writer->options.skew_angle = fz_detect_skew(ctx, writer->skew_bitmap);
 
 	deskewed = fz_deskew_pixmap(ctx, writer->skew_bitmap, writer->options.skew_angle, writer->options.skew_border);
 
@@ -1015,7 +1010,7 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 	fz_catch(ctx)
 	{
 		fz_drop_band_writer(ctx, &writer->super);
-		fz_throw(ctx, FZ_ERROR_LIBRARY, "OCR initialisation failed");
+		fz_rethrow(ctx);
 	}
 
 	return &writer->super;

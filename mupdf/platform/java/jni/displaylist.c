@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -183,4 +183,35 @@ FUN(DisplayList_getBounds)(JNIEnv *env, jobject self)
 		jni_rethrow(env, ctx);
 
 	return to_Rect(ctx, env, bounds);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(DisplayList_decodeBarcode)(JNIEnv *env, jobject self, jobject jsubarea, jfloat rotate)
+{
+	fz_context *ctx = get_context(env);
+	fz_display_list *list = from_DisplayList(env, self);
+	fz_rect subarea = from_Rect(env, jsubarea);
+	fz_barcode_type type = FZ_BARCODE_NONE;
+	char *contents = NULL;
+	jobject jcontents;
+	jobject jbarcodeinfo;
+
+	if (!ctx || !list)
+		return NULL;
+
+	fz_try(ctx)
+		contents = fz_decode_barcode_from_display_list(ctx, &type, list, subarea, rotate);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jcontents = (*env)->NewStringUTF(env, contents);
+	fz_free(ctx, contents);
+	if (!jcontents || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	jbarcodeinfo = (*env)->NewObject(env, cls_BarcodeInfo, mid_BarcodeInfo_init, type, jcontents);
+	if (!jbarcodeinfo || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	return jbarcodeinfo;
 }

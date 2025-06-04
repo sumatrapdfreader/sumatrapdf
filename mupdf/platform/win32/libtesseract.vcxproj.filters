@@ -815,9 +815,6 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\stridemap.cpp">
       <Filter>Source Files\tesseract\lstm</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\tfnetwork.cpp">
-      <Filter>Source Files\tesseract\lstm</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\weightmatrix.cpp">
       <Filter>Source Files\tesseract\lstm</Filter>
     </ClCompile>
@@ -999,6 +996,9 @@
       <Filter>Source Files\tesseract\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\lstmboxrenderer.cpp">
+      <Filter>Source Files\tesseract\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\pagerenderer.cpp">
       <Filter>Source Files\tesseract\api</Filter>
     </ClCompile>
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\pdfrenderer.cpp">

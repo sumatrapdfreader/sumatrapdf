@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_device:
 
 .. _mutool_run_js_api_device:
@@ -337,7 +328,7 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
     :arg alpha: The :ref:`alpha value<mutool_run_js_api_alpha>`.
 
 
-    .. image:: images/isolated-and-knockout.png
+    .. image:: images/isolated-and-knockout.webp
        :align: center
        :scale: 50%
 
@@ -434,10 +425,12 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
 
         device.renderFlags(["mask","startcap-undefined"], []);
 
-    .. |tor_todo| TypeError: device.renderFlags is not a function
+    .. TODO(tor): TypeError: device.renderFlags is not a function
 
 
 .. method:: setDefaultColorSpaces(defaults)
+
+    |mutool_tag_wasm_soon|
 
     Change the set of default colorspaces for the device. See the :ref:`DefaultColorSpaces<mutool_object_default_color_spaces>` object.
 
@@ -449,7 +442,7 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
     .. code-block:: javascript
 
 
-    .. |tor_todo| Ask Tor, how to create a default color space object.
+    .. TODO(tor): Ask Tor, how to create a default color space object.
 
 
 .. method:: beginStructure(standard, raw, uid)
@@ -468,7 +461,7 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
 
         device.beginStructure("Document", "my_tag_name", 123);
 
-    .. |tor_todo| TypeError: device.beginStructure is not a function
+    .. TODO(tor): TypeError: device.beginStructure is not a function
 
 
 .. method:: endStructure()
@@ -484,7 +477,7 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
         device.endStructure();
 
 
-    .. |tor_todo| TypeError: device.endStructure is not a function
+    .. TODO(tor): TypeError: device.endStructure is not a function
 
 
 .. method:: beginMetatext(type, text)
@@ -504,7 +497,7 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
         device.beginMetatext("Title", "My title");
 
 
-    .. |tor_todo| WASM: TypeError: device.beginMetatext is not a function
+    .. TODO(tor): WASM: TypeError: device.beginMetatext is not a function
 
 
 .. method:: endMetatext()
@@ -520,7 +513,7 @@ The methods that clip graphics must be balanced with a corresponding `popClip`.
         device.endMetatext();
 
 
-    .. |tor_todo| WASM: TypeError: device.endMetatext is not a function
+    .. TODO(tor): WASM: TypeError: device.endMetatext is not a function
 
 
 .. method:: close()

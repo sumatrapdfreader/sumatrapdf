@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -664,6 +664,12 @@ loop:
 		}
 	}
 
+	/* Some Fax streams appear to give up at the end. We could detect for this
+	 * with this:
+	 * if (fax->a >= fax->columns && fax->rows == fax->ridx+1)
+	 * 	goto eol;
+	 */
+
 	/* no eol check after makeup codes nor in the middle of an H code */
 	if (fax->stage == STATE_MAKEUP || fax->stage == STATE_H1 || fax->stage == STATE_H2)
 		goto loop;
@@ -729,14 +735,14 @@ eol:
 	}
 
 #if 0
-	/* if end_of_line & encoded_byte_align, EOLs are *not* optional */
-	if (fax->encoded_byte_align)
-	{
-		if (fax->end_of_line)
-			eat_bits(fax, (12 - fax->bidx) & 7);
-		else
-			eat_bits(fax, (8 - fax->bidx) & 7);
-	}
+	/* If end_of_line & encoded_byte_align - we don't know what to do here.
+	 * GS doesn't offer us any hints either. Previously, we used to do:
+	 *      eat_bits(fax, (12 - fax->bidx) & 7);
+	 * but we can't understand what we were trying to do, and it fails with
+	 * at least one file. Removing it doesn't harm anything in the cluster,
+	 * and brings us into line with gs. */
+	if (fax->encoded_byte_align && !fax->end_of_line)
+		eat_bits(fax, (8 - fax->bidx) & 7);
 #else
 	/* SumatraPDF: from https://bugs.ghostscript.com/show_bug.cgi?id=702896 */
 	/*

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -363,40 +363,52 @@ static void flush_space(fz_context *ctx, fz_html_box *flow, int lang, struct gen
 	}
 }
 
-/* pair-wise lookup table for UAX#14 linebreaks */
-static const char *pairbrk[29] =
+/* pair-wise lookup table for UAX#14 linebreaks
+The linebreak table entries mean:
+^ prohibited break
+	never break before A and after B, even with one or more spaces in between
+% indirect break
+	do not break before A, unless one or more spaces follow B
+_ direct break
+	break allowed before A
+*/
+static const char *pairbrk[32] =
 {
-/*	-OCCQGNESIPPNAHIIHBBBZCWHHJJJR- */
-/*	-PLPULSXYSROULLDNYAB2WMJ23LVTI- */
-	"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", /* OP open punctuation */
-	"_^^%%^^^^%%_____%%__^^^______", /* CL close punctuation */
-	"_^^%%^^^^%%%%%__%%__^^^______", /* CP close parenthesis */
-	"^^^%%%^^^%%%%%%%%%%%^^^%%%%%%", /* QU quotation */
-	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%", /* GL non-breaking glue */
-	"_^^%%%^^^_______%%__^^^______", /* NS nonstarters */
-	"_^^%%%^^^______%%%__^^^______", /* EX exclamation/interrogation */
-	"_^^%%%^^^__%_%__%%__^^^______", /* SY symbols allowing break after */
-	"_^^%%%^^^__%%%__%%__^^^______", /* IS infix numeric separator */
-	"%^^%%%^^^__%%%%_%%__^^^%%%%%_", /* PR prefix numeric */
-	"%^^%%%^^^__%%%__%%__^^^______", /* PO postfix numeric */
-	"%^^%%%^^^%%%%%_%%%__^^^______", /* NU numeric */
-	"%^^%%%^^^__%%%_%%%__^^^______", /* AL ordinary alphabetic and symbol characters */
-	"%^^%%%^^^__%%%_%%%__^^^______", /* HL hebrew letter */
-	"_^^%%%^^^_%____%%%__^^^______", /* ID ideographic */
-	"_^^%%%^^^______%%%__^^^______", /* IN inseparable characters */
-	"_^^%_%^^^__%____%%__^^^______", /* HY hyphens */
-	"_^^%_%^^^_______%%__^^^______", /* BA break after */
-	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%", /* BB break before */
-	"_^^%%%^^^_______%%_^^^^______", /* B2 break opportunity before and after */
-	"____________________^________", /* ZW zero width space */
-	"%^^%%%^^^__%%%_%%%__^^^______", /* CM combining mark */
-	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%", /* WJ word joiner */
-	"_^^%%%^^^_%____%%%__^^^___%%_", /* H2 hangul leading/vowel syllable */
-	"_^^%%%^^^_%____%%%__^^^____%_", /* H3 hangul leading/vowel/trailing syllable */
-	"_^^%%%^^^_%____%%%__^^^%%%%__", /* JL hangul leading jamo */
-	"_^^%%%^^^_%____%%%__^^^___%%_", /* JV hangul vowel jamo */
-	"_^^%%%^^^_%____%%%__^^^____%_", /* JT hangul trailing jamo */
-	"_^^%%%^^^_______%%__^^^_____%", /* RI regional indicator */
+/*	-OCCQGNESIPPNAHIIHBBBZCWHHJJJREEZ- */
+/*	-PLPULSXYSROULLDNYAB2WMJ23LVTIBMW- */
+/*	-                               J- */
+	"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^", /* OP open punctuation */
+	"_^^%%^^^^%%____%%%__^^^________%", /* CL close punctuation */
+	"_^^%%^^^^%%%%%_%%%__^^^________%", /* CP close parenthesis */
+	"^^^%%%^^^%%%%%%%%%%%^^^%%%%%%%%%", /* QU quotation */
+	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%%%%", /* GL non-breaking glue */
+	"_^^%%%^^^______%%%__^^^________%", /* NS nonstarters */
+	"_^^%%%^^^______%%%__^^^________%", /* EX exclamation/interrogation */
+	"_^^%%%^^^__%_%_%%%__^^^________%", /* SY symbols allowing break after */
+	"_^^%%%^^^__%%%_%%%__^^^________%", /* IS infix numeric separator */
+	"%^^%%%^^^__%%%%%%%__^^^%%%%%_%%%", /* PR prefix numeric */
+	"%^^%%%^^^__%%%_%%%__^^^________%", /* PO postfix numeric */
+	"%^^%%%^^^%%%%%_%%%__^^^________%", /* NU numeric */
+	"%^^%%%^^^%%%%%_%%%__^^^________%", /* AL ordinary alphabetic and symbol characters */
+	"%^^%%%^^^%%%%%_%%%__^^^________%", /* HL hebrew letter */
+	"_^^%%%^^^_%____%%%__^^^________%", /* ID ideographic */
+	"_^^%%%^^^______%%%__^^^________%", /* IN inseparable characters */
+	"_^^%_%^^^__%___%%%__^^^________%", /* HY hyphens */
+	"_^^%_%^^^______%%%__^^^________%", /* BA break after */
+	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%%%%", /* BB break before */
+	"_^^%%%^^^______%%%_^^^^________%", /* B2 break opportunity before and after */
+	"____________________^___________", /* ZW zero width space */
+	"%^^%%%^^^%_%%%_%%%__^^^________%", /* CM combining mark */
+	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%%%%", /* WJ word joiner */
+	"_^^%%%^^^_%____%%%__^^^___%%___%", /* H2 hangul leading/vowel syllable */
+	"_^^%%%^^^_%____%%%__^^^____%___%", /* H3 hangul leading/vowel/trailing syllable */
+	"_^^%%%^^^_%____%%%__^^^%%%%____%", /* JL hangul leading jamo */
+	"_^^%%%^^^_%____%%%__^^^___%%___%", /* JV hangul vowel jamo */
+	"_^^%%%^^^_%____%%%__^^^____%___%", /* JT hangul trailing jamo */
+	"_^^%%%^^^______%%%__^^^_____%__%", /* RI regional indicator */
+	"_^^%%%^^^_%____%%%__^^^_______%%", /* EB emoji base */
+	"_^^%%%^^^_%____%%%__^^^________%", /* EM emoji modifier */
+	"%^^%%%^^^%%%%%%%%%%%^^^%%%%%%%%%", /* ZWJ zero width joiner */
 };
 
 static fz_html_box *
@@ -492,7 +504,7 @@ static void generate_text(fz_context *ctx, fz_html_box *box, const char *text, i
 				else if (bsp) /* allow soft breaks */
 				{
 					int this_brk_cls = ucdn_get_resolved_linebreak_class(c);
-					if (this_brk_cls < UCDN_LINEBREAK_CLASS_RI)
+					if (this_brk_cls <= UCDN_LINEBREAK_CLASS_ZWJ)
 					{
 						int brk = pairbrk[g->last_brk_cls][this_brk_cls];
 
@@ -1424,7 +1436,7 @@ detect_flow_directionality(fz_context *ctx, fz_pool *pool, uni_buf *buffer, fz_b
 
 	while (end)
 	{
-		int level = end->bidi_level;
+		unsigned int level = end->bidi_level;
 
 		/* Gather the text from the flow up into a single buffer (at
 		 * least, as much of it as has the same direction markup). */
@@ -1752,8 +1764,6 @@ xml_to_boxes(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const char
 			fz_free(ctx, *rtitle);
 			*rtitle = NULL;
 		}
-		/* Dropping the tree works regardless of whether the tree is part of an fz_html or not. */
-		fz_drop_html_tree(ctx, tree);
 		fz_rethrow(ctx);
 	}
 }

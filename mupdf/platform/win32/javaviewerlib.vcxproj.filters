@@ -192,6 +192,9 @@
     <ClCompile Include="..\java\jni\archive.c">
       <Filter>jni</Filter>
     </ClCompile>
+    <ClCompile Include="..\java\jni\barcodeinfo.c">
+      <Filter>jni</Filter>
+    </ClCompile>
     <ClCompile Include="..\java\jni\buffer.c">
       <Filter>jni</Filter>
     </ClCompile>

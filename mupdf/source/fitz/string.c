@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -62,6 +62,15 @@ int
 fz_tolower(int c)
 {
 	const int *p;
+
+	/* Make ASCII fast. */
+	if (c < 128)
+	{
+		if (c >= 'A' && c <= 'Z')
+			c += 'a' - 'A';
+		return c;
+	}
+
 	p = fz_ucd_bsearch(c, ucd_tolower2, nelem(ucd_tolower2) / 3, 3);
 	if (p && c >= p[0] && c <= p[1])
 		return c + p[2];
@@ -94,23 +103,54 @@ fz_strnlen(const char *s, size_t n)
 int
 fz_strncasecmp(const char *a, const char *b, size_t n)
 {
-	if (!n--)
-		return 0;
-	for (; *a && *b && n && (*a == *b || fz_tolower(*a) == fz_tolower(*b)); a++, b++, n--)
-		;
-	return fz_tolower(*a) - fz_tolower(*b);
+	while (n > 0)
+	{
+		int ucs_a, ucs_b, n_a, n_b;
+		n_a = fz_chartorunen(&ucs_a, a, n);
+		n_b = fz_chartorunen(&ucs_b, b, n);
+		/* We believe that for all unicode characters X and Y, s.t.
+		 * fz_tolower(X) == fz_tolower(Y), X and Y must utf8 encode to
+		 * the same number of bytes. */
+		assert(n_a == n_b);
+		assert((size_t)n_a <= n);
+
+		// one or both of the strings are short
+		if (ucs_a == 0 || ucs_b == 0)
+			return ucs_a - ucs_b;
+
+		if (ucs_a != ucs_b)
+		{
+			ucs_a = fz_tolower(ucs_a);
+			ucs_b = fz_tolower(ucs_b);
+		}
+		if (ucs_a != ucs_b)
+			return ucs_a - ucs_b;
+
+		a += n_a;
+		b += n_b;
+		n -= n_a;
+	}
+	return 0;
 }
 
 int
 fz_strcasecmp(const char *a, const char *b)
 {
-	while (fz_tolower(*a) == fz_tolower(*b))
+	while (1)
 	{
-		if (*a++ == 0)
-			return 0;
-		b++;
+		int ucs_a, ucs_b;
+		a += fz_chartorune(&ucs_a, a);
+		b += fz_chartorune(&ucs_b, b);
+		ucs_a = fz_tolower(ucs_a);
+		ucs_b = fz_tolower(ucs_b);
+		if (ucs_a == ucs_b)
+		{
+			if (ucs_a == 0)
+				return 0;
+		}
+		else
+			return ucs_a - ucs_b;
 	}
-	return fz_tolower(*a) - fz_tolower(*b);
 }
 
 char *
@@ -317,7 +357,7 @@ fz_decode_uri(fz_context *ctx, const char *s)
 		{
 			int a = tohex(*s++);
 			int b = tohex(*s++);
-			int c = a << 4 | b;
+			c = a << 4 | b;
 			if (strchr(URIRESERVED "#", c)) {
 				*p++ = '%';
 				*p++ = HEX[a];
@@ -527,6 +567,12 @@ fz_chartorune(int *rune, const char *str)
 	int c, c1, c2, c3;
 	int l;
 
+	/* overlong null character */
+	if((unsigned char)str[0] == 0xc0 && (unsigned char)str[1] == 0x80) {
+		*rune = 0;
+		return 2;
+	}
+
 	/*
 	 * one character sequence
 	 *	00000-0007F => T1
@@ -597,10 +643,110 @@ bad:
 }
 
 int
+fz_chartorunen(int *rune, const char *str, size_t n)
+{
+	int c, c1, c2, c3;
+	int l;
+
+	if (n < 1)
+		goto bad;
+
+	/*
+	 * one character sequence
+	 *	00000-0007F => T1
+	 */
+	c = *(const unsigned char*)str;
+	if(c < Tx) {
+		*rune = c;
+		return 1;
+	}
+
+	if (n < 2)
+		goto bad;
+
+	/* overlong null character */
+	if((unsigned char)str[0] == 0xc0 && (unsigned char)str[1] == 0x80) {
+		*rune = 0;
+		return 2;
+	}
+
+	/*
+	 * two character sequence
+	 *	0080-07FF => T2 Tx
+	 */
+	c1 = *(const unsigned char*)(str+1) ^ Tx;
+	if(c1 & Testx)
+		goto bad;
+	if(c < T3) {
+		if(c < T2)
+			goto bad;
+		l = ((c << Bitx) | c1) & Rune2;
+		if(l <= Rune1)
+			goto bad;
+		*rune = l;
+		return 2;
+	}
+
+	if (n < 3)
+		goto bad;
+
+	/*
+	 * three character sequence
+	 *	0800-FFFF => T3 Tx Tx
+	 */
+	c2 = *(const unsigned char*)(str+2) ^ Tx;
+	if(c2 & Testx)
+		goto bad;
+	if(c < T4) {
+		l = ((((c << Bitx) | c1) << Bitx) | c2) & Rune3;
+		if(l <= Rune2)
+			goto bad;
+		*rune = l;
+		return 3;
+	}
+
+	if (n < 4)
+		goto bad;
+
+	/*
+	 * four character sequence (21-bit value)
+	 *	10000-1FFFFF => T4 Tx Tx Tx
+	 */
+	c3 = *(const unsigned char*)(str+3) ^ Tx;
+	if (c3 & Testx)
+		goto bad;
+	if (c < T5) {
+		l = ((((((c << Bitx) | c1) << Bitx) | c2) << Bitx) | c3) & Rune4;
+		if (l <= Rune3)
+			goto bad;
+		*rune = l;
+		return 4;
+	}
+	/*
+	 * Support for 5-byte or longer UTF-8 would go here, but
+	 * since we don't have that, we'll just fall through to bad.
+	 */
+
+	/*
+	 * bad decoding
+	 */
+bad:
+	*rune = Bad;
+	return 1;
+}
+
+int
 fz_runetochar(char *str, int rune)
 {
 	/* Runes are signed, so convert to unsigned for range check. */
 	unsigned int c = (unsigned int)rune;
+
+	/* overlong null character */
+	if (c == 0) {
+		((unsigned char *)str)[0] = 0xc0;
+		((unsigned char *)str)[1] = 0x80;
+		return 2;
+	}
 
 	/*
 	 * one character sequence
@@ -705,7 +851,6 @@ fz_utflen(const char *s)
 			s += fz_chartorune(&rune, s);
 		n++;
 	}
-	return 0;
 }
 
 float fz_atof(const char *s)
@@ -736,6 +881,18 @@ int64_t fz_atoi64(const char *s)
 	if (s == NULL)
 		return 0;
 	return atoll(s);
+}
+
+size_t fz_atoz(const char *s)
+{
+	int64_t i;
+
+	if (s == NULL)
+		return 0;
+	i = atoll(s);
+	if (i < 0 || (int64_t)(size_t)i != i)
+		return 0;
+	return (size_t)i;
 }
 
 int fz_is_page_range(fz_context *ctx, const char *s)
@@ -840,7 +997,7 @@ static char *twoway_memmem(const unsigned char *h, const unsigned char *z, const
 		BITOP(byteset, n[i], |=), shift[n[i]] = i+1;
 
 	/* Compute maximal suffix */
-	ip = -1; jp = 0; k = p = 1;
+	ip = (size_t)-1; jp = 0; k = p = 1;
 	while (jp+k<l) {
 		if (n[ip+k] == n[jp+k]) {
 			if (k == p) {
@@ -860,7 +1017,7 @@ static char *twoway_memmem(const unsigned char *h, const unsigned char *z, const
 	p0 = p;
 
 	/* And with the opposite comparison */
-	ip = -1; jp = 0; k = p = 1;
+	ip = (size_t)-1; jp = 0; k = p = 1;
 	while (jp+k<l) {
 		if (n[ip+k] == n[jp+k]) {
 			if (k == p) {
@@ -1004,4 +1161,100 @@ fz_wchar_from_utf8(fz_context *ctx, const char *path)
 	*w = 0;
 
 	return wpath;
+}
+
+const char *
+fz_strstr(const char *haystack, const char *needle)
+{
+	size_t matchlen = 0;
+	char d;
+
+	if (haystack == NULL || needle == NULL)
+		return NULL;
+
+	while ((d = needle[matchlen]) != 0)
+	{
+		char c = *haystack++;
+		if (c == 0)
+			return NULL;
+		if (c == d)
+			matchlen++;
+		else
+		{
+			haystack -= matchlen;
+			matchlen = 0;
+		}
+	}
+
+	return haystack - matchlen;
+}
+
+const char *
+fz_strstrcase(const char *haystack, const char *needle)
+{
+	size_t matchlen = 0;
+	size_t firstlen;
+
+	if (haystack == NULL || needle == NULL)
+		return NULL;
+
+	while (1)
+	{
+		int c, d;
+		int nc, nd;
+
+		nd = fz_chartorune(&d, &needle[matchlen]);
+		if (d == 0)
+			break;
+		nc = fz_chartorune(&c, haystack);
+		if (matchlen == 0)
+			firstlen = nc;
+		haystack += nc;
+		matchlen += nd;
+		if (c == 0)
+			return NULL;
+		if (c != d)
+			haystack -= matchlen - firstlen, matchlen = 0;
+	}
+
+	return haystack - matchlen;
+}
+
+static inline int my_isdigit(int c) {
+	return c >= '0' && c <= '9';
+}
+
+int
+fz_strverscmp(const char *l0, const char *r0)
+{
+	// This strverscmp implementation is borrowed from musl.
+	// Copyright © 2005-2020 Rich Felker, et al.
+	// Standard MIT license.
+	const unsigned char *l = (const void *)l0;
+	const unsigned char *r = (const void *)r0;
+	size_t i, dp, j;
+	int z = 1;
+
+	/* Find maximal matching prefix and track its maximal digit
+	 * suffix and whether those digits are all zeros. */
+	for (dp=i=0; l[i]==r[i]; i++) {
+		int c = l[i];
+		if (!c) return 0;
+		if (!my_isdigit(c)) dp=i+1, z=1;
+		else if (c!='0') z=0;
+	}
+
+	if (l[dp]!='0' && r[dp]!='0') {
+		/* If we're not looking at a digit sequence that began
+		 * with a zero, longest digit string is greater. */
+		for (j=i; my_isdigit(l[j]); j++)
+			if (!my_isdigit(r[j])) return 1;
+		if (my_isdigit(r[j])) return -1;
+	} else if (z && dp<i && (my_isdigit(l[i]) || my_isdigit(r[i]))) {
+		/* Otherwise, if common prefix of digit sequence is
+		 * all zeros, digits order less than non-digits. */
+		return (unsigned char)(l[i]-'0') - (unsigned char)(r[i]-'0');
+	}
+
+	return l[i] - r[i];
 }

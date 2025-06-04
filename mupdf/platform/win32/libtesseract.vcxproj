@@ -251,6 +251,7 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\capi.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\hocrrenderer.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\lstmboxrenderer.cpp" />
+    <ClCompile Include="..\..\thirdparty\tesseract\src\api\pagerenderer.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\pdfrenderer.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\renderer.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\api\wordstrboxrenderer.cpp" />
@@ -355,7 +356,6 @@
     <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\reversed.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\series.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\stridemap.cpp" />
-    <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\tfnetwork.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\lstm\weightmatrix.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\textord\alignedblob.cpp" />
     <ClCompile Include="..\..\thirdparty\tesseract\src\textord\baselinedetect.cpp" />
@@ -525,7 +525,7 @@
       </ForceConformanceInForLoopScope>
       <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4146;4244;4267;4566</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -546,7 +546,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4146;4244;4267;4566</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -569,7 +569,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4146;4244;4267;4566</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -594,7 +594,7 @@
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BrowseInformation>true</BrowseInformation>
-      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4146;4244;4267;4566</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -615,7 +615,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4146;4244;4267;4566</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -638,7 +638,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4267;4566;4018</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4146;4244;4267;4566</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>

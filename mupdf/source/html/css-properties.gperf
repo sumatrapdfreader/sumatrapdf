@@ -6,6 +6,9 @@ struct css_property_info { const char *name; int key; };
 %struct-type
 %%
 -mupdf-leading,PRO_LEADING
+-webkit-text-fill-color,PRO_TEXT_FILL_COLOR
+-webkit-text-stroke-color,PRO_TEXT_STROKE_COLOR
+-webkit-text-stroke-width,PRO_TEXT_STROKE_WIDTH
 background-color,PRO_BACKGROUND_COLOR
 border,PRO_BORDER
 border-bottom,PRO_BORDER_BOTTOM

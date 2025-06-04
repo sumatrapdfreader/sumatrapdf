@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -59,6 +59,12 @@ public class Buffer
 	public native int readBytes(int at, byte[] bs);
 	public native int readBytesInto(int at, byte[] bs, int off, int len);
 
+	public byte[] asByteArray() {
+		byte[] bs = new byte[getLength()];
+		readBytes(0, bs);
+		return bs;
+	}
+
 	public native void writeByte(byte b);
 	public native void writeBytes(byte[] bs);
 	public native void writeBytesFrom(byte[] bs, int off, int len);
@@ -113,4 +119,5 @@ public class Buffer
 		}
 	}
 
+	public native String asString();
 }

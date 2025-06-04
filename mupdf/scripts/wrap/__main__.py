@@ -90,7 +90,7 @@ C++ wrapping:
 
             Most calling code should use class-aware wrapper functions or
             wrapper class methods in preference to these low-level wrapper
-            funtions.
+            functions.
 
     Text representation of POD data:
 
@@ -383,7 +383,7 @@ Tools required to build:
 
             We work with clang-6 or clang-7, but clang-6 appears to not be able
             to cope with function args that are themselves function pointers,
-            so wrappers for MuPDF functions are ommited from the generated C++
+            so wrappers for MuPDF functions are omitted from the generated C++
             code.
 
         Unix:
@@ -407,7 +407,7 @@ Tools required to build:
 
     SWIG for Python/C# bindings:
 
-        We work with swig-3 and swig-4. If swig-4 is used, we propogate
+        We work with swig-3 and swig-4. If swig-4 is used, we propagate
         doxygen-style comments for structures and functions into the generated
         C++ code.
 
@@ -645,7 +645,7 @@ Usage:
                     updated, so that mtimes are unchanged.
 
                     Also removes any other .cpp or .h files from
-                    mupdf/platform/c++/{implmentation,include}.
+                    mupdf/platform/c++/{implementation,include}.
 
                 1:
                     Compile and link source files created by action=0.
@@ -814,7 +814,7 @@ Usage:
                 * Activates the Python environment.
                 * Runs setup.py install.
                     * Builds C, C++ and Python librariess in build/shared-release.
-                    * Copies build/shared-release/*.so into virtual envionment.
+                    * Copies build/shared-release/*.so into virtual environment.
                 * Runs scripts/mupdfwrap_test.py.
                     * Imports mupdf and checks basic functionality.
                 * Deactivates the Python environment.
@@ -1093,15 +1093,11 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             jlib.log('Setting -j to  multiprocessing.cpu_count()={j}')
         make += f' -j {j}'
     flags = os.path.basename( build_dirs.dir_so).split('-')
-    actual_build_dir = f'{build_dirs.dir_mupdf}/build/'
     make_env = ''
-    make_args = ' HAVE_GLUT=no HAVE_PTHREAD=yes verbose=yes'
+    make_args = ' HAVE_GLUT=no HAVE_PTHREAD=yes verbose=yes barcode=yes'
     if m_vars:
         make_args += f' {m_vars}'
     suffix = None
-    build_prefix = ''
-    build_suffix = ''
-    in_prefix = True
     for i, flag in enumerate( flags):
         if flag in ('x32', 'x64') or re.match('py[0-9]', flag):
             # setup.py puts cpu and python version
@@ -1109,68 +1105,43 @@ def _get_m_command( build_dirs, j=None, make=None, m_target=None, m_vars=None):
             # when creating wheels; we need to ignore
             # them.
             jlib.log('Ignoring {flag=}')
-            build_suffix += f'-{flag}'
-            actual_build_dir += f'-{flag}'
         else:
             if 0: pass  # lgtm [py/unreachable-statement]
             elif flag == 'debug':
                 make_args += ' build=debug'
-                in_prefix = False
             elif flag == 'release':
                 make_args += ' build=release'
-                in_prefix = False
             elif flag == 'memento':
                 make_args += ' build=memento'
-                in_prefix = False
             elif flag == 'shared':
                 make_args += ' shared=yes'
-                # `suffix` determines the name of libraries that we create, for
-                # example libmupdfcpp.so, but not libmupdf.so itself - this is
-                # created by `Makefile` etc. We do specify libmupdf.so when
-                # linking but the suffix is unused and on macos we will use
-                # libmupdf.dylib if present.
                 suffix = '.so'
-                build_prefix += f'{flag}-'
-                in_prefix = False
             elif flag == 'tesseract':
                 make_args += ' HAVE_LEPTONICA=yes HAVE_TESSERACT=yes'
-                build_prefix += f'{flag}-'
             elif flag == 'bsymbolic':
                 make_env += ' XLIB_LDFLAGS=-Wl,-Bsymbolic'
-                build_prefix += f'{flag}-'
-            elif flag == 'Py_LIMITED_API':
-                build_prefix += f'{flag}-'
+            elif flag in ('Py_LIMITED_API', 'PLA'):
+                pass
             elif flag.startswith('Py_LIMITED_API='):    # fixme: obsolete.
-                build_prefix += f'{flag}-'
+                pass
             elif flag.startswith('Py_LIMITED_API_'):
-                build_prefix += f'{flag}-'
+                pass
+            elif flag.startswith('PLA_'):
+                pass
             else:
-                if not in_prefix:
-                    raise Exception( f'Unrecognised flag {flag!r} in {flags!r} in {build_dirs.dir_so!r}')
-                if flag == 'fpic':
-                    make_env += ' CFLAGS="-fPIC"'
-                    suffix = '.a'
-                else:
-                    #jlib.log(f'Ignoring unrecognised flag {flag!r} in {flags!r} in {build_dirs.dir_so!r}')
-                    pass
-                build_prefix += f'{flag}-'
-            if i:
-                actual_build_dir += '-'
-            actual_build_dir += flag
-    assert suffix, f'Leaf must contain "shared-" or "fpic-": build_dirs.dir_so={build_dirs.dir_so}'
-    if build_prefix:
-        make_args += f' build_prefix={build_prefix}'
-    if build_suffix:
-        make_args += f' build_suffix={build_suffix}'
+                jlib.log(f'Ignoring unrecognised flag {flag!r} in {flags!r} in {build_dirs.dir_so!r}')
+    make_args += f' OUT=build/{os.path.basename(build_dirs.dir_so)}'
     if m_target:
         for t in m_target.split(','):
             make_args += f' {t}'
+    else:
+        make_args += f' libs libmupdf-threads'
     command = f'cd {build_dirs.dir_mupdf} &&'
     if make_env:
         command += make_env
     command += f' {make}{make_args}'
 
-    return command, actual_build_dir, suffix
+    return command, build_dirs.dir_so, suffix
 
 _windows_vs_upgrade_cache = dict()
 def _windows_vs_upgrade( vs_upgrade, build_dirs, devenv):
@@ -1341,7 +1312,7 @@ def build_0(
     # Output info about fz_*() functions that we don't make use
     # of in class methods.
     #
-    # This is superceded by automatically finding fuctions to wrap.
+    # This is superseded by automatically finding functions to wrap.
     #
     if 0:   # lgtm [py/unreachable-statement]
         jlib.log( 'functions that take struct args and are not used exactly once in methods:')
@@ -1633,7 +1604,7 @@ def build( build_dirs, swig_command, args, vs_upgrade, make_command):
                             f' platform/{win32_infix}/mupdf.sln'
                             f' /Build "{build}"'
                             )
-                    projects = ['mupdfcpp']
+                    projects = ['mupdfcpp', 'libmuthreads']
                     if m_target:
                         projects += m_target.split(',')
                     for project in projects:
@@ -2837,7 +2808,7 @@ def main2():
                             f'convert -o zlib.3.pdf-%d.png {zlib_pdf}',
                             f'draw -o zlib.3.pdf-%d.png -s tmf -v -y l -w 150 -R 30 -h 200 {zlib_pdf}',
                             f'draw -o zlib.png -R 10 {zlib_pdf}',
-                            f'clean -gggg -l {zlib_pdf} zlib.clean.pdf',
+                            f'clean -gggg {zlib_pdf} zlib.clean.pdf',
                             ):
                         command = f'{command_prefix} {mutool_py} {args2}'
                         jlib.log( 'running: {command}')

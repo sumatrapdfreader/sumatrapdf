@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -117,6 +117,8 @@ xps_parse_image_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rect
 	xps_part *part = NULL;
 	fz_image *image = NULL;
 
+	fz_var(image);
+
 	fz_try(ctx)
 	{
 		xps_find_image_brush_source_part(ctx, doc, base_uri, root, &part, NULL);
@@ -145,10 +147,12 @@ xps_parse_image_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rect
 	fz_try(ctx)
 	{
 		image = xps_load_image(ctx, doc, part);
+		xps_parse_tiling_brush(ctx, doc, ctm, area, base_uri, dict, root, xps_paint_image_brush, image);
 	}
 	fz_always(ctx)
 	{
 		xps_drop_part(ctx, doc, part);
+		fz_drop_image(ctx, image);
 	}
 	fz_catch(ctx)
 	{
@@ -157,11 +161,4 @@ xps_parse_image_brush(fz_context *ctx, xps_document *doc, fz_matrix ctm, fz_rect
 		fz_warn(ctx, "cannot decode image resource");
 		return;
 	}
-
-	fz_try(ctx)
-		xps_parse_tiling_brush(ctx, doc, ctm, area, base_uri, dict, root, xps_paint_image_brush, image);
-	fz_always(ctx)
-		fz_drop_image(ctx, image);
-	fz_catch(ctx)
-		fz_rethrow(ctx);
 }

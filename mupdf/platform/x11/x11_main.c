@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -39,6 +39,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
+#include <limits.h>
 
 #define mupdf_icon_bitmap_16_width 16
 #define mupdf_icon_bitmap_16_height 16
@@ -534,6 +535,20 @@ static void winblitstatusbar(pdfapp_t *app)
 		snprintf(buf, sizeof buf, "Page %d/%d", gapp.pageno, gapp.pagecount);
 		windrawstringxor(&gapp, 10, 20, buf);
 	}
+}
+
+int winisresolutionacceptable(pdfapp_t *app, fz_matrix ctm)
+{
+	fz_rect bounds;
+	fz_irect ibounds;
+	int w, h;
+
+	bounds = fz_transform_rect(app->page_bbox, ctm);
+	ibounds = fz_round_rect(bounds);
+	w = ibounds.x1 - ibounds.x0;
+	h = ibounds.y1 - ibounds.y0;
+
+	return w < (INT_MAX / 4) / h;
 }
 
 static void winblit(pdfapp_t *app)

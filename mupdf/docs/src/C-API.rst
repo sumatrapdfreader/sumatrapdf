@@ -2,15 +2,14 @@
 .. All Rights Reserved.
 
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-:title:`C API`
-====================
+C Library
+==========================================
 
 
 This is the :title:`MuPDF` :title:`C` API guide for developers. In this document we will guide you through the public and stable bits of the :title:`MuPDF` library. This is intended to both provide an introduction to new developers wanting to use low level features of :title:`MuPDF`, and as a reference guide to the public interface.
@@ -21,19 +20,10 @@ The functions and structures documented in this document are what we consider st
 
 
 
-:title:`MuPDF` modules
------------------------------------------
+Core
+----------------
 
-
-:title:`MuPDF` is separated into several modules.
-
-
-
-
-Core API
-~~~~~~~~~~~~~~~~
-
-The core module contains the runtime context, exception handling, and various string manipulation, math, hash table, binary tree, and other useful functions.
+The core contains the runtime context, exception handling, and various string manipulation, math, hash table, binary tree, and other useful functions.
 
 
 .. toctree::
@@ -43,7 +33,7 @@ The core module contains the runtime context, exception handling, and various st
 
 
 I/O
-~~~~~~~~~~~~~~~~
+----------------
 
 The I/O module contains structures and functions for buffers of data, reading and writing to streams, compression, and encryption.
 
@@ -54,7 +44,7 @@ The I/O module contains structures and functions for buffers of data, reading an
 
 
 Graphics
-~~~~~~~~~~~~~~~~
+----------------
 
 The graphics module contains graphic resource objects like colors, fonts, shadings, and images.
 
@@ -65,23 +55,15 @@ The graphics module contains graphic resource objects like colors, fonts, shadin
 
 
 Device
-~~~~~~~~~~~~~~~~
+----------------
 
 The device interface is how we provide access to the contents of a document. A device is a callback structure, that gets called for each piece of text, line art, and image on a page. There are several device implementations. The most important one renders the contents to a raster image, and another one gathers all the text into a structure that can be used to select and copy and search the text content on a page.
 
 Document
-~~~~~~~~~~~~~~~~
+----------------
 
 The document module handles reading and writing documents in various formats, and ties together all the preceding modules to provide rendering, format conversion, and search functionality for the document types we support.
 
 PDF
-~~~~~~~~~~~~~~~~
+----------------
 The PDF module provides access to the low level PDF structure, letting you query, modify, and create PDF objects and streams. It allows you to create new documents, modify existing documents, or examine features, extract data, or do almost anything you could want at the PDF object and stream level that we don't provide with the higher level APIs.
-
-
-
-.. include:: footer.rst
-
-
-
-.. External links

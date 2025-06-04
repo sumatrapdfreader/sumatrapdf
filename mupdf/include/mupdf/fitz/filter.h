@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -162,6 +162,12 @@ fz_stream *fz_open_flated(fz_context *ctx, fz_stream *chain, int window_bits);
 	if the compression format is not recognised.
 */
 fz_stream *fz_open_libarchived(fz_context *ctx, fz_stream *chain);
+
+/**
+	brotlid filter performs Brotli decoding of data read
+	from the chained filter.
+*/
+fz_stream *fz_open_brotlid(fz_context *ctx, fz_stream *chain);
 
 /**
 	lzwd filter performs LZW decoding of data read from the chained

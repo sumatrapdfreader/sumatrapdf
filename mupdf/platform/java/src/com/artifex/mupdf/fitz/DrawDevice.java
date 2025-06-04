@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,9 +28,13 @@ public final class DrawDevice extends NativeDevice
 		Context.init();
 	}
 
-	private static native long newNative(Pixmap pixmap);
+	private static native long newNative(Matrix transform, Pixmap pixmap);
+
+	public DrawDevice(Matrix transform, Pixmap pixmap) {
+		super(newNative(transform, pixmap));
+	}
 
 	public DrawDevice(Pixmap pixmap) {
-		super(newNative(pixmap));
+		super(newNative(Matrix.Identity(), pixmap));
 	}
 }

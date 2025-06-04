@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -43,8 +43,8 @@ size_t fz_deflate_bound(fz_context *ctx, size_t size);
 
 /**
 	Compress source_length bytes of data starting
-	at source, into a buffer of length *destLen, starting at dest.
-	*compressed_length will be updated on exit to contain the size
+	at source, into a buffer of length *compressed_length, starting at
+	dest. *compressed_length will be updated on exit to contain the size
 	actually used.
  */
 void fz_deflate(fz_context *ctx, unsigned char *dest, size_t *compressed_length, const unsigned char *source, size_t source_length, fz_deflate_level level);
@@ -70,6 +70,50 @@ unsigned char *fz_new_deflated_data(fz_context *ctx, size_t *compressed_length, 
 	down if it wants to.
 */
 unsigned char *fz_new_deflated_data_from_buffer(fz_context *ctx, size_t *compressed_length, fz_buffer *buffer, fz_deflate_level level);
+
+typedef enum
+{
+	FZ_BROTLI_NONE = 0,
+	FZ_BROTLI_BEST_SPEED = 1,
+	FZ_BROTLI_BEST = 11,
+	FZ_BROTLI_DEFAULT = 6 /* Guess */
+} fz_brotli_level;
+
+/**
+	Returns the upper bound on the
+	size of brotli compressed data of length size.
+ */
+size_t fz_brotli_bound(fz_context *ctx, size_t size);
+
+/**
+	Compress source_length bytes of data starting
+	at source, into a buffer of length *destLen, starting at dest.
+	*compressed_length will be updated on exit to contain the size
+	actually used.
+ */
+void fz_compress_brotli(fz_context *ctx, unsigned char *dest, size_t *compressed_length, const unsigned char *source, size_t source_length, fz_brotli_level level);
+
+/**
+	Compress source_length bytes of data starting
+	at source, into a new memory block malloced for that purpose.
+	*compressed_length is updated on exit to contain the size used.
+	Ownership of the block is returned from this function, and the
+	caller is therefore responsible for freeing it. The block may be
+	considerably larger than is actually required. The caller is
+	free to fz_realloc it down if it wants to.
+*/
+unsigned char *fz_new_brotli_data(fz_context *ctx, size_t *compressed_length, const unsigned char *source, size_t source_length, fz_brotli_level level);
+
+/**
+	Compress the contents of a fz_buffer into a
+	new block malloced for that purpose. *compressed_length is
+	updated on exit to contain the size used. Ownership of the block
+	is returned from this function, and the caller is therefore
+	responsible for freeing it. The block may be considerably larger
+	than is actually required. The caller is free to fz_realloc it
+	down if it wants to.
+*/
+unsigned char *fz_new_brotli_data_from_buffer(fz_context *ctx, size_t *compressed_length, fz_buffer *buffer, fz_brotli_level level);
 
 /**
 	Compress bitmap data as CCITT Group 3 1D fax image.

@@ -543,7 +543,7 @@ class TimingsItem:
 
 class Timings:
     '''
-    Allows gathering of hierachical timing information. Can also generate
+    Allows gathering of hierarchical timing information. Can also generate
     useful diagnostics.
 
     Caller can generate a tree of `TimingsItem` items via our `begin()` and
@@ -693,7 +693,7 @@ class Timings:
 
     def text( self, item, depth=0, precision=1):
         '''
-        Returns text showing hierachical timing information.
+        Returns text showing hierarchical timing information.
         '''
         if not self.active:
             return ''
@@ -1257,7 +1257,7 @@ def time_read_date1( text):
     <text> is:
         <year>-<month>-<day>-<hour>-<min>-<sec>
 
-    Trailing values can be ommitted, e.g. `2004-3' is treated as
+    Trailing values can be omitted, e.g. `2004-3' is treated as
     2004-03-0-0-0-0, i.e. 1st of March 2004. I think GMT is used,
     not the local time though.
 
@@ -1474,7 +1474,7 @@ def system(
         shell:
             Passed to underlying `subprocess.Popen()` call.
         encoding:
-            Sepecify the encoding used to translate the command's output to
+            Specify the encoding used to translate the command's output to
             characters. If `None` we send bytes to items in `out`.
         errors:
             How to handle encoding errors; see docs for `codecs` module
@@ -1669,7 +1669,7 @@ def system(
             # data until the requested number of bytes have been received.
             #
             # Also, os.read() does the right thing if the sender has made
-            # multipe calls to write() - it returns all available data, not
+            # multiple calls to write() - it returns all available data, not
             # just from the first unread write() call.
             #
             output0 = os.read( child.stdout.fileno(), 10000)
@@ -2000,7 +2000,7 @@ def fs_ensure_empty_dir( path):
 def fs_rename(src, dest):
     '''
     Renames `src` to `dest`. If we get an error, we try to remove `dest`
-    expicitly and then retry; this is to make things work on Windows.
+    explicitly and then retry; this is to make things work on Windows.
     '''
     try:
         os.rename(src, dest)
@@ -2136,7 +2136,7 @@ def build(
     determinism of dependencies.
 
     Rebuilds `outfiles` by running `command` if we determine that any of them
-    are out of date, or if `comand` has changed.
+    are out of date, or if `command` has changed.
 
     infiles:
         Names of files that are read by `command`. Can be a single filename. If

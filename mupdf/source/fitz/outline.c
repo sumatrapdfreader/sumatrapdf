@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -282,6 +282,10 @@ iter_std_item(fz_context *ctx, fz_outline_iterator *iter_)
 	iter->item.is_open = iter->current->is_open;
 	iter->item.title = iter->current->title;
 	iter->item.uri = iter->current->uri;
+	iter->item.r = iter->current->r / 255.0f;
+	iter->item.g = iter->current->g / 255.0f;
+	iter->item.b = iter->current->b / 255.0f;
+	iter->item.flags = iter->current->flags;
 
 	return &iter->item;
 }

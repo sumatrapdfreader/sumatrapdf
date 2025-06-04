@@ -4,7 +4,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -57,7 +56,6 @@ The `extract` command can be used to extract images and font files from a :title
 `[object numbers]`
    An array of object ids to extract from. If no object numbers are given on the command line, all images and fonts will be extracted from the file.
 
-.. include:: footer.rst
 
 
 

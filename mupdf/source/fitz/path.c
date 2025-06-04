@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -88,7 +88,7 @@ typedef struct
 	to 'pack' them into some target block of memory. If if coord_len
 	and cmd_len are both < 256, then they are PACKED_FLAT into an
 	fz_packed_path with the coords and cmds in the bytes afterwards,
-	all inside the target block. If they cannot be accomodated in
+	all inside the target block. If they cannot be accommodated in
 	that way, then they are PACKED_OPEN, where an fz_path is put
 	into the target block, and cmds and coords remain pointers to
 	allocated blocks.
@@ -897,6 +897,19 @@ void fz_walk_path(fz_context *ctx, const fz_path *path, const fz_path_walker *pr
 	}
 }
 
+/*
+	A couple of notes about the path bounding algorithm.
+
+	Firstly, we don't expand the bounds immediately on a move, because
+	a sequence of moves together will only actually use the last one,
+	and trailing moves are ignored. This is achieved using 'trailing_move'.
+
+	Secondly, we watch for paths that are entirely rectilinear (all segments
+	move left/right/up/down only, with no curves). Such "only_right_angles"
+	paths can be bounded with us ignoring any mitre limit. This is a really
+	common case that can otherwise bloats simple boxes far more than is
+	useful. This is particular annoying during table recognition!
+*/
 typedef struct
 {
 	fz_matrix ctm;
@@ -904,14 +917,22 @@ typedef struct
 	fz_point move;
 	int trailing_move;
 	int first;
+	int only_right_angles;
+	fz_point prev;
 } bound_path_arg;
 
 static void
 bound_moveto(fz_context *ctx, void *arg_, float x, float y)
 {
 	bound_path_arg *arg = (bound_path_arg *)arg_;
-	arg->move = fz_transform_point_xy(x, y, arg->ctm);
+	arg->move = arg->prev = fz_transform_point_xy(x, y, arg->ctm);
 	arg->trailing_move = 1;
+}
+
+static inline int
+eq0(float x)
+{
+	return x >= -0.001 && x <= 0.001;
 }
 
 static void
@@ -932,6 +953,9 @@ bound_lineto(fz_context *ctx, void *arg_, float x, float y)
 		arg->trailing_move = 0;
 		bound_expand(&arg->rect, arg->move);
 	}
+	if (arg->only_right_angles && !eq0(arg->prev.x - p.x) && !eq0(arg->prev.y - p.y))
+		arg->only_right_angles = 0;
+	arg->prev = p;
 }
 
 static void
@@ -954,6 +978,8 @@ bound_curveto(fz_context *ctx, void *arg_, float x1, float y1, float x2, float y
 		arg->trailing_move = 0;
 		bound_expand(&arg->rect, arg->move);
 	}
+	arg->only_right_angles = 0;
+	arg->prev = p;
 }
 
 static const fz_path_walker bound_path_walker =
@@ -964,28 +990,8 @@ static const fz_path_walker bound_path_walker =
 	NULL
 };
 
-fz_rect
-fz_bound_path(fz_context *ctx, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm)
-{
-	bound_path_arg arg;
-
-	arg.ctm = ctm;
-	arg.rect = fz_empty_rect;
-	arg.trailing_move = 0;
-	arg.first = 1;
-
-	fz_walk_path(ctx, path, &bound_path_walker, &arg);
-
-	if (!arg.first && stroke)
-	{
-		arg.rect = fz_adjust_rect_for_stroke(ctx, arg.rect, stroke, ctm);
-	}
-
-	return arg.rect;
-}
-
-fz_rect
-fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect r, const fz_stroke_state *stroke, fz_matrix ctm)
+static fz_rect
+adjust_rect_for_stroke(fz_context *ctx, fz_rect r, const fz_stroke_state *stroke, fz_matrix ctm, int no_mitre)
 {
 	float expand;
 
@@ -999,12 +1005,12 @@ fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect r, const fz_stroke_state *str
 	{
 		/* Mitring can't apply in this case. */
 	}
-	else if (stroke->linejoin == FZ_LINEJOIN_MITER && stroke->miterlimit > 0.5f)
+	else if (!no_mitre && stroke->linejoin == FZ_LINEJOIN_MITER && stroke->miterlimit > 0.5f)
 	{
 		/* miter limit is expressed in terms of the linewidth, not half the line width. */
 		expand *= stroke->miterlimit * 2;
 	}
-	else if (stroke->linejoin == FZ_LINEJOIN_MITER_XPS && stroke->miterlimit > 1.0f)
+	else if (!no_mitre && stroke->linejoin == FZ_LINEJOIN_MITER_XPS && stroke->miterlimit > 1.0f)
 	{
 		/* for xps, miter limit is expressed in terms of half the linewidth. */
 		expand *= stroke->miterlimit;
@@ -1017,6 +1023,33 @@ fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect r, const fz_stroke_state *str
 	r.x1 += expand;
 	r.y1 += expand;
 	return r;
+}
+
+fz_rect
+fz_bound_path(fz_context *ctx, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm)
+{
+	bound_path_arg arg;
+
+	arg.ctm = ctm;
+	arg.rect = fz_empty_rect;
+	arg.trailing_move = 0;
+	arg.first = 1;
+	arg.only_right_angles = 1;
+
+	fz_walk_path(ctx, path, &bound_path_walker, &arg);
+
+	if (!arg.first && stroke)
+	{
+		arg.rect = adjust_rect_for_stroke(ctx, arg.rect, stroke, ctm, arg.only_right_angles);
+	}
+
+	return arg.rect;
+}
+
+fz_rect
+fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect r, const fz_stroke_state *stroke, fz_matrix ctm)
+{
+	return adjust_rect_for_stroke(ctx, r, stroke, ctm, 0);
 }
 
 void
@@ -1420,6 +1453,31 @@ fz_keep_stroke_state(fz_context *ctx, const fz_stroke_state *strokec)
 	return fz_keep_imp(ctx, stroke, &stroke->refs);
 }
 
+int
+fz_stroke_state_eq(fz_context *ctx, const fz_stroke_state *a, const fz_stroke_state *b)
+{
+	int i;
+
+	if (a == NULL && b == NULL) return 1;
+
+	if (a == NULL && b != NULL) return 0;
+	if (a != NULL && b == NULL) return 0;
+
+	if (a->start_cap != b->start_cap) return 0;
+	if (a->dash_cap != b->dash_cap) return 0;
+	if (a->end_cap != b->end_cap) return 0;
+	if (a->linejoin != b->linejoin) return 0;
+	if (a->linewidth != b->linewidth) return 0;
+	if (a->miterlimit != b->miterlimit) return 0;
+	if (a->dash_phase != b->dash_phase) return 0;
+	if (a->dash_len != b->dash_len) return 0;
+
+	for (i = 0; i < a->dash_len; i++)
+		if (a->dash_list[i] != b->dash_list[i]) return 0;
+
+	return 1;
+}
+
 void
 fz_drop_stroke_state(fz_context *ctx, const fz_stroke_state *strokec)
 {
@@ -1434,11 +1492,10 @@ fz_new_stroke_state_with_dash_len(fz_context *ctx, int len)
 {
 	fz_stroke_state *state;
 
-	len -= nelem(state->dash_list);
 	if (len < 0)
 		len = 0;
 
-	state = Memento_label(fz_malloc(ctx, sizeof(*state) + sizeof(state->dash_list[0]) * len), "fz_stroke_state");
+	state = fz_malloc_flexible(ctx, fz_stroke_state, dash_list, len);
 	state->refs = 1;
 	state->start_cap = FZ_LINECAP_BUTT;
 	state->dash_cap = FZ_LINECAP_BUTT;
@@ -1448,7 +1505,6 @@ fz_new_stroke_state_with_dash_len(fz_context *ctx, int len)
 	state->miterlimit = 10;
 	state->dash_phase = 0;
 	state->dash_len = 0;
-	memset(state->dash_list, 0, sizeof(state->dash_list[0]) * (len + nelem(state->dash_list)));
 
 	return state;
 }
@@ -1459,12 +1515,59 @@ fz_new_stroke_state(fz_context *ctx)
 	return fz_new_stroke_state_with_dash_len(ctx, 0);
 }
 
+fz_linecap
+fz_linecap_from_string(const char *str)
+{
+	if (!strcmp(str, "Round"))
+		return FZ_LINECAP_ROUND;
+	if (!strcmp(str, "Square"))
+		return FZ_LINECAP_SQUARE;
+	if (!strcmp(str, "Triangle"))
+		return FZ_LINECAP_TRIANGLE;
+	return FZ_LINECAP_BUTT;
+}
+
+const char *
+fz_string_from_linecap(fz_linecap cap)
+{
+	switch (cap) {
+	default:
+	case FZ_LINECAP_BUTT: return "Butt";
+	case FZ_LINECAP_ROUND: return "Round";
+	case FZ_LINECAP_SQUARE: return "Square";
+	case FZ_LINECAP_TRIANGLE: return "Triangle";
+	}
+}
+
+fz_linejoin
+fz_linejoin_from_string(const char *str)
+{
+	if (!strcmp(str, "Round"))
+		return FZ_LINEJOIN_ROUND;
+	if (!strcmp(str, "Bevel"))
+		return FZ_LINEJOIN_BEVEL;
+	if (!strcmp(str, "MiterXPS"))
+		return FZ_LINEJOIN_MITER_XPS;
+	return FZ_LINEJOIN_MITER;
+}
+
+const char *
+fz_string_from_linejoin(fz_linejoin join)
+{
+	switch (join) {
+	default:
+	case FZ_LINEJOIN_MITER: return "Miter";
+	case FZ_LINEJOIN_ROUND: return "Round";
+	case FZ_LINEJOIN_BEVEL: return "Bevel";
+	case FZ_LINEJOIN_MITER_XPS: return "MiterXPS";
+	}
+}
+
 fz_stroke_state *
-fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke)
+fz_clone_stroke_state(fz_context *ctx, const fz_stroke_state *stroke)
 {
 	fz_stroke_state *clone = fz_new_stroke_state_with_dash_len(ctx, stroke->dash_len);
-	int extra = stroke->dash_len - nelem(stroke->dash_list);
-	int size = sizeof(*stroke) + sizeof(stroke->dash_list[0]) * extra;
+	size_t size = offsetof(fz_stroke_state, dash_list) + sizeof(float) * stroke->dash_len;
 	memcpy(clone, stroke, size);
 	clone->refs = 1;
 	return clone;
@@ -1473,27 +1576,23 @@ fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke)
 fz_stroke_state *
 fz_unshare_stroke_state_with_dash_len(fz_context *ctx, fz_stroke_state *shared, int len)
 {
-	int single, unsize, shsize, shlen;
+	int single;
 	fz_stroke_state *unshared;
 
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 	single = (shared->refs == 1);
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 
-	shlen = shared->dash_len - nelem(shared->dash_list);
-	if (shlen < 0)
-		shlen = 0;
-	shsize = sizeof(*shared) + sizeof(shared->dash_list[0]) * shlen;
-	len -= nelem(shared->dash_list);
-	if (len < 0)
-		len = 0;
-	if (single && shlen >= len)
+	if (single && len == shared->dash_len)
 		return shared;
 
-	unsize = sizeof(*unshared) + sizeof(unshared->dash_list[0]) * len;
-	unshared = Memento_label(fz_malloc(ctx, unsize), "fz_stroke_state");
-	memcpy(unshared, shared, (shsize > unsize ? unsize : shsize));
+	unshared = fz_new_stroke_state_with_dash_len(ctx, len);
+	if (shared->dash_len >= len)
+		memcpy(unshared, shared, offsetof(fz_stroke_state, dash_list) + sizeof(float) * len);
+	else
+		memcpy(unshared, shared, offsetof(fz_stroke_state, dash_list));
 	unshared->refs = 1;
+	unshared->dash_len = len;
 
 	if (fz_drop_imp(ctx, shared, &shared->refs))
 		fz_free(ctx, shared);
@@ -1629,4 +1728,171 @@ fz_clone_path(fz_context *ctx, fz_path *path)
 		fz_rethrow(ctx);
 	}
 	return new_path;
+}
+
+typedef struct
+{
+	fz_matrix ctm;
+	fz_point p[4];
+	int count;
+	int trailing_move;
+} rect_path_arg;
+
+static void
+rect_moveto(fz_context *ctx, void *arg_, float x, float y)
+{
+	rect_path_arg *arg = (rect_path_arg *)arg_;
+	fz_point p = fz_transform_point_xy(x, y, arg->ctm);
+
+	/* If we've already decided that it's not a rectangle. Just exit. */
+	if (arg->count < 0)
+		return;
+
+	/* We should never get multiple successive moves, by construction. */
+
+	/* If we're starting out... */
+	if (arg->count == 0)
+	{
+		arg->p[0] = p;
+		arg->count = 1;
+		return;
+	}
+
+	/* Otherwise, any move is fine, as long as it's not followed by another line... */
+	arg->trailing_move = 1;
+}
+
+static void
+rect_lineto(fz_context *ctx, void *arg_, float x, float y)
+{
+	rect_path_arg *arg = (rect_path_arg *)arg_;
+	fz_point p = fz_transform_point_xy(x, y, arg->ctm);
+
+	/* If we've already decided that it's not a rectangle. Just exit. */
+	if (arg->count < 0)
+		return;
+
+	if (arg->trailing_move)
+	{
+		arg->count = -1;
+		return;
+	}
+
+	/* Watch for pesky lines back to the same place. */
+	if (arg->p[arg->count-1].x == p.x && arg->p[arg->count-1].y == p.y)
+		return;
+
+	if (arg->count < 4)
+	{
+		arg->p[arg->count++] = p;
+		return;
+	}
+
+	/* Allow for lines back to the start. */
+	if (arg->count == 4)
+	{
+		if (arg->p[0].x == p.x && arg->p[0].y == p.y)
+		{
+			arg->count++;
+			return;
+		}
+	}
+
+	arg->count = -1;
+}
+
+static void
+rect_curveto(fz_context *ctx, void *arg_, float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	rect_path_arg *arg = (rect_path_arg *)arg_;
+
+	arg->count = -1;
+}
+
+static const fz_path_walker rect_path_walker =
+{
+	rect_moveto,
+	rect_lineto,
+	rect_curveto,
+	NULL
+};
+
+int
+fz_path_is_rect(fz_context *ctx, const fz_path *path, fz_matrix ctm)
+{
+	return fz_path_is_rect_with_bounds(ctx, path, ctm, NULL);
+}
+
+int
+fz_path_is_rect_with_bounds(fz_context *ctx, const fz_path *path, fz_matrix ctm, fz_rect *bounds)
+{
+	rect_path_arg arg;
+
+	arg.ctm = ctm;
+	arg.trailing_move = 0;
+	arg.count = 0;
+
+	fz_walk_path(ctx, path, &rect_path_walker, &arg);
+
+	if (arg.count < 0)
+		return 0;
+
+	/* 3 entries are bad, unless the last one returns the first. */
+	if (arg.count == 3 && (arg.p[0].x != arg.p[2].x || arg.p[0].y != arg.p[2].y))
+	{
+		return 0;
+	}
+	if (arg.count == 2 || arg.count == 3)
+	{
+		if (arg.p[0].x == arg.p[1].x || arg.p[0].y == arg.p[1].y)
+		{
+			if (bounds)
+			{
+				bounds->x0 = fz_min(arg.p[0].x, arg.p[1].x);
+				bounds->x1 = fz_max(arg.p[0].x, arg.p[1].x);
+				bounds->y0 = fz_min(arg.p[0].y, arg.p[1].y);
+				bounds->y1 = fz_max(arg.p[0].y, arg.p[1].y);
+			}
+			return 1;
+		}
+	}
+	/* All that's left are 4 entry ones */
+	if (arg.count != 4)
+		return 0;
+
+	if (arg.p[0].x == arg.p[1].x)
+	{
+		/* p[0]  p[3]
+		 * p[1]  p[2]
+		 */
+		if (arg.p[1].y == arg.p[2].y && arg.p[0].y == arg.p[3].y && arg.p[2].x == arg.p[3].x)
+		{
+			if (bounds)
+			{
+				bounds->x0 = fz_min(arg.p[0].x, arg.p[3].x);
+				bounds->x1 = fz_max(arg.p[0].x, arg.p[3].x);
+				bounds->y0 = fz_min(arg.p[0].y, arg.p[1].y);
+				bounds->y1 = fz_max(arg.p[0].y, arg.p[1].y);
+			}
+			return 1;
+		}
+	}
+	if (arg.p[0].y == arg.p[1].y)
+	{
+		/* p[0]  p[1]
+		 * p[3]  p[2]
+		 */
+		if (arg.p[1].x == arg.p[2].x && arg.p[0].x == arg.p[3].x && arg.p[2].y == arg.p[3].y)
+		{
+			if (bounds)
+			{
+				bounds->x0 = fz_min(arg.p[0].x, arg.p[1].x);
+				bounds->x1 = fz_max(arg.p[0].x, arg.p[1].x);
+				bounds->y0 = fz_min(arg.p[0].y, arg.p[3].y);
+				bounds->y1 = fz_max(arg.p[0].y, arg.p[3].y);
+			}
+			return 1;
+		}
+	}
+	return 0;
 }

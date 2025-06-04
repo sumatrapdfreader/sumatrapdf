@@ -252,10 +252,11 @@ static void process_field(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 	}
 }
 
-static void process_field_hierarchy(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_cycle_list *cycle_up)
+static int process_field_hierarchy(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_cycle_list *cycle_up)
 {
 	pdf_cycle_list cycle;
 	pdf_obj *kids;
+	int x = 0;
 
 	if (field == NULL || pdf_cycle(ctx, &cycle, cycle_up, field))
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "recursive field hierarchy");
@@ -268,22 +269,28 @@ static void process_field_hierarchy(fz_context *ctx, pdf_document *doc, pdf_obj 
 		for (i = 0; i < n; ++i)
 		{
 			pdf_obj *kid = pdf_array_get(ctx, kids, i);
-			process_field_hierarchy(ctx, doc, kid, &cycle);
+			x += process_field_hierarchy(ctx, doc, kid, &cycle);
 		}
 	}
 	else if (pdf_dict_get_inheritable(ctx, field, PDF_NAME(FT)) == PDF_NAME(Sig))
+	{
 		process_field(ctx, doc, field);
+		++x;
+	}
+
+	return x;
 }
 
-static void process_acro_form(fz_context *ctx, pdf_document *doc)
+static int process_acro_form(fz_context *ctx, pdf_document *doc)
 {
 	pdf_obj *trailer = pdf_trailer(ctx, doc);
 	pdf_obj *root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
 	pdf_obj *acroform = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
 	pdf_obj *fields = pdf_dict_get(ctx, acroform, PDF_NAME(Fields));
-	int i, n = pdf_array_len(ctx, fields);
-	for (i = 0; i < n; ++i)
-		process_field_hierarchy(ctx, doc, pdf_array_get(ctx, fields, i), NULL);
+	int i, x, n = pdf_array_len(ctx, fields);
+	for (i = x = 0; i < n; ++i)
+		x += process_field_hierarchy(ctx, doc, pdf_array_get(ctx, fields, i), NULL);
+	return x;
 }
 
 int pdfsign_main(int argc, char **argv)
@@ -335,7 +342,13 @@ int pdfsign_main(int argc, char **argv)
 				fz_warn(ctx, "cannot authenticate password: %s", infile);
 
 		if (argc - fz_optind <= 0 || list)
-			process_acro_form(ctx, doc);
+		{
+			if (!process_acro_form(ctx, doc))
+			{
+				fprintf(stderr, "No signatures found!\n");
+				exit(1);
+			}
+		}
 		else
 		{
 			while (argc - fz_optind)

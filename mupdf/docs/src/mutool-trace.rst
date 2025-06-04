@@ -4,7 +4,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -86,7 +85,6 @@ The trace takes the form of an XML document, with the root element being the doc
    </document>
 
 
-.. include:: footer.rst
 
 
 

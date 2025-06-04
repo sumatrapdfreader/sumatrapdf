@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -865,8 +865,6 @@ pdf_new_colorspace(fz_context *ctx, fz_colorspace *cs)
 	default:
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unimplemented colorspace");
 	}
-
-	return NULL;
 }
 
 pdf_obj *
@@ -908,7 +906,7 @@ pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade,
 		background = pdf_dict_get(ctx, shade, PDF_NAME(Background));
 		if (background)
 		{
-			int i, n = pdf_array_len(ctx, background);
+			int n = pdf_array_len(ctx, background);
 			float bg[FZ_MAX_COLORS];
 			float nbg[FZ_MAX_COLORS];
 
@@ -950,7 +948,7 @@ pdf_recolor_shade(fz_context *ctx, pdf_obj *shade, pdf_shade_recolorer *reshade,
 		}
 		else if (pdf_is_array(ctx, function))
 		{
-			int in, i;
+			int in;
 
 			rd.funcs = pdf_array_len(ctx, function);
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -28,7 +28,7 @@
 typedef struct fz_pool_node
 {
 	struct fz_pool_node *next;
-	char mem[1];
+	char mem[FZ_FLEXIBLE_ARRAY];
 } fz_pool_node;
 
 #define POOL_SIZE (4<<10) /* default size of pool blocks */

@@ -1,4 +1,4 @@
-.TH "MUTOOL" "1" "January 12, 2016"
+.TH "MUTOOL" "1" "April 14, 2025"
 .\" Please adjust this date whenever revising the manpage.
 .\" no hyphenation
 .nh
@@ -10,6 +10,11 @@ mutool \- all purpose tool for dealing with PDF files
 
 .SH SYNOPSIS
 mutool <sub-command> [options]
+
+.SH VERSION
+mutool -v
+.PP
+Shows the MuPDF version used to build mutool.
 
 .SH DESCRIPTION
 mutool is a tool based on MuPDF for dealing with document files in various manners.
@@ -40,6 +45,9 @@ If no output is specified, the output will go to stdout.
 Enforce a specific output format. Only necessary when outputting to stdout
 since normally the output filename is used to infer the output format.
 .TP
+.B \-q
+Be quiet, do not print progress messages.
+.TP
 .B \-R angle
 Rotate clockwise by given number of degrees.
 .TP
@@ -58,11 +66,17 @@ render with a maximum height).
 .B \-f
 Fit exactly; ignore the aspect ratio when matching specified width/heights.
 .TP
+.B \-b  box
+Use name page box (`MediaBox`, `CropBox`, `BleedBox`, `TrimBox`, or `ArtBox`), see :ref:`defined boxes<mutool_trim_defined_boxes>`.
+.TP
 .B \-B bandheight
 Render in banded mode with each band no taller than the given height. This uses
 less memory during rendering. Only compatible with pam, pgm, ppm, pnm and png
 output formats. Banded rendering and md5 checksumming may not be used at the
 same time.
+.TP
+.B \-T threads
+Number of threads to use for rendering (banded mode only).
 .TP
 .B \-W width
 Page width in points for EPUB layout.
@@ -76,11 +90,20 @@ Font size in points for EPUB layout.
 .B \-U filename
 User CSS stylesheet for EPUB layout.
 .TP
+.B \-X
+Disable document styles for EPUB layout.
+.TP
+.B \-a
+Disable usage of accelerator file.
+.TP
 .B \-c colorspace
 Render in the specified colorspace.
-Supported colorspaces are: mono, gray, grayalpha, rgb, rgbalpha, cmyk, cmykalpha.
-Some abbreviations are allowed: m, g, ga, rgba, cmyka.
+Supported colorspaces are: \fBmono\fR, \fBgray\fR, \fBgrayalpha\fR, \fBrgb\fR, \fBrgbalpha\fR, \fBcmyk\fR, \fBcmykalpha\fR.
+Some abbreviations are allowed: \fBm\fR, \fBg\fR, \fBga\fR, \fBrgba\fR, \fBcmyka\fR.
 The default is chosen based on the output format.
+.TP
+.B \-e filename
+Proof ICC profile filename to use for rendering.
 .TP
 .B -G gamma
 Apply gamma correction.
@@ -104,6 +127,18 @@ changed.
 .B \-A bits
 Specify how many bits of anti-aliasing to use. The default is 8.
 .TP
+.B \-A bits/bits
+Specify how many bits of anti-aliasing to use. The default is 8. Bits for graphics is before the slash, bits for text after the slash.
+.TP
+.B \-l width
+Minimum stroked line width (in pixels).
+.TP
+.B \-K
+Do not draw text.
+.TP
+.B \-KK
+Only draw text.
+.TP
 .B \-D
 Disable use of display lists. May cause slowdowns, but should reduce
 the amount of memory used.
@@ -111,11 +146,51 @@ the amount of memory used.
 .B \-i
 Ignore errors.
 .TP
+.B \-m limit
+Limit memory usage in bytes.
+.TP
 .B \-L
 Low memory mode (avoid caching objects by clearing cache after each page).
 .TP
 .B \-P
 Run interpretation and rendering at the same time.
+.TP
+.B \-N
+Disable ICC workflow.
+.TP
+.B \-O overprint
+Control spot/overprint rendering: \fB0\fR for no spot rendering, \fB1\fR for Overprint simulation (default), or \fB2f\R for full spot rendering.
+.TP
+.B \-t language
+Specify language/script for OCR (default: eng)
+.TP
+.B \-d ocr-file-path
+Specify path for OCR files (default: rely on \fBTESSDATA_PREFIX\fR environment variable.
+.TP
+.B \-k correction
+Set the skew correction, either one of \fBauto\fR, \fB0\fR for increase size, \fB1\fR for maintain size, or \fB2\fR for decrease size.
+.TP
+.B \-k correction,angle
+Set the skew correction as well as the angle.
+.TP
+.B \-y l
+Print the layer configs to stderr.
+.TP
+.B \-y layer-number
+Select layer config (by number from \fB-y l\fR).
+.TP
+.B \-y layer-number,item1,item2,...
+Select layer config (by number from \fB-y l\fR) and toggle the listed items.
+.TP
+.B \-Y
+Print the individual layers to stderr.
+.TP
+.B \-z layer-number
+Hide individual layer.
+.TP
+.B \-Z layer-number
+Show individual layer.
+
 .TP
 .B pages
 Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
@@ -143,30 +218,91 @@ Give it four times to also merge and reuse duplicate streams.
 .B \-s
 Rewrite content streams.
 .TP
-.B \-d
-Decompress streams. This will make the output file larger, but provides
-easy access for reading and editing the contents with a text editor.
-.TP
 .B \-l
-Linearize output. Create a "Web Optimized" output file.
+Linearize output. No longer supported! Used to ccreate a "Web Optimized" output file.
 .TP
-.B \-i
-Toggle decompression of image streams. Use in conjunction with -d to leave
-images compressed.
+.B \-D
+Save file without encryption.
 .TP
-.B \-f
-Toggle decompression of font streams. Use in conjunction with -d to leave
-fonts compressed.
+.B \-E method
+Save file with desired encryption method, one of: \fBrc4-40\fR \fBrc4-128\fR \fBaes-128\fR, or \fBaes-256\fR.
+.TP
+.B \-O password
+Owner password used when encrypting output file. This is required to edit the output file.
+.TP
+.B \-U password
+User password used when encrypting output file. This is required to view the output file.
+.TP
+.B \-P permissions
+Permissions used when encrypting output file. These are the permissions that apply when the output file is viewed.
 .TP
 .B \-a
 ASCII Hex encode binary streams. Use in conjunction with -d and -i or -f to
 ensure that although the images and/or fonts are compressed, the resulting
 file can still be viewed and edited with a text editor.
 .TP
+.B \-d
+Decompress streams. This will make the output file larger, but provides
+easy access for reading and editing the contents with a text editor.
+.TP
 .B \-z
 Deflate uncompressed streams.
 If combined with -d, any decompressed streams will be recompressed.
 If combined with -a, the streams will also be hex encoded after compression.
+.TP
+.B \-e effort
+Configure how much effort is spent compressing the output file. 0 is default amount, otherwise a percentage of the maximum effort, 1 for minimum and 100 for maximum effort.
+.TP
+.B \-f
+Toggle decompression of font streams. Use in conjunction with -d to leave
+fonts compressed.
+.TP
+.B \-i
+Toggle decompression of image streams. Use in conjunction with -d to leave
+images compressed.
+.TP
+.B \-c
+Pretty-print graphics commands in content streams.
+.TP
+.B \-s
+Sanitize graphics commands in content streams, this means, for example, removing invalid or redundant commands.
+.TP
+.B \-t
+Use compact PDF object syntax. This saves space.
+.TP
+.B \-tt
+Use indented PDF object syntax. This is more human-readable.
+.TP
+.B \-L
+Print comments containing labels showing how each object can be reached from the Root.
+.TP
+.B \-A
+Create appearance streams for annotations that are missing appearance streams.
+.TP
+.B \-AA
+Recreate appearance streams for all annotations.
+.TP
+.B \-m
+Preserve metadata.
+.TP
+.B \-S
+Subset fonts if possible. (EXPERIMENTAL!)
+.TP
+.B \-Z
+Use object streams cross reference streams for extra compressoin.
+.TP
+.B \-\-\fR(\fBcolor\fR,\fBgray\fR,\fBbitonal\fR)\fB-\fR(,\fBlossy-\fR,\fBlossless-\fR)\fBimage-subsample-method method
+Set the subsampling method (\fBaverage\fR, or \fBbicubic\fR) for the
+desired image types, for example color-lossy and bitonal-loessless.
+.TP
+.B \-\-\fR(\fBcolor\fR,\fBgray\fR,\fBbitonal\fR)\fB-\fR(,\fBlossy-\fR,\fBlossless-\fR)\fBimage-subsample-dpi dpi
+Set the resolution at which to subsample.
+.TP
+.B \-\-\fR(\fBcolor\fR,\fBgray\fR,\fBbitonal\fR)\fB-\fR(,\fBlossy-\fR,\fBlossless-\fR)\fBimage-recompress-method quality
+Set the recompression quality to either of \fBnever\fR, \fBsame\fR, \fBlossless\fR, \fBjpeg\fR, \fBj2k\fR, \fBfax\fR, or \fBjbig2\fR.
+.TP
+.B \-\-structure=\fR(\fBkeep\fR|\fBdrop\fR)
+Keep or drop the structure tree.
 .TP
 .B pages
 Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
@@ -184,6 +320,12 @@ Use the specified password if the file is encrypted.
 .TP
 .B \-r
 Convert images to RGB when extracting them.
+.TP
+.B \-a
+Embed SMasks as alpha channel..
+.TP
+.B \-N
+Do not use ICC color conversions.
 
 .SH INFO
 mutool info [options] file.pdf [pages]
@@ -212,6 +354,9 @@ List patterns.
 .TP
 .B -X
 List form and postscript XObjects.
+.TP
+.B -Z
+List ZUGFeRD info.
 .TP
 .B pages
 Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
@@ -242,48 +387,8 @@ define the page dimensions and font and image resources:
 .br
 %%Image Im0 path/to/image.png
 .TP
-.B \-O
-Comma separated list of format specific output options:
-.IP
-.B decompress
-.br
-Decompress all object streams.
-.IP
-.B compress
-.br
-Compress all object streams.
-.IP
-.B compress-fonts
-.br
-Compress object streams for embedded fonts.
-.IP
-.B compress-images
-.br
-Compress object streams for images.
-.IP
-.B ascii
-.br
-Encode object streams using ASCII hex encoding.
-.IP
-.B pretty
-.br
-Pretty-print objects with indentation.
-.IP
-.B linearize
-.br
-Optimize document for progressive loading in viewers.
-.IP
-.B sanitize
-.br
-Clean up graphics command in content streams.
-.IP
-.B garbage[=compact|deduplicate]
-.br
-Garbage collect unused objects. With
-.B compact
-the cross-reference table will also be compacted. With
-.B deduplicate
-duplicate objects will also be recombined.
+.B \-O options
+Comma separated list of format specific output options, see \fIOUTPUT OPTIONS\fR below.
 
 .SH PAGES
 mutool pages [options] input.pdf [pages ...]
@@ -308,11 +413,17 @@ pieces of paper that can then be glued together to create a large poster.
 .B \-p password
 Use the specified password if the file is encrypted.
 .TP
+.B \-m margin
+Margin (overlap) between pages in points or percent.
+.TP
 .B \-x factor
 Split the page into this many horizontal pieces.
 .TP
 .B \-y factor
 Split the page into this many vertical pieces.
+.TP
+.B \-r
+Splits hoirzontally from right to left (default splits from left to right).
 .PP
 The output will have x times y number of pages for each input page.
 
@@ -334,6 +445,12 @@ Print streams as binary data and omit the object header.
 .TP
 .B \-e
 Print streams in their original encoded (or compressed) form.
+.TP
+.B \-g
+Print each object on a single line, suitable for grep.
+.TP
+.B \-r
+Force repair before showing any objects.
 .PP
 Specify objects by number, or use one of the following special names:
 .TP
@@ -377,6 +494,9 @@ The convert command is used to convert a file from one format to another.
 .B \-p password
 Use the specified password if the file is encrypted.
 .TP
+.B \-b  box
+Use name page box (`MediaBox`, `CropBox`, `BleedBox`, `TrimBox`, or `ArtBox`), see :ref:`defined boxes<mutool_trim_defined_boxes>`.
+.TP
 .B \-A bits
 Specify how many bits of anti-aliasing to use. The default is 8.
 .TP
@@ -402,28 +522,694 @@ If no output is specified, the output will go to stdout.
 Enforce a specific output format. Only necessary when outputting to stdout
 since normally the output filename is used to infer the output format.
 .TP
-.B \-O
-Comma separated list of format specific output options:
+.B \-O options
+Comma separated list of format specific output options, see \fIOUTPUT OPTIONS\fR below.
 
 .SH MERGE
 mutool merge [options] file1 [pages] file2 [pages] ...
 .PP
 The merge command is used to pick out pages from two or more files and merge
-them in order into a new output file.
+them in order into a new PDF output file.
 .TP
 .B \-o output
 The output filename.
 .TP
-.B \-O
-See mutool create for details on this option.
+.B \-O options
+Comma separated list of format specific output options, see \fIOUTPUT OPTIONS\fR below.
 
-.SH VERSION
-mutool -v
+.SH BAKE
+mutool bake [options] input.pdf [output.pdf]
 .PP
-Shows the MuPDF version used to build mutool.
+Normally annotations and form field widgets are separate content streams
+that get drawn on top of the page contents. This command bakes annotations
+and/or widgets into the page contents, making them inseparable.
+After baking in annotations and widgets they are just visual representaitons
+of what the original annotation/widget looked like, their properties can no
+longer be edited since they no longer exist as proper annotation/widgets.
+.TP
+.B \-A
+Do not bake in annotations.
+.TP
+.B \-F
+Do not bake in form field widgets.
+.TP
+.B \-O options
+A comma separated list of PDF options. See \fIOUTPUT OPTIONS\fR below.
+
+.SH RECOLOR
+mutool recolor [options] input.pdf
+.PP
+Change the color space used in a PDF to a desired one. This command can,
+for example, change a color PDF to be grayscale.
+.TP
+.B \-c colorspace
+Desired output colorspace, choose one of \fBgray\fR (default), \fBrgb\fR, or \fBcmyk\fR.
+.TP
+.B \-r
+Remove any output intents.
+.TP
+.B \-o filename
+The output filename.
+
+.SH TRACE
+mutool trace [options] file1 [pages] file2 [pages] ...
+.PP
+Prints a trace of device calls needed to render the desired pages from the given document.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-W width
+Page width in points for EPUB layout.
+.TP
+.B \-H height
+Page height in points for EPUB layout.
+.TP
+.B \-S size
+Font size in points for EPUB layout.
+.TP
+.B \-U filename
+User CSS stylesheet for EPUB layout.
+.TP
+.B \-X
+Disable document styles for EPUB layout.
+.TP
+.B \-d
+Enable use of display lists.
+.B pages
+Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page.
+If no pages are specified, then all pages will be rendered.
+
+.SH TRIM
+mutool trim [options] input.pdf
+.PP
+Makes a modified version of a PDF with content that falls inside (or outside) of the given box removed.
+.TP
+.B \-b box
+Which box to trim to, either one of: \fBMediaBox\fR (default) \fBCropBox\fR \fBBleedBox\fR \fBTrimBox\fR, or \fBArtBox\fR.
+.TP
+.B \-f
+Fallback to mediabox if specified box not available.
+.TP
+.B \-m all
+Add same margins to all sides of the box, where \fBall\fR is positive for inwards, negative for outwards.
+.TP
+.B \-m vertical,horizontal
+Add specific margins for vertical and horizontal sides of the box, where \fBvertical\fR and \fBhorizonal\fR are positive for inwards, negative for outwards.
+.TP
+.B \-m top,right,bottom,left
+Add specific margins for top, right, bottom and left sides of the box, where \fBtop\fR, \fBright\fR, \fBbottom\fR, and \fBleft\fR each are positive for inwards, negative for outwards.
+.TP
+.B \-e
+Exclude contents of box rather than include them.
+.TP
+.B \-o filename
+The output filename.
+
+.SH SIGN
+mutool sign [options] input.pdf [signature object number]
+.PP
+Reads a PDF file and prints infromation about each signature field object. With
+suitable options all or specified signatures can be verified, cleared or signed.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-v
+Verify all signatures, or only the specified signature.
+.TP
+.B \-c
+Clear all signatures, or only the specified signature.
+.TP
+.B \-s certificate-filename
+Read a certificate from the given filename and use it to sign all, or just the specified signature.
+.TP
+.B \-P certificate-password
+Use the specified password when opening the certificate.
+.TP
+.B \-o filename
+The output filename.
+.B signature object numbers
+A list of PDF object number for signatures to verify/clear/sign. If no such object numbers are given, all signatures will be
+processed.
+
+.SH AUDIT
+mutool audit [options] file1.pdf file2.pdf ...
+.PP
+Outputs a report of operator and space usage for each given PDF file.
+.TP
+.B -o filename
+The output filename for the report.
+
+.SH OUTPUT OPTIONS
+Configuring output is done by a comma separated list of output options.
+
+.TP
+.B Raster format options
+These apply to output formats: cbz, png, pnm, pgm, ppm, pam, pbm, pkm.
+.IP
+.B rotate=N
+.in +4n
+Rotate rendered pagess N degrees counterclockwise.
+.in
+.IP
+.B resoution=N
+.in +4n
+Set both X and Y resolution in pixels per inch.
+.in
+.IP
+.B x-resolution=N
+.in +4n
+Set X resolution of rendred pages in pixels per inch.
+.in
+.IP
+.B y-resolution=N
+.in +4n
+Set Y resolution of rendred pages in pixels per inch.
+.in
+.IP
+.B width=N
+.in +4n
+Render pages to fit N pixels wide (ignore resolution option).
+.in
+.IP
+.B height=N
+.in +4n
+Render pages to fit N pixels tall (ignore resolution option).
+.in
+.IP
+.B colorspace=\fR(\fBgray\fR|\fBrgb\fR|\fBcmyk\fR)
+.in +4n
+Render pages using the specified colorspace.
+.in
+.IP
+.B alpha
+Render pages with alpha channel and transparent background.
+.in
+.IP
+.B graphics=\fR(\fBaaN\fR|\fBcop\fR|\fBapp\fR)
+.br
+.B text=\fR(\fBaaN\fR|\fBcop\fR|\fBapp\fR)
+.in +4n
+Set the rasterizer to use for graphics or text respectively:
+.in +4n
+.B aaN
+.in +4n
+Antialias with N bits (0 to 8).
+.in
+.B cop
+.in +4n
+Center of pixel.
+.in
+.B app
+.in +4n
+Any part of pixel.
+.in -12n
+
+.TP
+.B PDF options
+.IP
+.B decompress
+.in +4n
+Decompress all streams (except compress-fonts/images).
+.in
+.IP
+.B compress=\fR(\fByes\fR|\fBflate\fR|\fBbrotli\fR)
+.in +4n
+Compress all streams, if no value is given, or the value is \fByesf\R the default is to use flate.
+.in
+.IP
+.B compress-fonts
+.in +4n
+Compress object stream for embedded fonts.
+.in
+.IP
+.B compress-images
+.in +4n
+Compress object streams for images.
+.in
+.IP
+.B compress-effort=\fR(\fB0\fR|\fBPERCENTAGE\fR)
+.in +4n
+Effort spent compressing, 0 is default, otherwise percentage of max effort.
+.in
+.IP
+.B ascii
+.in +4n
+Encode object streams using ASCII hex encoding.
+.in
+.IP
+.B pretty
+.in +4n
+Pretty-print objects with indentation.
+.in
+.IP
+.B labels
+.in +4n
+Print object labels.
+.in
+.IP
+.B linearize
+.in +4n
+Optimize document for progressive loading in viewers ( no longer supported!).
+.in
+.IP
+.B clean
+.in +4n
+Pretty-print graphics commands in content streams.
+.in
+.IP
+.B sanitize
+.in +4n
+Clean up graphics command in content streams.
+.in
+.IP
+.B garbage
+.in +4n
+Garbage collect unused objects.
+.in
+.IP
+.B garbage=compact
+.in +4n
+Garbage collect unused object, and compact cross reference table.
+.in
+.IP
+.B garbage=deduplicate
+.in +4n
+Garbage collect unused objects, compact cross reference table, and recombine duplicate objects.
+.in
+.IP
+.B incremental
+.in +4n
+Write changes as incremental update.
+.in
+.IP
+.B objstms
+.in +4n
+Use object streams and cross reference streams.
+.in
+.IP
+.B appearance=\fR(\fByes\fR|\fBall\fR)
+.in +4n
+Synthesize just missing, or all, annotation/widget apperance streams.
+.in
+.IP
+.B continue-on-error
+.in +4n
+Continue saving the document even if there is an error.
+.in
+.IP
+.B decrypt
+.in +4n
+Write unencrypted document.
+.in
+.IP
+.B encrypt=\fR(\fBnone\fR|\fBkeep\fR|\fBrc4-40\fR|\fBrc4-128\fR|\fBaes-128\fR|\fBaes-256\fR)
+.in +4n
+Write encrypted document using specified encryption method.
+.in
+.IP
+.B permissions=NUMBER
+.in +4n
+Document permissions to grant when encrypting.
+.in
+.IP
+.B user-password=PASSWORD
+.in +4n
+Password required to read document.
+.in
+.IP
+.B owner-password=PASSWORD
+.in +4n
+Password required to edit document.
+.in
+.IP
+.B regenerate-id=no
+.in +4n
+Regenerate document id (default yes).
+.in
+
+.TP
+.B Text format options
+These apply to formats: html, xhtml, text stext.
+.IP
+.B preserve-images
+.in +4n
+Keep imagess in output.
+.in
+.IP
+.B preserve-ligatures
+.in +4n
+Do not expand ligature into constituent characters.
+.in
+.IP
+.B preserve-spans
+.in +4n
+Do not merge spans on the same line.
+.in
+.IP
+.B preserve-whitespace
+.in +4n
+Do not convert all whitespace into space characters.
+.in
+.IP
+.B inhibit-spaces
+.in +4n
+Do not add spaces between gaps in the text.
+.in
+.IP
+.B paragraph-break
+.in +4n
+Break blocks at paragraph boundaries.
+.in
+.IP
+.B dehyphenate
+.in +4n
+Attempts to join up hyphenated words.
+.in
+.IP
+.B ignore-actualtext
+.in +4n
+Do not apply ActualText replacements.
+.in
+.IP
+.B use-cid-for-unknown-unicode
+.in +4n
+Use character code if unicode mapping fails.
+.in
+.IP
+.B use-gid-for-unknown-unicode
+.in +4n
+Use glyph index if unicode mapping fails.
+.in
+.IP
+.B accurate-bboxes
+.in +4n
+Calculate bboxes from the outlines.
+.in
+.IP
+.B accurate-ascenders
+.in +4n
+Calculate ascender/descender from font glyphs.
+.in
+.IP
+.B accurate-side-bearings
+.in +4n
+Expand character bboxes to completely include width of glyphs.
+.in
+.IP
+.B collect-styles
+.in +4n
+Attempt to detect text features (fake bold, strikeout, underlined, etc.)
+.in
+.IP
+.B clip
+.in +4n
+Do not include text that is completely clipped.
+.in
+.IP
+.B clip-rect=x0:y0:x1:y1
+.in +4n
+Specify clipping rectangle within which to collect content.
+.in
+.IP
+.B structured
+.in +4n
+Collect structure markup.
+.in
+.IP
+.B vectors
+.in +4n
+Include vector bboxes in output.
+.in
+.IP
+.B segment
+.in +4n
+Attempt to segment the page.
+.in
+.IP
+.B table-hunt
+.in +4n
+Hunt for tables within a (segmented) page.
+.in
+
+.TP
+.B PCL options
+.IP
+.B colorspace=\fR(\fBmono\fR|\fBrgb\fR)
+.in +4n
+Render 1-bit black and white or a full color page.
+.in
+.IP
+.B preset=\fR(\fBgeneric\fR|\fBljet4\fR|\fBdj500\fR|\fBfs600\fR|\fBlj\fR|\fBlj2\fR|\fBlj3\fR|\fBlj4\fR|\fBlj4pl\fR|\fBlj4d\fR|\fBlp2563b\fR|\fBoce9050\fR)
+.in +4n
+Render 1-bit black and white or a full color page.
+.in
+.IP
+.B spacing=\fR(\fB0\fR|\fB1\fR|\fB2\fR|\fB3\fR)
+.in +4n
+Set vertical spacing to none, PCL 3 (<ESC>*p+<n>Y), PCL 5 (<ESC>*b<n>Y), or PCL 6 (<ESC>*b<n>Y and clear seed row).
+.in
+.IP
+.B mode2
+.in +4n
+Enable mode 2 graphics compression.
+.in
+.IP
+.B mode3
+.in +4n
+Enable mode 3 graphics compression.
+.in
+.IP
+.B eog_reset
+.in +4n
+End of graphics (<ESC>+rB) resets all parameters.
+.in
+.IP
+.B has_duplex
+.in +4n
+Duplex supported (<ESC>&l<duplex>S).
+.in
+.IP
+.B has_papersize
+.in +4n
+Papersize setting supported (<ESC>&l<sizecode>A).
+.in
+.IP
+.B has_copies
+.in +4n
+Number of copies supported (<ESC>&l<copies>X).
+.in
+.IP
+.B is_ljet4pjl
+.in +4n
+Disable/enable HP 4PJL model-specific output.
+.in
+.IP
+.B is_oce9050
+.in +4n
+Disable/enable Oce 9050 models-specific output.
+.in
+
+.TP
+.B PCLm options
+.IP
+.B compression=\fR(\fBnone\fR|\fBflate\fR)
+.in +4n
+No compression (default), or enable flate compression.
+.in
+.IP
+.B strip-height=N
+.in +4n
+Strip height (default 16).
+.in
+
+.TP
+.B PWG options
+.IP
+.B media_class=<string>
+.in +4n
+Set the media_class field.
+.in
+.IP
+.B media_color=<string>
+.in +4n
+Set the media_color field.
+.in
+.IP
+.B media_type=<string>
+.in +4n
+Set the media_type field.
+.in
+.IP
+.B output_type=<string>
+.in +4n
+Set the output_type field.
+.in
+.IP
+.B rendering_intent=<string>
+.in +4n
+Set the rendering_intent field.
+.in
+.IP
+.B page_size_name=<string>
+.in +4n
+Set the page_size_name field.
+.in
+.IP
+.B advance_distance=<int>
+.in +4n
+Set the advance_distance field.
+.in
+.IP
+.B advance_media=<int>
+.in +4n
+Set the advance_media field.
+.in
+.IP
+.B collate=<int>
+.in +4n
+Set the collate field.
+.in
+.IP
+.B cut_media=<int>
+.in +4n
+Set the cut_media field.
+.in
+.IP
+.B duplex=<int>
+.in +4n
+Set the duplex field.
+.in
+.IP
+.B insert_sheet=<int>
+.in +4n
+Set the insert_sheet field.
+.in
+.IP
+.B jog=<int>
+.in +4n
+Set the jog field.
+.in
+.IP
+.B leading_edge=<int>
+.in +4n
+Set the leading_edge field.
+.in
+.IP
+.B manual_feed=<int>
+.in +4n
+Set the manual_feed field.
+.in
+.IP
+.B media_position=<int>
+.in +4n
+Set the media_position field.
+.in
+.IP
+.B media_weight=<int>
+.in +4n
+Set the media_weight field.
+.in
+.IP
+.B mirror_print=<int>
+.in +4n
+Set the mirror_print field.
+.in
+.IP
+.B negative_print=<int>
+.in +4n
+Set the negative_print field.
+.in
+.IP
+.B num_copies=<int>
+.in +4n
+Set the num_copies field.
+.in
+.IP
+.B orientation=<int>
+.in +4n
+Set the orientation field.
+.in
+.IP
+.B output_face_up=<int>
+.in +4n
+Set the output_face_up field.
+.in
+.IP
+.B page_size_x=<int>
+.in +4n
+Set the page_size_x field.
+.in
+.IP
+.B page_size_y=<int>
+.in +4n
+Set the page_size_y field.
+.in
+.IP
+.B separations=<int>
+.in +4n
+Set the separations field.
+.in
+.IP
+.B tray_switch=<int>
+.in +4n
+Set the tray_switch field.
+.in
+.IP
+.B tumble=<int>
+.in +4n
+Set the tumble field.
+.in
+.IP
+.B media_type_num=<int>
+.in +4n
+Set the media_type_num field.
+.in
+.IP
+.B compression=<int>
+.in +4n
+Set the compression field.
+.in
+.IP
+.B row_count=<int>
+.in +4n
+Set the row_count field.
+.in
+.IP
+.B row_feed=<int>
+.in +4n
+Set the row_feed field.
+.in
+.IP
+.B row_step=<int>
+.in +4n
+Set the row_step field.
+.in
+
+.TP
+.B SVG options
+.IP
+.B text=text
+.in +4n
+Emit text as <text> elements (inaccurate fonts).
+.in
+.IP
+.B text=path
+.in +4n
+Emit text as <path> elements (accurate fonts).
+.in
+.IP
+.B no-reuse-images
+.in +4n
+Do not reuse image using <symbol> definitions.
+.in -4n
+
+.SH EXIT STATUS
+The exit status is 0 upon successful execution and non-zero upon error.
 
 .SH SEE ALSO
 .BR mupdf (1),
 
 .SH AUTHOR
-MuPDF is Copyright 2006-2017 Artifex Software, Inc.
+MuPDF is Copyright 2004-2025 Artifex Software, Inc.

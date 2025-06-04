@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Artifex Software, Inc.
+// Copyright (C) 2021-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -117,8 +117,17 @@ FUN(OutlineIterator_delete)(JNIEnv *env, jobject self)
 	return okay;
 }
 
+static unsigned int to255(float x)
+{
+	if (x < 0)
+		return 0;
+	if (x > 1)
+		return 255;
+	return (int)(x * 255 + 0.5);
+}
+
 JNIEXPORT void JNICALL
-FUN(OutlineIterator_update)(JNIEnv *env, jobject self, jstring jtitle, jstring juri, jboolean is_open)
+FUN(OutlineIterator_update)(JNIEnv *env, jobject self, jstring jtitle, jstring juri, jboolean is_open, jfloat r, jfloat g, jfloat b, int flags)
 {
 	fz_context *ctx = get_context(env);
 	fz_outline_iterator *iterator = from_OutlineIterator(env, self);
@@ -137,6 +146,11 @@ FUN(OutlineIterator_update)(JNIEnv *env, jobject self, jstring jtitle, jstring j
 		if (item.uri == NULL && juri != NULL)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "OutlineIterator_update failed to get uri as string");
 
+		item.r = to255(r);
+		item.g = to255(g);
+		item.b = to255(b);
+		item.flags = flags & 127;
+
 		fz_outline_iterator_update(ctx, iterator, &item);
 	}
 	fz_always(ctx)
@@ -151,7 +165,7 @@ FUN(OutlineIterator_update)(JNIEnv *env, jobject self, jstring jtitle, jstring j
 }
 
 JNIEXPORT jint JNICALL
-FUN(OutlineIterator_insert)(JNIEnv *env, jobject self, jstring jtitle, jstring juri, jboolean is_open)
+FUN(OutlineIterator_insert)(JNIEnv *env, jobject self, jstring jtitle, jstring juri, jboolean is_open, jfloat r, jfloat g, jfloat b, int flags)
 {
 	fz_context *ctx = get_context(env);
 	fz_outline_iterator *iterator = from_OutlineIterator(env, self);
@@ -170,6 +184,11 @@ FUN(OutlineIterator_insert)(JNIEnv *env, jobject self, jstring jtitle, jstring j
 		item.uri = juri ? (char *)((*env)->GetStringUTFChars(env, juri, NULL)) : NULL;
 		if (item.uri == NULL && juri != NULL)
 			fz_throw(ctx, FZ_ERROR_GENERIC, "OutlineIterator_insert failed to get uri as string");
+
+		item.r = to255(r);
+		item.g = to255(g);
+		item.b = to255(b);
+		item.flags = flags & 127;
 
 		okay = fz_outline_iterator_insert(ctx, iterator, &item);
 	}
@@ -194,6 +213,7 @@ FUN(OutlineIterator_item)(JNIEnv *env, jobject self)
 	fz_outline_item *item = NULL;
 	jstring jtitle = NULL;
 	jstring juri = NULL;
+	float r, g, b;
 
 	if (!ctx || !iterator) return NULL;
 
@@ -217,5 +237,8 @@ FUN(OutlineIterator_item)(JNIEnv *env, jobject self)
 		if (!juri || (*env)->ExceptionCheck(env))
 			return NULL;
 	}
-	return  (*env)->NewObject(env, cls_OutlineItem, mid_OutlineItem_init, jtitle, juri, item->is_open);
+	r = item->r / 255.0f;
+	g = item->g / 255.0f;
+	b = item->b / 255.0f;
+	return  (*env)->NewObject(env, cls_OutlineItem, mid_OutlineItem_init, jtitle, juri, item->is_open, r, g, b, item->flags);
 }

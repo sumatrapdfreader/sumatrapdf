@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -125,7 +125,7 @@
  *
  * Let us now consider the output position of each of the corners of
  * our src_w * src_h input rectangle under this transformation. For
- * simplity of notation, let's call these just 'w' and 'h'.
+ * simplicity of notation, let's call these just 'w' and 'h'.
  *
  * We know that by the properties of 2x2 matrices, (0, 0) maps to
  * (0, 0) and (w, h) maps the the sum of where (w,0) (0,h) map to,
@@ -416,8 +416,8 @@ make_x_weights(fz_context *ctx,
 
 	max_weights = (max_weights + 3) & ~3;
 
-	weights = (weight_t *)fz_malloc_aligned(ctx, max_weights * dst_w * sizeof(*weights) + SSE_SLOP, sizeof(weight_t) * 4);
-	memset(weights, 0, max_weights * dst_w * sizeof(*weights));
+	weights = (weight_t *)fz_malloc_aligned(ctx, sizeof(*weights) * max_weights * dst_w + SSE_SLOP, sizeof(weight_t) * 4);
+	memset(weights, 0, sizeof(*weights) * max_weights * dst_w);
 	fz_try(ctx)
 		index = (index_t *)fz_malloc(ctx, sizeof(*index) * dst_w + SSE_SLOP);
 	fz_catch(ctx)
@@ -536,7 +536,7 @@ make_y_weights(fz_context *ctx,
 	/* Ensure that we never try to access before 0 */
 	offset += (double)FILTER_WIDTH/squeeze;
 
-	weights = (weight_t *)fz_malloc_aligned(ctx, max_weights * dst_w * sizeof(*weights), sizeof(weight_t) * 4);
+	weights = (weight_t *)fz_malloc_aligned(ctx, sizeof(*weights) * max_weights * dst_w, sizeof(weight_t) * 4);
 	fz_try(ctx)
 		index = (index_t *)fz_malloc(ctx, sizeof(*index) * dst_w);
 	fz_catch(ctx)

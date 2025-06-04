@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_story:
 
 .. _mutool_run_js_api_object_story:

@@ -1,13 +1,3 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_document:
 
 
@@ -291,6 +281,8 @@
 
 
 .. method:: asPDF()
+
+    |mutool_tag|
 
     Returns a pdf version of the document (if possible). PDF documents return the same object. Documents that have an underlying PDF representation return that. Other document types return null.
 

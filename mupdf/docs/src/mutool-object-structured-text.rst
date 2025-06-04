@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_structured_text:
 
 .. _mutool_run_js_api_structured_text:
@@ -81,8 +72,6 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
 
 .. method:: walk(walker)
 
-    |wasm_tag|
-
     :arg walker: Function with protocol methods, see example below for details.
 
     Walk through the blocks (images or text blocks) of the structured text.
@@ -108,11 +97,20 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
             endTextBlock: function () {
                 console.log("endTextBlock");
             },
-            onChar: function (utf, origin, font, size, quad, color) {
-                console.log("onChar", utf, origin, font, size, quad, color);
+            beginStruct: function (standard, raw, index) {
+                console.log("beginStruct", standard, raw, index);
+            },
+            endStruct: function () {
+                console.log("endStruct");
+            },
+            onChar: function (utf, origin, font, size, quad, argb) {
+                console.log("onChar", utf, origin, font, size, quad, argb);
             },
             onImageBlock: function (bbox, transform, image) {
                 console.log("onImageBlock", bbox, transform, image);
+            },
+            onVector: function (isStroked, isRectangle, argb) {
+                console.log("onVector", isStroked, isRectangle, argb);
             },
         });
 
@@ -123,8 +121,6 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
 
 
 .. method:: asJSON(scale)
-
-    |wasm_tag|
 
     Returns the instance in :title:`JSON` format.
 
@@ -141,3 +137,33 @@ instance use :ref:`Page toStructuredText()<mutool_page_toStructuredText>`.
     .. note::
 
         If you want the coordinates to be 300 DPI then pass (300/72) as the `scale` parameter.
+
+
+
+.. method:: asHTML(id)
+
+    Returns the instance in :title:`HTML` format.
+
+    :arg is: `Integer`
+
+    :return: `String`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var html = sText.asHTML();
+
+
+
+.. method:: asText()
+
+    Returns the instance in :title:`Text` format.
+
+    :return: `String`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var text = sText.asText();

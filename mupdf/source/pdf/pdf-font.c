@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1442,8 +1442,7 @@ pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *font
 
 	fontdesc->flags = pdf_dict_get_int(ctx, dict, PDF_NAME(Flags));
 	fontdesc->italic_angle = pdf_dict_get_real(ctx, dict, PDF_NAME(ItalicAngle));
-	fontdesc->ascent = pdf_dict_get_real(ctx, dict, PDF_NAME(Ascent));
-	fontdesc->descent = pdf_dict_get_real(ctx, dict, PDF_NAME(Descent));
+	/* fontdesc->ascent and descent have already been set to sane defaults */
 	fontdesc->cap_height = pdf_dict_get_real(ctx, dict, PDF_NAME(CapHeight));
 	fontdesc->x_height = pdf_dict_get_real(ctx, dict, PDF_NAME(XHeight));
 	fontdesc->missing_width = pdf_dict_get_real(ctx, dict, PDF_NAME(MissingWidth));
@@ -1487,18 +1486,32 @@ pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *font
 		if (is_dynalab(fontdesc->font->name))
 			face->face_flags |= FT_FACE_FLAG_TRICKY;
 
-		if (fontdesc->ascent == 0.0f)
-			fontdesc->ascent = 1000.0f * face->ascender / face->units_per_EM;
+		fontdesc->ascent = 1000.0f * face->ascender / face->units_per_EM;
 
-		if (fontdesc->descent == 0.0f)
-			fontdesc->descent = 1000.0f * face->descender / face->units_per_EM;
+		fontdesc->descent = 1000.0f * face->descender / face->units_per_EM;
 	}
 
 	/* Prefer FontDescriptor Ascent/Descent values to embedded font's */
-	if (fontdesc->ascent)
+	fontdesc->ascent = pdf_dict_get_real_default(ctx, dict, PDF_NAME(Ascent), fontdesc->ascent);
+	fontdesc->descent = pdf_dict_get_real_default(ctx, dict, PDF_NAME(Descent), fontdesc->descent);
+	/* Allow for naughty producers that give us a positive descent. */
+	if (fontdesc->descent > 0)
+		fontdesc->descent = -fontdesc->descent;
+
+	if (fontdesc->ascent <= 0 || fontdesc->ascent > FZ_MAX_TRUSTWORTHY_ASCENT * 1000 ||
+		fontdesc->descent < FZ_MAX_TRUSTWORTHY_DESCENT * 1000)
+	{
+		fz_warn(ctx, "bogus font ascent/descent values (%g / %g)", fontdesc->ascent, fontdesc->descent);
+		fontdesc->font->ascender = 0.8f;
+		fontdesc->font->descender = -0.2f;
+		fontdesc->font->ascdesc_src = FZ_ASCDESC_DEFAULT;
+	}
+	else
+	{
 		fontdesc->font->ascender = fontdesc->ascent / 1000.0f;
-	if (fontdesc->descent)
 		fontdesc->font->descender = fontdesc->descent / 1000.0f;
+		fontdesc->font->ascdesc_src = FZ_ASCDESC_FROM_FONT;
+	}
 }
 
 static void

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -205,7 +205,7 @@ pdf_page *pdf_page_from_fz_page(fz_context *ctx, fz_page *ptr);
 /*
 	Get a pdf_document handle from an fz_document handle.
 
-	This is superfically similar to pdf_document_from_fz_document
+	This is superficially similar to pdf_document_from_fz_document
 	(and the older pdf_specifics).
 
 	For fz_documents that are actually pdf_documents, this will return
@@ -424,6 +424,7 @@ struct pdf_document
 
 	int version;
 	int is_fdf;
+	int bias;
 	int64_t startxref;
 	int64_t file_size;
 	pdf_crypt *crypt;
@@ -494,8 +495,6 @@ struct pdf_document
 	int hint_obj_offsets_max;
 	int64_t *hint_obj_offsets;
 
-	int resources_localised;
-
 	pdf_lexbuf_large lexbuf;
 
 	pdf_js *js;
@@ -514,6 +513,7 @@ struct pdf_document
 
 	struct {
 		fz_hash_table *fonts;
+		fz_hash_table *colorspaces;
 	} resources;
 
 	int orphans_max;
@@ -576,7 +576,7 @@ pdf_obj *pdf_graft_mapped_object(fz_context *ctx, pdf_graft_map *map, pdf_obj *o
 	destination document of the graft. This involves a deep copy
 	of the objects in question.
 
-	map: A map targetted at the document into which the page should
+	map: A map targeted at the document into which the page should
 	be inserted.
 
 	page_to: The position within the destination document at which
@@ -720,7 +720,7 @@ typedef struct
 	int do_incremental; /* Write just the changed objects. */
 	int do_pretty; /* Pretty-print dictionaries and arrays. */
 	int do_ascii; /* ASCII hex encode binary streams. */
-	int do_compress; /* Compress streams. */
+	int do_compress; /* Compress streams. 1 zlib, 2 brotli */
 	int do_compress_images; /* Compress (or leave compressed) image streams. */
 	int do_compress_fonts; /* Compress (or leave compressed) font streams. */
 	int do_decompress; /* Decompress streams (except when compressing images/fonts). */
@@ -738,6 +738,7 @@ typedef struct
 	int do_preserve_metadata; /* When cleaning, preserve metadata unchanged. */
 	int do_use_objstms; /* Use objstms if possible */
 	int compression_effort; /* 0 for default. 100 = max, 1 = min. */
+	int do_labels; /* Add labels to each object showing how it can be reached from the Root. */
 } pdf_write_options;
 
 FZ_DATA extern const pdf_write_options pdf_default_write_options;
@@ -869,5 +870,33 @@ int pdf_count_page_associated_files(fz_context *ctx, pdf_page *page);
 	Indexed from 0 to count-1.
 */
 pdf_obj *pdf_page_associated_file(fz_context *ctx, pdf_page *page, int idx);
+
+
+/*
+	A structure used to create "labels" for numbered objects.
+	The labels are different ways to reach an object from the trailer
+	and page tree, using the "mutool show" syntax.
+
+	Note: Paths involving "Parent", "P", "Prev", and "Last" are ignored,
+	as these are used for cycles in the structures which we don't care about
+	labeling.
+*/
+typedef struct pdf_object_labels pdf_object_labels;
+
+/*
+	Scan the entire object structure to create a directed graph
+	of indirect numbered objects and how they can reach each other.
+*/
+pdf_object_labels *pdf_load_object_labels(fz_context *ctx, pdf_document *doc);
+
+void pdf_drop_object_labels(fz_context *ctx, pdf_object_labels *g);
+
+/*
+	Enumerate all the possible labels for a given numbered object.
+	The callback is invoked with a path for each possible way the object
+	can be reached from the PDF trailer.
+*/
+typedef void (pdf_label_object_fn)(fz_context *ctx, void *arg, const char *label);
+void pdf_label_object(fz_context *ctx, pdf_object_labels *g, int num, pdf_label_object_fn *callback, void *arg);
 
 #endif

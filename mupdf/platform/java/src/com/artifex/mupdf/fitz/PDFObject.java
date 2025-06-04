@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -81,6 +81,16 @@ public class PDFObject implements Iterable<PDFObject>
 
 	public native byte[] readStream();
 	public native byte[] readRawStream();
+	public Buffer readStreamBuffer() {
+		Buffer b = new Buffer();
+		b.writeBytes(readStream());
+		return b;
+	}
+	public Buffer readRawStreamBuffer() {
+		Buffer b = new Buffer();
+		b.writeBytes(readRawStream());
+		return b;
+	}
 
 	public native void writeObject(PDFObject obj);
 	private native void writeStreamBuffer(Buffer buf);
@@ -317,5 +327,5 @@ public class PDFObject implements Iterable<PDFObject>
 		}
 	}
 
-	public native boolean isFilespec();
+	public native boolean isFileSpec();
 }

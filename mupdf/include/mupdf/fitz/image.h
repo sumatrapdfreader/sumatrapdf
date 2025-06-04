@@ -339,6 +339,8 @@ struct fz_image
 	unsigned int use_decode:1;
 	unsigned int decoded:1;
 	unsigned int scalable:1;
+	unsigned int intent:2;
+	unsigned int has_intent:1;
 	uint8_t orientation;
 	fz_image *mask;
 	int xres; /* As given in the image, not necessarily as rendered */

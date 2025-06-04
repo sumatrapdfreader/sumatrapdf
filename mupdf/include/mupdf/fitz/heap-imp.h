@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -21,7 +21,7 @@
 // CA 94129, USA, for further information.
 
 /* This file has preprocessor magic in it to instantiate both
- * protoypes and implementations for heap sorting structures
+ * prototypes and implementations for heap sorting structures
  * of various different types. Effectively, it's templating for
  * C.
  *
@@ -31,7 +31,7 @@
  */
 
 #ifndef MUPDF_FITZ_HEAP_I_KNOW_WHAT_IM_DOING
-#error Do not include heap-imp.h unless you know what youre doing
+#error Do not include heap-imp.h unless you know what you are doing
 #endif
 
 #define HEAP_XCAT(A,B) A##B
@@ -156,8 +156,35 @@ void HEAP_CAT(HEAP_TYPE_NAME,_uniq)(fz_context *ctx, HEAP_TYPE_NAME *heap
 }
 #endif
 
+#ifdef HEAP_DUMP
+void HEAP_CAT(HEAP_TYPE_NAME,_dump)(fz_context *ctx, fz_output *out, HEAP_TYPE_NAME *heap)
+#ifndef MUPDF_FITZ_HEAP_IMPLEMENT
+;
+#else
+{
+	int n = heap->len;
+	int i;
+	HEAP_CONTAINER_TYPE *h = heap->heap;
+
+	fz_write_printf(ctx, out, "Heap %p len %d:\n", heap, n);
+	for (i = 0; i < n; i++)
+		HEAP_DUMP(ctx, out, i, &h[i]);
+}
+#endif
+
+void HEAP_CAT(HEAP_TYPE_NAME,_debug)(fz_context *ctx, HEAP_TYPE_NAME *heap)
+#ifndef MUPDF_FITZ_HEAP_IMPLEMENT
+;
+#else
+{
+	HEAP_CAT(HEAP_TYPE_NAME,_dump)(ctx, fz_stddbg(ctx), heap);
+}
+#endif
+#endif
+
 #undef HEAP_CONTAINER_TYPE
 #undef HEAP_TYPE_NAME
 #undef HEAP_CMP
 #undef HEAP_XCAT
 #undef HEAP_CAT
+#undef HEAP_DUMP

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -313,9 +313,15 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, 
 			else if (pdf_name_eq(ctx, PDF_NAME(V2), obj))
 				cf->method = PDF_CRYPT_RC4;
 			else if (pdf_name_eq(ctx, PDF_NAME(AESV2), obj))
+			{
 				cf->method = PDF_CRYPT_AESV2;
+				cf->length = 128;
+			}
 			else if (pdf_name_eq(ctx, PDF_NAME(AESV3), obj))
+			{
 				cf->method = PDF_CRYPT_AESV3;
+				cf->length = 256;
+			}
 			else
 				fz_warn(ctx, "unknown encryption method: %s", pdf_to_name(ctx, obj));
 		}
@@ -1068,7 +1074,7 @@ pdf_compute_object_key(pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen,
 
 	/* Encryption method version 0 is undocumented, but a lucky
 	   guess revealed that all streams/strings in those PDFs are
-	   encrypted using the same 40 bit file enryption key using RC4. */
+	   encrypted using the same 40 bit file encryption key using RC4. */
 	if (crypt->v == 0 || cf->method == PDF_CRYPT_AESV3)
 	{
 		memcpy(key, crypt->key, key_len);

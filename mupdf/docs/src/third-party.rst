@@ -1,15 +1,14 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-Third Party Libraries Used by :title:`MuPDF`
+Third Party Libraries
 ==================================================
 
 These are the third party libraries used by :title:`MuPDF`.
@@ -26,7 +25,7 @@ These are the third party libraries used by :title:`MuPDF`.
      -
      -
    * - freetype_
-     - 2.13.0
+     - 2.13.3
      - Font scaling and rendering
      - BSD-style
    * - harfbuzz_
@@ -42,17 +41,21 @@ These are the third party libraries used by :title:`MuPDF`.
      - Color management
      - MIT-style
    * - openjpeg_
-     - 2.5.0
+     - 2.5.3
      - JPEG 2000 decoding
      - BSD-style
    * - zlib_
-     - 1.2.13
+     - 1.3.1
      - Deflate compression
      - zlib License
    * - `gumbo-parser`_
      - 0.10.1
      - HTML5 parser
      - Apache 2.0
+   * - `brotli`_
+     - 1.1.0 with upstream and local patches
+     - Brotli compression
+     - MIT-style
    * - **Optional**
      -
      -
@@ -74,9 +77,17 @@ These are the third party libraries used by :title:`MuPDF`.
      - OCR
      - Apache 2.0
    * - Leptonica_
-     - 1.84.1 with patches
+     - 1.85.0 with patches
      - Tesseract dependency
      - BSD-style
+   * - Zint_
+     - 2.13.0.9
+     - Zxing-cpp dependency
+     - BSD-style
+   * - Zxing-cpp_
+     - 2.3.0 with patches
+     - Barcode decoding/encoding
+     - Apache 2.0
 
 
 
@@ -86,7 +97,6 @@ These are the third party libraries used by :title:`MuPDF`.
 
 
 
-.. include:: footer.rst
 
 
 
@@ -99,6 +109,7 @@ These are the third party libraries used by :title:`MuPDF`.
 .. _openjpeg: http://www.openjpeg.org/
 .. _zlib: http://www.zlib.net/
 .. _gumbo-parser: https://github.com/google/gumbo-parser
+.. _brotli: https://brotli.org/
 .. _FreeGLUT: http://freeglut.sourceforge.net/
 .. _curl: http://curl.haxx.se/
 .. _JPEG-XR reference: https://www.itu.int/rec/T-REC-T.835/
@@ -106,3 +117,5 @@ These are the third party libraries used by :title:`MuPDF`.
 .. _Leptonica: https://github.com/DanBloomberg/leptonica
 .. _jbig2dec: https://jbig2dec.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link
 .. _MuJS: https://mujs.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link
+.. _Zint: https://www.zint.org.uk/
+.. _Zxing-cpp: https://github.com/zxing-cpp/zxing-cpp

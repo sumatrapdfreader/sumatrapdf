@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1122,7 +1122,7 @@ fz_dash_lineto(fz_context *ctx, struct sctx *s, float bx, float by, int from_bez
 	float total, used, ratio, tail;
 	float ax, ay;
 	float mx, my;
-	float old_bx, old_by;
+	float old_bx = 0, old_by = 0;
 	int n;
 	int dash_cap = s->stroke->dash_cap;
 

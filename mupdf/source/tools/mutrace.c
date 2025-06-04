@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -144,11 +144,7 @@ int mutrace_main(int argc, char **argv)
 	{
 		fz_register_document_handlers(ctx);
 		if (layout_css)
-		{
-			fz_buffer *buf = fz_read_file(ctx, layout_css);
-			fz_set_user_css(ctx, fz_string_from_buffer(ctx, buf));
-			fz_drop_buffer(ctx, buf);
-		}
+			fz_load_user_css(ctx, layout_css);
 		fz_set_use_document_css(ctx, layout_use_doc_css);
 	}
 	fz_catch(ctx)

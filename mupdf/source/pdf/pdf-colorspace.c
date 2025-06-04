@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -534,3 +534,122 @@ pdf_document_output_intent(fz_context *ctx, pdf_document *doc)
 }
 
 #endif
+
+static pdf_obj *
+pdf_add_indexed_colorspace(fz_context *ctx, pdf_document *doc, fz_colorspace *cs)
+{
+	fz_colorspace *basecs;
+	unsigned char *lookup = NULL;
+	int high = 0;
+	int basen;
+	pdf_obj *obj;
+
+	basecs = cs->u.indexed.base;
+	high = cs->u.indexed.high;
+	lookup = cs->u.indexed.lookup;
+	basen = basecs->n;
+
+	if (fz_colorspace_is_indexed(ctx, basecs))
+		fz_throw(ctx, FZ_ERROR_FORMAT, "indexed colorspaces must not have an indexed colorspace as base");
+
+	obj = pdf_add_new_array(ctx, doc, 4);
+	fz_try(ctx)
+	{
+		pdf_array_push(ctx, obj, PDF_NAME(Indexed));
+		pdf_array_push(ctx, obj, pdf_add_colorspace(ctx, doc, basecs));
+		pdf_array_push_int(ctx, obj, high);
+		pdf_array_push_string(ctx, obj, (char *) lookup, (size_t)basen * (high + 1));
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(ctx, obj);
+		fz_rethrow(ctx);
+	}
+	return obj;
+}
+
+static pdf_obj *
+pdf_add_icc_colorspace(fz_context *ctx, pdf_document *doc, fz_colorspace *cs)
+{
+#if FZ_ENABLE_ICC
+	pdf_obj *obj = NULL;
+	pdf_obj *stm = NULL;
+	pdf_obj *base;
+	pdf_obj *ref;
+	pdf_colorspace_resource_key key;
+
+	fz_var(obj);
+	fz_var(stm);
+
+	obj = pdf_find_colorspace_resource(ctx, doc, cs, &key);
+	if (obj)
+		return obj;
+
+	switch (fz_colorspace_type(ctx, cs))
+	{
+	default:
+		fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "only Gray, RGB, and CMYK ICC colorspaces supported");
+	case FZ_COLORSPACE_GRAY:
+		base = PDF_NAME(DeviceGray);
+		break;
+	case FZ_COLORSPACE_RGB:
+		base = PDF_NAME(DeviceRGB);
+		break;
+	case FZ_COLORSPACE_CMYK:
+		base = PDF_NAME(DeviceCMYK);
+		break;
+	case FZ_COLORSPACE_LAB:
+		base = PDF_NAME(Lab);
+		break;
+	}
+
+	fz_try(ctx)
+	{
+		stm = pdf_add_stream(ctx, doc, cs->u.icc.buffer, NULL, 0);
+		pdf_dict_put_int(ctx, stm, PDF_NAME(N), cs->n);
+		pdf_dict_put(ctx, stm, PDF_NAME(Alternate), base);
+
+		obj = pdf_add_new_array(ctx, doc, 2);
+		pdf_array_push(ctx, obj, PDF_NAME(ICCBased));
+		pdf_array_push(ctx, obj, stm);
+
+		ref = pdf_insert_colorspace_resource(ctx, doc, &key, obj);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(ctx, obj);
+		pdf_drop_obj(ctx, stm);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return ref;
+#else
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "ICC support disabled");
+#endif
+}
+
+pdf_obj *
+pdf_add_colorspace(fz_context *ctx, pdf_document *doc, fz_colorspace *cs)
+{
+	if (fz_colorspace_is_indexed(ctx, cs))
+		return pdf_add_indexed_colorspace(ctx, doc, cs);
+
+	if (fz_colorspace_is_icc(ctx, cs))
+		return pdf_add_icc_colorspace(ctx, doc, cs);
+
+	switch (fz_colorspace_type(ctx, cs))
+	{
+	case FZ_COLORSPACE_NONE:
+	case FZ_COLORSPACE_GRAY:
+		return PDF_NAME(DeviceGray);
+	case FZ_COLORSPACE_RGB:
+		return PDF_NAME(DeviceRGB);
+	case FZ_COLORSPACE_CMYK:
+		return PDF_NAME(DeviceCMYK);
+	case FZ_COLORSPACE_LAB:
+		return PDF_NAME(Lab);
+	default:
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "only Gray, RGB, and CMYK colorspaces supported");
+		break;
+	}
+}

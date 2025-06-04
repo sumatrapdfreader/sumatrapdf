@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2024 Artifex Software, Inc.
+// Copyright (C) 2022-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -251,7 +251,7 @@ fz_xml *fz_dom_create_element(fz_context *ctx, fz_xml *dom, const char *tag)
 		return NULL;
 
 	/* We make a new node, unconnected to anything else.
-	 * up will stil point to the dom root though. */
+	 * up will still point to the dom root though. */
 	return fz_new_dom_node(ctx, dom, tag);
 }
 

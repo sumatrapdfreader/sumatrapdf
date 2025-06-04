@@ -1,0 +1,1122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\aztec">
+      <UniqueIdentifier>{f3072269-3bc9-43da-84a0-0e3a5b0d0ff7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\datamatrix">
+      <UniqueIdentifier>{b8a772cf-735a-467d-89b5-7a1b723eebd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libzint">
+      <UniqueIdentifier>{aeaf329d-058e-4bbb-9d03-a45d9de69790}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libzueci">
+      <UniqueIdentifier>{9a1099dd-45e2-40bc-a008-8d4a8003d23f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\maxicode">
+      <UniqueIdentifier>{71764196-5675-489a-ac2b-960d2babee9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\oned">
+      <UniqueIdentifier>{a4281922-af83-4e1d-8cc3-4d5aa6aa0215}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pdf147">
+      <UniqueIdentifier>{4176f1a6-e2c7-45e5-a85b-b7f6ab09aece}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\qrcode">
+      <UniqueIdentifier>{71ca9dd8-ff59-4192-b797-02acc3da879b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\Barcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\BarcodeFormat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\BinaryBitmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\BitArray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\BitMatrix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\BitMatrixIO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\BitSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\CharacterSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ConcentricFinder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\Content.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\DecodeHints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\Error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\GenericGF.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\GenericGFPoly.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\GlobalHistogramBinarizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\GridSampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\GTIN.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\HRI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\HybridBinarizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\MultiFormatReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\MultiFormatWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\PerspectiveTransform.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ReadBarcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ReedSolomonDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ReedSolomonEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ResultPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\TextDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\TextEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\TextUtfEncoding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\Utf.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\WhiteRectDetector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\WriteBarcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ZXingC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\ZXingCpp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZDecoder.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZDetector.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZEncoder.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZHighLevelEncoder.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZReader.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZToken.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZWriter.cpp">
+      <Filter>Source Files\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMBitLayout.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMDataBlock.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMDecoder.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMDetector.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMECEncoder.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMHighLevelEncoder.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMReader.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMSymbolInfo.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMVersion.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMWriter.cpp">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci.c">
+      <Filter>Source Files\libzueci</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\maxicode\MCBitMatrixParser.cpp">
+      <Filter>Source Files\maxicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\maxicode\MCDecoder.cpp">
+      <Filter>Source Files\maxicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\maxicode\MCReader.cpp">
+      <Filter>Source Files\maxicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRBitMatrixParser.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRCodecMode.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDataBlock.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDecoder.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDetector.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QREncoder.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRErrorCorrectionLevel.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRFormatInformation.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRMaskUtil.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRMatrixUtil.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRReader.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRVersion.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRWriter.cpp">
+      <Filter>Source Files\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFBarcodeValue.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFBoundingBox.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFCodewordDecoder.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDecoder.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDetectionResult.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDetectionResultColumn.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDetector.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFEncoder.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFHighLevelEncoder.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFModulusGF.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFModulusPoly.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFReader.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFScanningDecoder.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFWriter.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\ZXBigInteger.cpp">
+      <Filter>Source Files\pdf147</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCodabarReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCodabarWriter.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode39Reader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode39Writer.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode93Reader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode93Writer.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode128Patterns.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode128Reader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode128Writer.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarCommon.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarExpandedBitDecoder.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarExpandedReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarLimitedReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDXFilmEdgeReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODEAN8Writer.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODEAN13Writer.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODITFReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODITFWriter.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODMultiUPCEANReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODReader.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODUPCAWriter.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODUPCEANCommon.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODUPCEWriter.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODWriterHelper.cpp">
+      <Filter>Source Files\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\2of5.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\auspost.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\aztec.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\bc412.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\bmp.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\codablock.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\code.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\code1.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\code16k.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\code49.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\code128.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\common.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\composite.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\dllversion.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\dmatrix.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\dotcode.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\dxfilmedge.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\eci.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\emf.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\filemem.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\general_field.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\gif.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\gridmtx.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\gs1.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\hanxin.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\imail.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\large.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\library.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\mailmark.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\maxicode.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\medical.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\output.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\pcx.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\pdf417.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\plessey.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\png.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\postal.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\ps.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\qr.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\raster.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\reedsol.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\rss.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\svg.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\telepen.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\tif.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\ultra.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\upcean.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zint\backend\vector.c">
+      <Filter>Source Files\libzint</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\scripts\zxing-cpp\eci_dedup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Barcode.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BarcodeFormat.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BinaryBitmap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BitArray.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BitHacks.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BitMatrix.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BitMatrixCursor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BitMatrixIO.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\BitSource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ByteArray.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ByteMatrix.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\CharacterSet.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ConcentricFinder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Content.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\DecodeHints.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\DecoderResult.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\DetectorResult.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ECI.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Error.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Flags.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Generator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\GenericGF.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\GenericGFPoly.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\GlobalHistogramBinarizer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\GridSampler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\GTIN.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\HRI.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\HybridBinarizer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ImageView.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\LogMatrix.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Matrix.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\MultiFormatReader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\MultiFormatWriter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Pattern.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\PerspectiveTransform.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Point.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Quadrilateral.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Range.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ReadBarcode.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Reader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ReaderOptions.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ReedSolomonDecoder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ReedSolomonEncoder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\RegressionLine.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Result.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ResultPoint.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Scope.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\StructuredAppend.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\TextDecoder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\TextEncoder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\TextUtfEncoding.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ThresholdBinarizer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\TritMatrix.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\Utf.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\WhiteRectDetector.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\WriteBarcode.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ZXAlgorithms.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ZXConfig.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ZXingC.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ZXingCpp.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ZXTestSupport.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\ZXVersion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZDecoder.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZDetector.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZDetectorResult.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZEncoder.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZEncodingState.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZHighLevelEncoder.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZReader.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZToken.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\aztec\AZWriter.h">
+      <Filter>Source Files\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMBitLayout.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMDataBlock.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMDecoder.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMDetector.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMECEncoder.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMEncoderContext.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMHighLevelEncoder.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMReader.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMSymbolInfo.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMSymbolShape.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMVersion.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\datamatrix\DMWriter.h">
+      <Filter>Source Files\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_big5.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_common.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_gb2312.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_gb18030.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_gbk.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_ksx1001.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_sb.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\libzueci\zueci_sjis.h">
+      <Filter>Source Files\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\maxicode\MCBitMatrixParser.h">
+      <Filter>Source Files\maxicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\maxicode\MCDecoder.h">
+      <Filter>Source Files\maxicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\maxicode\MCReader.h">
+      <Filter>Source Files\maxicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRBitMatrixParser.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRCodecMode.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDataBlock.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDataMask.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDecoder.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRDetector.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRECB.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QREncoder.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QREncodeResult.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRErrorCorrectionLevel.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRFormatInformation.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRMaskUtil.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRMatrixUtil.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRReader.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRVersion.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\qrcode\QRWriter.h">
+      <Filter>Source Files\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\CustomData.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFBarcodeMetadata.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFBarcodeValue.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFBoundingBox.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFCodeword.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFCodewordDecoder.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFCompaction.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDecoder.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDecoderResultExtra.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDetectionResult.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDetectionResultColumn.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFDetector.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFEncoder.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFHighLevelEncoder.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFModulusGF.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFModulusPoly.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFReader.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFScanningDecoder.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\PDFWriter.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\ZXBigInteger.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\pdf417\ZXNullable.h">
+      <Filter>Source Files\pdf147</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCodabarReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCodabarWriter.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode39Reader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode39Writer.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode93Reader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode93Writer.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode128Patterns.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode128Reader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODCode128Writer.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarCommon.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarExpandedBitDecoder.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarExpandedReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarLimitedReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDataBarReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODDXFilmEdgeReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODEAN8Writer.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODEAN13Writer.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODITFReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODITFWriter.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODMultiUPCEANReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODRowReader.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODUPCAWriter.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODUPCEANCommon.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODUPCEWriter.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zxing-cpp\core\src\oned\ODWriterHelper.h">
+      <Filter>Source Files\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\aztec.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\big5.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\bmp.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\channel_precalcs.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\code1.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\code49.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\code128.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\common.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\composite.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\dmatrix.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\dmatrix_trace.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\eci.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\eci_sb.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\emf.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\filemem.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\gb2312.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\gb18030.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\gbk.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\general_field.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\gridmtx.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\gs1.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\gs1_lint.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\hanxin.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\iso3166.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\iso4217.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\ksx1001.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\large.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\maxicode.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\output.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\pcx.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\pdf417.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\pdf417_tabs.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\pdf417_trace.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\qr.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\raster_font.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\reedsol.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\reedsol_logs.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\rss.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\sjis.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\tif.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\tif_lzw.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\zfiletypes.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\zint.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\zint\backend\zintconfig.h">
+      <Filter>Source Files\libzint</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,3 +1,143 @@
+List of changes in MuPDF 1.26
+
+	Removed PDF linearization support:
+
+		See https://artifex.com/blog/mupdf-removes-linearisation for
+		more information.
+
+	Object labels:
+
+		Write a comment before numbered objects listing the possible
+		ways it can be reached from the document root.
+
+		Enable with mutool show -L, mutool clean -L, and PDF write
+		option "labels".
+
+		Library functions pdf_load_object_labels and pdf_label_object.
+
+	Brotli compression:
+
+		Experimental feature from latest PDF specification proposal.
+
+	Optional barcode support:
+
+		Build with "make barcode=yes".
+		Uses zxing-cpp (zebra crossing) C++ as a third party dependency.
+		Adds mutool barcode sub-command.
+
+		To detect barcodes in a PDF:
+			mutool barcode -d barcode.pdf
+
+		To create barcode images as PNG file:
+			mutool barcode -c -o barcode.png -F qrcode "Hello, world!"
+
+		Library functions fz_new_barcode_image and
+		fz_decode_barcode_from_pixmap.
+
+	New Structured Text extraction passes:
+
+		Paragraph Breaking: Detect paragraphs from first-line
+		indentation and other heuristics.
+
+		Table Hunt: Scan text and try to assemble it into tables with
+		rows and columns.
+
+	New Structured Text extraction options:
+		- allow reading raw character or glyph index when unicode is not available
+		- collect styles to detect fake bold, underlines, strike-through, etc.
+		- clip-rect to only extract text inside the specified area
+		- accurate-ascenders to measure ascender data from font outline
+		- accurate-side-bearings to measure glyph widths from font outline
+
+	CSV output format (using "Table Hunt" pass on input document).
+
+	Core library additions:
+
+		JSON parser, object model, and printer.
+
+		Activity logger API.
+
+		Support "overlong null" characters in utf-8 (using "\xC0\x80"
+		to represent \x00 in C strings, without being misconstrued as a
+		string terminator).
+
+	Build system changes:
+
+		Cleaned up Makefile cruft and refactored how shared libraries
+		are built.
+
+		Removed bit-rotted sections of the Makefile that have not been
+		maintained and no longer work (primarily iOS and MinGW).
+
+		Don't build example tools muraster and mupdf-x11-curl by
+		default. These examples can be built with "make extra-apps".
+
+	Miscellaneous improvements and new behavior:
+
+		Include more data in structured text XML dumps.
+
+		Ignore junk at the start of a PDF file (such as PJL commands)
+		without needing to perform a full repair pass.
+
+		Support non-latin/greek/cyrillic/CJK languages in annotations
+		and widgets (requires HTML layout engine).
+
+		Use system font callback to look for missing fonts in HTML
+		layout.
+
+		Support CSS text fill and stroke properties:
+			-webkit-text-fill-color
+			-webkit-stroke-color
+			-webkit-stroke-width
+
+		Updated unicode line breaking (UAX 14) and upper/lowercase
+		tables to Unicode 16.0.
+
+	Bug fixes and stability improvements:
+
+		Many improvements to font subsetting.
+
+		Fixed several bugs with undo/redo journal affecting the cache
+		of open pages.
+
+		Improved calculation of font ascender/descender values when
+		presented with bad values from font files or PDF files.
+
+		Improved logic when repairing broken PDF files.
+
+		Improve Type3 font rendering compliance with specification in
+		some edge cases.
+
+	Command line tool additional options:
+
+		mutool poster: new option -m (margin)
+
+		mutool show: new option -r (force repair)
+
+		mutool clean: --structure=keep to keep tagged content when
+		subsetting pages. WARNING: This option will prevent the file
+		from shrinking, because we must still keep all the objects from
+		deleted pages around.
+
+		mutool clean: -t option will always write compact objects
+		mutool clean: -tt option will always pretty-print objects
+
+	Useful new C functions and fields:
+		- fz_stext_char field "color" renamed to "argb" to include alpha channel.
+		- fz_outline_item: new "flags" and r,g,b color fields.
+		- pdf_clip_page to filter page contents.
+		- pdf_add_colorspace to create ICC colorspace object.
+		- fz_load_user_css to load and set user css in one go.
+		- fz_new_bitmap_from_image
+		- fz_new_buffer_from_image_as_pbm
+		- fz_new_buffer_from_pixmap_as_pbm
+		- fz_strverscmp
+		- fz_strcasestr
+		- fz_format_string %> to output a hex encoded string
+		- fz_format_string %q and %Q write surrogate pairs
+
+	Java/JNI and mutool run JavaScript bindings have many new functions and features.
+
 List of changes in MuPDF 1.25
 
 	New logo!

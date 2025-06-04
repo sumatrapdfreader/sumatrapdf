@@ -1,10 +1,9 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -34,6 +33,9 @@ The `poster` command reads the input PDF file and for each page chops it up into
    `-p` password
       Use the specified password if the file is encrypted.
 
+   `-m` margin
+      Set the margin (overlap) between pages in points or percent.
+
    `-x` x decimation factor
       Pieces to horizontally divide each page into.
 
@@ -58,7 +60,6 @@ The `poster` command reads the input PDF file and for each page chops it up into
 
 
 
-.. include:: footer.rst
 
 
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -273,7 +273,7 @@ pdf_signature_error pdf_check_widget_certificate(fz_context *ctx, pdf_pkcs7_veri
 void pdf_clear_signature(fz_context *ctx, pdf_annot *widget);
 
 /*
-	Sign a signature field, while assigning it an arbitrary apparance determined by a display list.
+	Sign a signature field, while assigning it an arbitrary appearance determined by a display list.
 	The function pdf_signature_appearance can generate a variety of common signature appearances.
 */
 void pdf_sign_signature_with_appearance(fz_context *ctx, pdf_annot *widget, pdf_pkcs7_signer *signer, int64_t date, fz_display_list *disp_list);

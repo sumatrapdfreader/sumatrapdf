@@ -1,4 +1,4 @@
-.TH MUPDF 1 "Jan 12, 2021"
+.TH MUPDF 1 "Apr 9, 2025"
 .\" Please adjust this date whenever revising the manpage.
 .\" no hyphenation
 .nh
@@ -31,6 +31,12 @@ and
 A description of each of the supported options is included below.
 
 .TP
+.B \-b box-name
+Use the given page box (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)
+.TP
+.B \-c profile-filename
+Set the display ICC profile to the one in the named file.
+.TP
 .B \-p password
 Uses the given password to open an encrypted PDF file.
 The password is tried both as user and owner password.
@@ -44,21 +50,40 @@ Changes the anti-aliasing quality, specified as a number of bits between 0
 (off) and 8 (best).
 The default value is 8.
 .TP
-.B \-C RRGGBB
-Sets the full-page tint using hexadecimal color syntax.
-The default value is FFFAF0.
+.B \-B RRGGBB
+Sets the full-page black tint using hexadecimal color syntax.
+The default value is 303030.
 .TP
-.B \-W width
-Page width in points for EPUB layout.
+.B \-C RRGGBB
+Sets the full-page white tint using hexadecimal color syntax.
+The default value is FFFFF0.
 .TP
 .B \-H height
 Page height in points for EPUB layout.
+.TP
+.B \-I
+Invert colors.
+.TP
+.B \-J
+Disable JavaScripts in PDF forms.
+.TP
+.B \-R extraction-options
+Enable reflow and set the text extraction options.
 .TP
 .B \-S size
 Font size in points for EPUB layout.
 .TP
 .B \-U CSS-file
 User style sheet for EPUB layout.
+.TP
+.B \-W width
+Page width in points for EPUB layout.
+.TP
+.B \-X
+Disable document styles fro EPUB layout.
+.TP
+.B \-Y factor
+Set the UI scaling factor.
 
 .SH MOUSE BEHAVIOR
 
@@ -117,7 +142,10 @@ Mark current page for snap back.
 Up to 256 pages can be marked.
 .TP
 .B t
-Pop back to the latest mark.
+Go backward one step in mark history.
+.TP
+.B T
+Go forward one step in mark history.
 .TP
 .B [0\(en9]m
 Save the current page number in the numbered register.
@@ -167,6 +195,12 @@ Find the next/previous search result.
 .PP
 Miscellaneous:
 .TP
+.B F1
+Show key bindings help.
+.TP
+.B Escape
+Stop searching and/or remove focus from annotation/widget.
+.TP
 .B <, >
 Increase/decrease EPUB/XHTML font size.
 .TP
@@ -174,10 +208,10 @@ Increase/decrease EPUB/XHTML font size.
 Reload file.
 .TP
 .B p
-Toggle presentation mode.
+Toggle presentation mode. (mupdf-x11 only)
 .TP
 .B c
-Toggle between color and grayscale rendering.
+Toggle between color and grayscale rendering. (mupdf-x11 only)
 .TP
 .B C
 Toggle full-page color tinting.
@@ -200,6 +234,37 @@ Set bit of anti-aliasing to use. The default is 8.
 .B P
 Show page number and total number of pages.
 .TP
+.B i
+Show dialog box with informationa about the openend document.
+.TP
+.B B
+Change used page box. (MediaBox, CropBox, BleedBox, TrimBox, or ArtBox)
+The active page box is mentioned in the information dialog box.
+.TP
+.B o
+Show/hide document outline panel.
+.TP
+.B a
+Show/hide annotation panel.
+.TP
+.B R
+Show/hide redaction panel.
+.TP
+.B u
+Show/hide undo/redo panel.
+.TP
+.B Y
+Show/hide layers list.
+.TP
+.B o
+Start/stop highlighting links.
+.TP
+.B F
+Start/stop highlighting form widgets.
+.TP
+.B ` F12
+Show JS console.
+.TP
 .B S
 Save updated document file.
 .TP
@@ -217,4 +282,4 @@ file to be reloaded automatically, for use in e.g.\& build scripts.
 .BR mutool (1).
 
 .SH AUTHOR
-MuPDF is Copyright 2006\(en2021 Artifex Software, Inc.
+MuPDF is Copyright 2006\(en2025 Artifex Software, Inc.

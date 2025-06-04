@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -90,11 +90,24 @@
 /* #define FZ_ENABLE_JPX 1 */
 
 /**
+	Choose whether to enable Brotli compression support.
+	By default, it is enabled.
+*/
+/* #define FZ_ENABLE_BROTLI 1 */
+
+/**
 	Choose whether to enable JavaScript.
 	By default JavaScript is enabled both for mutool and PDF
 	interactivity.
 */
 /* #define FZ_ENABLE_JS 1 */
+
+/**
+	Choose whether to enable barcode functionality.
+	It is enabled by default, unless disabled by the build
+	system.
+*/
+/* #define FZ_ENABLE_BARCODE 1 */
 
 /**
 	Choose which fonts to include.
@@ -228,6 +241,10 @@
 #define FZ_ENABLE_JPX 1
 #endif /* FZ_ENABLE_JPX */
 
+#ifndef FZ_ENABLE_BROTLI
+#define FZ_ENABLE_BROTLI 1
+#endif /* FZ_ENABLE_BROTLI */
+
 #ifndef FZ_ENABLE_JS
 #define FZ_ENABLE_JS 1
 #endif /* FZ_ENABLE_JS */
@@ -275,6 +292,10 @@
 #ifndef OCR_DISABLED
 #define OCR_DISABLED
 #endif
+#endif
+
+#if !defined(FZ_ENABLE_BARCODE)
+#define FZ_ENABLE_BARCODE 1
 #endif
 
 #endif /* FZ_CONFIG_H */

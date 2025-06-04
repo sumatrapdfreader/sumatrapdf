@@ -1,7 +1,6 @@
 .. Copyright (C) 2001-2024 Artifex Software, Inc.
 .. All Rights Reserved.
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -10,7 +9,7 @@
 
 .. _How_To_Guide_Coordinate_System:
 
-The **MuPDF** Coordinate System
+Coordinate Systems
 =================================
 
 Origin Point, Point Size and Y-Axis
@@ -20,7 +19,7 @@ In **PDF**, the origin (for example: `(0, 0)`) of a page is located at its **bot
 
 
 
-.. image:: images/img-coordinate-space.png
+.. image:: images/img-coordinate-space.webp
 
 
 .. note::
@@ -55,7 +54,7 @@ For example:
 
 Results in:
 
-.. image:: images/200x200-rect.png
+.. image:: images/200x200-rect.webp
 
 
 
@@ -86,6 +85,3 @@ Then in this case we are working in the **PDF** coordinate space with the origin
         Q                               % Restore graphics state
 
     For more see `page 337 of the Adobe PDF Reference Guide <https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/pdfreference1.7old.pdf>`_.
-
-
-.. include:: footer.rst

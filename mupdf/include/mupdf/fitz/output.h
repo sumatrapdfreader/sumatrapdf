@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -369,6 +369,7 @@ void fz_write_stream(fz_context *ctx, fz_output *out, fz_stream *in);
 	%l{d,u,x,X} indicates that the values are int64_t.
 	%z{d,u,x,X} indicates that the value is a size_t.
 	%< outputs a quoted (utf8) string (for XML).
+	%> outputs a hex string for a zero terminated string of bytes.
 
 	user: An opaque pointer that is passed to the emit function.
 
@@ -424,5 +425,24 @@ fz_output *fz_new_ascii85_output(fz_context *ctx, fz_output *chain);
 fz_output *fz_new_rle_output(fz_context *ctx, fz_output *chain);
 fz_output *fz_new_arc4_output(fz_context *ctx, fz_output *chain, unsigned char *key, size_t keylen);
 fz_output *fz_new_deflate_output(fz_context *ctx, fz_output *chain, int effort, int raw);
+
+/*
+	Return whether a char is representable in an XML string.
+*/
+int fz_is_valid_xml_char(int c);
+
+/*
+	Return a char mapped into the ranges representable by XML.
+	Any unrepresentable char becomes the unicode replacement
+	char (0xFFFD).
+*/
+int
+fz_range_limit_xml_char(int c);
+
+/*
+	Return true if all the utf-8 encoded characters in the
+	string are representable within XML.
+*/
+int fz_is_valid_xml_string(const char *s);
 
 #endif

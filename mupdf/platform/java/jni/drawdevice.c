@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -23,9 +23,10 @@
 /* DrawDevice interface */
 
 JNIEXPORT jlong JNICALL
-FUN(DrawDevice_newNative)(JNIEnv *env, jclass cls, jobject jpixmap)
+FUN(DrawDevice_newNative)(JNIEnv *env, jclass cls, jobject jtransform, jobject jpixmap)
 {
 	fz_context *ctx = get_context(env);
+	fz_matrix transform = from_Matrix(env, jtransform);
 	fz_pixmap *pixmap = from_Pixmap(env, jpixmap);
 	fz_device *device = NULL;
 
@@ -33,7 +34,7 @@ FUN(DrawDevice_newNative)(JNIEnv *env, jclass cls, jobject jpixmap)
 	if (!pixmap) jni_throw_arg(env, "pixmap must not be null");
 
 	fz_try(ctx)
-		device = fz_new_draw_device(ctx, fz_identity, pixmap);
+		device = fz_new_draw_device(ctx, transform, pixmap);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 

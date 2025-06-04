@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -92,6 +92,7 @@ static jclass cls_AlertResult;
 static jclass cls_Archive;
 static jclass cls_ArrayList;
 static jclass cls_ArrayOfQuad;
+static jclass cls_BarcodeInfo;
 static jclass cls_Buffer;
 static jclass cls_ColorSpace;
 static jclass cls_Context;
@@ -108,6 +109,7 @@ static jclass cls_DocumentWriter_OCRListener;
 static jclass cls_DOM;
 static jclass cls_DOMAttribute;
 static jclass cls_FitzInputStream;
+static jclass cls_Float;
 static jclass cls_FloatArray;
 static jclass cls_Font;
 static jclass cls_Story;
@@ -135,6 +137,7 @@ static jclass cls_PDFDocument_PDFEmbeddedFileParams;
 static jclass cls_PDFGraftMap;
 static jclass cls_PDFObject;
 static jclass cls_PDFPage;
+static jclass cls_PDFProcessor;
 static jclass cls_PDFWidget;
 static jclass cls_PKCS7DistinguishedName;
 static jclass cls_PKCS7Signer;
@@ -155,6 +158,7 @@ static jclass cls_String;
 static jclass cls_StrokeState;
 static jclass cls_StructuredText;
 static jclass cls_StructuredTextWalker;
+static jclass cls_StructuredTextWalker_VectorInfo;
 static jclass cls_Text;
 static jclass cls_TextBlock;
 static jclass cls_TextChar;
@@ -170,6 +174,8 @@ static jclass cls_UnsupportedOperationException;
 static jfieldID fid_AlertResult_buttonPressed;
 static jfieldID fid_AlertResult_checkboxChecked;
 static jfieldID fid_Archive_pointer;
+static jfieldID fid_BarcodeInfo_type;
+static jfieldID fid_BarcodeInfo_contents;
 static jfieldID fid_Buffer_pointer;
 static jfieldID fid_ColorSpace_pointer;
 static jfieldID fid_Context_Version_major;
@@ -255,6 +261,8 @@ static jfieldID fid_Rect_y1;
 static jfieldID fid_Shade_pointer;
 static jfieldID fid_StrokeState_pointer;
 static jfieldID fid_StructuredText_pointer;
+static jfieldID fid_StructuredTextWalker_VectorInfo_isRectangle;
+static jfieldID fid_StructuredTextWalker_VectorInfo_isStroked;
 static jfieldID fid_TextBlock_bbox;
 static jfieldID fid_TextBlock_lines;
 static jfieldID fid_TextChar_c;
@@ -281,6 +289,7 @@ static jmethodID mid_Archive_init;
 static jmethodID mid_ArrayList_add;
 static jmethodID mid_ArrayList_toArray;
 static jmethodID mid_ArrayList_init;
+static jmethodID mid_BarcodeInfo_init;
 static jmethodID mid_Buffer_init;
 static jmethodID mid_ColorSpace_fromPointer;
 static jmethodID mid_ColorSpace_init;
@@ -332,6 +341,7 @@ static jmethodID mid_Document_init;
 static jmethodID mid_DOM_init;
 static jmethodID mid_DOMAttribute_init;
 static jmethodID mid_FitzInputStream_init;
+static jmethodID mid_Float_init;
 static jmethodID mid_Font_init;
 static jmethodID mid_Image_init;
 static jmethodID mid_Link_init;
@@ -351,6 +361,85 @@ static jmethodID mid_PDFDocument_init;
 static jmethodID mid_PDFGraftMap_init;
 static jmethodID mid_PDFObject_init;
 static jmethodID mid_PDFPage_init;
+static jmethodID mid_PDFProcessor_op_b;
+static jmethodID mid_PDFProcessor_op_B;
+static jmethodID mid_PDFProcessor_op_BDC;
+static jmethodID mid_PDFProcessor_op_BI;
+static jmethodID mid_PDFProcessor_op_BMC;
+static jmethodID mid_PDFProcessor_op_bstar;
+static jmethodID mid_PDFProcessor_op_Bstar;
+static jmethodID mid_PDFProcessor_op_BT;
+static jmethodID mid_PDFProcessor_op_BX;
+static jmethodID mid_PDFProcessor_op_c;
+static jmethodID mid_PDFProcessor_op_cm;
+static jmethodID mid_PDFProcessor_op_cs;
+static jmethodID mid_PDFProcessor_op_CS;
+static jmethodID mid_PDFProcessor_op_d;
+static jmethodID mid_PDFProcessor_op_d0;
+static jmethodID mid_PDFProcessor_op_d1;
+static jmethodID mid_PDFProcessor_op_Do_form;
+static jmethodID mid_PDFProcessor_op_Do_image;
+static jmethodID mid_PDFProcessor_op_DP;
+static jmethodID mid_PDFProcessor_op_dquote_byte_array;
+static jmethodID mid_PDFProcessor_op_dquote_string;
+static jmethodID mid_PDFProcessor_op_EMC;
+static jmethodID mid_PDFProcessor_op_ET;
+static jmethodID mid_PDFProcessor_op_EX;
+static jmethodID mid_PDFProcessor_op_f;
+static jmethodID mid_PDFProcessor_op_F;
+static jmethodID mid_PDFProcessor_op_fstar;
+static jmethodID mid_PDFProcessor_op_g;
+static jmethodID mid_PDFProcessor_op_G;
+static jmethodID mid_PDFProcessor_op_gs;
+static jmethodID mid_PDFProcessor_op_h;
+static jmethodID mid_PDFProcessor_op_i;
+static jmethodID mid_PDFProcessor_op_j;
+static jmethodID mid_PDFProcessor_op_J;
+static jmethodID mid_PDFProcessor_op_k;
+static jmethodID mid_PDFProcessor_op_K;
+static jmethodID mid_PDFProcessor_op_l;
+static jmethodID mid_PDFProcessor_op_m;
+static jmethodID mid_PDFProcessor_op_M;
+static jmethodID mid_PDFProcessor_op_MP;
+static jmethodID mid_PDFProcessor_op_n;
+static jmethodID mid_PDFProcessor_op_popResources;
+static jmethodID mid_PDFProcessor_op_pushResources;
+static jmethodID mid_PDFProcessor_op_q;
+static jmethodID mid_PDFProcessor_op_Q;
+static jmethodID mid_PDFProcessor_op_re;
+static jmethodID mid_PDFProcessor_op_rg;
+static jmethodID mid_PDFProcessor_op_RG;
+static jmethodID mid_PDFProcessor_op_ri;
+static jmethodID mid_PDFProcessor_op_s;
+static jmethodID mid_PDFProcessor_op_S;
+static jmethodID mid_PDFProcessor_op_sc_color;
+static jmethodID mid_PDFProcessor_op_SC_color;
+static jmethodID mid_PDFProcessor_op_sc_pattern;
+static jmethodID mid_PDFProcessor_op_SC_pattern;
+static jmethodID mid_PDFProcessor_op_sc_shade;
+static jmethodID mid_PDFProcessor_op_SC_shade;
+static jmethodID mid_PDFProcessor_op_sh;
+static jmethodID mid_PDFProcessor_op_squote_byte_array;
+static jmethodID mid_PDFProcessor_op_squote_string;
+static jmethodID mid_PDFProcessor_op_Tc;
+static jmethodID mid_PDFProcessor_op_Td;
+static jmethodID mid_PDFProcessor_op_TD;
+static jmethodID mid_PDFProcessor_op_Tf;
+static jmethodID mid_PDFProcessor_op_TJ;
+static jmethodID mid_PDFProcessor_op_Tj_byte_array;
+static jmethodID mid_PDFProcessor_op_Tj_string;
+static jmethodID mid_PDFProcessor_op_TL;
+static jmethodID mid_PDFProcessor_op_Tm;
+static jmethodID mid_PDFProcessor_op_Tr;
+static jmethodID mid_PDFProcessor_op_Ts;
+static jmethodID mid_PDFProcessor_op_Tstar;
+static jmethodID mid_PDFProcessor_op_Tw;
+static jmethodID mid_PDFProcessor_op_Tz;
+static jmethodID mid_PDFProcessor_op_v;
+static jmethodID mid_PDFProcessor_op_w;
+static jmethodID mid_PDFProcessor_op_W;
+static jmethodID mid_PDFProcessor_op_Wstar;
+static jmethodID mid_PDFProcessor_op_y;
 static jmethodID mid_PDFWidget_init;
 static jmethodID mid_PKCS7DistinguishedName_init;
 static jmethodID mid_PKCS7Signer_maxDigest;
@@ -376,11 +465,15 @@ static jmethodID mid_SeekableStream_seek;
 static jmethodID mid_Shade_init;
 static jmethodID mid_StrokeState_init;
 static jmethodID mid_StructuredTextWalker_beginLine;
+static jmethodID mid_StructuredTextWalker_beginStruct;
 static jmethodID mid_StructuredTextWalker_beginTextBlock;
 static jmethodID mid_StructuredTextWalker_endLine;
+static jmethodID mid_StructuredTextWalker_endStruct;
 static jmethodID mid_StructuredTextWalker_endTextBlock;
 static jmethodID mid_StructuredTextWalker_onChar;
 static jmethodID mid_StructuredTextWalker_onImageBlock;
+static jmethodID mid_StructuredTextWalker_onVector;
+static jmethodID mid_StructuredTextWalker_VectorInfo_init;
 static jmethodID mid_StructuredText_init;
 static jmethodID mid_TextBlock_init;
 static jmethodID mid_TextChar_init;
@@ -402,6 +495,28 @@ static fz_context *base_context;
 static int check_enums()
 {
 	int valid = 1;
+
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_NONE == FZ_BARCODE_NONE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_AZTEC == FZ_BARCODE_AZTEC;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_CODABAR == FZ_BARCODE_CODABAR;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_CODE39 == FZ_BARCODE_CODE39;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_CODE93 == FZ_BARCODE_CODE93;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_CODE128 == FZ_BARCODE_CODE128;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_DATABAR == FZ_BARCODE_DATABAR;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_DATABAREXPANDED == FZ_BARCODE_DATABAREXPANDED;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_DATAMATRIX == FZ_BARCODE_DATAMATRIX;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_EAN8 == FZ_BARCODE_EAN8;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_EAN13 == FZ_BARCODE_EAN13;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_ITF == FZ_BARCODE_ITF;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_MAXICODE == FZ_BARCODE_MAXICODE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_PDF417 == FZ_BARCODE_PDF417;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_QRCODE == FZ_BARCODE_QRCODE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_UPCA == FZ_BARCODE_UPCA;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_UPCE == FZ_BARCODE_UPCE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_MICROQRCODE == FZ_BARCODE_MICROQRCODE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_RMQRCODE == FZ_BARCODE_RMQRCODE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_DXFILMEDGE == FZ_BARCODE_DXFILMEDGE;
+	valid &= com_artifex_mupdf_fitz_BarcodeInfo_BARCODE_DATABARLIMITED == FZ_BARCODE_DATABARLIMITED;
 
 	valid &= com_artifex_mupdf_fitz_Device_BLEND_NORMAL == FZ_BLEND_NORMAL;
 	valid &= com_artifex_mupdf_fitz_Device_BLEND_MULTIPLY == FZ_BLEND_MULTIPLY;
@@ -696,6 +811,21 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_MAINTAIN == FZ_DESKEW_BORDER_MAINTAIN;
 	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_DECREASE == FZ_DESKEW_BORDER_DECREASE;
 
+	valid &= com_artifex_mupdf_fitz_OutlineIterator_FLAG_BOLD == FZ_OUTLINE_FLAG_BOLD;
+	valid &= com_artifex_mupdf_fitz_OutlineIterator_FLAG_ITALIC == FZ_OUTLINE_FLAG_ITALIC;
+
+	valid &= com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_STROKED == FZ_STEXT_VECTOR_IS_STROKED;
+	valid &= com_artifex_mupdf_fitz_StructuredText_VECTOR_IS_RECTANGLE == FZ_STEXT_VECTOR_IS_RECTANGLE;
+
+	valid &= com_artifex_mupdf_fitz_ColorSpace_NONE == FZ_COLORSPACE_NONE;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_GRAY == FZ_COLORSPACE_GRAY;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_RGB == FZ_COLORSPACE_RGB;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_BGR == FZ_COLORSPACE_BGR;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_CMYK == FZ_COLORSPACE_CMYK;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_LAB == FZ_COLORSPACE_LAB;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_INDEXED == FZ_COLORSPACE_INDEXED;
+	valid &= com_artifex_mupdf_fitz_ColorSpace_SEPARATION == FZ_COLORSPACE_SEPARATION;
+
 	return valid ? 1 : 0;
 }
 
@@ -971,6 +1101,11 @@ static int find_fids(JNIEnv *env)
 	mid_Archive_init = get_method(&err, env, "<init>", "(J)V");
 	fid_Archive_pointer = get_field(&err, env, "pointer", "J");
 
+	cls_BarcodeInfo = get_class(&err, env, PKG"BarcodeInfo");
+	fid_BarcodeInfo_type = get_field(&err, env, "type", "I");
+	fid_BarcodeInfo_contents = get_field(&err, env, "contents", "Ljava/lang/String;");
+	mid_BarcodeInfo_init = get_method(&err, env, "<init>", "(ILjava/lang/String;)V");
+
 	cls_Buffer = get_class(&err, env, PKG"Buffer");
 	mid_Buffer_init = get_method(&err, env, "<init>", "(J)V");
 	fid_Buffer_pointer = get_field(&err, env, "pointer", "J");
@@ -1103,7 +1238,7 @@ static int find_fids(JNIEnv *env)
 	mid_Outline_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;[L"PKG"Outline;)V");
 
 	cls_OutlineItem = get_class(&err, env, PKG"OutlineIterator$OutlineItem");
-	mid_OutlineItem_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;Z)V");
+	mid_OutlineItem_init = get_method(&err, env, "<init>", "(Ljava/lang/String;Ljava/lang/String;ZFFFI)V");
 
 	cls_OutlineIterator = get_class(&err, env, PKG"OutlineIterator");
 	fid_OutlineIterator_pointer = get_field(&err, env, "pointer", "J");
@@ -1164,7 +1299,86 @@ static int find_fids(JNIEnv *env)
 	cls_PDFPage = get_class(&err, env, PKG"PDFPage");
 	fid_PDFPage_pointer = get_field(&err, env, "pointer", "J");
 	mid_PDFPage_init = get_method(&err, env, "<init>", "(J)V");
-
+	cls_PDFProcessor = get_class(&err, env, PKG"PDFProcessor");
+	mid_PDFProcessor_op_b = get_method(&err, env, "op_b", "()V");
+	mid_PDFProcessor_op_B = get_method(&err, env, "op_B", "()V");
+	mid_PDFProcessor_op_BDC = get_method(&err, env, "op_BDC", "(Ljava/lang/String;L"PKG"PDFObject;)V");
+	mid_PDFProcessor_op_BI = get_method(&err, env, "op_BI", "(L"PKG"Image;)V");
+	mid_PDFProcessor_op_BMC = get_method(&err, env, "op_BMC", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_bstar = get_method(&err, env, "op_bstar", "()V");
+	mid_PDFProcessor_op_Bstar = get_method(&err, env, "op_Bstar", "()V");
+	mid_PDFProcessor_op_BT = get_method(&err, env, "op_BT", "()V");
+	mid_PDFProcessor_op_BX = get_method(&err, env, "op_BX", "()V");
+	mid_PDFProcessor_op_c = get_method(&err, env, "op_c", "(FFFFFF)V");
+	mid_PDFProcessor_op_cm = get_method(&err, env, "op_cm", "(FFFFFF)V");
+	mid_PDFProcessor_op_cs = get_method(&err, env, "op_cs", "(Ljava/lang/String;L"PKG"ColorSpace;)V");
+	mid_PDFProcessor_op_CS = get_method(&err, env, "op_CS", "(Ljava/lang/String;L"PKG"ColorSpace;)V");
+	mid_PDFProcessor_op_d = get_method(&err, env, "op_d", "([FF)V");
+	mid_PDFProcessor_op_d0 = get_method(&err, env, "op_d0", "(FF)V");
+	mid_PDFProcessor_op_d1 = get_method(&err, env, "op_d1", "(FFFFFF)V");
+	mid_PDFProcessor_op_Do_form = get_method(&err, env, "op_Do_form", "(Ljava/lang/String;L"PKG"PDFObject;L"PKG"PDFObject;)V");
+	mid_PDFProcessor_op_Do_image = get_method(&err, env, "op_Do_image", "(Ljava/lang/String;L"PKG"Image;)V");
+	mid_PDFProcessor_op_DP = get_method(&err, env, "op_DP", "(Ljava/lang/String;L"PKG"PDFObject;)V");
+	mid_PDFProcessor_op_dquote_byte_array = get_method(&err, env, "op_dquote", "(FF[B)V");
+	mid_PDFProcessor_op_dquote_string = get_method(&err, env, "op_dquote", "(FFLjava/lang/String;)V");
+	mid_PDFProcessor_op_EMC = get_method(&err, env, "op_EMC", "()V");
+	mid_PDFProcessor_op_ET = get_method(&err, env, "op_ET", "()V");
+	mid_PDFProcessor_op_EX = get_method(&err, env, "op_EX", "()V");
+	mid_PDFProcessor_op_f = get_method(&err, env, "op_f", "()V");
+	mid_PDFProcessor_op_F = get_method(&err, env, "op_F", "()V");
+	mid_PDFProcessor_op_fstar = get_method(&err, env, "op_fstar", "()V");
+	mid_PDFProcessor_op_g = get_method(&err, env, "op_g", "(F)V");
+	mid_PDFProcessor_op_G = get_method(&err, env, "op_G", "(F)V");
+	mid_PDFProcessor_op_gs = get_method(&err, env, "op_gs", "(Ljava/lang/String;L"PKG"PDFObject;)V");
+	mid_PDFProcessor_op_h = get_method(&err, env, "op_h", "()V");
+	mid_PDFProcessor_op_i = get_method(&err, env, "op_i", "(F)V");
+	mid_PDFProcessor_op_j = get_method(&err, env, "op_j", "(F)V");
+	mid_PDFProcessor_op_J = get_method(&err, env, "op_J", "(F)V");
+	mid_PDFProcessor_op_k = get_method(&err, env, "op_k", "(FFFF)V");
+	mid_PDFProcessor_op_K = get_method(&err, env, "op_K", "(FFFF)V");
+	mid_PDFProcessor_op_l = get_method(&err, env, "op_l", "(FF)V");
+	mid_PDFProcessor_op_m = get_method(&err, env, "op_m", "(FF)V");
+	mid_PDFProcessor_op_M = get_method(&err, env, "op_M", "(F)V");
+	mid_PDFProcessor_op_MP = get_method(&err, env, "op_MP", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_n = get_method(&err, env, "op_n", "()V");
+	mid_PDFProcessor_op_popResources = get_method(&err, env, "popResources", "()V");
+	mid_PDFProcessor_op_pushResources = get_method(&err, env, "pushResources", "(L"PKG"PDFObject;)V");
+	mid_PDFProcessor_op_q = get_method(&err, env, "op_q", "()V");
+	mid_PDFProcessor_op_Q = get_method(&err, env, "op_Q", "()V");
+	mid_PDFProcessor_op_re = get_method(&err, env, "op_re", "(FFFF)V");
+	mid_PDFProcessor_op_rg = get_method(&err, env, "op_rg", "(FFF)V");
+	mid_PDFProcessor_op_RG = get_method(&err, env, "op_RG", "(FFF)V");
+	mid_PDFProcessor_op_ri = get_method(&err, env, "op_ri", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_s = get_method(&err, env, "op_s", "()V");
+	mid_PDFProcessor_op_S = get_method(&err, env, "op_S", "()V");
+	mid_PDFProcessor_op_sc_color = get_method(&err, env, "op_sc_color", "([F)V");
+	mid_PDFProcessor_op_SC_color = get_method(&err, env, "op_SC_color", "([F)V");
+	mid_PDFProcessor_op_sc_pattern = get_method(&err, env, "op_sc_pattern", "(Ljava/lang/String;I[F)V");
+	mid_PDFProcessor_op_SC_pattern = get_method(&err, env, "op_SC_pattern", "(Ljava/lang/String;I[F)V");
+	mid_PDFProcessor_op_sc_shade = get_method(&err, env, "op_sc_shade", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_SC_shade = get_method(&err, env, "op_SC_shade", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_sh = get_method(&err, env, "op_sh", "(Ljava/lang/String;L"PKG"Shade;)V");
+	mid_PDFProcessor_op_squote_byte_array = get_method(&err, env, "op_squote", "([B)V");
+	mid_PDFProcessor_op_squote_string = get_method(&err, env, "op_squote", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_Tc = get_method(&err, env, "op_Tc", "(F)V");
+	mid_PDFProcessor_op_Td = get_method(&err, env, "op_Td", "(FF)V");
+	mid_PDFProcessor_op_TD = get_method(&err, env, "op_TD", "(FF)V");
+	mid_PDFProcessor_op_Tf = get_method(&err, env, "op_Tf", "(Ljava/lang/String;F)V");
+	mid_PDFProcessor_op_Tj_byte_array = get_method(&err, env, "op_Tj", "([B)V");
+	mid_PDFProcessor_op_Tj_string = get_method(&err, env, "op_Tj", "(Ljava/lang/String;)V");
+	mid_PDFProcessor_op_TJ = get_method(&err, env, "op_TJ", "([Ljava/lang/Object;)V");
+	mid_PDFProcessor_op_TL = get_method(&err, env, "op_TL", "(F)V");
+	mid_PDFProcessor_op_Tm = get_method(&err, env, "op_Tm", "(FFFFFF)V");
+	mid_PDFProcessor_op_Tr = get_method(&err, env, "op_Tr", "(F)V");
+	mid_PDFProcessor_op_Ts = get_method(&err, env, "op_Ts", "(F)V");
+	mid_PDFProcessor_op_Tstar = get_method(&err, env, "op_Tstar", "()V");
+	mid_PDFProcessor_op_Tw = get_method(&err, env, "op_Tw", "(F)V");
+	mid_PDFProcessor_op_Tz = get_method(&err, env, "op_Tz", "(F)V");
+	mid_PDFProcessor_op_v = get_method(&err, env, "op_v", "(FFFF)V");
+	mid_PDFProcessor_op_w = get_method(&err, env, "op_w", "(F)V");
+	mid_PDFProcessor_op_W = get_method(&err, env, "op_W", "()V");
+	mid_PDFProcessor_op_Wstar = get_method(&err, env, "op_Wstar", "()V");
+	mid_PDFProcessor_op_y = get_method(&err, env, "op_y", "(FFFF)V");
 	cls_PDFWidget = get_class(&err, env, PKG"PDFWidget");
 	fid_PDFWidget_pointer = get_field(&err, env, "pointer", "J");
 	fid_PDFWidget_fieldType = get_field(&err, env, "fieldType", "I");
@@ -1249,11 +1463,19 @@ static int find_fids(JNIEnv *env)
 
 	cls_StructuredTextWalker = get_class(&err, env, PKG"StructuredTextWalker");
 	mid_StructuredTextWalker_onImageBlock = get_method(&err, env, "onImageBlock", "(L"PKG"Rect;L"PKG"Matrix;L"PKG"Image;)V");
+	mid_StructuredTextWalker_beginStruct = get_method(&err, env, "beginStruct", "(Ljava/lang/String;Ljava/lang/String;I)V");
 	mid_StructuredTextWalker_beginTextBlock = get_method(&err, env, "beginTextBlock", "(L"PKG"Rect;)V");
+	mid_StructuredTextWalker_endStruct = get_method(&err, env, "endStruct", "()V");
 	mid_StructuredTextWalker_endTextBlock = get_method(&err, env, "endTextBlock", "()V");
 	mid_StructuredTextWalker_beginLine = get_method(&err, env, "beginLine", "(L"PKG"Rect;IL"PKG"Point;)V");
 	mid_StructuredTextWalker_endLine = get_method(&err, env, "endLine", "()V");
 	mid_StructuredTextWalker_onChar = get_method(&err, env, "onChar", "(IL"PKG"Point;L"PKG"Font;FL"PKG"Quad;)V");
+	mid_StructuredTextWalker_onVector = get_method(&err, env, "onVector", "(L"PKG"Rect;L"PKG"StructuredTextWalker$VectorInfo;I)V");
+
+	cls_StructuredTextWalker_VectorInfo = get_class(&err, env, PKG"StructuredTextWalker$VectorInfo");
+	fid_StructuredTextWalker_VectorInfo_isRectangle = get_field(&err, env, "isRectangle", "Z");
+	fid_StructuredTextWalker_VectorInfo_isStroked = get_field(&err, env, "isStroked", "Z");
+	mid_StructuredTextWalker_VectorInfo_init = get_method(&err, env, "<init>", "()V");
 
 	cls_Text = get_class(&err, env, PKG"Text");
 	fid_Text_pointer = get_field(&err, env, "pointer", "J");
@@ -1307,6 +1529,9 @@ static int find_fids(JNIEnv *env)
 	cls_TryLaterException = get_class(&err, env, PKG"TryLaterException");
 
 	/* Standard Java classes */
+
+	cls_Float = get_class(&err, env, "java/lang/Float");
+	mid_Float_init = get_method(&err, env, "<init>", "(F)V");
 
 	cls_FloatArray = get_class(&err, env, "[F");
 	cls_IntegerArray = get_class(&err, env, "[I");
@@ -1371,6 +1596,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_Archive);
 	(*env)->DeleteGlobalRef(env, cls_ArrayList);
 	(*env)->DeleteGlobalRef(env, cls_ArrayOfQuad);
+	(*env)->DeleteGlobalRef(env, cls_BarcodeInfo);
 	(*env)->DeleteGlobalRef(env, cls_Buffer);
 	(*env)->DeleteGlobalRef(env, cls_ColorSpace);
 	(*env)->DeleteGlobalRef(env, cls_Context);
@@ -1386,6 +1612,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_DOM);
 	(*env)->DeleteGlobalRef(env, cls_DOMAttribute);
 	(*env)->DeleteGlobalRef(env, cls_FitzInputStream);
+	(*env)->DeleteGlobalRef(env, cls_Float);
 	(*env)->DeleteGlobalRef(env, cls_FloatArray);
 	(*env)->DeleteGlobalRef(env, cls_Font);
 	(*env)->DeleteGlobalRef(env, cls_Story);
@@ -1413,6 +1640,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_PDFGraftMap);
 	(*env)->DeleteGlobalRef(env, cls_PDFObject);
 	(*env)->DeleteGlobalRef(env, cls_PDFPage);
+	(*env)->DeleteGlobalRef(env, cls_PDFProcessor);
 	(*env)->DeleteGlobalRef(env, cls_PDFWidget);
 	(*env)->DeleteGlobalRef(env, cls_PKCS7DistinguishedName);
 	(*env)->DeleteGlobalRef(env, cls_PKCS7Signer);
@@ -1433,6 +1661,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_StrokeState);
 	(*env)->DeleteGlobalRef(env, cls_StructuredText);
 	(*env)->DeleteGlobalRef(env, cls_StructuredTextWalker);
+	(*env)->DeleteGlobalRef(env, cls_StructuredTextWalker_VectorInfo);
 	(*env)->DeleteGlobalRef(env, cls_Text);
 	(*env)->DeleteGlobalRef(env, cls_TextBlock);
 	(*env)->DeleteGlobalRef(env, cls_TextChar);
@@ -1492,6 +1721,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM *vm, void *reserved)
 #include "jni/nativedevice.c"
 
 #include "jni/archive.c"
+#include "jni/barcodeinfo.c"
 #include "jni/buffer.c"
 #include "jni/colorspace.c"
 #include "jni/cookie.c"

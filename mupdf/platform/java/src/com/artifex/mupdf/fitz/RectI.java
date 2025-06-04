@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -205,5 +205,17 @@ public class RectI
 		y1 += top - y0;
 		x0 = left;
 		y0 = top;
+	}
+
+	public static RectI Infinite() {
+		return new RectI(Rect.MIN_INF_RECT, Rect.MIN_INF_RECT, Rect.MAX_INF_RECT, Rect.MAX_INF_RECT);
+	}
+
+	public static RectI Empty() {
+		return new RectI(Rect.MAX_INF_RECT, Rect.MAX_INF_RECT, Rect.MIN_INF_RECT, Rect.MIN_INF_RECT);
+	}
+
+	public static RectI Invalid() {
+		return new RectI();
 	}
 }

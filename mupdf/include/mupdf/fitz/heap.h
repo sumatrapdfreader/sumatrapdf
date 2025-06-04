@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -21,7 +21,7 @@
 // CA 94129, USA, for further information.
 
 /* This file has preprocessor magic in it to instantiate both
- * protoypes and implementations for heap sorting structures
+ * prototypes and implementations for heap sorting structures
  * of various different types. Effectively, it's templating for
  * C.
  *
@@ -104,6 +104,7 @@
 #define HEAP_TYPE_NAME fz_int_heap
 #define HEAP_CONTAINER_TYPE int
 #define HEAP_CMP(a,b) ((*a) - (*b))
+#define HEAP_DUMP(CTX, OUT, I, A) fz_write_printf(CTX, OUT, "%d: %d\n", I, *A)
 #include "mupdf/fitz/heap-imp.h"
 
 /* Instantiate fz_ptr_heap */
@@ -122,6 +123,7 @@ typedef struct
 #define HEAP_TYPE_NAME fz_int2_heap
 #define HEAP_CMP(A,B) (((A)->a) - ((B)->a))
 #define HEAP_CONTAINER_TYPE fz_int2
+#define HEAP_DUMP(CTX, OUT, I, A) fz_write_printf(CTX, OUT, "%d: %d %d\n", I, (A)->a, (A)->b)
 #include "mupdf/fitz/heap-imp.h"
 
 /* Instantiate fz_intptr_heap */
@@ -129,12 +131,13 @@ typedef struct
 typedef struct
 {
 	int a;
-	int b;
+	void *b;
 } fz_intptr;
 #endif
 #define HEAP_TYPE_NAME fz_intptr_heap
 #define HEAP_CONTAINER_TYPE fz_intptr
 #define HEAP_CMP(A,B) (((A)->a) - ((B)->a))
+#define HEAP_DUMP(CTX, OUT, I, A) fz_write_printf(CTX, OUT, "%d: %d %p\n", I, (A)->a, (A)->b)
 #include "mupdf/fitz/heap-imp.h"
 
 #endif /* MUPDF_FITZ_HEAP_H */

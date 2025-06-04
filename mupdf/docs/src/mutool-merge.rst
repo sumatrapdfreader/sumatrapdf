@@ -3,7 +3,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -68,7 +67,6 @@ The `merge` command is used to pick out pages from two or more files and merge t
 `...`
    Indicates that we add as many additional `[input]` & `[pages]` pairs as required to merge multiple documents.
 
-.. include:: footer.rst
 
 
 

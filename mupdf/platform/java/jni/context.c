@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -117,6 +117,12 @@ static void log_callback(void *user, const char *message)
 static int init_base_context(JNIEnv *env)
 {
 	int i;
+#ifdef FZ_JAVA_STORE_SIZE
+	size_t fz_store_size = FZ_JAVA_STORE_SIZE;
+#else
+	size_t fz_store_size = FZ_STORE_DEFAULT;
+#endif
+	char *env_fz_store_size;
 
 #ifdef _WIN32
 	/* No destructor on windows. We will leak contexts.
@@ -146,7 +152,11 @@ static int init_base_context(JNIEnv *env)
 		(void)pthread_mutex_init(&mutexes[i], NULL);
 #endif
 
-	base_context = fz_new_context(NULL, &locks, FZ_STORE_DEFAULT);
+	env_fz_store_size = getenv("FZ_JAVA_STORE_SIZE");
+	if (env_fz_store_size)
+		fz_store_size = fz_atoz(env_fz_store_size);
+	base_context = fz_new_context(NULL, &locks, fz_store_size);
+
 	if (!base_context)
 	{
 		LOGE("cannot create base context");
@@ -320,7 +330,7 @@ FUN(Context_shrinkStore)(JNIEnv *env, jclass cls, jint percent)
 	fz_context *ctx = get_context(env);
 	int success = 0;
 
-	if (!ctx) return 0;
+	if (!ctx) return JNI_FALSE;
 	if (percent < 0) jni_throw_arg(env, "percent must not be negative");
 	if (percent > 100) jni_throw_arg(env, "percent must not be more than 100");
 

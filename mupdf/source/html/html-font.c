@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -55,6 +55,13 @@ fz_add_html_font_face(fz_context *ctx, fz_html_font_set *set,
 	const char *src, fz_font *font)
 {
 	fz_html_font_face *custom = fz_malloc_struct(ctx, fz_html_font_face);
+	fz_font_flags_t *flags;
+
+	flags = fz_font_flags(font);
+	if (is_bold && !flags->is_bold)
+		flags->fake_bold = 1;
+	if (is_italic && !flags->is_italic)
+		flags->fake_italic = 1;
 
 	fz_try(ctx)
 	{
@@ -84,6 +91,7 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 	const unsigned char *data;
 	int best_score = 0;
 	fz_font *best_font = NULL;
+	fz_font *font;
 	int size;
 
 	for (custom = set->custom; custom; custom = custom->next)
@@ -112,15 +120,28 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 		data = fz_lookup_builtin_font(ctx, family, 0, 0, &size);
 	if (data)
 	{
-		fz_font *font = fz_new_font_from_memory(ctx, NULL, data, size, 0, 0);
-		fz_font_flags_t *flags = fz_font_flags(font);
-		if (is_bold && !flags->is_bold)
-			flags->fake_bold = 1;
-		if (is_italic && !flags->is_italic)
-			flags->fake_italic = 1;
-		fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<builtin>", font);
-		fz_drop_font(ctx, font);
+		font = fz_new_font_from_memory(ctx, NULL, data, size, 0, 0);
+		fz_try(ctx)
+			fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<builtin>", font);
+		fz_always(ctx)
+			fz_drop_font(ctx, font);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
 		return font;
+	}
+	else
+	{
+		font = fz_load_system_font(ctx, family, is_bold, is_italic, 0);
+		if (font)
+		{
+			fz_try(ctx)
+				fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<system>", font);
+			fz_always(ctx)
+				fz_drop_font(ctx, font);
+			fz_catch(ctx)
+				fz_rethrow(ctx);
+			return font;
+		}
 	}
 
 	// Use the imperfect match from before.

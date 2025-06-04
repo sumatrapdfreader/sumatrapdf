@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -231,7 +231,7 @@ public class Document
 	public static final int PERMISSION_EDIT = (int) 'e';
 	public static final int PERMISSION_ANNOTATE = (int) 'n';
 	public static final int PERMISSION_FORM = (int) 'f';
-	public static final int PERMISSION_ACCESSBILITY = (int) 'y';
+	public static final int PERMISSION_ACCESSIBILITY = (int) 'y';
 	public static final int PERMISSION_ASSEMBLE = (int) 'a';
 	public static final int PERMISSION_PRINT_HQ = (int) 'h';
 

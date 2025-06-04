@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -167,7 +167,7 @@ FUN(PDFPage_getWidgets)(JNIEnv *env, jobject self)
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
-	/* no widgegts, return NULL instead of empty array */
+	/* no widgets, return NULL instead of empty array */
 	if (count == 0)
 		return NULL;
 
@@ -298,4 +298,64 @@ FUN(PDFPage_associatedFile)(JNIEnv *env, jobject self, jint idx)
 		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, af);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFPage_process)(JNIEnv *env, jobject self, jobject jproc)
+{
+	fz_context *ctx = get_context(env);
+	pdf_page *page = from_PDFPage(env, self);
+	pdf_processor *proc = make_pdf_processor(env, ctx, jproc);
+	pdf_obj *resources;
+	pdf_obj *contents;
+
+	if (!ctx || !page) return;
+	if (!proc) jni_throw_arg_void(env, "processor must not be null");
+
+	fz_try(ctx)
+	{
+		resources = pdf_page_resources(ctx, page);
+		contents = pdf_page_contents(ctx, page);
+		pdf_process_contents(ctx, proc, page->doc, resources, contents, NULL, NULL);
+		pdf_close_processor(ctx, proc);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_processor(ctx, proc);
+	}
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFPage_toPixmap)(JNIEnv *env, jobject self, jobject jctm, jobject jcs, jboolean alpha, jboolean showExtra, jstring jusage, jint box)
+{
+	fz_context *ctx = get_context(env);
+	pdf_page *page = from_PDFPage(env, self);
+	fz_colorspace *cs = from_ColorSpace(env, jcs);
+	fz_matrix ctm = from_Matrix(env, jctm);
+	fz_pixmap *pixmap = NULL;
+	const char *usage = NULL;
+
+	if (!ctx || !page) return NULL;
+	if (jusage)
+	{
+		usage = (*env)->GetStringUTFChars(env, jusage, NULL);
+		if (!usage) return NULL;
+	}
+
+	fz_try(ctx)
+	{
+		if (showExtra)
+			pixmap = pdf_new_pixmap_from_page_with_usage(ctx, page, ctm, cs, alpha, usage, box);
+		else
+			pixmap = pdf_new_pixmap_from_page_contents_with_usage(ctx, page, ctm, cs, alpha, usage, box);
+	}
+	fz_always(ctx)
+		if (usage)
+			(*env)->ReleaseStringUTFChars(env, jusage, usage);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Pixmap_safe_own(ctx, env, pixmap);
 }

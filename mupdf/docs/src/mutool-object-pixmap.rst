@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_pixmap:
 
 .. _mutool_run_js_api_pixmap:
@@ -39,6 +30,28 @@ so that they can easily be used to represent tiles of a page.
 
         var pixmap = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, [0,0,100,100], true);
 
+.. method:: new Pixmap(pixmap, mask)
+
+    |mutool_tag|
+
+    *Constructor method*.
+
+    Create a new pixmap based on an existing pixmap without alpha, and combining it with a single component soft mask of the same dimensions.
+
+    :arg pixmap: `Pixmap` Used to set the color of pixels in the result.
+    :arg mask: `Pixmap` Used to set the alpha of pixels in the resul.t
+
+    :return: `Pixmap`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var pix = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, [0,0,100,100], false);
+        var mask = new mupdf.Pixmap(mupdf.ColorSpace.DeviceGray, [0,0,100,100], false);
+        // Set pixels in pix to desired RGB color values.
+        // Set pixels in mask to desired alpha levels.
+        var pixmapWithAlpha = new mupdf.Pixmap(pix, mask);
 
 
 |instance_methods|
@@ -90,6 +103,26 @@ so that they can easily be used to represent tiles of a page.
     .. code-block:: javascript
 
         var h = pixmap.getHeight();
+
+.. method:: getX()
+
+    :return: `Int` The x coordinate of the pixmap.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var x = pixmap.getX();
+
+.. method:: getY()
+
+    :return: `Int` The y coordinate of the pixmap.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var y = pixmap.getY();
 
 .. method:: getNumberOfComponents()
 
@@ -188,8 +221,8 @@ so that they can easily be used to represent tiles of a page.
 
     Get the value of component ``index`` at position `x`, `y` (relative to the image origin: 0, 0 is the top left pixel).
 
-    :arg x: X co-ordinate.
-    :arg y: Y co-ordinate.
+    :arg x: X coordinate.
+    :arg y: Y coordinate.
     :arg index: Component index. i.e. For CMYK ColorSpaces 0 = Cyan, for RGB 0 = Red etc.
     :return: `Int`.
 
@@ -290,6 +323,20 @@ so that they can easily be used to represent tiles of a page.
 
         pixmap.saveAsPKM("fileName.pkm");
 
+.. method:: saveAsJPX(fileName)
+
+    |mutool_tag|
+
+    Save the `Pixmap` as a :title:`JPX`.
+
+    :arg fileName: `String`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        pixmap.saveAsJPX("fileName.jpx");
+
 
 
 .. method:: invert()
@@ -345,12 +392,13 @@ so that they can easily be used to represent tiles of a page.
 
 
 
+.. _mutool_run_js_api_pixmap_warp:
 .. method:: warp(points, width, height)
 
     Return a warped subsection of the `Pixmap`, where the result has the requested dimensions.
 
     :arg points: `[x0, y0, x1, y1, x2, y2, x3, y3, x4, y4]`
-    Points give the corner points of a convex quadrilateral within the `Pixmap` to be warped.
+                 Points give the corner points of a convex quadrilateral within the `Pixmap` to be warped.
     :arg width: `Int`.
     :arg height: `Int`.
 
@@ -361,6 +409,24 @@ so that they can easily be used to represent tiles of a page.
     .. code-block:: javascript
 
         var warpedPixmap = pixmap.warp([0,0,100,0,0,100,100,100],200,200);
+
+
+.. method:: autowarp(points)
+
+    |mutool_tag|
+
+    Same as :ref:`Pixmap.warp()<mutool_run_js_api_pixmap_warp>` except that width and height are automatically determined.
+
+    :arg points: `[x0, y0, x1, y1, x2, y2, x3, y3, x4, y4]`
+                 Points give the corner points of a convex quadrilateral within the `Pixmap` to be warped.
+
+    :return: `Pixmap`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var warpedPixmap = pixmap.autowarp([0,0,100,0,0,100,100,100]);
 
 
 .. method:: convertToColorSpace(colorspace, proof, defaultColorSpaces, colorParams, keepAlpha)
@@ -380,12 +446,10 @@ so that they can easily be used to represent tiles of a page.
     :return: `Pixmap`.
 
 
-    .. |tor_todo| Can't get any joy out of this one because of `DefaultColorSpaces` not working for me.
+    .. TODO(tor): Can't get any joy out of this one because of `DefaultColorSpaces` not working for me.
 
 
 .. method:: getPixels()
-
-    |wasm_tag|
 
     Returns an array of pixels for the `Pixmap`.
 
@@ -400,8 +464,6 @@ so that they can easily be used to represent tiles of a page.
 
 
 .. method:: asPNG()
-
-    |wasm_tag|
 
     Returns a buffer of the `Pixmap` as a :title:`PNG`.
 
@@ -418,8 +480,6 @@ so that they can easily be used to represent tiles of a page.
 
 .. method:: asPSD()
 
-    |wasm_tag|
-
     Returns a buffer of the `Pixmap` as a :title:`PSD`.
 
 
@@ -434,8 +494,6 @@ so that they can easily be used to represent tiles of a page.
 
 .. method:: asPAM()
 
-    |wasm_tag|
-
     Returns a buffer of the `Pixmap` as a :title:`PAM`.
 
 
@@ -449,12 +507,13 @@ so that they can easily be used to represent tiles of a page.
 
 
 
-.. method:: asJPEG(quality)
-
-    |wasm_tag|
+.. method:: asJPEG(quality, invertCMYK)
 
     Returns a buffer of the `Pixmap` as a :title:`JPEG`.
     Note, if the `Pixmap` has an alpha channel then an exception will be thrown.
+
+    :arg quality: `Integer`. The desired quality in percent.
+    :arg invertCMYK: `Boolean`. Whether to invert CMYK.
 
 
     :return: `Buffer`.
@@ -466,9 +525,24 @@ so that they can easily be used to represent tiles of a page.
         var buffer = pixmap.asJPEG(80);
 
 
-.. method:: skewDetect()
+.. method:: detectDocument(points)
 
-    |wasm_tag|
+    |mutool_tag|
+
+    Detect a "document" in a `Pixmap` (either grayscale or rgb, without alpha)
+    Note, if the `Pixmap` is not Greyscale with no alpha then an exception will be thrown.
+
+    :return: `[x0,y0,x1,y1,x2,y2,x3,y3]`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var documentLocation = pixmap.detectDocument([0,0,100,0,100,100,0,100]);
+
+.. method:: detectSkew()
+
+    |mutool_tag|
 
     Returns the angle of skew detected from `Pixmap`.
     Note, if the `Pixmap` is not Greyscale with no alpha then an exception will be thrown.
@@ -480,12 +554,12 @@ so that they can easily be used to represent tiles of a page.
 
     .. code-block:: javascript
 
-        var angle = pixmap.skewDetect();
+        var angle = pixmap.detectSkew();
 
 
 .. method:: deskew(angle, border)
 
-    |wasm_tag|
+    |mutool_tag|
 
     Returns a new `Pixmap` being the deskewed version of the supplied `Pixmap`.
     Note, if a `Pixmap` is supplied that is not RGB or Greyscale, or has alpha then an exception will be thrown.
@@ -499,3 +573,81 @@ so that they can easily be used to represent tiles of a page.
     .. code-block:: javascript
 
         var deskewed = pixmap.deskew(angle, 0);
+
+
+.. method:: computeMD5()
+
+    |mutool_tag|
+
+    Returns the MD5 digest of the pixmap pixel data.
+
+    :return: `String` containing digest as 16 hex digits.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var md5 = pixmap.computeMD5();
+
+
+
+.. method:: decodeBarcode(rotate)
+
+    |mutool_tag|
+
+    Decodes a barcode detected in the pixmap, and returns an object with properties for barcode type and contents.
+
+    :arg rotate: `Integer` Degrees of rotation to rotate pixmap before detecting barcode.
+
+    :return: :ref:`BarcodeInfo<mutool_run_js_api_object_barcode_info>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var barcodeInfo = pixmap.decodeBarcode(0);
+
+
+
+.. method:: encodeBarcode(barcodeType, contents, size, errorCorrectionLevel, quietZones, humanReadableText)
+
+    |mutool_tag|
+
+    Encodes a barcode into a pixmap.
+
+    :arg barcodeType: `String` The desired barcode type, one of:
+
+      - `aztec`
+      - `codabar`
+      - `code39`
+      - `code93`
+      - `code128`
+      - `databar`
+      - `databarexpanded`
+      - `datamatrix`
+      - `ean8`
+      - `ean13`
+      - `itf`
+      - `maxicode`
+      - `pdf417`
+      - `qrcode`
+      - `upca`
+      - `upce`
+      - `microqrcode`
+      - `rmqrcode`
+      - `dxfilmedge`
+      - `databarlimited`
+
+    :arg contents: `String` The textual content to encode into the barcode.
+    :arg size: `Integer` The size of the barcode in pixels.
+    :arg errorCorrectionLevel: `Integer` The error correction level (0-8).
+    :arg quietZones: `Boolean` Whether to add an empty margin around the barcode.
+    :arg humanReadableText: `Boolean` Whether to add human-readable text. Some barcodes, e.g. EAN-13, can have the barcode contents printed in human-readable text next to the barcode.
+
+    :return: :ref:`Pixmap<mutool_run_js_api_pixmap>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var pix = Pixmap.encodeBarcode("qrcode", "Hello world!", 100, 2, true, false);

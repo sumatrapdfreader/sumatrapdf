@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -395,7 +395,7 @@ enum pdf_border_effect
 pdf_annot *pdf_create_annot(fz_context *ctx, pdf_page *page, enum pdf_annot_type type);
 
 /*
-	Delete an annoation from the page.
+	Delete an annotation from the page.
 
 	This unlinks the annotation from the page structure and drops
 	the pages reference to it. Any reference held by the caller
@@ -481,6 +481,16 @@ int pdf_annot_has_popup(fz_context *ctx, pdf_annot *annot);
 	Check to see if an annotation has author data.
 */
 int pdf_annot_has_author(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Check to see if an annotation has rich content.
+*/
+int pdf_annot_has_rich_contents(fz_context *ctx, pdf_annot *annot);
+
+/*
+	Check to see if an annotation has rich default styles.
+*/
+int pdf_annot_has_rich_defaults(fz_context *ctx, pdf_annot *annot);
 
 /*
 	Retrieve the annotation flags.
@@ -582,12 +592,12 @@ fz_quad pdf_annot_quad_point(fz_context *ctx, pdf_annot *annot, int i);
 int pdf_annot_ink_list_count(fz_context *ctx, pdf_annot *annot);
 
 /*
-	How many vertexes in stroke i of the ink list for an annotation?
+	How many vertices in stroke i of the ink list for an annotation?
 */
 int pdf_annot_ink_list_stroke_count(fz_context *ctx, pdf_annot *annot, int i);
 
 /*
-	Get vertex k from stroke i of the ink list for an annoation, in
+	Get vertex k from stroke i of the ink list for an annotation, in
 	doc space.
 */
 fz_point pdf_annot_ink_list_stroke_vertex(fz_context *ctx, pdf_annot *annot, int i, int k);
@@ -598,10 +608,10 @@ fz_point pdf_annot_ink_list_stroke_vertex(fz_context *ctx, pdf_annot *annot, int
 void pdf_set_annot_flags(fz_context *ctx, pdf_annot *annot, int flags);
 
 /*
-	Set the stamp appearance stream to a custom image.
-	Fits the image to the current Rect, and shrinks the Rect
-	to fit the image aspect ratio.
+	Set the stamp appearance to a custom image.
 */
+pdf_obj *pdf_annot_stamp_image_obj(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_stamp_image_obj(fz_context *ctx, pdf_annot *annot, pdf_obj *ref);
 void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *image);
 
 /*
@@ -700,7 +710,7 @@ void pdf_add_annot_quad_point(fz_context *ctx, pdf_annot *annot, fz_quad quad);
 	Set the ink list for an annotation.
 
 	n strokes. For 0 <= i < n, stroke i has count[i] points,
-	The vertexes for all the strokes are packed into a single
+	The vertices for all the strokes are packed into a single
 	array, pointed to by v.
 */
 void pdf_set_annot_ink_list(fz_context *ctx, pdf_annot *annot, int n, const int *count, const fz_point *v);
@@ -791,12 +801,18 @@ void pdf_set_annot_callout_line(fz_context *ctx, pdf_annot *annot, fz_point call
 fz_point pdf_annot_callout_point(fz_context *ctx, pdf_annot *annot);
 void pdf_set_annot_callout_point(fz_context *ctx, pdf_annot *annot, fz_point p);
 
+int pdf_annot_has_default_appearance(fz_context *ctx, pdf_annot *annot);
 void pdf_parse_default_appearance_unmapped(fz_context *ctx, const char *da, char *font_name, int font_name_len, float *size, int *n, float color[4]);
 void pdf_parse_default_appearance(fz_context *ctx, const char *da, const char **font, float *size, int *n, float color[4]);
 void pdf_print_default_appearance(fz_context *ctx, char *buf, int nbuf, const char *font, float size, int n, const float *color);
 void pdf_annot_default_appearance_unmapped(fz_context *ctx, pdf_annot *annot, char *font_name, int font_name_len, float *size, int *n, float color[4]);
 void pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4]);
 void pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *font, float size, int n, const float *color);
+
+const char *pdf_annot_rich_contents(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_rich_contents(fz_context *ctx, pdf_annot *annot, const char *plain, const char *rich);
+const char *pdf_annot_rich_defaults(fz_context *ctx, pdf_annot *annot);
+void pdf_set_annot_rich_defaults(fz_context *ctx, pdf_annot *annot, const char *style);
 
 /*
  * Request that an appearance stream should be generated for an annotation if none is present.
@@ -934,11 +950,11 @@ int pdf_is_embedded_file(fz_context *ctx, pdf_obj *fs);
 	If a checksum is added it can later be verified by calling
 	pdf_verify_embedded_file_checksum().
 */
-pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *filename, const char *mimetype, fz_buffer *contents, int64_t created, int64_t modifed, int add_checksum);
+pdf_obj *pdf_add_embedded_file(fz_context *ctx, pdf_document *doc, const char *filename, const char *mimetype, fz_buffer *contents, int64_t created, int64_t modified, int add_checksum);
 
 /*
 	Obtain parameters for a filespec: name, size,
-	creation and modification dates cnad MIME type.
+	creation and modification dates and MIME type.
 */
 void pdf_get_filespec_params(fz_context *ctx, pdf_obj *fs, pdf_filespec_params *out);
 
@@ -955,7 +971,7 @@ fz_buffer *pdf_load_embedded_file_contents(fz_context *ctx, pdf_obj *fs);
 
 /*
 	Verifies the embedded file checksum. Returns 1
-	if the verifiction is successful or there is no
+	if the verification is successful or there is no
 	checksum to be verified, or 0 if verification fails.
 */
 int pdf_verify_embedded_file_checksum(fz_context *ctx, pdf_obj *fs);

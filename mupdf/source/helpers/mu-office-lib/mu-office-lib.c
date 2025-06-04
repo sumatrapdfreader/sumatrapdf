@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -445,7 +445,7 @@ fail:
  *
  * Alternatively, in a synchronous context, MuOfficeDoc_getNumPages
  * can be called to wait for loading to complete and return the total
- * number of pages. In this mode of use, progressFn can be NULL. 
+ * number of pages. In this mode of use, progressFn can be NULL.
  */
 MuError MuOfficeLib_loadDocument(	MuOfficeLib               *mu,
 					const char                *path,

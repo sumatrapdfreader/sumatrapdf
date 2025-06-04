@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -590,6 +590,12 @@ const char *fz_user_css(fz_context *ctx);
 void fz_set_user_css(fz_context *ctx, const char *text);
 
 /**
+	Set the user stylesheet by loading the source from a file.
+	If the file is missing, do nothing.
+*/
+void fz_load_user_css(fz_context *ctx, const char *filename);
+
+/**
 	Return whether to respect document styles in HTML and EPUB.
 */
 int fz_use_document_css(fz_context *ctx);
@@ -697,6 +703,16 @@ void *fz_realloc(fz_context *ctx, void *p, size_t size);
 void fz_free(fz_context *ctx, void *p);
 
 /**
+	Flexible array member allocation helpers.
+*/
+#define fz_malloc_flexible(ctx, T, M, count) \
+	Memento_label(fz_calloc(ctx, 1, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)), #T)
+#define fz_realloc_flexible(ctx, p, T, M, count) \
+	Memento_label(fz_realloc(ctx, p, offsetof(T, M) + sizeof(*((T*)0)->M) * (count)), #T)
+#define fz_pool_alloc_flexible(ctx, pool, T, M, count) \
+	fz_pool_alloc(ctx, pool, offsetof(T, M) + sizeof(*((T*)0)->M) * (count))
+
+/**
 	fz_malloc equivalent that returns NULL rather than throwing
 	exceptions.
 */
@@ -741,7 +757,7 @@ void fz_memrnd(fz_context *ctx, uint8_t *block, int len);
 typedef struct
 {
 	int refs;
-	char str[1];
+	char str[FZ_FLEXIBLE_ARRAY];
 } fz_string;
 
 /*
@@ -816,13 +832,41 @@ typedef struct
 	float min_line_width;
 } fz_aa_context;
 
+typedef enum
+{
+	FZ_ACTIVITY_NEW_DOC = 0,
+	FZ_ACTIVITY_SHUTDOWN = 1
+} fz_activity_reason;
+
+typedef void (fz_activity_fn)(fz_context *ctx, void *opaque, fz_activity_reason reason, void *reason_arg);
+
+typedef struct
+{
+	void *opaque;
+	fz_activity_fn *activity;
+} fz_activity_context;
+
+void fz_register_activity_logger(fz_context *ctx, fz_activity_fn *activity, void *opaque);
+
 struct fz_context
 {
 	void *user;
+
+	/* If master points to itself, then we are the master context.
+	 * If master is NULL, then we are the master context, but we have
+	 * been destroyed. We exist just so the count of clones can live
+	 * on. Otherwise master points to the master context from which
+	 * we were cloned. */
+	fz_context *master;
+	/* The number of contexts in this family. 1 for this one, plus
+	 * 1 for every context cloned (directly or indirectly) from it. */
+	int context_count;
+
 	fz_alloc_context alloc;
 	fz_locks_context locks;
 	fz_error_context error;
 	fz_warn_context warn;
+	fz_activity_context activity;
 
 	/* unshared contexts */
 	fz_aa_context aa;

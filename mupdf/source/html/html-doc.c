@@ -180,7 +180,7 @@ htdoc_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char 
 {
 	html_document *doc = (html_document *)doc_;
 	if (!strcmp(key, FZ_META_FORMAT))
-		return (int)fz_strlcpy(buf, doc->format->format_name, size);
+		return 1 + (int)fz_strlcpy(buf, doc->format->format_name, size);
 	if (!strcmp(key, FZ_META_INFO_TITLE) && doc->html->title)
 		return 1 + (int)fz_strlcpy(buf, doc->html->title, size);
 	return -1;
@@ -271,7 +271,7 @@ static int isws(int c)
 	return c == 32 || c == 9 || c == 10 || c == 13 || c == 12;
 }
 
-int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
+static int recognize_html_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state, int xhtml)
 {
 	uint8_t buffer[4096];
 	size_t i, n, m;
@@ -279,10 +279,14 @@ int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *han
 		state_top,
 		state_open,
 		state_pling,
+		state_query,
 		state_maybe_doctype,
 		state_maybe_doctype_ws,
+		state_maybe_doctype_html,
+		state_maybe_doctype_html_xhtml,
 		state_maybe_comment,
 		state_maybe_html,
+		state_maybe_html_xhtml,
 		state_comment
 	};
 	int state = state_top;
@@ -359,11 +363,17 @@ int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *han
 				continue; /* whitespace */
 			if (c == '!')
 				state = state_pling;
+			else if (c == '?')
+				state = state_query;
 			else if (c == 'h' || c == 'H')
 				state = state_maybe_html;
 			else
 				return 0; /* Not an acceptable opening tag. */
 			m = 0;
+			break;
+		case state_query:
+			if (c == '>')
+				state = state_top;
 			break;
 		case state_pling:
 			if (isws(c))
@@ -411,28 +421,91 @@ int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *han
 				m++;
 			else if (m > 0 && (c == 'h' || c == 'H'))
 			{
-				state = state_maybe_html;
+				state = state_maybe_doctype_html;
 				m = 0;
 			}
 			else
 				return 0; /* Not an acceptable opening tag. */
+			break;
+		case state_maybe_doctype_html:
+			if (c == "tml"[m] || c == "TML"[m])
+			{
+				m++;
+				if (m == 3)
+				{
+					state = state_maybe_doctype_html_xhtml;
+					m = 0;
+				}
+			}
+			else
+				return 0; /* Not an acceptable opening tag. */
+			break;
+		case state_maybe_doctype_html_xhtml:
+			if (c == '>')
+			{
+				/* Not xhtml - the xhtml agent can handle this at a pinch (so 25),
+				 * but we'd rather the html one did (75). */
+				return xhtml ? 25 : 75;
+			}
+			if (c >= 'A'  && c <= 'Z')
+				c += 'a'-'A';
+			if (c == "xhtml"[m])
+			{
+				m++;
+				if (m == 5)
+				{
+					/* xhtml - the xhtml agent would be better (75) than the html
+					 * agent (25). */
+					return xhtml ? 75 : 25;
+				}
+			}
+			else
+				m = 0;
 			break;
 		case state_maybe_html:
 			if (c == "tml"[m] || c == "TML"[m])
 			{
 				m++;
 				if (m == 3)
-					/* Only return a score of 50, so that other, more
-					 * specific recognisers have scope to override this. */
-					return 50;
+				{
+					state = state_maybe_html_xhtml;
+					m = 0;
+				}
 			}
 			else
 				return 0; /* Not an acceptable opening tag. */
+			break;
+		case state_maybe_html_xhtml:
+			if (c == '>')
+			{
+				/* Not xhtml - the xhtml agent can handle this at a pinch (so 25),
+				 * but we'd rather the html one did (75). */
+				return xhtml ? 25 : 75;
+			}
+			if (c >= 'A'  && c <= 'Z')
+				c += 'a'-'A';
+			if (c == "xhtml"[m])
+			{
+				m++;
+				if (m == 5)
+				{
+					/* xhtml - the xhtml agent would be better (75) than the html
+					 * agent (25). */
+					return xhtml ? 75 : 25;
+				}
+			}
+			else
+				m = 0;
 			break;
 		}
 	}
 
 	return 0;
+}
+
+int htdoc_recognize_html_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
+{
+	return recognize_html_content(ctx, handler, stream, dir, hstate, free_state, 0);
 }
 
 static const fz_htdoc_format_t fz_htdoc_html5 =
@@ -486,6 +559,11 @@ xhtdoc_open_document(fz_context *ctx, const fz_document_handler *handler, fz_str
 	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, dir, &fz_htdoc_xhtml);
 }
 
+int xhtdoc_recognize_xhtml_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **hstate, fz_document_recognize_state_free_fn **free_state)
+{
+	return recognize_html_content(ctx, handler, stream, dir, hstate, free_state, 1);
+}
+
 static const char *xhtdoc_extensions[] =
 {
 	"xhtml",
@@ -504,7 +582,7 @@ fz_document_handler xhtml_document_handler =
 	xhtdoc_open_document,
 	xhtdoc_extensions,
 	xhtdoc_mimetypes,
-	NULL,
+	xhtdoc_recognize_xhtml_content,
 	1
 };
 
@@ -521,6 +599,44 @@ static fz_document *
 fb2doc_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *dir, void *state)
 {
 	return fz_htdoc_open_document_with_stream_and_dir(ctx, file, dir, &fz_htdoc_fb2);
+}
+
+static int
+fb2doc_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **state, fz_document_recognize_state_free_fn **free_state)
+{
+	const char *match = "<FictionBook";
+	int pos = 0;
+	int n = 4096;
+	int c;
+
+	if (state)
+		*state = NULL;
+	if (free_state)
+		*free_state = NULL;
+
+	if (stream == NULL)
+		return 0;
+
+	do
+	{
+		c = fz_read_byte(ctx, stream);
+		if (c == EOF)
+			return 0;
+		if (c == match[pos])
+		{
+			pos++;
+			if (pos == 12)
+				return 100;
+		}
+		else
+		{
+			/* Restart matching, but recheck c against the start. */
+			pos = (c == match[0]);
+		}
+	}
+	while (--n > 0);
+
+	return 0;
 }
 
 static const char *fb2doc_extensions[] =
@@ -543,7 +659,8 @@ fz_document_handler fb2_document_handler =
 	NULL,
 	fb2doc_open_document,
 	fb2doc_extensions,
-	fb2doc_mimetypes
+	fb2doc_mimetypes,
+	fb2doc_recognize_content
 };
 
 /* Mobi document handler */
@@ -580,6 +697,30 @@ mobi_open_document_with_buffer(fz_context *ctx, fz_buffer *mobi)
 	return doc;
 }
 
+static int
+mobi_recognize_content(fz_context *ctx, const fz_document_handler *handler, fz_stream *stream, fz_archive *dir, void **state, fz_document_recognize_state_free_fn **free_state)
+{
+	char text[8];
+
+	if (state)
+		*state = NULL;
+	if (free_state)
+		*free_state = NULL;
+
+	if (stream == NULL)
+		return 0;
+
+	fz_seek(ctx, stream, 32 + 28, SEEK_SET);
+	if (fz_read(ctx, stream, (unsigned char *)text, 8) != 8)
+		return 0;
+	if (memcmp(text, "BOOKMOBI", 8) == 0)
+		return 100;
+	if (memcmp(text, "TEXtREAd", 8) == 0)
+		return 100;
+
+	return 0;
+}
+
 static fz_document *
 mobi_open_document(fz_context *ctx, const fz_document_handler *handler, fz_stream *file, fz_stream *accel, fz_archive *dir, void *state)
 {
@@ -605,5 +746,6 @@ fz_document_handler mobi_document_handler =
 	NULL,
 	mobi_open_document,
 	mobi_extensions,
-	mobi_mimetypes
+	mobi_mimetypes,
+	mobi_recognize_content
 };

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -27,11 +27,29 @@ public class Outline
 	public String title;
 	public String uri;
 	public Outline[] down;
+	public float r;
+	public float g;
+	public float b;
+	public int flags;
 
 	public Outline(String title, String uri, Outline[] down) {
 		this.title = title;
 		this.uri = uri;
 		this.down = down;
+		this.r = 0;
+		this.g = 0;
+		this.b = 0;
+		this.flags = 0;
+	}
+
+	public Outline(String title, String uri, Outline[] down, float r, float g, float b, int flags) {
+		this.title = title;
+		this.uri = uri;
+		this.down = down;
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.flags = flags;
 	}
 
 	public String toString()

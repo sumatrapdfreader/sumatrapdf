@@ -71,7 +71,7 @@ public class MuPDFGui : System.Windows.Forms.Form
         }
         catch (System.Exception e)
         {
-            System.Console.WriteLine("Failed to open: " + path + " becase: " + e);
+            System.Console.WriteLine("Failed to open: " + path + " because: " + e);
             return;
         }
         this.goto_page(0, 0);

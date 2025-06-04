@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -26,8 +26,26 @@ JNIEXPORT void JNICALL
 FUN(Shade_finalize)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
-	fz_shade *shd = from_Shade_safe(env, self);
-	if (!ctx || !shd) return;
+	fz_shade *shade = from_Shade_safe(env, self);
+	if (!ctx || !shade) return;
 	(*env)->SetLongField(env, self, fid_Shade_pointer, 0);
-	fz_drop_shade(ctx, shd);
+	fz_drop_shade(ctx, shade);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Shade_getBounds)(JNIEnv *env, jobject self, jobject jctm)
+{
+	fz_context *ctx = get_context(env);
+	fz_shade *shade = from_Shade_safe(env, self);
+	fz_matrix ctm = from_Matrix(env, jctm);
+	fz_rect rect;
+
+	if (!ctx || !shade) return NULL;
+
+	fz_try(ctx)
+		rect = fz_bound_shade(ctx, shade, ctm);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Rect_safe(ctx, env, rect);
 }

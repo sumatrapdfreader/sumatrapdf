@@ -1,14 +1,13 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-Language Bindings
+C++, Python, and C# Bindings
 ===============================================================
 
 ..
@@ -1278,7 +1277,7 @@ functions and class methods.]
 
         /** Helper for calling `fz_document_handler::open` function pointer via
         Swig from Python/C#. */
-        FZ_FUNCTION fz_document* fz_document_handler_open(fz_context* ctx, const fz_document_handler *handler, fz_stream* stream, fz_stream* accel, fz_archive* dir);
+        FZ_FUNCTION fz_document* fz_document_handler_open(fz_context* ctx, const fz_document_handler *handler, fz_stream* stream, fz_stream* accel, fz_archive* dir, void* recognize_state);
 
         /** Helper for calling a `fz_document_handler::recognize` function
         pointer via Swig from Python/C#. */
@@ -1308,7 +1307,12 @@ functions and class methods.]
                 );
 
         /** Swig-friendly wrapper for pdf_rearrange_pages(). */
-        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>& pages);
+        void pdf_rearrange_pages2(
+                fz_context* ctx,
+                pdf_document* doc,
+                const std::vector<int>& pages,
+                pdf_clean_options_structure structure
+                );
 
         /** Swig-friendly wrapper for pdf_subset_fonts(). */
         void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages);
@@ -1316,6 +1320,30 @@ functions and class methods.]
         /** Swig-friendly and typesafe way to do fz_snprintf(fmt, value). `fmt`
         must end with one of 'efg' otherwise we throw an exception. */
         std::string fz_format_double(fz_context* ctx, const char* fmt, double value);
+
+        struct fz_font_ucs_gid
+        {{
+            unsigned long ucs;
+            unsigned int gid;
+        }};
+
+        /** SWIG-friendly wrapper for fz_enumerate_font_cmap(). */
+        std::vector<fz_font_ucs_gid> fz_enumerate_font_cmap2(fz_context* ctx, fz_font* font);
+
+        /** SWIG-friendly wrapper for pdf_set_annot_callout_line(). */
+        void pdf_set_annot_callout_line2(fz_context *ctx, pdf_annot *annot, std::vector<fz_point>& callout);
+
+        /** SWIG-friendly wrapper for fz_decode_barcode_from_display_list(),
+        avoiding leak of the returned string. */
+        std::string fz_decode_barcode_from_display_list2(fz_context *ctx, fz_barcode_type *type, fz_display_list *list, fz_rect subarea, int rotate);
+
+        /** SWIG-friendly wrapper for fz_decode_barcode_from_pixmap(), avoiding
+        leak of the returned string. */
+        std::string fz_decode_barcode_from_pixmap2(fz_context *ctx, fz_barcode_type *type, fz_pixmap *pix, int rotate);
+
+        /** SWIG-friendly wrapper for fz_decode_barcode_from_page(), avoiding
+        leak of the returned string. */
+        std::string fz_decode_barcode_from_page2(fz_context *ctx, fz_barcode_type *type, fz_page *page, fz_rect subarea, int rotate);
 
 
 Python/C# bindings details
@@ -1540,7 +1568,6 @@ Here is an example PDF filter written in Python that removes alternating items:
 
 
 
-.. include:: footer.rst
 
 
 

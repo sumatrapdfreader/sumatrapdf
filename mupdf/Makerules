@@ -3,10 +3,6 @@
 # We use $OS from environment if set.
 ifeq ($(OS),)
   OS := $(shell uname)
-  OS := $(OS:MINGW%=MINGW)
-  OS := $(OS:MSYS%=MINGW)
-  OS := $(OS:Windows_NT=MINGW)
-  OS := $(OS:Darwin=MACOS)
 endif
 
 WARNING_CFLAGS := -Wall -Wsign-compare
@@ -15,40 +11,70 @@ WARNING_CFLAGS := -Wall -Wsign-compare
 
 build_suffix :=
 
+ifeq ($(brotli),no)
+  CFLAGS += -DFZ_ENABLE_BROTLI=0
+  USE_BROTLI := no
+else
+  USE_BROTLI := yes
+endif
+
+ifeq ($(mujs),no)
+  CFLAGS += -DFZ_ENABLE_JS=0
+  USE_MUJS := no
+else
+  USE_MUJS := yes
+endif
+
+ifeq ($(html),no)
+  CFLAGS += -DFZ_ENABLE_HTML_ENGINE=0
+  CFLAGS += -DFZ_ENABLE_HTML=0
+  CFLAGS += -DFZ_ENABLE_EPUB=0
+  CFLAGS += -DFZ_ENABLE_FB2=0
+  CFLAGS += -DFZ_ENABLE_MOBI=0
+  CFLAGS += -DFZ_ENABLE_OFFICE=0
+  CFLAGS += -DFZ_ENABLE_TXT=0
+endif
+
 ifeq ($(tesseract),yes)
   build_suffix := $(build_suffix)-tesseract
   USE_TESSERACT := yes
 endif
 
+ifeq ($(barcode),yes)
+  build_suffix := $(build_suffix)-barcode
+  USE_ZXINGCPP := yes
+else
+  CFLAGS += -DFZ_ENABLE_BARCODE=0
+endif
+
 ifeq ($(tofu),yes)
   build_suffix := $(build_suffix)-tofu
-  XCFLAGS += -DTOFU
+  CFLAGS += -DTOFU
 endif
 
 ifeq ($(tofu_cjk),yes)
   build_suffix := $(build_suffix)-tofu_cjk
-  XCFLAGS += -DTOFU_CJK
+  CFLAGS += -DTOFU_CJK
 endif
 
 ifeq ($(tofu_cjk_ext),yes)
   build_suffix := $(build_suffix)-tofu_cjk_ext
-  XCFLAGS += -DTOFU_CJK_EXT
+  CFLAGS += -DTOFU_CJK_EXT
 endif
 
 ifeq ($(tofu_cjk_lang),yes)
   build_suffix := $(build_suffix)-tofu_cjk_lang
-  XCFLAGS += -DTOFU_CJK_LANG
+  CFLAGS += -DTOFU_CJK_LANG
 endif
 
 ifeq ($(archive),yes)
   build_suffix := $(build_suffix)-archive
-  XCFLAGS += -DHAVE_LIBARCHIVE
-  HAVE_LIBARCHIVE := yes
+  USE_LIBARCHIVE := yes
 endif
 
 ifeq ($(commercial),yes)
   build_suffix := $(build_suffix)-commercial
-  XCFLAGS += -DHAVE_SMARTOFFICE
+  CFLAGS += -DHAVE_SMARTOFFICE
   HAVE_SMARTOFFICE := yes
 endif
 
@@ -59,23 +85,12 @@ ifeq ($(findstring -fembed-bitcode,$(XCFLAGS)),)
   CFLAGS += -ffunction-sections -fdata-sections
 endif
 
-ifeq ($(OS),MACOS)
+ifeq ($(OS),Darwin)
   LDREMOVEUNREACH := -Wl,-dead_strip
   SO := dylib
 else
   LDREMOVEUNREACH := -Wl,--gc-sections
-  ifeq ($(OS),MINGW)
-    SO := dll
-    EXE := .exe
-  else
-    SO := so
-  endif
-endif
-
-ifeq "$(OS)" "ios"
-  NEONFLAGS =
-else
-  NEONFLAGS = -mneon
+  SO := so
 endif
 
 SANITIZE_FLAGS += -fsanitize=address
@@ -86,7 +101,7 @@ ifeq ($(shared),yes)
     override build_prefix := $(build_prefix)shared-
   endif
   LIB_CFLAGS = -fPIC
-  ifeq ($(OS),MACOS)
+  ifeq ($(OS),Darwin)
     LIB_LDFLAGS = -dynamiclib
   else ifeq ($(OS),wasm)
     LIB_LDFLAGS = -shared -sSIDE_MODULE
@@ -102,6 +117,8 @@ ifeq ($(shared),yes)
     # files containing font data, so leave HAVE_OBJCOPY unset. And we need
     # extra memory when linking.
     LDFLAGS += -sTOTAL_MEMORY=48MB
+  else ifeq ($(OS),Linux)
+    LIB_LDFLAGS = -shared -Wl,-soname,$(notdir $@)
   else
     LIB_LDFLAGS = -shared
   endif
@@ -155,10 +172,6 @@ else
   $(error unknown build setting: '$(build)')
 endif
 
-ifeq ($(OS),OpenBSD)
-  LDFLAGS += -pthread
-endif
-
 # Default system libraries
 SYS_FREETYPE_LIBS := -lfreetype2
 SYS_HARFBUZZ_LIBS := -lharfbuzz
@@ -169,26 +182,17 @@ SYS_LIBJPEG_LIBS := -ljpeg
 SYS_MUJS_LIBS := -lmujs
 SYS_OPENJPEG_LIBS := -lopenjp2
 SYS_ZLIB_LIBS := -lz
+SYS_BROTLI_LIBS := -lbrotlidec -lbrotlienc
 SYS_TESSERACT_LIBS := -ltesseract
 SYS_LEPTONICA_LIBS := -llept
 SYS_LIBARCHIVE_LIBS := -larchive
+SYS_ZXINGCPP_LIBS := -lzxing-cpp -lzint
 
 ifneq "$(CLUSTER)" ""
   CFLAGS += -DCLUSTER
 endif
 
-ifeq ($(OS),Linux)
-    LINUX_OR_OPENBSD := yes
-endif
-ifeq ($(OS),OpenBSD)
-    LINUX_OR_OPENBSD := yes
-endif
-
-ifeq ($(OS),MINGW)
-  WINDRES := windres
-  HAVE_WIN32 := yes
-
-else ifeq ($(OS),MACOS)
+ifeq ($(OS),Darwin)
   HAVE_GLUT := yes
   SYS_GLUT_CFLAGS := -Wno-deprecated-declarations
   SYS_GLUT_LIBS := -framework GLUT -framework OpenGL
@@ -205,99 +209,119 @@ else ifeq ($(OS),MACOS)
   else
     HAVE_LIBCRYPTO := $(shell pkg-config --exists 'libcrypto >= 1.1.0' && echo yes)
     ifeq ($(HAVE_LIBCRYPTO),yes)
-	  LIBCRYPTO_CFLAGS := $(shell pkg-config --cflags libcrypto) -DHAVE_LIBCRYPTO
-	  LIBCRYPTO_LIBS := $(shell pkg-config --libs libcrypto)
+      LIBCRYPTO_CFLAGS := $(shell pkg-config --cflags libcrypto) -DHAVE_LIBCRYPTO
+      LIBCRYPTO_LIBS := $(shell pkg-config --libs libcrypto)
     endif
   endif
 
-else ifeq ($(LINUX_OR_OPENBSD),yes)
+else
 
   ifeq ($(OS),Linux)
     HAVE_OBJCOPY := yes
   endif
 
-  ifeq ($(shell pkg-config --exists freetype2 && echo yes),yes)
-	SYS_FREETYPE_CFLAGS := $(shell pkg-config --cflags freetype2)
-	SYS_FREETYPE_LIBS := $(shell pkg-config --libs freetype2)
+  ifeq ($(OS),OpenBSD)
+    LDFLAGS += -pthread
   endif
-  ifeq ($(shell pkg-config --exists gumbo && echo yes),yes)
-	SYS_GUMBO_CFLAGS := $(shell pkg-config --cflags gumbo)
-	SYS_GUMBO_LIBS := $(shell pkg-config --libs gumbo)
+
+  ifeq ($(shell pkg-config --exists 'freetype2 >= 18.3.12' && echo yes),yes)
+    SYS_FREETYPE_CFLAGS := $(shell pkg-config --cflags freetype2)
+    SYS_FREETYPE_LIBS := $(shell pkg-config --libs freetype2)
   endif
-  ifeq ($(shell pkg-config --exists harfbuzz && echo yes),yes)
-	SYS_HARFBUZZ_CFLAGS := $(shell pkg-config --cflags harfbuzz)
-	SYS_HARFBUZZ_LIBS := $(shell pkg-config --libs harfbuzz)
+  ifeq ($(shell pkg-config --exists 'gumbo >= 0.10.0' && echo yes),yes)
+    SYS_GUMBO_CFLAGS := $(shell pkg-config --cflags gumbo)
+    SYS_GUMBO_LIBS := $(shell pkg-config --libs gumbo)
+  endif
+  ifeq ($(shell pkg-config --exists 'harfbuzz >= 2.0.0' && echo yes),yes)
+    SYS_HARFBUZZ_CFLAGS := $(shell pkg-config --cflags harfbuzz)
+    SYS_HARFBUZZ_LIBS := $(shell pkg-config --libs harfbuzz)
   endif
   ifeq ($(shell pkg-config --exists lcms2 && echo yes),yes)
-	SYS_LCMS2_CFLAGS := $(shell pkg-config --cflags lcms2)
-	SYS_LCMS2_LIBS := $(shell pkg-config --libs lcms2)
+    SYS_LCMS2_CFLAGS := $(shell pkg-config --cflags lcms2)
+    SYS_LCMS2_LIBS := $(shell pkg-config --libs lcms2)
   endif
   ifeq ($(shell pkg-config --exists libjpeg && echo yes),yes)
-	SYS_LIBJPEG_CFLAGS := $(shell pkg-config --cflags libjpeg)
-	SYS_LIBJPEG_LIBS := $(shell pkg-config --libs libjpeg)
+    SYS_LIBJPEG_CFLAGS := $(shell pkg-config --cflags libjpeg)
+    SYS_LIBJPEG_LIBS := $(shell pkg-config --libs libjpeg)
   endif
-  ifeq ($(shell pkg-config --exists libopenjp2 && echo yes),yes)
-	SYS_OPENJPEG_CFLAGS := $(shell pkg-config --cflags libopenjp2)
-	SYS_OPENJPEG_LIBS := $(shell pkg-config --libs libopenjp2)
+  ifeq ($(shell pkg-config --exists 'libopenjp2 >= 2.1.0' && echo yes),yes)
+    SYS_OPENJPEG_CFLAGS := $(shell pkg-config --cflags libopenjp2)
+    SYS_OPENJPEG_LIBS := $(shell pkg-config --libs libopenjp2)
   endif
-  ifeq ($(shell pkg-config --exists zlib && echo yes),yes)
-	SYS_ZLIB_CFLAGS := $(shell pkg-config --cflags zlib)
-	SYS_ZLIB_LIBS := $(shell pkg-config --libs zlib)
+  ifeq ($(shell pkg-config --exists 'zlib >= 1.2.6' && echo yes),yes)
+    SYS_ZLIB_CFLAGS := $(shell pkg-config --cflags zlib)
+    SYS_ZLIB_LIBS := $(shell pkg-config --libs zlib)
+  endif
+  ifeq ($(shell pkg-config --exists 'libbrotlidec libbrotlienc >= 0.6.0' && echo yes),yes)
+    SYS_BROTLI_CFLAGS := $(shell pkg-config --cflags libbrotlidec libbrotlienc)
+    SYS_BROTLI_LIBS := $(shell pkg-config --libs libbrotlidec libbrotlienc)
   endif
 
   HAVE_SYS_LEPTONICA := $(shell pkg-config --exists 'lept >= 1.7.4' && echo yes)
   ifeq ($(HAVE_SYS_LEPTONICA),yes)
-	SYS_LEPTONICA_CFLAGS := $(shell pkg-config --cflags lept)
-	SYS_LEPTONICA_LIBS := $(shell pkg-config --libs lept)
+    SYS_LEPTONICA_CFLAGS := $(shell pkg-config --cflags lept)
+    SYS_LEPTONICA_LIBS := $(shell pkg-config --libs lept)
   endif
 
   HAVE_SYS_TESSERACT := $(shell pkg-config --exists 'tesseract >= 4.0.0' && echo yes)
   ifeq ($(HAVE_SYS_TESSERACT),yes)
-	SYS_TESSERACT_CFLAGS := $(shell pkg-config --cflags tesseract)
-	SYS_TESSERACT_LIBS := $(shell pkg-config --libs tesseract)
+    SYS_TESSERACT_CFLAGS := $(shell pkg-config --cflags tesseract)
+    SYS_TESSERACT_LIBS := $(shell pkg-config --libs tesseract)
   endif
 
   HAVE_SYS_LIBARCHIVE := $(shell pkg-config --exists 'libarchive' && echo yes)
   ifeq ($(HAVE_SYS_LIBARCHIVE),yes)
-	SYS_LIBARCHIVE_CFLAGS := $(shell pkg-config --cflags libarchive)
-	SYS_LIBARCHIVE_LIBS := $(shell pkg-config --libs libarchive)
+    SYS_LIBARCHIVE_CFLAGS := $(shell pkg-config --cflags libarchive)
+    SYS_LIBARCHIVE_LIBS := $(shell pkg-config --libs libarchive)
+  endif
+
+  HAVE_SYS_ZXINGCPP := $(shell pkg-config --exists 'zxing >= 2.0.0' && echo yes)
+  ifeq ($(HAVE_SYS_ZXINGCPP),yes)
+    SYS_ZXINGCPP_CFLAGS := $(shell pkg-config --cflags zxing)
+    SYS_ZXINGCPP_LIBS := $(shell pkg-config --libs zxing)
   endif
 
   HAVE_SYS_CURL := $(shell pkg-config --exists libcurl && echo yes)
   ifeq ($(HAVE_SYS_CURL),yes)
-	SYS_CURL_CFLAGS := $(shell pkg-config --cflags libcurl)
-	SYS_CURL_LIBS := $(shell pkg-config --libs libcurl)
+    SYS_CURL_CFLAGS := $(shell pkg-config --cflags libcurl)
+    SYS_CURL_LIBS := $(shell pkg-config --libs libcurl)
   endif
 
-  HAVE_GLUT := yes
+  ifeq ($(HAVE_GLUT),)
+    HAVE_GLUT := $(shell pkg-config --exists gl x11 xrandr && echo yes)
+  endif
   ifeq ($(HAVE_GLUT),yes)
-    ifeq ($(OS),OpenBSD)
-      SYS_GLUT_CFLAGS := $(shell pkg-config --cflags glut gl)
-      SYS_GLUT_LIBS := $(shell pkg-config --libs glut gl)
+    SYS_GL_CFLAGS := $(shell pkg-config --cflags gl x11 xrandr)
+    SYS_GL_LIBS := $(shell pkg-config --libs gl x11 xrandr)
+    ifeq ($(shell pkg-config --exists glut && echo yes),yes)
+      SYS_GLUT_CFLAGS := $(shell pkg-config --cflags glut)
+      SYS_GLUT_LIBS := $(shell pkg-config --libs glut)
     else
       SYS_GLUT_CFLAGS :=
-      SYS_GLUT_LIBS := -lglut -lGL
+      SYS_GLUT_LIBS := -lglut
     endif
   endif
 
-  HAVE_X11 := $(shell pkg-config --exists x11 xext && echo yes)
+  ifeq ($(HAVE_X11),)
+    HAVE_X11 := $(shell pkg-config --exists x11 xext && echo yes)
+  endif
   ifeq ($(HAVE_X11),yes)
-	X11_CFLAGS := $(shell pkg-config --cflags x11 xext)
-	X11_LIBS := $(shell pkg-config --libs x11 xext)
+    X11_CFLAGS := $(shell pkg-config --cflags x11 xext)
+    X11_LIBS := $(shell pkg-config --libs x11 xext)
   endif
 
   ifeq ($(HAVE_LIBCRYPTO),)
     HAVE_LIBCRYPTO := $(shell pkg-config --exists 'libcrypto >= 1.1.0' && echo yes)
   endif
   ifeq ($(HAVE_LIBCRYPTO),yes)
-	LIBCRYPTO_CFLAGS := $(shell pkg-config --cflags libcrypto) -DHAVE_LIBCRYPTO
-	LIBCRYPTO_LIBS := $(shell pkg-config --libs libcrypto)
+    LIBCRYPTO_CFLAGS := $(shell pkg-config --cflags libcrypto) -DHAVE_LIBCRYPTO
+    LIBCRYPTO_LIBS := $(shell pkg-config --libs libcrypto)
   endif
 
   HAVE_PTHREAD := yes
   ifeq ($(HAVE_PTHREAD),yes)
-	PTHREAD_CFLAGS :=
-	PTHREAD_LIBS := -lpthread
+    PTHREAD_CFLAGS :=
+    PTHREAD_LIBS := -lpthread
   endif
 
 endif
@@ -305,11 +329,10 @@ endif
 # The following section has various cross compilation configurations.
 #
 # Invoke these as:
-#      make OS=mingw32-cross
+#      make OS=wasm
 #
 # This does rely on the generated directory being populated with the font files.
-# On a unix-like system, run 'make generate' before doing the cross compile.
-# On Windows, run 'nmake -f scripts\fontdump.nmake' in a Visual Studio command prompt.
+# Run 'make generate' before doing the cross compile.
 
 ifeq "$(OS)" "wasm"
   build_prefix += wasm/
@@ -343,39 +366,4 @@ ifeq "$(OS)" "pyodide"
   HAVE_OBJCOPY=no
   HAVE_LIBCRYPTO=no
   CFLAGS += -pthread
-endif
-
-ifeq "$(OS)" "mingw32-cross"
-  build_prefix += $(OS)/
-  SO := dll
-  EXE := .exe
-  CC = i686-w64-mingw32-gcc
-  CXX = i686-w64-mingw32-g++
-  LD = i686-w64-mingw32-gcc
-  AR = i686-w64-mingw32-ar
-  WINDRES = i686-w64-mingw32-windres
-  HAVE_WIN32=yes
-endif
-
-ifeq "$(OS)" "mingw64-cross"
-  build_prefix += $(OS)/
-  SO := dll
-  EXE := .exe
-  CC = x86_64-w64-mingw32-gcc
-  CXX = x86_64-w64-mingw32-g++
-  LD = x86_64-w64-mingw32-gcc
-  AR = x86_64-w64-mingw32-ar
-  WINDRES = x86_64-w64-mingw32-windres
-  HAVE_WIN32=yes
-endif
-
-# Most variables when building for iOS are set up in ios/build_libs.sh,
-# which is called from the Xcode project as a "Run Script" build step.
-# The following section works for both device and simulator builds.
-ifeq "$(OS)" "ios"
-  CC = xcrun cc
-  CXX = xcrun c++
-  AR = xcrun ar
-  LD = xcrun ld
-  RANLIB = xcrun ranlib
 endif

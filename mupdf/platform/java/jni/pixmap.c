@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -99,6 +99,125 @@ FUN(Pixmap_clearWithValue)(JNIEnv *env, jobject self, jint value)
 		fz_clear_pixmap_with_value(ctx, pixmap, value);
 	fz_catch(ctx)
 		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asPNG)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_png(ctx, pixmap, fz_default_color_params);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asJPEG)(JNIEnv *env, jobject self, jint quality, jboolean invert_cmyk)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_jpeg(ctx, pixmap, fz_default_color_params, quality, invert_cmyk);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asPAM)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_pam(ctx, pixmap, fz_default_color_params);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asPNM)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_pnm(ctx, pixmap, fz_default_color_params);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asPBM)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_pbm(ctx, pixmap, fz_default_color_params);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asPKM)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_pkm(ctx, pixmap, fz_default_color_params);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_asJPX)(JNIEnv *env, jobject self, jint quality)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_buffer *buf = NULL;
+
+	if (!ctx || !pixmap) return NULL;
+
+	fz_try(ctx)
+		buf = fz_new_buffer_from_pixmap_as_jpx(ctx, pixmap, fz_default_color_params, quality);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Buffer_safe_own(ctx, env, buf);
 }
 
 JNIEXPORT void JNICALL
@@ -221,6 +340,27 @@ FUN(Pixmap_saveAsPKM)(JNIEnv *env, jobject self, jstring jfilename)
 
 	fz_try(ctx)
 		fz_save_pixmap_as_pkm(ctx, pixmap, filename);
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT void JNICALL
+FUN(Pixmap_saveAsJPX)(JNIEnv *env, jobject self, jstring jfilename, jint quality)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	const char *filename = "null";
+
+	if (!ctx || !pixmap) return;
+	if (!jfilename) jni_throw_arg_void(env, "filename must not be null");
+
+	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
+	if (!filename) return;
+
+	fz_try(ctx)
+		fz_save_pixmap_as_jpx(ctx, pixmap, filename, quality);
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
 	fz_catch(ctx)
@@ -499,7 +639,7 @@ FUN(Pixmap_newNativeDeskew)(JNIEnv *env, jobject self, jfloat ang, jint border)
 }
 
 JNIEXPORT jfloat JNICALL
-FUN(Pixmap_skewDetect)(JNIEnv *env, jobject self)
+FUN(Pixmap_detectSkew)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_pixmap *pixmap = from_Pixmap(env, self);
@@ -508,7 +648,7 @@ FUN(Pixmap_skewDetect)(JNIEnv *env, jobject self)
 	if (!ctx || !pixmap) return 0;
 
 	fz_try(ctx)
-		ang = fz_skew_detect(ctx, pixmap);
+		ang = fz_detect_skew(ctx, pixmap);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 
@@ -534,4 +674,120 @@ FUN(Pixmap_detectDocument)(JNIEnv *env, jobject self)
 		return NULL;
 
 	return to_floatArray(ctx, env, (float *)&points[0], 8);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_warp)(JNIEnv *env, jobject self, jobject jpoints, jint width, jint height)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	jobject jpoint;
+	fz_point points[4] = { 0 };
+	fz_pixmap *dest = NULL;
+	jsize n, i;
+
+	if (!ctx || !pixmap) return NULL;
+	if (!jpoints) jni_throw_arg(env, "points not be null");
+
+	n = (*env)->GetArrayLength(env, jpoints);
+	if (n != 4) jni_throw_arg(env, "points must have exactly eight elements");
+
+	for (i = 0; i < n; i++)
+	{
+		jpoint = (*env)->GetObjectArrayElement(env, jpoints, i);
+		points[i].x = (*env)->GetFloatField(env, jpoint, fid_Point_x);
+		points[i].y = (*env)->GetFloatField(env, jpoint, fid_Point_y);
+	}
+
+	fz_try(ctx)
+		dest = fz_warp_pixmap(ctx, pixmap, points, width, height);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Pixmap_safe_own(ctx, env, dest);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_autowarp)(JNIEnv *env, jobject self, jobject jpoints)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	jobject jpoint;
+	fz_point points[4] = { 0 };
+	fz_pixmap *dest = NULL;
+	jsize n, i;
+
+	if (!ctx || !pixmap) return NULL;
+	if (!jpoints) jni_throw_arg(env, "points not be null");
+
+	n = (*env)->GetArrayLength(env, jpoints);
+	if (n != 4) jni_throw_arg(env, "points must have exactly eight elements");
+
+	for (i = 0; i < n; i++)
+	{
+		jpoint = (*env)->GetObjectArrayElement(env, jpoints, i);
+		points[i].x = (*env)->GetFloatField(env, jpoint, fid_Point_x);
+		points[i].y = (*env)->GetFloatField(env, jpoint, fid_Point_y);
+	}
+
+	fz_try(ctx)
+		dest = fz_autowarp_pixmap(ctx, pixmap, points);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Pixmap_safe_own(ctx, env, dest);
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_decodeBarcode)(JNIEnv *env, jobject self, jfloat rotate)
+{
+	fz_context *ctx = get_context(env);
+	fz_pixmap *pixmap = from_Pixmap(env, self);
+	fz_barcode_type type = FZ_BARCODE_NONE;
+	char *contents = NULL;
+	jobject jcontents;
+	jobject jbarcodeinfo;
+
+	if (!ctx || !pixmap)
+		return NULL;
+
+	fz_try(ctx)
+		contents = fz_decode_barcode_from_pixmap(ctx, &type, pixmap, rotate);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jcontents = (*env)->NewStringUTF(env, contents);
+	fz_free(ctx, contents);
+	if (!jcontents || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	jbarcodeinfo = (*env)->NewObject(env, cls_BarcodeInfo, mid_BarcodeInfo_init, type, jcontents);
+	if (!jbarcodeinfo || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	return jbarcodeinfo;
+}
+
+JNIEXPORT jobject JNICALL
+FUN(Pixmap_encodeBarcode)(JNIEnv *env, jobject self, jint barcode_type, jstring jcontents, jint size, jint ec, jboolean quiet, jboolean hrt)
+{
+	fz_context *ctx = get_context(env);
+	const char *contents = NULL;
+	fz_pixmap *pix = NULL;
+
+	if (!ctx)
+		return NULL;
+
+	contents = (*env)->GetStringUTFChars(env, jcontents, NULL);
+	if (!contents) jni_throw_run(env, "cannot get characters in contents string");
+
+	fz_try(ctx)
+		pix = fz_new_barcode_pixmap(ctx, barcode_type, contents, size, ec, quiet, hrt);
+	fz_always(ctx)
+		if (contents)
+			(*env)->ReleaseStringUTFChars(env, jcontents, contents);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return to_Pixmap_safe_own(ctx, env, pix);
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -489,14 +489,17 @@ examine_page(fz_context *ctx, pdf_document *doc, pdf_page *page, fonts_usage_t *
 	pdf_processor *proc = pdf_new_font_analysis_processor(ctx, usage);
 	pdf_obj *contents = pdf_page_contents(ctx, page);
 	pdf_obj *resources = pdf_page_resources(ctx, page);
-	pdf_annot *annot;
+	pdf_annot *annot, *widget;
 
 	fz_try(ctx)
 	{
 		pdf_process_contents(ctx, proc, doc, resources, contents, NULL, NULL);
 
+		pdf_processor_push_resources(ctx, proc, resources);
 		for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot))
 			pdf_process_annot(ctx, proc, annot, NULL);
+		for (widget = pdf_first_widget(ctx, page); widget; widget = pdf_next_widget(ctx, widget))
+			pdf_process_annot(ctx, proc, widget, NULL);
 		pdf_close_processor(ctx, proc);
 	}
 	fz_always(ctx)

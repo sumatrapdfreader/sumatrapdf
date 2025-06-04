@@ -36,6 +36,11 @@ guide
 *.dll
 DerivedData
 
+# PyMuPDF generated build files
+__pycache__
+platform/c++
+platform/python
+
 platform/java/local.properties
 platform/win32/*.user
 platform/win32/*.ncb

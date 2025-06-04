@@ -2,15 +2,18 @@
 .. All Rights Reserved.
 
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-Using :title:`MuPDF WASM`
+Using MuPDF with Javascript
 ==========================================
+
+.. note::
+
+    You can also use the Javascript bindings with the :ref:`mupdf_command_line_mutool_run` command!
 
 
 Installing
@@ -246,7 +249,6 @@ See Mozilla's page on `Using Promises`_ for more.
 
 
 
-.. include:: footer.rst
 
 ..   External links
 

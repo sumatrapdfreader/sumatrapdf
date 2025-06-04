@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -140,6 +140,12 @@ public class PDFAnnotation
 	public native void setFlags(int flags);
 	public native String getContents();
 	public native void setContents(String contents);
+	public native boolean hasRichContents();
+	public native String getRichContents();
+	public native void setRichContents(String plainText, String richText);
+	public native boolean hasRichDefaults();
+	public native String getRichDefaults();
+	public native void setRichDefaults(String style);
 	public native float[] getColor();
 	public native void setColor(float[] color);
 	public native float getOpacity();
@@ -324,12 +330,12 @@ public class PDFAnnotation
 	public native Point getLineCaptionOffset();
 	public native void setLineCaptionOffset(Point offset);
 
-	public native boolean hasFilespec();
-	public native void setFilespec(PDFObject fs);
-	public native PDFObject getFilespec();
-	public boolean hasFileSpecification() { return hasFilespec(); }
-	public void setFileSpecification(PDFObject fs) { setFilespec(fs); }
-	public PDFObject getFileSpecification() { return getFilespec(); }
+	public native boolean hasFileSpec();
+	public native void setFileSpec(PDFObject fs);
+	public native PDFObject getFileSpec();
+	public boolean hasFileSpecification() { return hasFileSpec(); }
+	public void setFileSpecification(PDFObject fs) { setFileSpec(fs); }
+	public PDFObject getFileSpecification() { return getFileSpec(); }
 
 	public native boolean hasIntent();
 	public native int getIntent();
@@ -342,7 +348,12 @@ public class PDFAnnotation
 	public native void eventFocus();
 	public native void eventBlur();
 
+	public native void requestSynthesis();
+	public native void requestResynthesis();
 	public native boolean update();
+
+	public native boolean getHot();
+	public native void setHot(boolean hot);
 
 	public native PDFObject getObject();
 
@@ -354,6 +365,7 @@ public class PDFAnnotation
 	public native int getQuadding();
 	public native void setQuadding(int quadding);
 
+	public native boolean hasDefaultAppearance();
 	public native DefaultAppearance getDefaultAppearance();
 	public native void setDefaultAppearance(String font, float size, float[] color);
 
@@ -395,6 +407,10 @@ public class PDFAnnotation
 		setNativeAppearanceImage(image);
 	}
 
+	public native PDFObject getStampImageObject();
+	public native void setStampImageObject(PDFObject image);
+	public native void setStampImage(Image image);
+
 	public native boolean getHiddenForEditing();
 	public native void setHiddenForEditing(boolean hidden);
 
@@ -420,4 +436,6 @@ public class PDFAnnotation
 
 	/** @deprecated use setBorderWidth instead. */
 	public void setBorder(float width) { setBorderWidth(width); }
+
+	public native void process(PDFProcessor processor);
 }

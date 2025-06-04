@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -38,6 +38,13 @@
 #include <stdarg.h> /* needed for va_list vararg functions */
 #include <setjmp.h> /* needed for the try/catch macros */
 #include <stdio.h> /* useful for debug printfs */
+
+#ifdef __cplusplus
+/* C++ doesn't support flexible array members... */
+#define FZ_FLEXIBLE_ARRAY 1
+#else
+#define FZ_FLEXIBLE_ARRAY
+#endif
 
 #include "export.h"
 

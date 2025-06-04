@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -336,6 +336,47 @@ static void fmtquote_pdf(struct fmtbuf *out, const char *s, int sq, int eq)
 	fmtputc(out, eq);
 }
 
+int
+fz_is_valid_xml_char(int c)
+{
+	if (c == 9 || c == 10 || c == 13)
+		return 1;
+	if (c < 32)
+		return 0;
+	if (c < 0xd800)
+		return 1;
+	if (c < 0xe000)
+		return 0;
+	if (c <= 0xfffd)
+		return 1;
+	if (c < 0x10000)
+		return 0;
+	if (c <= 0x10FFFF)
+		return 1;
+	return 0;
+}
+
+int
+fz_is_valid_xml_string(const char *s)
+{
+	int c, n;
+	while (*s != 0) {
+		n = fz_chartorune(&c, s);
+		if (!fz_is_valid_xml_char(c))
+			return 0;
+		s += n;
+	}
+	return 1;
+}
+
+int
+fz_range_limit_xml_char(int c)
+{
+	if (fz_is_valid_xml_char(c))
+		return c;
+	return 0xFFFD;
+}
+
 static void fmtquote_xml(struct fmtbuf *out, const char *s)
 {
 	int c, n;
@@ -371,7 +412,9 @@ static void fmtquote_xml(struct fmtbuf *out, const char *s)
 			fmtputc(out, ';');
 			break;
 		default:
-			if (c < 32 || c >= 127) {
+			c = fz_range_limit_xml_char(c);
+			if (c < 32 || c >= 127)
+			{
 				fmtputc(out, '&');
 				fmtputc(out, '#');
 				fmtputc(out, 'x');
@@ -394,6 +437,18 @@ static void fmtquote_xml(struct fmtbuf *out, const char *s)
 			break;
 		}
 		s += n;
+	}
+	fmtputc(out, '"');
+}
+
+static void fmtquote_hex(struct fmtbuf *out, const char *s)
+{
+	int c;
+	fmtputc(out, '"');
+	while ((c = *s++) != 0)
+	{
+		fmtputc(out, "0123456789ABCDEF"[(c>>4)&15]);
+		fmtputc(out, "0123456789ABCDEF"[(c)&15]);
 	}
 	fmtputc(out, '"');
 }
@@ -569,7 +624,6 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				c = va_arg(args, int);
 				fmtputc(&out, c);
 				break;
-
 			case 'e':
 				fmtfloat_e(&out, va_arg(args, double), w, p);
 				break;
@@ -658,6 +712,11 @@ fz_format_string(fz_context *ctx, void *user, void (*emit)(fz_context *ctx, void
 				str = va_arg(args, const char*);
 				if (!str) str = "";
 				fmtquote_xml(&out, str);
+				break;
+			case '>': /* hex string */
+				str = va_arg(args, const char*);
+				if (!str) str = "";
+				fmtquote_hex(&out, str);
 				break;
 			case '(': /* pdf string */
 				str = va_arg(args, const char*);

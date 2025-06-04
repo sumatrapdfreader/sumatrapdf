@@ -4,12 +4,13 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
+
+.. _mupdf_command_line_mutool_run:
 
 :title:`mutool run`
 ==========================================
@@ -18,7 +19,7 @@
 
 The `run` command executes a :title:`JavaScript` program, which has access to most of the features of the :title:`MuPDF` library. The command supports :title:`ECMAScript` 5 syntax in strict mode. All of the :title:`MuPDF` constructors and functions live in the global object, and the command line arguments are accessible from the global `scriptArgs` object. The name of the script is in the global `scriptPath` variable.
 
-See the :ref:`mutool JavaScript API<mutool_run_javascript_api>` for more.
+See the :ref:`mutool_run_javascript_api` for more.
 
 
 
@@ -37,17 +38,11 @@ See the :ref:`mutool JavaScript API<mutool_run_javascript_api>` for more.
 `script.js`
    The :title:`JavaScript` file which you would like to run.
 
-
-.. note::
-
-   See the :ref:`mutool JavaScript API<mutool_run_javascript_api>` for more.
-
-----
-
-
-
 `[ arguments ... ]`
-   If invoked without any arguments, it will drop you into an interactive :title:`REPL` (read-eval-print-loop). To exit this loop type `quit()` (same as pressing *ctrl-C* two times).
+   Any extra arguments you want to pass to the script.
+   These are available in the global `scriptArgs` array.
+
+If invoked without any arguments, it will drop you into an interactive :title:`REPL` (read-eval-print-loop). To exit this loop type `quit()` (same as pressing *ctrl-D*).
 
 
 
@@ -158,7 +153,6 @@ Advanced examples
 
 
 
-.. include:: footer.rst
 
 
 

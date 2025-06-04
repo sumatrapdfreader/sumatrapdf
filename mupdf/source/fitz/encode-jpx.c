@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -120,7 +120,7 @@ write_stm(void *p_buffer, OPJ_SIZE_T p_nb_bytes, void *p_user_data)
 	fz_try(stm->ctx)
 		fz_write_data(stm->ctx, stm->out, p_buffer, p_nb_bytes);
 	fz_catch(stm->ctx)
-		return -1;
+		return (OPJ_SIZE_T)-1;
 
 	return p_nb_bytes;
 }

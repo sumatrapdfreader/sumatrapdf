@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -89,6 +89,28 @@ size_t fz_strlcpy(char *dst, const char *src, size_t n);
 size_t fz_strlcat(char *dst, const char *src, size_t n);
 
 /**
+	Safe strstr function.
+
+	haystack: Where to look (may be NULL).
+
+	needled: What to look for.
+
+	Returns NULL if unmatched, or pointer to start of match.
+*/
+const char *fz_strstr(const char *haystack, const char *needle);
+
+/**
+	Safe case-insensitive strstr function. (Accepts UTF-8).
+
+	haystack: Where to look (may be NULL).
+
+	needled: What to look for.
+
+	Returns NULL if unmatched, or pointer to start of match.
+*/
+const char *fz_strstrcase(const char *haystack, const char *needle);
+
+/**
 	Find the start of the first occurrence of the substring needle in haystack.
 */
 void *fz_memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen);
@@ -102,6 +124,11 @@ void fz_dirname(char *dir, const char *path, size_t dirsize);
 	Find the filename component in a path.
 */
 const char *fz_basename(const char *path);
+
+/**
+	portable strverscmp(3) function
+*/
+int fz_strverscmp(const char *s1, const char *s2);
 
 /**
 	Like fz_decode_uri_component but in-place.
@@ -172,9 +199,15 @@ char *fz_cleanname_strdup(fz_context *ctx, const char *name);
 char *fz_realpath(const char *path, char *resolved_path);
 
 /**
-	Case insensitive (ASCII only) string comparison.
+	Case insensitive (UTF8) string comparison.
 */
 int fz_strcasecmp(const char *a, const char *b);
+
+/**
+	Case insensitive (UTF8) string comparison.
+
+	n = maximum number of bytes to read from either a or b.
+*/
 int fz_strncasecmp(const char *a, const char *b, size_t n);
 
 /**
@@ -187,12 +220,28 @@ enum { FZ_UTFMAX = 4 };
 	UTF8 decode a single rune from a sequence of chars.
 
 	rune: Pointer to an int to assign the decoded 'rune' to.
+	(0xFFFD on error).
 
 	str: Pointer to a UTF8 encoded string.
 
 	Returns the number of bytes consumed.
 */
 int fz_chartorune(int *rune, const char *str);
+
+/**
+	UTF8 decode a single rune from a sequence of chars
+	of given length.
+
+	rune: Pointer to an int to assign the decoded 'rune' to.
+	(0xFFFD on error).
+
+	str: Pointer to a UTF8 encoded string.
+
+	n: The number of bytes available at str.
+
+	Returns the number of bytes consumed.
+*/
+int fz_chartorunen(int *rune, const char *str, size_t n);
 
 /**
 	UTF8 encode a rune to a sequence of chars.

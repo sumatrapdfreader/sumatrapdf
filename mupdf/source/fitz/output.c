@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -102,7 +102,7 @@ fz_output *fz_stderr(fz_context *ctx)
 static void
 stdods_write(fz_context *ctx, void *opaque, const void *buffer, size_t count)
 {
-	unsigned char *buf = fz_malloc(ctx, count+1);
+	char *buf = fz_malloc(ctx, count+1);
 
 	memcpy(buf, buffer, count);
 	buf[count] = 0;
@@ -252,7 +252,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 
 	/* If <append> is false, we use fopen()'s 'x' flag to force an error if
 	 * some other process creates the file immediately after we have removed
-	 * it - this avoids vunerability where a less-privilege process can create
+	 * it - this avoids vulnerability where a less-privilege process can create
 	 * a link and get us to overwrite a different file. See:
 	 * 	https://bugs.ghostscript.com/show_bug.cgi?id=701797
 	 * 	http://www.open-std.org/jtc1/sc22//WG14/www/docs/n1339.pdf
@@ -266,7 +266,7 @@ fz_new_output_with_path(fz_context *ctx, const char *filename, int append)
 				fz_throw(ctx, FZ_ERROR_SYSTEM, "cannot remove file '%s': %s", filename, strerror(errno));
 	}
 #if defined(__MINGW32__) || defined(__MINGW64__)
-	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+"); /* 'x' flag not suported. */
+	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+"); /* 'x' flag not supported. */
 #else
 	file = fz_fopen_utf8(filename, append ? "rb+" : "wb+x");
 #endif
@@ -632,7 +632,7 @@ fz_write_rune(fz_context *ctx, fz_output *out, int rune)
 void
 fz_write_base64(fz_context *ctx, fz_output *out, const unsigned char *data, size_t size, int newline)
 {
-	static const char set[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	static const char set[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	size_t i;
 	for (i = 0; i + 3 <= size; i += 3)
 	{
@@ -676,7 +676,7 @@ fz_write_base64_buffer(fz_context *ctx, fz_output *out, fz_buffer *buf, int newl
 void
 fz_append_base64(fz_context *ctx, fz_buffer *out, const unsigned char *data, size_t size, int newline)
 {
-	static const char set[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	static const char set[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	size_t i;
 	for (i = 0; i + 3 <= size; i += 3)
 	{

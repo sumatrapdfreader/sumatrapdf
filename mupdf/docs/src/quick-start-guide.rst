@@ -4,7 +4,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -136,7 +135,6 @@ And a suite of image types, e.g. `png`, `jpg`, `bmp` etc.
 
 
 
-.. include:: footer.rst
 
 
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -124,6 +124,19 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_stream *tail, fz_compression_par
 						params->u.flate.columns,
 						params->u.flate.colors,
 						params->u.flate.bpc);
+			}
+			break;
+
+		case FZ_IMAGE_BROTLI:
+			head = fz_open_brotlid(ctx, tail);
+			if (params->u.brotli.predictor > 1)
+			{
+				body = head;
+				head = fz_open_predict(ctx, body,
+						params->u.brotli.predictor,
+						params->u.brotli.columns,
+						params->u.brotli.colors,
+						params->u.brotli.bpc);
 			}
 			break;
 

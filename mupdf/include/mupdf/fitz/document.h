@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -942,7 +942,7 @@ int fz_has_permission(fz_context *ctx, fz_document *doc, fz_permission p);
 	(will be larger than 'size' if the output was truncated), or -1 if the
 	key is not recognized or found.
 */
-int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char *buf, int size);
+int fz_lookup_metadata(fz_context *ctx, fz_document *doc, const char *key, char *buf, size_t size);
 
 #define FZ_META_FORMAT "format"
 #define FZ_META_ENCRYPTION "encryption"
@@ -1020,6 +1020,7 @@ struct fz_page
 	int chapter; /* chapter number */
 	int number; /* page number in chapter */
 	int incomplete; /* incomplete from progressive loading; don't cache! */
+	int in_doc; /* page has been placed into the document */
 	fz_page_drop_page_fn *drop_page;
 	fz_page_bound_page_fn *bound_page;
 	fz_page_run_page_fn *run_page_contents;

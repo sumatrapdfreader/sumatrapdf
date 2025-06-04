@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -88,6 +88,19 @@ typedef struct fz_halftone fz_halftone;
 	failure to allocate.
 */
 fz_bitmap *fz_new_bitmap_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht);
+
+/**
+	Make a bitmap from a pixmap and a halftone.
+
+	img: The image to generate from. Currently must be a single
+	color component with no alpha.
+
+	ht: The halftone to use. NULL implies the default halftone.
+
+	Returns the resultant bitmap. Throws exceptions in the case of
+	failure to allocate.
+*/
+fz_bitmap *fz_new_bitmap_from_image(fz_context *ctx, fz_image *img, fz_halftone *ht);
 
 /**
 	Make a bitmap from a pixmap and a

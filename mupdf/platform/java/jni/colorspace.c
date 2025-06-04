@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -78,8 +78,8 @@ FUN(ColorSpace_isGray)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_gray(ctx, cs);
 	fz_catch(ctx)
@@ -92,8 +92,8 @@ FUN(ColorSpace_isRGB)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_rgb(ctx, cs);
 	fz_catch(ctx)
@@ -106,8 +106,8 @@ FUN(ColorSpace_isCMYK)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_cmyk(ctx, cs);
 	fz_catch(ctx)
@@ -120,8 +120,8 @@ FUN(ColorSpace_isIndexed)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_indexed(ctx, cs);
 	fz_catch(ctx)
@@ -134,8 +134,8 @@ FUN(ColorSpace_isLab)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_lab(ctx, cs);
 	fz_catch(ctx)
@@ -148,8 +148,8 @@ FUN(ColorSpace_isDeviceN)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_device_n(ctx, cs);
 	fz_catch(ctx)
@@ -162,11 +162,63 @@ FUN(ColorSpace_isSubtractive)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_colorspace *cs = from_ColorSpace(env, self);
-	int result = 0;
-	if (!ctx) return 0;
+	int result = JNI_FALSE;
+	if (!ctx) return JNI_FALSE;
 	fz_try(ctx)
 		result = fz_colorspace_is_subtractive(ctx, cs);
 	fz_catch(ctx)
 		jni_rethrow(env, ctx);
 	return result;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(ColorSpace_toString)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_colorspace *cs = from_ColorSpace(env, self);
+	const char *name = NULL;
+	if (!ctx) return NULL;
+	fz_try(ctx)
+		name = fz_colorspace_name(ctx, cs);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+	return (*env)->NewStringUTF(env, name);
+}
+
+JNIEXPORT jlong JNICALL
+FUN(ColorSpace_newNativeColorSpace)(JNIEnv *env, jobject self, jstring jname, jobject jbuffer)
+{
+	fz_context *ctx = get_context(env);
+	fz_buffer *buf = from_Buffer_safe(env, jbuffer);
+	fz_colorspace *cs = NULL;
+	const char *name = NULL;
+
+	if (!ctx) return 0;
+	name = (*env)->GetStringUTFChars(env, jname, NULL);
+
+	fz_try(ctx)
+		cs = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_NONE, 0, name, buf);
+	fz_always(ctx)
+		(*env)->ReleaseStringUTFChars(env, jname, name);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return jlong_cast(cs);
+}
+
+JNIEXPORT jint JNICALL
+FUN(ColorSpace_getType)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_colorspace *cs = from_ColorSpace(env, self);
+	int cstype = FZ_COLORSPACE_NONE;
+
+	if (!ctx) return 0;
+
+	fz_try(ctx)
+		cstype = fz_colorspace_type(ctx, cs);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return cstype;
 }

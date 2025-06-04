@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -290,14 +290,14 @@ pdf_count_pages_before_kid(fz_context *ctx, pdf_document *doc, pdf_obj *parent, 
 		{
 			pdf_obj *count = pdf_dict_get(ctx, kid, PDF_NAME(Count));
 			int n = pdf_to_int(ctx, count);
-			if (!pdf_is_int(ctx, count) || n < 0)
+			if (!pdf_is_int(ctx, count) || n < 0 || INT_MAX - total <= n)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "illegal or missing count in pages tree");
 			total += n;
 		}
 		else
 			total++;
 	}
-	fz_throw(ctx, FZ_ERROR_FORMAT, "kid not found in parent's kids array");
+	return -1; // the page we're looking for is not in the page tree (it has been deleted)
 }
 
 static int
@@ -306,6 +306,7 @@ pdf_lookup_page_number_slow(fz_context *ctx, pdf_document *doc, pdf_obj *node)
 	pdf_mark_list mark_list;
 	int needle = pdf_to_num(ctx, node);
 	int total = 0;
+	int n;
 	pdf_obj *parent;
 
 	if (!pdf_name_eq(ctx, pdf_dict_get(ctx, node, PDF_NAME(Type)), PDF_NAME(Page)))
@@ -322,7 +323,18 @@ pdf_lookup_page_number_slow(fz_context *ctx, pdf_document *doc, pdf_obj *node)
 		{
 			if (pdf_mark_list_push(ctx, &mark_list, parent))
 				fz_throw(ctx, FZ_ERROR_FORMAT, "cycle in page tree (parents)");
-			total += pdf_count_pages_before_kid(ctx, doc, parent, needle);
+			n = pdf_count_pages_before_kid(ctx, doc, parent, needle);
+
+			// Page was not found in page tree!
+			if (n < 0)
+			{
+				total = -1;
+				break;
+			}
+			if (INT_MAX - total <= n)
+				fz_throw(ctx, FZ_ERROR_FORMAT, "illegal or missing count in pages tree");
+
+			total += n;
 			needle = pdf_to_num(ctx, parent);
 			parent = pdf_dict_get(ctx, parent, PDF_NAME(Parent));
 		}
@@ -364,6 +376,7 @@ pdf_lookup_page_number(fz_context *ctx, pdf_document *doc, pdf_obj *page)
 		fz_catch(ctx)
 		{
 			doc->page_tree_broken = 1;
+			fz_report_error(ctx);
 			fz_warn(ctx, "Page tree load failed. Falling back to slow lookup.");
 		}
 	}
@@ -764,6 +777,7 @@ pdf_page_obj_transform_box(fz_context *ctx, pdf_obj *pageobj, fz_rect *outbox, f
 	if (!pdf_is_array(ctx, obj))
 		obj = pdf_dict_get_inheritable(ctx, pageobj, PDF_NAME(MediaBox));
 	cropbox = pdf_to_rect(ctx, obj);
+	cropbox = fz_intersect_rect(cropbox, mediabox);
 	if (fz_is_empty_rect(cropbox))
 		cropbox = fz_make_rect(0, 0, 612, 792);
 	cropbox.x0 = fz_min(cropbox.x0, cropbox.x1);
@@ -1269,6 +1283,7 @@ void pdf_nuke_page(fz_context *ctx, pdf_page *page)
 	pdf_nuke_annots(ctx, page);
 	pdf_drop_obj(ctx, page->obj);
 	page->obj = NULL;
+	page->super.in_doc = 0;
 }
 
 void pdf_sync_page(fz_context *ctx, pdf_page *page)
@@ -1478,11 +1493,10 @@ void
 pdf_delete_page_range(fz_context *ctx, pdf_document *doc, int start, int end)
 {
 	int count = pdf_count_pages(ctx, doc);
-
-	if (end < 0 || end > count)
-		end = count+1;
-	if (start < 0)
-		start = 0;
+	if (end < 0)
+		end = count;
+	start = fz_clampi(start, 0, count);
+	end = fz_clampi(end, 0, count);
 	while (start < end)
 	{
 		pdf_delete_page(ctx, doc, start);
@@ -1943,13 +1957,13 @@ pdf_format_page_label(fz_context *ctx, int index, pdf_obj *dict, char *buf, size
 	if (style == PDF_NAME(D))
 		fz_snprintf(buf, size, "%d", index + start);
 	else if (style == PDF_NAME(R))
-		pdf_format_roman_page_label(buf, size, index + start, roman_uc, "M");
+		pdf_format_roman_page_label(buf, (int)size, index + start, roman_uc, "M");
 	else if (style == PDF_NAME(r))
-		pdf_format_roman_page_label(buf, size, index + start, roman_lc, "m");
+		pdf_format_roman_page_label(buf, (int)size, index + start, roman_lc, "m");
 	else if (style == PDF_NAME(A))
-		pdf_format_alpha_page_label(buf, size, index + start, 'A');
+		pdf_format_alpha_page_label(buf, (int)size, index + start, 'A');
 	else if (style == PDF_NAME(a))
-		pdf_format_alpha_page_label(buf, size, index + start, 'a');
+		pdf_format_alpha_page_label(buf, (int)size, index + start, 'a');
 }
 
 void

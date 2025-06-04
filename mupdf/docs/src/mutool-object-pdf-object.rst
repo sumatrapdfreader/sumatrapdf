@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_pdf_object:
 
 
@@ -25,14 +16,14 @@ All functions that take `PDFObjects`, do automatic translation between
 
 - Null, booleans, and numbers are translated directly.
 - :title:`JavaScript` strings are translated to :title:`PDF` names, unless
-they are surrounded by parentheses: "Foo" becomes the :title:`PDF` name /Foo
-and "(Foo)" becomes the :title:`PDF` string (Foo).
+  they are surrounded by parentheses: "Foo" becomes the :title:`PDF` name /Foo
+  and "(Foo)" becomes the :title:`PDF` string (Foo).
 - Arrays and dictionaries are recursively translated to :title:`PDF` arrays
-and dictionaries. Be aware of cycles though! The translation does NOT cope
-with cyclic references!
+  and dictionaries. Be aware of cycles though! The translation does NOT cope
+  with cyclic references!
 - The translation goes both ways: :title:`PDF` dictionaries and arrays can
-be accessed similarly to :title:`JavaScript` objects and arrays by getting
-and setting their properties.
+  be accessed similarly to :title:`JavaScript` objects and arrays by getting
+  and setting their properties.
 
 
 |instance_props|
@@ -233,7 +224,7 @@ and setting their properties.
         var val = pdfObj.asIndirect();
 
 
-.. method:: isFilespec()
+.. method:: isFileSpec()
 
     Is the object a file specification (or a reference to a file specification).
 
@@ -244,7 +235,7 @@ and setting their properties.
 
     .. code-block:: javascript
 
-        var val = pdfObj.isFilespec();
+        var val = pdfObj.isFileSpec();
 
 
 
@@ -440,6 +431,8 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
 
 .. method:: isReal()
 
+    |mutool_tag|
+
     Returns *true* if the object is a `Real` object.
 
     :return: `Boolean`.
@@ -485,3 +478,65 @@ Primitive :title:`PDF` objects such as booleans, names, and numbers can usually 
     .. code-block:: javascript
 
         var val = pdfObj.asByteString();
+
+.. method:: getNumber()
+
+    Convert a primitive :title:`PDF` integer or real object to a `Number` :title:`JavaScript` object.
+
+    :return: `Number`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var nbr = pdfObj.getNumber();
+
+.. method:: getName()
+
+    Convert a primitive :title:`PDF` name object to a `String` :title:`JavaScript` object.
+
+    :return: `String`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var name = pdfObj.getName();
+
+.. method:: getString()
+
+    Convert a primitive :title:`PDF` string object to a `String` :title:`JavaScript` object.
+
+    :return: `String`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var str = pdfObj.getString();
+
+.. method:: getInheritable()
+
+    Access dictionaries and array in the `PDFObject`.
+
+    For a dictionary, if the requested key does not exist, getInheritable()
+    will walk Parent references to parent dictionaries and lookup the same
+    key there. If no key can be found in any parent or grand-parent or
+    grand-grand-parent, all the way up, null is returned.
+
+    :arg ref: Key or index.
+    :return: The value for the key or index.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var dict = pdfDocument.newDictionary();
+        var grandParent = pdfDocument.newDictionary();
+        var grandgrandParent = pdfDocument.newDictionary();
+        grandgrandParent.put("my_key", "my_value");
+        grandParent.put("Parent", grandgrandParent);
+        dict.put("Parent", grandParent);
+        var value = dict.getInheritable("my_key");
+        var arr = pdfDocument.newArray();
+        var value = arr.get(0);

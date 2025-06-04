@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -51,7 +51,22 @@ public class StructuredText
 	public native Quad snapSelection(Point a, Point b, int mode);
 	public native String copy(Point a, Point b);
 
+	public final static int VECTOR_IS_STROKED = 1;
+	public final static int VECTOR_IS_RECTANGLE = 2;
+
 	public native void walk(StructuredTextWalker walker);
+
+	public native String asJSON(float scale);
+	public native String asHTML(int id);
+	public native String asText();
+
+	public String asJSON() {
+		return asJSON(1.0f);
+	}
+
+	public String asHTML() {
+		return asHTML(0);
+	}
 
 	public TextBlock[] getBlocks() {
 		BlockWalker walker = new BlockWalker();
@@ -106,6 +121,15 @@ public class StructuredText
 			chr.quad = quad;
 			chr.origin = origin;
 			chrs.add(chr);
+		}
+
+		public void beginStruct(String standard, String raw, int index) {
+		}
+
+		public void endStruct() {
+		}
+
+		public void onVector(Rect bbox, VectorInfo info, int argb) {
 		}
 
 		TextBlock[] getBlocks() {

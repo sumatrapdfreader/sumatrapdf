@@ -2,17 +2,14 @@
 .. All Rights Reserved.
 
 
-Core API
------------------------------------------
-
-
-Almost all functions in the :title:`MuPDF` library take a `fz_context` structure as their first argument. The context is used for many things; primarily it holds the exception stack for our `setjmp` based exception handling. It also holds various caches and auxiliary contexts for font rendering and color management.
-
-
+Core Library
+=========================================
 
 
 The :title:`Fitz` Context
 -----------------------------------------
+
+Almost all functions in the :title:`MuPDF` library take a `fz_context` structure as their first argument. The context is used for many things; primarily it holds the exception stack for our `setjmp` based exception handling. It also holds various caches and auxiliary contexts for font rendering and color management.
 
 
 .. note::
@@ -153,6 +150,10 @@ Reference Counting
 Most objects in :title:`MuPDF` use reference counting to keep track of when they are no longer used and can be freed. We use the verbs "keep" and "drop" to increment and decrement the reference count. For simplicity, we also use the word "drop" for non-reference counted objects (so that in case we change our minds and decide to add reference counting to an object, the code that uses it need not change).
 
 
+Utility Library
+===============
+
+MuPDF has implementations of many generally useful data structures and algorithms.
 
 Hash Table
 -----------------------------------------
@@ -214,8 +215,8 @@ There is no constructor for this structure, since there is no containing root st
 
 
 
-:title:`XML` Parser
------------------------------------------
+XML Parser
+=========================================
 
 We have a rudimentary :title:`XML` parser that handles well formed :title:`XML`. It does not do any namespace processing, and it does not validate the :title:`XML` syntax.
 
@@ -261,8 +262,10 @@ If `preserve_white` is *false*, we will discard all *whitespace-only* text eleme
     Find the first child element with the given tag name, or `NULL` if none.
 
 
+Strings
+========
 
-String Functions
+Unicode
 -----------------------------------------
 
 All text strings in :title:`MuPDF` use the `UTF-8` encoding. The following functions encode and decode `UTF-8` characters, and return the number of bytes used by the `UTF-8` character (at most `FZ_UTFMAX`).
@@ -273,6 +276,8 @@ All text strings in :title:`MuPDF` use the `UTF-8` encoding. The following funct
     int fz_chartorune(int *rune, const char *str);
     int fz_runetochar(char *str, int rune);
 
+Locale Independent
+-------------------
 
 Since many of the :title:`C` string functions are locale dependent, we also provide our own locale independent versions of these functions. We also have a couple of semi-standard functions like `strsep` and `strlcpy` that we can't rely on the system providing. These should be pretty self explanatory:
 
@@ -299,7 +304,7 @@ There are also a couple of functions to process filenames and :title:`URLs`:
     Decode :title:`URL` escapes in-place.
 
 
-String Formatting
+Formatting
 -----------------------------------------
 
 Our `printf` family handles the common `printf` formatting characters, with a few minor differences. We also support several non-standard formatting characters. The same `printf` syntax is used in the `printf` functions in the :title:`I/O` module as well.
@@ -341,7 +346,7 @@ Our `printf` family handles the common `printf` formatting characters, with a fe
 
 
 Math Functions
------------------------------------------
+=========================================
 
 We obviously need to deal with lots of points, rectangles, and transformations in :title:`MuPDF`.
 

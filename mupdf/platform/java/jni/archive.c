@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -30,22 +30,6 @@ FUN(Archive_finalize)(JNIEnv *env, jobject self)
 	if (!ctx || !arch) return;
 	(*env)->SetLongField(env, self, fid_Archive_pointer, 0);
 	fz_drop_archive(ctx, arch);
-}
-
-JNIEXPORT jlong JNICALL
-FUN(Archive_newNativeMultiArchive)(JNIEnv *env, jobject self)
-{
-	fz_context *ctx = get_context(env);
-	fz_archive *arch = NULL;
-
-	if (!ctx) return 0;
-
-	fz_try(ctx)
-		arch = fz_new_multi_archive(ctx);
-	fz_catch(ctx)
-		jni_rethrow(env, ctx);
-
-	return jlong_cast(arch);
 }
 
 JNIEXPORT jlong JNICALL

@@ -1,9 +1,8 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -38,6 +37,8 @@ The `show` command will print the specified objects and streams to `stdout`. Str
          Print only stream contents, as raw binary data.
       `-g`
          Print only object, one line per object, suitable for grep.
+      `-r`
+         Force repair before showing any objects.
 
 ----
 
@@ -108,7 +109,6 @@ The `show` command will print the specified objects and streams to `stdout`. Str
       mutool show $FILE grep | grep '/Filter/DCTDecode'
 
 
-.. include:: footer.rst
 
 
 

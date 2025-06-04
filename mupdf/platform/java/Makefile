@@ -110,6 +110,9 @@ mupdf_native.h : $(LIBRARY_JAVA_OBJECTS)
 $(MUPDF_JAVA) : ../../$(OUT)/mupdf_native.o $(MUPDF_CORE)
 	$(CC) -shared $(JAVA_LDFLAGS) -o $(MUPDF_JAVA) $^ $(JAVA_LIBS) $(BUILD_FLAGS)
 
+jshell: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
+	jshell --class-path ../../$(OUT)/ -R-Djava.library.path="../../$(OUT)" init.jshell $$MUPDF_ARGS
+
 run: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.Viewer $$MUPDF_ARGS
 
@@ -120,6 +123,9 @@ run-storytest: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 
 run-tracedevice: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.TraceDevice $$MUPDF_ARGS
+
+run-pdftrace: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
+	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.PDFTrace $$MUPDF_ARGS
 
 run-example: $(MUPDF_JAVA) $(EXAMPLE_JAVA_OBJECTS) $(MUPDF_JAR)
 	$(JAVA) -classpath ../../$(OUT)/ -Djava.library.path="../../$(OUT)" example.Example $$MUPDF_ARGS

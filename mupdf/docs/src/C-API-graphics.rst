@@ -2,9 +2,8 @@
 .. All Rights Reserved.
 
 
-Graphics API
------------------------------------------
-
+Graphics
+=========================================
 
 
 This module is a grab bag of various graphics related objects and functions.

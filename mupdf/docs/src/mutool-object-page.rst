@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_page:
 
 .. _mutool_run_js_api_page:
@@ -138,7 +129,7 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
 
 .. method:: toStructuredText(options)
 
-    Extract the text on the page into a `StructuredText` object. The options argument is a comma separated list of flags: "preserve-ligatures", "preserve-whitespace", "preserve-spans", "preserve-images", "inhibit-spaces", "dehyphenate", "structured", "use-cid-for-unknown-unicode", and "ignore-actualtext".
+    Extract the text on the page into a `StructuredText` object. The options argument is a comma separated list of flags: "preserve-ligatures", "preserve-whitespace", "preserve-spans", "preserve-images", "inhibit-spaces", "dehyphenate", "structured", "use-cid-for-unknown-unicode", "use-gid-for-unknown-unicode", and "ignore-actualtext".
 
     :arg options: `String`.
     :return: `StructuredText`.
@@ -251,3 +242,22 @@ The base class for a :ref:`PDF Page<mutool_run_js_api_pdf_page>`.
     .. note::
 
         As `PDFPage` extends `Page` this method will return **false**. It is only if we actually have an instance of a `PDFPage` when this method is overridden to return **true**.
+
+
+
+.. method:: decodeBarcode(subarea, rotate)
+
+    |mutool_tag|
+
+    Decodes a barcode detected in the pixmap, and returns an object with properties for barcode type and contents.
+
+    :arg subarea: `[ulx,uly,lrx,lry]` :ref:`Rectangle<mutool_run_js_api_rectangle>` Only detect barcode within subarea.
+    :arg rotate: `Integer` Degrees of rotation to rotate pixmap before detecting barcode.
+
+    :return: :ref:`BarcodeInfo<mutool_run_js_api_object_barcode_info>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var barcodeInfo = displaylist.decodeBarcode([0, 0, 100, 100 ], 0);

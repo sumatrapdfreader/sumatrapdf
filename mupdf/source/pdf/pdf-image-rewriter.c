@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -888,6 +888,8 @@ gather_image_info(fz_context *ctx, pdf_document *doc, int page_num, image_info *
 
 		for (annot = pdf_first_annot(ctx, page); annot != NULL; annot = pdf_next_annot(ctx, annot))
 			pdf_filter_annot_contents(ctx, doc, annot, &options);
+		for (annot = pdf_first_widget(ctx, page); annot != NULL; annot = pdf_next_annot(ctx, annot))
+			pdf_filter_annot_contents(ctx, doc, annot, &options);
 	}
 	fz_always(ctx)
 		fz_drop_page(ctx, &page->super);
@@ -918,6 +920,8 @@ rewrite_image_info(fz_context *ctx, pdf_document *doc, int page_num, image_info 
 		pdf_filter_page_contents(ctx, doc, page, &options);
 
 		for (annot = pdf_first_annot(ctx, page); annot != NULL; annot = pdf_next_annot(ctx, annot))
+			pdf_filter_annot_contents(ctx, doc, annot, &options);
+		for (annot = pdf_first_widget(ctx, page); annot != NULL; annot = pdf_next_annot(ctx, annot))
 			pdf_filter_annot_contents(ctx, doc, annot, &options);
 	}
 	fz_always(ctx)

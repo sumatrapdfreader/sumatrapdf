@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -39,4 +39,6 @@ public class Shade
 	private Shade(long p) {
 		pointer = p;
 	}
+
+	public native Rect getBounds(Matrix ctm);
 }

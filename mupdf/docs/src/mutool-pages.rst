@@ -3,7 +3,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -52,7 +51,6 @@ The `pages` command prints out :ref:`MediaBox<mutool_trim_defined_boxes>`, :ref:
 
 
 
-.. include:: footer.rst
 
 
 

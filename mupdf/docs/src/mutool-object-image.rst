@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_image:
 
 .. _mutool_run_js_api_image:
@@ -17,11 +8,14 @@
 `Image` objects are similar to `Pixmaps`, but can contain compressed data.
 
 
-.. method:: new Image(ref)
+.. method:: new Image(pixmap, mask)
 
     *Constructor method*.
 
-    Create a new image from a `Pixmap` data, or load an image file data.
+    Create a new image from a `Pixmap` data.
+
+    :arg pixmap: `Pixmap` Pixmap containing pixel data.
+    :arg mask: `Image` An optional image mask.
 
     :return: `Image`.
 
@@ -30,7 +24,58 @@
     .. code-block:: javascript
 
         var imageFromPixmap = new mupdf.Image(pixmap);
+
+.. method:: new Image(buffer)
+
+    *Constructor method*.
+
+    Create a new image from a `Buffer` containing image data.
+
+    :return: `Image`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
         var imageFromBuffer = new mupdf.Image(buffer);
+
+
+.. method:: new Image(buffer, globals)
+
+    |mutool_tag|
+
+    *Constructor method*.
+
+    Create a new image from a `Buffer` containing image data and a globals `Buffer`. This is useful for JBIG2 images.
+
+    :return: `Image`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var jbig2FromBuffers = new mupdf.Image(jbig2buffer, jbig2globals);
+
+
+.. method:: new Image(filename, mask)
+
+    |mutool_tag|
+
+    *Constructor method*.
+
+    Create a new image from an image file.
+
+    :arg filename: `String` Name of file containing image data.
+    :arg mask: `Image` An optional image mask.
+
+    :return: `Image`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var imageFromFile = new mupdf.Image("image.jpeg");
+
 
 
 |instance_methods|
@@ -128,6 +173,8 @@
 
 .. method:: getInterpolate()
 
+    |mutool_tag|
+
     Returns *true* if interpolated was used during decoding.
 
     :return: `Boolean`.
@@ -140,6 +187,8 @@
 
 
 .. method:: getColorKey()
+
+    |mutool_tag|
 
     Returns an array with 2 * N integers for an N component image with color key masking, or `null` if masking is not used. Each pair of integers define an interval, and component values within that interval are not painted.
 
@@ -154,6 +203,8 @@
 
 .. method:: getDecode()
 
+    |mutool_tag|
+
     Returns an array with 2 * N numbers for an N component image with color mapping, or `null` if mapping is not used. Each pair of numbers define the lower and upper values to which the component values are mapped linearly.
 
     :return: `[...]` or `null`.
@@ -167,6 +218,8 @@
 
 .. method:: getOrientation()
 
+    |mutool_tag|
+
     Returns the orientation of the image.
 
     :return: `Integer`.
@@ -178,6 +231,8 @@
         var orientation = image.getOrientation();
 
 .. method:: setOrientation(orientation)
+
+    |mutool_tag|
 
     Set the image orientation to the given orientation.
 

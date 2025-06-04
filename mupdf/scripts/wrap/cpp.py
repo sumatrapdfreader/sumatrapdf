@@ -521,7 +521,7 @@ def make_outparam_helper(
         #
         # We also value-initialise in case the underlying mupdf function also
         # reads the supplied value - i.e. treats it as an in-parm as well as an
-        # out-param; this is paricularly important for pointer out-params.
+        # out-param; this is particularly important for pointer out-params.
         #
         pointee = state.get_name_canonical( arg.cursor.type.get_pointee())
         generated.swig_cpp.write(f'        {declaration_text( pointee, arg.name)} = {{}};\n')
@@ -1084,7 +1084,12 @@ g_extra_declarations = textwrap.dedent(f'''
                 );
 
         /** Swig-friendly wrapper for pdf_rearrange_pages(). */
-        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>& pages);
+        void pdf_rearrange_pages2(
+                fz_context* ctx,
+                pdf_document* doc,
+                const std::vector<int>& pages,
+                pdf_clean_options_structure structure
+                );
 
         /** Swig-friendly wrapper for pdf_subset_fonts(). */
         void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages);
@@ -1101,6 +1106,21 @@ g_extra_declarations = textwrap.dedent(f'''
 
         /** SWIG-friendly wrapper for fz_enumerate_font_cmap(). */
         std::vector<fz_font_ucs_gid> fz_enumerate_font_cmap2(fz_context* ctx, fz_font* font);
+
+        /** SWIG-friendly wrapper for pdf_set_annot_callout_line(). */
+        void pdf_set_annot_callout_line2(fz_context *ctx, pdf_annot *annot, std::vector<fz_point>& callout);
+
+        /** SWIG-friendly wrapper for fz_decode_barcode_from_display_list(),
+        avoiding leak of the returned string. */
+        std::string fz_decode_barcode_from_display_list2(fz_context *ctx, fz_barcode_type *type, fz_display_list *list, fz_rect subarea, int rotate);
+
+        /** SWIG-friendly wrapper for fz_decode_barcode_from_pixmap(), avoiding
+        leak of the returned string. */
+        std::string fz_decode_barcode_from_pixmap2(fz_context *ctx, fz_barcode_type *type, fz_pixmap *pix, int rotate);
+
+        /** SWIG-friendly wrapper for fz_decode_barcode_from_page(), avoiding
+        leak of the returned string. */
+        std::string fz_decode_barcode_from_page2(fz_context *ctx, fz_barcode_type *type, fz_page *page, fz_rect subarea, int rotate);
         ''')
 
 g_extra_definitions = textwrap.dedent(f'''
@@ -1291,9 +1311,14 @@ g_extra_definitions = textwrap.dedent(f'''
             return ret;
         }}
 
-        void pdf_rearrange_pages2(fz_context* ctx, pdf_document* doc, const std::vector<int>& pages)
+        void pdf_rearrange_pages2(
+                fz_context* ctx,
+                pdf_document* doc,
+                const std::vector<int>& pages,
+                pdf_clean_options_structure structure
+                )
         {{
-            return pdf_rearrange_pages(ctx, doc, pages.size(), &pages[0]);
+            return pdf_rearrange_pages(ctx, doc, pages.size(), &pages[0], structure);
         }}
 
         void pdf_subset_fonts2(fz_context *ctx, pdf_document *doc, const std::vector<int>& pages)
@@ -1330,6 +1355,35 @@ g_extra_definitions = textwrap.dedent(f'''
             std::vector<fz_font_ucs_gid> ret;
             fz_enumerate_font_cmap(ctx, font, fz_enumerate_font_cmap2_cb, &ret);
             return ret;
+        }}
+
+        void pdf_set_annot_callout_line2(fz_context *ctx, pdf_annot *annot, std::vector<fz_point>& callout)
+        {{
+            pdf_set_annot_callout_line(ctx, annot, &callout[0], callout.size());
+        }}
+
+        std::string fz_decode_barcode_from_display_list2(fz_context *ctx, fz_barcode_type *type, fz_display_list *list, fz_rect subarea, int rotate)
+        {{
+            char* ret = fz_decode_barcode_from_display_list(ctx, type, list, subarea, rotate);
+            std::string ret2 = ret;
+            fz_free(ctx, ret);
+            return ret2;
+        }}
+
+        std::string fz_decode_barcode_from_pixmap2(fz_context *ctx, fz_barcode_type *type, fz_pixmap *pix, int rotate)
+        {{
+            char* ret = fz_decode_barcode_from_pixmap(ctx, type, pix, rotate);
+            std::string ret2 = ret;
+            fz_free(ctx, ret);
+            return ret2;
+        }}
+
+        std::string fz_decode_barcode_from_page2(fz_context *ctx, fz_barcode_type *type, fz_page *page, fz_rect subarea, int rotate)
+        {{
+            char* ret = fz_decode_barcode_from_page(ctx, type, page, subarea, rotate);
+            std::string ret2 = ret;
+            fz_free(ctx, ret);
+            return ret2;
         }}
         ''')
 
@@ -1402,7 +1456,7 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
             {{
                 std::cerr << file << ":" << line << ":" << fn << "(): "
                         << "MuPDF C++ internal assert failure: " << expression
-                        << "\\n";
+                        << "\\n" << std::flush;
                 abort();
             }}
 
@@ -1464,8 +1518,14 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                     if (s_trace)
                     {{
                         std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                << "fz_new_context() => " << m_ctx << "\\n";
+                    }}
+                    if (s_trace)
+                    {{
+                        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
                                 << " calling fz_register_document_handlers()\\n";
                     }}
+                    internal_assert("m_ctx = fz_new_context()" && m_ctx);
                     fz_register_document_handlers(m_ctx);
                 }}
                 static void lock(void *user, int lock)
@@ -1548,6 +1608,12 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
                         }}
                         internal_assert(s_state_valid);
                         m_ctx = fz_clone_context(s_state.m_ctx);
+                        if (s_trace)
+                        {{
+                            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << "(): "
+                                    << "fz_clone_context(" << s_state.m_ctx << ") => " << m_ctx << "\\n";
+                        }}
+                        internal_assert("m_ctx = fz_clone_context()" && m_ctx);
                     }}
                     return m_ctx;
                 }}
@@ -2251,7 +2317,7 @@ def class_add_iterator( tu, struct_cursor, struct_name, classname, extras, refch
             classes.ExtraMethod( f'{classname}Iterator', 'end()',
                     f'''
                     {{
-                        auto ret = {classname}Iterator(NULL);
+                        auto ret = {classname}Iterator({it_type}());
                         {refcheck_if}
                         #if {check_refs}
                         if (s_check_refs)
@@ -2461,7 +2527,7 @@ def class_find_destructor_fns( tu, struct_name, base_name):
 
 def num_instances(refcheck_if, delta, name):
     '''
-    Retuns C++ code to embed in a wrapper class constructor/destructor function
+    Returns C++ code to embed in a wrapper class constructor/destructor function
     to update the class static `s_num_instances` variable.
     '''
     ret = ''
@@ -2666,7 +2732,21 @@ def function_name_implies_kept_references( fnname):
             'fz_get_pixmap_from_image',
             ):
         return True
-    for i in ('new', 'create', 'find', 'load', 'open', 'keep', 'read', 'add', 'parse', 'graft', 'copy', 'deep_copy'):
+    for i in (
+            'add',
+            'convert',
+            'copy',
+            'create',
+            'deep_copy',
+            'find',
+            'graft',
+            'keep',
+            'load',
+            'new',
+            'open',
+            'parse',
+            'read',
+            ):
         if fnname.startswith(f'fz_{i}_') or fnname.startswith(f'pdf_{i}_'):
             if state.state_.show_details(fnname):
                 jlib.log('Assuming that {fnname=} returns a kept reference.')
@@ -3458,10 +3538,21 @@ def class_raw_constructor(
         constructor_decl = f'{classname}(::{struct_name}* internal)'
     out_h.write( '\n')
     out_h.write( f'    {comment}\n')
+    explicit = ''
+    if parse.has_refs( tu, struct_cursor.type):
+        # Don't allow implicit construction from low-level struct, because our
+        # destructor will drop it without a prior balancing keep.
+        explicit = f'explicit '
+        out_h.write(
+                f'    /* This constructor is marked as `explicit` because wrapper classes do not\n'
+                f'    call `keep`in constructors, but do call `drop` in destructors. So\n'
+                f'    automatic construction from a {struct_name}* will generally cause an\n'
+                f'    unbalanced `drop` resulting in errors such as SEGV. */\n'
+                )
     if extras.constructor_raw == 'default':
-        out_h.write( f'    FZ_FUNCTION {classname}(::{struct_name}* internal=NULL);\n')
+        out_h.write( f'    FZ_FUNCTION {explicit}{classname}(::{struct_name}* internal=NULL);\n')
     else:
-        out_h.write( f'    FZ_FUNCTION {constructor_decl};\n')
+        out_h.write( f'    FZ_FUNCTION {explicit}{constructor_decl};\n')
 
     if extras.constructor_raw != 'declaration_only':
         out_cpp.write( f'FZ_FUNCTION {classname}::{constructor_decl}\n')
@@ -3642,17 +3733,19 @@ def class_accessors(
                     decl = declaration_text( cursor.type, fn_args)
 
         # todo: if return type is uint8_t or int8_t, maybe return as <int>
-        # so SWIG doesn't think it is a string? This would fix errors witht
+        # so SWIG doesn't think it is a string? This would fix errors with
         # fz_image::n and fz_image::bpc.
         out_h.write( f'    FZ_FUNCTION {decl % cursor.spelling};\n')
         out_cpp.write( 'FZ_FUNCTION %s\n' % (decl % ( f'{classname}::{cursor.spelling}')))
         out_cpp.write( '{\n')
         if keep_function:
             out_cpp.write( f'    {rename.ll_fn(keep_function)}(m_internal->{cursor.spelling});\n')
-        if extras.pod:
-            out_cpp.write( f'    return m_internal.{cursor.spelling};\n')
+            out_cpp.write( f'    return ({classname2}) m_internal->{cursor.spelling};\n')
         else:
-            out_cpp.write( f'    return m_internal->{cursor.spelling};\n')
+            if extras.pod:
+                out_cpp.write( f'    return m_internal.{cursor.spelling};\n')
+            else:
+                out_cpp.write( f'    return m_internal->{cursor.spelling};\n')
         out_cpp.write( '}\n')
         out_cpp.write( '\n')
     assert n, f'No fields found for {struct_cursor.spelling}.'
@@ -4041,24 +4134,25 @@ def class_wrapper_virtual_fnptrs(
     out_cpp.write('    #endif\n')
     out_cpp.write( '}\n')
 
+    # Destructor. This needs to be virtual with an empty implementation,
+    # because instances will generally be derived classes.
+    out_h.write( '\n')
+    out_h.write( '    /** == Destructor. */\n')
+    out_h.write(f'    FZ_FUNCTION virtual ~{classname}2();\n')
+    out_cpp.write('\n')
+    out_cpp.write(f'FZ_FUNCTION {classname}2::~{classname}2()\n')
+    out_cpp.write( '{\n')
+    out_cpp.write(f'    {trace_if}\n')
+    out_cpp.write(f'    if (s_trace_director)\n')
+    out_cpp.write( '    {\n')
+    out_cpp.write(f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": ~{classname}2(): this=" << this << "\\n";\n')
+    if not extras.pod:
+        out_cpp.write( f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": ~{classname}2(): m_internal=" << m_internal << "\\n";\n')
+    out_cpp.write( '    }\n')
+    out_cpp.write(f'    #endif\n')
     if free:
-        # Destructor
-        out_h.write( '\n')
-        out_h.write( '    /** == Destructor. */\n')
-        out_h.write(f'    FZ_FUNCTION ~{classname}2();\n')
-        out_cpp.write('\n')
-        out_cpp.write(f'FZ_FUNCTION {classname}2::~{classname}2()\n')
-        out_cpp.write( '{\n')
-        out_cpp.write(f'    {trace_if}\n')
-        out_cpp.write(f'    if (s_trace_director)\n')
-        out_cpp.write( '    {\n')
-        out_cpp.write(f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": ~{classname}2(): this=" << this << "\\n";\n')
-        if not extras.pod:
-            out_cpp.write( f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": ~{classname}2(): m_internal=" << m_internal << "\\n";\n')
-        out_cpp.write( '    }\n')
-        out_cpp.write(f'    #endif\n')
         out_cpp.write(f'    {free}\n')
-        out_cpp.write( '}\n')
+    out_cpp.write( '}\n')
 
     def write(text):
         out_h.write(text)
@@ -4101,8 +4195,9 @@ def class_wrapper_virtual_fnptrs(
     for cursor, fnptr_type in get_fnptrs( shallow_typedef_expansion=True):
 
         # Write static callback.
+        return_type = _make_top_level(fnptr_type.get_result().spelling)
         out_cpp.write(f'/* Static callback, calls self->{cursor.spelling}(). */\n')
-        out_cpp.write(f'static {_make_top_level(fnptr_type.get_result().spelling)} {classname}2_s_{cursor.spelling}')
+        out_cpp.write(f'static {return_type} {classname}2_s_{cursor.spelling}')
         out_cpp.write('(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
@@ -4121,9 +4216,11 @@ def class_wrapper_virtual_fnptrs(
         out_cpp.write(f'        std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): arg_0=" << arg_0 << " arg_1=" << arg_1 << " self=" << self << "\\n";\n')
         out_cpp.write( '    }\n')
         out_cpp.write( '    #endif\n')
-        out_cpp.write( '    try\n')
         out_cpp.write( '    {\n')
-        out_cpp.write(f'        return self->{cursor.spelling}(')
+        out_cpp.write( '        char error_message[256] = "";\n')
+        out_cpp.write( '        try\n')
+        out_cpp.write( '        {\n')
+        out_cpp.write(f'            return self->{cursor.spelling}(')
         sep = ''
         for i, arg_type in enumerate( fnptr_type.argument_types()):
             if i == self_n:
@@ -4135,18 +4232,25 @@ def class_wrapper_virtual_fnptrs(
             out_cpp.write( f'{sep}{name}')
             sep = ', '
         out_cpp.write(');\n')
-        out_cpp.write('    }\n')
+        out_cpp.write('        }\n')
 
         # todo: catch our different exception types and map to FZ_ERROR_*.
-        out_cpp.write( '    catch (std::exception& e)\n')
-        out_cpp.write( '    {\n')
-        out_cpp.write(f'        {trace_if}\n')
-        out_cpp.write( '        if (s_trace_director)\n')
+        out_cpp.write( '        catch (std::exception& e)\n')
         out_cpp.write( '        {\n')
-        out_cpp.write(f'            std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): converting std::exception to fz_throw(): " << e.what() << "\\n";\n')
+        out_cpp.write(f'            {trace_if}\n')
+        out_cpp.write( '            if (s_trace_director)\n')
+        out_cpp.write( '            {\n')
+        out_cpp.write(f'                std::cerr << __FILE__ << ":" << __LINE__ << ":" << __FUNCTION__ << ": {classname}2_s_{cursor.spelling}(): converting std::exception to fz_throw(): " << e.what() << "\\n";\n')
+        out_cpp.write( '            }\n')
+        out_cpp.write( '            #endif\n')
+        out_cpp.write( '            fz_strlcpy(error_message, e.what(), sizeof(error_message));\n')
         out_cpp.write( '        }\n')
-        out_cpp.write( '        #endif\n')
-        out_cpp.write( '        fz_throw(arg_0, FZ_ERROR_GENERIC, "%s", e.what());\n')
+        out_cpp.write( '        /* We defer fz_throw() to here, to ensure that `std::exception& e` has been destructed. */\n')
+        out_cpp.write( '        fz_throw(arg_0, FZ_ERROR_GENERIC, "%s", error_message);\n')
+        if return_type != 'void':
+            out_cpp.write(f'        /* Keep compiler happy. */\n')
+            out_cpp.write(f'        {return_type} ret;\n')
+            out_cpp.write(f'        return ret;\n')
         out_cpp.write( '    }\n')
         out_cpp.write('}\n')
 
@@ -4363,7 +4467,7 @@ def class_wrapper(
                     duplicate_type=duplicate_type,
                     )
         except Clang6FnArgsBug as e:
-            jlib.log( 'Unable to wrap function {fnname} becase: {e}')
+            jlib.log( 'Unable to wrap function {fnname} because: {e}')
         else:
             out_h.write( temp_out_h.getvalue())
             out_cpp.write( temp_out_cpp.getvalue())
@@ -4440,7 +4544,7 @@ def class_wrapper(
             #log( 'auto-detected fn already in {struct_name} method_wrappers: {fnname}')
             # Omit this function, because there is an extra method with the
             # same name. (We could probably include both as they will generally
-            # have different args so overloading will destinguish them, but
+            # have different args so overloading will distinguish them, but
             # extra methods are usually defined to be used in preference.)
             pass
         elif fnname.startswith( 'fz_new_draw_device'):
@@ -4799,7 +4903,7 @@ def refcount_check_code( out, refcheck_if):
             If <allow_int_this> is true, we allow _this->m_internal to be
             an invalid pointer less than 4096, in which case we don't try
             to check refs. This is used for pdf_obj because in Python the
-            enums PDF_ENUM_NAME_* are converted to mupdf.PdfObj's containg
+            enums PDF_ENUM_NAME_* are converted to mupdf.PdfObj's contain
             .m_internal's which are the enum values cast to (for_pdf_obj*), so
             that they can be used directly.
 
@@ -5002,7 +5106,7 @@ def cpp_source(
                 assert not self.closed, f'File.write() called after .close(). {self.filename=}'
                 if fileline:
                     # Generate #line <line> "<filename>" for our caller's
-                    # location. This makes any compiler warnings refer to thei
+                    # location. This makes any compiler warnings refer to their
                     # python code rather than the generated C++ code.
                     tb = traceback.extract_stack( None)
                     filename, line, function, source = tb[0]

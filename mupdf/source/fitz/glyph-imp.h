@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -58,7 +58,7 @@ struct fz_glyph
 	int x, y, w, h;
 	fz_pixmap *pixmap;
 	size_t size;
-	unsigned char data[1];
+	unsigned char data[FZ_FLEXIBLE_ARRAY];
 };
 
 /*

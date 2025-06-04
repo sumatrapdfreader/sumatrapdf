@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -113,22 +113,28 @@ const char *
 pdf_layer_name(fz_context *ctx, pdf_document *doc, int layer)
 {
 	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
-	return desc ? pdf_dict_get_text_string(ctx, desc->ocgs[layer].obj, PDF_NAME(Name)) : NULL;
+	if (desc && layer >= 0 && layer < desc->len)
+		return pdf_dict_get_text_string(ctx, desc->ocgs[layer].obj, PDF_NAME(Name));
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid layer index");
 }
 
 int
 pdf_layer_is_enabled(fz_context *ctx, pdf_document *doc, int layer)
 {
 	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
-	return desc ? desc->ocgs[layer].state : 0;
+	if (desc && layer >= 0 && layer < desc->len)
+		return desc->ocgs[layer].state;
+	fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid layer index");
 }
 
 void
 pdf_enable_layer(fz_context *ctx, pdf_document *doc, int layer, int enabled)
 {
 	pdf_ocg_descriptor *desc = pdf_read_ocg(ctx, doc);
-	if (desc)
+	if (desc && layer >= 0 && layer < desc->len)
 		desc->ocgs[layer].state = enabled;
+	else
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "invalid layer index");
 }
 
 static int
@@ -193,7 +199,7 @@ find_ocg(fz_context *ctx, pdf_ocg_descriptor *desc, pdf_obj *obj)
 		else if (c > 0)
 			l = m + 1;
 		else
-			return c;
+			return m;
 	}
 	return -1;
 }

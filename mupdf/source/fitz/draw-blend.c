@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -561,8 +561,6 @@ fz_blend_nonseparable(byte * FZ_RESTRICT bp, int bal, const byte * FZ_RESTRICT s
 				/* CMYK */
 				if (complement)
 				{
-					int k;
-
 					rr = 255 - rr;
 					rg = 255 - rg;
 					rb = 255 - rb;

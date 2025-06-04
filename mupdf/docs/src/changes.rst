@@ -1,15 +1,14 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
    :keywords: MuPDF, pdf, epub
 
 
-Changes
+Change Log
 ==========================================
 
 - For the full list of changes between versions of :title:`MuPDF` see CHANGES_.
@@ -33,6 +32,18 @@ To minimise the impact of such changes, we undertake to list the :title:`API` ch
 .. important::
 
    The changes listed below only affects *existing* :title:`APIs`.
+
+Changes from 1.25 to 1.26
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- `fz_skew_detect` renamed `fz_detect_skew`.
+- `Filespec` renamed `FileSpec` to be consistent across bindings and documentation:
+    - `PDFAnnotation.hasFilespec` renamed `PDFAnnotation.hasFileSpec`
+    - `PDFAnnotation.getFilespec` renamed `PDFAnnotation.getFileSpec`
+    - `PDFAnnotation.setFilespec` renamed `PDFAnnotation.setFileSpec`
+    - `PDFDocument.getFilespecParams` renamed `PDFDocument.getFileSpecParams`.
+    - `PDFObject.isFilespec` renamed `PDFObject.isFileSpec`.
+- `StrokeState.getDashes` renamed `StrokeState.getDashPattern`.
+
 
 Changes from 1.24 to 1.25
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -164,7 +175,6 @@ Changes from 1.14 to 1.15
    The `op_BI` callback is now passed an additional colorspace resource name.
 
 
-.. include:: footer.rst
 
 
 

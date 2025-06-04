@@ -290,6 +290,8 @@ fz_transition *pdf_page_presentation(fz_context *ctx, pdf_page *page, fz_transit
 
 fz_default_colorspaces *pdf_load_default_colorspaces(fz_context *ctx, pdf_document *doc, pdf_page *page);
 
+void pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect *clip);
+
 /*
 	Update default colorspaces for an xobject.
 */

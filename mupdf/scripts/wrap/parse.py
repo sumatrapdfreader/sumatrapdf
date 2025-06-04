@@ -540,7 +540,7 @@ def get_args( tu, cursor, include_fz_context=False, skip_first_alt=False, verbos
                 if verbose:
                     jlib.log( '{extras.opaque=} {base_type_cursor.kind=} {base_type_cursor.is_definition()=}')
                 if extras.opaque:
-                    # E.g. we don't have access to defintion of fz_separation,
+                    # E.g. we don't have access to definition of fz_separation,
                     # but it is marked in classes.classextras with opaque=true,
                     # so there will be a wrapper class.
                     alt = base_type_cursor
@@ -874,7 +874,7 @@ def find_wrappable_function_with_arg0_type( tu, structname):
 
         First non-context param is <structname> (by reference, pointer or value).
 
-        If return type is a fz_* struc (by reference, pointer or value), the
+        If return type is a fz_* struct (by reference, pointer or value), the
         corresponding wrapper class has a raw constructor.
     '''
     find_wrappable_function_with_arg0_type_cache_populate( tu)

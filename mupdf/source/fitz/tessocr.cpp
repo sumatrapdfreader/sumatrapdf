@@ -116,7 +116,7 @@ void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
 	if (api == NULL)
 	{
 		fz_clear_leptonica_mem(ctx);
-		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract initialisation failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract base initialisation failed");
 	}
 
 	if (language == NULL || language[0] == 0)
@@ -133,7 +133,7 @@ void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
 	{
 		delete api;
 		fz_clear_leptonica_mem(ctx);
-		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract initialisation failed");
+		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract language initialisation failed");
 	}
 
 	return api;

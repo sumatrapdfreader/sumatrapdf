@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -46,8 +46,7 @@ public class StrokeState
 		finalize();
 	}
 
-	private native long newNativeStrokeState(int startCap, int dashCap, int endCap, int lineJoin, float lineWidth, float miterLimit,
-			float dashPhase, float[] dash);
+	private native long newNativeStrokeState(int lineCap, int lineJoin, float lineWidth, float miterLimit, float dashPhase, float[] dash);
 
 	// Private constructor for the C to use. Any objects created by the
 	// C are done for purposes of calling back to a java device, and
@@ -58,13 +57,13 @@ public class StrokeState
 		pointer = p;
 	}
 
-	public StrokeState(int startCap, int endCap, int lineJoin, float lineWidth, float miterLimit) {
-		pointer = newNativeStrokeState(startCap, 0, endCap, lineJoin, lineWidth, miterLimit, 0, null);
+	public StrokeState(int lineCap, int lineJoin, float lineWidth, float miterLimit) {
+		pointer = newNativeStrokeState(lineCap, lineJoin, lineWidth, miterLimit, 0, null);
 	}
 
-	public StrokeState(int startCap, int dashCap, int endCap, int lineJoin, float lineWidth, float miterLimit,
+	public StrokeState(int lineCap, int lineJoin, float lineWidth, float miterLimit,
 			float dashPhase, float[] dash) {
-		pointer = newNativeStrokeState(startCap, dashCap, endCap, lineJoin, lineWidth, miterLimit, dashPhase, dash);
+		pointer = newNativeStrokeState(lineCap, lineJoin, lineWidth, miterLimit, dashPhase, dash);
 	}
 
 	public native int getStartCap();
@@ -74,5 +73,5 @@ public class StrokeState
 	public native float getLineWidth();
 	public native float getMiterLimit();
 	public native float getDashPhase();
-	public native float[] getDashes();
+	public native float[] getDashPattern();
 }

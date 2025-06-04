@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -256,6 +256,8 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 		pdf_dict_del(ctx, obj, PDF_NAME(Title));
 
 	pdf_dict_del(ctx, obj, PDF_NAME(A));
+	pdf_dict_del(ctx, obj, PDF_NAME(C));
+	pdf_dict_del(ctx, obj, PDF_NAME(F));
 	pdf_dict_del(ctx, obj, PDF_NAME(Dest));
 	if (item->uri)
 	{
@@ -271,6 +273,15 @@ do_outline_update(fz_context *ctx, pdf_obj *obj, fz_outline_item *item, int is_n
 			pdf_dict_put_drop(ctx, obj, PDF_NAME(A),
 				pdf_new_action_from_link(ctx, doc, item->uri));
 	}
+	if (item->r != 0 || item->g != 0 || item->b != 0)
+	{
+		pdf_obj *color = pdf_dict_put_array(ctx, obj, PDF_NAME(C), 3);
+		pdf_array_put_real(ctx, color, 0, item->r / 255.0);
+		pdf_array_put_real(ctx, color, 1, item->g / 255.0);
+		pdf_array_put_real(ctx, color, 2, item->b / 255.0);
+	}
+	if (item->flags != 0)
+		pdf_dict_put_int(ctx, obj, PDF_NAME(F), item->flags);
 }
 
 static int
@@ -499,6 +510,13 @@ pdf_outline_iterator_item(fz_context *ctx, fz_outline_iterator *iter_)
 	}
 
 	iter->item.is_open = pdf_dict_get_int(ctx, iter->current, PDF_NAME(Count)) > 0;
+
+	obj = pdf_dict_get(ctx, iter->current, PDF_NAME(C));
+	iter->item.r = (int)(0.5 + 255 * pdf_array_get_real(ctx, obj, 0));
+	iter->item.g = (int)(0.5 + 255 * pdf_array_get_real(ctx, obj, 1));
+	iter->item.b = (int)(0.5 + 255 * pdf_array_get_real(ctx, obj, 2));
+
+	iter->item.flags = pdf_dict_get_int(ctx, iter->current, PDF_NAME(F)) & 127;
 
 	return &iter->item;
 }

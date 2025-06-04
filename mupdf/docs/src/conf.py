@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("."))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # extensions = ["sphinx.ext.autodoc", "sphinx.ext.coverage", "sphinx.ext.ifconfig"]
-extensions = ["sphinx_copybutton"]
+extensions = ["sphinx_copybutton",'sphinxcontrib.googleanalytics']
 if hasattr(os, "uname") and os.uname()[0] in ("OpenBSD", "Darwin"):
     # rst2pdf is not available on OpenBSD or MacOS.
     pass
@@ -33,6 +33,9 @@ templates_path = ["_templates"]
 
 # The suffix of source filenames.
 source_suffix = ".rst"
+
+# from: pip install sphinxcontrib-googleanalytics
+googleanalytics_id = "G-JZTN4VTL9M"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
@@ -85,13 +88,51 @@ version = release
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build","build"]
+exclude_patterns = [
+    "_build",
+    "build",
+    "mutool-object-*.rst",
+]
+
+rst_prolog = """
+.. |instance_props| raw:: html
+
+   <span class="instance_props_tag">Instance properties</span>
+
+.. |instance_methods| raw:: html
+
+   <span class="instance_methods_tag">Instance methods</span>
+
+.. |example_tag| raw:: html
+
+   <span class="example_tag">EXAMPLE</span>
+
+.. |mutool_tag| raw:: html
+
+   <span class="mutool_tag">mutool only</span>
+
+.. |mutool_tag_wasm_soon| raw:: html
+
+   <span class="mutool_tag">mutool only</span>
+
+.. |wasm_tag| raw:: html
+
+   <span class="wasm_tag">wasm only</span>
+
+"""
+
+rst_epilog = """
+.. raw:: html
+
+   <p class="footer-disclaimer">This software is provided AS-IS with no warranty, either express or implied. This software is distributed under license and may not be copied, modified or distributed except as expressly authorized under the terms of that license. Refer to licensing information at <a href="https://www.artifex.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=footer-link">artifex.com</a> or contact Artifex Software, Inc., 39 Mesa Street, Suite 108A, San Francisco, CA 94129, USA, for further information.</p>
+
+"""
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
 default_role = 'any'
 
-# To supress these warnings do the following:
+# To suppress these warnings do the following:
 # See: https://stackoverflow.com/questions/37359407/suppress-warnings-for-unfound-references-with-default-role-any-in-sphinx
 def on_missing_reference(app, env, node, contnode):
     if node['reftype'] == 'any':
@@ -132,9 +173,6 @@ html_theme = "furo"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-
-}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -149,7 +187,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-# html_logo = "_static/mupdf-sidebar-logo-dark.png"
+html_logo = "_static/mupdf-sidebar-logo.webp"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -161,8 +199,14 @@ html_favicon = "_static/favicon.ico"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 html_theme_options = {
-    "light_logo": "mupdf-sidebar-logo-dark.png",
-    "dark_logo": "mupdf-sidebar-logo-light.png"
+    "footer_icons": [
+        {
+            "name": "Discord",
+            "url": "https://discord.gg/DQjvZ6ERqH",
+            "class": "discord-link",
+            "html": "Find <b>#mupdf</b> on Discord <img class='discord-link' src='_static/discord-mark-blue.svg'>"
+        },
+    ],
 }
 
 # A list of CSS files. The entry must be a filename string or a tuple containing

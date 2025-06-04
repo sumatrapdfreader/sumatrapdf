@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -89,6 +89,14 @@ int fz_atoi(const char *s);
 	64bit atoi that copes with NULL
 */
 int64_t fz_atoi64(const char *s);
+
+/**
+	size_t atoi that copes with NULL.
+
+	NOTE: limited to 63bits. Negative numbers
+	are returned as 0.
+*/
+size_t fz_atoz(const char *s);
 
 /**
 	Some standard math functions, done as static inlines for speed.
@@ -267,6 +275,12 @@ FZ_DATA extern const fz_irect fz_empty_irect;
 */
 FZ_DATA extern const fz_rect fz_infinite_rect;
 FZ_DATA extern const fz_irect fz_infinite_irect;
+
+/**
+	An invalid rectangle.
+*/
+FZ_DATA extern const fz_rect fz_invalid_rect;
+FZ_DATA extern const fz_irect fz_invalid_irect;
 
 /**
 	Check if rectangle is empty.
@@ -539,8 +553,6 @@ fz_matrix fz_transform_page(fz_rect mediabox, float resolution, float rotate);
 /**
 	Create an inverse matrix.
 
-	inverse: Place to store inverse matrix.
-
 	matrix: Matrix to invert. A degenerate matrix, where the
 	determinant is equal to zero, can not be inverted and the
 	original matrix is returned instead.
@@ -552,9 +564,9 @@ fz_matrix fz_invert_matrix(fz_matrix matrix);
 /**
 	Attempt to create an inverse matrix.
 
-	inverse: Place to store inverse matrix.
+	inv: Place to store inverse matrix.
 
-	matrix: Matrix to invert. A degenerate matrix, where the
+	src: Matrix to invert. A degenerate matrix, where the
 	determinant is equal to zero, can not be inverted.
 
 	Returns 1 if matrix is degenerate (singular), or 0 otherwise.
@@ -823,6 +835,30 @@ int fz_is_point_inside_rect(fz_point p, fz_rect r);
 	top right corner is not included).
 */
 int fz_is_point_inside_irect(int x, int y, fz_irect r);
+
+/**
+	Inclusion test for rects.
+
+	rects are assumed to be both open or both closed.
+
+	No invalid rect can include any other rect.
+	No invalid rect can be included by any rect.
+	Empty (point) rects can include themselves.
+	Empty (line) rects can include many (subline) rects.
+*/
+int fz_is_rect_inside_rect(fz_rect inner, fz_rect outer);
+
+/**
+	Inclusion test for irects.
+
+	rects are assumed to be both open or both closed.
+
+	No invalid rect can include any other rect.
+	No invalid rect can be included by any rect.
+	Empty (point) rects can include themselves.
+	Empty (line) rects can include many (subline) rects.
+*/
+int fz_is_irect_inside_irect(fz_irect inner, fz_irect outer);
 
 /**
 	Inclusion test for quad in quad.

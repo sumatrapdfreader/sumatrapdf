@@ -434,6 +434,17 @@ lex_string(fz_context *ctx, fz_stream *f, pdf_lexbuf *lb)
 				*s++ = c;
 			}
 			break;
+		/* Bug 708256: PDF 32000-1 says that any occurence of \n, \r, or \r\n in a
+		 * (unless escaped with a '\') should be interpreted as a single 0x0a byte. */
+		case '\n':
+			*s++ = 0x0a;
+			break;
+		case '\r':
+			*s++ = 0x0a;
+			c = lex_byte(ctx, f);
+			if ((c != '\n') && (c != EOF))
+				fz_unread_byte(ctx, f);
+			break;
 		default:
 			*s++ = c;
 			break;

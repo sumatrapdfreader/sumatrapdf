@@ -690,6 +690,27 @@
     <ClCompile Include="..\..\source\fitz\stext-boxer.c">
       <Filter>fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\fitz\stext-para.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\stext-table.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\output-csv.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\json.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\pdf\pdf-label.c">
+      <Filter>pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\brotli.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\fitz\filter-brotli.c">
+      <Filter>fitz</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\fitz\draw-imp.h">
@@ -976,6 +997,15 @@
     </ClInclude>
     <ClInclude Include="..\..\include\mupdf\pdf\recolor.h">
       <Filter>!include\pdf</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\json.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\mupdf\fitz\barcode.h">
+      <Filter>!include\fitz</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\pdf\pdf-imp.h">
+      <Filter>pdf</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -668,6 +668,20 @@ load_enc_tab6(fz_context *ctx, uint8_t *d, size_t data_size, uint32_t offset)
 	return enc;
 }
 
+static int
+is_encoding_all_zeros(fz_context *ctx, encoding_t *enc)
+{
+	uint32_t i;
+
+	if (enc != NULL)
+		for (i = 0; i < enc->max; i++)
+			if (enc->gid[i] != 0)
+				return 0;
+
+	return 1;
+}
+
+
 static encoding_t *
 load_enc(fz_context *ctx, fz_buffer *t, int pid, int psid)
 {
@@ -716,6 +730,13 @@ load_enc(fz_context *ctx, fz_buffer *t, int pid, int psid)
 		enc->pid = pid;
 		enc->psid = psid;
 
+		if (is_encoding_all_zeros(ctx, enc))
+		{
+			// ignore any encoding that is all zeros
+			fz_free(ctx, enc);
+			enc = NULL;
+		}
+
 		return enc;
 	}
 
@@ -734,19 +755,21 @@ load_encoding(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	{
 		if (ttf->symbolic)
 		{
-			/* For symbolic fonts, we look for (1,0) as per PDF Spec, then (3,0). */
-			enc = load_enc(ctx, t, 1, 0);
+			/* For symbolic fonts, we look for (3,0) as per PDF Spec, then (1,0). */
+			enc = load_enc(ctx, t, 3, 0);
 			if (!enc)
-				enc = load_enc(ctx, t, 3, 0);
+				enc = load_enc(ctx, t, 1, 0);
 		}
 		else
 		{
-			/* For non symbolic fonts, we look for (3,1) then (1,0). */
+			/* For non symbolic fonts, we look for (3,1) then (1,0), then (0,1), and finally (0,3). */
 			enc = load_enc(ctx, t, 3, 1);
 			if (!enc)
 				enc = load_enc(ctx, t, 1, 0);
 			if (!enc)
 				enc = load_enc(ctx, t, 0, 1);
+			if (!enc)
+				enc = load_enc(ctx, t, 0, 3);
 		}
 		if (!enc)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "No suitable cmap table found");
@@ -875,7 +898,7 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 		put16(d + offset, entries - offset); /* offset */
 
 		/* Insert an entry */
-		if (!ttf->is_otf && ttf->gid_renum && i < ttf->orig_num_glyphs && enc->gid[i] < ttf->orig_num_glyphs)
+		if (!ttf->is_otf && ttf->gid_renum && i < enc->max && enc->gid[i] < ttf->orig_num_glyphs)
 			put16(d + entries, (ttf->is_otf || ttf->gid_renum == NULL) ? enc->gid[i] : ttf->gid_renum[enc->gid[i]]);
 		else
 			put16(d + entries, enc->gid[i]);
@@ -890,7 +913,7 @@ make_cmap(fz_context *ctx, ttf_t *ttf)
 				while (seg_end < i)
 				{
 					seg_end++;
-					if (!ttf->is_otf && ttf->gid_renum && seg_end < ttf->orig_num_glyphs && enc->gid[seg_end] < ttf->orig_num_glyphs)
+					if (!ttf->is_otf && ttf->gid_renum && seg_end < enc->max && enc->gid[seg_end] < ttf->orig_num_glyphs)
 						put16(d + entries, ttf->gid_renum[enc->gid[seg_end]]);
 					else
 						put16(d + entries, enc->gid[seg_end]);
@@ -1016,7 +1039,8 @@ read_hhea(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	 * that dividing line is in our new reduced set. */
 	if (ttf->encoding && !ttf->is_otf && ttf->orig_num_long_hor_metrics > 0)
 	{
-		ttf->new_num_long_hor_metrics = 0;
+		/* i = 0 is always kept long in subset_hmtx(). */
+		ttf->new_num_long_hor_metrics = 1;
 		for (i = ttf->orig_num_long_hor_metrics-1; i > 0; i--)
 			if (ttf->gid_renum[i])
 			{
@@ -1339,9 +1363,9 @@ subset_hmtx(fz_context *ctx, ttf_t *ttf, fz_stream *stm)
 	if (long_metrics > ttf->orig_num_glyphs)
 		long_metrics = ttf->orig_num_glyphs;
 	if (long_metrics > t->len / 4)
-		long_metrics = t->len / 4;
+		long_metrics = (uint16_t)(t->len / 4);
 
-	short_metrics = (t->len - long_metrics * 4) / 2;
+	short_metrics = (uint16_t)((t->len - long_metrics * 4) / 2);
 	if (short_metrics > ttf->orig_num_glyphs - long_metrics)
 		short_metrics = ttf->orig_num_glyphs - long_metrics;
 
@@ -1408,13 +1432,298 @@ shrink_loca_if_possible(fz_context *ctx, ttf_t *ttf)
 	put16(ttf->index_to_loc_formatp, 0);
 }
 
+static struct { const char *charname; int idx; } macroman[] =
+{
+	{   ".notdef",                                 0},
+	{   ".null",                                   1},
+	{   "A",                                      36},
+	{   "AE",                                    144},
+	{   "Aacute",                                201},
+	{   "Acircumflex",                           199},
+	{   "Adieresis",                              98},
+	{   "Agrave",                                173},
+	{   "Aring",                                  99},
+	{   "Atilde",                                174},
+	{   "B",                                      37},
+	{   "C",                                      38},
+	{   "Cacute",                                253},
+	{   "Ccaron",                                255},
+	{   "Ccedilla",                              100},
+	{   "D",                                      39},
+	{   "Delta",                                 168},
+	{   "E",                                      40},
+	{   "Eacute",                                101},
+	{   "Ecircumflex",                           200},
+	{   "Edieresis",                             202},
+	{   "Egrave",                                203},
+	{   "Eth",                                   233},
+	{   "F",                                      41},
+	{   "G",                                      42},
+	{   "Gbreve",                                248},
+	{   "H",                                      43},
+	{   "I",                                      44},
+	{   "Iacute",                                204},
+	{   "Icircumflex",                           205},
+	{   "Idieresis",                             206},
+	{   "Idotaccent",                            250},
+	{   "Igrave",                                207},
+	{   "J",                                      45},
+	{   "K",                                      46},
+	{   "L",                                      47},
+	{   "Lslash",                                226},
+	{   "M",                                      48},
+	{   "N",                                      49},
+	{   "Ntilde",                                102},
+	{   "O",                                      50},
+	{   "OE",                                    176},
+	{   "Oacute",                                208},
+	{   "Ocircumflex",                           209},
+	{   "Odieresis",                             103},
+	{   "Ograve",                                211},
+	{   "Omega",                                 159},
+	{   "Oslash",                                145},
+	{   "Otilde",                                175},
+	{   "P",                                      51},
+	{   "Q",                                      52},
+	{   "R",                                      53},
+	{   "S",                                      54},
+	{   "Scaron",                                228},
+	{   "Scedilla",                              251},
+	{   "T",                                      55},
+	{   "Thorn",                                 237},
+	{   "U",                                      56},
+	{   "Uacute",                                212},
+	{   "Ucircumflex",                           213},
+	{   "Udieresis",                             104},
+	{   "Ugrave",                                214},
+	{   "V",                                      57},
+	{   "W",                                      58},
+	{   "X",                                      59},
+	{   "Y",                                      60},
+	{   "Yacute",                                235},
+	{   "Ydieresis",                             187},
+	{   "Z",                                      61},
+	{   "Zcaron",                                230},
+	{   "a",                                      68},
+	{   "aacute",                                105},
+	{   "acircumflex",                           107},
+	{   "acute",                                 141},
+	{   "adieresis",                             108},
+	{   "ae",                                    160},
+	{   "agrave",                                106},
+	{   "ampersand",                               9},
+	{   "apple",                                 210},
+	{   "approxequal",                           167},
+	{   "aring",                                 110},
+	{   "asciicircum",                            65},
+	{   "asciitilde",                             97},
+	{   "asterisk",                               13},
+	{   "at",                                     35},
+	{   "atilde",                                109},
+	{   "b",                                      69},
+	{   "backslash",                              63},
+	{   "bar",                                    95},
+	{   "braceleft",                              94},
+	{   "braceright",                             96},
+	{   "bracketleft",                            62},
+	{   "bracketright",                           64},
+	{   "breve",                                 219},
+	{   "brokenbar",                             232},
+	{   "bullet",                                135},
+	{   "c",                                      70},
+	{   "cacute",                                254},
+	{   "caron",                                 225},
+	{   "ccaron",                                256},
+	{   "ccedilla",                              111},
+	{   "cedilla",                               222},
+	{   "cent",                                  132},
+	{   "circumflex",                            216},
+	{   "colon",                                  29},
+	{   "comma",                                  15},
+	{   "copyright",                             139},
+	{   "currency",                              189},
+	{   "d",                                      71},
+	{   "dagger",                                130},
+	{   "daggerdbl",                             194},
+	{   "dcroat",                                257},
+	{   "degree",                                131},
+	{   "dieresis",                              142},
+	{   "divide",                                184},
+	{   "dollar",                                  7},
+	{   "dotaccent",                             220},
+	{   "dotlessi",                              215},
+	{   "e",                                      72},
+	{   "eacute",                                112},
+	{   "ecircumflex",                           114},
+	{   "edieresis",                             115},
+	{   "egrave",                                113},
+	{   "eight",                                  27},
+	{   "ellipsis",                              171},
+	{   "emdash",                                179},
+	{   "endash",                                178},
+	{   "equal",                                  32},
+	{   "eth",                                   234},
+	{   "exclam",                                  4},
+	{   "exclamdown",                            163},
+	{   "f",                                      73},
+	{   "fi",                                    192},
+	{   "five",                                   24},
+	{   "fl",                                    193},
+	{   "florin",                                166},
+	{   "four",                                   23},
+	{   "fraction",                              188},
+	{   "franc",                                 247},
+	{   "g",                                      74},
+	{   "gbreve",                                249},
+	{   "germandbls",                            137},
+	{   "grave",                                  67},
+	{   "greater",                                33},
+	{   "greaterequal",                          149},
+	{   "guillemotleft",                         169},
+	{   "guillemotright",                        170},
+	{   "guilsinglleft",                         190},
+	{   "guilsinglright",                        191},
+	{   "h",                                      75},
+	{   "hungarumlaut",                          223},
+	{   "hyphen",                                 16},
+	{   "i",                                      76},
+	{   "iacute",                                116},
+	{   "icircumflex",                           118},
+	{   "idieresis",                             119},
+	{   "igrave",                                117},
+	{   "infinity",                              146},
+	{   "integral",                              156},
+	{   "j",                                      77},
+	{   "k",                                      78},
+	{   "l",                                      79},
+	{   "less",                                   31},
+	{   "lessequal",                             148},
+	{   "logicalnot",                            164},
+	{   "lozenge",                               185},
+	{   "lslash",                                227},
+	{   "m",                                      80},
+	{   "macron",                                218},
+	{   "minus",                                 239},
+	{   "mu",                                    151},
+	{   "multiply",                              240},
+	{   "n",                                      81},
+	{   "nine",                                   28},
+	{   "nonbreakingspace",                      172},
+	{   "nonmarkingreturn",                        2},
+	{   "notequal",                              143},
+	{   "ntilde",                                120},
+	{   "numbersign",                              6},
+	{   "o",                                      82},
+	{   "oacute",                                121},
+	{   "ocircumflex",                           123},
+	{   "odieresis",                             124},
+	{   "oe",                                    177},
+	{   "ogonek",                                224},
+	{   "ograve",                                122},
+	{   "one",                                    20},
+	{   "onehalf",                               244},
+	{   "onequarter",                            245},
+	{   "onesuperior",                           241},
+	{   "ordfeminine",                           157},
+	{   "ordmasculine",                          158},
+	{   "oslash",                                161},
+	{   "otilde",                                125},
+	{   "p",                                      83},
+	{   "paragraph",                             136},
+	{   "parenleft",                              11},
+	{   "parenright",                             12},
+	{   "partialdiff",                           152},
+	{   "percent",                                 8},
+	{   "period",                                 17},
+	{   "periodcentered",                        195},
+	{   "perthousand",                           198},
+	{   "pi",                                    155},
+	{   "plus",                                   14},
+	{   "plusminus",                             147},
+	{   "product",                               154},
+	{   "q",                                      84},
+	{   "question",                               34},
+	{   "questiondown",                          162},
+	{   "quotedbl",                                5},
+	{   "quotedblbase",                          197},
+	{   "quotedblleft",                          180},
+	{   "quotedblright",                         181},
+	{   "quoteleft",                             182},
+	{   "quoteright",                            183},
+	{   "quotesinglbase",                        196},
+	{   "quotesingle",                            10},
+	{   "r",                                      85},
+	{   "radical",                               165},
+	{   "registered",                            138},
+	{   "ring",                                  221},
+	{   "s",                                      86},
+	{   "scaron",                                229},
+	{   "scedilla",                              252},
+	{   "section",                               134},
+	{   "semicolon",                              30},
+	{   "seven",                                  26},
+	{   "six",                                    25},
+	{   "slash",                                  18},
+	{   "space",                                   3},
+	{   "sterling",                              133},
+	{   "summation",                             153},
+	{   "t",                                      87},
+	{   "thorn",                                 238},
+	{   "three",                                  22},
+	{   "threequarters",                         246},
+	{   "threesuperior",                         243},
+	{   "tilde",                                 217},
+	{   "trademark",                             140},
+	{   "two",                                    21},
+	{   "twosuperior",                           242},
+	{   "u",                                      88},
+	{   "uacute",                                126},
+	{   "ucircumflex",                           128},
+	{   "udieresis",                             129},
+	{   "ugrave",                                127},
+	{   "underscore",                             66},
+	{   "v",                                      89},
+	{   "w",                                      90},
+	{   "x",                                      91},
+	{   "y",                                      92},
+	{   "yacute",                                236},
+	{   "ydieresis",                             186},
+	{   "yen",                                   150},
+	{   "z",                                      93},
+	{   "zcaron",                                231},
+	{   "zero",                                   19},
+};
+
+static int
+find_macroman_string(const char *s)
+{
+	int l, r, m;
+	int comparison;
+
+	l = 0;
+	r = nelem(macroman);
+	while (l <= r)
+	{
+		m = (l + r) >> 1;
+		comparison = strcmp(s, macroman[m].charname);
+		if (comparison < 0)
+			r = m - 1;
+		else if (comparison > 0)
+			l = m + 1;
+		else
+			return macroman[m].idx;
+	}
+
+	return -1;
+}
+
 static size_t
 subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int num_gids)
 {
-	int i, n, new_glyphs;
+	int i, n, new_glyphs, old_strings, new_strings;
 	int j;
 	fz_int2_heap heap = { 0 };
-	uint8_t *d0, *e, *idx , *p;
+	uint8_t *d0, *e, *p;
 
 	if (len < (size_t) 2 + 2 * ttf->orig_num_glyphs)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated post table");
@@ -1425,13 +1734,14 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 
 	d0 = d;
 	d += 2; len -= 2;
-	idx = d;
 	e = d;
 	p = d;
 
 	/* Store all kept indexes. */
 	if (len < (size_t)n*2)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+	old_strings = 0;
+	new_strings = 0;
 	new_glyphs = 0;
 	j = 0;
 	len -= (size_t)n*2;
@@ -1441,13 +1751,18 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		fz_int2 i2;
 		p += 2;
 
+		if (o >= 258)
+			old_strings++;
+
 		/* We're only keeping gids we want. */
-		if (i != 0 && (j >= num_gids || gids[j] != i))
+		/* Note we need to keep both the gids we were given by the caller, but also
+		 * those required as composites (in gid_renum, if we have it). */
+		if (i != 0 && (j >= num_gids || gids[j] != i) && (ttf->gid_renum == NULL || ttf->gid_renum[i] == 0))
 		{
 			memmove(d, d + 2, (n - i - 1) * 2);
 			continue;
 		}
-		if (i != 0)
+		if (j < num_gids && gids[j] == i)
 			j++;
 
 		d += 2;
@@ -1456,14 +1771,40 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		/* We want this gid. */
 		new_glyphs++;
 
-		/* 257 or smaller: same as in the basic order. */
+		/* 257 or smaller: same as in the basic order, keep it as such. */
 		if (o <= 257)
 			continue;
+
+		/* check if string is one of the macroman standard ones, and use its index if so. */
+		{
+			uint8_t *q = d0 + 2 + (size_t) n * 2;
+			int k;
+			char buf[257] = { 0 };
+			int macidx;
+			for (k = 0; k < o - 258; k++)
+				q += 1 + *q;
+			for (k = 0; k < *q; k++)
+				buf[k] = *(q + 1 + k);
+
+			macidx = find_macroman_string(buf);
+
+			if (macidx >= 0)
+			{
+				put16(d - 2, macidx);
+				continue;
+			}
+		}
+
+		/* We want this gid, and it is a string. */
+		new_strings++;
 
 		/* Store the index. */
 		i2.a = o - 258;
 		i2.b = i;
 		fz_int2_heap_insert(ctx, &heap, i2);
+
+		/* Update string index value in table entry. */
+		put16(d - 2, 257 + new_strings);
 	}
 
 	d = p;
@@ -1478,7 +1819,7 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 
 	/* Run through the list moving the strings down that we care about. */
 	j = 0;
-	n = heap.len;
+	n = old_strings;
 	for (i = 0; i < n; i++)
 	{
 		uint8_t slen;
@@ -1501,7 +1842,6 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		d += slen;
 		e += slen;
 
-		put16(idx + 2*j, 258 + j);
 		j++;
 	}
 
@@ -1604,7 +1944,7 @@ fz_subset_ttf_for_gids(fz_context *ctx, fz_buffer *orig, int *gids, int num_gids
 			reduce_encoding(ctx, &ttf, gids, num_gids);
 		}
 
-		/* Read maxp and store the table. Rememeber orig_num_glyphs. */
+		/* Read maxp and store the table. Remember orig_num_glyphs. */
 		read_maxp(ctx, &ttf, stm);
 
 		/* Read head and store the table. Remember the loca index size. */

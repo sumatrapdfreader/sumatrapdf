@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_pdf_annotation:
 
 .. _mutool_run_js_api_pdf_annotation:
@@ -110,7 +101,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
         annotation.process(processor);
 
-    .. |tor_todo| WASM process is not a function and no processor interface exists.
+    .. TODO(tor): WASM process is not a function and no processor interface exists.
 
 
 .. method:: setAppearance(appearance, state, transform, displayList)
@@ -147,7 +138,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
 .. method:: setAppearance(image)
 
-
+    |mutool_tag|
 
     Set a stamp annotation's appearance to that of an image.
 
@@ -187,6 +178,33 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
         annotation.update();
 
+.. method:: requestSynthesis()
+
+    |mutool_tag|
+
+    Request that an appearance stream should be generated for an annotation if none present.
+    The appearance stream itself will be created in future calls to update() on
+    :ref:`PDFAnnotation<mutool_run_js_api_pdf_annotation>` or :ref:`PDFPage<mutool_run_js_api_pdf_page>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.requestSynthesis();
+
+.. method:: requestResynthesis()
+
+    |mutool_tag|
+
+    Request that an appearance stream should be re-generated for an annotation next time update() is
+    called on :ref:`PDFAnnotation<mutool_run_js_api_pdf_annotation>` or :ref:`PDFPage<mutool_run_js_api_pdf_page>`.
+    This is a side-effect of setting annotation properties, so normally this call does not need to be done explicitly.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.requestResynthesis();
 
 .. method:: getHot()
 
@@ -261,7 +279,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
     Get the annotation flags.
 
-    :return: `Integer` representaton of a bit-field of flags specified below.
+    :return: `Integer` representation of a bit-field of flags specified below.
 
     |example_tag|
 
@@ -274,7 +292,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
     Set the annotation flags.
 
-    :arg flags: `Integer` representaton of a bit-field of flags specified below.
+    :arg flags: `Integer` representation of a bit-field of flags specified below.
 
     |example_tag|
 
@@ -316,6 +334,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
 
 
+.. _mutool_object_pdf_annotation_get_contents:
 
 .. method:: getContents()
 
@@ -328,6 +347,8 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
     .. code-block:: javascript
 
         var contents = annotation.getContents();
+
+.. _mutool_object_pdf_annotation_set_contents:
 
 .. method:: setContents(text)
 
@@ -451,7 +472,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
         annotation.setCreationDate(new Date());
 
-    .. |tor_todo| In mutool this is milliseconds we need to change it to Date
+    .. TODO(tor): In mutool this is milliseconds we need to change it to Date
 
 
 .. method:: getModificationDate()
@@ -479,36 +500,7 @@ To get the annotations on a page see: :ref:`PDFPage getAnnotations()<mutool_run_
 
         annotation.setModificationDate(new Date());
 
-    .. |tor_todo| In mutool this is milliseconds we need to change it to Date
-
-
-
-
-
-.. method:: getQuadding()
-
-    Get the annotation quadding (justification).
-
-    :return: Quadding value, `0` for left-justified, `1` for centered, `2` for right-justified.
-
-    |example_tag|
-
-    .. code-block:: javascript
-
-        var quadding = annotation.getQuadding();
-
-
-.. method:: setQuadding(value)
-
-    Set the annotation quadding (justification).
-
-    :arg value: `Number`. Quadding value, `0` for left-justified, `1` for centered, `2` for right-justified.
-
-    |example_tag|
-
-    .. code-block:: javascript
-
-        annotation.setQuadding(1);
+    .. TODO(tor): In mutool this is milliseconds we need to change it to Date
 
 
 
@@ -583,9 +575,23 @@ These properties are only present for some annotation types, so support for them
         annotation.setRect([0,0,100,100]);
 
 
+.. method:: hasDefaultAppearance()
+
+    |mutool_tag|
+
+    Returns whether the annotation is capable of supporting a bounding box.
+
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var hasRect = annotation.hasRect();
+
+
+
 .. method:: getDefaultAppearance()
-
-
 
     Get the :ref:`default text appearance <mutool_run_js_api_object_default_appearance_text_object>` used for free text annotations.
 
@@ -612,6 +618,48 @@ These properties are only present for some annotation types, so support for them
     .. code-block:: javascript
 
         annotation.setDefaultAppearance("Helv", 16, [0,0,0]);
+
+
+
+.. method:: hasQuadding()
+
+    |mutool_tag|
+
+    Returns whether the annotation is capable of supporting quadding (justification).
+
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var hasQuadding = annotation.hasQuadding();
+
+
+.. method:: getQuadding()
+
+    Get the annotation quadding (justification).
+
+    :return: Quadding value, `0` for left-justified, `1` for centered, `2` for right-justified.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var quadding = annotation.getQuadding();
+
+
+.. method:: setQuadding(value)
+
+    Set the annotation quadding (justification).
+
+    :arg value: `Number`. Quadding value, `0` for left-justified, `1` for centered, `2` for right-justified.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setQuadding(1);
 
 
 
@@ -775,20 +823,65 @@ These properties are only present for some annotation types, so support for them
    * - "Slash"
 
 
+
+.. method:: hasLine()
+
+    Returns whether the annotation is capable of supporting a line or not.
+
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var hasLine = annotation.hasLine();
+
+
+
+
+.. method:: getLine()
+
+
+
+    Get line end points, represented by an array of two points, each represented as an `[x, y]` array.
+
+    :return: `[[x,y],...]`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var line = annotation.getLine();
+
+
+
+.. method:: setLine(endpoints)
+
+    Set the two line end points, represented by an array of two points, each represented as an `[x, y]` array.
+
+    :arg endpoint1: `[x,y]`.
+    :arg endpoint2: `[x,y]`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setLine([100,100], [150, 175]);
+
+
+
 Line Leaders
 ~~~~~~~~~~~~~~~
 
 
 In a PDF line annotation, "line leaders" refer to visual elements that can be added to the endpoints of a line annotation to enhance its appearance or meaning.
 
-.. image:: images/leader-lines.png
+.. image:: images/leader-lines.webp
           :alt: Leader lines explained
           :width: 100%
 
 
 .. method:: setLineLeader(ll)
-
-    |mutool_tag|
 
     Sets the line leader length.
 
@@ -796,12 +889,10 @@ In a PDF line annotation, "line leaders" refer to visual elements that can be ad
 
     .. note::
 
-        Setting a value of `0` effectivley removes the line leader.
+        Setting a value of `0` effectively removes the line leader.
 
 
 .. method:: getLineLeader()
-
-    |mutool_tag|
 
     Gets the line leader length.
 
@@ -810,19 +901,15 @@ In a PDF line annotation, "line leaders" refer to visual elements that can be ad
 
 .. method:: setLineLeaderExtension(lle)
 
-    |mutool_tag|
-
     Sets the line leader extension.
 
     :arg lle: `Number`. A non-negative number representing the length of leader line extensions that extend from the line proper 180 degrees from the leader lines.
 
     .. note::
 
-        Setting a value of `0` effectivley removes the line leader extension.
+        Setting a value of `0` effectively removes the line leader extension.
 
 .. method:: getLineLeaderExtension()
-
-    |mutool_tag|
 
     Gets the line leader extension.
 
@@ -831,15 +918,13 @@ In a PDF line annotation, "line leaders" refer to visual elements that can be ad
 
 .. method:: setLineLeaderOffset(llo)
 
-    |mutool_tag|
-
     Sets the line leader offset.
 
     :arg llo: `Number`. A non-negative number representing the length of the leader line offset, which is the amount of empty space between the endpoints of the annotation and the beginning of the leader lines.
 
     .. note::
 
-        Setting a value of `0` effectivley removes the line leader offset.
+        Setting a value of `0` effectively removes the line leader offset.
 
 .. method:: getLineLeaderOffset()
 
@@ -851,8 +936,6 @@ In a PDF line annotation, "line leaders" refer to visual elements that can be ad
 
 
 .. method:: setLineCaption(enable)
-
-    |mutool_tag|
 
     Sets whether line caption is enabled or not.
 
@@ -866,8 +949,6 @@ In a PDF line annotation, "line leaders" refer to visual elements that can be ad
 
 .. method:: getLineCaption()
 
-    |mutool_tag|
-
     Returns whether the line caption is enabled or not.
 
     :return: `Boolean`.
@@ -875,27 +956,23 @@ In a PDF line annotation, "line leaders" refer to visual elements that can be ad
 
 .. method:: setLineCaptionOffset(point)
 
-    |mutool_tag|
-
     Sets any line caption offset.
 
 
     :arg point: `Array`. A point, `[x, y]`, specifying the offset of the caption text from its normal position. The first value is the horizontal offset along the annotation line from its midpoint, with a positive value indicating offset to the right and a negative value indicating offset to the left. The second value is the vertical offset perpendicular to the annotation line, with a positive value indicating a shift up and a negative value indicating a shift down.
 
 
-    .. image:: images/offset-caption.png
+    .. image:: images/offset-caption.webp
           :alt: Offset caption explained
           :width: 100%
 
     .. note::
 
-        Setting a point of `[0,0]` effectivley removes the caption offset.
+        Setting a point of `[0,0]` effectively removes the caption offset.
 
 
 
 .. method:: getLineCaptionOffset()
-
-    |mutool_tag|
 
     Returns the line caption offset as a point, `[x, y]`.
 
@@ -910,14 +987,12 @@ Callouts
 
 Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotation_types>` and allow for a graphical line to point to an area on a page.
 
-.. image:: images/callout-annot.png
+.. image:: images/callout-annot.webp
           :alt: Callout annotation
           :width: 100%
 
 
 .. method:: hasCallout()
-
-    |mutool_tag|
 
     Returns whether the annotation is capable of supporting a callout or not.
 
@@ -927,16 +1002,12 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
 .. method:: setCalloutLine(points)
 
-    |mutool_tag|
-
     Takes an array of 2 or 3 points.
 
     :arg points: [ [x1, y1], [x2, y2], [x3, y3]? ].
 
 
 .. method:: getCalloutLine()
-
-    |mutool_tag|
 
     Returns the array of points.
 
@@ -945,16 +1016,12 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
 .. method:: setCalloutPoint(point)
 
-    |mutool_tag|
-
     Takes a point where the callout should point to.
 
     :arg points: `[x,y]`.
 
 
 .. method:: getCalloutPoint()
-
-    |mutool_tag|
 
     Returns the callout point.
 
@@ -963,16 +1030,12 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
 .. method:: setCalloutStyle(style)
 
-    |mutool_tag|
-
     Sets the style of the callout line.
 
     :arg style: `String`. A :ref:`line ending style <mutool_pdf_annotation_line_ending_styles>`.
 
 
 .. method:: getCalloutStyle()
-
-    |mutool_tag|
 
     Returns the callout style.
 
@@ -1013,7 +1076,7 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
 .. method:: setIcon(name)
 
-    Sets the annotation icon name, either one of the standard :ref:`icon names<mutool_pdf_annotation_icon_names>`, or something custom. Note that standard icon names can be used to resynthesize the annotation apperance, but custom names cannot.
+    Sets the annotation icon name, either one of the standard :ref:`icon names<mutool_pdf_annotation_icon_names>`, or something custom. Note that standard icon names can be used to resynthesize the annotation appearance, but custom names cannot.
 
     :arg name: `String`.
 
@@ -1087,52 +1150,9 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
 
 
-.. method:: hasLine()
-
-    Returns whether the annotation is capable of supporting a line or not.
-
-    :return: `Boolean`.
-
-    |example_tag|
-
-    .. code-block:: javascript
-
-        var hasLine = annotation.hasLine();
-
-
-
-
-.. method:: getLine()
-
-
-
-    Get line end points, represented by an array of two points, each represented as an `[x, y]` array.
-
-    :return: `[[x,y],...]`.
-
-    |example_tag|
-
-    .. code-block:: javascript
-
-        var line = annotation.getLine();
-
-
-
-.. method:: setLine(endpoints)
-
-    Set the two line end points, represented by an array of two points, each represented as an `[x, y]` array.
-
-    :arg endpoint1: `[x,y]`.
-    :arg endpoint2: `[x,y]`.
-
-    |example_tag|
-
-    .. code-block:: javascript
-
-        annotation.setLine([100,100], [150, 175]);
-
-
 .. method:: hasPopup()
+
+    |mutool_tag|
 
     Returns whether the annotation is capable of supporting a popup or not.
 
@@ -1213,7 +1233,9 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
     "Open" refers to whether the annotation is display in an open state when the page is loaded. A Text Note annotation is considered "Open" if the user has clicked on it to view its contents.
 
 
-.. method:: hasFilespec()
+.. method:: hasFileSpec()
+
+    |mutool_tag|
 
     Returns whether the annotation is capable of supporting the annotation file specification.
 
@@ -1223,13 +1245,13 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
     .. code-block:: javascript
 
-        var hasFileSpec = annotation.hasFilespec();
+        var hasFileSpec = annotation.hasFileSpec();
 
 
 
 
 
-.. method:: getFilespec()
+.. method:: getFileSpec()
 
 
     Gets the file specification object.
@@ -1240,15 +1262,15 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
     .. code-block:: javascript
 
-        var fileSpec = annotation.getFilespec(true);
+        var fileSpec = annotation.getFileSpec(true);
 
 
 
 
-.. _mutool_run_js_api_pdf_annotation_setFilespec:
+.. _mutool_run_js_api_pdf_annotation_setFileSpec:
 
 
-.. method:: setFilespec(fileSpecObject)
+.. method:: setFileSpec(fileSpecObject)
 
 
     Sets the file specification object.
@@ -1260,7 +1282,7 @@ Callouts are used with :ref:`"FreeText" annotations <mutool_run_js_api_annotatio
 
     .. code-block:: javascript
 
-        annotation.setFilespec({filename:"my_file.pdf",
+        annotation.setFileSpec({filename:"my_file.pdf",
                                 mimetype:"application/pdf",
                                 size:1000,
                                 creationDate:date,
@@ -1393,7 +1415,7 @@ The border drawn around some annotations can be controlled by:
 
     Set the annotation border dash pattern to the given array of dash item lengths. The supplied array represents the respective line stroke and gap lengths, e.g. `[1,1]` sets a small dash and small gap, `[2,1,4,1]` would set a medium dash, a small gap, a longer dash and then another small gap.
 
-    :arg dashpattern: [Float, Float, ....].
+    :arg dashPattern: [Float, Float, ....].
 
     |example_tag|
 
@@ -1584,7 +1606,7 @@ Ink annotations consist of a number of strokes, each consisting of a sequence of
 
 .. method:: addInkList(stroke)
 
-
+    |mutool_tag|
 
     To the list of strokes, append a stroke, represented as an array of vertices each an array of its X/Y coordinates.
 
@@ -1791,3 +1813,262 @@ Polygon and polyline annotations consist of a sequence of vertices with a straig
     .. code-block:: javascript
 
         annotation.applyRedaction(true, 1);
+
+.. method:: hasRichContents()
+
+    |mutool_tag|
+
+    Returns whether the annotation is capable of supporting rich text contents.
+
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var hasRichContents = annotation.hasRichContents();
+
+.. method:: getRichContents()
+
+    |mutool_tag|
+
+    Obtain the annotation's rich-text contents, as opposed to the plain text contents obtained by :ref:`getContents()<mutool_object_pdf_annotation_get_contents>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var richContents = annotation.getRichContents();
+
+.. method:: setRichContents(plainText, richText)
+
+    |mutool_tag|
+
+    Set the annotation's rich-text contents, as opposed to the plain text contents set by :ref:`setContents()<mutool_object_pdf_annotation_set_contents>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setRichContents("plain text", "<b><i>Rich-Text</i></b>");
+
+.. method:: getRichDefaults()
+
+    |mutool_tag|
+
+    Get the default style used for the annotation's rich-text contents.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var richDefaults = annotation.getRichDefaults();
+
+.. method:: setRichDefaults(style)
+
+    |mutool_tag|
+
+    Set the default style used for the annotation's rich-text contents.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setRichDefaults("font-size: 16pt");
+
+
+.. method:: getStampImageObject()
+
+    |mutool_tag|
+
+    If the annotation is a stamp annotation and it consists of an image, return the `PDFObject` representing that image.
+
+    :return: A `PDFObject` corresponding to the stamp annotation image, otherwise null.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var pdfobj = annotation.getStampImageObject();
+
+
+.. method:: setStampImageObject(imgobj)
+
+    |mutool_tag|
+
+    Create an appearance stream containing the image passed as argument and set that as the normal appearance of the annotation.
+
+    :arg imgobj: A `PDFObject` corresponding to the desired image.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setStampImageObject(imgobj);
+
+
+.. method:: setStampImage(img)
+
+    |mutool_tag|
+
+    Add the image passed as argument to the document as a PDF object, and pass a reference to that object to when setting the normal appearance of the stamp annotation.
+
+    :arg img: The `Image` desired to become the stamp annotations appearance.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setStampImage(img);
+
+
+.. method:: hasIntent()
+
+    |mutool_tag|
+
+    Returns whether the annotation is capable of supporting intent (justification).
+
+    :return: `Boolean`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var hasIntent = annotation.hasIntent();
+
+
+.. method:: getIntent()
+
+    Get the annotation intent.
+
+    :return: `String` :ref:`Annotation intent<mutool_pdf_annotation_intent_types>`.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        var intent = annotation.getIntent();
+
+
+.. method:: setIntent(intent)
+
+    Set the annotation intent.
+
+    :arg intent: `String` Intent value.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annotation.setIntent("LineArrow");
+
+.. _mutool_pdf_annotation_intent_types:
+
+**Intent values**
+
+.. list-table::
+   :header-rows: 1
+
+   * - **Intent names**
+   * - "FreeTextCallout"
+   * - "FreeTextTypeWriter"
+   * - "LineArrow"
+   * - "LineDimension"
+   * - "PolyLineDimension"
+   * - "PolygonCloud"
+   * - "PolygonDimension"
+   * - "StampImage"
+   * - "stampSnapshot"
+
+Events
+~~~~~~~~~~~~~~~
+
+PDF annotations my have event handlers reacting to different interactive events happening to the annotation.
+
+.. method:: eventEnter()
+
+    |mutool_tag_wasm_soon|
+
+    Trigger the event when the pointing device enters an annotation's active area.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annot.eventEnter();
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
+
+.. method:: eventExit()
+
+    |mutool_tag_wasm_soon|
+
+    Trigger the event when the pointing device exits an annotation's active area.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        annot.eventExit();
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
+
+.. method:: eventDown()
+
+    |mutool_tag_wasm_soon|
+
+    Trigger the event when the pointing device's button is depressed within an annotation's active area.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        widget.eventDown();
+
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
+
+.. method:: eventUp()
+
+    |mutool_tag_wasm_soon|
+
+    Trigger the event when the pointing device's button is released within an annotation's active area.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        widget.eventUp();
+
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
+
+.. method:: eventFocus()
+
+    |mutool_tag_wasm_soon|
+
+    Trigger the event when an annotation gains input focus.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        widget.eventFocus();
+
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)
+
+.. method:: eventBlur()
+
+    |mutool_tag_wasm_soon|
+
+    Trigger the event when an annotation loses input focus.
+
+    |example_tag|
+
+    .. code-block:: javascript
+
+        widget.eventBlur();
+
+
+    .. TODO(tor): WASM, Even says "TODO" in the mupdf.js source file :)

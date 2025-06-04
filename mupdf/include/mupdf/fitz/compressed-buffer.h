@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -66,6 +66,14 @@ typedef struct
 			int bpc;
 		}
 		flate;
+		struct
+		{
+			int columns;
+			int colors;
+			int predictor;
+			int bpc;
+		}
+		brotli;
 		struct
 		{
 			int columns;
@@ -155,6 +163,7 @@ enum
 	FZ_IMAGE_FLATE,
 	FZ_IMAGE_LZW,
 	FZ_IMAGE_RLD,
+	FZ_IMAGE_BROTLI,
 
 	/* Full image formats */
 	FZ_IMAGE_BMP,

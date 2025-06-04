@@ -325,7 +325,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -346,7 +346,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -368,7 +368,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -391,7 +391,7 @@
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BrowseInformation>true</BrowseInformation>
-      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -411,7 +411,7 @@
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -432,7 +432,7 @@
       <AdditionalIncludeDirectories>..\..\include;..\..\thirdparty\leptonica\src;..\..\scripts\tesseract</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>UNICODE</UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <DisableSpecificWarnings>4244;4018;4267</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4100;4101;4244;4200;4267;4305</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>

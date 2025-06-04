@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -83,13 +83,13 @@ typedef struct
 	pdf_obj super;
 	char *text; /* utf8 encoded text string */
 	size_t len;
-	char buf[1];
+	char buf[FZ_FLEXIBLE_ARRAY];
 } pdf_obj_string;
 
 typedef struct
 {
 	pdf_obj super;
-	char n[1];
+	char n[FZ_FLEXIBLE_ARRAY];
 } pdf_obj_name;
 
 typedef struct
@@ -718,8 +718,6 @@ do_objcmp(fz_context *ctx, pdf_obj *a, pdf_obj *b, int check_streams)
 				return differ;
 			}
 		}
-
-		return 0;
 	}
 	return 1;
 }
@@ -1055,7 +1053,7 @@ dump_changes(fz_context *ctx, pdf_document *doc, pdf_journal_entry *entry)
 }
 #endif
 
-/* We build up journal entries as being a list of changes (framents) that
+/* We build up journal entries as being a list of changes (fragments) that
  * happen all together as part of a single step. When we reach pdf_end_operation
  * we have all the changes that have happened during this operation in a list
  * that basically boils down to being:
@@ -1422,15 +1420,15 @@ void pdf_undo(fz_context *ctx, pdf_document *doc)
 	fz_write_printf(ctx, fz_stddbg(ctx), "Undo!\n");
 #endif
 
+	doc->journal->current = entry->prev;
+
+	swap_fragments(ctx, doc, entry);
+
 	// nuke all caches
 	pdf_drop_page_tree_internal(ctx, doc);
 	pdf_sync_open_pages(ctx, doc);
 	for (frag = entry->head; frag; frag = frag->next)
 		pdf_purge_object_from_store(ctx, doc, frag->obj_num);
-
-	doc->journal->current = entry->prev;
-
-	swap_fragments(ctx, doc, entry);
 }
 
 /* Move forwards in the undo history. Throws an error if we are at the
@@ -1708,8 +1706,8 @@ void pdf_deserialise_journal(fz_context *ctx, pdf_document *doc, fz_stream *stm)
 		if (fz_skip_string(ctx, stm, "entry\n") == 0)
 		{
 			/* Read the fragment title. */
-			pdf_token tok = pdf_lex(ctx, stm, &doc->lexbuf.base);
 			char *title;
+			tok = pdf_lex(ctx, stm, &doc->lexbuf.base);
 
 			if (tok != PDF_TOK_STRING)
 				fz_throw(ctx, FZ_ERROR_FORMAT, "Bad string in journal");
@@ -2467,7 +2465,7 @@ pdf_obj *
 pdf_dict_geta(fz_context *ctx, pdf_obj *obj, pdf_obj *key, pdf_obj *abbrev)
 {
 	pdf_obj *v;
-	/* ISO 32000-2:2020 (PDF 2.0) - abbreviated names take precendence. */
+	/* ISO 32000-2:2020 (PDF 2.0) - abbreviated names take precedence. */
 	v = pdf_dict_get(ctx, obj, abbrev);
 	if (v)
 		return v;
@@ -3682,7 +3680,8 @@ pdf_sprint_encrypted_obj(fz_context *ctx, char *buf, size_t cap, size_t *len, pd
 	}
 	fz_catch(ctx)
 	{
-		fz_free(ctx, fmt.ptr);
+		if (!buf || cap == 0)
+			fz_free(ctx, fmt.ptr);
 		fz_rethrow(ctx);
 	}
 

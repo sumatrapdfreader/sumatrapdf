@@ -1,5 +1,5 @@
 '''
-Support for using SWIG to generate langauge bindings from the C++ bindings.
+Support for using SWIG to generate language bindings from the C++ bindings.
 '''
 
 import inspect
@@ -318,43 +318,6 @@ def build_swig(
                     return ret;
                 }}
 
-
-                /* mupdfpy optimisation for copying pixmap. Copies first <n>
-                bytes of each pixel from <src> to <pm>. <pm> and <src> must
-                have same `.w` and `.h` */
-                void ll_fz_pixmap_copy( fz_pixmap* pm, const fz_pixmap* src, int n)
-                {{
-                    assert( pm->w == src->w);
-                    assert( pm->h == src->h);
-                    assert( n <= pm->n);
-                    assert( n <= src->n);
-
-                    if (pm->n == src->n)
-                    {{
-                        // identical samples
-                        assert( pm->stride == src->stride);
-                        memcpy( pm->samples, src->samples, pm->w * pm->h * pm->n);
-                    }}
-                    else
-                    {{
-                        for ( int y=0; y<pm->h; ++y)
-                        {{
-                            for ( int x=0; x<pm->w; ++x)
-                            {{
-                                memcpy(
-                                        pm->samples + pm->stride * y + pm->n * x,
-                                        src->samples + src->stride * y + src->n * x,
-                                        n
-                                        );
-                                if (pm->alpha)
-                                {{
-                                    src->samples[ src->stride * y + src->n * x] = 255;
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
-
                 /* mupdfpy optimisation for copying raw data into pixmap. `samples` must
                 have enough data to fill the pixmap. */
                 void ll_fz_pixmap_copy_raw( fz_pixmap* pm, const void* samples)
@@ -616,29 +579,31 @@ def build_swig(
                     int n
                     )
             {{
+                #define PDF_NAME2(X) {rename.namespace_class('pdf_obj')}(PDF_NAME(X))
                 for ( int i=0; i<n; ++i)
                 {{
                     {rename.namespace_class('pdf_obj')} o = {rename.namespace_fn('pdf_array_get')}( old_annots, i);
                     if ({rename.namespace_fn('pdf_dict_gets')}( o, "IRT").m_internal)
                         continue;
-                    {rename.namespace_class('pdf_obj')} subtype = {rename.namespace_fn('pdf_dict_get')}( o, PDF_NAME(Subtype));
-                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME(Link)))
+                    {rename.namespace_class('pdf_obj')} subtype = {rename.namespace_fn('pdf_dict_get')}( o, PDF_NAME2(Subtype));
+                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME2(Link)))
                         continue;
-                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME(Popup)))
+                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME2(Popup)))
                         continue;
-                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME(Widget)))
+                    if ( {rename.namespace_fn('pdf_name_eq')}( subtype, PDF_NAME2(Widget)))
                     {{
                         /* fixme: C++ API doesn't yet wrap fz_warn() - it
                         excludes all variadic fns. */
                         //mupdf::fz_warn( "skipping widget annotation");
                         continue;
                     }}
-                    {rename.namespace_fn('pdf_dict_del')}( o, PDF_NAME(Popup));
-                    {rename.namespace_fn('pdf_dict_del')}( o, PDF_NAME(P));
+                    {rename.namespace_fn('pdf_dict_del')}( o, PDF_NAME2(Popup));
+                    {rename.namespace_fn('pdf_dict_del')}( o, PDF_NAME2(P));
                     {rename.namespace_class('pdf_obj')} copy_o = {rename.namespace_fn('pdf_graft_mapped_object')}( graft_map, o);
                     {rename.namespace_class('pdf_obj')} annot = {rename.namespace_fn('pdf_new_indirect')}( doc_des, {rename.namespace_fn('pdf_to_num')}( copy_o), 0);
                     {rename.namespace_fn('pdf_array_push')}( new_annots, annot);
                 }}
+                #undef PDF_NAME2
             }}
             ''')
 
@@ -715,7 +680,7 @@ def build_swig(
 
             6. SWIG Director C++ code (here). We raise a C++ exception.
             5. MuPDF C++ API Director wrapper converts the C++ exception into a MuPDF fz_try/catch exception.
-            4. MuPDF C code allows the exception to propogate or catches and rethrows or throws a new fz_try/catch exception.
+            4. MuPDF C code allows the exception to propagate or catches and rethrows or throws a new fz_try/catch exception.
             3. MuPDF C++ API wrapper function converts the fz_try/catch exception into a C++ exception.
             2. SWIG C++ code converts the C++ exception into a Python exception.
             1. Python code receives the Python exception.
@@ -725,7 +690,7 @@ def build_swig(
             finally back into a Python exception.
 
             Each of these stages is necessary. In particular we cannot let the
-            first C++ exception propogate directly through MuPDF C code without
+            first C++ exception propagate directly through MuPDF C code without
             being a fz_try/catch exception, because it would mess up MuPDF C
             code's fz_try/catch exception stack.
 
@@ -834,7 +799,7 @@ def build_swig(
                 std::cerr << "========\\n";
             }
 
-            /* SWIG 4.1 documention talks about throwing a
+            /* SWIG 4.1 documentation talks about throwing a
             Swig::DirectorMethodException here, but this doesn't work for us
             because it sets Python's error state again, which makes the
             next SWIG call of a C/C++ function appear to fail.
@@ -1011,6 +976,7 @@ def build_swig(
                 %template(vectorq) vector<{rename.namespace_class("fz_quad")}>;
                 %template(vector_search_page2_hit) vector<fz_search_page2_hit>;
                 %template(vector_fz_font_ucs_gid) vector<fz_font_ucs_gid>;
+                %template(vector_fz_point) vector<fz_point>;
             }};
 
             // Make sure that operator++() gets converted to __next__().

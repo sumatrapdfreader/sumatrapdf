@@ -3,7 +3,6 @@
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -129,7 +128,6 @@ The ArtBox can be used to denote areas where it is considered "safe" to place gr
 
 
 
-.. include:: footer.rst
 
 
 

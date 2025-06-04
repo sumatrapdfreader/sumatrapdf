@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -38,6 +38,7 @@ public class DocumentWriter
 
 	private native static long newNativeDocumentWriter(String filename, String format, String options);
 	private native static long newNativeDocumentWriterWithSeekableOutputStream(SeekableOutputStream stream, String format, String options);
+	private native static long newNativeDocumentWriterWithBuffer(Buffer buffer, String format, String options);
 
 	public DocumentWriter(String filename, String format, String options) {
 		pointer = newNativeDocumentWriter(filename, format, options);
@@ -45,6 +46,10 @@ public class DocumentWriter
 
 	public DocumentWriter(SeekableOutputStream stream, String format, String options) {
 		pointer = newNativeDocumentWriterWithSeekableOutputStream(stream, format, options);
+	}
+
+	public DocumentWriter(Buffer buffer, String format, String options) {
+		pointer = newNativeDocumentWriterWithBuffer(buffer, format, options);
 	}
 
 	public native Device beginPage(Rect mediabox);

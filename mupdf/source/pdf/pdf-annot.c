@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -978,7 +978,7 @@ remove_from_tree(fz_context *ctx, pdf_obj *arr, pdf_obj *item, pdf_cycle_list *c
 	for (i = 0; i < n; ++i)
 	{
 		pdf_obj *obj = pdf_array_get(ctx, arr, i);
-		if (obj == item)
+		if (!pdf_objcmp(ctx, obj, item))
 		{
 			pdf_array_delete(ctx, arr, i);
 			res = 1;
@@ -1268,6 +1268,96 @@ pdf_set_annot_contents(fz_context *ctx, pdf_annot *annot, const char *text)
 	}
 }
 
+static pdf_obj *markup_subtypes[] = {
+	PDF_NAME(Text),
+	PDF_NAME(FreeText),
+	PDF_NAME(Line),
+	PDF_NAME(Square),
+	PDF_NAME(Circle),
+	PDF_NAME(Polygon),
+	PDF_NAME(PolyLine),
+	PDF_NAME(Highlight),
+	PDF_NAME(Underline),
+	PDF_NAME(Squiggly),
+	PDF_NAME(StrikeOut),
+	PDF_NAME(Redact),
+	PDF_NAME(Stamp),
+	PDF_NAME(Caret),
+	PDF_NAME(Ink),
+	PDF_NAME(FileAttachment),
+	PDF_NAME(Sound),
+	NULL,
+};
+
+int
+pdf_annot_has_rich_contents(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(RC), markup_subtypes);
+}
+
+const char *
+pdf_annot_rich_contents(fz_context *ctx, pdf_annot *annot)
+{
+	check_allowed_subtypes(ctx, annot, PDF_NAME(RC), markup_subtypes);
+	return pdf_dict_get_text_string(ctx, annot->obj, PDF_NAME(RC));
+}
+
+void
+pdf_set_annot_rich_contents(fz_context *ctx, pdf_annot *annot, const char *plain, const char *rich)
+{
+	begin_annot_op(ctx, annot, "Set rich contents");
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(RC), markup_subtypes);
+		pdf_dict_put_text_string(ctx, annot->obj, PDF_NAME(Contents), plain);
+		pdf_dict_put_text_string(ctx, annot->obj, PDF_NAME(RC), rich);
+		pdf_dirty_annot(ctx, annot);
+		end_annot_op(ctx, annot);
+	}
+	fz_catch(ctx)
+	{
+		abandon_annot_op(ctx, annot);
+		fz_rethrow(ctx);
+	}
+}
+
+static pdf_obj *default_style_subtypes[] = {
+	PDF_NAME(FreeText),
+	PDF_NAME(Widget),
+	NULL,
+};
+
+int
+pdf_annot_has_rich_defaults(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(DS), default_style_subtypes);
+}
+
+const char *
+pdf_annot_rich_defaults(fz_context *ctx, pdf_annot *annot)
+{
+	check_allowed_subtypes(ctx, annot, PDF_NAME(DS), default_style_subtypes);
+	return pdf_dict_get_text_string(ctx, annot->obj, PDF_NAME(DS));
+}
+
+void
+pdf_set_annot_rich_defaults(fz_context *ctx, pdf_annot *annot, const char *style)
+{
+	begin_annot_op(ctx, annot, "Set rich defaults");
+	fz_try(ctx)
+	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(DS), default_style_subtypes);
+		pdf_dict_put_text_string(ctx, annot->obj, PDF_NAME(DS), style);
+		pdf_dirty_annot(ctx, annot);
+		end_annot_op(ctx, annot);
+	}
+	fz_catch(ctx)
+	{
+		abandon_annot_op(ctx, annot);
+		fz_rethrow(ctx);
+	}
+}
+
 int
 pdf_annot_has_open(fz_context *ctx, pdf_annot *annot)
 {
@@ -1442,6 +1532,7 @@ pdf_annot_is_standard_stamp(fz_context *ctx, pdf_annot *annot)
 	else if (pdf_name_eq(ctx, name, PDF_NAME(NotForPublicRelease))) return 1;
 	else if (pdf_name_eq(ctx, name, PDF_NAME(Sold))) return 1;
 	else if (pdf_name_eq(ctx, name, PDF_NAME(TopSecret))) return 1;
+	else if (pdf_annot_stamp_image_obj(ctx, annot) != NULL) return 1;
 	else return 0;
 }
 
@@ -3324,27 +3415,6 @@ pdf_add_annot_ink_list(fz_context *ctx, pdf_annot *annot, int n, fz_point p[])
 	pdf_dirty_annot(ctx, annot);
 }
 
-static pdf_obj *markup_subtypes[] = {
-	PDF_NAME(Text),
-	PDF_NAME(FreeText),
-	PDF_NAME(Line),
-	PDF_NAME(Square),
-	PDF_NAME(Circle),
-	PDF_NAME(Polygon),
-	PDF_NAME(PolyLine),
-	PDF_NAME(Highlight),
-	PDF_NAME(Underline),
-	PDF_NAME(Squiggly),
-	PDF_NAME(StrikeOut),
-	PDF_NAME(Redact),
-	PDF_NAME(Stamp),
-	PDF_NAME(Caret),
-	PDF_NAME(Ink),
-	PDF_NAME(FileAttachment),
-	PDF_NAME(Sound),
-	NULL,
-};
-
 /*
 	Get annotation's modification date in seconds since the epoch.
 */
@@ -3939,6 +4009,18 @@ pdf_annot_default_appearance_unmapped(fz_context *ctx, pdf_annot *annot, char *f
 		fz_rethrow(ctx);
 }
 
+static pdf_obj *default_appearance_subtypes[] = {
+	PDF_NAME(FreeText),
+	PDF_NAME(Widget),
+	NULL,
+};
+
+int
+pdf_annot_has_default_appearance(fz_context *ctx, pdf_annot *annot)
+{
+	return is_allowed_subtype_wrap(ctx, annot, PDF_NAME(DA), default_appearance_subtypes);
+}
+
 void
 pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **font, float *size, int *n, float color[4])
 {
@@ -3947,6 +4029,7 @@ pdf_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char **fon
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(DA), default_appearance_subtypes);
 		da = pdf_dict_get_inheritable(ctx, annot->obj, PDF_NAME(DA));
 		if (!da)
 		{
@@ -3970,6 +4053,7 @@ pdf_set_annot_default_appearance(fz_context *ctx, pdf_annot *annot, const char *
 
 	fz_try(ctx)
 	{
+		check_allowed_subtypes(ctx, annot, PDF_NAME(DA), default_appearance_subtypes);
 		pdf_print_default_appearance(ctx, buf, sizeof buf, font, size, n, color);
 
 		pdf_dict_put_string(ctx, annot->obj, PDF_NAME(DA), buf, strlen(buf));
@@ -4183,52 +4267,62 @@ static pdf_obj *stamp_subtypes[] = {
 	NULL,
 };
 
-void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *img)
+pdf_obj *
+pdf_annot_stamp_image_obj(fz_context *ctx, pdf_annot *annot)
 {
-	pdf_document *doc;
-	fz_buffer *buf = NULL;
-	pdf_obj *res = NULL;
-	pdf_obj *res_xobj;
-	fz_rect rect;
-	float s;
+	pdf_obj *obj, *imgobj = NULL;
 
+	pdf_annot_push_local_xref(ctx, annot);
+
+	fz_try(ctx)
+	{
+		obj = pdf_dict_getp(ctx, annot->obj, "AP/N/Resources/XObject");
+		if (pdf_dict_len(ctx, obj) == 1)
+		{
+			obj = pdf_dict_get_val(ctx, obj, 0);
+			if (pdf_is_image_stream(ctx, obj))
+				imgobj = obj;
+		}
+	}
+	fz_always(ctx)
+		pdf_annot_pop_local_xref(ctx, annot);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
+	return imgobj;
+}
+
+void pdf_set_annot_stamp_image_obj(fz_context *ctx, pdf_annot *annot, pdf_obj *ref)
+{
 	begin_annot_op(ctx, annot, "Set stamp image");
-	doc = annot->page->doc;
-
-	fz_var(res);
-	fz_var(buf);
 
 	fz_try(ctx)
 	{
 		check_allowed_subtypes(ctx, annot, PDF_NAME(Stamp), stamp_subtypes);
 
-		// Shrink Rect to fit image, maintaining aspect ratio.
-		rect = pdf_bound_annot(ctx, annot);
-		s = fz_min((rect.x1 - rect.x0) / img->w, (rect.y1 - rect.y0) / img->h);
-		rect.x1 = rect.x0 + img->w * s;
-		rect.y1 = rect.y0 + img->h * s;
+		pdf_dict_del(ctx, annot->obj, PDF_NAME(AP));
+		pdf_dict_putp(ctx, annot->obj, "AP/N/Resources/XObject/I", ref);
 
-		// Add image resource
-		res = pdf_add_new_dict(ctx, doc, 1);
-		res_xobj = pdf_dict_put_dict(ctx, res, PDF_NAME(XObject), 1);
-		pdf_dict_put_drop(ctx, res_xobj, PDF_NAME(I), pdf_add_image(ctx, doc, img));
-
-		buf = fz_new_buffer_from_shared_data(ctx, (const unsigned char*)"/I Do\n", 6);
-
-		pdf_set_annot_appearance(ctx, annot, "N", NULL, fz_identity, fz_unit_rect, res, buf);
-		pdf_set_annot_rect(ctx, annot, rect);
 		end_annot_op(ctx, annot);
-	}
-	fz_always(ctx)
-	{
-		fz_drop_buffer(ctx, buf);
-		pdf_drop_obj(ctx, res);
 	}
 	fz_catch(ctx)
 	{
 		abandon_annot_op(ctx, annot);
 		fz_rethrow(ctx);
 	}
+
+	pdf_dirty_annot(ctx, annot);
+}
+
+void pdf_set_annot_stamp_image(fz_context *ctx, pdf_annot *annot, fz_image *img)
+{
+	pdf_obj *ref = pdf_add_image(ctx, annot->page->doc, img);
+	fz_try(ctx)
+		pdf_set_annot_stamp_image_obj(ctx, annot, ref);
+	fz_always(ctx)
+		pdf_drop_obj(ctx, ref);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static pdf_obj *filespec_subtypes[] = {

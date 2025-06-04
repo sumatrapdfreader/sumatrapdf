@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -361,7 +361,7 @@ pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_re
 		return pdf_keep_obj(ctx, old_xobj);
 
 	matrix = pdf_dict_get_matrix(ctx, old_xobj, PDF_NAME(Matrix));
-	transform = fz_concat(transform, matrix);
+	transform = fz_concat(matrix, transform);
 
 	fz_try(ctx)
 	{
@@ -977,6 +977,9 @@ static int culler(fz_context *ctx, void *opaque, fz_rect bbox, fz_cull_type type
 	case FZ_CULL_PATH_FILL:
 	case FZ_CULL_PATH_STROKE:
 	case FZ_CULL_PATH_FILL_STROKE:
+	case FZ_CULL_CLIP_PATH_FILL:
+	case FZ_CULL_CLIP_PATH_STROKE:
+	case FZ_CULL_CLIP_PATH_FILL_STROKE:
 		if (red->line_art == PDF_REDACT_LINE_ART_REMOVE_IF_COVERED)
 			return (rect_touches_redactions(ctx, bbox, red) == 2);
 		else if (red->line_art == PDF_REDACT_LINE_ART_REMOVE_IF_TOUCHED)
@@ -1025,7 +1028,7 @@ void init_redact_filter(fz_context *ctx, pdf_redact_options *redact_opts, struct
 	red->filter_list[1].options = NULL;
 
 	red->page = page;
-	red->target = NULL;
+	red->target = target;
 }
 
 static int
@@ -1097,4 +1100,134 @@ int
 pdf_apply_redaction(fz_context *ctx, pdf_annot *annot, pdf_redact_options *redact_opts)
 {
 	return pdf_apply_redaction_imp(ctx, annot->page, annot, redact_opts);
+}
+
+/* Hard clipping of pages */
+
+struct clip_filter_state {
+	pdf_filter_options filter_opts;
+	pdf_sanitize_filter_options sanitize_opts;
+	pdf_filter_factory filter_list[2];
+	pdf_page *page;
+	fz_rect clip;
+};
+
+static int clip_culler(fz_context *ctx, void *opaque, fz_rect bbox, fz_cull_type type)
+{
+	struct clip_filter_state *hc = opaque;
+
+	switch (type)
+	{
+	case FZ_CULL_PATH_FILL:
+	case FZ_CULL_PATH_STROKE:
+	case FZ_CULL_PATH_FILL_STROKE:
+	case FZ_CULL_CLIP_PATH_FILL:
+	case FZ_CULL_CLIP_PATH_STROKE:
+	case FZ_CULL_CLIP_PATH_FILL_STROKE:
+	case FZ_CULL_GLYPH:
+	case FZ_CULL_IMAGE:
+	case FZ_CULL_SHADING:
+		return (fz_is_empty_rect(fz_intersect_rect(bbox, hc->clip)));
+	default:
+		return 0;
+	}
+}
+
+static
+void init_clip_filter(fz_context *ctx, struct clip_filter_state *hc, pdf_page *page, fz_rect *clip)
+{
+	memset(&hc->filter_opts, 0, sizeof hc->filter_opts);
+	memset(&hc->sanitize_opts, 0, sizeof hc->sanitize_opts);
+
+	hc->filter_opts.recurse = 0; /* don't redact patterns, softmasks, and type3 fonts */
+	hc->filter_opts.instance_forms = 1; /* redact xobjects with instancing */
+	hc->filter_opts.ascii = 0;
+	hc->filter_opts.opaque = hc;
+	hc->filter_opts.filters = hc->filter_list;
+	hc->clip = *clip;
+
+	hc->sanitize_opts.opaque = hc;
+	hc->sanitize_opts.culler = clip_culler;
+
+	hc->filter_list[0].filter = pdf_new_sanitize_filter;
+	hc->filter_list[0].options = &hc->sanitize_opts;
+	hc->filter_list[1].filter = NULL;
+	hc->filter_list[1].options = NULL;
+
+	hc->page = page;
+}
+
+static void
+pdf_clip_page_links(fz_context *ctx, struct clip_filter_state *hc)
+{
+	pdf_obj *annots;
+	pdf_obj *link;
+	fz_rect area;
+	int k;
+
+	annots = pdf_dict_get(ctx, hc->page->obj, PDF_NAME(Annots));
+	k = 0;
+	while (k < pdf_array_len(ctx, annots))
+	{
+		link = pdf_array_get(ctx, annots, k);
+		if (pdf_dict_get(ctx, link, PDF_NAME(Subtype)) == PDF_NAME(Link))
+		{
+			area = pdf_dict_get_rect(ctx, link, PDF_NAME(Rect));
+			if (fz_is_empty_rect(fz_intersect_rect(area, hc->clip)))
+			{
+				pdf_array_delete(ctx, annots, k);
+				continue;
+			}
+		}
+		++k;
+	}
+}
+
+static void
+pdf_clip_page_annotations(fz_context *ctx, struct clip_filter_state *hc)
+{
+	pdf_annot *annot;
+	fz_rect area;
+
+restart:
+	for (annot = pdf_first_annot(ctx, hc->page); annot; annot = pdf_next_annot(ctx, annot))
+	{
+		if (pdf_annot_type(ctx, annot) == PDF_ANNOT_FREE_TEXT)
+		{
+			area = pdf_dict_get_rect(ctx, pdf_annot_obj(ctx, annot), PDF_NAME(Rect));
+			if (fz_is_empty_rect(fz_intersect_rect(area, hc->clip)))
+			{
+				pdf_delete_annot(ctx, hc->page, annot);
+				goto restart;
+			}
+		}
+	}
+}
+
+void
+pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect *clip)
+{
+	pdf_document *doc;
+	struct clip_filter_state hc;
+
+	if (page == NULL)
+		return;
+
+	doc = page->doc;
+
+	init_clip_filter(ctx, &hc, page, clip);
+
+	pdf_begin_operation(ctx, doc, "Apply hard clip to page");
+	fz_try(ctx)
+	{
+		pdf_filter_page_contents(ctx, doc, page, &hc.filter_opts);
+		pdf_clip_page_links(ctx, &hc);
+		pdf_clip_page_annotations(ctx, &hc);
+		pdf_end_operation(ctx, doc);
+	}
+	fz_catch(ctx)
+	{
+		pdf_abandon_operation(ctx, doc);
+		fz_rethrow(ctx);
+	}
 }

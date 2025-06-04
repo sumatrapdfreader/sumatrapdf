@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -370,6 +370,37 @@ fz_save_pixmap_as_pam(fz_context *ctx, fz_pixmap *pixmap, const char *filename)
 }
 
 static fz_buffer *
+buffer_from_bitmap(fz_context *ctx, fz_bitmap *bitmap, fz_color_params color_params, int drop,
+	void (*do_write)(fz_context *ctx, fz_output *out, fz_bitmap *bitmap))
+{
+	fz_buffer *buf = NULL;
+	fz_output *out = NULL;
+
+	fz_var(buf);
+	fz_var(out);
+
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 1024);
+		out = fz_new_output_with_buffer(ctx, buf);
+		do_write(ctx, out, bitmap);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+	{
+		if (drop)
+			fz_drop_bitmap(ctx, bitmap);
+		fz_drop_output(ctx, out);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
+	}
+	return buf;
+}
+
+static fz_buffer *
 buffer_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, int drop,
 	void (*do_write)(fz_context *ctx, fz_output *out, fz_pixmap *pix))
 {
@@ -398,6 +429,34 @@ buffer_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params
 		fz_rethrow(ctx);
 	}
 	return buf;
+}
+
+fz_buffer *
+fz_new_buffer_from_pixmap_as_pbm(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params)
+{
+	fz_bitmap *bitmap = fz_new_bitmap_from_pixmap(ctx, pix, NULL);
+	return buffer_from_bitmap(ctx, bitmap, color_params, 1, fz_write_bitmap_as_pbm);
+}
+
+fz_buffer *
+fz_new_buffer_from_image_as_pbm(fz_context *ctx, fz_image *image, fz_color_params color_params)
+{
+	fz_bitmap *bitmap = fz_new_bitmap_from_image(ctx, image, NULL);
+	return  buffer_from_bitmap(ctx, bitmap, color_params, 1, fz_write_bitmap_as_pbm);
+}
+
+fz_buffer *
+fz_new_buffer_from_pixmap_as_pkm(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params)
+{
+	fz_bitmap *bitmap = fz_new_bitmap_from_pixmap(ctx, pix, NULL);
+	return buffer_from_bitmap(ctx, bitmap, color_params, 1, fz_write_bitmap_as_pkm);
+}
+
+fz_buffer *
+fz_new_buffer_from_image_as_pkm(fz_context *ctx, fz_image *image, fz_color_params color_params)
+{
+	fz_bitmap *bitmap = fz_new_bitmap_from_image(ctx, image, NULL);
+	return  buffer_from_bitmap(ctx, bitmap, color_params, 1, fz_write_bitmap_as_pkm);
 }
 
 fz_buffer *

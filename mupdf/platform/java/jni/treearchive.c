@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -23,7 +23,7 @@
 /* TreeArchive interface */
 
 JNIEXPORT jlong JNICALL
-FUN(Archive_newNativeTreeArchive)(JNIEnv *env, jobject self)
+FUN(TreeArchive_newNativeTreeArchive)(JNIEnv *env, jobject self)
 {
 	fz_context *ctx = get_context(env);
 	fz_archive *arch = NULL;

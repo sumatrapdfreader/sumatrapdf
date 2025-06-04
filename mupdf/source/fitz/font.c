@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -716,6 +716,7 @@ fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, in
 	FT_ULong tag, size, i, n;
 	FT_UShort flags;
 	char namebuf[sizeof(font->name)];
+	fz_ascdesc_source ascdesc_src = FZ_ASCDESC_FROM_FONT;
 
 	fz_keep_freetype(ctx);
 
@@ -771,15 +772,21 @@ fz_new_font_from_buffer(fz_context *ctx, const char *name, fz_buffer *buffer, in
 		(float) face->bbox.xMax / face->units_per_EM,
 		(float) face->bbox.yMax / face->units_per_EM);
 
-	if (face->ascender == 0)
-		font->ascender = 0.8f;
+	if (face->ascender <= 0 || face->ascender > FZ_MAX_TRUSTWORTHY_ASCENT * face->units_per_EM)
+		font->ascender = 0.8f, ascdesc_src = FZ_ASCDESC_DEFAULT;
 	else
 		font->ascender = (float)face->ascender / face->units_per_EM;
 
-	if (face->descender == 0)
-		font->descender = -0.2f;
+	if (face->descender < FZ_MAX_TRUSTWORTHY_DESCENT * face->units_per_EM || face->descender > -FZ_MAX_TRUSTWORTHY_DESCENT * face->units_per_EM)
+		font->descender = -0.2f, ascdesc_src = FZ_ASCDESC_DEFAULT;
 	else
+	{
 		font->descender = (float)face->descender / face->units_per_EM;
+		if (font->descender > 0)
+			font->descender = -font->descender;
+	}
+
+	font->ascdesc_src = ascdesc_src;
 
 	font->subfont = index;
 
@@ -1599,11 +1606,12 @@ fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid)
 			FZ_DEVFLAG_ENDCAP_UNDEFINED |
 			FZ_DEVFLAG_LINEJOIN_UNDEFINED |
 			FZ_DEVFLAG_MITERLIMIT_UNDEFINED |
-			FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
+			FZ_DEVFLAG_LINEWIDTH_UNDEFINED |
+			FZ_DEVFLAG_DASH_PATTERN_UNDEFINED;
 
 	fz_try(ctx)
 	{
-		font->t3run(ctx, font->t3doc, font->t3resources, font->t3procs[gid], dev, fz_identity, NULL, NULL);
+		font->t3run(ctx, font->t3doc, font->t3resources, font->t3procs[gid], dev, fz_identity, NULL, NULL, NULL, NULL);
 		fz_close_device(ctx, dev);
 		font->t3flags[gid] = dev->flags;
 		d1_rect = dev->d1_rect;
@@ -1746,7 +1754,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 }
 
 void
-fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, fz_default_colorspaces *def_cs)
+fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, fz_default_colorspaces *def_cs, void *fill_gstate, void *stroke_gstate)
 {
 	fz_matrix ctm;
 
@@ -1764,7 +1772,7 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 	}
 
 	ctm = fz_concat(font->t3matrix, trm);
-	font->t3run(ctx, font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm, gstate, def_cs);
+	font->t3run(ctx, font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm, gstate, def_cs, fill_gstate, stroke_gstate);
 }
 
 fz_rect
@@ -2379,4 +2387,29 @@ void fz_enumerate_font_cmap(fz_context *ctx, fz_font *font, fz_cmap_callback *cb
 		fz_ft_lock(ctx);
 	}
 	fz_ft_unlock(ctx);
+}
+
+void fz_calculate_font_ascender_descender(fz_context *ctx, fz_font *font)
+{
+	int i, n;
+	fz_rect bounds = fz_empty_rect;
+	fz_matrix trm = { 1, 0, 0, 1, 0, 0 };
+
+	if (font == NULL)
+		return;
+
+	if (font->ascdesc_src == FZ_ASCDESC_FROM_BOUNDS)
+		return;
+
+	n = font->glyph_count;
+	for (i = 0; i < n; i++)
+	{
+		bounds = fz_union_rect(bounds, fz_bound_glyph(ctx, font, i, trm));
+	}
+
+	if (bounds.y1 > font->ascender)
+		font->ascender = bounds.y1;
+	if (bounds.y0 < font->descender)
+		font->descender = bounds.y0;
+	font->ascdesc_src = FZ_ASCDESC_FROM_BOUNDS;
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -532,7 +532,7 @@ fz_append_display_node(
 			ctm_flags |= CTM_CHANGE_EF, size += SIZE_IN_NODES(2*sizeof(float));
 		node.ctm = ctm_flags;
 	}
-	if (stroke && (writer->stroke == NULL || stroke != writer->stroke))
+	if (stroke && (writer->stroke == NULL || !fz_stroke_state_eq(ctx, stroke, writer->stroke)))
 	{
 		pad_size_for_pointer(list, &size);
 		stroke_off = size;
@@ -612,7 +612,7 @@ fz_append_display_node(
 	{
 		fz_try(ctx)
 		{
-			my_stroke = fz_keep_stroke_state(ctx, stroke);
+			my_stroke = fz_clone_stroke_state(ctx, stroke);
 		}
 		fz_catch(ctx)
 		{
@@ -727,7 +727,7 @@ fz_append_display_node(
 		fz_stroke_state **out_stroke = (fz_stroke_state **)(void *)(&node_ptr[stroke_off]);
 		*out_stroke = my_stroke;
 		fz_drop_stroke_state(ctx, writer->stroke);
-		/* Can never fail as my_stroke was kept above */
+		/* Can never fail as my_stroke was cloned above */
 		writer->stroke = fz_keep_stroke_state(ctx, my_stroke);
 	}
 	if (private_data_len)

@@ -1,12 +1,3 @@
-.. Copyright (C) 2001-2024 Artifex Software, Inc.
-.. All Rights Reserved.
-
-----
-
-.. default-domain:: js
-
-.. include:: html_tags.rst
-
 .. _mutool_object_protocols:
 
 
@@ -75,7 +66,7 @@ In order to retrieve information from this object see methods described within :
 Embedded File Params Object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Historical equivalent to Filespec Params Object. This `Object` contains metadata about a filespec, it has properties for:
+Historical equivalent to FileSpec Params Object. This `Object` contains metadata about a filespec, it has properties for:
 
 `filename`
     The name of the embedded file.
@@ -95,7 +86,7 @@ Historical equivalent to Filespec Params Object. This `Object` contains metadata
 
 .. _mutool_run_js_api_pdf_document_filespec_params_object:
 
-Filespec Params Object
+FileSpec Params Object
 ~~~~~~~~~~~~~~~~~~~~~~
 
 This `Object` contains metadata about a filespec, it has properties for:
@@ -132,19 +123,15 @@ This `Object` contains a numbered array of operations and a reference into this 
 
 
 
-.. _mutool_run_js_api_stroke_dictionary:
 .. _mutool_run_js_api_stroke_object:
 
 Stroking State Object
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The stroking state is a dictionary with keys for:
-
-    - `startCap`, `dashCap`, `endCap`
-        "Butt", "Round", "Square", or "Triangle".
+The stroking state constructor parameters have keys for:
 
     - `lineCap`
-        Set `startCap`, `dashCap`, and `endCap` all at once.
+        "Butt", "Round", "Square", or "Triangle".
 
     - `lineJoin`
         "Miter", "Round", "Bevel", or "MiterXPS".
@@ -276,3 +263,24 @@ Default Appearance Text Object
 
 `color`
     Array representing the :ref:`color value<mutool_run_js_api_colors>`.
+
+
+
+
+.. _mutool_run_js_api_object_name_tree:
+
+NameTree Object
+~~~~~~~~~~~~~~~~~~~
+
+Where each property and its values come from one of the name/value pairs from the corresponding name tree.
+
+.. _mutool_run_js_api_object_barcode_info:
+
+BarcodeInfo Object
+~~~~~~~~~~~~~~~~~~~~~
+
+`type`
+    String describing the type of barcode detected.
+
+`contents`
+    String containing the textual contents of the decoded barcode.

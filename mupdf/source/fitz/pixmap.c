@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -981,7 +981,7 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 	int y0 = fz_clampi(rect.y0 - pix->y, 0, pix->h);
 	int y1 = fz_clampi(rect.y1 - pix->y, 0, pix->h);
 
-	int k, x, y;
+	int x, y;
 	int n = pix->n;
 	int s = pix->s;
 	int cmyk = (pix->colorspace && pix->colorspace->type == FZ_COLORSPACE_CMYK);
@@ -1041,12 +1041,12 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 				{
 					int c = d[0];
 					int m = d[1];
-					int y = d[2];
+					int ye = d[2];
 					int k = d[3];
-					int mx = fz_maxi(fz_maxi(c, m), y);
+					int mx = fz_maxi(fz_maxi(c, m), ye);
 					d[0] = mx-c;
 					d[1] = mx-m;
-					d[2] = mx-y;
+					d[2] = mx-ye;
 					k = 255 - k - mx;
 					if (k < 0)
 						k = 0;
@@ -1065,6 +1065,7 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 			for (x = x0; x < x1; x++)
 			{
 				int a = d[n1];
+				int k;
 				for (k = 0; k < n1; k++)
 					d[k] = a - d[k];
 				d += n;
@@ -1079,6 +1080,7 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
 			for (x = x0; x < x1; x++)
 			{
+				int k;
 				for (k = 0; k < n1; k++)
 					d[k] = 255 - d[k];
 				d += n;
@@ -1092,6 +1094,7 @@ void fz_invert_pixmap_rect(fz_context *ctx, fz_pixmap *pix, fz_irect rect)
 			unsigned char *d = pix->samples + ((y * (size_t)pix->stride) + (x0 * (size_t)pix->n));
 			for (x = x0; x < x1; x++)
 			{
+				int k;
 				for (k = 0; k < n; k++)
 					d[k] = 255 - d[k];
 				d += n;

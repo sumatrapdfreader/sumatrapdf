@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -586,9 +586,9 @@ fz_transform_rect(fz_rect r, fz_matrix m)
 	 * invalid rectangle after transformation. */
 	if (invalid)
 	{
-		float t;
-		t = r.x0; r.x0 = r.x1; r.x1 = t;
-		t = r.y0; r.y0 = r.y1; r.y1 = t;
+		float f;
+		f = r.x0; r.x0 = r.x1; r.x1 = f;
+		f = r.y0; r.y0 = r.y1; r.y1 = f;
 	}
 	return r;
 }
@@ -773,6 +773,28 @@ int fz_is_point_inside_irect(int x, int y, fz_irect r)
 	return (x >= r.x0 && x < r.x1 && y >= r.y0 && y < r.y1);
 }
 
+int fz_is_rect_inside_rect(fz_rect inner, fz_rect outer)
+{
+	if (!fz_is_valid_rect(outer))
+		return 0;
+	if (!fz_is_valid_rect(inner))
+		return 0;
+	if (inner.x0 >= outer.x0 && inner.x1 <= outer.x1 && inner.y0 >= outer.y0 && inner.y1 <= outer.y1)
+		return 1;
+	return 0;
+}
+
+int fz_is_irect_inside_irect(fz_irect inner, fz_irect outer)
+{
+	if (!fz_is_valid_irect(outer))
+		return 0;
+	if (!fz_is_valid_irect(inner))
+		return 0;
+	if (inner.x0 >= outer.x0 && inner.x1 <= outer.x1 && inner.y0 >= outer.y0 && inner.y1 <= outer.y1)
+		return 1;
+	return 0;
+}
+
 /* cross (b-a) with (p-a) */
 static float
 cross(fz_point a, fz_point b, fz_point p)
@@ -809,15 +831,15 @@ static int fz_is_point_inside_triangle(fz_point p, fz_point a, fz_point b, fz_po
 	 * One of the cross products being 0 indicates that the point is on a line.
 	 * Two of the cross products being 0 indicates that the point is on a vertex.
 	 *
-	 * If 2 of the vertexes are the same, the algorithm still works.
-	 * Iff all 3 of the vertexes are the same, the cross products are all zero. The
+	 * If 2 of the vertices are the same, the algorithm still works.
+	 * Iff all 3 of the vertices are the same, the cross products are all zero. The
 	 * value of p is irrelevant.
 	 */
 	float crossa = cross(a, b, p);
 	float crossb = cross(b, c, p);
 	float crossc = cross(c, a, p);
 
-	/* Check for degenerate case. All vertexes the same. */
+	/* Check for degenerate case. All vertices the same. */
 	if (crossa == 0 && crossb == 0 && crossc == 0)
 		return a.x == p.x && a.y == p.y;
 

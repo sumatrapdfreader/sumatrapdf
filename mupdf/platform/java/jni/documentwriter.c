@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -165,6 +165,50 @@ FUN(DocumentWriter_newNativeDocumentWriterWithSeekableOutputStream)(JNIEnv *env,
 	fz_always(ctx)
 	{
 		fz_drop_output(ctx, out);
+		if (options)
+			(*env)->ReleaseStringUTFChars(env, joptions, options);
+		if (format)
+			(*env)->ReleaseStringUTFChars(env, jformat, format);
+	}
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return jlong_cast(wri);
+}
+
+JNIEXPORT jlong JNICALL
+FUN(DocumentWriter_newNativeDocumentWriterWithBuffer)(JNIEnv *env, jclass cls, jobject jbuffer, jstring jformat, jstring joptions)
+{
+	fz_context *ctx = get_context(env);
+	fz_document_writer *wri = NULL;
+	fz_buffer *buffer = from_Buffer_safe(env, jbuffer);
+	const char *format = NULL;
+	const char *options = NULL;
+
+	if (!ctx) return 0;
+	if (!buffer) jni_throw_arg(env, "output buffer must not be null");
+
+	if (jformat)
+	{
+		format = (*env)->GetStringUTFChars(env, jformat, NULL);
+		if (!format)
+			return 0;
+	}
+	if (joptions)
+	{
+		options = (*env)->GetStringUTFChars(env, joptions, NULL);
+		if (!options)
+		{
+			if (format)
+				(*env)->ReleaseStringUTFChars(env, jformat, format);
+			return 0;
+		}
+	}
+
+	fz_try(ctx)
+		wri = fz_new_document_writer_with_buffer(ctx, buffer, format, options);
+	fz_always(ctx)
+	{
 		if (options)
 			(*env)->ReleaseStringUTFChars(env, joptions, options);
 		if (format)

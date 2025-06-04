@@ -349,12 +349,14 @@ class BuildDirs:
         self.Py_LIMITED_API = None
         flags = os.path.basename(self.dir_so).split('-')
         for flag in flags:
-            if flag == 'Py_LIMITED_API':
+            if flag in ('Py_LIMITED_API', 'PLA'):
                 self.Py_LIMITED_API = '0x03080000'
             elif flag.startswith('Py_LIMITED_API='):    # 2024-11-15: fixme: obsolete
                 self.Py_LIMITED_API = flag[len('Py_LIMITED_API='):]
             elif flag.startswith('Py_LIMITED_API_'):
                 self.Py_LIMITED_API = flag[len('Py_LIMITED_API_'):]
+            elif flag.startswith('PLA_'):
+                self.Py_LIMITED_API = flag[len('PLA_'):]
         jlib.log(f'{self.Py_LIMITED_API=}')
 
         # Set swig .i and .cpp paths, including Py_LIMITED_API so that

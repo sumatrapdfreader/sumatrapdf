@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -493,10 +493,15 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_IDIV:
 				i2 = ps_pop_int(st);
 				i1 = ps_pop_int(st);
-				if (i2 != 0)
-					ps_push_int(st, i1 / i2);
-				else
+				if (i2 == 0) {
 					ps_push_int(st, DIV_BY_ZERO(i1, i2, INT_MIN, INT_MAX));
+				}
+				else if (i1 == INT_MIN && i2 == -1) {
+					ps_push_int(st, INT_MAX);
+				}
+				else {
+					ps_push_int(st, i1 / i2);
+				}
 				break;
 
 			case PS_OP_INDEX:
@@ -544,10 +549,15 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_MOD:
 				i2 = ps_pop_int(st);
 				i1 = ps_pop_int(st);
-				if (i2 != 0)
-					ps_push_int(st, i1 % i2);
-				else
+				if (i2 == 0) {
 					ps_push_int(st, DIV_BY_ZERO(i1, i2, INT_MIN, INT_MAX));
+				}
+				else if (i1 == INT_MIN && i2 == -1) {
+					ps_push_int(st, 0);
+				}
+				else {
+					ps_push_int(st, i1 % i2);
+				}
 				break;
 
 			case PS_OP_MUL:

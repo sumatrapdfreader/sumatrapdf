@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -359,7 +359,7 @@ void fz_drop_xml(fz_context *ctx, fz_xml *xml)
 	if (!xml)
 		return;
 
-	/* Whereever we are in the tree, we want the doc node at the root. */
+	/* Wherever we are in the tree, we want the doc node at the root. */
 	while (xml->up)
 		xml = xml->up;
 
@@ -991,9 +991,9 @@ static char *convert_to_utf8(fz_context *ctx, unsigned char *s, size_t n, int *d
 	{
 		fz_init_text_decoder(ctx, &dec, enc);
 		// NOTE: use decode_size if memory is more important than speed
-		m = dec.decode_bound(&dec, s, n);
+		m = (int)dec.decode_bound(&dec, s, (int)n);
 		dst = Memento_label(fz_malloc(ctx, m), "utf8");
-		dec.decode(&dec, dst, s, n);
+		dec.decode(&dec, dst, s, (int)n);
 		*dofree = 1;
 		return dst;
 	}
@@ -1065,7 +1065,7 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white)
 {
 	struct parser parser;
 	fz_xml *xml = NULL;
-	fz_xml root, *node;
+	fz_xml *root, *node;
 	char *p = NULL;
 	char *error;
 	int dofree = 0;
@@ -1088,9 +1088,8 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white)
 		n = fz_buffer_storage(ctx, buf, &s);
 	}
 
-	memset(&root, 0, sizeof(root));
 	parser.pool = fz_new_pool(ctx);
-	parser.head = &root;
+	parser.head = root = fz_pool_alloc_flexible(ctx, parser.pool, fz_xml, u.node.u.d.name, 1);
 	parser.preserve_white = preserve_white;
 	parser.depth = 0;
 #ifdef FZ_XML_SEQ
@@ -1110,11 +1109,11 @@ fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white)
 
 		xml = fz_pool_alloc(ctx, parser.pool, sizeof *xml);
 		xml->up = NULL;
-		xml->down = root.down;
+		xml->down = root->down;
 		xml->u.doc.refs = 1;
 		xml->u.doc.pool = parser.pool;
 
-		for (node = root.down; node; node = node->u.node.next)
+		for (node = root->down; node; node = node->u.node.next)
 			node->up = xml;
 	}
 	fz_always(ctx)

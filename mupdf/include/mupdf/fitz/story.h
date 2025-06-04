@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -73,7 +73,7 @@ fz_story *fz_new_story(fz_context *ctx, fz_buffer *buf, const char *user_css, fl
 
 	This function does not need to be called, but once it has been
 	the DOM is no longer accessible, and any fz_xml pointer
-	retrieved from fz_story_docment is no longer valid.
+	retrieved from fz_story_document is no longer valid.
 */
 const char *fz_story_warnings(fz_context *ctx, fz_story *story);
 

@@ -211,6 +211,7 @@ LIBJPEG_SRC += thirdparty/libjpeg/jutils.c
 
 LCMS2_CFLAGS += -Ithirdparty/lcms2/include
 LCMS2_CFLAGS += -DHAVE_LCMS2MT
+LCMS2_CFLAGS += -DLCMS2MT_PREFIX=lcms2mt_
 
 LCMS2_SRC += thirdparty/lcms2/src/cmsalpha.c
 LCMS2_SRC += thirdparty/lcms2/src/cmscam02.c
@@ -318,6 +319,42 @@ OPENJPEG_SRC += thirdparty/openjpeg/src/lib/openjp2/tcd.c
 OPENJPEG_SRC += thirdparty/openjpeg/src/lib/openjp2/tgt.c
 OPENJPEG_SRC += thirdparty/openjpeg/src/lib/openjp2/thread.c
 
+# --- BROTLI ---
+
+BROTLI_CFLAGS += -Ithirdparty/brotli/c/include
+
+BROTLI_SRC += thirdparty/brotli/c/common/constants.c
+BROTLI_SRC += thirdparty/brotli/c/common/context.c
+BROTLI_SRC += thirdparty/brotli/c/common/dictionary.c
+BROTLI_SRC += thirdparty/brotli/c/common/platform.c
+BROTLI_SRC += thirdparty/brotli/c/common/shared_dictionary.c
+BROTLI_SRC += thirdparty/brotli/c/common/transform.c
+BROTLI_SRC += thirdparty/brotli/c/dec/bit_reader.c
+BROTLI_SRC += thirdparty/brotli/c/dec/decode.c
+BROTLI_SRC += thirdparty/brotli/c/dec/huffman.c
+BROTLI_SRC += thirdparty/brotli/c/dec/state.c
+BROTLI_SRC += thirdparty/brotli/c/enc/backward_references.c
+BROTLI_SRC += thirdparty/brotli/c/enc/backward_references_hq.c
+BROTLI_SRC += thirdparty/brotli/c/enc/bit_cost.c
+BROTLI_SRC += thirdparty/brotli/c/enc/block_splitter.c
+BROTLI_SRC += thirdparty/brotli/c/enc/brotli_bit_stream.c
+BROTLI_SRC += thirdparty/brotli/c/enc/cluster.c
+BROTLI_SRC += thirdparty/brotli/c/enc/command.c
+BROTLI_SRC += thirdparty/brotli/c/enc/compound_dictionary.c
+BROTLI_SRC += thirdparty/brotli/c/enc/compress_fragment.c
+BROTLI_SRC += thirdparty/brotli/c/enc/compress_fragment_two_pass.c
+BROTLI_SRC += thirdparty/brotli/c/enc/dictionary_hash.c
+BROTLI_SRC += thirdparty/brotli/c/enc/encode.c
+BROTLI_SRC += thirdparty/brotli/c/enc/encoder_dict.c
+BROTLI_SRC += thirdparty/brotli/c/enc/entropy_encode.c
+BROTLI_SRC += thirdparty/brotli/c/enc/fast_log.c
+BROTLI_SRC += thirdparty/brotli/c/enc/histogram.c
+BROTLI_SRC += thirdparty/brotli/c/enc/literal_cost.c
+BROTLI_SRC += thirdparty/brotli/c/enc/memory.c
+BROTLI_SRC += thirdparty/brotli/c/enc/metablock.c
+BROTLI_SRC += thirdparty/brotli/c/enc/static_dict.c
+BROTLI_SRC += thirdparty/brotli/c/enc/utf8_util.c
+
 # --- FREEGLUT ---
 
 GLUT_CFLAGS += -Ithirdparty/freeglut/include
@@ -326,6 +363,7 @@ GLUT_BUILD_CFLAGS += -Ithirdparty/freeglut/src
 GLUT_BUILD_CFLAGS += -DHAVE_UNISTD_H
 GLUT_BUILD_CFLAGS += -DHAVE_STDINT_H
 GLUT_BUILD_CFLAGS += -DHAVE_X11_EXTENSIONS_XRANDR_H
+GLUT_BUILD_CFLAGS += $(SYS_GL_CFLAGS)
 
 GLUT_SRC += thirdparty/freeglut/src/fg_callbacks.c
 GLUT_SRC += thirdparty/freeglut/src/fg_cursor.c
@@ -370,13 +408,12 @@ GLUT_SRC += thirdparty/freeglut/src/x11/fg_window_x11.c
 GLUT_SRC += thirdparty/freeglut/src/x11/fg_window_x11_glx.c
 GLUT_SRC += thirdparty/freeglut/src/x11/fg_xinput_x11.c
 
-GLUT_LIBS += -lGL
-GLUT_LIBS += -lX11
-GLUT_LIBS += -lXrandr
+GLUT_LIBS += $(SYS_GL_LIBS)
 
 # --- LEPTONICA (optional, used by Tesseract) ---
 
 LEPTONICA_CFLAGS += -Ithirdparty/leptonica/src
+LEPTONICA_CFLAGS += -Iscripts/tesseract
 
 LEPTONICA_BUILD_CFLAGS += -Iscripts/tesseract
 LEPTONICA_BUILD_CFLAGS += -DLEPTONICA_INTERCEPT_ALLOC=1
@@ -582,6 +619,7 @@ TESSERACT_SRC += thirdparty/tesseract/src/api/baseapi.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/capi.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/hocrrenderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/lstmboxrenderer.cpp
+TESSERACT_SRC += thirdparty/tesseract/src/api/pagerenderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/pdfrenderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/renderer.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/api/wordstrboxrenderer.cpp
@@ -681,7 +719,6 @@ TESSERACT_SRC += thirdparty/tesseract/src/lstm/reconfig.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/lstm/reversed.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/lstm/series.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/lstm/stridemap.cpp
-TESSERACT_SRC += thirdparty/tesseract/src/lstm/tfnetwork.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/lstm/weightmatrix.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/textord/alignedblob.cpp
 TESSERACT_SRC += thirdparty/tesseract/src/textord/baselinedetect.cpp
@@ -755,7 +792,7 @@ endif
 
 ifeq ($(HAVE_NEON),yes)
 TESSERACT_DEFINES += -DHAVE_NEON
-TESSERACT_BUILD_CFLAGS += $(NEONFLAGS)
+TESSERACT_BUILD_CFLAGS += -mfpu=neon
 endif
 # Always include the neon code - it will compile to nothing if
 # neon isn't enabled. We need to always include it, because it
@@ -764,6 +801,180 @@ endif
 TESSERACT_SRC += thirdparty/tesseract/src/arch/intsimdmatrixneon.cpp
 
 TESSERACT_BUILD_CFLAGS += $(TESSERACT_DEFINES)
+
+# --- ZXINGCPP (optional) ---
+
+ZXINGCPP_LANGFLAGS = -std=c++20
+
+ZXINGCPP_CFLAGS += -Ithirdparty/zxing-cpp/core/src
+ZXINGCPP_CFLAGS += -DZXING_EXPERIMENTAL_API
+
+ZXINGCPP_BUILD_CFLAGS  = -DZXING_USE_ZINT
+ZXINGCPP_BUILD_CFLAGS += -DZXING_EXPERIMENTAL_API
+ZXINGCPP_BUILD_CFLAGS += -DZINT_NO_PNG
+
+ZXINGCPP_BUILD_CFLAGS += -Ithirdparty/zint/backend
+ZXINGCPP_BUILD_CFLAGS += -Iscripts/zxing-cpp
+
+ZXINGCPP_LIBS += -lstdc++
+
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZDetector.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZHighLevelEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZToken.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/aztec/AZWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/Barcode.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/BarcodeFormat.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/BinaryBitmap.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/BitArray.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/BitMatrix.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/BitMatrixIO.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/BitSource.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/CharacterSet.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ConcentricFinder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/Content.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMBitLayout.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMDataBlock.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMDetector.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMECEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMHighLevelEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMSymbolInfo.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMVersion.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/datamatrix/DMWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/DecodeHints.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ECI.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/Error.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/GenericGF.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/GenericGFPoly.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/GlobalHistogramBinarizer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/GridSampler.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/GTIN.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/HRI.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/HybridBinarizer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/libzueci/zueci.c
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/maxicode/MCBitMatrixParser.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/maxicode/MCDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/maxicode/MCReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/MultiFormatReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/MultiFormatWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCodabarReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCodabarWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode128Patterns.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode128Reader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode128Writer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode39Reader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode39Writer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode93Reader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODCode93Writer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODDataBarCommon.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODDataBarExpandedBitDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODDataBarExpandedReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODDataBarLimitedReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODDataBarReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODDXFilmEdgeReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODEAN13Writer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODEAN8Writer.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODITFReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODITFWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODMultiUPCEANReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODUPCAWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODUPCEANCommon.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODUPCEWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/oned/ODWriterHelper.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFBarcodeValue.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFBoundingBox.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFCodewordDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFDetectionResult.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFDetectionResultColumn.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFDetector.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFHighLevelEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFModulusGF.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFModulusPoly.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFScanningDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/PDFWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/pdf417/ZXBigInteger.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/PerspectiveTransform.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRBitMatrixParser.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRCodecMode.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRDataBlock.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRDetector.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QREncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRErrorCorrectionLevel.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRFormatInformation.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRMaskUtil.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRMatrixUtil.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRReader.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRVersion.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/qrcode/QRWriter.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ReadBarcode.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ReedSolomonDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ReedSolomonEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ResultPoint.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/TextDecoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/TextEncoder.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/TextUtfEncoding.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/Utf.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/WhiteRectDetector.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/WriteBarcode.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ZXingC.cpp
+ZXINGCPP_SRC += thirdparty/zxing-cpp/core/src/ZXingCpp.cpp
+ZXINGCPP_SRC += thirdparty/zint/backend/2of5.c
+ZXINGCPP_SRC += thirdparty/zint/backend/auspost.c
+ZXINGCPP_SRC += thirdparty/zint/backend/aztec.c
+ZXINGCPP_SRC += thirdparty/zint/backend/bc412.c
+ZXINGCPP_SRC += thirdparty/zint/backend/bmp.c
+ZXINGCPP_SRC += thirdparty/zint/backend/codablock.c
+ZXINGCPP_SRC += thirdparty/zint/backend/code.c
+ZXINGCPP_SRC += thirdparty/zint/backend/code1.c
+ZXINGCPP_SRC += thirdparty/zint/backend/code128.c
+ZXINGCPP_SRC += thirdparty/zint/backend/code16k.c
+ZXINGCPP_SRC += thirdparty/zint/backend/code49.c
+ZXINGCPP_SRC += thirdparty/zint/backend/common.c
+ZXINGCPP_SRC += thirdparty/zint/backend/composite.c
+ZXINGCPP_SRC += thirdparty/zint/backend/dllversion.c
+ZXINGCPP_SRC += thirdparty/zint/backend/dmatrix.c
+ZXINGCPP_SRC += thirdparty/zint/backend/dotcode.c
+ZXINGCPP_SRC += thirdparty/zint/backend/dxfilmedge.c
+ZXINGCPP_SRC += thirdparty/zint/backend/eci.c
+ZXINGCPP_SRC += thirdparty/zint/backend/emf.c
+ZXINGCPP_SRC += thirdparty/zint/backend/filemem.c
+ZXINGCPP_SRC += thirdparty/zint/backend/general_field.c
+ZXINGCPP_SRC += thirdparty/zint/backend/gif.c
+ZXINGCPP_SRC += thirdparty/zint/backend/gridmtx.c
+ZXINGCPP_SRC += thirdparty/zint/backend/gs1.c
+ZXINGCPP_SRC += thirdparty/zint/backend/hanxin.c
+ZXINGCPP_SRC += thirdparty/zint/backend/imail.c
+ZXINGCPP_SRC += thirdparty/zint/backend/large.c
+ZXINGCPP_SRC += thirdparty/zint/backend/library.c
+ZXINGCPP_SRC += thirdparty/zint/backend/mailmark.c
+ZXINGCPP_SRC += thirdparty/zint/backend/maxicode.c
+ZXINGCPP_SRC += thirdparty/zint/backend/medical.c
+ZXINGCPP_SRC += thirdparty/zint/backend/output.c
+ZXINGCPP_SRC += thirdparty/zint/backend/pcx.c
+ZXINGCPP_SRC += thirdparty/zint/backend/pdf417.c
+ZXINGCPP_SRC += thirdparty/zint/backend/plessey.c
+ZXINGCPP_SRC += thirdparty/zint/backend/png.c
+ZXINGCPP_SRC += thirdparty/zint/backend/postal.c
+ZXINGCPP_SRC += thirdparty/zint/backend/ps.c
+ZXINGCPP_SRC += thirdparty/zint/backend/qr.c
+ZXINGCPP_SRC += thirdparty/zint/backend/raster.c
+ZXINGCPP_SRC += thirdparty/zint/backend/reedsol.c
+ZXINGCPP_SRC += thirdparty/zint/backend/rss.c
+ZXINGCPP_SRC += thirdparty/zint/backend/svg.c
+ZXINGCPP_SRC += thirdparty/zint/backend/telepen.c
+ZXINGCPP_SRC += thirdparty/zint/backend/tif.c
+ZXINGCPP_SRC += thirdparty/zint/backend/ultra.c
+ZXINGCPP_SRC += thirdparty/zint/backend/upcean.c
+ZXINGCPP_SRC += thirdparty/zint/backend/vector.c
 
 # --- EXTRACT ---
 

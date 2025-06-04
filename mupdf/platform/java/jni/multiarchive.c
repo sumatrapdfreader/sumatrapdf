@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -21,6 +21,23 @@
 // CA 94129, USA, for further information.
 
 /* MultiArchive interface */
+
+JNIEXPORT jlong JNICALL
+FUN(MultiArchive_newNativeMultiArchive)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_archive *arch = NULL;
+
+	if (!ctx) return 0;
+
+	fz_try(ctx)
+		arch = fz_new_multi_archive(ctx);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return jlong_cast(arch);
+}
+
 
 JNIEXPORT void JNICALL
 FUN(MultiArchive_mountArchive)(JNIEnv *env, jobject self, jobject jsub, jstring jpath)

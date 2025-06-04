@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -83,10 +83,10 @@ fz_add_text_span(fz_context *ctx, fz_text *text, fz_font *font, int wmode, int b
 		text->head = text->tail = fz_new_text_span(ctx, font, wmode, bidi_level, markup_dir, language, trm);
 	}
 	else if (text->tail->font != font ||
-		text->tail->wmode != wmode ||
-		text->tail->bidi_level != bidi_level ||
-		text->tail->markup_dir != markup_dir ||
-		text->tail->language != language ||
+		text->tail->wmode != (unsigned int)wmode ||
+		text->tail->bidi_level != (unsigned int)bidi_level ||
+		text->tail->markup_dir != (unsigned int)markup_dir ||
+		text->tail->language != (unsigned int)language ||
 		text->tail->trm.a != trm.a ||
 		text->tail->trm.b != trm.b ||
 		text->tail->trm.c != trm.c ||
@@ -263,7 +263,7 @@ fz_text_language fz_text_language_from_string(const char *str)
 	else
 		return 0; /* There are no valid 1 char language codes */
 
-	/* 3nd char */
+	/* 3rd char */
 	if (str[2] >= 'a' && str[2] <= 'z')
 		lang += 27*27*(str[2] - 'a' + 1);
 	else if (str[2] >= 'A' && str[2] <= 'Z')

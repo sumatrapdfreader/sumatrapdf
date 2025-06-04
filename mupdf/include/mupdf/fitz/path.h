@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -63,7 +63,7 @@ typedef struct
 	float miterlimit;
 	float dash_phase;
 	int dash_len;
-	float dash_list[32];
+	float dash_list[FZ_FLEXIBLE_ARRAY];
 } fz_stroke_state;
 
 typedef struct
@@ -394,6 +394,7 @@ fz_stroke_state *fz_new_stroke_state_with_dash_len(fz_context *ctx, int len);
 	this can cause race conditions.
 */
 fz_stroke_state *fz_keep_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
+int fz_stroke_state_eq(fz_context *ctx, const fz_stroke_state *a, const fz_stroke_state *b);
 
 /**
 	Drop a reference to a stroke state structure, destroying the
@@ -442,6 +443,35 @@ fz_stroke_state *fz_unshare_stroke_state_with_dash_len(fz_context *ctx, fz_strok
 	Exceptions may be thrown in the event of a failure to
 	allocate.
 */
-fz_stroke_state *fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
+fz_stroke_state *fz_clone_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
+
+fz_linecap fz_linecap_from_string(const char *s);
+const char *fz_string_from_linecap(fz_linecap cap);
+fz_linejoin fz_linejoin_from_string(const char *s);
+const char *fz_string_from_linejoin(fz_linejoin join);
+
+/**
+	Check whether a given path, under the given transform
+	is an axis-aligned rectangle.
+
+	We accept zero width or height rectangles, so
+	"move 100, 100; line 200, 100" would count as
+	a rectangle too.
+*/
+int fz_path_is_rect(fz_context *ctx, const fz_path *path, fz_matrix ctm);
+
+/**
+	Check whether a given path, under the given transform
+	is an axis-aligned rectangle.
+
+	We accept zero width or height rectangles, so
+	"move 100, 100; line 200, 100" would count as
+	a rectangle too.
+
+	bounds = NULL, or place to return the rectangle
+	bounds if the path is a rectangle.
+*/
+int fz_path_is_rect_with_bounds(fz_context *ctx, const fz_path *path, fz_matrix ctm, fz_rect *bounds);
+
 
 #endif

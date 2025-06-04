@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -545,7 +545,7 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 	{
 		unsigned char *dp;
 		int x, y, k;
-		int w, h, n;
+		int w, h;
 
 		img = fz_new_pixmap(ctx, pnm->cs, pnm->width, pnm->height, NULL, 0);
 		dp = img->samples;

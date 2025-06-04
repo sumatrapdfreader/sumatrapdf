@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -491,8 +491,8 @@ tiff_paste_subsampled_tile(fz_context *ctx, struct tiff *tiff, unsigned char *ti
 {
 	/*
 	This explains how the samples are laid out in tiff data, the spec example is non-obvious.
-	The y, cb, cr indicies follow the spec, i.e. y17 is the y sample at row 1, column 7.
-	All indicies start at 0.
+	The y, cb, cr indices follow the spec, i.e. y17 is the y sample at row 1, column 7.
+	All indices start at 0.
 
 	hexlookup = (horizontalsubsampling & 0xf) << 4 | (verticalsubsampling & 0xf)
 
@@ -784,22 +784,22 @@ static inline int tiff_readbyte(struct tiff *tiff)
 
 static inline unsigned readshort(struct tiff *tiff)
 {
-	unsigned a = tiff_readbyte(tiff);
-	unsigned b = tiff_readbyte(tiff);
+	int a = tiff_readbyte(tiff);
+	int b = tiff_readbyte(tiff);
 	if (tiff->order == TII)
-		return (b << 8) | a;
-	return (a << 8) | b;
+		return (unsigned)((b << 8) | a);
+	return (unsigned)((a << 8) | b);
 }
 
 static inline unsigned tiff_readlong(struct tiff *tiff)
 {
-	unsigned a = tiff_readbyte(tiff);
-	unsigned b = tiff_readbyte(tiff);
-	unsigned c = tiff_readbyte(tiff);
-	unsigned d = tiff_readbyte(tiff);
+	int a = tiff_readbyte(tiff);
+	int b = tiff_readbyte(tiff);
+	int c = tiff_readbyte(tiff);
+	int d = tiff_readbyte(tiff);
 	if (tiff->order == TII)
-		return (d << 24) | (c << 16) | (b << 8) | a;
-	return (a << 24) | (b << 16) | (c << 8) | d;
+		return (unsigned)((d << 24) | (c << 16) | (b << 8) | a);
+	return (unsigned)((a << 24) | (b << 16) | (c << 8) | d);
 }
 
 static void
@@ -1068,7 +1068,7 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 		if (value > (size_t)(tiff->ep - tiff->bp))
 			fz_throw(ctx, FZ_ERROR_FORMAT, "TIFF JPEG tables offset out of range");
 		if (value + count > (size_t)(tiff->ep - tiff->bp))
-			count = (size_t)(tiff->ep - tiff->bp) - value;
+			count = (unsigned int)(tiff->ep - tiff->bp) - value;
 		tiff->jpegtables = tiff->bp + value;
 		tiff->jpegtableslen = count;
 		break;
@@ -1079,7 +1079,7 @@ tiff_read_tag_array(fz_context *ctx, struct tiff *tiff, unsigned offset)
 		if (value > (size_t)(tiff->ep - tiff->bp))
 			fz_throw(ctx, FZ_ERROR_FORMAT, "TIFF profile offset out of range");
 		if (value + count > (size_t)(tiff->ep - tiff->bp))
-			count = (size_t)(tiff->ep - tiff->bp) - value;
+			count = (unsigned int)(tiff->ep - tiff->bp) - value;
 		tiff->profile = Memento_label(fz_malloc(ctx, count), "tiff_profile");
 		/* ICC profile data type is set to UNDEFINED.
 		 * TBYTE reading not correct in tiff_read_tag_value */
@@ -1225,7 +1225,7 @@ tiff_read_ifd(fz_context *ctx, struct tiff *tiff)
 
 	offset = tiff->rp - tiff->bp;
 	count = readshort(tiff);
-	if (count * 12 > (unsigned)(tiff->ep - tiff->rp))
+	if (count > (unsigned)(tiff->ep - tiff->rp) / 12)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "overlarge IFD entry count %u", count);
 	original = offset + 2;
 	original_rp = tiff->rp;
@@ -1550,12 +1550,12 @@ tiff_decode_jpeg(fz_context *ctx, struct tiff *tiff)
 	if (tiff->jpegofs > (size_t)(tiff->ep - tiff->bp))
 	{
 		fz_warn(ctx, "TIFF JPEG image offset too large, capping");
-		tiff->jpegofs = (size_t)(tiff->ep - tiff->bp);
+		tiff->jpegofs = (unsigned int)(tiff->ep - tiff->bp);
 	}
 	if (tiff->jpeglen > (size_t)(tiff->ep - tiff->bp) - tiff->jpegofs)
 	{
 		fz_warn(ctx, "TIFF JPEG image length too long, capping");
-		tiff->jpeglen = (size_t)(tiff->ep - tiff->bp) - tiff->jpegofs;
+		tiff->jpeglen = (unsigned int)(tiff->ep - tiff->bp) - tiff->jpegofs;
 	}
 
 	fz_try(ctx)

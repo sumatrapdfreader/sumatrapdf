@@ -1,9 +1,8 @@
-.. Copyright (C) 2001-2023 Artifex Software, Inc.
+.. Copyright (C) 2001-2025 Artifex Software, Inc.
 .. All Rights Reserved.
 
 .. default-domain:: js
 
-.. include:: header.rst
 
 .. meta::
    :description: MuPDF documentation
@@ -42,7 +41,7 @@ The `clean` command pretty prints and rewrites the syntax of a :title:`PDF` file
          In addition to `-ggg` check streams for duplication.
 
       `-l`
-         Linearize PDF.
+         Linearize PDF (no longer supported!).
 
       `-D`
          Save file without encryption.
@@ -75,20 +74,46 @@ The `clean` command pretty prints and rewrites the syntax of a :title:`PDF` file
          Compress image streams.
 
       `-c`
-         Clean content streams.
+         Pretty-print graphics commands in content streams.
 
       `-s`
-         Sanitize content streams.
+         Sanitize graphics commands in content streams.
+
+      `-t`
+         Compact object syntax.
+
+      `-tt`
+         Use indented object syntax to make PDF objects more readable.
+
+      `-L`
+         Print comments containing labels showing how each object can be reached from the Root.
 
       `-A`
-         Create appearance streams for annotations.
+         Create appearance streams for annotations that are missing appearance streams.
 
       `-AA`
-         Recreate appearance streams for annotations.
+         Recreate appearance streams for all annotations.
 
       `-m`
          Preserve metadata.
 
+      `-S`
+         Subset fonts if possible. (EXPERIMENTAL!)
+
+      `-Z`
+         Use object streams cross reference streams for extra compressoin.
+
+      `--(color|gray|bitonal)-(|lossy-|lossless-)image-subsample-method method`
+         Set the subsampling method (`average`, or `bicubic`) for the desired image types, for example color-lossy and bitonal-loessless.
+
+      `--(color|gray|bitonal)-(|lossy-|lossless-)image-subsample-dpi dpi`
+         Set the resolution at which to subsample.
+
+      `--(color|gray|bitonal)-(|lossy-|lossless-)image-recompress-method quality`
+         Set the recompression quality to either of `never`, `same`, `lossless`, `jpeg`, `j2k`, `fax`, or `jbig2`.
+
+      `--structure=keep|drop`
+         Keep or drop the structure tree.
 
 ----
 
@@ -111,7 +136,6 @@ The `clean` command pretty prints and rewrites the syntax of a :title:`PDF` file
    Comma separated list of page numbers and ranges (for example: 1,5,10-15,20-N), where the character N denotes the last page. If no pages are specified, then all pages will be included.
 
 
-.. include:: footer.rst
 
 
 

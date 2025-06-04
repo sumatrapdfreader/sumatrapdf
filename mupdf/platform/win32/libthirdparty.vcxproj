@@ -116,7 +116,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
@@ -124,7 +124,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;4146</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4101;4146;4244;4267</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Memento|x64'">
@@ -133,7 +133,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";MEMENTO=1;verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
@@ -141,14 +141,14 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;4146</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4101;4146;4244;4267</DisableSpecificWarnings>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
@@ -156,7 +156,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;4146</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4101;4146;4244;4267</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -165,7 +165,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;_DEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>
       </MinimalRebuild>
@@ -173,7 +173,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;4146</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4101;4146;4244;4267</DisableSpecificWarnings>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <ProjectReference>
@@ -184,14 +184,14 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;JBIG_EXTERNAL_MEMENTO_H="memento.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MinimalRebuild />
-      <DisableSpecificWarnings>4018;4244;4146</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4101;4146;4244;4267</DisableSpecificWarnings>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -201,17 +201,48 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\thirdparty\brotli\c\include;..\..\thirdparty\lcms2\include;..\..\scripts\freetype;..\..\scripts\libjpeg;..\..\thirdparty\jbig2dec;..\..\thirdparty\libjpeg;..\..\thirdparty\openjpeg\src\lib\openjp2;..\..\thirdparty\zlib;..\..\thirdparty\freetype\include;..\..\thirdparty\freetype\include\freetype;..\..\thirdparty\gumbo-parser\src;..\..\thirdparty\gumbo-parser\visualc\include;..\..\include\;..\..\include\mupdf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN64;NDEBUG;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;OPJ_STATIC;USE_JPIP=1;FT_CONFIG_MODULES_H="slimftmodules.h";FT_CONFIG_OPTIONS_H="slimftoptions.h";verbose=-1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4018;4244;4146</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4018;4101;4146;4244;4267</DisableSpecificWarnings>
       <BrowseInformation>true</BrowseInformation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\brotli\c\common\constants.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\common\context.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\common\dictionary.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\common\platform.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\common\shared_dictionary.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\common\transform.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\bit_reader.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\decode.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\huffman.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\dec\state.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\backward_references.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\backward_references_hq.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\bit_cost.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\block_splitter.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\brotli_bit_stream.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\cluster.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\command.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\compound_dictionary.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\compress_fragment.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\compress_fragment_two_pass.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\dictionary_hash.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\encode.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\encoder_dict.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\entropy_encode.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\fast_log.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\histogram.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\literal_cost.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\memory.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\metablock.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\static_dict.c" />
+    <ClCompile Include="..\..\thirdparty\brotli\c\enc\utf8_util.c" />
     <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbase.c" />
     <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbbox.c" />
     <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbitmap.c" />
@@ -450,6 +481,66 @@
     <ClCompile Include="..\..\thirdparty\zlib\zutil.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\constants.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\context.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\dictionary.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\platform.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\shared_dictionary_internal.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\transform.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\common\version.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\dec\bit_reader.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\dec\huffman.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\dec\prefix.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\dec\state.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\backward_references.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\backward_references_hq.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\backward_references_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\bit_cost.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\bit_cost_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\block_encoder_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\block_splitter.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\block_splitter_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\brotli_bit_stream.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\cluster.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\cluster_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\command.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\compound_dictionary.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\compress_fragment.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\compress_fragment_two_pass.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\dictionary_hash.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\encoder_dict.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\entropy_encode.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\entropy_encode_static.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\fast_log.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\find_match_length.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_composite_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_forgetful_chain_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_longest_match64_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_longest_match_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_longest_match_quickly_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_rolling_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\hash_to_binary_tree_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\histogram.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\histogram_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\literal_cost.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\memory.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\metablock.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\metablock_inc.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\params.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\prefix.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\quality.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\ringbuffer.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\state.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\static_dict.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\static_dict_lut.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\utf8_util.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\enc\write_bits.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\decode.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\encode.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\port.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\shared_dictionary.h" />
+    <ClInclude Include="..\..\thirdparty\brotli\c\include\brotli\types.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftconfig.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftheader.h" />
     <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftmodule.h" />
@@ -603,6 +694,10 @@
     <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tgt.h" />
     <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\thread.h" />
     <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tls_keys.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\thirdparty\brotli\c\common\dictionary.bin" />
+    <None Include="..\..\thirdparty\brotli\c\common\dictionary.bin.br" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

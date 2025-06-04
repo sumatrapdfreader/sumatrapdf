@@ -40,3 +40,12 @@
 [submodule "thirdparty/extract"]
 	path = thirdparty/extract
 	url = ../extract.git
+[submodule "thirdparty/zxing-cpp"]
+	path = thirdparty/zxing-cpp
+	url = ../thirdparty-zxing-cpp.git
+[submodule "thirdparty/zint"]
+	path = thirdparty/zint
+	url = ../thirdparty-zint.git
+[submodule "thirdparty/brotli"]
+	path = thirdparty/brotli
+	url = ../thirdparty-brotli.git

@@ -303,7 +303,7 @@ static void toc_pagefn(fz_context *ctx, void *ref, int page_num, fz_rect mediabo
 		fz_lineto(ctx, path, 100, 200);
 		fz_lineto(ctx, path, 50, 200);
 		fz_closepath(ctx, path);
-		fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), rgb, 0.9 /*alpha*/, fz_default_color_params);
+		fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), rgb, 0.9f /*alpha*/, fz_default_color_params);
 		fz_drop_path(ctx, path);
 	}
 	else
@@ -313,7 +313,7 @@ static void toc_pagefn(fz_context *ctx, void *ref, int page_num, fz_rect mediabo
 		fz_lineto(ctx, path, 50, 200);
 		fz_lineto(ctx, path, 100, 50);
 		fz_closepath(ctx, path);
-		fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), rgb, 0.9 /*alpha*/, fz_default_color_params);
+		fz_fill_path(ctx, dev, path, 0, ctm, fz_device_rgb(ctx), rgb, 0.9f /*alpha*/, fz_default_color_params);
 		fz_drop_path(ctx, path);
 	}
 }
@@ -368,7 +368,7 @@ int main(int argc, const char *argv[])
 	{
 		writer = fz_new_pdf_writer(ctx, "out.pdf", "");
 
-		buf = fz_new_buffer_from_copied_data(ctx, snark, strlen(snark)+1);
+		buf = fz_new_buffer_from_copied_data(ctx, (unsigned char *)snark, strlen(snark)+1);
 
 		archive = fz_open_directory(ctx, ".");
 
@@ -478,7 +478,7 @@ int main(int argc, const char *argv[])
 
 		writer = fz_new_pdf_writer(ctx, "out3.pdf", "");
 
-		buf = fz_new_buffer_from_copied_data(ctx, festival_template, strlen(festival_template)+1);
+		buf = fz_new_buffer_from_copied_data(ctx, (unsigned char *)festival_template, strlen(festival_template)+1);
 		story = fz_new_story(ctx, buf, "", 11, NULL);
 
 		dom = fz_story_document(ctx, story);
