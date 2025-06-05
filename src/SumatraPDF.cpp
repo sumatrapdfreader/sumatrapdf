@@ -3013,7 +3013,7 @@ static void RenameCurrentFile(MainWindow* win) {
     }
 
     auto* ctrl = win->ctrl;
-    const char* srcPath = ctrl->GetFilePath();
+    const char* srcPath = str::DupTemp(ctrl->GetFilePath());
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcPath)) {
         return;
@@ -3062,9 +3062,8 @@ static void RenameCurrentFile(MainWindow* win) {
     }
     TempStr dstFilePath = ToUtf8Temp(dstFilePathW);
     TempStr dstPathNormalized = path::NormalizeTemp(dstFilePath);
-    logf("RenameCurrentFile: '%s' => '%s'\n", srcPath, dstFilePath);
-    logf("  dstPathNormalized: '%s'\n", dstPathNormalized);
-    if (path::IsSame(dstFilePath, dstPathNormalized)) {
+    TempStr srcPathNormalized = path::NormalizeTemp(srcPath);
+    if (path::IsSame(srcPathNormalized, dstPathNormalized)) {
         return;
     }
 
