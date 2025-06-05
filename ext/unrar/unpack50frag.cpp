@@ -2,6 +2,7 @@ FragmentedWindow::FragmentedWindow()
 {
   memset(Mem,0,sizeof(Mem));
   memset(MemSize,0,sizeof(MemSize));
+  LastAllocated=0;
 }
 
 
@@ -13,6 +14,7 @@ FragmentedWindow::~FragmentedWindow()
 
 void FragmentedWindow::Reset()
 {
+  LastAllocated=0;
   for (uint I=0;I<ASIZE(Mem);I++)
     if (Mem[I]!=NULL)
     {
@@ -60,6 +62,7 @@ void FragmentedWindow::Init(size_t WinSize)
   }
   if (TotalSize<WinSize) // Not found enough free blocks.
     throw std::bad_alloc();
+  LastAllocated=WinSize;
 }
 
 
@@ -74,15 +77,32 @@ byte& FragmentedWindow::operator [](size_t Item)
 }
 
 
-void FragmentedWindow::CopyString(uint Length,uint Distance,size_t &UnpPtr,size_t MaxWinMask)
+void FragmentedWindow::CopyString(uint Length,size_t Distance,size_t &UnpPtr,bool FirstWinDone,size_t MaxWinSize)
 {
   size_t SrcPtr=UnpPtr-Distance;
+  if (Distance>UnpPtr)
+  {
+    SrcPtr+=MaxWinSize;
+
+    if (Distance>MaxWinSize || !FirstWinDone)
+    {
+      while (Length-- > 0)
+      {
+        (*this)[UnpPtr]=0;
+        if (++UnpPtr>=MaxWinSize)
+          UnpPtr-=MaxWinSize;
+      }
+      return;
+    }
+  }
+
   while (Length-- > 0)
   {
-    (*this)[UnpPtr]=(*this)[SrcPtr++ & MaxWinMask];
-    // We need to have masked UnpPtr after quit from loop, so it must not
-    // be replaced with '(*this)[UnpPtr++ & MaxWinMask]'
-    UnpPtr=(UnpPtr+1) & MaxWinMask;
+    (*this)[UnpPtr]=(*this)[SrcPtr];
+    if (++SrcPtr>=MaxWinSize)
+      SrcPtr-=MaxWinSize;
+    if (++UnpPtr>=MaxWinSize)
+      UnpPtr-=MaxWinSize;
   }
 }
 

@@ -17,12 +17,27 @@
 #define  MAXPASSWORD       512
 #define  MAXPASSWORD_RAR   128
 
-#define  MAXSFXSIZE        0x200000
+// Set some arbitrary sensible limit to maximum path length to prevent
+// the excessive memory allocation for dynamically allocated strings.
+#define  MAXPATHSIZE       0x10000
+
+#define  MAXSFXSIZE        0x400000
 
 #define  MAXCMTSIZE        0x40000
 
+#ifdef _WIN_32
+#define  DefSFXName        L"default32.sfx"
+#else
 #define  DefSFXName        L"default.sfx"
+#endif
 #define  DefSortListName   L"rarfiles.lst"
+
+// Maximum dictionary allowed by compression. Can be less than
+// maximum dictionary supported by decompression.
+#define PACK_MAX_DICT      0x1000000000ULL // 64 GB.
+
+// Maximum dictionary allowed by decompression.
+#define UNPACK_MAX_DICT    0x1000000000ULL // 64 GB.
 
 
 #ifndef SFX_MODULE
@@ -31,5 +46,9 @@
 
 // Produce the value, which is equal or larger than 'v' and aligned to 'a'.
 #define ALIGN_VALUE(v,a) (size_t(v) + ( (~size_t(v) + 1) & (a - 1) ) )
+
+#if defined(_WIN_ALL) && !defined(SFX_MODULE)
+#define PROPAGATE_MOTW // Propagate the archive Mark of the Web.
+#endif
 
 #endif

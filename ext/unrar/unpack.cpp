@@ -10,8 +10,8 @@
 #ifndef SFX_MODULE
 #include "unpack15.cpp"
 #include "unpack20.cpp"
-#endif
 #include "unpack30.cpp"
+#endif
 #include "unpack50.cpp"
 #include "unpack50frag.cpp"
 
@@ -22,20 +22,21 @@ Unpack::Unpack(ComprDataIO *DataIO)
   Window=NULL;
   Fragmented=false;
   Suspended=false;
-  UnpAllBuf=false;
   UnpSomeRead=false;
+  ExtraDist=false;
 #ifdef RAR_SMP
   MaxUserThreads=1;
   UnpThreadPool=NULL;
   ReadBufMT=NULL;
   UnpThreadData=NULL;
 #endif
+  AllocWinSize=0;
   MaxWinSize=0;
   MaxWinMask=0;
 
   // Perform initialization, which should be done only once for all files.
-  // It prevents crash if first DoUnpack call is later made with wrong
-  // (true) 'Solid' value.
+  // It prevents crash if first unpacked file has the wrong "true" Solid flag,
+  // so first DoUnpack call is made with the wrong "true" Solid value later.
   UnpInitData(false);
 #ifndef SFX_MODULE
   // RAR 1.5 decompression initialization
@@ -47,10 +48,11 @@ Unpack::Unpack(ComprDataIO *DataIO)
 
 Unpack::~Unpack()
 {
+#ifndef SFX_MODULE
   InitFilters30(false);
+#endif
 
-  if (Window!=NULL)
-    free(Window);
+  Alloc.delete_l<byte>(Window); // delete Window;
 #ifdef RAR_SMP
   delete UnpThreadPool;
   delete[] ReadBufMT;
@@ -70,13 +72,11 @@ void Unpack::SetThreads(uint Threads)
 #endif
 
 
-void Unpack::Init(size_t WinSize,bool Solid)
+// We get 64-bit WinSize, so we still can check and quit for dictionaries
+// exceeding a threshold in 32-bit builds. Then we convert WinSize to size_t
+// MaxWinSize.
+void Unpack::Init(uint64 WinSize,bool Solid)
 {
-  // If 32-bit RAR unpacks an archive with 4 GB dictionary, the window size
-  // will be 0 because of size_t overflow. Let's issue the memory error.
-  if (WinSize==0)
-    ErrHandler.MemoryError();
-
   // Minimum window size must be at least twice more than maximum possible
   // size of filter block, which is 0x10000 in RAR now. If window size is
   // smaller, we can have a block with never cleared flt->NextWindow flag
@@ -86,39 +86,61 @@ void Unpack::Init(size_t WinSize,bool Solid)
   if (WinSize<MinAllocSize)
     WinSize=MinAllocSize;
 
-  if (WinSize<=MaxWinSize) // Use the already allocated window.
-    return;
-  if ((WinSize>>16)>0x10000) // Window size must not exceed 4 GB.
+  if (WinSize>Min(0x10000000000ULL,UNPACK_MAX_DICT)) // Window size must not exceed 1 TB.
+    throw std::bad_alloc();
+
+  // 32-bit build can't unpack dictionaries exceeding 32-bit even in theory.
+  // Also we've not verified if WrapUp and WrapDown work properly in 32-bit
+  // version and >2GB dictionary and if 32-bit version can handle >2GB
+  // distances. Since such version is unlikely to allocate >2GB anyway,
+  // we prohibit >2GB dictionaries for 32-bit build here.
+  if (WinSize>0x80000000 && sizeof(size_t)<=4)
+    throw std::bad_alloc();
+
+  // Solid block shall use the same window size for all files.
+  // But if Window isn't initialized when Solid is set, it means that
+  // first file in solid block doesn't have the solid flag. We initialize
+  // the window anyway for such malformed archive.
+  // Non-solid files shall use their specific window sizes,
+  // so current window size and unpack routine behavior doesn't depend on
+  // previously unpacked files and their extraction order.
+  if (!Solid || Window==nullptr)
+  {
+    MaxWinSize=(size_t)WinSize;
+    MaxWinMask=MaxWinSize-1;
+  }
+
+  // Use the already allocated window when processing non-solid files
+  // with reducing dictionary sizes.
+  if (WinSize<=AllocWinSize)
     return;
 
   // Archiving code guarantees that window size does not grow in the same
   // solid stream. So if we are here, we are either creating a new window
   // or increasing the size of non-solid window. So we could safely reject
-  // current window data without copying them to a new window, though being
-  // extra cautious, we still handle the solid window grow case below.
-  bool Grow=Solid && (Window!=NULL || Fragmented);
-
-  // We do not handle growth for existing fragmented window.
-  if (Grow && Fragmented)
+  // current window data without copying them to a new window.
+  if (Solid && (Window!=NULL || Fragmented && WinSize>FragWindow.GetWinSize()))
     throw std::bad_alloc();
 
-  byte *NewWindow=Fragmented ? NULL : (byte *)malloc(WinSize);
+  Alloc.delete_l<byte>(Window); // delete Window;
+  Window=nullptr;
+  
+  try
+  {
+    if (!Fragmented)
+      Window=Alloc.new_l<byte>((size_t)WinSize,false); // Window=new byte[(size_t)WinSize];
+  }
+  catch (std::bad_alloc) // Use the fragmented window in this case.
+  {
+  }
 
-  if (NewWindow==NULL)
-    if (Grow || WinSize<0x1000000)
-    {
-      // We do not support growth for new fragmented window.
-      // Also exclude RAR4 and small dictionaries.
-      throw std::bad_alloc();
-    }
+  if (Window==nullptr)
+    if (WinSize<0x1000000 || sizeof(size_t)>4)
+      throw std::bad_alloc(); // Exclude RAR4, small dictionaries and 64-bit.
     else
     {
-      if (Window!=NULL) // If allocated by preceding files.
-      {
-        free(Window);
-        Window=NULL;
-      }
-      FragWindow.Init(WinSize);
+      if (WinSize>FragWindow.GetWinSize())
+        FragWindow.Init((size_t)WinSize);
       Fragmented=true;
     }
 
@@ -126,23 +148,12 @@ void Unpack::Init(size_t WinSize,bool Solid)
   {
     // Clean the window to generate the same output when unpacking corrupt
     // RAR files, which may access unused areas of sliding dictionary.
-    memset(NewWindow,0,WinSize);
+    // 2023.10.31: We've added FirstWinDone based unused area access check
+    // in Unpack::CopyString(), so this memset might be unnecessary now.
+//    memset(Window,0,(size_t)WinSize);
 
-    // If Window is not NULL, it means that window size has grown.
-    // In solid streams we need to copy data to a new window in such case.
-    // RAR archiving code does not allow it in solid streams now,
-    // but let's implement it anyway just in case we'll change it sometimes.
-    if (Grow)
-      for (size_t I=1;I<=MaxWinSize;I++)
-        NewWindow[(UnpPtr-I)&(WinSize-1)]=Window[(UnpPtr-I)&(MaxWinSize-1)];
-
-    if (Window!=NULL)
-      free(Window);
-    Window=NewWindow;
+    AllocWinSize=WinSize;
   }
-
-  MaxWinSize=WinSize;
-  MaxWinMask=MaxWinSize-1;
 }
 
 
@@ -154,21 +165,23 @@ void Unpack::DoUnpack(uint Method,bool Solid)
   switch(Method)
   {
 #ifndef SFX_MODULE
-    case 15: // rar 1.5 compression
+    case 15: // RAR 1.5 compression.
       if (!Fragmented)
         Unpack15(Solid);
       break;
-    case 20: // rar 2.x compression
-    case 26: // files larger than 2GB
+    case 20: // RAR 2.x compression.
+    case 26: // Files larger than 2GB.
       if (!Fragmented)
         Unpack20(Solid);
       break;
-#endif
-    case 29: // rar 3.x compression
+    case 29: // RAR 3.x compression.
       if (!Fragmented)
         Unpack29(Solid);
       break;
-    case 50: // RAR 5.0 compression algorithm.
+#endif
+    case VER_PACK5: // 50. RAR 5.0 and 7.0 compression algorithms.
+    case VER_PACK7: // 70.
+      ExtraDist=(Method==VER_PACK7);
 #ifdef RAR_SMP
       if (MaxUserThreads>1)
       {
@@ -194,13 +207,19 @@ void Unpack::UnpInitData(bool Solid)
 {
   if (!Solid)
   {
-    memset(OldDist,0,sizeof(OldDist));
+    OldDist[0]=OldDist[1]=OldDist[2]=OldDist[3]=(size_t)-1;
+
     OldDistPtr=0;
-    LastDist=LastLength=0;
+
+    LastDist=(uint)-1; // Initialize it to -1 like LastDist.
+    LastLength=0;
+
 //    memset(Window,0,MaxWinSize);
     memset(&BlockTables,0,sizeof(BlockTables));
     UnpPtr=WrPtr=0;
-    WriteBorder=Min(MaxWinSize,UNPACK_MAX_WRITE)&MaxWinMask;
+    PrevPtr=0;
+    FirstWinDone=false;
+    WriteBorder=Min(MaxWinSize,UNPACK_MAX_WRITE);
   }
   // Filters never share several solid files, so we can safely reset them
   // even in solid archive.
@@ -215,8 +234,8 @@ void Unpack::UnpInitData(bool Solid)
   BlockHeader.BlockSize=-1;  // '-1' means not defined yet.
 #ifndef SFX_MODULE
   UnpInitData20(Solid);
-#endif
   UnpInitData30(Solid);
+#endif
   UnpInitData50(Solid);
 }
 

@@ -101,19 +101,35 @@ void Wait()
 
 
 
+#ifdef _WIN_ALL
+bool SetPrivilege(LPCTSTR PrivName)
+{
+  bool Success=false;
+
+  HANDLE hToken;
+  if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+  {
+    TOKEN_PRIVILEGES tp;
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (LookupPrivilegeValue(NULL,PrivName,&tp.Privileges[0].Luid) &&
+        AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL) &&
+        GetLastError() == ERROR_SUCCESS)
+      Success=true;
+
+    CloseHandle(hToken);
+  }
+
+  return Success;
+}
+#endif
+
+
 #if defined(_WIN_ALL) && !defined(SFX_MODULE)
 void Shutdown(POWER_MODE Mode)
 {
-  HANDLE hToken;
-  TOKEN_PRIVILEGES tkp;
-  if (OpenProcessToken(GetCurrentProcess(),TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&hToken))
-  {
-    LookupPrivilegeValue(NULL,SE_SHUTDOWN_NAME,&tkp.Privileges[0].Luid);
-    tkp.PrivilegeCount = 1;
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-    AdjustTokenPrivileges(hToken,FALSE,&tkp,0,(PTOKEN_PRIVILEGES)NULL,0);
-  }
+  SetPrivilege(SE_SHUTDOWN_NAME);
   if (Mode==POWERMODE_OFF)
     ExitWindowsEx(EWX_SHUTDOWN|EWX_FORCE,SHTDN_REASON_FLAG_PLANNED);
   if (Mode==POWERMODE_SLEEP)
@@ -150,16 +166,18 @@ bool ShutdownCheckAnother(bool Open)
 
 
 
+
 #if defined(_WIN_ALL)
 // Load library from Windows System32 folder. Use this function to prevent
 // loading a malicious code from current folder or same folder as exe.
 HMODULE WINAPI LoadSysLibrary(const wchar *Name)
 {
-  wchar SysDir[NM];
-  if (GetSystemDirectory(SysDir,ASIZE(SysDir))==0)
-    return NULL;
-  MakeName(SysDir,Name,SysDir,ASIZE(SysDir));
-  return LoadLibrary(SysDir);
+  std::vector<wchar> SysDir(MAX_PATH);
+  if (GetSystemDirectory(SysDir.data(),(UINT)SysDir.size())==0)
+    return nullptr;
+  std::wstring FullName;
+  MakeName(SysDir.data(),Name,FullName);
+  return LoadLibrary(FullName.c_str());
 }
 
 
@@ -186,6 +204,7 @@ SSE_VERSION _SSE_Version=GetSSEVersion();
 
 SSE_VERSION GetSSEVersion()
 {
+#ifdef _MSC_VER
   int CPUInfo[4];
   __cpuid(CPUInfo, 0);
 
@@ -210,6 +229,18 @@ SSE_VERSION GetSSEVersion()
     if ((CPUInfo[3] & 0x2000000)!=0)
       return SSE_SSE;
   }
+#elif defined(__GNUC__)
+  if (__builtin_cpu_supports("avx2"))
+    return SSE_AVX2;
+  if (__builtin_cpu_supports("sse4.1"))
+    return SSE_SSE41;
+  if (__builtin_cpu_supports("ssse3"))
+    return SSE_SSSE3;
+  if (__builtin_cpu_supports("sse2"))
+    return SSE_SSE2;
+  if (__builtin_cpu_supports("sse"))
+    return SSE_SSE;
+#endif
   return SSE_NONE;
 }
 #endif

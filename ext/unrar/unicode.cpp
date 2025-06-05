@@ -128,6 +128,26 @@ bool CharToWide(const char *Src,wchar *Dest,size_t DestSize)
 }
 
 
+bool WideToChar(const std::wstring &Src,std::string &Dest)
+{
+  // We need more than 1 char per wchar_t for DBCS and up to 4 for UTF-8.
+  std::vector<char> DestA(4*Src.size()+1); // "+1" for terminating zero.
+  bool Result=WideToChar(Src.c_str(),DestA.data(),DestA.size());
+  Dest=DestA.data();
+  return Result;
+}
+
+
+bool CharToWide(const std::string &Src,std::wstring &Dest)
+{
+  // 2 wchar_t per char in case char is converted to UTF-16 surrogate pair.
+  std::vector<wchar> DestW(2*Src.size()+1); // "+1" for terminating zero.
+  bool Result=CharToWide(Src.c_str(),DestW.data(),DestW.size());
+  Dest=DestW.data();
+  return Result;
+}
+
+
 #if defined(_UNIX) && defined(MBFUNCTIONS)
 // Convert and restore mapped inconvertible Unicode characters. 
 // We use it for extended ASCII names in Unix.
@@ -244,11 +264,42 @@ byte* WideToRaw(const wchar *Src,size_t SrcSize,byte *Dest,size_t DestSize)
 }
 
 
+// Store UTF-16 raw byte stream.
+void WideToRaw(const std::wstring &Src,std::vector<byte> &Dest)
+{
+  for (wchar C : Src)
+  {
+    Dest.push_back((byte)C);
+    Dest.push_back((byte)(C>>8));
+  }
+  // In STL version of this function we do not add the trailing zero.
+  // Otherwise we would need to remove it when restoring std::wstring
+  // from raw data.
+
+  // Dest.push_back(0); // 2 bytes of trailing UTF-16 zero.
+  // Dest.push_back(0);
+}
+
+
 wchar* RawToWide(const byte *Src,wchar *Dest,size_t DestSize)
 {
   for (size_t I=0;I<DestSize;I++)
     if ((Dest[I]=Src[I*2]+(Src[I*2+1]<<8))==0)
       break;
+  return Dest;
+}
+
+
+std::wstring RawToWide(const std::vector<byte> &Src)
+{
+  std::wstring Dest;
+  for (size_t I=0;I+1<Src.size();I+=2)
+  {
+    wchar c=Src[I]+(Src[I+1]<<8);
+    Dest.push_back(c);
+    if (c==0)
+      break;
+  }
   return Dest;
 }
 
@@ -293,6 +344,46 @@ void WideToUtf(const wchar *Src,char *Dest,size_t DestSize)
   }
   *Dest=0;
 }
+
+
+void WideToUtf(const std::wstring &Src,std::string &Dest)
+{
+  for (size_t I=0;I<Src.size() && Src[I]!=0;)
+  {
+    uint c=Src[I++];
+    if (c<0x80)
+      Dest.push_back(c);
+    else
+      if (c<0x800)
+      {
+        Dest.push_back(0xc0|(c>>6));
+        Dest.push_back(0x80|(c&0x3f));
+      }
+      else
+      {
+        if (c>=0xd800 && c<=0xdbff && I<Src.size() && Src[I]>=0xdc00 && Src[I]<=0xdfff) // Surrogate pair.
+        {
+          c=((c-0xd800)<<10)+(Src[I]-0xdc00)+0x10000;
+          I++;
+        }
+        if (c<0x10000)
+        {
+          Dest.push_back(0xe0|(c>>12));
+          Dest.push_back(0x80|((c>>6)&0x3f));
+          Dest.push_back(0x80|(c&0x3f));
+        }
+        else
+          if (c < 0x200000)
+          {
+            Dest.push_back(0xf0|(c>>18));
+            Dest.push_back(0x80|((c>>12)&0x3f));
+            Dest.push_back(0x80|((c>>6)&0x3f));
+            Dest.push_back(0x80|(c&0x3f));
+          }
+      }
+  }
+}
+
 
 
 size_t WideToUtfSize(const wchar *Src)
@@ -397,6 +488,146 @@ bool UtfToWide(const char *Src,wchar *Dest,size_t DestSize)
 }
 
 
+bool UtfToWide(const char *Src,std::wstring &Dest)
+{
+  bool Success=true;
+  Dest.clear();
+  while (*Src!=0)
+  {
+    uint c=byte(*(Src++)),d;
+    if (c<0x80)
+      d=c;
+    else
+      if ((c>>5)==6)
+      {
+        if ((*Src&0xc0)!=0x80)
+        {
+          Success=false;
+          break;
+        }
+        d=((c&0x1f)<<6)|(*Src&0x3f);
+        Src++;
+      }
+      else
+        if ((c>>4)==14)
+        {
+          if ((Src[0]&0xc0)!=0x80 || (Src[1]&0xc0)!=0x80)
+          {
+            Success=false;
+            break;
+          }
+          d=((c&0xf)<<12)|((Src[0]&0x3f)<<6)|(Src[1]&0x3f);
+          Src+=2;
+        }
+        else
+          if ((c>>3)==30)
+          {
+            if ((Src[0]&0xc0)!=0x80 || (Src[1]&0xc0)!=0x80 || (Src[2]&0xc0)!=0x80)
+            {
+              Success=false;
+              break;
+            }
+            d=((c&7)<<18)|((Src[0]&0x3f)<<12)|((Src[1]&0x3f)<<6)|(Src[2]&0x3f);
+            Src+=3;
+          }
+          else
+          {
+            Success=false;
+            break;
+          }
+    if (d>0xffff)
+    {
+      if (d>0x10ffff) // UTF-8 must end at 0x10ffff according to RFC 3629.
+      {
+        Success=false;
+        continue;
+      }
+      if (sizeof(wchar_t)==2) // Use the surrogate pair.
+      {
+        Dest.push_back( ((d-0x10000)>>10)+0xd800 );
+        Dest.push_back( (d&0x3ff)+0xdc00 );
+      }
+      else
+        Dest.push_back( d );
+    }
+    else
+      Dest.push_back( d );
+  }
+  return Success;
+}
+
+
+/*
+bool UtfToWide(const std::vector<char> &Src,std::wstring &Dest)
+{
+  bool Success=true;
+  Dest.clear();
+  for (size_t I=0;I<Src.size() && Src[I]!=0;) // We expect it to always stop at 0.
+  {
+    uint c=byte(Src[I++]),d;
+    if (c<0x80)
+      d=c;
+    else
+      if ((c>>5)==6)
+      {
+        if (Src.size()-I<1 || (Src[I]&0xc0)!=0x80)
+        {
+          Success=false;
+          break;
+        }
+        d=((c&0x1f)<<6)|(Src[I]&0x3f);
+        I++;
+      }
+      else
+        if ((c>>4)==14)
+        {
+          if (Src.size()-I<2 || (Src[I]&0xc0)!=0x80 || (Src[I+1]&0xc0)!=0x80)
+          {
+            Success=false;
+            break;
+          }
+          d=((c&0xf)<<12)|((Src[I]&0x3f)<<6)|(Src[I+1]&0x3f);
+          I+=2;
+        }
+        else
+          if ((c>>3)==30)
+          {
+            if (Src.size()-I<3 || (Src[I]&0xc0)!=0x80 || (Src[I+1]&0xc0)!=0x80 || (Src[I+2]&0xc0)!=0x80)
+            {
+              Success=false;
+              break;
+            }
+            d=((c&7)<<18)|((Src[I]&0x3f)<<12)|((Src[I+1]&0x3f)<<6)|(Src[I+2]&0x3f);
+            I+=3;
+          }
+          else
+          {
+            Success=false;
+            break;
+          }
+    if (d>0xffff)
+    {
+      if (d>0x10ffff) // UTF-8 must end at 0x10ffff according to RFC 3629.
+      {
+        Success=false;
+        continue;
+      }
+      if (sizeof(Dest[0])==2) // Use the surrogate pair.
+      {
+        Dest.push_back( ((d-0x10000)>>10)+0xd800 );
+        Dest.push_back( (d&0x3ff)+0xdc00 );
+      }
+      else
+        Dest.push_back( d );
+    }
+    else
+      Dest.push_back( d );
+  }
+  return Success;
+}
+*/
+
+
 // For zero terminated strings.
 bool IsTextUtf8(const byte *Src)
 {
@@ -425,6 +656,40 @@ bool IsTextUtf8(const byte *Src,size_t SrcSize)
 
 int wcsicomp(const wchar *s1,const wchar *s2)
 {
+  // If strings are English or numeric, perform the fast comparison.
+  // It improves speed in cases like comparing against a lot of MOTW masks.
+  bool FastMode=true;
+  while (true)
+  {
+    // English uppercase, English lowercase and digit flags.
+    bool u1=*s1>='A' && *s1<='Z', l1=*s1>='a' && *s1<='z', d1=*s1>='0' && *s1<='9';
+    bool u2=*s2>='A' && *s2<='Z', l2=*s2>='a' && *s2<='z', d2=*s2>='0' && *s2<='9';
+
+    // Fast comparison is impossible if both characters are not alphanumeric or 0.
+    if (!u1 && !l1 && !d1 && *s1!=0 && !u2 && !l2 && !d2 && *s2!=0)
+    {
+      FastMode=false;
+      break;
+    }
+    // Convert lowercase to uppercase, keep numeric and not alphanumeric as is.
+    wchar c1 = l1 ? *s1-'a'+'A' : *s1;
+    wchar c2 = l2 ? *s2-'a'+'A' : *s2;
+
+    // If characters mistmatch, to return a proper value we must compare
+    // already converted, case insensitive characters instead of original ones.
+    // So we place a.txt before B.txt and can perform the correct case
+    // insensitive binary search in different string lists.
+    if (c1 != c2)
+      return c1 < c2 ? -1 : 1;
+
+    if (*s1==0)
+      break;
+    s1++;
+    s2++;
+  }
+  if (FastMode)
+    return 0;
+
 #ifdef _WIN_ALL
   return CompareStringW(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,s1,-1,s2,-1)-2;
 #else
@@ -432,6 +697,11 @@ int wcsicomp(const wchar *s1,const wchar *s2)
   {
     wchar u1 = towupper(*s1);
     wchar u2 = towupper(*s2);
+
+    // If characters mistmatch, to return a proper value we must compare
+    // already converted, case insensitive characters instead of original ones.
+    // So we place a.txt before B.txt and can perform the correct case
+    // insensitive binary search in different string lists.
     if (u1 != u2)
       return u1 < u2 ? -1 : 1;
     if (*s1==0)
@@ -450,8 +720,10 @@ int wcsnicomp(const wchar *s1,const wchar *s2,size_t n)
   // If we specify 'n' exceeding the actual string length, CompareString goes
   // beyond the trailing zero and compares garbage. So we need to limit 'n'
   // to real string length.
-  size_t l1=Min(wcslen(s1)+1,n);
-  size_t l2=Min(wcslen(s2)+1,n);
+  size_t sl1=wcslen(s1); // Pre-compute to not call wcslen() in Min() twice.
+  size_t l1=Min(sl1+1,n);
+  size_t sl2=wcslen(s2); // Pre-compute to not call wcslen() in Min() twice.
+  size_t l2=Min(sl2+1,n);
   return CompareStringW(LOCALE_USER_DEFAULT,NORM_IGNORECASE|SORT_STRINGSORT,s1,(int)l1,s2,(int)l2)-2;
 #else
   if (n==0)
@@ -483,7 +755,15 @@ const wchar_t* wcscasestr(const wchar_t *str, const wchar_t *search)
       if (tolowerw(str[i+j])!=tolowerw(search[j]))
         break;
     }
-  return NULL;
+  return nullptr;
+}
+
+
+// Case insensitive std::wstring substring search.
+std::wstring::size_type wcscasestr(const std::wstring &str, const std::wstring &search)
+{
+  const wchar *Found=wcscasestr(str.c_str(),search.c_str());
+  return Found==nullptr ? std::wstring::npos : Found-str.c_str();
 }
 
 
@@ -500,10 +780,14 @@ wchar* wcslower(wchar *s)
 #endif
   return s;
 }
-#endif
 
 
-#ifndef SFX_MODULE
+void wcslower(std::wstring &s)
+{
+  wcslower(&s[0]);
+}
+
+
 wchar* wcsupper(wchar *s)
 {
 #ifdef _WIN_ALL
@@ -515,6 +799,12 @@ wchar* wcsupper(wchar *s)
     *c=towupper(*c);
 #endif
   return s;
+}
+
+
+void wcsupper(std::wstring &s)
+{
+  wcsupper(&s[0]);
 }
 #endif
 
@@ -548,27 +838,28 @@ int tolowerw(int ch)
 }
 
 
-int atoiw(const wchar *s)
+int atoiw(const std::wstring &s)
 {
   return (int)atoilw(s);
 }
 
 
-int64 atoilw(const wchar *s)
+int64 atoilw(const std::wstring &s)
 {
   bool sign=false;
-  if (*s=='-') // We do use signed integers here, for example, in GUI SFX.
+  size_t Pos=0;
+  if (s[Pos]=='-') // We do use signed integers here, for example, in GUI SFX.
   {
-    s++;
+    Pos++;
     sign=true;
   }
   // Use unsigned type here, since long string can overflow the variable
   // and signed integer overflow is undefined behavior in C++.
   uint64 n=0;
-  while (*s>='0' && *s<='9')
+  while (s[Pos]>='0' && s[Pos]<='9')
   {
-    n=n*10+(*s-'0');
-    s++;
+    n=n*10+(s[Pos]-'0');
+    Pos++;
   }
   // Check int64(n)>=0 to avoid the signed overflow with undefined behavior
   // when negating 0x8000000000000000.

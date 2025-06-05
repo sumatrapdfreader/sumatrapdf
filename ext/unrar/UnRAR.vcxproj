@@ -238,8 +238,10 @@
     <ClCompile Include="hash.cpp" />
     <ClCompile Include="headers.cpp" />
     <ClCompile Include="isnt.cpp" />
+    <ClCompile Include="largepage.cpp" />
     <ClCompile Include="list.cpp" />
     <ClCompile Include="match.cpp" />
+    <ClCompile Include="motw.cpp" />
     <ClCompile Include="options.cpp" />
     <ClCompile Include="pathfn.cpp" />
     <ClCompile Include="qopen.cpp" />

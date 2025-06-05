@@ -287,8 +287,7 @@ workspace "SumatraPDF"
     optimized_conf()
     defines { "UNRAR", "RARDLL", "SILENT" }
     -- os.hpp redefines WINVER, is there a better way?
-    disablewarnings { "4005" }
-    disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4731", "4996" }
+    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4996" } 
     -- unrar uses exception handling in savepos.hpp but I don't want to enable it
     -- as it seems to infect the Sumatra binary as well (i.e. I see bad alloc exception
     -- being thrown)
@@ -468,7 +467,7 @@ workspace "SumatraPDF"
       "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
     }
-    disablewarnings { "4018", "4100", "4244", "4267", "4312", "4701", "4706", "4996" }
+    disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
     includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
     freetype_files()
 

@@ -1,7 +1,39 @@
 
 
+#ifdef _WIN_ALL
+// StreamName must include the leading ':'.
+static bool IsNtfsProhibitedStream(const std::wstring &StreamName)
+{
+  // 2024.03.14: We replaced the predefined names check with simpler
+  // "no more than a single colon" check. Second colon could be used to
+  // define the type of alternate stream, but RAR archives work only with
+  // data streams and do not store :$DATA type in archive. It is assumed.
+  // So there is no legitimate use for stream type inside of archive,
+  // but it can be abused to hide the actual file data in file::$DATA
+  // or hide the actual MOTW data in Zone.Identifier:$DATA.
+  uint ColonCount=0;
+  for (wchar Ch:StreamName)
+    if (Ch==':' && ++ColonCount>1)
+      return true;
+  return false;
+/*
+  const wchar *Reserved[]{
+    L"::$ATTRIBUTE_LIST",L"::$BITMAP",L"::$DATA",L"::$EA",L"::$EA_INFORMATION",
+    L"::$FILE_NAME",L"::$INDEX_ALLOCATION",L":$I30:$INDEX_ALLOCATION",
+    L"::$INDEX_ROOT",L"::$LOGGED_UTILITY_STREAM",L":$EFS:$LOGGED_UTILITY_STREAM",
+    L":$TXF_DATA:$LOGGED_UTILITY_STREAM",L"::$OBJECT_ID",L"::$REPARSE_POINT"
+  };
+  for (const wchar *Name : Reserved)
+    if (wcsicomp(StreamName,Name)==0)
+      return true;
+  return false;
+*/
+}
+#endif
+
+
 #if !defined(SFX_MODULE) && defined(_WIN_ALL)
-void ExtractStreams20(Archive &Arc,const wchar *FileName)
+void ExtractStreams20(Archive &Arc,const std::wstring &FileName)
 {
   if (Arc.BrokenHeader)
   {
@@ -17,38 +49,46 @@ void ExtractStreams20(Archive &Arc,const wchar *FileName)
     return;
   }
 
-  wchar StreamName[NM+2];
-  if (FileName[0]!=0 && FileName[1]==0)
-  {
-    // Convert single character names like f:stream to .\f:stream to
-    // resolve the ambiguity with drive letters.
-    wcsncpyz(StreamName,L".\\",ASIZE(StreamName));
-    wcsncatz(StreamName,FileName,ASIZE(StreamName));
-  }
-  else
-    wcsncpyz(StreamName,FileName,ASIZE(StreamName));
-  if (wcslen(StreamName)+strlen(Arc.StreamHead.StreamName)>=ASIZE(StreamName) ||
-      Arc.StreamHead.StreamName[0]!=':')
+  std::wstring StreamName;
+  CharToWide(Arc.StreamHead.StreamName,StreamName);
+
+  if (StreamName[0]!=':')
   {
     uiMsg(UIERROR_STREAMBROKEN,Arc.FileName,FileName);
     ErrHandler.SetErrorCode(RARX_CRC);
     return;
   }
 
-  wchar StoredName[NM];
-  CharToWide(Arc.StreamHead.StreamName,StoredName,ASIZE(StoredName));
-  ConvertPath(StoredName+1,StoredName+1,ASIZE(StoredName)-1);
+  // Convert single character names like f:stream to .\f:stream to
+  // resolve the ambiguity with drive letters.
+  std::wstring FullName=FileName.size()==1 ? L".\\"+FileName:FileName;
+  FullName+=StreamName;
 
-  wcsncatz(StreamName,StoredName,ASIZE(StreamName));
+#ifdef PROPAGATE_MOTW
+  // 2022.10.31: Can't easily read RAR 2.0 stream data here, so if we already
+  // propagated the archive Zone.Identifier stream, also known as Mark of
+  // the Web, to extracted file, we do not overwrite it here.
+  if (Arc.Motw.IsNameConflicting(StreamName))
+    return;
 
-  FindData fd;
-  bool Found=FindFile::FastFind(FileName,&fd);
+  // 2024.02.03: Prevent using Zone.Identifier:$DATA to overwrite Zone.Identifier
+  // according to ZDI-CAN-23156 Trend Micro report.
+  // 2024.03.14: Not needed after adding check for 2+ ':' in IsNtfsProhibitedStream(().
+  // if (wcsnicomp(StreamName,L":Zone.Identifier:",17)==0)
+  //  return;
+#endif
 
-  if ((fd.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
-    SetFileAttr(FileName,fd.FileAttr & ~FILE_ATTRIBUTE_READONLY);
+  if (IsNtfsProhibitedStream(StreamName))
+    return;
+
+  FindData FD;
+  bool HostFound=FindFile::FastFind(FileName,&FD);
+
+  if ((FD.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
+    SetFileAttr(FileName,FD.FileAttr & ~FILE_ATTRIBUTE_READONLY);
 
   File CurFile;
-  if (CurFile.WCreate(StreamName))
+  if (CurFile.WCreate(FullName))
   {
     ComprDataIO DataIO;
     Unpack Unpack(&DataIO);
@@ -69,33 +109,26 @@ void ExtractStreams20(Archive &Arc,const wchar *FileName)
     else
       CurFile.Close();
   }
+
+  // Restoring original file timestamps.
   File HostFile;
-  if (Found && HostFile.Open(FileName,FMF_OPENSHARED|FMF_UPDATE))
-    SetFileTime(HostFile.GetHandle(),&fd.ftCreationTime,&fd.ftLastAccessTime,
-                &fd.ftLastWriteTime);
-  if ((fd.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
-    SetFileAttr(FileName,fd.FileAttr);
+  if (HostFound && HostFile.Open(FileName,FMF_OPENSHARED|FMF_UPDATE))
+    SetFileTime(HostFile.GetHandle(),&FD.ftCreationTime,&FD.ftLastAccessTime,
+                &FD.ftLastWriteTime);
+
+  // Restoring original file attributes.
+  // Important if file was read only or did not have "Archive" attribute.
+  if ((FD.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
+    SetFileAttr(FileName,FD.FileAttr);
 }
 #endif
 
 
 #ifdef _WIN_ALL
-void ExtractStreams(Archive &Arc,const wchar *FileName,bool TestMode)
+void ExtractStreams(Archive &Arc,const std::wstring &FileName,bool TestMode)
 {
-  wchar FullName[NM+2];
-  if (FileName[0]!=0 && FileName[1]==0)
-  {
-    // Convert single character names like f:stream to .\f:stream to
-    // resolve the ambiguity with drive letters.
-    wcsncpyz(FullName,L".\\",ASIZE(FullName));
-    wcsncatz(FullName,FileName,ASIZE(FullName));
-  }
-  else
-    wcsncpyz(FullName,FileName,ASIZE(FullName));
-
-  wchar StreamName[NM];
-  GetStreamNameNTFS(Arc,StreamName,ASIZE(StreamName));
-  if (*StreamName!=':')
+  std::wstring StreamName=GetStreamNameNTFS(Arc);
+  if (StreamName[0]!=':')
   {
     uiMsg(UIERROR_STREAMBROKEN,Arc.FileName,FileName);
     ErrHandler.SetErrorCode(RARX_CRC);
@@ -105,55 +138,91 @@ void ExtractStreams(Archive &Arc,const wchar *FileName,bool TestMode)
   if (TestMode)
   {
     File CurFile;
-    Arc.ReadSubData(NULL,&CurFile,true);
+    Arc.ReadSubData(nullptr,&CurFile,true);
     return;
   }
 
-  wcsncatz(FullName,StreamName,ASIZE(FullName));
+  // Convert single character names like f:stream to .\f:stream to
+  // resolve the ambiguity with drive letters.
+  std::wstring FullName=FileName.size()==1 ? L".\\"+FileName:FileName;
+  FullName+=StreamName;
 
+#ifdef PROPAGATE_MOTW
+  // 2022.10.31: If we already propagated the archive Zone.Identifier stream,
+  // also known as Mark of the Web, to extracted file, we overwrite it here
+  // only if file zone is stricter. Received a user request for such behavior.
 
-  FindData fd;
-  bool HostFound=FindFile::FastFind(FileName,&fd);
+  std::string ParsedMotw;
+  if (Arc.Motw.IsNameConflicting(StreamName))
+  {
+    // Do not worry about excessive memory allocation, ReadSubData prevents it.
+    std::vector<byte> FileMotw;
+    if (!Arc.ReadSubData(&FileMotw,nullptr,false))
+      return;
+    ParsedMotw.assign(FileMotw.begin(),FileMotw.end());
 
-  if ((fd.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
-    SetFileAttr(FileName,fd.FileAttr & ~FILE_ATTRIBUTE_READONLY);
+    // We already set the archive stream. If file stream value isn't more
+    // restricted, we do not want to write it over the existing archive stream.
+    if (!Arc.Motw.IsFileStreamMoreSecure(ParsedMotw))
+      return;
+  }
+
+  // 2024.02.03: Prevent using :Zone.Identifier:$DATA to overwrite :Zone.Identifier
+  // according to ZDI-CAN-23156 Trend Micro report.
+  // 2024.03.14: Not needed after adding check for 2+ ':' in IsNtfsProhibitedStream(().
+  // if (wcsnicomp(StreamName,L":Zone.Identifier:",17)==0)
+  //  return;
+#endif
+
+  if (IsNtfsProhibitedStream(StreamName))
+    return;
+
+  FindData FD;
+  bool HostFound=FindFile::FastFind(FileName,&FD);
+
+  if ((FD.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
+    SetFileAttr(FileName,FD.FileAttr & ~FILE_ATTRIBUTE_READONLY);
   File CurFile;
 
   if (CurFile.WCreate(FullName))
   {
-    if (Arc.ReadSubData(NULL,&CurFile,false))
+#ifdef PROPAGATE_MOTW
+    if (!ParsedMotw.empty())
+    {
+      // The archive propagated security zone is either missing
+      // or less strict than file one. Write the file security zone here.
+      CurFile.Write(ParsedMotw.data(),ParsedMotw.size());
+      CurFile.Close();
+    }
+    else
+#endif
+    if (Arc.ReadSubData(nullptr,&CurFile,false))
       CurFile.Close();
   }
 
   // Restoring original file timestamps.
   File HostFile;
   if (HostFound && HostFile.Open(FileName,FMF_OPENSHARED|FMF_UPDATE))
-    SetFileTime(HostFile.GetHandle(),&fd.ftCreationTime,&fd.ftLastAccessTime,
-                &fd.ftLastWriteTime);
+    SetFileTime(HostFile.GetHandle(),&FD.ftCreationTime,&FD.ftLastAccessTime,
+                &FD.ftLastWriteTime);
 
-  // Restoring original file attributes. Important if file was read only
-  // or did not have "Archive" attribute
-  SetFileAttr(FileName,fd.FileAttr);
+  // Restoring original file attributes.
+  // Important if file was read only or did not have "Archive" attribute.
+  if ((FD.FileAttr & FILE_ATTRIBUTE_READONLY)!=0)
+    SetFileAttr(FileName,FD.FileAttr);
 }
 #endif
 
 
-void GetStreamNameNTFS(Archive &Arc,wchar *StreamName,size_t MaxSize)
+std::wstring GetStreamNameNTFS(Archive &Arc)
 {
-  byte *Data=&Arc.SubHead.SubData[0];
-  size_t DataSize=Arc.SubHead.SubData.Size();
+  std::wstring Dest;
   if (Arc.Format==RARFMT15)
-  {
-    size_t DestSize=Min(DataSize/2,MaxSize-1);
-    RawToWide(Data,StreamName,DestSize);
-    StreamName[DestSize]=0;
-  }
+    Dest=RawToWide(Arc.SubHead.SubData);
   else
   {
-    char UtfString[NM*4];
-    size_t DestSize=Min(DataSize,ASIZE(UtfString)-1);
-    memcpy(UtfString,Data,DestSize);
-    UtfString[DestSize]=0;
-    UtfToWide(UtfString,StreamName,MaxSize);
+    std::string Src(Arc.SubHead.SubData.begin(),Arc.SubHead.SubData.end());
+    UtfToWide(Src.data(),Dest);
   }
+  return Dest;
 }

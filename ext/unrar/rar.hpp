@@ -16,7 +16,6 @@
 #include "unicode.hpp"
 #include "errhnd.hpp"
 #include "secpassword.hpp"
-#include "array.hpp"
 #include "strlist.hpp"
 #include "timefn.hpp"
 #include "sha1.hpp"
@@ -32,6 +31,9 @@
 #include "strfn.hpp"
 #ifdef _WIN_ALL
 #include "isnt.hpp"
+#endif
+#ifdef PROPAGATE_MOTW
+#include "motw.hpp"
 #endif
 #include "file.hpp"
 #include "crc.hpp"
@@ -62,6 +64,8 @@
 
 #include "threadpool.hpp"
 
+#include "largepage.hpp"
+
 #include "unpack.hpp"
 
 
@@ -85,9 +89,6 @@
 
 #include "global.hpp"
 
-#if 0
-#include "benchmark.hpp"
-#endif
 
 
 

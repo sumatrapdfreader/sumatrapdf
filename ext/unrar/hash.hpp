@@ -13,6 +13,8 @@ struct HashValue
   bool operator == (const HashValue &cmp) const;
 
   // Not actually used now. Const member for same reason as operator == above.
+  // Can be removed after switching to C++20, which automatically provides "!="
+  // if operator == is defined.
   bool operator != (const HashValue &cmp) const {return !(*this==cmp);}
 
   HASH_TYPE Type;
@@ -32,7 +34,24 @@ class DataHash;
 
 class DataHash
 {
+  public:
+    struct CRC32ThreadData
+    {
+      void *Data;
+      size_t DataSize;
+      uint DataCRC;
+    };
   private:
+    void UpdateCRC32MT(const void *Data,size_t DataSize);
+    uint BitReverse32(uint N);
+    uint gfMulCRC(uint A, uint B);
+    uint gfExpCRC(uint N);
+
+    // Speed gain seems to vanish above 8 CRC32 threads.
+    static const uint CRC32_POOL_THREADS=8;
+    // Thread pool must allow at least BLAKE2_THREADS_NUMBER threads.
+    static const uint HASH_POOL_THREADS=Max(BLAKE2_THREADS_NUMBER,CRC32_POOL_THREADS);
+
     HASH_TYPE HashType;
     uint CurCRC32;
     blake2sp_state *blake2ctx;
@@ -41,8 +60,6 @@ class DataHash
     ThreadPool *ThPool;
 
     uint MaxThreads;
-    // Upper limit for maximum threads to prevent wasting threads in pool.
-    static const uint MaxHashThreads=8;
 #endif
   public:
     DataHash();

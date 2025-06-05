@@ -69,8 +69,8 @@ SecPassword::~SecPassword()
 void SecPassword::Clean()
 {
   PasswordSet=false;
-  if (Password.size()>0)
-    cleandata(&Password[0],Password.size());
+  if (!Password.empty())
+    cleandata(Password.data(),Password.size()*sizeof(Password[0]));
 }
  
 
@@ -79,7 +79,7 @@ void SecPassword::Clean()
 // So we use our own function for this purpose.
 void cleandata(void *data,size_t size)
 {
-  if (data==NULL || size==0)
+  if (data==nullptr || size==0)
     return;
 #if defined(_WIN_ALL) && defined(_MSC_VER)
   SecureZeroMemory(data,size);
@@ -120,6 +120,14 @@ void SecPassword::Get(wchar *Psw,size_t MaxSize)
 }
 
 
+void SecPassword::Get(std::wstring &Psw)
+{
+  wchar PswBuf[MAXPASSWORD];
+  Get(PswBuf,ASIZE(PswBuf));
+  Psw=PswBuf;
+}
+
+
 
 
 void SecPassword::Set(const wchar *Psw)
@@ -141,7 +149,7 @@ size_t SecPassword::Length()
   wchar Plain[MAXPASSWORD];
   Get(Plain,ASIZE(Plain));
   size_t Length=wcslen(Plain);
-  cleandata(Plain,ASIZE(Plain));
+  cleandata(Plain,sizeof(Plain));
   return Length;
 }
 
@@ -156,8 +164,8 @@ bool SecPassword::operator == (SecPassword &psw)
   Get(Plain1,ASIZE(Plain1));
   psw.Get(Plain2,ASIZE(Plain2));
   bool Result=wcscmp(Plain1,Plain2)==0;
-  cleandata(Plain1,ASIZE(Plain1));
-  cleandata(Plain2,ASIZE(Plain2));
+  cleandata(Plain1,sizeof(Plain1));
+  cleandata(Plain2,sizeof(Plain2));
   return Result;
 }
 
