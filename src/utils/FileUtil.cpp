@@ -239,16 +239,18 @@ static TempWStr NormalizeTemp(const WCHAR* path) {
 
     TempWStr fullPath = AllocArrayTemp<WCHAR>(cch);
     GetFullPathNameW(path, cch, fullPath, nullptr);
+
+    TempWStr normPath = fullPath;
     // convert to long form
     cch = GetLongPathNameW(fullPath, nullptr, 0);
-    if (!cch) {
-        return fullPath;
-    }
-
-    TempWStr normPath = AllocArrayTemp<WCHAR>(cch);
-    GetLongPathNameW(fullPath, normPath, cch);
-    if (cch <= MAX_PATH) {
-        return normPath;
+    if (cch > 0) {
+        // this sometimes fails for valid long paths
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/4940
+        normPath = AllocArrayTemp<WCHAR>(cch);
+        GetLongPathNameW(fullPath, normPath, cch);
+        if (cch <= MAX_PATH) {
+            return normPath;
+        }
     }
 
     // handle overlong paths: first, try to shorten the path
