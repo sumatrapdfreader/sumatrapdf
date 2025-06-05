@@ -877,6 +877,12 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
                 font_name = "NirmalaUI-Bold";
             }
         } break;
+        case UCDN_SCRIPT_HEBREW: {
+            font_name = "SegoeUI";
+            if (bold) {
+                font_name = "SegoeUI-Bold";
+            }
+        } break;
         case UCDN_SCRIPT_CYRILLIC:
         case UCDN_SCRIPT_GREEK:
         case UCDN_SCRIPT_ARMENIAN:
