@@ -180,15 +180,20 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc
 
 // convenience function for the above that always allocates
 char* ResolveHtmlEntities(const char* s, size_t len) {
-    const char* tmp = ResolveHtmlEntities(s, s + len, nullptr);
-    if (tmp == s) {
+    const char* res = ResolveHtmlEntities(s, s + len, nullptr);
+    if (res == s) {
+        // ensure 0-terminated string is returned
         return str::Dup(s, len);
     }
-    return (char*)tmp;
+    return (char*)res;
 }
 
 TempStr ResolveHtmlEntitiesTemp(const char* s, size_t len) {
-    auto res = ResolveHtmlEntities(s, s + len, GetTempAllocator());
+    const char* res = ResolveHtmlEntities(s, s + len, GetTempAllocator());
+    if (res == s) {
+        // ensure 0-terminated string is returned
+        return str::DupTemp(s, len);
+    }
     return (TempStr)res;
 }
 
