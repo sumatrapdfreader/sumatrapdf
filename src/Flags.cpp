@@ -351,8 +351,13 @@ FileArgs::~FileArgs() {
 // args into FileArgs
 // returns nullptr if there are not args
 FileArgs* ParseFileArgs(const char* path) {
-    const char* hashPos = str::FindChar(path, '?');
+    const char* hashPos = str::FindCharLast(path, '?');
     if (!hashPos) {
+        return nullptr;
+    }
+    // don't mutilate long file paths that start with "\\?\"
+    int off = (int)(hashPos - path);
+    if (off == 2) {
         return nullptr;
     }
     FileArgs* res = new FileArgs();
