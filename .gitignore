@@ -39,8 +39,11 @@ docs_epub_tmp
 this_is_invalid_location
 docs/www/*.html
 docs/www/img/
+
 # https://stackoverflow.com/questions/10755655/git-ignore-tracked-files
-# git update-index --assume-unchanged .\docs\manual.dat
-# git update-index --no-assume-unchanged .\docs\manual.dat
+# git update-index --assume-unchanged .\docs\manual.dat    : stop tracking changes
+# git update-index --no-assume-unchanged .\docs\manual.dat : re-start tracking changes
+# must be done in every checkout
 docs/manual.dat
+
 vs2022-clang/
