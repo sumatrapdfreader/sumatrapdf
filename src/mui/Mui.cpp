@@ -168,7 +168,9 @@ void Destroy() {
         e.Free();
     }
     delete gGraphicsCache;
+    gGraphicsCache = nullptr;
     delete gFontsCache;
+    gFontsCache = nullptr;
     DeleteCriticalSection(&gMuiCs);
 }
 
