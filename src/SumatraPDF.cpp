@@ -2991,7 +2991,7 @@ static void DeleteCurrentFile(MainWindow* win) {
         return;
     }
     auto* ctrl = win->ctrl;
-    const char* path = ctrl->GetFilePath();
+    const char* path = str::DupTemp(ctrl->GetFilePath());
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(path)) {
         return;
