@@ -3362,11 +3362,14 @@ static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
     StrVec& files = gLastNextPrevFiles;
 
     char* dir = path::GetDirTemp(path);
-    if (str::Eq(dir, lastNextPrevFilesDir)) {
-        // failed files could have changed
-        RemoveFailedFiles(files);
-        return files;
+    if (lastNextPrevFilesDir) {
+        if (path::IsSame(dir, lastNextPrevFilesDir)) {
+            // failed files could have changed
+            RemoveFailedFiles(files);
+            return files;
+        }
     }
+    files.Reset();
     str::ReplaceWithCopy(&lastNextPrevFilesDir, dir);
     DirIter di{dir};
     for (DirIterEntry* de : di) {
