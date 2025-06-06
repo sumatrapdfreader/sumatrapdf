@@ -1548,6 +1548,14 @@ static MainWindow* CreateMainWindow() {
     // TODO: this is hackish. in general we should divorce
     // layout re-calculations from MainWindow and creation of windows
     win->UpdateCanvasSize();
+#if defined(USE_DARKMODELIB)
+    DarkMode::setDarkTitleBar(win->hwndFrame);
+    DarkMode::setChildCtrlsSubclassAndTheme(win->hwndFrame);
+    DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
+    DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndReBar);
+    DarkMode::setDarkScrollBar(win->hwndCanvas);
+    DarkMode::setDarkTooltips(win->infotip->hwnd);
+#endif
     return win;
 }
 
@@ -1619,7 +1627,12 @@ void UpdateAfterThemeChange() {
         CaptionUpdateUI(win, win->caption);
         // TODO: probably leaking toolbar image list
         UpdateToolbarAfterThemeChange(win);
-
+#if defined(USE_DARKMODELIB)
+        DarkMode::setDarkTitleBar(win->hwndFrame);
+        DarkMode::setChildCtrlsTheme(win->hwndFrame);
+        DarkMode::setDarkScrollBar(win->hwndCanvas);
+        DarkMode::setDarkTooltips(win->infotip->hwnd);
+#endif
         // TODO: this only rerenders canvas, not frame, even with
         // includingNonClientArea == true.
         MainWindowRerender(win, true);
