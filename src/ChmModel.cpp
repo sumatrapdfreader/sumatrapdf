@@ -665,6 +665,7 @@ ChmThumbnailTask::~ChmThumbnailTask() {
     }
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);
+    delete saveThumbnail;
 }
 
 bool ChmThumbnailTask::OnBeforeNavigate(const char*, bool newWindow) {
@@ -697,11 +698,12 @@ void ChmThumbnailTask::OnDocumentComplete(const char* url) {
     }
     logf("ChmThumbnailTask::OnDocumentComplete: '%s'\n", url);
     if (didSave) {
-        // maybe prevent crash generating .chm thumbnails
+        // don't crash creating .chm thumbnail
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4519
-        ReportIfQuick(didSave);
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/4833
         return;
     }
+    didSave = true;
     Rect area(0, 0, size.dx * 2, size.dy * 2);
     HBITMAP hbmp = hw->TakeScreenshot(area, size);
     if (hbmp) {

@@ -721,14 +721,12 @@ struct CreateThumbnailData {
     RenderedBitmap* bmp = nullptr;
 
     ~CreateThumbnailData() {
-        logf("~CreateThumbnailData: deleting 0x%p filePath='%s' 0x%p\n", this, filePath, filePath);
         str::Free(filePath);
     }
 };
 
 static void CreateThumbnailFinish(CreateThumbnailData* d) {
     char* path = d->filePath;
-    logf("CreateThumbnailFinish: path: '%s', 0x%p, d: 0x%p, d->bmp: 0x%p\n", path, path, d, d->bmp);
     if (d->bmp) {
         SetThumbnail(gFileHistory.FindByPath(path), d->bmp);
     }
@@ -765,10 +763,8 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     }
 
     auto size = Size(kThumbnailDx, kThumbnailDy);
-    char* filePath = str::Dup(win->ctrl->GetFilePath());
-    auto d = new CreateThumbnailData{filePath, nullptr};
-    logf("CreateThumbnailForFile: filePath: '%s', 0x%p, d: 0x%p\n", filePath, filePath, d);
-    // TODO: this leaks
+    auto d = new CreateThumbnailData{};
+    d->filePath = str::Dup(win->ctrl->GetFilePath());
     auto fn = NewFunc1(CreateThumbnailOnBitmapRendered, d);
     win->ctrl->CreateThumbnail(size, fn);
 }
