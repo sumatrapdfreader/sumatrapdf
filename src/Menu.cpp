@@ -1016,6 +1016,9 @@ UINT_PTR removeIfNoDiskAccessPerm[] = {
     CmdPinSelectedDocument,
     CmdForgetSelectedDocument,
     CmdInvokeInverseSearch,
+    CmdCreateShortcutToFile,
+    CmdSaveEmbeddedFile,
+    CmdShowLog,
     0,
 };
 

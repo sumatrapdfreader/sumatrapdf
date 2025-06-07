@@ -781,10 +781,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (win->AsChm()) {
-        // the Print dialog allows access to the file system, so fall back
-        // to printing the entire document without dialog if that isn't desired
-        bool showUI = CanAccessDisk();
-        win->AsChm()->PrintCurrentPage(showUI);
+        win->AsChm()->PrintCurrentPage(true);
         return;
     }
     DisplayModel* dm = win->AsFixed();
@@ -816,13 +813,6 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         }
     }
     AbortPrinting(win);
-
-    // the Print dialog allows access to the file system, so fall back
-    // to printing the entire document without dialog if that isn't desired
-    if (!CanAccessDisk()) {
-        PrintFile2(engine);
-        return;
-    }
 
     PRINTDLGEXW pdex{};
     pdex.lStructSize = sizeof(PRINTDLGEXW);
