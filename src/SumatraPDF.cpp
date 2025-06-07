@@ -131,6 +131,9 @@ static StrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static StrVec gAllowedFileTypes;
 
+static const char* gNextPrevDir = nullptr;
+static StrVec gNextPrevDirCache; // cached files in gNextPrevDir
+
 static void CloseDocumentInCurrentTab(MainWindow*, bool keepUIEnabled, bool deleteModel);
 static void OnSidebarSplitterMove(Splitter::MoveEvent*);
 static void OnFavSplitterMove(Splitter::MoveEvent*);
@@ -3342,9 +3345,6 @@ static void OpenFile(MainWindow* win) {
     }
 }
 
-static StrVec gLastNextPrevFiles;
-const char* lastNextPrevFilesDir = nullptr;
-
 static void RemoveFailedFiles(StrVec& files) {
     for (char* path : gFilesFailedToOpen) {
         int idx = files.Find(path);
@@ -3355,16 +3355,16 @@ static void RemoveFailedFiles(StrVec& files) {
 }
 
 static StrVec& CollectNextPrevFilesIfChanged(const char* path) {
-    StrVec& files = gLastNextPrevFiles;
+    StrVec& files = gNextPrevDirCache;
 
     char* dir = path::GetDirTemp(path);
-    if (path::IsSame(dir, lastNextPrevFilesDir)) {
+    if (path::IsSame(dir, gNextPrevDir)) {
         // failed files could have changed
         RemoveFailedFiles(files);
         return files;
     }
     files.Reset();
-    str::ReplaceWithCopy(&lastNextPrevFilesDir, dir);
+    str::ReplaceWithCopy(&gNextPrevDir, dir);
     DirIter di{dir};
     for (DirIterEntry* de : di) {
         files.Append(de->filePath);
@@ -3400,6 +3400,8 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     }
 
     WindowTab* tab = win->CurrentTab();
+    bool didRetry = false;
+again:
     const char* path = tab->filePath;
     StrVec files = CollectNextPrevFilesIfChanged(path);
     if (files.Size() < 2) {
@@ -3413,10 +3415,19 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward) {
     } else {
         idx = (idx + nFiles - 1) % nFiles;
     }
+    path = files[idx];
+    if (!file::Exists(path)) {
+        if (didRetry) {
+            // TODO: can I do something better?
+            return;
+        }
+        didRetry = true;
+        str::FreePtr(&gNextPrevDir); // trigger re-reading the directory        
+        goto again;
+    }
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForTab(tab);
-    path = files[idx];
     // TODO: should take onFinish() callback so that if failed
     // we could automatically go to next file
     LoadArgs args(path, win);
