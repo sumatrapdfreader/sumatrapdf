@@ -228,8 +228,6 @@ func main() {
 		flgClangFormat               bool
 		flgClean                     bool
 		flgDiff                      bool
-		flgFilesList                 bool
-		flgFileUpload                string
 		flgGenDocs                   bool
 		flgGenSettings               bool
 		flgGenWebsiteDocs            bool
@@ -246,8 +244,6 @@ func main() {
 	)
 
 	{
-		flag.StringVar(&flgFileUpload, "file-upload", "", "upload a test file to s3 / spaces")
-		flag.BoolVar(&flgFilesList, "files-list", false, "list uploaded files in s3 / spaces")
 		flag.BoolVar(&flgRegenPremake, "premake", false, "regenerate premake*.lua files")
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgCIDailyBuild, "ci-daily", false, "run CI daily steps")
@@ -362,7 +358,6 @@ func main() {
 		if false {
 			// avoid "unused function" warnings
 			testGenUpdateTxt()
-			deleteFilesOneOff()
 		}
 		return
 	}
@@ -377,21 +372,11 @@ func main() {
 		return
 	}
 
-	if flgFileUpload != "" {
-		fileUpload(flgFileUpload)
-		return
-	}
-
 	if flgBuildLogview {
 		buildLogView()
 		if flgUpload {
 			uploadLogView()
 		}
-		return
-	}
-
-	if flgFilesList {
-		filesList()
 		return
 	}
 
