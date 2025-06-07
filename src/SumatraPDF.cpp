@@ -5707,9 +5707,18 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 tab, "https://translate.google.com/?op=translate&sl=auto&tl=${userlang}&text=${selection}");
             break;
 
-        case CmdTranslateSelectionWithDeepL:
-            LaunchBrowserWithSelection(tab, "https://www.deepl.com/translator#-/${userlang}/${selection}");
-            break;
+        case CmdTranslateSelectionWithDeepL: {
+            // Note: we don't know if selected string is English but I don't know
+            // how to get deepl.com to auto-detect language
+            const char* lang = trans::GetCurrentLangCode();
+            const char* uri = "https://www.deepl.com/translator#en/${userlang}/${selection}";
+            if (str::Eq(lang, "en")) {
+                // it's pointless to translate from English to English
+                // this format will hopefully trigger auto-detection of user languge by deepl.com
+                uri = "https://www.deepl.com/translator#en/${selection}";
+            }
+            LaunchBrowserWithSelection(tab, uri);
+        } break;
 
         case CmdSearchSelectionWithGoogle:
             LaunchBrowserWithSelection(tab, "https://www.google.com/search?q=${selection}");
