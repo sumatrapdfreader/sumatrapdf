@@ -14,6 +14,7 @@ EXPORTS
 	pdf_load_embedded_file_contents
 	pdf_annot_filespec
 	pdf_drop_annot
+	pdf_is_filespec
 
 	fz_run_page_widgets
 	fz_register_document_handlers
