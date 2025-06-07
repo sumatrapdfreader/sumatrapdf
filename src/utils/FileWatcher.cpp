@@ -120,8 +120,12 @@ static void GetFileState(const char* path, FileWatcherState* fs) {
     // but it's also updated when the file is being read from (e.g.
     // copy f.pdf f2.pdf will change lastAccessTime of f.pdf)
     // So I'm sticking with lastWriteTime
-    fs->time = file::GetModificationTime(path);
-    fs->size = file::GetSize(path);
+    FILETIME lastMod{};
+    AutoCloseHandle h(file::OpenReadOnly(path));
+    if (h.IsValid()) {
+        GetFileTime(h, nullptr, nullptr, &fs->time);
+        fs->size = file::GetSize(h);
+    }
 }
 
 static bool FileStateEq(FileWatcherState* fs1, FileWatcherState* fs2) {

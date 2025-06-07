@@ -53,6 +53,7 @@ ByteSlice ReadFile(const char* path);
 int ReadN(const char* path, char* buf, size_t toRead);
 bool WriteFile(const char* path, const ByteSlice&);
 
+i64 GetSize(HANDLE h);
 i64 GetSize(const char*);
 bool Delete(const char* path);
 bool DeleteFileToTrash(const char* path);

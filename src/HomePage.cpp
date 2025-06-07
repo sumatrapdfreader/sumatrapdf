@@ -395,11 +395,7 @@ static void OnPaintAbout(HWND hwnd) {
 }
 
 static void OnSizeAbout(HWND hwnd) {
-    MainWindow* win = FindMainWindowByHwnd(hwnd);
-    if (!win) {
-        ReportDebugIf(true);
-        return;
-    }
+    // TODO: do I need anything here?
 }
 
 static void CopyAboutInfoToClipboard() {
