@@ -61,7 +61,7 @@ end
 
 function zlib_ng_files()
   files_in_dir("ext/zlib-ng", {
-    "adler32.c", 
+    "adler32.c",
     "chunkset.c",
     "compare258.c",
     "compress.c",
@@ -242,7 +242,7 @@ function jbig2dec_files()
   })
 end
 
-function libheif_files() 
+function libheif_files()
   files_in_dir("ext/libheif/libheif", {
     "bitstream.*",
     "box.*",
@@ -1293,5 +1293,19 @@ end
 function bin2coff_files()
   files_in_dir("tools", {
     "bin2coff.c"
+  })
+end
+
+function darkmodelib_files()
+  files_in_dir("ext/darkmodelib/src", {
+    "DarkMode.*",
+    "DarkModeSubclass.cpp",
+    "IatHook.h",
+    "StdAfx.h",
+    "UAHMenuBar.h",
+    "Version.h",
+  })
+  files_in_dir("ext/darkmodelib/include", {
+    "DarkModeSubclass.h",
   })
 end

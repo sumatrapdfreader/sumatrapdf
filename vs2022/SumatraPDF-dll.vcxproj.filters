@@ -677,9 +677,6 @@
     <None Include="..\do\compress.go">
       <Filter>do</Filter>
     </None>
-    <None Include="..\do\file_upload.go">
-      <Filter>do</Filter>
-    </None>
     <None Include="..\do\gen_docs.go">
       <Filter>do</Filter>
     </None>

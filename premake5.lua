@@ -287,7 +287,7 @@ workspace "SumatraPDF"
     optimized_conf()
     defines { "UNRAR", "RARDLL", "SILENT" }
     -- os.hpp redefines WINVER, is there a better way?
-    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4996" } 
+    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4996" }
     -- unrar uses exception handling in savepos.hpp but I don't want to enable it
     -- as it seems to infect the Sumatra binary as well (i.e. I see bad alloc exception
     -- being thrown)
@@ -499,7 +499,7 @@ workspace "SumatraPDF"
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
     -- gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
@@ -588,7 +588,7 @@ workspace "SumatraPDF"
     filter {}
 
     disablewarnings {
-      "4005", "4018", "4057", "4100", "4115", "4130", "4132", "4200", "4204", "4206", "4210", 
+      "4005", "4018", "4057", "4100", "4115", "4130", "4132", "4200", "4204", "4206", "4210",
       "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
@@ -667,6 +667,30 @@ workspace "SumatraPDF"
     includedirs { "src", "ext/lzma/C" }
     includedirs { "ext/libheif", "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
     utils_files()
+
+  project "darkmodelib"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++latest"
+    optimized_conf()
+
+    defines { "_WINDOWS", "STRICT_TYPED_ITEMIDS", "NOMINMAX", "WIN32_LEAN_AND_MEAN", "VC_EXTRALEAN", "SUPPORT_UTF8", "_DARKMODELIB_NO_INI_CONFIG" }
+    includedirs { "ext/darkmodelib/include" }
+
+    darkmodelib_files()
+
+    buildoptions { "/Zc:__cplusplus", "/sdl", "/permissive-" }
+
+    filter "configurations:Debug or DebugFull"
+      optimize "Off"
+      runtime "Debug"
+    filter {}
+
+    filter "configurations:Release or ReleaseAnalyze"
+      optimize "Speed"
+      buildoptions { "/Gw", "/GT", "/GL" }
+      symbols "Off"
+    filter {}
 
   ---- executables
 
@@ -781,7 +805,7 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "ext/darkmodelib/include" }
 
     webview_conf()
 
@@ -812,7 +836,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "libdjvu",  "libwebp", "dav1d", "libheif", "mupdf", "unarrlib", "utils", "unrar", "chm"
+      "libdjvu",  "libwebp", "dav1d", "libheif", "mupdf", "unarrlib", "utils", "unrar", "chm", "darkmodelib"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -837,7 +861,7 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
-    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
+    includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib", "ext/darkmodelib/include" }
 
     synctex_files()
     mui_files()
@@ -873,7 +897,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "unarrlib", "utils", "chm"
+      "libmupdf", "unrar", "unarrlib", "utils", "chm", "darkmodelib"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -909,7 +933,7 @@ workspace "MakeLZSA"
   filter "action:vs2022"
     location "vs2022"
   filter {}
-  
+
   clang_conf()
 
   filter {"platforms:x32", "configurations:Release"}

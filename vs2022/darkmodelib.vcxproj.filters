@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DarkMode.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\IatHook.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\Version.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\darkmodelib\src\DarkMode.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
