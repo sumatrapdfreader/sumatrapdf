@@ -1146,7 +1146,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     DetectExternalViewers();
 
     gRenderCache = new RenderCache();
-
+#if defined(USE_DARKMODELIB)
+    DarkMode::initDarkMode();
+#endif
     LoadSettings();
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
