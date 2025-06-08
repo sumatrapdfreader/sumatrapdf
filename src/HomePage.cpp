@@ -470,6 +470,9 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_CREATE:
             ReportIf(gHwndAbout);
+#if defined(USE_DARKMODELIB)
+            DarkMode::setDarkTitleBar(hwnd);
+#endif
             break;
 
         case WM_ERASEBKGND:

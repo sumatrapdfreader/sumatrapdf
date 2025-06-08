@@ -130,7 +130,26 @@ void SetThemeByIndex(int themeIdx) {
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = gThemes->At(gCurrThemeIndex);
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
+#if defined(USE_DARKMODELIB)
+    DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
+    DarkMode::setTextColor(ThemeWindowTextColor());
+    DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
+    DarkMode::setDlgBackgroundColor(ThemeWindowControlBackgroundColor());
+    DarkMode::setLinkTextColor(ThemeWindowLinkColor());
+    DarkMode::updateThemeBrushesAndPens();
+
+    DarkMode::setViewTextColor(ThemeWindowTextColor());
+    DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
+    DarkMode::calculateTreeViewStyle();
+
+    DarkMode::setDarkModeConfig(DarkMode::isThemeDark() ? 1 : 3);
+
     UpdateAfterThemeChange();
+
+    DarkMode::updatePrevTreeViewStyle();
+#else
+    UpdateAfterThemeChange();
+#endif
 };
 
 void SelectNextTheme() {
