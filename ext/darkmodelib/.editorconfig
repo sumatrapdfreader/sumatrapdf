@@ -1,0 +1,25 @@
+# top-most EditorConfig file
+root = true
+
+# C/C++/C# Code Files
+[*.{c++,cc,cpp,cppm,cxx,h,h++,hh,hpp,hxx,inl,ipp,ixx,tlh,tli}]
+indent_style = tab
+indent_size = 4
+tab_width = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Visual Studio Project Files (XML)
+[*.{csproj,vcxproj,vcxproj.filters,props}]
+indent_size = 2
+
+[*.sln]
+indent_style = tab
+
+# Powershell Scripts
+[*.ps1]
+indent_size = 2
+
+# Markdown
+[*.{md,markdown}]
+trim_trailing_whitespace = false

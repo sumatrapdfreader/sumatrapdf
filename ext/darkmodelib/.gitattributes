@@ -1,0 +1,54 @@
+# Set the default behavior.
+*               text=auto
+
+# Visual Studio Project Files
+*.sln           text eol=crlf
+*.csproj        text eol=crlf
+*.vcxproj       text eol=crlf
+
+*.filters       text eol=crlf
+*.props         text eol=crlf
+
+# Resource File
+*.rc            text eol=crlf
+
+# C/C++/C# Code Files
+*.c             text diff=c
+*.cpp           text diff=cpp
+*.cxx           text diff=cpp
+*.c++           text diff=cpp
+*.cc            text diff=cpp
+*.cs            text diff=csharp
+
+*.h             text diff=c
+*.hpp           text diff=cpp
+*.h++           text diff=cpp
+*.hh            text diff=cpp
+
+# Dynamic libraries
+*.dll           binary
+
+# Static libraries
+*.lib           binary
+
+# Executables
+*.exe           binary
+
+# Windows scripts
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+*.ps1           text eol=crlf
+
+# Other
+*.md            text
+*.txt           text
+
+*.xml           text
+*.yaml          text
+*.yml           text
+
+.editorconfig   text
+.gitattributes  text
+.gitignore      text
+
+# Third Party Files
