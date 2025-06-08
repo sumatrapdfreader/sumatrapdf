@@ -40,6 +40,8 @@ extern "C" {
 
 #include "utils/Log.h"
 
+#include "theme.h"
+
 constexpr int borderWidthMin = 0;
 constexpr int borderWidthMax = 12;
 
@@ -1447,7 +1449,11 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
+#if defined(USE_DARKMODELIB)
+    args.bgColor = DarkMode::isThemeDark() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
+#else
     args.bgColor = MkGray(0xee);
+#endif
     args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
     args.visible = false;
     args.font = GetAppFont();
@@ -1497,6 +1503,10 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     if (annot) {
         UpdateUIForSelectedAnnotation(ew, annot, true);
     }
+#if defined(USE_DARKMODELIB)
+    DarkMode::setDarkDlgNotifySafe(ew->hwnd);
+    DarkMode::setWindowEraseBgSubclass(ew->hwnd);
+#endif
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);
