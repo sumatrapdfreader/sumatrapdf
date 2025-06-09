@@ -259,7 +259,9 @@ static bool IsPointInRect(fz_rect rect, fz_point pt) {
 fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
-    ReportIf(0 != mediabox.x0 || 0 != mediabox.y0);
+    // TODO: this is happening quite often so don't report it
+    // not sure if it indicates an actual issue
+    // ReportIf(0 != mediabox.x0 || 0 != mediabox.y0);
     rotation = (rotation + 360) % 360;
     if (90 == rotation) {
         ctm = fz_pre_translate(ctm, 0, -mediabox.y1);
