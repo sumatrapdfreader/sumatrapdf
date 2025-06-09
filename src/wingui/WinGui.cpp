@@ -322,9 +322,13 @@ bool Wnd::IsVisible() const {
 }
 
 void Wnd::Destroy() {
-    HwndDestroyWindowSafe(&hwnd);
+    // the order is important
+    // stop dispatching messages to this Wnd
+    WindowMapRemove(this);
+    // unsubclass while hwnd is still valid
     UnSubclass();
-    Cleanup();
+    // finally destroy hwnd
+    HwndDestroyWindowSafe(&hwnd);
 }
 
 LRESULT Wnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
