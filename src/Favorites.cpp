@@ -577,12 +577,15 @@ static void GoToFavForTVItem(MainWindow* win, TreeCtrl* treeView, HTREEITEM hIte
 }
 #endif
 
-static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
+static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
+    if (!fs->favorites || fs->favorites->Size() == 0) {
+        return nullptr;
+    }
     auto* res = new FavTreeItem();
-    Favorite* fn = fav->favorites->at(0);
+    Favorite* fn = fs->favorites->at(0);
     res->favorite = fn;
 
-    bool isCollapsed = fav->favorites->size() == 1;
+    bool isCollapsed = fs->favorites->size() == 1;
     if (isCollapsed) {
         isExpanded = false;
     }
@@ -590,9 +593,9 @@ static FavTreeItem* MakeFavTopLevelItem(FileState* fav, bool isExpanded) {
 
     TempStr text = nullptr;
     if (isCollapsed) {
-        text = FavCompactReadableNameTemp(fav, fn);
+        text = FavCompactReadableNameTemp(fs, fn);
     } else {
-        char* fp = fav->filePath;
+        char* fp = fs->filePath;
         text = path::GetBaseNameTemp(fp);
     }
     res->text = str::Dup(text);
@@ -617,16 +620,19 @@ static FavTreeModel* BuildFavTreeModel(MainWindow* win) {
     StrVec filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
     for (char* path : filePathsSorted) {
-        FileState* f = GetFavByFilePath(path);
-        ReportIf(!f);
-        if (!f) {
+        FileState* fs = GetFavByFilePath(path);
+        ReportIf(!fs);
+        if (!fs) {
             continue;
         }
-        bool isExpanded = win->expandedFavorites.Contains(f);
-        FavTreeItem* ti = MakeFavTopLevelItem(f, isExpanded);
+        bool isExpanded = win->expandedFavorites.Contains(fs);
+        FavTreeItem* ti = MakeFavTopLevelItem(fs, isExpanded);
+        if (!ti) {
+            continue;
+        }
         res->root->children.Append(ti);
-        if (f->favorites->size() > 1) {
-            MakeFavSecondLevel(ti, f);
+        if (fs->favorites->size() > 1) {
+            MakeFavSecondLevel(ti, fs);
         }
     }
     return res;

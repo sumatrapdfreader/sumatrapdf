@@ -3422,7 +3422,7 @@ again:
             return;
         }
         didRetry = true;
-        str::FreePtr(&gNextPrevDir); // trigger re-reading the directory        
+        str::FreePtr(&gNextPrevDir); // trigger re-reading the directory
         goto again;
     }
 
