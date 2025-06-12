@@ -6,5 +6,6 @@ use (
 	./do
 	./tools/logview
 	./tools/logview-cli
+	./tools/logview-web
 	./tools/regress
 )

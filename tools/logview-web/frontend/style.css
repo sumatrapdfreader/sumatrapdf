@@ -1,0 +1,18 @@
+html {
+  background-color: rgb(243, 243, 243);
+  color: rgb(65, 61, 61);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  font-size: 9pt;
+  overscroll-behavior-y: none;
+}
+
+#app {
+  height: 100vh;
+}

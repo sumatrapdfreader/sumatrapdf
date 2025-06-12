@@ -46,6 +46,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
+github.com/rodrigocfd/windigo v0.0.0-20230404010522-c27b4f427b06 h1:IBF7vPdWWceV9SFxZK92vbhLCCOSBFPTuw3OfkskPCY=
+github.com/rodrigocfd/windigo v0.0.0-20230404010522-c27b4f427b06/go.mod h1:3zHhLYU08CkrMx5cdPlmC1HObT8fSldWtfS8cnSRzYo=
 github.com/rodrigocfd/windigo v0.2.0 h1:BsV8bf9/ave8qhi3qklxSb3Mdw7XfUFTPZI/j8EdLJ4=
 github.com/rodrigocfd/windigo v0.2.0/go.mod h1:3zHhLYU08CkrMx5cdPlmC1HObT8fSldWtfS8cnSRzYo=
 github.com/samber/lo v1.50.0 h1:XrG0xOeHs+4FQ8gJR97zDz5uOFMW7OwFWiFVzqopKgY=

@@ -1,8 +1,6 @@
-module logview
+module logview-web
 
-go 1.22
-
-toolchain go1.24.3
+go 1.23.0
 
 require (
 	github.com/kjk/common v0.0.0-20250101150952-60008e1089e4
