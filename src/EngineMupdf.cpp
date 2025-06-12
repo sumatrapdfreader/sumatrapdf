@@ -330,6 +330,11 @@ static WCHAR* PdfCleanStringInPlace(WCHAR* s) {
         WCHAR c = *curr;
         if (c < 0x20) {
             *curr = ' ';
+        } else if (c == 0xfffd) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/4965
+            // TODO: was there mupdf change that caused this?
+            *curr = 0;
+            break;
         }
         curr++;
     }
