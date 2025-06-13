@@ -36,6 +36,13 @@
     }
   });
 
+  function genLotsOfLogs() {
+    let no = len(tabs) + 1;
+    for (let i = 0; i < 10000; i++) {
+      let s = `this is a line number ${i}`;
+      plog(no, s);
+    }
+  }
   /**
    * @param {KeyboardEvent} ev
    */
@@ -207,6 +214,8 @@
     <button onclick={clearLogs}>clear</button>
     <div>{len(selectedTab.logs)} lines, {len(filteredLogs)} shown</div>
     <div style="flex-grow: 1"></div>
+    <button class="hidden" onclick={() => genLotsOfLogs()}>gen test data</button
+    >
     <button onclick={aboutClicked}>about</button>
   </div>
 
@@ -233,7 +242,7 @@
       {/if}
     {:else}
       {#each filteredLogs as log, idx (idx)}
-        <span class="log-line">{log}</span><br />
+        <span key={idx} class="log-line">{log}</span><br />
       {/each}
     {/if}
   </div>
@@ -248,6 +257,9 @@
   }
   .grow {
     flex-grow: 1;
+  }
+  .hidden {
+    display: none;
   }
 
   main {
