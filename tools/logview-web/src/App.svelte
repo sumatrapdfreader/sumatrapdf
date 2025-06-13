@@ -27,49 +27,37 @@
     return s.includes(searchTerm);
   }
 
-  function splitOnFirstSpace(str) {
-    const index = str.indexOf(" ");
-    if (index === -1) {
-      return [str];
-    }
-    return [str.slice(0, index), str.slice(index + 1)];
-  }
-
   onMount(() => {
     window.addEventListener("beforeunload", (ev) => {
       // fetch("/kill", { method: "post" });
     });
-    console.log("registering EventSource");
+    // console.log("registering EventSource");
     const source = new EventSource("/sse");
     source.onopen = (ev) => {
-      console.log("event source opened", ev);
+      // console.log("event source opened", ev);
     };
     source.onerror = (ev) => {
       console.log("event source error", ev);
     };
+
+    /**
+     * @param {MessageEvent} ev
+     */
     source.onmessage = (ev) => {
-      let s = ev.data;
-      console.log("Received:", s);
-      let parts = splitOnFirstSpace(s);
-      if (len(parts) == 1) {
-        plog(parts[0], 0);
-        return;
-      }
-      let n = parseInt(parts[0]);
-      plog(parts[1], n);
+      console.log(ev.data);
+      let js = JSON.parse(ev.data);
+      plog(js.ConnNo, js.Line);
     };
   });
 
   /**
-   * @param {string} s
    * @param {number} no
+   * @param {string} line
    */
-  function plog(s, no) {
-    // a single write can contain multiple lines
-    s = s.trimEnd();
-    let lines = s.split("\n");
+  function plog(no, line) {
+    line = line.trimEnd();
+    let lines = [line];
     let didMatch = false;
-    console.log(`lines: ${lines.length}`);
     for (let l of lines) {
       /** @type {[string, number]}*/
       let el = [l, idx];
@@ -169,7 +157,11 @@
   </div>
   <div bind:this={logAreaEl} class="log-area">
     {#if len(filteredLogs) == 0}
-      <div class="no-results">No results matching '<b>{searchTerm}</b>'</div>
+      {#if len(logs) == 0}
+        <div class="no-results">No logs yet</div>
+      {:else}
+        <div class="no-results">No results matching '<b>{searchTerm}</b>'</div>
+      {/if}
     {:else}
       {#each filteredLogs as log (log[1])}
         <span class="log-line">{log[0]}</span><br />

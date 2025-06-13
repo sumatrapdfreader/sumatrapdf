@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -47,6 +48,33 @@ func mkServeFileOptions(fsys fs.FS) *hutil.ServeFileOptions {
 	}
 }
 
+func getNextLine(d []byte) ([]byte, []byte, bool) {
+	i := bytes.IndexByte(d, '\n')
+	if i < 0 {
+		return nil, d, false
+	}
+	line := d[:i-1]
+	d = d[i+1:]
+	return line, d, true
+}
+
+func writeFlushedf(w http.ResponseWriter, format string, args ...interface{}) error {
+	logf("writeFlushed:\n"+format, args...)
+	_, err := fmt.Fprintf(w, format, args...)
+	if err != nil {
+		return err
+	}
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
+	return nil
+}
+
+type DataFormat struct {
+	ConnNo int
+	Line   string
+}
+
 // in dev, proxyHandler redirects assets to vite web server
 // in prod, assets must be pre-built in frontend/dist directory
 func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
@@ -72,16 +100,44 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			w.Header().Set("Cache-Control", "no-cache")
 			w.Header().Set("Connection", "keep-alive")
 
-			for v := range chPipeReads {
-				logf("sse: '%s'\n", string(v.d))
-				_, err := fmt.Fprintf(w, "data: %d %s\n\n", v.connNo, string(v.d))
-				if err != nil {
-					logf("sse: error writing to response writer: %v\n", err)
-					return
+			var buf, line []byte
+			var ok bool
+			sendNextChunk := func(v []byte, connNo int) error {
+				buf = append(buf, v...)
+				for {
+					line, buf, ok = getNextLine(buf)
+					if !ok {
+						return nil
+					}
+					json, err := json.Marshal(DataFormat{
+						ConnNo: connNo,
+						Line:   string(line),
+					})
+					if err != nil {
+						return err
+					}
+					err = writeFlushedf(w, "data: %s\n\n\n", json)
+					if err != nil {
+						return err
+					}
 				}
-				w.(http.Flusher).Flush()
 			}
-			return
+			for {
+				select {
+				case v := <-chPipeReads:
+					err := sendNextChunk(v.d, v.connNo)
+					if err != nil {
+						logf("sse: sendNextChunn() failed with '%v'\n", err)
+						return
+					}
+				case <-time.After(5 * time.Second):
+					err := writeFlushedf(w, ": keep-alive\n\n")
+					if err != nil {
+						logf("sse: error writing to response writer: %v\n", err)
+						return
+					}
+				}
+			}
 		}
 
 		if strings.HasPrefix(uri, "/event") {
@@ -224,6 +280,7 @@ func runServerDev() {
 	if isWinOrMac() {
 		url := fmt.Sprintf("http://%s/ping.txt", httpSrv.Addr)
 		waitUntilServerReady(url)
+		waitUntilServerReady(proxyURLStr)
 		u.OpenBrowser("http://" + httpSrv.Addr)
 	}
 	go pipeThread(chPipeReads)
