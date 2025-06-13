@@ -299,8 +299,9 @@ func main() {
 		defer measureDuration()()
 		u.UpdateGoDeps("do", true)
 		u.UpdateGoDeps(filepath.Join("tools", "regress"), true)
-		u.UpdateGoDeps(filepath.Join("tools", "logview-cli"), true)
-		u.UpdateGoDeps(filepath.Join("tools", "logview"), true)
+		// u.UpdateGoDeps(filepath.Join("tools", "logview-cli"), true)
+		// u.UpdateGoDeps(filepath.Join("tools", "logview"), true)
+		// u.UpdateGoDeps(filepath.Join("tools", "logview-web"), true)
 		return
 	}
 
