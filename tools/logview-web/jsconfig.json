@@ -19,7 +19,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.
      * Disable this if you'd like to use dynamic types.
@@ -31,8 +31,8 @@
    * to avoid limiting type declarations.
    */
   "include": [
-    "./**/*.d.ts",
-    "./**/*.js",
-    "./**/*.svelte"
+    "./src/**/*.d.ts",
+    "./src/**/*.js",
+    "./src/**/*.svelte"
   ]
 }

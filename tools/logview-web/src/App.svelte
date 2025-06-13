@@ -92,7 +92,7 @@
 
   let windowTitle = "Logview " + version;
   // @ts-ignore
-  window.runtime.WindowSetTitle(windowTitle);
+  window.runtime?.WindowSetTitle(windowTitle);
 
   function pauseClicked() {
     autoScrollPaused = !autoScrollPaused;
@@ -114,7 +114,7 @@
   function aboutClicked() {
     let uri = "https://www.sumatrapdfreader.org/docs/Logview";
     // @ts-ignore
-    window.runtime.BrowserOpenURL(uri);
+    window.runtime?.BrowserOpenURL(uri);
   }
   // @ts-ignore
   //window.runtime.EventsOn("plog", plog);
