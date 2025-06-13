@@ -1,33 +1,40 @@
 <script>
-  import { run } from "svelte/legacy";
-
   import { version } from "./version";
   import { onMount } from "svelte";
 
-  let idx = 2;
-  /** @type {[string, number][]} */
-  let logs = $state([]);
   let autoScrollPaused = false;
   let btnText = $state("pause scrolling");
   let searchTerm = $state("");
   let searchTermLC = $derived(searchTerm.trim().toLowerCase());
-  let filteredLogs = $derived(filterLogs(logs, searchTermLC));
   /** @type {HTMLElement} */
   let logAreaEl;
   /** @type {HTMLElement} */
   let searchEl;
 
-  /**
-   * @param {string} s
-   * @param {string} searchTerm
-   */
-  function matches(s, searchTerm) {
-    if (searchTerm === "") {
-      return false;
+  class TabInfo {
+    /** @type {number} */
+    appNo;
+    /** @type {string[]} */
+    logs = $state([]);
+    tabName = $state("logs");
+    constructor(no) {
+      this.appNo = no;
     }
-    s = s.toLowerCase();
-    return s.includes(searchTerm);
   }
+
+  /** @type {TabInfo[]} */
+  let tabs = $state([]);
+
+  /** @type {TabInfo} */
+  let selectedTab = $state(new TabInfo(-1));
+
+  let filteredLogs = $derived(filterLogs(searchTermLC, selectedTab.logs));
+
+  $effect(() => {
+    if (!autoScrollPaused && len(selectedTab.logs) > 0) {
+      scrollToBottom(logAreaEl);
+    }
+  });
 
   /**
    * @param {KeyboardEvent} ev
@@ -51,6 +58,13 @@
         togglePauseScrolling();
         ev.preventDefault();
         return;
+      }
+      let tabNo = ev.keyCode - "0".charCodeAt(0) - 1;
+      // console.log(ev.keyCode, tabNo);
+      if (tabNo >= 0 && tabNo < 9) {
+        if (len(tabs) > tabNo) {
+          selectedTab = tabs[tabNo];
+        }
       }
     }
   }
@@ -80,55 +94,61 @@
   });
 
   /**
+   * @param {number} appNo
+   * @returns {TabInfo}
+   */
+  function findOrCreateTab(appNo) {
+    for (let tab of tabs) {
+      if (tab.appNo === appNo) {
+        return tab;
+      }
+    }
+    let tab = new TabInfo(appNo);
+    tabs.push(tab);
+    selectedTab = tab;
+    return tab;
+  }
+
+  /**
    * @param {number} no
    * @param {string} line
    */
   function plog(no, line) {
     line = line.trim();
-    let lines = [line];
-    let didMatch = false;
-    for (let l of lines) {
-      /** @type {[string, number]}*/
-      let el = [l, idx];
-      idx = idx + 1;
-      logs.push(el);
-      if (matches(l, searchTermLC)) {
-        filteredLogs.push(el);
-        didMatch = true;
-      }
-    }
-
-    if (searchTermLC === "") {
-      filteredLogs = logs;
-      if (!autoScrollPaused) {
-        scrollToBottom(logAreaEl);
-      }
-      return;
-    }
-
-    if (didMatch) {
-      filteredLogs = filteredLogs;
-      if (!autoScrollPaused) {
-        scrollToBottom(logAreaEl);
-      }
+    let tab = findOrCreateTab(no);
+    tab.logs.push(line);
+    if (line.startsWith("app: ")) {
+      tab.tabName = line.slice(4);
     }
   }
 
   /**
-   * @param {[string, number][]} logs
    * @param {string} searchTermLC
+   * @param {string[]} logs
    */
-  function filterLogs(logs, searchTermLC) {
+  function filterLogs(searchTermLC, logs) {
     if (searchTermLC === "") {
       return logs;
     }
     let res = [];
-    for (let el of logs) {
-      if (matches(el[0], searchTermLC)) {
-        res.push(el);
+    for (let line of logs) {
+      if (matches(line, searchTermLC)) {
+        res.push(line);
       }
     }
     return res;
+  }
+
+  /**
+   * @param {string} s
+   * @param {string} searchTerm
+   */
+  function matches(s, searchTerm) {
+    if (searchTerm === "") {
+      return false;
+    }
+    s = s.toLowerCase();
+    return s.includes(searchTerm);
   }
 
   /**
@@ -156,8 +176,13 @@
     return o ? o.length : 0;
   }
   function clearLogs() {
-    logs = [];
-    filteredLogs = [];
+    if (selectedTab) {
+      selectedTab.logs = [];
+    }
+  }
+
+  function selectTab(tab) {
+    selectedTab = tab;
   }
 
   function aboutClicked() {
@@ -169,7 +194,7 @@
   //window.runtime.EventsOn("plog", plog);
 </script>
 
-<main>
+<main class="flex flex-col">
   <div class="top">
     <div style="flex-grow: 1"></div>
     <input
@@ -180,32 +205,80 @@
     />
     <button class="btn-pause" onclick={togglePauseScrolling}>{btnText}</button>
     <button onclick={clearLogs}>clear</button>
-    <div>{len(logs)} line, {len(filteredLogs)} shown</div>
+    <div>{len(selectedTab.logs)} lines, {len(filteredLogs)} shown</div>
     <div style="flex-grow: 1"></div>
     <button onclick={aboutClicked}>about</button>
   </div>
-  <div bind:this={logAreaEl} tabindex="0" role="listbox" class="log-area">
-    {#if len(filteredLogs) == 0}
-      {#if len(logs) == 0}
+
+  <div class="tabs">
+    {#each tabs as tab, idx}
+      {#if tab === selectedTab}
+        <button class="tab tab-selected">{tab.tabName} ({idx + 1})</button>
+      {:else}
+        <button onclick={() => selectTab(tab)} class="tab"
+          >{tab.tabName} ({idx + 1})</button
+        >
+      {/if}
+    {/each}
+  </div>
+
+  <div bind:this={logAreaEl} tabindex="0" role="listbox" class="log-area grow">
+    {#if !selectedTab}
+      <div class="no-results">No logs yet</div>
+    {:else if len(filteredLogs) == 0}
+      {#if len(selectedTab.logs) == 0}
         <div class="no-results">No logs yet</div>
       {:else}
         <div class="no-results">No results matching '<b>{searchTerm}</b>'</div>
       {/if}
     {:else}
-      {#each filteredLogs as log (log[1])}
-        <span class="log-line">{log[0]}</span><br />
+      {#each filteredLogs as log, idx (idx)}
+        <span class="log-line">{log}</span><br />
       {/each}
     {/if}
   </div>
 </main>
 
 <style>
-  main {
+  .flex {
     display: flex;
+  }
+  .flex-col {
     flex-direction: column;
-    height: calc(100vh - 1rem);
-    padding: 0.5rem 0.5rem;
+  }
+  .grow {
+    flex-grow: 1;
+  }
+
+  main {
+    min-height: 0;
+    height: 100vh;
     overflow: auto;
+  }
+
+  .top {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0.5rem;
+    padding-top: 4px;
+    padding-bottom: 6px;
+  }
+
+  .tabs {
+    display: flex;
+  }
+
+  .tab {
+    border: 0;
+    padding: 4px 1rem;
+    cursor: pointer;
+    &:hover {
+      background-color: rgba(128, 128, 128, 0.2);
+    }
+  }
+  .tab-selected {
+    background-color: white;
   }
   .no-results {
     text-align: center;
@@ -217,20 +290,13 @@
     min-width: 8rem;
   }
 
-  .top {
-    display: flex;
-    justify-content: center;
-    align-items: baseline;
-    column-gap: 0.5rem;
-  }
-
   .log-area {
     overflow: auto;
-    margin-top: 0.5rem;
+    padding-top: 4px;
     /* background: rgb(239, 250, 254); */
-    height: 100%;
-    background-color: rgb(255, 255, 255);
+    background-color: white;
   }
+
   .log-line {
     font-family: monospace;
     content-visibility: auto;

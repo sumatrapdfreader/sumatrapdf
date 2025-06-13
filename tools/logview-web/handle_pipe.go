@@ -47,7 +47,7 @@ func handlePipe(hPipe win.HPIPE, connNo int, ch chan PipeChunk) {
 		cbBytesRead += int(n)
 		dst := make([]byte, n)
 		copy(dst, buf[:n])
-		logf("pipe: %d %s", connNo, string(dst))
+		// logf("pipe: %d %s", connNo, string(dst))
 		msg := PipeChunk{
 			d:      dst,
 			connNo: connNo,
