@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "svelte": "^5.0.0",
     "vite": "^6.3.5"

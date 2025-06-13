@@ -2,6 +2,7 @@
   import { run } from "svelte/legacy";
 
   import { version } from "./version";
+  import { onMount } from "svelte";
 
   let idx = 2;
   /** @type {[string, number][]} */
@@ -25,6 +26,39 @@
     s = s.toLowerCase();
     return s.includes(searchTerm);
   }
+
+  function splitOnFirstSpace(str) {
+    const index = str.indexOf(" ");
+    if (index === -1) {
+      return [str];
+    }
+    return [str.slice(0, index), str.slice(index + 1)];
+  }
+
+  onMount(() => {
+    window.addEventListener("beforeunload", (ev) => {
+      // fetch("/kill", { method: "post" });
+    });
+    console.log("registering EventSource");
+    const source = new EventSource("/sse");
+    source.onopen = (ev) => {
+      console.log("event source opened", ev);
+    };
+    source.onerror = (ev) => {
+      console.log("event source error", ev);
+    };
+    source.onmessage = (ev) => {
+      let s = ev.data;
+      console.log("Received:", s);
+      let parts = splitOnFirstSpace(s);
+      if (len(parts) == 1) {
+        plog(parts[0], 0);
+        return;
+      }
+      let n = parseInt(parts[0]);
+      plog(parts[1], n);
+    };
+  });
 
   /**
    * @param {string} s
