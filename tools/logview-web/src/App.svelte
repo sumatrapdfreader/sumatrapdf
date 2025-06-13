@@ -31,7 +31,7 @@
   let filteredLogs = $derived(filterLogs(searchTermLC, selectedTab.logs));
 
   $effect(() => {
-    if (!autoScrollPaused && len(selectedTab.logs) > 0) {
+    if (!autoScrollPaused && len(filteredLogs) > 0) {
       scrollToBottom(logAreaEl);
     }
   });
@@ -48,7 +48,9 @@
    */
   function keydown(ev) {
     if (ev.key === "/") {
-      searchEl.focus();
+      if (searchEl) {
+        searchEl.focus();
+      }
       ev.preventDefault();
       return;
     }
@@ -130,17 +132,31 @@
   }
 
   /**
+   * @param {number} n
+   * @returns {number[]}
+   */
+  function mkArrayOfNumbers(n) {
+    let res = Array(n);
+    for (let i = 0; i < n; i++) {
+      res[i] = i;
+    }
+    return res;
+  }
+
+  /**
    * @param {string} searchTermLC
    * @param {string[]} logs
    */
   function filterLogs(searchTermLC, logs) {
+    let n = len(logs);
     if (searchTermLC === "") {
-      return logs;
+      return mkArrayOfNumbers(n);
     }
     let res = [];
-    for (let line of logs) {
+    for (let i = 0; i < n; i++) {
+      let line = logs[i];
       if (matches(line, searchTermLC)) {
-        res.push(line);
+        res.push(i);
       }
     }
     return res;
@@ -241,8 +257,9 @@
         <div class="no-results">No results matching '<b>{searchTerm}</b>'</div>
       {/if}
     {:else}
-      {#each filteredLogs as log, idx (idx)}
-        <span key={idx} class="log-line">{log}</span><br />
+      {#each filteredLogs as logIdx (logIdx)}
+        {@const log = selectedTab.logs[logIdx]}
+        <span class="log-line">{log}</span><br />
       {/each}
     {/if}
   </div>
@@ -304,7 +321,7 @@
 
   .log-area {
     overflow: auto;
-    padding-top: 4px;
+    padding: 4px 1rem;
     /* background: rgb(239, 250, 254); */
     background-color: white;
   }
