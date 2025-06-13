@@ -53,13 +53,13 @@ func getNextLine(d []byte) ([]byte, []byte, bool) {
 	if i < 0 {
 		return nil, d, false
 	}
-	line := d[:i-1]
+	line := d[:i]
 	d = d[i+1:]
 	return line, d, true
 }
 
 func writeFlushedf(w http.ResponseWriter, format string, args ...interface{}) error {
-	logf("writeFlushed:\n"+format, args...)
+	// logf("writeFlushed:\n"+format, args...)
 	_, err := fmt.Fprintf(w, format, args...)
 	if err != nil {
 		return err
@@ -131,11 +131,11 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 						return
 					}
 				case <-time.After(5 * time.Second):
-					err := writeFlushedf(w, ": keep-alive\n\n")
-					if err != nil {
-						logf("sse: error writing to response writer: %v\n", err)
-						return
-					}
+					// err := writeFlushedf(w, ": keep-alive\n\n\n")
+					// if err != nil {
+					// 	logf("sse: error writing to response writer: %v\n", err)
+					// 	return
+					// }
 				}
 			}
 		}

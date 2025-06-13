@@ -7,13 +7,15 @@
   let idx = 2;
   /** @type {[string, number][]} */
   let logs = $state([]);
-  let filteredLogs = $state([]);
   let autoScrollPaused = false;
   let btnText = $state("pause scrolling");
   let searchTerm = $state("");
-  let searchTermLC = "";
+  let searchTermLC = $derived(searchTerm.trim().toLowerCase());
+  let filteredLogs = $derived(filterLogs(logs, searchTermLC));
   /** @type {HTMLElement} */
   let logAreaEl;
+  /** @type {HTMLElement} */
+  let searchEl;
 
   /**
    * @param {string} s
@@ -27,7 +29,34 @@
     return s.includes(searchTerm);
   }
 
+  /**
+   * @param {KeyboardEvent} ev
+   */
+  function keydown(ev) {
+    if (ev.key === "/") {
+      searchEl.focus();
+      ev.preventDefault();
+      return;
+    }
+    let isSearchFocused = document.activeElement === searchEl;
+    if (isSearchFocused) {
+      if (ev.key === "Escape") {
+        // if searchEl is focused, return focus to logAreaEl
+        logAreaEl.focus();
+        searchTerm = "";
+        return;
+      }
+    } else {
+      if (ev.key === "p") {
+        togglePauseScrolling();
+        ev.preventDefault();
+        return;
+      }
+    }
+  }
+
   onMount(() => {
+    window.addEventListener("keydown", keydown, true);
     window.addEventListener("beforeunload", (ev) => {
       // fetch("/kill", { method: "post" });
     });
@@ -44,7 +73,7 @@
      * @param {MessageEvent} ev
      */
     source.onmessage = (ev) => {
-      console.log(ev.data);
+      // console.log(ev.data);
       let js = JSON.parse(ev.data);
       plog(js.ConnNo, js.Line);
     };
@@ -55,7 +84,7 @@
    * @param {string} line
    */
   function plog(no, line) {
-    line = line.trimEnd();
+    line = line.trim();
     let lines = [line];
     let didMatch = false;
     for (let l of lines) {
@@ -86,14 +115,12 @@
   }
 
   /**
-   * @param {string} searchTerm
+   * @param {[string, number][]} logs
+   * @param {string} searchTermLC
    */
-  function filterLogs(searchTerm) {
-    searchTerm = searchTerm.trim();
-    searchTermLC = searchTerm.toLowerCase();
+  function filterLogs(logs, searchTermLC) {
     if (searchTermLC === "") {
-      filteredLogs = logs;
-      return;
+      return logs;
     }
     let res = [];
     for (let el of logs) {
@@ -101,7 +128,7 @@
         res.push(el);
       }
     }
-    filteredLogs = res;
+    return res;
   }
 
   /**
@@ -116,12 +143,12 @@
   // @ts-ignore
   window.runtime?.WindowSetTitle(windowTitle);
 
-  function pauseClicked() {
+  function togglePauseScrolling() {
     autoScrollPaused = !autoScrollPaused;
     if (autoScrollPaused) {
-      btnText = "unpause scrolling";
+      btnText = "unpause scrolling (p)";
     } else {
-      btnText = "pause scrolling";
+      btnText = "pause scrolling (p)";
     }
   }
 
@@ -140,22 +167,24 @@
   }
   // @ts-ignore
   //window.runtime.EventsOn("plog", plog);
-  run(() => {
-    filterLogs(searchTerm);
-  });
 </script>
 
 <main>
   <div class="top">
     <div style="flex-grow: 1"></div>
-    <input type="text" placeholder="search term..." bind:value={searchTerm} />
-    <button class="btn-pause" onclick={pauseClicked}>{btnText}</button>
+    <input
+      type="text"
+      placeholder="filter /"
+      bind:this={searchEl}
+      bind:value={searchTerm}
+    />
+    <button class="btn-pause" onclick={togglePauseScrolling}>{btnText}</button>
     <button onclick={clearLogs}>clear</button>
     <div>{len(logs)} line, {len(filteredLogs)} shown</div>
     <div style="flex-grow: 1"></div>
     <button onclick={aboutClicked}>about</button>
   </div>
-  <div bind:this={logAreaEl} class="log-area">
+  <div bind:this={logAreaEl} tabindex="0" role="listbox" class="log-area">
     {#if len(filteredLogs) == 0}
       {#if len(logs) == 0}
         <div class="no-results">No logs yet</div>
