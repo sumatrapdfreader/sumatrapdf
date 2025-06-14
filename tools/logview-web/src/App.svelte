@@ -230,14 +230,6 @@
     return s.replace(regexp, '<span class="hili">$1</span>');
   }
 
-  /**
-   * @param {HTMLElement} node
-   */
-  function scrollToBottom(node) {
-    // node.scroll({ top: node.scrollHeight, behavior: "smooth" });
-    node.scroll({ top: node.scrollHeight });
-  }
-
   let windowTitle = "Logview " + version;
   // @ts-ignore
   window.runtime?.WindowSetTitle(windowTitle);
@@ -310,14 +302,14 @@
     {#each tabs as tab, idx}
       {#if idx === selectedTabIdx}
         <button class="tab tab-selected"
-          >{tab.tabName} ({idx + 1})
+          >{tab.tabName} <span class="kbd">[{idx + 1}]</span>
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <span onclick={() => closeTab(idx)} class="tab-close">×</span>
         </button>
       {:else}
         <button onclick={() => selectTab(idx)} class="tab"
-          >{tab.tabName} ({idx + 1})
+          >{tab.tabName} <span class="kbd">[{idx + 1}]</span>
           <!-- svelte-ignore a11y_click_events_have_key_events -->
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <span onclick={() => closeTab(idx)} class="tab-close">×</span>
@@ -327,16 +319,16 @@
   </div>
 
   {#if selectedTabIdx < 0}
-    <div class="grow">
+    <div class="grow bg-white">
       <div class="no-results">No logs yet</div>
     </div>
   {:else if len(filteredLogs) == 0}
     {#if getLogsCount() == 0}
-      <div class="grow">
+      <div class="grow bg-white">
         <div class="no-results">No logs yet</div>
       </div>
     {:else}
-      <div class="grow">
+      <div class="grow bg-white">
         <div class="no-results">No results matching '<b>{filter}</b>'</div>
       </div>
     {/if}
@@ -373,6 +365,10 @@
   .grow {
     flex-grow: 1;
   }
+  .bg-white {
+    background-color: white;
+  }
+
   .hidden {
     display: none;
   }
@@ -402,9 +398,16 @@
     display: flex;
   }
 
+  .kbd {
+    color: gray;
+    margin-left: 0.25rem;
+  }
+
   .tab {
+    display: flex;
+    align-items: center;
     border: 0;
-    padding: 4px 1rem;
+    padding: 4px 0.5rem;
     cursor: pointer;
     &:hover {
       background-color: rgba(128, 128, 128, 0.2);
@@ -423,27 +426,14 @@
       background-color: rgba(128, 128, 128, 0.4);
     }
   }
+
   .no-results {
     text-align: center;
     font-size: 120%;
     margin-top: 30%; /* from eyeballing */
-    /* background-color: bisque; */
   }
   .btn-pause {
     min-width: 8rem;
-  }
-
-  .log-area {
-    overflow: auto;
-    padding: 4px 1rem;
-    /* background: rgb(239, 250, 254); */
-    background-color: white;
-    font-family: monospace;
-  }
-
-  .log-line {
-    /* content-visibility: auto; */
-    /* contain-intrinsic-size: 1rem; */
   }
 
   :global(.hili) {
