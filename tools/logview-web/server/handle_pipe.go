@@ -23,12 +23,7 @@ func IsValidHandle(h win.HANDLE) bool {
 	return !invalid
 }
 
-type PipeChunk struct {
-	d      []byte
-	connNo int
-}
-
-func handlePipe(hPipe win.HPIPE, connNo int, ch chan PipeChunk) {
+func handlePipe(hPipe win.HPIPE, connNo int) {
 	var buf [kBufSize]byte
 	var cbBytesRead = 0
 	for {
@@ -37,22 +32,12 @@ func handlePipe(hPipe win.HPIPE, connNo int, ch chan PipeChunk) {
 		n, err := hPipe.ReadFile(buf[:], nil)
 		if err != nil {
 			s := fmt.Sprintf("ReadFile: failed with '%s', n=%d\n", err, n)
-			msg := PipeChunk{
-				d:      []byte(s),
-				connNo: connNo,
-			}
-			ch <- msg
+			appendToLastLogs(connNo, s)
 			break
 		}
 		cbBytesRead += int(n)
-		dst := make([]byte, n)
-		copy(dst, buf[:n])
-		// logf("pipe: %d %s", connNo, string(dst))
-		msg := PipeChunk{
-			d:      dst,
-			connNo: connNo,
-		}
-		ch <- msg
+		s := string(buf[:n])
+		appendToLastLogs(connNo, s)
 	}
 	hPipe.DisconnectNamedPipe()
 	hPipe.CloseHandle()
@@ -66,7 +51,7 @@ func createNamedPipe() (win.HPIPE, error) {
 	return win.CreateNamedPipe(kPipeName, openMode, mode, maxInstances, kBufSize, kBufSize, 0, nil)
 }
 
-func pipeThread(ch chan PipeChunk) {
+func pipeThread() {
 	var hPipe win.HPIPE
 	var err error
 	for {
@@ -77,12 +62,12 @@ func pipeThread(ch chan PipeChunk) {
 		}
 		err = hPipe.ConnectNamedPipe()
 		if err != nil {
-			fmt.Printf("client couldn't connect to our pipe\n")
+			logf("client couldn't connect to our pipe\n")
 			hPipe.CloseHandle()
 			continue
 		}
 		wc.Add(1)
-		go handlePipe(hPipe, connNo, ch)
+		go handlePipe(hPipe, connNo)
 		connNo++
 	}
 }

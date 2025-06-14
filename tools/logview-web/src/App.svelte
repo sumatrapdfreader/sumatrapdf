@@ -103,28 +103,54 @@
     }
   }
 
+  function fetchLogsIncrements() {
+    /**
+     * @param {Response} rsp
+     */
+    function handleRsp(rsp) {
+      if (!rsp.ok || rsp.status != 200) {
+        console.log("fetch failed:", rsp);
+        scheduleNextLogsIncrementalFetch(5000);
+        return;
+      }
+      function handleJSON(js) {
+        if (!Array.isArray(js)) {
+          console.log("unexpected json result, not array:", js);
+          scheduleNextLogsIncrementalFetch(1000);
+          return;
+        }
+        let n = len(js);
+        if (n === 0) {
+          scheduleNextLogsIncrementalFetch(100);
+          return;
+        }
+        let nLogs = n / 2;
+        console.log(`got ${nLogs} logs`);
+        for (let i = 0; i < n; i += 2) {
+          plog(js[i], js[i + 1]);
+        }
+        if (nLogs === 1000) {
+          // we got the max logs so re-get immediately
+          scheduleNextLogsIncrementalFetch(1);
+        } else {
+          scheduleNextLogsIncrementalFetch(1000);
+        }
+      }
+      rsp.json().then(handleJSON);
+    }
+    fetch("/api/getlogsincremental").then(handleRsp);
+  }
+
+  function scheduleNextLogsIncrementalFetch(timeout = 1000) {
+    setTimeout(fetchLogsIncrements, timeout);
+  }
+
   onMount(() => {
     window.addEventListener("keydown", keydown);
     window.addEventListener("beforeunload", (ev) => {
       // fetch("/kill", { method: "post" });
     });
-    // console.log("registering EventSource");
-    const source = new EventSource("/sse");
-    source.onopen = (ev) => {
-      // console.log("event source opened", ev);
-    };
-    source.onerror = (ev) => {
-      console.log("event source error", ev);
-    };
-
-    /**
-     * @param {MessageEvent} ev
-     */
-    source.onmessage = (ev) => {
-      // console.log(ev.data);
-      let js = JSON.parse(ev.data);
-      plog(js.ConnNo, js.Line);
-    };
+    scheduleNextLogsIncrementalFetch();
   });
 
   /**
@@ -335,7 +361,7 @@
   {:else}
     <VList
       bind:this={vlist}
-      style="flex-grow: 1; font-family: monospace; background-color: white"
+      style="flex-grow: 1; font-family: monospace; background-color: white;"
       data={filteredLogs}
       getKey={getKeyFilteredLogs}
     >
@@ -427,6 +453,14 @@
     }
   }
 
+  .log-line {
+    white-space: pre-wrap;
+    word-break: break-all;
+    padding: 0px 0.5rem;
+    &:hover {
+      background-color: lightgray;
+    }
+  }
   .no-results {
     text-align: center;
     font-size: 120%;

@@ -12,6 +12,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/felixge/httpsnoop"
@@ -22,8 +23,7 @@ import (
 var (
 	DistFS embed.FS
 
-	httpSrv     *http.Server
-	chPipeReads chan PipeChunk = make(chan PipeChunk, 10000)
+	httpSrv *http.Server
 )
 
 const httpPort = 17892
@@ -74,6 +74,109 @@ type DataFormat struct {
 	Line   string
 }
 
+var (
+	muLastLogs sync.Mutex
+	// flattened array where each entry is 2 element:
+	// connNo : number
+	// s : string
+	lastLogs = []interface{}{}
+)
+
+func appendToLastLogs(connNo int, s string) {
+	muLastLogs.Lock()
+	lastLogs = append(lastLogs, connNo, s)
+	muLastLogs.Unlock()
+}
+
+/*
+func handleSSE(w http.ResponseWriter, r *http.Request) {
+	logf("mainHandler: got /sse, serving SSE\n")
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	var buf, line []byte
+	var ok bool
+	sendNextChunk := func(v []byte, connNo int) error {
+		buf = append(buf, v...)
+		for {
+			line, buf, ok = getNextLine(buf)
+			if !ok {
+				return nil
+			}
+			json, err := json.Marshal(DataFormat{
+				ConnNo: connNo,
+				Line:   string(line),
+			})
+			if err != nil {
+				return err
+			}
+			err = writeFlushedf(w, "data: %s\n\n\n", json)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	for {
+		select {
+		case v := <-chPipeReads:
+			err := sendNextChunk(v.d, v.connNo)
+			if err != nil {
+				logf("sse: sendNextChunn() failed with '%v'\n", err)
+				return
+			}
+		case <-time.After(5 * time.Second):
+			// err := writeFlushedf(w, ": keep-alive\n\n\n")
+			// if err != nil {
+			// 	logf("sse: error writing to response writer: %v\n", err)
+			// 	return
+			// }
+		}
+	}
+}
+*/
+
+func getLogsIncremental(max int) []interface{} {
+	muLastLogs.Lock()
+	defer muLastLogs.Unlock()
+
+	if len(lastLogs) == 0 {
+		return []interface{}{}
+	}
+
+	if max <= 0 || max > len(lastLogs) {
+		max = len(lastLogs)
+	}
+	res := lastLogs[:max]
+	lastLogs = lastLogs[max:]
+	return res
+}
+
+func handleGetLogsIncremental(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/javascript")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+	res := getLogsIncremental(1000)
+	d, _ := json.Marshal(&res)
+	w.Write(d)
+}
+
+var muLogInfrequently sync.Mutex
+
+func logInfrequently(lastLog *time.Time, freq time.Duration, format string, args ...interface{}) {
+	muLogInfrequently.Lock()
+	defer muLogInfrequently.Unlock()
+
+	now := time.Now()
+	if lastLog1.IsZero() || now.Sub(*lastLog) >= freq {
+		*lastLog = now
+		logf(format, args...)
+		return
+	}
+}
+
+var lastLog1 time.Time
+
 // in dev, proxyHandler redirects assets to vite web server
 // in prod, assets must be pre-built in frontend/dist directory
 func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.ReverseProxy) *http.Server {
@@ -81,7 +184,6 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 
 	mainHandler := func(w http.ResponseWriter, r *http.Request) {
 		uri := r.URL.Path
-		logf("mainHandler: '%s'\n", r.RequestURI)
 
 		switch uri {
 		case "/ping", "/ping.txt":
@@ -89,56 +191,20 @@ func makeHTTPServer(serveOpts *hutil.ServeFileOptions, proxyHandler *httputil.Re
 			http.ServeContent(w, r, "foo.txt", time.Time{}, content)
 			return
 		case "/kill":
-			logf("mainHandler: got /kill, exiting\n")
+			logf("GET /kill, exiting\n")
 			// TODO: cleaner kill
 			os.Exit(0)
 			return
-		case "/sse":
-			logf("mainHandler: got /sse, serving SSE\n")
-			w.Header().Set("Content-Type", "text/event-stream")
-			w.Header().Set("Cache-Control", "no-cache")
-			w.Header().Set("Connection", "keep-alive")
-
-			var buf, line []byte
-			var ok bool
-			sendNextChunk := func(v []byte, connNo int) error {
-				buf = append(buf, v...)
-				for {
-					line, buf, ok = getNextLine(buf)
-					if !ok {
-						return nil
-					}
-					json, err := json.Marshal(DataFormat{
-						ConnNo: connNo,
-						Line:   string(line),
-					})
-					if err != nil {
-						return err
-					}
-					err = writeFlushedf(w, "data: %s\n\n\n", json)
-					if err != nil {
-						return err
-					}
-				}
-			}
-			for {
-				select {
-				case v := <-chPipeReads:
-					err := sendNextChunk(v.d, v.connNo)
-					if err != nil {
-						logf("sse: sendNextChunn() failed with '%v'\n", err)
-						return
-					}
-				case <-time.After(5 * time.Second):
-					// err := writeFlushedf(w, ": keep-alive\n\n\n")
-					// if err != nil {
-					// 	logf("sse: error writing to response writer: %v\n", err)
-					// 	return
-					// }
-				}
-			}
+		case "/api/getlogsincremental":
+			logInfrequently(&lastLog1, time.Second*10, "GET /api/getlogsincremental\n")
+			handleGetLogsIncremental(w, r)
+			return
+			// case "/sse":
+			// 	handleSSE(w, r)
+			// 	return
 		}
 
+		// logf("mainHandler: '%s'\n", r.RequestURI)
 		if strings.HasPrefix(uri, "/event") {
 			// logtastic.HandleEvent(w, r)
 			return
@@ -282,6 +348,6 @@ func runServerDev() {
 		waitUntilServerReady(proxyURLStr)
 		u.OpenBrowser("http://" + httpSrv.Addr)
 	}
-	go pipeThread(chPipeReads)
+	go pipeThread()
 	waitFn()
 }
