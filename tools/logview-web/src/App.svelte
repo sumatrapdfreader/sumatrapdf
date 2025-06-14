@@ -58,10 +58,8 @@
    * @param {number} tabIdx
    */
   function closeTab(tabIdx) {
-    console.log("closed tab ", tabIdx);
     tabs.splice(tabIdx, 1);
     if (len(tabs) === 0) {
-      console.log("closeTab: closed last tab");
       selectedTabIdx = -1;
       return;
     }
@@ -69,7 +67,6 @@
     if (selectedTabIdx >= len(tabs)) {
       --selectedTabIdx;
     }
-    console.log("new selected tab:", selectedTabIdx);
   }
   /**
    * @param {KeyboardEvent} ev

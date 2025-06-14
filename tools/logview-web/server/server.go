@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bytes"
@@ -20,8 +20,7 @@ import (
 )
 
 var (
-	//go:embed dist/*
-	distFS embed.FS
+	DistFS embed.FS
 
 	httpSrv     *http.Server
 	chPipeReads chan PipeChunk = make(chan PipeChunk, 10000)

@@ -1,20 +1,18 @@
 package main
 
-import "flag"
+import (
+	"embed"
+	"logview-web/server"
+)
+
+var (
+	// go:embed dist/*
+	distFS embed.FS
+)
 
 func main() {
-
-	var (
-		flgRunDev bool
-	)
-	{
-		flag.BoolVar(&flgRunDev, "run-dev", false, "run in development mode")
-		flag.Parse()
-	}
-
-	if flgRunDev {
-		runServerDev()
-		return
-	}
-	flag.Usage()
+	// This is the main entry point for the application.
+	// It will call the Main function from the server package.
+	server.DistFS = distFS
+	server.Main()
 }
