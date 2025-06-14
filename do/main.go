@@ -231,7 +231,7 @@ func main() {
 		flgGenDocs                   bool
 		flgGenSettings               bool
 		flgGenWebsiteDocs            bool
-		flgLogView                   bool
+		flgRunLogView                bool
 		flgRegenPremake              bool
 		flgRunTests                  bool
 		flgTransDownload             bool
@@ -269,7 +269,7 @@ func main() {
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenSettings, "gen-settings", false, "re-generate src/Settings.h")
 		flag.StringVar(&flgUpdateVer, "update-auto-update-ver", "", "update version used for auto-update checks")
-		flag.BoolVar(&flgLogView, "logview", false, "run logview")
+		flag.BoolVar(&flgRunLogView, "logview", false, "run logview")
 		flag.BoolVar(&flgRunTests, "run-tests", false, "run test_util executable")
 		flag.BoolVar(&flgBuildLogview, "build-logview", false, "build logview-win. Use -upload to also upload it to backblaze")
 		flag.IntVar(&flgBuildNo, "build-no-info", 0, "print build number info for given build number")
@@ -468,8 +468,11 @@ func main() {
 		return
 	}
 
-	if flgLogView {
-		logView()
+	if flgRunLogView {
+		runLogViewWeb()
+		if false {
+			runLogViewWin()
+		}
 		return
 	}
 
@@ -485,7 +488,8 @@ func main() {
 	flag.Usage()
 }
 
-func logView() {
+func runLogViewWin() {
+	logf("runLogViewWin\n")
 	path := filepath.Join(logViewWinDir, "build", "bin", "logview.exe")
 	if !u.FileExists(path) {
 		logf("'%s' doesn't exist, rebuilding\n", path)
@@ -495,9 +499,23 @@ func logView() {
 		logf("rm \"%s\"\n", path)
 	}
 	cmd := exec.Command(path)
+	cmd.Dir = logViewWinDir
 	err := cmd.Start()
 	must(err)
 	logf("Started %s\n", path)
+}
+
+func runLogViewWeb() {
+	logf("runLogViewWweb\n")
+	dir := filepath.Join("tools", "logview-web")
+	cmd := exec.Command("go", "run", ".", "-run-dev")
+	cmd.Dir = dir
+	err := cmd.Start()
+	must(err)
+	logf("Started %s in %s\n", cmd.String(), dir)
+	// wait for it to finish
+	err = cmd.Wait()
+	must(err)
 }
 
 func cmdRunLoggedInDir(dir string, args ...string) {
