@@ -8,7 +8,7 @@
   let filter = $state("");
   let filterLC = $derived(filter.trim().toLowerCase());
 
-  /** @type {VList<{ id: number; size: string }}*/
+  /** @type {VList<{ id: number; size: string }>}*/
   let vlist = $state();
 
   let hiliRegExp = $derived(makeHilightRegExp(filter));
@@ -55,6 +55,15 @@
         vlist.scrollToIndex(n - 1);
       }
     }
+  });
+
+  let itemsCountMsg = $derived.by(() => {
+    let n = len(filteredLogs);
+    let n2 = getLogsCount();
+    if (n == n2) {
+      return `${n2} lines`;
+    }
+    return `${n} of ${n2} lines`;
   });
 
   function genLotsOfLogs() {
@@ -384,21 +393,34 @@
 
 <main class="flex flex-col">
   <div class="top">
-    <div style="flex-grow: 1"></div>
-    <input
-      type="text"
-      placeholder="filter /"
-      bind:this={searchEl}
-      bind:value={filter}
-    />
-    <button class="btn-pause" onclick={togglePauseScrolling}>{btnText}</button>
-    <button onclick={clearLogs}>clear</button>
-    <div>{len(filteredLogs)} out of {getLogsCount()}</div>
-    <div style="flex-grow: 1"></div>
-    <button class="hidden2" onclick={() => genLotsOfLogs()}
-      >gen test data</button
-    >
-    <button class="mr-1" onclick={aboutClicked}>about</button>
+    <div></div>
+    <div class="relative">
+      <input
+        type="text"
+        placeholder="filter '/'"
+        bind:this={searchEl}
+        bind:value={filter}
+        class="py-1 px-2 bg-white w-full mb-1 rounded-xs"
+        style="min-width: 70vw"
+      />
+      <div class="absolute right-[0.5rem] top-[0.25rem] italic text-gray-400">
+        {itemsCountMsg}
+      </div>
+    </div>
+
+    <div class="mr-2 menu-trigger dropdown">
+      ☰
+      <div class="dropdown-content">
+        <button class="btn-pause text-xs" onclick={togglePauseScrolling}
+          >{btnText}</button
+        >
+        <button onclick={clearLogs} class="text-xs">clear</button>
+        <button class="hidden2 text-xs" onclick={() => genLotsOfLogs()}
+          >gen test data</button
+        >
+        <button class="mr-1 text-xs" onclick={aboutClicked}>about</button>
+      </div>
+    </div>
   </div>
 
   <div class="tabs">
@@ -459,19 +481,6 @@
 </main>
 
 <style>
-  .flex {
-    display: flex;
-  }
-  .flex-col {
-    flex-direction: column;
-  }
-  .grow {
-    flex-grow: 1;
-  }
-  .bg-white {
-    background-color: white;
-  }
-
   .values {
     display: flex;
     flex-direction: column;
@@ -494,12 +503,14 @@
     }
   }
 
-  .hidden {
-    display: none;
-  }
-
-  .mr-1 {
-    margin-right: 0.25rem;
+  .menu-trigger {
+    border: 0;
+    font-size: 16px;
+    padding: 1px 4px;
+    cursor: pointer;
+    &:hover {
+      background-color: #e3e3e3;
+    }
   }
 
   main {
@@ -510,9 +521,41 @@
   button {
     cursor: pointer;
   }
+
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0px;
+    top: 0.75rem;
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    min-width: 160px;
+    z-index: 40;
+    border: 1px solid #444;
+    flex-direction: column;
+    /* justify-items: stretch; */
+
+    button {
+      border: 0;
+      width: 100%;
+      &:hover {
+        background-color: #ddd;
+      }
+    }
+  }
+
+  .dropdown:hover .dropdown-content {
+    display: flex;
+  }
+
   .top {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: baseline;
     column-gap: 0.5rem;
     padding-top: 4px;

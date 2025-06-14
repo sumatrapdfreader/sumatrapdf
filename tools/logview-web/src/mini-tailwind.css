@@ -1,0 +1,84 @@
+:root {
+ --clor-gray-400: oklch(70.7% 0.022 261.325)  
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+.mr-1 {
+  margin-right: 0.25rem;
+}
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem ;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.py-1 {
+  padding-block: 0.25rem;
+}
+
+.px-2 {
+  padding-inline: 0.5rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.rounded-xs {
+  border-radius: 0.125rem;
+}
+
+.right-\[0\.5rem\] {
+  right: 0.5rem /* 8px */;
+}
+
+.top-\[0\.25rem\] {
+  top: 0.25rem /* 4px */;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.text-gray-400 {
+  color: var(--color-gray-400) /* oklch(70.7% 0.022 261.325) = #99a1af */;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: calc(1 / 0.75);
+}
