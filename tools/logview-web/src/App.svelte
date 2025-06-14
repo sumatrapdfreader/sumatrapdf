@@ -32,10 +32,10 @@
   /** @type {TabInfo[]} */
   let tabs = $state([]);
 
-  /** @type {TabInfo} */
-  let selectedTab = $state(new TabInfo(-1));
+  /** @type {number} */
+  let selectedTabIdx = $state(-1);
 
-  let filteredLogs = $derived(filterLogs(filterLC, selectedTab.logs));
+  let filteredLogs = $derived(filterLogs(filterLC, selectedTabIdx));
 
   $effect(() => {
     if (!autoScrollPaused) {
@@ -54,6 +54,23 @@
     }
   }
 
+  /**
+   * @param {number} tabIdx
+   */
+  function closeTab(tabIdx) {
+    console.log("closed tab ", tabIdx);
+    tabs.splice(tabIdx, 1);
+    if (len(tabs) === 0) {
+      console.log("closeTab: closed last tab");
+      selectedTabIdx = -1;
+      return;
+    }
+    // update selected tab
+    if (selectedTabIdx >= len(tabs)) {
+      --selectedTabIdx;
+    }
+    console.log("new selected tab:", selectedTabIdx);
+  }
   /**
    * @param {KeyboardEvent} ev
    */
@@ -83,7 +100,7 @@
       // console.log(ev.keyCode, tabNo);
       if (tabNo >= 0 && tabNo < 9) {
         if (len(tabs) > tabNo) {
-          selectedTab = tabs[tabNo];
+          selectedTabIdx = tabNo;
         }
       }
     }
@@ -125,7 +142,7 @@
     }
     let tab = new TabInfo(appNo);
     tabs.push(tab);
-    selectedTab = tab;
+    selectedTabIdx = len(tabs) - 1;
     return tab;
   }
 
@@ -156,9 +173,13 @@
 
   /**
    * @param {string} filterLC
-   * @param {string[]} logs
+   * @param {number} tabIdx
    */
-  function filterLogs(filterLC, logs) {
+  function filterLogs(filterLC, tabIdx) {
+    if (tabIdx < 0) {
+      return [];
+    }
+    let logs = tabs[tabIdx].logs;
     let n = len(logs);
     if (filterLC === "") {
       return mkArrayOfNumbers(n);
@@ -237,13 +258,16 @@
     return o ? o.length : 0;
   }
   function clearLogs() {
-    if (selectedTab) {
-      selectedTab.logs = [];
+    if (selectedTabIdx >= 0) {
+      tabs[selectedTabIdx].logs = [];
     }
   }
 
-  function selectTab(tab) {
-    selectedTab = tab;
+  /**
+   * @param {number} tabIdx
+   */
+  function selectTab(tabIdx) {
+    selectedTabIdx = tabIdx;
   }
 
   function aboutClicked() {
@@ -258,6 +282,12 @@
     return item;
     // return filteredLogs[i];
   }
+  function getLogsCount() {
+    if (selectedTabIdx < 0) {
+      return 0;
+    }
+    return len(tabs[selectedTabIdx].logs);
+  }
 </script>
 
 <main class="flex flex-col">
@@ -271,7 +301,7 @@
     />
     <button class="btn-pause" onclick={togglePauseScrolling}>{btnText}</button>
     <button onclick={clearLogs}>clear</button>
-    <div>showing {len(filteredLogs)} out of {len(selectedTab.logs)}</div>
+    <div>{len(filteredLogs)} out of {getLogsCount()}</div>
     <div style="flex-grow: 1"></div>
     <button class="hidden2" onclick={() => genLotsOfLogs()}
       >gen test data</button
@@ -281,22 +311,30 @@
 
   <div class="tabs">
     {#each tabs as tab, idx}
-      {#if tab === selectedTab}
-        <button class="tab tab-selected">{tab.tabName} ({idx + 1})</button>
+      {#if idx === selectedTabIdx}
+        <button class="tab tab-selected"
+          >{tab.tabName} ({idx + 1})
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <span onclick={() => closeTab(idx)} class="tab-close">×</span>
+        </button>
       {:else}
-        <button onclick={() => selectTab(tab)} class="tab"
-          >{tab.tabName} ({idx + 1})</button
-        >
+        <button onclick={() => selectTab(idx)} class="tab"
+          >{tab.tabName} ({idx + 1})
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <span onclick={() => closeTab(idx)} class="tab-close">×</span>
+        </button>
       {/if}
     {/each}
   </div>
 
-  {#if !selectedTab}
+  {#if selectedTabIdx < 0}
     <div class="grow">
       <div class="no-results">No logs yet</div>
     </div>
   {:else if len(filteredLogs) == 0}
-    {#if len(selectedTab.logs) == 0}
+    {#if getLogsCount() == 0}
       <div class="grow">
         <div class="no-results">No logs yet</div>
       </div>
@@ -313,7 +351,8 @@
       getKey={getKeyFilteredLogs}
     >
       {#snippet children(item, index)}
-        {@const line = selectedTab.logs[item]}
+        {@const logs = tabs[selectedTabIdx].logs}
+        {@const line = logs[item]}
         {#if filter === ""}
           <span class="log-line">{line}</span>
           <!-- <div class="log-line">{line}</div> -->
@@ -379,6 +418,12 @@
     cursor: default;
     &:hover {
       background-color: white;
+    }
+  }
+  .tab-close {
+    padding: 1px 4px;
+    &:hover {
+      background-color: rgba(128, 128, 128, 0.4);
     }
   }
   .no-results {
