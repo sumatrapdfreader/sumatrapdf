@@ -148,18 +148,22 @@
   }
 
   /**
-   * @param {string} searchTermLC
+   * @param {string} filterLC
    * @param {string[]} logs
    */
-  function filterLogs(searchTermLC, logs) {
+  function filterLogs(filterLC, logs) {
     let n = len(logs);
-    if (searchTermLC === "") {
+    if (filterLC === "") {
       return mkArrayOfNumbers(n);
+    }
+    let parts = filterLC.split(" ");
+    for (let i = 0; i < parts.length; i++) {
+      parts[i] = parts[i].trim();
     }
     let res = [];
     for (let i = 0; i < n; i++) {
       let line = logs[i];
-      if (matches(line, searchTermLC)) {
+      if (matches(line, parts)) {
         res.push(i);
       }
     }
@@ -168,14 +172,16 @@
 
   /**
    * @param {string} s
-   * @param {string} searchTerm
+   * @param {string[]} searchTerms
    */
-  function matches(s, searchTerm) {
-    if (searchTerm === "") {
-      return false;
-    }
+  function matches(s, searchTerms) {
     s = s.toLowerCase();
-    return s.includes(searchTerm);
+    for (let term of searchTerms) {
+      if (!s.includes(term)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
