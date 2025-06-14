@@ -150,4 +150,6 @@ struct RenderCache {
 
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
+
+    void LogCacheSize();
 };
