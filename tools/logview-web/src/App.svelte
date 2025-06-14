@@ -4,8 +4,11 @@
 
   let autoScrollPaused = false;
   let btnText = $state("pause scrolling");
-  let searchTerm = $state("");
-  let searchTermLC = $derived(searchTerm.trim().toLowerCase());
+  let filter = $state("");
+  let filterLC = $derived(filter.trim().toLowerCase());
+
+  let hiliRegExp = $derived(makeHilightRegExp(filter));
+
   /** @type {HTMLElement} */
   let logAreaEl;
   /** @type {HTMLElement} */
@@ -28,7 +31,7 @@
   /** @type {TabInfo} */
   let selectedTab = $state(new TabInfo(-1));
 
-  let filteredLogs = $derived(filterLogs(searchTermLC, selectedTab.logs));
+  let filteredLogs = $derived(filterLogs(filterLC, selectedTab.logs));
 
   $effect(() => {
     if (!autoScrollPaused && len(filteredLogs) > 0) {
@@ -43,6 +46,7 @@
       plog(no, s);
     }
   }
+
   /**
    * @param {KeyboardEvent} ev
    */
@@ -59,7 +63,7 @@
       if (ev.key === "Escape") {
         // if searchEl is focused, return focus to logAreaEl
         logAreaEl.focus();
-        searchTerm = "";
+        filter = "";
         return;
       }
     } else {
@@ -175,6 +179,27 @@
   }
 
   /**
+   * @param {string} filter
+   * @returns {RegExp}
+   */
+  export function makeHilightRegExp(filter) {
+    let parts = filter.split(" ");
+    let a = [];
+    for (let s of parts) {
+      s = s.trim().toLowerCase();
+      let escaped = s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      a.push(escaped);
+    }
+    let s = a.join("|");
+    return new RegExp(`(${s})`, "gi");
+  }
+
+  export function hilightText(s, regexp) {
+    // console.log("hilightText:", s, regexp);
+    return s.replace(regexp, '<span class="hili">$1</span>');
+  }
+
+  /**
    * @param {HTMLElement} node
    */
   function scrollToBottom(node) {
@@ -224,13 +249,14 @@
       type="text"
       placeholder="filter /"
       bind:this={searchEl}
-      bind:value={searchTerm}
+      bind:value={filter}
     />
     <button class="btn-pause" onclick={togglePauseScrolling}>{btnText}</button>
     <button onclick={clearLogs}>clear</button>
-    <div>{len(selectedTab.logs)} lines, {len(filteredLogs)} shown</div>
+    <div>showing {len(filteredLogs)} out of {len(selectedTab.logs)}</div>
     <div style="flex-grow: 1"></div>
-    <button class="hidden" onclick={() => genLotsOfLogs()}>gen test data</button
+    <button class="hidden2" onclick={() => genLotsOfLogs()}
+      >gen test data</button
     >
     <button onclick={aboutClicked}>about</button>
   </div>
@@ -254,12 +280,17 @@
       {#if len(selectedTab.logs) == 0}
         <div class="no-results">No logs yet</div>
       {:else}
-        <div class="no-results">No results matching '<b>{searchTerm}</b>'</div>
+        <div class="no-results">No results matching '<b>{filter}</b>'</div>
       {/if}
     {:else}
       {#each filteredLogs as logIdx (logIdx)}
-        {@const log = selectedTab.logs[logIdx]}
-        <span class="log-line">{log}</span><br />
+        {@const line = selectedTab.logs[logIdx]}
+        {#if filter === ""}
+          <span class="log-line">{line}</span><br />
+        {:else}
+          {@const hili = hilightText(line, hiliRegExp)}
+          <span class="log-line">{@html hili}</span><br />
+        {/if}
       {/each}
     {/if}
   </div>
@@ -324,11 +355,14 @@
     padding: 4px 1rem;
     /* background: rgb(239, 250, 254); */
     background-color: white;
-  }
-
-  .log-line {
     font-family: monospace;
+  }
+  .log-line {
     content-visibility: auto;
     /* contain-intrinsic-size: 1rem; */
+  }
+
+  :global(.hili) {
+    background-color: yellow;
   }
 </style>
