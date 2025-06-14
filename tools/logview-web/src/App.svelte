@@ -24,6 +24,9 @@
     /** @type {string[]} */
     logs = $state([]);
     tabName = $state("logs");
+    // array, each value is array of 3 elements:
+    // [name, type, value]
+    values = $state([]);
     constructor(no) {
       this.appNo = no;
     }
@@ -34,6 +37,14 @@
 
   /** @type {number} */
   let selectedTabIdx = $state(-1);
+
+  let currentTabValues = $derived(selectTabValues(selectedTabIdx));
+  function selectTabValues(tabIdx) {
+    if (tabIdx < 0) {
+      return [];
+    }
+    return tabs[tabIdx].values;
+  }
 
   let filteredLogs = $derived(filterLogs(filterLC, selectedTabIdx));
 
@@ -50,6 +61,9 @@
     let no = 3798; // random but unique number
     for (let i = 0; i < 10000; i++) {
       let s = `this is a line number ${i}`;
+      if (i % 1000 == 0) {
+        s = `:v cacheSize${i} bs ${i}`;
+      }
       plog(no, s);
     }
   }
@@ -169,13 +183,56 @@
     return tab;
   }
 
+  const valuePrefix = ":v ";
+
+  /**
+   * s looks like:
+   * v: <name> <type> <value>
+   * @param {string} sIn
+   */
+  function parseValue(sIn) {
+    // console.log("parseValue:", sIn);
+    let s = sIn.substring(len(valuePrefix));
+    let idx = s.indexOf(" ");
+    if (idx < 0) {
+      console.log(`parseValue: invalid sIn='${sIn}'`);
+      return null;
+    }
+    let name = s.substring(0, idx);
+    s = s.substring(idx + 1);
+    idx = s.indexOf(" ");
+    let typ = s.substring(0, idx);
+    s = s.substring(idx + 1);
+    let v = s;
+    return [name, typ, v];
+  }
+
   /**
    * @param {number} no
    * @param {string} line
    */
   function plog(no, line) {
-    line = line.trim();
+    line = line.trimEnd();
     let tab = findOrCreateTab(no);
+    if (line.startsWith(valuePrefix)) {
+      let e = parseValue(line);
+      if (e === null) {
+        return;
+      }
+      console.log("value:", e);
+      let a = tab.values;
+      let n = len(a);
+      for (let i = 0; i < n; i++) {
+        // update value in place
+        if (a[i][0] == e[0]) {
+          // TODO: will this trigger re-render ?
+          a[i] = e;
+          return;
+        }
+      }
+      tab.values.push(e);
+      return;
+    }
     tab.logs.push(line);
     if (line.startsWith("app: ")) {
       tab.tabName = line.slice(4);
@@ -269,6 +326,13 @@
     }
   }
 
+  function getValues(tabIdx) {
+    if (tabIdx < 0) {
+      return [];
+    }
+    return tabs[tabIdx].values;
+  }
+
   function len(o) {
     return o ? o.length : 0;
   }
@@ -304,6 +368,19 @@
     return len(tabs[selectedTabIdx].logs);
   }
 </script>
+
+{#if len(currentTabValues) > 0}
+  <div class="values">
+    {#each currentTabValues as v, idx (idx)}
+      {@const name = v[0]}
+      {@const val = v[2]}
+      <div class="val-item">
+        <div>{name}</div>
+        <div>{val}</div>
+      </div>
+    {/each}
+  </div>
+{/if}
 
 <main class="flex flex-col">
   <div class="top">
@@ -393,6 +470,28 @@
   }
   .bg-white {
     background-color: white;
+  }
+
+  .values {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    padding: 2px 8px;
+    top: 64px;
+    right: 22px;
+    min-width: 200px;
+    /* min-height: 200px; */
+    background-color: rgba(255, 255, 255, 200);
+    z-index: 10;
+    border: 1px solid #c0c0c0;
+  }
+
+  .val-item {
+    display: flex;
+    justify-content: space-between;
+    &:hover {
+      background-color: #e3e3e3;
+    }
   }
 
   .hidden {
