@@ -315,8 +315,8 @@ void CleanUpThumbnailCache() {
     }
 
     for (char* path : filePaths) {
-        logf("CleanUpThumbnailCache: deleting '%s'\n", path);
         if (shouldDeleteThumbnail) {
+            logf("CleanUpThumbnailCache: deleting '%s'\n", path);
             file::Delete(path);
         }
     }
