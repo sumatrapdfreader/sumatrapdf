@@ -1,16 +1,20 @@
 <script>
   import { version } from "./version";
   import { onMount } from "svelte";
+  import { VList } from "virtua/svelte";
 
   let autoScrollPaused = false;
-  let btnText = $state("pause scrolling");
+  let btnText = $state("pause scrolling (p)");
   let filter = $state("");
   let filterLC = $derived(filter.trim().toLowerCase());
+
+  /** @type {VList<{ id: number; size: string }}*/
+  let vlist = $state();
 
   let hiliRegExp = $derived(makeHilightRegExp(filter));
 
   /** @type {HTMLElement} */
-  let logAreaEl;
+  // let logAreaEl;
   /** @type {HTMLElement} */
   let searchEl;
 
@@ -34,13 +38,16 @@
   let filteredLogs = $derived(filterLogs(filterLC, selectedTab.logs));
 
   $effect(() => {
-    if (!autoScrollPaused && len(filteredLogs) > 0) {
-      scrollToBottom(logAreaEl);
+    if (!autoScrollPaused) {
+      let n = len(filteredLogs);
+      if (n > 0) {
+        vlist.scrollToIndex(n - 1);
+      }
     }
   });
 
   function genLotsOfLogs() {
-    let no = len(tabs) + 1;
+    let no = 3798; // random but unique number
     for (let i = 0; i < 10000; i++) {
       let s = `this is a line number ${i}`;
       plog(no, s);
@@ -62,7 +69,7 @@
     if (isSearchFocused) {
       if (ev.key === "Escape") {
         // if searchEl is focused, return focus to logAreaEl
-        logAreaEl.focus();
+        searchEl.blur();
         filter = "";
         return;
       }
@@ -83,7 +90,7 @@
   }
 
   onMount(() => {
-    window.addEventListener("keydown", keydown, true);
+    window.addEventListener("keydown", keydown);
     window.addEventListener("beforeunload", (ev) => {
       // fetch("/kill", { method: "post" });
     });
@@ -246,6 +253,11 @@
   }
   // @ts-ignore
   //window.runtime.EventsOn("plog", plog);
+  function getKeyFilteredLogs(item, _) {
+    // console.log("getKeyFilteredLogs:", item, i);
+    return item;
+    // return filteredLogs[i];
+  }
 </script>
 
 <main class="flex flex-col">
@@ -264,7 +276,7 @@
     <button class="hidden2" onclick={() => genLotsOfLogs()}
       >gen test data</button
     >
-    <button onclick={aboutClicked}>about</button>
+    <button class="mr-1" onclick={aboutClicked}>about</button>
   </div>
 
   <div class="tabs">
@@ -279,27 +291,40 @@
     {/each}
   </div>
 
-  <div bind:this={logAreaEl} tabindex="0" role="listbox" class="log-area grow">
-    {#if !selectedTab}
+  {#if !selectedTab}
+    <div class="grow">
       <div class="no-results">No logs yet</div>
-    {:else if len(filteredLogs) == 0}
-      {#if len(selectedTab.logs) == 0}
+    </div>
+  {:else if len(filteredLogs) == 0}
+    {#if len(selectedTab.logs) == 0}
+      <div class="grow">
         <div class="no-results">No logs yet</div>
-      {:else}
-        <div class="no-results">No results matching '<b>{filter}</b>'</div>
-      {/if}
+      </div>
     {:else}
-      {#each filteredLogs as logIdx (logIdx)}
-        {@const line = selectedTab.logs[logIdx]}
+      <div class="grow">
+        <div class="no-results">No results matching '<b>{filter}</b>'</div>
+      </div>
+    {/if}
+  {:else}
+    <VList
+      bind:this={vlist}
+      style="flex-grow: 1; font-family: monospace; background-color: white"
+      data={filteredLogs}
+      getKey={getKeyFilteredLogs}
+    >
+      {#snippet children(item, index)}
+        {@const line = selectedTab.logs[item]}
         {#if filter === ""}
-          <span class="log-line">{line}</span><br />
+          <span class="log-line">{line}</span>
+          <!-- <div class="log-line">{line}</div> -->
         {:else}
           {@const hili = hilightText(line, hiliRegExp)}
-          <span class="log-line">{@html hili}</span><br />
+          <span class="log-line">{@html hili}</span>
+          <!-- <div class="log-line">{@html hili}</div> -->
         {/if}
-      {/each}
-    {/if}
-  </div>
+      {/snippet}
+    </VList>
+  {/if}
 </main>
 
 <style>
@@ -316,12 +341,18 @@
     display: none;
   }
 
+  .mr-1 {
+    margin-right: 0.25rem;
+  }
+
   main {
     min-height: 0;
     height: 100vh;
     overflow: auto;
   }
-
+  button {
+    cursor: pointer;
+  }
   .top {
     display: flex;
     justify-content: center;
@@ -345,6 +376,10 @@
   }
   .tab-selected {
     background-color: white;
+    cursor: default;
+    &:hover {
+      background-color: white;
+    }
   }
   .no-results {
     text-align: center;
@@ -363,8 +398,9 @@
     background-color: white;
     font-family: monospace;
   }
+
   .log-line {
-    content-visibility: auto;
+    /* content-visibility: auto; */
     /* contain-intrinsic-size: 1rem; */
   }
 
