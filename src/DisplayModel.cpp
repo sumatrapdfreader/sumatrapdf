@@ -312,7 +312,7 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
 }
 
 DisplayModel::~DisplayModel() {
-    dontRenderFlag = true;
+    pauseRendering = true;
     cb->CleanUp(this);
 
     delete pdfSync;
@@ -1140,14 +1140,13 @@ void DisplayModel::RenderVisibleParts() {
         }
     }
 
-    // TODO: why the hell this is requesting pages again?
-#if 0
-    // request the visible pages last so that the above requested
-    // invisible pages are not rendered if the queue fills up
+    // re-request the visible pages again so:
+    // * they get picked first by rendering thread
+    // * if queue fills up, the invisible pages from predictive rendering
+    //   wont be rendered
     for (int pageNo = lastVisiblePage; pageNo >= firstVisiblePage; pageNo--) {
         cb->RequestRendering(pageNo);
     }
-#endif
 }
 
 void DisplayModel::SetViewPortSize(Size newViewPortSize) {
