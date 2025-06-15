@@ -153,7 +153,7 @@ func buildSignAndUploadLatestPreRelease() {
 	// sign all files in one swoop
 	// build can take a long time and signing rquires user interaction
 	// so wait for user to press enter
-	waitForEnter("\nPress enter to sign the builds")
+	waitForEnter("\nPress enter to sign and upload the builds")
 	err := signExesInDir(dirDst)
 	if err != nil {
 		os.RemoveAll(dirDst)
@@ -177,7 +177,6 @@ func buildSignAndUploadLatestPreRelease() {
 	if !isClean {
 		uploadDryRun = true
 	}
-	waitForEnter("\nPress enter to upload the builds")
 	uploadToStorage(buildTypePreRel, ver, dirDst)
 }
 
