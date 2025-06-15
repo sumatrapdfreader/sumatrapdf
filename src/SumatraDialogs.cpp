@@ -184,9 +184,9 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         data = (Dialog_GetPassword_Data*)lp;
         HwndSetText(hDlg, _TRA("Enter password"));
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-        DarkMode::setDarkDlgSafe(hDlg);
-#endif
+        if (gUseDarkModeLib) {
+            DarkMode::setDarkDlgSafe(hDlg);
+        }
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != nullptr);
 
         TempStr txt = str::FormatTemp(_TRA("Enter password for %s"), data->fileName);
@@ -266,9 +266,9 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
     if (WM_INITDIALOG == msg) {
         data = (Dialog_GoToPage_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-        DarkMode::setDarkDlgSafe(hDlg);
-#endif
+        if (gUseDarkModeLib) {
+            DarkMode::setDarkDlgSafe(hDlg);
+        }
         HwndSetText(hDlg, _TRA("Go to page"));
 
         editPageNo = GetDlgItem(hDlg, IDC_GOTO_PAGE_EDIT);
@@ -348,9 +348,9 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
             //[ ACCESSKEY_GROUP Find Dialog
             data = (Dialog_Find_Data*)lp;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-            DarkMode::setDarkDlgSafe(hDlg);
-#endif
+            if (gUseDarkModeLib) {
+                DarkMode::setDarkDlgSafe(hDlg);
+            }
             HwndSetText(hDlg, _TRA("Find"));
             HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("&Find what:"));
             HwndSetDlgItemText(hDlg, IDC_MATCH_CASE, _TRA("&Match case"));
@@ -424,9 +424,9 @@ static INT_PTR CALLBACK Dialog_PdfAssociate_Proc(HWND hDlg, UINT msg, WPARAM wp,
     if (WM_INITDIALOG == msg) {
         data = (Dialog_PdfAssociate_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-        DarkMode::setDarkDlgSafe(hDlg);
-#endif
+        if (gUseDarkModeLib) {
+            DarkMode::setDarkDlgSafe(hDlg);
+        }
         HwndSetText(hDlg, _TRA("Associate with PDF files?"));
         HwndSetDlgItemText(hDlg, IDC_STATIC, _TRA("Make SumatraPDF default application for PDF files?"));
         HwndSetDlgItemText(hDlg, IDC_DONT_ASK_ME_AGAIN, _TRA("&Don't ask me again"));
@@ -491,9 +491,9 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
 
         data = (Dialog_ChangeLanguage_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-        DarkMode::setDarkDlgSafe(hDlg);
-#endif
+        if (gUseDarkModeLib) {
+            DarkMode::setDarkDlgSafe(hDlg);
+        }
         // for non-latin languages this depends on the correct fonts being installed,
         // otherwise all the user will see are squares
         HwndSetText(hDlg, _TRA("Change Language"));
@@ -695,9 +695,9 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, L
             //[ ACCESSKEY_GROUP Zoom Dialog
             data = (Dialog_CustomZoom_Data*)lp;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-            DarkMode::setDarkDlgSafe(hDlg);
-#endif
+            if (gUseDarkModeLib) {
+                DarkMode::setDarkDlgSafe(hDlg);
+            }
             SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, data->forChm, data->zoomArg);
 
             HwndSetText(hDlg, _TRA("Zoom factor"));
@@ -771,9 +771,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
         case WM_INITDIALOG:
             prefs = (GlobalPrefs*)lp;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)prefs);
-#if defined(USE_DARKMODELIB)
-            DarkMode::setDarkDlgSafe(hDlg);
-#endif
+            if (gUseDarkModeLib) {
+                DarkMode::setDarkDlgSafe(hDlg);
+            }
             {
                 HWND hwndCb = GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT);
                 // Fill the page layouts into the select box
@@ -915,9 +915,9 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
         case WM_INITDIALOG:
             data = (Print_Advanced_Data*)((PROPSHEETPAGE*)lp)->lParam;
             SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-            DarkMode::setDarkDlgSafe(hDlg);
-#endif
+            if (gUseDarkModeLib) {
+                DarkMode::setDarkDlgSafe(hDlg);
+            }
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_RANGE, _TRA("Print range"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_ALL, _TRA("&All selected pages"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_RANGE_EVEN, _TRA("&Even pages only"));
@@ -1010,9 +1010,9 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARA
     if (WM_INITDIALOG == msg) {
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
-#if defined(USE_DARKMODELIB)
-        DarkMode::setDarkDlgSafe(hDlg);
-#endif
+        if (gUseDarkModeLib) {
+            DarkMode::setDarkDlgSafe(hDlg);
+        }
         HwndSetText(hDlg, _TRA("Add Favorite"));
         TempStr s = str::FormatTemp(_TRA("Add page %s to favorites with (optional) name:"), data->pageNo);
         HwndSetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);

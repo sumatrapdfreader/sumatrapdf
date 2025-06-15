@@ -911,9 +911,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         FilterStringsForQuery(prefix, m->strings);
         c->SetModel(m);
         listBox = c;
-#if defined(USE_DARKMODELIB)
-        DarkMode::setDarkScrollBar(listBox->hwnd);
-#endif
+        if (gUseDarkModeLib) {
+            DarkMode::setDarkScrollBar(listBox->hwnd);
+        }
         vbox->AddChild(c, 1);
     }
     {

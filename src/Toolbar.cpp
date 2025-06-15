@@ -1017,12 +1017,13 @@ void CreateToolbar(MainWindow* win) {
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-#if !defined(USE_DARKMODELIB)
-    if (!IsCurrentThemeDefault()) {
-        // without this custom draw code doesn't work
-        SetWindowTheme(hwndToolbar, L"", L"");
+    if (!gUseDarkModeLib) {
+        if (!IsCurrentThemeDefault()) {
+            // without this custom draw code doesn't work
+            SetWindowTheme(hwndToolbar, L"", L"");
+        }
     }
-#endif
+
     int iconSize = SetToolbarIconsImageList(win);
 
     TBMETRICS tbMetrics{};

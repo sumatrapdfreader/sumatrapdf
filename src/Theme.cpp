@@ -16,6 +16,14 @@ License: GPLv3 */
 
 #include "utils/Log.h"
 
+// allow only x64 and arm64 for compatibility for older OS
+#if !defined(_DARKMODELIB_NOT_USED) && \
+    (defined(__x86_64__) || defined(_M_X64) || defined(__arm64__) || defined(__arm64) || defined(_M_ARM64))
+bool gUseDarkModeLib = true;
+#else
+bool gUseDarkModeLib = false;
+#endif
+
 /*
 preserve those translations:
 _TRN("Dark")
@@ -131,26 +139,26 @@ void SetThemeByIndex(int themeIdx) {
     gCurrSetThemeCmdId = gFirstSetThemeCmdId + themeIdx;
     gCurrentTheme = gThemes->At(gCurrThemeIndex);
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
-#if defined(USE_DARKMODELIB)
-    DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
-    DarkMode::setTextColor(ThemeWindowTextColor());
-    DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
-    DarkMode::setDlgBackgroundColor(ThemeWindowControlBackgroundColor());
-    DarkMode::setLinkTextColor(ThemeWindowLinkColor());
-    DarkMode::updateThemeBrushesAndPens();
+    if (gUseDarkModeLib) {
+        DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
+        DarkMode::setTextColor(ThemeWindowTextColor());
+        DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
+        DarkMode::setDlgBackgroundColor(ThemeWindowControlBackgroundColor());
+        DarkMode::setLinkTextColor(ThemeWindowLinkColor());
+        DarkMode::updateThemeBrushesAndPens();
 
-    DarkMode::setViewTextColor(ThemeWindowTextColor());
-    DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
-    DarkMode::calculateTreeViewStyle();
+        DarkMode::setViewTextColor(ThemeWindowTextColor());
+        DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
+        DarkMode::calculateTreeViewStyle();
 
-    DarkMode::setDarkModeConfig(DarkMode::isThemeDark() ? 1 : 3);
+        DarkMode::setDarkModeConfig(DarkMode::isThemeDark() ? 1 : 3);
 
-    UpdateAfterThemeChange();
+        UpdateAfterThemeChange();
 
-    DarkMode::updatePrevTreeViewStyle();
-#else
-    UpdateAfterThemeChange();
-#endif
+        DarkMode::updatePrevTreeViewStyle();
+    } else {
+        UpdateAfterThemeChange();
+    }
 };
 
 void SelectNextTheme() {

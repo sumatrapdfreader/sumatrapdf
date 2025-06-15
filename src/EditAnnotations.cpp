@@ -1450,11 +1450,12 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
-#if defined(USE_DARKMODELIB)
-    args.bgColor = DarkMode::isThemeDark() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
-#else
-    args.bgColor = MkGray(0xee);
-#endif
+    if (gUseDarkModeLib) {
+        args.bgColor = DarkMode::isThemeDark() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
+    } else {
+        args.bgColor = MkGray(0xee);
+    }
+
     args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
     args.visible = false;
     args.font = GetAppFont();
@@ -1504,10 +1505,11 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     if (annot) {
         UpdateUIForSelectedAnnotation(ew, annot, true);
     }
-#if defined(USE_DARKMODELIB)
-    DarkMode::setDarkDlgNotifySafe(ew->hwnd);
-    DarkMode::setWindowEraseBgSubclass(ew->hwnd);
-#endif
+    if (gUseDarkModeLib) {
+        DarkMode::setDarkDlgNotifySafe(ew->hwnd);
+        DarkMode::setWindowEraseBgSubclass(ew->hwnd);
+    }
+
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     ew->SetIsVisible(true);

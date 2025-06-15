@@ -5,8 +5,6 @@
 // https://github.com/ysc3839/win32-darkmode
 // which is licensed under the MIT License. Copyright (c) 2019 Richard Yu
 
-#include "StdAfx.h"
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
