@@ -18,9 +18,6 @@
 // with modification from Notepad++ team.
 // Heavily modified by ozone10 (contributor of Notepad++)
 
-
-#include "StdAfx.h"
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
