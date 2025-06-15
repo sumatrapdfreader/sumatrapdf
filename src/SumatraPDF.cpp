@@ -89,6 +89,7 @@
 #include "CommandPalette.h"
 #include "Theme.h"
 #include "Caption.h"
+#include "../ext/darkmodelib/include/DarkModeSubclass.h"
 
 #include "utils/Log.h"
 

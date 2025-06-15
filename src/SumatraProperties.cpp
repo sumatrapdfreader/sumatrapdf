@@ -29,6 +29,7 @@
 #include "SumatraConfig.h"
 #include "Print.h"
 #include "Theme.h"
+#include "../ext/darkmodelib/include/DarkModeSubclass.h"
 
 void ShowProperties(HWND parent, DocController* ctrl, bool extended);
 

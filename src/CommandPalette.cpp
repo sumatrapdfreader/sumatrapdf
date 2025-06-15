@@ -28,6 +28,7 @@
 #include "ExternalViewers.h"
 #include "Annotation.h"
 #include "FileHistory.h"
+#include "../ext/darkmodelib/include/DarkModeSubclass.h"
 
 #include "utils/Log.h"
 

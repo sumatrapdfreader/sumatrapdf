@@ -1,9 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
 License: GPLv3 */
 
-#include "utils/BaseUtil.h"
-#include "../ext/darkmodelib/include/DarkModeSubclass.h"
-
 void SetTheme(const char* name);
 void SetCurrentThemeFromSettings();
 void SelectNextTheme();

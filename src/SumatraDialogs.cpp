@@ -17,8 +17,8 @@
 #include "AppTools.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
-
-#include "theme.h"
+#include "Theme.h"
+#include "../ext/darkmodelib/include/DarkModeSubclass.h"
 
 // http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 #pragma pack(push, 1)

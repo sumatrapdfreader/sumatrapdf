@@ -37,6 +37,7 @@ extern "C" {
 #include "SumatraPDF.h"
 #include "Canvas.h"
 #include "Commands.h"
+#include "../ext/darkmodelib/include/DarkModeSubclass.h"
 
 #include "utils/Log.h"
 
