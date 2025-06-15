@@ -2730,7 +2730,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
     for (auto& tab : win->Tabs()) {
         if (tab->AsFixed()) {
-            tab->AsFixed()->pauseRendering = true;
+            tab->AsFixed()->dontRenderFlag = true;
         }
     }
 

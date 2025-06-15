@@ -142,10 +142,12 @@ struct RenderCache {
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 
+    static DWORD WINAPI RenderCacheThread(LPVOID data);
+
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
                            TilePosition* tile = nullptr);
     bool DropCacheEntry(BitmapCacheEntry* entry);
-    void FreePage(DisplayModel* dm, int pageNo, TilePosition* tile);
+    void FreePage(DisplayModel* dm = nullptr, int pageNo = -1, TilePosition* tile = nullptr);
     void FreeNotVisible();
 
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
