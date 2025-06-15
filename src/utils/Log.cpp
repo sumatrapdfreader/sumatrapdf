@@ -117,28 +117,6 @@ static void logToPipe(const char* s, size_t n = 0) {
     }
 }
 
-// verbose log, only to debugger and pipe
-void logv(const char* s) {
-    if (gLogToDebugger || IsDebuggerPresent()) {
-        OutputDebugStringA(s);
-    }
-    logToPipe(s);
-}
-
-void logvf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
-    logv(s.Get());
-    va_end(args);
-}
-
-// logs value that is byte size to pipe
-void logValueSize(const char* name, i64 v) {
-    TempStr s = str::FormatTemp(":v %s size %lld\n", name, v);
-    logToPipe(s);
-}
-
 void log(const char* s, bool always) {
     bool skipLog = !always && gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
 
@@ -201,7 +179,6 @@ void log(const char* s, bool always) {
     logToPipe(s, n);
     gLogMutex.Unlock();
 }
-
 void loga(const char* s) {
     if (gDestroyedLogging) {
         return;

@@ -251,7 +251,6 @@ struct BlittableBitmap {
     BlittableBitmap() {};
 
     Size GetSize();
-    i64 GetByteSize();
 
     virtual bool Blit(HDC hdc, Rect target) = 0;
     virtual bool IsValid() = 0;

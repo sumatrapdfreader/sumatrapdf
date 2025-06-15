@@ -32,12 +32,6 @@ Size BlittableBitmap::GetSize() {
     return size;
 }
 
-// this is approximate size
-i64 BlittableBitmap::GetByteSize() {
-    i64 res = (i64)size.dx * (i64)size.dy * i64(4);
-    return res;
-}
-
 RenderedBitmap::RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap) {
     this->hbmp = hbmp;
     this->hMap = hMap;
