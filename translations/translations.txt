@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4cf2e902dc1f9928b55cd66f916181a232f48137
+fe0736a5db47c5bf1c50763f98e4b6cdf9b609c8
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -1593,7 +1593,7 @@ hi:&कीबोर्ड शॉर्टकट
 hu:&Gyorsbillentyűk
 id:&Pintasan Kibor
 it:&Tasti rapidi
-ja:キーボード ショートカット(&K)
+ja:キーボードショートカット(&K)
 kr:키보드 단축키(&K)
 lt:&Spartieji klavišai
 my:&Pintasan Papan Kekunci
@@ -14053,7 +14053,7 @@ hi:वेबसाइट पर मैनुअल
 hu:Kézikönyv a weboldalon
 id:Manual di Situs Web
 it:Manuale (sito web)
-ja:Web サイトのマニュアル(&A)
+ja:ウェブサイト上のマニュアル(&A)
 my:Manual Di Tapak Web
 nl:Handleiding op Website
 pl:Instrukcja obsługi na stronie internetowej
