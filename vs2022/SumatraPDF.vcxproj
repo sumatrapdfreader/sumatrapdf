@@ -966,6 +966,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DarkMode.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\IatHook.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppColors.h" />
@@ -1051,6 +1057,8 @@
     <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\darkmodelib\src\DarkMode.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp" />
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
     <ClCompile Include="..\src\Accelerators.cpp" />
@@ -1401,7 +1409,6 @@
     <None Include="..\do\check_accesskyes.go" />
     <None Include="..\do\clang_tidy_format.go" />
     <None Include="..\do\compress.go" />
-    <None Include="..\do\file_upload.go" />
     <None Include="..\do\gen_docs.go" />
     <None Include="..\do\git.go" />
     <None Include="..\do\github_ci.go" />

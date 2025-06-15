@@ -22,6 +22,15 @@
     <Filter Include="ext">
       <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext\darkmodelib">
+      <UniqueIdentifier>{A35716CE-0FE3-8392-18F4-068784FEDF92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\darkmodelib\include">
+      <UniqueIdentifier>{167246F4-82A9-8E8B-8BB3-F2AEF769B584}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\darkmodelib\src">
+      <UniqueIdentifier>{3A2F0B1B-A690-E828-2FFE-2EDB9B5E1FE8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ext\synctex">
       <UniqueIdentifier>{73E6124D-DF9B-8B42-6890-8519D4448246}</UniqueIdentifier>
     </Filter>
@@ -54,6 +63,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h">
+      <Filter>ext\darkmodelib\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DarkMode.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\IatHook.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\Version.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -305,6 +332,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\darkmodelib\src\DarkMode.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser.c">
       <Filter>ext\synctex</Filter>
     </ClCompile>
@@ -672,9 +705,6 @@
       <Filter>do</Filter>
     </None>
     <None Include="..\do\compress.go">
-      <Filter>do</Filter>
-    </None>
-    <None Include="..\do\file_upload.go">
       <Filter>do</Filter>
     </None>
     <None Include="..\do\gen_docs.go">

@@ -2,7 +2,7 @@
 License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "DarkModeSubclass.h"
+#include "../ext/darkmodelib/include/DarkModeSubclass.h"
 
 void SetTheme(const char* name);
 void SetCurrentThemeFromSettings();
