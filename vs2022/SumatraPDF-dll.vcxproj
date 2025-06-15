@@ -1014,6 +1014,12 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DarkMode.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\IatHook.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\Annotation.h" />
     <ClInclude Include="..\src\AppColors.h" />
@@ -1099,6 +1105,8 @@
     <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\darkmodelib\src\DarkMode.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp" />
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
     <ClCompile Include="..\src\Accelerators.cpp" />

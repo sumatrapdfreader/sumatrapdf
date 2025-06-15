@@ -840,6 +840,7 @@ workspace "SumatraPDF"
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
 
+    darkmodelib_files()
     synctex_files()
     mui_files()
     wingui_files()
