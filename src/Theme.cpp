@@ -155,7 +155,7 @@ void SetThemeByIndex(int themeIdx) {
 
         UpdateAfterThemeChange();
 
-        DarkMode::updatePrevTreeViewStyle();
+        DarkMode::setPrevTreeViewStyle();
     } else {
         UpdateAfterThemeChange();
     }

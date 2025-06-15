@@ -1,17 +1,20 @@
-// Copyright (C)2024-2025 ozone10
+// SPDX-License-Identifier: GPL-3.0-or-later
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/*
+ * Copyright (c) 2024-2025 ozone10
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 
 // Based on Notepad++ dark mode code, original by adzm / Adam D. Walling
 // with modification from Notepad++ team.
@@ -62,7 +65,7 @@ namespace DarkMode
 		COLORREF headerEdge = 0;
 	};
 
-	enum class ToolTipsType
+	enum class ToolTipsType : unsigned char // std::uint8_t
 	{
 		tooltip,
 		toolbar,
@@ -71,80 +74,166 @@ namespace DarkMode
 		tabbar
 	};
 
-	enum class ColorTone
+	enum class ColorTone : unsigned char // std::uint8_t
 	{
-		black       = 0,
-		red         = 1,
-		green       = 2,
-		blue        = 3,
-		purple      = 4,
-		cyan        = 5,
-		olive       = 6
+		black   = 0,
+		red     = 1,
+		green   = 2,
+		blue    = 3,
+		purple  = 4,
+		cyan    = 5,
+		olive   = 6,
+		max     = 7 // don't use, for internal checks
 	};
 
-	enum class TreeViewStyle
+	/**
+	 * @brief Defines the available visual styles for TreeView controls.
+	 *
+	 * Used to control theming behavior for TreeViews:
+	 * - `classic`: Legacy style without theming.
+	 * - `light`: Light mode appearance.
+	 * - `dark`: Dark mode appearance.
+	 *
+	 * Set via configuration and used by style evaluators (e.g. @ref calculateTreeViewStyle).
+	 */
+	enum class TreeViewStyle : unsigned char
 	{
-		classic,
-		light,
-		dark
+		classic,  ///< Non-themed legacy appearance.
+		light,    ///< Light mode.
+		dark      ///< Dark mode.
 	};
 
-	enum LibInfo
+	/**
+	 * @brief Describes metadata fields and compile-time features of the dark mode library.
+	 *
+	 * Values of this enum are used with getLibInfo() to retrieve version numbers and
+	 * determine whether specific features were enabled during compilation.
+	 */
+	enum class LibInfo : unsigned char
 	{
-		featureCheck    = 0,
-		verMajor        = 1,
-		verMinor        = 2,
-		verRevision     = 3,
-		iathookExternal = 4,
-		iniConfigUsed   = 5,
-		allowOldOS      = 6,
-		useDlgProcCtl   = 7,
-		maxValue        = 8
+		featureCheck,     ///< Returns maxValue to verify enum coverage.
+		verMajor,         ///< Major version number of the library.
+		verMinor,         ///< Minor version number of the library.
+		verRevision,      ///< Revision/patch number of the library.
+		iathookExternal,  ///< Indicates if external IAT hooking is used.
+		iniConfigUsed,    ///< True if `.ini` file configuration is supported.
+		allowOldOS,       ///< True if older Windows versions are allowed.
+		useDlgProcCtl,    ///< True if WM_CTLCOLORxxx can be handled directly in dialog procedure.
+		maxValue          ///< Sentinel value for internal validation (not intended for use).
 	};
 
+	/**
+	 * @brief Returns library version information or compile-time feature flags.
+	 *
+	 * @param libInfoType The type of information to query.
+	 * @return Integer representing the requested value or feature flag.
+	 *
+	 * @see LibInfo
+	 */
 	[[nodiscard]] int getLibInfo(LibInfo libInfoType);
 
-	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
+	// ========================================================================
+	// Config
+	// ========================================================================
+
+	/**
+	 * @brief Initializes the dark mode configuration based on the selected mode.
+	 *
+	 * @param dmType Configuration mode:
+	 *        - 0: Light mode (manual)
+	 *        - 1: Dark mode (manual)
+	 *        - 3: Classic mode (manual)
+	 *
+	 * @note Values 2 and 4 are reserved for internal use only.
+	 */
 	void initDarkModeConfig(UINT dmType);
-	// DWM_WINDOW_CORNER_PREFERENCE values
+
+	/// Sets the preferred window corner style on Windows 11. (DWM_WINDOW_CORNER_PREFERENCE values)
 	void setRoundCornerConfig(UINT roundCornerStyle);
+
+	/// Sets the preferred border color for window edge on Windows 11.
 	void setBorderColorConfig(COLORREF clr);
-	// DWM_SYSTEMBACKDROP_TYPE values
+
+	// Sets the Mica effects on Windows 11. (DWM_SYSTEMBACKDROP_TYPE values)
 	void setMicaConfig(UINT mica);
+
+	/// Applies Mica effects on the full window.
 	void setMicaExtendedConfig(bool extendMica);
-	// enum DarkModeType { light = 0, dark = 1, classic = 3 }; values
+
+	/// Applies dark mode settings based on the given configuration type. (initDarkModeConfig values)
 	void setDarkModeConfig(UINT dmType);
+
+	/// Applies dark mode settings based on system mode preference.
 	void setDarkModeConfig();
 
+	/// Initializes dark mode experimental features, colors, and other settings.
 	void initDarkMode(const wchar_t* iniName);
+
+	///Initializes dark mode without INI settings.
 	void initDarkMode();
 
+	// ========================================================================
+	// Basic checks
+	// ========================================================================
+
+	/// Checks if non-classic mode is enabled.
 	[[nodiscard]] bool isEnabled();
+
+	/// Checks if experimental dark mode features are currently active.
 	[[nodiscard]] bool isExperimentalActive();
+
+	/// Checks if experimental dark mode features are supported by the system.
 	[[nodiscard]] bool isExperimentalSupported();
 
+	/// Checks if follow the system mode behavior is enabled.
 	[[nodiscard]] bool isWindowsModeEnabled();
 
-	[[nodiscard]] bool isWindows10();
-	[[nodiscard]] bool isWindows11();
+	/// Checks if the host OS is at least Windows 10.
+	[[nodiscard]] bool isAtLeastWindows10();
+
+	/// Checks if the host OS is at least Windows 11.
+	[[nodiscard]] bool isAtLeastWindows11();
+
+	/// Retrieves the current Windows build number.
 	[[nodiscard]] DWORD getWindowsBuildNumber();
 
-	// handle events
+	// ========================================================================
+	// System Events
+	// ========================================================================
 
+	/// Handles system setting changes related to dark mode.
 	bool handleSettingChange(LPARAM lParam);
+
+	/// Checks if dark mode is enabled in the Windows registry.
 	[[nodiscard]] bool isDarkModeReg();
 
-	// from DarkMode.h
+	// ========================================================================
+	// From DarkMode.h
+	// ========================================================================
 
+	/**
+	 * @brief Overrides a specific system color with a custom color.
+	 *
+	 * Currently supports:
+	 * - `COLOR_WINDOW`: Background of ComboBoxEx list.
+	 * - `COLOR_WINDOWTEXT`: Text color of ComboBoxEx list.
+	 * - `COLOR_BTNFACE`: Gridline color in ListView (when applicable).
+	 *
+	 * @param nIndex One of the supported system color indices.
+	 * @param color Custom `COLORREF` value to apply.
+	 */
 	void setSysColor(int nIndex, COLORREF color);
-	bool hookSysColor();
-	void unhookSysColor();
 
-	// enhancements to DarkMode.h
+	// ========================================================================
+	// Enhancements to DarkMode.h
+	// ========================================================================
 
+	/// Makes scrollbars on the specified window and all its children consistent.
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
-	// colors
+	// ========================================================================
+	// Colors
+	// ========================================================================
 
 	void setToneColors(ColorTone colorTone);
 	[[nodiscard]] ColorTone getColorTone();
@@ -226,12 +315,19 @@ namespace DarkMode
 
 	[[nodiscard]] HPEN getHeaderEdgePen();
 
-	// paint helper
+	// ========================================================================
+	// Paint Helpers
+	// ========================================================================
 
+	/// Paints a rounded rectangle using the specified pen and brush.
 	void paintRoundRect(HDC hdc, const RECT& rect, HPEN hpen, HBRUSH hBrush, int width = 0, int height = 0);
-	inline void paintRoundFrameRect(HDC hdc, const RECT& rect, HPEN hpen, int width = 0, int height = 0);
 
-	// control subclassing
+	/// Paints an unfilled rounded rectangle (frame only).
+	void paintRoundFrameRect(HDC hdc, const RECT& rect, HPEN hpen, int width = 0, int height = 0);
+
+	// ========================================================================
+	// Control Subclassing
+	// ========================================================================
 
 	void setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
 	void removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
@@ -246,6 +342,9 @@ namespace DarkMode
 	void removeTabCtrlUpDownSubclass(HWND hWnd);
 	void setTabCtrlSubclass(HWND hWnd);
 	void removeTabCtrlSubclass(HWND hWnd);
+
+	void setCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd);
+	void removeCustomBorderForListBoxOrEditCtrlSubclass(HWND hWnd);
 
 	void setComboBoxCtrlSubclass(HWND hWnd);
 	void removeComboBoxCtrlSubclass(HWND hWnd);
@@ -268,12 +367,16 @@ namespace DarkMode
 	void setStaticTextCtrlSubclass(HWND hWnd);
 	void removeStaticTextCtrlSubclass(HWND hWnd);
 
-	// child subclassing
+	// ========================================================================
+	// Child Subclassing
+	// ========================================================================
 
 	void setChildCtrlsSubclassAndTheme(HWND hParent, bool subclass = true, bool theme = true);
 	void setChildCtrlsTheme(HWND hParent);
 
-	// window, parent, and other subclassing
+	// ========================================================================
+	// Window, Parent, And Other Subclassing
+	// ========================================================================
 
 	void setWindowEraseBgSubclass(HWND hWnd);
 	void removeWindowEraseBgSubclass(HWND hWnd);
@@ -290,7 +393,9 @@ namespace DarkMode
 	void setWindowSettingChangeSubclass(HWND hWnd);
 	void removeWindowSettingChangeSubclass(HWND hWnd);
 
-	// theme and helper
+	// ========================================================================
+	// Theme And Helpers
+	// ========================================================================
 
 	void enableSysLinkCtrlCtlColor(HWND hWnd);
 
@@ -309,23 +414,43 @@ namespace DarkMode
 	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
 	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
 
-	// only if g_dmType == DarkModeType::classic
-	inline void enableThemeDialogTexture(HWND hWnd, bool theme);
+	/// Enables or disables theme-based dialog background textures in classic mode.
+	void enableThemeDialogTexture(HWND hWnd, bool theme);
+
+	/// Enables or disables visual styles for a window.
 	void disableVisualStyle(HWND hWnd, bool doDisable);
+
+	/// Calculates perceptual lightness of a COLORREF color.
 	[[nodiscard]] double calculatePerceivedLightness(COLORREF clr);
+
+	/// Retrieves the current TreeView style configuration.
+	[[nodiscard]] const TreeViewStyle& getTreeViewStyle();
+
+	/// Determines appropriate TreeView style based on background perceived lightness.
 	void calculateTreeViewStyle();
-	void updatePrevTreeViewStyle();
-	[[nodiscard]] TreeViewStyle getTreeViewStyle();
-	void setTreeViewStyle(HWND hWnd, bool force = false);
+
+	/// Applies the appropriate window theme style to the specified TreeView.
+	void setTreeViewWindowTheme(HWND hWnd, bool force = false);
+
+	/// Retrieves the previous TreeView style configuration.
+	[[nodiscard]] const TreeViewStyle& getPrevTreeViewStyle();
+
+	/// Stores the current TreeView style as the previous style for later comparison.
+	void setPrevTreeViewStyle();
+
+	/// Checks whether the current theme is dark.
 	[[nodiscard]] bool isThemeDark();
-	inline void redrawWindowFrame(HWND hWnd);
+
+	void redrawWindowFrame(HWND hWnd);
 	void setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag);
 	void setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag);
 	void replaceExEdgeWithBorder(HWND hWnd, bool replace, LONG_PTR exStyleFlag);
 	void replaceClientEdgeWithBorderSafe(HWND hWnd);
 	void setProgressBarClassicTheme(HWND hWnd);
 
-	// ctl color
+	// ========================================================================
+	// Ctl Color
+	// ========================================================================
 
 	[[nodiscard]] LRESULT onCtlColor(HDC hdc);
 	[[nodiscard]] LRESULT onCtlColorCtrl(HDC hdc);
@@ -335,84 +460,99 @@ namespace DarkMode
 	[[nodiscard]] LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
 	[[nodiscard]] LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
 
-	// hook callback dialog procedure for font, color chooser,... dialogs
+	// ========================================================================
+	// Hook Callback Dialog Procedure
+	// ========================================================================
 
+	/**
+	 * @brief Hook procedure for customizing common dialogs with dark mode.
+	 *
+	 * This function handles messages for all Windows common dialogs.
+	 * When initialized (`WM_INITDIALOG`), it applies dark mode styling to the dialog.
+	 *
+	 * ## Special Case: Font Dialog Workaround
+	 * - When a hook is used with `ChooseFont`, Windows **automatically falls back**
+	 *   to an **older template**, losing modern UI elements.
+	 * - To prevent this forced downgrade, a **modified template** (based on Font.dlg) is used.
+	 * - **CBS_OWNERDRAWFIXED should be removed** from the **Size** and **Script** comboboxes
+	 *   to restore proper visualization.
+	 * - **Custom owner-draw visuals remain** for other font comboboxes to allow font preview.
+	 * - Same for the `"AaBbYyZz"` sample text.
+	 * - However **Automatic system translation for captions and static texts is lost** in this workaround.
+	 *
+	 * ## Custom Font Dialog Template (Resource File)
+	 * ```rc
+	 * IDD_DARK_FONT_DIALOG DIALOG 13, 54, 243, 234
+	 * STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU |
+	 *       DS_3DLOOK
+	 * CAPTION "Font"
+	 * FONT 9, "Segoe UI"
+	 * BEGIN
+	 *     LTEXT           "&Font:", stc1, 7, 7, 98, 9
+	 *     COMBOBOX        cmb1, 7, 16, 98, 76,
+	 *                     CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+	 *                     CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+	 *                     CBS_OWNERDRAWFIXED
+	 *
+	 *     LTEXT           "Font st&yle:", stc2, 114, 7, 74, 9
+	 *     COMBOBOX        cmb2, 114, 16, 74, 76,
+	 *                     CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+	 *                     WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+	 *                     CBS_OWNERDRAWFIXED
+	 *
+	 *     LTEXT           "&Size:", stc3, 198, 7, 36, 9
+	 *     COMBOBOX        cmb3, 198, 16, 36, 76,
+	 *                     CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+	 *                     CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+	 *                     CBS_OWNERDRAWFIXED // remove CBS_OWNERDRAWFIXED
+	 *
+	 *     GROUPBOX        "Effects", grp1, 7, 97, 98, 76, WS_GROUP
+	 *     AUTOCHECKBOX    "Stri&keout", chx1, 13, 111, 90, 10, WS_TABSTOP
+	 *     AUTOCHECKBOX    "&Underline", chx2, 13, 127, 90, 10
+	 *
+	 *     LTEXT           "&Color:", stc4, 13, 144, 89, 9
+	 *     COMBOBOX        cmb4, 13, 155, 85, 100,
+	 *                     CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL |
+	 *                     CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+	 *
+	 *     GROUPBOX        "Sample", grp2, 114, 97, 120, 43, WS_GROUP
+	 *     CTEXT           "AaBbYyZz", stc5, 116, 106, 117, 33,
+	 *                     SS_NOPREFIX | NOT WS_VISIBLE
+	 *     LTEXT           "", stc6, 7, 178, 227, 20, SS_NOPREFIX | NOT WS_GROUP
+	 *
+	 *     LTEXT           "Sc&ript:", stc7, 114, 145, 118, 9
+	 *     COMBOBOX        cmb5, 114, 155, 120, 30, CBS_DROPDOWNLIST |
+	 *                     CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | // remove CBS_OWNERDRAWFIXED
+	 *                     WS_BORDER | WS_VSCROLL | WS_TABSTOP
+	 *
+	 *     CONTROL         "<A>Show more fonts</A>", IDC_MANAGE_LINK, "SysLink",
+	 *                     WS_TABSTOP, 7, 199, 227, 9
+	 *
+	 *     DEFPUSHBUTTON   "OK", IDOK, 141, 215, 45, 14, WS_GROUP
+	 *     PUSHBUTTON      "Cancel", IDCANCEL, 190, 215, 45, 14, WS_GROUP
+	 *     PUSHBUTTON      "&Apply", psh3, 92, 215, 45, 14, WS_GROUP
+	 *     PUSHBUTTON      "&Help", pshHelp, 43, 215, 45, 14, WS_GROUP
+	 * END
+	 * ```
+	 *
+	 * ## Usage Example:
+	 * ```cpp
+	 * #define IDD_DARK_FONT_DIALOG 1000 // usually in resource.h or other header
+	 * 
+	 * CHOOSEFONT cf{};
+	 * cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
+	 * cf.lpfnHook = static_cast<LPCFHOOKPROC>(HookDlgProc);
+	 * cf.hInstance = GetModuleHandle(nullptr);
+	 * cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
+	 * ```
+	 *
+	 * @param hWnd Handle to the dialog window.
+	 * @param uMsg Message identifier.
+	 * @param wParam First message parameter.
+	 * @param lParam Second message parameter.
+	 * @return A value defined by the hook procedure.
+	 */
 	UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-// Below is copy of Windows 7 new choose font dialog template from Font.dlg.
-// Using hook will force ChooseFont function to use older template.
-// Workaround is to use modified template (remove CBS_OWNERDRAWFIXED
-// from size and script comboboxes) copied from Font.dlg. Other comboboxes
-// use custom owner draw, which are needed to show visuals for selected font.
-// Same for "AaBbYyZz" text which has NOT WS_VISIBLE.
-// This workaround will however remove automatic system translation for caption
-// and static texts.
-//
-// Usage example:
-
-//#define IDD_DARK_FONT_DIALOG 1000 // usually in resource.h or other header
-
-//CHOOSEFONT cf{};
-//// some user code
-//cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
-//cf.lpfnHook = static_cast<LPCFHOOKPROC>(DarkMode::HookDlgProc);
-//cf.hInstance = GetModuleHandle(nullptr);
-//cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
-
-// in rc file
-
-//IDD_DARK_FONT_DIALOG DIALOG 13, 54, 243, 234
-//STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU |
-//      DS_3DLOOK
-//CAPTION "Font"
-//FONT 9, "Segoe UI"
-//BEGIN
-//    LTEXT           "&Font:", stc1, 7, 7, 98, 9
-//    COMBOBOX        cmb1, 7, 16, 98, 76,
-//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
-//                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
-//                    CBS_OWNERDRAWFIXED
-//
-//    LTEXT           "Font st&yle:", stc2, 114, 7, 74, 9
-//    COMBOBOX        cmb2, 114, 16, 74, 76,
-//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
-//                    WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
-//                    CBS_OWNERDRAWFIXED
-//
-//    LTEXT           "&Size:", stc3, 198, 7, 36, 9
-//    COMBOBOX        cmb3, 198, 16, 36, 76,
-//                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
-//                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
-//                    CBS_OWNERDRAWFIXED // remove CBS_OWNERDRAWFIXED
-//
-//    GROUPBOX        "Effects", grp1, 7, 97, 98, 76, WS_GROUP
-//    AUTOCHECKBOX    "Stri&keout", chx1, 13, 111, 90, 10, WS_TABSTOP
-//    AUTOCHECKBOX    "&Underline", chx2, 13, 127, 90, 10
-//
-//    LTEXT           "&Color:", stc4, 13, 144, 89, 9
-//    COMBOBOX        cmb4, 13, 155, 85, 100,
-//                    CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL |
-//                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
-//
-//    GROUPBOX        "Sample", grp2, 114, 97, 120, 43, WS_GROUP
-//    CTEXT           "AaBbYyZz", stc5, 116, 106, 117, 33,
-//                    SS_NOPREFIX | NOT WS_VISIBLE
-//    LTEXT           "", stc6, 7, 178, 227, 20, SS_NOPREFIX | NOT WS_GROUP
-//
-//    LTEXT           "Sc&ript:", stc7, 114, 145, 118, 9
-//    COMBOBOX        cmb5, 114, 155, 120, 30, CBS_DROPDOWNLIST |
-//                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | // remove CBS_OWNERDRAWFIXED
-//                    WS_BORDER | WS_VSCROLL | WS_TABSTOP
-//    
-//    CONTROL         "<A>Show more fonts</A>", IDC_MANAGE_LINK, "SysLink", 
-//                    WS_TABSTOP, 7, 199, 227, 9 
-//
-//    DEFPUSHBUTTON   "OK", IDOK, 141, 215, 45, 14, WS_GROUP
-//    PUSHBUTTON      "Cancel", IDCANCEL, 190, 215, 45, 14, WS_GROUP
-//    PUSHBUTTON      "&Apply", psh3, 92, 215, 45, 14, WS_GROUP
-//    PUSHBUTTON      "&Help", pshHelp, 43, 215, 45, 14, WS_GROUP
-//
-//END
 } // namespace DarkMode
 
 #else

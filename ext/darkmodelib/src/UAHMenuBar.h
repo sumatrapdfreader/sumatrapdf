@@ -1,5 +1,7 @@
-// MIT license, see LICENSE
-// Copyright(c) 2021 adzm / Adam D. Walling
+// SPDX-License-Identifier: MIT
+
+// Copyright (c) 2021 adzm / Adam D. Walling
+// MIT license, see LICENSE-UAHMenuBar
 
 #pragma once
 #include <windows.h>
@@ -21,11 +23,13 @@ typedef union tagUAHMENUITEMMETRICS
 {
 	// cx appears to be 14 / 0xE less than rcItem's width!
 	// cy 0x14 seems stable, i wonder if it is 4 less than rcItem's height which is always 24 atm
-	struct {
+	struct
+	{
 		DWORD cx;
 		DWORD cy;
 	} rgsizeBar[2];
-	struct {
+	struct
+	{
 		DWORD cx;
 		DWORD cy;
 	} rgsizePopup[4];
