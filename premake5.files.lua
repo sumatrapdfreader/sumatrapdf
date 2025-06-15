@@ -722,6 +722,20 @@ function uia_files()
   })
 end
 
+function darkmodelib_files()
+  files_in_dir("ext/darkmodelib/src", {
+    "DarkMode.*",
+    "DarkModeSubclass.cpp",
+    "IatHook.h",
+    "StdAfx.h",
+    "UAHMenuBar.h",
+    "Version.h",
+  })
+  files_in_dir("ext/darkmodelib/include", {
+    "DarkModeSubclass.h",
+  })
+end
+
 function utils_files()
   files_in_dir("src/utils", {
     "AvifReader.*",

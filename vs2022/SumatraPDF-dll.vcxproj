@@ -1450,7 +1450,6 @@
     <None Include="..\do\check_accesskyes.go" />
     <None Include="..\do\clang_tidy_format.go" />
     <None Include="..\do\compress.go" />
-    <None Include="..\do\file_upload.go" />
     <None Include="..\do\gen_docs.go" />
     <None Include="..\do\git.go" />
     <None Include="..\do\github_ci.go" />

@@ -31,7 +31,7 @@
 #define NOMINMAX
 #endif
 
-#include "DarkModeSubclass.h"
+#include "../include/DarkModeSubclass.h"
 
 #if !defined(_DARKMODELIB_NOT_USED)
 
@@ -153,14 +153,8 @@ static bool setClrFromIni(const std::wstring& sectionName, const std::wstring& k
 		}
 	}
 
-	try
-	{
-		*clr = HEXRGB(std::stoul(buffer, nullptr, 16));
-	}
-	catch (const std::exception&)
-	{
-		return false;
-	}
+	// TODO: stoul can throw exception so use something else
+	*clr = HEXRGB(std::stoul(buffer, nullptr, 16));
 
 	return true;
 }

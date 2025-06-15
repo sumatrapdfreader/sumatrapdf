@@ -785,6 +785,7 @@ workspace "SumatraPDF"
 
     webview_conf()
 
+    darkmodelib_files()
     synctex_files()
     mui_files()
     wingui_files()
