@@ -117,8 +117,8 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     }
     ReportIf(entry->refs != 0);
     ReportIf(cache[idx] != entry);
-    logf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo, entry->rotation,
-         entry->zoom);
+    logf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo,
+         entry->rotation, entry->zoom);
 
     delete entry;
 
@@ -259,16 +259,13 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     // must go from end becaues freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
-        bool shouldFree = false;
-        // a specific page
-        shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
-        if (tile) {
+        bool shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
+        if (shouldFree && tile) {
             // a given tile of the page or all tiles not rendered at a given resolution
             // (and at resolution 0 for quick zoom previews)
-            shouldFree =
-                shouldFree && (entry->tile == *tile ||
-                            tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res ||
-                            tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
+            shouldFree = (entry->tile == *tile ||
+                          tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res ||
+                          tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
         }
         if (shouldFree) {
             DropCacheEntry(entry);
@@ -277,7 +274,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
 }
 
 void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
-    logf("RenderCache::FreeForDisplayModel: dm=0x%p\n", dm);
+    logf("RenderCache::FreeForDisplayModel: dm: 0x%p\n", dm);
     ScopedCritSec scope(&cacheAccess);
     // must go from end becaues freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
@@ -392,7 +389,7 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
 
 // reduce the size of tiles in order to hopefully use less memory overall
 bool RenderCache::ReduceTileSize() {
-    logf("RenderCache::ReduceTileSize(): reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
+    logf("RenderCache::ReduceTileSize: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
     if (maxTileSize.dx < 200 || maxTileSize.dy < 200) {
         return false;
     }
@@ -437,7 +434,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
-    logf("RenderCache::RequestRendering(): pageNo %d\n", pageNo);
+    logf("RenderCache::RequestRendering: pageNo %d\n", pageNo);
     ScopedCritSec scope(&requestAccess);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
@@ -502,7 +499,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                          const OnBitmapRendered* renderCb) {
-    logf("RenderCache::Render(): pageNo %d\n", pageNo);
+    logf("RenderCache::Render: pageNo %d\n", pageNo);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
         return false;
