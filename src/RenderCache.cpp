@@ -117,7 +117,7 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     }
     ReportIf(entry->refs != 0);
     ReportIf(cache[idx] != entry);
-    logf("RenderCache::DropCacheEntry: pageNo: %d, rotation: %d, zoom: %.2f\n", entry->pageNo, entry->rotation,
+    logf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo, entry->rotation,
          entry->zoom);
 
     delete entry;
@@ -255,7 +255,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     // must go from end becaues freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
-        bool shouldFree;
+        bool shouldFree = false;
         if (dm && pageNo != kInvalidPageNo) {
             // a specific page
             shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
@@ -284,7 +284,15 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
 }
 
 void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
-    FreePage(dm);
+    logf("RenderCache::FreeForDisplayModel: dm=0x%p\n", dm);
+    ScopedCritSec scope(&cacheAccess);
+    // must go from end becaues freeing changes the cache
+    for (int i = cacheCount - 1; i >= 0; i--) {
+        BitmapCacheEntry* entry = cache[i];
+        if (entry->dm == dm) {
+            DropCacheEntry(entry);
+        }
+    }
 }
 
 void RenderCache::FreeNotVisible() {
