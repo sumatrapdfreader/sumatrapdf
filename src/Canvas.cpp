@@ -61,13 +61,10 @@ bool gNoFlickerRender = true;
 
 Kind kNotifAnnotation = "notifAnnotation";
 
-// Timer for mouse wheel smooth scrolling
-constexpr UINT_PTR kSmoothScrollTimerID = 6;
-
 // Smooth scrolling factor. This is a value between 0 and 1.
 // Each step, we scroll the needed delta times this factor.
 // Therefore, a higher factor makes smooth scrolling faster.
-static const double gSmoothScrollingFactor = 0.2;
+static const double gSmoothScrollingFactor = 0.3;
 
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
@@ -151,7 +148,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     if (si.nPos != currPos || msg == SB_THUMBTRACK) {
         if (gGlobalPrefs->smoothScroll) {
             win->scrollTargetY = si.nPos;
-            SetTimer(win->hwndCanvas, kSmoothScrollTimerID, USER_TIMER_MINIMUM, nullptr);
+            SetEvent(win->scrollTimer);
         } else {
             win->AsFixed()->ScrollYTo(si.nPos);
         }
@@ -392,8 +389,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
         case MouseAction::Scrolling: {
             win->annotationUnderCursor = nullptr;
-            win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-            win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+            win->yScrollSpeed = (y - win->dragStart.y) * SMOOTHSCROLL_FACTOR;
+            win->xScrollSpeed = (x - win->dragStart.x) * SMOOTHSCROLL_FACTOR;
             break;
         }
         case MouseAction::SelectingText:
@@ -1211,7 +1208,7 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     win->dragStartPending = false;
     // Kill the smooth scroll timer when zooming
     // We don't want to move to the new updated y offset after zooming
-    KillTimer(win->hwndCanvas, kSmoothScrollTimerID);
+    ResetEvent(win->scrollTimer);
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -1639,7 +1636,7 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_MBUTTONDOWN:
-            SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+            SetEvent(win->smoothscrollTimer);
             // TODO: Create window that shows location of initial click for reference
             OnMouseMiddleButtonDown(win, x, y, wp);
             return 0;
@@ -1819,14 +1816,15 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
 
         case SMOOTHSCROLL_TIMER_ID:
             if (MouseAction::Scrolling == win->mouseAction) {
-                win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
+                double factor = win->scrollTimerDeltaTime / 1000.0;
+                win->MoveDocBy((int)(win->xScrollSpeed * factor), (int)(win->yScrollSpeed * factor));
             } else if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
                 pt = HwndGetCursorPos(win->hwndCanvas);
                 if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y)) {
                     OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
                 }
             } else {
-                KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+                ResetEvent(win->smoothscrollTimer);
                 win->yScrollSpeed = 0;
                 win->xScrollSpeed = 0;
             }
@@ -1875,11 +1873,12 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             int delta = target - current;
 
             if (delta == 0) {
-                KillTimer(hwnd, kSmoothScrollTimerID);
+                ResetEvent(win->scrollTimer);
             } else {
                 // logf("Smooth scrolling from %d to %d (delta %d)\n", current, target, delta);
 
-                double step = delta * gSmoothScrollingFactor;
+                double a = pow(1.0 - gSmoothScrollingFactor, 60 * win->scrollTimerDeltaTime / 1000.0);
+                double step = delta * (1.0 - a);
 
                 // Round away from zero
                 int dy = step < 0 ? (int)floor(step) : (int)ceil(step);
