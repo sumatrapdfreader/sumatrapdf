@@ -312,7 +312,7 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
 }
 
 DisplayModel::~DisplayModel() {
-    dontRenderFlag = true;
+    pauseRendering = true;
     cb->CleanUp(this);
 
     delete pdfSync;

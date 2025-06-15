@@ -260,7 +260,7 @@ struct DisplayModel : DocController {
     bool inPresentation = false;
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
-    bool dontRenderFlag = false;
+    bool pauseRendering = false;
 };
 
 extern bool gPredictiveRender;

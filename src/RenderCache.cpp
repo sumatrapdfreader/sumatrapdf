@@ -418,7 +418,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
     logf("RenderCache::RequestRendering(): pageNo %d\n", pageNo);
     ScopedCritSec scope(&requestAccess);
     ReportIf(!dm);
-    if (!dm || dm->dontRenderFlag) {
+    if (!dm || dm->pauseRendering) {
         return;
     }
 
@@ -482,7 +482,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
                          const OnBitmapRendered* renderCb) {
     logf("RenderCache::Render(): pageNo %d\n", pageNo);
     ReportIf(!dm);
-    if (!dm || dm->dontRenderFlag) {
+    if (!dm || dm->pauseRendering) {
         return false;
     }
 
@@ -655,7 +655,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             continue;
         }
 
-        if (req.dm->dontRenderFlag) {
+        if (req.dm->pauseRendering) {
             if (req.renderCb) {
                 req.renderCb->Call(nullptr);
             }
