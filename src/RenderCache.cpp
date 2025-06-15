@@ -250,32 +250,25 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
    of the given DisplayModel, or even all invisible pages). */
 void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     logf("RenderCache::FreePage: dm: 0x%p, pageNo: %d\n", dm, pageNo);
+    ReportIf(!dm || (pageNo == kInvalidPageNo));
+    if (!dm || (pageNo == kInvalidPageNo)) {
+        return;
+    }
     ScopedCritSec scope(&cacheAccess);
 
     // must go from end becaues freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         bool shouldFree = false;
-        if (dm && pageNo != kInvalidPageNo) {
-            // a specific page
-            shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
-            if (tile) {
-                // a given tile of the page or all tiles not rendered at a given resolution
-                // (and at resolution 0 for quick zoom previews)
-                shouldFree =
-                    shouldFree && (entry->tile == *tile ||
-                                   tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res ||
-                                   tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
-            }
-        } else if (dm) {
-            // all pages of this DisplayModel
-            shouldFree = (entry->dm == dm);
-        } else {
-            // all invisible pages resp. page tiles
-            shouldFree = !entry->dm->PageVisibleNearby(entry->pageNo);
-            if (!shouldFree && entry->tile.res > 1) {
-                shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->tile, 2.0);
-            }
+        // a specific page
+        shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
+        if (tile) {
+            // a given tile of the page or all tiles not rendered at a given resolution
+            // (and at resolution 0 for quick zoom previews)
+            shouldFree =
+                shouldFree && (entry->tile == *tile ||
+                            tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res ||
+                            tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
         }
         if (shouldFree) {
             DropCacheEntry(entry);
