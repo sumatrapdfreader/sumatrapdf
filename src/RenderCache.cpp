@@ -652,7 +652,7 @@ void RenderCache::AbortCurrentRequest() {
     curReq->abort = true;
 }
 
-DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
+static DWORD WINAPI RenderCacheThread(LPVOID data) {
     RenderCache* cache = (RenderCache*)data;
     PageRenderRequest req;
     RenderedBitmap* bmp;

@@ -142,8 +142,6 @@ struct RenderCache {
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest();
 
-    static DWORD WINAPI RenderCacheThread(LPVOID data);
-
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
                            TilePosition* tile = nullptr);
     bool DropCacheEntry(BitmapCacheEntry* entry);
