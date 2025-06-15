@@ -28,6 +28,14 @@
    due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
 
+#if defined(CONSERVE_MEMORY)
+bool gConserveMemory = true;
+#else
+bool gConserveMemory = false;
+#endif
+
+static DWORD WINAPI RenderCacheThread(LPVOID data);
+
 bool gShowTileLayout = false;
 
 RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)}) {
@@ -869,18 +877,18 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
         }
     }
 
-#ifdef CONSERVE_MEMORY
-    if (!neededScaling) {
-        if (renderOutOfDateCue) {
-            *renderOutOfDateCue = false;
+    if (gConserveMemory) {
+        if (!neededScaling) {
+            if (renderOutOfDateCue) {
+                *renderOutOfDateCue = false;
+            }
+            // free tiles with different resolution
+            TilePosition tile(targetRes, (USHORT)-1, 0);
+            logf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
+            FreePage(dm, pageNo, &tile);
         }
-        // free tiles with different resolution
-        TilePosition tile(targetRes, (USHORT)-1, 0);
-        logf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
-        FreePage(dm, pageNo, &tile);
+        FreeNotVisible();
     }
-    FreeNotVisible();
-#endif
 
     return renderDelayMin;
 }
