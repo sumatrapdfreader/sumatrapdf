@@ -258,6 +258,8 @@ struct BlittableBitmap {
     virtual ~BlittableBitmap() {};
 };
 
+i64 BlittableBitmapByteSize(BlittableBitmap*);
+
 struct RenderedBitmap : BlittableBitmap {
     HBITMAP hbmp = nullptr;
     HANDLE hMap = nullptr;

@@ -32,6 +32,16 @@ Size BlittableBitmap::GetSize() {
     return size;
 }
 
+// approximate size, we assume 4 bytes per pixel and don't count stride
+i64 BlittableBitmapByteSize(BlittableBitmap* bmp) {
+    if (!bmp) {
+        return 0;
+    }
+    Size s = bmp->GetSize();
+    i64 res = i64(s.dx) * i64(s.dy) * i64(4);
+    return res;
+}
+
 RenderedBitmap::RenderedBitmap(HBITMAP hbmp, Size size, HANDLE hMap) {
     this->hbmp = hbmp;
     this->hMap = hMap;
