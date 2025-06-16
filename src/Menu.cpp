@@ -2089,6 +2089,9 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
 }
 
 void MarkMenuOwnerDraw(HMENU hmenu) {
+    if (gUseDarkModeLib) {
+        return;
+    }
     if (!ThemeColorizeControls()) {
         return;
     }
