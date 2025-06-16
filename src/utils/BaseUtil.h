@@ -672,7 +672,7 @@ Func0 MkFunc0Void(funcVoidPtr fn);
 template <typename T>
 Func0 MkFunc0(void (*fn)(T*), T* d) {
     auto res = Func0{};
-    res.fn = (func0Ptr)fn;
+    res.fn = (void*)fn;
     res.userData = (void*)d;
     return res;
 }
