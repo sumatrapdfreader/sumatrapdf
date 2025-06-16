@@ -30,7 +30,7 @@
 #include "Translations.h"
 #include "Version.h"
 #include "Theme.h"
-#include "../ext/darkmodelib/include/DarkModeSubclass.h"
+#include "DarkModeSubclass.h"
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2

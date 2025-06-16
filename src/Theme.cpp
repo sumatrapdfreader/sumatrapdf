@@ -12,7 +12,7 @@ License: GPLv3 */
 #include "GlobalPrefs.h"
 #include "Translations.h"
 #include "Toolbar.h"
-#include "../ext/darkmodelib/include/DarkModeSubclass.h"
+#include "DarkModeSubclass.h"
 
 #include "utils/Log.h"
 

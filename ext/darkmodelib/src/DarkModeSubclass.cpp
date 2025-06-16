@@ -34,7 +34,7 @@
 #define NOMINMAX
 #endif
 
-#include "../include/DarkModeSubclass.h"
+#include "DarkModeSubclass.h"
 
 #if !defined(_DARKMODELIB_NOT_USED)
 

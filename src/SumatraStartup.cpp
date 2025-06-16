@@ -69,7 +69,7 @@
 #include "ExternalViewers.h"
 #include "AppColors.h"
 #include "Theme.h"
-#include "../ext/darkmodelib/include/DarkModeSubclass.h"
+#include "DarkModeSubclass.h"
 
 #include "utils/Log.h"
 
