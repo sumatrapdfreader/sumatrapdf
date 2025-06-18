@@ -171,7 +171,7 @@ struct WndToHwnd {
 
 Vec<WndToHwnd> gWndToHwndMap;
 
-static Wnd* WindowMapGetWindow(HWND hwnd) {
+static Wnd* WndMapGetWindow(HWND hwnd) {
     for (auto& el : gWndToHwndMap) {
         if (el.hwnd == hwnd) {
             return el.window;
@@ -185,7 +185,7 @@ static void WndMapAdd(HWND hwnd, Wnd* w) {
         ReportIf(!hwnd);
         return;
     }
-    Wnd* existing = WindowMapGetWindow(hwnd);
+    Wnd* existing = WndMapGetWindow(hwnd);
     if (existing) {
         ReportIf(existing);
         return;
@@ -238,7 +238,7 @@ static LRESULT CALLBACK WndWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
         return 0;
     }
 
-    Wnd* wnd = WindowMapGetWindow(hwnd);
+    Wnd* wnd = WndMapGetWindow(hwnd);
 
     if (msg == WM_NCCREATE) {
         CREATESTRUCT* cs = (CREATESTRUCT*)(lparam);
@@ -602,7 +602,7 @@ LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
         return 0;
     }
 
-    Wnd* pWnd = WindowMapGetWindow(wnd);
+    Wnd* pWnd = WndMapGetWindow(wnd);
     if (pWnd != nullptr) {
         auto res = pWnd->OnMessageReflect(msg, wparam, lparam);
         return res;
@@ -617,7 +617,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch (msg) {
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
-            Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
+            Wnd* pWnd = WndMapGetWindow(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
                 didHandle = pWnd->OnCommand(wparam, lparam);
@@ -631,7 +631,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             // Restricting OnNotifyReflect to child windows avoids double handling.
             NMHDR* hdr = reinterpret_cast<LPNMHDR>(lparam);
             HWND from = hdr->hwndFrom;
-            Wnd* wndFrom = WindowMapGetWindow(from);
+            Wnd* wndFrom = WndMapGetWindow(from);
             if (!wndFrom) {
                 return 0;
             }
@@ -655,7 +655,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_HSCROLL:
         case WM_VSCROLL:
         case WM_PARENTNOTIFY: {
-            Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
+            Wnd* pWnd = WndMapGetWindow(reinterpret_cast<HWND>(lparam));
             LRESULT result = 0;
             if (pWnd != nullptr) {
                 result = pWnd->MessageReflect(msg, wparam, lparam);
@@ -712,7 +712,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
-            Wnd* pWnd = WindowMapGetWindow(reinterpret_cast<HWND>(lparam));
+            Wnd* pWnd = WndMapGetWindow(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
                 didHandle = pWnd->OnCommand(wparam, lparam);
@@ -743,7 +743,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             // Restricting OnNotifyReflect to child windows avoids double handling.
             NMHDR* hdr = reinterpret_cast<NMHDR*>(lparam);
             HWND from = hdr->hwndFrom;
-            Wnd* wndFrom = WindowMapGetWindow(from);
+            Wnd* wndFrom = WndMapGetWindow(from);
 
             if (wndFrom != nullptr) {
                 if (::GetParent(from) == this->hwnd) {
@@ -897,7 +897,7 @@ bool Wnd::PreTranslateMessage(MSG& msg) {
 
 void Wnd::Attach(HWND hwnd) {
     ReportIf(!IsWindow(hwnd));
-    ReportIf(WindowMapGetWindow(hwnd));
+    ReportIf(WndMapGetWindow(hwnd));
 
     this->hwnd = hwnd;
     Subclass();
@@ -1045,7 +1045,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     ReportIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE
     ReportIf(hwndTmp != hwnd);
-    ReportIf(this != WindowMapGetWindow(hwndTmp));
+    ReportIf(this != WndMapGetWindow(hwndTmp));
     if (!hwnd) {
         return nullptr;
     }
@@ -1150,7 +1150,7 @@ bool PreTranslateMessage(MSG& msg) {
         return false;
     }
     for (HWND hwnd = msg.hwnd; hwnd != nullptr; hwnd = ::GetParent(hwnd)) {
-        auto wnd = WindowMapGetWindow(hwnd);
+        auto wnd = WndMapGetWindow(hwnd);
         if (wnd && wnd->PreTranslateMessage(msg)) {
             return true;
         }
