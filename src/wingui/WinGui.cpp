@@ -164,15 +164,15 @@ TempStr WinMsgNameTemp(UINT msg) {
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 
-struct WindowToHwnd {
+struct WndToHwnd {
     Wnd* window = nullptr;
     HWND hwnd = nullptr;
 };
 
-Vec<WindowToHwnd> gWindowToHwndMap;
+Vec<WndToHwnd> gWndToHwndMap;
 
 static Wnd* WindowMapGetWindow(HWND hwnd) {
-    for (auto& el : gWindowToHwndMap) {
+    for (auto& el : gWndToHwndMap) {
         if (el.hwnd == hwnd) {
             return el.window;
         }
@@ -180,7 +180,7 @@ static Wnd* WindowMapGetWindow(HWND hwnd) {
     return nullptr;
 }
 
-static void WindowMapAdd(HWND hwnd, Wnd* w) {
+static void WndMapAdd(HWND hwnd, Wnd* w) {
     if (!hwnd) {
         ReportIf(!hwnd);
         return;
@@ -190,17 +190,17 @@ static void WindowMapAdd(HWND hwnd, Wnd* w) {
         ReportIf(existing);
         return;
     }
-    WindowToHwnd el = {w, hwnd};
-    gWindowToHwndMap.Append(el);
+    WndToHwnd el = {w, hwnd};
+    gWndToHwndMap.Append(el);
 }
 
 /*
-static bool WindowMapRemove(HWND hwnd) {
-    int n = gWindowToHwndMap.Size();
+static bool WndMapRemoveHwnd(HWND hwnd) {
+    int n = gWndToHwndMap.Size();
     for (int i = 0; i < n; i++) {
-        auto&& el = gWindowToHwndMap[i];
+        auto&& el = gWndToHwndMap[i];
         if (el.hwnd == hwnd) {
-            gWindowToHwndMap.RemoveAtFast(i);
+            gWndToHwndMap.RemoveAtFast(i);
             return true;
         }
     }
@@ -208,15 +208,16 @@ static bool WindowMapRemove(HWND hwnd) {
 }
 */
 
-static bool WindowMapRemove(Wnd* w) {
-    int n = gWindowToHwndMap.Size();
+static bool WndMapRemoveWnd(Wnd* w) {
+    int n = gWndToHwndMap.Size();
     for (int i = 0; i < n; i++) {
-        auto&& el = gWindowToHwndMap[i];
+        auto&& el = gWndToHwndMap[i];
         if (el.window == w) {
-            gWindowToHwndMap.RemoveAtFast(i);
+            gWndToHwndMap.RemoveAtFast(i);
             return true;
         }
     }
+    logf("WndMapRemoveWnd: failed to remove w: 0x%p\n", w);
     return false;
 }
 
@@ -244,7 +245,7 @@ static LRESULT CALLBACK WndWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
         ReportIf(wnd);
         wnd = (Wnd*)(cs->lpCreateParams);
         wnd->hwnd = hwnd;
-        WindowMapAdd(hwnd, wnd);
+        WndMapAdd(hwnd, wnd);
     }
 
     if (wnd) {
@@ -324,7 +325,7 @@ bool Wnd::IsVisible() const {
 void Wnd::Destroy() {
     // the order is important
     // stop dispatching messages to this Wnd
-    WindowMapRemove(this);
+    WndMapRemoveWnd(this);
     // unsubclass while hwnd is still valid
     UnSubclass();
     // finally destroy hwnd
@@ -914,13 +915,13 @@ HWND Wnd::Detach() {
     UnSubclass();
 
     HWND wnd = hwnd;
-    WindowMapRemove(this);
+    WndMapRemoveWnd(this);
     hwnd = nullptr;
     return wnd;
 }
 
 void Wnd::Cleanup() {
-    WindowMapRemove(this);
+    WndMapRemoveWnd(this);
     hwnd = nullptr;
     subclassId = 0;
 }
@@ -1077,7 +1078,7 @@ void Wnd::Subclass() {
     if (subclassId) {
         return;
     }
-    WindowMapAdd(hwnd, this);
+    WndMapAdd(hwnd, this);
 
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwnd, WndSubclassedWindowProc, subclassId, (DWORD_PTR)this);
