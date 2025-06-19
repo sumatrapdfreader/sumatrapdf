@@ -305,7 +305,7 @@ func Main() {
 
 	if flgUpdateGoDeps {
 		defer measureDuration()()
-		u.UpdateGoDeps("do", true)
+		u.UpdateGoDeps(".", true)
 		u.UpdateGoDeps(filepath.Join("tools", "regress"), true)
 		// u.UpdateGoDeps(filepath.Join("tools", "logview-cli"), true)
 		// u.UpdateGoDeps(filepath.Join("tools", "logview"), true)
