@@ -397,7 +397,7 @@ func Main() {
 	}
 
 	if flgBuildSignUploadPreRelease {
-		buildSignAndUploadLatestPreRelease()
+		buildSignAndUploadPreRelease()
 		return
 	}
 

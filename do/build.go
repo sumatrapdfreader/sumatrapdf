@@ -82,13 +82,13 @@ func createPdbLzsa(dir string) error {
 }
 
 // build, sign, upload latest pre-release build
-func buildSignAndUploadLatestPreRelease() {
+func buildSignAndUploadPreRelease() {
 	if !isGithubMyMasterBranch() {
-		logf("buildSignAndUploadLatestPreRelease: skipping build because not on master branch\n")
+		logf("buildSignAndUploadPreRelease: skipping build because not on master branch\n")
 		return
 	}
 	ver := getPreReleaseVer()
-	logf("buildSignAndUploadLatestPreRelease: ver: %s\n", ver)
+	logf("buildSignAndUploadPreRelease: ver: %s\n", ver)
 	isClean := isGitClean(".")
 	if !isClean {
 		logf("will not upload because git is not clean\n")
@@ -152,9 +152,10 @@ func buildSignAndUploadLatestPreRelease() {
 	}
 
 	makeAppxTempMust(dirDst)
-	if true {
+	if false {
 		// temporary for testing making .msix
 		buildAppxMust(dirDst)
+		return
 	}
 
 	// sign all files in one swoop
@@ -185,7 +186,7 @@ func buildSignAndUploadLatestPreRelease() {
 	createManifestMust(manifestPath)
 
 	if !isClean {
-		logf("buildSignAndUploadLatestPreRelease: will skip upload because git is not clean\n")
+		logf("buildSignAndUploadPreRelease: will skip upload because git is not clean\n")
 		uploadDryRun = true
 	}
 	uploadToStorage(buildTypePreRel, ver, dirDst)
