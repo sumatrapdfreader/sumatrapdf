@@ -1,4 +1,4 @@
-package main
+package do
 
 import (
 	"archive/zip"
@@ -97,6 +97,7 @@ func buildSignAndUploadLatestPreRelease() {
 	verifyBuildNotInStorageMust(newMinioBackblazeClient(), buildTypePreRel, ver)
 
 	detectSigntoolPathMust()
+	detectMakeAppxPathMust()
 	genHTMLDocsForApp()
 
 	setBuildConfigPreRelease()
@@ -150,6 +151,12 @@ func buildSignAndUploadLatestPreRelease() {
 		build(plat)
 	}
 
+	makeAppxTempMust(dirDst)
+	if true {
+		// temporary for testing making .msix
+		buildAppxMust(dirDst)
+	}
+
 	// sign all files in one swoop
 	// build can take a long time and signing rquires user interaction
 	// so wait for user to press enter
@@ -159,6 +166,9 @@ func buildSignAndUploadLatestPreRelease() {
 		os.RemoveAll(dirDst)
 		must(err)
 	}
+
+	copyExeToAppxTempMust(dirDst)
+	buildAppxMust(dirDst)
 
 	// create SumatraPDF-{prefix}.zip with SumatraPDF-{prefix}.exe inside
 	// this must happen after signing
@@ -175,6 +185,7 @@ func buildSignAndUploadLatestPreRelease() {
 	createManifestMust(manifestPath)
 
 	if !isClean {
+		logf("buildSignAndUploadLatestPreRelease: will skip upload because git is not clean\n")
 		uploadDryRun = true
 	}
 	uploadToStorage(buildTypePreRel, ver, dirDst)

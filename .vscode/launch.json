@@ -5,12 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "doit.bat",
+            "name": "do",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/do"
+            "program": "${workspaceFolder}"
         },
         {
             "name": "dbg 64",

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-go run ./do/ "$@"
+go run . "$@"

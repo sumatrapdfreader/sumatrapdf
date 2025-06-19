@@ -1,4 +1,4 @@
-package main
+package do
 
 import (
 	"fmt"
@@ -64,9 +64,9 @@ func detectMsbuildPathMust() string {
 }
 
 func detectSigntoolPathMust() string {
-	return detectPathInSDKMust(`x64\signtool.exe`)
+	return detectPathInSDKMust(filepath.Join(`x64`, `signtool.exe`))
 }
 
 func detectMakeAppxPathMust() string {
-	return detectPathInSDKMust(`x64\makeappx.exe`)
+	return detectPathInSDKMust(filepath.Join(`x64`, `makeappx.exe`))
 }

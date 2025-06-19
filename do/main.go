@@ -1,4 +1,4 @@
-package main
+package do
 
 import (
 	"flag"
@@ -196,7 +196,7 @@ func ensureBuildOptionsPreRequesites(opts *BuildOptions) {
 	}
 }
 
-func main() {
+func Main() {
 	logf("Current directory: %s\n", currDirAbsMust())
 	timeStart := time.Now()
 	defer func() {
@@ -277,6 +277,14 @@ func main() {
 		flag.BoolVar(&flgGenDocs, "gen-docs", false, "generate html docs in docs/www from markdown in docs/md")
 		flag.BoolVar(&flgGenWebsiteDocs, "gen-docs-website", false, "generate html docs in ../sumatra-website repo and check them in")
 		flag.Parse()
+	}
+
+	if false {
+		detectVersions()
+		dirDst := filepath.Join("out", "artifacts", "16996-dirty")
+		makeAppxTempMust(dirDst)
+		buildAppxMust(dirDst)
+		return
 	}
 
 	if false {

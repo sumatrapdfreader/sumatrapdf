@@ -1,1 +1,1 @@
-go run ./do %*
+go run . %*

@@ -1,4 +1,4 @@
-package main
+package do
 
 import (
 	"fmt"
@@ -433,7 +433,7 @@ func genSettingsStruct() string {
 	structMetaData := buildMetaData(globalPrefsStruct, builtMeta)
 
 	{
-		s := buildStruct(themesStruct, builtDef);
+		s := buildStruct(themesStruct, builtDef)
 		structDef += s
 		s = buildMetaData(themesStruct, builtMeta)
 		structMetaData += s
@@ -443,8 +443,7 @@ func genSettingsStruct() string {
 	content = strings.Replace(content, "{{structDef}}", structDef, -1)
 	content = strings.Replace(content, "{{structMetadata}}", structMetaData, -1)
 
-
-return content
+	return content
 }
 
 func getWebsiteDir() string {

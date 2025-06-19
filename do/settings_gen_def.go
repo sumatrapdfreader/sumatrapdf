@@ -1,4 +1,4 @@
-package main
+package do
 
 // ##### setting definitions for SumatraPDF #####
 

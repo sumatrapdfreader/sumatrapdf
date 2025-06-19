@@ -1,8 +1,9 @@
-package main
+package do
 
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -67,6 +68,14 @@ func signFiles(dir string, files []string) error {
 	return err
 }
 
+func shouldSign(f os.DirEntry) bool {
+	if f.IsDir() {
+		return false
+	}
+	ext := filepath.Ext(f.Name())
+	return ext == ".exe" || ext == ".msix"
+}
+
 func signExesInDir(dir string) error {
 	logf("signing exes in '%s'\n", dir)
 	files, err := os.ReadDir(dir)
@@ -75,7 +84,7 @@ func signExesInDir(dir string) error {
 	}
 	var exes []string
 	for _, f := range files {
-		if !f.IsDir() && strings.HasSuffix(f.Name(), ".exe") {
+		if shouldSign(f) {
 			exes = append(exes, f.Name())
 		}
 	}

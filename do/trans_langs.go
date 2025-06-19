@@ -1,4 +1,4 @@
-package main
+package do
 
 // List of languages we support, their iso codes and id as understood
 // by Windows SDK (LANG_* and SUBLANG_*_*).
