@@ -283,7 +283,7 @@ func Main() {
 		detectVersions()
 		dirDst := filepath.Join("out", "artifacts", "16996-dirty")
 		makeAppxTempMust(dirDst)
-		buildAppxMust(dirDst)
+		buildAppxMust(dirDst, false)
 		return
 	}
 

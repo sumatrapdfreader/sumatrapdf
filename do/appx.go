@@ -14,6 +14,7 @@ func copyExeToAppxTempMust(dirDst string) {
 	appxDir := "AppxTemp"
 	exeSrcPath := filepath.Join(dirDst, "SumatraPDF-prerel-64.exe")
 	exeDstPath := filepath.Join(appxDir, "SumatraPDF-store.exe")
+	os.Remove(exeDstPath) // overwrite
 	must(u.CopyFile(exeDstPath, exeSrcPath))
 }
 
@@ -36,19 +37,21 @@ func makeAppxTempMust(dirDst string) {
 	copyExeToAppxTempMust(dirDst)
 }
 
-func buildAppxMust(dstDir string) {
+func buildAppxMust(dstDir string, sign bool) {
 	logf("buildAppxMust")
 
 	makeAppx := detectMakeAppxPathMust()
 	appxDir := "AppxTemp"
-	appxName := "SumatraPDF.msix"
-	appxPath := filepath.Join(dstDir, appxName)
-	os.Remove(appxName)
+	msixName := "SumatraPDF.msix"
+	msixPath := filepath.Join(dstDir, msixName)
+	os.Remove(msixPath)
 	// "makeappx" pack /d bin\release\net461 /p MissionPlanner.
 	// /d : directory to pack
 	// /p : output .msix file path
 	// /v : verbose mode
-	cmd := exec.Command(makeAppx, "pack", "/v", "/d", appxDir, "/p", appxPath)
+	cmd := exec.Command(makeAppx, "pack", "/v", "/d", appxDir, "/p", msixPath)
 	runCmdLoggedMust(cmd)
-	must(signFiles(dstDir, []string{appxName}))
+	if sign {
+		must(signFiles(dstDir, []string{msixName}))
+	}
 }
