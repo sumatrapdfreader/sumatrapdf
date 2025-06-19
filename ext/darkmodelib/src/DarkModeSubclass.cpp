@@ -211,9 +211,22 @@ static bool SetClrFromIni(const std::wstring& sectionName, const std::wstring& k
 		}
 	}
 
-	static constexpr int baseHex = 16;
+#if 0
+	try
+	{
+		static constexpr int baseHex = 16;
+		*clr = HEXRGB(std::stoul(buffer, nullptr, baseHex));
+	}
+	catch (const std::exception&)
+	{
+		return false;
+	}
+
+#else
 	// TODO(sumatrapdf): stoul() can throw an exception so use sth. else
+	static constexpr int baseHex = 16;
 	*clr = HEXRGB(std::stoul(buffer, nullptr, baseHex));
+#endif
 
 	return true;
 }
