@@ -496,7 +496,7 @@ void SetDarkMode(bool useDark, bool fixDarkScrollbar)
 	}
 }
 
-// Hooking GetSysColor for comboboxex listbox
+// Hooking GetSysColor for comboboxex' list box and list view's gridlines
 
 using fnGetSysColor = auto (WINAPI*)(int nIndex) -> DWORD;
 

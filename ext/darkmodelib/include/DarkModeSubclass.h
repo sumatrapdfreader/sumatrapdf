@@ -65,25 +65,38 @@ namespace DarkMode
 		COLORREF headerEdge = 0;
 	};
 
-	enum class ToolTipsType : unsigned char // std::uint8_t
+	// unsigned char == std::uint8_t
+
+	/**
+	 * @brief Represents tooltip from different controls.
+	 */
+	enum class ToolTipsType : unsigned char
 	{
-		tooltip,
-		toolbar,
-		listview,
-		treeview,
-		tabbar
+		tooltip,   ///< Standard tooltip control.
+		toolbar,   ///< Tooltips associated with toolbar buttons.
+		listview,  ///< Tooltips associated with list views.
+		treeview,  ///< Tooltips associated with tree view.
+		tabbar,    ///< Tooltips associated with tab controls.
+		trackbar   ///< Tooltips associated with trackbar (slider) controls.
 	};
 
-	enum class ColorTone : unsigned char // std::uint8_t
+	/**
+	 * @brief Defines dark mode preset color tones.
+	 *
+	 * Used as preset to choose default colors in dark mode.
+	 * Value `max` is reserved for internal range checking,
+	 * do not use in application code.
+	 */
+	enum class ColorTone : unsigned char
 	{
-		black   = 0,
-		red     = 1,
-		green   = 2,
-		blue    = 3,
-		purple  = 4,
-		cyan    = 5,
-		olive   = 6,
-		max     = 7 // don't use, for internal checks
+		black   = 0,  ///< Black
+		red     = 1,  ///< Red
+		green   = 2,  ///< Green
+		blue    = 3,  ///< Blue
+		purple  = 4,  ///< Purple
+		cyan    = 5,  ///< Cyan
+		olive   = 6,  ///< Olive
+		max     = 7   ///< Don't use, for internal checks
 	};
 
 	/**
@@ -119,6 +132,7 @@ namespace DarkMode
 		iniConfigUsed,    ///< True if `.ini` file configuration is supported.
 		allowOldOS,       ///< True if older Windows versions are allowed.
 		useDlgProcCtl,    ///< True if WM_CTLCOLORxxx can be handled directly in dialog procedure.
+		preferTheme,      ///< True if theme is supported and can be used over subclass, e.g. combo box on Windows 10+.
 		maxValue          ///< Sentinel value for internal validation (not intended for use).
 	};
 
@@ -145,6 +159,7 @@ namespace DarkMode
 	 *        - 3: Classic mode (manual)
 	 *
 	 * @note Values 2 and 4 are reserved for internal use only.
+	 *       Using them can cause visual glitches.
 	 */
 	void initDarkModeConfig(UINT dmType);
 
@@ -397,21 +412,43 @@ namespace DarkMode
 	// Theme And Helpers
 	// ========================================================================
 
+	/// Configures the SysLink control to be affected by `WM_CTLCOLORSTATIC` message.
 	void enableSysLinkCtrlCtlColor(HWND hWnd);
 
+	/// Sets dark title bar and optional Windows 11 features.
 	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features);
+
+	/// Sets dark mode title bar on supported Windows versions.
 	void setDarkTitleBar(HWND hWnd);
-	void setDarkExplorerTheme(HWND hWnd);
-	void setDarkScrollBar(HWND hWnd);
-	void setDarkTooltips(HWND hWnd, ToolTipsType type = ToolTipsType::tooltip);
-	void setDarkLineAbovePanelToolbar(HWND hWnd);
-	void setDarkHeader(HWND hWnd);
-	void setDarkListView(HWND hWnd);
-	void setDarkListViewCheckboxes(HWND hWnd);
+
+	/// Applies an experimental visual style to the specified window, if supported.
 	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName = L"Explorer");
+
+	/// Applies "DarkMode_Explorer" visual style if experimental mode is active.
+	void setDarkExplorerTheme(HWND hWnd);
+
+	/// Applies "DarkMode_Explorer" visual style to scroll bars.
+	void setDarkScrollBar(HWND hWnd);
+
+	/// Applies "DarkMode_Explorer" visual style to tooltip controls based on context.
+	void setDarkTooltips(HWND hWnd, ToolTipsType type = ToolTipsType::tooltip);
+
+	/// Sets the color of line above a toolbar control for non-classic mode.
+	void setDarkLineAbovePanelToolbar(HWND hWnd);
+
+	/// Applies an experimental Explorer visual style to a list view.
+	void setDarkListView(HWND hWnd);
+
+	/// Replaces default list view checkboxes with themed dark-mode versions on Windows 11.
+	void setDarkListViewCheckboxes(HWND hWnd);
+
+	/// Sets colors and edges for a RichEdit control.
 	void setDarkRichEdit(HWND hWnd);
 
+	/// Applies visual styles; ctl color message and child controls subclassings to a dialog safely.
 	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
+
+	/// Applies visual styles; ctl color message, child controls, and custom drawing subclassings to a dialog safely.
 	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
 
 	/// Enables or disables theme-based dialog background textures in classic mode.
@@ -441,23 +478,50 @@ namespace DarkMode
 	/// Checks whether the current theme is dark.
 	[[nodiscard]] bool isThemeDark();
 
+	/// Checks whether the color is dark.
+	[[nodiscard]] bool isColorDark(COLORREF clr);
+
+	/// Forces a window to redraw its non-client frame.
 	void redrawWindowFrame(HWND hWnd);
+
+	/// Sets a window's standard style flags and redraws window if needed.
 	void setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag);
+
+	/// Sets a window's extended style flags and redraws window if needed.
 	void setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag);
+
+	/// Replaces an extended edge (e.g. client edge) with a standard window border.
 	void replaceExEdgeWithBorder(HWND hWnd, bool replace, LONG_PTR exStyleFlag);
+
+	/// Safely toggles `WS_EX_CLIENTEDGE` with `WS_BORDER` based on dark mode state.
 	void replaceClientEdgeWithBorderSafe(HWND hWnd);
+
+	/// Applies classic-themed styling to a progress bar in non-classic mode.
 	void setProgressBarClassicTheme(HWND hWnd);
 
 	// ========================================================================
 	// Ctl Color
 	// ========================================================================
 
+	/// Handles text and background colorizing for read-only controls.
 	[[nodiscard]] LRESULT onCtlColor(HDC hdc);
+
+	/// Handles text and background colorizing for interactive controls.
 	[[nodiscard]] LRESULT onCtlColorCtrl(HDC hdc);
+
+	/// Handles text and background colorizing for window and disabled non-text controls.
 	[[nodiscard]] LRESULT onCtlColorDlg(HDC hdc);
+
+	/// Handles text and background colorizing for error state (for specific usage).
 	[[nodiscard]] LRESULT onCtlColorError(HDC hdc);
+
+	/// Handles text and background colorizing for static text controls.
 	[[nodiscard]] LRESULT onCtlColorDlgStaticText(HDC hdc, bool isTextEnabled);
+
+	/// Handles text and background colorizing for syslink controls.
 	[[nodiscard]] LRESULT onCtlColorDlgLinkText(HDC hdc, bool isTextEnabled = true);
+
+	/// Handles text and background colorizing for list box controls.
 	[[nodiscard]] LRESULT onCtlColorListbox(WPARAM wParam, LPARAM lParam);
 
 	// ========================================================================
@@ -541,7 +605,7 @@ namespace DarkMode
 	 * 
 	 * CHOOSEFONT cf{};
 	 * cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
-	 * cf.lpfnHook = static_cast<LPCFHOOKPROC>(HookDlgProc);
+	 * cf.lpfnHook = static_cast<LPCFHOOKPROC>(DarkMode::HookDlgProc);
 	 * cf.hInstance = GetModuleHandle(nullptr);
 	 * cf.lpTemplateName = MAKEINTRESOURCE(IDD_DARK_FONT_DIALOG);
 	 * ```
