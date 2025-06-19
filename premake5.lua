@@ -782,11 +782,13 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     includedirs { "src", "mupdf/include" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
+
     includedirs { "ext/darkmodelib/include" }
+    defines { "_DARKMODELIB_NO_INI_CONFIG" }
+    darkmodelib_files()
 
     webview_conf()
 
-    darkmodelib_files()
     synctex_files()
     mui_files()
     wingui_files()
@@ -842,7 +844,10 @@ workspace "SumatraPDF"
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib" }
     includedirs { "ext/darkmodelib/include" }
 
+    includedirs { "ext/darkmodelib/include" }
+    defines { "_DARKMODELIB_NO_INI_CONFIG" }
     darkmodelib_files()
+
     synctex_files()
     mui_files()
     wingui_files()

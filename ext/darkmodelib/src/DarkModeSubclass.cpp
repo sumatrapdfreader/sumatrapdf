@@ -211,7 +211,6 @@ static bool SetClrFromIni(const std::wstring& sectionName, const std::wstring& k
 		}
 	}
 
-#if 0
 	try
 	{
 		static constexpr int baseHex = 16;
@@ -221,12 +220,6 @@ static bool SetClrFromIni(const std::wstring& sectionName, const std::wstring& k
 	{
 		return false;
 	}
-
-#else
-	// TODO(sumatrapdf): stoul() can throw an exception so use sth. else
-	static constexpr int baseHex = 16;
-	*clr = HEXRGB(std::stoul(buffer, nullptr, baseHex));
-#endif
 
 	return true;
 }
@@ -1634,7 +1627,7 @@ namespace DarkMode
 	}
 
 	/**
-	 * @brief Makes scrollbars on the specified window and all its children consistent.
+	 * @brief Makes scroll bars on the specified window and all its children consistent.
 	 *
 	 * Currently not widely used by default.
 	 *
@@ -3368,27 +3361,27 @@ namespace DarkMode
 		}
 		else
 		{
-		if (p._theme && (isListBox || hasScrollBar))
-		{
+			if (p._theme && (isListBox || hasScrollBar))
+			{
 				// dark scroll bars for list box or edit control
-			::SetWindowTheme(hWnd, p._themeClassName, nullptr);
-		}
+				::SetWindowTheme(hWnd, p._themeClassName, nullptr);
+			}
 
-		const auto nExStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
-		const bool hasClientEdge = (nExStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
-		const bool isCBoxListBox = isListBox && (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
+			const auto nExStyle = ::GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+			const bool hasClientEdge = (nExStyle & WS_EX_CLIENTEDGE) == WS_EX_CLIENTEDGE;
+			const bool isCBoxListBox = isListBox && (nStyle & LBS_COMBOBOX) == LBS_COMBOBOX;
 
-		if (p._subclass && hasClientEdge && !isCBoxListBox)
-		{
-			DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(hWnd);
-		}
+			if (p._subclass && hasClientEdge && !isCBoxListBox)
+			{
+				DarkMode::setCustomBorderForListBoxOrEditCtrlSubclass(hWnd);
+			}
 
-		if (::GetWindowSubclass(hWnd, CustomBorderSubclass, kCustomBorderSubclassID, nullptr) == TRUE)
-		{
-			const bool enableClientEdge = !DarkMode::isEnabled();
-			DarkMode::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
+			if (::GetWindowSubclass(hWnd, CustomBorderSubclass, kCustomBorderSubclassID, nullptr) == TRUE)
+			{
+				const bool enableClientEdge = !DarkMode::isEnabled();
+				DarkMode::setWindowExStyle(hWnd, enableClientEdge, WS_EX_CLIENTEDGE);
+			}
 		}
-	}
 	}
 
 	struct ComboBoxData
@@ -3737,7 +3730,7 @@ namespace DarkMode
 						DarkMode::replaceClientEdgeWithBorderSafe(cbi.hwndList);
 					}
 
-					//dark scrollbar for listbox of combobox
+					// dark scroll bar for list box of combo box
 					::SetWindowTheme(cbi.hwndList, p._themeClassName, nullptr);
 				}
 			}
@@ -3819,8 +3812,8 @@ namespace DarkMode
 					break;
 				}
 
-				// ComboboxEx has only one child combobox, so only control-defined notification code is checked.
-				// Hooking is done only when listbox is about to show. And unhook when listbox is closed.
+				// ComboboxEx has only one child combo box, so only control-defined notification code is checked.
+				// Hooking is done only when list box is about to show. And unhook when list box is closed.
 				// This process is used to avoid visual glitches in other GUI.
 				switch (HIWORD(wParam))
 				{
@@ -4818,10 +4811,10 @@ namespace DarkMode
 			DarkMode::setProgressBarClassicTheme(hWnd);
 		}
 		else if (p._subclass)
-			{
-				DarkMode::setProgressBarCtrlSubclass(hWnd);
-			}
+		{
+			DarkMode::setProgressBarCtrlSubclass(hWnd);
 		}
+	}
 
 	struct StaticTextData
 	{
@@ -6281,7 +6274,7 @@ namespace DarkMode
 			{
 				msg = 0;
 				break;
-		}
+			}
 		}
 
 		if (msg == 0)
