@@ -4,7 +4,7 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10">
-  <Identity Name="KrzysztofKowalczyk.SumatraPDF" Version="{{VERSION}}" ProcessorArchitecture="x64" Publisher="CN="Open Source Developer, Krzysztof Kowalczyk", O=Open Source Developer, L=Kraków, S=małopolskie, C=PL" />
+  <Identity Name="KrzysztofKowalczyk.SumatraPDF" Version="{{VERSION}}" ProcessorArchitecture="x64" Publisher="CN=Open Source Developer, Krzysztof Kowalczyk, O=Open Source Developer, L=Kraków, S=małopolskie, C=PL" />
   <Properties>
     <DisplayName>SumatraPDF</DisplayName>
     <PublisherDisplayName>Krysztof Kowalczyk</PublisherDisplayName>
