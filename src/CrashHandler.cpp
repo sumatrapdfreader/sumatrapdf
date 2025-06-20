@@ -322,12 +322,17 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     // the debugger. In other builds it sends a debug report
 
     bool shouldUpload = gIsDebugBuild || gIsPreReleaseBuild || gIsAsanBuild;
+    if (gIsStoreBuild && !isCrash) {
+        // those would probably be too frequent
+        shouldUpload = false;
+    }
     if (!shouldUpload) {
         if (IsDebuggerPresent()) {
             DebugBreak();
         }
         return;
     }
+
     // we want to avoid submitting multiple reports for the same
     // condition. I'm too lazy to implement tracking this granularly
     // so only allow once submission in a given session
