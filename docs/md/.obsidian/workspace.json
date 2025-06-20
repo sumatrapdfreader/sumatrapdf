@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Go-to-Page.md",
+                "file": "Contribute-translation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Go-to-Page"
+              "title": "Contribute-translation"
             }
           }
         ]
@@ -170,9 +170,11 @@
   },
   "active": "3c9a998230f19a48",
   "lastOpenFiles": [
-    "Add-Favorite.md",
     "Commands.md",
+    "Configure-for-restricted-use.md",
     "Customize-theme-colors.md",
+    "Build-system.md",
+    "Add-Favorite.md",
     "SumatraPDF-documentation.md",
     "Keyboard-shortcuts.md",
     "Customizing-keyboard-shortcuts.md",
@@ -183,7 +185,6 @@
     "Logview.md",
     "DDE-Commands.md",
     "Go-to-Page.md",
-    "Corrupted-installation.md",
-    "Build-system.md"
+    "Corrupted-installation.md"
   ]
 }
