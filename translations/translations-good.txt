@@ -5088,7 +5088,7 @@ hr:Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredben
 hu:Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban a beállításokat.
 id:Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.
 it:Impossibile eseguire il comando di ricerca inversa.\nControlla la riga di comando usata nelle impostazioni.
-ja:逆順検索コマンドを開始できません。設定でコマンドラインを確認してください。
+ja:逆検索コマンドを開始できません。設定でコマンドラインを確認してください。
 kr:역방향 검색 명령을 시작할 수 없습니다.  설정에서 명령줄을 확인하세요.
 kw:Ny yllir dalleth gorhemmyn gorthhwilas.  Check an linen gorhemmyn y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
@@ -8537,7 +8537,7 @@ hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 it:Inserisci linea di comando da eseguire quando si fa doppio clic su un documento PDF:
-ja:PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
+ja:PDFドキュメントをダブルクリックしたときに実行するコマンドライン
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 kw:Enter an linen-gorhemmyn dh'y elwel pan wre'ta klyck dewblek war an skriven PDF:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
@@ -14037,7 +14037,7 @@ hr:Inačica PDF-a:
 hu:PDF verzió:
 id:Versi PDF:
 it:Versione PDF:
-ja:PDF バージョン:
+ja:PDFバージョン:
 kr:PDF 버전:
 kw:Versyon PDF:
 lt:PDF versija:
@@ -17189,7 +17189,7 @@ hr:Omogući unazadnu pretragu
 hu:Fordított keresés parancsának beállítása
 id:Setel perintah pencarian terbalik
 it:Imposta la ricerca inversa via riga di comando
-ja:逆順検索コマンドラインの設定
+ja:逆検索のコマンドラインを設定
 kr:명령줄 역방향 탐색 설정
 kw:Settya linen-arhadow gorthhwilas
 lt:Nustatyti atvirkščios paieškos komandinę eilutę

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fe0736a5db47c5bf1c50763f98e4b6cdf9b609c8
+53b06e735069401175a58eddaf3134ce2a9e73e1
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -5923,7 +5923,7 @@ hr:Ne mogu pokrenuti naredbu unazadnog pretraživanja. Molim provjerite naredben
 hu:Nem indítható a fordított keresési parancs. Ellenőrizze a parancssorban a beállításokat.
 id:Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.
 it:Impossibile eseguire il comando di ricerca inversa.\nControlla la riga di comando usata nelle impostazioni.
-ja:逆順検索コマンドを開始できません。設定でコマンドラインを確認してください。
+ja:逆検索コマンドを開始できません。設定でコマンドラインを確認してください。
 ka:შებრუნებული ძებნის ბრძანების გაშვება ვერ მოხერხდა. გთხოვთ შეამოწმეთ ბრძანებების სტრიქონის პარამეტრები.
 kr:역방향 검색 명령을 시작할 수 없습니다.  설정에서 명령줄을 확인하세요.
 ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام بدرێت. تکایە فرمانی هێڵ بپشکنە لە ڕێکخستنەکاندا
@@ -9900,7 +9900,7 @@ hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 it:Inserisci linea di comando da eseguire quando si fa doppio clic su un documento PDF:
-ja:PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
+ja:PDFドキュメントをダブルクリックしたときに実行するコマンドライン
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
@@ -16220,7 +16220,7 @@ hr:Inačica PDF-a:
 hu:PDF verzió:
 id:Versi PDF:
 it:Versione PDF:
-ja:PDF バージョン:
+ja:PDFバージョン:
 jv:Versi PDF
 ka:PDF-ის ვერსია:
 kr:PDF 버전:
@@ -19708,7 +19708,7 @@ hr:Omogući unazadnu pretragu
 hu:Fordított keresés parancsának beállítása
 id:Setel perintah pencarian terbalik
 it:Imposta la ricerca inversa via riga di comando
-ja:逆順検索コマンドラインの設定
+ja:逆検索のコマンドラインを設定
 ka:შებრუნებული ძებნის ბრძანების სტრიქონის დაყენება
 kr:명령줄 역방향 탐색 설정
 ku:ڕێکخستنی هێڵی پێچەوانەی گەڕان
