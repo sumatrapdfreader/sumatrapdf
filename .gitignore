@@ -41,7 +41,7 @@ docs/www/*.html
 docs/www/img/
 AppxTemp/
 __debug*.exe
-# docs/md/.obsidian/workspace.json
+docs/md/.obsidian/workspace.json
 
 # https://stackoverflow.com/questions/10755655/git-ignore-tracked-files
 # git update-index --assume-unchanged .\docs\manual.dat    : stop tracking changes
