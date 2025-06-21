@@ -3532,23 +3532,29 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (overClose) {
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = tabUnderMouse;
-            } else if (tabUnderMouse != -1) {
-                int selectedTab = GetSelected();
-                if (tabUnderMouse != selectedTab) {
-                    bool stopChange = TriggerSelectionChanging(this);
-                    if (stopChange) {
-                        return 0;
-                    }
-                    SetSelected(tabUnderMouse);
-                    TriggerSelectionChanged(this);
-                }
-                TabInfo* ti = GetTab(GetSelected());
-                if (!ti->isPinned) {
-                    grabLocation.x = mousePos.x - ti->r.x;
-                    grabLocation.y = mousePos.y - ti->r.y;
-                    SetCapture(hwnd);
-                }
+                return 0;
             }
+            if (tabUnderMouse < 0) {
+                return 0;
+            }
+
+            int selectedTab = GetSelected();
+            if (tabUnderMouse != selectedTab) {
+                bool stopChange = TriggerSelectionChanging(this);
+                if (stopChange) {
+                    return 0;
+                }
+                SetSelected(tabUnderMouse);
+                TriggerSelectionChanged(this);
+            }
+            TabInfo* ti = GetTab(GetSelected());
+            if (ti->isPinned) {
+                return 0;
+            }
+
+            grabLocation.x = mousePos.x - ti->r.x;
+            grabLocation.y = mousePos.y - ti->r.y;
+            SetCapture(hwnd);
             return 0;
         }
 
