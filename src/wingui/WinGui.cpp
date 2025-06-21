@@ -2776,14 +2776,7 @@ bool TreeView::UpdateItem(TreeItem ti) {
 void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
     auto tm = treeView->treeModel;
     int n = tm->ChildCount(item);
-    TreeItem tmp[256];
-    TreeItem* a = &tmp[0];
-    void* toFree = nullptr;
-    if (n > dimof(tmp)) {
-        size_t nBytes = (size_t)n * sizeof(TreeItem);
-        toFree = malloc(nBytes);
-        a = (TreeItem*)toFree;
-    }
+    TreeItem*a = AllocArrayTemp<TreeItem>(n);
     // ChildAt() is optimized for sequential access and we need to
     // insert backwards, so gather the items in v first
     for (int i = 0; i < n; i++) {
@@ -2801,8 +2794,6 @@ void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
             PopulateTreeItem(treeView, ti, h);
         }
     }
-
-    free(toFree);
 }
 
 static void PopulateTree(TreeView* treeView, TreeModel* tm) {
