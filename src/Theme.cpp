@@ -76,6 +76,14 @@ static const char* themesTxt = R"(Themes [
         LinkColor = #9999a0
         ColorizeControls = true
     ]
+    [
+        Name = Solarized Light
+        TextColor = #212323
+        BackgroundColor = #fdf6e3
+        ControlBackgroundColor =#eee8d5
+        LinkColor = #9999a0
+        ColorizeControls = true
+    ]
 ]
 )";
 
