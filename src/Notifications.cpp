@@ -292,7 +292,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     auto grc = Gdiplus::Rect(0, 0, rc.dx, rc.dy);
     graphics.FillRectangle(&br, grc);
 
-    {
+    if (false) {
         Pen pen(GdiRgbFromCOLORREF(colBorder));
         pen.SetWidth(4);
         grc = {rc.x, rc.y, rc.dx, rc.dy};

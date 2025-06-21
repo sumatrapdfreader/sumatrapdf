@@ -80,7 +80,7 @@ static const char* themesTxt = R"(Themes [
         Name = Solarized Light
         TextColor = #212323
         BackgroundColor = #fdf6e3
-        ControlBackgroundColor =#eee8d5
+        ControlBackgroundColor = #eee8d5
         LinkColor = #9999a0
         ColorizeControls = true
     ]
@@ -330,10 +330,18 @@ COLORREF ThemeNotificationsTextColor() {
 }
 
 COLORREF ThemeNotificationsHighlightColor() {
+    if (gCurrentTheme->colorizeControls) {
+        auto col = ThemeWindowBackgroundColor();
+        return AdjustLightOrDark(col, 20);
+    }
     return RgbToCOLORREF(0xFFEE70); // yellowish
 }
 
 COLORREF ThemeNotificationsHighlightTextColor() {
+    if (gCurrentTheme->colorizeControls) {
+        auto col = ThemeWindowTextColor();
+        return AdjustLightOrDark(col, 20);
+    }
     return RgbToCOLORREF(0x8d0801); // reddish
 }
 
