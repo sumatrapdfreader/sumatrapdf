@@ -397,10 +397,8 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM 
    be displayed as default. */
 char* Dialog_Find(HWND hwnd, const char* previousSearch, bool* matchCase) {
     Dialog_Find_Data data;
-    AutoFreeStr toFree = str::Dup(previousSearch);
-    data.searchTerm = toFree.CStr();
+    data.searchTerm = str::DupTemp(previousSearch);
     data.matchCase = matchCase ? *matchCase : false;
-
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd, Dialog_Find_Proc, (LPARAM)&data);
     if (res != IDOK) {
         return nullptr;
