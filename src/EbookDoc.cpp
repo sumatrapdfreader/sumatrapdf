@@ -1383,7 +1383,7 @@ TxtDoc::TxtDoc(const char* fileName) {
 // cf. http://www.cix.co.uk/~gidds/Software/TCR.html
 #define TCR_HEADER "!!8-Bit!!"
 
-static char* DecompressTcrText(const char* data, size_t dataLen) {
+static TempStr DecompressTcrTextTemp(const char* data, size_t dataLen) {
     ReportIf(!str::StartsWith(data, TCR_HEADER));
     const char* curr = data + str::Len(TCR_HEADER);
     const char* end = data + dataLen;
@@ -1391,7 +1391,7 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
     const char* dict[256] = {0};
     for (int n = 0; n < (int)dimof(dict); n++) {
         if (curr >= end) {
-            return str::Dup(data);
+            return str::DupTemp(data);
         }
         dict[n] = curr;
         curr += 1 + (u8)*curr;
@@ -1411,7 +1411,7 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
         }
     }
 
-    return text.StealData();
+    return text.StealData(GetTempAllocator());
 }
 
 static const char* TextFindLinkEnd(str::Str& htmlData, const char* curr, char prevChar, bool fromWww = false) {
@@ -1530,21 +1530,17 @@ bool TxtDoc::Load() {
         return false;
     }
 
-    AutoFreeStr toFree;
     char* text = (char*)fileContent.Get();
     if (str::EndsWithI(fileName, ".tcr") && str::StartsWith(text, TCR_HEADER)) {
-        char* s = DecompressTcrText(fileContent, fileContent.size());
-        if (!s) {
+        text = DecompressTcrTextTemp(fileContent, fileContent.size());
+        if (!text) {
             return false;
         }
-        text = s;
-        toFree = s;
     }
-    TempStr s = DecodeTextToUtf8Temp(text);
-    if (!s) {
+    text = DecodeTextToUtf8Temp(text);
+    if (!text) {
         return false;
     }
-    text = s;
 
     int rfc;
     isRFC = str::Parse(path::GetBaseNameTemp(fileName), "rfc%d.txt%$", &rfc) != nullptr;
