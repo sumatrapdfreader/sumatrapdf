@@ -2776,7 +2776,7 @@ bool TreeView::UpdateItem(TreeItem ti) {
 void PopulateTreeItem(TreeView* treeView, TreeItem item, HTREEITEM parent) {
     auto tm = treeView->treeModel;
     int n = tm->ChildCount(item);
-    TreeItem*a = AllocArrayTemp<TreeItem>(n);
+    TreeItem* a = AllocArrayTemp<TreeItem>(n);
     // ChildAt() is optimized for sequential access and we need to
     // insert backwards, so gather the items in v first
     for (int i = 0; i < n; i++) {
@@ -3477,7 +3477,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             TrackMouseLeave(hwnd);
             bool isDragging = (GetCapture() == hwnd);
             int hl = tabHighlighted;
-            if (isDragging && tabUnderMouse == -1) {
+            if (isDragging) {
                 // move the tab out: draw it as a image and drag around the screen
                 draggingTab = true;
                 TabInfo* thl = GetTab(hl);
