@@ -148,6 +148,8 @@ void SetThemeByIndex(int themeIdx) {
     gCurrentTheme = gThemes->At(gCurrThemeIndex);
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     if (gUseDarkModeLib) {
+        DarkMode::setDarkModeConfig(DarkMode::isColorDark(ThemeWindowControlBackgroundColor()) ? 1 : 3);
+
         DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
         DarkMode::setTextColor(ThemeWindowTextColor());
         DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
@@ -158,8 +160,6 @@ void SetThemeByIndex(int themeIdx) {
         DarkMode::setViewTextColor(ThemeWindowTextColor());
         DarkMode::setViewBackgroundColor(ThemeWindowControlBackgroundColor());
         DarkMode::calculateTreeViewStyle();
-
-        DarkMode::setDarkModeConfig(DarkMode::isThemeDark() ? 1 : 3);
 
         UpdateAfterThemeChange();
 
