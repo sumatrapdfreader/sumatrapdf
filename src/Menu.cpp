@@ -23,6 +23,7 @@
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "Theme.h"
+#include "DarkModeSubclass.h"
 #include "GlobalPrefs.h"
 #include "Annotation.h"
 #include "AppColors.h"
@@ -2089,7 +2090,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
 }
 
 void MarkMenuOwnerDraw(HMENU hmenu) {
-    if (gUseDarkModeLib) {
+    if (gUseDarkModeLib && DarkMode::isEnabled()) {
         return;
     }
     if (!ThemeColorizeControls()) {

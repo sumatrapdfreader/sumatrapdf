@@ -39,6 +39,7 @@ extern "C" {
 #include "SvgIcons.h"
 #include "SumatraConfig.h"
 #include "Theme.h"
+#include "DarkModeSubclass.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
@@ -1017,11 +1018,15 @@ void CreateToolbar(MainWindow* win) {
     win->hwndToolbar = hwndToolbar;
     SendMessageW(hwndToolbar, TB_BUTTONSTRUCTSIZE, (WPARAM)sizeof(TBBUTTON), 0);
 
-    if (!gUseDarkModeLib) {
+    if (!gUseDarkModeLib || !DarkMode::isEnabled()) {
         if (!IsCurrentThemeDefault()) {
             // without this custom draw code doesn't work
             SetWindowTheme(hwndToolbar, L"", L"");
         }
+    }
+
+    if (gUseDarkModeLib) {
+        DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndReBar);
     }
 
     int iconSize = SetToolbarIconsImageList(win);

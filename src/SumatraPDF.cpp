@@ -1556,7 +1556,6 @@ static MainWindow* CreateMainWindow() {
         DarkMode::setDarkTitleBar(win->hwndFrame);
         DarkMode::setChildCtrlsSubclassAndTheme(win->hwndFrame);
         DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
-        DarkMode::setWindowNotifyCustomDrawSubclass(win->hwndReBar);
         DarkMode::setDarkScrollBar(win->hwndCanvas);
         DarkMode::setDarkTooltips(win->infotip->hwnd);
     }
