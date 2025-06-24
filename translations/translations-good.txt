@@ -8537,7 +8537,7 @@ hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 it:Inserisci linea di comando da eseguire quando si fa doppio clic su un documento PDF:
-ja:PDFドキュメントをダブルクリックしたときに実行するコマンドライン
+ja:PDFドキュメント上でダブルクリックしたときに実行するコマンドライン
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 kw:Enter an linen-gorhemmyn dh'y elwel pan wre'ta klyck dewblek war an skriven PDF:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
@@ -13981,7 +13981,7 @@ hr:Proizvođač PDF-a:
 hu:PDF-et létrehozta:
 id:Pembuat PDF:
 it:Produttore PDF:
-ja:PDF生成ツール:
+ja:PDF生成ソフト:
 kr:PDF 제작자:
 kw:Askorrer PDF:
 lt:PDF leidėjas:

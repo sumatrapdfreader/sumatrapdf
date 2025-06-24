@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-53b06e735069401175a58eddaf3134ce2a9e73e1
+b94b9b10c7f6a78a0d0a8f77f8417aedd3858958
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -9900,7 +9900,7 @@ hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 it:Inserisci linea di comando da eseguire quando si fa doppio clic su un documento PDF:
-ja:PDFドキュメントをダブルクリックしたときに実行するコマンドライン
+ja:PDFドキュメント上でダブルクリックしたときに実行するコマンドライン
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
@@ -16153,7 +16153,7 @@ hr:Proizvođač PDF-a:
 hu:PDF-et létrehozta:
 id:Pembuat PDF:
 it:Produttore PDF:
-ja:PDF生成ツール:
+ja:PDF生成ソフト:
 ka:PDF-ის მწარმოებელი:
 kr:PDF 제작자:
 ku:PDF بەرهەمهێنەری:
