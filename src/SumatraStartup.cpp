@@ -839,43 +839,38 @@ static void ShowNoAdminErrorMessage() {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
-static void MaybeDeleteStaleDirectory(char* dir, DirIterEntry* d) {
-    const char* name = d->name;
-    bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
-    if (!maybeDelete) {
-        logf("MaybeDeleteStaleDirectory: skipping '%s' because not manual-* or crsahinfo-*\n", name);
-        return;
-    }
-    TempStr currVer = GetVerDirNameTemp("");
-    if (str::Contains(name, currVer)) {
-        logf("MaybeDeleteStaleDirectory: skipping '%s' because our ver '%s'\n", name, currVer);
-        return;
-    }
-    bool ok = dir::RemoveAll(dir);
-    logf("MaybeDeleteStaleDirectory: dir::RemoveAll('%s') returned %d\n", dir, ok);
-    return;
-}
-
 // delete symbols and manual from possibly previous versions
 static void DeleteStaleFilesAsync() {
     TempStr dir = GetNotImportantDataDirTemp();
+    TempStr ver = GetVerDirNameTemp("");
+    logf("DeleteStaleFilesAsync: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
+
     DirIter di{dir};
     di.includeFiles = false;
     di.includeDirs = true;
     for (DirIterEntry* de : di) {
-        MaybeDeleteStaleDirectory(dir, de);
+        const char* name = de->name;
+        bool maybeDelete = str::StartsWith(name, "manual-") || str::StartsWith(name, "crashinfo-");
+        if (!maybeDelete) {
+            logf("DeleteStaleFilesAsync: skipping '%s' because not manual-* or crsahinfo-*\n", name);
+            continue;
+        }
+        TempStr currVer = GetVerDirNameTemp("");
+        if (str::Contains(name, currVer)) {
+            logf("DeleteStaleFilesAsync: skipping '%s' because our ver '%s'\n", name, currVer);
+            continue;
+        }
+        bool ok = dir::RemoveAll(dir);
+        logf("DeleteStaleFilesAsync: dir::RemoveAll('%s') returned %d\n", dir, ok);
     }
 }
 
 void StartDeleteStaleFiles() {
     // for now we only care about pre-release builds as they can be updated frequently
-    if (false && !gIsPreReleaseBuild) {
+    if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
         logf("DeleteStaleFiles: skipping because gIsPreRelaseBuild: %d\n", (int)gIsPreReleaseBuild);
         return;
     }
-    TempStr dir = GetNotImportantDataDirTemp();
-    TempStr ver = GetVerDirNameTemp("");
-    logf("DeleteStaleFiles: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
     auto fn = MkFunc0Void(DeleteStaleFilesAsync);
     RunAsync(fn, "DeleteStaleFilesThread");
 }
