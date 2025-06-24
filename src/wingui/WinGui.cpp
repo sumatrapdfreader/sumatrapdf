@@ -181,8 +181,8 @@ Wnd* WndMapFindByHWND(HWND hwnd) {
 }
 
 static void WndMapAdd(HWND hwnd, Wnd* w) {
-    if (!hwnd) {
-        ReportIf(!hwnd);
+    if (!hwnd || !w) {
+        ReportIf(!hwnd || !w);
         return;
     }
     Wnd* existing = WndMapFindByHWND(hwnd);

@@ -142,7 +142,6 @@ int GetWndX(NotificationWnd* wnd) {
 }
 
 NotificationWnd::~NotificationWnd() {
-    Destroy();
 }
 
 HWND NotificationWnd::Create(const NotificationCreateArgs& args) {

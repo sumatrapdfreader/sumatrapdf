@@ -708,7 +708,6 @@ static void BuildSymbolPath(const char* symDir) {
 
     char* p = path.CStr();
     str::ReplaceWithCopy(&gSymbolPath, p);
-    logf("gSymbolPath: '%s'\n", gSymbolPath);
 }
 
 bool SetSymbolsDir(const char* symDir) {
