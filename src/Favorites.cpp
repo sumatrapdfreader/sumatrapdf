@@ -220,12 +220,7 @@ static void AddOrReplaceFav(const char* filePath, int pageNo, const char* name, 
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
         // we were asked to add a favorite for current file but couldn't find
-        // history for this file. should only happen if we're not remembering
-        // opened files
-        // TODO: is this invalid check because we could have opened a file,
-        // turned off the setting, turned on the setting and then
-        // tried to add the fav?
-        ReportIf(gGlobalPrefs->rememberOpenedFiles);
+        // history for this file
         fav = NewDisplayState(filePath);
         gFileHistory.Append(fav);
     }
