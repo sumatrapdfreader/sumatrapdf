@@ -129,15 +129,6 @@ TempStr GetAppDataDirTemp() {
             dir = GetTempDirTemp(); // shouldn't happen, last chance thing
         }
         dir = path::JoinTemp(dir, kAppName);
-        // use a different path for store builds
-        if (gIsStoreBuild) {
-            // %APPLOCALDATA%/SumatraPDF Store
-            // %APPLOCALDATA%/SumatraPDF Store Preview
-            dir = str::JoinTemp(dir, " Store");
-            if (gIsPreReleaseBuild) {
-                dir = str::JoinTemp(dir, " Preview");
-            }
-        }
     }
     logf("GetAppDataDirTemp(): '%s'\n", dir);
     SetAppDataDir(dir);
