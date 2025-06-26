@@ -53,27 +53,19 @@ static const char* themesTxt = R"(Themes [
         ColorizeControls = true
     ]
     [
-        Name = Darker
-        TextColor = #c3c3c6
-        BackgroundColor = #2d2d30
-        ControlBackgroundColor = #2d2d30
-        LinkColor = #9999a0
-        ColorizeControls = true
-    ]
-    [
         Name = Dark
-        TextColor = #F9FAFB
-        BackgroundColor = #000000
-        ControlBackgroundColor = #000000
-        LinkColor = #6B7280
-        ColorizeControls = true
-    ]
-    [
-        Name = Dark background Bright text
         TextColor = #ffffff
         BackgroundColor = #2d2d30
         ControlBackgroundColor = #2d2d30
         LinkColor = #9999a0
+        ColorizeControls = true
+    ]
+    [
+        Name = Black
+        TextColor = #F9FAFB
+        BackgroundColor = #000000
+        ControlBackgroundColor = #000000
+        LinkColor = #6B7280
         ColorizeControls = true
     ]
     [
