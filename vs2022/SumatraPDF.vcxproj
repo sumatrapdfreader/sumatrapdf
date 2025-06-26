@@ -1405,6 +1405,7 @@
     <None Include="..\.github\workflows\codeql.yml" />
     <None Include="..\.github\workflows\daily.yml" />
     <None Include="..\.gitignore" />
+    <None Include="..\do\appx.go" />
     <None Include="..\do\build.go" />
     <None Include="..\do\check_accesskyes.go" />
     <None Include="..\do\clang_tidy_format.go" />
@@ -1428,7 +1429,6 @@
     <None Include="..\do\wc.go" />
     <None Include="..\docs\manual.tmpl.html" />
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md" />
-    <None Include="..\docs\md\Add-Favorite.md" />
     <None Include="..\docs\md\Advanced-options-settings.md" />
     <None Include="..\docs\md\Build-system.md" />
     <None Include="..\docs\md\Command-Palette.md" />
@@ -1447,7 +1447,6 @@
     <None Include="..\docs\md\DDE-Commands.md" />
     <None Include="..\docs\md\Debugging-Sumatra.md" />
     <None Include="..\docs\md\Editing-annotations.md" />
-    <None Include="..\docs\md\Go-to-Page.md" />
     <None Include="..\docs\md\How-to-submit-bug-reports.md" />
     <None Include="..\docs\md\How-we-store-settings.md" />
     <None Include="..\docs\md\Installer-cmd-line-arguments.md" />

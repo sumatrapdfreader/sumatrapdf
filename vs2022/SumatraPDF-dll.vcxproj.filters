@@ -698,6 +698,9 @@
       <Filter>.github\workflows</Filter>
     </None>
     <None Include="..\.gitignore" />
+    <None Include="..\do\appx.go">
+      <Filter>do</Filter>
+    </None>
     <None Include="..\do\build.go">
       <Filter>do</Filter>
     </None>
@@ -767,9 +770,6 @@
     <None Include="..\docs\md\Accessibility-and-Text-to-Speech.md">
       <Filter>docs\md</Filter>
     </None>
-    <None Include="..\docs\md\Add-Favorite.md">
-      <Filter>docs\md</Filter>
-    </None>
     <None Include="..\docs\md\Advanced-options-settings.md">
       <Filter>docs\md</Filter>
     </None>
@@ -822,9 +822,6 @@
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\Editing-annotations.md">
-      <Filter>docs\md</Filter>
-    </None>
-    <None Include="..\docs\md\Go-to-Page.md">
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\How-to-submit-bug-reports.md">
