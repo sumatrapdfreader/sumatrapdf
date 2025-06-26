@@ -2793,12 +2793,9 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     }
 
     if (lastWindow && quitIfLast) {
-        logf("Calling PostQuitMessage() in CloseWindow() because closing lastWindow\n");
         int nWindows = gWindows.size();
-        if (nWindows != 0) {
-            logf("nWindows: %d\n", nWindows);
-            ReportDebugIf(nWindows != 0);
-        }
+        logf("Calling PostQuitMessage() in CloseWindow() because closing lastWindow, nWindows: %d\n", nWindows);
+        ReportDebugIf(nWindows != 0);
         PostQuitMessage(0);
     }
 }

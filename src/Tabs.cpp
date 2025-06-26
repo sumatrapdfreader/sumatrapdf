@@ -559,6 +559,11 @@ void TabsOnChangedDoc(MainWindow* win) {
 
 // Called when we're closing an entire window (quitting)
 void TabsOnCloseWindow(MainWindow* win) {
+    // TODO: I've seen a crash here where it seems like we've deleted the only main window
+    // but somehow we still process Esc and we get here. this might not be enough
+    if (!win->tabsCtrl) {
+        return;
+    }
     auto tabs = win->Tabs();
     DeleteVecMembers(tabs);
     win->tabsCtrl->RemoveAllTabs();

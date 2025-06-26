@@ -148,6 +148,7 @@ MainWindow::~MainWindow() {
         HWND hwndTemp = tabsCtrl->hwnd;
         logf("~MainWindow: delete tabsCtrl: 0x%p, HWND: 0x%p\n", tabsCtrl, hwndTemp);
         delete tabsCtrl;
+        tabsCtrl = nullptr;
         Wnd* w = WndMapFindByHWND(hwndTemp);
         if (w != nullptr) {
             logf("~MainWindow: tabsCtrl->hwnd found in WndMap after delete tabsCtrl\n");
