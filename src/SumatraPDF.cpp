@@ -4617,76 +4617,38 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     RelayoutFrame(win, false);
 }
 
-// Tests that various ways to crash will generate crash report.
-// Commented-out because they are ad-hoc. Left in code because
-// I don't want to write them again if I ever need to test crash reporting
-#if 0
-#include <signal.h>
-static void TestCrashAbort()
-{
-    raise(SIGABRT);
-}
+constexpr int kMaxURLLen = 1500;
 
-struct Base;
-void foo(Base* b);
-
-struct Base {
-    Base() {
-        foo(this);
-    }
-    virtual ~Base() = 0;
-    virtual void pure() = 0;
-};
-struct Derived : public Base {
-    void pure() { }
-};
-
-void foo(Base* b) {
-    b->pure();
-}
-
-static void TestCrashPureCall()
-{
-    Derived d; // should crash
-}
-
-// tests that making a big allocation with new raises an exception
-static int TestBigNew()
-{
-    size_t size = 1024*1024*1024*1;  // 1 GB should be out of reach
-    char *mem = (char*)1;
-    while (mem) {
-        mem = new char[size];
-    }
-    // just some code so that compiler doesn't optimize this code to null
-    for (size_t i = 0; i < 1024; i++) {
-        mem[i] = i & 0xff;
-    }
-    int res = 0;
-    for (size_t i = 0; i < 1024; i++) {
-        res += mem[i];
-    }
-    return res;
-}
-#endif
-
-#if 0
-static bool NeedsURLEncoding(WCHAR c) {
-    // TODO: implement me
-    return false;
-}
-#endif
-
-static TempStr URLEncodeTemp(const char* s) {
-    TempWStr ws = ToWStrTemp(s);
-    WCHAR buf[INTERNET_MAX_URL_LENGTH + 16]{}; // +16 jic
-    DWORD cchSizeInOut = dimof(buf) - 1;
+// if url-encoded s is bigger than a reasonable URL path,
+// we don't want to fail but truncate and encode less
+static TempStr URLEncodeNoFailTemp(const char* s) {
+    HRESULT hr;
+    DWORD diff;
+    WCHAR buf[kMaxURLLen + 1]{};
     DWORD flags = URL_ESCAPE_AS_UTF8;
-    HRESULT hr = UrlEscapeW(ws, buf, &cchSizeInOut, flags);
-    if (FAILED(hr)) {
-        return nullptr;
+    TempWStr ws = ToWStrTemp(s);
+    // we can't predict the length of encoded string so we try
+    // with increasingly smaller input strings, from 1500 down to 1000
+    int maxLen = kMaxURLLen;
+    for (int i = 0; i < 10; i++) {
+        if (str::Len(ws) > maxLen) {
+            ws[maxLen] = 0;
+        }
+        DWORD cchSizeInOut = kMaxURLLen;
+        hr = UrlEscapeW(ws, buf, &cchSizeInOut, flags);
+        if (SUCCEEDED(hr)) {
+            return ToUtf8Temp(buf);
+        }
+        // cchSizeInOut involves url-encoded characters
+        // we can reduce ws by less characters than that
+        // but don't know how many, so we use conservative guess
+        diff = cchSizeInOut - kMaxURLLen;
+        if (diff > 10) {
+            diff = (diff * 2) / 3;
+        }
+        maxLen -= diff;
     }
-    return ToUtf8Temp(buf);
+    return nullptr;
 }
 
 constexpr const char* kUserLangStr = "${userlang}";
@@ -4731,7 +4693,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     if (!selText) {
         return;
     }
-    TempStr encodedSelection = URLEncodeTemp(selText);
+    TempStr encodedSelection = URLEncodeNoFailTemp(selText);
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
     const char* lang = trans::GetCurrentLangCode();
