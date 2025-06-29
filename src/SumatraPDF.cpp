@@ -4631,7 +4631,7 @@ static TempStr URLEncodeNoFailTemp(const char* s) {
     // with increasingly smaller input strings, from 1500 down to 1000
     int maxLen = kMaxURLLen;
     for (int i = 0; i < 10; i++) {
-        if (str::Len(ws) > maxLen) {
+        if (str::Leni(ws) > maxLen) {
             ws[maxLen] = 0;
         }
         DWORD cchSizeInOut = kMaxURLLen;
