@@ -687,7 +687,7 @@ function sumatrapdf_files()
     "Uninstaller.cpp",
     "WindowTab.*",
 
-    "ext/versions.txt",
+    "../ext/versions.txt",
     "scratch.txt",
   })
   filter {"configurations:Debug or DebugFull"}

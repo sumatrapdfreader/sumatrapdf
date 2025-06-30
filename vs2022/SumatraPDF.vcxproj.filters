@@ -37,9 +37,6 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\ext">
-      <UniqueIdentifier>{0DFD2FA9-79DC-AE44-82F4-391BEE5215A6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\mui">
       <UniqueIdentifier>{A71E30A9-13FE-AE44-1C16-3A1B887415A6}</UniqueIdentifier>
     </Filter>
@@ -896,12 +893,12 @@
     <None Include="..\docs\www\sumatra.css">
       <Filter>docs\www</Filter>
     </None>
+    <None Include="..\ext\versions.txt">
+      <Filter>ext</Filter>
+    </None>
     <None Include="..\premake5.files.lua" />
     <None Include="..\premake5.lua" />
     <None Include="..\premake5.obsolete.lua" />
-    <None Include="..\src\ext\versions.txt">
-      <Filter>src\ext</Filter>
-    </None>
     <None Include="..\src\scratch.txt">
       <Filter>src</Filter>
     </None>
