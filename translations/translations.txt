@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b94b9b10c7f6a78a0d0a8f77f8417aedd3858958
+2b901bfe078037731f414aeaf31b51a0c3aa6cdb
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -814,7 +814,7 @@ ar:لا تسألني مرةً أخرى&
 az:Bir daha &soruşma
 bg:Без повтор&но питане
 bn:&আমাকে আর জিজ্ঞেস করবেন না
-br:&Não me perguntar de novo
+br:&Não me pergunte de novo
 bs:Nemoj me ponovo pitati
 by:Больш не пытаць
 ca-xv:&No m'ho tornis a preguntar
@@ -3043,7 +3043,7 @@ am:&Հարմարեցնել էջը տպելու համար (եթե պահանջվ
 ar:(تقليص الصفحات إلى منطقة قابلة للطباعة (إذا لزم الأمر&
 az:Ehtiyac varsa, səhifələri çap sahəsinin ölçüsünə görə kiçilt
 bg:&Намали страниците в мястото за отпечатване (при необходимост)
-br:&Reduzir as páginas pra área imprimível (se necessário)
+br:&Encolher as páginas pra área imprimível (se necessário)
 bs:Umanji stranice na područje za štampu (ako je potrebno)
 by:&Сціскаць старонкі да вобласці друку (калі неабходна)
 ca-xv:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
@@ -17446,7 +17446,7 @@ am:Այս անվամբ տպիչ գոյություն չունի
 ar:طابعة بهذا الاسم غير موجودة
 az:Bu adda printer mövcud deyil
 bg:Принтер с това име не съществува
-br:Uma impressora com este nome dado não existe
+br:Não existe uma impressora com o nome dado
 bs:Štampač sa datim nazivom ne postoji
 by:Друкарка з такім імем не існуе
 ca-xv:No existeix cap impressora amb aquest nom

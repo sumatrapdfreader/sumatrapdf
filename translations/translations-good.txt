@@ -733,7 +733,7 @@ am:&Այլևս չհարցնել
 ar:لا تسألني مرةً أخرى&
 az:Bir daha &soruşma
 bg:Без повтор&но питане
-br:&Não me perguntar de novo
+br:&Não me pergunte de novo
 by:Больш не пытаць
 ca:&No ho tornis a preguntar
 ca-xv:&No m'ho tornis a preguntar
@@ -2675,7 +2675,7 @@ am:&Հարմարեցնել էջը տպելու համար (եթե պահանջվ
 ar:(تقليص الصفحات إلى منطقة قابلة للطباعة (إذا لزم الأمر&
 az:Ehtiyac varsa, səhifələri çap sahəsinin ölçüsünə görə kiçilt
 bg:&Намали страниците в мястото за отпечатване (при необходимост)
-br:&Reduzir as páginas pra área imprimível (se necessário)
+br:&Encolher as páginas pra área imprimível (se necessário)
 by:&Сціскаць старонкі да вобласці друку (калі неабходна)
 ca:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
 ca-xv:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
@@ -15102,7 +15102,7 @@ am:Այս անվամբ տպիչ գոյություն չունի
 ar:طابعة بهذا الاسم غير موجودة
 az:Bu adda printer mövcud deyil
 bg:Принтер с това име не съществува
-br:Uma impressora com este nome dado não existe
+br:Não existe uma impressora com o nome dado
 by:Друкарка з такім імем не існуе
 ca:No existeix cap impressora amb el nom donat
 ca-xv:No existeix cap impressora amb aquest nom
