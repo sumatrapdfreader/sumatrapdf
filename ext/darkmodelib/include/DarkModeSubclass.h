@@ -75,9 +75,10 @@ namespace DarkMode
 		tooltip,   ///< Standard tooltip control.
 		toolbar,   ///< Tooltips associated with toolbar buttons.
 		listview,  ///< Tooltips associated with list views.
-		treeview,  ///< Tooltips associated with tree view.
+		treeview,  ///< Tooltips associated with tree views.
 		tabbar,    ///< Tooltips associated with tab controls.
-		trackbar   ///< Tooltips associated with trackbar (slider) controls.
+		trackbar,  ///< Tooltips associated with trackbar (slider) controls.
+		rebar      ///< Tooltips associated with rebar controls.
 	};
 
 	/**
@@ -250,7 +251,10 @@ namespace DarkMode
 	// Colors
 	// ========================================================================
 
-	void setToneColors(ColorTone colorTone);
+	/// Sets the color tone and its color set for the active theme.
+	void setColorTone(ColorTone colorTone);
+
+	/// Retrieves the currently active color tone for the theme.
 	[[nodiscard]] ColorTone getColorTone();
 
 	COLORREF setBackgroundColor(COLORREF clrNew);
@@ -330,13 +334,15 @@ namespace DarkMode
 
 	[[nodiscard]] HPEN getHeaderEdgePen();
 
+	/// Initializes default color set based on the current mode type.
+	void setDefaultColors(bool updateBrushesAndOther);
+
 	// ========================================================================
 	// Paint Helpers
 	// ========================================================================
 
 	/// Paints a rounded rectangle using the specified pen and brush.
 	void paintRoundRect(HDC hdc, const RECT& rect, HPEN hpen, HBRUSH hBrush, int width = 0, int height = 0);
-
 	/// Paints an unfilled rounded rectangle (frame only).
 	void paintRoundFrameRect(HDC hdc, const RECT& rect, HPEN hpen, int width = 0, int height = 0);
 
@@ -344,13 +350,19 @@ namespace DarkMode
 	// Control Subclassing
 	// ========================================================================
 
+	/// Applies themed owner drawn subclassing to a checkbox, radio, or tri-state button control.
 	void setCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a a checkbox, radio, or tri-state button control.
 	void removeCheckboxOrRadioBtnCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn subclassing to a groupbox button control.
 	void setGroupboxCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a groupbox button control.
 	void removeGroupboxCtrlSubclass(HWND hWnd);
 
+	/// Applies owner drawn subclassing and theming to an updown (spinner) control.
 	void setUpDownCtrlSubclass(HWND hWnd);
+	/// Removes the owner drawn subclass from a updown (spinner) control.
 	void removeUpDownCtrlSubclass(HWND hWnd);
 
 	void setTabCtrlUpDownSubclass(HWND hWnd);
@@ -393,10 +405,14 @@ namespace DarkMode
 	// Window, Parent, And Other Subclassing
 	// ========================================================================
 
+	/// Applies window subclassing to handle `WM_ERASEBKGND` message.
 	void setWindowEraseBgSubclass(HWND hWnd);
+	/// Removes the subclass used for `WM_ERASEBKGND` message handling.
 	void removeWindowEraseBgSubclass(HWND hWnd);
 
+	/// Applies window subclassing to enable `WM_CTLCOLOR*` handling.
 	void setWindowCtlColorSubclass(HWND hWnd);
+	/// Removes the subclass used for `WM_CTLCOLOR*` messages handling.
 	void removeWindowCtlColorSubclass(HWND hWnd);
 
 	void setWindowNotifyCustomDrawSubclass(HWND hWnd, bool subclassChildren = false);
@@ -417,37 +433,29 @@ namespace DarkMode
 
 	/// Sets dark title bar and optional Windows 11 features.
 	void setDarkTitleBarEx(HWND hWnd, bool useWin11Features);
-
 	/// Sets dark mode title bar on supported Windows versions.
 	void setDarkTitleBar(HWND hWnd);
 
 	/// Applies an experimental visual style to the specified window, if supported.
 	void setDarkThemeExperimental(HWND hWnd, const wchar_t* themeClassName = L"Explorer");
-
 	/// Applies "DarkMode_Explorer" visual style if experimental mode is active.
 	void setDarkExplorerTheme(HWND hWnd);
-
 	/// Applies "DarkMode_Explorer" visual style to scroll bars.
 	void setDarkScrollBar(HWND hWnd);
-
 	/// Applies "DarkMode_Explorer" visual style to tooltip controls based on context.
 	void setDarkTooltips(HWND hWnd, ToolTipsType type = ToolTipsType::tooltip);
 
 	/// Sets the color of line above a toolbar control for non-classic mode.
 	void setDarkLineAbovePanelToolbar(HWND hWnd);
-
 	/// Applies an experimental Explorer visual style to a list view.
 	void setDarkListView(HWND hWnd);
-
 	/// Replaces default list view checkboxes with themed dark-mode versions on Windows 11.
 	void setDarkListViewCheckboxes(HWND hWnd);
-
 	/// Sets colors and edges for a RichEdit control.
 	void setDarkRichEdit(HWND hWnd);
 
 	/// Applies visual styles; ctl color message and child controls subclassings to a dialog safely.
 	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
-
 	/// Applies visual styles; ctl color message, child controls, and custom drawing subclassings to a dialog safely.
 	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
 
@@ -483,16 +491,12 @@ namespace DarkMode
 
 	/// Forces a window to redraw its non-client frame.
 	void redrawWindowFrame(HWND hWnd);
-
 	/// Sets a window's standard style flags and redraws window if needed.
 	void setWindowStyle(HWND hWnd, bool setStyle, LONG_PTR styleFlag);
-
 	/// Sets a window's extended style flags and redraws window if needed.
 	void setWindowExStyle(HWND hWnd, bool setExStyle, LONG_PTR exStyleFlag);
-
 	/// Replaces an extended edge (e.g. client edge) with a standard window border.
 	void replaceExEdgeWithBorder(HWND hWnd, bool replace, LONG_PTR exStyleFlag);
-
 	/// Safely toggles `WS_EX_CLIENTEDGE` with `WS_BORDER` based on dark mode state.
 	void replaceClientEdgeWithBorderSafe(HWND hWnd);
 
@@ -612,8 +616,8 @@ namespace DarkMode
 	 *
 	 * @param hWnd Handle to the dialog window.
 	 * @param uMsg Message identifier.
-	 * @param wParam First message parameter.
-	 * @param lParam Second message parameter.
+	 * @param wParam First message parameter (unused).
+	 * @param lParam Second message parameter (unused).
 	 * @return A value defined by the hook procedure.
 	 */
 	UINT_PTR CALLBACK HookDlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

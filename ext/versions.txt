@@ -77,4 +77,4 @@ libheif         trunk      2022-05-30
 
 darkmodelib     trunk      2025-06-19
   https://github.com/ozone10/darkmodelib
-  https://github.com/ozone10/darkmodelib/commit/2a18418fdd4506e9200117dbddb5a5734651ab47
+  https://github.com/ozone10/darkmodelib/commit/4f3373b
