@@ -7,6 +7,9 @@
     <Filter Include=".github\workflows">
       <UniqueIdentifier>{B3AE4BDD-1FC5-4973-683C-D594D4911AFB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Appx">
+      <UniqueIdentifier>{7E9F827C-6AD6-830D-13C3-6910FFD8FF0E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="do">
       <UniqueIdentifier>{98775900-8403-880B-EDB1-880BD95C880B}</UniqueIdentifier>
     </Filter>
@@ -692,6 +695,9 @@
       <Filter>.github\workflows</Filter>
     </None>
     <None Include="..\.gitignore" />
+    <None Include="..\Appx\AppxManifest.xml">
+      <Filter>Appx</Filter>
+    </None>
     <None Include="..\do\appx.go">
       <Filter>do</Filter>
     </None>
@@ -907,5 +913,10 @@
     <ResourceCompile Include="..\src\SumatraPDF.rc">
       <Filter>src</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <AppxManifest Include="..\Appx\SumatraPDF.appxmanifest">
+      <Filter>Appx</Filter>
+    </AppxManifest>
   </ItemGroup>
 </Project>
