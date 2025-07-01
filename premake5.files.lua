@@ -619,8 +619,9 @@ function sumatrapdf_files()
     "premake5.files.lua",
     "ext/versions.txt",
     "Appx/AppxManifest.xml",
+    -- https://github.com/premake/premake-core/pull/1750/files
+    -- TODO: not sure if it does anything
     "Appx/SumatraPDF.appxmanifest",
-
   })
   files_in_dir("src", {
     "Accelerators.*",
