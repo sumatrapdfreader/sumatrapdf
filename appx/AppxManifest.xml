@@ -32,9 +32,9 @@
 
         <uap:DefaultTile Wide310x150Logo="SumatraLogo310x150Logo.png" Square310x310Logo="SumatraLogo310x310Logo.png" >
           <uap:ShowNameOnTiles>
-            <uap:ShowOn Tile="Square150x150Logo" />
-            <uap:ShowOn Tile="Wide310x150Logo" />
-            <uap:ShowOn Tile="Square310x310Logo" />
+            <uap:ShowOn Tile="square150x150Logo" />
+            <uap:ShowOn Tile="wide310x150Logo" />
+            <uap:ShowOn Tile="square310x310Logo" />
           </uap:ShowNameOnTiles>
         </uap:DefaultTile>
 
