@@ -1483,12 +1483,6 @@
     <ResourceCompile Include="..\src\SumatraPDF.rc" />
   </ItemGroup>
   <ItemGroup>
-    <AppxManifest Include="..\Appx\SumatraPDF.appxmanifest">
-      <FileType>Document</FileType>
-      <SubType>Designer</SubType>
-    </AppxManifest>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="zlib.vcxproj">
       <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>
     </ProjectReference>

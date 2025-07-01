@@ -917,9 +917,4 @@
       <Filter>src</Filter>
     </ResourceCompile>
   </ItemGroup>
-  <ItemGroup>
-    <AppxManifest Include="..\Appx\SumatraPDF.appxmanifest">
-      <Filter>Appx</Filter>
-    </AppxManifest>
-  </ItemGroup>
 </Project>

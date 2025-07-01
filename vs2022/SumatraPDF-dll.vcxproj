@@ -1532,12 +1532,6 @@
     <ResourceCompile Include="..\src\SumatraPDF.rc" />
   </ItemGroup>
   <ItemGroup>
-    <AppxManifest Include="..\Appx\SumatraPDF.appxmanifest">
-      <FileType>Document</FileType>
-      <SubType>Designer</SubType>
-    </AppxManifest>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="libmupdf.vcxproj">
       <Project>{B812ACA6-A4DF-06B2-CDF8-F459B9243C40}</Project>
     </ProjectReference>
