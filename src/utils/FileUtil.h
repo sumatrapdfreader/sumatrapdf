@@ -12,6 +12,8 @@ TempStr GetPathNoExtTemp(const char* path);
 TempStr GetDirTemp(const char* path);
 TempWStr GetDirTemp(const WCHAR* path);
 
+TempStr GetNonVirtualTemp(const char* virtualPath);
+
 char* Join(Allocator* allocator, const char* path, const char* fileName);
 char* Join(const char* path, const char* fileName);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2 = nullptr);

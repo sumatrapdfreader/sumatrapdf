@@ -81,6 +81,7 @@ TempStr GetSettingsFileNameTemp() {
     return str::DupTemp("SumatraPDF-settings.txt");
 }
 
+// this could be virtual path when running in app store
 TempStr GetSettingsPathTemp() {
     return GetPathInAppDataDirTemp(GetSettingsFileNameTemp());
 }

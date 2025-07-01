@@ -5,6 +5,7 @@
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/WinDynCalls.h"
 
 #include "utils/Log.h"
 
@@ -468,6 +469,37 @@ bool IsAbsolute(const char* path) {
     TempWStr ws = ToWStrTemp(path);
     return !PathIsRelativeW(ws);
 }
+
+// When running in App Store, Windows virtualizes %APPDATA% etc., so to get a real path
+// for settings etc., we need to un-virtualize
+TempStr GetNonVirtualTemp(const char* virtualPath) {
+    if (!DynGetFinalPathNameByHandleW) {
+        return (TempStr)virtualPath;
+    }
+    TempWStr pathW = ToWStrTemp(virtualPath);
+    HANDLE hFile = CreateFileW(pathW, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                               FILE_ATTRIBUTE_NORMAL, nullptr);
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        return (TempStr)virtualPath;
+    }
+
+    WCHAR realPath[MAX_PATH * 4];
+    DWORD ret = DynGetFinalPathNameByHandleW(hFile, realPath, sizeof(realPath) / sizeof(WCHAR), FILE_NAME_NORMALIZED);
+
+    CloseHandle(hFile);
+    if (ret <= 0) {
+        return (TempStr)virtualPath;
+    }
+
+    TempStr res = ToUtf8Temp(realPath);
+    // Remove the "\\?\" prefix if present
+    if (str::StartsWith(res, "\\\\?\\")) {
+        res = res + 4;
+    }
+    return res;
+}
+
 } // namespace path
 
 // returns the path to either the %TEMP% directory or a

@@ -664,6 +664,9 @@ bool LaunchFileIfExists(const char* path) {
     if (!file::Exists(path)) {
         return false;
     }
+    if (gIsStoreBuild) {
+        path = path::GetNonVirtualTemp(path);
+    }
     LaunchFileShell(path, nullptr, "open");
     return true;
 }

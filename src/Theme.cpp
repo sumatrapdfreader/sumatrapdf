@@ -152,7 +152,7 @@ void SetThemeByIndex(int themeIdx) {
         constexpr UINT kModeClassic = 3;
         // TODO: we should apply themes to every theme other than 0
         // but in Solarized Light in Find dialog's input field text is invisible i.e. black
-        //UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
+        // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
         bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
         UINT mode = isDarkCol ? kModeDark : kModeClassic;
         DarkMode::setDarkModeConfig(mode);

@@ -61,15 +61,16 @@ typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 NORMALIZ_API_LIST(API_DECLARATION)
 
 // kernel32.dll
-#define KERNEL32_API_LIST(V)    \
-    V(SetProcessDEPPolicy)      \
-    V(IsWow64Process)           \
-    V(GetProcessInformation)    \
-    V(SetDllDirectoryW)         \
-    V(SetDefaultDllDirectories) \
-    V(RtlCaptureContext)        \
-    V(RtlCaptureStackBackTrace) \
-    V(SetThreadDescription)     \
+#define KERNEL32_API_LIST(V)     \
+    V(SetProcessDEPPolicy)       \
+    V(IsWow64Process)            \
+    V(GetProcessInformation)     \
+    V(SetDllDirectoryW)          \
+    V(SetDefaultDllDirectories)  \
+    V(RtlCaptureContext)         \
+    V(RtlCaptureStackBackTrace)  \
+    V(SetThreadDescription)      \
+    V(GetFinalPathNameByHandleW) \
     V(SetProcessMitigationPolicy)
 
 // TODO: only available in 20348, not yet present in SDK?

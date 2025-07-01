@@ -3662,7 +3662,7 @@ static void OpenAdvancedOptions() {
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
     TempStr path = GetSettingsPathTemp();
-    LaunchFileShell(path);
+    LaunchFileIfExists(path);
 }
 
 static void ShowOptionsDialog(HWND hwnd) {
@@ -6349,7 +6349,7 @@ void ShowCrashHandlerMessage() {
         log("ShowCrashHandlerMessage: !gCrashFilePath\n");
         return;
     }
-    LaunchFileShell(gCrashFilePath, nullptr, "open");
+    LaunchFileIfExists(gCrashFilePath);
     auto url = "https://www.sumatrapdfreader.org/docs/Submit-crash-report.html";
     LaunchFileShell(url, nullptr, "open");
 }
