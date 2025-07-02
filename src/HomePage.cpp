@@ -472,7 +472,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_CREATE:
             ReportIf(gHwndAbout);
             if (gUseDarkModeLib) {
-                DarkMode::setDarkTitleBar(hwnd);
+                DarkMode::setDarkTitleBarEx(hwnd, true);
             }
             break;
 

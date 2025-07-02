@@ -1,19 +1,10 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: MPL-2.0
 
 /*
- * Copyright (c) 2024-2025 ozone10
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * Copyright (c) 2025 oZone10
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 // Based on Notepad++ dark mode code, original by adzm / Adam D. Walling
@@ -108,7 +99,9 @@ namespace DarkMode
 	 * - `light`: Light mode appearance.
 	 * - `dark`: Dark mode appearance.
 	 *
-	 * Set via configuration and used by style evaluators (e.g. @ref calculateTreeViewStyle).
+	 * Set via configuration and used by style evaluators (e.g. @ref DarkMode::calculateTreeViewStyle).
+	 *
+	 * @see DarkMode::calculateTreeViewStyle()
 	 */
 	enum class TreeViewStyle : unsigned char
 	{
@@ -120,8 +113,10 @@ namespace DarkMode
 	/**
 	 * @brief Describes metadata fields and compile-time features of the dark mode library.
 	 *
-	 * Values of this enum are used with getLibInfo() to retrieve version numbers and
+	 * Values of this enum are used with @ref DarkMode::getLibInfo to retrieve version numbers and
 	 * determine whether specific features were enabled during compilation.
+	 *
+	 * @see DarkMode::getLibInfo()
 	 */
 	enum class LibInfo : unsigned char
 	{
@@ -135,6 +130,24 @@ namespace DarkMode
 		useDlgProcCtl,    ///< True if WM_CTLCOLORxxx can be handled directly in dialog procedure.
 		preferTheme,      ///< True if theme is supported and can be used over subclass, e.g. combo box on Windows 10+.
 		maxValue          ///< Sentinel value for internal validation (not intended for use).
+	};
+
+	/**
+	 * @brief Defines the available dark mode types for manual configurations.
+	 *
+	 * Can be used in DarkMode::initDarkModeConfig and in DarkMode::setDarkModeConfig
+	 * with static_cast<UINT>(DarkModeType::'value').
+	 *
+	 * @note Also used internally to distinguish between light, dark, and classic modes.
+	 *
+	 * @see DarkMode::initDarkModeConfig()
+	 * @see DarkMode::setDarkModeConfig()
+	 */
+	enum class DarkModeType : unsigned char
+	{
+		light = 0,  ///< Light mode appearance.
+		dark = 1,   ///< Dark mode appearance.
+		classic = 3 ///< Classic (non-themed or system) appearance.
 	};
 
 	/**
@@ -154,10 +167,12 @@ namespace DarkMode
 	/**
 	 * @brief Initializes the dark mode configuration based on the selected mode.
 	 *
+	 * For convenience @ref DarkModeType enums values can be used.
+	 *
 	 * @param dmType Configuration mode:
-	 *        - 0: Light mode (manual)
-	 *        - 1: Dark mode (manual)
-	 *        - 3: Classic mode (manual)
+	 *        - 0: Light mode
+	 *        - 1: Dark mode
+	 *        - 3: Classic mode
 	 *
 	 * @note Values 2 and 4 are reserved for internal use only.
 	 *       Using them can cause visual glitches.
@@ -170,13 +185,16 @@ namespace DarkMode
 	/// Sets the preferred border color for window edge on Windows 11.
 	void setBorderColorConfig(COLORREF clr);
 
-	// Sets the Mica effects on Windows 11. (DWM_SYSTEMBACKDROP_TYPE values)
+	// Sets the Mica effects on Windows 11 setting. (DWM_SYSTEMBACKDROP_TYPE values)
 	void setMicaConfig(UINT mica);
 
-	/// Applies Mica effects on the full window.
+	/// Sets Mica effects on the full window setting.
 	void setMicaExtendedConfig(bool extendMica);
 
-	/// Applies dark mode settings based on the given configuration type. (initDarkModeConfig values)
+	/// Sets dialog colors on title bar on Windows 11 setting.
+	void setColorizeTitleBarConfig(bool colorize);
+
+	/// Applies dark mode settings based on the given configuration type. (DarkModeType values)
 	void setDarkModeConfig(UINT dmType);
 
 	/// Applies dark mode settings based on system mode preference.
@@ -244,7 +262,7 @@ namespace DarkMode
 	// Enhancements to DarkMode.h
 	// ========================================================================
 
-	/// Makes scrollbars on the specified window and all its children consistent.
+	/// Makes scroll bars on the specified window and all its children consistent.
 	void enableDarkScrollBarForWindowAndChildren(HWND hWnd);
 
 	// ========================================================================
@@ -410,18 +428,24 @@ namespace DarkMode
 	/// Removes the subclass used for `WM_ERASEBKGND` message handling.
 	void removeWindowEraseBgSubclass(HWND hWnd);
 
-	/// Applies window subclassing to enable `WM_CTLCOLOR*` handling.
+	/// Applies window subclassing to handle `WM_CTLCOLOR*` messages.
 	void setWindowCtlColorSubclass(HWND hWnd);
 	/// Removes the subclass used for `WM_CTLCOLOR*` messages handling.
 	void removeWindowCtlColorSubclass(HWND hWnd);
 
-	void setWindowNotifyCustomDrawSubclass(HWND hWnd, bool subclassChildren = false);
+	/// Applies window subclassing for handling `NM_CUSTOMDRAW` notifications for custom drawing.
+	void setWindowNotifyCustomDrawSubclass(HWND hWnd);
+	/// Removes the subclass used for handling `NM_CUSTOMDRAW` notifications for custom drawing.
 	void removeWindowNotifyCustomDrawSubclass(HWND hWnd);
 
+	/// Applies window subclassing for menu bar themed custom drawing.
 	void setWindowMenuBarSubclass(HWND hWnd);
+	/// Removes the subclass used for menu bar themed custom drawing.
 	void removeWindowMenuBarSubclass(HWND hWnd);
 
+	/// Applies window subclassing to handle `WM_SETTINGCHANGE` message.
 	void setWindowSettingChangeSubclass(HWND hWnd);
+	/// Removes the subclass used for `WM_SETTINGCHANGE` message handling.
 	void removeWindowSettingChangeSubclass(HWND hWnd);
 
 	// ========================================================================
@@ -454,10 +478,12 @@ namespace DarkMode
 	/// Sets colors and edges for a RichEdit control.
 	void setDarkRichEdit(HWND hWnd);
 
-	/// Applies visual styles; ctl color message and child controls subclassings to a dialog safely.
-	void setDarkDlgSafe(HWND hWnd, bool useWin11Features = true);
-	/// Applies visual styles; ctl color message, child controls, and custom drawing subclassings to a dialog safely.
-	void setDarkDlgNotifySafe(HWND hWnd, bool useWin11Features = true);
+	/// Applies visual styles; ctl color message and child controls subclassings to a window safely.
+	void setDarkWndSafe(HWND hWnd, bool useWin11Features = true);
+	/// Applies visual styles; ctl color message, child controls, custom drawing, and setting change subclassings to a window safely.
+	void setDarkWndNotifySafeEx(HWND hWnd, bool setSettingChangeSubclass = false, bool useWin11Features = true);
+	/// Applies visual styles; ctl color message, child controls, and custom drawing subclassings to a window safely.
+	void setDarkWndNotifySafe(HWND hWnd, bool useWin11Features = true);
 
 	/// Enables or disables theme-based dialog background textures in classic mode.
 	void enableThemeDialogTexture(HWND hWnd, bool theme);
@@ -542,9 +568,9 @@ namespace DarkMode
 	 * - When a hook is used with `ChooseFont`, Windows **automatically falls back**
 	 *   to an **older template**, losing modern UI elements.
 	 * - To prevent this forced downgrade, a **modified template** (based on Font.dlg) is used.
-	 * - **CBS_OWNERDRAWFIXED should be removed** from the **Size** and **Script** comboboxes
+	 * - **CBS_OWNERDRAWFIXED should be removed** from the **Size** and **Script** combo boxes
 	 *   to restore proper visualization.
-	 * - **Custom owner-draw visuals remain** for other font comboboxes to allow font preview.
+	 * - **Custom owner-draw visuals remain** for other font combo boxes to allow font preview.
 	 * - Same for the `"AaBbYyZz"` sample text.
 	 * - However **Automatic system translation for captions and static texts is lost** in this workaround.
 	 *
@@ -606,7 +632,7 @@ namespace DarkMode
 	 * ## Usage Example:
 	 * ```cpp
 	 * #define IDD_DARK_FONT_DIALOG 1000 // usually in resource.h or other header
-	 * 
+	 *
 	 * CHOOSEFONT cf{};
 	 * cf.Flags |= CF_ENABLEHOOK | CF_ENABLETEMPLATE;
 	 * cf.lpfnHook = static_cast<LPCFHOOKPROC>(DarkMode::HookDlgProc);
