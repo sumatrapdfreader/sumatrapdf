@@ -148,14 +148,15 @@ void SetThemeByIndex(int themeIdx) {
     gCurrentTheme = gThemes->At(gCurrThemeIndex);
     str::ReplaceWithCopy(&gGlobalPrefs->theme, gCurrentTheme->name);
     if (gUseDarkModeLib) {
-        constexpr UINT kModeDark = 1;
-        constexpr UINT kModeClassic = 3;
         // TODO: we should apply themes to every theme other than 0
         // but in Solarized Light in Find dialog's input field text is invisible i.e. black
         // UINT mode = themeIdx == 0 ? kModeClassic : kModeDark;
-        bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
-        UINT mode = isDarkCol ? kModeDark : kModeClassic;
+        const bool isDarkCol = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
+        const UINT mode = static_cast<UINT>(isDarkCol         ? DarkMode::DarkModeType::dark
+                                            : (themeIdx == 0) ? DarkMode::DarkModeType::classic
+                                                              : DarkMode::DarkModeType::light);
         DarkMode::setDarkModeConfig(mode);
+        DarkMode::setDefaultColors(false);
 
         DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
         DarkMode::setTextColor(ThemeWindowTextColor());

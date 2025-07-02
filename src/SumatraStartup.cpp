@@ -1144,6 +1144,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     gRenderCache = new RenderCache();
     if (gUseDarkModeLib) {
         DarkMode::initDarkMode();
+        DarkMode::setColorizeTitleBarConfig(true);
     }
     LoadSettings();
     UpdateGlobalPrefs(flags);

@@ -1451,7 +1451,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
     if (gUseDarkModeLib) {
-        args.bgColor = DarkMode::isThemeDark() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
+        args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
     } else {
         args.bgColor = MkGray(0xee);
     }
@@ -1506,7 +1506,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab) {
         UpdateUIForSelectedAnnotation(ew, annot, true);
     }
     if (gUseDarkModeLib) {
-        DarkMode::setDarkDlgNotifySafe(ew->hwnd);
+        DarkMode::setDarkWndNotifySafe(ew->hwnd);
         DarkMode::setWindowEraseBgSubclass(ew->hwnd);
     }
 
