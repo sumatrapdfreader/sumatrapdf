@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-2b901bfe078037731f414aeaf31b51a0c3aa6cdb
+c8f3046efab166719324cde3e699a3b3d31ccb69
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -5992,7 +5992,7 @@ hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
 it:Lingua interfaccia utente (UI Language)
-ja:言語の変更 (Change Language)
+ja:言語を変更 (Change Language)
 jv:Ganti Basa
 ka:ენის შეცვლა (Change Language)
 kr:언어 바꾸기(Change Language)
@@ -9900,7 +9900,7 @@ hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
 it:Inserisci linea di comando da eseguire quando si fa doppio clic su un documento PDF:
-ja:PDFドキュメント上でダブルクリックしたときに実行するコマンドライン
+ja:PDF文書上でダブルクリックしたときに実行するコマンドライン
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
@@ -17915,7 +17915,7 @@ hr:Preime&nuj
 hu:&Átnevezés…
 id:Rubah Nama
 it:Ri&nomina...
-ja:ファイル名の変更(&N)...
+ja:ファイル名を変更(&N)...
 kr:이름 바꾸기(&N)...
 lt:&Pervadinti
 my:Na&makan Semula...
@@ -20020,7 +20020,7 @@ hr:Prikaži alatnu traku
 hu:Eszköztár
 id:Tampilkan &Toolbar
 it:&Barra strumenti
-ja:ツールバーの表示(&T)
+ja:ツールバーを表示(&T)
 ka:&ხელსაწყოთა ზოლის ჩვენება
 kr:도구모음 보이기(&T)
 ku:پیشاندانی &شریتی ئامراز
@@ -20139,7 +20139,7 @@ hr:Prikaži favorite
 hu:Kedvencek megjelenítése
 id:Tampilkan Favorit
 it:Preferiti
-ja:お気に入りの表示
+ja:お気に入りを表示
 ka:რჩეულების ჩვენება
 kr:즐겨찾기 보이기
 ku:پیشاندانی پەسەندەکان
