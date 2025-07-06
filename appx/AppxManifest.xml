@@ -7,7 +7,7 @@
   <Identity Name="31563KrzysztofKowalczyk.SumatraPDF" Version="{{VERSION}}" ProcessorArchitecture="x64" Publisher="CN=&quot;Open Source Developer, Krzysztof Kowalczyk&quot;, O=Open Source Developer, L=Kraków, S=małopolskie, C=PL" />
   <Properties>
     <DisplayName>SumatraPDF</DisplayName>
-    <PublisherDisplayName>Krysztof Kowalczyk</PublisherDisplayName>
+    <PublisherDisplayName>Krzysztof Kowalczyk</PublisherDisplayName>
     <Description>PDF, eBook, ePub, comic book, XPS, DjVu, mobi, cbz, cbr reader</Description>
     <Logo>SumatraPDF_StoreLogo_150x150.png</Logo>
   </Properties>
@@ -17,7 +17,7 @@
   </Resources>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14316.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17134.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
   <Capabilities>

@@ -25,7 +25,7 @@ func makeAppxTempMust(dirDst string) {
 	u.DirCopyRecurMust(appxTempDir, "Appx", nil)
 
 	// overwrite version in AppxManifest.xml
-	ver := "3.6.0." + getPreReleaseVer()
+	ver := "3.6." + getPreReleaseVer() + ".0"
 	d := u.ReadFileMust(filepath.Join("appx", "AppxManifest.xml"))
 	d2 := bytes.Replace(d, []byte("{{VERSION}}"), []byte(ver), -1)
 	panicIf(bytes.Equal(d, d2), "AppxManifest.xml must contain {{VERSION}} placeholder")
