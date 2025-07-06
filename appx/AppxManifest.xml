@@ -69,7 +69,6 @@
               <uap:FileType>.tif</uap:FileType>
               <uap:FileType>.tiff</uap:FileType>
               <uap:FileType>.jp2</uap:FileType>
-              <uap:FileType>.chm</uap:FileType>
             </uap:SupportedFileTypes>
           </uap3:FileTypeAssociation>
         </uap3:Extension>
