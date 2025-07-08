@@ -4621,7 +4621,7 @@ constexpr int kMaxURLLen = 1500;
 
 // if url-encoded s is bigger than a reasonable URL path,
 // we don't want to fail but truncate and encode less
-static TempStr URLEncodeNoFailTemp(const char* s) {
+static TempStr URLEncodeMayTruncateTemp(const char* s) {
     HRESULT hr;
     DWORD diff;
     WCHAR buf[kMaxURLLen + 1]{};
@@ -4631,8 +4631,8 @@ static TempStr URLEncodeNoFailTemp(const char* s) {
     // with increasingly smaller input strings, from 1500 down to 1000
     int maxLen = kMaxURLLen;
     for (int i = 0; i < 10; i++) {
-        if (str::Leni(ws) > maxLen) {
-            ws[maxLen] = 0;
+        if (str::Leni(ws) >= maxLen) {
+            ws[maxLen-1] = 0;
         }
         DWORD cchSizeInOut = kMaxURLLen;
         hr = UrlEscapeW(ws, buf, &cchSizeInOut, flags);
@@ -4693,7 +4693,7 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     if (!selText) {
         return;
     }
-    TempStr encodedSelection = URLEncodeNoFailTemp(selText);
+    TempStr encodedSelection = URLEncodeMayTruncateTemp(selText);
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
     const char* lang = trans::GetCurrentLangCode();
