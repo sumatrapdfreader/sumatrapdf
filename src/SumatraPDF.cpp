@@ -1464,6 +1464,50 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     win->favLabelWithClose->SetLabel(_TRA("Favorites"));
 }
 
+static void ScrollTimerThread(MainWindow* win) {
+    std::array<HANDLE, 2> timers = {
+        win->scrollTimer,
+        win->smoothscrollTimer,
+    };
+
+    std::array<unsigned int, timers.size()> ids = {
+        kSmoothScrollTimerID,
+        SMOOTHSCROLL_TIMER_ID,
+    };
+
+    while (WaitForMultipleObjects(timers.size(), timers.data(), false, INFINITE) <= WAIT_OBJECT_0 + timers.size()) {
+        if (win->scrollTimerCancelled) {
+            break;
+        }
+
+        for (int i = 0; i < timers.size(); i++) {
+            if (WaitForSingleObject(timers[i], 0) == WAIT_OBJECT_0)
+                SendMessage(win->hwndCanvas, WM_TIMER, ids[i], 0);
+        }
+
+        // Re-fetch the monitor refresh rate in case window is moved to
+        // new window, or monitor refresh rate changed. Default to 60fps if
+        // anything goes wrong.
+
+        win->scrollTimerDeltaTime = 1000 / 60;
+
+        HMONITOR monitor = MonitorFromWindow(win->hwndCanvas, MONITOR_DEFAULTTOPRIMARY);
+        MONITORINFOEX info;
+        info.cbSize = sizeof(MONITORINFOEX);
+        if (GetMonitorInfo(monitor, &info)) {
+            DEVMODE mode;
+            mode.dmSize = sizeof(DEVMODE);
+            mode.dmDriverExtra = 0;
+
+            if (EnumDisplaySettings(info.szDevice, ENUM_CURRENT_SETTINGS, &mode) && mode.dmDisplayFrequency > 0) {
+                win->scrollTimerDeltaTime = 1000 / mode.dmDisplayFrequency;
+            }
+        }
+        
+        Sleep(win->scrollTimerDeltaTime);
+    }
+}
+
 static MainWindow* CreateMainWindow() {
     Rect windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty()) {
@@ -1512,6 +1556,11 @@ static MainWindow* CreateMainWindow() {
 
     // hide scrollbars to avoid showing/hiding on empty window
     ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
+
+    win->scrollTimer = CreateEvent(nullptr, true, false, nullptr);
+    win->smoothscrollTimer = CreateEvent(nullptr, true, false, nullptr);
+    Func0 fn = MkFunc0(ScrollTimerThread, win);
+    win->scrollTimerThread = StartThread(fn, "Scroll Thread");
 
     ReportIf(win->menu);
     win->menu = BuildMenu(win);
@@ -2740,6 +2789,12 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
 
     AbortFinding(win, true);
     AbortPrinting(win);
+    if (win->scrollTimerThread) {
+        win->scrollTimerCancelled = true;
+        SetEvent(win->scrollTimer);
+        WaitForSingleObject(win->scrollTimerThread, INFINITE);
+    }
+    win->scrollTimerCancelled = false;
 
     for (auto& tab : win->Tabs()) {
         if (tab->AsFixed()) {
