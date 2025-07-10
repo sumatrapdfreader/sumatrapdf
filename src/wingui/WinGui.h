@@ -14,7 +14,7 @@ enum WindowBorderStyle { kWindowBorderNone, kWindowBorderClient, kWindowBorderSt
 
 struct Wnd;
 
-Wnd* WndMapFindByHWND(HWND);
+Wnd* WndListFindByHwnd(HWND);
 void MarkHWNDDestroyed(HWND);
 
 struct ContextMenuEvent {

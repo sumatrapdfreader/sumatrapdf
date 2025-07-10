@@ -164,89 +164,39 @@ TempStr WinMsgNameTemp(UINT msg) {
 // TODO:
 // - if layout is set, do layout on WM_SIZE using LayoutToSize
 
-struct WndToHwnd {
-    Wnd* window = nullptr;
-    HWND hwnd = nullptr;
-};
-
 Vec<HWND> gHwndDestroyed;
 
 void MarkHWNDDestroyed(HWND hwnd) {
     gHwndDestroyed.Append(hwnd);
 }
 
-Vec<WndToHwnd> gWndToHwndMap;
+Vec<Wnd*> gWndList;
 
-Wnd* WndMapFindByHWND(HWND hwnd) {
-    if (gHwndDestroyed.Find(hwnd) >= 0) {
-        return nullptr;
-    }
-    for (auto& el : gWndToHwndMap) {
-        if (el.hwnd == hwnd) {
-            return el.window;
+Wnd* WndListFindByHwnd(HWND hwnd) {
+    for (auto& wnd : gWndList) {
+        if (wnd->hwnd == hwnd) {
+            if (gHwndDestroyed.Find(hwnd) >= 0) {
+                return nullptr;
+            }
+            return wnd;
         }
     }
     return nullptr;
 }
 
-HWND WndMapFindByWnd(Wnd* wnd) {
-    for (auto& el : gWndToHwndMap) {
-        if (el.window == wnd) {
-            return el.hwnd;
-        }
+static bool WndListRemove(Wnd* w) {
+    bool removed = false;
+    while (gWndList.RemoveFast(w) >= 0) {
+        removed = true;
     }
-    return nullptr;
+    // logf("WndMapRemoveWnd: failed to remove w: 0x%p\n", w);
+    return removed;
 }
 
-static bool WndMapRemoveHwnd(HWND hwnd) {
-    int n = gWndToHwndMap.Size();
-    for (int i = 0; i < n; i++) {
-        auto&& el = gWndToHwndMap[i];
-        if (el.hwnd == hwnd) {
-            gWndToHwndMap.RemoveAtFast(i);
-            return true;
-        }
-    }
-    logf("WndMapRemoveHwnd: failed to remove hwnd: 0x%p\n", (void*)hwnd);
-    return false;
-}
-
-static bool WndMapRemoveWnd(Wnd* w) {
-    int n = gWndToHwndMap.Size();
-    for (int i = 0; i < n; i++) {
-        auto&& el = gWndToHwndMap[i];
-        if (el.window == w) {
-            gWndToHwndMap.RemoveAtFast(i);
-            return true;
-        }
-    }
-    //logf("WndMapRemoveWnd: failed to remove w: 0x%p\n", w);
-    return false;
-}
-
-static void WndMapAdd(HWND hwnd, Wnd* w) {
-    if (!hwnd || !w) {
-        ReportIf(!hwnd || !w);
-        return;
-    }
-    bool report = false;
-    int maxLoops = 5;
-    while (WndMapFindByHWND(hwnd) && maxLoops >= 0) {
-        logf("WndMapAdd: adding hwnd 0x%p that already exists\n", (void*)hwnd);
-        WndMapRemoveHwnd(hwnd);
-        report = true;
-        maxLoops--;
-    }
-    while (WndMapFindByWnd(w) && maxLoops >= 0) {
-        logf("WndMapAdd: adding wd 0x%p that already exists\n", w);
-        WndMapRemoveWnd(w);
-        report = true;
-        maxLoops--;
-    }
+static void WndListAdd(Wnd* w) {
+    bool report = WndListRemove(w);
     ReportIfQuick(report);
-
-    WndToHwnd el = {w, hwnd};
-    gWndToHwndMap.Append(el);
+    gWndList.Append(w);
 }
 
 //- Taskbar.cpp
@@ -266,14 +216,14 @@ static LRESULT CALLBACK WndWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
         return 0;
     }
 
-    Wnd* wnd = WndMapFindByHWND(hwnd);
+    Wnd* wnd = WndListFindByHwnd(hwnd);
 
     if (msg == WM_NCCREATE) {
         CREATESTRUCT* cs = (CREATESTRUCT*)(lparam);
         ReportIf(wnd);
         wnd = (Wnd*)(cs->lpCreateParams);
         wnd->hwnd = hwnd;
-        WndMapAdd(hwnd, wnd);
+        WndListAdd(wnd);
     }
 
     if (wnd) {
@@ -353,8 +303,7 @@ bool Wnd::IsVisible() const {
 void Wnd::Destroy() {
     // the order is important
     // stop dispatching messages to this Wnd
-    WndMapRemoveHwnd(hwnd);
-    WndMapRemoveWnd(this);
+    WndListRemove(this);
     // unsubclass while hwnd is still valid
     UnSubclass();
     // finally destroy hwnd
@@ -631,7 +580,7 @@ LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
         return 0;
     }
 
-    Wnd* pWnd = WndMapFindByHWND(wnd);
+    Wnd* pWnd = WndListFindByHwnd(wnd);
     if (pWnd != nullptr) {
         auto res = pWnd->OnMessageReflect(msg, wparam, lparam);
         return res;
@@ -646,7 +595,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     switch (msg) {
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
-            Wnd* pWnd = WndMapFindByHWND(reinterpret_cast<HWND>(lparam));
+            Wnd* pWnd = WndListFindByHwnd(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
                 didHandle = pWnd->OnCommand(wparam, lparam);
@@ -660,7 +609,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             // Restricting OnNotifyReflect to child windows avoids double handling.
             NMHDR* hdr = reinterpret_cast<LPNMHDR>(lparam);
             HWND from = hdr->hwndFrom;
-            Wnd* wndFrom = WndMapFindByHWND(from);
+            Wnd* wndFrom = WndListFindByHwnd(from);
             if (!wndFrom) {
                 return 0;
             }
@@ -684,7 +633,7 @@ LRESULT TryReflectMessages(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         case WM_HSCROLL:
         case WM_VSCROLL:
         case WM_PARENTNOTIFY: {
-            Wnd* pWnd = WndMapFindByHWND(reinterpret_cast<HWND>(lparam));
+            Wnd* pWnd = WndListFindByHwnd(reinterpret_cast<HWND>(lparam));
             LRESULT result = 0;
             if (pWnd != nullptr) {
                 result = pWnd->MessageReflect(msg, wparam, lparam);
@@ -741,7 +690,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         case WM_COMMAND: {
             // Reflect this message if it's from a control.
-            Wnd* pWnd = WndMapFindByHWND(reinterpret_cast<HWND>(lparam));
+            Wnd* pWnd = WndListFindByHwnd(reinterpret_cast<HWND>(lparam));
             bool didHandle = false;
             if (pWnd != nullptr) {
                 didHandle = pWnd->OnCommand(wparam, lparam);
@@ -772,7 +721,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             // Restricting OnNotifyReflect to child windows avoids double handling.
             NMHDR* hdr = reinterpret_cast<NMHDR*>(lparam);
             HWND from = hdr->hwndFrom;
-            Wnd* wndFrom = WndMapFindByHWND(from);
+            Wnd* wndFrom = WndListFindByHwnd(from);
 
             if (wndFrom != nullptr) {
                 if (::GetParent(from) == this->hwnd) {
@@ -926,7 +875,7 @@ bool Wnd::PreTranslateMessage(MSG& msg) {
 
 void Wnd::Attach(HWND hwnd) {
     ReportIf(!IsWindow(hwnd));
-    ReportIf(WndMapFindByHWND(hwnd));
+    ReportIf(WndListFindByHwnd(hwnd));
 
     this->hwnd = hwnd;
     Subclass();
@@ -944,13 +893,13 @@ HWND Wnd::Detach() {
     UnSubclass();
 
     HWND wnd = hwnd;
-    WndMapRemoveWnd(this);
+    WndListRemove(this);
     hwnd = nullptr;
     return wnd;
 }
 
 void Wnd::Cleanup() {
-    WndMapRemoveWnd(this);
+    WndListRemove(this);
     hwnd = nullptr;
     subclassId = 0;
 }
@@ -1074,7 +1023,7 @@ HWND Wnd::CreateCustom(const CreateCustomArgs& args) {
     ReportIf(!hwndTmp);
     // hwnd should be assigned in WM_CREATE
     ReportIf(hwndTmp != hwnd);
-    ReportIf(this != WndMapFindByHWND(hwndTmp));
+    ReportIf(this != WndListFindByHwnd(hwndTmp));
     if (!hwnd) {
         return nullptr;
     }
@@ -1107,7 +1056,7 @@ void Wnd::Subclass() {
     if (subclassId) {
         return;
     }
-    WndMapAdd(hwnd, this);
+    WndListAdd(this);
 
     subclassId = NextSubclassId();
     BOOL ok = SetWindowSubclass(hwnd, WndSubclassedWindowProc, subclassId, (DWORD_PTR)this);
@@ -1179,7 +1128,7 @@ bool PreTranslateMessage(MSG& msg) {
         return false;
     }
     for (HWND hwnd = msg.hwnd; hwnd != nullptr; hwnd = ::GetParent(hwnd)) {
-        auto wnd = WndMapFindByHWND(hwnd);
+        auto wnd = WndListFindByHwnd(hwnd);
         if (wnd && wnd->PreTranslateMessage(msg)) {
             return true;
         }

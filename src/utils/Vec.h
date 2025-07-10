@@ -344,10 +344,18 @@ class Vec {
     // returns position of removed element or -1 if not removed
     int Remove(const T& el) {
         int i = Find(el);
-        if (-1 == i) {
-            return -1;
+        if (i >= 0) {
+            RemoveAt(i);
         }
-        RemoveAt(i);
+        return i;
+    }
+
+    // returns position of removed element or -1 if not removed
+    int RemoveFast(const T& el) {
+        int i = Find(el);
+        if (i >= 0) {
+            RemoveAtFast(i);
+        }
         return i;
     }
 
