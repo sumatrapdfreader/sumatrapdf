@@ -280,10 +280,8 @@ func Main() {
 	}
 
 	if false {
+		// for ad-hoc testing
 		detectVersions()
-		dirDst := filepath.Join("out", "artifacts", "16996-dirty")
-		makeAppxTempMust(dirDst)
-		buildAppxMust(dirDst, false)
 		return
 	}
 

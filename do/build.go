@@ -151,10 +151,6 @@ func buildSignAndUploadPreRelease() {
 		build(plat)
 	}
 
-	makeAppxTempMust(dirDst)
-	// test building msix before signing
-	buildAppxMust(dirDst, false)
-
 	// sign all files in one swoop
 	// build can take a long time and signing rquires user interaction
 	// so wait for user to press enter
@@ -164,9 +160,6 @@ func buildSignAndUploadPreRelease() {
 		os.RemoveAll(dirDst)
 		must(err)
 	}
-
-	copyExeToAppxTempMust(dirDst)
-	buildAppxMust(dirDst, true)
 
 	// create SumatraPDF-{prefix}.zip with SumatraPDF-{prefix}.exe inside
 	// this must happen after signing
