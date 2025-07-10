@@ -4665,7 +4665,7 @@ constexpr const char* kSelectionStr = "${selection}";
 // I made it manually by looking at trans_lang.go and
 // https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
 // but not fully and it might be incorrect anyway wrt. to other translation websites
-static const char* gLangsMap = "am\0hy\0by\0be\0ca-xv\0ca\0cz\0cs\0kr\0ko\0vn\0vi\0cn\0zh-CN\0tw\0zh-TW";
+static const char* gLangsMap = "am\0hy\0by\0be\0ca-xv\0ca\0cz\0cs\0kr\0ko\0vn\0vi\0cn\0zh-CN\0tw\0zh-TW\0";
 static const char* GetISO639LangCodeFromLang(const char* lang) {
     int idx = seqstrings::StrToIdx(gLangsMap, lang);
     if (idx < 0 || idx % 2 != 0) {
