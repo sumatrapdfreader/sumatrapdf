@@ -169,9 +169,18 @@ struct WndToHwnd {
     HWND hwnd = nullptr;
 };
 
+Vec<HWND> gHwndDestroyed;
+
+void MarkHWNDDestroyed(HWND hwnd) {
+    gHwndDestroyed.Append(hwnd);
+}
+
 Vec<WndToHwnd> gWndToHwndMap;
 
 Wnd* WndMapFindByHWND(HWND hwnd) {
+    if (gHwndDestroyed.Find(hwnd) >= 0) {
+        return nullptr;
+    }
     for (auto& el : gWndToHwndMap) {
         if (el.hwnd == hwnd) {
             return el.window;
@@ -180,21 +189,15 @@ Wnd* WndMapFindByHWND(HWND hwnd) {
     return nullptr;
 }
 
-static void WndMapAdd(HWND hwnd, Wnd* w) {
-    if (!hwnd || !w) {
-        ReportIf(!hwnd || !w);
-        return;
+HWND WndMapFindByWnd(Wnd* wnd) {
+    for (auto& el : gWndToHwndMap) {
+        if (el.window == wnd) {
+            return el.hwnd;
+        }
     }
-    Wnd* existing = WndMapFindByHWND(hwnd);
-    if (existing) {
-        ReportIf(existing);
-        return;
-    }
-    WndToHwnd el = {w, hwnd};
-    gWndToHwndMap.Append(el);
+    return nullptr;
 }
 
-/*
 static bool WndMapRemoveHwnd(HWND hwnd) {
     int n = gWndToHwndMap.Size();
     for (int i = 0; i < n; i++) {
@@ -204,9 +207,9 @@ static bool WndMapRemoveHwnd(HWND hwnd) {
             return true;
         }
     }
+    logf("WndMapRemoveHwnd: failed to remove hwnd: 0x%p\n", (void*)hwnd);
     return false;
 }
-*/
 
 static bool WndMapRemoveWnd(Wnd* w) {
     int n = gWndToHwndMap.Size();
@@ -217,8 +220,33 @@ static bool WndMapRemoveWnd(Wnd* w) {
             return true;
         }
     }
-    logf("WndMapRemoveWnd: failed to remove w: 0x%p\n", w);
+    //logf("WndMapRemoveWnd: failed to remove w: 0x%p\n", w);
     return false;
+}
+
+static void WndMapAdd(HWND hwnd, Wnd* w) {
+    if (!hwnd || !w) {
+        ReportIf(!hwnd || !w);
+        return;
+    }
+    bool report = false;
+    int maxLoops = 5;
+    while (WndMapFindByHWND(hwnd) && maxLoops >= 0) {
+        logf("WndMapAdd: adding hwnd 0x%p that already exists\n", (void*)hwnd);
+        WndMapRemoveHwnd(hwnd);
+        report = true;
+        maxLoops--;
+    }
+    while (WndMapFindByWnd(w) && maxLoops >= 0) {
+        logf("WndMapAdd: adding wd 0x%p that already exists\n", w);
+        WndMapRemoveWnd(w);
+        report = true;
+        maxLoops--;
+    }
+    ReportIfQuick(report);
+
+    WndToHwnd el = {w, hwnd};
+    gWndToHwndMap.Append(el);
 }
 
 //- Taskbar.cpp
@@ -325,6 +353,7 @@ bool Wnd::IsVisible() const {
 void Wnd::Destroy() {
     // the order is important
     // stop dispatching messages to this Wnd
+    WndMapRemoveHwnd(hwnd);
     WndMapRemoveWnd(this);
     // unsubclass while hwnd is still valid
     UnSubclass();

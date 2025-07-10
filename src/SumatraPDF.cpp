@@ -4632,7 +4632,7 @@ static TempStr URLEncodeMayTruncateTemp(const char* s) {
     int maxLen = kMaxURLLen;
     for (int i = 0; i < 10; i++) {
         if (str::Leni(ws) >= maxLen) {
-            ws[maxLen-1] = 0;
+            ws[maxLen - 1] = 0;
         }
         DWORD cchSizeInOut = kMaxURLLen;
         hr = UrlEscapeW(ws, buf, &cchSizeInOut, flags);
