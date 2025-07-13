@@ -1,6 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// Timer for mouse wheel smooth scrolling
+constexpr UINT_PTR kSmoothScrollTimerID = 6;
+
 void UpdateDeltaPerLine();
 
 LRESULT CALLBACK WndProcCanvas(HWND, UINT, WPARAM, LPARAM);
