@@ -19,6 +19,10 @@ bool isWordChar(WCHAR c) {
     return IsCharAlphaNumeric(c) || c == '_';
 }
 
+static bool isDigit(WCHAR c) {
+    return c >= '0' && c <= '9';
+}
+
 DocumentTextCache::DocumentTextCache(EngineBase* engine) : engine(engine) {
     nPages = engine->PageCount();
     pagesText = AllocArray<PageText>(nPages);
@@ -274,19 +278,68 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     int textLen;
     const WCHAR* text = textCache->GetTextForPage(pageNo, &textLen);
 
+    bool isAllDigits = true;
+    WCHAR c = 0;
     for (; i > 0; i--) {
-        if (!isWordChar(text[i - 1])) {
+        c = text[i - 1];
+        if (!isWordChar(c)) {
+            break;
+        }
+        if (!isDigit(c)) {
+            isAllDigits = false;
+        }
+    }
+    int wordStart = i;
+    int maybeNumberStart = i;
+    int nDigits = 0;
+    if (isAllDigits && c == '.') {
+        for (int j = i - 2; j >= 0; j--) {
+            c = text[j];
+            if (isDigit(c)) {
+                nDigits++;
+                continue;
+            }
+            if (nDigits > 0) {
+                maybeNumberStart = j + 1;
+            } else {
+                isAllDigits = false;
+            }
             break;
         }
     }
-    StartAt(pageNo, i);
 
     for (; i < textLen; i++) {
-        if (!isWordChar(text[i])) {
+        c = text[i];
+        if (!isWordChar(c)) {
             break;
         }
+        if (!isDigit(c)) {
+            isAllDigits = false;
+        }
     }
-    SelectUpTo(pageNo, i);
+
+    // try to select fractional numbers i.e. if c is '.', chars before are all digits and chars after are all digits,
+    // extend to digits
+    int wordEnd = i;
+    nDigits = 0;
+    if (isAllDigits && c == '.') {
+        for (int j = wordEnd + 1; j < textLen; j++) {
+            c = text[j];
+            if (isDigit(c)) {
+                nDigits++;
+                continue;
+            }
+            break;
+        }
+        if (nDigits > 0) {
+            wordEnd += nDigits + 1; // +1 for '.'
+        }
+    }
+    if (isAllDigits) {
+        wordStart = maybeNumberStart;
+    }
+    StartAt(pageNo, wordStart);
+    SelectUpTo(pageNo, wordEnd);
 }
 
 void TextSelection::CopySelection(TextSelection* orig) {
