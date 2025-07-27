@@ -489,7 +489,7 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
     if (cmdId == CmdCommandPalette && firstArg) {
         // validate mode
         const char* s = firstArg->strVal;
-        static SeqStrings validModes = ">\0#\0@\0"; // TODO: "@@\0" ?
+        static SeqStrings validModes = ">\0#\0@\0:\0"; // TODO: "@@\0" ?
         if (seqstrings::StrToIdx(validModes, s) < 0) {
             logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);
             FreeCommandArgs(firstArg);
