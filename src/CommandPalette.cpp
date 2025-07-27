@@ -187,6 +187,9 @@ struct ListBoxModelCP : ListBoxModel {
     const char* Item(int i) override {
         return strings.At(i);
     }
+    ItemDataCP* Data(int i) {
+        return strings.AtData(i);
+    }
 };
 
 struct CommandPaletteWnd : Wnd {
@@ -238,6 +241,13 @@ struct CommandPaletteBuildCtx {
 
     ~CommandPaletteBuildCtx() = default;
 };
+
+static const char* SkipWS(const char* s) {
+    while (str::IsWs(*s)) {
+        s++;
+    }
+    return s;
+}
 
 static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (cmdId <= CmdFirst) {
@@ -454,6 +464,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     // append paths of opened files
     currTabIdx = 0;
+    tabs.Reset();
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab : w->Tabs()) {
             ItemDataCP data;
@@ -473,6 +484,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
 
     // append paths of files from history, excluding
     // already appended (from opened files)
+    fileHistory.Reset();
     for (FileState* fs : *gGlobalPrefs->fileStates) {
         char* s = fs->filePath;
         s = ConvertPathForDisplayTemp(s);
@@ -511,6 +523,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     // we want the commands sorted
     SortNoCase(&tempCommands);
     int n = tempCommands.Size();
+    commands.Reset();
     for (int i = 0; i < n; i++) {
         commands.AppendFrom(&tempCommands, i);
     }
@@ -599,6 +612,40 @@ bool CommandPaletteWnd::PreTranslateMessage(MSG& msg) {
 
         if (msg.wParam == VK_RETURN) {
             ExecuteCurrentSelection();
+            return true;
+        }
+
+        if (msg.wParam == VK_DELETE) {
+            const char* filter = editQuery->GetTextTemp();
+            filter = SkipWS(filter);
+            if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
+                int n = listBox->GetCount();
+                if (n == 0) {
+                    return false;
+                }
+                int currSel = listBox->GetCurrentSelection();
+                auto m = (ListBoxModelCP*)listBox->model;
+                auto d = m->Data(currSel);
+                FileState* fs = gFileHistory.FindByPath(d->filePath);
+                if (!fs) {
+                    return true;
+                }
+                gFileHistory.Remove(fs);
+                CollectStrings(this->win);
+                this->QueryChanged();
+
+                // restore selection for fluid use
+                n = listBox->GetCount();
+                if (n == 0) {
+                    return true;
+                }
+                int lastIdx = n - 1;
+                if (currSel > lastIdx) {
+                    currSel = lastIdx;
+                }
+                listBox->SetCurrentSelection(currSel);
+                return true;
+            }
             return true;
         }
 
@@ -692,13 +739,6 @@ static void FilterStrings(StrVecCP& strs, const char* filter, StrVecCP& matchedO
         }
         matchedOut.AppendFrom(&strs, i);
     }
-}
-
-const char* SkipWS(const char* s) {
-    while (str::IsWs(*s)) {
-        s++;
-    }
-    return s;
 }
 
 void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& strings) {
