@@ -744,6 +744,14 @@ static void FilterStrings(StrVecCP& strs, const char* filter, StrVecCP& matchedO
 void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& strings) {
     // for efficiency, reusing existing model
     strings.Reset();
+    if (str::StartsWith(filter, kPalettePrefixAll)) {
+        filter++;
+        FilterStrings(tabs, filter, strings);
+        FilterStrings(fileHistory, filter, strings);
+        FilterStrings(commands, filter, strings);
+        return;
+    }
+
     if (str::StartsWith(filter, kPalettePrefixTabs)) {
         filter++;
         FilterStrings(tabs, filter, strings);
@@ -911,7 +919,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         auto hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
         hbox->alignCross = CrossAxisAlign::CrossCenter;
-        auto pad = Insets{0, 4, 0, 4};
+        auto pad = Insets{0, 8, 0, 8};
         {
             auto c = CreateStatic(hwnd, font, "# File History");
             c->SetColors(colTxt, colBg);
@@ -928,6 +936,13 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         }
         {
             auto c = CreateStatic(hwnd, font, "@ Tabs");
+            c->SetColors(colTxt, colBg);
+            c->onClick = MkFunc0(SwitchToTabs, this);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        {
+            auto c = CreateStatic(hwnd, font, ": Everything");
             c->SetColors(colTxt, colBg);
             c->onClick = MkFunc0(SwitchToTabs, this);
             auto p = new Padding(c, pad);
