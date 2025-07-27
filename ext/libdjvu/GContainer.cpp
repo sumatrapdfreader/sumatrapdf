@@ -636,7 +636,7 @@ GListBase::operator= (const GListBase & ref)
 
 
 GSetBase::GSetBase(const Traits &traits)
-  : traits(traits), nelems(0), nbuckets(0), 
+  : traits(traits), nelems(0), nbuckets(0), table(0),
     gtable(table), first(0)
 {
   rehash(17);
@@ -644,8 +644,8 @@ GSetBase::GSetBase(const Traits &traits)
 
 
 GSetBase::GSetBase(const GSetBase &ref)
-  : traits(ref.traits), 
-    nelems(0), nbuckets(0), gtable(table), first(0)
+  : traits(ref.traits), nelems(0), nbuckets(0), table(0),
+    gtable(table), first(0)
 {
   GSetBase::operator= (ref);
 }

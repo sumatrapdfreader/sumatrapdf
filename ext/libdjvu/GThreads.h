@@ -230,7 +230,7 @@ private:
     as private members. It is therefore not possible to make multiple copies
     of instances of this class, as implied by the class semantic. */
 
-class GMonitor
+class DJVUAPI GMonitor
 {
 public:
   GMonitor();
@@ -340,7 +340,7 @@ public:
     modification, which guarantees, that their state cannot be changed in
     between of these operations. */
 
-class GSafeFlags : public GMonitor
+class DJVUAPI GSafeFlags : public GMonitor
 {
 private:
    volatile long flags;

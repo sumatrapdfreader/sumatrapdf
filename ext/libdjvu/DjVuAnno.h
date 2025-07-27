@@ -135,6 +135,10 @@ public:
           \item[ZOOM_WIDTH] "Fit width" mode.
           \item[ZOOM_PAGE] "Fit page" mode.
           \item[ZOOM_UNSPEC] Annotation does not specify a zoom factor.
+          \item[Any positive number] Zoom in \%. Please note that
+                   all constants above are either negative or ZERO. Thus
+                   it's possible to distinguish numerical zoom from those
+                   special cases.
           \end{description} */
    int		zoom;
       /** Initial mode. Possible values are:
@@ -144,10 +148,6 @@ public:
              \item[MODE_BACK] background mode.
              \item[MODE_BW] black and white mode.
              \item[MODE_UNSPEC] Annotation does not specify a display mode.
-	     \item[Any positive number] Zoom in \%. Please note that
-                   all constants above are either negative or ZERO. Thus
-                   it's possible to distinguish numerical zoom from those
-                   special cases.
           \end{description} */
    int		mode;
       /** Horizontal page alignment. Possible values are #ALIGN_LEFT#,

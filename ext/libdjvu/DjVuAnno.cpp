@@ -80,6 +80,7 @@ namespace DJVU {
 #endif
 
 
+
 // GLParser.h and GLParser.cpp used to be separate files capable to decode
 // that weird ANTa chunk format into C++ structures and lists. But since
 // its implementation is temporary and is used only in this file (DjVuAnno.cpp)
@@ -231,7 +232,11 @@ static GUTF8String make_c_string(GUTF8String string)
           char buf[8];
           static const char *tr1 = "\"\\tnrbf";
           static const char *tr2 = "\"\\\t\n\r\b\f";
+#if HAVE_SNPRINTF
+          snprintf(buf, sizeof(buf), "\\%03o", (int)(((unsigned char*)data)[span]));
+#else
           sprintf(buf,"\\%03o", (int)(((unsigned char*)data)[span]));
+#endif
           for (int i=0; tr2[i]; i++)
             if (data[span] == tr2[i])
               buf[1] = tr1[i];

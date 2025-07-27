@@ -98,16 +98,18 @@ GBitmap::destroy(void)
 
 GBitmap::GBitmap()
   : nrows(0), ncolumns(0), border(0), 
-    bytes_per_row(0), grays(0), bytes(0), gbytes_data(bytes_data), 
-    grle(rle), grlerows(rlerows), rlelength(0),
+    bytes_per_row(0), grays(0), bytes(0),
+    bytes_data(0), gbytes_data(bytes_data), 
+    rle(0), grle(rle), rlerows(0), grlerows(rlerows), rlelength(0),
     monitorptr(0)
 {
 }
 
 GBitmap::GBitmap(int nrows, int ncolumns, int border)
   : nrows(0), ncolumns(0), border(0), 
-    bytes_per_row(0), grays(0), bytes(0), gbytes_data(bytes_data), 
-    grle(rle), grlerows(rlerows), rlelength(0),
+    bytes_per_row(0), grays(0), bytes(0),
+    bytes_data(0), gbytes_data(bytes_data), 
+    rle(0), grle(rle), rlerows(0), grlerows(rlerows), rlelength(0),
     monitorptr(0)
 {
   G_TRY
@@ -124,8 +126,9 @@ GBitmap::GBitmap(int nrows, int ncolumns, int border)
 
 GBitmap::GBitmap(ByteStream &ref, int border)
   : nrows(0), ncolumns(0), border(0), 
-    bytes_per_row(0), grays(0), bytes(0), gbytes_data(bytes_data),
-    grle(rle), grlerows(rlerows), rlelength(0),
+    bytes_per_row(0), grays(0), bytes(0),
+    bytes_data(0), gbytes_data(bytes_data),
+    rle(0), grle(rle), rlerows(0), grlerows(rlerows), rlelength(0),
     monitorptr(0)
 {
   G_TRY
@@ -142,8 +145,9 @@ GBitmap::GBitmap(ByteStream &ref, int border)
 
 GBitmap::GBitmap(const GBitmap &ref)
   : nrows(0), ncolumns(0), border(0), 
-    bytes_per_row(0), grays(0), bytes(0), gbytes_data(bytes_data), 
-    grle(rle), grlerows(rlerows), rlelength(0),
+    bytes_per_row(0), grays(0), bytes(0),
+    bytes_data(0), gbytes_data(bytes_data), 
+    rle(0), grle(rle), rlerows(0), grlerows(rlerows), rlelength(0),
     monitorptr(0)
 {
   G_TRY
@@ -160,8 +164,9 @@ GBitmap::GBitmap(const GBitmap &ref)
 
 GBitmap::GBitmap(const GBitmap &ref, int border)
   : nrows(0), ncolumns(0), border(0), 
-    bytes_per_row(0), grays(0), bytes(0), gbytes_data(bytes_data),
-    grle(rle), grlerows(rlerows), rlelength(0),
+    bytes_per_row(0), grays(0), bytes(0),
+    bytes_data(0), gbytes_data(bytes_data),
+    rle(0), grle(rle), rlerows(0), grlerows(rlerows), rlelength(0),
     monitorptr(0)
 {
   G_TRY
@@ -179,8 +184,9 @@ GBitmap::GBitmap(const GBitmap &ref, int border)
 
 GBitmap::GBitmap(const GBitmap &ref, const GRect &rect, int border)
   : nrows(0), ncolumns(0), border(0), 
-    bytes_per_row(0), grays(0), bytes(0), gbytes_data(bytes_data),
-    grle(rle), grlerows(rlerows), rlelength(0),
+    bytes_per_row(0), grays(0), bytes(0),
+    bytes_data(0), gbytes_data(bytes_data),
+    rle(0), grle(rle), rlerows(0), grlerows(rlerows), rlelength(0),
     monitorptr(0)
 {
   G_TRY
@@ -1284,6 +1290,8 @@ GBitmap::decode(unsigned char *runs)
   // initialize pixel array
   if (nrows==0 || ncolumns==0)
     G_THROW( ERR_MSG("GBitmap.not_init") );
+  if (ncolumns + border != (unsigned short)(ncolumns+border))
+    G_THROW("GBitmap: image size exceeds maximum (corrupted file?)");
   bytes_per_row = ncolumns + border;
   if (runs==0)
     G_THROW( ERR_MSG("GBitmap.null_arg") );

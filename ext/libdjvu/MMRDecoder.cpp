@@ -537,7 +537,7 @@ MMRDecoder::~MMRDecoder() {}
 MMRDecoder::MMRDecoder( const int xwidth, const int xheight )
 : width(xwidth), height(xheight), lineno(0), 
   striplineno(0), rowsperstrip(0), gline(line,width+8),
-  glineruns(lineruns,width+4), gprevruns(prevruns,width+4)
+  glineruns(lineruns,width+8), gprevruns(prevruns,width+8)
 {
   gline.clear();
   glineruns.clear();
@@ -589,6 +589,9 @@ MMRDecoder::scanruns(const unsigned short **endptr)
   int a0,rle,b1;
   for(a0=0,rle=0,b1=*pr++;a0 < width;)
     {
+      // Check for buffer overflow
+      if (xr > lineruns+width+2 || pr > prevruns+width+2)
+	G_THROW(invalid_mmr_data);
       // Process MMR codes
       const int c=mrtable->decode(src);
       switch ( c )
@@ -714,7 +717,7 @@ MMRDecoder::scanruns(const unsigned short **endptr)
                         rle++;
                         a0++;
                       }
-                    if (a0 > width)
+                    if (a0 > width || xr > lineruns+width+2)
                       G_THROW(invalid_mmr_data);
                   }
                 // Analyze uncompressed termination code.

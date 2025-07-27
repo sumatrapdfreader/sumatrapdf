@@ -904,8 +904,13 @@ char *
 miniobj_t::pname() const
 {
   const char *cname = miniexp_to_name(classof());
-  char *res = new char[strlen(cname)+24];
+  int lres = strlen(cname)+24;
+  char *res = new char[lres];
+#if HAVE_SNPRINTF
+  snprintf(res,lres,"#%s:<%p>",cname,this);
+#else
   sprintf(res,"#%s:<%p>",cname,this);
+#endif
   return res;
 }
 
@@ -1078,6 +1083,16 @@ print_c_string(const char *s, char *d, int flags, size_t len)
               && (flags & (miniexp_io_u4escape | miniexp_io_u6escape))
               && char_utf8(c, s, len) )
             {
+#if HAVE_SNPRINTF
+              if (c <= 0xffff && (flags & miniexp_io_u4escape))
+                snprintf(buffer,sizeof(buffer),"u%04X", c);
+              else if (flags & miniexp_io_u6escape) // c# style
+                snprintf(buffer,sizeof(buffer),"U%06X", c);
+              else if (flags & miniexp_io_u4escape) // json style
+                snprintf(buffer,sizeof(buffer),"u%04X\\u%04X", 
+                        0xd800+(((c-0x10000)>>10)&0x3ff), 
+                        0xdc00+(c&0x3ff));
+#else
               if (c <= 0xffff && (flags & miniexp_io_u4escape))
                 sprintf(buffer,"u%04X", c);
               else if (flags & miniexp_io_u6escape) // c# style
@@ -1086,12 +1101,17 @@ print_c_string(const char *s, char *d, int flags, size_t len)
                 sprintf(buffer,"u%04X\\u%04X", 
                         0xd800+(((c-0x10000)>>10)&0x3ff), 
                         0xdc00+(c&0x3ff));
+#endif
             }
           if (buffer[0] == 0 && c == 0)
             if (*s < '0' || *s > '7')
               buffer[0] = '0';
           if (buffer[0] == 0)
+#if HAVE_SNPRINTF
+            snprintf(buffer, sizeof(buffer), "%03o", c);
+#else
             sprintf(buffer, "%03o", c);
+#endif
           for (int i=0; buffer[i]; i++)
             char_out(buffer[i], d, n);
           continue;
@@ -1256,9 +1276,15 @@ char *
 minifloat_t::pname() const
 {
   char *r = new char[64];
+#if HAVE_SNPRINTF
+  snprintf(r,64,"%f",val);
+  if (! str_looks_like_double(r))
+    snprintf(r,64,"+%f",val);
+#else
   sprintf(r,"%f",val);
   if (! str_looks_like_double(r))
     sprintf(r,"+%f",val);
+#endif
   return r;
 }
 
@@ -1464,7 +1490,11 @@ printer_t::print(miniexp_t p)
     }
   else if (miniexp_numberp(p))
     {
+#if HAVE_SNPRINTF
+      snprintf(buffer, sizeof(buffer), "%d", miniexp_to_int(p));
+#else
       sprintf(buffer, "%d", miniexp_to_int(p));
+#endif
       mlput(buffer);
     }
   else if (miniexp_symbolp(p))

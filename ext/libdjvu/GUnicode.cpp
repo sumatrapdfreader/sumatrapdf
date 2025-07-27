@@ -433,7 +433,6 @@ GStringRep::Unicode::create(
     if (maxutf8size)
     {
       unsigned char *optr=utf8buf;
-      int len=0;
       unsigned char const *iptr=(unsigned char *)buf;
       uint16_t const *sptr=(uint16_t *)buf;
       uint32_t w;
@@ -442,61 +441,61 @@ GStringRep::Unicode::create(
         case XUCS4:
           for(;
             (iptr<eptr)&&(w=*(uint32_t const *)iptr);
-            len++,iptr+=sizeof(uint32_t const))
+             iptr+=sizeof(uint32_t const))
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUCS4BE:
-          for(;(w=UCS4BEtoUCS4(iptr,eptr));len++)
+          for(;(w=UCS4BEtoUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUCS4LE:
-          for(;(w=UCS4LEtoUCS4(iptr,eptr));len++)
+          for(;(w=UCS4LEtoUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUCS4_2143:
-          for(;(w=UCS4_2143toUCS4(iptr,eptr));len++)
+          for(;(w=UCS4_2143toUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUCS4_3412:
-          for(;(w=UCS4_3412toUCS4(iptr,eptr));len++)
+          for(;(w=UCS4_3412toUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUTF16:
-          for(;(w=xUTF16toUCS4(sptr,eptr));len++)
+          for(;(w=xUTF16toUCS4(sptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUTF16BE:
-          for(;(w=UTF16BEtoUCS4(iptr,eptr));len++)
+          for(;(w=UTF16BEtoUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUTF16LE:
-          for(;(w=UTF16LEtoUCS4(iptr,eptr));len++)
+          for(;(w=UTF16LEtoUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XUTF8:
-          for(;(w=UTF8toUCS4(iptr,eptr));len++)
+          for(;(w=UTF8toUCS4(iptr,eptr));)
           {
             optr=UCS4toUTF8(w,optr);
           }
           break;
         case XEBCDIC:
-          for(;(iptr<eptr)&&(w=*iptr++);len++)
+          for(;(iptr<eptr)&&(w=*iptr++);)
           {
             optr=UCS4toUTF8(w,optr);
           }
@@ -552,8 +551,8 @@ xUTF16toUCS4(uint16_t const *&s,void const * const eptr)
         if(rr <= eptr)
           {
             uint32_t const W2=s[1];
-            if(((W2>=0xDC00)||(W2<=0xDFFF))
-               &&((U=(0x1000+((W1&0x3ff)<<10))|(W2&0x3ff))))
+            if(((W2>=0xDC00)&&(W2<=0xDFFF)) &&
+               ((U=(0x1000+((W1&0x3ff)<<10))|(W2&0x3ff))) )
               {
                 s=rr;
               }
@@ -589,7 +588,7 @@ UTF16BEtoUCS4(unsigned char const *&s,void const * const eptr)
           if(rr <= eptr)
             {
               uint32_t const C2MSB=s[2];
-              if((C2MSB>=0xDC)||(C2MSB<=0xDF))
+              if((C2MSB>=0xDC) && (C2MSB<=0xDF))
                 {
                   U=0x10000+((uint32_t)s[1]<<10)+(uint32_t)s[3]
                     +(((C1MSB<<18)|(C2MSB<<8))&0xc0300);
@@ -627,7 +626,7 @@ UTF16LEtoUCS4(unsigned char const *&s,void const * const eptr)
           if(rr <= eptr)
             {
               uint32_t const C2MSB=s[3];
-              if((C2MSB>=0xDC)||(C2MSB<=0xDF))
+              if((C2MSB>=0xDC)&&(C2MSB<=0xDF))
                 {
                   U=0x10000+((uint32_t)s[0]<<10)+(uint32_t)s[2]
                     +(((C1MSB<<18)|(C2MSB<<8))&0xc0300);

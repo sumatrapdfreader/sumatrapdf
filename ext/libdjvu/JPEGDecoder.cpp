@@ -62,6 +62,10 @@
 
 #ifdef NEED_JPEG_DECODER
 
+#include "GSmartPointer.h"
+#include "ByteStream.h"
+#include "GPixmap.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -81,8 +85,6 @@ extern "C" {
 #endif
 
 #include "JPEGDecoder.h"
-#include "ByteStream.h"
-#include "GPixmap.h"
 #ifdef LIBJPEGNAME
 #include "DjVuDynamic.h"
 #include "GString.h"
