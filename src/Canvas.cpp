@@ -1752,6 +1752,13 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             int requiredScrollAxes = -1;
             bool needH = dm->NeedHScroll();
             bool needV = dm->NeedVScroll();
+            
+            // For SinglePage mode, respect the hideScrollbars setting
+            bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
+            if (isSinglePageMode && gGlobalPrefs->fixedPageUI.hideScrollbars) {
+                needV = false;
+            }
+            
             if (needH && needV) {
                 requiredScrollAxes = SB_BOTH;
             } else if (needH) {
