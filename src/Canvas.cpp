@@ -10,6 +10,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include <algorithm>
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -119,6 +120,51 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 
     int currPos = si.nPos;
     auto ctrl = win->ctrl;
+    bool isSinglePageMode = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    
+    if (isSinglePageMode) {
+        // In SinglePage mode, scrollbar position directly corresponds to page number
+        USHORT msg = LOWORD(wp);
+        int targetPage = currPos + 1; // Convert 0-based position to 1-based page number
+        
+        switch (msg) {
+            case SB_TOP:
+                targetPage = 1;
+                break;
+            case SB_BOTTOM:
+                targetPage = ctrl->PageCount();
+                break;
+            case SB_LINEUP:
+                targetPage = std::max(1, targetPage - 1);
+                break;
+            case SB_LINEDOWN:
+                targetPage = std::min(ctrl->PageCount(), targetPage + 1);
+                break;
+            case SB_HALF_PAGEUP:
+                targetPage = std::max(1, targetPage - 1);
+                break;
+            case SB_HALF_PAGEDOWN:
+                targetPage = std::min(ctrl->PageCount(), targetPage + 1);
+                break;
+            case SB_PAGEUP:
+                targetPage = std::max(1, targetPage - 1);
+                break;
+            case SB_PAGEDOWN:
+                targetPage = std::min(ctrl->PageCount(), targetPage + 1);
+                break;
+            case SB_THUMBTRACK:
+                targetPage = si.nTrackPos + 1;
+                break;
+        }
+        
+        // Navigate to the target page
+        if (targetPage != ctrl->CurrentPageNo()) {
+            ctrl->GoToPage(targetPage, true);
+        }
+        return;
+    }
+    
+    // Original logic for other display modes
     int lineHeight = DpiScale(win->hwndCanvas, 16);
     bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
@@ -339,11 +385,11 @@ static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) 
     DisplayModel* dm = win->AsFixed();
     x += win->annotationBeingMovedOffset.x;
     y += win->annotationBeingMovedOffset.y;
-    Point pt{x, y};
+    Point pt { x, y };
     int pageNo = dm->GetPageNoByPoint(pt);
     // we can only move annotation within the same page
     if (pageNo == PageNo(annot)) {
-        Rect rScreen{x, y, 1, 1};
+        Rect rScreen { x, y, 1, 1 };
         RectF r = dm->CvtFromScreen(rScreen, pageNo);
         RectF ar = GetRect(annot);
         r.dx = ar.dx;
@@ -444,7 +490,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
         }
     }
 
-    Point pos{x, y};
+    Point pos { x, y };
     NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
 
     if (win->dragStartPending) {
@@ -461,11 +507,11 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
             if (annot != prev) {
-#if 0
+                #if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                 TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
-#endif
+                #endif
                 if (gShowAnnotationNotification) {
                     if (annot) {
                         // auto r = annot->bounds;
@@ -547,10 +593,10 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     RectF r = GetRect(annot);
     int pageNo = dm->GetPageNoByPoint(pt);
     Rect rScreen = dm->CvtToScreen(pageNo, r);
-    win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};
+    win->annotationBeingMovedSize = { rScreen.dx, rScreen.dy };
     int offsetX = rScreen.x - pt.x;
     int offsetY = rScreen.y - pt.y;
-    win->annotationBeingMovedOffset = Point{offsetX, offsetY};
+    win->annotationBeingMovedOffset = Point { offsetX, offsetY };
     DrawMovePattern(win, pt, win->annotationBeingMovedSize);
     return;
 }
@@ -739,7 +785,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     HwndSetFocus(win->hwndFrame);
 
     DisplayModel* dm = win->AsFixed();
-    Point pt{x, y};
+    Point pt { x, y };
 
     WindowTab* tab = win->CurrentTab();
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
@@ -920,14 +966,14 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
     int elementPageNo = -1;
     IPageElement* pageEl = dm->GetElementAtPos(mousePos, &elementPageNo);
 
-#if 0
+    #if 0
     WindowTab* tab = win->CurrentTab();
     if (IsCtrlPressed() && win->annotationUnderCursor) {
         ShowEditAnnotationsWindow(tab);
         SetSelectedAnnotation(tab, win->annotationUnderCursor);
         return;
     }
-#endif
+    #endif
     if (isOverText) {
         int pageNo = dm->GetPageNoByPoint(mousePos);
         if (win->ctrl->ValidPageNo(pageNo)) {
@@ -1270,8 +1316,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
             percBot /= dm->PageCount();
         }
         Size vp = dm->GetViewPort().Size();
-        TRIVERTEX tv[4] = {{0, 0}, {vp.dx, vp.dy / 2}, {0, vp.dy / 2}, {vp.dx, vp.dy}};
-        GRADIENT_RECT gr[2] = {{0, 1}, {2, 3}};
+        TRIVERTEX tv[4] = { { 0, 0 }, { vp.dx, vp.dy / 2 }, { 0, vp.dy / 2 }, { vp.dx, vp.dy } };
+        GRADIENT_RECT gr[2] = { { 0, 1 }, { 2, 3 } };
 
         COLORREF col0 = colors[0];
         COLORREF col1 = colors[1];
@@ -1343,13 +1389,13 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                 }
                 rendering = true;
             } else {
-#if 0
+                #if 0
                 AutoDeletePen pen(CreatePen(PS_SOLID, 2, RGB(0xff, 0, 0)));
                 ScopedSelectPen restorePen(hdc, pen);
                 auto x = bounds.x;
                 auto y = bounds.y;
                 Rectangle(hdc, x, y, x + bounds.dx, y + bounds.dy);
-#endif
+                #endif
                 auto prevCol = SetTextColor(hdc, colDocTxt);
                 DrawCenteredText(hdc, bounds, _TRA("Couldn't render the page"), isRtl);
                 SetTextColor(hdc, prevCol);
@@ -1458,7 +1504,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         return TRUE;
     }
 
-    int pageNo = {0};
+    int pageNo = { 0 };
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
     if (!pageEl) {
         SetTextOrArrorCursor(dm, pt);
@@ -1629,8 +1675,37 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
-    if (vScroll && !isCont) {
-        constexpr int pageFlipDelta = WHEEL_DELTA * 3;
+    // Handle page-by-page navigation for non-continuous modes and SinglePage mode
+    bool isSinglePageMode = (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    
+    // For SinglePage mode with content requiring scrolling, use continuous scrolling behavior
+    if (isSinglePageMode && vScroll) {
+        DisplayModel* dm = win->AsFixed();
+        if (dm && dm->NeedVScroll()) {
+            // Content is larger than viewport, use continuous scrolling
+            // Fall through to the default scrolling behavior below
+        } else {
+            // Content fits in viewport, use page-by-page navigation
+            int pageFlipDelta = WHEEL_DELTA; // One wheel click = one page
+            win->wheelAccumDelta += delta;
+            if (win->wheelAccumDelta >= pageFlipDelta) {
+                win->ctrl->GoToPrevPage();
+                win->wheelAccumDelta -= pageFlipDelta;
+                return 0;
+            }
+            if (win->wheelAccumDelta <= -pageFlipDelta) {
+                win->ctrl->GoToNextPage();
+                win->wheelAccumDelta += pageFlipDelta;
+                return 0;
+            }
+            return 0;
+        }
+    }
+    
+    // Handle page-by-page navigation for other non-continuous modes (but not SinglePage mode)
+    if (vScroll && !isCont && !isSinglePageMode) {
+        int pageFlipDelta = WHEEL_DELTA * 3; // Three wheel clicks = one page (original behavior)
+        
         float zoomVirt = win->ctrl->GetZoomVirtual();
         // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
         bool flipPage = zoomVirt == kZoomFitContent;
@@ -1640,6 +1715,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // logf("  flipping page because !dm->NeedVScroll()\n");
             flipPage = true;
         }
+        
         // int scrolLPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         //  Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
         if (flipPage) {
@@ -1660,6 +1736,25 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     if (gDeltaPerLine == 0) {
         return 0;
+    }
+
+    // For SinglePage mode with zoomed content, use continuous scrolling with page transitions
+    if (isSinglePageMode && vScroll && win->AsFixed()) {
+        DisplayModel* dm = win->AsFixed();
+        if (dm && dm->NeedVScroll()) {
+            // Use continuous scrolling that handles page transitions at boundaries
+            SCROLLINFO si{};
+            si.cbSize = sizeof(si);
+            si.fMask = SIF_PAGE;
+            GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
+            int scrollBy = -MulDiv(si.nPage, delta * 30, WHEEL_DELTA);
+            if (hScroll) {
+                win->AsFixed()->ScrollXBy(scrollBy);
+            } else {
+                win->AsFixed()->ScrollYBy(scrollBy, true);
+            }
+            return 0;
+        }
     }
 
     if (gDeltaPerLine < 0 && win->AsFixed()) {
@@ -1814,7 +1909,7 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
             if (!isBegin) {
                 auto prev = (float)touchState.zoomIntermediate;
                 float factor = curr / prev;
-                Point pt{gi.ptsLocation.x, gi.ptsLocation.y};
+                Point pt { gi.ptsLocation.x, gi.ptsLocation.y };
                 HwndScreenToClient(win->hwndCanvas, pt);
                 float newZoom = ScaleZoomBy(win, factor);
                 SmartZoom(win, newZoom, &pt, false);
@@ -2037,6 +2132,13 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             int requiredScrollAxes = -1;
             bool needH = dm->NeedHScroll();
             bool needV = dm->NeedVScroll();
+            
+            // For SinglePage mode, respect the hideScrollbars setting
+            bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
+            if (isSinglePageMode && gGlobalPrefs->fixedPageUI.hideScrollbars) {
+                needV = false;
+            }
+            
             if (needH && needV) {
                 requiredScrollAxes = SB_BOTH;
             } else if (needH) {
@@ -2266,7 +2368,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             OnDropFiles(win, (HDROP)wp, !lp);
             return 0;
 
-        // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
+            // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
         case WM_ERASEBKGND:
             // return non-zero to indicate we erased
             // helps to avoid flicker

@@ -21,6 +21,7 @@
 #include "utils/Archive.h"
 #include "utils/Timer.h"
 #include "utils/LzmaSimpleArchive.h"
+#include <algorithm>
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -830,24 +831,43 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
-    if (viewPort.dy >= canvas.dy) {
-        si.nPos = 0;
+    // For SinglePage mode, show a scrollbar for rapid page navigation
+    bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
+    bool showVScroll = false;
+    
+    if (isSinglePageMode) {
+        // In SinglePage mode, show vertical scrollbar for page navigation (respecting hideScrollbars setting)
+        showVScroll = !gGlobalPrefs->fixedPageUI.hideScrollbars;
+        int pageCount = dm->PageCount();
+        int currentPage = dm->CurrentPageNo();
+        
+        si.nPos = currentPage - 1;  // 0-based position
         si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
+        si.nMax = pageCount - 1;    // 0-based max
+        si.nPage = 1;               // One page visible at a time
     } else {
-        si.nPos = dm->GetViewPort().y;
-        si.nMin = 0;
-        si.nMax = canvas.dy - 1;
-        si.nPage = viewPort.dy;
+        // Original logic for other display modes
+        if (viewPort.dy >= canvas.dy) {
+            si.nPos = 0;
+            si.nMin = 0;
+            si.nMax = 99;
+            si.nPage = 100;
+        } else {
+            si.nPos = dm->GetViewPort().y;
+            si.nMin = 0;
+            si.nMax = canvas.dy - 1;
+            si.nPage = viewPort.dy;
 
-        if (kZoomFitPage != dm->GetZoomVirtual()) {
-            // keep the top/bottom 5% of the previous page visible after paging down/up
-            si.nPage = (uint)(si.nPage * 0.95);
-            si.nMax -= viewPort.dy - si.nPage;
+            if (kZoomFitPage != dm->GetZoomVirtual()) {
+                // keep the top/bottom 5% of the previous page visible after paging down/up
+                si.nPage = (uint)(si.nPage * 0.95);
+                si.nMax -= viewPort.dy - si.nPage;
+            }
         }
+        showVScroll = (viewPort.dy < canvas.dy);
     }
-    ShowScrollBar(win->hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
+    
+    ShowScrollBar(win->hwndCanvas, SB_VERT, showVScroll);
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
 
