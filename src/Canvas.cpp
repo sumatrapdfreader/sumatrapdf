@@ -1307,27 +1307,6 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
 }
 
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
-    // In SinglePage mode, always do page-by-page navigation regardless of cursor position
-    bool isSinglePageMode = (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
-    if (isSinglePageMode) {
-        // Force page-by-page navigation in SinglePage mode
-        short delta = GET_WHEEL_DELTA_WPARAM(wp);
-        constexpr int pageFlipDelta = WHEEL_DELTA; // One wheel click = one page
-        
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= pageFlipDelta) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= pageFlipDelta;
-            return 0;
-        }
-        if (win->wheelAccumDelta <= -pageFlipDelta) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += pageFlipDelta;
-            return 0;
-        }
-        return 0;
-    }
-    
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
@@ -1365,8 +1344,13 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
-    if (vScroll && !isCont) {
-        constexpr int pageFlipDelta = WHEEL_DELTA * 3;
+    // Handle page-by-page navigation for non-continuous modes and SinglePage mode
+    bool isSinglePageMode = (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    if (vScroll && (!isCont || isSinglePageMode)) {
+        // For SinglePage mode, use WHEEL_DELTA for page-by-page navigation
+        // For other non-continuous modes, use WHEEL_DELTA * 3 for the original behavior
+        int pageFlipDelta = isSinglePageMode ? WHEEL_DELTA : WHEEL_DELTA * 3;
+        
         float zoomVirt = win->ctrl->GetZoomVirtual();
         // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
         bool flipPage = zoomVirt == kZoomFitContent;
@@ -1479,27 +1463,6 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 }
 
 static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
-    // In SinglePage mode, always do page-by-page navigation regardless of cursor position
-    bool isSinglePageMode = (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
-    if (isSinglePageMode) {
-        // Force page-by-page navigation in SinglePage mode
-        short delta = GET_WHEEL_DELTA_WPARAM(wp);
-        constexpr int pageFlipDelta = WHEEL_DELTA; // One wheel click = one page
-        
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= pageFlipDelta) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= pageFlipDelta;
-            return 0;
-        }
-        if (win->wheelAccumDelta <= -pageFlipDelta) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += pageFlipDelta;
-            return 0;
-        }
-        return 0;
-    }
-    
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (win->tocVisible && IsCursorOverWindow(win->tocTreeView->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
