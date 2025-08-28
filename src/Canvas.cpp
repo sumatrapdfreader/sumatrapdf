@@ -1416,7 +1416,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             si.cbSize = sizeof(si);
             si.fMask = SIF_PAGE;
             GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
-            int scrollBy = -MulDiv(si.nPage, delta, WHEEL_DELTA);
+            int scrollBy = -MulDiv(si.nPage, delta * 10, WHEEL_DELTA);
             if (hScroll) {
                 win->AsFixed()->ScrollXBy(scrollBy);
             } else {
