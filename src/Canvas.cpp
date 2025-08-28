@@ -1346,10 +1346,34 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     // Handle page-by-page navigation for non-continuous modes and SinglePage mode
     bool isSinglePageMode = (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
-    if (vScroll && (!isCont || isSinglePageMode)) {
-        // For SinglePage mode, use WHEEL_DELTA for page-by-page navigation
-        // For other non-continuous modes, use WHEEL_DELTA * 3 for the original behavior
-        int pageFlipDelta = isSinglePageMode ? WHEEL_DELTA : WHEEL_DELTA * 3;
+    
+    // For SinglePage mode with content requiring scrolling, use continuous scrolling behavior
+    if (isSinglePageMode && vScroll) {
+        DisplayModel* dm = win->AsFixed();
+        if (dm && dm->NeedVScroll()) {
+            // Content is larger than viewport, use continuous scrolling
+            // Fall through to the default scrolling behavior below
+        } else {
+            // Content fits in viewport, use page-by-page navigation
+            int pageFlipDelta = WHEEL_DELTA; // One wheel click = one page
+            win->wheelAccumDelta += delta;
+            if (win->wheelAccumDelta >= pageFlipDelta) {
+                win->ctrl->GoToPrevPage();
+                win->wheelAccumDelta -= pageFlipDelta;
+                return 0;
+            }
+            if (win->wheelAccumDelta <= -pageFlipDelta) {
+                win->ctrl->GoToNextPage();
+                win->wheelAccumDelta += pageFlipDelta;
+                return 0;
+            }
+            return 0;
+        }
+    }
+    
+    // Handle page-by-page navigation for other non-continuous modes (but not SinglePage mode)
+    if (vScroll && !isCont && !isSinglePageMode) {
+        int pageFlipDelta = WHEEL_DELTA * 3; // Three wheel clicks = one page (original behavior)
         
         float zoomVirt = win->ctrl->GetZoomVirtual();
         // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
@@ -1360,6 +1384,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // logf("  flipping page because !dm->NeedVScroll()\n");
             flipPage = true;
         }
+        
         // int scrolLPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         //  Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
         if (flipPage) {
@@ -1380,6 +1405,25 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     if (gDeltaPerLine == 0) {
         return 0;
+    }
+
+    // For SinglePage mode with zoomed content, use continuous scrolling with page transitions
+    if (isSinglePageMode && vScroll && win->AsFixed()) {
+        DisplayModel* dm = win->AsFixed();
+        if (dm && dm->NeedVScroll()) {
+            // Use continuous scrolling that handles page transitions at boundaries
+            SCROLLINFO si{};
+            si.cbSize = sizeof(si);
+            si.fMask = SIF_PAGE;
+            GetScrollInfo(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT, &si);
+            int scrollBy = -MulDiv(si.nPage, delta, WHEEL_DELTA);
+            if (hScroll) {
+                win->AsFixed()->ScrollXBy(scrollBy);
+            } else {
+                win->AsFixed()->ScrollYBy(scrollBy, true);
+            }
+            return 0;
+        }
     }
 
     if (gDeltaPerLine < 0 && win->AsFixed()) {
