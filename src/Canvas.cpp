@@ -10,6 +10,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include <algorithm>
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -103,6 +104,51 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 
     int currPos = si.nPos;
     auto ctrl = win->ctrl;
+    bool isSinglePageMode = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    
+    if (isSinglePageMode) {
+        // In SinglePage mode, scrollbar position directly corresponds to page number
+        USHORT msg = LOWORD(wp);
+        int targetPage = currPos + 1; // Convert 0-based position to 1-based page number
+        
+        switch (msg) {
+            case SB_TOP:
+                targetPage = 1;
+                break;
+            case SB_BOTTOM:
+                targetPage = ctrl->PageCount();
+                break;
+            case SB_LINEUP:
+                targetPage = std::max(1, targetPage - 1);
+                break;
+            case SB_LINEDOWN:
+                targetPage = std::min(ctrl->PageCount(), targetPage + 1);
+                break;
+            case SB_HALF_PAGEUP:
+                targetPage = std::max(1, targetPage - 1);
+                break;
+            case SB_HALF_PAGEDOWN:
+                targetPage = std::min(ctrl->PageCount(), targetPage + 1);
+                break;
+            case SB_PAGEUP:
+                targetPage = std::max(1, targetPage - 1);
+                break;
+            case SB_PAGEDOWN:
+                targetPage = std::min(ctrl->PageCount(), targetPage + 1);
+                break;
+            case SB_THUMBTRACK:
+                targetPage = si.nTrackPos + 1;
+                break;
+        }
+        
+        // Navigate to the target page
+        if (targetPage != ctrl->CurrentPageNo()) {
+            ctrl->GoToPage(targetPage, true);
+        }
+        return;
+    }
+    
+    // Original logic for other display modes
     int lineHeight = DpiScale(win->hwndCanvas, 16);
     bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
