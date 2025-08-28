@@ -836,8 +836,8 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     bool showVScroll = false;
     
     if (isSinglePageMode) {
-        // In SinglePage mode, always show vertical scrollbar for page navigation
-        showVScroll = true;
+        // In SinglePage mode, show vertical scrollbar for page navigation (respecting hideScrollbars setting)
+        showVScroll = !gGlobalPrefs->fixedPageUI.hideScrollbars;
         int pageCount = dm->PageCount();
         int currentPage = dm->CurrentPageNo();
         
