@@ -41,12 +41,79 @@
 
 #include "utils/Log.h"
 
+// NEW: needed for TreeView subclassing
+#include <commctrl.h>
+
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
+
+// --------------------------------------------------------------------------------------
+// TOC TreeView subclass: Vim-style hjkl navigation + Shift-only type-to-search
+// --------------------------------------------------------------------------------------
+struct TocTreeSubState {
+    bool eatNextChar = false; // swallow next WM_CHAR after mapping a letter to arrow
+};
+
+static LRESULT CALLBACK TocTree_SubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
+                                             UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    auto* st = reinterpret_cast<TocTreeSubState*>(dwRefData);
+
+    switch (msg) {
+    case WM_NCDESTROY: {
+        // Remove our subclass and free state, then forward to default
+        LRESULT res = DefSubclassProc(hwnd, msg, wParam, lParam);
+        RemoveWindowSubclass(hwnd, TocTree_SubclassProc, uIdSubclass);
+        delete st;
+        return res;
+    }
+
+    case WM_KEYDOWN: {
+        const bool ctrlDown  = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+        const bool altDown   = (GetKeyState(VK_MENU)    & 0x8000) != 0;
+        const bool shiftDown = (GetKeyState(VK_SHIFT)   & 0x8000) != 0;
+
+        // Unmodified hjkl => send as arrow keys to leverage native TreeView behavior
+        if (!ctrlDown && !altDown && !shiftDown) {
+            WPARAM vk = 0;
+            if (wParam == 'h' || wParam == 'H') vk = VK_LEFT;
+            else if (wParam == 'j' || wParam == 'J') vk = VK_DOWN;
+            else if (wParam == 'k' || wParam == 'K') vk = VK_UP;
+            else if (wParam == 'l' || wParam == 'L') vk = VK_RIGHT;
+
+            if (vk) {
+                st->eatNextChar = true;                // prevent incremental search for this key
+                SendMessageW(hwnd, WM_KEYDOWN, vk, 0); // forward as arrow
+                return 0;                              // handled
+            }
+        }
+        break;
+    }
+
+    case WM_CHAR: {
+        // If we just mapped a letter to an arrow, consume the paired WM_CHAR
+        if (st->eatNextChar) {
+            st->eatNextChar = false;
+            return 0;
+        }
+
+        // Require Shift for incremental search: swallow a–z/A–Z if Shift is NOT down
+        const bool shiftDown = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+        if (!shiftDown) {
+            wchar_t ch = static_cast<wchar_t>(wParam);
+            if ((ch >= L'a' && ch <= L'z') || (ch >= L'A' && ch <= L'Z')) {
+                return 0; // block unshifted letter search
+            }
+        }
+        break;
+    }
+    }
+
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
@@ -1026,6 +1093,14 @@ void CreateToc(MainWindow* win) {
     treeView->Create(args);
     ReportIf(!treeView->hwnd);
     win->tocTreeView = treeView;
+
+    // NEW: attach hjkl + Shift-only search behavior directly to the TOC TreeView
+    {
+        auto* st = new TocTreeSubState();
+        // Use a fresh subclass id; cleanup is handled in WM_NCDESTROY
+        BOOL ok = SetWindowSubclass(treeView->hwnd, TocTree_SubclassProc, NextSubclassId(), (DWORD_PTR)st);
+        ReportIf(!ok);
+    }
 
     SubclassToc(win);
 
