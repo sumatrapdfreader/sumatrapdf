@@ -775,14 +775,13 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
-#if 0
-static void FavTreeItemClicked(TreeClickEvent* ev) {
-    ev->didHandle = true;
-    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    ReportIf(!win);
-    GoToFavForTreeItem(win, ev->treeItem);
+static void FavTreeItemClicked(TreeView::ClickEvent* ev) {
+    if (ev->treeItem == ev->treeView->GetSelection()) {
+        MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
+        ReportIf(!win);
+        GoToFavForTreeItem(win, ev->treeItem);
+    }
 }
-#endif
 
 static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
@@ -914,7 +913,7 @@ void CreateFavorites(MainWindow* win) {
     treeView->onContextMenu = fn;
     treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
     treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
-    // treeView->onClick = FavTreeItemClicked;
+    treeView->onClick = MkFunc1Void(FavTreeItemClicked);
     // treeView->onChar = TocTreeCharHandler;
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
