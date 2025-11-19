@@ -61,6 +61,12 @@ newoption {
    description = "use clang-cl.exe instead of cl.exe"
 }
 
+-- TODO: won't be needed with premake5 beta 8
+newoption {
+   trigger = "with-2026",
+   description = "use vs2026 directory"
+}
+
 -- TODO: test this option
 -- usestandardpreprocessor 'On'
 
@@ -139,6 +145,16 @@ function optimized_conf()
   filter {}
 end
 
+-- TODO: temporary, create 2022 project in 2026
+-- directory and then needs manual retarget in vs2026
+-- in premake5 beta 8 (not yet released) vs2026 action
+-- is supported and we'll be able to switch to that
+function conf_2026()
+  filter { "options:with-2026" }
+    location "vs2026"
+  filter {}
+end
+
 -- per-workspace setting that differ in clang-cl.exe vs cl.exe builds
 function clang_conf()
   filter "options:with-clang"
@@ -214,7 +230,9 @@ workspace "SumatraPDF"
     location "vs2022"
   filter {}
 
+
   clang_conf()
+  conf_2026()
 
   filter {"platforms:x32", "configurations:Release"}
     targetdir "out/rel32"
@@ -287,7 +305,7 @@ workspace "SumatraPDF"
     optimized_conf()
     defines { "UNRAR", "RARDLL", "SILENT" }
     -- os.hpp redefines WINVER, is there a better way?
-    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4996" } 
+    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4996" }
     -- unrar uses exception handling in savepos.hpp but I don't want to enable it
     -- as it seems to infect the Sumatra binary as well (i.e. I see bad alloc exception
     -- being thrown)
@@ -499,7 +517,7 @@ workspace "SumatraPDF"
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
     -- gumbo
-    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267", 
+    disablewarnings { "4018", "4100", "4132", "4204", "4244", "4245", "4267",
     "4305", "4306", "4389", "4456", "4701" }
     includedirs { "ext/gumbo-parser/include", "ext/gumbo-parser/visualc/include" }
     gumbo_files()
@@ -588,7 +606,7 @@ workspace "SumatraPDF"
     filter {}
 
     disablewarnings {
-      "4005", "4018", "4057", "4100", "4115", "4130", "4132", "4200", "4204", "4206", "4210", 
+      "4005", "4018", "4057", "4100", "4115", "4130", "4132", "4200", "4204", "4206", "4210",
       "4245", "4267", "4295", "4305", "4389", "4456", "4457", "4703", "4706", "4819", "5286"
     }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
@@ -918,8 +936,9 @@ workspace "MakeLZSA"
   filter "action:vs2022"
     location "vs2022"
   filter {}
-  
+
   clang_conf()
+  conf_2026()
 
   filter {"platforms:x32", "configurations:Release"}
     targetdir "out/rel32"
