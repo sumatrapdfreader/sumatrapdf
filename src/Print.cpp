@@ -1,4 +1,4 @@
-/* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2025 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
@@ -901,7 +901,16 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     if (pdex.Flags & PD_CURRENTPAGE) {
-        PRINTPAGERANGE pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
+        PRINTPAGERANGE pr;
+        if (pdex.nPageRanges == 1 && pdex.lpPageRanges[0].nFromPage == pdex.lpPageRanges[0].nToPage) {
+            // Unified Print Dialog (which doesn't have a "Current page" option)
+            // sets PD_CURRENTPAGE when the custom range contains one page (2 or 2-2)
+            // with nFromPage and nToPage equal to the chosen page.
+            // PD_PAGENUMS isn't set in that case.
+            pr = pdex.lpPageRanges[0];
+        } else {
+            pr = {(DWORD)dm->CurrentPageNo(), (DWORD)dm->CurrentPageNo()};
+        }
         ranges.Append(pr);
     } else if (win->CurrentTab()->selectionOnPage && (pdex.Flags & PD_SELECTION)) {
         printSelection = true;
