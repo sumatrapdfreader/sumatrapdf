@@ -402,11 +402,11 @@ static void SetupCrashHandler() {
 }
 
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
-    // create a unique identifier for this executable
+    // create a unique identifier for this executable and appdata combination
     // (allows independent side-by-side installations)
-    TempStr exePath = GetSelfExePathTemp();
-    str::ToLowerInPlace(exePath);
-    u32 hash = MurmurHash2(exePath, str::Len(exePath));
+    TempStr combinedPath = str::Join(GetSelfExePathTemp(), "|", GetAppDataDirTemp());
+    str::ToLowerInPlace(combinedPath);
+    u32 hash = MurmurHash2(combinedPath, str::Len(combinedPath));
     TempStr mapId = str::FormatTemp("SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
