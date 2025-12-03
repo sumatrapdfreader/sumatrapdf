@@ -84,6 +84,54 @@ static const char* themesTxt = R"(Themes [
         LinkColor = #9999a0
         ColorizeControls = true
     ]
+    [
+        Name = Solarized Dark
+        TextColor = #839496
+        BackgroundColor = #002b36
+        ControlBackgroundColor = #073642
+        LinkColor = #268bd2
+        ColorizeControls = true
+    ]
+    [
+        Name = Dracula
+        TextColor = #f8f8f2
+        BackgroundColor = #282a36
+        ControlBackgroundColor = #44475a
+        LinkColor = #8be9fd
+        ColorizeControls = true
+    ]
+    [
+        Name = Nebula
+        TextColor = #CBE3E7
+        BackgroundColor = #100E23
+        ControlBackgroundColor = #1E1C31
+        LinkColor = #91DDFF
+        ColorizeControls = true
+    ]
+    [
+        Name = Greeny
+        TextColor = #FDD085
+        BackgroundColor = #4F6232
+        ControlBackgroundColor = #1E3304
+        LinkColor = #A2E53B
+        ColorizeControls = true
+    ]
+    [
+        Name = Choco
+        TextColor = #D7AD62
+        BackgroundColor = #2A1104
+        ControlBackgroundColor = #172736
+        LinkColor = #E8CD12
+        ColorizeControls = true
+    ]
+    [
+        Name = Purpy
+        TextColor = #E2C3C3
+        BackgroundColor = #20222A
+        ControlBackgroundColor = #1E0126
+        LinkColor = #EFF0B8
+        ColorizeControls = true
+    ]
 ]
 )";
 
