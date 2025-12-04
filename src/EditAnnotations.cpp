@@ -539,7 +539,8 @@ static void DoPopup(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void DoContents(EditAnnotationsWindow* ew, Annotation* annot) {
     TempStr s = Contents(annot);
-    // TODO: don't replace if already is "\r\n"
+    // don't replace if already is "\r\n"
+    s = str::ReplaceTemp(s, "\r\n", "\n");
     s = str::ReplaceTemp(s, "\n", "\r\n");
     ew->editContents->SetText(s);
     ew->staticContents->SetIsVisible(true);
@@ -973,6 +974,7 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
         return;
     }
     auto txt = ew->editContents->GetTextTemp();
+    txt = str::ReplaceTemp(txt, "\r\n", "\n");
     SetContents(a, txt);
     EnableSaveIfAnnotationsChanged(ew);
 
