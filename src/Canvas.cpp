@@ -61,6 +61,22 @@ bool gNoFlickerRender = true;
 
 Kind kNotifAnnotation = "notifAnnotation";
 
+// Resize handle positions that used in resizing annotations
+enum class ResizeHandle {
+    None = 0,
+    TopLeft,
+    Top,
+    TopRight,
+    Right,
+    BottomRight,
+    Bottom,
+    BottomLeft,
+    Left
+};
+
+// Size of resize handle hit area (in pixels)
+constexpr int kResizeHandleSize = 8;
+
 // Timer for mouse wheel smooth scrolling
 constexpr UINT_PTR kSmoothScrollTimerID = 6;
 
@@ -229,6 +245,84 @@ static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
     }
 }
 
+// Get the resize handle at the given point for the selected annotation
+static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* annot) {
+    if (!annot) {
+        return ResizeHandle::None;
+    }
+
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return ResizeHandle::None;
+    }
+
+    int pageNo = annot->pageNo;
+    if (!dm->PageVisible(pageNo)) {
+        return ResizeHandle::None;
+    }
+
+    Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
+    int handleSize = kResizeHandleSize;
+
+    // Check corners first (they have priority)
+    if (pt.x >= rect.x - handleSize && pt.x <= rect.x + handleSize &&
+        pt.y >= rect.y - handleSize && pt.y <= rect.y + handleSize) {
+        return ResizeHandle::TopLeft;
+    }
+    if (pt.x >= rect.x + rect.dx - handleSize && pt.x <= rect.x + rect.dx + handleSize &&
+        pt.y >= rect.y - handleSize && pt.y <= rect.y + handleSize) {
+        return ResizeHandle::TopRight;
+    }
+    if (pt.x >= rect.x + rect.dx - handleSize && pt.x <= rect.x + rect.dx + handleSize &&
+        pt.y >= rect.y + rect.dy - handleSize && pt.y <= rect.y + rect.dy + handleSize) {
+        return ResizeHandle::BottomRight;
+    }
+    if (pt.x >= rect.x - handleSize && pt.x <= rect.x + handleSize &&
+        pt.y >= rect.y + rect.dy - handleSize && pt.y <= rect.y + rect.dy + handleSize) {
+        return ResizeHandle::BottomLeft;
+    }
+
+    // Check edges
+    if (pt.y >= rect.y - handleSize && pt.y <= rect.y + handleSize &&
+        pt.x >= rect.x + handleSize && pt.x <= rect.x + rect.dx - handleSize) {
+        return ResizeHandle::Top;
+    }
+    if (pt.x >= rect.x + rect.dx - handleSize && pt.x <= rect.x + rect.dx + handleSize &&
+        pt.y >= rect.y + handleSize && pt.y <= rect.y + rect.dy - handleSize) {
+        return ResizeHandle::Right;
+    }
+    if (pt.y >= rect.y + rect.dy - handleSize && pt.y <= rect.y + rect.dy + handleSize &&
+        pt.x >= rect.x + handleSize && pt.x <= rect.x + rect.dx - handleSize) {
+        return ResizeHandle::Bottom;
+    }
+    if (pt.x >= rect.x - handleSize && pt.x <= rect.x + handleSize &&
+        pt.y >= rect.y + handleSize && pt.y <= rect.y + rect.dy - handleSize) {
+        return ResizeHandle::Left;
+    }
+
+    return ResizeHandle::None;
+}
+
+// Get the appropriate cursor for a resize handle
+static LPWSTR GetCursorForResizeHandle(ResizeHandle handle) {
+    switch (handle) {
+        case ResizeHandle::TopLeft:
+        case ResizeHandle::BottomRight:
+            return IDC_SIZENWSE;
+        case ResizeHandle::TopRight:
+        case ResizeHandle::BottomLeft:
+            return IDC_SIZENESW;
+        case ResizeHandle::Top:
+        case ResizeHandle::Bottom:
+            return IDC_SIZENS;
+        case ResizeHandle::Left:
+        case ResizeHandle::Right:
+            return IDC_SIZEWE;
+        default:
+            return IDC_ARROW;
+    }
+}
+
 // return true if this was annotation dragging
 static bool StopDraggingAnnotation(MainWindow* win, int x, int y, bool aborted) {
     Annotation* annot = win->annotationBeingDragged;
@@ -293,6 +387,7 @@ void CancelDrag(MainWindow* win) {
     win->mouseAction = MouseAction::None;
     win->linkOnLastButtonDown = nullptr;
     win->annotationBeingDragged = nullptr;
+    win->annotationBeingResized = false;
     SetCursorCached(IDC_ARROW);
 }
 
@@ -413,9 +508,17 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
         case MouseAction::Dragging: {
             Annotation* annot = win->annotationBeingDragged;
             if (annot) {
-                Size size = win->annotationBeingMovedSize;
-                DrawMovePattern(win, prevPos, size);
-                DrawMovePattern(win, pos, size);
+                if (win->annotationBeingResized) {
+                    // During resize, just update cursor position and redraw
+                    win->dragPrevPos = pos;
+                    // Keep the resize cursor active during resize
+                    SetCursorCached(GetCursorForResizeHandle((ResizeHandle)win->resizeHandle));
+                    MainWindowRerender(win);
+                } else {
+                    Size size = win->annotationBeingMovedSize;
+                    DrawMovePattern(win, prevPos, size);
+                    DrawMovePattern(win, pos, size);
+                }
             } else {
                 win->MoveDocBy(win->dragPrevPos.x - x, win->dragPrevPos.y - y);
             }
@@ -442,6 +545,113 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     win->annotationBeingMovedOffset = Point{offsetX, offsetY};
     DrawMovePattern(win, pt, win->annotationBeingMovedSize);
     return;
+}
+
+static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt, ResizeHandle handle) {
+    win->annotationBeingDragged = annot;
+    win->annotationBeingResized = true;
+    win->resizeHandle = (int)handle;
+    win->dragStart = pt;
+    DisplayModel* dm = win->AsFixed();
+    RectF r = GetRect(annot);
+    win->annotationOriginalRect = r;
+    SetCapture(win->hwndCanvas);
+    win->mouseAction = MouseAction::Dragging;
+    win->dragPrevPos = pt;
+}
+
+static bool StopAnnotationResize(MainWindow* win, int x, int y, bool aborted) {
+    if (!win->annotationBeingResized) {
+        return false;
+    }
+
+    Annotation* annot = win->annotationBeingDragged;
+    win->annotationBeingResized = false;
+    win->annotationBeingDragged = nullptr;
+
+    // Release mouse capture and reset cursor
+    if (GetCapture() == win->hwndCanvas) {
+        ReleaseCapture();
+    }
+    SetCursorCached(IDC_ARROW);
+
+    if (aborted || !annot) {
+        return true;
+    }
+
+    DisplayModel* dm = win->AsFixed();
+    Point pt{x, y};
+    int pageNo = PageNo(annot);
+
+    // Convert screen coordinates to page coordinates
+    Rect screenPt{x, y, 1, 1};
+    RectF pagePt = dm->CvtFromScreen(screenPt, pageNo);
+
+    // Calculate the new rectangle based on the resize handle and mouse movement
+    RectF originalRect = win->annotationOriginalRect;
+    RectF newRect = originalRect;
+
+    Point startPt = win->dragStart;
+    Rect startScreen{startPt.x, startPt.y, 1, 1};
+    RectF startPage = dm->CvtFromScreen(startScreen, pageNo);
+
+    float deltaX = pagePt.x - startPage.x;
+    float deltaY = pagePt.y - startPage.y;
+
+    switch ((ResizeHandle)win->resizeHandle) {
+        case ResizeHandle::TopLeft:
+            newRect.x = originalRect.x + deltaX;
+            newRect.y = originalRect.y + deltaY;
+            newRect.dx = originalRect.dx - deltaX;
+            newRect.dy = originalRect.dy - deltaY;
+            break;
+        case ResizeHandle::Top:
+            newRect.y = originalRect.y + deltaY;
+            newRect.dy = originalRect.dy - deltaY;
+            break;
+        case ResizeHandle::TopRight:
+            newRect.y = originalRect.y + deltaY;
+            newRect.dx = originalRect.dx + deltaX;
+            newRect.dy = originalRect.dy - deltaY;
+            break;
+        case ResizeHandle::Right:
+            newRect.dx = originalRect.dx + deltaX;
+            break;
+        case ResizeHandle::BottomRight:
+            newRect.dx = originalRect.dx + deltaX;
+            newRect.dy = originalRect.dy + deltaY;
+            break;
+        case ResizeHandle::Bottom:
+            newRect.dy = originalRect.dy + deltaY;
+            break;
+        case ResizeHandle::BottomLeft:
+            newRect.x = originalRect.x + deltaX;
+            newRect.dx = originalRect.dx - deltaX;
+            newRect.dy = originalRect.dy + deltaY;
+            break;
+        case ResizeHandle::Left:
+            newRect.x = originalRect.x + deltaX;
+            newRect.dx = originalRect.dx - deltaX;
+            break;
+        default:
+            break;
+    }
+
+    // Ensure minimum size
+    const float minSize = 20.0f;
+    if (newRect.dx < minSize) {
+        newRect.dx = minSize;
+    }
+    if (newRect.dy < minSize) {
+        newRect.dy = minSize;
+    }
+
+    SetRect(annot, newRect);
+    NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
+    MainWindowRerender(win);
+    ToolbarUpdateStateForWindow(win, true);
+
+    return true;
 }
 
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
@@ -473,7 +683,16 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     WindowTab* tab = win->CurrentTab();
     Annotation* annot = dm->GetAnnotationAtPos(pt, tab->selectedAnnotation);
     bool isMoveableAnnot = annot && (annot == tab->selectedAnnotation) && IsMoveableAnnotation(annot->type);
-    if (isMoveableAnnot) {
+
+    // Check if we're clicking on a resize handle of the selected annotation
+    ResizeHandle resizeHandle = ResizeHandle::None;
+    if (tab->selectedAnnotation && IsMoveableAnnotation(tab->selectedAnnotation->type)) {
+        resizeHandle = GetResizeHandleAt(win, pt, tab->selectedAnnotation);
+    }
+
+    if (resizeHandle != ResizeHandle::None) {
+        StartAnnotationResize(win, tab->selectedAnnotation, pt, resizeHandle);
+    } else if (isMoveableAnnot) {
         StartAnnotationDrag(win, annot, pt);
     } else {
         ReportIf(win->linkOnLastButtonDown);
@@ -498,7 +717,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
-    if (isMoveableAnnot || !canCopy || (isShift || !isOverText) && !isCtrl) {
+    if (resizeHandle != ResizeHandle::None || isMoveableAnnot || !canCopy || (isShift || !isOverText) && !isCtrl) {
         StartMouseDrag(win, x, y);
     } else {
         OnSelectionStart(win, x, y, key);
@@ -525,7 +744,13 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     // TODO: should IsDrag() ever be true here? We should get mouse move first
     bool didDragMouse = !win->dragStartPending || IsDragDistance(x, win->dragStart.x, y, win->dragStart.y);
     if (MouseAction::Dragging == ma) {
-        StopMouseDrag(win, x, y, !didDragMouse);
+        if (win->annotationBeingResized) {
+            StopAnnotationResize(win, x, y, !didDragMouse);
+            // Trigger cursor update after resize
+            SendMessageW(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+        } else {
+            StopMouseDrag(win, x, y, !didDragMouse);
+        }
     } else {
         OnSelectionStop(win, x, y, !didDragMouse);
         if (MouseAction::Selecting == ma && win->showSelection) {
@@ -898,6 +1123,37 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     Gdiplus::Pen pen(&br, 4);
     Gdiplus::Graphics gs(hdc);
     gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
+
+    // Draw resize handles
+    Gdiplus::SolidBrush handleBrush(Gdiplus::Color(255, 255, 255, 255)); // White
+    Gdiplus::Pen handlePen(Gdiplus::Color(255, 0, 0, 0), 1); // Black
+    int handleSize = 6;
+
+    // Draw corner handles
+    gs.FillRectangle(&handleBrush, rect.x - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+
+    gs.FillRectangle(&handleBrush, rect.x + rect.dx - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x + rect.dx - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+
+    gs.FillRectangle(&handleBrush, rect.x + rect.dx - handleSize/2, rect.y + rect.dy - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x + rect.dx - handleSize/2, rect.y + rect.dy - handleSize/2, handleSize, handleSize);
+
+    gs.FillRectangle(&handleBrush, rect.x - handleSize/2, rect.y + rect.dy - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x - handleSize/2, rect.y + rect.dy - handleSize/2, handleSize, handleSize);
+
+    // Draw edge handles
+    gs.FillRectangle(&handleBrush, rect.x + rect.dx/2 - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x + rect.dx/2 - handleSize/2, rect.y - handleSize/2, handleSize, handleSize);
+
+    gs.FillRectangle(&handleBrush, rect.x + rect.dx - handleSize/2, rect.y + rect.dy/2 - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x + rect.dx - handleSize/2, rect.y + rect.dy/2 - handleSize/2, handleSize, handleSize);
+
+    gs.FillRectangle(&handleBrush, rect.x + rect.dx/2 - handleSize/2, rect.y + rect.dy - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x + rect.dx/2 - handleSize/2, rect.y + rect.dy - handleSize/2, handleSize, handleSize);
+
+    gs.FillRectangle(&handleBrush, rect.x - handleSize/2, rect.y + rect.dy/2 - handleSize/2, handleSize, handleSize);
+    gs.DrawRectangle(&handlePen, rect.x - handleSize/2, rect.y + rect.dy/2 - handleSize/2, handleSize, handleSize);
 }
 
 static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
@@ -1125,6 +1381,16 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
     }
 
     Annotation* selected = win->CurrentTab()->selectedAnnotation;
+
+    // Check if hovering over resize handle of selected annotation
+    if (selected && IsMoveableAnnotation(selected->type)) {
+        ResizeHandle handle = GetResizeHandleAt(win, pt, selected);
+        if (handle != ResizeHandle::None) {
+            SetCursorCached(GetCursorForResizeHandle(handle));
+            return TRUE;
+        }
+    }
+
     Annotation* annot = dm->GetAnnotationAtPos(pt, selected);
     if (annot && (annot == selected) && IsMoveableAnnotation(annot->type)) {
         SetCursorCached(IDC_HAND);
@@ -1167,7 +1433,11 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
 
     switch (win->mouseAction) {
         case MouseAction::Dragging:
-            SetCursor(gCursorDrag);
+            if (win->annotationBeingResized) {
+                SetCursorCached(GetCursorForResizeHandle((ResizeHandle)win->resizeHandle));
+            } else {
+                SetCursor(gCursorDrag);
+            }
             return TRUE;
         case MouseAction::Scrolling:
             SetCursorCached(IDC_SIZEALL);

@@ -169,6 +169,11 @@ struct MainWindow {
     HBRUSH brMovePattern = nullptr;
     Annotation* annotationBeingDragged = nullptr;
 
+    // Vars for resizing annotations
+    int resizeHandle = 0; // ResizeHandle enum casted to int
+    bool annotationBeingResized = false;
+    RectF annotationOriginalRect;
+
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
        of the mouse from the point where the user middle clicked. */

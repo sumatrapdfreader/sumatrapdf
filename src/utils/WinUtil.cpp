@@ -2552,8 +2552,9 @@ void RectInflateTB(RECT& r, int top, int bottom) {
     r.bottom += bottom;
 }
 
-static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,  IDC_HAND, IDC_SIZEALL,
-                                  IDC_SIZEWE, IDC_SIZENS, IDC_NO,   IDC_CROSS};
+static LPWSTR knownCursorIds[] = {IDC_ARROW,    IDC_IBEAM,    IDC_HAND,     IDC_SIZEALL,
+                                  IDC_SIZEWE,   IDC_SIZENS,   IDC_SIZENWSE, IDC_SIZENESW,
+                                  IDC_NO,       IDC_CROSS};
 
 static HCURSOR cachedCursors[dimof(knownCursorIds)]{};
 
@@ -2569,7 +2570,7 @@ static int GetCursorIndex(LPWSTR cursorId) {
 
 #if 0
 static const char* cursorNames =
-    "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_NO\0IDC_CROSS\0";
+    "IDC_ARROW\0IDC_BEAM\0IDC_HAND\0IDC_SIZEALL\0IDC_SIZEWE\0IDC_SIZENS\0IDC_SIZENWSE\0IDC_SIZENESW\0IDC_NO\0IDC_CROSS\0";
 
 static const char* GetCursorName(LPWSTR cursorId) {
     int i = GetCursorIndex(cursorId);
