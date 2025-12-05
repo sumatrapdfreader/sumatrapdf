@@ -405,6 +405,9 @@ bool IsDragDistance(int x1, int x2, int y1, int y2) {
 
 static bool gShowAnnotationNotification = true;
 
+// Forward declaration
+static RectF CalculateResizedRect(MainWindow* win, int x, int y);
+
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     DisplayModel* dm = win->AsFixed();
     ReportIf(!dm);
@@ -509,10 +512,15 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = win->annotationBeingDragged;
             if (annot) {
                 if (win->annotationBeingResized) {
-                    // During resize, just update cursor position and redraw
+                    // During resize, calculate and apply new rectangle in real-time
                     win->dragPrevPos = pos;
                     // Keep the resize cursor active during resize
                     SetCursorCached(GetCursorForResizeHandle((ResizeHandle)win->resizeHandle));
+                    
+                    // Calculate and apply the new rectangle based on current mouse position
+                    RectF newRect = CalculateResizedRect(win, x, y);
+                    SetRect(annot, newRect);
+                    
                     MainWindowRerender(win);
                 } else {
                     Size size = win->annotationBeingMovedSize;
@@ -547,6 +555,125 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     return;
 }
 
+// Helper function to calculate new rectangle during resize
+static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
+    DisplayModel* dm = win->AsFixed();
+    Annotation* annot = win->annotationBeingDragged;
+    int pageNo = PageNo(annot);
+    
+    // Convert screen coordinates to page coordinates
+    Rect screenPt{x, y, 1, 1};
+    RectF pagePt = dm->CvtFromScreen(screenPt, pageNo);
+    
+    // Calculate the new rectangle based on the resize handle and mouse movement
+    RectF originalRect = win->annotationOriginalRect;
+    RectF newRect = originalRect;
+    
+    Point startPt = win->dragStart;
+    Rect startScreen{startPt.x, startPt.y, 1, 1};
+    RectF startPage = dm->CvtFromScreen(startScreen, pageNo);
+    
+    float deltaX = pagePt.x - startPage.x;
+    float deltaY = pagePt.y - startPage.y;
+    
+    // Ensure minimum size
+    const float minSize = 20.0f;
+    
+    switch ((ResizeHandle)win->resizeHandle) {
+        case ResizeHandle::TopLeft:
+            newRect.x = originalRect.x + deltaX;
+            newRect.y = originalRect.y + deltaY;
+            newRect.dx = originalRect.dx - deltaX;
+            newRect.dy = originalRect.dy - deltaY;
+            // Constrain width and adjust x if needed to keep right edge fixed
+            if (newRect.dx < minSize) {
+                newRect.x = originalRect.x + originalRect.dx - minSize;
+                newRect.dx = minSize;
+            }
+            // Constrain height and adjust y if needed to keep bottom edge fixed
+            if (newRect.dy < minSize) {
+                newRect.y = originalRect.y + originalRect.dy - minSize;
+                newRect.dy = minSize;
+            }
+            break;
+        case ResizeHandle::Top:
+            newRect.y = originalRect.y + deltaY;
+            newRect.dy = originalRect.dy - deltaY;
+            // Constrain height and adjust y if needed to keep bottom edge fixed
+            if (newRect.dy < minSize) {
+                newRect.y = originalRect.y + originalRect.dy - minSize;
+                newRect.dy = minSize;
+            }
+            break;
+        case ResizeHandle::TopRight:
+            newRect.y = originalRect.y + deltaY;
+            newRect.dx = originalRect.dx + deltaX;
+            newRect.dy = originalRect.dy - deltaY;
+            // Constrain width (right edge can move freely)
+            if (newRect.dx < minSize) {
+                newRect.dx = minSize;
+            }
+            // Constrain height and adjust y if needed to keep bottom edge fixed
+            if (newRect.dy < minSize) {
+                newRect.y = originalRect.y + originalRect.dy - minSize;
+                newRect.dy = minSize;
+            }
+            break;
+        case ResizeHandle::Right:
+            newRect.dx = originalRect.dx + deltaX;
+            // Constrain width (right edge can move freely)
+            if (newRect.dx < minSize) {
+                newRect.dx = minSize;
+            }
+            break;
+        case ResizeHandle::BottomRight:
+            newRect.dx = originalRect.dx + deltaX;
+            newRect.dy = originalRect.dy + deltaY;
+            // Constrain width and height (bottom-right corner can move freely)
+            if (newRect.dx < minSize) {
+                newRect.dx = minSize;
+            }
+            if (newRect.dy < minSize) {
+                newRect.dy = minSize;
+            }
+            break;
+        case ResizeHandle::Bottom:
+            newRect.dy = originalRect.dy + deltaY;
+            // Constrain height (bottom edge can move freely)
+            if (newRect.dy < minSize) {
+                newRect.dy = minSize;
+            }
+            break;
+        case ResizeHandle::BottomLeft:
+            newRect.x = originalRect.x + deltaX;
+            newRect.dx = originalRect.dx - deltaX;
+            newRect.dy = originalRect.dy + deltaY;
+            // Constrain width and adjust x if needed to keep right edge fixed
+            if (newRect.dx < minSize) {
+                newRect.x = originalRect.x + originalRect.dx - minSize;
+                newRect.dx = minSize;
+            }
+            // Constrain height (bottom edge can move freely)
+            if (newRect.dy < minSize) {
+                newRect.dy = minSize;
+            }
+            break;
+        case ResizeHandle::Left:
+            newRect.x = originalRect.x + deltaX;
+            newRect.dx = originalRect.dx - deltaX;
+            // Constrain width and adjust x if needed to keep right edge fixed
+            if (newRect.dx < minSize) {
+                newRect.x = originalRect.x + originalRect.dx - minSize;
+                newRect.dx = minSize;
+            }
+            break;
+        default:
+            break;
+    }
+    
+    return newRect;
+}
+
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt, ResizeHandle handle) {
     win->annotationBeingDragged = annot;
     win->annotationBeingResized = true;
@@ -579,74 +706,8 @@ static bool StopAnnotationResize(MainWindow* win, int x, int y, bool aborted) {
         return true;
     }
 
-    DisplayModel* dm = win->AsFixed();
-    Point pt{x, y};
-    int pageNo = PageNo(annot);
-
-    // Convert screen coordinates to page coordinates
-    Rect screenPt{x, y, 1, 1};
-    RectF pagePt = dm->CvtFromScreen(screenPt, pageNo);
-
-    // Calculate the new rectangle based on the resize handle and mouse movement
-    RectF originalRect = win->annotationOriginalRect;
-    RectF newRect = originalRect;
-
-    Point startPt = win->dragStart;
-    Rect startScreen{startPt.x, startPt.y, 1, 1};
-    RectF startPage = dm->CvtFromScreen(startScreen, pageNo);
-
-    float deltaX = pagePt.x - startPage.x;
-    float deltaY = pagePt.y - startPage.y;
-
-    switch ((ResizeHandle)win->resizeHandle) {
-        case ResizeHandle::TopLeft:
-            newRect.x = originalRect.x + deltaX;
-            newRect.y = originalRect.y + deltaY;
-            newRect.dx = originalRect.dx - deltaX;
-            newRect.dy = originalRect.dy - deltaY;
-            break;
-        case ResizeHandle::Top:
-            newRect.y = originalRect.y + deltaY;
-            newRect.dy = originalRect.dy - deltaY;
-            break;
-        case ResizeHandle::TopRight:
-            newRect.y = originalRect.y + deltaY;
-            newRect.dx = originalRect.dx + deltaX;
-            newRect.dy = originalRect.dy - deltaY;
-            break;
-        case ResizeHandle::Right:
-            newRect.dx = originalRect.dx + deltaX;
-            break;
-        case ResizeHandle::BottomRight:
-            newRect.dx = originalRect.dx + deltaX;
-            newRect.dy = originalRect.dy + deltaY;
-            break;
-        case ResizeHandle::Bottom:
-            newRect.dy = originalRect.dy + deltaY;
-            break;
-        case ResizeHandle::BottomLeft:
-            newRect.x = originalRect.x + deltaX;
-            newRect.dx = originalRect.dx - deltaX;
-            newRect.dy = originalRect.dy + deltaY;
-            break;
-        case ResizeHandle::Left:
-            newRect.x = originalRect.x + deltaX;
-            newRect.dx = originalRect.dx - deltaX;
-            break;
-        default:
-            break;
-    }
-
-    // Ensure minimum size
-    const float minSize = 20.0f;
-    if (newRect.dx < minSize) {
-        newRect.dx = minSize;
-    }
-    if (newRect.dy < minSize) {
-        newRect.dy = minSize;
-    }
-
-    SetRect(annot, newRect);
+    // The annotation has already been updated during mouse move,
+    // just notify and update toolbar
     NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
