@@ -2690,10 +2690,12 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
 // are other windows, else the Frequently Read page is displayed
 void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     WindowTab* tab = win->CurrentTab();
-    if (!tab) {
-        return;
+    if (tab) {
+        CloseTab(tab, quitIfLast);
+    } else {
+        // Close tabless Frequently Read/About page
+        CloseWindow(win, true, false);
     }
-    CloseTab(tab, quitIfLast);
 }
 
 bool CanCloseWindow(MainWindow* win) {
@@ -6358,3 +6360,4 @@ void ShutdownCleanup() {
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
 }
+
