@@ -577,7 +577,7 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
     float deltaY = pagePt.y - startPage.y;
     
     // Ensure minimum size
-    const float minSize = 20.0f;
+    const float minSize = 10.0f;
     
     switch ((ResizeHandle)win->resizeHandle) {
         case ResizeHandle::TopLeft:
