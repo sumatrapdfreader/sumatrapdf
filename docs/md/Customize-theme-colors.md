@@ -81,7 +81,7 @@ Meaning of the parameters:
 - `LinkColor` is a color for links. Typically it's blue.
 - `ColorizeControls` should be `true`. If `false` we won't try to change colors of standard windows controls (menu, toolbar, buttons etc.) so a lot of UI will not respect theme colors.
 
-Now, once you save the file above, there are three main ways to choose a theme that you had created:
-1. By changing the value of `Theme = ` in the `SumatraPDF-settings.txt` which we accessed above (e.g. `Theme = Solarized Dark` . Or,
+Now, once you save the text file above, there are three main ways to choose a theme that you had created:
+1. By changing the value of `Theme = ` in the `SumatraPDF-settings.txt` which we accessed above (e.g. `Theme = Solarized Dark`). Or,
 2. By launching the Command Palette (`Ctrl + K`), and then typing `theme` (afterwards, select the desired theme from the list). Or,
-3. By navigating to `Settings` / `Theme` and then choosing the desired theme from the list.
+3. By navigating to `Settings` / `Theme` and then choosing a theme.
