@@ -698,6 +698,9 @@
     <None Include="..\Appx\AppxManifest.xml">
       <Filter>Appx</Filter>
     </None>
+    <None Include="..\do\appx.go">
+      <Filter>do</Filter>
+    </None>
     <None Include="..\do\build.go">
       <Filter>do</Filter>
     </None>

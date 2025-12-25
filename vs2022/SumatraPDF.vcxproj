@@ -1406,6 +1406,7 @@
     <None Include="..\.github\workflows\daily.yml" />
     <None Include="..\.gitignore" />
     <None Include="..\Appx\AppxManifest.xml" />
+    <None Include="..\do\appx.go" />
     <None Include="..\do\build.go" />
     <None Include="..\do\check_accesskyes.go" />
     <None Include="..\do\clang_tidy_format.go" />

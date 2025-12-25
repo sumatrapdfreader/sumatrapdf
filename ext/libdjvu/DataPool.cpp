@@ -792,10 +792,6 @@ DataPool::create(const GP<DataPool> & pool, int start, int length)
   DEBUG_MAKE_INDENT(3);
   if (!pool)
     G_THROW( ERR_MSG("DataPool.zero_DataPool") );
-  // SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/5035
-  if (start < 0 || length < 0) {
-      G_THROW( ERR_MSG("DataPool.create: Invalid start or length") );
-  }
   DataPool *xpool=new DataPool();
   GP<DataPool> retval=xpool;
   xpool->init();
