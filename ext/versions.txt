@@ -23,7 +23,7 @@ jbig2dec        0.18       2020-02-11
 libjpeg-turbo   1.3.1      2014-04-20
   https://github.com/libjpeg-turbo/libjpeg-turbo/tags
 
-libdjvu         master     2020-12-06
+libdjvu         master     2025-12-25
   https://djvu.sourceforge.net/
   https://github.com/barak/djvulibre
 

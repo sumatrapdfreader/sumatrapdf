@@ -1424,7 +1424,10 @@ IWBitmap::Encode::init(const GBitmap &bm, const GP<GBitmap> gmask)
   int h = bm.rows();
   int g = bm.get_grays()-1;
   signed char *buffer;
-  GPBuffer<signed char> gbuffer(buffer,w*h);
+  size_t sz = w * h;
+  if (sz == 0 || g <= 0 || sz / (size_t)w != (size_t)h)
+    G_THROW("IW44Image: inconsistent image size (corrupted file?)");
+  GPBuffer<signed char> gbuffer(buffer,sz);
   // Prepare gray level conversion table
   signed char  bconv[256];
   for (i=0; i<256; i++)
