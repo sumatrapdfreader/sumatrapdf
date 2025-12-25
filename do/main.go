@@ -439,7 +439,7 @@ func Main() {
 	}
 
 	if flgBuildSmoke {
-		buildSmoke(false) // TODO: flgSign
+		buildSmoke(true)
 		return
 	}
 
