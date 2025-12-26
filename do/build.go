@@ -662,7 +662,7 @@ func buildSmoke(sign bool) {
 		runCmdLoggedMust(cmd)
 	}
 	if sign {
-		files := []string{"SumatraPDF.exe", "SumatraPDF-dll.exe", "libmupdf.dll", "PdfFilter.dll", "PdfPreview.dll"}
+		files := []string{"SumatraPDF-dll.exe", "libmupdf.dll", "PdfFilter.dll", "PdfPreview.dll"}
 		signFiles(outDir, files)
 	}
 }
