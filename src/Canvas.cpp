@@ -1011,7 +1011,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
 
         bool renderOutOfDateCue = false;
         int renderDelay = gRenderCache->Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
-        if (renderDelay == 0) {
+        if (renderDelay == 0 || renderDelay == RENDER_DELAY_FAILED) {
             shouldPaint = true;
         }
         if (renderDelay != 0) {
@@ -1091,8 +1091,8 @@ static void OnPaintDocument(MainWindow* win) {
             FillRect(hdc, &ps.rcPaint, GetStockBrush(WHITE_BRUSH));
             break;
         default:
-            bool shouldFlush = DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
-            if (!gNoFlickerRender || shouldFlush) {
+            bool shouldPaint = DrawDocument(win, win->buffer->GetDC(), &ps.rcPaint);
+            if (!gNoFlickerRender || shouldPaint) {
                 win->buffer->Flush(hdc);
             }
     }
