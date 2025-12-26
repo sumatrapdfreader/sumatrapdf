@@ -13,13 +13,13 @@ name: "CodeQL"
 
 on:
   schedule:
-    - cron: '45 10 * * 1'
+    - cron: "45 10 * * 1"
   workflow_dispatch:
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: 'windows-latest'
+    runs-on: "windows-latest"
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     permissions:
       # required for all workflows
@@ -36,45 +36,45 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - language: c-cpp
-          build-mode: manual
+          - language: c-cpp
+            build-mode: manual
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: ${{ matrix.language }}
-        build-mode: ${{ matrix.build-mode }}
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
-    - if: matrix.build-mode == 'manual'
-      run: .\doit.bat -build-codeql
+      - if: matrix.build-mode == 'manual'
+        run: .\doit.bat -build-codeql
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
-      with:
-        category: "/language:${{matrix.language}}"
-        output: sarif-results
-        upload: failure-only
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{matrix.language}}"
+          output: sarif-results
+          upload: failure-only
 
-    - name: filter-sarif
-      uses: advanced-security/filter-sarif@v1
-      with:
-        patterns: |
-          -**/*
-          src/**/*
-        input: sarif-results/cpp.sarif
-        output: sarif-results/cpp.sarif
+      - name: filter-sarif
+        uses: advanced-security/filter-sarif@v1
+        with:
+          patterns: |
+            -**/*
+            src/**/*
+          input: sarif-results/cpp.sarif
+          output: sarif-results/cpp.sarif
 
-    - name: Upload SARIF
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: sarif-results/cpp.sarif
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: sarif-results/cpp.sarif
 
-    - name: Upload loc as a Build Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: sarif-results
-        path: sarif-results
-        retention-days: 1
+      - name: Upload loc as a Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-results
+          path: sarif-results
+          retention-days: 1
