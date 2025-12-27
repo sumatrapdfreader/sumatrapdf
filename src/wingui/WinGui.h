@@ -84,7 +84,7 @@ struct Wnd : ILayout {
 
     Wnd();
     Wnd(HWND hwnd);
-    virtual ~Wnd();
+    virtual ~Wnd() override;
     void Destroy();
 
     HWND CreateCustom(const CreateCustomArgs&);
@@ -322,7 +322,7 @@ struct ListBox : Wnd {
     int idealSizeLines = 0;
 
     ListBox();
-    virtual ~ListBox();
+    virtual ~ListBox() override;
 
     HWND Create(const CreateArgs&);
 

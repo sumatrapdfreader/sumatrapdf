@@ -17,7 +17,7 @@ struct CreateWebViewArgs {
 
 struct WebviewWnd : Wnd {
     WebviewWnd();
-    ~WebviewWnd() override;
+    virtual ~WebviewWnd() override;
 
     HWND Create(const CreateWebViewArgs&);
 

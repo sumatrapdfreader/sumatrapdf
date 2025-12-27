@@ -193,7 +193,7 @@ struct ListBoxModelCP : ListBoxModel {
 };
 
 struct CommandPaletteWnd : Wnd {
-    ~CommandPaletteWnd() override = default;
+    virtual ~CommandPaletteWnd() override = default;
     HFONT font = nullptr;
     MainWindow* win = nullptr;
 

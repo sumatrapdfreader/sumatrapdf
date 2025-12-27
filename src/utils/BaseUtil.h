@@ -563,7 +563,7 @@ Kind kindFoo = "foo";
 using Kind = const char*;
 
 struct KindBase {
-    Kind kind;
+    Kind kind = nullptr;
 
     Kind GetKind() const {
         return kind;

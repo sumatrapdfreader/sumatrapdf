@@ -433,9 +433,9 @@ LRESULT Wnd::OnNotifyReflect(WPARAM, LPARAM) {
 }
 
 void Wnd::OnPaint(HDC hdc, PAINTSTRUCT* ps) {
-    auto bgBrush = BackgroundBrush();
-    if (bgBrush != nullptr) {
-        FillRect(hdc, &ps->rcPaint, bgBrush);
+    auto br = BackgroundBrush();
+    if (br != nullptr) {
+        FillRect(hdc, &ps->rcPaint, br);
     }
 }
 

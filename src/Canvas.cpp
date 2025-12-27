@@ -725,7 +725,6 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->annotationBeingResized = true;
     win->resizeHandle = (int)handle;
     win->dragStart = pt;
-    DisplayModel* dm = win->AsFixed();
     RectF r = GetRect(annot);
     win->annotationOriginalRect = r;
     SetCapture(win->hwndCanvas);

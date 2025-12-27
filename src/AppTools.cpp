@@ -125,7 +125,7 @@ TempStr GetAppDataDirTemp() {
     } else {
         dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
         if (!dir) {
-            ReportIf(!dir);
+            ReportIf(true);
             dir = GetTempDirTemp(); // shouldn't happen, last chance thing
         }
         dir = path::JoinTemp(dir, kAppName);

@@ -147,7 +147,7 @@ struct PageDestinationFile : IPageDestination {
         ReportIf(!u);
         kind = kindDestinationLaunchFile;
         path = str::Dup(u);
-        dest = str::Dup(dest);
+        this->dest = str::Dup(dest);
     }
 
     ~PageDestinationFile() override {
