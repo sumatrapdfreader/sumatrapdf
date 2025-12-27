@@ -630,7 +630,7 @@ FUN(NativeDevice_endGroup)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jint JNICALL
-FUN(NativeDevice_beginTile)(JNIEnv *env, jobject self, jobject jarea, jobject jview, jfloat xstep, jfloat ystep, jobject jctm, jint id)
+FUN(NativeDevice_beginTile)(JNIEnv *env, jobject self, jobject jarea, jobject jview, jfloat xstep, jfloat ystep, jobject jctm, jint id, jint doc_id)
 {
 	fz_context *ctx = get_context(env);
 	fz_device *dev = from_Device(env, self);
@@ -647,7 +647,7 @@ FUN(NativeDevice_beginTile)(JNIEnv *env, jobject self, jobject jarea, jobject jv
 	if (err)
 		return 0;
 	fz_try(ctx)
-		i = fz_begin_tile_id(ctx, dev, area, view, xstep, ystep, ctm, id);
+		i = fz_begin_tile_tid(ctx, dev, area, view, xstep, ystep, ctm, id, doc_id);
 	fz_always(ctx)
 		unlockNativeDevice(env, info);
 	fz_catch(ctx)

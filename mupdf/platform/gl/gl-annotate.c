@@ -1110,7 +1110,7 @@ static void do_border(void)
 
 static int image_file_filter(const char *fn)
 {
-	return !!strstr(fn, ".jpg") || !!strstr(fn, ".jpeg") || !!strstr(fn, ".png");
+	return !!fz_strstrcase(fn, ".jpg") || !!fz_strstrcase(fn, ".jpeg") || !!fz_strstrcase(fn, ".png");
 }
 
 void do_annotate_panel(void)

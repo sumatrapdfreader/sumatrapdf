@@ -3262,6 +3262,8 @@ static void pdf_update_button_appearance(fz_context *ctx, pdf_annot *annot)
 				pdf_dict_put(ctx, annot->obj, PDF_NAME(AS), PDF_NAME(Off));
 				as = PDF_NAME(Off);
 			}
+			else
+				as = pdf_resolve_indirect_chain(ctx, as);
 
 			if (as == PDF_NAME(Off))
 				as_yes = pdf_keep_obj(ctx, pdf_button_field_on_state(ctx, annot->obj));

@@ -610,6 +610,7 @@ fz_new_document_of_size(fz_context *ctx, int size)
 {
 	fz_document *doc = fz_calloc(ctx, 1, size);
 	doc->refs = 1;
+	doc->id = fz_new_document_id(ctx);
 
 	fz_log_activity(ctx, FZ_ACTIVITY_NEW_DOC, NULL);
 

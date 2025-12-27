@@ -1754,11 +1754,11 @@ export class Device extends Userdata<"fz_device"> {
 		libmupdf._wasm_end_group(this.pointer)
 	}
 
-	beginTile(area: Rect, view: Rect, xstep: number, ystep: number, ctm: Matrix, id: number) {
+	beginTile(area: Rect, view: Rect, xstep: number, ystep: number, ctm: Matrix, id: number, doc_id: number) {
 		checkRect(area)
 		checkRect(view)
 		checkMatrix(ctm)
-		return libmupdf._wasm_begin_tile(this.pointer, RECT(area), RECT2(view), xstep, ystep, MATRIX(ctm), id)
+		return libmupdf._wasm_begin_tile(this.pointer, RECT(area), RECT2(view), xstep, ystep, MATRIX(ctm), id, doc_id)
 	}
 
 	endTile() {
@@ -1808,7 +1808,11 @@ export class DocumentWriter extends Userdata<"fz_document_writer"> {
 
 	beginPage(mediabox: Rect) {
 		checkRect(mediabox)
-		return new Device(libmupdf._wasm_begin_page(this.pointer, RECT(mediabox)))
+		return new Device(
+			libmupdf._wasm_keep_device(
+				libmupdf._wasm_begin_page(this.pointer, RECT(mediabox))
+			)
+		)
 	}
 
 	endPage() {
@@ -1868,6 +1872,7 @@ export class Document extends Userdata<"any_document"> {
 
 	static openDocument(from: Buffer | ArrayBuffer | Uint8Array | Stream | string, magic?: string): Document {
 		let pointer = 0 as Pointer<"any_document">
+		let free_from = false
 
 		if (typeof from === "string") {
 			magic = from
@@ -1882,14 +1887,23 @@ export class Document extends Userdata<"any_document"> {
 
 		checkType(magic, "string")
 
-		if (from instanceof ArrayBuffer || from instanceof Uint8Array)
+		if (from instanceof ArrayBuffer || from instanceof Uint8Array) {
 			from = new Buffer(from)
+			free_from = true
+		}
 		if (from instanceof Buffer)
 			pointer = libmupdf._wasm_open_document_with_buffer(STRING(magic), from.pointer)
 		else if (from instanceof Stream)
 			pointer = libmupdf._wasm_open_document_with_stream(STRING(magic), from.pointer)
 		else
 			throw new Error("not a Buffer or Stream")
+
+		if (free_from) {
+			// Destroy any implicit Buffer instances immediately!
+			// This may help the GC and FinalizationRegistry out when
+			// processing many documents without a pause.
+			from.destroy()
+		}
 
 		let pdf = libmupdf._wasm_pdf_document_from_fz_document(pointer)
 		if (pdf)
@@ -4060,7 +4074,7 @@ interface DeviceFunctions {
 	beginGroup?(bbox: Rect, colorspace: ColorSpace, isolated: boolean, knockout: boolean, blendmode: BlendMode, alpha: number): void,
 	endGroup?(): void,
 
-	beginTile?(area: Rect, view: Rect, xstep: number, ystep: number, ctm: Matrix, id: number): number,
+	beginTile?(area: Rect, view: Rect, xstep: number, ystep: number, ctm: Matrix, id: number, doc_id: number): number,
 	endTile?(): void,
 
 	beginLayer?(name: string): void,
@@ -4166,10 +4180,10 @@ globalThis.$libmupdf_device = {
 		alpha: number
 	): void {
 		$libmupdf_device_table.get(id)?.fillPath?.(
-			new Path(path),
+			new Path(libmupdf._wasm_keep_path(path)),
 			!!even_odd,
 			fromMatrix(ctm),
-			new ColorSpace(colorspace),
+			new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 			fromColorArray(color_n, color_arr),
 			alpha
 		)
@@ -4182,7 +4196,7 @@ globalThis.$libmupdf_device = {
 		ctm: Pointer<"fz_matrix">
 	): void {
 		$libmupdf_device_table.get(id)?.clipPath?.(
-				new Path(path),
+				new Path(libmupdf._wasm_keep_path(path)),
 				!!even_odd,
 				fromMatrix(ctm)
 			)
@@ -4199,10 +4213,10 @@ globalThis.$libmupdf_device = {
 		alpha: number
 	): void {
 		$libmupdf_device_table.get(id)?.strokePath?.(
-			new Path(path),
-			new StrokeState(stroke),
+			new Path(libmupdf._wasm_keep_path(path)),
+			new StrokeState(libmupdf._wasm_keep_stroke_state(stroke)),
 			fromMatrix(ctm),
-			new ColorSpace(colorspace),
+			new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 			fromColorArray(color_n, color_arr),
 			alpha
 		)
@@ -4215,8 +4229,8 @@ globalThis.$libmupdf_device = {
 		ctm: Pointer<"fz_matrix">
 	): void {
 		$libmupdf_device_table.get(id)?.clipStrokePath?.(
-			new Path(path),
-			new StrokeState(stroke),
+			new Path(libmupdf._wasm_keep_path(path)),
+			new StrokeState(libmupdf._wasm_keep_stroke_state(stroke)),
 			fromMatrix(ctm)
 		)
 	},
@@ -4231,9 +4245,9 @@ globalThis.$libmupdf_device = {
 		alpha: number
 	): void {
 		$libmupdf_device_table.get(id)?.fillText?.(
-				new Text(text),
+				new Text(libmupdf._wasm_keep_text(text)),
 				fromMatrix(ctm),
-				new ColorSpace(colorspace),
+				new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 				fromColorArray(color_n, color_arr),
 				alpha
 			)
@@ -4250,10 +4264,10 @@ globalThis.$libmupdf_device = {
 		alpha: number
 	): void {
 		$libmupdf_device_table.get(id)?.strokeText?.(
-				new Text(text),
-				new StrokeState(stroke),
+				new Text(libmupdf._wasm_keep_text(text)),
+				new StrokeState(libmupdf._wasm_keep_stroke_state(stroke)),
 				fromMatrix(ctm),
-				new ColorSpace(colorspace),
+				new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 				fromColorArray(color_n, color_arr),
 				alpha
 			)
@@ -4265,7 +4279,7 @@ globalThis.$libmupdf_device = {
 		ctm: Pointer<"fz_matrix">
 	): void {
 		$libmupdf_device_table.get(id)?.clipText?.(
-				new Text(text),
+				new Text(libmupdf._wasm_keep_text(text)),
 				fromMatrix(ctm)
 			)
 	},
@@ -4277,8 +4291,8 @@ globalThis.$libmupdf_device = {
 		ctm: Pointer<"fz_matrix">,
 	): void {
 		$libmupdf_device_table.get(id)?.clipStrokeText?.(
-				new Text(text),
-				new StrokeState(stroke),
+				new Text(libmupdf._wasm_keep_text(text)),
+				new StrokeState(libmupdf._wasm_keep_stroke_state(stroke)),
 				fromMatrix(ctm)
 			)
 	},
@@ -4289,7 +4303,7 @@ globalThis.$libmupdf_device = {
 		ctm: Pointer<"fz_matrix">
 	): void {
 		$libmupdf_device_table.get(id)?.ignoreText?.(
-				new Text(text),
+				new Text(libmupdf._wasm_keep_text(text)),
 				fromMatrix(ctm)
 			)
 	},
@@ -4332,7 +4346,7 @@ globalThis.$libmupdf_device = {
 		$libmupdf_device_table.get(id)?.fillImageMask?.(
 			new Image(image),
 			fromMatrix(ctm),
-			new ColorSpace(colorspace),
+			new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 			fromColorArray(color_n, color_arr),
 			alpha
 		)
@@ -4364,7 +4378,7 @@ globalThis.$libmupdf_device = {
 		$libmupdf_device_table.get(id)?.beginMask?.(
 			fromRect(bbox),
 			!!luminosity,
-			new ColorSpace(colorspace),
+			new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 			fromColorArray(color_n, color_arr)
 		)
 	},
@@ -4380,7 +4394,7 @@ globalThis.$libmupdf_device = {
 	): void {
 		$libmupdf_device_table.get(id)?.beginGroup?.(
 			fromRect(bbox),
-			new ColorSpace(colorspace),
+			new ColorSpace(libmupdf._wasm_keep_colorspace(colorspace)),
 			!!isolated,
 			!!knockout,
 			Device.BLEND_MODES[blendmode] as BlendMode,
@@ -4395,7 +4409,8 @@ globalThis.$libmupdf_device = {
 		xstep: number,
 		ystep: number,
 		ctm: Pointer<"fz_matrix">,
-		tile_id: number
+		tile_id: number,
+		doc_id: number
 	): number {
 		return $libmupdf_device_table.get(id)?.beginTile?.(
 			fromRect(area),
@@ -4403,7 +4418,8 @@ globalThis.$libmupdf_device = {
 			xstep,
 			ystep,
 			fromMatrix(ctm),
-			tile_id
+			tile_id,
+			doc_id
 		) || 0
 	},
 

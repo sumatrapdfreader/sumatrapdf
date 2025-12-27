@@ -29,7 +29,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - Font scaling and rendering
      - BSD-style
    * - harfbuzz_
-     - 6.0.0
+     - 6.0.0 with patches
      - Text shaping
      - MIT-style
    * - libjpeg_
@@ -37,7 +37,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - JPEG decoding
      - BSD-style
    * - `Incompatible fork of lcms2`_
-     - 2.14 with patches
+     - 2.16 with patches
      - Color management
      - MIT-style
    * - openjpeg_
@@ -49,7 +49,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - Deflate compression
      - zlib License
    * - `gumbo-parser`_
-     - 0.10.1
+     - 0.10.1 with patches
      - HTML5 parser
      - Apache 2.0
    * - `brotli`_
@@ -73,7 +73,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - JPEG-XR decoding
      - special
    * - Tesseract_
-     - 5.3.4 with patches
+     - 5.5.0 with patches
      - OCR
      - Apache 2.0
    * - Leptonica_

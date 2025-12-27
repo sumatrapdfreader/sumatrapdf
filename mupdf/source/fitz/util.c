@@ -817,6 +817,7 @@ fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image)
 {
 	fz_compressed_buffer *cbuf;
 	fz_buffer *buf;
+	const char *mime;
 
 	cbuf = fz_compressed_image_buffer(ctx, image);
 
@@ -836,6 +837,7 @@ fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image)
 			return;
 		}
 	}
+
 	if (cbuf && cbuf->params.type == FZ_IMAGE_PNG)
 	{
 		fz_append_string(ctx, out, "data:image/png;base64,");
@@ -843,10 +845,21 @@ fz_append_image_as_data_uri(fz_context *ctx, fz_buffer *out, fz_image *image)
 		return;
 	}
 
+	if (fz_is_lossy_image(ctx, image))
+	{
+		/* Convert lossy image formats to JPEG */
+		buf = fz_new_buffer_from_image_as_jpeg(ctx, image, fz_default_color_params, 90, 0);
+		mime = "data:image/jpeg;base64,";
+	}
+	else
+	{
 	buf = fz_new_buffer_from_image_as_png(ctx, image, fz_default_color_params);
+		mime = "data:image/png;base64,";
+	}
+
 	fz_try(ctx)
 	{
-		fz_append_string(ctx, out, "data:image/png;base64,");
+		fz_append_string(ctx, out, mime);
 		fz_append_base64_buffer(ctx, out, buf, 1);
 	}
 	fz_always(ctx)

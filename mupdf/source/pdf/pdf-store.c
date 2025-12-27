@@ -120,6 +120,7 @@ void
 pdf_empty_store(fz_context *ctx, pdf_document *doc)
 {
 	fz_filter_store(ctx, pdf_filter_store, doc, &pdf_obj_store_type);
+	fz_drop_drawn_tiles_for_document(ctx, (fz_document *)doc);
 }
 
 static int

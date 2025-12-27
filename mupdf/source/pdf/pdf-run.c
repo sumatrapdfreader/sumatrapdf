@@ -91,7 +91,7 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 	fz_always(ctx)
 	{
 		if (resources_pushed)
-			pdf_processor_pop_resources(ctx, proc);
+			pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
 		pdf_drop_processor(ctx, proc);
 		fz_drop_default_colorspaces(ctx, default_cs);
 		pdf_annot_pop_local_xref(ctx, annot);

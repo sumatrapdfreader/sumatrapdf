@@ -546,7 +546,7 @@ static void toggle_check_box(fz_context *ctx, pdf_annot *annot)
 
 		/* TODO: check V value as well as or instead of AS? */
 		as = pdf_dict_get(ctx, field, PDF_NAME(AS));
-		if (as && as != PDF_NAME(Off))
+		if (pdf_is_name(ctx, as) && !pdf_name_eq(ctx, as, PDF_NAME(Off)))
 		{
 			if (is_radio && is_no_toggle_to_off)
 			{
@@ -2330,6 +2330,7 @@ static pdf_obj *get_annot_ap(fz_context *ctx, pdf_obj *annot)
 	pdf_obj *as = pdf_dict_get(ctx, annot, PDF_NAME(AS));
 	if (ap)
 	{
+		as = pdf_resolve_indirect_chain(ctx, as);
 		ap = pdf_dict_get(ctx, ap, PDF_NAME(N));
 		if (pdf_is_stream(ctx, ap))
 			return ap;
@@ -2406,7 +2407,13 @@ static void pdf_bake_page(fz_context *ctx, pdf_document *doc, pdf_obj *page, int
 
 	res = pdf_dict_get(ctx, page, PDF_NAME(Resources));
 	if (!res)
+	{
+		res = pdf_dict_get_inheritable(ctx, page, PDF_NAME(Resources));
+		if (res)
+			pdf_dict_put(ctx, page, PDF_NAME(Resources), res);
+		else
 		res = pdf_dict_put_dict(ctx, page, PDF_NAME(Resources), 4);
+	}
 
 	res_xobj = pdf_dict_get(ctx, res, PDF_NAME(XObject));
 	if (!res_xobj)

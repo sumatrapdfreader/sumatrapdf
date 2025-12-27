@@ -853,9 +853,9 @@ void wasm_end_group(fz_device *dev)
 }
 
 EXPORT
-int wasm_begin_tile(fz_device *dev, fz_rect *area, fz_rect *view, float xstep, float ystep, fz_matrix *ctm, int id)
+int wasm_begin_tile(fz_device *dev, fz_rect *area, fz_rect *view, float xstep, float ystep, fz_matrix *ctm, int id, int doc_id)
 {
-	INTEGER(fz_begin_tile_id, dev, *area, *view, xstep, ystep, *ctm, id)
+  INTEGER(fz_begin_tile_tid, dev, *area, *view, xstep, ystep, *ctm, id, doc_id)
 }
 
 EXPORT
@@ -2759,7 +2759,7 @@ js_dev_end_group(fz_context *ctx, fz_device *dev)
 
 static int
 js_dev_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view,
-	float xstep, float ystep, fz_matrix ctm, int id)
+	float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
 {
 	return EM_ASM_INT({ return globalThis.$libmupdf_device.begin_tile($0, $1, $2, $3, $4, $5, $6) },
 		((js_device*)dev)->id,
@@ -2768,7 +2768,8 @@ js_dev_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view,
 		xstep,
 		ystep,
 		&ctm,
-		id
+		id,
+		doc_id
 	);
 }
 

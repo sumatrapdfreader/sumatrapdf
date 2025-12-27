@@ -862,6 +862,9 @@ struct fz_context
 	 * 1 for every context cloned (directly or indirectly) from it. */
 	int context_count;
 
+	/* Only the master version of this is used! */
+	int next_document_id;
+
 	fz_alloc_context alloc;
 	fz_locks_context locks;
 	fz_error_context error;

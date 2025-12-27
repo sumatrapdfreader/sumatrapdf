@@ -35,6 +35,19 @@ pdf_processor *pdf_keep_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_close_processor(fz_context *ctx, pdf_processor *proc);
 void pdf_drop_processor(fz_context *ctx, pdf_processor *proc);
 
+/*
+ * Stack of resources used during interpretation (holding page and
+ * xobject/font/type3 glyph resource dictionaries).
+ */
+
+struct pdf_resource_stack
+{
+	pdf_resource_stack *next;
+	pdf_obj *resources;
+};
+
+pdf_obj *pdf_lookup_resource(fz_context *ctx, pdf_resource_stack *stack, pdf_obj *type, const char *name);
+
 typedef enum
 {
 	PDF_PROCESSOR_REQUIRES_DECODED_IMAGES = 1
@@ -58,9 +71,12 @@ struct pdf_processor
 	 * is to pass either it, or a filtered version of it onto any
 	 * chained processor. */
 	void (*push_resources)(fz_context *ctx, pdf_processor *proc, pdf_obj *res);
+
 	/* Pop the resources stack. This must be passed on to any chained
 	 * processors. This returns a pointer to the resource dict just
-	 * popped by the deepest filter. The caller inherits this reference. */
+	 * popped by the deepest filter. The caller inherits this reference.
+	 * NOTE: This must NOT throw as it may be called during cleanup!
+	 */
 	pdf_obj *(*pop_resources)(fz_context *ctx, pdf_processor *proc);
 
 	/* general graphics state */
@@ -190,13 +206,15 @@ struct pdf_processor
 	int hidden;
 
 	pdf_processor_requirements requirements;
+
+	/* resource dictionary stack */
+	pdf_resource_stack *rstack;
 };
 
 typedef struct
 {
 	/* input */
 	pdf_document *doc;
-	pdf_obj *rdb;
 	pdf_lexbuf *buf;
 	fz_cookie *cookie;
 
@@ -455,7 +473,7 @@ void pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, 
 	Function to process a contents stream without handling the resources.
 	The caller is responsible for pushing/popping the resources.
 */
-void pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie);
+void pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *stmobj, fz_cookie *cookie);
 
 /* Text handling helper functions */
 typedef struct

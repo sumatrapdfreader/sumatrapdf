@@ -29,6 +29,24 @@
 /* Maximum number of errors before aborting */
 #define MAX_SYNTAX_ERRORS 100
 
+pdf_obj *
+pdf_lookup_resource(fz_context *ctx, pdf_resource_stack *stack, pdf_obj *type, const char *name)
+{
+	pdf_obj *sub, *obj;
+	while (stack)
+	{
+		sub = pdf_dict_get(ctx, stack->resources, type);
+		if (sub)
+		{
+			obj = pdf_dict_gets(ctx, sub, name);
+			if (obj)
+				return obj;
+		}
+		stack = stack->next;
+	}
+	return NULL;
+}
+
 void *
 pdf_new_processor(fz_context *ctx, int size)
 {
@@ -68,6 +86,13 @@ pdf_drop_processor(fz_context *ctx, pdf_processor *proc)
 			fz_warn(ctx, "dropping unclosed PDF processor");
 		if (proc->drop_processor)
 			proc->drop_processor(ctx, proc);
+		while (proc->rstack)
+		{
+			pdf_resource_stack *stk = proc->rstack;
+			proc->rstack = stk->next;
+			pdf_drop_obj(ctx, stk->resources);
+			fz_free(ctx, stk);
+		}
 		fz_free(ctx, proc);
 	}
 }
@@ -86,11 +111,10 @@ void pdf_reset_processor(fz_context *ctx, pdf_processor *proc)
 }
 
 static void
-pdf_init_csi(fz_context *ctx, pdf_csi *csi, pdf_document *doc, pdf_obj *rdb, pdf_lexbuf *buf, fz_cookie *cookie)
+pdf_init_csi(fz_context *ctx, pdf_csi *csi, pdf_document *doc, pdf_lexbuf *buf, fz_cookie *cookie)
 {
 	memset(csi, 0, sizeof *csi);
 	csi->doc = doc;
-	csi->rdb = rdb;
 	csi->buf = buf;
 	csi->cookie = cookie;
 }
@@ -112,7 +136,7 @@ pdf_clear_stack(fz_context *ctx, pdf_csi *csi)
 }
 
 static pdf_font_desc *
-pdf_try_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *font, fz_cookie *cookie)
+pdf_try_load_font(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, pdf_obj *font, fz_cookie *cookie)
 {
 	pdf_font_desc *desc = NULL;
 	fz_try(ctx)
@@ -137,10 +161,9 @@ pdf_try_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *fon
 }
 
 static fz_image *
-parse_inline_image(fz_context *ctx, pdf_csi *csi, fz_stream *stm, char *csname, int cslen)
+parse_inline_image(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream *stm, char *csname, int cslen)
 {
 	pdf_document *doc = csi->doc;
-	pdf_obj *rdb = csi->rdb;
 	pdf_obj *obj = NULL;
 	pdf_obj *cs;
 	fz_image *img = NULL;
@@ -168,7 +191,7 @@ parse_inline_image(fz_context *ctx, pdf_csi *csi, fz_stream *stm, char *csname, 
 			if (fz_peek_byte(ctx, stm) == '\n')
 				fz_read_byte(ctx, stm);
 
-		img = pdf_load_inline_image(ctx, doc, rdb, obj, stm);
+		img = pdf_load_inline_image(ctx, doc, proc->rstack, obj, stm);
 
 		/* find EI */
 		found = 0;
@@ -251,7 +274,7 @@ pdf_process_extgstate(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, pdf_ob
 		pdf_obj *font_size = pdf_array_get(ctx, obj, 1);
 		pdf_font_desc *font;
 		if (pdf_is_dict(ctx, font_ref))
-			font = pdf_try_load_font(ctx, csi->doc, csi->rdb, font_ref, csi->cookie);
+			font = pdf_try_load_font(ctx, csi->doc, proc->rstack, font_ref, csi->cookie);
 		else
 			font = pdf_load_hail_mary_font(ctx, csi->doc);
 		fz_try(ctx)
@@ -381,10 +404,9 @@ pdf_process_extgstate(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, pdf_ob
 static void
 pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 {
-	pdf_obj *xres, *xobj, *subtype;
+	pdf_obj *xobj, *subtype;
 
-	xres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(XObject));
-	xobj = pdf_dict_gets(ctx, xres, csi->name);
+	xobj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(XObject), csi->name);
 	if (!xobj)
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find XObject resource '%s'", csi->name);
 	subtype = pdf_dict_get(ctx, xobj, PDF_NAME(Subtype));
@@ -397,7 +419,7 @@ pdf_process_Do(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	if (!pdf_is_name(ctx, subtype))
 		fz_throw(ctx, FZ_ERROR_SYNTAX, "no XObject subtype specified");
 
-	if (pdf_is_ocg_hidden(ctx, csi->doc, csi->rdb, proc->usage, pdf_dict_get(ctx, xobj, PDF_NAME(OC))))
+	if (pdf_is_ocg_hidden(ctx, csi->doc, proc->rstack, proc->usage, pdf_dict_get(ctx, xobj, PDF_NAME(OC))))
 		return;
 
 	if (pdf_name_eq(ctx, subtype, PDF_NAME(Form)))
@@ -454,9 +476,7 @@ pdf_process_CS(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 		cs = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
 	else
 	{
-		pdf_obj *csres, *csobj;
-		csres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(ColorSpace));
-		csobj = pdf_dict_gets(ctx, csres, csi->name);
+		pdf_obj *csobj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(ColorSpace), csi->name);
 		if (!csobj)
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find ColorSpace resource '%s'", csi->name);
 		if (pdf_is_array(ctx, csobj) && pdf_array_len(ctx, csobj) == 1 && pdf_name_eq(ctx, pdf_array_get(ctx, csobj, 0), PDF_NAME(Pattern)))
@@ -488,11 +508,10 @@ pdf_process_SC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 {
 	if (csi->name[0])
 	{
-		pdf_obj *patres, *patobj;
+		pdf_obj *patobj;
 		int type;
 
-		patres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(Pattern));
-		patobj = pdf_dict_gets(ctx, patres, csi->name);
+		patobj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Pattern), csi->name);
 		if (!patobj)
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find Pattern resource '%s'", csi->name);
 
@@ -555,10 +574,10 @@ pdf_process_SC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, int stroke)
 }
 
 static pdf_obj *
-resolve_properties(fz_context *ctx, pdf_csi *csi, pdf_obj *obj)
+resolve_properties(fz_context *ctx, pdf_processor *proc, pdf_obj *obj)
 {
 	if (pdf_is_name(ctx, obj))
-		return pdf_dict_get(ctx, pdf_dict_get(ctx, csi->rdb, PDF_NAME(Properties)), obj);
+		return pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Properties), pdf_to_name(ctx, obj));
 	else
 		return obj;
 }
@@ -567,7 +586,7 @@ static void
 pdf_process_BDC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 {
 	if (proc->op_BDC)
-		proc->op_BDC(ctx, proc, csi->name, csi->obj, resolve_properties(ctx, csi, csi->obj));
+		proc->op_BDC(ctx, proc, csi->name, csi->obj, resolve_properties(ctx, proc, csi->obj));
 
 	/* Already hidden, no need to look further */
 	if (proc->hidden > 0)
@@ -580,7 +599,7 @@ pdf_process_BDC(fz_context *ctx, pdf_processor *proc, pdf_csi *csi)
 	if (strcmp(csi->name, "OC"))
 		return;
 
-	if (pdf_is_ocg_hidden(ctx, csi->doc, csi->rdb, proc->usage, csi->obj))
+	if (pdf_is_ocg_hidden(ctx, csi->doc, proc->rstack, proc->usage, csi->obj))
 		++proc->hidden;
 }
 
@@ -687,9 +706,7 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 
 	case B('g','s'):
 		{
-			pdf_obj *gsres, *gsobj;
-			gsres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(ExtGState));
-			gsobj = pdf_dict_gets(ctx, gsres, csi->name);
+			pdf_obj *gsobj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(ExtGState), csi->name);
 			if (!gsobj)
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find ExtGState resource '%s'", csi->name);
 			if (proc->op_gs_begin)
@@ -745,12 +762,11 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 	case B('T','f'):
 		if (proc->op_Tf)
 		{
-			pdf_obj *fontres, *fontobj;
+			pdf_obj *fontobj;
 			pdf_font_desc *font;
-			fontres = pdf_dict_get(ctx, csi->rdb, PDF_NAME(Font));
-			fontobj = pdf_dict_gets(ctx, fontres, csi->name);
+			fontobj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Font), csi->name);
 			if (pdf_is_dict(ctx, fontobj))
-				font = pdf_try_load_font(ctx, csi->doc, csi->rdb, fontobj, csi->cookie);
+				font = pdf_try_load_font(ctx, csi->doc, proc->rstack, fontobj, csi->cookie);
 			else
 				font = pdf_load_hail_mary_font(ctx, csi->doc);
 			fz_try(ctx)
@@ -820,7 +836,7 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 	/* shadings, images, xobjects */
 	case B('B','I'):
 		{
-			fz_image *img = parse_inline_image(ctx, csi, stm, csname, sizeof csname);
+			fz_image *img = parse_inline_image(ctx, proc, csi, stm, csname, sizeof csname);
 			fz_try(ctx)
 			{
 				if (proc->op_BI)
@@ -836,10 +852,9 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 	case B('s','h'):
 		if (proc->op_sh)
 		{
-			pdf_obj *shaderes, *shadeobj;
+			pdf_obj *shadeobj;
 			fz_shade *shade;
-			shaderes = pdf_dict_get(ctx, csi->rdb, PDF_NAME(Shading));
-			shadeobj = pdf_dict_gets(ctx, shaderes, csi->name);
+			shadeobj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Shading), csi->name);
 			if (!shadeobj)
 				fz_throw(ctx, FZ_ERROR_SYNTAX, "cannot find Shading resource '%s'", csi->name);
 			shade = pdf_load_shading(ctx, csi->doc, shadeobj);
@@ -856,7 +871,7 @@ pdf_process_keyword(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_strea
 
 	/* marked content */
 	case B('M','P'): if (proc->op_MP) proc->op_MP(ctx, proc, csi->name); break;
-	case B('D','P'): if (proc->op_DP) proc->op_DP(ctx, proc, csi->name, csi->obj, resolve_properties(ctx, csi, csi->obj)); break;
+	case B('D','P'): if (proc->op_DP) proc->op_DP(ctx, proc, csi->name, csi->obj, resolve_properties(ctx, proc, csi->obj)); break;
 	case C('B','M','C'): pdf_process_BMC(ctx, proc, csi, csi->name); break;
 	case C('B','D','C'): pdf_process_BDC(ctx, proc, csi); break;
 	case C('E','M','C'): pdf_process_EMC(ctx, proc, csi); break;
@@ -1109,16 +1124,40 @@ pdf_process_stream(fz_context *ctx, pdf_processor *proc, pdf_csi *csi, fz_stream
 
 void pdf_processor_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
 {
+	pdf_resource_stack *stk = fz_malloc_struct(ctx, pdf_resource_stack);
+	stk->next = proc->rstack;
+	proc->rstack = stk;
+	stk->resources = pdf_keep_obj(ctx, res);
+
+	if (proc->push_resources)
 	proc->push_resources(ctx, proc, res);
 }
 
 pdf_obj *pdf_processor_pop_resources(fz_context *ctx, pdf_processor *proc)
 {
-	return proc->pop_resources(ctx, proc);
+	pdf_resource_stack *stk = proc->rstack;
+	pdf_obj *res = NULL;
+	pdf_obj *out_res = NULL;
+
+	if (stk)
+	{
+		res = stk->resources;
+		proc->rstack = stk->next;
+		fz_free(ctx, stk);
+	}
+
+	if (proc->pop_resources)
+	{
+		out_res = proc->pop_resources(ctx, proc);
+		pdf_drop_obj(ctx, res);
+		return out_res;
+	}
+
+	return res;
 }
 
 void
-pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie)
+pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *stmobj, fz_cookie *cookie)
 {
 	pdf_csi csi;
 	pdf_lexbuf buf;
@@ -1130,7 +1169,7 @@ pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc
 	fz_var(stm);
 
 	pdf_lexbuf_init(ctx, &buf, PDF_LEXBUF_SMALL);
-	pdf_init_csi(ctx, &csi, doc, rdb, &buf, cookie);
+	pdf_init_csi(ctx, &csi, doc, &buf, cookie);
 
 	fz_try(ctx)
 	{
@@ -1154,18 +1193,22 @@ pdf_process_raw_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc
 }
 
 void
-pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, pdf_obj *stmobj, fz_cookie *cookie, pdf_obj **out_res)
+pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *in_res, pdf_obj *stmobj, fz_cookie *cookie, pdf_obj **out_res)
 {
-	pdf_processor_push_resources(ctx, proc, rdb);
+	if (in_res)
+		pdf_processor_push_resources(ctx, proc, in_res);
 	fz_try(ctx)
-		pdf_process_raw_contents(ctx, proc, doc, rdb, stmobj, cookie);
+		pdf_process_raw_contents(ctx, proc, doc, stmobj, cookie);
 	fz_always(ctx)
 	{
-		pdf_obj *res = pdf_processor_pop_resources(ctx, proc);
+		if (in_res)
+		{
+			pdf_obj *ret_res = pdf_processor_pop_resources(ctx, proc);
 		if (out_res)
-			*out_res = res;
+				*out_res = ret_res;
 		else
-			pdf_drop_obj(ctx, res);
+				pdf_drop_obj(ctx, ret_res);
+		}
 	}
 	fz_catch(ctx)
 		fz_rethrow(ctx);
@@ -1238,7 +1281,7 @@ pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_annot *annot, fz_coo
 }
 
 void
-pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *rdb, fz_buffer *contents)
+pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *res, fz_buffer *contents)
 {
 	pdf_csi csi;
 	pdf_lexbuf buf;
@@ -1250,17 +1293,19 @@ pdf_process_glyph(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_o
 		return;
 
 	pdf_lexbuf_init(ctx, &buf, PDF_LEXBUF_SMALL);
-	pdf_init_csi(ctx, &csi, doc, rdb, &buf, NULL);
+	pdf_init_csi(ctx, &csi, doc, &buf, NULL);
 
 	fz_try(ctx)
 	{
-		pdf_processor_push_resources(ctx, proc, rdb);
+		if (res)
+			pdf_processor_push_resources(ctx, proc, res);
 		stm = fz_open_buffer(ctx, contents);
 		pdf_process_stream(ctx, proc, &csi, stm);
 		pdf_process_end(ctx, proc, &csi);
 	}
 	fz_always(ctx)
 	{
+		if (res)
 		pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
 		fz_drop_stream(ctx, stm);
 		pdf_clear_stack(ctx, &csi);

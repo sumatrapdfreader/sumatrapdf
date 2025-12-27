@@ -76,4 +76,6 @@ fz_archive_handler_context *fz_keep_archive_handler_context(fz_context *ctx);
 
 void fz_log_activity(fz_context *ctx, fz_activity_reason reason, void *arg);
 
+int fz_new_document_id(fz_context *ctx);
+
 #endif

@@ -314,14 +314,14 @@ fz_ocr_end_group(fz_context *ctx, fz_device *dev)
 }
 
 static int
-fz_ocr_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id)
+fz_ocr_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
 {
 	fz_ocr_device *ocr = (fz_ocr_device *)dev;
 
 	/* Always pass 0 as tile id here so that neither device can
 	 * disagree about whether the contents need to be sent. */
-	(void)fz_begin_tile_id(ctx, ocr->list_dev, area, view, xstep, ystep, ctm, 0);
-	(void)fz_begin_tile_id(ctx, ocr->draw_dev, area, view, xstep, ystep, ctm, 0);
+	(void)fz_begin_tile_tid(ctx, ocr->list_dev, area, view, xstep, ystep, ctm, 0, 0);
+	(void)fz_begin_tile_tid(ctx, ocr->draw_dev, area, view, xstep, ystep, ctm, 0, 0);
 
 	return 0;
 }
@@ -878,11 +878,11 @@ rewrite_end_group(fz_context *ctx, fz_device *dev)
 }
 
 static int
-rewrite_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id)
+rewrite_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
 {
 	fz_rewrite_device *rewrite = (fz_rewrite_device *)dev;
 
-	return fz_begin_tile_id(ctx, rewrite->target, area, view, xstep, ystep, ctm, id);
+	return fz_begin_tile_tid(ctx, rewrite->target, area, view, xstep, ystep, ctm, id, doc_id);
 }
 
 static void

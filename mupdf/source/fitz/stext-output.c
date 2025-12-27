@@ -594,10 +594,10 @@ fz_print_stext_table_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *b
 				}
 				fz_write_string(ctx, out, "<td");
 				if (x1 > x0+1)
-					fz_write_printf(ctx, out, " rowspan=%d", x1-x0);
+					fz_write_printf(ctx, out, " colspan=\"%d\"", x1-x0);
 				if (y1 > y0+1)
-					fz_write_printf(ctx, out, " colspan=%d", y1-y0);
-				fz_write_string(ctx, out, ">\n");
+					fz_write_printf(ctx, out, " rowspan=\"%d\"", y1-y0);
+				fz_write_string(ctx, out, ">");
 				run_to_xhtml(ctx, td->u.s.down->first_block, out);
 				fz_write_printf(ctx, out, "</td>\n");
 				for ( ; y0 < y1; y0++)

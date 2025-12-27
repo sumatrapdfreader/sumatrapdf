@@ -34,7 +34,7 @@ Check out the [example projects](examples/) to help you get started.
 
 ## Documentation
 
-- [MuPDF.js Reference](https://mupdf.readthedocs.io/en/latest/reference/javascript.html)
+- [MuPDF.js Reference](https://mupdf.readthedocs.io/en/latest/reference/javascript/)
 - [Getting Started & Examples](https://mupdfjs.readthedocs.io/en/latest/)
 
 ## Contact

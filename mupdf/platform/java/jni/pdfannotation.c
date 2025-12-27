@@ -2103,7 +2103,7 @@ FUN(PDFAnnotation_process)(JNIEnv *env, jobject self, jobject jproc)
 	}
 	fz_always(ctx)
 	{
-		pdf_processor_pop_resources(ctx, proc);
+		pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
 		pdf_drop_processor(ctx, proc);
 	}
 	fz_catch(ctx)

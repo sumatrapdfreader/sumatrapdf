@@ -2301,6 +2301,9 @@ def link_l_flags( sos, ld_origin=None):
             # `install_name_tool -change` to rename internal names to
             # `@rpath/<leafname>`.
             ret += ' -Wl,-rpath,@loader_path/.'
+        elif os.environ.get( 'PYODIDE') == '1':
+            # 2025-09-05: Pyodide now supports rpath.
+            ret += " -Wl,-rpath,'$ORIGIN'"
         else:
             ret += " -Wl,-rpath,'$ORIGIN',-z,origin"
     #log('{sos=} {ld_origin=} {ret=}')

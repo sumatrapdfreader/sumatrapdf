@@ -39,13 +39,6 @@ typedef struct gstate_stack
 	fz_matrix ctm;
 } gstate_stack;
 
-typedef struct resources_stack
-{
-	struct resources_stack *next;
-	pdf_obj *old_rdb;
-	pdf_obj *new_rdb;
-} resources_stack;
-
 typedef struct
 {
 	pdf_obj *cs;
@@ -90,7 +83,7 @@ typedef struct
 	pdf_processor *chain;
 	pdf_filter_options *global_options;
 	pdf_color_filter_options *options;
-	resources_stack *rstack;
+	pdf_resource_stack *new_rstack;
 	gstate_stack *gstate;
 	cs_color *stroke;
 	cs_color *fill;
@@ -208,9 +201,9 @@ make_resource_instance(fz_context *ctx, pdf_color_processor *p, pdf_obj *key, co
 	int i;
 
 	/* key gives us our category. Make sure we have such a category. */
-	pdf_obj *res = pdf_dict_get(ctx, p->rstack->new_rdb, key);
+	pdf_obj *res = pdf_dict_get(ctx, p->new_rstack->resources, key);
 	if (!res)
-		res = pdf_dict_put_dict(ctx, p->rstack->new_rdb, key, 8);
+		res = pdf_dict_put_dict(ctx, p->new_rstack->resources, key, 8);
 
 	/* Now check through the category for each possible prefixed name
 	 * in turn. */
@@ -262,7 +255,7 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 	{
 		/* Any other names should be looked up in the resource dict,
 		 * because our rewrite function doesn't have access to that. */
-		cs_obj = pdf_dict_get(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(ColorSpace)), cs_obj);
+		cs_obj = pdf_lookup_resource(ctx, p->super.rstack, PDF_NAME(ColorSpace), pdf_to_name(ctx, cs_obj));
 	}
 
 	/* Until now, cs_obj has been a borrowed reference. Make it a real one. */
@@ -1112,7 +1105,7 @@ pdf_color_SC_pattern(fz_context *ctx, pdf_processor *proc, const char *name, pdf
 {
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 	float local_color[FZ_MAX_COLORS] = { 0 };
-	pdf_obj *cs_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Pattern)), name);
+	pdf_obj *cs_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Pattern), name);
 
 	memcpy(local_color, color, sizeof(float) * n);
 	rewrite_cs(ctx, p, cs_obj, n, local_color, 1);
@@ -1123,7 +1116,7 @@ pdf_color_sc_pattern(fz_context *ctx, pdf_processor *proc, const char *name, pdf
 {
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 	float local_color[FZ_MAX_COLORS] = { 0 };
-	pdf_obj *cs_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Pattern)), name);
+	pdf_obj *cs_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Pattern), name);
 
 	memcpy(local_color, color, sizeof(float) * n);
 	rewrite_cs(ctx, p, cs_obj, n, local_color, 0);
@@ -1143,10 +1136,10 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 	if (p->options->shade_rewrite == NULL)
 	{
 		/* Must copy shading over to new resources dict. */
-		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
-		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		pdf_obj *old_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Shading), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->new_rstack->resources, PDF_NAME(Shading));
 		if (new_shading_dict == NULL)
-			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
 		if (p->chain->op_SC_shade)
@@ -1154,17 +1147,17 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 		return;
 	}
 
-	orig = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Pattern)), name);
+	orig = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Pattern), name);
 	orig = pdf_dict_get(ctx, orig, PDF_NAME(Shading));
 
 	new_shade = find_rewritten_shade(ctx, p, orig, new_name);
 	if (new_shade)
 	{
 		/* Must copy shading over to new resources dict. */
-		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
-		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		pdf_obj *old_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Shading), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->new_rstack->resources, PDF_NAME(Shading));
 		if (new_shading_dict == NULL)
-			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
 		if (p->chain->op_SC_shade)
@@ -1219,10 +1212,10 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 	if (p->options->shade_rewrite == NULL)
 	{
 		/* Must copy shading over to new resources dict. */
-		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
-		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		pdf_obj *old_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Shading), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->new_rstack->resources, PDF_NAME(Shading));
 		if (new_shading_dict == NULL)
-			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
 		if (p->chain->op_sc_shade)
@@ -1230,7 +1223,7 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 		return;
 	}
 
-	orig = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Pattern)), name);
+	orig = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Pattern), name);
 	orig = pdf_dict_get(ctx, orig, PDF_NAME(Shading));
 
 	new_shade = find_rewritten_shade(ctx, p, orig, new_name);
@@ -1386,10 +1379,10 @@ pdf_color_sh(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *s
 	if (p->options->shade_rewrite == NULL)
 	{
 		/* Must copy shading over to new resources dict. */
-		pdf_obj *old_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
-		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->rstack->new_rdb, PDF_NAME(Shading));
+		pdf_obj *old_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Shading), name);
+		pdf_obj *new_shading_dict = pdf_dict_get(ctx, p->new_rstack->resources, PDF_NAME(Shading));
 		if (new_shading_dict == NULL)
-			pdf_dict_put_drop(ctx, p->rstack->new_rdb, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
+			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
 		if (p->chain->op_sh)
@@ -1397,7 +1390,7 @@ pdf_color_sh(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *s
 		return;
 	}
 
-	orig = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(Shading)), name);
+	orig = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Shading), name);
 
 	new_shade = find_rewritten_shade(ctx, p, orig, new_name);
 	if (new_shade)
@@ -1438,7 +1431,7 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 	fz_image *orig = image;
 	char new_name[MAX_REWRITTEN_NAME];
-	pdf_obj *im_obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(XObject)), name);
+	pdf_obj *im_obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(XObject), name);
 
 	/* Have we done this one before? */
 	if (!p->options->repeated_image_rewrite)
@@ -1644,6 +1637,15 @@ pdf_drop_color_processor(fz_context *ctx, pdf_processor *proc)
 		fz_free(ctx, gs);
 		gs = gs_next;
 	}
+
+	while (p->new_rstack)
+	{
+		pdf_resource_stack *stk = p->new_rstack;
+		p->new_rstack = stk->next;
+		pdf_drop_obj(ctx, stk->resources);
+		fz_free(ctx, stk);
+	}
+
 	drop_rewritten_images(ctx, p);
 	drop_rewritten_shades(ctx, p);
 
@@ -1654,42 +1656,40 @@ static void
 pdf_color_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
 {
 	pdf_color_processor *p = (pdf_color_processor*)proc;
-	resources_stack *stk = fz_malloc_struct(ctx, resources_stack);
+	pdf_resource_stack *stk = fz_malloc_struct(ctx, pdf_resource_stack);
 	pdf_obj *obj;
 
 	p->gstate->unmarked = UNMARKED_STROKE | UNMARKED_FILL;
 
-	stk->next = p->rstack;
-	p->rstack = stk;
+	stk->next = p->new_rstack;
+	p->new_rstack = stk;
 	fz_try(ctx)
 	{
-		stk->old_rdb = pdf_keep_obj(ctx, res);
 		/* At the moment we know that we'll always be flattening XObjects.
 		 * So only the top level 'push' makes a new resource dict. Any
 		 * subsequent one will share the previous levels one. */
 		if (stk->next)
-			stk->new_rdb = pdf_keep_obj(ctx, stk->next->new_rdb);
+			stk->resources = pdf_keep_obj(ctx, stk->next->resources);
 		else
-			stk->new_rdb = pdf_new_dict(ctx, p->doc, 1);
+			stk->resources = pdf_new_dict(ctx, p->doc, 1);
 
 		obj = pdf_dict_get(ctx, res, PDF_NAME(Properties));
 		if (obj)
-			pdf_dict_put(ctx, stk->new_rdb, PDF_NAME(Properties), obj);
+			pdf_dict_put(ctx, stk->resources, PDF_NAME(Properties), obj);
 		obj = pdf_dict_get(ctx, res, PDF_NAME(ExtGState));
 		if (obj)
-			pdf_dict_put(ctx, stk->new_rdb, PDF_NAME(ExtGState), obj);
+			pdf_dict_put(ctx, stk->resources, PDF_NAME(ExtGState), obj);
 		obj = pdf_dict_get(ctx, res, PDF_NAME(Font));
 		if (obj)
-			pdf_dict_put(ctx, stk->new_rdb, PDF_NAME(Font), obj);
+			pdf_dict_put(ctx, stk->resources, PDF_NAME(Font), obj);
 
-		pdf_processor_push_resources(ctx, p->chain, stk->new_rdb);
+		pdf_processor_push_resources(ctx, p->chain, stk->resources);
 	}
 	fz_catch(ctx)
 	{
-		pdf_drop_obj(ctx, stk->old_rdb);
-		pdf_drop_obj(ctx, stk->new_rdb);
+		pdf_drop_obj(ctx, stk->resources);
+		p->new_rstack = stk->next;
 		fz_free(ctx, stk);
-		p->rstack = stk->next;
 		fz_rethrow(ctx);
 	}
 }
@@ -1698,11 +1698,10 @@ static pdf_obj *
 pdf_color_pop_resources(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_color_processor *p = (pdf_color_processor*)proc;
-	resources_stack *stk = p->rstack;
+	pdf_resource_stack *stk = p->new_rstack;
 
-	p->rstack = stk->next;
-	pdf_drop_obj(ctx, stk->old_rdb);
-	pdf_drop_obj(ctx, stk->new_rdb);
+	p->new_rstack = stk->next;
+	pdf_drop_obj(ctx, stk->resources);
 	fz_free(ctx, stk);
 
 	return pdf_processor_pop_resources(ctx, p->chain);

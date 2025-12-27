@@ -189,6 +189,7 @@ static fz_stext_block *split_block_at_line(fz_context *ctx, stext_pos *pos, fz_s
 	}
 	block->next = newblock;
 	newblock->type = FZ_STEXT_BLOCK_TEXT;
+	newblock->id = block->id;
 	newblock->u.t.flags = block->u.t.flags;
 	newblock->u.t.first_line = line;
 	newblock->u.t.last_line = block->u.t.last_line;

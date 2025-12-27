@@ -1075,6 +1075,7 @@ struct fz_document
 	fz_document_as_pdf_fn *as_pdf;
 	int did_layout;
 	int is_reflowable;
+	int id;
 
 	/* Linked list of currently open pages. These are not
 	 * references, but just a linked list of open pages,

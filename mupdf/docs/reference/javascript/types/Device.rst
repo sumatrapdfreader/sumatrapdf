@@ -325,7 +325,7 @@ Groups and transparency
 Tiling
 ^^^^^^
 
-.. method:: Device.prototype.beginTile(area, view, xstep, ystep, ctm, id)
+.. method:: Device.prototype.beginTile(area, view, xstep, ystep, ctm, id, doc_id)
 
 	Draw a tiling pattern. Any drawing commands between `beginTile` and `endTile` are grouped and then repeated across the whole page. Apply a clip mask to restrict the pattern to the desired shape.
 
@@ -335,9 +335,11 @@ Tiling
 	:param number ystep: y step.
 	:param Matrix ctm: The transform to apply.
 	:param number id:
-		The purpose of id is to allow for efficient caching of rendered
-		tiles. If id is 0, then no caching is performed. If it is
-		non-zero, then it assumed to uniquely identify this tile.
+	:param number doc_id:
+		The purpose of id/doc_id is to allow for efficient caching of
+		rendered tiles. If id is 0, then no caching is performed. If
+		it is non-zero, then id/doc_id are assumed to uniquely
+		identify this tile.
 
 	.. code-block::
 

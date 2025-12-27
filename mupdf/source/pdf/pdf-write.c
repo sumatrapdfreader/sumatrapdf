@@ -267,6 +267,10 @@ static int removeduplicateobjs(fz_context *ctx, pdf_document *doc, pdf_write_sta
 					continue;
 			}
 
+			/* Never common up pages! */
+			if (pdf_name_eq(ctx, pdf_dict_get(ctx, a, PDF_NAME(Type)), PDF_NAME(Page)))
+				continue;
+
 			/* Keep the lowest numbered object */
 			newnum = fz_mini(num, other);
 			opts->renumber_map[num] = newnum;
@@ -411,7 +415,11 @@ static void renumberobjs(fz_context *ctx, pdf_document *doc, pdf_write_state *op
 
 			if (pdf_is_indirect(ctx, obj))
 			{
-				obj = pdf_new_indirect(ctx, doc, to, 0);
+				int o = pdf_to_num(ctx, obj);
+				if (o >= xref_len || o <= 0 || opts->renumber_map[o] == 0)
+					obj = PDF_NULL;
+				else
+					obj = pdf_new_indirect(ctx, doc, opts->renumber_map[o], 0);
 				fz_try(ctx)
 					pdf_update_object(ctx, doc, num, obj);
 				fz_always(ctx)
@@ -2346,6 +2354,22 @@ prepass(fz_context *ctx, pdf_document *doc)
 }
 
 static void
+pdf_ensure_pages_are_pages(fz_context *ctx, pdf_document *doc)
+{
+	int i;
+
+	if (!doc->fwd_page_map)
+		return;
+
+	for (i = 0; i < doc->map_page_count; i++)
+	{
+		pdf_obj *type = pdf_dict_get(ctx, doc->fwd_page_map[i], PDF_NAME(Type));
+		if (type == NULL)
+			pdf_dict_put(ctx, doc->fwd_page_map[i], PDF_NAME(Type), PDF_NAME(Page));
+	}
+}
+
+static void
 do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, const pdf_write_options *in_opts)
 {
 	int lastfree;
@@ -2448,6 +2472,11 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 
 		xref_len = pdf_xref_len(ctx, doc); /* May have changed due to repair */
 		expand_lists(ctx, opts, xref_len);
+
+		if (opts->do_garbage >= 1)
+		{
+			pdf_ensure_pages_are_pages(ctx, doc);
+		}
 
 		do
 		{
@@ -2585,6 +2614,9 @@ do_pdf_save_document(fz_context *ctx, pdf_document *doc, pdf_write_state *opts, 
 		{
 			complete_signatures(ctx, doc, opts);
 		}
+
+		pdf_sync_open_pages(ctx, doc);
+
 		pdf_end_operation(ctx, doc);
 	}
 	fz_always(ctx)

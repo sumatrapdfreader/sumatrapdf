@@ -495,12 +495,12 @@ fz_test_end_group(fz_context *ctx, fz_device *dev_)
 }
 
 static int
-fz_test_begin_tile(fz_context *ctx, fz_device *dev_, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id)
+fz_test_begin_tile(fz_context *ctx, fz_device *dev_, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
 {
 	fz_test_device *dev = (fz_test_device*)dev_;
 
 	if (dev->passthrough)
-		return fz_begin_tile_id(ctx, dev->passthrough, area, view, xstep, ystep, ctm, id);
+		return fz_begin_tile_tid(ctx, dev->passthrough, area, view, xstep, ystep, ctm, id, doc_id);
 	else
 		return 0;
 }

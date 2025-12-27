@@ -129,7 +129,7 @@ static void do_clear_signature(void)
 
 static int image_file_filter(const char *fn)
 {
-	return !!strstr(fn, ".jpg") || !!strstr(fn, ".jpeg") || !!strstr(fn, ".png");
+	return !!fz_strstrcase(fn, ".jpg") || !!fz_strstrcase(fn, ".jpeg") || !!fz_strstrcase(fn, ".png");
 }
 
 static void signature_appearance_dialog(void);
@@ -383,7 +383,7 @@ static void cert_password_dialog(void)
 
 static int cert_file_filter(const char *fn)
 {
-	return !!strstr(fn, ".pfx");
+	return !!fz_strstrcase(fn, ".pfx");
 }
 
 static void cert_file_dialog(void)

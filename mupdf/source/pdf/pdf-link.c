@@ -213,7 +213,6 @@ pdf_parse_link_dest_to_file_with_path(fz_context *ctx, pdf_document *doc, const 
 	}
 }
 
-#if 0
 /* Look at an FS object, and find a name. Find any embedded
  * file stream object that corresponds to that and return it.
  * Optionally return the name.
@@ -229,65 +228,62 @@ get_file_stream_and_name(fz_context *ctx, pdf_obj *fs, pdf_obj **namep)
 	pdf_obj *ef = pdf_dict_get(ctx, fs, PDF_NAME(EF));
 	pdf_obj *name = pdf_dict_get(ctx, fs, PDF_NAME(UF));
 	pdf_obj *file = pdf_dict_get(ctx, ef, PDF_NAME(UF));
+	pdf_obj *any_name = name;
 
 	if (!name && !file)
 	{
 		name = pdf_dict_get(ctx, fs, PDF_NAME(F));
+		if (any_name == NULL)
+			any_name = name;
 		file = pdf_dict_get(ctx, ef, PDF_NAME(F));
 	}
 	if (!name && !file)
 	{
 		name = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
+		if (any_name == NULL)
+			any_name = name;
 		file = pdf_dict_get(ctx, ef, PDF_NAME(Unix));
 	}
 	if (!name && !file)
 	{
 		name = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
+		if (any_name == NULL)
+			any_name = name;
 		file = pdf_dict_get(ctx, ef, PDF_NAME(DOS));
 	}
 	if (!name && !file)
 	{
 		name = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
+		if (any_name == NULL)
+			any_name = name;
 		file = pdf_dict_get(ctx, ef, PDF_NAME(Mac));
 	}
-	if (namep)
-		*namep = name;
 
-	return name ? file : NULL;
-}
-#else
-/* SumatraPDF: https://github.com/sumatrapdfreader/sumatrapdf/issues/4563 */
-static pdf_obj *
-get_file_stream_and_name(fz_context *ctx, pdf_obj *fs, pdf_obj **namep)
+	/* bug708587: Some bad files have the name under one
+	 * entry (e.g. UF), and the entry in EF under another
+	 * (e.g. F). Strictly speaking this is against the
+	 * spec, but we'd rather find the embedded file than
+	 * not. */
+	if (any_name && !file)
 {
-	pdf_obj *ef = pdf_dict_get(ctx, fs, PDF_NAME(EF));
-	pdf_obj *name = pdf_dict_get(ctx, fs, PDF_NAME(UF));
-	pdf_obj *file = pdf_dict_get(ctx, ef, PDF_NAME(UF));
-
-	if (!name)
-		name = pdf_dict_get(ctx, fs, PDF_NAME(F));
-	if (!name)
-		name = pdf_dict_get(ctx, fs, PDF_NAME(Unix));
-	if (!name)
-		name = pdf_dict_get(ctx, fs, PDF_NAME(DOS));
-	if (!name)
-		name = pdf_dict_get(ctx, fs, PDF_NAME(Mac));
-
-	if (!file)
+		name = any_name;
+		file = pdf_dict_get(ctx, ef, PDF_NAME(UF));
+		if (file == NULL)
 		file = pdf_dict_get(ctx, ef, PDF_NAME(F));
-	if (!file)
+		if (file == NULL)
 		file = pdf_dict_get(ctx, ef, PDF_NAME(Unix));
-	if (!file)
+		if (file == NULL)
 		file = pdf_dict_get(ctx, ef, PDF_NAME(DOS));
-	if (!file)
+		if (file == NULL)
 		file = pdf_dict_get(ctx, ef, PDF_NAME(Mac));
+	}
 
 	if (namep)
 		*namep = name;
 
 	return name ? file : NULL;
 }
-#endif
+
 static char *
 convert_file_spec_to_URI(fz_context *ctx, pdf_document *doc, pdf_obj *file_spec, pdf_obj *dest, int is_remote)
 {

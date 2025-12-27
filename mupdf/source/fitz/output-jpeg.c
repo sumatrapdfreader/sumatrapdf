@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -261,12 +261,35 @@ jpeg_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, 
 {
 	fz_buffer *buf = NULL;
 	fz_output *out = NULL;
+	fz_pixmap *pix2 = NULL;
 
 	fz_var(buf);
 	fz_var(out);
+	fz_var(pix2);
+
+	if (pix->w == 0 || pix->h == 0)
+	{
+		if (drop)
+			fz_drop_pixmap(ctx, pix);
+		return NULL;
+	}
 
 	fz_try(ctx)
 	{
+		if (pix->colorspace && pix->colorspace != fz_device_gray(ctx) && pix->colorspace != fz_device_rgb(ctx) && pix->colorspace != fz_device_cmyk(ctx))
+		{
+			pix2 = fz_convert_pixmap(ctx, pix, fz_device_rgb(ctx), NULL, NULL, color_params, 1);
+			if (drop)
+			{
+				fz_drop_pixmap(ctx, pix);
+				pix = pix2;
+				pix2 = NULL;
+			}
+			else
+			{
+				pix = pix2;
+			}
+		}
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
 		fz_write_pixmap_as_jpeg(ctx, out, pix, quality, invert_cmyk);
@@ -276,6 +299,7 @@ jpeg_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, 
 	{
 		if (drop)
 			fz_drop_pixmap(ctx, pix);
+		fz_drop_pixmap(ctx, pix2);
 		fz_drop_output(ctx, out);
 	}
 	fz_catch(ctx)
@@ -290,11 +314,11 @@ fz_buffer *
 fz_new_buffer_from_image_as_jpeg(fz_context *ctx, fz_image *image, fz_color_params color_params, int quality, int invert_cmyk)
 {
 	fz_pixmap *pix = fz_get_pixmap_from_image(ctx, image, NULL, NULL, NULL, NULL);
-	return jpeg_from_pixmap(ctx, pix, color_params, quality, 1, invert_cmyk);
+	return jpeg_from_pixmap(ctx, pix, color_params, quality, invert_cmyk, 1);
 }
 
 fz_buffer *
 fz_new_buffer_from_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pix, fz_color_params color_params, int quality, int invert_cmyk)
 {
-	return jpeg_from_pixmap(ctx, pix, color_params, quality, 0, invert_cmyk);
+	return jpeg_from_pixmap(ctx, pix, color_params, quality, invert_cmyk, 0);
 }

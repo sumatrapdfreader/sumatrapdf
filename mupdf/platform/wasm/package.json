@@ -1,6 +1,6 @@
 {
 	"name": "mupdf",
-	"version": "1.26.2",
+	"version": "1.26.4",
 	"description": "MuPDF.js",
 	"author": "Artifex Software, Inc.",
 	"license": "AGPL-3.0-or-later",

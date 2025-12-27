@@ -329,7 +329,7 @@ fz_java_device_end_group(fz_context *ctx, fz_device *dev)
 }
 
 static int
-fz_java_device_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id)
+fz_java_device_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
 {
 	fz_java_device *jdev = (fz_java_device *)dev;
 	JNIEnv *env = jdev->env;
@@ -338,7 +338,7 @@ fz_java_device_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect
 	jobject jctm = to_Matrix(ctx, env, ctm);
 	int res;
 
-	res = (*env)->CallIntMethod(env, jdev->self, mid_Device_beginTile, jarea, jview, xstep, ystep, jctm, (jint)id);
+	res = (*env)->CallIntMethod(env, jdev->self, mid_Device_beginTile, jarea, jview, xstep, ystep, jctm, (jint)id, (jint)doc_id);
 	if ((*env)->ExceptionCheck(env))
 		fz_throw_java(ctx, env);
 

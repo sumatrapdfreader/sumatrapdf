@@ -65,4 +65,38 @@ size_t fz_pool_size(fz_context *ctx, fz_pool *pool);
 */
 void fz_drop_pool(fz_context *ctx, fz_pool *pool);
 
+/**
+	Routines to handle a 'variable length array' within the pool.
+
+	Appending to the array, and looking up items within the array
+	are O(log n) operations.
+*/
+typedef struct fz_pool_array fz_pool_array;
+
+/**
+	Create a new pool array for a given type, with a given initial size.
+*/
+#define fz_new_pool_array(CTX, POOL, TYPE, INIT) \
+	fz_new_pool_array_imp(CTX, POOL, sizeof(TYPE), INIT);
+
+fz_pool_array *fz_new_pool_array_imp(fz_context *ctx, fz_pool *pool, size_t size, size_t initial);
+
+/**
+	Append an element to the end of the array.
+
+	Returns a pointer to the new element (initially all 0's), and
+	(optionally) the index of that element.
+*/
+void *fz_pool_array_append(fz_context *ctx, fz_pool_array *arr, size_t *idx);
+
+/**
+	Lookup an element in the array.
+*/
+void *fz_pool_array_lookup(fz_context *ctx, fz_pool_array *arr, size_t idx);
+
+/**
+	Get the length of the array.
+*/
+size_t fz_pool_array_len(fz_context *ctx, fz_pool_array *arr);
+
 #endif

@@ -1,7 +1,7 @@
 mutool bake
 ==========================================
 
-The ``bake`` command changes the colorspaces used in a PDF file.
+The ``bake`` command bakes PDF forms into static content.
 
 .. code-block:: bash
 

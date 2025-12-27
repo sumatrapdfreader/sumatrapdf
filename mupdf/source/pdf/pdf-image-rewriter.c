@@ -428,18 +428,6 @@ resample(fz_context *ctx, fz_pixmap *src, int method, float from_dpi, float to_d
 	return fz_keep_pixmap(ctx, src);
 }
 
-static int
-fmt_is_lossy(int fmt)
-{
-	if (fmt == FZ_IMAGE_JBIG2 ||
-		fmt == FZ_IMAGE_JPEG ||
-		fmt == FZ_IMAGE_JPX ||
-		fmt == FZ_IMAGE_JXR)
-		return 1;
-
-	return 0;
-}
-
 static fz_compressed_buffer *
 fz_recompress_image_as_jpeg(fz_context *ctx, fz_pixmap *pix, const char *quality, fz_colorspace **cs)
 {
@@ -717,7 +705,7 @@ do_image_rewrite(fz_context *ctx, void *opaque, fz_image **image, fz_matrix ctm,
 	fz_pixmap *newpix = NULL;
 	image_type type;
 	int fmt = fz_compressed_image_type(ctx, *image);
-	int lossy = fmt_is_lossy(fmt);
+	int lossy = fz_is_lossy_image(ctx, *image);
 	size_t orig_len = pdf_dict_get_int64(ctx, im_obj, PDF_NAME(Length));
 
 	/* FIXME: We don't recompress im_obj->mask! */

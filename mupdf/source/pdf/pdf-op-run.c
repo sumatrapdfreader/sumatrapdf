@@ -96,12 +96,6 @@ struct pdf_gstate
 	int luminosity;
 };
 
-typedef struct resources_stack
-{
-	struct resources_stack *next;
-	pdf_obj *resources;
-} resources_stack;
-
 typedef struct marked_content_stack
 {
 	struct marked_content_stack *next;
@@ -124,8 +118,6 @@ struct pdf_run_processor
 	fz_cookie *cookie;
 
 	fz_default_colorspaces *default_cs;
-
-	resources_stack *rstack;
 
 	/* path object state */
 	fz_path *path;
@@ -669,7 +661,7 @@ pdf_show_pattern(fz_context *ctx, pdf_run_processor *pr, pdf_pattern *pat, int p
 	if (0)
 #endif
 	{
-		int cached = fz_begin_tile_id(ctx, pr->dev, local_area, pat->bbox, pat->xstep, pat->ystep, ptm, id);
+		int cached = fz_begin_tile_tid(ctx, pr->dev, local_area, pat->bbox, pat->xstep, pat->ystep, ptm, id, pat->document->super.id);
 		if (!cached)
 		{
 			gstate->ctm = ptm;
@@ -2505,7 +2497,7 @@ static void pdf_run_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smas
 		gstate->softmask_ctm = gstate->ctm;
 		gstate->softmask = pdf_keep_obj(ctx, smask);
 		gstate->softmask_cs = fz_keep_colorspace(ctx, smask_cs);
-		gstate->softmask_resources = pdf_keep_obj(ctx, pr->rstack->resources);
+		gstate->softmask_resources = pdf_keep_obj(ctx, proc->rstack->resources);
 		pdf_drop_obj(ctx, gstate->softmask_tr);
 		gstate->softmask_tr = NULL;
 		if (tr)
@@ -2989,8 +2981,7 @@ static void pdf_run_Do_image(fz_context *ctx, pdf_processor *proc, const char *n
 
 static void pdf_run_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_obj *xobj)
 {
-	pdf_run_processor *pr = (pdf_run_processor *)proc;
-	pdf_run_xobject(ctx, (pdf_run_processor*)proc, xobj, pr->rstack->resources, fz_identity, 0);
+	pdf_run_xobject(ctx, (pdf_run_processor*)proc, xobj, proc->rstack->resources, fz_identity, 0);
 }
 
 /* marked content */
@@ -3091,14 +3082,6 @@ pdf_drop_run_processor(fz_context *ctx, pdf_processor *proc)
 
 	fz_free(ctx, pr->gstate);
 
-	while (pr->rstack)
-	{
-		resources_stack *stk = pr->rstack;
-		pr->rstack = stk->next;
-		pdf_drop_obj(ctx, stk->resources);
-		fz_free(ctx, stk);
-	}
-
 	while (pr->begin_layer)
 	{
 		begin_layer_stack *stk = pr->begin_layer;
@@ -3114,33 +3097,6 @@ pdf_drop_run_processor(fz_context *ctx, pdf_processor *proc)
 
 	pdf_drop_document(ctx, pr->doc);
 	pdf_drop_obj(ctx, pr->role_map);
-}
-
-static void
-pdf_run_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *resources)
-{
-	pdf_run_processor *pr = (pdf_run_processor *)proc;
-	resources_stack *stk = fz_malloc_struct(ctx, resources_stack);
-
-	stk->next = pr->rstack;
-	pr->rstack = stk;
-	stk->resources = pdf_keep_obj(ctx, resources);
-}
-
-static pdf_obj *
-pdf_run_pop_resources(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_run_processor *pr = (pdf_run_processor *)proc;
-	resources_stack *stk = pr->rstack;
-
-	if (stk)
-	{
-		pr->rstack = stk->next;
-		pdf_drop_obj(ctx, stk->resources);
-		fz_free(ctx, stk);
-	}
-
-	return NULL;
 }
 
 /*
@@ -3167,9 +3123,6 @@ pdf_new_run_processor(fz_context *ctx, pdf_document *doc, fz_device *dev, fz_mat
 
 		proc->super.close_processor = pdf_close_run_processor;
 		proc->super.drop_processor = pdf_drop_run_processor;
-
-		proc->super.push_resources = pdf_run_push_resources;
-		proc->super.pop_resources = pdf_run_pop_resources;
 
 		/* general graphics state */
 		proc->super.op_w = pdf_run_w;

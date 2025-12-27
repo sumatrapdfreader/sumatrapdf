@@ -30,35 +30,24 @@ typedef struct boxer_s boxer_t;
 typedef struct {
 	int len;
 	int max;
+	double fudge;
 	fz_rect list[FZ_FLEXIBLE_ARRAY];
 } rectlist_t;
 
 struct boxer_s {
 	fz_rect mediabox;
 	rectlist_t *list;
+	int tight;
 };
 
-static int fz_rect_contains_rect(fz_rect a, fz_rect b)
-{
-	if (a.x0 > b.x0)
-		return 0;
-	if (a.y0 > b.y0)
-		return 0;
-	if (a.x1 < b.x1)
-		return 0;
-	if (a.y1 < b.y1)
-		return 0;
-
-	return 1;
-}
-
 static rectlist_t *
-rectlist_create(fz_context *ctx, int max)
+rectlist_create(fz_context *ctx, int max, double fudge)
 {
 	rectlist_t *list = fz_malloc_flexible(ctx, rectlist_t, list, max);
 
 	list->len = 0;
 	list->max = max;
+	list->fudge = fudge;
 
 	return list;
 }
@@ -70,13 +59,15 @@ static void
 rectlist_append(rectlist_t *list, fz_rect *box)
 {
 	int i;
+	/* We allow ourselves a fudge factor when checking for inclusion.
+	 * This is either 4 points, or 0 points, depending on whether
+	 * we are running in 'tight' mode or not. */
+	double r_fudge = list->fudge;
 
 	for (i = 0; i < list->len; i++)
 	{
 		fz_rect *r = &list->list[i];
 		fz_rect smaller, larger;
-		/* We allow ourselves a fudge factor of 4 points when checking for inclusion. */
-		double r_fudge = 4;
 
 		smaller.x0 = r->x0 + r_fudge;
 		larger. x0 = r->x0 - r_fudge;
@@ -87,9 +78,9 @@ rectlist_append(rectlist_t *list, fz_rect *box)
 		smaller.y1 = r->y1 - r_fudge;
 		larger. y1 = r->y1 + r_fudge;
 
-		if (fz_rect_contains_rect(larger, *box))
+		if (fz_contains_rect(larger, *box))
 			return; /* box is enclosed! Nothing to do. */
-		if (fz_rect_contains_rect(*box, smaller))
+		if (fz_contains_rect(*box, smaller))
 		{
 			/* box encloses r. Ditch r. */
 			/* Shorten the list */
@@ -109,7 +100,7 @@ rectlist_append(rectlist_t *list, fz_rect *box)
 }
 
 static boxer_t *
-boxer_create_length(fz_context *ctx, fz_rect *mediabox, int len)
+boxer_create_length(fz_context *ctx, fz_rect *mediabox, int len, int tight)
 {
 	boxer_t *boxer = fz_malloc_struct(ctx, boxer_t);
 
@@ -117,16 +108,17 @@ boxer_create_length(fz_context *ctx, fz_rect *mediabox, int len)
 		return NULL;
 
 	memcpy(&boxer->mediabox, mediabox, sizeof(*mediabox));
-	boxer->list = rectlist_create(ctx, len);
+	boxer->list = rectlist_create(ctx, len, tight ? 0 : 4);
+	boxer->tight = tight;
 
 	return boxer;
 }
 
 /* Create a boxer structure for a page of size mediabox. */
 static boxer_t *
-boxer_create(fz_context *ctx, fz_rect *mediabox)
+boxer_create(fz_context *ctx, fz_rect *mediabox, int tight)
 {
-	boxer_t *boxer = boxer_create_length(ctx, mediabox, 1);
+	boxer_t *boxer = boxer_create_length(ctx, mediabox, 1, tight);
 
 	if (boxer == NULL)
 		return NULL;
@@ -164,7 +156,7 @@ static void boxer_feed(fz_context *ctx, boxer_t *boxer, fz_rect *bbox)
 	fz_rect box;
 	/* When we feed a box into a the boxer, we can never make
 	* the list more than 4 times as long. */
-	rectlist_t *newlist = rectlist_create(ctx, boxer->list->len * 4);
+	rectlist_t *newlist = rectlist_create(ctx, boxer->list->len * 4, boxer->list->fudge);
 
 #ifdef DEBUG_WRITE_AS_PS
 	printf("0 0 1 setrgbcolor\n");
@@ -292,7 +284,7 @@ static fz_rect boxer_margins(boxer_t *boxer)
 /* Create a new boxer from a subset of an old one. */
 static boxer_t *boxer_subset(fz_context *ctx, boxer_t *boxer, fz_rect rect)
 {
-	boxer_t *new_boxer = boxer_create_length(ctx, &rect, boxer->list->len);
+	boxer_t *new_boxer = boxer_create_length(ctx, &rect, boxer->list->len, boxer->tight);
 	int i;
 
 	if (new_boxer == NULL)
@@ -310,15 +302,15 @@ static boxer_t *boxer_subset(fz_context *ctx, boxer_t *boxer, fz_rect rect)
 	return new_boxer;
 }
 
-static int analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, fz_stext_block **last_block, boxer_t *big_boxer, int depth);
+static int analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, boxer_t *big_boxer, int depth);
 
 static void
-analyse_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, fz_stext_block **last_block, boxer_t *boxer, fz_rect r, int depth)
+analyse_subset(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, boxer_t *boxer, fz_rect r, int depth)
 {
 	boxer_t *sub_box = boxer_subset(ctx, boxer, r);
 
 	fz_try(ctx)
-		(void)analyse_sub(ctx, page, first_block, last_block, sub_box, depth);
+		(void)analyse_sub(ctx, page, parent, sub_box, depth);
 	fz_always(ctx)
 		boxer_destroy(ctx, sub_box);
 	fz_catch(ctx)
@@ -329,7 +321,7 @@ analyse_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_bloc
  * Returns 0 if no suitable subdivision point found.
  * Returns 1 if a subdivision point is found.*/
 static int
-boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, fz_stext_block **last_block, boxer_t *boxer, int depth)
+boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, boxer_t *boxer, int depth)
 {
 	rectlist_t *list = boxer->list;
 	double max_h = 0, max_v = 0;
@@ -404,7 +396,7 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_blo
 			r.y0 = top;
 			r.y1 = found_top;
 
-			analyse_subset(ctx, page, first_block, last_block, boxer, r, depth);
+			analyse_subset(ctx, page, parent, boxer, r, depth);
 
 			/* Now move top down for the next go. */
 			top = list->list[found].y1;
@@ -413,7 +405,7 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_blo
 		/* One final region, from top to bottom */
 		r = boxer->mediabox;
 		r.y0 = top;
-		analyse_subset(ctx, page, first_block, last_block, boxer, r, depth);
+		analyse_subset(ctx, page, parent, boxer, r, depth);
 
 		return 1;
 	}
@@ -461,7 +453,7 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_blo
 			r = boxer->mediabox;
 			r.x0 = left;
 			r.x1 = found_left;
-			analyse_subset(ctx, page, first_block, last_block, boxer, r, depth);
+			analyse_subset(ctx, page, parent, boxer, r, depth);
 
 			/* Now move left right for the next go. */
 			left = list->list[found].x1;
@@ -470,7 +462,7 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_blo
 		/* One final region, from left to right */
 		r = boxer->mediabox;
 		r.x0 = left;
-		analyse_subset(ctx, page, first_block, last_block, boxer, r, depth);
+		analyse_subset(ctx, page, parent, boxer, r, depth);
 
 		return 1;
 	}
@@ -478,32 +470,12 @@ boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_blo
 	return 0;
 }
 
-static void
-new_stext_struct(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, fz_structure standard, const char *raw)
-{
-	fz_stext_struct *str;
-	size_t z;
-
-	if (raw == NULL)
-		raw = "";
-	z = strlen(raw);
-
-	str = fz_pool_alloc(ctx, page->pool, offsetof(fz_stext_struct, raw) + z + 1);
-	str->first_block = NULL;
-	str->last_block = NULL;
-	str->standard = standard;
-	str->parent = page->last_struct;
-	str->up = block;
-	memcpy(str->raw, raw, z+1);
-
-	block->u.s.down = str;
-}
-
 #ifdef DEBUG_STRUCT
 static void
 do_dump_stext(fz_stext_block *block, int depth)
 {
 	int d;
+	int idx = -1;
 
 	while (block)
 	{
@@ -521,7 +493,9 @@ do_dump_stext(fz_stext_block *block, int depth)
 				printf("VECTOR %p\n", block);
 				break;
 			case FZ_STEXT_BLOCK_STRUCT:
-				printf("STRUCT %p\n", block);
+				printf("STRUCT %p (idx=%d)\n", block, block->u.s.index);
+				assert(block->u.s.index > idx);
+				idx = block->u.s.index;
 				do_dump_stext(block->u.s.down->first_block, depth+1);
 				break;
 		}
@@ -551,25 +525,26 @@ recalc_bbox(fz_stext_block *block)
 }
 
 static fz_stext_struct *
-page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, fz_stext_block **last_block, fz_rect mediabox)
+page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, fz_rect mediabox)
 {
 	fz_stext_block *block, *next_block;
-	fz_stext_block *target = NULL;
-	fz_stext_block *last = NULL;
+	fz_stext_block *target = NULL; /* The first block in our target list */
+	fz_stext_block *last = NULL; /* The last block in our target list */
+	fz_stext_struct *target_parent = NULL;
+	fz_stext_block *after = NULL; /* The block we want to insert after (NULL=start of list) */
 	fz_stext_block *newblock;
 	int idx = 0;
-
+	int idx2;
 #ifdef DEBUG_STRUCT
-	dump_stext("BEFORE", *first_block);
+	dump_stext("BEFORE", parent ? parent->first_block : page->first_block);
 #endif
 
-	for (block = *first_block; block != NULL; block = next_block)
+	block = parent ? parent->first_block : page->first_block;
+	while (block != NULL)
 	{
 		fz_rect bbox;
 
 		next_block = block->next;
-		if (block->type != FZ_STEXT_BLOCK_TEXT && block->type != FZ_STEXT_BLOCK_VECTOR)
-			continue;
 
 		bbox = block->bbox;
 
@@ -579,17 +554,23 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 			/* Unlink block from the current list. */
 			if (block->prev)
 				block->prev->next = next_block;
+			else if (parent)
+				parent->first_block = next_block;
 			else
-				*first_block = next_block;
+				page->first_block = next_block;
 			if (next_block)
 				next_block->prev = block->prev;
+			else if (parent)
+				parent->last_block = block->prev;
 			else
-				*last_block = block->prev;
+				page->last_block = block->prev;
 
 			/* Add block onto our target list */
 			if (target == NULL)
 			{
 				target = block;
+				target_parent = parent;
+				after = block->prev;
 				block->prev = NULL;
 			}
 			else
@@ -600,7 +581,15 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 			last = block;
 			block->next = NULL;
 		}
-		else if (block->type == FZ_STEXT_BLOCK_TEXT && !fz_is_empty_rect(fz_intersect_rect(bbox, mediabox)))
+		else if (fz_is_empty_rect(fz_intersect_rect(bbox, mediabox)))
+		{
+		}
+		else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
+		{
+			parent = block->u.s.down;
+			next_block = parent->first_block;
+		}
+		else if (block->type == FZ_STEXT_BLOCK_TEXT)
 		{
 			/* Need to look at the parts. */
 			fz_stext_line *line, *next_line;
@@ -620,6 +609,11 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 						if (target == NULL)
 						{
 							target = newblock;
+							target_parent = parent;
+							if (line == block->u.t.first_line)
+								after = block->prev;
+							else
+								after = block;
 						}
 						else
 						{
@@ -627,6 +621,7 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 							newblock->prev = last;
 						}
 						last = newblock;
+						newblock->id = block->id;
 					}
 
 					/* Unlink line from the current list. */
@@ -660,45 +655,94 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 				recalc_bbox(newblock);
 			}
 		}
+
+		/* Step onwards (or upwards) */
+		block = next_block;
+		while (block == NULL)
+		{
+			if (parent == NULL)
+				break;
+			block = parent->up->next;
+			parent = parent->parent;
+		}
 	}
 
 	/* If no content to add, bale! */
 	if (target == NULL)
 		return NULL;
 
-	/* We want to insert a structure node that contains target as the last structure
-	 * node on this blocklist. Find the first block that's not a structure block. */
-	for (block = *first_block; block != NULL; block = block->next)
+	/* We want to insert a structure node that contains target after 'after'. */
+	block = target_parent ? target_parent->first_block : page->first_block;
+	if (after != NULL)
+	{
+		while (1)
+		{
+			if (block->type == FZ_STEXT_BLOCK_STRUCT)
+				idx = block->u.s.index+1;
+			if (block == after)
+				break;
+			block = block->next;
+		}
+		block = block->next;
+	}
+	/* So we want to insert a structure node with index 'idx' after 'after' */
+	/* Ensure that the following structure nodes have sane index values */
+	idx2 = idx+1;
+	for (; block != NULL; block = block->next)
 	{
 		if (block->type != FZ_STEXT_BLOCK_STRUCT)
+			continue;
+		if (block->u.s.index >= idx2)
 			break;
-		idx++;
+		block->u.s.index = idx2;
+		idx2++;
 	}
 
-	/* So we want to insert just before block. */
+	/* Convert from 'after' to 'before'. */
+	if (after)
+		block = after->next;
+	else if (target_parent)
+		block = target_parent->first_block;
+	else
+		block = page->first_block;
+
+	/* So we want to insert just before block, with index 'idx'. */
 
 	/* We are going to need to create a new block. Create a complete unlinked one here. */
-	newblock = fz_pool_alloc(ctx, page->pool, sizeof *newblock);
-	newblock->bbox = fz_empty_rect;
-	newblock->prev = block ? block->prev : *last_block;
+	newblock = fz_new_stext_struct(ctx, page, FZ_STRUCTURE_DIV, "Split", idx);
+	if (block)
+		newblock->prev = block->prev;
+	else if (target_parent)
+		newblock->prev = target_parent->last_block;
+	else
+		newblock->prev = page->last_block;
 	newblock->next = block;
-	newblock->type = FZ_STEXT_BLOCK_STRUCT;
-	newblock->u.s.index = idx;
-	newblock->u.s.down = NULL;
-	/* If this throws, we leak newblock but it's within the pool, so it doesn't matter. */
-	/* And create a new struct and have newblock point to it. */
-	new_stext_struct(ctx, page, newblock, FZ_STRUCTURE_DIV, "Split");
+	newblock->id = target->id;
 
 	/* Now insert newblock just before block */
 	/* If block was first, now we are. */
-	if (*first_block == block)
-		*first_block = newblock;
+	if (target_parent)
+	{
+		if (target_parent->first_block == block)
+			target_parent->first_block = newblock;
+	}
+	else if (page->first_block == block)
+		page->first_block = newblock;
 	if (block == NULL)
 	{
 		/* Inserting at the end! */
-		if (*last_block)
-			(*last_block)->next = newblock;
-		*last_block = newblock;
+		if (target_parent)
+		{
+			if (target_parent->last_block)
+				target_parent->last_block->next = newblock;
+			target_parent->last_block = newblock;
+		}
+		else
+		{
+			if (page->last_block)
+				page->last_block->next = newblock;
+			page->last_block = newblock;
+		}
 	}
 	else
 	{
@@ -708,6 +752,7 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 	}
 
 	newblock->u.s.down->first_block = target;
+	newblock->u.s.down->last_block = last;
 	target->prev = NULL;
 
 	for (block = target; block->next != NULL; block = block->next)
@@ -716,7 +761,7 @@ page_subset(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 	newblock->u.s.down->last_block = block;
 
 #ifdef DEBUG_STRUCT
-	dump_stext("AFTER", *first_block);
+	dump_stext("AFTER", parent ? parent->first_block : page->first_block);
 #endif
 
 	return newblock->u.s.down;
@@ -727,12 +772,10 @@ enum {
 };
 
 static int
-analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, fz_stext_block **last_block, boxer_t *big_boxer, int depth)
+analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, boxer_t *big_boxer, int depth)
 {
 	fz_rect margins;
 	boxer_t *boxer;
-	boxer_t *boxer1 = NULL;
-	boxer_t *boxer2 = NULL;
 	fz_stext_struct *div;
 	int ret = 0;
 
@@ -746,12 +789,9 @@ analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 	/* Now subset the rectangles just to include those that are in our bbox. */
 	boxer = boxer_subset(ctx, big_boxer, margins);
 
-	fz_var(boxer1);
-	fz_var(boxer2);
-
 	fz_try(ctx)
 	{
-		div = page_subset(ctx, page, first_block, last_block, boxer->mediabox);
+		div = page_subset(ctx, page, parent, boxer->mediabox);
 		/* If nothing subsetted (no textual content in that region), give up. */
 		if (div == NULL)
 			break;
@@ -761,7 +801,7 @@ analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 		if (depth < MAX_ANALYSIS_DEPTH)
 		{
 			/* Can we subdivide that region any more? */
-			if (boxer_subdivide(ctx, page, &div->first_block, &div->last_block, boxer, depth+1))
+			if (boxer_subdivide(ctx, page, div, boxer, depth+1))
 				break;
 		}
 
@@ -799,8 +839,6 @@ analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_block **first_block, 
 	}
 	fz_always(ctx)
 	{
-		boxer_destroy(ctx, boxer1);
-		boxer_destroy(ctx, boxer2);
 		boxer_destroy(ctx, boxer);
 	}
 	fz_catch(ctx)
@@ -834,7 +872,7 @@ feed_line(fz_context *ctx, boxer_t *boxer, fz_stext_line *line)
 		do
 		{
 			fz_rect bbox = fz_rect_from_quad(ch->quad);
-			float margin = ch->size/2;
+			float margin = boxer->tight ? 0 : ch->size/2;
 			bbox.x0 -= margin;
 			bbox.y0 -= margin;
 			bbox.x1 += margin;
@@ -894,28 +932,10 @@ fz_collate_small_vector_run(fz_stext_block **blockp)
 	return r;
 }
 
-int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page)
-{
-	boxer_t *boxer;
-	fz_stext_block *block;
-	int ret = 0;
-
-	/* If we have structure already, give up. We can't hope to beat
-	 * proper structure! */
-	for (block = page->first_block; block != NULL; block = block->next)
-		if (block->type == FZ_STEXT_BLOCK_STRUCT)
-			return 0;
-
-#ifdef DEBUG_WRITE_AS_PS
-	printf("1 -1 scale 0 -%g translate\n", page->mediabox.y1-page->mediabox.y0);
-#endif
-
-	boxer = boxer_create(ctx, &page->mediabox);
-
-	fz_try(ctx)
+static void
+recurse_and_feed(fz_context *ctx, boxer_t *boxer, fz_stext_block *block)
 	{
-		/* Just walking the blocks is safe as we're assuming no structure here. */
-		for (block = page->first_block; block != NULL; block = block->next)
+	for (; block != NULL; block = block->next)
 		{
 			fz_stext_line *line;
 			switch (block->type)
@@ -937,11 +957,32 @@ int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page)
 				r.x1 += VECTOR_MARGIN;
 				r.y1 += VECTOR_MARGIN;
 				boxer_feed(ctx, boxer, &r);
+			break;
+		}
+		case FZ_STEXT_BLOCK_STRUCT:
+			if(block->u.s.down)
+				recurse_and_feed(ctx, boxer, block->u.s.down->first_block);
+			break;
+		default:
+			boxer_feed(ctx, boxer, &block->bbox);
+			break;
 			}
 			}
 		}
 
-		ret = analyse_sub(ctx, page, &page->first_block, &page->last_block, boxer, 0);
+static int
+segment_rect(fz_context *ctx, fz_rect box, fz_stext_page *page, fz_stext_struct *parent, int tight)
+{
+	boxer_t *boxer;
+	int ret = 0;
+
+	boxer = boxer_create(ctx, &box, tight);
+
+	fz_try(ctx)
+	{
+		recurse_and_feed(ctx, boxer, parent ? parent->first_block : page->first_block);
+
+		ret = analyse_sub(ctx, page, parent, boxer, 0);
 	}
 	fz_always(ctx)
 		boxer_destroy(ctx, boxer);
@@ -953,4 +994,111 @@ int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page)
 #endif
 
 	return ret;
+}
+
+int fz_segment_stext_rect(fz_context *ctx, fz_stext_page *page, fz_rect rect)
+{
+#ifdef DEBUG_WRITE_AS_PS
+	printf("1 -1 scale 0 -%g translate\n", rect.y1-rect.y0);
+#endif
+
+	return segment_rect(ctx, rect, page, NULL, 1);
+}
+
+int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page)
+{
+	fz_stext_block *block;
+
+	/* If we have structure already, give up. We can't hope to beat
+	 * proper structure! */
+	for (block = page->first_block; block != NULL; block = block->next)
+		if (block->type == FZ_STEXT_BLOCK_STRUCT)
+			return 0;
+
+#ifdef DEBUG_WRITE_AS_PS
+	printf("1 -1 scale 0 -%g translate\n", page->mediabox.y1-page->mediabox.y0);
+#endif
+
+	return segment_rect(ctx, page->mediabox, page, NULL, 0);
+}
+
+int
+fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page)
+{
+	fz_stext_page_block_iterator iter;
+	int dropped = 0;
+	fz_rect coverage = fz_empty_rect;
+
+	/* First, find the area actually covered on the page. */
+	for (iter = fz_stext_page_block_iterator_begin(page); !fz_stext_page_block_iterator_eod_dfs(iter); iter = fz_stext_page_block_iterator_next_dfs(iter))
+	{
+		/* Try to ignore stuff that's completely off screen */
+		fz_rect bbox = fz_intersect_rect(page->mediabox, iter.pos->bbox);
+
+		coverage = fz_union_rect(coverage, bbox);
+	}
+
+	/* Iterate across all the blocks in the page in a depth first order. We'll break out
+	 * when we find the first one that is not a white (or transparent) rectangle fill
+	 * that covers a significant amount of the page. This therefore copes with several
+	 * page fills on the same page. */
+	for (iter = fz_stext_page_block_iterator_begin(page); !fz_stext_page_block_iterator_eod_dfs(iter); iter = fz_stext_page_block_iterator_next_dfs(iter))
+	{
+		fz_rect bbox;
+
+		/* Stop searching when we find something that's not a vector */
+		if (iter.pos->type != FZ_STEXT_BLOCK_VECTOR)
+			break;
+
+		/* Stop searching when we find a vector that's not a rectangle */
+		if ((iter.pos->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE) == 0)
+			break;
+
+		/* Stop searching when we find a vector that's stroked */
+		if ((iter.pos->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED) != 0)
+			break;
+
+		/* Stop searching when we find a vector that's not white (or invisible) */
+		if ((iter.pos->u.v.argb & 0xff000000) != 0 && (iter.pos->u.v.argb & 0xffffff) != 0xffffff)
+			break;
+
+		/* If we don't cover the coverage area, then we can't be a background. */
+		bbox = fz_expand_rect(iter.pos->bbox, 0.1f); /* Allow for rounding */
+		if (!fz_contains_rect(bbox, coverage))
+			break;
+
+		/* If we don't cover at least 90% of the height/width, then give up. */
+		if (fz_is_infinite_rect(page->mediabox))
+		{
+			/* Can't judge. Skip this check. */
+		}
+		else if ((iter.pos->bbox.y1 - iter.pos->bbox.y0) < 0.9f * (page->mediabox.y1 - page->mediabox.y0) ||
+			(iter.pos->bbox.x1 - iter.pos->bbox.x0) < 0.9f * (page->mediabox.x1 - page->mediabox.x0))
+		{
+			break;
+		}
+
+		/* This is a background block. Remove it. This will be the first block
+		 * in the list, so it's simpler. */
+		if (iter.parent)
+		{
+			iter.parent->first_block = iter.pos->next;
+			if (iter.pos->next)
+				iter.pos->next->prev = NULL;
+			else
+				iter.parent->last_block = NULL;
+		}
+		else
+		{
+			iter.page->first_block = iter.pos->next;
+			if (iter.pos->next)
+				iter.pos->next->prev = NULL;
+			else
+				iter.page->last_block = NULL;
+		}
+
+		dropped = 1;
+	}
+
+	return dropped;
 }

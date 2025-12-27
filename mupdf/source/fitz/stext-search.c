@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -579,6 +579,8 @@ static const char *find_string(const char *s, const char *needle, const char **e
 	return *endp = NULL, NULL;
 }
 
+typedef int (fz_match_callback_fn)(fz_context *ctx, void *opaque, int num_quads, fz_quad *hit_bbox, int chapter, int page);
+
 struct search_data
 {
 	/* Number of hits so far.*/
@@ -589,9 +591,36 @@ struct search_data
 	fz_quad locals[32];
 	fz_quad *quads;
 	float hfuzz, vfuzz;
-	fz_search_callback_fn *cb;
+	fz_match_callback_fn *cb;
 	void *opaque;
+	fz_stext_page *page;
+	fz_stext_block *block4id;
 };
+
+static int
+send_queued_quads(fz_context *ctx, struct search_data *hits)
+{
+	int ret = 0;
+
+	hits->count_hits++;
+	if (hits->cb)
+	{
+		fz_stext_page *page = hits->page;
+		int chapter_num = -1;
+		int page_num = -1;
+		fz_stext_page_details *deets = fz_stext_page_details_for_block(ctx, page, hits->block4id);
+		if (deets)
+		{
+			chapter_num = deets->chapter;
+			page_num = deets->page;
+		}
+		if (hits->cb(ctx, hits->opaque, hits->quad_fill, hits->quads, chapter_num, page_num))
+			ret = 1;
+	}
+	hits->quad_fill = 0;
+
+	return ret;
+}
 
 static int hit_char(fz_context *ctx, struct search_data *hits, fz_stext_line *line, fz_stext_char *ch, int is_at_start)
 {
@@ -617,10 +646,8 @@ static int hit_char(fz_context *ctx, struct search_data *hits, fz_stext_line *li
 	if (is_at_start && hits->quad_fill > 0)
 	{
 		/* Send the quads we have queued. */
-		hits->count_hits++;
-		if (hits->cb && hits->cb(ctx, hits->opaque, hits->quad_fill, hits->quads))
+		if (send_queued_quads(ctx, hits))
 			return 1;
-		hits->quad_fill = 0;
 	}
 
 	if (hits->quad_fill == hits->max_quads)
@@ -643,8 +670,8 @@ static int hit_char(fz_context *ctx, struct search_data *hits, fz_stext_line *li
 	return 0;
 }
 
-int
-fz_search_stext_page_cb(fz_context *ctx, fz_stext_page *page, const char *needle, fz_search_callback_fn *cb, void *opaque)
+static int
+fz_match_stext_page_cb(fz_context *ctx, fz_stext_page *page, const char *needle, fz_match_callback_fn *cb, void *opaque)
 {
 	struct search_data hits;
 	fz_stext_block *block;
@@ -666,6 +693,8 @@ fz_search_stext_page_cb(fz_context *ctx, fz_stext_page *page, const char *needle
 	hits.vfuzz = 0.1f;
 	hits.cb = cb;
 	hits.opaque = opaque;
+	hits.block4id = NULL;
+	hits.page = page;
 
 	buffer = fz_new_buffer_from_stext_page(ctx, page);
 	fz_try(ctx)
@@ -685,10 +714,24 @@ fz_search_stext_page_cb(fz_context *ctx, fz_stext_page *page, const char *needle
 				for (ch = line->first_char; ch; ch = ch->next)
 				{
 try_new_match:
+					if (inside && hits.block4id && hits.block4id->id != block->id)
+					{
+						/* We're split over multiple pages. Send what we have for now. */
+						if (hits.quad_fill)
+						{
+							/* If a match splits over 2 pages, it counts as 2 hits. */
+							hits.count_hits++;
+							(void)send_queued_quads(ctx, &hits);
+						}
+						hits.block4id = block;
+					}
 					if (!inside)
 					{
 						if (haystack >= begin)
+						{
 							inside = 1;
+							hits.block4id = block;
+						}
 					}
 					if (inside)
 					{
@@ -720,8 +763,7 @@ no_more_matches:
 		if (hits.quad_fill)
 		{
 			hits.count_hits++;
-			if (hits.cb)
-				(void)hits.cb(ctx, hits.opaque, hits.quad_fill, hits.quads);
+			(void)send_queued_quads(ctx, &hits);
 		}
 	}
 	fz_always(ctx)
@@ -734,6 +776,27 @@ no_more_matches:
 		fz_rethrow(ctx);
 
 	return hits.count_hits;
+}
+
+typedef struct
+{
+	fz_search_callback_fn *cb;
+	void *opaque;
+} match2search_data;
+
+static int match2search(fz_context *ctx, void *opaque, int num_quads, fz_quad *hit_bbox, int chapter, int page)
+{
+	match2search_data *md = (match2search_data *)opaque;
+
+	return md->cb(ctx, md->opaque, num_quads, hit_bbox);
+}
+
+int
+fz_search_stext_page_cb(fz_context *ctx, fz_stext_page *page, const char *needle, fz_search_callback_fn *cb, void *opaque)
+{
+	match2search_data md = { cb, opaque };
+
+	return fz_match_stext_page_cb(ctx, page, needle, match2search, &md);
 }
 
 typedef struct
@@ -771,12 +834,13 @@ int
 fz_search_stext_page(fz_context *ctx, fz_stext_page *page, const char *needle, int *hit_mark, fz_quad *quads, int max_quads)
 {
 	oldsearch_data data;
+	match2search_data md = { oldsearch_cb, &data };
 
 	data.hit_mark = hit_mark;
 	data.quads = quads;
 	data.max_quads = max_quads;
 	data.fill = 0;
 	data.hit = 0;
-	(void)fz_search_stext_page_cb(ctx, page, needle, oldsearch_cb, &data);
+	(void)fz_match_stext_page_cb(ctx, page, needle, match2search, &md);
 	return data.fill; /* Return the number of quads we have read */
 }

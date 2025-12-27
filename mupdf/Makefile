@@ -411,13 +411,6 @@ $(OUT)/multi-threaded: docs/examples/multi-threaded.c $(MUPDF_LIB) $(THIRD_LIB)
 $(OUT)/storytest: docs/examples/storytest.c $(MUPDF_LIB) $(THIRD_LIB)
 	$(LINK_CMD) $(CFLAGS) $(THIRD_LIBS)
 
-# --- Update version string header ---
-
-VERSION = $(shell git describe --tags)
-
-version:
-	sed -i~ -e '/FZ_VERSION /s/".*"/"'$(VERSION)'"/' include/mupdf/fitz/version.h
-
 # --- Format man pages ---
 
 %.txt: %.1

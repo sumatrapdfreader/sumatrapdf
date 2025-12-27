@@ -129,3 +129,81 @@ void fz_drop_pool(fz_context *ctx, fz_pool *pool)
 	}
 	fz_free(ctx, pool);
 }
+
+typedef struct fz_pool_array_section
+{
+	struct fz_pool_array_section *next;
+	size_t len;
+	char elements[FZ_FLEXIBLE_ARRAY];
+} fz_pool_array_section;
+
+struct fz_pool_array
+{
+	fz_pool *pool;
+	size_t size;
+	size_t len;
+	fz_pool_array_section head;
+};
+
+fz_pool_array *fz_new_pool_array_imp(fz_context *ctx, fz_pool *pool, size_t size, size_t initial)
+{
+	fz_pool_array *arr;
+
+	if (initial <= 0)
+		initial = 4;
+
+	arr = fz_pool_alloc(ctx, pool, sizeof(fz_pool_array) + size * initial);
+
+	arr->pool = pool;
+	arr->size = size;
+	arr->len = 0;
+	arr->head.len = initial;
+
+	return arr;
+}
+
+void *fz_pool_array_append(fz_context *ctx, fz_pool_array *arr, size_t *idx)
+{
+	size_t len = arr->len;
+	size_t base = 0;
+	fz_pool_array_section *sec = &arr->head;
+
+	while (base + sec->len < len && sec->next != NULL)
+		base += sec->len, sec = sec->next;
+
+	if (base + sec->len == len)
+	{
+		/* We need to allocate a new block */
+		size_t newlen = sec->len * 2;
+		sec->next = fz_pool_alloc(ctx, arr->pool, sizeof(fz_pool_array_section) + arr->size * newlen);
+		base = len;
+		sec = sec->next;
+		sec->len = newlen;
+	}
+
+	/* Now insert */
+	arr->len++;
+	if (idx)
+		*idx = len;
+
+	return (void *)(&sec->elements[0] + arr->size * (len - base));
+}
+
+void *fz_pool_array_lookup(fz_context *ctx, fz_pool_array *arr, size_t idx)
+{
+	size_t base = 0;
+	fz_pool_array_section *sec = &arr->head;
+
+	if (idx >= arr->len)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "array is not that long");
+
+	while (base + sec->len < idx)
+		base += sec->len, sec = sec->next;
+
+	return (void *)(&sec->elements[0] + arr->size * (idx - base));
+}
+
+size_t fz_pool_array_len(fz_context *ctx, fz_pool_array *arr)
+{
+	return arr->len;
+}

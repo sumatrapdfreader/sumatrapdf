@@ -372,3 +372,16 @@ void fz_log_activity(fz_context *ctx, fz_activity_reason reason, void *arg)
 
 	ctx->activity.activity(ctx, ctx->activity.opaque, reason, arg);
 }
+
+int fz_new_document_id(fz_context *ctx)
+{
+	int id;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	while (ctx->master && ctx->master != ctx)
+		ctx = ctx->master;
+	id = ctx->next_document_id++;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+
+	return id;
+}

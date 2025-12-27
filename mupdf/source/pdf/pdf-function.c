@@ -299,11 +299,23 @@ ps_roll(ps_stack *st, int n, int j)
 			j = n - j;
 	}
 
+	if (j*2 > n)
+	{
+		for (i = j; i < n; i++)
+		{
+			tmp = st->stack[st->sp - n];
+			memmove(st->stack + st->sp - n, st->stack + st->sp - n + 1, (n-1) * sizeof(psobj));
+			st->stack[st->sp - 1] = tmp;
+		}
+	}
+	else
+	{
 	for (i = 0; i < j; i++)
 	{
 		tmp = st->stack[st->sp - 1];
-		memmove(st->stack + st->sp - n + 1, st->stack + st->sp - n, n * sizeof(psobj));
+			memmove(st->stack + st->sp - n + 1, st->stack + st->sp - n, (n-1) * sizeof(psobj));
 		st->stack[st->sp - n] = tmp;
+		}
 	}
 }
 

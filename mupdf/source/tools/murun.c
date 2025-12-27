@@ -2031,7 +2031,7 @@ js_dev_end_group(fz_context *ctx, fz_device *dev)
 
 static int
 js_dev_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view,
-	float xstep, float ystep, fz_matrix ctm, int id)
+	float xstep, float ystep, fz_matrix ctm, int id, int doc_id)
 {
 	js_State *J = ((js_device*)dev)->J;
 	if (js_try(J))
@@ -2045,7 +2045,8 @@ js_dev_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view,
 		js_pushnumber(J, ystep);
 		ffi_pushmatrix(J, ctm);
 		js_pushnumber(J, id);
-		js_call(J, 6);
+		js_pushnumber(J, doc_id);
+		js_call(J, 7);
 		n = js_tointeger(J, -1);
 		js_pop(J, 1);
 		return n;
@@ -2247,17 +2248,10 @@ static fz_device *new_js_device(fz_context *ctx, js_State *J)
 
 #if FZ_ENABLE_PDF
 
-typedef struct resources_stack
-{
-	struct resources_stack *next;
-	pdf_obj *resources;
-} resources_stack;
-
 typedef struct
 {
 	pdf_processor super;
 	js_State *J;
-	resources_stack *rstack;
 	int extgstate;
 } pdf_js_processor;
 
@@ -2879,7 +2873,7 @@ static void js_proc_Do_form(fz_context *ctx, pdf_processor *proc, const char *na
 	PROC_BEGIN("op_Do_form");
 	js_pushstring(J, name);
 	ffi_pushobj(J, pdf_keep_obj(ctx, xobj));
-	ffi_pushobj(J, pdf_keep_obj(ctx, ((pdf_js_processor*)proc)->rstack->resources));
+	ffi_pushobj(J, pdf_keep_obj(ctx, proc->rstack->resources));
 	PROC_END(3);
 }
 
@@ -2931,42 +2925,11 @@ static void js_proc_EX(fz_context *ctx, pdf_processor *proc)
 	PROC_END(0);
 }
 
-static void js_proc_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
-{
-	PROC_BEGIN("push_resources");
-	ffi_pushobj(J, pdf_keep_obj(ctx, res));
-	PROC_END(1);
-}
-
-static pdf_obj *js_proc_pop_resources(fz_context *ctx, pdf_processor *proc)
-{
-	PROC_BEGIN("pop_resources");
-	PROC_END(0);
-	return NULL;
-}
-
-static void js_proc_drop(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_js_processor *pr = (pdf_js_processor *)proc;
-
-	while (pr->rstack)
-	{
-		resources_stack *stk = pr->rstack;
-		pr->rstack = stk->next;
-		pdf_drop_obj(ctx, stk->resources);
-		fz_free(ctx, stk);
-	}
-}
-
 static pdf_processor *new_js_processor(fz_context *ctx, js_State *J)
 {
 	pdf_js_processor *proc = pdf_new_processor(ctx, sizeof *proc);
 
 	proc->super.close_processor = NULL;
-	proc->super.drop_processor = js_proc_drop;
-
-	proc->super.push_resources = js_proc_push_resources;
-	proc->super.pop_resources = js_proc_pop_resources;
 
 	/* general graphics state */
 	proc->super.op_w = js_proc_w;
@@ -10837,7 +10800,7 @@ static void ffi_PDFAnnotation_process(js_State *J)
 	}
 	fz_always(ctx)
 	{
-		pdf_processor_pop_resources(ctx, proc);
+		pdf_drop_obj(ctx, pdf_processor_pop_resources(ctx, proc));
 		pdf_drop_processor(ctx, proc);
 	}
 	fz_catch(ctx)

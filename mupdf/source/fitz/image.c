@@ -761,6 +761,23 @@ drop_pixmap_image(fz_context *ctx, fz_image *image_)
 	fz_drop_pixmap(ctx, image->tile);
 }
 
+int
+fz_is_lossy_image(fz_context *ctx, fz_image *image)
+{
+	fz_compressed_buffer *cbuf = fz_compressed_image_buffer(ctx, image);
+	if (cbuf)
+	{
+		switch (cbuf->params.type)
+		{
+		case FZ_IMAGE_JPEG:
+		case FZ_IMAGE_JPX:
+		case FZ_IMAGE_JXR:
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static fz_pixmap *
 compressed_image_get_pixmap(fz_context *ctx, fz_image *image_, fz_irect *subarea, int w, int h, int *l2factor)
 {

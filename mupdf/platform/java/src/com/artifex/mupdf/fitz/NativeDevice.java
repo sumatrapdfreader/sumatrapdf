@@ -66,7 +66,7 @@ public class NativeDevice extends Device
 	public native final void beginGroup(Rect rect, ColorSpace cs, boolean isolated, boolean knockout, int blendmode, float alpha);
 	public native final void endGroup();
 
-	public native final int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id);
+	public native final int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id, int doc_id);
 	public native final void endTile();
 
 	public native final void renderFlags(int set, int clear);

@@ -37,7 +37,7 @@ pdf_t3_free_resources(fz_context *ctx, void *doc, void *rdb_)
 }
 
 pdf_font_desc *
-pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *dict)
+pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, pdf_obj *dict)
 {
 	char buf[256];
 	const char *estrings[256];
@@ -171,7 +171,7 @@ pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *d
 		font->t3freeres = pdf_t3_free_resources;
 		font->t3resources = pdf_dict_get(ctx, dict, PDF_NAME(Resources));
 		if (!font->t3resources)
-			font->t3resources = rdb;
+			font->t3resources = rdb->resources; /* TODO: keep full resource dictionary chain! */
 		if (font->t3resources)
 			pdf_keep_obj(ctx, font->t3resources);
 		if (!font->t3resources)

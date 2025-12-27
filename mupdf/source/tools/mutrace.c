@@ -158,6 +158,7 @@ int mutrace_main(int argc, char **argv)
 	fz_var(doc);
 	fz_try(ctx)
 	{
+		printf("<?xml version=\"1.0\"?>\n");
 		for (i = fz_optind; i < argc; ++i)
 		{
 			doc = fz_open_document(ctx, argv[i]);

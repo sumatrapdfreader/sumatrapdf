@@ -3,7 +3,6 @@ mutool run
 
 The ``run`` command executes a Javascript program, which has access to most of the features of the MuPDF library.
 The command supports ECMAScript 5 syntax in strict mode.
-All of the MuPDF classes and functions live in the global object, and the
 
 .. code-block:: bash
 

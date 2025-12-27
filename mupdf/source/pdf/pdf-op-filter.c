@@ -107,13 +107,6 @@ typedef struct tag_record
 	struct tag_record *prev;
 } tag_record;
 
-typedef struct resources_stack
-{
-	struct resources_stack *next;
-	pdf_obj *old_rdb;
-	pdf_obj *new_rdb;
-} resources_stack;
-
 typedef struct
 {
 	pdf_processor super;
@@ -133,7 +126,7 @@ typedef struct
 	float Tm_adjust;
 	tag_record *current_tags;
 	tag_record *pending_tags;
-	resources_stack *rstack;
+	pdf_resource_stack *new_rstack;
 	pdf_sanitize_filter_options *options;
 	fz_matrix transform;
 	/* Has any marking text been sent so far this text object? */
@@ -152,15 +145,14 @@ copy_resource(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *key, const ch
 	if (!name || name[0] == 0)
 		return;
 
-	res = pdf_dict_get(ctx, p->rstack->old_rdb, key);
-	obj = pdf_dict_gets(ctx, res, name);
+	obj = pdf_lookup_resource(ctx, p->super.rstack, key, name);
 	if (obj)
 	{
-		res = pdf_dict_get(ctx, p->rstack->new_rdb, key);
+		res = pdf_dict_get(ctx, p->new_rstack->resources, key);
 		if (!res)
 		{
-			res = pdf_new_dict(ctx, pdf_get_bound_document(ctx, p->rstack->new_rdb), 1);
-			pdf_dict_put_drop(ctx, p->rstack->new_rdb, key, res);
+			res = pdf_new_dict(ctx, pdf_get_bound_document(ctx, p->new_rstack->resources), 1);
+			pdf_dict_put_drop(ctx, p->new_rstack->resources, key, res);
 		}
 		pdf_dict_putp(ctx, res, name, obj);
 	}
@@ -169,9 +161,9 @@ copy_resource(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *key, const ch
 static void
 add_resource(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *key, const char *name, pdf_obj *val)
 {
-	pdf_obj *res = pdf_dict_get(ctx, p->rstack->new_rdb, key);
+	pdf_obj *res = pdf_dict_get(ctx, p->new_rstack->resources, key);
 	if (!res)
-		res = pdf_dict_put_dict(ctx, p->rstack->new_rdb, key, 8);
+		res = pdf_dict_put_dict(ctx, p->new_rstack->resources, key, 8);
 	pdf_dict_puts(ctx, res, name, val);
 }
 
@@ -179,9 +171,9 @@ static void
 create_resource_name(fz_context *ctx, pdf_sanitize_processor *p, pdf_obj *key, const char *prefix, char *buf, int len)
 {
 	int i;
-	pdf_obj *res = pdf_dict_get(ctx, p->rstack->new_rdb, key);
+	pdf_obj *res = pdf_dict_get(ctx, p->new_rstack->resources, key);
 	if (!res)
-		res = pdf_dict_put_dict(ctx, p->rstack->new_rdb, key, 8);
+		res = pdf_dict_put_dict(ctx, p->new_rstack->resources, key, 8);
 	for (i = 1; i < 65536; ++i)
 	{
 		fz_snprintf(buf, len, "%s%d", prefix, i);
@@ -2535,7 +2527,7 @@ pdf_filter_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_i
 			{
 				/* Make up a unique name when instancing forms so we don't accidentally clash. */
 				char buf[40];
-				pdf_obj *obj = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->old_rdb, PDF_NAME(XObject)), name);
+				pdf_obj *obj = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(XObject), name);
 				create_resource_name(ctx, p, PDF_NAME(XObject), "Im", buf, sizeof buf);
 				add_resource(ctx, p, PDF_NAME(XObject), buf, obj);
 				p->chain->op_Do_image(ctx, p->chain, buf, image);
@@ -2587,7 +2579,7 @@ pdf_filter_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_o
 		char buf[40];
 		create_resource_name(ctx, p, PDF_NAME(XObject), "Fm", buf, sizeof buf);
 		transform = fz_concat(p->gstate->sent.ctm, p->transform);
-		new_xobj = pdf_filter_xobject_instance(ctx, xobj, p->rstack->new_rdb, transform, p->global_options, NULL);
+		new_xobj = pdf_filter_xobject_instance(ctx, xobj, p->new_rstack->resources, transform, p->global_options, NULL);
 		fz_try(ctx)
 		{
 			add_resource(ctx, p, PDF_NAME(XObject), buf, new_xobj);
@@ -2785,6 +2777,7 @@ pdf_drop_sanitize_processor(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_sanitize_processor *p = (pdf_sanitize_processor*)proc;
 	filter_gstate *gs = p->gstate;
+
 	while (gs)
 	{
 		filter_gstate *next = gs->next;
@@ -2795,44 +2788,42 @@ pdf_drop_sanitize_processor(fz_context *ctx, pdf_processor *proc)
 		fz_free(ctx, gs);
 		gs = next;
 	}
+
+	while (p->new_rstack)
+	{
+		pdf_resource_stack *stk = p->new_rstack;
+		p->new_rstack = stk->next;
+		pdf_drop_obj(ctx, stk->resources);
+		fz_free(ctx, stk);
+	}
+
 	while (p->pending_tags)
 		pop_tag(ctx, p, &p->pending_tags);
 	while (p->current_tags)
 		pop_tag(ctx, p, &p->current_tags);
-	pdf_drop_obj(ctx, p->structarray);
-	pdf_drop_document(ctx, p->doc);
 
 	fz_drop_path(ctx, p->path);
-
-	while (p->rstack)
-	{
-		resources_stack *stk = p->rstack;
-		p->rstack = stk->next;
-		pdf_drop_obj(ctx, stk->new_rdb);
-		pdf_drop_obj(ctx, stk->old_rdb);
-		fz_free(ctx, stk);
-	}
+	pdf_drop_obj(ctx, p->structarray);
+	pdf_drop_document(ctx, p->doc);
 }
 
 static void
 pdf_sanitize_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
 {
 	pdf_sanitize_processor *p = (pdf_sanitize_processor *)proc;
-	resources_stack *stk = fz_malloc_struct(ctx, resources_stack);
+	pdf_resource_stack *stk = fz_malloc_struct(ctx, pdf_resource_stack);
 
-	stk->next = p->rstack;
-	p->rstack = stk;
+	stk->next = p->new_rstack;
+	p->new_rstack = stk;
 	fz_try(ctx)
 	{
-		stk->old_rdb = pdf_keep_obj(ctx, res);
-		stk->new_rdb = pdf_new_dict(ctx, p->doc, 1);
-		pdf_processor_push_resources(ctx, p->chain, stk->new_rdb);
+		stk->resources = pdf_new_dict(ctx, p->doc, 1);
+		pdf_processor_push_resources(ctx, p->chain, stk->resources);
 	}
 	fz_catch(ctx)
 	{
-		pdf_drop_obj(ctx, stk->old_rdb);
-		pdf_drop_obj(ctx, stk->new_rdb);
-		p->rstack = stk->next;
+		pdf_drop_obj(ctx, stk->resources);
+		p->new_rstack = stk->next;
 		fz_free(ctx, stk);
 		fz_rethrow(ctx);
 	}
@@ -2842,11 +2833,10 @@ static pdf_obj *
 pdf_sanitize_pop_resources(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_sanitize_processor *p = (pdf_sanitize_processor *)proc;
-	resources_stack *stk = p->rstack;
+	pdf_resource_stack *stk = p->new_rstack;
 
-	p->rstack = stk->next;
-	pdf_drop_obj(ctx, stk->old_rdb);
-	pdf_drop_obj(ctx, stk->new_rdb);
+	p->new_rstack = stk->next;
+	pdf_drop_obj(ctx, stk->resources);
 	fz_free(ctx, stk);
 
 	return pdf_processor_pop_resources(ctx, p->chain);

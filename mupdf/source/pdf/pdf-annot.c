@@ -80,7 +80,7 @@ pdf_annot_ap(fz_context *ctx, pdf_annot *annot)
 	/* If it's not a stream, it may be a dictionary containing
 	 * a range of possible values, that should be indexed by
 	 * AS. */
-	return pdf_dict_get(ctx, ap, pdf_dict_get(ctx, annot->obj, PDF_NAME(AS)));
+	return pdf_dict_get(ctx, ap, pdf_resolve_indirect_chain(ctx, pdf_dict_get(ctx, annot->obj, PDF_NAME(AS))));
 }
 
 int pdf_annot_active(fz_context *ctx, pdf_annot *annot)
@@ -166,15 +166,18 @@ void
 pdf_nuke_annots(fz_context *ctx, pdf_page *page)
 {
 	pdf_annot *annot;
+	pdf_annot *next;
 
-	for (annot = page->annots; annot; annot = annot->next)
+	for (annot = page->annots; annot; annot = next)
 	{
+		next = annot->next;
 		pdf_drop_obj(ctx, annot->obj);
 		annot->obj = NULL;
 		pdf_drop_annot(ctx, annot);
 	}
-	for (annot = page->widgets; annot; annot = annot->next)
+	for (annot = page->widgets; annot; annot = next)
 	{
+		next = annot->next;
 		pdf_drop_obj(ctx, annot->obj);
 		annot->obj = NULL;
 		pdf_drop_annot(ctx, annot);

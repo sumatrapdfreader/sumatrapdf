@@ -27,6 +27,7 @@
 #include "mupdf/fitz/context.h"
 #include "mupdf/fitz/output.h"
 #include "mupdf/fitz/log.h"
+#include "mupdf/fitz/types.h"
 
 /**
 	Resource store
@@ -237,7 +238,8 @@ typedef struct
 			char has_group_alpha;
 			float m[4];
 			void *ptr;
-		} im; /* 28 or 32 bytes */
+			int doc_id;
+		} im; /* 32 or 36 bytes */
 		struct
 		{
 			unsigned char src_md5[16];
@@ -252,7 +254,8 @@ typedef struct
 			unsigned int bgr:1;
 		} link; /* 36 bytes */
 	} u;
-} fz_store_hash; /* 40 or 44 bytes */
+	/* 0 or 4 bytes padding */
+} fz_store_hash; /* 40 or 48 bytes */
 
 /**
 	Every type of object to be placed into the store defines an
@@ -403,6 +406,12 @@ typedef int (fz_store_filter_fn)(fz_context *ctx, void *arg, void *key);
 	If the function returns 1 for an element, drop the element.
 */
 void fz_filter_store(fz_context *ctx, fz_store_filter_fn *fn, void *arg, const fz_store_type *type);
+
+/**
+	Filter the store and throw away any stored tiles drawn for a
+	given document.
+*/
+void fz_drop_drawn_tiles_for_document(fz_context *ctx, fz_document *doc);
 
 /**
 	Output debugging information for the current state of the store

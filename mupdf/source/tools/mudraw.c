@@ -552,7 +552,7 @@ file_level_headers(fz_context *ctx)
 		fz_print_stext_header_as_xhtml(ctx, out);
 
 	if (output_format == OUT_STEXT_XML || output_format == OUT_TRACE || output_format == OUT_BBOX || output_format == OUT_OCR_STEXT_XML)
-		fz_write_printf(ctx, out, "<document name=\"%s\">\n", filename);
+		fz_write_printf(ctx, out, "<document filename=\"%s\">\n", filename);
 	if (output_format == OUT_STEXT_JSON || output_format == OUT_OCR_STEXT_JSON)
 		fz_write_printf(ctx, out, "{%q:%q,%q:[", "file", filename, "pages");
 
@@ -705,8 +705,8 @@ static void dodrawpage(fz_context *ctx, fz_page *page, fz_display_list *list, in
 
 		fz_try(ctx)
 		{
-			fz_write_printf(ctx, out, "<page mediabox=\"%g %g %g %g\">\n",
-					tmediabox.x0, tmediabox.y0, tmediabox.x1, tmediabox.y1);
+			fz_write_printf(ctx, out, "<page number=\"%d\" mediabox=\"%g %g %g %g\">\n",
+				pagenum, tmediabox.x0, tmediabox.y0, tmediabox.x1, tmediabox.y1);
 			dev = fz_new_trace_device(ctx, out);
 			apply_kill_switch(dev);
 			if (output_format == OUT_OCR_TRACE)

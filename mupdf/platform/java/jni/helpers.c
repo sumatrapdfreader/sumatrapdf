@@ -70,16 +70,9 @@ static int hit_callback(fz_context *ctx, void *opaque, int quads, fz_quad *quad)
 	return 0;
 }
 
-typedef struct resources_stack
-{
-	struct resources_stack *next;
-	pdf_obj *resources;
-} resources_stack;
-
 typedef struct
 {
 	pdf_processor super;
-	resources_stack *rstack;
 	int extgstate;
 
 	JNIEnv *env;
@@ -756,8 +749,8 @@ static void java_proc_Do_form(fz_context *ctx, pdf_processor *proc, const char *
 	jstring jname = (*env)->NewStringUTF(env, name);
 	jobject jform = to_PDFObject_safe(ctx, env, xobj);
 	jobject jres = NULL;
-	if (((pdf_java_processor *) proc)->rstack)
-		jres = to_PDFObject_safe(ctx, env, ((pdf_java_processor *) proc)->rstack->resources);
+	if (proc->rstack)
+		jres = to_PDFObject_safe(ctx, env, proc->rstack->resources);
 	(*env)->CallVoidMethod(env, jproc, mid_PDFProcessor_op_Do_image, jname, jform, jres);
 	(*env)->DeleteLocalRef(env, jres);
 	(*env)->DeleteLocalRef(env, jform);
@@ -843,24 +836,10 @@ static pdf_obj *java_proc_pop_resources(fz_context *ctx, pdf_processor *proc)
 	return NULL;
 }
 
-static void java_proc_drop(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_java_processor *pr = (pdf_java_processor *)proc;
-
-	while (pr->rstack)
-	{
-		resources_stack *stk = pr->rstack;
-		pr->rstack = stk->next;
-		pdf_drop_obj(ctx, stk->resources);
-		fz_free(ctx, stk);
-	}
-}
-
 pdf_processor *make_pdf_processor(JNIEnv *env, fz_context *ctx, jobject jproc)
 {
 	pdf_java_processor *proc = pdf_new_processor(ctx, sizeof *proc);
 	proc->super.close_processor = NULL;
-	proc->super.drop_processor = java_proc_drop;
 
 	proc->super.push_resources = java_proc_push_resources;
 	proc->super.pop_resources = java_proc_pop_resources;

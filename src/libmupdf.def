@@ -16,6 +16,9 @@ EXPORTS
 	pdf_drop_annot
 	pdf_is_filespec
 
+	fz_stext_page_block_iterator_begin
+	fz_stext_page_block_iterator_next_dfs
+	fz_stext_page_block_iterator_eod_dfs
 	fz_run_page_widgets
 	fz_register_document_handlers
 	fz_count_chapters

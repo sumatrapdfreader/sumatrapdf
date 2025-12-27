@@ -29,6 +29,8 @@ typedef struct pdf_document pdf_document;
 typedef struct pdf_crypt pdf_crypt;
 typedef struct pdf_journal pdf_journal;
 
+typedef struct pdf_resource_stack pdf_resource_stack;
+
 /* Defined in PDF 1.7 according to Acrobat limit. */
 #define PDF_MAX_OBJECT_NUMBER 8388607
 #define PDF_MAX_GEN_NUMBER 65535

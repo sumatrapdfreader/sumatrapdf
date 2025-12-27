@@ -34,12 +34,6 @@ typedef struct gstate
 	pdf_font_desc *font;
 } gstate;
 
-typedef struct resources_stack
-{
-	struct resources_stack *next;
-	pdf_obj *res;
-} resources_stack;
-
 typedef struct
 {
 	int num;
@@ -68,7 +62,6 @@ typedef struct
 typedef struct
 {
 	pdf_processor super;
-	resources_stack *rstack;
 	fonts_usage_t *usage;
 	gstate *gs;
 } pdf_font_analysis_processor;
@@ -93,50 +86,8 @@ drop_processor(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_font_analysis_processor *p = (pdf_font_analysis_processor*)proc;
 
-	while (p->rstack)
-	{
-		resources_stack *stk = p->rstack;
-		p->rstack = stk->next;
-		pdf_drop_obj(ctx, stk->res);
-		fz_free(ctx, stk);
-	}
-
 	while (p->gs)
 		pop_gstate(ctx, p);
-}
-
-static void
-push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
-{
-	pdf_font_analysis_processor *p = (pdf_font_analysis_processor *)proc;
-	resources_stack *stk = fz_malloc_struct(ctx, resources_stack);
-
-	stk->next = p->rstack;
-	p->rstack = stk;
-	fz_try(ctx)
-	{
-		stk->res = pdf_keep_obj(ctx, res);
-	}
-	fz_catch(ctx)
-	{
-		pdf_drop_obj(ctx, stk->res);
-		p->rstack = stk->next;
-		fz_free(ctx, stk);
-		fz_rethrow(ctx);
-	}
-}
-
-static pdf_obj *
-pop_resources(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_font_analysis_processor *p = (pdf_font_analysis_processor *)proc;
-	resources_stack *stk = p->rstack;
-	pdf_obj *res = p->rstack->res;
-
-	p->rstack = stk->next;
-	fz_free(ctx, stk);
-
-	return res;
 }
 
 static void
@@ -169,7 +120,7 @@ static void
 font_analysis_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_font_desc *font, float size)
 {
 	pdf_font_analysis_processor *p = (pdf_font_analysis_processor*)proc;
-	pdf_obj *dict = pdf_dict_gets(ctx, pdf_dict_get(ctx, p->rstack->res, PDF_NAME(Font)), name);
+	pdf_obj *dict = pdf_lookup_resource(ctx, proc->rstack, PDF_NAME(Font), name);
 	pdf_obj *subtype, *fontdesc;
 	pdf_obj *fontfile = NULL;
 	pdf_obj *key;
@@ -441,10 +392,6 @@ font_analysis_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pd
 	pdf_font_analysis_processor *pr = (pdf_font_analysis_processor *)proc;
 	pdf_document *doc = pdf_get_bound_document(ctx, xobj);
 	pdf_obj *resources = pdf_xobject_resources(ctx, xobj);
-
-	if (!resources)
-		resources = pr->rstack->res;
-
 	pdf_process_contents(ctx, (pdf_processor*)pr, doc, resources, xobj, NULL, NULL);
 }
 
@@ -454,8 +401,6 @@ pdf_new_font_analysis_processor(fz_context *ctx, fonts_usage_t *usage)
 	pdf_font_analysis_processor *proc = (pdf_font_analysis_processor *)pdf_new_processor(ctx, sizeof *proc);
 
 	proc->super.drop_processor = drop_processor;
-	proc->super.push_resources = push_resources;
-	proc->super.pop_resources = pop_resources;
 
 	proc->super.op_Do_form = font_analysis_Do_form;
 

@@ -226,10 +226,12 @@ fz_new_stext_page(fz_context *ctx, fz_rect mediabox)
 	fz_try(ctx)
 	{
 		page = fz_pool_alloc(ctx, pool, sizeof(*page));
+		page->refs = 1;
 		page->pool = pool;
 		page->mediabox = mediabox;
 		page->first_block = NULL;
 		page->last_block = NULL;
+		page->id_list = fz_new_pool_array(ctx, pool, fz_stext_page_details, 4);
 	}
 	fz_catch(ctx)
 	{
@@ -266,10 +268,27 @@ drop_run(fz_context *ctx, fz_stext_block *block)
 	}
 }
 
+fz_stext_page_details *fz_stext_page_details_for_block(fz_context *ctx, fz_stext_page *page, fz_stext_block *block)
+{
+	if (block == NULL || page == NULL)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "page details require a page and a block");
+
+	return (fz_stext_page_details *)fz_pool_array_lookup(ctx, page->id_list, block->id);
+}
+
+fz_stext_page *
+fz_keep_stext_page(fz_context *ctx, fz_stext_page *page)
+{
+	return fz_keep_imp(ctx, page, &page->refs);
+}
+
 void
 fz_drop_stext_page(fz_context *ctx, fz_stext_page *page)
 {
-	if (page)
+	if (page == NULL)
+		return;
+
+	if (fz_drop_imp(ctx, page, &page->refs))
 	{
 		drop_run(ctx, page->first_block);
 		fz_drop_pool(ctx, page->pool);
@@ -282,11 +301,13 @@ fz_drop_stext_page(fz_context *ctx, fz_stext_page *page)
  * with more complicated pointer setup.
  */
 static fz_stext_block *
-add_block_to_page(fz_context *ctx, fz_stext_page *page)
+add_block_to_page(fz_context *ctx, fz_stext_page *page, int type, int id)
 {
 	fz_stext_block *block = fz_pool_alloc(ctx, page->pool, sizeof *page->first_block);
 	block->bbox = fz_empty_rect; /* Fixes bug 703267. */
 	block->prev = page->last_block;
+	block->type = type;
+	block->id = id;
 	if (page->last_struct)
 	{
 		if (page->last_struct->last_block)
@@ -313,18 +334,15 @@ add_block_to_page(fz_context *ctx, fz_stext_page *page)
 }
 
 static fz_stext_block *
-add_text_block_to_page(fz_context *ctx, fz_stext_page *page)
+add_text_block_to_page(fz_context *ctx, fz_stext_page *page, int id)
 {
-	fz_stext_block *block = add_block_to_page(ctx, page);
-	block->type = FZ_STEXT_BLOCK_TEXT;
-	return block;
+	return add_block_to_page(ctx, page, FZ_STEXT_BLOCK_TEXT, id);
 }
 
 static fz_stext_block *
-add_image_block_to_page(fz_context *ctx, fz_stext_page *page, fz_matrix ctm, fz_image *image)
+add_image_block_to_page(fz_context *ctx, fz_stext_page *page, fz_matrix ctm, fz_image *image, int id)
 {
-	fz_stext_block *block = add_block_to_page(ctx, page);
-	block->type = FZ_STEXT_BLOCK_IMAGE;
+	fz_stext_block *block = add_block_to_page(ctx, page, FZ_STEXT_BLOCK_IMAGE, id);
 	block->u.i.transform = ctm;
 	block->u.i.image = fz_keep_image(ctx, image);
 	block->bbox = fz_transform_rect(fz_unit_rect, ctm);
@@ -838,7 +856,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	/* Start a new block (but only at the beginning of a text object) */
 	if (new_para || !cur_block)
 	{
-		cur_block = add_text_block_to_page(ctx, page);
+		cur_block = add_text_block_to_page(ctx, page, dev->id);
 		cur_line = cur_block->u.t.last_line;
 	}
 
@@ -982,6 +1000,17 @@ do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix 
 
 	for (i = start; i < end; i++)
 	{
+		if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
+		{
+			fz_rect r = current_clip(ctx, dev);
+			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &r))
+			{
+				dev->last.clipped = 1;
+				continue;
+			}
+		}
+		dev->last.clipped = 0;
+
 		/* Calculate new pen location and delta */
 		tm.e = span->items[i].x;
 		tm.f = span->items[i].y;
@@ -995,17 +1024,6 @@ do_extract(fz_context *ctx, fz_stext_device *dev, fz_text_span *span, fz_matrix 
 		}
 		dev->last.valid = 1;
 		dev->last.flags = flags;
-
-		if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
-		{
-			fz_rect r = current_clip(ctx, dev);
-			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &r))
-			{
-				dev->last.clipped = 1;
-				continue;
-			}
-		}
-		dev->last.clipped = 0;
 
 		/* Calculate bounding box and new pen position based on font metrics */
 		if (span->items[i].gid >= 0)
@@ -1059,22 +1077,22 @@ rune_index(const char *utf8, size_t idx)
 }
 
 static void
-flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, int i)
+flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, int i, int end)
 {
 	if (*actualtext == 0)
 		return;
 
-	while (1)
+	if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
+		if (dev->last.clipped)
+			return;
+
+	while (end < 0 || (end >= 0 && i < end))
 	{
 		int rune;
 		actualtext += fz_chartorune(&rune, actualtext);
 
 		if (rune == 0)
 			break;
-
-		if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
-			if (dev->last.clipped)
-				continue;
 
 		fz_add_stext_char(ctx, dev, dev->last.font,
 			rune,
@@ -1121,7 +1139,7 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 	{
 		int rune;
 		int len = fz_chartorune(&rune, actualtext);
-		if (span->items[start].gid != rune || rune == 0)
+		if (span->items[start].ucs != rune || rune == 0)
 			break;
 		actualtext += len; z--;
 	}
@@ -1146,7 +1164,7 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 	{
 		/* Nasty n^2 algo here, cos backtracking through utf8 is not trivial. It'll do. */
 		int rune = rune_index(actualtext, z-1);
-		if (span->items[end-1].gid != rune)
+		if (span->items[end-1].ucs != rune)
 			break;
 		z--;
 	}
@@ -1159,6 +1177,17 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 	{
 		fz_text_item *item = &span->items[i];
 		int rune = -1;
+
+		if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
+		{
+			fz_rect r = current_clip(ctx, dev);
+			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &r))
+			{
+				dev->last.clipped = 1;
+				continue;
+			}
+		}
+		dev->last.clipped = 0;
 
 		if ((size_t)i < z)
 			actualtext += fz_chartorune(&rune, actualtext);
@@ -1175,17 +1204,7 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 			dev->last.font = fz_keep_font(ctx, font);
 		}
 		dev->last.valid = 1;
-
-		if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
-		{
-			fz_rect r = current_clip(ctx, dev);
-			if (fz_glyph_entirely_outside_box(ctx, &ctm, span, &span->items[i], &r))
-			{
-				dev->last.clipped = 1;
-				continue;
-			}
-		}
-		dev->last.clipped = 0;
+		dev->last.flags = flags;
 
 		/* Calculate bounding box and new pen position based on font metrics */
 		if (item->gid >= 0)
@@ -1217,7 +1236,7 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 
 	/* We found a matching postfix. It seems likely that this is going to be the only
 	 * text object we get, so send any remaining actualtext now. */
-	flush_actualtext(ctx, dev, actualtext, i);
+	flush_actualtext(ctx, dev, actualtext, i, i + (int)strlen(actualtext) - (span->len - end));
 
 	/* Send the postfix */
 	if (end != span->len)
@@ -1337,7 +1356,15 @@ static void
 fz_stext_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const char *text)
 {
 	fz_stext_device *tdev = (fz_stext_device*)dev;
-	metatext_t *mt = fz_malloc_struct(ctx, metatext_t);
+	metatext_t *mt = find_actualtext(tdev);
+
+	if (mt != NULL && meta == FZ_METATEXT_ACTUALTEXT)
+		flush_actualtext(ctx, tdev, mt->text, 0, -1);
+
+	if (meta == FZ_METATEXT_ACTUALTEXT)
+		tdev->last.valid = 0;
+
+	mt = fz_malloc_struct(ctx, metatext_t);
 
 	mt->prev = tdev->metatext;
 	tdev->metatext = mt;
@@ -1384,8 +1411,9 @@ fz_stext_end_metatext(fz_context *ctx, fz_device *dev)
 	/* If we have a 'last' text position, send the content after that. */
 	if (tdev->last.valid)
 	{
-		flush_actualtext(ctx, tdev, tdev->metatext->text, 0);
+		flush_actualtext(ctx, tdev, tdev->metatext->text, 0, -1);
 		pop_metatext(ctx, tdev);
+		tdev->last.valid = 0;
 		return;
 	}
 
@@ -1401,7 +1429,12 @@ fz_stext_end_metatext(fz_context *ctx, fz_device *dev)
 		tdev->last.trm.f = tdev->metatext->bounds.y0;
 	}
 	else
+	{
+		if ((dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT)) == 0)
 		fz_warn(ctx, "Actualtext with no position. Text may be lost or mispositioned.");
+		pop_metatext(ctx, tdev);
+		return;
+	}
 
 	fz_var(myfont);
 
@@ -1412,7 +1445,7 @@ fz_stext_end_metatext(fz_context *ctx, fz_device *dev)
 			myfont = fz_new_base14_font(ctx, "Helvetica");
 			tdev->last.font = myfont;
 		}
-		flush_actualtext(ctx, tdev, tdev->metatext->text, 0);
+		flush_actualtext(ctx, tdev, tdev->metatext->text, 0, -1);
 		pop_metatext(ctx, tdev);
 	}
 	fz_always(ctx)
@@ -1449,7 +1482,7 @@ fz_stext_fill_image(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ct
 
 	/* If the alpha is less than 50% then it's probably a watermark or effect or something. Skip it. */
 	if (alpha >= 0.5f)
-		add_image_block_to_page(ctx, tdev->page, ctm, img);
+		add_image_block_to_page(ctx, tdev->page, ctm, img, tdev->id);
 
 }
 
@@ -1566,17 +1599,17 @@ fixup_bboxes_and_bidi(fz_context *ctx, fz_stext_block *block)
 }
 
 static void
-advance_x(fz_point *a, fz_point b, float d)
+advance_to_x(fz_point *a, fz_point b, float x)
 {
-	a->y += (b.y - a->y) * d / (b.x - a->x);
-	a->x += d;
+	a->y += (b.y - a->y) * (x - a->x) / (b.x - a->x);
+	a->x = x;
 }
 
 static void
-advance_y(fz_point *a, fz_point b, float d)
+advance_to_y(fz_point *a, fz_point b, float y)
 {
-	a->x += (b.x - a->x) * d / (b.y - a->y);
-	a->y += d;
+	a->x += (b.x - a->x) * (y - a->y) / (b.y - a->y);
+	a->y = y;
 }
 
 static int
@@ -1593,13 +1626,13 @@ line_crosses_rect(fz_point a, fz_point b, fz_rect r)
 		return 0;
 
 	if (a.x < r.x0)
-		advance_x(&a, b, r.x0 - a.x);
+		advance_to_x(&a, b, r.x0);
 	if (a.x > r.x1)
-		advance_x(&a, b, r.x1 - a.x);
+		advance_to_x(&a, b, r.x1);
 	if (a.y < r.y0)
-		advance_y(&a, b, r.y0 - a.y);
+		advance_to_y(&a, b, r.y0);
 	if (a.y > r.y1)
-		advance_y(&a, b, r.y1 - a.y);
+		advance_to_y(&a, b, r.y1);
 
 	return fz_is_point_inside_rect(a, r);
 }
@@ -1670,6 +1703,13 @@ static fz_rect expanded_rect_from_quad(fz_quad quad, fz_point dir, fz_point orig
 	fz_point right = { quad.lr.x - quad.ur.x, quad.lr.y - quad.ur.y };
 	float height = (hypotf(left.x, left.y) + hypotf(right.x, right.y))/2;
 	int neg = 0;
+	float extra_rise = 0;
+
+	/* Spaces will have 0 ascent. underscores will have small ascent.
+	 * We want a sane ascent to be able to spot strikeouts, but not
+	 * so big that it incorporates lines above the text, like borders. */
+	if (ascent < 0.75*size)
+		extra_rise = 0.75*size - ascent;
 
 	/* We'd like height to be at least ascent + 1/4 size */
 	if (height < 0)
@@ -1684,6 +1724,10 @@ static fz_rect expanded_rect_from_quad(fz_quad quad, fz_point dir, fz_point orig
 	quad.ll.y +=   height * dir.x;
 	quad.lr.x += - height * dir.y;
 	quad.lr.y +=   height * dir.x;
+	quad.ul.x -= - extra_rise * dir.y;
+	quad.ul.y -=   extra_rise * dir.x;
+	quad.ur.x -= - extra_rise * dir.y;
+	quad.ur.y -=   extra_rise * dir.x;
 
 	return fz_rect_from_quad(quad);
 }
@@ -1698,7 +1742,7 @@ static int feq(float a,float b)
 }
 
 static void
-check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point to, fz_point dir)
+check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point to, fz_point dir, float thickness)
 {
 	for ( ; block; block = block->next)
 	{
@@ -1723,7 +1767,14 @@ check_strikeout(fz_context *ctx, fz_stext_block *block, fz_point from, fz_point 
 			{
 				fz_point up;
 				float dx, dy, dot;
-				fz_rect ch_box = expanded_rect_from_quad(ch->quad, line->dir, ch->origin, ch->size);
+				fz_rect ch_box;
+
+				/* If the thickness is more than a 1/4 of the size, it's a highlight, not a
+				 * line! */
+				if (ch->size < thickness*4)
+					continue;
+
+				ch_box = expanded_rect_from_quad(ch->quad, line->dir, ch->origin, ch->size);
 
 				if (!line_crosses_rect(from, to, ch_box))
 					continue;
@@ -1758,12 +1809,13 @@ check_rects_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page 
 	{
 		fz_point from = tdev->rects[i].from;
 		fz_point to = tdev->rects[i].to;
+		float thickness = tdev->rects[i].thickness;
 		fz_point dir;
 		dir.x = to.x - from.x;
 		dir.y = to.y - from.y;
 		dir = fz_normalize_vector(dir);
 
-		check_strikeout(ctx, page->first_block, from, to, dir);
+		check_strikeout(ctx, page->first_block, from, to, dir, thickness);
 	}
 }
 
@@ -2065,11 +2117,18 @@ check_for_strikeout(fz_context *ctx, fz_stext_device *tdev, fz_stext_page *page,
 }
 
 static void
-add_vector(fz_context *ctx, fz_stext_page *page, fz_rect bbox, uint32_t flags, uint32_t argb)
+add_vector(fz_context *ctx, fz_stext_page *page, fz_rect bbox, uint32_t flags, uint32_t argb, int id, float exp)
 {
-	fz_stext_block *b = add_block_to_page(ctx, page);
+	fz_stext_block *b = add_block_to_page(ctx, page, FZ_STEXT_BLOCK_VECTOR, id);
 
-	b->type = FZ_STEXT_BLOCK_VECTOR;
+	if (exp != 0)
+	{
+		bbox.x0 -= exp;
+		bbox.y0 -= exp;
+		bbox.x1 += exp;
+		bbox.y1 += exp;
+	}
+
 	b->bbox = bbox;
 	b->u.v.flags = flags;
 	b->u.v.argb = argb;
@@ -2085,6 +2144,8 @@ typedef struct
 	fz_rect pending;
 	int count;
 	fz_point p[5];
+	int id;
+	float exp;
 } split_path_data;
 
 static void
@@ -2122,7 +2183,7 @@ maybe_rect(fz_context *ctx, split_path_data *sp)
 			for (i = 1; i < sp->count; i++)
 				bounds = fz_include_point_in_rect(bounds, sp->p[i]);
 			if (fz_is_valid_rect(sp->pending))
-				add_vector(ctx, sp->page, sp->pending, sp->flags | FZ_STEXT_VECTOR_IS_RECTANGLE | FZ_STEXT_VECTOR_CONTINUES, sp->argb);
+				add_vector(ctx, sp->page, sp->pending, sp->flags | FZ_STEXT_VECTOR_IS_RECTANGLE | FZ_STEXT_VECTOR_CONTINUES, sp->argb, sp->id, sp->exp);
 			sp->pending = bounds;
 			return;
 		}
@@ -2226,7 +2287,7 @@ fz_path_walker split_path_rects =
 };
 
 static void
-add_vectors_from_path(fz_context *ctx, fz_stext_page *page, const fz_path *path, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp, int stroke)
+add_vectors_from_path(fz_context *ctx, fz_stext_page *page, int id, const fz_path *path, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp, int stroke, float exp)
 {
 	int have_leftovers;
 	split_path_data sp;
@@ -2238,6 +2299,8 @@ add_vectors_from_path(fz_context *ctx, fz_stext_page *page, const fz_path *path,
 	sp.count = 0;
 	sp.leftovers = fz_empty_rect;
 	sp.pending = fz_empty_rect;
+	sp.id = id;
+	sp.exp = exp;
 	fz_walk_path(ctx, path, &split_path_rects, &sp);
 
 	have_leftovers = fz_is_valid_rect(sp.leftovers);
@@ -2245,9 +2308,9 @@ add_vectors_from_path(fz_context *ctx, fz_stext_page *page, const fz_path *path,
 	maybe_rect(ctx, &sp);
 
 	if (fz_is_valid_rect(sp.pending))
-		add_vector(ctx, page, sp.pending, sp.flags | FZ_STEXT_VECTOR_IS_RECTANGLE | (have_leftovers ? FZ_STEXT_VECTOR_CONTINUES : 0), sp.argb);
+		add_vector(ctx, page, sp.pending, sp.flags | FZ_STEXT_VECTOR_IS_RECTANGLE | (have_leftovers ? FZ_STEXT_VECTOR_CONTINUES : 0), sp.argb, id, exp);
 	if (have_leftovers)
-		add_vector(ctx, page, sp.leftovers, sp.flags, sp.argb);
+		add_vector(ctx, page, sp.leftovers, sp.flags, sp.argb, id, exp);
 }
 
 static void
@@ -2266,7 +2329,7 @@ fz_stext_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int eve
 		check_for_strikeout(ctx, tdev, page, path, ctm);
 
 	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
-		add_vectors_from_path(ctx, page, path, ctm, cs, color, alpha, cp, 0);
+		add_vectors_from_path(ctx, page, tdev->id, path, ctm, cs, color, alpha, cp, 0, 0);
 }
 
 static void
@@ -2276,6 +2339,7 @@ fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const
 	fz_stext_page *page = tdev->page;
 	fz_rect path_bounds = fz_bound_path(ctx, path, ss, ctm);
 	fz_rect *bounds = actualtext_bounds((fz_stext_device *)dev);
+	float exp = ss->linewidth / 2;
 
 	/* If we're in an actualtext, then update the bounds to include this content. */
 	if (bounds != NULL)
@@ -2285,7 +2349,7 @@ fz_stext_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const
 		check_for_strikeout(ctx, tdev, page, path, ctm);
 
 	if (tdev->flags & FZ_STEXT_COLLECT_VECTORS)
-		add_vectors_from_path(ctx, page, path, ctm, cs, color, alpha, cp, 1);
+		add_vectors_from_path(ctx, page, tdev->id, path, ctm, cs, color, alpha, cp, 1, exp);
 }
 
 static void
@@ -2298,7 +2362,7 @@ new_stext_struct(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, fz
 		raw = "";
 	z = strlen(raw);
 
-	str = fz_pool_alloc(ctx, page->pool, sizeof(*str) + z);
+	str = fz_pool_alloc(ctx, page->pool, offsetof(fz_stext_struct, raw) + z + 1);
 	str->first_block = NULL;
 	str->last_block = NULL;
 	str->standard = standard;
@@ -2308,6 +2372,25 @@ new_stext_struct(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, fz
 
 	block->u.s.down = str;
 }
+
+fz_stext_block *
+fz_new_stext_struct(fz_context *ctx, fz_stext_page *page, fz_structure standard, const char *raw, int idx)
+{
+	fz_stext_block *block;
+
+	block = fz_pool_alloc(ctx, page->pool, sizeof *page->first_block);
+	block->bbox = fz_empty_rect;
+	block->prev = NULL;
+	block->next = NULL;
+	block->type = FZ_STEXT_BLOCK_STRUCT;
+	block->u.s.index = idx;
+	block->u.s.down = NULL;
+	/* If this throws, we leak newblock but it's within the pool, so it doesn't matter. */
+	new_stext_struct(ctx, page, block, standard, raw);
+
+	return block;
+}
+
 
 static void
 fz_stext_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard, const char *raw, int idx)
@@ -2395,15 +2478,7 @@ fz_stext_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard,
 	}
 
 	/* We are going to need to create a new block. Create a complete unlinked one here. */
-	newblock = fz_pool_alloc(ctx, page->pool, sizeof *page->first_block);
-	newblock->bbox = fz_empty_rect;
-	newblock->prev = NULL;
-	newblock->next = NULL;
-	newblock->type = FZ_STEXT_BLOCK_STRUCT;
-	newblock->u.s.index = idx;
-	newblock->u.s.down = NULL;
-	/* If this throws, we leak newblock but it's within the pool, so it doesn't matter. */
-	new_stext_struct(ctx, page, newblock, standard, raw);
+	newblock = fz_new_stext_struct(ctx, page, standard, raw, idx);
 
 	/* So now we just need to link it in somewhere. */
 	if (gt)
@@ -2414,23 +2489,37 @@ fz_stext_begin_structure(fz_context *ctx, fz_device *dev, fz_structure standard,
 			gt->prev->next = newblock;
 		gt->prev = newblock;
 		newblock->next = gt;
+		newblock->id = gt->id;
 	}
 	else if (block)
 	{
 		/* Link it in at the end of the list (i.e. after 'block') */
 		newblock->prev = block;
 		block->next = newblock;
+		if (page->last_struct)
+		{
+			assert(page->last_struct->last_block == block);
+			page->last_struct->last_block = newblock;
+		}
+		else
+		{
+			assert(page->last_block == block);
+			page->last_block = newblock;
+		}
+		newblock->id = block->id;
 	}
 	else if (page->last_struct)
 	{
 		/* We have no blocks at all at this level. */
 		page->last_struct->first_block = newblock;
 		page->last_struct->last_block = newblock;
+		newblock->id = page->last_struct->up->id;
 	}
 	else
 	{
 		/* We have no blocks at ANY level. */
 		page->first_block = newblock;
+		/* newblock will have an id of 0. Best we can do. */
 	}
 	/* Wherever we linked it in, that's where we want to continue adding content. */
 	page->last_struct = newblock->u.s.down;
@@ -2466,6 +2555,12 @@ fz_stext_end_structure(fz_context *ctx, fz_device *dev)
 
 fz_device *
 fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options *opts)
+{
+	return fz_new_stext_device_for_page(ctx, page, opts, 0, 0, fz_empty_rect);
+}
+
+fz_device *
+fz_new_stext_device_for_page(fz_context *ctx, fz_stext_page *page, const fz_stext_options *opts, int chapter_num, int page_num, fz_rect mediabox)
 {
 	fz_stext_device *dev = fz_new_derived_device(ctx, fz_stext_device);
 
@@ -2515,6 +2610,25 @@ fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options
 	dev->rect_max = 0;
 	dev->rect_len = 0;
 	dev->rects = NULL;
+
+	/* Push a new id */
+	fz_try(ctx)
+	{
+		fz_stext_page_details *deets;
+		size_t id;
+		deets = fz_pool_array_append(ctx, page->id_list, &id);
+		dev->id = (int)id;
+		deets->mediabox = mediabox;
+		deets->chapter = chapter_num;
+		deets->page = page_num;
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, dev);
+		fz_rethrow(ctx);
+	}
+
+	page->mediabox = fz_union_rect(page->mediabox, mediabox);
 
 	return (fz_device*)dev;
 }

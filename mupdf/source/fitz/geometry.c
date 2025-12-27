@@ -643,6 +643,11 @@ int fz_contains_rect(fz_rect a, fz_rect b)
 		(a.y1 >= b.y1));
 }
 
+int fz_overlaps_rect(fz_rect a, fz_rect b)
+{
+	return !fz_is_empty_rect(fz_intersect_rect(a, b));
+}
+
 int
 fz_is_valid_quad(fz_quad q)
 {

@@ -110,6 +110,7 @@ LOCAL_SRC_FILES += $(wildcard $(MUPDF_PATH)/generated/resources/fonts/urw/*.c)
 
 LOCAL_CFLAGS += $(MUPDF_EXTRA_CFLAGS)
 
+LOCAL_SHORT_COMMANDS := true
 include $(BUILD_STATIC_LIBRARY)
 
 # --- Build local static libraries for thirdparty libraries ---
@@ -275,5 +276,7 @@ LOCAL_LDLIBS += -lm
 
 LOCAL_LDFLAGS := -Wl,--gc-sections
 LOCAL_LDFLAGS += $(MUPDF_EXTRA_LDFLAGS)
+
+LOCAL_SHORT_COMMANDS := true
 
 include $(BUILD_SHARED_LIBRARY)

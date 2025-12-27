@@ -310,12 +310,24 @@ enum
  *	the logical data, a caller now has to do a depth-first traversal.
  */
 
+typedef struct
+{
+	fz_rect mediabox;
+	int chapter;
+	int page;
+} fz_stext_page_details;
+
 /**
 	A text page is a list of blocks, together with an overall
 	bounding box.
+
+	The name of this structure is now slightly out of date. It
+	should really be fz_stext_document, cos it can contain
+	content from multiple pages.
 */
 typedef struct
 {
+	int refs;
 	fz_pool *pool;
 	fz_rect mediabox;
 	fz_stext_block *first_block;
@@ -326,7 +338,20 @@ typedef struct
 	 * not be used by anything outside of the stext device. */
 	fz_stext_block *last_block;
 	fz_stext_struct *last_struct;
+
+	/* An array of fz_stext_page_details */
+	fz_pool_array *id_list;
 } fz_stext_page;
+
+/**
+	Take a new reference to an fz_stext_page.
+*/
+fz_stext_page *fz_keep_stext_page(fz_context *ctx, fz_stext_page *page);
+
+/**
+	Helper function to retrieve the details for a given id from a block.
+*/
+fz_stext_page_details *fz_stext_page_details_for_block(fz_context *ctx, fz_stext_page *page, fz_stext_block *block);
 
 enum
 {
@@ -369,6 +394,7 @@ enum
 struct fz_stext_block
 {
 	int type;
+	int id;
 	fz_rect bbox;
 	union {
 		struct { fz_stext_line *first_line, *last_line; int flags;} t;
@@ -632,12 +658,41 @@ fz_stext_options *fz_parse_stext_options(fz_context *ctx, fz_stext_options *opts
 	Essentially this code attempts to split the page horizontally and/or
 	vertically repeatedly into smaller and smaller "segments" (divisions).
 
+	This minimises the reordering of the content, but some reordering
+	may be unavoidable.
+
 	Returns 0 if no changes were made to the document.
 
 	This is experimental code, and may change (or be removed) in future
 	versions!
 */
 int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page);
+
+/**
+	Perform segmentation analysis on a rectangle of a given
+	stext page.
+
+	Like fz_segment_stext_page, this attempts to split the given page
+	region horizontally and/or vertically repeatedly into smaller and
+	smaller "segments".
+
+	This works for pages with structure too, but splitting with
+	rectangles that cut across structure blocks may not behave as
+	expected.
+
+	This minimises the reordering of the content (as viewed from the
+	perspective of a depth first traversal), but some reordering may
+	be unavoidable.
+
+	This function accepts smaller gaps for segmentation than the full
+	page segmentation does.
+
+	Returns 0 if no changes were made to the document.
+
+	This is experimental code, and may change (or be removed) in future
+	versions!
+*/
+int fz_segment_stext_rect(fz_context *ctx, fz_stext_page *page, fz_rect rect);
 
 /**
 	Attempt to break paragraphs at plausible places.
@@ -649,6 +704,12 @@ void fz_paragraph_break(fz_context *ctx, fz_stext_page *page);
 	information.
 */
 void fz_table_hunt(fz_context *ctx, fz_stext_page *page);
+
+/**
+	Hunt for possible tables within a specific rect on a page, and
+	update the stext with information.
+*/
+void fz_table_hunt_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds);
 
 /**
 	Interpret the bounded contents of a given stext page as
@@ -684,6 +745,42 @@ fz_find_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds
 	options: Options to configure the stext device.
 */
 fz_device *fz_new_stext_device(fz_context *ctx, fz_stext_page *page, const fz_stext_options *options);
+
+/**
+	Create a device to extract the text on a page into an existing
+	fz_stext_page structure.
+
+	Gather the text on a page into blocks and lines.
+
+	The reading order is taken from the order the text is drawn in
+	the source file, so may not be accurate.
+
+	stext_page: The text page to which content should be added. This will
+	usually be a newly created (empty) text page, but it can be one
+	containing data already (for example when merging multiple
+	pages, or watermarking).
+
+	options: Options to configure the stext device.
+
+	The next 2 parameters are copied into the fz_stext_page structure's
+	ids section, so only have to be valid if you expect to interrogate
+	that section later.
+
+	chapter_num: The chapter number that this page came from.
+
+	page_num: The page number that this page came from.
+
+	The final parameter is copied into the fz_stext_page structure's
+	ids section. The mediabox for the enture fz_stext_page is unioned
+	with this, so pass fz_empty_bbox if you don't care about getting
+	a valid value back from the ids section, but you don't want to
+	upset the value in the page->mediabox field.
+
+	mediabox: The mediabox for this page.
+*/
+fz_device *
+fz_new_stext_device_for_page(fz_context *ctx, fz_stext_page *stext_page, const fz_stext_options *opts, int chapter_num, int page_num, fz_rect mediabox);
+
 
 /**
 	Create a device to OCR the text on the page.
@@ -732,5 +829,96 @@ fz_device *fz_new_ocr_device(fz_context *ctx, fz_device *target, fz_matrix ctm, 
 
 fz_document *fz_open_reflowed_document(fz_context *ctx, fz_document *underdoc, const fz_stext_options *opts);
 
+/*
+	Allocator function to make a new STRUCT stext block to be used in
+	a given page (and it's 'down' structure, initially empty). Not
+	linked in to the overall page structure yet.
+*/
+fz_stext_block *fz_new_stext_struct(fz_context *ctx, fz_stext_page *page, fz_structure standard, const char *raw, int index);
+
+/* Iterators for walking over stext pages */
+
+/*
+	Iterator definition. The parts of this are subject to change.
+*/
+typedef struct
+{
+	fz_stext_page *page;
+	fz_stext_block *pos;
+	fz_stext_struct *parent;
+} fz_stext_page_block_iterator;
+
+/*
+	Create a new iterator, initialised to point at the first block on the page.
+*/
+fz_stext_page_block_iterator fz_stext_page_block_iterator_begin(fz_stext_page *page);
+
+/*
+	Move to the next block (never moving upwards).
+
+	If there is no next block, iterator.pos is returned as NULL.
+*/
+fz_stext_page_block_iterator fz_stext_page_block_iterator_next(fz_stext_page_block_iterator pos);
+
+/*
+	On a structure block, this moves the iterator down to the first child of
+	that block.
+
+	On any other block, this does nothing.
+*/
+fz_stext_page_block_iterator fz_stext_page_block_iterator_down(fz_stext_page_block_iterator pos);
+
+/*
+	Move up to the parent of the current block.
+
+	If there is no parent, iterator.pos is return as NULL.
+*/
+fz_stext_page_block_iterator fz_stext_page_block_iterator_up(fz_stext_page_block_iterator pos);
+
+/*
+	Move to the next block (in a depth first traversal style).
+
+	The iterator never stops on struct blocks, and instead steps into them.
+	At the end of a set of child blocks, it will move back to the parent and
+	continue from there.
+*/
+fz_stext_page_block_iterator fz_stext_page_block_iterator_next_dfs(fz_stext_page_block_iterator pos);
+
+/*
+	Return true if the iterator is at the end of a list of blocks.
+	(No attempt is made to account for whether there is more data after a
+	parent block).
+*/
+int fz_stext_page_block_iterator_eod(fz_stext_page_block_iterator pos);
+
+/*
+	Return true if the iterator is at the end of a depth first traversal
+	of the stext page.
+*/
+int fz_stext_page_block_iterator_eod_dfs(fz_stext_page_block_iterator pos);
+
+/*
+	Update a given stext page so that the contents within it that fall
+	within the given rectangle are contained within a structure tag of the
+	given classification.
+
+	The code tries not to change the ordering of content as seen from
+	a depth first traversal as it does this.
+
+	This is an experimental interface. It may be updated or removed in
+	future with no warning!
+*/
+void
+fz_classify_stext_rect(fz_context *ctx, fz_stext_page *page, fz_structure classification, fz_rect rect);
+
+/*
+	Remove any prefix of large white rectangular vectors that (almost)
+	fills the page from the stext.
+
+	This is an experimental interface. It may be updated or removed in
+	future with no warning!
+*/
+int
+fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page);
 
 #endif

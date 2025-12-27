@@ -160,7 +160,7 @@ public class TraceDevice extends Device implements PathWalker, TextWalker
 		System.out.println("endGroup");
 	}
 
-	public int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id) {
+	public int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id, int doc_id) {
 		System.out.println("beginTile");
 		return 0;
 	}

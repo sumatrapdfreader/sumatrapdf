@@ -56,7 +56,9 @@ typedef struct {
 	fz_pixmap *shape;
 	fz_pixmap *group_alpha;
 	int blendmode;
-	int id, encache;
+	int id;
+	int doc_id;
+	int encache;
 	float alpha;
 	fz_matrix ctm;
 	float xstep, ystep;
@@ -2566,6 +2568,7 @@ typedef struct
 	int refs;
 	float ctm[4];
 	int id;
+	int doc_id;
 	char has_shape;
 	char has_group_alpha;
 	fz_colorspace *cs;
@@ -2585,6 +2588,7 @@ fz_make_hash_tile_key(fz_context *ctx, fz_store_hash *hash, void *key_)
 	tile_key *key = key_;
 
 	hash->u.im.id = key->id;
+	hash->u.im.doc_id = key->doc_id;
 	hash->u.im.has_shape = key->has_shape;
 	hash->u.im.has_group_alpha = key->has_group_alpha;
 	hash->u.im.m[0] = key->ctm[0];
@@ -2619,6 +2623,7 @@ fz_cmp_tile_key(fz_context *ctx, void *k0_, void *k1_)
 	tile_key *k0 = k0_;
 	tile_key *k1 = k1_;
 	return k0->id == k1->id &&
+		k0->doc_id == k1->doc_id &&
 		k0->has_shape == k1->has_shape &&
 		k0->has_group_alpha == k1->has_group_alpha &&
 		k0->ctm[0] == k1->ctm[0] &&
@@ -2632,8 +2637,8 @@ static void
 fz_format_tile_key(fz_context *ctx, char *s, size_t n, void *key_)
 {
 	tile_key *key = (tile_key *)key_;
-	fz_snprintf(s, n, "(tile id=%x, ctm=%g %g %g %g, cs=%x, shape=%d, ga=%d)",
-			key->id, key->ctm[0], key->ctm[1], key->ctm[2], key->ctm[3], key->cs,
+	fz_snprintf(s, n, "(tile id=%x, doc_id=%x, ctm=%g %g %g %g, cs=%x, shape=%d, ga=%d)",
+			key->id, key->doc_id, key->ctm[0], key->ctm[1], key->ctm[2], key->ctm[3], key->cs,
 			key->has_shape, key->has_group_alpha);
 }
 
@@ -2684,7 +2689,7 @@ fz_tile_size(fz_context *ctx, tile_record *tile)
 }
 
 static int
-fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix in_ctm, int id)
+fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix in_ctm, int id, int doc_id)
 {
 	fz_draw_device *dev = (fz_draw_device*)devp;
 	fz_matrix ctm = fz_concat(in_ctm, dev->transform);
@@ -2739,6 +2744,7 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 		tk.ctm[2] = ctm.c;
 		tk.ctm[3] = ctm.d;
 		tk.id = id;
+		tk.doc_id = doc_id;
 		tk.cs = state[1].dest->colorspace;
 		tk.has_shape = (state[1].shape != NULL);
 		tk.has_group_alpha = (state[1].group_alpha != NULL);
@@ -2753,6 +2759,7 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 			state[1].xstep = xstep;
 			state[1].ystep = ystep;
 			state[1].id = id;
+			state[1].doc_id = doc_id;
 			state[1].encache = 0;
 			state[1].area = fz_irect_from_rect(area);
 			state[1].ctm = ctm;
@@ -2787,6 +2794,7 @@ fz_draw_begin_tile(fz_context *ctx, fz_device *devp, fz_rect area, fz_rect view,
 	state[1].xstep = xstep;
 	state[1].ystep = ystep;
 	state[1].id = id;
+	state[1].doc_id = doc_id;
 	state[1].encache = 1;
 	state[1].area = fz_irect_from_rect(area);
 	state[1].ctm = ctm;
@@ -2943,6 +2951,7 @@ fz_draw_end_tile(fz_context *ctx, fz_device *devp)
 				key = fz_malloc_struct(ctx, tile_key);
 				key->refs = 1;
 				key->id = state[1].id;
+				key->doc_id = state[1].doc_id;
 				key->ctm[0] = ctm.a;
 				key->ctm[1] = ctm.b;
 				key->ctm[2] = ctm.c;
@@ -3376,4 +3385,18 @@ fz_new_draw_device_with_options(fz_context *ctx, const fz_draw_options *opts, fz
 		fz_rethrow(ctx);
 	}
 	return dev;
+}
+
+static int
+drop_tile_doc(fz_context *ctx, void *doc_id, void *key_)
+{
+	tile_key *key = (tile_key *)key_;
+
+	return (key->doc_id == (int)(intptr_t)doc_id);
+}
+
+void
+fz_drop_drawn_tiles_for_document(fz_context *ctx, fz_document *doc)
+{
+	fz_filter_store(ctx, drop_tile_doc, (void *)(intptr_t)doc->id, &fz_tile_store_type);
 }

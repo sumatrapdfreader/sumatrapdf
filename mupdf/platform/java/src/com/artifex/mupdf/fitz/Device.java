@@ -77,7 +77,7 @@ abstract public class Device
 	abstract public void endMask();
 	abstract public void beginGroup(Rect area, ColorSpace cs, boolean isolated, boolean knockout, int blendmode, float alpha);
 	abstract public void endGroup();
-	abstract public int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id);
+	abstract public int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id, int doc_id);
 	abstract public void endTile();
 	abstract public void renderFlags(int set, int clear);
 	abstract public void setDefaultColorSpaces(DefaultColorSpaces dcs);

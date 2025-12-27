@@ -2692,10 +2692,10 @@ JNIEXPORT void JNICALL Java_com_artifex_mupdf_fitz_NativeDevice_endGroup
 /*
  * Class:     com_artifex_mupdf_fitz_NativeDevice
  * Method:    beginTile
- * Signature: (Lcom/artifex/mupdf/fitz/Rect;Lcom/artifex/mupdf/fitz/Rect;FFLcom/artifex/mupdf/fitz/Matrix;I)I
+ * Signature: (Lcom/artifex/mupdf/fitz/Rect;Lcom/artifex/mupdf/fitz/Rect;FFLcom/artifex/mupdf/fitz/Matrix;II)I
  */
 JNIEXPORT jint JNICALL Java_com_artifex_mupdf_fitz_NativeDevice_beginTile
-  (JNIEnv *, jobject, jobject, jobject, jfloat, jfloat, jobject, jint);
+  (JNIEnv *, jobject, jobject, jobject, jfloat, jfloat, jobject, jint, jint);
 
 /*
  * Class:     com_artifex_mupdf_fitz_NativeDevice

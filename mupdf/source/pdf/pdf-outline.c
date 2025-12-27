@@ -50,6 +50,9 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 		if (pdf_mark_bits_set(ctx, marks, dict))
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Cycle detected in outlines");
 
+		if (!pdf_is_indirect(ctx, dict))
+			  fz_throw(ctx, FZ_ERROR_FORMAT, "Non-indirect outline entry discovered");
+
 		parent = pdf_dict_get(ctx, dict, PDF_NAME(Parent));
 		prev = pdf_dict_get(ctx, dict, PDF_NAME(Prev));
 		next = pdf_dict_get(ctx, dict, PDF_NAME(Next));
