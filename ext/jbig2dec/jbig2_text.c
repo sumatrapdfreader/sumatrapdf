@@ -404,7 +404,6 @@ cleanup1:
                 }
 
                 if (code1 < 0 || code2 < 0 || code3 < 0 || code4 < 0 || code5 < 0 || code6 < 0) {
-                    jbig2_image_release(ctx, IB);
                     code = jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to decode data");
                     goto cleanup2;
                 }

@@ -336,6 +336,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
                     tparams.IARI == NULL || tparams.IARDW == NULL ||
                     tparams.IARDH == NULL) {
                 jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number, "failed to allocate text region arith decoder contexts");
+                goto cleanup;
             }
         }
     }

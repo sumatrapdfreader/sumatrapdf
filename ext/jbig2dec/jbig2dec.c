@@ -567,7 +567,7 @@ main(int argc, char **argv)
 {
     jbig2dec_params_t params;
     jbig2dec_error_callback_state_t error_callback_state;
-    jbig2dec_allocator_t allocator_;
+    jbig2dec_allocator_t allocator_ = { 0 };
     jbig2dec_allocator_t *allocator = &allocator_;
     Jbig2Ctx *ctx = NULL;
     FILE *f = NULL, *f_page = NULL;

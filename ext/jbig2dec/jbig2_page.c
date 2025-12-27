@@ -85,9 +85,11 @@ jbig2_page_info(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_dat
                 }
                 else if (ctx->max_page_index > (UINT32_MAX >> 2)) {
                     ctx->max_page_index = UINT32_MAX;
+                } else {
+                    ctx->max_page_index <<= 2;
                 }
 
-                pages = jbig2_renew(ctx, ctx->pages, Jbig2Page, (ctx->max_page_index <<= 2));
+                pages = jbig2_renew(ctx, ctx->pages, Jbig2Page, ctx->max_page_index);
                 if (pages == NULL) {
                     return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "failed to reallocate pages");
                 }
