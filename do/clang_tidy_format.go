@@ -9,6 +9,16 @@ import (
 	"sync"
 )
 
+func detectClangTidy() string {
+	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\clang-tidy.exe`)
+	panicIf(!fileExists(path), "didn't find clang-tidy.exe")
+	// if !printClangPath {
+	// 	logf("clang-format: %s\n", path)
+	// 	printClangPath = true
+	// }
+	return path
+}
+
 /*
 https://clang.llvm.org/extra/clang-tidy/checks/list.html
 
@@ -74,7 +84,8 @@ func clangTidyFile(path string) {
 		"-D_WIN32_WINNT=0x0a00",
 		"-DPRE_RELEASE_VER=3.3",
 	}
-	cmd := exec.Command("clang-tidy", args...)
+	exePath := detectClangTidy()
+	cmd := exec.Command(exePath, args...)
 	err := runCmdShowProgressAndLog(cmd, clangTidyLogFile)
 	must(err)
 }
@@ -159,7 +170,8 @@ func clangTidyFix(path string) {
 		"-D_WIN32_WINNT=0x0a00",
 		"-DPRE_RELEASE_VER=3.3",
 	}
-	cmd := exec.Command("clang-tidy", args...)
+	exePath := detectClangTidy()
+	cmd := exec.Command(exePath, args...)
 	err := runCmdShowProgressAndLog(cmd, clangTidyLogFile)
 	must(err)
 }

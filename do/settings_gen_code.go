@@ -35,7 +35,7 @@ var (
 type Field struct {
 	Name    string
 	Type    *Type
-	Default interface{}
+	Default any
 	Comment string
 	// internal settings are not serialized, only valid during program runtime
 	Internal   bool
@@ -187,7 +187,7 @@ func toCName(name string) string {
 	return strings.ToLower(name[0:1]) + name[1:]
 }
 
-func mkField(name string, typ *Type, def interface{}, comment string) *Field {
+func mkField(name string, typ *Type, def any, comment string) *Field {
 	res := &Field{
 		Name:       name,
 		Type:       typ,
@@ -241,7 +241,7 @@ func mkArray(name string, fields []*Field, comment string) *Field {
 	return res
 }
 
-func mkCompactArray(name string, typ *Type, def interface{}, comment string) *Field {
+func mkCompactArray(name string, typ *Type, def any, comment string) *Field {
 	typ2Name := fmt.Sprintf("%sArray", typ.Name)
 	typ2CType := fmt.Sprintf("Vec<%s>*", typ.Ctype)
 	typ2 := &Type{typ2Name, typ2CType}

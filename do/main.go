@@ -269,7 +269,7 @@ func Main() {
 		flag.BoolVar(&flgTriggerCodeQL, "trigger-codeql", false, "trigger codeql build")
 		flag.BoolVar(&flgCppCheck, "cppcheck", false, "run cppcheck (must be installed)")
 		flag.BoolVar(&flgCppCheckAll, "cppcheck-all", false, "run cppcheck with more checks (must be installed)")
-		//flag.BoolVar(&flgClangTidy, "clang-tidy", false, "run clang-tidy (must be installed)")
+		flag.BoolVar(&flgClangTidy, "clang-tidy", false, "run clang-tidy (must be installed)")
 		//flag.BoolVar(&flgClangTidyFix, "clang-tidy-fix", false, "run clang-tidy (must be installed)")
 		flag.BoolVar(&flgDiff, "diff", false, "preview diff using winmerge")
 		flag.BoolVar(&flgGenSettings, "gen-settings", false, "re-generate src/Settings.h")

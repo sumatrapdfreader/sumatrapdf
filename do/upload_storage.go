@@ -236,7 +236,7 @@ var sumLatestInstallerArm64 = "{{.Host}}/{{.Prefix}}-arm64-install.exe";
 
 `
 	sha1 := getGitSha1()
-	d := map[string]interface{}{
+	d := map[string]any{
 		"Host":     host,
 		"Ver":      ver,
 		"Sha1":     sha1,

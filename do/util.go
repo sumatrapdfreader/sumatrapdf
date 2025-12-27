@@ -31,7 +31,7 @@ var (
 	toTrimmedLines    = u.ToTrimmedLines
 )
 
-func logf(s string, args ...interface{}) {
+func logf(s string, args ...any) {
 	if len(args) > 0 {
 		s = fmt.Sprintf(s, args...)
 	}
@@ -81,7 +81,7 @@ func fileSizeMust(path string) int64 {
 	return size
 }
 
-func evalTmpl(s string, v interface{}) string {
+func evalTmpl(s string, v any) string {
 	tmpl, err := template.New("tmpl").Parse(s)
 	must(err)
 	var buf bytes.Buffer
@@ -119,12 +119,7 @@ func findLargestFileByExt() {
 	drive := "x:\\" // on laptop
 	drive = "v:\\"  // on desktop
 	isWantedExt := func(ext string) bool {
-		for _, s := range []string{".pdf", ".cbr", ".cbz", ".epub", "mobi", ".xps", ".djvu", ".pdb", ".prc", ".xps"} {
-			if s == ext {
-				return true
-			}
-		}
-		return false
+		return slices.Contains([]string{".pdf", ".cbr", ".cbz", ".epub", "mobi", ".xps", ".djvu", ".pdb", ".prc", ".xps"}, ext)
 	}
 
 	extToSize := map[string]int64{}
@@ -192,15 +187,6 @@ func createDirForFileMust(path string) {
 	must(os.MkdirAll(dir, 0755))
 }
 
-func stringInSlice(a []string, toCheck string) bool {
-	for _, s := range a {
-		if s == toCheck {
-			return true
-		}
-	}
-	return false
-}
-
 func fmtCmdShort(cmd exec.Cmd) string {
 	cmd.Path = filepath.Base(cmd.Path)
 	return cmd.String()
@@ -212,7 +198,7 @@ func currDirAbsMust() string {
 	return dir
 }
 
-func execTextTemplate(tmplText string, data interface{}) string {
+func execTextTemplate(tmplText string, data any) string {
 	tmpl, err := template.New("").Parse(tmplText)
 	must(err)
 	var buf bytes.Buffer

@@ -2,6 +2,7 @@ package do
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -76,7 +77,7 @@ func extractAccesskeyGroups(path string) map[string]*accessGroup {
 		} else if group != nil {
 			strs := extractTranslations(line)
 			for _, str := range strs {
-				exists := stringInSlice(group.group, str)
+				exists := slices.Contains(group.group, str)
 				n := strings.Count(str, "&")
 				panicIf(n > 1, "TODO: handle multiple '&' in strings")
 				if exists {
