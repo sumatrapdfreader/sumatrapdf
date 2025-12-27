@@ -57,5 +57,11 @@ class PdbReader {
 };
 
 // stuff for mobi format
-enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc, Plucker };
+enum class PdbDocType {
+    Unknown,
+    Mobipocket,
+    PalmDoc,
+    TealDoc,
+    Plucker
+};
 PdbDocType GetPdbDocType(const char* typeCreator);

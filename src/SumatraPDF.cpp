@@ -834,17 +834,17 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     // For SinglePage mode, show a scrollbar for rapid page navigation
     bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
     bool showVScroll = false;
-    
+
     if (isSinglePageMode) {
         // In SinglePage mode, show vertical scrollbar for page navigation (respecting hideScrollbars setting)
         showVScroll = !gGlobalPrefs->fixedPageUI.hideScrollbars;
         int pageCount = dm->PageCount();
         int currentPage = dm->CurrentPageNo();
-        
-        si.nPos = currentPage - 1;  // 0-based position
+
+        si.nPos = currentPage - 1; // 0-based position
         si.nMin = 0;
-        si.nMax = pageCount - 1;    // 0-based max
-        si.nPage = 1;               // One page visible at a time
+        si.nMax = pageCount - 1; // 0-based max
+        si.nPage = 1;            // One page visible at a time
     } else {
         // Original logic for other display modes
         if (viewPort.dy >= canvas.dy) {
@@ -866,7 +866,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         }
         showVScroll = (viewPort.dy < canvas.dy);
     }
-    
+
     ShowScrollBar(win->hwndCanvas, SB_VERT, showVScroll);
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
@@ -2159,7 +2159,11 @@ void LoadModelIntoTab(WindowTab* tab) {
     win->RedrawAll(true);
 }
 
-enum class MeasurementUnit { pt, mm, in };
+enum class MeasurementUnit {
+    pt,
+    mm,
+    in
+};
 
 static TempStr FormatCursorPositionTemp(EngineBase* engine, PointF pt, MeasurementUnit unit) {
     if (pt.x < 0) {
@@ -6380,4 +6384,3 @@ void ShutdownCleanup() {
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
 }
-

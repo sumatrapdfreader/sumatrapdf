@@ -3,7 +3,12 @@
 
 constexpr int kInstallerWinDy = 340;
 
-enum class PreviousInstallationType { None = 0, User = 1, Machine = 2, Both = 3 };
+enum class PreviousInstallationType {
+    None = 0,
+    User = 1,
+    Machine = 2,
+    Both = 3
+};
 
 struct PreviousInstallationInfo {
     char* installationDir = nullptr;

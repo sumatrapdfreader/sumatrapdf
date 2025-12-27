@@ -92,7 +92,10 @@
 #define MAKE_ARG(__arg, __name) __arg,
 #define MAKE_STR(__arg, __name) __name "\0"
 
-enum class Arg { Unknown = -1, ARGS(MAKE_ARG) };
+enum class Arg {
+    Unknown = -1,
+    ARGS(MAKE_ARG)
+};
 
 static const char* gArgNames = ARGS(MAKE_STR);
 

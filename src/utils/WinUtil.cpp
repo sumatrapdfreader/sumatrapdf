@@ -2552,9 +2552,8 @@ void RectInflateTB(RECT& r, int top, int bottom) {
     r.bottom += bottom;
 }
 
-static LPWSTR knownCursorIds[] = {IDC_ARROW,    IDC_IBEAM,    IDC_HAND,     IDC_SIZEALL,
-                                  IDC_SIZEWE,   IDC_SIZENS,   IDC_SIZENWSE, IDC_SIZENESW,
-                                  IDC_NO,       IDC_CROSS};
+static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,    IDC_HAND,     IDC_SIZEALL, IDC_SIZEWE,
+                                  IDC_SIZENS, IDC_SIZENWSE, IDC_SIZENESW, IDC_NO,      IDC_CROSS};
 
 static HCURSOR cachedCursors[dimof(knownCursorIds)]{};
 

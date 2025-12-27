@@ -2,7 +2,10 @@
    License: GPLv3 */
 
 struct TextSearch : public TextSelection {
-    enum class Direction : bool { Backward = false, Forward = true };
+    enum class Direction : bool {
+        Backward = false,
+        Forward = true
+    };
 
     TextSearch(EngineBase* engine, DocumentTextCache* textCache);
     ~TextSearch();

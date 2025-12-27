@@ -118,7 +118,11 @@ bool IsEqual(const ByteSlice&, const ByteSlice&);
 
 namespace str {
 
-enum class TrimOpt { Left, Right, Both };
+enum class TrimOpt {
+    Left,
+    Right,
+    Both
+};
 
 size_t Len(const WCHAR*);
 size_t Len(const char* s);

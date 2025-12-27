@@ -26,7 +26,12 @@ struct HtmlToken {
         Error
     };
 
-    enum ParsingError { NoError, ExpectedElement, UnclosedTag, InvalidTag };
+    enum ParsingError {
+        NoError,
+        ExpectedElement,
+        UnclosedTag,
+        InvalidTag
+    };
 
     bool IsStartTag() const {
         return type == StartTag;

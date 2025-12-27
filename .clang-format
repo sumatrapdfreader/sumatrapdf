@@ -5,6 +5,8 @@ AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 # AllowShortBlocksOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false # Prevents collapsing even short enums to one line
+AlignAfterOpenBracket: Align # Aligns the enumerators vertically after the {
 IndentWidth: 4
 ColumnLimit: 120
 AccessModifierOffset: -2

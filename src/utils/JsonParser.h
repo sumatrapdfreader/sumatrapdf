@@ -5,7 +5,12 @@
 
 namespace json {
 
-enum class Type { String, Number, Bool, Null };
+enum class Type {
+    String,
+    Number,
+    Bool,
+    Null
+};
 
 // parsing JSON data will call the ValueVisitor for every
 // primitive data value with a string representation of that

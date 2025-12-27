@@ -10,7 +10,12 @@ typedef ar_archive* (*archive_opener_t)(ar_stream*);
 
 class MultiFormatArchive {
   public:
-    enum class Format { Zip, Rar, SevenZip, Tar };
+    enum class Format {
+        Zip,
+        Rar,
+        SevenZip,
+        Tar
+    };
 
     struct FileInfo {
         size_t fileId = 0;

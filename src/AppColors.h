@@ -4,7 +4,6 @@
 // application-wide colors
 
 enum class AppColor {
-
 };
 
 COLORREF GetAppColor(AppColor);

@@ -4,7 +4,10 @@
 // class for decoding of byte buffer as a sequence of numbers
 class ByteOrderDecoder {
   public:
-    enum ByteOrder { LittleEndian, BigEndian };
+    enum ByteOrder {
+        LittleEndian,
+        BigEndian
+    };
 
     ByteOrderDecoder(const char* d, size_t len, ByteOrder order);
     ByteOrderDecoder(const u8* d, size_t len, ByteOrder order);

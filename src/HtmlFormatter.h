@@ -84,7 +84,12 @@ struct StyleRule {
     HtmlTag tag = Tag_NotFound;
     u32 classHash = 0;
 
-    enum Unit { px, pt, em, inherit };
+    enum Unit {
+        px,
+        pt,
+        em,
+        inherit
+    };
 
     float textIndent = 0;
     Unit textIndentUnit = inherit;

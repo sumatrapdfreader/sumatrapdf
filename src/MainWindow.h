@@ -26,7 +26,6 @@ struct Annotation;
 struct ILinkHandler;
 
 // Current action being performed with a mouse
-// clang-format off
 enum class MouseAction {
     None = 0,
     Dragging,
@@ -34,16 +33,13 @@ enum class MouseAction {
     Scrolling,
     SelectingText
 };
-// clang-format on
 
-// clang-format off
 enum PresentationMode {
     PM_DISABLED = 0,
     PM_ENABLED,
     PM_BLACK_SCREEN,
     PM_WHITE_SCREEN
 };
-// clang-format on
 
 // WM_GESTURE handling
 struct TouchState {

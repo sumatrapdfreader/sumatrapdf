@@ -751,7 +751,9 @@ So far have tested printing from XP to
  - HP Deskjet D4160
  - Lexmark Z515 inkjet, which should cover most bases.
 */
-enum { MAXPAGERANGES = 10 };
+enum {
+    MAXPAGERANGES = 10
+};
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     // we remember some printer settings per process
     static ScopedMem<DEVMODE> defaultDevMode;
