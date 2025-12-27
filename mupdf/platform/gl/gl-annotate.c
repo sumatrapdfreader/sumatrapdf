@@ -774,6 +774,38 @@ static void do_annotate_date(void)
 		ui_label("Date: %s", s);
 }
 
+static void do_annotate_flags(void)
+{
+	char str[100];
+	int n = 0;
+	str[0] = 0;
+	int f = pdf_annot_flags(ctx, ui.selected_annot);
+	if (f & PDF_ANNOT_IS_INVISIBLE) ++n, fz_strlcat(str, "Invisible ", sizeof str);
+	if (f & PDF_ANNOT_IS_HIDDEN) ++n, fz_strlcat(str, "Hidden ", sizeof str);
+	if (f & PDF_ANNOT_IS_PRINT) ++n, fz_strlcat(str, "Print ", sizeof str);
+	if (f & PDF_ANNOT_IS_NO_ZOOM) ++n, fz_strlcat(str, "NoZoom ", sizeof str);
+	if (f & PDF_ANNOT_IS_NO_ROTATE) ++n, fz_strlcat(str, "NoRotate ", sizeof str);
+	if (f & PDF_ANNOT_IS_NO_VIEW) ++n, fz_strlcat(str, "NoView ", sizeof str);
+	if (f & PDF_ANNOT_IS_READ_ONLY) ++n, fz_strlcat(str, "ReadOnly ", sizeof str);
+	if (f & PDF_ANNOT_IS_LOCKED) ++n, fz_strlcat(str, "Locked ", sizeof str);
+	if (f & PDF_ANNOT_IS_TOGGLE_NO_VIEW) ++n, fz_strlcat(str, "ToggleNoView ", sizeof str);
+	if (f & PDF_ANNOT_IS_LOCKED_CONTENTS) ++n, fz_strlcat(str, "LockedContents ", sizeof str);
+	if (str[0])
+	{
+		if (n < 3)
+		{
+			ui_label("Flags: %s", str);
+		}
+		else
+		{
+			ui_label("Flags:");
+			ui.layout->padx = 10;
+			ui_label(str);
+			ui.layout->padx = 0;
+		}
+	}
+}
+
 static const char *intent_names[] = {
 	"Default", // all
 	"FreeTextCallout", // freetext
@@ -889,7 +921,7 @@ static const char *font_names[] = { "Cour", "Helv", "TiRo" };
 static const char *lang_names[] = { "", "ja", "ko", "zh-Hans", "zh-Hant" };
 static const char *im_redact_names[] = { "Keep images", "Remove images", "Erase pixels" };
 static const char *la_redact_names[] = { "Keep line art", "Remove covered line art", "Remove touched line art" };
-static const char *tx_redact_names[] = { "Remove text", "Keep text" };
+static const char *tx_redact_names[] = { "Remove text", "Keep text", "Remove invisible text" };
 static const char *border_styles[] = { "Solid", "Dashed", "Dotted" };
 static const char *border_intensities[] = { "None", "Small clouds", "Large clouds", "Enormous clouds" };
 
@@ -1113,6 +1145,13 @@ static int image_file_filter(const char *fn)
 	return !!fz_strstrcase(fn, ".jpg") || !!fz_strstrcase(fn, ".jpeg") || !!fz_strstrcase(fn, ".png");
 }
 
+static void resize_icon_annot(void)
+{
+	fz_rect rect = pdf_annot_rect(ctx, ui.selected_annot);
+	rect = fz_make_rect(rect.x0, rect.y0, rect.x0 + 16, rect.y0 + 16);
+	pdf_set_annot_rect(ctx, ui.selected_annot, rect);
+}
+
 void do_annotate_panel(void)
 {
 	static struct list annot_list;
@@ -1175,6 +1214,7 @@ void do_annotate_panel(void)
 
 		do_annotate_author();
 		do_annotate_date();
+		do_annotate_flags();
 
 		obj = pdf_dict_get(ctx, pdf_annot_obj(ctx, ui.selected_annot), PDF_NAME(Popup));
 		if (obj)
@@ -1342,6 +1382,7 @@ void do_annotate_panel(void)
 				{
 					trace_action("annot.setIcon(%q);\n", text_icons[choice]);
 					pdf_set_annot_icon_name(ctx, ui.selected_annot, text_icons[choice]);
+					resize_icon_annot();
 				}
 				break;
 			case PDF_ANNOT_FILE_ATTACHMENT:
@@ -1351,6 +1392,7 @@ void do_annotate_panel(void)
 				{
 					trace_action("annot.setIcon(%q);\n", file_attachment_icons[choice]);
 					pdf_set_annot_icon_name(ctx, ui.selected_annot, file_attachment_icons[choice]);
+					resize_icon_annot();
 				}
 				break;
 			case PDF_ANNOT_SOUND:
@@ -1360,6 +1402,7 @@ void do_annotate_panel(void)
 				{
 					trace_action("annot.setIcon(%q);\n", sound_icons[choice]);
 					pdf_set_annot_icon_name(ctx, ui.selected_annot, sound_icons[choice]);
+					resize_icon_annot();
 				}
 				break;
 			case PDF_ANNOT_STAMP:
@@ -1369,6 +1412,7 @@ void do_annotate_panel(void)
 				{
 					trace_action("annot.setIcon(%q);\n", stamp_icons[choice]);
 					pdf_set_annot_icon_name(ctx, ui.selected_annot, stamp_icons[choice]);
+					resize_icon_annot();
 				}
 				break;
 			}

@@ -41,7 +41,7 @@ These are the third party libraries used by :title:`MuPDF`.
      - Color management
      - MIT-style
    * - openjpeg_
-     - 2.5.3
+     - 2.5.4
      - JPEG 2000 decoding
      - BSD-style
    * - zlib_
@@ -105,7 +105,7 @@ These are the third party libraries used by :title:`MuPDF`.
 .. _freetype: http://www.freetype.org/
 .. _harfbuzz: http://www.harfbuzz.org/
 .. _libjpeg: http://www.ijg.org/
-.. _Incompatible fork of lcms2: http://git.ghostscript.com/?p=thirdparty-lcms2.git;a=summary
+.. _Incompatible fork of lcms2: http://cgit.ghostscript.com/cgi-bin/cgit.cgi/thirdparty-lcms2.git/
 .. _openjpeg: http://www.openjpeg.org/
 .. _zlib: http://www.zlib.net/
 .. _gumbo-parser: https://github.com/google/gumbo-parser

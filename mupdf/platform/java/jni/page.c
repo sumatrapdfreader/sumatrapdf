@@ -245,7 +245,7 @@ FUN(Page_getLinks)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jobjectArray JNICALL
-FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
+FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle, jint style)
 {
 	fz_context *ctx = get_context(env);
 	fz_page *page = from_Page(env, self);
@@ -263,7 +263,7 @@ FUN(Page_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (!state.hits || (*env)->ExceptionCheck(env)) return NULL;
 
 	fz_try(ctx)
-		fz_search_page_cb(ctx, page, needle, hit_callback, &state);
+		fz_match_page_cb(ctx, page, needle, hit_callback, &state, style);
 	fz_always(ctx)
 	{
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);

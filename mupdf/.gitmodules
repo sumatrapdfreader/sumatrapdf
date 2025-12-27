@@ -1,51 +1,83 @@
 [submodule "thirdparty/jbig2dec"]
 	path = thirdparty/jbig2dec
 	url = ../jbig2dec.git
+	shallow = true
 [submodule "thirdparty/mujs"]
 	path = thirdparty/mujs
 	url = ../mujs.git
+	shallow = true
 [submodule "thirdparty/freetype"]
 	path = thirdparty/freetype
 	url = ../thirdparty-freetype2.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/gumbo-parser"]
 	path = thirdparty/gumbo-parser
 	url = ../thirdparty-gumbo-parser.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/harfbuzz"]
 	path = thirdparty/harfbuzz
 	url = ../thirdparty-harfbuzz.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/jpeg"]
 	path = thirdparty/libjpeg
 	url = ../thirdparty-libjpeg.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/lcms2"]
 	path = thirdparty/lcms2
 	url = ../thirdparty-lcms2.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/openjpeg"]
 	path = thirdparty/openjpeg
 	url = ../thirdparty-openjpeg.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/zlib"]
 	path = thirdparty/zlib
 	url = ../thirdparty-zlib.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/curl"]
 	path = thirdparty/curl
 	url = ../thirdparty-curl.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/freeglut"]
 	path = thirdparty/freeglut
 	url = ../thirdparty-freeglut.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/tesseract"]
 	path = thirdparty/tesseract
 	url = ../thirdparty-tesseract.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/leptonica"]
 	path = thirdparty/leptonica
 	url = ../thirdparty-leptonica.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/extract"]
 	path = thirdparty/extract
 	url = ../extract.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/zxing-cpp"]
 	path = thirdparty/zxing-cpp
 	url = ../thirdparty-zxing-cpp.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/zint"]
 	path = thirdparty/zint
 	url = ../thirdparty-zint.git
+	branch = artifex
+	shallow = true
 [submodule "thirdparty/brotli"]
 	path = thirdparty/brotli
 	url = ../thirdparty-brotli.git
+	branch = artifex
+	shallow = true

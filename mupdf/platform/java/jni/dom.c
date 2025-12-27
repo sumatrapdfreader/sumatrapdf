@@ -486,3 +486,39 @@ FUN(DOM_createElement)(JNIEnv *env, jobject self, jstring jtag)
 
 	return to_DOM_safe(ctx, env, elt);
 }
+
+JNIEXPORT jobject JNICALL
+FUN(DOM_getText)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_xml *dom = from_DOM_safe(env, self);
+	const char *text = NULL;
+
+	fz_try(ctx)
+		text = fz_xml_text(dom);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	if (text)
+		return (*env)->NewStringUTF(env, text);
+	else
+		return NULL;
+}
+
+JNIEXPORT jobject JNICALL
+FUN(DOM_getTag)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	fz_xml *dom = from_DOM_safe(env, self);
+	const char *tag = NULL;
+
+	fz_try(ctx)
+		tag = fz_xml_tag(dom);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	if (tag)
+		return (*env)->NewStringUTF(env, tag);
+	else
+		return NULL;
+}

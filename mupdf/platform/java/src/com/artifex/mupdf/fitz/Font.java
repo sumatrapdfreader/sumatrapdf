@@ -76,4 +76,11 @@ public class Font
 	public String toString() {
 		return "Font(" + getName() + ")";
 	}
+
+	protected static FontLoader fontLoader;
+	public static native void installFontLoader(FontLoader loader);
+
+	public interface FontLoader {
+		Font loadFont(String name, String script, boolean bold, boolean italic);
+	}
 }

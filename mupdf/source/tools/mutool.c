@@ -51,6 +51,7 @@ int pdfrecolor_main(int argc, char *argv[]);
 int pdftrim_main(int argc, char *argv[]);
 int pdfbake_main(int argc, char *argv[]);
 int mubar_main(int argc, char *argv[]);
+int mugrep_main(int argc, char *argv[]);
 
 int cmapdump_main(int argc, char *argv[]);
 int pdfaudit_main(int argc, char *argv[]);
@@ -83,6 +84,7 @@ static struct {
 	{ cmapdump_main, "cmapdump", "dump CMap resource as C source file" },
 #endif
 #endif
+	{ mugrep_main, "grep", "search for text" },
 	{ mutrace_main, "trace", "trace device calls" },
 #if FZ_ENABLE_BARCODE
 	{ mubar_main, "barcode", "encode/decode barcodes" },

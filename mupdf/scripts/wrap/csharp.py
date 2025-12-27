@@ -66,56 +66,70 @@ def make_outparam_helper_csharp(
                 )
         return
 
+    omit = None
+
+    num_return_values = 0 if return_void else 1
     # We don't attempt to generate wrappers for fns that take or return
     # 'unsigned char*' - swig does not treat these as zero-terminated strings,
     # and they are generally binary data so cannot be handled generically.
     #
     if parse.is_pointer_to(cursor.result_type, 'unsigned char'):
-        jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because it returns unsigned char*.', 1)
-        return
-    for arg in parse.get_args( tu, cursor):
-        if parse.is_pointer_to(arg.cursor.type, 'unsigned char'):
-            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has unsigned char* arg.', 1)
-            return
-        if parse.is_pointer_to_pointer_to(arg.cursor.type, 'unsigned char'):
-            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has unsigned char** arg.', 1)
-            return
-        if arg.cursor.type.get_array_size() >= 0:
-            jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has array arg.', 1)
-            return
-        if arg.cursor.type.kind == state.clang.cindex.TypeKind.POINTER:
-            pointee = state.get_name_canonical( arg.cursor.type.get_pointee())
-            if pointee.kind == state.clang.cindex.TypeKind.ENUM:
-                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has enum out-param arg.', 1)
-                return
-            if pointee.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
-                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has fn-ptr arg.', 1)
-                return
-            if pointee.is_const_qualified():
-                # Not an out-param.
-                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has pointer-to-const arg.', 1)
-                return
-            if arg.cursor.type.get_pointee().spelling == 'FILE':
-                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has FILE* arg.', 1)
-                return
-            if pointee.spelling == 'void':
-                jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because has void* arg.', 1)
-                return
+        omit = f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because it returns unsigned char*.'
 
-    num_return_values = 0 if return_void else 1
-    for arg in parse.get_args( tu, cursor):
-        if arg.out_param:
-            num_return_values += 1
-    assert num_return_values
+    elif parse.is_pointer_to(cursor.result_type, 'void'):
+        omit = 'Cannot generate C# out-param wrapper for {cursor.mangled_name} because it returns void*, which is not valid in C# tuple.'
 
-    if num_return_values > 7:
+    else:
+        for arg in parse.get_args( tu, cursor):
+            if arg.out_param:
+                num_return_values += 1
+
+            if parse.is_pointer_to(arg.cursor.type, 'unsigned char'):
+                omit = f'has unsigned char* arg.'
+                break
+            if parse.is_pointer_to_pointer_to(arg.cursor.type, 'unsigned char'):
+                omit = f'has unsigned char** arg.'
+                break
+            if arg.cursor.type.get_array_size() >= 0:
+                omit = f'has array arg.'
+                break
+            if arg.cursor.type.kind == state.clang.cindex.TypeKind.POINTER:
+                pointee = state.get_name_canonical( arg.cursor.type.get_pointee())
+                if pointee.kind == state.clang.cindex.TypeKind.ENUM:
+                    omit = f'has enum out-param arg.'
+                    break
+                if pointee.kind == state.clang.cindex.TypeKind.FUNCTIONPROTO:
+                    omit = 'has fn-ptr arg.'
+                    break
+                if pointee.is_const_qualified():
+                    # Not an out-param.
+                    omit = f'has pointer-to-const arg.'
+                    break
+                if arg.cursor.type.get_pointee().spelling == 'FILE':
+                    omit = f'has FILE* arg.'
+                    break
+                if pointee.spelling == 'void':
+                    omit = f'has void* arg.'
+                    break
+
+    if not omit and num_return_values > 7:
         # On linux, mono-csc can fail with:
         #   System.NotImplementedException: tuples > 7
         #
-        jlib.log(f'Cannot generate C# out-param wrapper for {cursor.mangled_name} because would require > 7-tuple.')
+        omit = f'would require > 7-tuple.'
+
+    if omit:
+        message = f'Omitting C# out-param wrapper for {cursor.mangled_name}() because {omit}'
+        jlib.log(message, level=1, nv=0)
+        write(f'\n')
+        write(f'/*\n')
+        write(f'{message}\n')
+        write(f'*/\n')
+        write(f'\n')
         return
 
     # Write C# wrapper.
+    assert num_return_values
     arg0, _ = parse.get_first_arg( tu, cursor)
     if not arg0.alt:
         return
@@ -137,7 +151,7 @@ def make_outparam_helper_csharp(
         elif parse.is_pointer_to(type_, 'char'):
             write( f'string')
         else:
-            text = cpp.declaration_text(type_, '').strip()
+            text = cpp.declaration_text(type_, '', top_level='mupdf.').strip()
             if text == 'int16_t':           text = 'short'
             elif text == 'int64_t':         text = 'long'
             elif text == 'size_t':          text = 'ulong'
@@ -204,7 +218,7 @@ def make_outparam_helper_csharp(
         elif parse.is_pointer_to(arg.cursor.type, 'char'):
             write(f'string {arg.name_csharp}')
         else:
-            text = cpp.declaration_text(arg.cursor.type, arg.name_csharp).strip()
+            text = cpp.declaration_text(arg.cursor.type, arg.name_csharp, top_level='mupdf.').strip()
             text = util.clip(text, 'const ')
             text = text.replace('int16_t ', 'short ')
             text = text.replace('int64_t ', 'long ')

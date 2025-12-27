@@ -29,7 +29,7 @@ make_submodule_archive extract		test
 make_submodule_archive freeglut
 make_submodule_archive freetype		tests
 make_submodule_archive gumbo-parser	benchmarks tests
-make_submodule_archive harfbuzz		test perf
+make_submodule_archive harfbuzz		perf
 make_submodule_archive jbig2dec
 make_submodule_archive lcms2		testbed plugins/fast_float
 make_submodule_archive leptonica	prog
@@ -39,7 +39,7 @@ make_submodule_archive openjpeg
 make_submodule_archive tesseract	unittest
 make_submodule_archive zint
 make_submodule_archive zlib		test contrib
-make_submodule_archive zxing-cpp	test
+make_submodule_archive zxing-cpp	core/src/libzint
 
 # Generate commercial tarball
 cp $STEM.tar $CSTEM.tar

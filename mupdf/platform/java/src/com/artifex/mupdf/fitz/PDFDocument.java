@@ -60,9 +60,13 @@ public class PDFDocument extends Document
 		super(newNative());
 	}
 
+	public native void check();
+
 	public boolean isPDF() {
 		return true;
 	}
+
+	public native void setPageTreeCache(boolean enabled);
 
 	public native PDFObject findPage(int at);
 
@@ -279,6 +283,26 @@ public class PDFDocument extends Document
 			super(filename, mimetype, size, created, modified);
 		}
 	}
+
+	public static final int LAYER_UI_LABEL = 0;
+	public static final int LAYER_UI_CHECKBOX = 1;
+	public static final int LAYER_UI_RADIOBOX = 2;
+
+	public static class LayerConfigUIInfo {
+		public int type;
+		public int depth;
+		public boolean selected;
+		public boolean locked;
+		public String text;
+	}
+
+	public native int countLayerConfigs();
+	public native String getLayerConfigName(int config);
+	public native String getLayerConfigCreator(int config);
+	public native void selectLayerConfig(int config);
+
+	public native int countLayerConfigUIs();
+	public native LayerConfigUIInfo getLayerConfigUIInfo(int configui);
 
 	public native int countLayers();
 	public native boolean isLayerVisible(int layer);

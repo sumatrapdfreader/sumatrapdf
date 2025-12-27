@@ -244,6 +244,15 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 
 			jpeg_read_header(cinfo, 1);
 
+			/* default value is 1 if the image has components and 0 otherwise */
+			if (state->color_transform < 0)
+			{
+				if (cinfo->num_components == 3)
+					state->color_transform = 1;
+				else
+					state->color_transform = 0;
+			}
+
 			/* Adobe APP marker overrides ColorTransform from PDF */
 			if (cinfo->saw_Adobe_marker)
 				state->color_transform = cinfo->Adobe_transform;

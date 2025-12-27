@@ -76,9 +76,6 @@ def show_stext(document):
 
 
 def test_filter(path):
-    if platform.system() == 'Windows':
-        print( 'Not testing mupdf.PdfFilterOptions2 because known to fail on Windows.')
-        return
 
     # pdf_sanitizer_filter_options.
     class MySanitizeFilterOptions( mupdf.PdfSanitizeFilterOptions2):
@@ -86,9 +83,9 @@ def test_filter(path):
             super().__init__()
             self.use_virtual_text_filter()
             self.state = 1
-        def text_filter( self, ctx, ucsbuf, ucslen, trm, ctm, bbox):
+        def text_filter( self, ctx, ucsbuf, ucslen, trm, ctm, bbox, tr, ca, CA):
             if 0:
-                log( f'text_filter(): ctx={ctx} ucsbuf={ucsbuf} ucslen={ucslen} trm={trm} ctm={ctm} bbox={bbox}')
+                log( f'text_filter(): {ctx=} {ucsbuf=} {ucslen=} {trm=} {ctm=} {bbox=} {tr=} {ca=} {CA=}')
             # Remove every other item.
             self.state = 1 - self.state
             return self.state

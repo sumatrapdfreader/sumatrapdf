@@ -184,6 +184,8 @@ typedef struct
 
 	/* Updated as we move through the job */
 	int page_count;
+
+	char *options;
 } fz_pdfocr_options;
 
 /**
@@ -242,7 +244,7 @@ void fz_save_pixmap_as_jpeg(fz_context *ctx, fz_pixmap *pixmap, const char *file
 /**
 	Write a (Greyscale or RGB) pixmap as a png.
 */
-void fz_write_pixmap_as_png(fz_context *ctx, fz_output *out, const fz_pixmap *pixmap);
+void fz_write_pixmap_as_png(fz_context *ctx, fz_output *out, fz_pixmap *pixmap);
 
 /**
 	Pixmap data as JP2K with no subsampling.
@@ -347,11 +349,13 @@ fz_band_writer *fz_new_pbm_band_writer(fz_context *ctx, fz_output *out);
 	Save a pixmap as a pbm. (Performing halftoning).
 */
 void fz_save_pixmap_as_pbm(fz_context *ctx, fz_pixmap *pixmap, const char *filename);
+void fz_write_pixmap_as_pkm(fz_context *ctx, fz_output *out, fz_pixmap *pixmap);
 
 /**
 	Save a CMYK bitmap as a pkm.
 */
 void fz_save_bitmap_as_pkm(fz_context *ctx, fz_bitmap *bitmap, const char *filename);
+void fz_write_pixmap_as_pbm(fz_context *ctx, fz_output *out, fz_pixmap *pixmap);
 
 /**
 	Write a CMYK bitmap as a pkm.

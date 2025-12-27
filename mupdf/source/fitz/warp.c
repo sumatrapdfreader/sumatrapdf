@@ -657,12 +657,12 @@ gauss5x5(fz_context *ctx, fz_pixmap *src)
 	if (w < 5 || h < 5)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Pixmap too small");
 
-	buf = fz_malloc(ctx, w*3*5 * sizeof(uint16_t));
+	buf = fz_malloc(ctx, sizeof(uint16_t) * w * 3 * 5);
 
-	gauss5row(&buf[0*3*w], &s[0*w], w);
-	gauss5row(&buf[1*3*w], &s[1*w], w);
-	memcpy(&buf[3*3*w], buf, w*3 * sizeof(uint16_t)); /* row -2 */
-	memcpy(&buf[4*3*w], buf, w*3 * sizeof(uint16_t)); /* row -1 */
+	gauss5row(&buf[0*3*(size_t)w], &s[0*w], w);
+	gauss5row(&buf[1*3*(size_t)w], &s[1*w], w);
+	memcpy(&buf[3*3*(size_t)w], buf, sizeof(uint16_t) * w * 3); /* row -2 */
+	memcpy(&buf[4*3*(size_t)w], buf, sizeof(uint16_t) * w * 3); /* row -1 */
 	for (y = 2; y < h; y++)
 	{
 		gauss5row(&buf[(y%5)*3*w], &s[2*w], w);
@@ -672,7 +672,7 @@ gauss5x5(fz_context *ctx, fz_pixmap *src)
 	}
 	for (; y < h+2; y++)
 	{
-		memcpy(&buf[(y%5)*3*w], &buf[((y+4)%5)*3*w], 3*w*sizeof(uint16_t));
+		memcpy(&buf[(size_t)w * 3 * (y%5)], &buf[(size_t)w * 3 * ((y+4)%5)], sizeof(uint16_t) * 3 * w);
 		gauss5col(s, buf, y-2, w);
 		s += w;
 	}
@@ -737,17 +737,17 @@ gauss5x5_3(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int comp)
 	if (w < 5 || h < 5)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Pixmap too small");
 
-	buf = fz_malloc(ctx, w*3*5 * sizeof(uint16_t));
+	buf = fz_malloc(ctx, sizeof(uint16_t) * w * 3 * 5);
 
 	gauss5row3(&buf[0*3*w], s, w);
 	s += w*3;
 	gauss5row3(&buf[1*3*w], s, w);
 	s += w*3;
-	memcpy(&buf[3*3*w], buf, w*3 * sizeof(uint16_t)); /* row -2 */
-	memcpy(&buf[4*3*w], buf, w*3 * sizeof(uint16_t)); /* row -1 */
+	memcpy(&buf[3*3*w], buf, sizeof(uint16_t) * w * 3); /* row -2 */
+	memcpy(&buf[4*3*w], buf, sizeof(uint16_t) * w * 3); /* row -1 */
 	for (y = 2; y < h; y++)
 	{
-		gauss5row3(&buf[((y*3)%15)*w], s, w);
+		gauss5row3(&buf[(size_t)w * ((y*3)%15)], s, w);
 
 		gauss5col(d, buf, y-2, w);
 		s += w*3;
@@ -755,7 +755,7 @@ gauss5x5_3(fz_context *ctx, fz_pixmap *dst, const fz_pixmap *src, int comp)
 	}
 	for (; y < h+2; y++)
 	{
-		memcpy(&buf[(y%5)*3*w], &buf[((y+4)%5)*3*w], 3*w*sizeof(uint16_t));
+		memcpy(&buf[(size_t)w * 3 * (y%5)], &buf[(size_t)w * 3 * ((y+4)%5)], sizeof(uint16_t) * 3 * w);
 		gauss5col(d, buf, y-2, w);
 		d += w;
 	}
@@ -808,9 +808,9 @@ pregradrow(int16_t *d, const unsigned char *s, int w)
 static void
 pregradcol(unsigned char *d, const int16_t *buf, int y, int w, uint32_t *max)
 {
-	const int16_t *s0 = &buf[((y+2)%3)*w*2];
-	const int16_t *s1 = &buf[((y  )%3)*w*2];
-	const int16_t *s2 = &buf[((y+1)%3)*w*2];
+	const int16_t *s0 = &buf[(size_t)w * 2 *((y+2)%3)];
+	const int16_t *s1 = &buf[(size_t)w * 2 *((y  )%3)];
+	const int16_t *s2 = &buf[(size_t)w * 2 *((y+1)%3)];
 	int i;
 
 	for (i = w; i > 0; i--)
@@ -870,20 +870,20 @@ pregrad(fz_context *ctx, fz_pixmap *src)
 	int w = src->w;
 	int h = src->h;
 	unsigned char *s = src->samples;
-	int16_t *buf = fz_malloc(ctx, w*2*3*sizeof(int16_t));
+	int16_t *buf = fz_malloc(ctx, sizeof(int16_t) * w * 2 * 3);
 	int y;
 	uint32_t max = 0;
 
 	pregradrow(buf, s, w); /* Line 0 */
-	memcpy(&buf[w*2*2], buf, w*2*sizeof(int16_t)); /* Line 1 */
+	memcpy(&buf[w*2*2], buf, sizeof(int16_t) * w * 2); /* Line 1 */
 	s += w;
 	for (y = 1; y < h-1; y++)
 	{
-		pregradrow(&buf[(y%3)*w*2], s, w);
+		pregradrow(&buf[(size_t)w * 2 * (y%3)], s, w);
 		pregradcol(s-w, buf, y-1, w, &max);
 		s += w;
 	}
-	memcpy(&buf[((y+1)%3)*w*2], &buf[(y%3)*w*2], w*2*sizeof(int16_t)); /* Line h */
+	memcpy(&buf[(size_t)w * 2 * ((y+1)%3)], &buf[(size_t)w * 2 * (y%3)], sizeof(int16_t) * w * 2); /* Line h */
 	pregradcol(s-w, buf, h-2, w, &max);
 	pregradcol(s, buf, h-1, w, &max);
 
@@ -920,9 +920,9 @@ gradrow(int16_t *d, const unsigned char *s, int w)
 static void
 gradcol(unsigned char *d, const int16_t *buf, int y, int w, int scale)
 {
-	const int16_t *s0 = &buf[((y+2)%3)*w*2];
-	const int16_t *s1 = &buf[((y  )%3)*w*2];
-	const int16_t *s2 = &buf[((y+1)%3)*w*2];
+	const int16_t *s0 = &buf[(size_t)w * 2 * ((y+2)%3)];
+	const int16_t *s1 = &buf[(size_t)w * 2 * ((y  )%3)];
+	const int16_t *s2 = &buf[(size_t)w * 2 * ((y+1)%3)];
 	int i;
 
 	for (i = w; i > 0; i--)
@@ -984,11 +984,11 @@ grad(fz_context *ctx, fz_pixmap *src, uint32_t scale)
 	int w = src->w;
 	int h = src->h;
 	unsigned char *s = src->samples;
-	int16_t *buf = fz_malloc(ctx, w*2*3*sizeof(int16_t));
+	int16_t *buf = fz_malloc(ctx, sizeof(int16_t) * w * 2 * 3);
 	int y;
 
 	gradrow(buf, s, w); /* Line 0 */
-	memcpy(&buf[w*2*2], buf, w*2*sizeof(int16_t)); /* Line 1 */
+	memcpy(&buf[(size_t)w * 2 * 2], buf, sizeof(int16_t) * w * 2); /* Line 1 */
 	s += w;
 	for (y = 1; y < h-1; y++)
 	{
@@ -996,7 +996,7 @@ grad(fz_context *ctx, fz_pixmap *src, uint32_t scale)
 		gradcol(s-w, buf, y-1, w, scale);
 		s += w;
 	}
-	memcpy(&buf[((y+1)%3)*w*2], &buf[(y%3)*w*2], w*2*sizeof(int16_t)); /* Line h */
+	memcpy(&buf[(size_t)w * 2 * ((y+1)%3)], &buf[(size_t)w * 2 * (y%3)], sizeof(int16_t) * w * 2); /* Line h */
 	gradcol(s-w, buf, h-2, w, scale);
 	gradcol(s, buf, h-1, w, scale);
 
@@ -1567,7 +1567,7 @@ static uint32_t *do_hough(fz_context *ctx, const fz_pixmap *src, int stride, int
 	int h = src->h;
 	int x, y;
 	const unsigned char *s = src->samples;
-	uint32_t *hough = fz_calloc(ctx, sizeof(uint32_t), 180*stride);
+	uint32_t *hough = fz_calloc(ctx, sizeof(uint32_t), 180*(size_t)stride);
 
 	START_TIME();
 	/* Construct the hough space representation. */

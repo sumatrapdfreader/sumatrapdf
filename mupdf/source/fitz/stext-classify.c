@@ -33,7 +33,7 @@ fz_stext_page_block_iterator_next_or_up(fz_stext_page_block_iterator pos)
 	{
 		pos = fz_stext_page_block_iterator_next(pos);
 		/* If we hit the end, and we still have further to go, step up. */
-		if (pos.pos == NULL && pos.parent != NULL)
+		if (pos.block == NULL && pos.parent != NULL)
 		{
 			pos = fz_stext_page_block_iterator_up(pos);
 			continue;
@@ -53,7 +53,7 @@ insert_new_struct(fz_context *ctx, fz_stext_page_block_iterator pos, fz_structur
 
 	/* Horrible. Calculate an index value. */
 	b = pos.parent ? pos.parent->first_block : pos.page->first_block;
-	while (b != pos.pos)
+	while (b != pos.block)
 	{
 		if (b->type == FZ_STEXT_BLOCK_STRUCT)
 			index++;
@@ -74,18 +74,18 @@ insert_new_struct(fz_context *ctx, fz_stext_page_block_iterator pos, fz_structur
 
 	/* We are going to need to create a new block. Create a complete unlinked one here. */
 	newblock = fz_new_stext_struct(ctx, pos.page, classification, fz_structure_to_string(classification), index);
-	newblock->id = pos.pos->id;
+	newblock->id = pos.block->id;
 
-	/* Insert the newblock before pos.pos. */
-	newblock->prev = pos.pos->prev;
-	if (pos.pos->prev)
-		pos.pos->prev->next = newblock;
+	/* Insert the newblock before pos.block. */
+	newblock->prev = pos.block->prev;
+	if (pos.block->prev)
+		pos.block->prev->next = newblock;
 	else if (pos.parent)
 		pos.parent->first_block = newblock;
 	else
 		pos.page->first_block = newblock;
-	newblock->next = pos.pos;
-	pos.pos->prev = newblock;
+	newblock->next = pos.block;
+	pos.block->prev = newblock;
 
 	return newblock;
 }
@@ -93,10 +93,10 @@ insert_new_struct(fz_context *ctx, fz_stext_page_block_iterator pos, fz_structur
 static fz_stext_block *
 relink_block_and_next(fz_stext_page_block_iterator pos, fz_stext_block *newblock)
 {
-	fz_stext_block *b = pos.pos;
+	fz_stext_block *b = pos.block;
 	fz_stext_block *next = b->next;
 
-	/* Unlink b (pos.pos) from it's current position. */
+	/* Unlink b (pos.block) from it's current position. */
 	if (b->prev)
 		b->prev->next = b->next;
 	else if (pos.parent)
@@ -141,7 +141,7 @@ enum
 static int
 split_text_by_rect(fz_context *ctx, fz_stext_page_block_iterator pos, fz_rect rect)
 {
-	fz_stext_block *b = pos.pos;
+	fz_stext_block *b = pos.block;
 	fz_stext_line *line;
 	fz_stext_char *ch;
 	int all_in = 1;
@@ -205,12 +205,12 @@ split_text_by_rect(fz_context *ctx, fz_stext_page_block_iterator pos, fz_rect re
 
 	newblock = fz_pool_alloc(ctx, pos.page->pool, sizeof *pos.page->first_block);
 	newblock->bbox = fz_empty_rect;
-	newblock->id = pos.pos->id;
+	newblock->id = pos.block->id;
 	newblock->prev = NULL;
 	newblock->next = NULL;
 	newblock->type = FZ_STEXT_BLOCK_TEXT;
 	newblock->u.t.first_line = NULL;
-	newblock->u.t.flags = pos.pos->u.t.flags;
+	newblock->u.t.flags = pos.block->u.t.flags;
 	newblock->u.t.last_line = NULL;
 
 	/* We are going to move chars/lines that fall entirely within the rectangle into a
@@ -218,22 +218,22 @@ split_text_by_rect(fz_context *ctx, fz_stext_page_block_iterator pos, fz_rect re
 	if (first_char_is_in)
 	{
 		/* The very first char goes into our new block; our new block should go first. */
-		newblock->prev = pos.pos->prev;
-		if (pos.pos->prev)
-			pos.pos->prev->next = newblock;
+		newblock->prev = pos.block->prev;
+		if (pos.block->prev)
+			pos.block->prev->next = newblock;
 		else if (pos.parent)
 			pos.parent->first_block = newblock;
 		else
 			pos.page->first_block = newblock;
-		newblock->next = pos.pos;
-		pos.pos->prev = newblock;
+		newblock->next = pos.block;
+		pos.block->prev = newblock;
 	}
 	else
 	{
-		/* The very first char will not be moved; our new block should go after pos.pos. */
-		newblock->prev = pos.pos;
-		newblock->next = pos.pos->next;
-		pos.pos->next = newblock;
+		/* The very first char will not be moved; our new block should go after pos.block. */
+		newblock->prev = pos.block;
+		newblock->next = pos.block->next;
+		pos.block->next = newblock;
 		if (newblock->next)
 			newblock->next->prev = newblock;
 		else if (pos.parent)
@@ -301,6 +301,7 @@ split_text_by_rect(fz_context *ctx, fz_stext_page_block_iterator pos, fz_rect re
 				new_line = fz_pool_alloc(ctx, pos.page->pool, sizeof(*new_line));
 				new_line->bbox = fz_empty_rect;
 				new_line->dir = line->dir;
+				new_line->flags = line->flags;
 				new_line->wmode = line->wmode;
 			}
 			/* Unlink char */
@@ -358,34 +359,34 @@ fz_classify_stext_rect(fz_context *ctx, fz_stext_page *page, fz_structure classi
 	fz_stext_page_block_iterator pos = fz_stext_page_block_iterator_begin(page);
 	fz_stext_block *newblock;
 
-	while (pos.pos != NULL)
+	while (pos.block != NULL)
 	{
 		/* Walk the tree until we find a block that overlaps rect. */
-		while (pos.pos != NULL)
+		while (pos.block != NULL)
 		{
-			if (fz_contains_rect(rect, pos.pos->bbox))
+			if (fz_contains_rect(rect, pos.block->bbox))
 			{
 				/* This node is entirely contained by rect. */
 				break;
 			}
-			else if (fz_overlaps_rect(pos.pos->bbox, rect))
+			else if (fz_overlaps_rect(pos.block->bbox, rect))
 			{
 				/* rect overlaps with the current nodes bbox. (This includes the
 				 * case where rect is contained by this node, but is not restricted
 				 * to it) */
 				/* Note: "if", not "switch" here, to allow us to break out of the while! */
-				if (pos.pos->type == FZ_STEXT_BLOCK_STRUCT)
+				if (pos.block->type == FZ_STEXT_BLOCK_STRUCT)
 				{
 					/* It's a struct node. */
 					pos = fz_stext_page_block_iterator_down(pos);
 					/* Can't possibly step down any further, so this is it. */
-					if (pos.pos == NULL)
+					if (pos.block == NULL)
 						break;
 					continue;
 				}
-				else if (pos.pos->type == FZ_STEXT_BLOCK_TEXT)
+				else if (pos.block->type == FZ_STEXT_BLOCK_TEXT)
 				{
-					/* Split pos.pos by rect, and then continue to make sure we pick the right fragment. */
+					/* Split pos.block by rect, and then continue to make sure we pick the right fragment. */
 					int split = split_text_by_rect(ctx, pos, rect);
 					if (split == SPLIT_OK)
 						continue; /* We split the node successfully. Loop back to consider the 2 halves again. */
@@ -406,33 +407,33 @@ fz_classify_stext_rect(fz_context *ctx, fz_stext_page *page, fz_structure classi
 		}
 
 		/* If we've hit the end, we have nothing left to do. */
-		if (pos.pos == NULL)
+		if (pos.block == NULL)
 			return;
 
-		/* So pos.pos overlaps our rect. We need to make a struct node and put stuff
-		 * (starting with pos.pos, but maybe continuing after it) inside that. */
+		/* So pos.block overlaps our rect. We need to make a struct node and put stuff
+		 * (starting with pos.block, but maybe continuing after it) inside that. */
 		newblock = insert_new_struct(ctx, pos, classification);
 
 		/* Walk the tree appending stuff onto newblock until we find a block that doesn't overlap rect. */
-		while (pos.pos)
+		while (pos.block)
 		{
 			fz_rect overlap;
-			if (fz_contains_rect(rect, pos.pos->bbox))
+			if (fz_contains_rect(rect, pos.block->bbox))
 			{
 				/* This node is entirely contained by rect. */
-				pos.pos = relink_block_and_next(pos, newblock);
+				pos.block = relink_block_and_next(pos, newblock);
 				continue;
 			}
 
-			overlap = fz_intersect_rect(rect, pos.pos->bbox);
+			overlap = fz_intersect_rect(rect, pos.block->bbox);
 
 			if (!fz_is_empty_rect(overlap))
 			{
 				float area, area2;
 				/* rect overlaps this node */
-				if (pos.pos->type == FZ_STEXT_BLOCK_TEXT)
+				if (pos.block->type == FZ_STEXT_BLOCK_TEXT)
 				{
-					/* Split pos.pos by rect, and then continue to make sure we pick the right fragment. */
+					/* Split pos.block by rect, and then continue to make sure we pick the right fragment. */
 					int split = split_text_by_rect(ctx, pos, rect);
 					if (split == SPLIT_OK)
 						continue; /* We split the node successfully. Loop back to reconsider the fragments. */
@@ -443,11 +444,11 @@ fz_classify_stext_rect(fz_context *ctx, fz_stext_page *page, fz_structure classi
 					assert(split == NO_SPLIT_ALL_IN);
 				}
 				area = (overlap.x1 - overlap.x0) * (overlap.y1 - overlap.y0);
-				area2 = (pos.pos->bbox.x1 - pos.pos->bbox.x0) * (pos.pos->bbox.y1 - pos.pos->bbox.y0);
+				area2 = (pos.block->bbox.x1 - pos.block->bbox.x0) * (pos.block->bbox.y1 - pos.block->bbox.y0);
 				if (area2 < 2 * area)
 				{
 					/* More than 50% of this block is overlapped. We'll take it. */
-					pos.pos = relink_block_and_next(pos, newblock);
+					pos.block = relink_block_and_next(pos, newblock);
 					continue;
 				}
 			}

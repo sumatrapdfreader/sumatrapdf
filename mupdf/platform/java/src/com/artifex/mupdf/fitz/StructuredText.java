@@ -46,7 +46,30 @@ public class StructuredText
 		pointer = p;
 	}
 
-	public native Quad[][] search(String needle);
+	public static final int SEARCH_EXACT = 0;
+	public static final int SEARCH_IGNORE_CASE = 1;
+	public static final int SEARCH_IGNORE_DIACRITICS = 2;
+	public static final int SEARCH_REGEXP = 4;
+	public static final int SEARCH_KEEP_LINES = 8;
+	public static final int SEARCH_KEEP_PARAGRAPHS = 16;
+	public static final int SEARCH_KEEP_HYPHENS = 32;
+
+	public static final int CHAR_FLAGS_STRIKEOUT = 1;
+	public static final int CHAR_FLAGS_UNDERLINE = 2;
+	public static final int CHAR_FLAGS_SYNTHETIC = 4;
+	public static final int CHAR_FLAGS_BOLD = 8; /* Either real or 'fake' bold */
+	public static final int CHAR_FLAGS_FILLED = 16;
+	public static final int CHAR_FLAGS_STROKED = 32;
+	public static final int CHAR_FLAGS_CLIPPED = 64;
+	public static final int CHAR_FLAGS_UNICODE_IS_CID = 128;
+	public static final int CHAR_FLAGS_UNICODE_IS_GID = 256;
+	public static final int CHAR_FLAGS_SYNTHETIC_LARGE = 512;
+
+	public native Quad[][] search(String needle, int style);
+	public Quad[][] search(String needle)
+	{
+		return search(needle, StructuredText.SEARCH_IGNORE_CASE);
+	}
 	public native Quad[] highlight(Point a, Point b);
 	public native Quad snapSelection(Point a, Point b, int mode);
 	public native String copy(Point a, Point b);
@@ -115,12 +138,14 @@ public class StructuredText
 			lines.add(line);
 		}
 
-		public void onChar(int c, Point origin, Font font, float size, Quad quad) {
+		public void onChar(int c, Point origin, Font font, float size, Quad quad, int argb, int flags) {
 			TextChar chr = new TextChar();
 			chr.c = c;
 			chr.quad = quad;
 			chr.origin = origin;
 			chrs.add(chr);
+			chr.argb = argb;
+			chr.flags = flags;
 		}
 
 		public void beginStruct(String standard, String raw, int index) {
@@ -155,6 +180,8 @@ public class StructuredText
 		public boolean isWhitespace() {
 			return Character.isWhitespace(c);
 		}
+		public int argb;
+		public int flags;
 	}
 
 }

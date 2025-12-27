@@ -1,3 +1,84 @@
+List of changes in MuPDF 1.27
+
+	New and updated documentation! Build local HTML and Markdown versions from source with sphinx.
+
+	New (experimental) search API that supports matching results across pages and regular expressions.
+
+	Build system:
+		Optimize thirdparty dependency submodules to reduce size of git clone and release tarballs.
+		Allow conditional compilation for html, xps, svg, extract modules.
+		Visual Studio project added an arm64 configuration.
+		WASM bindings folded back into main git repository.
+		Makefile added new "install-tools" target.
+
+	General:
+		More robust document type recognition.
+		Many new classes and functions to both WASM and mutool run Javascript bindings.
+		Changes to mutool run to bring it into sync with WASM library -- if you stick to ES5 syntax, scripts can run in both environments.
+		Improve dehyphenation behavior in structured text extraction.
+		Several optimizations when encountering JPEG2000 images in PDF files.
+		Fixed many bugs with OCG handling (more improvements to come in a future release).
+
+	HTML and EPUB:
+		Hyphenation!
+			Set HTML lang attribute and CSS style hyphens:auto to enable.
+		CSS non-static positioning:
+			position: absolute and relative
+			inset/top/right/bottom/left
+		HTML tables:
+			colgroup and col
+			rowspan and colspan
+			width, height, valign, and border-collapse
+		Legacy HTML attributes:
+			width, height, valign, align, bgcolor, border, hidden
+		CSS border-style: double, dotted, dashed, outset, inset, ridge, groove
+		CSS tree-structural pseudo-selectors (:root, :empty, :first-child, :nth-child, etc)
+		CSS :link pseudo-class
+		Improved BiDi support with direction:rtl CSS property and dir=rtl HTML attribute
+		Recognize all CSS named colors!
+		Improved fallback font detection.
+		EPUB 3 table of contents.
+
+	PDF Forms & Annotations:
+		Respect AcroForm/NeedAppearances flag -- widgets may look different if this flag is set!
+		Changed Text (aka Note) annotation sizing and positioning to conform better with the PDF reference.
+		Respect NoZoom and NoRotate flags.
+		Fixed bug with some checkboxes not toggling as they should.
+
+	Tools & Programs:
+		mutool:
+			Handle output to stdout more reliably in all tools.
+		mutool run:
+			allow import statements for mupdf and fs modules
+			script compatibility tweaks with node
+			process.argv
+			process.exit
+		mutool clean:
+			vectorize text (turn text objects into paths) with -v flag
+		mutool draw:
+			behavior tweaked to be more consistent across output formats
+		mutool poster:
+			improve behavior when pages have been rotated
+		mutool merge:
+			preserve external (only) links when merging documents
+		mutool extract:
+			extract embedded files and attachments
+		mutool grep:
+			new tool to search for text in documents
+		mupdf-gl:
+			confirm before opening potentially dangerous external links.
+		mupdf-x11:
+			refuse to open potentially dangerous external links.
+
+	API changes:
+		Use fz_quad in fz_warp_pixmap, fz_autowarp_pixmap, and fz_detect_document.
+
+	API news:
+		- special redaction mode PDF_TEXT_REMOVE_INVISIBLE to strip only invisible text.
+		- pdf_check_document (PDFDocument.check in JS and Java) function to scan the file for errors.
+		- pdf_set_page_tree_cache to allow faster first-page loads at the cost of slower loading of all other pages.
+		- fz_stext_page_details -- stext can now represent text from multiple pages.
+
 List of changes in MuPDF 1.26
 
 	Removed PDF linearization support:

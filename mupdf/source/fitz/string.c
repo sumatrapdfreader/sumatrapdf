@@ -441,7 +441,11 @@ fz_format_output_path(fz_context *ctx, char *path, size_t size, const char *fmt,
 	}
 	else
 	{
+		const char *psep = strrchr(fmt, '/');
 		s = p = strrchr(fmt, '.');
+		/* Ensure we only match a . in the last path segment. */
+		if (psep != NULL && p < psep)
+			p = NULL;
 		if (!p)
 			s = p = fmt + strlen(fmt);
 	}

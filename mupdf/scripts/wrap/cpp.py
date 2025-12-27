@@ -58,6 +58,12 @@ def declaration_text(
         for internal diagnostics.
     name_is_simple:
         true iff <name> is an identifier.
+    verbose:
+        .
+    expand_typedef:
+        .
+    top_level:
+        Prefix used for top-level names. When generating C# code, use `mupdf.`.
 
     If name_is_simple is false, we surround <name> with (...) if type is a
     function.
@@ -472,6 +478,7 @@ class Generated:
         self.swig_python_exceptions = io.StringIO()
         self.swig_python_set_error_classes = io.StringIO()
         self.swig_csharp = io.StringIO()
+        self.swig_csharp_exceptions = io.StringIO()
         self.virtual_fnptrs = []    # List of extra wrapper class names with virtual fnptrs.
         self.cppyy_extra = ''
 
@@ -1136,7 +1143,7 @@ g_extra_definitions = textwrap.dedent(f'''
             assert(e != 0);
             char* buf = (char*) fz_malloc(ctx, e);
             int e2 = fz_lookup_metadata(ctx, doc, key, buf, e);
-            assert(e2 = e);
+            assert(e2 == e);
             std::string ret = buf;
             free(buf);
             return ret;
@@ -1153,7 +1160,7 @@ g_extra_definitions = textwrap.dedent(f'''
             assert(e != 0);
             char* buf = (char*) fz_malloc(ctx, e);
             int e2 = pdf_lookup_metadata(ctx, doc, key, buf, e);
-            assert(e2 = e);
+            assert(e2 == e);
             std::string ret = buf;
             free(buf);
             return ret;
@@ -1428,6 +1435,24 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
 
             /** Internal use only. Returns `fz_context*` for use by current thread. */
             FZ_FUNCTION fz_context* {rename.internal('context_get')}();
+
+            /* Internal, do not call directly. */
+            FZ_FUNCTION void {rename.internal('check_ndebug0')}(bool caller_ndebug_defined);
+
+            /** Checks current NDEBUG is same as NDEBUG used when C++ bindings
+            were built. If not, shows message on cerr and calls abort().
+
+            Mixing NDEBUG and non-NDEBUG code is not supported by the C++
+            bindings.
+            */
+            static inline void {rename.internal('check_ndebug')}()
+            {{
+                #ifdef NDEBUG
+                    {rename.internal('check_ndebug0')}(true);
+                #else
+                    {rename.internal('check_ndebug0')}(false);
+                #endif
+            }}
             '''
             ))
 
@@ -1452,6 +1477,31 @@ def make_internal_functions( namespace, out_h, out_cpp, refcheck_if, trace_if):
 
     cpp_text = textwrap.dedent(
             f'''
+            FZ_FUNCTION void {rename.internal('check_ndebug0')}(bool caller_ndebug_defined)
+            {{
+                #ifdef NDEBUG
+                    bool library_ndebug_defined = true;
+                #else
+                    bool library_ndebug_defined = false;
+                #endif
+                if (caller_ndebug_defined != library_ndebug_defined)
+                {{
+                    std::cerr << "*** MuPDF C++ build/configuration failure.\\n";
+                    if (library_ndebug_defined)
+                    {{
+                        std::cerr << "*** Library built with NDEBUG but caller built without NDEBUG.\\n";
+                    }}
+                    else
+                    {{
+                        std::cerr << "*** Library built without NDEBUG but caller built with NDEBUG.\\n";
+                    }}
+                    std::cerr << "*** This is not supported.\\n";
+                    std::cerr << "*** Calling abort().\\n";
+                    std::cerr << std::flush;
+                    abort();
+                }}
+            }}
+
             FZ_FUNCTION void internal_assert_fail(const char* file, int line, const char* fn, const char* expression)
             {{
                 std::cerr << file << ":" << line << ":" << fn << "(): "
@@ -1892,6 +1942,36 @@ def make_function_wrappers(
                 }}
             '''
             ))
+
+    generated.swig_csharp_exceptions.write(textwrap.dedent(f'''
+            /*
+            On Windows, exceptions are automatically converted into
+            System.Runtime.InteropServices.SEHException instances but the exception
+            message is not used.
+
+            On Mono this doesn't seem to happen and std::terminate() is called.
+
+            So we use swig's `%exception {...}` to convert exceptions here.
+
+            Unlike in the Python bindings, we do not (yet) attempt to convert
+            the different MuPDF C++ exception types into the equivalent C#
+            types. Instead we always create a SWIG_CSharpApplicationException
+            with the C++ exception's `.what()` string.
+            */
+            %exception
+            {{
+                try
+                {{
+                    $action
+                }}
+                catch (std::exception& e)
+                {{
+                    //std::cout << "%exception: Received exception: " << e.what() << "\\n" << std::flush;
+                    SWIG_CSharpSetPendingException(SWIG_CSharpApplicationException, e.what());
+                    //std::cout << "%exception: after SWIG_CSharpSetPendingException.\\n" << std::flush;
+                }}
+            }}
+            '''))
 
     # Declare exception class for each FZ_ERROR_*. Also append catch blocks for
     # each of these exception classes to `handle_exception()`.
@@ -4895,10 +4975,10 @@ def refcount_check_code( out, refcheck_if):
 
                 static RefsCheck<fz_document, FzDocument> s_FzDocument_refs_check;
 
-            Then if s_check_refs is true, each constructor function calls
-            .add(), the destructor calls .remove() and other class functions
-            call .check(). This ensures that we check reference counting after
-            each class operation.
+            Then if s_check_refs is true, constructor functions call .add(),
+            the destructor calls .remove() and other class functions call
+            .check(). This ensures that we check reference counting after each
+            class operation.
 
             If <allow_int_this> is true, we allow _this->m_internal to be
             an invalid pointer less than 4096, in which case we don't try
@@ -4926,6 +5006,10 @@ def refcount_check_code( out, refcheck_if):
                     assert(m_size == 32 || m_size == 16 || m_size == 8 || m_size == -1);
                 }}
 
+                /* Called before keep/drop.
+
+                Check that refs+delta and
+                m_this_to_num[this_->m_internal]+delta are consistent. */
                 void change( const ClassWrapper* this_, const char* file, int line, const char* fn, int delta)
                 {{
                     assert( s_check_refs);
@@ -4965,6 +5049,7 @@ def refcount_check_code( out, refcheck_if):
                     if (m_size == 32)   refs = *(int32_t*) refs_ptr;
                     if (m_size == 16)   refs = *(int16_t*) refs_ptr;
                     if (m_size ==  8)   refs = *(int8_t* ) refs_ptr;
+                    refs += delta;
 
                     int& n = m_this_to_num[ this_->m_internal];
                     int n_prev = n;

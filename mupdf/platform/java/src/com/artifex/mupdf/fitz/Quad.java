@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -54,7 +54,7 @@ public class Quad
 			this.lr_x = Float.NaN;
 			this.lr_y = Float.NaN;
 		}
-		else if (!r.isInfinite())
+		else if (r.isInfinite())
 		{
 			this.ul_x = Float.NEGATIVE_INFINITY;
 			this.ul_y = Float.POSITIVE_INFINITY;
@@ -89,7 +89,7 @@ public class Quad
 	public Quad transformed(Matrix m) {
 		if (!isValid())
 			return this;
-		if (!isInfinite())
+		if (isInfinite())
 			return this;
 		float t_ul_x = ul_x * m.a + ul_y * m.c + m.e;
 		float t_ul_y = ul_x * m.b + ul_y * m.d + m.f;

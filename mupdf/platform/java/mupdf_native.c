@@ -112,6 +112,7 @@ static jclass cls_FitzInputStream;
 static jclass cls_Float;
 static jclass cls_FloatArray;
 static jclass cls_Font;
+static jclass cls_FontLoader;
 static jclass cls_Story;
 static jclass cls_IOException;
 static jclass cls_IllegalArgumentException;
@@ -133,6 +134,7 @@ static jclass cls_OutlineIterator;
 static jclass cls_PDFAnnotation;
 static jclass cls_PDFDocument;
 static jclass cls_PDFDocument_JsEventListener;
+static jclass cls_PDFDocument_LayerConfigUIInfo;
 static jclass cls_PDFDocument_PDFEmbeddedFileParams;
 static jclass cls_PDFGraftMap;
 static jclass cls_PDFObject;
@@ -201,6 +203,7 @@ static jfieldID fid_FitzInputStream_closed;
 static jfieldID fid_FitzInputStream_markpos;
 static jfieldID fid_FitzInputStream_pointer;
 static jfieldID fid_Font_pointer;
+static jfieldID fid_Font_fontLoader;
 static jfieldID fid_Story_pointer;
 static jfieldID fid_Image_pointer;
 static jfieldID fid_Link_pointer;
@@ -224,6 +227,11 @@ static jfieldID fid_NativeDevice_nativeResource;
 static jfieldID fid_OutlineIterator_pointer;
 static jfieldID fid_PDFAnnotation_pointer;
 static jfieldID fid_PDFDocument_pointer;
+static jfieldID fid_PDFDocument_LayerConfigUIInfo_type;
+static jfieldID fid_PDFDocument_LayerConfigUIInfo_depth;
+static jfieldID fid_PDFDocument_LayerConfigUIInfo_selected;
+static jfieldID fid_PDFDocument_LayerConfigUIInfo_locked;
+static jfieldID fid_PDFDocument_LayerConfigUIInfo_text;
 static jfieldID fid_PDFGraftMap_pointer;
 static jfieldID fid_PDFObject_Null;
 static jfieldID fid_PDFObject_pointer;
@@ -343,6 +351,7 @@ static jmethodID mid_DOMAttribute_init;
 static jmethodID mid_FitzInputStream_init;
 static jmethodID mid_Float_init;
 static jmethodID mid_Font_init;
+static jmethodID mid_FontLoader_loadFont;
 static jmethodID mid_Image_init;
 static jmethodID mid_Link_init;
 static jmethodID mid_Location_init;
@@ -356,6 +365,7 @@ static jmethodID mid_OutlineIterator_init;
 static jmethodID mid_PDFAnnotation_init;
 static jmethodID mid_LinkDestination_init;
 static jmethodID mid_PDFDocument_JsEventListener_onAlert;
+static jmethodID mid_PDFDocument_LayerConfigUIInfo_init;
 static jmethodID mid_PDFDocument_PDFEmbeddedFileParams_init;
 static jmethodID mid_PDFDocument_init;
 static jmethodID mid_PDFGraftMap_init;
@@ -710,6 +720,9 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh == FZ_LANG_zh;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hans == FZ_LANG_zh_Hans;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_LANGUAGE_zh_Hant == FZ_LANG_zh_Hant;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LAYER_UI_LABEL == PDF_LAYER_UI_LABEL;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LAYER_UI_CHECKBOX == PDF_LAYER_UI_CHECKBOX;
+	valid &= com_artifex_mupdf_fitz_PDFDocument_LAYER_UI_RADIOBOX == PDF_LAYER_UI_RADIOBOX;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_NOT_ZUGFERD == PDF_NOT_ZUGFERD;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_COMFORT == PDF_ZUGFERD_COMFORT;
 	valid &= com_artifex_mupdf_fitz_PDFDocument_ZUGFERD_BASIC == PDF_ZUGFERD_BASIC;
@@ -744,6 +757,24 @@ static int check_enums()
 	valid &= com_artifex_mupdf_fitz_StructuredText_SELECT_CHARS == FZ_SELECT_CHARS;
 	valid &= com_artifex_mupdf_fitz_StructuredText_SELECT_WORDS == FZ_SELECT_WORDS;
 	valid &= com_artifex_mupdf_fitz_StructuredText_SELECT_LINES == FZ_SELECT_LINES;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_EXACT == FZ_SEARCH_EXACT;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_IGNORE_CASE == FZ_SEARCH_IGNORE_CASE;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_IGNORE_DIACRITICS == FZ_SEARCH_IGNORE_DIACRITICS;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_REGEXP == FZ_SEARCH_REGEXP;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_KEEP_LINES == FZ_SEARCH_KEEP_LINES;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_KEEP_PARAGRAPHS == FZ_SEARCH_KEEP_PARAGRAPHS;
+	valid &= com_artifex_mupdf_fitz_StructuredText_SEARCH_KEEP_HYPHENS == FZ_SEARCH_KEEP_HYPHENS;
+
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_STRIKEOUT == FZ_STEXT_STRIKEOUT;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_UNDERLINE == FZ_STEXT_UNDERLINE;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_SYNTHETIC == FZ_STEXT_SYNTHETIC;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_BOLD == FZ_STEXT_BOLD;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_FILLED == FZ_STEXT_FILLED;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_STROKED == FZ_STEXT_STROKED;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_CLIPPED == FZ_STEXT_CLIPPED;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_UNICODE_IS_CID == FZ_STEXT_UNICODE_IS_CID;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_UNICODE_IS_GID == FZ_STEXT_UNICODE_IS_GID;
+	valid &= com_artifex_mupdf_fitz_StructuredText_CHAR_FLAGS_SYNTHETIC_LARGE == FZ_STEXT_SYNTHETIC_LARGE;
 
 	valid &= com_artifex_mupdf_fitz_PDFWidget_TYPE_UNKNOWN == PDF_WIDGET_TYPE_UNKNOWN;
 	valid &= com_artifex_mupdf_fitz_PDFWidget_TYPE_BUTTON == PDF_WIDGET_TYPE_BUTTON;
@@ -806,6 +837,7 @@ static int check_enums()
 
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_REMOVE == PDF_REDACT_TEXT_REMOVE;
 	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_NONE == PDF_REDACT_TEXT_NONE;
+	valid &= com_artifex_mupdf_fitz_PDFPage_REDACT_TEXT_REMOVE_INVISIBLE == PDF_REDACT_TEXT_REMOVE_INVISIBLE;
 
 	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_INCREASE == FZ_DESKEW_BORDER_INCREASE;
 	valid &= com_artifex_mupdf_fitz_Pixmap_DESKEW_BORDER_MAINTAIN == FZ_DESKEW_BORDER_MAINTAIN;
@@ -1200,7 +1232,11 @@ static int find_fids(JNIEnv *env)
 
 	cls_Font = get_class(&err, env, PKG"Font");
 	fid_Font_pointer = get_field(&err, env, "pointer", "J");
+	fid_Font_fontLoader = get_static_field(&err, env, "fontLoader", "L"PKG"Font$FontLoader;");
 	mid_Font_init = get_method(&err, env, "<init>", "(J)V");
+
+	cls_FontLoader = get_class(&err, env, PKG"Font$FontLoader");
+	mid_FontLoader_loadFont = get_method(&err, env, "loadFont", "(Ljava/lang/String;Ljava/lang/String;ZZ)L"PKG"Font;");
 
 	cls_Story = get_class(&err, env, PKG"Story");
 	fid_Story_pointer = get_field(&err, env, "pointer", "J");
@@ -1265,6 +1301,14 @@ static int find_fids(JNIEnv *env)
 	cls_PDFDocument = get_class(&err, env, PKG"PDFDocument");
 	fid_PDFDocument_pointer = get_field(&err, env, "pointer", "J");
 	mid_PDFDocument_init = get_method(&err, env, "<init>", "(J)V");
+
+	cls_PDFDocument_LayerConfigUIInfo = get_class (&err, env, PKG"PDFDocument$LayerConfigUIInfo");
+	fid_PDFDocument_LayerConfigUIInfo_type = get_field(&err, env, "type", "I");
+	fid_PDFDocument_LayerConfigUIInfo_depth = get_field(&err, env, "depth", "I");
+	fid_PDFDocument_LayerConfigUIInfo_selected = get_field(&err, env, "selected", "Z");
+	fid_PDFDocument_LayerConfigUIInfo_locked = get_field(&err, env, "locked", "Z");
+	fid_PDFDocument_LayerConfigUIInfo_text = get_field(&err, env, "text", "Ljava/lang/String;");
+	mid_PDFDocument_LayerConfigUIInfo_init = get_method(&err, env, "<init>", "()V");
 
 	cls_LinkDestination = get_class(&err, env, PKG"LinkDestination");
 	mid_LinkDestination_init = get_method(&err, env, "<init>", "(IIIFFFFF)V");
@@ -1469,7 +1513,7 @@ static int find_fids(JNIEnv *env)
 	mid_StructuredTextWalker_endTextBlock = get_method(&err, env, "endTextBlock", "()V");
 	mid_StructuredTextWalker_beginLine = get_method(&err, env, "beginLine", "(L"PKG"Rect;IL"PKG"Point;)V");
 	mid_StructuredTextWalker_endLine = get_method(&err, env, "endLine", "()V");
-	mid_StructuredTextWalker_onChar = get_method(&err, env, "onChar", "(IL"PKG"Point;L"PKG"Font;FL"PKG"Quad;)V");
+	mid_StructuredTextWalker_onChar = get_method(&err, env, "onChar", "(IL"PKG"Point;L"PKG"Font;FL"PKG"Quad;II)V");
 	mid_StructuredTextWalker_onVector = get_method(&err, env, "onVector", "(L"PKG"Rect;L"PKG"StructuredTextWalker$VectorInfo;I)V");
 
 	cls_StructuredTextWalker_VectorInfo = get_class(&err, env, PKG"StructuredTextWalker$VectorInfo");
@@ -1615,6 +1659,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_Float);
 	(*env)->DeleteGlobalRef(env, cls_FloatArray);
 	(*env)->DeleteGlobalRef(env, cls_Font);
+	(*env)->DeleteGlobalRef(env, cls_FontLoader);
 	(*env)->DeleteGlobalRef(env, cls_Story);
 	(*env)->DeleteGlobalRef(env, cls_IOException);
 	(*env)->DeleteGlobalRef(env, cls_IllegalArgumentException);
@@ -1636,6 +1681,7 @@ static void lose_fids(JNIEnv *env)
 	(*env)->DeleteGlobalRef(env, cls_PDFAnnotation);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument_JsEventListener);
+	(*env)->DeleteGlobalRef(env, cls_PDFDocument_LayerConfigUIInfo);
 	(*env)->DeleteGlobalRef(env, cls_PDFDocument_PDFEmbeddedFileParams);
 	(*env)->DeleteGlobalRef(env, cls_PDFGraftMap);
 	(*env)->DeleteGlobalRef(env, cls_PDFObject);

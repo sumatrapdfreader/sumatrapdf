@@ -33,7 +33,7 @@ FUN(StructuredText_finalize)(JNIEnv *env, jobject self)
 }
 
 JNIEXPORT jobject JNICALL
-FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
+FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle, jint style)
 {
 	fz_context *ctx = get_context(env);
 	fz_stext_page *text = from_StructuredText(env, self);
@@ -50,7 +50,7 @@ FUN(StructuredText_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (!state.hits || (*env)->ExceptionCheck(env)) return NULL;
 
 	fz_try(ctx)
-		fz_search_stext_page_cb(ctx, text, needle, hit_callback, &state);
+		fz_match_stext_page_cb(ctx, text, needle, hit_callback, &state, style);
 	fz_always(ctx)
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);
 	fz_catch(ctx)
@@ -206,7 +206,7 @@ java_stext_walk(JNIEnv *env, fz_context *ctx, jobject walker, fz_stext_block *bl
 					if (!jquad) return;
 
 					(*env)->CallVoidMethod(env, walker, mid_StructuredTextWalker_onChar,
-						ch->c, jorigin, jfont, ch->size, jquad);
+						ch->c, jorigin, jfont, ch->size, jquad, ch->argb, ch->flags);
 					if ((*env)->ExceptionCheck(env)) return;
 
 					(*env)->DeleteLocalRef(env, jquad);

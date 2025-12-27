@@ -74,42 +74,16 @@ enum
 	SCREEN_FURNITURE_H = 40,
 };
 
-static void open_browser(const char *uri)
+static void open_browser_exec(const char *uri)
 {
-#ifndef _WIN32
-	char *argv[3];
-#endif
-	char buf[PATH_MAX];
-
-#ifndef _WIN32
-	pid_t pid;
-	int err;
-#endif
-
-	/* Relative file: URI, make it absolute! */
-	if (!strncmp(uri, "file:", 5) && uri[5] != '/')
-	{
-		char buf_base[PATH_MAX];
-		char buf_cwd[PATH_MAX];
-		fz_dirname(buf_base, filename, sizeof buf_base);
-		if (getcwd(buf_cwd, sizeof buf_cwd))
-		{
-			fz_snprintf(buf, sizeof buf, "file://%s/%s/%s", buf_cwd, buf_base, uri+5);
-			fz_cleanname(buf+7);
-			uri = buf;
-		}
-	}
-
-	if (strncmp(uri, "file://", 7) && strncmp(uri, "http://", 7) && strncmp(uri, "https://", 8) && strncmp(uri, "mailto:", 7))
-	{
-		fz_warn(ctx, "refusing to open unknown link (%s)", uri);
-		return;
-	}
-
 #ifdef _WIN32
 	ShellExecuteA(NULL, "open", uri, 0, 0, SW_SHOWNORMAL);
 #else
+	char *argv[3];
+	pid_t pid;
+	int err;
 	const char *browser = getenv("BROWSER");
+
 	if (!browser)
 	{
 #ifdef __APPLE__
@@ -127,6 +101,62 @@ static void open_browser(const char *uri)
 		fz_warn(ctx, "cannot spawn browser '%s': %s", browser, strerror(err));
 
 #endif
+}
+
+static char link_uri[PATH_MAX];
+
+static void open_browser_dialog(void)
+{
+	ui_dialog_begin(ui.gridsize*20, ui.gridsize*4);
+	ui_layout(T, NONE, NW, ui.padsize, ui.padsize);
+	ui_label("Do you want to open this external link?");
+	ui_spacer();
+	ui_label("%s", link_uri);
+	ui_spacer();
+	ui_layout(B, X, S, ui.padsize, ui.padsize);
+	ui_panel_begin(0, ui.gridsize, 0, 0, 0);
+	{
+		ui_layout(R, NONE, S, 0, 0);
+		if (ui_button("Open") || ui.key == KEY_ENTER)
+		{
+			ui.dialog = NULL;
+			open_browser_exec(link_uri);
+		}
+		ui_spacer();
+		if (ui_button("Cancel") || ui.key == KEY_ESCAPE)
+		{
+			ui.dialog = NULL;
+		}
+	}
+	ui_panel_end();
+	ui_dialog_end();
+}
+
+static void open_browser(const char *uri)
+{
+	fz_strlcpy(link_uri, uri, sizeof link_uri);
+
+	/* Relative file: URI, make it absolute! */
+	if (!strncmp(uri, "file:", 5) && uri[5] != '/')
+	{
+		char buf_base[PATH_MAX];
+		char buf_cwd[PATH_MAX];
+		fz_dirname(buf_base, filename, sizeof buf_base);
+		if (getcwd(buf_cwd, sizeof buf_cwd))
+		{
+			fz_snprintf(link_uri, sizeof link_uri, "file://%s/%s/%s", buf_cwd, buf_base, uri+5);
+			fz_cleanname(link_uri+7);
+			uri = link_uri;
+		}
+	}
+
+	if (strncmp(uri, "file://", 7) && strncmp(uri, "http://", 7) && strncmp(uri, "https://", 8) && strncmp(uri, "mailto:", 7))
+	{
+		fz_warn(ctx, "refusing to open unknown link (%s)", uri);
+		return;
+	}
+
+	ui.dialog = open_browser_dialog;
 }
 
 static const int zoom_list[] = {
@@ -183,7 +213,7 @@ static float layout_w = FZ_DEFAULT_LAYOUT_W;
 static float layout_h = FZ_DEFAULT_LAYOUT_H;
 static float layout_em = FZ_DEFAULT_LAYOUT_EM;
 static char *layout_css = NULL;
-static int layout_use_doc_css = 1;
+static int layout_use_css = 1;
 static int enable_js = 1;
 static int tint_white = 0xFFFFF0;
 static int tint_black = 0x303030;
@@ -228,6 +258,7 @@ static int showundo = 0;
 static int showlayers = 0;
 static int showlinks = 0;
 static int showsearch = 0;
+static int showcoord = 0;
 int showannotate = 0;
 int showform = 0;
 
@@ -239,6 +270,8 @@ static int console_start_y = 0;
 #endif
 
 static const char *tooltip = NULL;
+
+static char coord_tooltip[100];
 
 struct mark
 {
@@ -582,6 +615,7 @@ static fz_location search_page = {-1, -1};
 static fz_location search_hit_page = {-1, -1};
 static int search_active = 0;
 char *search_needle = 0;
+fz_search_options search_options = FZ_SEARCH_IGNORE_CASE;
 int search_hit_count = 0;
 fz_quad search_hit_quads[5000];
 
@@ -598,6 +632,7 @@ static char *help_dialog_text =
 	"Y - show layer list\n"
 	"a - show annotation editor\n"
 	"R - show redaction editor\n"
+	"x - show mouse coordinates\n"
 	"L - highlight links\n"
 	"F - highlight form fields\n"
 	"r - reload file\n"
@@ -612,6 +647,7 @@ static char *help_dialog_text =
 	"C - toggle tinted color mode\n"
 	"E - toggle ICC color management\n"
 	"e - toggle spot color emulation\n"
+	"c - toggle document/user css\n"
 	"\n"
 	"f - fullscreen window\n"
 	"w - shrink wrap window\n"
@@ -1234,6 +1270,11 @@ static void relayout(void)
 	if (fz_is_document_reflowable(ctx, doc))
 	{
 		fz_bookmark mark = fz_make_bookmark(ctx, doc, currentpage);
+		fz_set_use_document_css(ctx, layout_use_css & 1);
+		if (layout_use_css & 2)
+			fz_load_user_css(ctx, layout_css);
+		else
+			fz_set_user_css(ctx, NULL);
 		fz_layout_document(ctx, doc, layout_w, layout_h, layout_em);
 		currentpage = fz_lookup_bookmark(ctx, doc, mark);
 		history_count = 0;
@@ -1389,27 +1430,62 @@ static void do_undo(void)
 
 static void do_layers(void)
 {
-	const char *name;
-	int n, i, on;
+	int n, i, k, configs;
 
 	ui_layout(L, BOTH, NW, 0, 0);
 	ui_panel_begin(outline_w, 0, ui.padsize*2, ui.padsize*2, 1);
 	ui_layout(T, X, NW, ui.padsize, ui.padsize);
+
+	if (pdf)
+	{
+		configs = pdf_count_layer_configs(ctx, pdf);
+
+		if (ui_popup("LayerConfigPopup", "Config...", 1, configs))
+		{
+			for (k = 0; k < configs; ++k)
+			{
+				const char *name = pdf_layer_config_name(ctx, pdf, k);
+				if (ui_popup_item(name))
+				{
+					pdf_select_layer_config(ctx, pdf, k);
+					page_contents_changed = 1;
+				}
+			}
+			ui_popup_end();
+		}
+		ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
+	}
+
 	ui_label("Layers:");
 	ui_layout(T, X, NW, ui.padsize*2, ui.padsize);
 
 	if (pdf)
 	{
-		n = pdf_count_layers(ctx, pdf);
+		n = pdf_count_layer_config_ui(ctx, pdf);
 		for (i = 0; i < n; ++i)
 		{
-			name = pdf_layer_name(ctx, pdf, i);
-			on = pdf_layer_is_enabled(ctx, pdf, i);
-			if (ui_checkbox(name, &on))
+			pdf_layer_config_ui info;
+			pdf_layer_config_ui_info(ctx, pdf, i, &info);
+
+			ui_panel_begin(0, ui.lineheight, 0, 0, 0);
 			{
-				pdf_enable_layer(ctx, pdf, i, on);
+				ui_layout(L, Y, NW, 0, 0);
+				ui_pack((1 + info.depth) * ui.lineheight / 2, 0);
+
+				if (info.type == PDF_LAYER_UI_LABEL)
+			{
+					ui_label(info.text);
+				}
+				else if (ui_checkbox_aux(info.text, &info.selected, !!info.locked))
+				{
+					if (info.selected)
+						pdf_select_layer_config_ui(ctx, pdf, i);
+					else
+						pdf_deselect_layer_config_ui(ctx, pdf, i);
 				page_contents_changed = 1;
 			}
+		}
+			ui_panel_end();
 		}
 		if (n == 0)
 			ui_label("None");
@@ -1939,6 +2015,11 @@ void reload_document(void)
 {
 	save_history();
 	save_accelerator();
+	fz_set_use_document_css(ctx, layout_use_css & 1);
+	if (layout_use_css & 2)
+		fz_load_user_css(ctx, layout_css);
+	else
+		fz_set_user_css(ctx, NULL);
 	load_document();
 	if (doc)
 	{
@@ -2314,6 +2395,7 @@ static void do_app(void)
 		case 'u': toggle_undo(); break;
 		case 'Y': toggle_layers(); break;
 		case 'L': showlinks = !showlinks; break;
+		case 'x': showcoord = !showcoord; break;
 		case 'F': showform = !showform; break;
 		case 'i': ui.dialog = info_dialog; break;
 #if FZ_ENABLE_JS
@@ -2325,6 +2407,7 @@ static void do_app(void)
 
 		case '>': layout_em = number > 0 ? number : layout_em + 1; relayout(); break;
 		case '<': layout_em = number > 0 ? number : layout_em - 1; relayout(); break;
+		case 'c': layout_use_css = (layout_use_css + 1) % 4; reload_document(); break;
 
 		case 'C': currenttint = !currenttint; break;
 		case 'I': currentinvert = !currentinvert; break;
@@ -2704,9 +2787,51 @@ static fz_buffer *format_info_text()
 	fz_append_printf(ctx, out, "Spot rendering: %s.\n", currentseparations ? "on" : "off");
 
 	if (fz_is_document_reflowable(ctx, doc))
+	{
 		fz_append_printf(ctx, out, "Em size: %g\n", layout_em);
+		buf[0] = 0;
+		if (fz_use_document_css(ctx))
+			fz_strlcat(buf, "doc, ", sizeof buf);
+		if (fz_user_css(ctx))
+			fz_strlcat(buf, "user, ", sizeof buf);
+		if (strlen(buf) > 2)
+			buf[strlen(buf)-2] = 0;
+		else
+			fz_strlcat(buf, "none", sizeof buf);
+		fz_append_printf(ctx, out, "CSS: %s\n", buf);
+	}
 
 	return out;
+}
+
+static void do_coord_tooltip(void)
+{
+	fz_point client_p, fitz_p, pdf_p;
+	fz_matrix m, im;
+	client_p = fz_make_point(ui.x, ui.y);
+	fitz_p = fz_transform_point(client_p, view_page_inv_ctm);
+	if (pdf)
+	{
+		pdf_page_transform(ctx, page, NULL, &m);
+		im = fz_invert_matrix(m);
+		pdf_p = fz_transform_point(fitz_p, im);
+		fz_snprintf(coord_tooltip, sizeof coord_tooltip,
+			"mouse at %g %g (%g %g in PDF space)",
+			roundf(fitz_p.x),
+			roundf(fitz_p.y),
+			roundf(pdf_p.x),
+			roundf(pdf_p.y)
+		);
+	}
+	else
+	{
+		fz_snprintf(coord_tooltip, sizeof coord_tooltip,
+			"mouse at %g %g",
+			roundf(fitz_p.x),
+			roundf(fitz_p.y)
+		);
+	}
+	tooltip = coord_tooltip;
 }
 
 static void do_canvas(void)
@@ -2824,6 +2949,10 @@ static void do_canvas(void)
 
 	if (showsearch)
 	{
+		int search_ignore_case = !!(search_options & FZ_SEARCH_IGNORE_CASE);
+		int search_ignore_diacritics = !!(search_options & FZ_SEARCH_IGNORE_DIACRITICS);
+		int search_regexp = !!(search_options & FZ_SEARCH_REGEXP);
+
 		ui_layout(T, X, NW, 0, 0);
 		ui_panel_begin(0, ui.gridsize + ui.padsize*4, ui.padsize*2, ui.padsize*2, 1);
 		ui_layout(L, NONE, W, ui.padsize, 0);
@@ -2845,9 +2974,33 @@ static void do_canvas(void)
 				search_page = currentpage;
 			}
 		}
-		if (ui.focus != &search_input)
-			showsearch = 0;
 		ui_panel_end();
+
+		ui_panel_begin(0, ui.gridsize + ui.padsize*4, ui.padsize*2, ui.padsize*2, 1);
+		ui_layout(L, NONE, W, ui.padsize, 0);
+
+		// put focus back to search text field after toggling these checkboxes
+		if (ui_checkbox("Ignore case", &search_ignore_case))
+			ui.focus = &search_input;
+		if (ui_checkbox("Ignore diacritics", &search_ignore_diacritics))
+			ui.focus = &search_input;
+		if (ui_checkbox("Regexp", &search_regexp))
+			ui.focus = &search_input;
+
+		search_options = FZ_SEARCH_EXACT;
+		if (search_ignore_case)
+			search_options |= FZ_SEARCH_IGNORE_CASE;
+		if (search_ignore_diacritics)
+			search_options |= FZ_SEARCH_IGNORE_DIACRITICS;
+		if (search_regexp)
+			search_options |= FZ_SEARCH_REGEXP;
+
+		ui_panel_end();
+	}
+
+	if (!tooltip && showcoord)
+	{
+		do_coord_tooltip();
 	}
 
 	if (tooltip)
@@ -2878,10 +3031,12 @@ void do_main(void)
 
 		while (search_active && glutGet(GLUT_ELAPSED_TIME) < start_time + 200)
 		{
-			search_hit_count = fz_search_chapter_page_number(ctx, doc,
+			fz_try(ctx)
+			{
+				search_hit_count = fz_match_chapter_page_number(ctx, doc,
 				search_page.chapter, search_page.page,
 				search_needle,
-				NULL, search_hit_quads, nelem(search_hit_quads));
+					NULL, search_hit_quads, nelem(search_hit_quads), search_options);
 			trace_action("hits = doc.loadPage(%d).search(%q);\n", fz_page_number_from_location(ctx, doc, search_page), search_needle);
 			trace_action("print('Search page %d:', repr(%q), hits.length, repr(hits));\n", fz_page_number_from_location(ctx, doc, search_page), search_needle);
 			if (search_hit_count)
@@ -2908,6 +3063,14 @@ void do_main(void)
 					else
 						search_page = fz_previous_page(ctx, doc, search_page);
 				}
+			}
+		}
+			fz_catch(ctx)
+			{
+				// ignore invalid regexp input
+				fz_rethrow_unless(ctx, FZ_ERROR_ARGUMENT);
+				ui_show_warning_dialog("%s", fz_convert_error(ctx, NULL));
+				search_active = 0;
 			}
 		}
 
@@ -3004,6 +3167,12 @@ static void usage(const char *argv0)
 	fprintf(stderr, "\t-Y -\tset the UI scaling factor\n");
 	fprintf(stderr, "\t-R -\tenable reflow and set the text extraction options\n");
 	fprintf(stderr, "\t\t\texample: -R dehyphenate,preserve-images\n");
+	exit(1);
+}
+
+static void version(void)
+{
+	fprintf(stderr, "mupdf-gl version %s\n", FZ_VERSION);
 	exit(1);
 }
 
@@ -3104,11 +3273,12 @@ int main(int argc, char **argv)
 
 	glutInit(&argc, argv);
 
-	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJb:A:B:C:T:Y:R:c:")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:r:IW:H:S:U:XJb:A:B:C:T:Y:R:c:v")) != -1)
 	{
 		switch (c)
 		{
 		default: usage(argv[0]); break;
+		case 'v': version(); break;
 		case 'p': password = fz_optarg; break;
 		case 'r': currentzoom = fz_atof(fz_optarg); break;
 		case 'c': profile_name = fz_optarg; break;
@@ -3117,8 +3287,8 @@ int main(int argc, char **argv)
 		case 'W': layout_w = fz_atof(fz_optarg); break;
 		case 'H': layout_h = fz_atof(fz_optarg); break;
 		case 'S': layout_em = fz_atof(fz_optarg); break;
-		case 'U': layout_css = fz_optarg; break;
-		case 'X': layout_use_doc_css = 0; break;
+		case 'U': layout_css = fz_optarg; layout_use_css |= 2; break;
+		case 'X': layout_use_css ^= 1; break;
 		case 'J': enable_js = !enable_js; break;
 		case 'A': currentaa = fz_atoi(fz_optarg); break;
 		case 'C': currenttint = 1; tint_white = strtol(fz_optarg, NULL, 16); break;
@@ -3174,7 +3344,7 @@ int main(int argc, char **argv)
 
 	if (layout_css)
 		fz_load_user_css(ctx, layout_css);
-	fz_set_use_document_css(ctx, layout_use_doc_css);
+	fz_set_use_document_css(ctx, layout_use_css & 1);
 
 	if (fz_optind < argc)
 	{

@@ -102,7 +102,7 @@ fz_pixmap *fz_new_barcode_pixmap(fz_context *ctx, fz_barcode_type type, const ch
 /**
 	Decode a barcode from a page.
 
-	type: NULL, or a pointer to recieve the barcode type decoded.
+	type: NULL, or a pointer to receive the barcode type decoded.
 	page: The page to decode.
 	subarea: subarea of the page to decode.
 	rotate: 0, 90, 180, or 270.
@@ -114,7 +114,7 @@ char *fz_decode_barcode_from_page(fz_context *ctx, fz_barcode_type *type, fz_pag
 /**
 	Decode a barcode from a pixmap.
 
-	type: NULL, or a pointer to recieve the barcode type decoded.
+	type: NULL, or a pointer to receive the barcode type decoded.
 	pix: The pixmap to decode.
 	rotate: 0, 90, 180, or 270.
 
@@ -126,7 +126,7 @@ char *fz_decode_barcode_from_pixmap(fz_context *ctx, fz_barcode_type *type, fz_p
 /**
 	Decode a barcode from a display list.
 
-	type: NULL, or a pointer to recieve the barcode type decoded.
+	type: NULL, or a pointer to receive the barcode type decoded.
 	list: The display list to render to get the barcode.
 	subarea: subarea of the page to decode.
 	rotate: 0, 90, 180, or 270.

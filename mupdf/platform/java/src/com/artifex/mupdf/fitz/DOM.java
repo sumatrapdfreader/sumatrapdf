@@ -1,4 +1,4 @@
-// Copyright (C) 2022 Artifex Software, Inc.
+// Copyright (C) 2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -64,4 +64,6 @@ public class DOM
 	public native DOMAttribute[] attributes();
 	public native DOM find(String tag, String att, String val);
 	public native DOM findNext(String tag, String att, String val);
+	public native String getText();
+	public native String getTag();
 }

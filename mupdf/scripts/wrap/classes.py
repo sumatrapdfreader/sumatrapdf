@@ -1695,9 +1695,9 @@ classextras = ClassExtras(
                     ExtraConstructor( '()',
                         f'''
                         {{
+                            memset(this->internal(), 0, sizeof(*this->internal()));
                             /* Use memcpy() otherwise we get 'invalid array assignment' errors. */
                             memcpy(&this->internal()->write, &pdf_default_write_options, sizeof(this->internal()->write));
-                            memset(&this->internal()->image, 0, sizeof(this->internal()->image));
                         }}
                         ''',
                         comment = '/* Default constructor, makes copy of pdf_default_write_options. */'

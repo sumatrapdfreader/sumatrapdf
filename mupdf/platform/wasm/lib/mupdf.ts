@@ -235,6 +235,14 @@ export function setUserCSS(text: string) {
 	libmupdf._wasm_set_user_css(STRING(text))
 }
 
+export function emptyStore() {
+	libmupdf._wasm_empty_store()
+}
+
+export function shrinkStore(percent: number): boolean {
+	return libmupdf._wasm_shrink_store(percent)
+}
+
 export function installLoadFontFunction(f: (name: string, script: string, bold: boolean, italic: boolean) => Font | null) {
 	$libmupdf_load_font_file_js = f
 }
@@ -525,6 +533,16 @@ function fromBuffer(ptr: Pointer<"fz_buffer">): Uint8Array {
 	let data = libmupdf._wasm_buffer_get_data(ptr)
 	let size = libmupdf._wasm_buffer_get_len(ptr)
 	return libmupdf.HEAPU8.slice(data, data + size)
+}
+
+function fromLayerConfigUIInfo(ptr: Pointer<"pdf_layer_config_ui">): Object {
+	return {
+		text: libmupdf._wasm_pdf_layer_config_ui_get_text(ptr),
+		depth: libmupdf._wasm_pdf_layer_config_ui_get_depth(ptr),
+		type: libmupdf._wasm_pdf_layer_config_ui_get_type(ptr),
+		selected: libmupdf._wasm_pdf_layer_config_ui_get_selected(ptr),
+		locked: libmupdf._wasm_pdf_layer_config_ui_get_locked(ptr),
+	}
 }
 
 /* unused for now
@@ -841,6 +859,10 @@ export class Font extends Userdata<"fz_font"> {
 		"Greek",
 		"Cyrillic"
 	]
+
+	static readonly SIMPLE_ENCODING_LATIN = "Latin"
+	static readonly SIMPLE_ENCODING_GREEK = "Greek"
+	static readonly SIMPLE_ENCODING_CYRILLIC = "Cyrillic"
 
 	static readonly ADOBE_CNS = 0
 	static readonly ADOBE_GB = 1
@@ -1455,6 +1477,7 @@ interface StructuredTextWalker {
 	onChar?(c: string, origin: Point, font: Font, size: number, quad: Quad, color: Color): void
 	endLine?(): void
 	endTextBlock?(): void
+	onVector?(bbox: Rect, flags: any, color: Color): void
 }
 
 type SelectMode = "chars" | "words" | "lines"
@@ -1478,13 +1501,7 @@ export class StructuredText extends Userdata<"fz_stext_page"> {
 			let block_type = libmupdf._wasm_stext_block_get_type(block)
 			let block_bbox = fromRect(libmupdf._wasm_stext_block_get_bbox(block))
 
-			if (block_type === 1) {
-				if (walker.onImageBlock) {
-					let matrix = fromMatrix(libmupdf._wasm_stext_block_get_transform(block))
-					let image = new Image(libmupdf._wasm_stext_block_get_image(block))
-					walker.onImageBlock(block_bbox, matrix, image)
-				}
-			} else {
+			if (block_type === 0) {
 				if (walker.beginTextBlock)
 					walker.beginTextBlock(block_bbox)
 
@@ -1521,6 +1538,28 @@ export class StructuredText extends Userdata<"fz_stext_page"> {
 
 				if (walker.endTextBlock)
 					walker.endTextBlock()
+			} else if (block_type === 1) {
+				/* image */
+				if (walker.onImageBlock) {
+					let matrix = fromMatrix(libmupdf._wasm_stext_block_get_transform(block))
+					let image = new Image(libmupdf._wasm_stext_block_get_image(block))
+					walker.onImageBlock(block_bbox, matrix, image)
+				}
+			} else if (block_type === 2) {
+				/* struct */
+			} else if (block_type === 3) {
+				/* vector */
+				if (walker.onVector) {
+					let v_flags_word = libmupdf._wasm_stext_block_get_v_flags(block)
+					let v_flags = {
+						isStroked: !!(v_flags_word & 1),
+						isRectangle: !!(v_flags_word & 2),
+					}
+					let v_color = colorFromNumber(libmupdf._wasm_stext_block_get_v_argb(block))
+					walker.onVector(block_bbox, v_flags, v_color)
+				}
+			} else if (block_type === 4) {
+				/* grid */
 			}
 
 			block = libmupdf._wasm_stext_block_get_next(block)
@@ -1607,8 +1646,27 @@ export class Device extends Userdata<"fz_device"> {
 		"Luminosity",
 	]
 
-	constructor(pointer: Pointer<"fz_device">)
+	static readonly BLEND_NORMAL = "Normal"
+	static readonly BLEND_MULTIPLY = "Multiply"
+	static readonly BLEND_SCREEN = "Screen"
+	static readonly BLEND_OVERLAY = "Overlay"
+	static readonly BLEND_DARKEN = "Darken"
+	static readonly BLEND_LIGHTEN = "Lighten"
+	static readonly BLEND_COLOR_DODGE = "ColorDodge"
+	static readonly BLEND_COLOR_BURN = "ColorBurn"
+	static readonly BLEND_HARD_LIGHT = "HardLight"
+	static readonly BLEND_SOFT_LIGHT = "SoftLight"
+	static readonly BLEND_DIFFERENCE = "Difference"
+	static readonly BLEND_EXCLUSION = "Exclusion"
+	static readonly BLEND_HUE = "Hue"
+	static readonly BLEND_SATURATION = "Saturation"
+	static readonly BLEND_COLOR = "Color"
+	static readonly BLEND_LUMINOSITY = "Luminosity"
+
 	constructor(callbacks: DeviceFunctions)
+
+	// PRIVATE
+	constructor(pointer: Pointer<"fz_device">)
 
 	constructor(pointer_or_callbacks: Pointer<"fz_device"> | DeviceFunctions) {
 		if (typeof pointer_or_callbacks === "number")
@@ -1834,6 +1892,48 @@ export type DocumentPermission =
 	"assemble" |
 	"print-hq"
 
+export class LinkDestination {
+	static readonly LINK_DEST: LinkDestType[] = [
+		"Fit",
+		"FitB",
+		"FitH",
+		"FitBH",
+		"FitV",
+		"FitBV",
+		"FitR",
+		"XYZ",
+	]
+
+	static readonly FIT = "Fit"
+	static readonly FIT_B = "FitB"
+	static readonly FIT_H = "FitH"
+	static readonly FIT_BH = "FitBH"
+	static readonly FIT_V = "FitV"
+	static readonly FIT_BV = "FitBV"
+	static readonly FIT_R = "FitR"
+	static readonly XYZ = "XYZ"
+
+	type: LinkDestType
+	chapter: number
+	page: number
+	x: number
+	y: number
+	width: number
+	height: number
+	zoom: number
+
+	constructor(chapter=0, page=0, type:LinkDestType="Fit", x=NaN, y=NaN, width=NaN, height=NaN, zoom=NaN) {
+		this.chapter = chapter
+		this.page = page
+		this.type = type
+		this.x = x
+		this.y = y
+		this.width = width
+		this.height = height
+		this.zoom = zoom
+	}
+}
+
 export class Document extends Userdata<"any_document"> {
 	static override readonly _drop = libmupdf._wasm_drop_document
 
@@ -1848,6 +1948,15 @@ export class Document extends Userdata<"any_document"> {
 	static readonly META_INFO_CREATIONDATE = "info:CreationDate"
 	static readonly META_INFO_MODIFICATIONDATE = "info:ModDate"
 
+	static readonly PERMISSION_PRINT = "print"
+	static readonly PERMISSION_COPY = "copy"
+	static readonly PERMISSION_EDIT = "eedit"
+	static readonly PERMISSION_ANNOTATE = "annotate"
+	static readonly PERMISSION_FORM = "form"
+	static readonly PERMISSION_ACCESSIBILITY = "accessibility"
+	static readonly PERMISSION_ASSEMBLE = "assemble"
+	static readonly PERMISSION_PRINT_HQ = "print-hq"
+
 	static readonly PERMISSION: Record<DocumentPermission,number> = {
 		"print": "p".charCodeAt(0),
 		"copy": "c".charCodeAt(0),
@@ -1858,17 +1967,6 @@ export class Document extends Userdata<"any_document"> {
 		"assemble": "a".charCodeAt(0),
 		"print-hq": "h".charCodeAt(0),
 	}
-
-	static readonly LINK_DEST: LinkDestType[] = [
-		"Fit",
-		"FitB",
-		"FitH",
-		"FitBH",
-		"FitV",
-		"FitBV",
-		"FitR",
-		"XYZ",
-	]
 
 	static openDocument(from: Buffer | ArrayBuffer | Uint8Array | Stream | string, magic?: string): Document {
 		let pointer = 0 as Pointer<"any_document">
@@ -1917,7 +2015,7 @@ export class Document extends Userdata<"any_document"> {
 			libmupdf._wasm_format_link_uri(this.pointer,
 				dest.chapter | 0,
 				dest.page | 0,
-				ENUM<LinkDestType>(dest.type, Document.LINK_DEST),
+				ENUM<LinkDestType>(dest.type, LinkDestination.LINK_DEST),
 				+dest.x,
 				+dest.y,
 				+dest.width,
@@ -1946,7 +2044,7 @@ export class Document extends Userdata<"any_document"> {
 	}
 
 	hasPermission(perm: DocumentPermission) {
-		let perm_ix = Document.PERMISSION[perm]
+		let perm_ix = (typeof perm === "number") ? perm : Document.PERMISSION[perm]
 		return !!libmupdf._wasm_has_permission(this.pointer, perm_ix)
 	}
 
@@ -2031,7 +2129,7 @@ export class Document extends Userdata<"any_document"> {
 		else
 			dest = libmupdf._wasm_resolve_link_dest(this.pointer, STRING(link))
 		return {
-			type: Document.LINK_DEST[libmupdf._wasm_link_dest_get_type(dest)] as LinkDestType,
+			type: LinkDestination.LINK_DEST[libmupdf._wasm_link_dest_get_type(dest)] as LinkDestType,
 			chapter: libmupdf._wasm_link_dest_get_chapter(dest),
 			page: libmupdf._wasm_link_dest_get_page(dest),
 			x: libmupdf._wasm_link_dest_get_x(dest),
@@ -2058,9 +2156,12 @@ interface OutlineItem {
 export class OutlineIterator extends Userdata<"fz_outline_iterator"> {
 	static override readonly _drop = libmupdf._wasm_drop_outline_iterator
 
-	static readonly RESULT_DID_NOT_MOVE = -1
-	static readonly RESULT_AT_ITEM = 0
-	static readonly RESULT_AT_EMPTY = 1
+	static readonly ITERATOR_DID_NOT_MOVE = -1
+	static readonly ITERATOR_AT_ITEM = 0
+	static readonly ITERATOR_AT_EMPTY = 1
+
+	static readonly FLAG_BOLD = 1
+	static readonly FLAG_ITALIC = 2
 
 	item() {
 		let item = libmupdf._wasm_outline_iterator_item(this.pointer)
@@ -2165,6 +2266,12 @@ export class Page extends Userdata<"any_page"> {
 		"TrimBox",
 		"ArtBox"
 	]
+
+	static readonly MEDIA_BOX = "MediaBox"
+	static readonly CROP_BOX = "CropBox"
+	static readonly BLEED_BOX = "BleedBox"
+	static readonly TRIM_BOX = "TrimBox"
+	static readonly ART_BOX = "ArtBox"
 
 	isPDF() {
 		return this instanceof PDFPage
@@ -2273,7 +2380,6 @@ export class PDFDocument extends Document {
 	// PRIVATE
 	constructor(clone: PDFDocument)
 	constructor(pointer: Pointer<"any_document">)
-	constructor(data: Buffer | ArrayBuffer | Uint8Array | Stream)
 
 	constructor(arg1?: Pointer<"any_document"> | Buffer | ArrayBuffer | Uint8Array | Stream | PDFDocument | string) {
 		if (typeof arg1 === "undefined")
@@ -2467,6 +2573,11 @@ export class PDFDocument extends Document {
 	findPage(index: number) {
 		checkType(index, "number")
 		return this._fromPDFObjectKeep(libmupdf._wasm_pdf_lookup_page_obj(this.pointer, index))
+	}
+
+	setPageTreeCache(enabled: boolean) {
+		checkType(enabled, "boolean")
+		libmupdf._wasm_pdf_set_page_tree_cache(this.pointer, enabled)
 	}
 
 	addPage(mediabox: Rect, rotate: Rotate, resources: any, contents: AnyBuffer) {
@@ -2753,6 +2864,30 @@ export class PDFDocument extends Document {
 
 	bake(bakeAnnots = true, bakeWidgets = true) {
 		libmupdf._wasm_pdf_bake_document(this.pointer, bakeAnnots, bakeWidgets)
+	}
+
+	countLayerConfigs(): number {
+		return libmupdf._wasm_pdf_count_layer_configs(this.pointer)
+	}
+
+	getLayerConfigCreator(config: number): string {
+		return fromString(libmupdf._wasm_pdf_layer_config_creator(this.pointer, config))
+	}
+
+	getLayerConfigName(config: number): string {
+		return fromString(libmupdf._wasm_pdf_layer_config_name(this.pointer, config))
+	}
+
+	selectLayerConfig(config: number) {
+		libmupdf._wasm_pdf_select_layer_config(this.pointer, config)
+	}
+
+	countLayerConfigUIs(): number {
+		return libmupdf._wasm_pdf_count_layer_config_uis(this.pointer)
+	}
+
+	getLayerConfigUIInfo(configui: number) {
+		return fromLayerConfigUIInfo(libmupdf._wasm_pdf_layer_config_ui_info(this.pointer, configui));
 	}
 
 	countLayers(): number {

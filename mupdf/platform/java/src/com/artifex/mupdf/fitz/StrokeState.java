@@ -66,9 +66,7 @@ public class StrokeState
 		pointer = newNativeStrokeState(lineCap, lineJoin, lineWidth, miterLimit, dashPhase, dash);
 	}
 
-	public native int getStartCap();
-	public native int getDashCap();
-	public native int getEndCap();
+	public native int getLineCap();
 	public native int getLineJoin();
 	public native float getLineWidth();
 	public native float getMiterLimit();

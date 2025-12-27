@@ -313,7 +313,10 @@ is_valid_utf8(const unsigned char *s, const unsigned char *end)
 {
 	for (; s < end; ++s)
 	{
-		int skip = *s < 0x80 ? 0 : *s < 0xC0 ? -1 : *s < 0xE0 ? 1 : *s < 0xF0 ? 2 : *s < 0xF5 ? 3 : -1;
+		int c = *s;
+		int skip = c < 0x80 ? 0 : c < 0xC0 ? -1 : c < 0xE0 ? 1 : c < 0xF0 ? 2 : c < 0xF5 ? 3 : -1;
+		if (c >= 0x18 && c <= 0x1f) // Reserved control characters used by PDFDocEncoding.
+			return 0;
 		if (skip == -1)
 			return 0;
 		while (skip-- > 0)

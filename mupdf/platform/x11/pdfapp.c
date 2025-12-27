@@ -1201,29 +1201,10 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 static void pdfapp_gotouri(pdfapp_t *app, char *uri)
 {
-	char buf[PATH_MAX];
-
-	/* Relative file:// URI, make it absolute! */
-	if (!strncmp(uri, "file://", 7) && uri[7] != '/')
-	{
-		char buf_base[PATH_MAX];
-		char buf_cwd[PATH_MAX];
-		if (getcwd(buf_cwd, sizeof buf_cwd))
-		{
-			fz_dirname(buf_base, app->docpath, sizeof buf_base);
-			fz_snprintf(buf, sizeof buf, "file://%s/%s/%s", buf_cwd, buf_base, uri+7);
-			fz_cleanname(buf+7);
-			uri = buf;
-		}
-	}
-
-	if (strncmp(uri, "file://", 7) && strncmp(uri, "http://", 7) && strncmp(uri, "https://", 8) && strncmp(uri, "mailto:", 7))
-	{
+	if (!strncmp(uri, "http://", 7) || !strncmp(uri, "https://", 8))
+		winopenuri(app, uri);
+	else
 		fz_warn(app->ctx, "refusing to open unknown link (%s)", uri);
-		return;
-	}
-
-	winopenuri(app, uri);
 }
 
 void pdfapp_gotopage(pdfapp_t *app, int number)

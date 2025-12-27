@@ -125,10 +125,9 @@ fz_rotate(float theta)
 	float s;
 	float c;
 
-	while (theta < 0)
+	theta = fmod(theta, 360);
+	if (theta < 0)
 		theta += 360;
-	while (theta >= 360)
-		theta -= 360;
 
 	if (fabsf(0 - theta) < FLT_EPSILON)
 	{
@@ -165,10 +164,9 @@ fz_rotate(float theta)
 fz_matrix
 fz_pre_rotate(fz_matrix m, float theta)
 {
-	while (theta < 0)
+	theta = fmod(theta, 360);
+	if (theta < 0)
 		theta += 360;
-	while (theta >= 360)
-		theta -= 360;
 
 	if (fabsf(0 - theta) < FLT_EPSILON)
 	{
@@ -258,22 +256,24 @@ fz_transform_page(fz_rect mediabox, float resolution, float rotate)
 fz_matrix
 fz_invert_matrix(fz_matrix src)
 {
-	float a = src.a;
-	float det = a * src.d - src.b * src.c;
-	if (det < -FLT_EPSILON || det > FLT_EPSILON)
-	{
-		fz_matrix dst;
-		float rdet = 1 / det;
-		dst.a = src.d * rdet;
-		dst.b = -src.b * rdet;
-		dst.c = -src.c * rdet;
-		dst.d = a * rdet;
-		a = -src.e * dst.a - src.f * dst.c;
-		dst.f = -src.e * dst.b - src.f * dst.d;
-		dst.e = a;
-		return dst;
-	}
-	return src;
+	double sa = (double)src.a;
+	double sb = (double)src.b;
+	double sc = (double)src.c;
+	double sd = (double)src.d;
+	double da, db, dc, dd, de, df;
+	double det = sa * sd - sb * sc;
+	// If we cannot invert the matrix, return a degenerate one so we can
+	// more easily spot it when debugging!
+	if (det >= -DBL_EPSILON && det <= DBL_EPSILON)
+		return fz_make_matrix(0, 0, 0, 0, 0, 0);
+	det = 1 / det;
+	da = sd * det;
+	db = -sb * det;
+	dc = -sc * det;
+	dd = sa * det;
+	de = -src.e * da - src.f * dc;
+	df = -src.e * db - src.f * dd;
+	return fz_make_matrix(da, db, dc, dd, de, df);
 }
 
 int

@@ -1,0 +1,124 @@
+% title: Hyphenation patterns for Dutch
+% copyright: Copyright (C) 1996 Piet Tutelaers
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Dutch
+%     tag: nl
+% version: 1.1 (November 1996)
+% licence:
+%     name: MIT
+%     url: https://opensource.org/licenses/MIT
+% authors:
+%     -
+%         name: Piet Tutelaers
+%         contact: P.T.H.Tutelaers (at) tue.nl
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - Version 1.1 November 1996
+%     - Copyright changed March 2000
+% texlive:
+%     encoding: ec
+%     babelname: dutch
+%     legacy_patterns: nehyph96.tex
+%     message: Dutch hyphenation patterns
+%     description: |-
+%         Hyphenation patterns for Dutch in T1/EC and UTF-8 encodings.
+%         These patterns don't handle cases like 'menuutje' > 'menu-tje',
+%         and don't hyphenate words that have different hyphenations according
+%         to their meaning.
+% known_bugs:
+%     xi-ii: 'when we’d expect xiii for a roman number (see GitHub issue #29)'
+% ==========================================
+% PURPOSE: 8-bit hyphenation patterns for TeX based upon the new Dutch
+%          spelling, officially since 1 August 1996. These patterns follow
+%          the new hyphenation rules in the ‘Woordenlijst Nederlandse
+%          Taal, SDU Uitgevers, Den Haag 1995’ (the so called ‘Groene
+%          Boekje’) described in section 5.2 (Het afbreekteken).
+%
+%          The main differences with our earlier patterns based upon the
+%          CELEX dictionary are:
+%           (1) provide 8-bit patterns based upon the T1 character encoding
+%               (the encoding for DC/EC compatible TeX fonts)
+%           (2) don’t hyphenate if this results in a syllable of one letter
+%               before or after the hyphen (hence hyphens in a-drenaline,
+%               studi-o, mensa-pen and vide-oachtig are invalid)
+%           (3) handle words derived from other languages (‘bastaard
+%               woorden’) according to the new rules
+%
+%          Like the CELEX patterns these patterns don’t hyphenate:
+%           (4) in a changing syllable (menuutje can not be hyphenated as
+%               menu-tje)
+%           (5) in words that have different hyphenations according to
+%               there meaning (buur-tje/buurt-je)
+%
+% Exception list
+%
+% The following words were not properly hyphenated.
+%
+% aan*dacht.s*trek*ker
+% aan*dacht.s*trek*kers
+% ach.t*en*der
+% ach.t*en*ders
+% ach.t*en*der*tig
+% ach.t*en*der*tig*ste
+% be*heer.s*ta*ken
+% be*scher.m*en*gel
+% be*scher.m*en*ge*len
+% be*stuur.s*la*gen
+% be*stuur.s*ta*ken
+% bij*ge*plaats-te
+% bij*plaats-te
+% bij*stand.s*trek*ker
+% bij*stand.s*trek*kers
+% bui*te.n*an*ten*ne
+% bui*te.n*an*ten*nes
+% di-a*ken
+% di-a*kens
+% don*de.r*aal
+% ge*plaats-te
+% han*del.s*taal
+% he.r*e*nen
+% her*plaats-te
+% ho*ger*ge*plaats-te
+% hoog*ge*plaats-te
+% hoogst*ge*plaats-te
+% ket*ting*s.te*ken
+% laag*ge*plaats-te
+% land.s*taal
+% mee.st*al
+% mi*nis*ter.s*por*te*feuil*le
+% mi*nis*ter.s*por*te*feuil*les
+% mis*plaats-te
+% on*ge*plaats-te
+% ont*hoof*d.in*gen
+% ont*pers-te
+% op*ge*plaats-te
+% over*ge*plaats-te
+% over*plaats-te
+% pa*ling*s.te*ken
+% plaats-te
+% recht.s*taal
+% schil*der.s*ta*lent
+% sou*ve*nier.tje
+% sou*ve*nier.tjes
+% spie*ge.l*ei
+% spits-te
+% sub*a-to*mai*re
+% te*rug*ge*plaats-te
+% trans*o-ce*a*ni*sche
+% ver*en*gel.s*te
+% ver*hol*land.s*te
+% ver*in*land.s*te
+% ver*kind.s*te
+% ver*ne*der*land.s*te
+% ver*plaats-te
+% ver*recht.s-te
+% ver*steed.s*te
+% voort-re*de*ne*ren
+% wal.s*te
+% wa*ter*staat.s*in*ge*ni*eur
+% wa*ter*staat.s*in*ge*ni*eurs

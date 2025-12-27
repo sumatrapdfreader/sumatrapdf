@@ -538,6 +538,9 @@ static int usage(void)
 		"\t-A -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-A -/-\tnumber of bits of antialiasing (0 to 8) (graphics, text)\n"
 		"\n"
+		"\t-i\tignore errors\n"
+		"\t-v\tshow version\n"
+		"\n"
 		"\tpages\tcomma separated list of page numbers and ranges\n",
 		X_RESOLUTION, Y_RESOLUTION, PAPER_WIDTH, PAPER_HEIGHT
 		);

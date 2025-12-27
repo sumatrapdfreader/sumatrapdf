@@ -88,7 +88,7 @@ rectlist_append(rectlist_t *list, fz_rect *box)
 			/* If the one that just got chopped off wasn't r, move it down. */
 			if (i < list->len)
 			{
-				memcpy(r, &list->list[list->len], sizeof(*r));
+				memmove(r, &list->list[list->len], sizeof(*r));
 				i--; /* Reconsider this entry next time. */
 			}
 		}
@@ -324,151 +324,98 @@ static int
 boxer_subdivide(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, boxer_t *boxer, int depth)
 {
 	rectlist_t *list = boxer->list;
-	double max_h = 0, max_v = 0;
+	double max_size = 0;
 	int i;
+	int horiz = 0;
+	int largest = -1;
+	fz_rect r;
 
 	for (i = 0; i < list->len; i++)
 	{
-		fz_rect r = boxer->list->list[i];
+		r = list->list[i];
 
 		if (r.x0 <= boxer->mediabox.x0 && r.x1 >= boxer->mediabox.x1)
 		{
 			/* Horizontal divider */
 			double size = r.y1 - r.y0;
-			if (size > max_h)
+			if (size > max_size)
 			{
-				max_h = size;
+				max_size = size;
+				largest = i;
+				horiz = 1;
 			}
 		}
 		if (r.y0 <= boxer->mediabox.y0 && r.y1 >= boxer->mediabox.y1)
 		{
 			/* Vertical divider */
 			double size = r.x1 - r.x0;
-			if (size > max_v)
+			if (size > max_size)
 			{
-				max_v = size;
+				max_size = size;
+				largest = i;
+				horiz = 0;
 			}
 		}
 	}
 
-	if (max_h > max_v)
+	if (largest == -1)
 	{
-		fz_rect r;
-		float min_gap;
-		float top;
+#ifdef DEBUG_WRITE_AS_PS
+		{
+			printf("%% SUBSET\n");
+			printf("0 1 1 setrgbcolor\n");
+			printf("%g %g moveto\n%g %g lineto\n%g %g lineto\n%g %g lineto\nclosepath\nstroke\n\n",
+			boxer->mediabox.x0, boxer->mediabox.y0,
+			boxer->mediabox.x0, boxer->mediabox.y1,
+			boxer->mediabox.x1, boxer->mediabox.y1,
+			boxer->mediabox.x1, boxer->mediabox.y0);
+				}
+#endif
+		return 0;
+			}
 
+			r = boxer->mediabox;
+	if (horiz)
+	{
 		/* Divider runs horizontally. */
-
-		/* We want to list out all the horizontal subregions that are separated
-		 * by an appropriate gap, from top to bottom. */
-
-		/* Any gap larger than the the gap we ignored will do. */
-		min_gap = max_v;
-
-		/* We're going to need to run through the data multiple times to find the
-		 * topmost block each time. We'll use 'top' to cull against, and gradually
-		 * lower that after each successful pass. */
-		top = boxer->mediabox.y0;
-		while (1)
+#ifdef DEBUG_WRITE_AS_PS
 		{
-			/* Find the topmost divider below 'top' of height at least min_gap */
-			float found_top;
-			int found = -1;
-			for (i = 0; i < list->len; i++)
-			{
-				fz_rect *b = &list->list[i];
-				if (b->x0 <= boxer->mediabox.x0 && boxer->mediabox.x1 <= b->x1 && b->y0 > top && b->y1 - b->y0 >= min_gap)
-				{
-					if (found == -1 || b->y0 < found_top)
-					{
-						found = i;
-						found_top = b->y0;
-					}
-				}
-			}
-
-			/* If we failed to find one, we're done. */
-			if (found == -1)
-				break;
-
-			/* So we have a region from top to found_top */
-			r = boxer->mediabox;
-			r.y0 = top;
-			r.y1 = found_top;
-
+			printf("%% H DIVIDER\n");
+			printf("1 0 1 setrgbcolor\n");
+			printf("%g %g moveto\n%g %g lineto\nstroke\n\n",
+			list->list[largest].x0, (list->list[largest].y0 + list->list[largest].y1) * 0.5f,
+			list->list[largest].x1, (list->list[largest].y0 + list->list[largest].y1) * 0.5f);
+		}
+#endif
+		r.y1 = list->list[largest].y0;
 			analyse_subset(ctx, page, parent, boxer, r, depth);
 
-			/* Now move top down for the next go. */
-			top = list->list[found].y1;
-		}
-
-		/* One final region, from top to bottom */
-		r = boxer->mediabox;
-		r.y0 = top;
+		r.y0 = list->list[largest].y1;
+		r.y1 = boxer->mediabox.y1;
 		analyse_subset(ctx, page, parent, boxer, r, depth);
-
-		return 1;
 	}
-	else if (max_v > 0)
+	else
 	{
-		fz_rect r;
-		float min_gap;
-		float left;
-
 		/* Divider runs vertically. */
-
-		/* We want to list out all the vertical subregions that are separated
-		 * by an appropriate gap, from left to right. */
-
-		/* Any gap larger than the the gap we ignored will do. */
-		min_gap = max_h;
-
-		/* We're going to need to run through the data multiple times to find the
-		 * leftmost block each time. We'll use 'left' to cull against, and gradually
-		 * lower that after each successful pass. */
-		left = boxer->mediabox.x0;
-		while (1)
+#ifdef DEBUG_WRITE_AS_PS
 		{
-			/* Find the leftmost divider to the right of 'left' of width at least min_gap */
-			float found_left;
-			int found = -1;
-			for (i = 0; i < list->len; i++)
-			{
-				fz_rect *b = &list->list[i];
-				if (b->y0 <= boxer->mediabox.y0 && boxer->mediabox.y1 <= b->y1 && b->x0 > left && b->x1 - b->x0 >= min_gap)
-				{
-					if (found == -1 || b->x0 < found_left)
-					{
-						found = i;
-						found_left = b->x0;
+			printf("%% V DIVIDER\n");
+			printf("1 0 1 setrgbcolor\n");
+			printf("%g %g moveto\n%g %g lineto\nstroke\n\n",
+			(list->list[largest].x0 + list->list[largest].x1) * 0.5f, list->list[largest].y0,
+			(list->list[largest].x0 + list->list[largest].x1) * 0.5f, list->list[largest].y1);
 					}
-				}
-			}
-
-			/* If we failed to find one, we're done. */
-			if (found == -1)
-				break;
-
-			/* So we have a region from top to found_top */
-			r = boxer->mediabox;
-			r.x0 = left;
-			r.x1 = found_left;
-			analyse_subset(ctx, page, parent, boxer, r, depth);
-
-			/* Now move left right for the next go. */
-			left = list->list[found].x1;
-		}
-
-		/* One final region, from left to right */
-		r = boxer->mediabox;
-		r.x0 = left;
+#endif
+		r.x1 = list->list[largest].x0;
 		analyse_subset(ctx, page, parent, boxer, r, depth);
+
+		r.x0 = list->list[largest].x1;
+		r.x1 = boxer->mediabox.x1;
+			analyse_subset(ctx, page, parent, boxer, r, depth);
+		}
 
 		return 1;
 	}
-
-	return 0;
-}
 
 #ifdef DEBUG_STRUCT
 static void
@@ -804,38 +751,6 @@ analyse_sub(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, boxer
 			if (boxer_subdivide(ctx, page, div, boxer, depth+1))
 				break;
 		}
-
-#ifdef DEBUG_WRITE_AS_PS
-		{
-			int i, n;
-			fz_rect *list;
-			boxer_sort(boxer);
-			n = boxer_results(boxer, &list);
-
-			printf("%% SUBDIVISION\n");
-			for (i = 0; i < n; i++)
-			{
-				printf("%% %g %g %g %g\n",
-					list[i].x0, list[i].y0, list[i].x1, list[i].y1);
-			}
-
-			printf("0 0 0 setrgbcolor\n");
-			for (i = 0; i < n; i++) {
-				printf("%g %g moveto\n%g %g lineto\n%g %g lineto\n%g %g lineto\nclosepath\nstroke\n\n",
-					list[i].x0, list[i].y0,
-					list[i].x0, list[i].y1,
-					list[i].x1, list[i].y1,
-					list[i].x1, list[i].y0);
-			}
-
-			printf("1 0 0 setrgbcolor\n");
-			printf("%g %g moveto\n%g %g lineto\n%g %g lineto\n%g %g lineto\nclosepath\nstroke\n\n",
-				margins.x0, margins.y0,
-				margins.x0, margins.y1,
-				margins.x1, margins.y1,
-				margins.x1, margins.y0);
-		}
-#endif
 	}
 	fz_always(ctx)
 	{
@@ -872,7 +787,7 @@ feed_line(fz_context *ctx, boxer_t *boxer, fz_stext_line *line)
 		do
 		{
 			fz_rect bbox = fz_rect_from_quad(ch->quad);
-			float margin = boxer->tight ? 0 : ch->size/2;
+			float margin = boxer->tight ? 0 : ch->size/4;
 			bbox.x0 -= margin;
 			bbox.y0 -= margin;
 			bbox.x1 += margin;
@@ -1009,6 +924,8 @@ int fz_segment_stext_page(fz_context *ctx, fz_stext_page *page)
 {
 	fz_stext_block *block;
 
+	fz_stext_remove_page_fill(ctx, page);
+
 	/* If we have structure already, give up. We can't hope to beat
 	 * proper structure! */
 	for (block = page->first_block; block != NULL; block = block->next)
@@ -1033,7 +950,7 @@ fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page)
 	for (iter = fz_stext_page_block_iterator_begin(page); !fz_stext_page_block_iterator_eod_dfs(iter); iter = fz_stext_page_block_iterator_next_dfs(iter))
 	{
 		/* Try to ignore stuff that's completely off screen */
-		fz_rect bbox = fz_intersect_rect(page->mediabox, iter.pos->bbox);
+		fz_rect bbox = fz_intersect_rect(page->mediabox, iter.block->bbox);
 
 		coverage = fz_union_rect(coverage, bbox);
 	}
@@ -1047,23 +964,23 @@ fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page)
 		fz_rect bbox;
 
 		/* Stop searching when we find something that's not a vector */
-		if (iter.pos->type != FZ_STEXT_BLOCK_VECTOR)
+		if (iter.block->type != FZ_STEXT_BLOCK_VECTOR)
 			break;
 
 		/* Stop searching when we find a vector that's not a rectangle */
-		if ((iter.pos->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE) == 0)
+		if ((iter.block->u.v.flags & FZ_STEXT_VECTOR_IS_RECTANGLE) == 0)
 			break;
 
 		/* Stop searching when we find a vector that's stroked */
-		if ((iter.pos->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED) != 0)
+		if ((iter.block->u.v.flags & FZ_STEXT_VECTOR_IS_STROKED) != 0)
 			break;
 
 		/* Stop searching when we find a vector that's not white (or invisible) */
-		if ((iter.pos->u.v.argb & 0xff000000) != 0 && (iter.pos->u.v.argb & 0xffffff) != 0xffffff)
+		if ((iter.block->u.v.argb & 0xff000000) != 0 && (iter.block->u.v.argb & 0xffffff) != 0xffffff)
 			break;
 
 		/* If we don't cover the coverage area, then we can't be a background. */
-		bbox = fz_expand_rect(iter.pos->bbox, 0.1f); /* Allow for rounding */
+		bbox = fz_expand_rect(iter.block->bbox, 0.1f); /* Allow for rounding */
 		if (!fz_contains_rect(bbox, coverage))
 			break;
 
@@ -1072,8 +989,8 @@ fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page)
 		{
 			/* Can't judge. Skip this check. */
 		}
-		else if ((iter.pos->bbox.y1 - iter.pos->bbox.y0) < 0.9f * (page->mediabox.y1 - page->mediabox.y0) ||
-			(iter.pos->bbox.x1 - iter.pos->bbox.x0) < 0.9f * (page->mediabox.x1 - page->mediabox.x0))
+		else if ((iter.block->bbox.y1 - iter.block->bbox.y0) < 0.9f * (page->mediabox.y1 - page->mediabox.y0) ||
+			(iter.block->bbox.x1 - iter.block->bbox.x0) < 0.9f * (page->mediabox.x1 - page->mediabox.x0))
 		{
 			break;
 		}
@@ -1082,17 +999,17 @@ fz_stext_remove_page_fill(fz_context *ctx, fz_stext_page *page)
 		 * in the list, so it's simpler. */
 		if (iter.parent)
 		{
-			iter.parent->first_block = iter.pos->next;
-			if (iter.pos->next)
-				iter.pos->next->prev = NULL;
+			iter.parent->first_block = iter.block->next;
+			if (iter.block->next)
+				iter.block->next->prev = NULL;
 			else
 				iter.parent->last_block = NULL;
 		}
 		else
 		{
-			iter.page->first_block = iter.pos->next;
-			if (iter.pos->next)
-				iter.pos->next->prev = NULL;
+			iter.page->first_block = iter.block->next;
+			if (iter.block->next)
+				iter.block->next->prev = NULL;
 			else
 				iter.page->last_block = NULL;
 		}

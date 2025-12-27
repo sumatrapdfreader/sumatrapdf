@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <time.h>
 
+
 struct fz_style_context
 {
 	int refs;
@@ -212,6 +213,7 @@ fz_drop_context(fz_context *ctx)
 	fz_drop_tuning_context(ctx);
 	fz_drop_colorspace_context(ctx);
 	fz_drop_font_context(ctx);
+	fz_drop_hyph_context(ctx);
 
 	fz_flush_warnings(ctx);
 
@@ -289,6 +291,7 @@ fz_new_context_imp(const fz_alloc_context *alloc, const fz_locks_context *locks,
 		fz_new_glyph_cache_context(ctx);
 		fz_new_colorspace_context(ctx);
 		fz_new_font_context(ctx);
+		fz_new_hyph_context(ctx);
 		fz_new_document_handler_context(ctx);
 		fz_new_archive_handler_context(ctx);
 		fz_new_style_context(ctx);
@@ -335,6 +338,7 @@ fz_clone_context(fz_context *ctx)
 	fz_keep_style_context(new_ctx);
 	fz_keep_tuning_context(new_ctx);
 	fz_keep_font_context(new_ctx);
+	fz_keep_hyph_context(new_ctx);
 	fz_keep_colorspace_context(new_ctx);
 	fz_keep_store_context(new_ctx);
 	fz_keep_glyph_cache(new_ctx);

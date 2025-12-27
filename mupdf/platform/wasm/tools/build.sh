@@ -14,7 +14,7 @@
 
 EMSDK=${EMSDK:-/opt/emsdk}
 BUILD=${BUILD:-small}
-DEFINES=${DEFINES:--DTOFU -DTOFU_CJK_EXT}
+DEFINES=${DEFINES:--DTOFU -DTOFU_CJK_EXT -DFZ_ENABLE_HYPHEN=0}
 FEATURES=${FEATURES:-brotli=no mujs=no extract=no xps=no svg=no}
 
 if [ "$BUILD" = "memento" ]

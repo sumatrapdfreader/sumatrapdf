@@ -19,6 +19,10 @@
       Include="bin2coff__ttc_">
       <Targets>_bin2coff__ttc_</Targets>
     </AvailableItemName>
+    <AvailableItemName
+      Include="bin2coff__zip_">
+      <Targets>_bin2coff__zip_</Targets>
+    </AvailableItemName>
   </ItemGroup>
   <UsingTask
     TaskName="bin2coff__ttf_"
@@ -40,6 +44,12 @@
   </UsingTask>
   <UsingTask
     TaskName="bin2coff__ttc_"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="bin2coff__zip_"
     TaskFactory="XamlTaskFactory"
     AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
@@ -303,5 +313,70 @@
     </ItemGroup>
     <MakeDir
       Directories="@(bin2coff__ttc_DirsToMake-&gt;'%(RootDir)%(Directory)')" />
+  </Target>
+  <Target
+    Name="_bin2coff__zip_"
+    BeforeTargets="$(bin2coff__zip_BeforeTargets)"
+    AfterTargets="$(bin2coff__zip_AfterTargets)"
+    Condition="'@(bin2coff__zip_)' != ''"
+    DependsOnTargets="$(bin2coff__zip_DependsOn);Computebin2coff__zip_Output"
+    Outputs="%(bin2coff__zip_.Outputs)"
+    Inputs="%(bin2coff__zip_.Identity);%(bin2coff__zip_.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <bin2coff__zip_
+        Remove="@(bin2coff__zip_)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <ItemGroup>
+      <bin2coff__zip__tlog
+        Include="%(bin2coff__zip_.Outputs)"
+        Condition="'%(bin2coff__zip_.Outputs)' != '' and '%(bin2coff__zip_.ExcludedFromBuild)' != 'true'">
+        <Source>@(bin2coff__zip_, '|')</Source>
+      </bin2coff__zip__tlog>
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(bin2coff__zip_.ExecutionDescription)" />
+    <WriteLinesToFile
+      Condition="'@(bin2coff__zip__tlog)' != '' and '%(bin2coff__zip__tlog.ExcludedFromBuild)' != 'true'"
+      File="$(TLogLocation)$(ProjectName).write.1u.tlog"
+      Lines="^%(bin2coff__zip__tlog.Source);@(bin2coff__zip__tlog-&gt;'%(Fullpath)')"
+      Encoding="Unicode" />
+    <bin2coff__zip_
+      Condition="'@(bin2coff__zip_)' != '' and '%(bin2coff__zip_.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(bin2coff__zip_.CommandLineTemplate)"
+      AdditionalOptions="%(bin2coff__zip_.AdditionalOptions)"
+      Inputs="%(bin2coff__zip_.Identity)" />
+  </Target>
+  <PropertyGroup>
+    <ComputeLinkInputsTargets>
+            $(ComputeLinkInputsTargets);
+            Computebin2coff__zip_Output;
+          </ComputeLinkInputsTargets>
+    <ComputeLibInputsTargets>
+            $(ComputeLibInputsTargets);
+            Computebin2coff__zip_Output;
+          </ComputeLibInputsTargets>
+  </PropertyGroup>
+  <Target
+    Name="Computebin2coff__zip_Output"
+    Condition="'@(bin2coff__zip_)' != ''">
+    <ItemGroup>
+      <bin2coff__zip_DirsToMake
+        Condition="'@(bin2coff__zip_)' != '' and '%(bin2coff__zip_.ExcludedFromBuild)' != 'true'"
+        Include="%(bin2coff__zip_.Outputs)" />
+      <Link
+        Include="%(bin2coff__zip_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <Lib
+        Include="%(bin2coff__zip_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+      <ImpLib
+        Include="%(bin2coff__zip_DirsToMake.Identity)"
+        Condition="'%(Extension)'=='.obj' or '%(Extension)'=='.res' or '%(Extension)'=='.rsc' or '%(Extension)'=='.lib'" />
+    </ItemGroup>
+    <MakeDir
+      Directories="@(bin2coff__zip_DirsToMake-&gt;'%(RootDir)%(Directory)')" />
   </Target>
 </Project>

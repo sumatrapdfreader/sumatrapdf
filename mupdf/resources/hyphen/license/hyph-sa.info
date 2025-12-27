@@ -1,0 +1,119 @@
+% title: Hyphenation patterns for Sanskrit and Prakrit, Latin transliteration,
+%     and Devanāgari, Bengali, Gujarati, Kannada, Malayalam, and Telugu scripts
+% copyright: Copyright (C) 2006-2011 Yves Codet
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Sanskrit
+%     tag: sa
+% version: 0.6
+% authors:
+%   -
+%     name: Yves Codet
+%     contact: ycodet (at) club-internet.fr
+% licence:
+%     text: You may freely use, copy, modify and/or distribute this file.
+% hyphenmins:
+%     generation:
+%         left: 1
+%         right: 1
+%     typesetting:
+%         left: 1
+%         right: 3
+% changes:
+%     - Created:        April 1st, 2005
+%     - First release:  June 8th, 2006
+%     - Revised:        September 14th, 2011
+% texlive:
+%     babelname: sanskrit
+%     message: Sanskrit hyphenation patterns
+%     description: |-
+%         Hyphenation patterns for Sanskrit and Prakrit in transliteration,
+%         and in Devanagari, Bengali, Kannada, Malayalam and Telugu scripts
+%         for Unicode engines.
+% ==========================================
+% Created by Yves Codet. Special thanks to Jonathan Kew and Benjamin Varghese who provided very useful informations.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GENERAL RULE
+% Do not break either side of ZERO-WIDTH JOINER
+% (U+200D) and ZERO-WIDTH NON-JOINER (U+200C)
+% (Maybe this should be implemented/supported in engines already.)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TRANSLITERATION
+%%%%%%%%%%%%%%%%%%%%
+% Decomposed characters
+% Break after any vowel, except inside a diphthong.
+% Break between a and i or u in hiatus.
+% Do not break before a final consonant or consonant cluster.
+% Break after anusvara, anunasika, visarga, jihvamuliya and
+% upadhmaniya, but not before.
+% Do not break before a breve below, a candrabindu, a macron,
+% a macron below, an acute, a grave or a diaeresis; break after
+% a macron below, an acute or a grave.
+%%%%%%%%%%%%%%%%%%%%
+% Precomposed characters
+% Break after any vowel, except inside a diphthong.
+% Break between a and i or u in hiatus.
+% Do not break before a final consonant or consonant cluster.
+% Break after anusvara, visarga, jihvamuliya and upadhmaniya,
+% but not before.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% DEVANAGARI SCRIPT
+% Break before or after any independent vowel.
+% Break after any dependent vowel but not before.
+% Break before or after any consonant.
+% Do not break before a final consonant or conjunct.
+% Do not break before chandrabindu, anusvara, visarga, avagraha
+% and accents; do not break after avagraha.
+% Do not break either side of virama (may be within conjunct).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BENGALI SCRIPT
+% Break before or after any independent vowel.
+% Break after any dependent vowel, but not before.
+% Break before or after any consonant.
+% Do not break after khanda ta.
+% Do not break before a final consonant or conjunct.
+% Do not break before chandrabindu, anusvara, visarga, avagraha,
+% nukta and au length mark; do not break after avagraha.
+% Do not break either side of virama (may be within conjunct).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GUJARATI SCRIPT
+% Break before or after any independent vowel.
+% Break after any dependent vowel but not before.
+% Break before or after any consonant.
+% Do not break before a final consonant or conjunct.
+% Do not break before chandrabindu, anusvara, visarga, avagraha;
+% do not break after avagraha.
+% Do not break either side of virama (may be within conjunct).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% KANNADA SCRIPT
+% Break before or after any independent vowel.
+% Break after any dependent vowel, but not before.
+% Break before or after any consonant.
+% Do not break before a final consonant or conjunct.
+% Do not break before anusvara, visarga, jihvamuliya,
+% upadhmaniya, avagraha, length mark and ai length mark;
+% do not break after avagraha.
+% Do not break either side of virama (may be within conjunct).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MALAYALAM SCRIPT
+% Break before or after any independent vowel.
+% Break after any dependent vowel, but not before.
+% Break before or after any consonant.
+% Do not break before a final consonant or conjunct.
+% Do not break before a chillu.
+%% Representation in Unicode 5.1:
+%% Representation in Unicode 5.0 and prior versions (i.e. NNA, NA, RA, LA, TA, LLA or KA + VIRAMA + ZWJ):
+% Do not break before anusvara, visarga and length mark.
+% Do not break either side of virama (may be within conjunct).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TELUGU SCRIPT
+% Break before or after any independent vowel.
+% Break after any dependent vowel, but not before.
+% Break before or after any consonant.
+% Do not break before a final consonant or conjunct.
+% Do not break before chandrabindu, anusvara, visarga,
+% length mark and ai length mark.
+% Do not break either side of virama (may be within conjunct).

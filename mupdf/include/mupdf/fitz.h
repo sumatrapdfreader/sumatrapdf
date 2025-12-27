@@ -44,6 +44,7 @@ extern "C" {
 #include "mupdf/fitz/bidi.h"
 #include "mupdf/fitz/xml.h"
 #include "mupdf/fitz/json.h"
+#include "mupdf/fitz/hyphen.h"
 
 /* I/O */
 #include "mupdf/fitz/buffer.h"

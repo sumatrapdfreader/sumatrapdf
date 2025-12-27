@@ -148,6 +148,10 @@
 /* (You probably really don't want to do that except for measurement
  * purposes!) */
 
+/* Choose which hyphenation patterns to include. */
+/* #define FZ_ENABLE_HYPHEN 1 */
+/* #define FZ_ENABLE_HYPHEN_ALL 1 */
+
 /* ---------- DO NOT EDIT ANYTHING UNDER THIS LINE ---------- */
 
 #ifndef FZ_ENABLE_SPOT_RENDERING
@@ -180,6 +184,14 @@
 #undef FZ_PLOTTERS_N
 #define FZ_PLOTTERS_N 1
 #endif
+
+#ifndef FZ_ENABLE_HYPHEN
+#define FZ_ENABLE_HYPHEN 1
+#endif /* FZ_ENABLE_HYPHEN */
+
+#ifndef FZ_ENABLE_HYPHEN_ALL
+#define FZ_ENABLE_HYPHEN_ALL 1
+#endif /* FZ_ENABLE_HYPHEN_ALL */
 
 #ifndef FZ_ENABLE_PDF
 #define FZ_ENABLE_PDF 1
@@ -286,6 +298,11 @@
 #if FZ_ENABLE_HTML == 0 && FZ_ENABLE_EPUB == 0
 #undef TOFU_SIL
 #define TOFU_SIL
+#endif
+
+#if FZ_ENABLE_HTML_ENGINE == 0
+#undef FZ_ENABLE_HYPHEN
+#define FZ_ENABLE_HYPHEN 0
 #endif
 
 #if !defined(HAVE_LEPTONICA) || !defined(HAVE_TESSERACT)

@@ -29,7 +29,7 @@ public interface StructuredTextWalker
 	void endTextBlock();
 	void beginLine(Rect bbox, int wmode, Point dir);
 	void endLine();
-	void onChar(int c, Point origin, Font font, float size, Quad q);
+	void onChar(int c, Point origin, Font font, float size, Quad q, int argb, int flags);
 	void beginStruct(String standard, String raw, int index);
 	void endStruct();
 	void onVector(Rect bbox, VectorInfo info, int argb);

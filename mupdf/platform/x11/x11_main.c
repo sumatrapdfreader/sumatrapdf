@@ -891,6 +891,17 @@ static void usage(const char *argv0)
 	fprintf(stderr, "\t-S -\tfont size for EPUB layout\n");
 	fprintf(stderr, "\t-U -\tuser style sheet for EPUB layout\n");
 	fprintf(stderr, "\t-X\tdisable document styles for EPUB layout\n");
+	fprintf(stderr, "\t-c -\tICC output profile\n");
+#ifdef HAVE_CURL
+	fprintf(stderr, "\t-b -\temulate progressive loading (kbps)\n");
+#endif
+	fprintf(stderr, "\t-v\tshow version\n");
+	exit(1);
+}
+
+static void version(void)
+{
+	fprintf(stderr, "mupdf-x11 version %s\n", FZ_VERSION);
 	exit(1);
 }
 
@@ -923,7 +934,8 @@ int main(int argc, char **argv)
 
 	pdfapp_init(ctx, &gapp);
 
-	while ((c = fz_getopt(argc, argv, "Ip:r:A:C:W:H:S:U:Xb:c:")) != -1)
+	while ((c = fz_getopt(argc, argv, "Ip:r:A:C:W:H:S:U:Xb:c:
+	v")) != -1)
 	{
 		switch (c)
 		{
@@ -943,7 +955,8 @@ int main(int argc, char **argv)
 		case 'U': gapp.layout_css = fz_optarg; break;
 		case 'X': gapp.layout_use_doc_css = 0; break;
 		case 'b': kbps = fz_atoi(fz_optarg); break;
-		default: usage(argv[0]);
+		case 'v': version(); break;
+		default: usage(argv[0]); break;
 		}
 	}
 

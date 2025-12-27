@@ -13,7 +13,7 @@ and E-book documents. There are viewers for various platforms, several command
 line tools, and a software library for building tools and applications.
 
 It is available under either the `GNU GPL Affero license <https://www.gnu.org/licenses/agpl-3.0.html>`_
-or  `licensed for commercial <https://artifex.com/licensing/commercial?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link>`_
+or  `licensed for commercial <https://artifex.com/licensing?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link#commercial-license>`_
 use from `Artifex Software, Inc <https://artifex.com/?utm_source=rtd-mupdf&utm_medium=rtd&utm_content=inline-link>`_.
 
 .. toctree::
@@ -45,7 +45,7 @@ use from `Artifex Software, Inc <https://artifex.com/?utm_source=rtd-mupdf&utm_m
 	reference/common/index
 	reference/c/index
 	reference/javascript/index
-	reference/swig
+	reference/cxx-and-derived-bindings
 
 .. toctree::
 	:caption: Other

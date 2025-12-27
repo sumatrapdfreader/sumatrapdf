@@ -209,6 +209,9 @@ struct pdf_processor
 
 	/* resource dictionary stack */
 	pdf_resource_stack *rstack;
+
+	/* Unused, except when inited as chain processor */
+	pdf_processor *chain;
 };
 
 typedef struct
@@ -377,7 +380,7 @@ typedef struct
 {
 	void *opaque;
 	fz_image *(*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image, fz_rect scissor);
-	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
+	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox, int tr, float ca, float CA);
 	void (*after_text_object)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
 	int (*culler)(fz_context *ctx, void *opaque, fz_rect bbox, fz_cull_type type);
 }
@@ -408,6 +411,15 @@ pdf_sanitize_filter_options;
 	should be identical to the incoming operator stream.
 */
 pdf_processor *pdf_new_sanitize_filter(fz_context *ctx, pdf_document *doc, pdf_processor *chain, int struct_parents, fz_matrix transform, pdf_filter_options *options, void *sopts);
+
+typedef struct
+{
+	void *opaque;
+	/* To be expanded */
+}
+pdf_vectorize_filter_options;
+
+pdf_processor *pdf_new_vectorize_filter(fz_context *ctx, pdf_document *doc, pdf_processor *chain, int structparents, fz_matrix transform, pdf_filter_options *options, void *vopts);
 
 pdf_obj *pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_res, fz_matrix ctm, pdf_filter_options *options, pdf_cycle_list *cycle_up);
 

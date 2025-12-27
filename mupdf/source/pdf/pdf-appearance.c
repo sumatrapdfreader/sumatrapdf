@@ -1359,8 +1359,9 @@ static void
 pdf_write_icon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_rect *rect, fz_rect *bbox, pdf_obj **res)
 {
 	const char *name;
-	float xc = (rect->x0 + rect->x1) / 2;
-	float yc = (rect->y0 + rect->y1) / 2;
+	float w = fz_max(10, fz_min(20, fz_min(rect->y1 - rect->y0, rect->x1 - rect->x0)));
+	float x = rect->x0;
+	float y = rect->y1 - w;
 
 	pdf_write_opacity(ctx, annot, buf, res);
 
@@ -1413,7 +1414,7 @@ pdf_write_icon_appearance(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, fz_
 	else
 		fz_append_string(ctx, buf, icon_star);
 
-	*rect = fz_make_rect(xc - 9, yc - 9, xc + 9, yc + 9);
+	*rect = fz_make_rect(x, y, x + w, y + w);
 	*bbox = fz_make_rect(0, 0, 16, 16);
 }
 
@@ -3714,8 +3715,10 @@ retry_after_repair:
 
 		/* We need to put this appearance stream back into the document. */
 		needs_resynth = pdf_annot_needs_resynthesis(ctx, annot);
-		if (needs_resynth)
+		if (needs_resynth > 0)
 			local_synthesis = 0;
+		if (needs_resynth < 0)
+			local_synthesis = 1;
 
 		/* Some appearances can NEVER be resynthesised. Spot those here. */
 		if (needs_resynth)

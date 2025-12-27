@@ -650,6 +650,30 @@ static inline void bound_expand(fz_rect *r, fz_point p)
 	if (p.y > r->y1) r->y1 = p.y;
 }
 
+int fz_path_is_empty(fz_context *ctx, const fz_path *path)
+{
+	int cmd_len;
+
+	if (path == NULL)
+		return 1;
+
+	switch (path->packed)
+	{
+	case FZ_PATH_UNPACKED:
+	case FZ_PATH_PACKED_OPEN:
+		cmd_len = path->cmd_len;
+		break;
+	case FZ_PATH_PACKED_FLAT:
+		cmd_len = ((fz_packed_path *)path)->cmd_len;
+		break;
+	default:
+		assert("This never happens" == NULL);
+		return 1;
+	}
+
+	return (cmd_len == 0);
+}
+
 void fz_walk_path(fz_context *ctx, const fz_path *path, const fz_path_walker *proc, void *arg)
 {
 	int i, k, cmd_len;
@@ -1895,4 +1919,83 @@ fz_path_is_rect_with_bounds(fz_context *ctx, const fz_path *path, fz_matrix ctm,
 		}
 	}
 	return 0;
+}
+
+typedef struct
+{
+	int unclosed;
+	int active;
+	float move_x;
+	float move_y;
+	float last_x;
+	float last_y;
+} closed_arg;
+
+static void
+closed_moveto(fz_context *ctx, void *arg_, float x, float y)
+{
+	closed_arg *arg = (closed_arg *)arg_;
+
+	if (arg->active)
+	{
+		if (arg->move_x != arg->last_x || arg->move_y != arg->last_y)
+			arg->unclosed = 1;
+	}
+	arg->active = 0;
+	arg->move_x = x;
+	arg->move_y = y;
+	arg->last_x = x;
+	arg->last_y = y;
+}
+
+static void
+closed_lineto(fz_context *ctx, void *arg_, float x, float y)
+{
+	closed_arg *arg = (closed_arg *)arg_;
+
+	arg->active = 1;
+	arg->last_x = x;
+	arg->last_y = y;
+}
+
+static void
+closed_curveto(fz_context *ctx, void *arg_, float x0, float y0, float x1, float y1, float x2, float y2)
+{
+	closed_arg *arg = (closed_arg *)arg_;
+
+	arg->active = 1;
+	arg->last_x = x2;
+	arg->last_y = y2;
+}
+
+static void
+closed_close(fz_context *ctx, void *arg_)
+{
+	closed_arg *arg = (closed_arg *)arg_;
+
+	arg->active = 0;
+}
+
+static const fz_path_walker closed_path_walker =
+{
+	closed_moveto,
+	closed_lineto,
+	closed_curveto,
+	closed_close
+};
+
+int
+fz_path_is_closed(fz_context *ctx, const fz_path *path)
+{
+	closed_arg arg = { 0 };
+
+	fz_walk_path(ctx, path, &closed_path_walker, &arg);
+
+	if (arg.active)
+	{
+		if (arg.move_x != arg.last_x || arg.move_y != arg.last_y)
+			arg.unclosed = 1;
+	}
+
+	return !arg.unclosed;
 }

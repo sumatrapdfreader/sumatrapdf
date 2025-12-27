@@ -59,7 +59,7 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 
 		parent_diff = pdf_objcmp(ctx, parent, expected_parent);
 		prev_diff = pdf_objcmp(ctx, prev, expected_prev);
-		last_diff = next == NULL && pdf_objcmp_resolve(ctx, last, dict);
+		last_diff = next == NULL && pdf_objcmp(ctx, last, dict);
 
 		if (fixed == NULL)
 		{
@@ -80,12 +80,10 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 			{
 				if (parent_diff)
 				{
-					fz_warn(ctx, "Bad or missing parent pointer in outline tree, repairing");
 					pdf_dict_put(ctx, dict, PDF_NAME(Parent), expected_parent);
 				}
 				if (prev_diff)
 				{
-					fz_warn(ctx, "Bad or missing prev pointer in outline tree, repairing");
 					if (expected_prev)
 						pdf_dict_put(ctx, dict, PDF_NAME(Prev), expected_prev);
 					else
@@ -93,7 +91,6 @@ pdf_test_outline(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_mark_bit
 				}
 				if (last_diff)
 				{
-					fz_warn(ctx, "Bad or missing last pointer in outline tree, repairing");
 					pdf_dict_put(ctx, expected_parent, PDF_NAME(Last), dict);
 				}
 			}
@@ -560,9 +557,9 @@ fz_outline_iterator *pdf_new_outline_iterator(fz_context *ctx, pdf_document *doc
 			{
 				/* Pass through the outlines once, fixing inconsistencies */
 				pdf_test_outline(ctx, doc, first, marks, obj, &fixed);
-
 				if (fixed)
 				{
+					fz_warn(ctx, "repaired broken tree structure in outline");
 					/* If a fix was performed, pass through again,
 					 * this time throwing if it's still not correct. */
 					pdf_mark_bits_reset(ctx, marks);

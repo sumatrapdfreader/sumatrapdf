@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -342,7 +342,9 @@ ps_end_page(fz_context *ctx, fz_document_writer *wri_, fz_device *dev)
 {
 	fz_ps_writer *wri = (fz_ps_writer*)wri_;
 	fz_pixmap *pix = wri->pixmap;
-	fz_band_writer *bw;
+	fz_band_writer *bw = NULL;
+
+	fz_var(bw);
 
 	fz_try(ctx)
 	{

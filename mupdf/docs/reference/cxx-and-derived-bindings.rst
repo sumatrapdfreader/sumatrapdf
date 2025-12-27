@@ -303,6 +303,8 @@ environmental variables:
 Limitations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+* We do not wrap variadic functions such as `fz_write_printf()`.
+
 * Global instances of C++ wrapper classes are not supported.
 
   This is because:
@@ -349,9 +351,9 @@ The Python and C# MuPDF APIs
   ``mupdf::FzBuffer`` instance and ``truncated`` is an integer.
 
 * Allows implementation of mutool in Python - see
-  `mupdf:scripts/mutool.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mutool.py>`_
+  `mupdf:scripts/mutool.py <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mutool.py>`_
   and
-  `mupdf:scripts/mutool_draw.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mutool_draw.py>`_.
+  `mupdf:scripts/mutool_draw.py <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mutool_draw.py>`_.
 
 * Provides text representation of simple 'POD' structs:
 
@@ -403,12 +405,12 @@ Minimal Python code that uses the ``mupdf`` module::
 
 A simple example Python test script (run by ``scripts/mupdfwrap.py -t``) is:
 
-* `scripts/mupdfwrap_test.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mupdfwrap_test.py>`_
+* `scripts/mupdfwrap_test.py <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mupdfwrap_test.py>`_
 
 More detailed usage of the Python API can be found in:
 
-* `scripts/mutool.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mutool.py>`_
-* `scripts/mutool_draw.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mutool_draw.py>`_
+* `scripts/mutool.py <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mutool.py>`_
+* `scripts/mutool_draw.py <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mutool_draw.py>`_
 
 
 **Example Python code that shows all available information about a document's Stext blocks, lines and characters**:
@@ -464,8 +466,8 @@ More detailed usage of the Python API can be found in:
 Basic PDF viewers written in Python and C#
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* `scripts/mupdfwrap_gui.py <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mupdfwrap_gui.py>`_
-* `scripts/mupdfwrap_gui.cs <https://git.ghostscript.com/?p=mupdf.git;a=blob;f=scripts/mupdfwrap_gui.cs>`_
+* `scripts/mupdfwrap_gui.py <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mupdfwrap_gui.py>`_
+* `scripts/mupdfwrap_gui.cs <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/scripts/mupdfwrap_gui.cs>`_
 * Build and run with:
 
   * ``./scripts/mupdfwrap.py -b all --test-python-gui``
@@ -818,6 +820,14 @@ Notes
   manager, for example ``sudo apt install swig`` on Linux, or use
   ``./scripts/mupdfwrap.py --swig-windows-auto ...`` on Windows.
 
+*
+  C# ommisions.
+
+  Some functions are ommited from the C# API due to C# restrictions, for
+  example functions that return void* and have out-params (because tuples
+  cannot contain void* items). These will be marked with comments in the
+  generated mupdf.cs file.
+
 
 * More information about running ``scripts/mupdfwrap.py``.
 
@@ -833,7 +843,7 @@ Building the MuPDF C API
 
 * On Unix, runs ``make`` on MuPDF's ``Makefile`` with ``shared=yes``.
 
-* On Windows, runs ``devenv.com`` on ``.sln`` and ``.vcxproj`` files within MuPDF's `platform/win32/ <https://git.ghostscript.com/?p=mupdf.git;a=tree;f=platform/win32>`_
+* On Windows, runs ``devenv.com`` on ``.sln`` and ``.vcxproj`` files within MuPDF's `platform/win32/ <https://cgit.ghostscript.com/cgi-bin/cgit.cgi/mupdf.git/tree/platform/win32>`_
   directory.
 
 Generation of the MuPDF C++ API

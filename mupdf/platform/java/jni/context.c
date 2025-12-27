@@ -341,3 +341,72 @@ FUN(Context_shrinkStore)(JNIEnv *env, jclass cls, jint percent)
 
 	return success != 0;
 }
+
+static fz_font *load_java_font_file(fz_context *ctx, const char *name, const char *script, int bold, int italic)
+{
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env = NULL;
+	fz_font *font = NULL;
+	jobject jfont = NULL;
+	jstring jname = NULL;
+	jstring jscript = NULL;
+	jobject jfontloader = NULL;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in load_java_font_file");
+
+	jname = (*env)->NewStringUTF(env, name);
+	if (!jname || (*env)->ExceptionCheck(env))
+		fz_throw_and_detach_thread(ctx, detach, FZ_ERROR_GENERIC, "cannot convert font name to java string");
+
+	jscript = (*env)->NewStringUTF(env, script);
+	if (!jscript || (*env)->ExceptionCheck(env))
+	{
+		(*env)->DeleteLocalRef(env, jname);
+		fz_throw_and_detach_thread(ctx, detach, FZ_ERROR_GENERIC, "cannot convert script name to java string");
+	}
+
+	jfontloader = (*env)->GetStaticObjectField(env, cls_Font, fid_Font_fontLoader);
+	if (jfontloader)
+	{
+		jfont = (*env)->CallObjectMethod(env, jfontloader, mid_FontLoader_loadFont, jname, jscript, bold, italic);
+		(*env)->DeleteLocalRef(env, jfontloader);
+		(*env)->DeleteLocalRef(env, jscript);
+		(*env)->DeleteLocalRef(env, jname);
+		if ((*env)->ExceptionCheck(env))
+			fz_throw_and_detach_thread(ctx, detach, FZ_ERROR_GENERIC, "cannot load font");
+
+		if (jfont)
+		{
+			font = CAST(fz_font *, (*env)->GetLongField(env, jfont, fid_Font_pointer));
+			font = fz_keep_font(ctx, font);
+		}
+	}
+
+	jni_detach_thread(detach);
+
+	return font;
+}
+
+static fz_font *load_java_font(fz_context *ctx, const char *name, int bold, int italic, int needs_exact_metrics)
+{
+	return load_java_font_file(ctx, name, "undefined", bold, italic);
+}
+
+static fz_font *load_java_cjk_font(fz_context *ctx, const char *name, int ordering, int serif)
+{
+	switch (ordering)
+	{
+	case FZ_ADOBE_CNS: return load_java_font_file(ctx, name, "TC", 0, 0);
+	case FZ_ADOBE_GB: return load_java_font_file(ctx, name, "SC", 0, 0);
+	case FZ_ADOBE_JAPAN: return load_java_font_file(ctx, name, "JP", 0, 0);
+	case FZ_ADOBE_KOREA: return load_java_font_file(ctx, name, "KR", 0, 0);
+	}
+	return NULL;
+}
+
+static fz_font *load_java_fallback_font(fz_context *ctx, int script, int language, int serif, int bold, int italic)
+{
+	return load_java_font_file(ctx, "undefined", fz_lookup_script_name(ctx, script, language), bold, italic);
+}

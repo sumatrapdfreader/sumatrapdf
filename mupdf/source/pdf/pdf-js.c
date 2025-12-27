@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -25,6 +25,10 @@
 
 #if FZ_ENABLE_JS
 
+// set limits to how much memory and cpu malicious/broken scripts can use up
+#define PDF_JS_LIMIT_RUNTIME (10 << 20) // ten million instructions
+#define PDF_JS_LIMIT_MEMORY (100 << 20) // one hundred megabytes
+
 #include "mujs.h"
 
 #include <stdarg.h>
@@ -34,7 +38,6 @@ struct pdf_js
 {
 	fz_context *ctx;
 	pdf_document *doc;
-	pdf_obj *form;
 	js_State *imp;
 	pdf_js_console *console;
 	void *console_user;
@@ -393,9 +396,13 @@ static void doc_getField(js_State *J)
 	fz_context *ctx = js->ctx;
 	const char *cName = js_tostring(J, 1);
 	pdf_obj *dict = NULL;
+	pdf_obj *form = NULL;
 
 	fz_try(ctx)
-		dict = pdf_lookup_field(ctx, js->form, cName);
+	{
+		form = pdf_dict_getl(ctx, pdf_trailer(ctx, js->doc), PDF_NAME(Root), PDF_NAME(AcroForm), PDF_NAME(Fields));
+		dict = pdf_lookup_field(ctx, form, cName);
+	}
 	fz_catch(ctx)
 		rethrow(js);
 
@@ -513,9 +520,14 @@ static void doc_setModDate(js_State *J) { doc_setMetaDate(J, FZ_META_INFO_MODIFI
 static void doc_resetForm(js_State *J)
 {
 	pdf_js *js = js_getcontext(J);
-	pdf_obj *field;
+	pdf_obj *field, *form;
 	fz_context *ctx = js->ctx;
 	int i, n;
+
+	fz_try(ctx)
+		form = pdf_dict_getl(ctx, pdf_trailer(ctx, js->doc), PDF_NAME(Root), PDF_NAME(AcroForm), PDF_NAME(Fields));
+	fz_catch(ctx)
+		rethrow(js);
 
 	/* An array of fields has been passed in. Call pdf_reset_field on each item. */
 	if (js_isarray(J, 1))
@@ -524,7 +536,10 @@ static void doc_resetForm(js_State *J)
 		for (i = 0; i < n; ++i)
 		{
 			js_getindex(J, 1, i);
-			field = pdf_lookup_field(ctx, js->form, js_tostring(J, -1));
+			fz_try(ctx)
+				field = pdf_lookup_field(ctx, form, js_tostring(J, -1));
+			fz_catch(ctx)
+				rethrow(js);
 			if (field)
 				pdf_field_reset(ctx, js->doc, field);
 			js_pop(J, 1);
@@ -534,16 +549,16 @@ static void doc_resetForm(js_State *J)
 	/* No argument or null passed in means reset all. */
 	else
 	{
-		n = pdf_array_len(ctx, js->form);
-		for (i = 0; i < n; i++)
+		fz_try(ctx)
 		{
-			fz_try(ctx)
-				pdf_field_reset(ctx, js->doc, pdf_array_get(ctx, js->form, i));
+			n = pdf_array_len(ctx, form);
+		for (i = 0; i < n; i++)
+				pdf_field_reset(ctx, js->doc, pdf_array_get(ctx, form, i));
+		}
 			fz_catch(ctx)
 				rethrow(js);
 		}
 	}
-}
 
 static void doc_print(js_State *J)
 {
@@ -1043,13 +1058,6 @@ static pdf_js *pdf_new_js(fz_context *ctx, pdf_document *doc)
 
 	fz_try(ctx)
 	{
-		pdf_obj *root, *acroform;
-
-		/* Find the form array */
-		root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
-		acroform = pdf_dict_get(ctx, root, PDF_NAME(AcroForm));
-		js->form = pdf_dict_get(ctx, acroform, PDF_NAME(Fields));
-
 		/* Initialise the javascript engine, passing the fz_context for use in memory allocation. */
 		js->imp = js_newstate(pdf_js_alloc, ctx, 0);
 		if (!js->imp)
@@ -1256,9 +1264,12 @@ void pdf_js_execute(pdf_js *js, const char *name, const char *source, char **res
 			js_pop(J, 1);
 		} else {
 			js_pushundefined(J);
+			js_setlimit(J, PDF_JS_LIMIT_RUNTIME, PDF_JS_LIMIT_MEMORY);
 			if (js_pcall(J, 0)) {
 				if (result)
 					*result = fz_strdup(ctx, js_trystring(J, -1, "Error"));
+				else
+					fz_write_printf(ctx, fz_stddbg(ctx), "js: %s\n", js_trystring(J, -1, "Error"));
 				js_pop(J, 1);
 			} else {
 				if (result)
@@ -1327,5 +1338,6 @@ void pdf_js_execute(pdf_js *js, const char *name, const char *source, char **res
 int pdf_js_event_result_validate(pdf_js *js, char **newvalue) { *newvalue=NULL; return 1; }
 pdf_js_console *pdf_js_get_console(fz_context *ctx, pdf_document *doc) { return NULL; }
 void pdf_js_set_console(fz_context *ctx, pdf_document *doc, pdf_js_console *console, void *user) { }
+
 
 #endif /* FZ_ENABLE_JS */

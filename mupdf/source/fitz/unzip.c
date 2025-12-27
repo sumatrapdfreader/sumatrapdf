@@ -686,13 +686,27 @@ fz_open_zip_archive_with_stream(fz_context *ctx, fz_stream *file)
 fz_archive *
 fz_open_zip_archive(fz_context *ctx, const char *filename)
 {
-	fz_archive *zip = NULL;
+	fz_archive *zip;
 	fz_stream *file;
 
 	file = fz_open_file(ctx, filename);
+	fz_try(ctx)
+		zip = fz_open_zip_archive_with_stream(ctx, file);
+	fz_always(ctx)
+		fz_drop_stream(ctx, file);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 
-	fz_var(zip);
+	return zip;
+}
 
+fz_archive *
+fz_open_zip_archive_with_memory(fz_context *ctx, const unsigned char *data, size_t size)
+{
+	fz_archive *zip;
+	fz_stream *file;
+
+	file = fz_open_memory(ctx, data, size);
 	fz_try(ctx)
 		zip = fz_open_zip_archive_with_stream(ctx, file);
 	fz_always(ctx)

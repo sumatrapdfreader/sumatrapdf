@@ -1403,3 +1403,28 @@ fz_xml *fz_keep_xml(fz_context *ctx, fz_xml *xml)
 	/* Return the original node pointer, not the dom pointer! */
 	return xml;
 }
+
+char *fz_new_text_from_xml(fz_context *ctx, fz_xml *root)
+{
+	fz_xml *node;
+	size_t i = 0, n = 1;
+	char *s;
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
+	{
+		const char *text = fz_xml_text(node);
+		n += text ? strlen(text) : 0;
+	}
+	s = Memento_label(fz_malloc(ctx, n), "fz_new_text_from_xml");
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
+	{
+		const char *text = fz_xml_text(node);
+		if (text)
+		{
+			n = strlen(text);
+			memcpy(s+i, text, n);
+			i += n;
+		}
+	}
+	s[i] = 0;
+	return s;
+}

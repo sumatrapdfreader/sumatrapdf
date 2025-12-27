@@ -17,6 +17,37 @@ Constructors
 
 To obtain a StructuredText instance use `Page.prototype.toStructuredText()`.
 
+Static properties
+-----------------
+
+.. data:: StructuredText.SEARCH_EXACT
+
+	used to search untransformed text
+
+.. data:: StructuredText.SEARCH_IGNORE_CASE
+
+	used to search text ignoring case differences
+
+.. data:: StructuredText.SEARCH_IGNORE_DIACRITICS
+
+	used to search text ignoring diacritics
+
+.. data:: StructuredText.SEARCH_REGEXP
+
+	used to search text with the needle being a regexp
+
+.. data:: StructuredText.SEARCH_KEEP_LINES
+
+	used to search text preserving line breaks.
+
+.. data:: StructuredText.SEARCH_KEEP_PARAGRAPHS
+
+	used to search text preserving paragraph breaks.
+
+.. data:: StructuredText.SEARCH_KEEP_HYPHENS
+
+	used to search text preserving hyphens and not joining lines.
+
 Instance methods
 ----------------
 
@@ -27,7 +58,7 @@ Instance methods
 	Each match in the result is an array containing one or more Quads that cover the matching text.
 
 	:param string needle: The text to search for.
-	:param number maxHits: Maximum number of hits to return. Default 500.
+	:param number options: Optional options for the search. A logical or of options such as `StructuredText.SEARCH_EXACT`.
 
 	:returns: Array of Array of `Quad`
 
@@ -93,14 +124,14 @@ Instance methods
 			endStruct: function () {
 				console.log("endStruct")
 			},
-			onChar: function (utf, origin, font, size, quad, argb) {
-				console.log("onChar", utf, origin, font, size, quad, argb)
+			onChar: function (utf, origin, font, size, quad, argb, flags) {
+				console.log("onChar", utf, origin, font, size, quad, argb, flags)
 			},
 			onImageBlock: function (bbox, transform, image) {
 				console.log("onImageBlock", bbox, transform, image)
 			},
-			onVector: function (isStroked, isRectangle, argb) {
-				console.log("onVector", isStroked, isRectangle, argb)
+			onVector: function (bbox, flags, argb) {
+				console.log("onVector", bbox, flags, argb)
 			},
 		})
 

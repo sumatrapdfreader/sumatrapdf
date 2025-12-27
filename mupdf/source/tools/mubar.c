@@ -168,7 +168,10 @@ static void mubar_decode_page(fz_context *ctx, fz_output *out, fz_document *doc,
 {
 	fz_barcode_type type;
 	fz_page *page = fz_load_page(ctx, doc, page_no-1);
-	char *text;
+	char *text = NULL;
+
+	fz_var(text);
+
 	fz_try(ctx)
 	{
 		text = fz_decode_barcode_from_page(ctx, &type, page, fz_infinite_rect, rotation);

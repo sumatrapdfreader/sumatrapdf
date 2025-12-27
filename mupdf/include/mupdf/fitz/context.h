@@ -33,6 +33,7 @@
 #endif
 
 typedef struct fz_font_context fz_font_context;
+typedef struct fz_hyph_context fz_hyph_context;
 typedef struct fz_colorspace_context fz_colorspace_context;
 typedef struct fz_style_context fz_style_context;
 typedef struct fz_tuning_context fz_tuning_context;
@@ -888,6 +889,7 @@ struct fz_context
 	/* shared contexts */
 	fz_output *stddbg;
 	fz_font_context *font;
+	fz_hyph_context *hyph;
 	fz_colorspace_context *colorspace;
 	fz_store *store;
 	fz_glyph_cache *glyph_cache;

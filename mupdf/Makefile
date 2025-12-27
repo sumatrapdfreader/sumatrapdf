@@ -130,6 +130,8 @@ $(OUT)/platform/gl/%.o : platform/gl/%.c
 ifeq ($(HAVE_OBJCOPY),yes)
   $(OUT)/source/fitz/noto.o : source/fitz/noto.c
 	$(CC_CMD) $(WARNING_CFLAGS) -Wdeclaration-after-statement -DHAVE_OBJCOPY $(LIB_CFLAGS) $(THIRD_CFLAGS)
+  $(OUT)/source/fitz/hyphen.o : source/fitz/hyphen.c
+	$(CC_CMD) $(WARNING_CFLAGS) -Wdeclaration-after-statement -DHAVE_OBJCOPY $(LIB_CFLAGS) $(THIRD_CFLAGS)
 endif
 
 $(OUT)/source/fitz/memento.o : source/fitz/memento.c
@@ -146,16 +148,18 @@ $(OUT)/source/%.o : source/%.cpp
 
 ifeq ($(HAVE_TESSERACT),yes)
 $(OUT)/source/fitz/tessocr.o : source/fitz/tessocr.cpp
-	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(TESSERACT_CFLAGS) $(TESSERACT_DEFINES) $(TESSERACT_LANGFLAGS) $(LEPTONICA_CFLAGS)
+	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(TESSERACT_CFLAGS) $(TESSERACT_LANGFLAGS) $(LEPTONICA_CFLAGS)
 endif
 
 ifeq ($(HAVE_LEPTONICA),yes)
 $(OUT)/source/fitz/leptonica-wrap.o : source/fitz/leptonica-wrap.c
-	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(LEPTONICA_CFLAGS) $(LEPTONICA_DEFINES)
+	$(CC_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(LEPTONICA_CFLAGS)
 endif
 
-$(OUT)/source/fitz/barcode.o : source/fitz/barcode.cpp
+ifeq ($(HAVE_ZXINGCPP),yes)
+$(OUT)/source/fitz/zxingbarcode.o : source/fitz/zxingbarcode.cpp
 	$(CXX_CMD) $(WARNING_CFLAGS) $(LIB_CFLAGS) $(THIRD_CFLAGS) $(ZXINGCPP_CFLAGS) $(ZXINGCPP_LANGFLAGS)
+endif
 
 $(OUT)/platform/%.o : platform/%.c
 	$(CC_CMD) $(WARNING_CFLAGS)
@@ -257,6 +261,30 @@ endif
 
 generate: $(FONT_GEN)
 
+# --- Generated hyphenation patterns ---
+
+ifeq (,$(findstring -DFZ_ENABLE_HYPHEN=0,$(CFLAGS)))
+  ifeq (,$(findstring -DFZ_ENABLE_HYPHEN_ALL=0,$(CFLAGS)))
+    HYPH_BIN = resources/hyphen/hyph-all.zip
+  else
+    HYPH_BIN = resources/hyphen/hyph-std.zip
+  endif
+endif
+
+HYPH_GEN := $(HYPH_BIN:%=generated/%.c)
+
+generated/%.zip.c : %.zip $(HEXDUMP_SH) ; $(QUIET_GEN) $(MKTGTDIR) ; bash $(HEXDUMP_SH) > $@ $<
+
+ifeq ($(HAVE_OBJCOPY),yes)
+  MUPDF_OBJ += $(HYPH_BIN:%.zip=$(OUT)/%.zip.o)
+  $(OUT)/%.zip.o : %.zip ; $(OBJCOPY_CMD)
+else
+  MUPDF_OBJ += $(HYPH_GEN:%.c=$(OUT)/%.o)
+endif
+
+# NOTE: Run scripts/runhyphen.sh to generate new hyphenation zip files.
+generate: $(HYPH_GEN)
+
 # --- Generated ICC profiles ---
 
 source/fitz/icc/%.icc.h: resources/icc/%.icc
@@ -269,6 +297,9 @@ generate: source/fitz/icc/gray.icc.h
 generate: source/fitz/icc/rgb.icc.h
 generate: source/fitz/icc/cmyk.icc.h
 generate: source/fitz/icc/lab.icc.h
+generate: source/fitz/icc/ps_gray.icc.h
+generate: source/fitz/icc/ps_rgb.icc.h
+generate: source/fitz/icc/ps_cmyk.icc.h
 
 # --- Generated CMap files ---
 
@@ -312,7 +343,10 @@ ifeq ($(shared),yes)
   endif
 else
   MUPDF_LIB = $(OUT)/libmupdf.a
+  ifneq ($(THIRD_OBJ),)
+    # omit libmupdf-third if there is nothing in it
   THIRD_LIB = $(OUT)/libmupdf-third.a
+  endif
   $(MUPDF_LIB) : $(MUPDF_OBJ)
   $(THIRD_LIB) : $(THIRD_OBJ)
 endif
@@ -335,6 +369,7 @@ MUTOOL_SRC += source/tools/muconvert.c
 MUTOOL_SRC += source/tools/mudraw.c
 MUTOOL_SRC += source/tools/murun.c
 MUTOOL_SRC += source/tools/mutrace.c
+MUTOOL_SRC += source/tools/mugrep.c
 MUTOOL_SRC += source/tools/mubar.c
 MUTOOL_SRC += source/tools/cmapdump.c
 MUTOOL_SRC += $(sort $(wildcard source/tools/pdf*.c))
@@ -402,13 +437,15 @@ endif
 
 # --- Examples ---
 
-examples: $(OUT)/example $(OUT)/multi-threaded $(OUT)/storytest
+examples: $(OUT)/example $(OUT)/multi-threaded $(OUT)/storytest $(OUT)/searchtest
 
 $(OUT)/example: docs/examples/example.c $(MUPDF_LIB) $(THIRD_LIB)
 	$(LINK_CMD) $(CFLAGS) $(THIRD_LIBS)
 $(OUT)/multi-threaded: docs/examples/multi-threaded.c $(MUPDF_LIB) $(THIRD_LIB)
 	$(LINK_CMD) $(CFLAGS) $(THIRD_LIBS) -lpthread
 $(OUT)/storytest: docs/examples/storytest.c $(MUPDF_LIB) $(THIRD_LIB)
+	$(LINK_CMD) $(CFLAGS) $(THIRD_LIBS)
+$(OUT)/searchtest: docs/examples/searchtest.c $(MUPDF_LIB) $(THIRD_LIB)
 	$(LINK_CMD) $(CFLAGS) $(THIRD_LIBS)
 
 # --- Format man pages ---
@@ -660,7 +697,9 @@ install-% c++-% python-% csharp-%:
 
 endif
 
-.PHONY: all clean nuke install third libs apps generate tags docs
+.PHONY: all clean nuke install third libs apps generate tags tarball
+.PHONY: docs docs-live docs-clean java java-clean wasm wasm-clean
+.PHONY: watch watch-recompile
 .PHONY: shared shared-debug shared-clean
 .PHONY: c++-% python-% csharp-%
 .PHONY: c++-clean python-clean csharp-clean

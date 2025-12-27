@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2023 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -36,7 +36,7 @@ public class TraceDevice extends Device implements PathWalker, TextWalker
 		return s + "] " + alpha;
 	}
 	public String traceStroke(StrokeState stroke) {
-		return "c=" + stroke.getStartCap() + "," + stroke.getDashCap() + "," + stroke.getEndCap() +
+		return "c=" + stroke.getLineCap() +
 			" j=" + stroke.getLineJoin() +
 			" m=" + stroke.getMiterLimit() +
 			" l=" + stroke.getLineWidth();
@@ -161,7 +161,12 @@ public class TraceDevice extends Device implements PathWalker, TextWalker
 	}
 
 	public int beginTile(Rect area, Rect view, float xstep, float ystep, Matrix ctm, int id, int doc_id) {
-		System.out.println("beginTile");
+		System.out.println("beginTile doc_id=" + doc_id +
+				" id=" + id +
+				" view=" + view +
+				" xstep=" + xstep +
+				" ystep=" + ystep +
+				" ctm=" + ctm);
 		return 0;
 	}
 
@@ -209,9 +214,24 @@ public class TraceDevice extends Device implements PathWalker, TextWalker
 	}
 
 	public static void main(String[] args) {
-		Document doc = Document.openDocument("pdfref17.pdf");
-		Page page = doc.loadPage(1144);
+		if (args.length < 2)
+		{
+			System.err.println("Usage: TraceDevice <PDF-file> <page1> [page2 page3 ...]");
+			System.exit(1);
+		}
+
+		Document doc = Document.openDocument(args[0]);
 		TraceDevice dev = new TraceDevice();
+
+		for (int i = 1; i < args.length; i++)
+		{
+			int pagenbr = Integer.parseInt(args[i]);
+			Page page = doc.loadPage(pagenbr);
+			System.out.println("");
+			System.out.println("Page " + pagenbr);
 		page.run(dev, new Matrix());
+		}
+
+
 	}
 }

@@ -1,0 +1,40 @@
+% title: Hyphenation patterns for Hungarian
+% copyright: Copyright (C) 2003 Bence Nagy
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Hungarian
+%     tag: hu
+% version: 2011-08-15
+% authors:
+%   -
+%     name: Bence Nagy
+%     contact: bence.nagy (at) gmail.com
+% licence:
+%     - This file is available under any of these licences, at your option:
+%     -
+%         name: MPL
+%         version: 1.1
+%         initial_developer: Bence Nagy
+%         contributors:
+%             - Bence Nagy
+%         url: https://www.mozilla.org/en-US/MPL/1.1/
+%     -
+%         name: GPL
+%         version: 2.0
+%         url: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+%     -
+%         name: LGPL
+%         version: 2.1
+%         url: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% texlive:
+%     encoding: ec
+%     babelname: hungarian
+%     legacy_patterns: huhyphn.tex
+%     message: Hungarian hyphenation patterns
+%     description: Hyphenation patterns for Hungarian in T1/EC and UTF-8 encodings.
+%

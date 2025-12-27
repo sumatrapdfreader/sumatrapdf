@@ -105,6 +105,11 @@ fz_buffer *fz_new_buffer_from_shared_data(fz_context *ctx, const unsigned char *
 fz_buffer *fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_t size);
 
 /**
+	Create a new buffer with printf formatted data.
+*/
+fz_buffer *fz_new_buffer_from_printf(fz_context *ctx, const char *fmt, ...);
+
+/**
 	Make a new buffer, containing a copy of the data used in
 	the original.
 */

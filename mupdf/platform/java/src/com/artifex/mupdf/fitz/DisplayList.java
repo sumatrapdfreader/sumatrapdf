@@ -55,7 +55,11 @@ public class DisplayList
 		return toStructuredText(null);
 	}
 
-	public native Quad[][] search(String needle);
+	public native Quad[][] search(String needle, int style);
+	public Quad[][] search(String needle)
+	{
+		return search(needle, StructuredText.SEARCH_IGNORE_CASE);
+	}
 
 	public native void run(Device dev, Matrix ctm, Rect scissor, Cookie cookie);
 

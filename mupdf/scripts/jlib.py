@@ -2146,8 +2146,12 @@ def build(
         Names of files that are written by `command`. Can also be a single
         filename. Can be `(files2, filter_)` as supported by `jlib.fs_paths()`.
     command:
-        Command to run. {IN} and {OUT} are replaced by space-separated
-        `infiles` and `outfiles` with '/' changed to '\' on Windows.
+        Usually a string, the command to run. {IN} and {OUT} are replaced by
+        space-separated `infiles` and `outfiles` with '/' changed to '\' on
+        Windows.
+
+        Otherwise can be a callable taking no parameters. This is not as good
+        as a string because we cannot detect if the command has changed.
     force_rebuild:
         If true, we always re-run the command.
     out:
@@ -2180,7 +2184,6 @@ def build(
     if out is None:
         out = 'log'
 
-    command_filename = f'{outfiles[0]}.cmd'
     reasons = []
 
     if not reasons or all_reasons:
@@ -2198,17 +2201,20 @@ def build(
             # window.
             ret = ret.replace('/', '\\\\')
         return ret
-    command = command.replace('{IN}', files_string(infiles))
-    command = command.replace('{OUT}', files_string(outfiles))
 
-    if not reasons or all_reasons:
-        try:
-            with open( command_filename) as f:
-                command0 = f.read()
-        except Exception:
-            command0 = None
-        if command != command0:
-           reasons.append( f'command has changed:\n{command0}\n=>\n{command}')
+    if not callable(command):
+        command = command.replace('{IN}', files_string(infiles))
+        command = command.replace('{OUT}', files_string(outfiles))
+        command_filename = f'{outfiles[0]}.cmd'
+
+        if not reasons or all_reasons:
+            try:
+                with open( command_filename) as f:
+                    command0 = f.read()
+            except Exception:
+                command0 = None
+            if command != command0:
+               reasons.append( f'command has changed:\n{command0}\n=>\n{command}')
 
     if not reasons or all_reasons:
         reason = fs_any_newer( infiles, outfiles)
@@ -2224,28 +2230,32 @@ def build(
             nv=0,
             )
 
-    # Empty <command_filename) while we run the command so that if command
-    # fails but still creates target(s), then next time we will know target(s)
-    # are not up to date.
-    #
-    # We rename the command to a temporary file and then rename back again
-    # after the command finishes so that its mtime is unchanged if the command
-    # has not changed.
-    #
-    fs_ensure_parent_dir( command_filename)
-    command_filename_temp = command_filename + '-'
-    fs_remove(command_filename_temp)
-    if os.path.exists( command_filename):
-        fs_rename(command_filename, command_filename_temp)
-    fs_update( command, command_filename_temp)
-    assert os.path.isfile( command_filename_temp)
+    if callable(command):
+        command()
 
-    system( command, out=out, verbose=verbose, executable=executable, caller=2)
+    else:
+        # Empty <command_filename) while we run the command so that if command
+        # fails but still creates target(s), then next time we will know
+        # target(s) are not up to date.
+        #
+        # We rename the command to a temporary file and then rename back again
+        # after the command finishes so that its mtime is unchanged if the
+        # command has not changed.
+        #
+        fs_ensure_parent_dir( command_filename)
+        command_filename_temp = command_filename + '-'
+        fs_remove(command_filename_temp)
+        if os.path.exists( command_filename):
+            fs_rename(command_filename, command_filename_temp)
+        fs_update( command, command_filename_temp)
+        assert os.path.isfile( command_filename_temp)
 
-    assert os.path.isfile( command_filename_temp), \
-            f'Command seems to have deleted {command_filename_temp=}: {command!r}'
+        system( command, out=out, verbose=verbose, executable=executable, caller=2)
 
-    fs_rename( command_filename_temp, command_filename)
+        assert os.path.isfile( command_filename_temp), \
+                f'Command seems to have deleted {command_filename_temp=}: {command!r}'
+
+        fs_rename( command_filename_temp, command_filename)
 
     return True
 

@@ -27,8 +27,8 @@ fz_stext_page_block_iterator fz_stext_page_block_iterator_begin(fz_stext_page *p
 	fz_stext_page_block_iterator pos;
 
 	pos.page = page;
-	pos.pos = page ? page->first_block : NULL;
 	pos.parent = NULL;
+	pos.block = page ? page->first_block : NULL;
 
 	return pos;
 }
@@ -41,10 +41,10 @@ fz_stext_page_block_iterator fz_stext_page_block_iterator_next(fz_stext_page_blo
 		return pos;
 
 	/* If we've hit EOF, then nowhere else to go. */
-	if (pos.pos == NULL)
+	if (pos.block == NULL)
 		return pos;
 
-	pos.pos = pos.pos->next;
+	pos.block = pos.block->next;
 	return pos;
 }
 
@@ -52,13 +52,13 @@ fz_stext_page_block_iterator fz_stext_page_block_iterator_down(fz_stext_page_blo
 {
 	/* Can't throw here, so trying to move down on illegal nodes
 	 * will just do nothing. */
-	if (pos.pos == NULL)
+	if (pos.block == NULL)
 		return pos;
-	if (pos.pos->type != FZ_STEXT_BLOCK_STRUCT)
+	if (pos.block->type != FZ_STEXT_BLOCK_STRUCT)
 		return pos;
 
-	pos.parent = pos.pos->u.s.down;
-	pos.pos = pos.pos->u.s.down->first_block;
+	pos.parent = pos.block->u.s.down;
+	pos.block = pos.block->u.s.down->first_block;
 
 	return pos;
 }
@@ -70,8 +70,8 @@ fz_stext_page_block_iterator fz_stext_page_block_iterator_up(fz_stext_page_block
 
 	/* pos.parent->up is the struct block we are currently traversing the
 	 * children of. So it's where we want to do 'next' from. */
-	pos.pos = pos.parent->up;
-	/* pos.parent->parent is the struct that owns the new pos.pos */
+	pos.block = pos.parent->up;
+	/* pos.parent->parent is the struct that owns the new pos.block */
 	pos.parent = pos.parent->parent;
 
 	return pos;
@@ -85,14 +85,14 @@ fz_stext_page_block_iterator fz_stext_page_block_iterator_next_dfs(fz_stext_page
 	{
 		pos = fz_stext_page_block_iterator_next(pos);
 
-		if (pos.pos)
+		if (pos.block)
 		{
-			if (pos.pos->type != FZ_STEXT_BLOCK_STRUCT)
+			if (pos.block->type != FZ_STEXT_BLOCK_STRUCT)
 				return pos;
 
 			/* Move down. And loop. */
-			pos.parent = pos.pos->u.s.down;
-			pos.pos = pos.pos->u.s.down->first_block;
+			pos.parent = pos.block->u.s.down;
+			pos.block = pos.block->u.s.down->first_block;
 			continue;
 		}
 
@@ -102,26 +102,26 @@ fz_stext_page_block_iterator fz_stext_page_block_iterator_next_dfs(fz_stext_page
 			return pos; /* EOF */
 		/* pos.parent->up is the struct block we are currently traversing the
 		 * children of. So it's where we want to do 'next' from. */
-		pos.pos = pos.parent->up;
-		/* pos.parent->parent is the struct that owns the new pos.pos */
+		pos.block = pos.parent->up;
+		/* pos.parent->parent is the struct that owns the new pos.block */
 		pos.parent = pos.parent->parent;
 	}
 }
 
 int fz_stext_page_block_iterator_eod(fz_stext_page_block_iterator pos)
 {
-	return (pos.pos == NULL);
+	return (pos.block == NULL);
 }
 
 int fz_stext_page_block_iterator_eod_dfs(fz_stext_page_block_iterator pos)
 {
 	while (1)
 	{
-		if (pos.pos)
+		if (pos.block)
 			return 0;
 		if (pos.parent == NULL)
 			return 1;
-		pos.pos = pos.parent->up;
+		pos.block = pos.parent->up;
 		pos.parent = pos.parent->parent;
 	}
 }

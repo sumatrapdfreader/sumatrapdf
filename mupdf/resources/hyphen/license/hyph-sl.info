@@ -1,0 +1,74 @@
+% title: Hyphenation patterns for Slovenian
+% copyright: Copyright (C) 1990 Matjaž Vrečko
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Slovenian
+%     tag: sl
+% version: 2.3
+% authors:
+%   -
+%     name: Matjaž Vrečko
+%     affiliation: TeXCeX
+%     contact: matjaz (at) mg-soft.si
+% licence:
+%     - This file is available under any of these licences:
+%     -
+%         name: LPPL
+%         version: 1
+%         or_later: true
+%         url: http://www.latex-project.org/lppl/lppl-1-0.html
+%     -
+%         name: MIT
+%         url: https://opensource.org/licences/MIT
+%         text: >
+%             Permission is hereby granted, free of charge, to any person
+%             obtaining a copy of this software and associated documentation
+%             files (the "Software"), to deal in the Software without
+%             restriction, including without limitation the rights to use,
+%             copy, modify, merge, publish, distribute, sublicense, and/or sell
+%             copies of the Software, and to permit persons to whom the
+%             Software is furnished to do so, subject to the following
+%             conditions:
+%
+%             The above copyright notice and this permission notice shall be
+%             included in all copies or substantial portions of the Software.
+%
+%             THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+%             EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+%             OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+%             NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+%             HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+%             WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%             FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+%             OTHER DEALINGS IN THE SOFTWARE.
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - 1990       First version of `hyphen.si' (Matjaž Vrečko, TeXCeX)
+%
+%     - >
+%         Some cosmetic changes done later on, but none of these apply any more;
+%         the patterns are still the same as they were originally:
+%     - 1994-05-17 Use of code page 852 in patterns (Leon Žlajpah)
+%     - 1995-04-06 Release of `sihyph21.tex'
+%     - 1995-06-20 >
+%             Added \slovenehyphenmins
+%             Release of `sihyph22.tex'
+%     - 1997-15-04 >
+%             Some changes concerning "c, "s, "z and ...
+%             Release of `sihyph23.tex'
+%     - 2007-01-20 >
+%             `sihyph23.tex' renamed to `slhyph.tex'
+%             (sl is the proper language code for Slovenian)
+% texlive:
+%     synonyms:
+%         - slovene
+%     encoding: ec
+%     babelname: slovenian
+%     legacy_patterns: sihyph.tex
+%     message: Slovenian hyphenation patterns
+%     description: Hyphenation patterns for Slovenian in T1/EC and UTF-8 encodings.
+%

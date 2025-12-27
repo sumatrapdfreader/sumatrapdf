@@ -36,10 +36,15 @@ public class Archive
 		finalize();
 	}
 
-	private native long newNativeArchive(String path);
+	private native long newNativeArchiveWithPath(String path);
+	private native long newNativeArchiveWithStream(SeekableInputStream stream);
 
 	public Archive(String path) {
-		pointer = newNativeArchive(path);
+		pointer = newNativeArchiveWithPath(path);
+	}
+
+	public Archive(SeekableInputStream stream) {
+		pointer = newNativeArchiveWithStream(stream);
 	}
 
 	protected Archive(long p) {

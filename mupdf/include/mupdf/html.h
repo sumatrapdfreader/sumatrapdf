@@ -34,6 +34,7 @@
 */
 typedef struct fz_html_s fz_html;
 typedef struct fz_html_font_set_s fz_html_font_set;
+typedef struct fz_html_hyph_set_s fz_html_hyph_set;
 
 typedef struct
 {

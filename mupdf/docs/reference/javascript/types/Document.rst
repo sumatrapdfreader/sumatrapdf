@@ -12,24 +12,97 @@ and a handful of image formats.
 
 	|no_new|
 
+Constants
+---------
+
+Permission flags for `Document.prototype.hasPermission`:
+
+.. data:: Document.PERMISSION_PRINT
+
+	``"print"`` -- Print the document.
+
+.. data:: Document.PERMISSION_EDIT
+
+	``"edit"`` -- Modify the contents of the document by operations other than those controlled by the other flags: (annotate, form, assemble).
+
+.. data:: Document.PERMISSION_COPY
+
+	``"edit"`` -- Copy or otherwise extract text from the document.
+
+.. data:: Document.PERMISSION_ANNOTATE
+
+	``"annotate"`` -- Add or modify annotations.
+
+.. data:: Document.PERMISSION_FORM
+
+	``"form"`` -- Fill in existing form fields.
+
+.. data:: Document.PERMISSION_ACCESSIBILITY
+
+	``"accessibility"`` --
+	Copy or otherwise extract text from the document in support of accessibility.
+
+.. data:: Document.PERMISSION_ASSEMBLE
+
+	``"assemble"`` -- Insert, rotate, or delete pages and create bookmarks.
+
+.. data:: Document.PERMISSION_PRINT_HQ
+
+	``"print-hq"`` -- Print the document to a representation from which a faithful digital
+	copy of the PDF content could be generated.
+
 Static methods
 --------------
 
 .. function::
 	Document.openDocument(filename)
+	Document.openDocument(filename, dir)
+	Document.openDocument(filename, accelerator, dir)
 	Document.openDocument(buffer, magic)
+	Document.openDocument(buffer, magic, acceleratorbuffer)
+	Document.openDocument(buffer, magic, acceleratorbuffer, dir)
 
 	Open the named or given document.
 
 	:param string filename: File name to open.
-	:param Buffer | ArrayBuffer | Uint8Array | string buffer: Buffer containing a PDF file.
+	:param Buffer | ArrayBuffer | Uint8Array | string buffer: Buffer containing a document file.
 	:param string magic: An optional :term:`MIME-type` or file extension. Defaults to "application/pdf".
+	:param string accelerator: File name of accelerator file.
+	:param Buffer | ArrayBuffer | Uint8Array | string acceleratorbuffer: Buffer containing an accelerator file.
+	:param Archive dir: An archive from which to load resources for rendering.
 
 	:returns: Document
 
 	.. code-block::
 
-		var document = new mupdf.Document.openDocument("my_pdf.pdf", "application/pdf")
+		var document1 = mupdf.Document.openDocument("my_pdf.pdf", "application/pdf")
+		var document2 = mupdf.Document.openDocument("my_pdf.pdf", dir)
+		var document3 = mupdf.Document.openDocument("my_pdf.pdf", acceleratorfile, dir)
+		var document4 = mupdf.Document.openDocument(fs.readFileSync("my_pdf.pdf"), "application/pdf")
+		var document5 = mupdf.Document.openDocument(fs.readFileSync("my_pdf.pdf"), acceleratorbuffer, "application/pdf")
+		var document6 = mupdf.Document.openDocument(fs.readFileSync("my_pdf.pdf"), acceleratorbuffer, dir, "application/pdf")
+
+.. function::
+	Document.recognize(magic)
+	Document.recognizeContent(filename)
+	Document.recognizeContent(buffer, magic)
+	Document.recognizeContent(buffer, dir, magic)
+
+	Check if MuPDF can open a document with the provided magic, or with the contents in the given file/buffer.
+
+	:param string magic: An optional :term:`MIME-type` or file extension. Defaults to "application/pdf".
+	:param string filename: File name to check contents of.
+	:param Buffer | ArrayBuffer | Uint8Array | string buffer: Buffer containing a PDF file.
+	:param Archive dir: An archive from which to load resources for rendering.
+
+	:returns: boolean
+
+	.. code-block::
+
+		var recognized1 = mupdf.Document.recognize("application/pdf")
+		var recognized2 = mupdf.Document.recognizeContent("my_pdf.pdf")
+		var recognized3 = mupdf.Document.recognizeContent(buffer, "application/pdf")
+		var recognized4 = mupdf.Document.recognizeContent(buffer, dir, "application/pdf")
 
 Instance methods
 ----------------
@@ -74,37 +147,19 @@ Instance methods
 
 .. method:: Document.prototype.hasPermission(permission)
 
-	Returns ``true`` if the document has permission for the supplied permission string parameter.
+	Check if a user is allowed permission to perform certain operations on the document.
 
-	:param string permission: The permission to seek for, e.g. "edit".
+	:param "print" | "edit" | "copy" | "annotate" | "form" | "accessibility" | "assemble" | "print-hq" permission:
+
+	See `Document.PERMISSION_PRINT`, etc.
+
 
 	:returns: boolean
 
-	.. list-table::
-		:header-rows: 1
-
-		* - **String**
-		  - **Description**
-		* - print
-		  - Can print
-		* - edit
-		  - Can edit
-		* - copy
-		  - Can copy
-		* - annotate
-		  - Can annotate
-		* - form
-		  - Can fill out forms
-		* - accessibility
-		  - Can copy for accessibility
-		* - assemble
-		  - Can manage document pages
-		* - print-hq
-		  - Can print high-quality
-
 	.. code-block::
 
-		var canEdit = document.hasPermission("edit")
+		var canEdit1 = document.hasPermission("edit")
+		var canEdit2 = document.hasPermission(Document.PERMISSION_EDIT)
 
 .. method:: Document.prototype.getMetaData(key)
 

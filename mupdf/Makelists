@@ -803,7 +803,9 @@ TESSERACT_BUILD_CFLAGS += $(TESSERACT_DEFINES)
 
 # --- ZXINGCPP (optional) ---
 
+ifeq ($(USE_ZXINGCPP),yes)
 ZXINGCPP_LANGFLAGS = -std=c++20
+endif
 
 ZXINGCPP_CFLAGS += -Ithirdparty/zxing-cpp/core/src
 ZXINGCPP_CFLAGS += -DZXING_EXPERIMENTAL_API

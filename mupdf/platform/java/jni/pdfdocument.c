@@ -124,6 +124,20 @@ FUN(PDFDocument_finalize)(JNIEnv *env, jobject self)
 	FUN(Document_finalize)(env, self); /* Call super.finalize() */
 }
 
+JNIEXPORT void JNICALL
+FUN(PDFDocument_check)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *pdf = from_PDFDocument(env, self);
+
+	if (!ctx || !pdf) return;
+
+	fz_try(ctx)
+		pdf_check_document(ctx, pdf);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
 JNIEXPORT jint JNICALL
 FUN(PDFDocument_countObjects)(JNIEnv *env, jobject self)
 {
@@ -1539,7 +1553,7 @@ FUN(PDFDocument_addEmbeddedFile)(JNIEnv *env, jobject self, jstring jfilename, j
 	return to_PDFObject_safe(ctx, env, fs);
 }
 
-JNIEXPORT jstring JNICALL
+JNIEXPORT jobject JNICALL
 FUN(PDFDocument_getFilespecParams)(JNIEnv *env, jobject self, jobject jfs)
 {
 	fz_context *ctx = get_context(env);
@@ -1951,6 +1965,109 @@ FUN(PDFDocument_lookupDest)(JNIEnv *env, jobject self, jobject jdest)
 		jni_rethrow(env, ctx);
 
 	return to_PDFObject_safe_own(ctx, env, obj);
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_countLayerConfigs)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	jint configs = 0;
+
+	fz_try(ctx)
+		configs = pdf_count_layer_configs(ctx, doc);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return configs;
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_getLayerConfigName)(JNIEnv *env, jobject self, jint config)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	const char *name = NULL;
+
+	fz_try(ctx)
+		name = pdf_layer_config_name(ctx, doc, config);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return (*env)->NewStringUTF(env, name);
+}
+
+JNIEXPORT jstring JNICALL
+FUN(PDFDocument_getLayerConfigCreator)(JNIEnv *env, jobject self, jint config)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	const char *creator = NULL;
+
+	fz_try(ctx)
+		creator = pdf_layer_config_creator(ctx, doc, config);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return (*env)->NewStringUTF(env, creator);
+}
+
+JNIEXPORT void JNICALL
+FUN(PDFDocument_selectLayerConfig)(JNIEnv *env, jobject self, jint config)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+
+	fz_try(ctx)
+		pdf_select_layer_config(ctx, doc, config);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}
+
+JNIEXPORT jint JNICALL
+FUN(PDFDocument_countLayerConfigUIs)(JNIEnv *env, jobject self)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	jint configuis = 0;
+
+	fz_try(ctx)
+		configuis = pdf_count_layer_config_ui(ctx, doc);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	return configuis;
+}
+
+JNIEXPORT jobject JNICALL
+FUN(PDFDocument_getLayerConfigUIInfo)(JNIEnv *env, jobject self, jint configui)
+{
+	fz_context *ctx = get_context(env);
+	pdf_document *doc = from_PDFDocument(env, self);
+	pdf_layer_config_ui info = { 0 };
+	jobject jinfo = NULL;
+	jobject jtext = NULL;
+
+	fz_try(ctx)
+		pdf_layer_config_ui_info(ctx, doc, configui, &info);
+	fz_catch(ctx)
+		jni_rethrow(env, ctx);
+
+	jtext = (*env)->NewStringUTF(env, info.text);
+	if (!jtext || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	jinfo = (*env)->NewObject(env, cls_PDFDocument_LayerConfigUIInfo, mid_PDFDocument_LayerConfigUIInfo_init);
+	if (!jinfo || (*env)->ExceptionCheck(env))
+		return NULL;
+
+	(*env)->SetIntField(env, jinfo, fid_PDFDocument_LayerConfigUIInfo_type, info.type);
+	(*env)->SetIntField(env, jinfo, fid_PDFDocument_LayerConfigUIInfo_depth, info.depth);
+	(*env)->SetBooleanField(env, jinfo, fid_PDFDocument_LayerConfigUIInfo_selected, info.selected);
+	(*env)->SetBooleanField(env, jinfo, fid_PDFDocument_LayerConfigUIInfo_locked, info.locked);
+	(*env)->SetObjectField(env, jinfo, fid_PDFDocument_LayerConfigUIInfo_text, jtext);
+
+	return jinfo;
 }
 
 JNIEXPORT jint JNICALL

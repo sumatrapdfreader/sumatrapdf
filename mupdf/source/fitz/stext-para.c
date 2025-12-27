@@ -1498,12 +1498,15 @@ do_para_break(fz_context *ctx, fz_stext_page *page, fz_stext_block **pfirst, fz_
 
 			/* Think about breaking lines at Titles. */
 			/* First, underlined ones. */
+			if (!in_header)
+			{
 			if (detect_underlined_titles(ctx, &pos, block))
 				next_block = block->next; /* We split the block! */
 			if (block->type != FZ_STEXT_BLOCK_TEXT)
 			{
 				next_block = block;
 				break;
+				}
 			}
 
 #ifdef DEBUG_PARA_SPLITS

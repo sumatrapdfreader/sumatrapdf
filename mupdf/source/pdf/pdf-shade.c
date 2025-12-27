@@ -78,7 +78,7 @@ make_sampled_shade_function(fz_context *ctx, fz_shade *shade, int funcs, pdf_fun
 
 /* Type 1-3 -- Function-based, linear and radial shadings */
 
-#define FUNSEGS 64 /* size of sampled mesh for function-based shadings */
+#define FUNSEGS 256 /* size of sampled mesh for function-based shadings */
 
 static void
 pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_obj *dict, int funcs, pdf_function **func)
@@ -87,6 +87,7 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 	float x0, y0, x1, y1;
 	float fv[2];
 	int xx, yy, zz;
+	int xdivs, ydivs;
 	float *p;
 	int n = fz_colorspace_n(ctx, shade->colorspace);
 
@@ -101,10 +102,13 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 		y1 = pdf_array_get_real(ctx, obj, 3);
 	}
 
+	xdivs = FUNSEGS;
+	ydivs = FUNSEGS;
+
 	shade->u.f.matrix = pdf_dict_get_matrix(ctx, dict, PDF_NAME(Matrix));
-	shade->u.f.xdivs = FUNSEGS;
-	shade->u.f.ydivs = FUNSEGS;
-	shade->u.f.fn_vals = Memento_label(fz_malloc(ctx, (FUNSEGS+1)*(FUNSEGS+1)*n*sizeof(float)), "shade_fn_vals");
+	shade->u.f.xdivs = xdivs;
+	shade->u.f.ydivs = ydivs;
+	shade->u.f.fn_vals = Memento_label(fz_malloc(ctx, (xdivs+1)*(ydivs+1)*n*sizeof(float)), "shade_fn_vals");
 	shade->u.f.domain[0][0] = x0;
 	shade->u.f.domain[0][1] = y0;
 	shade->u.f.domain[1][0] = x1;
@@ -113,13 +117,13 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 	p = shade->u.f.fn_vals;
 	if (funcs == 1)
 	{
-		for (yy = 0; yy <= FUNSEGS; yy++)
+		for (yy = 0; yy <= ydivs; yy++)
 		{
-			fv[1] = y0 + (y1 - y0) * yy / FUNSEGS;
+			fv[1] = y0 + (y1 - y0) * yy / ydivs;
 
-			for (xx = 0; xx <= FUNSEGS; xx++)
+			for (xx = 0; xx <= xdivs; xx++)
 			{
-				fv[0] = x0 + (x1 - x0) * xx / FUNSEGS;
+				fv[0] = x0 + (x1 - x0) * xx / xdivs;
 
 				pdf_eval_function(ctx, func[0], fv, 2, p, n);
 				p += n;
@@ -131,13 +135,13 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 		if (funcs != n)
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "Expected 1 2in, n-out function, or n 2 in, 1-out functions");
 
-		for (yy = 0; yy <= FUNSEGS; yy++)
+		for (yy = 0; yy <= ydivs; yy++)
 		{
-			fv[1] = y0 + (y1 - y0) * yy / FUNSEGS;
+			fv[1] = y0 + (y1 - y0) * yy / ydivs;
 
-			for (xx = 0; xx <= FUNSEGS; xx++)
+			for (xx = 0; xx <= xdivs; xx++)
 			{
-				fv[0] = x0 + (x1 - x0) * xx / FUNSEGS;
+				fv[0] = x0 + (x1 - x0) * xx / xdivs;
 
 				for (zz = 0; zz < n; zz++)
 				{

@@ -213,6 +213,9 @@ static void showgrep(fz_context *ctx)
 		pdf_xref_entry *entry = pdf_get_xref_entry_no_null(ctx, doc, i);
 		if (entry->type == 'n' || entry->type == 'o')
 		{
+			ref = NULL;
+
+			fz_var(ref);
 			fz_try(ctx)
 			{
 				ref = pdf_new_indirect(ctx, doc, i, 0);
@@ -337,10 +340,10 @@ static void showaction(fz_context *ctx, pdf_obj *action, const char *name)
 	}
 }
 
-static void showfield(fz_context *ctx, pdf_obj *field)
+static void showfield(fz_context *ctx, pdf_obj *field, int recurse)
 {
 	pdf_obj *kids, *ft, *parent;
-	const char *tu;
+	const char *tu, *value;
 	char *t;
 	int ff;
 	int i, n;
@@ -408,23 +411,50 @@ static void showfield(fz_context *ctx, pdf_obj *field)
 	showaction(ctx, pdf_dict_getp_inheritable(ctx, field, "AA/Fo"), "Focus");
 	showaction(ctx, pdf_dict_getp_inheritable(ctx, field, "AA/Bl"), "Blur");
 
+	value = pdf_field_value(ctx, field);
+	if (value && value[0])
+		fz_write_printf(ctx, out, "    Value: %q\n", value);
+
 	fz_write_string(ctx, out, "\n");
 
-	kids = pdf_dict_get(ctx, field, PDF_NAME(Kids));
-	n = pdf_array_len(ctx, kids);
-	for (i = 0; i < n; ++i)
-		showfield(ctx, pdf_array_get(ctx, kids, i));
+	if (recurse)
+	{
+		kids = pdf_dict_get(ctx, field, PDF_NAME(Kids));
+		n = pdf_array_len(ctx, kids);
+		for (i = 0; i < n; ++i)
+			showfield(ctx, pdf_array_get(ctx, kids, i), 1);
+	}
 }
 
 static void showform(fz_context *ctx)
 {
-	pdf_obj *fields;
-	int i, n;
+	pdf_obj *fields, *page, *obj;
+	int i, k, n, m;
 
 	fields = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/Fields");
-	n = pdf_array_len(ctx, fields);
-	for (i = 0; i < n; ++i)
-		showfield(ctx, pdf_array_get(ctx, fields, i));
+	if (fields)
+	{
+		n = pdf_array_len(ctx, fields);
+		for (i = 0; i < n; ++i)
+			showfield(ctx, pdf_array_get(ctx, fields, i), 1);
+	}
+	else
+	{
+		fz_write_string(ctx, out, "% Root/AcroForm/Fields is missing!\n\n");
+		m = pdf_count_pages(ctx, doc);
+		for (k = 0; k < m; ++k)
+		{
+			page = pdf_lookup_page_obj(ctx, doc, k);
+			fields = pdf_dict_get(ctx, page, PDF_NAME(Annots));
+			n = pdf_array_len(ctx, fields);
+			for (i = 0; i < n; ++i)
+			{
+				obj = pdf_array_get(ctx, fields, i);
+				if (pdf_dict_get(ctx, obj, PDF_NAME(Subtype)) == PDF_NAME(Widget))
+					showfield(ctx, obj, 0);
+			}
+		}
+	}
 }
 
 #define SEP ".[]/"

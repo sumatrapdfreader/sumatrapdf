@@ -259,3 +259,15 @@ Instance methods
 	.. code-block:: javascript
 
 		var obj = pdfPage.associatedFile(0)
+
+.. method:: PDFPage.prototype.clip(rect)
+
+	|only_mutool|
+
+	Clip the page to the given rectangle.
+
+	:param Rect rect: The new desired dimensions.
+
+	.. code-block:: javascript
+
+		pdfPage.clip([0, 0, 200, 300])

@@ -282,6 +282,8 @@ csv_end_page(fz_context *ctx, fz_document_writer *wri_, fz_device *dev)
 		fz_write_printf(ctx, wri->out, "%C", 0xFEFF);
 
 		output_tables(ctx, wri, wri->page, wri->page->first_block);
+		fz_drop_stext_page(ctx, wri->page);
+		wri->page = NULL;
 		wri->pagenum++;
 	}
 	fz_always(ctx)
@@ -303,6 +305,7 @@ static void
 csv_drop_writer(fz_context *ctx, fz_document_writer *wri_)
 {
 	fz_csv_writer *wri = (fz_csv_writer*)wri_;
+	fz_drop_stext_page(ctx, wri->page);
 	fz_drop_output(ctx, wri->out);
 }
 
@@ -337,9 +340,6 @@ fz_new_csv_writer(fz_context *ctx, const char *path, const char *options)
 	fz_try(ctx)
 		wri = fz_new_csv_writer_with_output(ctx, out, options);
 	fz_catch(ctx)
-	{
-		fz_drop_output(ctx, out);
 		fz_rethrow(ctx);
-	}
 	return wri;
 }

@@ -1,0 +1,83 @@
+% title: Hyphenation patterns for Catalan
+% copyright: Copyright (C) December 1991-January 1995, July 2003 Gonçal Badenes
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Catalan
+%     tag: ca
+% version: 1.11 15 July 2003 15:08:12 CET
+% authors:
+%   -
+%     name: Gonçal Badenes
+%     contact: g.badenes (at) ieee.org
+%   -
+%     name: Francina Turon
+% licence:
+%     name: LPPL
+%     version: 1
+%     or_later: true
+%     url: https://latex-project.org/lppl/
+% hyphenmins:
+%     generation:
+%         left: 2
+%         right: 2
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - Version 1.11 2003-07-15 Identical to version 1.10 except for the updated copyright notice.
+%     - Version 1.10 1995-01-17
+% texlive:
+%     encoding: ec
+%     babelname: catalan
+%     legacy_patterns: cahyph.tex
+%     message: Catalan hyphenation patterns
+%     description: Hyphenation patterns for Catalan in T1/EC and UTF-8 encodings.
+% ==========================================
+%
+% This patterns have been created using standard, conservative
+% hyphenation rules for catalan. The results have refined running them
+% through patgen. In that way, the number of hits has been increased.
+%
+% These rules produce no wrong patterns (Results checked against the
+% “Diccionari Ortogràfic i de Pronúncia”, Enciclopèdia
+% Catalana. The percentage of valid hyphen misses is lower than 1%
+%
+% Some of the patterns below represent combinations that never
+% happen in Catalan. We have tried to keep them to a minimum.
+%
+% Please report any problem you might have to the authors!!!
+%
+%
+% Attach vowel groups to left consonant
+%
+% Build legal consonant groups, leave other consonants bound to
+% the previous group. This overrides part of the previous pattern
+% group.
+%
+% Vowels are kept together by the defaults
+% We break here diphthongs and the like
+%
+% We consider here i and u as semiconsonants
+%
+% Semiconsonants at the beginning of word
+% .i2a .i2e .i2o .i2u .u2a .u2e .u2i .u2o
+% .i2é .i2í .i2ó .i2ú .i2à
+% .u2é .u2í .u2ó .u2ú .u2à
+%
+% And now the crescent diphtongs
+%
+% We add here some exceptions to the rules for diaeresis
+% a1us. e1us. i1us. o1us. u1us.
+%
+% disallow hyphenation on possible prefixes
+% .a2b .a2n .e2n .e2x .g2h .g2n .i2n .o2b .p2s
+%
+% Avoid hyphenation on some intra-word groups
+%
+% Avoid wrong hyphenation on some foreign-origin words
+% .c2h2 .d2h2 .k2s2 .m2n2 .r2h2 .s2 .t2h2 .t2s2 .t2x2 .w2h2
+%
+% Add some good patterns found by patgen
+% Finally, add exception list
+% me-nhir me-nhirs

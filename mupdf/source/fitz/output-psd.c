@@ -94,7 +94,7 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	int n = writer->super.n;
 	int c = n - writer->super.alpha - s;
 	fz_separations *seps = writer->super.seps;
-	int i;
+	int i, j, nseps;
 	size_t len;
 	static const char psdsig[12] = { '8', 'B', 'P', 'S', 0, 1, 0, 0, 0, 0, 0, 0 };
 	static const char ressig[4] = { '8', 'B', 'I', 'M' };
@@ -108,6 +108,10 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	size = 0;
 	data = NULL;
 #endif
+
+	if (s != fz_count_active_separations(ctx, seps))
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Number of active separations doesn't match produced number of spot planes");
+	nseps = fz_count_separations(ctx, seps);
 
 	if (cs->n != 4)
 		cs_cmyk = fz_device_cmyk(ctx);
@@ -145,20 +149,25 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 	/* Image Resources Section - Spot Names, Equivalent colors, resolution, ICC Profile */
 	/* Spot names */
 	len = 0;
-	for (i = 0; i < s; i++)
+	j = 0;
+	for (i = 0; i < nseps; i++)
 	{
-		const char *name = fz_separation_name(ctx, seps, i);
+		const char *name;
 		char text[32];
 		size_t len2;
+		if (fz_separation_current_behavior(ctx, seps, i) != FZ_SEPARATION_SPOT)
+			continue;
+		name = fz_separation_name(ctx, seps, i);
 		if (name == NULL)
 		{
-			fz_snprintf(text, sizeof text, "Spot%d", i-4);
+			fz_snprintf(text, sizeof text, "Spot%d", j);
 			name = text;
 		}
 		len2 = strlen(name);
 		if (len2 > 255)
 			len2 = 255;
 		len += len2 + 1;
+		j++;
 	}
 
 	/* Write the size of all the following resources */
@@ -175,13 +184,17 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_write_int16_be(ctx, out, 0x03EE);
 		fz_write_int16_be(ctx, out, 0); /* PString */
 		fz_write_int32_be(ctx, out, (len + 1)&~1);
-		for (i = 0; i < s; i++) {
+		j = 0;
+		for (i = 0; i < nseps; i++) {
 			size_t len2;
-			const char *name = fz_separation_name(ctx, seps, i);
+			const char *name;
 			char text[32];
+			if (fz_separation_current_behavior(ctx, seps, i) != FZ_SEPARATION_SPOT)
+				continue;
+			name = fz_separation_name(ctx, seps, i);
 			if (name == NULL)
 			{
-				fz_snprintf(text, sizeof text, "Spot%d", i-4);
+				fz_snprintf(text, sizeof text, "Spot%d", j);
 				name = text;
 			}
 			len2 = strlen(name);
@@ -189,6 +202,7 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 				len2 = 255;
 			fz_write_byte(ctx, out, (unsigned char)len2);
 			fz_write_data(ctx, out, name, len2);
+			j++;
 		}
 		if (len & 1)
 		{
@@ -200,8 +214,11 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 		fz_write_int16_be(ctx, out, 0x03EF);
 		fz_write_int16_be(ctx, out, 0); /* PString */
 		fz_write_int32_be(ctx, out, 14 * s); /* Length */
-		for (i = 0; i < s; i++) {
+		j = 0;
+		for (i = 0; i < nseps; i++) {
 			float cmyk[4];
+			if (fz_separation_current_behavior(ctx, seps, i) != FZ_SEPARATION_SPOT)
+				continue;
 			fz_separation_equivalent(ctx, seps, i, cs_cmyk, cmyk, NULL, fz_default_color_params);
 			fz_write_int16_be(ctx, out, 02); /* CMYK */
 			/* PhotoShop stores all component values as if they were additive. */
@@ -212,6 +229,7 @@ psd_write_header(fz_context *ctx, fz_band_writer *writer_, fz_colorspace *cs)
 			fz_write_int16_be(ctx, out, 0); /* Opacity 0 to 100 */
 			fz_write_byte(ctx, out, 2); /* Don't know */
 			fz_write_byte(ctx, out, 0); /* Padding - Always Zero */
+			j++;
 		}
 	}
 

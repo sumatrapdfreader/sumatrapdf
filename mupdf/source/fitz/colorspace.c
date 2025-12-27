@@ -34,6 +34,9 @@
 #include "icc/rgb.icc.h"
 #include "icc/cmyk.icc.h"
 #include "icc/lab.icc.h"
+#include "icc/ps_gray.icc.h"
+#include "icc/ps_rgb.icc.h"
+#include "icc/ps_cmyk.icc.h"
 
 void fz_new_colorspace_context(fz_context *ctx)
 {
@@ -43,11 +46,17 @@ void fz_new_colorspace_context(fz_context *ctx)
 	fz_buffer *rgb = NULL;
 	fz_buffer *cmyk = NULL;
 	fz_buffer *lab = NULL;
+	fz_buffer *ps_gray = NULL;
+	fz_buffer *ps_rgb = NULL;
+	fz_buffer *ps_cmyk = NULL;
 
 	fz_var(gray);
 	fz_var(rgb);
 	fz_var(cmyk);
 	fz_var(lab);
+	fz_var(ps_gray);
+	fz_var(ps_rgb);
+	fz_var(ps_cmyk);
 
 	cct = ctx->colorspace = fz_malloc_struct(ctx, fz_colorspace_context);
 	cct->ctx_refs = 1;
@@ -62,11 +71,18 @@ void fz_new_colorspace_context(fz_context *ctx)
 		rgb = fz_new_buffer_from_shared_data(ctx, resources_icc_rgb_icc, resources_icc_rgb_icc_len);
 		cmyk = fz_new_buffer_from_shared_data(ctx, resources_icc_cmyk_icc, resources_icc_cmyk_icc_len);
 		lab = fz_new_buffer_from_shared_data(ctx, resources_icc_lab_icc, resources_icc_lab_icc_len);
+		ps_gray = fz_new_buffer_from_shared_data(ctx, resources_icc_ps_gray_icc, resources_icc_ps_gray_icc_len);
+		ps_rgb = fz_new_buffer_from_shared_data(ctx, resources_icc_ps_rgb_icc, resources_icc_ps_rgb_icc_len);
+		ps_cmyk = fz_new_buffer_from_shared_data(ctx, resources_icc_ps_cmyk_icc, resources_icc_ps_cmyk_icc_len);
 		cct->gray = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_GRAY, FZ_COLORSPACE_IS_DEVICE, "DeviceGray", gray);
 		cct->rgb = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_RGB, FZ_COLORSPACE_IS_DEVICE, "DeviceRGB", rgb);
 		cct->bgr = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_BGR, FZ_COLORSPACE_IS_DEVICE, "DeviceBGR", rgb);
 		cct->cmyk = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_CMYK, FZ_COLORSPACE_IS_DEVICE, "DeviceCMYK", cmyk);
 		cct->lab = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_LAB, FZ_COLORSPACE_IS_DEVICE, "Lab", lab);
+		cct->ps_gray = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_GRAY, FZ_COLORSPACE_IS_DEVICE, "DeviceGray", ps_gray);
+		cct->ps_rgb = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_RGB, FZ_COLORSPACE_IS_DEVICE, "DeviceRGB", ps_rgb);
+		cct->ps_bgr = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_BGR, FZ_COLORSPACE_IS_DEVICE, "DeviceBGR", ps_rgb);
+		cct->ps_cmyk = fz_new_icc_colorspace(ctx, FZ_COLORSPACE_CMYK, FZ_COLORSPACE_IS_DEVICE, "DeviceCMYK", ps_cmyk);
 	}
 	fz_always(ctx)
 	{
@@ -74,6 +90,9 @@ void fz_new_colorspace_context(fz_context *ctx)
 		fz_drop_buffer(ctx, rgb);
 		fz_drop_buffer(ctx, cmyk);
 		fz_drop_buffer(ctx, lab);
+		fz_drop_buffer(ctx, ps_gray);
+		fz_drop_buffer(ctx, ps_rgb);
+		fz_drop_buffer(ctx, ps_cmyk);
 	}
 	fz_catch(ctx)
 	{
@@ -105,6 +124,10 @@ void fz_new_colorspace_context(fz_context *ctx)
 	cct->bgr = fz_new_colorspace(ctx, FZ_COLORSPACE_BGR, FZ_COLORSPACE_IS_DEVICE, 3, "DeviceBGR");
 	cct->cmyk = fz_new_colorspace(ctx, FZ_COLORSPACE_CMYK, FZ_COLORSPACE_IS_DEVICE, 4, "DeviceCMYK");
 	cct->lab = fz_new_colorspace(ctx, FZ_COLORSPACE_LAB, FZ_COLORSPACE_IS_DEVICE, 3, "Lab");
+	cct->ps_gray = fz_new_colorspace(ctx, FZ_COLORSPACE_GRAY, FZ_COLORSPACE_IS_DEVICE, 1, "DeviceGray");
+	cct->ps_rgb = fz_new_colorspace(ctx, FZ_COLORSPACE_RGB, FZ_COLORSPACE_IS_DEVICE, 3, "DeviceRGB");
+	cct->ps_bgr = fz_new_colorspace(ctx, FZ_COLORSPACE_BGR, FZ_COLORSPACE_IS_DEVICE, 3, "DeviceBGR");
+	cct->ps_cmyk = fz_new_colorspace(ctx, FZ_COLORSPACE_CMYK, FZ_COLORSPACE_IS_DEVICE, 4, "DeviceCMYK");
 }
 
 void fz_enable_icc(fz_context *ctx)
@@ -133,6 +156,10 @@ void fz_drop_colorspace_context(fz_context *ctx)
 		fz_drop_colorspace(ctx, ctx->colorspace->bgr);
 		fz_drop_colorspace(ctx, ctx->colorspace->cmyk);
 		fz_drop_colorspace(ctx, ctx->colorspace->lab);
+		fz_drop_colorspace(ctx, ctx->colorspace->ps_gray);
+		fz_drop_colorspace(ctx, ctx->colorspace->ps_rgb);
+		fz_drop_colorspace(ctx, ctx->colorspace->ps_bgr);
+		fz_drop_colorspace(ctx, ctx->colorspace->ps_cmyk);
 #if FZ_ENABLE_ICC
 		fz_drop_icc_context(ctx);
 #endif
@@ -1006,6 +1033,27 @@ fz_find_color_converter(fz_context *ctx, fz_color_converter *cc, fz_colorspace *
 	if (ds->type == FZ_COLORSPACE_SEPARATION)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Cannot convert into Separation colorspace.");
 
+	if (params.ri & FZ_RI_IN_SOFTMASK)
+	{
+		if (ss->type == FZ_COLORSPACE_GRAY)
+			ss = ctx->colorspace->ps_gray;
+		else if (ss->type == FZ_COLORSPACE_RGB)
+			ss = ctx->colorspace->ps_rgb;
+		else if (ss->type == FZ_COLORSPACE_BGR)
+			ss = ctx->colorspace->ps_bgr;
+		else if (ss->type == FZ_COLORSPACE_CMYK)
+			ss = ctx->colorspace->ps_cmyk;
+		if (ds->type == FZ_COLORSPACE_GRAY)
+			ds = ctx->colorspace->ps_gray;
+		else if (ds->type == FZ_COLORSPACE_RGB)
+			ds = ctx->colorspace->ps_rgb;
+		else if (ds->type == FZ_COLORSPACE_BGR)
+			ds = ctx->colorspace->ps_bgr;
+		else if (ds->type == FZ_COLORSPACE_CMYK)
+			ds = ctx->colorspace->ps_cmyk;
+		params.ri &= ~FZ_RI_IN_SOFTMASK;
+	}
+
 	if (ss->type == FZ_COLORSPACE_INDEXED)
 	{
 		if (ss->u.indexed.base->type == FZ_COLORSPACE_SEPARATION)
@@ -1848,8 +1896,29 @@ fz_convert_pixmap_samples(fz_context *ctx, const fz_pixmap *src, fz_pixmap *dst,
 			ss = src->colorspace;
 		}
 
+		/* Adjust colorspaces for being in a softmask */
+		if (params.ri & FZ_RI_IN_SOFTMASK)
+		{
+			if (ss->type == FZ_COLORSPACE_GRAY)
+				ss = ctx->colorspace->ps_gray;
+			else if (ss->type == FZ_COLORSPACE_RGB)
+				ss = ctx->colorspace->ps_rgb;
+			else if (ss->type == FZ_COLORSPACE_BGR)
+				ss = ctx->colorspace->ps_bgr;
+			else if (ss->type == FZ_COLORSPACE_CMYK)
+				ss = ctx->colorspace->ps_cmyk;
+			if (ds->type == FZ_COLORSPACE_GRAY)
+				ds = ctx->colorspace->ps_gray;
+			else if (ds->type == FZ_COLORSPACE_RGB)
+				ds = ctx->colorspace->ps_rgb;
+			else if (ds->type == FZ_COLORSPACE_BGR)
+				ds = ctx->colorspace->ps_bgr;
+			else if (ds->type == FZ_COLORSPACE_CMYK)
+				ds = ctx->colorspace->ps_cmyk;
+			params.ri &= ~FZ_RI_IN_SOFTMASK;
+		}
 		/* Substitute Device colorspace with page Default colorspace: */
-		if (ss->flags & FZ_COLORSPACE_IS_DEVICE)
+		else if (ss->flags & FZ_COLORSPACE_IS_DEVICE)
 		{
 			switch (ss->type)
 			{

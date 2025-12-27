@@ -26,6 +26,10 @@ update between versions.
 
 > The changes listed below only affect *existing* APIs.
 
+## Changes from 1.26 to 1.27
+
+- Use `fz_quad` in `fz_warp_pixmap`, `fz_autowarp_pixmap`, and `fz_detect_document`.
+
 ## Changes from 1.25 to 1.26
 
 - `fz_skew_detect` renamed `fz_detect_skew`.
@@ -50,7 +54,7 @@ update between versions.
 ## Changes from 1.23 to 1.24
 
 - You must call `pdf_report_error` in the final `fz_catch`. Any unreported errors will be automatically reported when a new error is raised, or when closing the fitz context.
-- The deprecated pdf_check_signature was removed.
+- The deprecated `pdf_check_signature` was removed.
 
 
 ## Changes from 1.22 to 1.23

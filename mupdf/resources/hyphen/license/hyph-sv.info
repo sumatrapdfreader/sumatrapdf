@@ -1,0 +1,55 @@
+% title: Hyphenation patterns for Swedish
+% copyright: Copyright (C) 1994 Jan Michael Rynning
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Swedish
+%     tag: sv
+% version: 1994-03-03
+% authors:
+%   -
+%     name: Jan Michael Rynning
+%     contact: jmr (at) incolumitas.se
+% licence:
+%     name: LPPL
+%     version: 1.2
+%     or_later: true
+% hyphenmins:
+%     generation:
+%         left: 1
+%         right: 2
+%     typesetting:
+%         left: 2
+%         right: 2
+% changes:
+%     - 1991-01-08: First version available for anonymous FTP.
+%     - 1991-08-08: Changed \aa to \aa0 at end of line, to stop TeX from
+%           concatenating the patterns.
+%     - 1991-09-03: Cleaned up lots of inconsistencies in the dictionary.
+%           As a consequence, the patterns shrunk a lot.  Also added some 4000
+%           one-syllable words, some of which were hyphenated by the old
+%           patterns, and some 1500 compound words, about half of which were
+%           incorrectly hyphenated by the old patterns.
+%     - 1991-11-01: Added another some 6200 compound words, all of which were
+%           incorrectly hyphenated by the old patterns.
+%     - 1991-11-13: Added another some 6500 compound words, all of which were
+%           incorrectly hyphenated by the old patterns.
+%     - 1992-01-30: Changed macros to ^^, for use with LaTeX and dc fonts.
+%     - 1994-03-03: The hyphenated dictionary now contains about 118,000 words.
+%           The hyphenation now works much better for compound words.
+%           Patgen parameters 1 2 20, 2 1 8, 1 4 7, 3 2 1, 1 10000 4.
+% texlive:
+%     encoding: ec
+%     message: Swedish hyphenation patterns
+%     legacy_patterns: svhyph.tex
+%     description: Hyphenation patterns for Swedish in T1/EC and UTF-8 encodings.
+%     babelname: swedish
+% ==========================================
+% These hyphenation patterns work quite well for simple words, but not
+% quite as well for compound words.  I'm working on improving the quality,
+% by adding more words.  If you know any Swedish words which are not
+% correctly hypheneted using these patterns, or if you have questions or
+% comments, please contact me:
+%
+% Jan Michael Rynning <jmr@incolumitas.se>
+%

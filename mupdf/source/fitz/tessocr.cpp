@@ -106,7 +106,128 @@ tess_file_reader(const STRING& fname, GenericVector<char> *out)
 }
 #endif
 
-void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
+static const char *
+find_equals_or_end(const char **ep, const char *s)
+{
+	const char *e = s;
+
+	while (*e)
+	{
+		if (*e == '=' || *e == ',')
+			break;
+		e++;
+	}
+
+	/* Skip back over any spaces */
+	*ep = e;
+	while (*ep != s)
+	{
+		if ((*ep)[-1] != ' ')
+			break;
+		(*ep)--;
+	}
+
+	return e;
+}
+
+static const char *
+find_val(const char **val, const char **valend, const char *s)
+{
+	/* If there isn't an equals, just stop. */
+	if (*s != '=')
+	{
+		*val = NULL;
+		*valend = NULL;
+		return s;
+	}
+
+	/* Skip over the equals. */
+	s++;
+
+	while (*s == ' ')
+		s++;
+
+	/* If it's a quoted string... */
+	if (*s == '"')
+	{
+		s++;
+		*val = s;
+		while (*s)
+		{
+			if (*s == '\"')
+				break;
+			s++;
+		}
+		*valend = s;
+		/* Step over the close quote if there is one. */
+		if (*s)
+			s++;
+	}
+	else
+	{
+		/* Otherwise, just return until , or the end. */
+		*val = s;
+		while (*s)
+		{
+			if (*s == ',')
+				break;
+			s++;
+		}
+		*valend = s;
+	}
+
+	/* Skip anything until the end or the next comma.
+	 * Only whitespace, probably. */
+	while (*s && *s != ',')
+		s++;
+
+	return s;
+}
+
+static void
+send_var(fz_context *ctx, tesseract::TessBaseAPI *api, const char *key, const char *keyend, const char *val, const char *valend)
+{
+	char *keystring;
+	char *valstring = NULL;
+	size_t kz = keyend - key;
+	size_t vz = valend - val;
+
+	if (kz == 0)
+		return;
+
+	keystring = (char *)fz_malloc(ctx, kz + 1);
+	memcpy(keystring, key, kz);
+	keystring[kz] = 0;
+
+	fz_var(valstring);
+
+	fz_try(ctx)
+	{
+		if (vz > 0)
+		{
+			valstring = (char *)fz_malloc(ctx, vz+1);
+			memcpy(valstring, val, vz);
+			valstring[vz] = 0;
+		}
+
+		if (!api->SetVariable(keystring, vz == 0 ? "true" : valstring))
+		{
+			if (vz == 0)
+				fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid tesseract option \"%s\"", keystring);
+			else
+				fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid tesseract option \"%s\"=\"%s\"", keystring, valstring);
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, valstring);
+		fz_free(ctx, keystring);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void *ocr_init(fz_context *ctx, const char *language, const char *datadir, const char *options)
 {
 	tesseract::TessBaseAPI *api;
 
@@ -134,6 +255,27 @@ void *ocr_init(fz_context *ctx, const char *language, const char *datadir)
 		delete api;
 		fz_clear_leptonica_mem(ctx);
 		fz_throw(ctx, FZ_ERROR_LIBRARY, "Tesseract language initialisation failed");
+	}
+
+	if (options)
+	{
+		const char *val, *valend, *key, *keyend;
+		const char *pos = options;
+		while (*pos)
+		{
+			/* Skip any spaces */
+			while (*pos == ' ')
+				pos++;
+			key = pos;
+			pos = find_equals_or_end(&keyend, pos);
+			pos = find_val(&val, &valend, pos);
+
+			send_var(ctx, api, key, keyend, val, valend);
+
+			if (*pos)
+				pos++;
+			key = pos;
+		}
 	}
 
 	return api;

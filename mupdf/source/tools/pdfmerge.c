@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -50,9 +50,37 @@ static pdf_document *doc_des = NULL;
 static pdf_document *doc_src = NULL;
 int output_page_count = 0;
 
-static void page_merge(fz_context *ctx, int page_from, int page_to, pdf_graft_map *graft_map)
+static void page_merge(fz_context *ctx, int page_from, pdf_graft_map *graft_map)
 {
-	pdf_graft_mapped_page(ctx, graft_map, page_to - 1, doc_src, page_from - 1);
+	pdf_page *page_src = NULL, *page_des = NULL;
+	fz_link *link, *head = NULL;
+
+	pdf_graft_mapped_page(ctx, graft_map, -1, doc_src, page_from - 1);
+
+	fz_var(page_src);
+	fz_var(page_des);
+	fz_var(head);
+
+	fz_try(ctx)
+	{
+		page_src = pdf_load_page(ctx, doc_src, page_from - 1);
+		page_des = pdf_load_page(ctx, doc_des, pdf_count_pages(ctx, doc_des) - 1);
+		head = fz_load_links(ctx, (fz_page*)page_src);
+		for (link = head; link; link = link->next)
+		{
+			// TODO: copy internal links to renumbered pages
+			if (fz_is_external_link(ctx, link->uri))
+				fz_create_link(ctx, (fz_page*)page_des, link->rect, link->uri);
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_page(ctx, (fz_page*)page_src);
+		fz_drop_page(ctx, (fz_page*)page_des);
+		fz_drop_link(ctx, head);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 /*
@@ -245,13 +273,13 @@ static void merge_range(fz_context *ctx, const char *range)
 			if (start < end)
 				for (i = start; i <= end; ++i)
 				{
-					page_merge(ctx, i, 0, graft_map);
+					page_merge(ctx, i, graft_map);
 					pages_merged++;
 				}
 			else
 				for (i = start; i >= end; --i)
 				{
-					page_merge(ctx, i, 0, graft_map);
+					page_merge(ctx, i, graft_map);
 					pages_merged++;
 				}
 		}
@@ -335,6 +363,8 @@ int pdfmerge_main(int argc, char **argv)
 	{
 		doc_src = NULL;
 		input = argv[fz_optind++];
+
+		fz_var(doc_src);
 
 		fz_try(ctx)
 		{

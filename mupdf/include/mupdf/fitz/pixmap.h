@@ -376,6 +376,7 @@ int fz_is_pixmap_monochrome(fz_context *ctx, fz_pixmap *pixmap);
 /* Implementation details: subject to change.*/
 
 fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray);
+fz_pixmap *fz_alpha_from_rgb(fz_context *ctx, fz_pixmap *color);
 void fz_decode_tile(fz_context *ctx, fz_pixmap *pix, const float *decode);
 void fz_md5_pixmap(fz_context *ctx, fz_pixmap *pixmap, unsigned char digest[16]);
 

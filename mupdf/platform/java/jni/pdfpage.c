@@ -359,3 +359,19 @@ FUN(PDFPage_toPixmap)(JNIEnv *env, jobject self, jobject jctm, jobject jcs, jboo
 
 	return to_Pixmap_safe_own(ctx, env, pixmap);
 }
+
+JNIEXPORT void JNICALL
+FUN(PDFPage_clip)(JNIEnv *env, jobject self, jobject jrect)
+{
+	fz_context *ctx = get_context(env);
+	pdf_page *page = from_PDFPage(env, self);
+	fz_rect rect = from_Rect(env, jrect);
+
+	if (!ctx || !page)
+		return;
+
+	fz_try(ctx)
+		pdf_clip_page(ctx, page, &rect);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+}

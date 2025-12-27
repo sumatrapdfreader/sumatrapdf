@@ -85,6 +85,8 @@ int pdf_is_tint_colorspace(fz_context *ctx, fz_colorspace *cs);
 fz_shade *pdf_load_shading(fz_context *ctx, pdf_document *doc, pdf_obj *obj);
 void pdf_sample_shade_function(fz_context *ctx, float *samples, int n, int funcs, pdf_function **func, float t0, float t1);
 
+int pdf_guess_colorspace_components(fz_context *ctx, pdf_obj *obj);
+
 /**
 	Function to recolor a single color from a shade.
 */

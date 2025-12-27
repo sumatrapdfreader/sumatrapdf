@@ -510,6 +510,30 @@ fz_save_bitmap_as_pkm(fz_context *ctx, fz_bitmap *bitmap, const char *filename)
 }
 
 void
+fz_write_pixmap_as_pbm(fz_context *ctx, fz_output *out, fz_pixmap *pixmap)
+{
+	fz_bitmap *bitmap = fz_new_bitmap_from_pixmap(ctx, pixmap, NULL);
+	fz_try(ctx)
+		fz_write_bitmap_as_pbm(ctx, out, bitmap);
+	fz_always(ctx)
+		fz_drop_bitmap(ctx, bitmap);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void
+fz_write_pixmap_as_pkm(fz_context *ctx, fz_output *out, fz_pixmap *pixmap)
+{
+	fz_bitmap *bitmap = fz_new_bitmap_from_pixmap(ctx, pixmap, NULL);
+	fz_try(ctx)
+		fz_write_bitmap_as_pkm(ctx, out, bitmap);
+	fz_always(ctx)
+		fz_drop_bitmap(ctx, bitmap);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+void
 fz_save_pixmap_as_pbm(fz_context *ctx, fz_pixmap *pixmap, const char *filename)
 {
 	fz_bitmap *bitmap = fz_new_bitmap_from_pixmap(ctx, pixmap, NULL);

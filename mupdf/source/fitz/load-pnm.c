@@ -430,6 +430,9 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 		int w, h, n;
 
 		img = fz_new_pixmap(ctx, pnm->cs, pnm->width, pnm->height, NULL, 0);
+
+		fz_try(ctx)
+		{
 		dp = img->samples;
 
 		w = img->w;
@@ -463,6 +466,12 @@ pnm_ascii_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p, 
 						v = fz_clampi(v, 0, pnm->maxval);
 						*dp++ = map_color(ctx, v, pnm->maxval, 255);
 					}
+		}
+	}
+		fz_catch(ctx)
+		{
+			fz_drop_pixmap(ctx, img);
+			fz_rethrow(ctx);
 		}
 	}
 
@@ -517,7 +526,7 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
 	if (pnm->width <= 0)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
-	if (pnm->bitdepth == 1)
+	if (bitmap)
 	{
 		/* Overly sensitive test, but we can live with it. */
 		if ((size_t)pnm->width > SIZE_MAX / (unsigned int)n)
@@ -548,6 +557,9 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 		int w, h;
 
 		img = fz_new_pixmap(ctx, pnm->cs, pnm->width, pnm->height, NULL, 0);
+
+		fz_try(ctx)
+		{
 		dp = img->samples;
 
 		w = img->w;
@@ -589,6 +601,12 @@ pnm_binary_read_image(fz_context *ctx, struct info *pnm, const unsigned char *p,
 						*dp++ = map_color(ctx, (p[0] << 8) | p[1], pnm->maxval, 255);
 						p += 2;
 					}
+			}
+		}
+		fz_catch(ctx)
+		{
+			fz_drop_pixmap(ctx, img);
+			fz_rethrow(ctx);
 		}
 	}
 

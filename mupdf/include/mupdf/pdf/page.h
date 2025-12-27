@@ -35,6 +35,12 @@ pdf_obj *pdf_lookup_page_obj(fz_context *ctx, pdf_document *doc, int needle);
 pdf_obj *pdf_lookup_page_loc(fz_context *ctx, pdf_document *doc, int needle, pdf_obj **parentp, int *indexp);
 
 /*
+	Enable or disable the page tree cache that is used to speed up page object lookups.
+	The page tree cache is used unless explicitly disabled with this function.
+*/
+void pdf_set_page_tree_cache(fz_context *ctx, pdf_document *doc, int enabled);
+
+/*
 	Cache the page tree for fast forward/reverse page lookups.
 
 	No longer required. This is a No Op, now as page tree
@@ -273,7 +279,14 @@ enum {
 	/* Do not remove any text at all as part of this redaction
 	 * operation. Using this option is INSECURE! Use at your own
 	 * risk. */
-	PDF_REDACT_TEXT_NONE
+	PDF_REDACT_TEXT_NONE,
+	/* Remove any invisible text that overlaps with the redaction
+	 * region however slightly. This is intended to allow the
+	 * removal of invisible text layers added by OCR passes.
+	 * This will remove text that is made invisible by rendering
+	 * mode, but will NOT remove other cases (like white-on-white
+	 * text, etc). */
+	PDF_REDACT_TEXT_REMOVE_INVISIBLE,
 };
 
 typedef struct
@@ -291,6 +304,8 @@ fz_transition *pdf_page_presentation(fz_context *ctx, pdf_page *page, fz_transit
 fz_default_colorspaces *pdf_load_default_colorspaces(fz_context *ctx, pdf_document *doc, pdf_page *page);
 
 void pdf_clip_page(fz_context *ctx, pdf_page *page, fz_rect *clip);
+
+void pdf_vectorize_page(fz_context *ctx, pdf_page *page);
 
 /*
 	Update default colorspaces for an xobject.

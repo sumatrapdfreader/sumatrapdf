@@ -546,9 +546,12 @@ add_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, 
 				{
 					/* case 1, reduces to case 0 */
 					/* or case 2, deleting the node */
+					if (!tree[current].many)
+					{
 					tree[current].out += high + 1 - tree[current].low;
 					tree[current].low = high + 1;
-					if (tree[current].low > tree[current].high)
+					}
+					if (tree[current].low > tree[current].high || tree[current].many)
 					{
 						/* update lt/gt references that will be moved/stale after deleting current */
 						if (gt == (unsigned int) cmap->tlen - 1)
@@ -572,7 +575,8 @@ add_range(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, 
 					/* case 3, reduces to case 5 */
 					int new_high = tree[current].high;
 					tree[current].high = low-1;
-					add_range(ctx, cmap, high+1, new_high, tree[current].out + high + 1 - tree[current].low, 0, tree[current].many);
+					assert(!tree[current].many);
+					add_range(ctx, cmap, high+1, new_high, tree[current].out + high + 1 - tree[current].low, 0, 0);
 					tree = cmap->tree;
 				}
 				/* Now look for where to move to next (left for case 0, right for case 5) */
@@ -675,17 +679,20 @@ static void
 add_mrange(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *out, int len)
 {
 	int out_pos;
+	int new_len = cmap->dlen + len + 1;
 
-	if (cmap->dlen + len + 1 > cmap->dcap)
+	if (new_len > cmap->dcap)
 	{
-		int new_cap = cmap->dcap ? cmap->dcap * 2 : 256;
+		int new_cap = cmap->dcap > 0 ? cmap->dcap : 256;
+		while (new_len > new_cap)
+			new_cap *= 2;
 		cmap->dict = fz_realloc_array(ctx, cmap->dict, new_cap, int);
 		cmap->dcap = new_cap;
 	}
 	out_pos = cmap->dlen;
 	cmap->dict[out_pos] = len;
 	memcpy(&cmap->dict[out_pos+1], out, sizeof(int)*len);
-	cmap->dlen += len + 1;
+	cmap->dlen = new_len;
 
 	add_range(ctx, cmap, low, low, out_pos, 1, 1);
 }
@@ -701,9 +708,9 @@ pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *valu
 {
 	int *ovalues = values;
 	/* len is always restricted to <= 256 by the callers. */
-	int local[256];
+	int local[PDF_MRANGE_CAP];
 
-	assert(len <= 256);
+	assert(len <= PDF_MRANGE_CAP);
 
 	/* Decode unicode surrogate pairs. */
 	/* Only the *-UCS2 CMaps use one-to-many mappings, so assuming unicode should be safe. */

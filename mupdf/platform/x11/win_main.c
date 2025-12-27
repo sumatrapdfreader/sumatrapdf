@@ -1254,10 +1254,13 @@ typedef BOOL (SetProcessDPIAwareFn)(void);
 static int
 get_system_dpi(void)
 {
-	HMODULE hUser32 = LoadLibrary(TEXT("user32.dll"));
+	HMODULE hUser32;
 	SetProcessDPIAwareFn *ptr;
 	int hdpi, vdpi;
 	HDC desktopDC;
+
+	SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+	hUser32 = LoadLibrary(TEXT("user32.dll"));
 
 	ptr = (SetProcessDPIAwareFn *)GetProcAddress(hUser32, "SetProcessDPIAware");
 	if (ptr != NULL)

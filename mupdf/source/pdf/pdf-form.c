@@ -152,6 +152,7 @@ static void update_field_value(fz_context *ctx, pdf_document *doc, pdf_obj *obj,
 	if (old_text && !strcmp(old_text, text))
 		return;
 
+	// TODO: if field is a checkbox, V should be a name and not a string!
 	pdf_dict_put_text_string(ctx, obj, PDF_NAME(V), text);
 
 	pdf_field_mark_dirty(ctx, obj);
@@ -304,9 +305,11 @@ void pdf_field_reset(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 static void add_field_hierarchy_to_array(fz_context *ctx, pdf_obj *array, pdf_obj *field, pdf_obj *fields, int exclude)
 {
 	pdf_obj *kids = pdf_dict_get(ctx, field, PDF_NAME(Kids));
-	char *needle = pdf_load_field_name(ctx, field);
 	int i, n;
 
+	if (fields)
+	{
+		char *needle = pdf_load_field_name(ctx, field);
 	fz_try(ctx)
 	{
 		n = pdf_array_len(ctx, fields);
@@ -326,6 +329,7 @@ static void add_field_hierarchy_to_array(fz_context *ctx, pdf_obj *array, pdf_ob
 
 	if ((exclude && i < n) || (!exclude && i == n))
 		return;
+	}
 
 	pdf_array_push(ctx, array, field);
 
@@ -349,21 +353,31 @@ static pdf_obj *specified_fields(fz_context *ctx, pdf_document *doc, pdf_obj *fi
 {
 	pdf_obj *form = pdf_dict_getl(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root), PDF_NAME(AcroForm), PDF_NAME(Fields), NULL);
 	int i, n;
-	pdf_obj *result = pdf_new_array(ctx, doc, 0);
+	pdf_obj *result;
 
+	result = pdf_new_array(ctx, doc, 0);
 	fz_try(ctx)
 	{
+		if (fields)
+		{
 		n = pdf_array_len(ctx, fields);
-
 		for (i = 0; i < n; i++)
 		{
 			pdf_obj *field = pdf_array_get(ctx, fields, i);
-
 			if (pdf_is_string(ctx, field))
 				field = pdf_lookup_field(ctx, form, pdf_to_str_buf(ctx, field));
-
 			if (field)
 				add_field_hierarchy_to_array(ctx, result, field, fields, exclude);
+		}
+	}
+		else
+		{
+			n = pdf_array_len(ctx, form);
+			for (i = 0; i < n; i++)
+			{
+				pdf_obj *field = pdf_array_get(ctx, form, i);
+				add_field_hierarchy_to_array(ctx, result, field, fields, exclude);
+			}
 		}
 	}
 	fz_catch(ctx)
@@ -427,21 +441,11 @@ static pdf_annot *find_widget(fz_context *ctx, pdf_document *doc, pdf_obj *chk)
 
 static void set_check(fz_context *ctx, pdf_document *doc, pdf_obj *chk, pdf_obj *name)
 {
-	pdf_obj *n = pdf_dict_getp(ctx, chk, "AP/N");
-	pdf_obj *val;
-
-	/* If name is a possible value of this check
-	* box then use it, otherwise use "Off" */
-	if (pdf_dict_get(ctx, n, name))
-		val = name;
-	else
-		val = PDF_NAME(Off);
-
-	if (pdf_name_eq(ctx, pdf_dict_get(ctx, chk, PDF_NAME(AS)), val))
-		return;
-
-	pdf_dict_put(ctx, chk, PDF_NAME(AS), val);
+	if (pdf_dict_get(ctx, chk, PDF_NAME(AS)) != name)
+	{
+		pdf_dict_put(ctx, chk, PDF_NAME(AS), name);
 	pdf_set_annot_has_changed(ctx, find_widget(ctx, doc, chk));
+}
 }
 
 /* Set the values of all fields in a group defined by a node
@@ -612,9 +616,16 @@ pdf_update_page(fz_context *ctx, pdf_page *page)
 	pdf_annot *widget;
 	int changed = 0;
 
+	if (page->doc == NULL)
+		return 0;
+
+	if (!page->doc->resynth_required && !page->doc->recalculate)
+		return 0;
+
 	fz_try(ctx)
 	{
 		pdf_begin_implicit_operation(ctx, page->doc);
+
 		if (page->doc->recalculate)
 			pdf_calculate_form(ctx, page->doc);
 
@@ -624,6 +635,7 @@ pdf_update_page(fz_context *ctx, pdf_page *page)
 		for (widget = page->widgets; widget; widget = widget->next)
 			if (pdf_update_annot(ctx, widget))
 				changed = 1;
+
 		pdf_end_operation(ctx, page->doc);
 	}
 	fz_catch(ctx)
@@ -632,6 +644,17 @@ pdf_update_page(fz_context *ctx, pdf_page *page)
 		fz_rethrow(ctx);
 	}
 
+	return changed;
+}
+
+int
+pdf_update_open_pages(fz_context *ctx, pdf_document *doc)
+{
+	fz_page *page;
+	int changed = 0;
+	for (page = doc->super.open; page; page = page->next)
+		if (pdf_update_page(ctx, (pdf_page*)page))
+			changed = 1;
 	return changed;
 }
 
@@ -2366,6 +2389,10 @@ static void pdf_bake_annot(fz_context *ctx, fz_buffer *buf, pdf_document *doc, p
 	fz_matrix m;
 	pdf_obj *ap;
 	char name[20];
+
+	int flags = pdf_dict_get_int(ctx, annot, PDF_NAME(F));
+	if (flags & (PDF_ANNOT_IS_INVISIBLE | PDF_ANNOT_IS_HIDDEN))
+		return;
 
 	ap = get_annot_ap(ctx, annot);
 	if (ap)

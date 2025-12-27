@@ -1,5 +1,21 @@
 # Changelog
 
+## [v2.5.4](https://github.com/uclouvain/openjpeg/releases/v2.5.4) (2025-09-20)
+
+[Full Changelog](https://github.com/uclouvain/openjpeg/compare/v2.5.3...v2.5.4)
+
+**Closed issues:**
+
+- CMake configure warning with CMake 3.30 and newer [\#1579](https://github.com/uclouvain/openjpeg/issues/1579)
+
+**Merged pull requests:**
+
+- pkgconfig: drop unused libraries from `Libs.private` [\#1591](https://github.com/uclouvain/openjpeg/pull/1591) ([bgilbert](https://github.com/bgilbert))
+- Fix CMake warning: Compatibility with CMake \< 3.10 will be removed [\#1580](https://github.com/uclouvain/openjpeg/pull/1580) ([dzenanz](https://github.com/dzenanz))
+- code documentation updates [\#1576](https://github.com/uclouvain/openjpeg/pull/1576) ([weanti](https://github.com/weanti))
+- Fixed ICC profile copy failure on write [\#1574](https://github.com/uclouvain/openjpeg/pull/1574) ([mircomir](https://github.com/mircomir))
+- opj\_jp2\_read\_header: Check for error after parsing header. [\#1573](https://github.com/uclouvain/openjpeg/pull/1573) ([sebras](https://github.com/sebras)) (CVE-2025-54874)
+
 ## [v2.5.3](https://github.com/uclouvain/openjpeg/releases/v2.5.3) (2024-12-09)
 
 [Full Changelog](https://github.com/uclouvain/openjpeg/compare/v2.5.2...v2.5.3)

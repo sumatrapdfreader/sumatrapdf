@@ -19,6 +19,9 @@
     <Filter Include="fonts\urw">
       <UniqueIdentifier>{16744927-0f13-4af0-b6e5-ac8bc9fed513}</UniqueIdentifier>
     </Filter>
+    <Filter Include="hyphen">
+      <UniqueIdentifier>{2f242ea2-b125-4099-8da5-2afdc5f11899}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <bin2coff__cff_ Include="..\..\resources\fonts\urw\Dingbats.cff">
@@ -577,5 +580,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dummy.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <bin2coff__zip_ Include="..\..\resources\hyphen\hyph-all.zip">
+      <Filter>hyphen</Filter>
+    </bin2coff__zip_>
+    <bin2coff__zip_ Include="..\..\resources\hyphen\hyph-std.zip">
+      <Filter>hyphen</Filter>
+    </bin2coff__zip_>
   </ItemGroup>
 </Project>

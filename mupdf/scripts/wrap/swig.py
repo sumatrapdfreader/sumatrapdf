@@ -1007,6 +1007,9 @@ def build_swig(
     if language == 'python':
         text += generated.swig_python_exceptions.getvalue()
 
+    if language == 'csharp':
+        text += generated.swig_csharp_exceptions.getvalue()
+
     text += textwrap.dedent(f'''
             // Ensure SWIG handles OUTPUT params.
             //
@@ -1056,6 +1059,7 @@ def build_swig(
 
                 %pythoncode %{{
 
+                import codecs
                 import inspect
                 import os
                 import re
@@ -1064,6 +1068,25 @@ def build_swig(
 
                 def log( text):
                     print( text, file=sys.stderr)
+
+                # We modify SWIG code's default translation of C strings into
+                # Unicode to handle MuPDF's special-casing of zero bytes.
+                #
+                # SWIG's default is to call PyUnicode_DecodeUTF8()
+                # with errors="surrogateescape". We change this in the
+                # SWIG-generated C++ code to errors="surrogateescape_mupdf".
+                #
+                # And here in Python, we add a corresponding error handler.
+                #
+                surrogateescape = codecs.lookup_error('surrogateescape')
+
+                def surrogateescape_mupdf(e):
+                    if isinstance(e, (UnicodeDecodeError, UnicodeTranslateError)):
+                        if e.object[e.start:e.start+2] == b'\\xc0\\x80':
+                            return '\\0', e.start+2
+                    return surrogateescape(e)
+
+                codecs.register_error('surrogateescape_mupdf', surrogateescape_mupdf)
 
                 g_mupdf_trace_director = (os.environ.get('MUPDF_trace_director') == '1')
 
@@ -1152,28 +1175,46 @@ def build_swig(
 
                     Iterators must have the following methods:
 
-                        __increment__(): move to next item in the container.
+                        __increment__():
+                            Move to next item in the container. Needs Swig
+                            `%rename(__increment__) *::operator++;`.
                         __ref__(): return reference to item in the container.
+                            Automatically generated from C++ operator*().
 
                     Must also be able to compare two iterators for equality.
 
+                    If a class supports C++ iteration with begin() and end()
+                    methods, then one can allow Python iteration by adding
+                    a .__iter__() method that returns a instance of this
+                    class. For example:
+
+                    # A container class that supports C++ iteration with
+                    # .begin() and .end() methods.
+                    class Foo:
+                        def begin(): ...
+                        def end(): ...
+                        ...
+
+                    # Make Foo support Python iteration.
+                    Foo.__iter__ = lambda self: IteratorWrap(self)
+
+                    # Usage.
+                    foo = Foo()
+                    for i in foo:
+                        ...
                     """
                     def __init__( self, container):
-                        self.container = container
-                        self.pos = None
+                        self.begin = container.begin()
                         self.end = container.end()
-                    def __iter__( self):
-                        return self
-                    def __next__( self):    # for python2.
+                        self.pos = None
+                    def __next__( self):
                         if self.pos is None:
-                            self.pos = self.container.begin()
+                            self.pos = self.begin
                         else:
                             self.pos.__increment__()
                         if self.pos == self.end:
                             raise StopIteration()
                         return self.pos.__ref__()
-                    def next( self):    # for python3.
-                        return self.__next__()
 
                 # The auto-generated Python class method
                 # {rename.class_('fz_buffer')}.{rename.method('fz_buffer', 'fz_buffer_extract')}() returns (size, data).
@@ -1806,21 +1847,44 @@ def build_swig(
 
             jlib.fs_update(text, path_out)
 
+        def modify_cpp(path_in, path_out):
+            a = jlib.fs_read(path_in)
+            # Change SWIG's call of
+            # PyUnicode_DecodeUTF8(str, len, "surrogateescape")
+            # to
+            # PyUnicode_DecodeUTF8(str, len, "surrogateescape_mupdf")
+            #
+            b = a.replace('"surrogateescape"', '"surrogateescape_mupdf"')
+            assert b != a
+            jlib.fs_write(path_out, b)
+
         jlib.fs_update( '', swig2_cpp)
         jlib.fs_remove( swig2_py)
 
-        # Make main mupdf .so.
-        command = make_command( 'mupdf', swig_cpp, swig_i)
+        # Make main mupdf .so. We use intermediate .cpp and .py filenames to
+        # allow us to post-process them.
+        swig_cpp_ = f'{build_dirs.dir_mupdf}/platform/python/mupdf.intermediate.cpp'
         swig_py_ = f'{build_dirs.dir_mupdf}/platform/python/mupdf.py'
+        command = make_command( 'mupdf', swig_cpp_, swig_i)
         rebuilt = jlib.build(
                 (swig_i, include1, include2),
-                (swig_cpp, swig_py_),
+                (swig_cpp_, swig_py_),
                 command,
                 force_rebuild,
                 )
         jlib.log(f'swig => {rebuilt=}.')
-        updated = modify_py( swig_py_, swig_py)
-        jlib.log(f'modify_py() => {updated=}.')
+        jlib.build(
+                (swig_py_, __file__),
+                swig_py,
+                lambda: modify_py(swig_py_, swig_py),
+                force_rebuild,
+                )
+        jlib.build(
+                (swig_cpp_, __file__),
+                swig_cpp,
+                lambda: modify_cpp(swig_cpp_, swig_cpp),
+                force_rebuild,
+                )
 
 
     elif language == 'csharp':
@@ -1956,16 +2020,117 @@ def test_swig():
             )
 
 
-def test_swig_csharp():
+def test_swig_csharp_internal(name, code_i, code_test, x32):
+    '''
+    Builds and tests a SWIG-generated C# library.
+
+    name:
+        Name of module to build from <code_i>.
+    code_i
+        Module SWIG input.
+    code_test
+        C# test code.
+    x32
+        If true we build for x32-only with `csc -platform:x86`.
+
+    In a temporary directory (whose name contains <name>):
+
+    * Writes swig input <code_i> to <name>.i
+    * Writes <code_test> to test.cs.
+    * Uses swig and c++ to build <name>.i into <name>.dll and <name>.cs.
+    * Builds test.cs and <name>.cs into an executable 'test.exe'.
+    * Runs the executable.
+    '''
+
+    build_dir = f'test_swig_csharp_{name}'
+    os.makedirs( build_dir, exist_ok=True)
+
+    with open(f'{build_dir}/{name}.i', 'w') as f:
+        f.write(f'%module {name}\n')
+        f.write(code_i)
+
+    # Run swig on `{name}.i` to generate `{name}.cs` and `{name}.cpp`.
+    #
+    jlib.system(
+            f'''
+            cd {build_dir} && swig
+                -D_WIN32
+                -c++
+                -csharp
+                -Wextra
+                -Wall
+                -dllimport {name}.dll
+                -outdir .
+                -outfile {name}.cs
+                -o {name}.cpp
+                {name}.i
+            ''')
+
+    # Compile/link {name}.cpp to create {name}.dll.
+    #
+    if state.state_.windows:
+        import wdev
+        vs = wdev.WindowsVS(cpu = wdev.WindowsCpu('x32') if x32 else None)
+        jlib.system(
+                f'''
+                cd {build_dir} && "{vs.vcvars}"&&"{vs.cl}"
+                    /nologo                     #
+                    /c                          # Compiles without linking.
+                    /EHsc                       # Enable "Standard C++ exception handling".
+                    /MD
+                    /Tp{name}.cpp               # /Tp specifies C++ source file.
+                    /Fo{name}.cpp.obj           # Output file.
+                    /permissive-                # Set standard-conformance mode.
+                    /FC                         # Display full path of source code files passed to cl.exe in diagnostic text.
+                    /W3                         # Sets which warning level to output. /W3 is IDE default.
+                    /diagnostics:caret          # Controls the format of diagnostic messages.
+                ''')
+
+        jlib.system(
+                f'''
+                cd {build_dir} && "{vs.vcvars}"&&"{vs.link}"
+                    /nologo                     #
+                    /DLL
+                    /IMPLIB:{name}.lib        # Overrides the default import library name.
+                    /OUT:{name}.dll           # Specifies the output file name.
+                    /nologo
+                    {name}.cpp.obj
+                ''')
+    else:
+        assert not x32, '.net x32 builds not supported on non-windows.'
+        jlib.system(
+                f'''
+                cd {build_dir} && c++
+                    -fPIC
+                    --shared
+                    -o {name}.dll
+                    {name}.cpp
+                ''')
+
+    # Build C# test programme.
+    with open(f'{build_dir}/test.cs', 'w') as f:
+        f.write(code_test)
+
+    # Use `csc` to compile `test.cs` and `{name}.cs`, and create `test.exe`.
+    #
+    csc, mono, _ = csharp.csharp_settings(None)
+    jlib.system(f'cd {build_dir} && "{csc}"{" -platform:x86" if x32 else ""} -out:test.exe test.cs {name}.cs')
+
+    # Run `test.exe`.
+    #
+    jlib.system(f'cd {build_dir} && {mono} test.exe')
+
+
+def test_swig_csharp_unicode(x32):
     '''
     Checks behaviour with and without our custom string marshalling code from
     _csharp_unicode_prefix().
     '''
-    test_swig_csharp_internal(fix=0)
-    test_swig_csharp_internal(fix=1)
+    test_swig_csharp_unicode_internal(x32, fix=0)
+    test_swig_csharp_unicode_internal(x32, fix=1)
 
 
-def test_swig_csharp_internal(fix):
+def test_swig_csharp_unicode_internal(x32, fix):
     '''
     Test utf8 string handling, with/without use of _csharp_unicode_prefix().
     '''
@@ -1973,16 +2138,12 @@ def test_swig_csharp_internal(fix):
     # C++ and .NET/Mono build commands.
     #
 
-    build_dir = f'test_swig_{fix}'
-    os.makedirs( build_dir, exist_ok=True)
-
     print('')
-    print(f'### test_swig_internal(): {fix=}', flush=1)
+    print(f'### test_swig_csharp_unicode_internal(): {fix=}', flush=1)
 
-    # Create SWIG input file `test.i`.
-    #
-    test_i = '%module test\n'
+    name = f'test_swig_unicode_{fix}'
 
+    test_i = ''
     if fix:
         test_i += _csharp_unicode_prefix()
 
@@ -2008,7 +2169,7 @@ def test_swig_csharp_internal(fix):
                 std::string foo2(const std::string& text)
                 {{
                     std::string ret;
-                    for (int i=0; i<text.size(); ++i)
+                    for (unsigned i=0; i<text.size(); ++i)
                     {{
                         char buffer[8];
                         snprintf(buffer, sizeof(buffer), " \\\\x%02x", (unsigned char) text[i]);
@@ -2049,70 +2210,8 @@ def test_swig_csharp_internal(fix):
                 }}
             %}}
             ''')
-    with open(f'{build_dir}/test.i', 'w') as f:
-        f.write(test_i)
 
-    # Run swig on `test.i` to generate `test.cs` and `test.cpp`.
-    #
-    jlib.system(
-            f'''
-            cd {build_dir} && swig
-                {'-DSWIG_CSHARP_NO_STRING_HELPER=1 -DSWIG_CSHARP_NO_EXCEPTION_HELPER=1' if 0 and fix else ''}
-                -D_WIN32
-                -c++
-                -csharp
-                -Wextra
-                -Wall
-                -dllimport test.dll
-                -outdir .
-                -outfile test.cs
-                -o test.cpp
-                test.i
-            ''')
-
-    # Compile/link test.cpp to create test.dll.
-    #
-    if state.state_.windows:
-        import wdev
-        vs = wdev.WindowsVS()
-        jlib.system(
-                f'''
-                cd {build_dir} && "{vs.vcvars}"&&"{vs.cl}"
-                    /nologo                     #
-                    /c                          # Compiles without linking.
-                    /EHsc                       # Enable "Standard C++ exception handling".
-                    /MD
-                    /Tptest.cpp                 # /Tp specifies C++ source file.
-                    /Fotest.cpp.obj             # Output file.
-                    /permissive-                # Set standard-conformance mode.
-                    /FC                         # Display full path of source code files passed to cl.exe in diagnostic text.
-                    /W3                         # Sets which warning level to output. /W3 is IDE default.
-                    /diagnostics:caret          # Controls the format of diagnostic messages.
-                ''')
-
-        jlib.system(
-                f'''
-                cd {build_dir} && "{vs.vcvars}"&&"{vs.link}"
-                    /nologo                     #
-                    /DLL
-                    /IMPLIB:test.lib        # Overrides the default import library name.
-                    /OUT:test.dll           # Specifies the output file name.
-                    /nologo
-                    test.cpp.obj
-                ''')
-    else:
-        jlib.system(
-                f'''
-                cd {build_dir} && c++
-                    -fPIC
-                    --shared
-                    -o test.dll
-                    test.cpp
-                ''')
-
-    # Create C# test programme `testfoo.cs`.
-    #
-    cs = textwrap.dedent(f'''
+    code_test = textwrap.dedent(f'''
             public class HelloWorld
             {{
                 public static void Main(string[] args)
@@ -2125,19 +2224,19 @@ def test_swig_csharp_internal(fix):
                     string text = System.Text.Encoding.UTF8.GetString(text_utf8);
 
                     // Escaped representation of text_utf8, as returned by
-                    // calls of test.foo1() and test.foo2() below.
+                    // calls of {name}.foo1() and {name}.foo2() below.
                     //
                     string text_utf8_escaped = " \\\\xf0 \\\\x90 \\\\x90 \\\\xb7";
                     string incorrect_utf8_escaped = " \\\\x3f \\\\x3f";
 
-                    // test.foo1()/test.foo2() return a `const
+                    // {name}.foo1()/{name}.foo2() return a `const
                     // char*`/`std::string` containing an escaped
                     // representation of the string that they were given. If
                     // things are working correctly, this will be an escaped
                     // representation of `text_utf8`.
                     //
 
-                    string foo1 = test.foo1(text);
+                    string foo1 = {name}.foo1(text);
                     System.Console.WriteLine("foo1: " + foo1);
                     string foo_expected_escaped = (expect_fix) ? text_utf8_escaped : incorrect_utf8_escaped;
                     if (foo1 != foo_expected_escaped)
@@ -2148,7 +2247,7 @@ def test_swig_csharp_internal(fix):
                                 );
                     }}
 
-                    string foo2 = test.foo2(text);
+                    string foo2 = {name}.foo2(text);
                     System.Console.WriteLine("foo2: " + foo2);
                     if (foo2 != foo_expected_escaped)
                     {{
@@ -2158,7 +2257,7 @@ def test_swig_csharp_internal(fix):
                                 );
                     }}
 
-                    // test.bar1() and test.bar2() return a `const
+                    // {name}.bar1() and {name}.bar2() return a `const
                     // char*`/`std::string` containing the bytes of
                     // `text_utf8`. If things are working correctly we will see
                     // exactly these bytes.
@@ -2166,7 +2265,7 @@ def test_swig_csharp_internal(fix):
                     byte[] bar_expected_utf8_incorrect = {{ 0xc3, 0xb0, 0xc2, 0x90, 0xc2, 0x90, 0xc2, 0xb7, }};
                     byte[] bar_expected_utf8 = (expect_fix) ? text_utf8 : bar_expected_utf8_incorrect;
 
-                    string ret3 = test.bar();
+                    string ret3 = {name}.bar();
                     byte[] ret3_utf8 = System.Text.Encoding.UTF8.GetBytes(ret3);
                     print_bytes_as_string("ret3_utf8:", ret3_utf8);
                     if (!equal(ret3_utf8, bar_expected_utf8))
@@ -2174,7 +2273,7 @@ def test_swig_csharp_internal(fix):
                         throw new System.Exception("ret3 != bar_expected_utf8");
                     }}
 
-                    string ret4 = test.bar2();
+                    string ret4 = {name}.bar2();
                     byte[] ret4_utf8 = System.Text.Encoding.UTF8.GetBytes(ret4);
                     print_bytes_as_string("ret4_utf8:", ret4_utf8);
                     if (!equal(ret4_utf8, bar_expected_utf8))
@@ -2205,14 +2304,96 @@ def test_swig_csharp_internal(fix):
                 }}
             }}
             ''')
-    with open(f'{build_dir}/testfoo.cs', 'w') as f:
-        f.write(cs)
 
-    # Use `csc` to compile `testfoo.cs` and create `testfoo.exe`.
-    #
-    csc, mono, _ = csharp.csharp_settings(None)
-    jlib.system(f'cd {build_dir} && "{csc}" -out:testfoo.exe testfoo.cs test.cs')
+    test_swig_csharp_internal(name, test_i, code_test, x32)
 
-    # Run `testfoo.exe`.
+
+def test_swig_charp_exceptions(x32):
+
+    '''
+    Test SWIG-generated handling of C++ exceptions.
+
+    As of 2025-08-20, works ok on Windows, fails on Linux/Mono.
+    '''
+
+    code_i = textwrap.dedent(f'''
+            %include "std_string.i"
+            ''')
+
+    # On Windows, exceptions are automatically converted into
+    # System.Runtime.InteropServices.SEHException instances.
     #
-    jlib.system(f'cd {build_dir} && {mono} testfoo.exe')
+    # On Mono this doesn't seem to happen and std::terminate() is called.
+    #
+    # So if we are not on Windows we use swig's `%exception {...}` to
+    # explicitly convert exceptions to .net. In the fuiture we could follow
+    # the Python bindings and convert each of the various MuPDF C++ exception
+    # classes into the equivalent C# class.
+    #
+    if not state.state_.windows:
+        code_i += textwrap.dedent(f'''
+                %exception
+                {{
+                    try
+                    {{
+                        $action
+                    }}
+                    catch (std::exception& e)
+                    {{
+                        std::cout << "%exception: Received exception: " << e.what() << "\\n" << std::flush;
+                        SWIG_CSharpSetPendingException(SWIG_CSharpApplicationException, e.what());
+                        std::cout << "%exception: after SWIG_CSharpSetPendingException.\\n" << std::flush;
+                    }}
+                }}
+                ''')
+
+    code_i += textwrap.dedent(f'''
+            int check1();
+            int check2();
+
+            %{{
+                #include <stdexcept>
+                #include <iostream>
+
+                // Returns string containing escaped description of `text`.
+                int check1()
+                {{
+                    return 0;
+                }}
+
+                int check2()
+                {{
+                    throw std::runtime_error("check2() deliberate exception.");
+                    return 0;
+                }}
+
+            %}}
+            ''')
+
+    code_test = textwrap.dedent(f'''
+            public class HelloWorld
+            {{
+                public static void Main(string[] args)
+                {{
+                    int i1 = exceptions.check1();
+                    System.Console.WriteLine("exceptions.check1() => " + i1);
+                    int received_exception = 0;
+                    try
+                    {{
+                        int i2 = exceptions.check2();
+                    }}
+                    catch (System.Exception e)
+                    {{
+                        received_exception = 1;
+                        System.Console.WriteLine("Received expected exception: " + e.Message);
+                        System.Console.WriteLine("e.GetType(): " + e.GetType());
+                    }}
+                    if (received_exception != 1)
+                    {{
+                        throw new System.Exception("Did not receive expected exception");
+                    }}
+                }}
+            }}
+            ''')
+
+    test_swig_csharp_internal('exceptions', code_i, code_test, x32)

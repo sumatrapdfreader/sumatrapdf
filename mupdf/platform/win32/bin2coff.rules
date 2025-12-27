@@ -48,5 +48,16 @@
 			<Properties>
 			</Properties>
 		</CustomBuildRule>
+		<CustomBuildRule
+			Name="bin2coff (zip)"
+			DisplayName="bin2coff (zip)"
+			CommandLine="Release\bin2coff.exe &quot;$(InputPath)&quot; &quot;$(IntDir)\$(InputName)_zip.obj&quot; _binary_$(InputName)_zip $(PlatformName)"
+			Outputs="$(IntDir)\$(InputName)_zip.obj"
+			FileExtensions="*.zip"
+			ExecutionDescription="Embedding Zip"
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
 	</Rules>
 </VisualStudioToolFile>

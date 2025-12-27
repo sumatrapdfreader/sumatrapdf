@@ -991,7 +991,11 @@ fz_shrink_store(fz_context *ctx, unsigned int percent)
 #endif
 	fz_lock(ctx, FZ_LOCK_ALLOC);
 
+	if (store->max == FZ_STORE_UNLIMITED)
 	new_size = (size_t)(((uint64_t)store->size * percent) / 100);
+	else
+		new_size = (size_t)(((uint64_t)store->max * percent) / 100);
+
 	if (store->size > new_size)
 		scavenge(ctx, store->size - new_size);
 

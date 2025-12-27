@@ -257,6 +257,11 @@ fz_xml *fz_xml_find_next_dfs(fz_xml *item, const char *tag, const char *att, con
 fz_xml *fz_xml_find_next_dfs_top(fz_xml *item, const char *tag, const char *att, const char *match, fz_xml *top);
 
 /**
+	Extract and concatenate all plain text data from XML tree into a new string.
+*/
+char *fz_new_text_from_xml(fz_context *ctx, fz_xml *root);
+
+/**
 	DOM-like functions for html in xml.
 */
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -65,6 +65,12 @@ typedef struct fz_pixmap_image fz_pixmap_image;
 	Returns a non NULL kept pixmap pointer. May throw exceptions.
 */
 fz_pixmap *fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subarea, fz_matrix *ctm, int *w, int *h);
+
+/**
+	Like fz_get_pixmap_from_image but convert to an alpha only mask using
+	luminance if the image is grayscale or RGB.
+*/
+fz_pixmap *fz_get_pixmap_mask_from_image(fz_context *ctx, fz_image *image, const fz_irect *subarea, fz_matrix *ctm, int *dw, int *dh, int in_smask);
 
 /**
 	Calls fz_get_pixmap_from_image() with ctm, subarea, w and h all set to NULL.
@@ -264,6 +270,7 @@ fz_image *fz_new_image_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, fz_image 
 	of the data.
 */
 fz_image *fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer);
+fz_image *fz_new_jpx_image_from_buffer(fz_context *ctx, fz_buffer *buffer, fz_colorspace *cs);
 
 /**
 	Create a new image from the contents
@@ -432,8 +439,8 @@ fz_pixmap *fz_load_jpx(fz_context *ctx, const unsigned char *data, size_t size, 
 /**
 	Exposed because compression and decompression need to share this.
 */
-void opj_lock(fz_context *ctx);
-void opj_unlock(fz_context *ctx);
+void fz_opj_lock(fz_context *ctx);
+void fz_opj_unlock(fz_context *ctx);
 
 
 /**

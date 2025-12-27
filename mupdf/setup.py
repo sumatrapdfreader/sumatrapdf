@@ -33,11 +33,15 @@ Internal testing only - environmental variables:
         run swig.
 '''
 
+# Work around pip 25/pyproject_hooks 1.2.0 path meddling:
+import sys
+if sys.meta_path[0].__class__.__name__ == '_BackendPathFinder':
+    sys.meta_path.pop(0)
+
 import os
 import platform
 import re
 import subprocess
-import sys
 import time
 
 
@@ -535,13 +539,6 @@ def get_requires_for_build_wheel(config_settings=None):
     if openbsd():
         #print(f'OpenBSD: libclang not available via pip; assuming `pkg_add py3-llvm`.')
         pass
-    elif macos() and platform.machine() == 'arm64':
-        #print(
-        #       f'MacOS/arm64: forcing use of libclang 16.0.6 because 17.0.6'
-        #       f' and 18.1.1 are known to fail with:'
-        #       f' `clang.cindex.TranslationUnitLoadError: Error parsing translation unit.`'
-        #       )
-        ret.append('libclang==16.0.6')
     else:
         ret.append('libclang')
     if msys2():

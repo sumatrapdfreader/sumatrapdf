@@ -78,7 +78,7 @@ fz_save_pixmap_as_png(fz_context *ctx, fz_pixmap *pixmap, const char *filename)
 }
 
 void
-fz_write_pixmap_as_png(fz_context *ctx, fz_output *out, const fz_pixmap *pixmap)
+fz_write_pixmap_as_png(fz_context *ctx, fz_output *out, fz_pixmap *pixmap)
 {
 	fz_band_writer *writer;
 

@@ -2,6 +2,17 @@
 
 More details in the [CHANGELOG](https://github.com/uclouvain/openjpeg/blob/master/CHANGELOG.md)
 
+## OpenJPEG 2.5.4 (Sept 2025)
+
+No API/ABI break compared to v2.5.3
+
+### Bug fixes
+
+* opj\_jp2\_read\_header: Check for error after parsing header. [\#1573](https://github.com/uclouvain/openjpeg/pull/1573)
+* pkgconfig: drop unused libraries from `Libs.private` [\#1591](https://github.com/uclouvain/openjpeg/pull/1591)
+* Fix CMake warning: Compatibility with CMake \< 3.10 will be removed [\#1580](https://github.com/uclouvain/openjpeg/pull/1580)
+* Fixed ICC profile copy failure on write [\#1574](https://github.com/uclouvain/openjpeg/pull/1574)
+
 ## OpenJPEG 2.5.3 (Dec 2024)
 
 No API/ABI break compared to v2.5.2

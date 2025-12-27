@@ -60,7 +60,7 @@ pdf_load_encoding(const char **estrings, const char *encoding)
 }
 
 static void pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *fontdesc, pdf_obj *dict,
-	const char *collection, const char *basefont, int iscidfont);
+	const char *collection, const char *basefont, int iscidfont, pdf_obj *fftype);
 
 static const char *base_font_names[][10] =
 {
@@ -350,6 +350,23 @@ static int ft_find_glyph_by_unicode_name(FT_Face face, const char *name)
 
 	/* Failed. */
 	return 0;
+}
+
+static void
+pdf_make_font_family(fz_context *ctx, fz_font *font)
+{
+	if (font->flags.ft_substitute || font->t3procs)
+	{
+		/* Remove "ABCDEF+" prefix and "-Bold" suffix. */
+		char *p = strchr(font->name, '+');
+		if (p)
+			fz_strlcpy(font->family, p+1, sizeof font->family);
+		else
+			fz_strlcpy(font->family, font->name, sizeof font->family);
+		p = strrchr(font->family, '-');
+		if (p)
+			*p = 0;
+	}
 }
 
 /*
@@ -759,7 +776,7 @@ static int use_s22pdf_workaround(fz_context *ctx, pdf_obj *dict, pdf_obj *descri
 }
 
 static pdf_font_desc *
-pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
+pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *fftype)
 {
 	const char *basefont;
 	pdf_obj *descriptor;
@@ -793,7 +810,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 
 		descriptor = pdf_dict_get(ctx, dict, PDF_NAME(FontDescriptor));
 		if (descriptor)
-			pdf_load_font_descriptor(ctx, doc, fontdesc, descriptor, NULL, basefont, 0);
+			pdf_load_font_descriptor(ctx, doc, fontdesc, descriptor, NULL, basefont, 0, fftype);
 		else
 			pdf_load_builtin_font(ctx, fontdesc, basefont, 0);
 
@@ -817,7 +834,7 @@ pdf_load_simple_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 				pdf_drop_font(ctx, fontdesc);
 				fontdesc = NULL;
 				fontdesc = pdf_new_font_desc(ctx);
-				pdf_load_font_descriptor(ctx, doc, fontdesc, descriptor, "Adobe-GB1", cp936fonts[i+1], 0);
+				pdf_load_font_descriptor(ctx, doc, fontdesc, descriptor, "Adobe-GB1", cp936fonts[i+1], 0, fftype);
 				fontdesc->encoding = pdf_load_system_cmap(ctx, "GBK-EUC-H");
 				fontdesc->to_unicode = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
 				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
@@ -1134,7 +1151,7 @@ pdf_load_hail_mary_font(fz_context *ctx, pdf_document *doc)
 	}
 
 	/* FIXME: Get someone with a clue about fonts to fix this */
-	fontdesc = pdf_load_simple_font(ctx, doc, NULL);
+	fontdesc = pdf_load_simple_font(ctx, doc, NULL, PDF_NAME(FontFile));
 
 	existing = fz_store_item(ctx, &hail_mary_store_key, fontdesc, fontdesc->size, &hail_mary_store_type);
 	assert(existing == NULL);
@@ -1148,7 +1165,7 @@ pdf_load_hail_mary_font(fz_context *ctx, pdf_document *doc)
  */
 
 static pdf_font_desc *
-load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_unicode)
+load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_unicode, pdf_obj *fftype)
 {
 	pdf_obj *widths;
 	pdf_obj *descriptor;
@@ -1217,7 +1234,7 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 		descriptor = pdf_dict_get(ctx, dict, PDF_NAME(FontDescriptor));
 		if (!descriptor)
 			fz_throw(ctx, FZ_ERROR_SYNTAX, "missing font descriptor");
-		pdf_load_font_descriptor(ctx, doc, fontdesc, descriptor, collection, basefont, 1);
+		pdf_load_font_descriptor(ctx, doc, fontdesc, descriptor, collection, basefont, 1, fftype);
 
 		face = fontdesc->font->ft_face;
 
@@ -1332,6 +1349,11 @@ load_cid_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict, pdf_obj *encodi
 				}
 			}
 		}
+		else
+		{
+			/* don't stretch to match widths if no widths table was given */
+			fontdesc->font->flags.ft_stretch = 0;
+		}
 
 		pdf_end_hmtx(ctx, fontdesc);
 
@@ -1419,9 +1441,9 @@ pdf_load_type0_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 	to_unicode = pdf_dict_get(ctx, dict, PDF_NAME(ToUnicode));
 
 	if (pdf_is_name(ctx, subtype) && pdf_name_eq(ctx, subtype, PDF_NAME(CIDFontType0)))
-		return load_cid_font(ctx, doc, dfont, encoding, to_unicode);
+		return load_cid_font(ctx, doc, dfont, encoding, to_unicode, PDF_NAME(FontFile3));
 	if (pdf_is_name(ctx, subtype) && pdf_name_eq(ctx, subtype, PDF_NAME(CIDFontType2)))
-		return load_cid_font(ctx, doc, dfont, encoding, to_unicode);
+		return load_cid_font(ctx, doc, dfont, encoding, to_unicode, PDF_NAME(FontFile2));
 	fz_throw(ctx, FZ_ERROR_SYNTAX, "unknown cid font type");
 }
 
@@ -1431,9 +1453,9 @@ pdf_load_type0_font(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 
 static void
 pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *fontdesc, pdf_obj *dict,
-	const char *collection, const char *basefont, int iscidfont)
+	const char *collection, const char *basefont, int iscidfont, pdf_obj *fftype)
 {
-	pdf_obj *obj1, *obj2, *obj3, *obj;
+	pdf_obj *obj;
 	const char *fontname;
 	FT_Face face;
 
@@ -1447,10 +1469,10 @@ pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *font
 	fontdesc->x_height = pdf_dict_get_real(ctx, dict, PDF_NAME(XHeight));
 	fontdesc->missing_width = pdf_dict_get_real(ctx, dict, PDF_NAME(MissingWidth));
 
-	obj1 = pdf_dict_get(ctx, dict, PDF_NAME(FontFile));
-	obj2 = pdf_dict_get(ctx, dict, PDF_NAME(FontFile2));
-	obj3 = pdf_dict_get(ctx, dict, PDF_NAME(FontFile3));
-	obj = obj1 ? obj1 : obj2 ? obj2 : obj3;
+	obj = pdf_dict_get(ctx, dict, fftype);
+	if (!obj) obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile));
+	if (!obj) obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile2));
+	if (!obj) obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile3));
 
 	if (pdf_is_indirect(ctx, obj))
 	{
@@ -1501,6 +1523,7 @@ pdf_load_font_descriptor(fz_context *ctx, pdf_document *doc, pdf_font_desc *font
 	if (fontdesc->ascent <= 0 || fontdesc->ascent > FZ_MAX_TRUSTWORTHY_ASCENT * 1000 ||
 		fontdesc->descent < FZ_MAX_TRUSTWORTHY_DESCENT * 1000)
 	{
+		if (fontdesc->ascent != 0 || fontdesc->descent != 0)
 		fz_warn(ctx, "bogus font ascent/descent values (%g / %g)", fontdesc->ascent, fontdesc->descent);
 		fontdesc->font->ascender = 0.8f;
 		fontdesc->font->descender = -0.2f;
@@ -1582,11 +1605,11 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, pdf_o
 	if (pdf_name_eq(ctx, subtype, PDF_NAME(Type0)))
 		fontdesc = pdf_load_type0_font(ctx, doc, dict);
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(Type1)))
-		fontdesc = pdf_load_simple_font(ctx, doc, dict);
+		fontdesc = pdf_load_simple_font(ctx, doc, dict, PDF_NAME(FontFile));
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(MMType1)))
-		fontdesc = pdf_load_simple_font(ctx, doc, dict);
+		fontdesc = pdf_load_simple_font(ctx, doc, dict, PDF_NAME(FontFile));
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(TrueType)))
-		fontdesc = pdf_load_simple_font(ctx, doc, dict);
+		fontdesc = pdf_load_simple_font(ctx, doc, dict, PDF_NAME(FontFile2));
 	else if (pdf_name_eq(ctx, subtype, PDF_NAME(Type3)))
 	{
 		fontdesc = pdf_load_type3_font(ctx, doc, rdb, dict);
@@ -1606,11 +1629,14 @@ pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_resource_stack *rdb, pdf_o
 	else
 	{
 		fz_warn(ctx, "unknown font format, guessing type1 or truetype.");
-		fontdesc = pdf_load_simple_font(ctx, doc, dict);
+		fontdesc = pdf_load_simple_font(ctx, doc, dict, PDF_NAME(FontFile));
 	}
 
 	fz_try(ctx)
 	{
+		/* Set family name from font name for substitute and Type 3 fonts */
+		pdf_make_font_family(ctx, fontdesc->font);
+
 		/* Create glyph width table for stretching substitute fonts and text extraction. */
 		pdf_make_width_table(ctx, fontdesc);
 

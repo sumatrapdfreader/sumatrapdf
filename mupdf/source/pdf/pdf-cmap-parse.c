@@ -220,7 +220,7 @@ static void
 pdf_parse_bf_range_array(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *buf, int lo, int hi)
 {
 	pdf_token tok;
-	int dst[256];
+	int dst[PDF_MRANGE_CAP];
 
 	while (1)
 	{
@@ -296,7 +296,7 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 			}
 			else
 			{
-				int dststr[256];
+				int dststr[PDF_MRANGE_CAP];
 				size_t i;
 
 				if (buf->len / 2)
@@ -332,7 +332,7 @@ static void
 pdf_parse_bf_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *buf)
 {
 	pdf_token tok;
-	int dst[256];
+	int dst[PDF_MRANGE_CAP];
 	int src;
 
 	while (1)

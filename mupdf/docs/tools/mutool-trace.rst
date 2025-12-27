@@ -12,6 +12,8 @@ The ``trace`` command prints a trace of all the device calls used to render a pa
 
 	``-p`` password
 		Use the specified password if the file is encrypted.
+	``-b`` box
+		Use named page box (``MediaBox``, ``CropBox``, ``BleedBox``, ``TrimBox``, or ``ArtBox``).
 	``-W`` width
 		Page width in points for EPUB layout.
 	``-H`` height

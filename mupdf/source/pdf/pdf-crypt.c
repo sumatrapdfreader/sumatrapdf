@@ -59,6 +59,8 @@ struct pdf_crypt
 	int p;
 	int encrypt_metadata;
 
+	int access; /* 2=user, 4=owner, 6=user+owner (see pdf_authenticate_password return code) */
+
 	unsigned char key[32]; /* decryption key generated from password */
 };
 
@@ -785,7 +787,6 @@ int
 pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pwd_utf8)
 {
 	char password[2048];
-	int auth;
 
 	if (!doc->crypt)
 		return 1; /* No password required */
@@ -799,12 +800,12 @@ pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pwd_ut
 			pdf_saslprep_from_utf8(password, pwd_utf8, sizeof password);
 	}
 
-	auth = 0;
+	doc->crypt->access = 0;
 	if (pdf_authenticate_user_password(ctx, doc->crypt, (unsigned char *)password, strlen(password)))
-		auth = 2;
+		doc->crypt->access = 2;
 	if (pdf_authenticate_owner_password(ctx, doc->crypt, (unsigned char *)password, strlen(password)))
-		auth |= 4;
-	else if (auth & 2)
+		doc->crypt->access |= 4;
+	else if (doc->crypt->access & 2)
 	{
 		/* We need to reauthenticate the user password,
 		 * because the failed attempt to authenticate
@@ -815,10 +816,10 @@ pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pwd_ut
 
 	/* To match Acrobat, we choose not to allow an empty owner
 	 * password, unless the user password is also the empty one. */
-	if (*password == 0 && auth == 4)
-		return 0;
+	if (*password == 0 && doc->crypt->access == 4)
+		doc->crypt->access = 0;
 
-	return auth;
+	return doc->crypt->access;
 }
 
 int
@@ -835,6 +836,8 @@ int
 pdf_has_permission(fz_context *ctx, pdf_document *doc, fz_permission p)
 {
 	if (!doc->crypt)
+		return 1;
+	if (doc->crypt->access & 4) /* unlocked with owner password */
 		return 1;
 	switch (p)
 	{
@@ -853,10 +856,11 @@ pdf_has_permission(fz_context *ctx, pdf_document *doc, fz_permission p)
 int
 pdf_document_permissions(fz_context *ctx, pdf_document *doc)
 {
-	if (doc->crypt)
+	if (!doc->crypt)
+		return (int)0xFFFFFFFC; /* all permissions granted, reserved bits set appropriately */
+	if (doc->crypt->access & 4)
+		return (int)0xFFFFFFFC; /* owner password -- all permissions granted */
 		return doc->crypt->p;
-	/* all permissions granted, reserved bits set appropriately */
-	return (int)0xFFFFFFFC;
 }
 
 /*

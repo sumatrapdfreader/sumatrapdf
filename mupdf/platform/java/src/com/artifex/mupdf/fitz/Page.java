@@ -83,7 +83,11 @@ public class Page
 		return toStructuredText(null);
 	}
 
-	public native Quad[][] search(String needle);
+	public native Quad[][] search(String needle, int style);
+	public Quad[][] search(String needle)
+	{
+		return search(needle, StructuredText.SEARCH_IGNORE_CASE);
+	}
 
 	public native byte[] textAsHtml();
 

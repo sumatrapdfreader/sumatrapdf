@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -203,6 +203,11 @@ psd_read_image(fz_context *ctx, struct info *info, const unsigned char *p, size_
 		info->n = n = get16be(&source);
 		info->height = getu32be(&source);
 		info->width = getu32be(&source);
+		if (info->height == 0)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "image height must be > 0");
+		if (info->width == 0)
+			fz_throw(ctx, FZ_ERROR_FORMAT, "image width must be > 0");
+
 		bpc = get16be(&source);
 		if (bpc != 8 && bpc != 16)
 			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "Only 8 or 16 bpc PSD files supported!");

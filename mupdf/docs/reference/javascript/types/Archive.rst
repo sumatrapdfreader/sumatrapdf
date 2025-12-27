@@ -22,6 +22,17 @@ Constructors
 		var archive2 = new mupdf.Archive("example2.tar")
 		var archive3 = new mupdf.Archive("images/")
 
+.. class:: Archive(buffer)
+
+	Create a new archive based either on a tar- or zip-file contained in a buffer.
+
+	:param Buffer | ArrayBuffer | Uint8Array | string buffer: Buffer containing a archive.
+
+	.. code-block::
+
+		var archive1 = new mupdf.Archive(fs.readFileSync("example1.zip"))
+		var archive2 = new mupdf.Archive(fs.readFileSync("example1.tar"))
+
 Instance methods
 -----------------
 

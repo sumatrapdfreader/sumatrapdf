@@ -44,7 +44,7 @@ static const char *format = NULL;
 static const char *options = "";
 
 static fz_context *ctx;
-static fz_document *doc;
+static fz_document *doc = NULL;
 static fz_document_writer *out;
 static fz_box_type page_box = FZ_CROP_BOX;
 static int count;

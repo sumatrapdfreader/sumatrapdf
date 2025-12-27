@@ -32,6 +32,25 @@ here.
 
 	Disable ICC-profiles based operation.
 
+.. function:: mupdf.emptyStore()
+
+	Empty all cached entries from the store.
+
+.. function:: mupdf.shrinkStore(percent)
+
+	Remove cached entries from the store until it holds less
+	data than the specified threshold.
+
+	If the store was initialized with a limit, the threshold is a
+	percentage of the limit. If the store is unlimited in size, the
+	threshold is a percentage of what the store currently holds.
+
+	Returns a boolean indicating whether or not the store was able to be
+	shrunk to below the threshold.
+
+	:param number percent:
+	:returns: boolean
+
 .. function:: mupdf.setUserCSS(stylesheet, useDocumentStyles)
 
 	Set a style sheet to apply to all reflowable documents.

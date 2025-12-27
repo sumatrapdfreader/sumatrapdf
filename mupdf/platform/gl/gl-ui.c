@@ -367,7 +367,10 @@ static void on_reshape(int w, int h)
 
 static void on_display(void)
 {
+	void (*old_dialog)(void) = ui.dialog;
 	run_main_loop();
+	if (ui.dialog != old_dialog)
+		ui_invalidate();
 }
 
 static void on_error(const char *fmt, va_list ap)
@@ -587,28 +590,28 @@ fz_irect ui_pack_layout(int slave_w, int slave_h, enum side side, enum fill fill
 		parcel.x1 = ui.cavity->x1 - padx;
 		parcel.y0 = ui.cavity->y0 + pady;
 		parcel.y1 = ui.cavity->y0 + pady + slave_h;
-		ui.cavity->y0 = parcel.y1 + pady;
+		ui.cavity->y0 = fz_clampi(parcel.y1 + pady, ui.cavity->y0, ui.cavity->y1);
 		break;
 	case B:
 		parcel.x0 = ui.cavity->x0 + padx;
 		parcel.x1 = ui.cavity->x1 - padx;
 		parcel.y0 = ui.cavity->y1 - pady - slave_h;
 		parcel.y1 = ui.cavity->y1 - pady;
-		ui.cavity->y1 = parcel.y0 - pady;
+		ui.cavity->y1 = fz_clampi(parcel.y0 - pady, ui.cavity->y0, ui.cavity->y1);
 		break;
 	case L:
 		parcel.x0 = ui.cavity->x0 + padx;
 		parcel.x1 = ui.cavity->x0 + padx + slave_w;
 		parcel.y0 = ui.cavity->y0 + pady;
 		parcel.y1 = ui.cavity->y1 - pady;
-		ui.cavity->x0 = parcel.x1 + padx;
+		ui.cavity->x0 = fz_clampi(parcel.x1 + padx, ui.cavity->x0, ui.cavity->x1);
 		break;
 	case R:
 		parcel.x0 = ui.cavity->x1 - padx - slave_w;
 		parcel.x1 = ui.cavity->x1 - padx;
 		parcel.y0 = ui.cavity->y0 + pady;
 		parcel.y1 = ui.cavity->y1 - pady;
-		ui.cavity->x1 = parcel.x0 - padx;
+		ui.cavity->x1 = fz_clampi(parcel.x0 - padx, ui.cavity->x0, ui.cavity->x1);
 		break;
 	}
 

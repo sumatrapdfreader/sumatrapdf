@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -29,6 +29,12 @@
 
 pdf_pkcs7_signer *
 pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw)
+{
+	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OpenSSL support.");
+}
+
+pdf_pkcs7_signer *
+pkcs7_openssl_read_pfx_from_buffer(fz_context *ctx, fz_buffer *buf, const char *pw)
 {
 	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "No OpenSSL support.");
 }
@@ -778,7 +784,7 @@ static size_t max_digest_size(fz_context *ctx, pdf_pkcs7_signer *signer)
 	return signer_create_digest(ctx, signer, NULL, NULL, 0);
 }
 
-pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw)
+static pdf_pkcs7_signer *pkcs7_openssl_read_pfx_imp(fz_context *ctx, const char *pfile, fz_buffer *buf, const char *pw)
 {
 	BIO *pfxbio = NULL;
 	PKCS12 *p12 = NULL;
@@ -805,17 +811,38 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 
 		ERR_clear_error();
 
+		if (pfile)
+		{
 		pfxbio = BIO_new_file(pfile, "rb");
 		if (pfxbio == NULL)
 			fz_throw(ctx, FZ_ERROR_LIBRARY, "Can't open pfx file: %s", pfile);
+		}
+		else
+		{
+			unsigned char *data;
+			size_t len = fz_buffer_storage(ctx ,buf, &data);
+			pfxbio = BIO_new_mem_buf(data, (int)len);
+			if (pfxbio == NULL)
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Can't open pfx buffer");
+		}
 
 		p12 = d2i_PKCS12_bio(pfxbio, NULL);
 		if (p12 == NULL)
+		{
+			if (pfile)
 			fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
+			else
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file");
+		}
 
 		asafes = PKCS12_unpack_authsafes(p12);
 		if (asafes == NULL)
+		{
+			if (pfile)
 			fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file: %s", pfile);
+			else
+				fz_throw(ctx, FZ_ERROR_LIBRARY, "Invalid pfx file");
+		}
 
 		/* Nothing in this for loop can fz_throw */
 		for (i = 0; i < sk_PKCS7_num(asafes); i++)
@@ -864,6 +891,16 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
 	}
 
 	return &signer->base;
+}
+
+pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw)
+{
+	return pkcs7_openssl_read_pfx_imp(ctx, pfile, 0, pw);
+}
+
+pdf_pkcs7_signer *pkcs7_openssl_read_pfx_from_buffer(fz_context *ctx, fz_buffer *buf, const char *pw)
+{
+	return pkcs7_openssl_read_pfx_imp(ctx, NULL, buf, pw);
 }
 
 pdf_pkcs7_distinguished_name *get_signatory(fz_context *ctx, pdf_pkcs7_verifier *verifier, unsigned char *sig, size_t sig_len)

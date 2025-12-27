@@ -15,11 +15,12 @@ from . import parse
 try:
     import clang.cindex
 except Exception as e:
-    jlib.log('Warning: failed to import clang.cindex: {e=}\n'
-            f'We need Clang Python to build MuPDF python.\n'
-            f'Install with `pip install libclang` (typically inside a Python venv),\n'
-            f'or (OpenBSD only) `pkg_add py3-llvm.`\n'
-            )
+    if '--venv' not in sys.argv:
+        jlib.log('Warning: failed to import clang.cindex: {e=}\n'
+                f'We need Clang Python to build MuPDF python.\n'
+                f'Install with `pip install libclang` (typically inside a Python venv),\n'
+                f'or (OpenBSD only) `pkg_add py3-llvm.`\n'
+                )
     clang = None
 
 omit_fns = [
@@ -193,6 +194,8 @@ class Cpu:
     Members:
         .bits
             .
+        .name:
+            'x32' or 'x64'.
         .windows_subdir
             '' or 'x64/', e.g. platform/win32/x64/Release.
         .windows_name
@@ -309,9 +312,9 @@ class BuildDirs:
                 # `/Od` (no optimisation) and `/RTC1` (extra runtime checks)
                 # because these seem to be conventionally set in VS.
                 #
-                self.cpp_flags = '/MDd /Od /RTC1'
+                self.cpp_flags = '/MDd /Od /RTC1 /D _DEBUG'
             elif '-memento' in dir_so:
-                self.cpp_flags = '/MDd /Od /RTC1 /DMEMENTO'
+                self.cpp_flags = '/MDd /Od /RTC1 /D _DEBUG /DMEMENTO'
             else:
                 self.cpp_flags = None
                 jlib.log( 'Warning: unrecognised {dir_so=}, so cannot determine cpp_flags')
@@ -328,17 +331,20 @@ class BuildDirs:
         if state_.windows:
             # Infer cpu and python version from self.dir_so. And append current
             # cpu and python version if not already present.
-            m = re.search( '-(x[0-9]+)-py([0-9.]+)$', self.dir_so)
-            if not m:
-                suffix = f'-{Cpu(cpu_name())}-py{python_version()}'
-                jlib.log('Adding suffix to {self.dir_so=}: {suffix!r}')
-                self.dir_so += suffix
-                m = re.search( '-(x[0-9]+)-py([0-9.]+)$', self.dir_so)
-                assert m
-            #log(f'self.dir_so={self.dir_so} {os.path.basename(self.dir_so)} m={m}')
-            assert m, f'Failed to parse dir_so={self.dir_so!r} - should be *-x32|x64-pyA.B'
-            self.cpu = Cpu( m.group(1))
-            self.python_version = m.group(2)
+            flags = self.dir_so.split('-')
+            self.cpu = None
+            self.python_version = None
+            for flag in flags:
+                if flag in ('x32', 'x64'):
+                    self.cpu = Cpu(flag)
+                if flag.startswith('py'):
+                    self.python_version = flag[2:]
+            if not self.cpu:
+                self.cpu = Cpu(cpu_name())
+                self.dir_so += f'-{self.cpu.name}'
+            if not self.python_version:
+                self.python_version = python_version()
+                self.dir_so += f'-py{self.python_version}'
             #jlib.log('{self.cpu=} {self.python_version=} {dir_so=}')
         else:
             # Use Python we are running under.
@@ -375,5 +381,7 @@ class BuildDirs:
             return 'Debug'
         elif 'release' in dir_so_flags:
             return 'Release'
+        elif 'memento' in dir_so_flags:
+            return 'Memento'
         else:
             assert 0, f'Expecting "-release-" or "-debug-" in build_dirs.dir_so={self.dir_so}'

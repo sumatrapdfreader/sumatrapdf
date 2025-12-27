@@ -1012,7 +1012,7 @@ walk_to_find_content(fz_context *ctx, div_list *xs, div_list *ys, fz_stext_block
 				if (region.y1 > bounds.y1)
 					region.y1 = bounds.y1;
 				if (region.y0 >= region.y1)
-					break;
+					continue;
 
 				/* Skip leading spaces. */
 				for (ch = line->first_char; ch != NULL; ch = ch->next)
@@ -1165,6 +1165,37 @@ typedef struct
 	fz_rect bounds;
 	int has_background;
 } grid_walker_data;
+
+static fz_stext_grid_info *
+copy_grid_info_to_pool(fz_context *ctx, fz_stext_page *page, cells_t *cells)
+{
+	int i, n = cells->w * cells->h;
+	fz_stext_grid_info *info;
+	size_t z = offsetof(fz_stext_grid_info, info) + sizeof(info->info[0]) * n;
+	cell_t *cell = &cells->cell[0];
+	info = fz_pool_alloc(ctx, page->pool, z);
+
+	info->w = cells->w;
+	info->h = cells->h;
+
+	for (i = 0; i < n; i++, cell++)
+	{
+		unsigned int flags = 0;
+		if (cell->full)
+			flags |= FZ_STEXT_GRID_FULL;
+		if (cell->h_crossed)
+			flags |= FZ_STEXT_GRID_H_CROSSED;
+		if (cell->v_crossed)
+			flags |= FZ_STEXT_GRID_V_CROSSED;
+		if (cell->h_line)
+			flags |= FZ_STEXT_GRID_T_BORDER;
+		if (cell->v_line)
+			flags |= FZ_STEXT_GRID_L_BORDER;
+		info->info[i].flags = flags;
+	}
+
+	return info;
+}
 
 static cell_t *
 get_cell(cells_t *cells, int x, int y)
@@ -1696,7 +1727,10 @@ mark_cells_for_content(fz_context *ctx, grid_walker_data *gd, fz_rect s)
 	fz_rect r = fz_intersect_rect(gd->bounds, s);
 	int x0, x1, y0, y1, x, y;
 
-	if (fz_is_empty_rect(r))
+	/* Check for non-validity rather than empty here, as e.g.
+	 * spaces are empty, and we'd still like to account for
+	 * their horizontal extent. */
+	if (!fz_is_valid_rect(r))
 		return 0;
 
 	x0 = find_cell_l(gd->xpos, r.x0);
@@ -1932,6 +1966,11 @@ calculate_spanned_content(fz_context *ctx, grid_walker_data *gd, fz_stext_block 
 						{
 							/* Single spaces around numbers are ignored. */
 							was_numeric = 0;
+							continue;
+						}
+						if (ch->flags & FZ_STEXT_SYNTHETIC_LARGE)
+						{
+							/* Break on large synthetic spaces */
 							continue;
 						}
 						/* A single space. Accept it. */
@@ -2714,9 +2753,11 @@ transcribe_table(fz_context *ctx, grid_walker_data *gd, fz_stext_page *page, fz_
 		fz_stext_block *block;
 		fz_stext_grid_positions *xps2 = copy_grid_positions_to_pool(ctx, page, gd->xpos);
 		fz_stext_grid_positions *yps2 = copy_grid_positions_to_pool(ctx, page, gd->ypos);
+		fz_stext_grid_info *info = copy_grid_info_to_pool(ctx, page, gd->cells);
 		block = add_grid_block(ctx, page, &table->first_block, &table->last_block, table->up->id);
 		block->u.b.xs = xps2;
 		block->u.b.ys = yps2;
+		block->u.b.info = info;
 		block->bbox.x0 = block->u.b.xs->list[0].pos;
 		block->bbox.y0 = block->u.b.ys->list[0].pos;
 		block->bbox.x1 = block->u.b.xs->list[block->u.b.xs->len-1].pos;
@@ -2737,19 +2778,19 @@ merge_column(grid_walker_data *gd, int x)
 		cell_t *s = &gd->cells->cell[x + y * gd->cells->w];
 
 		if (x > 0)
-			memcpy(d-x, s-x, sizeof(*d) * x);
+			memmove(d-x, s-x, sizeof(*d) * x);
 		d->full = s[0].full || s[1].full;
 		d->h_crossed = s[0].h_crossed || s[1].h_crossed;
 		d->h_line = s[0].h_line; /* == s[1].h_line */
 		d->v_crossed = s[0].v_crossed;
 		d->v_line = s[0].v_line;
 		if (x < gd->cells->w - 2)
-			memcpy(d+1, s+2, sizeof(*d) * (gd->cells->w - 2 - x));
+			memmove(d+1, s+2, sizeof(*d) * (gd->cells->w - 2 - x));
 	}
 	gd->cells->w--;
 
 	if (x < gd->xpos->len - 2)
-		memcpy(&gd->xpos->list[x+1], &gd->xpos->list[x+2], sizeof(gd->xpos->list[0]) * (gd->xpos->len - 2 - x));
+		memmove(&gd->xpos->list[x+1], &gd->xpos->list[x+2], sizeof(gd->xpos->list[0]) * (gd->xpos->len - 2 - x));
 	gd->xpos->len--;
 }
 
@@ -2840,11 +2881,11 @@ merge_row(grid_walker_data *gd, int y)
 		d++;
 	}
 	if (y < gd->cells->h - 2)
-		memcpy(d, d+w, sizeof(*d) * (gd->cells->h - 2 - y) * w);
+		memmove(d, d+w, sizeof(*d) * (gd->cells->h - 2 - y) * w);
 	gd->cells->h--;
 
 	if (y < gd->ypos->len - 2)
-		memcpy(&gd->ypos->list[y+1], &gd->ypos->list[y+2], sizeof(gd->ypos->list[0]) * (gd->ypos->len - 2 - y));
+		memmove(&gd->ypos->list[y+1], &gd->ypos->list[y+2], sizeof(gd->ypos->list[0]) * (gd->ypos->len - 2 - y));
 	gd->ypos->len--;
 }
 
@@ -3147,14 +3188,59 @@ find_table_within_bounds(fz_context *ctx, grid_walker_data *gd, fz_stext_block *
 	return failed;
 }
 
+/* The score for a table can be thought of as a judgement of
+ * how 'awkward' a table is.
+ *
+ *  + Score 1 for every empty cell that doesn't have "supporting"
+ *    borders.
+ *  + Score 1 for every 'crossing' between cells.
+ */
+static float
+score_table(fz_context *ctx, grid_walker_data *gd)
+{
+	int x, y;
+	int w = gd->cells->w;
+	int h = gd->cells->h;
+	int score = 0;
+	int num_cells = (w-1)*(h-1);
+
+	assert(num_cells > 0);
+
+	for (y = 0; y < h-1; y++)
+	{
+		for (x = 0; x < w-1; x++)
+		{
+			cell_t *cell = get_cell(gd->cells, x, y);
+			cell_t *right = get_cell(gd->cells, x+1, y);
+			cell_t *below = get_cell(gd->cells, x, y+1);
+			score += cell->h_crossed + cell->v_crossed;
+			if (cell->full)
+			{
+				/* We have content. */
+			}
+			else if (cell->h_line && cell->v_line && right->v_line && below->h_line)
+			{
+				/* The cell is properly bordered. */
+			}
+			else
+				score++;
+		}
+	}
+
+	return score / (float)num_cells;
+}
+
 static int
-do_table_hunt(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, int *has_background, fz_rect top_bounds)
+do_table_hunt(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, int *has_background, fz_rect top_bounds, float *subtable_score, float score_threshold)
 {
 	fz_stext_block *block;
 	int count;
 	fz_stext_block **first_block = parent ? &parent->first_block : &page->first_block;
 	int num_subtables = 0;
 	grid_walker_data gd = { 0 };
+	float score;
+
+	*subtable_score = 0;
 
 	/* No content? Just bale. */
 	if (*first_block == NULL)
@@ -3176,7 +3262,7 @@ do_table_hunt(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, int
 			if (block->u.s.down)
 			{
 				int background = 0;
-				num_subtables += do_table_hunt(ctx, page, block->u.s.down, &background, top_bounds);
+				num_subtables += do_table_hunt(ctx, page, block->u.s.down, &background, top_bounds, subtable_score, score_threshold);
 				if (background)
 					*has_background = 1;
 				count++;
@@ -3214,13 +3300,23 @@ do_table_hunt(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, int
 		if (find_table_within_bounds(ctx, &gd, *first_block, bounds))
 			break;
 
+		score = score_table(ctx, &gd);
+#ifdef DEBUG_TABLE_STRUCTURE
+		printf("Bounds: %g %g %g %g Score: %g\n",
+			bounds.x0, bounds.y0, bounds.x1, bounds.y1, score);
+#endif
+
 		*has_background = gd.has_background;
 
 		if (num_subtables > 0)
 		{
+			/* Our table's score needs to be lower than the sum of the scores
+			 * for the subtables for us to accept it. */
+			int x, y;
+			if (score > *subtable_score)
+				break;
 			/* We are risking throwing away a table we've already found for this
 			 * one. Only do it if this one is really convincing. */
-			int x, y;
 			for (x = 0; x < gd.xpos->len; x++)
 				if (gd.xpos->list[x].uncertainty != 0)
 					break;
@@ -3233,6 +3329,11 @@ do_table_hunt(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, int
 				break;
 		}
 
+		if (score > score_threshold)
+			break;
+
+		*subtable_score = score;
+
 #ifdef DEBUG_TABLE_STRUCTURE
 		printf("Transcribing table: (%g,%g)->(%g,%g)\n",
 			gd.xpos->list[0].pos,
@@ -3241,7 +3342,6 @@ do_table_hunt(fz_context *ctx, fz_stext_page *page, fz_stext_struct *parent, int
 			gd.ypos->list[gd.ypos->len-1].pos);
 #endif
 
-		/* Now we should have the entire table calculated. */
 		(void)transcribe_table(ctx, &gd, page, parent);
 		num_subtables = 1;
 #ifdef DEBUG_WRITE_AS_PS
@@ -3287,13 +3387,15 @@ void
 fz_table_hunt(fz_context *ctx, fz_stext_page *page)
 {
 	int has_background = 0;
+	float score;
 
 	if (page == NULL)
 		return;
 
 	assert(verify_stext(ctx, page, NULL));
 
-	do_table_hunt(ctx, page, NULL, &has_background, fz_infinite_rect);
+	/* FIXME: Nasty heuristic threshold. */
+	do_table_hunt(ctx, page, NULL, &has_background, fz_infinite_rect, &score, 0.3f);
 
 	assert(verify_stext(ctx, page, NULL));
 }
@@ -3302,6 +3404,7 @@ void
 fz_table_hunt_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect rect)
 {
 	int has_background = 0;
+	float score;
 
 	if (page == NULL)
 		return;
@@ -3310,7 +3413,7 @@ fz_table_hunt_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect rect)
 
 	fz_segment_stext_rect(ctx, page, rect);
 
-	do_table_hunt(ctx, page, NULL, &has_background, rect);
+	do_table_hunt(ctx, page, NULL, &has_background, rect, &score, 1);
 
 	assert(verify_stext(ctx, page, NULL));
 }
@@ -3344,8 +3447,10 @@ fz_find_table_within_bounds(fz_context *ctx, fz_stext_page *page, fz_rect bounds
 		/* Now we should have the entire table calculated. */
 		table = transcribe_table(ctx, &gd, page, NULL);
 #ifdef DEBUG_WRITE_AS_PS
+		if (table && table->first_block && table->first_block->type == FZ_STEXT_BLOCK_GRID)
 		{
 			int i;
+			fz_stext_block *block = table->first_block;
 			printf("%% TABLE\n");
 			for (i = 0; i < block->u.b.xs->len; i++)
 			{

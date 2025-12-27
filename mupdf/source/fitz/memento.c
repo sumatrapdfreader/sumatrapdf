@@ -1,4 +1,4 @@
-/* Copyright (C) 2009-2024 Artifex Software, Inc.
+/* Copyright (C) 2009-2025 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -1084,7 +1084,6 @@ static Memento_hashedST *Memento_getHashedStacktrace(void)
     count = 0;
 #endif
 
-    count -= skip;
     hash = hashStackTrace(&stack[skip], count);
     while (1) {
         h = &memento.stacktraces[hash & 0xff];
@@ -1169,7 +1168,8 @@ static void Memento_bt_internal(int skip2)
     int skip;
 
     count = Memento_getStacktrace(stack, &skip);
-    Memento_showStacktrace(&stack[skip+skip2], count-skip-skip2);
+    if (count > skip2)
+        Memento_showStacktrace(&stack[skip+skip2], count-skip);
 #endif
 }
 

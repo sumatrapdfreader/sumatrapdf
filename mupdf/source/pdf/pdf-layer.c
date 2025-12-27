@@ -24,6 +24,7 @@
 #include "mupdf/pdf.h"
 
 #include <string.h>
+#include <limits.h>
 
 /*
 	Notes on OCGs etc.
@@ -206,12 +207,17 @@ find_ocg(fz_context *ctx, pdf_ocg_descriptor *desc, pdf_obj *obj)
 
 static int
 populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order, int depth, pdf_obj *rbgroups, pdf_obj *locked,
-	pdf_cycle_list *cycle_up)
+	int *min, pdf_cycle_list *cycle_up)
 {
 	pdf_cycle_list cycle;
 	int len = pdf_array_len(ctx, order);
-	int i, j;
+	int len2;
+	int i, j, k;
 	pdf_ocg_ui *ui;
+	int mindepth = INT_MAX;
+
+	if (min == NULL)
+		min = &mindepth;
 
 	for (i = 0; i < len; i++)
 	{
@@ -221,13 +227,14 @@ populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order,
 			if (pdf_cycle(ctx, &cycle, cycle_up, o))
 				continue;
 
-			fill = populate_ui(ctx, desc, fill, o, depth+1, rbgroups, locked, &cycle);
+			fill = populate_ui(ctx, desc, fill, o, depth+1, rbgroups, locked, min, &cycle);
 			continue;
 		}
 		if (pdf_is_string(ctx, o))
 		{
 			ui = get_ocg_ui(ctx, desc, fill++);
 			ui->depth = depth;
+			*min = fz_mini(*min, ui->depth);
 			ui->ocg = -1;
 			ui->name = pdf_to_text_string(ctx, o);
 			ui->button_flags = PDF_LAYER_UI_LABEL;
@@ -239,12 +246,32 @@ populate_ui(fz_context *ctx, pdf_ocg_descriptor *desc, int fill, pdf_obj *order,
 		if (j < 0)
 			continue; /* OCG not found in main list! Just ignore it */
 		ui = get_ocg_ui(ctx, desc, fill++);
-		ui->depth = depth;
+		ui->depth = depth + 1;
+		*min = fz_mini(*min, ui->depth);
 		ui->ocg = j;
 		ui->name = pdf_dict_get_text_string(ctx, o, PDF_NAME(Name));
-		ui->button_flags = pdf_array_contains(ctx, o, rbgroups) ? PDF_LAYER_UI_RADIOBOX : PDF_LAYER_UI_CHECKBOX;
-		ui->locked = pdf_array_contains(ctx, o, locked);
+		ui->locked = pdf_array_contains(ctx, locked, o);
+		ui->button_flags = PDF_LAYER_UI_CHECKBOX;
+		len2 = pdf_array_len(ctx, rbgroups);
+		for (k = 0; k < len2; ++k)
+		{
+			if (pdf_array_contains(ctx, pdf_array_get(ctx, rbgroups, k), o))
+			{
+				ui->button_flags = PDF_LAYER_UI_RADIOBOX;
+				break;
+			}
+		}
 	}
+
+	/* After having iterated over all items at the top-level, the minimum depth is
+	   known. Subtract that from the depth of each item, so that top-level items
+	   always start at depth == 0. */
+	if (depth == 0 && *min > 0)
+	{
+		for (i = 0; i < fill; i++)
+			desc->ui[i].depth -= *min;
+	}
+
 	return fill;
 }
 
@@ -283,7 +310,7 @@ load_ui(fz_context *ctx, pdf_ocg_descriptor *desc, pdf_obj *ocprops, pdf_obj *oc
 	desc->ui = fz_malloc_struct_array(ctx, count, pdf_ocg_ui);
 	fz_try(ctx)
 	{
-		desc->num_ui_entries = populate_ui(ctx, desc, 0, order, 0, rbgroups, locked, NULL);
+		desc->num_ui_entries = populate_ui(ctx, desc, 0, order, 0, rbgroups, locked, NULL, NULL);
 	}
 	fz_catch(ctx)
 	{
@@ -297,28 +324,31 @@ pdf_select_layer_config(fz_context *ctx, pdf_document *doc, int config)
 {
 	pdf_ocg_descriptor *desc;
 	int i, j, len, len2;
-	pdf_obj *obj, *cobj;
+	pdf_obj *obj, *cobj, *ocprops;
 	pdf_obj *name;
 
 	desc = pdf_read_ocg(ctx, doc);
 
-	obj = pdf_dict_get(ctx, pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)), PDF_NAME(OCProperties));
-	if (!obj)
+	ocprops = pdf_dict_get(ctx, pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)), PDF_NAME(OCProperties));
+	if (!ocprops)
 	{
-		if (config == 0)
+		if (config == -1)
 			return;
 		else
 			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Unknown Layer config (None known!)");
 	}
 
-	cobj = pdf_array_get(ctx, pdf_dict_get(ctx, obj, PDF_NAME(Configs)), config);
-	if (!cobj)
+	if (config == -1)
 	{
-		if (config != 0)
-			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Illegal Layer config");
-		cobj = pdf_dict_get(ctx, obj, PDF_NAME(D));
-		if (!cobj)
+		cobj = pdf_dict_get(ctx, ocprops, PDF_NAME(D));
+	if (!cobj)
 			fz_throw(ctx, FZ_ERROR_FORMAT, "No default Layer config");
+	}
+	else
+	{
+		cobj = pdf_array_get(ctx, pdf_dict_get(ctx, ocprops, PDF_NAME(Configs)), config);
+		if (!cobj)
+			fz_throw(ctx, FZ_ERROR_ARGUMENT, "Illegal Layer config");
 	}
 
 	pdf_drop_obj(ctx, desc->intent);
@@ -352,7 +382,7 @@ pdf_select_layer_config(fz_context *ctx, pdf_document *doc, int config)
 		pdf_obj *o = pdf_array_get(ctx, obj, i);
 		for (j=0; j < len; j++)
 		{
-			if (!pdf_objcmp_resolve(ctx, desc->ocgs[j].obj, o))
+			if (!pdf_objcmp(ctx, desc->ocgs[j].obj, o))
 			{
 				desc->ocgs[j].state = 1;
 				break;
@@ -367,7 +397,7 @@ pdf_select_layer_config(fz_context *ctx, pdf_document *doc, int config)
 		pdf_obj *o = pdf_array_get(ctx, obj, i);
 		for (j=0; j < len; j++)
 		{
-			if (!pdf_objcmp_resolve(ctx, desc->ocgs[j].obj, o))
+			if (!pdf_objcmp(ctx, desc->ocgs[j].obj, o))
 			{
 				desc->ocgs[j].state = 0;
 				break;
@@ -378,41 +408,62 @@ pdf_select_layer_config(fz_context *ctx, pdf_document *doc, int config)
 	desc->current = config;
 
 	drop_ui(ctx, desc);
-	load_ui(ctx, desc, obj, cobj);
+	load_ui(ctx, desc, ocprops, cobj);
 }
 
-void
-pdf_layer_config_info(fz_context *ctx, pdf_document *doc, int config_num, pdf_layer_config *info)
+static pdf_obj *
+get_layer_config(fz_context *ctx, pdf_document *doc, int config_num)
 {
 	pdf_ocg_descriptor *desc;
 	pdf_obj *ocprops;
 	pdf_obj *obj;
 
-	if (!info)
-		return;
-
 	desc = pdf_read_ocg(ctx, doc);
 
-	info->name = NULL;
-	info->creator = NULL;
-
-	if (config_num < 0 || config_num >= desc->num_configs)
+	if (config_num < -1 || config_num >= desc->num_configs)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid layer config number");
 
 	ocprops = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/OCProperties");
 	if (!ocprops)
-		return;
+		return NULL;
 
 	obj = pdf_dict_get(ctx, ocprops, PDF_NAME(Configs));
-	if (pdf_is_array(ctx, obj))
-		obj = pdf_array_get(ctx, obj, config_num);
-	else if (config_num == 0)
+	if (config_num == -1)
 		obj = pdf_dict_get(ctx, ocprops, PDF_NAME(D));
+	else if (pdf_is_array(ctx, obj))
+		obj = pdf_array_get(ctx, obj, config_num);
 	else
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid layer config number");
 
-	info->creator = pdf_dict_get_string(ctx, obj, PDF_NAME(Creator), NULL);
-	info->name = pdf_dict_get_string(ctx, obj, PDF_NAME(Name), NULL);
+	return obj;
+}
+
+const char *
+pdf_layer_config_creator(fz_context *ctx, pdf_document *doc, int config_num)
+{
+	pdf_obj *layer_config = get_layer_config(ctx, doc, config_num);
+	return pdf_dict_get_text_string(ctx, layer_config, PDF_NAME(Creator));
+}
+
+const char *
+pdf_layer_config_name(fz_context *ctx, pdf_document *doc, int config_num)
+{
+	pdf_obj *layer_config = get_layer_config(ctx, doc, config_num);
+	pdf_obj *name = pdf_dict_get(ctx, layer_config, PDF_NAME(Name));
+	if (config_num == -1 && !name)
+		return "Default";
+	else
+		return pdf_to_text_string(ctx, name);
+}
+
+void
+pdf_layer_config_info(fz_context *ctx, pdf_document *doc, int config_num, pdf_layer_config *info)
+{
+	if (info)
+	{
+		info->creator = pdf_layer_config_creator(ctx, doc, config_num);
+		info->name = pdf_layer_config_name(ctx, doc, config_num);
+	}
 }
 
 void
@@ -436,17 +487,25 @@ pdf_drop_ocg(fz_context *ctx, pdf_document *doc)
 }
 
 static void
-clear_radio_group(fz_context *ctx, pdf_document *doc, pdf_obj *ocg)
+clear_radio_group(fz_context *ctx, pdf_document *doc, int config_num, pdf_obj *ocg)
 {
-	pdf_obj *rbgroups = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/OCProperties/RBGroups");
+	pdf_obj *ocprops, *rbgroups, *cobj = NULL;
 	int len, i;
+
+	ocprops = pdf_dict_get(ctx, pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root)), PDF_NAME(OCProperties));
+	if (config_num >= 0)
+		cobj = pdf_array_get(ctx, pdf_dict_get(ctx, ocprops, PDF_NAME(Configs)), config_num);
+	if (config_num == -1 || (config_num >= 0 && !cobj))
+		cobj = pdf_dict_get(ctx, ocprops, PDF_NAME(D));
+
+	rbgroups = pdf_dict_get(ctx, cobj, PDF_NAME(RBGroups));
 
 	len = pdf_array_len(ctx, rbgroups);
 	for (i = 0; i < len; i++)
 	{
 		pdf_obj *group = pdf_array_get(ctx, rbgroups, i);
 
-		if (pdf_array_contains(ctx, ocg, group))
+		if (pdf_array_contains(ctx, group, ocg))
 		{
 			int len2 = pdf_array_len(ctx, group);
 			int j;
@@ -459,7 +518,7 @@ clear_radio_group(fz_context *ctx, pdf_document *doc, pdf_obj *ocg)
 				{
 					pdf_ocg_entry *s = &doc->ocg->ocgs[k];
 
-					if (!pdf_objcmp_resolve(ctx, s->obj, g))
+					if (!pdf_objcmp(ctx, s->obj, g))
 						s->state = 0;
 				}
 			}
@@ -489,7 +548,7 @@ void pdf_select_layer_config_ui(fz_context *ctx, pdf_document *doc, int ui)
 		return;
 
 	if (entry->button_flags == PDF_LAYER_UI_RADIOBOX)
-		clear_radio_group(ctx, doc, desc->ocgs[entry->ocg].obj);
+		clear_radio_group(ctx, doc, desc->current, desc->ocgs[entry->ocg].obj);
 
 	desc->ocgs[entry->ocg].state = 1;
 }
@@ -513,7 +572,7 @@ void pdf_toggle_layer_config_ui(fz_context *ctx, pdf_document *doc, int ui)
 	selected = desc->ocgs[entry->ocg].state;
 
 	if (entry->button_flags == PDF_LAYER_UI_RADIOBOX)
-		clear_radio_group(ctx, doc, desc->ocgs[entry->ocg].obj);
+		clear_radio_group(ctx, doc, desc->current, desc->ocgs[entry->ocg].obj);
 
 	desc->ocgs[entry->ocg].state = !selected;
 }
@@ -557,9 +616,10 @@ pdf_layer_config_ui_info(fz_context *ctx, pdf_document *doc, int ui, pdf_layer_c
 	entry = &desc->ui[ui];
 	info->type = entry->button_flags;
 	info->depth = entry->depth;
-	info->selected = desc->ocgs[entry->ocg].state;
 	info->locked = entry->locked;
 	info->text = entry->name;
+	if (entry->ocg != -1)
+		info->selected = desc->ocgs[entry->ocg].state;
 }
 
 static int
@@ -798,7 +858,7 @@ pdf_read_ocg(fz_context *ctx, pdf_document *doc)
 		}
 		qsort(doc->ocg->ocgs, len, sizeof(doc->ocg->ocgs[0]), ocgcmp);
 
-		pdf_select_layer_config(ctx, doc, 0);
+		pdf_select_layer_config(ctx, doc, -1);
 	}
 	fz_catch(ctx)
 	{
@@ -874,4 +934,29 @@ pdf_set_layer_config_as_default(fz_context *ctx, pdf_document *doc)
 	pdf_dict_del(ctx, d, PDF_NAME(Locked));
 
 	pdf_dict_del(ctx, ocprops, PDF_NAME(Configs));
+}
+
+const char *
+pdf_layer_config_ui_type_to_string(pdf_layer_config_ui_type type)
+{
+	switch (type)
+	{
+	default:
+		return "Invalid";
+	case PDF_LAYER_UI_LABEL:
+		return "Label";
+	case PDF_LAYER_UI_CHECKBOX:
+		return "Checkbox";
+	case PDF_LAYER_UI_RADIOBOX:
+		return "Radiobox";
+	}
+}
+
+pdf_layer_config_ui_type
+pdf_layer_config_ui_type_from_string(const char *str)
+{
+	if (!strcmp("Label", str)) return PDF_LAYER_UI_LABEL;
+	if (!strcmp("Checkbox", str)) return PDF_LAYER_UI_CHECKBOX;
+	if (!strcmp("Radiobox", str)) return PDF_LAYER_UI_RADIOBOX;
+	return PDF_LAYER_UI_CHECKBOX;
 }

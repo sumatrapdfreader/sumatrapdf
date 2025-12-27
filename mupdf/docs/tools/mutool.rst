@@ -19,6 +19,9 @@ Here are a few highlights:
 ``mutool show``
 	A tool for displaying the internal objects in a PDF file.
 
+``mutool grep``
+	Search text content of documents.
+
 ``mutool extract``
 	Extract images and embedded font resources.
 

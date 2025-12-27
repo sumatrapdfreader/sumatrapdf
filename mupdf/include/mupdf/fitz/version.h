@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2025 Artifex Software, Inc.
+// Copyright (C) 2004-2024 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -23,9 +23,9 @@
 #ifndef MUPDF_FITZ_VERSION_H
 #define MUPDF_FITZ_VERSION_H
 #ifndef FZ_VERSION
-#define FZ_VERSION "1.26.12"
+#define FZ_VERSION "1.27.0"
 #define FZ_VERSION_MAJOR 1
-#define FZ_VERSION_MINOR 26
-#define FZ_VERSION_PATCH 12
+#define FZ_VERSION_MINOR 27
+#define FZ_VERSION_PATCH 0
 #endif
 #endif

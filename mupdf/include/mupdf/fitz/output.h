@@ -141,7 +141,10 @@ fz_output *fz_new_output(fz_context *ctx, int bufsiz, void *state, fz_output_wri
 
 /**
 	Open an output stream that writes to a
-	given path.
+	given path. This stream will always be a binary stream.
+
+	On Windows, if this stream is stdout or stderr, these will
+	be set to binary.
 
 	filename: The filename to write to (specified in UTF-8).
 

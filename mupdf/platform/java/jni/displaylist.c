@@ -135,7 +135,7 @@ FUN(DisplayList_toStructuredText)(JNIEnv *env, jobject self, jstring joptions)
 }
 
 JNIEXPORT jobjectArray JNICALL
-FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
+FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle, jint style)
 {
 	fz_context *ctx = get_context(env);
 	fz_display_list *list = from_DisplayList(env, self);
@@ -153,7 +153,7 @@ FUN(DisplayList_search)(JNIEnv *env, jobject self, jstring jneedle)
 	if (!state.hits || (*env)->ExceptionCheck(env)) return NULL;
 
 	fz_try(ctx)
-		fz_search_display_list_cb(ctx, list, needle, hit_callback, &state);
+		fz_match_display_list_cb(ctx, list, needle, hit_callback, &state, style);
 	fz_always(ctx)
 	{
 		(*env)->ReleaseStringUTFChars(env, jneedle, needle);

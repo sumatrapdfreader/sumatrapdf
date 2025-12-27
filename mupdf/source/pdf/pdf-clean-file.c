@@ -472,6 +472,67 @@ void pdf_rearrange_pages(fz_context *ctx, pdf_document *doc, int count, const in
 	pdf_sync_open_pages(ctx, doc);
 }
 
+static void pdf_vectorize_pages_imp(fz_context *ctx, pdf_document *doc, int count, const int *new_page_list, pdf_clean_options_vectorize vectorize)
+{
+	int i;
+	int n = pdf_count_pages(ctx, doc);
+	pdf_page *page = NULL;
+
+	fz_var(page);
+
+	fz_try(ctx)
+	{
+		if (count == 0)
+		{
+			for (i = 0; i < n; i++)
+			{
+				page = pdf_load_page(ctx, doc, i);
+				pdf_vectorize_page(ctx, page);
+				pdf_drop_page(ctx, page);
+				page = NULL;
+			}
+		}
+		else
+		{
+			for (i = 0; i < count; i++)
+			{
+				page = pdf_load_page(ctx, doc, new_page_list[i]);
+				pdf_vectorize_page(ctx, page);
+				pdf_drop_page(ctx, page);
+				page = NULL;
+			}
+		}
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_page(ctx, page);
+		fz_rethrow(ctx);
+	}
+}
+
+void pdf_vectorize_pages(fz_context *ctx, pdf_document *doc, int count, const int *new_page_list, pdf_clean_options_vectorize vectorize)
+{
+	if (vectorize < PDF_CLEAN_VECTORIZE_NO || vectorize > PDF_CLEAN_VECTORIZE_YES)
+		fz_throw(ctx, FZ_ERROR_ARGUMENT, "Invalid vectorize argument");
+
+	if (vectorize == PDF_CLEAN_VECTORIZE_NO)
+		return;
+
+	pdf_begin_operation(ctx, doc, "Vectorize pages");
+	fz_try(ctx)
+	{
+		pdf_vectorize_pages_imp(ctx, doc, count, new_page_list, vectorize);
+		pdf_end_operation(ctx, doc);
+	}
+	fz_catch(ctx)
+	{
+		pdf_abandon_operation(ctx, doc);
+		pdf_sync_open_pages(ctx, doc);
+		fz_rethrow(ctx);
+	}
+	pdf_sync_open_pages(ctx, doc);
+}
+
 void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password, pdf_clean_options *opts, int argc, char *argv[])
 {
 	pdf_clean_options default_opts = { 0 };
@@ -493,6 +554,11 @@ void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password
 		if (pdf_needs_password(ctx, pdf))
 			if (!pdf_authenticate_password(ctx, pdf, password))
 				fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", infile);
+
+		/* First, we do a prepass across the document to load all the objects
+		 * into memory. We do this to force any repairs to happen before we
+		 * start to apply any edits (which would be lost if a repair is triggered). */
+		pdf_check_document(ctx, pdf);
 
 		len = cap = 0;
 
@@ -531,6 +597,11 @@ void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password
 
 			pdf_rearrange_pages(ctx, pdf, len, pages, opts->structure);
 		}
+
+		/* Although the API supports passing a page list here, we don't
+		 * need to (and in fact, must not) pass it, because the subset of
+		 * the pages has been done already. */
+		pdf_vectorize_pages(ctx, pdf, 0, NULL, opts->vectorize);
 
 		pdf_rewrite_images(ctx, pdf, &opts->image);
 

@@ -134,6 +134,7 @@ typedef struct fz_ocr_device_s
 
 	char *language;
 	char *datadir;
+	char *options;
 } fz_ocr_device;
 
 static void
@@ -390,6 +391,7 @@ drop_ocr_device(fz_context *ctx, fz_ocr_device *ocr)
 	fz_free(ctx, ocr->chars);
 	fz_free(ctx, ocr->language);
 	fz_free(ctx, ocr->datadir);
+	fz_free(ctx, ocr->options);
 }
 
 static void
@@ -1056,7 +1058,7 @@ fz_ocr_close_device(fz_context *ctx, fz_device *dev)
 	fz_close_device(ctx, ocr->draw_dev);
 
 	/* Now run the OCR */
-	tessapi = ocr_init(ctx, ocr->language, ocr->datadir);
+	tessapi = ocr_init(ctx, ocr->language, ocr->datadir, ocr->options);
 
 	fz_try(ctx)
 	{
@@ -1108,6 +1110,21 @@ fz_new_ocr_device(fz_context *ctx,
 		int (*progress)(fz_context *, void *, int),
 		void *progress_arg)
 {
+	return fz_new_ocr_device_with_options(ctx, target, ctm, mediabox, with_list, language, datadir, progress, progress_arg, NULL);
+}
+
+fz_device *
+fz_new_ocr_device_with_options(fz_context *ctx,
+		fz_device *target,
+		fz_matrix ctm,
+		fz_rect mediabox,
+		int with_list,
+		const char *language,
+		const char *datadir,
+		int (*progress)(fz_context *, void *, int),
+		void *progress_arg,
+		const char *options)
+{
 #ifdef OCR_DISABLED
 	fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "OCR Disabled in this build");
 #else
@@ -1115,6 +1132,9 @@ fz_new_ocr_device(fz_context *ctx,
 
 	if (target == NULL)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "OCR devices require a target");
+
+	if (options == NULL)
+		options = "";
 
 	dev = fz_new_derived_device(ctx, fz_ocr_device);
 
@@ -1160,6 +1180,8 @@ fz_new_ocr_device(fz_context *ctx,
 		fz_rect bbox;
 		fz_irect ibox;
 		fz_point res;
+
+		dev->options = fz_strdup(ctx, options);
 
 		dev->target = target;
 		dev->mediabox = mediabox;

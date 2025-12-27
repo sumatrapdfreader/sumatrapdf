@@ -52,6 +52,9 @@ add_object_label(fz_context *ctx, pdf_object_labels *g, char *path, int a, int b
 {
 	pdf_object_label_node *node, **root;
 
+	if (a < 0 || a >= g->object_count)
+		return;
+
 	node = fz_pool_alloc(ctx, g->pool, sizeof(pdf_object_label_node));
 	node->path = fz_pool_strdup(ctx, g->pool, path);
 	node->num = b;

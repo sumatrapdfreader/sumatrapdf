@@ -31,15 +31,14 @@ Instance methods
 	:param Archive subArchive: An archive that will be a child archive of this one.
 	:param string path: The path at which the archive will be inserted.
 
+	In the following example ``example1.zip`` contains ``file1.txt`` and
+	``example2.zip`` contains ``file2.txt``. The MultiArchive now lets you
+	access both ``file1.txt`` and ``subpath/file2.txt``:
+
 	.. code-block::
-		:caption:
-			Assuming that ``example1.zip`` contains a ``file1.txt``
-			and ``example2.tar`` contains ``file2.txt``, the
-			multiarchive now allows access to "file1.txt" and
-			"subpath/file2.txt".
 
 		var archive = new mupdf.MultiArchive()
 		archive.mountArchive(new mupdf.Archive("example1.zip"), null)
-		archive.mountArchive(new mupdf.Archive("example2.tar"), "subpath")
-		print(archive.hasEntry("file1.txt"))
-		print(archive.hasEntry("subpath/file2.txt"))
+		archive.mountArchive(new mupdf.Archive("example2.zip"), "subpath")
+		console.log(archive.hasEntry("file1.txt"))
+		console.log(archive.hasEntry("subpath/file2.txt"))

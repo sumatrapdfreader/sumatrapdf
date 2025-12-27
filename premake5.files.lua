@@ -854,7 +854,7 @@ function mupdf_files()
   files { "mupdf/source/fitz/*.h" }
   files_in_dir("mupdf/source/fitz", {
     "archive.c",
-    -- "barcode.cpp",
+    -- "barcode.c",
     "bbox-device.c",
     "bidi.c",
     "bidi-std.c",
@@ -916,6 +916,7 @@ function mupdf_files()
     "harfbuzz.c",
     "hash.c",
     "heap.c",
+    "hyphen.c",
     "image.c",
     "jmemcust.c",
     "json.c",
@@ -1046,6 +1047,7 @@ function mupdf_files()
     "pdf-op-buffer.c",
     "pdf-op-filter.c",
     "pdf-op-run.c",
+    "pdf-op-vectorize.c",
     "pdf-outline.c",
     "pdf-page.c",
     "pdf-parse.c",

@@ -1723,7 +1723,7 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 	int i, n, new_glyphs, old_strings, new_strings;
 	int j;
 	fz_int2_heap heap = { 0 };
-	uint8_t *d0, *e, *p;
+	uint8_t *d0, *e, *p, *end;
 
 	if (len < (size_t) 2 + 2 * ttf->orig_num_glyphs)
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Truncated post table");
@@ -1733,6 +1733,7 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
 
 	d0 = d;
+	end = d0 + len;
 	d += 2; len -= 2;
 	e = d;
 	p = d;
@@ -1750,6 +1751,10 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		uint16_t o = get16(d);
 		fz_int2 i2;
 		p += 2;
+
+		/* Treat TrueType reserved numbers as .notdef */
+		if (!ttf->is_otf && o >= 32768)
+			o = 0;
 
 		if (o >= 258)
 			old_strings++;
@@ -1781,10 +1786,22 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 			int k;
 			char buf[257] = { 0 };
 			int macidx;
-			for (k = 0; k < o - 258; k++)
+			for (k = 0; k < o - 258 && q < end; k++)
 				q += 1 + *q;
-			for (k = 0; k < *q; k++)
+			if (q >= end)
+			{
+				fz_free(ctx, heap.heap);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Glyph name index out of range in post table");
+			}
+
+			for (k = 0; k < *q && q + 1 + k < end; k++)
 				buf[k] = *(q + 1 + k);
+
+			if (k < *q)
+			{
+				fz_free(ctx, heap.heap);
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Glyph name extends past end of post table");
+			}
 
 			macidx = find_macroman_string(buf);
 
@@ -1825,10 +1842,16 @@ subset_post2(fz_context *ctx, ttf_t *ttf, uint8_t *d, size_t len, int *gids, int
 		uint8_t slen;
 
 		if (len < 1)
+		{
+			fz_free(ctx, heap.heap);
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+		}
 		slen = *d+1;
 		if (len < slen)
+		{
+			fz_free(ctx, heap.heap);
 			fz_throw(ctx, FZ_ERROR_FORMAT, "Malformed post table");
+		}
 		len -= slen;
 
 		if (j >= heap.len || heap.heap[j].a != i)

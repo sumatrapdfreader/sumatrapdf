@@ -60,6 +60,14 @@ enum
 	FZ_RI_ABSOLUTE_COLORIMETRIC,
 };
 
+/* We abuse the top bit of the rendering intent to hold details of
+ * whether we are in a softmask or not. This should not be used by
+ * non-internal code. */
+enum
+{
+	FZ_RI_IN_SOFTMASK = 0x80
+};
+
 typedef struct
 {
 	uint8_t ri;	/* rendering intent */

@@ -250,6 +250,31 @@ static void savefont(pdf_obj *dict)
 		fz_rethrow(ctx);
 }
 
+static void savefile(pdf_obj *fs)
+{
+	char namebuf[100];
+	pdf_filespec_params params;
+	fz_buffer *buf;
+	const char *ext;
+
+	pdf_get_filespec_params(ctx, fs, &params);
+
+	buf = pdf_load_embedded_file_contents(ctx, fs);
+	fz_try(ctx)
+	{
+		ext = strrchr(params.filename, '.');
+		if (!ext)
+			ext = ".dat";
+		fz_snprintf(namebuf, sizeof(namebuf), "file-%04d%s", pdf_to_num(ctx, fs), ext);
+		printf("extracting %s (%s)\n", namebuf, params.filename);
+		fz_save_buffer(ctx, buf, namebuf);
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
 static void extractobject(int num)
 {
 	pdf_obj *ref = NULL;
@@ -263,6 +288,8 @@ static void extractobject(int num)
 			saveimage(ref);
 		if (isfontdesc(ref))
 			savefont(ref);
+		if (pdf_is_embedded_file(ctx, ref))
+			savefile(ref);
 
 		fz_empty_store(ctx);
 	}

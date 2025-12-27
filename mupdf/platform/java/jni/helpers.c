@@ -26,7 +26,7 @@ typedef struct {
 	int error;
 } search_state;
 
-static int hit_callback(fz_context *ctx, void *opaque, int quads, fz_quad *quad)
+static int hit_callback(fz_context *ctx, void *opaque, int quads, fz_quad *quad, int chapter, int page)
 {
 	search_state *state = (search_state *) opaque;
 	JNIEnv *env = state->env;
@@ -964,4 +964,200 @@ pdf_processor *make_pdf_processor(JNIEnv *env, fz_context *ctx, jobject jproc)
 	proc->env = env;
 
 	return (pdf_processor*)proc;
+}
+
+/* Callbacks to implement fz_stream and fz_output using Java classes */
+
+typedef struct
+{
+	jobject stream;
+	jbyteArray array;
+	jbyte buffer[8192];
+}
+SeekableStreamState;
+
+static int SeekableInputStream_next(fz_context *ctx, fz_stream *stm, size_t max)
+{
+	SeekableStreamState *state = stm->state;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+	int n, ch;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableInputStream_next");
+
+	n = (*env)->CallIntMethod(env, state->stream, mid_SeekableInputStream_read, state->array);
+	if ((*env)->ExceptionCheck(env))
+		fz_throw_java_and_detach_thread(ctx, env, detach);
+
+	if (n > 0)
+	{
+		(*env)->GetByteArrayRegion(env, state->array, 0, n, state->buffer);
+		if ((*env)->ExceptionCheck(env))
+			fz_throw_java_and_detach_thread(ctx, env, detach);
+
+		/* update stm->pos so fz_tell knows the current position */
+		stm->rp = (unsigned char *)state->buffer;
+		stm->wp = stm->rp + n;
+		stm->pos += n;
+
+		ch = *stm->rp++;
+	}
+	else if (n < 0)
+	{
+		ch = EOF;
+	}
+	else
+		fz_throw_and_detach_thread(ctx, detach, FZ_ERROR_GENERIC, "no bytes read");
+
+	jni_detach_thread(detach);
+	return ch;
+}
+
+static void SeekableInputStream_seek(fz_context *ctx, fz_stream *stm, int64_t offset, int whence)
+{
+	SeekableStreamState *state = stm->state;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+	int64_t pos;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableInputStream_seek");
+
+	pos = (*env)->CallLongMethod(env, state->stream, mid_SeekableStream_seek, offset, whence);
+	if ((*env)->ExceptionCheck(env))
+		fz_throw_java_and_detach_thread(ctx, env, detach);
+
+	stm->pos = pos;
+	stm->rp = stm->wp = (unsigned char *)state->buffer;
+
+	jni_detach_thread(detach);
+}
+
+static void SeekableInputStream_drop(fz_context *ctx, void *streamState_)
+{
+	SeekableStreamState *state = streamState_;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+	{
+		fz_warn(ctx, "cannot attach to JVM in SeekableInputStream_drop; leaking input stream");
+		return;
+	}
+
+	(*env)->DeleteGlobalRef(env, state->stream);
+	(*env)->DeleteGlobalRef(env, state->array);
+
+	fz_free(ctx, state);
+
+	jni_detach_thread(detach);
+}
+
+static void SeekableOutputStream_write(fz_context *ctx, void *streamState_, const void *buffer_, size_t count)
+{
+	SeekableStreamState *state = streamState_;
+	const jbyte *buffer = buffer_;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableOutputStream_write");
+
+	while (count > 0)
+	{
+		size_t n = fz_minz(count, sizeof(state->buffer));
+
+		(*env)->SetByteArrayRegion(env, state->array, 0, n, buffer);
+		if ((*env)->ExceptionCheck(env))
+			fz_throw_java_and_detach_thread(ctx, env, detach);
+
+		buffer += n;
+		count -= n;
+
+		(*env)->CallVoidMethod(env, state->stream, mid_SeekableOutputStream_write, state->array, 0, n);
+		if ((*env)->ExceptionCheck(env))
+			fz_throw_java_and_detach_thread(ctx, env, detach);
+	}
+
+	jni_detach_thread(detach);
+}
+
+static int64_t SeekableOutputStream_tell(fz_context *ctx, void *streamState_)
+{
+	SeekableStreamState *state = streamState_;
+	jboolean detach = JNI_FALSE;
+	int64_t pos = 0;
+	JNIEnv *env;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableOutputStream_tell");
+
+	pos = (*env)->CallLongMethod(env, state->stream, mid_SeekableStream_position);
+	if ((*env)->ExceptionCheck(env))
+		fz_throw_java_and_detach_thread(ctx, env, detach);
+
+	jni_detach_thread(detach);
+
+	return pos;
+}
+
+static void SeekableOutputStream_truncate(fz_context *ctx, void *streamState_)
+{
+	SeekableStreamState *state = streamState_;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableOutputStream_truncate");
+
+	(*env)->CallVoidMethod(env, state->stream, mid_SeekableOutputStream_truncate);
+	if ((*env)->ExceptionCheck(env))
+		fz_throw_java_and_detach_thread(ctx, env, detach);
+
+	jni_detach_thread(detach);
+}
+
+static void SeekableOutputStream_seek(fz_context *ctx, void *streamState_, int64_t offset, int whence)
+{
+	SeekableStreamState *state = streamState_;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot attach to JVM in SeekableOutputStream_seek");
+
+	(void) (*env)->CallLongMethod(env, state->stream, mid_SeekableStream_seek, offset, whence);
+	if ((*env)->ExceptionCheck(env))
+		fz_throw_java_and_detach_thread(ctx, env, detach);
+
+	jni_detach_thread(detach);
+}
+
+static void SeekableOutputStream_drop(fz_context *ctx, void *streamState_)
+{
+	SeekableStreamState *state = streamState_;
+	jboolean detach = JNI_FALSE;
+	JNIEnv *env;
+
+	env = jni_attach_thread(&detach);
+	if (env == NULL)
+	{
+		fz_warn(ctx, "cannot attach to JVM in SeekableOutputStream_drop; leaking output stream");
+		return;
+	}
+
+	(*env)->DeleteGlobalRef(env, state->stream);
+	(*env)->DeleteGlobalRef(env, state->array);
+
+	fz_free(ctx, state);
+
+	jni_detach_thread(detach);
 }

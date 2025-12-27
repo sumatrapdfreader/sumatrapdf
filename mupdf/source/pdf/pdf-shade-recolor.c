@@ -36,7 +36,7 @@ typedef struct
 	int funcs;
 } recolor_details;
 
-#define FUNSEGS 64 /* size of sampled mesh for function-based shadings */
+#define FUNSEGS 256 /* size of sampled mesh for function-based shadings */
 #define FUNBPS 8 /* Bits per sample in output functions */
 
 static void

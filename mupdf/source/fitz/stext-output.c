@@ -516,6 +516,48 @@ find_table_pos(fz_stext_grid_positions *xs, float x0, float x1, int *ix0, int *i
 static void
 run_to_xhtml(fz_context *ctx, fz_stext_block *block, fz_output *out);
 
+static unsigned int
+grid_flags(fz_stext_grid_info *info, int x, int y)
+{
+	if (info == NULL || x < 0 || y < 0 || x >= info->w || y >= info->h)
+		return 0;
+	return info->info[y * info->w + x].flags;
+}
+
+static void
+start_cell(fz_context *ctx, fz_output *out, fz_stext_grid_info *info, int x, int y)
+{
+	unsigned int flags = grid_flags(info, x, y);
+	unsigned int flagsr = grid_flags(info, x+1, y);
+	unsigned int flagsb = grid_flags(info, x, y+1);
+	fz_write_string(ctx, out, "<td");
+	if (info == NULL)
+		return;
+	if ((flags & FZ_STEXT_GRID_L_BORDER) == 0 &&
+		(flags & FZ_STEXT_GRID_T_BORDER) == 0 &&
+		(flagsr & FZ_STEXT_GRID_L_BORDER) == 0 &&
+		(flagsb & FZ_STEXT_GRID_T_BORDER) == 0)
+		return;
+	fz_write_string(ctx, out, " style=\"border-style:");
+	if (flags & FZ_STEXT_GRID_T_BORDER)
+		fz_write_string(ctx, out, "solid ");
+	else
+		fz_write_string(ctx, out, "none ");
+	if (flagsr & FZ_STEXT_GRID_L_BORDER)
+		fz_write_string(ctx, out, "solid ");
+	else
+		fz_write_string(ctx, out, "none ");
+	if (flagsb & FZ_STEXT_GRID_T_BORDER)
+		fz_write_string(ctx, out, "solid ");
+	else
+		fz_write_string(ctx, out, "none ");
+	if (flags & FZ_STEXT_GRID_L_BORDER)
+		fz_write_string(ctx, out, "solid;\"");
+	else
+		fz_write_string(ctx, out, "none;\"");
+
+}
+
 static void
 fz_print_stext_table_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *block)
 {
@@ -539,7 +581,7 @@ fz_print_stext_table_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *b
 
 	fz_try(ctx)
 	{
-		fz_write_printf(ctx, out, "<table>\n");
+		fz_write_printf(ctx, out, "<table style=\"border-collapse: collapse;\">\n");
 
 		y = 0;
 		for (tr = grid->next; tr != NULL; tr = tr->next)
@@ -587,12 +629,13 @@ fz_print_stext_table_as_xhtml(fz_context *ctx, fz_output *out, fz_stext_block *b
 					uint8_t *c = &cells[x + w*y];
 					if (*c == 0)
 					{
-						fz_write_printf(ctx, out, "<td></td>");
+						start_cell(ctx, out, grid->u.b.info, x, y);
+						fz_write_printf(ctx, out, "></td>");
 						*c = 1;
 					}
 					x++;
 				}
-				fz_write_string(ctx, out, "<td");
+				start_cell(ctx, out, grid->u.b.info, x, y);
 				if (x1 > x0+1)
 					fz_write_printf(ctx, out, " colspan=\"%d\"", x1-x0);
 				if (y1 > y0+1)
@@ -736,6 +779,12 @@ static void fz_print_stext_block_as_xhtml(fz_context *ctx, fz_output *out, fz_st
 			}
 
 			sp = (ch->c == ' ');
+			/* Skip hyphens on line joins */
+			if (ch->next == NULL && (line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0 && fz_is_unicode_hyphen(ch->c))
+			{
+				sp = 1;
+				continue;
+			}
 			switch (ch->c)
 			{
 			default:
@@ -887,10 +936,10 @@ as_xml(fz_context *ctx, fz_stext_block *block, fz_output *out)
 				float size = 0;
 				const char *name = NULL;
 
-				fz_write_printf(ctx, out, "<line bbox=\"%g %g %g %g\" wmode=\"%d\" dir=\"%g %g\"",
+				fz_write_printf(ctx, out, "<line bbox=\"%g %g %g %g\" wmode=\"%d\" dir=\"%g %g\" flags=\"%d\"",
 						line->bbox.x0, line->bbox.y0, line->bbox.x1, line->bbox.y1,
 						line->wmode,
-						line->dir.x, line->dir.y);
+						line->dir.x, line->dir.y, line->flags);
 
 				/* This is duplication of information, but it makes it MUCH easier to search for
 				 * text fragments in large output. */
@@ -1064,7 +1113,8 @@ as_json(fz_context *ctx, fz_stext_block *block, fz_output *out, float scale)
 				fz_write_printf(ctx, out, "%q:%d,", "x", (int)(line->bbox.x0 * scale));
 				fz_write_printf(ctx, out, "%q:%d,", "y", (int)(line->bbox.y0 * scale));
 				fz_write_printf(ctx, out, "%q:%d,", "w", (int)((line->bbox.x1 - line->bbox.x0) * scale));
-				fz_write_printf(ctx, out, "%q:%d},", "h", (int)((line->bbox.y1 - line->bbox.y0) * scale));
+				fz_write_printf(ctx, out, "%q:%d,", "h", (int)((line->bbox.y1 - line->bbox.y0) * scale));
+				fz_write_printf(ctx, out, "%q:%d},", "flags", line->flags);
 
 				/* Since we force preserve-spans, the first char has the style for the entire line. */
 				if (line->first_char)
@@ -1158,12 +1208,19 @@ do_as_text(fz_context *ctx, fz_output *out, fz_stext_block *first_block)
 		case FZ_STEXT_BLOCK_TEXT:
 			for (line = block->u.t.first_line; line; line = line->next)
 			{
+				int break_line = 1;
 				for (ch = line->first_char; ch; ch = ch->next)
 				{
+					if (ch->next == NULL && (line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0)
+					{
+						break_line = 0;
+						continue;
+					}
 					n = fz_runetochar(utf, ch->c);
 					for (i = 0; i < n; i++)
 						fz_write_byte(ctx, out, utf[i]);
 				}
+				if (break_line)
 				fz_write_string(ctx, out, "\n");
 			}
 			fz_write_string(ctx, out, "\n");

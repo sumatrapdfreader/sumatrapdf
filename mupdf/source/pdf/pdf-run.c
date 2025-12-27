@@ -30,7 +30,6 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 	fz_rect mediabox;
 	pdf_processor *proc = NULL;
 	fz_default_colorspaces *default_cs = NULL;
-	int flags;
 	int resources_pushed = 0;
 	int struct_parent_num;
 	pdf_obj *struct_parent;
@@ -65,17 +64,6 @@ pdf_run_annot_with_usage(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf
 			fz_set_default_colorspaces(ctx, dev, default_cs);
 
 		pdf_page_transform(ctx, page, &mediabox, &page_ctm);
-
-		flags = pdf_dict_get_int(ctx, annot->obj, PDF_NAME(F));
-		if (flags & PDF_ANNOT_IS_NO_ROTATE)
-		{
-			int rotate = pdf_dict_get_inheritable_int(ctx, page->obj, PDF_NAME(Rotate));
-			fz_rect rect = pdf_dict_get_rect(ctx, annot->obj, PDF_NAME(Rect));
-			fz_point tp = fz_transform_point_xy(rect.x0, rect.y1, page_ctm);
-			page_ctm = fz_concat(page_ctm, fz_translate(-tp.x, -tp.y));
-			page_ctm = fz_concat(page_ctm, fz_rotate(-rotate));
-			page_ctm = fz_concat(page_ctm, fz_translate(tp.x, tp.y));
-		}
 
 		ctm = fz_concat(page_ctm, ctm);
 
@@ -260,6 +248,8 @@ void pdf_run_annot(fz_context *ctx, pdf_annot *annot, fz_device *dev, fz_matrix 
 	if (!page)
 		fz_throw(ctx, FZ_ERROR_ARGUMENT, "annotation not bound to any page");
 
+	pdf_update_page(ctx, page);
+
 	doc = page->doc;
 
 	nocache = !!(dev->hints & FZ_NO_CACHE);
@@ -339,6 +329,8 @@ void pdf_run_page_annots_with_usage(fz_context *ctx, pdf_page *page, fz_device *
 	pdf_document *doc = page->doc;
 	int nocache;
 
+	pdf_update_page(ctx, page);
+
 	nocache = !!(dev->hints & FZ_NO_CACHE);
 	if (nocache)
 		pdf_mark_xref(ctx, doc);
@@ -367,6 +359,8 @@ void pdf_run_page_widgets_with_usage(fz_context *ctx, pdf_page *page, fz_device 
 {
 	pdf_document *doc = page->doc;
 	int nocache;
+
+	pdf_update_page(ctx, page);
 
 	nocache = !!(dev->hints & FZ_NO_CACHE);
 	if (nocache)
@@ -397,6 +391,8 @@ pdf_run_page_with_usage(fz_context *ctx, pdf_page *page, fz_device *dev, fz_matr
 {
 	pdf_document *doc = page->doc;
 	int nocache = !!(dev->hints & FZ_NO_CACHE);
+
+	pdf_update_page(ctx, page);
 
 	if (nocache)
 		pdf_mark_xref(ctx, doc);

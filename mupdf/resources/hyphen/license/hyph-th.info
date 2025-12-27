@@ -1,0 +1,544 @@
+% title: Hyphenation patterns for Thai
+% copyright: Copyright (C) 2012-2013 Theppitak Karoonboonyanan
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: Thai
+%     tag: th
+% authors:
+%   -
+%     name: Theppitak Karoonboonyanan
+%     contact: theppitak (at) gmail.com
+% licence:
+%     name: LPPL
+%     version: 1.3
+%     or_later: true
+%     status: maintained
+%     maintainer: Theppitak Karoonboonyanan
+%     url: https://latex-project.org/lppl/
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 3
+% texlive:
+%     encoding: lth
+%     babelname: thai
+%     message: Thai hyphenation patterns
+%     description: Hyphenation patterns for Thai in LTH and UTF-8 encodings.
+% ==========================================
+% https://linux.thai.net/projects/thailatex
+% https://github.com/tlwg/thailatex
+%
+%%
+%% No hyphenation at the very word begin
+%%
+%%
+%% No hyphenation at the very word end.
+%%
+%%
+%% Force hyphenation/no-hyphenation on certain characters.
+%%
+%6ั
+%เ6
+% Since 'เ6' conflicts with 'เ2', let's elaborate it instead
+%เ6ก
+% (also force 'โผ-เผ')
+%%
+%% Begin of exception lists
+%%
+% Block 'ช-วา'
+% Block 'ไอน์~ส-ไตน์', after '5ไ6' pattern
+% but still enable 'ปา~เลส-ไตน์'
+% Block 'บ-ท~ความ'
+% Fix aggressive 'ม1ว'
+% but still enable 'เหม-วดี', 'ล้อม-วง'
+% Force 'มวล-ชน', but not 'แฟล-ช'
+% Force 'วัต-ถุ', 'สัต-ถุ', but not 'วัต-ถ์', 'นัต-ถุ์'
+% Block 'เม-ตร', 'สู-ตร', 'ปริ-ตร', etc.
+% Block 'ธา-ตุ' caused by 'ธา5ตุ' pattern
+% but still allow 'ธา-ตุ-โขภ' and 'ธา-ตุม-มิส-สา'
+% Block 'บุ-ตร' caused by 'บุ5ตร' pattern
+% but still allow 'บุ-ตรี'
+% Block 'ค-รู' caused by '1รู' pattern
+% Block 'ฮิ~บ-รู', 'ฮี~บ-รู' caused by '1รู' pattern
+% Block 'ส-ภา' caused by '1ภา' pattern
+% but still allow 'เส-ภา', 'โส-ภา', 'อังส-ภา~ระ'
+% Block 'ผ-วา' caused by '1วา' pattern
+% Block 'สกล~น-คร' caused by 'น1ค' pattern
+% but still allow 'ครืน-ครั่น', 'ปืน-ครก', 'สวน-ครัว', 'สำ-มะ-โน-ครัว'
+% Block 'เห-ยง' caused by 'เห5ยง' pattern
+% but still allow 'มเห-ยงค์'
+% Block 'เปี่-ยม' caused by 'ปี่3' pattern
+% Block 'เขี้-ยว' caused by 'ขี้1' pattern
+% Block 'ม-ณี' caused by '1ณี' pattern
+% but still allow 'คาม-ณีย์', 'พราหม-ณี', 'รม-ณีย์', 'รม-ณีย-สถาน', 'รัม-ณีย-สถาน'
+% Block 'งง~ง-วย', 'จอ~หง-วน', 'ทราม~สง-วน', 'ลม~ง-วง', 'หง-วน', 'เข้ม~ง-วด'
+%   caused by 'ง1ว'
+% but still allow many others, including 'ฆ้อง-วง', 'วัง-วน'
+% Block 'ต่อ~ย-อด' caused by a mysterious pattern
+% Block 'นาง~พ-ญา' caused by '1ญา' pattern
+% Block 'จุ-รณ' caused by 'ุ1ร' pattern
+% Block 'ฤ-ชา' caused by '1ชา' pattern
+% Block 'ฤ-ทัย' caused by '5ทัย.' pattern
+% but still allow 'หฤ-ทัย'
+% Block 'พรร-ดิ' caused by 'ร1ด'
+% Block 'สวา-ดิ' caused by 'า1ดิ'
+% Block 'คู่~อ-ริ' caused by 'อ1ริ'
+% Block 'ปัญ~จ~น-ที' caused by 'น3ที'
+% but sill allow 'กุน-ที' etc.
+% Block 'พุทธ~ค-ยา' caused by '1ยา'
+% but still allow 'ภาค-ยา-นุ-วัติ'
+% Block 'มนิ~ม-นา', 'มนุษย์~ม-นา'
+% but still allow 'กรม-นา' etc.
+% Force 'ปา-ณะ', 'หริ-ณะ', 'ตรุ-ณะ'
+% Force 'ปัณ-ณะ', 'โก-ณะ', 'โท-ณะ', 'โล-ณะ'
+% Force 'ชุษ-ณะ', 'กฤษ-ณะ' but not 'ลัก~ษ-ณะ'
+% Force 'ทรรป-ณะ', 'พราหม-ณะ', 'สม-ณะ', 'ลว-ณะ', 'ศรว-ณะ'
+% Force 'ร-ณะ' (e.g. มร-ณะ, สร-ณะ, วรร-ณะ)
+% Block 'บัณ-ร-สี', 'ปัณ-ร-สี'
+% but still allow 'นร-สีห์'
+% Block 'ก-นะ' caused by 'ก1น' pattern
+% but still allow 'ยก-นะ'
+% Force 'คค-นะ', 'นย-นะ', 'ภว-นะ', 'มท-นะ', 'รต-นะ', 'ลว-นะ', 'ลว-ณะ',
+% 'วจ-นะ', 'วท-นะ', 'วส-นะ', 'ศม-นะ', 'สว-นะ', 'อา-ลป-นะ', 'โภช-นะ', 'ไช-นะ'
+% Force 'อา-ลป-นะ', but not 'วิ~เล~ป-นะ'
+% Force 'วรรธ-นะ', but not 'อวิ~โร~ธ-นะ'
+% Force 'สธ-นะ', but not 'โส~ธ-นะ'
+% Force 'สว-นะ', but not 'เส~ว-นะ'
+% Force 'เสาว-นะ'
+% Force 'ปัฏ-นะ', 'พัฒ-นะ', 'ชัป-นะ', 'ทัส-นะ', 'มัท-นะ', 'มุจ-นะ', 'รัต-นะ', 'วัจ-นะ',
+%   'รัช-นะ'
+% Force 'อา-สนะ', but not 'วา~ส-นะ', 'เส~นา~ส-นะ'
+% Force 'ศุ-นะ'
+% Force '-ผี'
+% Force '-จำ'
+% Force '-งำ', but not 'ห-งำ'
+% Force 'ร่าย-รำ', 'ละ~คร-รำ', 'เต้น-รำ', 'โค-รำ', 'ไพ-รำ'
+% but not 'ค-รำ', 'พ-รำ'
+% Force 'ต้ม-ยำ', 'แม่น-ยำ'
+% Force '-งง', but not 'หงอง~แห-งง'
+% Force 'งัน-งก'
+% Force '-ขน', but not '-ชน์', 'เ-ชน', 'โ-ชน'
+% Force '-กร', but not 'จั-กร'
+% Force 'มา-นะ', 'ฐา-นะ', 'ปา-นะ', 'คา-นะ', etc.
+% Force 'เถ-ระ'
+% Force 'นา-ยก', 'ทา-ยก'
+% Force 'า-ยน', 'า-นี', 'า-วี', 'า-ฐี'
+% Force 'ป-โ', but not 'สัม~ป-โยค', 'สา~ธา~รณุ~ป-โภค'
+% but still allow 'วิป-โยค', 'อุป-โภค'
+% Force 'ทัศ-นะ', 'ทรรศ-นะ'
+% Force 'ธรร-มะ'
+% Force 'ต-ถี', but not 'จตุ~ต-ถี'
+% Force '-บท', but not 'ปรัส~ส-บท'
+% Force '-บถ', but not 'ข-บถ', 'ส-บถ'
+% Force 'กัง-ฟู', 'ถ้วย-ฟู', 'ผง-ฟู', 'ฟื้น-ฟู', 'เดียน~เบียน-ฟู', 'เฟื่อง-ฟู'
+% Force 'จัก-ษุ'
+% Force 'ชา-ตะ', 'นา~ริ-ตะ', 'ผิ-ตะ', 'ภี-ตะ', 'มุ-ตะ', 'รช-ตะ', 'วา-ตะ', 'ศิ-ตะ',
+%   'สร-ตะ', 'สังข-ตะ', 'สิ-ตะ', 'หัส-ตะ', 'อภู-ตะ', 'อัจ~จุ-ตะ'
+% but not 'ทุ-คตะ', 'ภา-รตะ', 'สวา-คตะ'
+% Force 'สก~ทา-คา-มิผล', 'สกิ~ทา-คา-มิผล', 'อนา~คา-มิผล'
+% Force 'นา~งา~ซา-กิ', 'อิ~บา~รา-กิ', 'โด~รา~ยา-กิ'
+% Force 'พิ~รา-กล', 'มา~ยา-กล', 'วิท~ยา-กล', 'สา-กล'
+% Force 'พิ-กล', but not 'เลิ-ก~ลา', 'บุค~ลิ-ก~ลัก~ษณะ'
+% Force 'เล่ห์-กล'
+% Force '-นำ', but not 'ห-นำ'
+% Force 'นารี-ผล'
+% Force '-ณุ'
+% Force '-นี.', but not 'กุ-หนี', 'ตัจ-ฉนี', 'บา-รนี', 'วี-ชนี', 'หนี', 'หน่าย-หนี',
+%   'อัส-สนี', 'เม-ทนี', 'เยอ-ร-มนี'
+% Force 'คัน-ยิ'
+% Force 'ชิ-ลี', 'ชุ-ลี', 'า-ลี', 'โป-ลี', 'โม-ลี', 'นนท-ลี', 'กท-ลี', 'จร-ลี'
+% Force 'ศาก-ยะ', 'โยค-ยะ', 'สาธ-ยะ', 'มัท-ยะ', 'อน-ยะ', 'วา~จา~ไป-ยะ', 'บุษ-ยะ'
+% Force 'วา-ยะ', 'ปิ-ยะ', '*ริ-ยะ' etc., 'ณี-ยะ', 'นี-ยะ', 'ภา~คี-ยะ', 'โม~ฆี-ยะ'
+% Force 'สุน~ทรี-ยะ', 'ปรี-ยะ' but not 'เปรี-ยะ'
+% Force 'มโห-รี', 'มโห-สถ', but not 'มโห-ร~สพ'
+% Force 'สิ-รี', 'ภู-รี', 'พิ~หา-รี', 'จม-รี' (but not 'ม-รี~จิ')
+% Force 'กิน-รี', 'โน-รี', but not 'น-รี~เวช'
+% Force 'บัค~เต-รี', but not 'เต-รียม', 'ออส~เต-รีย'
+% Force 'วัช-รี', but not 'เช-รียง'
+% Force 'เถ-รี', 'เภ-รี'
+% Force 'ภม-รี', 'ภุม-รี', 'โม-รี' but not 'ภระ~ม-รี'
+% Force 'ภุม-รี', 'ภุม-รา'
+% Force 'ไพ-รี', but not 'เพ-รียว'
+% Force 'เว-รี', but not 'ว-รี'
+% Force '-ผล'
+% Force '-ดล.', but not 'โม~เ-ดล'
+% Force '-รส.', but not 'คอง-เกรส', 'จรส', 'ซู-โครส', 'เดกซ์-โทรส', 'เพรส',
+%   'เอ็กซ์-เพรส', 'แอด-เดรส'
+% Force '-คน.', but not 'โ-คน', 'เ-คน', 'แ-คน'
+% Force 'กัณ-หา', 'ตัณ-หา'
+% Force 'ฤๅ-' and the misspelled 'ฤา-'
+% Force '.ยี่-'
+% Force 'ภา-วะ', 'กา~สา-วะ', 'ปัส~สา-วะ'
+% Force 'เท-พี', 'เท-วี'
+% Force 'บรร-จง', 'บรร-จบ', 'บรร-จุ', 'บรร-ถร', 'บรร-พต', but not 'บรร-พ~ชน'
+% Force 'ทัก~ษิ~โณ-ทก', 'ปริต~โต-ทก', 'วัส~โส-ทก' etc.
+% but not 'กระ~แ-ทก' etc.
+% Force '-ดร.', but not 'ไฮ~โ-ดร'
+% Force 'น-ทร.', 'อา-ทร', 'นโค-ทร', 'ชโล-ทร', 'โส-ทร'
+% Force 'กวน-อู', 'ตอง-อู'
+% Force '-พล.', but not 'เ-พล'
+% Force 'ไพร่-'
+% Force '-ศก', but not 'โ-ศก'
+% Force 'อัฐ-', but not 'อัฐิ', 'อัฐ-ม', but still allow 'อัฐ-มี'
+% Force 'ชี-วี', 'ยู-วี', 'ปัถ-วี', 'มนัส-วี', 'อฏ-วี'
+% Force 'ขัน-ตี', 'โร-ตี', 'ต่อ-ตี', 'คิ~ริ~บา-ตี', 'กรา~ฟิ-ตี', 'ซิ-ตี', 'จิ~บู-ตี'
+% Force 'กะ~ลา-สี', 'พา~ราณ-สี', 'มเห-สี', 'สัม~ภเว-สี', 'สู-สี', 'อิ-สี', 'เก-สี'
+% Force 'โบ-ลา', 'มู-ลา', 'อจ-ลา', 'เว-ลา', 'เน~บิว-ลา', 'เมข-ลา',
+%   'เว~เน~ซู~เอ-ลา', แชง~กรี-ลา', 'โม~โต~โร-ลา', 'วิ~โอ-ลา', 'โซ-ลา'
+% Force 'สัท~ธา~ธิ-กะ', 'อา~คัน~ตุ-กะ'
+% Force 'ฟุ~กุ~โอ-กะ'
+% Force 'นว-กะ'
+% Force 'ปกิณ-กะ'
+% Force 'เภ-กะ'
+% Force 'มา~ตา~มหัย-กะ', 'อริย-กะ'
+% Force 'วรรธ-กะ'
+% Force 'วัฏ-กะ', 'วัฒ-กะ', 'วา~ณิช-กะ'
+% Force 'ศต-กะ'
+% Force 'อา~มล-กะ'
+% Force '-ทุ.'
+% Block 'โซ-รม', caused by 'โซ1' pattern
+% Block 'อินทร~ธ-นู', caused by '1นู' pattern
+% Force 'วัส-ดุ', 'พัส-ดุ', 'ศุภ~มัส-ดุ' but not 'กบิล~พัส-ดุ์'
+% Force 'สวรร-คต', 'สุร-คต'
+% Force 'อัส~ดง-คต' inhibited by 'ดง4ค' pattern
+% Force '-กง.' but not 'เ-กง.'
+% Force 'ปิ-ฎก', 'สา-ฎก', etc.
+% Force 'บู~รณ-มี', 'ภู-มี', 'ทศ-มี', 'นว-มี'
+% Force 'ปี-ติ', 'สัง~คี-ติ', 'ศรุ-ติ', 'สุ-ติ', 'เฮ-ติ', 'อร-ติ', 'ปัญ~จ-วีส-ติ',
+%   'ติงส-ติ' (but not หนัง~ส-ติ๊ก), 'คุป-ติ' (but not 'ภค~วัม~ป-ติ')
+% Block 'มุต-ติ', 'วิ~ภัต-ติ'
+% Force 'ภัก-ดี', 'ปร~นิม~มิต~วส~วัต-ดี', 'ยุพ-ดี', 'วสุม-ดี', 'ไย-ดี', 'พัศ-ดี', 'มือ-ดี',
+%   'พอ-ดี', 'อรา-ดี', 'ดี~วี-ดี', 'ปรี-ดี', 'สดุ-ดี', 'ยุว-ดี', 'ดิบ-ดี'
+% Force 'นัก-รบ'
+% Force 'กุณ-ฑล', 'กุณ-ฑี', 'กุณ-โฑ', but not 'กุณ-ฑ์'
+% Force 'พร็อก-ซี', 'ยิป-ซี', 'เชล-ซี', 'เซียม-ซี'
+% Force 'กต~เว-ที', 'เว-ที', 'ได้-ที', 'ไพ-ที', but not 'ปัญ~จ~น-ที'
+% Force 'เยอ-บี-รา'; 'ดู-รา'; 'มโนห์-รา', 'เซียร์-รา'
+% Force 'จิต-รา'
+% Force 'แรม-รา', 'โม-รา'; 'โรย-รา', 'ไอย-รา'
+% Force 'มก-รา' (but not 'ก้าม~ก-ราม', 'เยี่ยม~ก-ราย'); 'รบ-รา';
+%   'เลิก-รา'(but not 'วิ~ก-รานต์')
+% Force 'เห-รา' but not 'เห-ราะ'
+% Force 'กร-กฎ', 'กรร-กฎ', (common misspelt) 'ปรา-กฎ'; 'กร-กฏ', 'ทุ-กฏ'
+% Force '-หะ',
+% but not '-คหะ' (e.g. ปัค-คหะ) except 'เค-หะ', 'นิค-หะ';
+%         '-ทหะ' (e.g. เทว-ทหะ) except 'เท-หะ'
+% Force 'คู-หา', 'ลีฬ-หา', 'เค-หา', 'สิ~เน-หา', 'เสน่-หา'
+% Force '-มะ', but not 'กู~ร-มะ', 'แห-มะ', 'มหา~ต-มะ'
+% Force '-หู', but not 'พ-หู'
+% Force '-ดำ', but not 'ส-ดำ'
+% Force '-คำ'
+% Force '-สะ', but not 'ว-สะ'
+% Force '-ฐะ', but not 'ส-ฐะ'
+% Force '-ธะ'
+% Force '-พี.', but not 'ทา~ร-พี' except 'ทร-พี'
+% Force 'ปฐ-วี'
+% Force 'พนิ-ดา'
+% Force 'บุษ-บก', 'บุษ-บง', 'บุษ-ปะ'
+% Force 'พิ-ระ', 'ธี-ระ', 'ปู-ระ'
+% Force 'พช-ระ', 'พัช-ระ', 'วัช-ระ', but not 'ช-ระ~ลุ'
+% Force 'จิต-ระ', but not 'โล~กุ~ต-ระ'
+% Force 'ทห-ระ', but not 'ยี่~ห-ระ'
+% Force 'ภัท-ระ', 'อท-ระ', 'รุท-ระ' but not 'ทระ-นง'
+% Force 'ศุก-ระ', but not 'ก-ระ', 'แก-ระ', 'อนุ~ก-ระ~เบียด'
+% Force 'สว-ระ'
+% Force 'อา~ภัส-ระ', 'อิส-ระ'
+% Force 'เป-ระ'
+% Force 'ดื้อ-ยา', 'หมอ-ยา' inhibited by 'อ4ยา' pattern
+% Force 'กัต-ติ-เก-ยา' inhibited by 'เก2' pattern
+% Force 'สวรร-ยา' inhibited by '1วรร4' pattern
+% Force 'สา-วก'
+% Force 'นิ-ธิ', 'ปณิ-ธิ'
+% Force 'สุท-ธิ', 'พุท-ธิ', 'ศุท-ธิ', but not 'บริ~สุท-ธิ์'
+% Force '~สิท-ธิ', 'มหิท-ธิ'
+% but not 'สิท-ธิ์', '.สิท-ธิ.', 'บุ~ริม~สิท-ธิ', 'ไกร~สิท-ธิ'
+% Force 'อุป-ธิ'
+% Block 'ขัด~สมา-ธิ' caused by 'า1ธ' pattern, but not '.สมา-ธิ.'
+% Block 'พยา-ธิ' caused by 'า1ธ' pattern
+% Force 'ชฎา~มัง-ษี', 'ปัก-ษี', 'ภา-ษี', 'มหิ-ษี', 'ยัก-ษี', but not 'ฤ-ษี'
+% Block 'วร~ด-นู' caused by '1นู' pattern
+% Force 'ศิ-วะ', 'สิ-วะ'; 'ชี-วะ'; 'สุ-วะ'
+% Force 'อา~ชี-วก'
+% Force 'อวัย-วะ', 'อวย-วะ'
+% Force 'ปริ~เท-วะ', 'ไท-วะ', 'อุ~ปัท-วะ', but not 'มัท-ทวะ'
+% Force 'อาช-วะ'
+% Force 'ไศ-วะ'
+% Force '-ถะ'
+% Force '-ษะ'
+% Force 'จตุ-พร', 'จตุร~พิธ-พร', 'ทศ-พร', 'สถา-พร', 'เจริญ-พร'
+% but not "มะ~แ-พร้ว', 'ยุ-พ~ราช'
+% Force 'นม-ผง', 'ผุย-ผง', but not 'แผง'
+% Force 'คาน-ธี', 'ชล-ธี', 'สิน-ธี', 'สุ-ธี', 'เม-ธี'
+% Force 'ชิ-ชะ', 'ทิ-ชะ'; 'รา-ชะ', 'ลา-ชะ'
+% Force 'สโร-ชะ', 'อัตร-ชะ', but not 'ร-ชะ'
+% Force 'สต~ภิส-ชะ'
+% Force 'โอ-ชะ'
+% Force 'ปฏิ-ฆะ', 'มา-ฆะ', 'โม-ฆะ', 'โอ-ฆะ', but not 'ม-ฆะ'
+% Force 'เฟอะ-ฟะ', 'เฟะ-ฟะ', but not 'เ-ฟะ~ฟะ'
+% Force 'กัด~ดา-ฟี', 'โคร~มา~โท~กรา-ฟี'
+% Force 'ดิ-ถี', 'ติ-ถี', 'ศิ-ถี', 'อติ-ถี'
+% Force 'สาร-ถี'
+% Force 'หุย-ฮา', 'เฮ-ฮา', 'โด-ฮา', but not 'เ-ฮา'
+% Force 'ราช-ญี', 'หัจ-ญี', 'ฮัจ-ญี', but not 'เ-ญีย*'
+% Force 'บุป-ผา', 'ภู-ผา', 'หุบ-ผา', 'เลข-ผา', but not 'เ-ผา'
+% Force 'ทัฬ-หิ', 'ปัณ-หิ', 'อัป~เป-หิ', 'อเป-หิ', but not 'เ-หิน'
+% Force 'สิน-ธพ', 'สิน-ธุ' (but not 'สิน-ธุ์'), 'สิน-ธู'
+% Force 'คิว-ชู', 'สาย-ชู', but not 'ร-ชู'
+% Force 'เท-ศะ', 'เป-ศะ', 'วัง-ศะ', but not 'ว-ศะ', 'ศ-ศะ'
+% Force 'กา~วิ-ละ', 'ติ-ละ', 'อัม~พิ-ละ'; 'มา~ตุ-ละ'; 'มู-ละ', 'ศู-ละ'
+% Force 'ร้อย-ละ'
+% Force 'ลด-ละ'
+% Force 'วส-ละ'
+% Force 'อเจ-ละ', 'อเจ-ลก'
+% Force 'เต-ละ'
+% Force 'แต่-ละ'
+% Force 'กลัน-ทะ', 'ฉัน-ทะ', 'สัน-ทะ'
+% Force 'อุต~ตร~ภัท-ทะ'
+% Force 'เส-ทะ'
+% Force 'ชัน-ตุ', but not 'รัง~สิ-มันตุ์'
+% Block 'กรร-ตุ' caused by '1ตุ' pattern
+% Force 'มา-ตฤ'
+% Force 'ปฏิ-รพ', 'ประ~ติ-รพ'
+% Force 'เคา-รพ', 'มณ~ฑา-รพ', but not 'ธา-ร~พระ~กร'
+% Force 'ไกรพ'
+% Force 'ปร-ศุ', 'อา-ศุ', but not 'ป-ศุ'
+% Force 'คา-ถา', 'อนา-ถา'
+% Force 'ขี~ณา-สพ', 'วา-สพ'
+% Force 'โพ-สพ', 'ไพ-สพ'
+% Force 'คุ~รุ~มุ-ขี', 'สุ-ขี'
+% Force 'คน~ทิ-สอ', 'สี-สอ'
+% Force 'จำ~ปา-ดะ'
+% Force 'ซา-บะ', 'มะ-ตะ-บะ', 'อุ-บะ', but not 'ต-บะ'
+% Force 'นันท~ทา-ยี', 'ฐา-ยี', 'ยา-ยี', but not 'ยา~ห-ยี'
+% Force 'จับ~ยี่-กี', 'วัฒ-กี', 'หริต-กี', 'อัย-กี', 'โศ-กี', but not 'ส-กี'
+% Force 'กระ~ดาน-หก', 'วลา-หก', 'โก-หก', etc., but not 'แ-หก'
+% Force 'จง-อร', 'เอม-อร', but not 'สลัง~ง-อร์'
+% Force 'เอม-อร', but not 'พอ~ลิ~เม-อร์'
+% Force 'จี-วร', 'อิน~ที-วร'
+% Force 'ภาส-วร', but not 'พร~ส-วรรค์'
+% Force 'ชม~พู-นท'
+% Force '-จร.', but not 'ฉกา~มา~พ-จร', 'ฉกา~มา~ว-จร', 'โย~คา~พ-จร', 'โย~คา~ว-จร'
+% but not potential '*โ-จร'
+% Force 'ซาก-ศพ'
+% Force 'ตริ~โป-ลี', 'ทริ~โป-ลี'
+% Force 'ตรี-ภพ', 'เอก-ภพ', etc.
+% Force 'ทา-นพ', 'มา-นพ', 'อา~ที-นพ'
+% Force 'อรร-ณพ', 'มหรร-ณพ', 'มา-ณพ', 'อัณ-ณพ', etc.
+% Force 'กา-รก', 'ทา-รก', but not potential 'กา-ร~กระ~ทำ'
+% Force 'กะ~ทก-รก'
+% Force 'สาย-รก', but not potential 'เพียร~ก-ระ~ทำ
+% Force 'เรี้ยว-รก', but not potential 'คว-ร~กระ~ทำ'
+% Force 'นฤ-มล', 'พิ-มล' etc., but not 'ก-มล', 'ย-มล', 'เ-มล'
+% Force 'นิ~ลุ-บล', 'ยุ-บล'
+% Force 'นิ~โล-บล'
+% Force 'นิ~สา-ชล', 'อัส~สุ-ชล', etc. but not 'เ-ชล'
+% Force 'ปริ~พา-ชก', 'โภ-ชก', but not 'โ-ชก'
+% Force 'บุพ-โพ', 'เท-โพ'
+% Force 'ปร~มา-ณู', 'เร-ณู', but not 'อ-ณู'
+% Force 'นา-ปี', 'ปริน~ซิ-ปี', 'รู-ปี', 'วา-ปี', 'ศิล-ปี'
+% Force 'ปัญ~จา-บี', 'อา~บู~ดา-บี', but not 'น-บี'
+% Force 'ปุ-ฏะ', 'วัฏ-ฏะ', 'สก-ฏะ', but not 'ว-ฏะ'
+% Force 'นา-ฬี', 'เมา-ฬี'
+% Force 'ปุ-ปะ', 'ศิล-ปะ', 'สัม~ผัป~ลา-ปะ', 'สู-ปะ', 'อา-ปะ'
+% but not 'กัจ~ฉ-ปะ', 'กัส~ส-ปะ', 'แ-ปะ'
+% Force 'ซู-ลู', 'ปู-ลู', 'ฮอน~โน~ลู-ลู'
+% Force 'พัน-ตู', 'วา~นู~อา-ตู', 'อู~บัน-ตู', but not 'ส-ตู'
+% Force 'มฤต-ยู', 'มลา-ยู', 'ศรัณ-ยู', 'ไอ~ซี-ยู'
+% but not 'พ-ยู่ห์', 'อ-ยู่', 'ม-ยูร', 'ห-ยูก~ยา'
+% Force 'พยัค-ฆี', 'เม-ฆี'
+% Force 'อวิ-จี', 'อาร์~พี-จี'; 'กุ-จี', 'รุ-จี'; 'ซู-จี', 'รู-จี'
+% Force 'อเว-จี', but not 'ว-จี'
+% Force 'รา-ศี', 'ประ~ทา-ศี', 'เก-ศี', but not 'ศ-ศี', 'เ-ศียร'
+% Force 'มืด-มน', 'วิ-มน', but not 'เ-มน'
+% Force 'ป้อ-ยอ', 'ยก-ยอ', 'หมู-ยอ', but not 'เผ-ยอ'
+% Force 'พิษ-สง', 'ลิ-สง', but not 'อ-สง~ไขย'
+% Force 'กา-สร', 'มา~ธุ-สร', 'อัป-สร', but not 'อ-สร~พิษ', 'อิ-สร~ชน'
+% Force 'ชา-ดก', 'มฤ-ดก', 'โช-ดก', 'โป-ดก'
+% but not 'สัต~ส-ดก', 'โส-ดก', 'แ-ดก'
+% Force 'มอส-โก', 'ยู~เนส-โก', 'เฉ-โก', but not 'ป-โกฏิ', '*ส-โกป'
+% Force 'ฝึก-ฝน'
+% Force 'ลา-มก', 'อุ~ลา-มก'
+% Force 'มอ-ซอ', 'ลี-ซอ', but not 'เ-ซอ'
+% Force 'วิ~สา-ขะ', 'ไพ~ศา-ขะ'; 'ลู-ขะ'
+% Force 'เส-ขะ', but not 'ส-ขะ'
+% Force 'วรร-ษา'
+% Force 'วส-ภะ', 'อส-ภะ', 'โศ-ภะ'
+% Force 'โศ-ภน', 'โศ-ภี'
+% Force 'ดิ-ลก', 'ติ-ลก'
+% Force 'กุ-ฎี'
+% Force 'วิ~ศา-ขา', but not potential 'ไพ-ศาข์'
+% Force 'วิ~เห-สา', 'เก-สา', but not 'เ-สา', 'สหั-สา'
+% Force 'วู-ซู', 'เย-ซู'
+% Force 'กรร-ษก', 'ศิก-ษก', 'โฆ-ษก', but not 'บรร~ย~เวก-ษก์', 'อภิ~เ-ษก'
+% Force 'เศรษ-ฐี', 'ษัษ-ฐี'
+% Force 'โค-ดม', 'หโย-ดม', 'อุต-ดม', but not 'ส-ดมภ์', 'โส-ดม'
+% Force 'ติด-ลม', 'หลอด-ลม', 'กระ~แส-ลม', 'เพรียว-ลม', 'สี-ลม'
+% Force 'กุ-ศล', 'โก-ศล', but not 'ไศ-ล'
+% Force 'นิ-ยต', 'อนิ-ยต'
+% Force 'กระ~ดูก-งู', 'หมอ-งู'
+% Force 'อนี-จะ', 'เบญ-จะ', but not 'กระ~แ-จะ'
+% Force 'อนุ~ศา-สก', 'อันตร~วา-สก', 'อุ~บา-สก', but not 'ปัณ~ณา-สก์
+% Force 'โป-สก'
+% Force 'ทร-ยศ', 'อป-ยศ', 'อัป-ยศ', 'เกียรติ-ยศ', but not 'พ-ยศ', 'สุ~ริ~เ-ยศ'
+% Force 'อว~รุท-ธก', 'โส-ธก' but not 'เ-ธก'
+% Force 'มนุษย์-กบ', 'เป่า-กบ', but not potential 'โ-กบ'
+% Force 'เต~ลุ-คู', 'เวท-คู'
+% Force 'พลาส-มา', 'เส-มา', but not 'ส-มา'
+% Force 'กุ-แล', 'ดู-แล', 'แค-แล', but not 'ส-แลง', 'ส-แล็ก'
+% Force 'ศรา-พก', 'แถม-พก', but not 'สะ-โ-พก'
+% Force 'โส-ภณ', 'โส-ภี'
+% Block 'กรร-ดิ' caused by 'ร1ด' pattern
+% but still allow 'กรร-ดิก'
+% Force 'กา-ฬา-วก', 'ศรา-วก', but not 'ก้า-ว~ก่าย'
+% Force 'กิน-นร', inhibited by 'น4นร' pattern (สนน-รา-คา)
+% Force 'กุ~ลี~กุ-จอ', but not 'เ-จอ', 'อา-จ~อง', 'อเน-จ~อนาถ'
+% Force 'ขจร-จบ', but not 'แ-จบ'
+% Force 'ค่า-คบ', but not 'แ-คบ'
+% Force 'ฉ้อ-ฉล', but not 'แ-ฉลบ'
+% Force 'ชม-รม', but not 'โค-รม'
+% Force 'อบ-รม', but not 'บ-รม'
+% Force 'บริ-รม' (but not 'นิ-ร~มล'), 'อี-รม'
+% Force 'ซุก-ซน', but not 'โ-ซน'
+% Force 'สี-ดอ', but not 'เ-ดอะ'
+% Force 'ซู~ซู-กิ' but not 'เ-กิด', 'ป-กิณ~กะ'
+% Force 'อี~ซู-ซุ' (but not potential 'ซู-ซ'), 'ซู-ฮก' (but not potential 'ซู-ฮ์')
+% Force 'ดา-บส', 'ดาว-บส', but not 'เ-บส', 'จ็อ-บส์'
+% Force 'ดิ้น-รน', but not 'เนร-นาด'
+% Force 'ตก-ลง', but not 'แก-ลง'
+% Force 'ลืม-ตน'
+% Force 'ตัว-ตน', but not 'เว-ตน์'
+% Force 'ตี-วง'
+% Force 'พิศ-วง'
+% Force 'แตร-วง', 'แวด-วง' explicitly
+% Force 'ทมิฬ~นา-ฑู'
+% Force 'ทร-หด', but not 'โ-หด'
+% Force 'นอบ-นบ', but not 'บ-น~บาน'
+% Force 'นา-คร' inhibited by 'นา4คร' pattern, but not 'นา-ค~ราช'
+% Force 'บี-ฑา', but not 'ค-ฑา'
+% Force 'บู-ดู'
+% Force 'ปรา-รภ', but not 'สา-ร~ภาพ', 'สา-ร~ภี' (for now)
+% Force 'ปลา-ฝา'
+% Force 'พล-รบ', 'แนว-รบ', 'เรือ-รบ'
+% Force 'พา-รณ'
+% Force 'ยืน-ยง', 'โฉม-ยง', 'ยุ-ยง', 'สุ~ริ-ยง'
+% Force 'สุ~ริ-ยน'
+% Force 'มหา-พน'
+% Force 'มิ~ยา-งิ'
+% Force 'ราช-รถ', 'มโน-รถ', 'หงส-รถ'
+% Force 'ยุ~คัน-ธร' inhibited by 'ัน4ธ' pattern, but not 'สุ~คัน-ธ~รส'
+% Force 'มณ-ฑก' (but not 'มณ-ฑ์'), 'มณ-โฑ' explicitly
+% Force 'มร-กต', 'มร-ฑป' explicitly
+% Force 'ยอด-อก', 'โล่ง-อก' explicitly (ambiguous)
+% Force 'ยืด-อก' explicitly
+% Force 'ระ~เห-หน
+% Force 'รัน-ทด', but not 'แค~โ-ทด'
+% Force 'ราว-นม', 'เทพ-นม', 'โค-นม'
+% Force 'ราษ-ฎร', but not 'รา-ษฎร์'
+% Force 'ริ-ปุ', 'ริ-ปู'
+% Force 'รี-รอ'
+% Force 'ลอย-ลำ', 'หมอ-ลำ', 'แก้-ลำ'
+% Force 'ลั่น-ทม', 'อุป-ทม'
+% Force 'วก-วน', 'อล-วน' explicitly
+% Force 'วิ-จล'
+% Force 'วิช-ญะ'
+% Force 'ศี-ขร'
+% Force 'ศีล-อด'
+% Force 'สดก~ก๊อก-ธม', but not potential 'แ-ธม'
+% Force 'สม-รด', 'สัก-วา' explicitly
+% Force 'สัป-ดน', 'สัป-ทน'
+% Force 'สา-สม', 'เจือ-สม'
+% Force 'สิ~ขา-นล'
+% Force 'ภี-รุ', 'อู-รุ', 'สิ~เน-รุ'
+% Force 'สิง-หล'
+% Force 'สีห-นุ' explicitly
+% Force 'สุ-ภร', but not 'เ-ภ~รี', 'อุ~สุ-ภ~ราช'
+% Force 'หมด-จด', but not potential 'โ-จด'
+% Force 'หยิบ-ยก'
+% Force 'อดิ-ศร', 'ไกร-ศร'
+% Force 'อพ-ยพ' explicitly
+% Force 'อร-ชร'
+% Force 'เน~แบรส-กา', 'อะ~แลส-กา'
+% Force 'อาจ-อง' explicitly (ambiguous)
+% Force 'อี-มู'
+% Force 'อึง-อล' explicitly (ambiguous)
+% Force 'อุ-ชุ'
+% Force 'อุ-สภ'
+% Force 'เก-ชา', 'เก-ศา' explicitly
+% Force 'โช-ตก', 'เก็บ-ตก'
+% Force 'เข-ฬะ' explicitly
+% Force 'เคราห-ณี'
+% Force 'เจือ-ปน'
+% Force 'เชย-ชม'
+% Force 'เบื้อง-บน'
+% Force 'ตุร-คะ', 'เพ-คะ', 'โภ-คะ', but not 'ภ-คะ'
+% Force 'เพียง-ออ', 'เออ-ออ'
+% Force 'เรือ-ธง', 'เรือ-บด'
+% Force 'เลี้ยว-ลด'
+% Force 'เสื่อ-กก', but not 'เ-กก'
+% Force 'เหลือ-ขอ', 'เหล่า-กอ'
+% Force 'แด-วู' explicitly
+% Force 'แยบ-ยล'
+% Force 'โฉ-เก' explicitly
+% Force 'โด-มร', 'โต-มร' explicitly
+% Force 'โต้-โผ'
+% Force 'โท-โส' explicitly
+% Force 'โป้-ปด'
+% Force 'โภ-คี'
+% Force 'โย-นก', but not โย-น~กลอง
+% Force 'โส-มม' explicitly
+% Force 'โส-ฬส', but not 'กา-ฬ~สินธุ์
+% Force 'โสต-ถิ'
+% Force 'โอ้-โฮ'
+% Force 'ใจ-คอ'
+% Force 'ไค-ฟง', but not 'แ-ฟง'
+% Force 'ไช-โย' explicitly
+% Force 'ไอ~รา-พต', but not potential 'แ-พต'
+% Force 'กรร-กศ' explicitly
+% Force 'กัล-บก'
+% Force 'กัศ-ยป'
+% Force 'กา-นน', but not 'โล~ซา-นน์'
+% Force 'กุ-ฎา', 'กู-ฏา'
+% Force 'กุ~โน~กา-มอ'
+% Force 'ขิ~ป~สัท-โท'
+% Force 'จุ-ทส'
+% Force 'จ่า-รง'
+% Force 'ทัฬ-หี'
+% Force 'ทา-ฒะ', but not potential 'เ-ฒะ'
+% Force 'ธต-รฐ' explicitly
+% Force 'บุท-คล'
+% Force 'ปัต-ถร'
+% Force 'ปิ-ฐิ'
+% Force 'ปุป-ผะ'
+% Force 'พฤ-ษภ' explicitly, but not 'พฤ-ษ~ภา~คม'
+% Force 'พิ-ธุ'
+% Force 'มา-ฬก'
+% Force 'มเห-สิ'
+% Force 'วัฏ-ฏิ', 'ยัษ-ฏิ'
+% Force 'ศิษ-ฎิ' explicitly (not to affect 'สฤ-ษฎิ')
+% Force 'อิษ-ฏี'
+% Force 'ราก-ษส', but not 'กระ~ดา-ษ~สา', 'เศ-ษ~ส่วน', and potential 'เ-ษส'
+% Force 'ลิ-ปิ'
+% Force 'สู-ริ', but not 'เพ~ฑู-ริย์'
+% Force 'เลฑ-ฑุ'
+% Force 'เลษ-ฏุ'
+% Force 'ชา-ตา' inhibited by 'ชา2ต' pattern
+% Force 'ดาว-ตก', 'ปลง-ตก' inhibited by '2ตก' pattern
+% Block 'เก-ตุ' caused by 'ก1ต' pattern, but allows potential 'เก-ตุม~วดี'
+% Force 'เส-ตุ', 'มัส-ตุ'
+% Force 'ลิ-บง' inhibited by 'ลิ4บ' pattern
+% Force 'เอก-อุ', but not 'ช-อุ่ม'
+% Force 'อิศ-รา'
+% Force 'ทัก~ษ-อร'
+% Block 'ช-รา' at the end, e.g. 'นิร~ช-รา', 'เน~รัญ~ช-รา', but allows
+% e.g. 'คุช-ราต', 'พัช-รา~ภา', 'คช-ราช', 'เพช-รา~ยุทธ', 'วัช-ราสน์'
+% Force 'เด-ชะ', but not 'เด~ชน์', 'เด~ช'
+% Force 'โก~โบ-ริ', but not 'บ-ริ*', 'โบ-รก~เกอร์', 'โบ-ร~ชัวร์'
+% Block 'ป-ทา' at the end, e.g. 'ปฏิ~ป-ทา', but allow e.g. 'อุป-ทาน'
+% Force 'ปโต~เล-มี'
+% Force 'พรม-คด'
+% Force 'อี-สป'
+% Force 'เก~ร-ละ'
+% Force 'เทส-ลา', but not 'ส-ลา', 'ส-ลา~ตัน', 'เส-ลา'
+% Force 'เอส~เพรส-โซ', but not 'ส-โตร์', 'ส-โนว์', 'ส-โลวัก'
+% Force 'โซ-ฟี'

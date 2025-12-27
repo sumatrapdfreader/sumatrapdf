@@ -597,16 +597,15 @@ tiff_paste_subsampled_tile(fz_context *ctx, struct tiff *tiff, unsigned char *ti
 				k = sx = sy = 0;
 				offset = offsets;
 
+				x += sw;
+				if (x < w)
 				dst += sw * 3;
 
-				x += sw;
 				if (x >= col + tw)
 				{
-					dst -= (x - (col + tw)) * 3;
-					dst += (sh - 1) * w * 3;
-					dst += col * 3;
 					x = col;
 					y += sh;
+					dst = &tiff->samples[y * tiff->stride + x * 3];
 				}
 			}
 		}

@@ -190,6 +190,19 @@ void pdf_drop_document(fz_context *ctx, pdf_document *doc);
 pdf_document *pdf_keep_document(fz_context *ctx, pdf_document *doc);
 
 /*
+	Do a pass through the document to check if it needs
+	any repairs; and trigger a repair if necessary.
+
+	This is a very expensive operation both in terms of memory use
+	and computation, because it needs to parse the entire file to
+	detect any errors.
+
+	The result of the check is saved, so calling this function again
+	after the initial check is a no-op.
+*/
+void pdf_check_document(fz_context *ctx, pdf_document *doc);
+
+/*
 	down-cast a fz_document to a pdf_document.
 	Returns NULL if underlying document is not PDF
 */
@@ -282,6 +295,27 @@ typedef struct
 void pdf_layer_config_info(fz_context *ctx, pdf_document *doc, int config_num, pdf_layer_config *info);
 
 /*
+	Fetch the creator of the given layer config, or NULL if none exists.
+
+	doc: The document in question.
+
+	config_num: A value in the 0..n-1 range, where n is the
+	value returned from pdf_count_layer_configs.
+*/
+const char *pdf_layer_config_creator(fz_context *ctx, pdf_document *doc, int config_num);
+
+/*
+	Fetch the name of the given layer config, or NULL if none exists.
+
+	doc: The document in question.
+
+	config_num: A value in the 0..n-1 range, where n is the
+	value returned from pdf_count_layer_configs.
+
+*/
+const char *pdf_layer_config_name(fz_context *ctx, pdf_document *doc, int config_num);
+
+/*
 	Set the current configuration.
 	This updates the visibility of the optional content groups
 	within the document.
@@ -343,6 +377,9 @@ typedef enum
 	PDF_LAYER_UI_CHECKBOX = 1,
 	PDF_LAYER_UI_RADIOBOX = 2
 } pdf_layer_config_ui_type;
+
+const char *pdf_layer_config_ui_type_to_string(pdf_layer_config_ui_type type);
+pdf_layer_config_ui_type pdf_layer_config_ui_type_from_string(const char *str);
 
 typedef struct
 {
@@ -423,6 +460,7 @@ struct pdf_document
 	fz_stream *file;
 
 	int version;
+	int checked; /* we've checked that we don't need to repair */
 	int is_fdf;
 	int bias;
 	int64_t startxref;
@@ -452,7 +490,7 @@ struct pdf_document
 	int map_page_count;
 	pdf_rev_page_map *rev_page_map;
 	pdf_obj **fwd_page_map;
-	int page_tree_broken;
+	int use_page_tree_map;
 
 	int repair_attempted;
 	int repair_in_progress;

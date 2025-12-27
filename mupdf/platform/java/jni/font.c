@@ -178,3 +178,23 @@ FUN(Font_isItalic)(JNIEnv *env, jobject self)
 
 	return result;
 }
+
+JNIEXPORT void JNICALL
+FUN(Font_installFontLoader)(JNIEnv *env, jclass cls, jobject jloader)
+{
+	fz_context *ctx = get_context(env);
+
+	if (!ctx) return;
+
+	(*env)->SetStaticObjectField(env, cls_Font, fid_Font_fontLoader, jloader);
+
+	fz_try(ctx)
+		fz_install_load_system_font_funcs(ctx,
+			load_java_font,
+			load_java_cjk_font,
+			load_java_fallback_font);
+	fz_catch(ctx)
+		jni_rethrow_void(env, ctx);
+
+	return;
+}

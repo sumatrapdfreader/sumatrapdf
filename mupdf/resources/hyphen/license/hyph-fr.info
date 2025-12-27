@@ -1,0 +1,213 @@
+% title: Hyphenation patterns for French
+% copyright: Copyright (C) 1994-2002 Daniel Flipo, Bernard Gaulle, 2016 Arthur Reutenauer
+% notice: This file is part of the hyph-utf8 package.
+%     See http://www.hyphenation.org/tex for more information.
+% language:
+%     name: French
+%     tag: fr
+% version: V2.13 2016/05/12
+% authors:
+%     -
+%         name: Daniel Flipo
+%     -
+%         name: Bernard Gaulle
+%         note: deceased
+%     -
+%         name: Arthur Reutenauer
+%         contact: arthur (at) reutenauer.eu
+%     -
+%         email: cesure-l (at) gutenberg (dot} eu (dot) org
+% licence:
+%     name: MIT
+%     url: https://opensource.org/licenses/MIT
+%     text: >
+%         Permission is hereby granted, free of charge, to any person obtaining
+%         a copy of this software and associated documentation files (the
+%         "Software"), to deal in the Software without restriction, including
+%         without limitation the rights to use, copy, modify, merge, publish,
+%         distribute, sublicense, and/or sell copies of the Software, and to
+%         permit persons to whom the Software is furnished to do so, subject to
+%         the following conditions:
+%
+%         The above copyright notice and this permission notice shall be
+%         included in all copies or substantial portions of the Software.
+%
+%         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+%         EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+%         MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+%         NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+%         BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+%         ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+%         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+%         SOFTWARE.
+% hyphenmins:
+%     typesetting:
+%         left: 2
+%         right: 2
+% texlive:
+%     synonyms:
+%         - patois
+%         - francais
+%     encoding: ec
+%     babelname: french
+%     legacy_patterns: frhyph.tex
+%     message: French hyphenation patterns
+%     description: Hyphenation patterns for French in T1/EC and UTF-8 encodings.
+% ==========================================
+%%%%%%%% The most famous good guys who worked hard to obtain something usable.
+% Jacques Desarmenien, Universite de Strasbourg :
+%          -  << how to run TeX in a French environment: hyphenation, fonts,
+%             typography. >> in Tugboat, 5 (1984) 91-102. and TeX85 conference
+%          -  << La division par ordinateur des mots francais :
+%             application a TeX >> in TSI vol. 5 No 4, 1986 (C) AFCET-
+%                                                             Gauthier-Villars
+% Norman Buckle, UQAH (nb; many additions)
+% Michael Ferguson, INRS-Telecommunications (mjf) June 1988
+% Justin Bur, Universite de Montreal (jbb; checked against original list)
+%                    all patterns including apostrophe missing from nb list
+% after that, GUTenberg  and specially Daniel Flipo and Bernard Gaulle
+% did their best effort to improve the list of patterns.
+%
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%*
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%a
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%b
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%c
+% words ending with -cent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%d
+% words ending with -dent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%e
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%f
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%g
+% words ending with -gent (df) 22/02/94
+%
+% words ending with -guent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%h
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%i
+% ill patterns missing from nb list
+% end of ill patterns
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%j
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%k
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%l
+% words ending with -lent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%m
+% words ending with -ment (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%n
+% words ending with -nent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%o
+%'\"o2 % mjf % deleted 3/1/94 df-bg
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%p
+% words ending with -pent (df) 22/02/94
+%
+%%%% Here is an example of a pb involving phonetic and etymologic patterns 5/94
+%%%%                .phyto3ph2 % originaly, but wrong for phy-toph-thora   9/92
+%%%%                .phy2topha % for -pharmacie but wrong for phyto-biol.. 5/94
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%q
+% words ending with -quent (df) 22/02/94
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%r
+% words ending with -rent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%s
+% words ending with -sent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%t
+% words ending with -tent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%u
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%v
+% words ending with -vent (df) 22/02/94
+%
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%w
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%x
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%y
+%-------------------%-----------------------%
+% phonetic patterns % etymological patterns %
+%-------------------%-----------------------%
+%%z
+% words ending with -zent (df) 22/02/94
+%

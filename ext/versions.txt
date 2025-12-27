@@ -42,10 +42,10 @@ mujs            1.0.6      Apr 4, 2019
   https://mujs.com/
   https://github.com/ArtifexSoftware/mujs/commit/00d4606c3baf813b7b1c176823b2729bf51002a2
 
-../mupdf        1.26.12
-  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.26.12
+../mupdf        1.27.0
+  https://github.com/ArtifexSoftware/mupdf/releases/tag/1.27.0
 
-openjpeg        2.5.3
+openjpeg        2.5.4
 
 synctex         1.16       2011-06-14
   https://itexmac.sourceforge.net/SyncTeX.html

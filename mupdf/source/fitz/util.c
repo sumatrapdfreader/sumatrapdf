@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2022 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -293,7 +293,7 @@ fz_new_stext_page_from_display_list(fz_context *ctx, fz_display_list *list, cons
 }
 
 fz_stext_page *
-fz_new_stext_page_from_page(fz_context *ctx, fz_page *page, const fz_stext_options *options)
+fz_new_stext_page_from_page_with_cookie(fz_context *ctx, fz_page *page, const fz_stext_options *options, fz_cookie *cookie)
 {
 	fz_stext_page *text;
 	fz_device *dev = NULL;
@@ -307,7 +307,7 @@ fz_new_stext_page_from_page(fz_context *ctx, fz_page *page, const fz_stext_optio
 	fz_try(ctx)
 	{
 		dev = fz_new_stext_device(ctx, text, options);
-		fz_run_page_contents(ctx, page, dev, fz_identity, NULL);
+		fz_run_page_contents(ctx, page, dev, fz_identity, cookie);
 		fz_close_device(ctx, dev);
 	}
 	fz_always(ctx)
@@ -321,6 +321,12 @@ fz_new_stext_page_from_page(fz_context *ctx, fz_page *page, const fz_stext_optio
 	}
 
 	return text;
+}
+
+fz_stext_page *
+fz_new_stext_page_from_page(fz_context *ctx, fz_page *page, const fz_stext_options *options)
+{
+	return fz_new_stext_page_from_page_with_cookie(ctx, page, options, NULL);
 }
 
 fz_stext_page *
@@ -485,33 +491,265 @@ fz_search_chapter_page_number_cb(fz_context *ctx, fz_document *doc, int chapter,
 	return count;
 }
 
+int
+fz_match_display_list(fz_context *ctx, fz_display_list *list, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options)
+{
+	fz_stext_page *text;
+	int count = 0;
+
+	text = fz_new_stext_page_from_display_list(ctx, list, NULL);
+	fz_try(ctx)
+		count = fz_match_stext_page(ctx, text, needle, hit_mark, hit_bbox, hit_max, options);
+	fz_always(ctx)
+		fz_drop_stext_page(ctx, text);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_display_list_cb(fz_context *ctx, fz_display_list *list, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options)
+{
+	fz_stext_page *text;
+	int count = 0;
+
+	text = fz_new_stext_page_from_display_list(ctx, list, NULL);
+	fz_try(ctx)
+		count = fz_match_stext_page_cb(ctx, text, needle, cb, opaque, options);
+	fz_always(ctx)
+		fz_drop_stext_page(ctx, text);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_page(fz_context *ctx, fz_page *page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options)
+{
+	fz_stext_options opts = { FZ_STEXT_DEHYPHENATE };
+	fz_stext_page *text;
+	int count = 0;
+
+	text = fz_new_stext_page_from_page(ctx, page, &opts);
+	fz_try(ctx)
+		count = fz_match_stext_page(ctx, text, needle, hit_mark, hit_bbox, hit_max, options);
+	fz_always(ctx)
+		fz_drop_stext_page(ctx, text);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_page_cb(fz_context *ctx, fz_page *page, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options)
+{
+	fz_stext_options opts = { FZ_STEXT_DEHYPHENATE };
+	fz_stext_page *text;
+	int count = 0;
+
+	text = fz_new_stext_page_from_page(ctx, page, &opts);
+	fz_try(ctx)
+		count = fz_match_stext_page_cb(ctx, text, needle, cb, opaque, options);
+	fz_always(ctx)
+		fz_drop_stext_page(ctx, text);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_page_number(fz_context *ctx, fz_document *doc, int number, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options)
+{
+	fz_page *page;
+	int count = 0;
+
+	page = fz_load_page(ctx, doc, number);
+	fz_try(ctx)
+		count = fz_match_page(ctx, page, needle, hit_mark, hit_bbox, hit_max, options);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_page_number_cb(fz_context *ctx, fz_document *doc, int number, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options)
+{
+	fz_page *page;
+	int count = 0;
+
+	page = fz_load_page(ctx, doc, number);
+	fz_try(ctx)
+		count = fz_match_page_cb(ctx, page, needle, cb, opaque, options);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int number, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options)
+{
+	fz_page *page;
+	int count = 0;
+
+	page = fz_load_chapter_page(ctx, doc, chapter, number);
+	fz_try(ctx)
+		count = fz_match_page(ctx, page, needle, hit_mark, hit_bbox, hit_max, options);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
+int
+fz_match_chapter_page_number_cb(fz_context *ctx, fz_document *doc, int chapter, int number, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options)
+{
+	fz_page *page;
+	int count = 0;
+
+	page = fz_load_chapter_page(ctx, doc, chapter, number);
+	fz_try(ctx)
+		count = fz_match_page_cb(ctx, page, needle, cb, opaque, options);
+	fz_always(ctx)
+		fz_drop_page(ctx, page);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+	return count;
+}
+
 fz_buffer *
 fz_new_buffer_from_stext_page(fz_context *ctx, fz_stext_page *page)
 {
-	fz_stext_block *block;
+	return fz_new_buffer_from_flattened_stext_page(ctx, page, FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS, NULL);
+}
+
+static int
+inhibit_space_after_line_break(int c)
+{
+	return fz_is_unicode_whitespace(c) || fz_is_unicode_hyphen(c);
+}
+
+static int
+do_flatten(fz_context *ctx, fz_buffer *buf, fz_stext_position **map, fz_stext_page *page, fz_stext_struct *parent, fz_stext_block *block, fz_text_flatten flatten, int *ws)
+{
 	fz_stext_line *line;
 	fz_stext_char *ch;
-	fz_buffer *buf;
+	int n = 0;
 
-	buf = fz_new_buffer(ctx, 256);
-	fz_try(ctx)
-	{
-		for (block = page->first_block; block; block = block->next)
+	#define EMIT(X,Y) \
+	{ \
+		if (map && *map) *(*map)++ = (fz_stext_position){ page, parent, block, line, ch }; \
+		if (buf) fz_append_rune(ctx, buf, Y); \
+		++n; \
+	}
+
+	for (; block != NULL; block = block->next)
 		{
 			if (block->type == FZ_STEXT_BLOCK_TEXT)
 			{
+			int join_line = 0;
 				for (line = block->u.t.first_line; line; line = line->next)
 				{
+				join_line = 0;
 					for (ch = line->first_char; ch; ch = ch->next)
-						fz_append_rune(ctx, buf, ch->c);
-					fz_append_byte(ctx, buf, '\n');
+				{
+					/* Last character of a line where we aren't keeping hyphens; check for dehyphenation. */
+					if (ch == line->last_char && (flatten & FZ_TEXT_FLATTEN_KEEP_HYPHENS) == 0)
+					{
+						/* Soft hyphens are always removed. */
+						if (ch->c == 0xad)
+						{
+							join_line = 1;
+							continue;
+						}
+						/* Non-soft hyphens are only broken if we extracted with dehyphenation. */
+						if ((line->flags & FZ_STEXT_LINE_FLAGS_JOINED) != 0 && fz_is_unicode_hyphen(ch->c))
+						{
+							join_line = 1;
+							continue;
+						}
+					}
+
+					/* Soft hyphens at the beginning or in the middle of a line are always removed. */
+					if (ch != line->last_char && ch->c == 0xad)
+					{
+						continue;
+					}
+
+					EMIT(ch, ch->c);
+
+					*ws = inhibit_space_after_line_break(ch->c);
 				}
-				fz_append_byte(ctx, buf, '\n');
+
+				if (join_line)
+				{
+					/* No whitespace, no linebreak. */
+				}
+				else if (flatten & FZ_TEXT_FLATTEN_KEEP_LINES)
+				{
+					EMIT(NULL, '\n');
+					*ws = 1;
+				}
+				else
+				{
+					if (!*ws)
+						EMIT(NULL, ' ');
+					*ws = 1;
+				}
+			}
+
+			if (flatten & FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS)
+			{
+				EMIT(NULL, '\n');
+				*ws = 1;
+			}
+			else if (!join_line)
+			{
+				EMIT(NULL, '\n');
+				*ws = 1;
 			}
 		}
+		else if (block->type == FZ_STEXT_BLOCK_STRUCT && block->u.s.down)
+		{
+			n += do_flatten(ctx, buf, map, page, block->u.s.down, block->u.s.down->first_block, flatten, ws);
+				}
+			}
+
+	return n;
+}
+
+fz_buffer *
+fz_new_buffer_from_flattened_stext_page(fz_context *ctx, fz_stext_page *page, fz_text_flatten flatten, fz_stext_position **mapp)
+{
+	fz_stext_position *map = NULL;
+	fz_buffer *buf = NULL;
+	int ws, len;
+
+	fz_var(map);
+	fz_var(buf);
+
+	if (mapp)
+	{
+		ws = 0;
+		len = do_flatten(ctx, NULL, NULL, page, NULL, page->first_block, flatten, &ws);
+		}
+
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 256);
+		if (mapp)
+			map = *mapp = fz_malloc_array(ctx, len, fz_stext_position);
+		ws = 0;
+		do_flatten(ctx, buf, &map, page, NULL, page->first_block, flatten, &ws);
 	}
 	fz_catch(ctx)
 	{
+		if (mapp)
+			fz_free(ctx, *mapp);
 		fz_drop_buffer(ctx, buf);
 		fz_rethrow(ctx);
 	}
@@ -522,12 +760,18 @@ fz_new_buffer_from_stext_page(fz_context *ctx, fz_stext_page *page)
 fz_buffer *
 fz_new_buffer_from_display_list(fz_context *ctx, fz_display_list *list, const fz_stext_options *options)
 {
+	return fz_new_buffer_from_flattened_display_list(ctx, list, options, FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS);
+}
+
+fz_buffer *
+fz_new_buffer_from_flattened_display_list(fz_context *ctx, fz_display_list *list, const fz_stext_options *options, fz_text_flatten flatten)
+{
 	fz_stext_page *text;
 	fz_buffer *buf = NULL;
 
 	text = fz_new_stext_page_from_display_list(ctx, list, options);
 	fz_try(ctx)
-		buf = fz_new_buffer_from_stext_page(ctx, text);
+		buf = fz_new_buffer_from_flattened_stext_page(ctx, text, flatten, NULL);
 	fz_always(ctx)
 		fz_drop_stext_page(ctx, text);
 	fz_catch(ctx)
@@ -538,12 +782,18 @@ fz_new_buffer_from_display_list(fz_context *ctx, fz_display_list *list, const fz
 fz_buffer *
 fz_new_buffer_from_page(fz_context *ctx, fz_page *page, const fz_stext_options *options)
 {
+	return fz_new_buffer_from_flattened_page(ctx, page, options, FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS);
+}
+
+fz_buffer *
+fz_new_buffer_from_flattened_page(fz_context *ctx, fz_page *page, const fz_stext_options *options, fz_text_flatten flatten)
+{
 	fz_stext_page *text;
 	fz_buffer *buf = NULL;
 
 	text = fz_new_stext_page_from_page(ctx, page, options);
 	fz_try(ctx)
-		buf = fz_new_buffer_from_stext_page(ctx, text);
+		buf = fz_new_buffer_from_flattened_stext_page(ctx, text, flatten, NULL);
 	fz_always(ctx)
 		fz_drop_stext_page(ctx, text);
 	fz_catch(ctx)
@@ -554,12 +804,18 @@ fz_new_buffer_from_page(fz_context *ctx, fz_page *page, const fz_stext_options *
 fz_buffer *
 fz_new_buffer_from_page_number(fz_context *ctx, fz_document *doc, int number, const fz_stext_options *options)
 {
+	return fz_new_buffer_from_flattened_page_number(ctx, doc, number, options, FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS);
+}
+
+fz_buffer *
+fz_new_buffer_from_flattened_page_number(fz_context *ctx, fz_document *doc, int number, const fz_stext_options *options, fz_text_flatten flatten)
+{
 	fz_page *page;
 	fz_buffer *buf = NULL;
 
 	page = fz_load_page(ctx, doc, number);
 	fz_try(ctx)
-		buf = fz_new_buffer_from_page(ctx, page, options);
+		buf = fz_new_buffer_from_flattened_page(ctx, page, options, flatten);
 	fz_always(ctx)
 		fz_drop_page(ctx, page);
 	fz_catch(ctx)

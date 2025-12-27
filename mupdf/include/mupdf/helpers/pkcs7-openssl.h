@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -42,6 +42,9 @@ pdf_pkcs7_distinguished_name *pkcs7_openssl_distinguished_name(fz_context *ctx, 
 
 /* Read the certificate and private key from a pfx file, holding it as an opaque structure */
 pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, const char *pw);
+
+/* Read the certificate and private key from a buffer, holding it as an opaque structure */
+pdf_pkcs7_signer *pkcs7_openssl_read_pfx_from_buffer(fz_context *ctx, fz_buffer *buf, const char *pw);
 
 pdf_pkcs7_verifier *pkcs7_openssl_new_verifier(fz_context *ctx);
 

@@ -1,0 +1,65 @@
+# Run scripts/mupdfwrap.py directly on multiple Github servers. Instead of
+# specifying individual inputs, we support a single string input which is used
+# for the command line directly.
+#
+# This ensures we behave exactly like scripts/mupdfwrap.py, without confusion
+# caused by having to translate between differing APIs.
+
+name: mupdfwrap
+
+on:
+  #schedule:
+  #  - cron: '47 4 * * *'
+  #pull_request:
+  #  branches: [main]
+  workflow_dispatch:
+    inputs:
+      args:
+        type: string
+        default: ''
+        description: 'Arguments to pass to scripts/mupdfwrap.py'
+
+jobs:
+
+  mupdfwrap:
+    name: mupdfwrap
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+
+      # Avoid cancelling of all runs after a single failure.
+      fail-fast: false
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v5
+
+      # https://github.com/pypa/cibuildwheel/issues/2114
+      # https://cibuildwheel.pypa.io/en/stable/faq/#emulation
+      #
+      - name: Set up QEMU
+        if: runner.os == 'Linux' && runner.arch == 'X64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
+
+      - name: mupdfwrap
+        env:
+          MUPDF_mupdfwrap_args: ${{inputs.args}}
+        run:
+          python scripts/mupdfwrap.py -a MUPDF_mupdfwrap_args
+
+      # Upload any generated sdist/wheels, to be accessible from github Actions
+      # page.
+      #
+      - uses: actions/upload-artifact@v4
+        with:
+          path: |
+              wheelhouse/*.whl
+              wheelhouse/*.tar.gz
+          name: artifact-${{ matrix.os }}

@@ -35,6 +35,28 @@ Constructors
 
 You can create other devices with `DrawDevice` and `DisplayListDevice`.
 
+Constants
+---------
+
+:term:`Blend mode` constants for use with `Device.prototype.beginGroup`:
+
+.. data:: Device.BLEND_NORMAL
+.. data:: Device.BLEND_MULTIPLY
+.. data:: Device.BLEND_SCREEN
+.. data:: Device.BLEND_OVERLAY
+.. data:: Device.BLEND_DARKEN
+.. data:: Device.BLEND_LIGHTEN
+.. data:: Device.BLEND_COLOR_DODGE
+.. data:: Device.BLEND_COLOR_BURN
+.. data:: Device.BLEND_HARD_LIGHT
+.. data:: Device.BLEND_SOFT_LIGHT
+.. data:: Device.BLEND_DIFFERENCE
+.. data:: Device.BLEND_EXCLUSION
+.. data:: Device.BLEND_HUE
+.. data:: Device.BLEND_SATURATION
+.. data:: Device.BLEND_COLOR
+.. data:: Device.BLEND_LUMINOSITY
+
 Instance methods
 ----------------
 
@@ -284,25 +306,6 @@ Groups and transparency
 	and :term:`blend mode` in the glossary for a cursory overview of the
 	concepts.
 
-	The blendmode is one of these string values:
-
-	- "Normal"
-	- "Multiply"
-	- "Screen"
-	- "Overlay"
-	- "Darken"
-	- "Lighten"
-	- "ColorDodge"
-	- "ColorBurn"
-	- "HardLight"
-	- "SoftLight"
-	- "Difference"
-	- "Exclusion"
-	- "Hue"
-	- "Saturation"
-	- "Color"
-	- "Luminosity"
-
 	:param Rect area: The blend area.
 	:param ColorSpace colorspace: Colorspace
 	:param boolean isolated: Whether the group is isolated.
@@ -310,9 +313,21 @@ Groups and transparency
 	:param string blendmode: The blend mode used when compositing this group with its backdrop.
 	:param number alpha: The :term:`opacity`.
 
+	The blendmode is one of these string values or the corresponding enum constants:
+	Normal, Multiply, Screen, Overlay, Darken, Lighten, ColorDodge, ColorBurn, HardLight, SoftLight, Difference, Exclusion, Hue, Saturation, Color, Luminosity.
+
+	You can also use the `Device.BLEND_NORMAL` constant:
+
 	.. code-block::
 
-		device.beginGroup([0, 0, 100, 100], mupdf.ColorSpace.DeviceRGB, true, true, "Multiply", 0.5)
+		device.beginGroup(
+			[0, 0, 100, 100],
+			mupdf.ColorSpace.DeviceRGB,
+			true,
+			true,
+			"Multiply",
+			0.5
+		)
 
 .. method:: Device.prototype.endGroup()
 

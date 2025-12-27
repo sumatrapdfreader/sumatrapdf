@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -1488,7 +1488,7 @@ fz_load_bmp_subimage_count(fz_context *ctx, const unsigned char *buf, size_t len
 			nextoffset = 0;
 		}
 
-		if (end - begin < nextoffset)
+		if ((uint32_t) (end - begin) < nextoffset)
 		{
 			fz_warn(ctx, "treating invalid next subimage offset as end of file");
 			nextoffset = 0;

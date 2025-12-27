@@ -964,6 +964,8 @@ static void
 pdfocr_drop_band_writer(fz_context *ctx, fz_band_writer *writer_)
 {
 	pdfocr_band_writer *writer = (pdfocr_band_writer *)writer_;
+
+	fz_free(ctx, writer->options.options);
 	fz_free(ctx, writer->stripbuf);
 	fz_free(ctx, writer->compbuf);
 	fz_free(ctx, writer->page_obj);
@@ -987,7 +989,10 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 	writer->super.drop = pdfocr_drop_band_writer;
 
 	if (options)
+	{
 		writer->options = *options;
+		writer->options.options = NULL;
+	}
 	else
 		memset(&writer->options, 0, sizeof(writer->options));
 
@@ -1005,7 +1010,9 @@ fz_band_writer *fz_new_pdfocr_band_writer(fz_context *ctx, fz_output *out, const
 
 	fz_try(ctx)
 	{
-		writer->tessapi = ocr_init(ctx, writer->options.language, writer->options.datadir);
+		if (options && options->options)
+			writer->options.options = fz_strdup(ctx, options->options);
+		writer->tessapi = ocr_init(ctx, writer->options.language, writer->options.datadir, writer->options.options);
 	}
 	fz_catch(ctx)
 	{

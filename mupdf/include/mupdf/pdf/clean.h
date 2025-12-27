@@ -41,6 +41,11 @@ typedef enum {
 	PDF_CLEAN_STRUCTURE_KEEP = 1
 } pdf_clean_options_structure;
 
+typedef enum {
+	PDF_CLEAN_VECTORIZE_NO = 0,
+	PDF_CLEAN_VECTORIZE_YES = 1
+} pdf_clean_options_vectorize;
+
 typedef struct
 {
 	pdf_write_options write;
@@ -48,11 +53,17 @@ typedef struct
 
 	int subset_fonts;
 
-	/* 0 to drop the structure tree (default).
-	 * 1 to keep it unchanged.
+	/* PDF_CLEAN_STRUCTURE_DROP to drop the structure tree (default).
+	 * PDF_CLEAN_STRUCTURE_KEEP to keep it unchanged.
 	 * Future values reserved.
 	 */
 	pdf_clean_options_structure structure;
+
+	/* PDF_CLEAN_VECTORIZE_NO to leave the pages unchanged.
+	 * PDF_CLEAN_VECTORIZE_YES to vectorize each page (and flatten any Type 3 fonts).
+	 * Future values reserved.
+	 */
+	pdf_clean_options_vectorize vectorize;
 } pdf_clean_options;
 
 /*
@@ -64,5 +75,10 @@ void pdf_clean_file(fz_context *ctx, char *infile, char *outfile, char *password
 	Recreate page tree to include only the pages listed in the array, in the order listed.
 */
 void pdf_rearrange_pages(fz_context *ctx, pdf_document *doc, int count, const int *pages, pdf_clean_options_structure structure);
+
+/*
+	Recreate given page list (or all pages if count == 0), with text being vectorized.
+*/
+void pdf_vectorize_pages(fz_context *ctx, pdf_document *doc, int count, const int *new_page_list, pdf_clean_options_vectorize vectorize);
 
 #endif

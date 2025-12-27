@@ -64,4 +64,20 @@
       <ExecutionDescription>Embedding TTC</ExecutionDescription>
     </bin2coff__ttc_>
   </ItemDefinitionGroup>
+  <PropertyGroup
+    Condition="'$(bin2coff__zip_BeforeTargets)' == '' and '$(bin2coff__zip_AfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <bin2coff__zip_BeforeTargets>Midl</bin2coff__zip_BeforeTargets>
+    <bin2coff__zip_AfterTargets>CustomBuild</bin2coff__zip_AfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <bin2coff__zip_DependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(bin2coff__zip_DependsOn)</bin2coff__zip_DependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <bin2coff__zip_>
+      <CommandLineTemplate>Release\bin2coff.exe "%(FullPath)" "$(IntDir)%(Filename)_zip.obj" _binary_%(Filename)_zip $(Platform)</CommandLineTemplate>
+      <Outputs>$(IntDir)%(Filename)_zip.obj</Outputs>
+      <ExecutionDescription>Embedding ZIP</ExecutionDescription>
+    </bin2coff__zip_>
+  </ItemDefinitionGroup>
 </Project>

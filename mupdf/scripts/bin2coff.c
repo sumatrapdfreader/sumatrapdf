@@ -61,6 +61,7 @@ typedef unsigned long long   uint64_t;
 #define IMAGE_FILE_MACHINE_I386			 0x014c
 #define IMAGE_FILE_MACHINE_IA64			 0x0200
 #define IMAGE_FILE_MACHINE_AMD64		 0x8664
+#define IMAGE_FILE_MACHINE_ARM64		 0xAA64
 
 #define IMAGE_FILE_RELOCS_STRIPPED		 0x0001
 #define IMAGE_FILE_EXECUTABLE_IMAGE		 0x0002
@@ -231,12 +232,21 @@ typedef struct {
 
 #pragma pack(pop)
 
-static int check_64bit(const char *arg, int *x86_32)
+typedef enum
 {
-	if ((strcmp(arg, "64bit") == 0) || (strcmp(arg, "x64") == 0))
-		*x86_32 = 0; /* 0 = 64bit */
-	else if ((strcmp(arg, "32bit") == 0) || (strcmp(arg, "Win32") == 0))
-		*x86_32 = 1; /* 1 = 32bit */
+	MACHINE_X86 = 0,
+	MACHINE_X64 = 1,
+	MACHINE_ARM64 = 2
+} machine_type;
+
+static int check_machine(const char *arg, machine_type *machine)
+{
+	if ((strcmp(arg, "32bit") == 0) || (strcmp(arg, "Win32") == 0))
+		*machine = MACHINE_X86;
+	else if ((strcmp(arg, "64bit") == 0) || (strcmp(arg, "x64") == 0))
+		*machine = MACHINE_X64;
+	else if ((strcmp(arg, "ARM64") == 0) || (strcmp(arg, "aarch64") == 0))
+		*machine = MACHINE_ARM64;
 	else
 		return 0;
 	return 1;
@@ -250,6 +260,7 @@ main (int argc, char *argv[])
 {
 	const uint16_t endian_test = 0xBE00;
 	int x86_32, short_label, short_size, last_arg;
+	machine_type machine;
 	int i, r = 1;
 	char* label;
 	FILE *fd = NULL;
@@ -262,13 +273,17 @@ main (int argc, char *argv[])
 	SIZE_TYPE* data_size;
 
 	if ((argc < 3) || (argc > 5)) {
-		fprintf(stderr, "\nUsage: bin2coff bin obj [label] [64bit|Win32|x64]\n\n");
+		fprintf(stderr, "\nUsage: bin2coff bin obj [label] [64bit|Win32|x64|ARM64|aarch64]\n\n");
 		fprintf(stderr, "  bin  : source binary data\n");
 		fprintf(stderr, "  obj  : target object file, in MS COFF format.\n");
 		fprintf(stderr, "  label: identifier for the extern data. If not provided, the name of the\n");
 		fprintf(stderr, "         binary file without extension is used.\n");
-		fprintf(stderr, "  64bit:\n  Win32:\n  x64  : produce a 64 bit compatible object - symbols are generated without\n");
+		fprintf(stderr, "  Win32:\n  x86  : produce a 32 bit compatible object - \n");
+		fprintf(stderr, "         machine type is set to x86.\n\n");
+		fprintf(stderr, "  64bit:\n  x64  : produce a 64 bit compatible object - symbols are generated without\n");
 		fprintf(stderr, "         leading underscores and machine type is set to x86_x64.\n\n");
+		fprintf(stderr, "  ARM64:\n  aarch64: produce an ARM 64 bit compatible object -\n");
+		fprintf(stderr, "         machine type is set to ARM64.\n\n");
 		fprintf(stderr, "With your linker set properly, typical access from a C source is:\n\n");
 		fprintf(stderr, "    extern uint8_t  label[]     /* binary data         */\n");
 		fprintf(stderr, "    extern uint32_t label_size  /* size of binary data */\n\n");
@@ -290,12 +305,13 @@ main (int argc, char *argv[])
 	size = (size_t)ftell(fd);
 	fseek(fd, 0, SEEK_SET);
 
-	x86_32 = 0;
+	machine = MACHINE_X86;
 	last_arg = argc;
-	if (argc >= 4 && check_64bit(argv[3], &x86_32))
+	if (argc >= 4 && check_machine(argv[3], &machine))
 		last_arg = 4;
-	else if (argc >= 5 && check_64bit(argv[4], &x86_32))
+	else if (argc >= 5 && check_machine(argv[4], &machine))
 		last_arg = 5;
+	x86_32 = machine == MACHINE_X86 ? 1 : 0;
 
 	/* Label setup */
 	if (argc < last_arg) {
@@ -341,7 +357,13 @@ main (int argc, char *argv[])
 	string_table = (IMAGE_STRINGS*)&buffer[sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER) + size + sizeof(SIZE_TYPE) + 2*sizeof(IMAGE_SYMBOL)];
 
 	/* Populate file header */
-	file_header->Machine = (x86_32)?IMAGE_FILE_MACHINE_I386:IMAGE_FILE_MACHINE_AMD64;
+	if (machine == MACHINE_X86)
+		file_header->Machine = IMAGE_FILE_MACHINE_I386;
+	else if (machine == MACHINE_X64)
+		file_header->Machine = IMAGE_FILE_MACHINE_AMD64;
+	else
+		file_header->Machine = IMAGE_FILE_MACHINE_ARM64;
+
 	file_header->NumberOfSections = 1;
 	file_header->PointerToSymbolTable = sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_SECTION_HEADER) + (uint32_t)size+4;
 	file_header->NumberOfSymbols = 2;

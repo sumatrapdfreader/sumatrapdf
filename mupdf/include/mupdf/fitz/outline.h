@@ -47,6 +47,13 @@ enum
 	FZ_OUTLINE_FLAG_ITALIC = 2,
 };
 
+enum
+{
+	FZ_OUTLINE_ITERATOR_DID_NOT_MOVE = -1,
+	FZ_OUTLINE_ITERATOR_AT_ITEM = 0,
+	FZ_OUTLINE_ITERATOR_AT_EMPTY = 1,
+};
+
 typedef struct fz_outline_iterator fz_outline_iterator;
 
 /**

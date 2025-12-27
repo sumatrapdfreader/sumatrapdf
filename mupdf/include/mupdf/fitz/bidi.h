@@ -29,7 +29,8 @@ typedef enum
 {
 	FZ_BIDI_LTR = 0,
 	FZ_BIDI_RTL = 1,
-	FZ_BIDI_NEUTRAL = 2
+	FZ_BIDI_NEUTRAL = 2,
+	FZ_BIDI_UNSET = 3
 }
 fz_bidi_direction;
 

@@ -82,6 +82,7 @@ fz_pixmap *fz_fill_pixmap_from_display_list(fz_context *ctx, fz_display_list *li
 
 	Ownership of the fz_stext_page is returned to the caller.
 */
+fz_stext_page *fz_new_stext_page_from_page_with_cookie(fz_context *ctx, fz_page *page, const fz_stext_options *options, fz_cookie *cookie);
 fz_stext_page *fz_new_stext_page_from_page(fz_context *ctx, fz_page *page, const fz_stext_options *options);
 fz_stext_page *fz_new_stext_page_from_page_number(fz_context *ctx, fz_document *doc, int number, const fz_stext_options *options);
 fz_stext_page *fz_new_stext_page_from_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int number, const fz_stext_options *options);
@@ -90,10 +91,49 @@ fz_stext_page *fz_new_stext_page_from_display_list(fz_context *ctx, fz_display_l
 /**
 	Convert structured text into plain text.
 */
+typedef enum
+{
+	/* ALL: Flatten the text completely. All gaps between words/
+	 * paragraphs/lines are expressed as a single space. */
+	FZ_TEXT_FLATTEN_ALL = 0,
+
+	/* KEEP_LINES: Keep line splits as \n. */
+	FZ_TEXT_FLATTEN_KEEP_LINES = 1,
+
+	/* KEEP_PARAGRAPHS: Keep paragraph splits. If used without
+	 * KEEP_LINES, paragraphs will appear as \n. If used with
+	 * KEEP_LINES, paragraphs will appear as \n\n. */
+	FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS = 2,
+
+	/* KEEP_HYPHENS: Do not join hyphenated lines. */
+	FZ_TEXT_FLATTEN_KEEP_HYPHENS = 4
+} fz_text_flatten;
+
+/**
+	Create a new buffer by flattening the text from an stext
+	page.
+*/
+fz_buffer *fz_new_buffer_from_flattened_stext_page(fz_context *ctx, fz_stext_page *text, fz_text_flatten flatten, fz_stext_position **map);
+
+/**
+	Does the same as fz_new_buffer_from_flattened_stext_page(), with
+	the options FZ_TEXT_FLATTEN_KEEP_PARAGRAPHS.
+*/
 fz_buffer *fz_new_buffer_from_stext_page(fz_context *ctx, fz_stext_page *text);
+
+/**
+	Convenience functions built on fz_new_buffer_from_stext_page.
+*/
 fz_buffer *fz_new_buffer_from_page(fz_context *ctx, fz_page *page, const fz_stext_options *options);
 fz_buffer *fz_new_buffer_from_page_number(fz_context *ctx, fz_document *doc, int number, const fz_stext_options *options);
 fz_buffer *fz_new_buffer_from_display_list(fz_context *ctx, fz_display_list *list, const fz_stext_options *options);
+
+/**
+	Convenience functions built on fz_new_buffer_from_flattened_stext_page.
+*/
+fz_buffer *fz_new_buffer_from_flattened_page(fz_context *ctx, fz_page *page, const fz_stext_options *options, fz_text_flatten flatten);
+fz_buffer *fz_new_buffer_from_flattened_page_number(fz_context *ctx, fz_document *doc, int number, const fz_stext_options *options, fz_text_flatten flatten);
+fz_buffer *fz_new_buffer_from_flattened_display_list(fz_context *ctx, fz_display_list *list, const fz_stext_options *options, fz_text_flatten flatten);
 
 /**
 	Search for the 'needle' text on the page.
@@ -104,6 +144,10 @@ int fz_search_page(fz_context *ctx, fz_page *page, const char *needle, int *hit_
 int fz_search_page_number(fz_context *ctx, fz_document *doc, int number, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
 int fz_search_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
 int fz_search_display_list(fz_context *ctx, fz_display_list *list, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max);
+int fz_match_page(fz_context *ctx, fz_page *page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options);
+int fz_match_page_number(fz_context *ctx, fz_document *doc, int number, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options);
+int fz_match_chapter_page_number(fz_context *ctx, fz_document *doc, int chapter, int page, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options);
+int fz_match_display_list(fz_context *ctx, fz_display_list *list, const char *needle, int *hit_mark, fz_quad *hit_bbox, int hit_max, fz_search_options options);
 
 /**
 	Search for the 'needle' text on the page.
@@ -112,6 +156,10 @@ int fz_search_page_cb(fz_context *ctx, fz_page *page, const char *needle, fz_sea
 int fz_search_page_number_cb(fz_context *ctx, fz_document *doc, int number, const char *needle, fz_search_callback_fn *cb, void *opaque);
 int fz_search_chapter_page_number_cb(fz_context *ctx, fz_document *doc, int chapter, int page, const char *needle, fz_search_callback_fn *cb, void *opaque);
 int fz_search_display_list_cb(fz_context *ctx, fz_display_list *list, const char *needle, fz_search_callback_fn *cb, void *opaque);
+int fz_match_page_cb(fz_context *ctx, fz_page *page, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options);
+int fz_match_page_number_cb(fz_context *ctx, fz_document *doc, int number, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options);
+int fz_match_chapter_page_number_cb(fz_context *ctx, fz_document *doc, int chapter, int page, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options);
+int fz_match_display_list_cb(fz_context *ctx, fz_display_list *list, const char *needle, fz_match_callback_fn *cb, void *opaque, fz_search_options options);
 
 /**
 	Parse an SVG document into a display-list.

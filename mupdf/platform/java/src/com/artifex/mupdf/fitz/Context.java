@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2021 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -22,6 +22,9 @@
 
 package com.artifex.mupdf.fitz;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 // This class handles the loading of the MuPDF shared library, together
 // with the ThreadLocal magic to get the required context.
 //
@@ -40,6 +43,14 @@ public class Context
 
 	private static native int initNative();
 
+	private static String stackTrace(Throwable t) {
+		StringWriter w = new StringWriter();
+		PrintWriter pw = new PrintWriter(w);
+		t.printStackTrace(pw);
+		pw.flush();
+		return w.toString();
+	}
+
 	public static void init() {
 		if (!inited) {
 			inited = true;
@@ -49,7 +60,14 @@ public class Context
 				try {
 					System.loadLibrary("mupdf_java64");
 				} catch (UnsatisfiedLinkError ee) {
-					System.loadLibrary("mupdf_java32");
+					try {
+						System.loadLibrary("mupdf_java32");
+					} catch (UnsatisfiedLinkError eee) {
+						throw new UnsatisfiedLinkError("cannot load mupdf library:\n" +
+							stackTrace(e) +
+							stackTrace(ee) +
+							stackTrace(eee));
+					}
 				}
 			}
 			if (initNative() < 0)

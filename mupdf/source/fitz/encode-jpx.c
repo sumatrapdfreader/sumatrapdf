@@ -146,25 +146,27 @@ static OPJ_BOOL seek_stm(OPJ_OFF_T p_nb_bytes, void *p_user_data)
 static void
 info_callback(const char *msg, void *client_data)
 {
+#if 0
 	fz_context *ctx = (fz_context *)client_data;
-
-	fz_warn(ctx, "INFO: %s", msg);
+	// strlen-1 to trim trailing newline
+	fz_warn(ctx, "openjpeg info: %.*s", (int) strlen(msg)-1, msg);
+#endif
 }
 
 static void
 warning_callback(const char *msg, void *client_data)
 {
 	fz_context *ctx = (fz_context *)client_data;
-
-	fz_warn(ctx, "WARNING: %s", msg);
+	// strlen-1 to trim trailing newline
+	fz_warn(ctx, "openjpeg warning: %.*s", (int) strlen(msg)-1, msg);
 }
 
 static void
 error_callback(const char *msg, void *client_data)
 {
 	fz_context *ctx = (fz_context *)client_data;
-
-	fz_warn(ctx, "ERROR: %s", msg);
+	// strlen-1 to trim trailing newline
+	fz_warn(ctx, "openjpeg error: %.*s", (int) strlen(msg)-1, msg);
 }
 
 void
@@ -181,7 +183,7 @@ fz_write_pixmap_as_jpx(fz_context *ctx, fz_output *out, fz_pixmap *pix, int q)
 
 	fz_var(image);
 
-	opj_lock(ctx);
+	fz_opj_lock(ctx);
 	fz_try(ctx)
 	{
 		image = image_from_pixmap(ctx, pix);
@@ -299,7 +301,7 @@ fz_write_pixmap_as_jpx(fz_context *ctx, fz_output *out, fz_pixmap *pix, int q)
 			fz_throw(ctx, FZ_ERROR_LIBRARY, "Encoding failed");
 	}
 	fz_always(ctx)
-		opj_unlock(ctx);
+		fz_opj_unlock(ctx);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
 }

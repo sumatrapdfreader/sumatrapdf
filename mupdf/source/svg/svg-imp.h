@@ -23,6 +23,12 @@
 #ifndef SOURCE_SVG_IMP_H
 #define SOURCE_SVG_IMP_H
 
+typedef struct svg_cycle_list_s svg_cycle_list;
+struct svg_cycle_list_s {
+	svg_cycle_list *up;
+	fz_xml *symbol;
+};
+
 typedef struct svg_document_s svg_document;
 
 struct svg_document_s
@@ -33,6 +39,7 @@ struct svg_document_s
 	fz_tree *idmap;
 	float width;
 	float height;
+	svg_cycle_list *cycle; /* for detecting mutual recursive <use> invocations */
 	fz_archive *zip; /* for locating external resources */
 	char base_uri[2048];
 };

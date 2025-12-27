@@ -35,7 +35,8 @@ struct pdf_annot
 	int is_hot;
 	int is_active;
 
-	int needs_new_ap; /* If set, then a resynthesis of this annotation has been requested. */
+	int needs_new_local_ap; /* True for widgets when AcroForm/NeedAppearances is set */
+	int needs_new_ap; /* If set, then a resynthesis of this annotation has been requested. (-1 to request local only) */
 	int has_new_ap; /* If set, then the appearance stream has changed since last queried. */
 	int ignore_trigger_events; /* Avoids triggering events during editing of e.g. text field widgets. */
 	int hidden_editing; /* Hides annotation from rendering e.g. during editing. */

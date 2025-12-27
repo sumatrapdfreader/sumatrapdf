@@ -4024,7 +4024,7 @@ fz_paint_image_imp(fz_context *ctx,
 	{
 		/* Note this may cause compile warning because fz_warn() is marked as
 		being like printf(), but actually it treats %ld as matching int64_t. */
-		fz_warn(ctx, "image too large for fixed point math: %ld x %ld", (int64_t)sw, (int64_t)sh);
+		fz_warn(ctx, "image too large for fixed point math: %d x %d", (int)sw, (int)sh);
 		return;
 	}
 

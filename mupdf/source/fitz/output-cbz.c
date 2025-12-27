@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -118,10 +118,7 @@ fz_new_cbz_writer(fz_context *ctx, const char *path, const char *options)
 	fz_try(ctx)
 		wri = fz_new_cbz_writer_with_output(ctx, out, options);
 	fz_catch(ctx)
-	{
-		fz_drop_output(ctx, out);
 		fz_rethrow(ctx);
-	}
 	return wri;
 }
 
@@ -133,8 +130,10 @@ typedef struct
 	fz_draw_options options;
 	fz_pixmap *pixmap;
 	void (*save)(fz_context *ctx, fz_pixmap *pix, const char *filename);
+	void (*write)(fz_context *ctx, fz_output *out, fz_pixmap *pix);
 	int count;
 	char *path;
+	fz_output *out;
 } fz_pixmap_writer;
 
 static fz_device *
@@ -154,8 +153,15 @@ pixmap_end_page(fz_context *ctx, fz_document_writer *wri_, fz_device *dev)
 	{
 		fz_close_device(ctx, dev);
 		wri->count += 1;
+		if (wri->path && wri->save)
+		{
 		fz_format_output_path(ctx, path, sizeof path, wri->path, wri->count);
 		wri->save(ctx, wri->pixmap, path);
+	}
+		else
+		{
+			wri->write(ctx, wri->out, wri->pixmap);
+		}
 	}
 	fz_always(ctx)
 	{
@@ -187,6 +193,32 @@ fz_new_pixmap_writer(fz_context *ctx, const char *path, const char *options,
 		fz_parse_draw_options(ctx, &wri->options, options);
 		wri->path = fz_strdup(ctx, path ? path : default_path);
 		wri->save = save;
+		switch (n)
+		{
+		case 1: wri->options.colorspace = fz_device_gray(ctx); break;
+		case 3: wri->options.colorspace = fz_device_rgb(ctx); break;
+		case 4: wri->options.colorspace = fz_device_cmyk(ctx); break;
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, wri);
+		fz_rethrow(ctx);
+	}
+
+	return (fz_document_writer*)wri;
+}
+
+fz_document_writer *fz_new_pixmap_writer_with_output(fz_context *ctx, fz_output *out, const char *options, int n,
+	void (*write)(fz_context *ctx, fz_output *out, fz_pixmap *pix))
+{
+	fz_pixmap_writer *wri = fz_new_derived_document_writer(ctx, fz_pixmap_writer, pixmap_begin_page, pixmap_end_page, NULL, pixmap_drop_writer);
+
+	fz_try(ctx)
+	{
+		fz_parse_draw_options(ctx, &wri->options, options);
+		wri->out = out;
+		wri->write = write;
 		switch (n)
 		{
 		case 1: wri->options.colorspace = fz_device_gray(ctx); break;

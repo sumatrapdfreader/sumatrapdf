@@ -26,7 +26,10 @@
 #include "mupdf/fitz/store.h"
 #include "mupdf/pdf/document.h"
 
-#define PDF_MRANGE_CAP 32
+// The maximum 1-to-many mapping length.
+// In the PDF reference, the max is 512 bytes for ToUnicode CMaps.
+// This results in us needing to support up to 256 characters.
+#define PDF_MRANGE_CAP 256
 
 typedef struct
 {

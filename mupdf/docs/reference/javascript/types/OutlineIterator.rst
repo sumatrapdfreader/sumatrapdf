@@ -22,6 +22,33 @@ Constructors
 
 OutlineIterator instances are returned by `Document.prototype.outlineIterator()`.
 
+Constants
+---------
+
+Navigation return codes:
+
+.. data:: OutlineIterator.ITERATOR_DID_NOT_MOVE
+
+	Movement was not possible.
+
+.. data:: OutlineIterator.ITERATOR_AT_ITEM
+
+	New position has a valid item.
+
+.. data:: OutlineIterator.ITERATOR_AT_EMPTY
+
+	New position has no item, but one can be inserted here.
+
+Style bit flags:
+
+.. data:: OutlineIterator.FLAG_BOLD
+
+	Bit is set outline item style is bold.
+
+.. data:: OutlineIterator.FLAG_ITALIC
+
+	Bit is set if outline item style is italic.
+
 Instance methods
 ----------------
 

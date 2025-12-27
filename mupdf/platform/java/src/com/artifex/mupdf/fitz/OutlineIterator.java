@@ -59,6 +59,10 @@ public class OutlineIterator
 	public native OutlineItem item();
 	public native int delete();
 
+	public static final int ITERATOR_DID_NOT_MOVE = -1;
+	public static final int ITERATOR_AT_ITEM = 0;
+	public static final int ITERATOR_AT_EMPTY = 1;
+
 	public static final int FLAG_BOLD = 1;
 	public static final int FLAG_ITALIC = 2;
 

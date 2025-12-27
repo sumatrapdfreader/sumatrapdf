@@ -64,6 +64,7 @@ static int usage(void)
 		"\t-t\tcompact object syntax\n"
 		"\t-tt\tindented object syntax\n"
 		"\t-L\twrite object labels\n"
+		"\t-v\tvectorize text\n"
 		"\t-A\tcreate appearance streams for annotations\n"
 		"\t-AA\trecreate appearance streams for annotations\n"
 		"\t-m\tpreserve metadata\n"
@@ -133,7 +134,7 @@ int pdfclean_main(int argc, char **argv)
 	opts.write = pdf_default_write_options;
 	opts.write.dont_regenerate_id = 1;
 
-	while ((c = fz_getopt_long(argc, argv, "ade:fgilmp:stczDAE:LO:U:P:SZ", longopts)) != -1)
+	while ((c = fz_getopt_long(argc, argv, "ade:fgilmp:stcvzDAE:LO:U:P:SZ", longopts)) != -1)
 	{
 		switch (c)
 		{
@@ -161,6 +162,7 @@ int pdfclean_main(int argc, char **argv)
 		case 'm': opts.write.do_preserve_metadata = 1; break;
 		case 'S': opts.subset_fonts = 1; break;
 		case 'Z': opts.write.do_use_objstms = 1; break;
+		case 'v': opts.vectorize++; break;
 		case 0:
 		{
 			switch((int)(intptr_t)fz_optlong->opaque)

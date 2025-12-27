@@ -52,6 +52,23 @@ Constructors
                 var font4 = new mupdf.Font("Comic Sans", "/usr/share/fonts/truetype/msttcorefonts/Comic_Sans_MS.ttf", 1)
 		var font5 = new mupdf.Font("Freight Sans", fs.readFileSync("DroidSansFallbackFull.ttf"))
 
+Constants
+---------
+
+Encoding constants for `PDFDocument.prototype.addSimpleFont`:
+
+.. data:: Font.SIMPLE_ENCODING_LATIN
+
+	WinAnsiEncoding (a.k.a. CP-1252)
+
+.. data:: Font.SIMPLE_ENCODING_GREEK
+
+	ISO-8859-7
+
+.. data:: Font.SIMPLE_ENCODING_CYRILLIC
+
+	KOI8-U
+
 Instance methods
 ----------------
 

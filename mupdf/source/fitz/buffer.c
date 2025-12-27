@@ -101,6 +101,22 @@ fz_new_buffer_from_copied_data(fz_context *ctx, const unsigned char *data, size_
 	return b;
 }
 
+fz_buffer *
+fz_new_buffer_from_printf(fz_context *ctx, const char *fmt, ...)
+{
+	size_t len;
+	fz_buffer *buf;
+	va_list ap;
+	va_start(ap, fmt);
+	len = fz_vsnprintf(NULL, 0, fmt, ap);
+	va_end(ap);
+	buf = fz_new_buffer(ctx, len+1);
+	va_start(ap, fmt);
+	fz_append_vprintf(ctx, buf, fmt, ap);
+	va_end(ap);
+	return buf;
+}
+
 fz_buffer *fz_clone_buffer(fz_context *ctx, fz_buffer *buf)
 {
 	return fz_new_buffer_from_copied_data(ctx, buf ? buf->data : NULL, buf ? buf->len : 0);

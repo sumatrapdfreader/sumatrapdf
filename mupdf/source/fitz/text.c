@@ -280,9 +280,12 @@ char *fz_string_from_text_language(char str[8], fz_text_language lang)
 
 	/* str is supposed to be at least 8 chars in size */
 	if (str == NULL)
-		return NULL;
+		return "";
 	if (lang == FZ_LANG_UNSET)
-		return NULL;
+	{
+		str[0] = 0;
+		return str;
+	}
 
 	if (lang == FZ_LANG_zh_Hant)
 		fz_strlcpy(str, "zh-Hant", 8);

@@ -990,7 +990,7 @@ execute_charstring(fz_context *ctx, cff_t *cff, const uint8_t *pc, const uint8_t
 		case 9:
 		case 13:
 		case 17:
-			fz_throw(ctx, FZ_ERROR_FORMAT, "Reserved charstring byte");
+			fz_throw(ctx, FZ_ERROR_FORMAT, "Reserved charstring byte c=0x%x", c);
 			break;
 
 		/* Deal with all the hints together */
@@ -1211,7 +1211,7 @@ overflow:
 
 
 			default:
-				fz_throw(ctx, FZ_ERROR_FORMAT, "Reserved charstring byte");
+				fz_throw(ctx, FZ_ERROR_FORMAT, "Reserved charstring byte c=0x%x", c);
 			}
 			break;
 		}

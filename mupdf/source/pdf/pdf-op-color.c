@@ -1,4 +1,4 @@
-// Copyright (C) 2004-2024 Artifex Software, Inc.
+// Copyright (C) 2004-2025 Artifex Software, Inc.
 //
 // This file is part of MuPDF.
 //
@@ -80,7 +80,6 @@ typedef struct
 	pdf_processor super;
 	pdf_document *doc;
 	int structparents;
-	pdf_processor *chain;
 	pdf_filter_options *global_options;
 	pdf_color_filter_options *options;
 	pdf_resource_stack *new_rstack;
@@ -293,16 +292,16 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 			if (stroking)
 			{
 				if (n == 1)
-					p->chain->op_G(ctx, p->chain, color[0]);
+					p->super.chain->op_G(ctx, p->super.chain, color[0]);
 				else
-					p->chain->op_CS(ctx, p->chain, "DeviceGray", fz_device_gray(ctx));
+					p->super.chain->op_CS(ctx, p->super.chain, "DeviceGray", fz_device_gray(ctx));
 			}
 			else
 			{
 				if (n == 1)
-					p->chain->op_g(ctx, p->chain, color[0]);
+					p->super.chain->op_g(ctx, p->super.chain, color[0]);
 				else
-					p->chain->op_cs(ctx, p->chain, "DeviceGray", fz_device_gray(ctx));
+					p->super.chain->op_cs(ctx, p->super.chain, "DeviceGray", fz_device_gray(ctx));
 			}
 			break;
 		}
@@ -312,16 +311,16 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 			if (stroking)
 			{
 				if (n == 3)
-					p->chain->op_RG(ctx, p->chain, color[0], color[1], color[2]);
+					p->super.chain->op_RG(ctx, p->super.chain, color[0], color[1], color[2]);
 				else
-					p->chain->op_CS(ctx, p->chain, "DeviceRGB", fz_device_rgb(ctx));
+					p->super.chain->op_CS(ctx, p->super.chain, "DeviceRGB", fz_device_rgb(ctx));
 			}
 			else
 			{
 				if (n == 3)
-					p->chain->op_rg(ctx, p->chain, color[0], color[1], color[2]);
+					p->super.chain->op_rg(ctx, p->super.chain, color[0], color[1], color[2]);
 				else
-					p->chain->op_cs(ctx, p->chain, "DeviceRGB", fz_device_rgb(ctx));
+					p->super.chain->op_cs(ctx, p->super.chain, "DeviceRGB", fz_device_rgb(ctx));
 			}
 			break;
 		}
@@ -331,16 +330,16 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 			if (stroking)
 			{
 				if (n == 4)
-					p->chain->op_K(ctx, p->chain, color[0], color[1], color[2], color[3]);
+					p->super.chain->op_K(ctx, p->super.chain, color[0], color[1], color[2], color[3]);
 				else
-					p->chain->op_CS(ctx, p->chain, "DeviceCMYK", fz_device_cmyk(ctx));
+					p->super.chain->op_CS(ctx, p->super.chain, "DeviceCMYK", fz_device_cmyk(ctx));
 			}
 			else
 			{
 				if (n == 4)
-					p->chain->op_k(ctx, p->chain, color[0], color[1], color[2], color[3]);
+					p->super.chain->op_k(ctx, p->super.chain, color[0], color[1], color[2], color[3]);
 				else
-					p->chain->op_cs(ctx, p->chain, "DeviceCMYK", fz_device_cmyk(ctx));
+					p->super.chain->op_cs(ctx, p->super.chain, "DeviceCMYK", fz_device_cmyk(ctx));
 			}
 			break;
 		}
@@ -351,9 +350,9 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 		{
 			assert(n == 0);
 			if (stroking)
-				p->chain->op_CS(ctx, p->chain, "Pattern", NULL);
+				p->super.chain->op_CS(ctx, p->super.chain, "Pattern", NULL);
 			else
-				p->chain->op_cs(ctx, p->chain, "Pattern", NULL);
+				p->super.chain->op_cs(ctx, p->super.chain, "Pattern", NULL);
 			break;
 		}
 
@@ -365,16 +364,16 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 
 			cs = pdf_load_colorspace(ctx, cs_obj);
 			if (stroking)
-				p->chain->op_CS(ctx, p->chain, new_name, cs);
+				p->super.chain->op_CS(ctx, p->super.chain, new_name, cs);
 			else
-				p->chain->op_cs(ctx, p->chain, new_name, cs);
+				p->super.chain->op_cs(ctx, p->super.chain, new_name, cs);
 
 			if (n > 0)
 			{
 				if (stroking)
-					p->chain->op_SC_color(ctx, p->chain, n, color);
+					p->super.chain->op_SC_color(ctx, p->super.chain, n, color);
 				else
-					p->chain->op_sc_color(ctx, p->chain, n, color);
+					p->super.chain->op_sc_color(ctx, p->super.chain, n, color);
 			}
 			break;
 		}
@@ -391,18 +390,18 @@ rewrite_cs(fz_context *ctx, pdf_color_processor *p, pdf_obj *cs_obj, int n, floa
 		{
 			pat = pdf_load_pattern(ctx, p->doc, cs_obj);
 			if (stroking)
-				p->chain->op_SC_pattern(ctx, p->chain, new_name, pat, n, color);
+				p->super.chain->op_SC_pattern(ctx, p->super.chain, new_name, pat, n, color);
 			else
-				p->chain->op_sc_pattern(ctx, p->chain, new_name, pat, n, color);
+				p->super.chain->op_sc_pattern(ctx, p->super.chain, new_name, pat, n, color);
 			break;
 		}
 		else if (type == 2)
 		{
 			shade = pdf_load_shading(ctx, p->doc, cs_obj);
 			if (stroking)
-				p->chain->op_SC_shade(ctx, p->chain, new_name, shade);
+				p->super.chain->op_SC_shade(ctx, p->super.chain, new_name, shade);
 			else
-				p->chain->op_sc_shade(ctx, p->chain, new_name, shade);
+				p->super.chain->op_sc_shade(ctx, p->super.chain, new_name, shade);
 			break;
 		}
 
@@ -439,161 +438,6 @@ mark_fill(fz_context *ctx, pdf_color_processor *p)
 	p->gstate->unmarked &= ~UNMARKED_FILL;
 }
 
-/* general graphics state */
-
-static void
-pdf_color_w(fz_context *ctx, pdf_processor *proc, float linewidth)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_w)
-		p->chain->op_w(ctx, p->chain, linewidth);
-}
-
-static void
-pdf_color_j(fz_context *ctx, pdf_processor *proc, int linejoin)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_j)
-		p->chain->op_j(ctx, p->chain, linejoin);
-}
-
-static void
-pdf_color_J(fz_context *ctx, pdf_processor *proc, int linecap)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_J)
-		p->chain->op_J(ctx, p->chain, linecap);
-}
-
-static void
-pdf_color_M(fz_context *ctx, pdf_processor *proc, float miterlimit)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_M)
-		p->chain->op_M(ctx, p->chain, miterlimit);
-}
-
-static void
-pdf_color_d(fz_context *ctx, pdf_processor *proc, pdf_obj *array, float phase)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_d)
-		p->chain->op_d(ctx, p->chain, array, phase);
-}
-
-static void
-pdf_color_ri(fz_context *ctx, pdf_processor *proc, const char *intent)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_ri)
-		p->chain->op_ri(ctx, p->chain, intent);
-}
-
-static void
-pdf_color_gs_OP(fz_context *ctx, pdf_processor *proc, int b)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_OP)
-		p->chain->op_gs_OP(ctx, p->chain, b);
-}
-
-static void
-pdf_color_gs_op(fz_context *ctx, pdf_processor *proc, int b)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_op)
-		p->chain->op_gs_op(ctx, p->chain, b);
-}
-
-static void
-pdf_color_gs_OPM(fz_context *ctx, pdf_processor *proc, int i)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_OPM)
-		p->chain->op_gs_OPM(ctx, p->chain, i);
-}
-
-static void
-pdf_color_gs_UseBlackPtComp(fz_context *ctx, pdf_processor *proc, pdf_obj *name)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_UseBlackPtComp)
-		p->chain->op_gs_UseBlackPtComp(ctx, p->chain, name);
-}
-
-static void
-pdf_color_i(fz_context *ctx, pdf_processor *proc, float flatness)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_i)
-		p->chain->op_i(ctx, p->chain, flatness);
-}
-
-static void
-pdf_color_gs_begin(fz_context *ctx, pdf_processor *proc, const char *name, pdf_obj *extgstate)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_begin)
-		p->chain->op_gs_begin(ctx, p->chain, name, extgstate);
-}
-
-static void
-pdf_color_gs_BM(fz_context *ctx, pdf_processor *proc, const char *blendmode)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_BM)
-		p->chain->op_gs_BM(ctx, p->chain, blendmode);
-}
-
-static void
-pdf_color_gs_CA(fz_context *ctx, pdf_processor *proc, float alpha)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_CA)
-		p->chain->op_gs_CA(ctx, p->chain, alpha);
-}
-
-static void
-pdf_color_gs_ca(fz_context *ctx, pdf_processor *proc, float alpha)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_ca)
-		p->chain->op_gs_ca(ctx, p->chain, alpha);
-}
-
-static void
-pdf_color_gs_SMask(fz_context *ctx, pdf_processor *proc, pdf_obj *smask, fz_colorspace *smask_cs, float *bc, int luminosity, pdf_obj *tr)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_SMask)
-		p->chain->op_gs_SMask(ctx, p->chain, smask, smask_cs, bc, luminosity, tr);
-}
-
-static void
-pdf_color_gs_end(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_gs_end)
-		p->chain->op_gs_end(ctx, p->chain);
-}
-
 /* special graphics state */
 
 static void
@@ -609,8 +453,8 @@ pdf_color_q(fz_context *ctx, pdf_processor *proc)
 	gs->ctm = p->gstate->ctm;
 	p->gstate = gs;
 
-	if (p->chain->op_q)
-		p->chain->op_q(ctx, p->chain);
+	if (p->super.chain->op_q)
+		p->super.chain->op_q(ctx, p->super.chain);
 }
 
 static void
@@ -628,74 +472,11 @@ pdf_color_cm(fz_context *ctx, pdf_processor *proc, float a, float b, float c, fl
 
 	p->gstate->ctm = fz_concat(m, p->gstate->ctm);
 
-	if (p->chain->op_cm)
-		p->chain->op_cm(ctx, p->chain, a, b, c, d, e, f);
+	if (p->super.chain->op_cm)
+		p->super.chain->op_cm(ctx, p->super.chain, a, b, c, d, e, f);
 }
 
 /* path construction */
-
-static void
-pdf_color_m(fz_context *ctx, pdf_processor *proc, float x, float y)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_m)
-		p->chain->op_m(ctx, p->chain, x, y);
-}
-
-static void
-pdf_color_l(fz_context *ctx, pdf_processor *proc, float x, float y)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_l)
-		p->chain->op_l(ctx, p->chain, x, y);
-}
-
-static void
-pdf_color_c(fz_context *ctx, pdf_processor *proc, float x1, float y1, float x2, float y2, float x3, float y3)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_c)
-		p->chain->op_c(ctx, p->chain, x1, y1, x2, y2, x3, y3);
-}
-
-static void
-pdf_color_v(fz_context *ctx, pdf_processor *proc, float x2, float y2, float x3, float y3)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_v)
-		p->chain->op_v(ctx, p->chain, x2, y2, x3, y3);
-}
-
-static void
-pdf_color_y(fz_context *ctx, pdf_processor *proc, float x1, float y1, float x3, float y3)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_y)
-		p->chain->op_y(ctx, p->chain, x1, y1, x3, y3);
-}
-
-static void
-pdf_color_h(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_h)
-		p->chain->op_h(ctx, p->chain);
-}
-
-static void
-pdf_color_re(fz_context *ctx, pdf_processor *proc, float x, float y, float w, float h)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_re)
-		p->chain->op_re(ctx, p->chain, x, y, w, h);
-}
 
 /* path painting */
 
@@ -707,8 +488,8 @@ pdf_color_S(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_STROKE)
 		mark_stroke(ctx, p);
 
-	if (p->chain->op_S)
-		p->chain->op_S(ctx, p->chain);
+	if (p->super.chain->op_S)
+		p->super.chain->op_S(ctx, p->super.chain);
 }
 
 static void
@@ -719,8 +500,8 @@ pdf_color_s(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_s)
-		p->chain->op_s(ctx, p->chain);
+	if (p->super.chain->op_s)
+		p->super.chain->op_s(ctx, p->super.chain);
 }
 
 static void
@@ -731,8 +512,8 @@ pdf_color_F(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_F)
-		p->chain->op_F(ctx, p->chain);
+	if (p->super.chain->op_F)
+		p->super.chain->op_F(ctx, p->super.chain);
 }
 
 static void
@@ -743,8 +524,8 @@ pdf_color_f(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_f)
-		p->chain->op_f(ctx, p->chain);
+	if (p->super.chain->op_f)
+		p->super.chain->op_f(ctx, p->super.chain);
 }
 
 static void
@@ -755,8 +536,8 @@ pdf_color_fstar(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_fstar)
-		p->chain->op_fstar(ctx, p->chain);
+	if (p->super.chain->op_fstar)
+		p->super.chain->op_fstar(ctx, p->super.chain);
 }
 
 static void
@@ -769,8 +550,8 @@ pdf_color_B(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_B)
-		p->chain->op_B(ctx, p->chain);
+	if (p->super.chain->op_B)
+		p->super.chain->op_B(ctx, p->super.chain);
 }
 
 static void
@@ -783,8 +564,8 @@ pdf_color_Bstar(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_Bstar)
-		p->chain->op_Bstar(ctx, p->chain);
+	if (p->super.chain->op_Bstar)
+		p->super.chain->op_Bstar(ctx, p->super.chain);
 }
 
 static void
@@ -797,8 +578,8 @@ pdf_color_b(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_b)
-		p->chain->op_b(ctx, p->chain);
+	if (p->super.chain->op_b)
+		p->super.chain->op_b(ctx, p->super.chain);
 }
 
 static void
@@ -811,57 +592,8 @@ pdf_color_bstar(fz_context *ctx, pdf_processor *proc)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_bstar)
-		p->chain->op_bstar(ctx, p->chain);
-}
-
-static void
-pdf_color_n(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_n)
-		p->chain->op_n(ctx, p->chain);
-}
-
-/* clipping paths */
-
-static void
-pdf_color_W(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_W)
-		p->chain->op_W(ctx, p->chain);
-}
-
-static void
-pdf_color_Wstar(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Wstar)
-		p->chain->op_Wstar(ctx, p->chain);
-}
-
-/* text objects */
-
-static void
-pdf_color_BT(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_BT)
-		p->chain->op_BT(ctx, p->chain);
-}
-
-static void
-pdf_color_ET(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_ET)
-		p->chain->op_ET(ctx, p->chain);
+	if (p->super.chain->op_bstar)
+		p->super.chain->op_bstar(ctx, p->super.chain);
 }
 
 static void
@@ -875,115 +607,18 @@ pdf_color_Q(fz_context *ctx, pdf_processor *proc)
 	pdf_drop_obj(ctx, gs->cs_stroke);
 
 	fz_try(ctx)
-		if (p->chain->op_Q)
-			p->chain->op_Q(ctx, p->chain);
+		if (p->super.chain->op_Q)
+			p->super.chain->op_Q(ctx, p->super.chain);
 	fz_always(ctx)
 		fz_free(ctx, gs);
 	fz_catch(ctx)
 		fz_rethrow(ctx);
-}
 
-/* text state */
-
-static void
-pdf_color_Tc(fz_context *ctx, pdf_processor *proc, float charspace)
+	if (!p->gstate)
 {
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tc)
-		p->chain->op_Tc(ctx, p->chain, charspace);
+		p->gstate = fz_malloc_struct(ctx, gstate_stack);
+		p->gstate->ctm = fz_identity;
 }
-
-static void
-pdf_color_Tw(fz_context *ctx, pdf_processor *proc, float wordspace)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tw)
-		p->chain->op_Tw(ctx, p->chain, wordspace);
-}
-
-static void
-pdf_color_Tz(fz_context *ctx, pdf_processor *proc, float scale)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tz)
-		p->chain->op_Tz(ctx, p->chain, scale);
-}
-
-static void
-pdf_color_TL(fz_context *ctx, pdf_processor *proc, float leading)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_TL)
-		p->chain->op_TL(ctx, p->chain, leading);
-}
-
-static void
-pdf_color_Tf(fz_context *ctx, pdf_processor *proc, const char *name, pdf_font_desc *font, float size)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tf)
-		p->chain->op_Tf(ctx, p->chain, name, font, size);
-}
-
-static void
-pdf_color_Tr(fz_context *ctx, pdf_processor *proc, int render)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tr)
-		p->chain->op_Tr(ctx, p->chain, render);
-}
-
-static void
-pdf_color_Ts(fz_context *ctx, pdf_processor *proc, float rise)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Ts)
-		p->chain->op_Ts(ctx, p->chain, rise);
-}
-
-/* text positioning */
-
-static void
-pdf_color_Td(fz_context *ctx, pdf_processor *proc, float tx, float ty)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Td)
-		p->chain->op_Td(ctx, p->chain, tx, ty);
-}
-
-static void
-pdf_color_TD(fz_context *ctx, pdf_processor *proc, float tx, float ty)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_TD)
-		p->chain->op_TD(ctx, p->chain, tx, ty);
-}
-
-static void
-pdf_color_Tm(fz_context *ctx, pdf_processor *proc, float a, float b, float c, float d, float e, float f)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tm)
-		p->chain->op_Tm(ctx, p->chain, a, b, c, d, e, f);
-}
-
-static void
-pdf_color_Tstar(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_Tstar)
-		p->chain->op_Tstar(ctx, p->chain);
 }
 
 /* text showing */
@@ -999,8 +634,8 @@ pdf_color_TJ(fz_context *ctx, pdf_processor *proc, pdf_obj *array)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_TJ)
-		p->chain->op_TJ(ctx, p->chain, array);
+	if (p->super.chain->op_TJ)
+		p->super.chain->op_TJ(ctx, p->super.chain, array);
 }
 
 static void
@@ -1014,8 +649,8 @@ pdf_color_Tj(fz_context *ctx, pdf_processor *proc, char *str, size_t len)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_Tj)
-		p->chain->op_Tj(ctx, p->chain, str, len);
+	if (p->super.chain->op_Tj)
+		p->super.chain->op_Tj(ctx, p->super.chain, str, len);
 }
 
 static void
@@ -1029,8 +664,8 @@ pdf_color_squote(fz_context *ctx, pdf_processor *proc, char *str, size_t len)
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_squote)
-		p->chain->op_squote(ctx, p->chain, str, len);
+	if (p->super.chain->op_squote)
+		p->super.chain->op_squote(ctx, p->super.chain, str, len);
 }
 
 static void
@@ -1044,28 +679,8 @@ pdf_color_dquote(fz_context *ctx, pdf_processor *proc, float aw, float ac, char 
 	if (p->gstate->unmarked & UNMARKED_FILL)
 		mark_fill(ctx, p);
 
-	if (p->chain->op_dquote)
-		p->chain->op_dquote(ctx, p->chain, aw, ac, str, len);
-}
-
-/* type 3 fonts */
-
-static void
-pdf_color_d0(fz_context *ctx, pdf_processor *proc, float wx, float wy)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_d0)
-		p->chain->op_d0(ctx, p->chain, wx, wy);
-}
-
-static void
-pdf_color_d1(fz_context *ctx, pdf_processor *proc, float wx, float wy, float llx, float lly, float urx, float ury)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_d1)
-		p->chain->op_d1(ctx, p->chain, wx, wy, llx, lly, urx, ury);
+	if (p->super.chain->op_dquote)
+		p->super.chain->op_dquote(ctx, p->super.chain, aw, ac, str, len);
 }
 
 /* color */
@@ -1142,8 +757,8 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
-		if (p->chain->op_SC_shade)
-			p->chain->op_SC_shade(ctx, p->chain, name, shade);
+		if (p->super.chain->op_SC_shade)
+			p->super.chain->op_SC_shade(ctx, p->super.chain, name, shade);
 		return;
 	}
 
@@ -1160,8 +775,8 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
-		if (p->chain->op_SC_shade)
-			p->chain->op_SC_shade(ctx, p->chain, new_name, new_shade);
+		if (p->super.chain->op_SC_shade)
+			p->super.chain->op_SC_shade(ctx, p->super.chain, new_name, new_shade);
 		return;
 	}
 
@@ -1184,8 +799,8 @@ pdf_color_SC_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 		/* Remember that we've done this one before. */
 		push_rewritten_shade(ctx, p, orig, new_shade, new_name);
 
-		if (p->chain->op_sh)
-			p->chain->op_SC_shade(ctx, p->chain, new_name, new_shade);
+		if (p->super.chain->op_sh)
+			p->super.chain->op_SC_shade(ctx, p->super.chain, new_name, new_shade);
 	}
 	fz_always(ctx)
 	{
@@ -1218,8 +833,8 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
-		if (p->chain->op_sc_shade)
-			p->chain->op_sc_shade(ctx, p->chain, name, shade);
+		if (p->super.chain->op_sc_shade)
+			p->super.chain->op_sc_shade(ctx, p->super.chain, name, shade);
 		return;
 	}
 
@@ -1229,8 +844,8 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 	new_shade = find_rewritten_shade(ctx, p, orig, new_name);
 	if (new_shade)
 	{
-		if (p->chain->op_sc_shade)
-			p->chain->op_sc_shade(ctx, p->chain, new_name, new_shade);
+		if (p->super.chain->op_sc_shade)
+			p->super.chain->op_sc_shade(ctx, p->super.chain, new_name, new_shade);
 		return;
 	}
 
@@ -1253,8 +868,8 @@ pdf_color_sc_shade(fz_context *ctx, pdf_processor *proc, const char *name, fz_sh
 		/* Remember that we've done this one before. */
 		push_rewritten_shade(ctx, p, orig, new_shade, new_name);
 
-		if (p->chain->op_sh)
-			p->chain->op_sc_shade(ctx, p->chain, new_name, new_shade);
+		if (p->super.chain->op_sh)
+			p->super.chain->op_sc_shade(ctx, p->super.chain, new_name, new_shade);
 	}
 	fz_always(ctx)
 	{
@@ -1362,8 +977,8 @@ pdf_color_BI(fz_context *ctx, pdf_processor *proc, fz_image *image, const char *
 	if (p->options->image_rewrite)
 		p->options->image_rewrite(ctx, p->options->opaque, &image, p->gstate->ctm, NULL);
 
-	if (p->chain->op_BI)
-		p->chain->op_BI(ctx, p->chain, image, colorspace);
+	if (p->super.chain->op_BI)
+		p->super.chain->op_BI(ctx, p->super.chain, image, colorspace);
 	fz_drop_image(ctx, image);
 }
 
@@ -1385,8 +1000,8 @@ pdf_color_sh(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *s
 			pdf_dict_put_drop(ctx, p->new_rstack->resources, PDF_NAME(Shading), new_shading_dict = pdf_new_dict(ctx, p->doc, 4));
 		pdf_dict_puts(ctx, new_shading_dict, name, old_obj);
 
-		if (p->chain->op_sh)
-			p->chain->op_sh(ctx, p->chain, name, shade);
+		if (p->super.chain->op_sh)
+			p->super.chain->op_sh(ctx, p->super.chain, name, shade);
 		return;
 	}
 
@@ -1395,8 +1010,8 @@ pdf_color_sh(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *s
 	new_shade = find_rewritten_shade(ctx, p, orig, new_name);
 	if (new_shade)
 	{
-		if (p->chain->op_sh)
-			p->chain->op_sh(ctx, p->chain, new_name, new_shade);
+		if (p->super.chain->op_sh)
+			p->super.chain->op_sh(ctx, p->super.chain, new_name, new_shade);
 		return;
 	}
 
@@ -1413,8 +1028,8 @@ pdf_color_sh(fz_context *ctx, pdf_processor *proc, const char *name, fz_shade *s
 		/* Remember that we've done this one before. */
 		push_rewritten_shade(ctx, p, orig, new_shade, new_name);
 
-		if (p->chain->op_sh)
-			p->chain->op_sh(ctx, p->chain, new_name, new_shade);
+		if (p->super.chain->op_sh)
+			p->super.chain->op_sh(ctx, p->super.chain, new_name, new_shade);
 	}
 	fz_always(ctx)
 	{
@@ -1439,8 +1054,8 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 		image = find_rewritten_image(ctx, p, im_obj, new_name);
 		if (image)
 		{
-			if (p->chain->op_Do_image)
-				p->chain->op_Do_image(ctx, p->chain, new_name, image);
+			if (p->super.chain->op_Do_image)
+				p->super.chain->op_Do_image(ctx, p->super.chain, new_name, image);
 			return;
 		}
 	}
@@ -1481,8 +1096,8 @@ pdf_color_Do_image(fz_context *ctx, pdf_processor *proc, const char *name, fz_im
 			push_rewritten_image(ctx, p, im_obj, image, new_name);
 		}
 
-		if (p->chain->op_Do_image)
-			p->chain->op_Do_image(ctx, p->chain, new_name, image);
+		if (p->super.chain->op_Do_image)
+			p->super.chain->op_Do_image(ctx, p->super.chain, new_name, image);
 	}
 	fz_always(ctx)
 	{
@@ -1525,93 +1140,17 @@ pdf_color_Do_form(fz_context *ctx, pdf_processor *proc, const char *name, pdf_ob
 
 		pdf_dict_put_drop(ctx, xobj, PDF_NAME(Resources), new_xres);
 
-		if (p->chain->op_Do_form)
-			p->chain->op_Do_form(ctx, p->chain, new_name, xobj);
+		if (p->super.chain->op_Do_form)
+			p->super.chain->op_Do_form(ctx, p->super.chain, new_name, xobj);
 	}
 	else
 	{
 		/* In this case, we just copy the XObject across (renaming it). Our caller will arrange to
 		 * filter it. */
 		make_resource_instance(ctx, p, PDF_NAME(XObject), "Xo", new_name, sizeof(new_name), xobj);
-		if (p->chain->op_Do_form)
-			p->chain->op_Do_form(ctx, p->chain, new_name, xobj);
-	}
+		if (p->super.chain->op_Do_form)
+			p->super.chain->op_Do_form(ctx, p->super.chain, new_name, xobj);
 }
-
-/* marked content */
-
-static void
-pdf_color_MP(fz_context *ctx, pdf_processor *proc, const char *tag)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_MP)
-		p->chain->op_MP(ctx, p->chain, tag);
-}
-
-static void
-pdf_color_DP(fz_context *ctx, pdf_processor *proc, const char *tag, pdf_obj *raw, pdf_obj *cooked)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_DP)
-		p->chain->op_DP(ctx, p->chain, tag, raw, cooked);
-}
-
-static void
-pdf_color_BMC(fz_context *ctx, pdf_processor *proc, const char *tag)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_BMC)
-		p->chain->op_BMC(ctx, p->chain, tag);
-}
-
-static void
-pdf_color_BDC(fz_context *ctx, pdf_processor *proc, const char *tag, pdf_obj *raw, pdf_obj *cooked)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_BDC)
-		p->chain->op_BDC(ctx, p->chain, tag, raw, cooked);
-}
-
-static void
-pdf_color_EMC(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_EMC)
-		p->chain->op_EMC(ctx, p->chain);
-}
-
-/* compatibility */
-
-static void
-pdf_color_BX(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_BX)
-		p->chain->op_BX(ctx, p->chain);
-}
-
-static void
-pdf_color_EX(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_EX)
-		p->chain->op_EX(ctx, p->chain);
-}
-
-static void
-pdf_color_END(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	if (p->chain->op_END)
-		p->chain->op_END(ctx, p->chain);
 }
 
 static void
@@ -1619,7 +1158,7 @@ pdf_close_color_processor(fz_context *ctx, pdf_processor *proc)
 {
 	pdf_color_processor *p = (pdf_color_processor*)proc;
 
-	pdf_close_processor(ctx, p->chain);
+	pdf_close_processor(ctx, p->super.chain);
 }
 
 static void
@@ -1683,7 +1222,7 @@ pdf_color_push_resources(fz_context *ctx, pdf_processor *proc, pdf_obj *res)
 		if (obj)
 			pdf_dict_put(ctx, stk->resources, PDF_NAME(Font), obj);
 
-		pdf_processor_push_resources(ctx, p->chain, stk->resources);
+		pdf_processor_push_resources(ctx, p->super.chain, stk->resources);
 	}
 	fz_catch(ctx)
 	{
@@ -1704,15 +1243,7 @@ pdf_color_pop_resources(fz_context *ctx, pdf_processor *proc)
 	pdf_drop_obj(ctx, stk->resources);
 	fz_free(ctx, stk);
 
-	return pdf_processor_pop_resources(ctx, p->chain);
-}
-
-static void
-pdf_reset_color_processor(fz_context *ctx, pdf_processor *proc)
-{
-	pdf_color_processor *p = (pdf_color_processor*)proc;
-
-	pdf_reset_processor(ctx, p->chain);
+	return pdf_processor_pop_resources(ctx, p->super.chain);
 }
 
 pdf_processor *
@@ -1730,41 +1261,14 @@ pdf_new_color_filter(
 
 	proc->super.close_processor = pdf_close_color_processor;
 	proc->super.drop_processor = pdf_drop_color_processor;
-	proc->super.reset_processor = pdf_reset_color_processor;
 
 	proc->super.push_resources = pdf_color_push_resources;
 	proc->super.pop_resources = pdf_color_pop_resources;
-
-	/* general graphics state */
-	proc->super.op_w = pdf_color_w;
-	proc->super.op_j = pdf_color_j;
-	proc->super.op_J = pdf_color_J;
-	proc->super.op_M = pdf_color_M;
-	proc->super.op_d = pdf_color_d;
-	proc->super.op_ri = pdf_color_ri;
-	proc->super.op_i = pdf_color_i;
-	proc->super.op_gs_begin = pdf_color_gs_begin;
-	proc->super.op_gs_end = pdf_color_gs_end;
-
-	/* transparency graphics state */
-	proc->super.op_gs_BM = pdf_color_gs_BM;
-	proc->super.op_gs_CA = pdf_color_gs_CA;
-	proc->super.op_gs_ca = pdf_color_gs_ca;
-	proc->super.op_gs_SMask = pdf_color_gs_SMask;
 
 	/* special graphics state */
 	proc->super.op_q = pdf_color_q;
 	proc->super.op_Q = pdf_color_Q;
 	proc->super.op_cm = pdf_color_cm;
-
-	/* path construction */
-	proc->super.op_m = pdf_color_m;
-	proc->super.op_l = pdf_color_l;
-	proc->super.op_c = pdf_color_c;
-	proc->super.op_v = pdf_color_v;
-	proc->super.op_y = pdf_color_y;
-	proc->super.op_h = pdf_color_h;
-	proc->super.op_re = pdf_color_re;
 
 	/* path painting */
 	proc->super.op_S = pdf_color_S;
@@ -1776,40 +1280,12 @@ pdf_new_color_filter(
 	proc->super.op_Bstar = pdf_color_Bstar;
 	proc->super.op_b = pdf_color_b;
 	proc->super.op_bstar = pdf_color_bstar;
-	proc->super.op_n = pdf_color_n;
-
-	/* clipping paths */
-	proc->super.op_W = pdf_color_W;
-	proc->super.op_Wstar = pdf_color_Wstar;
-
-	/* text objects */
-	proc->super.op_BT = pdf_color_BT;
-	proc->super.op_ET = pdf_color_ET;
-
-	/* text state */
-	proc->super.op_Tc = pdf_color_Tc;
-	proc->super.op_Tw = pdf_color_Tw;
-	proc->super.op_Tz = pdf_color_Tz;
-	proc->super.op_TL = pdf_color_TL;
-	proc->super.op_Tf = pdf_color_Tf;
-	proc->super.op_Tr = pdf_color_Tr;
-	proc->super.op_Ts = pdf_color_Ts;
-
-	/* text positioning */
-	proc->super.op_Td = pdf_color_Td;
-	proc->super.op_TD = pdf_color_TD;
-	proc->super.op_Tm = pdf_color_Tm;
-	proc->super.op_Tstar = pdf_color_Tstar;
 
 	/* text showing */
 	proc->super.op_TJ = pdf_color_TJ;
 	proc->super.op_Tj = pdf_color_Tj;
 	proc->super.op_squote = pdf_color_squote;
 	proc->super.op_dquote = pdf_color_dquote;
-
-	/* type 3 fonts */
-	proc->super.op_d0 = pdf_color_d0;
-	proc->super.op_d1 = pdf_color_d1;
 
 	/* color */
 	proc->super.op_CS = pdf_color_CS;
@@ -1834,25 +1310,6 @@ pdf_new_color_filter(
 	proc->super.op_Do_image = pdf_color_Do_image;
 	proc->super.op_Do_form = pdf_color_Do_form;
 
-	/* marked content */
-	proc->super.op_MP = pdf_color_MP;
-	proc->super.op_DP = pdf_color_DP;
-	proc->super.op_BMC = pdf_color_BMC;
-	proc->super.op_BDC = pdf_color_BDC;
-	proc->super.op_EMC = pdf_color_EMC;
-
-	/* compatibility */
-	proc->super.op_BX = pdf_color_BX;
-	proc->super.op_EX = pdf_color_EX;
-
-	/* extgstate */
-	proc->super.op_gs_OP = pdf_color_gs_OP;
-	proc->super.op_gs_op = pdf_color_gs_op;
-	proc->super.op_gs_OPM = pdf_color_gs_OPM;
-	proc->super.op_gs_UseBlackPtComp = pdf_color_gs_UseBlackPtComp;
-
-	proc->super.op_END = pdf_color_END;
-
 	fz_try(ctx)
 		proc->gstate = fz_malloc_struct(ctx, gstate_stack);
 	fz_catch(ctx)
@@ -1863,11 +1320,11 @@ pdf_new_color_filter(
 	proc->gstate->ctm = fz_identity;
 
 	proc->doc = pdf_keep_document(ctx, doc);
-	proc->chain = chain;
+	proc->super.chain = chain;
 	proc->global_options = global_options;
 	proc->options = options;
 
-	proc->super.requirements = PDF_PROCESSOR_REQUIRES_DECODED_IMAGES | proc->chain->requirements;
+	proc->super.requirements = PDF_PROCESSOR_REQUIRES_DECODED_IMAGES | proc->super.chain->requirements;
 
 	return (pdf_processor*)proc;
 }
