@@ -510,13 +510,15 @@ struct chmFile {
 };
 
 static int64_t _chm_fetch_bytes(struct chmFile* h, uint8_t* buf, uint64_t os, int64_t len) {
-    if (os + len > h->data_len) {
+    // Add negative length check
+    if (len <= 0) {
         return 0;
     }
-    if (os + len > h->data_len) {
-        len = h->data_len - os;
+    // Fix overflow-safe bounds check
+    if (os > h->data_len || (uint64_t)len > h->data_len - os) {
+        return 0;
     }
-    memcpy(buf, h->data + os, len);
+    memcpy(buf, h->data + os, (size_t)len);
     return len;
 }
 
@@ -1008,7 +1010,13 @@ static int _chm_get_cmpblock_bounds(struct chmFile* h, uint64_t block, uint64_t*
     }
 
     /* compute the length and absolute start address */
+    if (*start > (uint64_t)*len) {
+        return 0;  // Invalid block bounds
+    }
     *len -= *start;
+    if (*start > UINT64_MAX - h->data_offset - h->cn_unit.start) {
+        return 0;  // Overflow would occur
+    }
     *start += h->data_offset + h->cn_unit.start;
 
     return 1;
