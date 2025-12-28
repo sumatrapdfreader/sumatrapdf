@@ -5969,7 +5969,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SetAnnotCreateArgs(args, cmd);
                 auto annot = MakeAnnotationsFromSelection(tab, &args);
                 if (annot) {
-                    bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, IsShiftPressed());
+                    // for built-in shortcuts, Shift also opens edit window
+                    // don't apply that to user shortcuts
+                    // https://github.com/sumatrapdfreader/sumatrapdf/discussions/5209
+                    bool defVal = cmd->id >= CmdFirstCustom ? false : IsShiftPressed();
+                    bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, defVal);
                     if (openEdit) {
                         ShowEditAnnotationsWindow(tab);
                         SetSelectedAnnotation(tab, annot);
