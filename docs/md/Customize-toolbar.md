@@ -22,12 +22,12 @@ Shortcuts [
         Cmd = CmdNextTab
         ToolbarText = Next Tab
     ]
-	[
-		Name = Send By Mail
-		Cmd = CmdSendByEmail
-		Key = Shift + M
-		ToolbarText = ✉
-	]
+    [
+        Name = Send By Mail
+        Cmd = CmdSendByEmail
+        Key = Shift + M
+        ToolbarText = ✉
+    ]
 ]
 ```
 
