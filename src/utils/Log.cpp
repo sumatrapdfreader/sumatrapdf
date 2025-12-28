@@ -117,11 +117,12 @@ static void logToPipe(const char* s, size_t n = 0) {
     }
 }
 
-// verbose log, only to debugger and pipeAdd commentMore actions
+// verbose log, only to pipe
+// used to log to debugger but 10x shows it and is really slow
 void logv(const char* s) {
-    if (gLogToDebugger || IsDebuggerPresent()) {
-        OutputDebugStringA(s);
-    }
+    // if (gLogToDebugger || IsDebuggerPresent()) {
+    //     OutputDebugStringA(s);
+    // }
     logToPipe(s);
 }
 
