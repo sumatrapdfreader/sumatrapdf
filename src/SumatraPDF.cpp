@@ -5972,7 +5972,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     // for built-in shortcuts, Shift also opens edit window
                     // don't apply that to user shortcuts
                     // https://github.com/sumatrapdfreader/sumatrapdf/discussions/5209
-                    bool defVal = cmd->id >= CmdFirstCustom ? false : IsShiftPressed();
+                    bool defVal = IsShiftPressed();
+                    if (cmd) {
+                        defVal = cmd->id < CmdFirstCustom;
+                    }
                     bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, defVal);
                     if (openEdit) {
                         ShowEditAnnotationsWindow(tab);
