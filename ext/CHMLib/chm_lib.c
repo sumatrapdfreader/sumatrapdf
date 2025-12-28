@@ -457,9 +457,15 @@ static int _unmarshal_lzxc_control_data(uint8_t** pData, unsigned int* pDataLen,
     if (dest->windowSize == 0 || dest->resetInterval == 0)
         return 0;
 
-    /* for now, only support resetInterval a multiple of windowSize/2 */
-    if (dest->windowSize == 1)
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/5207
+    // Validate windowSize is in valid LZX range [2^15, 2^21]
+    if (dest->windowSize < 32768 || dest->windowSize > 2097152) {
         return 0;
+    }
+    // Also ensure it's a power of 2
+    if ((dest->windowSize & (dest->windowSize - 1)) != 0) {
+        return 0;
+    }
     if ((dest->resetInterval % (dest->windowSize / 2)) != 0)
         return 0;
 
