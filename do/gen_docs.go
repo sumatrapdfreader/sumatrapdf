@@ -613,6 +613,8 @@ func copyDocsToWebsite() {
 		copyFileMust(dstPath, srcPath)
 	}
 
+	obisdianDir := filepath.Join(dstDir, ".obsidian")
+	os.RemoveAll(obisdianDir)
 	d := runExeInDirMust(websiteDir, "git", "status")
 	logf("\n%s\n", string(d))
 }
