@@ -28,6 +28,14 @@ Shortcuts [
         Key = Shift + M
         ToolbarText = ✉
     ]
+    [
+        Cmd = CmdNavigateBack
+        ToolbarText = ←
+    ]
+    [
+        Cmd = CmdNavigateForward
+        ToolbarText = →
+    ]
 ]
 ```
 
