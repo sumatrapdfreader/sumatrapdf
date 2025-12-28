@@ -61,6 +61,26 @@ static const char* getWinError(DWORD errCode) {
 }
 #endif
 
+static LARGE_INTEGER lastPipeOpenTryTime = { 0 };
+
+static void maybeOpenLogPipe() {
+    // only re-try every 10 secs to minimize cost because pipe is rarely
+    // opened and logging is frequent
+    if (lastPipeOpenTryTime.QuadPart != 0) {
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        LARGE_INTEGER now;
+        QueryPerformanceCounter(&now);
+        double diffSecs = static_cast<double>(now.QuadPart - lastPipeOpenTryTime.QuadPart) / static_cast<double>(freq.QuadPart);
+        if (diffSecs < 10.0f) {
+            return;
+        }
+    }
+    QueryPerformanceCounter(&lastPipeOpenTryTime);
+    hLogPipe = CreateFileW(kPipeName, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    // TODO: retry if ERROR_PIPE_BUSY?
+}
+
 static void logToPipe(const char* s, size_t n = 0) {
     if (!gLogToPipe) {
         return;
@@ -76,12 +96,8 @@ static void logToPipe(const char* s, size_t n = 0) {
     BOOL ok = false;
     bool didConnect = false;
     if (!IsValidHandle(hLogPipe)) {
-        // try open pipe for logging
-        hLogPipe = CreateFileW(kPipeName, GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        maybeOpenLogPipe();
         if (!IsValidHandle(hLogPipe)) {
-            // TODO: retry if ERROR_PIPE_BUSY ?
-            // TODO: maybe remember when last we tried to open it and don't try to open for the
-            // next 10 secs, to minimize CreateFileW() calls
             return;
         }
         didConnect = true;
