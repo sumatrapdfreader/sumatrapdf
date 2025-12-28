@@ -91,7 +91,7 @@
 
 ## Feedback
 
-Found a bug? Have feature request? Submit via [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues) and  [vote for features](https://sumatrapdf.canny.io/feature-requests) you want to see next.
+Found a bug? Have feature request? Submit via [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues) and  [vote for features](https://sumatrapdf.userjot.com) you want to see next.
 
 Have feedback or question? Discuss in a [forum](https://github.com/sumatrapdfreader/sumatrapdf/discussions).
 
