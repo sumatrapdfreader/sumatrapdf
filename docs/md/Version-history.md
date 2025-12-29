@@ -53,6 +53,7 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - swapped key bindings: 'i' is now CmdTogglePageInfo, 'I' is CmdInvertColors. Several people were confused by accidentally typing 'i' to invert colors, is less likely to type it accidentally
 - allow creating custom themes in advanced settings in `Themes` section. [See docs](https://www.sumatrapdfreader.org/docs/Customize-theme-colors).
 - improve scrolling with middle click drag [#4529](https://github.com/sumatrapdfreader/sumatrapdf/issues/4529)
+- make built-in keyboard shortctus work on non-us keyboards (cyrillic , hebrew etc.)
 
 ### 3.5.2 (2023-10-25)
 

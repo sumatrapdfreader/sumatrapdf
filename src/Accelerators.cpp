@@ -83,11 +83,17 @@
     V(VK_F23, "F23")                \
     V(VK_F24, "F24")
 
+// note: even letter shortcuts like 'k' are marked as FVIRTKEY so that they
+// work even on non-english keyboards (cyrillic, hebrew)
+// VK_A is 'A' etc. which corresponds to 'a' key.
+// To get 'A' need explicitly use FSHIFT.
+// https://learn.microsoft.com/en-us/windows/win32/menurc/using-keyboard-accelerators?referrer=grok.com
+// https://grok.com/share/bGVnYWN5_d83c2956-4ce2-4c74-ba4d-9794d1760ccb?rid=746312cc-7d0f-4479-abec-25c394652cac
 ACCEL gBuiltInAccelerators[] = {
-    {0, 'k', CmdScrollUp},
-    {0, 'j', CmdScrollDown},
-    {0, 'h', CmdScrollLeft},
-    {0, 'l', CmdScrollRight},
+    {FVIRTKEY, 'K', CmdScrollUp},
+    {FVIRTKEY, 'J', CmdScrollDown},
+    {FVIRTKEY, 'H', CmdScrollLeft},
+    {FVIRTKEY, 'L', CmdScrollRight},
     {FVIRTKEY, VK_UP, CmdScrollUp},
     {FVIRTKEY, VK_DOWN, CmdScrollDown},
     {FVIRTKEY, VK_LEFT, CmdScrollLeft},
@@ -111,10 +117,10 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FVIRTKEY, VK_RETURN, CmdScrollUpPage},
     {FCONTROL | FVIRTKEY, VK_UP, CmdScrollUpPage},
 
-    {0, 'n', CmdGoToNextPage},
+    {FVIRTKEY, 'N', CmdGoToNextPage},
     //{FCONTROL | FVIRTKEY, VK_NEXT, CmdGoToNextPage},
 
-    {0, 'p', CmdGoToPrevPage},
+    {FVIRTKEY, 'P', CmdGoToPrevPage},
     //{FCONTROL | FVIRTKEY, VK_PRIOR, CmdGoToPrevPage},
 
     {FVIRTKEY, VK_HOME, CmdGoToFirstPage},
@@ -144,7 +150,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'D', CmdProperties},
     {FCONTROL | FVIRTKEY, 'F', CmdFindFirst},
     {FCONTROL | FVIRTKEY, 'G', CmdGoToPage},
-    {0, 'g', CmdGoToPage},
+    {FVIRTKEY, 'g', CmdGoToPage},
     {FCONTROL | FVIRTKEY, 'K', CmdCommandPalette},
     //{FALT | FVIRTKEY, 'K', CmdCommandPaletteOnlyTabs}, // removed in 3.6
     {FSHIFT | FCONTROL | FVIRTKEY, 'S', CmdSaveAnnotations},
@@ -199,28 +205,31 @@ ACCEL gBuiltInAccelerators[] = {
 
     // need 2 entries for 'a' and 'Shift + a'
     // TODO: maybe add CmdCreateAnnotHighlightAndOpenWindow (kind of clumsy)
-    {0, 'a', CmdCreateAnnotHighlight},
-    {0, 'A', CmdCreateAnnotHighlight},
+    {FVIRTKEY, 'A', CmdCreateAnnotHighlight},
+    {FVIRTKEY | FSHIFT, 'A', CmdCreateAnnotHighlight},
 
-    {0, 'u', CmdCreateAnnotUnderline},
-    {0, 'U', CmdCreateAnnotUnderline},
+    {FVIRTKEY, 'U', CmdCreateAnnotUnderline},
+    {FVIRTKEY | FSHIFT, 'U', CmdCreateAnnotUnderline},
 
-    {0, 'I', CmdInvertColors},
-    {0, 'i', CmdTogglePageInfo},
+    {FVIRTKEY | FSHIFT, 'I', CmdInvertColors},
+    {FVIRTKEY, 'I', CmdTogglePageInfo},
 
     {FCONTROL | FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
 
-    {0, 'q', CmdCloseCurrentDocument},
-    {0, 'r', CmdReloadDocument},
-    {0, 'z', CmdToggleZoom},
-    {0, 'f', CmdToggleFullscreen},
-    {0, '[', CmdRotateLeft},
-    {0, ']', CmdRotateRight},
-    {0, 'm', CmdToggleCursorPosition},
-    {0, 'w', CmdPresentationWhiteBackground},
-    // // for Logitech's wireless presenters which target PowerPoint's shortcuts
+    {FVIRTKEY, 'Q', CmdCloseCurrentDocument},
+    {FVIRTKEY, 'R', CmdReloadDocument},
+    {FVIRTKEY, 'Z', CmdToggleZoom},
+    {FVIRTKEY, 'F', CmdToggleFullscreen},
+    // '['
+    {FVIRTKEY, VK_OEM_4, CmdRotateLeft},
+    // ']'
+    {FVIRTKEY, VK_OEM_6, CmdRotateRight},
+    {FVIRTKEY, 'M', CmdToggleCursorPosition},
+    {FVIRTKEY, 'W', CmdPresentationWhiteBackground},
+    // for Logitech's wireless presenters which target PowerPoint's shortcuts
+    // TODO: don't know what VK_ is this
     {0, '.', CmdPresentationBlackBackground},
-    {0, 'c', CmdToggleContinuousView},
+    {FVIRTKEY, 'C', CmdToggleContinuousView},
 };
 
 ACCEL* gAccels = nullptr;
