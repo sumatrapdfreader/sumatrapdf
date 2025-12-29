@@ -622,6 +622,18 @@ static bool isSafeAccel(const ACCEL& a) {
         return false;
     }
 
+    // regular keys are also coded as FVIRTKEY or FVIRTKEY | FSHIFT
+    // so that they work based on virtual keyboard code to support
+    // non-english keyboards
+    if (k >= 'A' && k <= 'Z') {
+        if (a.fVirt == FVIRTKEY) {
+            return false;
+        }
+        if (a.fVirt == (FVIRTKEY | FSHIFT)) {
+            return false;
+        }
+    }
+
     // whitelist Alt + Left, Alt + Right to enable document
     // navigation when focus is in edit or tree control
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/3688#issuecomment-1728271753
