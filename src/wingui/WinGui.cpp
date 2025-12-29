@@ -3349,25 +3349,25 @@ static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
     tabs->onTabDragged.Call(&ev);
 }
 
-static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tab1, int tab2) {
+static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
     int nTabs = tabsCtrl->TabCount();
-    bool badState = (tab1 == tab2) || (tab1 < 0) || (tab2 < 0) || (tab1 >= nTabs) || (tab2 >= nTabs);
+    bool badState = (tabIdxFrom == tabIdxTo) || (tabIdxFrom < 0) || (tabIdxTo < 0) || (tabIdxFrom >= nTabs) || (tabIdxTo >= nTabs);
     if (badState) {
-        logfa("tab1: %d, tab2: %d, nTabs: %d\n", tab1, tab2, nTabs);
+        logfa("tabIdxFrom: %d, tabIdxTo: %d, nTabs: %d\n", tabIdxFrom, tabIdxTo, nTabs);
         ReportDebugIf(true);
         return;
     }
 
     auto&& tabs = tabsCtrl->tabs;
-    std::swap(tabs.at(tab1), tabs.at(tab2));
-
-    // TODO: simplify?
-    int current = tabsCtrl->GetSelected();
-    int newSelected = tab1;
-    if (tab1 == current) {
-        newSelected = tab2;
+    TabInfo* moved = tabs.At(tabIdxFrom);
+    tabs.RemoveAt(tabIdxFrom);
+    if (tabIdxFrom < tabIdxTo) {
+        // we moved from left to right e.g. from 1 to 3
+        // after removing 1 we insert not at 3 but 2
+        tabIdxTo -= 1;
     }
-    tabsCtrl->SetSelected(newSelected);
+    tabs.InsertAt(tabIdxTo, moved);
+    tabsCtrl->SetSelected(tabIdxTo);
     tabsCtrl->LayoutTabs();
     TabsCtrlUpdateAfterChangingTabsCount(tabsCtrl);
 }
@@ -3716,7 +3716,6 @@ void TabsCtrl::SwapTabs(int idx1, int idx2) {
     TabInfo* tmp = tabs[idx1];
     tabs[idx1] = tabs[idx2];
     tabs[idx2] = tmp;
-    LayoutTabs();
 }
 
 // Note: the caller should take care of deleting userData

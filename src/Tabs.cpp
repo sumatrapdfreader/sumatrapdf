@@ -629,4 +629,5 @@ void MoveTab(MainWindow* win, int dir) {
     }
     win->tabsCtrl->SwapTabs(idx, newIdx);
     win->tabsCtrl->SetSelected(newIdx);
+    win->tabsCtrl->LayoutTabs();
 }
