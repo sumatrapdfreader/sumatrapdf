@@ -127,6 +127,7 @@ struct DjVuContext {
     ddjvu_context_t* ctx = nullptr;
     int refCount = 1;
     CRITICAL_SECTION lock;
+    bool didFail = false;
 
     DjVuContext() {
         InitializeCriticalSection(&lock);
@@ -161,13 +162,25 @@ struct DjVuContext {
         DeleteCriticalSection(&lock);
     }
 
-    void SpinMessageLoop(bool wait = true) const {
+    bool SpinMessageLoop(bool wait = true) {
         const ddjvu_message_t* msg = nullptr;
+        if (didFail) {
+            return false;
+        }
         if (wait) {
-            ddjvu_message_wait(ctx);
+            msg = ddjvu_message_wait(ctx);
+            auto tag = msg->m_any.tag;
+            if (tag == DDJVU_ERROR) {
+                didFail = true;
+                return false;
+            }
         }
         while ((msg = ddjvu_message_peek(ctx)) != nullptr) {
             auto tag = msg->m_any.tag;
+            if (tag == DDJVU_ERROR) {
+                didFail = true;
+                return false;
+            }
             if (DDJVU_NEWSTREAM == tag) {
                 auto streamId = msg->m_newstream.streamid;
                 if (streamId != 0) {
@@ -177,6 +190,7 @@ struct DjVuContext {
             }
             ddjvu_message_pop(ctx);
         }
+        return true;
     }
 
     ddjvu_document_t* OpenFile(const char* fileName) {
@@ -462,8 +476,12 @@ bool EngineDjVu::FinishLoading() {
 
     ScopedCritSec scope(&gDjVuContext->lock);
 
+    bool ok;
     while (!ddjvu_document_decoding_done(doc)) {
-        gDjVuContext->SpinMessageLoop();
+        ok = gDjVuContext->SpinMessageLoop();
+        if (!ok) {
+            return false;
+        }
     }
 
     if (ddjvu_document_decoding_error(doc)) {
@@ -478,7 +496,7 @@ bool EngineDjVu::FinishLoading() {
     for (int i = 0; i < pageCount; i++) {
         pages.Append(new DjVuPageInfo());
     }
-    bool ok = LoadMediaboxes();
+    ok = LoadMediaboxes();
     if (!ok) {
         // fall back to the slower but safer way to extract page mediaboxes
         for (int i = 0; i < pageCount; i++) {
@@ -572,11 +590,18 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     if (!page) {
         return nullptr;
     }
-    while (!ddjvu_page_decoding_done(page)) {
-        gDjVuContext->SpinMessageLoop();
-    }
-    if (ddjvu_page_decoding_error(page)) {
-        return nullptr;
+    bool ok;
+    for (;;) {
+        if (ddjvu_page_decoding_error(page)) {
+            return nullptr;
+        }
+        if (ddjvu_page_decoding_done(page)) {
+            break;
+        }
+        ok = gDjVuContext->SpinMessageLoop();
+        if (!ok) {
+            return nullptr;
+        }
     }
 
     ddjvu_page_rotation_t rot = DDJVU_ROTATE_0;
@@ -627,8 +652,8 @@ RenderedBitmap* EngineDjVu::RenderPage(RenderPageArgs& args) {
     }
 
     ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
-    int ok = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, bmpData);
-    if (!ok) {
+    int res = ddjvu_page_render(page, mode, &prect, &rrect, fmt, (unsigned long)stride, bmpData);
+    if (res == 0) {
         // nothing was rendered, leave the page blank (same as WinDjView)
         memset(bmpData, 0xFF, stride * dy);
         isBitonal = true;
@@ -647,11 +672,18 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         return pageRc;
     }
 
-    while (!ddjvu_page_decoding_done(page)) {
-        gDjVuContext->SpinMessageLoop();
-    }
-    if (ddjvu_page_decoding_error(page)) {
-        return pageRc;
+    bool ok;
+    for (;;) {
+        if (ddjvu_page_decoding_error(page)) {
+            return pageRc;
+        }
+        if (ddjvu_page_decoding_done(page)) {
+            break;
+        }
+        ok = gDjVuContext->SpinMessageLoop();
+        if (!ok) {
+            return pageRc;
+        }
     }
     ddjvu_page_set_rotation(page, DDJVU_ROTATE_0);
 
@@ -674,8 +706,8 @@ RectF EngineDjVu::PageContentBox(int pageNo, RenderTarget) {
         return pageRc;
     }
 
-    int ok = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData);
-    if (!ok) {
+    int res = ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData);
+    if (res == 0) {
         return pageRc;
     }
 
@@ -853,9 +885,18 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     ScopedCritSec scope(&gDjVuContext->lock);
 
     miniexp_t pagetext;
-    while ((pagetext = ddjvu_document_get_pagetext(doc, pageNo - 1, nullptr)) == miniexp_dummy) {
-        gDjVuContext->SpinMessageLoop();
+    bool ok;
+    for (;;) {
+        pagetext = ddjvu_document_get_pagetext(doc, pageNo - 1, nullptr);
+        if (pagetext != miniexp_dummy) {
+            break;
+        }
+        ok = gDjVuContext->SpinMessageLoop();
+        if (!ok) {
+            return {};
+        }
     }
+
     if (miniexp_nil == pagetext) {
         return {};
     }
@@ -876,8 +917,12 @@ PageText EngineDjVu::ExtractPageText(int pageNo) {
     ReportIf(str::Len(extracted.Get()) != coords.size());
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
+    ok;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
-        gDjVuContext->SpinMessageLoop();
+        ok = gDjVuContext->SpinMessageLoop();
+        if (!ok) {
+            return {};
+        }
     }
     float dpiFactor = 1.0;
     if (DDJVU_JOB_OK == status) {
@@ -915,12 +960,19 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
     pi->gotAllElements = true;
     auto& els = pi->allElements;
 
+    bool ok;
     if (pi->annos == miniexp_dummy) {
         ScopedCritSec scope(&gDjVuContext->lock);
+        if (gDjVuContext->didFail) {
+            return pi->allElements;
+        }
         while (pi->annos == miniexp_dummy) {
             pi->annos = ddjvu_document_get_pageanno(doc, pageNo - 1);
             if (pi->annos == miniexp_dummy) {
-                gDjVuContext->SpinMessageLoop();
+                ok = gDjVuContext->SpinMessageLoop();
+                if (!ok) {
+                    return pi->allElements;
+                }
             }
         }
     }
@@ -936,7 +988,10 @@ Vec<IPageElement*> EngineDjVu::GetElements(int pageNo) {
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
     while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
-        gDjVuContext->SpinMessageLoop();
+        ok = gDjVuContext->SpinMessageLoop();
+        if (!ok) {
+            return pi->allElements;
+        }
     }
     float dpiFactor = 1.0;
     if (DDJVU_JOB_OK == status) {
