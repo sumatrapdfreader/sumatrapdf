@@ -3082,13 +3082,19 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     int nTabs = TabCount();
     for (int i = 0; i < nTabs; i++) {
         TabInfo* ti = tabs[i];
+        Rect r = ti->r;
         // logfa("testing i=%d rect: %d %d %d %d pt: %d %d\n", i, ti->r.x, ti->r.y, ti->r.dx, ti->r.dy, p.x, p.y);
-        if (!ti->r.Contains(p)) {
+        if (!r.Contains(p)) {
             continue;
         }
         res.tabIdx = i;
         res.overClose = ti->rClose.Contains(p);
         res.tabInfo = ti;
+        Rect rightHalf = r;
+        int halfDx = r.dx / 2;
+        rightHalf.x = r.x + halfDx;
+        rightHalf.dx = halfDx;
+        res.inRightHalf = rightHalf.Contains(p);
         return res;
     }
 
@@ -3351,7 +3357,8 @@ static void TriggerTabDragged(TabsCtrl* tabs, int tab1, int tab2) {
 
 static void UpdateAfterDrag(TabsCtrl* tabsCtrl, int tabIdxFrom, int tabIdxTo) {
     int nTabs = tabsCtrl->TabCount();
-    bool badState = (tabIdxFrom == tabIdxTo) || (tabIdxFrom < 0) || (tabIdxTo < 0) || (tabIdxFrom >= nTabs) || (tabIdxTo >= nTabs);
+    bool badState =
+        (tabIdxFrom == tabIdxTo) || (tabIdxFrom < 0) || (tabIdxTo < 0) || (tabIdxFrom >= nTabs) || (tabIdxTo > nTabs);
     if (badState) {
         logfa("tabIdxFrom: %d, tabIdxTo: %d, nTabs: %d\n", tabIdxFrom, tabIdxTo, nTabs);
         ReportDebugIf(true);
@@ -3565,10 +3572,18 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 TriggerTabMigration(this, selectedTab, scPoint);
                 return 0;
             }
-            if (tabUnderMouse != selectedTab && !GetTab(tabUnderMouse)->isPinned) {
-                TriggerTabDragged(this, selectedTab, tabUnderMouse);
-                UpdateAfterDrag(this, selectedTab, tabUnderMouse);
+            int dstIdx = tabUnderMouse;
+            if (tabState.inRightHalf) {
+                dstIdx++;
             }
+            if (dstIdx == selectedTab) {
+                return 0;
+            }
+            if ((dstIdx < TabCount()) && GetTab(dstIdx)->isPinned) {
+                return 0;
+            }
+            TriggerTabDragged(this, selectedTab, dstIdx);
+            UpdateAfterDrag(this, selectedTab, dstIdx);
             return 0;
         }
 
