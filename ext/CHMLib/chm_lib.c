@@ -1011,11 +1011,11 @@ static int _chm_get_cmpblock_bounds(struct chmFile* h, uint64_t block, uint64_t*
 
     /* compute the length and absolute start address */
     if (*start > (uint64_t)*len) {
-        return 0;  // Invalid block bounds
+        return 0; // Invalid block bounds
     }
     *len -= *start;
     if (*start > UINT64_MAX - h->data_offset - h->cn_unit.start) {
-        return 0;  // Overflow would occur
+        return 0; // Overflow would occur
     }
     *start += h->data_offset + h->cn_unit.start;
 

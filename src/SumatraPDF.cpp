@@ -4643,11 +4643,11 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     RelayoutFrame(win, false);
 }
 
-constexpr int kMaxURLLen = 1500;
-
 // if url-encoded s is bigger than a reasonable URL path,
 // we don't want to fail but truncate and encode less
 static TempStr URLEncodeMayTruncateTemp(const char* s) {
+    constexpr int kMaxURLLen = 1500;
+
     HRESULT hr;
     DWORD diff;
     WCHAR buf[kMaxURLLen + 1]{};
@@ -5974,7 +5974,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                     // https://github.com/sumatrapdfreader/sumatrapdf/discussions/5209
                     bool defVal = IsShiftPressed();
                     if (cmd) {
-                        defVal = cmd->id < CmdFirstCustom;
+                        defVal = false;
                     }
                     bool openEdit = GetCommandBoolArg(cmd, kCmdArgOpenEdit, defVal);
                     if (openEdit) {

@@ -61,7 +61,7 @@ static const char* getWinError(DWORD errCode) {
 }
 #endif
 
-static LARGE_INTEGER lastPipeOpenTryTime = { 0 };
+static LARGE_INTEGER lastPipeOpenTryTime = {0};
 
 static void maybeOpenLogPipe() {
     // only re-try every 10 secs to minimize cost because pipe is rarely
@@ -71,7 +71,8 @@ static void maybeOpenLogPipe() {
         QueryPerformanceFrequency(&freq);
         LARGE_INTEGER now;
         QueryPerformanceCounter(&now);
-        double diffSecs = static_cast<double>(now.QuadPart - lastPipeOpenTryTime.QuadPart) / static_cast<double>(freq.QuadPart);
+        double diffSecs =
+            static_cast<double>(now.QuadPart - lastPipeOpenTryTime.QuadPart) / static_cast<double>(freq.QuadPart);
         if (diffSecs < 10.0f) {
             return;
         }
