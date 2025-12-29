@@ -61,7 +61,7 @@ static const char* getWinError(DWORD errCode) {
 }
 #endif
 
-static LARGE_INTEGER lastPipeOpenTryTime = {0};
+static LARGE_INTEGER lastPipeOpenTryTime = {};
 
 static void maybeOpenLogPipe() {
     // only re-try every 10 secs to minimize cost because pipe is rarely

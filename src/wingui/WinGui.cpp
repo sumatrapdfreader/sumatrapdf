@@ -795,7 +795,7 @@ LRESULT Wnd::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
         case WM_ENTERSIZEMOVE:
         case WM_EXITSIZEMOVE: {
-            SIZE size = {0};
+            SIZE size = {};
             OnSize(msg, 0, size);
             break;
         }
@@ -1316,7 +1316,7 @@ int TooltipGetCount(HWND hwnd) {
 }
 
 void TooltipoRemoveTool(HWND hwnd, HWND owner, int id) {
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
@@ -1325,7 +1325,7 @@ void TooltipoRemoveTool(HWND hwnd, HWND owner, int id) {
 
 int TooltipGetId(HWND hwnd, int idx) {
     WCHAR buf[90]; // per docs returns max 80 chars
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.lpszText = buf;
     BOOL ok = SendMessageW(hwnd, TTM_ENUMTOOLS, idx, (LPARAM)&ti);
@@ -1361,7 +1361,7 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
         TooltipInfo& tti = tools[i];
 
         TempWStr ws = ToWStrTemp(tti.s);
-        TOOLINFOW ti = {0};
+        TOOLINFOW ti = {};
         ti.cbSize = sizeof(ti);
         ti.hwnd = owner;
         ti.uId = (UINT_PTR)tti.id;
@@ -1374,7 +1374,7 @@ void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools) {
 
 static TempStr TooltipGetTextTemp(HWND hwnd, HWND owner, int id) {
     WCHAR buf[512];
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
@@ -1403,7 +1403,7 @@ static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool
 
     SetMaxWidthForText(hwnd, s, multiline);
     TempWStr ws = ToWStrTemp(s);
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
@@ -1414,7 +1414,7 @@ static bool TooltipUpdateText(HWND hwnd, HWND owner, int id, const char* s, bool
 }
 
 void TooltipUpdateRect(HWND hwnd, HWND owner, int id, const Rect& rc) {
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = owner;
     ti.uId = (UINT_PTR)id;
@@ -1452,7 +1452,7 @@ int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     int id = GetNextTooltipID();
     SetMaxWidthForText(hwnd, s, multiline);
     TempWStr ws = ToWStrTemp(s);
-    TOOLINFOW ti = {0};
+    TOOLINFOW ti = {};
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
     ti.uId = (UINT_PTR)id;
@@ -1517,7 +1517,7 @@ void Tooltip::Delete(int id) {
         ReportIf(removeIdx < 0);
     }
 
-    TOOLINFOW ti{0};
+    TOOLINFOW ti{};
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
     ti.uId = (UINT_PTR)id;
@@ -3659,7 +3659,7 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& argsIn) {
     if (withToolTips) {
         HWND ttHwnd = GetToolTipsHwnd();
         SetWindowStyle(ttHwnd, TTS_NOPREFIX, true);
-        TOOLINFO ti{0};
+        TOOLINFO ti{};
         ti.cbSize = sizeof(ti);
         ti.hwnd = hwnd;
         ti.uId = 0;
@@ -3685,7 +3685,7 @@ int TabsCtrl::TabCount() {
 // takes ownership of tab
 int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
     ReportIf(idx < 0);
-    TCITEMW item{0};
+    TCITEMW item{};
     item.mask = TCIF_TEXT;
     item.pszText = ToWStrTemp(tab->text);
     int res = TabCtrl_InsertItem(hwnd, idx, &item);

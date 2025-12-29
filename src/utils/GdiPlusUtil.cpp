@@ -323,7 +323,7 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
 }
 
 static void MaybeFlipBitmap(Bitmap* bmp) {
-    u8 buf[64] = {0}; // empirically is 26
+    u8 buf[64] = {}; // empirically is 26
 
     UINT propSize = bmp->GetPropertyItemSize(PropertyTagOrientation);
     if (propSize == 0) {

@@ -111,7 +111,7 @@ bool HttpGetToFile(const char* urlA, const char* destFilePath, const Func1<HttpP
     WCHAR* url = ToWStrTemp(urlA);
     char* buf = nullptr;
 
-    HttpProgress progress{0};
+    HttpProgress progress{};
 
     WCHAR* pathW = ToWStrTemp(destFilePath);
     HANDLE hf =

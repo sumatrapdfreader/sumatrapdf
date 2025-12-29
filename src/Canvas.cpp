@@ -1513,7 +1513,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         return TRUE;
     }
 
-    int pageNo = {0};
+    int pageNo = 0;
     IPageElement* pageEl = dm->GetElementAtPos(pt, &pageNo);
     if (!pageEl) {
         SetTextOrArrorCursor(dm, pt);

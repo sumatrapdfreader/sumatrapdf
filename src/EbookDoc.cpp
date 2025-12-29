@@ -1388,7 +1388,7 @@ static TempStr DecompressTcrTextTemp(const char* data, size_t dataLen) {
     const char* curr = data + str::Len(TCR_HEADER);
     const char* end = data + dataLen;
 
-    const char* dict[256] = {0};
+    const char* dict[256] = {};
     for (int n = 0; n < (int)dimof(dict); n++) {
         if (curr >= end) {
             return str::DupTemp(data);

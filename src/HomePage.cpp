@@ -139,7 +139,7 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
     Point pt = mainRect.TL();
     // colorful version
     static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
-    char buf[2] = {0};
+    char buf[2] = {};
     for (int i = 0; i < str::Leni(kAppName); i++) {
         SetTextColor(hdc, cols[i % dimofi(cols)]);
         buf[0] = kAppName[i];

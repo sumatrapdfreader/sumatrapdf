@@ -143,7 +143,7 @@ bool SaveDataToFile(HWND hwndParent, char* fileNameA, ByteSlice data) {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwndParent;
 
-    WCHAR dstFileName[MAX_PATH] = {0};
+    WCHAR dstFileName[MAX_PATH] = {};
     if (fileNameA) {
         str::BufSet(dstFileName, dimof(dstFileName), fileNameA);
     }

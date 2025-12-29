@@ -636,7 +636,7 @@ TempStr GetSpecialFolderTemp(int csidl, bool createIfMissing) {
 
 // temp directory
 TempStr GetTempDirTemp() {
-    WCHAR dir[MAX_PATH] = {0};
+    WCHAR dir[MAX_PATH] = {};
 #if 0 // TODO: only available in 20348, not yet present in SDK
     DWORD cch = 0;
     if (DynGetTempPath2W) {
@@ -1306,7 +1306,7 @@ HWND HwndGetParent(HWND hwnd) {
 }
 
 TempStr HwndGetClassName(HWND hwnd) {
-    WCHAR buf[512] = {0};
+    WCHAR buf[512] = {};
     int n = GetClassNameW(hwnd, buf, dimof(buf));
     ReportIf(n == 0);
     return ToUtf8Temp(buf);
@@ -1355,7 +1355,7 @@ void SetDlgItemFont(HWND hDlg, int nIDDlgItem, HFONT fnt) {
 
 // Get the name of default printer or nullptr if not exists.
 char* GetDefaultPrinterNameTemp() {
-    WCHAR buf[512] = {0};
+    WCHAR buf[512] = {};
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize)) {
         return ToUtf8Temp(buf);
@@ -2376,7 +2376,7 @@ void RunNonElevated(const char* exePath) {
     logf("RunNonElevated: '%s'\n", exePath);
     TempStr cmd = nullptr;
     char* explorerPath = nullptr;
-    WCHAR buf[MAX_PATH] = {0};
+    WCHAR buf[MAX_PATH] = {};
     uint res = GetWindowsDirectoryW(buf, dimof(buf));
     if (0 == res || res >= dimof(buf)) {
         goto Run;
@@ -3165,14 +3165,14 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end) {
 
 bool IsPEFileSigned(const char* filePath) {
     TempWStr ws = ToWStrTemp(filePath);
-    WINTRUST_FILE_INFO fileInfo = {0};
+    WINTRUST_FILE_INFO fileInfo = {};
     fileInfo.cbStruct = sizeof(WINTRUST_FILE_INFO);
     fileInfo.pcwszFilePath = ws;
     fileInfo.hFile = NULL;
     fileInfo.pgKnownSubject = NULL;
 
     GUID actionGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
-    WINTRUST_DATA trustData = {0};
+    WINTRUST_DATA trustData = {};
 
     trustData.cbStruct = sizeof(WINTRUST_DATA);
     trustData.pPolicyCallbackData = NULL;

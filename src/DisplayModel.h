@@ -240,7 +240,7 @@ struct DisplayModel : DocController {
        except for kZoomFitPage, kZoomFitWidth and kZoomFitContent */
     float zoomReal{kInvalidZoom};
     float zoomVirtual{kInvalidZoom};
-    int rotation = {0};
+    int rotation = 0;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     float dpiFactor{1.0f};
@@ -250,7 +250,7 @@ struct DisplayModel : DocController {
     Vec<ScrollState> navHistory;
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
-    size_t navHistoryIdx = {0};
+    size_t navHistoryIdx = 0;
 
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */

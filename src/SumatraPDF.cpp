@@ -3141,7 +3141,7 @@ static void CreateLnkShortcut(MainWindow* win) {
 
     const WCHAR* defExt = ToWStrTemp(ctrl->GetDefaultFileExt());
 
-    WCHAR dstFileName[MAX_PATH] = {0};
+    WCHAR dstFileName[MAX_PATH] = {};
     // Remove the extension so that it can be replaced with .lnk
     auto name = path::GetBaseNameTemp(path);
     str::BufSet(dstFileName, dimof(dstFileName), name);

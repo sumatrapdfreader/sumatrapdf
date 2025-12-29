@@ -33,7 +33,7 @@ struct Fmt {
     int currPercArgNo = 0;
     str::Str res;
 
-    char buf[256] = {0};
+    char buf[256] = {};
 };
 
 static void addRawStr(Fmt& fmt, const char* s, size_t len) {

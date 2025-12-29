@@ -356,7 +356,7 @@ WORD gVirtKeysIds[] = {VIRT_KEYS(KEY_ID)};
 // returns 0 if not a known name of virtual key
 static WORD parseVirtKey(const char* s, bool* addShiftOut) {
     *addShiftOut = false;
-    char buf[2] = {0};
+    char buf[2] = {};
     const char* toFind = s;
     if (str::Len(s) == 1) {
         int idx = str::FindCharIdx(shiftKeys, *s);
@@ -495,7 +495,7 @@ again:
 }
 
 bool IsValidShortcutString(const char* shortcut) {
-    ACCEL accel = {0};
+    ACCEL accel = {};
     accel.cmd = (WORD)-1; // for debugging
     return parseShortcut(shortcut, accel);
 }

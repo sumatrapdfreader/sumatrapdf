@@ -2232,7 +2232,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
     char* thousandSep = ToUtf8Temp(thousandSepW);
     char* buf = fmt::FormatTemp("%d", num);
 
-    char res[128] = {0};
+    char res[128] = {};
     int resLen = dimof(res);
     char* next = res;
     int i = 3 - (str::Len(buf) % 3);
@@ -2254,7 +2254,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale) {
     i64 num = (i64)(number * 100 + 0.5);
 
     char* tmp = FormatNumWithThousandSepTemp(num / 100, locale);
-    WCHAR decimalW[4] = {0};
+    WCHAR decimalW[4] = {};
     if (!GetLocaleInfoW(locale, LOCALE_SDECIMAL, decimalW, dimof(decimalW))) {
         decimalW[0] = '.';
         decimalW[1] = 0;
