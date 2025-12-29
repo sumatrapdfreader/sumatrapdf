@@ -17,7 +17,7 @@ import (
 
 // we delete old daily and pre-release builds. This defines how many most recent
 // builds to retain
-const nBuildsToRetainPreRel = 5
+const nBuildsToRetainPreRel = 20
 
 type BuildType string
 
