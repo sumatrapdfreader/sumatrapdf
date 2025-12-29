@@ -631,6 +631,15 @@ char* FindChar(char* str, char c) {
     return strchr(str, c);
 }
 
+int FindCharIdx(const char* str, char c) {
+    for (auto start = str; *str; str++) {
+        if (*str == c) {
+            return (int)(str - start);
+        }
+    }
+    return -1;
+}
+
 const char* FindCharLast(const char* str, char c) {
     return strrchr(str, c);
 }

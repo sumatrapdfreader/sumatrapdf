@@ -185,6 +185,7 @@ bool IsAlNum(char c);
 
 const char* FindChar(const char* str, char c);
 char* FindChar(char* str, char c);
+int FindCharIdx(const char* str, char c);
 const char* FindCharLast(const char* str, char c);
 char* FindCharLast(char* str, char c);
 const char* Find(const char* str, const char* find);

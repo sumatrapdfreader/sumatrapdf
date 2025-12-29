@@ -12,76 +12,154 @@
 #include "utils/Log.h"
 
 // http://www.kbdedit.com/manual/low_level_vk_list.html
+// https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+// if there are multiple declarations, the first one will be shown in menu
+#define VIRT_KEYS(V)                 \
+    V(VK_NUMPAD0, "numpad0")         \
+    V(VK_NUMPAD1, "numpad1")         \
+    V(VK_NUMPAD2, "numpad2")         \
+    V(VK_NUMPAD3, "numpad3")         \
+    V(VK_NUMPAD4, "numpad4")         \
+    V(VK_NUMPAD5, "numpad5")         \
+    V(VK_NUMPAD6, "numpad6")         \
+    V(VK_NUMPAD7, "numpad7")         \
+    V(VK_NUMPAD8, "numpad8")         \
+    V(VK_NUMPAD9, "numpad9")         \
+    V(VK_TAB, "Tab")                 \
+    V(VK_END, "End")                 \
+    V(VK_HOME, "Home")               \
+    V(VK_LEFT, "Left")               \
+    V(VK_RIGHT, "Right")             \
+    V(VK_UP, "Up")                   \
+    V(VK_DOWN, "Down")               \
+    V(VK_NEXT, "PageDown")           \
+    V(VK_NEXT, "PgDown")             \
+    V(VK_PRIOR, "PageUp")            \
+    V(VK_PRIOR, "PgUp")              \
+    V(VK_BACK, "Back")               \
+    V(VK_BACK, "Backspace")          \
+    V(VK_DELETE, "Del")              \
+    V(VK_DELETE, "Delete")           \
+    V(VK_INSERT, "Ins")              \
+    V(VK_INSERT, "Insert")           \
+    V(VK_ESCAPE, "Esc")              \
+    V(VK_ESCAPE, "Escape")           \
+    V(VK_RETURN, "Return")           \
+    V(VK_CONVERT, "Convert")         \
+    V(VK_NONCONVERT, "NoConvert")    \
+    V(VK_SPACE, "Space")             \
+    V(VK_MULTIPLY, "*")              \
+    V(VK_MULTIPLY, "Multiply")       \
+    V(VK_MULTIPLY, "Mult")           \
+    V(VK_ADD, "+")                   \
+    V(VK_OEM_PLUS, "+")              \
+    V(VK_ADD, "Add")                 \
+    V(VK_OEM_MINUS, "-")             \
+    V(VK_SUBTRACT, "Subtract")       \
+    V(VK_SUBTRACT, "Sub")            \
+    V(VK_SUBTRACT, "-")              \
+    V(VK_DIVIDE, "/")                \
+    V(VK_DIVIDE, "Divide")           \
+    V(VK_DIVIDE, "Div")              \
+    V(VK_HELP, "Help")               \
+    V(VK_SELECT, "Select")           \
+    V(VK_VOLUME_DOWN, "Volume Down") \
+    V(VK_VOLUME_DOWN, "VolumeDown")  \
+    V(VK_VOLUME_UP, "Volume Up")     \
+    V(VK_VOLUME_UP, "VolumeUp")      \
+    V(VK_XBUTTON1, "XButton1")       \
+    V(VK_XBUTTON2, "XButton2")       \
+    V(VK_F1, "F1")                   \
+    V(VK_F2, "F2")                   \
+    V(VK_F3, "F3")                   \
+    V(VK_F4, "F4")                   \
+    V(VK_F5, "F5")                   \
+    V(VK_F6, "F6")                   \
+    V(VK_F7, "F7")                   \
+    V(VK_F8, "F8")                   \
+    V(VK_F9, "F9")                   \
+    V(VK_F10, "F10")                 \
+    V(VK_F11, "F11")                 \
+    V(VK_F12, "F12")                 \
+    V(VK_F13, "F13")                 \
+    V(VK_F14, "F14")                 \
+    V(VK_F15, "F15")                 \
+    V(VK_F16, "F16")                 \
+    V(VK_F17, "F17")                 \
+    V(VK_F18, "F18")                 \
+    V(VK_F19, "F19")                 \
+    V(VK_F20, "F20")                 \
+    V(VK_F21, "F21")                 \
+    V(VK_F22, "F22")                 \
+    V(VK_F23, "F23")                 \
+    V(VK_F24, "F24")                 \
+    V(VK_CLEAR, "Clear")             \
+    V(VK_ACCEPT, "Accept")           \
+    V(VK_MODECHANGE, "ModeChange")   \
+    V(VK_PRINT, "Print")             \
+    V(VK_EXECUTE, "Execute")         \
+    V(VK_SNAPSHOT, "PrtSc")          \
+    V(VK_SLEEP, "Sleep")             \
+    V(VK_SEPARATOR, "Separator")     \
+    V(VK_DECIMAL, "Decimal")         \
+    V(VK_SCROLL, "Scroll")           \
+    V(VK_OEM_1, ";")                 \
+    V(VK_OEM_3, "`")
 
-#define VIRT_KEYS(V)                \
-    V(VK_NUMPAD0, "numpad0")        \
-    V(VK_NUMPAD1, "numpad1")        \
-    V(VK_NUMPAD2, "numpad2")        \
-    V(VK_NUMPAD3, "numpad3")        \
-    V(VK_NUMPAD4, "numpad4")        \
-    V(VK_NUMPAD5, "numpad5")        \
-    V(VK_NUMPAD6, "numpad6")        \
-    V(VK_NUMPAD7, "numpad7")        \
-    V(VK_NUMPAD8, "numpad8")        \
-    V(VK_NUMPAD9, "numpad9")        \
-    V(VK_TAB, "Tab")                \
-    V(VK_END, "End")                \
-    V(VK_HOME, "Home")              \
-    V(VK_LEFT, "Left")              \
-    V(VK_RIGHT, "Right")            \
-    V(VK_UP, "Up")                  \
-    V(VK_DOWN, "Down")              \
-    V(VK_NEXT, "PageDown")          \
-    V(VK_NEXT, "PgDown")            \
-    V(VK_PRIOR, "PageUp")           \
-    V(VK_PRIOR, "PgUp")             \
-    V(VK_BACK, "Back")              \
-    V(VK_BACK, "Backspace")         \
-    V(VK_DELETE, "Del")             \
-    V(VK_DELETE, "Delete")          \
-    V(VK_INSERT, "Ins")             \
-    V(VK_INSERT, "Insert")          \
-    V(VK_ESCAPE, "Esc")             \
-    V(VK_ESCAPE, "Escape")          \
-    V(VK_RETURN, "Return")          \
-    V(VK_SPACE, "Space")            \
-    V(VK_MULTIPLY, "Multiply")      \
-    V(VK_MULTIPLY, "Mult")          \
-    V(VK_ADD, "Add")                \
-    V(VK_SUBTRACT, "Subtract")      \
-    V(VK_SUBTRACT, "Sub")           \
-    V(VK_DIVIDE, "Divide")          \
-    V(VK_DIVIDE, "Div")             \
-    V(VK_HELP, "Help")              \
-    V(VK_SELECT, "Select")          \
-    V(VK_VOLUME_DOWN, "VolumeDown") \
-    V(VK_VOLUME_UP, "VolumeUp")     \
-    V(VK_XBUTTON1, "XButton1")      \
-    V(VK_XBUTTON2, "XButton2")      \
-    V(VK_F1, "F1")                  \
-    V(VK_F2, "F2")                  \
-    V(VK_F3, "F3")                  \
-    V(VK_F4, "F4")                  \
-    V(VK_F5, "F5")                  \
-    V(VK_F6, "F6")                  \
-    V(VK_F7, "F7")                  \
-    V(VK_F8, "F8")                  \
-    V(VK_F9, "F9")                  \
-    V(VK_F10, "F10")                \
-    V(VK_F11, "F11")                \
-    V(VK_F12, "F12")                \
-    V(VK_F13, "F13")                \
-    V(VK_F14, "F14")                \
-    V(VK_F15, "F15")                \
-    V(VK_F16, "F16")                \
-    V(VK_F17, "F17")                \
-    V(VK_F18, "F18")                \
-    V(VK_F19, "F19")                \
-    V(VK_F20, "F20")                \
-    V(VK_F21, "F21")                \
-    V(VK_F22, "F22")                \
-    V(VK_F23, "F23")                \
-    V(VK_F24, "F24")
+// when user puts e.g. "~" it's actually "`" but with SHIFT
+static const char* shiftKeys = "~`,<.>/?;:'\"-_=+[{]}\\|";
+
+// TOOD: add those as well?
+// #define VK_OEM_5          0xDC  //  '\|' for US
+// #define VK_OEM_7          0xDE  //  ''"' for US
+// #define VK_OEM_102        0xE2  //  "<>" or "\|" on RT 102-key kbd.
+// #define VK_OEM_PLUS       0xBB   // '+' any country
+// #define VK_OEM_COMMA      0xBC   // ',' any country
+// #define VK_OEM_MINUS      0xBD   // '-' any country
+// #define VK_OEM_PERIOD     0xBE   // '.' any country
+// #define VK_OEM_2          0xBF   // '/?' for US
+// #define VK_BROWSER_BACK        0xA6
+// #define VK_BROWSER_FORWARD     0xA7
+// #define VK_BROWSER_REFRESH     0xA8
+// #define VK_BROWSER_STOP        0xA9
+// #define VK_BROWSER_SEARCH      0xAA
+// #define VK_BROWSER_FAVORITES   0xAB
+// #define VK_BROWSER_HOME        0xAC
+// #define VK_VOLUME_MUTE         0xAD
+// #define VK_MEDIA_NEXT_TRACK    0xB0
+// #define VK_MEDIA_PREV_TRACK    0xB1
+// #define VK_MEDIA_STOP          0xB2
+// #define VK_MEDIA_PLAY_PAUSE    0xB3
+// #define VK_LAUNCH_MAIL         0xB4
+// #define VK_LAUNCH_MEDIA_SELECT 0xB5
+// #define VK_LAUNCH_APP1         0xB6
+// #define VK_LAUNCH_APP2         0xB7
+// #define VK_OEM_8          0xDF
+// #define VK_OEM_AX         0xE1  //  'AX' key on Japanese AX kbd
+// #define VK_ICO_HELP       0xE3  //  Help key on ICO
+// #define VK_ICO_00         0xE4  //  00 key on ICO
+// #define VK_PROCESSKEY     0xE5
+// #define VK_OEM_RESET      0xE9
+// #define VK_OEM_JUMP       0xEA
+// #define VK_OEM_PA1        0xEB
+// #define VK_OEM_PA2        0xEC
+// #define VK_OEM_PA3        0xED
+// #define VK_OEM_WSCTRL     0xEE
+// #define VK_OEM_CUSEL      0xEF
+// #define VK_OEM_ATTN       0xF0
+// #define VK_OEM_FINISH     0xF1
+// #define VK_OEM_COPY       0xF2
+// #define VK_OEM_AUTO       0xF3
+// #define VK_OEM_ENLW       0xF4
+// #define VK_OEM_BACKTAB    0xF5
+// #define VK_ATTN           0xF6
+// #define VK_CRSEL          0xF7
+// #define VK_EXSEL          0xF8
+// #define VK_EREOF          0xF9
+// #define VK_PLAY           0xFA
+// #define VK_ZOOM           0xFB
+// #define VK_NONAME         0xFC
+// #define VK_PA1            0xFD
 
 // note: even letter shortcuts like 'k' are marked as FVIRTKEY so that they
 // work even on non-english keyboards (cyrillic, hebrew)
@@ -235,7 +313,7 @@ ACCEL gBuiltInAccelerators[] = {
 ACCEL* gAccels = nullptr;
 int gAccelsCount = 0;
 
-static void SkipWS(const char*& s) {
+static void skipWS(const char*& s) {
     while (*s) {
         if (!str::IsWs(*s)) {
             return;
@@ -244,7 +322,7 @@ static void SkipWS(const char*& s) {
     }
 }
 
-static void SkipPlusOrMinus(const char*& s) {
+static void skipPlusOrMinus(const char*& s) {
     if (*s == '+') {
         s++;
         return;
@@ -255,14 +333,14 @@ static void SkipPlusOrMinus(const char*& s) {
     }
 }
 
-static bool SkipVirtKey(const char*& s, const char* key) {
+static bool skipVirtKey(const char*& s, const char* key) {
     if (!str::StartsWithI(s, key)) {
         return false;
     }
     s += str::Leni(key);
-    SkipWS(s);
-    SkipPlusOrMinus(s);
-    SkipWS(s);
+    skipWS(s);
+    skipPlusOrMinus(s);
+    skipWS(s);
     return true;
 }
 
@@ -276,8 +354,19 @@ WORD gVirtKeysIds[] = {VIRT_KEYS(KEY_ID)};
 
 // parses virtual keys like F1, Del, Backspace etc.
 // returns 0 if not a known name of virtual key
-static WORD ParseVirtKey(const char* s) {
-    int idx = seqstrings::StrToIdxIS(gVirtKeyNames, s);
+static WORD parseVirtKey(const char* s, bool* addShiftOut) {
+    *addShiftOut = false;
+    char buf[2] = {0};
+    const char* toFind = s;
+    if (str::Len(s) == 1) {
+        int idx = str::FindCharIdx(shiftKeys, *s);
+        if ((idx >= 0) && (idx % 2 == 0)) {
+            buf[0] = shiftKeys[idx + 1];
+            toFind = &buf[0];
+            *addShiftOut = true;
+        }
+    }
+    int idx = seqstrings::StrToIdxIS(gVirtKeyNames, toFind);
     if (idx < 0) {
         return 0;
     }
@@ -286,30 +375,55 @@ static WORD ParseVirtKey(const char* s) {
     return keyId;
 }
 
+// used in menu shortcuts
+static const char* getVirt(BYTE key, bool isEng) {
+    // over-rides for non-english languages
+    if (!isEng) {
+        switch (key) {
+            case VK_LEFT:
+                return "<-";
+            case VK_RIGHT:
+                return "->";
+        }
+    }
+    int n = dimofi(gVirtKeysIds);
+    WORD w = key;
+    for (int i = 0; i < n; i++) {
+        if (gVirtKeysIds[i] == w) {
+            return seqstrings::IdxToStr(gVirtKeyNames, i);
+        }
+    }
+    return nullptr;
+}
+
 // Parses a string like Ctrl+Shift+A into ACCEL structure
 // We accept variants: "Ctrl+A", "Ctrl-A", "Ctrl + A"
-static bool ParseShortcut(const char* shortcut, ACCEL& accel) {
+static bool parseShortcut(const char* shortcut, ACCEL& accel) {
     BYTE fVirt = 0;
 
 again:
-    SkipWS(shortcut);
-    if (SkipVirtKey(shortcut, "alt")) {
+    skipWS(shortcut);
+    if (skipVirtKey(shortcut, "alt")) {
         fVirt |= (FALT | FVIRTKEY);
         goto again;
     }
-    if (SkipVirtKey(shortcut, "shift")) {
+    if (skipVirtKey(shortcut, "shift")) {
         fVirt |= (FSHIFT | FVIRTKEY);
         goto again;
     }
-    if (SkipVirtKey(shortcut, "ctrl")) {
+    if (skipVirtKey(shortcut, "ctrl")) {
         fVirt |= (FCONTROL | FVIRTKEY);
         goto again;
     }
     accel.fVirt = fVirt;
 
-    accel.key = ParseVirtKey(shortcut);
+    bool addShift = false;
+    accel.key = parseVirtKey(shortcut, &addShift);
     if (accel.key != 0) {
         accel.fVirt |= FVIRTKEY;
+        if (addShift) {
+            accel.fVirt |= FSHIFT;
+        }
         return true;
     }
     // now we expect a character like 'a' or 'P'
@@ -361,6 +475,15 @@ again:
     if (!c) {
         return false;
     }
+
+    // those correspond to 0...9 keys and require SHIFT
+    static const char* shift09 = ")!@#$%^&*(";
+    int idx = str::FindCharIdx(shift09, c);
+    if (idx >= 0) {
+        accel.key = ('0' + idx);
+        accel.fVirt |= (FSHIFT | FVIRTKEY);
+        return true;
+    }
     if (accel.fVirt != 0) {
         // if we have ctrl/alt/shift, convert 'a' - 'z' into 'A' - 'Z'
         if (c >= 'a' && c <= 'z') {
@@ -372,169 +495,12 @@ again:
 }
 
 bool IsValidShortcutString(const char* shortcut) {
-    ACCEL accel;
-    return ParseShortcut(shortcut, accel);
+    ACCEL accel = {0};
+    accel.cmd = (WORD)-1; // for debugging
+    return parseShortcut(shortcut, accel);
 }
 
-static const char* getVirt(BYTE key, bool isEng) {
-    // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-    // Note: might need to add if we add more shortcuts
-    switch (key) {
-        case VK_XBUTTON1:
-            return "XButton1";
-        case VK_XBUTTON2:
-            return "XButton2";
-        case VK_BACK:
-            return "Backspace";
-        case VK_TAB:
-            return "Tab";
-        case VK_CLEAR:
-            // TODO: ???
-            return "Clear";
-        case VK_RETURN:
-            return "Return";
-        case VK_ESCAPE:
-            return "Esc";
-        case VK_CONVERT:
-            // TODO: ???
-            return "Convert";
-        case VK_NONCONVERT:
-            // TODO: ???
-            return "NoConvert";
-        case VK_ACCEPT:
-            // TODO: ???
-            return "Accept";
-        case VK_MODECHANGE:
-            // TODO: ???
-            return "ModeChange";
-        case VK_SPACE:
-            return "Space";
-        case VK_PRIOR:
-            return "PageUp";
-        case VK_NEXT:
-            return "PageDown";
-        case VK_END:
-            return "End";
-        case VK_HOME:
-            return "Home";
-        case VK_LEFT:
-            if (!isEng) {
-                return "<-";
-            }
-            return "Left";
-        case VK_UP:
-            return "Up";
-        case VK_RIGHT:
-            if (!isEng) {
-                return "->";
-            }
-            return "Right";
-        case VK_DOWN:
-            return "Down";
-        case VK_SELECT:
-            return "Select";
-        case VK_PRINT:
-            return "Print";
-        case VK_EXECUTE:
-            return "Execute";
-        case VK_SNAPSHOT:
-            return "PrtSc";
-        case VK_INSERT:
-            return "Insert";
-        case VK_DELETE:
-            return "Del";
-        case VK_HELP:
-            return "Help";
-        case VK_SLEEP:
-            // TODO: ???
-            return "Sleep";
-        case VK_MULTIPLY:
-            return "*";
-        case VK_ADD:
-        case VK_OEM_PLUS:
-            return "+";
-        case VK_SEPARATOR:
-            // TODO: ???
-            return "Separator";
-        case VK_SUBTRACT:
-        case VK_OEM_MINUS:
-            return "-";
-        case VK_DECIMAL:
-            // TODO: ???
-            return "Decimal";
-        case VK_DIVIDE:
-            return "/";
-        case VK_SCROLL:
-            // TODO: ???
-            return "Scroll";
-        case VK_VOLUME_DOWN:
-            // TODO: ???
-            return "Volume Down";
-        case VK_VOLUME_UP:
-            // TODO: ???
-            return "Volume Up";
-    }
-    /*
-    TOOD: add those as well?
-        #define VK_BROWSER_BACK        0xA6
-        #define VK_BROWSER_FORWARD     0xA7
-        #define VK_BROWSER_REFRESH     0xA8
-        #define VK_BROWSER_STOP        0xA9
-        #define VK_BROWSER_SEARCH      0xAA
-        #define VK_BROWSER_FAVORITES   0xAB
-        #define VK_BROWSER_HOME        0xAC
-
-        #define VK_VOLUME_MUTE         0xAD
-        #define VK_MEDIA_NEXT_TRACK    0xB0
-        #define VK_MEDIA_PREV_TRACK    0xB1
-        #define VK_MEDIA_STOP          0xB2
-        #define VK_MEDIA_PLAY_PAUSE    0xB3
-        #define VK_LAUNCH_MAIL         0xB4
-        #define VK_LAUNCH_MEDIA_SELECT 0xB5
-        #define VK_LAUNCH_APP1         0xB6
-        #define VK_LAUNCH_APP2         0xB7
-
-        #define VK_OEM_4          0xDB  //  '[{' for US
-        #define VK_OEM_5          0xDC  //  '\|' for US
-        #define VK_OEM_6          0xDD  //  ']}' for US
-        #define VK_OEM_7          0xDE  //  ''"' for US
-        #define VK_OEM_8          0xDF
-
-        #define VK_OEM_AX         0xE1  //  'AX' key on Japanese AX kbd
-        #define VK_OEM_102        0xE2  //  "<>" or "\|" on RT 102-key kbd.
-        #define VK_ICO_HELP       0xE3  //  Help key on ICO
-        #define VK_ICO_00         0xE4  //  00 key on ICO
-
-        #define VK_PROCESSKEY     0xE5
-
-        #define VK_OEM_RESET      0xE9
-        #define VK_OEM_JUMP       0xEA
-        #define VK_OEM_PA1        0xEB
-        #define VK_OEM_PA2        0xEC
-        #define VK_OEM_PA3        0xED
-        #define VK_OEM_WSCTRL     0xEE
-        #define VK_OEM_CUSEL      0xEF
-        #define VK_OEM_ATTN       0xF0
-        #define VK_OEM_FINISH     0xF1
-        #define VK_OEM_COPY       0xF2
-        #define VK_OEM_AUTO       0xF3
-        #define VK_OEM_ENLW       0xF4
-        #define VK_OEM_BACKTAB    0xF5
-
-        #define VK_ATTN           0xF6
-        #define VK_CRSEL          0xF7
-        #define VK_EXSEL          0xF8
-        #define VK_EREOF          0xF9
-        #define VK_PLAY           0xFA
-        #define VK_ZOOM           0xFB
-        #define VK_NONAME         0xFC
-        #define VK_PA1            0xFD
-        #define VK_OEM_CLEAR      0xFE
-    */
-    return nullptr;
-}
-
-static TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
+static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     auto lang = trans::GetCurrentLangCode();
     bool isEng = str::IsEmpty(lang) || str::Eq(lang, "en");
     bool isGerman = str::Eq(lang, "de");
@@ -610,14 +576,14 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     for (int i = 0; i < gAccelsCount; i++) {
         a = gAccels[i];
         if (a.cmd == cmdId) {
-            TempStr res = AppendAccelKeyToMenuStringTemp(menuStr, a);
+            TempStr res = appendAccelKeyToMenuStringTemp(menuStr, a);
             return res;
         }
     }
     return menuStr;
 }
 
-static bool SameAccelKey(const ACCEL& a1, const ACCEL& a2) {
+static bool sameAccelKey(const ACCEL& a1, const ACCEL& a2) {
     if (a1.fVirt != a2.fVirt) {
         return false;
     }
@@ -649,7 +615,7 @@ static WORD gNotSafeKeys[] = {
 // block regular processing of key events and mess up edit control
 // at the same time, we do want most accelerators to be enabed even
 // if edit or tree view control has focus
-static bool IsSafeAccel(const ACCEL& a) {
+static bool isSafeAccel(const ACCEL& a) {
     WORD k = a.key;
     if (a.fVirt == 0) {
         // regular keys like 'n', without any shift / alt modifier
@@ -709,17 +675,17 @@ void CreateSumatraAcceleratorTable() {
     auto addShortcutIfNotExists = [&](ACCEL accel) -> void {
         bool shortcutExists = false;
         for (int i = 0; !shortcutExists && i < nAccels; i++) {
-            shortcutExists = SameAccelKey(accels[i], accel);
+            shortcutExists = sameAccelKey(accels[i], accel);
         }
         if (shortcutExists) {
             return;
         }
         accels[nAccels++] = accel;
-        if (IsSafeAccel(accel)) {
+        if (isSafeAccel(accel)) {
             editAccels[nEditAccels++] = accel;
             treeViewAccels[nTreeViewAccels++] = accel;
         }
-        if (((int)accel.cmd == (int)CmdToggleBookmarks) && !IsSafeAccel(accel)) {
+        if (((int)accel.cmd == (int)CmdToggleBookmarks) && !isSafeAccel(accel)) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2832
             treeViewAccels[nTreeViewAccels++] = accel;
         }
@@ -730,7 +696,7 @@ void CreateSumatraAcceleratorTable() {
         if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {
             ACCEL accel{};
             accel.cmd = curr->id;
-            if (ParseShortcut(curr->key, accel)) {
+            if (parseShortcut(curr->key, accel)) {
                 addShortcutIfNotExists(accel);
             }
         }
