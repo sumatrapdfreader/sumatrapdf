@@ -2138,33 +2138,34 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return OnGesture(win, msg, wp, lp);
 
         case WM_NCPAINT: {
+            if (gGlobalPrefs->fixedPageUI.hideScrollbars) {
+                ShowScrollBar(win->hwndCanvas, SB_BOTH, false);
+                goto def;
+            }
+
             DisplayModel* dm = win->AsFixed();
-            // check whether scrolling is required in the horizontal and/or vertical axes
-            int requiredScrollAxes = -1;
+            bool isSinglePage = (dm->GetDisplayMode() == DisplayMode::SinglePage);
             bool needH = dm->NeedHScroll();
-            bool needV = dm->NeedVScroll();
-
-            // For SinglePage mode, respect the hideScrollbars setting
-            bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
-            if (isSinglePageMode && gGlobalPrefs->fixedPageUI.hideScrollbars) {
-                needV = false;
+            bool needV = dm->NeedVScroll() || isSinglePage;
+            if (!needH && !needV) {
+                ShowScrollBar(win->hwndCanvas, SB_BOTH, false);
+                goto def;
             }
 
+            // check whether scrolling is required in the horizontal and/or vertical axes
+            int wBar = -1;
             if (needH && needV) {
-                requiredScrollAxes = SB_BOTH;
+                wBar = SB_BOTH;
             } else if (needH) {
-                requiredScrollAxes = SB_HORZ;
+                wBar = SB_HORZ;
             } else if (needV) {
-                requiredScrollAxes = SB_VERT;
+                wBar = SB_VERT;
             }
-
-            if (requiredScrollAxes != -1) {
-                ShowScrollBar(win->hwndCanvas, requiredScrollAxes, !gGlobalPrefs->fixedPageUI.hideScrollbars);
-            }
-
+            ShowScrollBar(win->hwndCanvas, wBar, true);
             // allow default processing to continue
         }
     }
+def:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 

@@ -21,7 +21,6 @@
 #include "utils/Archive.h"
 #include "utils/Timer.h"
 #include "utils/LzmaSimpleArchive.h"
-#include <algorithm>
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -807,10 +806,18 @@ void ControllerCallbackHandler::SaveDownload(const char* url, const ByteSlice& d
     SaveDataToFile(win->hwndFrame, path, data);
 }
 
+static void makeFullScrollbar(SCROLLINFO& si) {
+    si.nPos = 0;
+    si.nMin = 0;
+    si.nMax = 99;
+    si.nPage = 100;
+}
+
 void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ReportIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
 
+    bool hideScrollbar = gGlobalPrefs->fixedPageUI.hideScrollbars;
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -818,40 +825,30 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     Size viewPort = dm->GetViewPort().Size();
 
     if (viewPort.dx >= canvas.dx) {
-        si.nPos = 0;
-        si.nMin = 0;
-        si.nMax = 99;
-        si.nPage = 100;
+        makeFullScrollbar(si);
     } else {
         si.nPos = dm->GetViewPort().x;
         si.nMin = 0;
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
     }
-    ShowScrollBar(win->hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
+
+    bool showHScroll = (viewPort.dx < canvas.dx) && !hideScrollbar;
+    ShowScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
-    // For SinglePage mode, show a scrollbar for rapid page navigation
     bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
-    bool showVScroll = false;
-
+    bool showVScroll = true;
     if (isSinglePageMode) {
-        // In SinglePage mode, show vertical scrollbar for page navigation (respecting hideScrollbars setting)
-        showVScroll = !gGlobalPrefs->fixedPageUI.hideScrollbars;
         int pageCount = dm->PageCount();
         int currentPage = dm->CurrentPageNo();
-
         si.nPos = currentPage - 1; // 0-based position
         si.nMin = 0;
         si.nMax = pageCount - 1; // 0-based max
         si.nPage = 1;            // One page visible at a time
     } else {
-        // Original logic for other display modes
         if (viewPort.dy >= canvas.dy) {
-            si.nPos = 0;
-            si.nMin = 0;
-            si.nMax = 99;
-            si.nPage = 100;
+            makeFullScrollbar(si);
         } else {
             si.nPos = dm->GetViewPort().y;
             si.nMin = 0;
@@ -866,7 +863,9 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
         }
         showVScroll = (viewPort.dy < canvas.dy);
     }
-
+    if (hideScrollbar) {
+        showVScroll = false;
+    }
     ShowScrollBar(win->hwndCanvas, SB_VERT, showVScroll);
     SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
 }
