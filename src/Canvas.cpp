@@ -1789,6 +1789,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return 0;
     }
 
+#if 0
     // scroll faster if the cursor is over the scroll bar
     if (IsCursorOverWindow(win->hwndCanvas)) {
         Point pt = HwndGetCursorPos(win->hwndCanvas);
@@ -1798,6 +1799,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             return 0;
         }
     }
+#endif
 
     win->wheelAccumDelta += delta;
     int prevScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
