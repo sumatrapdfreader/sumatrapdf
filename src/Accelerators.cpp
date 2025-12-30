@@ -477,7 +477,16 @@ again:
         accel.fVirt |= (FSHIFT | FVIRTKEY);
         return true;
     }
-    if (accel.fVirt != 0) {
+    if (accel.fVirt == 0) {
+        // in 3.6 we marked our shortcuts as virtual so we need to mark user provided
+        // virtual as well
+        if (c >= 'a' && c <= 'z') {
+            accel.fVirt = FVIRTKEY;
+            c -= ('a' - 'A');
+        } else if (c >= 'A' && c <= 'Z') {
+            accel.fVirt = (FVIRTKEY | FSHIFT);
+        }
+    } else {
         // if we have ctrl/alt/shift, convert 'a' - 'z' into 'A' - 'Z'
         if (c >= 'a' && c <= 'z') {
             c -= ('a' - 'A');
