@@ -43,26 +43,6 @@ constexpr size_t kFileHistoryMaxFiles = 1000;
 
 FileHistory gFileHistory;
 
-// sorts the most often used files first
-static int cmpOpenCount(const void* a, const void* b) {
-    FileState* dsA = *(FileState**)a;
-    FileState* dsB = *(FileState**)b;
-    // sort pinned documents before unpinned ones
-    if (dsA->isPinned != dsB->isPinned) {
-        return dsA->isPinned ? -1 : 1;
-    }
-    // sort pinned documents alphabetically
-    if (dsA->isPinned) {
-        return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
-    }
-    // sort often opened documents first
-    if (dsA->openCount != dsB->openCount) {
-        return dsB->openCount - dsA->openCount;
-    }
-    // use recency as the criterion in case of equal open counts
-    return dsA->index < dsB->index ? -1 : 1;
-}
-
 void FileHistory::Append(FileState* fs) const {
     ReportIf(!fs->filePath);
     states->Append(fs);
@@ -190,6 +170,26 @@ bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
     return true;
 }
 
+// sorts the most often used files first
+static int cmpOpenCount(const void* a, const void* b) {
+    FileState* dsA = *(FileState**)a;
+    FileState* dsB = *(FileState**)b;
+    // sort pinned documents before unpinned ones
+    if (dsA->isPinned != dsB->isPinned) {
+        return dsA->isPinned ? -1 : 1;
+    }
+    // sort pinned documents alphabetically
+    if (dsA->isPinned) {
+        return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
+    }
+    // sort often opened documents first
+    if (dsA->openCount != dsB->openCount) {
+        return dsB->openCount - dsA->openCount;
+    }
+    // use recency as the criterion in case of equal open counts
+    return dsA->index < dsB->index ? -1 : 1;
+}
+
 // returns a shallow copy of the file history list, sorted
 // by open count (which has a pre-multiplied recency factor)
 // and with all missing states filtered out
@@ -204,6 +204,34 @@ void FileHistory::GetFrequencyOrder(Vec<FileState*>& list) const {
         }
     }
     list.Sort(cmpOpenCount);
+}
+
+// sorts recently opened files first
+static int cmpRecentlyOpened(const void* a, const void* b) {
+    FileState* dsA = *(FileState**)a;
+    FileState* dsB = *(FileState**)b;
+    // sort pinned documents before unpinned ones
+    if (dsA->isPinned != dsB->isPinned) {
+        return dsA->isPinned ? -1 : 1;
+    }
+    // sort pinned documents alphabetically
+    if (dsA->isPinned) {
+        return str::CmpNatural(path::GetBaseNameTemp(dsA->filePath), path::GetBaseNameTemp(dsB->filePath));
+    }
+    // use recency as the criterion in case of equal open counts
+    return dsA->index < dsB->index ? -1 : 1;
+}
+
+void FileHistory::GetRecentlyOpenedOrder(Vec<FileState*>& list) const {
+    ReportIf(list.size() > 0);
+    size_t i = 0;
+    for (FileState* ds : *states) {
+        ds->index = i++;
+        if (!ds->isMissing || ds->isPinned) {
+            list.Append(ds);
+        }
+    }
+    list.Sort(cmpRecentlyOpened);
 }
 
 // removes file history entries which shouldn't be saved anymore

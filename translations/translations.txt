@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e084d516630b604cf7ef118821e2ce1a741e8523
+9580d34d74abe5f1fd0ba2c7c97aee5e3d39409b
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -18138,6 +18138,7 @@ tw:重新命名(&N)...
 uk:Перейменувати...
 uz:Qayta &nomlash...
 vn:Đổi &Tên
+:Recently Opened
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղանկյուն` x=%d y=%d dx=%d dy=%d
 ar:المربع: x=%d y=%d dx=%d dy=%d

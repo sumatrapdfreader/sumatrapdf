@@ -665,7 +665,11 @@ static bool ShouldSaveThumbnail(FileState* ds) {
 
     // don't create thumbnails for files that won't need them anytime soon
     Vec<FileState*> list;
-    gFileHistory.GetFrequencyOrder(list);
+    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+        gFileHistory.GetFrequencyOrder(list);
+    } else {
+        gFileHistory.GetRecentlyOpenedOrder(list);
+    }
     int idx = list.Find(ds);
     if (idx < 0 || kFileHistoryMaxFrequent * 2 <= idx) {
         return false;

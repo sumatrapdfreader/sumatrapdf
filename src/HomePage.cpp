@@ -699,7 +699,11 @@ void LayoutHomePage(HomePageLayout& l) {
     l.promote = ParsePromote(promoteBuiltIn);
 
     Vec<FileState*> fileStates;
-    gFileHistory.GetFrequencyOrder(fileStates);
+    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+        gFileHistory.GetFrequencyOrder(fileStates);
+    } else {
+        gFileHistory.GetRecentlyOpenedOrder(fileStates);
+    }
     auto hwnd = l.hwnd;
     auto hdc = l.hdc;
     auto rc = l.rc;
@@ -707,7 +711,7 @@ void LayoutHomePage(HomePageLayout& l) {
 
     bool isRtl = IsUIRtl();
     HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
-    HFONT fontFrequentlyRead = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    HFONT hdrFont = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
 
     Size sz = CalcSumatraVersionSize(hdc);
     {
@@ -740,17 +744,20 @@ void LayoutHomePage(HomePageLayout& l) {
         ptOff.x = kThumbsMarginLeft;
     }
 
-    const char* txt = _TRA("Frequently Read");
-    VirtWndText* freqRead = new VirtWndText(hwnd, txt, fontFrequentlyRead);
-    l.freqRead = freqRead;
-    freqRead->isRtl = isRtl;
-    Size txtSize = freqRead->GetIdealSize(true);
+    const char* txt = _TRA("Recently Opened");
+    if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+        txt = _TRA("Frequently Read");
+    }
+    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
+    l.freqRead = hdr;
+    hdr->isRtl = isRtl;
+    Size txtSize = hdr->GetIdealSize(true);
 
     Rect rcHdr(ptOff.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
     if (isRtl) {
         rcHdr.x = rc.dx - ptOff.x - rcHdr.dx;
     }
-    freqRead->SetBounds(rcHdr);
+    hdr->SetBounds(rcHdr);
 
     int nFiles = fileStates.Size();
     for (int row = 0; row < thumbsRows; row++) {
