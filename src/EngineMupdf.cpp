@@ -1029,6 +1029,10 @@ static TocItem* NewTocItemWithDestination(TocItem* parent, char* title, IPageDes
 
 // TODO: could be optimized
 static bool RectFullyContains(RectF r1, RectF r2) {
+    // if same size, we don't consider it that one covers another
+    if (r1 == r2) {
+        return false;
+    }
     return r1.Contains(r2.TL()) && r1.Contains(r2.BR());
 }
 
@@ -1057,18 +1061,29 @@ static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
 // that is fully obscured by all other elements
 // if not fully obscured, return the first one
 static IPageElement* PickBestElement(Vec<IPageElement*>& els) {
-    if (els.Size() == 0) {
+    int n = els.Size();
+    if (n == 0) {
         return nullptr;
     }
-
-Encore:
-    int n = els.Size();
     if (n == 1) {
         return els[0];
     }
+
+    // for https://github.com/sumatrapdfreader/sumatrapdf/issues/5200
+    // priority for destinations (e.g. links) over images
+    for (IPageElement* el : els) {
+        if (el->GetKind() == kindPageElementDest) {
+            return el;
+        }
+    }
+Encore:
     bool didRemove = RemoveHeWhoFullyContains(els);
     if (didRemove) {
         ReportIf(els.Size() != n - 1);
+        n = els.Size();
+        if (n == 1) {
+            return els[0];
+        }
         goto Encore;
     }
     return els[0];
