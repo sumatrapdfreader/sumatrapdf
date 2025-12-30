@@ -9,6 +9,8 @@
                 "${workspaceRoot}/src/wingui",
                 "${workspaceRoot}/ext/synctex",
                 "${workspaceRoot}/ext/unarr",
+                "${workspaceRoot}/ext/brotli/c/include",
+                "${workspaceRoot}/ext/darkmodelib/include",
                 "${workspaceRoot}/ext/zlib",
                 "${workspaceRoot}/ext/CHMLIB",
                 "${workspaceRoot}/packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include"
@@ -23,14 +25,14 @@
                 "_WIN32_WINNT=0x0a00"
             ],
             "windowsSdkVersion": "10.0.18362.0",
-            "intelliSenseMode": "msvc-x64",
+            "intelliSenseMode": "windows-msvc-x64",
             "browse": {
                 "path": [],
                 "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": "${workspaceRoot}/.vscode/db/intellisense.db"
             },
             "cppStandard": "c++20",
-            "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.24.28314/bin/Hostx64/x64/cl.exe"
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe"
         }
     ],
     "version": 4
