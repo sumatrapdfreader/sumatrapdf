@@ -345,11 +345,12 @@ static void RememberSessionState() {
 // added or removed from gFileHistory (in order to keep
 // the list of recently opened documents in sync)
 bool SaveSettings() {
-    if (!gDontSaveSettings) {
+    if (gDontSaveSettings) {
         // if we are exiting the application by File->Exit,
         // OnMenuExit will have called SaveSettings() already
         // and we skip the call here to avoid saving incomplete session info
         // (because some windows might have been closed already)
+        return true;
     }
 
     // don't save preferences without the proper permission
