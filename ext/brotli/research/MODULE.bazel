@@ -1,0 +1,21 @@
+# Copyright 2025 The Brotli Authors. All rights reserved.
+#
+# Distributed under MIT license.
+# See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+
+"""Brotli reference implementation"""
+
+module(
+    name = "brotli_research",
+    version = "1.1.0",
+    repo_name = "org_brotli_research",
+)
+
+bazel_dep(name = "divsufsort", version = "2.0.1")
+bazel_dep(name = "esaxx", version = "20250106.0")
+
+bazel_dep(name = "brotli", version = "1.1.0", repo_name = "org_brotli")
+local_path_override(
+    module_name = "brotli",
+    path = "..",
+)

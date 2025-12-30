@@ -1,0 +1,21 @@
+# Copyright 2025 The Brotli Authors. All rights reserved.
+#
+# Distributed under MIT license.
+# See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+
+"""Brotli reference implementation"""
+
+module(
+    name = "brotli_go",
+    version = "1.1.0",
+    repo_name = "org_brotli_go",
+)
+
+bazel_dep(name = "rules_go", version = "0.51.0", repo_name = "io_bazel_rules_go")
+bazel_dep(name = "gazelle", version = "0.40.0")
+
+bazel_dep(name = "brotli", version = "1.1.0", repo_name = "org_brotli")
+local_path_override(
+    module_name = "brotli",
+    path = "..",
+)

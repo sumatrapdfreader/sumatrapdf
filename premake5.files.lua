@@ -51,6 +51,21 @@ function makelzsa_files()
   }
 end
 
+function brotli_files()
+  files_in_dir("ext/brotli/c/common", {
+    "*.h",
+    "*.c",
+  })
+  files_in_dir("ext/brotli/c/dec", {
+    "*.h",
+    "*.c",
+  })
+  files_in_dir("ext/brotli/c/enc", {
+     "*.h",
+     "*.c",
+  })
+end
+
 function zlib_files()
   files_in_dir("ext/zlib", {
     "adler32.c", "compress.c", "crc32.c", "deflate.c", "inffast.c",
@@ -61,7 +76,7 @@ end
 
 function zlib_ng_files()
   files_in_dir("ext/zlib-ng", {
-    "adler32.c", 
+    "adler32.c",
     "chunkset.c",
     "compare258.c",
     "compress.c",
@@ -242,7 +257,7 @@ function jbig2dec_files()
   })
 end
 
-function libheif_files() 
+function libheif_files()
   files_in_dir("ext/libheif/libheif", {
     "bitstream.*",
     "box.*",

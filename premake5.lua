@@ -484,6 +484,7 @@ workspace "SumatraPDF"
       "FT2_BUILD_LIBRARY",
       "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
       "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+      "FT_CONFIG_OPTION_USE_BROTLI",
     }
     disablewarnings { "4018", "4100", "4101", "4244", "4267", "4312", "4701", "4706", "4996" }
     includedirs { "mupdf/scripts/freetype", "ext/freetype/include" }
@@ -528,7 +529,11 @@ workspace "SumatraPDF"
     uses_zlib()
     extract_files()
 
-    -- iibheif
+    -- brotli
+    includedirs { "ext/brotli/c/include" }
+    brotli_files()
+
+    -- libheif
     defines { "LIBHEIF_STATIC_BUILD" }
 
   function fonts()
@@ -599,7 +604,7 @@ workspace "SumatraPDF"
     -- this defines which fonts are to be excluded from being included directly
     -- we exclude the very big cjk fonts
     defines { "TOFU_NOTO", "TOFU_CJK_LANG", "TOFU_NOTO_SUMATRA" }
-    defines { "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=0", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=0", "FZ_ENABLE_HYPHEN=0" }
+    defines { "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=0", "FZ_ENABLE_HYPHEN=0" }
 
     filter { "platforms:arm64" }
         defines { "ARCH_HAS_NEON=1" }
@@ -622,12 +627,14 @@ workspace "SumatraPDF"
       "mupdf/scripts/freetype",
       "ext/freetype/include",
       "ext/mujs",
+      "ext/brotli/c/include",
       "ext/harfbuzz/src",
       "ext/lcms2/include",
       "ext/gumbo-parser/src",
       "ext/extract/include",
     }
     fonts()
+
 
     mupdf_files()
     links { "mupdf-libs" }
@@ -643,7 +650,7 @@ workspace "SumatraPDF"
     language "C"
     optimized_conf()
     disablewarnings { "4206", "4702" }
-    defines { "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=0", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=0", "FZ_ENABLE_HYPHEN=0" }
+    defines { "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=0", "FZ_ENABLE_HYPHEN=0" }
 
     filter { "platforms:arm64" }
         defines { "ARCH_HAS_NEON=1" }

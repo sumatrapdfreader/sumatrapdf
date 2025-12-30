@@ -1,0 +1,346 @@
+# Copyright 2021 Google Inc. All Rights Reserved.
+#
+# Distributed under MIT license.
+# See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+
+# Workflow for building and running tests under Ubuntu
+
+name: Build/Test
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, reopened, labeled, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ubuntu_build:
+    name: Build and test ${{ matrix.name }}
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # TODO: consider running this combination in docker
+          #- name: cmake:gcc4.4
+
+          # TODO: consider running this combination in docker
+          #- name: cmake:gcc7
+
+          - name: cmake:gcc9
+            build_system: cmake
+            c_compiler: gcc-9
+            cxx_compiler: g++-9
+            os: ubuntu-20.04
+
+          # TODO: consider running this combination in docker
+          #- name: cmake:clang3.5
+
+          - name: cmake:clang15
+            build_system: cmake
+            c_compiler: clang-15
+            cxx_compiler: clang++15
+            os: ubuntu-22.04
+
+          - name: cmake:clang:asan
+            build_system: cmake
+            sanitizer: address
+            c_compiler: clang
+            cxx_compiler: clang++
+
+          - name: cmake:clang:tsan
+            build_system: cmake
+            sanitizer: thread
+            c_compiler: clang
+            cxx_compiler: clang++
+
+          - name: cmake:clang:ubsan
+            build_system: cmake
+            sanitizer: undefined
+            c_compiler: clang
+            cxx_compiler: clang++
+            c_flags: -fno-sanitize-recover=undefined,integer
+
+          - name: cmake:qemu-arm-neon-gcc
+            build_system: cmake
+            c_compiler: arm-linux-gnueabihf-gcc
+            cxx_compiler: arm-linux-gnueabihf-g++
+            c_flags: -march=armv7-a -mfloat-abi=hard -mfpu=neon
+            extra_apt_pkgs: gcc-arm-linux-gnueabihf libc6-dev-armhf-cross qemu-user
+
+          - name: cmake-osx:clang
+            build_system: cmake
+            c_compiler: clang
+            cxx_compiler: clang++
+            os: macos-latest
+
+          - name: cmake-osx:gcc
+            build_system: cmake
+            c_compiler: gcc
+            cxx_compiler: g++
+            os: macos-latest
+
+          - name: cmake-win64:msvc-rel
+            build_system: cmake
+            cmake_generator: Visual Studio 17 2022
+            cmake_config: Release
+            os: windows-latest
+
+          - name: cmake-win64:msvc-dbg
+            build_system: cmake
+            cmake_generator: Visual Studio 17 2022
+            cmake_config: Debug
+            os: windows-latest
+
+          - name: fuzz:clang
+            build_system: fuzz
+            c_compiler: clang
+            cxx_compiler: clang++
+
+          # TODO: consider running this combination in docker
+          #- name: python2.7:gcc5
+
+          # TODO: consider running this combination in docker
+          #- name: python27:clang9
+          #  build_system: python
+          #  c_compiler: clang-9
+          #  python_version: 2.7
+          #  cxx_compiler: clang++-9
+          #  os: ubuntu-20.04
+
+          # TODO: consider running this combination in docker
+          #- name: python27-win
+          #  build_system: python
+          #  python_version: 2.7
+          #  # TODO: investigate why win-builds can't run tests
+          #  py_setuptools_cmd: build_ext
+          #  os: windows-2016
+
+          # TODO: consider running this combination in docker
+          #- name: python3.6:gcc5
+
+          # TODO: consider running this combination in docker
+          #- name: python3.7:gcc5
+
+          # TODO: consider running this combination in docker
+          #- name: python3.8:gcc5
+
+          - name: python3.10:clang
+            build_system: python
+            python_version: "3.10"
+            c_compiler: clang
+            cxx_compiler: clang++
+
+          - name: python3.10-win
+            build_system: python
+            python_version: "3.10"
+            # TODO: investigate why win-builds can't run tests
+            py_setuptools_cmd: build_ext
+            os: windows-2019
+
+          - name: maven
+            build_system: maven
+
+          - name: bazel:root
+            build_system: bazel
+            bazel_project: .
+
+          - name: bazel:go
+            build_system: bazel
+            bazel_project: go
+
+          - name: bazel:java
+            build_system: bazel
+            bazel_project: java
+
+          - name: bazel:research
+            build_system: bazel
+            bazel_project: research
+
+          - name: bazel-osx:root
+            build_system: bazel
+            bazel_project: .
+            os: macos-latest
+
+          - name: bazel-osx:go
+            build_system: bazel
+            bazel_project: go
+            os: macos-latest
+
+          - name: bazel-osx:java
+            build_system: bazel
+            bazel_project: java
+            os: macos-latest
+
+          - name: bazel-osx:research
+            build_system: bazel
+            bazel_project: research
+            os: macos-latest
+
+          - name: bazel-win:root
+            build_system: bazel
+            bazel_project: .
+            os: windows-latest
+
+          # TODO: use single dll on windows, otherwise it fails to link
+          #- name: bazel-win:go
+          #  build_system: bazel
+          #  bazel_project: go
+          #  os: windows-latest
+
+          - name: bazel-win:java
+            build_system: bazel
+            bazel_project: java
+            os: windows-latest
+
+          - name: bazel-win:research
+            build_system: bazel
+            bazel_project: research
+            os: windows-latest
+
+    env:
+      CC: ${{ matrix.c_compiler || 'gcc' }}
+      CXX: ${{ matrix.cxx_compiler || 'gcc' }}
+
+    steps:
+    - name: Install extra deps @ Ubuntu
+      if: ${{ runner.os == 'Linux' }}
+      # Already installed: bazel, clang{13-15}, cmake, gcc{9.5-13.1}, java{8,11,17,21}, maven, python{3.10}
+      run: |
+        EXTRA_PACKAGES="${{ matrix.extra_apt_pkgs || '' }}"
+        sudo apt update
+        sudo apt install -y ${EXTRA_PACKAGES}
+
+    - name: Checkout the source
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      with:
+        submodules: false
+        fetch-depth: 1
+
+    #- name: Checkout VC9 for Python
+    #  if: ${{ runner.os == 'Windows' && matrix.build_system == 'python' &&  matrix.python_version == '2.7' }}
+    #  uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+    #  with:
+    #    repository: reider-roque/sulley-win-installer
+    #    path: third_party/VCForPython27
+
+    - name: Configure / Build / Test with CMake
+      if: ${{ matrix.build_system == 'cmake' }}
+      run: |
+        export ASAN_OPTIONS=detect_leaks=0
+        declare -a CMAKE_OPTIONS=()
+        CMAKE_OPTIONS+=("-DCMAKE_VERBOSE_MAKEFILE=ON")
+        [ ! -z '${{ matrix.c_compiler || '' }}' ] && CMAKE_OPTIONS+=(-DCMAKE_C_COMPILER='${{ matrix.c_compiler }}')
+        [ ! -z '${{ matrix.cxx_compiler || '' }}' ] && CMAKE_OPTIONS+=(-DCMAKE_CXX_COMPILER='${{ matrix.cxx_compiler }}')
+        [ ! -z '${{ matrix.sanitizer || '' }}' ] && CMAKE_OPTIONS+=(-DENABLE_SANITIZER='${{ matrix.sanitizer }}')
+        [ ! -z '${{ matrix.cmake_generator || '' }}' ] && export CMAKE_GENERATOR='${{ matrix.cmake_generator }}'
+        declare -a CMAKE_BUILD_OPTIONS=()
+        [ ! -z '${{ matrix.cmake_config || '' }}' ] && CMAKE_BUILD_OPTIONS+=(--config '${{ matrix.cmake_config }}')
+        declare -a CMAKE_TEST_OPTIONS=()
+        [ ! -z '${{ matrix.cmake_config || '' }}' ] && CMAKE_TEST_OPTIONS+=(-C '${{ matrix.cmake_config }}')
+
+        cmake -B out . ${CMAKE_OPTIONS[*]} -DCMAKE_C_FLAGS='${{ matrix.c_flags || '' }}'
+        cmake --build out ${CMAKE_BUILD_OPTIONS[*]}
+        cd out; ctest ${CMAKE_TEST_OPTIONS[*]}; cd ..
+
+    - name: Quick Fuzz
+      if: ${{ matrix.build_system == 'fuzz' }}
+      run: |
+        mkdir ${RUNNER_TEMP}/decode_corpora
+        unzip java/org/brotli/integration/fuzz_data.zip -d ${RUNNER_TEMP}/decode_corpora
+        cd ${GITHUB_WORKSPACE}/c/fuzz
+        bazelisk build --config=asan-libfuzzer :decode_fuzzer
+        for f in `ls ${RUNNER_TEMP}/decode_corpora`
+        do
+          echo "Testing $f"
+          ./bazel-bin/decode_fuzzer_bin ${RUNNER_TEMP}/decode_corpora/$f
+        done
+
+    - name: Build with Bazel
+      if: ${{ matrix.build_system == 'bazel' }}
+      run: |
+        cd ${GITHUB_WORKSPACE}/${{ matrix.bazel_project }}
+        bazelisk build -c opt ...:all --java_runtime_version=remotejdk_21
+
+    - name: Fix symlinks for Bazel (Windows)
+      if: ${{ matrix.build_system == 'bazel' && runner.os == 'Windows' && matrix.bazel_project == 'java' }}
+      shell: python
+      run: |
+        import fnmatch
+        import os
+        import os.path
+        from shutil import copyfile
+        os.chdir('${{ matrix.bazel_project }}')
+        print('Searching for manifests in ' + os.getcwd())
+        matches = []
+        for root, dirnames, filenames in os.walk('bazel-bin\\org\\brotli'):
+          for filename in fnmatch.filter(filenames, '*.runfiles_manifest'):
+            matches.append(os.path.join(root, filename))
+        for match in matches:
+          print('Scanning manifest ' + match)
+          runfiles = match[:-len('_manifest')]
+          with open(match) as manifest:
+            for entry in manifest:
+              entry = entry.strip()
+              if not entry.startswith("_main"):
+                continue
+              if entry.startswith("_main/external"):
+                continue
+              (alias, space, link) = entry.partition(' ')
+              if alias.endswith('.jar') or alias.endswith('.exe'):
+                continue
+              link = link.replace('/', '\\')
+              alias = alias.replace('/', '\\')
+              dst = os.path.join(runfiles, alias)
+              if not os.path.exists(dst):
+                print(link + ' -> ' + dst)
+                parent = os.path.dirname(dst)
+                if not os.path.exists(parent):
+                  os.makedirs(parent)
+                copyfile(link, dst)
+        print('Finished resolving symlinks')
+
+    - name: Test with Bazel
+      if: ${{ matrix.build_system == 'bazel' }}
+      run: |
+        cd ${GITHUB_WORKSPACE}/${{ matrix.bazel_project }}
+        bazelisk query "tests(...)" --output=label > ${RUNNER_TEMP}/tests.lst
+        [ -s ${RUNNER_TEMP}/tests.lst ] && bazelisk test -c opt ...:all --java_runtime_version=remotejdk_21
+        bazelisk clean
+
+    - name: Build / Test with Maven
+      if: ${{ matrix.build_system == 'maven' }}
+      run: |
+        export MAVEN_OPTS=-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+        cd java/org/brotli
+        mvn -B install
+        # TODO(eustas): nuke maven build?
+        # cd integration
+        # mvn -B verify
+
+    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+      if: ${{ matrix.build_system == 'python' }}
+      with:
+        python-version: ${{ matrix.python_version }}
+
+    # TODO: investigate, why msiexec hangs
+    #- name: Install VC9 for Python
+    #  if: ${{ runner.os == 'Windows' && matrix.build_system == 'python' &&  matrix.python_version == '2.7' }}
+    #  run: |
+    #    echo "070474db76a2e625513a5835df4595df9324d820f9cc97eab2a596dcbc2f5cbf  third_party/VCForPython27/VCForPython27.msi" | sha256sum --check --status
+    #    msiexec ALLUSERS=1 /qn /norestart /i third_party/VCForPython27/VCForPython27.msi /l*v ${RUNNER_TEMP}/msiexec.log
+    #    cat ${RUNNER_TEMP}/msiexec.log
+
+    - name: Build / Test with Python
+      if: ${{ matrix.build_system == 'python' }}
+      run: |
+        python -VV
+        python -c "import sys; sys.exit('Invalid python version') if '.'.join(map(str,sys.version_info[0:2])) != '${{ matrix.python_version }}' else True"
+        python setup.py ${{ matrix.py_setuptools_cmd || 'test'}}

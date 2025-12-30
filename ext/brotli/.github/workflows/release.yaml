@@ -1,0 +1,191 @@
+# Copyright 2023 Google Inc. All Rights Reserved.
+#
+# Distributed under MIT license.
+# See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+
+# Workflow for building the release binaries.
+
+name: Release build / deploy
+on:
+  push:
+    branches:
+      - master
+      - v*.*.*
+  release:
+    types: [ published ]
+  pull_request:
+    types: [opened, reopened, labeled, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  windows_build:
+    name: Windows Build (vcpkg / ${{ matrix.triplet }})
+    runs-on: [windows-latest]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - triplet: x86-windows-dynamic
+            arch: '-A Win32'
+            build_shared_libs: 'ON'
+          - triplet: x64-windows-dynamic
+            arch: '-A x64'
+            build_shared_libs: 'ON'
+          - triplet: x86-windows-static
+            arch: '-A Win32'
+            build_shared_libs: 'OFF'
+          - triplet: x64-windows-static
+            arch: '-A x64'
+            build_shared_libs: 'OFF'
+
+    env:
+      VCPKG_VERSION: '2022.11.14'
+      VCPKG_ROOT: vcpkg
+      VCPKG_DISABLE_METRICS: 1
+
+    steps:
+    - name: Checkout the source
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      with:
+        submodules: false
+        fetch-depth: 1
+
+    - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
+      id: cache-vcpkg
+      with:
+        path: vcpkg
+        key: release-${{ runner.os }}-vcpkg-${{ env.VCPKG_VERSION }}-${{ matrix.triplet }}
+
+    - name: Download vcpkg
+      if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+      # wget doesn't seem to work under bash.
+      shell: 'powershell'
+      run: |
+        C:\msys64\usr\bin\wget.exe -nv `
+           https://github.com/microsoft/vcpkg/archive/refs/tags/${{ env.VCPKG_VERSION }}.zip `
+          -O vcpkg.zip
+    - name: Bootstrap vcpkg
+      if: steps.cache-vcpkg.outputs.cache-hit != 'true'
+      shell: 'bash'
+      run: |
+        set -x
+        unzip -q vcpkg.zip
+        rm -rf ${VCPKG_ROOT}
+        mv vcpkg-${VCPKG_VERSION} ${VCPKG_ROOT}
+        ${VCPKG_ROOT}/bootstrap-vcpkg.sh
+
+    - name: Configure
+      shell: 'bash'
+      run: |
+        set -x
+        mkdir out
+        cmake -Bout -H. ${{ matrix.arch }} \
+          -DBUILD_TESTING=OFF \
+          -DBUILD_SHARED_LIBS=${{ matrix.build_shared_libs }} \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=`pwd`/prefix \
+          -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+          -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+        #
+    - name: Build
+      shell: 'bash'
+      run: |
+        set -x
+        cmake --build out --config Release
+    - name: Install
+      shell: 'bash'
+      run: |
+        set -x
+        cmake --build out --config Release --target install
+        cp LICENSE prefix/bin/LICENSE.brotli
+    - name: Upload artifacts
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      with:
+        name: brotli-${{matrix.triplet}}
+        path: |
+          prefix/bin/*
+
+    - name: Package release zip
+      shell: 'powershell'
+      run: |
+        Compress-Archive -Path prefix\bin\* `
+          -DestinationPath brotli-${{matrix.triplet}}.zip
+
+    - name: Upload binaries to release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v0.1.15
+      with:
+        files: brotli-${{matrix.triplet}}.zip
+
+  testdata_upload:
+    name: Upload testdata
+    runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        shell: bash
+    steps:
+
+    - name: Checkout the source
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      with:
+        submodules: false
+        fetch-depth: 1
+
+    - name: Compress testdata
+      run: |
+        tar cvfJ testdata.txz tests/testdata
+
+    - name: Upload archive to release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v0.1.15
+      with:
+        files: testdata.txz
+
+  archive_build:
+    needs: testdata_upload
+    name: Build and test from archive
+    runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        shell: bash
+    steps:
+
+    - name: Checkout the source
+      uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
+      with:
+        submodules: false
+        fetch-depth: 1
+
+    - name: Archive
+      run: |
+        git archive HEAD -o archive.tgz
+
+    - name: Pick tag
+      run: |
+        echo "BROTLI_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+    - name: Extract
+      run: |
+        mkdir archive
+        cd archive
+        tar xvzf ../archive.tgz
+
+    - name: Download testdata
+      run: |
+        cd archive
+        scripts/download_testdata.sh
+
+    - name: Configure and Build
+      run: |
+        cd archive
+        cmake -B out .
+        cmake --build out
+
+    - name: Test
+      run: |
+        cd archive
+        cd out
+        ctest

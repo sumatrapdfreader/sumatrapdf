@@ -8,6 +8,7 @@
 
 Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 
+- support brotli compression in PDF files
 - in Command Palette, if you start search with ":" we show everything (like in 3.5)
 - in Command Palette, when viewing opened files history (#), you can press Delete to remove the entry from history
 - improved zooming:

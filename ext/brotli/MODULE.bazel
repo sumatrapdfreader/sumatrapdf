@@ -1,0 +1,12 @@
+# Copyright 2025 The Brotli Authors. All rights reserved.
+#
+# Distributed under MIT license.
+# See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
+
+"""Brotli reference implementation"""
+
+module(
+    name = "brotli",
+    version = "1.1.0",
+    repo_name = "org_brotli",
+)

@@ -1,0 +1,49 @@
+tests/testdata/* binary
+
+# Exclude everything
+**/** export-ignore
+
+# Add top-level files
+.bazelignore !export-ignore
+BUILD.bazel !export-ignore
+CHANGELOG.md !export-ignore
+CMakeLists.txt !export-ignore
+CONTRIBUTING.md !export-ignore
+LICENSE !export-ignore
+MANIFEST.in !export-ignore
+README !export-ignore
+README.md !export-ignore
+SECURITY.md !export-ignore
+setup.cfg !export-ignore
+setup.py !export-ignore
+WORKSPACE.bazel !export-ignore
+
+# Add sources
+c !export-ignore
+c/** !export-ignore
+c/common/dictionary.bin* export-ignore
+c/fuzz export-ignore
+
+# Add man pages
+docs !export-ignore
+docs/** !export-ignore
+docs/brotli-comparison-study-2015-09-22.pdf export-ignore
+
+# Add python bindings + tests
+python !export-ignore
+python/** !export-ignore
+
+# Add more build files.
+scripts !export-ignore
+scripts/download_testdata.sh !export-ignore
+scripts/libbrotli*.pc.in !export-ignore
+
+# Add testdata
+tests !export-ignore
+tests/*.sh !export-ignore
+tests/*.cmake !export-ignore
+tests/testdata !export-ignore
+tests/testdata/empty !export-ignore
+tests/testdata/empty.compressed !export-ignore
+tests/testdata/ukkonooa !export-ignore
+tests/testdata/ukkonooa.compressed !export-ignore

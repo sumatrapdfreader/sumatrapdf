@@ -1,0 +1,17 @@
+# Description:
+#   Korlin port of Brotli decoder.
+
+load("@rules_kotlin//kotlin:jvm.bzl", "kt_jvm_library")
+
+package(default_visibility = ["//visibility:public"])
+
+licenses(["notice"])  # MIT
+
+kt_jvm_library(
+    name = "dec",
+    srcs = [
+        "BrotliInputStream.kt",
+        "Decode.kt",
+    ],
+    visibility = ["//visibility:public"],
+)
