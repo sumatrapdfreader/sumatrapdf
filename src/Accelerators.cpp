@@ -104,10 +104,9 @@
     V(VK_DECIMAL, "Decimal")         \
     V(VK_SCROLL, "Scroll")           \
     V(VK_OEM_1, ";")                 \
-    V(VK_OEM_3, "`")
-
-// when user puts e.g. "~" it's actually "`" but with SHIFT
-static const char* shiftKeys = "~`,<.>/?;:'\"-_=+[{]}\\|";
+    V(VK_OEM_3, "`")                 \
+    V(VK_OEM_4, "[")                 \
+    V(VK_OEM_6, "]")
 
 // TOOD: add those as well?
 // #define VK_OEM_5          0xDC  //  '\|' for US
@@ -352,29 +351,6 @@ SeqStrings gVirtKeyNames = VIRT_KEYS(KEY_NAME) "\0";
 WORD gVirtKeysIds[] = {VIRT_KEYS(KEY_ID)};
 #undef KEY_ID
 
-// parses virtual keys like F1, Del, Backspace etc.
-// returns 0 if not a known name of virtual key
-static WORD parseVirtKey(const char* s, bool* addShiftOut) {
-    *addShiftOut = false;
-    char buf[2] = {};
-    const char* toFind = s;
-    if (str::Len(s) == 1) {
-        int idx = str::FindCharIdx(shiftKeys, *s);
-        if ((idx >= 0) && (idx % 2 == 0)) {
-            buf[0] = shiftKeys[idx + 1];
-            toFind = &buf[0];
-            *addShiftOut = true;
-        }
-    }
-    int idx = seqstrings::StrToIdxIS(gVirtKeyNames, toFind);
-    if (idx < 0) {
-        return 0;
-    }
-    ReportIf(idx >= dimofi(gVirtKeysIds));
-    WORD keyId = gVirtKeysIds[idx];
-    return keyId;
-}
-
 // used in menu shortcuts
 static const char* getVirt(BYTE key, bool isEng) {
     // over-rides for non-english languages
@@ -417,15 +393,32 @@ again:
     }
     accel.fVirt = fVirt;
 
-    bool addShift = false;
-    accel.key = parseVirtKey(shortcut, &addShift);
-    if (accel.key != 0) {
-        accel.fVirt |= FVIRTKEY;
-        if (addShift) {
-            accel.fVirt |= FSHIFT;
+    // when user puts e.g. "~" it's actually "`" but with SHIFT
+    static const char* shiftKeys = "~`,<.>/?;:'\"-_=+[{]}\\|";
+    char buf[2] = {};
+    const char* toFind = shortcut;
+    if (str::Len(shortcut) == 1) {
+        int idx = str::FindCharIdx(shiftKeys, *shortcut);
+        if ((idx >= 0) && (idx % 2 == 1)) {
+            buf[0] = shiftKeys[idx - 1];
+            toFind = &buf[0];
+            accel.key = buf[0];
+            accel.fVirt |= (FSHIFT | FVIRTKEY);
         }
+    }
+
+    // check for keys like F1, Del, Backspace etc.
+    int idx = seqstrings::StrToIdxIS(gVirtKeyNames, toFind);
+    if (idx >= 0) {
+        ReportIf(idx >= dimofi(gVirtKeysIds));
+        accel.key = gVirtKeysIds[idx];
+        accel.fVirt |= FVIRTKEY;
         return true;
     }
+    if (toFind != shortcut) {
+        return true;
+    }
+
     // now we expect a character like 'a' or 'P'
     TempStr s = (TempStr)shortcut;
     if (str::Leni(s) > 1) {
@@ -478,7 +471,7 @@ again:
 
     // those correspond to 0...9 keys and require SHIFT
     static const char* shift09 = ")!@#$%^&*(";
-    int idx = str::FindCharIdx(shift09, c);
+    idx = str::FindCharIdx(shift09, c);
     if (idx >= 0) {
         accel.key = ('0' + idx);
         accel.fVirt |= (FSHIFT | FVIRTKEY);
