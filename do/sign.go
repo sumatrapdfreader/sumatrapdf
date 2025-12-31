@@ -34,8 +34,6 @@ func signFiles(dir string, files []string) error {
 
 	desc := "https://www.sumatrapdfreader.org"
 	signServer := "http://time.certum.pl/"
-	//signServer := "http://timestamp.verisign.com/scripts/timstamp.dll"
-	//signServer := "http://timestamp.sectigo.com"
 
 	// retry 3 times because signing might fail due to temorary error
 	// ("The specified timestamp server either could not be reached or")
@@ -45,12 +43,15 @@ func signFiles(dir string, files []string) error {
 		// Note: not signing with sha1 for pre-win-7
 		// We don't support win7 anymore
 
+		// https://files.certum.eu/documents/manual_pl/CS-Code_Signing_w_chmurze_Podpisywanie_signtool_jarsigner.pdf
 		// sign with sha256 for win7+ ater Jan 2016
 		args := []string{"sign",
-			"/t", signServer,
+			"/sha1",
+			"e1e6883f78bf923b92f21a71fd33a452c9ed7dd0",
+			"/tr", signServer,
 			"/du", desc,
-			//"/n", "Open Source Developer, Krzysztof Kowalczyk",
-			"/n", "Beata Bala",
+			//"/n", "Krzysztof Kowalczyk",
+			"/td", "sha256",
 			"/fd", "sha256",
 			"/debug",
 			"/v",
