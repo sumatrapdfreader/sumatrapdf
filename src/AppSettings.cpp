@@ -296,48 +296,80 @@ bool LoadSettings() {
     return true;
 }
 
+static TabState* CloneTabState(const TabState* src) {
+    TabState* dst = (TabState*)AllocStruct<TabState>();
+    dst->filePath = str::Dup(src->filePath);
+    dst->displayMode = str::Dup(src->displayMode);
+    dst->pageNo = src->pageNo;
+    dst->zoom = str::Dup(src->zoom);
+    dst->rotation = src->rotation;
+    dst->scrollPos = src->scrollPos;
+    dst->showToc = src->showToc;
+    dst->tocState = new Vec<int>(*src->tocState);
+    return dst;
+}
+
+Vec<SessionData*>* gInitialSessionData = nullptr;
+
 static void RememberSessionState() {
-    Vec<SessionData*>* sessionData = gGlobalPrefs->sessionData;
-    ResetSessionState(sessionData);
+    Vec<SessionData*>* sessionState = gGlobalPrefs->sessionData;
+    FreeSessionState(sessionState);
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
         return;
     }
 
-    if (gWindows.size() == 0) {
-        return;
-    }
-
     for (auto* win : gWindows) {
-        SessionData* data = NewSessionData();
+        SessionData* windowState = NewSessionData();
         for (WindowTab* tab : win->Tabs()) {
-            if (tab->IsAboutTab()) {
+            if (!tab->filePath) {
+                // home page tab
                 continue;
             }
             const char* fp = tab->filePath;
-            FileState* fs = NewDisplayState(fp);
-            if (tab->ctrl) {
-                tab->ctrl->GetDisplayState(fs);
+            if (!tab->ctrl) {
+                // lazy loading, file not loaded into a tab
+                // use the saved state from previous session
+                // note: might stil have issues if multiple tabs with same file
+                bool didFind = false;
+                int nWindows = gInitialSessionData->Size();
+                for (int i = 0; i < nWindows; i++) {
+                    SessionData* psd = gInitialSessionData->At(i);
+                    int nTabs = psd->tabStates->Size();
+                    for (int j = 0; j < nTabs; j++) {
+                        TabState* pts = psd->tabStates->At(j);
+                        if (str::Eq(pts->filePath, fp)) {
+                            TabState* ts = CloneTabState(pts);
+                            windowState->tabStates->Append(ts);
+                            didFind = true;
+                            break;
+                        }
+                    }
+                }
+                ReportIf(!didFind);
+                continue;
             }
+            FileState* fs = NewDisplayState(fp);
+            tab->ctrl->GetDisplayState(fs);
             fs->showToc = tab->showToc;
             *fs->tocState = tab->tocState;
             TabState* ts = NewTabState(fs);
-            data->tabStates->Append(ts);
+            windowState->tabStates->Append(ts);
             DeleteDisplayState(fs);
         }
-        if (data->tabStates->Size() == 0) {
+        if (windowState->tabStates->Size() == 0) {
             continue;
         }
-        data->tabIndex = win->GetTabIdx(win->CurrentTab()) + 1;
-        if (data->tabIndex < 0) {
-            data->tabIndex = 0;
+        windowState->tabIndex = win->GetTabIdx(win->CurrentTab()) + 1;
+        if (windowState->tabIndex < 0) {
+            windowState->tabIndex = 0;
         }
         // TODO: allow recording this state without changing gGlobalPrefs
         RememberDefaultWindowPosition(win);
-        data->windowState = gGlobalPrefs->windowState;
-        data->windowPos = gGlobalPrefs->windowPos;
-        data->sidebarDx = gGlobalPrefs->sidebarDx;
-        sessionData->Append(data);
+        windowState->windowState = gGlobalPrefs->windowState;
+        windowState->windowPos = gGlobalPrefs->windowPos;
+        windowState->sidebarDx = gGlobalPrefs->sidebarDx;
+        sessionState->Append(windowState);
     }
 }
 

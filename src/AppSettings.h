@@ -11,6 +11,8 @@ enum {
 
 extern bool gDontSaveSettings;
 
+extern Vec<SessionData*>* gInitialSessionData;
+
 TempStr GetSettingsPathTemp();
 TempStr GetSettingsFileNameTemp();
 

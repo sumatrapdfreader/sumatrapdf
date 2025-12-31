@@ -20,8 +20,8 @@
 #include "wingui/WinGui.h"
 
 #include "resource.h"
-#include "AppSettings.h"
 #include "Settings.h"
+#include "AppSettings.h"
 #include "Flags.h"
 #include "Version.h"
 #include "Annotation.h"
