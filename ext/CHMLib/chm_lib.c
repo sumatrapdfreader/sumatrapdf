@@ -1125,11 +1125,14 @@ static int64_t _chm_decompress_region(struct chmFile* h, uint8_t* buf, uint64_t 
     if (nLen > (h->reset_table.block_len - nOffset))
         nLen = h->reset_table.block_len - nOffset;
 
-    /* if block is cached, return data from it. */
-    if (h->cache_block_indices[nBlock % h->cache_num_blocks] == nBlock &&
-        h->cache_blocks[nBlock % h->cache_num_blocks] != NULL) {
-        memcpy(buf, h->cache_blocks[nBlock % h->cache_num_blocks] + nOffset, (unsigned int)nLen);
-        return nLen;
+    /* SumatraPDF: seen in a crash report */
+    if (h->cache_num_blocks > 0) {
+      /* if block is cached, return data from it. */
+      if (h->cache_block_indices[nBlock % h->cache_num_blocks] == nBlock &&
+          h->cache_blocks[nBlock % h->cache_num_blocks] != NULL) {
+          memcpy(buf, h->cache_blocks[nBlock % h->cache_num_blocks] + nOffset, (unsigned int)nLen);
+          return nLen;
+      }
     }
 
     /* data request not satisfied, so... start up the decompressor machine */
