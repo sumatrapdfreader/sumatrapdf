@@ -4266,6 +4266,12 @@ static WCHAR SingleCharLowerW(WCHAR c) {
 }
 
 static void OnFrameKeyEsc(MainWindow* win) {
+    // Check if annotation window is open and close it
+    WindowTab* tab = win->CurrentTab();
+    if (tab && tab->editAnnotsWindow) {
+        CloseAndDeleteEditAnnotationsWindow(tab);
+        return;
+    }
     if (AbortFinding(win, true)) {
         return;
     }

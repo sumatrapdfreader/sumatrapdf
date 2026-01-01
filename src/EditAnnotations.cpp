@@ -425,6 +425,11 @@ static void ButtonSaveToCurrentPDFHandler(EditAnnotationsWindow* ew) {
 bool EditAnnotationsWindow::PreTranslateMessage(MSG& msg) {
     if (msg.message == WM_KEYDOWN) {
         int key = (int)msg.wParam;
+        if (key == VK_ESCAPE) {
+            // Close the annotation window when Esc is pressed
+            CloseAndDeleteEditAnnotationsWindow(this->tab);
+            return true;
+        }
         if (key == VK_DELETE) {
             // we don't want this to trigger in edit control
             HWND focused = ::GetFocus();

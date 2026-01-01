@@ -1063,7 +1063,7 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                     borderWidth = 1; // default
                 }
                 pdf_set_annot_border(ctx, annot, (float)borderWidth);
-                pdf_set_annot_contents(ctx, annot, "This is a text...");
+                pdf_set_annot_contents(ctx, annot, "");
                 int fontSize = a.freeTextSize;
                 if (fontSize <= 0) {
                     fontSize = 12;
