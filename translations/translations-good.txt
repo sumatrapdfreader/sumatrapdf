@@ -15911,6 +15911,15 @@ uk:Перейменувати...
 uz:Qayta &nomlash...
 vn:Đổi &Tên
 :Recently Opened
+br:Abertos Recentemente
+cn:最近打开
+co:Aperti pocu fà
+de:Kürzlich geöffnet
+pl:Ostatnio otwarte
+ro:Deschis recent
+sat:ᱱᱤᱛᱚᱜ ᱠᱷᱩᱞᱟ ᱮᱱᱟ
+sk:Naposledy otvorené
+tw:最近開啟
 :Rect: x=%d y=%d dx=%d dy=%d
 am:Ուղղանկյուն` x=%d y=%d dx=%d dy=%d
 ar:المربع: x=%d y=%d dx=%d dy=%d
