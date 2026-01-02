@@ -35,10 +35,8 @@
 static const char* kNotifUpdateCheckInProgress = "notifUpdateCheckInProgress";
 
 // certificate on www.sumatrapdfreader.org is not supported by win7 and win8.1
-// (doesn't have the ciphers they understand)
-// so we first try sumatra-website.onrender.com which should work
+// (doesn't have the ciphers they understand) so we have a backup on backblaze
 
-// https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt
 // clang-format off
 #if defined(PRE_RELEASE_VER) || defined(DEBUG)
 constexpr const char* kUpdateInfoURL = "https://www.sumatrapdfreader.org/updatecheck-pre-release.txt";
@@ -310,8 +308,9 @@ struct UpdateProgressData {
 struct DownloadUpdateAsyncData {
     HWND hwndForNotif = nullptr;
     UpdateInfo* updateInfo = nullptr;
+    HttpProgress httpProgress = {};
+
     DownloadUpdateAsyncData() = default;
-    HttpProgress httpProgress;
     ~DownloadUpdateAsyncData() {
         delete updateInfo;
     }
