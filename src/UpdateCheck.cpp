@@ -65,12 +65,15 @@ bool gUpdateCheckInProgress = false;
 struct UpdateInfo {
     HWND hwndParent = nullptr;
     const char* latestVer = nullptr;
+
     const char* installer64 = nullptr;
-    const char* installerArm64 = nullptr;
-    const char* installer32 = nullptr;
     const char* portable64 = nullptr;
-    const char* portableArm64 = nullptr;
+
+    const char* installer32 = nullptr;
     const char* portable32 = nullptr;
+
+    const char* installerArm64 = nullptr;
+    const char* portableArm64 = nullptr;
 
     const char* dlURL = nullptr;
     const char* installerPath = nullptr;
@@ -79,11 +82,11 @@ struct UpdateInfo {
     ~UpdateInfo() {
         str::Free(latestVer);
         str::Free(installer64);
-        str::Free(installerArm64);
-        str::Free(installer32);
         str::Free(portable64);
-        str::Free(portableArm64);
+        str::Free(installer32);
         str::Free(portable32);
+        str::Free(installerArm64);
+        str::Free(portableArm64);
         str::Free(dlURL);
         str::Free(installerPath);
     }
@@ -468,15 +471,13 @@ static void BuildUpdateURL(str::Str& url, const char* baseURL, UpdateCheck updat
     url = baseURL;
     url.Append("?v=");
     url.Append(UPDATE_CHECK_VERA);
-    url.Append("&os=");
     char* osVerTemp = GetWindowsVerTemp();
+    url.Append("&os=");
     url.Append(osVerTemp);
     url.Append("&64bit=");
-    if (IsProcess64()) {
-        url.Append("yes");
-    } else {
-        url.Append("no");
-    }
+    url.Append(IsProcess64() ? "yes" : "no");
+    url.Append("&arm=");
+    url.Append(IsArmBuild() ? "yes" : "no");
     const char* lang = trans::GetCurrentLangCode();
     url.Append("&lang=");
     url.Append(lang);
