@@ -3034,8 +3034,6 @@ void TabsCtrl::LayoutTabs() {
     tabSize = {dx, dy};
     // logfa("TabsCtrl::Layout size: (%d, %d), tab size: (%d, %d)\n", rect.dx, rect.dy, tabSize.dx, tabSize.dy);
 
-    HwndTabsSetItemSize(hwnd, tabSize);
-
     int closeDy = DpiScale(hwnd, 8);
     int closeDx = closeDy;
     int closeY = (dy - closeDy) / 2;
@@ -3070,7 +3068,7 @@ void TabsCtrl::LayoutTabs() {
     }
     free(tools);
 
-    HwndScheduleRepaint(hwnd);
+    HwndTabsSetItemSize(hwnd, tabSize);
 }
 
 // Finds the index of the tab, which contains the given point.
@@ -3127,7 +3125,7 @@ bool TabsCtrl::IsValidIdx(int idx) {
     return idx >= 0 && idx < TabCount();
 }
 
-void TabsCtrl::Paint(HDC hdc, RECT& rc) {
+void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     TabsCtrl::MouseState tabState = TabStateFromMousePosition(lastMousePos);
     int tabUnderMouse = tabState.tabIdx;
     bool overClose = tabState.overClose && tabState.tabInfo->canClose;
@@ -3699,8 +3697,11 @@ int TabsCtrl::InsertTab(int idx, TabInfo* tab) {
         return res;
     }
     tabs.InsertAt(idx, tab);
-    SetSelected(idx);
+    // LayoutTabs() must be before SetSelected() because SetSelected()
+    // triggers sync repaint which paints tab texts in wrong positions
+    // because we didn't position them yet in layout.
     LayoutTabs();
+    SetSelected(idx);
     TabsCtrlUpdateAfterChangingTabsCount(this);
     return idx;
 }
