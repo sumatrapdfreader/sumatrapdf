@@ -1618,6 +1618,10 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     bool vScroll = !hScroll;
     bool isCont = !IsContinuous(win->ctrl->GetDisplayMode());
 
+    // Check if both scrollbars are present for 2D scrolling
+    DisplayModel* dm = win->AsFixed();
+    bool enable2DScroll = dm && dm->NeedHScroll() && dm->NeedVScroll();
+
     // logf("delta: %d, accumDelta: %d, hscroll: %d, continuous: %d, gDeltaPerLine: %d\n", (int)delta,
     // win->wheelAccumDelta,
     //      (int)hScroll, (int)isCont, gDeltaPerLine);
@@ -1629,12 +1633,36 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
+    
+    // If 2D scrolling is enabled (both scrollbars present) and shift is not pressed,
+    // accumulate vertical delta and apply both X and Y together for smooth scrolling
+    if (enable2DScroll && !hScroll) {
+        win->wheelAccumDeltaY += delta;
+        
+        // Apply smooth continuous scrolling - process all accumulated deltas
+        // Convert wheel delta to pixels using a responsive multiplier
+        // Standard WHEEL_DELTA is 120, we'll map that to reasonable pixel movement
+        const int pixelsPerWheelDelta = 40; // Adjust this value to change scroll speed
+        
+        int scrollX = (win->wheelAccumDeltaX * pixelsPerWheelDelta) / WHEEL_DELTA;
+        int scrollY = (win->wheelAccumDeltaY * pixelsPerWheelDelta) / WHEEL_DELTA;
+        
+        // Apply the scroll movement - negate Y for natural scrolling direction
+        if (scrollX != 0 || scrollY != 0) {
+            win->MoveDocBy(scrollX, -scrollY);  // Negate only Y for proper direction
+            
+            // Subtract the processed amount from accumulators
+            win->wheelAccumDeltaX -= (scrollX * WHEEL_DELTA) / pixelsPerWheelDelta;
+            win->wheelAccumDeltaY -= (scrollY * WHEEL_DELTA) / pixelsPerWheelDelta;
+        }
+        return 0;
+    }
+    
     if (vScroll && !isCont) {
         constexpr int pageFlipDelta = WHEEL_DELTA * 3;
         float zoomVirt = win->ctrl->GetZoomVirtual();
         // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
         bool flipPage = zoomVirt == kZoomFitContent;
-        DisplayModel* dm = win->AsFixed();
         if (dm && !dm->NeedVScroll()) {
             // if page/pages fully fit in window, flip the whole page
             // logf("  flipping page because !dm->NeedVScroll()\n");
@@ -1695,24 +1723,26 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         }
     }
 
-    win->wheelAccumDelta += delta;
-    int prevScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+    // Legacy scrolling path when 2D scrolling is not enabled
+    int* accumDelta = hScroll ? &win->wheelAccumDeltaX : &win->wheelAccumDeltaY;
+    *accumDelta += delta;
+    int prevScrollPos = GetScrollPos(win->hwndCanvas, hScroll ? SB_HORZ : SB_VERT);
 
     UINT scrollMsg = hScroll ? WM_HSCROLL : WM_VSCROLL;
     bool didScrollByLine = false;
-    if (win->wheelAccumDelta < 0) {
+    if (*accumDelta < 0) {
         WPARAM scrollWp = hScroll ? SB_LINERIGHT : SB_LINEDOWN;
-        while (win->wheelAccumDelta <= -gDeltaPerLine) {
+        while (*accumDelta <= -gDeltaPerLine) {
             SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
-            win->wheelAccumDelta += gDeltaPerLine;
+            *accumDelta += gDeltaPerLine;
             // logf("  line down\n");
             didScrollByLine = true;
         }
     } else {
         WPARAM scrollWp = hScroll ? SB_LINELEFT : SB_LINEUP;
-        while (win->wheelAccumDelta >= gDeltaPerLine) {
+        while (*accumDelta >= gDeltaPerLine) {
             SendMessageW(win->hwndCanvas, scrollMsg, scrollWp, 0);
-            win->wheelAccumDelta -= gDeltaPerLine;
+            *accumDelta -= gDeltaPerLine;
             // logf("  line up\n");
             didScrollByLine = true;
         }
@@ -1732,7 +1762,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         // we don't flip a page if we did scroll by line
         return 0;
     }
-    // logf("  flip page: delta: %d, accumDelta: %d\n", (int)delta, (int)win->wheelAccumDelta);
+    // logf("  flip page: delta: %d, accumDelta: %d\n", (int)delta, (int)*accumDelta);
     if (delta > 0) {
         win->ctrl->GoToPrevPage(true);
     } else {
@@ -1755,15 +1785,42 @@ static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM 
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
-    win->wheelAccumDelta += delta;
-
-    while (win->wheelAccumDelta >= gDeltaPerLine) {
-        SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
-        win->wheelAccumDelta -= gDeltaPerLine;
+    
+    // Check if 2D scrolling is enabled (both scrollbars present)
+    DisplayModel* dm = win->AsFixed();
+    bool enable2DScroll = dm && dm->NeedHScroll() && dm->NeedVScroll();
+    
+    if (enable2DScroll) {
+        // Accumulate horizontal delta for 2D scrolling
+        win->wheelAccumDeltaX += delta;
+        
+        // Apply smooth continuous scrolling - process all accumulated deltas
+        const int pixelsPerWheelDelta = 40; // Match the value in CanvasOnMouseWheel
+        
+        int scrollX = (win->wheelAccumDeltaX * pixelsPerWheelDelta) / WHEEL_DELTA;
+        int scrollY = (win->wheelAccumDeltaY * pixelsPerWheelDelta) / WHEEL_DELTA;
+        
+        // Apply the scroll movement - negate for proper direction
+        if (scrollX != 0 || scrollY != 0) {
+            win->MoveDocBy(scrollX, -scrollY);  // Negate only Y for proper direction
+            
+            // Subtract the processed amount from accumulators
+            win->wheelAccumDeltaX -= (scrollX * WHEEL_DELTA) / pixelsPerWheelDelta;
+            win->wheelAccumDeltaY -= (scrollY * WHEEL_DELTA) / pixelsPerWheelDelta;
+        }
+        return TRUE;
     }
-    while (win->wheelAccumDelta <= -gDeltaPerLine) {
+    
+    // Legacy horizontal-only scrolling when 2D scroll is not enabled
+    win->wheelAccumDeltaX += delta;
+
+    while (win->wheelAccumDeltaX >= gDeltaPerLine) {
+        SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+        win->wheelAccumDeltaX -= gDeltaPerLine;
+    }
+    while (win->wheelAccumDeltaX <= -gDeltaPerLine) {
         SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
-        win->wheelAccumDelta += gDeltaPerLine;
+        win->wheelAccumDeltaX += gDeltaPerLine;
     }
 
     return TRUE;

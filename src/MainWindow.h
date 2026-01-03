@@ -200,7 +200,9 @@ struct MainWindow {
     Rect canvasRc;      // size of the canvas (excluding any scroll bars)
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
-    int wheelAccumDelta = 0;
+    int wheelAccumDelta = 0; // legacy accumulator for page flipping
+    int wheelAccumDeltaX = 0; // horizontal scroll accumulator
+    int wheelAccumDeltaY = 0; // vertical scroll accumulator
     UINT_PTR delayedRepaintTimer = 0;
 
     HANDLE printThread = nullptr;
