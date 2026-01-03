@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f093c58ecb579691a0816f0a1f953aef18dba773
+6d99029c4aea878485bbc20c9d3001f38a75b8e7
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
 ar:شرح %s. مفتاح التحكم Ctrl مع النقر للتحرير.
@@ -18143,7 +18143,9 @@ br:Abertos Recentemente
 cn:最近打开
 co:Aperti pocu fà
 de:Kürzlich geöffnet
+nl:Recent Geopend
 pl:Ostatnio otwarte
+pt:Abertos Recentemente
 ro:Deschis recent
 sat:ᱱᱤᱛᱚᱜ ᱠᱷᱩᱞᱟ ᱮᱱᱟ
 sk:Naposledy otvorené

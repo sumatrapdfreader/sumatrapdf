@@ -15915,7 +15915,9 @@ br:Abertos Recentemente
 cn:最近打开
 co:Aperti pocu fà
 de:Kürzlich geöffnet
+nl:Recent Geopend
 pl:Ostatnio otwarte
+pt:Abertos Recentemente
 ro:Deschis recent
 sat:ᱱᱤᱛᱚᱜ ᱠᱷᱩᱞᱟ ᱮᱱᱟ
 sk:Naposledy otvorené
