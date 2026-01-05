@@ -5983,7 +5983,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!handle) {
                 return 0;
             }
-            Point pt = HwndGetCursorPos(hwnd);
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
             int pageNoUnderCursor = dm->GetPageNoByPoint(pt);
             if (pageNoUnderCursor < 0) {
                 return 0;

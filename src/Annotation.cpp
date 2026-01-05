@@ -1114,8 +1114,18 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
             SetIconName(res, iconName);
         }
     }
+    
+    // Set annotation color
     if (col.parsedOk) {
-        SetColor(res, col.pdfCol);
+        // For FreeText, set transparent background (box color)
+        if (typ == AnnotationType::FreeText) {
+            SetColor(res, 0x00000000);  // Transparent
+        } else {
+            SetColor(res, col.pdfCol);
+        }
+    } else if (typ == AnnotationType::FreeText) {
+        // Even if no color from config, ensure FreeText has transparent background
+        SetColor(res, 0x00000000);  // Transparent
     }
 
     pdf_drop_annot(ctx, annot);
