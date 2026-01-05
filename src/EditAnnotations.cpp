@@ -488,6 +488,10 @@ static PdfColor GetDropDownColor(const char* sv) {
     return col.pdfCol;
 }
 
+// Forward declaration for auto-resize function
+static void AutoResizeFreeTextAnnotation(Annotation* annot, const char* text);
+
+
 // TODO: mupdf shows it in 1.6 but not 1.7. Why?
 bool gShowRect = true;
 
@@ -630,6 +634,13 @@ static void TextFontSizeChanging(EditAnnotationsWindow* ew, Trackbar::PositionCh
     SetDefaultAppearanceTextSize(annot, fontSize);
     TempStr s = str::FormatTemp(_TRA("Text Size: %d"), fontSize);
     ew->staticTextSize->SetText(s);
+    
+    // Auto-resize FreeText annotations when font size changes
+    if (Type(annot) == AnnotationType::FreeText) {
+        TempStr txt = Contents(annot);
+        AutoResizeFreeTextAnnotation(annot, txt);
+    }
+    
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -1000,6 +1011,116 @@ void EditAnnotationsWindow::ListBoxSelectionChanged() {
 static UINT_PTR gMainWindowRerenderTimer = 0;
 static MainWindow* gMainWindowForRender = nullptr;
 
+// Auto-resize FreeText annotation based on content
+static void AutoResizeFreeTextAnnotation(Annotation* annot, const char* text) {
+    if (Type(annot) != AnnotationType::FreeText) {
+        return;
+    }
+    if (!text || !*text) {
+        return;
+    }
+
+    EngineMupdf* engine = annot->engine;
+    if (!engine) {
+        return;
+    }
+
+    auto ctx = engine->Ctx();
+    int pageNo = PageNo(annot);
+    
+    // Get current annotation rect
+    RectF currentRect = GetRect(annot);
+    
+    // Get page bounds to respect page boundaries
+    RectF pageMediabox = engine->PageMediabox(pageNo);
+    
+    // Get font size
+    int fontSize = DefaultAppearanceTextSize(annot);
+    if (fontSize <= 0) {
+        fontSize = 12; // default
+    }
+    
+    // Get border width to account for padding
+    int borderWidth = BorderWidth(annot);
+    if (borderWidth < 0) {
+        borderWidth = 1;
+    }
+    
+    // Calculate text dimensions
+    // Count lines and find maximum line width
+    int lineCount = 1;
+    int maxLineLen = 0;
+    int currentLineLen = 0;
+    
+    for (const char* p = text; *p; p++) {
+        if (*p == '\n') {
+            lineCount++;
+            if (currentLineLen > maxLineLen) {
+                maxLineLen = currentLineLen;
+            }
+            currentLineLen = 0;
+        } else {
+            currentLineLen++;
+        }
+    }
+    if (currentLineLen > maxLineLen) {
+        maxLineLen = currentLineLen;
+    }
+    
+    // Estimate character width (approximate for monospace-like calculation)
+    // For proportional fonts, this is a rough estimate
+    float charWidth = fontSize * 0.6f; // Approximate width per character
+    float lineHeight = fontSize * 1.15f; // Line height with minimal spacing
+    
+    // Calculate required dimensions with minimal padding
+    // Tight padding: just border width + small text margin
+    float horizontalPadding = borderWidth + 4.0f; // Minimal left/right padding
+    float verticalPadding = borderWidth + 2.0f;   // Minimal top/bottom padding
+    float minWidth = 50.0f; // Minimum width
+    float minHeight = fontSize * 1.15f; // Minimum height for one line
+    
+    float requiredWidth = (maxLineLen * charWidth) + horizontalPadding;
+    float requiredHeight = (lineCount * lineHeight) + verticalPadding;
+    
+    // Ensure minimum sizes
+    if (requiredWidth < minWidth) {
+        requiredWidth = minWidth;
+    }
+    if (requiredHeight < minHeight) {
+        requiredHeight = minHeight;
+    }
+    
+    // Create new rect with same position but adjusted size
+    RectF newRect = currentRect;
+    newRect.dx = requiredWidth;
+    newRect.dy = requiredHeight;
+    
+    // Constrain to page bounds
+    if (newRect.x + newRect.dx > pageMediabox.x + pageMediabox.dx) {
+        newRect.dx = (pageMediabox.x + pageMediabox.dx) - newRect.x;
+        if (newRect.dx < minWidth) {
+            newRect.x = (pageMediabox.x + pageMediabox.dx) - minWidth;
+            newRect.dx = minWidth;
+        }
+    }
+    
+    if (newRect.y + newRect.dy > pageMediabox.y + pageMediabox.dy) {
+        newRect.dy = (pageMediabox.y + pageMediabox.dy) - newRect.y;
+        if (newRect.dy < minHeight) {
+            newRect.y = (pageMediabox.y + pageMediabox.dy) - minHeight;
+            newRect.dy = minHeight;
+        }
+    }
+    
+    // Only update if size changed significantly (avoid micro-adjustments)
+    float widthDiff = fabs(newRect.dx - currentRect.dx);
+    float heightDiff = fabs(newRect.dy - currentRect.dy);
+    
+    if (widthDiff > 1.0f || heightDiff > 1.0f) {
+        SetRect(annot, newRect);
+    }
+}
+
 // TODO: there seems to be a leak
 static void ContentsChanged(EditAnnotationsWindow* ew) {
     auto a = ew->tab->selectedAnnotation;
@@ -1011,6 +1132,10 @@ static void ContentsChanged(EditAnnotationsWindow* ew) {
     auto txt = ew->editContents->GetTextTemp();
     txt = str::ReplaceTemp(txt, "\r\n", "\n");
     SetContents(a, txt);
+    
+    // Auto-resize FreeText annotations
+    AutoResizeFreeTextAnnotation(a, txt);
+    
     EnableSaveIfAnnotationsChanged(ew);
 
     MainWindow* win = ew->tab->win;

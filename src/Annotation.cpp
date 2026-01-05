@@ -1043,9 +1043,16 @@ Annotation* EngineMupdfCreateAnnotation(EngineBase* engine, int pageNo, PointF p
                 case AnnotationType::Circle: {
                     fz_rect trect = pdf_annot_rect(ctx, annot);
                     float dx = trect.x1 - trect.x0;
+                    float dy = trect.y1 - trect.y0;
+                    
+                    // For FreeText, start with minimal size
+                    if (typ == AnnotationType::FreeText) {
+                        dx = 50.0f;  // Minimum width
+                        dy = 20.0f;  // Minimum height
+                    }
+                    
                     trect.x0 = pos.x;
                     trect.x1 = trect.x0 + dx;
-                    float dy = trect.y1 - trect.y0;
                     trect.y0 = pos.y;
                     trect.y1 = trect.y0 + dy;
                     pdf_set_annot_rect(ctx, annot, trect);
