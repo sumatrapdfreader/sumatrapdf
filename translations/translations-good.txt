@@ -23,7 +23,7 @@ gl:%s anotación. Ctrl+clic para editar.
 he:%s הערה. כדי לערוך לחץ על Ctrl + קליק.
 hi:%s एनोटेशन । संपादित करने के लिए Ctrl+क्लिक करें।
 hu:Megjegyzés: %s. Szerkesztés: Ctrl+kattintás.
-id:%s anotasi. Ctrl+click untuk mengedit.
+id:Anotasi %s. Ctrl+click untuk mengedit.
 it:Annotazione %s. Ctrl+clic per modificarla.
 ja:%sの注釈です。編集するにはCtrl+左クリック
 kr:%s 주석. Ctrl+클릭으로 편집
@@ -179,7 +179,7 @@ he:הגדרות מתקדמות...
 hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Haladó beállítások…
-id:&Pilihan Lanjutan...
+id:Opsi &Lanjutan...
 it:&Opzioni avanzate...
 ja:詳細設定(&A)
 kr:고급 옵션(&A)...
@@ -291,7 +291,7 @@ he:חזור
 hi:&पीछे
 hr:&Natrag
 hu:&Vissza
-id:Kembali
+id:Kem&bali
 it:&Indietro
 ja:戻る(&B)
 kr:뒤로(&B)
@@ -343,7 +343,7 @@ he:תצוגת ספר
 hi:&बुक व्यू
 hr:&Knjiški pregled
 hu:&Könyvnézet
-id:Tampilan Buku
+id:Tampilan &Buku
 it:Vista &libro
 ja:ブックビュー(&B)
 kr:책처럼 보기(&B)
@@ -396,7 +396,7 @@ he:ביטול
 hi:&रद्द करें
 hr:&Odustani
 hu:&Mégse
-id:&Membatalkan
+id:&Batalkan
 it:&Annulla
 ja:キャンセル(&C)
 kr:취소
@@ -892,7 +892,7 @@ he:זוג עמודים
 hi:&सामना करना
 hr:&Dvije stranice
 hu:Oldal&pár
-id:Menghadap
+id:Ber&hadapan
 it:Pagine a&ffiancate
 ja:見開き(&F)
 kr:두 페이지(&F)
@@ -1983,7 +1983,7 @@ he:אפשרויות
 hi:&विकल्प
 hr:P&ostavke
 hu:&Beállítások
-id:Pilihan
+id:&Opsi
 it:&Opzioni
 ja:オプション(&O)
 kr:옵션(&O)
@@ -2040,7 +2040,7 @@ he:הגדרות...
 hi:&विकल्पों...
 hr:Mogućnosti...
 hu:&Beállítások...
-id:&Pilihan...
+id:&Opsi...
 it:&Opzioni...
 ja:オプション(&O)...
 kr:옵션(&O)...
@@ -3442,7 +3442,7 @@ he:&זום
 hi:&बडा करें
 hr:&Uvećaj
 hu:&Nagyítás
-id:&Perbesar
+id:Perbesa&ran
 it:&Ingrandimento
 ja:ズーム(&Z)
 kr:확대/축소(&Z)
@@ -4069,7 +4069,7 @@ he:הערות
 hi:एनोटेशन
 hr:Bilješke
 hu:Megjegyzések
-id:Catatan
+id:Anotasi
 it:Annotazioni
 ja:注釈
 kr:주석
@@ -4353,7 +4353,7 @@ he:מחבר:
 hi:लेखक:
 hr:Autor:
 hu:Készítő:
-id:Pengarang:
+id:Penulis:
 it:Autore:
 ja:作者:
 kr:저자:
@@ -4693,7 +4693,7 @@ he:קיצורי דרך לסימנייה
 hi:चिन्हित अल्प तरीका
 hr:Prečaci oznaka
 hu:Könyvjelző parancsikonok
-id:Jalan Pintas Markah
+id:Pintasan Markah
 it:Scorciatoie segnalibro
 ja:ショートカットをブックマーク
 kr:북마크 바로가기
@@ -5374,7 +5374,7 @@ he:...מחפש עדכון
 hi:अपडेट की जांच की जा रही है...
 hr:Provjera dostupnosti ažuriranja...
 hu:Frissítés keresése...
-id:Mencari pembaruan...
+id:Memeriksa pembaruan...
 it:Controllo aggiornamenti...
 ja:更新を確認中...
 kr:업데이트를 확인 중입니다...
@@ -5482,7 +5482,7 @@ he:.קבצים, תמונות ממוזערות נמחקו %d נוקתה היסט�
 hi:%d फ़ाइलों का इतिहास साफ़ किया गया, थंबनेल हटाये गये।
 hr:Izbrisana povijest %d datoteka, izbrisane minijature.
 hu:Előzmények törölve (%d fájl), miniatűrök eltávolítva.
-id:Riwayat %d file dibersihkan, thumbnail dihapus.
+id:Riwayat berkas %d dibersihkan, thumbnail dihapus.
 it:Svuotata la cronologia di %d file, anteprime eliminate
 ja:%d 個の履歴を削除し、サムネイルを削除しました。
 kr:%d개 파일 내역 초기화 및 썸네일 삭제.
@@ -6758,7 +6758,7 @@ he:הגישה אל מאפייני המדפסת נכשלה.
 hi:प्रिंटर के गुणों प्राप्त नहीं कर पा रहा
 hr:Nemoguće pribaviti svojstva printera
 hu:A nyomtató tulajdonságai nem érhetőek el
-id:Gagal mendapatkan properti Pencetak
+id:Gagal mendapatkan properti Printer
 it:Impossibile ottenere proprietà stampante
 ja:プリンターのプロパティを開けませんでした
 kr:프린터 속성을 가져올 수 없습니다.
@@ -7381,7 +7381,7 @@ he:צור הערה תחת סמן העכבר
 hi:एनोटेशन और कर्सर के तहत बनाएं
 hr:Napravi bilješku &ispod kursora
 hu:Új megjegyzés &Kurzor alatt
-id:Buat catatan dengan kursor
+id:Buat Anotasi Dibawah &Kursor
 it:Crea annotazione sotto al c&ursore
 ja:注釈をカーソル位置に作成(&U)
 kr:커서 아래 주석 생성(&U)
@@ -7437,7 +7437,7 @@ he:צור הערה מן הבחירה
 hi:चयन से एनोटेशन बनाएं
 hr:Napravite bilješku iz odabira
 hu:Megjegyzés készítése a kiválasztásból
-id:Buat catatan dari pilihan
+id:Buat Anotasi Dari Seleksi
 it:Crea annotazione dalla selezione
 ja:選択範囲に注釈を作成
 kr:선택한 곳에 주석 생성
@@ -7662,7 +7662,7 @@ he:זום מותאם אישית...
 hi:कस्टम &ज़ूम करें...
 hr:Prilagođeno &uvećanje...
 hu:Egyéni &nagyítás…
-id:Kustomisasi & Perbesar...
+id:Kustomisasi & Perbesaran...
 it:&Zoom personalizzato...
 ja:拡大率の指定(&Z)...
 kr:확대/축소 사용자 정의(&Z)...
@@ -8529,7 +8529,7 @@ he:ערוך את הערה %s
 hi:%s एनोटेशन संपादित करें
 hr:Uredi %s bilješku
 hu:%s. megjegyzés szerkesztése
-id:Edit %s Anotasi
+id:Edit Anotasi %s
 it:Modifica annotazione %s
 ja:%sの注釈を編集
 kr:주석 편집 (%s)
@@ -8576,7 +8576,7 @@ he:ערוך הערות
 hi:टिप्पणियां संपादित करें
 hr:Uredi bilješke
 hu:Megjegyzések szerkesztése
-id:Tambah catatan
+id:Edit Anotasi
 it:Modifica annotazioni
 ja:注釈を編集
 kr:주석 편집
@@ -9117,7 +9117,7 @@ he:עמוד לצד עמוד
 hi:पुस्तक
 hr:Dvije stranice
 hu:Oldalpár
-id:Dua Halaman
+id:Berhadapan
 it:Pagine affiancate
 ja:見開き
 kr:두 페이지씩
@@ -12633,7 +12633,7 @@ he:חלון חדש
 hi:नई &विंडो
 hr:Novi p&rozor
 hu:Új &ablak
-id:Halaman Baru
+id:&Jendela Baru
 it:Nuova &finestra
 ja:新しいウィンドウ(&W)
 kr:새 창(&W)
@@ -13498,7 +13498,7 @@ he:הצג את הקובץ בסייר הקבצים
 hi:& एक्सप्लोरर में डायरेक्टरी खोलें
 hr:Otvori direktorij u &Exploreru
 hu:Tároló mappa megnyitása
-id:Buka Direktori di &Explorer
+id:Buka Direktori di E&xplorer
 it:Apri cartella in &Explorer
 ja:エクスプローラーでディレクトリを開く(&E)
 kr:탐색기에서 디렉토리 열기
@@ -15915,6 +15915,8 @@ br:Abertos Recentemente
 cn:最近打开
 co:Aperti pocu fà
 de:Kürzlich geöffnet
+fr:Ouvert récemment
+id:Terakhir Dibuka
 nl:Recent Geopend
 pl:Ostatnio otwarte
 pt:Abertos Recentemente
@@ -16390,7 +16392,7 @@ he:בחירה
 hi:s& चुनाव
 hr:O&dabir
 hu:K&iválasztás
-id:Pilihan
+id:&Seleksi
 it:S&elezione
 ja:選択範囲(&E)
 kr:선택(&E)
@@ -16554,7 +16556,7 @@ he:שמור הערות במסמך PDF קיים
 hi:मौजूदा PDF में नोट करें
 hr:Spremi bilješke u postojeći PDF
 hu:Megjegyzések elmentése a meglévő PDF-be
-id:Simpan catatan ke PDF terkini
+id:Simpan anotasi ke PDF ini
 it:Salva annotazioni in questo PDF
 ja:注釈を上書き保存
 kr:주석을 현재 PDF에 저장하기
@@ -16712,7 +16714,7 @@ he:...שמור קיצור דרך
 hi:शॉर्टकट सहेजें...
 hr:Spre&mi prečac...
 hu:&Prancsikon mentése…
-id:Simpan
+id:&Pintasan Simpan
 it:Sal&va scorciatoia...
 ja:ショートカットを保存(&H)...
 kr:바로가기 저장(&H)...
@@ -16765,7 +16767,7 @@ he:?לשמור הערות
 hi:टिप्पणीया सहेजे?
 hr:Spremi bilješke?
 hu:Megjegyzések mentése?
-id:Simpan catatan?
+id:Simpan anotasi?
 it:Vuoi salvare le annotazioni?
 ja:注釈を保存しますか？
 kr:주석을 저장할까요?
@@ -16877,7 +16879,7 @@ he:קיים PDF שמור שינויים במסמך
 hi:मौजूदा PDF में परिवर्तन करें
 hr:Spremi promjene u postojeći PDF
 hu:Változások mentése a meglévő PDF-be
-id:Simpan perubahan ke PDF terkini
+id:Simpan perubahan ke PDF ini
 it:Salva modifiche in questo PDF
 ja:変更を上書き保存
 kr:기존 PDF에 변경사항 저장
@@ -16988,7 +16990,7 @@ he:'%s' -הערות שנשמרו ב
 hi:टिप्पणियाँ को '%s' में सहेजा गया
 hr:Bilješke spremljene u '%s'
 hu:Mentett megjegyzések ehhez: „%s”
-id:Catatan tersimpan di: %s'
+id:Anotasi tersimpan ke '%s'
 it:Annotazioni salvate in '%s'
 ja:'%s' に注釈を保存しました
 kr:주석을 '%s'에 저장했습니다
@@ -18862,7 +18864,7 @@ he:הגדרות SumatraPDF
 hi:Sumatra पीडीएफ विकल्प
 hr:Mogućnosti programa
 hu:A SumatraPDF beállításai
-id:Pilihan SumatraPDF
+id:Opsi SumatraPDF
 it:Opzioni di SumatraPDF
 ja:SumatraPDF のオプション
 kr:SumatraPDF 옵션
@@ -20107,7 +20109,7 @@ he:הערות שלא נשמרו
 hi:सहेजी न गई टिप्पणियाँ
 hr:Nespremljene bilješke
 hu:Mentetlen megjegyzések
-id:Catatan tidak tersimpan
+id:Anotasi belum tersimpan
 it:Annotazioni non salvate
 ja:未保存の注釈
 kr:저장되지 않은 주석
@@ -20764,7 +20766,7 @@ he:זום
 hi:ज़ूम
 hr:Uvećanje
 hu:Beállít
-id:Sesuaikan
+id:Perbesaran
 it:Zoom
 ja:ズーム
 kr:확대/축소
