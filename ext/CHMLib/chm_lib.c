@@ -1080,6 +1080,12 @@ static int64_t _chm_decompress_block(struct chmFile* h, uint64_t block, uint8_t*
         }
     }
 
+    /* SumatraPDF: prevent division by zero */
+    /* https://github.com/sumatrapdfreader/sumatrapdf/issues/5246 */
+    if (h->cache_num_blocks == 0) {
+        return -1;
+    }
+
     /* allocate slot in cache */
     indexSlot = (int)(block % h->cache_num_blocks);
     if (!h->cache_blocks[indexSlot])
@@ -1118,6 +1124,12 @@ static int64_t _chm_decompress_region(struct chmFile* h, uint8_t* buf, uint64_t 
     if (len <= 0)
         return (int64_t)0;
 
+    /* SumatraPDF: prevent division by zero */
+    /* https://github.com/sumatrapdfreader/sumatrapdf/issues/5246 */
+    if (h->reset_table.block_len == 0) {
+        return (int64_t)0;
+    }
+
     /* figure out what we need to read */
     nBlock = start / h->reset_table.block_len;
     nOffset = start % h->reset_table.block_len;
@@ -1140,6 +1152,12 @@ static int64_t _chm_decompress_region(struct chmFile* h, uint8_t* buf, uint64_t 
         int window_size = ffs(h->window_size) - 1;
         h->lzx_last_block = -1;
         h->lzx_state = LZXinit(window_size);
+    }
+
+    /* SumatraPDF: prevent division by zero in _chm_decompress_block */
+    /* https://github.com/sumatrapdfreader/sumatrapdf/issues/5246 */
+    if (h->reset_blkcount == 0) {
+        return (int64_t)0;
     }
 
     /* decompress some data */
