@@ -307,11 +307,9 @@ static TextEditor editorRules[] = {
     {
         "notepad.exe",
         "\"%f\"",
-        RegType::None,
-        nullptr,
-        nullptr,
-        "notepad.exe",
-        "notepad.exe \"%f\""
+        RegType::BinaryPath,
+        kRegCurrentVer "\\Microsoft\\Windows NT\\CurrentVersion",
+        "SystemRoot"
     }
 };
 
