@@ -534,14 +534,12 @@ static int RunMessageLoop() {
     return (int)msg.wParam;
 }
 
-#if defined(DEBUG)
 static void ShutdownCommon() {
     mui::Destroy();
     uitask::Destroy();
     UninstallCrashHandler();
     dbghelp::FreeCallstackLogs();
 }
-#endif
 
 static void ReplaceColor(char** col, char* maybeColor) {
     ParsedColor c;
@@ -1105,13 +1103,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         ::ExitProcess(exitCode);
     }
 
-#if defined(DEBUG)
-    if (flags.testRenderPage) {
-        TestRenderPage(flags);
-        ShutdownCommon();
-        return 0;
-    }
 
+#if defined(DEBUG)
     if (flags.testExtractPage) {
         TestExtractPage(flags);
         ShutdownCommon();
@@ -1148,6 +1141,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     LoadSettings();
     UpdateGlobalPrefs(flags);
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
+
+    if (flags.testRenderPage) {
+        TestRenderPage(flags);
+        ShutdownCommon();
+        return 0;
+    }
 
     if (flags.showConsole) {
         RedirectIOToConsole();

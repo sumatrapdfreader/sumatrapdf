@@ -692,6 +692,7 @@ function sumatrapdf_files()
     "TableOfContents.*",
     "Tabs.*",
     "Tester.*",
+    "Tests.cpp",
     "TextSearch.*",
     "TextSelection.*",
     "Theme.*",
@@ -708,7 +709,6 @@ function sumatrapdf_files()
   })
   filter {"configurations:Debug or DebugFull"}
     files_in_dir("src", {
-      "Tests.cpp",
       "regress/Regress.*",
       "Scratch.*",
     })
