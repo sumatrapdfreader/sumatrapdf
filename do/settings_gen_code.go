@@ -462,7 +462,7 @@ func updateSumatraWebsite() string {
 		cmd.Dir = dir
 		runCmdLoggedMust(cmd)
 	}
-	dir = filepath.Join(dir, "server", "www")
+	dir = filepath.Join(dir, "www")
 	panicIf(!dirExists(dir), "directory for sumatra website '%s' doesn't exist", dir)
 	return dir
 }

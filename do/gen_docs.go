@@ -593,7 +593,7 @@ func copyDocsToWebsite() {
 	updateSumatraWebsite()
 	srcDir := filepath.Join("docs", "md")
 	websiteDir := getWebsiteDir()
-	dstDir := filepath.Join(websiteDir, "server", "www", "docs-md")
+	dstDir := filepath.Join(websiteDir, "www", "docs-md")
 	must(os.RemoveAll(dstDir))
 
 	copyFilesExtsToNormalizeNL = []string{".md", ".css"}
@@ -602,14 +602,14 @@ func copyDocsToWebsite() {
 	files := []string{"notion.css", "sumatra.css", "gen_toc.js"}
 	for _, name := range files {
 		srcPath := filepath.Join("docs", "www", name)
-		dstPath := filepath.Join(websiteDir, "server", "www", name)
+		dstPath := filepath.Join(websiteDir, "www", name)
 		copyFileMust(dstPath, srcPath)
 	}
 
 	files = []string{"gen_docs.search.js", "gen_docs.search.html"}
 	for _, name := range files {
 		srcPath := filepath.Join("do", name)
-		dstPath := filepath.Join(websiteDir, "server", "www", name)
+		dstPath := filepath.Join(websiteDir, "www", name)
 		copyFileMust(dstPath, srcPath)
 	}
 
