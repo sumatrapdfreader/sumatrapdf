@@ -750,4 +750,3 @@ bool IsSumatraSigned() {
     }
     return gIsSigned ? true : false;
 }
-

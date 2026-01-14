@@ -119,7 +119,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
 
     int currPos = si.nPos;
-    auto ctrl = win->ctrl;
+    auto* ctrl = win->ctrl;
     bool isSinglePageMode = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
 
     if (isSinglePageMode) {
@@ -598,7 +598,6 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     int offsetY = rScreen.y - pt.y;
     win->annotationBeingMovedOffset = Point{offsetX, offsetY};
     DrawMovePattern(win, pt, win->annotationBeingMovedSize);
-    return;
 }
 
 // Helper function to calculate new rectangle during resize
@@ -623,7 +622,7 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
     float deltaY = pagePt.y - startPage.y;
 
     // Ensure minimum size
-    const float minSize = 10.0f;
+    const float minSize = 10.0F;
 
     switch ((ResizeHandle)win->resizeHandle) {
         case ResizeHandle::TopLeft:
@@ -656,9 +655,7 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
             newRect.dx = originalRect.dx + deltaX;
             newRect.dy = originalRect.dy - deltaY;
             // Constrain width (right edge can move freely)
-            if (newRect.dx < minSize) {
-                newRect.dx = minSize;
-            }
+            newRect.dx = std::max(newRect.dx, minSize);
             // Constrain height and adjust y if needed to keep bottom edge fixed
             if (newRect.dy < minSize) {
                 newRect.y = originalRect.y + originalRect.dy - minSize;
@@ -668,27 +665,19 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
         case ResizeHandle::Right:
             newRect.dx = originalRect.dx + deltaX;
             // Constrain width (right edge can move freely)
-            if (newRect.dx < minSize) {
-                newRect.dx = minSize;
-            }
+            newRect.dx = std::max(newRect.dx, minSize);
             break;
         case ResizeHandle::BottomRight:
             newRect.dx = originalRect.dx + deltaX;
             newRect.dy = originalRect.dy + deltaY;
             // Constrain width and height (bottom-right corner can move freely)
-            if (newRect.dx < minSize) {
-                newRect.dx = minSize;
-            }
-            if (newRect.dy < minSize) {
-                newRect.dy = minSize;
-            }
+            newRect.dx = std::max(newRect.dx, minSize);
+            newRect.dy = std::max(newRect.dy, minSize);
             break;
         case ResizeHandle::Bottom:
             newRect.dy = originalRect.dy + deltaY;
             // Constrain height (bottom edge can move freely)
-            if (newRect.dy < minSize) {
-                newRect.dy = minSize;
-            }
+            newRect.dy = std::max(newRect.dy, minSize);
             break;
         case ResizeHandle::BottomLeft:
             newRect.x = originalRect.x + deltaX;
@@ -700,9 +689,7 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
                 newRect.dx = minSize;
             }
             // Constrain height (bottom edge can move freely)
-            if (newRect.dy < minSize) {
-                newRect.dy = minSize;
-            }
+            newRect.dy = std::max(newRect.dy, minSize);
             break;
         case ResizeHandle::Left:
             newRect.x = originalRect.x + deltaX;
@@ -1292,7 +1279,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     }
 
     bool shouldPaint = false;
-    auto gcols = gGlobalPrefs->fixedPageUI.gradientColors;
+    auto* gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = gcols->size();
     if (paintOnBlackWithoutShadow) {
         AutoDeleteBrush brush = CreateSolidBrush(WIN_COL_BLACK);
@@ -1316,8 +1303,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
             colors[2] = ParseColor(gcols->at(2), WIN_COL_WHITE);
         }
         Size size = dm->GetCanvasSize();
-        float percTop = 1.0f * dm->GetViewPort().y / size.dy;
-        float percBot = 1.0f * dm->GetViewPort().BR().y / size.dy;
+        float percTop = 1.0F * dm->GetViewPort().y / size.dy;
+        float percBot = 1.0F * dm->GetViewPort().BR().y / size.dy;
         if (!IsContinuous(dm->GetDisplayMode())) {
             percTop += dm->CurrentPageNo() - 1;
             percTop /= dm->PageCount();
@@ -1331,23 +1318,23 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
         COLORREF col0 = colors[0];
         COLORREF col1 = colors[1];
         COLORREF col2 = colors[2];
-        if (percTop < 0.5f) {
+        if (percTop < 0.5F) {
             GetGradientColor(col0, col1, 2 * percTop, &tv[0]);
         } else {
-            GetGradientColor(col1, col2, 2 * (percTop - 0.5f), &tv[0]);
+            GetGradientColor(col1, col2, 2 * (percTop - 0.5F), &tv[0]);
         }
 
         if (percBot < 0.5f) {
             GetGradientColor(col0, col1, 2 * percBot, &tv[3]);
         } else {
-            GetGradientColor(col1, col2, 2 * (percBot - 0.5f), &tv[3]);
+            GetGradientColor(col1, col2, 2 * (percBot - 0.5F), &tv[3]);
         }
 
-        bool needCenter = percTop < 0.5f && percBot > 0.5f;
+        bool needCenter = percTop < 0.5F && percBot > 0.5F;
         if (needCenter) {
             GetGradientColor(col1, col1, 0, &tv[1]);
             GetGradientColor(col1, col1, 0, &tv[2]);
-            tv[1].y = tv[2].y = (LONG)((0.5f - percTop) / (percBot - percTop) * vp.dy);
+            tv[1].y = tv[2].y = (LONG)((0.5F - percTop) / (percBot - percTop) * vp.dy);
         } else {
             gr[0].LowerRight = 3;
         }
@@ -1365,7 +1352,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
     bool isRtl = IsUIRtl();
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
-        if (!pageInfo || 0.0f == pageInfo->visibleRatio) {
+        if (!pageInfo || 0.0F == pageInfo->visibleRatio) {
             continue;
         }
         ReportIf(!pageInfo->shown);
@@ -1634,10 +1621,10 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     // from delta values that are centered around 0
     bool negative = accumDelta < 0;
 
-    factor = (float)std::abs(accumDelta) / 100.f;
-    factor = 1.f + factor;
+    factor = (float)std::abs(accumDelta) / 100.F;
+    factor = 1.F + factor;
     if (negative) {
-        factor = 1 / factor;
+        factor = 1.F / factor;
     }
     newZoom = initialZoomVritual * factor;
     bool smartZoom = false; // Note: if true will prioritze selection

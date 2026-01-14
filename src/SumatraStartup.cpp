@@ -1103,7 +1103,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
         ::ExitProcess(exitCode);
     }
 
-
 #if defined(DEBUG)
     if (flags.testExtractPage) {
         TestExtractPage(flags);
