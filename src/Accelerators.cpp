@@ -607,7 +607,9 @@ static WORD gNotSafeKeys[] = {
     VK_DELETE,
     VK_BACK,
     VK_HOME,
-    VK_END
+    VK_END,
+    VK_OEM_4,
+    VK_OEM_6
 };
 // clang-format on
 
