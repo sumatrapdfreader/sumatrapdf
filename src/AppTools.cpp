@@ -307,9 +307,9 @@ static TextEditor editorRules[] = {
     {
         "notepad.exe",
         "\"%f\"",
-        RegType::BinaryPath,
-        kRegCurrentVer "\\Microsoft\\Windows NT\\CurrentVersion",
-        "SystemRoot"
+        RegType::BinaryDir,
+        "Software\\Microsoft\\Windows NT\\CurrentVersion",
+        "SystemRoot",
     }
 };
 
@@ -750,3 +750,4 @@ bool IsSumatraSigned() {
     }
     return gIsSigned ? true : false;
 }
+
