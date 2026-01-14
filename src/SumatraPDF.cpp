@@ -2847,6 +2847,9 @@ static bool AppendFileFilterForDoc(DocController* ctrl, str::Str& fileFilter) {
     auto ext = ctrl->GetDefaultFileExt();
     if (str::EqI(ext, ".xps")) {
         fileFilter.Append(_TRA("XPS documents"));
+    } else if (str::EqI(ext, ".epub")) {
+        // .epub can be handled by kindEngineMupdf
+        fileFilter.Append(_TRA("EPUB ebooks"));
     } else if (type == kindEngineDjVu) {
         fileFilter.Append(_TRA("DjVu documents"));
     } else if (type == kindEngineComicBooks) {
