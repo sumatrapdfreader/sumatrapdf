@@ -324,6 +324,8 @@ var (
 			"if true, we show a list of frequently read documents when no document is loaded"),
 		mkField("SidebarDx", Int, 0,
 			"width of favorites/bookmarks sidebar (if shown)"),
+		mkField("ScrollbarInSinglePage", Bool, false,
+			"if true, we show scrollbar in single page mode").setVersion("3.6"),
 		mkField("SmoothScroll", Bool, false,
 			"if true, implements smooth scrolling").setVersion("3.6"),
 		mkField("FastScrollOverScrollbar", Bool, false,

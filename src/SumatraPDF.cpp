@@ -841,7 +841,7 @@ void ControllerCallbackHandler::UpdateScrollbars(Size canvas) {
     ShowScrollBar(win->hwndCanvas, SB_HORZ, showHScroll);
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
 
-    bool isSinglePageMode = (dm->GetDisplayMode() == DisplayMode::SinglePage);
+    bool isSinglePageMode = gGlobalPrefs->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
     bool showVScroll = true;
     if (isSinglePageMode) {
         int pageCount = dm->PageCount();

@@ -120,7 +120,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 
     int currPos = si.nPos;
     auto* ctrl = win->ctrl;
-    bool isSinglePageMode = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    bool isSinglePageMode = gGlobalPrefs->scrollbarInSinglePage && (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
 
     if (isSinglePageMode) {
         // In SinglePage mode, scrollbar position directly corresponds to page number
@@ -1672,7 +1672,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     // Handle page-by-page navigation for non-continuous modes and SinglePage mode
-    bool isSinglePageMode = (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    bool isSinglePageMode =
+        gGlobalPrefs->scrollbarInSinglePage && (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
 
     // For SinglePage mode with content requiring scrolling, use continuous scrolling behavior
     if (isSinglePageMode && vScroll) {
@@ -2131,7 +2132,8 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             }
 
             DisplayModel* dm = win->AsFixed();
-            bool isSinglePage = (dm->GetDisplayMode() == DisplayMode::SinglePage);
+            bool isSinglePage =
+                gGlobalPrefs->scrollbarInSinglePage && (dm->GetDisplayMode() == DisplayMode::SinglePage);
             bool needH = dm->NeedHScroll();
             bool needV = dm->NeedVScroll() || isSinglePage;
             if (!needH && !needV) {
