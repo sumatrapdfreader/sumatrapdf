@@ -934,8 +934,11 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
      * XXX: implement caching scheme for dir pages
      */
 
+    int ok;
+    int32_t new_page;
     int32_t curPage;
     uint8_t* page_buf_end;
+    int max_pages = 2048; /* prevent infinite loops */
     /* buffer to hold whatever page we're looking at */
     /* RWE 6/12/2003 */
     uint8_t* page_buf = malloc(h->block_len);
@@ -947,10 +950,17 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
     curPage = h->index_root;
 
     /* until we have either returned or given up */
-    while (curPage != -1) {
+    while (curPage != -1 && max_pages > 0) {
+        max_pages--;
         /* try to fetch the index page */
-        if (_chm_fetch_bytes(h, page_buf, (uint64_t)h->dir_offset + (uint64_t)curPage * h->block_len, h->block_len) !=
-            h->block_len) {
+        ok = _chm_fetch_bytes(h, page_buf, (uint64_t)h->dir_offset + (uint64_t)curPage * h->block_len, h->block_len) ==
+             h->block_len;
+        if (!ok) {
+            free(page_buf);
+            return CHM_RESOLVE_FAILURE;
+        }
+
+        if (h->block_len < 4) {
             free(page_buf);
             return CHM_RESOLVE_FAILURE;
         }
@@ -968,14 +978,17 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
             _chm_parse_PMGL_entry(&pEntry, page_buf_end, ui);
             free(page_buf);
             return CHM_RESOLVE_SUCCESS;
-        }
-
-        /* else, if it is a branch node: */
-        else if (memcmp(page_buf, _chm_pmgi_marker, 4) == 0)
-            curPage = _chm_find_in_PMGI(page_buf, h->block_len, objPath);
-
-        /* else, we are confused.  give up. */
-        else {
+        } else if (memcmp(page_buf, _chm_pmgi_marker, 4) == 0) {
+            /* else, if it is a branch node: */
+            new_page = _chm_find_in_PMGI(page_buf, h->block_len, objPath);
+            if (new_page == curPage) {
+                /* we are stuck in an infinite loop.  give up. */
+                free(page_buf);
+                return CHM_RESOLVE_FAILURE;
+            }
+            curPage = new_page;
+        } else {
+            /* else, we are confused.  give up. */
             free(page_buf);
             return CHM_RESOLVE_FAILURE;
         }
