@@ -229,8 +229,9 @@ struct AutoFreeWStr {
     }
 
     void SetCopy(const WCHAR* newVal) {
+        WCHAR* w = str::Dup(newVal);
         str::FreePtr(&data);
-        data = str::Dup(newVal);
+        data = w;
     }
 
     // for convenince, we calculate the size if wasn't provided
