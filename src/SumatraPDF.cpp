@@ -3278,6 +3278,37 @@ static void DuplicateInNewWindow(MainWindow* win) {
     DuplicateTabInNewWindow(tab);
 }
 
+// create a new tab in current window and load currently shown document into it
+// meant to make it easy to compare 2 documents side by side
+static void DuplicateInNewTab(MainWindow* win) {
+    if (win->IsCurrentTabAbout()) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* currentTab = win->CurrentTab();
+    if (!currentTab || !currentTab->filePath) {
+        return;
+    }
+
+    const char* path = currentTab->filePath;
+    ReportIf(!path);
+    if (!path) {
+        return;
+    }
+
+    // Save current window/tab state before loading new tab
+    SaveSettings();
+
+    // TODO: should copy the display state from current file
+    LoadArgs args(path, win);
+    args.showWin = true;
+    args.noPlaceWindow = true;
+    args.forceReuse = false; // Force creation of new tab instead of reusing current
+    LoadDocument(&args);
+}
+
 static void GetFilesFromGetOpenFileName(OPENFILENAMEW* ofn, StrVec& filesOut) {
     WCHAR* dir = ofn->lpstrFile;
     WCHAR* file = ofn->lpstrFile + ofn->nFileOffset;
@@ -5249,6 +5280,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdDuplicateInNewWindow:
             DuplicateInNewWindow(win);
+            break;
+
+        case CmdDuplicateInNewTab:
+            DuplicateInNewTab(win);
             break;
 
         case CmdOpenFile:
