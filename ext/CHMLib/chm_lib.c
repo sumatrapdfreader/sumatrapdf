@@ -778,10 +778,10 @@ static void _chm_skip_PMGL_entry_data(uint8_t** pEntry, uint8_t* end) {
 }
 
 /* parse a compressed dword */
-static uint64_t _chm_parse_cword(uint8_t** pEntry) {
+static uint64_t _chm_parse_cword(uint8_t** pEntry, uint8_t* end) {
     uint64_t accum = 0;
-    uint8_t temp;
-    while ((temp = *(*pEntry)++) >= 0x80) {
+    uint8_t temp = 0;
+    while ((*pEntry < end) && (temp = *(*pEntry)++) >= 0x80) {
         accum <<= 7;
         accum += temp & 0x7f;
     }
@@ -802,14 +802,14 @@ static uint64_t _chm_parse_cword_safe(uint8_t** pEntry, uint8_t* end) {
 }
 
 /* parse a utf-8 string into an ASCII char buffer */
-static int _chm_parse_UTF8(uint8_t** pEntry, uint64_t count, char* path) {
+static int _chm_parse_UTF8(uint8_t** pEntry, uint8_t* end, uint64_t count, char* path) {
     /* XXX: implement UTF-8 support, including a real mapping onto
      *      ISO-8859-1?  probably there is a library to do this?  As is
      *      immediately apparent from the below code, I'm presently not doing
      *      any special handling for files in which none of the strings contain
      *      UTF-8 multi-byte characters.
      */
-    while (count != 0) {
+    while (((*pEntry) < end) && (count != 0)) {
         *path++ = (char)(*(*pEntry)++);
         --count;
     }
@@ -819,22 +819,22 @@ static int _chm_parse_UTF8(uint8_t** pEntry, uint64_t count, char* path) {
 }
 
 /* parse a PMGL entry into a chmUnitInfo struct; return 1 on success. */
-static int _chm_parse_PMGL_entry(uint8_t** pEntry, struct chmUnitInfo* ui) {
+static int _chm_parse_PMGL_entry(uint8_t** pEntry, uint8_t* end, struct chmUnitInfo* ui) {
     uint64_t strLen;
 
     /* parse str len */
-    strLen = _chm_parse_cword(pEntry);
+    strLen = _chm_parse_cword(pEntry, end);
     if (strLen > CHM_MAX_PATHLEN)
         return 0;
 
     /* parse path */
-    if (!_chm_parse_UTF8(pEntry, strLen, ui->path))
+    if (!_chm_parse_UTF8(pEntry, end, strLen, ui->path))
         return 0;
 
     /* parse info */
-    ui->space = (int)_chm_parse_cword(pEntry);
-    ui->start = _chm_parse_cword(pEntry);
-    ui->length = _chm_parse_cword(pEntry);
+    ui->space = (int)_chm_parse_cword(pEntry, end);
+    ui->start = _chm_parse_cword(pEntry, end);
+    ui->length = _chm_parse_cword(pEntry, end);
     return 1;
 }
 
@@ -865,7 +865,7 @@ static uint8_t* _chm_find_in_PMGL(uint8_t* page_buf, uint32_t block_len, const c
         strLen = _chm_parse_cword_safe(&cur, end);
         if (strLen > CHM_MAX_PATHLEN)
             return NULL;
-        if (!_chm_parse_UTF8(&cur, strLen, buffer))
+        if (!_chm_parse_UTF8(&cur, end, strLen, buffer))
             return NULL;
 
         /* check if it is the right name */
@@ -901,10 +901,10 @@ static int32_t _chm_find_in_PMGI(uint8_t* page_buf, uint32_t block_len, const ch
     /* now, scan progressively */
     while (cur < end) {
         /* grab the name */
-        strLen = _chm_parse_cword(&cur);
+        strLen = _chm_parse_cword(&cur, end);
         if (strLen > CHM_MAX_PATHLEN)
             return -1;
-        if (!_chm_parse_UTF8(&cur, strLen, buffer))
+        if (!_chm_parse_UTF8(&cur, end, strLen, buffer))
             return -1;
 
         /* check if it is the right name */
@@ -912,7 +912,7 @@ static int32_t _chm_find_in_PMGI(uint8_t* page_buf, uint32_t block_len, const ch
             return page;
 
         /* load next value for path */
-        page = (int)_chm_parse_cword(&cur);
+        page = (int)_chm_parse_cword(&cur, end);
     }
 
     return page;
@@ -925,12 +925,13 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
      */
 
     int32_t curPage;
-
+    uint8_t* page_buf_end;
     /* buffer to hold whatever page we're looking at */
     /* RWE 6/12/2003 */
     uint8_t* page_buf = malloc(h->block_len);
     if (page_buf == NULL)
         return CHM_RESOLVE_FAILURE;
+    page_buf_end = page_buf + h->block_len;
 
     /* starting page */
     curPage = h->index_root;
@@ -954,7 +955,7 @@ int chm_resolve_object(struct chmFile* h, const char* objPath, struct chmUnitInf
             }
 
             /* parse entry and return */
-            _chm_parse_PMGL_entry(&pEntry, ui);
+            _chm_parse_PMGL_entry(&pEntry, page_buf_end, ui);
             free(page_buf);
             return CHM_RESOLVE_SUCCESS;
         }
@@ -1081,8 +1082,7 @@ static int64_t _chm_decompress_block(struct chmFile* h, uint64_t block, uint8_t*
 
                 /* decompress the previous block */
                 if (!_chm_get_cmpblock_bounds(h, curBlockIdx, &cmpStart, &cmpLen) || cmpLen < 0 ||
-                    cmpLen > cbufferLen ||
-                    _chm_fetch_bytes(h, cbuffer, cmpStart, cmpLen) != cmpLen ||
+                    cmpLen > cbufferLen || _chm_fetch_bytes(h, cbuffer, cmpStart, cmpLen) != cmpLen ||
                     LZXdecompress(h->lzx_state, cbuffer, lbuffer, (int)cmpLen, (int)h->reset_table.block_len) !=
                         DECR_OK) {
                     free(cbuffer);
@@ -1118,8 +1118,7 @@ static int64_t _chm_decompress_block(struct chmFile* h, uint64_t block, uint8_t*
 
     /* decompress the block we actually want */
     ok = _chm_get_cmpblock_bounds(h, block, &cmpStart, &cmpLen);
-    if (!ok || cmpLen > cbufferLen ||
-        _chm_fetch_bytes(h, cbuffer, cmpStart, cmpLen) != cmpLen ||
+    if (!ok || cmpLen > cbufferLen || _chm_fetch_bytes(h, cbuffer, cmpStart, cmpLen) != cmpLen ||
         LZXdecompress(h->lzx_state, cbuffer, lbuffer, (int)cmpLen, (int)h->reset_table.block_len) != DECR_OK) {
         free(cbuffer);
         return (int64_t)0;
@@ -1285,7 +1284,7 @@ int chm_enumerate(struct chmFile* h, int what, CHM_ENUMERATOR e, void* context) 
         while (cur < end) {
             ui.flags = 0;
 
-            if (!_chm_parse_PMGL_entry(&cur, &ui)) {
+            if (!_chm_parse_PMGL_entry(&cur, end, &ui)) {
                 free(page_buf);
                 return 0;
             }
@@ -1415,7 +1414,7 @@ int chm_enumerate_dir(struct chmFile* h, const char* prefix, int what, CHM_ENUME
         while (cur < end) {
             ui.flags = 0;
 
-            if (!_chm_parse_PMGL_entry(&cur, &ui)) {
+            if (!_chm_parse_PMGL_entry(&cur, end, &ui)) {
                 free(page_buf);
                 return 0;
             }
