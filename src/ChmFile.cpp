@@ -384,7 +384,8 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, uint cp, 
         } else if (str::EqI(attrName, L"Local")) {
             // remove the ITS protocol and any filename references from the URLs
             if (str::Find(attrVal, L"::/")) {
-                attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
+                const WCHAR* v = str::Find(attrVal, L"::/") + 3;
+                attrVal.SetCopy(v);
             }
             local.Set(attrVal.StealData());
         }
