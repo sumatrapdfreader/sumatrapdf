@@ -529,16 +529,17 @@ struct chmFile* chm_open(const char* d, size_t len) {
     unsigned int sremain;
     uint8_t* sbufpos;
     struct chmFile* newHandle = NULL;
-    struct chmItsfHeader itsfHeader;
-    struct chmItspHeader itspHeader;
+    struct chmItsfHeader itsfHeader = {0};
+    struct chmItspHeader itspHeader = {0};
 #if 0
     struct chmUnitInfo          uiSpan;
 #endif
     struct chmUnitInfo uiLzxc = {0};
     struct chmLzxcControlData ctlData;
+    int ok;
 
     /* allocate handle */
-    newHandle = (struct chmFile*)malloc(sizeof(struct chmFile));
+    newHandle = (struct chmFile*)calloc(sizeof(struct chmFile), 1);
     if (newHandle == NULL)
         return NULL;
     newHandle->data = d;
@@ -551,8 +552,11 @@ struct chmFile* chm_open(const char* d, size_t len) {
     /* read and verify header */
     sremain = _CHM_ITSF_V3_LEN;
     sbufpos = sbuffer;
-    if (_chm_fetch_bytes(newHandle, sbuffer, (uint64_t)0, sremain) != sremain ||
-        !_unmarshal_itsf_header(&sbufpos, &sremain, &itsfHeader)) {
+    ok = _chm_fetch_bytes(newHandle, sbuffer, (uint64_t)0, sremain) == sremain;
+    if (ok) {
+        ok = _unmarshal_itsf_header(&sbufpos, &sremain, &itsfHeader);
+    }
+    if (!ok) {
         chm_close(newHandle);
         return NULL;
     }
@@ -565,8 +569,11 @@ struct chmFile* chm_open(const char* d, size_t len) {
     /* now, read and verify the directory header chunk */
     sremain = _CHM_ITSP_V1_LEN;
     sbufpos = sbuffer;
-    if (_chm_fetch_bytes(newHandle, sbuffer, (uint64_t)itsfHeader.dir_offset, sremain) != sremain ||
-        !_unmarshal_itsp_header(&sbufpos, &sremain, &itspHeader)) {
+    ok = _chm_fetch_bytes(newHandle, sbuffer, (uint64_t)itsfHeader.dir_offset, sremain) == sremain;
+    if (ok) {
+        ok = _unmarshal_itsp_header(&sbufpos, &sremain, &itspHeader);
+    }
+    if (!ok) {
         chm_close(newHandle);
         return NULL;
     }
@@ -628,8 +635,11 @@ struct chmFile* chm_open(const char* d, size_t len) {
     if (newHandle->compression_enabled) {
         sremain = _CHM_LZXC_RESETTABLE_V1_LEN;
         sbufpos = sbuffer;
-        if (chm_retrieve_object(newHandle, &newHandle->rt_unit, sbuffer, 0, sremain) != sremain ||
-            !_unmarshal_lzxc_reset_table(&sbufpos, &sremain, &newHandle->reset_table)) {
+        ok = chm_retrieve_object(newHandle, &newHandle->rt_unit, sbuffer, 0, sremain) == sremain;
+        if (ok) {
+            ok = _unmarshal_lzxc_reset_table(&sbufpos, &sremain, &newHandle->reset_table);
+        }
+        if (!ok) {
             newHandle->compression_enabled = 0;
         }
     }
