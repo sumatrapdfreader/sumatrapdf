@@ -765,16 +765,16 @@ void chm_set_param(struct chmFile* h, int paramType, int paramVal) {
  */
 
 /* skip a compressed dword */
-static void _chm_skip_cword(uint8_t** pEntry) {
-    while (*(*pEntry)++ >= 0x80)
+static void _chm_skip_cword(uint8_t** pEntry, uint8_t* end) {
+    while ((*pEntry < end) && *(*pEntry)++ >= 0x80)
         ;
 }
 
 /* skip the data from a PMGL entry */
-static void _chm_skip_PMGL_entry_data(uint8_t** pEntry) {
-    _chm_skip_cword(pEntry);
-    _chm_skip_cword(pEntry);
-    _chm_skip_cword(pEntry);
+static void _chm_skip_PMGL_entry_data(uint8_t** pEntry, uint8_t* end) {
+    _chm_skip_cword(pEntry, end);
+    _chm_skip_cword(pEntry, end);
+    _chm_skip_cword(pEntry, end);
 }
 
 /* parse a compressed dword */
@@ -782,6 +782,18 @@ static uint64_t _chm_parse_cword(uint8_t** pEntry) {
     uint64_t accum = 0;
     uint8_t temp;
     while ((temp = *(*pEntry)++) >= 0x80) {
+        accum <<= 7;
+        accum += temp & 0x7f;
+    }
+
+    return (accum << 7) + temp;
+}
+
+/* parse a compressed dword */
+static uint64_t _chm_parse_cword_safe(uint8_t** pEntry, uint8_t* end) {
+    uint64_t accum = 0;
+    uint8_t temp = 0;
+    while ((*pEntry < end) && (temp = *(*pEntry)++) >= 0x80) {
         accum <<= 7;
         accum += temp & 0x7f;
     }
@@ -850,7 +862,7 @@ static uint8_t* _chm_find_in_PMGL(uint8_t* page_buf, uint32_t block_len, const c
     while (cur < end) {
         /* grab the name */
         temp = cur;
-        strLen = _chm_parse_cword(&cur);
+        strLen = _chm_parse_cword_safe(&cur, end);
         if (strLen > CHM_MAX_PATHLEN)
             return NULL;
         if (!_chm_parse_UTF8(&cur, strLen, buffer))
@@ -860,7 +872,7 @@ static uint8_t* _chm_find_in_PMGL(uint8_t* page_buf, uint32_t block_len, const c
         if (!_stricmp(buffer, objPath))
             return temp;
 
-        _chm_skip_PMGL_entry_data(&cur);
+        _chm_skip_PMGL_entry_data(&cur, end);
     }
 
     return NULL;
