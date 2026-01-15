@@ -451,7 +451,7 @@ bool ChmModel::OnBeforeNavigate(const char* url, bool newWindow) {
     // instead pass the URL to the system's default browser
     if (url && cb) {
         // TODO: optimize, create just destination
-        auto item = NewChmTocItem(nullptr, nullptr, 0, url);
+        auto item = NewChmTocItem(nullptr, nullptr, 1, url);
         cb->GotoLink(item->dest);
         delete item;
     }
