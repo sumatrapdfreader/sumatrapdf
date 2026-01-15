@@ -509,16 +509,17 @@ struct chmFile {
     int32_t cache_num_blocks;
 };
 
-static int64_t _chm_fetch_bytes(struct chmFile* h, uint8_t* buf, uint64_t os, int64_t len) {
-    // Add negative length check
+static int64_t _chm_fetch_bytes(struct chmFile* h, uint8_t* buf, uint64_t offset, int64_t len) {
     if (len <= 0) {
         return 0;
     }
-    // Fix overflow-safe bounds check
-    if (os > h->data_len || (uint64_t)len > h->data_len - os) {
+    if (offset > h->data_len) {
         return 0;
     }
-    memcpy(buf, h->data + os, (size_t)len);
+    if ((uint64_t)len > h->data_len - offset) {
+        return 0;
+    }
+    memcpy(buf, h->data + offset, (size_t)len);
     return len;
 }
 
@@ -1024,13 +1025,18 @@ static int _chm_get_cmpblock_bounds(struct chmFile* h, uint64_t block, uint64_t*
 
 /* decompress the block.  must have lzx_mutex. */
 static int64_t _chm_decompress_block(struct chmFile* h, uint64_t block, uint8_t** ubuffer) {
-    uint8_t* cbuffer = malloc(((unsigned int)h->reset_table.block_len + 6144));
+    uint8_t* cbuffer;
+    uint64_t cbufferLen;
     uint64_t cmpStart;                                           /* compressed start  */
     int64_t cmpLen;                                              /* compressed len    */
     int indexSlot;                                               /* cache index slot  */
     uint8_t* lbuffer;                                            /* local buffer ptr  */
     uint32_t blockAlign = (uint32_t)(block % h->reset_blkcount); /* reset intvl. aln. */
     uint32_t i;                                                  /* local loop index  */
+    int ok;
+
+    cbufferLen = h->reset_table.block_len + 6144;
+    cbuffer = malloc(cbufferLen);
 
     if (cbuffer == NULL)
         return -1;
@@ -1063,7 +1069,7 @@ static int64_t _chm_decompress_block(struct chmFile* h, uint64_t block, uint8_t*
 
                 /* decompress the previous block */
                 if (!_chm_get_cmpblock_bounds(h, curBlockIdx, &cmpStart, &cmpLen) || cmpLen < 0 ||
-                    cmpLen > h->reset_table.block_len + 6144 ||
+                    cmpLen > cbufferLen ||
                     _chm_fetch_bytes(h, cbuffer, cmpStart, cmpLen) != cmpLen ||
                     LZXdecompress(h->lzx_state, cbuffer, lbuffer, (int)cmpLen, (int)h->reset_table.block_len) !=
                         DECR_OK) {
@@ -1099,7 +1105,8 @@ static int64_t _chm_decompress_block(struct chmFile* h, uint64_t block, uint8_t*
     *ubuffer = lbuffer;
 
     /* decompress the block we actually want */
-    if (!_chm_get_cmpblock_bounds(h, block, &cmpStart, &cmpLen) ||
+    ok = _chm_get_cmpblock_bounds(h, block, &cmpStart, &cmpLen);
+    if (!ok || cmpLen > cbufferLen ||
         _chm_fetch_bytes(h, cbuffer, cmpStart, cmpLen) != cmpLen ||
         LZXdecompress(h->lzx_state, cbuffer, lbuffer, (int)cmpLen, (int)h->reset_table.block_len) != DECR_OK) {
         free(cbuffer);
