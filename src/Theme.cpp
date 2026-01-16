@@ -203,7 +203,7 @@ void SetThemeByIndex(int themeIdx) {
         const UINT mode = static_cast<UINT>(isDarkCol         ? DarkMode::DarkModeType::dark
                                             : (themeIdx == 0) ? DarkMode::DarkModeType::classic
                                                               : DarkMode::DarkModeType::light);
-        DarkMode::setDarkModeConfig(mode);
+        DarkMode::setDarkModeConfigEx(mode);
         DarkMode::setDefaultColors(false);
 
         DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());

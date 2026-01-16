@@ -1,0 +1,40 @@
+#include <windows.h>
+#include "Version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION DM_VERSION_MAJOR, DM_VERSION_MINOR, DM_VERSION_REVISION, 0
+ PRODUCTVERSION DM_VERSION_MAJOR, DM_VERSION_MINOR, DM_VERSION_REVISION, 0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L  // DLL
+ FILESUBTYPE 0x0L
+BEGIN
+BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "ozone10"
+            VALUE "FileDescription", "Darkmodelib - dark mode and custom color support library for win32 common controls"
+            VALUE "FileVersion", STR(DM_VERSION_MAJOR) "." STR(DM_VERSION_MINOR) "." STR(DM_VERSION_REVISION)
+            VALUE "InternalName", "darkmode.dll"
+            VALUE "LegalCopyright", DM_COPYRIGHT
+            VALUE "OriginalFilename", "darkmode.dll"
+            VALUE "ProductName", "Darkmodelib"
+            VALUE "ProductVersion", STR(DM_VERSION_MAJOR) "." STR(DM_VERSION_MINOR) "." STR(DM_VERSION_REVISION)
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

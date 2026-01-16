@@ -61,8 +61,8 @@ function brotli_files()
     "*.c",
   })
   files_in_dir("ext/brotli/c/enc", {
-     "*.h",
-     "*.c",
+    "*.h",
+    "*.c",
   })
 end
 
@@ -222,7 +222,6 @@ function unarr_no_lzma_files()
   unarrr_lzmasdk_files()
 end
 
-
 function unarr_no_bzip_files()
   files {
     "ext/unarr/common/*",
@@ -274,7 +273,6 @@ function libheif_files()
     "heif_plugin_registry.*",
     "nclx.*",
   })
-
 end
 
 function dav1d_x68_files()
@@ -371,7 +369,7 @@ function dav1d_files()
 end
 
 function openjpeg_files()
-  files_in_dir( "ext/openjpeg/src/lib/openjp2", {
+  files_in_dir("ext/openjpeg/src/lib/openjp2", {
     "bio.c",
     "cidx_manager.c",
     "cio.c",
@@ -487,31 +485,31 @@ function libjpeg_turbo_files()
     "jcmaster.c", "jcparam.c", "jcprepct.c", "jcsample.c", "jcphuff.c"
   })
 
-  filter {'platforms:arm64'}
-    files {"ext/libjpeg-turbo/jsimd_none.c"}
+  filter { 'platforms:arm64' }
+  files { "ext/libjpeg-turbo/jsimd_none.c" }
 
-  filter {'platforms:x32'}
-    files_in_dir("ext/libjpeg-turbo/simd", {
-      "jsimdcpu.asm", "jccolmmx.asm", "jcgrammx.asm", "jdcolmmx.asm",
-    	"jcsammmx.asm", "jdsammmx.asm", "jdmermmx.asm", "jcqntmmx.asm",
-    	"jfmmxfst.asm", "jfmmxint.asm", "jimmxred.asm", "jimmxint.asm",
-    	"jimmxfst.asm", "jcqnt3dn.asm", "jf3dnflt.asm", "ji3dnflt.asm",
-    	"jcqntsse.asm", "jfsseflt.asm", "jisseflt.asm", "jccolss2.asm",
-    	"jcgrass2.asm", "jdcolss2.asm", "jcsamss2.asm", "jdsamss2.asm",
-    	"jdmerss2.asm", "jcqnts2i.asm", "jfss2fst.asm", "jfss2int.asm",
-    	"jiss2red.asm", "jiss2int.asm", "jiss2fst.asm", "jcqnts2f.asm",
-    	"jiss2flt.asm",
-    })
-    files {"ext/libjpeg-turbo/simd/jsimd_i386.c"}
+  filter { 'platforms:x32' }
+  files_in_dir("ext/libjpeg-turbo/simd", {
+    "jsimdcpu.asm", "jccolmmx.asm", "jcgrammx.asm", "jdcolmmx.asm",
+    "jcsammmx.asm", "jdsammmx.asm", "jdmermmx.asm", "jcqntmmx.asm",
+    "jfmmxfst.asm", "jfmmxint.asm", "jimmxred.asm", "jimmxint.asm",
+    "jimmxfst.asm", "jcqnt3dn.asm", "jf3dnflt.asm", "ji3dnflt.asm",
+    "jcqntsse.asm", "jfsseflt.asm", "jisseflt.asm", "jccolss2.asm",
+    "jcgrass2.asm", "jdcolss2.asm", "jcsamss2.asm", "jdsamss2.asm",
+    "jdmerss2.asm", "jcqnts2i.asm", "jfss2fst.asm", "jfss2int.asm",
+    "jiss2red.asm", "jiss2int.asm", "jiss2fst.asm", "jcqnts2f.asm",
+    "jiss2flt.asm",
+  })
+  files { "ext/libjpeg-turbo/simd/jsimd_i386.c" }
 
-  filter {'platforms:x64 or x64_asan'}
-    files_in_dir("ext/libjpeg-turbo/simd", {
-      "jfsseflt-64.asm", "jccolss2-64.asm", "jdcolss2-64.asm", "jcgrass2-64.asm",
-    	"jcsamss2-64.asm", "jdsamss2-64.asm", "jdmerss2-64.asm", "jcqnts2i-64.asm",
-    	"jfss2fst-64.asm", "jfss2int-64.asm", "jiss2red-64.asm", "jiss2int-64.asm",
-    	"jiss2fst-64.asm", "jcqnts2f-64.asm", "jiss2flt-64.asm",
-    })
-    files {"ext/libjpeg-turbo/simd/jsimd_x86_64.c"}
+  filter { 'platforms:x64 or x64_asan' }
+  files_in_dir("ext/libjpeg-turbo/simd", {
+    "jfsseflt-64.asm", "jccolss2-64.asm", "jdcolss2-64.asm", "jcgrass2-64.asm",
+    "jcsamss2-64.asm", "jdsamss2-64.asm", "jdmerss2-64.asm", "jcqnts2i-64.asm",
+    "jfss2fst-64.asm", "jfss2int-64.asm", "jiss2red-64.asm", "jiss2int-64.asm",
+    "jiss2fst-64.asm", "jcqnts2f-64.asm", "jiss2flt-64.asm",
+  })
+  files { "ext/libjpeg-turbo/simd/jsimd_x86_64.c" }
 
   filter {}
 end
@@ -520,7 +518,7 @@ function lcms2_files()
   files_in_dir("ext/lcms2/src", {
     "*.c", "*.h"
   })
-  files{ "ext/lcms/include.*.h" }
+  files { "ext/lcms/include.*.h" }
 end
 
 function harfbuzz_files()
@@ -707,24 +705,24 @@ function sumatrapdf_files()
 
     "scratch.txt",
   })
-  filter {"configurations:Debug or DebugFull"}
-    files_in_dir("src", {
-      "regress/Regress.*",
-      "Scratch.*",
-    })
-    files_in_dir("src/testcode", {
-      "test-app.h",
-      "TestApp.cpp",
-      "TestTab.cpp",
-      "TestLayout.cpp",
-      --"TestLice.cpp",
-    })
-    files_in_dir("src/utils/tests", {
-      "*.cpp",
-    })
-    files_in_dir("src/utils", {
-        "UtAssert.*",
-    })
+  filter { "configurations:Debug or DebugFull" }
+  files_in_dir("src", {
+    "regress/Regress.*",
+    "Scratch.*",
+  })
+  files_in_dir("src/testcode", {
+    "test-app.h",
+    "TestApp.cpp",
+    "TestTab.cpp",
+    "TestLayout.cpp",
+    --"TestLice.cpp",
+  })
+  files_in_dir("src/utils/tests", {
+    "*.cpp",
+  })
+  files_in_dir("src/utils", {
+    "UtAssert.*",
+  })
   filter {}
 end
 
@@ -740,12 +738,16 @@ end
 
 function darkmodelib_files()
   files_in_dir("ext/darkmodelib/src", {
-    "DarkMode.*",
     "DarkModeSubclass.cpp",
-    "IatHook.h",
-    "StdAfx.h",
-    "UAHMenuBar.h",
-    "Version.h",
+    "DmlibColor.cpp",
+    "DmlibDpi.cpp",
+    "DmlibHook.cpp",
+    "DmlibPaintHelper.cpp",
+    "DmlibSubclass.cpp",
+    "DmlibSubclassControl.cpp",
+    "DmlibSubclassWindow.cpp",
+    "DmlibWinApi.cpp",
+    "*.h",
   })
   files_in_dir("ext/darkmodelib/include", {
     "DarkModeSubclass.h",
@@ -807,10 +809,10 @@ function utils_files()
     "WinUtil.*",
     "ZipUtil.*",
   })
-  filter {"configurations:Debug or DebugFull"}
-    files_in_dir("src/utils", {
-      "windrawlib.*",
-    })
+  filter { "configurations:Debug or DebugFull" }
+  files_in_dir("src/utils", {
+    "windrawlib.*",
+  })
   filter {}
 end
 
@@ -854,7 +856,7 @@ end
 function chm_files()
   files_in_dir("ext/CHMLib/src", {
     "chm_lib.c",
-    "lzx.c" ,
+    "lzx.c",
   })
 end
 
@@ -1135,32 +1137,32 @@ end
 
 function mutools_files()
   files_in_dir("mupdf/source/tools", {
-      "mudraw.c",
-      "mutool.c",
-      "pdfclean.c",
-      "pdfextract.c",
-      "pdfinfo.c",
-      "pdfposter.c",
-      "pdfshow.c",
+    "mudraw.c",
+    "mutool.c",
+    "pdfclean.c",
+    "pdfextract.c",
+    "pdfinfo.c",
+    "pdfposter.c",
+    "pdfshow.c",
   })
 end
 
 function mutool_files()
   mudoc_files() -- TODO: could turn into a .lib
   files_in_dir("mupdf/source/tools", {
-      "mutool.c",
-      "pdfshow.c",
-      "pdfclean.c",
-      "pdfinfo.c",
-      "pdfextract.c",
-      "pdfposter.c",
+    "mutool.c",
+    "pdfshow.c",
+    "pdfclean.c",
+    "pdfinfo.c",
+    "pdfextract.c",
+    "pdfposter.c",
   })
 end
 
 function mudraw_files()
   mudoc_files()
   files_in_dir("mupdf/source/tools", {
-      "mudraw.c",
+    "mudraw.c",
   })
 end
 
@@ -1191,7 +1193,7 @@ function sizer_files()
 end
 
 function test_util_files()
-  files_in_dir( "src/utils", {
+  files_in_dir("src/utils", {
     "BaseUtil.*",
     "BitManip.*",
     "ByteOrderDecoder.*",
@@ -1239,10 +1241,10 @@ function test_util_files()
 end
 
 function plugin_test_files()
-    files {
-        "src/tools/plugin-test.cpp",
-        "src/CrashHandlerNoOp.cpp"
-    }
+  files {
+    "src/tools/plugin-test.cpp",
+    "src/CrashHandlerNoOp.cpp"
+  }
 end
 
 function pdf_preview_files()
@@ -1301,16 +1303,16 @@ function search_filter_files()
     "RegistrySearchFilter.*",
   })
 
-  filter {"configurations:Debug or DebugFull"}
-    files_in_dir("src/ifilter", {
-      "TeXFilter.*",
-      "EpubFilter.*",
-    })
-    files {
-      "src/EbookDoc.*",
-      "src/MobiDoc.*",
-      "src/PalmDbReader.*",
-    }
+  filter { "configurations:Debug or DebugFull" }
+  files_in_dir("src/ifilter", {
+    "TeXFilter.*",
+    "EpubFilter.*",
+  })
+  files {
+    "src/EbookDoc.*",
+    "src/MobiDoc.*",
+    "src/PalmDbReader.*",
+  }
   filter {}
 end
 

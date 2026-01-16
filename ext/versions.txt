@@ -73,6 +73,6 @@ dav1d           trunk      2022-05-28
 libheif         trunk      2022-05-30
   https://github.com/strukturag/libheif
 
-darkmodelib     trunk      2025-02-07
+darkmodelib     trunk      2026-01-16
   https://github.com/ozone10/darkmodelib
-  https://github.com/ozone10/darkmodelib/commit/eaadb15
+  https://github.com/ozone10/darkmodelib/commit/57cc10c819d17c47b6afd295b424153082144193

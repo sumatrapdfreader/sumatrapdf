@@ -1580,7 +1580,7 @@ static MainWindow* CreateMainWindow() {
         DarkMode::setChildCtrlsSubclassAndTheme(win->hwndFrame);
         DarkMode::removeTabCtrlSubclass(win->tabsCtrl->hwnd);
         DarkMode::setDarkScrollBar(win->hwndCanvas);
-        DarkMode::setDarkTooltips(win->infotip->hwnd);
+        DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
     }
     return win;
 }
@@ -1657,7 +1657,7 @@ void UpdateAfterThemeChange() {
             DarkMode::setDarkTitleBar(win->hwndFrame);
             DarkMode::setChildCtrlsTheme(win->hwndFrame);
             DarkMode::setDarkScrollBar(win->hwndCanvas);
-            DarkMode::setDarkTooltips(win->infotip->hwnd);
+            DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
         }
         // TODO: this only rerenders canvas, not frame, even with
         // includingNonClientArea == true.

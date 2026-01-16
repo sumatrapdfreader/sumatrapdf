@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project=".\darkmodelib.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{c08c7f8c-c0bf-4af8-a333-9948017b462b}</ProjectGuid>
+    <RootNamespace>darkmodelib</RootNamespace>
+    <ProjectName>darkmodelib</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project=".\darkmodelib.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\build\lib\$(Platform)-$(Configuration)\</OutDir>
+    <IntDir>..\build\obj\$(Platform)-$(Configuration)\</IntDir>
+    <TargetName>darkmode</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\build\lib\$(Platform)-$(Configuration)\</OutDir>
+    <IntDir>..\build\obj\$(Platform)-$(Configuration)\</IntDir>
+    <TargetName>darkmode</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\build\lib\$(Platform)-$(Configuration)\</OutDir>
+    <IntDir>..\build\obj\$(Platform)-$(Configuration)\</IntDir>
+    <TargetName>darkmode</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\build\lib\$(Platform)-$(Configuration)\</OutDir>
+    <IntDir>..\build\obj\$(Platform)-$(Configuration)\</IntDir>
+    <TargetName>darkmode</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>..\build\lib\$(Platform)-$(Configuration)\</OutDir>
+    <IntDir>..\build\obj\$(Platform)-$(Configuration)\</IntDir>
+    <TargetName>darkmode</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <OutDir>..\build\lib\$(Platform)-$(Configuration)\</OutDir>
+    <IntDir>..\build\obj\$(Platform)-$(Configuration)\</IntDir>
+    <TargetName>darkmode</TargetName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\DarkModeSubclass.h" />
+    <ClInclude Include="..\src\DmlibColor.h" />
+    <ClInclude Include="..\src\DmlibDpi.h" />
+    <ClInclude Include="..\src\DmlibGlyph.h" />
+    <ClInclude Include="..\src\DmlibHook.h" />
+    <ClInclude Include="..\src\DmlibIni.h" />
+    <ClInclude Include="..\src\DmlibPaintHelper.h" />
+    <ClInclude Include="..\src\DmlibSubclass.h" />
+    <ClInclude Include="..\src\DmlibSubclassControl.h" />
+    <ClInclude Include="..\src\DmlibSubclassWindow.h" />
+    <ClInclude Include="..\src\DmlibWinApi.h" />
+    <ClInclude Include="..\src\IatHook.h" />
+    <ClInclude Include="..\src\ModuleHelper.h" />
+    <ClInclude Include="..\src\StdAfx.h" />
+    <ClInclude Include="..\src\UAHMenuBar.h" />
+    <ClInclude Include="..\src\Version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\DarkModeSubclass.cpp" />
+    <ClCompile Include="..\src\DmlibColor.cpp" />
+    <ClCompile Include="..\src\DmlibDpi.cpp" />
+    <ClCompile Include="..\src\DmlibHook.cpp" />
+    <ClCompile Include="..\src\DmlibIni.cpp" />
+    <ClCompile Include="..\src\DmlibPaintHelper.cpp" />
+    <ClCompile Include="..\src\DmlibSubclass.cpp" />
+    <ClCompile Include="..\src\DmlibSubclassControl.cpp" />
+    <ClCompile Include="..\src\DmlibSubclassWindow.cpp" />
+    <ClCompile Include="..\src\DmlibWinApi.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

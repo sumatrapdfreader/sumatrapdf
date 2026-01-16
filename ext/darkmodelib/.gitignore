@@ -29,6 +29,9 @@
 *.a
 *.lib
 
+# Binary version of the resource script file
+*.aps
+
 # Executables
 *.exe
 *.out

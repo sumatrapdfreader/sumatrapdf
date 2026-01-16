@@ -967,8 +967,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h" />
-    <ClInclude Include="..\ext\darkmodelib\src\DarkMode.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibColor.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibDpi.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibGlyph.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibHook.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibIni.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibPaintHelper.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibSubclass.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibSubclassControl.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibSubclassWindow.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibWinApi.h" />
     <ClInclude Include="..\ext\darkmodelib\src\IatHook.h" />
+    <ClInclude Include="..\ext\darkmodelib\src\ModuleHelper.h" />
     <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h" />
     <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
     <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
@@ -1057,8 +1067,15 @@
     <ClInclude Include="..\src\wingui\WinGui.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\darkmodelib\src\DarkMode.cpp" />
     <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibColor.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibDpi.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibHook.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibPaintHelper.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibSubclass.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibSubclassControl.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibSubclassWindow.cpp" />
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibWinApi.cpp" />
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
     <ClCompile Include="..\src\Accelerators.cpp" />

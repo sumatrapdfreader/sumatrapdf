@@ -66,10 +66,40 @@
     <ClInclude Include="..\ext\darkmodelib\include\DarkModeSubclass.h">
       <Filter>ext\darkmodelib\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\ext\darkmodelib\src\DarkMode.h">
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibColor.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibDpi.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibGlyph.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibHook.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibIni.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibPaintHelper.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibSubclass.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibSubclassControl.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibSubclassWindow.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\DmlibWinApi.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\darkmodelib\src\IatHook.h">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\darkmodelib\src\ModuleHelper.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h">
@@ -332,10 +362,31 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\darkmodelib\src\DarkMode.cpp">
+    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp">
       <Filter>ext\darkmodelib\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\ext\darkmodelib\src\DarkModeSubclass.cpp">
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibColor.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibDpi.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibHook.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibPaintHelper.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibSubclass.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibSubclassControl.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibSubclassWindow.cpp">
+      <Filter>ext\darkmodelib\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\darkmodelib\src\DmlibWinApi.cpp">
       <Filter>ext\darkmodelib\src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\synctex\synctex_parser.c">

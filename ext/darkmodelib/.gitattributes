@@ -10,7 +10,7 @@
 *.props         text eol=crlf
 
 # Resource File
-*.rc            text eol=crlf
+*.rc            binary
 
 # C/C++/C# Code Files
 *.c             text diff=c
