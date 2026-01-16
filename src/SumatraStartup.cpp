@@ -924,7 +924,7 @@ static void testLogf() {
 extern "C" void destroy_system_font_list();
 extern void DeleteManualBrowserWindow();
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
+int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
     MainWindow* win = nullptr;

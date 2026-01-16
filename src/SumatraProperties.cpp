@@ -367,11 +367,16 @@ static Rect CalcPropertiesLayout(PropertiesLayout* layoutData, HDC hdc) {
 }
 
 static void ShowExtendedProperties(PropertiesLayout* pl) {
-    MainWindow* win = FindMainWindowByHwnd(pl ? pl->hwndParent : nullptr);
-    if (win && !pl->HasProperty(_TRA("Fonts:"))) {
-        DestroyWindow(pl->hwnd);
-        ShowProperties(win->hwndFrame, win->ctrl, true);
+    if (!pl || pl->HasProperty(_TRA("Fonts:"))) {
+        // early exit if already showing extended properties
+        return;
     }
+    MainWindow* win = FindMainWindowByHwnd(pl->hwndParent);
+    if (!win) {
+        return;
+    }
+    DestroyWindow(pl->hwnd);
+    ShowProperties(win->hwndFrame, win->ctrl, true);
 }
 
 static void CopyPropertiesToClipboard(PropertiesLayout* layoutData) {

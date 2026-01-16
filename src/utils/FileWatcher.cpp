@@ -456,12 +456,13 @@ WatchedFile* FileWatcherSubscribe(const char* path, const Func0& onFileChangedCb
         logf("FileWatcherSubscribe: path='%s' doesn't exist\n", path);
         return nullptr;
     }
-    if (false && IsProcess32()) {
+#if 0
+    if (IsProcess32()) {
         // https://github.com/sumatrapdfreader/sumatrapdf/issues/4111
         logf("FileWatcherSubscribe: not starting a file watcher thread due to 32-bit miscompilation\n");
         return nullptr;
     }
-
+#endif
     if (!gThreadHandle) {
         logf("FileWatcherSubscribe: starting a thread\n");
         InitializeCriticalSection(&gFileWatcherMutex);
