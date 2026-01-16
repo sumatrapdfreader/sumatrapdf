@@ -1574,6 +1574,14 @@ static void fz_unlock_context_cs(void* user, int lock) {
 }
 
 static void fz_print_cb(void* user, const char* msg) {
+    static AtomicBool seenMsg;
+    if (str::Contains(msg, "generic error: couldn't find system font 'serif'")) {
+        // this floods the log in some files
+        if (seenMsg.Get()) {
+            return;
+        }
+        seenMsg.Set(true);
+    }
     if (!str::EndsWith(msg, "\n")) {
         msg = str::JoinTemp(msg, "\n");
     }
