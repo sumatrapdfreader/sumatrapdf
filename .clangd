@@ -2,6 +2,8 @@
 CompileFlags:
   Add:
     - -std=c++17
+    - -I./mupdf/include # TODO: I don't know which of those work
+    - -I../mupdf/include
     - -I${workspaceFolder}/mupdf/include
     - -I${workspaceFolder}/src
     - -I${workspaceFolder}/src/utils
@@ -22,3 +24,6 @@ Diagnostics:
     - bugprone-easily-swappable-parameters
     - readability-isolate-declaration
     - readability-function-cognitive-complexity
+    - readability-qualified-auto
+    - modernize-use-auto
+    - readability-simplify-boolean-expr
