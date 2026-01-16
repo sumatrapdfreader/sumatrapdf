@@ -409,13 +409,13 @@ enum class DisplayMode {
 	ContinuousBookView,
 };
 
-constexpr float kZoomFitPage = -1.f;
-constexpr float kZoomFitWidth = -2.f;
-constexpr float kZoomFitContent = -3.f;
-constexpr float kZoomActualSize = 100.0f;
-constexpr float kZoomMax = 6400.f; /* max zoom in % */
-constexpr float kZoomMin = 8.33f;  /* min zoom in % */
-constexpr float kInvalidZoom = -99.0f;
+constexpr float kZoomFitPage = -1.F;
+constexpr float kZoomFitWidth = -2.F;
+constexpr float kZoomFitContent = -3.F;
+constexpr float kZoomActualSize = 100.0F;
+constexpr float kZoomMax = 6400.F; /* max zoom in % */
+constexpr float kZoomMin = 8.33F;  /* min zoom in % */
+constexpr float kInvalidZoom = -99.0F;
 
 {{structDef}}
 
@@ -440,8 +440,8 @@ func genSettingsStruct() string {
 	}
 
 	content := settingsStructsHeader
-	content = strings.Replace(content, "{{structDef}}", structDef, -1)
-	content = strings.Replace(content, "{{structMetadata}}", structMetaData, -1)
+	content = strings.ReplaceAll(content, "{{structDef}}", structDef)
+	content = strings.ReplaceAll(content, "{{structMetadata}}", structMetaData)
 
 	return content
 }
@@ -472,7 +472,7 @@ func genAndSaveSettingsStructs() {
 	websiteSettingsDir := filepath.Join(websiteDir, "settings")
 	ver := extractSumatraVersionMust()
 	// this we do to work-around a bug in Cloudflare Pages that doesn't support '.' in file name
-	verUrlized := strings.Replace(ver, ".", "-", -1)
+	verUrlized := strings.ReplaceAll(ver, ".", "-")
 
 	settingsFileName := fmt.Sprintf("settings%s.html", verUrlized)
 	langsFileName := fmt.Sprintf("langs%s.html", verUrlized)
@@ -496,8 +496,8 @@ func genAndSaveSettingsStructs() {
 	*/
 
 	//fmt.Printf("%s\n", s)
-	s = strings.Replace(s, "\n", "\r\n", -1)
-	s = strings.Replace(s, "\t", "    ", -1)
+	// s = strings.ReplaceAll(s, "\n", "\r\n")
+	s = strings.ReplaceAll(s, "\t", "    ")
 	path := filepath.Join("src", "Settings.h")
 	writeFileMust(path, []byte(s))
 	detectClangFormat()
@@ -518,14 +518,13 @@ func genAndSaveSettingsStructs() {
 			lines = append(lines, s)
 		}
 		inside := strings.Join(lines, "\n")
-		s := strings.Replace(tmplLangsHTML, "%INSIDE%", inside, -1)
+		s := strings.ReplaceAll(tmplLangsHTML, "%INSIDE%", inside)
 		ver := extractSumatraVersionMust()
-		verUrlized := strings.Replace(ver, ".", "-", -1)
-		s = strings.Replace(s, "%VER%", ver, -1)
-		s = strings.Replace(s, "%VER_URL%", verUrlized, -1)
-		s = strings.Replace(s, "settings.html", settingsFileName, -1)
-		s = strings.Replace(s, "\n", "\r\n", -1)
-		// undo html escaping that differs from Python
+		verUrlized := strings.ReplaceAll(ver, ".", "-")
+		s = strings.ReplaceAll(s, "%VER%", ver)
+		s = strings.ReplaceAll(s, "%VER_URL%", verUrlized)
+		s = strings.ReplaceAll(s, "settings.html", settingsFileName)
+		s = strings.ReplaceAll(s, "\n", "\r\n") // undo html escaping that differs from Python
 		// TODO: possibly remove
 		//s = strings.Replace(s, "&#39;", "'", -1)
 
@@ -536,10 +535,10 @@ func genAndSaveSettingsStructs() {
 	genSettingsHTML := func() {
 		prefs := globalPrefsStruct
 		inside := genStruct(prefs, "")
-		s := strings.Replace(tmplHTML, "%INSIDE%", inside, -1)
-		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
-		s = strings.Replace(s, "langs.html", langsFileName, -1)
-		s = strings.Replace(s, "\n", "\r\n", -1)
+		s := strings.ReplaceAll(tmplHTML, "%INSIDE%", inside)
+		s = strings.ReplaceAll(s, "%VER%", extractSumatraVersionMust())
+		s = strings.ReplaceAll(s, "langs.html", langsFileName)
+		// s = strings.ReplaceAll(s, "\n", "\r\n")
 		// undo html escaping that differs from Python
 		// TODO: possibly remove
 		//s = strings.Replace(s, "&#39;", "'", -1)
@@ -552,14 +551,19 @@ func genAndSaveSettingsStructs() {
 	genSettingsMarkdown := func() {
 		prefs := globalPrefsStruct
 		inside := genStructMarkdown(prefs, "")
-		s := strings.Replace(tmplMarkdown, "%INSIDE%", inside, -1)
-		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
-		s = strings.Replace(s, "\n", "\r\n", -1)
+		s := strings.ReplaceAll(tmplMarkdown, "%INSIDE%", inside)
 
-		mdFileName := fmt.Sprintf("settings%s.md", verUrlized)
-		path := filepath.Join(websiteSettingsDir, mdFileName)
-		writeFileMust(path, []byte(s))
-		fmt.Printf("Wrote '%s'\n", path)
+		// Append to docs/md/Advanced-options-settings.md after "# Settings" line
+		mdPath := filepath.Join("docs", "md", "Advanced-options-settings.md")
+		existing := string(readFileMust(mdPath))
+		marker := "# Settings"
+		idx := strings.Index(existing, marker)
+		panicIf(idx == -1, "marker '%s' not found in '%s'", marker, mdPath)
+		// Keep everything up to and including "# Settings\n"
+		prefix := existing[:idx+len(marker)] + "\n\n"
+		result := prefix + s
+		writeFileMust(mdPath, []byte(result))
+		fmt.Printf("Wrote '%s'\n", mdPath)
 	}
 
 	genSettingsHTML()

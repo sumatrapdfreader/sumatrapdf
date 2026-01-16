@@ -17,13 +17,13 @@ enum class DisplayMode {
     ContinuousBookView,
 };
 
-constexpr float kZoomFitPage = -1.f;
-constexpr float kZoomFitWidth = -2.f;
-constexpr float kZoomFitContent = -3.f;
-constexpr float kZoomActualSize = 100.0f;
-constexpr float kZoomMax = 6400.f; /* max zoom in % */
-constexpr float kZoomMin = 8.33f;  /* min zoom in % */
-constexpr float kInvalidZoom = -99.0f;
+constexpr float kZoomFitPage = -1.F;
+constexpr float kZoomFitWidth = -2.F;
+constexpr float kZoomFitContent = -3.F;
+constexpr float kZoomActualSize = 100.0F;
+constexpr float kZoomMax = 6400.F; /* max zoom in % */
+constexpr float kZoomMin = 8.33F;  /* min zoom in % */
+constexpr float kInvalidZoom = -99.0F;
 
 // top, right, bottom and left margin (in that order) between window and
 // document

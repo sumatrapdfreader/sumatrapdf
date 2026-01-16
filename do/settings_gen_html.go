@@ -308,25 +308,9 @@ func mkLang(name string, code string) *Lang {
 	}
 }
 
-const tmplMarkdown = `# Customizing SumatraPDF %VER%
+const tmplMarkdown = `Below is an explanation of what the different settings mean and what their default values are.
 
-You can change the look and behavior of
-[SumatraPDF](https://www.sumatrapdfreader.org/)
-by editing the file ` + "`SumatraPDF-settings.txt`" + `. The file is stored in
-` + "`%LOCALAPPDATA%\\SumatraPDF`" + ` directory for the installed version or in the
-same directory as ` + "`SumatraPDF.exe`" + ` executable for the portable version.
-
-Use the menu item ` + "`Settings -> Advanced Settings...`" + ` to open the settings file
-with your default text editor.
-
-The file is in a simple text format. Below is an explanation of
-what the different settings mean and what their default values are.
-
-Highlighted settings can't be changed from the UI. Modifying other settings
-directly in this file is not recommended.
-
-If you add or remove lines with square brackets, **make sure to always add/remove
-square brackets in pairs**! Else you risk losing all the data following them.
+If you add or remove lines with square brackets, **make sure to always add/remove square brackets in pairs**! Else you risk losing all the data following them.
 
 ` + "```" + `
 %INSIDE%
@@ -341,7 +325,7 @@ The components are hex values (ranging from 00 to FF) and stand for:
 - ` + "`gg`" + ` : green component
 - ` + "`bb`" + ` : blue component
 
-For example #ff0000 means red color. You can use [Sphere](https://galactic.ink/sphere/) to pick a color.
+For example #ff0000 means red color.
 `
 
 func genCommentMarkdown(comment string, first bool) string {
@@ -354,8 +338,8 @@ func genCommentMarkdown(comment string, first bool) string {
 	left := lineLen - 2
 	// [foo](bar.html) is converted to foo (bar.html) in plain text
 	hrefText := ""
-	words := strings.Split(comment, " ")
-	for _, word := range words {
+	words := strings.SplitSeq(comment, " ")
+	for word := range words {
 		if word[0] == '[' {
 			wordURL := extractURL(word[1:])
 			if len(wordURL) == 2 {
