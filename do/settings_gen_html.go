@@ -307,3 +307,119 @@ func mkLang(name string, code string) *Lang {
 		code: code,
 	}
 }
+
+const tmplMarkdown = `# Customizing SumatraPDF %VER%
+
+You can change the look and behavior of
+[SumatraPDF](https://www.sumatrapdfreader.org/)
+by editing the file ` + "`SumatraPDF-settings.txt`" + `. The file is stored in
+` + "`%LOCALAPPDATA%\\SumatraPDF`" + ` directory for the installed version or in the
+same directory as ` + "`SumatraPDF.exe`" + ` executable for the portable version.
+
+Use the menu item ` + "`Settings -> Advanced Settings...`" + ` to open the settings file
+with your default text editor.
+
+The file is in a simple text format. Below is an explanation of
+what the different settings mean and what their default values are.
+
+Highlighted settings can't be changed from the UI. Modifying other settings
+directly in this file is not recommended.
+
+If you add or remove lines with square brackets, **make sure to always add/remove
+square brackets in pairs**! Else you risk losing all the data following them.
+
+` + "```" + `
+%INSIDE%
+` + "```" + `
+
+## Syntax for color values
+
+The syntax for colors is: ` + "`#rrggbb`" + `.
+
+The components are hex values (ranging from 00 to FF) and stand for:
+- ` + "`rr`" + ` : red component
+- ` + "`gg`" + ` : green component
+- ` + "`bb`" + ` : blue component
+
+For example #ff0000 means red color. You can use [Sphere](https://galactic.ink/sphere/) to pick a color.
+`
+
+func genCommentMarkdown(comment string, first bool) string {
+	lineLen := 80
+	s := "\n"
+	if first {
+		s = ""
+	}
+	s = s + "; "
+	left := lineLen - 2
+	// [foo](bar.html) is converted to foo (bar.html) in plain text
+	hrefText := ""
+	words := strings.Split(comment, " ")
+	for _, word := range words {
+		if word[0] == '[' {
+			wordURL := extractURL(word[1:])
+			if len(wordURL) == 2 {
+				s += fmt.Sprintf("%s (%s)", wordURL[0], wordURL[1])
+				continue
+			}
+			hrefText = wordURL[0]
+			continue
+		} else if hrefText != "" {
+			wordURL := extractURL(word)
+			hrefText = hrefText + " " + wordURL[0]
+			if len(wordURL) == 2 {
+				s += fmt.Sprintf("%s (%s) ", hrefText, wordURL[1])
+				hrefText = ""
+			}
+			continue
+		}
+		if left < len(word) {
+			s = rstrip(s) + "\n; "
+			left = lineLen - 2
+		}
+		word += " "
+		left -= len(word)
+		s += word
+	}
+	s = rstrip(s)
+	return s
+}
+
+func genStructMarkdown(struc *Field, indent string) string {
+	var lines []string
+	first := true
+
+	fields := struc.Default.([]*Field)
+	for _, field := range fields {
+		if field.Internal || field.isComment() {
+			continue
+		}
+		comment := field.DocComment
+		if field.Version != "2.3" {
+			comment += fmt.Sprintf(" (introduced in version %s)", field.Version)
+		}
+
+		s := genCommentMarkdown(comment, first)
+		lines = append(lines, s)
+
+		switch field.Type.Name {
+		case "Array":
+			indent2 := indent + indentStr[:len(indentStr)/2]
+			start := fmt.Sprintf("%s%s [\n%s[", indent, field.Name, indent2)
+			end := fmt.Sprintf("%s]\n%s]", indent2, indent)
+			inside := genStructMarkdown(field, indent+indentStr)
+			lines = append(lines, start, inside, end)
+		case "Struct":
+			start := fmt.Sprintf("%s%s [", indent, field.Name)
+			end := fmt.Sprintf("%s]", indent)
+			inside := genStructMarkdown(field, indent+indentStr)
+			lines = append(lines, start, inside, end)
+		default:
+			s = field.initDefault()
+			s = lstrip(s)
+			lines = append(lines, indent+s)
+		}
+		first = false
+	}
+	return strings.Join(lines, "\n")
+}

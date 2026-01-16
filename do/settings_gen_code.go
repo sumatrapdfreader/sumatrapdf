@@ -549,7 +549,21 @@ func genAndSaveSettingsStructs() {
 		fmt.Printf("Wrote '%s'\n", path)
 	}
 
+	genSettingsMarkdown := func() {
+		prefs := globalPrefsStruct
+		inside := genStructMarkdown(prefs, "")
+		s := strings.Replace(tmplMarkdown, "%INSIDE%", inside, -1)
+		s = strings.Replace(s, "%VER%", extractSumatraVersionMust(), -1)
+		s = strings.Replace(s, "\n", "\r\n", -1)
+
+		mdFileName := fmt.Sprintf("settings%s.md", verUrlized)
+		path := filepath.Join(websiteSettingsDir, mdFileName)
+		writeFileMust(path, []byte(s))
+		fmt.Printf("Wrote '%s'\n", path)
+	}
+
 	genSettingsHTML()
+	genSettingsMarkdown()
 	genLangsHTML()
 	logf("!!!!!! checkin sumatra website repo!!!!\n")
 }

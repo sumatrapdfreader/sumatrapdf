@@ -24,3 +24,5 @@ Here are some things you can customize:
 - hide scrollbars with `FixedPageUI.HideScrollbars`
 
 Advanced settings file also stores the history and state of opened files so that we can e.g. re-open on the page
+
+# Settings
