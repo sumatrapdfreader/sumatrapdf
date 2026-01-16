@@ -70,8 +70,9 @@ windrawlib      trunk
 dav1d           trunk      2022-05-28
   https://code.videolan.org/videolan/dav1d
 
-libheif         trunk      2022-05-30
+libheif         trunk      2026-01-16
   https://github.com/strukturag/libheif
+  https://github.com/strukturag/libheif/commit/62f1b8c76ed4d8305071fdacbe74ef9717bacac5
 
 darkmodelib     trunk      2026-01-16
   https://github.com/ozone10/darkmodelib
