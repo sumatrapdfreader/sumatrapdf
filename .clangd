@@ -2,20 +2,23 @@
 CompileFlags:
   Add:
     - -std=c++17
----
+    - -I${workspaceFolder}/mupdf/include
+    - -I${workspaceFolder}/src
+    - -I${workspaceFolder}/src/utils
+
 If:
   PathExclude:
     - mupdf/.*
     - ext/.*
+
 Diagnostics:
-  Suppress: # ← this is the most common way
+  Suppress:
     - unused-parameter # example 1
     - misc-use-internal-linkage
     - misc-use-anonymous-namespace
     - readability-identifier-length
     - bugprone-switch-missing-default-case
-    - readability-avoid-unconditional-preprocessor-if # complains about #if 0 blocks
+    - readability-avoid-unconditional-preprocessor-if
     - bugprone-easily-swappable-parameters
     - readability-isolate-declaration
     - readability-function-cognitive-complexity
----
