@@ -374,10 +374,11 @@ workspace "SumatraPDF"
   project "libheif"
     kind "StaticLib"
     language "C++"
+    cppdialect "C++latest"
     optimized_conf()
     defines { "_CRT_SECURE_NO_WARNINGS", "HAVE_DAV1D", "LIBHEIF_STATIC_BUILD" }
-    includedirs { "ext/libheif", "ext/dav1d/include" }
-    disablewarnings {  "4018", "4100", "4101","4146", "4244", "4245", "4267", "4273", "4456", "4701", "4703" }
+    includedirs { "ext/libheif/libheif", "ext/libheif/libheif/api", "ext/dav1d/include" }
+    disablewarnings {  "4018", "4065", "4100", "4101","4146", "4244", "4245", "4267", "4273", "4319", "4456", "4701", "4703", "4805", "4996" }
     -- TODO: I don't want RTTI and /EHsc
     rtti "On"
     buildoptions { "/EHsc" }
@@ -690,7 +691,7 @@ workspace "SumatraPDF"
     uses_zlib()
     defines { "LIBHEIF_STATIC_BUILD" }
     includedirs { "src", "ext/lzma/C" }
-    includedirs { "ext/libheif", "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
+    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/dav1d/include", "ext/unarr", "mupdf/include" }
     utils_files()
 
   ---- executables

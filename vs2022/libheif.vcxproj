@@ -367,10 +367,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -382,6 +382,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -396,10 +397,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -411,6 +412,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -425,10 +427,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -440,6 +442,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -454,10 +457,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -469,6 +472,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -483,9 +487,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -497,6 +501,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -511,9 +516,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -525,6 +530,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -539,9 +545,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -553,6 +559,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -567,9 +574,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -581,6 +588,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -595,10 +603,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -610,6 +618,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -624,10 +633,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -639,6 +648,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -653,10 +663,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -668,6 +678,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -682,10 +693,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -697,6 +708,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -710,10 +722,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -725,6 +737,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -740,10 +753,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -755,6 +768,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -770,10 +784,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -785,6 +799,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -800,10 +815,10 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4100;4101;4146;4244;4245;4267;4273;4456;4701;4703;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4018;4065;4100;4101;4146;4244;4245;4267;4273;4319;4456;4701;4703;4805;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_DAV1D;LIBHEIF_STATIC_BUILD;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\ext\libheif;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ext\libheif\libheif;..\ext\libheif\libheif\api;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -815,6 +830,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -826,36 +842,158 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_brands.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_color.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_context.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_decoding.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_encoding.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_plugin.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_security.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.h" />
     <ClInclude Include="..\ext\libheif\libheif\bitstream.h" />
     <ClInclude Include="..\ext\libheif\libheif\box.h" />
+    <ClInclude Include="..\ext\libheif\libheif\brands.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avc_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avc_dec.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avc_enc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avif_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avif_dec.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avif_enc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\decoder.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\encoder.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\hevc_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\hevc_dec.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\hevc_enc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg2000_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg2000_dec.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg2000_enc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg_dec.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg_enc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\vvc_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\vvc_dec.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\vvc_enc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\alpha.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\chroma_sampling.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\colorconversion.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\hdr_sdr.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\monochrome.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\rgb2rgb.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\rgb2yuv.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\rgb2yuv_sharp.h" />
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\yuv2rgb.h" />
+    <ClInclude Include="..\ext\libheif\libheif\common_utils.h" />
+    <ClInclude Include="..\ext\libheif\libheif\context.h" />
     <ClInclude Include="..\ext\libheif\libheif\error.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_avif.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_colorconversion.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_context.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_decoder_dav1d.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_file.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_hevc.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_image.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_plugin.h" />
-    <ClInclude Include="..\ext\libheif\libheif\heif_plugin_registry.h" />
+    <ClInclude Include="..\ext\libheif\libheif\file.h" />
+    <ClInclude Include="..\ext\libheif\libheif\file_layout.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\avc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\avif.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\grid.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\hevc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\iden.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\image_item.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\jpeg.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\jpeg2000.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\mask_image.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\overlay.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\tiled.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\vvc.h" />
+    <ClInclude Include="..\ext\libheif\libheif\init.h" />
+    <ClInclude Include="..\ext\libheif\libheif\logging.h" />
     <ClInclude Include="..\ext\libheif\libheif\nclx.h" />
+    <ClInclude Include="..\ext\libheif\libheif\pixelimage.h" />
+    <ClInclude Include="..\ext\libheif\libheif\plugin_registry.h" />
+    <ClInclude Include="..\ext\libheif\libheif\plugins\decoder_dav1d.h" />
+    <ClInclude Include="..\ext\libheif\libheif\plugins\encoder_mask.h" />
+    <ClInclude Include="..\ext\libheif\libheif\region.h" />
+    <ClInclude Include="..\ext\libheif\libheif\security_limits.h" />
+    <ClInclude Include="..\ext\libheif\libheif\sequences\chunk.h" />
+    <ClInclude Include="..\ext\libheif\libheif\sequences\seq_boxes.h" />
+    <ClInclude Include="..\ext\libheif\libheif\sequences\track.h" />
+    <ClInclude Include="..\ext\libheif\libheif\sequences\track_metadata.h" />
+    <ClInclude Include="..\ext\libheif\libheif\sequences\track_visual.h" />
+    <ClInclude Include="..\ext\libheif\libheif\text.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_brands.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_color.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_context.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_decoding.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_encoding.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_plugin.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_security.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.cc" />
     <ClCompile Include="..\ext\libheif\libheif\bitstream.cc" />
     <ClCompile Include="..\ext\libheif\libheif\box.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\brands.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avc_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avc_dec.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avc_enc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avif_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avif_dec.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avif_enc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\decoder.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\encoder.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\hevc_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\hevc_dec.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\hevc_enc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg2000_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg2000_dec.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg2000_enc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg_dec.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg_enc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\vvc_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\vvc_dec.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\vvc_enc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\alpha.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\chroma_sampling.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\colorconversion.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\hdr_sdr.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\monochrome.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\rgb2rgb.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\rgb2yuv.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\rgb2yuv_sharp.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\yuv2rgb.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\common_utils.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\context.cc" />
     <ClCompile Include="..\ext\libheif\libheif\error.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_avif.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_colorconversion.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_context.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_decoder_dav1d.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_file.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_hevc.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_image.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_plugin.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\heif_plugin_registry.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\file.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\file_layout.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\avc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\avif.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\grid.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\hevc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\iden.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\image_item.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\jpeg.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\jpeg2000.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\mask_image.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\overlay.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\tiled.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\vvc.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\init.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\logging.cc" />
     <ClCompile Include="..\ext\libheif\libheif\nclx.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\pixelimage.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\plugin_registry.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\plugins\decoder_dav1d.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\plugins\encoder_mask.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\region.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\security_limits.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\sequences\chunk.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\sequences\seq_boxes.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\sequences\track.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\sequences\track_metadata.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\sequences\track_visual.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\text.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

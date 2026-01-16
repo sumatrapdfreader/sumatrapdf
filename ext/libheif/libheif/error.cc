@@ -1,6 +1,6 @@
 /*
  * HEIF codec.
- * Copyright (c) 2017 struktur AG, Dirk Farin <farin@struktur.de>
+ * Copyright (c) 2017 Dirk Farin <dirk.farin@gmail.com>
  *
  * This file is part of libheif.
  *
@@ -21,16 +21,32 @@
 #include "error.h"
 
 #include <cassert>
+#include <cstring>
+
+
+const heif_error heif_error_null_pointer_argument {
+  heif_error_Usage_error,
+  heif_suberror_Null_pointer_argument,
+  "NULL argument passed"
+};
+
 
 // static
-const char heif::Error::kSuccess[] = "Success";
+const char Error::kSuccess[] = "Success";
 const char* cUnknownError = "Unknown error";
 
 
-heif::Error::Error() = default;
+const Error Error::Ok(heif_error_Ok);
+
+const Error Error::InternalError{heif_error_Unsupported_feature, // TODO: use better value
+                                 heif_suberror_Unspecified,
+                                 "Internal error"};
 
 
-heif::Error::Error(heif_error_code c,
+Error::Error() = default;
+
+
+Error::Error(heif_error_code c,
                    heif_suberror_code sc,
                    const std::string& msg)
     : error_code(c),
@@ -40,7 +56,45 @@ heif::Error::Error(heif_error_code c,
 }
 
 
-const char* heif::Error::get_error_string(heif_error_code err)
+// Replacement for C++20 std::string::starts_with()
+static bool starts_with(const std::string& str, const std::string& prefix) {
+    if (str.length() < prefix.length()) {
+        return false;
+    }
+
+  return str.compare(0, prefix.size(), prefix) == 0;
+}
+
+
+Error Error::from_heif_error(const heif_error& c_error)
+{
+  // unpack the concatenated error message and extract the last part only
+
+  const char* err_string = get_error_string(c_error.code);
+  const char* sub_err_string = get_error_string(c_error.subcode);
+
+  std::string msg = c_error.message;
+  if (starts_with(msg, err_string)) {
+    msg = msg.substr(strlen(err_string));
+
+    if (starts_with(msg, ": ")) {
+      msg = msg.substr(2);
+    }
+
+    if (starts_with(msg, sub_err_string)) {
+      msg = msg.substr(strlen(sub_err_string));
+
+      if (starts_with(msg, ": ")) {
+        msg = msg.substr(2);
+      }
+    }
+  }
+
+  return {c_error.code, c_error.subcode, msg};
+}
+
+
+const char* Error::get_error_string(heif_error_code err)
 {
   switch (err) {
     case heif_error_Ok:
@@ -65,13 +119,19 @@ const char* heif::Error::get_error_string(heif_error_code err)
       return "Error during encoding or writing output file";
     case heif_error_Color_profile_does_not_exist:
       return "Color profile does not exist";
+    case heif_error_Plugin_loading_error:
+      return "Error while loading plugin";
+    case heif_error_Canceled:
+      return "Canceled by user";
+    case heif_error_End_of_sequence:
+      return "End of sequence";
   }
 
   assert(false);
   return "Unknown error";
 }
 
-const char* heif::Error::get_error_string(heif_suberror_code err)
+const char* Error::get_error_string(heif_suberror_code err)
 {
   switch (err) {
     case heif_suberror_Unspecified:
@@ -97,8 +157,12 @@ const char* heif::Error::get_error_string(heif_suberror_code err)
       return "No 'hdlr' box";
     case heif_suberror_No_hvcC_box:
       return "No 'hvcC' box";
+    case heif_suberror_No_vvcC_box:
+      return "No 'vvcC' box";
     case heif_suberror_No_av1C_box:
       return "No 'av1C' box";
+    case heif_suberror_No_avcC_box:
+      return "No 'avcC' box";
     case heif_suberror_No_pitm_box:
       return "No 'pitm' box";
     case heif_suberror_No_ipco_box:
@@ -151,12 +215,32 @@ const char* heif::Error::get_error_string(heif_suberror_code err)
       return "Unknown NCLX transfer characteristics";
     case heif_suberror_Unknown_NCLX_matrix_coefficients:
       return "Unknown NCLX matrix coefficients";
+    case heif_suberror_Invalid_region_data:
+      return "Invalid region item data";
+    case heif_suberror_No_ispe_property:
+      return "Image has no 'ispe' property";
+    case heif_suberror_Camera_intrinsic_matrix_undefined:
+      return "Camera intrinsic matrix undefined";
+    case heif_suberror_Camera_extrinsic_matrix_undefined:
+      return "Camera extrinsic matrix undefined";
+    case heif_suberror_Invalid_J2K_codestream:
+      return "Invalid JPEG 2000 codestream";
+    case heif_suberror_Decompression_invalid_data:
+      return "Invalid data in generic compression inflation";
+    case heif_suberror_No_moov_box:
+      return "No 'moov' box";
+    case heif_suberror_No_icbr_box:
+      return "No 'icbr' box";
+    case heif_suberror_Invalid_mini_box:
+      return "Unsupported or invalid 'mini' box";
 
 
       // --- Memory_allocation_error ---
 
     case heif_suberror_Security_limit_exceeded:
       return "Security limit exceeded";
+    case heif_suberror_Compression_initialisation_error:
+      return "Compression initialisation method error";
 
       // --- Usage_error ---
 
@@ -174,6 +258,10 @@ const char* heif::Error::get_error_string(heif_suberror_code err)
       return "Unsupported parameter";
     case heif_suberror_Invalid_parameter_value:
       return "Invalid parameter value";
+    case heif_suberror_Invalid_property:
+      return "Invalid property";
+    case heif_suberror_Item_reference_cycle:
+      return "Image reference cycle";
 
       // --- Unsupported_feature ---
 
@@ -187,6 +275,14 @@ const char* heif::Error::get_error_string(heif_suberror_code err)
       return "Unsupported color conversion";
     case heif_suberror_Unsupported_item_construction_method:
       return "Unsupported item construction method";
+    case heif_suberror_Unsupported_header_compression_method:
+      return "Unsupported header compression method";
+    case heif_suberror_Unsupported_generic_compression_method:
+      return "Unsupported generic compression method";
+    case heif_suberror_Unsupported_essential_property:
+      return "Unsupported essential item property";
+    case heif_suberror_Unsupported_track_type:
+      return "Unsupported track type";
 
       // --- Encoder_plugin_error --
 
@@ -197,6 +293,29 @@ const char* heif::Error::get_error_string(heif_suberror_code err)
 
     case heif_suberror_Cannot_write_output_data:
       return "Cannot write output data";
+    case heif_suberror_Encoder_initialization:
+      return "Initialization problem";
+    case heif_suberror_Encoder_encoding:
+      return "Encoding problem";
+    case heif_suberror_Encoder_cleanup:
+      return "Cleanup problem";
+    case heif_suberror_Too_many_regions:
+      return "Too many regions (>255) in an 'rgan' item.";
+
+      // --- Plugin_loading_error ---
+
+    case heif_suberror_Plugin_loading_error:
+      return "Plugin file cannot be loaded";
+    case heif_suberror_Plugin_is_not_loaded:
+      return "Trying to remove a plugin that is not loaded";
+    case heif_suberror_Cannot_read_plugin_directory:
+      return "Error while scanning the directory for plugins";
+    case heif_suberror_No_matching_decoder_installed:
+#if ENABLE_PLUGIN_LOADING
+      return "No decoding plugin installed for this compression format";
+#else
+      return "Support for this compression format has not been built in";
+#endif
   }
 
   assert(false);
@@ -204,7 +323,7 @@ const char* heif::Error::get_error_string(heif_suberror_code err)
 }
 
 
-heif_error heif::Error::error_struct(ErrorBuffer* error_buffer) const
+heif_error Error::error_struct(ErrorBuffer* error_buffer) const
 {
   if (error_buffer) {
     if (error_code == heif_error_Ok) {

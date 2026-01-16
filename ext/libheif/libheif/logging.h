@@ -1,6 +1,6 @@
 /*
  * HEIF codec.
- * Copyright (c) 2017 struktur AG, Dirk Farin <farin@struktur.de>
+ * Copyright (c) 2017 Dirk Farin <dirk.farin@gmail.com>
  *
  * This file is part of libheif.
  *
@@ -21,10 +21,6 @@
 #ifndef LIBHEIF_LOGGING_H
 #define LIBHEIF_LOGGING_H
 
-#if defined(HAVE_CONFIG_H)
-#include "config.h"
-#endif
-
 #include <cinttypes>
 #include <cstddef>
 
@@ -35,38 +31,36 @@
 #include <istream>
 
 
-namespace heif {
+class Indent
+{
+public:
+  Indent() = default;
 
-  class Indent
+  int get_indent() const { return m_indent; }
+
+  void operator++(int) { m_indent++; }
+
+  void operator--(int)
   {
-  public:
-    Indent() = default;
-
-    int get_indent() const
-    { return m_indent; }
-
-    void operator++(int)
-    { m_indent++; }
-
-    void operator--(int)
-    {
-      m_indent--;
-      if (m_indent < 0) m_indent = 0;
-    }
-
-  private:
-    int m_indent = 0;
-  };
-
-
-  inline std::ostream& operator<<(std::ostream& ostr, const Indent& indent)
-  {
-    for (int i = 0; i < indent.get_indent(); i++) {
-      ostr << "| ";
-    }
-
-    return ostr;
+    m_indent--;
+    if (m_indent < 0) m_indent = 0;
   }
+
+  std::string get_string() const;
+
+private:
+  int m_indent = 0;
+};
+
+
+inline std::ostream& operator<<(std::ostream& ostr, const Indent& indent)
+{
+  ostr << indent.get_string();
+  return ostr;
 }
+
+std::string write_raw_data_as_hex(const uint8_t* data, size_t len,
+                                  const std::string& firstLineIndent,
+                                  const std::string& remainingLinesIndent);
 
 #endif

@@ -1,0 +1,416 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="api">
+      <UniqueIdentifier>{5F5E880B-CB67-887C-54E3-9E7CC0EB937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\libheif">
+      <UniqueIdentifier>{81D2F1D4-ED87-6ACA-767C-64A1E23061CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="codecs">
+      <UniqueIdentifier>{B6EBDEF6-A28D-09CD-8B48-1D217789901D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="color-conversion">
+      <UniqueIdentifier>{F702E0EE-E3FB-FE40-0C2E-E4C5F885DE4C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="image-items">
+      <UniqueIdentifier>{F7E3F257-6399-6B4D-EC8D-652458426251}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="plugins">
+      <UniqueIdentifier>{07D1A6B5-73B0-2551-7CC8-B027E8268CB2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sequences">
+      <UniqueIdentifier>{D15CBE8E-3DC7-7205-8605-24ABF2AE505A}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_brands.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_color.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_context.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_decoding.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_encoding.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_plugin.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_security.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\bitstream.h" />
+    <ClInclude Include="..\ext\libheif\libheif\box.h" />
+    <ClInclude Include="..\ext\libheif\libheif\brands.h" />
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avc_boxes.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avc_dec.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avc_enc.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avif_boxes.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avif_dec.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\avif_enc.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\decoder.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\encoder.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\hevc_boxes.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\hevc_dec.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\hevc_enc.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg2000_boxes.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg2000_dec.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg2000_enc.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg_boxes.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg_dec.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\jpeg_enc.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\vvc_boxes.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\vvc_dec.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\codecs\vvc_enc.h">
+      <Filter>codecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\alpha.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\chroma_sampling.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\colorconversion.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\hdr_sdr.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\monochrome.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\rgb2rgb.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\rgb2yuv.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\rgb2yuv_sharp.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\yuv2rgb.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\common_utils.h" />
+    <ClInclude Include="..\ext\libheif\libheif\context.h" />
+    <ClInclude Include="..\ext\libheif\libheif\error.h" />
+    <ClInclude Include="..\ext\libheif\libheif\file.h" />
+    <ClInclude Include="..\ext\libheif\libheif\file_layout.h" />
+    <ClInclude Include="..\ext\libheif\libheif\image-items\avc.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\avif.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\grid.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\hevc.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\iden.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\image_item.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\jpeg.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\jpeg2000.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\mask_image.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\overlay.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\tiled.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image-items\vvc.h">
+      <Filter>image-items</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\init.h" />
+    <ClInclude Include="..\ext\libheif\libheif\logging.h" />
+    <ClInclude Include="..\ext\libheif\libheif\nclx.h" />
+    <ClInclude Include="..\ext\libheif\libheif\pixelimage.h" />
+    <ClInclude Include="..\ext\libheif\libheif\plugin_registry.h" />
+    <ClInclude Include="..\ext\libheif\libheif\plugins\decoder_dav1d.h">
+      <Filter>plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\plugins\encoder_mask.h">
+      <Filter>plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\region.h" />
+    <ClInclude Include="..\ext\libheif\libheif\security_limits.h" />
+    <ClInclude Include="..\ext\libheif\libheif\sequences\chunk.h">
+      <Filter>sequences</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\sequences\seq_boxes.h">
+      <Filter>sequences</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\sequences\track.h">
+      <Filter>sequences</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\sequences\track_metadata.h">
+      <Filter>sequences</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\sequences\track_visual.h">
+      <Filter>sequences</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\text.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_brands.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_color.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_context.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_decoding.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_encoding.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_plugin.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_security.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\bitstream.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\box.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\brands.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avc_boxes.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avc_dec.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avc_enc.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avif_boxes.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avif_dec.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\avif_enc.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\decoder.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\encoder.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\hevc_boxes.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\hevc_dec.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\hevc_enc.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg2000_boxes.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg2000_dec.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg2000_enc.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg_boxes.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg_dec.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\jpeg_enc.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\vvc_boxes.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\vvc_dec.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\codecs\vvc_enc.cc">
+      <Filter>codecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\alpha.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\chroma_sampling.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\colorconversion.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\hdr_sdr.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\monochrome.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\rgb2rgb.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\rgb2yuv.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\rgb2yuv_sharp.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\yuv2rgb.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\common_utils.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\context.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\error.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\file.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\file_layout.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\image-items\avc.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\avif.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\grid.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\hevc.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\iden.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\image_item.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\jpeg.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\jpeg2000.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\mask_image.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\overlay.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\tiled.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image-items\vvc.cc">
+      <Filter>image-items</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\init.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\logging.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\nclx.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\pixelimage.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\plugin_registry.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\plugins\decoder_dav1d.cc">
+      <Filter>plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\plugins\encoder_mask.cc">
+      <Filter>plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\region.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\security_limits.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\sequences\chunk.cc">
+      <Filter>sequences</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\sequences\seq_boxes.cc">
+      <Filter>sequences</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\sequences\track.cc">
+      <Filter>sequences</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\sequences\track_metadata.cc">
+      <Filter>sequences</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\sequences\track_visual.cc">
+      <Filter>sequences</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\text.cc" />
+  </ItemGroup>
+</Project>
