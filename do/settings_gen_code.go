@@ -556,10 +556,10 @@ func genAndSaveSettingsStructs() {
 		// Append to docs/md/Advanced-options-settings.md after "# Settings" line
 		mdPath := filepath.Join("docs", "md", "Advanced-options-settings.md")
 		existing := string(readFileMust(mdPath))
-		marker := "# Settings"
+		marker := "## Settings"
 		idx := strings.Index(existing, marker)
 		panicIf(idx == -1, "marker '%s' not found in '%s'", marker, mdPath)
-		// Keep everything up to and including "# Settings\n"
+		// Keep everything up to and including "## Settings\n"
 		prefix := existing[:idx+len(marker)] + "\n\n"
 		result := prefix + s
 		writeFileMust(mdPath, []byte(result))

@@ -25,7 +25,7 @@ Here are some things you can customize:
 
 Advanced settings file also stores the history and state of opened files so that we can e.g. re-open on the page
 
-# Settings
+## Settings
 
 Below is an explanation of what the different settings mean and what their default values are.
 
