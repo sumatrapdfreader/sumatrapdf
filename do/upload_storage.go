@@ -179,7 +179,7 @@ func getDownloadUrlsDirectS3(mc *minioutil.Client, buildType BuildType, ver stri
 }
 
 // sumatrapdf/sumatralatest.js
-func createSumatraLatestJs(mc *minioutil.Client, buildType BuildType) string {
+func createSumatraLatestJs(buildType BuildType) string {
 	var appName string
 	switch buildType {
 	case buildTypePreRel:
@@ -257,7 +257,7 @@ func getVersionFilesForLatestInfo(mc *minioutil.Client, buildType BuildType, ver
 
 	{
 		// *latest.js : for the website
-		s := createSumatraLatestJs(mc, buildType)
+		s := createSumatraLatestJs(buildType)
 		res = append(res, []string{remotePaths[0], s})
 	}
 

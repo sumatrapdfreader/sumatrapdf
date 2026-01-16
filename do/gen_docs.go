@@ -48,7 +48,7 @@ const h1BreadcrumbsEnd = `</div>
 </div>
 `
 
-func renderFirstH1(w io.Writer, h *ast.Heading, entering bool, seenFirstH1 *bool) {
+func renderFirstH1(w io.Writer, _ *ast.Heading, entering bool, seenFirstH1 *bool) {
 	if entering {
 		io.WriteString(w, h1BreadcrumbsStart)
 	} else {
@@ -104,7 +104,7 @@ func genCsvTableHTML(records [][]string, noHeader bool) string {
 	return strings.Join(lines, "\n")
 }
 
-func renderCodeBlock(w io.Writer, cb *ast.CodeBlock, entering bool) {
+func renderCodeBlock(w io.Writer, cb *ast.CodeBlock, _ bool) {
 	csvContent := bytes.TrimSpace(cb.Literal)
 	// os.WriteFile("temp.csv", csvContent, 0644)
 	r := csv.NewReader(bytes.NewReader(csvContent))
@@ -117,7 +117,7 @@ func renderCodeBlock(w io.Writer, cb *ast.CodeBlock, entering bool) {
 	io.WriteString(w, s)
 }
 
-func renderColumns(w io.Writer, columns *Columns, entering bool) {
+func renderColumns(w io.Writer, _ *Columns, entering bool) {
 	if entering {
 		io.WriteString(w, `<div class="doc-columns">`)
 	} else {

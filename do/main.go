@@ -221,31 +221,28 @@ func Main() {
 	)
 
 	var (
-		flgBuildLogview              bool
-		flgBuildNo                   int
-		flgBuildPreRelease           bool
-		flgBuildRelease              bool
-		flgBuildSmoke                bool
-		flgBuildCodeQL               bool
-		flgCheckAccessKeys           bool
-		flgCIBuild                   bool
-		flgCIDailyBuild              bool
-		flgClangFormat               bool
-		flgClean                     bool
-		flgDiff                      bool
-		flgGenDocs                   bool
-		flgGenSettings               bool
-		flgGenWebsiteDocs            bool
-		flgRunLogView                bool
-		flgRegenPremake              bool
-		flgRunTests                  bool
-		flgTransDownload             bool
-		flgTriggerCodeQL             bool
-		flgUpdateGoDeps              bool
-		flgUpdateVer                 string
-		flgUpload                    bool
-		flgWc                        bool
-		flgBuildSignUploadPreRelease bool
+		flgBuildLogview    bool
+		flgBuildNo         int
+		flgBuildSmoke      bool
+		flgBuildCodeQL     bool
+		flgCheckAccessKeys bool
+		flgCIBuild         bool
+		flgCIDailyBuild    bool
+		flgClangFormat     bool
+		flgClean           bool
+		flgDiff            bool
+		flgGenDocs         bool
+		flgGenSettings     bool
+		flgGenWebsiteDocs  bool
+		flgRunLogView      bool
+		flgRegenPremake    bool
+		flgRunTests        bool
+		flgTransDownload   bool
+		flgTriggerCodeQL   bool
+		flgUpdateGoDeps    bool
+		flgUpdateVer       string
+		flgUpload          bool
+		flgWc              bool
 	)
 
 	{
@@ -253,9 +250,6 @@ func Main() {
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgCIDailyBuild, "ci-daily", false, "run CI daily steps")
 		flag.BoolVar(&flgBuildSmoke, "build-smoke", false, "run smoke build (installer for 64bit release)")
-		flag.BoolVar(&flgBuildSignUploadPreRelease, "build-sign-upload-pre-rel", false, "build, sign and upload pre-release")
-		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
-		flag.BoolVar(&flgBuildRelease, "build-release", false, "build release")
 		flag.BoolVar(&flgBuildCodeQL, "build-codeql", false, "build for codeql")
 		//flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
@@ -399,17 +393,6 @@ func Main() {
 		opts.upload = true
 	}
 
-	if flgBuildSignUploadPreRelease {
-		buildSignAndUploadPreRelease()
-		return
-	}
-
-	if flgBuildRelease {
-		// only when building locally, not on GitHub CI
-		opts.verifyTranslationUpToDate = true
-		opts.doCleanCheck = true
-		opts.releaseBuild = true
-	}
 	//opts.doCleanCheck = false // for ad-hoc testing
 
 	ensureBuildOptionsPreRequesites(opts)
@@ -455,21 +438,6 @@ func Main() {
 
 	if flgCIBuild {
 		buildCi()
-		return
-	}
-
-	if flgBuildRelease {
-		// TODO: must fix signing and upload
-		buildRelease()
-		return
-	}
-
-	// this one is typically for me to build locally, so build all projects
-	// to build less use -build-smoke
-	if flgBuildPreRelease {
-		cleanReleaseBuilds()
-		genHTMLDocsForApp()
-		buildPreRelease(platform32)
 		return
 	}
 

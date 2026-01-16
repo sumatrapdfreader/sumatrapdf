@@ -64,13 +64,14 @@ func extractAccesskeyGroups(path string) map[string]*accessGroup {
 			}
 		} else if isAltGroupStartOrEnd(line) {
 			panicIf(group == nil, "Can't use ACCESSKEY_ALTERNATIVE outside of group")
-			if line[2] == '[' {
+			switch line[2] {
+			case '[':
 				panicIf(line[25] != ' ', "Typo?")
 				panicIf(group.inAltGroup, "Nested ACCESSKEY_ALTERNATIVE isn't supported")
 				group.inAltGroup = true
-			} else if line[2] == '|' {
+			case '|':
 				panicIf(!group.inAltGroup, "Unexpected ACCESSKEY_ALTERNATIVE alternative")
-			} else {
+			default:
 				panicIf(!group.inAltGroup, "Unexpected ACCESSKEY_ALTERNATIVE end")
 				group.inAltGroup = false
 			}

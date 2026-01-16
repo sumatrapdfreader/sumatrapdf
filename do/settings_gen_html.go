@@ -229,9 +229,10 @@ func genComment(comment string, fieldID string, start string, first bool) string
 		}
 		word += " "
 		left -= len(word)
-		if word == "color " {
+		switch word {
+		case "color ":
 			word = `<a href="#color">color</a> `
-		} else if word == "colors " {
+		case "colors ":
 			word = `<a href="#color">colors</a> `
 		}
 		s += word
@@ -272,18 +273,19 @@ func genStruct(struc *Field, indent string) string {
 		s := genComment(comment, fieldID, indent, first)
 		lines = append(lines, s)
 
-		if field.Type.Name == "Array" {
+		switch field.Type.Name {
+		case "Array":
 			indent2 := indent + indentStr[:len(indentStr)/2]
 			start := fmt.Sprintf("%s%s [\n%s[", indent, field.Name, indent2)
 			end := fmt.Sprintf("%s]\n%s]", indent2, indent)
 			inside := genStruct(field, indent+indentStr)
 			lines = append(lines, start, inside, end)
-		} else if field.Type.Name == "Struct" {
+		case "Struct":
 			start := fmt.Sprintf("%s%s [", indent, field.Name)
 			end := fmt.Sprintf("%s]", indent)
 			inside := genStruct(field, indent+indentStr)
 			lines = append(lines, start, inside, end)
-		} else {
+		default:
 			s = field.initDefault()
 			s = lstrip(s)
 			lines = append(lines, indent+s)

@@ -218,7 +218,7 @@ func measureDuration() func() {
 	}
 }
 
-func shouldCopyFile(dir string, de fs.DirEntry) bool {
+func shouldCopyFile(de fs.DirEntry) bool {
 	name := de.Name()
 
 	bannedSuffixes := []string{".go", ".bat"}
@@ -244,7 +244,7 @@ func copyFilesRecurMust(dstDir, srcDir string) {
 	must(err)
 
 	for _, de := range files {
-		if !shouldCopyFile(dstDir, de) {
+		if !shouldCopyFile(de) {
 			continue
 		}
 		dstPath := filepath.Join(dstDir, de.Name())

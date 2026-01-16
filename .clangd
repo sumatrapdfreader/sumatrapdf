@@ -7,6 +7,13 @@ CompileFlags:
     - -I${workspaceFolder}/mupdf/include
     - -I${workspaceFolder}/src
     - -I${workspaceFolder}/src/utils
+		- -DUNICODE
+		- -DWIN32
+		- -D_WIN32
+		- -D_CRT_SECURE_NO_WARNINGS
+		- -DWINVER=0x0a00
+		- -D_WIN32_WINNT=0x0a00
+		- -DPRE_RELEASE_VER=3.3
 
 If:
   PathExclude:
