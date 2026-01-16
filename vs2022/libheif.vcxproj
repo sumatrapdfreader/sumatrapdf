@@ -852,6 +852,7 @@
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_plugin.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_security.h" />
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_sequences.h" />
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.h" />
     <ClInclude Include="..\ext\libheif\libheif\bitstream.h" />
     <ClInclude Include="..\ext\libheif\libheif\box.h" />
@@ -929,6 +930,7 @@
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_plugin.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_security.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_sequences.cc" />
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.cc" />
     <ClCompile Include="..\ext\libheif\libheif\bitstream.cc" />
     <ClCompile Include="..\ext\libheif\libheif\box.cc" />

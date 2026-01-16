@@ -54,6 +54,9 @@
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_security.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_sequences.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
@@ -247,6 +250,9 @@
       <Filter>api\libheif</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_security.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_sequences.cc">
       <Filter>api\libheif</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_tai_timestamps.cc">

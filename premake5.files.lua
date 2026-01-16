@@ -344,6 +344,7 @@ function libheif_files()
     "heif_image_handle.*",
     "heif_plugin.*",
     "heif_security.*",
+    "heif_sequences.*",
     "heif_tai_timestamps.*",
   })
 end
