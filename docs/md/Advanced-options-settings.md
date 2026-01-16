@@ -171,129 +171,132 @@ ZoomIncrement = 0
 
 ; customization options for PDF, XPS, DjVu and PostScript UI
 FixedPageUI [
-; color value with which black (text) will be substituted
+    ; color value with which black (text) will be substituted
     TextColor = #000000
 
-; color value with which white (background) will be substituted
+    ; color value with which white (background) will be substituted
     BackgroundColor = #ffffff
 
-; color value for the text selection rectangle (also used to highlight found
-; text) (introduced in version 2.4)
+    ; color value for the text selection rectangle (also used to highlight found
+    ; text) (introduced in version 2.4)
     SelectionColor = #f5fc0c
 
-; top, right, bottom and left margin (in that order) between window and document
+    ; top, right, bottom and left margin (in that order) between window and
+    ; document
     WindowMargin = 2 4 2 4
 
-; horizontal and vertical distance between two pages in facing and book view
-; modes
+    ; horizontal and vertical distance between two pages in facing and book view
+    ; modes
     PageSpacing = 4 4
 
-; colors to use for the gradient from top to bottom (stops will be inserted at
-; regular intervals throughout the document); currently only up to three colors
-; are supported; the idea behind this experimental feature is that the
-; background might allow to subconsciously determine reading progress; suggested
-; values: #2828aa #28aa28 #aa2828
+    ; colors to use for the gradient from top to bottom (stops will be inserted
+    ; at regular intervals throughout the document); currently only up to three
+    ; colors are supported; the idea behind this experimental feature is that
+    ; the background might allow to subconsciously determine reading progress;
+    ; suggested values: #2828aa #28aa28 #aa2828
     GradientColors =
 
-; if true, TextColor and BackgroundColor of the document will be swapped
+    ; if true, TextColor and BackgroundColor of the document will be swapped
     InvertColors = false
 
-; if true, hides the scrollbars but retains ability to scroll
+    ; if true, hides the scrollbars but retains ability to scroll
     HideScrollbars = false
 ]
 
 ; customization options for eBookUI
 EBookUI [
-; font size, default 8.0
+    ; font size, default 8.0
     FontSize = 0
 
-; default is 420
+    ; default is 420
     LayoutDx = 0
 
-; default is 595
+    ; default is 595
     LayoutDy = 0
 
-; if true, we ignore ebook's CSS
+    ; if true, we ignore ebook's CSS
     IgnoreDocumentCSS = false
 
-; custom CSS. Might need to set IgnoreDocumentCSS = true
+    ; custom CSS. Might need to set IgnoreDocumentCSS = true
     CustomCSS =
 ]
 
 ; customization options for Comic Book and images UI
 ComicBookUI [
-; top, right, bottom and left margin (in that order) between window and document
+    ; top, right, bottom and left margin (in that order) between window and
+    ; document
     WindowMargin = 0 0 0 0
 
-; horizontal and vertical distance between two pages in facing and book view
-; modes
+    ; horizontal and vertical distance between two pages in facing and book view
+    ; modes
     PageSpacing = 4 4
 
-; if true, default to displaying Comic Book files in manga mode (from right to
-; left if showing 2 pages at a time)
+    ; if true, default to displaying Comic Book files in manga mode (from right
+    ; to left if showing 2 pages at a time)
     CbxMangaMode = false
 ]
 
 ; customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI
 ; settings apply instead
 ChmUI [
-; if true, the UI used for PDF documents will be used for CHM documents as well
+    ; if true, the UI used for PDF documents will be used for CHM documents as
+    ; well
     UseFixedPageUI = false
 ]
 
 ; default values for annotations in PDF documents (introduced in version 3.3)
 Annotations [
-; highlight annotation color
+    ; highlight annotation color
     HighlightColor = #ffff00
 
-; underline annotation color
+    ; underline annotation color
     UnderlineColor = #00ff00
 
-; squiggly annotation color (introduced in version 3.5)
+    ; squiggly annotation color (introduced in version 3.5)
     SquigglyColor = #ff00ff
 
-; strike out annotation color (introduced in version 3.5)
+    ; strike out annotation color (introduced in version 3.5)
     StrikeOutColor = #ff0000
 
-; color of free text annotation (introduced in version 3.5)
+    ; color of free text annotation (introduced in version 3.5)
     FreeTextColor = 
 
-; size of free text annotation (introduced in version 3.5)
+    ; size of free text annotation (introduced in version 3.5)
     FreeTextSize = 12
 
-; width of free text annotation border (introduced in version 3.5)
+    ; width of free text annotation border (introduced in version 3.5)
     FreeTextBorderWidth = 1
 
-; text icon annotation color
+    ; text icon annotation color
     TextIconColor = 
 
-; type of text annotation icon: comment, help, insert, key, new paragraph, note,
-; paragraph. If not set: note.
+    ; type of text annotation icon: comment, help, insert, key, new paragraph,
+    ; note, paragraph. If not set: note.
     TextIconType = 
 
-; default author for created annotations, use (none) to not add an author at
-; all. If not set will use Windows user name (introduced in version 3.4)
+    ; default author for created annotations, use (none) to not add an author at
+    ; all. If not set will use Windows user name (introduced in version 3.4)
     DefaultAuthor = 
 ]
 
 ; list of additional external viewers for various file types. See docs for more information (https://www.sumatrapdfreader.org/docs/Customize-external-viewers)
 ExternalViewers [
   [
-; command line with which to call the external viewer, may contain %p for page
-; number and "%1" for the file name (add quotation marks around paths containing
-; spaces)
+    ; command line with which to call the external viewer, may contain %p for
+    ; page number and "%1" for the file name (add quotation marks around paths
+    ; containing spaces)
     CommandLine =
 
-; name of the external viewer to be shown in the menu (implied by CommandLine if
-; missing)
+    ; name of the external viewer to be shown in the menu (implied by
+    ; CommandLine if missing)
     Name =
 
-; optional filter for which file types the menu item is to be shown; separate
-; multiple entries using ';' and don't include any spaces (e.g. *.pdf;*.xps for
-; all PDF and XPS documents)
+    ; optional filter for which file types the menu item is to be shown;
+    ; separate multiple entries using ';' and don't include any spaces (e.g.
+    ; *.pdf;*.xps for all PDF and XPS documents)
     Filter =
 
-; optional: keyboard shortcut e.g. Alt + 7 (introduced in version 3.6)
+    ; optional: keyboard shortcut e.g. Alt + 7 (introduced in version 3.6)
     Key =
   ]
 ]
@@ -301,25 +304,25 @@ ExternalViewers [
 ; customization options for how we show forward search results (used from LaTeX
 ; editors)
 ForwardSearch [
-; when set to a positive value, the forward search highlight style will be
-; changed to a rectangle at the left of the page (with the indicated amount of
-; margin from the page margin)
+    ; when set to a positive value, the forward search highlight style will be
+    ; changed to a rectangle at the left of the page (with the indicated amount
+    ; of margin from the page margin)
     HighlightOffset = 0
 
-; width of the highlight rectangle (if HighlightOffset is > 0)
+    ; width of the highlight rectangle (if HighlightOffset is > 0)
     HighlightWidth = 15
 
-; color used for the forward search highlight
+    ; color used for the forward search highlight
     HighlightColor = #6581ff
 
-; if true, highlight remains visible until the next mouse click (instead of
-; fading away immediately)
+    ; if true, highlight remains visible until the next mouse click (instead of
+    ; fading away immediately)
     HighlightPermanent = false
 ]
 
 ; these override the default settings in the Print dialog
 PrinterDefaults [
-; default value for scaling (shrink, fit, none)
+    ; default value for scaling (shrink, fit, none)
     PrintScale = shrink
 ]
 
@@ -327,15 +330,15 @@ PrinterDefaults [
 ; is active. See docs for more information (https://www.sumatrapdfreader.org/docs/Customize-search-translation-services)
 SelectionHandlers [
   [
-; url to invoke for the selection. ${selection} will be replaced with current
-; selection and ${userlang} with language code for current UI (e.g. 'de' for
-; German)
+    ; url to invoke for the selection. ${selection} will be replaced with
+    ; current selection and ${userlang} with language code for current UI (e.g.
+    ; 'de' for German)
     URL =
 
-; name shown in context menu
+    ; name shown in context menu
     Name =
 
-; keyboard shortcut (introduced in version 3.6)
+    ; keyboard shortcut (introduced in version 3.6)
     Key =
   ]
 ]
@@ -343,16 +346,16 @@ SelectionHandlers [
 ; custom keyboard shortcuts
 Shortcuts [
   [
-; command
+    ; command
     Cmd = 
 
-; keyboard shortcut (e.g. Ctrl-Alt-F)
+    ; keyboard shortcut (e.g. Ctrl-Alt-F)
     Key = 
 
-; name shown in command palette (introduced in version 3.6)
+    ; name shown in command palette (introduced in version 3.6)
     Name =
 
-; if given, shows in toolbar (introduced in version 3.6)
+    ; if given, shows in toolbar (introduced in version 3.6)
     ToolbarText =
   ]
 ]
@@ -360,22 +363,22 @@ Shortcuts [
 ; color themes (introduced in version 3.6)
 Themes [
   [
-; name of the theme
+    ; name of the theme
     Name = 
 
-; text color
+    ; text color
     TextColor = 
 
-; background color
+    ; background color
     BackgroundColor = 
 
-; control background color
+    ; control background color
     ControlBackgroundColor = 
 
-; link color
+    ; link color
     LinkColor = 
 
-; should we colorize Windows controls and window areas
+    ; should we colorize Windows controls and window areas
     ColorizeControls = false
   ]
 ]
@@ -401,81 +404,81 @@ WindowPos = 0 0 0 0
 ; information about opened files (in most recently used order)
 FileStates [
   [
-; path of the document
+    ; path of the document
     FilePath =
 
-; Values which are persisted for bookmarks/favorites
+    ; Values which are persisted for bookmarks/favorites
     Favorites [
       [
-; name of this favorite as shown in the menu
+        ; name of this favorite as shown in the menu
         Name =
 
-; number of the bookmarked page
+        ; number of the bookmarked page
         PageNo = 0
 
-; label for this page (only present if logical and physical page numbers are not
-; the same)
+        ; label for this page (only present if logical and physical page numbers
+        ; are not the same)
         PageLabel =
       ]
     ]
 
-; a document can be "pinned" to the Frequently Read list so that it isn't
-; displaced by recently opened documents
+    ; a document can be "pinned" to the Frequently Read list so that it isn't
+    ; displaced by recently opened documents
     IsPinned = false
 
-; if true, the file is considered missing and won't be shown in any list
+    ; if true, the file is considered missing and won't be shown in any list
     IsMissing = false
 
-; number of times this document has been opened recently
+    ; number of times this document has been opened recently
     OpenCount = 0
 
-; data required to open a password protected document without having to ask for
-; the password again
+    ; data required to open a password protected document without having to ask
+    ; for the password again
     DecryptionKey =
 
-; if true, we use global defaults when opening this file (instead of the values
-; below)
+    ; if true, we use global defaults when opening this file (instead of the
+    ; values below)
     UseDefaultState = false
 
-; layout of pages. valid values: automatic, single page, facing, book view,
-; continuous, continuous facing, continuous book view
+    ; layout of pages. valid values: automatic, single page, facing, book view,
+    ; continuous, continuous facing, continuous book view
     DisplayMode = automatic
 
-; how far this document has been scrolled (in x and y direction)
+    ; how far this document has been scrolled (in x and y direction)
     ScrollPos = 0 0
 
-; number of the last read page
+    ; number of the last read page
     PageNo = 1
 
-; zoom (in %) or one of those values: fit page, fit width, fit content
+    ; zoom (in %) or one of those values: fit page, fit width, fit content
     Zoom = fit page
 
-; how far pages have been rotated as a multiple of 90 degrees
+    ; how far pages have been rotated as a multiple of 90 degrees
     Rotation = 0
 
-; state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is
-; minimized
+    ; state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is
+    ; minimized
     WindowState = 0
 
-; default position (can be on any monitor)
+    ; default position (can be on any monitor)
     WindowPos = 0 0 0 0
 
-; if true, we show table of contents (Bookmarks) sidebar if it's present in the
-; document
+    ; if true, we show table of contents (Bookmarks) sidebar if it's present in
+    ; the document
     ShowToc = true
 
-; width of the left sidebar panel containing the table of contents
+    ; width of the left sidebar panel containing the table of contents
     SidebarDx = 0
 
-; if true, the document is displayed right-to-left in facing and book view modes
-; (only used for comic book documents)
+    ; if true, the document is displayed right-to-left in facing and book view
+    ; modes (only used for comic book documents)
     DisplayR2L = false
 
-; data required to restore the last read page in the ebook UI
+    ; data required to restore the last read page in the ebook UI
     ReparseIdx = 0
 
-; data required to determine which parts of the table of contents have been
-; expanded
+    ; data required to determine which parts of the table of contents have been
+    ; expanded
     TocState =
   ]
 ]
@@ -484,45 +487,45 @@ FileStates [
 ; version 3.1)
 SessionData [
   [
-; data required for restoring the view state of a single tab
+    ; data required for restoring the view state of a single tab
     TabStates [
       [
-; path of the document
+        ; path of the document
         FilePath =
 
-; same as FileStates -> DisplayMode
+        ; same as FileStates -> DisplayMode
         DisplayMode = automatic
 
-; number of the last read page
+        ; number of the last read page
         PageNo = 1
 
-; same as FileStates -> Zoom
+        ; same as FileStates -> Zoom
         Zoom = fit page
 
-; same as FileStates -> Rotation
+        ; same as FileStates -> Rotation
         Rotation = 0
 
-; how far this document has been scrolled (in x and y direction)
+        ; how far this document has been scrolled (in x and y direction)
         ScrollPos = 0 0
 
-; if true, the table of contents was shown when the document was closed
+        ; if true, the table of contents was shown when the document was closed
         ShowToc = true
 
-; same as FileStates -> TocState
+        ; same as FileStates -> TocState
         TocState =
       ]
     ]
 
-; index of the currently selected tab (1-based)
+    ; index of the currently selected tab (1-based)
     TabIndex = 1
 
-; same as FileState -> WindowState
+    ; same as FileState -> WindowState
     WindowState = 0
 
-; default position (can be on any monitor)
+    ; default position (can be on any monitor)
     WindowPos = 0 0 0 0
 
-; width of favorites/bookmarks sidebar (if shown)
+    ; width of favorites/bookmarks sidebar (if shown)
     SidebarDx = 0
   ]
 ]
@@ -540,11 +543,13 @@ OpenCountWeek = 0
 
 ## Syntax for color values
 
-The syntax for colors is: `#rrggbb`.
+The syntax for colors is: `#rrggbb` or `#rrggbb`.
 
 The components are hex values (ranging from 00 to FF) and stand for:
 - `rr` : red component
 - `gg` : green component
 - `bb` : blue component
+- `aa` : alpha (transparency) component
 
-For example #ff0000 means red color.
+For example #ff0000 means red color. #ff00007f is half-transparent red.
+

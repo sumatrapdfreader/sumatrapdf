@@ -96,13 +96,14 @@ square brackets in pairs</b>! Else you risk losing all the data following them.<
 <h3 id="color">Syntax for color values</h3>
 
 <p>
-The syntax for colors is: <code>#rrggbb</code>.</p>
+The syntax for colors is: <code>#rrggbb</code> or <code>#rrggbbaa</code>.</p>
 <p>The components are hex values (ranging from 00 to FF) and stand for:
 <ul>
   <li><code>rr</code> : red component</li>
   <li><code>gg</code> : green component</li>
   <li><code>bb</code> : blue component</li>
-</ul>
+  <li><code>aa</code> : alpha (transparency) component</li>
+  </ul>
 For example #ff0000 means red color. You can use <a href="https://galactic.ink/sphere/">Sphere</a> to pick a color.
 </p>
 </div>
@@ -318,24 +319,27 @@ If you add or remove lines with square brackets, **make sure to always add/remov
 
 ## Syntax for color values
 
-The syntax for colors is: ` + "`#rrggbb`" + `.
+The syntax for colors is: ` + "`#rrggbb`" + ` or ` + "`#rrggbb`" + `.
 
 The components are hex values (ranging from 00 to FF) and stand for:
 - ` + "`rr`" + ` : red component
 - ` + "`gg`" + ` : green component
 - ` + "`bb`" + ` : blue component
+- ` + "`aa`" + ` : alpha (transparency) component
 
-For example #ff0000 means red color.
+For example #ff0000 means red color. #ff00007f is half-transparent red.
+
 `
 
-func genCommentMarkdown(comment string, first bool) string {
+func genCommentMarkdown(comment string, indent string, first bool) string {
 	lineLen := 80
 	s := "\n"
 	if first {
 		s = ""
 	}
-	s = s + "; "
-	left := lineLen - 2
+	prefix := indent + "; "
+	s = s + prefix
+	left := lineLen - len(prefix)
 	// [foo](bar.html) is converted to foo (bar.html) in plain text
 	hrefText := ""
 	words := strings.SplitSeq(comment, " ")
@@ -358,8 +362,8 @@ func genCommentMarkdown(comment string, first bool) string {
 			continue
 		}
 		if left < len(word) {
-			s = rstrip(s) + "\n; "
-			left = lineLen - 2
+			s = rstrip(s) + "\n" + prefix
+			left = lineLen - len(prefix)
 		}
 		word += " "
 		left -= len(word)
@@ -383,7 +387,7 @@ func genStructMarkdown(struc *Field, indent string) string {
 			comment += fmt.Sprintf(" (introduced in version %s)", field.Version)
 		}
 
-		s := genCommentMarkdown(comment, first)
+		s := genCommentMarkdown(comment, indent, first)
 		lines = append(lines, s)
 
 		switch field.Type.Name {
