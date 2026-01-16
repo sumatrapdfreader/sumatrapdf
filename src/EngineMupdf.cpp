@@ -5,7 +5,6 @@ extern "C" {
 #include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 #include "../mupdf/source/fitz/color-imp.h"
-#include "../mupdf/source/pdf/pdf-annot-imp.h"
 }
 
 #include "utils/BaseUtil.h"
@@ -39,14 +38,14 @@ extern "C" {
 #include "utils/Log.h"
 
 // A5
-static float layoutA5DxPt = 420.f;
-static float layoutA5DyPt = 595.f;
+static float layoutA5DxPt = 420.F;
+static float layoutA5DyPt = 595.F;
 
 // A4
-static float layoutA4DxPt = 595.f;
-static float layoutA4DyPt = 842.f;
+static float layoutA4DxPt = 595.F;
+static float layoutA4DyPt = 842.F;
 
-static float layoutFontEm = 11.f;
+static float layoutFontEm = 11.F;
 
 // in mupdf_load_system_font.c
 extern "C" void install_load_windows_font_funcs(fz_context* ctx);
@@ -281,16 +280,16 @@ fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
 
 // TODO: maybe make dpi a float as well
 static float DpiScale(float x, int dpi) {
-    ReportIf(dpi < 70.f);
+    ReportIf(dpi < 70.F);
     // TODO: maybe implement step scaling like mupdf
     float res = x * (float)dpi;
-    res = res / 96.f;
+    res = res / 96.F;
     return res;
 }
 
 static float FzRectOverlap(fz_rect r1, fz_rect r2) {
     if (fz_is_empty_rect(r1)) {
-        return 0.0f;
+        return 0.0F;
     }
     fz_rect isect = fz_intersect_rect(r1, r2);
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
@@ -298,7 +297,7 @@ static float FzRectOverlap(fz_rect r1, fz_rect r2) {
 
 static float FzRectOverlap(fz_rect r1, RectF r2f) {
     if (fz_is_empty_rect(r1)) {
-        return 0.0f;
+        return 0.0F;
     }
     fz_rect r2 = ToFzRect(r2f);
     fz_rect isect = fz_intersect_rect(r1, r2);
@@ -854,7 +853,8 @@ static RenderedBitmap* TryRenderAsPaletteImage(fz_pixmap* pixmap) {
         return nullptr;
     }
 
-    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
+    size_t sz = sizeof(BITMAPINFO) + (255 * sizeof(RGBQUAD));
+    ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sz));
 
     u8* dest = bmpData;
     u8* source = pixmap->samples;
