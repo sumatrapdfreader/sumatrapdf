@@ -1575,8 +1575,13 @@ static void fz_unlock_context_cs(void* user, int lock) {
 
 static void fz_print_cb(void* user, const char* msg) {
     static AtomicBool seenMsg;
-    if (str::Contains(msg, "generic error: couldn't find system font 'serif'")) {
+    if (str::Contains(msg, "generic error: couldn't find system font")) {
         // this floods the log in some files
+        // it shows a font name like this:
+        // generic error: couldn't find system font 'AngsanaUPC-Bold'
+        // generic error: couldn't find system font 'AngsanaUPC'
+        // we only show the first missed font. Could use StrVec() to log every
+        // missing font
         if (seenMsg.Get()) {
             return;
         }
