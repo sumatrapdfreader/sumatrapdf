@@ -1789,7 +1789,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
             gFileHistory.MarkFileInexistent(fs->filePath, true);
         } else {
             gFileHistory.Remove(fs);
-            DeleteDisplayState(fs);
+            DeleteFileState(fs);
         }
         DeleteThumbnailForFile(filePath);
         SaveSettings();

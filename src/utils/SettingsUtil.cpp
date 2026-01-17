@@ -272,27 +272,25 @@ static bool parseBool(const char* value) {
 static void deserializeField(const FieldInfo& field, u8* base, const char* value) {
     u8* fieldPtr = base + field.offset;
 
-    char** strPtr = (char**)fieldPtr;
-    WCHAR** wstrPtr = (WCHAR**)fieldPtr;
-    bool* boolPtr = (bool*)fieldPtr;
-    int* intPtr = (int*)fieldPtr;
-
     switch (field.type) {
-        case SettingType::Bool:
+        case SettingType::Bool: {
+            bool* boolPtr = (bool*)fieldPtr;
             if (value) {
                 *boolPtr = parseBool(value);
             } else {
                 *boolPtr = field.value != 0;
             }
             break;
+        }
 
-        case SettingType::Int:
+        case SettingType::Int: {
+            int* intPtr = (int*)fieldPtr;
             if (value) {
                 *intPtr = ParseInt(value);
             } else {
                 *intPtr = (int)field.value;
             }
-            break;
+        } break;
 
         case SettingType::Float: {
             const char* s = value ? value : (const char*)field.value;
@@ -301,14 +299,16 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
         }
 
         case SettingType::Color:
-        case SettingType::String:
+        case SettingType::String: {
+            char** strPtr = (char**)fieldPtr;
             free(*strPtr);
             if (value) {
                 *strPtr = UnescapeStr(value);
             } else {
                 *strPtr = str::Dup((const char*)field.value);
             }
-            break;
+        } break;
+
         case SettingType::Compact:
             ReportIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
@@ -586,8 +586,9 @@ static void FreeStructData(const StructInfo* info, u8* base) {
 }
 
 void FreeStruct(const StructInfo* info, void* strct) {
-    if (strct) {
-        FreeStructData(info, (u8*)strct);
+    if (!strct) {
+        return;
     }
+    FreeStructData(info, (u8*)strct);
     free(strct);
 }

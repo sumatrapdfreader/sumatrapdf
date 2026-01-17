@@ -221,7 +221,7 @@ static void AddOrReplaceFav(const char* filePath, int pageNo, const char* name, 
     if (!fav) {
         // we were asked to add a favorite for current file but couldn't find
         // history for this file
-        fav = NewDisplayState(filePath);
+        fav = NewFileState(filePath);
         gFileHistory.Append(fav);
     }
 
@@ -251,7 +251,7 @@ static void RemoveFav(const char* filePath, int pageNo) {
 
     if (!gGlobalPrefs->rememberOpenedFiles && 0 == fav->favorites->size()) {
         gFileHistory.Remove(fav);
-        DeleteDisplayState(fav);
+        DeleteFileState(fav);
     }
 }
 
@@ -268,7 +268,7 @@ static void RemoveAllFavForFile(const char* filePath) {
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
         gFileHistory.Remove(fav);
-        DeleteDisplayState(fav);
+        DeleteFileState(fav);
     }
 }
 

@@ -805,7 +805,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
     if (!prefsData.empty()) {
         // serialize without FileStates info because it's the largest
         GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());
-        delete gp->fileStates;
+        DeleteFileStates(gp->fileStates);
         gp->fileStates = new Vec<FileState*>();
         // TODO: also sessionData?
         ByteSlice d = SerializeGlobalPrefs(gp, nullptr);

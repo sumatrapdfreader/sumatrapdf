@@ -1392,7 +1392,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
 
-    FileState* fs = NewDisplayState(path);
+    FileState* fs = NewFileState(path);
     tab->ctrl->GetDisplayState(fs);
     UpdateDisplayStateWindowRect(win, fs);
     UpdateSidebarDisplayState(tab, fs);
@@ -1416,7 +1416,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     ReplaceDocumentInCurrentTab(&args, ctrl, fs);
 
     if (!ctrl) {
-        DeleteDisplayState(fs);
+        DeleteFileState(fs);
         return;
     }
 
@@ -1443,7 +1443,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         }
     }
 
-    DeleteDisplayState(fs);
+    DeleteFileState(fs);
 }
 
 static void CreateSidebar(MainWindow* win) {
@@ -1685,7 +1685,7 @@ static void RenameFileInHistory(const char* oldPath, const char* newPath) {
         if (fs->favorites->size() > 0) {
             UpdateFavoritesTreeForAllWindows();
         }
-        DeleteDisplayState(fs);
+        DeleteFileState(fs);
     }
     fs = gFileHistory.FindByName(oldPath, nullptr);
     if (fs) {

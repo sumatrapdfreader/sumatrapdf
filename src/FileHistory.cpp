@@ -66,7 +66,7 @@ void FileHistory::Clear(bool keepFavorites) const {
             states->at(i)->openCount = 0;
             keep.Append(states->at(i));
         } else {
-            DeleteDisplayState(states->at(i));
+            DeleteFileState(states->at(i));
         }
     }
     *states = keep;
@@ -129,7 +129,7 @@ FileState* FileHistory::MarkFileLoaded(const char* filePath) const {
     // the file moves to the front of the list
     FileState* fs = FindByPath(filePath);
     if (!fs) {
-        fs = NewDisplayState(filePath);
+        fs = NewFileState(filePath);
         fs->useDefaultState = true;
     } else {
         states->Remove(fs);
@@ -269,7 +269,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         } else {
             continue;
         }
-        DeleteDisplayState(state);
+        DeleteFileState(state);
     }
 }
 

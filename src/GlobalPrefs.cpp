@@ -16,15 +16,22 @@
 
 GlobalPrefs* gGlobalPrefs = nullptr;
 
-FileState* NewDisplayState(const char* filePath) {
+FileState* NewFileState(const char* filePath) {
     FileState* fs = (FileState*)DeserializeStruct(&gFileStateInfo, nullptr);
     SetFileStatePath(fs, filePath);
     return fs;
 }
 
-void DeleteDisplayState(FileState* fs) {
+void DeleteFileState(FileState* fs) {
     delete fs->thumbnail;
     FreeStruct(&gFileStateInfo, fs);
+}
+
+void DeleteFileStates(Vec<FileState*>* a) {
+    for (auto fs : *a) {
+        DeleteFileState(fs);
+    }
+    delete a;
 }
 
 Favorite* NewFavorite(int pageNo, const char* name, const char* pageLabel) {
