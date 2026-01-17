@@ -1521,7 +1521,7 @@ void DeleteCreatedFonts() {
     while (curr) {
         auto next = curr->next;
         free((void*)curr->name);
-        DeleteFont(&curr->font);
+        DeleteFont(curr->font);
         delete curr;
         curr = next;
     }
