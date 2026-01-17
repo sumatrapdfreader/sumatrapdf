@@ -3548,15 +3548,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONUP: {
+            bool isDragging = (GetCapture() == hwnd);
+            if (isDragging) {
+                ReleaseCapture();
+            }
             if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed && overClose) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = -1;
-            }
-            bool isDragging = (GetCapture() == hwnd);
-            if (isDragging) {
-                ReleaseCapture();
+                return 0;
             }
             // we don't always get WM_MOUSEMOVE before WM_LBUTTONUP so
             // update tabHighlighted
@@ -3588,6 +3589,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             TriggerTabDragged(this, selectedTab, dstIdx);
             UpdateAfterDrag(this, selectedTab, dstIdx);
+            HwndScheduleRepaint(hwnd);
             return 0;
         }
 
