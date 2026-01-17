@@ -51,7 +51,6 @@ void DbgOutLastError(DWORD err = 0);
 
 // registry
 const char* RegKeyNameTemp(HKEY key);
-const char* RegKeyNameWTemp(HKEY key);
 bool RegKeyExists(HKEY keySub, const char* keyName);
 char* ReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);
 char* LoggedReadRegStrTemp(HKEY keySub, const char* keyName, const char* valName);

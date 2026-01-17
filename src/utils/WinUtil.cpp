@@ -440,7 +440,7 @@ TryAgainWOW64:
 
 char* LoggedReadRegStrTemp(HKEY hkey, const char* keyName, const char* valName) {
     auto res = ReadRegStrTemp(hkey, keyName, valName);
-    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameWTemp(hkey), keyName, valName, res);
+    logf("ReadRegStrTemp(%s, %s, %s) => '%s'\n", RegKeyNameTemp(hkey), keyName, valName, res);
     return res;
 }
 
@@ -478,11 +478,11 @@ bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, cons
     DWORD cbData = (DWORD)(str::Len(valueW) + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_SZ, (const void*)valueW, cbData);
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, value, res);
+        logf("WriteRegStr(%s, %s, %s, %s) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, value, res);
         LogLastError();
         return false;
     }
-    logf("WriteRegStr(%s, %s, %s, %s) failed with '%d' ok!\n", RegKeyNameWTemp(hkey), keyName, valName, value);
+    logf("WriteRegStr(%s, %s, %s, %s) failed with '%d' ok!\n", RegKeyNameTemp(hkey), keyName, valName, value);
     return true;
 }
 
@@ -506,12 +506,12 @@ bool LoggedWriteRegDWORD(HKEY hkey, const char* keyName, const char* valName, DW
     WCHAR* valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyNameW, valNameW, REG_DWORD, (const void*)&value, sizeof(DWORD));
     if (res != ERROR_SUCCESS) {
-        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameWTemp(hkey), keyName, valName, (int)value,
+        logf("WriteRegDWORD(%s, %s, %s, %d) failed with '%d'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value,
              res);
         LogLastError();
         return false;
     }
-    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameWTemp(hkey), keyName, valName, (int)value);
+    logf("WriteRegDWORD(%s, %s, %s, %d) => ok'\n", RegKeyNameTemp(hkey), keyName, valName, (int)value);
     return true;
 }
 
@@ -519,7 +519,7 @@ bool LoggedWriteRegNone(HKEY hkey, const char* key, const char* valName) {
     WCHAR* keyW = ToWStrTemp(key);
     WCHAR* valNameW = ToWStrTemp(valName);
     LSTATUS res = SHSetValueW(hkey, keyW, valNameW, REG_NONE, nullptr, 0);
-    logf("LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameWTemp(hkey), key, valName, res);
+    logf("LoggedWriteRegNone(%s, %s, %s) => '%d'\n", RegKeyNameTemp(hkey), key, valName, res);
     return (ERROR_SUCCESS == res);
 }
 
