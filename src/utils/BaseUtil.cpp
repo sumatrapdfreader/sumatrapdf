@@ -198,6 +198,15 @@ void PoolAllocator::Reset(bool poisonFreedMemory) {
         ReportIf(currBlock);
         return;
     }
+    if (!first->next && (first->nAllocs == 0)) {
+        // fast path when no allocations have been made
+        return;
+    }
+    if (!first->next) {
+        // fast path where only first block
+        ResetBlock(first);
+        return;
+    }
     if (poisonFreedMemory) {
         PoisonData(firstBlock);
     }
