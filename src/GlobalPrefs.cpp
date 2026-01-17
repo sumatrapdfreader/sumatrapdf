@@ -144,3 +144,10 @@ void SetFileStatePath(FileState* fs, const WCHAR* path) {
 Themes* ParseThemes(const char* data) {
     return (Themes*)DeserializeStruct(&gThemesInfo, data);
 }
+
+void FreeParsedThemes(Themes* themes) {
+    if (!themes) {
+        return;
+    }
+    FreeStruct(&gThemesInfo, themes);
+}

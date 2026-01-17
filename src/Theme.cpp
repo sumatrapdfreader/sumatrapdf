@@ -146,16 +146,25 @@ static int gThemeCount;
 static int gCurrThemeIndex = 0;
 static Theme* gCurrentTheme = nullptr;
 static Theme* gThemeLight = nullptr;
+static Themes* gParsedThemes = nullptr;
 
 bool IsCurrentThemeDefault() {
     return gCurrThemeIndex == 0;
 }
 
+void FreeThemes() {
+    delete gThemes; // no need to free members, they are owned by gParsedThemes
+    gThemes = nullptr;
+    FreeParsedThemes(gParsedThemes);
+    gParsedThemes = nullptr;
+}
+
 void CreateThemeCommands() {
-    delete gThemes;
+    FreeThemes();
+
     gThemes = new Vec<Theme*>();
-    auto themes = ParseThemes(themesTxt);
-    for (Theme* theme : *themes->themes) {
+    gParsedThemes = ParseThemes(themesTxt);
+    for (Theme* theme : *gParsedThemes->themes) {
         gThemes->Append(theme);
     }
 

@@ -21,6 +21,7 @@ COLORREF ThemeNotificationsHighlightTextColor();
 COLORREF ThemeNotificationsProgressColor();
 bool ThemeColorizeControls();
 bool IsCurrentThemeDefault();
+void FreeThemes();
 
 extern int gFirstSetThemeCmdId;
 extern int gLastSetThemeCmdId;

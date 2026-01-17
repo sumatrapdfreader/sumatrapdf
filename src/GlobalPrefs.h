@@ -23,5 +23,6 @@ void SetFileStatePath(FileState* fs, const char* path);
 // void SetFileStatePath(FileState* fs, const WCHAR* path);
 
 Themes* ParseThemes(const char* data);
+void FreeParsedThemes(Themes* themes);
 
 #define GetPrefsColor(name) GetParsedColor(name, name##Parsed)
