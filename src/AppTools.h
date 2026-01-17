@@ -29,6 +29,8 @@ bool HasBeenInstalled();
 bool IsRunningInPortableMode();
 bool IsDllBuild();
 
+void DeleteAppTools();
+
 void SetAppDataDir(const char* path);
 TempStr GetAppDataDirTemp();
 TempStr GetPathInAppDataDirTemp(const char* fileName);

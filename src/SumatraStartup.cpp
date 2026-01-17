@@ -1476,7 +1476,7 @@ Exit:
     if (!gIsAsanBuild) {
         UninstallCrashHandler();
     }
-
+    DeleteAppTools();
     DestroyLogging();
     DestroyTempAllocator();
 

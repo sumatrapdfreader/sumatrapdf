@@ -107,6 +107,10 @@ bool IsDllBuild() {
 // TODO: leaks
 static char* gAppDataDir = nullptr;
 
+void DeleteAppTools() {
+    str::FreePtr(&gAppDataDir);
+}
+
 void SetAppDataDir(const char* dir) {
     dir = path::NormalizeTemp(dir);
     bool ok = dir::CreateAll(dir);
