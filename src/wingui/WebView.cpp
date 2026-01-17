@@ -29,6 +29,7 @@ TempStr GetWebView2VersionTemp() {
         return nullptr;
     }
     TempStr res = ToUtf8Temp(ver);
+    CoTaskMemFree((void*)ver);
     return res;
 }
 
