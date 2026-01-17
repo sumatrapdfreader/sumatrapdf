@@ -861,6 +861,7 @@ void UninstallCrashHandler() {
     str::FreePtr(&gSystemInfo);
     str::FreePtr(&gSettingsFile);
     str::FreePtr(&gModulesInfo);
+    str::FreePtr(&gCrashFilePath);
     delete gCrashHandlerAllocator;
 }
 
