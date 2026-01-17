@@ -335,9 +335,17 @@ static void deserializeField(const FieldInfo& field, u8* base, const char* value
             *(Vec<int>**)fieldPtr = v;
             while (value && *value) {
                 FieldInfo info{};
-                info.type = SettingType::IntArray == field.type     ? SettingType::Int
-                            : SettingType::FloatArray == field.type ? SettingType::Float
-                                                                    : SettingType::Color;
+                switch (field.type) {
+                    case SettingType::IntArray:
+                        info.type = SettingType::Int;
+                        break;
+                    case SettingType::FloatArray:
+                        info.type = SettingType::Float;
+                        break;
+                    default:
+                        ReportIf(true);
+                        break;
+                }
                 deserializeField(info, (u8*)v->AppendBlanks(1), value);
                 value = skipNonWhitespace(value);
                 value = skipWhitespace(value);
