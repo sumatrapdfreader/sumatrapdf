@@ -524,18 +524,44 @@ static void FreeStructData(const StructInfo* info, u8* base) {
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
         u8* fieldPtr = base + field.offset;
-        if (SettingType::Struct == field.type || SettingType::Prerelease == field.type) {
-            FreeStructData(GetSubstruct(field), fieldPtr);
-        } else if (SettingType::Array == field.type) {
-            FreeArray(*(Vec<void*>**)fieldPtr, field);
-        } else if (SettingType::String == field.type) {
-            void* m = *((void**)fieldPtr);
-            free(m);
-        } else if (SettingType::FloatArray == field.type || SettingType::IntArray == field.type) {
-            Vec<int>* v = *((Vec<int>**)fieldPtr);
-            delete v;
-        } else if (SettingType::StringArray == field.type || SettingType::ColorArray == field.type) {
-            FreeUtf8StringArray(*(Vec<char*>**)fieldPtr);
+        switch (field.type) {
+            case SettingType::Bool:
+            case SettingType::Int:
+            case SettingType::Float:
+            case SettingType::Comment:
+                // nothing to free
+                break;
+            case SettingType::Struct:
+            case SettingType::Prerelease: {
+                const StructInfo* substruct = GetSubstruct(field);
+                FreeStructData(substruct, fieldPtr);
+                break;
+            }
+            case SettingType::Array: {
+                Vec<void*>* array = *(Vec<void*>**)fieldPtr;
+                FreeArray(array, field);
+                break;
+            }
+            case SettingType::Color:
+            case SettingType::String: {
+                void* str = *((void**)fieldPtr);
+                free(str);
+                break;
+            }
+            case SettingType::FloatArray:
+            case SettingType::IntArray: {
+                Vec<int>* vec = *((Vec<int>**)fieldPtr);
+                delete vec;
+                break;
+            }
+            case SettingType::StringArray:
+            case SettingType::ColorArray: {
+                Vec<char*>* strArray = *(Vec<char*>**)fieldPtr;
+                FreeUtf8StringArray(strArray);
+                break;
+            }
+            default:
+                break;
         }
     }
 }
