@@ -100,9 +100,13 @@ void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t extra
     if (!mem) {
         return nullptr;
     }
-    void* newMem = AllocZero(a, size + extraBytes);
-    if (newMem) {
-        memcpy(newMem, mem, size);
+    void* newMem = Alloc(a, size + extraBytes);
+    if (!newMem) {
+        return nullptr;
+    }
+    memcpy(newMem, mem, size);
+    if (extraBytes > 0) {
+        ZeroMemory((char*)newMem + size, extraBytes);
     }
     return newMem;
 }
