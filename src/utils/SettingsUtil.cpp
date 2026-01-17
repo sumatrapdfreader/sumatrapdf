@@ -110,14 +110,26 @@ static char* SerializeUtf8StringArray(const Vec<char*>* strArray) {
     return (char*)serialized.StealData();
 }
 
+static char* skipNonWhitespace(const char* s) {
+    while (*s && !str::IsWs(*s)) {
+        s++;
+    }
+    return (char*)s;
+}
+
+static char* skipWhitespace(const char* s) {
+    while (str::IsWs(*s)) {
+        s++;
+    }
+    return (char*)s;
+}
+
 static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* serialized) {
     char* str = (char*)serialized;
     const char* s = str;
 
     for (;;) {
-        while (str::IsWs(*s)) {
-            s++;
-        }
+        s = skipWhitespace(s);
         if (!*s) {
             return;
         }
@@ -134,10 +146,7 @@ static void DeserializeUtf8StringArray(Vec<char*>* strArray, const char* seriali
                 s++;
             }
         } else {
-            const char* e;
-            for (e = s; *e && !str::IsWs(*e); e++) {
-                ;
-            }
+            const char* e = skipNonWhitespace(s);
             strArray->Append(str::Dup(s, e - s));
             s = e;
         }
@@ -153,8 +162,12 @@ static void FreeUtf8StringArray(Vec<char*>* strArray) {
 }
 
 static void FreeArray(Vec<void*>* array, const FieldInfo& field) {
-    for (size_t j = 0; array && j < array->size(); j++) {
-        FreeStruct(GetSubstruct(field), array->at(j));
+    if (!array) {
+        return;
+    }
+    auto structInfo = GetSubstruct(field);
+    for (auto el : *array) {
+        FreeStruct(structInfo, el);
     }
     delete array;
 }
@@ -256,7 +269,7 @@ static bool parseBool(const char* value) {
     return i != 0;
 }
 
-static void DeserializeField(const FieldInfo& field, u8* base, const char* value) {
+static void deserializeField(const FieldInfo& field, u8* base, const char* value) {
     u8* fieldPtr = base + field.offset;
 
     char** strPtr = (char**)fieldPtr;
@@ -300,52 +313,50 @@ static void DeserializeField(const FieldInfo& field, u8* base, const char* value
             ReportIf(!IsCompactable(GetSubstruct(field)));
             for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
                 if (value) {
-                    for (; str::IsWs(*value); value++) {
-                        ;
-                    }
+                    value = skipWhitespace(value);
                     if (!*value) {
                         value = nullptr;
                     }
                 }
-                DeserializeField(GetSubstruct(field)->fields[i], fieldPtr, value);
+                deserializeField(GetSubstruct(field)->fields[i], fieldPtr, value);
                 if (value) {
-                    for (; *value && !str::IsWs(*value); value++) {
-                        ;
-                    }
+                    value = skipNonWhitespace(value);
                 }
             }
             break;
         case SettingType::FloatArray:
-        case SettingType::IntArray:
+        case SettingType::IntArray: {
             if (!value) {
                 value = (const char*)field.value;
             }
-            delete *(Vec<int>**)fieldPtr;
-            *(Vec<int>**)fieldPtr = new Vec<int>();
+            Vec<int>* v = *(Vec<int>**)fieldPtr;
+            delete v;
+            v = new Vec<int>();
+            *(Vec<int>**)fieldPtr = v;
             while (value && *value) {
                 FieldInfo info{};
                 info.type = SettingType::IntArray == field.type     ? SettingType::Int
                             : SettingType::FloatArray == field.type ? SettingType::Float
                                                                     : SettingType::Color;
-                DeserializeField(info, (u8*)(*(Vec<int>**)fieldPtr)->AppendBlanks(1), value);
-                for (; *value && !str::IsWs(*value); value++) {
-                    ;
-                }
-                for (; str::IsWs(*value); value++) {
-                    ;
-                }
+                deserializeField(info, (u8*)v->AppendBlanks(1), value);
+                value = skipNonWhitespace(value);
+                value = skipWhitespace(value);
             }
-            break;
+        } break;
         case SettingType::ColorArray:
-        case SettingType::StringArray:
-            FreeUtf8StringArray(*(Vec<char*>**)fieldPtr);
-            *(Vec<char*>**)fieldPtr = new Vec<char*>();
+        case SettingType::StringArray: {
+            Vec<char*>* v = *(Vec<char*>**)fieldPtr;
+            FreeUtf8StringArray(v);
+            v = new Vec<char*>();
+            *(Vec<char*>**)fieldPtr = v;
             if (value) {
-                DeserializeUtf8StringArray(*(Vec<char*>**)fieldPtr, AutoFree(UnescapeStr(value)));
+                char* v2 = UnescapeStr(value);
+                DeserializeUtf8StringArray(v, v2);
+                free(v2);
             } else if (field.value) {
-                DeserializeUtf8StringArray(*(Vec<char*>**)fieldPtr, (const char*)field.value);
+                DeserializeUtf8StringArray(v, (const char*)field.value);
             }
-            break;
+        } break;
         default:
             ReportIf(true);
     }
@@ -497,7 +508,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
         } else if (field.type != SettingType::Comment) {
             const char* value = node ? node->GetValue(fieldName) : nullptr;
             if (useDefaults || value) {
-                DeserializeField(field, base, value);
+                deserializeField(field, base, value);
             }
         }
     }
