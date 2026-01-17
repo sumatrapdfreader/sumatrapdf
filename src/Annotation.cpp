@@ -838,6 +838,9 @@ int BorderWidth(Annotation* annot) {
 }
 
 void SetBorderWidth(Annotation* annot, int newWidth) {
+    if (!annot) {
+        return;
+    }
     EngineMupdf* e = annot->engine;
     {
         auto ctx = e->Ctx();
