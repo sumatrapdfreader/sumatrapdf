@@ -16,12 +16,12 @@ void DeleteGlobalPrefs(GlobalPrefs*);
 
 SessionData* NewSessionData();
 TabState* NewTabState(FileState*);
+void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
 ParsedColor* GetParsedColor(const char* s, ParsedColor& parsed);
 COLORREF GetParsedCOLORREF(const char* s, ParsedColor& parsed, COLORREF def);
 
 void SetFileStatePath(FileState* fs, const char* path);
-// void SetFileStatePath(FileState* fs, const WCHAR* path);
 
 Themes* ParseThemes(const char*);
 void FreeParsedThemes(Themes*);

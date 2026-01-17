@@ -358,6 +358,7 @@ static void RememberSessionState() {
             DeleteFileState(fs);
         }
         if (windowState->tabStates->Size() == 0) {
+            FreeSessionData(windowState);
             continue;
         }
         windowState->tabIndex = win->GetTabIdx(win->CurrentTab()) + 1;

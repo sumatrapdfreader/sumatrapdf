@@ -106,13 +106,17 @@ TabState* NewTabState(FileState* fs) {
     return state;
 }
 
+void FreeSessionData(SessionData* data) {
+    FreeStruct(&gSessionDataInfo, data);
+}
+
 void FreeSessionDataVec(Vec<SessionData*>* sessionData) {
     ReportIf(!sessionData);
     if (!sessionData) {
         return;
     }
     for (SessionData* data : *sessionData) {
-        FreeStruct(&gSessionDataInfo, data);
+        FreeSessionData(data);
     }
     sessionData->Reset();
 }
