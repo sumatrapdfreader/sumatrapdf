@@ -779,18 +779,12 @@ void HandleRedirectedConsoleOnShutdown() {
 
 // Return the full exe path of my own executable
 TempStr GetSelfExePathTemp() {
-    WCHAR buf[MAX_PATH]{};
-    DWORD nSize = dimof(buf) - 1;
+    WCHAR buf[MAX_PATH + 2]{};
+    DWORD nChars = dimof(buf) - 1;
     auto h = GetInstance();
-    DWORD res = GetModuleFileNameW(h, buf, nSize);
-    if (res < nSize) {
-        return ToUtf8Temp(buf);
-    }
-    nSize = res + 2;
-    WCHAR* buf2 = Allocator::AllocArray<WCHAR>(nullptr, (size_t)nSize);
-    res = GetModuleFileNameW(h, buf, nSize);
-    ReportIf(res < nSize);
-    return ToUtf8Temp(buf2);
+    // TODO: GetModuleFileNameW() truncates if too big but doesn't return the needed size
+    GetModuleFileNameW(h, buf, nChars);
+    return ToUtf8Temp(buf);
 }
 
 // Return directory where our executable is located
