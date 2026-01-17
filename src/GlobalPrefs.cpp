@@ -106,7 +106,7 @@ TabState* NewTabState(FileState* fs) {
     return state;
 }
 
-void FreeSessionState(Vec<SessionData*>* sessionData) {
+void FreeSessionDataVec(Vec<SessionData*>* sessionData) {
     ReportIf(!sessionData);
     if (!sessionData) {
         return;

@@ -1419,7 +1419,7 @@ Exit:
     str::Free(logFilePath);
 
     if (gInitialSessionData) {
-        FreeSessionState(gInitialSessionData);
+        FreeSessionDataVec(gInitialSessionData);
         delete gInitialSessionData;
         gInitialSessionData = nullptr;
     }

@@ -313,7 +313,7 @@ Vec<SessionData*>* gInitialSessionData = nullptr;
 
 static void RememberSessionState() {
     Vec<SessionData*>* sessionState = gGlobalPrefs->sessionData;
-    FreeSessionState(sessionState);
+    FreeSessionDataVec(sessionState);
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
         return;
