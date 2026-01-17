@@ -1551,14 +1551,20 @@ char& Str::Last() const {
 // is likely to use more memory than strictly necessary, but in most cases
 // it doesn't matter
 char* Str::StealData(Allocator* a) {
-    if (a == nullptr) {
-        a = this->allocator;
-    }
     char* res = els;
-    if (els == buf) {
-        res = (char*)Allocator::MemDup(a, buf, len + kPadding);
+    if (a) {
+        // if allocator is specified, have to duplicate
+        res = (char*)Allocator::MemDup(a, els, len + kPadding);
+    } else {
+        if (els == buf) {
+            a = (a != nullptr) ? a : this->allocator;
+            res = (char*)Allocator::MemDup(a, els, len + kPadding);
+        } else {
+            // we're returning els, so reset to small buf
+            els = buf;
+        }
     }
-    els = buf;
+
     Reset();
     return res;
 }
