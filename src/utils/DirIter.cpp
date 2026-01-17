@@ -74,7 +74,7 @@ NextDir:
     } else {
         ok = FindNextFileW(it->h, &it->fd);
         if (!ok) {
-            SafeCloseHandle(&it->h);
+            SafeFindClose(&it->h);
             str::FreePtr(&it->pattern);
             goto NextDir;
         }
@@ -99,14 +99,14 @@ NextDir:
         }
         ok = FindNextFileW(it->h, &it->fd);
         if (!ok) {
-            SafeCloseHandle(&it->h);
+            SafeFindClose(&it->h);
             str::FreePtr(&it->pattern);
             goto NextDir;
         }
     };
 DidFinish:
     str::FreePtr(&it->pattern);
-    SafeCloseHandle(&it->h);
+    SafeFindClose(&it->h);
     it->didFinish = true;
     return;
 }

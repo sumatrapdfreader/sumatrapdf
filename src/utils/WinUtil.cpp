@@ -2346,14 +2346,28 @@ bool IsValidHandle(HANDLE h) {
     return !(h == nullptr || h == INVALID_HANDLE_VALUE);
 }
 
-// This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
-// but /analyze complains anyway
-bool SafeCloseHandle(HANDLE* h) {
-    if (IsValidHandle(*h)) {
+// close handle returned by FindFirstFile()
+bool SafeFindClose(HANDLE* hPtr) {
+    HANDLE h = *hPtr;
+    if (!IsValidHandle(h)) {
+        *hPtr = nullptr;
         return false;
     }
-    BOOL ok = CloseHandle(*h);
-    *h = nullptr;
+    BOOL ok = FindClose(h);
+    *hPtr = nullptr;
+    return !!ok;
+}
+
+// This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
+// but /analyze complains anyway
+bool SafeCloseHandle(HANDLE* hPtr) {
+    HANDLE h = *hPtr;
+    if (!IsValidHandle(h)) {
+        *hPtr = nullptr;
+        return false;
+    }
+    BOOL ok = CloseHandle(h);
+    *hPtr = nullptr;
     return !!ok;
 }
 

@@ -27,6 +27,7 @@ bool ListBoxSetTopIndex(HWND, int);
 
 bool IsValidHandle(HANDLE);
 bool SafeCloseHandle(HANDLE*);
+bool SafeFindClose(HANDLE*);
 void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc);
 void MoveWindow(HWND hwnd, Rect rect);
 void MoveWindow(HWND hwnd, RECT* r);
