@@ -2244,6 +2244,10 @@ void ScheduleRepaint(MainWindow* win, int delayInMs) {
 static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
     Point pt;
 
+    if (!win) {
+        return;
+    }
+
     switch (timerId) {
         case REPAINT_TIMER_ID:
             win->delayedRepaintTimer = 0;
