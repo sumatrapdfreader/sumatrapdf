@@ -482,7 +482,7 @@ bool LoggedWriteRegStr(HKEY hkey, const char* keyName, const char* valName, cons
         LogLastError();
         return false;
     }
-    logf("WriteRegStr(%s, %s, %s, %s) failed with '%d' ok!\n", RegKeyNameTemp(hkey), keyName, valName, value);
+    logf("WriteRegStr(%s, %s, %s, %s) ok!\n", RegKeyNameTemp(hkey), keyName, valName, value);
     return true;
 }
 
