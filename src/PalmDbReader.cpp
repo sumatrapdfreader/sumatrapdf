@@ -80,12 +80,10 @@ bool PdbReader::ParseHeader() {
 
     // validate offsets
     u32 prevOff = recInfos[0].offset;
-    for (size_t i = 1; i < nRecs - 1; i++) {
-        u32 off = recInfos[i].offset;
-        if (prevOff > off) {
+    for (size_t i = 0; i < nRecs - 1; i++) {
+        if (recInfos[i].offset > recInfos[i + 1].offset) {
             return false;
         }
-        prevOff = off;
     }
 
     // technically PDB record size should be less than 64K,
@@ -114,7 +112,9 @@ ByteSlice PdbReader::GetRecord(size_t recNo) {
     if (recNo != nRecs - 1) {
         nextOff = recInfos[recNo + 1].offset;
     }
-    ReportIf(off > nextOff);
+    if (off > nextOff) {
+        return {};
+    }
     size_t size = nextOff - off;
     return {(u8*)data + off, size};
 }
