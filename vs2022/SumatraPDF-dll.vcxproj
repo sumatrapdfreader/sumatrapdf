@@ -1447,15 +1447,27 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\Button.cpp" />
+    <ClCompile Include="..\src\wingui\Checkbox.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
+    <ClCompile Include="..\src\wingui\DropDown.cpp" />
+    <ClCompile Include="..\src\wingui\Edit.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\wingui\HtmlWindow.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
+    <ClCompile Include="..\src\wingui\ListBox.cpp" />
+    <ClCompile Include="..\src\wingui\Progress.cpp" />
+    <ClCompile Include="..\src\wingui\Splitter.cpp" />
+    <ClCompile Include="..\src\wingui\Static.cpp" />
+    <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\Tooltip.cpp" />
+    <ClCompile Include="..\src\wingui\Trackbar.cpp" />
+    <ClCompile Include="..\src\wingui\TreeView.cpp" />
     <ClCompile Include="..\src\wingui\UIModels.cpp" />
     <ClCompile Include="..\src\wingui\VirtWnd.cpp" />
     <ClCompile Include="..\src\wingui\WebView.cpp" />
-    <ClCompile Include="..\src\wingui\WinGui.cpp" />
+    <ClCompile Include="..\src\wingui\Wnd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.github\workflows\build.yml" />

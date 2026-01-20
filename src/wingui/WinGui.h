@@ -186,6 +186,7 @@ struct Wnd : ILayout {
 };
 
 bool PreTranslateMessage(MSG& msg);
+void SizeToIdealSize(Wnd* wnd);
 
 //--- Static
 
@@ -265,6 +266,15 @@ struct Tooltip : Wnd {
 
     Vec<int> tooltipIds;
 };
+
+struct TooltipInfo {
+    const char* s;
+    Rect r;
+    int id;
+};
+
+int TooltipGetCount(HWND hwnd);
+void TooltipAddTools(HWND hwnd, HWND owner, TooltipInfo* tools, int nTools);
 
 //--- Edit
 using TextChangedHandler = Func0;
