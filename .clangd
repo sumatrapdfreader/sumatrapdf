@@ -34,3 +34,4 @@ Diagnostics:
     - readability-qualified-auto
     - modernize-use-auto
     - readability-simplify-boolean-expr
+    - readability-use-std-min-max
