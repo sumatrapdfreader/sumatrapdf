@@ -35,3 +35,4 @@ Diagnostics:
     - modernize-use-auto
     - readability-simplify-boolean-expr
     - readability-use-std-min-max
+    - readability-named-parameter
