@@ -9,7 +9,7 @@ struct LabelWithCloseCreateArgs {
 
 struct LabelWithCloseWnd : Wnd {
     LabelWithCloseWnd() = default;
-    virtual ~LabelWithCloseWnd() override = default;
+    ~LabelWithCloseWnd() override = default;
 
     HWND Create(const LabelWithCloseCreateArgs&);
 

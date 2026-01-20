@@ -40,7 +40,7 @@ constexpr UINT_PTR kNotifTimerTimeoutId = 1;
 
 struct NotificationWnd : Wnd {
     NotificationWnd() = default;
-    virtual ~NotificationWnd() override;
+    ~NotificationWnd() override;
 
     HWND Create(const NotificationCreateArgs&);
 

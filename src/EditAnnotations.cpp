@@ -176,7 +176,7 @@ struct EditAnnotationsWindow : Wnd {
 
     void ListBoxSelectionChanged();
 
-    virtual ~EditAnnotationsWindow() override;
+    ~EditAnnotationsWindow() override;
 };
 
 #if 0

@@ -38,10 +38,14 @@ current stats:
 .txt     190      2
 
 ---
-
-
-
-
+add -fix-virt flag to build.ts. It reads all .cpp and .h files in src/ directory
+uses regular expression to detect a pattern, where on the same line we have:
+virtual ~CommandPaletteWnd() override
+i.e. virtual .* override
+in lines that match that it removes virtual and following whitespace
+if not lines that match, leaves the file alone
+if made changes write the changed file back, make sure to preserve original line endings (crlf or lf)
+---
 
 
 

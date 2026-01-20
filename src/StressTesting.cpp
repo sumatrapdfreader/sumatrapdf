@@ -367,7 +367,7 @@ struct DirFileProviderAsync : TestFileProvider {
         return queue.Size();
     }
 
-    virtual void Restart() override {
+    void Restart() override {
         AtomicIntSet(&nFiles, 0);
         StartDirTraverseAsync(&queue, startDir.CStr(), true);
     }
