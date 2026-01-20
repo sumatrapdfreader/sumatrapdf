@@ -51,3 +51,4 @@ docs/manual.dat
 
 vs2022-clang/
 vs2026/
+.claude/settings.local.json

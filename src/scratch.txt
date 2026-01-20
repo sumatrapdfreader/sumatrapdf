@@ -1,3 +1,19 @@
+create build.ts to be executed with bun that runs msbuild command to build
+----
+in build.ts remove ./out/dbg64/SumatraPDF.exe before running msbuild
+----
+in StrUtil.cpp and StrUtil.h implement:
+struct Str {
+  char* s;
+  int len;
+  Str();
+  explicit Str(char* s);
+  explicit Str(char* s, int len);
+};
+add StrL(s) macro that returns Str{s, (int)sizeof(s) - 1}
+---
+
+
 Ideas for refactorings:
 
 - change all size_t => int
