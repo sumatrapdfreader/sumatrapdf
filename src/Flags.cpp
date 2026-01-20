@@ -65,6 +65,7 @@
     V(StressTest, "stress-test")                 \
     V(N, "n")                                    \
     V(Max, "max")                                \
+    V(MaxFiles, "max-files")                     \
     V(Render, "render")                          \
     V(ExtractText, "extract-text")               \
     V(Bench, "bench")                            \
@@ -635,6 +636,11 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
         }
         if (arg == Arg::Max) {
             i.stressTestMax = paramInt;
+            continue;
+        }
+        if (arg == Arg::MaxFiles) {
+            i.maxFiles = paramInt;
+            continue;
         }
         if (arg == Arg::Render) {
             i.testRenderPage = true;

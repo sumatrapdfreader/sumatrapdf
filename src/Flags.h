@@ -79,6 +79,7 @@ struct Flags {
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
     int stressTestMax = 0;
+    int maxFiles = 0;
 
     // related to testing
     bool testRenderPage = false;

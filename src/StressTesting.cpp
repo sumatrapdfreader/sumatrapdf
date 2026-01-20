@@ -421,6 +421,7 @@ struct StressTest {
     int currPageNo = 0;
     int pageForSearchStart = 0;
     int nFilesProcessed = 0; // number of files processed so far
+    int maxFiles = 0;        // max files to process, 0 means no limit
     int timerId = 0;
     bool exitWhenDone = false;
     int nSlowPages = 0;
@@ -690,6 +691,9 @@ static void RandomizeViewingState(StressTest* st) {
 }
 
 static bool GoToNextFile(StressTest* st) {
+    if (st->maxFiles > 0 && st->nFilesProcessed >= st->maxFiles) {
+        return false;
+    }
     for (;;) {
         TempStr nextFile = st->fileProvider->NextFile();
         if (nextFile) {
@@ -894,6 +898,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
             // dst will be deleted when the stress ends
             win = windows[j];
             StressTest* dst = new StressTest(win, i->exitWhenDone);
+            dst->maxFiles = i->maxFiles;
             win->stressTest = dst;
             Start(dst, filesProvider, i->stressTestCycles);
         }
@@ -902,6 +907,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
     } else {
         // dst will be deleted when the stress ends
         StressTest* st = new StressTest(win, i->exitWhenDone);
+        st->maxFiles = i->maxFiles;
         win->stressTest = st;
         Start(st, i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
     }
