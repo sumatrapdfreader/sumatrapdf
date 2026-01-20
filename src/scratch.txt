@@ -23,6 +23,31 @@ in BaseUtil.cpp, BaseUtil.h add atomic counters and info to PoolAllocator
 remove AtomicInt class from src/utils/BaseUtil.h and src/utils/BaseUtil.cpp
 instead add a typedef AtomicInt = LONG and replace the use of AtomicInt methods with AtomicInt* functions that use Interlocked* win32 apis, for example void AtomicIntAdd(AtomicInt* atomicInt, int value), int AtomicIntGet(AtomicInt* atomicInt) etc.
 ---
+add command-line arg -wc to build.ts
+it recursively scans all files in src/ directory and calculates total number of lines for each file extension and prints the result for .cpp, .h, .c, .txt files
+---
+also print number of files per extension like: .cpp: 100 lines in 28 files
+---
+display the output in a table-like display, 3 columns, numbers are aligned right, print the header (ext,lines,files) first and then just numbers for each row
+
+current stats:
+ ext   lines  files
+.cpp  101830    175
+  .h   18207    147
+  .c       8      1
+.txt     190      2
+
+---
+
+
+
+
+
+
+
+
+
+
 
 
 Ideas for refactorings:
