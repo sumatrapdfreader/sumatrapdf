@@ -208,6 +208,18 @@ StrSpan::StrSpan(const char* s, int sLen) {
     }
 }
 
+Str::Str() = default;
+
+Str::Str(char* s) {
+    this->s = s;
+    len = str::Leni(s);
+}
+
+Str::Str(char* s, int len) {
+    this->s = s;
+    this->len = len;
+}
+
 bool IsEqual(const StrSpan& d1, const StrSpan& d2) {
     if (d1.Len() != d2.Len()) {
         return false;
