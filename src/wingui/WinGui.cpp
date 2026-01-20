@@ -561,8 +561,21 @@ LRESULT Wnd::MessageReflect(UINT msg, WPARAM wparam, LPARAM lparam) {
             wnd = reinterpret_cast<HWND>(lparam);
             break;
 
-        case WM_DRAWITEM:
-        case WM_MEASUREITEM:
+        case WM_DRAWITEM: {
+            // Get HWND directly from the struct since control ID may be 0
+            DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lparam;
+            wnd = dis->hwndItem;
+            break;
+        }
+        case WM_MEASUREITEM: {
+            // MEASUREITEMSTRUCT doesn't have hwnd, try GetDlgItem first
+            wnd = GetDlgItem(hwnd, static_cast<int>(wparam));
+            if (!wnd && wparam == 0) {
+                // Control ID is 0, find owner-draw listbox child
+                wnd = FindWindowExW(hwnd, nullptr, L"LISTBOX", nullptr);
+            }
+            break;
+        }
         case WM_DELETEITEM:
         case WM_COMPAREITEM:
             wnd = GetDlgItem(hwnd, static_cast<int>(wparam));
@@ -1736,11 +1749,20 @@ HWND ListBox::Create(const CreateArgs& args) {
     // https://docs.microsoft.com/en-us/windows/win32/controls/list-box-styles
     cargs.style = WS_CHILD | WS_TABSTOP | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL;
     cargs.style |= LBS_NOINTEGRALHEIGHT | LBS_NOTIFY;
+    if (onDrawItem.IsValid()) {
+        cargs.style |= LBS_OWNERDRAWFIXED;
+    }
     // args.style |= WS_BORDER;
     Wnd::CreateControl(cargs);
     SizeToIdealSize(this);
 
     if (hwnd) {
+        // For owner-draw, set item height manually since WM_MEASUREITEM
+        // is sent during CreateWindowEx before we're registered in WndList
+        if (onDrawItem.IsValid()) {
+            int itemHeight = GetItemHeight(0) + DpiScale(hwnd, 4);
+            SendMessageW(hwnd, LB_SETITEMHEIGHT, 0, itemHeight);
+        }
         if (model != nullptr) {
             FillWithItems(this->hwnd, model);
         }
@@ -1839,6 +1861,34 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         auto br = BackgroundBrush();
         return (LRESULT)br;
     }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-measureitem
+    if (msg == WM_MEASUREITEM) {
+        if (!onDrawItem.IsValid()) {
+            return 0;
+        }
+        MEASUREITEMSTRUCT* mis = (MEASUREITEMSTRUCT*)lparam;
+        // add vertical padding for spacing between items
+        mis->itemHeight = GetItemHeight(0) + DpiScale(hwnd, 4);
+        return TRUE;
+    }
+
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-drawitem
+    if (msg == WM_DRAWITEM) {
+        if (!onDrawItem.IsValid()) {
+            return 0;
+        }
+        DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lparam;
+        DrawItemEvent ev;
+        ev.listBox = this;
+        ev.hdc = dis->hDC;
+        ev.itemRect = dis->rcItem;
+        ev.itemIndex = (int)dis->itemID;
+        ev.selected = (dis->itemState & ODS_SELECTED) != 0;
+        onDrawItem.Call(&ev);
+        return TRUE;
+    }
+
     return 0;
 }
 

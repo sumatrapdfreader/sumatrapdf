@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 #include "utils/UITask.h"
 #include "utils/FileUtil.h"
 
@@ -23,6 +24,7 @@
 #include "SumatraConfig.h"
 #include "Commands.h"
 #include "CommandPalette.h"
+#include "Accelerators.h"
 #include "SumatraPDF.h"
 #include "Tabs.h"
 #include "ExternalViewers.h"
@@ -862,6 +864,73 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+static void DrawListBoxItem(ListBox::DrawItemEvent* ev) {
+    ListBox* lb = ev->listBox;
+    auto m = (ListBoxModelCP*)lb->model;
+    if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
+        return;
+    }
+
+    HDC hdc = ev->hdc;
+    RECT rc = ev->itemRect;
+
+    // set colors based on selection state
+    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
+    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    if (ev->selected) {
+        colBg = GetSysColor(COLOR_HIGHLIGHT);
+        colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+    }
+
+    // fill background
+    SetBkColor(hdc, colBg);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+
+    // get item text and data
+    const char* itemText = m->Item(ev->itemIndex);
+    ItemDataCP* data = m->Data(ev->itemIndex);
+
+    // get accelerator string for commands
+    TempStr accelStr = nullptr;
+    if (data->cmdId != 0) {
+        // AppendAccelKeyToMenuStringTemp returns "\tCtrl + X" or original string if no accel
+        TempStr withAccel = AppendAccelKeyToMenuStringTemp((TempStr) "", data->cmdId);
+        if (withAccel && withAccel[0] == '\t') {
+            accelStr = withAccel + 1; // skip the tab character
+        }
+    }
+
+    // set text color and background mode
+    SetTextColor(hdc, colText);
+    SetBkMode(hdc, TRANSPARENT);
+
+    // select font
+    HFONT oldFont = nullptr;
+    if (lb->font) {
+        oldFont = SelectFont(hdc, lb->font);
+    }
+
+    // add some padding
+    int padX = DpiScale(lb->hwnd, 4);
+    rc.left += padX;
+    rc.right -= padX;
+
+    // draw command name on the left
+    WCHAR* itemTextW = ToWStrTemp(itemText);
+    DrawTextW(hdc, itemTextW, -1, &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+
+    // draw accelerator on the right (if any)
+    if (accelStr && accelStr[0]) {
+        WCHAR* accelStrW = ToWStrTemp(accelStr);
+        rc.right -= DpiScale(lb->hwnd, 8); // extra right padding for accelerator
+        DrawTextW(hdc, accelStrW, -1, &rc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+    }
+
+    if (oldFont) {
+        SelectFont(hdc, oldFont);
+    }
+}
+
 static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
     Static::CreateArgs args;
     args.parent = parent;
@@ -957,6 +1026,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         args.font = font;
         auto c = new ListBox();
         c->onDoubleClick = MkFunc0(ListDoubleClick, this);
+        c->onDrawItem = MkFunc1Void<ListBox::DrawItemEvent*>(DrawListBoxItem);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         c->Create(args);
