@@ -50,6 +50,14 @@ analyze src/CommandPalette.cpp, src/CommandPalette.h, src/Commands.h, src/Comman
 In CommandPaletteWnd when showing commands we also want to show the accelerator key if any, on the right side of the command name
 To do that we need to do custom painting in ListBox and paint command name on the left side and accelerator key on the right side
 ---
+it doesn't work, doesn't show any commands at all
+---
+it works but it needs a few pixels of spacing between the lines
+---
+no change, the lines still overlap
+---
+looks good. now add 8px right padding to accelerator key
+---
 split src/WinGui/WinGui.cpp into multiple files, one file for each class
 name the file after class name e.g. Wnd => src/WinGui/Wnd.cpp
 update visual studio solution by running: go run . -premake
