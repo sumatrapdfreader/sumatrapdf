@@ -395,6 +395,16 @@ struct Allocator {
     static void* MemDup(Allocator* a, const void* mem, size_t size, size_t extraBytes = 0);
 };
 
+// atomic integer using Windows Interlocked* APIs
+using AtomicInt = volatile LONG;
+
+int AtomicIntSet(AtomicInt* v, int n);
+int AtomicIntInc(AtomicInt* v);
+int AtomicIntDec(AtomicInt* v);
+int AtomicIntAdd(AtomicInt* v, int n);
+int AtomicIntSub(AtomicInt* v, int n);
+int AtomicIntGet(AtomicInt* v);
+
 // PoolAllocator is for the cases where we need to allocate pieces of memory
 // that are meant to be freed together. It simplifies the callers (only need
 // to track this object and not all allocated pieces). Allocation and freeing
@@ -426,6 +436,13 @@ struct PoolAllocator : Allocator {
     Block* firstBlock = nullptr;
     int nAllocs = 0;
     CRITICAL_SECTION cs;
+
+    // statistics
+    AtomicInt totalAllocs;         // total number of allocations (never reset)
+    AtomicInt totalAllocatedSize;  // total bytes allocated (never reset)
+    AtomicInt maxAllocsSinceReset; // max allocations between Reset() calls
+    AtomicInt maxMemSinceReset;    // max memory between Reset() calls
+    int currAllocatedSize = 0;     // current allocated memory since last Reset()
 
     PoolAllocator();
 
@@ -604,21 +621,6 @@ class ExitScopeHelp {
     ExitScope<T> operator+(T t) {
         return t;
     }
-};
-
-// it's 32-bit value which we cast to int for ease of use
-struct AtomicInt {
-    AtomicInt() = default;
-    ~AtomicInt() = default;
-    int Set(int n);
-    int Inc();
-    int Dec();
-    int Add(int n);
-    int Sub(int n);
-    int Get() const;
-
-  private:
-    volatile LONG val = 0;
 };
 
 using func0Ptr = void (*)(void*);

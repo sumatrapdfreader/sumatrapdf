@@ -83,9 +83,9 @@ void RunAsync(const Func0& fn, const char* threadName) {
     SafeCloseHandle(&hThread);
 }
 
-AtomicInt gDangerousThreadCount;
+AtomicInt gDangerousThreadCount = 0;
 
 bool AreDangerousThreadsPending() {
-    auto count = gDangerousThreadCount.Get();
+    auto count = AtomicIntGet(&gDangerousThreadCount);
     return count != 0;
 }

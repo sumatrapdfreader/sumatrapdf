@@ -12,33 +12,32 @@ Kind kindNone = "none";
 LONG gAllowAllocFailure = 0;
 
 // returns previous value
-int AtomicInt::Set(int n) {
-    auto res = InterlockedExchange((LONG*)&val, n);
-    return (int)res;
+int AtomicIntSet(AtomicInt* v, int n) {
+    return (int)InterlockedExchange(v, n);
 }
 
 // returns value after increment
-int AtomicInt::Inc() {
-    return (int)InterlockedIncrement(&val);
+int AtomicIntInc(AtomicInt* v) {
+    return (int)InterlockedIncrement(v);
 }
 
 // returns value after decrement
-int AtomicInt::Dec() {
-    return (int)InterlockedDecrement(&val);
+int AtomicIntDec(AtomicInt* v) {
+    return (int)InterlockedDecrement(v);
 }
 
 // returns value after adding
-int AtomicInt::Add(int n) {
-    return (int)InterlockedAdd(&val, n);
+int AtomicIntAdd(AtomicInt* v, int n) {
+    return (int)InterlockedAdd(v, n);
 }
 
 // returns value after subtracting
-int AtomicInt::Sub(int n) {
-    return (int)InterlockedAdd(&val, -n);
+int AtomicIntSub(AtomicInt* v, int n) {
+    return (int)InterlockedAdd(v, -n);
 }
 
-int AtomicInt::Get() const {
-    return (int)InterlockedCompareExchange((LONG*)&val, 0, 0);
+int AtomicIntGet(AtomicInt* v) {
+    return (int)InterlockedCompareExchange(v, 0, 0);
 }
 
 bool AtomicBool::Get() const {
@@ -196,15 +195,19 @@ void PoolAllocator::Reset(bool poisonFreedMemory) {
     Block* first = firstBlock;
     if (!first) {
         ReportIf(currBlock);
+        currAllocatedSize = 0;
         return;
     }
     if (!first->next && (first->nAllocs == 0)) {
         // fast path when no allocations have been made
+        currAllocatedSize = 0;
         return;
     }
     if (!first->next) {
         // fast path where only first block
         ResetBlock(first);
+        currAllocatedSize = 0;
+        nAllocs = 0;
         return;
     }
     if (poisonFreedMemory) {
@@ -216,6 +219,7 @@ void PoolAllocator::Reset(bool poisonFreedMemory) {
     ResetBlock(first);
     firstBlock = first;
     currBlock = first;
+    currAllocatedSize = 0;
 }
 
 PoolAllocator::~PoolAllocator() {
@@ -296,6 +300,18 @@ void* PoolAllocator::Alloc(size_t size) {
     currBlock->end = (char*)index;
     currBlock->nAllocs += 1;
     nAllocs += 1;
+
+    // update statistics
+    AtomicIntInc(&totalAllocs);
+    AtomicIntAdd(&totalAllocatedSize, (int)size);
+    currAllocatedSize += (int)size;
+    if (nAllocs > AtomicIntGet(&maxAllocsSinceReset)) {
+        AtomicIntSet(&maxAllocsSinceReset, nAllocs);
+    }
+    if (currAllocatedSize > AtomicIntGet(&maxMemSinceReset)) {
+        AtomicIntSet(&maxMemSinceReset, currAllocatedSize);
+    }
+
     return res;
 }
 

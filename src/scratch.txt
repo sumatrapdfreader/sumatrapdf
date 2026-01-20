@@ -12,6 +12,17 @@ struct Str {
 };
 add StrL(s) macro that returns Str{s, (int)sizeof(s) - 1}
 ---
+run bun add to add types for node and bun
+---
+in BaseUtil.cpp, BaseUtil.h add atomic counters and info to PoolAllocator
+- count total number of allocation
+- total amount of allocated memory
+- max allocated memory between calls to Reset()
+- max allocations between calls to Reset()
+---
+remove AtomicInt class from src/utils/BaseUtil.h and src/utils/BaseUtil.cpp
+instead add a typedef AtomicInt = LONG and replace the use of AtomicInt methods with AtomicInt* functions that use Interlocked* win32 apis, for example void AtomicIntAdd(AtomicInt* atomicInt, int value), int AtomicIntGet(AtomicInt* atomicInt) etc.
+---
 
 
 Ideas for refactorings:

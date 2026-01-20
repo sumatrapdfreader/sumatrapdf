@@ -1951,7 +1951,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
 
 static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
     auto args = d->args;
-    gDangerousThreadCount.Inc();
+    AtomicIntInc(&gDangerousThreadCount);
     DocController* ctrl = nullptr;
     MainWindow* win = args->win;
     HwndPasswordUI pwdUI(win->hwndFrame ? win->hwndFrame : nullptr);
@@ -1964,7 +1964,7 @@ static void LoadDocumentAsync(LoadDocumentAsyncData* d) {
 
     auto fn = MkFunc0<LoadDocumentAsyncData>(LoadDocumentAsyncFinish, d);
     uitask::Post(fn, "TaskLoadDocumentAsyncFinish");
-    gDangerousThreadCount.Dec();
+    AtomicIntDec(&gDangerousThreadCount);
 }
 
 void StartLoadDocument(LoadArgs* argsIn) {
