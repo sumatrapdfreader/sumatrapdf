@@ -130,3 +130,9 @@ to verify it compiles after changes run: "bun .\build.ts -build-preview2"
 extract functionality related to writing to / receiving from pipe from files in directory src/preview2/ into src/PreviewPipe.cpp and src/PreviewPipe.h
 we want to be able to test pipe rendering functionality from SumatraPDF.exe so we need the sending functionality available there as well
 ---
+add cmd-line arg -test-preview-pipe <file-name> that exercises all preview pipe functionality from src/PreviewPipe.cpp and src/PreviewPipe.h
+src/Flags.cpp is where parsing of command-line arguments happens
+src/SumatrapdfStartup.cpp is where we need to check for this argument and call the appropriate function to run the test
+to test rendered pages, create empty directory pipe-preview-results and write out each rendered page as .png file (page1.png, page2.png, ...) in pipe-preview-results/ directory
+to create PNG file use win32 apis
+for other information, write pipe-preview-results/result.txt with information you get via preview pipe, formatted for human readability

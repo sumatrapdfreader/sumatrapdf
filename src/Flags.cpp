@@ -90,7 +90,8 @@
     V(EngineDump, "engine-dump")                 \
     V(SetColorRange, "set-color-range")          \
     V(PreviewPipe, "preview-pipe")               \
-    V(IFilterPipe, "ifilter-pipe")
+    V(IFilterPipe, "ifilter-pipe")               \
+    V(TestPreviewPipe, "test-preview-pipe")
 
 #define MAKE_ARG(__arg, __name) __arg,
 #define MAKE_STR(__arg, __name) __name "\0"
@@ -724,6 +725,10 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i) {
             i.ifilterPipeName = str::Dup(param);
             continue;
         }
+        if (arg == Arg::TestPreviewPipe) {
+            i.testPreviewPipePath = str::Dup(param);
+            continue;
+        }
         // again, argName is any of the known args, so assume it's a file starting with '-'
         args.RewindParam();
 
@@ -766,4 +771,5 @@ Flags::~Flags() {
     str::Free(dde);
     str::Free(previewPipeName);
     str::Free(ifilterPipeName);
+    str::Free(testPreviewPipePath);
 }

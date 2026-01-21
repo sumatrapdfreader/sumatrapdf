@@ -53,8 +53,11 @@ HANDLE LaunchSumatraForPreview(const char* pipeName) {
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
 
+    // Get the directory containing the exe for the working directory
+    TempStr exeDir = path::GetDirTemp(exePath);
+
     PROCESS_INFORMATION pi{};
-    BOOL ok = CreateProcessA(exePath, cmdLine, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+    BOOL ok = CreateProcessA(exePath, cmdLine, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, exeDir, &si, &pi);
     if (!ok) {
         logf("LaunchSumatraForPreview: CreateProcessA failed with error %d\n", (int)GetLastError());
         return nullptr;

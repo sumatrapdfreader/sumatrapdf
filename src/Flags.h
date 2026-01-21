@@ -121,6 +121,9 @@ struct Flags {
     // for ifilter pipe mode (used by ifilter DLL)
     char* ifilterPipeName = nullptr;
 
+    // for testing preview pipe functionality
+    char* testPreviewPipePath = nullptr;
+
     Flags() = default;
     ~Flags();
 };

@@ -934,7 +934,12 @@ static EngineBase* CreateEngineFromDataForPreview(const ByteSlice& data, Preview
     EngineBase* engine = nullptr;
     switch (fileType) {
         case PreviewFileType::PDF:
-            engine = CreateEngineMupdfFromStream(stream, "preview.pdf");
+            __try {
+                engine = CreateEngineMupdfFromStream(stream, "preview.pdf");
+            } __except (EXCEPTION_EXECUTE_HANDLER) {
+                logf("CreateEngineFromDataForPreview: exception 0x%08x creating PDF engine\n", GetExceptionCode());
+                engine = nullptr;
+            }
             break;
         case PreviewFileType::DjVu:
             engine = CreateEngineDjVuFromStream(stream);
@@ -1310,6 +1315,434 @@ static void RunPreviewPipeV2(HANDLE hPipe) {
     logf("RunPreviewPipeV2: session ended\n");
 }
 
+// Helper to save HBITMAP to PNG file using GDI+
+static bool SaveHBitmapAsPng(HBITMAP hBitmap, const char* filePath) {
+    if (!hBitmap || !filePath) {
+        return false;
+    }
+    Gdiplus::Bitmap gbmp(hBitmap, nullptr);
+    CLSID pngEncId = GetEncoderClsid(L"image/png");
+    WCHAR* filePathW = ToWStrTemp(filePath);
+    Gdiplus::Status status = gbmp.Save(filePathW, &pngEncId);
+    return status == Gdiplus::Ok;
+}
+
+// Determine PreviewFileType from file extension
+static PreviewFileType GetPreviewFileTypeFromPath(const char* path) {
+    if (str::EndsWithI(path, ".pdf")) {
+        return PreviewFileType::PDF;
+    }
+    if (str::EndsWithI(path, ".djvu") || str::EndsWithI(path, ".djv")) {
+        return PreviewFileType::DjVu;
+    }
+    if (str::EndsWithI(path, ".epub")) {
+        return PreviewFileType::EPUB;
+    }
+    if (str::EndsWithI(path, ".fb2") || str::EndsWithI(path, ".fb2z")) {
+        return PreviewFileType::FB2;
+    }
+    if (str::EndsWithI(path, ".mobi") || str::EndsWithI(path, ".prc") || str::EndsWithI(path, ".azw")) {
+        return PreviewFileType::MOBI;
+    }
+    if (str::EndsWithI(path, ".cbz") || str::EndsWithI(path, ".cbr") || str::EndsWithI(path, ".cb7") ||
+        str::EndsWithI(path, ".cbt")) {
+        return PreviewFileType::CBX;
+    }
+    if (str::EndsWithI(path, ".tga")) {
+        return PreviewFileType::TGA;
+    }
+    // Default to PDF
+    return PreviewFileType::PDF;
+}
+
+// Test preview pipe functionality by exercising all pipe operations
+static void RunTestPreviewPipe(const char* filePath) {
+    logf("RunTestPreviewPipe: testing with file '%s'\n", filePath);
+
+    // Check if file exists
+    if (!file::Exists(filePath)) {
+        logf("RunTestPreviewPipe: file '%s' does not exist\n", filePath);
+        return;
+    }
+
+    // Create output directory
+    const char* resultsDir = "pipe-preview-results";
+    if (!dir::Create(resultsDir)) {
+        if (!dir::Exists(resultsDir)) {
+            logf("RunTestPreviewPipe: failed to create directory '%s'\n", resultsDir);
+            return;
+        }
+    }
+
+    // Load file data
+    ByteSlice fileData = file::ReadFile(filePath);
+    if (fileData.empty()) {
+        logf("RunTestPreviewPipe: failed to read file '%s'\n", filePath);
+        return;
+    }
+
+    PreviewFileType fileType = GetPreviewFileTypeFromPath(filePath);
+    logf("RunTestPreviewPipe: file size=%d, fileType=%d\n", (int)fileData.size(), (int)fileType);
+
+    str::Str resultText;
+    resultText.AppendFmt("Preview Pipe Test Results\n");
+    resultText.AppendFmt("=========================\n\n");
+    resultText.AppendFmt("File: %s\n", filePath);
+    resultText.AppendFmt("File size: %d bytes\n", (int)fileData.size());
+    resultText.AppendFmt("File type: %d\n\n", (int)fileType);
+
+    // ===== Test Protocol V1 (Thumbnail mode) =====
+    resultText.AppendFmt("--- Protocol V1 (Thumbnail mode) ---\n");
+    {
+        // Generate unique pipe name
+        char* pipeName = GenerateUniquePipeName();
+        if (!pipeName) {
+            logf("RunTestPreviewPipe: failed to generate pipe name\n");
+            resultText.AppendFmt("ERROR: Failed to generate pipe name\n");
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Create the pipe
+        HANDLE hPipe = CreatePreviewPipe(pipeName);
+        if (hPipe == INVALID_HANDLE_VALUE) {
+            logf("RunTestPreviewPipe: V1 failed to create pipe\n");
+            resultText.AppendFmt("ERROR: Failed to create pipe\n");
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Launch SumatraPDF.exe with -preview-pipe
+        HANDLE hProcess = LaunchSumatraForPreview(pipeName);
+        if (!hProcess) {
+            logf("RunTestPreviewPipe: V1 failed to launch SumatraPDF\n");
+            resultText.AppendFmt("ERROR: Failed to launch SumatraPDF.exe\n");
+            CloseHandle(hPipe);
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Wait for connection
+        if (!WaitForPipeConnection(hPipe)) {
+            logf("RunTestPreviewPipe: V1 failed to wait for pipe connection\n");
+            resultText.AppendFmt("ERROR: Failed to connect to pipe\n");
+            TerminateProcess(hProcess, 1);
+            CloseHandle(hProcess);
+            CloseHandle(hPipe);
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Send preview request (thumbnail size 256)
+        uint thumbSize = 256;
+        if (!SendPreviewRequest(hPipe, fileType, thumbSize, fileData)) {
+            logf("RunTestPreviewPipe: V1 failed to send preview request\n");
+            resultText.AppendFmt("ERROR: Failed to send preview request\n");
+        } else {
+            // Check if child process is still running before reading response
+            DWORD exitCode = 0;
+            if (GetExitCodeProcess(hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
+                logf("RunTestPreviewPipe: V1 child process exited with code %d before response\n", exitCode);
+                resultText.AppendFmt("ERROR: Child process exited with code %d before sending response\n", exitCode);
+            } else {
+                // Receive response
+                HBITMAP hBitmap = ReceivePreviewResponse(hPipe);
+                if (hBitmap) {
+                    BITMAP bm;
+                    GetObject(hBitmap, sizeof(bm), &bm);
+                    resultText.AppendFmt("Thumbnail received: %dx%d pixels\n", bm.bmWidth, bm.bmHeight);
+
+                    // Save as PNG
+                    TempStr thumbPath = path::JoinTemp(resultsDir, "thumbnail.png");
+                    if (SaveHBitmapAsPng(hBitmap, thumbPath)) {
+                        resultText.AppendFmt("Thumbnail saved to: thumbnail.png\n");
+                    } else {
+                        resultText.AppendFmt("ERROR: Failed to save thumbnail as PNG\n");
+                    }
+                    DeleteObject(hBitmap);
+                } else {
+                    // Check if process crashed while we were waiting
+                    if (GetExitCodeProcess(hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
+                        logf("RunTestPreviewPipe: V1 child process crashed with code %d\n", exitCode);
+                        resultText.AppendFmt("ERROR: Child process crashed with code %d\n", exitCode);
+                    } else {
+                        resultText.AppendFmt("ERROR: Failed to receive thumbnail\n");
+                    }
+                }
+            }
+        }
+
+        // Cleanup
+        DisconnectNamedPipe(hPipe);
+        CloseHandle(hPipe);
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+        str::Free(pipeName);
+    }
+
+    resultText.AppendFmt("\n--- Protocol V2 (Session mode) ---\n");
+
+    // ===== Test Protocol V2 (Session mode) =====
+    {
+        // Generate unique pipe name
+        char* pipeName = GenerateUniquePipeName();
+        if (!pipeName) {
+            resultText.AppendFmt("ERROR: Failed to generate pipe name\n");
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Create the pipe
+        HANDLE hPipe = CreatePreviewPipe(pipeName);
+        if (hPipe == INVALID_HANDLE_VALUE) {
+            resultText.AppendFmt("ERROR: Failed to create pipe\n");
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Launch SumatraPDF.exe
+        HANDLE hProcess = LaunchSumatraForPreview(pipeName);
+        if (!hProcess) {
+            resultText.AppendFmt("ERROR: Failed to launch SumatraPDF.exe\n");
+            CloseHandle(hPipe);
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Wait for connection
+        if (!WaitForPipeConnection(hPipe)) {
+            resultText.AppendFmt("ERROR: Failed to connect to pipe\n");
+            TerminateProcess(hProcess, 1);
+            CloseHandle(hProcess);
+            CloseHandle(hPipe);
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        DWORD bytesWritten = 0, bytesRead = 0;
+
+        // First, send the protocol identification header (read by RunPreviewPipeServer)
+        u32 magic = kPreviewRequestMagic;
+        u32 version = kPreviewProtocolVersion2;
+        WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr);
+        WriteFile(hPipe, &version, 4, &bytesWritten, nullptr);
+
+        // Now send Init command (each command has its own magic/version/cmd header)
+        u32 cmd = (u32)PreviewCmd::Init;
+        u32 ft = (u32)fileType;
+        u32 dataSize = (u32)fileData.size();
+
+        WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr);
+        WriteFile(hPipe, &version, 4, &bytesWritten, nullptr);
+        WriteFile(hPipe, &cmd, 4, &bytesWritten, nullptr);
+        WriteFile(hPipe, &ft, 4, &bytesWritten, nullptr);
+        WriteFile(hPipe, &dataSize, 4, &bytesWritten, nullptr);
+
+        // Write file data
+        DWORD totalWritten = 0;
+        while (totalWritten < dataSize) {
+            DWORD toWrite = dataSize - totalWritten;
+            WriteFile(hPipe, fileData.data() + totalWritten, toWrite, &bytesWritten, nullptr);
+            if (bytesWritten == 0)
+                break;
+            totalWritten += bytesWritten;
+        }
+        FlushFileBuffers(hPipe);
+
+        // Check if child process is still running
+        DWORD exitCode = 0;
+        if (GetExitCodeProcess(hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
+            logf("RunTestPreviewPipe: V2 child process exited with code %d before Init response\n", exitCode);
+            resultText.AppendFmt("Init ERROR: Child process exited with code %d\n", exitCode);
+            DisconnectNamedPipe(hPipe);
+            CloseHandle(hPipe);
+            CloseHandle(hProcess);
+            str::Free(pipeName);
+            fileData.Free();
+            TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+            file::WriteFile(resultPath, resultText.AsByteSlice());
+            return;
+        }
+
+        // Read Init response
+        u32 respMagic = 0, status = 0, pageCount = 0;
+        ReadFile(hPipe, &respMagic, 4, &bytesRead, nullptr);
+        ReadFile(hPipe, &status, 4, &bytesRead, nullptr);
+        ReadFile(hPipe, &pageCount, 4, &bytesRead, nullptr);
+
+        if (respMagic != kPreviewResponseMagic || status != 0) {
+            // Check if child process crashed
+            if (GetExitCodeProcess(hProcess, &exitCode) && exitCode != STILL_ACTIVE) {
+                resultText.AppendFmt("Init ERROR: Child process crashed with code %d\n", exitCode);
+            } else {
+                resultText.AppendFmt("Init ERROR: magic=0x%08x, status=%d\n", respMagic, status);
+            }
+        } else {
+            resultText.AppendFmt("Init SUCCESS: pageCount=%d\n", pageCount);
+
+            // GetPageBox for each page and Render each page
+            for (u32 pn = 1; pn <= pageCount; pn++) {
+                // GetPageBox
+                magic = kPreviewRequestMagic;
+                version = kPreviewProtocolVersion2;
+                cmd = (u32)PreviewCmd::GetPageBox;
+
+                WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &version, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &cmd, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &pn, 4, &bytesWritten, nullptr);
+                FlushFileBuffers(hPipe);
+
+                u32 widthBits = 0, heightBits = 0;
+                ReadFile(hPipe, &respMagic, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &status, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &widthBits, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &heightBits, 4, &bytesRead, nullptr);
+
+                float width, height;
+                memcpy(&width, &widthBits, 4);
+                memcpy(&height, &heightBits, 4);
+
+                if (respMagic != kPreviewResponseMagic || status != 0) {
+                    resultText.AppendFmt("Page %d GetPageBox ERROR: status=%d\n", pn, status);
+                    continue;
+                }
+                resultText.AppendFmt("Page %d: %.2f x %.2f points\n", pn, width, height);
+
+                // Render page at zoom 1.0
+                magic = kPreviewRequestMagic;
+                version = kPreviewProtocolVersion2;
+                cmd = (u32)PreviewCmd::Render;
+                float zoom = 1.0f;
+                u32 zoomBits;
+                memcpy(&zoomBits, &zoom, 4);
+                u32 targetWidth = (u32)width;
+                u32 targetHeight = (u32)height;
+
+                WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &version, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &cmd, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &pn, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &zoomBits, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &targetWidth, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &targetHeight, 4, &bytesWritten, nullptr);
+                FlushFileBuffers(hPipe);
+
+                // Read render response header
+                u32 bmpWidth = 0, bmpHeight = 0, bmpDataLen = 0;
+                ReadFile(hPipe, &respMagic, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &status, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &bmpWidth, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &bmpHeight, 4, &bytesRead, nullptr);
+                ReadFile(hPipe, &bmpDataLen, 4, &bytesRead, nullptr);
+
+                if (respMagic != kPreviewResponseMagic || status != 0) {
+                    resultText.AppendFmt("Page %d Render ERROR: status=%d\n", pn, status);
+                    continue;
+                }
+
+                // Read bitmap data
+                u8* bmpData = AllocArray<u8>(bmpDataLen);
+                if (bmpData) {
+                    DWORD totalRead = 0;
+                    while (totalRead < bmpDataLen) {
+                        DWORD toRead = bmpDataLen - totalRead;
+                        if (!ReadFile(hPipe, bmpData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
+                            break;
+                        }
+                        totalRead += bytesRead;
+                    }
+
+                    if (totalRead == bmpDataLen) {
+                        // Create DIB section
+                        BITMAPINFO bmi{};
+                        bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+                        bmi.bmiHeader.biWidth = bmpWidth;
+                        bmi.bmiHeader.biHeight = bmpHeight;
+                        bmi.bmiHeader.biPlanes = 1;
+                        bmi.bmiHeader.biBitCount = 32;
+                        bmi.bmiHeader.biCompression = BI_RGB;
+
+                        u8* dibData = nullptr;
+                        HBITMAP hBitmap = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&dibData, nullptr, 0);
+                        if (hBitmap && dibData) {
+                            memcpy(dibData, bmpData, bmpDataLen);
+
+                            // Save as PNG
+                            TempStr pageName = str::FormatTemp("page%d.png", pn);
+                            TempStr pagePath = path::JoinTemp(resultsDir, pageName);
+                            if (SaveHBitmapAsPng(hBitmap, pagePath)) {
+                                resultText.AppendFmt("Page %d rendered: %dx%d, saved to %s\n", pn, bmpWidth, bmpHeight,
+                                                     pageName);
+                            } else {
+                                resultText.AppendFmt("Page %d rendered: %dx%d, ERROR saving PNG\n", pn, bmpWidth,
+                                                     bmpHeight);
+                            }
+                            DeleteObject(hBitmap);
+                        } else {
+                            resultText.AppendFmt("Page %d ERROR: CreateDIBSection failed\n", pn);
+                        }
+                    } else {
+                        resultText.AppendFmt("Page %d ERROR: incomplete bitmap data\n", pn);
+                    }
+                    free(bmpData);
+                } else {
+                    resultText.AppendFmt("Page %d ERROR: failed to allocate memory\n", pn);
+                }
+            }
+
+            // Send Shutdown command
+            magic = kPreviewRequestMagic;
+            version = kPreviewProtocolVersion2;
+            cmd = (u32)PreviewCmd::Shutdown;
+            WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr);
+            WriteFile(hPipe, &version, 4, &bytesWritten, nullptr);
+            WriteFile(hPipe, &cmd, 4, &bytesWritten, nullptr);
+            FlushFileBuffers(hPipe);
+
+            resultText.AppendFmt("Shutdown command sent\n");
+        }
+
+        // Cleanup
+        DisconnectNamedPipe(hPipe);
+        CloseHandle(hPipe);
+        // Give the process a moment to exit gracefully
+        WaitForSingleObject(hProcess, 1000);
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+        str::Free(pipeName);
+    }
+
+    fileData.Free();
+
+    // Write result file
+    TempStr resultPath = path::JoinTemp(resultsDir, "result.txt");
+    file::WriteFile(resultPath, resultText.AsByteSlice());
+    logf("RunTestPreviewPipe: results written to %s\n", resultPath);
+}
+
 static void RunPreviewPipeServer(const char* pipeName) {
     logf("RunPreviewPipeServer: connecting to pipe '%s'\n", pipeName);
 
@@ -1633,6 +2066,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _
     // Handle ifilter pipe mode early - used by ifilter DLL
     if (flags.ifilterPipeName) {
         RunIFilterPipeServer(flags.ifilterPipeName);
+        ::ExitProcess(0);
+    }
+
+    // Handle test preview pipe mode - exercises all preview pipe functionality
+    if (flags.testPreviewPipePath) {
+        RunTestPreviewPipe(flags.testPreviewPipePath);
         ::ExitProcess(0);
     }
 
