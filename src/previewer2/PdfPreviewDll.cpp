@@ -6,8 +6,6 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
-#include "wingui/UIModels.h"
-
 #include "RegistryPreview.h"
 #include "PdfPreviewBase.h"
 

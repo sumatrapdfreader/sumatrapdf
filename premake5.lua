@@ -780,8 +780,7 @@ workspace "SumatraPDF"
     mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     includedirs {
-      "src", "src/wingui", "mupdf/include",
-      "ext/libdjvu", "ext/CHMLib"
+      "src", "src/wingui"
     }
     pdf_preview2_files()
     filter {"configurations:Debug"}
@@ -794,7 +793,6 @@ workspace "SumatraPDF"
     filter {}
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "utils", "unrar", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust" }
 
   project "PdfPreview"

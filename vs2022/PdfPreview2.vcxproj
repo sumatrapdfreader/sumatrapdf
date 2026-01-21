@@ -383,7 +383,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -396,7 +396,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -413,7 +413,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -426,7 +426,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -443,7 +443,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -456,7 +456,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -473,7 +473,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -486,7 +486,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -503,7 +503,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -516,7 +516,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -533,7 +533,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -546,7 +546,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -563,7 +563,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -576,7 +576,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -593,7 +593,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -606,7 +606,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -623,7 +623,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -639,7 +639,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -658,7 +658,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -674,7 +674,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -693,7 +693,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -709,7 +709,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -727,7 +727,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -743,7 +743,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -761,7 +761,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -777,7 +777,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -797,7 +797,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -813,7 +813,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -833,7 +833,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -849,7 +849,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -868,7 +868,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4100;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -884,7 +884,7 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0605;_WIN32_WINNT=0x0603;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -898,66 +898,47 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ChmFile.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
-    <ClInclude Include="..\src\EbookFormatter.h" />
-    <ClInclude Include="..\src\EngineAll.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\FzImgReader.h" />
-    <ClInclude Include="..\src\HtmlFormatter.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\PalmDbReader.h" />
-    <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
-    <ClInclude Include="..\src\mui\TextRender.h" />
     <ClInclude Include="..\src\previewer2\PdfPreviewBase.h" />
+    <ClInclude Include="..\src\utils\BaseUtil.h" />
+    <ClInclude Include="..\src\utils\ColorUtil.h" />
+    <ClInclude Include="..\src\utils\Dpi.h" />
+    <ClInclude Include="..\src\utils\FileUtil.h" />
+    <ClInclude Include="..\src\utils\GeomUtil.h" />
     <ClInclude Include="..\src\utils\Log.h" />
+    <ClInclude Include="..\src\utils\StrFormat.h" />
+    <ClInclude Include="..\src\utils\StrUtil.h" />
+    <ClInclude Include="..\src\utils\StrVec.h" />
+    <ClInclude Include="..\src\utils\StrconvUtil.h" />
+    <ClInclude Include="..\src\utils\TempAllocator.h" />
+    <ClInclude Include="..\src\utils\WinDynCalls.h" />
+    <ClInclude Include="..\src\utils\WinUtil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
-    <ClCompile Include="..\src\EbookDoc.cpp" />
-    <ClCompile Include="..\src\EbookFormatter.cpp" />
-    <ClCompile Include="..\src\EngineBase.cpp" />
-    <ClCompile Include="..\src\EngineDjVu.cpp" />
-    <ClCompile Include="..\src\EngineEbook.cpp" />
-    <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\FzImgReader.cpp" />
-    <ClCompile Include="..\src\HtmlFormatter.cpp" />
-    <ClCompile Include="..\src\MUPDF_Exports.cpp" />
-    <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
-    <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
-    <ClCompile Include="..\src\mui\TextRender.cpp" />
     <ClCompile Include="..\src\previewer2\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer2\PdfPreviewDll.cpp" />
+    <ClCompile Include="..\src\utils\BaseUtil.cpp" />
+    <ClCompile Include="..\src\utils\ColorUtil.cpp" />
+    <ClCompile Include="..\src\utils\Dpi.cpp" />
+    <ClCompile Include="..\src\utils\FileUtil.cpp" />
+    <ClCompile Include="..\src\utils\GeomUtil.cpp" />
     <ClCompile Include="..\src\utils\Log.cpp" />
+    <ClCompile Include="..\src\utils\StrFormat.cpp" />
+    <ClCompile Include="..\src\utils\StrUtil.cpp" />
+    <ClCompile Include="..\src\utils\StrVec.cpp" />
+    <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
+    <ClCompile Include="..\src\utils\TempAllocator.cpp" />
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
+    <ClCompile Include="..\src\utils\WinUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\previewer2\PdfPreview.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="utils.vcxproj">
-      <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="unrar.vcxproj">
-      <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="libmupdf.vcxproj">
-      <Project>{B812ACA6-A4DF-06B2-CDF8-F459B9243C40}</Project>
-    </ProjectReference>
-    <ProjectReference Include="chm.vcxproj">
-      <Project>{DD65880B-496F-887C-D2EA-9E7C3EF3937C}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

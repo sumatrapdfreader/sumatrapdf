@@ -12,56 +12,59 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ChmFile.h" />
-    <ClInclude Include="..\src\DocProperties.h" />
-    <ClInclude Include="..\src\EbookDoc.h" />
-    <ClInclude Include="..\src\EbookFormatter.h" />
-    <ClInclude Include="..\src\EngineAll.h" />
-    <ClInclude Include="..\src\EngineBase.h" />
-    <ClInclude Include="..\src\EngineMupdf.h" />
-    <ClInclude Include="..\src\FzImgReader.h" />
-    <ClInclude Include="..\src\HtmlFormatter.h" />
-    <ClInclude Include="..\src\MobiDoc.h" />
-    <ClInclude Include="..\src\PalmDbReader.h" />
-    <ClInclude Include="..\src\PdfCreator.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\Mui.h">
       <Filter>mui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\TextRender.h">
-      <Filter>mui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\previewer2\PdfPreviewBase.h">
       <Filter>previewer2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\BaseUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\ColorUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Dpi.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\FileUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\GeomUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Log.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\StrFormat.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrVec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrconvUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\TempAllocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinDynCalls.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ChmFile.cpp" />
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
-    <ClCompile Include="..\src\EbookDoc.cpp" />
-    <ClCompile Include="..\src\EbookFormatter.cpp" />
-    <ClCompile Include="..\src\EngineBase.cpp" />
-    <ClCompile Include="..\src\EngineDjVu.cpp" />
-    <ClCompile Include="..\src\EngineEbook.cpp" />
-    <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
-    <ClCompile Include="..\src\FzImgReader.cpp" />
-    <ClCompile Include="..\src\HtmlFormatter.cpp" />
-    <ClCompile Include="..\src\MUPDF_Exports.cpp" />
-    <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PalmDbReader.cpp" />
-    <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\TextRender.cpp">
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\previewer2\PdfPreview.cpp">
@@ -70,7 +73,43 @@
     <ClCompile Include="..\src\previewer2\PdfPreviewDll.cpp">
       <Filter>previewer2</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\BaseUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ColorUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Dpi.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\FileUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\GeomUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\Log.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrFormat.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrVec.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrconvUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\TempAllocator.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>

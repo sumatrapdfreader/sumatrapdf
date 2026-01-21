@@ -8,20 +8,12 @@
 #include "utils/FileUtil.h"
 #include "mui/Mui.h"
 
-#include "wingui/UIModels.h"
-
 #include "RegistryPreview.h"
 
 // TODO: move code to PdfPreviewBase.cpp
 #include "PdfPreviewBase.h"
 
 #include "utils/Log.h"
-
-// Stub for EngineMupdf - not used in previewer
-struct EBookUI;
-EBookUI* GetEBookUI() {
-    return nullptr;
-}
 
 constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;

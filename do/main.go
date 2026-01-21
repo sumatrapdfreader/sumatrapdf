@@ -70,19 +70,19 @@ func getSecrets() {
 
 func regenPremake() {
 	premakePath := filepath.Join("bin", "premake5.exe")
-	// TODO: with premake5 beta 8 switch to using vs2026 action
-	{
-		cmd := exec.Command(premakePath, "--with-2026", "vs2022")
-		runCmdLoggedMust(cmd)
-	}
 	{
 		cmd := exec.Command(premakePath, "vs2022")
 		runCmdLoggedMust(cmd)
 	}
-	{
-		cmd := exec.Command(premakePath, "--with-clang", "vs2022")
-		runCmdLoggedMust(cmd)
-	}
+	// TODO: with premake5 beta 8 switch to using vs2026 action
+	// {
+	// 	cmd := exec.Command(premakePath, "--with-2026", "vs2022")
+	// 	runCmdLoggedMust(cmd)
+	// }
+	// {
+	// 	cmd := exec.Command(premakePath, "--with-clang", "vs2022")
+	// 	runCmdLoggedMust(cmd)
+	// }
 }
 
 func openForAppend(name string) (*os.File, error) {
