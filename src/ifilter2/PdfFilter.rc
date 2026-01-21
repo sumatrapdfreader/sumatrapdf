@@ -1,0 +1,30 @@
+#include <windows.h>
+#include "../Version.h"
+
+VS_VERSION_INFO    VERSIONINFO     MOVEABLE IMPURE LOADONCALL DISCARDABLE
+  FILEVERSION    VER_RESOURCE
+  PRODUCTVERSION VER_RESOURCE
+  FILEFLAGS     0
+  FILEOS        VOS_NT_WINDOWS32
+  FILETYPE      VFT_DLL
+  FILESUBTYPE   0       // not used
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    //language ID = U.S. English, char set = Windows, Multilingual
+
+    BEGIN
+      VALUE "FileDescription",  "SumatraPDF IFilter Search Helper"
+      VALUE "FileVersion",      VER_RESOURCE_STR
+      VALUE "LegalCopyright",   kCopyrightStr
+      VALUE "OriginalFilename", "PdfFilter.dll"
+      VALUE "ProductName",      "SumatraPDF"
+      VALUE "ProductVersion",   VER_RESOURCE_STR
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1252
+  END
+END

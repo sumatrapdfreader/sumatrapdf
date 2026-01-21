@@ -762,6 +762,17 @@ workspace "SumatraPDF"
     links { "utils", "unrar", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust" }
 
+    project "PdfFilter2"
+      kind "SharedLib"
+      language "C++"
+      cppdialect "C++latest"
+      mixed_dbg_rel_conf()
+      disablewarnings { "4100", "4838" }
+      includedirs { "src", "src/wingui" }
+      search_filter2_files()
+      links { "utils", "unrar" }
+      links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust" }
+
   project "PdfPreview2"
     kind "SharedLib"
     language "C++"

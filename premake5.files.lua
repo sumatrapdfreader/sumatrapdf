@@ -1424,6 +1424,21 @@ function search_filter_files()
   filter {}
 end
 
+function search_filter2_files()
+  files_in_dir("src/ifilter", {
+    "PdfFilter.*",
+    "SearchFilterDll.cpp",
+    "CPdfFilter.*",
+    "FilterBase.h",
+  })
+  files_in_dir("src", {
+    "utils/Log.*",
+    "CrashHandlerNoOp.cpp",
+    "DocProperties.*",
+    "RegistrySearchFilter.*",
+  })
+end
+
 function gumbo_files()
   files_in_dir("ext/gumbo-parser/src", {
     "*.c",
