@@ -63,6 +63,33 @@ name the file after class name e.g. Wnd => src/WinGui/Wnd.cpp
 update visual studio solution by running: go run . -premake
 build by rnning: bun build.ts
 ---
+I got a crash:
+libmupdf.dll!add_char_to_line+0xd2 \mupdf\source\fitz\stext-device.c+397
+libmupdf.dll!fz_add_stext_char_imp+0x7a2 \mupdf\source\fitz\stext-device.c+860
+libmupdf.dll!fz_add_stext_char+0x5fe \mupdf\source\fitz\stext-device.c+955
+libmupdf.dll!flush_actualtext+0x106 \mupdf\source\fitz\stext-device.c+1087
+libmupdf.dll!fz_stext_begin_metatext+0xc3 \mupdf\source\fitz\stext-device.c+1343
+libmupdf.dll!fz_begin_metatext+0x67 \mupdf\source\fitz\device.c+621
+libmupdf.dll!begin_metatext+0x7d \mupdf\source\pdf\pdf-op-run.c+1682
+libmupdf.dll!push_marked_content+0x246 \mupdf\source\pdf\pdf-op-run.c+2126
+libmupdf.dll!pdf_process_BDC+0x54 \mupdf\source\pdf\pdf-interpret.c+1233
+libmupdf.dll!pdf_process_keyword+0xc1e \mupdf\source\pdf\pdf-interpret.c+1517
+libmupdf.dll!pdf_process_stream+0x1d3 \mupdf\source\pdf\pdf-interpret.c+1687
+libmupdf.dll!pdf_process_raw_contents+0x10b \mupdf\source\pdf\pdf-interpret.c+1827
+libmupdf.dll!pdf_process_contents+0x72 \mupdf\source\pdf\pdf-interpret.c+1850
+libmupdf.dll!pdf_run_page_contents_with_usage_imp+0x567 \mupdf\source\pdf\pdf-run.c+188
+libmupdf.dll!pdf_run_page_contents_with_usage+0xc7 \mupdf\source\pdf\pdf-run.c+226
+libmupdf.dll!pdf_run_page_contents+0x30 \mupdf\source\pdf\pdf-run.c+240
+libmupdf.dll!pdf_run_page_contents_imp+0x30 \mupdf\source\pdf\pdf-page.c+1114
+libmupdf.dll!fz_run_page_contents+0x8d \mupdf\source\fitz\document.c+1024
+libmupdf.dll!fz_new_stext_page_from_page_with_cookie+0xe4 \mupdf\source\fitz\util.c+311
+sumatrapdf.exe!EngineMupdf::ExtractPageText+0xc7 \src\EngineMupdf.cpp+3205
+
+Most likely this line in stext-device.c:
+	if (font->flags.is_bold)
+crashes because font is null
+analyze the code in mupdf/ directory stext-device.c, device.c, pdf-op-run.c, pdf-interpret.c and see if you can figure out sequence of actions that would lead to font being null
+---
 
 Ideas for refactorings:
 
