@@ -1355,34 +1355,6 @@ function pdf_preview_files()
   })
 end
 
-function pdf_preview2_files()
-  files_in_dir("src/previewer2", {
-    "PdfPreview.*",
-    "PdfPreviewBase.h",
-    "PdfPreviewDll.cpp",
-  })
-
-  files_in_dir("src", {
-    "utils/BaseUtil.*",
-    "utils/ColorUtil.*",
-    "utils/Dpi.*",
-    "utils/GeomUtil.*",
-    "utils/FileUtil.*",
-    "utils/Log.*",
-    "utils/StrconvUtil.*",
-    "utils/StrFormat.*",
-    "utils/StrUtil.*",
-    "utils/StrVec.*",
-    "utils/TempAllocator.*",
-    "utils/WinDynCalls.*",
-    "utils/WinUtil.*",
-    "mui/Mui.*",
-    "CrashHandlerNoOp.cpp",
-    "RegistryPreview.*",
-    "SumatraConfig.*",
-  })
-end
-
 function search_filter_files()
   files_in_dir("src/ifilter", {
     "PdfFilter.*",
@@ -1418,18 +1390,59 @@ function search_filter_files()
   filter {}
 end
 
+function pdf_preview2_files()
+  files_in_dir("src/previewer2", {
+    "PdfPreview.*",
+    "PdfPreviewBase.h",
+    "PdfPreviewDll.cpp",
+  })
+
+  files_in_dir("src", {
+    "utils/BaseUtil.*",
+    "utils/ColorUtil.*",
+    "utils/Dpi.*",
+    "utils/GeomUtil.*",
+    "utils/FileUtil.*",
+    "utils/Log.*",
+    "utils/StrconvUtil.*",
+    "utils/StrFormat.*",
+    "utils/StrUtil.*",
+    "utils/StrVec.*",
+    "utils/TempAllocator.*",
+    "utils/WinDynCalls.*",
+    "utils/WinUtil.*",
+    "mui/Mui.*",
+    "CrashHandlerNoOp.cpp",
+    "RegistryPreview.*",
+    "SumatraConfig.*",
+  })
+end
+
 function search_filter2_files()
-  files_in_dir("src/ifilter", {
+  files_in_dir("src/ifilter2", {
     "PdfFilter.*",
     "SearchFilterDll.cpp",
     "CPdfFilter.*",
     "FilterBase.h",
   })
   files_in_dir("src", {
+    "utils/BaseUtil.*",
+    "utils/ColorUtil.*",
+    "utils/Dpi.*",
+    "utils/GeomUtil.*",
+    "utils/FileUtil.*",
     "utils/Log.*",
+    "utils/StrconvUtil.*",
+    "utils/StrFormat.*",
+    "utils/StrUtil.*",
+    "utils/StrVec.*",
+    "utils/TempAllocator.*",
+    "utils/WinDynCalls.*",
+    "utils/WinUtil.*",
+    "mui/Mui.*",
     "CrashHandlerNoOp.cpp",
-    "DocProperties.*",
     "RegistrySearchFilter.*",
+    "SumatraConfig.*",
   })
 end
 

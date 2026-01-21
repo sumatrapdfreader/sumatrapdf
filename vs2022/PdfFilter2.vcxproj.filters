@@ -1,43 +1,124 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ifilter">
-      <UniqueIdentifier>{74F9F98B-E0D8-7827-E9F0-03FE554FDF88}</UniqueIdentifier>
+    <Filter Include="ifilter2">
+      <UniqueIdentifier>{2628390B-12F5-9316-3B0E-82BE273AC9A4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mui">
+      <UniqueIdentifier>{1092880B-7C9B-887C-0517-9F7C711F947C}</UniqueIdentifier>
     </Filter>
     <Filter Include="utils">
       <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\DocProperties.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
-    <ClInclude Include="..\src\ifilter\FilterBase.h">
-      <Filter>ifilter</Filter>
+    <ClInclude Include="..\src\SumatraConfig.h" />
+    <ClInclude Include="..\src\ifilter2\FilterBase.h">
+      <Filter>ifilter2</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ifilter\PdfFilter.h">
-      <Filter>ifilter</Filter>
+    <ClInclude Include="..\src\ifilter2\PdfFilter.h">
+      <Filter>ifilter2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mui\Mui.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\BaseUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\ColorUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Dpi.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\FileUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\GeomUtil.h">
+      <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Log.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrFormat.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrVec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrconvUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\TempAllocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinDynCalls.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
-    <ClCompile Include="..\src\DocProperties.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
-    <ClCompile Include="..\src\ifilter\PdfFilter.cpp">
-      <Filter>ifilter</Filter>
+    <ClCompile Include="..\src\SumatraConfig.cpp" />
+    <ClCompile Include="..\src\ifilter2\PdfFilter.cpp">
+      <Filter>ifilter2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ifilter\SearchFilterDll.cpp">
-      <Filter>ifilter</Filter>
+    <ClCompile Include="..\src\ifilter2\SearchFilterDll.cpp">
+      <Filter>ifilter2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mui\Mui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\BaseUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ColorUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Dpi.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\FileUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\GeomUtil.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\Log.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\StrFormat.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrVec.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrconvUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\TempAllocator.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\ifilter\PdfFilter.rc">
-      <Filter>ifilter</Filter>
+    <ResourceCompile Include="..\src\ifilter2\PdfFilter.rc">
+      <Filter>ifilter2</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
