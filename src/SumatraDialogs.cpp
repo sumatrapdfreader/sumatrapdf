@@ -829,7 +829,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPA
                 if (cmdLine) {
                     AppendIfNotExists(&detected, cmdLine);
                 } else {
-                    cmdLine = detected[0];
+                    if (detected.Size() > 0) {
+                        cmdLine = detected[0];
+                    }
                 }
                 for (char* s : detected) {
                     // if no existing command was selected then set the user custom command in the combo
