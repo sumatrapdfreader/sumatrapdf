@@ -119,7 +119,13 @@ Implementation details:
 - Modified PdfFilter and EpubFilter to use pipe communication via ExtractDataViaPipe()
 - DLL creates pipe server, launches SumatraPDF.exe as client, sends file data, receives extracted text/metadata
 - SumatraPDF.exe connects to pipe, uses Engine* classes to extract data, sends response, exits
-
+---
+analyze the code in ./src/preview2 and finish conversion to using sumatrapdf.exe via pipe for rendering of pages
+Need to remove all uses of Engine* classes, all LoadEngine() methods
+must convert PageRenderer to also use sumatrapdf.exe via pipe instead of engine
+potentially needs to extend the pipe protocol to pass requested page number, zoom and size in src/preview2/PdfPreview.cpp and src/SumatraStartup.cpp
+remove #include of Enginebase.h, EngineAll, DocController.h
+to verify it compiles after changes run: "bun .\build.ts -build-preview2"
 
 
 

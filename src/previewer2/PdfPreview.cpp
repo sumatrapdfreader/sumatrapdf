@@ -10,11 +10,6 @@
 
 #include "wingui/UIModels.h"
 
-#include "Settings.h"
-#include "DocController.h"
-#include "EngineBase.h"
-#include "EngineAll.h"
-#include "Annotation.h"
 #include "RegistryPreview.h"
 
 // TODO: move code to PdfPreviewBase.cpp
@@ -22,19 +17,15 @@
 
 #include "utils/Log.h"
 
-constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
-constexpr int kPreviewMargin = 2;
-constexpr UINT kUwmPaintAgain = (WM_USER + 101);
-
-// Protocol constants for named pipe preview - must match SumatraStartup.cpp
-constexpr u32 kPreviewRequestMagic = 0x53505657;  // "SPVW" - SumatraPDF Preview
-constexpr u32 kPreviewResponseMagic = 0x53505652; // "SPVR" - SumatraPDF Preview Response
-constexpr u32 kPreviewProtocolVersion = 1;
-constexpr DWORD kPipeTimeoutMs = 30000; // 30 second timeout for pipe operations
-
+// Stub for EngineMupdf - not used in previewer
+struct EBookUI;
 EBookUI* GetEBookUI() {
     return nullptr;
 }
+
+constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
+constexpr int kPreviewMargin = 2;
+constexpr UINT kUwmPaintAgain = (WM_USER + 101);
 
 // Generate a unique pipe name using a GUID
 static char* GenerateUniquePipeName() {
@@ -90,7 +81,35 @@ static HANDLE LaunchSumatraForPreview(const char* pipeName) {
     return pi.hProcess;
 }
 
-// Send preview request through the pipe
+// Wait for client connection with timeout
+static bool WaitForPipeConnection(HANDLE hPipe) {
+    OVERLAPPED ov{};
+    ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    if (!ov.hEvent) {
+        return false;
+    }
+
+    if (!ConnectNamedPipe(hPipe, &ov)) {
+        DWORD err = GetLastError();
+        if (err == ERROR_PIPE_CONNECTED) {
+            // Already connected
+            CloseHandle(ov.hEvent);
+            return true;
+        } else if (err == ERROR_IO_PENDING) {
+            DWORD waitResult = WaitForSingleObject(ov.hEvent, kPipeTimeoutMs);
+            CloseHandle(ov.hEvent);
+            return waitResult == WAIT_OBJECT_0;
+        } else {
+            CloseHandle(ov.hEvent);
+            return false;
+        }
+    }
+
+    CloseHandle(ov.hEvent);
+    return true;
+}
+
+// Send preview request through the pipe (version 1 protocol for thumbnails)
 static bool SendPreviewRequest(HANDLE hPipe, PreviewFileType fileType, uint cx, const ByteSlice& data) {
     DWORD bytesWritten = 0;
 
@@ -257,35 +276,11 @@ HBITMAP PreviewBase::GetThumbnailViaPipe(uint cx) {
 
     HBITMAP result = nullptr;
 
-    // Wait for client to connect (with timeout)
-    // Use overlapped I/O for proper timeout handling
-    OVERLAPPED ov{};
-    ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    if (!ov.hEvent) {
-        logf("GetThumbnailViaPipe: failed to create event\n");
+    // Wait for client to connect
+    if (!WaitForPipeConnection(hPipe)) {
+        logf("GetThumbnailViaPipe: pipe connection failed\n");
         goto cleanup;
     }
-
-    if (!ConnectNamedPipe(hPipe, &ov)) {
-        DWORD err = GetLastError();
-        if (err == ERROR_PIPE_CONNECTED) {
-            // Client already connected, that's fine
-        } else if (err == ERROR_IO_PENDING) {
-            // Wait for connection with timeout
-            DWORD waitResult = WaitForSingleObject(ov.hEvent, kPipeTimeoutMs);
-            if (waitResult != WAIT_OBJECT_0) {
-                logf("GetThumbnailViaPipe: pipe connection timed out or failed\n");
-                CloseHandle(ov.hEvent);
-                goto cleanup;
-            }
-        } else {
-            logf("GetThumbnailViaPipe: ConnectNamedPipe failed with error %d\n", (int)err);
-            CloseHandle(ov.hEvent);
-            goto cleanup;
-        }
-    }
-
-    CloseHandle(ov.hEvent);
 
     logf("GetThumbnailViaPipe: client connected\n");
 
@@ -336,55 +331,170 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE*
     return S_OK;
 }
 
+// Initialize a pipe session for version 2 protocol (session-based preview)
+bool PreviewBase::InitPreviewSession() {
+    logf("InitPreviewSession\n");
+
+    // Read stream data
+    ByteSlice data = GetDataFromStream(m_pStream.Get(), nullptr);
+    if (data.empty()) {
+        logf("InitPreviewSession: failed to get data from stream\n");
+        return false;
+    }
+
+    logf("InitPreviewSession: read %d bytes from stream\n", (int)data.size());
+
+    // Generate unique pipe name
+    char* pipeName = GenerateUniquePipeName();
+    if (!pipeName) {
+        logf("InitPreviewSession: failed to generate pipe name\n");
+        data.Free();
+        return false;
+    }
+
+    logf("InitPreviewSession: pipe name '%s'\n", pipeName);
+
+    // Create named pipe (we are the server)
+    HANDLE hPipe = CreatePreviewPipe(pipeName);
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        logf("InitPreviewSession: failed to create pipe\n");
+        str::Free(pipeName);
+        data.Free();
+        return false;
+    }
+
+    // Launch SumatraPDF.exe
+    HANDLE hProcess = LaunchSumatraForPreview(pipeName);
+    if (!hProcess) {
+        logf("InitPreviewSession: failed to launch SumatraPDF\n");
+        CloseHandle(hPipe);
+        str::Free(pipeName);
+        data.Free();
+        return false;
+    }
+
+    str::Free(pipeName);
+
+    // Wait for client to connect
+    if (!WaitForPipeConnection(hPipe)) {
+        logf("InitPreviewSession: pipe connection failed\n");
+        CloseHandle(hPipe);
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+        data.Free();
+        return false;
+    }
+
+    logf("InitPreviewSession: client connected\n");
+
+    // Send Init command (version 2 protocol)
+    DWORD bytesWritten = 0, bytesRead = 0;
+
+    u32 magic = kPreviewRequestMagic;
+    u32 version = kPreviewProtocolVersion2;
+    u32 cmd = (u32)PreviewCmd::Init;
+    u32 fileType = (u32)GetFileType();
+    u32 dataSize = (u32)data.size();
+
+    WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &version, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &cmd, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &fileType, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &dataSize, 4, &bytesWritten, nullptr);
+
+    // Write file data
+    DWORD totalWritten = 0;
+    while (totalWritten < dataSize) {
+        DWORD toWrite = dataSize - totalWritten;
+        if (!WriteFile(hPipe, data.data() + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
+            logf("InitPreviewSession: failed to write file data\n");
+            CloseHandle(hPipe);
+            TerminateProcess(hProcess, 0);
+            CloseHandle(hProcess);
+            data.Free();
+            return false;
+        }
+        totalWritten += bytesWritten;
+    }
+
+    FlushFileBuffers(hPipe);
+    data.Free();
+
+    // Read Init response: magic(4) + status(4) + pageCount(4)
+    u32 respMagic = 0, status = 0, pageCount = 0;
+    if (!ReadFile(hPipe, &respMagic, 4, &bytesRead, nullptr) || bytesRead != 4 || respMagic != kPreviewResponseMagic) {
+        logf("InitPreviewSession: invalid response magic\n");
+        CloseHandle(hPipe);
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+        return false;
+    }
+    if (!ReadFile(hPipe, &status, 4, &bytesRead, nullptr) || bytesRead != 4 || status != 0) {
+        logf("InitPreviewSession: init failed with status %d\n", status);
+        CloseHandle(hPipe);
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+        return false;
+    }
+    if (!ReadFile(hPipe, &pageCount, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("InitPreviewSession: failed to read page count\n");
+        CloseHandle(hPipe);
+        TerminateProcess(hProcess, 0);
+        CloseHandle(hProcess);
+        return false;
+    }
+
+    logf("InitPreviewSession: success, pageCount=%d\n", pageCount);
+
+    // Create pipe session
+    pipeSession = new PreviewPipeSession();
+    pipeSession->hPipe = hPipe;
+    pipeSession->hProcess = hProcess;
+    pipeSession->pageCount = (int)pageCount;
+
+    return true;
+}
+
+// PageRenderer class using pipe session
 class PageRenderer {
-    EngineBase* engine = nullptr;
+    PreviewPipeSession* session = nullptr;
     HWND hwnd = nullptr;
 
     int currPage = 0;
-    RenderedBitmap* currBmp = nullptr;
-    // due to rounding differences, currBmp->Size() and currSize can differ slightly
+    HBITMAP currBmp = nullptr;
     Size currSize;
+
     int reqPage = 0;
     float reqZoom = 0.f;
     Size reqSize = {};
     bool reqAbort = false;
-    AbortCookie* abortCookie = nullptr;
 
     CRITICAL_SECTION currAccess;
     HANDLE thread = nullptr;
 
-    // seeking inside an IStream spins an inner event loop
-    // which can cause reentrance in OnPaint and leave an
-    // engine semi-initialized when it's called recursively
-    // (this only applies for the UI thread where the critical
-    // sections can't prevent recursion without the risk of deadlock)
-    bool preventRecursion = false;
-
   public:
-    PageRenderer(EngineBase* engine, HWND hwnd) {
-        this->engine = engine;
+    PageRenderer(PreviewPipeSession* session, HWND hwnd) {
+        this->session = session;
         this->hwnd = hwnd;
         InitializeCriticalSection(&currAccess);
     }
+
     ~PageRenderer() {
         if (thread) {
+            reqAbort = true;
             WaitForSingleObject(thread, INFINITE);
         }
-        delete currBmp;
+        if (currBmp) {
+            DeleteObject(currBmp);
+        }
         DeleteCriticalSection(&currAccess);
     }
 
     RectF GetPageRect(int pageNo) {
-        if (preventRecursion) {
+        if (!session || !session->IsConnected()) {
             return RectF();
         }
-
-        preventRecursion = true;
-        // assume that any engine methods could lead to a seek
-        RectF bbox = engine->PageMediabox(pageNo);
-        bbox = engine->Transform(bbox, pageNo, 1.0, 0);
-        preventRecursion = false;
-        return bbox;
+        return session->GetPageBox(pageNo);
     }
 
     void Render(HDC hdc, Rect target, int pageNo, float zoom) {
@@ -392,7 +502,12 @@ class PageRenderer {
 
         ScopedCritSec scope(&currAccess);
         if (currBmp && currPage == pageNo && currSize == target.Size()) {
-            currBmp->Blit(hdc, target);
+            // Blit cached bitmap
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HGDIOBJ oldBmp = SelectObject(hdcMem, currBmp);
+            BitBlt(hdc, target.x, target.y, target.dx, target.dy, hdcMem, 0, 0, SRCCOPY);
+            SelectObject(hdcMem, oldBmp);
+            DeleteDC(hdcMem);
         } else if (!thread) {
             reqPage = pageNo;
             reqZoom = zoom;
@@ -400,9 +515,6 @@ class PageRenderer {
             reqAbort = false;
             thread = CreateThread(nullptr, 0, RenderThread, this, 0, nullptr);
         } else if (reqPage != pageNo || reqSize != target.Size()) {
-            if (abortCookie) {
-                abortCookie->Abort();
-            }
             reqAbort = true;
         }
     }
@@ -410,27 +522,37 @@ class PageRenderer {
   protected:
     static DWORD WINAPI RenderThread(LPVOID data) {
         log("PageRenderer::RenderThread started\n");
-        ScopedCom comScope; // because the engine reads data from a COM IStream
+        ScopedCom comScope;
 
         PageRenderer* pr = (PageRenderer*)data;
-        RenderPageArgs args(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
-        RenderedBitmap* bmp = pr->engine->RenderPage(args);
+
+        if (!pr->session || !pr->session->IsConnected()) {
+            return 0;
+        }
+
+        HBITMAP bmp = pr->session->RenderPage(pr->reqPage, pr->reqZoom, pr->reqSize.dx, pr->reqSize.dy);
         if (!bmp) {
+            log("PageRenderer::RenderThread: RenderPage failed\n");
+            ScopedCritSec scope(&pr->currAccess);
+            HANDLE th = pr->thread;
+            pr->thread = nullptr;
+            CloseHandle(th);
+            DestroyTempAllocator();
             return 0;
         }
 
         ScopedCritSec scope(&pr->currAccess);
 
         if (!pr->reqAbort) {
-            delete pr->currBmp;
+            if (pr->currBmp) {
+                DeleteObject(pr->currBmp);
+            }
             pr->currBmp = bmp;
             pr->currPage = pr->reqPage;
             pr->currSize = pr->reqSize;
         } else {
-            delete bmp;
+            DeleteObject(bmp);
         }
-        delete pr->abortCookie;
-        pr->abortCookie = nullptr;
 
         HANDLE th = pr->thread;
         pr->thread = nullptr;
@@ -588,13 +710,10 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
     this->renderer = nullptr;
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
-    EngineBase* engine = GetEngine();
     int pageCount = 1;
-    if (engine) {
-        pageCount = engine->PageCount();
-        this->renderer = new PageRenderer(engine, m_hwnd);
-        // don't use the engine afterwards directly (cf. PageRenderer::preventRecursion)
-        engine = nullptr;
+    if (InitPreviewSession() && pipeSession) {
+        pageCount = pipeSession->pageCount;
+        this->renderer = new PageRenderer(pipeSession, m_hwnd);
     }
 
     SCROLLINFO si{};
@@ -610,22 +729,6 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
     return S_OK;
 }
 
-EngineBase* PdfPreview::LoadEngine(IStream* stream) {
-    log("PdfPreview::LoadEngine()\n");
-    return CreateEngineMupdfFromStream(stream, "foo.pdf");
-}
-
-#if 0
-EngineBase* XpsPreview::LoadEngine(IStream* stream) {
-    return CreateEngineXpFromStream(stream);
-}
-#endif
-
-EngineBase* DjVuPreview::LoadEngine(IStream* stream) {
-    log("DjVuPreview::LoadEngine()\n");
-    return CreateEngineDjVuFromStream(stream);
-}
-
 EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, kEpubPreviewClsid) {
     log("EpubPreview::EpubPreview()\n");
     m_gdiScope = new ScopedGdiPlus();
@@ -634,11 +737,6 @@ EpubPreview::EpubPreview(long* plRefCount) : PreviewBase(plRefCount, kEpubPrevie
 
 EpubPreview::~EpubPreview() {
     mui::Destroy();
-}
-
-EngineBase* EpubPreview::LoadEngine(IStream* stream) {
-    log("EpubPreview::LoadEngine()\n");
-    return CreateEngineEpubFromStream(stream);
 }
 
 Fb2Preview::Fb2Preview(long* plRefCount) : PreviewBase(plRefCount, kFb2PreviewClsid) {
@@ -650,11 +748,6 @@ Fb2Preview::~Fb2Preview() {
     mui::Destroy();
 }
 
-EngineBase* Fb2Preview::LoadEngine(IStream* stream) {
-    log("Fb2Preview::LoadEngine()\n");
-    return CreateEngineFb2FromStream(stream);
-}
-
 MobiPreview::MobiPreview(long* plRefCount) : PreviewBase(plRefCount, kMobiPreviewClsid) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
@@ -662,19 +755,4 @@ MobiPreview::MobiPreview(long* plRefCount) : PreviewBase(plRefCount, kMobiPrevie
 
 MobiPreview::~MobiPreview() {
     mui::Destroy();
-}
-
-EngineBase* MobiPreview::LoadEngine(IStream* stream) {
-    log("MobiPreview::LoadEngine()\n");
-    return CreateEngineMobiFromStream(stream);
-}
-
-EngineBase* CbxPreview::LoadEngine(IStream* stream) {
-    log("CbxPreview::LoadEngine()\n");
-    return CreateEngineCbxFromStream(stream);
-}
-
-EngineBase* TgaPreview::LoadEngine(IStream* stream) {
-    log("TgaPreview::LoadEngine()\n");
-    return CreateEngineImageFromStream(stream);
 }

@@ -928,7 +928,16 @@ extern void DeleteManualBrowserWindow();
 // Protocol constants for named pipe preview
 constexpr u32 kPreviewRequestMagic = 0x53505657;  // "SPVW" - SumatraPDF Preview
 constexpr u32 kPreviewResponseMagic = 0x53505652; // "SPVR" - SumatraPDF Preview Response
-constexpr u32 kPreviewProtocolVersion = 1;
+constexpr u32 kPreviewProtocolVersion = 1;        // One-shot thumbnail mode
+constexpr u32 kPreviewProtocolVersion2 = 2;       // Session-based preview mode
+
+// Commands for protocol version 2 (session-based)
+enum class PreviewCmd : u32 {
+    Init = 1,       // Initialize with file data, returns page count
+    GetPageBox = 2, // Get page dimensions
+    Render = 3,     // Render a page
+    Shutdown = 255, // Close session
+};
 
 // File type enum matching the DLL side
 enum class PreviewFileType : u32 {
@@ -976,6 +985,355 @@ static EngineBase* CreateEngineFromDataForPreview(const ByteSlice& data, Preview
     return engine;
 }
 
+// Helper to render a page and extract bitmap data
+static u8* RenderPageToBitmap(EngineBase* engine, int pageNo, float zoom, u32* outWidth, u32* outHeight,
+                              u32* outDataLen) {
+    RectF page = engine->Transform(engine->PageMediabox(pageNo), pageNo, 1.0, 0);
+    Rect target = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
+
+    RectF pageRect = engine->Transform(ToRectF(target), pageNo, zoom, 0, true);
+    RenderPageArgs args(pageNo, zoom, 0, &pageRect);
+    RenderedBitmap* bmp = engine->RenderPage(args);
+
+    if (!bmp) {
+        logf("RenderPageToBitmap: RenderPage failed for page %d\n", pageNo);
+        return nullptr;
+    }
+
+    u32 width = target.dx;
+    u32 height = target.dy;
+    u32 bmpDataLen = width * height * 4;
+
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biHeight = height;
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    u8* bmpData = AllocArray<u8>(bmpDataLen);
+    if (!bmpData) {
+        delete bmp;
+        return nullptr;
+    }
+
+    HDC hdc = GetDC(nullptr);
+    if (!GetDIBits(hdc, bmp->GetBitmap(), 0, height, bmpData, &bmi, DIB_RGB_COLORS)) {
+        ReleaseDC(nullptr, hdc);
+        free(bmpData);
+        delete bmp;
+        return nullptr;
+    }
+    ReleaseDC(nullptr, hdc);
+
+    // Set alpha to 0xFF for each pixel
+    for (u32 i = 0; i < width * height; i++) {
+        bmpData[4 * i + 3] = 0xFF;
+    }
+
+    delete bmp;
+
+    *outWidth = width;
+    *outHeight = height;
+    *outDataLen = bmpDataLen;
+    return bmpData;
+}
+
+// Helper to write bitmap response to pipe
+static bool WriteBitmapResponse(HANDLE hPipe, u32 status, u32 width, u32 height, u8* bmpData, u32 bmpDataLen) {
+    DWORD bytesWritten = 0;
+    u32 responseMagic = kPreviewResponseMagic;
+
+    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &width, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &height, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &bmpDataLen, 4, &bytesWritten, nullptr);
+
+    if (status == 0 && bmpData && bmpDataLen > 0) {
+        DWORD totalWritten = 0;
+        while (totalWritten < bmpDataLen) {
+            DWORD toWrite = bmpDataLen - totalWritten;
+            if (!WriteFile(hPipe, bmpData + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
+                return false;
+            }
+            totalWritten += bytesWritten;
+        }
+    }
+    FlushFileBuffers(hPipe);
+    return true;
+}
+
+// Protocol version 1: One-shot thumbnail rendering
+static void RunPreviewPipeV1(HANDLE hPipe, u32 fileType, u32 thumbSize, u32 dataSize) {
+    DWORD bytesRead = 0;
+
+    // Sanity check
+    if (dataSize == 0 || dataSize > 100 * 1024 * 1024) {
+        logf("RunPreviewPipeV1: invalid dataSize %d\n", dataSize);
+        u32 status = 1;
+        WriteBitmapResponse(hPipe, status, 0, 0, nullptr, 0);
+        return;
+    }
+
+    // Read file data
+    u8* fileData = AllocArray<u8>(dataSize);
+    if (!fileData) {
+        logf("RunPreviewPipeV1: failed to allocate %d bytes\n", dataSize);
+        u32 status = 3;
+        WriteBitmapResponse(hPipe, status, 0, 0, nullptr, 0);
+        return;
+    }
+
+    DWORD totalRead = 0;
+    while (totalRead < dataSize) {
+        DWORD toRead = dataSize - totalRead;
+        if (!ReadFile(hPipe, fileData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
+            logf("RunPreviewPipeV1: failed to read file data at offset %d\n", totalRead);
+            free(fileData);
+            u32 status = 1;
+            WriteBitmapResponse(hPipe, status, 0, 0, nullptr, 0);
+            return;
+        }
+        totalRead += bytesRead;
+    }
+
+    logf("RunPreviewPipeV1: read %d bytes of file data\n", totalRead);
+
+    ByteSlice data = {fileData, (size_t)dataSize};
+    EngineBase* engine = CreateEngineFromDataForPreview(data, (PreviewFileType)fileType);
+
+    u32 status = 0;
+    u32 width = 0, height = 0, bmpDataLen = 0;
+    u8* bmpData = nullptr;
+
+    if (!engine) {
+        logf("RunPreviewPipeV1: failed to create engine\n");
+        status = 1;
+    } else {
+        RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
+        float zoom = std::min((float)thumbSize / page.dx, (float)thumbSize / page.dy) - 0.001f;
+        bmpData = RenderPageToBitmap(engine, 1, zoom, &width, &height, &bmpDataLen);
+        if (!bmpData) {
+            status = 2;
+        }
+        engine->Release();
+    }
+
+    free(fileData);
+
+    WriteBitmapResponse(hPipe, status, width, height, bmpData, bmpDataLen);
+    free(bmpData);
+    logf("RunPreviewPipeV1: done, status=%d\n", status);
+}
+
+// Protocol version 2: Session-based preview with multiple commands
+static void RunPreviewPipeV2(HANDLE hPipe) {
+    logf("RunPreviewPipeV2: starting session\n");
+    DWORD bytesRead = 0, bytesWritten = 0;
+    EngineBase* engine = nullptr;
+    bool running = true;
+
+    while (running) {
+        // Read command header: magic(4) + version(4) + command(4)
+        u32 magic = 0, version = 0, cmd = 0;
+
+        if (!ReadFile(hPipe, &magic, 4, &bytesRead, nullptr) || bytesRead != 4) {
+            logf("RunPreviewPipeV2: failed to read magic (connection closed?)\n");
+            break;
+        }
+        if (magic != kPreviewRequestMagic) {
+            logf("RunPreviewPipeV2: invalid magic 0x%08x\n", magic);
+            break;
+        }
+        if (!ReadFile(hPipe, &version, 4, &bytesRead, nullptr) || bytesRead != 4) {
+            logf("RunPreviewPipeV2: failed to read version\n");
+            break;
+        }
+        if (version != kPreviewProtocolVersion2) {
+            logf("RunPreviewPipeV2: invalid version %d\n", version);
+            break;
+        }
+        if (!ReadFile(hPipe, &cmd, 4, &bytesRead, nullptr) || bytesRead != 4) {
+            logf("RunPreviewPipeV2: failed to read command\n");
+            break;
+        }
+
+        logf("RunPreviewPipeV2: received command %d\n", cmd);
+
+        switch ((PreviewCmd)cmd) {
+            case PreviewCmd::Init: {
+                // Read: fileType(4) + dataSize(4) + data
+                u32 fileType = 0, dataSize = 0;
+                if (!ReadFile(hPipe, &fileType, 4, &bytesRead, nullptr) || bytesRead != 4 ||
+                    !ReadFile(hPipe, &dataSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
+                    logf("RunPreviewPipeV2: Init - failed to read header\n");
+                    running = false;
+                    break;
+                }
+
+                logf("RunPreviewPipeV2: Init - fileType=%d, dataSize=%d\n", fileType, dataSize);
+
+                if (dataSize == 0 || dataSize > 100 * 1024 * 1024) {
+                    logf("RunPreviewPipeV2: Init - invalid dataSize\n");
+                    u32 responseMagic = kPreviewResponseMagic;
+                    u32 status = 1;
+                    u32 pageCount = 0;
+                    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+                    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+                    WriteFile(hPipe, &pageCount, 4, &bytesWritten, nullptr);
+                    FlushFileBuffers(hPipe);
+                    running = false;
+                    break;
+                }
+
+                u8* fileData = AllocArray<u8>(dataSize);
+                if (!fileData) {
+                    logf("RunPreviewPipeV2: Init - failed to allocate memory\n");
+                    u32 responseMagic = kPreviewResponseMagic;
+                    u32 status = 3;
+                    u32 pageCount = 0;
+                    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+                    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+                    WriteFile(hPipe, &pageCount, 4, &bytesWritten, nullptr);
+                    FlushFileBuffers(hPipe);
+                    running = false;
+                    break;
+                }
+
+                DWORD totalRead = 0;
+                while (totalRead < dataSize) {
+                    DWORD toRead = dataSize - totalRead;
+                    if (!ReadFile(hPipe, fileData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
+                        break;
+                    }
+                    totalRead += bytesRead;
+                }
+
+                if (totalRead != dataSize) {
+                    logf("RunPreviewPipeV2: Init - failed to read file data\n");
+                    free(fileData);
+                    u32 responseMagic = kPreviewResponseMagic;
+                    u32 status = 1;
+                    u32 pageCount = 0;
+                    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+                    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+                    WriteFile(hPipe, &pageCount, 4, &bytesWritten, nullptr);
+                    FlushFileBuffers(hPipe);
+                    running = false;
+                    break;
+                }
+
+                ByteSlice data = {fileData, (size_t)dataSize};
+                engine = CreateEngineFromDataForPreview(data, (PreviewFileType)fileType);
+                free(fileData);
+
+                u32 responseMagic = kPreviewResponseMagic;
+                u32 status = engine ? 0 : 1;
+                u32 pageCount = engine ? (u32)engine->PageCount() : 0;
+
+                logf("RunPreviewPipeV2: Init - engine created, pageCount=%d\n", pageCount);
+
+                WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &pageCount, 4, &bytesWritten, nullptr);
+                FlushFileBuffers(hPipe);
+                break;
+            }
+
+            case PreviewCmd::GetPageBox: {
+                // Read: pageNo(4)
+                u32 pageNo = 0;
+                if (!ReadFile(hPipe, &pageNo, 4, &bytesRead, nullptr) || bytesRead != 4) {
+                    logf("RunPreviewPipeV2: GetPageBox - failed to read pageNo\n");
+                    running = false;
+                    break;
+                }
+
+                logf("RunPreviewPipeV2: GetPageBox - pageNo=%d\n", pageNo);
+
+                u32 responseMagic = kPreviewResponseMagic;
+                u32 status = 0;
+                float widthF = 0, heightF = 0;
+
+                if (!engine || pageNo < 1 || pageNo > (u32)engine->PageCount()) {
+                    status = 1;
+                } else {
+                    RectF bbox = engine->PageMediabox(pageNo);
+                    bbox = engine->Transform(bbox, pageNo, 1.0, 0);
+                    widthF = bbox.dx;
+                    heightF = bbox.dy;
+                }
+
+                // Write floats as bit patterns
+                u32 widthBits, heightBits;
+                memcpy(&widthBits, &widthF, 4);
+                memcpy(&heightBits, &heightF, 4);
+
+                WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &widthBits, 4, &bytesWritten, nullptr);
+                WriteFile(hPipe, &heightBits, 4, &bytesWritten, nullptr);
+                FlushFileBuffers(hPipe);
+                break;
+            }
+
+            case PreviewCmd::Render: {
+                // Read: pageNo(4) + zoomBits(4) + targetWidth(4) + targetHeight(4)
+                u32 pageNo = 0, zoomBits = 0, targetWidth = 0, targetHeight = 0;
+                if (!ReadFile(hPipe, &pageNo, 4, &bytesRead, nullptr) || bytesRead != 4 ||
+                    !ReadFile(hPipe, &zoomBits, 4, &bytesRead, nullptr) || bytesRead != 4 ||
+                    !ReadFile(hPipe, &targetWidth, 4, &bytesRead, nullptr) || bytesRead != 4 ||
+                    !ReadFile(hPipe, &targetHeight, 4, &bytesRead, nullptr) || bytesRead != 4) {
+                    logf("RunPreviewPipeV2: Render - failed to read params\n");
+                    running = false;
+                    break;
+                }
+
+                float zoom;
+                memcpy(&zoom, &zoomBits, 4);
+
+                logf("RunPreviewPipeV2: Render - pageNo=%d, zoom=%.3f, target=%dx%d\n", pageNo, zoom, targetWidth,
+                     targetHeight);
+
+                u32 status = 0;
+                u32 width = 0, height = 0, bmpDataLen = 0;
+                u8* bmpData = nullptr;
+
+                if (!engine || pageNo < 1 || pageNo > (u32)engine->PageCount()) {
+                    status = 1;
+                } else {
+                    bmpData = RenderPageToBitmap(engine, pageNo, zoom, &width, &height, &bmpDataLen);
+                    if (!bmpData) {
+                        status = 2;
+                    }
+                }
+
+                WriteBitmapResponse(hPipe, status, width, height, bmpData, bmpDataLen);
+                free(bmpData);
+                break;
+            }
+
+            case PreviewCmd::Shutdown: {
+                logf("RunPreviewPipeV2: Shutdown command received\n");
+                running = false;
+                break;
+            }
+
+            default:
+                logf("RunPreviewPipeV2: unknown command %d\n", cmd);
+                running = false;
+                break;
+        }
+    }
+
+    if (engine) {
+        engine->Release();
+    }
+    logf("RunPreviewPipeV2: session ended\n");
+}
+
 static void RunPreviewPipeServer(const char* pipeName) {
     logf("RunPreviewPipeServer: connecting to pipe '%s'\n", pipeName);
 
@@ -986,8 +1344,8 @@ static void RunPreviewPipeServer(const char* pipeName) {
         return;
     }
 
-    // Read request header: magic(4) + version(4) + fileType(4) + thumbSize(4) + dataSize(4) = 20 bytes
-    u32 magic = 0, version = 0, fileType = 0, thumbSize = 0, dataSize = 0;
+    // Read common header: magic(4) + version(4)
+    u32 magic = 0, version = 0;
     DWORD bytesRead = 0;
 
     if (!ReadFile(hPipe, &magic, 4, &bytesRead, nullptr) || bytesRead != 4 || magic != kPreviewRequestMagic) {
@@ -995,149 +1353,35 @@ static void RunPreviewPipeServer(const char* pipeName) {
         CloseHandle(hPipe);
         return;
     }
-    if (!ReadFile(hPipe, &version, 4, &bytesRead, nullptr) || bytesRead != 4 || version != kPreviewProtocolVersion) {
-        logf("RunPreviewPipeServer: invalid version %d\n", version);
-        CloseHandle(hPipe);
-        return;
-    }
-    if (!ReadFile(hPipe, &fileType, 4, &bytesRead, nullptr) || bytesRead != 4) {
-        logf("RunPreviewPipeServer: failed to read fileType\n");
-        CloseHandle(hPipe);
-        return;
-    }
-    if (!ReadFile(hPipe, &thumbSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
-        logf("RunPreviewPipeServer: failed to read thumbSize\n");
-        CloseHandle(hPipe);
-        return;
-    }
-    if (!ReadFile(hPipe, &dataSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
-        logf("RunPreviewPipeServer: failed to read dataSize\n");
+    if (!ReadFile(hPipe, &version, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("RunPreviewPipeServer: failed to read version\n");
         CloseHandle(hPipe);
         return;
     }
 
-    logf("RunPreviewPipeServer: fileType=%d, thumbSize=%d, dataSize=%d\n", fileType, thumbSize, dataSize);
+    logf("RunPreviewPipeServer: protocol version %d\n", version);
 
-    // Sanity check
-    if (dataSize == 0 || dataSize > 100 * 1024 * 1024) { // max 100MB
-        logf("RunPreviewPipeServer: invalid dataSize %d\n", dataSize);
-        CloseHandle(hPipe);
-        return;
-    }
-
-    // Read file data
-    u8* fileData = AllocArray<u8>(dataSize);
-    if (!fileData) {
-        logf("RunPreviewPipeServer: failed to allocate %d bytes\n", dataSize);
-        CloseHandle(hPipe);
-        return;
-    }
-
-    DWORD totalRead = 0;
-    while (totalRead < dataSize) {
-        DWORD toRead = dataSize - totalRead;
-        if (!ReadFile(hPipe, fileData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
-            logf("RunPreviewPipeServer: failed to read file data at offset %d\n", totalRead);
-            free(fileData);
+    if (version == kPreviewProtocolVersion) {
+        // Version 1: Read remaining v1 header (fileType, thumbSize, dataSize) and process
+        u32 fileType = 0, thumbSize = 0, dataSize = 0;
+        if (!ReadFile(hPipe, &fileType, 4, &bytesRead, nullptr) || bytesRead != 4 ||
+            !ReadFile(hPipe, &thumbSize, 4, &bytesRead, nullptr) || bytesRead != 4 ||
+            !ReadFile(hPipe, &dataSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
+            logf("RunPreviewPipeServer: failed to read v1 header\n");
             CloseHandle(hPipe);
             return;
         }
-        totalRead += bytesRead;
-    }
-
-    logf("RunPreviewPipeServer: read %d bytes of file data\n", totalRead);
-
-    // Create engine from data
-    ByteSlice data = {fileData, (size_t)dataSize};
-    EngineBase* engine = CreateEngineFromDataForPreview(data, (PreviewFileType)fileType);
-
-    u32 status = 0;
-    u32 width = 0, height = 0, bmpDataLen = 0;
-    u8* bmpData = nullptr;
-
-    if (!engine) {
-        logf("RunPreviewPipeServer: failed to create engine\n");
-        status = 1; // error
+        logf("RunPreviewPipeServer: V1 - fileType=%d, thumbSize=%d, dataSize=%d\n", fileType, thumbSize, dataSize);
+        RunPreviewPipeV1(hPipe, fileType, thumbSize, dataSize);
+    } else if (version == kPreviewProtocolVersion2) {
+        // Version 2: Session-based, commands follow
+        RunPreviewPipeV2(hPipe);
     } else {
-        // Render page 1 at requested size
-        RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
-        float zoom = std::min((float)thumbSize / page.dx, (float)thumbSize / page.dy) - 0.001f;
-        Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
-
-        RectF pageRect = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
-        RenderPageArgs args(1, zoom, 0, &pageRect);
-        RenderedBitmap* bmp = engine->RenderPage(args);
-
-        if (!bmp) {
-            logf("RunPreviewPipeServer: RenderPage failed\n");
-            status = 2; // render error
-        } else {
-            width = thumb.dx;
-            height = thumb.dy;
-            bmpDataLen = width * height * 4;
-
-            // Get bitmap data
-            BITMAPINFO bmi{};
-            bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-            bmi.bmiHeader.biHeight = height;
-            bmi.bmiHeader.biWidth = width;
-            bmi.bmiHeader.biPlanes = 1;
-            bmi.bmiHeader.biBitCount = 32;
-            bmi.bmiHeader.biCompression = BI_RGB;
-
-            bmpData = AllocArray<u8>(bmpDataLen);
-            if (!bmpData) {
-                logf("RunPreviewPipeServer: failed to allocate bitmap buffer\n");
-                status = 3; // memory error
-            } else {
-                HDC hdc = GetDC(nullptr);
-                if (!GetDIBits(hdc, bmp->GetBitmap(), 0, height, bmpData, &bmi, DIB_RGB_COLORS)) {
-                    logf("RunPreviewPipeServer: GetDIBits failed\n");
-                    status = 4; // GetDIBits error
-                    free(bmpData);
-                    bmpData = nullptr;
-                } else {
-                    // Set alpha to 0xFF for each pixel
-                    for (u32 i = 0; i < width * height; i++) {
-                        bmpData[4 * i + 3] = 0xFF;
-                    }
-                }
-                ReleaseDC(nullptr, hdc);
-            }
-            delete bmp;
-        }
-        engine->Release();
+        logf("RunPreviewPipeServer: unsupported version %d\n", version);
     }
 
-    free(fileData);
-
-    // Write response header: magic(4) + status(4) + width(4) + height(4) + dataLen(4) = 20 bytes
-    DWORD bytesWritten = 0;
-    u32 responseMagic = kPreviewResponseMagic;
-    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
-    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
-    WriteFile(hPipe, &width, 4, &bytesWritten, nullptr);
-    WriteFile(hPipe, &height, 4, &bytesWritten, nullptr);
-    WriteFile(hPipe, &bmpDataLen, 4, &bytesWritten, nullptr);
-
-    // Write bitmap data if successful
-    if (status == 0 && bmpData && bmpDataLen > 0) {
-        DWORD totalWritten = 0;
-        while (totalWritten < bmpDataLen) {
-            DWORD toWrite = bmpDataLen - totalWritten;
-            if (!WriteFile(hPipe, bmpData + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
-                logf("RunPreviewPipeServer: failed to write bitmap data at offset %d\n", totalWritten);
-                break;
-            }
-            totalWritten += bytesWritten;
-        }
-        logf("RunPreviewPipeServer: wrote %d bytes of bitmap data\n", totalWritten);
-    }
-
-    free(bmpData);
-    FlushFileBuffers(hPipe);
     CloseHandle(hPipe);
-    logf("RunPreviewPipeServer: done, status=%d\n", status);
+    logf("RunPreviewPipeServer: done\n");
 }
 
 // Protocol constants for named pipe IFilter - must match ifilter2 DLL
