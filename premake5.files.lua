@@ -1355,6 +1355,40 @@ function pdf_preview_files()
   })
 end
 
+function pdf_preview2_files()
+  files_in_dir("src/previewer2", {
+    "PdfPreview.*",
+    "PdfPreviewBase.h",
+    "PdfPreviewDll.cpp",
+  })
+
+  files_in_dir("src", {
+    "utils/Log.*",
+    "mui/Mui.*",
+    "mui/TextRender.*",
+    "CrashHandlerNoOp.cpp",
+    "ChmFile.*",
+    "DocProperties.*",
+    "EbookDoc.*",
+    "EbookFormatter.*",
+    "EngineBase.*",
+    "EngineEbook.*",
+    "EngineDjVu.*",
+    "EngineImages.*",
+    "EngineMupdf.*",
+    "EngineMupdfImpl.*",
+    "EngineAll.h",
+    "FzImgReader.*",
+    "HtmlFormatter.*",
+    "RegistryPreview.*",
+    "MobiDoc.*",
+    "MUPDF_Exports.cpp",
+    "PalmDbReader.*",
+    "PdfCreator.*",
+    "SumatraConfig.*",
+  })
+end
+
 function search_filter_files()
   files_in_dir("src/ifilter", {
     "PdfFilter.*",

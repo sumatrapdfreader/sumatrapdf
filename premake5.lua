@@ -762,6 +762,30 @@ workspace "SumatraPDF"
     links { "utils", "unrar", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version", "wininet", "wintrust" }
 
+  project "PdfPreview2"
+    kind "SharedLib"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    disablewarnings { "4100", "4838" }
+    includedirs {
+      "src", "src/wingui", "mupdf/include",
+      "ext/libdjvu", "ext/CHMLib"
+    }
+    pdf_preview2_files()
+    filter {"configurations:Debug"}
+      -- defines { "BUILD_XPS_PREVIEW" }
+      -- TODO: use EngineMupdf for XPS
+      defines {
+        "BUILD_EPUB_PREVIEW",
+        "BUILD_FB2_PREVIEW", "BUILD_MOBI_PREVIEW"
+      }
+    filter {}
+    -- TODO: "chm" should only be for Debug config but doing links { "chm" }
+    -- in the filter breaks linking by setting LinkLibraryDependencies to false
+    links { "utils", "unrar", "libmupdf", "chm" }
+    links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust" }
+
   project "PdfPreview"
     kind "SharedLib"
     language "C++"
