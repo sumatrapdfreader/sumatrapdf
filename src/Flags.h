@@ -118,6 +118,9 @@ struct Flags {
     // for preview pipe mode (used by previewer DLL)
     char* previewPipeName = nullptr;
 
+    // for ifilter pipe mode (used by ifilter DLL)
+    char* ifilterPipeName = nullptr;
+
     Flags() = default;
     ~Flags();
 };

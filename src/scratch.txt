@@ -109,6 +109,16 @@ SumatraPDF.exe waits for commands on the pipe and sends back ifilter data
 ifilter sends the data via that pipe to sumatrapdf.exe
 when process is finished, terminate the SumatraPDF.exe
 Startup code for SumatraPDF.exe is in src/SumatraStartup.cpp and parsing of cmd-line args in src/Flags.cpp
+---
+DONE: ifilter2 named pipe implementation
+Implementation details:
+- Added -ifilter-pipe <pipe_name> command-line argument in Flags.cpp/h
+- Added RunIFilterPipeServer() in SumatraStartup.cpp to handle pipe requests
+- Protocol: request sends magic(IFLT)+version+fileType+dataSize+fileData
+- Response: magic(IFLR)+status+pageCount+author+title+date+pageTexts(UTF-16)
+- Modified PdfFilter and EpubFilter to use pipe communication via ExtractDataViaPipe()
+- DLL creates pipe server, launches SumatraPDF.exe as client, sends file data, receives extracted text/metadata
+- SumatraPDF.exe connects to pipe, uses Engine* classes to extract data, sends response, exits
 
 
 

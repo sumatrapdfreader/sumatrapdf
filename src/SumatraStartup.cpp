@@ -26,6 +26,7 @@
 
 #include "Settings.h"
 #include "DisplayMode.h"
+#include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -1139,6 +1140,222 @@ static void RunPreviewPipeServer(const char* pipeName) {
     logf("RunPreviewPipeServer: done, status=%d\n", status);
 }
 
+// Protocol constants for named pipe IFilter - must match ifilter2 DLL
+constexpr u32 kIFilterRequestMagic = 0x49464C54;  // "IFLT" - IFilter Request
+constexpr u32 kIFilterResponseMagic = 0x49464C52; // "IFLR" - IFilter Response
+constexpr u32 kIFilterProtocolVersion = 1;
+
+// File type enum for IFilter - matches ifilter2 DLL
+enum class IFilterFileType : u32 {
+    PDF = 1,
+    EPUB = 2,
+};
+
+static EngineBase* CreateEngineFromDataForIFilter(const ByteSlice& data, IFilterFileType fileType) {
+    IStream* stream = CreateStreamFromData(data);
+    if (!stream) {
+        return nullptr;
+    }
+    EngineBase* engine = nullptr;
+    switch (fileType) {
+        case IFilterFileType::PDF:
+            engine = CreateEngineMupdfFromStream(stream, "ifilter.pdf");
+            break;
+        case IFilterFileType::EPUB:
+            engine = CreateEngineEpubFromStream(stream);
+            break;
+        default:
+            break;
+    }
+    stream->Release();
+    return engine;
+}
+
+// Helper to write a length-prefixed UTF-8 string to pipe
+static bool WriteLenPrefixedString(HANDLE hPipe, const char* s) {
+    DWORD bytesWritten = 0;
+    u32 len = s ? (u32)str::Len(s) : 0;
+    if (!WriteFile(hPipe, &len, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+    if (len > 0) {
+        DWORD totalWritten = 0;
+        while (totalWritten < len) {
+            DWORD toWrite = len - totalWritten;
+            if (!WriteFile(hPipe, s + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
+                return false;
+            }
+            totalWritten += bytesWritten;
+        }
+    }
+    return true;
+}
+
+// Helper to write a length-prefixed UTF-16 string to pipe
+static bool WriteLenPrefixedWString(HANDLE hPipe, const WCHAR* ws) {
+    DWORD bytesWritten = 0;
+    u32 len = ws ? (u32)(str::Len(ws) * sizeof(WCHAR)) : 0;
+    if (!WriteFile(hPipe, &len, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+    if (len > 0) {
+        DWORD totalWritten = 0;
+        while (totalWritten < len) {
+            DWORD toWrite = len - totalWritten;
+            if (!WriteFile(hPipe, (const u8*)ws + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
+                return false;
+            }
+            totalWritten += bytesWritten;
+        }
+    }
+    return true;
+}
+
+static void RunIFilterPipeServer(const char* pipeName) {
+    logf("RunIFilterPipeServer: connecting to pipe '%s'\n", pipeName);
+
+    // Connect to the named pipe (DLL is the server, we are the client)
+    HANDLE hPipe = CreateFileA(pipeName, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        logf("RunIFilterPipeServer: failed to connect to pipe, error %d\n", (int)GetLastError());
+        return;
+    }
+
+    // Read request header: magic(4) + version(4) + fileType(4) + dataSize(4) = 16 bytes
+    u32 magic = 0, version = 0, fileType = 0, dataSize = 0;
+    DWORD bytesRead = 0;
+
+    if (!ReadFile(hPipe, &magic, 4, &bytesRead, nullptr) || bytesRead != 4 || magic != kIFilterRequestMagic) {
+        logf("RunIFilterPipeServer: invalid magic 0x%08x\n", magic);
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &version, 4, &bytesRead, nullptr) || bytesRead != 4 || version != kIFilterProtocolVersion) {
+        logf("RunIFilterPipeServer: invalid version %d\n", version);
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &fileType, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("RunIFilterPipeServer: failed to read fileType\n");
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &dataSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("RunIFilterPipeServer: failed to read dataSize\n");
+        CloseHandle(hPipe);
+        return;
+    }
+
+    logf("RunIFilterPipeServer: fileType=%d, dataSize=%d\n", fileType, dataSize);
+
+    // Sanity check
+    if (dataSize == 0 || dataSize > 100 * 1024 * 1024) { // max 100MB
+        logf("RunIFilterPipeServer: invalid dataSize %d\n", dataSize);
+        CloseHandle(hPipe);
+        return;
+    }
+
+    // Read file data
+    u8* fileData = AllocArray<u8>(dataSize);
+    if (!fileData) {
+        logf("RunIFilterPipeServer: failed to allocate %d bytes\n", dataSize);
+        CloseHandle(hPipe);
+        return;
+    }
+
+    DWORD totalRead = 0;
+    while (totalRead < dataSize) {
+        DWORD toRead = dataSize - totalRead;
+        if (!ReadFile(hPipe, fileData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
+            logf("RunIFilterPipeServer: failed to read file data at offset %d\n", totalRead);
+            free(fileData);
+            CloseHandle(hPipe);
+            return;
+        }
+        totalRead += bytesRead;
+    }
+
+    logf("RunIFilterPipeServer: read %d bytes of file data\n", totalRead);
+
+    // Create engine from data
+    ByteSlice data = {fileData, (size_t)dataSize};
+    EngineBase* engine = CreateEngineFromDataForIFilter(data, (IFilterFileType)fileType);
+
+    u32 status = 0;
+    u32 pageCount = 0;
+    char* author = nullptr;
+    char* title = nullptr;
+    char* date = nullptr;
+    Vec<WCHAR*> pageTexts;
+
+    if (!engine) {
+        logf("RunIFilterPipeServer: failed to create engine\n");
+        status = 1; // error
+    } else {
+        pageCount = engine->PageCount();
+
+        // Extract metadata
+        author = str::Dup(engine->GetPropertyTemp(kPropAuthor));
+        title = str::Dup(engine->GetPropertyTemp(kPropTitle));
+        if (!title) {
+            title = str::Dup(engine->GetPropertyTemp(kPropSubject));
+        }
+        date = str::Dup(engine->GetPropertyTemp(kPropModificationDate));
+        if (!date) {
+            date = str::Dup(engine->GetPropertyTemp(kPropCreationDate));
+        }
+
+        logf("RunIFilterPipeServer: pageCount=%d, author='%s', title='%s'\n", pageCount, author ? author : "(null)",
+             title ? title : "(null)");
+
+        // Extract text from each page
+        for (int i = 1; i <= (int)pageCount; i++) {
+            PageText pt = engine->ExtractPageText(i);
+            if (pt.text && pt.len > 0) {
+                // Replace \n with \r\n for Windows
+                WCHAR* text = str::Replace(pt.text, L"\n", L"\r\n");
+                pageTexts.Append(text);
+            } else {
+                pageTexts.Append(nullptr);
+            }
+            FreePageText(&pt);
+        }
+
+        engine->Release();
+    }
+
+    free(fileData);
+
+    // Write response header: magic(4) + status(4) + pageCount(4) = 12 bytes
+    DWORD bytesWritten = 0;
+    u32 responseMagic = kIFilterResponseMagic;
+    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &pageCount, 4, &bytesWritten, nullptr);
+
+    // Write metadata as length-prefixed strings
+    WriteLenPrefixedString(hPipe, author);
+    WriteLenPrefixedString(hPipe, title);
+    WriteLenPrefixedString(hPipe, date);
+
+    // Write page texts as length-prefixed UTF-16 strings
+    for (int i = 0; i < (int)pageTexts.size(); i++) {
+        WriteLenPrefixedWString(hPipe, pageTexts[i]);
+    }
+
+    // Cleanup
+    str::Free(author);
+    str::Free(title);
+    str::Free(date);
+    for (WCHAR* ws : pageTexts) {
+        str::Free(ws);
+    }
+
+    FlushFileBuffers(hPipe);
+    CloseHandle(hPipe);
+    logf("RunIFilterPipeServer: done, status=%d\n", status);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1190,6 +1407,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _
     // Handle preview pipe mode early - used by previewer DLL
     if (flags.previewPipeName) {
         RunPreviewPipeServer(flags.previewPipeName);
+        ::ExitProcess(0);
+    }
+
+    // Handle ifilter pipe mode early - used by ifilter DLL
+    if (flags.ifilterPipeName) {
+        RunIFilterPipeServer(flags.ifilterPipeName);
         ::ExitProcess(0);
     }
 
