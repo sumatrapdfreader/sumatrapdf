@@ -115,6 +115,9 @@ struct Flags {
     // before proceeding
     int sleepMs = 0;
 
+    // for preview pipe mode (used by previewer DLL)
+    char* previewPipeName = nullptr;
+
     Flags() = default;
     ~Flags();
 };

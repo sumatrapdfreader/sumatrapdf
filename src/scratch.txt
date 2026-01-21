@@ -98,8 +98,7 @@ launch SumatraPDF.exe with -preview-pipe <pipe_name>
 SumatraPDF.exe waits for commands on the pipe and sends back thumbnail data
 previewer sends the data via that pipe to sumatrapdf.exe
 when thumnbnail is finished, terminate the process
-
-
+Startup code for SumatraPDF.exe is in src/SumatraStartup.cpp and parsing of cmd-line args in src/Flags.cpp
 
 
 

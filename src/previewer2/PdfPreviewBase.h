@@ -5,6 +5,17 @@
 
 class PageRenderer;
 
+// File type enum for preview pipe protocol
+enum class PreviewFileType : u32 {
+    PDF = 1,
+    DjVu = 2,
+    EPUB = 3,
+    FB2 = 4,
+    MOBI = 5,
+    CBX = 6,
+    TGA = 7
+};
+
 class PreviewBase : public IThumbnailProvider,
                     public IInitializeWithStream,
                     public IObjectWithSite,
@@ -176,6 +187,9 @@ class PreviewBase : public IThumbnailProvider,
     Rect m_rcParent;
 
     virtual EngineBase* LoadEngine(IStream* stream) = 0;
+    virtual PreviewFileType GetFileType() = 0;
+
+    HBITMAP GetThumbnailViaPipe(uint cx);
 };
 
 class PdfPreview : public PreviewBase {
@@ -185,6 +199,9 @@ class PdfPreview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::PDF;
+    }
 };
 
 #if 0
@@ -206,6 +223,9 @@ class DjVuPreview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::DjVu;
+    }
 };
 
 class EpubPreview : public PreviewBase {
@@ -215,6 +235,9 @@ class EpubPreview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::EPUB;
+    }
 };
 
 class Fb2Preview : public PreviewBase {
@@ -224,6 +247,9 @@ class Fb2Preview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::FB2;
+    }
 };
 
 class MobiPreview : public PreviewBase {
@@ -233,6 +259,9 @@ class MobiPreview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::MOBI;
+    }
 };
 
 class CbxPreview : public PreviewBase {
@@ -243,6 +272,9 @@ class CbxPreview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::CBX;
+    }
 };
 
 class TgaPreview : public PreviewBase {
@@ -253,4 +285,7 @@ class TgaPreview : public PreviewBase {
 
   protected:
     EngineBase* LoadEngine(IStream* stream) override;
+    PreviewFileType GetFileType() override {
+        return PreviewFileType::TGA;
+    }
 };

@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/FileUtil.h"
 #include "mui/Mui.h"
 
 #include "wingui/UIModels.h"
@@ -25,64 +26,314 @@ constexpr COLORREF kColWindowBg = RGB(0x99, 0x99, 0x99);
 constexpr int kPreviewMargin = 2;
 constexpr UINT kUwmPaintAgain = (WM_USER + 101);
 
+// Protocol constants for named pipe preview - must match SumatraStartup.cpp
+constexpr u32 kPreviewRequestMagic = 0x53505657;  // "SPVW" - SumatraPDF Preview
+constexpr u32 kPreviewResponseMagic = 0x53505652; // "SPVR" - SumatraPDF Preview Response
+constexpr u32 kPreviewProtocolVersion = 1;
+constexpr DWORD kPipeTimeoutMs = 30000; // 30 second timeout for pipe operations
+
 EBookUI* GetEBookUI() {
     return nullptr;
 }
 
-IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
-    EngineBase* engine = GetEngine();
-    if (!engine) {
-        logf("PreviewBase::GetThumbnail: failed to get the engine\n");
-        return E_FAIL;
+// Generate a unique pipe name using a GUID
+static char* GenerateUniquePipeName() {
+    GUID guid;
+    if (FAILED(CoCreateGuid(&guid))) {
+        return nullptr;
+    }
+    return str::Format("\\\\.\\pipe\\LOCAL\\SumatraPDF-Preview-%08X%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X",
+                       guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
+                       guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+}
+
+// Create the named pipe (DLL is the server)
+static HANDLE CreatePreviewPipe(const char* pipeName) {
+    HANDLE hPipe = CreateNamedPipeA(pipeName, PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                                    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
+                                    1,         // maxInstances - only one client
+                                    64 * 1024, // outBufferSize
+                                    64 * 1024, // inBufferSize
+                                    kPipeTimeoutMs,
+                                    nullptr); // security attributes
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        logf("CreatePreviewPipe: CreateNamedPipeA failed with error %d\n", (int)GetLastError());
+    }
+    return hPipe;
+}
+
+// Launch SumatraPDF.exe with -preview-pipe argument
+static HANDLE LaunchSumatraForPreview(const char* pipeName) {
+    // Find SumatraPDF.exe in the same directory as the DLL
+    TempStr exePath = GetPathInExeDirTemp("SumatraPDF.exe");
+    if (!file::Exists(exePath)) {
+        logf("LaunchSumatraForPreview: SumatraPDF.exe not found at '%s'\n", exePath);
+        return nullptr;
     }
 
-    logf("PreviewBase::GetThumbnail(cx=%d, engine: %s\n", (int)cx, engine->kind);
+    TempStr cmdLine = str::FormatTemp("\"%s\" -preview-pipe %s", exePath, pipeName);
+    logf("LaunchSumatraForPreview: launching '%s'\n", cmdLine);
 
-    RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
-    float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
-    Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
+    STARTUPINFOA si{};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
 
+    PROCESS_INFORMATION pi{};
+    BOOL ok = CreateProcessA(exePath, cmdLine, nullptr, nullptr, FALSE, CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
+    if (!ok) {
+        logf("LaunchSumatraForPreview: CreateProcessA failed with error %d\n", (int)GetLastError());
+        return nullptr;
+    }
+
+    CloseHandle(pi.hThread);
+    return pi.hProcess;
+}
+
+// Send preview request through the pipe
+static bool SendPreviewRequest(HANDLE hPipe, PreviewFileType fileType, uint cx, const ByteSlice& data) {
+    DWORD bytesWritten = 0;
+
+    // Write header: magic(4) + version(4) + fileType(4) + thumbSize(4) + dataSize(4) = 20 bytes
+    u32 magic = kPreviewRequestMagic;
+    u32 version = kPreviewProtocolVersion;
+    u32 ft = (u32)fileType;
+    u32 thumbSize = cx;
+    u32 dataSize = (u32)data.size();
+
+    if (!WriteFile(hPipe, &magic, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+    if (!WriteFile(hPipe, &version, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+    if (!WriteFile(hPipe, &ft, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+    if (!WriteFile(hPipe, &thumbSize, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+    if (!WriteFile(hPipe, &dataSize, 4, &bytesWritten, nullptr) || bytesWritten != 4) {
+        return false;
+    }
+
+    // Write file data
+    DWORD totalWritten = 0;
+    while (totalWritten < dataSize) {
+        DWORD toWrite = dataSize - totalWritten;
+        if (!WriteFile(hPipe, data.data() + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
+            return false;
+        }
+        totalWritten += bytesWritten;
+    }
+
+    FlushFileBuffers(hPipe);
+    return true;
+}
+
+// Receive preview response from the pipe and create HBITMAP
+static HBITMAP ReceivePreviewResponse(HANDLE hPipe) {
+    DWORD bytesRead = 0;
+
+    // Read response header: magic(4) + status(4) + width(4) + height(4) + dataLen(4) = 20 bytes
+    u32 magic = 0, status = 0, width = 0, height = 0, bmpDataLen = 0;
+
+    if (!ReadFile(hPipe, &magic, 4, &bytesRead, nullptr) || bytesRead != 4 || magic != kPreviewResponseMagic) {
+        logf("ReceivePreviewResponse: invalid magic 0x%08x\n", magic);
+        return nullptr;
+    }
+    if (!ReadFile(hPipe, &status, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("ReceivePreviewResponse: failed to read status\n");
+        return nullptr;
+    }
+    if (status != 0) {
+        logf("ReceivePreviewResponse: server returned error status %d\n", status);
+        return nullptr;
+    }
+    if (!ReadFile(hPipe, &width, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("ReceivePreviewResponse: failed to read width\n");
+        return nullptr;
+    }
+    if (!ReadFile(hPipe, &height, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("ReceivePreviewResponse: failed to read height\n");
+        return nullptr;
+    }
+    if (!ReadFile(hPipe, &bmpDataLen, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("ReceivePreviewResponse: failed to read bmpDataLen\n");
+        return nullptr;
+    }
+
+    logf("ReceivePreviewResponse: width=%d, height=%d, bmpDataLen=%d\n", width, height, bmpDataLen);
+
+    if (bmpDataLen == 0 || bmpDataLen != width * height * 4) {
+        logf("ReceivePreviewResponse: invalid bitmap data length\n");
+        return nullptr;
+    }
+
+    // Read bitmap data
+    u8* bmpData = AllocArray<u8>(bmpDataLen);
+    if (!bmpData) {
+        logf("ReceivePreviewResponse: failed to allocate %d bytes\n", bmpDataLen);
+        return nullptr;
+    }
+
+    DWORD totalRead = 0;
+    while (totalRead < bmpDataLen) {
+        DWORD toRead = bmpDataLen - totalRead;
+        if (!ReadFile(hPipe, bmpData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
+            logf("ReceivePreviewResponse: failed to read bitmap data at offset %d\n", totalRead);
+            free(bmpData);
+            return nullptr;
+        }
+        totalRead += bytesRead;
+    }
+
+    // Create DIB section from the bitmap data
     BITMAPINFO bmi{};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
-    bmi.bmiHeader.biHeight = thumb.dy;
-    bmi.bmiHeader.biWidth = thumb.dx;
+    bmi.bmiHeader.biWidth = width;
+    bmi.bmiHeader.biHeight = height; // positive = bottom-up DIB
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    u8* bmpData = nullptr;
-    HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&bmpData, nullptr, 0);
-    if (!hthumb) {
-        log("PreviewBase::GetThumbnail: CreateDIBSection() failed\n");
-        return E_OUTOFMEMORY;
+    u8* dibData = nullptr;
+    HBITMAP hBitmap = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&dibData, nullptr, 0);
+    if (!hBitmap || !dibData) {
+        logf("ReceivePreviewResponse: CreateDIBSection failed\n");
+        free(bmpData);
+        return nullptr;
     }
 
-    page = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
-    RenderPageArgs args(1, zoom, 0, &page);
-    RenderedBitmap* bmp = engine->RenderPage(args);
+    // Copy the bitmap data
+    memcpy(dibData, bmpData, bmpDataLen);
+    free(bmpData);
 
-    HDC hdc = GetDC(nullptr);
-    if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-        // cf. http://msdn.microsoft.com/en-us/library/bb774612(v=VS.85).aspx
-        for (int i = 0; i < thumb.dx * thumb.dy; i++) {
-            bmpData[4 * i + 3] = 0xFF;
-        }
+    return hBitmap;
+}
 
-        *phbmp = hthumb;
-        if (pdwAlpha) {
-            *pdwAlpha = WTSAT_RGB;
+HBITMAP PreviewBase::GetThumbnailViaPipe(uint cx) {
+    logf("GetThumbnailViaPipe: cx=%d\n", cx);
+
+    // Read stream data
+    ByteSlice data = GetDataFromStream(m_pStream.Get(), nullptr);
+    if (data.empty()) {
+        logf("GetThumbnailViaPipe: failed to get data from stream\n");
+        return nullptr;
+    }
+
+    logf("GetThumbnailViaPipe: read %d bytes from stream\n", (int)data.size());
+
+    // Generate unique pipe name
+    char* pipeName = GenerateUniquePipeName();
+    if (!pipeName) {
+        logf("GetThumbnailViaPipe: failed to generate pipe name\n");
+        data.Free();
+        return nullptr;
+    }
+
+    logf("GetThumbnailViaPipe: pipe name '%s'\n", pipeName);
+
+    // Create named pipe (we are the server)
+    HANDLE hPipe = CreatePreviewPipe(pipeName);
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        logf("GetThumbnailViaPipe: failed to create pipe\n");
+        str::Free(pipeName);
+        data.Free();
+        return nullptr;
+    }
+
+    // Launch SumatraPDF.exe
+    HANDLE hProcess = LaunchSumatraForPreview(pipeName);
+    if (!hProcess) {
+        logf("GetThumbnailViaPipe: failed to launch SumatraPDF\n");
+        CloseHandle(hPipe);
+        str::Free(pipeName);
+        data.Free();
+        return nullptr;
+    }
+
+    str::Free(pipeName);
+
+    HBITMAP result = nullptr;
+
+    // Wait for client to connect (with timeout)
+    // Use overlapped I/O for proper timeout handling
+    OVERLAPPED ov{};
+    ov.hEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    if (!ov.hEvent) {
+        logf("GetThumbnailViaPipe: failed to create event\n");
+        goto cleanup;
+    }
+
+    if (!ConnectNamedPipe(hPipe, &ov)) {
+        DWORD err = GetLastError();
+        if (err == ERROR_PIPE_CONNECTED) {
+            // Client already connected, that's fine
+        } else if (err == ERROR_IO_PENDING) {
+            // Wait for connection with timeout
+            DWORD waitResult = WaitForSingleObject(ov.hEvent, kPipeTimeoutMs);
+            if (waitResult != WAIT_OBJECT_0) {
+                logf("GetThumbnailViaPipe: pipe connection timed out or failed\n");
+                CloseHandle(ov.hEvent);
+                goto cleanup;
+            }
+        } else {
+            logf("GetThumbnailViaPipe: ConnectNamedPipe failed with error %d\n", (int)err);
+            CloseHandle(ov.hEvent);
+            goto cleanup;
         }
-        log("PreviewBase::GetThumbnail: provided thumbnail\n");
+    }
+
+    CloseHandle(ov.hEvent);
+
+    logf("GetThumbnailViaPipe: client connected\n");
+
+    // Send request
+    if (!SendPreviewRequest(hPipe, GetFileType(), cx, data)) {
+        logf("GetThumbnailViaPipe: failed to send request\n");
+        goto cleanup;
+    }
+
+    logf("GetThumbnailViaPipe: request sent\n");
+
+    // Receive response
+    result = ReceivePreviewResponse(hPipe);
+    if (result) {
+        logf("GetThumbnailViaPipe: received bitmap\n");
     } else {
-        DeleteObject(hthumb);
-        hthumb = nullptr;
-        log("PreviewBase::GetThumbnail: GetDIBits() failed\n");
+        logf("GetThumbnailViaPipe: failed to receive response\n");
     }
 
-    ReleaseDC(nullptr, hdc);
-    delete bmp;
+cleanup:
+    DisconnectNamedPipe(hPipe);
+    CloseHandle(hPipe);
 
-    return hthumb ? S_OK : E_NOTIMPL;
+    // Terminate the process if still running
+    TerminateProcess(hProcess, 0);
+    CloseHandle(hProcess);
+
+    data.Free();
+
+    return result;
+}
+
+IFACEMETHODIMP PreviewBase::GetThumbnail(uint cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
+    logf("PreviewBase::GetThumbnail(cx=%d)\n", (int)cx);
+
+    // Use pipe communication to SumatraPDF.exe for thumbnail generation
+    HBITMAP hBitmap = GetThumbnailViaPipe(cx);
+    if (!hBitmap) {
+        logf("PreviewBase::GetThumbnail: GetThumbnailViaPipe failed\n");
+        return E_FAIL;
+    }
+
+    *phbmp = hBitmap;
+    if (pdwAlpha) {
+        *pdwAlpha = WTSAT_RGB;
+    }
+    logf("PreviewBase::GetThumbnail: provided thumbnail via pipe\n");
+    return S_OK;
 }
 
 class PageRenderer {

@@ -924,6 +924,221 @@ static void testLogf() {
 extern "C" void destroy_system_font_list();
 extern void DeleteManualBrowserWindow();
 
+// Protocol constants for named pipe preview
+constexpr u32 kPreviewRequestMagic = 0x53505657;  // "SPVW" - SumatraPDF Preview
+constexpr u32 kPreviewResponseMagic = 0x53505652; // "SPVR" - SumatraPDF Preview Response
+constexpr u32 kPreviewProtocolVersion = 1;
+
+// File type enum matching the DLL side
+enum class PreviewFileType : u32 {
+    PDF = 1,
+    DjVu = 2,
+    EPUB = 3,
+    FB2 = 4,
+    MOBI = 5,
+    CBX = 6,
+    TGA = 7
+};
+
+static EngineBase* CreateEngineFromDataForPreview(const ByteSlice& data, PreviewFileType fileType) {
+    IStream* stream = CreateStreamFromData(data);
+    if (!stream) {
+        return nullptr;
+    }
+    EngineBase* engine = nullptr;
+    switch (fileType) {
+        case PreviewFileType::PDF:
+            engine = CreateEngineMupdfFromStream(stream, "preview.pdf");
+            break;
+        case PreviewFileType::DjVu:
+            engine = CreateEngineDjVuFromStream(stream);
+            break;
+        case PreviewFileType::EPUB:
+            engine = CreateEngineEpubFromStream(stream);
+            break;
+        case PreviewFileType::FB2:
+            engine = CreateEngineFb2FromStream(stream);
+            break;
+        case PreviewFileType::MOBI:
+            engine = CreateEngineMobiFromStream(stream);
+            break;
+        case PreviewFileType::CBX:
+            engine = CreateEngineCbxFromStream(stream);
+            break;
+        case PreviewFileType::TGA:
+            engine = CreateEngineImageFromStream(stream);
+            break;
+        default:
+            break;
+    }
+    stream->Release();
+    return engine;
+}
+
+static void RunPreviewPipeServer(const char* pipeName) {
+    logf("RunPreviewPipeServer: connecting to pipe '%s'\n", pipeName);
+
+    // Connect to the named pipe (DLL is the server, we are the client)
+    HANDLE hPipe = CreateFileA(pipeName, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        logf("RunPreviewPipeServer: failed to connect to pipe, error %d\n", (int)GetLastError());
+        return;
+    }
+
+    // Read request header: magic(4) + version(4) + fileType(4) + thumbSize(4) + dataSize(4) = 20 bytes
+    u32 magic = 0, version = 0, fileType = 0, thumbSize = 0, dataSize = 0;
+    DWORD bytesRead = 0;
+
+    if (!ReadFile(hPipe, &magic, 4, &bytesRead, nullptr) || bytesRead != 4 || magic != kPreviewRequestMagic) {
+        logf("RunPreviewPipeServer: invalid magic 0x%08x\n", magic);
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &version, 4, &bytesRead, nullptr) || bytesRead != 4 || version != kPreviewProtocolVersion) {
+        logf("RunPreviewPipeServer: invalid version %d\n", version);
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &fileType, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("RunPreviewPipeServer: failed to read fileType\n");
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &thumbSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("RunPreviewPipeServer: failed to read thumbSize\n");
+        CloseHandle(hPipe);
+        return;
+    }
+    if (!ReadFile(hPipe, &dataSize, 4, &bytesRead, nullptr) || bytesRead != 4) {
+        logf("RunPreviewPipeServer: failed to read dataSize\n");
+        CloseHandle(hPipe);
+        return;
+    }
+
+    logf("RunPreviewPipeServer: fileType=%d, thumbSize=%d, dataSize=%d\n", fileType, thumbSize, dataSize);
+
+    // Sanity check
+    if (dataSize == 0 || dataSize > 100 * 1024 * 1024) { // max 100MB
+        logf("RunPreviewPipeServer: invalid dataSize %d\n", dataSize);
+        CloseHandle(hPipe);
+        return;
+    }
+
+    // Read file data
+    u8* fileData = AllocArray<u8>(dataSize);
+    if (!fileData) {
+        logf("RunPreviewPipeServer: failed to allocate %d bytes\n", dataSize);
+        CloseHandle(hPipe);
+        return;
+    }
+
+    DWORD totalRead = 0;
+    while (totalRead < dataSize) {
+        DWORD toRead = dataSize - totalRead;
+        if (!ReadFile(hPipe, fileData + totalRead, toRead, &bytesRead, nullptr) || bytesRead == 0) {
+            logf("RunPreviewPipeServer: failed to read file data at offset %d\n", totalRead);
+            free(fileData);
+            CloseHandle(hPipe);
+            return;
+        }
+        totalRead += bytesRead;
+    }
+
+    logf("RunPreviewPipeServer: read %d bytes of file data\n", totalRead);
+
+    // Create engine from data
+    ByteSlice data = {fileData, (size_t)dataSize};
+    EngineBase* engine = CreateEngineFromDataForPreview(data, (PreviewFileType)fileType);
+
+    u32 status = 0;
+    u32 width = 0, height = 0, bmpDataLen = 0;
+    u8* bmpData = nullptr;
+
+    if (!engine) {
+        logf("RunPreviewPipeServer: failed to create engine\n");
+        status = 1; // error
+    } else {
+        // Render page 1 at requested size
+        RectF page = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
+        float zoom = std::min((float)thumbSize / page.dx, (float)thumbSize / page.dy) - 0.001f;
+        Rect thumb = RectF(0, 0, page.dx * zoom, page.dy * zoom).Round();
+
+        RectF pageRect = engine->Transform(ToRectF(thumb), 1, zoom, 0, true);
+        RenderPageArgs args(1, zoom, 0, &pageRect);
+        RenderedBitmap* bmp = engine->RenderPage(args);
+
+        if (!bmp) {
+            logf("RunPreviewPipeServer: RenderPage failed\n");
+            status = 2; // render error
+        } else {
+            width = thumb.dx;
+            height = thumb.dy;
+            bmpDataLen = width * height * 4;
+
+            // Get bitmap data
+            BITMAPINFO bmi{};
+            bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+            bmi.bmiHeader.biHeight = height;
+            bmi.bmiHeader.biWidth = width;
+            bmi.bmiHeader.biPlanes = 1;
+            bmi.bmiHeader.biBitCount = 32;
+            bmi.bmiHeader.biCompression = BI_RGB;
+
+            bmpData = AllocArray<u8>(bmpDataLen);
+            if (!bmpData) {
+                logf("RunPreviewPipeServer: failed to allocate bitmap buffer\n");
+                status = 3; // memory error
+            } else {
+                HDC hdc = GetDC(nullptr);
+                if (!GetDIBits(hdc, bmp->GetBitmap(), 0, height, bmpData, &bmi, DIB_RGB_COLORS)) {
+                    logf("RunPreviewPipeServer: GetDIBits failed\n");
+                    status = 4; // GetDIBits error
+                    free(bmpData);
+                    bmpData = nullptr;
+                } else {
+                    // Set alpha to 0xFF for each pixel
+                    for (u32 i = 0; i < width * height; i++) {
+                        bmpData[4 * i + 3] = 0xFF;
+                    }
+                }
+                ReleaseDC(nullptr, hdc);
+            }
+            delete bmp;
+        }
+        engine->Release();
+    }
+
+    free(fileData);
+
+    // Write response header: magic(4) + status(4) + width(4) + height(4) + dataLen(4) = 20 bytes
+    DWORD bytesWritten = 0;
+    u32 responseMagic = kPreviewResponseMagic;
+    WriteFile(hPipe, &responseMagic, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &status, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &width, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &height, 4, &bytesWritten, nullptr);
+    WriteFile(hPipe, &bmpDataLen, 4, &bytesWritten, nullptr);
+
+    // Write bitmap data if successful
+    if (status == 0 && bmpData && bmpDataLen > 0) {
+        DWORD totalWritten = 0;
+        while (totalWritten < bmpDataLen) {
+            DWORD toWrite = bmpDataLen - totalWritten;
+            if (!WriteFile(hPipe, bmpData + totalWritten, toWrite, &bytesWritten, nullptr) || bytesWritten == 0) {
+                logf("RunPreviewPipeServer: failed to write bitmap data at offset %d\n", totalWritten);
+                break;
+            }
+            totalWritten += bytesWritten;
+        }
+        logf("RunPreviewPipeServer: wrote %d bytes of bitmap data\n", totalWritten);
+    }
+
+    free(bmpData);
+    FlushFileBuffers(hPipe);
+    CloseHandle(hPipe);
+    logf("RunPreviewPipeServer: done, status=%d\n", status);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -971,6 +1186,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _
     Flags flags;
     ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
+
+    // Handle preview pipe mode early - used by previewer DLL
+    if (flags.previewPipeName) {
+        RunPreviewPipeServer(flags.previewPipeName);
+        ::ExitProcess(0);
+    }
 
     CheckIsStoreBuild();
 
