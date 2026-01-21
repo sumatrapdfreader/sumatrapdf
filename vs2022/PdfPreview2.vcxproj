@@ -898,6 +898,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\PreviewPipe.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
@@ -918,6 +919,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
+    <ClCompile Include="..\src\PreviewPipe.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />

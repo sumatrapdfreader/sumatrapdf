@@ -742,6 +742,7 @@ function sumatrapdf_files()
     "PdfSync.*",
     "Print.*",
     "ProgressUpdateUI.*",
+    "PreviewPipe.*",
     "RenderCache.*",
     "RegistryInstaller.*",
     "RegistryPreview.*",
@@ -1413,6 +1414,7 @@ function pdf_preview2_files()
     "utils/WinUtil.*",
     "mui/Mui.*",
     "CrashHandlerNoOp.cpp",
+    "PreviewPipe.*",
     "RegistryPreview.*",
     "SumatraConfig.*",
   })

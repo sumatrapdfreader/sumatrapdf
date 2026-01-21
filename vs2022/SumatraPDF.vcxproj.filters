@@ -228,6 +228,9 @@
     <ClInclude Include="..\src\PdfSync.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PreviewPipe.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Print.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -528,6 +531,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PreviewPipe.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Print.cpp">
