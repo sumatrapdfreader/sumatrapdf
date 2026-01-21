@@ -126,7 +126,8 @@ must convert PageRenderer to also use sumatrapdf.exe via pipe instead of engine
 potentially needs to extend the pipe protocol to pass requested page number, zoom and size in src/preview2/PdfPreview.cpp and src/SumatraStartup.cpp
 remove #include of Enginebase.h, EngineAll, DocController.h
 to verify it compiles after changes run: "bun .\build.ts -build-preview2"
-
+---
+extract functionality related to writing to / receiving from pipe from files in directory src/preview2/ into src/PreviewPipe.cpp and src/PreviewPipe.h
 
 
 Ideas for refactorings:
