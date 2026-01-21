@@ -69,6 +69,7 @@
 #include "Installer.h"
 #include "ExternalViewers.h"
 #include "AppColors.h"
+#include "PreviewPipe.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 
@@ -924,31 +925,6 @@ static void testLogf() {
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 extern void DeleteManualBrowserWindow();
-
-// Protocol constants for named pipe preview
-constexpr u32 kPreviewRequestMagic = 0x53505657;  // "SPVW" - SumatraPDF Preview
-constexpr u32 kPreviewResponseMagic = 0x53505652; // "SPVR" - SumatraPDF Preview Response
-constexpr u32 kPreviewProtocolVersion = 1;        // One-shot thumbnail mode
-constexpr u32 kPreviewProtocolVersion2 = 2;       // Session-based preview mode
-
-// Commands for protocol version 2 (session-based)
-enum class PreviewCmd : u32 {
-    Init = 1,       // Initialize with file data, returns page count
-    GetPageBox = 2, // Get page dimensions
-    Render = 3,     // Render a page
-    Shutdown = 255, // Close session
-};
-
-// File type enum matching the DLL side
-enum class PreviewFileType : u32 {
-    PDF = 1,
-    DjVu = 2,
-    EPUB = 3,
-    FB2 = 4,
-    MOBI = 5,
-    CBX = 6,
-    TGA = 7
-};
 
 static EngineBase* CreateEngineFromDataForPreview(const ByteSlice& data, PreviewFileType fileType) {
     IStream* stream = CreateStreamFromData(data);

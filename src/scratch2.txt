@@ -1,0 +1,148 @@
+
+Ideas for refactorings:
+
+- change all size_t => int
+- change use of Str::Get() => Str::CStr() (or maybe make it Str() as in StrSpan?)
+- audit all str::Join() and path::Join() to see if could / should be *Temp()
+
+------------------------------------------------------------------
+
+static void ClearPixmap(fz_pixmap* pixmap) {
+    auto stride = pixmap->stride;
+    size_t dx = (size_t)pixmap->w;
+    size_t dy = (size_t)pixmap->h;
+    u8* samples = pixmap->samples;
+    ReportIf(pixmap->n != 3);
+    for (size_t y = 0; y < dy; y++) {
+        u8* d = samples + (stride * y);
+        for (size_t x = 0; x < dx; x++) {
+            d[0] = 255;
+            d[1] = 0;
+            d[2] = 0;
+            d += pixmap->n;
+            if (false) {
+                if (x % 2 == 0) {
+                    *d++ = 255;
+                    *d++ = 0;
+                    *d++ = 0;
+                } else {
+                    *d++ = 0;
+                    *d++ = 0;
+                    *d++ = 255;
+                }
+            }
+        }
+    }
+}
+
+------------------------------------------------------------------
+
+// Select random files to test. We want to test each file type equally, so
+// we first group them by file extension and then select up to maxPerType
+// for each extension, randomly, and inter-leave the files with different
+// extensions, so their testing is evenly distributed.
+// Returns result in <files>.
+static void RandomizeFiles(StrVec& files, int maxPerType) {
+    StrVec fileExts;
+    Vec<StrVec*> filesPerType;
+
+    for (int i = 0; i < files.Size(); i++) {
+        char* file = files.at(i);
+        char* ext = path::GetExtTemp(file);
+        CrashAlwaysIf(!ext);
+        int typeNo = fileExts.FindI(ext);
+        if (-1 == typeNo) {
+            fileExts.Append(ext);
+            filesPerType.Append(new StrVec());
+            typeNo = filesPerType.Size() - 1;
+        }
+        filesPerType.at(typeNo)->Append(file);
+    }
+
+    for (size_t j = 0; j < filesPerType.size(); j++) {
+        StrVec* all = filesPerType.at(j);
+        StrVec* random = new StrVec();
+
+        for (int n = 0; n < maxPerType && all->Size() > 0; n++) {
+            int idx = rand() % all->Size();
+            char* file = all->at(idx);
+            random->Append(file);
+            all->RemoveAt(idx);
+        }
+
+        filesPerType.at(j) = random;
+        delete all;
+    }
+
+    files.Reset();
+
+    bool gotAll = false;
+    while (!gotAll) {
+        gotAll = true;
+        for (size_t j = 0; j < filesPerType.size(); j++) {
+            StrVec* random = filesPerType.at(j);
+            if (random->Size() > 0) {
+                gotAll = false;
+                char* file = random->at(0);
+                files.Append(file);
+                random->RemoveAt(0);
+            }
+        }
+    }
+
+    for (size_t j = 0; j < filesPerType.size(); j++) {
+        delete filesPerType.at(j);
+    }
+}
+
+------------------------------------------------------------------
+
+StrVec2 ideas:
+- optimize for SetAt(): when removing last string from a page, free its memory (update currEnd)
+- implement StrVec2::InsertAt()
+
+------------------------------------------------------------------
+
+struct ClosureData;
+typedef void (*closureFunc)(ClosureData*);
+
+struct ClosureData {
+    closureFunc func;
+    virtual ~ClosureData() = 0;
+    virtual operator()() {
+        func(this);
+    }
+};
+
+template <typename T>
+ClosureData* newClosure(void (*func)(T*)) {
+    T* res = new T();
+    res->func = (closureFunc)func;
+    return res;
+}
+
+struct UpdateCheckData : ClosureData {
+    ~UpdateCheckData() override {
+    }
+};
+
+void updateCheck(UpdateCheckData* d) {
+    // ...
+    delete d;
+}
+
+auto res = newClosure<UpdateCheckData>(updateCheck);
+
+------------------------------------------------------------------
+
+Delegates ideas:
+https://github.com/rosbacke/delegate
+https://github.com/rosbacke/MCU-tools/tree/master/src/callback
+https://github.com/Naios/function2
+https://gist.github.com/twoscomplement/030818a6c38c5a983482dc3a385a3ab8
+https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0792r3.html
+https://github.com/vittorioromeo/Experiments/blob/master/function_ref.cpp
+https://blog.stratifylabs.dev/device/2022-12-01-Callback-and-Lambdas-in-embedded-cpp/
+
+CmdOpenAttachment,,Open Attachment,ver 3.6+
+CmdSaveAttachment,,Save Attachment,ver 3.6+

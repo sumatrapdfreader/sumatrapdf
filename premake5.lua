@@ -752,6 +752,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C++"
     cppdialect "C++latest"
+    mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
@@ -774,7 +775,6 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C++"
     cppdialect "C++latest"
-    mixed_dbg_rel_conf()
     disablewarnings { "4100", "4838" }
     includedirs {
       "src", "src/wingui"
@@ -885,7 +885,7 @@ workspace "SumatraPDF"
     filter "platforms:x64_asan"
       linkoptions { "/INFERASANLIBS" }
     filter {}
-    -- dependson { "PdfFilter", "PdfPreview", "test_util" }
+    dependson { "PdfFilter2", "PdfPreview2", "test_util" }
 
   -- a dll version where most functionality is in libmupdf.dll
   project "SumatraPDF-dll"
