@@ -140,6 +140,7 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent*);
 static void OnFavSplitterMove(Splitter::MoveEvent*);
 
 EBookUI* GetEBookUI() {
+    if (!gGlobalPrefs) return nullptr;
     return &gGlobalPrefs->eBookUI;
 }
 

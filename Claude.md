@@ -8,10 +8,10 @@ Our code is in src/ directory. External dependencies are in ext/ directory and m
 
 To build run build.ts with bun
 
-This crates ./out/dbg64/SumatraPDF.exe executable
+This creates ./out/dbg64/SumatraPDF.exe executable
 
-To debug run: `raddbg.exe --auto_run --quit_after_success ./out/dbg64/SumatraPDF.exe
+To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`
 
 After making a change to .cpp, .c or .h file (and before running build.ts), run clang-format on those files to reformat them in place
 
-When commiting changes also commit src/ailog.txt (if changed)
+When commiting changes also commit ailog.txt (if changed)

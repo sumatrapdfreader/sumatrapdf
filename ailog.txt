@@ -1,7 +1,7 @@
 create build.ts to be executed with bun that runs msbuild command to build
-----
+────
 in build.ts remove ./out/dbg64/SumatraPDF.exe before running msbuild
-----
+────
 in StrUtil.cpp and StrUtil.h implement:
 struct Str {
   char* s;
@@ -11,23 +11,23 @@ struct Str {
   explicit Str(char* s, int len);
 };
 add StrL(s) macro that returns Str{s, (int)sizeof(s) - 1}
----
+────
 run bun add to add types for node and bun
----
+────
 in BaseUtil.cpp, BaseUtil.h add atomic counters and info to PoolAllocator
 - count total number of allocation
 - total amount of allocated memory
 - max allocated memory between calls to Reset()
 - max allocations between calls to Reset()
----
+────
 remove AtomicInt class from src/utils/BaseUtil.h and src/utils/BaseUtil.cpp
 instead add a typedef AtomicInt = LONG and replace the use of AtomicInt methods with AtomicInt* functions that use Interlocked* win32 apis, for example void AtomicIntAdd(AtomicInt* atomicInt, int value), int AtomicIntGet(AtomicInt* atomicInt) etc.
----
+────
 add command-line arg -wc to build.ts
 it recursively scans all files in src/ directory and calculates total number of lines for each file extension and prints the result for .cpp, .h, .c, .txt files
----
+────
 also print number of files per extension like: .cpp: 100 lines in 28 files
----
+────
 display the output in a table-like display, 3 columns, numbers are aligned right, print the header (ext,lines,files) first and then just numbers for each row
 
 current stats:
@@ -37,7 +37,7 @@ current stats:
   .c       8      1
 .txt     190      2
 
----
+────
 add -fix-virt flag to build.ts. It reads all .cpp and .h files in src/ directory
 uses regular expression to detect a pattern, where on the same line we have:
 virtual ~CommandPaletteWnd() override
@@ -45,24 +45,24 @@ i.e. virtual .* override
 in lines that match that it removes virtual and following whitespace
 if not lines that match, leaves the file alone
 if made changes write the changed file back, make sure to preserve original line endings (crlf or lf)
----
+────
 analyze src/CommandPalette.cpp, src/CommandPalette.h, src/Commands.h, src/Commands.cpp src/Accelerators.cpp src/Accelerators.h
 In CommandPaletteWnd when showing commands we also want to show the accelerator key if any, on the right side of the command name
 To do that we need to do custom painting in ListBox and paint command name on the left side and accelerator key on the right side
----
+────
 it doesn't work, doesn't show any commands at all
----
+────
 it works but it needs a few pixels of spacing between the lines
----
+────
 no change, the lines still overlap
----
+────
 looks good. now add 8px right padding to accelerator key
----
+────
 split src/WinGui/WinGui.cpp into multiple files, one file for each class
 name the file after class name e.g. Wnd => src/WinGui/Wnd.cpp
 update visual studio solution by running: go run . -premake
 build by rnning: bun build.ts
----
+────
 I got a crash:
 libmupdf.dll!add_char_to_line+0xd2 \mupdf\source\fitz\stext-device.c+397
 libmupdf.dll!fz_add_stext_char_imp+0x7a2 \mupdf\source\fitz\stext-device.c+860
@@ -89,7 +89,7 @@ Most likely this line in stext-device.c:
 	if (font->flags.is_bold)
 crashes because font is null
 analyze the code in mupdf/ directory stext-device.c, device.c, pdf-op-run.c, pdf-interpret.c and see if you can figure out sequence of actions that would lead to font being null
----
+────
 Analyze the code in ./src/previewer2
 it's a dll for providing thumbnails to windows
 instead of implementing thumbnails directly using Engine* classes, change the implementation to use SumatraPDF.exe executable to do the actual work
@@ -99,7 +99,7 @@ SumatraPDF.exe waits for commands on the pipe and sends back thumbnail data
 previewer sends the data via that pipe to sumatrapdf.exe
 when thumnbnail is finished, terminate the process
 Startup code for SumatraPDF.exe is in src/SumatraStartup.cpp and parsing of cmd-line args in src/Flags.cpp
----
+────
 Analyze the code in ./src/ifilter2
 it's a dll for providing search of files via search ifilter to windows
 instead of implementing the functionality directly using Engine* classes, change the implementation to use SumatraPDF.exe executable to do the actual work
@@ -109,7 +109,7 @@ SumatraPDF.exe waits for commands on the pipe and sends back ifilter data
 ifilter sends the data via that pipe to sumatrapdf.exe
 when process is finished, terminate the SumatraPDF.exe
 Startup code for SumatraPDF.exe is in src/SumatraStartup.cpp and parsing of cmd-line args in src/Flags.cpp
----
+────
 DONE: ifilter2 named pipe implementation
 Implementation details:
 - Added -ifilter-pipe <pipe_name> command-line argument in Flags.cpp/h
@@ -119,24 +119,24 @@ Implementation details:
 - Modified PdfFilter and EpubFilter to use pipe communication via ExtractDataViaPipe()
 - DLL creates pipe server, launches SumatraPDF.exe as client, sends file data, receives extracted text/metadata
 - SumatraPDF.exe connects to pipe, uses Engine* classes to extract data, sends response, exits
----
+────
 analyze the code in ./src/preview2 and finish conversion to using sumatrapdf.exe via pipe for rendering of pages
 Need to remove all uses of Engine* classes, all LoadEngine() methods
 must convert PageRenderer to also use sumatrapdf.exe via pipe instead of engine
 potentially needs to extend the pipe protocol to pass requested page number, zoom and size in src/preview2/PdfPreview.cpp and src/SumatraStartup.cpp
 remove #include of Enginebase.h, EngineAll, DocController.h
 to verify it compiles after changes run: "bun .\build.ts -build-preview2"
----
+────
 extract functionality related to writing to / receiving from pipe from files in directory src/preview2/ into src/PreviewPipe.cpp and src/PreviewPipe.h
 we want to be able to test pipe rendering functionality from SumatraPDF.exe so we need the sending functionality available there as well
----
+────
 add cmd-line arg -test-preview-pipe <file-name> that exercises all preview pipe functionality from src/PreviewPipe.cpp and src/PreviewPipe.h
 src/Flags.cpp is where parsing of command-line arguments happens
 src/SumatrapdfStartup.cpp is where we need to check for this argument and call the appropriate function to run the test
 to test rendered pages, create empty directory pipe-preview-results and write out each rendered page as .png file (page1.png, page2.png, ...) in pipe-preview-results/ directory
 to create PNG file use win32 apis
 for other information, write pipe-preview-results/result.txt with information you get via preview pipe, formatted for human readability
----
+────
 I got a crash:
 sumatrapdf.exe!TabsCtrl::WndProc+0x2b7 \src\wingui\TabsCtrl.cpp+599
 sumatrapdf.exe!WndWindowProc+0x86 \src\wingui\Wnd.cpp+230
@@ -162,3 +162,6 @@ _uploadDebugReport
 Analyze src/wingui/TabsCtrl.cpp and other relevant code (CloseTab, CloseWindow).
 Is it possible that TriggerTabClosed() destroys HWND and TabsCtrl so when we return the tab is no longer valid?
 If yes, add code after TriggerTabClose() that does FindMainWindowByHWND() and exits if not found.
+────
+debug -preview-pipe with     running under windb xas :`windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe <arguments>`
+
