@@ -1063,6 +1063,10 @@ flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, 
 	if (*actualtext == 0)
 		return;
 
+	/* SumatraPFD: https://github.com/sumatrapdfreader/sumatrapdf/issues/5280 */
+	if (!dev->last.valid)
+		return;
+
 	if (dev->flags & (FZ_STEXT_CLIP | FZ_STEXT_CLIP_RECT))
 		if (dev->last.clipped)
 			return;
