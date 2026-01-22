@@ -17,6 +17,10 @@
 
 #include "utils/Log.h"
 
+// Forward declaration - defined in MainWindow.cpp
+struct MainWindow;
+MainWindow* FindMainWindowByHwnd(HWND hwnd);
+
 //--- Tabs
 
 Kind kindTabs = "tabs";
@@ -595,6 +599,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (tabBeingClosed != -1 && tabUnderMouse == tabBeingClosed && overClose) {
                 // send notification that the tab is closed
                 TriggerTabClosed(this, tabBeingClosed);
+                // TriggerTabClosed() might have destroyed the window and this TabsCtrl
+                if (!FindMainWindowByHwnd(hwnd)) {
+                    return 0;
+                }
                 HwndScheduleRepaint(hwnd);
                 tabBeingClosed = -1;
                 return 0;
@@ -641,6 +649,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 return 0;
             }
             TriggerTabClosed(this, tabBeingClosed);
+            // TriggerTabClosed() might have destroyed the window and this TabsCtrl
+            if (!FindMainWindowByHwnd(hwnd)) {
+                return 0;
+            }
             HwndScheduleRepaint(hwnd);
             return 0;
         }
