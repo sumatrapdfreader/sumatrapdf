@@ -702,10 +702,9 @@ function sumatrapdf_files()
     "docs/md/*.md",
     "docs/www/*.css",
     "premake5.lua",
-    "premake5.obsolete.lua",
     "premake5.files.lua",
     "ext/versions.txt",
-    "Appx/AppxManifest.xml",
+    "ailog.txt",
   })
   files_in_dir("src", {
     "Accelerators.*",
@@ -777,8 +776,6 @@ function sumatrapdf_files()
     "VirtWnd.*",
     "Uninstaller.cpp",
     "WindowTab.*",
-
-    "scratch.txt",
   })
   filter { "configurations:Debug or DebugFull" }
   files_in_dir("src", {
