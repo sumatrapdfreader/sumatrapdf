@@ -136,3 +136,29 @@ src/SumatrapdfStartup.cpp is where we need to check for this argument and call t
 to test rendered pages, create empty directory pipe-preview-results and write out each rendered page as .png file (page1.png, page2.png, ...) in pipe-preview-results/ directory
 to create PNG file use win32 apis
 for other information, write pipe-preview-results/result.txt with information you get via preview pipe, formatted for human readability
+---
+I got a crash:
+sumatrapdf.exe!TabsCtrl::WndProc+0x2b7 \src\wingui\TabsCtrl.cpp+599
+sumatrapdf.exe!WndWindowProc+0x86 \src\wingui\Wnd.cpp+230
+comctl32.dll!DefSubclassProc+0x14a
+
+Exception: C0000005 EXCEPTION_ACCESS_VIOLATION
+Faulting IP: 00007FF7A1AB5BD7 01:00000000000B4BD7 sumatrapdf.exe!TabsCtrl::WndProc+0x2b7 C:\Users\kjk\src\sumatrapdf\src\wingui\TabsCtrl.cpp+599
+Fault writing address 0000027CFFDA3F10
+
+log before crash:
+CloseTab: tab: 0x0000027D010FE250 win: 0x0000027D01C6CAA0, hwndFrame: 0x2a058a, quitIfLast: 0
+CloseWindow: win: 0x0000027D01C6CAA0, hwndFrame: 0x2a058a, quitIfLast: 0, forceClose: 0
+SaveSettings
+NotifyAboutFile: ignoring 'C:\Users\EscritÃ³rio Campiolo\AppData\Local\SumatraPDF\SumatraPDF-settings.txt'
+NotifyAboutFile: ignoring 'C:\Users\EscritÃ³rio Campiolo\AppData\Local\SumatraPDF\SumatraPDF-settings.txt'
+DeleteMainWindow: win: 0x0000027D01C6CAA0, hwndFrame: 0x00000000002A058A, hwndCanvas: 0x00000000001604FE, winIdx : 1, nWindowsLeft: 1
+~MainWindow: delete tabsCtrl: 0x0000027CFFDA3DA0, HWND: 0x00000000001204B0
+SaveSettings
+CrashDumpExceptionHandler
+CrashDumpThread
+_uploadDebugReport
+
+Analyze src/wingui/TabsCtrl.cpp and other relevant code (CloseTab, CloseWindow).
+Is it possible that TriggerTabClosed() destroys HWND and TabsCtrl so when we return the tab is no longer valid?
+If yes, add code after TriggerTabClose() that does FindMainWindowByHWND() and exits if not found.

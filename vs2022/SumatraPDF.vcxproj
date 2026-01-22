@@ -1427,7 +1427,11 @@
     <None Include="..\.github\workflows\codeql.yml" />
     <None Include="..\.github\workflows\daily.yml" />
     <None Include="..\.gitignore" />
+    <None Include="..\Claude.md" />
+    <None Include="..\SECURITY.md" />
     <None Include="..\ailog.txt" />
+    <None Include="..\clangtidy.out.txt" />
+    <None Include="..\cppcheck.out.txt" />
     <None Include="..\do\build.go" />
     <None Include="..\do\check_accesskyes.go" />
     <None Include="..\do\clang_tidy_format.go" />
@@ -1494,9 +1498,12 @@
     <None Include="..\docs\wishlist.txt" />
     <None Include="..\docs\www\notion.css" />
     <None Include="..\docs\www\sumatra.css" />
+    <None Include="..\drmem-sup.txt" />
     <None Include="..\ext\versions.txt" />
+    <None Include="..\out.txt" />
     <None Include="..\premake5.files.lua" />
     <None Include="..\premake5.lua" />
+    <None Include="..\readme.md" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc" />

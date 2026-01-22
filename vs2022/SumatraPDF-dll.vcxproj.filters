@@ -788,7 +788,11 @@
       <Filter>.github\workflows</Filter>
     </None>
     <None Include="..\.gitignore" />
+    <None Include="..\Claude.md" />
+    <None Include="..\SECURITY.md" />
     <None Include="..\ailog.txt" />
+    <None Include="..\clangtidy.out.txt" />
+    <None Include="..\cppcheck.out.txt" />
     <None Include="..\do\build.go">
       <Filter>do</Filter>
     </None>
@@ -987,11 +991,14 @@
     <None Include="..\docs\www\sumatra.css">
       <Filter>docs\www</Filter>
     </None>
+    <None Include="..\drmem-sup.txt" />
     <None Include="..\ext\versions.txt">
       <Filter>ext</Filter>
     </None>
+    <None Include="..\out.txt" />
     <None Include="..\premake5.files.lua" />
     <None Include="..\premake5.lua" />
+    <None Include="..\readme.md" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">

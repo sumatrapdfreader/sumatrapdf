@@ -694,6 +694,8 @@ function sumatrapdf_files()
   files_in_dir(".", {
     ".gitignore",
     "*.yml",
+    "*.md",
+    "*.txt",
     ".github/*.yml",
     ".github/workflows/*.yml",
     "do/*.go",
@@ -704,7 +706,6 @@ function sumatrapdf_files()
     "premake5.lua",
     "premake5.files.lua",
     "ext/versions.txt",
-    "ailog.txt",
   })
   files_in_dir("src", {
     "Accelerators.*",

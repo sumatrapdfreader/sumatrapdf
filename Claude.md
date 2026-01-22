@@ -14,4 +14,4 @@ To debug run: `raddbg.exe --auto_run --quit_after_success ./out/dbg64/SumatraPDF
 
 After making a change to .cpp, .c or .h file (and before running build.ts), run clang-format on those files to reformat them in place
 
-When commiting changes also commit src/scratch.txt (if changed)
+When commiting changes also commit src/ailog.txt (if changed)
