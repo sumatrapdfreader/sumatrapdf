@@ -53,3 +53,4 @@ vs2022-clang/
 vs2026/
 .claude/settings.local.json
 pipe-preview-results
+nul

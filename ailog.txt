@@ -164,4 +164,74 @@ Is it possible that TriggerTabClosed() destroys HWND and TabsCtrl so when we ret
 If yes, add code after TriggerTabClose() that does FindMainWindowByHWND() and exits if not found.
 ────
 debug -preview-pipe with     running under windb xas :`windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe <arguments>`
+────
+I got a crash:
 
+Exception: C0000005 EXCEPTION_ACCESS_VIOLATION
+Faulting IP: 00007FFD0EFA8EFB 01:0000000000127EFB libmupdf.dll!fz_end_group+0x77 C:\Users\kjk\src\sumatrapdf\mupdf\source\fitz\device.c+467
+Fault writing address 0000010AD2EF70C8
+
+libmupdf.dll!fz_end_group+0x77 \mupdf\source\fitz\device.c+467
+libmupdf.dll!pdf_run_xobject+0x926 \mupdf\source\pdf\pdf-op-run.c+2423
+libmupdf.dll!pdf_run_Do_form+0x46 \mupdf\source\pdf\pdf-op-run.c+3073
+libmupdf.dll!pdf_process_Do+0x113 \mupdf\source\pdf\pdf-interpret.c+1070
+libmupdf.dll!pdf_process_keyword+0x92e \mupdf\source\pdf\pdf-interpret.c+1511
+libmupdf.dll!pdf_process_stream+0x1d3 \mupdf\source\pdf\pdf-interpret.c+1687
+libmupdf.dll!pdf_process_raw_contents+0x10b \mupdf\source\pdf\pdf-interpret.c+1827
+libmupdf.dll!pdf_process_contents+0x72 \mupdf\source\pdf\pdf-interpret.c+1850
+libmupdf.dll!pdf_run_page_contents_with_usage_imp+0x567 \mupdf\source\pdf\pdf-run.c+188
+libmupdf.dll!pdf_run_page_with_usage+0xd8 \mupdf\source\pdf\pdf-run.c+402
+sumatrapdf.exe!EngineMupdf::RenderPage+0x2ee \src\EngineMupdf.cpp+3003
+────
+analyze the code in mupdf/ directory device.c, pdf-op-run.c, pdf-interpret.c, pdf-run.c and see if you can figure out sequence of actions that would lead to font being null
+
+The Vulnerable Code Path
+
+The bug is in pdf_show_char (pdf-op-run.c:1266-1276). The render_direct path for uncacheable Type3 glyphs has no
+try/catch around fz_render_t3_glyph_direct:
+
+pdf_gsave(ctx, pr);
+gstate->text.font = NULL;  // font set to NULL
+fz_render_t3_glyph_direct(ctx, ...);  // CAN THROW - no protection
+pr->dev->flags = old_flags;   // skipped on throw
+pdf_grestore(ctx, pr);        // skipped on throw
+
+Why Static PDFs Can't Easily Trigger the Crash
+
+The crash is at fz_end_group (line 2386 in pdf_run_xobject), which means pdf_process_contents at line 2369 must have
+returned normally. But:
+
+1. All errors from the Type3 render_direct path are morphed SYNTAX→FORMAT by pdf_process_glyph (pdf-interpret.c:1960)
+2. FORMAT errors are always rethrown by pdf_process_stream (not caught as SYNTAX)
+3. This means pdf_process_contents always throws when the render_direct path fails
+4. When it throws, the code jumps to fz_catch at line 2414, skipping fz_end_group
+
+So the crash can't be caused by a simple error-handling imbalance from a malformed PDF structure. The device state
+remains balanced for all error types.
+
+Most Likely Crash Cause
+
+The crash (WRITE violation at 0000010AD2EF70C8) is most likely a heap use-after-free or heap corruption that manifests
+during fz_paint_pixmap/fz_blend_pixmap inside fz_draw_end_group. The corrupted memory was probably freed or
+overwritten by an earlier operation during the transparency group's content processing. Possible triggers:
+
+- OOM at a precise moment during pixmap allocation in fz_draw_begin_group (after push_stack but before state is fully
+initialized)
+- Heap corruption from a buffer overflow in glyph/image/pattern rendering within the Type3 procedure
+- Race condition if SumatraPDF renders pages on multiple threads sharing font data
+- Integer overflow in coordinate calculations causing out-of-bounds pixmap writes
+
+The font being null observation is a side effect: if fz_render_t3_glyph_direct throws, pdf_grestore is skipped and
+gstate->text.font stays NULL. This NULL font persists in the corrupted gstate stack and may contribute to later issues
+if processing somehow continues.
+
+Reproducing the Crash
+
+To reproduce this crash, you would likely need:
+1. The specific PDF file from the crash report (it may trigger a heap corruption that's specific to its content)
+2. Running under a memory stress tool or specific memory layout
+3. Possibly Address Sanitizer (-fsanitize=address) or Page Heap (gflags /p /enable SumatraPDF.exe /full) to catch the
+root cause
+
+Would you like me to add a protective fz_try/fz_catch around the fz_render_t3_glyph_direct call in pdf_show_char to
+fix the missing error handling?
