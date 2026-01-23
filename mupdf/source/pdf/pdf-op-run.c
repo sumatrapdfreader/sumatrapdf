@@ -1271,9 +1271,22 @@ pdf_show_char(fz_context *ctx, pdf_run_processor *pr, int cid, fz_text_language 
 			stroke_gstate = pr->gstate + gstate->stroke.gstate_num;
 		pdf_drop_font(ctx, gstate->text.font);
 		gstate->text.font = NULL; /* don't inherit the current font... */
+		/* SumatraPDF: speculative fix for https://github.com/sumatrapdfreader/sumatrapdf/issues/5285 */
+#if 0   /* original code */
 		fz_render_t3_glyph_direct(ctx, pr->dev, fontdesc->font, gid, composed, gstate, pr->default_cs, fill_gstate, stroke_gstate);
 		pr->dev->flags = old_flags;
 		pdf_grestore(ctx, pr);
+#else   /* fix */
+		fz_try(ctx)
+			fz_render_t3_glyph_direct(ctx, pr->dev, fontdesc->font, gid, composed, gstate, pr->default_cs, fill_gstate, stroke_gstate);
+		fz_always(ctx)
+		{
+			pr->dev->flags = old_flags;
+			pdf_grestore(ctx, pr);
+		}
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+#endif
 		/* Render text invisibly so that it can still be extracted. */
 		pr->tos.text_mode = 3;
 	}
