@@ -19,6 +19,11 @@ jobs:
       - name: Install bun
         uses: oven-sh/setup-bun@v2
 
+      - name: Set up MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64 # Optional: defaults to x64; other options like x86, amd64_arm64
+
       - name: Build
         env:
           R2_SECRET: ${{ secrets.R2_SECRET }}
