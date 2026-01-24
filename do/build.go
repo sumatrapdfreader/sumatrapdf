@@ -387,6 +387,12 @@ func buildCi() {
 	}
 }
 
+func detectLlvmPdbutil() string {
+	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\llvm-pdbutil.exe`)
+	panicIf(!fileExists(path), "didn't find llvm-pdbutil.exe")
+	return path
+}
+
 func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
 	exePath := detectLlvmPdbutil()
 	cmdArgs := append([]string{"pretty"}, args...)
@@ -394,7 +400,10 @@ func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
 	cmd := exec.Command(exePath, cmdArgs...)
 	logf("> %s\n", fmtCmdShort(cmd))
 	out, err := cmd.Output()
-	must(err)
+	if err != nil {
+		logf("%s failed with '%s', output:\n%s\n", fmtCmdShort(cmd), err, string(out))
+		must(err)
+	}
 
 	var buf bytes.Buffer
 	gz := gzip.NewWriter(&buf)
