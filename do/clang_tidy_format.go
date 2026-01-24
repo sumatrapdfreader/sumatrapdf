@@ -257,6 +257,22 @@ func clangFormatFile(path string) {
 	runCmdLoggedMust(cmd)
 }
 
+func detectLlvmPdbutil() string {
+	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\llvm-pdbutil.exe`)
+	panicIf(!fileExists(path), "didn't find llvm-pdbutil.exe")
+	return path
+}
+
+func runLlvmPdbutil(pdbPath string, outPath string) {
+	exePath := detectLlvmPdbutil()
+	cmd := exec.Command(exePath, "pretty", "-globals", "-symbol-order=size", pdbPath)
+	logf("> %s\n", fmdCmdShort(cmd))
+	out, err := cmd.Output()
+	must(err)
+	writeFileMust(outPath, out)
+	logf("wrote llvm-pdbutil output to '%s'\n", outPath)
+}
+
 func clangFormatFiles() {
 	path := detectClangFormat()
 	logf("using '%s'\n", path)

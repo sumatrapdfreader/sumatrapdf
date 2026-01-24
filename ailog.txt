@@ -235,3 +235,8 @@ root cause
 
 Would you like me to add a protective fz_try/fz_catch around the fz_render_t3_glyph_direct call in pdf_show_char to
 fix the missing error handling?
+────
+in do/ directory in Go code add a function that takes a path of PDB file and path of the output file
+it runs: llvm-pdbutil.exe pretty -globals -symbol-order=size <pdb_file>
+it captures the stdout and saves to output file
+detect the location of llvm-pdbutil.exe same way as in existing code in do/ directory
