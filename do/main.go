@@ -438,6 +438,8 @@ func Main() {
 
 	if flgCIBuild {
 		buildCi()
+		ensureAllUploadCreds()
+		uploadPdbBuildArtifacts()
 		return
 	}
 

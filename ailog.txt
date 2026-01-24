@@ -240,3 +240,12 @@ in do/ directory in Go code add a function that takes a path of PDB file and pat
 it runs: llvm-pdbutil.exe pretty -globals -symbol-order=size <pdb_file>
 it captures the stdout and saves to output file
 detect the location of llvm-pdbutil.exe same way as in existing code in do/ directory
+────
+in .github/workflows/build.yml add a step to instll bun
+────
+analyze Go code in do/ directory and summarize what -ci flag does
+────
+at the end of processing of -ci flag in do/main.go add code that runs:
+- runs: llvm-pdbutil.exe pretty -globals -symbol-order=size on out\rel64\SumatraPDF.pdb, captures the output and writes to SumatraPDF-globals.txt.gz (compressed with gzip)
+- runs: llvm-pdbutil.exe pretty -classes on out\rel64\SumatraPDF.pdb, captures the output and writes to SumatraPDF-classes.txt.gz (compressed with gzip)
+- uploads both files as to both backblaze b2 and cloudflare r2 under software/sumatrapdf/build-artifacts/ under name YYYY-MM-DD-<build-number>-<short-sha1>.SumatraPDF-globals.txt.gz and YYYY-MM-DD-<build-number>-<short-sha1>.SumatraPDF-classes.txt.gz

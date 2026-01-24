@@ -115,7 +115,7 @@ func getDownloadUrlsForPrefix(prefix string, buildType BuildType, ver string) *D
 		}
 	}
 	rplc := func(s *string) {
-		*s = strings.Replace(*s, "${ver}", ver, -1)
+		*s = strings.ReplaceAll(*s, "${ver}", ver)
 		//*s = strings.Replace(*s, "${buildType}", buildType, -1)
 	}
 	rplc(&res.installer64)
@@ -144,7 +144,7 @@ PortableZipArm64: ${zipArm64}
 PortableZip32: ${zip32}
 `
 	rplc := func(old, new string) {
-		s = strings.Replace(s, old, new, -1)
+		s = strings.ReplaceAll(s, old, new)
 	}
 	rplc("${ver}", ver)
 	rplc("${inst64}", urls.installer64)

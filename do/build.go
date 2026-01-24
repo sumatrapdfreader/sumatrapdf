@@ -2,6 +2,8 @@ package do
 
 import (
 	"archive/zip"
+	"bytes"
+	"compress/gzip"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -10,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kjk/common/u"
@@ -373,10 +376,7 @@ func buildCi() {
 	case githubEventPush:
 		removeReleaseBuilds()
 		genHTMLDocsForApp()
-		// I'm typically building 64-bit so in ci build 32-bit
-		// and build all projects, to find regressions in code
-		// I'm not regularly building while developing
-		buildPreRelease(platform32)
+		buildPreRelease(platform64)
 	case githubEventTypeCodeQL:
 		// code ql is just a regular build, I assume intercepted by
 		// by their tooling
@@ -385,6 +385,68 @@ func buildCi() {
 	default:
 		panic("unkown value from getGitHubEventType()")
 	}
+}
+
+func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
+	exePath := detectLlvmPdbutil()
+	cmdArgs := append([]string{"pretty"}, args...)
+	cmdArgs = append(cmdArgs, pdbPath)
+	cmd := exec.Command(exePath, cmdArgs...)
+	logf("> %s\n", fmdCmdShort(cmd))
+	out, err := cmd.Output()
+	must(err)
+
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	_, err = gz.Write(out)
+	must(err)
+	err = gz.Close()
+	must(err)
+	writeFileMust(outPath, buf.Bytes())
+	logf("wrote %s (%s)\n", outPath, formatSize(int64(buf.Len())))
+}
+
+func uploadPdbBuildArtifacts() {
+	pdbPath := filepath.Join("out", "rel64", "SumatraPDF.pdb")
+	if !fileExists(pdbPath) {
+		logf("uploadPdbBuildArtifacts: '%s' doesn't exist, skipping\n", pdbPath)
+		return
+	}
+
+	globalsPath := "SumatraPDF-globals.txt.gz"
+	classesPath := "SumatraPDF-classes.txt.gz"
+
+	runLlvmPdbutilGzipped(pdbPath, globalsPath, "-globals", "-symbol-order=size")
+	runLlvmPdbutilGzipped(pdbPath, classesPath, "-classes")
+
+	ver := getPreReleaseVer()
+	sha1 := getGitSha1()
+	shortSha1 := sha1[:8]
+	dateStr := time.Now().Format("2006-01-02")
+	prefix := fmt.Sprintf("software/sumatrapdf-build-artifacts/%s-%s-%s", dateStr, ver, shortSha1)
+
+	remoteGlobals := prefix + ".SumatraPDF-globals.txt.gz"
+	remoteClasses := prefix + ".SumatraPDF-classes.txt.gz"
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		mc := newMinioR2Client()
+		mc.UploadFile(remoteGlobals, globalsPath, true)
+		logf("uploaded %s\n", mc.URLForPath(remoteGlobals))
+		mc.UploadFile(remoteClasses, classesPath, true)
+		logf("uploaded %s\n", mc.URLForPath(remoteClasses))
+		wg.Done()
+	}()
+	go func() {
+		mc := newMinioBackblazeClient()
+		mc.UploadFile(remoteGlobals, globalsPath, true)
+		logf("uploaded %s\n", mc.URLForPath(remoteGlobals))
+		mc.UploadFile(remoteClasses, classesPath, true)
+		logf("uploaded %s\n", mc.URLForPath(remoteClasses))
+		wg.Done()
+	}()
+	wg.Wait()
 }
 
 func ensureManualIsBuilt() {

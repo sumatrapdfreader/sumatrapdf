@@ -17,10 +17,8 @@ jobs:
           # needed to calc build number via git log --oneline
           fetch-depth: 0
 
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Build
-        env:
-          R2_SECRET: ${{ secrets.R2_SECRET }}
-          R2_ACCESS: ${{ secrets.R2_ACCESS }}
-          BB_SECRET: ${{ secrets.BB_SECRET }}
-          BB_ACCESS: ${{ secrets.BB_ACCESS }}
         run: .\doit.bat -ci-daily
