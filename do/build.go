@@ -398,7 +398,7 @@ func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
 	cmdArgs = append(cmdArgs, pdbPath)
 	cmd := exec.Command(exePath, cmdArgs...)
 	logf("> %s\n", fmtCmdShort(cmd))
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		logf("%s failed with '%s', output:\n%s\n", fmtCmdShort(cmd), err, string(out))
 		must(err)
