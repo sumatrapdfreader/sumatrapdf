@@ -2,7 +2,6 @@ package do
 
 import (
 	"archive/zip"
-	"bytes"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -405,14 +404,15 @@ func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
 		must(err)
 	}
 
-	var buf bytes.Buffer
-	gz := gzip.NewWriter(&buf)
+	f, err := os.Create(outPath)
+	must(err)
+	defer f.Close()
+	gz := gzip.NewWriter(f)
 	_, err = gz.Write(out)
 	must(err)
 	err = gz.Close()
 	must(err)
-	writeFileMust(outPath, buf.Bytes())
-	logf("wrote %s (%s)\n", outPath, formatSize(int64(buf.Len())))
+	logf("wrote %s (%s)\n", outPath, formatSize(int64(len(out))))
 }
 
 func uploadPdbBuildArtifacts() {
