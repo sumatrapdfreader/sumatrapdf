@@ -5153,16 +5153,6 @@ static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
     }
 }
 
-static void CloseWindowDelayedAsync(MainWindow* win) {
-    if (IsGUIThread(FALSE)) {
-        CloseWindow(win, false, false);
-        return;
-    }
-    Sleep(4 * 1000);
-    auto fn = MkFunc0(CloseWindowDelayedAsync, win);
-    uitask::Post(fn, nullptr);
-}
-
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
 
@@ -5386,11 +5376,6 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             for (WindowTab* t : toClose) {
                 CloseTab(t, false);
             }
-        } break;
-
-        case CmdDebugDelayCloseWindow: {
-            auto fn = MkFunc0(CloseWindowDelayedAsync, win);
-            RunAsync(fn, "DelayedCloseWindow");
         } break;
 
         case CmdExit:
