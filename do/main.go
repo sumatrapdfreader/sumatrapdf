@@ -96,7 +96,7 @@ func runCmdShowProgressAndLog(cmd *exec.Cmd, path string) error {
 
 	cmd.Stdout = io.MultiWriter(f, os.Stdout)
 	cmd.Stderr = io.MultiWriter(f, os.Stderr)
-	logf("> %s\n", fmtCmdShort(*cmd))
+	logf("> %s\n", fmtCmdShort(cmd))
 	return cmd.Run()
 }
 

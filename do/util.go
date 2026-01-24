@@ -155,7 +155,7 @@ func findLargestFileByExt() {
 	logf("processed %d files\n", nFiles)
 }
 
-func fmdCmdShort(cmd *exec.Cmd) string {
+func fmtCmdShort(cmd *exec.Cmd) string {
 	cmd2 := *cmd
 	exePath := filepath.Base(cmd.Path)
 	cmd2.Path = exePath
@@ -163,7 +163,7 @@ func fmdCmdShort(cmd *exec.Cmd) string {
 }
 
 func runCmdLoggedMust(cmd *exec.Cmd) {
-	logf("> %s\n", fmdCmdShort(cmd))
+	logf("> %s\n", fmtCmdShort(cmd))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -185,11 +185,6 @@ func createDirForFile(path string) error {
 func createDirForFileMust(path string) {
 	dir := filepath.Dir(path)
 	must(os.MkdirAll(dir, 0755))
-}
-
-func fmtCmdShort(cmd exec.Cmd) string {
-	cmd.Path = filepath.Base(cmd.Path)
-	return cmd.String()
 }
 
 func currDirAbsMust() string {

@@ -392,7 +392,7 @@ func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
 	cmdArgs := append([]string{"pretty"}, args...)
 	cmdArgs = append(cmdArgs, pdbPath)
 	cmd := exec.Command(exePath, cmdArgs...)
-	logf("> %s\n", fmdCmdShort(cmd))
+	logf("> %s\n", fmtCmdShort(cmd))
 	out, err := cmd.Output()
 	must(err)
 
