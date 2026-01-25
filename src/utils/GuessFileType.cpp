@@ -105,6 +105,11 @@ Kind kindFileAvif = "fileAvif";
     V(".svg", kindFileSvg)        \
     V(".djvu", kindFileDjVu)      \
     V(".jp2", kindFileJp2)        \
+    V(".j2k", kindFileJp2)        \
+    V(".jpx", kindFileJp2)        \
+    V(".jpf", kindFileJp2)        \
+    V(".jpm", kindFileJp2)        \
+    V(".j2c", kindFileJp2)        \
     V(".zip", kindFileZip)        \
     V(".rar", kindFileRar)        \
     V(".7z", kindFile7Z)          \
