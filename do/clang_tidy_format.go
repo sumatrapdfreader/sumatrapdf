@@ -10,7 +10,7 @@ import (
 )
 
 func detectClangTidy() string {
-	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\clang-tidy.exe`)
+	path := detectPathMust(vsBasePaths, `VC\Tools\Llvm\bin\clang-tidy.exe`)
 	panicIf(!fileExists(path), "didn't find clang-tidy.exe")
 	// if !printClangPath {
 	// 	logf("clang-format: %s\n", path)
@@ -242,7 +242,7 @@ func runClangTidy(fix bool) {
 var printClangPath bool
 
 func detectClangFormat() string {
-	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\clang-format.exe`)
+	path := detectPathMust(vsBasePaths, `VC\Tools\Llvm\bin\clang-format.exe`)
 	panicIf(!fileExists(path), "didn't find clang-format.exe")
 	if !printClangPath {
 		logf("clang-format: %s\n", path)

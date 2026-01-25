@@ -32,31 +32,36 @@ var (
 	}
 )
 
-func detectPath(paths []string, name string) string {
+func detectPathMust(paths []string, name string) string {
+	if path, ok := checkAvailbleInPATH(name); ok {
+		return path
+	}
 	for _, path := range paths {
 		p := filepath.Join(path, name)
 		if fileExists(p) {
 			return p
 		}
 	}
-	return ""
+	logf("Didn't find '%s' in vs paths\n", name)
+	panic("didn't find " + name)
 }
 
 // if can execute without an error, then is in path
 func checkAvailbleInPATH(path string) (string, bool) {
 	name := filepath.Base(path)
 	cmd := exec.Command(name)
-	out, err := cmd.CombinedOutput()
+	_, err := cmd.CombinedOutput()
 	if err != nil {
+		logf("%s NOT in PATH (from '%s')\n", name, path)
 		return "", false
 	}
-	return string(out), true
+	logf("%s found in PATH (from '%s')\n", name, path)
+	return name, true
 }
 
 func detectPathInSDKMust(name string) string {
 	if path, ok := checkAvailbleInPATH(name); ok {
-		logf("%s found in PATH\n", path)
-		return name
+		return path
 	}
 	for _, sdkVer := range sdkVersions {
 		path := filepath.Join(`C:\Program Files (x86)\Windows Kits\10\bin`, sdkVer, name)
@@ -75,7 +80,7 @@ func detectMsbuildPathMust() string {
 		logf("%s found in PATH\n", path)
 		return path
 	}
-	path := detectPath(vsBasePaths, msBuildName)
+	path := detectPathMust(vsBasePaths, msBuildName)
 	panicIf(path == "", fmt.Sprintf("didn't find %s", msBuildName))
 	if !didPrintMsbuildPath {
 		logf("msbuild.exe: %s\n", path)

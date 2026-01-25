@@ -437,6 +437,7 @@ func Main() {
 	}
 
 	if flgCIBuild {
+		detectLlvmPdbutil()
 		buildCi()
 		ensureAllUploadCreds()
 		uploadPdbBuildArtifacts()

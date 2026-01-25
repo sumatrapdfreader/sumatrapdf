@@ -387,9 +387,7 @@ func buildCi() {
 }
 
 func detectLlvmPdbutil() string {
-	path := detectPath(vsBasePaths, `VC\Tools\Llvm\bin\llvm-pdbutil.exe`)
-	panicIf(!fileExists(path), "didn't find llvm-pdbutil.exe")
-	return path
+	return detectPathMust(vsBasePaths, `VC\Tools\Llvm\bin\llvm-pdbutil.exe`)
 }
 
 func runLlvmPdbutilGzipped(pdbPath string, outPath string, args ...string) {
