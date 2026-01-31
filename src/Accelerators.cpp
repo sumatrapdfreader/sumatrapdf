@@ -213,9 +213,9 @@ ACCEL gBuiltInAccelerators[] = {
 
     {FCONTROL | FVIRTKEY, VK_DELETE, CmdDeleteAnnotation},
 
-    {0, 'q', CmdCloseCurrentDocument},
-    {0, 'r', CmdReloadDocument},
-    {0, 'z', CmdToggleZoom},
+    // {0, 'q', CmdCloseCurrentDocument},
+    // {0, 'r', CmdReloadDocument},
+    // {0, 'z', CmdToggleZoom},
     {0, 'f', CmdToggleFullscreen},
     {0, '[', CmdRotateLeft},
     {0, ']', CmdRotateRight},
@@ -223,7 +223,7 @@ ACCEL gBuiltInAccelerators[] = {
     {0, 'w', CmdPresentationWhiteBackground},
     // // for Logitech's wireless presenters which target PowerPoint's shortcuts
     {0, '.', CmdPresentationBlackBackground},
-    {0, 'c', CmdToggleContinuousView},
+    // {0, 'c', CmdToggleContinuousView},
 };
 
 ACCEL* gAccels = nullptr;
