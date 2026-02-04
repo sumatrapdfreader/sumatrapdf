@@ -111,5 +111,6 @@ bool IsAnnotationEq(Annotation* a1, Annotation* a2);
 void PdfColorToFloat(PdfColor c, float rgb[3]);
 void SetIconName(Annotation*, const char*);
 bool SetColor(Annotation*, PdfColor);
+bool SetStampImageFromFile(Annotation*, const char* path, bool resizeToImage = true);
 void DeleteAnnotation(Annotation*);
 bool IsMoveableAnnotation(AnnotationType);

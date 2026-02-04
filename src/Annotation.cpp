@@ -6,9 +6,12 @@ extern "C" {
 #include <mupdf/pdf.h>
 }
 
+#include <algorithm>
+
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/FileUtil.h"
 
 #include "wingui/UIModels.h"
 
@@ -595,6 +598,86 @@ bool SetColor(Annotation* annot, PdfColor c) {
             fz_report_error(ctx);
         }
     }
+    MarkNotificationAsModified(e, annot);
+    return true;
+}
+
+bool SetStampImageFromFile(Annotation* annot, const char* path, bool resizeToImage) {
+    if (!annot || Type(annot) != AnnotationType::Stamp || str::IsEmptyOrWhiteSpace(path)) {
+        return false;
+    }
+
+    EngineMupdf* e = annot->engine;
+    auto ctx = e->Ctx();
+    bool ok = false;
+    float newW = 0.0f;
+    float newH = 0.0f;
+
+    {
+        ScopedCritSec cs(e->ctxAccess);
+        fz_image* img = nullptr;
+        fz_buffer* buf = nullptr;
+        fz_try(ctx) {
+            ByteSlice data = file::ReadFile(path);
+            if (data.empty()) {
+                fz_throw(ctx, FZ_ERROR_GENERIC, "empty image data");
+            }
+            buf = fz_new_buffer_from_copied_data(ctx, data.data(), data.size());
+            img = fz_new_image_from_buffer(ctx, buf);
+            if (img) {
+                int xres = img->xres > 0 ? img->xres : 72;
+                int yres = img->yres > 0 ? img->yres : 72;
+                newW = (float)img->w * 72.0f / (float)xres;
+                newH = (float)img->h * 72.0f / (float)yres;
+
+                pdf_set_annot_stamp_image(ctx, annot->pdfannot, img);
+
+                if (resizeToImage && newW > 1.0f && newH > 1.0f) {
+                    pdf_page* page = pdf_annot_page(ctx, annot->pdfannot);
+                    fz_rect pageRc = pdf_bound_page(ctx, page, FZ_CROP_BOX);
+                    float pageW = pageRc.x1 - pageRc.x0;
+                    float pageH = pageRc.y1 - pageRc.y0;
+                    float maxW = pageW * 0.30f;
+                    float maxH = pageH * 0.30f;
+                    float scale = 1.0f;
+                    if (maxW > 0.0f && maxH > 0.0f) {
+                        float sx = maxW / newW;
+                        float sy = maxH / newH;
+                        scale = std::min(1.0f, std::min(sx, sy));
+                    }
+                    newW *= scale;
+                    newH *= scale;
+
+                    fz_rect trect = pdf_annot_rect(ctx, annot->pdfannot);
+                    trect.x1 = trect.x0 + newW;
+                    trect.y1 = trect.y0 + newH;
+                    pdf_set_annot_rect(ctx, annot->pdfannot, trect);
+                }
+
+                pdf_update_annot(ctx, annot->pdfannot);
+                ok = true;
+            }
+        }
+        fz_always(ctx) {
+            if (img) {
+                fz_drop_image(ctx, img);
+            }
+            if (buf) {
+                fz_drop_buffer(ctx, buf);
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            logf("SetStampImageFromFile(): failed for '%s'\n", path);
+            ok = false;
+        }
+    }
+
+    if (!ok) {
+        return false;
+    }
+
+    annot->bounds = GetBounds(annot);
     MarkNotificationAsModified(e, annot);
     return true;
 }

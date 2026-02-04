@@ -155,6 +155,7 @@ struct EditAnnotationsWindow : Wnd {
 
     Button* buttonSaveAttachment = nullptr;
     Button* buttonEmbedAttachment = nullptr;
+    Button* buttonSetStampImage = nullptr;
 
     Button* buttonDelete = nullptr;
 
@@ -298,6 +299,7 @@ static void HidePerAnnotControls(EditAnnotationsWindow* ew) {
 
     ew->buttonSaveAttachment->SetIsVisible(false);
     ew->buttonEmbedAttachment->SetIsVisible(false);
+    ew->buttonSetStampImage->SetIsVisible(false);
 
     ew->buttonDelete->SetIsVisible(false);
 }
@@ -834,6 +836,60 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
     ew->buttonEmbedAttachment->SetIsVisible(true);
 }
 
+static TempWStr GetImageFileFilterTemp() {
+    const char* filter = "*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jxr;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.avif";
+    str::Str fileFilter;
+    fileFilter.Append(_TRA("Images"));
+    fileFilter.AppendChar('\1');
+    fileFilter.Append(filter);
+    fileFilter.AppendChar('\1');
+    fileFilter.Append(_TRA("All files"));
+    fileFilter.Append("\1*.*\1");
+    str::TransCharsInPlace(fileFilter.CStr(), "\1", "\0");
+    return ToWStrTemp(fileFilter);
+}
+
+static bool PickImageFile(HWND owner, str::Str& pathOut) {
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = owner;
+    ofn.lpstrFilter = GetImageFileFilterTemp();
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
+    ofn.nMaxFile = MAX_PATH;
+
+    AutoFreeWStr file = AllocArray<WCHAR>(ofn.nMaxFile);
+    ofn.lpstrFile = file;
+
+    if (!GetOpenFileNameW(&ofn)) {
+        return false;
+    }
+    pathOut.Set(ToUtf8Temp(file));
+    return true;
+}
+
+static void ButtonSetStampImage(EditAnnotationsWindow* ew) {
+    ReportIf(!ew->tab->selectedAnnotation);
+    if (!CanAccessDisk()) {
+        return;
+    }
+    str::Str path;
+    if (!PickImageFile(ew->hwnd, path)) {
+        return;
+    }
+    if (SetStampImageFromFile(ew->tab->selectedAnnotation, path.CStr())) {
+        EnableSaveIfAnnotationsChanged(ew);
+        MainWindowRerender(ew->tab->win);
+    }
+}
+
+static void DoStampImage(EditAnnotationsWindow* ew, Annotation* annot) {
+    if (Type(annot) != AnnotationType::Stamp) {
+        return;
+    }
+    ew->buttonSetStampImage->SetIsVisible(true);
+}
+
 static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
     int opacity = ev->pos;
     SetOpacity(ew->tab->selectedAnnotation, opacity);
@@ -871,6 +927,7 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
 
         DoOpacity(ew, annot);
         DoSaveEmbed(ew, annot);
+        DoStampImage(ew, annot);
 
         // TODO: not sure it should be here as it might trigger recursive loop
         // SetSelectedAnnotation(ew->tab, annot);
@@ -1527,6 +1584,21 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
         vbox->AddChild(w);
     }
 
+    {
+        Button::CreateArgs args;
+        args.parent = parent;
+        args.text = "Set Stamp Image...";
+        args.font = fnt;
+
+        auto w = new Button();
+        w->SetInsetsPt(8, 0, 0, 0);
+        HWND hwnd = w->Create(args);
+        ReportIf(!hwnd);
+
+        w->onClick = MkFunc0(ButtonSetStampImage, ew);
+        ew->buttonSetStampImage = w;
+        vbox->AddChild(w);
+    }
     {
         Button::CreateArgs args;
         args.parent = parent;

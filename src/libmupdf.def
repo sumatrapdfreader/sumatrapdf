@@ -500,6 +500,7 @@ EXPORTS
 	pdf_set_annot_line
 	pdf_annot_line_ending_styles
 	pdf_set_annot_line_ending_styles
+	pdf_set_annot_stamp_image
 	pdf_annot_creation_date
 	pdf_annot_modification_date
 	pdf_set_annot_modification_date
