@@ -235,6 +235,20 @@ static void DrawMovePattern(MainWindow* win, Point pt, Size size) {
     ReleaseDC(hwnd, hdc);
 }
 
+static void DrawResizePattern(MainWindow* win, Rect r) {
+    HWND hwnd = win->hwndCanvas;
+    HDC hdc = GetDC(hwnd);
+    int x = r.x;
+    int y = r.y;
+    int dx = r.dx;
+    int dy = r.dy;
+    SetBrushOrgEx(hdc, x, y, nullptr);
+    HBRUSH hbrushOld = (HBRUSH)SelectObject(hdc, win->brMovePattern);
+    PatBlt(hdc, x, y, dx, dy, PATINVERT);
+    SelectObject(hdc, hbrushOld);
+    ReleaseDC(hwnd, hdc);
+}
+
 static void StartMouseDrag(MainWindow* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
     win->mouseAction = MouseAction::Dragging;
@@ -512,16 +526,19 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = win->annotationBeingDragged;
             if (annot) {
                 if (win->annotationBeingResized) {
-                    // During resize, calculate and apply new rectangle in real-time
                     win->dragPrevPos = pos;
-                    // Keep the resize cursor active during resize
                     SetCursorCached(GetCursorForResizeHandle((ResizeHandle)win->resizeHandle));
-                    
-                    // Calculate and apply the new rectangle based on current mouse position
+
                     RectF newRect = CalculateResizedRect(win, x, y);
-                    SetRect(annot, newRect);
-                    
-                    MainWindowRerender(win);
+                    int pageNo = PageNo(annot);
+                    Rect rScreen = dm->CvtToScreen(pageNo, newRect);
+
+                    if (win->hasResizePattern) {
+                        DrawResizePattern(win, win->lastResizePatternRect);
+                    }
+                    DrawResizePattern(win, rScreen);
+                    win->lastResizePatternRect = rScreen;
+                    win->hasResizePattern = true;
                 } else {
                     Size size = win->annotationBeingMovedSize;
                     DrawMovePattern(win, prevPos, size);
@@ -559,6 +576,9 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
 static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     Annotation* annot = win->annotationBeingDragged;
+    if (!annot) {
+        return win->annotationOriginalRect;
+    }
     int pageNo = PageNo(annot);
     
     // Convert screen coordinates to page coordinates
@@ -680,8 +700,10 @@ static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point& pt,
     win->resizeHandle = (int)handle;
     win->dragStart = pt;
     DisplayModel* dm = win->AsFixed();
+    CreateMovePatternLazy(win);
     RectF r = GetRect(annot);
     win->annotationOriginalRect = r;
+    win->hasResizePattern = false;
     SetCapture(win->hwndCanvas);
     win->mouseAction = MouseAction::Dragging;
     win->dragPrevPos = pt;
@@ -694,7 +716,6 @@ static bool StopAnnotationResize(MainWindow* win, int x, int y, bool aborted) {
 
     Annotation* annot = win->annotationBeingDragged;
     win->annotationBeingResized = false;
-    win->annotationBeingDragged = nullptr;
 
     // Release mouse capture and reset cursor
     if (GetCapture() == win->hwndCanvas) {
@@ -703,11 +724,23 @@ static bool StopAnnotationResize(MainWindow* win, int x, int y, bool aborted) {
     SetCursorCached(IDC_ARROW);
 
     if (aborted || !annot) {
+        if (win->hasResizePattern) {
+            DrawResizePattern(win, win->lastResizePatternRect);
+            win->hasResizePattern = false;
+        }
+        win->annotationBeingDragged = nullptr;
         return true;
     }
 
-    // The annotation has already been updated during mouse move,
-    // just notify and update toolbar
+    if (win->hasResizePattern) {
+        DrawResizePattern(win, win->lastResizePatternRect);
+        win->hasResizePattern = false;
+    }
+
+    RectF newRect = CalculateResizedRect(win, x, y);
+    SetRect(annot, newRect);
+    win->annotationBeingDragged = nullptr;
+
     NotifyAnnotationsChanged(win->CurrentTab()->editAnnotsWindow);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);

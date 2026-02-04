@@ -173,6 +173,8 @@ struct MainWindow {
     int resizeHandle = 0; // ResizeHandle enum casted to int
     bool annotationBeingResized = false;
     RectF annotationOriginalRect;
+    bool hasResizePattern = false;
+    Rect lastResizePatternRect;
 
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
