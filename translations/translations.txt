@@ -40,6 +40,7 @@ sl:Opomba %s. Ctrl+click za urejanje.
 sr-rs:%s белешка. Ctrl+клик за уређивање.
 sv:%s kommentar. Ctrl+klick för att ändra
 ta:%s குறிப்புரைகள். திருத்த Ctrl கிளிக் செய்யவும்.
+tr:%s açıklaması. Düzenlemek için Ctrl+tıklayın.
 tw:%s 註解。按 Ctrl+滑鼠左鍵 進行編輯。
 uz:%s izoh. Tahrirlash uchun Ctrl+bosish.
 :&About
@@ -531,7 +532,7 @@ sv:&Markör
 ta:&இடையெச்சக்குறி
 th:&ผู้ดูแล
 tl:&Kareta
-tr:&Karet
+tr:&İşaret
 tw:插入符號(&C)
 uk:&Каретка
 uz:&Karet
