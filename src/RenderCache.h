@@ -15,6 +15,9 @@ constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
 // i.e. one big page can use as much memory as lots of small pages
 #define MAX_BITMAPS_CACHED 64
 
+// max number of render threads we support
+#define MAX_RENDER_THREADS 64
+
 struct PageInfo;
 
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
@@ -91,9 +94,12 @@ struct RenderCache {
 
     PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
     int requestCount = 0;
-    PageRenderRequest* curReq = nullptr;
+    // one slot per render thread for tracking what each thread is currently rendering
+    PageRenderRequest* curReqs[MAX_RENDER_THREADS]{};
     CRITICAL_SECTION requestAccess;
-    HANDLE renderThread = nullptr;
+
+    int nMaxThreads = 1;           // max render threads (logical CPU count)
+    AtomicInt nActiveThreads = 0;  // threads currently alive
 
     Size maxTileSize{};
     bool isRemoteSession = false;
@@ -124,8 +130,8 @@ struct RenderCache {
     // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
 
-    bool ClearCurrentRequest();
-    bool GetNextRequest(PageRenderRequest* req);
+    bool ClearCurrentRequest(int slot);
+    bool GetNextRequest(PageRenderRequest* req, int slot);
     void Add(PageRenderRequest& req, RenderedBitmap* bmp);
 
     USHORT GetTileRes(DisplayModel* dm, int pageNo) const;
@@ -148,5 +154,12 @@ struct RenderCache {
 
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
+    void MaybeSpawnRenderThread();
     void LogCacheSize();
+};
+
+struct RenderThreadData {
+    RenderCache* cache;
+    int threadSlot;
+    bool isPermanent;
 };
