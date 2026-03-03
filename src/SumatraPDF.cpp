@@ -1352,11 +1352,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 void ReloadDocument(MainWindow* win, bool autoRefresh) {
     WindowTab* tab = win->CurrentTab();
 
-    // we can't reload while having annotations window open because
-    // that invalidates the mupdf objects that we hold in editAnnotsWindow
-    // TODO: a better approach would be to have a callback that editAnnotsWindow
-    // would register for and re-do its state
-    if (!tab || tab->editAnnotsWindow) {
+    if (!tab) {
         return;
     }
     // TODO: maybe should ensure it never is called for IsAboutTab() ?
@@ -1423,6 +1419,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         DeleteFileState(fs);
         return;
     }
+
+    // after reload, refresh the annotations list in the edit window
+    // so that it stays in sync with the new engine
+    UpdateAnnotationsList(tab->editAnnotsWindow);
 
     tab->reloadOnFocus = false;
 

@@ -864,7 +864,10 @@ static void UpdateUIForSelectedAnnotation(EditAnnotationsWindow* ew, Annotation*
     HidePerAnnotControls(ew);
     if (annot) {
         int itemNo = ew->annotations.Find(annot);
-        ReportIf(itemNo < 0);
+        if (itemNo < 0) {
+            // can happen if annotations list is out of sync (e.g. after reload)
+            return;
+        }
 
         DoRect(ew, annot);
         DoAuthor(ew, annot);
