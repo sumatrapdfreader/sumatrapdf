@@ -130,16 +130,14 @@ MainWindow::~MainWindow() {
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
     {
-        MarkHWNDDestroyed(tabsCtrl->hwnd);
         logf("~MainWindow: delete tabsCtrl: 0x%p, HWND: 0x%p\n", tabsCtrl, tabsCtrl->hwnd);
-        HWND hwndTemp = tabsCtrl->hwnd;
+        // Destroy the HWND first while tabsCtrl is still alive to handle
+        // any messages pumped by DestroyWindow. Then delete the C++ object.
+        // This prevents use-after-free when comctl32 dispatches messages
+        // during window destruction.
+        tabsCtrl->Destroy();
         delete tabsCtrl;
         tabsCtrl = nullptr;
-        Wnd* w = WndListFindByHwnd(hwndTemp);
-        if (w != nullptr) {
-            logf("~MainWindow: tabsCtrl->hwnd found in WndMap after delete tabsCtrl\n");
-            ReportIf(true);
-        }
     }
 
     // cbHandler is passed into DocController and must be deleted afterwards
