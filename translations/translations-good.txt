@@ -44,7 +44,7 @@ kw:# Istori Restren
 lt:# Failų istorija
 lv:# Failu vēsture
 mk:# Историја на датотеки
-ml:# ഫയൽ ചരിത്രം
+ml:ഫയൽ ചരിത്രം
 mm:# ဖိုင်မှတ်တမ်း
 my:# ဖိုင်မှတ်တမ်း
 ne:# फाइल इतिहास
@@ -117,7 +117,7 @@ kw:%s anotas. Ctrl+klyck rag golegi.
 lt:%s anotacija. Ctrl+paspaudimas redaguoti.
 lv:%s anotācija. Ctrl+klikšķis lai rediģētu.
 mk:%s анотација. Ctrl+клик за уредување.
-ml:%s വ്യാഖ്യാനം. എഡിറ്റ് ചെയ്യാൻ Ctrl+ക്ലിക്ക് ചെയ്യുക.
+ml:%s വ്യാഖ്യാനം. എഡിറ്റ് ചെയ്യാൻ Ctrl ക്ലിക്ക് ചെയ്യുക.
 mm:%s မှတ်ချက်။ တည်းဖြတ်ရန် Ctrl+နှိပ်ပါ။
 my:%s anotasi. Ctrl+klik untuk edit.
 ne:%s एनोटेशन। सम्पादन गर्न Ctrl+क्लिक गर्नुहोस्।
@@ -3162,6 +3162,7 @@ kw:&Settyansow
 lt:&Nuostatos
 lv:&Iestatījumi
 mk:&Поставувања
+ml:ക്രമീകരണങ്ങൾ
 my:&Tetapan
 ne:&सेटिङहरू
 nl:&Instellingen
@@ -4251,7 +4252,7 @@ kw:> Gordhyansow
 lt:> Komandos
 lv:> Komandas
 mk:> Команди
-ml:> കമാൻഡുകൾ
+ml:കമാൻഡുകൾ
 mm:> အမိန့်များ
 my:> ညွှန်ကြားချက်များ
 ne:> आदेशहरू
@@ -6803,7 +6804,7 @@ kw:Hwilas a Renewed
 lt:Tikrinti atnaujinimus
 lv:Pārbaudīt atjauninājumus
 mk:Провери за ажурирања
-ml:അപ്‌ഡേറ്റുകൾ പരിശോധിക്കുക
+ml:അപ്ഡേറ്റുകൾക്കായി പരിശോധിക്കുക
 mm:အပ်ဒိတ်များ စစ်ဆေးရန်
 my:အပ်ဒိတ်များရှိမရှိစစ်ဆေးရန်
 ne:अपडेटहरू जाँच गर्नुहोस्
@@ -31725,7 +31726,7 @@ kw:Diskwedhes yn restren
 lt:Rodyti aplankale
 lv:Rādīt mapē
 mk:Прикажи во папка
-ml:ഫോൾഡറിൽ കാണിക്കുക
+ml:ഫോൾഡറിൽ ഫയൽ കാണിക്കുക...
 mm:ဖိုင်တွဲတွင် ပြသပါ
 my:Tunjukkan dalam folder
 ne:फोल्डरमा देखाउनुहोस्
