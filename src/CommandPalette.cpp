@@ -227,6 +227,7 @@ struct CommandPaletteWnd : Wnd {
     void SwitchToFileHistory();
     void OnSelectionChange();
     void OnListDoubleClick();
+    void DrawListBoxItem(ListBox::DrawItemEvent* ev);
 };
 
 struct CommandPaletteBuildCtx {
@@ -1004,7 +1005,7 @@ static void PositionCommandPalette(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-static void DrawListBoxItem(ListBox::DrawItemEvent* ev) {
+void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
     auto m = (ListBoxModelCP*)lb->model;
     if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
@@ -1063,7 +1064,7 @@ static void DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     rc.right -= padX;
 
     // draw command name on the left, highlighting matched words
-    int nWords = gCommandPaletteWnd ? gCommandPaletteWnd->filterWords.Size() : 0;
+    int nWords = filterWords.Size();
     if (nWords == 0) {
         WCHAR* itemTextW = ToWStrTemp(itemText);
         uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
@@ -1074,7 +1075,7 @@ static void DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         int textLen = str::Leni(itemText);
         // marks which chars are part of a match
         u8* highlighted = AllocArrayTemp<u8>(textLen);
-        const StrVec& words = gCommandPaletteWnd->filterWords;
+        const StrVec& words = filterWords;
         for (int w = 0; w < nWords; w++) {
             const char* word = words.At(w);
             int wordLen = str::Leni(word);
@@ -1274,7 +1275,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         args.isRtl = IsUIRtl();
         auto c = new ListBox();
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
-        c->onDrawItem = MkFunc1Void<ListBox::DrawItemEvent*>(DrawListBoxItem);
+        c->onDrawItem =
+            MkMethod1<CommandPaletteWnd, ListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         c->Create(args);

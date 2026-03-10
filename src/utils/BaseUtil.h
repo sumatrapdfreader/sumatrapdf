@@ -758,6 +758,20 @@ struct Func1 {
     }
 };
 
+template <typename T, typename TArg, void (T::*Method)(TArg)>
+static void MethodTrampoline1(void* obj, TArg arg) {
+    (static_cast<T*>(obj)->*Method)(arg);
+}
+
+template <typename T, typename TArg, void (T::*Method)(TArg)>
+Func1<TArg> MkMethod1(T* obj) {
+    auto res = Func1<TArg>{};
+    using fptr = void (*)(void*, TArg);
+    res.fn = (fptr)&MethodTrampoline1<T, TArg, Method>;
+    res.userData = (void*)obj;
+    return res;
+}
+
 template <typename T1, typename T2>
 Func1<T2> MkFunc1(void (*fn)(T1*, T2), T1* d) {
     auto res = Func1<T2>{};
