@@ -1226,7 +1226,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         c->maxDx = 150;
         HWND ok = c->Create(args);
         ReportIf(!ok);
-        c->onTextChanged = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::QueryChanged>(this);
+        c->onTextChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::QueryChanged>(this);
         editQuery = c;
         vbox->AddChild(c);
     }
@@ -1239,28 +1239,28 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         {
             auto c = CreateStatic(hwnd, font, _TRA("# File History"));
             c->SetColors(colTxt, colBg);
-            c->onClick = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFileHistory>(this);
+            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFileHistory>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, _TRA("> Commands"));
             c->SetColors(colTxt, colBg);
-            c->onClick = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::SwitchToCommands>(this);
+            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToCommands>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, _TRA("@ Tabs"));
             c->SetColors(colTxt, colBg);
-            c->onClick = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
+            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, _TRA(": Everything"));
             c->SetColors(colTxt, colBg);
-            c->onClick = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
+            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
@@ -1273,13 +1273,13 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         args.font = font;
         args.isRtl = IsUIRtl();
         auto c = new ListBox();
-        c->onDoubleClick = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
+        c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem = MkFunc1Void<ListBox::DrawItemEvent*>(DrawListBoxItem);
         c->idealSizeLines = 32;
         c->SetInsetsPt(4, 0);
         c->Create(args);
         c->SetColors(colTxt, colBg);
-        c->onSelectionChanged = MkFunc0Method<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
+        c->onSelectionChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
         auto m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);
         c->SetModel(m);

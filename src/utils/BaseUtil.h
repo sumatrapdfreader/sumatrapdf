@@ -714,7 +714,7 @@ static void MethodTrampoline(void* obj) {
 }
 
 template <typename T, void (T::*Method)()>
-Func0 MkFunc0Method(T* obj) {
+Func0 MkMethod0(T* obj) {
     auto res = Func0{};
     res.fn = (void*)&MethodTrampoline<T, Method>;
     res.userData = (void*)obj;
