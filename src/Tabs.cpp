@@ -195,6 +195,7 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     WindowTab* newTab = new WindowTab(newWin);
     newTab->SetFilePath(tab->filePath);
     newWin->currentTabTemp = AddTabToWindow(newWin, newTab);
+    newWin->ctrl = nullptr;
     LoadArgs args(tab->filePath, newWin);
     args.forceReuse = true;
     args.noSavePrefs = true;
