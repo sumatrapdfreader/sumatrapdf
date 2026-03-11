@@ -1365,9 +1365,9 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
     if (!tab->IsDocLoaded()) {
         if (!autoRefresh) {
-            // TODO: seen a crash
             if (str::IsEmpty(tab->filePath)) {
-                logf("tab->filePath is empty\n");
+                logf("ReloadDocument: tab->filePath is empty, can't reload\n");
+                return;
             }
             LoadArgs args(tab->filePath, win);
             args.forceReuse = true;
@@ -1380,6 +1380,10 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
 
     HwndPasswordUI pwdUI(win->hwndFrame);
     const char* path = tab->filePath;
+    if (str::IsEmpty(path)) {
+        logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
+        return;
+    }
     logfa("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
     DocController* ctrl = CreateControllerForEngineOrFile(nullptr, path, &pwdUI, win);
     // We don't allow PDF-repair if it is an autorefresh because
