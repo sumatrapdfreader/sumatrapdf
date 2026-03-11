@@ -2174,7 +2174,9 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
 
     HwndSetFocus(win->hwndFrame);
-    if (!tab->IsAboutTab()) {
+    if (tab->type == WindowTab::Type::None) {
+        logf("LoadModelIntoTab: tab 0x%p has Type::None, skipping reload\n", tab);
+    } else if (!tab->IsAboutTab()) {
         if (gGlobalPrefs->lazyLoading && !tab->ctrl) {
             ReloadDocument(win, false);
         } else {
