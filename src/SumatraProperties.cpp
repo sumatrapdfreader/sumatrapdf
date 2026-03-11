@@ -543,6 +543,9 @@ static void GetProps(DocController* ctrl, PropertiesLayout* layoutData, bool ext
     ReportIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
+    if (!path) {
+        path = "unknown";
+    }
     layoutData->AddProperty(_TRA("File:"), path, true);
 
     DisplayModel* dm = ctrl->AsFixed();
