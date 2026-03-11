@@ -513,7 +513,7 @@ void RegisterSettingsForFileChanges() {
     ReportIf(gWatchedSettingsFile); // only call me once
     TempStr path = GetSettingsPathTemp();
     auto fn = MkFunc0Void(SchedulePrefsReload);
-    gWatchedSettingsFile = FileWatcherSubscribe(path, fn);
+    gWatchedSettingsFile = FileWatcherSubscribe(path, fn, true);
 }
 
 void UnregisterSettingsForFileChanges() {

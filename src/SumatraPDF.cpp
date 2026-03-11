@@ -1874,7 +1874,12 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     if (gGlobalPrefs->reloadModifiedDocuments) {
         auto fn = MkFunc0(ScheduleReloadTab, currTab);
-        currTab->watcher = FileWatcherSubscribe(path, fn, gGlobalPrefs->enableTeXEnhancements);
+        // was gGlobalPrefs->enableTeXEnhancements because people complained
+        // about network traffic. but then people complained it stopped working
+        // we'll now recommend ReloadModifiedDocuments = false for those
+        // who complain
+        bool enableManualCheck = true;
+        currTab->watcher = FileWatcherSubscribe(path, fn, enableManualCheck);
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
