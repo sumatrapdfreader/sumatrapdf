@@ -1623,6 +1623,10 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
     }
     UpdateWindow(win->hwndFrame);
 
+    if (gWindows.Size() == 1 && IsDebuggerPresent()) {
+        HwndToForeground(win->hwndFrame);
+    }
+
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     ToolbarUpdateStateForWindow(win, true);
 
