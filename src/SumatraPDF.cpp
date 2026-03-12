@@ -2140,6 +2140,10 @@ void LoadModelIntoTab(WindowTab* tab) {
         // display the notification ASAP
         win->RedrawAll(true);
     }
+    // ShowWindow / RedrawAll can pump messages, potentially destroying win
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
     CloseDocumentInCurrentTab(win, true, false);
 
     win->currentTabTemp = tab;
