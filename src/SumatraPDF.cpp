@@ -2779,7 +2779,8 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     }
 
     tabCount = win->TabCount();
-    if (tabCount == 1 && win->GetTab(0)->IsAboutTab()) {
+    WindowTab* lastTab = (tabCount == 1) ? win->GetTab(0) : nullptr;
+    if (lastTab && lastTab->type == WindowTab::Type::About) {
         // showing only home page tab so remove it
         // if there are other windows, close this one
         if (gWindows.size() > 1) {
