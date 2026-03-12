@@ -32,6 +32,7 @@
 #include "Theme.h"
 #include "AppSettings.h"
 #include "DarkModeSubclass.h"
+#include "utils/Log.h"
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2
@@ -40,16 +41,18 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
+static bool gShowPromotion = false;
+
 constexpr const char* promoteBuiltIn = R"(
 [
     Name = Edna
     URL = https://edna.arslexis.io
-    Info = Note taking app for develelopers
+    Info = Note taking web app for power users
 ]
 [
-    Name = "MarkLexis"
+    Name = MarkLexis
     URL = https://marklexis.arslexis.io
-    Info = Best bookmarking web application
+    Info = Bookmarking web application
 ]
 )";
 
@@ -658,6 +661,14 @@ struct HomePageLayout {
     VirtWndText* openDoc = nullptr;
     VirtWndText* hideShowFreqRead = nullptr;
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
+
+    // promotion
+    Promote* promoteSelected = nullptr; // not owned, points into promote list
+    Rect rcPromote;                     // background rect
+    Rect rcPromoteTitle;                // "Try my other software"
+    Rect rcPromoteName;                 // name link
+    Rect rcPromoteInfo;                 // info text
+
     ~HomePageLayout();
 };
 
@@ -701,7 +712,9 @@ static Promote* ParsePromote(const char* s) {
 constexpr int kOpenDocumentYShift = 7;
 
 void LayoutHomePage(HomePageLayout& l) {
-    l.promote = ParsePromote(promoteBuiltIn);
+    if (!l.promote) {
+        l.promote = ParsePromote(promoteBuiltIn);
+    }
 
     Vec<FileState*> fileStates;
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
@@ -835,6 +848,53 @@ void LayoutHomePage(HomePageLayout& l) {
             win->staticLinks.Append(thumb.sl);
         }
     }
+
+    // layout promotion at the bottom
+    if (l.promote) {
+        int n = ListLen(l.promote);
+        int idx = rand() % n;
+        Promote* p = l.promote;
+        for (int i = 0; i < idx; i++) {
+            p = p->next;
+        }
+        l.promoteSelected = p;
+
+        HFONT fontPromoTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        HFONT fontPromoName = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        HFONT fontPromoInfo = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+
+        Rect rcClient = ClientRect(win->hwndCanvas);
+        int padding = DpiScale(hdc, 8);
+
+        const char* titleTxt = "Try my other software";
+        Size titleSize = HdcMeasureText(hdc, titleTxt, DT_LEFT, fontPromoTitle);
+
+        Size nameSize = HdcMeasureText(hdc, p->name, DT_LEFT, fontPromoName);
+        TempStr infoTxt = str::JoinTemp(" \xE2\x80\x94 ", p->info);
+        Size infoSize = HdcMeasureText(hdc, infoTxt, DT_LEFT, fontPromoInfo);
+
+        int contentDx = nameSize.dx + infoSize.dx;
+        int titlePadX = DpiScale(hdc, 8);
+        int titlePadY = DpiScale(hdc, 4);
+        int promoteDy = titleSize.dy / 2 + padding + std::max(nameSize.dy, infoSize.dy) + 2 * padding;
+
+        int promoteY = rcClient.dy - promoteDy;
+
+        l.rcPromote = {0, promoteY, rcClient.dx, promoteDy};
+
+        int titleX = (rcClient.dx - titleSize.dx) / 2;
+        int titleY = promoteY - titleSize.dy / 2;
+        l.rcPromoteTitle = {titleX - titlePadX, titleY - titlePadY, titleSize.dx + 2 * titlePadX,
+                            titleSize.dy + titlePadY};
+
+        int contentY = titleY + titleSize.dy + padding;
+        int contentStartX = (rcClient.dx - contentDx) / 2;
+        l.rcPromoteName = {contentStartX, contentY, nameSize.dx, nameSize.dy};
+        l.rcPromoteInfo = {contentStartX + nameSize.dx, contentY, infoSize.dx, infoSize.dy};
+
+        auto slPromo = new StaticLink(l.rcPromoteName, p->url, p->url);
+        win->staticLinks.Append(slPromo);
+    }
 }
 
 static void GetFileStateIcon(FileState* fs) {
@@ -935,6 +995,57 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
         Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
         auto sl = new StaticLink(rcFreqRead, kLinkHideList);
         win->staticLinks.Append(sl);
+    }
+
+    // draw promotion
+    if (gShowPromotion && l.promoteSelected) {
+        Promote* p = l.promoteSelected;
+#if 0
+        {
+            Rect rcWin = ClientRect(win->hwndCanvas);
+            logf("DrawHomePageLayout: window size: %d x %d\n", rcWin.dx, rcWin.dy);
+            logf("  promote: name='%s' url='%s' info='%s'\n", p->name, p->url, p->info);
+            logf("  rcPromote:      x=%d y=%d dx=%d dy=%d\n", l.rcPromote.x, l.rcPromote.y, l.rcPromote.dx,
+                 l.rcPromote.dy);
+            logf("  rcPromoteTitle: x=%d y=%d dx=%d dy=%d\n", l.rcPromoteTitle.x, l.rcPromoteTitle.y,
+                 l.rcPromoteTitle.dx, l.rcPromoteTitle.dy);
+            logf("  rcPromoteName:  x=%d y=%d dx=%d dy=%d\n", l.rcPromoteName.x, l.rcPromoteName.y, l.rcPromoteName.dx,
+                 l.rcPromoteName.dy);
+            logf("  rcPromoteInfo:  x=%d y=%d dx=%d dy=%d\n", l.rcPromoteInfo.x, l.rcPromoteInfo.y, l.rcPromoteInfo.dx,
+                 l.rcPromoteInfo.dy);
+        }
+#endif
+        //COLORREF promoBgCol = RGB(232, 232, 240);
+        COLORREF promoBgCol = RGB(255, 255, 255);
+        FillRect(hdc, l.rcPromote, promoBgCol);
+
+        HFONT fontPromoTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        HFONT fontPromoName = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        HFONT fontPromoInfo = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+
+        uint fmt = DT_LEFT | DT_NOCLIP;
+
+        // draw title background and text
+        FillRect(hdc, l.rcPromoteTitle, promoBgCol);
+        int titlePadX = DpiScale(hdc, 8);
+        int titlePadY = DpiScale(hdc, 4);
+        Rect rcTitleTxt = {l.rcPromoteTitle.x + titlePadX, l.rcPromoteTitle.y + titlePadY,
+                           l.rcPromoteTitle.dx - 2 * titlePadX, l.rcPromoteTitle.dy - titlePadY};
+        SetTextColor(hdc, ThemeWindowTextColor());
+        HdcDrawText(hdc, "Try my other software", rcTitleTxt, fmt, fontPromoTitle);
+
+        // draw name as link
+        color = ThemeWindowLinkColor();
+        SetTextColor(hdc, color);
+        SelectObject(hdc, penLinkLine);
+        HdcDrawText(hdc, p->name, l.rcPromoteName, fmt, fontPromoName);
+        int underlineY = l.rcPromoteName.y + l.rcPromoteName.dy - 3;
+        DrawLine(hdc, Rect(l.rcPromoteName.x, underlineY, l.rcPromoteName.dx, 0));
+
+        // draw info
+        SetTextColor(hdc, ThemeWindowTextColor());
+        TempStr infoTxt = str::JoinTemp(" \xE2\x80\x94 ", p->info);
+        HdcDrawText(hdc, infoTxt, l.rcPromoteInfo, fmt, fontPromoInfo);
     }
 }
 
