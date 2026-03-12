@@ -17,7 +17,7 @@ CmdClose,"Ctrl + W, Ctrl + F4",Close Document,
 CmdCloseCurrentDocument,q,Close Current Document,
 CmdCommandPalette,Ctrl + K,Command Palette,
 CmdDuplicateInNewWindow,Shift + Ctrl + N,Open Current Document In New Window,
-CmdDuplicateInNewTab,,Open Current Document In New Tab,
+CmdDuplicateInNewTab,,Open Current Document In New Tab,ver 3.6+
 CmdExit,Ctrl + Q,Exit Application,
 CmdMoveFrameFocus,F6,Move Frame Focus,
 CmdNewWindow,Ctrl + N,Open New SumatraPDF Window,
@@ -81,7 +81,7 @@ CmdToggleScrollbars,,Toggle Scrollbars,
 CmdToggleToolbar,F8,Toggle Toolbar,
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
-CmdToggleLinks,,Toggle Show Links, Toggle drawing blue rectangle around links
+CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
 ```
 
 ## Tabs
