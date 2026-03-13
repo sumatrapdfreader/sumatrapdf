@@ -1,9 +1,0 @@
-go 1.24.3
-
-use (
-	.
-	./tools/logview
-	./tools/logview-cli
-	./tools/logview-web
-	./tools/regress
-)
