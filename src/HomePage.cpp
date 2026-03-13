@@ -43,7 +43,7 @@
 
 static bool gShowPromotion = false;
 
-constexpr const char* promoteBuiltIn = R"(
+constexpr const char* promoBuiltIn = R"(
 [
     Name = Edna
     URL = https://edna.arslexis.io
@@ -726,7 +726,7 @@ constexpr int kOpenDocumentYShift = 7;
 
 void LayoutHomePage(HomePageLayout& l) {
     if (!l.promote) {
-        auto s = promoFromServer ? promoFromServer : promoteBuiltIn;
+        auto s = promoFromServer ? promoFromServer : promoBuiltIn;
         l.promote = ParsePromoteFromString(s);
     }
 

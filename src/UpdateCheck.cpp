@@ -102,6 +102,13 @@ PortableExe64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prere
 PortableExe32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel.exe
 PortableZip64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64.zip
 PortableZip32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel.zip
+
+[Promo]
+[
+    Name = MarkLexis
+    URL = https://marklexis.arslexis.io
+    Info = Bookmarking web application
+]
 */
 static UpdateInfo* ParseUpdateInfo(const char* d) {
     // if a user configures os-wide proxy that is not a regular ie proxy
