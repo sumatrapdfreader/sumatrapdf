@@ -20,4 +20,6 @@ constexpr const char* kLinkOpenFile = "<File,Open>";
 constexpr const char* kLinkShowList = "<View,ShowList>";
 constexpr const char* kLinkHideList = "<View,HideList>";
 
+void SetPromoString(const char*);
+
 void DrawHomePage(MainWindow* win, HDC hdc);

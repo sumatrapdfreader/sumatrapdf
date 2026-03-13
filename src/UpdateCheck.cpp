@@ -28,6 +28,7 @@
 #include "Notifications.h"
 #include "MainWindow.h"
 #include "SumatraDialogs.h"
+#include "HomePage.h"
 #include "UpdateCheck.h"
 
 #include "utils/Log.h"
@@ -115,6 +116,13 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
         return nullptr;
     }
     AutoDelete delRoot(root);
+
+    {
+        auto promoString = SerializeSquareTreeNode(root->GetChild("Promo"));
+        SetPromoString(promoString);
+        str::Free(promoString);
+    }
+
     SquareTreeNode* node = root->GetChild("SumatraPDF");
     if (!node) {
         return nullptr;
@@ -151,10 +159,6 @@ static UpdateInfo* ParseUpdateInfo(const char* d) {
 }
 
 static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
-    if (gIsStoreBuild) {
-        // I assume store will take care of updates
-        return false;
-    }
     if (gUpdateCheckInProgress) {
         logf("CheckForUpdate: skipping because gUpdateCheckInProgress\n");
         return false;
@@ -364,6 +368,10 @@ static void DownloadUpdateAsync(DownloadUpdateAsyncData* data) {
 }
 
 static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheckType) {
+    if (gIsStoreBuild) {
+        // I assume store will take care of updates
+        return false;
+    }
     auto latestVer = updateInfo->latestVer;
     const char* myVer = UPDATE_CHECK_VERA;
     // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
@@ -480,6 +488,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
             uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
             MsgBox(hwndParent, _TRA("You have the latest version."), _TRA("SumatraPDF Update"), flags);
         }
+        delete updateInfo;
         return 0;
     }
 
@@ -488,6 +497,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", data->Get());
         RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
+        delete updateInfo;
         return 0;
     }
 
@@ -534,6 +544,7 @@ static void BuildUpdateURL(str::Str& url, const char* baseURL, UpdateCheck updat
     }
     url.Append("&simd=");
     url.Append(LatestSupportedSIMD());
+    url.Append("&withPromo");
     if (UpdateCheck::UserInitiated == updateCheckType) {
         url.Append("&force");
     }

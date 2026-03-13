@@ -207,6 +207,43 @@ static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) 
     return node;
 }
 
+static void SerializeRec(SquareTreeNode* node, str::Str& s, int indent) {
+    int n = node->data.Size();
+    for (int i = 0; i < n; i++) {
+        SquareTreeNode::DataItem& item = node->data.At(i);
+        for (int j = 0; j < indent; j++) {
+            s.AppendChar(' ');
+            s.AppendChar(' ');
+        }
+        if (item.child) {
+            s.Append(item.key);
+            s.Append(" [\n");
+            SerializeRec(item.child, s, indent + 1);
+            for (int j = 0; j < indent; j++) {
+                s.AppendChar(' ');
+                s.AppendChar(' ');
+            }
+            s.Append("]\n");
+        } else {
+            s.Append(item.key);
+            s.Append(" = ");
+            if (item.str) {
+                s.Append(item.str);
+            }
+            s.AppendChar('\n');
+        }
+    }
+}
+
+const char* SerializeSquareTreeNode(SquareTreeNode* node) {
+    if (!node) {
+        return nullptr;
+    }
+    str::Str s;
+    SerializeRec(node, s, 0);
+    return s.StealData();
+}
+
 SquareTreeNode* ParseSquareTree(const char* s) {
     TempStr data = strconv::UnknownToUtf8Temp(s);
     if (!data) {

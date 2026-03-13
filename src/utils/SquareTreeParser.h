@@ -30,3 +30,4 @@ struct SquareTreeNode {
 };
 
 SquareTreeNode* ParseSquareTree(const char* s);
+const char* SerializeSquareTreeNode(SquareTreeNode*);

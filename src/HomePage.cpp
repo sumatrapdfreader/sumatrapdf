@@ -56,6 +56,9 @@ constexpr const char* promoteBuiltIn = R"(
 ]
 )";
 
+// TODO: leaks if set
+const char* promoFromServer = nullptr;
+
 constexpr COLORREF kAboutBorderCol = RGB(0, 0, 0);
 
 constexpr int kAboutLeftRightSpaceDx = 8;
@@ -110,6 +113,11 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {nullptr, nullptr, nullptr}};
 
 static Vec<StaticLink*> gStaticLinks;
+
+void SetPromoString(const char* s) {
+    if (!s) return;
+    str::ReplaceWithCopy(&promoFromServer, s);
+}
 
 static TempStr GetAppVersionTemp() {
     char* s = str::DupTemp("v" CURR_VERSION_STRA);
@@ -678,11 +686,7 @@ HomePageLayout::~HomePageLayout() {
     ListDelete(promote);
 }
 
-static Promote* ParsePromote(const char* s) {
-    if (str::IsEmptyOrWhiteSpace(s)) {
-        return nullptr;
-    }
-    SquareTreeNode* root = ParseSquareTree(s);
+static Promote* ParsePromoteFromTree(SquareTreeNode* root) {
     if (!root) {
         return nullptr;
     }
@@ -705,15 +709,25 @@ static Promote* ParsePromote(const char* s) {
         }
         ListInsertEnd(&first, p);
     }
-    delete root;
     return first;
+}
+
+static Promote* ParsePromoteFromString(const char* s) {
+    if (str::IsEmptyOrWhiteSpace(s)) {
+        return nullptr;
+    }
+    SquareTreeNode* root = ParseSquareTree(s);
+    auto res = ParsePromoteFromTree(root);
+    delete root;
+    return res;
 }
 
 constexpr int kOpenDocumentYShift = 7;
 
 void LayoutHomePage(HomePageLayout& l) {
     if (!l.promote) {
-        l.promote = ParsePromote(promoteBuiltIn);
+        auto s = promoFromServer ? promoFromServer : promoteBuiltIn;
+        l.promote = ParsePromoteFromString(s);
     }
 
     Vec<FileState*> fileStates;
