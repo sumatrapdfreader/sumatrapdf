@@ -4898,6 +4898,9 @@ static void LaunchBrowserWithSelection(WindowTab* tab, const char* urlPattern) {
     // ${userLang} and and ${selectin} are typed by user in settings file
     // to be shomewhat resilient against typos, we'll accept a different case
     const char* lang = trans::GetCurrentLangCode();
+    if (str::Eq(lang, "kr")) {
+        lang = "ko";
+    }
     auto contryCode = GetISO639LangCodeFromLang(lang);
     TempStr uri = str::ReplaceNoCaseTemp(urlPattern, kUserLangStr, contryCode);
     uri = str::ReplaceNoCaseTemp(uri, kSelectionStr, encodedSelection);

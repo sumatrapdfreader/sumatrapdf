@@ -1015,7 +1015,7 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
                  l.rcPromoteInfo.dy);
         }
 #endif
-        //COLORREF promoBgCol = RGB(232, 232, 240);
+        // COLORREF promoBgCol = RGB(232, 232, 240);
         COLORREF promoBgCol = RGB(255, 255, 255);
         FillRect(hdc, l.rcPromote, promoBgCol);
 
