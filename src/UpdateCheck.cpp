@@ -492,8 +492,7 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
             RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
-            uint flags = MB_ICONINFORMATION | MB_OK | MB_SETFOREGROUND | MB_TOPMOST;
-            MsgBox(hwndParent, _TRA("You have the latest version."), _TRA("SumatraPDF Update"), flags);
+            ShowTemporaryNotification(hwndParent, _TRA("You have the latest version."), 5 * 1000);
         }
         delete updateInfo;
         return 0;
