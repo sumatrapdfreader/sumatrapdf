@@ -1,7 +1,16 @@
-import { existsSync, rmSync, readdirSync, statSync, readFileSync, writeFileSync, mkdirSync, copyFileSync } from "node:fs";
+import {
+  existsSync,
+  rmSync,
+  readdirSync,
+  statSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  copyFileSync,
+} from "node:fs";
 import { join, resolve, extname } from "node:path";
 import { $ } from "bun";
-import { isGitClean } from "./util.ts";
+import { isGitClean } from "./util";
 
 function getWebsiteDir(): string {
   return resolve(join("..", "hack", "webapps", "sumatra-website"));
@@ -20,7 +29,6 @@ async function runGitInDir(dir: string, ...args: string[]): Promise<string> {
   }
   return out;
 }
-
 
 function getCurrentBranch(dir: string): string {
   const proc = Bun.spawnSync(["git", "branch"], {
@@ -127,6 +135,13 @@ async function main() {
   rmSync(dstDir, { recursive: true, force: true });
   copyFilesRecur(dstDir, srcDir);
 
+  {
+    const dst = join(dstDir, "SumatraPDF-documentation.md");
+    const src = join(dstDir, "SumatraPDF-documentation-website.md");
+    copyFileNormalized(dst, src);
+    rmSync(src);
+  }
+
   // copy CSS and JS files
   const cssJsFiles = ["notion.css", "sumatra.css", "gen_toc.js"];
   for (const name of cssJsFiles) {
@@ -138,7 +153,7 @@ async function main() {
   // copy search files
   const searchFiles = ["gen_docs.search.js", "gen_docs.search.html"];
   for (const name of searchFiles) {
-    const srcPath = join("cmd", name);
+    const srcPath = join("cmd", "html-helpers", name);
     const dstPath = join(websiteDir, "www", name);
     copyFileNormalized(dstPath, srcPath);
   }

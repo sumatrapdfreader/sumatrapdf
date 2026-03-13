@@ -1,6 +1,6 @@
 // markdown-it 14.1.0 - https://github.com/markdown-it/markdown-it (MIT license)
 // vendored in cmd/markdown-it.min.js from https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js
-const MarkdownIt: any = require("./markdown-it.min.js");
+import MarkdownIt from "./markdown-it.min.js";
 import {
   readFileSync,
   writeFileSync,
@@ -21,18 +21,20 @@ const wwwOutDir = join(docsDir, "www");
 const mdProcessed = new Map<string, string>();
 const mdToProcess: string[] = [];
 
-const searchJS = `<script>${readFileSync(join("cmd", "gen_docs.search.js"), "utf-8")}</script>`;
-const searchHTML = readFileSync(join("cmd", "gen_docs.search.html"), "utf-8");
+const searchJS = `<script>${readFileSync(join("cmd", "html-helpers", "gen_docs.search.js"), "utf-8")}</script>`;
+const searchHTML = readFileSync(join("cmd", "html-helpers", "gen_docs.search.html"), "utf-8");
 const tmplManual = readFileSync(join(docsDir, "manual.tmpl.html"), "utf-8");
 
 const h1BreadcrumbsStart = `
-\t<div class="breadcrumbs">
-\t\t<div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div>
-\t\t<div>/</div>
-\t\t<div>`;
+  <div class="breadcrumbs">
+    <div><a href="SumatraPDF-documentation.html">SumatraPDF documentation</a></div>
+    <div>/</div>
+  <div>`;
 const h1BreadcrumbsEnd = `</div>
 </div>
 `;
+
+let breadCrumbs = "";
 
 function slugify(text: string): string {
   return text
@@ -133,7 +135,7 @@ function preProcess(text: string): string {
 
 function getInlineText(token: MarkdownIt.Token): string {
   if (!token.children) return token.content || "";
-  return token.children.map((t) => t.content || "").join("");
+  return token.children.map((t: MarkdownIt.Token) => t.content || "").join("");
 }
 
 function mdToHTML(name: string): string {
@@ -150,7 +152,7 @@ function mdToHTML(name: string): string {
   md.renderer.rules.paragraph_close = () => "</div>\n";
 
   // render ```commands fenced blocks as CSV tables
-  md.renderer.rules.fence = (tokens, idx) => {
+  md.renderer.rules.fence = (tokens: MarkdownIt.Token[], idx: number) => {
     const t = tokens[idx];
     if (t.info.trim() === "commands") return genCsvTableHTML(parseCsv(t.content));
     return `<pre><code>${md.utils.escapeHtml(t.content)}</code></pre>\n`;
@@ -160,7 +162,7 @@ function mdToHTML(name: string): string {
   let seenFirstH1 = false;
   let h1Mode: "skip" | "breadcrumb" | null = null;
 
-  md.renderer.rules.heading_open = (tokens, idx) => {
+  md.renderer.rules.heading_open = (tokens: MarkdownIt.Token[], idx: number) => {
     const tok = tokens[idx];
     const level = Number(tok.tag[1]);
     const text = getInlineText(tokens[idx + 1]);
@@ -180,7 +182,7 @@ function mdToHTML(name: string): string {
     return `<${tok.tag} id="${id}">`;
   };
 
-  md.renderer.rules.heading_close = (tokens, idx) => {
+  md.renderer.rules.heading_close = (tokens: MarkdownIt.Token[], idx: number) => {
     const tok = tokens[idx];
     if (h1Mode === "skip") {
       h1Mode = null;
@@ -196,7 +198,7 @@ function mdToHTML(name: string): string {
   };
 
   // rewrite links: .md → .html, external links get target="_blank"
-  md.renderer.rules.link_open = (tokens, idx, options, _env, self) => {
+  md.renderer.rules.link_open = (tokens: MarkdownIt.Token[], idx: number, options: any, _env: any, self: any) => {
     const tok = tokens[idx];
     let href = tok.attrGet("href") ?? "";
 
@@ -227,7 +229,7 @@ function mdToHTML(name: string): string {
   };
 
   // validate image references exist
-  md.renderer.rules.image = (tokens, idx, options, _env, self) => {
+  md.renderer.rules.image = (tokens: MarkdownIt.Token[], idx: number, options: any, _env: any, self: any) => {
     const tok = tokens[idx];
     const src = tok.attrGet("src") ?? "";
     if (!src.startsWith("https://") && !src.startsWith("http://")) {
@@ -246,8 +248,6 @@ function mdToHTML(name: string): string {
   innerHTML = innerHTML.replace(/<!--skip-->[\s\S]*?<!--\/skip-->/g, "");
 
   innerHTML = `<div class="notion-page">${innerHTML}</div>`;
-  innerHTML += "<hr>";
-  innerHTML += `<center><a href="https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/md/${name}" target="_blank" class="suggest-change">edit</a></center>`;
 
   let html = tmplManual.replace("{{InnerHTML}}", innerHTML);
   const title = getHTMLFileName(name).replace(".html", "").replace(/-/g, " ");

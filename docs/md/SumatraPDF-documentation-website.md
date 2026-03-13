@@ -45,6 +45,45 @@
 
 [Version history](Version-history.md)
 
+## Misc
+
+[Contribute translation](Contribute-translation.md)
+
+[How to submit bug reports](How-to-submit-bug-reports.md)
+
+[Submit crash report](Submit-crash-report.md)
+
+[Reporting printing bugs](Reporting-printing-bugs.md)
+
+[Update check doesnt work?](Update-check-doesnt-work.md)
+
+[Failed to load libmupdf](Failed-to-load-libmupdf.md)
+
+[Corrupted installation](Corrupted-installation.md)
+
+[Why only Windows?](Why-only-Windows.md)
+
+## Information for developers
+
+[Contribute to SumatraPDF](Contribute-to-SumatraPDF.md)
+
+[Logview](Logview.md)
+
+[Build system](Build-system.md)
+
+[Debugging Sumatra](Debugging-Sumatra.md)
+
+[How we store settings](How-we-store-settings.md)
+
+[Using DrMemory](Using-DrMemory.md)
+
+[Using OpenCppCoverage](Using-OpenCppCoverage.md)
+
+[Is there a virus in Sumatra sources?](Is-there-a-virus-in-Sumatra-sources.md)
+
+[Accessibility and Text-to-Speech](Accessibility-and-Text-to-Speech.md)
+
+[Source code downloads](Source-code-downloads.md)
 :columns
 
 ## Downloads

@@ -1,12 +1,6 @@
 # Version history
 
-## [RSS/Atom feed](https://github.com/sumatrapdfreader/sumatrapdf/releases)
-
-## Version history
-
-### next (3.6)
-
-Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
+## 3.6
 
 - add `DisableAntiAlias` advanced setting and `CmdToggleAntiAlias` command
 - add `CmdShowAnnotations`, `CmdHideAnnotations`, `CmdToggleShowAnnotations` commands for temporarily hiding / showing annotations
@@ -63,19 +57,19 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - make built-in keyboard shortcuts work on non-us keyboards (cyrillic , hebrew etc.)
 - add `CmdDuplicateInNewTab` (`Open Current Document In New Tab`) command
 
-### 3.5.2 (2023-10-25)
+## 3.5.2 (2023-10-25)
 
 - fix not showing tab text
 - make menus in dark themes look more like standard menus (bigger padding)
 - fix Bookmarks for folder showing bad file names
 - update translations
 
-### 3.5.1 (2023-10-24)
+## 3.5.1 (2023-10-24)
 
 - fix uninstaller crash
 - disable lazy loading of files when restoring a session
 
-### 3.5 (2023-10-23)
+## 3.5 (2023-10-23)
 
 - Arm 64-bit builds
 - dark mode (menu `Settings / Theme` or `Ctrl + K` command `Select next theme`)
@@ -106,21 +100,21 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - add `-disable-auto-rotation` cmd-line print option
 - add `-dde` cmd-line option
 
-### 3.4.6 (2022-06-08)
+## 3.4.6 (2022-06-08)
 
 - fix crashes
 - fix hang in Fit Content mode and Bookmark links
 
-### 3.4.5 (2022-06-05)
+## 3.4.5 (2022-06-05)
 
 - fix crashes
 
-### 3.4.4 (2022-06-02)
+## 3.4.4 (2022-06-02)
 
 - restore `HOME` and `END` in find edit field
 - fix crashes
 
-### 3.4.3 (2022-05-29)
+## 3.4.3 (2022-05-29)
 
 - re-enable `Backspace` in edit field
 - fix installation for all users when using custom installation directory
@@ -128,17 +122,17 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - fix display of some PDF images
 - fix slow loading of some ePub files
 
-### 3.4.2 (2022-05-27)
+## 3.4.2 (2022-05-27)
 
 - make keyboard accelerators work when tree view has focus
 - fix `-set-color-range` and `-bg-color` replacing `MainWindowBackground`
 - fix crash with incorrectly defined selection handlers
 
-### 3.4.1 (2022-05-25)
+## 3.4.1 (2022-05-25)
 
 - fix downloading of symbols for better crash reports
 
-### 3.4 (2022-05-24)
+## 3.4 (2022-05-24)
 
 - [Command Palette](Command-Palette.md)
 - [customizable keyboard shortcuts](Customizing-keyboard-shortcuts.md)
@@ -159,20 +153,20 @@ Changes in [pre-release builds](https://www.sumatrapdfreader.org/prerelease):
 - support opening `.heic` image files (if Windows heic codec is installed)
 - add experimental smooth scrolling (enabled with `SmoothScroll` advanced setting)
 
-### 3.3.3 (2021-07-20)
+## 3.3.3 (2021-07-20)
 
 - fix a crash in PdfFilter.dll
 
-### 3.3.2 (2021-07-19)
+## 3.3.2 (2021-07-19)
 
 - restore showing Table Of Contents for .chm files
 - fix crashes
 
-### 3.3.1 (2021-07-14)
+## 3.3.1 (2021-07-14)
 
 - fix rotation in DjVu documents
 
-### 3.3 (2021-07-06)
+## 3.3 (2021-07-06)
 
 - added support for adding / removing / editing annotations in PDF files. Read [the tutorial](Editing-annotations.md)
 - new toolbar
@@ -200,7 +194,7 @@ Minor improvements and bug-fixes:
 - restore ability to save embedded files (fixes [#1557](https://github.com/sumatrapdfreader/sumatrapdf/issues/1557))
 - `Alt + Space` opens a sys menu
 
-### 3.2 (2020-03-15)
+## 3.2 (2020-03-15)
 
 This release upgrades the core PDF parsing and rendering library mupdf to the latest version. This fixes PDF rendering bugs and improves performance.
 
@@ -222,19 +216,19 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 [https://www.sumatrapdfreader.org/download-prev.html](https://www.sumatrapdfreader.org/download-prev.html)
 
-### 3.1.2 (2016-08-14)
+## 3.1.2 (2016-08-14)
 
 - fixed issue with icons being purple in latest Windows 10 update
 - tell Windows 10 that SumatraPDF can open supported file types
 
-### 3.1.1 (2015-11-02)
+## 3.1.1 (2015-11-02)
 
 - (re)add support for old processors that don’t have SSE2
 - support newer versions of unrar.dll
 - allow keeping the browser plugin if it’s already installed
 - crash fixes
 
-### 3.1 (2015-10-24)
+## 3.1 (2015-10-24)
 
 - 64bit builds
 - all documents are restored at startup if a window with multiple tabs is closed (or if closing happened through File -> Exit); this can be disabled through the `RestoreSession` advanced setting
@@ -242,7 +236,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - scrolling with touchpad (e.g. on Surface Pro) now works
 - many crash and other bug fixes
 
-### 3.0 (2014-10-18)
+## 3.0 (2014-10-18)
 
 - Tabs! Enabled by default. Use Settings/Options... menu to go back to the old UI
 - support table of contents and links in ebook UI
@@ -258,16 +252,16 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - replaced non-free UnRAR with a free RAR extraction library. If some CBR files fail to open for you, download unrar.dll from https://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe
 - deprecated browser plugin. We keep it if it was installed in earlier version
 
-### 2.5.2 (2014-05-13)
+## 2.5.2 (2014-05-13)
 
 - use less memory for comic book files
 - PDF rendering fixes
 
-### 2.5.1 (2014-05-07)
+## 2.5.1 (2014-05-07)
 
 - hopefully fix frequent ebook crashes
 
-### 2.5 (2014-05-05)
+## 2.5 (2014-05-05)
 
 - 2 page view for ebooks
 - new keybindings:
@@ -279,7 +273,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - left/right clicking no longer changes pages in fullscreen mode (use Presentation mode if you rely on this feature)
 - fixed multiple crashes and made multiple minor improvements
 
-### 2.4 (2013-10-01)
+## 2.4 (2013-10-01)
 
 - full-screen mode for ebooks (Ctrl-L)
 - new key bindings:
@@ -289,15 +283,15 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - support for RAR5 compressed comic books
 - fixed multiple crashes
 
-### 2.3.2 (2013-05-25)
+## 2.3.2 (2013-05-25)
 
 - fix changing a language via Settings/Change Language
 
-### 2.3.1 (2013-05-23)
+## 2.3.1 (2013-05-23)
 
 - don't require SSE2 (to support old computers without SSE2 support)
 
-### 2.3 (2013-05-22)
+## 2.3 (2013-05-22)
 
 - greater configurability via **[advanced settings](https://www.sumatrapdfreader.org/settings.html)**
 - "Go To Page" in ebook ui
@@ -312,13 +306,13 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - reduced size. Installer is ~1MB smaller
 - downside: this release no longer supports very old processors without **[SSE2 instructions](https://en.wikipedia.org/wiki/SSE2)**. Using SSE2 makes Sumatra faster. If you have an old computer without SSE2, you need to use 2.2.1.
 
-### 2.2.1 (2013-01-12)
+## 2.2.1 (2013-01-12)
 
 - fixed ebooks sometimes not remembering the viewing position
 - fixed Sumatra not exiting when opening files from a network drive
 - fixes for most frequent crashes and PDF parsing robustness fixes
 
-### 2.2 (2012-12-24)
+## 2.2 (2012-12-24)
 
 - add support for FictionBook ebook format
 - add support for PDF documents encrypted with Acrobat X
@@ -326,11 +320,11 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - new command-line option: -manga-mode [1|true|0|false] for proper display of manga comic books
 - many robustness fixes and small improvements
 
-### 2.1.1 (2012-05-07)
+## 2.1.1 (2012-05-07)
 
 - fixes for a few crashes
 
-### 2.1 (2012-05-03)
+## 2.1 (2012-05-03)
 
 - support for EPUB ebook format
 - added File/Rename menu item to rename currently viewed file (contributed by Vasily Fomin)
@@ -340,33 +334,33 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - support JPEG XR images (available on Windows Vista or later, for Windows XP the **[Windows Imaging Component](https://www.microsoft.com/en-us/download/details.aspx?id=32)** has to be installed)
 - the installer is now signed
 
-### 2.0.1 (2012-04-08)
+## 2.0.1 (2012-04-08)
 
 - fix loading .mobi files from command line
 - fix a crash loading multiple .mobi files at once
 - fix a crash showing tooltips for table of contents tree entries
 
-### 2.0 (2012-04-02)
+## 2.0 (2012-04-02)
 
 - support for **[MOBI](https://blog.kowalczyk.info/articles/mobi-ebook-reader-viewer-for-windows.html)** eBook format
 - support opening CHM documents from network drives
 - a selection can be copied to a clipboard as an image by using right-click context menu
 - using ucrt to reduce program size
 
-### 1.9 (2011-11-23)
+## 1.9 (2011-11-23)
 
 - support for **[CHM](https://blog.kowalczyk.info/articles/chm-reader-viewer-for-windows.html)** documents
 - support touch gestures, available on Windows 7 or later. Contributed by Robert Prouse
 - open linked audio and video files in an external media player
 - improved support for PDF transparency groups
 
-### 1.8 (2011-09-18)
+## 1.8 (2011-09-18)
 
 - improved support for PDF form text fields
 - various minor improvements and bug fixes
 - speedup handling some types of djvu files
 
-### 1.7 (2011-07-18)
+## 1.7 (2011-07-18)
 
 - favorites
 - improved support for right-to-left languages e.g. Arabic
@@ -377,7 +371,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - more robust installer
 - many minor improvements and bugfixes
 
-### 1.6 (2011-05-30)
+## 1.6 (2011-05-30)
 
 - add support for displaying DjVu documents
 - display Frequently Read list when no document is open
@@ -388,11 +382,11 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add Print toolbar button
 - experimental: previewing of PDF documents in Windows Vista and 7. Creates thumbnails and displays documents in Explorer's Preview pane. Needs to be explicitly selected during install process. We've had reports that it doesn't work on Windows 7 x64.
 
-### 1.5.1 (2011-04-26)
+## 1.5.1 (2011-04-26)
 
 - fixes for rare crashes
 
-### 1.5 (2011-04-23)
+## 1.5 (2011-04-23)
 
 - add support for viewing XPS documents
 - add support for viewing CBZ and CBR comic books
@@ -400,7 +394,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add context menu for copying text, link addresses and comments. In browser plugin it also adds saving and printing commands
 - add folder browsing (Ctrl+Shift+Right opens next PDF document in the current folder, Ctrl+Shift+Left opens previous document)
 
-### 1.4 (2011-03-12)
+## 1.4 (2011-03-12)
 
 - browser plugin for Firefox/Chrome/Opera (Internet Explorer is not supported). It's not installed by default so you have to check the appropriate checkbox in the installer
 - IFilter that enables full-text search of PDF files in Windows Desktop Search (i.e. search from Windows Vista/7's Start Menu). Also not installed by default
@@ -412,7 +406,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - support for AES-256 encrypted PDF documents
 - fixed an integer overflow reported by Jeroen van der Gun and other small fixes and improvements to PDF handling
 
-### 1.3 (2011-02-04)
+## 1.3 (2011-02-04)
 
 - improved text selection and copying. We now mimic the way a browser or Adobe Reader works: just select text with mouse and use Ctrl-C to copy it to a clipboard
 - Shift+Left Mouse now scrolls the document, Ctrl+Left mouse still creates a rectangular selection (for copying images)
@@ -431,7 +425,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - updated openjpeg library to version 1.4 and freetype to version 2.4.4
 - fixed 2 integer overflows reported by Stefan Cornelius from Secunia Research
 
-### 1.2 (2010-11-26)
+## 1.2 (2010-11-26)
 
 - improved printing: faster and uses less resources
 - add Ctrl-Y as a shortcut for Custom Zoom
@@ -441,7 +435,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - allow saving PDF document attachments to disk
 - latest fixes and improvements to PDF rendering from mupdf project
 
-### 1.1 (2010-05-20)
+## 1.1 (2010-05-20)
 
 - added book view (“View/Book View” menu item) option. It’s known as “Show Cover Page During Two-Up” in Adobe Reader
 - added “File/Properties” menu item, showing basic information about PDF file
@@ -452,18 +446,18 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - misc bug fixes and small improvements in UI
 - add Ctrl + and Ctrl – as shortcuts for zooming (matches Adobe Reader)
 
-### 1.0.1 (2009-11-27)
+## 1.0.1 (2009-11-27)
 
 - many memory leaks fixed (Simon Bünzli)
 - potential crash due to stack corruption (pointed out by Christophe Devine)
 - making Sumatra default PDF reader no longer asks for admin privileges on Vista/Windows 7
 - translation updates
 
-### 1.0 (2009-11-17)
+## 1.0 (2009-11-17)
 
 - lots of small bug fixes and improvements
 
-### 0.9.4 (2009-07-19)
+## 0.9.4 (2009-07-19)
 
 - improved PDF compatibility (more types of documents can be rendered)
 - added settings dialog (contributed by Simon Bünzli)
@@ -474,12 +468,12 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - a new icon for documents association (contributed by George Georgiou)
 - lots of bugfixes and UI polish
 
-### 0.9.3 (2008-10-07)
+## 0.9.3 (2008-10-07)
 
 - fix an issue with opening non-ascii files
 - updated Japanese and Brazilian translation
 
-### 0.9.2 (2008-10-06)
+## 0.9.2 (2008-10-06)
 
 - ability to disable auto-update check
 - improved text rendering - should fix problems with overlapping text
@@ -491,7 +485,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - fix crash when pressing 'Cancel' when entering a password
 - updated translations
 
-### 0.9.1 (2008-08-22)
+## 0.9.1 (2008-08-22)
 
 - improved rendering of some PDFs
 - support for links inside PDF file
@@ -499,7 +493,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - enabled SyncTex support which mistakenly disabled in 0.9
 - misc fixes and translation updates
 
-### 0.9 (2008-08-10)
+## 0.9 (2008-08-10)
 
 - add Ctrl-P as print shortcut
 - add F11 as full-screen shortcut
@@ -512,7 +506,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - removed poppler rendering engine resulting in smaller program and updated to latest mupdf sources
 - misc bugfixes and translation updates
 
-### 0.8.1 (2008-05-27)
+## 0.8.1 (2008-05-27)
 
 - automatic reloading of changed PDFs (contributed by William Blum)
 - tex integration (contributed by William Blum)
@@ -526,7 +520,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - fix showing boxes in table of contents tree
 - translation updates
 
-### 0.8 (2008-01-01)
+## 0.8 (2008-01-01)
 
 - added search (contributed by MrChuoi)
 - added table of contents (contributed by MrChuoi)
@@ -539,7 +533,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add command-line option -esc-to-exit
 - add command-line option -bgcolor $color
 
-### 0.7 (2007-07-28)
+## 0.7 (2007-07-28)
 
 - added ability to select the text and copy to clipboard - contributed by Tomek Weksej
 - made it multi-lingual (13 translations)
@@ -551,7 +545,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - fixed a few crashes
 - moved the sources to Google Code project hosting
 
-### 0.6 (2007-04-29)
+## 0.6 (2007-04-29)
 
 - enable opening password-protected PDFs
 - don't allow printing in PDFs that have printing forbidden
@@ -564,7 +558,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - when MuPDF engine cannot load a file or render a page, we fallback to poppler engine to make rendering more robust
 - fixed a few crashes
 
-### 0.5 (2007-03-04)
+## 0.5 (2007-03-04)
 
 - fixed rendering problems with some PDF files
 - speedups - the application should feel snappy and there should be less waiting for rendering
@@ -572,7 +566,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - added <Ctrl>-<Shift>-+ and <Ctrl>-<Shift>-- keybindings to rotate clockwise and counter-clockwise (just like Acrobat Reader)
 - fixed a crash or two
 
-### 0.4 (2007-02-18)
+## 0.4 (2007-02-18)
 
 - printing
 - ask before registering as a default handler for PDF files
@@ -584,13 +578,13 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - uninstaller completely removes the program
 - changed name of preferences files from prefs.txt to sumatrapdfprefs.txt
 
-### 0.3 (2006-11-25)
+## 0.3 (2006-11-25)
 
 - added toolbar for most frequently used operations
 - should be more snappy because rendering is done in background and it caches one page ahead
 - some things are faster
 
-### 0.2 (2006-08-06)
+## 0.2 (2006-08-06)
 
 - added facing, continuous and continuous facing viewing modes
 - remember history of opened files
@@ -604,6 +598,6 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - provide a download in a .zip file for those who can't run installation program
 - switched to poppler code instead of xpdf
 
-### 0.1 (2006-06-01)
+## 0.1 (2006-06-01)
 
 - first version released
