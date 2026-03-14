@@ -176,8 +176,11 @@ char* BuildCrashInfoText(const char* condStr, bool isCrash, bool captureCallstac
 
 void SaveCrashInfo(const ByteSlice& d) {
     if (!gCrashFilePath) {
+        logf("SaveCrashInfo: skipping because !gCrashFilePath");
+
         return;
     }
+    logf("SaveCrashInfo: gCrashFilePath='%s'\n", gCrashFilePath);
     dir::CreateForFile(gCrashFilePath);
     file::WriteFile(gCrashFilePath, d);
 }

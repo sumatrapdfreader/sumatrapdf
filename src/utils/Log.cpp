@@ -83,9 +83,7 @@ static void maybeOpenLogPipe() {
 }
 
 static void logToPipe(const char* s, size_t n = 0) {
-    if (!gLogToPipe) {
-        return;
-    }
+    if (!gLogToPipe) return;
     if (!s || (*s == 0)) {
         return;
     }
@@ -132,6 +130,16 @@ static void logToPipe(const char* s, size_t n = 0) {
         CloseHandle(hLogPipe);
         hLogPipe = INVALID_HANDLE_VALUE;
     }
+}
+
+// to use in
+void logPipe(const char* fmt, ...) {
+    if (!gLogToPipe) return;
+    va_list args;
+    va_start(args, fmt);
+    AutoFreeStr s = str::FmtV(fmt, args);
+    logToPipe(s.Get());
+    va_end(args);
 }
 
 // verbose log, only to pipe

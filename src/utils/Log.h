@@ -18,6 +18,8 @@ void logf(const char* fmt, ...);
 void logvf(const char* fmt, ...);
 void logv(const char* s);
 
+void logPipe(const char* fmt, ...);
+
 void logValueSize(const char* name, i64 v);
 
 // log always

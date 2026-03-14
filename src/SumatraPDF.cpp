@@ -6636,7 +6636,7 @@ bool CrashHandlerCanUseNet() {
 }
 
 void ShowCrashHandlerMessage() {
-    log("ShowCrashHandlerMessage()\n");
+    log("ShowCrashHandlerMessage\n");
     // don't show a message box in restricted use, as the user most likely won't be
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
@@ -6659,6 +6659,7 @@ void ShowCrashHandlerMessage() {
 
     int res = MsgBox(nullptr, msg, "SumatraPDF crashed", flags);
     if (IDCANCEL != res) {
+        log("ShowCrashHandlerMessage: res != IDCANCEL\n");
         return;
     }
     if (!gCrashFilePath) {
