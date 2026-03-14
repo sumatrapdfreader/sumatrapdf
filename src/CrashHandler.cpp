@@ -295,15 +295,15 @@ bool AreSymbolsDownloaded(const char* symDir) {
     return false;
 }
 
-bool InitializeDbgHelp(bool force) {
-    TempWStr ws = ToWStrTemp(gSymbolPath);
+bool InitializeDbgHelp(const char* symDir, bool force) {
+    TempWStr ws = ToWStrTemp(symDir);
     if (!dbghelp::Initialize(ws, force)) {
-        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", gSymbolPath, (int)force);
+        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", symDir, (int)force);
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), gSymbolPath: '%s' force: %d failed\n", gSymbolPath,
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symDir: '%s' force: %d failed\n", symDir,
              (int)force);
         return false;
     }
@@ -319,7 +319,7 @@ bool DownloadSymbolsIfNeeded() {
             return false;
         }
     }
-    return InitializeDbgHelp(false);
+    return InitializeDbgHelp(gSymbolsDir, false);
 }
 
 // like crash report, but can be triggered without a crash
