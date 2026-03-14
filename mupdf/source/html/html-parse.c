@@ -238,6 +238,8 @@ struct genstate
 	int col_num;
 
 	fz_css_style_splay *styles;
+
+	int depth;
 };
 
 static int iswhite(int c)
@@ -1341,12 +1343,21 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 	const char *lang_att;
 	const char *dir_att;
 
-	int save_markup_dir = g->markup_dir;
-	int save_markup_lang = g->markup_lang;
-	char *save_href = g->href;
+	int save_markup_dir;
+	int save_markup_lang;
+	char *save_href;
+
+	/* Limit recursion depth to prevent stack overflow on deeply nested HTML. */
+	if (g->depth > 500)
+		return;
+	g->depth++;
+
+	save_markup_dir = g->markup_dir;
+	save_markup_lang = g->markup_lang;
+	save_href = g->href;
 
 	if (display == DIS_NONE)
-		return;
+		goto end;
 
 	tag = fz_xml_tag(node);
 
@@ -1476,6 +1487,7 @@ static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box,
 	}
 
 end:
+	g->depth--;
 	g->markup_dir = save_markup_dir;
 	g->markup_lang = save_markup_lang;
 	g->href = save_href;
