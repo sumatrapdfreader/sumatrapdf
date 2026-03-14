@@ -966,6 +966,9 @@ HWND Wnd::CreateControl(const CreateControlArgs& args) {
     void* createParams = this;
     hwnd = ::CreateWindowExW(exStyle, className, L"", style, x, y, dx, dy, parent, id, inst, createParams);
     ReportIf(!hwnd);
+    if (!hwnd) {
+        return nullptr;
+    }
     HwndSetFont(hwnd, font);
 
     // TODO: validate that
