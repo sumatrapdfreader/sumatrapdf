@@ -671,10 +671,12 @@ bool LaunchFileIfExists(const char* path) {
         return false;
     }
     if (!file::Exists(path)) {
+        log("LaunchFileIfExists: !file::Exists('%s')\n", path);
         return false;
     }
     if (gIsStoreBuild) {
         path = path::GetNonVirtualTemp(path);
+        log("LaunchFileIfExists: gIsStoreBuild, path='%s'\n", path);
     }
     LaunchFileShell(path, nullptr, "open");
     return true;

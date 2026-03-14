@@ -991,6 +991,7 @@ bool LaunchFileShell(const char* path, const char* params, const char* verb, boo
         LogLastError(err);
         return false;
     }
+    logf("LaunchFileShell: launched '%s'\n", path);
     return true;
 }
 
