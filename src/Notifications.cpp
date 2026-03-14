@@ -210,6 +210,9 @@ HWND NotificationWnd::Create(const NotificationCreateArgs& args) {
     cargs.isRtl = IsUIRtl();
 
     CreateCustom(cargs);
+    if (!hwnd) {
+        return nullptr;
+    }
 
     Layout(args.msg);
     delayInMs = args.delayInMs;
