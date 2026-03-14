@@ -8,5 +8,5 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
 void UninstallCrashHandler();
 bool CrashHandlerDownloadSymbols();
 bool AreSymbolsDownloaded(const char* symDir);
-bool InitializeDbgHelp(bool force);
+bool InitializeDbgHelp(const char* symDir, bool force);
 bool SetSymbolsDir(const char* symDir);
