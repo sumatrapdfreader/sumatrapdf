@@ -331,11 +331,19 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     } else {
         loga("_uploadDebugReport\n");
     }
-    bool shouldUpload = gIsDebugBuild || gIsPreReleaseBuild || gIsAsanBuild;
-    if (gIsStoreBuild && !isCrash) {
-        // those would probably be too frequent
-        shouldUpload = false;
+
+    auto s = BuildCrashInfoText(condStr, isCrash, captureCallstack);
+    if (str::IsEmpty(s)) {
+        loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
+        return;
     }
+    ByteSlice d(s);
+    SaveCrashInfo(d);
+
+    bool shouldUpload = true;
+    if (gIsDebugBuild || gIsAsanBuild) shouldUpload = false;
+    if (gIsStoreBuild && !isCrash) shouldUpload = false;
+
     if (!shouldUpload) {
         if (IsDebuggerPresent()) {
             DebugBreak();
@@ -389,15 +397,6 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
         // we proceed even if we fail to download symbols
         DownloadSymbolsIfNeeded();
     }
-
-    auto s = BuildCrashInfoText(condStr, isCrash, captureCallstack);
-    if (str::IsEmpty(s)) {
-        loga("_uploadDebugReport(): skipping because !BuildCrashInfoText()\n");
-        return;
-    }
-
-    ByteSlice d(s);
-    SaveCrashInfo(d);
 
     UploadCrashReport(d);
     // gCrashHandlerAllocator->Free((const void*)d.data());
