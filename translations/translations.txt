@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1161abf5041cc227c4ed276790f07f216cd35930
+c3ad48c1f3e1a98df25d0ef5e02ff4430adf800f
 :# File History
 br:# Histórico de Arquivos
 cn:# 文件历史记录
@@ -13402,6 +13402,8 @@ br:Início
 cn:主页
 co:Accolta
 de:Startseite
+fr:Accueil
+ga:Baile
 nl:Thuis
 pl:Startowa
 sk:Domov
