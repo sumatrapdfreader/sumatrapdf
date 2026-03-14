@@ -1623,7 +1623,7 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
     }
     UpdateWindow(win->hwndFrame);
 
-    if (gWindows.Size() == 1 && IsDebuggerPresent()) {
+    if (gWindows.Size() == 1 && (true || IsDebuggerPresent())) {
         HwndToForeground(win->hwndFrame);
     }
 
