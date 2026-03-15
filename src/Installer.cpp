@@ -1148,6 +1148,10 @@ int RunInstaller() {
 
     const char* installerLogPath = nullptr;
 
+    if (gCli->silent) {
+        gLogToConsole = false;
+    }
+
     gCliNew.log = gCli->log;
     gCliNew.allUsers = gCli->allUsers;
     gCliNew.withFilter = gCli->withFilter;
