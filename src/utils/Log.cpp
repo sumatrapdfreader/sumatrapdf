@@ -165,7 +165,7 @@ void logValueSize(const char* name, i64 v) {
     logToPipe(s);
 }
 
-void log(const char* s, bool always) {
+static void log2(const char* s, bool always) {
     bool skipLog = !always && gSkipDuplicateLines && gLogBuf && gLogBuf->Contains(s);
 
     if (!skipLog) {
@@ -227,11 +227,16 @@ void log(const char* s, bool always) {
     logToPipe(s, n);
     gLogMutex.Unlock();
 }
+
+void log(const char* s) {
+    log2(s, false);
+}
+
 void loga(const char* s) {
     if (gDestroyedLogging) {
         return;
     }
-    log(s, true);
+    log2(s, true);
 }
 
 void logf(const char* fmt, ...) {
@@ -242,7 +247,7 @@ void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args);
-    log(s.Get(), false);
+    log2(s.Get(), false);
     va_end(args);
 }
 
@@ -254,7 +259,7 @@ void logfa(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     char* s = str::FmtV(fmt, args);
-    log(s, true);
+    log2(s, true);
     str::Free(s);
     va_end(args);
 }

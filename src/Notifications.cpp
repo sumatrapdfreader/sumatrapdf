@@ -625,7 +625,7 @@ void MaybeDelayedWarningNotification(const char* fmt, ...) {
     char* msg = str::FmtV(fmt, args);
     va_end(args);
 
-    log(msg, false /* always */);
+    log(msg);
 
     HWND hwnd = GetHwndForNotification();
     if (hwnd) {

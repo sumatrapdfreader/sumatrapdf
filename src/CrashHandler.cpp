@@ -364,7 +364,7 @@ bool InitializeDbgHelp(bool force) {
         logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath, (int)force);
         return false;
     }
-    log("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath);
+    logf("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath);
     return true;
 }
 

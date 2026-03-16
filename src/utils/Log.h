@@ -12,7 +12,7 @@ extern char* gLogFilePath;
 void StartLogToFile(const char* path, bool removeIfExists);
 bool WriteCurrentLogToFile(const char* path);
 
-void log(const char* s, bool always = false);
+void log(const char* s);
 void logf(const char* fmt, ...);
 
 void logvf(const char* fmt, ...);

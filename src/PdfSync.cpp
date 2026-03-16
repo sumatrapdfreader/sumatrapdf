@@ -756,8 +756,7 @@ extern "C" int _synctex_error(const char* fmt, ...) {
     va_start(args, fmt);
     AutoFreeStr s = str::FmtV(fmt, args);
     char* s2 = str::JoinTemp(s, "\n"); // synctex doesn't use '\n'
-    bool logAlways = true;
-    log(s2, logAlways);
+    loga(s2);
     va_end(args);
     return 0;
 }
