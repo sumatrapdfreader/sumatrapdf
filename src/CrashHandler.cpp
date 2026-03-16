@@ -72,7 +72,6 @@ char* gCrashFilePath = nullptr;
 
 static char* gSymbolsUrl = nullptr;
 static char* gCrashDumpPath = nullptr;
-static char* gSymbolPath = nullptr;
 static char* gSystemInfo = nullptr;
 static char* gSettingsFile = nullptr;
 static char* gModulesInfo = nullptr;
@@ -295,16 +294,74 @@ bool AreSymbolsDownloaded(const char* symDir) {
     return false;
 }
 
+/*
+https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-path
+http://p-nand-q.com/python/procmon.html
+https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools
+
+Setting symbol path:
+add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
+add GetEnvironmentVariableA("_NT_ALT_SYMBOL_PATH ", ..., ...)
+add: cache*C:\MySymbols;srv*https://msdl.microsoft.com/download/symbols
+
+dbghelp.dll should be installed with os but might be outdated
+for symbols server symsrv.dll is needed, installed with debug tools for windows
+*/
+static bool gAddNtSymbolPath = false;
+static bool gAddSymbolServer = false;
+static bool gAddExeDir = false;
+
+static TempStr BuildSymbolPathTemp(const char* symDir) {
+    str::Str path(2048, GetTempAllocator());
+
+    bool symDirExists = dir::Exists(symDir);
+
+    // at this point symDir might not exist but we add it anyway
+    path.Append(symDir);
+    path.Append(";");
+
+    // in debug builds the symbols are in the same directory as .exe
+    if (gIsDebugBuild || gAddExeDir) {
+        TempStr dir = GetSelfExeDirTemp();
+        path.Append(dir);
+        path.Append(";");
+    }
+
+    if (gAddNtSymbolPath) {
+        TempStr ntSymPath = GetEnvVariableTemp("_NT_SYMBOL_PATH");
+        // internet talks about both _NT_ALT_SYMBOL_PATH and _NT_ALTERNATE_SYMBOL_PATH
+        if (str::IsEmpty(ntSymPath)) {
+            ntSymPath = GetEnvVariableTemp("_NT_ALT_SYMBOL_PATH");
+        }
+        if (str::IsEmpty(ntSymPath)) {
+            ntSymPath = GetEnvVariableTemp("_NT_ALTERNATE_SYMBOL_PATH");
+        }
+        if (!str::IsEmpty(ntSymPath)) {
+            path.Append(ntSymPath);
+            path.Append(";");
+        }
+    }
+    if (gAddSymbolServer && symDirExists) {
+        // this probably won't work as it needs symsrv.dll and that's not included with Windows
+        // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
+        path.AppendFmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir);
+    }
+
+    // remove ";" from the end
+    path.RemoveLast();
+    return (TempStr)path.CStr();
+}
+
 bool InitializeDbgHelp(bool force) {
-    TempWStr ws = ToWStrTemp(gSymbolPath);
+    TempStr symPath = BuildSymbolPathTemp(gSymbolsDir);
+    TempWStr ws = ToWStrTemp(symPath);
     if (!dbghelp::Initialize(ws, force)) {
-        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", gSymbolPath, (int)force);
+        logf("InitializeDbgHelp: dbghelp::Initialize('%s'), force: %d failed\n", symPath, (int)force);
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), gSymbolPath: '%s' force: %d failed\n", gSymbolPath,
-             (int)force);
+        logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath, (int)force);
         return false;
     }
     log("InitializeDbgHelp(): did initialize ok\n");
@@ -390,8 +447,8 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
         return;
     }
 
-    logfa("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolPath: '%s'\n", (int)isCrash,
-          (int)captureCallstack, gSymbolPath);
+    logfa("_uploadDebugReport: isCrash: %d, captureCallstack: %d, gSymbolsDir: '%s'\n", (int)isCrash,
+          (int)captureCallstack, gSymbolsDir);
 
     if (captureCallstack) {
         // we proceed even if we fail to download symbols
@@ -665,73 +722,11 @@ static void BuildSystemInfo() {
     gSystemInfo = s.StealData();
 }
 
-/*
-https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/symbol-path
-http://p-nand-q.com/python/procmon.html
-https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools
-
-Setting symbol path:
-add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
-add GetEnvironmentVariableA("_NT_ALT_SYMBOL_PATH ", ..., ...)
-add: cache*C:\MySymbols;srv*https://msdl.microsoft.com/download/symbols
-
-dbghelp.dll should be installed with os but might be outdated
-for symbols server symsrv.dll is needed, installed with debug tools for windows
-*/
-
-static bool gAddNtSymbolPath = false;
-static bool gAddSymbolServer = false;
-static bool gAddExeDir = false;
-
-static void BuildSymbolPath(const char* symDir) {
-    str::Str path(1024);
-
-    bool symDirExists = dir::Exists(symDir);
-
-    // at this point symDir might not exist but we add it anyway
-    path.Append(symDir);
-    path.Append(";");
-
-    // in debug builds the symbols are in the same directory as .exe
-    if (gIsDebugBuild || gAddExeDir) {
-        TempStr dir = GetSelfExeDirTemp();
-        path.Append(dir);
-        path.Append(";");
-    }
-
-    if (gAddNtSymbolPath) {
-        TempStr ntSymPath = GetEnvVariableTemp("_NT_SYMBOL_PATH");
-        // internet talks about both _NT_ALT_SYMBOL_PATH and _NT_ALTERNATE_SYMBOL_PATH
-        if (str::IsEmpty(ntSymPath)) {
-            ntSymPath = GetEnvVariableTemp("_NT_ALT_SYMBOL_PATH");
-        }
-        if (str::IsEmpty(ntSymPath)) {
-            ntSymPath = GetEnvVariableTemp("_NT_ALTERNATE_SYMBOL_PATH");
-        }
-        if (!str::IsEmpty(ntSymPath)) {
-            path.Append(ntSymPath);
-            path.Append(";");
-        }
-    }
-    if (gAddSymbolServer && symDirExists) {
-        // this probably won't work as it needs symsrv.dll and that's not included with Windows
-        // TODO: maybe try to scan system directories for symsrv.dll and somehow add it?
-        path.AppendFmt("cache*%s;srv*https://msdl.microsoft.com/download/symbols;", symDir);
-    }
-
-    // remove ";" from the end
-    path.RemoveLast();
-
-    char* p = path.CStr();
-    str::ReplaceWithCopy(&gSymbolPath, p);
-}
-
 bool SetSymbolsDir(const char* symDir) {
     if (!symDir) {
         return false;
     }
     str::ReplaceWithCopy(&gSymbolsDir, symDir);
-    BuildSymbolPath(gSymbolsDir);
     return true;
 }
 
@@ -873,7 +868,6 @@ void UninstallCrashHandler() {
     str::FreePtr(&gSymbolsUrl);
     str::FreePtr(&gSymbolsDir);
 
-    str::FreePtr(&gSymbolPath);
     str::FreePtr(&gSystemInfo);
     str::FreePtr(&gSettingsFile);
     str::FreePtr(&gModulesInfo);
