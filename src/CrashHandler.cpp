@@ -349,7 +349,7 @@ static TempStr BuildSymbolPathTemp(const char* symDir) {
 
     // remove ";" from the end
     path.RemoveLast();
-    return (TempStr)path.CStr();
+    return (TempStr)path.StealData();
 }
 
 bool InitializeDbgHelp(bool force) {
@@ -364,7 +364,7 @@ bool InitializeDbgHelp(bool force) {
         logf("InitializeDbgHelp(): dbghelp::HasSymbols(), symPath: '%s' force: %d failed\n", symPath, (int)force);
         return false;
     }
-    log("InitializeDbgHelp(): did initialize ok\n");
+    log("InitializeDbgHelp(): did initialize ok, symPath: '%s'\n", symPath);
     return true;
 }
 
