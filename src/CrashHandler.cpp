@@ -349,7 +349,7 @@ static TempStr BuildSymbolPathTemp(const char* symDir) {
 
     // remove ";" from the end
     path.RemoveLast();
-    return (TempStr)path.StealData();
+    return (TempStr)path.StealData(GetTempAllocator());
 }
 
 bool InitializeDbgHelp(bool force) {
