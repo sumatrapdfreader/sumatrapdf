@@ -173,6 +173,7 @@ static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
 
     // when forcing, we download pre-release, which shows greater version than our build
     // so we don't want to download during automatic check, only when user initiated
+
 #if defined(FORCE_AUTO_UPDATE)
     if (updateCheckType == UpdateCheck::UserInitiated) {
         return true;
@@ -381,14 +382,12 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo, UpdateCheck updateCheck
     }
     auto latestVer = updateInfo->latestVer;
     const char* myVer = UPDATE_CHECK_VERA;
-    // myVer = L"3.1"; // for ad-hoc debugging of auto-update code
-    bool hasUpdate = CompareProgramVersion(latestVer, myVer) > 0;
     if (gIsDebugBuild) {
-        // for easier testing, in debug build update check is never triggered
-        // by automatic update check and always triggers by user-initiated
-        // user can cancel the update
-        hasUpdate = updateCheckType == UpdateCheck::UserInitiated;
+        // in debug build we compare against pre-rel version, like "17616"
+        // but our version is like "3.6" so it triggers update
+        myVer = "50000";
     }
+    bool hasUpdate = CompareProgramVersion(latestVer, myVer) > 0;
     return hasUpdate;
 }
 
@@ -491,8 +490,8 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         logf("ShowAutoUpdateDialog: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
-            RemoveNotificationsForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
-            ShowTemporaryNotification(hwndParent, _TRA("You have the latest version."), 5 * 1000);
+            auto wnd = GetNotificationForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
+            NotificationUpdateMessage(wnd, _TRA("You have the latest version."), 5 * 1000, true);
         }
         delete updateInfo;
         return 0;
