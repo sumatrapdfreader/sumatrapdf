@@ -98,7 +98,6 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     {"manual", "SumatraPDF manual", kManualURL},
     {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
     {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
-    {"translations", "The Translators", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS"},
     {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
 #if defined(GIT_COMMIT_ID_STR)
     {"last change", "git commit " GIT_COMMIT_ID_STR,
