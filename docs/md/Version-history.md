@@ -1,11 +1,11 @@
 # Version history
 
-## 3.6
+## 3.6 (2026-03-17)
 
 - add `DisableAntiAlias` advanced setting and `CmdToggleAntiAlias` command
 - add `CmdShowAnnotations`, `CmdHideAnnotations`, `CmdToggleShowAnnotations` commands for temporarily hiding / showing annotations
 - add `CmdToggleInverseSearch` to temporarily disable mouse click invoking tex inverse search
-- add "bgcolor", "opacity", "textsize", "borderWidth" arguments to `CmdCreate
+- add `bgcolor`, `opacity`, `textsize`, `borderWidth` arguments to `CmdCreateAnnot*` commands
 - add `Annotations.FreeTextBackgroundColor` and `Annotations.FreeTextOpacity` advanced settings
 - sort thumbnails on home page by most recently used date. Set advanced setting `HomePageSortByFrequentlyRead = true` to revert to pre-3.6 behavior of sorting by frequency of use.
 - support brotli compression in PDF files
