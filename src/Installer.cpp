@@ -1093,7 +1093,7 @@ bool ExtractInstallerFiles(char* dir) {
     return ExtractInstallerFiles(&gArchive, dir);
 }
 
-static bool MismatchedOSDialog(HWND hwndParent) {
+static bool ShouldInstallMismatchedArch(HWND hwndParent) {
     logf("Mismatch of the OS and executable arch\n");
 
     constexpr int kBtnIdContinue = 100;
@@ -1138,9 +1138,9 @@ static bool MismatchedOSDialog(HWND hwndParent) {
             url = "https://www.sumatrapdfreader.org/prerelease";
         }
         LaunchBrowser(url);
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 int RunInstaller() {
@@ -1178,13 +1178,10 @@ int RunInstaller() {
     }
     if (!IsProcessAndOsArchSame()) {
         logfa("quitting because !IsProcessAndOsArchSame()\n");
-        MismatchedOSDialog(nullptr);
-        RunNonElevated(installerLogPath);
-        return 1;
+        bool ok = ShouldInstallMismatchedArch(nullptr);
+        if (!ok) return 1;
     }
-    if (!OpenEmbeddedFilesArchive()) {
-        return 1;
-    }
+    if (!OpenEmbeddedFilesArchive()) return 1;
 
     GetPreviousInstallInfo(&gPrevInstall);
     // with -run-install all values should be explicitly set
