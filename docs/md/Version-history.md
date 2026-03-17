@@ -9,7 +9,7 @@
 - add `Annotations.FreeTextBackgroundColor` and `Annotations.FreeTextOpacity` advanced settings
 - sort thumbnails on home page by most recently used date. Set advanced setting `HomePageSortByFrequentlyRead = true` to revert to pre-3.6 behavior of sorting by frequency of use.
 - support brotli compression in PDF files
-- in Command Palette, if you start search with ":" we show everything (like in 3.5)
+- in Command Palette, if you start search with `:` we show everything (like in 3.5)
 - in Command Palette, when viewing opened files history (#), you can press Delete to remove the entry from history
 - improved zooming:
   - zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
@@ -27,7 +27,7 @@
   - CmdCreateAnnot\* commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
   - `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
-  - `CmdNextTabSmart`, `CmdPrevTabSmart` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`, `Ctrl + Shift + Tab``
+  - `CmdNextTabSmart`, `CmdPrevTabSmart` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`, `Ctrl + Shift + Tab`
 - added `UIFontSize` advanced setting
 - removed `TreeFontWeightOffset` advanced setting
 - increase number of thumbnails on home page from 10 => 30
@@ -51,7 +51,7 @@
 - `Ctrl + Shift + K` no longer active, use `Ctrl + K`. You can restore this shortcut by binding it to `CmdCommandPalette >` command.
 - add `Name` field for shortcuts. If given, the command will show up in Command Palette (`Ctrl + K`)
 - closing a current tab now behaves like in Chrome: selects next tab (to the right). We used to select previously active tab, but that's unpredictable and we prefer to align SumatraPDF behavior with other popular apps.
-- swapped key bindings: 'i' is now CmdTogglePageInfo, 'I' is CmdInvertColors. Several people were confused by accidentally typing 'i' to invert colors, is less likely to type it accidentally
+- swapped key bindings: `i` is now CmdTogglePageInfo, `I` is CmdInvertColors. Several people were confused by accidentally typing `i` to invert colors, is less likely to type it accidentally
 - allow creating custom themes in advanced settings in `Themes` section. [See docs](https://www.sumatrapdfreader.org/docs/Customize-theme-colors).
 - improve scrolling with middle click drag [#4529](https://github.com/sumatrapdfreader/sumatrapdf/issues/4529)
 - make built-in keyboard shortcuts work on non-us keyboards (cyrillic , hebrew etc.)
