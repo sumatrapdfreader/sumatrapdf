@@ -2135,8 +2135,10 @@ static void OnPaintError(MainWindow* win) {
     // TODO: should this be "Error opening %s"?
     auto tab = win->CurrentTab();
     const char* filePath = tab->filePath;
-    TempStr msg = str::FormatTemp(_TRA("Error loading %s"), filePath);
-    DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
+    if (filePath) {
+        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), filePath);
+        DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
+    }
     SelectObject(hdc, hPrevFont);
 
     EndPaint(win->hwndCanvas, &ps);
