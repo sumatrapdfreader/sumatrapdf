@@ -390,8 +390,12 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
     }
 
     bool shouldUpload = true;
+    // debug build is likely other people modyfing
     if (gIsDebugBuild || gIsAsanBuild) shouldUpload = false;
-    if (gIsStoreBuild && !isCrash) shouldUpload = false;
+    if (!isCrash) {
+        // for non-crashes, don't upload in release builds (too much info)
+        shouldUpload = gIsPreReleaseBuild;
+    }
 
     if (!shouldUpload) {
         if (IsDebuggerPresent()) {
@@ -417,22 +421,6 @@ void _uploadDebugReport(const char* condStr, bool isCrash, bool captureCallstack
         return;
     }
     didSubmitDebugReport = true;
-
-    // no longer can happen i.e. we exclude non-crashes from release builds via #ifdef
-#if 0
-    if (!isCrash) {
-        if (!gIsPreReleaseBuild) {
-            // only enabled for pre-release builds, don't want lots of non-crash
-            // reports from official release
-            return;
-        }
-
-        if (gIsDebugBuild) {
-            // exclude debug builds. Those are most likely other people modyfing Sumatra
-            return;
-        }
-    }
-#endif
 
     if (!CrashHandlerCanUseNet()) {
         log("_uploadDebugReport skipping because !CrashHandlerCanUseNet()\n");
