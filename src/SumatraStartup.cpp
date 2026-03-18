@@ -2143,6 +2143,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _
     ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
 
+    if (gCli->silent) {
+        gLogToConsole = false;
+    }
+
     // Handle preview pipe mode early - used by previewer DLL
     if (flags.previewPipeName) {
         RunPreviewPipeServer(flags.previewPipeName);
