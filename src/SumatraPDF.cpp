@@ -5398,6 +5398,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             auto theme = GetCommandStringArg(cmd, kCmdArgTheme, nullptr);
             if (theme) {
                 SetTheme(theme);
+                SaveSettings();
             }
             return 0;
         }
