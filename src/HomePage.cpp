@@ -41,7 +41,7 @@
 #endif
 #define ABOUT_LINE_SEP_SIZE 1
 
-static bool gShowPromotion = false;
+static bool gShowPromotion = true;
 
 constexpr const char* promoBuiltIn = R"(
 [
