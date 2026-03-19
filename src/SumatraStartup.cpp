@@ -607,6 +607,12 @@ static bool ExeHasNameOfInstaller() {
     return str::FindI(exeName, "install");
 }
 
+static bool ExeHasNameOfStoreInstaller() {
+    TempStr exePath = GetSelfExePathTemp();
+    TempStr exeName = path::GetBaseNameTemp(exePath);
+    return str::FindI(exeName, "install-store");
+}
+
 static bool HasDataResource(int id) {
     auto resName = MAKEINTRESOURCEW(id);
     auto hmod = GetModuleHandleW(nullptr);
@@ -639,21 +645,6 @@ static bool IsInstallerButNotInstalled() {
         return false;
     }
     return !IsOurExeInstalled();
-}
-
-static void CheckIsStoreBuild() {
-    TempStr exePath = GetSelfExePathTemp();
-    TempStr exeName = path::GetBaseNameTemp(exePath);
-    if (str::FindI(exeName, "store")) {
-        gIsStoreBuild = true;
-        return;
-    }
-    TempStr dir = path::GetDirTemp(exePath);
-    TempStr path = path::JoinTemp(dir, "AppxManifest.xml");
-    if (file::Exists(path)) {
-        gIsStoreBuild = true;
-    }
-    return;
 }
 
 // we delay load libmupdf.dll but it seems in some cases it fails to load
@@ -2140,6 +2131,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _
     }
 
     Flags flags;
+    if (ExeHasNameOfStoreInstaller()) {
+        logf("Running store installer\n");
+        flags.install = true;
+        flags.silent = true;
+        flags.storeInstaller = true;
+        gCli = &flags;
+        return RunInstaller();
+    }
+
     ParseFlags(GetCommandLineW(), flags);
     gCli = &flags;
 
@@ -2164,8 +2164,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPSTR, _
         RunTestPreviewPipe(flags.testPreviewPipePath);
         ::ExitProcess(0);
     }
-
-    CheckIsStoreBuild();
 
     // do this before running installer etc. so that we have disk / net permissions
     // (default policy is to disallow everything)

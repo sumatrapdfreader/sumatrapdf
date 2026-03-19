@@ -106,6 +106,7 @@ struct Flags {
     bool log = false;
     bool allUsers = false;
     bool runInstallNow = false;
+    bool storeInstaller = false;
 
     // for internal use
     char* updateSelfTo = nullptr;
