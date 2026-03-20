@@ -789,7 +789,10 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         wnd->checkboxForAllUsers = CreateCheckbox(hwnd, s, isChecked);
         wnd->checkboxForAllUsers->onStateChanged = MkFunc0Void(ForAllUsersStateChanged);
 
-        checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
+        checkDy = 0;
+        if (wnd->checkboxRegisterPreview) {
+            checkDy = wnd->checkboxRegisterPreview->GetIdealSize().dy;
+        }
         rc = {x, y, x + dx, y + checkDy};
         wnd->checkboxForAllUsers->SetPos(&rc);
         y -= checkDy;
