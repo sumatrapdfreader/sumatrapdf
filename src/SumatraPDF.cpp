@@ -3636,6 +3636,7 @@ again:
     LoadArgs args(path, win);
     args.forceReuse = true;
     LoadDocument(&args);
+    HwndRepaintNow(win->tabsCtrl->hwnd);
 }
 
 constexpr int kSplitterDx = 5;
