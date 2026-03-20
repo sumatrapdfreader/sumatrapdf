@@ -1,15 +1,18 @@
 AppTranslator: SumatraPDF
-b970c54d9ef1b8adf499649a33910bf7bda56020
+a3c90c886df577db0e659e87128cdfc39241cfcc
 :# File History
 br:# Histórico de Arquivos
 cn:# 文件历史记录
 co:# Cronolugia di schedariu
 de:# Dateiverlauf
+hi:फ़ाइल इतिहास
+ja:# ファイル履歴
 ml:ഫയൽ ചരിത്രം
 nl:# Bestandsgeschiedenis
 pl:# Historia plików
-ru:# Последние файлы
+ru:# История файлов
 sk:# História súboru
+sr-rs:# Историја датотека
 tw:# 檔案歷程記錄
 :%s annotation. Ctrl+click to edit.
 am:%s մեկնաբանություն: Ctrl+քլիք՝ խմբագրելու համար:
@@ -171,7 +174,7 @@ no:&Faktisk størrelse
 pl:&Rozmiar rzeczywisty
 pt:&Tamanho Real
 ro:&Mărimea actuală
-ru:Насто&ящий размер
+ru:&Настоящий размер
 sat:&ᱢᱩᱞ ᱢᱟᱯ
 sk:&Aktuálna veľkosť
 sl:Dej&anska velikost
@@ -236,7 +239,7 @@ pa:&ਉੱਨਤ ਵਿਕਲਪ
 pl:Opcje &zaawansowane...
 pt:Opções &Avançadas...
 ro:Opțiuni &avansate...
-ru:&Расширенные параметры...
+ru:&Дополнительные параметры...
 sat:&ᱩᱱᱱᱚᱛ ᱵᱟᱪᱷᱟᱣᱟᱜ ...
 si:සංකීර්ණ සැකසුුම්
 sk:&Rozšírené možnosti...
@@ -2778,7 +2781,7 @@ no:&Husk disse innstillingene for hvert dokument
 pl:Pamiętaj ustawienia dla &każdego dokumentu
 pt:Memo&rizar estas definições para todos os documentos
 ro:&Reține aceste opțiuni pentru fiecare document
-ru:Запомнит&ь эти параметры для каждого документа
+ru:Запомнит&ь эти настройки для каждого документа
 sat:ᱡᱷᱚᱛᱚ ᱫᱚᱞᱤᱞ ᱯᱤᱪᱷᱟ ᱱᱚᱶᱟ ᱥᱟᱡᱟᱣ &ᱢᱚᱱᱮ ᱫᱚᱦᱚ ᱠᱟᱜ ᱢᱮ
 si:මෙම සැකසුම් සියලු ගොනු සදහා &මතක තබාගන්න
 sk:&Zapamätať si tieto nastavenia pre každý dokument
@@ -3200,7 +3203,7 @@ no:&Enkeltside
 pl:&Pojedyncza strona
 pt:&Uma página
 ro:&O singură pagină
-ru:По &одной странице
+ru:&Постранично
 sat:&ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱦᱴᱟ
 sk:Jedna &strana
 sl:Eno&stransko
@@ -4034,31 +4037,38 @@ br:: Tudo
 cn:: 所有
 co:: Tuttu
 de:: Alles
+ja:: すべて
 nl:: Alles
 pl:: Wszystko
 sk:: Všetko
+sr-rs:: Све
 tw:: 全部
 :> Commands
 br:> Comandos
 cn:> 命令
 co:> Cumande
 de:> Befehle
+hi:नियंत्रण
+ja:> コマンド
 ml:കമാൻഡുകൾ
 nl:> Commando's
 pl:> Polecenia
 ru:> Команды
 sk:> Príkazy
+sr-rs:> Команде
 tw:> 命令
 :@ Tabs
 br:@ Abas
 cn:@ 标签页
 co:@ Unghjette
 de:@ Tabs
+ja:@ タブ
 ml:@ ടാബുകൾ
 nl:@ Tabs
 pl:@ Karty
 ru:@ Вкладки
 sk:@ Karty
+sr-rs:@ Картице
 tw:@ 索引標籤
 :About SumatraPDF
 af:Omtrent SumatraPDF
@@ -4187,7 +4197,7 @@ pa:ਪਸੰਦੀਦਾ ਜੋੜੋ
 pl:Dodaj do ulubionych
 pt:Adicionar Favorito
 ro:Adaugă ca favorit
-ru:&Добавить в избранное
+ru:Добавить в избранное
 sat:ᱠᱩᱥᱤᱠᱚᱨᱮ ᱥᱮᱞᱮᱫ ᱢᱮ
 si:ප්‍රියතම  ගොන්නට දමන්න
 sk:Pridať obľúbenú položku
@@ -4492,11 +4502,14 @@ br:Opções Avançadas...
 cn:高级选项…
 co:Ozzioni d’espertu…
 de:Erweiterte Optionen…
+hi:उन्नत विकल्प
+ja:詳細オプション...
 ml:വിപുലമായ ഓപ്ഷനുകൾ...
 nl:Geavanceerde Opties...
 pl:Opcje zaawansowane...
-ru:Расширенные параметры...
+ru:Дополнительные параметры...
 sk:Pokročilé možnosti
+sr-rs:Напредне опције...
 tw:進階選項…
 :Advanced Settings...
 am:Ընդլայնված կարգավորումներ...
@@ -4504,11 +4517,13 @@ br:Configurações Avançadas...
 cn:高级设置…
 co:Parametri d’espertu…
 de:Erweiterte Einstellungen…
+ja:詳細設定...
 ml:വിപുലമായ ക്രമീകരണങ്ങൾ...
 nl:Geavanceerde Opties...
 pl:Ustawienia zaawansowane...
-ru:Расширенные настройки...
+ru:Дополнительные настройки...
 sk:Pokročilé možnosti…
+sr-rs:Напредне поставке...
 tw:進階設定…
 :All files
 am:Բոլոր ֆայլերը
@@ -6067,7 +6082,7 @@ no:Kan ikke starte invertert søkekommando. Vennligst sjekk kommandolinjen i inn
 pl:Nie można rozpocząć odwrotnego wyszukiwania. Proszę sprawdzić ustawienia wiersza poleceń.
 pt:Não pôde iniciar o comando de busca invertida. Por favor verifique a linha de comandos nas definições.
 ro:Nu pot lansa comanda de căutare inversă. Verificați, vă rog, opțiunile din linia de comandă.
-ru:Ошибка команды обратного поиска. Проверьте параметры командной строки.
+ru:Не удается запустить команду обратного поиска. Проверьте строку команды в настройках.
 sat:ᱩᱞᱚᱴ ᱥᱮᱸᱫᱽᱨᱟ ᱟᱫᱮᱥ ᱫᱚ ᱮᱛᱦᱚᱵ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ ᱾ ᱫᱟᱭᱟᱠᱟᱛᱮ ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱟᱫᱮᱥ ᱞᱟᱹᱭᱤᱱ ᱧᱮᱞ ᱵᱤᱲᱟᱹᱣ ᱢᱮ ᱾
 si:ප්‍රතිලෝම සෙවුමේ විධානය ආරම්භකළ නොහැක. කරුණාකර  සැකසුම්හි හි විධාන පෙළ බලන්න.
 sk:Príkaz inverzné hľadanie zlyhal. Skontrolujte príkazový riadok v nastaveniach.
@@ -6163,11 +6178,13 @@ br:Mudar Idioma...
 cn:更改语言…
 co:Cambià di lingua…
 de:Sprache ändern…
+ja:言語を変更...
 ml:ഭാഷ മാറ്റുക...
 nl:Taal Wijzigen...
 pl:Zmień język...
 ru:Изменить Язык
 sk:Zmeniť jazyk…
+sr-rs:Промени језик...
 tw:變更語言…
 :Check For Updates
 am:Ստուգել թարմացումները
@@ -6175,6 +6192,7 @@ br:Procurar Atualizações
 cn:检查更新
 co:Cuntrollà e messe à livellu
 de:Nach Updates suchen
+ja:更新を確認
 ml:അപ്ഡേറ്റുകൾക്കായി പരിശോധിക്കുക
 nl:Controleer Op Updates
 pl:Sprawdź aktualizacje
@@ -6379,11 +6397,13 @@ br:Limpar Histórico
 cn:清除历史记录
 co:Viutà a cronolugia
 de:Verlauf löschen
+ja:履歴をクリア
 ml:ചരിത്രം മായ്ക്കുക
 nl:Geschiedenis Wissen
 pl:Wyczyść historię
 ru:Очистить Историю
 sk:Vymazať históriu
+sr-rs:Очисти историју
 tw:清除歷程記錄
 :Cleared history of %d files, deleted thumbnails.
 am:%d ֆայլերի մաքրված պատմություն, ջնջված մանրապատկերներ:
@@ -6584,6 +6604,7 @@ ru:Закрыть все вкладки
 sat:ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ
 sk:Zatvoriť všetky karty
 sl:Zapri vse zavihke
+sr-rs:Затвори све картице
 sv:Stäng alla flikar
 ta:எல்லா கீற்றுகளையும் மூடிடுக
 tr:Tüm Sekmeleri Kapat
@@ -6595,10 +6616,12 @@ br:Fechar Documento Atual
 cn:关闭当前文档
 co:Chjode u ducumentu attuale
 de:Aktuelles Dokument schließen
+ja:現在のファイルを閉じる
 nl:Sluit Huidig Document
 pl:Zamknij bieżący dokument
 ru:Закрыть текущий документ
 sk:Zatvoriť aktuálny dokument
+sr-rs:Затвори тренутни документ
 tw:關閉目前之文件
 :Close Document
 am:Փակել փաստաթուղթը
@@ -6606,10 +6629,12 @@ br:Fechar Documento
 cn:关闭文档
 co:Chjode u ducumentu
 de:Dokument schließen
+ja:ファイルを閉じる
 nl:Sluit Document
 pl:Zamknij dokument
 ru:Закрыть документ
 sk:Zatvoriť dokument
+sr-rs:Затвори документ
 tw:關閉文件
 :Close Other Tabs
 am:Փակել այլ ներդիրները
@@ -6699,6 +6724,7 @@ ru:Закрыть вкладки слева
 sat:ᱞᱮᱝᱜᱟᱛᱤ ᱯᱟᱦᱴᱟ ᱴᱮᱵᱽᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ
 sk:Zatvoriť karty vľavo
 sl:Zapri zavihke na levi
+sr-rs:Затвори картице лево
 sv:Stäng flikar till vänster
 ta:இடதுபுறம் உள்ள கீற்றுகளை மூடிடுக
 tr:Soldaki Sekmeleri Kapat
@@ -7627,10 +7653,12 @@ br:Copiar Comentário
 cn:复制注释
 co:Cupià u cummentu
 de:Kommentar kopieren
+ja:コメントをコピー
 nl:Kopieer Commentaar
 pl:Kopiuj komentarz
 ru:Скопировать Комментарий
 sk:Kopírovať komentár
+sr-rs:Копирај коментар
 tw:複製留言
 :Copy File Path
 am:Պատճենել ֆայլի ուղին
@@ -7687,10 +7715,12 @@ br:Copiar Imagem
 cn:复制图片
 co:Cupià a fiura
 de:Bild kopieren
+ja:画像をコピー
 nl:Kopieer Afbeelding
 pl:Kopiuj obraz
 ru:Скопировать рисунок
 sk:Kopírovať obrázok
+sr-rs:Копирај слику
 tw:複製圖片
 :Copy Link Target
 am:Պատճենել հղման թիրախը
@@ -7698,8 +7728,10 @@ br:Copiar Endereço do Link
 cn:复制链接目标
 co:Cupià a destinazione di u liame
 de:Linkziel kopieren
+ja:リンク先をコピー
 nl:Kopieer Link Doel
 pl:Kopiuj cel z odnośnika
+ru:Скопировать ссылку
 sk:Kopírovať adresu odkazu
 tw:複製連結目標
 :Copy Selection
@@ -7708,10 +7740,12 @@ br:Copiar Seleção
 cn:复制所选内容
 co:Cupià a selezzione
 de:Auswahl kopieren
+ja:選択範囲をコピー
 nl:Kopieer Selectie
 pl:Kopiuj zaznaczenie
 ru:Скопировать Выделение
 sk:Kopírovať výber
+sr-rs:Ископирај изабрано
 tw:複製選取内容
 :Copy To Clipboard
 am:Պատճենել սեղմնատախտակին
@@ -8633,6 +8667,7 @@ nl:Maak .lnk Snelkoppeling
 pl:Utwórz skrót .lnk
 ru:Создать Ярлык .lnk
 sk:Vytvoriť odkaz .lnk
+sr-rs:Направи .lnk пречицу
 tw:建立 .lnk 捷徑
 :Create Annotation &Under Cursor
 am:Ստեղծել մեկնաբանություն &նշորդի ներքո
@@ -9634,6 +9669,7 @@ ru:Удалить
 sat:ᱢᱮᱴᱟᱣ
 sk:Odstrániť
 sl:Zbriši
+sr-rs:Избриши
 sv:Radera
 ta:அழித்தல்
 tr:Sil
@@ -9694,6 +9730,7 @@ co:Squassà u favuritu
 de:Favorit löschen
 nl:Verwijder Favoriet
 pl:Usuń ulubione
+ru:Удалить из избранного
 sk:Odstrániť obľúbené
 tw:從我的最愛刪除
 :Delete File
@@ -9706,6 +9743,7 @@ nl:Verwijder Bestand
 pl:Usuń plik
 ru:Удалить Файл
 sk:Odstrániť súbor
+sr-rs:Избриши датотеку
 tw:刪除檔案
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
@@ -10330,6 +10368,7 @@ de:Einbetten…
 nl:Insluiten...
 pl:Osadź...
 sk:Vložiť…
+sr-rs:Угради...
 tw:内嵌…
 :Enter password
 af:Tik Wagwoord In
@@ -10659,6 +10698,7 @@ de:Ein Programm ausführen
 nl:Een programma uitvoeren
 pl:Uruchom program
 sk:Spustiť program
+sr-rs:Изврши програм
 tw:執行程式
 :Exit Application
 am:Ելք ծրագրից
@@ -10670,6 +10710,7 @@ nl:Applicatie Afsluiten
 pl:Wyjdź z programu
 ru:Выйти из Приложения
 sk:Ukončiť aplikáciu
+sr-rs:Напусти апликацију
 tw:結束應用程式
 :Expand All
 am:Ընդարձակել բոլորը
@@ -12162,7 +12203,9 @@ co:Prima pagina
 de:Erste Seite
 nl:Eerste Pagina
 pl:Pierwsza strona
+ru:Первая страница
 sk:Prvá strana
+sr-rs:Прва страна
 tw:第一頁
 :Fit &Content
 am:Հարմարեցնել &բովանդակությունը
@@ -12202,7 +12245,7 @@ no:Tilpass til &innhold
 pl:Dopasuj do &zawartości
 pt:Ajustar ao &Conteúdo
 ro:Cuprinde &conținutul
-ru:Вписать содер&жимое
+ru:По &содержимому
 sat:&ᱡᱤᱱᱤᱥ ᱠᱷᱟᱯ
 sk:Prispôsobiť &obsahu
 sl:Prilagodi vsebino
@@ -12253,7 +12296,7 @@ no:Tilpass til &side
 pl:Dopasuj do s&trony
 pt:Ajustar à &página
 ro:Cuprinde &Pagină
-ru:Вписать &страницу
+ru:По размеру &страницы
 sat:&ᱥᱟᱦᱴᱟ ᱠᱷᱟᱯ
 sk:Prispôsobiť stra&ne
 sl:&Prilagodi stran
@@ -12304,7 +12347,7 @@ no:Tilpass til &bredde
 pl:Dopasuj do sz&erokości
 pt:Ajustar à &largura
 ro:Cuprinde &lățime
-ru:Вписать по &ширине
+ru:По &ширине
 sat:&ᱚᱥᱟᱨ ᱠᱷᱟᱯ
 sk:Prispôsobiť šír&ke
 sl:P&rilagodi po širini
@@ -12575,7 +12618,7 @@ no:Tilpass bredde og vis sider kontinuerlig
 pl:Dopasuj do szerokości i wyświetlaj strony w układzie ciągłym
 pt:Ajustar largura e mostrar páginas contínuas
 ro:Potrivire după lățime și afișare continuă a paginilor
-ru:Вписать по ширине и прокручивать непрерывно (не по страницам)
+ru:По ширине и показывать страницы непрерывно
 sat:ᱚᱥᱟᱨ ᱠᱷᱟᱯ ᱟᱨ ᱥᱟᱦᱴᱟᱠᱚ ᱞᱮᱛᱟᱲ ᱥᱟᱦᱤᱡ ᱫᱮᱠᱷᱟᱣᱢᱮ
 si:අඛණ්ඩව නිසිලෙස පළල සකසමින් පිටු පෙන්වන්න
 sk:Prispôsobiť šírke a zobrazovať stránky priebežne
@@ -12642,7 +12685,7 @@ no:Tilpass til enkeltside
 pl:Dopasuj pojedynczą stronę
 pt:Ajustar a uma página
 ro:Potrivire pentru o singură pagină
-ru:Вписать страницу по размеру окна
+ru:Постранично
 sat:ᱢᱤᱫᱴᱟᱹᱝ ᱯᱩᱨᱟᱹ ᱥᱟᱦᱴᱟ ᱵᱟᱹᱭᱥᱟᱣ ᱢᱮ
 si:තනි පිටුවට සකසන්න
 sk:Prispôsobiť a zobraziť celú stranu v okne
@@ -13061,6 +13104,7 @@ nl:Ga naar Pagina...
 pl:Idź do strony...
 ru:Перейти к Странице...
 sk:Prejsť na stranu…
+sr-rs:Иди на страну...
 tw:跳至頁面…
 :Go to page
 af:Gaan Na Bladsy
@@ -13264,6 +13308,7 @@ co:Piattà l’annutazioni
 de:Anmerkungen ausblenden
 nl:Verberg Notaties
 pl:Ukryj adnotacje
+ru:Скрыть аннотации
 sk:Skryť anotácie
 tw:隱藏註解
 :Hide frequently read
@@ -13409,6 +13454,7 @@ fr:Accueil
 ga:Baile
 nl:Thuis
 pl:Startowa
+ru:Главная
 sk:Domov
 tw:首頁
 :Icon:
@@ -14144,6 +14190,7 @@ co:Invertisce i culori
 de:Farben umkehren
 nl:Keer Kleuren Om
 pl:Odwróć kolory
+ru:Инвертировать цвета
 sk:Invertovať farby
 tw:反轉顏色
 :Invoke Inverse Search
@@ -14237,7 +14284,9 @@ co:Ultima pagina
 de:Letzte Seite
 nl:Laatste Pagina
 pl:Ostatnia strona
+ru:Последняя страница
 sk:Posledná strana
+sr-rs:Последња страна
 tw:最後一頁
 :Launch a browser or run command with selection
 am:Գործարկեք դիտարկիչը կամ գործարկեք հրամանը ընտրության միջոցով
@@ -15057,6 +15106,7 @@ co:Dispiazzà u puntu fucale di a vista
 de:Rahmenfokus verschieben
 nl:Verplaats Focus van Kader
 pl:Przenieś uaktywnienie ramki
+ru:Переместить фокус кадра
 sk:Presunúť zameranie rámca
 tw:移動框架焦點
 :Move Tab Left
@@ -15067,6 +15117,7 @@ co:Dispiazzà l’unghjetta à manu manca
 de:Tab nach links verschieben
 nl:Verplaats Tab naar Links
 pl:Przesuń kartę w lewo
+ru:Переместить вкладку влево
 sk:Presunúť kartu doľava
 tw:向左移動分頁
 :Move Tab Right
@@ -15077,6 +15128,7 @@ co:Dispiazzà l’unghjetta à manu diritta
 de:Tab nach rechts verschieben
 nl:Verplaats Tab naar Rechts
 pl:Przesuń kartę w prawo
+ru:Переместить вкладку вправо
 sk:Presunúť kartu doprava
 tw:向右移動分頁
 :Navigate Back
@@ -15085,8 +15137,10 @@ br:Navegar pra Trás
 cn:向后导航
 co:Navigazione in daretu
 de:Zurück
+ja:戻る
 nl:Navigeer Terug
 pl:Nawiguj wstecz
+ru:Перейти назад
 sk:Prejsť späť
 tw:向後巡覽
 :Navigate Forward
@@ -15095,8 +15149,10 @@ br:Navegar pra Frente
 cn:向前导航
 co:Navigazione in avanti
 de:Weiter
+ja:進む
 nl:Navigeer Vooruit
 pl:Nawiguj do przodu
+ru:Перейти вперед
 sk:Prejsť dopredu
 tw:向前巡覽
 :New &window
@@ -15290,6 +15346,7 @@ co:Unghjetta seguente
 de:Nächster Tab
 nl:Volgende Tab
 pl:Następna karta
+ru:Следующая вкладка
 sk:Ďalšia karta
 tw:下一個分頁
 :No
@@ -16357,6 +16414,7 @@ co:Apre un schedariu...
 de:Datei öffnen…
 nl:Open Bestand...
 pl:Otwórz plik...
+ru:Открыть файл...
 sk:Otvoriť súbor…
 tw:開啟檔案…
 :Open In New Window
@@ -16853,6 +16911,7 @@ br:Abrir no Adobe Acrobat
 cn:在 Adobe Acrobat 中打开
 co:Apre cù Adobe Reader
 de:In Adobe Acrobat öffnen
+ja:Adobe Acrobat で開く
 nl:Open In Adobe Acrobat
 pl:Otwórz w Adobe Acrobat
 sk:Otvoriť v Adobe Acrobat
@@ -16863,6 +16922,7 @@ br:Abrir no Foxit PhantomPDF
 cn:在 福昕 PDF 编辑器 中打开
 co:Apre cù Foxit PhantomPDF
 de:In Foxit PhantomPDF öffnen
+ja:Foxit PhantomPDF で開く
 nl:Open In Foxit PhantomPDF
 pl:Otwórz w Foxit PhantomPDF
 sk:Otvoriť v Foxit PhantomPDF
@@ -16873,6 +16933,7 @@ br:Abrir no Foxit Reader
 cn:在 福昕阅读器 中打开
 co:Apre cù Foxit Reader
 de:In Foxit Reader öffnen
+ja:Foxit Reader で開く
 nl:Open in Foxit Reader
 pl:Otwórz w Foxit Readerze
 sk:Otvoriť vo Foxit Reader
@@ -16929,6 +16990,7 @@ br:Abrir no Microsoft HTML Help
 cn:在 Microsoft HTML 帮助中打开
 co:Apre cù Microsoft HTML Help
 de:In Microsoft HTML Help öffnen
+ja:Microsoft HTML Help で開く
 nl:Open in Microsoft HTML Help
 pl:Otwórz w Microsoft HTML Help
 sk:Otvoriť v Microsoft HTML Help
@@ -16939,6 +17001,7 @@ br:Abrir no Microsoft Xps Viewer
 cn:在 Microsoft XPS Viewer 中打开
 co:Apre cù Microsoft Xps Viewer
 de:In Microsoft XPS Viewer öffnen
+ja:Microsoft XPS Viewer で開く
 nl:Open in Microsoft Xps Viewer
 pl:Otwórz w Microsoft XPS Viewer
 sk:Otvoriť v Microsoft Xps Viewer
@@ -16948,7 +17011,8 @@ am:Բացել PDF-XChange-ում
 br:Abrir no PDF-XChange
 cn:在 PDF-XChange 中打开
 co:Apre cù PDF-XChange
-de:In PDF-XChange öffnen
+de:In PDF-XChange Editor öffnen
+ja:PDF-XChange で開く
 nl:Open in PDF-XChange
 pl:Otwórz w PDF-XChange
 sk:Otvoriť v PDF-XChange
@@ -18398,6 +18462,7 @@ co:Unghjetta precedente
 de:Vorheriger Tab
 nl:Vorige Tab
 pl:Poprzednia karta
+ru:Предыдущая вкладка
 sk:Predchádzajúca karta
 tw:上一個分頁
 :Print
@@ -19395,6 +19460,7 @@ co:Rinuminà u schedariu…
 de:Datei umbenennen…
 nl:Hernoem Bestand
 pl:Zmień nazwę pliku...
+ru:Переименовать файл...
 sk:Premenovať súbor…
 tw:重新命名檔案…
 :Rename To
@@ -19588,6 +19654,7 @@ co:Girà à manca
 de:Nach links drehen
 nl:Roteer naar Links
 pl:Obróć w lewo
+ru:Повернуть влево
 sk:Otočiť doľava
 tw:向左旋轉
 :Rotate Right
@@ -19598,6 +19665,7 @@ co:Girà à diritta
 de:Nach rechts drehen
 nl:Roteer naar Rechts
 pl:Obróć w prawo
+ru:Поворот вправо
 sk:Otočiť doprava
 tw:向右旋轉
 :S&election
@@ -19943,6 +20011,7 @@ co:Arregistrà u schedariu cù u nome…
 de:Datei speichern unter…
 nl:Bestand Opslaan Als...
 pl:Zapisz plik jako...
+ru:Сохранить файл как...
 sk:Uložiť súbor ako…
 tw:將檔案另存新檔…
 :Save S&hortcut...
@@ -20229,6 +20298,7 @@ co:Arregistrà…
 de:Speichern…
 nl:Opslaan...
 pl:Zapisz...
+ru:Сохранить...
 sk:Uložiť…
 tw:儲存…
 :Saved annotations to '%s'
@@ -20443,6 +20513,7 @@ br:Procurar Seleção com Bing
 cn:使用 Bing 搜索所选内容
 co:Ricerca di a selezzione cù Bing
 de:Auswahl mit Bing suchen
+ja:選択範囲を Bing で検索
 nl:Zoek Selectie met Bing
 pl:Szukaj zaznaczenia za pomocą Bing
 sk:Vyhľadať vybrané na Bingu
@@ -20453,6 +20524,7 @@ br:Procurar Seleção com Google
 cn:使用 Google 搜索所选内容
 co:Ricerca di a selezzione cù Google
 de:Auswahl mit Google suchen
+ja:選択範囲を Google で検索
 nl:Zoek Selectie met Google
 pl:Szukaj zaznaczenia za pomocą Google
 sk:Vyhľadať vybrané na Googli
@@ -20463,6 +20535,7 @@ br:Procurar Seleção com Google Scholar
 cn:使用 Google 学术搜索所选内容
 co:Ricerca di a selezzione cù Google Scholar
 de:Auswahl mit Google Scholar suchen
+ja:選択範囲を Google Scholar で検索
 nl:Zoek Selectie met Google Scholar
 pl:Szukaj zaznaczenia za pomocą Google Scholar
 sk:Vyhľadať vybrané na Google Scholar
@@ -20473,6 +20546,7 @@ br:Procurar Seleção com Wikipedia
 cn:使用 维基百科 搜索所选内容
 co:Ricerca di a selezzione cù Wikipedia
 de:Auswahl mit Wikipedia suchen
+ja:選択範囲を Wikipedia で検索
 nl:Zoek Selectie met Wikipedia
 pl:Szukaj zaznaczenia za pomocą Wikipedii
 sk:Vyhľadať vybrané na Wikipédii
@@ -20806,6 +20880,7 @@ co:Tuttu selezziunà
 de:Alles auswählen
 nl:Selecteer Alle
 pl:Zaznacz wszystko
+ru:Выбрать всё
 sk:Vybrať všetko
 tw:選取全部
 :Select content with Ctrl+left mouse button
@@ -21169,8 +21244,10 @@ br:Definir tema
 cn:设置主题
 co:Definisce u tema
 de:Design festlegen
+ja:配色テーマを設定
 nl:Stel Thema in
 pl:Ustaw motyw
+ru:Установить тему
 sk:Nastaviť motív
 tw:設定主題
 :Set theme '%s'
@@ -21178,8 +21255,10 @@ br:Definir tema '%s'
 cn:设置为 '%s' 主题
 co:Definisce u tema « %s »
 de:Design '%s' festlegen
+ja:配色テーマ '%s'
 nl:Stel thema '%s' in
 pl:Ustaw motyw „%s”
+ru:Установить тему '%s'
 sk:Nastaviť motív '%s'
 tw:設定成 '%s' 主題
 :Show &Bookmarks
@@ -21506,6 +21585,7 @@ co:Affissà l’annutazioni
 de:Anmerkungen anzeigen
 nl:Toon Notaties
 pl:Pokaż adnotacje
+ru:Показать аннотации
 sk:Zobraziť anotácie
 tw:顯示註解
 :Show Book&marks
@@ -21567,6 +21647,7 @@ co:Affissà i pruprietà di u ducumentu…
 de:Dokumenteigenschaften anzeigen…
 nl:Toon Document Eigenschappen...
 pl:Pokaż właściwości dokumentu...
+ru:Показать свойства документа...
 sk:Zobraziť vlastnosti dokumentu…
 tw:顯示文件內容…
 :Show Favorites
@@ -21643,6 +21724,7 @@ co:Affissà u schedariu in u cartulare…
 de:Datei im Ordner anzeigen…
 nl:Toon Bestand in Map
 pl:Pokaż plik w folderze...
+ru:Показать файл в папке...
 sk:Zobraziť súbor v priečinku…
 tw:在資料夾中顯示檔案…
 :Show Logs
@@ -21653,6 +21735,7 @@ co:Affissà i ghjurnali di messaghji
 de:Protokolle anzeigen
 nl:Toon Log's
 pl:Pokaż dzienniki
+ru:Показать журналы
 sk:Zobraziť logy
 tw:顯示記錄
 :Show Scr&ollbars
@@ -22033,6 +22116,7 @@ co:Affissà da una pagina
 de:Einzelseitenansicht
 nl:Weergave van één pagina
 pl:Widok pojedynczej strony
+ru:Постраничный вид
 sk:Zobrazenie jednej strany
 tw:單頁檢視
 :Smart Next Tab
@@ -23079,6 +23163,7 @@ co:Grafia di testu :
 de:Schriftart:
 nl:Tekst Lettertype:
 pl:Czcionka tekstu:
+ru:Шрифт текста:
 sk:Písmo textu:
 tw:文字字型：
 :Text Size:
@@ -23778,6 +23863,7 @@ br:Traduzir a Seleção com o DeepL
 cn:使用 DeepL 翻译所选内容
 co:Traduce a selezzione cù DeepL
 de:Auswahl mit DeepL übersetzen
+ja:選択範囲を DeepL を使って翻訳
 nl:Vertaal Selectie Met DeepL
 pl:Przetłumacz zaznaczenie za pomocą DeepL
 sk:Preložiť výber pomocou DeepL
@@ -23788,6 +23874,7 @@ br:Traduzir a Seleção com o Google
 cn:使用 Google 翻译所选内容
 co:Traduce a selezzione cù Google
 de:Auswahl mit Google Translate übersetzen
+ja:選択範囲を Google を使って翻訳
 nl:Vertaal Selectie Met Google
 pl:Przetłumacz zaznaczenie za pomocą Google
 sk:Preložiť výber pomocou Google
@@ -24368,6 +24455,7 @@ co:Affissà cù un lettore esternu persunalizatu
 de:Mit benutzerdefiniertem externen Betrachter anzeigen
 nl:Bekijken Met Aangepaste Externe Viewer
 pl:Widok za pomocą niestandardowej przeglądarki zewnętrznej
+ru:Просмотр с помощью внешнего просмотрщика
 sk:Zobraziť pomocou vlastného externého prehliadača
 tw:以自訂外部檢視器檢視
 :View: Presentation Mode
@@ -24378,6 +24466,7 @@ co:Vista : Modu di presentazione
 de:Ansicht: Präsentationsmodus
 nl:Toon: Presentatie Modus
 pl:Widok: tryb prezentacji
+ru:Просмотр: Режим презентации
 sk:Zobraziť: Režim prezentácie
 tw:檢視：簡報模式
 :Visit &Website
@@ -25149,8 +25238,10 @@ br:Zoom: 100%
 cn:缩放：100%
 co:Ingrandamentu : 100%
 de:Zoom: 100 %
+ja:ズーム: 100%
 nl:Zoom: 100%
 pl:Powiększenie: 100%
+ru:Масштаб: 100%
 sk:Zväčšiť: 100 %
 tw:縮放：100%
 :Zoom: 12.5%
@@ -25159,8 +25250,10 @@ br:Zoom: 12.5%
 cn:缩放：12.5%
 co:Ingrandamentu : 12,5%
 de:Zoom: 12,5 %
+ja:ズーム: 12.5%
 nl:Zoom: 12.5%
 pl:Powiększenie: 12,5%
+ru:Масштаб: 12.5%
 sk:Zväčšiť: 12.5%
 tw:縮放：12.5%
 :Zoom: 125%
@@ -25169,8 +25262,10 @@ br:Zoom: 125%
 cn:缩放：125%
 co:Ingrandamentu : 125%
 de:Zoom: 125 %
+ja:ズーム: 125%
 nl:Zoom: 125%
 pl:Powiększenie: 125%
+ru:Масштаб: 125%
 sk:Zväčšiť: 125%
 tw:縮放：125%
 :Zoom: 150%
@@ -25179,8 +25274,10 @@ br:Zoom: 150%
 cn:缩放：150%
 co:Ingrandamentu : 150%
 de:Zoom: 150 %
+ja:ズーム: 150%
 nl:Zoom: 150%
 pl:Powiększenie: 150%
+ru:Масштаб: 150%
 sk:Zväčšiť: 150%
 tw:縮放：150%
 :Zoom: 1600%
@@ -25189,8 +25286,10 @@ br:Zoom: 1600%
 cn:缩放：1600%
 co:Ingrandamentu : 1600%
 de:Zoom: 1600 %
+ja:ズーム: 1600%
 nl:Zoom: 1600%
 pl:Powiększenie: 1600%
+ru:Масштаб: 1600%
 sk:Zväčšiť: 1600%
 tw:縮放：1600%
 :Zoom: 200%
@@ -25199,8 +25298,10 @@ br:Zoom: 200%
 cn:缩放：200%
 co:Ingrandamentu : 200%
 de:Zoom: 200 %
+ja:ズーム: 200%
 nl:Zoom: 200%
 pl:Powiększenie: 200%
+ru:Масштаб: 200%
 sk:Zväčšiť: 200%
 tw:縮放：200%
 :Zoom: 25%
@@ -25209,8 +25310,10 @@ br:Zoom: 25%
 cn:缩放：25%
 co:Ingrandamentu : 25%
 de:Zoom: 25 %
+ja:ズーム: 25%
 nl:Zoom: 25%
 pl:Powiększenie: 25%
+ru:Масштаб: 25%
 sk:Zväčšiť: 25%
 tw:縮放：25%
 :Zoom: 3200%
@@ -25219,8 +25322,10 @@ br:Zoom: 3200%
 cn:缩放：3200%
 co:Ingrandamentu : 3200%
 de:Zoom: 3200 %
+ja:ズーム: 3200%
 nl:Zoom: 3200%
 pl:Powiększenie: 3200%
+ru:Масштаб: 3200%
 sk:Zväčšiť: 3200%
 tw:縮放：3200%
 :Zoom: 400%
@@ -25229,8 +25334,10 @@ br:Zoom: 400%
 cn:缩放：400%
 co:Ingrandamentu : 400%
 de:Zoom: 400 %
+ja:ズーム: 400%
 nl:Zoom: 400%
 pl:Powiększenie: 400%
+ru:Масштаб: 400%
 sk:Zväčšiť: 400%
 tw:縮放：400%
 :Zoom: 50%
@@ -25239,8 +25346,10 @@ br:Zoom: 50%
 cn:缩放：50%
 co:Ingrandamentu : 50%
 de:Zoom: 50 %
+ja:ズーム: 50%
 nl:Zoom: 50%
 pl:Powiększenie: 50%
+ru:Масштаб: 50%
 sk:Zväčšiť: 50%
 tw:縮放：50%
 :Zoom: 6400%
@@ -25249,8 +25358,10 @@ br:Zoom: 6400%
 cn:缩放：6400%
 co:Ingrandamentu : 6400%
 de:Zoom: 6400 %
+ja:ズーム: 6400%
 nl:Zoom: 6400%
 pl:Powiększenie: 6400%
+ru:Масштаб: 6400%
 sk:Zväčšiť: 6400%
 tw:縮放：6400%
 :Zoom: 8.33%
@@ -25259,8 +25370,10 @@ br:Zoom: 8.33%
 cn:缩放：8.33%
 co:Ingrandamentu : 8,33%
 de:Zoom: 8,33 %
+ja:ズーム: 8.33%
 nl:Zoom: 8.33%
 pl:Powiększenie: 8,33%
+ru:Масштаб: 8.33%
 sk:Zväčšiť: 8.33%
 tw:縮放：8.33%
 :Zoom: 800%
@@ -25269,8 +25382,10 @@ br:Zoom: 800%
 cn:缩放：800%
 co:Ingrandamentu : 800%
 de:Zoom: 800 %
+ja:ズーム: 800%
 nl:Zoom: 800%
 pl:Powiększenie: 800%
+ru:Масштаб: 800%
 sk:Zväčšiť: 800%
 tw:縮放：800%
 :Zoom: Actual Size
@@ -25281,6 +25396,7 @@ co:Ingrandamentu : dimensione attuate
 de:Zoom: Tatsächliche Größe
 nl:Zoom: Werkelijke Grootte
 pl:Powiększenie: rozmiar rzeczywisty
+ru:Масштаб: Настоящий размер
 sk:Zväčšiť: Skutočná veľkosť
 tw:縮放：實際大小
 :Zoom: Custom...
@@ -25291,6 +25407,7 @@ co:Ingrandamentu : persunalizatu…
 de:Zoom: Benutzerdefiniert…
 nl:Zoom: Aangepast...
 pl:Powiększenie: niestandardowe...
+ru:Масштаб: Свой...
 sk:Zväčšiť: Vlastné…
 tw:縮放：自訂…
 :Zoom: Fit Content
@@ -25301,6 +25418,7 @@ co:Ingrandamentu : adattà à u cuntenutu
 de:Zoom: An Inhalt anpassen
 nl:Zoom: Inhoud Aanpassen
 pl:Powiększenie: dopasuj do zawartości
+ru:Масштаб: По содержимому
 sk:Zväčšiť: Prispôsobiť obsah
 tw:縮放：符合內容
 :Zoom: Fit Page
@@ -25311,6 +25429,7 @@ co:Ingrandamentu : adattà à a pagina
 de:Zoom: An Seite anpassen
 nl:Zoom: Pagina Passend
 pl:Powiększenie: dopasuj do całej strony
+ru:Масштаб: По размеру страницы
 sk:Zväčšiť: Prispôsobiť strane
 tw:縮放：符合頁面
 :Zoom: Fit Page and Single Page
@@ -25321,6 +25440,7 @@ co:Ingrandamentu : adattà à a pagina è à a pagina sana
 de:Zoom: Seite anpassen und Einzelseite
 nl:Zoom: Pagina Passend en Enkele Pagina
 pl:Powiększenie: dopasuj do całej i pojedynczej strony
+ru:Масштаб: По размеру страницы и Постранично
 sk:Zväčšiť: Prispôsobiť strane a jedna strana
 tw:縮放：符合頁面、單頁檢視
 :Zoom: Fit Width
@@ -25331,6 +25451,7 @@ co:Ingrandamentu : adattà à a larghezza
 de:Zoom: An Fensterbreite anpassen
 nl:Zoom: Breedte Aanpassen
 pl:Powiększenie: dopasuj do szerokości strony
+ru:Масштаб: По ширине
 sk:Zväčšiť: Prispôsobiť šírke
 tw:縮放：符合頁面寬度
 :Zoom: Fit Width And Continuous
@@ -25341,6 +25462,7 @@ co:Ingrandamentu : adattà à a larghezza è lettura in cuntinuu
 de:Zoom: Fortlaufend an Fensterbreite anpassen
 nl:Zoom: Breedte Aangepast en Doorlopend
 pl:Powiększenie: dopasuj do szerokości i w układzie ciągłym
+ru:Масштаб: По ширине и Непрерывно
 sk:Zväčšiť: Prispôsobiť šírke a zobrazovať stránky priebežne
 tw:縮放：符合頁寬，連續顯示
 :[Changes detected; refreshing] %s
@@ -25499,6 +25621,7 @@ de:Seite %d,
 ga:leathanach %d,
 nl:pagina %d,
 pl:strona %d,
+ru:страница %d,
 sk:stranu %d,
 tw:第 %d 頁，
 :printing document
