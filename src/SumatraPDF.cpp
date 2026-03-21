@@ -5291,7 +5291,7 @@ static void SetAnnotCreateArgsFromCommand(AnnotCreateArgs& args, CustomCommand* 
 }
 
 static void SetAnnotCreateArgs(AnnotCreateArgs& args, CustomCommand* cmd) {
-    if (cmd) {
+    if (cmd && (cmd->id != cmd->origId)) {
         // a command definition doesn't use values from settings
         // must specify everything explicitly
         SetAnnotCreateArgsFromCommand(args, cmd);
