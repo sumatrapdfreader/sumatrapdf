@@ -19,7 +19,7 @@ There are 2 possible problems:
 
 If you want to place SumatraPDF in any location, under any name, use the self-contained portable flavor.
 
-If you insist on using the installable version, just install it. The installer will run if it has `-install` in the name of the .exe (which it will if you download [official build](https://www.sumatrapdfreader.org/download-free-pdf-viewer)).
+If you insist on using the installable version, just install it. The installer will run if it has `-install` in the name of the `.exe` (which it will if you download [official build](https://www.sumatrapdfreader.org/download-free-pdf-viewer)).
 
 If you rename the `.exe`, you can force running the installer with `-install` option.
 

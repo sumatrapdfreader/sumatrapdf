@@ -26,8 +26,8 @@ Launch SumatraPDF from TeXStudio enabling forward and backward search:
 
 Configure viewer in [output profiles](https://texniccenter.sourceforge.net/configuration.html#viewer-tab).
 
-- press Alt+F7 (Build > Define Output Profiles)
-- for any one of the PDF Profiles e.g. LaTeX > PDF
+- press `Alt + F7` (`Build` > `Define Output Profiles`)
+- for any one of the PDF Profiles e.g. `LaTeX` > `PDF`
 - for Executable path it should have something like:
   - `C:\Program Files\SumatraPDF\SumatraPDF.exe -inverse-search "\"C:\Program Files (x86)\TeXnicCenter\TeXnicCenter.exe\" /ddecmd \"[goto('%f','%l')]\""`
   - `SumatraPDF.exe` path might be different on your computer
@@ -50,11 +50,11 @@ UseTabs = true
 
 Now a double click in the PDF should take you back to TeXnicCenter either in an included file or the main file. IF not, check the syntax of the InverseSearchCmdLine = matches YOUR location for TeXnicCenter
 
-Back in the editor press Alt+F7 (Build > Define Output Profiles) and for each of the PDF options select viewer
+Back in the editor press `Alt + F7` (`Build` > `Define Output Profiles`) and for each of the PDF options select viewer
 
-In the 1Executable path1 section REMOVE anything after the .exe
+In the `Executable path` section REMOVE anything after the .exe
 
-In the 1View project's Output1 select `Command line argument` and check it is `"%bm.pdf"`
+In the `View project's Output` select `Command line argument` and check it is `"%bm.pdf"`
 
 In Forward search change it to `-forward-search "%Wc" %l "%bm.pdf"`
 

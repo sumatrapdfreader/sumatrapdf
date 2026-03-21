@@ -88,7 +88,7 @@ To change default color for highlight annotation (created with keyboard shortcut
 
 This is a first version of annotation editing. We don't yet support all annotation types and can't do everything that other PDF editing apps can do.
 
-The future will be driven by your feedback. If there are features missing or there are better ways of doing things, let me know in the forum [https://forum.sumatrapdfreader.org/](https://forum.sumatrapdfreader.org/)
+The future will be driven by your feedback. If there are features missing or there are better ways of doing things, let me know in [Discussions](https://github.com/sumatrapdfreader/sumatrapdf/discussions)
 
 When providing feedback:
 
