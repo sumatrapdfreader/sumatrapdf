@@ -2,7 +2,7 @@ AppTranslator: SumatraPDF
 AppTranslator: SumatraPDF
 :# File History
 af:# Lêergeskiedenis
-am:# የፋይል ታሪክ
+am:# Ֆայլի պատմություն
 ar:# سجل الملفات
 az:# Fayl Tarixçəsi
 bg:# История на файла
@@ -4137,7 +4137,7 @@ uz:(bet %s)
 vn:(trang %s)
 :: Everything
 af:: Alles
-am:: ሁሉም ነገር
+am:: Ամբողջը
 ar:: كل شيء
 az:: Hər şey
 bg:: Всичко
@@ -4210,7 +4210,7 @@ uz:: Hamma narsa
 vn:: Mọi thứ
 :> Commands
 af:> Bevele
-am:> ትዕዛዞች
+am:> Մեկնաբանություններ
 ar:> الأوامر
 az:> Əmrlər
 bg:> Команди
@@ -4283,7 +4283,7 @@ uz:> Buyruqlar
 vn:> Lệnh
 :@ Tabs
 af:@ Oortjies
-am:@ ትሮች
+am:@ Ներդիրներ
 ar:@ علامات التبويب
 az:@ Tablar
 bg:@ Табове
@@ -8148,7 +8148,7 @@ uz:Mosligi
 vn:Tính tương thích
 :Contents:
 af:Inhoud:
-am:Բովանդակություն.
+am:Բովանդակությունը՝
 ar:المحتويات:
 az:Məzmun:
 bg:Съдържание:
@@ -12040,7 +12040,7 @@ uz:To‘qroq
 vn:Tối hơn
 :Date:
 af:Datum:
-am:Ամսաթիվ.
+am:Ամսաթիվ՝
 ar:التاريخ:
 az:Tarix:
 bg:Дата:
@@ -12696,7 +12696,7 @@ uk:Налагодження: Перемкнути RTL
 uz:Nosozlik: O'ngdan chapga rejimini almashtirish
 vn:Gỡ lỗi: Bật/tắt RTL
 :Default &Layout:
-am:Ծրագրային &դասավորություն.
+am:Ծրագրային &դասավորություն՝
 ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
@@ -12764,7 +12764,7 @@ uk:Розташування за замовчуванням:
 uz:Standart &joylashish
 vn:Khung nhìn mặc định
 :Default &Zoom:
-am:Ծրագրային &չափը.
+am:Ծրագրային &չափը՝
 ar:التكبير الافتراضي&:
 az:Standart miq&yas:
 bg:&Увеличение по подразбиране:
@@ -13893,7 +13893,7 @@ uz:Izohlarni tahrirlash
 vn:Chỉnh Sửa Chú Thích
 :Embed...
 af:Insluit...
-am:አካትት...
+am:Ներկառուցված...
 ar:تضمين...
 az:Yerləşdir...
 bg:Вграждане...
@@ -18128,7 +18128,7 @@ uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Home
 af:Tuis
-am:መነሻ
+am:Տուն
 ar:الرئيسية
 az:Ana səhifə
 bg:Начало
@@ -18632,7 +18632,7 @@ uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
 af:Installeer en herlaai
-am:Տեղադրել և վեաթողարկել
+am:Տեղադրել և վերաթողարկել
 ar:ثبّت وأعد التشغيل
 az:Quraşdır və təkrar aç
 bg:Инсталирай и рестартирай програмата
@@ -21362,7 +21362,7 @@ uz:Bu joyda sinxronlanish ma'lumoti yo'q
 vn:Không có thông tin đồng bộ ở chỗ này
 :Number of Pages:
 af:Aantal Bladsye:
-am:Էջերի քանակը.
+am:Էջերի քանակը՝
 ar:عدد الصفحات:
 az:Səhifə sayı:
 bg:Брой страници:
@@ -24477,7 +24477,7 @@ uz:Bet %s
 vn:Trang %s
 :Page Size:
 af:Bladsygrootte:
-am:Էջի չափը.
+am:Էջի չափը՝
 ar:حجم الصفحة:
 az:Səhifə ölçüsü:
 bg:Размери на страницата:
@@ -25280,7 +25280,7 @@ uz:Ko‘pburchak
 vn:Đa Hình
 :Popup: %d 0 R
 af:Opspringer: %d 0 R
-am:Ելնող՝ %d 0 R
+am:Թռուցիկ՝ %d 0 R
 ar:المنبثقة: %d 0 R
 az:Sıçrayan element: %d 0 R
 bg:Изскачащ прозорец:  %d 0 R
@@ -28470,7 +28470,7 @@ uz:Yangi PDF-ga saqlash
 vn:Lưu &PDF mới
 :Save...
 af:Stoor...
-am:አስቀምጥ...
+am:Պահել
 ar:حفظ...
 az:Saxla...
 bg:Запазване...
@@ -30691,7 +30691,7 @@ uz:Mavzuni o'rnatish
 vn:Đặt chủ đề
 :Set theme '%s'
 af:Stel tema '%s' in
-am:ገጽታ '%s' ያቀናብሩ
+am:Սահմանել '%s' ձևավորումը
 ar:تعيين السمة '%s'
 az:Temanı '%s' olaraq təyin et
 bg:Задаване на тема '%s'
@@ -33210,7 +33210,7 @@ uz:Matn rangi:
 vn:Màu Sắc:
 :Text Font:
 af:Tekslettertipe:
-am:የጽሑፍ ቅርጸ ቁምፊ:
+am:Տառատեսակը՝
 ar:خط النص:
 az:Mətn Şrifti:
 bg:Шрифт на текста:
@@ -38659,7 +38659,7 @@ uz:ishlatmang
 vn:không sử dụng
 :page %d,
 af:bladsy %d,
-am:ገጽ %d፣
+am:էջ %d,
 ar:صفحة %d،
 az:səhifə %d,
 bg:страница %d,

@@ -1,6 +1,7 @@
 AppTranslator: SumatraPDF
-a3c90c886df577db0e659e87128cdfc39241cfcc
+2868f72d28726db839738554d0d984389d655d3f
 :# File History
+am:# Ֆայլի պատմություն
 br:# Histórico de Arquivos
 cn:# 文件历史记录
 co:# Cronolugia di schedariu
@@ -4033,6 +4034,7 @@ uk:(сторінка %s)
 uz:(bet %s)
 vn:(trang %s)
 :: Everything
+am:: Ամբողջը
 br:: Tudo
 cn:: 所有
 co:: Tuttu
@@ -4044,6 +4046,7 @@ sk:: Všetko
 sr-rs:: Све
 tw:: 全部
 :> Commands
+am:> Մեկնաբանություններ
 br:> Comandos
 cn:> 命令
 co:> Cumande
@@ -4058,6 +4061,7 @@ sk:> Príkazy
 sr-rs:> Команде
 tw:> 命令
 :@ Tabs
+am:@ Ներդիրներ
 br:@ Abas
 cn:@ 标签页
 co:@ Unghjette
@@ -7096,7 +7100,7 @@ uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
 :Contents:
-am:Բովանդակություն.
+am:Բովանդակությունը՝
 ar:المحتويات:
 az:Məzmun:
 bg:Съдържание:
@@ -9361,7 +9365,7 @@ uk:Темніша
 uz:To‘qroq
 vn:Tối hơn
 :Date:
-am:Ամսաթիվ.
+am:Ամսաթիվ՝
 ar:التاريخ:
 az:Tarix:
 bg:Дата:
@@ -9499,7 +9503,7 @@ pl:Debugowanie: przełącz RTL
 sk:Ladenie: Prepnúť RTL
 tw:除錯：切換從右向左模式
 :Default &Layout:
-am:Ծրագրային &դասավորություն.
+am:Ծրագրային &դասավորություն՝
 ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
@@ -9567,7 +9571,7 @@ uk:Розташування за замовчуванням:
 uz:Standart &joylashish
 vn:Khung nhìn mặc định
 :Default &Zoom:
-am:Ծրագրային &չափը.
+am:Ծրագրային &չափը՝
 ar:التكبير الافتراضي&:
 az:Standart miq&yas:
 bg:&Увеличение по подразбиране:
@@ -10361,6 +10365,7 @@ uk:Змінити анотації
 uz:Izohlarni tahrirlash
 vn:Chỉnh Sửa Chú Thích
 :Embed...
+am:Ներկառուցված...
 br:Embutir...
 cn:嵌入…
 co:@ Unghjette
@@ -13446,6 +13451,7 @@ uk:Підказка: Для повторного пошуку натисніть
 uz:Eslatma: qayta qidirish uchun F3 tugmasini bosing
 vn:Gợi ý: Nhấn phím F3 để tìm lại
 :Home
+am:Տուն
 br:Início
 cn:主页
 co:Accolta
@@ -13833,7 +13839,7 @@ uk:Встановити SumatraPDF у папку
 uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Install and relaunch
-am:Տեղադրել և վեաթողարկել
+am:Տեղադրել և վերաթողարկել
 ar:ثبّت وأعد التشغيل
 az:Quraşdır və təkrar aç
 bg:Инсталирай и рестартирай програмата
@@ -15655,7 +15661,7 @@ uk:Немає Інформації про синхронізацію на цій
 uz:Bu joyda sinxronlanish ma'lumoti yo'q
 vn:Không có thông tin đồng bộ ở chỗ này
 :Number of Pages:
-am:Էջերի քանակը.
+am:Էջերի քանակը՝
 ar:عدد الصفحات:
 az:Səhifə sayı:
 bg:Брой страници:
@@ -17552,7 +17558,7 @@ uk:Сторінка %s
 uz:Bet %s
 vn:Trang %s
 :Page Size:
-am:Էջի չափը.
+am:Էջի չափը՝
 ar:حجم الصفحة:
 az:Səhifə ölçüsü:
 bg:Размери на страницата:
@@ -18195,7 +18201,7 @@ uk:Багатокутник
 uz:Ko‘pburchak
 vn:Đa Hình
 :Popup: %d 0 R
-am:Ելնող՝ %d 0 R
+am:Թռուցիկ՝ %d 0 R
 ar:المنبثقة: %d 0 R
 az:Sıçrayan element: %d 0 R
 bg:Изскачащ прозорец:  %d 0 R
@@ -20292,6 +20298,7 @@ uk:Зберегти в новому PDF-файлі
 uz:Yangi PDF-ga saqlash
 vn:Lưu &PDF mới
 :Save...
+am:Պահել
 br:Salvar...
 cn:保存…
 co:Arregistrà…
@@ -21251,6 +21258,7 @@ ru:Установить тему
 sk:Nastaviť motív
 tw:設定主題
 :Set theme '%s'
+am:Սահմանել '%s' ձևավորումը
 br:Definir tema '%s'
 cn:设置为 '%s' 主题
 co:Definisce u tema « %s »
@@ -23157,6 +23165,7 @@ uk:Колір тексту:
 uz:Matn rangi:
 vn:Màu Sắc:
 :Text Font:
+am:Տառատեսակը՝
 br:Fonte do Texto
 cn:文本字体：
 co:Grafia di testu :
@@ -25614,6 +25623,7 @@ ru:не использовать
 sk:nepoužiť
 tw:不要使用
 :page %d,
+am:էջ %d,
 br:página %d,
 cn:第 %d 页，
 co:pagina %d,
