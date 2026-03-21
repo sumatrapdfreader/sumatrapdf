@@ -10,7 +10,7 @@
 - sort thumbnails on home page by most recently used date. Set advanced setting `HomePageSortByFrequentlyRead = true` to revert to pre-3.6 behavior of sorting by frequency of use.
 - support brotli compression in PDF files
 - in Command Palette, if you start search with `:` we show everything (like in 3.5)
-- in Command Palette, when viewing opened files history (#), you can press Delete to remove the entry from history
+- in Command Palette, when viewing opened files history (`#`), you can press Delete to remove the entry from history
 - improved zooming:
   - zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
 - include manual (`F1` to launch browser with documentation)
@@ -24,7 +24,7 @@
   - `CmdInvokeInverseSearch`
   - `CmdMoveTabRight` (`Ctrl + Shift + PageUp`), `CmdMoveTabLeft` (`Ctrl + Shift + PageDown`) to move tabs left / right, like in Chrome
 - add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
-  - CmdCreateAnnot\* commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
+  - `CmdCreateAnnot*` commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
   - `CmdGoToNextPage`, `CmdGoToPrevPage` : integer argument, how many pages to advance
   - `CmdNextTabSmart`, `CmdPrevTabSmart` (`Smart Tab Switch`), shortcut: `Ctrl + Tab`, `Ctrl + Shift + Tab`
@@ -46,7 +46,7 @@
 - change: `CmdCreateAnnotHighlight` etc. no longer copies selection to clipboard by default. To get that behavior back, you can use `copytoclipboard` argument [instead](Commands.md#cmdcreateannothighlight-and-other-cmdcreateannot).
 - change: `Ctrl + Tab` is now `CmdNextTabSmart`, was `CmdNextTab`. `Ctrl + Shift + Tab` is now `CmdPrevTabSmart`, was `CmdPrevTab`. You can [re-bind it](Customizing-keyboard-shortcuts.md) if you prefer old behavior
 - `CmdCommandPalette` takes optional `mode` argument: `@` for tab selection, `#` for selecting from file history and `>` for commands.
-- command palette no longer shows combined tabs/file history/commands. `CmdCommandPalette` only shows commands. Because of that removed `CmdCommandPaletteNoFiles` because now ``CmdCommandPalette` behaves like it
+- command palette no longer shows combined tabs/file history/commands. `CmdCommandPalette` only shows commands. Because of that removed `CmdCommandPaletteNoFiles` because now `CmdCommandPalette` behaves like it
 - removed `CmdCommandPaletteOnlyTabs`, replaced by `CmdCommandPaletteNoFiles @`
 - `Ctrl + Shift + K` no longer active, use `Ctrl + K`. You can restore this shortcut by binding it to `CmdCommandPalette >` command.
 - add `Name` field for shortcuts. If given, the command will show up in Command Palette (`Ctrl + K`)
@@ -146,7 +146,7 @@
 - `i` keyboard shortcuts inverts document colors `Shift + i` does what `i` used to do i.e. show page number
 - `u` and `Shift + u` keyboard shortcuts adds underline annotation for currently selected text
 - `Delete` / `Backspace` keyboard shortcuts delete an annotation under mouse cursor
-- support .svg files
+- support `.svg` files
 - faster scrolling with mouse wheel when cursor over scrollbar
 - add `-search` cmd-line option and `[Search("<file>", "<search-term>")]` DDE command
 - a way to get list of used fonts in properties window
@@ -159,7 +159,7 @@
 
 ## 3.3.2 (2021-07-19)
 
-- restore showing Table Of Contents for .chm files
+- restore showing Table Of Contents for `.chm` files
 - fix crashes
 
 ## 3.3.1 (2021-07-14)
@@ -183,8 +183,8 @@
 Minor improvements and bug-fixes:
 
 - advanced setting to change font size in bookmarks / favorites tree view e.g. `TreeFontSize = 12`
-- support newer versions of ghostscript (≥ 9.54) for opening .ps files
-- support jpeg-xr images in .xps files
+- support newer versions of ghostscript (≥ 9.54) for opening `.ps` files
+- support jpeg-xr images in `.xps` files
 - restore tooltips (regression in 3.2)
 - update mupdf to latest version
 - make silent installation always silent
@@ -245,10 +245,10 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add support for LZMA and PPMd compression in CBZ comic books
 - allow saving Comic Book files as PDF
 - swapped keybindings:
-  - F11 : Fullscreen mode (still also Ctrl+Shift+L)
-  - F5 : Presentation mode (also Shift+F11, still also Ctrl+L)
-- added a document measurement UI. Press 'm' to start. Keep pressing 'm' to change measurement units
-- new advanced settings: FullPathInTitle, UseSysColors (no longer exposed through the Options dialog), UseTabs
+  - `F11` : Fullscreen mode (still also `Ctrl + Shift + L`)
+  - `F5` : Presentation mode (also `Shift + F11`, still also `Ctrl + L`)
+- added a document measurement UI. Press `m` to start. Keep pressing `m` to change measurement units
+- new advanced settings: `FullPathInTitle`, `UseSysColors` (no longer exposed through the Options dialog), `UseTabs`
 - replaced non-free UnRAR with a free RAR extraction library. If some CBR files fail to open for you, download unrar.dll from https://www.rarlab.com/rar_add.htm and place it alongside SumatraPDF.exe
 - deprecated browser plugin. We keep it if it was installed in earlier version
 
@@ -265,20 +265,20 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 - 2 page view for ebooks
 - new keybindings:
-  - Ctrl+PgDn, Ctrl+Right : go to next page
-  - Ctrl+PgUp, Ctrl+Left : go to previous page
+  - `Ctrl + PgDn`, `Ctrl + Right` : go to next page
+  - `Ctrl + PgUp`, `Ctrl + Left` : go to previous page
 - 10x faster ebook layout
 - support JP2 images
-- new **[advanced settings](https://www.sumatrapdfreader.org/settings.html)**: ShowMenuBar, ReloadModifiedDocuments, CustomScreenDPI
+- new **[advanced settings](https://www.sumatrapdfreader.org/settings.html)**: `ShowMenuBar`, `ReloadModifiedDocuments`, `CustomScreenDPI`
 - left/right clicking no longer changes pages in fullscreen mode (use Presentation mode if you rely on this feature)
 - fixed multiple crashes and made multiple minor improvements
 
 ## 2.4 (2013-10-01)
 
-- full-screen mode for ebooks (Ctrl-L)
+- full-screen mode for ebooks (`Ctrl-L`)
 - new key bindings:
-  - F9 - show/hide menu (not remembered after quitting)
-  - F8 - show/hide toolbar
+  - `F9` - show/hide menu (not remembered after quitting)
+  - `F8` - show/hide toolbar
 - support WebP images (standalone and in comic books)
 - support for RAR5 compressed comic books
 - fixed multiple crashes
@@ -297,8 +297,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - "Go To Page" in ebook ui
 - add View/Manga Mode menu item for Comic Book (CBZ/CBR) files
 - new key bindings:
-  - Ctrl-Up : page up
-  - Ctrl-Down : page down
+  - `Ctrl-Up` : page up
+  - `Ctrl-Down` : page down
 - add support for OpenXPS documents
 - support Deflate64 in Comic Book (CBZ/CBR) files
 - fixed missing paragraph indentation in EPUB documents
@@ -317,7 +317,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add support for FictionBook ebook format
 - add support for PDF documents encrypted with Acrobat X
 - “Print as image” compatibility option in print dialog for documents that fail to print properly
-- new command-line option: -manga-mode [1|true|0|false] for proper display of manga comic books
+- new command-line option: `-manga-mode [1|true|0|false]` for proper display of manga comic books
 - many robustness fixes and small improvements
 
 ## 2.1.1 (2012-05-07)
@@ -336,8 +336,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 ## 2.0.1 (2012-04-08)
 
-- fix loading .mobi files from command line
-- fix a crash loading multiple .mobi files at once
+- fix loading `.mobi` files from command line
+- fix a crash loading multiple `.mobi` files at once
 - fix a crash showing tooltips for table of contents tree entries
 
 ## 2.0 (2012-04-02)
@@ -365,8 +365,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - favorites
 - improved support for right-to-left languages e.g. Arabic
 - logical page numbers are displayed and used, if a document provides them (such as i, ii, iii, etc.)
-- allow to restrict SumatraPDF's features with more granularity; see **[sumatrapdfrestric.init](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini)** for documentation
-- -named-dest also matches strings in table of contents
+- allow to restrict SumatraPDF's features with more granularity; see **[sumatrapdfrestrict.ini](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini)** for documentation
+- `-named-dest` also matches strings in table of contents
 - improved support for EPS files (requires Ghostscript)
 - more robust installer
 - many minor improvements and bugfixes
@@ -392,7 +392,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add support for viewing CBZ and CBR comic books
 - add File/Save Shortcut menu item to create shortcuts to a specific place in a document
 - add context menu for copying text, link addresses and comments. In browser plugin it also adds saving and printing commands
-- add folder browsing (Ctrl+Shift+Right opens next PDF document in the current folder, Ctrl+Shift+Left opens previous document)
+- add folder browsing (`Ctrl + Shift + Right` opens next PDF document in the current folder, `Ctrl + Shift + Left` opens previous document)
 
 ## 1.4 (2011-03-12)
 
@@ -402,16 +402,16 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - you can choose a custom installation directory in the installer
 - menu items for re-opening current document in Foxit and PDF-XChange (if they're installed)
 - we no longer compress the installer executable with mpress. It caused some anti-virus programs to falsely report Sumatra as a virus. The downside is that the binaries on disk are now bigger. Note: we still compress the portable .zip version
-- -title cmd-line option was removed
+- `-title` cmd-line option was removed
 - support for AES-256 encrypted PDF documents
 - fixed an integer overflow reported by Jeroen van der Gun and other small fixes and improvements to PDF handling
 
 ## 1.3 (2011-02-04)
 
-- improved text selection and copying. We now mimic the way a browser or Adobe Reader works: just select text with mouse and use Ctrl-C to copy it to a clipboard
-- Shift+Left Mouse now scrolls the document, Ctrl+Left mouse still creates a rectangular selection (for copying images)
-- 'c' shortcut toggles continuous mode
-- '+' / '\*' on the numeric keyboard now do zoom and rotation
+- improved text selection and copying. We now mimic the way a browser or Adobe Reader works: just select text with mouse and use `Ctrl-C` to copy it to a clipboard
+- `Shift + Left Mouse` now scrolls the document, `Ctrl + Left mouse` still creates a rectangular selection (for copying images)
+- `c` shortcut toggles continuous mode
+- `+` / `*` on the numeric keyboard now do zoom and rotation
 - added toolbar icons for Fit Page and Fit Width and updated the look of toolbar icons
 - add support for back/forward mouse buttons for back/forward navigation
 - 1.2 introduces a new full screen mode and made it the default full screen mode. Old mode was still available but not easily discoverable. We've added View/Presentation menu item for new full screen mode and View/Fullscreen menu item for the old full screen mode, to make it more discoverable
@@ -428,8 +428,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 ## 1.2 (2010-11-26)
 
 - improved printing: faster and uses less resources
-- add Ctrl-Y as a shortcut for Custom Zoom
-- add Ctrl-A as a shortcut for Select All Text
+- add `Ctrl-Y` as a shortcut for Custom Zoom
+- add `Ctrl-A` as a shortcut for Select All Text
 - improved full screen mode
 - open embedded PDF documents
 - allow saving PDF document attachments to disk
@@ -444,7 +444,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - auto-detect commonly used TeX editors for inverse-search command
 - bug fixes to PDF handling (more PDFs are shown correctly)
 - misc bug fixes and small improvements in UI
-- add Ctrl + and Ctrl – as shortcuts for zooming (matches Adobe Reader)
+- add `Ctrl +` and `Ctrl –` as shortcuts for zooming (matches Adobe Reader)
 
 ## 1.0.1 (2009-11-27)
 
@@ -482,26 +482,26 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - improvements to DDE (contributed by Danilo Roascio)
 - SyncTex improvements
 - improve persistence of state (contributed by Robert Liu)
-- fix crash when pressing 'Cancel' when entering a password
+- fix crash when pressing `Cancel` when entering a password
 - updated translations
 
 ## 0.9.1 (2008-08-22)
 
 - improved rendering of some PDFs
 - support for links inside PDF file
-- added -restrict and -title cmd-line options (contributed by Matthew Wilcoxson)
+- added `-restrict` and `-title` cmd-line options (contributed by Matthew Wilcoxson)
 - enabled SyncTex support which mistakenly disabled in 0.9
 - misc fixes and translation updates
 
 ## 0.9 (2008-08-10)
 
-- add Ctrl-P as print shortcut
-- add F11 as full-screen shortcut
+- add `Ctrl-P` as print shortcut
+- add `F11` as full-screen shortcut
 - password dialog no longer shows the password
 - support for AES-encrypted PDF files
 - updates to SyncTeX/PdfSync integration (contributed by William Blum)
-- add -nameddest command-line option and DDE commands for jumping to named destination(contributed by Alexander Klenin)
-- add -reuse-instance command-line option (contributed by William Blum)
+- add `-nameddest` command-line option and DDE commands for jumping to named destination (contributed by Alexander Klenin)
+- add `-reuse-instance` command-line option (contributed by William Blum)
 - add DDE command to open PDF file (contributed by William Blum)
 - removed poppler rendering engine resulting in smaller program and updated to latest mupdf sources
 - misc bugfixes and translation updates
@@ -514,8 +514,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - language change is now a separate dialog instead of a menu
 - remember more settings (like default view)
 - automatic checks for new versions
-- add command-line option -lang $lang
-- add command-line option -print-dialog (contributed by Peter Astrand)
+- add command-line option `-lang $lang`
+- add command-line option `-print-dialog` (contributed by Peter Astrand)
 - ESC or single mouse click hides selection
 - fix showing boxes in table of contents tree
 - translation updates
@@ -530,8 +530,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - fixed some crashes
 - rendering speedups
 - fixed loading of some PDFs
-- add command-line option -esc-to-exit
-- add command-line option -bgcolor $color
+- add command-line option `-esc-to-exit`
+- add command-line option `-bgcolor $color`
 
 ## 0.7 (2007-07-28)
 
@@ -539,7 +539,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - made it multi-lingual (13 translations)
 - added Save As option
 - list of recently opened files is updated immediately
-- fixed .pdf extension registration on Vista
+- fixed `.pdf` extension registration on Vista
 - added ability to compile as DLL and C# sample application - contributed by Valery Possoz
 - mingw compilation fixes and project files for CodeBlocks - contributed by MrChuoi
 - fixed a few crashes
@@ -562,8 +562,8 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 - fixed rendering problems with some PDF files
 - speedups - the application should feel snappy and there should be less waiting for rendering
-- added 'r' keybinding for reloading currently open PDF file
-- added <Ctrl>-<Shift>-+ and <Ctrl>-<Shift>-- keybindings to rotate clockwise and counter-clockwise (just like Acrobat Reader)
+- added `r` keybinding for reloading currently open PDF file
+- added `Ctrl-Shift-+` and `Ctrl-Shift--` keybindings to rotate clockwise and counter-clockwise (just like Acrobat Reader)
 - fixed a crash or two
 
 ## 0.4 (2007-02-18)
@@ -576,7 +576,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - improve the way fonts directory is found
 - improvements to portable mode
 - uninstaller completely removes the program
-- changed name of preferences files from prefs.txt to sumatrapdfprefs.txt
+- changed name of preferences files from `prefs.txt` to `sumatrapdfprefs.txt`
 
 ## 0.3 (2006-11-25)
 

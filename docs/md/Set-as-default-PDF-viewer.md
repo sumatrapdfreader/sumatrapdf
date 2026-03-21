@@ -18,7 +18,7 @@ In File Explorer:
 
 From the list, choose `SumatraPDF` and check `Always use this app to open .pdf files`:
 
-![choose_app.png](img/choose_app.png)
+![Choose App](img/choose_app.png)
 
 ## Using Default apps system settings
 
@@ -28,11 +28,11 @@ Unfortunately the details differ between Windows updates.
 
 Launch `Default app` section in settings app, e.g. use `Windows logo` hot-key to launch system-wide search, type `default apps` and click on `Default apps` search result to launch settings app.
 
-![Untitled](img/default-apps.png)
+![Default apps](img/default-apps.png)
 
 In Default apps type `.pdf` for file extension:
 
-![Settings](img/settings-app.png)
+![Default apps Settings](img/settings-app.png)
 
 Click on current default PDF application (`Microsoft Edge` in this example) and select `SumatraPDF`:
 

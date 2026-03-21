@@ -28,7 +28,7 @@ On Windows 10 / 11:
 
 ## What if the above doesn't help?
 
-What if you still have questions? You can use the [forums](https://forum.sumatrapdfreader.org/) to ask for additional help.
+What if you still have questions? You can use [Discussions](https://github.com/sumatrapdfreader/sumatrapdf/discussions) to ask for additional help.
 
 However, in order for someone to help you, you need to provide the following information:
 

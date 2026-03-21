@@ -567,5 +567,5 @@ The components are hex values (ranging from 00 to FF) and stand for:
 - `bb` : blue component
 - `aa` : alpha (transparency) component
 
-For example #ff0000 means red color. #ff00007f is half-transparent red.
+For example `#ff0000` means red color. `#7fff0000` is half-transparent red.
 

@@ -45,11 +45,8 @@ Here are the steps to follow if Sumatra hangs
 2. start WinDBG.exe
 3. use File/Attach to process (F6) and select SumatraPDF.exe from the
 4. In WinDBG, type:
-
-7.1) `.sympath+ SRV*c:\symbols*https://msdl.microsoft.com/download/symbols`
-
-7.2) `~*kb`
-
-7.3) `lmf`
+    - `.sympath+ SRV*c:\symbols*https://msdl.microsoft.com/download/symbols`
+    - `~*kb`
+    - `lmf`
 
 Attach the output to bug report.

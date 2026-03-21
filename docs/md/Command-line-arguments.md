@@ -61,7 +61,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 ## Options related to forward/inverse search (for LaTeX editors)
 
-- `-forward-search "<sourcepath>" <line> "<pdfpath>"`: performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. -forward-search "/path/to/main.tex" 123 "/path/to/main.pdf" highlights all text related to line 123 in main.tex.
+- `-forward-search "<sourcepath>" <line> "<pdfpath>"`: performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. `-forward-search "/path/to/main.tex" 123 "/path/to/main.pdf"` highlights all text related to line 123 in main.tex.
 - `-reuse-instance` : tells an already open SumatraPDF to load the indicated files. If there are several running instances, behavior is undefined. Only needed when communicating with SumatraPDF through DDE (use the ReuseInstance setting instead otherwise).
 - `-inverse-search <command-line>` : sets the command line to be used for performing an inverse search from a PDF document (usually back to a LaTeX source file). The inverse search command line can also be set from the Setting dialog. Use the variable %f for the current filename and %l for the current line.
 [Deprecated]: This setting is exposed in the Options dialog after the first PDF document with corresponding .synctex or .pdfsync file has been loaded. Alternatively, use the corresponding advanced setting instead.
@@ -72,7 +72,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 - `-console` : Opens a console window alongside SumatraPDF for accessing (MuPDF) debug output.
 - `-stress-test <path> [file-filter] [range] [cycle-count]`
-    - Renders all pages of the indicated file/directory for stability and performance testing. E.g.:
+    : Renders all pages of the indicated file/directory for stability and performance testing. E.g.:
 
     ```
     -stress-test file1.pdf 25x
@@ -88,12 +88,10 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 The following options just set values in the settings file and may be removed in any future version:
 
-- `-bg-color <hexcolor>` : changes the yellow background color to a different color. See e.g. [html-color-codes.info](https://html-color-codes.info/) for a way to generate the hexcode for a color. E.g. `-bg-color #999999` changes the color to gray.
-[Deprecated]: Use [MainWindowBackground](https://www.sumatrapdfreader.org/settings/settings.html#MainWindowBackground) setting instead.
+- `-bg-color <hexcolor>` : changes the yellow background color to a different color. See e.g. [html-color-codes.info](https://html-color-codes.info/) for a way to generate the hexcode for a color. E.g. `-bg-color #999999` changes the color to gray. [Deprecated]: Use [MainWindowBackground](https://www.sumatrapdfreader.org/settings/settings.html#MainWindowBackground) setting instead.
 - `-esc-to-exit` : enables the Escape key to quit SumatraPDF. Deprecated: Use the [EscToExit](https://www.sumatrapdfreader.org/settings.html#EscToExit) setting instead.
 - `-set-color-range <text-hexcolor> <background-hexcolor>` : Uses the given two colors for foreground and background and maps all other colors used in a document in between these two. E.g. `-set-color-range #dddddd #333333` displays soft white text on a dark gray background. [Deprecated]: Use the TextColor and BackgroundColor settings for FixedPageUI instead.
-- `-lang <language-code>` : sets the UI language. See [/scripts/trans_langs.py] (https://github.com/sumatrapdfreader/sumatrapdf/blob/master/scripts/trans_langs.py) for the list of available language codes. E.g. -lang de. [Deprecated]: Use the `UiLanguage` setting instead.
-- `-manga-mode <mode>` : enables or disables "Manga mode" for reading (mainly Japanese) comic books from right to left. Mode must be "true" or 1 for enabling and "false" or 0 for disabling this feature.
+- `-lang <language-code>` : sets the UI language. See [/scripts/trans_langs.py] (https://github.com/sumatrapdfreader/sumatrapdf/blob/master/scripts/trans_langs.py) for the list of available language codes. E.g. `-lang de`. [Deprecated]: Use the `UiLanguage` setting instead.
+- `-manga-mode <mode>` : enables or disables "Manga mode" for reading (mainly Japanese) comic books from right to left. Mode must be "true" or 1 for enabling and "false" or 0 for disabling this feature. Deprecated: Use the [CbxMangaMode](https://www.sumatrapdfreader.org/settings.html#ComicBookUI_CbxMangaMode) setting for ComicBookUI instead.
 - `-invert-colors`
 
-Deprecated: Use the [CbxMangaMode](https://www.sumatrapdfreader.org/settings.html#ComicBookUI_CbxMangaMode) setting for ComicBookUI instead.

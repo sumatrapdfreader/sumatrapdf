@@ -1,4 +1,4 @@
-# Submit crash report`
+# Submit crash report
 
 Please help us fix SumatraPDF crashes.
 

@@ -19,7 +19,7 @@ You can also use command palette (`Ctrl + K`):
 - `Ctrl + K` to open command palette
 - type e.g. `deepl` to find `Translate with DeepL` command
 
-![Untitled](img/cmd-palette-translate.png)
+![Using Command Palette](img/cmd-palette-translate.png)
 
 - press `Enter` (or double-click with mouse) to execute the action
 
