@@ -286,7 +286,8 @@ function appendToAICache(english: string[], lang: string, translations: Map<stri
 }
 
 async function translateWithClaude(apiKey: string, strings: string[], langCode: string): Promise<Map<string, string>> {
-  const stringsJson = JSON.stringify(strings);
+  let stringsToTranslate = strings.map((s) => s.replaceAll("&", ""));
+  const stringsJson = JSON.stringify(stringsToTranslate);
   const prompt = `Translate the following English UI strings to the language identified by locale code "${langCode}". Return ONLY a JSON object mapping each English string to its translation. No explanation, no markdown formatting, just the JSON object.\n\n${stringsJson}`;
 
   const resp = await fetch("https://api.anthropic.com/v1/messages", {
@@ -329,7 +330,14 @@ async function translateWithClaude(apiKey: string, strings: string[], langCode: 
   const result = new Map<string, string>();
   for (const [key, value] of Object.entries(parsed)) {
     if (typeof value === "string") {
-      result.set(key, value);
+      let idx = stringsToTranslate.indexOf(key);
+      if (idx < 0) throw new Error(`Claude returned unexpected key: '${key}' for lang ${langCode}`);
+      let origStr = strings[idx];
+      let verif = origStr.replaceAll("&", "");
+      if (verif != key) {
+        throw new Error(`Claude returned key '${key}' that doesn't match original '${origStr}' (lang ${langCode})`);
+      }
+      result.set(origStr, value);
     }
   }
   return result;
@@ -356,7 +364,6 @@ async function addTranslationsFromAI(pt: ParsedTranslations): Promise<void> {
     // find untranslated strings without "&"
     const missing: string[] = [];
     for (const s of allStrings) {
-      if (s.includes("&")) continue;
       if (translations.has(s)) continue;
       // check AI cache first
       const cached = aiCache.get(lang)?.get(s);
