@@ -221,11 +221,14 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
         }
         ByteSlice d = {uncompressed, fi->uncompressedSize};
         ok = file::WriteFile(filePath, d);
-
+        if (!ok) {
+            DWORD err = GetLastError();
+            logf("ExtractSymbols: failed to write '%s'\n", filePath);
+            LogLastError(err);
+        }
         Allocator::Free(allocator, filePath);
         Allocator::Free(allocator, uncompressed);
         if (!ok) {
-            logf("ExtractSymbols: failed to write '%s'\n", filePath);
             return false;
         }
     }
