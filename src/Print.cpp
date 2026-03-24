@@ -856,6 +856,18 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         goto Exit;
     }
 
+    // re-validate after modal dialog - tab/document may have changed while dialog was open
+    dm = win->AsFixed();
+    if (!dm) {
+        goto Exit;
+    }
+    engine = dm->GetEngine();
+    if (!engine) {
+        goto Exit;
+    }
+    rotation = dm->GetRotation();
+    nPages = dm->PageCount();
+
     if (!pdex.hDevNames) {
         MessageBoxWarning(win->hwndFrame, _TRA("Couldn't get printer name"), _TRA("Printing problem."));
         goto Exit;
