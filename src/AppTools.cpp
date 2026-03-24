@@ -112,8 +112,12 @@ void DeleteAppTools() {
 
 void SetAppDataDir(const char* dir) {
     dir = path::NormalizeTemp(dir);
-    bool ok = dir::CreateAll(dir);
-    ReportIf(!ok);
+    // don't try to create root directories like d:\ (CreateAll would fail)
+    bool isRootDir = str::Len(dir) == 3 && dir[1] == ':' && dir[2] == '\\';
+    if (!isRootDir) {
+        bool ok = dir::CreateAll(dir);
+        ReportIf(!ok);
+    }
     str::ReplaceWithCopy(&gAppDataDir, dir);
 }
 
