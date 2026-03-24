@@ -1,7 +1,8 @@
 AppTranslator: SumatraPDF
-2868f72d28726db839738554d0d984389d655d3f
+bc1a633ac91084dee42d97f4d0e9977757750b1f
 :# File History
 am:# Ֆայլի պատմություն
+ar:# سجل الملفات
 br:# Histórico de Arquivos
 cn:# 文件历史记录
 co:# Cronolugia di schedariu
@@ -4062,6 +4063,7 @@ sr-rs:> Команде
 tw:> 命令
 :@ Tabs
 am:@ Ներդիրներ
+ar:@ علامات التبويب
 br:@ Abas
 cn:@ 标签页
 co:@ Unghjette

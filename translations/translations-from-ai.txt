@@ -28038,3 +28038,3425 @@ tl:pahina %d,
 uk:сторінка %d,
 :page %d,
 vn:trang %d,
+:Show PDF Info
+am:የPDF መረጃ አሳይ
+:Show PDF Info
+ar:عرض معلومات PDF
+:Show PDF Info
+br:Diskouez titouroù ar PDF
+:Show PDF Info
+cn:显示PDF信息
+:Show PDF Info
+co:Affissà l'infurmazione PDF
+:Show PDF Info
+de:PDF-Info anzeigen
+:Show PDF Info
+hi:PDF जानकारी दिखाएं
+:Show PDF Info
+ja:PDFの情報を表示
+:Show PDF Info
+ml:PDF വിവരങ്ങൾ കാണിക്കുക
+:Show PDF Info
+nl:PDF-info weergeven
+:Show PDF Info
+pl:Pokaż informacje o pliku PDF
+:Show PDF Info
+ru:Показать информацию о PDF
+:Show PDF Info
+sk:Zobraziť informácie o PDF
+:Show PDF Info
+sr-rs:Prikaži PDF informacije
+:Show PDF Info
+tw:顯示 PDF 資訊
+:Show PDF Info
+az:PDF Məlumatını Göstər
+:Show PDF Info
+by:Паказаць інфармацыю пра PDF
+:Show PDF Info
+ca:Mostra informació del PDF
+:Show PDF Info
+cy:Dangos Gwybodaeth PDF
+:Show PDF Info
+cz:Zobrazit informace o PDF
+:Show PDF Info
+el:Εμφάνιση πληροφοριών PDF
+:Show PDF Info
+es:Mostrar información del PDF
+:Show PDF Info
+fa:نمایش اطلاعات PDF
+:Show PDF Info
+fi:Näytä PDF-tiedot
+:Show PDF Info
+fo:Vís PDF upplýsingar
+:Show PDF Info
+fr:Afficher les informations du PDF
+:Show PDF Info
+ga:Taispeáin Eolas PDF
+:Show PDF Info
+gl:Mostrar información do PDF
+:Show PDF Info
+he:הצג מידע על PDF
+:Show PDF Info
+hu:PDF információk megjelenítése
+:Show PDF Info
+id:Tampilkan Info PDF
+:Show PDF Info
+it:Mostra informazioni PDF
+:Show PDF Info
+kr:PDF 정보 표시
+:Show PDF Info
+lv:Rādīt PDF informāciju
+:Show PDF Info
+my:PDF အချက်အလက်ပြရန်
+:Show PDF Info
+pt:Mostrar informações do PDF
+:Show PDF Info
+ro:Afișează informații PDF
+:Show PDF Info
+sat:PDF ᱠᱷᱚᱵᱚᱨ ᱫᱮᱠᱷᱟᱣ ᱢᱮ
+:Show PDF Info
+sl:Prikaži podatke o PDF
+:Show PDF Info
+sv:Visa PDF-information
+:Show PDF Info
+ta:PDF தகவலைக் காட்டு
+:Show PDF Info
+tr:PDF Bilgilerini Göster
+:Show PDF Info
+uz:PDF ma'lumotlarini ko'rsatish
+:Show PDF Info
+af:Wys PDF Inligting
+:Show PDF Info
+bg:Покажи информация за PDF
+:Show PDF Info
+bn:PDF তথ্য দেখান
+:Show PDF Info
+bs:Prikaži PDF informacije
+:Show PDF Info
+ca-xv:Mostra la informació del PDF
+:Show PDF Info
+dk:Vis PDF-info
+:Show PDF Info
+et:Kuva PDF info
+:Show PDF Info
+eu:Erakutsi PDF informazioa
+:Show PDF Info
+fy-nl:PDF-ynfo toane
+:Show PDF Info
+hr:Prikaži PDF informacije
+:Show PDF Info
+jv:Tampilake Info PDF
+:Show PDF Info
+ka:PDF ინფორმაციის ჩვენება
+:Show PDF Info
+ku:Zانیارییەکانی PDF پیشان بدە
+:Show PDF Info
+kw:Diskwedhes Kedhlow PDF
+:Show PDF Info
+lt:Rodyti PDF informaciją
+:Show PDF Info
+mk:Прикажи информации за PDF
+:Show PDF Info
+mm:PDF အချက်အလက်ပြရန်
+:Show PDF Info
+ne:PDF जानकारी देखाउनुहोस्
+:Show PDF Info
+nn:Vis PDF-info
+:Show PDF Info
+no:Vis PDF-info
+:Show PDF Info
+pa:PDF ਜਾਣਕਾਰੀ ਦਿਖਾਓ
+:Show PDF Info
+si:PDF තොරතුරු පෙන්වන්න
+:Show PDF Info
+sn:Ratidza Ruzivo rwePDF
+:Show PDF Info
+sp-rs:Prikaži PDF informacije
+:Show PDF Info
+sq:Shfaq Informacionin e PDF-së
+:Show PDF Info
+th:แสดงข้อมูล PDF
+:Show PDF Info
+tl:Ipakita ang Impormasyon ng PDF
+:Show PDF Info
+uk:Показати інформацію про PDF
+:Show PDF Info
+vn:Hiển thị thông tin PDF
+:Open With Pdf&Djvu Bookmarker
+ar:فتح باستخدام PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+hi:PdfDjvu बुकमार्कर के साथ खोलें
+:Open With Pdf&Djvu Bookmarker
+ja:PdfDjvu Bookmarkerで開く
+:&Even pages only
+ml:ഇരട്ട പേജുകൾ മാത്രം
+:&Facing
+ml:അഭിമുഖമായി
+:&First Page
+ml:ആദ്യ പേജ്
+:&Fit pages to printable area
+ml:പ്രിന്റ് ചെയ്യാവുന്ന പ്രദേശത്തിലേക്ക് പേജുകൾ യോജിപ്പിക്കുക
+:&Free Text
+ml:സ്വതന്ത്ര വാചകം
+:&Highlight
+ml:ഹൈലൈറ്റ്
+:&Keyboard Shortcuts
+ml:കീബോർഡ് കുറുക്കുവഴികൾ
+:&Last Page
+ml:അവസാന പേജ്
+:&Magnification:
+ml:വലുതാക്കൽ:
+:&Manual
+ml:മാനുവൽ
+:&Match case
+ml:അക്ഷരവലുപ്പം യോജിപ്പിക്കുക
+:&Next Page
+ml:അടുത്ത പേജ്
+:&No
+ml:ഇല്ല
+:&Open...
+ml:തുറക്കുക...
+:&Options
+ml:ഓപ്ഷനുകൾ
+:&Options...
+ml:ഓപ്ഷനുകൾ...
+:&Pin Document
+ml:ഡോക്യുമെന്റ് പിൻ ചെയ്യുക
+:&Previous Page
+ml:മുമ്പത്തെ പേജ്
+:&Print...
+ml:പ്രിന്റ് ചെയ്യുക...
+:&Print... (denied)
+ml:പ്രിന്റ് ചെയ്യുക... (നിഷേധിച്ചു)
+:&Remember the password for this document
+ml:ഈ ഡോക്യുമെന്റിനായുള്ള പാസ്‌വേഡ് ഓർമ്മിക്കുക
+:&Remember these settings for each document
+ml:ഓരോ ഡോക്യുമെന്റിനും ഈ ക്രമീകരണങ്ങൾ ഓർമ്മിക്കുക
+:&Remove From History
+ml:ചരിത്രത്തിൽ നിന്ന് നീക്കം ചെയ്യുക
+:&Save As...
+ml:പേരിൽ സംരക്ഷിക്കുക...
+:&Save to existing PDF
+ml:നിലവിലുള്ള PDF-ലേക്ക് സംരക്ഷിക്കുക
+:&Search With Google
+ml:Google ഉപയോഗിച്ച് തിരയുക
+:&Shrink pages to printable area (if necessary)
+ml:പ്രിന്റ് ചെയ്യാവുന്ന പ്രദേശത്തേക്ക് പേജുകൾ ചുരുക്കുക (ആവശ്യമെങ്കിൽ)
+:&Single Page
+ml:ഒറ്റ പേജ്
+:&Stamp
+ml:സ്റ്റാമ്പ്
+:&Strike Out
+ml:വെട്ടിക്കളയുക
+:&Text
+ml:വാചകം
+:&Theme
+ml:തീം
+:&Translate With Google
+ml:Google ഉപയോഗിച്ച് വിവർത്തനം ചെയ്യുക
+:&Underline
+ml:അടിവര
+:&Use original page sizes
+ml:യഥാർത്ഥ പേജ് വലുപ്പങ്ങൾ ഉപയോഗിക്കുക
+:&Window
+ml:വിൻഡോ
+:&Yes
+ml:ഉവ്വ്
+:E&xit
+ml:പുറത്തുകടക്കുക
+:E&xit Fullscreen
+ml:പൂർണ്ണസ്‌ക്രീനിൽ നിന്ന് പുറത്തുകടക്കുക
+:F&avorites
+ml:പ്രിയപ്പെട്ടവ
+:F&orward
+ml:മുന്നോട്ട്
+:F&ullscreen
+ml:പൂർണ്ണസ്‌ക്രീൻ
+:Fin&d...
+ml:കണ്ടെത്തുക...
+:Fit &Content
+ml:ഉള്ളടക്കം യോജിപ്പിക്കുക
+:Fit &Page
+ml:പേജ് യോജിപ്പിക്കുക
+:Fit &Width
+ml:വീതി യോജിപ്പിക്കുക
+:Hide &Options
+ml:ഓപ്ഷനുകൾ മറയ്ക്കുക
+:Install SumatraPDF in &folder:
+ml:ഫോൾഡറിൽ SumatraPDF ഇൻസ്റ്റാൾ ചെയ്യുക:
+:Let Windows Desktop Search &search PDF documents
+ml:Windows Desktop Search-ന് PDF രേഖകൾ തിരയാൻ അനുവദിക്കുക
+:Let Windows show &previews of PDF documents
+ml:PDF രേഖകളുടെ പ്രിവ്യൂകൾ കാണിക്കാൻ Windows-നെ അനുവദിക്കുക
+:Man&ga Mode
+ml:മാംഗ മോഡ്
+:New &window
+ml:പുതിയ വിൻഡോ
+:Open &in PDF-XChange
+ml:PDF-XChange-ൽ തുറക്കുക
+:Open Directory in &Double Commander
+ml:Double Commander-ൽ ഡയറക്ടറി തുറക്കുക
+:Open Directory in &Explorer
+ml:Explorer-ൽ ഡയറക്ടറി തുറക്കുക
+:Open Directory in &Total Commander
+ml:Total Commander-ൽ ഡയറക്ടറി തുറക്കുക
+:Open Directory in Directory &Opus
+ml:Directory Opus-ൽ ഡയറക്ടറി തുറക്കുക
+:Open With Pdf&Djvu Bookmarker
+ml:PdfDjvu Bookmarker ഉപയോഗിച്ച് തുറക്കുക
+:Open in &Adobe Reader
+ml:Adobe Reader-ൽ തുറക്കുക
+:Open in &Foxit Reader
+ml:Foxit Reader-ൽ തുറക്കുക
+:Open in &Microsoft XPS-Viewer
+ml:Microsoft XPS-Viewer-ൽ തുറക്കുക
+:Open in Microsoft &HTML Help
+ml:Microsoft HTML Help-ൽ തുറക്കുക
+:P&roperties
+ml:ഗുണവിശേഷതകൾ
+:Pa&ge...
+ml:പേജ്...
+:Pr&esentation
+ml:അവതരണം
+:Re&name...
+ml:പേരു മാറ്റുക...
+:Remember &opened files
+ml:തുറന്ന ഫയലുകൾ ഓർമ്മിക്കുക
+:Rotate &Left
+ml:ഇടത്തോട്ട് തിരിക്കുക
+:Rotate &Right
+ml:വലത്തോട്ട് തിരിക്കുക
+:S&election
+ml:തിരഞ്ഞെടുക്കൽ
+:S&quiggly
+ml:ചുരുണ്ട വര
+:Save S&hortcut...
+ml:കുറുക്കുവഴി സംരക്ഷിക്കുക...
+:Save to &new PDF
+ml:പുതിയ PDF-ലേക്ക് സംരക്ഷിക്കുക
+:Search With &Bing
+ml:Bing ഉപയോഗിച്ച് തിരയുക
+:Search With &Google
+ml:Google ഉപയോഗിച്ച് തിരയുക
+:Search with &Google Scholar
+ml:Google Scholar ഉപയോഗിച്ച് തിരയുക
+:Search with &Wikipedia
+ml:Wikipedia ഉപയോഗിച്ച് തിരയുക
+:Select &All
+ml:എല്ലാം തിരഞ്ഞെടുക്കുക
+:Send by &E-mail...
+ml:ഇ-മെയിൽ വഴി അയയ്ക്കുക...
+:Show &Bookmarks
+ml:ബുക്ക്മാർക്കുകൾ കാണിക്കുക
+:Show &Favorites
+ml:പ്രിയങ്കരങ്ങൾ കാണിക്കുക
+:Show &Pages Continuously
+ml:പേജുകൾ തുടർച്ചയായി കാണിക്കുക
+:Show &Scrollbars
+ml:സ്ക്രോൾബാറുകൾ കാണിക്കുക
+:Show in &folder
+ml:ഫോൾഡറിൽ കാണിക്കുക
+:Show the &bookmarks sidebar when available
+ml:ലഭ്യമാകുമ്പോൾ ബുക്ക്മാർക്ക് സൈഡ്ബാർ കാണിക്കുക
+:Translate with &DeepL
+ml:DeepL ഉപയോഗിച്ച് വിവർത്തനം ചെയ്യുക
+:Use &tabs
+ml:ടാബുകൾ ഉപയോഗിക്കുക
+:Open With Pdf&Djvu Bookmarker
+ru:Открыть в PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+sr-rs:Отвори са PdfDjvu Bookmarker
+:Search with &Google Scholar
+sr-rs:Претражи са Google Scholar
+:Search with &Wikipedia
+sr-rs:Претражи са Википедијом
+:Open With Pdf&Djvu Bookmarker
+az:PdfDjvu Bookmarker ilə Aç
+:Search with &Google Scholar
+az:Google Scholar ilə Axtar
+:Search with &Wikipedia
+az:Wikipedia ilə Axtar
+:Open With Pdf&Djvu Bookmarker
+by:Адкрыць праз PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+ca:Obre amb PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+cy:Agor Gyda PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+cz:Otevřít pomocí PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+el:Άνοιγμα με PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+es:Abrir con PdfDjvu Bookmarker
+:&Facing
+fa:روبرو
+:&Strike Out
+fa:خط خورده
+:&Underline
+fa:زیرخط
+:Open With Pdf&Djvu Bookmarker
+fa:باز کردن با PdfDjvu Bookmarker
+:S&quiggly
+fa:موجدار
+:Search with &Google Scholar
+fa:جستجو با Google Scholar
+:Search with &Wikipedia
+fa:جستجو با ویکی‌پدیا
+:Open With Pdf&Djvu Bookmarker
+fi:Avaa PdfDjvu Bookmarkerilla
+:Open With Pdf&Djvu Bookmarker
+fo:Lat upp við PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+fr:Ouvrir avec PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+ga:Oscail le PdfDjvu Bookmarker
+:Search with &Google Scholar
+ga:Cuardaigh le Google Scholar
+:Search with &Wikipedia
+ga:Cuardaigh le Vicipéid
+:Open With Pdf&Djvu Bookmarker
+gl:Abrir con PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+he:פתח באמצעות PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+hu:Megnyitás PdfDjvu Bookmarker alkalmazással
+:Open With Pdf&Djvu Bookmarker
+id:Buka Dengan PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+it:Apri con PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+kr:PdfDjvu Bookmarker로 열기
+:Search with &Google Scholar
+kr:Google Scholar로 검색
+:Search with &Wikipedia
+kr:Wikipedia로 검색
+:Open With Pdf&Djvu Bookmarker
+lv:Atvērt ar PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+my:PdfDjvu Bookmarker ဖြင့် ဖွင့်ပါ
+:Open With Pdf&Djvu Bookmarker
+pt:Abrir com PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+ro:Deschide cu PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+sat:PdfDjvu Bookmarker ᱥᱟᱶ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ
+:Open With Pdf&Djvu Bookmarker
+sl:Odpri s PdfDjvu Bookmarker
+:Open With Pdf&Djvu Bookmarker
+sv:Öppna med PdfDjvu Bookmarker
+:S&quiggly
+sv:Slingrigt
+:&Keyboard Shortcuts
+ta:விசைப்பலகை குறுக்குவழிகள்
+:Open With Pdf&Djvu Bookmarker
+ta:PdfDjvu புக்மார்க்கர் மூலம் திற
+:Search with &Google Scholar
+ta:கூகுள் ஸ்காலர் மூலம் தேடு
+:Search with &Wikipedia
+ta:விக்கிப்பீடியா மூலம் தேடு
+:Open With Pdf&Djvu Bookmarker
+tr:PdfDjvu Bookmarker ile Aç
+:Open With Pdf&Djvu Bookmarker
+uz:PdfDjvu Bookmarker bilan ochish
+:&Advanced Options...
+af:Gevorderde Opsies...
+:&All selected pages
+af:Alle geselekteerde bladsye
+:&Back
+af:Terug
+:&Book View
+af:Boekaansig
+:&Cancel
+af:Kanselleer
+:&Caret
+af:Wyser
+:&Close
+af:Sluit
+:&Continue installing 32-bit version
+af:Gaan voort om 32-bis weergawe te installeer
+:&Copy Selection
+af:Kopieer Seleksie
+:&Copy To Clipboard
+af:Kopieer Na Knipbord
+:&Discard changes
+af:Verwerp veranderinge
+:&Even pages only
+af:Slegs ewe bladsye
+:&Facing
+af:Langsaan
+:&Find what:
+af:Vind wat:
+:&First Page
+af:Eerste Bladsy
+:&Fit pages to printable area
+af:Pas bladsye by drukbare area
+:&Free Text
+af:Vrye Teks
+:&Go to page:
+af:Gaan na bladsy:
+:&Highlight
+af:Verlig
+:&Keyboard Shortcuts
+af:Sleutelbordkortpaaie
+:&Last Page
+af:Laaste Bladsy
+:&Magnification:
+af:Vergroting:
+:&Match case
+af:Pas hooflettergevoeligheid
+:&Next Page
+af:Volgende Bladsy
+:&Odd pages only
+af:Slegs onewe bladsye
+:&Open Document
+af:Open Dokument
+:&Open...
+af:Open...
+:&Options
+af:Opsies
+:&Options...
+af:Opsies...
+:&Password:
+af:Wagwoord:
+:&Pin Document
+af:Speld Dokument
+:&Previous Page
+af:Vorige Bladsy
+:&Print...
+af:Druk...
+:&Print... (denied)
+af:Druk... (geweier)
+:&Remember the password for this document
+af:Onthou die wagwoord vir hierdie dokument
+:&Remember these settings for each document
+af:Onthou hierdie instellings vir elke dokument
+:&Remove From History
+af:Verwyder Uit Geskiedenis
+:&Save As...
+af:Stoor As...
+:&Save to existing PDF
+af:Stoor na bestaande PDF
+:&Search With Google
+af:Soek Met Google
+:&Settings
+af:Instellings
+:&Shrink pages to printable area (if necessary)
+af:Krimp bladsye na drukbare area (indien nodig)
+:&Single Page
+af:Enkele Bladsy
+:&Stamp
+af:Stempel
+:&Strike Out
+af:Deurhaal
+:&Text
+af:Teks
+:&Theme
+af:Tema
+:&Translate With Google
+af:Vertaal Met Google
+:&Underline
+af:Onderstreep
+:&Use original page sizes
+af:Gebruik oorspronklike bladsygroottes
+:&Window
+af:Venster
+:Automatically check for &updates
+af:Kontroleer outomaties vir opdaterings
+:Copy &Image
+af:Kopieer Beeld
+:Copy &Link Address
+af:Kopieer Skakel Adres
+:Copy Co&mment
+af:Kopieer Kommentaar
+:Create Annotation &Under Cursor
+af:Skep Annotasie Onder Wyser
+:Custom &Zoom...
+af:Aangepaste Zoom...
+:Default &Layout:
+af:Verstek Uitleg:
+:Default &Zoom:
+af:Verstek Zoom:
+:E&xit
+af:Verlaat
+:E&xit Fullscreen
+af:Verlaat Volskerm
+:F&avorites
+af:Gunstelinge
+:F&orward
+af:Vorentoe
+:F&ullscreen
+af:Volskerm
+:Fin&d...
+af:Vind...
+:Fit &Content
+af:Pas Inhoud
+:Fit &Page
+af:Pas Bladsy
+:Fit &Width
+af:Pas Wydte
+:Hide &Options
+af:Versteek Opsies
+:Install SumatraPDF in &folder:
+af:Installeer SumatraPDF in vouer:
+:Let Windows Desktop Search &search PDF documents
+af:Laat Windows Desktop Search PDF dokumente deursoek
+:Let Windows show &previews of PDF documents
+af:Laat Windows voorskouings van PDF dokumente wys
+:Man&ga Mode
+af:Manga Modus
+:New &window
+af:Nuwe venster
+:Open &in PDF-XChange
+af:Open in PDF-XChange
+:Open Directory in &Double Commander
+af:Open Gids in Double Commander
+:Open Directory in &Explorer
+af:Open Gids in Explorer
+:Open Directory in &Total Commander
+af:Open Gids in Total Commander
+:Open Directory in Directory &Opus
+af:Open Gids in Directory Opus
+:Open With Pdf&Djvu Bookmarker
+af:Open Met PdfDjvu Bookmarker
+:Open in &Adobe Reader
+af:Open in Adobe Reader
+:Open in &Foxit Reader
+af:Open in Foxit Reader
+:Open in &Microsoft XPS-Viewer
+af:Open in Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
+af:Open in Microsoft HTML Help
+:P&roperties
+af:Eienskappe
+:Pa&ge...
+af:Bladsy...
+:Pr&esentation
+af:Aanbieding
+:Re&name...
+af:Hernoem...
+:Remember &opened files
+af:Onthou oopgemaakte lêers
+:Rotate &Left
+af:Roteer Links
+:Rotate &Right
+af:Roteer Regs
+:S&election
+af:Seleksie
+:S&quiggly
+af:Kronkellyn
+:Save S&hortcut...
+af:Stoor Kortpad...
+:Save to &new PDF
+af:Stoor na nuwe PDF
+:Search With &Bing
+af:Soek Met Bing
+:Search With &Google
+af:Soek met Google
+:Search with &Google Scholar
+af:Soek met Google Scholar
+:Search with &Wikipedia
+af:Soek met Wikipedia
+:Select &All
+af:Kies alles
+:Send by &E-mail...
+af:Stuur per e-pos...
+:Show &Bookmarks
+af:Wys boekmerke
+:Show &Favorites
+af:Wys gunstelinge
+:Show &Pages Continuously
+af:Wys bladsye deurlopend
+:Show &Scrollbars
+af:Wys rolstawe
+:Show in &folder
+af:Wys in vouer
+:Show the &bookmarks sidebar when available
+af:Wys die boekmerke kantbalk wanneer beskikbaar
+:Translate with &DeepL
+af:Vertaal met DeepL
+:Use &tabs
+af:Gebruik oortjies
+:&Keyboard Shortcuts
+bg:Клавишни комбинации
+:Open Directory in &Double Commander
+bg:Отвори директория в Double Commander
+:Open Directory in &Explorer
+bg:Отвори директория в Explorer
+:Open Directory in &Total Commander
+bg:Отвори директория в Total Commander
+:Open Directory in Directory &Opus
+bg:Отвори директория в Directory Opus
+:Open With Pdf&Djvu Bookmarker
+bg:Отвори с PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+bg:Отвори в Microsoft HTML Help
+:Search with &Google Scholar
+bg:Търси с Google Scholar
+:&Actual Size
+bn:প্রকৃত আকার
+:&Back
+bn:পিছনে
+:&Book View
+bn:বই ভিউ
+:&Cancel
+bn:বাতিল
+:&Close
+bn:বন্ধ করুন
+:&Continue installing 32-bit version
+bn:৩২-বিট সংস্করণ ইনস্টল চালিয়ে যান
+:&Copy To Clipboard
+bn:ক্লিপবোর্ডে কপি করুন
+:&Discard changes
+bn:পরিবর্তনগুলি বাতিল করুন
+:&Facing
+bn:মুখোমুখি
+:&First Page
+bn:প্রথম পৃষ্ঠা
+:&Fit pages to printable area
+bn:মুদ্রণযোগ্য এলাকায় পৃষ্ঠাগুলি ফিট করুন
+:&Free Text
+bn:মুক্ত টেক্সট
+:&Highlight
+bn:হাইলাইট
+:&Keyboard Shortcuts
+bn:কীবোর্ড শর্টকাট
+:&Last Page
+bn:শেষ পৃষ্ঠা
+:&Magnification:
+bn:বিবর্ধন:
+:&Match case
+bn:অক্ষর মিলান
+:&Next Page
+bn:পরবর্তী পৃষ্ঠা
+:&Odd pages only
+bn:শুধুমাত্র বিজোড় পৃষ্ঠা
+:&Open Document
+bn:নথি খুলুন
+:&Open...
+bn:খুলুন...
+:&Options...
+bn:অপশন...
+:&Pin Document
+bn:নথি পিন করুন
+:&Previous Page
+bn:পূর্ববর্তী পৃষ্ঠা
+:&Print... (denied)
+bn:মুদ্রণ... (অস্বীকৃত)
+:&Remember the password for this document
+bn:এই নথির জন্য পাসওয়ার্ড মনে রাখুন
+:&Remember these settings for each document
+bn:প্রতিটি নথির জন্য এই সেটিংস মনে রাখুন
+:&Remove From History
+bn:ইতিহাস থেকে সরান
+:&Save As...
+bn:নতুন নামে সংরক্ষণ করুন...
+:&Save to existing PDF
+bn:বিদ্যমান PDF-এ সংরক্ষণ করুন
+:&Search With Google
+bn:Google দিয়ে অনুসন্ধান করুন
+:&Shrink pages to printable area (if necessary)
+bn:মুদ্রণযোগ্য এলাকায় পৃষ্ঠা সংকুচিত করুন (প্রয়োজনে)
+:&Single Page
+bn:একক পৃষ্ঠা
+:&Stamp
+bn:স্ট্যাম্প
+:&Strike Out
+bn:স্ট্রাইক আউট
+:&Text
+bn:টেক্সট
+:&Translate With Google
+bn:Google দিয়ে অনুবাদ করুন
+:&Underline
+bn:আন্ডারলাইন
+:&Use original page sizes
+bn:মূল পৃষ্ঠার আকার ব্যবহার করুন
+:&Window
+bn:উইন্ডো
+:Create Annotation &Under Cursor
+bn:কার্সারের অধীনে টীকা তৈরি করুন
+:Custom &Zoom...
+bn:কাস্টম জুম...
+:E&xit
+bn:প্রস্থান
+:E&xit Fullscreen
+bn:পূর্ণস্ক্রীন থেকে প্রস্থান
+:F&avorites
+bn:পছন্দসমূহ
+:F&orward
+bn:সামনে
+:F&ullscreen
+bn:পূর্ণস্ক্রীন
+:Fin&d...
+bn:খুঁজুন...
+:Fit &Content
+bn:বিষয়বস্তু মানানসই করুন
+:Fit &Page
+bn:পৃষ্ঠা মানানসই করুন
+:Fit &Width
+bn:প্রস্থ মানানসই করুন
+:Hide &Options
+bn:বিকল্পগুলি লুকান
+:Install SumatraPDF in &folder:
+bn:ফোল্ডারে SumatraPDF ইনস্টল করুন:
+:Let Windows Desktop Search &search PDF documents
+bn:Windows Desktop Search কে PDF নথি অনুসন্ধান করতে দিন
+:Let Windows show &previews of PDF documents
+bn:Windows কে PDF নথির প্রিভিউ দেখাতে দিন
+:Man&ga Mode
+bn:মাঙ্গা মোড
+:New &window
+bn:নতুন উইন্ডো
+:Open &in PDF-XChange
+bn:PDF-XChange এ খুলুন
+:Open Directory in &Double Commander
+bn:Double Commander এ ডিরেক্টরি খুলুন
+:Open Directory in &Explorer
+bn:Explorer এ ডিরেক্টরি খুলুন
+:Open Directory in &Total Commander
+bn:Total Commander এ ডিরেক্টরি খুলুন
+:Open Directory in Directory &Opus
+bn:Directory Opus এ ডিরেক্টরি খুলুন
+:Open With Pdf&Djvu Bookmarker
+bn:PdfDjvu Bookmarker দিয়ে খুলুন
+:Open in &Adobe Reader
+bn:Adobe Reader এ খুলুন
+:Open in &Foxit Reader
+bn:Foxit Reader এ খুলুন
+:Open in &Microsoft XPS-Viewer
+bn:Microsoft XPS-Viewer এ খুলুন
+:Open in Microsoft &HTML Help
+bn:Microsoft HTML Help এ খুলুন
+:P&roperties
+bn:বৈশিষ্ট্য
+:Pa&ge...
+bn:পৃষ্ঠা...
+:Pr&esentation
+bn:উপস্থাপনা
+:Re&name...
+bn:নাম পরিবর্তন করুন...
+:Remember &opened files
+bn:খোলা ফাইলগুলি মনে রাখুন
+:Rotate &Left
+bn:বামে ঘোরান
+:Rotate &Right
+bn:ডানে ঘোরান
+:S&election
+bn:নির্বাচন
+:S&quiggly
+bn:তরঙ্গায়িত
+:Save S&hortcut...
+bn:শর্টকাট সংরক্ষণ করুন...
+:Save to &new PDF
+bn:নতুন PDF এ সংরক্ষণ করুন
+:Search With &Bing
+bn:Bing দিয়ে অনুসন্ধান করুন
+:Search With &Google
+bn:Google দিয়ে অনুসন্ধান করুন
+:Search with &Google Scholar
+bn:Google Scholar দিয়ে অনুসন্ধান করুন
+:Search with &Wikipedia
+bn:Wikipedia দিয়ে অনুসন্ধান করুন
+:Show &Bookmarks
+bn:বুকমার্ক দেখান
+:Show &Favorites
+bn:পছন্দের তালিকা দেখান
+:Show &Pages Continuously
+bn:পৃষ্ঠাগুলি একটানা দেখান
+:Show &Scrollbars
+bn:স্ক্রলবার দেখান
+:Show in &folder
+bn:ফোল্ডারে দেখান
+:Show the &bookmarks sidebar when available
+bn:উপলব্ধ হলে বুকমার্ক সাইডবার দেখান
+:Translate with &DeepL
+bn:DeepL দিয়ে অনুবাদ করুন
+:Use &tabs
+bn:ট্যাব ব্যবহার করুন
+:&Actual Size
+bs:Stvarna veličina
+:&Back
+bs:Nazad
+:&Book View
+bs:Prikaz knjige
+:&Cancel
+bs:Otkaži
+:&Caret
+bs:Kursor
+:&Close
+bs:Zatvori
+:&Continue installing 32-bit version
+bs:Nastavi instalaciju 32-bitne verzije
+:&Copy To Clipboard
+bs:Kopiraj u međuspremnik
+:&Discard changes
+bs:Odbaci promjene
+:&Facing
+bs:Suprotno
+:&First Page
+bs:Prva stranica
+:&Free Text
+bs:Slobodan tekst
+:&Highlight
+bs:Istakni
+:&Keyboard Shortcuts
+bs:Prečice tastature
+:&Last Page
+bs:Zadnja stranica
+:&Next Page
+bs:Sljedeća stranica
+:&Open...
+bs:Otvori...
+:&Previous Page
+bs:Prethodna stranica
+:&Remove From History
+bs:Ukloni iz historije
+:&Save to existing PDF
+bs:Spremi u postojeći PDF
+:&Search With Google
+bs:Pretraži Google-om
+:&Single Page
+bs:Pojedinačna stranica
+:&Stamp
+bs:Pečat
+:&Strike Out
+bs:Precrtaj
+:&Text
+bs:Tekst
+:&Theme
+bs:Tema
+:&Translate With Google
+bs:Prevedi Google-om
+:&Underline
+bs:Podvuci
+:Create Annotation &Under Cursor
+bs:Kreiraj anotaciju ispod kursora
+:Custom &Zoom...
+bs:Prilagođeno zumiranje...
+:E&xit
+bs:Izlaz
+:E&xit Fullscreen
+bs:Izađi iz punog ekrana
+:F&orward
+bs:Naprijed
+:F&ullscreen
+bs:Puni ekran
+:Fin&d...
+bs:Pronađi...
+:Fit &Content
+bs:Prilagodi sadržaj
+:Fit &Page
+bs:Prilagodi stranicu
+:Fit &Width
+bs:Prilagodi širinu
+:New &window
+bs:Novi prozor
+:Open Directory in &Double Commander
+bs:Otvori direktorij u Double Commander-u
+:Open Directory in &Explorer
+bs:Otvori direktorij u Explorer-u
+:Open Directory in &Total Commander
+bs:Otvori direktorij u Total Commander-u
+:Open Directory in Directory &Opus
+bs:Otvori direktorij u Directory Opus-u
+:Open With Pdf&Djvu Bookmarker
+bs:Otvori sa PdfDjvu Bookmarker-om
+:Open in Microsoft &HTML Help
+bs:Otvori u Microsoft HTML Help-u
+:Pa&ge...
+bs:Stranica...
+:Pr&esentation
+bs:Prezentacija
+:Re&name...
+bs:Preimenuj...
+:Rotate &Left
+bs:Rotiraj lijevo
+:Rotate &Right
+bs:Rotiraj desno
+:S&election
+bs:Selekcija
+:S&quiggly
+bs:Valovito
+:Save S&hortcut...
+bs:Sačuvaj prečicu...
+:Save to &new PDF
+bs:Sačuvaj u novi PDF
+:Search With &Bing
+bs:Pretraži sa Bing
+:Search With &Google
+bs:Pretraži sa Google
+:Search with &Google Scholar
+bs:Pretraži sa Google Scholar
+:Search with &Wikipedia
+bs:Pretraži sa Wikipedia
+:Show &Favorites
+bs:Prikaži favorite
+:Show &Scrollbars
+bs:Prikaži trake za pomjeranje
+:Show Book&marks
+bs:Prikaži oznake
+:Show in &folder
+bs:Prikaži u folderu
+:Translate with &DeepL
+bs:Prevedi sa DeepL
+:&Actual Size
+ca-xv:Mida real
+:&Back
+ca-xv:Enrere
+:&Book View
+ca-xv:Visualització de llibre
+:&Close
+ca-xv:Tanca
+:&Copy To Clipboard
+ca-xv:Copia al porta-retalls
+:&Facing
+ca-xv:Pàgines confrontades
+:&First Page
+ca-xv:Primera pàgina
+:&Highlight
+ca-xv:Ressalta
+:&Keyboard Shortcuts
+ca-xv:Dreceres de teclat
+:&Last Page
+ca-xv:Darrera pàgina
+:&Next Page
+ca-xv:Pàgina següent
+:&Open...
+ca-xv:Obre...
+:&Previous Page
+ca-xv:Pàgina anterior
+:&Single Page
+ca-xv:Pàgina única
+:Custom &Zoom...
+ca-xv:Zoom personalitzat...
+:E&xit
+ca-xv:Surt
+:F&orward
+ca-xv:Endavant
+:F&ullscreen
+ca-xv:Pantalla completa
+:Fin&d...
+ca-xv:Cerca...
+:Fit &Content
+ca-xv:Ajusta al contingut
+:Fit &Page
+ca-xv:Ajusta a la pàgina
+:Fit &Width
+ca-xv:Ajusta a l'amplada
+:New &window
+ca-xv:Finestra nova
+:Open Directory in &Double Commander
+ca-xv:Obre el directori amb Double Commander
+:Open Directory in &Explorer
+ca-xv:Obre el directori amb l'Explorador
+:Open Directory in &Total Commander
+ca-xv:Obre el directori amb Total Commander
+:Open Directory in Directory &Opus
+ca-xv:Obre el directori amb Directory Opus
+:Open With Pdf&Djvu Bookmarker
+ca-xv:Obre amb PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+ca-xv:Obre amb Microsoft HTML Help
+:Pa&ge...
+ca-xv:Pàgina...
+:Pr&esentation
+ca-xv:Presentació
+:Re&name...
+ca-xv:Canvia el nom...
+:Rotate &Left
+ca-xv:Gira a l'esquerra
+:Rotate &Right
+ca-xv:Gira a la dreta
+:Save S&hortcut...
+ca-xv:Desa la drecera...
+:Search with &Google Scholar
+ca-xv:Cerca amb Google Scholar
+:Search with &Wikipedia
+ca-xv:Cerca amb la Viquipèdia
+:Show Book&marks
+ca-xv:Mostra les adreces d'interès
+:&Facing
+dk:Modstående
+:&Free Text
+dk:Fri tekst
+:&Highlight
+dk:Fremhæv
+:Open Directory in Directory &Opus
+dk:Åbn mappe i Directory Opus
+:Open With Pdf&Djvu Bookmarker
+dk:Åbn med PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+dk:Åbn i Microsoft HTML Help
+:S&quiggly
+dk:Bølget
+:&Actual Size
+et:Tegelik suurus
+:&Back
+et:Tagasi
+:&Book View
+et:Raamatuvaade
+:&Close
+et:Sulge
+:&Copy To Clipboard
+et:Kopeeri lõikelauale
+:&Facing
+et:Kahepoolne
+:&First Page
+et:Esimene lehekülg
+:&Highlight
+et:Tõsta esile
+:&Keyboard Shortcuts
+et:Kiirklahvid
+:&Last Page
+et:Viimane lehekülg
+:&Next Page
+et:Järgmine lehekülg
+:&Open...
+et:Ava...
+:&Previous Page
+et:Eelmine lehekülg
+:&Single Page
+et:Üksik lehekülg
+:&Underline
+et:Allajoonitud
+:Custom &Zoom...
+et:Kohandatud suum...
+:E&xit
+et:Välju
+:F&orward
+et:Edasi
+:F&ullscreen
+et:Täisekraan
+:Fin&d...
+et:Otsi...
+:Fit &Content
+et:Sobita sisu
+:Fit &Page
+et:Sobita lehekülg
+:Fit &Width
+et:Sobita laius
+:New &window
+et:Uus aken
+:Open Directory in &Double Commander
+et:Ava kataloog Double Commanderis
+:Open Directory in &Explorer
+et:Ava kataloog Exploreris
+:Open Directory in &Total Commander
+et:Ava kataloog Total Commanderis
+:Open Directory in Directory &Opus
+et:Ava kataloog Directory Opuses
+:Open With Pdf&Djvu Bookmarker
+et:Ava PdfDjvu Bookmarkeriga
+:Open in Microsoft &HTML Help
+et:Ava Microsoft HTML Helpis
+:Pa&ge...
+et:Lehekülg...
+:Pr&esentation
+et:Esitlus
+:Re&name...
+et:Nimeta ümber...
+:Rotate &Left
+et:Pööra vasakule
+:Rotate &Right
+et:Pööra paremale
+:Save S&hortcut...
+et:Salvesta otsetee...
+:Search with &Google Scholar
+et:Otsi Google Scholariga
+:Search with &Wikipedia
+et:Otsi Wikipediast
+:Show Book&marks
+et:Näita järjehoidjaid
+:&Keyboard Shortcuts
+eu:Laster-tekla Lasterbideak
+:Open Directory in &Double Commander
+eu:Ireki Direktorioa Double Commander-en
+:Open Directory in &Explorer
+eu:Ireki Direktorioa Esploratzailean
+:Open Directory in &Total Commander
+eu:Ireki Direktorioa Total Commander-en
+:Open Directory in Directory &Opus
+eu:Ireki Direktorioa Directory Opus-en
+:Open With Pdf&Djvu Bookmarker
+eu:Ireki PdfDjvu Bookmarker-ekin
+:Open in Microsoft &HTML Help
+eu:Ireki Microsoft HTML Help-en
+:Search with &Google Scholar
+eu:Bilatu Google Scholar-ekin
+:Search with &Wikipedia
+eu:Bilatu Wikipedia-rekin
+:&Actual Size
+fy-nl:Wurklike grutte
+:&Advanced Options...
+fy-nl:Avansearre opsjes...
+:&All selected pages
+fy-nl:Alle selektearre siden
+:&Back
+fy-nl:Tebek
+:&Book View
+fy-nl:Boekwersjowing
+:&Cancel
+fy-nl:Annulearje
+:&Caret
+fy-nl:Kursorteken
+:&Close
+fy-nl:Slute
+:&Continue installing 32-bit version
+fy-nl:Trochgean mei ynstallaasje fan 32-bit ferzje
+:&Copy Selection
+fy-nl:Seleksje kopiearje
+:&Copy To Clipboard
+fy-nl:Kopiearje nei klamboerd
+:&Discard changes
+fy-nl:Wizigingen fuortsmite
+:&Even pages only
+fy-nl:Allinnich even siden
+:&Facing
+fy-nl:Tsjinoerinoar
+:&First Page
+fy-nl:Earste side
+:&Fit pages to printable area
+fy-nl:Siden oanpasse oan printerber gebiet
+:&Free Text
+fy-nl:Frije tekst
+:&Highlight
+fy-nl:Markearje
+:&Keyboard Shortcuts
+fy-nl:Fluchtoetsen
+:&Last Page
+fy-nl:Lêste side
+:&Next Page
+fy-nl:Folgjende side
+:&Odd pages only
+fy-nl:Allinnich ûneven siden
+:&Open Document
+fy-nl:Dokumint iepenje
+:&Open...
+fy-nl:Iepenje...
+:&Options
+fy-nl:Opsjes
+:&Pin Document
+fy-nl:Dokumint fêstsette
+:&Previous Page
+fy-nl:Foarige side
+:&Print...
+fy-nl:Printsje...
+:&Print... (denied)
+fy-nl:Printsje... (wegere)
+:&Remember the password for this document
+fy-nl:Unthaad it wachtwurd foar dit dokumint
+:&Remove From History
+fy-nl:Fuortsmite út skiednis
+:&Save As...
+fy-nl:Bewarje as...
+:&Save to existing PDF
+fy-nl:Bewarje nei besteande PDF
+:&Search With Google
+fy-nl:Sykje mei Google
+:&Shrink pages to printable area (if necessary)
+fy-nl:Siden ferlytsje nei printerber gebiet (as nedich)
+:&Single Page
+fy-nl:Inkelde side
+:&Stamp
+fy-nl:Stimpel
+:&Strike Out
+fy-nl:Trochstreekje
+:&Text
+fy-nl:Tekst
+:&Theme
+fy-nl:Tema
+:&Translate With Google
+fy-nl:Oersette mei Google
+:&Underline
+fy-nl:Understreekje
+:&Use original page sizes
+fy-nl:Orizjinele sidegrúttes brûke
+:&Window
+fy-nl:Finster
+:Copy &Image
+fy-nl:Ofbylding kopiearje
+:Copy &Link Address
+fy-nl:Keppelingsadres kopiearje
+:Copy Co&mment
+fy-nl:Kommentaar kopiearje
+:Create Annotation &Under Cursor
+fy-nl:Annotaasje meitsje ûnder kursor
+:Custom &Zoom...
+fy-nl:Oanpaste zoom...
+:E&xit
+fy-nl:Ofslute
+:E&xit Fullscreen
+fy-nl:Folslein skerm ferlitte
+:F&avorites
+fy-nl:Favoriten
+:F&orward
+fy-nl:Foarút
+:F&ullscreen
+fy-nl:Folslein skerm
+:Fin&d...
+fy-nl:Sykje...
+:Fit &Content
+fy-nl:Ynhâld passe
+:Fit &Page
+fy-nl:Side passe
+:Fit &Width
+fy-nl:Breedte passe
+:Hide &Options
+fy-nl:Opsjes ferstopje
+:Install SumatraPDF in &folder:
+fy-nl:SumatraPDF ynstallearje yn map:
+:Let Windows Desktop Search &search PDF documents
+fy-nl:Lit Windows Desktop Search PDF-dokuminten sykje
+:Let Windows show &previews of PDF documents
+fy-nl:Lit Windows foarbylden fan PDF-dokuminten sjen litte
+:Man&ga Mode
+fy-nl:Manga-modus
+:New &window
+fy-nl:Nij finster
+:Open Directory in &Double Commander
+fy-nl:Map iepenje yn Double Commander
+:Open Directory in &Explorer
+fy-nl:Map iepenje yn Explorer
+:Open Directory in &Total Commander
+fy-nl:Map iepenje yn Total Commander
+:Open Directory in Directory &Opus
+fy-nl:Map iepenje yn Directory Opus
+:Open With Pdf&Djvu Bookmarker
+fy-nl:Iepenje mei PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+fy-nl:Iepenje yn Microsoft HTML Help
+:P&roperties
+fy-nl:Eigenskippen
+:Pa&ge...
+fy-nl:Side...
+:Pr&esentation
+fy-nl:Presintaasje
+:Re&name...
+fy-nl:Omneame...
+:Rotate &Left
+fy-nl:Nei links draaie
+:Rotate &Right
+fy-nl:Nei rjochts draaie
+:S&election
+fy-nl:Seleksje
+:S&quiggly
+fy-nl:Golslyntsje
+:Save S&hortcut...
+fy-nl:Fluchkeppeling bewarje...
+:Save to &new PDF
+fy-nl:Bewarje as nije PDF
+:Search With &Bing
+fy-nl:Sykje mei Bing
+:Search With &Google
+fy-nl:Sykje mei Google
+:Search with &Google Scholar
+fy-nl:Sykje mei Google Scholar
+:Search with &Wikipedia
+fy-nl:Sykje mei Wikipedia
+:Select &All
+fy-nl:Alles selektearje
+:Show &Bookmarks
+fy-nl:Blêdwizers sjen litte
+:Show &Favorites
+fy-nl:Favoriten sjen litte
+:Show &Scrollbars
+fy-nl:Skofbalken sjen litte
+:Show in &folder
+fy-nl:Sjen litte yn map
+:Translate with &DeepL
+fy-nl:Oersette mei DeepL
+:Use &tabs
+fy-nl:Ljepblêden brûke
+:&Keyboard Shortcuts
+hr:Prečaci tipkovnice
+:Open With Pdf&Djvu Bookmarker
+hr:Otvori s PdfDjvu Bookmarker
+:Search with &Google Scholar
+hr:Pretraži s Google Scholar
+:Search with &Wikipedia
+hr:Pretraži s Wikipedijom
+:&Actual Size
+jv:Ukuran Asli
+:&Back
+jv:Bali
+:&Book View
+jv:Tampilan Buku
+:&Cancel
+jv:Batal
+:&Caret
+jv:Karet
+:&Close
+jv:Tutup
+:&Continue installing 32-bit version
+jv:Terusake nginstal versi 32-bit
+:&Copy Selection
+jv:Salin Pilihan
+:&Copy To Clipboard
+jv:Salin Menyang Clipboard
+:&Discard changes
+jv:Ilangake owah-owahan
+:&Facing
+jv:Madhep
+:&First Page
+jv:Kaca Pisanan
+:&Fit pages to printable area
+jv:Cocokake kaca karo area cetak
+:&Free Text
+jv:Teks Bebas
+:&Highlight
+jv:Sorot
+:&Keyboard Shortcuts
+jv:Tombol Cepet
+:&Last Page
+jv:Kaca Pungkasan
+:&Magnification:
+jv:Pembesaran:
+:&Manual
+jv:Manual
+:&Match case
+jv:Cocokake aksara gedhe cilik
+:&Next Page
+jv:Kaca Sabanjure
+:&Open Document
+jv:Buka Dokumen
+:&Open...
+jv:Buka...
+:&Options
+jv:Pilihan
+:&Options...
+jv:Pilihan...
+:&Password:
+jv:Sandhi:
+:&Pin Document
+jv:Pin Dokumen
+:&Previous Page
+jv:Kaca Sadurunge
+:&Remember the password for this document
+jv:Eling sandhi kanggo dokumen iki
+:&Remember these settings for each document
+jv:Eling setelan iki kanggo saben dokumen
+:&Remove From History
+jv:Busak Saka Riwayat
+:&Save to existing PDF
+jv:Simpen menyang PDF sing wis ana
+:&Search With Google
+jv:Goleki Nganggo Google
+:&Settings
+jv:Setelan
+:&Shrink pages to printable area (if necessary)
+jv:Cilikake kaca menyang area cetak (yen perlu)
+:&Single Page
+jv:Kaca Tunggal
+:&Stamp
+jv:Stempel
+:&Strike Out
+jv:Coret
+:&Text
+jv:Teks
+:&Theme
+jv:Tema
+:&Translate With Google
+jv:Terjemahake Nganggo Google
+:&Underline
+jv:Garis ngisor
+:&Use original page sizes
+jv:Gunakake ukuran kaca asli
+:&View
+jv:Tampilan
+:&Window
+jv:Jendela
+:&Zoom
+jv:Zum
+:Check for &Updates
+jv:Priksa Nganyari
+:Copy &Link Address
+jv:Salin Alamat Link
+:Copy Co&mment
+jv:Salin Komentar
+:Create Annotation &Under Cursor
+jv:Gawe Anotasi ing Kursor
+:Custom &Zoom...
+jv:Zoom Khusus...
+:Default &Layout:
+jv:Tata Letak Standar:
+:Default &Zoom:
+jv:Zoom Standar:
+:E&xit
+jv:Metu
+:E&xit Fullscreen
+jv:Metu saka Layar Kebak
+:F&avorites
+jv:Favorit
+:F&orward
+jv:Maju
+:F&ullscreen
+jv:Layar Kebak
+:Fin&d...
+jv:Goleki...
+:Fit &Content
+jv:Pas Konten
+:Fit &Page
+jv:Pas Kaca
+:Fit &Width
+jv:Pas Jembar
+:Let Windows Desktop Search &search PDF documents
+jv:Ijini Windows Desktop Search nggoleki dokumen PDF
+:Let Windows show &previews of PDF documents
+jv:Ijini Windows nuduhake pratinjau dokumen PDF
+:Man&ga Mode
+jv:Mode Manga
+:New &window
+jv:Jendela anyar
+:Open &in PDF-XChange
+jv:Bukak ing PDF-XChange
+:Open Directory in &Double Commander
+jv:Bukak Direktori ing Double Commander
+:Open Directory in &Explorer
+jv:Bukak Direktori ing Explorer
+:Open Directory in &Total Commander
+jv:Bukak Direktori ing Total Commander
+:Open Directory in Directory &Opus
+jv:Bukak Direktori ing Directory Opus
+:Open With Pdf&Djvu Bookmarker
+jv:Bukak nganggo PdfDjvu Bookmarker
+:Open in &Foxit Reader
+jv:Bukak ing Foxit Reader
+:Open in &Microsoft XPS-Viewer
+jv:Bukak ing Microsoft XPS-Viewer
+:Open in Microsoft &HTML Help
+jv:Bukak ing Microsoft HTML Help
+:P&roperties
+jv:Properti
+:Pa&ge...
+jv:Kaca...
+:Pr&esentation
+jv:Presentasi
+:Re&name...
+jv:Ganti Jeneng...
+:Remember &opened files
+jv:Elinga file sing wis dibukak
+:Rotate &Left
+jv:Putar Kiwa
+:Rotate &Right
+jv:Rotate Tengen
+:S&election
+jv:Pilihan
+:S&quiggly
+jv:Garis Gelombang
+:Save S&hortcut...
+jv:Simpen Trabasan...
+:Save to &new PDF
+jv:Simpen menyang PDF anyar
+:Search With &Bing
+jv:Goleki nganggo Bing
+:Search With &Google
+jv:Goleki nganggo Google
+:Search with &Google Scholar
+jv:Goleki nganggo Google Scholar
+:Search with &Wikipedia
+jv:Goleki nganggo Wikipedia
+:Select &All
+jv:Pilih Kabeh
+:Show &Bookmarks
+jv:Tuduhake Tandha Buku
+:Show &Favorites
+jv:Tuduhake Favorit
+:Show &Pages Continuously
+jv:Tuduhake Kaca Terus-terusan
+:Show &Scrollbars
+jv:Tuduhake Scrollbar
+:Show &Toolbar
+jv:Tuduhake Toolbar
+:Show Book&marks
+jv:Tuduhake Tetenger
+:Show Scr&ollbars
+jv:Tuduhake Scrollbar
+:Show in &folder
+jv:Tuduhake ing folder
+:Show the &bookmarks sidebar when available
+jv:Tuduhake sidebar tetenger yen kasedhiya
+:Translate with &DeepL
+jv:Terjemahake nganggo DeepL
+:Use &tabs
+jv:Gunakake tab
+:Visit &Website
+jv:Bukak Situs Web
+:&Actual Size
+ka:რეალური ზომა
+:&Back
+ka:უკან
+:&Book View
+ka:წიგნის ხედი
+:&Cancel
+ka:გაუქმება
+:&Caret
+ka:კურსორი
+:&Close
+ka:დახურვა
+:&Continue installing 32-bit version
+ka:32-ბიტიანი ვერსიის დაინსტალირების გაგრძელება
+:&Copy To Clipboard
+ka:ბუფერში კოპირება
+:&Discard changes
+ka:ცვლილებების გაუქმება
+:&Facing
+ka:გვერდიგვერდ
+:&First Page
+ka:პირველი გვერდი
+:&Free Text
+ka:თავისუფალი ტექსტი
+:&Highlight
+ka:ხაზგასმა
+:&Keyboard Shortcuts
+ka:კლავიატურის მალსახმობები
+:&Last Page
+ka:ბოლო გვერდი
+:&Next Page
+ka:შემდეგი გვერდი
+:&Open...
+ka:გახსნა...
+:&Previous Page
+ka:წინა გვერდი
+:&Save to existing PDF
+ka:არსებულ PDF-ში შენახვა
+:&Search With Google
+ka:Google-ით ძიება
+:&Single Page
+ka:ერთი გვერდი
+:&Stamp
+ka:ბეჭედი
+:&Strike Out
+ka:გადახაზვა
+:&Text
+ka:ტექსტი
+:&Translate With Google
+ka:Google-ით თარგმნა
+:&Underline
+ka:ხაზგასმა ქვემოთ
+:Create Annotation &Under Cursor
+ka:ანოტაციის შექმნა კურსორის ქვეშ
+:Custom &Zoom...
+ka:ზომის შეცვლა...
+:E&xit
+ka:გასვლა
+:F&orward
+ka:წინ
+:F&ullscreen
+ka:სრულ ეკრანზე
+:Fin&d...
+ka:ძიება...
+:Fit &Content
+ka:შინაარსის ჩატევა
+:Fit &Page
+ka:გვერდის ჩატევა
+:Fit &Width
+ka:სიგანის ჩატევა
+:New &window
+ka:ახალი ფანჯარა
+:Open Directory in &Double Commander
+ka:საქაღალდის გახსნა Double Commander-ში
+:Open Directory in &Explorer
+ka:საქაღალდის გახსნა Explorer-ში
+:Open Directory in &Total Commander
+ka:საქაღალდის გახსნა Total Commander-ში
+:Open Directory in Directory &Opus
+ka:საქაღალდის გახსნა Directory Opus-ში
+:Open With Pdf&Djvu Bookmarker
+ka:გახსნა PdfDjvu Bookmarker-ით
+:Open in Microsoft &HTML Help
+ka:გახსნა Microsoft HTML Help-ში
+:Pa&ge...
+ka:გვერდი...
+:Pr&esentation
+ka:პრეზენტაცია
+:Re&name...
+ka:გადარქმევა...
+:Rotate &Left
+ka:მარცხნივ შემობრუნება
+:Rotate &Right
+ka:მარჯვნივ შემობრუნება
+:S&election
+ka:მონიშვნა
+:S&quiggly
+ka:ღალღალა
+:Save S&hortcut...
+ka:მალსახმობის შენახვა...
+:Save to &new PDF
+ka:ახალ PDF-ში შენახვა
+:Search With &Bing
+ka:Bing-ით ძებნა
+:Search With &Google
+ka:Google-ით ძებნა
+:Search with &Google Scholar
+ka:Google Scholar-ით ძებნა
+:Search with &Wikipedia
+ka:Wikipedia-ით ძებნა
+:Show Book&marks
+ka:სანიშნების ჩვენება
+:Translate with &DeepL
+ka:DeepL-ით თარგმნა
+:&Back
+ku:Paşve
+:&Book View
+ku:Dîtina Pirtûkê
+:&Cancel
+ku:Betal bike
+:&Caret
+ku:Nîşanker
+:&Close
+ku:Bigre
+:&Continue installing 32-bit version
+ku:Bijîya sazkirina guhertoya 32-bît
+:&Copy To Clipboard
+ku:Ji bo Clipboard-ê kopî bike
+:&Discard changes
+ku:Guhertinan red bike
+:&Facing
+ku:Rûberû
+:&First Page
+ku:Rûpela Yekem
+:&Free Text
+ku:Nivîsa Azad
+:&Highlight
+ku:Ronî bike
+:&Keyboard Shortcuts
+ku:Kurteriyên Klavyeyê
+:&Last Page
+ku:Rûpela Dawî
+:&Next Page
+ku:Rûpela Pêşve
+:&Open...
+ku:Veke...
+:&Previous Page
+ku:Rûpela Berê
+:&Remove From History
+ku:Ji Dîrokê Rake
+:&Save to existing PDF
+ku:Li PDF-ya heyî tomar bike
+:&Search With Google
+ku:Bi Google-ê bigere
+:&Single Page
+ku:Rûpeleke Tenê
+:&Stamp
+ku:Mühür
+:&Strike Out
+ku:Xete bihêle
+:&Text
+ku:Nivîs
+:&Theme
+ku:Dirb
+:&Translate With Google
+ku:Bi Google-ê wergerîne
+:&Underline
+ku:Binxet
+:Create Annotation &Under Cursor
+ku:Li bin nîşankerê şîrove çêke
+:Custom &Zoom...
+ku:Mezinbûna Taybet...
+:E&xit
+ku:Derkeve
+:E&xit Fullscreen
+ku:Ji Dîmena Tije derkeve
+:F&orward
+ku:Pêşve
+:F&ullscreen
+ku:Dîmena Tije
+:Fin&d...
+ku:Bibîne...
+:Fit &Content
+ku:Li Naverokê Bike
+:Fit &Page
+ku:Li Rûpelê Bike
+:Fit &Width
+ku:Li Firehiyê Bike
+:New &window
+ku:Paceyeke nû
+:Open Directory in &Double Commander
+ku:Peldankê di Double Commander de veke
+:Open Directory in &Explorer
+ku:Peldankê di Explorer de veke
+:Open Directory in &Total Commander
+ku:Peldankê di Total Commander de veke
+:Open Directory in Directory &Opus
+ku:Peldankê di Directory Opus de veke
+:Open With Pdf&Djvu Bookmarker
+ku:Bi PdfDjvu Bookmarker veke
+:Open in Microsoft &HTML Help
+ku:Di Microsoft HTML Help de veke
+:Pr&esentation
+ku:Pêşkêşî
+:Re&name...
+ku:Nav biguherîne...
+:Rotate &Left
+ku:Bo Çepê Bizivirîne
+:Rotate &Right
+ku:Bo Rastê Bizivirîne
+:S&election
+ku:Hilbijartin
+:S&quiggly
+ku:Xalxalok
+:Save S&hortcut...
+ku:Kurterê Tomar Bike...
+:Save to &new PDF
+ku:Di PDF-ya nû de tomar bike
+:Search With &Bing
+ku:Bi Bing re bigere
+:Search With &Google
+ku:Bi Google re bigere
+:Search with &Google Scholar
+ku:Bi Google Scholar re bigere
+:Search with &Wikipedia
+ku:Bi Wikipedia re bigere
+:Show &Favorites
+ku:Bijarteyên xwe nîşan bide
+:Show &Scrollbars
+ku:Şirîtên şixulandinê nîşan bide
+:Show Book&marks
+ku:Şûnpêlan nîşan bide
+:Show in &folder
+ku:Di peldankê de nîşan bide
+:Translate with &DeepL
+ku:Bi DeepL re wergerîne
+:&Actual Size
+kw:Myns Gwir
+:&Back
+kw:Tre
+:&Book View
+kw:Gwyans Lyver
+:&Close
+kw:Degea
+:&Copy To Clipboard
+kw:Dasskrifa dhe Glipbord
+:&Facing
+kw:Rag-dhu
+:&First Page
+kw:Pennfolen
+:&Highlight
+kw:Gorleuni
+:&Keyboard Shortcuts
+kw:Skochfordhow Klewros
+:&Last Page
+kw:Folen Diwedh
+:&Next Page
+kw:Folen Nessa
+:&Open...
+kw:Ygeri...
+:&Previous Page
+kw:Folen Gyns
+:&Single Page
+kw:Folen Sensel
+:Custom &Zoom...
+kw:Hewhe Personys...
+:E&xit
+kw:Gasa
+:F&orward
+kw:Yn-rag
+:F&ullscreen
+kw:Skrin Leun
+:Fin&d...
+kw:Kavoes...
+:Fit &Content
+kw:Kettya Dalgh
+:Fit &Page
+kw:Kettya Folen
+:Fit &Width
+kw:Kettya Les
+:New &window
+kw:Fenester nowydh
+:Open Directory in &Double Commander
+kw:Ygeri Kavoes yn Double Commander
+:Open Directory in &Explorer
+kw:Ygeri Kavoes yn Explorer
+:Open Directory in &Total Commander
+kw:Ygeri Kavoes yn Total Commander
+:Open Directory in Directory &Opus
+kw:Ygeri Kavoes yn Directory Opus
+:Open With Pdf&Djvu Bookmarker
+kw:Ygeri gans PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+kw:Ygeri yn Microsoft HTML Help
+:Pa&ge...
+kw:Folen...
+:Pr&esentation
+kw:Presentacyon
+:Re&name...
+kw:Dashenwel...
+:Rotate &Left
+kw:Treylya dhe'n Kledh
+:Rotate &Right
+kw:Treylya dhe'n Dyhow
+:Save S&hortcut...
+kw:Gwitha Skochfordh...
+:Search with &Google Scholar
+kw:Hwilas gans Google Scholar
+:Search with &Wikipedia
+kw:Hwilas gans Wikipedia
+:Show &Bookmarks
+kw:Diskwedhes Folennow-merkys
+:&Actual Size
+lt:Tikras dydis
+:&Back
+lt:Atgal
+:&Book View
+lt:Knygos rodinys
+:&Continue installing 32-bit version
+lt:Tęsti 32 bitų versijos diegimą
+:&Facing
+lt:Gretimi
+:&First Page
+lt:Pirmas puslapis
+:&Highlight
+lt:Paryškinti
+:&Last Page
+lt:Paskutinis puslapis
+:&Next Page
+lt:Kitas puslapis
+:&Previous Page
+lt:Ankstesnis puslapis
+:&Search With Google
+lt:Ieškoti su Google
+:&Single Page
+lt:Vienas puslapis
+:Custom &Zoom...
+lt:Pasirinktinis mastelis...
+:F&orward
+lt:Pirmyn
+:F&ullscreen
+lt:Visas ekranas
+:Fin&d...
+lt:Rasti...
+:Fit &Content
+lt:Pritaikyti turinį
+:Fit &Page
+lt:Pritaikyti puslapį
+:Fit &Width
+lt:Pritaikyti plotį
+:Open Directory in &Double Commander
+lt:Atidaryti katalogą Double Commander
+:Open Directory in Directory &Opus
+lt:Atidaryti katalogą Directory Opus
+:Open With Pdf&Djvu Bookmarker
+lt:Atidaryti su PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+lt:Atidaryti Microsoft HTML Help
+:Pa&ge...
+lt:Puslapis...
+:Pr&esentation
+lt:Pateiktis
+:Rotate &Left
+lt:Pasukti kairėn
+:Rotate &Right
+lt:Pasukti dešinėn
+:Save S&hortcut...
+lt:Išsaugoti nuorodą...
+:Search with &Google Scholar
+lt:Ieškoti su Google Scholar
+:Search with &Wikipedia
+lt:Ieškoti su Wikipedia
+:Show Book&marks
+lt:Rodyti žymeles
+:&Caret
+mk:Курсор
+:&Copy To Clipboard
+mk:Копирај во клипборд
+:&Facing
+mk:Наспроти
+:&First Page
+mk:Prva страница
+:&Free Text
+mk:Слободен текст
+:&Highlight
+mk:Истакни
+:&Keyboard Shortcuts
+mk:Кратенки на тастатура
+:&Last Page
+mk:Последна страница
+:&Next Page
+mk:Следна страница
+:&Open...
+mk:Отвори...
+:&Previous Page
+mk:Претходна страница
+:&Remove From History
+mk:Отстрани од историја
+:&Save to existing PDF
+mk:Зачувај во постоечки PDF
+:&Search With Google
+mk:Барај со Google
+:&Single Page
+mk:Единечна страница
+:&Stamp
+mk:Печат
+:&Strike Out
+mk:Прецртај
+:&Text
+mk:Текст
+:&Theme
+mk:Тема
+:&Translate With Google
+mk:Преведи со Google
+:&Underline
+mk:Подвлечи
+:Create Annotation &Under Cursor
+mk:Создади забелешка под курсор
+:Custom &Zoom...
+mk:Приспособено зумирање...
+:E&xit
+mk:Излез
+:E&xit Fullscreen
+mk:Излез од цел екран
+:F&orward
+mk:Напред
+:F&ullscreen
+mk:Цел екран
+:Fin&d...
+mk:Најди...
+:Fit &Content
+mk:Прилагоди содржина
+:Fit &Page
+mk:Прилагоди страница
+:Fit &Width
+mk:Прилагоди ширина
+:New &window
+mk:Нов прозорец
+:Open Directory in &Double Commander
+mk:Отвори директориум во Double Commander
+:Open Directory in &Explorer
+mk:Отвори директориум во Explorer
+:Open Directory in &Total Commander
+mk:Отвори директориум во Total Commander
+:Open Directory in Directory &Opus
+mk:Отвори директориум во Directory Opus
+:Open With Pdf&Djvu Bookmarker
+mk:Отвори со PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+mk:Отвори во Microsoft HTML Help
+:Pa&ge...
+mk:Страница...
+:Pr&esentation
+mk:Презентација
+:Re&name...
+mk:Преименувај...
+:Rotate &Left
+mk:Ротирај лево
+:Rotate &Right
+mk:Ротирај десно
+:S&election
+mk:Селекција
+:S&quiggly
+mk:Бранеста линија
+:Save S&hortcut...
+mk:Зачувај кратенка...
+:Save to &new PDF
+mk:Зачувај во нов PDF
+:Search With &Bing
+mk:Барај со Bing
+:Search With &Google
+mk:Пребарај со Google
+:Search with &Google Scholar
+mk:Пребарај со Google Scholar
+:Search with &Wikipedia
+mk:Пребарај со Википедија
+:Show &Favorites
+mk:Прикажи омилени
+:Show &Scrollbars
+mk:Прикажи лизгачи
+:Show Book&marks
+mk:Прикажи обележувачи
+:Show in &folder
+mk:Прикажи во папка
+:Translate with &DeepL
+mk:Преведи со DeepL
+:&Actual Size
+mm:အစစ်အရွယ်အစား
+:&Advanced Options...
+mm:အဆင့်မြင့် ရွေးချယ်မှုများ...
+:&All selected pages
+mm:ရွေးချယ်ထားသော စာမျက်နှာများအားလုံး
+:&Back
+mm:နောက်သို့
+:&Book View
+mm:စာအုပ်မြင်ကွင်း
+:&Cancel
+mm:ပယ်ဖျက်
+:&Caret
+mm:ကာရက်
+:&Close
+mm:ပိတ်
+:&Continue installing 32-bit version
+mm:32-bit ဗားရှင်းကို ဆက်လက်ထည့်သွင်းပါ
+:&Copy Selection
+mm:ရွေးချယ်မှုကို ကူးယူ
+:&Copy To Clipboard
+mm:ကလစ်ဘုတ်သို့ ကူးယူ
+:&Discard changes
+mm:ပြောင်းလဲမှုများကို ဖယ်ရှား
+:&Even pages only
+mm:စုံစာမျက်နှာများသာ
+:&Facing
+mm:မျက်နှာချင်းဆိုင်
+:&Find what:
+mm:ရှာမည်:
+:&First Page
+mm:ပထမစာမျက်နှာ
+:&Fit pages to printable area
+mm:စာမျက်နှာများကို ပရင့်ထုတ်နိုင်သော နေရာနှင့် ကိုက်ညီအောင်လုပ်
+:&Free Text
+mm:လွတ်လပ်သော စာသား
+:&Go to page:
+mm:စာမျက်နှာသို့ သွား:
+:&Highlight
+mm:မီးမောင်းထိုး
+:&Keyboard Shortcuts
+mm:ကီးဘုတ် ဖြတ်လမ်းများ
+:&Last Page
+mm:နောက်ဆုံးစာမျက်နှာ
+:&Magnification:
+mm:ချဲ့ခြင်း:
+:&Match case
+mm:စာလုံးအကြီးအသေး ကိုက်ညီမှု
+:&Next Page
+mm:နောက်စာမျက်နှာ
+:&No
+mm:မလုပ်ပါ
+:&Odd pages only
+mm:မစုံစာမျက်နှာများသာ
+:&Open Document
+mm:စာရွက်စာတမ်းဖွင့်
+:&Open...
+mm:ဖွင့်...
+:&Options
+mm:ရွေးချယ်မှုများ
+:&Options...
+mm:ရွေးချယ်မှုများ...
+:&Password:
+mm:စကားဝှက်:
+:&Pin Document
+mm:စာရွက်စာတမ်းကို တွဲထား
+:&Previous Page
+mm:ယခင်စာမျက်နှာ
+:&Print...
+mm:ပရင့်ထုတ်...
+:&Print... (denied)
+mm:ပရင့်ထုတ်... (ငြင်းပယ်ခံရ)
+:&Remember the password for this document
+mm:ဤစာရွက်စာတမ်းအတွက် စကားဝှက်ကို မှတ်ထား
+:&Remember these settings for each document
+mm:စာရွက်စာတမ်းတစ်ခုစီအတွက် ဤဆက်တင်များကို မှတ်ထား
+:&Remove From History
+mm:မှတ်တမ်းမှ ဖယ်ရှား
+:&Save As...
+mm:အဖြစ် သိမ်း...
+:&Save to existing PDF
+mm:ရှိပြီးသား PDF သို့ သိမ်း
+:&Search With Google
+mm:Google ဖြင့် ရှာဖွေ
+:&Settings
+mm:ဆက်တင်များ
+:&Shrink pages to printable area (if necessary)
+mm:စာမျက်နှာများကို ပရင့်ထုတ်နိုင်သော နေရာသို့ ချုံ့ (လိုအပ်ပါက)
+:&Single Page
+mm:စာမျက်နှာတစ်ခုတည်း
+:&Stamp
+mm:တံဆိပ်ခေါက်
+:&Strike Out
+mm:မျဉ်းသား
+:&Text
+mm:စာသား
+:&Theme
+mm:အပြင်အဆင်
+:&Translate With Google
+mm:Google နဲ့ ဘာသာပြန်ရန်
+:&Underline
+mm:မျဉ်းသားရန်
+:&Use original page sizes
+mm:မူလစာမျက်နှာအရွယ်အစားများကို အသုံးပြုရန်
+:&Window
+mm:ဝင်းဒိုး
+:&Yes
+mm:ဟုတ်ကဲ့
+:Automatically check for &updates
+mm:အပ်ဒိတ်များကို အလိုအလျောက်စစ်ဆေးရန်
+:Copy &Image
+mm:ပုံကူးယူရန်
+:Copy &Link Address
+mm:လင့်ခ်လိပ်စာကူးယူရန်
+:Copy Co&mment
+mm:မှတ်ချက်ကူးယူရန်
+:Create Annotation &Under Cursor
+mm:ကာဆာအောက်တွင် မှတ်ချက်ဖန်တီးရန်
+:Custom &Zoom...
+mm:စိတ်ကြိုက် ချဲ့/ချုံ့ခြင်း...
+:Default &Layout:
+mm:မူလအပြင်အဆင်:
+:Default &Zoom:
+mm:မူလချဲ့/ချုံ့မှု:
+:E&xit
+mm:ထွက်ရန်
+:E&xit Fullscreen
+mm:မျက်နှာပြင်အပြည့်မှထွက်ရန်
+:F&avorites
+mm:အကြိုက်ဆုံးများ
+:F&orward
+mm:ရှေ့သို့
+:F&ullscreen
+mm:မျက်နှာပြင်အပြည့်
+:Fin&d...
+mm:ရှာဖွေရန်...
+:Fit &Content
+mm:အကြောင်းအရာနဲ့ကိုက်ညီအောင်
+:Fit &Page
+mm:စာမျက်နှာနဲ့ကိုက်ညီအောင်
+:Fit &Width
+mm:အကျယ်နဲ့ကိုက်ညီအောင်
+:Hide &Options
+mm:ရွေးချယ်စရာများကိုဖျောက်ရန်
+:Install SumatraPDF in &folder:
+mm:SumatraPDF ကို ဖိုင်တွဲတွင် ထည့်သွင်းရန်:
+:Let Windows Desktop Search &search PDF documents
+mm:Windows Desktop Search ကို PDF စာရွက်စာတမ်းများ ရှာဖွေခွင့်ပြုရန်
+:Let Windows show &previews of PDF documents
+mm:Windows ကို PDF စာရွက်စာတမ်းများ အစမ်းကြည့်ခွင့်ပြုရန်
+:Man&ga Mode
+mm:မန်ဂါမုဒ်
+:New &window
+mm:ဝင်းဒိုးအသစ်
+:Open &in PDF-XChange
+mm:PDF-XChange တွင်ဖွင့်ရန်
+:Open Directory in &Double Commander
+mm:Double Commander တွင် လမ်းညွှန်ဖွင့်ရန်
+:Open Directory in &Explorer
+mm:Explorer တွင် လမ်းညွှန်ဖွင့်ရန်
+:Open Directory in &Total Commander
+mm:Total Commander တွင် လမ်းညွှန်ဖွင့်ရန်
+:Open Directory in Directory &Opus
+mm:Directory Opus တွင် လမ်းညွှန်ဖွင့်ရန်
+:Open With Pdf&Djvu Bookmarker
+mm:PdfDjvu Bookmarker ဖြင့်ဖွင့်ရန်
+:Open in &Adobe Reader
+mm:Adobe Reader တွင်ဖွင့်ရန်
+:Open in &Foxit Reader
+mm:Foxit Reader တွင်ဖွင့်ရန်
+:Open in &Microsoft XPS-Viewer
+mm:Microsoft XPS-Viewer တွင်ဖွင့်ရန်
+:Open in Microsoft &HTML Help
+mm:Microsoft HTML Help တွင်ဖွင့်ရန်
+:P&roperties
+mm:ဂုဏ်သတ္တိများ
+:Pa&ge...
+mm:စာမျက်နှာ...
+:Pr&esentation
+mm:တင်ပြချက်
+:Re&name...
+mm:အမည်ပြောင်းရန်...
+:Remember &opened files
+mm:ဖွင့်ထားသောဖိုင်များကို မှတ်ထားရန်
+:Rotate &Left
+mm:ဘယ်ဘက်လှည့်ရန်
+:Rotate &Right
+mm:ညာဘက်လှည့်ရန်
+:S&election
+mm:ရွေးချယ်မှု
+:S&quiggly
+mm:ကောက်မျဉ်းသား
+:Save S&hortcut...
+mm:ဖြတ်လမ်းလင့်ခ်သိမ်းဆည်းရန်...
+:Save to &new PDF
+mm:PDF အသစ်သို့သိမ်းဆည်းရန်
+:Search With &Bing
+mm:Bing ဖြင့်ရှာဖွေရန်
+:Search With &Google
+mm:Google ဖြင့်ရှာဖွေရန်
+:Search with &Google Scholar
+mm:Google Scholar ဖြင့်ရှာဖွေရန်
+:Search with &Wikipedia
+mm:Wikipedia ဖြင့်ရှာဖွေရန်
+:Select &All
+mm:အားလုံးရွေးရန်
+:Send by &E-mail...
+mm:အီးမေးလ်ဖြင့်ပို့ရန်...
+:Show &Bookmarks
+mm:စာညှပ်များပြရန်
+:Show &Favorites
+mm:အကြိုက်ဆုံးများပြရန်
+:Show &Pages Continuously
+mm:စာမျက်နှာများကိုဆက်တိုက်ပြရန်
+:Show &Scrollbars
+mm:လှိမ့်တန်းများပြရန်
+:Show in &folder
+mm:ဖိုင်တွဲထဲတွင်ပြရန်
+:Show the &bookmarks sidebar when available
+mm:ရရှိနိုင်သောအခါစာညှပ်များဘေးတန်းပြရန်
+:Translate with &DeepL
+mm:DeepL ဖြင့်ဘာသာပြန်ရန်
+:Use &tabs
+mm:တက်ဗ်များသုံးရန်
+:&Caret
+ne:क्यारेट
+:&Continue installing 32-bit version
+ne:३२-बिट संस्करण स्थापना जारी राख्नुहोस्
+:&Copy To Clipboard
+ne:क्लिपबोर्डमा प्रतिलिपि गर्नुहोस्
+:&Discard changes
+ne:परिवर्तनहरू रद्द गर्नुहोस्
+:&Facing
+ne:सामना
+:&First Page
+ne:पहिलो पृष्ठ
+:&Free Text
+ne:स्वतन्त्र पाठ
+:&Highlight
+ne:हाइलाइट
+:&Keyboard Shortcuts
+ne:किबोर्ड सर्टकटहरू
+:&Last Page
+ne:अन्तिम पृष्ठ
+:&Next Page
+ne:अर्को पृष्ठ
+:&Open...
+ne:खोल्नुहोस्...
+:&Previous Page
+ne:अघिल्लो पृष्ठ
+:&Remove From History
+ne:इतिहासबाट हटाउनुहोस्
+:&Save to existing PDF
+ne:अवस्थित PDF मा सुरक्षित गर्नुहोस्
+:&Search With Google
+ne:Google मा खोज्नुहोस्
+:&Single Page
+ne:एकल पृष्ठ
+:&Stamp
+ne:छाप
+:&Strike Out
+ne:काट्नुहोस्
+:&Text
+ne:पाठ
+:&Translate With Google
+ne:Google सँग अनुवाद गर्नुहोस्
+:&Underline
+ne:रेखांकन
+:Create Annotation &Under Cursor
+ne:कर्सर मुनि एनोटेशन सिर्जना गर्नुहोस्
+:Custom &Zoom...
+ne:अनुकूलन जुम...
+:E&xit
+ne:बाहिर निस्कनुहोस्
+:E&xit Fullscreen
+ne:पूर्ण स्क्रिनबाट बाहिर निस्कनुहोस्
+:F&orward
+ne:अगाडि
+:F&ullscreen
+ne:पूर्ण स्क्रिन
+:Fin&d...
+ne:खोज्नुहोस्...
+:Fit &Content
+ne:सामग्री मिलाउनुहोस्
+:Fit &Page
+ne:पृष्ठ मिलाउनुहोस्
+:Fit &Width
+ne:चौडाइ मिलाउनुहोस्
+:New &window
+ne:नयाँ विन्डो
+:Open Directory in &Double Commander
+ne:Double Commander मा डाइरेक्टरी खोल्नुहोस्
+:Open Directory in &Explorer
+ne:Explorer मा डाइरेक्टरी खोल्नुहोस्
+:Open Directory in &Total Commander
+ne:Total Commander मा डाइरेक्टरी खोल्नुहोस्
+:Open Directory in Directory &Opus
+ne:Directory Opus मा डाइरेक्टरी खोल्नुहोस्
+:Open With Pdf&Djvu Bookmarker
+ne:PdfDjvu Bookmarker सँग खोल्नुहोस्
+:Open in Microsoft &HTML Help
+ne:Microsoft HTML Help मा खोल्नुहोस्
+:Pa&ge...
+ne:पृष्ठ...
+:Pr&esentation
+ne:प्रस्तुति
+:Re&name...
+ne:पुन: नामकरण गर्नुहोस्...
+:Rotate &Left
+ne:बायाँ घुमाउनुहोस्
+:Rotate &Right
+ne:दायाँ घुमाउनुहोस्
+:S&election
+ne:चयन
+:S&quiggly
+ne:टेढो रेखा
+:Save S&hortcut...
+ne:सर्टकट सुरक्षित गर्नुहोस्...
+:Save to &new PDF
+ne:नयाँ PDF मा सुरक्षित गर्नुहोस्
+:Search With &Bing
+ne:Bing सँग खोज्नुहोस्
+:Search With &Google
+ne:Google सँग खोज्नुहोस्
+:Search with &Google Scholar
+ne:Google Scholar सँग खोज्नुहोस्
+:Search with &Wikipedia
+ne:Wikipedia सँग खोज्नुहोस्
+:Show &Favorites
+ne:मनपर्ने देखाउनुहोस्
+:Show &Scrollbars
+ne:स्क्रोलबार देखाउनुहोस्
+:Show Book&marks
+ne:बुकमार्क देखाउनुहोस्
+:Show in &folder
+ne:फोल्डरमा देखाउनुहोस्
+:Translate with &DeepL
+ne:DeepL सँग अनुवाद गर्नुहोस्
+:&Actual Size
+nn:Faktisk storleik
+:&Book View
+nn:Bokvising
+:&Caret
+nn:Skrivemerke
+:&Continue installing 32-bit version
+nn:Hald fram med å installera 32-bits versjon
+:&Copy To Clipboard
+nn:Kopier til utklippstavle
+:&Discard changes
+nn:Forkast endringar
+:&Facing
+nn:Motsett
+:&First Page
+nn:Første side
+:&Free Text
+nn:Fritekst
+:&Highlight
+nn:Markering
+:&Keyboard Shortcuts
+nn:Tastatursnarveier
+:&Last Page
+nn:Siste side
+:&Next Page
+nn:Neste side
+:&Previous Page
+nn:Førre side
+:&Remove From History
+nn:Fjern frå historikk
+:&Save to existing PDF
+nn:Lagre til eksisterande PDF
+:&Search With Google
+nn:Søk med Google
+:&Single Page
+nn:Enkeltside
+:&Stamp
+nn:Stempel
+:&Strike Out
+nn:Gjennomstreking
+:&Text
+nn:Tekst
+:&Translate With Google
+nn:Omset med Google
+:Create Annotation &Under Cursor
+nn:Lag merknad under markør
+:Custom &Zoom...
+nn:Tilpassa zoom...
+:F&orward
+nn:Fram
+:Fin&d...
+nn:Finn...
+:Fit &Content
+nn:Tilpass innhald
+:Fit &Page
+nn:Tilpass side
+:Fit &Width
+nn:Tilpass breidde
+:Open Directory in &Double Commander
+nn:Opne mappe i Double Commander
+:Open Directory in &Explorer
+nn:Opne mappe i Utforskar
+:Open Directory in &Total Commander
+nn:Opne mappe i Total Commander
+:Open Directory in Directory &Opus
+nn:Opne mappe i Directory Opus
+:Open With Pdf&Djvu Bookmarker
+nn:Opne med PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+nn:Opne i Microsoft HTML Help
+:Pr&esentation
+nn:Presentasjon
+:Re&name...
+nn:Endra namn...
+:S&election
+nn:Utval
+:S&quiggly
+nn:Bølgje
+:Save S&hortcut...
+nn:Lagre snarveg...
+:Save to &new PDF
+nn:Lagre til ny PDF
+:Search With &Bing
+nn:Søk med Bing
+:Search with &Google Scholar
+nn:Søk med Google Scholar
+:Search with &Wikipedia
+nn:Søk med Wikipedia
+:Show &Scrollbars
+nn:Vis rullefelt
+:Show Book&marks
+nn:Vis bokmerke
+:Translate with &DeepL
+nn:Omset med DeepL
+:&Keyboard Shortcuts
+no:Tastatursnarveier
+:Open With Pdf&Djvu Bookmarker
+no:Åpne med PdfDjvu Bookmarker
+:Search with &Google Scholar
+no:Søk med Google Scholar
+:Search with &Wikipedia
+no:Søk med Wikipedia
+:&Actual Size
+pa:ਅਸਲ ਆਕਾਰ
+:&Back
+pa:ਪਿੱਛੇ
+:&Book View
+pa:ਕਿਤਾਬ ਦ੍ਰਿਸ਼
+:&Cancel
+pa:ਰੱਦ ਕਰੋ
+:&Caret
+pa:ਕੈਰੇਟ
+:&Close
+pa:ਬੰਦ ਕਰੋ
+:&Continue installing 32-bit version
+pa:32-ਬਿੱਟ ਸੰਸਕਰਣ ਇੰਸਟਾਲ ਕਰਨਾ ਜਾਰੀ ਰੱਖੋ
+:&Copy To Clipboard
+pa:ਕਲਿੱਪਬੋਰਡ 'ਤੇ ਕਾਪੀ ਕਰੋ
+:&Discard changes
+pa:ਤਬਦੀਲੀਆਂ ਰੱਦ ਕਰੋ
+:&Even pages only
+pa:ਸਿਰਫ਼ ਜਿਸਤ ਸਫ਼ੇ
+:&Facing
+pa:ਸਾਹਮਣੇ
+:&Find what:
+pa:ਕੀ ਲੱਭਣਾ ਹੈ:
+:&First Page
+pa:ਪਹਿਲਾ ਸਫ਼ਾ
+:&Fit pages to printable area
+pa:ਸਫ਼ਿਆਂ ਨੂੰ ਪ੍ਰਿੰਟਯੋਗ ਖੇਤਰ ਵਿੱਚ ਫਿੱਟ ਕਰੋ
+:&Free Text
+pa:ਮੁਕਤ ਟੈਕਸਟ
+:&Highlight
+pa:ਹਾਈਲਾਈਟ
+:&Keyboard Shortcuts
+pa:ਕੀਬੋਰਡ ਸ਼ਾਰਟਕੱਟ
+:&Last Page
+pa:ਆਖਰੀ ਸਫ਼ਾ
+:&Magnification:
+pa:ਵਿਸ਼ਾਲਤਾ:
+:&Match case
+pa:ਕੇਸ ਮੇਲ ਕਰੋ
+:&Next Page
+pa:ਅਗਲਾ ਸਫ਼ਾ
+:&Odd pages only
+pa:ਸਿਰਫ਼ ਟਾਂਕ ਸਫ਼ੇ
+:&Open Document
+pa:ਦਸਤਾਵੇਜ਼ ਖੋਲ੍ਹੋ
+:&Open...
+pa:ਖੋਲ੍ਹੋ...
+:&Options
+pa:ਵਿਕਲਪ
+:&Options...
+pa:ਵਿਕਲਪ...
+:&Pin Document
+pa:ਦਸਤਾਵੇਜ਼ ਪਿੰਨ ਕਰੋ
+:&Previous Page
+pa:ਪਿਛਲਾ ਸਫ਼ਾ
+:&Print...
+pa:ਪ੍ਰਿੰਟ ਕਰੋ...
+:&Print... (denied)
+pa:ਪ੍ਰਿੰਟ ਕਰੋ... (ਰੱਦ ਕੀਤਾ)
+:&Remember the password for this document
+pa:ਇਸ ਦਸਤਾਵੇਜ਼ ਲਈ ਪਾਸਵਰਡ ਯਾਦ ਰੱਖੋ
+:&Remember these settings for each document
+pa:ਹਰੇਕ ਦਸਤਾਵੇਜ਼ ਲਈ ਇਹ ਸੈਟਿੰਗਾਂ ਯਾਦ ਰੱਖੋ
+:&Remove From History
+pa:ਇਤਿਹਾਸ ਤੋਂ ਹਟਾਓ
+:&Save As...
+pa:ਇਸ ਤਰ੍ਹਾਂ ਸੰਭਾਲੋ...
+:&Save to existing PDF
+pa:ਮੌਜੂਦਾ PDF ਵਿੱਚ ਸੰਭਾਲੋ
+:&Search With Google
+pa:ਗੂਗਲ ਨਾਲ ਖੋਜੋ
+:&Settings
+pa:ਸੈਟਿੰਗਾਂ
+:&Shrink pages to printable area (if necessary)
+pa:ਸਫ਼ਿਆਂ ਨੂੰ ਪ੍ਰਿੰਟਯੋਗ ਖੇਤਰ ਵਿੱਚ ਸੁੰਗੜੋ (ਜੇ ਲੋੜ ਹੋਵੇ)
+:&Single Page
+pa:ਇਕੱਲਾ ਸਫ਼ਾ
+:&Stamp
+pa:ਮੋਹਰ
+:&Strike Out
+pa:ਕੱਟੋ
+:&Text
+pa:ਟੈਕਸਟ
+:&Translate With Google
+pa:ਗੂਗਲ ਨਾਲ ਅਨੁਵਾਦ ਕਰੋ
+:&Underline
+pa:ਹੇਠਾਂ ਰੇਖਾ
+:&Use original page sizes
+pa:ਮੂਲ ਸਫ਼ਾ ਆਕਾਰ ਵਰਤੋ
+:&Window
+pa:ਵਿੰਡੋ
+:&Yes
+pa:ਹਾਂ
+:Create Annotation &Under Cursor
+pa:ਕਰਸਰ ਹੇਠ ਟਿੱਪਣੀ ਬਣਾਓ
+:Custom &Zoom...
+pa:ਕਸਟਮ ਜ਼ੂਮ...
+:Default &Layout:
+pa:ਡਿਫੌਲਟ ਲੇਆਉਟ:
+:Default &Zoom:
+pa:ਡਿਫੌਲਟ ਜ਼ੂਮ:
+:E&xit
+pa:ਬਾਹਰ ਜਾਓ
+:E&xit Fullscreen
+pa:ਪੂਰੀ ਸਕਰੀਨ ਤੋਂ ਬਾਹਰ ਜਾਓ
+:F&orward
+pa:ਅੱਗੇ
+:F&ullscreen
+pa:ਪੂਰੀ ਸਕਰੀਨ
+:Fin&d...
+pa:ਲੱਭੋ...
+:Fit &Content
+pa:ਸਮੱਗਰੀ ਫਿੱਟ ਕਰੋ
+:Fit &Page
+pa:ਪੰਨਾ ਫਿੱਟ ਕਰੋ
+:Fit &Width
+pa:ਚੌੜਾਈ ਫਿੱਟ ਕਰੋ
+:Hide &Options
+pa:ਵਿਕਲਪ ਲੁਕਾਓ
+:Install SumatraPDF in &folder:
+pa:ਫੋਲਡਰ ਵਿੱਚ SumatraPDF ਇੰਸਟਾਲ ਕਰੋ:
+:Let Windows Desktop Search &search PDF documents
+pa:Windows Desktop Search ਨੂੰ PDF ਦਸਤਾਵੇਜ਼ ਖੋਜਣ ਦਿਓ
+:Let Windows show &previews of PDF documents
+pa:Windows ਨੂੰ PDF ਦਸਤਾਵੇਜ਼ਾਂ ਦੇ ਪੂਰਵਦਰਸ਼ਨ ਦਿਖਾਉਣ ਦਿਓ
+:Man&ga Mode
+pa:ਮੰਗਾ ਮੋਡ
+:New &window
+pa:ਨਵੀਂ ਵਿੰਡੋ
+:Open &in PDF-XChange
+pa:PDF-XChange ਵਿੱਚ ਖੋਲ੍ਹੋ
+:Open Directory in &Double Commander
+pa:Double Commander ਵਿੱਚ ਡਾਇਰੈਕਟਰੀ ਖੋਲ੍ਹੋ
+:Open Directory in &Explorer
+pa:Explorer ਵਿੱਚ ਡਾਇਰੈਕਟਰੀ ਖੋਲ੍ਹੋ
+:Open Directory in &Total Commander
+pa:Total Commander ਵਿੱਚ ਡਾਇਰੈਕਟਰੀ ਖੋਲ੍ਹੋ
+:Open Directory in Directory &Opus
+pa:Directory Opus ਵਿੱਚ ਡਾਇਰੈਕਟਰੀ ਖੋਲ੍ਹੋ
+:Open With Pdf&Djvu Bookmarker
+pa:PdfDjvu Bookmarker ਨਾਲ ਖੋਲ੍ਹੋ
+:Open in &Adobe Reader
+pa:Adobe Reader ਵਿੱਚ ਖੋਲ੍ਹੋ
+:Open in &Foxit Reader
+pa:Foxit Reader ਵਿੱਚ ਖੋਲ੍ਹੋ
+:Open in &Microsoft XPS-Viewer
+pa:Microsoft XPS-Viewer ਵਿੱਚ ਖੋਲ੍ਹੋ
+:Open in Microsoft &HTML Help
+pa:Microsoft HTML Help ਵਿੱਚ ਖੋਲ੍ਹੋ
+:P&roperties
+pa:ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ
+:Pa&ge...
+pa:ਪੰਨਾ...
+:Pr&esentation
+pa:ਪੇਸ਼ਕਾਰੀ
+:Re&name...
+pa:ਨਾਮ ਬਦਲੋ...
+:Remember &opened files
+pa:ਖੋਲ੍ਹੀਆਂ ਫਾਈਲਾਂ ਯਾਦ ਰੱਖੋ
+:Rotate &Left
+pa:ਖੱਬੇ ਘੁੰਮਾਓ
+:Rotate &Right
+pa:ਸੱਜੇ ਘੁੰਮਾਓ
+:S&election
+pa:ਚੋਣ
+:S&quiggly
+pa:ਲਹਿਰਦਾਰ
+:Save S&hortcut...
+pa:ਸ਼ਾਰਟਕੱਟ ਸੇਵ ਕਰੋ...
+:Save to &new PDF
+pa:ਨਵੀਂ PDF ਵਿੱਚ ਸੇਵ ਕਰੋ
+:Search With &Bing
+pa:Bing ਨਾਲ ਖੋਜੋ
+:Search With &Google
+pa:Google ਨਾਲ ਖੋਜੋ
+:Search with &Google Scholar
+pa:Google Scholar ਨਾਲ ਖੋਜੋ
+:Search with &Wikipedia
+pa:Wikipedia ਨਾਲ ਖੋਜੋ
+:Select &All
+pa:ਸਭ ਚੁਣੋ
+:Send by &E-mail...
+pa:ਈ-ਮੇਲ ਰਾਹੀਂ ਭੇਜੋ...
+:Show &Bookmarks
+pa:ਬੁੱਕਮਾਰਕ ਦਿਖਾਓ
+:Show &Favorites
+pa:ਮਨਪਸੰਦ ਦਿਖਾਓ
+:Show &Pages Continuously
+pa:ਪੰਨੇ ਲਗਾਤਾਰ ਦਿਖਾਓ
+:Show &Scrollbars
+pa:ਸਕ੍ਰੋਲਬਾਰ ਦਿਖਾਓ
+:Show Book&marks
+pa:ਬੁੱਕਮਾਰਕ ਵੇਖੋ
+:Show Scr&ollbars
+pa:ਸਕ੍ਰੋਲਬਾਰ ਵੇਖੋ
+:Show in &folder
+pa:ਫੋਲਡਰ ਵਿੱਚ ਵੇਖੋ
+:Show the &bookmarks sidebar when available
+pa:ਜਦੋਂ ਉਪਲਬਧ ਹੋਵੇ ਤਾਂ ਬੁੱਕਮਾਰਕ ਸਾਈਡਬਾਰ ਵੇਖੋ
+:Translate with &DeepL
+pa:DeepL ਨਾਲ ਅਨੁਵਾਦ ਕਰੋ
+:Use &tabs
+pa:ਟੈਬਾਂ ਵਰਤੋ
+:&Actual Size
+si:සැබෑ ප්‍රමාණය
+:&Back
+si:ආපසු
+:&Book View
+si:පොත් දර්ශනය
+:&Cancel
+si:අවලංගු කරන්න
+:&Caret
+si:කැරට්
+:&Close
+si:වසන්න
+:&Continue installing 32-bit version
+si:32-bit අනුවාදය ස්ථාපනය කිරීම දිගටම කරන්න
+:&Copy To Clipboard
+si:පසුරුපුවරුවට පිටපත් කරන්න
+:&Discard changes
+si:වෙනස්කම් ඉවතලන්න
+:&Facing
+si:මුහුණලා
+:&First Page
+si:පළමු පිටුව
+:&Free Text
+si:නිදහස් පෙළ
+:&Highlight
+si:උද්දීපනය කරන්න
+:&Keyboard Shortcuts
+si:යතුරුපුවරු කෙටිමං
+:&Last Page
+si:අවසාන පිටුව
+:&Next Page
+si:ඊළඟ පිටුව
+:&Open...
+si:විවෘත කරන්න...
+:&Previous Page
+si:පෙර පිටුව
+:&Remove From History
+si:ඉතිහාසයෙන් ඉවත් කරන්න
+:&Save to existing PDF
+si:පවතින PDF වෙත සුරකින්න
+:&Search With Google
+si:Google සමඟ සොයන්න
+:&Single Page
+si:තනි පිටුව
+:&Stamp
+si:මුද්‍රාව
+:&Strike Out
+si:පහර දෙන්න
+:&Text
+si:පෙළ
+:&Translate With Google
+si:Google සමඟ පරිවර්තනය කරන්න
+:&Underline
+si:යටි ඉරි
+:Create Annotation &Under Cursor
+si:කර්සරය යටතේ විවරණයක් සාදන්න
+:Custom &Zoom...
+si:අභිරුචි විශාලනය...
+:E&xit
+si:පිටවීම
+:E&xit Fullscreen
+si:පූර්ණ තිරයෙන් පිටවන්න
+:F&orward
+si:ඉදිරියට
+:F&ullscreen
+si:පූර්ණ තිරය
+:Fin&d...
+si:සොයන්න...
+:Fit &Content
+si:අන්තර්ගතය ගැළපෙන්න
+:Fit &Page
+si:පිටුව ගැළපෙන්න
+:Fit &Width
+si:පළල ගැළපෙන්න
+:New &window
+si:නව කවුළුව
+:Open Directory in &Double Commander
+si:Double Commander හි නාමාවලිය විවෘත කරන්න
+:Open Directory in &Explorer
+si:Explorer හි නාමාවලිය විවෘත කරන්න
+:Open Directory in &Total Commander
+si:Total Commander හි නාමාවලිය විවෘත කරන්න
+:Open Directory in Directory &Opus
+si:Directory Opus හි නාමාවලිය විවෘත කරන්න
+:Open With Pdf&Djvu Bookmarker
+si:PdfDjvu Bookmarker සමඟ විවෘත කරන්න
+:Open in Microsoft &HTML Help
+si:Microsoft HTML Help හි විවෘත කරන්න
+:Pa&ge...
+si:පිටුව...
+:Pr&esentation
+si:ඉදිරිපත් කිරීම
+:Re&name...
+si:නැවත නම් කරන්න...
+:Rotate &Left
+si:වමට කරකවන්න
+:Rotate &Right
+si:දකුණට කරකවන්න
+:S&election
+si:තේරීම
+:S&quiggly
+si:රැළි සහිත
+:Save S&hortcut...
+si:කෙටිමග සුරකින්න...
+:Save to &new PDF
+si:නව PDF එකකට සුරකින්න
+:Search With &Bing
+si:Bing සමඟ සොයන්න
+:Search With &Google
+si:Google සමඟ සොයන්න
+:Search with &Google Scholar
+si:Google Scholar සමඟ සොයන්න
+:Search with &Wikipedia
+si:Wikipedia සමඟ සොයන්න
+:Show &Favorites
+si:ප්‍රියතම පෙන්වන්න
+:Show &Scrollbars
+si:අනුචලන තීරු පෙන්වන්න
+:Show Book&marks
+si:පිටු සලකුණු පෙන්වන්න
+:Show in &folder
+si:ෆෝල්ඩරය තුළ පෙන්වන්න
+:Translate with &DeepL
+si:DeepL සමඟ පරිවර්තනය කරන්න
+:&Actual Size
+sn:Saizi Chaiyo
+:&Advanced Options...
+sn:Sarudzo Dzepamberi...
+:&All selected pages
+sn:Mapeji ese akasarudzwa
+:&Back
+sn:Kumashure
+:&Book View
+sn:Maonero eBhuku
+:&Cancel
+sn:Kanzura
+:&Caret
+sn:Mucherechedzo
+:&Close
+sn:Vhara
+:&Continue installing 32-bit version
+sn:Ramba uchiisa 32-bit version
+:&Copy Selection
+sn:Kopera Zvakasarudzwa
+:&Copy To Clipboard
+sn:Kopera Ku Clipboard
+:&Discard changes
+sn:Rasa shanduko
+:&Even pages only
+sn:Mapeji akaenzana chete
+:&Facing
+sn:Zvakatarisana
+:&Find what:
+sn:Tsvaka chii:
+:&First Page
+sn:Peji Yekutanga
+:&Fit pages to printable area
+sn:Kodzera mapeji kunzvimbo yeprinta
+:&Free Text
+sn:Mavara Akasununguka
+:&Go to page:
+sn:Enda kupeji:
+:&Highlight
+sn:Ratidza
+:&Keyboard Shortcuts
+sn:Mapfupi eKibhodi
+:&Last Page
+sn:Peji Yekupedzisira
+:&Magnification:
+sn:Kukurisa:
+:&Manual
+sn:Gwara
+:&Match case
+sn:Fananidza mavara makuru nemaduku
+:&Next Page
+sn:Peji Inotevera
+:&Odd pages only
+sn:Mapeji asina kuenzana chete
+:&Open Document
+sn:Vhura Gwaro
+:&Open...
+sn:Vhura...
+:&Options
+sn:Sarudzo
+:&Options...
+sn:Sarudzo...
+:&Password:
+sn:Pasiwedi:
+:&Pin Document
+sn:Bata Gwaro
+:&Previous Page
+sn:Peji Yakapfuura
+:&Print...
+sn:Dhindira...
+:&Print... (denied)
+sn:Dhindira... (rakarambidzwa)
+:&Remember the password for this document
+sn:Yeuka pasiwedi yegwaro iri
+:&Remember these settings for each document
+sn:Yeuka zvigadziriso izvi kune rimwe nerimwe gwaro
+:&Remove From History
+sn:Bvisa Munhoroondo
+:&Save As...
+sn:Chengetedza Se...
+:&Save to existing PDF
+sn:Chengetedza kune PDF iripo
+:&Search With Google
+sn:Tsvaka Ne Google
+:&Settings
+sn:Zvigadziriso
+:&Shrink pages to printable area (if necessary)
+sn:Deredza mapeji kunzvimbo yeprinta (kana zvichidikanwa)
+:&Single Page
+sn:Peji Imwe Chete
+:&Stamp
+sn:Chisimbiso
+:&Strike Out
+sn:Rova Muchinjikwa
+:&Text
+sn:Mavara
+:&Theme
+sn:Dingindira
+:&Translate With Google
+sn:Shandura neGoogle
+:&Underline
+sn:Mutsetse Pasi
+:&Use original page sizes
+sn:Shandisa saizi dzepeji dzepakutanga
+:&Window
+sn:Hwindo
+:&Yes
+sn:Hongu
+:Automatically check for &updates
+sn:Tarisa zvigadziriso zvitsva zvazvoga
+:Copy &Link Address
+sn:Kopa Kero yeLink
+:Copy Co&mment
+sn:Kopa Comment
+:Create Annotation &Under Cursor
+sn:Gadzira Annotation Pasi peCursor
+:Custom &Zoom...
+sn:Zoom Yako...
+:Default &Layout:
+sn:Layout Yepakutanga:
+:Default &Zoom:
+sn:Zoom Yepakutanga:
+:E&xit
+sn:Buda
+:E&xit Fullscreen
+sn:Buda muFullscreen
+:F&avorites
+sn:Zvandinoda
+:F&orward
+sn:Mberi
+:F&ullscreen
+sn:Skrini Yakazara
+:Fin&d...
+sn:Tsvaga...
+:Fit &Content
+sn:Kukodzera Zviri Mukati
+:Fit &Page
+sn:Kukodzera Peji
+:Fit &Width
+sn:Kukodzera Upamhi
+:Hide &Options
+sn:Viga Sarudzo
+:Install SumatraPDF in &folder:
+sn:Isa SumatraPDF mufolda:
+:Let Windows Desktop Search &search PDF documents
+sn:Rega Windows Desktop Search itsvage magwaro ePDF
+:Let Windows show &previews of PDF documents
+sn:Rega Windows iratidze previews dzemagwaro ePDF
+:Man&ga Mode
+sn:Manga Mode
+:New &window
+sn:Hwindo itsva
+:Open &in PDF-XChange
+sn:Vhura muPDF-XChange
+:Open Directory in &Double Commander
+sn:Vhura Directory muDouble Commander
+:Open Directory in &Explorer
+sn:Vhura Directory muExplorer
+:Open Directory in &Total Commander
+sn:Vhura Directory muTotal Commander
+:Open Directory in Directory &Opus
+sn:Vhura Directory muDirectory Opus
+:Open With Pdf&Djvu Bookmarker
+sn:Vhura NePdfDjvu Bookmarker
+:Open in &Foxit Reader
+sn:Vhura muFoxit Reader
+:Open in &Microsoft XPS-Viewer
+sn:Vhura muMicrosoft XPS-Viewer
+:Open in Microsoft &HTML Help
+sn:Vhura muMicrosoft HTML Help
+:P&roperties
+sn:Zvimiro
+:Pa&ge...
+sn:Peji...
+:Pr&esentation
+sn:Kuratidza
+:Re&name...
+sn:Shandura Zita...
+:Remember &opened files
+sn:Yeuka mafaera akavhurwa
+:Rotate &Left
+sn:Tenderera Kuruboshwe
+:Rotate &Right
+sn:Tenderera Kurudyi
+:S&election
+sn:Kusarudza
+:S&quiggly
+sn:Mutsetse Unomonyoroka
+:Save S&hortcut...
+sn:Chengetedza Shortcut...
+:Save to &new PDF
+sn:Chengetedza kuPDF itsva
+:Search With &Bing
+sn:Tsvaga NeBing
+:Search With &Google
+sn:Tsvaga NeGoogle
+:Search with &Google Scholar
+sn:Tsvaga neGoogle Scholar
+:Search with &Wikipedia
+sn:Tsvaga neWikipedia
+:Select &All
+sn:Sarudza Zvose
+:Send by &E-mail...
+sn:Tumira neE-mail...
+:Show &Bookmarks
+sn:Ratidza Zvibhukumaki
+:Show &Favorites
+sn:Ratidza Zvinodiwa
+:Show &Pages Continuously
+sn:Ratidza Mapeji Achiramba
+:Show &Scrollbars
+sn:Ratidza Mabha Ekukweva
+:Show in &folder
+sn:Ratidza mufodha
+:Show the &bookmarks sidebar when available
+sn:Ratidza bha rerutivi rezvibhukumaki kana riripo
+:Translate with &DeepL
+sn:Shandura neDeepL
+:Use &tabs
+sn:Shandisa matab
+:&Actual Size
+sp-rs:Stvarna veličina
+:&Back
+sp-rs:Nazad
+:&Book View
+sp-rs:Prikaz knjige
+:&Cancel
+sp-rs:Otkaži
+:&Caret
+sp-rs:Kursor
+:&Close
+sp-rs:Zatvori
+:&Continue installing 32-bit version
+sp-rs:Nastavi instalaciju 32-bitne verzije
+:&Copy To Clipboard
+sp-rs:Kopiraj u clipboard
+:&Discard changes
+sp-rs:Odbaci promene
+:&Facing
+sp-rs:Naspramno
+:&First Page
+sp-rs:Prva strana
+:&Free Text
+sp-rs:Slobodan tekst
+:&Highlight
+sp-rs:Označi
+:&Keyboard Shortcuts
+sp-rs:Prečice na tastaturi
+:&Last Page
+sp-rs:Poslednja strana
+:&Next Page
+sp-rs:Sledeća strana
+:&Open...
+sp-rs:Otvori...
+:&Previous Page
+sp-rs:Prethodna strana
+:&Remove From History
+sp-rs:Ukloni iz istorije
+:&Save to existing PDF
+sp-rs:Sačuvaj u postojeći PDF
+:&Search With Google
+sp-rs:Pretraži pomoću Google-a
+:&Single Page
+sp-rs:Jedna strana
+:&Stamp
+sp-rs:Pečat
+:&Strike Out
+sp-rs:Precrtaj
+:&Text
+sp-rs:Tekst
+:&Translate With Google
+sp-rs:Prevedi pomoću Google-a
+:&Underline
+sp-rs:Podvuci
+:Create Annotation &Under Cursor
+sp-rs:Kreiraj anotaciju pod kursorom
+:Custom &Zoom...
+sp-rs:Prilagođeno zumiranje...
+:E&xit
+sp-rs:Izlaz
+:E&xit Fullscreen
+sp-rs:Izađi iz celog ekrana
+:F&orward
+sp-rs:Napred
+:F&ullscreen
+sp-rs:Ceo ekran
+:Fin&d...
+sp-rs:Pronađi...
+:Fit &Content
+sp-rs:Uklopi sadržaj
+:Fit &Page
+sp-rs:Uklopi stranu
+:Fit &Width
+sp-rs:Uklopi širinu
+:New &window
+sp-rs:Novi prozor
+:Open Directory in &Double Commander
+sp-rs:Otvori direktorijum u Double Commander-u
+:Open Directory in &Explorer
+sp-rs:Otvori direktorijum u Explorer-u
+:Open Directory in &Total Commander
+sp-rs:Otvori direktorijum u Total Commander-u
+:Open Directory in Directory &Opus
+sp-rs:Otvori direktorijum u Directory Opus-u
+:Open With Pdf&Djvu Bookmarker
+sp-rs:Otvori pomoću PdfDjvu Bookmarker-a
+:Open in Microsoft &HTML Help
+sp-rs:Otvori u Microsoft HTML Help-u
+:Pa&ge...
+sp-rs:Strana...
+:Pr&esentation
+sp-rs:Prezentacija
+:Re&name...
+sp-rs:Preimenuj...
+:Rotate &Left
+sp-rs:Rotiraj levo
+:Rotate &Right
+sp-rs:Ротирај надесно
+:S&election
+sp-rs:Избор
+:S&quiggly
+sp-rs:Таласаста
+:Save S&hortcut...
+sp-rs:Сачувај пречицу...
+:Save to &new PDF
+sp-rs:Сачувај у нови PDF
+:Search With &Bing
+sp-rs:Претражи са Bing
+:Search With &Google
+sp-rs:Претражи са Google
+:Search with &Google Scholar
+sp-rs:Претражи са Google Scholar
+:Search with &Wikipedia
+sp-rs:Претражи са Wikipedia
+:Show &Favorites
+sp-rs:Прикажи омiljене
+:Show &Scrollbars
+sp-rs:Прикажи траке за померање
+:Show Book&marks
+sp-rs:Прикажи обележиваче
+:Show in &folder
+sp-rs:Прикажи у фолдеру
+:Translate with &DeepL
+sp-rs:Преведи са DeepL
+:&Actual Size
+sq:Madhësia aktuale
+:&Back
+sq:Mbrapa
+:&Book View
+sq:Pamje libri
+:&Cancel
+sq:Anulo
+:&Caret
+sq:Kursor
+:&Close
+sq:Mbyll
+:&Continue installing 32-bit version
+sq:Vazhdo instalimin e versionit 32-bit
+:&Copy To Clipboard
+sq:Kopjo në kujtesën e punës
+:&Discard changes
+sq:Hidh ndryshimet
+:&Facing
+sq:Ballore
+:&First Page
+sq:Faqja e parë
+:&Free Text
+sq:Tekst i lirë
+:&Highlight
+sq:Ndriqo
+:&Keyboard Shortcuts
+sq:Shkurtoret e tastierës
+:&Last Page
+sq:Faqja e fundit
+:&Next Page
+sq:Faqja tjetër
+:&Open...
+sq:Hap...
+:&Previous Page
+sq:Faqja e mëparshme
+:&Remove From History
+sq:Hiq nga historiku
+:&Save to existing PDF
+sq:Ruaj në PDF ekzistues
+:&Search With Google
+sq:Kërko me Google
+:&Single Page
+sq:Faqe e vetme
+:&Stamp
+sq:Vulë
+:&Strike Out
+sq:Nëpërvijëzo
+:&Text
+sq:Tekst
+:&Translate With Google
+sq:Përkthe me Google
+:&Underline
+sq:Nënvizo
+:Create Annotation &Under Cursor
+sq:Krijo shënim nën kursorin
+:Custom &Zoom...
+sq:Zmadhim i personalizuar...
+:E&xit
+sq:Dil
+:E&xit Fullscreen
+sq:Dil nga ekrani i plotë
+:F&orward
+sq:Përpara
+:F&ullscreen
+sq:Ekran i plotë
+:Fin&d...
+sq:Gjej...
+:Fit &Content
+sq:Përshtat përmbajtjen
+:Fit &Page
+sq:Përshtat faqen
+:Fit &Width
+sq:Përshtat gjerësinë
+:New &window
+sq:Dritare e re
+:Open Directory in &Double Commander
+sq:Hap drejtorinë në Double Commander
+:Open Directory in &Explorer
+sq:Hap drejtorinë në Explorer
+:Open Directory in &Total Commander
+sq:Hap drejtorinë në Total Commander
+:Open Directory in Directory &Opus
+sq:Hap drejtorinë në Directory Opus
+:Open With Pdf&Djvu Bookmarker
+sq:Hap me PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+sq:Hap në Microsoft HTML Help
+:Pa&ge...
+sq:Faqe...
+:Pr&esentation
+sq:Prezantim
+:Re&name...
+sq:Riemërto...
+:Rotate &Left
+sq:Rrotullo majtas
+:Rotate &Right
+sq:Rrotullo Djathtas
+:S&election
+sq:Përzgjedhja
+:S&quiggly
+sq:Vijëzuar
+:Save S&hortcut...
+sq:Ruaj Shkurtoren...
+:Save to &new PDF
+sq:Ruaj në PDF të ri
+:Search With &Bing
+sq:Kërko Me Bing
+:Search With &Google
+sq:Kërko Me Google
+:Search with &Google Scholar
+sq:Kërko me Google Scholar
+:Search with &Wikipedia
+sq:Kërko me Wikipedia
+:Show &Favorites
+sq:Shfaq të Preferuarat
+:Show &Scrollbars
+sq:Shfaq Shiritat e Rrëshqitjes
+:Show Book&marks
+sq:Shfaq Faqeruajtëset
+:Show in &folder
+sq:Shfaq në dosje
+:Translate with &DeepL
+sq:Përkthe me DeepL
+:&Actual Size
+th:ขนาดจริง
+:&Back
+th:ย้อนกลับ
+:&Book View
+th:มุมมองหนังสือ
+:&Close
+th:ปิด
+:&Copy To Clipboard
+th:คัดลอกไปยังคลิปบอร์ด
+:&Facing
+th:หน้าคู่
+:&First Page
+th:หน้าแรก
+:&Highlight
+th:ไฮไลต์
+:&Keyboard Shortcuts
+th:ทางลัดแป้นพิมพ์
+:&Last Page
+th:หน้าสุดท้าย
+:&Next Page
+th:หน้าถัดไป
+:&Open...
+th:เปิด...
+:&Previous Page
+th:หน้าก่อนหน้า
+:&Single Page
+th:หน้าเดียว
+:Custom &Zoom...
+th:ซูมกำหนดเอง...
+:E&xit
+th:ออก
+:F&orward
+th:ไปข้างหน้า
+:F&ullscreen
+th:เต็มหน้าจอ
+:Fin&d...
+th:ค้นหา...
+:Fit &Content
+th:พอดีเนื้อหา
+:Fit &Page
+th:พอดีหน้า
+:Fit &Width
+th:พอดีความกว้าง
+:New &window
+th:หน้าต่างใหม่
+:Open Directory in &Double Commander
+th:เปิดไดเรกทอรีใน Double Commander
+:Open Directory in &Explorer
+th:เปิดไดเรกทอรีใน Explorer
+:Open Directory in &Total Commander
+th:เปิดไดเรกทอรีใน Total Commander
+:Open Directory in Directory &Opus
+th:เปิดไดเรกทอรีใน Directory Opus
+:Open With Pdf&Djvu Bookmarker
+th:เปิดด้วย PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+th:เปิดใน Microsoft HTML Help
+:Pa&ge...
+th:หน้า...
+:Pr&esentation
+th:การนำเสนอ
+:Re&name...
+th:เปลี่ยนชื่อ...
+:Rotate &Left
+th:หันซ้าย
+:Rotate &Right
+th:หันขวา
+:Save S&hortcut...
+th:บันทึกทางลัด...
+:Search with &Google Scholar
+th:ค้นหาด้วย Google Scholar
+:Search with &Wikipedia
+th:ค้นหาด้วย Wikipedia
+:Show &Bookmarks
+th:แสดงบุ๊กมาร์ก
+:&Keyboard Shortcuts
+tl:Mga Shortcut sa Keyboard
+:Open With Pdf&Djvu Bookmarker
+tl:Buksan Gamit ang PdfDjvu Bookmarker
+:Search with &Google Scholar
+tl:Maghanap gamit ang Google Scholar
+:Search with &Wikipedia
+tl:Maghanap gamit ang Wikipedia
+:&Keyboard Shortcuts
+uk:Комбінації клавіш
+:Open With Pdf&Djvu Bookmarker
+uk:Відкрити за допомогою PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+uk:Відкрити в Microsoft HTML Help
+:Search with &Google Scholar
+uk:Шукати в Google Scholar
+:Search with &Wikipedia
+uk:Шукати у Вікіпедії
+:&Keyboard Shortcuts
+vn:Phím tắt
+:Open Directory in &Double Commander
+vn:Mở thư mục trong Double Commander
+:Open Directory in &Explorer
+vn:Mở thư mục trong Explorer
+:Open Directory in &Total Commander
+vn:Mở thư mục trong Total Commander
+:Open Directory in Directory &Opus
+vn:Mở thư mục trong Directory Opus
+:Open With Pdf&Djvu Bookmarker
+vn:Mở bằng PdfDjvu Bookmarker
+:Open in Microsoft &HTML Help
+vn:Mở trong Microsoft HTML Help
+:Search with &Google Scholar
+vn:Tìm kiếm với Google Scholar
+:Search with &Wikipedia
+vn:Tìm kiếm với Wikipedia
+:Show Book&marks
+ml:ബുക്ക്മാർക്കുകൾ കാണിക്കുക
+:Show Scr&ollbars
+ml:സ്ക്രോൾബാറുകൾ കാണിക്കുക
+:Show Book&marks
+af:Wys Boekmerke
+:Show Scr&ollbars
+af:Wys Rolbalke
+:Show Book&marks
+bn:বুকমার্ক দেখান
+:Show Scr&ollbars
+bn:স্ক্রলবার দেখান
+:Show Scr&ollbars
+bs:Prikaži trake za pomicanje
+:Show Book&marks
+fy-nl:Blêdwizers toane
+:Show Scr&ollbars
+fy-nl:Skôwbalken toane
+:Show Scr&ollbars
+ku:Derfetên hilqurîn nîşan bide
+:Show Book&marks
+kw:Diskwedhes Folennosow
+:Show Scr&ollbars
+mk:Прикажи лизгачи
+:Show Book&marks
+mm:စာညှပ်များ ပြသရန်
+:Show Scr&ollbars
+mm:လှိမ့်ဘားများ ပြသရန်
+:Show Scr&ollbars
+ne:स्क्रोलबारहरू देखाउनुहोस्
+:Search With &Google
+nn:Søk med Google
+:Show Scr&ollbars
+nn:Vis rullefelt
+:Show Scr&ollbars
+si:අනුචලන තීරු පෙන්වන්න
+:Show Book&marks
+sn:Ratidza Zvibhukumaki
+:Show Scr&ollbars
+sn:Ratidza Mabhari Ekukweretesa
+:Show Scr&ollbars
+sp-rs:Prikaži trake za pomeranje
+:Show Scr&ollbars
+sq:Shfaq Shiritat e Rrëshqitjes
+:Show Book&marks
+th:แสดงบุ๊กมาร์ก
