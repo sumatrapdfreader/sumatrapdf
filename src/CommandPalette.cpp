@@ -590,20 +590,64 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     // append paths of opened files
     currTabIdx = 0;
     tabs.Reset();
-    for (MainWindow* w : gWindows) {
-        for (WindowTab* tab : w->Tabs()) {
-            ItemDataCP data;
-            data.tab = tab;
-            if (tab->IsAboutTab()) {
-                tabs.Append(_TRA("Home"), data);
+    Vec<WindowTab*> tabsOrdered;
+    if (smartTabMode && gGlobalPrefs->useMruTabSwitching) {
+        WindowTab* curr = currTab;
+        if (curr) {
+            tabsOrdered.Append(curr);
+        }
+
+        auto* history = mainWin->tabSelectionHistory;
+        if (history) {
+            int nHistory = history->Size();
+            for (int i = nHistory - 1; i >= 0; i--) {
+                WindowTab* tab = history->at(i);
+                if (!tab || tabsOrdered.Contains(tab) || tab->win != mainWin) {
+                    continue;
+                }
+                tabsOrdered.Append(tab);
+            }
+        }
+
+        for (WindowTab* tab : mainWin->Tabs()) {
+            if (!tab || tabsOrdered.Contains(tab)) {
                 continue;
             }
+            tabsOrdered.Append(tab);
+        }
+
+        for (MainWindow* w : gWindows) {
+            if (w == mainWin) {
+                continue;
+            }
+            for (WindowTab* tab : w->Tabs()) {
+                if (!tab || tabsOrdered.Contains(tab)) {
+                    continue;
+                }
+                tabsOrdered.Append(tab);
+            }
+        }
+    } else {
+        for (MainWindow* w : gWindows) {
+            tabsOrdered.Append(w->Tabs());
+        }
+    }
+
+    for (WindowTab* tab : tabsOrdered) {
+        if (!tab) {
+            continue;
+        }
+        ItemDataCP data;
+        data.tab = tab;
+        if (tab->IsAboutTab()) {
+            tabs.Append(_TRA("Home"), data);
+        } else {
             auto name = path::GetBaseNameTemp(tab->filePath);
             tabs.Append(name, data);
-            if (tab == currTab) {
-                currTabIdx = tabs.Size() - 1;
-                logf("currTabIdx: %d\n", currTabIdx);
-            }
+        }
+        if (tab == currTab) {
+            currTabIdx = tabs.Size() - 1;
+            logf("currTabIdx: %d\n", currTabIdx);
         }
     }
 

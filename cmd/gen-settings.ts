@@ -722,6 +722,17 @@ const globalPrefs: Field[] = [
     ),
   ),
   setVersion(mkField("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows"), "3.0"),
+  setVersion(
+    setExpert(
+      mkField(
+        "UseMruTabSwitching",
+        Bool,
+        false,
+        "if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order",
+      ),
+    ),
+    "3.6",
+  ),
   setDoc(
     setExpert(
       mkCompactArray(

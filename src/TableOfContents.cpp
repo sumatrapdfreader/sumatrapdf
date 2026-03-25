@@ -33,6 +33,7 @@
 #include "resource.h"
 #include "Commands.h"
 #include "AppTools.h"
+#include "CommandPalette.h"
 #include "TableOfContents.h"
 #include "Translations.h"
 #include "Tabs.h"
@@ -860,7 +861,7 @@ void TocTreeKeyDown2(TreeView::KeyDownEvent* ev) {
 
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     if (win->tabsVisible && IsCtrlPressed()) {
-        TabsOnCtrlTab(win, IsShiftPressed());
+        RunCommandPalette(win, kPalettePrefixTabs, IsShiftPressed() ? -1 : 1);
         ev->result = 1;
         return;
     }

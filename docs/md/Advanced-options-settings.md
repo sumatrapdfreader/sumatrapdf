@@ -169,6 +169,10 @@ UseSysColors = false
 ; version 3.0)
 UseTabs = true
 
+; if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most recently
+; used order instead of tab-strip order (introduced in version 3.6)
+UseMruTabSwitching = false
+
 ; sequence of zoom levels when zooming in/out; all values must lie between 8.33
 ; and 6400
 ZoomLevels = 
@@ -572,4 +576,3 @@ The components are hex values (ranging from 00 to FF) and stand for:
 - `aa` : alpha (transparency) component
 
 For example #ff0000 means red color. #ff00007f is half-transparent red.
-
