@@ -202,7 +202,8 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
     int idx = ew->listBox->GetCurrentSelection();
     if (idx < 0) {
-        ReportIf(ew->tab->selectedAnnotation != nullptr);
+        // can get out of sync e.g. after UpdateAnnotationsList during save/reload
+        ew->tab->selectedAnnotation = nullptr;
         return;
     }
     Annotation* annot = ew->annotations.at(idx);
