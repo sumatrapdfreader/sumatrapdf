@@ -190,7 +190,7 @@ static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFir
 }
 
 static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {
-    if (!win) {
+    if (!win || !win->IsDocLoaded()) {
         return;
     }
     if (flags.enterPresentation || flags.enterFullScreen) {
