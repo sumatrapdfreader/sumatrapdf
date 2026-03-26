@@ -1181,6 +1181,9 @@ RectF DisplayModel::GetContentBox(int pageNo) const {
     RectF cbox{};
     // we cache the contentBox
     PageInfo* pageInfo = GetPageInfo(pageNo);
+    if (!pageInfo) {
+        return cbox;
+    }
     if (pageInfo->contentBox.IsEmpty()) {
         pageInfo->contentBox = engine->PageContentBox(pageNo);
     }
@@ -1390,6 +1393,9 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
     }
 
     PageInfo* pageInfo = GetPageInfo(currPageNo);
+    if (!pageInfo) {
+        return false;
+    }
     if (zoomVirtual == kZoomFitContent && -pageInfo->pageOnScreen.y <= top.y) {
         scrollY = 0; // continue, even though the current page isn't fully visible
     } else if (std::max(-pageInfo->pageOnScreen.y, 0) > scrollY && IsContinuous(GetDisplayMode())) {
