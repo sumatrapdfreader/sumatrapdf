@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bc1a633ac91084dee42d97f4d0e9977757750b1f
+3449b41da6a352d93b8004db3eed58b25f29fb3b
 :# File History
 am:# Ֆայլի պատմություն
 ar:# سجل الملفات
@@ -7,6 +7,7 @@ br:# Histórico de Arquivos
 cn:# 文件历史记录
 co:# Cronolugia di schedariu
 de:# Dateiverlauf
+el:# Ιστορικό αρχείων
 hi:फ़ाइल इतिहास
 ja:# ファイル履歴
 ml:ഫയൽ ചരിത്രം
@@ -4040,6 +4041,7 @@ br:: Tudo
 cn:: 所有
 co:: Tuttu
 de:: Alles
+el:: Τα πάντα
 ja:: すべて
 nl:: Alles
 pl:: Wszystko
@@ -4052,6 +4054,7 @@ br:> Comandos
 cn:> 命令
 co:> Cumande
 de:> Befehle
+el:> Εντολές
 hi:नियंत्रण
 ja:> コマンド
 ml:കമാൻഡുകൾ
@@ -4068,6 +4071,7 @@ br:@ Abas
 cn:@ 标签页
 co:@ Unghjette
 de:@ Tabs
+el:@ Καρτέλες
 ja:@ タブ
 ml:@ ടാബുകൾ
 nl:@ Tabs
@@ -4508,6 +4512,7 @@ br:Opções Avançadas...
 cn:高级选项…
 co:Ozzioni d’espertu…
 de:Erweiterte Optionen…
+el:Προηγμένες επιλογές...
 hi:उन्नत विकल्प
 ja:詳細オプション...
 ml:വിപുലമായ ഓപ്ഷനുകൾ...
@@ -4523,6 +4528,7 @@ br:Configurações Avançadas...
 cn:高级设置…
 co:Parametri d’espertu…
 de:Erweiterte Einstellungen…
+el:Προηγμένες ρυθμίσεις...
 ja:詳細設定...
 ml:വിപുലമായ ക്രമീകരണങ്ങൾ...
 nl:Geavanceerde Opties...
@@ -6184,6 +6190,7 @@ br:Mudar Idioma...
 cn:更改语言…
 co:Cambià di lingua…
 de:Sprache ändern…
+el:Αλλαγή γλώσσας...
 ja:言語を変更...
 ml:ഭാഷ മാറ്റുക...
 nl:Taal Wijzigen...
@@ -6198,6 +6205,7 @@ br:Procurar Atualizações
 cn:检查更新
 co:Cuntrollà e messe à livellu
 de:Nach Updates suchen
+el:Έλεγχος για ενημερώσεις
 ja:更新を確認
 ml:അപ്ഡേറ്റുകൾക്കായി പരിശോധിക്കുക
 nl:Controleer Op Updates
@@ -6403,6 +6411,7 @@ br:Limpar Histórico
 cn:清除历史记录
 co:Viutà a cronolugia
 de:Verlauf löschen
+el:Εκκαθάριση ιστορικού
 ja:履歴をクリア
 ml:ചരിത്രം മായ്ക്കുക
 nl:Geschiedenis Wissen
@@ -6622,6 +6631,7 @@ br:Fechar Documento Atual
 cn:关闭当前文档
 co:Chjode u ducumentu attuale
 de:Aktuelles Dokument schließen
+el:Κλείσιμο τρεχόντος εγγράφου
 ja:現在のファイルを閉じる
 nl:Sluit Huidig Document
 pl:Zamknij bieżący dokument
@@ -6635,6 +6645,7 @@ br:Fechar Documento
 cn:关闭文档
 co:Chjode u ducumentu
 de:Dokument schließen
+el:Κλείσιμο εγγράφου
 ja:ファイルを閉じる
 nl:Sluit Document
 pl:Zamknij dokument
@@ -7659,6 +7670,7 @@ br:Copiar Comentário
 cn:复制注释
 co:Cupià u cummentu
 de:Kommentar kopieren
+el:Αντιγραφή σχολίου
 ja:コメントをコピー
 nl:Kopieer Commentaar
 pl:Kopiuj komentarz
@@ -7721,6 +7733,7 @@ br:Copiar Imagem
 cn:复制图片
 co:Cupià a fiura
 de:Bild kopieren
+el:Αντιγραφή εικόνας
 ja:画像をコピー
 nl:Kopieer Afbeelding
 pl:Kopiuj obraz
@@ -7734,6 +7747,7 @@ br:Copiar Endereço do Link
 cn:复制链接目标
 co:Cupià a destinazione di u liame
 de:Linkziel kopieren
+el:Αντιγραφή στόχου συνδέσμου
 ja:リンク先をコピー
 nl:Kopieer Link Doel
 pl:Kopiuj cel z odnośnika
@@ -7746,6 +7760,7 @@ br:Copiar Seleção
 cn:复制所选内容
 co:Cupià a selezzione
 de:Auswahl kopieren
+el:Αντιγραφή επιλογής
 ja:選択範囲をコピー
 nl:Kopieer Selectie
 pl:Kopiuj zaznaczenie
@@ -8669,6 +8684,7 @@ br:Criar Atalho .lnk
 cn:创建 .lnk 快捷方式
 co:Creà un accurtatoghju .lnk
 de:LNK-Verknüpfung erstellen
+el:Δημιουργία συντόμευσης .lnk
 nl:Maak .lnk Snelkoppeling
 pl:Utwórz skrót .lnk
 ru:Создать Ярлык .lnk
@@ -8797,6 +8813,7 @@ br:Criar Anotação do Circunflexo
 cn:创建插入符标注
 co:Creà un’annutazione di barra d’inserzione
 de:Cursor‑Anmerkung erstellen
+el:Δημιουργία δείκτη σχολιασμού
 nl:Maak Cursor Notatie
 pl:Utwórz adnotację karetą
 sk:Vytvoriť anotáciu so vsuvkou
@@ -8807,6 +8824,7 @@ br:Criar Anotação do Círculo
 cn:创建圆圈标注
 co:Creà un’annutazione circulare
 de:Kreis-Anmerkung erstellen
+el:Δημιουργία κύκλου σχολιασμού
 nl:Maak Cirkel Notatie
 pl:Utwórz adnotację okręgiem
 sk:Vytvoriť kruhovú anotáciu
@@ -8817,6 +8835,7 @@ br:Criar Anotação do Arquivo Anexado
 cn:创建文件附件标注
 co:Creà un’annutazione di pezza ghjunta
 de:Dateianhang-Anmerkung erstellen
+el:Δημιουργία συνημμένου αρχείου σχολιασμού
 nl:Maak Bestand Bijlage Notatie
 pl:Utwórz adnotację załącznikem pliku
 sk:Vytvoriť anotáciu k prílohe súboru
@@ -8827,6 +8846,7 @@ br:Criar Anotação do Texto Livre
 cn:创建自由文本标注
 co:Creà un’annutazione di testu liberu
 de:Freitext-Anmerkung erstellen
+el:Δημιουργία ελεύθερου κειμένου σχολιασμού
 nl:Maak Vrije Tekst Notatie
 pl:Utwórz adnotację dowolnym tekstem
 sk:Vytvoriť anotáciu s voľným textom
@@ -8837,6 +8857,7 @@ br:Criar Anotação do Destaque
 cn:创建高亮标注
 co:Creà un’annutazione di messa in evidenza
 de:Hervorhebungsanmerkung erstellen
+el:Δημιουργία επισήμανσης σχολιασμού
 nl:Maak Markeer Notatie
 pl:Utwórz adnotację wyróżnieniem
 sk:Vytvoriť zvýraznenú anotáciu
@@ -8847,6 +8868,7 @@ br:Criar Anotação da Tinta
 cn:创建墨迹标注
 co:Creà un’annutazione lnk
 de:Freihandanmerkung erstellen
+el:Δημιουργία μελανιού σχολιασμού
 nl:Maak .Ink Notatie
 pl:Utwórz adnotację atramentem
 sk:Vytvoriť anotáciu atramentom
@@ -8857,6 +8879,7 @@ br:Criar Anotação da Linha
 cn:创建线条标注
 co:Creà un’annutazione di linea
 de:Zeilenanmerkung erstellen
+el:Δημιουργία γραμμής σχολιασμού
 nl:Maak Lijn Notatie
 pl:Utwórz adnotację linią
 sk:Vytvoriť anotáciu čiarou
@@ -8867,6 +8890,7 @@ br:Criar Anotação do Link
 cn:创建链接注释
 co:Creà un’annutazione di liame
 de:Link-Anmerkung erstellen
+el:Δημιουργία συνδέσμου σχολιασμού
 nl:Maak Link Notatie
 pl:Utwórz adnotację odnośnikiem
 sk:Vytvoriť anotáciu s odkazom
@@ -8877,6 +8901,7 @@ br:Criar Anotação da Poli-Linha
 cn:创建折线标注
 co:Creà un’annutazione di linea tronca
 de:Polylinien-Anmerkung erstellen
+el:Δημιουργία πολυγραμμής σχολιασμού
 nl:Maak Poly Lijn Notatie
 pl:Utwórz adnotację polilinią
 sk:Vytvoriť anotáciu lomenou čiarou
@@ -8887,6 +8912,7 @@ br:Criar Anotação do Polígono
 cn:创建多边形标注
 co:Creà un’annutazione di poligonu
 de:Polygon-Anmerkung erstellen
+el:Δημιουργία πολυγώνου σχολιασμού
 nl:Maak Polygon Notatie
 pl:Utwórz adnotację wielokątem
 sk:Vytvoriť mnohouholníkovú anotáciu
@@ -8897,6 +8923,7 @@ br:Criar Anotação do Popup
 cn:创建弹出式标注
 co:Creà un’annutazione di finestrinu
 de:Einblendbare Anmerkung erstellen
+el:Δημιουργία σχολιασμού αναδυόμενου
 nl:Maak Pop-up Notatie
 pl:Utwórz adnotację wyskakującym okienkiem
 sk:Vytvoriť vyskakovaciu anotáciu
@@ -8907,6 +8934,7 @@ br:Criar Anotação da Redação
 cn:创建密文标注
 co:Creà un’annutazione di redazzione
 de:Schwärzungsanmerkung erstellen
+el:Δημιουργία αποκρυμμένου σχολιασμού
 nl:Maak Redactie Notatie
 pl:Utwórz adnotację redagowaniem
 sk:Vytvoriť redigovanú poznámku
@@ -8917,6 +8945,7 @@ br:Criar Anotação do Quadrado
 cn:创建矩形标注
 co:Creà un’annutazione quadrata
 de:Quadratische Anmerkung erstellen
+el:Δημιουργία σχολιασμού τετράγωνου
 nl:Maak Vierkante Notatie
 pl:Utwórz adnotację kwadratem
 sk:Vytvoriť štvorcovú anotáciu
@@ -8927,6 +8956,7 @@ br:Criar Anotação do Ondulado
 cn:创建波浪线标注
 co:Creà un’annutazione undulata
 de:Geschwungene Anmerkung erstellen
+el:Δημιουργία σγουρού σχολιασμού
 nl:Maak Golvende Notatie
 pl:Utwórz adnotację falowaniem
 sk:Vytvoriť vlnovkovú anotáciu
@@ -8937,6 +8967,7 @@ br:Criar Anotação do Carimbo
 cn:创建图章标注
 co:Creà un’annutazione di stampaghjolu
 de:Stempelanmerkung erstellen
+el:Δημιουργία σφραγίδας σχολιασμού
 nl:Maak Stempel Notatie
 pl:Utwórz adnotację pieczęcią
 sk:Vytvoriť anotáciu s pečiatkou
@@ -8947,6 +8978,7 @@ br:Criar Anotação Riscada
 cn:创建删除线标注
 co:Creà un’annutazione di linea rigata
 de:Streichungsanmerkung erstellen
+el:Δημιουργία σχολιασμού διαγραφής
 nl:Maak Doorstreepte Notatie
 pl:Utwórz adnotację skreśleniem
 sk:Vytvoriť prečiarknutú anotáciu
@@ -8957,6 +8989,7 @@ br:Criar Anotação do Texto
 cn:创建文本注释
 co:Creà un’annutazione di testu
 de:Textanmerkung erstellen
+el:Δημιουργία σχολιασμού κειμένου
 nl:Maak Tekst Notatie
 pl:Utwórz adnotację tekstem
 sk:Vytvoriť textovú anotáciu
@@ -8967,6 +9000,7 @@ br:Criar Anotação do Sublinhado
 cn:创建下划线标注
 co:Creà un’annutazione sottulineata
 de:Unterstrichene Anmerkung erstellen
+el:Δημιουργία υπογράμμισης σχολιασμού
 nl:Maak Onderstreepte Notatie
 pl:Utwórz adnotację podkreśleniem
 sk:Vytvoriť podčiarknutú anotáciu
@@ -9430,6 +9464,7 @@ br:Debug: Memória Corrompida
 cn:调试：损坏内存
 co:Spannatura : Memoria alterata
 de:Debug: Beschädigter Speicher
+el:Αποσφαλμάτωση: Κατεστραμμένη μνήμη
 nl:Foutopsporing: Beschadigd Geheugen
 pl:Debugowanie: uszkodź pamięć
 sk:Ladenie: Poškodená pamäť
@@ -9440,6 +9475,7 @@ br:Debug: Cause um Crash em Mim
 cn:调试：使程序崩溃
 co:Spannatura : Tombami
 de:Debug: Absturz provozieren
+el:Αποσφαλμάτωση: Συντριβή
 nl:Foutopsporing: Laat Crashen
 pl:Debugowanie: zawieś mnie
 sk:Ladenie: Pád aplikácie
@@ -9450,6 +9486,7 @@ br:Debug: Baixar Símbolos
 cn:调试：下载符号
 co:Spannatura : Scaricà i simbuli
 de:Debug: Symbole herunterladen
+el:Αποσφαλμάτωση: Λήψη συμβόλων
 nl:Foutopsporing: Download Symbolen
 pl:Debugowanie: pobierz symbole
 sk:Ladenie: Stiahnuť symboly
@@ -9460,6 +9497,7 @@ br:Debug: Mostrar Notificação
 cn:调试：显示通知
 co:Spannatura : Affissà a nutificazione
 de:Debug: Benachrichtigung anzeigen
+el:Αποσφαλμάτωση: Εμφάνιση ειδοποίησης
 nl:Foutopsporing: Toon Melding
 pl:Debugowanie: pokaż powiadomienie
 sk:Ladenie: Zobraziť upozornenie
@@ -9470,6 +9508,7 @@ br:Debug: Iniciar Teste de Stress
 cn:调试：开始压力测试
 co:Spannatura : Lancià una prova di custrizzione
 de:Debug: Stresstest starten
+el:Αποσφαλμάτωση: Έναρξη δοκιμής στρες
 nl:Foutopsporing:: Stress Test
 pl:Debugowanie: rozpocznij test obciążeniowy
 sk:Ladenie: Spustiť záťažový test
@@ -9480,6 +9519,7 @@ br:Debug: Testar Aplicativo
 cn:调试：测试应用
 co:Spannatura : Appiecazione di prova
 de:Debug: App testen
+el:Αποσφαλμάτωση: Δοκιμή εφαρμογής
 nl:Foutopsporing: Test App
 pl:Debugowanie: testuj aplikację
 sk:Ladenie: Testovať aplikáciu
@@ -9490,6 +9530,7 @@ br:Debug: Alternar Renderização Preditiva
 cn:调试：切换预测性渲染
 co:Spannatura : Attivà o disattivà a restituzione di predizzione
 de:Debug: Vorschau-Rendering umschalten
+el:Εντοπισμός σφαλμάτων: Εναλλαγή προγνωστικής απόδοσης
 nl:Foutopsporing: IN-/UIT Schakelen Voorspellende Weergave
 pl:Debugowanie: przełącz renderowanie predykcyjne
 sk:Ladenie: Prepnúť prediktívne vykresľovanie
@@ -9500,6 +9541,7 @@ br:Debug: Alternar Rtl
 cn:调试：切换从右向左模式
 co:Spannatura : Attivà o disattivà Rtl
 de:Debug: RTL umschalten
+el:Αποσφαλμάτωση: Εναλλαγή Rtl
 nl:Foutopsporing: IN/UIT Schakelen Rtl
 pl:Debugowanie: przełącz RTL
 sk:Ladenie: Prepnúť RTL
@@ -9734,6 +9776,7 @@ br:Apagar Favorito
 cn:从收藏夹删除
 co:Squassà u favuritu
 de:Favorit löschen
+el:Διαγραφή Αγαπημένου
 nl:Verwijder Favoriet
 pl:Usuń ulubione
 ru:Удалить из избранного
@@ -9745,6 +9788,7 @@ br:Apagar Arquivo
 cn:删除文件
 co:Squassà u schedariu
 de:Datei löschen
+el:Διαγραφή αρχείου
 nl:Verwijder Bestand
 pl:Usuń plik
 ru:Удалить Файл
@@ -9894,6 +9938,7 @@ br:Não fazer nada
 cn:不执行操作
 co:Ùn fà nunda
 de:Nichts tun
+el:Μην κάνετε τίποτα
 nl:Doe Niets
 pl:Nic nie rób
 ru:Ничего не делать
@@ -10372,6 +10417,7 @@ br:Embutir...
 cn:嵌入…
 co:@ Unghjette
 de:Einbetten…
+el:Ενσωμάτωση...
 nl:Insluiten...
 pl:Osadź...
 sk:Vložiť…
@@ -10702,6 +10748,7 @@ br:Executar um programa
 cn:执行程序
 co:Lancià un prugramma
 de:Ein Programm ausführen
+el:Εκτέλεση ενός προγράμματος
 nl:Een programma uitvoeren
 pl:Uruchom program
 sk:Spustiť program
@@ -10713,6 +10760,7 @@ br:Sair do Aplicativo
 cn:退出应用程序
 co:Esce da l’appiecazione
 de:Anwendung beenden
+el:Έξοδος από την εφαρμογή
 nl:Applicatie Afsluiten
 pl:Wyjdź z programu
 ru:Выйти из Приложения
@@ -11026,6 +11074,7 @@ br:Visualizar em Página Dupla
 cn:双页视图
 co:Affissà cum’è pagina doppia
 de:Doppelseitenansicht
+el:Προβολή πρόσοψης
 nl:Vooraanzicht
 pl:Widok wielu stron
 sk:Zobraziť dve strany
@@ -12032,6 +12081,7 @@ br:Achar a Seleção Seguinte
 cn:查找下一个所选内容
 co:Truvà a selezzione seguente
 de:Nächste Auswahl suchen
+el:Εύρεση επόμενης επιλογής
 nl:Zoek Volgende Selectie
 pl:Znajdź następne zaznaczenie
 sk:Hľadať ďalší výber
@@ -12115,6 +12165,7 @@ br:Achar a Seleção Anterior
 cn:查找上一个所选内容
 co:Truvà a selezzione precedente
 de:Vorherige Auswahl suchen
+el:Εύρεση προηγούμενης επιλογής
 nl:Zoek Vorige Selectie
 pl:Znajdź poprzednie zaznaczenie
 sk:Hľadať predchádzajúci výber
@@ -12198,6 +12249,7 @@ br:Achar: Diferenciar Maiúsculas/Minúsculas
 cn:查找：切换区分大小写
 co:Circà : Attivà o disattivà u rispettu di a cassa
 de:Suchen: Groß-/Kleinschreibung umschalten
+el:Εύρεση: Εναλλαγή θήκης αντιστοίχισης
 nl:Zoek: Hoofdlettergevoeligheid IN/UIT Schakelen
 pl: Znajdź: przełącz uwzględnianie wielkości liter
 sk:Hľadať: Prepnúť rozlišovanie veľkých/malých písmen
@@ -12208,6 +12260,7 @@ br:Primeira Página
 cn:第一页
 co:Prima pagina
 de:Erste Seite
+el:Πρώτη σελίδα
 nl:Eerste Pagina
 pl:Pierwsza strona
 ru:Первая страница
@@ -13107,6 +13160,7 @@ br:Ir para a Página...
 cn:转到页面…
 co:Andà à a pagina…
 de:Zu Seite gehen…
+el:Μετάβαση στη σελίδα...
 nl:Ga naar Pagina...
 pl:Idź do strony...
 ru:Перейти к Странице...
@@ -13192,6 +13246,7 @@ br:Ajuda: Sobre o SumatraPDF
 cn:帮助：关于 SumatraPDF
 co:Aiutu : Apprupositu di SumatraPDF
 de:Hilfe: Über SumatraPDF
+el:Βοήθεια: Σχετικά με το SumatraPDF
 nl:Help: Over SumatraPDF
 pl:Pomoc: o programie SumatraPDF
 ru:Справка: О SumatraPDF
@@ -13203,6 +13258,7 @@ br:Ajuda: Atalhos do Teclado
 cn:帮助：键盘快捷键
 co:Aiutu : Accurtatoghji di tastera
 de:Hilfe: Tastenkombinationen
+el:Βοήθεια: Συντομεύσεις πληκτρολογίου
 nl:Help: Toetsenbord Sneltoetsen
 pl:Pomoc: skróty klawiaturowe
 ru:Справка: Клавишные Сокращения (HotKeys)
@@ -13214,6 +13270,7 @@ br:Ajuda: Manual
 cn:帮助：使用手册
 co:Aiutu : Manuale
 de:Hilfe: Handbuch
+el:Βοήθεια: Εγχειρίδιο
 nl:Help: Handleiding
 pl:Pomoc: instrukcja obsługi
 ru:Справка: Инструкция
@@ -13225,6 +13282,7 @@ br:Ajuda: Manual no Site
 cn:帮助：在线手册
 co:Aiutu : Manuale nant’à u situ web
 de:Hilfe: Handbuch auf der Website
+el:Βοήθεια: Εγχειρίδιο στον ιστότοπο
 nl:Help: Handleiding Op Website
 pl:Pomoc: instrukcja obsługi na stronie internetowej
 ru:Справка: Инструкция На Сайте
@@ -13236,6 +13294,7 @@ br:Ajuda: Site do SumatraPDF
 cn:帮助：SumatraPDF 网站
 co:Aiutu : Situ web di SumatraPDF
 de:Hilfe: SumatraPDF-Website
+el:Βοήθεια: Ιστοσελίδα SumatraPDF
 nl:Help: SumatraPDF Website
 pl:Pomoc: strona internetowa programu SumatraPDF
 ru:Справка: Сайт SumatraPDF
@@ -13313,6 +13372,7 @@ br:Ocultar Anotações
 cn:隐藏标注
 co:Piattà l’annutazioni
 de:Anmerkungen ausblenden
+el:Απόκρυψη σχολιασμών
 nl:Verberg Notaties
 pl:Ukryj adnotacje
 ru:Скрыть аннотации
@@ -13458,6 +13518,7 @@ br:Início
 cn:主页
 co:Accolta
 de:Startseite
+el:Κεντρική
 fr:Accueil
 ga:Baile
 nl:Thuis
@@ -14196,6 +14257,7 @@ br:Inverter Cores
 cn:反转颜色
 co:Invertisce i culori
 de:Farben umkehren
+el:Αντιστροφή χρωμάτων
 nl:Keer Kleuren Om
 pl:Odwróć kolory
 ru:Инвертировать цвета
@@ -14207,6 +14269,7 @@ br:Invocar Busca Invertida
 cn:调用逆向搜索
 co:Lancià a ricerca à l’arritrosa
 de:Rückwärtssuche ausführen
+el:Κλήση αντίστροφης αναζήτησης
 nl:Omgekeerde Zoekfunctie
 pl:Wywołaj odwrotne wyszukiwanie
 sk:Použiť inverzné vyhľadávanie
@@ -14290,6 +14353,7 @@ br:Última Página
 cn:最后一页
 co:Ultima pagina
 de:Letzte Seite
+el:Τελευταία σελίδα
 nl:Laatste Pagina
 pl:Ostatnia strona
 ru:Последняя страница
@@ -14302,6 +14366,7 @@ br:Executar um navegador ou executar comando com seleção
 cn:对选中内容启动浏览器或运行命令
 co:Lancià un navigatore o una cumanda cù a selezzione
 de:Browser starten oder Befehl mit Auswahl ausführen
+el:Εκκινήστε ένα πρόγραμμα περιήγησης ή εκτελέστε την εντολή με επιλογή
 nl:Start een Browser of voer een opdracht uit met selectie
 pl:Uruchom przeglądarkę lub polecenie z zaznaczeniem
 sk:Spustiť prehliadač alebo spustiť príkaz s výberom
@@ -15112,6 +15177,7 @@ br:Mover o Foco do Frame
 cn:移动框架焦点
 co:Dispiazzà u puntu fucale di a vista
 de:Rahmenfokus verschieben
+el:Μετακίνηση εστίασης καρέ
 nl:Verplaats Focus van Kader
 pl:Przenieś uaktywnienie ramki
 ru:Переместить фокус кадра
@@ -15123,6 +15189,7 @@ br:Mover a Aba pra Esquerda
 cn:左移标签页
 co:Dispiazzà l’unghjetta à manu manca
 de:Tab nach links verschieben
+el:Μετακίνηση καρτέλας αριστερά
 nl:Verplaats Tab naar Links
 pl:Przesuń kartę w lewo
 ru:Переместить вкладку влево
@@ -15134,6 +15201,7 @@ br:Mover a Aba pra Direita
 cn:右移标签页
 co:Dispiazzà l’unghjetta à manu diritta
 de:Tab nach rechts verschieben
+el:Μετακίνηση καρτέλας δεξιά
 nl:Verplaats Tab naar Rechts
 pl:Przesuń kartę w prawo
 ru:Переместить вкладку вправо
@@ -15145,6 +15213,7 @@ br:Navegar pra Trás
 cn:向后导航
 co:Navigazione in daretu
 de:Zurück
+el:Πλοηγηθείτε πίσω
 ja:戻る
 nl:Navigeer Terug
 pl:Nawiguj wstecz
@@ -15157,6 +15226,7 @@ br:Navegar pra Frente
 cn:向前导航
 co:Navigazione in avanti
 de:Weiter
+el:Προχωρήστε μπροστά
 ja:進む
 nl:Navigeer Vooruit
 pl:Nawiguj do przodu
@@ -15352,6 +15422,7 @@ br:Próxima Aba
 cn:下一标签页
 co:Unghjetta seguente
 de:Nächster Tab
+el:Επόμενη καρτέλα
 nl:Volgende Tab
 pl:Następna karta
 ru:Следующая вкладка
@@ -16110,6 +16181,7 @@ br:Abrir Documento Atual em Nova Aba
 cn:在新标签页中打开当前文档
 co:Apre u ducumentu attuale in un’unghjetta nova
 de:Aktuelles Dokument in neuem Tab öffnen
+el:Άνοιγμα τρέχοντος εγγράφου σε νέα καρτέλα
 nl:Open Huidig Document In Nieuwe Tab
 pl:Otwórz bieżący dokument w nowej karcie
 sk:Otvoriť aktuálny dokument na novej karte
@@ -16120,6 +16192,7 @@ br:Abrir Documento Atual em Nova Janela
 cn:在新窗口中打开当前文档
 co:Apre u ducumentu attuale in una finestra nova
 de:Aktuelles Dokument in neuem Fenster öffnen
+el:Άνοιγμα τρέχοντος εγγράφου σε νέο παράθυρο
 nl:Open Huidig Document In Nieuw Venster
 pl:Otwórz bieżący dokument w nowym oknie
 sk:Otvoriť aktuálny dokument v novom okne
@@ -16130,6 +16203,7 @@ br:Abrir o Diretório no Directory Opus
 cn:在 Directory Opus 中打开文件目录
 co:Apre u cartulare cù Directory &Opus
 de:Verzeichnis in Directory Opus öffnen
+el:Άνοιγμα φακέλου στο Directory Opus
 nl:Open Directory In Directory Opus
 pl:Otwórz katalog w Directory Opus
 sk:Otvoriť priečinok v Directory Opus
@@ -16140,6 +16214,7 @@ br:Abrir o Diretório no Double Commander
 cn:在 Double Commander 中打开文件目录
 co:Apre u cartulare cù Double Commander
 de:Verzeichnis in Double Commander öffnen
+el:Άνοιγμα καταλόγου στο Double Commander
 nl:Open Map In Dubbel Commander
 pl:Otwórz katalog w Double Commanderze
 sk:Otvoriť priečinok v Double Commander
@@ -16150,6 +16225,7 @@ br:Abrir o Diretório no Explorer
 cn:在资源管理器中打开文件目录
 co:Apre u cartulare cù l’espluratore
 de:Verzeichnis im Explorer öffnen
+el:Άνοιγμα καταλόγου στον Explorer
 nl:Open Map In Verkenner
 pl:Otwórz katalog w Eksploratorze
 sk:Otvoriť priečinok v Prieskumníkovi
@@ -16160,6 +16236,7 @@ br:Abrir o Diretório no Total Commander
 cn:在 Total Commander 中打开文件目录
 co:Apre u cartulare cù Total Commander
 de:Verzeichnis in Total Commander öffnen
+el:Άνοιγμα φακέλου στο Total Commander
 nl:Open Map in Total Commander
 pl:Otwórz katalog w Total Commanderze
 sk:Otvoriť priečinok v Total Commander
@@ -16420,6 +16497,7 @@ br:Abrir Arquivo...
 cn:打开文件…
 co:Apre un schedariu...
 de:Datei öffnen…
+el:Άνοιγμα αρχείου...
 nl:Open Bestand...
 pl:Otwórz plik...
 ru:Открыть файл...
@@ -16479,6 +16557,7 @@ br:Abrir Nova Janela do SumatraPDF
 cn:打开新的 SumatraPDF 窗口
 co:Apre una finestra nova di SumatraPDF
 de:Neues SumatraPDF-Fenster öffnen
+el:Άνοιγμα νέου παραθύρου SumatraPDF
 nl:Open Nieuw SumatraPDF Venster
 pl:Otwórz nowe okno SumatraPDF
 sk:Otvoriť nové okno SumatraPDF
@@ -16565,6 +16644,7 @@ br:Abrir Documento Selecionado
 cn:打开选中的文档
 co:Apre u ducumentu selezziunatu
 de:Ausgewähltes Dokument öffnen
+el:Άνοιγμα επιλεγμένου εγγράφου
 nl:Open Geselecteerd Document
 pl:Otwórz zaznaczony dokument
 sk:Otvoriť vybraný dokument
@@ -16575,6 +16655,7 @@ br:Abrir com Pdf&Djvu Bookmarker
 cn:使用 Pdf&Djvu Bookmarker 打开
 co:Apre cù Pdf&Djvu Bookmarker
 de:Mit Pdf & DjVu Bookmarker öffnen
+el:Άνοιγμα με Pdf&Djvu Bookmarker
 nl:Openen met Pdf&Djvu Bladwijzer
 pl:Otwórz za pomocą PDF & DjVu Bookmarkera
 sk:Otvoriť pomocou Pdf&Djvu Bookmarker
@@ -16919,6 +17000,7 @@ br:Abrir no Adobe Acrobat
 cn:在 Adobe Acrobat 中打开
 co:Apre cù Adobe Reader
 de:In Adobe Acrobat öffnen
+el:Άνοιγμα στο Adobe Acrobat
 ja:Adobe Acrobat で開く
 nl:Open In Adobe Acrobat
 pl:Otwórz w Adobe Acrobat
@@ -16930,6 +17012,7 @@ br:Abrir no Foxit PhantomPDF
 cn:在 福昕 PDF 编辑器 中打开
 co:Apre cù Foxit PhantomPDF
 de:In Foxit PhantomPDF öffnen
+el:Άνοιγμα στο Foxit PhantomPDF
 ja:Foxit PhantomPDF で開く
 nl:Open In Foxit PhantomPDF
 pl:Otwórz w Foxit PhantomPDF
@@ -16941,6 +17024,7 @@ br:Abrir no Foxit Reader
 cn:在 福昕阅读器 中打开
 co:Apre cù Foxit Reader
 de:In Foxit Reader öffnen
+el:Ανοίξτε στο Foxit Reader
 ja:Foxit Reader で開く
 nl:Open in Foxit Reader
 pl:Otwórz w Foxit Readerze
@@ -16998,6 +17082,7 @@ br:Abrir no Microsoft HTML Help
 cn:在 Microsoft HTML 帮助中打开
 co:Apre cù Microsoft HTML Help
 de:In Microsoft HTML Help öffnen
+el:Άνοιγμα στη Βοήθεια HTML της Microsoft
 ja:Microsoft HTML Help で開く
 nl:Open in Microsoft HTML Help
 pl:Otwórz w Microsoft HTML Help
@@ -17009,6 +17094,7 @@ br:Abrir no Microsoft Xps Viewer
 cn:在 Microsoft XPS Viewer 中打开
 co:Apre cù Microsoft Xps Viewer
 de:In Microsoft XPS Viewer öffnen
+el:Άνοιγμα στο Microsoft Xps Viewer
 ja:Microsoft XPS Viewer で開く
 nl:Open in Microsoft Xps Viewer
 pl:Otwórz w Microsoft XPS Viewer
@@ -17020,6 +17106,7 @@ br:Abrir no PDF-XChange
 cn:在 PDF-XChange 中打开
 co:Apre cù PDF-XChange
 de:In PDF-XChange Editor öffnen
+el:Άνοιγμα στο PDF-XChange
 ja:PDF-XChange で開く
 nl:Open in PDF-XChange
 pl:Otwórz w PDF-XChange
@@ -17031,6 +17118,7 @@ br:Opções...
 cn:选项…
 co:Ozzioni…
 de:Optionen…
+el:Επιλογές...
 nl:Opties...
 pl:Opcje...
 ru:Параметры...
@@ -17902,6 +17990,7 @@ br:Fixar Documento Selecionado
 cn:固定所选文档
 co:Spirlà u ducumentu selezziunatu
 de:Ausgewähltes Dokument anheften
+el:Καρφίτσωμα επιλεγμένου έγγραφου
 nl:Pin Geselecteerd Document
 pl:Przypnij zaznaczony dokument
 sk:Pripnúť vybraný dokument
@@ -18376,6 +18465,7 @@ br:Apresentação com Fundo Preto
 cn:演示模式：黑色背景
 co:Presentazione cù un sfondulu neru
 de:Präsentation mit schwarzem Hintergrund
+el:Μαύρο φόντο παρουσίασης
 nl:Presentatie Zwarte Achtergrond
 pl:Czarne tło prezentacji
 sk:Čierne pozadie prezentácie
@@ -18386,6 +18476,7 @@ br:Apresentação com Fundo Branco
 cn:演示模式：白色背景
 co:Presentazione cù un sfondulu biancu
 de:Präsentation mit weißem Hintergrund
+el:Λευκό φόντο παρουσίασης
 nl:Presentatie Witte Achtergrond
 pl:Białe tło prezentacji
 sk:Biele pozadie prezentácie
@@ -18468,6 +18559,7 @@ br:Aba Anterior
 cn:上一标签页
 co:Unghjetta precedente
 de:Vorheriger Tab
+el:Προηγούμενη καρτέλα
 nl:Vorige Tab
 pl:Poprzednia karta
 ru:Предыдущая вкладка
@@ -18547,6 +18639,7 @@ br:Imprimir Documento...
 cn:打印文档…
 co:Stampà u schedariu…
 de:Dokument drucken…
+el:Εκτύπωση εγγράφου...
 nl:Print Document...
 pl:Drukuj dokument...
 sk:Tlač dokumentu…
@@ -19124,6 +19217,7 @@ br:Abertos Recentemente
 cn:最近打开
 co:Aperti pocu fà
 de:Kürzlich geöffnet
+el:Πρόσφατα ανοιγμένα
 fr:Ouvert récemment
 id:Terakhir Dibuka
 nl:Recent Geopend
@@ -19248,6 +19342,7 @@ br:Recarregar Documento
 cn:重新加载文档
 co:Ricaricà u ducumentu
 de:Dokument neu laden
+el:Επαναφόρτωση εγγράφου
 nl:Herlaad Document
 pl:Załaduj ponownie dokument
 sk:Znovu načítať dokument
@@ -19324,6 +19419,7 @@ br:Remover Documento Selecionado do Histórico
 cn:从历史记录中移除所选文档
 co:Caccià da a cronolugia u ducumentu selezziunatu
 de:Ausgewähltes Dokument aus dem Verlauf entfernen
+el:Αφαίρεση επιλεγμένου εγγράφου από το ιστορικό
 nl:Verwijder Geselecteerde Document uit Geschiedenis
 pl:Usuń zaznaczony dokument z historii
 sk:Odstrániť vybraný dokument z histórie
@@ -19466,6 +19562,7 @@ br:Renomear Arquivo...
 cn:重命名文件…
 co:Rinuminà u schedariu…
 de:Datei umbenennen…
+el:Μετονομασία αρχείου...
 nl:Hernoem Bestand
 pl:Zmień nazwę pliku...
 ru:Переименовать файл...
@@ -19546,6 +19643,7 @@ br:Re-abrir o Último Fechado
 cn:重新打开上次关闭的文件
 co:Riapre l’ultimu chosu
 de:Zuletzt geschlossene erneut öffnen
+el:Ξανάνοιξε το τελευταία κλεισμένο
 nl:Heropen Laatst Gesloten
 pl:Otwórz ponownie ostatnio zamknięty
 sk:Znovu otvoriť naposledy zatvorené
@@ -19660,6 +19758,7 @@ br:Girar pra Esquerda
 cn:向左旋转
 co:Girà à manca
 de:Nach links drehen
+el:Περιστροφή αριστερά
 nl:Roteer naar Links
 pl:Obróć w lewo
 ru:Повернуть влево
@@ -19671,6 +19770,7 @@ br:Girar pra Direita
 cn:向右旋转
 co:Girà à diritta
 de:Nach rechts drehen
+el:Περιστροφή δεξιά
 nl:Roteer naar Rechts
 pl:Obróć w prawo
 ru:Поворот вправо
@@ -19847,6 +19947,7 @@ br:Salvar Anotações em um PDF novo
 cn:将标注保存到新的 PDF 文件
 co:Arregistrà l’annutazioni in un PDF novu
 de:Anmerkungen in neuer PDF-Datei speichern
+el:Αποθήκευση σχολίων σε νέο PDF
 nl:Sla Notaties op in nieuwe PDF
 pl:Zapisz adnotacje w nowym pliku PDF
 sk:Uložiť anotácie do nového súboru PDF
@@ -20017,6 +20118,7 @@ br:Salvar Arquivo Como...
 cn:文件另存为…
 co:Arregistrà u schedariu cù u nome…
 de:Datei speichern unter…
+el:Αποθήκευση αρχείου ως...
 nl:Bestand Opslaan Als...
 pl:Zapisz plik jako...
 ru:Сохранить файл как...
@@ -20305,6 +20407,7 @@ br:Salvar...
 cn:保存…
 co:Arregistrà…
 de:Speichern…
+el:Αποθήκευση...
 nl:Opslaan...
 pl:Zapisz...
 ru:Сохранить...
@@ -20422,6 +20525,7 @@ br:Rolar para Baixo
 cn:向下滚动
 co:Fà sfilà inghjò
 de:Nach unten scrollen
+el:Κύλιση προς τα κάτω
 nl:Scroll Naar Beneden
 pl:Przewiń w dół
 sk:Posunúť nadol
@@ -20432,6 +20536,7 @@ br:Rolar Meia Página pra Baixo
 cn:向下滚动半页
 co:Fà sfilà inghjò d’una mezapagina
 de:Eine halbe Seite nach unten scrollen
+el:Κύλιση προς τα κάτω κατά μισή σελίδα
 nl:Scroll Halve Pagina naar Beneden
 pl:Przewiń w dół o pół strony
 sk:Posunúť o polovicu strany nadol
@@ -20442,6 +20547,7 @@ br:Rolar Baixo Uma Página pra Baixo
 cn:向下滚动一页
 co:Fà sfilà inghjò d’una pagina
 de:Seitenweise nach unten scrollen
+el:Κύλιση προς τα κάτω κατά σελίδα
 nl:Scroll Omlaag Per Pagina
 pl:Przewiń w dół o stronę
 sk:Posunúť o stranu nadol
@@ -20452,6 +20558,7 @@ br:Rolar pra Esquerda
 cn:向左滚动
 co:Fà sfilà à manca
 de:Nach links scrollen
+el:Κύλιση προς τα αριστερά
 nl:Scroll naar Links
 pl:Przewiń w lewo
 sk:Posunúť doľava
@@ -20462,6 +20569,7 @@ br:Rolar para a Esquerda Uma Página
 cn:向左滚动一页
 co:Fà sfilà à manca d’una pagina
 de:Seitenweise nach links scrollen
+el:Κύλιση αριστερά κατά σελίδα
 nl:Scroll naar Links Per Pagina
 pl:Przewiń w lewo o stronę
 sk:Posunúť doľava na strane
@@ -20472,6 +20580,7 @@ br:Rolar para a Direita
 cn:向右滚动
 co:Fà sfilà à diritta
 de:Nach rechts scrollen
+el:Κύλιση προς τα δεξιά
 nl:Scroll naar Rechts
 pl:Przewiń w prawo
 sk:Posunúť doprava
@@ -20482,6 +20591,7 @@ br:Rolar para a Direita Uma Página
 cn:向右滚动一页
 co:Fà sfilà à diritta d’una pagina
 de:Seitenweise nach rechts scrollen
+el:Κύλιση δεξιά κατά σελίδα
 nl:Scroll naar Rechts Per Pagina
 pl:Przewiń w prawo o stronę
 sk:Posunúť doprava na strane
@@ -20492,6 +20602,7 @@ br:Rolar para Cima
 cn:向上滚动
 co:Fà sfilà insù
 de:Nach oben scrollen
+el:Κύλιση προς τα επάνω
 nl:Scroll naar Boven
 pl:Przewiń w górę
 sk:Posunúť hore
@@ -20502,6 +20613,7 @@ br:Rolar para Cima Meia Página
 cn:向上滚动半页
 co:Fà sfilà insù d’una mezapagina
 de:Eine halbe Seite nach oben scrollen
+el:Κύλιση προς τα επάνω κατά μισή σελίδα
 nl:Scroll Halve Pagina Omhoog
 pl:Przewiń w górę o pół strony
 sk:Posunúť o polovicu strany hore
@@ -20512,6 +20624,7 @@ br:Rolar para Cima Uma Página
 cn:向上滚动一页
 co:Fà sfilà insù d’una pagina
 de:Seitenweise nach oben scrollen
+el:Κύλιση προς τα επάνω κατά σελίδα
 nl:Scroll Omhoog Per Pagina
 pl:Przewiń w górę o stronę
 sk:Posúvať hore na strane
@@ -20522,6 +20635,7 @@ br:Procurar Seleção com Bing
 cn:使用 Bing 搜索所选内容
 co:Ricerca di a selezzione cù Bing
 de:Auswahl mit Bing suchen
+el:Αναζήτηση επιλογής με το Bing
 ja:選択範囲を Bing で検索
 nl:Zoek Selectie met Bing
 pl:Szukaj zaznaczenia za pomocą Bing
@@ -20533,6 +20647,7 @@ br:Procurar Seleção com Google
 cn:使用 Google 搜索所选内容
 co:Ricerca di a selezzione cù Google
 de:Auswahl mit Google suchen
+el:Επιλογή αναζήτησης με το Google
 ja:選択範囲を Google で検索
 nl:Zoek Selectie met Google
 pl:Szukaj zaznaczenia za pomocą Google
@@ -20544,6 +20659,7 @@ br:Procurar Seleção com Google Scholar
 cn:使用 Google 学术搜索所选内容
 co:Ricerca di a selezzione cù Google Scholar
 de:Auswahl mit Google Scholar suchen
+el:Search Selection with Google Scholar
 ja:選択範囲を Google Scholar で検索
 nl:Zoek Selectie met Google Scholar
 pl:Szukaj zaznaczenia za pomocą Google Scholar
@@ -20555,6 +20671,7 @@ br:Procurar Seleção com Wikipedia
 cn:使用 维基百科 搜索所选内容
 co:Ricerca di a selezzione cù Wikipedia
 de:Auswahl mit Wikipedia suchen
+el:Αναζήτηση επιλογής με τη Wikipedia
 ja:選択範囲を Wikipedia で検索
 nl:Zoek Selectie met Wikipedia
 pl:Szukaj zaznaczenia za pomocą Wikipedii
@@ -20887,6 +21004,7 @@ br:Selecionar Tudo
 cn:全选
 co:Tuttu selezziunà
 de:Alles auswählen
+el:Επιλογή όλων
 nl:Selecteer Alle
 pl:Zaznacz wszystko
 ru:Выбрать всё
@@ -20964,6 +21082,7 @@ br:Selecionar próximo tema
 cn:选择下一个主题
 co:Selezziunà u tema prossimu
 de:Nächstes Design auswählen
+el:Επιλέξτε το επόμενο θέμα
 nl:Selecteer Volgende Thema
 pl:Wybierz następny motyw
 sk:Vybrať ďalší motív
@@ -21105,6 +21224,7 @@ br:Enviar Documento por Email...
 cn:通过电子邮件发送文档…
 co:Mandà u ducumentu da messaghju elettronicu…
 de:Dokument per E-Mail senden…
+el:Αποστολή εγγράφου με email...
 nl:Verzend Document Per E-Mail
 pl:Wyślij dokument e-mailem...
 sk:Odoslať dokument e-mailom…
@@ -21253,6 +21373,7 @@ br:Definir tema
 cn:设置主题
 co:Definisce u tema
 de:Design festlegen
+el:Ορισμός θέματος
 ja:配色テーマを設定
 nl:Stel Thema in
 pl:Ustaw motyw
@@ -21265,6 +21386,7 @@ br:Definir tema '%s'
 cn:设置为 '%s' 主题
 co:Definisce u tema « %s »
 de:Design '%s' festlegen
+el:Ορισμός θέματος '%s'
 ja:配色テーマ '%s'
 nl:Stel thema '%s' in
 pl:Ustaw motyw „%s”
@@ -21593,6 +21715,7 @@ br:Mostrar Anotações
 cn:显示标注
 co:Affissà l’annutazioni
 de:Anmerkungen anzeigen
+el:Εμφάνιση σχολιασμών
 nl:Toon Notaties
 pl:Pokaż adnotacje
 ru:Показать аннотации
@@ -21655,6 +21778,7 @@ br:Mostrar as Propriedades do Documento...
 cn:显示文档属性…
 co:Affissà i pruprietà di u ducumentu…
 de:Dokumenteigenschaften anzeigen…
+el:Εμφάνιση ιδιοτήτων εγγράφου...
 nl:Toon Document Eigenschappen...
 pl:Pokaż właściwości dokumentu...
 ru:Показать свойства документа...
@@ -21732,6 +21856,7 @@ br:Mostrar Arquivo na Pasta...
 cn:在文件夹中显示文件…
 co:Affissà u schedariu in u cartulare…
 de:Datei im Ordner anzeigen…
+el:Εμφάνιση αρχείου σε φάκελο...
 nl:Toon Bestand in Map
 pl:Pokaż plik w folderze...
 ru:Показать файл в папке...
@@ -21743,6 +21868,7 @@ br:Mostrar Registros
 cn:显示日志
 co:Affissà i ghjurnali di messaghji
 de:Protokolle anzeigen
+el:Εμφάνιση αρχείων καταγραφής
 nl:Toon Log's
 pl:Pokaż dzienniki
 ru:Показать журналы
@@ -22124,6 +22250,7 @@ br:Visualização de Página Única
 cn:单页视图
 co:Affissà da una pagina
 de:Einzelseitenansicht
+el:Προβολή μίας σελίδας
 nl:Weergave van één pagina
 pl:Widok pojedynczej strony
 ru:Постраничный вид
@@ -22135,6 +22262,7 @@ br:Próxima Aba Inteligente
 cn:智能切换到下一标签页
 co:Frizzulà l’unghjetta seguente
 de:Intelligenter nächster Tab
+el:Έξυπνη επόμενη καρτέλα
 nl:Slimme Volgende Tab
 pl:Następna karta inteligentnie
 sk:Inteligentné prepínanie kariet
@@ -23172,6 +23300,7 @@ br:Fonte do Texto
 cn:文本字体：
 co:Grafia di testu :
 de:Schriftart:
+el:Γραμματοσειρά κειμένου:
 nl:Tekst Lettertype:
 pl:Czcionka tekstu:
 ru:Шрифт текста:
@@ -23693,6 +23822,7 @@ br:Ativar/Desativar a Renderização com Anti-Aliasing
 cn:切换抗锯齿渲染
 co:Attivà o disattivà a restituzione antimerlata
 de:Anti-Aliasing-Rendering umschalten
+el:Εναλλαγή απόδοσης Anti-Alias
 nl:Anti Aliasing IN-/UIT Schakelen
 pl:Przełącz renderowanie antyaliasingowe
 sk:Prepnúť vykresľovanie s vyhladzovaním
@@ -23703,6 +23833,7 @@ br:Ativar/Desativar Favoritos
 cn:切换书签
 co:Attivà o disattivà l’indette
 de:Lesezeichen umschalten
+el:Εναλλαγή σελιδοδεικτών
 nl:Bladwijzers IN/UIT Schakelen
 pl:Przełącz zakładki
 sk:Prepnúť záložky
@@ -23713,6 +23844,7 @@ br:Ativar/Desativar a Visualização Contínua
 cn:切换连续显示
 co:Attivà o disattivà a vista in cuntinuu
 de:Fortlaufende Ansicht umschalten
+el:Εναλλαγή συνεχούς προβολής
 nl:Continue Tonen IN/UIT Schakelen
 pl:Przełącz widok ciągły
 sk:Prepnúť priebežné zobrazenie
@@ -23723,6 +23855,7 @@ br:Exibir/Ocultar a Posição do Cursor
 cn:切换光标位置显示
 co:Attivà o disattivà a pusizione di u cursore
 de:Cursorposition umschalten
+el:Εναλλαγή θέσης δρομέα
 nl:Cursor Positie Wisselen
 pl:Przełącz pozycję kursora
 sk:Prepnúť polohu kurzora
@@ -23733,6 +23866,7 @@ br:Exibir/Ocultar os Favoritos
 cn:切换收藏夹
 co:Attivà o disattivà i favuriti
 de:Favoriten umschalten
+el:Εναλλαγή αγαπημένων
 nl:Favorieten IN/UIT Schakelen
 pl:Przełącz ulubione
 sk:Prepnúť obľúbené
@@ -23743,6 +23877,7 @@ br:Exibir/Ocultar Lidos Frequentemente
 cn:切换经常打开的文件
 co:Attivà o disattivà i ducumenti letti aspessu
 de:Häufig gelesene anzeigen/ausblenden
+el:Εναλλαγή συχνά διαβασμένων
 nl:Veelgelezen Berichten Tonen/Verbergen
 pl:Przełącz ostatnio otwierane
 sk:Prepnúť často čítané
@@ -23753,6 +23888,7 @@ br:Ativar/Desativar a Tela Cheia
 cn:切换全屏
 co:Attivà o disattivà u screnu sanu
 de:Vollbild umschalten
+el:Εναλλαγή πλήρους οθόνης
 nl:Volledig Scherm IN\UIT Schakelen
 pl:Przełącz tryb pełnoekranowy
 sk:Prepnúť zobrazenie na celú obrazovku
@@ -23763,6 +23899,7 @@ br:Ativar/Desativar a Busca Invertida
 cn:切换逆向搜索
 co:Attivà o disattivà a ricerca à l’arritrosa
 de:Rückwärtssuche umschalten
+el:Εναλλαγή αντίστροφης αναζήτησης
 nl:Omgekeerd Zoeken IN/UIT Schakelen
 pl:Przełącz odwrotne wyszukiwanie
 sk:Prepnúť inverzné vyhľadávanie
@@ -23773,6 +23910,7 @@ br:Exibir/Ocultar o Modo Mangá
 cn:切换漫画模式
 co:Attivà o disattivà u mode Manga
 de:Manga-Modus umschalten
+el:Εναλλαγή Λειτουργίας Manga
 nl:Manga Modus IN/UIT Schakelen
 pl:Przełącz tryb mangi
 sk:Prepnúť režim Manga
@@ -23783,6 +23921,7 @@ br:Ativar/Desativar Maiúsculas/Minúsculas
 cn:切换区分大小写
 co:Attivà o disattivà u rispettu di a cassa
 de:Groß-/Kleinschreibung umschalten
+el:Εναλλαγή αντιστοίχισης πεζοκεφαλαίων
 nl:Schakel hoofdlettergebruik in/uit
 pl:Przełącz uwzględnianie wielkości liter
 sk:Prepnúť rozlišovanie veľkých/malých písmen
@@ -23794,6 +23933,7 @@ br:Ativar/Desativar a Barra do Menu
 cn:切换菜单栏
 co:Attivà o disattivà a barra di listinu
 de:Menüleiste umschalten
+el:Εναλλαγή γραμμής μενού
 nl:Menubalk Tonen/Verbergen
 pl:Przełącz pasek menu
 sk:Prepnúť panel s ponukami
@@ -23804,6 +23944,7 @@ br:Exibir/Ocultar Informações da Página
 cn:切换页面信息
 co:Attivà o disattivà l’infurmazione nant’à a pagina
 de:Seiteninfo umschalten
+el:Εναλλαγή πληροφοριών σελίδας
 nl:Pagina Info Tonen/Verbergen
 pl:Przełącz informacje o stronie
 sk:Prepnúť informácie o strane
@@ -23814,6 +23955,7 @@ br:Exibir/Ocultar Barras de Rolagem
 cn:切换滚动条
 co:Attivà o disattivà e barre di sfilarata
 de:Bildlaufleisten umschalten
+el:Εναλλαγή γραμμών κύλισης
 nl:Schuifbalken IN/UIT Schakelen
 pl:Przełącz paski przewijania
 sk:Prepnúť posuvníky
@@ -23824,6 +23966,7 @@ br:Ativar/Desativar a Mostra de Anotações
 cn:切换显示标注
 co:Attivà o disattivà l’affissera di l’annutazioni
 de:Anmerkungen anzeigen/ausblenden
+el:Εναλλαγή εμφάνισης σχολιασμών
 nl:Notaties Tonen/Verbergen
 pl:Przełącz pokazywanie adnotacji
 sk:Prepnúť Zobraziť anotácie
@@ -23834,6 +23977,7 @@ br:Ativar/Desativar a Mostra de Links
 cn:切换显示链接
 co:Attivà o disattivà l’affissera di i liami
 de:Links anzeigen/ausblenden
+el:Εναλλαγή εμφάνισης συνδέσμων
 nl:Links Tonen/Verbergen
 pl:Przełącz pokazywanie odnośników
 sk:Prepnúť Zobraziť odkazy
@@ -23844,6 +23988,7 @@ br:Ativar/Desativar a Tabela de Conteúdos
 cn:切换目录
 co:Attivà o disattivà a tavula di cuntenutu
 de:Inhaltsverzeichnis umschalten
+el:Εναλλαγή πίνακα περιεχομένων
 nl:Inhoudsopgave Tonen/Verbergen
 pl:Przełącz spis treści
 sk:Prepnúť obsah
@@ -23854,6 +23999,7 @@ br:Ativar/Desativar a Barra de Ferramentas
 cn:切换工具栏
 co:Attivà o disattivà a barra d’attrezzi
 de:Werkzeugleiste umschalten
+el:Εναλλαγή γραμμής εργαλείων
 nl:Werkbalk Tonen/Verbergen
 pl:Przełącz pasek narzędzi
 sk:Prepnúť panel nástrojov
@@ -23864,6 +24010,7 @@ br:Ativar/Desativar Zoom
 cn:切换缩放
 co:Attivà o disattivà l’ingrandamentu
 de:Zoom umschalten
+el:Εναλλαγή ζουμ
 nl:Zoom IN/UIT Schakelen
 pl:Przełącz powiększenie
 sk:Prepnúť zväčšenie
@@ -23874,6 +24021,7 @@ br:Traduzir a Seleção com o DeepL
 cn:使用 DeepL 翻译所选内容
 co:Traduce a selezzione cù DeepL
 de:Auswahl mit DeepL übersetzen
+el:Μετάφραση επιλογής με DeepL
 ja:選択範囲を DeepL を使って翻訳
 nl:Vertaal Selectie Met DeepL
 pl:Przetłumacz zaznaczenie za pomocą DeepL
@@ -23885,6 +24033,7 @@ br:Traduzir a Seleção com o Google
 cn:使用 Google 翻译所选内容
 co:Traduce a selezzione cù Google
 de:Auswahl mit Google Translate übersetzen
+el:Επιλογή μετάφρασης με το Google
 ja:選択範囲を Google を使って翻訳
 nl:Vertaal Selectie Met Google
 pl:Przetłumacz zaznaczenie za pomocą Google
@@ -24464,6 +24613,7 @@ br:Visualizar com o Visualizador Externo Personalizado
 cn:通过自定义外部查看器查看
 co:Affissà cù un lettore esternu persunalizatu
 de:Mit benutzerdefiniertem externen Betrachter anzeigen
+el:Προβολή με προσαρμοσμένο εξωτερικό πρόγραμμα προβολής
 nl:Bekijken Met Aangepaste Externe Viewer
 pl:Widok za pomocą niestandardowej przeglądarki zewnętrznej
 ru:Просмотр с помощью внешнего просмотрщика
@@ -24475,6 +24625,7 @@ br:Visualizar: Modo de Apresentação
 cn:视图：演示模式
 co:Vista : Modu di presentazione
 de:Ansicht: Präsentationsmodus
+el:Προβολή: Λειτουργία παρουσίασης
 nl:Toon: Presentatie Modus
 pl:Widok: tryb prezentacji
 ru:Просмотр: Режим презентации
@@ -25249,6 +25400,7 @@ br:Zoom: 100%
 cn:缩放：100%
 co:Ingrandamentu : 100%
 de:Zoom: 100 %
+el:Ζουμ: 100%
 ja:ズーム: 100%
 nl:Zoom: 100%
 pl:Powiększenie: 100%
@@ -25261,6 +25413,7 @@ br:Zoom: 12.5%
 cn:缩放：12.5%
 co:Ingrandamentu : 12,5%
 de:Zoom: 12,5 %
+el:Ζουμ: 12,5%
 ja:ズーム: 12.5%
 nl:Zoom: 12.5%
 pl:Powiększenie: 12,5%
@@ -25273,6 +25426,7 @@ br:Zoom: 125%
 cn:缩放：125%
 co:Ingrandamentu : 125%
 de:Zoom: 125 %
+el:Ζουμ: 125%
 ja:ズーム: 125%
 nl:Zoom: 125%
 pl:Powiększenie: 125%
@@ -25285,6 +25439,7 @@ br:Zoom: 150%
 cn:缩放：150%
 co:Ingrandamentu : 150%
 de:Zoom: 150 %
+el:Ζουμ: 150%
 ja:ズーム: 150%
 nl:Zoom: 150%
 pl:Powiększenie: 150%
@@ -25297,6 +25452,7 @@ br:Zoom: 1600%
 cn:缩放：1600%
 co:Ingrandamentu : 1600%
 de:Zoom: 1600 %
+el:Zoom: 1600%
 ja:ズーム: 1600%
 nl:Zoom: 1600%
 pl:Powiększenie: 1600%
@@ -25309,6 +25465,7 @@ br:Zoom: 200%
 cn:缩放：200%
 co:Ingrandamentu : 200%
 de:Zoom: 200 %
+el:Ζουμ: 200%
 ja:ズーム: 200%
 nl:Zoom: 200%
 pl:Powiększenie: 200%
@@ -25321,6 +25478,7 @@ br:Zoom: 25%
 cn:缩放：25%
 co:Ingrandamentu : 25%
 de:Zoom: 25 %
+el:Ζουμ: 25%
 ja:ズーム: 25%
 nl:Zoom: 25%
 pl:Powiększenie: 25%
@@ -25333,6 +25491,7 @@ br:Zoom: 3200%
 cn:缩放：3200%
 co:Ingrandamentu : 3200%
 de:Zoom: 3200 %
+el:Ζουμ: 3200%
 ja:ズーム: 3200%
 nl:Zoom: 3200%
 pl:Powiększenie: 3200%
@@ -25345,6 +25504,7 @@ br:Zoom: 400%
 cn:缩放：400%
 co:Ingrandamentu : 400%
 de:Zoom: 400 %
+el:Ζουμ: 400%
 ja:ズーム: 400%
 nl:Zoom: 400%
 pl:Powiększenie: 400%
@@ -25357,6 +25517,7 @@ br:Zoom: 50%
 cn:缩放：50%
 co:Ingrandamentu : 50%
 de:Zoom: 50 %
+el:Ζουμ: 50%
 ja:ズーム: 50%
 nl:Zoom: 50%
 pl:Powiększenie: 50%
@@ -25369,6 +25530,7 @@ br:Zoom: 6400%
 cn:缩放：6400%
 co:Ingrandamentu : 6400%
 de:Zoom: 6400 %
+el:Ζουμ: 6400%
 ja:ズーム: 6400%
 nl:Zoom: 6400%
 pl:Powiększenie: 6400%
@@ -25381,6 +25543,7 @@ br:Zoom: 8.33%
 cn:缩放：8.33%
 co:Ingrandamentu : 8,33%
 de:Zoom: 8,33 %
+el:Zoom: 8.33%
 ja:ズーム: 8.33%
 nl:Zoom: 8.33%
 pl:Powiększenie: 8,33%
@@ -25393,6 +25556,7 @@ br:Zoom: 800%
 cn:缩放：800%
 co:Ingrandamentu : 800%
 de:Zoom: 800 %
+el:Ζουμ: 800%
 ja:ズーム: 800%
 nl:Zoom: 800%
 pl:Powiększenie: 800%
@@ -25405,6 +25569,7 @@ br:Zoom: Tamanho Real
 cn:缩放：实际大小
 co:Ingrandamentu : dimensione attuate
 de:Zoom: Tatsächliche Größe
+el:Ζουμ: Πραγματικό μέγεθος
 nl:Zoom: Werkelijke Grootte
 pl:Powiększenie: rozmiar rzeczywisty
 ru:Масштаб: Настоящий размер
@@ -25416,6 +25581,7 @@ br:Zoom: Personalizado...
 cn:缩放：自定义…
 co:Ingrandamentu : persunalizatu…
 de:Zoom: Benutzerdefiniert…
+el:Ζουμ: Προσαρμοσμένο...
 nl:Zoom: Aangepast...
 pl:Powiększenie: niestandardowe...
 ru:Масштаб: Свой...
@@ -25427,6 +25593,7 @@ br:Zoom: Ajustar ao Conteúdo
 cn:缩放：适合内容
 co:Ingrandamentu : adattà à u cuntenutu
 de:Zoom: An Inhalt anpassen
+el:Ζουμ: Προσαρμογή περιεχομένου
 nl:Zoom: Inhoud Aanpassen
 pl:Powiększenie: dopasuj do zawartości
 ru:Масштаб: По содержимому
@@ -25438,6 +25605,7 @@ br:Zoom: Ajustar à Página
 cn:缩放：适合页面
 co:Ingrandamentu : adattà à a pagina
 de:Zoom: An Seite anpassen
+el:Ζουμ: Προσαρμογή σελίδας
 nl:Zoom: Pagina Passend
 pl:Powiększenie: dopasuj do całej strony
 ru:Масштаб: По размеру страницы
@@ -25449,6 +25617,7 @@ br:Zoom> Ajustar à Página e Página Única
 cn:缩放：适合页面且单页视图
 co:Ingrandamentu : adattà à a pagina è à a pagina sana
 de:Zoom: Seite anpassen und Einzelseite
+el:Ζουμ: Προσαρμογή σελίδας και μεμονωμένη σελίδα
 nl:Zoom: Pagina Passend en Enkele Pagina
 pl:Powiększenie: dopasuj do całej i pojedynczej strony
 ru:Масштаб: По размеру страницы и Постранично
@@ -25460,6 +25629,7 @@ br:Zoom: Ajustar pela Largura
 cn:缩放：适合宽度
 co:Ingrandamentu : adattà à a larghezza
 de:Zoom: An Fensterbreite anpassen
+el:Ζουμ: Προσαρμογή στο πλάτος
 nl:Zoom: Breedte Aanpassen
 pl:Powiększenie: dopasuj do szerokości strony
 ru:Масштаб: По ширине
@@ -25471,6 +25641,7 @@ br:Zoom: Ajustar pela Largura e Contínua
 cn:缩放：适合宽度且连续显示
 co:Ingrandamentu : adattà à a larghezza è lettura in cuntinuu
 de:Zoom: Fortlaufend an Fensterbreite anpassen
+el:Ζουμ: Προσαρμογή σε πλάτος και συνεχές
 nl:Zoom: Breedte Aangepast en Doorlopend
 pl:Powiększenie: dopasuj do szerokości i w układzie ciągłym
 ru:Масштаб: По ширине и Непрерывно
@@ -25619,6 +25790,7 @@ br:Não use
 cn:不使用
 co:ùn impiegà micca
 de:nicht verwenden
+el:μη χρησιμοποιείτε
 nl:niet gebruiken
 pl:nie używaj
 ru:не использовать
@@ -25630,6 +25802,7 @@ br:página %d,
 cn:第 %d 页，
 co:pagina %d,
 de:Seite %d,
+el:σελίδα %d,
 ga:leathanach %d,
 nl:pagina %d,
 pl:strona %d,

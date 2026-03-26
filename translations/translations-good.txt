@@ -18,7 +18,7 @@ cy:# Hanes Ffeil
 cz:# Historie souborů
 de:# Dateiverlauf
 dk:# Filhistorik
-el:# Ιστορικό Αρχείου
+el:# Ιστορικό αρχείων
 es:# Historial de archivos
 et:# Failiajalugu
 eu:# Fitxategiaren historia
@@ -4836,7 +4836,7 @@ cy:: Popeth
 cz:: Vše
 de:: Alles
 dk:: Alt
-el:: Όλα
+el:: Τα πάντα
 es:: Todo
 et:: Kõik
 eu:: Dena
@@ -5493,7 +5493,7 @@ cy:Dewisiadau Uwch...
 cz:Pokročilé možnosti...
 de:Erweiterte Optionen…
 dk:Avancerede muligheder
-el:Επιλογές για προχωρημένους
+el:Προηγμένες επιλογές...
 es:Opciones avanzadas...
 et:Rohkem sätteid...
 eu:Aukera aurreratuak...
@@ -5566,7 +5566,7 @@ cy:Gosodiadau Uwch...
 cz:Pokročilá nastavení...
 de:Erweiterte Einstellungen…
 dk:Avancerede indstillinger...
-el:Ρυθμίσεις για Προχωρημένους...
+el:Προηγμένες ρυθμίσεις...
 es:Configuración avanzada...
 et:Täpsemad sätted...
 eu:Ezarpen Aurreratuak...
@@ -7391,7 +7391,7 @@ cy:Newid Iaith...
 cz:Změnit jazyk...
 de:Sprache ändern…
 dk:Skift sprog...
-el:Αλλαγή Γλώσσας...
+el:Αλλαγή γλώσσας...
 es:Cambiar idioma...
 et:Muuda keelt...
 eu:Aldatu Hizkuntza...
@@ -7464,7 +7464,7 @@ cy:Gwirio am Ddiweddariadau
 cz:Zkontrolovat aktualizace
 de:Nach Updates suchen
 dk:Søg efter opdateringer
-el:Έλεγχος για Ενημερώσεις
+el:Έλεγχος για ενημερώσεις
 es:Buscar actualizaciones
 et:Kontrolli uuendusi
 eu:Egiaztatu Eguneraketak
@@ -7756,7 +7756,7 @@ cy:Clirio Hanes
 cz:Vymazat historii
 de:Verlauf löschen
 dk:Ryd historik
-el:Εκκαθάριση Ιστορικού
+el:Εκκαθάριση ιστορικού
 es:Borrar historial
 et:Kustuta ajalugu
 eu:Garbitu Historia
@@ -8121,7 +8121,7 @@ cy:Cau'r Ddogfen Gyfredol
 cz:Zavřít aktuální dokument
 de:Aktuelles Dokument schließen
 dk:Luk nuværende dokument
-el:Κλείσιμο Τρέχοντος Εγγράφου
+el:Κλείσιμο τρεχόντος εγγράφου
 es:Cerrar documento actual
 et:Sulge praegune dokument
 eu:Itxi Uneko Dokumentua
@@ -8194,7 +8194,7 @@ cy:Cau Dogfen
 cz:Zavřít dokument
 de:Dokument schließen
 dk:Luk dokument
-el:Κλείσιμο Εγγράφου
+el:Κλείσιμο εγγράφου
 es:Cerrar documento
 et:Sulge dokument
 eu:Itxi Dokumentua
@@ -9654,7 +9654,7 @@ cy:Copïo Targed Dolen
 cz:Kopírovat cíl odkazu
 de:Linkziel kopieren
 dk:Kopiér linkmål
-el:Αντιγραφή Προορισμού Συνδέσμου
+el:Αντιγραφή στόχου συνδέσμου
 es:Copiar destino del enlace
 et:Kopeeri lingi sihtkoht
 eu:Kopiatu Estekaren Helburua
@@ -10822,7 +10822,7 @@ cy:Creu Llwybr Byr .lnk
 cz:Vytvořit zástupce .lnk
 de:LNK-Verknüpfung erstellen
 dk:Opret .lnk genvej
-el:Δημιουργία Συντόμευσης .lnk
+el:Δημιουργία συντόμευσης .lnk
 es:Crear acceso directo .lnk
 et:Loo .lnk otsetee
 eu:Sortu .lnk Lasterbidea
@@ -11041,7 +11041,7 @@ cy:Creu Anodiad Caret
 cz:Vytvořit anotaci kurzoru
 de:Cursor‑Anmerkung erstellen
 dk:Opret indsætningsmærke-annotation
-el:Δημιουργία Σημείωσης Δρομέα
+el:Δημιουργία δείκτη σχολιασμού
 es:Crear anotación de cursor
 et:Loo sisestuskursori märkus
 eu:Sortu Karet Oharra
@@ -11114,7 +11114,7 @@ cy:Creu Anodiad Cylch
 cz:Vytvořit anotaci kruhu
 de:Kreis-Anmerkung erstellen
 dk:Opret cirkel-annotation
-el:Δημιουργία Σημείωσης Κύκλου
+el:Δημιουργία κύκλου σχολιασμού
 es:Crear anotación de círculo
 et:Loo ringimärkus
 eu:Sortu Zirkulu Oharra
@@ -11187,7 +11187,7 @@ cy:Creu Anodiad Atodiad Ffeil
 cz:Vytvořit anotaci přílohy
 de:Dateianhang-Anmerkung erstellen
 dk:Opret vedhæftet fil-annotation
-el:Δημιουργία Σημείωσης Συνημμένου Αρχείου
+el:Δημιουργία συνημμένου αρχείου σχολιασμού
 es:Crear anotación de archivo adjunto
 et:Loo failimanuse märkus
 eu:Sortu Fitxategi Eranskin Oharra
@@ -11260,7 +11260,7 @@ cy:Creu Anodiad Testun Rhydd
 cz:Vytvořit textovou anotaci
 de:Freitext-Anmerkung erstellen
 dk:Opret fritekst-annotation
-el:Δημιουργία Σημείωσης Ελεύθερου Κειμένου
+el:Δημιουργία ελεύθερου κειμένου σχολιασμού
 es:Crear anotación de texto libre
 et:Loo vabateksti märkus
 eu:Sortu Testu Libre Oharra
@@ -11333,7 +11333,7 @@ cy:Creu Anodiad Amlygu
 cz:Vytvořit anotaci zvýraznění
 de:Hervorhebungsanmerkung erstellen
 dk:Opret fremhævnings-annotation
-el:Δημιουργία Σημείωσης Επισήμανσης
+el:Δημιουργία επισήμανσης σχολιασμού
 es:Crear anotación de resaltado
 et:Loo esiletõstmise märkus
 eu:Sortu Nabarmentze Oharra
@@ -11406,7 +11406,7 @@ cy:Creu Anodiad Inc
 cz:Vytvořit anotaci inkoustu
 de:Freihandanmerkung erstellen
 dk:Opret blæk-annotation
-el:Δημιουργία Σημείωσης Μελανιού
+el:Δημιουργία μελανιού σχολιασμού
 es:Crear anotación de tinta
 et:Loo käsitsi joonistatud märkus
 eu:Sortu Tinta Oharra
@@ -11479,7 +11479,7 @@ cy:Creu Anodiad Llinell
 cz:Vytvořit anotaci čáry
 de:Zeilenanmerkung erstellen
 dk:Opret linje-annotation
-el:Δημιουργία Σημείωσης Γραμμής
+el:Δημιουργία γραμμής σχολιασμού
 es:Crear anotación de línea
 et:Loo joonemärkus
 eu:Sortu Lerro Oharra
@@ -11552,7 +11552,7 @@ cy:Creu Anodiad Dolen
 cz:Vytvořit anotaci odkazu
 de:Link-Anmerkung erstellen
 dk:Opret link-annotation
-el:Δημιουργία Σημείωσης Συνδέσμου
+el:Δημιουργία συνδέσμου σχολιασμού
 es:Crear anotación de enlace
 et:Loo lingimärkus
 eu:Sortu Esteka Oharra
@@ -11625,7 +11625,7 @@ cy:Creu Anodiad Aml-linell
 cz:Vytvořit anotaci lomené čáry
 de:Polylinien-Anmerkung erstellen
 dk:Opret polylinje-annotation
-el:Δημιουργία Σημείωσης Πολυγραμμής
+el:Δημιουργία πολυγραμμής σχολιασμού
 es:Crear anotación de polilínea
 et:Loo murdjoonemärkus
 eu:Sortu Lerro Anitz Oharra
@@ -11698,7 +11698,7 @@ cy:Creu Anodiad Polygon
 cz:Vytvořit anotaci polygonu
 de:Polygon-Anmerkung erstellen
 dk:Opret polygon-annotation
-el:Δημιουργία Σημείωσης Πολυγώνου
+el:Δημιουργία πολυγώνου σχολιασμού
 es:Crear anotación de polígono
 et:Loo hulknurgamärkus
 eu:Sortu Poligono Oharra
@@ -11771,7 +11771,7 @@ cy:Creu Anodiad Naid
 cz:Vytvořit vyskakovací anotaci
 de:Einblendbare Anmerkung erstellen
 dk:Opret popup-annotation
-el:Δημιουργία Αναδυόμενης Σημείωσης
+el:Δημιουργία σχολιασμού αναδυόμενου
 es:Crear anotación emergente
 et:Loo hüpikaknamärkus
 eu:Sortu Leiho Emergente Oharra
@@ -11844,7 +11844,7 @@ cy:Creu Anodiad Golygu
 cz:Vytvořit anotaci redigování
 de:Schwärzungsanmerkung erstellen
 dk:Opret redigerings-annotation
-el:Δημιουργία Σημείωσης Λογοκρισίας
+el:Δημιουργία αποκρυμμένου σχολιασμού
 es:Crear anotación de censura
 et:Loo mustandusmärkus
 eu:Sortu Erredaktatu Oharra
@@ -11917,7 +11917,7 @@ cy:Creu Anodiad Sgwâr
 cz:Vytvořit anotaci čtverce
 de:Quadratische Anmerkung erstellen
 dk:Opret firkant-annotation
-el:Δημιουργία Σημείωσης Τετραγώνου
+el:Δημιουργία σχολιασμού τετράγωνου
 es:Crear anotación de cuadrado
 et:Loo ruudumärkus
 eu:Sortu Karratu Oharra
@@ -11990,7 +11990,7 @@ cy:Creu Anodiad Troellog
 cz:Vytvořit vlnovkovou anotaci
 de:Geschwungene Anmerkung erstellen
 dk:Opret bølget-annotation
-el:Δημιουργία Κυματοειδούς Σημείωσης
+el:Δημιουργία σγουρού σχολιασμού
 es:Crear anotación ondulada
 et:Loo lainejoonemärkus
 eu:Sortu Kiribil Oharra
@@ -12063,7 +12063,7 @@ cy:Creu Anodiad Stamp
 cz:Vytvořit anotaci razítka
 de:Stempelanmerkung erstellen
 dk:Opret stempel-annotation
-el:Δημιουργία Σημείωσης Σφραγίδας
+el:Δημιουργία σφραγίδας σχολιασμού
 es:Crear anotación de sello
 et:Loo tempelmärkus
 eu:Sortu Zigilua Oharra
@@ -12136,7 +12136,7 @@ cy:Creu Anodiad Taro Allan
 cz:Vytvořit anotaci přeškrtnutí
 de:Streichungsanmerkung erstellen
 dk:Opret gennemstregnings-annotation
-el:Δημιουργία Σημείωσης Διαγραφής
+el:Δημιουργία σχολιασμού διαγραφής
 es:Crear anotación de tachado
 et:Loo läbikriipsutamise märkus
 eu:Sortu Marratze Oharra
@@ -12209,7 +12209,7 @@ cy:Creu Anodiad Testun
 cz:Vytvořit textovou anotaci
 de:Textanmerkung erstellen
 dk:Opret tekst-annotation
-el:Δημιουργία Σημείωσης Κειμένου
+el:Δημιουργία σχολιασμού κειμένου
 es:Crear anotación de texto
 et:Loo tekstimärkus
 eu:Sortu Testu Oharra
@@ -12282,7 +12282,7 @@ cy:Creu Anodiad Tanlinellu
 cz:Vytvořit anotaci podtržení
 de:Unterstrichene Anmerkung erstellen
 dk:Opret understregnings-annotation
-el:Δημιουργία Σημείωσης Υπογράμμισης
+el:Δημιουργία υπογράμμισης σχολιασμού
 es:Crear anotación de subrayado
 et:Loo allakriipsutamise märkus
 eu:Sortu Azpimarra Oharra
@@ -12866,7 +12866,7 @@ cy:Dadfygio: Llygru Cof
 cz:Ladění: Poškodit paměť
 de:Debug: Beschädigter Speicher
 dk:Fejlfinding: Korrumpér hukommelse
-el:Αποσφαλμάτωση: Καταστροφή Μνήμης
+el:Αποσφαλμάτωση: Κατεστραμμένη μνήμη
 es:Depurar: Corromper memoria
 et:Silumine: Rikutud mälu
 eu:Araztu: Hondatu Memoria
@@ -12939,7 +12939,7 @@ cy:Dadfygio: Fy Chwalu
 cz:Ladění: Vyvolat pád
 de:Debug: Absturz provozieren
 dk:Fejlfinding: Få programmet til at gå ned
-el:Αποσφαλμάτωση: Κατάρρευση
+el:Αποσφαλμάτωση: Συντριβή
 es:Depurar: Forzar fallo
 et:Silumine: Krahh
 eu:Araztu: Kraskatu
@@ -13012,7 +13012,7 @@ cy:Dadfygio: Lawrlwytho Symbolau
 cz:Ladění: Stáhnout symboly
 de:Debug: Symbole herunterladen
 dk:Fejlfinding: Download symboler
-el:Αποσφαλμάτωση: Λήψη Συμβόλων
+el:Αποσφαλμάτωση: Λήψη συμβόλων
 es:Depurar: Descargar símbolos
 et:Silumine: Laadi alla sümbolid
 eu:Araztu: Deskargatu Sinboloak
@@ -13085,7 +13085,7 @@ cy:Dadfygio: Dangos Hysbysiad
 cz:Ladění: Zobrazit oznámení
 de:Debug: Benachrichtigung anzeigen
 dk:Fejlfinding: Vis meddelelse
-el:Αποσφαλμάτωση: Εμφάνιση Ειδοποίησης
+el:Αποσφαλμάτωση: Εμφάνιση ειδοποίησης
 es:Depurar: Mostrar notificación
 et:Silumine: Näita teavitust
 eu:Araztu: Erakutsi Jakinarazpena
@@ -13158,7 +13158,7 @@ cy:Dadfygio: Dechrau Prawf Straen
 cz:Ladění: Spustit zátěžový test
 de:Debug: Stresstest starten
 dk:Fejlfinding: Start belastningstest
-el:Αποσφαλμάτωση: Έναρξη Δοκιμής Καταπόνησης
+el:Αποσφαλμάτωση: Έναρξη δοκιμής στρες
 es:Depurar: Iniciar prueba de estrés
 et:Silumine: Alusta stressitesti
 eu:Araztu: Hasi Estres Proba
@@ -13231,7 +13231,7 @@ cy:Dadfygio: Profi Ap
 cz:Ladění: Testovat aplikaci
 de:Debug: App testen
 dk:Fejlfinding: Test app
-el:Αποσφαλμάτωση: Δοκιμή Εφαρμογής
+el:Αποσφαλμάτωση: Δοκιμή εφαρμογής
 es:Depurar: Probar aplicación
 et:Silumine: Testi rakendust
 eu:Araztu: Probatu Aplikazioa
@@ -13304,7 +13304,7 @@ cy:Dadfygio: Toglo Rendro Rhagfynegol
 cz:Ladění: Přepnout prediktivní vykreslování
 de:Debug: Vorschau-Rendering umschalten
 dk:Fejlfinding: Skift forudsigende rendering
-el:Αποσφαλμάτωση: Εναλλαγή Προβλεπτικής Απόδοσης
+el:Εντοπισμός σφαλμάτων: Εναλλαγή προγνωστικής απόδοσης
 es:Depurar: Alternar renderizado predictivo
 et:Silumine: Lülita ennustav renderdamine sisse/välja
 eu:Araztu: Txandakatu Errendatze Iragarlekoa
@@ -13815,7 +13815,7 @@ cy:Dileu Ffeil
 cz:Smazat soubor
 de:Datei löschen
 dk:Slet fil
-el:Διαγραφή Αρχείου
+el:Διαγραφή αρχείου
 es:Eliminar archivo
 et:Kustuta fail
 eu:Ezabatu Fitxategia
@@ -14034,7 +14034,7 @@ cy:Gwneud dim
 cz:Nedělat nic
 de:Nichts tun
 dk:Gør ingenting
-el:Καμία ενέργεια
+el:Μην κάνετε τίποτα
 es:No hacer nada
 et:Ära tee midagi
 eu:Ez egin ezer
@@ -15129,7 +15129,7 @@ cy:Gweithredu rhaglen
 cz:Spustit program
 de:Ein Programm ausführen
 dk:Kør et program
-el:Εκτέλεση προγράμματος
+el:Εκτέλεση ενός προγράμματος
 es:Ejecutar un programa
 et:Käivita programm
 eu:Exekutatu programa bat
@@ -15202,7 +15202,7 @@ cy:Gadael Rhaglen
 cz:Ukončit aplikaci
 de:Anwendung beenden
 dk:Afslut program
-el:Έξοδος από την Εφαρμογή
+el:Έξοδος από την εφαρμογή
 es:Salir de la aplicación
 et:Välju rakendusest
 eu:Irten aplikaziotik
@@ -15640,7 +15640,7 @@ cy:Golwg Wynebu
 cz:Zobrazení naproti
 de:Doppelseitenansicht
 dk:Modstående visning
-el:Προβολή Αντικριστών Σελίδων
+el:Προβολή πρόσοψης
 es:Vista enfrentada
 et:Vastasvaade
 eu:Orriak alboz albo
@@ -16808,7 +16808,7 @@ cy:Canfod y Dewisiad Nesaf
 cz:Najít další výskyt
 de:Nächste Auswahl suchen
 dk:Find næste markering
-el:Εύρεση Επόμενης Επιλογής
+el:Εύρεση επόμενης επιλογής
 es:Buscar siguiente selección
 et:Otsi järgmine valik
 eu:Bilatu hurrengo hautapena
@@ -16954,7 +16954,7 @@ cy:Canfod y Dewisiad Blaenorol
 cz:Najít předchozí výskyt
 de:Vorherige Auswahl suchen
 dk:Find forrige markering
-el:Εύρεση Προηγούμενης Επιλογής
+el:Εύρεση προηγούμενης επιλογής
 es:Buscar selección anterior
 et:Otsi eelmine valik
 eu:Bilatu aurreko hautapena
@@ -17100,7 +17100,7 @@ cy:Canfod: Toglo Cydweddu Cas
 cz:Hledat: Přepnout rozlišování velikosti písmen
 de:Suchen: Groß-/Kleinschreibung umschalten
 dk:Søg: Skift store/små bogstaver
-el:Εύρεση: Εναλλαγή Διάκρισης Πεζών/Κεφαλαίων
+el:Εύρεση: Εναλλαγή θήκης αντιστοίχισης
 es:Buscar: Alternar coincidir mayúsculas
 et:Otsi: lülita tõstutundlikkus
 eu:Bilatu: Txandakatu maiuskulak/minuskulak
@@ -18268,7 +18268,7 @@ cy:Mynd i Dudalen...
 cz:Přejít na stránku...
 de:Zu Seite gehen…
 dk:Gå til side...
-el:Μετάβαση σε Σελίδα...
+el:Μετάβαση στη σελίδα...
 es:Ir a la página...
 et:Mine lehele...
 eu:Joan orrira...
@@ -18487,7 +18487,7 @@ cy:Cymorth: Llwybrau Byr Bysellfwrdd
 cz:Nápověda: Klávesové zkratky
 de:Hilfe: Tastenkombinationen
 dk:Hjælp: Tastaturgenveje
-el:Βοήθεια: Συντομεύσεις Πληκτρολογίου
+el:Βοήθεια: Συντομεύσεις πληκτρολογίου
 es:Ayuda: Atajos de teclado
 et:Abi: kiirklahvid
 eu:Laguntza: Laster-teklak
@@ -18633,7 +18633,7 @@ cy:Cymorth: Llawlyfr ar y Wefan
 cz:Nápověda: Manuál na webu
 de:Hilfe: Handbuch auf der Website
 dk:Hjælp: Manual på hjemmeside
-el:Βοήθεια: Εγχειρίδιο στον Ιστότοπο
+el:Βοήθεια: Εγχειρίδιο στον ιστότοπο
 es:Ayuda: Manual en el sitio web
 et:Abi: kasutusjuhend veebilehel
 eu:Laguntza: Eskuliburua webgunean
@@ -18852,7 +18852,7 @@ cy:Cuddio Anodiadau
 cz:Skrýt anotace
 de:Anmerkungen ausblenden
 dk:Skjul annoteringer
-el:Απόκρυψη Σχολιασμών
+el:Απόκρυψη σχολιασμών
 es:Ocultar anotaciones
 et:Peida märkused
 eu:Ezkutatu oharrak
@@ -19071,7 +19071,7 @@ cy:Cartref
 cz:Domů
 de:Startseite
 dk:Hjem
-el:Αρχική
+el:Κεντρική
 es:Inicio
 et:Avaleht
 eu:Hasiera
@@ -20020,7 +20020,7 @@ cy:Gwrthdroi Lliwiau
 cz:Invertovat barvy
 de:Farben umkehren
 dk:Inverter farver
-el:Αντιστροφή Χρωμάτων
+el:Αντιστροφή χρωμάτων
 es:Invertir colores
 et:Pööra värvid ümber
 eu:Alderantzikatu koloreak
@@ -20093,7 +20093,7 @@ cy:Galw Chwiliad Gwrthdro
 cz:Spustit inverzní vyhledávání
 de:Rückwärtssuche ausführen
 dk:Start omvendt søgning
-el:Εκτέλεση Αντίστροφης Αναζήτησης
+el:Κλήση αντίστροφης αναζήτησης
 es:Invocar búsqueda inversa
 et:Käivita pöördotsing
 eu:Abiarazi alderantzizko bilaketa
@@ -20312,7 +20312,7 @@ cy:Lansio porwr neu redeg gorchymyn gyda'r dewisiad
 cz:Spustit prohlížeč nebo spustit příkaz s výběrem
 de:Browser starten oder Befehl mit Auswahl ausführen
 dk:Start browser eller kør kommando med markering
-el:Εκκίνηση προγράμματος περιήγησης ή εκτέλεση εντολής με επιλογή
+el:Εκκινήστε ένα πρόγραμμα περιήγησης ή εκτελέστε την εντολή με επιλογή
 es:Abrir navegador o ejecutar comando con la selección
 et:Käivita brauser või käivita käsk valikuga
 eu:Abiarazi nabigatzailea edo exekutatu komandoa hautapenarekin
@@ -21334,7 +21334,7 @@ cy:Symud Ffocws Ffrâm
 cz:Přesunout fokus rámce
 de:Rahmenfokus verschieben
 dk:Flyt rammefokus
-el:Μετακίνηση Εστίασης Πλαισίου
+el:Μετακίνηση εστίασης καρέ
 es:Mover foco del marco
 et:Liiguta raami fookus
 eu:Aldatu markoaren fokua
@@ -21407,7 +21407,7 @@ cy:Symud Tab i'r Chwith
 cz:Přesunout kartu vlevo
 de:Tab nach links verschieben
 dk:Flyt fane til venstre
-el:Μετακίνηση Καρτέλας Αριστερά
+el:Μετακίνηση καρτέλας αριστερά
 es:Mover pestaña a la izquierda
 et:Liiguta sakk vasakule
 eu:Mugitu fitxa ezkerrera
@@ -21480,7 +21480,7 @@ cy:Symud Tab i'r Dde
 cz:Přesunout kartu vpravo
 de:Tab nach rechts verschieben
 dk:Flyt fane til højre
-el:Μετακίνηση Καρτέλας Δεξιά
+el:Μετακίνηση καρτέλας δεξιά
 es:Mover pestaña a la derecha
 et:Liiguta sakk paremale
 eu:Mugitu fitxa eskuinera
@@ -21553,7 +21553,7 @@ cy:Llywio'n Ôl
 cz:Přejít zpět
 de:Zurück
 dk:Naviger tilbage
-el:Πλοήγηση Πίσω
+el:Πλοηγηθείτε πίσω
 es:Navegar atrás
 et:Naviger tagasi
 eu:Nabigatu atzera
@@ -21626,7 +21626,7 @@ cy:Llywio Ymlaen
 cz:Přejít vpřed
 de:Weiter
 dk:Naviger fremad
-el:Πλοήγηση Μπροστά
+el:Προχωρήστε μπροστά
 es:Navegar adelante
 et:Naviger edasi
 eu:Nabigatu aurrera
@@ -21918,7 +21918,7 @@ cy:Tab Nesaf
 cz:Další karta
 de:Nächster Tab
 dk:Næste fane
-el:Επόμενη Καρτέλα
+el:Επόμενη καρτέλα
 es:Pestaña siguiente
 et:Järgmine sakk
 eu:Hurrengo fitxa
@@ -22867,7 +22867,7 @@ cy:Agor y Ddogfen Bresennol mewn Tab Newydd
 cz:Otevřít aktuální dokument v nové kartě
 de:Aktuelles Dokument in neuem Tab öffnen
 dk:Åbn nuværende dokument i ny fane
-el:Άνοιγμα Τρέχοντος Εγγράφου Σε Νέα Καρτέλα
+el:Άνοιγμα τρέχοντος εγγράφου σε νέα καρτέλα
 es:Abrir documento actual en nueva pestaña
 et:Ava praegune dokument uuel sakil
 eu:Ireki uneko dokumentua fitxa berrian
@@ -22940,7 +22940,7 @@ cy:Agor y Ddogfen Bresennol mewn Ffenestr Newydd
 cz:Otevřít aktuální dokument v novém okně
 de:Aktuelles Dokument in neuem Fenster öffnen
 dk:Åbn nuværende dokument i nyt vindue
-el:Άνοιγμα Τρέχοντος Εγγράφου Σε Νέο Παράθυρο
+el:Άνοιγμα τρέχοντος εγγράφου σε νέο παράθυρο
 es:Abrir documento actual en nueva ventana
 et:Ava praegune dokument uues aknas
 eu:Ireki uneko dokumentua leiho berrian
@@ -23013,7 +23013,7 @@ cy:Agor Cyfeiriadur yn Directory Opus
 cz:Otevřít adresář v Directory Opus
 de:Verzeichnis in Directory Opus öffnen
 dk:Åbn mappe i Directory Opus
-el:Άνοιγμα Καταλόγου Στο Directory Opus
+el:Άνοιγμα φακέλου στο Directory Opus
 es:Abrir directorio en Directory Opus
 et:Ava kataloog Directory Opuses
 eu:Ireki direktorioa Directory Opus-en
@@ -23086,7 +23086,7 @@ cy:Agor Cyfeiriadur yn Double Commander
 cz:Otevřít adresář v Double Commander
 de:Verzeichnis in Double Commander öffnen
 dk:Åbn mappe i Double Commander
-el:Άνοιγμα Καταλόγου Στο Double Commander
+el:Άνοιγμα καταλόγου στο Double Commander
 es:Abrir directorio en Double Commander
 et:Ava kataloog Double Commanderis
 eu:Ireki direktorioa Double Commander-en
@@ -23159,7 +23159,7 @@ cy:Agor Cyfeiriadur yn Explorer
 cz:Otevřít adresář v Průzkumníku
 de:Verzeichnis im Explorer öffnen
 dk:Åbn mappe i Stifinder
-el:Άνοιγμα Καταλόγου Στην Εξερεύνηση
+el:Άνοιγμα καταλόγου στον Explorer
 es:Abrir directorio en Explorador
 et:Ava kataloog Exploreris
 eu:Ireki direktorioa Explorer-en
@@ -23232,7 +23232,7 @@ cy:Agor Cyfeiriadur yn Total Commander
 cz:Otevřít adresář v Total Commander
 de:Verzeichnis in Total Commander öffnen
 dk:Åbn mappe i Total Commander
-el:Άνοιγμα Καταλόγου Στο Total Commander
+el:Άνοιγμα φακέλου στο Total Commander
 es:Abrir directorio en Total Commander
 et:Ava kataloog Total Commanderis
 eu:Ireki direktorioa Total Commander-en
@@ -23670,7 +23670,7 @@ cy:Agor Ffeil...
 cz:Otevřít soubor...
 de:Datei öffnen…
 dk:Åbn fil...
-el:Άνοιγμα Αρχείου...
+el:Άνοιγμα αρχείου...
 es:Abrir archivo...
 et:Ava fail...
 eu:Ireki fitxategia...
@@ -23816,7 +23816,7 @@ cy:Agor Ffenestr SumatraPDF Newydd
 cz:Otevřít nové okno SumatraPDF
 de:Neues SumatraPDF-Fenster öffnen
 dk:Åbn nyt SumatraPDF vindue
-el:Άνοιγμα Νέου Παραθύρου SumatraPDF
+el:Άνοιγμα νέου παραθύρου SumatraPDF
 es:Abrir nueva ventana de SumatraPDF
 et:Ava uus SumatraPDF aken
 eu:Ireki SumatraPDF leiho berria
@@ -24035,7 +24035,7 @@ cy:Agor y Ddogfen a Ddewiswyd
 cz:Otevřít vybraný dokument
 de:Ausgewähltes Dokument öffnen
 dk:Åbn valgt dokument
-el:Άνοιγμα Επιλεγμένου Εγγράφου
+el:Άνοιγμα επιλεγμένου εγγράφου
 es:Abrir documento seleccionado
 et:Ava valitud dokument
 eu:Ireki hautatutako dokumentua
@@ -24108,7 +24108,7 @@ cy:Agor Gyda PdfDjvu Bookmarker
 cz:Otevřít pomocí PdfDjvu Bookmarker
 de:Mit Pdf & DjVu Bookmarker öffnen
 dk:Åbn med PdfDjvu Bookmarker
-el:Άνοιγμα με PdfDjvu Bookmarker
+el:Άνοιγμα με Pdf&Djvu Bookmarker
 es:Abrir con PdfDjvu Bookmarker
 et:Ava PdfDjvu Bookmarkeriga
 eu:Ireki PdfDjvu Bookmarker-ekin
@@ -24692,7 +24692,7 @@ cy:Agor yn Foxit Reader
 cz:Otevřít v programu Foxit Reader
 de:In Foxit Reader öffnen
 dk:Åbn med Foxit Reader
-el:Άνοιγμα με Foxit Reader
+el:Ανοίξτε στο Foxit Reader
 es:Abrir con Foxit Reader
 et:Ava Foxit Readeris
 eu:Ireki Foxit Readerren
@@ -24838,7 +24838,7 @@ cy:Agor yn Microsoft HTML Help
 cz:Otevřít v Microsoft HTML Help
 de:In Microsoft HTML Help öffnen
 dk:Åbn i Microsoft HTML Help
-el:Άνοιγμα στη βοήθεια Microsoft HTML
+el:Άνοιγμα στη Βοήθεια HTML της Microsoft
 es:Abrir en Microsoft HTML Help
 et:Ava Microsoft HTML Helpis
 eu:Ireki Microsoft HTML Help-en
@@ -24984,7 +24984,7 @@ cy:Agor yn PDF-XChange
 cz:Otevřít v programu PDF-XChange
 de:In PDF-XChange Editor öffnen
 dk:Åbn med PDF-XChange
-el:Άνοιγμα με PDF-XChange
+el:Άνοιγμα στο PDF-XChange
 es:Abrir con PDF-XChange
 et:Ava PDF-XChangega
 eu:Ireki PDF-XChangen
@@ -26079,7 +26079,7 @@ cy:Pinio'r Ddogfen a Ddewiswyd
 cz:Připnout vybraný dokument
 de:Ausgewähltes Dokument anheften
 dk:Fastgør valgt dokument
-el:Καρφίτσωμα Επιλεγμένου Εγγράφου
+el:Καρφίτσωμα επιλεγμένου έγγραφου
 es:Anclar documento seleccionado
 et:Kinnita valitud dokument
 eu:Ainguratu hautatutako dokumentua
@@ -26736,7 +26736,7 @@ cy:Cyflwyniad Cefndir Du
 cz:Prezentace s černým pozadím
 de:Präsentation mit schwarzem Hintergrund
 dk:Præsentation med sort baggrund
-el:Παρουσίαση Με Μαύρο Φόντο
+el:Μαύρο φόντο παρουσίασης
 es:Presentación con fondo negro
 et:Esitluse must taust
 eu:Aurkezpena atzeko plano beltzarekin
@@ -26809,7 +26809,7 @@ cy:Cyflwyniad Cefndir Gwyn
 cz:Prezentace s bílým pozadím
 de:Präsentation mit weißem Hintergrund
 dk:Præsentation med hvid baggrund
-el:Παρουσίαση Με Λευκό Φόντο
+el:Λευκό φόντο παρουσίασης
 es:Presentación con fondo blanco
 et:Esitluse valge taust
 eu:Aurkezpena atzeko plano zuriarekin
@@ -26955,7 +26955,7 @@ cy:Tab Blaenorol
 cz:Předchozí karta
 de:Vorheriger Tab
 dk:Forrige fane
-el:Προηγούμενη Καρτέλα
+el:Προηγούμενη καρτέλα
 es:Pestaña anterior
 et:Eelmine kaart
 eu:Aurreko fitxa
@@ -27101,7 +27101,7 @@ cy:Argraffu Dogfen...
 cz:Tisknout dokument...
 de:Dokument drucken…
 dk:Udskriv dokument...
-el:Εκτύπωση Εγγράφου...
+el:Εκτύπωση εγγράφου...
 es:Imprimir documento...
 et:Prindi dokument...
 eu:Inprimatu dokumentua...
@@ -27831,7 +27831,7 @@ cy:Agorwyd yn Ddiweddar
 cz:Nedávno otevřené
 de:Kürzlich geöffnet
 dk:Senest åbnet
-el:Πρόσφατα Ανοιγμένα
+el:Πρόσφατα ανοιγμένα
 es:Abiertos recientemente
 et:Hiljuti avatud
 eu:Duela gutxi irekiak
@@ -28050,7 +28050,7 @@ cy:Ail-lwytho Dogfen
 cz:Znovu načíst dokument
 de:Dokument neu laden
 dk:Genindlæs dokument
-el:Επαναφόρτωση Εγγράφου
+el:Επαναφόρτωση εγγράφου
 es:Recargar documento
 et:Laadi dokument uuesti
 eu:Berritu dokumentua
@@ -28196,7 +28196,7 @@ cy:Tynnu'r Ddogfen a Ddewiswyd o'r Hanes
 cz:Odstranit vybraný dokument z historie
 de:Ausgewähltes Dokument aus dem Verlauf entfernen
 dk:Fjern valgt dokument fra historik
-el:Αφαίρεση Επιλεγμένου Εγγράφου Από Ιστορικό
+el:Αφαίρεση επιλεγμένου εγγράφου από το ιστορικό
 es:Eliminar documento seleccionado del historial
 et:Eemalda valitud dokument ajaloost
 eu:Kendu hautatutako dokumentua historiatik
@@ -28415,7 +28415,7 @@ cy:Ailenwi Ffeil...
 cz:Přejmenovat soubor...
 de:Datei umbenennen…
 dk:Omdøb fil...
-el:Μετονομασία Αρχείου...
+el:Μετονομασία αρχείου...
 es:Renombrar archivo...
 et:Nimeta fail ümber...
 eu:Berrizendatu fitxategia...
@@ -28561,7 +28561,7 @@ cy:Ailagor yr Olaf a Gaewyd
 cz:Znovu otevřít naposledy zavřený
 de:Zuletzt geschlossene erneut öffnen
 dk:Genåbn senest lukkede
-el:Επαναφορά Τελευταίου Κλεισμένου
+el:Ξανάνοιξε το τελευταία κλεισμένο
 es:Reabrir último cerrado
 et:Ava viimati suletud uuesti
 eu:Berrireki azken itxia
@@ -29145,7 +29145,7 @@ cy:Cadw Anodiadau i PDF newydd
 cz:Uložit anotace do nového PDF
 de:Anmerkungen in neuer PDF-Datei speichern
 dk:Gem annoteringer til ny PDF
-el:Αποθήκευση Σχολιασμών σε νέο PDF
+el:Αποθήκευση σχολίων σε νέο PDF
 es:Guardar anotaciones en un nuevo PDF
 et:Salvesta märkused uude PDF-i
 eu:Gorde oharrak PDF berri batean
@@ -29437,7 +29437,7 @@ cy:Cadw Ffeil Fel...
 cz:Uložit soubor jako...
 de:Datei speichern unter…
 dk:Gem fil som...
-el:Αποθήκευση Αρχείου Ως...
+el:Αποθήκευση αρχείου ως...
 es:Guardar archivo como...
 et:Salvesta fail kui...
 eu:Gorde fitxategia honela...
@@ -30094,7 +30094,7 @@ cy:Sgrolio i Lawr
 cz:Posunout dolů
 de:Nach unten scrollen
 dk:Rul ned
-el:Κύλιση Κάτω
+el:Κύλιση προς τα κάτω
 es:Desplazar hacia abajo
 et:Keri alla
 eu:Korritu behera
@@ -30167,7 +30167,7 @@ cy:Sgrolio i Lawr Hanner Tudalen
 cz:Posunout dolů o půl stránky
 de:Eine halbe Seite nach unten scrollen
 dk:Rul ned med en halv side
-el:Κύλιση Κάτω Κατά Μισή Σελίδα
+el:Κύλιση προς τα κάτω κατά μισή σελίδα
 es:Desplazar media página hacia abajo
 et:Keri pool lehekülge alla
 eu:Korritu behera orrialde erdiz
@@ -30240,7 +30240,7 @@ cy:Sgrolio i Lawr Fesul Tudalen
 cz:Posunout dolů o stránku
 de:Seitenweise nach unten scrollen
 dk:Rul ned med en side
-el:Κύλιση Κάτω Κατά Σελίδα
+el:Κύλιση προς τα κάτω κατά σελίδα
 es:Desplazar una página hacia abajo
 et:Keri lehekülje võrra alla
 eu:Korritu behera orrialdearekin
@@ -30313,7 +30313,7 @@ cy:Sgrolio i'r Chwith
 cz:Posunout vlevo
 de:Nach links scrollen
 dk:Rul til venstre
-el:Κύλιση Αριστερά
+el:Κύλιση προς τα αριστερά
 es:Desplazar a la izquierda
 et:Keri vasakule
 eu:Korritu ezkerrera
@@ -30386,7 +30386,7 @@ cy:Sgrolio i'r Chwith Fesul Tudalen
 cz:Posunout vlevo o stránku
 de:Seitenweise nach links scrollen
 dk:Rul til venstre med en side
-el:Κύλιση Αριστερά Κατά Σελίδα
+el:Κύλιση αριστερά κατά σελίδα
 es:Desplazar una página a la izquierda
 et:Keri lehekülje võrra vasakule
 eu:Korritu ezkerrera orrialdearekin
@@ -30459,7 +30459,7 @@ cy:Sgrolio i'r Dde
 cz:Posunout vpravo
 de:Nach rechts scrollen
 dk:Rul til højre
-el:Κύλιση Δεξιά
+el:Κύλιση προς τα δεξιά
 es:Desplazar a la derecha
 et:Keri paremale
 eu:Korritu eskuinera
@@ -30532,7 +30532,7 @@ cy:Sgrolio i'r Dde Fesul Tudalen
 cz:Posunout vpravo o stránku
 de:Seitenweise nach rechts scrollen
 dk:Rul til højre med en side
-el:Κύλιση Δεξιά Κατά Σελίδα
+el:Κύλιση δεξιά κατά σελίδα
 es:Desplazar una página a la derecha
 et:Keri lehekülje võrra paremale
 eu:Korritu eskuinera orrialdearekin
@@ -30605,7 +30605,7 @@ cy:Sgrolio i Fyny
 cz:Posunout nahoru
 de:Nach oben scrollen
 dk:Rul op
-el:Κύλιση Πάνω
+el:Κύλιση προς τα επάνω
 es:Desplazar hacia arriba
 et:Keri üles
 eu:Korritu gora
@@ -30678,7 +30678,7 @@ cy:Sgrolio i Fyny Hanner Tudalen
 cz:Posunout nahoru o půl stránky
 de:Eine halbe Seite nach oben scrollen
 dk:Rul op med en halv side
-el:Κύλιση Πάνω Κατά Μισή Σελίδα
+el:Κύλιση προς τα επάνω κατά μισή σελίδα
 es:Desplazar media página hacia arriba
 et:Keri pool lehekülge üles
 eu:Korritu gora orrialde erdiz
@@ -30751,7 +30751,7 @@ cy:Sgrolio i Fyny Fesul Tudalen
 cz:Posunout nahoru o stránku
 de:Seitenweise nach oben scrollen
 dk:Rul op efter side
-el:Κύλιση Πάνω Κατά Σελίδα
+el:Κύλιση προς τα επάνω κατά σελίδα
 es:Desplazar una página hacia arriba
 et:Keri lehekülje võrra üles
 eu:Korritu gora orrialdearekin
@@ -30824,7 +30824,7 @@ cy:Chwilio Dewisiad gyda Bing
 cz:Hledat výběr pomocí Bing
 de:Auswahl mit Bing suchen
 dk:Søg markering med Bing
-el:Αναζήτηση Επιλογής με Bing
+el:Αναζήτηση επιλογής με το Bing
 es:Buscar selección con Bing
 et:Otsi valikut Bingist
 eu:Bilatu hautapena Bing-ekin
@@ -30897,7 +30897,7 @@ cy:Chwilio Dewisiad gyda Google
 cz:Hledat výběr pomocí Google
 de:Auswahl mit Google suchen
 dk:Søg markering med Google
-el:Αναζήτηση Επιλογής με Google
+el:Επιλογή αναζήτησης με το Google
 es:Buscar selección con Google
 et:Otsi valikut Google'ist
 eu:Bilatu hautapena Google-rekin
@@ -30970,7 +30970,7 @@ cy:Chwilio Dewisiad gyda Google Scholar
 cz:Hledat výběr pomocí Google Scholar
 de:Auswahl mit Google Scholar suchen
 dk:Søg markering med Google Scholar
-el:Αναζήτηση Επιλογής με Google Scholar
+el:Search Selection with Google Scholar
 es:Buscar selección con Google Académico
 et:Otsi valikut Google Scholarist
 eu:Bilatu hautapena Google Scholar-rekin
@@ -31043,7 +31043,7 @@ cy:Chwilio Dewis gyda Wikipedia
 cz:Hledat výběr ve Wikipedii
 de:Auswahl mit Wikipedia suchen
 dk:Søg markering med Wikipedia
-el:Αναζήτηση Επιλογής με Wikipedia
+el:Αναζήτηση επιλογής με τη Wikipedia
 es:Buscar selección en Wikipedia
 et:Otsi valikut Wikipediast
 eu:Bilatu hautapena Wikipedia-rekin
@@ -31700,7 +31700,7 @@ cy:Dewis y thema nesaf
 cz:Vybrat další motiv
 de:Nächstes Design auswählen
 dk:Vælg næste tema
-el:Επιλογή επόμενου θέματος
+el:Επιλέξτε το επόμενο θέμα
 es:Seleccionar siguiente tema
 et:Vali järgmine teema
 eu:Hautatu hurrengo gaia
@@ -31919,7 +31919,7 @@ cy:Anfon Dogfen Drwy E-bost...
 cz:Odeslat dokument e-mailem...
 de:Dokument per E-Mail senden…
 dk:Send dokument via e-mail...
-el:Αποστολή Εγγράφου με Email...
+el:Αποστολή εγγράφου με email...
 es:Enviar documento por correo electrónico...
 et:Saada dokument e-postiga...
 eu:Bidali dokumentua posta elektronikoz...
@@ -32649,7 +32649,7 @@ cy:Dangos Anodiadau
 cz:Zobrazit anotace
 de:Anmerkungen anzeigen
 dk:Vis annoteringer
-el:Εμφάνιση Σχολιασμών
+el:Εμφάνιση σχολιασμών
 es:Mostrar anotaciones
 et:Kuva märkused
 eu:Erakutsi oharrak
@@ -32795,7 +32795,7 @@ cy:Dangos Priodweddau Dogfen...
 cz:Zobrazit vlastnosti dokumentu...
 de:Dokumenteigenschaften anzeigen…
 dk:Vis dokumentegenskaber...
-el:Εμφάνιση Ιδιοτήτων Εγγράφου...
+el:Εμφάνιση ιδιοτήτων εγγράφου...
 es:Mostrar propiedades del documento...
 et:Kuva dokumendi omadused...
 eu:Erakutsi dokumentuaren propietateak...
@@ -32941,7 +32941,7 @@ cy:Dangos Ffeil Yn y Ffolder...
 cz:Zobrazit soubor ve složce...
 de:Datei im Ordner anzeigen…
 dk:Vis fil i mappe...
-el:Εμφάνιση Αρχείου στον Φάκελο...
+el:Εμφάνιση αρχείου σε φάκελο...
 es:Mostrar archivo en carpeta...
 et:Kuva fail kaustas...
 eu:Erakutsi fitxategia karpetan...
@@ -33014,7 +33014,7 @@ cy:Dangos Cofnodion
 cz:Zobrazit protokoly
 de:Protokolle anzeigen
 dk:Vis logfiler
-el:Εμφάνιση Αρχείων Καταγραφής
+el:Εμφάνιση αρχείων καταγραφής
 es:Mostrar registros
 et:Kuva logid
 eu:Erakutsi erregistroak
@@ -33525,7 +33525,7 @@ cy:Golwg Tudalen Sengl
 cz:Zobrazení jedné stránky
 de:Einzelseitenansicht
 dk:Enkeltsidesvisning
-el:Προβολή Μονής Σελίδας
+el:Προβολή μίας σελίδας
 es:Vista de página única
 et:Ühe lehekülje vaade
 eu:Orrialde bakarreko ikuspegia
@@ -33598,7 +33598,7 @@ cy:Tab Nesaf Deallus
 cz:Inteligentní další karta
 de:Intelligenter nächster Tab
 dk:Smart næste fane
-el:Έξυπνη Επόμενη Καρτέλα
+el:Έξυπνη επόμενη καρτέλα
 es:Pestaña siguiente inteligente
 et:Nutikas järgmine kaart
 eu:Hurrengo fitxa adimentsua
@@ -34839,7 +34839,7 @@ cy:Ffont Testun:
 cz:Písmo textu:
 de:Schriftart:
 dk:Tekstskrift:
-el:Γραμματοσειρά Κειμένου:
+el:Γραμματοσειρά κειμένου:
 es:Fuente de texto:
 et:Teksti font:
 eu:Testu-letra-tipoa:
@@ -35496,7 +35496,7 @@ cy:Toglo Rendro Gwrth-Alias
 cz:Přepnout vyhlazování
 de:Anti-Aliasing-Rendering umschalten
 dk:Slå anti-alias rendering til/fra
-el:Εναλλαγή Απόδοσης Anti-Alias
+el:Εναλλαγή απόδοσης Anti-Alias
 es:Alternar renderizado suavizado
 et:Lülita serva pehmendamine
 eu:Txandakatu anti-alias errendatzea
@@ -35569,7 +35569,7 @@ cy:Toglo Nodau Tudalen
 cz:Přepnout záložky
 de:Lesezeichen umschalten
 dk:Slå bogmærker til/fra
-el:Εναλλαγή Σελιδοδεικτών
+el:Εναλλαγή σελιδοδεικτών
 es:Alternar marcadores
 et:Lülita järjehoidjad
 eu:Txandakatu laster-markak
@@ -35642,7 +35642,7 @@ cy:Toglo Golwg Barhaus
 cz:Přepnout plynulé zobrazení
 de:Fortlaufende Ansicht umschalten
 dk:Slå kontinuerlig visning til/fra
-el:Εναλλαγή Συνεχόμενης Προβολής
+el:Εναλλαγή συνεχούς προβολής
 es:Alternar vista continua
 et:Lülita pidev vaade
 eu:Txandakatu ikuspegi jarraitua
@@ -35715,7 +35715,7 @@ cy:Toglo Safle Cyrchwr
 cz:Přepnout pozici kurzoru
 de:Cursorposition umschalten
 dk:Slå markørposition til/fra
-el:Εναλλαγή Θέσης Δρομέα
+el:Εναλλαγή θέσης δρομέα
 es:Alternar posición del cursor
 et:Lülita kursori asukoht
 eu:Txandakatu kurtsorearen posizioa
@@ -35788,7 +35788,7 @@ cy:Toglo Ffefrynnau
 cz:Přepnout oblíbené
 de:Favoriten umschalten
 dk:Slå favoritter til/fra
-el:Εναλλαγή Αγαπημένων
+el:Εναλλαγή αγαπημένων
 es:Alternar favoritos
 et:Lülita lemmikud
 eu:Txandakatu gogokoak
@@ -35861,7 +35861,7 @@ cy:Toglo Darllen yn Aml
 cz:Přepnout často čtené
 de:Häufig gelesene anzeigen/ausblenden
 dk:Slå ofte læst til/fra
-el:Εναλλαγή Συχνά Αναγνωσμένων
+el:Εναλλαγή συχνά διαβασμένων
 es:Alternar leídos frecuentemente
 et:Lülita sageli loetud
 eu:Txandakatu maiz irakurriak
@@ -35934,7 +35934,7 @@ cy:Toglo Sgrin Lawn
 cz:Přepnout celou obrazovku
 de:Vollbild umschalten
 dk:Slå fuldskærm til/fra
-el:Εναλλαγή Πλήρους Οθόνης
+el:Εναλλαγή πλήρους οθόνης
 es:Alternar pantalla completa
 et:Lülita täisekraan
 eu:Txandakatu pantaila osoa
@@ -36007,7 +36007,7 @@ cy:Toglo Chwilio Gwrthdro
 cz:Přepnout inverzní vyhledávání
 de:Rückwärtssuche umschalten
 dk:Slå omvendt søgning til/fra
-el:Εναλλαγή Αντίστροφης Αναζήτησης
+el:Εναλλαγή αντίστροφης αναζήτησης
 es:Alternar búsqueda inversa
 et:Lülita pöördotsing
 eu:Txandakatu alderantzizko bilaketa
@@ -36153,7 +36153,7 @@ cy:Toglo Cydweddu Maint Llythrennau
 cz:Přepnout rozlišování velikosti písmen
 de:Groß-/Kleinschreibung umschalten
 dk:Slå versalfølsom til/fra
-el:Εναλλαγή Διάκρισης Πεζών-Κεφαλαίων
+el:Εναλλαγή αντιστοίχισης πεζοκεφαλαίων
 es:Alternar coincidir mayúsculas/minúsculas
 et:Lülita tõstutundlikkus
 eu:Txandakatu maiuskulak/minuskulak
@@ -36226,7 +36226,7 @@ cy:Toglo Bar Dewislen
 cz:Přepnout panel nabídek
 de:Menüleiste umschalten
 dk:Slå menulinje til/fra
-el:Εναλλαγή Γραμμής Μενού
+el:Εναλλαγή γραμμής μενού
 es:Alternar barra de menú
 et:Lülita menüüriba
 eu:Txandakatu menu-barra
@@ -36299,7 +36299,7 @@ cy:Toglo Gwybodaeth Tudalen
 cz:Přepnout informace o stránce
 de:Seiteninfo umschalten
 dk:Slå sideinfo til/fra
-el:Εναλλαγή Πληροφοριών Σελίδας
+el:Εναλλαγή πληροφοριών σελίδας
 es:Alternar información de página
 et:Lülita leheteave sisse/välja
 eu:Txandakatu orrialde-informazioa
@@ -36372,7 +36372,7 @@ cy:Toglo Barrau Sgrolio
 cz:Přepnout posuvníky
 de:Bildlaufleisten umschalten
 dk:Slå rullepaneler til/fra
-el:Εναλλαγή Γραμμών Κύλισης
+el:Εναλλαγή γραμμών κύλισης
 es:Alternar barras de desplazamiento
 et:Lülita kerimisribad sisse/välja
 eu:Txandakatu korritze-barrak
@@ -36445,7 +36445,7 @@ cy:Toglo Dangos Anodiadau
 cz:Přepnout zobrazení anotací
 de:Anmerkungen anzeigen/ausblenden
 dk:Slå vis annoteringer til/fra
-el:Εναλλαγή Εμφάνισης Σχολιασμών
+el:Εναλλαγή εμφάνισης σχολιασμών
 es:Alternar mostrar anotaciones
 et:Lülita märkuste kuvamine sisse/välja
 eu:Txandakatu erakutsi oharrak
@@ -36518,7 +36518,7 @@ cy:Toglo Dangos Dolenni
 cz:Přepnout zobrazení odkazů
 de:Links anzeigen/ausblenden
 dk:Slå vis links til/fra
-el:Εναλλαγή Εμφάνισης Συνδέσμων
+el:Εναλλαγή εμφάνισης συνδέσμων
 es:Alternar mostrar enlaces
 et:Lülita linkide kuvamine sisse/välja
 eu:Txandakatu erakutsi estekak
@@ -36591,7 +36591,7 @@ cy:Toglo Tabl Cynnwys
 cz:Přepnout obsah
 de:Inhaltsverzeichnis umschalten
 dk:Slå indholdsfortegnelse til/fra
-el:Εναλλαγή Πίνακα Περιεχομένων
+el:Εναλλαγή πίνακα περιεχομένων
 es:Alternar tabla de contenidos
 et:Lülita sisukord sisse/välja
 eu:Txandakatu eduki-taula
@@ -36664,7 +36664,7 @@ cy:Toglo Bar Offer
 cz:Přepnout panel nástrojů
 de:Werkzeugleiste umschalten
 dk:Slå værktøjslinje til/fra
-el:Εναλλαγή Γραμμής Εργαλείων
+el:Εναλλαγή γραμμής εργαλείων
 es:Alternar barra de herramientas
 et:Lülita tööriistariba sisse/välja
 eu:Txandakatu tresna-barra
@@ -36737,7 +36737,7 @@ cy:Toglo Chwyddo
 cz:Přepnout přiblížení
 de:Zoom umschalten
 dk:Slå zoom til/fra
-el:Εναλλαγή Μεγέθυνσης
+el:Εναλλαγή ζουμ
 es:Alternar zoom
 et:Lülita suurendus sisse/välja
 eu:Txandakatu zooma
@@ -36810,7 +36810,7 @@ cy:Cyfieithu Dewis Gyda DeepL
 cz:Přeložit výběr pomocí DeepL
 de:Auswahl mit DeepL übersetzen
 dk:Oversæt markering med DeepL
-el:Μετάφραση Επιλογής με DeepL
+el:Μετάφραση επιλογής με DeepL
 es:Traducir selección con DeepL
 et:Tõlgi valik DeepL-iga
 eu:Itzuli hautapena DeepL-rekin
@@ -36883,7 +36883,7 @@ cy:Cyfieithu Dewis gyda Google
 cz:Přeložit výběr pomocí Google
 de:Auswahl mit Google Translate übersetzen
 dk:Oversæt markering med Google
-el:Μετάφραση Επιλογής με Google
+el:Επιλογή μετάφρασης με το Google
 es:Traducir selección con Google
 et:Tõlgi valik Google'iga
 eu:Itzuli hautapena Google-rekin
@@ -37613,7 +37613,7 @@ cy:Gweld Gyda Gwyliwr Allanol Personol
 cz:Zobrazit s vlastním externím prohlížečem
 de:Mit benutzerdefiniertem externen Betrachter anzeigen
 dk:Vis med brugerdefineret ekstern fremviser
-el:Προβολή με Προσαρμοσμένο Εξωτερικό Πρόγραμμα
+el:Προβολή με προσαρμοσμένο εξωτερικό πρόγραμμα προβολής
 es:Ver con visor externo personalizado
 et:Vaata kohandatud välise vaatajaga
 eu:Ikusi kanpoko ikustaile pertsonalizatuarekin
@@ -37686,7 +37686,7 @@ cy:Golwg: Modd Cyflwyniad
 cz:Zobrazení: Režim prezentace
 de:Ansicht: Präsentationsmodus
 dk:Visning: Præsentationstilstand
-el:Προβολή: Λειτουργία Παρουσίασης
+el:Προβολή: Λειτουργία παρουσίασης
 es:Vista: Modo presentación
 et:Vaade: Esitlusrežiim
 eu:Ikusi: Aurkezpen modua
@@ -38635,7 +38635,7 @@ cy:Chwyddo: 100%
 cz:Přiblížení: 100%
 de:Zoom: 100 %
 dk:Zoom: 100%
-el:Μεγέθυνση: 100%
+el:Ζουμ: 100%
 es:Zoom: 100%
 et:Suurendus: 100%
 eu:Zoom: %100
@@ -38708,7 +38708,7 @@ cy:Chwyddo: 12.5%
 cz:Přiblížení: 12,5%
 de:Zoom: 12,5 %
 dk:Zoom: 12,5%
-el:Μεγέθυνση: 12.5%
+el:Ζουμ: 12,5%
 es:Zoom: 12,5%
 et:Suurendus: 12,5%
 eu:Zoom: %12,5
@@ -38781,7 +38781,7 @@ cy:Chwyddo: 125%
 cz:Přiblížení: 125%
 de:Zoom: 125 %
 dk:Zoom: 125%
-el:Μεγέθυνση: 125%
+el:Ζουμ: 125%
 es:Zoom: 125%
 et:Suurendus: 125%
 eu:Zoom: %125
@@ -38854,7 +38854,7 @@ cy:Chwyddo: 150%
 cz:Přiblížení: 150%
 de:Zoom: 150 %
 dk:Zoom: 150%
-el:Μεγέθυνση: 150%
+el:Ζουμ: 150%
 es:Zoom: 150%
 et:Suurendus: 150%
 eu:Zoom: %150
@@ -38927,7 +38927,7 @@ cy:Chwyddo: 1600%
 cz:Přiblížení: 1600%
 de:Zoom: 1600 %
 dk:Zoom: 1600%
-el:Μεγέθυνση: 1600%
+el:Zoom: 1600%
 es:Zoom: 1600%
 et:Suurendus: 1600%
 eu:Zoom: %1600
@@ -39000,7 +39000,7 @@ cy:Chwyddo: 200%
 cz:Přiblížení: 200%
 de:Zoom: 200 %
 dk:Zoom: 200%
-el:Μεγέθυνση: 200%
+el:Ζουμ: 200%
 es:Zoom: 200%
 et:Suurendus: 200%
 eu:Zoom: %200
@@ -39073,7 +39073,7 @@ cy:Chwyddo: 25%
 cz:Přiblížení: 25%
 de:Zoom: 25 %
 dk:Zoom: 25%
-el:Μεγέθυνση: 25%
+el:Ζουμ: 25%
 es:Zoom: 25%
 et:Suurendus: 25%
 eu:Zoom: %25
@@ -39146,7 +39146,7 @@ cy:Chwyddo: 3200%
 cz:Přiblížení: 3200%
 de:Zoom: 3200 %
 dk:Zoom: 3200%
-el:Μεγέθυνση: 3200%
+el:Ζουμ: 3200%
 es:Zoom: 3200%
 et:Suurendus: 3200%
 eu:Zoom: %3200
@@ -39219,7 +39219,7 @@ cy:Chwyddo: 400%
 cz:Přiblížení: 400%
 de:Zoom: 400 %
 dk:Zoom: 400%
-el:Μεγέθυνση: 400%
+el:Ζουμ: 400%
 es:Zoom: 400%
 et:Suurendus: 400%
 eu:Zoom: %400
@@ -39292,7 +39292,7 @@ cy:Chwyddo: 50%
 cz:Přiblížení: 50%
 de:Zoom: 50 %
 dk:Zoom: 50%
-el:Μεγέθυνση: 50%
+el:Ζουμ: 50%
 es:Zoom: 50%
 et:Suurendus: 50%
 eu:Zoom: %50
@@ -39365,7 +39365,7 @@ cy:Chwyddo: 6400%
 cz:Přiblížení: 6400%
 de:Zoom: 6400 %
 dk:Zoom: 6400%
-el:Μεγέθυνση: 6400%
+el:Ζουμ: 6400%
 es:Zoom: 6400%
 et:Suurendus: 6400%
 eu:Zoom: %6400
@@ -39438,7 +39438,7 @@ cy:Chwyddo: 8.33%
 cz:Přiblížení: 8,33%
 de:Zoom: 8,33 %
 dk:Zoom: 8,33%
-el:Μεγέθυνση: 8.33%
+el:Zoom: 8.33%
 es:Zoom: 8,33%
 et:Suurendus: 8,33%
 eu:Zoom: %8,33
@@ -39511,7 +39511,7 @@ cy:Chwyddo: 800%
 cz:Přiblížení: 800%
 de:Zoom: 800 %
 dk:Zoom: 800%
-el:Μεγέθυνση: 800%
+el:Ζουμ: 800%
 es:Zoom: 800%
 et:Suurendus: 800%
 eu:Zoom: %800
@@ -39584,7 +39584,7 @@ cy:Chwyddo: Maint Gwirioneddol
 cz:Přiblížení: Skutečná velikost
 de:Zoom: Tatsächliche Größe
 dk:Zoom: Faktisk størrelse
-el:Μεγέθυνση: Πραγματικό Μέγεθος
+el:Ζουμ: Πραγματικό μέγεθος
 es:Zoom: Tamaño real
 et:Suurendus: Tegelik suurus
 eu:Zoom: Benetako tamaina
@@ -39657,7 +39657,7 @@ cy:Chwyddo: Personol...
 cz:Přiblížení: Vlastní...
 de:Zoom: Benutzerdefiniert…
 dk:Zoom: Tilpasset...
-el:Μεγέθυνση: Προσαρμοσμένη...
+el:Ζουμ: Προσαρμοσμένο...
 es:Zoom: Personalizado...
 et:Suurendus: Kohandatud...
 eu:Zoom: Pertsonalizatua...
@@ -39730,7 +39730,7 @@ cy:Chwyddo: Ffitio Cynnwys
 cz:Přiblížení: Přizpůsobit obsah
 de:Zoom: An Inhalt anpassen
 dk:Zoom: Tilpas indhold
-el:Μεγέθυνση: Προσαρμογή Περιεχομένου
+el:Ζουμ: Προσαρμογή περιεχομένου
 es:Zoom: Ajustar contenido
 et:Suurendus: Mahuta sisu
 eu:Zoom: Doitu edukira
@@ -39876,7 +39876,7 @@ cy:Chwyddo: Ffitio Tudalen a Thudalen Sengl
 cz:Zoom: Přizpůsobit stránku a jedna stránka
 de:Zoom: Seite anpassen und Einzelseite
 dk:Zoom: Tilpas side og enkelt side
-el:Ζουμ: Προσαρμογή σελίδας και μονή σελίδα
+el:Ζουμ: Προσαρμογή σελίδας και μεμονωμένη σελίδα
 es:Zoom: Ajustar página y página única
 et:Suurendus: Mahuta lehele ja üksik leht
 eu:Zoom: Doitu orrira eta orri bakarra
@@ -39949,7 +39949,7 @@ cy:Chwyddo: Ffitio Lled
 cz:Zoom: Přizpůsobit šířku
 de:Zoom: An Fensterbreite anpassen
 dk:Zoom: Tilpas bredde
-el:Ζουμ: Προσαρμογή πλάτους
+el:Ζουμ: Προσαρμογή στο πλάτος
 es:Zoom: Ajustar ancho
 et:Suurendus: Mahuta laiusele
 eu:Zoom: Doitu zabalerara
@@ -40022,7 +40022,7 @@ cy:Chwyddo: Ffitio Lled a Pharhaus
 cz:Zoom: Přizpůsobit šířku a souvislé
 de:Zoom: Fortlaufend an Fensterbreite anpassen
 dk:Zoom: Tilpas bredde og kontinuerlig
-el:Ζουμ: Προσαρμογή πλάτους και συνεχής
+el:Ζουμ: Προσαρμογή σε πλάτος και συνεχές
 es:Zoom: Ajustar ancho y continuo
 et:Suurendus: Mahuta laiusele ja pidev
 eu:Zoom: Doitu zabalerara eta jarraian
@@ -40241,7 +40241,7 @@ cy:peidio â defnyddio
 cz:nepoužívat
 de:nicht verwenden
 dk:brug ikke
-el:μην χρησιμοποιήσετε
+el:μη χρησιμοποιείτε
 es:no usar
 et:ära kasuta
 eu:ez erabili
