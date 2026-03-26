@@ -1851,6 +1851,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
+    // TrackPopupMenu runs a nested message loop; during that time the window
+    // can be force-closed (e.g. by a plugin host destroying the parent).
+    // If that happened, all our cached pointers (win, dm, pageEl, etc.) are dangling.
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+
     auto cmd = FindCustomCommand(cmdId);
     if (cmd && cmd->origId == CmdSelectionHandler) {
         HwndSendCommand(win->hwndFrame, cmd->id);
