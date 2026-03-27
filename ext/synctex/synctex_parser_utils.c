@@ -243,33 +243,87 @@ const char * _synctex_base_name(const char *path) {
     return path;
 }
 
+/**
+ * Convert a string encoded in the local character page (system ANSI code page) to UTF-8 encoding.
+ *
+ * @param localStr  A null-terminated string encoded in the local character page
+ * @return          A dynamically allocated UTF-8 string (caller must free), or NULL on failure
+ */
+char* ConvertLocalToUTF8(const char* localStr) {
+    if (!localStr) return NULL;
+    UINT acp = GetACP();
+    int wLen = MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr, -1, NULL, 0);
+    if (wLen == 0) return NULL;
+    wchar_t* wBuf = (wchar_t*)malloc(wLen * sizeof(wchar_t));
+    if (!wBuf) return NULL;
+    if (MultiByteToWideChar(acp, MB_ERR_INVALID_CHARS, localStr, -1, wBuf, wLen) == 0) {
+        free(wBuf);
+        return NULL;
+    }
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, NULL, 0, NULL, NULL);
+    if (utf8Len == 0) {
+        free(wBuf);
+        return NULL;
+    }
+    char* utf8Buf = (char*)malloc(utf8Len);
+    if (!utf8Buf) {
+        free(wBuf);
+        return NULL;
+    }
+    if (WideCharToMultiByte(CP_UTF8, 0, wBuf, -1, utf8Buf, utf8Len, NULL, NULL) == 0) {
+        free(wBuf);
+        free(utf8Buf);
+        return NULL;
+    }
+    free(wBuf);
+    return utf8Buf;
+}
+
 /*  Compare two file names, windows is sometimes case insensitive... */
-synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs) {
+synctex_bool_t _synctex_is_equivalent_file_name(const char* lhs, const char* rhs_sys) {
+    // The variable rhs_sys represents the content inside .synctex.gz.
+	// which is encoded in the system's current ANSI code page
+	// (also known as the "active code page" or "system local character page").
+    // e.g., 936 for Simplified Chinese GBK, 1252 for Western European, etc.
+    // while the variable lhs is UTF-8 encoded. Therefore, a conversion is needed.
+    const char* rhs_alloc = ConvertLocalToUTF8(rhs_sys);
+    const char* rhs = rhs_alloc;
     /*  Remove the leading regex '(\./+)*' in both rhs and lhs */
     synctex_ignore_leading_dot_slash_in_path(&lhs);
     synctex_ignore_leading_dot_slash_in_path(&rhs);
 next_character:
-	if (SYNCTEX_IS_PATH_SEPARATOR(*lhs)) {/*  lhs points to a path separator */
-		if (!SYNCTEX_IS_PATH_SEPARATOR(*rhs)) {/*  but not rhs */
-			return synctex_NO;
-		}
+    if (SYNCTEX_IS_PATH_SEPARATOR(*lhs)) {      /*  lhs points to a path separator */
+        if (!SYNCTEX_IS_PATH_SEPARATOR(*rhs)) { /*  but not rhs */
+            free((void*)rhs_alloc);
+            return synctex_NO;
+        }
         ++lhs;
         ++rhs;
         synctex_ignore_leading_dot_slash_in_path(&lhs);
         synctex_ignore_leading_dot_slash_in_path(&rhs);
         goto next_character;
-	} else if (SYNCTEX_IS_PATH_SEPARATOR(*rhs)) {/*  rhs points to a path separator but not lhs */
-		return synctex_NO;
-	} else if (SYNCTEX_ARE_PATH_CHARACTERS_EQUAL(*lhs,*rhs)){/*  uppercase do not match */
-		return synctex_NO;
-	} else if (!*lhs) {/*  lhs is at the end of the string */
-		return *rhs ? synctex_NO : synctex_YES;
-	} else if(!*rhs) {/*  rhs is at the end of the string but not lhs */
-		return synctex_NO;
-	}
-	++lhs;
-	++rhs;
-	goto next_character;
+    } else if (SYNCTEX_IS_PATH_SEPARATOR(*rhs)) { /*  rhs points to a path separator but not lhs */
+        free((void*)rhs_alloc);
+        return synctex_NO;
+    } else if (SYNCTEX_ARE_PATH_CHARACTERS_EQUAL(*lhs, *rhs)) { /*  uppercase do not match */
+        free((void*)rhs_alloc);
+        return synctex_NO;
+    } else if (!*lhs) { /*  lhs is at the end of the string */
+        if (*rhs) {
+            free((void*)rhs_alloc);
+            return synctex_NO;
+        } else {
+            free((void*)rhs_alloc);
+            return synctex_YES;
+        }
+        //return *rhs ? synctex_NO : synctex_YES;
+    } else if (!*rhs) { /*  rhs is at the end of the string but not lhs */
+        free((void*)rhs_alloc);
+        return synctex_NO;
+    }
+    ++lhs;
+    ++rhs;
+    goto next_character;
 }
 
 synctex_bool_t _synctex_path_is_absolute(const char * name) {
