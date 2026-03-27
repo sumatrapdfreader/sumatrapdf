@@ -235,10 +235,6 @@ workspace "SumatraPDF"
   filter {}
 
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
-  -- /utf-8 sets both source and execution charset to UTF-8
-  -- fixes compilation on non-English Windows (e.g. Chinese) where
-  -- default code page doesn't match source file encoding
-  buildoptions { "/utf-8" }
 
   location "this_is_invalid_location"
 
