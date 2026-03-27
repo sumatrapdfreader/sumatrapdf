@@ -3190,10 +3190,7 @@ TempStr HGLOBALToStrTemp(HGLOBAL h, bool isUnicode) {
     if (isUnicode) {
         res = ToUtf8Temp((WCHAR*)mem);
     } else {
-        // convert from ANSI codepage to UTF-8 so that non-ASCII paths
-        // (e.g. Chinese characters) are handled correctly
-        TempWStr ws = strconv::AnsiToWStrTemp((char*)mem);
-        res = ToUtf8Temp(ws);
+        res = str::DupTemp((char*)mem);
     }
     GlobalUnlock(h);
     return res;
