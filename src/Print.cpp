@@ -934,6 +934,16 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         }
     }
 
+    // re-validate engine - it may have been invalidated while message boxes were shown
+    dm = win->AsFixed();
+    if (!dm) {
+        goto Exit;
+    }
+    engine = dm->GetEngine();
+    if (!engine) {
+        goto Exit;
+    }
+
     sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
     pd = new PrintData(engine, printer, ranges, advanced, rotation, sel);
 
