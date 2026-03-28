@@ -594,6 +594,9 @@ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM
 }
 
 void UpdateToolbarFindText(MainWindow* win) {
+    if (!win->hwndToolbar) {
+        return;
+    }
     bool showUI = NeedsFindUI(win);
     HwndSetVisibility(win->hwndFindLabel, showUI);
     HwndSetVisibility(win->hwndFindBg, showUI);
@@ -752,6 +755,9 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 }
 
 void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
+    if (!win->hwndToolbar) {
+        return;
+    }
     const char* text = _TRA("Page:");
     if (!updateOnly) {
         HwndSetText(win->hwndPageLabel, text);
