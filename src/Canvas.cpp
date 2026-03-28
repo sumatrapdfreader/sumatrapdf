@@ -576,7 +576,7 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     DisplayModel* dm = win->AsFixed();
     CreateMovePatternLazy(win);
     RectF r = GetRect(annot);
-    int pageNo = dm->GetPageNoByPoint(pt);
+    int pageNo = PageNo(annot);
     Rect rScreen = dm->CvtToScreen(pageNo, r);
     win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};
     int offsetX = rScreen.x - pt.x;
