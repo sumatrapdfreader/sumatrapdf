@@ -1,9 +1,9 @@
 AppTranslator: SumatraPDF
-878236c7bd1f4c68c0420f1068e360992e215ffa
+92a3a4a4f798539cf290ab821aed82dfd2d231db
 :# File History
 am:# Ֆայլի պատմություն
 ar:# سجل الملفات
-br:# Histórico de Arquivos
+br:# Histórico dos Arquivos
 cn:# 文件历史记录
 co:# Cronolugia di schedariu
 de:# Dateiverlauf
@@ -11,7 +11,7 @@ el:# Ιστορικό αρχείων
 hi:फ़ाइल इतिहास
 ja:# ファイル履歴
 ml:ഫയൽ ചരിത്രം
-nl:# Bestandsgeschiedenis
+nl:# Bestand Geschiedenis
 pl:# Historia plików
 ru:# История файлов
 sk:# História súboru
@@ -47,7 +47,7 @@ kr:%s 주석. Ctrl+클릭으로 편집
 lv:%s anotācija. Ctrl+klikšķis lai rediģētu.
 ml:%s വ്യാഖ്യാനം. എഡിറ്റ് ചെയ്യാൻ Ctrl ക്ലിക്ക് ചെയ്യുക.
 my:%s anotasi. Ctrl+klik untuk edit.
-nl:%s aantekening. Ctrl+klik om te bewerken
+nl:%s notatie. Ctrl+klik voor bewerken.
 pl:Adnotacja %s. Ctrl+kliknięcie, aby edytować.
 pt:Anotação %s. Ctrl + clique pra editar.
 ro:%s adnotare. Ctrl+clic să modifici
@@ -11686,7 +11686,7 @@ ar:ملف مرفق
 az:Qoşma fayl
 bg:Прикачен файл
 bn:নথি সংযুক্তি
-br:Arquivo Anexo
+br:Arquivo Anexado
 by:Далучаны файл
 ca-xv:Fitxer adjunt
 ca:Fitxer adjunt
@@ -16177,7 +16177,7 @@ uk:Відкрити вкладення
 uz:Ilovani ochish
 :Open Current Document In New Tab
 am:Բացել ընթացիկ փաստաթուղթը նոր ներդիրում
-br:Abrir Documento Atual em Nova Aba
+br:Abrir o Documento Atual numa Nova Aba
 cn:在新标签页中打开当前文档
 co:Apre u ducumentu attuale in un’unghjetta nova
 de:Aktuelles Dokument in neuem Tab öffnen
@@ -16188,7 +16188,7 @@ sk:Otvoriť aktuálny dokument na novej karte
 tw:在新分頁中開啟目前文件
 :Open Current Document In New Window
 am:Բացել ընթացիկ փաստաթուղթը նոր պատուհանում
-br:Abrir Documento Atual em Nova Janela
+br:Abrir o Documento Atual numa Nova Janela
 cn:在新窗口中打开当前文档
 co:Apre u ducumentu attuale in una finestra nova
 de:Aktuelles Dokument in neuem Fenster öffnen
@@ -19943,7 +19943,7 @@ uz:SVG hujjatlari
 vn:Các Tài Liệu SVG
 :Save Annotations to a new PDF
 am:Պահպանեք ծանոթագրությունները նոր PDF ֆայլում
-br:Salvar Anotações em um PDF novo
+br:Salvar as Anotações num PDF novo
 cn:将标注保存到新的 PDF 文件
 co:Arregistrà l’annutazioni in un PDF novu
 de:Anmerkungen in neuer PDF-Datei speichern
@@ -25637,7 +25637,7 @@ sk:Zväčšiť: Prispôsobiť šírke
 tw:縮放：符合頁面寬度
 :Zoom: Fit Width And Continuous
 am:Դիտափոխում՝ հարմարեցնել լայնությանը և շարունակական
-br:Zoom: Ajustar pela Largura e Contínua
+br:Zoom: Ajustar pela Largura e Contínuo
 cn:缩放：适合宽度且连续显示
 co:Ingrandamentu : adattà à a larghezza è lettura in cuntinuu
 de:Zoom: Fortlaufend an Fensterbreite anpassen
@@ -25798,7 +25798,7 @@ sk:nepoužiť
 tw:不要使用
 :page %d,
 am:էջ %d,
-br:página %d,
+br:Página %d,
 cn:第 %d 页，
 co:pagina %d,
 de:Seite %d,
