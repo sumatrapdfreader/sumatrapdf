@@ -721,7 +721,8 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
 Exit:
     fz_free(ctx, fontname);
     if (!found) {
-        fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't find system font '%s'", orig_name);
+        fz_warn(ctx, "couldn't find system font '%s'", orig_name);
+        return NULL;
     }
     buffer = load_and_cache_font(ctx, found, orig_name);
     int use_glyph_bbox = !streq(found->fontface, "DroidSansFallback");
@@ -778,12 +779,7 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
     fz_font* font = NULL;
 
     /* try to find a matching system font before falling back to an approximate one */
-    fz_try(ctx) {
-        font = load_windows_font_by_name(ctx, fontname);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
+    font = load_windows_font_by_name(ctx, fontname);
     if (font) return font;
 
     /* try to fall back to a reasonable system font */
@@ -811,12 +807,9 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
                     font = load_windows_font_by_name(ctx, "DFKaiShu-SB-Estd-BF");
                     break;
                 case FZ_ADOBE_GB:
-                    fz_try(ctx) {
-                        font = load_windows_font_by_name(ctx, "KaiTi");
-                    }
-                    fz_catch(ctx) {
+                    font = load_windows_font_by_name(ctx, "KaiTi");
+                    if (!font) {
                         font = load_windows_font_by_name(ctx, "KaiTi_GB2312");
-                        fz_report_error(ctx);
                     }
                     break;
                 case FZ_ADOBE_JAPAN:
@@ -912,12 +905,7 @@ static fz_font* load_windows_fallback_font(fz_context* ctx, int script, int lang
     }
 
     /* try to find a matching system font before falling back to an approximate one */
-    fz_try(ctx) {
-        font = load_windows_font_by_name(ctx, font_name);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
+    font = load_windows_font_by_name(ctx, font_name);
     return font;
 }
 
