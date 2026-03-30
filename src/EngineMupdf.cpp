@@ -2992,13 +2992,13 @@ RenderedBitmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
         fzcookie = (fz_cookie*)cookie->GetData();
     }
 
+    ScopedCritSec cs(ctxAccess);
+
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false, fzcookie);
     if (!pageInfo || !pageInfo->page) {
         return nullptr;
     }
     fz_page* page = pageInfo->page;
-
-    ScopedCritSec cs(ctxAccess);
 
     if (disableAntiAlias) {
         fz_set_aa_level(ctx, 0);
