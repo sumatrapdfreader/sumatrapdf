@@ -2536,7 +2536,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    const char* srcFileName = engine->FilePath();
+    TempStr srcFileName = str::DupTemp(engine->FilePath());
     str::BufSet(dstFileName, dimof(dstFileName), srcFileName);
 
     ofn.lStructSize = sizeof(ofn);
