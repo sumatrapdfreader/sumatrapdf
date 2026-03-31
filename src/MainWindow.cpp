@@ -9,6 +9,7 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 #include "utils/GuessFileType.h"
+#include "utils/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -42,6 +43,13 @@
 #include "StressTesting.h"
 #include "Translations.h"
 #include "uia/Provider.h"
+
+#include "utils/Log.h"
+
+static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
+    logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
+    delete tabsCtrl;
+}
 #include "Theme.h"
 #include "Canvas.h"
 
@@ -130,13 +138,14 @@ MainWindow::~MainWindow() {
     auto tabs = Tabs();
     DeleteVecMembers(tabs);
     {
-        logf("~MainWindow: delete tabsCtrl: 0x%p, HWND: 0x%p\n", tabsCtrl, tabsCtrl->hwnd);
-        // Destroy the HWND first while tabsCtrl is still alive to handle
-        // any messages pumped by DestroyWindow. Then delete the C++ object.
-        // This prevents use-after-free when comctl32 dispatches messages
-        // during window destruction.
-        tabsCtrl->Destroy();
-        delete tabsCtrl;
+        TabsCtrl* tabsCtrlToDelete = tabsCtrl;
+        logf("~MainWindow: destroy tabsCtrl: 0x%p, HWND: 0x%p\n", tabsCtrlToDelete, tabsCtrlToDelete->hwnd);
+        // Tab close can re-enter comctl32 subclass dispatch while unwinding
+        // the current message. Destroy the HWND now, but defer deleting the
+        // C++ object until the UI task queue runs after message dispatch.
+        tabsCtrlToDelete->Destroy();
+        auto fn = MkFunc0(SafeDeleteTabsCtrl, tabsCtrlToDelete);
+        uitask::Post(fn, "SafeDeleteTabsCtrl");
         tabsCtrl = nullptr;
     }
 
