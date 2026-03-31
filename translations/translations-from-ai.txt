@@ -31460,3 +31460,147 @@ sp-rs:Prikaži trake za pomeranje
 sq:Shfaq Shiritat e Rrëshqitjes
 :Show Book&marks
 th:แสดงบุ๊กมาร์ก
+:File path not available
+am:የፋይል መንገድ አይገኝም
+:File path not available
+ar:مسار الملف غير متاح
+:File path not available
+br:N'eo ket hegerz hent ar restr
+:File path not available
+cn:文件路径不可用
+:File path not available
+co:Percorsu di u schedariu micca dispunibule
+:File path not available
+de:Dateipfad nicht verfügbar
+:File path not available
+el:Η διαδρομή αρχείου δεν είναι διαθέσιμη
+:File path not available
+hi:फ़ाइल पथ उपलब्ध नहीं है
+:File path not available
+it:Percorso file non disponibile
+:File path not available
+ja:ファイルパスが利用できません
+:File path not available
+ml:ഫയൽ പാത്ത് ലഭ്യമല്ല
+:File path not available
+nl:Bestandspad niet beschikbaar
+:File path not available
+pl:Ścieżka pliku niedostępna
+:File path not available
+ru:Путь к файлу недоступен
+:File path not available
+sk:Cesta k súboru nie je dostupná
+:File path not available
+sr-rs:Putanja fajla nije dostupna
+:File path not available
+tw:檔案路徑無法使用
+:File path not available
+az:Fayl yolu mövcud deyil
+:File path not available
+by:Шлях да файла недаступны
+:File path not available
+ca:Ruta del fitxer no disponible
+:File path not available
+cy:Llwybr ffeil ddim ar gael
+:File path not available
+cz:Cesta k souboru není k dispozici
+:File path not available
+es:Ruta de archivo no disponible
+:File path not available
+fa:مسیر فایل در دسترس نیست
+:File path not available
+fi:Tiedostopolku ei saatavilla
+:File path not available
+fo:Fílaleið ikki tøk
+:File path not available
+fr:Chemin du fichier non disponible
+:File path not available
+ga:Níl conair comhaid ar fáil
+:File path not available
+gl:Ruta do ficheiro non dispoñible
+:File path not available
+he:נתיב הקובץ אינו זמין
+:File path not available
+hu:A fájl elérési útja nem érhető el
+:File path not available
+id:Jalur file tidak tersedia
+:File path not available
+kr:파일 경로를 사용할 수 없습니다
+:File path not available
+lv:Faila ceļš nav pieejams
+:File path not available
+my:ဖိုင်လမ်းကြောင်း မရနိုင်ပါ
+:File path not available
+pt:Caminho do arquivo não disponível
+:File path not available
+ro:Calea fișierului nu este disponibilă
+:File path not available
+sat:ᱨᱮᱫ ᱰᱟᱦᱟᱨ ᱵᱟᱹᱱᱩᱜᱼᱟ
+:File path not available
+sl:Pot do datoteke ni na voljo
+:File path not available
+sv:Sökvägen till filen är inte tillgänglig
+:File path not available
+ta:கோப்பு பாதை கிடைக்கவில்லை
+:File path not available
+tr:Dosya yolu mevcut değil
+:File path not available
+uz:Fayl yo'li mavjud emas
+:File path not available
+af:Lêerpad nie beskikbaar nie
+:File path not available
+bg:Пътят до файла не е наличен
+:File path not available
+bn:ফাইল পাথ উপলব্ধ নেই
+:File path not available
+bs:Putanja fajla nije dostupna
+:File path not available
+ca-xv:Camí del fitxer no disponible
+:File path not available
+dk:Filsti ikke tilgængelig
+:File path not available
+et:Faili tee pole saadaval
+:File path not available
+eu:Fitxategiaren bidea ez dago erabilgarri
+:File path not available
+fy-nl:Triempad net beskikber
+:File path not available
+hr:Putanja datoteke nije dostupna
+:File path not available
+jv:Path berkas ora kasedhiya
+:File path not available
+ka:ფაილის გზა მიუწვდომელია
+:File path not available
+ku:Rêça pelê berdest nîne
+:File path not available
+kw:Henfordh restren ny vydh kavadow
+:File path not available
+lt:Failo kelias neprieinamas
+:File path not available
+mk:Патеката до датотеката не е достапна
+:File path not available
+mm:ဖိုင်လမ်းကြောင်း မရရှိနိုင်ပါ
+:File path not available
+ne:फाइल पथ उपलब्ध छैन
+:File path not available
+nn:Filstig ikkje tilgjengeleg
+:File path not available
+no:Filbane ikke tilgjengelig
+:File path not available
+pa:ਫਾਈਲ ਮਾਰਗ ਉਪਲਬਧ ਨਹੀਂ ਹੈ
+:File path not available
+si:ගොනු මාර්ගය ලබා ගත නොහැක
+:File path not available
+sn:Nzira yefaira haisi kuwanikwa
+:File path not available
+sp-rs:Putanja fajla nije dostupna
+:File path not available
+sq:Shtegu i skedarit nuk është i disponueshëm
+:File path not available
+th:ไม่พบเส้นทางไฟล์
+:File path not available
+tl:Hindi available ang landas ng file
+:File path not available
+uk:Шлях до файлу недоступний
+:File path not available
+vn:Đường dẫn tệp không khả dụng
