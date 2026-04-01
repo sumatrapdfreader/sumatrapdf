@@ -770,6 +770,7 @@ static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bol
     }
 
     font = load_windows_font_by_name(ctx, fontname);
+    if (!font) return NULL;
     /* use the font's own metrics for base 14 fonts */
     if (is_base_14) font->flags.ft_substitute = 0;
     return font;
