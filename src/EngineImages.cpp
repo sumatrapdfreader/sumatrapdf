@@ -184,8 +184,13 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     Graphics g(hDC);
     g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
+    if (this->disableAntiAlias) {
+        g.SetSmoothingMode(Gdiplus::SmoothingModeNone);
+        g.SetInterpolationMode(Gdiplus::InterpolationModeNearestNeighbor);
+    } else {
+        g.SetSmoothingMode(SmoothingModeAntiAlias);
+        g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+    }
     g.SetPageUnit(UnitPixel);
 
     Color white(0xFF, 0xFF, 0xFF);
@@ -491,6 +496,7 @@ class EngineImage : public EngineImages {
     EngineBase* Clone() override;
 
     TempStr GetPropertyTemp(const char* name) override;
+    void GetProperties(StrVec& keyValOut) override;
 
     static EngineBase* CreateFromFile(const char* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -641,6 +647,57 @@ bool EngineImage::FinishLoading() {
 #define PropertyTagXPSubject 0x9c9f
 #endif
 
+static bool GetImagePropertyItem(Bitmap* bmp, PROPID id, PropertyItem** itemOut) {
+    uint size = bmp->GetPropertyItemSize(id);
+    if (size == 0) {
+        return false;
+    }
+    PropertyItem* item = (PropertyItem*)malloc(size);
+    if (!item) {
+        return false;
+    }
+    Status ok = bmp->GetPropertyItem(id, size, item);
+    if (ok != Ok) {
+        free(item);
+        return false;
+    }
+    *itemOut = item;
+    return true;
+}
+
+// get a rational property as numerator/denominator
+static bool GetImagePropertyRational(Bitmap* bmp, PROPID id, ULONG& num, ULONG& den) {
+    PropertyItem* item = nullptr;
+    if (!GetImagePropertyItem(bmp, id, &item)) {
+        return false;
+    }
+    bool ok = (item->type == PropertyTagTypeRational) && (item->length >= 8);
+    if (ok) {
+        num = ((ULONG*)item->value)[0];
+        den = ((ULONG*)item->value)[1];
+    }
+    free(item);
+    return ok;
+}
+
+// get a short/long integer property
+static bool GetImagePropertyLong(Bitmap* bmp, PROPID id, ULONG& val) {
+    PropertyItem* item = nullptr;
+    if (!GetImagePropertyItem(bmp, id, &item)) {
+        return false;
+    }
+    bool ok = false;
+    if (item->type == PropertyTagTypeShort && item->length >= 2) {
+        val = *(USHORT*)item->value;
+        ok = true;
+    } else if (item->type == PropertyTagTypeLong && item->length >= 4) {
+        val = *(ULONG*)item->value;
+        ok = true;
+    }
+    free(item);
+    return ok;
+}
+
 static TempStr GetImagePropertyTemp(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     char* value = nullptr;
     uint size = bmp->GetPropertyItemSize(id);
@@ -686,6 +743,170 @@ TempStr EngineImage::GetPropertyTemp(const char* name) {
         return GetImagePropertyTemp(image, PropertyTagSoftwareUsed);
     }
     return nullptr;
+}
+
+void EngineImage::GetProperties(StrVec& keyValOut) {
+    EngineBase::GetProperties(keyValOut);
+
+    TempStr val;
+
+    // image dimensions
+    uint w = image->GetWidth();
+    uint h = image->GetHeight();
+    if (w > 0 && h > 0) {
+        val = str::FormatTemp("%u x %u", w, h);
+        AddProp(keyValOut, kPropImageSize, val);
+    }
+
+    // DPI
+    float dpiX = image->GetHorizontalResolution();
+    float dpiY = image->GetVerticalResolution();
+    if (dpiX > 0 && dpiY > 0) {
+        if (dpiX == dpiY) {
+            val = str::FormatTemp("%.0f", dpiX);
+        } else {
+            val = str::FormatTemp("%.0f x %.0f", dpiX, dpiY);
+        }
+        AddProp(keyValOut, kPropDpi, val);
+    }
+
+    // keywords
+    val = GetImagePropertyTemp(image, PropertyTagXPKeywords);
+    if (val) {
+        AddProp(keyValOut, kPropKeywords, val);
+    }
+
+    // comment
+    val = GetImagePropertyTemp(image, PropertyTagXPComment);
+    if (val) {
+        AddProp(keyValOut, kPropComment, val);
+    }
+
+    // camera make and model
+    val = GetImagePropertyTemp(image, PropertyTagEquipMake);
+    if (val) {
+        AddProp(keyValOut, kPropCameraMake, val);
+    }
+    val = GetImagePropertyTemp(image, PropertyTagEquipModel);
+    if (val) {
+        AddProp(keyValOut, kPropCameraModel, val);
+    }
+
+    // date original
+    val = GetImagePropertyTemp(image, PropertyTagExifDTOrig);
+    if (val) {
+        AddProp(keyValOut, kPropDateOriginal, val);
+    }
+
+    // exposure time
+    ULONG num, den;
+    if (GetImagePropertyRational(image, PropertyTagExifExposureTime, num, den)) {
+        if (den > 0 && num > 0) {
+            if (num == 1) {
+                val = str::FormatTemp("1/%u s", den);
+            } else {
+                val = str::FormatTemp("%u/%u s", num, den);
+            }
+            AddProp(keyValOut, kPropExposureTime, val);
+        }
+    }
+
+    // f-number
+    if (GetImagePropertyRational(image, PropertyTagExifFNumber, num, den)) {
+        if (den > 0) {
+            float fNum = (float)num / (float)den;
+            val = str::FormatTemp("f/%.1f", fNum);
+            AddProp(keyValOut, kPropFNumber, val);
+        }
+    }
+
+    // ISO speed
+    ULONG isoVal;
+    if (GetImagePropertyLong(image, PropertyTagExifISOSpeed, isoVal)) {
+        val = str::FormatTemp("ISO %u", isoVal);
+        AddProp(keyValOut, kPropIsoSpeed, val);
+    }
+
+    // focal length
+    if (GetImagePropertyRational(image, PropertyTagExifFocalLength, num, den)) {
+        if (den > 0) {
+            float fl = (float)num / (float)den;
+            val = str::FormatTemp("%.1f mm", fl);
+            AddProp(keyValOut, kPropFocalLength, val);
+        }
+    }
+
+    // focal length in 35mm equivalent
+    ULONG fl35;
+    if (GetImagePropertyLong(image, PropertyTagExifFocalLengthIn35mmFilm, fl35)) {
+        val = str::FormatTemp("%u mm", fl35);
+        AddProp(keyValOut, kPropFocalLength35mm, val);
+    }
+
+    // flash
+    ULONG flashVal;
+    if (GetImagePropertyLong(image, PropertyTagExifFlash, flashVal)) {
+        const char* flashStr = (flashVal & 1) ? "Yes" : "No";
+        AddProp(keyValOut, kPropFlash, flashStr);
+    }
+
+    // orientation
+    ULONG orient;
+    if (GetImagePropertyLong(image, PropertyTagOrientation, orient)) {
+        val = str::FormatTemp("%u", orient);
+        AddProp(keyValOut, kPropOrientation, val);
+    }
+
+    // exposure program
+    ULONG expProg;
+    if (GetImagePropertyLong(image, PropertyTagExifExposureProg, expProg)) {
+        // clang-format off
+        static const char* exposurePrograms[] = {
+            "Not defined", "Manual", "Normal program", "Aperture priority",
+            "Shutter priority", "Creative program", "Action program",
+            "Portrait mode", "Landscape mode",
+        };
+        // clang-format on
+        if (expProg < dimof(exposurePrograms)) {
+            AddProp(keyValOut, kPropExposureProgram, exposurePrograms[expProg]);
+        }
+    }
+
+    // metering mode
+    ULONG metering;
+    if (GetImagePropertyLong(image, PropertyTagExifMeteringMode, metering)) {
+        // clang-format off
+        static const char* meteringModes[] = {
+            "Unknown", "Average", "Center Weighted Average", "Spot",
+            "Multi Spot", "Pattern", "Partial",
+        };
+        // clang-format on
+        if (metering < dimof(meteringModes)) {
+            AddProp(keyValOut, kPropMeteringMode, meteringModes[metering]);
+        }
+    }
+
+    // white balance
+    ULONG wb;
+    if (GetImagePropertyLong(image, PropertyTagExifWhiteBalance, wb)) {
+        AddProp(keyValOut, kPropWhiteBalance, wb == 0 ? "Auto" : "Manual");
+    }
+
+    // exposure bias
+    if (GetImagePropertyRational(image, PropertyTagExifExposureBias, num, den)) {
+        if (den > 0) {
+            float bias = (float)(LONG)num / (float)(LONG)den;
+            val = str::FormatTemp("%+.1f EV", bias);
+            AddProp(keyValOut, kPropExposureBias, val);
+        }
+    }
+
+    // bits per sample
+    ULONG bps;
+    if (GetImagePropertyLong(image, PropertyTagBitsPerSample, bps)) {
+        val = str::FormatTemp("%u", bps);
+        AddProp(keyValOut, kPropBitsPerSample, val);
+    }
 }
 
 Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
@@ -1090,6 +1311,7 @@ class EngineCbx : public EngineImages {
     EngineBase* Clone() override;
 
     TempStr GetPropertyTemp(const char* name) override;
+    void GetProperties(StrVec& keyValOut) override;
 
     TocTree* GetToc() override;
 
@@ -1312,6 +1534,23 @@ TempStr EngineCbx::GetPropertyTemp(const char* name) {
     }
 
     return nullptr;
+}
+
+void EngineCbx::GetProperties(StrVec& keyValOut) {
+    EngineBase::GetProperties(keyValOut);
+
+    str::Str filesStr;
+    auto& fileInfos = cbxFile->GetFileInfos();
+    size_t n = fileInfos.size();
+    for (size_t i = 0; i < n; i++) {
+        auto* fi = fileInfos[i];
+        if (str::IsEmpty(fi->name)) {
+            continue;
+        }
+        filesStr.AppendChar('\n');
+        filesStr.Append(fi->name);
+    }
+    AddProp(keyValOut, kPropFiles, filesStr.CStr());
 }
 
 Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {

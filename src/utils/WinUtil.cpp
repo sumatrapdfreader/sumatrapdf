@@ -1298,6 +1298,38 @@ void LimitWindowSizeToScreen(HWND hwnd, SIZE& size) {
     }
 }
 
+// If the window is off-screen (e.g. a monitor was disconnected),
+// move it to the nearest visible monitor's work area.
+void HwndEnsureVisible(HWND hwnd) {
+    if (!hwnd) {
+        return;
+    }
+    Rect rect = WindowRect(hwnd);
+    if (rect.IsEmpty()) {
+        return;
+    }
+    Rect shifted = ShiftRectToWorkArea(rect, nullptr, false);
+    if (IsZoomed(hwnd)) {
+        // for maximized windows, check if the window's non-maximized position
+        // would be on a visible monitor; if not, move to primary and re-maximize
+        WINDOWPLACEMENT wp{};
+        wp.length = sizeof(wp);
+        if (GetWindowPlacement(hwnd, &wp)) {
+            Rect normal = ToRect(wp.rcNormalPosition);
+            Rect normalShifted = ShiftRectToWorkArea(normal);
+            if (normal != normalShifted) {
+                wp.rcNormalPosition = ToRECT(normalShifted);
+                SetWindowPlacement(hwnd, &wp);
+            }
+        }
+        return;
+    }
+    if (rect == shifted) {
+        return;
+    }
+    MoveWindow(hwnd, shifted);
+}
+
 // returns available area of the screen i.e. screen minus taskbar area
 Rect GetWorkAreaRect(Rect rect, HWND hwnd) {
     RECT tmpRect = ToRECT(rect);
@@ -2129,6 +2161,10 @@ bool HwndHasCaption(HWND hwnd) {
 }
 
 void HwndSetVisibility(HWND hwnd, bool visible) {
+    bool isVisible = IsWindowVisible(hwnd);
+    if (isVisible == visible) {
+        return;
+    }
     ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
 }
 
@@ -2961,6 +2997,9 @@ void TbSetPadding(HWND hwnd, int padX, int padY) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/tb-getrect
 void TbGetRectById(HWND hwnd, int buttonId, RECT* r) {
+    if (!hwnd) {
+        return;
+    }
     auto res = SendMessageW(hwnd, TB_GETRECT, buttonId, (LPARAM)r);
     if (res == 0) {
         logf("TbGetRect: hwnd=0x%p, buttonId: %d pos: (%d, %d) size: (%d, %d)\n", hwnd, buttonId, r->left, r->top,
@@ -2971,6 +3010,9 @@ void TbGetRectById(HWND hwnd, int buttonId, RECT* r) {
 }
 
 void TbGetRectByIdx(HWND hwnd, int buttonIdx, RECT* rc) {
+    if (!hwnd) {
+        return;
+    }
     auto res = SendMessageW(hwnd, TB_GETITEMRECT, buttonIdx, (LPARAM)rc);
     if (res == 0) {
         logf("TbGetRectByIdx: hwnd=0x%p, buttonId: %d\n", hwnd, buttonIdx);

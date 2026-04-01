@@ -403,8 +403,7 @@ static void TabsContextMenu(ContextMenuEvent* ev) {
             break;
         }
         case CmdProperties: {
-            bool extended = false;
-            ShowProperties(win->hwndFrame, tabUnderMouse->ctrl, extended);
+            ShowProperties(win->hwndFrame, tabUnderMouse->ctrl);
             break;
         }
     }
@@ -496,6 +495,9 @@ static NO_INLINE void VerifyWindowTab(MainWindow* win, WindowTab* tdata) {
 // This happens when a new document is loaded or when another tab is selected.
 void SaveCurrentWindowTab(MainWindow* win) {
     if (!win) {
+        return;
+    }
+    if (!win->tabsCtrl) {
         return;
     }
 
@@ -597,9 +599,6 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitleBar) {
     }
     win->tabsInTitlebar = inTitleBar;
     win->tabsCtrl->inTitleBar = inTitleBar;
-    if (inTitleBar != win->isMenuHidden) {
-        ToggleMenuBar(win, false);
-    }
     if (inTitleBar) {
         RelayoutCaption(win);
     }

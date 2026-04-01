@@ -195,6 +195,9 @@
     <ClInclude Include="..\src\HtmlFormatter.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ImageSaveCropResize.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Installer.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -241,6 +244,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\Scratch.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Screenshot.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SearchAndDDE.h">
@@ -497,6 +503,9 @@
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ImageSaveCropResize.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\Installer.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -551,6 +560,9 @@
     <ClCompile Include="..\src\Scratch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Screenshot.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SearchAndDDE.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -585,6 +597,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Tabs.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TestPlugin.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TestPreview.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Tester.cpp">
@@ -869,6 +887,9 @@
     <None Include="..\cmd\run-tests.ts">
       <Filter>cmd</Filter>
     </None>
+    <None Include="..\cmd\test-plugin.ts">
+      <Filter>cmd</Filter>
+    </None>
     <None Include="..\cmd\trans-dl.ts">
       <Filter>cmd</Filter>
     </None>
@@ -1014,6 +1035,9 @@
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\Tool-draw.md">
+      <Filter>docs\md</Filter>
+    </None>
+    <None Include="..\docs\md\Tool-extract-text-from-pdf.md">
       <Filter>docs\md</Filter>
     </None>
     <None Include="..\docs\md\Tool-extract.md">

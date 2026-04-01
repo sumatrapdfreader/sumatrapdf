@@ -64,8 +64,8 @@ TempStr GetShortcutPathTemp(int csidl);
 bool ExtractInstallerFiles(char* dir);
 
 char* GetExistingInstallationDir();
-
 void GetPreviousInstallInfo(PreviousInstallationInfo* info);
+bool IsOurExeInstalled();
 
 char* GetInstallationFilePathTemp(const char* installDir, const char* name);
 

@@ -25,6 +25,10 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 Kind kindTabs = "tabs";
 
+// non-selected tabs narrower than this hide their close button so that
+// clicks drag/select instead of accidentally closing the tab
+constexpr int kMinTabWidthForClose = 64;
+
 using Gdiplus::Bitmap;
 using Gdiplus::Color;
 using Gdiplus::CompositingQualityHighQuality;
@@ -71,12 +75,13 @@ void TabsCtrl::LayoutTabs() {
     tabSize = {dx, dy};
     // logfa("TabsCtrl::Layout size: (%d, %d), tab size: (%d, %d)\n", rect.dx, rect.dy, tabSize.dx, tabSize.dy);
 
-    int closeDy = DpiScale(hwnd, 8);
+    int closeDy = DpiScale(hwnd, 16);
     int closeDx = closeDy;
     int closeY = (dy - closeDy) / 2;
     // logfa("  closeDx: %d, closeDy: %d\n", closeDx, closeDy);
 
     bool isRtl = HwndIsRtl(hwnd);
+    int closePad = 8; // padding between close circle and tab edge
 
     HFONT hfont = GetFont();
     int x = isRtl ? rect.dx : 0;
@@ -87,11 +92,13 @@ void TabsCtrl::LayoutTabs() {
         if (isRtl) {
             xEnd = x - dx;
             ti->r = {xEnd, 0, dx, dy};
-            ti->rClose = {xEnd + 8, closeY, closeDx, closeDy};
+            ti->rClose = {xEnd + closePad, closeY, closeDx, closeDy};
+            ti->rCloseHit = {xEnd, 0, closeDx + 2 * closePad, dy};
         } else {
             xEnd = x + dx;
             ti->r = {x, 0, dx, dy};
-            ti->rClose = {xEnd - closeDx - 8, closeY, closeDx, closeDy};
+            ti->rClose = {xEnd - closeDx - closePad, closeY, closeDx, closeDy};
+            ti->rCloseHit = {xEnd - closeDx - 2 * closePad, 0, closeDx + 2 * closePad, dy};
         }
         ti->titleSize = HwndMeasureText(hwnd, ti->text, hfont);
         int y = (dy - ti->titleSize.dy) / 2;
@@ -143,7 +150,9 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
             continue;
         }
         res.tabIdx = i;
-        res.overClose = ti->rClose.Contains(pt);
+        bool isSelected = (i == GetSelected());
+        bool closeActive = isSelected || r.dx >= kMinTabWidthForClose;
+        res.overClose = closeActive && ti->rCloseHit.Contains(pt);
         res.tabInfo = ti;
         Rect rightHalf = r;
         int halfDx = r.dx / 2;
@@ -159,11 +168,6 @@ TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
 Gdiplus::Color GdipCol(COLORREF c) {
     return GdiRgbFromCOLORREF(c);
 }
-
-// if true, on hover we paint the background of tab close (X) button
-constexpr bool closeCircleEnabled = true;
-constexpr float closePenWidth = 1.0f;
-constexpr COLORREF circleColor = RgbToCOLORREF(0xC13535);
 
 bool TabsCtrl::IsValidIdx(int idx) {
     return idx >= 0 && idx < TabCount();
@@ -212,21 +216,18 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     COLORREF tabBgSelected = ThemeControlBackgroundColor();
     COLORREF tabBgHighlight;
     COLORREF tabBgBackground;
-    if (IsLightColor(tabBgSelected)) {
-        tabBgBackground = AdjustLightness2(tabBgSelected, -25);
-        tabBgHighlight = AdjustLightness2(tabBgSelected, -35);
-    } else {
-        tabBgBackground = AdjustLightness2(tabBgSelected, 25);
-        tabBgHighlight = AdjustLightness2(tabBgSelected, 35);
-    }
+    tabBgBackground = AccentColor(tabBgSelected, 25);
+    tabBgHighlight = AccentColor(tabBgSelected, 35);
 
     COLORREF tabBgCol;
     for (int i = 0; i < n; i++) {
         // Get the correct colors based on the state and the current theme
         tabBgCol = tabBgBackground;
-        if (selectedIdx == i) {
+        bool isSelected = selectedIdx == i;
+        bool isUnderMouse = tabUnderMouse == i;
+        if (isSelected) {
             tabBgCol = tabBgSelected;
-        } else if (tabUnderMouse == i) {
+        } else if (isUnderMouse) {
             tabBgCol = tabBgHighlight;
         }
 
@@ -240,32 +241,19 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
         gr = ToGdipRect(ti->r);
         gfx.FillRectangle(&br, gr);
 
-        if (ti->canClose && (i == tabUnderMouse || i == selectedIdx)) {
-            r = ti->rClose;
-            if (i == tabUnderMouse && overClose && closeCircleEnabled) {
-                // draw bacground of X
-                Rect cr = r;
-                cr.Inflate(3, 3);
-                gr = ToGdipRect(cr);
-                br.SetColor(GdipCol(circleColor));
-                gfx.FillRectangle(&br, gr);
-            }
+        // debug: paint close hit area in light green
+        if (false && ti->canClose && (i == tabUnderMouse)) {
+            Gdiplus::SolidBrush dbgBr(Gdiplus::Color(80, 0, 255, 0));
+            gfx.FillRectangle(&dbgBr, ToGdipRect(ti->rCloseHit));
+        }
 
-            // draw X with a lighter color
-            gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
-            gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
-            Color closeCol = GdipCol(textColor);
-            closeCol = Color(128 + 64, closeCol.GetR(), closeCol.GetG(), closeCol.GetB());
-            br.SetColor(closeCol);
-            Pen penX(&br, closePenWidth);
-            Gdiplus::Point p1(r.x, r.y);
-            Gdiplus::Point p2(r.x + r.dx, r.y + r.dy);
-            gfx.DrawLine(&penX, p1, p2);
-            p1 = {r.x + r.dx, r.y};
-            p2 = {r.x, r.y + r.dy};
-            gfx.DrawLine(&penX, p1, p2);
-            gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
-            gfx.SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+        bool closeVisible = ti->canClose && (isSelected || (isUnderMouse && ti->r.dx >= kMinTabWidthForClose));
+        if (closeVisible) {
+            DrawCloseButtonArgs closeArgs;
+            closeArgs.hdc = hdc;
+            closeArgs.r = ti->rClose;
+            closeArgs.isHover = overClose && isUnderMouse;
+            DrawCloseButton(closeArgs);
         }
 
         // draw text
@@ -282,6 +270,25 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
         br.SetColor(GdipCol(textColor));
         TempWStr ws = ToWStrTemp(ti->text);
         gfx.DrawString(ws, -1, &f, rTxt, &sf, &br);
+
+        // draw red dot after tab text for dirty (unsaved) tabs
+        if (ti->isDirty) {
+            gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+            // measure actual rendered text width (may be truncated with ellipsis)
+            Gdiplus::RectF bounds;
+            gfx.MeasureString(ws, -1, &f, rTxt, &sf, &bounds);
+            int dotRadius = DpiScale(hwnd, 3);
+            int dotX = (int)(bounds.X + bounds.Width) + dotRadius;
+            // clamp to not exceed the text area
+            int maxX = (int)(rTxt.X + rTxt.Width) - dotRadius * 2;
+            if (dotX > maxX) {
+                dotX = maxX;
+            }
+            int dotY = ti->r.y + (ti->r.dy - dotRadius * 2) / 2;
+            SolidBrush redBr(Color(255, 0xEE, 0x22, 0x22));
+            gfx.FillEllipse(&redBr, dotX, dotY, dotRadius * 2, dotRadius * 2);
+            gfx.SetSmoothingMode(Gdiplus::SmoothingModeNone);
+        }
     }
 }
 
@@ -487,10 +494,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // Check if mouse has moved beyond system drag threshold
     bool beyondDragThreshold = false;
     if (msg == WM_MOUSEMOVE && GetCapture() == hwnd && !draggingTab) {
-        int cxDrag = GetSystemMetrics(SM_CXDRAG);
-        int cyDrag = GetSystemMetrics(SM_CYDRAG);
-        beyondDragThreshold = (abs(mousePos.x - grabLocation.x - GetTab(tabHighlighted)->r.x) > cxDrag) ||
-                              (abs(mousePos.y - grabLocation.y - GetTab(tabHighlighted)->r.y) > cyDrag);
+        if (tabHighlighted >= 0 && tabHighlighted < TabCount()) {
+            int cxDrag = GetSystemMetrics(SM_CXDRAG);
+            int cyDrag = GetSystemMetrics(SM_CYDRAG);
+            beyondDragThreshold = (abs(mousePos.x - grabLocation.x - GetTab(tabHighlighted)->r.x) > cxDrag) ||
+                                  (abs(mousePos.y - grabLocation.y - GetTab(tabHighlighted)->r.y) > cyDrag);
+        }
     }
 
     switch (msg) {
@@ -598,7 +607,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 SetSelected(tabUnderMouse);
                 TriggerSelectionChanged(this);
             }
-            TabInfo* ti = GetTab(GetSelected());
+            TabInfo* ti = GetTab(tabUnderMouse);
             if (ti->isPinned) {
                 return 0;
             }
@@ -680,8 +689,17 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
         }
 
-        case WM_ERASEBKGND:
+        case WM_ERASEBKGND: {
+            // just paint with the background color to avoid flickering, we will paint the tabs in WM_PAINT
+            if (!IsCurrentThemeDefault()) {
+                HDC hdc = (HDC)wp;
+                RECT rc = ClientRECT(hwnd);
+                HBRUSH hbr = CreateSolidBrush(ThemeControlBackgroundColor());
+                FillRect(hdc, &rc, hbr);
+                DeleteObject(hbr);
+            }
             return TRUE; // we handled it so don't erase
+        }
 
         case WM_NCPAINT:
             return 0; // prevent native tab control from drawing its edge
@@ -788,6 +806,14 @@ void TabsCtrl::SetTextAndTooltip(int idx, const char* text, const char* tooltip)
     LayoutTabs();
 }
 
+void TabsCtrl::SetTabDirty(int idx, bool dirty) {
+    TabInfo* tab = GetTab(idx);
+    if (tab && tab->isDirty != dirty) {
+        tab->isDirty = dirty;
+        LayoutTabs(); // rebuilds tooltips from current ti->tooltip values
+    }
+}
+
 // returns userData because it's not owned by TabsCtrl
 UINT_PTR TabsCtrl::RemoveTab(int idx) {
     ReportIf(idx < 0);
@@ -844,7 +870,21 @@ int TabsCtrl::SetSelected(int idx) {
 }
 
 void TabsCtrl::SetHighlighted(int idx) {
+    int oldSelectedIdx = GetSelected();
+    if (IsValidIdx(tabForceShowSelected)) {
+        oldSelectedIdx = tabForceShowSelected;
+    }
+    int newSelectedIdx = GetSelected();
+    if (IsValidIdx(idx)) {
+        newSelectedIdx = idx;
+    }
+    if (tabForceShowSelected == idx) {
+        return;
+    }
     tabForceShowSelected = idx;
+    if (oldSelectedIdx == newSelectedIdx) {
+        return;
+    }
     HwndRepaintNow(hwnd);
 }
 

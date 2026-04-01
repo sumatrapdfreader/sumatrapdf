@@ -84,6 +84,8 @@ Staring in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you ca
 
 [trace](Tool-trace.md)
 
+[Extract text from PDF](Tool-extract-text-from-pdf.md)
+
 :columns
 
 ## Misc docs

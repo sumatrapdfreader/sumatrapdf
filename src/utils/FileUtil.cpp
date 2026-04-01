@@ -563,6 +563,23 @@ TempStr GetPathInExeDirTemp(const char* fileName) {
     return path;
 }
 
+// If path doesn't exist, returns it as-is.
+// Otherwise generates unique path by inserting ".1", ".2" etc. before extension.
+TempStr MakeUniqueFilePathTemp(const char* path) {
+    if (!file::Exists(path)) {
+        return str::DupTemp(path);
+    }
+    TempStr noExt = path::GetPathNoExtTemp(path);
+    TempStr ext = path::GetExtTemp(path);
+    for (int i = 1; i < 10000; i++) {
+        TempStr candidate = str::FormatTemp("%s.%d%s", noExt, i, ext);
+        if (!file::Exists(candidate)) {
+            return candidate;
+        }
+    }
+    return str::DupTemp(path);
+}
+
 namespace file {
 
 FILE* OpenFILE(const char* path) {
@@ -817,6 +834,20 @@ bool SetZoneIdentifier(const char* filePath, int zoneId) {
 bool DeleteZoneIdentifier(const char* filePath) {
     char* path = str::JoinTemp(filePath, ":Zone.Identifier");
     return Delete(path);
+}
+
+bool Rename(const char* newPath, const char* oldPath) {
+    if (!newPath || !oldPath) {
+        return false;
+    }
+    WCHAR* newPathW = ToWStrTemp(newPath);
+    WCHAR* oldPathW = ToWStrTemp(oldPath);
+    BOOL ok = MoveFileW(oldPathW, newPathW);
+    if (!ok) {
+        LogLastError();
+        return false;
+    }
+    return true;
 }
 
 } // namespace file

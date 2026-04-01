@@ -36,6 +36,7 @@
 #include "Theme.h"
 
 #include "utils/Log.h"
+#include <Notifications.h>
 
 // workaround for OnMenuExit
 // if this flag is set, CloseWindow will not save prefs before closing the window.
@@ -102,6 +103,7 @@ static void SetCommandNameAndShortcut(CustomCommand* cmd, const char* name, cons
     }
     if (!IsValidShortcutString(key)) {
         logf("SetCommandNameAndShortcut: '%s' is not a valid shortcut for '%s'\n", key, cmd->definition);
+        MaybeDelayedWarningNotification("'%s' is not a valid shortcut for '%s'", key, cmd->definition);
         return;
     }
     cmd->key = str::Dup(key);
@@ -168,6 +170,11 @@ static void CreateCustomShortcuts() {
         if (!cmd) {
             continue;
         }
+        // if command already has a key bound (from a previous shortcut entry),
+        // create a separate command so both shortcuts work
+        if (cmd->key && !str::IsEmptyOrWhiteSpace(shortcut->key)) {
+            cmd = CreateCustomCommand(shortcut->cmd, cmd->origId, nullptr);
+        }
         shortcut->cmdId = cmd->id;
         SetCommandNameAndShortcut(cmd, shortcut->name, shortcut->key);
     }
@@ -190,14 +197,20 @@ bool LoadSettings() {
         prefsData.Free();
     }
 
-    if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
+    if (trans::ValidateLangCode(gprefs->uiLanguage)) {
+        SetCurrentLang(gprefs->uiLanguage);
+    } else {
         // guess the ui language on first start
         str::ReplaceWithCopy(&gprefs->uiLanguage, trans::DetectUserLang());
     }
+
     gprefs->lastPrefUpdate = file::GetModificationTime(settingsPath);
     gprefs->defaultDisplayModeEnum = DisplayModeFromString(gprefs->defaultDisplayMode, DisplayMode::Automatic);
     gprefs->defaultZoomFloat = ZoomFromString(gprefs->defaultZoom, kZoomActualSize);
     ReportIf(!IsValidZoom(gprefs->defaultZoomFloat));
+    if (gprefs->defaultImageZoom) {
+        gprefs->defaultImageZoomFloat = ZoomFromString(gprefs->defaultImageZoom, 0);
+    }
 
     int weekDiff = GetWeekCount() - gprefs->openCountWeek;
     gprefs->openCountWeek = GetWeekCount();
@@ -399,6 +412,9 @@ bool SaveSettings() {
     // update display mode and zoom fields from internal values
     str::ReplaceWithCopy(&gGlobalPrefs->defaultDisplayMode, DisplayModeToString(gGlobalPrefs->defaultDisplayModeEnum));
     ZoomToString(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat, nullptr);
+    if (gGlobalPrefs->defaultImageZoomFloat != 0) {
+        ZoomToString(&gGlobalPrefs->defaultImageZoom, gGlobalPrefs->defaultImageZoomFloat, nullptr);
+    }
 
     TempStr path = GetSettingsPathTemp();
     ReportIf(!path);

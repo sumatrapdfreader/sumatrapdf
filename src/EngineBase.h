@@ -379,6 +379,8 @@ class EngineBase {
     bool disableAntiAlias = false;
     int pageCount = -1;
 
+    StrVec errors;
+
     // TODO: migrate other engines to use this
     AutoFreeStr fileNameBase;
 
@@ -433,7 +435,7 @@ class EngineBase {
     // keys are names of properties the caller wants. If given, we append those
     // proerties in this order and potentially add more
     // if keys are empty, we put them in order we want
-    virtual void GetProperties(const StrVec& keys, StrVec& keyValOut);
+    virtual void GetProperties(StrVec& keyValOut);
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

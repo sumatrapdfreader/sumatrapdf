@@ -10,5 +10,8 @@ void CancelDrag(MainWindow*);
 
 extern Kind kNotifAnnotation;
 
+void RegisterCanvasDropTarget(HWND hwndCanvas);
+void RevokeCanvasDropTarget(HWND hwndCanvas);
+
 // Timer for mouse wheel smooth scrolling
 constexpr UINT_PTR kSmoothScrollTimerID = 6;

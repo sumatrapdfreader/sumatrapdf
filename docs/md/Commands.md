@@ -78,7 +78,9 @@ CmdToggleMangaMode,,Toggle Manga Mode,
 CmdToggleMenuBar,F9,Toggle Menu Bar,
 CmdTogglePageInfo,Shift + i,Show / Hide Current Page Number,
 CmdToggleScrollbars,,Toggle Scrollbars,
+CmdToggleOverlayScrollbar,,Toggle Overlay Scrollbar,ver 3.7+
 CmdToggleToolbar,F8,Toggle Toolbar,
+CmdToggleUseTabs,,Toggle Use Tabs,"Toggle UseTabs setting, only affects new windows, ver 3.7+"
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+
 CmdSelectNextTheme,,Select Next Theme,ver 3.5+
 CmdToggleLinks,,Toggle Show Links,"Toggle drawing blue rectangle around links, ver 3.6+"
@@ -239,16 +241,23 @@ CmdInvokeInverseSearch,,Invoke Inverse Search,ver 3.6+
 ## System
 
 ```commands
-Command IDs,Keyboard shortcuts,Command Palette
-CmdAdvancedOptions,,Advanced Options (Settings)...
-CmdAdvancedSettings,,Advanced Options (Settings)...
-CmdChangeLanguage,,Change Language...
-CmdCheckUpdate,,Check For Updates
-CmdClearHistory,,Clear History
-CmdContributeTranslation,,Contribute Translation
-CmdForgetSelectedDocument,,Remove Selected Document From History
-CmdOptions,,Options...
-CmdShowLog,,Show Logs
+Command IDs,Keyboard shortcuts,Command Palette,Notes
+CmdAdvancedOptions,,Advanced Options (Settings)...,
+CmdAdvancedSettings,,Advanced Options (Settings)...,
+CmdChangeLanguage,,Change Language...,
+CmdCheckUpdate,,Check For Updates,
+CmdClearHistory,,Clear History,
+CmdContributeTranslation,,Contribute Translation,
+CmdForgetSelectedDocument,,Remove Selected Document From History,
+CmdListPrinters,,List Printers,ver 3.7+
+CmdOptions,,Options...,
+CmdScreenshot,,Take Screenshot,ver 3.7+
+CmdCropImage,,Crop Image,ver 3.7+
+CmdResizeImage,,Resize Image,ver 3.7+
+CmdSaveImage,,Save Image,"Save image from context menu, ver 3.7+"
+CmdPasteClipboardImage,,Paste Image From Clipboard,"Paste image from clipboard and open it, ver 3.7+"
+CmdShowErrors,,Show Errors,"Show mupdf warnings/errors in right-click context menu, ver 3.7+"
+CmdShowLog,,Show Logs,
 ```
 
 ## Help
@@ -267,6 +276,12 @@ CmdHelpVisitWebsite,,Help: SumatraPDF Website
 Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdToggleInverseSearch,,Toggle Inverse Search,"temporarily disable TeX inverse search on left mouse click, ver 3.6+"
 CmdToggleAntiAlias,,Toggle Anti-Alias Rendering,"Toggle anti-alias rendering in pdf and epub documents, ver 3.6+"
+CmdToggleSmoothScroll,,Toggle Smooth Scroll,"Toggle SmoothScroll advanced setting, ver 3.7+"
+CmdToggleHideScrollbar,,Toggle Hide Scrollbar,"Toggle HideScrollbar advanced setting, ver 3.7+"
+CmdToggleScrollbarInSinglePage,,Toggle Scrollbar In Single Page,"Toggle ScrollbarInSinglePage advanced setting, ver 3.7+"
+CmdToggleLazyLoading,,Toggle Lazy Loading,"Toggle LazyLoading advanced setting, ver 3.7+"
+CmdToggleWindowsPreviewer,,Register / Un-register Windows Previewer,"Only available when SumatraPDF is installed. Registers or un-registers the PDF preview handler for Windows Explorer preview pane, ver 3.7+"
+CmdToggleWindowsSearchFilter,,Register / Un-register Windows Search Filter,"Only available when SumatraPDF is installed. Registers or un-registers the PDF search filter for Windows Search indexing, ver 3.7+"
 ```
 
 ## Debug

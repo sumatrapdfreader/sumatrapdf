@@ -12,6 +12,16 @@ void UpdateToolbarPageText(MainWindow*, int pageCount, bool updateOnly = false);
 void UpdateFindbox(MainWindow*);
 void SetToolbarButtonEnableState(MainWindow*, int cmdId, bool isEnabled);
 void SetToolbarButtonCheckedState(MainWindow*, int cmdId, bool isChecked);
+bool IsShowingToolbar(MainWindow*);
 void ShowOrHideToolbar(MainWindow*);
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
+
+void CreateMenuBarRebar(MainWindow*);
+void DestroyMenuBarRebar(MainWindow*);
+void ShowMenuBarRebar(MainWindow*);
+void RebuildMenuBarButtons(MainWindow*);
+bool IsShowingMenuBarRebar(MainWindow*);
+bool HandleMenuBarCommand(MainWindow*, int cmdId);
+bool ActivateMenuBarByAccel(MainWindow*, WCHAR accel);
+void UpdateCustomMenuBarMenuSelect(MainWindow*, WPARAM, LPARAM);

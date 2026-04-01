@@ -351,7 +351,8 @@ h6 {
 
 .toc-wrapper {
   position: fixed;
-  top: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   right: 1rem;
   z-index: 50;
 
@@ -891,16 +892,19 @@ blockquote {
 
 .sans {
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji",
-    "Segoe UI Symbol";
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+    "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 .code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
 .serif {
-  font-family: Lyon-Text, Georgia, KaiTi, STKaiTi, "华文楷体", KaiTi_GB2312, "楷体_GB2312", serif;
+  font-family:
+    Lyon-Text, Georgia, KaiTi, STKaiTi, "华文楷体", KaiTi_GB2312, "楷体_GB2312",
+    serif;
 }
 
 .mono {
@@ -1166,4 +1170,16 @@ blockquote {
 
 .breadcrumbs > div:last-child {
   font-weight: bold;
+}
+
+.breadcrumbs > a {
+  margin-left: auto;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.5;
+  font-size: 0.875rem;
+}
+
+.grow {
+  flex-grow: 1;
 }

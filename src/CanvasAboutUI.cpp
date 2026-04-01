@@ -28,6 +28,8 @@
 #include "Translations.h"
 #include "Theme.h"
 
+#include "utils/Log.h"
+
 static void OnPaintAbout(MainWindow* win) {
     auto t = TimeGet();
     PAINTSTRUCT ps;
@@ -167,8 +169,21 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         case WM_PAINT:
+            if (gRedrawLog) {
+                logf("redraw: WM_PAINT hwnd=0x%p (canvas-about)\n", hwnd);
+            }
             OnPaintAbout(win);
             return 0;
+
+        case WM_VSCROLL:
+            HomePageOnVScroll(win, wp);
+            return 0;
+
+        case WM_MOUSEWHEEL: {
+            int delta = GET_WHEEL_DELTA_WPARAM(wp);
+            HomePageOnMouseWheel(win, delta);
+            return 0;
+        }
 
         default:
             return DefWindowProc(hwnd, msg, wp, lp);

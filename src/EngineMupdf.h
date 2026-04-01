@@ -55,6 +55,7 @@ class EngineMupdf : public EngineBase {
 
     bool HasClipOptimizations(int pageNo) override;
     TempStr GetPropertyTemp(const char* name) override;
+    void GetProperties(StrVec& keyValOut) override;
 
     bool BenchLoadPage(int pageNo) override;
 

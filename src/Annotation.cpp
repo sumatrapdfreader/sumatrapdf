@@ -382,7 +382,13 @@ void DeleteAnnotation(Annotation* annot) {
         return;
     }
     EngineMupdf* e = annot->engine;
+    if (!e) {
+        return;
+    }
     auto a = annot->pdfannot;
+    if (!a) {
+        return;
+    }
     bool failed = false;
     {
         auto ctx = e->Ctx();

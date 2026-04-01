@@ -31,6 +31,7 @@
 #include "Version.h"
 #include "Theme.h"
 #include "AppSettings.h"
+#include "OverlayScrollbar.h"
 #include "DarkModeSubclass.h"
 #include "utils/Log.h"
 
@@ -618,7 +619,6 @@ void DrawAboutPage(MainWindow* win, HDC hdc) {
 
 /* alternate static page to display when no document is loaded */
 
-constexpr int kThumbsMaxCols = 5;
 constexpr int kThumbsSeparatorDy = 2;
 constexpr int kThumbsBorderDx = 1;
 #define kThumbsMarginLeft DpiScale(hdc, 40)
@@ -670,6 +670,9 @@ struct HomePageLayout {
     VirtWndText* openDoc = nullptr;
     VirtWndText* hideShowFreqRead = nullptr;
     Vec<ThumbnailLayout> thumbnails; // info for each thumbnail
+    int totalContentDy = 0;          // total height of all thumbnail rows
+    int thumbsVisibleDy = 0;         // visible height for thumbnails area
+    Rect rcThumbsArea;               // clip rect for thumbnails
 
     // promotion
     Promote* promoteSelected = nullptr; // not owned, points into promote list
@@ -724,6 +727,7 @@ static Promote* ParsePromoteFromString(const char* s) {
 }
 
 constexpr int kOpenDocumentYShift = 7;
+constexpr int kThumbsMiddleMargin = 32;
 
 void LayoutHomePage(HomePageLayout& l) {
     if (!l.promote) {
@@ -756,27 +760,22 @@ void LayoutHomePage(HomePageLayout& l) {
 
     l.rcLine = {0, sz.dy, rc.dx, 0};
 
-    Rect& titleBox = l.rcAppWithVer;
-    rc.SubTB(titleBox.dy, 0);
-
-    int dx =
+    // --- Pre-compute thumbnail grid x offset so header can align with it ---
+    int nFilesForLayout = fileStates.Size();
+    int colsForLayout =
         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
-    int thumbsCols = limitValue(dx, 1, kThumbsMaxCols);
-    int dy =
-        (rc.dy - kThumbsMarginTop - kThumbsMarginBottom + kThumbsSpaceBetweenY) / (kThumbnailDy + kThumbsSpaceBetweenY);
-    int thumbsRows = std::min(dy, kFileHistoryMaxFrequent / thumbsCols);
-    int x = rc.x + kThumbsMarginLeft +
-            (rc.dx - thumbsCols * kThumbnailDx - (thumbsCols - 1) * kThumbsSpaceBetweenX - kThumbsMarginLeft -
-             kThumbsMarginRight) /
-                2;
-    rc.y = 0;
-    Point ptOff(x, rc.y + kThumbsMarginTop);
-    if (ptOff.x < DpiScale(hdc, kInnerPadding)) {
-        ptOff.x = DpiScale(hdc, kInnerPadding);
-    } else if (fileStates.size() == 0) {
-        ptOff.x = kThumbsMarginLeft;
+    int thumbsColsForLayout = std::max(colsForLayout, 1);
+    int thumbsStartX = rc.x + kThumbsMarginLeft +
+                       (rc.dx - thumbsColsForLayout * kThumbnailDx - (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX -
+                        kThumbsMarginLeft - kThumbsMarginRight) /
+                           2;
+    if (thumbsStartX < DpiScale(hdc, kInnerPadding)) {
+        thumbsStartX = DpiScale(hdc, kInnerPadding);
+    } else if (nFilesForLayout == 0) {
+        thumbsStartX = kThumbsMarginLeft;
     }
 
+    // --- Step 1: layout header at the top ---
     const char* txt = _TRA("Recently Opened");
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
@@ -786,9 +785,10 @@ void LayoutHomePage(HomePageLayout& l) {
     hdr->isRtl = isRtl;
     Size txtSize = hdr->GetIdealSize(true);
 
-    Rect rcHdr(ptOff.x, rc.y + (kThumbsMarginTop - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    int hdrY = DpiScale(hdc, 8);
+    Rect rcHdr(thumbsStartX, hdrY, txtSize.dx, txtSize.dy);
     if (isRtl) {
-        rcHdr.x = rc.dx - ptOff.x - rcHdr.dx;
+        rcHdr.x = rc.dx - thumbsStartX - rcHdr.dx;
     }
     hdr->SetBounds(rcHdr);
 
@@ -824,7 +824,49 @@ void LayoutHomePage(HomePageLayout& l) {
     auto sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
     win->staticLinks.Append(sl);
 
-    int nFiles = fileStates.Size();
+    int headerBottomY = rcHdr.y + rcHdr.dy;
+
+    // --- Step 2: calculate promotion area at the bottom (before thumbnails) ---
+    int promoHeight = 0;
+    if (l.promote) {
+        HFONT fontPromoTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        Size titleSize = HdcMeasureText(hdc, "Try my other software", DT_LEFT, fontPromoTitle);
+        HFONT fontPromoName = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+        int n = ListLen(l.promote);
+        int idx = rand() % n;
+        Promote* p = l.promote;
+        for (int i = 0; i < idx; i++) {
+            p = p->next;
+        }
+        l.promoteSelected = p;
+        Size nameSize = HdcMeasureText(hdc, p->name, DT_LEFT, fontPromoName);
+        int padding = DpiScale(hdc, 8);
+        promoHeight = titleSize.dy / 2 + padding + std::max(nameSize.dy, titleSize.dy) + 2 * padding;
+    }
+
+    // --- Step 3: middle area for thumbnails ---
+    int thumbsTopY = headerBottomY + kThumbsMiddleMargin;
+    int thumbsBottomY = rc.dy - promoHeight - kThumbsMiddleMargin;
+    int thumbsVisibleDy = std::max(0, thumbsBottomY - thumbsTopY);
+
+    l.rcThumbsArea = {0, thumbsTopY, rc.dx, thumbsVisibleDy};
+
+    int nFiles = nFilesForLayout;
+    int thumbsCols = thumbsColsForLayout;
+    int thumbsRows = (nFiles + thumbsCols - 1) / thumbsCols;
+    int thumbsContentDy = thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY) - kThumbsSpaceBetweenY;
+
+    int scrollY = win->homePageScrollY;
+    int maxScrollY = std::max(0, thumbsContentDy - thumbsVisibleDy);
+    if (scrollY > maxScrollY) {
+        scrollY = maxScrollY;
+        win->homePageScrollY = scrollY;
+    }
+    l.totalContentDy = thumbsContentDy;
+    l.thumbsVisibleDy = thumbsVisibleDy;
+
+    Point ptOff(thumbsStartX, thumbsTopY - scrollY);
+
     for (int row = 0; row < thumbsRows; row++) {
         for (int col = 0; col < thumbsCols; col++) {
             if (row * thumbsCols + col >= nFiles) {
@@ -864,15 +906,9 @@ void LayoutHomePage(HomePageLayout& l) {
         }
     }
 
-    // layout promotion at the bottom
-    if (l.promote) {
-        int n = ListLen(l.promote);
-        int idx = rand() % n;
-        Promote* p = l.promote;
-        for (int i = 0; i < idx; i++) {
-            p = p->next;
-        }
-        l.promoteSelected = p;
+    // layout promotion at the bottom (promoteSelected already picked in step 2)
+    if (l.promoteSelected) {
+        Promote* p = l.promoteSelected;
 
         HFONT fontPromoTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
         HFONT fontPromoName = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
@@ -961,25 +997,27 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
     l.freqRead->Paint(hdc);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
+    // clip thumbnails to the middle area
+    {
+        const Rect& ta = l.rcThumbsArea;
+        HRGN thumbsClip = CreateRectRgn(ta.x, ta.y, ta.x + ta.dx, ta.y + ta.dy);
+        SelectClipRgn(hdc, thumbsClip);
+        DeleteObject(thumbsClip);
+    }
+
     for (const ThumbnailLayout& thumb : l.thumbnails) {
         FileState* fs = thumb.fs;
         const Rect& page = thumb.rcPage;
 
         RenderedBitmap* thumbImg = LoadThumbnail(fs);
         if (thumbImg) {
+            int savedDC = SaveDC(hdc);
             HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
-            SelectClipRgn(hdc, clip);
+            ExtSelectClipRgn(hdc, clip, RGN_AND);
             // note: we used to invert bitmaps in dark theme but that doesn't
             // make sense for thumbnails
-            RenderedBitmap* clone = nullptr; // state->thumbnail->Clone();
-            if (clone) {
-                UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
-                clone->Blit(hdc, page);
-                delete clone;
-            } else {
-                thumbImg->Blit(hdc, page);
-            }
-            SelectClipRgn(hdc, nullptr);
+            thumbImg->Blit(hdc, page);
+            RestoreDC(hdc, savedDC);
             DeleteObject(clip);
         }
         RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
@@ -994,6 +1032,9 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
         int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
         ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
     }
+
+    // restore full clip region
+    SelectClipRgn(hdc, nullptr);
 
     color = ThemeWindowLinkColor();
     SetTextColor(hdc, color);
@@ -1030,8 +1071,7 @@ static void DrawHomePageLayout(const HomePageLayout& l) {
                  l.rcPromoteInfo.dy);
         }
 #endif
-        // COLORREF promoBgCol = RGB(232, 232, 240);
-        COLORREF promoBgCol = RGB(255, 255, 255);
+        COLORREF promoBgCol = ThemeControlBackgroundColor();
         FillRect(hdc, l.rcPromote, promoBgCol);
 
         HFONT fontPromoTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
@@ -1076,4 +1116,90 @@ void DrawHomePage(MainWindow* win, HDC hdc) {
     LayoutHomePage(l);
 
     DrawHomePageLayout(l);
+
+    // update overlay scrollbar for home page if thumbnails overflow visible area
+    bool showScrollbarV = gGlobalPrefs->fixedPageUI.useOverlayScrollbar && l.totalContentDy > l.thumbsVisibleDy;
+    if (showScrollbarV) {
+        if (!win->overlayScrollV) {
+            win->overlayScrollV = OverlayScrollbarCreate(win->hwndCanvas, OverlayScrollbar::Type::Vert);
+        }
+        SCROLLINFO si{};
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_ALL;
+        si.nMin = 0;
+        si.nMax = l.totalContentDy - 1;
+        si.nPage = l.thumbsVisibleDy;
+        si.nPos = win->homePageScrollY;
+        OverlayScrollbarShow(win->overlayScrollV, true);
+        OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
+    }
+    // show thin scrollbar briefly to indicate content is scrollable
+    OverlayScrollbarShow(win->overlayScrollV, showScrollbarV);
+}
+
+void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
+    USHORT msg = LOWORD(wp);
+    HDC hdc = GetDC(win->hwndCanvas);
+    int lineDy = kThumbnailDy + kThumbsSpaceBetweenY;
+    int pageDy = lineDy * 3;
+    ReleaseDC(win->hwndCanvas, hdc);
+
+    int newScrollY = win->homePageScrollY;
+    switch (msg) {
+        case SB_LINEUP:
+            newScrollY -= lineDy;
+            break;
+        case SB_LINEDOWN:
+            newScrollY += lineDy;
+            break;
+        case SB_PAGEUP:
+            newScrollY -= pageDy;
+            break;
+        case SB_PAGEDOWN:
+            newScrollY += pageDy;
+            break;
+        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: {
+            int pos = (int)(short)HIWORD(wp);
+            // overlay scrollbar sends full position in HIWORD for THUMBTRACK
+            if (win->overlayScrollV) {
+                pos = win->overlayScrollV->nTrackPos;
+            }
+            newScrollY = pos;
+            break;
+        }
+        case SB_TOP:
+            newScrollY = 0;
+            break;
+        case SB_BOTTOM:
+            newScrollY = INT_MAX; // will be clamped by layout
+            break;
+    }
+    if (newScrollY < 0) {
+        newScrollY = 0;
+    }
+    if (newScrollY != win->homePageScrollY) {
+        win->homePageScrollY = newScrollY;
+        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    }
+}
+
+void HomePageOnMouseWheel(MainWindow* win, int delta) {
+    Rect rc = ClientRect(win->hwndCanvas);
+    HDC hdc = GetDC(win->hwndCanvas);
+    int thumbsRowDy = kThumbnailDy + kThumbsSpaceBetweenY;
+    ReleaseDC(win->hwndCanvas, hdc);
+
+    int scrollBy = thumbsRowDy / 3;
+    if (delta > 0) {
+        scrollBy = -scrollBy;
+    }
+    int newScrollY = win->homePageScrollY + scrollBy;
+    if (newScrollY < 0) {
+        newScrollY = 0;
+    }
+    if (newScrollY != win->homePageScrollY) {
+        win->homePageScrollY = newScrollY;
+        InvalidateRect(win->hwndCanvas, nullptr, FALSE);
+    }
 }

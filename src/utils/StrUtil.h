@@ -208,7 +208,7 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...);
 
 int CmpNatural(const char*, const char*);
 
-TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT);
+TempStr FormatFloatWithThousandSepTemp(double number, LCID locale = LOCALE_USER_DEFAULT, bool stripTrailingZero = true);
 TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale = LOCALE_USER_DEFAULT);
 TempStr FormatSizeShortTemp(i64 size, const char* sizeUnits[3]);
 TempStr FormatFileSizeTemp(i64);

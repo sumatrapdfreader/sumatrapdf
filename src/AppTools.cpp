@@ -20,6 +20,8 @@
 #include "Version.h"
 #include "AppTools.h"
 
+bool NeedsWindowEmbeddingHacks();
+
 #include "utils/Log.h"
 
 /* Returns true, if a Registry entry indicates that this executable has been
@@ -432,6 +434,19 @@ bool ExtendedEditWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM) {
     switch (msg) {
         case WM_LBUTTONDOWN:
             delayFocus = !HwndIsFocused(hwnd);
+            if (delayFocus && NeedsWindowEmbeddingHacks()) {
+                HWND hwndFg = GetForegroundWindow();
+                DWORD fgTid = hwndFg ? GetWindowThreadProcessId(hwndFg, nullptr) : 0;
+                DWORD ourTid = GetCurrentThreadId();
+                bool attached = false;
+                if (fgTid && fgTid != ourTid) {
+                    attached = AttachThreadInput(ourTid, fgTid, TRUE) != 0;
+                }
+                SetFocus(hwnd);
+                if (attached) {
+                    AttachThreadInput(ourTid, fgTid, FALSE);
+                }
+            }
             return true;
 
         case WM_LBUTTONUP: {

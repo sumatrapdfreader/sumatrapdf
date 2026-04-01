@@ -92,11 +92,17 @@ static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     }
 
     auto hwndFrame = win->hwndFrame;
+
+    // first SetParent as top-level window (may fail but primes the window manager)
+    SetParent(hwndFrame, hwndParent);
+
+    // strip styles and set WS_CHILD
     long ws = GetWindowLong(hwndFrame, GWL_STYLE);
     ws &= ~(WS_POPUP | WS_BORDER | WS_CAPTION | WS_THICKFRAME);
     ws |= WS_CHILD;
     SetWindowLong(hwndFrame, GWL_STYLE, ws);
 
+    // second SetParent after WS_CHILD is set
     SetParent(hwndFrame, hwndParent);
     MoveWindow(hwndFrame, ClientRect(hwndParent));
     ShowWindow(hwndFrame, SW_SHOW);
@@ -113,12 +119,18 @@ static bool RegisterWinClass() {
 
     HMODULE h = GetModuleHandleW(nullptr);
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+    HBRUSH bgBrush = CreateSolidBrush(ThemeMainWindowBackgroundColor());
     FillWndClassEx(wcex, FRAME_CLASS_NAME, WndProcSumatraFrame);
+    // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on every resize
+    wcex.style = 0;
     wcex.hIcon = LoadIconW(h, iconName);
+    wcex.hbrBackground = bgBrush;
     atom = RegisterClassEx(&wcex);
 
     FillWndClassEx(wcex, CANVAS_CLASS_NAME, WndProcCanvas);
-    wcex.style |= CS_DBLCLKS;
+    // remove CS_HREDRAW | CS_VREDRAW to avoid full invalidation on resize
+    wcex.style = CS_DBLCLKS;
+    wcex.hbrBackground = bgBrush;
     atom = RegisterClassEx(&wcex);
 
     return true;
@@ -186,7 +198,7 @@ static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFir
 }
 
 static void FlagsEnterFullscreen(const Flags& flags, MainWindow* win) {
-    if (!win) {
+    if (!win || !win->IsDocLoaded()) {
         return;
     }
     if (flags.enterPresentation || flags.enterFullScreen) {
@@ -321,6 +333,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad 
     logf("RestoreTabOnStartup: state->filePath: '%s'\n", state->filePath);
     LoadArgs args(state->filePath, win);
     args.noSavePrefs = true;
+    args.showWin = false;
     if (lazyLoad) {
         args.tabState = state;
     }
@@ -433,7 +446,7 @@ Retry:
     prevProcId = *procId;
     UnmapViewOfFile(procId);
     CloseHandle(hMap);
-    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
+    while ((hwnd = FindWindowExW(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
         DWORD wndProcId;
         GetWindowThreadProcessId(hwnd, &wndProcId);
         if (wndProcId == prevProcId) {
@@ -625,15 +638,6 @@ static bool IsInstallerAndNamedAsSuch() {
         return false;
     }
     return ExeHasNameOfInstaller();
-}
-
-static bool IsOurExeInstalled() {
-    AutoFreeStr installedDir = GetExistingInstallationDir();
-    if (!installedDir.Get()) {
-        return false;
-    }
-    TempStr exeDir = GetSelfExeDirTemp();
-    return str::EqI(installedDir.Get(), exeDir);
 }
 
 static bool IsInstallerButNotInstalled() {
@@ -931,6 +935,13 @@ void StartDeleteStaleFiles() {
     auto fn = MkFunc0Void(DeleteStaleFilesAsync);
     RunAsync(fn, "DeleteStaleFilesThread");
 }
+
+// static void FocusMainWindowOnStartup(MainWindow* win) {
+//     if (!win || !IsWindow(win->hwndFrame)) {
+//         return;
+//     }
+//     win->Focus();
+// }
 
 // non-admin process cannot send DDE messages to admin process
 // so when that happens we need to alert the user
@@ -2303,11 +2314,24 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 #endif
 
+    // in debug build, default
+    if (gIsDebugBuild) {
+        if (!flags.logFile) {
+            flags.logFile = str::Dup("sumlog.txt");
+        }
+    }
     if (flags.log && !noLogHere) {
-        logFilePath = GetLogFilePathTemp();
+        if (flags.logFile) {
+            dir::CreateForFile(flags.logFile);
+            logFilePath = flags.logFile;
+            logFilePath = path::NormalizeTemp(logFilePath);
+        } else {
+            logFilePath = GetLogFilePathTemp();
+        }
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
         }
+        // gRedrawLog = true;
     }
 
 #if defined(DEBUG)
@@ -2428,6 +2452,18 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         TestApp();
         return 0;
     }
+    if (flags.testPlugin) {
+        // in TestPlugin.cpp
+        extern void TestPlugin(const WCHAR* cmdLine);
+        TestPlugin(GetCommandLineW());
+        return 0;
+    }
+    if (flags.testPreview) {
+        // in TestPreview.cpp
+        extern void TestPreview(const WCHAR* cmdLine);
+        TestPreview(GetCommandLineW());
+        return 0;
+    }
 #endif
 
     if (MaybeMutool() != kNoMutool) {
@@ -2446,6 +2482,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     LoadSettings();
     UpdateGlobalPrefs(flags);
+    if (gMyWindowWasEmbedded) {
+        gGlobalPrefs->useTabs = false;
+        gGlobalPrefs->restoreSession = false;
+        gGlobalPrefs->rememberOpenedFiles = false;
+        gGlobalPrefs->fixedPageUI.useOverlayScrollbar = false;
+    }
     SetCurrentLang(flags.lang ? flags.lang : gGlobalPrefs->uiLanguage);
     FileWatcherInit();
 
@@ -2523,7 +2565,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (flags.printDialog || flags.stressTestPath || gPluginMode) {
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
-        existingHwnd = FindWindow(FRAME_CLASS_NAME, nullptr);
+        existingHwnd = FindWindowW(FRAME_CLASS_NAME, nullptr);
     } else if (gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs) {
         existingHwnd = existingInstanceHwnd;
     }
@@ -2568,7 +2610,7 @@ ContinueOpenWindow:
     gInitialSessionData = gGlobalPrefs->sessionData;
     gGlobalPrefs->sessionData = new Vec<SessionData*>();
 
-    restoreSession = gGlobalPrefs->restoreSession && (gInitialSessionData->Size() > 0) && !gPluginMode;
+    restoreSession = gGlobalPrefs->restoreSession && (gInitialSessionData->Size() > 0) && !NeedsWindowEmbeddingHacks();
     if (!gGlobalPrefs->useTabs && (existingInstanceHwnd != nullptr)) {
         // do not restore a session if tabs are disabled and SumatraPDF is already running
         // TODO: maybe disable restoring if tabs are disabled?
@@ -2594,7 +2636,8 @@ ContinueOpenWindow:
 
     if (restoreSession) {
         for (SessionData* data : *gInitialSessionData) {
-            win = CreateAndShowMainWindow(data);
+            // create window hidden to avoid flashing the about page
+            win = CreateAndShowMainWindow(data, false);
             for (TabState* state : *data->tabStates) {
                 if (str::IsEmpty(state->filePath)) {
                     logf("WinMain: skipping RestoreTabOnStartup() because state->filePath is empty\n");
@@ -2607,6 +2650,7 @@ ContinueOpenWindow:
                 // trigger loading of the document
                 ReloadDocument(win, false);
             }
+            ShowMainWindow(win, data->windowState);
         }
     }
 
@@ -2705,9 +2749,13 @@ ContinueOpenWindow:
 
     StartAsyncUpdateCheck(win, UpdateCheck::Automatic);
 
-    BringWindowToTop(win->hwndFrame);
+    if (IsDebuggerPresent()) {
+        // helps when running from 10x under debugger
+        BringWindowToTop(win->hwndFrame);
+    }
 
     StartDeleteStaleFiles();
+    // uitask::Post(MkFunc0(FocusMainWindowOnStartup, win), "FocusMainWindowOnStartup");
 
     exitCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
@@ -2729,7 +2777,6 @@ Exit:
         // (as recommended for a quick exit)
         ::ExitProcess(exitCode);
     }
-    str::Free(logFilePath);
 
     if (gInitialSessionData) {
         FreeSessionDataVec(gInitialSessionData);

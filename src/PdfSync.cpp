@@ -81,6 +81,7 @@ class SyncTex : public Synchronizer {
 
     EngineBase* engine; // needed for converting between coordinate systems
     synctex_scanner_p scanner;
+    AutoFreeStr originalDir; // original directory when synctex.gz is copied to temp
 };
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
@@ -500,32 +501,39 @@ static bool PathHasNonAscii(const char* s) {
     return false;
 }
 
-// copy file to a temp path with ASCII-only name so that
+// COPY `.synctex.gz` file to a temp path with ASCII-only name so that
 // gzopen() (which uses fopen() internally) can open it on Windows
 // when the original path has non-ASCII (e.g. CJK) characters
-static TempStr CopyToTempFileIfNeeded(const char* path) {
-    if (!PathHasNonAscii(path)) {
-        return nullptr;
-    }
-    if (!file::Exists(path)) {
-        return nullptr;
-    }
+// return: path of temp file (utf-8).
+static TempStr CopyGzToTempFile(const char* path) {
     // use file::ReadFile which uses CreateFileW (handles Unicode)
     ByteSlice data = file::ReadFile(path);
     if (data.IsEmpty()) {
-        return nullptr;
+        logfa("CopyGzToTempFile: source file '.synctex.gz' '%s' is empty.\n", path);
+        // return nullptr;
     }
-    TempStr tempPath = GetTempFilePathTemp("stx");
+    TempStr tempPath = GetTempFilePathTemp("stx"); // abcdef.tmp
     if (!tempPath) {
         data.Free();
+        logfa("CopyGzToTempFile: unable to get temp file path.\n");
         return nullptr;
     }
     bool ok = file::WriteFile(tempPath, data);
     data.Free();
     if (!ok) {
+        logfa("CopyGzToTempFile: unable to write temp file '%s'.\n", tempPath);
         return nullptr;
     }
-    logfa("CopyToTempFileIfNeeded: copied '%s' to '%s'\n", path, tempPath);
+
+    TempStr pathNoExt = path::GetPathNoExtTemp(tempPath);         // abcdef
+    TempStr pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz"); // abcdef.synctex.gz
+    int ret = rename(tempPath, pathSyncGz);
+    if (ret) {
+        logfa("CopyGzToTempFile: unable rename from '%s' to '%s'. error: %d.\n", tempPath, pathSyncGz, errno);
+        return nullptr;
+    }
+
+    logfa("CopyGzToTempFile: copied '%s' to '%s'\n", path, pathSyncGz);
     return tempPath;
 }
 
@@ -566,60 +574,48 @@ int SyncTex::RebuildIndexIfNeeded() {
     }
     synctex_scanner_free(scanner);
     scanner = nullptr;
-    i64 fsize;
-    TempStr pathNoExt;
-    TempStr pathSyncGz;
-    bool didRepeat = false;
-
-    TempStr syncPathTemp = str::DupTemp(syncFilePath.Get());
-Repeat:
-    // try the path directly first (works for ASCII paths and UTF-8 aware builds)
-    scanner = synctex_scanner_new_with_output_file(syncPathTemp, nullptr, 1);
-    if (scanner) {
-        logfa("synctex_scanner_new_with_output_file: ok for '%s'\n", syncPathTemp);
-        goto Exit;
-    }
-    // if the path has non-ASCII chars, gzopen() (which uses fopen()) can't handle
-    // Unicode paths on Windows; copy the file to an ASCII-safe temp path
-    {
-        TempStr tempPath = CopyToTempFileIfNeeded(syncPathTemp);
-        if (tempPath) {
-            logfa("synctex_scanner_new_with_output_file: retrying with temp copy '%s'\n", tempPath);
-            scanner = synctex_scanner_new_with_output_file(tempPath, nullptr, 1);
-            if (scanner) {
-                logfa("synctex_scanner_new_with_output_file: ok for temp copy '%s'\n", tempPath);
-                goto Exit;
-            }
-        }
-    }
-    if (didRepeat) {
-        logfa("synctex_scanner_new_with_output_file: failed for '%s'\n", syncPathTemp);
-        return PDFSYNCERR_SYNCFILE_NOTFOUND;
-    }
+    TempStr pathNoExt;    //  abc
+    TempStr pathSyncTemp; //  abc.synctex
+    TempStr pathSyncGz;   //  abc.synctex.gz
+    pathSyncTemp = str::DupTemp(syncFilePath.Get());
+    pathNoExt = path::GetPathNoExtTemp(syncFilePath);
+    pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
 
     // Note: https://github.com/sumatrapdfreader/sumatrapdf/discussions/2640#discussioncomment-2861368
     // reported failure to parse a large (12 MB) .synctex.gz even though file exists
-    pathNoExt = path::GetPathNoExtTemp(syncFilePath);
-    pathSyncGz = str::JoinTemp(pathNoExt, ".synctex.gz");
+    i64 fsize;
     if (!file::Exists(pathSyncGz)) {
-        logfa("synctex_scanner_new_with_output_file: failed for '%s'\n", syncPathTemp);
+        logfa("SyncTex::RebuildIndexIfNeeded: '.synctex.gz' file NOT found '%s'\n", pathSyncGz);
         return PDFSYNCERR_SYNCFILE_NOTFOUND;
     }
     fsize = file::GetSize(pathSyncGz);
-    logf("SyncTex::RebuildIndexIfNeeded: trying to uncompress %s, size: %d\n", pathSyncGz, (int)fsize);
+    logf("SyncTex::RebuildIndexIfNeeded: trying to handle '.synctex.gz'.\npath: %s, size: %lld\n", pathSyncGz, fsize);
 
-    syncPathTemp = ungzipToFile(pathSyncGz);
-    if (!syncPathTemp) {
-        logfa("SyncTex::RebuildIndexIfNeeded: ungzipToFile('%s') failed\n", pathSyncGz);
-        goto Exit;
+    bool path_nonascii = PathHasNonAscii(pathSyncTemp);
+
+    if (path_nonascii) {
+        TempStr tempPathSyncGz = CopyGzToTempFile(pathSyncGz);
+        if (!tempPathSyncGz) {
+            logfa("SyncTex::RebuildIndexIfNeeded: unable to copy '.synctex.gz' to a temp file.\n");
+            return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
+        }
+        TempStr tempathNoExt = path::GetPathNoExtTemp(tempPathSyncGz);
+        TempStr temppathSync = str::JoinTemp(tempathNoExt, ".synctex");
+        scanner = synctex_scanner_new_with_output_file(temppathSync, nullptr, 1);
+        if (scanner) {
+            logfa("synctex_scanner_new_with_output_file: ok for '%s'\n", temppathSync);
+            // remember original dir for path resolution
+            originalDir.Set(str::Dup(path::GetDirTemp(pathSyncTemp)));
+        }
+    } else {
+        // try the path directly first (works for ASCII paths and UTF-8 aware builds)
+        // copy from a08dfc46 ( a08dfc46913366406f2fc2c18e0e29093e78d1bb )
+        scanner = synctex_scanner_new_with_output_file(pathSyncTemp, nullptr, 1);
+        if (scanner) {
+            logfa("synctex_scanner_new_with_output_file: ok for '%s'\n", pathSyncTemp);
+        }
     }
-    fsize = file::GetSize(syncPathTemp);
-    logfa("SyncTex::RebuildIndexIfNeeded: retrying with uncompressed version '%s' of size %d\n", syncPathTemp, fsize);
 
-    didRepeat = true;
-    goto Repeat;
-
-Exit:
     return MarkIndexWasRebuilt();
 }
 
@@ -648,9 +644,9 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    bool isUtf8 = true;
+    // the name may be in the system's local encoding (e.g. GBK) or UTF-8
+    // try to use it as-is first (UTF-8), then convert from local encoding
     filename.Set(str::Dup(name));
-TryAgainAnsi:
     if (!filename) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
@@ -659,14 +655,34 @@ TryAgainAnsi:
     str::TransCharsInPlace(filename, "*/", " \\");
     // Convert the source filepath to an absolute path
     if (!path::IsAbsolute(filename)) {
-        filename.Set(PrependDir(filename));
+        if (originalDir.Get()) {
+            // resolve relative to original dir when loaded from temp
+            filename.Set(path::Join(originalDir.Get(), filename));
+        } else {
+            filename.Set(PrependDir(filename));
+        }
     }
-
-    // recent SyncTeX versions encode in UTF-8 instead of ANSI
-    if (isUtf8 && !file::Exists(filename)) {
-        isUtf8 = false;
-        filename.Set(strconv::AnsiToUtf8(name));
-        goto TryAgainAnsi;
+    // if the file doesn't exist, try converting from local encoding to UTF-8
+    if (!file::Exists(filename)) {
+        char* utf8Name = strconv::AnsiToUtf8(name);
+        if (utf8Name) {
+            AutoFreeStr altPath;
+            str::TransCharsInPlace(utf8Name, "*/", " \\");
+            if (!path::IsAbsolute(utf8Name)) {
+                if (originalDir.Get()) {
+                    altPath.Set(path::Join(originalDir.Get(), utf8Name));
+                } else {
+                    altPath.Set(PrependDir(utf8Name));
+                }
+            } else {
+                altPath.Set(utf8Name);
+                utf8Name = nullptr;
+            }
+            str::Free(utf8Name);
+            if (file::Exists(altPath)) {
+                filename.Set(altPath.StealData());
+            }
+        }
     }
 
     *line = synctex_node_line(node);
@@ -697,8 +713,22 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
+    // if scanner was loaded from a temp file (non-ASCII original path),
+    // try querying with just the filename since the scanner's base dir is wrong
+    TempStr queryPath = srcfilepath;
+    if (originalDir.Get()) {
+        // try relative to original dir
+        if (str::StartsWithI(srcfilepath, originalDir.Get())) {
+            int dirLen = str::Leni(originalDir.Get());
+            if (srcfilepath[dirLen] == '\\' || srcfilepath[dirLen] == '/') {
+                dirLen++;
+            }
+            queryPath = str::DupTemp(srcfilepath + dirLen);
+        }
+    }
+
     bool isUtf8 = true;
-    TempStr mb_srcfilepath = srcfilepath;
+    TempStr mb_srcfilepath = queryPath;
 TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
@@ -707,7 +737,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        char* tmp = strconv::Utf8ToAnsi(srcfilepath);
+        char* tmp = strconv::Utf8ToAnsi(queryPath);
         mb_srcfilepath = str::DupTemp(tmp);
         str::Free(tmp);
         goto TryAgainAnsi;

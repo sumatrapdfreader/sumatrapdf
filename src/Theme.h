@@ -21,6 +21,7 @@ COLORREF ThemeNotificationsHighlightTextColor();
 COLORREF ThemeNotificationsProgressColor();
 bool ThemeColorizeControls();
 bool IsCurrentThemeDefault();
+COLORREF AccentColor(COLORREF col, int light, int dark = 0);
 void FreeThemes();
 bool UseDarkModeLib();
 

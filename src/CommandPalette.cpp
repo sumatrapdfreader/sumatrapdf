@@ -34,11 +34,11 @@
 #include "DarkModeSubclass.h"
 #include "Notifications.h"
 #include "Translations.h"
+#include "Installer.h"
+#include "RegistryPreview.h"
+#include "RegistrySearchFilter.h"
 
 #include "utils/Log.h"
-
-constexpr const char* kInfoRegular = "↑ ↓ to navigate      Enter to select     Esc to close";
-constexpr const char* kInfoSmartTab = "Ctrl+Tab to navigate         Release Ctrl to select    Space for sticky mode";
 
 // clang-format off
 // those commands never show up in command palette
@@ -98,17 +98,25 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdDebugTestApp,
     CmdDebugTogglePredictiveRender,
     CmdDebugToggleRtl,
-    CmdFavoriteToggle,
+    CmdToggleAntiAlias,
+    CmdToggleSmoothScroll,
+    CmdToggleHideScrollbar,
+    CmdToggleScrollbarInSinglePage,
+    CmdToggleLazyLoading,
     CmdToggleFullscreen,
     CmdToggleMenuBar,
     CmdToggleToolbar,
+    CmdToggleUseTabs,
+    CmdFavoriteToggle,
     CmdShowLog,
     CmdClearHistory,
     CmdReopenLastClosedFile,
     CmdSelectNextTheme,
     CmdToggleFrequentlyRead,
+    CmdListPrinters,
     CmdDebugCrashMe,
     CmdDebugCorruptMemory,
+    CmdScreenshot,
     0,
 };
 
@@ -128,6 +136,9 @@ static i32 gCommandsNoActivate[] = {
     CmdNewWindow,
     CmdDuplicateInNewWindow,
     CmdShowPdfInfo,
+    CmdListPrinters,
+    CmdCropImage,
+    CmdResizeImage,
     // TOOD: probably more
     0,
 };
@@ -293,11 +304,17 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
         return RecentlyCloseDocumentsCount() > 0;
     }
 
+    // must check before ctx.isDocLoaded
+    if (cmdId == CmdToggleWindowsPreviewer || cmdId == CmdToggleWindowsSearchFilter) {
+        return IsOurExeInstalled();
+    }
+
     // when document is not loaded, most commands are not available
     // except those white-listed
     if (IsCmdInList(cmdId, gDocumentNotOpenWhitelist)) {
         return true;
     }
+
     if (!ctx.isDocLoaded) {
         return false;
     }
@@ -405,11 +422,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
 }
 
 static TempStr ConvertPathForDisplayTemp(const char* s) {
-    TempStr name = path::GetBaseNameTemp(s);
-    TempStr dir = path::GetDirTemp(s);
-    TempStr res = str::JoinTemp(name, "  (", dir);
-    res = str::JoinTemp(res, ")");
-    return res;
+    return path::GetBaseNameTemp(s);
 }
 
 static TempStr RemovePrefixFromString(const char* s) {
@@ -448,8 +461,8 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
         } break;
         case CmdToggleMenuBar: {
             isToggle = true;
-            // isMenuHidden: true means hidden, toggling will show it
-            newIsOn = win->isMenuHidden;
+            bool visible = gGlobalPrefs->useTabs ? gGlobalPrefs->showMenubarWithTabs : gGlobalPrefs->showMenubar;
+            newIsOn = !visible;
         } break;
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents: {
@@ -496,6 +509,26 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
             isToggle = true;
             newIsOn = gGlobalPrefs->disableAntiAlias;
         } break;
+        case CmdToggleSmoothScroll: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->smoothScroll;
+        } break;
+        case CmdToggleHideScrollbar: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->fixedPageUI.hideScrollbars;
+        } break;
+        case CmdToggleScrollbarInSinglePage: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->scrollbarInSinglePage;
+        } break;
+        case CmdToggleLazyLoading: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->lazyLoading;
+        } break;
+        case CmdToggleUseTabs: {
+            isToggle = true;
+            newIsOn = !gGlobalPrefs->useTabs;
+        } break;
         case CmdToggleZoom: {
             // TODO: this toggles via different values
         } break;
@@ -514,6 +547,23 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
     if (isToggle) {
         s = (const char*)str::JoinTemp(s, newIsOn ? ": on" : ": off");
     }
+
+    if (cmdId == CmdToggleWindowsPreviewer) {
+        if (IsPreviewInstalled()) {
+            s = _TRA("Un-register Windows Previewer");
+        } else {
+            s = _TRA("Register Windows Previewer");
+        }
+    }
+
+    if (cmdId == CmdToggleWindowsSearchFilter) {
+        if (IsSearchFilterInstalled()) {
+            s = _TRA("Un-register Windows Search Filter");
+        } else {
+            s = _TRA("Register Windows Search Filter");
+        }
+    }
+
     return s;
 }
 
@@ -525,7 +575,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     ctx.hasSelection = ctx.isDocLoaded && currTab && mainWin->showSelection && currTab->selectionOnPage;
     ctx.canSendEmail = CanSendAsEmailAttachment(currTab);
     ctx.isPdf = ctx.isDocLoaded && CouldBePDFDoc(currTab);
-    ctx.allowToggleMenuBar = !mainWin->tabsInTitlebar;
+    ctx.allowToggleMenuBar = true;
 
     int nTabs = mainWin->TabCount();
     int tabIdx = mainWin->GetTabIdx(currTab);
@@ -665,14 +715,15 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     StrVecCP tempCommands;
     int cmdId = (int)CmdFirst + 1;
     for (SeqStrings name = gCommandDescriptions; name; seqstrings::Next(name, &cmdId)) {
-        if (AllowCommand(ctx, (i32)cmdId)) {
-            ReportIf(str::Leni(name) == 0);
-            ItemDataCP data;
-            data.cmdId = (i32)cmdId;
-            auto nameTranslated = trans::GetTranslation(name);
-            auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, (TempStr)nameTranslated);
-            tempCommands.Append(nameUpdated, data);
+        if (!AllowCommand(ctx, (i32)cmdId)) {
+            continue;
         }
+        ReportIf(str::Leni(name) == 0);
+        ItemDataCP data;
+        data.cmdId = (i32)cmdId;
+        auto nameTranslated = trans::GetTranslation(name);
+        auto nameUpdated = UpdateCommandNameTemp(mainWin, cmdId, (TempStr)nameTranslated);
+        tempCommands.Append(nameUpdated, data);
     }
 
     // includes externalViewers, selectionHandlers and keyboardShortcuts
@@ -721,6 +772,7 @@ void CommandPaletteWnd::SwitchToFileHistory() {
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 HWND gCommandPaletteHwnd = nullptr;
 static HWND gHwndToActivateOnClose = nullptr;
+static WindowTab* gTabToSelectOnClose = nullptr;
 
 void SafeDeleteCommandPaletteWnd() {
     if (!gCommandPaletteWnd) {
@@ -734,6 +786,13 @@ void SafeDeleteCommandPaletteWnd() {
     if (gHwndToActivateOnClose) {
         SetActiveWindow(gHwndToActivateOnClose);
         gHwndToActivateOnClose = nullptr;
+    }
+    if (gTabToSelectOnClose) {
+        WindowTab* tab = gTabToSelectOnClose;
+        gTabToSelectOnClose = nullptr;
+        if (tab->win && IsMainWindowValid(tab->win) && tab->win->GetTabIdx(tab) >= 0) {
+            SelectTabInWindow(tab);
+        }
     }
 }
 
@@ -1020,9 +1079,7 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
     WindowTab* tab = data->tab;
     if (tab != nullptr) {
         MainWindow* mainWin = tab->win;
-        if (mainWin->CurrentTab() != tab) {
-            SelectTabInWindow(tab);
-        }
+        gTabToSelectOnClose = tab;
         gHwndToActivateOnClose = mainWin->hwndFrame;
         ScheduleDelete();
         return;
@@ -1074,8 +1131,12 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
     COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
     if (ev->selected) {
-        colBg = GetSysColor(COLOR_HIGHLIGHT);
-        colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+        if (false && IsCurrentThemeDefault()) {
+            colBg = GetSysColor(COLOR_HIGHLIGHT);
+            colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+        } else {
+            colBg = AccentColor(colBg, 30);
+        }
     }
 
     // fill background
@@ -1093,14 +1154,16 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     const char* itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
 
-    // get accelerator string for commands
-    TempStr accelStr = nullptr;
+    // get right-side string: accelerator for commands, directory for file history
+    TempStr rightStr = nullptr;
     if (data->cmdId != 0) {
         // AppendAccelKeyToMenuStringTemp returns "\tCtrl + X" or original string if no accel
         TempStr withAccel = AppendAccelKeyToMenuStringTemp((TempStr) "", data->cmdId);
         if (withAccel && withAccel[0] == '\t') {
-            accelStr = withAccel + 1; // skip the tab character
+            rightStr = withAccel + 1; // skip the tab character
         }
+    } else if (data->filePath) {
+        rightStr = path::GetDirTemp(data->filePath);
     }
 
     // set text color and background mode
@@ -1198,9 +1261,15 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
             highlightRects[i].right = strOriginX + szEnd.cx;
         }
 
-        // draw yellow background rectangles for matches (skip when selected)
-        if (!ev->selected) {
-            HBRUSH hbrHighlight = CreateSolidBrush(RGB(255, 255, 0));
+        // draw highlight background rectangles for matches
+        {
+            COLORREF highlightCol;
+            if (IsCurrentThemeDefault()) {
+                highlightCol = RGB(255, 255, 0); // yellow for default theme
+            } else {
+                highlightCol = AccentColor(colBg, 40);
+            }
+            HBRUSH hbrHighlight = CreateSolidBrush(highlightCol);
             for (int i = 0; i < nRanges; i++) {
                 FillRect(hdc, &highlightRects[i], hbrHighlight);
             }
@@ -1213,18 +1282,33 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
         DrawTextW(hdc, itemTextW, -1, &rc, fmt);
     }
 
-    // draw accelerator on the opposite side from the command name
-    if (accelStr && accelStr[0]) {
-        WCHAR* accelStrW = ToWStrTemp(accelStr);
-        uint fmtAccel = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+    // draw right-side text (shortcut or directory), truncated to avoid overlapping left text
+    if (rightStr && rightStr[0]) {
+        WCHAR* rightStrW = ToWStrTemp(rightStr);
+        int gap = DpiScale(lb->hwnd, 8);
+
+        // measure left text width
+        WCHAR* itemTextW2 = ToWStrTemp(itemText);
+        SIZE szLeft{};
+        GetTextExtentPoint32W(hdc, itemTextW2, str::Leni(itemText), &szLeft);
+        int leftEnd = rc.left + szLeft.cx + gap;
+
+        RECT rcRight = rc;
+        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
         if (isRtl) {
-            rc.left += DpiScale(lb->hwnd, 8);
-            fmtAccel |= DT_LEFT | DT_RTLREADING;
+            rcRight.right = rc.right - szLeft.cx - gap;
+            fmt |= DT_LEFT | DT_RTLREADING;
         } else {
-            rc.right -= DpiScale(lb->hwnd, 8);
-            fmtAccel |= DT_RIGHT;
+            rcRight.left = leftEnd;
+            rcRight.right -= gap;
+            fmt |= DT_RIGHT;
         }
-        DrawTextW(hdc, accelStrW, -1, &rc, fmtAccel);
+        if (rcRight.left < rcRight.right) {
+            COLORREF rightCol = AccentColor(colText, 80);
+            SetTextColor(hdc, rightCol);
+            DrawTextW(hdc, rightStrW, -1, &rcRight, fmt);
+            SetTextColor(hdc, colText);
+        }
     }
 
     if (oldFont) {
@@ -1346,11 +1430,29 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         }
         vbox->AddChild(c, 1);
     }
+
     {
-        auto c = CreateStatic(hwnd, this->font, smartTabMode ? kInfoSmartTab : kInfoRegular);
-        c->SetColors(colTxt, colBg);
-        staticInfo = c;
-        vbox->AddChild(c);
+        char const* strings[3];
+        if (smartTabMode) {
+            strings[0] = _TRA("Ctrl+Tab to navigate");
+            strings[1] = _TRA("Release Ctrl to select");
+            strings[2] = _TRA("Space for sticky mode");
+        } else {
+            strings[0] = _TRA("↑ ↓ to navigate");
+            strings[1] = _TRA("Enter to select");
+            strings[2] = _TRA("Esc to close");
+        }
+        auto hbox = new HBox();
+        hbox->alignMain = MainAxisAlign::MainCenter;
+        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        auto pad = Insets{0, 8, 0, 8};
+        for (int i = 0; i < 3; i++) {
+            auto c = CreateStatic(hwnd, font, strings[i]);
+            c->SetColors(colTxt, colBg);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        vbox->AddChild(hbox);
     }
 
     auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
@@ -1380,7 +1482,11 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
 }
 
 void RunCommandPalette(MainWindow* win, const char* prefix, int smartTabAdvance) {
-    ReportIf(gCommandPaletteWnd);
+    if (gCommandPaletteWnd) {
+        // already open — just focus it
+        HwndSetFocus(gCommandPaletteHwnd);
+        return;
+    }
 
     auto wnd = new CommandPaletteWnd();
     auto fn = MkFunc1Void<Wnd::DestroyEvent*>(OnDestroy);

@@ -6,6 +6,26 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 - add cmd-line tools `SumatraPDF <tool> <args>`. Tools: draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace
 - add `CmdShowPdfInfo` (`Show PDF Info` in `Ctrl + k` [command palette](Command-Palette.md))
+- improved overlay scrollbar
+- make thumbnails on home page scrollable
+- add ability to register / unregister Windows preview handler and search filter from `Ctrl + k` command palette. Use "Register Windows Preview", Un-register Windows Preview", "Register Windows Search Filter", "Un-register Windows Search Filter".
+- `Ctrl + click` on a PDF link opens it in a new tab (instead of navigating in the current tab)
+- you can now drag&drop selected text to another application, like a text editor
+- added `List Printers` (`CmdListPrinters`) command to `Ctrl + k` Command Palette to list available printers
+- add `-log-to-file <file>` cmd-line flag to log to a specific file (like `-log` but with custom log file path)
+- add `DefaultImageZoom` advanced setting to control default zoom level for images
+- improve `Toggle Use Tabs` (`CmdToggleUseTabs`). You can now transition between using tabs / not using tabs witout restarting the app
+- allow showing menu bar when using tabs (previously menu bar was only shown when not using tabs)
+- add `CmdScreenshot` (`Take Screenshot` in `Ctrl + k` [command palette](Command-Palette.md)) to capture screenshots of the desktop and all visible windows, saved as PNG files in `Screenshots` sub-directory of SumatraPDF data directory
+- you can drag&drop images from a browser onto SumatraPDF window. We'll download it to Downloads folder and open
+- add `CmdCropImage` (`Crop Image`) command for cropping images when viewing image files
+- add `CmdResizeImage` (`Resize Image`) command for resizing images when viewing image files
+- `Ctrl + V` pastes image from clipboard, saves as PNG in Downloads folder and opens it
+- Can save images in different formats: PNG, JPEG, BMP, GIF, TIFF.
+- add `Show Errors` in right-click context menu for PDF documents that have mupdf warnings/errors
+- add `CmdToggleSmoothScroll` (`Toggle Smooth Scroll`) command to toggle `SmoothScroll` advanced setting
+- add `CmdToggleHideScrollbar` (`Toggle Hide Scrollbar`) command to toggle `HideScrollbar` advanced setting
+- add `CmdToggleScrollbarInSinglePage` (`Toggle Scrollbar In Single Page`) command to toggle `ScrollbarInSinglePage` advanced setting
 
 ## 3.6 (2026-03-17)
 

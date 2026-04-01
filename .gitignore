@@ -37,3 +37,4 @@ docs-www/
 *.cbr
 *.cbz
 translations/translations.txt.lzsa
+log.txt

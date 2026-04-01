@@ -381,7 +381,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -413,7 +413,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -445,7 +445,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -477,7 +477,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -508,7 +508,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -539,7 +539,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -570,7 +570,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -601,7 +601,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -633,7 +633,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -665,7 +665,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -697,7 +697,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -729,7 +729,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -760,7 +760,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -793,7 +793,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -826,7 +826,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -859,7 +859,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/EHsc %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /EHsc %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>

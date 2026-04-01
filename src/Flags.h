@@ -86,6 +86,8 @@ struct Flags {
     bool testExtractPage = false;
     int testPageNo = 0;
     bool testApp = false;
+    bool testPlugin = false;
+    bool testPreview = false;
     char* dde = nullptr;
     bool engineDump = false; // -engine-dump
 
@@ -104,6 +106,7 @@ struct Flags {
     bool withPreview = false;
     bool justExtractFiles = false;
     bool log = false;
+    char* logFile = nullptr;
     bool allUsers = false;
     bool runInstallNow = false;
     bool storeInstaller = false;

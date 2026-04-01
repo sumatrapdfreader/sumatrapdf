@@ -6,12 +6,16 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/ThreadUtil.h"
+#include "utils/UITask.h"
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
 #include "Settings.h"
+#include "GlobalPrefs.h"
+#include "AppSettings.h"
 #include "DocProperties.h"
 #include "DocController.h"
 #include "EngineBase.h"
@@ -31,7 +35,7 @@
 #include "Theme.h"
 #include "DarkModeSubclass.h"
 
-void ShowProperties(HWND parent, DocController* ctrl, bool extended);
+void ShowProperties(HWND parent, DocController* ctrl);
 
 constexpr const WCHAR* kPropertiesWinClassName = L"SUMATRA_PDF_PROPERTIES";
 
@@ -43,14 +47,11 @@ struct PropertiesLayout {
     HWND hwndParent = nullptr;
     HWND hwndEdit = nullptr;
     Button* btnCopyToClipboard = nullptr;
-    Button* btnGetFonts = nullptr;
     str::Str propsText;
+    Point initialPos;
 
     PropertiesLayout() = default;
-    ~PropertiesLayout() {
-        delete btnCopyToClipboard;
-        delete btnGetFonts;
-    }
+    ~PropertiesLayout() { delete btnCopyToClipboard; }
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
@@ -77,34 +78,89 @@ void DeletePropertiesWindow(HWND hwndParent) {
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParseA(const char* pdfDate, SYSTEMTIME* timeOut) {
+static bool PdfDateParseA(const char* date, SYSTEMTIME* timeOut, int* timeZoneOut) {
+    if (!date || !*date) return false;
+
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
+    *timeZoneOut = 0;
+
     // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, "D:")) {
-        pdfDate += 2;
+    if (str::StartsWith(date, "D:")) {
+        date += 2;
     }
-    return str::Parse(pdfDate,
-                      "%4d%2d%2d"
-                      "%2d%2d%2d",
-                      &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
-                      &timeOut->wSecond) != nullptr;
+    const char* end = str::Parse(date,
+                                 "%4d%2d%2d"
+                                 "%2d%2d%2d",
+                                 &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
+                                 &timeOut->wSecond);
+    if (!end) {
+        return false;
+    }
+    // parse optional timezone: Z, +HH'MM', -HH'MM' (or +HH'MM, +HHMM, +HH)
+    if (*end == 'Z') {
+        *timeZoneOut = 0;
+    } else if (*end == '+' || *end == '-') {
+        int sign = (*end == '+') ? 1 : -1;
+        int tzHour = 0;
+        int tzMin = 0;
+        const char* tz = end + 1;
+        const char* tzEnd = str::Parse(tz, "%2d'%2d", &tzHour, &tzMin);
+        if (!tzEnd) {
+            tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
+        }
+        if (!tzEnd) {
+            str::Parse(tz, "%2d", &tzHour);
+        }
+        *timeZoneOut = sign * (tzHour * 100 + tzMin);
+    }
+    return true;
     // don't bother about the day of week, we won't display it anyway
 }
 
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(const char* isoDate, SYSTEMTIME* timeOut) {
+static bool IsoDateParse(const char* date, SYSTEMTIME* timeOut, int* timeZoneOut) {
+    if (!date || !*date) return false;
+
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const char* end = str::Parse(isoDate, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    *timeZoneOut = 0;
+
+    const char* end = str::Parse(date, "%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) { // time is optional
-        str::Parse(end, "T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        const char* timeEnd = str::Parse(end, "T%2d:%2d:%2d", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        if (timeEnd) {
+            // parse optional timezone: Z, +HH:MM, -HH:MM
+            if (*timeEnd == 'Z') {
+                *timeZoneOut = 0;
+            } else if (*timeEnd == '+' || *timeEnd == '-') {
+                int sign = (*timeEnd == '+') ? 1 : -1;
+                int tzHour = 0;
+                int tzMin = 0;
+                const char* tz = timeEnd + 1;
+                const char* tzEnd = str::Parse(tz, "%2d:%2d", &tzHour, &tzMin);
+                if (!tzEnd) {
+                    str::Parse(tz, "%2d%2d", &tzHour, &tzMin);
+                }
+                *timeZoneOut = sign * (tzHour * 100 + tzMin);
+            }
+        }
     }
     return end != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
-static TempStr FormatSystemTimeTemp(SYSTEMTIME& date) {
+static TempStr AddTimeZone(TempStr s, int timeZone) {
+    if (timeZone == 0) return nullptr;
+
+    const char* tzSign = (timeZone > 0) ? "+" : "-";
+    int abs = (timeZone > 0) ? timeZone : -timeZone;
+    int hours = abs / 100;
+    int mins = abs % 100;
+    return str::FormatTemp("%s %s%02d:%02d", s, tzSign, hours, mins);
+}
+
+static TempStr FormatSystemTimeTemp(SYSTEMTIME& date, int timeZone) {
     WCHAR bufW[512]{};
     int cchBufLen = dimof(bufW);
     int ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, bufW, cchBufLen);
@@ -114,7 +170,8 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date) {
 
     // don't add 00:00:00 for dates without time
     if (0 == date.wHour && 0 == date.wMinute && 0 == date.wSecond) {
-        return ToUtf8Temp(bufW);
+        TempStr res = ToUtf8Temp(bufW);
+        return AddTimeZone(res, timeZone);
     }
 
     WCHAR* tmp = bufW + ret;
@@ -123,27 +180,17 @@ static TempStr FormatSystemTimeTemp(SYSTEMTIME& date) {
     if (ret < 2) { // GetTimeFormat() failed or returned an empty result
         tmp[-1] = '\0';
     }
-
-    return ToUtf8Temp(bufW);
+    TempStr res = ToUtf8Temp(bufW);
+    return AddTimeZone(res, timeZone);
 }
 
 // Convert a date in PDF or XPS format, e.g. "D:20091222171933-05'00'" to a display
 // format e.g. "12/22/2009 5:19:33 PM"
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // The conversion happens in place
-static TempStr ConvDateToDisplayTemp(const char* s, bool (*dateParseFn)(const char* date, SYSTEMTIME* timeOut)) {
-    if (!s || !*s || !dateParseFn) {
-        return nullptr;
-    }
-
-    SYSTEMTIME date{};
-    bool ok = dateParseFn(s, &date);
-    if (!ok) {
-        return nullptr;
-    }
-
-    return FormatSystemTimeTemp(date);
-}
+// static TempStr ConvDateToDisplayTemp(SYSTEMTIME* timeOut) {
+//    return
+//}
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 static TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
@@ -236,28 +283,44 @@ static const char* propToName[] = {
     kPropCreatorApp, _TRN("Application:"),
     kPropPdfProducer, _TRN("PDF Producer:"),
     kPropPdfVersion, _TRN("PDF Version:"),
+    kPropFiles, _TRN("Files:"),
+    kPropKeywords, _TRN("Keywords:"),
+    kPropEncryption, _TRN("Encryption:"),
+    kPropImageSize, _TRN("Image Size:"),
+    kPropDpi, _TRN("DPI:"),
+    kPropComment, _TRN("Comment:"),
+    kPropCameraMake, _TRN("Camera Make:"),
+    kPropCameraModel, _TRN("Camera Model:"),
+    kPropDateOriginal, _TRN("Date Original:"),
+    kPropExposureTime, _TRN("Exposure Time:"),
+    kPropFNumber, _TRN("F-Number:"),
+    kPropIsoSpeed, _TRN("ISO Speed:"),
+    kPropFocalLength, _TRN("Focal Length:"),
+    kPropFocalLength35mm, _TRN("Focal Length (35mm):"),
+    kPropFlash, _TRN("Flash:"),
+    kPropOrientation, _TRN("Orientation:"),
+    kPropExposureProgram, _TRN("Exposure Program:"),
+    kPropMeteringMode, _TRN("Metering Mode:"),
+    kPropWhiteBalance, _TRN("White Balance:"),
+    kPropExposureBias, _TRN("Exposure Bias:"),
+    kPropBitsPerSample, _TRN("Bits Per Sample:"),
     nullptr,
 };
 // clang-format on
 
 static void AppendPropTranslated(str::Str& out, const char* propName, const char* val) {
+    if (!val) return;
     const char* s = GetMatchingString(propToName, propName);
     ReportIf(!s);
     const char* trans = trans::GetTranslation(s);
     AppendProp(out, trans, val);
 }
 
-static void AppendPropTranslated(str::Str& out, DocController* ctrl, const char* propName) {
-    TempStr val = ctrl->GetPropertyTemp(propName);
-    AppendPropTranslated(out, propName, val);
-}
-
-static void AppendPdfFileStructure(str::Str& out, DocController* ctrl) {
-    TempStr fstruct = ctrl->GetPropertyTemp(kPropPdfFileStructure);
+static void AppendPdfFileStructure(str::Str& out, const char* fstruct, const char* filePath) {
     if (str::IsEmpty(fstruct)) {
-        bool isPDF = str::EndsWithI(ctrl->GetFilePath(), ".pdf");
+        bool isPDF = str::EndsWithI(filePath, ".pdf");
         if (isPDF) {
-            AppendProp(out, _TRA("Fast Web View"), _TRA("No"));
+            AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), ":"), _TRA("No"));
         }
         return;
     }
@@ -270,7 +333,7 @@ static void AppendPdfFileStructure(str::Str& out, DocController* ctrl) {
     if (parts.Contains("linearized")) {
         linearized = _TRA("Yes");
     }
-    AppendProp(out, _TRA("Fast Web View"), linearized);
+    AppendProp(out, str::JoinTemp(_TRA("Fast Web View"), ":"), linearized);
 
     if (parts.Contains("tagged")) {
         props.Append(_TRA("Tagged PDF"));
@@ -289,7 +352,36 @@ static void AppendPdfFileStructure(str::Str& out, DocController* ctrl) {
     AppendProp(out, _TRA("PDF Optimizations:"), val);
 }
 
-static void GetPropsText(DocController* ctrl, str::Str& out, bool extended) {
+static void GetAllProps(DocController* ctrl, Props& propsOut) {
+    DisplayModel* dm = ctrl->AsFixed();
+    if (dm) {
+        EngineBase* engine = dm->GetEngine();
+        engine->GetProperties(propsOut);
+    } else {
+        for (int i = 0; gAllProps[i]; i++) {
+            TempStr val = ctrl->GetPropertyTemp(gAllProps[i]);
+            propsOut.Append(gAllProps[i]);
+            propsOut.Append(val);
+        }
+    }
+}
+
+void AppendDateProp(str::Str& out, const char* key, const char* val, bool isPdfDate) {
+    SYSTEMTIME date;
+    int timeZone = 0;
+    bool ok = false;
+    if (!val) return;
+    if (isPdfDate) {
+        ok = PdfDateParseA(val, &date, &timeZone);
+    } else {
+        ok = IsoDateParse(val, &date, &timeZone);
+    }
+    if (!ok) return;
+    TempStr dateStr = FormatSystemTimeTemp(date, timeZone);
+    AppendProp(out, key, dateStr);
+}
+
+static void GetPropsText(DocController* ctrl, str::Str& out) {
     ReportIf(!ctrl);
 
     const char* path = gPluginMode ? gPluginURL : ctrl->GetFilePath();
@@ -314,32 +406,27 @@ static void GetPropsText(DocController* ctrl, str::Str& out, bool extended) {
         AppendProp(out, _TRA("File Size:"), strTemp);
     }
 
-    AppendPropTranslated(out, ctrl, kPropTitle);
-    AppendPropTranslated(out, ctrl, kPropSubject);
-    AppendPropTranslated(out, ctrl, kPropAuthor);
-    AppendPropTranslated(out, ctrl, kPropCopyright);
+    Props props;
+    GetAllProps(ctrl, props);
 
-    TempStr val = ctrl->GetPropertyTemp(kPropCreationDate);
-    if (val && dm && kindEngineMupdf == dm->engineType) {
-        strTemp = ConvDateToDisplayTemp(val, PdfDateParseA);
-    } else {
-        strTemp = ConvDateToDisplayTemp(val, IsoDateParse);
-    }
-    AppendProp(out, _TRA("Created:"), strTemp);
+    AppendPropTranslated(out, kPropTitle, GetPropValueTemp(props, kPropTitle));
+    AppendPropTranslated(out, kPropSubject, GetPropValueTemp(props, kPropSubject));
+    AppendPropTranslated(out, kPropAuthor, GetPropValueTemp(props, kPropAuthor));
+    AppendPropTranslated(out, kPropCopyright, GetPropValueTemp(props, kPropCopyright));
 
-    val = ctrl->GetPropertyTemp(kPropModificationDate);
-    if (val && dm && kindEngineMupdf == dm->engineType) {
-        strTemp = ConvDateToDisplayTemp(val, PdfDateParseA);
-    } else {
-        strTemp = ConvDateToDisplayTemp(val, IsoDateParse);
-    }
-    AppendProp(out, _TRA("Modified:"), strTemp);
+    bool isPdfDate = dm && kindEngineMupdf == dm->engineType;
+    char* val = GetPropValueTemp(props, kPropCreationDate);
+    AppendDateProp(out, _TRA("Created:"), val, isPdfDate);
+    val = GetPropValueTemp(props, kPropModificationDate);
+    AppendDateProp(out, _TRA("Modified:"), val, isPdfDate);
 
-    AppendPropTranslated(out, ctrl, kPropCreatorApp);
-    AppendPropTranslated(out, ctrl, kPropPdfProducer);
-    AppendPropTranslated(out, ctrl, kPropPdfVersion);
+    AppendPropTranslated(out, kPropCreatorApp, GetPropValueTemp(props, kPropCreatorApp));
+    AppendPropTranslated(out, kPropPdfProducer, GetPropValueTemp(props, kPropPdfProducer));
+    AppendPropTranslated(out, kPropPdfVersion, GetPropValueTemp(props, kPropPdfVersion));
+    strTemp = FormatPermissionsTemp(ctrl);
+    AppendProp(out, _TRA("Denied Permissions:"), strTemp);
 
-    AppendPdfFileStructure(out, ctrl);
+    AppendPdfFileStructure(out, GetPropValueTemp(props, kPropPdfFileStructure), ctrl->GetFilePath());
 
     strTemp = str::FormatTemp("%d", ctrl->PageCount());
     AppendProp(out, _TRA("Number of Pages:"), strTemp);
@@ -348,18 +435,45 @@ static void GetPropsText(DocController* ctrl, str::Str& out, bool extended) {
         strTemp = FormatPageSizeTemp(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
         AppendProp(out, _TRA("Page Size:"), strTemp);
     }
+    AppendPropTranslated(out, kPropFiles, GetPropValueTemp(props, kPropFiles));
 
-    strTemp = FormatPermissionsTemp(ctrl);
-    AppendProp(out, _TRA("Denied Permissions:"), strTemp);
+    // clang-format off
+    // properties already shown above, skip when appending remaining
+    static const char* handledProps[] = {
+        kPropTitle, kPropSubject, kPropAuthor, kPropCopyright,
+        kPropCreationDate, kPropModificationDate,
+        kPropCreatorApp, kPropPdfProducer, kPropPdfVersion,
+        kPropPdfFileStructure, kPropFiles,
+        kPropUnsupportedFeatures, kPropFontList,
+        nullptr,
+    };
+    // clang-format on
 
-    if (extended) {
-        // Note: FontList extraction can take a while
-        val = ctrl->GetPropertyTemp(kPropFontList);
-        if (val) {
-            out.Append("\n");
-            out.Append(_TRA("Fonts:"));
-            out.Append("\n");
-            out.Append(val);
+    // append any remaining properties not already shown
+    int nProps = PropsCount(props);
+    for (int i = 0; i < nProps; i++) {
+        char* propName = props.At(i * 2);
+        char* propVal = props.At(i * 2 + 1);
+        if (str::IsEmpty(propVal)) {
+            continue;
+        }
+        bool handled = false;
+        for (int j = 0; handledProps[j]; j++) {
+            if (str::Eq(propName, handledProps[j])) {
+                handled = true;
+                break;
+            }
+        }
+        if (handled) {
+            continue;
+        }
+        const char* s = GetMatchingString(propToName, propName);
+        if (s) {
+            const char* trans = trans::GetTranslation(s);
+            AppendProp(out, trans, propVal);
+        } else {
+            TempStr label = str::FormatTemp("%s:", propName);
+            AppendProp(out, label, propVal);
         }
     }
 }
@@ -377,22 +491,6 @@ static void SetEditText(HWND hwndEdit, const char* text) {
     SendMessageW(hwndEdit, EM_SETSEL, 0, 0);
 }
 
-static void ShowExtendedProperties(PropertiesLayout* pl) {
-    if (!pl) {
-        return;
-    }
-    // check if already showing fonts
-    if (str::Find(pl->propsText.CStr(), _TRA("Fonts:"))) {
-        return;
-    }
-    MainWindow* win = FindMainWindowByHwnd(pl->hwndParent);
-    if (!win) {
-        return;
-    }
-    DestroyWindow(pl->hwnd);
-    ShowProperties(win->hwndFrame, win->ctrl, true);
-}
-
 static void CopyPropertiesToClipboard(PropertiesLayout* pl) {
     if (!pl) {
         return;
@@ -400,15 +498,62 @@ static void CopyPropertiesToClipboard(PropertiesLayout* pl) {
     CopyTextToClipboard(pl->propsText.CStr());
 }
 
+static void SizeToContent(PropertiesLayout* pl) {
+    HWND hwnd = pl->hwnd;
+    HWND hwndEdit = pl->hwndEdit;
+
+    HFONT font = (HFONT)SendMessageW(hwndEdit, WM_GETFONT, 0, 0);
+    HDC hdcEdit = GetDC(hwndEdit);
+    HGDIOBJ origFont = SelectObject(hdcEdit, font);
+    int maxLineDx = 0;
+    int nLines = 0;
+    const char* text = pl->propsText.CStr();
+    while (*text) {
+        const char* nl = str::FindChar(text, '\n');
+        int lineLen = nl ? (int)(nl - text) : str::Leni(text);
+        SIZE sz{};
+        TempWStr lineW = ToWStrTemp(text, (size_t)lineLen);
+        GetTextExtentPoint32W(hdcEdit, lineW, str::Leni(lineW), &sz);
+        if (sz.cx > maxLineDx) {
+            maxLineDx = sz.cx;
+        }
+        nLines++;
+        text = nl ? nl + 1 : text + lineLen;
+    }
+    maxLineDx += 16;
+
+    TEXTMETRICW tm{};
+    GetTextMetricsW(hdcEdit, &tm);
+    int lineHeight = tm.tmHeight + tm.tmExternalLeading;
+
+    SelectObject(hdcEdit, origFont);
+    ReleaseDC(hwndEdit, hdcEdit);
+
+    // add padding for scrollbar, border, window frame
+    int editPadding = GetSystemMetrics(SM_CXVSCROLL) + 2 * GetSystemMetrics(SM_CXEDGE) + 16;
+    int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
+    int wantedClientDx = maxLineDx + editPadding;
+    int wantedDx = wantedClientDx + frameDx;
+
+    // calculate height to fit all lines
+    int editBorderDy = 2 * GetSystemMetrics(SM_CYEDGE);
+    int frameDy = GetSystemMetrics(SM_CYFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
+    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + kButtonAreaDy + frameDy;
+
+    // cap at 80% of screen
+    Rect work = GetWorkAreaRect(WindowRect(hwnd), hwnd);
+    int maxDx = (work.dx * 80) / 100;
+    int maxDy = (work.dy * 80) / 100;
+    wantedDx = std::min(wantedDx, maxDx);
+    wantedDy = std::min(wantedDy, maxDy);
+
+    Rect wRc = WindowRect(hwnd);
+    MoveWindow(hwnd, wRc.x, wRc.y, wantedDx, wantedDy, TRUE);
+}
+
 static void LayoutButtons(PropertiesLayout* pl) {
     Rect cRc = ClientRect(pl->hwnd);
     int btnY = cRc.dy - kButtonAreaDy + kButtonPadding;
-
-    if (pl->btnGetFonts) {
-        auto sz = pl->btnGetFonts->GetIdealSize();
-        Rect rc{kButtonPadding, btnY, sz.dx, sz.dy};
-        pl->btnGetFonts->SetBounds(rc);
-    }
 
     if (pl->btnCopyToClipboard) {
         auto sz = pl->btnCopyToClipboard->GetIdealSize();
@@ -436,11 +581,6 @@ static void PropertiesOnCommand(HWND hwnd, WPARAM wp) {
     switch (cmd) {
         case CmdCopySelection:
             CopyPropertiesToClipboard(pl);
-            break;
-
-        case CmdProperties:
-            // make a repeated Ctrl+D display some extended properties
-            ShowExtendedProperties(pl);
             break;
     }
 }
@@ -480,6 +620,14 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_DESTROY:
             pl = FindPropertyWindowByHwnd(hwnd);
             ReportIf(!pl);
+            if (pl) {
+                Rect rc = WindowRect(hwnd);
+                Point pos = {rc.x, rc.y};
+                if (pos != pl->initialPos) {
+                    gGlobalPrefs->propWinPos = pos;
+                    SaveSettings();
+                }
+            }
             gPropertiesWindows.Remove(pl);
             delete pl;
             break;
@@ -494,7 +642,53 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 
-void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
+struct GetFontsResult {
+    HWND hwnd;
+    str::Str fontsText;
+};
+
+static void OnGetFontsFinished(GetFontsResult* result) {
+    PropertiesLayout* pl = FindPropertyWindowByHwnd(result->hwnd);
+    if (pl) {
+        // remove "Getting fonts information..." line
+        const char* marker = _TRA("Getting fonts information...");
+        const char* found = str::Find(pl->propsText.CStr(), marker);
+        if (found) {
+            int pos = (int)(found - pl->propsText.CStr());
+            if (pos > 0 && pl->propsText.CStr()[pos - 1] == '\n') {
+                pos--;
+            }
+            pl->propsText.RemoveAt(pos, pl->propsText.Size() - pos);
+        }
+        pl->propsText.Append(result->fontsText.CStr());
+        SetEditText(pl->hwndEdit, pl->propsText.CStr());
+        SizeToContent(pl);
+    }
+    delete result;
+}
+
+struct GetFontsData {
+    HWND hwnd;
+    DocController* ctrl;
+};
+
+static void GetFontsThread(GetFontsData* data) {
+    TempStr val = data->ctrl->GetPropertyTemp(kPropFontList);
+    auto result = new GetFontsResult;
+    result->hwnd = data->hwnd;
+    if (val) {
+        result->fontsText.Append("\n");
+        result->fontsText.Append(_TRA("Fonts:"));
+        result->fontsText.Append("\n");
+        result->fontsText.Append(val);
+    }
+    auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
+    uitask::Post(fn, "GetFontsFinished");
+    delete data;
+    DestroyTempAllocator();
+}
+
+void ShowProperties(HWND parent, DocController* ctrl) {
     PropertiesLayout* layoutData = FindPropertyWindowByHwnd(parent);
     if (layoutData) {
         SetActiveWindow(layoutData->hwnd);
@@ -507,7 +701,9 @@ void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
 
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
-    GetPropsText(ctrl, layoutData->propsText, extended);
+    GetPropsText(ctrl, layoutData->propsText);
+    layoutData->propsText.Append("\n");
+    layoutData->propsText.Append(_TRA("Getting fonts information..."));
 
     HMODULE h = GetModuleHandleW(nullptr);
     WNDCLASSEX wcex = {};
@@ -557,41 +753,7 @@ void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
 
     SetEditText(hwndEdit, layoutData->propsText.CStr());
 
-    // estimate window width based on longest line
-    {
-        HDC hdcEdit = GetDC(hwndEdit);
-        HGDIOBJ origFont = SelectObject(hdcEdit, font);
-        int maxLineDx = 0;
-        const char* text = layoutData->propsText.CStr();
-        while (*text) {
-            const char* nl = str::FindChar(text, '\n');
-            int lineLen = nl ? (int)(nl - text) : str::Leni(text);
-            SIZE sz{};
-            TempWStr lineW = ToWStrTemp(text, (size_t)lineLen);
-            GetTextExtentPoint32W(hdcEdit, lineW, str::Leni(lineW), &sz);
-            if (sz.cx > maxLineDx) {
-                maxLineDx = sz.cx;
-            }
-            text = nl ? nl + 1 : text + lineLen;
-        }
-        maxLineDx += 16;
-        SelectObject(hdcEdit, origFont);
-        ReleaseDC(hwndEdit, hdcEdit);
-
-        // add padding for scrollbar, border, window frame
-        int editPadding = GetSystemMetrics(SM_CXVSCROLL) + 2 * GetSystemMetrics(SM_CXEDGE) + 16;
-        int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
-        int wantedClientDx = maxLineDx + editPadding;
-        int wantedDx = wantedClientDx + frameDx;
-
-        // cap at 80% of screen
-        Rect work = GetWorkAreaRect(WindowRect(parent), hwnd);
-        int maxDx = (work.dx * 80) / 100;
-        wantedDx = std::min(wantedDx, maxDx);
-
-        Rect wRc = WindowRect(hwnd);
-        MoveWindow(hwnd, wRc.x, wRc.y, wantedDx, wRc.dy, TRUE);
-    }
+    SizeToContent(layoutData);
 
     // create buttons
     {
@@ -606,24 +768,29 @@ void ShowProperties(HWND parent, DocController* ctrl, bool extended) {
         b->onClick = MkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
-    if (!extended) {
-        Button::CreateArgs args;
-        args.parent = hwnd;
-        args.text = _TRA("Get Fonts Info");
-        args.isRtl = isRtl;
-
-        auto b = new Button();
-        b->Create(args);
-        layoutData->btnGetFonts = b;
-        b->onClick = MkFunc0(ShowExtendedProperties, layoutData);
-    }
-
     LayoutButtons(layoutData);
 
-    CenterDialog(hwnd, parent);
+    Point savedPos = gGlobalPrefs->propWinPos;
+    if (!savedPos.IsEmpty()) {
+        SetWindowPos(hwnd, nullptr, savedPos.x, savedPos.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    } else {
+        CenterDialog(hwnd, parent);
+    }
+    HwndEnsureVisible(hwnd);
+    {
+        Rect rc = WindowRect(hwnd);
+        layoutData->initialPos = {rc.x, rc.y};
+    }
     if (UseDarkModeLib()) {
         DarkMode::setDarkWndSafe(hwnd);
         DarkMode::setWindowEraseBgSubclass(hwnd);
     }
     ShowWindow(hwnd, SW_SHOW);
+
+    // start background font loading
+    auto data = new GetFontsData;
+    data->hwnd = hwnd;
+    data->ctrl = ctrl;
+    auto fn = MkFunc0<GetFontsData>(GetFontsThread, data);
+    RunAsync(fn, "GetFontsThread");
 }

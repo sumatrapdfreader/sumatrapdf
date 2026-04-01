@@ -80,7 +80,7 @@ def ForwardSearch()
 enddef
 ```
 
-Feel free to replace `SumatraPDF.exe` with the correct executable filename,
+Replace `SumatraPDF.exe` with the correct executable filename,
 e.g. `SumatraPDFv3-4-5.exe`.
 
 Next, you should map this function to some key, for example you could use the
@@ -90,7 +90,7 @@ following.
 nnoremap <buffer> <F5> <Scriptcmd>ForwardSearch()<cr>
 ```
 
-Now, `<F5>` will perform a forward-search. Feel free to replace `<F5>` with
+Now, `<F5>` will perform a forward-search. You can replace `<F5>` with
 the key that you prefer.
 
 ### backward-search

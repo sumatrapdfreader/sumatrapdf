@@ -13,6 +13,27 @@ extern const char* kPropFontList;
 extern const char* kPropPdfVersion;
 extern const char* kPropPdfProducer;
 extern const char* kPropPdfFileStructure;
+extern const char* kPropFiles;
+extern const char* kPropKeywords;
+extern const char* kPropEncryption;
+extern const char* kPropImageSize;
+extern const char* kPropDpi;
+extern const char* kPropComment;
+extern const char* kPropCameraMake;
+extern const char* kPropCameraModel;
+extern const char* kPropDateOriginal;
+extern const char* kPropExposureTime;
+extern const char* kPropFNumber;
+extern const char* kPropIsoSpeed;
+extern const char* kPropFocalLength;
+extern const char* kPropFocalLength35mm;
+extern const char* kPropFlash;
+extern const char* kPropOrientation;
+extern const char* kPropExposureProgram;
+extern const char* kPropMeteringMode;
+extern const char* kPropWhiteBalance;
+extern const char* kPropExposureBias;
+extern const char* kPropBitsPerSample;
 
 extern const char* gAllProps[];
 

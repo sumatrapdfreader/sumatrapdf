@@ -333,8 +333,8 @@ void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
 
         if (symName) {
             s.AppendFmt("!%s+0x%x", symName, (int)symDisp);
-        } else if (symDisp != 0) {
-            s.AppendFmt("+0x%x", (int)symDisp);
+        } else {
+            s.AppendFmt("+0x%x", (int)offset);
         }
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
@@ -401,7 +401,7 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
     stackFrame.AddrStack.Mode = AddrModeFlat;
 
     int framesCount = 0;
-    static const int maxFrames = 32;
+    static const int maxFrames = 48;
     while (framesCount < maxFrames) {
         if (!GetStackFrameInfo(s, &stackFrame, &ctx, hThread)) {
             break;

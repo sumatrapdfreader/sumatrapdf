@@ -588,6 +588,9 @@ NotificationWnd* ShowWarningNotification(HWND hwndParent, const char* msg, int t
 }
 
 void NotificationUpdateMessage(NotificationWnd* wnd, const char* msg, int timeoutMs, bool highlight) {
+    if (!wnd) {
+        return;
+    }
     wnd->UpdateMessage(msg, timeoutMs, highlight);
 }
 

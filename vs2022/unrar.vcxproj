@@ -367,7 +367,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -381,6 +381,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -404,7 +405,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -418,6 +419,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -441,7 +443,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -455,6 +457,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -475,7 +478,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -489,6 +492,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -512,7 +516,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -525,6 +529,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -548,7 +553,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -561,6 +566,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -584,7 +590,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -597,6 +603,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -617,7 +624,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -630,6 +637,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -653,7 +661,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -667,6 +675,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -690,7 +699,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -704,6 +713,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -727,7 +737,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -741,6 +751,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -761,7 +772,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -775,6 +786,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -797,7 +809,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -811,6 +823,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -835,7 +848,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -849,6 +862,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -873,7 +887,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -887,6 +901,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>
@@ -908,7 +923,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4800;6319;4005;4100;4201;4211;4244;4310;4389;4456;4459;4505;4701;4702;4706;4709;4731;4828;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;UNRAR;RARDLL;SILENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\unrar;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -922,6 +937,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ResourceCompile>

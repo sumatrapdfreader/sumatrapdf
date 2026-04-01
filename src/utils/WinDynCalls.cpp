@@ -193,11 +193,15 @@ HRESULT SetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWOR
     return DynDwmSetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
 
+void SetWindowBorderColor(HWND hwnd, COLORREF color) {
+    SetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &color, sizeof(color));
+}
+
 void SetWindowRoundedCorners(HWND hwnd, bool rounded) {
     auto cornerPref = rounded ? DWMWCP_ROUND : DWMWCP_DONOTROUND;
     SetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &cornerPref, sizeof(cornerPref));
     COLORREF borderColor = rounded ? DWMWA_COLOR_DEFAULT : DWMWA_COLOR_NONE;
-    SetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &borderColor, sizeof(borderColor));
+    SetWindowBorderColor(hwnd, borderColor);
 }
 
 }; // namespace dwm

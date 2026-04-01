@@ -894,6 +894,40 @@ void GetStressTestInfo(str::Str* s) {
     }
 }
 
+static Rect GetWorkAreaRect() {
+    RECT rc;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+    return ToRect(rc);
+}
+
+// position windows in halves or quarters of the screen
+static void PositionStressWindows(MainWindow** windows, int n) {
+    Rect wa = GetWorkAreaRect();
+    int halfDx = wa.dx / 2;
+    int halfDy = wa.dy / 2;
+    struct {
+        int x, y, dx, dy;
+    } positions[4];
+
+    if (n == 1) {
+        positions[0] = {wa.x, wa.y, halfDx, wa.dy};
+    } else if (n == 2) {
+        positions[0] = {wa.x, wa.y, halfDx, wa.dy};
+        positions[1] = {wa.x + halfDx, wa.y, wa.dx - halfDx, wa.dy};
+    } else {
+        // 3 or 4: quarters
+        positions[0] = {wa.x, wa.y, halfDx, halfDy};
+        positions[1] = {wa.x + halfDx, wa.y, wa.dx - halfDx, halfDy};
+        positions[2] = {wa.x, wa.y + halfDy, halfDx, wa.dy - halfDy};
+        positions[3] = {wa.x + halfDx, wa.y + halfDy, wa.dx - halfDx, wa.dy - halfDy};
+    }
+
+    for (int j = 0; j < n; j++) {
+        auto& p = positions[j];
+        MoveWindow(windows[j]->hwndFrame, p.x, p.y, p.dx, p.dy, TRUE);
+    }
+}
+
 void StartStressTest(Flags* i, MainWindow* win) {
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
@@ -909,6 +943,10 @@ void StartStressTest(Flags* i, MainWindow* win) {
     freopen_s(&nul, "NUL", "w", stderr);
 
     int n = i->stressParallelCount;
+    if (n > 4) {
+        n = 4;
+    }
+
     if (n > 1 || i->stressRandomizeFiles) {
         MainWindow** windows = AllocArray<MainWindow*>(n);
         windows[0] = win;
@@ -918,6 +956,8 @@ void StartStressTest(Flags* i, MainWindow* win) {
                 return;
             }
         }
+
+        PositionStressWindows(windows, n);
 
         printf("Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);
@@ -939,6 +979,7 @@ void StartStressTest(Flags* i, MainWindow* win) {
 
         free(windows);
     } else {
+        PositionStressWindows(&win, 1);
         // dst will be deleted when the stress ends
         StressTest* st = new StressTest(win, i->exitWhenDone);
         st->maxFiles = i->maxFiles;

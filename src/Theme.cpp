@@ -220,10 +220,16 @@ void SetThemeByIndex(int themeIdx) {
         DarkMode::setDefaultColors(false);
 
         DarkMode::setBackgroundColor(ThemeWindowBackgroundColor());
+        DarkMode::setCtrlBackgroundColor(ThemeWindowControlBackgroundColor());
+        COLORREF ctrlBg = ThemeWindowControlBackgroundColor();
+        COLORREF hotBg = AccentColor(ctrlBg, 20);
+        COLORREF edgeCol = AccentColor(ctrlBg, 40);
+        DarkMode::setHotBackgroundColor(hotBg);
         DarkMode::setTextColor(ThemeWindowTextColor());
         DarkMode::setDisabledTextColor(ThemeWindowTextDisabledColor());
-        DarkMode::setDlgBackgroundColor(ThemeWindowControlBackgroundColor());
+        DarkMode::setDlgBackgroundColor(ctrlBg);
         DarkMode::setLinkTextColor(ThemeWindowLinkColor());
+        DarkMode::setEdgeColor(edgeCol);
         DarkMode::updateThemeBrushesAndPens();
 
         DarkMode::setViewTextColor(ThemeWindowTextColor());
@@ -285,14 +291,14 @@ void SetCurrentThemeFromSettings() {
     }
 }
 
-// if is dark, makes lighter, if light, makes darker
-static COLORREF AdjustLightOrDark(COLORREF col, float n) {
-    if (IsLightColor(col)) {
-        col = AdjustLightness2(col, -n);
-    } else {
-        col = AdjustLightness2(col, n);
+COLORREF AccentColor(COLORREF col, int light, int dark) {
+    if (dark == 0) {
+        dark = light;
     }
-    return col;
+    if (IsLightColor(col)) {
+        return AdjustLightness2(col, -light);
+    }
+    return AdjustLightness2(col, dark);
 }
 
 #define GetThemeCol(name, def) GetParsedCOLORREF(name, name##Parsed, def)
@@ -339,7 +345,7 @@ COLORREF ThemeDocumentColors(COLORREF& bg) {
         // this is probably not expected for custom colors but we used to do
         // it for built-in themes
         // so do it for legacy themes but not for custom themes or new Dark theme
-        bg = AdjustLightOrDark(bg, 8);
+        bg = AccentColor(bg, 8);
     }
     return text;
 }
@@ -373,10 +379,14 @@ COLORREF ThemeWindowTextColor() {
 }
 
 COLORREF ThemeWindowTextDisabledColor() {
-    auto col = ThemeWindowTextColor();
-    // TODO: probably add textDisabledColor
-    auto col2 = AdjustLightOrDark(col, 0x7f);
-    return col2;
+    // blend text color halfway toward background so disabled text
+    // is visible but clearly muted on both light and dark themes
+    COLORREF txt = ThemeWindowTextColor();
+    COLORREF bg = ThemeMainWindowBackgroundColor();
+    u8 r = (u8)((GetRValue(txt) + GetRValue(bg)) / 2);
+    u8 g = (u8)((GetGValue(txt) + GetGValue(bg)) / 2);
+    u8 b = (u8)((GetBValue(txt) + GetBValue(bg)) / 2);
+    return RGB(r, g, b);
 }
 
 COLORREF ThemeWindowControlBackgroundColor() {
@@ -401,7 +411,7 @@ COLORREF ThemeNotificationsTextColor() {
 COLORREF ThemeNotificationsHighlightColor() {
     if (gCurrentTheme->colorizeControls) {
         auto col = ThemeWindowBackgroundColor();
-        return AdjustLightOrDark(col, 20);
+        return AccentColor(col, 20);
     }
     return RgbToCOLORREF(0xFFEE70); // yellowish
 }
@@ -409,7 +419,7 @@ COLORREF ThemeNotificationsHighlightColor() {
 COLORREF ThemeNotificationsHighlightTextColor() {
     if (gCurrentTheme->colorizeControls) {
         auto col = ThemeWindowTextColor();
-        return AdjustLightOrDark(col, 20);
+        return AccentColor(col, 20);
     }
     return RgbToCOLORREF(0x8d0801); // reddish
 }

@@ -217,6 +217,7 @@ void SetCurrentLangByCode(const char* langCode) {
 }
 
 const char* ValidateLangCode(const char* langCode) {
+    if (!langCode) return nullptr;
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
     if (idx < 0) {
         return nullptr;

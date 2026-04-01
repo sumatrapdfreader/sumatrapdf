@@ -18,7 +18,6 @@ PDF output options:
   ascii: ASCII hex encode binary streams
   pretty: pretty-print objects with indentation
   labels: print object labels
-  linearize: optimize for web browsers (no longer supported!)
   clean: pretty-print graphics commands in content streams
   sanitize: sanitize graphics commands in content streams
   garbage: garbage collect unused objects

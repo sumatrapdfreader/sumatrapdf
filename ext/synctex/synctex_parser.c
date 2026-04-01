@@ -616,11 +616,6 @@ static synctex_open_s __synctex_open_v2(const char * output, synctex_io_mode_t i
     }
     if (NULL == (open.file = gzopen(open.synctex,mode))) {
         /*  Could not open this file */
-        if (errno != ENOENT) {
-            /*  The file does exist, this is a lower level error, I can't do anything. */
-            _synctex_error("could not open %s, error %i\n",open.synctex,errno);
-            goto return_on_error;
-        }
         /*  Apparently, there is no uncompressed synctex file. Try the compressed version */
         if (open.synctex != strcat(open.synctex,synctex_suffix_gz)){
             _synctex_error("!  __synctex_open_v2: Concatenation problem (can't add suffix '%s')\n",synctex_suffix_gz);

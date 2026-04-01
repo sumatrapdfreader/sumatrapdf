@@ -39,7 +39,11 @@ quits.
 
 // maximum number of files to remember in total
 // (to keep the settings file within reasonable bounds)
-constexpr size_t kFileHistoryMaxFiles = 1000;
+constexpr int kFileHistoryMaxFiles = 1000;
+
+// maximum number of most frequently used files that will be shown on the
+// Frequent Read list (space permitting)
+constexpr int kFileHistoryMaxFrequent = 1000;
 
 FileHistory gFileHistory;
 
@@ -250,7 +254,7 @@ void FileHistory::Purge(bool alwaysUseDefaultState) const {
         }
     }
 
-    for (size_t j = states->size(); j > 0; j--) {
+    for (int j = states->Size(); j > 0; j--) {
         FileState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites

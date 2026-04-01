@@ -43,8 +43,13 @@ CustomScreenDPI = 0
 ; view, continuous, continuous facing, continuous book view
 DefaultDisplayMode = automatic
 
-; default zoom (in %) or one of those values: fit page, fit width, fit content
+; default zoom. valid values: fit page, fit width, fit content or percent like
+; 100%
 DefaultZoom = fit page
+
+; default zoom for image files. valid values: fit page, fit width, fit content
+; or percent like 100%
+DefaultImageZoom = 
 
 ; if true, we expose the SyncTeX inverse search command line in Settings ->
 ; Options
@@ -92,10 +97,13 @@ RestoreSession = true
 ; if true, we'll always open files using existing SumatraPDF process
 ReuseInstance = true
 
-; if false, the menu bar will be hidden for all newly opened windows (use F9 to
-; show it until the window closes or Alt to show it just briefly), only applies
-; if UseTabs is false (introduced in version 2.5)
+; if false, the menu bar will be hidden (use F9 to toggle, persisted across
+; sessions) (introduced in version 2.5)
 ShowMenubar = true
+
+; if true, show the menu bar when using tabs (useTabs = true) (introduced in
+; version 3.7)
+ShowMenubarWithTabs = false
 
 ; if true, we show the toolbar at the top of the window
 ShowToolbar = true
@@ -563,6 +571,9 @@ TimeOfLastUpdateCheck = 0 0
 
 ; value required to determine recency for the OpenCount value in FileStates
 OpenCountWeek = 0
+
+; position of the document properties window
+PropWinPos = 0 0
 ```
 
 ## Syntax for color values
@@ -570,9 +581,10 @@ OpenCountWeek = 0
 The syntax for colors is: `#rrggbb` or `#aarrggbb`.
 
 The components are hex values (ranging from 00 to FF) and stand for:
+- `aa` : alpha (transparency). ff is fully transparent, 0 is not transparent, and 7f is 50% transparent
 - `rr` : red component
 - `gg` : green component
 - `bb` : blue component
-- `aa` : alpha (transparency) component
 
-For example #ff0000 means red color. #ff00007f is half-transparent red.
+For example #ff0000 means red color. #7fff0000 is half-transparent red.
+

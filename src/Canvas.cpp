@@ -10,7 +10,11 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/ThreadUtil.h"
+#include "utils/HttpUtil.h"
+#include "utils/GuessFileType.h"
 #include <algorithm>
+#include <shlobj.h>
 
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
@@ -62,6 +66,154 @@ bool gNoFlickerRender = true;
 
 Kind kNotifAnnotation = "notifAnnotation";
 
+// OLE drag-drop support for dragging selected text out of the window
+class TextDropSource : public IDropSource {
+    LONG refCount = 1;
+
+  public:
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (riid == IID_IUnknown || riid == IID_IDropSource) {
+            *ppv = this;
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG r = InterlockedDecrement(&refCount);
+        if (r == 0) {
+            delete this;
+        }
+        return r;
+    }
+    STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override {
+        if (fEscapePressed) {
+            return DRAGDROP_S_CANCEL;
+        }
+        if (!(grfKeyState & MK_LBUTTON)) {
+            return DRAGDROP_S_DROP;
+        }
+        return S_OK;
+    }
+    STDMETHODIMP GiveFeedback(__unused DWORD) override { return DRAGDROP_S_USEDEFAULTCURSORS; }
+};
+
+class TextDataObject : public IDataObject {
+    LONG refCount = 1;
+    HGLOBAL hText = nullptr;
+
+  public:
+    explicit TextDataObject(const WCHAR* text) {
+        size_t cb = (str::Len(text) + 1) * sizeof(WCHAR);
+        hText = GlobalAlloc(GMEM_MOVEABLE, cb);
+        if (hText) {
+            void* p = GlobalLock(hText);
+            memcpy(p, text, cb);
+            GlobalUnlock(hText);
+        }
+    }
+    ~TextDataObject() {
+        if (hText) {
+            GlobalFree(hText);
+        }
+    }
+
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (riid == IID_IUnknown || riid == IID_IDataObject) {
+            *ppv = this;
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG r = InterlockedDecrement(&refCount);
+        if (r == 0) {
+            delete this;
+        }
+        return r;
+    }
+
+    STDMETHODIMP GetData(FORMATETC* pFE, STGMEDIUM* pMedium) override {
+        if (!hText) {
+            return E_UNEXPECTED;
+        }
+        if (pFE->cfFormat != CF_UNICODETEXT || !(pFE->tymed & TYMED_HGLOBAL)) {
+            return DV_E_FORMATETC;
+        }
+        size_t cb = GlobalSize(hText);
+        HGLOBAL hCopy = GlobalAlloc(GMEM_MOVEABLE, cb);
+        if (!hCopy) {
+            return E_OUTOFMEMORY;
+        }
+        void* src = GlobalLock(hText);
+        void* dst = GlobalLock(hCopy);
+        memcpy(dst, src, cb);
+        GlobalUnlock(hCopy);
+        GlobalUnlock(hText);
+        pMedium->tymed = TYMED_HGLOBAL;
+        pMedium->hGlobal = hCopy;
+        pMedium->pUnkForRelease = nullptr;
+        return S_OK;
+    }
+    STDMETHODIMP GetDataHere(__unused FORMATETC*, __unused STGMEDIUM*) override { return E_NOTIMPL; }
+    STDMETHODIMP QueryGetData(FORMATETC* pFE) override {
+        if (pFE->cfFormat == CF_UNICODETEXT && (pFE->tymed & TYMED_HGLOBAL)) {
+            return S_OK;
+        }
+        return DV_E_FORMATETC;
+    }
+    STDMETHODIMP GetCanonicalFormatEtc(__unused FORMATETC*, FORMATETC* pOut) override {
+        pOut->ptd = nullptr;
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP SetData(__unused FORMATETC*, __unused STGMEDIUM*, __unused BOOL) override { return E_NOTIMPL; }
+    STDMETHODIMP EnumFormatEtc(__unused DWORD, __unused IEnumFORMATETC**) override { return E_NOTIMPL; }
+    STDMETHODIMP DAdvise(__unused FORMATETC*, __unused DWORD, __unused IAdviseSink*, __unused DWORD*) override {
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP DUnadvise(__unused DWORD) override { return E_NOTIMPL; }
+    STDMETHODIMP EnumDAdvise(__unused IEnumSTATDATA**) override { return E_NOTIMPL; }
+};
+
+static bool IsPointInSelection(MainWindow* win, Point pt) {
+    WindowTab* tab = win->CurrentTab();
+    if (!tab || !tab->selectionOnPage) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return false;
+    }
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        Rect r = sel.GetRect(dm);
+        if (r.Contains(pt)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void StartTextDragDrop(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    bool isTextOnly = false;
+    TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnly);
+    if (str::IsEmpty(text)) {
+        return;
+    }
+    WCHAR* wtext = ToWStrTemp(text);
+    TextDataObject* dataObj = new TextDataObject(wtext);
+    TextDropSource* dropSrc = new TextDropSource();
+    DWORD dwEffect = 0;
+    DoDragDrop(dataObj, dropSrc, DROPEFFECT_COPY, &dwEffect);
+    dropSrc->Release();
+    dataObj->Release();
+}
+
 // Resize handle positions that used in resizing annotations
 enum class ResizeHandle {
     None = 0,
@@ -107,10 +259,28 @@ void UpdateDeltaPerLine() {
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
 
+const char* scrollMsgStr(USHORT msg) {
+    switch (msg) {
+        case SB_LINEDOWN:
+            return "SB_LINEDOWN";
+        case SB_LINEUP:
+            return "SB_LINEUP";
+        case SB_HALF_PAGEDOWN:
+            return "SB_HALF_PAGEDOWN";
+        case SB_HALF_PAGEUP:
+            return "SB_HALF_PAGEUP";
+        case SB_PAGEDOWN:
+            return "SB_PAGEDOWN";
+        case SB_PAGEUP:
+            return "SB_PAGEUP";
+    }
+    return str::FormatTemp("%d", (int)msg);
+}
+
 static void OnVScroll(MainWindow* win, WPARAM wp) {
     ReportIf(!win->AsFixed());
 
-    bool useOverlay = gGlobalPrefs->fixedPageUI.useOverlayScrollbar && win->overlayScrollV;
+    bool useOverlay = gGlobalPrefs->fixedPageUI.useOverlayScrollbar && IsOverlayScrollbarVisible(win->overlayScrollV);
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -120,14 +290,26 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
     }
 
-    int currPos = si.nPos;
+    USHORT msg = LOWORD(wp);
     auto* ctrl = win->ctrl;
-    bool isSinglePageMode = gGlobalPrefs->scrollbarInSinglePage && (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    bool dmIsSinglePage = (ctrl->GetDisplayMode() == DisplayMode::SinglePage);
+    // scrollbarInSinglePage is false by default
+    // if true, we show scrollbar in single page mode and make its position correspond to page number, so user can
+    // scroll through pages using scrollbar even in single page mode
+    bool singlePageWithScrollbar = gGlobalPrefs->scrollbarInSinglePage && dmIsSinglePage;
 
-    if (isSinglePageMode) {
+    int lineHeight = DpiScale(win->hwndCanvas, 16);
+    bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
+    if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
+        lineHeight = 1;
+    }
+    // logf("OnVscroll: msg=%s, min: %d, max: %d, nPage: %d, pos: %d, fit page: %d, lineHeight: %d,
+    // singlePageWithScrollbar: %d\n", scrollMsgStr(msg), si.nMin,
+    //      si.nMax, si.nPage, si.nPos, isFitPage ? 1 : 0, lineHeight, singlePageWithScrollbar);
+
+    if (singlePageWithScrollbar) {
         // In SinglePage mode, scrollbar position directly corresponds to page number
-        USHORT msg = LOWORD(wp);
-        int targetPage = currPos + 1; // Convert 0-based position to 1-based page number
+        int targetPage = ctrl->CurrentPageNo();
 
         switch (msg) {
             case SB_TOP:
@@ -167,19 +349,16 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     }
 
     // Original logic for other display modes
-    int lineHeight = DpiScale(win->hwndCanvas, 16);
-    bool isFitPage = (kZoomFitPage == ctrl->GetZoomVirtual());
-    if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
-        lineHeight = 1;
-    }
 
-    USHORT msg = LOWORD(wp);
+    int currPos = si.nPos;
+    int halfPage = si.nPage / 2;
     switch (msg) {
         case SB_TOP:
             si.nPos = si.nMin;
             break;
         case SB_BOTTOM:
             si.nPos = si.nMax;
+
             break;
         case SB_LINEUP:
             si.nPos -= lineHeight;
@@ -188,10 +367,10 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             si.nPos += lineHeight;
             break;
         case SB_HALF_PAGEUP:
-            si.nPos -= si.nPage / 2;
+            si.nPos -= halfPage;
             break;
         case SB_HALF_PAGEDOWN:
-            si.nPos += si.nPage / 2;
+            si.nPos += halfPage;
             break;
         case SB_PAGEUP:
             si.nPos -= si.nPage;
@@ -203,19 +382,17 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
             si.nPos = si.nTrackPos;
             break;
     }
+    // logf("OnVScroll: nPos: %d\n", si.nPos);
 
     // Set the position and then retrieve it.  Due to adjustments
     // by Windows it may not be the same as the value set.
     si.fMask = SIF_POS;
-    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+    bool showScrollbar = !gGlobalPrefs->fixedPageUI.hideScrollbars;
+    BOOL showWinScrollbar = showScrollbar && !useOverlay;
+    BOOL showOverScrollbar = showScrollbar && useOverlay;
+    SetScrollInfo(win->hwndCanvas, SB_VERT, &si, showWinScrollbar);
     GetScrollInfo(win->hwndCanvas, SB_VERT, &si);
-    if (useOverlay) {
-        SCROLLINFO siUpdate{};
-        siUpdate.cbSize = sizeof(siUpdate);
-        siUpdate.fMask = SIF_POS;
-        siUpdate.nPos = si.nPos;
-        OverlayScrollbarSetInfo(win->overlayScrollV, &siUpdate, TRUE);
-    }
+    OverlayScrollbarSetInfo(win->overlayScrollV, &si, showOverScrollbar);
 
     // If the position has changed or we're dealing with a touchpad scroll event,
     // scroll the window and update it
@@ -232,7 +409,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 static void OnHScroll(MainWindow* win, WPARAM wp) {
     ReportIf(!win->AsFixed());
 
-    bool useOverlay = gGlobalPrefs->fixedPageUI.useOverlayScrollbar && win->overlayScrollH;
+    bool useOverlay = gGlobalPrefs->fixedPageUI.useOverlayScrollbar && IsOverlayScrollbarVisible(win->overlayScrollH);
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
@@ -274,11 +451,7 @@ static void OnHScroll(MainWindow* win, WPARAM wp) {
     SetScrollInfo(win->hwndCanvas, SB_HORZ, &si, TRUE);
     GetScrollInfo(win->hwndCanvas, SB_HORZ, &si);
     if (useOverlay) {
-        SCROLLINFO siUpdate{};
-        siUpdate.cbSize = sizeof(siUpdate);
-        siUpdate.fMask = SIF_POS;
-        siUpdate.nPos = si.nPos;
-        OverlayScrollbarSetInfo(win->overlayScrollH, &siUpdate, TRUE);
+        OverlayScrollbarSetInfo(win->overlayScrollH, &si, TRUE);
     }
 
     // If the position has changed or we're dealing with a touchpad scroll event,
@@ -499,6 +672,20 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     Point pos{x, y};
     NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
 
+    if (win->textDragPending) {
+        if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
+            return;
+        }
+        // threshold met: initiate OLE drag-drop of selected text
+        win->textDragPending = false;
+        win->dragStartPending = false;
+        if (GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+        StartTextDragDrop(win);
+        return;
+    }
+
     if (win->dragStartPending) {
         if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
             return;
@@ -600,7 +787,7 @@ static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point& pt) {
     DisplayModel* dm = win->AsFixed();
     CreateMovePatternLazy(win);
     RectF r = GetRect(annot);
-    int pageNo = dm->GetPageNoByPoint(pt);
+    int pageNo = PageNo(annot);
     Rect rScreen = dm->CvtToScreen(pageNo, r);
     win->annotationBeingMovedSize = {rScreen.dx, rScreen.dy};
     int offsetX = rScreen.x - pt.x;
@@ -772,6 +959,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 
     win->dragStartPending = true;
     win->dragStart = pt;
+    win->textDragPending = false;
 
     // - without modifiers, clicking on text starts a text selection
     //   and clicking somewhere else starts a drag
@@ -783,6 +971,15 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
+
+    // if clicking on already selected text, prepare for drag-out instead of new selection
+    if (canCopy && !isShift && !isCtrl && isOverText && win->showSelection && IsPointInSelection(win, pt)) {
+        win->textDragPending = true;
+        win->linkOnLastButtonDown = nullptr;
+        SetCapture(win->hwndCanvas);
+        return;
+    }
+
     if (resizeHandle != ResizeHandle::None || isMoveableAnnot || !canCopy || (isShift || !isOverText) && !isCtrl) {
         StartMouseDrag(win, x, y);
     } else {
@@ -793,6 +990,18 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     ReportIf(!dm);
+
+    // click on selected text without dragging: clear selection
+    if (win->textDragPending) {
+        win->textDragPending = false;
+        win->dragStartPending = false;
+        if (GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+        DeleteOldSelectionInfo(win, true);
+        return;
+    }
+
     auto ma = win->mouseAction;
     if (MouseAction::None == ma || IsRightDragging(win)) {
         return;
@@ -871,6 +1080,21 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
             ScheduleRepaint(win, 0);
         }
         SetCursorCached(IDC_ARROW);
+
+        // Ctrl+click on internal link: open in new tab and navigate there
+        bool isInternal = (kindDestinationLaunchURL != kind && kindDestinationLaunchFile != kind);
+        if (IsCtrlPressed() && dest && isInternal && tab->filePath) {
+            LoadArgs args(tab->filePath, win);
+            args.showWin = true;
+            args.noPlaceWindow = true;
+            args.forceReuse = false;
+            MainWindow* newWin = LoadDocument(&args);
+            if (newWin && newWin->IsDocLoaded()) {
+                newWin->linkHandler->ScrollTo(dest);
+            }
+            return;
+        }
+
         win->ctrl->HandleLink(dest, win->linkHandler);
         // win->linkHandler->GotoLink(dest);
         return;
@@ -1188,8 +1412,8 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
         Gdiplus::Pen pen(&br, 4);
         gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
     } else {
-        Gdiplus::Color gray(180, 128, 128, 128);
-        Gdiplus::Pen pen(gray, 2);
+        Gdiplus::Color blue(255, 0, 80, 200);
+        Gdiplus::Pen pen(blue, 2);
         pen.SetDashStyle(Gdiplus::DashStyleDot);
         gs.DrawRectangle(&pen, rect.x, rect.y, rect.dx, rect.dy);
     }
@@ -1643,6 +1867,20 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
+
+    // fit content: always flip page on wheel, regardless of scrollbar state
+    if (vScroll && dm && dm->GetZoomVirtual() == kZoomFitContent && IsSingle(dm->GetDisplayMode())) {
+        win->wheelAccumDelta += delta;
+        if (win->wheelAccumDelta >= WHEEL_DELTA) {
+            win->ctrl->GoToPrevPage();
+            win->wheelAccumDelta -= WHEEL_DELTA;
+        } else if (win->wheelAccumDelta <= -WHEEL_DELTA) {
+            win->ctrl->GoToNextPage();
+            win->wheelAccumDelta += WHEEL_DELTA;
+        }
+        return 0;
+    }
+
     // Handle page-by-page navigation for non-continuous modes and SinglePage mode
     bool isSinglePageMode =
         gGlobalPrefs->scrollbarInSinglePage && (win->ctrl->GetDisplayMode() == DisplayMode::SinglePage);
@@ -1672,8 +1910,6 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
 
     // Handle page-by-page navigation for other non-continuous modes (but not SinglePage mode)
     if (vScroll && !isCont && !isSinglePageMode) {
-        int pageFlipDelta = WHEEL_DELTA * 3; // Three wheel clicks = one page (original behavior)
-
         float zoomVirt = win->ctrl->GetZoomVirtual();
         // in fit content we might show vert scrollbar but we want to flip the whole page on mouse wheel
         bool flipPage = zoomVirt == kZoomFitContent;
@@ -1682,6 +1918,8 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // logf("  flipping page because !dm->NeedVScroll()\n");
             flipPage = true;
         }
+        // fit content/page: one wheel click = one page; otherwise 3 clicks
+        int pageFlipDelta = flipPage ? WHEEL_DELTA : WHEEL_DELTA * 3;
 
         // int scrolLPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         //  Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
@@ -2017,6 +2255,12 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
     int y = GET_Y_LPARAM(lp);
     switch (msg) {
         case WM_PAINT:
+            if (gRedrawLog) {
+                RECT urc;
+                GetUpdateRect(hwnd, &urc, FALSE);
+                logf("redraw: WM_PAINT hwnd=0x%p (canvas-fixed) rc=(%d,%d,%d,%d)\n", hwnd, urc.left, urc.top, urc.right,
+                     urc.bottom);
+            }
             OnPaintDocument(win);
             return 0;
 
@@ -2161,6 +2405,7 @@ static void OnPaintError(MainWindow* win) {
     const char* filePath = tab->filePath;
     if (filePath) {
         TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), filePath);
+        SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
     SelectObject(hdc, hPrevFont);
@@ -2171,6 +2416,9 @@ static void OnPaintError(MainWindow* win) {
 static LRESULT WndProcCanvasLoadError(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
         case WM_PAINT:
+            if (gRedrawLog) {
+                logf("redraw: WM_PAINT hwnd=0x%p (canvas-error)\n", hwnd);
+            }
             OnPaintError(win);
             return 0;
 
@@ -2206,7 +2454,9 @@ static void RepaintTask(RepaintTaskData* d) {
 }
 
 void ScheduleRepaint(MainWindow* win, int delayInMs) {
-    // logf("ScheduleRepaint RenderCache:\n");
+    if (gRedrawLog) {
+        logf("redraw: ScheduleRepaint delayMs=%d canvas=0x%p\n", delayInMs, win->hwndCanvas);
+    }
     auto data = new RepaintTaskData;
     data->win = win;
     data->delayInMs = delayInMs;
@@ -2342,6 +2592,334 @@ static void OnDropFiles(MainWindow* win, HDROP hDrop, bool dragFinish) {
     }
 }
 
+// returns true if url looks like it could be an image URL
+static bool IsImageUrl(const char* url) {
+    // strip query string / fragment for extension check
+    const char* q = str::FindChar(url, '?');
+    const char* h = str::FindChar(url, '#');
+    int len = str::Leni(url);
+    if (q && (int)(q - url) < len) {
+        len = (int)(q - url);
+    }
+    if (h && (int)(h - url) < len) {
+        len = (int)(h - url);
+    }
+    // check for common image extensions
+    const char* exts[] = {".png",  ".jpg",  ".jpeg", ".gif", ".bmp", ".tiff", ".tif",
+                          ".webp", ".avif", ".heic", ".jxr", ".jp2", ".tga"};
+    for (auto ext : exts) {
+        int extLen = str::Leni(ext);
+        if (len >= extLen) {
+            TempStr ending = str::DupTemp(url + len - extLen, extLen);
+            if (str::EqI(ending, ext)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Get the user's Downloads folder path
+static TempStr GetDownloadsDirTemp() {
+    WCHAR* pathW = nullptr;
+    HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &pathW);
+    if (FAILED(hr) || !pathW) {
+        CoTaskMemFree(pathW);
+        return nullptr;
+    }
+    TempStr res = ToUtf8Temp(pathW);
+    CoTaskMemFree(pathW);
+    return res;
+}
+
+// Extract a file name from a URL (last path component, without query/fragment)
+static TempStr FileNameFromUrlTemp(const char* url) {
+    // skip past scheme
+    const char* s = str::FindChar(url, '/');
+    if (s && s[1] == '/') {
+        s += 2; // skip "//"
+    }
+    // find last '/' before any '?' or '#'
+    const char* lastSlash = nullptr;
+    const char* p = s ? s : url;
+    while (*p && *p != '?' && *p != '#') {
+        if (*p == '/') {
+            lastSlash = p;
+        }
+        p++;
+    }
+    if (!lastSlash) {
+        return nullptr;
+    }
+    int nameLen = (int)(p - lastSlash - 1);
+    if (nameLen <= 0) {
+        return nullptr;
+    }
+    return str::DupTemp(lastSlash + 1, nameLen);
+}
+
+struct DownloadAndOpenUrlData {
+    char* url;
+    HWND hwndCanvas;
+};
+
+static void DownloadAndOpenUrl(DownloadAndOpenUrlData* data) {
+    TempStr url = data->url;
+    HWND hwndCanvas = data->hwndCanvas;
+
+    TempStr downloadsDir = GetDownloadsDirTemp();
+    if (!downloadsDir) {
+        logf("DownloadAndOpenUrl: failed to get Downloads folder\n");
+        free(data->url);
+        delete data;
+        return;
+    }
+
+    TempStr fileName = FileNameFromUrlTemp(url);
+    if (!fileName) {
+        // generate a fallback name
+        fileName = str::DupTemp("dropped_image.png");
+    }
+
+    TempStr destPath = path::JoinTemp(downloadsDir, fileName);
+
+    // avoid overwriting: if file exists, add a numeric suffix
+    if (file::Exists(destPath)) {
+        TempStr ext = path::GetExtTemp(destPath);
+        TempStr base = str::DupTemp(fileName, str::Leni(fileName) - str::Leni(ext));
+        for (int i = 1; i < 1000; i++) {
+            TempStr newName = str::FormatTemp("%s_%d%s", base, i, ext);
+            destPath = path::JoinTemp(downloadsDir, newName);
+            if (!file::Exists(destPath)) {
+                break;
+            }
+        }
+    }
+
+    logf("DownloadAndOpenUrl: downloading '%s' to '%s'\n", url, destPath);
+
+    Func1<HttpProgress*> emptyProgress;
+    bool ok = HttpGetToFile(url, destPath, emptyProgress);
+    if (!ok) {
+        logf("DownloadAndOpenUrl: download failed for '%s'\n", url);
+        free(data->url);
+        delete data;
+        return;
+    }
+
+    // verify the downloaded file is a supported image type
+    Kind kind = GuessFileTypeFromContent(destPath);
+    if (!IsEngineImageSupportedFileType(kind)) {
+        logf("DownloadAndOpenUrl: downloaded file is not a supported image type: '%s'\n", destPath);
+        file::Delete(destPath);
+        free(data->url);
+        delete data;
+        return;
+    }
+
+    // ensure it has a good extension, some urls are like:
+    // https://pbs.twimg.com/media/HEwit7bbQAAWiIO?format=jpg&name=large
+    const char* ext = GetExtForKind(kind);
+    if (!str::EndsWithI(destPath, ext)) {
+        TempStr newDest = str::JoinTemp(destPath, ext);
+        ok = file::Rename(newDest, destPath);
+        if (ok) {
+            destPath = newDest;
+        }
+    }
+
+    // open the file on the UI thread
+    char* pathDup = str::Dup(destPath);
+    auto fn = MkFunc0<char>(
+        [](char* path) {
+            MainWindow* win = FindMainWindowByHwnd(GetForegroundWindow());
+            if (!win && !gWindows.IsEmpty()) {
+                win = gWindows.at(0);
+            }
+            if (win) {
+                LoadArgs args(path, win);
+                StartLoadDocument(&args);
+            }
+            free(path);
+        },
+        pathDup);
+    uitask::Post(fn, "DownloadAndOpenUrl");
+
+    free(data->url);
+    delete data;
+}
+
+// Extract text from IDataObject (tries CF_UNICODETEXT, then CF_TEXT)
+static TempStr GetTextFromDataObject(IDataObject* dataObj) {
+    FORMATETC fmtUnicode = {CF_UNICODETEXT, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    FORMATETC fmtAnsi = {CF_TEXT, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    STGMEDIUM medium{};
+    HRESULT hr = dataObj->GetData(&fmtUnicode, &medium);
+    TempStr res;
+    if (SUCCEEDED(hr) && medium.hGlobal) {
+        WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
+        res = w ? ToUtf8Temp(w) : nullptr;
+        goto Cleanup;
+    }
+    hr = dataObj->GetData(&fmtAnsi, &medium);
+    if (SUCCEEDED(hr) && medium.hGlobal) {
+        char* s = (char*)GlobalLock(medium.hGlobal);
+        res = s ? str::DupTemp(s) : nullptr;
+        goto Cleanup;
+    }
+    return nullptr;
+Cleanup:
+    GlobalUnlock(medium.hGlobal);
+    ReleaseStgMedium(&medium);
+    return res;
+}
+
+// Check if IDataObject contains a URL (registered format "UniformResourceLocatorW" or "UniformResourceLocator")
+static TempStr GetUrlFromDataObject(IDataObject* dataObj) {
+    // try wide URL format first
+    static CLIPFORMAT cfUrlW = (CLIPFORMAT)RegisterClipboardFormatW(L"UniformResourceLocatorW");
+    if (cfUrlW) {
+        FORMATETC fmt = {cfUrlW, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+        STGMEDIUM medium{};
+        HRESULT hr = dataObj->GetData(&fmt, &medium);
+        if (SUCCEEDED(hr) && medium.hGlobal) {
+            WCHAR* w = (WCHAR*)GlobalLock(medium.hGlobal);
+            TempStr res = w ? ToUtf8Temp(w) : nullptr;
+            GlobalUnlock(medium.hGlobal);
+            ReleaseStgMedium(&medium);
+            if (res && (str::StartsWithI(res, "http://") || str::StartsWithI(res, "https://"))) {
+                return res;
+            }
+        }
+    }
+    // try ANSI URL format
+    static CLIPFORMAT cfUrl = (CLIPFORMAT)RegisterClipboardFormatW(L"UniformResourceLocator");
+    if (cfUrl) {
+        FORMATETC fmt = {cfUrl, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+        STGMEDIUM medium{};
+        HRESULT hr = dataObj->GetData(&fmt, &medium);
+        if (SUCCEEDED(hr) && medium.hGlobal) {
+            char* s = (char*)GlobalLock(medium.hGlobal);
+            TempStr res = s ? str::DupTemp(s) : nullptr;
+            GlobalUnlock(medium.hGlobal);
+            ReleaseStgMedium(&medium);
+            if (res && (str::StartsWithI(res, "http://") || str::StartsWithI(res, "https://"))) {
+                return res;
+            }
+        }
+    }
+    return nullptr;
+}
+
+static bool DataObjectHasFiles(IDataObject* dataObj) {
+    FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    return dataObj->QueryGetData(&fmt) == S_OK;
+}
+
+static bool DataObjectHasUrl(IDataObject* dataObj) {
+    TempStr url = GetUrlFromDataObject(dataObj);
+    if (url && IsImageUrl(url)) {
+        return true;
+    }
+    // also check plain text that looks like an image URL
+    TempStr text = GetTextFromDataObject(dataObj);
+    if (text && (str::StartsWithI(text, "http://") || str::StartsWithI(text, "https://")) && IsImageUrl(text)) {
+        return true;
+    }
+    return false;
+}
+
+class CanvasDropTarget : public IDropTarget {
+    LONG refCount = 1;
+    HWND hwnd = nullptr;
+
+  public:
+    explicit CanvasDropTarget(HWND h) : hwnd(h) {}
+
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (riid == IID_IUnknown || riid == IID_IDropTarget) {
+            *ppv = this;
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        LONG r = InterlockedDecrement(&refCount);
+        if (r == 0) {
+            delete this;
+        }
+        return r;
+    }
+
+    STDMETHODIMP DragEnter(IDataObject* dataObj, __unused DWORD grfKeyState, __unused POINTL pt,
+                           DWORD* pdwEffect) override {
+        if (DataObjectHasFiles(dataObj) || DataObjectHasUrl(dataObj)) {
+            *pdwEffect = DROPEFFECT_COPY;
+        } else {
+            *pdwEffect = DROPEFFECT_NONE;
+        }
+        return S_OK;
+    }
+
+    STDMETHODIMP DragOver(__unused DWORD grfKeyState, __unused POINTL pt, DWORD* pdwEffect) override {
+        *pdwEffect = DROPEFFECT_COPY;
+        return S_OK;
+    }
+
+    STDMETHODIMP DragLeave() override { return S_OK; }
+
+    STDMETHODIMP Drop(IDataObject* dataObj, DWORD grfKeyState, __unused POINTL pt, DWORD* pdwEffect) override {
+        *pdwEffect = DROPEFFECT_COPY;
+
+        // first try file drops (CF_HDROP)
+        FORMATETC fmtHDrop = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+        STGMEDIUM medium{};
+        HRESULT hr = dataObj->GetData(&fmtHDrop, &medium);
+        if (SUCCEEDED(hr) && medium.hGlobal) {
+            HDROP hDrop = (HDROP)medium.hGlobal;
+            MainWindow* win = FindMainWindowByHwnd(hwnd);
+            if (win) {
+                OnDropFiles(win, hDrop, false);
+            }
+            ReleaseStgMedium(&medium);
+            return S_OK;
+        }
+
+        // try URL drop
+        TempStr url = GetUrlFromDataObject(dataObj);
+        if (!url) {
+            // fall back to plain text
+            TempStr text = GetTextFromDataObject(dataObj);
+            if (text && (str::StartsWithI(text, "http://") || str::StartsWithI(text, "https://"))) {
+                url = text;
+            }
+        }
+
+        if (url) {
+            auto data = new DownloadAndOpenUrlData();
+            data->url = str::Dup(url);
+            data->hwndCanvas = hwnd;
+            auto fn = MkFunc0<DownloadAndOpenUrlData>([](DownloadAndOpenUrlData* d) { DownloadAndOpenUrl(d); }, data);
+            RunAsync(fn, "DownloadAndOpenUrl");
+        }
+
+        return S_OK;
+    }
+};
+
+void RegisterCanvasDropTarget(HWND hwndCanvas) {
+    auto* dt = new CanvasDropTarget(hwndCanvas);
+    RegisterDragDrop(hwndCanvas, dt);
+    dt->Release(); // RegisterDragDrop AddRef'd it
+}
+
+void RevokeCanvasDropTarget(HWND hwndCanvas) {
+    RevokeDragDrop(hwndCanvas);
+}
+
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // messages that don't require win
 
@@ -2353,27 +2931,33 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
 
             // https://docs.microsoft.com/en-us/windows/win32/winmsg/wm-erasebkgnd
-        case WM_ERASEBKGND:
-            // return non-zero to indicate we erased
-            // helps to avoid flicker
+        case WM_ERASEBKGND: {
+            if (gRedrawLog) {
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                logf("redraw: WM_ERASEBKGND hwnd=0x%p (canvas) rc=(%d,%d,%d,%d)\n", hwnd, rc.left, rc.top, rc.right,
+                     rc.bottom);
+            }
+            // don't paint here; old content stays until WM_PAINT covers it
+            // (CS_HREDRAW|CS_VREDRAW removed so no transparent flash)
             return 1;
+        }
 
-        case WM_NCHITTEST:
-            // Let the frame handle resize near its edges by returning HTTRANSPARENT.
-            if (win && win->tabsInTitlebar && !IsZoomed(win->hwndFrame)) {
+        case WM_NCHITTEST: {
+            // return HTTRANSPARENT near frame edges so the parent frame
+            // can handle resize hit-testing beyond kFrameBorderSize
+            if (win && win->tabsInTitlebar && !IsZoomed(GetParent(hwnd))) {
                 int x = GET_X_LPARAM(lp);
                 int y = GET_Y_LPARAM(lp);
                 RECT wrc;
-                GetWindowRect(win->hwndFrame, &wrc);
-                int frameX = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int frameY = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                int borderX = frameX + 3;
-                int borderY = frameY + 3;
-                if ((x - wrc.left) < borderX || (wrc.right - x) < borderX || (wrc.bottom - y) < borderY) {
+                GetWindowRect(GetParent(hwnd), &wrc);
+                int b = kFrameResizeHitTest;
+                if ((x - wrc.left) < b || (wrc.right - x) <= b || (y - wrc.top) < b || (wrc.bottom - y) <= b) {
                     return HTTRANSPARENT;
                 }
             }
             break;
+        }
     }
 
     if (!win) {
@@ -2388,7 +2972,15 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
         case WM_SIZE:
             if (!IsIconic(win->hwndFrame)) {
+                if (gRedrawLog) {
+                    RECT rc;
+                    GetClientRect(hwnd, &rc);
+                    logf("redraw: WM_SIZE hwnd=0x%p (canvas) size=(%d,%d)\n", hwnd, rc.right, rc.bottom);
+                }
                 win->UpdateCanvasSize();
+                // fully invalidate since layout depends on size
+                // (replaces CS_HREDRAW | CS_VREDRAW which caused transparent flash)
+                InvalidateRect(hwnd, nullptr, FALSE);
             }
             return 0;
 

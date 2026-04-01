@@ -1,6 +1,14 @@
 import { readFileSync, writeFileSync, readdirSync, appendFileSync, existsSync } from "node:fs";
 import { join, extname } from "node:path";
+import { spawnSync } from "node:child_process";
 import { commands } from "./gen-commands";
+
+// strings that should not be sent for translation
+// (e.g. command names whose display text is set dynamically)
+const translationBlacklist: string[] = [
+  "Toggle Windows Previewer",
+  "Toggle Windows Search Filter",
+];
 
 const apptranslatorServer = "https://www.apptranslator.org";
 const translationsDir = "translations";
@@ -48,8 +56,16 @@ function extractStringsToTranslate(): string[] {
     strs.push(commands[i]);
   }
   const unique = [...new Set(strs)];
-  console.log(`${unique.length} unique strings to translate (including command descriptions)`);
-  return unique;
+  // verify blacklisted strings are actually in the list before removing them
+  for (const bl of translationBlacklist) {
+    if (!unique.includes(bl)) {
+      throw new Error(`Blacklisted string "${bl}" not found in strings to translate`);
+    }
+  }
+  const blacklistSet = new Set(translationBlacklist);
+  const filtered = unique.filter((s) => !blacklistSet.has(s));
+  console.log(`${filtered.length} unique strings to translate (including command descriptions, ${translationBlacklist.length} blacklisted)`);
+  return filtered;
 }
 
 function getTransSecret(): string {
@@ -484,6 +500,18 @@ async function main() {
   console.log(`Wrote ${path} of size ${fixed.length}`);
 
   printBadTranslations(badTranslations);
+
+  // compress translations-good.txt into .lzsa archive
+  const lzsaPath = join(translationsDir, "translations.txt.lzsa");
+  const goodPath = join(translationsDir, "translations-good.txt");
+  const makeLzsa = join("bin", "MakeLZSA.exe");
+  const lzsaArgs = [lzsaPath, `${goodPath}:translations-good.txt`];
+  console.log(`Running ${makeLzsa} ${lzsaArgs.join(" ")}`);
+  const res = spawnSync(makeLzsa, lzsaArgs, { stdio: "inherit" });
+  if (res.status !== 0) {
+    throw new Error(`MakeLZSA failed with exit code ${res.status}`);
+  }
+  console.log(`Wrote ${lzsaPath}`);
 }
 
 await main();

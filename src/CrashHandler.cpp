@@ -122,7 +122,7 @@ static char* BuildCrashInfoText(const char* condStr, const char* fileLine, bool 
         s.Append("Type: debug report (not crash)\n");
     }
     if (condStr) {
-        s.AppendFmt("Cond: %s@%s\n", condStr, fileLine);
+        s.AppendFmt("Cond: %s @ %s\n", condStr, fileLine);
     }
     if (gSystemInfo) {
         s.Append(gSystemInfo);
@@ -765,7 +765,10 @@ static char* BuildSymbolsUrl() {
         const char* ver = QM(CURR_VERSION);
         urlBase = str::JoinTemp(urlBase, "rel/", ver, "/SumatraPDF-", ver);
     }
-    const char* suff = "-32.pdb.lzsa";
+    // TODO: ugly it's different between release and pre-release
+    const char* suff = ".pdb.lzsa";
+    if (gIsPreReleaseBuild) suff = "-32.pdb.lzsa";
+
 #if IS_ARM_64 == 1
     suff = "-arm64.pdb.lzsa";
 #elif IS_INTEL_64 == 1

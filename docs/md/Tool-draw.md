@@ -2,6 +2,101 @@
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
+## SumatraPDF draw
+
+Usage: `SumatraPDF draw [options] file [pages]`
+
+See [all-options](#all-options) below.
+
+You can use `draw` to:
+
+- convert PDF to other formats (image, html, svg)
+- extract, delete pages
+- extract text
+
+## Example usage
+
+Let's assume you have `foo.pdf` with 8 pages.
+
+### Extract 2nd page
+
+`SumatraPDF draw -o foo-page-2.pdf foo.pdf 2`
+
+### Extract pages 1,2,7,8 into a separate file each
+
+`SumatraPDF draw -o "foo-page-%d.pdf" foo.pdf 1-2,7,8`
+
+### Delete 3rd page
+
+`SumatraPDF draw -o foo-3rd-page-deleted.pdf foo.pdf 1-2,4-8`
+
+### Extract 2nd page as png image
+
+`SumatraPDF draw -o foo-page-2.png -F png foo.pdf 2`
+
+### Rotate pages
+
+Use `-R 90|180|270` option to rotate pages.
+
+### Extract each page as PNG image
+
+`SumatraPDF draw -o "foo-%d.png" foo.pdf`
+
+### Convert PDF to PNG
+
+`SumatraPDF draw -o "foo-%d.png" foo.pdf`
+
+### Change output image size
+
+Each page in a PDF has a given width / height.
+
+When convertint to an image (like PNG), you can change the size of output image:
+
+`SumatraPDF draw -o "foo-%d.png" -w 400 -h 800 foo.pdf`
+
+### Convert PNG to PDF
+
+`SumatraPDF draw  -o foo.pdf foo.png`
+
+### Convert PDF to self-contained HTML file
+
+`SumatraPDF draw -o foo.html foo.pdf`
+
+### Convert PDF to self-contained SVG file
+
+`SumatraPDF draw -o foo.svg foo.pdf`
+
+### Extract all text from PDF
+
+`SumatraPDF draw -o foo.txt foo.pdf`
+
+### Structured text
+
+In PDF text really consists of characters positioned in a page.
+
+If you want to see detailed information about text in PDF, especially for further programmating processing, you can extract structured text which is: font, glyph (character), position.
+
+### Extract structured text from PDF in XML format
+
+`SumatraPDF draw -o foo.stext foo.pdf`
+
+In XML format it might look like:
+
+```xml
+<font name="CharisSIL" size="7.9701">
+<char quad="187.4652 295.9985 191.96033 295.9985 187.4652 301.9683 191.96033 301.9683" x="187.4652" y="301.871" bidi="0" color="#000000" alpha="#ff" flags="16" c="d"/>
+```
+
+Here it shows that letter `d` in font `CharisSIL` is at a given x/y position in the page.
+
+### Extract structured text from PDF in JSON format
+
+`SumatraPDF draw -o foo.stext.json -F stext.json foo.pdf`
+
+It's the same information but in JSON format.
+
+## All options
+
 ```
 usage: SumatraPDF draw [options] file [pages]
   -p -    password
@@ -60,7 +155,7 @@ usage: SumatraPDF draw [options] file [pages]
   -t -    Specify language/script for OCR (default: eng) (disabled)
   -d -    Specify path for OCR files (default: rely on TESSDATA_PREFIX environment variable) (disabled)
   -k -{,-}        Skew correction options. auto or angle {0=increase size, 1=maintain size, 2=decrease size} (disabled)
-  
+
   -y l    List the layer configs to stderr
   -y -    Select layer config (by number)
   -y -{,-}*       Select layer config (by number), and toggle the listed entries

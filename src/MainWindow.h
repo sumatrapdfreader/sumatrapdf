@@ -119,6 +119,8 @@ struct MainWindow {
 
     HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
+    HWND hwndMenuReBar = nullptr;
+    HWND hwndMenuToolbar = nullptr;
     HWND hwndFindLabel = nullptr;
     HWND hwndFindEdit = nullptr;
     HWND hwndFindBg = nullptr;
@@ -126,7 +128,6 @@ struct MainWindow {
     HWND hwndPageEdit = nullptr;
     HWND hwndPageBg = nullptr;
     HWND hwndPageTotal = nullptr;
-    HWND hwndTbWarningMsg = nullptr;
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;
@@ -168,13 +169,13 @@ struct MainWindow {
     Tooltip* infotip = nullptr;
 
     HMENU menu = nullptr;
-    bool isMenuHidden = false; // not persisted at shutdown
 
     DoubleBuffer* buffer = nullptr;
 
     MouseAction mouseAction = MouseAction::None;
     bool dragRightClick = false; // if true, drag was initiated with right mouse click
     bool dragStartPending = false;
+    bool textDragPending = false; // true when mouse down on selected text, waiting for drag
 
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
@@ -210,9 +211,13 @@ struct MainWindow {
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLink*> staticLinks;
 
+    // home page thumbnail scrolling
+    int homePageScrollY = 0;
+
     bool isFullScreen = false;
     PresentationMode presentation = PM_DISABLED;
     int windowStateBeforePresentation = 0;
+    bool suppressFrameRedraw = false;
 
     long nonFullScreenWindowStyle = 0;
     Rect nonFullScreenFrameRect;

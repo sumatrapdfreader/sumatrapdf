@@ -1,6 +1,6 @@
 # Configure for restricted use
 
-SumatraPDF can be configured for restricted use. 
+SumatraPDF can be configured for restricted use.
 
 A restricted mode is useful if you want to use SumatraPDF as a bundled viewer for your program's documentation or in kiosk mode
 
@@ -19,6 +19,6 @@ In restricted mode some actions that are not appropriate in such context are dis
 - opening with Adobe Acrobat
 - e-mailing PDF
 
-To restrict SumatraPDF put file `sumatrapdfrestrict.ini` in the same directory where `SumatraPDF.exe` is.
+To restrict SumatraPDF put file `sumatrapdfrestrict.ini` in the same directory where `SumatraPDF` is.
 
 Here's a [full documentation of available options](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini).

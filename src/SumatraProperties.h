@@ -3,6 +3,6 @@
 
 struct PropertiesLayout;
 
-void ShowProperties(HWND parent, DocController* ctrl, bool extended);
+void ShowProperties(HWND parent, DocController* ctrl);
 void DeletePropertiesWindow(HWND hwndParent);
 PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd);

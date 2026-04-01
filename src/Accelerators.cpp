@@ -55,9 +55,9 @@
     V(VK_OEM_PLUS, "+")              \
     V(VK_ADD, "Add")                 \
     V(VK_OEM_MINUS, "-")             \
+    V(VK_SUBTRACT, "-")              \
     V(VK_SUBTRACT, "Subtract")       \
     V(VK_SUBTRACT, "Sub")            \
-    V(VK_SUBTRACT, "-")              \
     V(VK_DIVIDE, "/")                \
     V(VK_DIVIDE, "Divide")           \
     V(VK_DIVIDE, "Div")              \
@@ -224,6 +224,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, 'B', CmdFavoriteAdd},
     {FCONTROL | FVIRTKEY, 'C', CmdCopySelection},
     {FCONTROL | FVIRTKEY, VK_INSERT, CmdCopySelection},
+    {FCONTROL | FVIRTKEY, 'V', CmdPasteClipboardImage},
     {FCONTROL | FVIRTKEY, 'D', CmdProperties},
     {FCONTROL | FVIRTKEY, 'F', CmdFindFirst},
     {FCONTROL | FVIRTKEY, 'G', CmdGoToPage},
@@ -448,7 +449,7 @@ again:
             // 4 Either ALT key is pressed.
             BYTE shiftState = HIBYTE(key);
             BYTE k = LOBYTE(key);
-            logf("mapped char 0x%x as %d (0x%x), shift state: %d\n", (int)wc, (int)k, (int)k, (int)shiftState);
+            // logf("mapped char 0x%x as %d (0x%x), shift state: %d\n", (int)wc, (int)k, (int)k, (int)shiftState);
             key = (SHORT)k;
             if (shiftState & 0x1) {
                 accel.fVirt |= (FSHIFT | FVIRTKEY);
@@ -499,6 +500,10 @@ again:
 bool IsValidShortcutString(const char* shortcut) {
     ACCEL accel = {};
     accel.cmd = (WORD)-1; // for debugging
+    return parseShortcut(shortcut, accel);
+}
+
+bool ParseShortcutString(const char* shortcut, ACCEL& accel) {
     return parseShortcut(shortcut, accel);
 }
 
@@ -647,6 +652,11 @@ static bool isSafeAccel(const ACCEL& a) {
         }
     }
 
+    if ((a.fVirt == (FCONTROL | FVIRTKEY)) && (k == 'V')) {
+        // Ctrl+V should work normally in edit controls (paste text)
+        return false;
+    }
+
     for (WORD notSafe : gNotSafeKeys) {
         if (notSafe == k) {
             return false;
@@ -710,6 +720,11 @@ void CreateSumatraAcceleratorTable() {
     curr = gFirstCustomCommand;
     while (curr) {
         if ((curr->id > 0) && !str::IsEmptyOrWhiteSpace(curr->key)) {
+            // CmdScreenshot shortcuts are registered as global hotkeys, not accelerators
+            if (curr->origId == CmdScreenshot) {
+                curr = curr->next;
+                continue;
+            }
             ACCEL accel{};
             accel.cmd = curr->id;
             if (parseShortcut(curr->key, accel)) {

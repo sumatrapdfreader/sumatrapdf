@@ -125,6 +125,15 @@ char* GetExistingInstallationDir() {
     return nullptr;
 }
 
+bool IsOurExeInstalled() {
+    AutoFreeStr installedDir = GetExistingInstallationDir();
+    if (!installedDir.Get()) {
+        return false;
+    }
+    TempStr exeDir = GetSelfExeDirTemp();
+    return str::EqI(installedDir.Get(), exeDir);
+}
+
 void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     info->installationDir = GetExistingInstallationDir();
     if (!info->installationDir) {

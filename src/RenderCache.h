@@ -13,7 +13,7 @@ constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
 // GDI resources/memory when caching many larger bitmaps
 // TODO: this should be based on amount of memory taken by rendered pages
 // i.e. one big page can use as much memory as lots of small pages
-#define MAX_BITMAPS_CACHED 64
+#define MAX_BITMAPS_CACHED 128
 
 struct PageInfo;
 
@@ -82,6 +82,10 @@ struct PageRenderRequest {
     const OnBitmapRendered* renderCb = nullptr;
 };
 
+constexpr int kMaxRenderThreads = 32;
+
+extern int gMaxRenderThreads;
+
 struct RenderCache {
     BitmapCacheEntry* cache[MAX_BITMAPS_CACHED]{};
     int cacheCount = 0;
@@ -91,9 +95,11 @@ struct RenderCache {
 
     PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
     int requestCount = 0;
-    PageRenderRequest* curReq = nullptr;
+    // per-thread current request tracking (index matches thread index)
+    PageRenderRequest* curReqs[kMaxRenderThreads]{};
     CRITICAL_SECTION requestAccess;
-    HANDLE renderThread = nullptr;
+    HANDLE renderThreads[kMaxRenderThreads]{};
+    int nRenderThreads = 0;
 
     Size maxTileSize{};
     bool isRemoteSession = false;
@@ -102,7 +108,7 @@ struct RenderCache {
     COLORREF backgroundColor = 0;
 
     /* Interface for page rendering thread */
-    HANDLE startRendering = nullptr;
+    HANDLE startRendering = nullptr; // semaphore, signaled once per queued request
     AtomicBool shouldExit = 0;
 
     RenderCache();
@@ -123,8 +129,8 @@ struct RenderCache {
     // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
 
-    bool ClearCurrentRequest();
-    bool GetNextRequest(PageRenderRequest* req);
+    bool ClearCurrentRequest(int threadIdx);
+    bool GetNextRequest(PageRenderRequest* req, int threadIdx);
     void Add(PageRenderRequest& req, RenderedBitmap* bmp);
 
     USHORT GetTileRes(DisplayModel* dm, int pageNo) const;
@@ -137,7 +143,7 @@ struct RenderCache {
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
                 RectF* pageRect = nullptr, const OnBitmapRendered* renderCb = nullptr);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
-    void AbortCurrentRequest();
+    void AbortCurrentRequest(int threadIdx);
 
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
                            TilePosition* tile = nullptr);

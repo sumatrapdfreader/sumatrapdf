@@ -235,6 +235,10 @@ workspace "SumatraPDF"
   filter {}
 
   disablewarnings { "4127", "4189", "4324", "4458", "4522", "4611", "4702", "4800", "6319" }
+  -- /utf-8 sets both source and execution charset to UTF-8
+  -- fixes compilation on non-English Windows (e.g. Chinese) where
+  -- default code page doesn't match source file encoding
+  buildoptions { "/utf-8" }
 
   location "this_is_invalid_location"
 
@@ -310,7 +314,7 @@ workspace "SumatraPDF"
     optimized_conf()
     defines { "UNRAR", "RARDLL", "SILENT" }
     -- os.hpp redefines WINVER, is there a better way?
-    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4996" }
+    disablewarnings { "4005", "4100", "4201", "4211", "4244", "4310", "4389", "4456", "4459", "4505", "4701", "4702", "4706", "4709", "4731", "4828", "4996" }
     exceptionhandling "On"
 
     includedirs { "ext/unrar" }
@@ -744,17 +748,6 @@ workspace "SumatraPDF"
 
 ---- executables
 
-  project "plugin-test"
-    kind "WindowedApp"
-    language "C++"
-    cppdialect "C++latest"
-    mixed_dbg_rel_conf()
-    entrypoint "WinMainCRTStartup"
-    includedirs { "src" }
-    plugin_test_files()
-    links { "utils", "mupdf" }
-    links { "shlwapi", "version", "comctl32", "wininet", "wintrust", "crypt32" }
-
   project "test_util"
     kind "ConsoleApp"
     language "C++"
@@ -828,17 +821,6 @@ workspace "SumatraPDF"
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
     links { "utils", "unrar", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
-
-  project "PdfPreviewTest"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++latest"
-    mixed_dbg_rel_conf()
-    disablewarnings { "4838" }
-    includedirs { "src" }
-    preview_test_files()
-    links { "gdiplus", "comctl32", "shlwapi", "Version", "Ole32" }
-    dependson { "PdfPreview" }
 
   -- a single static executable
   project "SumatraPDF"

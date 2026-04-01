@@ -6,6 +6,10 @@ struct AnnotCreateArgs;
 #define CANVAS_CLASS_NAME L"SUMATRA_PDF_CANVAS"
 #define FRAME_CLASS_NAME L"SUMATRA_PDF_FRAME"
 
+constexpr int kFrameResizeHitTest = 5;
+
+extern bool gRedrawLog;
+
 constexpr const char* kWebsiteURL = "https://www.sumatrapdfreader.org/";
 constexpr const char* kManualURL = "https://www.sumatrapdfreader.org/manual";
 constexpr const char* kContributeTranslationsURL = "https://www.sumatrapdfreader.org/docs/Contribute-translation";
@@ -86,6 +90,7 @@ extern Flags* gCli;
 extern bool gShowFrameRate;
 
 extern const char* gPluginURL;
+extern bool gMyWindowWasEmbedded;
 extern Favorites gFavorites;
 extern WNDPROC DefWndProcCloseButton;
 extern RenderCache* gRenderCache;
@@ -101,6 +106,8 @@ extern DocController* gMostRecentlyOpenedDoc;
 
 #define gPluginMode (gPluginURL != nullptr)
 
+bool NeedsWindowEmbeddingHacks();
+
 void InitializePolicies(bool restrict);
 void RestrictPolicies(Perm revokePermission);
 bool HasPermission(Perm permission);
@@ -113,7 +120,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout = true);
 void RememberFavTreeExpansionState(MainWindow* win);
 void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree);
 void AdvanceFocus(MainWindow* win);
@@ -182,7 +189,8 @@ struct PasswordUI;
 MainWindow* LoadDocument(LoadArgs* args);
 MainWindow* LoadDocumentFinish(LoadArgs* args);
 void StartLoadDocument(LoadArgs* args);
-MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr);
+MainWindow* CreateAndShowMainWindow(SessionData* data = nullptr, bool showWin = true);
+void ShowMainWindow(MainWindow* win, int windowState);
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* path, PasswordUI* pwdUI,
                                                MainWindow* win);
 

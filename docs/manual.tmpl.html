@@ -1,26 +1,85 @@
 <!doctype html>
 <html>
-  <head>
-    <meta http-equiv="Content-Language" content="en-us" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <meta
-      name="keywords"
-      content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer, windows 10, Windows 11, "
-    />
-    <meta name="description" content="Sumatra PDF reader and viewer for Windows" />
-    <title>{{Title}}</title>
-    <link rel="stylesheet" type="text/css" href="sumatra.css" />
-  </head>
+<head>
+  <meta http-equiv="Content-Language" content="en-us" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <body>
-    <div>&nbsp;</div>
+  <meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer, windows 10, Windows 11, " />
+  <meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+  <title>{{Title}}</title>
+  <link rel="stylesheet" type="text/css" href="sumatra.css" />
+  <style>
+    .page-layout {
+      display: flex;
+      min-height: 100vh;
+    }
 
-    {{InnerHTML}}
+    .sidebar-toc {
+      display: none;
+      flex-shrink: 0;
+      width: 240px;
+      padding: 0.25rem 0.75rem 1rem 0.75rem;
+      border-right: 1px solid lightgray;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
 
-    <div style="border-top: 1px solid lightgray; margin-top: 0.8rem; margin-bottom: 1rem">&nbsp;</div>
+    .sidebar-toc .toc-title {
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+    }
 
-    <script src="gen_toc.js" defer></script>
-  </body>
+    .sidebar-toc .toc-title a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .sidebar-toc a {
+      display: block;
+      font-size: 10pt;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .sidebar-toc a:hover {
+      text-decoration: underline;
+    }
+
+    .sidebar-toc a.toc-current {
+      font-weight: bold;
+    }
+
+    .page-content {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    @media (min-width: 950px) {
+      .sidebar-toc {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-layout">
+    {{TocHTML}}
+    <div class="page-content">
+      <div>&nbsp;</div>
+
+      {{InnerHTML}}
+
+      <div style="border-top: 1px solid lightgray; margin-top: 0.8rem; margin-bottom: 1rem">&nbsp;</div>
+    </div>
+  </div>
+
+  <script src="gen_toc.js" defer></script>
+</body>
+
 </html>

@@ -35,11 +35,6 @@
   </Project>
   <Project Path="PdfPreview2.vcxproj" Id="B35B45A6-1F11-BE9B-A805-B87214BAB49F">
   </Project>
-  <Project Path="PdfPreviewTest.vcxproj" Id="A10482EE-8DD2-75F4-7666-E61A62D35159">
-    <BuildDependency Project="PdfPreview.vcxproj" />
-  </Project>
-  <Project Path="plugin-test.vcxproj" Id="21A274DA-8D57-EDCF-164C-E7A68200E4D3">
-  </Project>
   <Project Path="SumatraPDF.vcxproj" Id="DC1BAF9B-C8D3-F0E8-31DB-C9441DB28BD9" DefaultStartup="true">
     <BuildDependency Project="PdfFilter2.vcxproj" />
     <BuildDependency Project="PdfPreview2.vcxproj" />

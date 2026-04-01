@@ -23,3 +23,5 @@ constexpr const char* kLinkHideList = "<View,HideList>";
 void SetPromoString(const char*);
 
 void DrawHomePage(MainWindow* win, HDC hdc);
+void HomePageOnVScroll(MainWindow* win, WPARAM wp);
+void HomePageOnMouseWheel(MainWindow* win, int delta);

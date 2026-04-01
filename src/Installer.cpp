@@ -1327,8 +1327,8 @@ int RunInstaller() {
 Exit:
     if (installerLogPath) {
         RunNonElevated(installerLogPath);
-    } else if (!gCli->silent && (ret != 0)) {
-        // if installation failed, automatically show the log
+    } else if (!gCli->silent && (ret != 0 || gInstallFailed)) {
+        // if installation failed, save log to file and show it
         installerLogPath = GetInstallerLogPath();
         bool ok = WriteCurrentLogToFile(installerLogPath);
         if (ok) {

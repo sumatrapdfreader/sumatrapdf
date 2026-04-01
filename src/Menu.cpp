@@ -38,11 +38,13 @@
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Selection.h"
+#include "Tabs.h"
 #include "HomePage.h"
 #include "Translations.h"
 #include "Toolbar.h"
 #include "EditAnnotations.h"
 #include "Accelerators.h"
+#include "ImageSaveCropResize.h"
 #include "Menu.h"
 
 #include "utils/Log.h"
@@ -768,6 +770,29 @@ static MenuDef menuDefCreateAnnotUnderCursor[] = {
 };
 //] ACCESSKEY_GROUP Context Menu (Create annot under cursor)
 
+static MenuDef menuDefContextImage[] = {
+    {
+        _TRN("C&opy To Clipboard"),
+        CmdCopyImage,
+    },
+    {
+        _TRN("&Save"),
+        CmdSaveImage,
+    },
+    {
+        _TRN("C&rop"),
+        CmdCropImage,
+    },
+    {
+        _TRN("R&esize"),
+        CmdResizeImage,
+    },
+    {
+        nullptr,
+        0,
+    },
+};
+
 //[ ACCESSKEY_GROUP Context Menu (Content)
 static MenuDef menuDefContext[] = {
     {
@@ -791,8 +816,8 @@ static MenuDef menuDefContext[] = {
         CmdCopyComment,
     },
     {
-        _TRN("Copy &Image"),
-        CmdCopyImage,
+        _TRN("&Image"),
+        (UINT_PTR)menuDefContextImage,
     },
     // note: strings cannot be "" or else items are not there
     {
@@ -842,6 +867,10 @@ static MenuDef menuDefContext[] = {
     {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
+    },
+    {
+        _TRN("Show Errors"),
+        CmdShowErrors,
     },
     {
         _TRN("E&xit Fullscreen"),
@@ -1397,6 +1426,13 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         // hacky but works: small number is command id, large is submenu (a pointer)
         bool isSubMenu = md.idOrSubmenu > CmdLast + 10000;
 
+        // handle separators before command state checks
+        // (separators have idOrSubmenu=0 which would match the 0 sentinel in removal lists)
+        if (str::Eq(md.title, kMenuSeparator)) {
+            AppendMenuW(menu, MF_SEPARATOR, kMenuSeparatorID, nullptr);
+            continue;
+        }
+
         auto [removeMenu, disableMenu] = GetCommandIdState(ctx, cmdId);
         if (ctx) {
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
@@ -1404,12 +1440,6 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
         removeMenu |= ((subMenuDef == menuDefDebug) && !ShowDebugMenu());
         if (removeMenu) {
-            continue;
-        }
-
-        // prevent two consecutive separators
-        if (str::Eq(md.title, kMenuSeparator)) {
-            AppendMenuW(menu, MF_SEPARATOR, kMenuSeparatorID, nullptr);
             continue;
         }
 
@@ -1783,8 +1813,35 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     if (!pageEl || !pageEl->Is(kindPageElementComment) || !value) {
         MenuRemove(popup, CmdCopyComment);
     }
-    if (!pageEl || !pageEl->Is(kindPageElementImage)) {
-        MenuRemove(popup, CmdCopyImage);
+    {
+        bool onImage = pageEl && pageEl->Is(kindPageElementImage);
+        bool isImageEngine = tab && tab->GetEngineType() == kindEngineImage;
+        if (!onImage && !isImageEngine) {
+            MenuRemove(popup, CmdCopyImage);
+        }
+        if (!onImage) {
+            MenuRemove(popup, CmdSaveImage);
+        }
+        if (!isImageEngine && !onImage) {
+            MenuRemove(popup, CmdCropImage);
+            MenuRemove(popup, CmdResizeImage);
+        }
+        // remove the Image submenu entirely if no items left
+        if (!onImage && !isImageEngine) {
+            // find and remove the submenu by scanning top-level items
+            int n = GetMenuItemCount(popup);
+            for (int j = 0; j < n; j++) {
+                HMENU sub = GetSubMenu(popup, j);
+                if (sub && GetMenuItemCount(sub) == 0) {
+                    RemoveMenu(popup, j, MF_BYPOSITION);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!engine || engine->errors.Size() == 0) {
+        MenuRemove(popup, CmdShowErrors);
     }
 
     bool isFullScreen = win->isFullScreen || win->presentation;
@@ -1851,6 +1908,13 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
+    // TrackPopupMenu runs a nested message loop; during that time the window
+    // can be force-closed (e.g. by a plugin host destroying the parent).
+    // If that happened, all our cached pointers (win, dm, pageEl, etc.) are dangling.
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+
     auto cmd = FindCustomCommand(cmdId);
     if (cmd && cmd->origId == CmdSelectionHandler) {
         HwndSendCommand(win->hwndFrame, cmd->id);
@@ -1891,7 +1955,34 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         case CmdToggleScrollbars:
         case CmdSaveAnnotations:
         case CmdSaveAnnotationsNewFile:
-        case CmdFavoriteAdd:
+        case CmdFavoriteAdd: {
+            HwndSendCommand(win->hwndFrame, cmdId);
+            break;
+        }
+
+        case CmdSaveImage:
+        case CmdCropImage:
+        case CmdResizeImage: {
+            if (pageEl && pageEl->Is(kindPageElementImage)) {
+                RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
+                if (bmp) {
+                    TempStr dir = path::GetDirTemp(filePath);
+                    TempStr base = path::GetBaseNameTemp(filePath);
+                    TempStr noExt = path::GetPathNoExtTemp(base);
+                    TempStr destPath = path::JoinTemp(dir, str::FormatTemp("%s_page_%d.png", noExt, pageNoUnderCursor));
+                    ImageEditMode m = ImageEditMode::Save;
+                    if (cmdId == CmdCropImage) {
+                        m = ImageEditMode::Crop;
+                    } else if (cmdId == CmdResizeImage) {
+                        m = ImageEditMode::Resize;
+                    }
+                    ShowImageEditWindow(win, m, destPath, bmp);
+                    delete bmp;
+                }
+            } else {
+                HwndSendCommand(win->hwndFrame, cmdId);
+            }
+        } break;
         case CmdToggleFullscreen: {
             // handle in FrameOnCommand() in SumatraPDF.cpp
             HwndSendCommand(win->hwndFrame, cmdId);
@@ -1917,6 +2008,14 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         }
         case CmdFavoriteDel: {
             DelFavorite(filePath, pageNoUnderCursor);
+            break;
+        }
+        case CmdShowErrors: {
+            if (engine && engine->errors.Size() > 0) {
+                char* text = Join(&engine->errors, "\n");
+                ShowTextInWindow("Errors", text);
+                str::Free(text);
+            }
             break;
         }
     }
@@ -1976,9 +2075,16 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         }
     };
 }
-
-void MarkMenuOwnerDraw(HMENU hmenu) {
-    if (UseDarkModeLib() && DarkMode::isEnabled()) {
+#if 1
+void MarkMenuOwnerDraw(HMENU, bool) {
+    // our painting isn't good enough so disable for now
+    // rely on darkmodelib for menu theming, which only does light / dark theme from os
+}
+#else
+void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
+    // darkmodelib handles the menu bar via setWindowMenuBarSubclass
+    // but doesn't handle popup/context menus, so we owner-draw those
+    if (isMenuBar && UseDarkModeLib() && DarkMode::isEnabled()) {
         return;
     }
     if (!ThemeColorizeControls()) {
@@ -2046,6 +2152,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         }
     }
 }
+#endif
 
 static int GetMenuCheckMarkCx(HWND hwnd) {
     int cx = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
@@ -2105,8 +2212,6 @@ void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
 // - paint shortcut (part after \t if exists) separately
 // - paint MFS_DISABLED state
 // - paint icons for system menus
-// - for submenus, the triangle on the right doesn't draw in the right color
-//   I don't know who's drawing it
 void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     if (ODT_MENU != dis->CtlType) {
         return;
@@ -2151,17 +2256,16 @@ void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 
     COLORREF bgCol = ThemeMainWindowBackgroundColor();
     COLORREF txtCol = ThemeWindowTextColor();
-    // TODO: if isDisabled, pick a color that represents disabled
-    // either add it to theme definition or auto-generate
-    // (lighter if dark color, darker if light color)
-    if (isDisabled) {
-        txtCol = ThemeWindowTextDisabledColor();
-    }
 
     bool isSelected = bit::IsMaskSet(dis->itemState, (uint)ODS_SELECTED);
-    if (isSelected) {
-        // TODO: probably better colors
-        std::swap(bgCol, txtCol);
+    if (isDisabled) {
+        txtCol = ThemeWindowTextDisabledColor();
+        if (isSelected) {
+            // subtle highlight for disabled selected items
+            bgCol = AccentColor(bgCol, 10);
+        }
+    } else if (isSelected) {
+        bgCol = AccentColor(bgCol, 40);
     }
 
     RECT rc = dis->rcItem;
@@ -2257,7 +2361,7 @@ HMENU BuildMenu(MainWindow* win) {
     AutoDelete delCtx(ctx);
     HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), ctx);
 
-    MarkMenuOwnerDraw(mainMenu);
+    MarkMenuOwnerDraw(mainMenu, true);
     return mainMenu;
 }
 
@@ -2277,7 +2381,7 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         BuildMenuZoom(m);
     }
     MenuUpdateStateForWindow(win);
-    MarkMenuOwnerDraw(win->menu);
+    MarkMenuOwnerDraw(win->menu, true);
 }
 
 // show/hide top-level menu bar. This doesn't persist across launches
@@ -2292,11 +2396,34 @@ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
     HWND hwnd = win->hwndFrame;
 
     if (showTemporarily) {
+        if (win->tabsInTitlebar) {
+            // can't show regular menu with custom caption, so do nothing
+            return;
+        }
         SetMenu(hwnd, win->menu);
         return;
     }
 
-    bool hideMenu = !showTemporarily && GetMenu(hwnd) != nullptr;
+    if (win->tabsInTitlebar) {
+        // toggle rebar menu bar while keeping tabs in titlebar
+        bool isShowing = IsShowingMenuBarRebar(win);
+        if (isShowing) {
+            DestroyMenuBarRebar(win);
+            gGlobalPrefs->showMenubar = false;
+            gGlobalPrefs->showMenubarWithTabs = false;
+        } else {
+            CreateMenuBarRebar(win);
+            gGlobalPrefs->showMenubar = true;
+            gGlobalPrefs->showMenubarWithTabs = true;
+        }
+        // layout first so the rebar is positioned correctly, then show it
+        RelayoutWindow(win);
+        ShowMenuBarRebar(win);
+        return;
+    }
+
+    bool hideMenu = GetMenu(hwnd) != nullptr;
     SetMenu(hwnd, hideMenu ? nullptr : win->menu);
-    win->isMenuHidden = hideMenu;
+    gGlobalPrefs->showMenubar = !hideMenu;
+    gGlobalPrefs->showMenubarWithTabs = !hideMenu;
 }

@@ -233,7 +233,8 @@ inline void CrashMe() {
 
 extern void _uploadDebugReport(const char*, const char*, bool, bool);
 
-#define STRINGIZE(x) #x
+#define STRINGIZE_(x) #x
+#define STRINGIZE(x) STRINGIZE_(x)
 #define FILE_LINE __FILE__ ":" STRINGIZE(__LINE__)
 
 #define ReportIfCond(cond, condStr, fileLine, isCrash, captureCallstack)      \

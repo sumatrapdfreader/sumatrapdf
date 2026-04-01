@@ -13,7 +13,7 @@ constexpr const char* kMenuSeparator = "-----";
 
 void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);
-void MarkMenuOwnerDraw(HMENU);
+void MarkMenuOwnerDraw(HMENU, bool isMenuBar = false);
 void FreeMenuOwnerDrawInfoData(HMENU);
 void MenuCustomDrawMesureItem(HWND, MEASUREITEMSTRUCT*);
 void MenuCustomDrawItem(HWND, DRAWITEMSTRUCT*);

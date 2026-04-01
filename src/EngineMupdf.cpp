@@ -1584,11 +1584,15 @@ static void fz_print_cb(void* user, const char* msg) {
         msg = str::JoinTemp(msg, "\n");
     }
     log(msg);
+    EngineMupdf* engine = (EngineMupdf*)user;
+    if (engine) {
+        engine->errors.Append(msg);
+    }
 }
 
-static void InstallFitzErrorCallbacks(fz_context* ctx) {
-    fz_set_warning_callback(ctx, fz_print_cb, nullptr);
-    fz_set_error_callback(ctx, fz_print_cb, nullptr);
+static void InstallFitzErrorCallbacks(EngineMupdf* engine, fz_context* ctx) {
+    fz_set_warning_callback(ctx, fz_print_cb, (void*)engine);
+    fz_set_error_callback(ctx, fz_print_cb, (void*)engine);
 }
 
 struct ContextThreadID {
@@ -1694,7 +1698,7 @@ EngineMupdf::EngineMupdf() {
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     _ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
-    InstallFitzErrorCallbacks(_ctx);
+    InstallFitzErrorCallbacks(this, _ctx);
 
     install_load_windows_font_funcs(_ctx);
     fz_register_document_handlers(_ctx);
@@ -3554,6 +3558,36 @@ TempStr EngineMupdf::GetPropertyTemp(const char* name) {
     TempStr res = ToUtf8Temp(ws);
     return res;
 };
+
+static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, const char* key) {
+    char buf[1024]{};
+    int n = fz_lookup_metadata(ctx, doc, key, buf, (int)dimof(buf));
+    if (n <= 0) {
+        return nullptr;
+    }
+    if (n > (int)dimof(buf)) {
+        n = (int)dimof(buf) - 1;
+        buf[n] = 0;
+    }
+    return str::DupTemp(buf, (size_t)n - 1);
+}
+
+void EngineMupdf::GetProperties(StrVec& keyValOut) {
+    EngineBase::GetProperties(keyValOut);
+
+    auto ctx = Ctx();
+    ScopedCritSec ctxScope(ctxAccess);
+
+    TempStr val = LookupMetadataTemp(ctx, _doc, "info:Keywords");
+    if (val) {
+        AddProp(keyValOut, kPropKeywords, val);
+    }
+
+    val = LookupMetadataTemp(ctx, _doc, "encryption");
+    if (val) {
+        AddProp(keyValOut, kPropEncryption, val);
+    }
+}
 
 ByteSlice EngineMupdf::GetFileData() {
     auto ctx = Ctx();

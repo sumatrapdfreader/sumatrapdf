@@ -410,6 +410,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -448,6 +449,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -486,6 +488,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -524,6 +527,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -562,6 +566,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -600,6 +605,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -638,6 +644,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -676,6 +683,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -717,6 +725,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -760,6 +769,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -803,6 +813,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -846,6 +857,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -888,7 +900,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -933,7 +945,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -978,7 +990,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -1023,7 +1035,7 @@
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/utf-8 /analyze %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
@@ -1096,6 +1108,7 @@
     <ClInclude Include="..\src\GlobalPrefs.h" />
     <ClInclude Include="..\src\HomePage.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
+    <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\Menu.h" />
@@ -1112,6 +1125,7 @@
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\Scratch.h" />
+    <ClInclude Include="..\src\Screenshot.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\Settings.h" />
@@ -1198,6 +1212,7 @@
     <ClCompile Include="..\src\GlobalPrefs.cpp" />
     <ClCompile Include="..\src\HomePage.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
+    <ClCompile Include="..\src\ImageSaveCropResize.cpp" />
     <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\InstallerCommon.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
@@ -1224,6 +1239,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
@@ -1236,6 +1252,26 @@
     <ClCompile Include="..\src\SvgIcons.cpp" />
     <ClCompile Include="..\src\TableOfContents.cpp" />
     <ClCompile Include="..\src\Tabs.cpp" />
+    <ClCompile Include="..\src\TestPlugin.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\TestPreview.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\Tester.cpp" />
     <ClCompile Include="..\src\Tests.cpp" />
     <ClCompile Include="..\src\TextSearch.cpp" />
@@ -1541,6 +1577,7 @@
     <None Include="..\cmd\pdb-sizes.ts" />
     <None Include="..\cmd\premake.ts" />
     <None Include="..\cmd\run-tests.ts" />
+    <None Include="..\cmd\test-plugin.ts" />
     <None Include="..\cmd\trans-dl.ts" />
     <None Include="..\cmd\trans-gen.ts" />
     <None Include="..\cmd\trans-with-ai.ts" />
@@ -1590,6 +1627,7 @@
     <None Include="..\docs\md\Tool-clean.md" />
     <None Include="..\docs\md\Tool-convert.md" />
     <None Include="..\docs\md\Tool-draw.md" />
+    <None Include="..\docs\md\Tool-extract-text-from-pdf.md" />
     <None Include="..\docs\md\Tool-extract.md" />
     <None Include="..\docs\md\Tool-grep.md" />
     <None Include="..\docs\md\Tool-info.md" />

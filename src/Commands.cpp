@@ -25,59 +25,64 @@ static SeqStrings gCommandNames =
     "CmdToggleBookmarks\0" "CmdToggleTableOfContents\0" "CmdToggleFullscreen\0"
     "CmdPresentationWhiteBackground\0" "CmdPresentationBlackBackground\0" "CmdTogglePresentationMode\0"
     "CmdToggleToolbar\0" "CmdToggleScrollbars\0" "CmdToggleOverlayScrollbar\0"
-    "CmdToggleMenuBar\0" "CmdCopySelection\0" "CmdTranslateSelectionWithGoogle\0"
-    "CmdTranslateSelectionWithDeepL\0" "CmdSearchSelectionWithGoogle\0" "CmdSearchSelectionWithBing\0"
-    "CmdSearchSelectionWithWikipedia\0" "CmdSearchSelectionWithGoogleScholar\0" "CmdSelectAll\0"
-    "CmdNewWindow\0" "CmdDuplicateInNewWindow\0" "CmdDuplicateInNewTab\0"
-    "CmdCopyImage\0" "CmdCopyLinkTarget\0" "CmdCopyComment\0"
-    "CmdCopyFilePath\0" "CmdScrollUp\0" "CmdScrollDown\0"
-    "CmdScrollLeft\0" "CmdScrollRight\0" "CmdScrollLeftPage\0"
-    "CmdScrollRightPage\0" "CmdScrollUpPage\0" "CmdScrollDownPage\0"
-    "CmdScrollDownHalfPage\0" "CmdScrollUpHalfPage\0" "CmdGoToNextPage\0"
-    "CmdGoToPrevPage\0" "CmdGoToFirstPage\0" "CmdGoToLastPage\0"
-    "CmdGoToPage\0" "CmdFindFirst\0" "CmdFindNext\0"
-    "CmdFindPrev\0" "CmdFindNextSel\0" "CmdFindPrevSel\0"
-    "CmdFindToggleMatchCase\0" "CmdSaveAnnotations\0" "CmdSaveAnnotationsNewFile\0"
-    "CmdEditAnnotations\0" "CmdDeleteAnnotation\0" "CmdZoomFitPage\0"
-    "CmdZoomActualSize\0" "CmdZoomFitWidth\0" "CmdZoom6400\0"
-    "CmdZoom3200\0" "CmdZoom1600\0" "CmdZoom800\0"
-    "CmdZoom400\0" "CmdZoom200\0" "CmdZoom150\0"
-    "CmdZoom125\0" "CmdZoom100\0" "CmdZoom50\0"
-    "CmdZoom25\0" "CmdZoom12_5\0" "CmdZoom8_33\0"
-    "CmdZoomFitContent\0" "CmdZoomCustom\0" "CmdZoomIn\0"
-    "CmdZoomOut\0" "CmdZoomFitWidthAndContinuous\0" "CmdZoomFitPageAndSinglePage\0"
-    "CmdContributeTranslation\0" "CmdOpenWithKnownExternalViewerFirst\0" "CmdOpenWithExplorer\0"
-    "CmdOpenWithDirectoryOpus\0" "CmdOpenWithTotalCommander\0" "CmdOpenWithDoubleCommander\0"
-    "CmdOpenWithAcrobat\0" "CmdOpenWithFoxIt\0" "CmdOpenWithFoxItPhantom\0"
-    "CmdOpenWithPdfXchange\0" "CmdOpenWithXpsViewer\0" "CmdOpenWithHtmlHelp\0"
-    "CmdOpenWithPdfDjvuBookmarker\0" "CmdOpenWithKnownExternalViewerLast\0" "CmdOpenSelectedDocument\0"
-    "CmdPinSelectedDocument\0" "CmdForgetSelectedDocument\0" "CmdExpandAll\0"
-    "CmdCollapseAll\0" "CmdSaveEmbeddedFile\0" "CmdOpenEmbeddedPDF\0"
-    "CmdSaveAttachment\0" "CmdOpenAttachment\0" "CmdOptions\0"
-    "CmdAdvancedOptions\0" "CmdAdvancedSettings\0" "CmdChangeLanguage\0"
-    "CmdCheckUpdate\0" "CmdHelpOpenManual\0" "CmdHelpOpenManualOnWebsite\0"
-    "CmdHelpOpenKeyboardShortcuts\0" "CmdHelpVisitWebsite\0" "CmdHelpAbout\0"
-    "CmdMoveFrameFocus\0" "CmdFavoriteAdd\0" "CmdFavoriteDel\0"
-    "CmdFavoriteToggle\0" "CmdToggleLinks\0" "CmdToggleShowAnnotations\0"
-    "CmdShowAnnotations\0" "CmdHideAnnotations\0" "CmdCreateAnnotText\0"
-    "CmdCreateAnnotLink\0" "CmdCreateAnnotFreeText\0" "CmdCreateAnnotLine\0"
-    "CmdCreateAnnotSquare\0" "CmdCreateAnnotCircle\0" "CmdCreateAnnotPolygon\0"
-    "CmdCreateAnnotPolyLine\0" "CmdCreateAnnotHighlight\0" "CmdCreateAnnotUnderline\0"
-    "CmdCreateAnnotSquiggly\0" "CmdCreateAnnotStrikeOut\0" "CmdCreateAnnotRedact\0"
-    "CmdCreateAnnotStamp\0" "CmdCreateAnnotCaret\0" "CmdCreateAnnotInk\0"
-    "CmdCreateAnnotPopup\0" "CmdCreateAnnotFileAttachment\0" "CmdInvertColors\0"
-    "CmdTogglePageInfo\0" "CmdToggleZoom\0" "CmdNavigateBack\0"
-    "CmdNavigateForward\0" "CmdToggleCursorPosition\0" "CmdOpenNextFileInFolder\0"
-    "CmdOpenPrevFileInFolder\0" "CmdCommandPalette\0" "CmdShowLog\0"
-    "CmdShowPdfInfo\0" "CmdClearHistory\0" "CmdReopenLastClosedFile\0"
-    "CmdNextTab\0" "CmdPrevTab\0" "CmdNextTabSmart\0"
-    "CmdPrevTabSmart\0" "CmdMoveTabLeft\0" "CmdMoveTabRight\0"
-    "CmdSelectNextTheme\0" "CmdToggleFrequentlyRead\0" "CmdInvokeInverseSearch\0"
-    "CmdExec\0" "CmdViewWithExternalViewer\0" "CmdSelectionHandler\0"
-    "CmdSetTheme\0" "CmdToggleInverseSearch\0" "CmdDebugCorruptMemory\0"
-    "CmdDebugCrashMe\0" "CmdDebugDownloadSymbols\0" "CmdDebugTestApp\0"
-    "CmdDebugShowNotif\0" "CmdDebugStartStressTest\0" "CmdDebugTogglePredictiveRender\0"
-    "CmdDebugToggleRtl\0" "CmdToggleAntiAlias\0" "CmdNone\0" "\0";
+    "CmdToggleMenuBar\0" "CmdToggleUseTabs\0" "CmdCopySelection\0"
+    "CmdTranslateSelectionWithGoogle\0" "CmdTranslateSelectionWithDeepL\0" "CmdSearchSelectionWithGoogle\0"
+    "CmdSearchSelectionWithBing\0" "CmdSearchSelectionWithWikipedia\0" "CmdSearchSelectionWithGoogleScholar\0"
+    "CmdSelectAll\0" "CmdNewWindow\0" "CmdDuplicateInNewWindow\0"
+    "CmdDuplicateInNewTab\0" "CmdCopyImage\0" "CmdCopyLinkTarget\0"
+    "CmdCopyComment\0" "CmdCopyFilePath\0" "CmdScrollUp\0"
+    "CmdScrollDown\0" "CmdScrollLeft\0" "CmdScrollRight\0"
+    "CmdScrollLeftPage\0" "CmdScrollRightPage\0" "CmdScrollUpPage\0"
+    "CmdScrollDownPage\0" "CmdScrollDownHalfPage\0" "CmdScrollUpHalfPage\0"
+    "CmdGoToNextPage\0" "CmdGoToPrevPage\0" "CmdGoToFirstPage\0"
+    "CmdGoToLastPage\0" "CmdGoToPage\0" "CmdFindFirst\0"
+    "CmdFindNext\0" "CmdFindPrev\0" "CmdFindNextSel\0"
+    "CmdFindPrevSel\0" "CmdFindToggleMatchCase\0" "CmdSaveAnnotations\0"
+    "CmdSaveAnnotationsNewFile\0" "CmdEditAnnotations\0" "CmdDeleteAnnotation\0"
+    "CmdZoomFitPage\0" "CmdZoomActualSize\0" "CmdZoomFitWidth\0"
+    "CmdZoom6400\0" "CmdZoom3200\0" "CmdZoom1600\0"
+    "CmdZoom800\0" "CmdZoom400\0" "CmdZoom200\0"
+    "CmdZoom150\0" "CmdZoom125\0" "CmdZoom100\0"
+    "CmdZoom50\0" "CmdZoom25\0" "CmdZoom12_5\0"
+    "CmdZoom8_33\0" "CmdZoomFitContent\0" "CmdZoomCustom\0"
+    "CmdZoomIn\0" "CmdZoomOut\0" "CmdZoomFitWidthAndContinuous\0"
+    "CmdZoomFitPageAndSinglePage\0" "CmdContributeTranslation\0" "CmdOpenWithKnownExternalViewerFirst\0"
+    "CmdOpenWithExplorer\0" "CmdOpenWithDirectoryOpus\0" "CmdOpenWithTotalCommander\0"
+    "CmdOpenWithDoubleCommander\0" "CmdOpenWithAcrobat\0" "CmdOpenWithFoxIt\0"
+    "CmdOpenWithFoxItPhantom\0" "CmdOpenWithPdfXchange\0" "CmdOpenWithXpsViewer\0"
+    "CmdOpenWithHtmlHelp\0" "CmdOpenWithPdfDjvuBookmarker\0" "CmdOpenWithKnownExternalViewerLast\0"
+    "CmdOpenSelectedDocument\0" "CmdPinSelectedDocument\0" "CmdForgetSelectedDocument\0"
+    "CmdExpandAll\0" "CmdCollapseAll\0" "CmdSaveEmbeddedFile\0"
+    "CmdOpenEmbeddedPDF\0" "CmdSaveAttachment\0" "CmdOpenAttachment\0"
+    "CmdOptions\0" "CmdAdvancedOptions\0" "CmdAdvancedSettings\0"
+    "CmdChangeLanguage\0" "CmdCheckUpdate\0" "CmdHelpOpenManual\0"
+    "CmdHelpOpenManualOnWebsite\0" "CmdHelpOpenKeyboardShortcuts\0" "CmdHelpVisitWebsite\0"
+    "CmdHelpAbout\0" "CmdMoveFrameFocus\0" "CmdFavoriteAdd\0"
+    "CmdFavoriteDel\0" "CmdFavoriteToggle\0" "CmdToggleLinks\0"
+    "CmdToggleShowAnnotations\0" "CmdShowAnnotations\0" "CmdHideAnnotations\0"
+    "CmdCreateAnnotText\0" "CmdCreateAnnotLink\0" "CmdCreateAnnotFreeText\0"
+    "CmdCreateAnnotLine\0" "CmdCreateAnnotSquare\0" "CmdCreateAnnotCircle\0"
+    "CmdCreateAnnotPolygon\0" "CmdCreateAnnotPolyLine\0" "CmdCreateAnnotHighlight\0"
+    "CmdCreateAnnotUnderline\0" "CmdCreateAnnotSquiggly\0" "CmdCreateAnnotStrikeOut\0"
+    "CmdCreateAnnotRedact\0" "CmdCreateAnnotStamp\0" "CmdCreateAnnotCaret\0"
+    "CmdCreateAnnotInk\0" "CmdCreateAnnotPopup\0" "CmdCreateAnnotFileAttachment\0"
+    "CmdInvertColors\0" "CmdTogglePageInfo\0" "CmdToggleZoom\0"
+    "CmdNavigateBack\0" "CmdNavigateForward\0" "CmdToggleCursorPosition\0"
+    "CmdOpenNextFileInFolder\0" "CmdOpenPrevFileInFolder\0" "CmdCommandPalette\0"
+    "CmdShowLog\0" "CmdShowPdfInfo\0" "CmdShowErrors\0"
+    "CmdClearHistory\0" "CmdReopenLastClosedFile\0" "CmdNextTab\0"
+    "CmdPrevTab\0" "CmdNextTabSmart\0" "CmdPrevTabSmart\0"
+    "CmdMoveTabLeft\0" "CmdMoveTabRight\0" "CmdSelectNextTheme\0"
+    "CmdToggleFrequentlyRead\0" "CmdInvokeInverseSearch\0" "CmdExec\0"
+    "CmdViewWithExternalViewer\0" "CmdSelectionHandler\0" "CmdSetTheme\0"
+    "CmdToggleInverseSearch\0" "CmdDebugCorruptMemory\0" "CmdDebugCrashMe\0"
+    "CmdDebugDownloadSymbols\0" "CmdDebugTestApp\0" "CmdDebugShowNotif\0"
+    "CmdDebugStartStressTest\0" "CmdDebugTogglePredictiveRender\0" "CmdDebugToggleRtl\0"
+    "CmdToggleAntiAlias\0" "CmdToggleSmoothScroll\0" "CmdToggleHideScrollbar\0"
+    "CmdToggleScrollbarInSinglePage\0" "CmdToggleLazyLoading\0" "CmdListPrinters\0"
+    "CmdToggleWindowsPreviewer\0" "CmdToggleWindowsSearchFilter\0" "CmdScreenshot\0"
+    "CmdCropImage\0" "CmdResizeImage\0" "CmdSaveImage\0"
+    "CmdPasteClipboardImage\0" "CmdNone\0" "\0";
 
 static i32 gCommandIds[] = {
     CmdOpenFile, CmdClose, CmdCloseCurrentDocument,
@@ -91,59 +96,64 @@ static i32 gCommandIds[] = {
     CmdToggleBookmarks, CmdToggleTableOfContents, CmdToggleFullscreen,
     CmdPresentationWhiteBackground, CmdPresentationBlackBackground, CmdTogglePresentationMode,
     CmdToggleToolbar, CmdToggleScrollbars, CmdToggleOverlayScrollbar,
-    CmdToggleMenuBar, CmdCopySelection, CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithDeepL, CmdSearchSelectionWithGoogle, CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithWikipedia, CmdSearchSelectionWithGoogleScholar, CmdSelectAll,
-    CmdNewWindow, CmdDuplicateInNewWindow, CmdDuplicateInNewTab,
-    CmdCopyImage, CmdCopyLinkTarget, CmdCopyComment,
-    CmdCopyFilePath, CmdScrollUp, CmdScrollDown,
-    CmdScrollLeft, CmdScrollRight, CmdScrollLeftPage,
-    CmdScrollRightPage, CmdScrollUpPage, CmdScrollDownPage,
-    CmdScrollDownHalfPage, CmdScrollUpHalfPage, CmdGoToNextPage,
-    CmdGoToPrevPage, CmdGoToFirstPage, CmdGoToLastPage,
-    CmdGoToPage, CmdFindFirst, CmdFindNext,
-    CmdFindPrev, CmdFindNextSel, CmdFindPrevSel,
-    CmdFindToggleMatchCase, CmdSaveAnnotations, CmdSaveAnnotationsNewFile,
-    CmdEditAnnotations, CmdDeleteAnnotation, CmdZoomFitPage,
-    CmdZoomActualSize, CmdZoomFitWidth, CmdZoom6400,
-    CmdZoom3200, CmdZoom1600, CmdZoom800,
-    CmdZoom400, CmdZoom200, CmdZoom150,
-    CmdZoom125, CmdZoom100, CmdZoom50,
-    CmdZoom25, CmdZoom12_5, CmdZoom8_33,
-    CmdZoomFitContent, CmdZoomCustom, CmdZoomIn,
-    CmdZoomOut, CmdZoomFitWidthAndContinuous, CmdZoomFitPageAndSinglePage,
-    CmdContributeTranslation, CmdOpenWithKnownExternalViewerFirst, CmdOpenWithExplorer,
-    CmdOpenWithDirectoryOpus, CmdOpenWithTotalCommander, CmdOpenWithDoubleCommander,
-    CmdOpenWithAcrobat, CmdOpenWithFoxIt, CmdOpenWithFoxItPhantom,
-    CmdOpenWithPdfXchange, CmdOpenWithXpsViewer, CmdOpenWithHtmlHelp,
-    CmdOpenWithPdfDjvuBookmarker, CmdOpenWithKnownExternalViewerLast, CmdOpenSelectedDocument,
-    CmdPinSelectedDocument, CmdForgetSelectedDocument, CmdExpandAll,
-    CmdCollapseAll, CmdSaveEmbeddedFile, CmdOpenEmbeddedPDF,
-    CmdSaveAttachment, CmdOpenAttachment, CmdOptions,
-    CmdAdvancedOptions, CmdAdvancedSettings, CmdChangeLanguage,
-    CmdCheckUpdate, CmdHelpOpenManual, CmdHelpOpenManualOnWebsite,
-    CmdHelpOpenKeyboardShortcuts, CmdHelpVisitWebsite, CmdHelpAbout,
-    CmdMoveFrameFocus, CmdFavoriteAdd, CmdFavoriteDel,
-    CmdFavoriteToggle, CmdToggleLinks, CmdToggleShowAnnotations,
-    CmdShowAnnotations, CmdHideAnnotations, CmdCreateAnnotText,
-    CmdCreateAnnotLink, CmdCreateAnnotFreeText, CmdCreateAnnotLine,
-    CmdCreateAnnotSquare, CmdCreateAnnotCircle, CmdCreateAnnotPolygon,
-    CmdCreateAnnotPolyLine, CmdCreateAnnotHighlight, CmdCreateAnnotUnderline,
-    CmdCreateAnnotSquiggly, CmdCreateAnnotStrikeOut, CmdCreateAnnotRedact,
-    CmdCreateAnnotStamp, CmdCreateAnnotCaret, CmdCreateAnnotInk,
-    CmdCreateAnnotPopup, CmdCreateAnnotFileAttachment, CmdInvertColors,
-    CmdTogglePageInfo, CmdToggleZoom, CmdNavigateBack,
-    CmdNavigateForward, CmdToggleCursorPosition, CmdOpenNextFileInFolder,
-    CmdOpenPrevFileInFolder, CmdCommandPalette, CmdShowLog,
-    CmdShowPdfInfo, CmdClearHistory, CmdReopenLastClosedFile,
-    CmdNextTab, CmdPrevTab, CmdNextTabSmart,
-    CmdPrevTabSmart, CmdMoveTabLeft, CmdMoveTabRight,
-    CmdSelectNextTheme, CmdToggleFrequentlyRead, CmdInvokeInverseSearch,
-    CmdExec, CmdViewWithExternalViewer, CmdSelectionHandler,
-    CmdSetTheme, CmdToggleInverseSearch, CmdDebugCorruptMemory,
-    CmdDebugCrashMe, CmdDebugDownloadSymbols, CmdDebugTestApp,
-    CmdDebugShowNotif, CmdDebugStartStressTest, CmdDebugTogglePredictiveRender,
-    CmdDebugToggleRtl, CmdToggleAntiAlias, CmdNone,
+    CmdToggleMenuBar, CmdToggleUseTabs, CmdCopySelection,
+    CmdTranslateSelectionWithGoogle, CmdTranslateSelectionWithDeepL, CmdSearchSelectionWithGoogle,
+    CmdSearchSelectionWithBing, CmdSearchSelectionWithWikipedia, CmdSearchSelectionWithGoogleScholar,
+    CmdSelectAll, CmdNewWindow, CmdDuplicateInNewWindow,
+    CmdDuplicateInNewTab, CmdCopyImage, CmdCopyLinkTarget,
+    CmdCopyComment, CmdCopyFilePath, CmdScrollUp,
+    CmdScrollDown, CmdScrollLeft, CmdScrollRight,
+    CmdScrollLeftPage, CmdScrollRightPage, CmdScrollUpPage,
+    CmdScrollDownPage, CmdScrollDownHalfPage, CmdScrollUpHalfPage,
+    CmdGoToNextPage, CmdGoToPrevPage, CmdGoToFirstPage,
+    CmdGoToLastPage, CmdGoToPage, CmdFindFirst,
+    CmdFindNext, CmdFindPrev, CmdFindNextSel,
+    CmdFindPrevSel, CmdFindToggleMatchCase, CmdSaveAnnotations,
+    CmdSaveAnnotationsNewFile, CmdEditAnnotations, CmdDeleteAnnotation,
+    CmdZoomFitPage, CmdZoomActualSize, CmdZoomFitWidth,
+    CmdZoom6400, CmdZoom3200, CmdZoom1600,
+    CmdZoom800, CmdZoom400, CmdZoom200,
+    CmdZoom150, CmdZoom125, CmdZoom100,
+    CmdZoom50, CmdZoom25, CmdZoom12_5,
+    CmdZoom8_33, CmdZoomFitContent, CmdZoomCustom,
+    CmdZoomIn, CmdZoomOut, CmdZoomFitWidthAndContinuous,
+    CmdZoomFitPageAndSinglePage, CmdContributeTranslation, CmdOpenWithKnownExternalViewerFirst,
+    CmdOpenWithExplorer, CmdOpenWithDirectoryOpus, CmdOpenWithTotalCommander,
+    CmdOpenWithDoubleCommander, CmdOpenWithAcrobat, CmdOpenWithFoxIt,
+    CmdOpenWithFoxItPhantom, CmdOpenWithPdfXchange, CmdOpenWithXpsViewer,
+    CmdOpenWithHtmlHelp, CmdOpenWithPdfDjvuBookmarker, CmdOpenWithKnownExternalViewerLast,
+    CmdOpenSelectedDocument, CmdPinSelectedDocument, CmdForgetSelectedDocument,
+    CmdExpandAll, CmdCollapseAll, CmdSaveEmbeddedFile,
+    CmdOpenEmbeddedPDF, CmdSaveAttachment, CmdOpenAttachment,
+    CmdOptions, CmdAdvancedOptions, CmdAdvancedSettings,
+    CmdChangeLanguage, CmdCheckUpdate, CmdHelpOpenManual,
+    CmdHelpOpenManualOnWebsite, CmdHelpOpenKeyboardShortcuts, CmdHelpVisitWebsite,
+    CmdHelpAbout, CmdMoveFrameFocus, CmdFavoriteAdd,
+    CmdFavoriteDel, CmdFavoriteToggle, CmdToggleLinks,
+    CmdToggleShowAnnotations, CmdShowAnnotations, CmdHideAnnotations,
+    CmdCreateAnnotText, CmdCreateAnnotLink, CmdCreateAnnotFreeText,
+    CmdCreateAnnotLine, CmdCreateAnnotSquare, CmdCreateAnnotCircle,
+    CmdCreateAnnotPolygon, CmdCreateAnnotPolyLine, CmdCreateAnnotHighlight,
+    CmdCreateAnnotUnderline, CmdCreateAnnotSquiggly, CmdCreateAnnotStrikeOut,
+    CmdCreateAnnotRedact, CmdCreateAnnotStamp, CmdCreateAnnotCaret,
+    CmdCreateAnnotInk, CmdCreateAnnotPopup, CmdCreateAnnotFileAttachment,
+    CmdInvertColors, CmdTogglePageInfo, CmdToggleZoom,
+    CmdNavigateBack, CmdNavigateForward, CmdToggleCursorPosition,
+    CmdOpenNextFileInFolder, CmdOpenPrevFileInFolder, CmdCommandPalette,
+    CmdShowLog, CmdShowPdfInfo, CmdShowErrors,
+    CmdClearHistory, CmdReopenLastClosedFile, CmdNextTab,
+    CmdPrevTab, CmdNextTabSmart, CmdPrevTabSmart,
+    CmdMoveTabLeft, CmdMoveTabRight, CmdSelectNextTheme,
+    CmdToggleFrequentlyRead, CmdInvokeInverseSearch, CmdExec,
+    CmdViewWithExternalViewer, CmdSelectionHandler, CmdSetTheme,
+    CmdToggleInverseSearch, CmdDebugCorruptMemory, CmdDebugCrashMe,
+    CmdDebugDownloadSymbols, CmdDebugTestApp, CmdDebugShowNotif,
+    CmdDebugStartStressTest, CmdDebugTogglePredictiveRender, CmdDebugToggleRtl,
+    CmdToggleAntiAlias, CmdToggleSmoothScroll, CmdToggleHideScrollbar,
+    CmdToggleScrollbarInSinglePage, CmdToggleLazyLoading, CmdListPrinters,
+    CmdToggleWindowsPreviewer, CmdToggleWindowsSearchFilter, CmdScreenshot,
+    CmdCropImage, CmdResizeImage, CmdSaveImage,
+    CmdPasteClipboardImage, CmdNone,
 };
 
 SeqStrings gCommandDescriptions =
@@ -158,59 +168,64 @@ SeqStrings gCommandDescriptions =
     "Toggle Bookmarks\0" "Toggle Table Of Contents\0" "Toggle Fullscreen\0"
     "Presentation White Background\0" "Presentation Black Background\0" "View: Presentation Mode\0"
     "Toggle Toolbar\0" "Toggle Scrollbars\0" "Toggle Overlay Scrollbar\0"
-    "Toggle Menu Bar\0" "Copy Selection\0" "Translate Selection with Google\0"
-    "Translate Selection With DeepL\0" "Search Selection with Google\0" "Search Selection with Bing\0"
-    "Search Selection with Wikipedia\0" "Search Selection with Google Scholar\0" "Select All\0"
-    "Open New SumatraPDF Window\0" "Open Current Document In New Window\0" "Open Current Document In New Tab\0"
-    "Copy Image\0" "Copy Link Target\0" "Copy Comment\0"
-    "Copy File Path\0" "Scroll Up\0" "Scroll Down\0"
-    "Scroll Left\0" "Scroll Right\0" "Scroll Left By Page\0"
-    "Scroll Right By Page\0" "Scroll Up By Page\0" "Scroll Down By Page\0"
-    "Scroll Down By Half Page\0" "Scroll Up By Half Page\0" "Next Page\0"
-    "Previous Page\0" "First Page\0" "Last Page\0"
-    "Go to Page...\0" "Find\0" "Find Next\0"
-    "Find Previous\0" "Find Next Selection\0" "Find Previous Selection\0"
-    "Find: Toggle Match Case\0" "Save Annotations to existing PDF\0" "Save Annotations to a new PDF\0"
-    "Edit Annotations\0" "Delete Annotation\0" "Zoom: Fit Page\0"
-    "Zoom: Actual Size\0" "Zoom: Fit Width\0" "Zoom: 6400%\0"
-    "Zoom: 3200%\0" "Zoom: 1600%\0" "Zoom: 800%\0"
-    "Zoom: 400%\0" "Zoom: 200%\0" "Zoom: 150%\0"
-    "Zoom: 125%\0" "Zoom: 100%\0" "Zoom: 50%\0"
-    "Zoom: 25%\0" "Zoom: 12.5%\0" "Zoom: 8.33%\0"
-    "Zoom: Fit Content\0" "Zoom: Custom...\0" "Zoom In\0"
-    "Zoom Out\0" "Zoom: Fit Width And Continuous\0" "Zoom: Fit Page and Single Page\0"
-    "Contribute Translation\0" "don't use\0" "Open Directory In Explorer\0"
-    "Open Directory In Directory Opus\0" "Open Directory In Total Commander\0" "Open Directory In Double Commander\0"
-    "Open in Adobe Acrobat\0" "Open in Foxit Reader\0" "Open in Foxit PhantomPDF\0"
-    "Open in PDF-XChange\0" "Open in Microsoft Xps Viewer\0" "Open in Microsoft HTML Help\0"
-    "Open With Pdf&Djvu Bookmarker\0" "don't use\0" "Open Selected Document\0"
-    "Pin Selected Document\0" "Remove Selected Document From History\0" "Expand All\0"
-    "Collapse All\0" "Save Embedded File...\0" "Open Embedded PDF\0"
-    "Save Attachment...\0" "Open Attachment\0" "Options...\0"
-    "Advanced Options...\0" "Advanced Settings...\0" "Change Language...\0"
-    "Check For Updates\0" "Help: Manual\0" "Help: Manual On Website\0"
-    "Help: Keyboard Shortcuts\0" "Help: SumatraPDF Website\0" "Help: About SumatraPDF\0"
-    "Move Frame Focus\0" "Add Favorite\0" "Delete Favorite\0"
-    "Toggle Favorites\0" "Toggle Show Links\0" "Toggle Show Annotations\0"
-    "Show Annotations\0" "Hide Annotations\0" "Create Text Annotation\0"
-    "Create Link Annotation\0" "Create Free Text Annotation\0" "Create Line Annotation\0"
-    "Create Square Annotation\0" "Create Circle Annotation\0" "Create Polygon Annotation\0"
-    "Create Poly Line Annotation\0" "Create Highlight Annotation\0" "Create Underline Annotation\0"
-    "Create Squiggly Annotation\0" "Create Strike Out Annotation\0" "Create Redact Annotation\0"
-    "Create Stamp Annotation\0" "Create Caret Annotation\0" "Create Ink Annotation\0"
-    "Create Popup Annotation\0" "Create File Attachment Annotation\0" "Invert Colors\0"
-    "Toggle Page Info\0" "Toggle Zoom\0" "Navigate Back\0"
-    "Navigate Forward\0" "Toggle Cursor Position\0" "Open Next File In Folder\0"
-    "Open Previous File In Folder\0" "Command Palette\0" "Show Logs\0"
-    "Show PDF Info\0" "Clear History\0" "Reopen Last Closed\0"
-    "Next Tab\0" "Previous Tab\0" "Smart Next Tab\0"
-    "Smart Next Tab\0" "Move Tab Left\0" "Move Tab Right\0"
-    "Select next theme\0" "Toggle Frequently Read\0" "Invoke Inverse Search\0"
-    "Execute a program\0" "View With Custom External Viewer\0" "Launch a browser or run command with selection\0"
-    "Set theme\0" "Toggle Inverse Search\0" "Debug: Corrupt Memory\0"
-    "Debug: Crash Me\0" "Debug: Download Symbols\0" "Debug: Test App\0"
-    "Debug: Show Notification\0" "Debug: Start Stress Test\0" "Debug: Toggle Predictive Rendering\0"
-    "Debug: Toggle Rtl\0" "Toggle Anti-Alias Rendering\0" "Do nothing\0" "\0";
+    "Toggle Menu Bar\0" "Toggle Use Tabs\0" "Copy Selection\0"
+    "Translate Selection with Google\0" "Translate Selection With DeepL\0" "Search Selection with Google\0"
+    "Search Selection with Bing\0" "Search Selection with Wikipedia\0" "Search Selection with Google Scholar\0"
+    "Select All\0" "Open New SumatraPDF Window\0" "Open Current Document In New Window\0"
+    "Open Current Document In New Tab\0" "Copy Image\0" "Copy Link Target\0"
+    "Copy Comment\0" "Copy File Path\0" "Scroll Up\0"
+    "Scroll Down\0" "Scroll Left\0" "Scroll Right\0"
+    "Scroll Left By Page\0" "Scroll Right By Page\0" "Scroll Up By Page\0"
+    "Scroll Down By Page\0" "Scroll Down By Half Page\0" "Scroll Up By Half Page\0"
+    "Next Page\0" "Previous Page\0" "First Page\0"
+    "Last Page\0" "Go to Page...\0" "Find\0"
+    "Find Next\0" "Find Previous\0" "Find Next Selection\0"
+    "Find Previous Selection\0" "Find: Toggle Match Case\0" "Save Annotations to existing PDF\0"
+    "Save Annotations to a new PDF\0" "Edit Annotations\0" "Delete Annotation\0"
+    "Zoom: Fit Page\0" "Zoom: Actual Size\0" "Zoom: Fit Width\0"
+    "Zoom: 6400%\0" "Zoom: 3200%\0" "Zoom: 1600%\0"
+    "Zoom: 800%\0" "Zoom: 400%\0" "Zoom: 200%\0"
+    "Zoom: 150%\0" "Zoom: 125%\0" "Zoom: 100%\0"
+    "Zoom: 50%\0" "Zoom: 25%\0" "Zoom: 12.5%\0"
+    "Zoom: 8.33%\0" "Zoom: Fit Content\0" "Zoom: Custom...\0"
+    "Zoom In\0" "Zoom Out\0" "Zoom: Fit Width And Continuous\0"
+    "Zoom: Fit Page and Single Page\0" "Contribute Translation\0" "don't use\0"
+    "Open Directory In Explorer\0" "Open Directory In Directory Opus\0" "Open Directory In Total Commander\0"
+    "Open Directory In Double Commander\0" "Open in Adobe Acrobat\0" "Open in Foxit Reader\0"
+    "Open in Foxit PhantomPDF\0" "Open in PDF-XChange\0" "Open in Microsoft Xps Viewer\0"
+    "Open in Microsoft HTML Help\0" "Open With Pdf&Djvu Bookmarker\0" "don't use\0"
+    "Open Selected Document\0" "Pin Selected Document\0" "Remove Selected Document From History\0"
+    "Expand All\0" "Collapse All\0" "Save Embedded File...\0"
+    "Open Embedded PDF\0" "Save Attachment...\0" "Open Attachment\0"
+    "Options...\0" "Advanced Options...\0" "Advanced Settings...\0"
+    "Change Language...\0" "Check For Updates\0" "Help: Manual\0"
+    "Help: Manual On Website\0" "Help: Keyboard Shortcuts\0" "Help: SumatraPDF Website\0"
+    "Help: About SumatraPDF\0" "Move Frame Focus\0" "Add Favorite\0"
+    "Delete Favorite\0" "Toggle Favorites\0" "Toggle Show Links\0"
+    "Toggle Show Annotations\0" "Show Annotations\0" "Hide Annotations\0"
+    "Create Text Annotation\0" "Create Link Annotation\0" "Create Free Text Annotation\0"
+    "Create Line Annotation\0" "Create Square Annotation\0" "Create Circle Annotation\0"
+    "Create Polygon Annotation\0" "Create Poly Line Annotation\0" "Create Highlight Annotation\0"
+    "Create Underline Annotation\0" "Create Squiggly Annotation\0" "Create Strike Out Annotation\0"
+    "Create Redact Annotation\0" "Create Stamp Annotation\0" "Create Caret Annotation\0"
+    "Create Ink Annotation\0" "Create Popup Annotation\0" "Create File Attachment Annotation\0"
+    "Invert Colors\0" "Toggle Page Info\0" "Toggle Zoom\0"
+    "Navigate Back\0" "Navigate Forward\0" "Toggle Cursor Position\0"
+    "Open Next File In Folder\0" "Open Previous File In Folder\0" "Command Palette\0"
+    "Show Logs\0" "Show PDF Info\0" "Show Errors\0"
+    "Clear History\0" "Reopen Last Closed\0" "Next Tab\0"
+    "Previous Tab\0" "Smart Next Tab\0" "Smart Next Tab\0"
+    "Move Tab Left\0" "Move Tab Right\0" "Select next theme\0"
+    "Toggle Frequently Read\0" "Invoke Inverse Search\0" "Execute a program\0"
+    "View With Custom External Viewer\0" "Launch a browser or run command with selection\0" "Set theme\0"
+    "Toggle Inverse Search\0" "Debug: Corrupt Memory\0" "Debug: Crash Me\0"
+    "Debug: Download Symbols\0" "Debug: Test App\0" "Debug: Show Notification\0"
+    "Debug: Start Stress Test\0" "Debug: Toggle Predictive Rendering\0" "Debug: Toggle Rtl\0"
+    "Toggle Anti-Alias Rendering\0" "Toggle Smooth Scroll\0" "Toggle Hide Scrollbar\0"
+    "Toggle Scrollbar In Single Page\0" "Toggle Lazy Loading\0" "List Printers\0"
+    "Toggle Windows Previewer\0" "Toggle Windows Search Filter\0" "Take Screenshot\0"
+    "Crop Image\0" "Resize Image\0" "Save Image\0"
+    "Paste Image From Clipboard\0" "Do nothing\0" "\0";
 // clang-format on
 // @gen-end cmd-c
 
@@ -616,7 +631,8 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
     const char* cmd = parts[0];
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
-        MaybeDelayedWarningNotification("Error parsing Shortcuts: unknown cmd name in '%s'\n", definition);
+        MaybeDelayedWarningNotification("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n",
+                                        definition);
         return nullptr;
     }
     if (parts.Size() == 1) {

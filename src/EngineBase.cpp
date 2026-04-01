@@ -375,18 +375,21 @@ TocTree* EngineBase::GetToc() {
     return nullptr;
 }
 
+#include "DocProperties.h"
+
 // default implementation that just sets wanted keys
-void EngineBase::GetProperties(const StrVec&, StrVec&) {
-#if 0
-    for (auto& key : keys) {
-        TempStr val = GetPropertyTemp(key);
-        if (!val) {
-            continue;
+void EngineBase::GetProperties(StrVec& keyValueOut) {
+    for (int i = 0;; i++) {
+        const char* key = gAllProps[i];
+        if (!key) {
+            break;
         }
-        keyValueOut.Append(key);
-        keyValueOut.Append(val);
+        TempStr val = GetPropertyTemp(key);
+        if (val) {
+            keyValueOut.Append(key);
+            keyValueOut.Append(val);
+        }
     }
-#endif
 }
 
 bool EngineBase::HasPageLabels() const {

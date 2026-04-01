@@ -113,6 +113,7 @@ bool IsCtrlPressed();
 Rect ShiftRectToWorkArea(Rect rect, HWND hwnd = nullptr, bool bFully = false);
 Rect GetWorkAreaRect(Rect rect, HWND hwnd);
 void LimitWindowSizeToScreen(HWND hwnd, SIZE& size);
+void HwndEnsureVisible(HWND hwnd);
 Rect GetFullscreenRect(HWND);
 Rect GetVirtualScreenRect();
 

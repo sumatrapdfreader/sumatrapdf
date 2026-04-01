@@ -35,6 +35,7 @@ bool gSkipDuplicateLines = false;
 
 bool gLogToPipe = true;
 HANDLE hLogPipe = INVALID_HANDLE_VALUE;
+static Mutex gPipeMutex;
 
 char* gLogFilePath = nullptr;
 
@@ -83,7 +84,9 @@ static void maybeOpenLogPipe() {
 }
 
 static void logToPipe(const char* s, size_t n = 0) {
-    if (!gLogToPipe) return;
+    if (!gLogToPipe) {
+        return;
+    }
     if (!s || (*s == 0)) {
         return;
     }
@@ -91,22 +94,18 @@ static void logToPipe(const char* s, size_t n = 0) {
         n = str::Len(s);
     }
 
+    gPipeMutex.Lock();
+
     DWORD cbWritten = 0;
     BOOL ok = false;
     bool didConnect = false;
     if (!IsValidHandle(hLogPipe)) {
         maybeOpenLogPipe();
         if (!IsValidHandle(hLogPipe)) {
+            gPipeMutex.Unlock();
             return;
         }
         didConnect = true;
-    }
-
-    // TODO: do I need this if I don't read from the pipe?
-    DWORD mode = PIPE_READMODE_MESSAGE;
-    ok = SetNamedPipeHandleState(hLogPipe, &mode, nullptr, nullptr);
-    if (!ok) {
-        OutputDebugStringA("logToPipe: SetNamedPipeHandleState() failed\n");
     }
 
     if (didConnect) {
@@ -116,20 +115,13 @@ static void logToPipe(const char* s, size_t n = 0) {
     }
 
     DWORD cb = (DWORD)n;
-    // TODO: what happens when we write more than the server can read?
-    // should I loop if cbWritten < cb?
     ok = WriteFile(hLogPipe, s, cb, &cbWritten, nullptr);
     if (!ok) {
-#if 0
-        DWORD err = GetLastError();
-        OutputDebugStringA("logToPipe: WriteFile() failed with error: ");
-        char buf[256]{};
-        snprintf(buf, sizeof(buf) - 1, "%d %s\n", (int)err, getWinError(err));
-        OutputDebugStringA(buf);
-#endif
         CloseHandle(hLogPipe);
         hLogPipe = INVALID_HANDLE_VALUE;
     }
+
+    gPipeMutex.Unlock();
 }
 
 // to use in
@@ -268,7 +260,7 @@ void StartLogToFile(const char* path, bool removeIfExists) {
     ReportIf(gLogFilePath);
     gLogFilePath = str::Dup(path);
     if (removeIfExists) {
-        remove(path);
+        file::Delete(path);
     }
 }
 

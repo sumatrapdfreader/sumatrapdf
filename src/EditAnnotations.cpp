@@ -202,7 +202,8 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 static void DeleteSelectedAnnotation(EditAnnotationsWindow* ew) {
     int idx = ew->listBox->GetCurrentSelection();
     if (idx < 0) {
-        ReportIf(ew->tab->selectedAnnotation != nullptr);
+        // can get out of sync e.g. after UpdateAnnotationsList during save/reload
+        ew->tab->selectedAnnotation = nullptr;
         return;
     }
     Annotation* annot = ew->annotations.at(idx);
@@ -318,8 +319,10 @@ EditAnnotationsWindow::~EditAnnotationsWindow() {
 
     if (tab->selectedAnnotation != nullptr) {
         tab->selectedAnnotation = nullptr;
-        MainWindowRerender(tab->win);
-        ToolbarUpdateStateForWindow(tab->win, false);
+        if (!tab->win->isBeingClosed) {
+            MainWindowRerender(tab->win);
+            ToolbarUpdateStateForWindow(tab->win, false);
+        }
     }
     delete mainLayout;
 }
@@ -964,14 +967,17 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot, bool isNew, EditAn
     // but not do the rest of the logic as it triggers infinite loop
     // TODO: maybe if we already have selected annotation, do not auto-pick
     MainWindow* win = tab->win;
+    auto ew = tab->editAnnotsWindow;
     if (annot == tab->selectedAnnotation) {
         MainWindowRerender(win);
+        if (ew) {
+            UpdateUIForSelectedAnnotation(ew, annot, isNew, focus);
+        }
         ToolbarUpdateStateForWindow(win, false);
         return;
     }
     tab->selectedAnnotation = annot;
     tab->didScrollToSelectedAnnotation = false;
-    auto ew = tab->editAnnotsWindow;
     // go to page with a given annotations before triggering repaint
     if (ew) {
         UpdateUIForSelectedAnnotation(ew, annot, isNew, focus);

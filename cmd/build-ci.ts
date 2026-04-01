@@ -261,7 +261,7 @@ async function buildPreRelease(preRelVer: string, sha1: string, vsplatform: stri
     }
 
     // build all targets
-    const targets = ["PdfFilter", "plugin-test", "PdfPreview", "PdfPreviewTest", "SumatraPDF", "SumatraPDF-dll"];
+    const targets = ["PdfFilter", "PdfPreview", "SumatraPDF", "SumatraPDF-dll"];
     const t = `/t:${targets.map((t) => t + ":Rebuild").join(";")}`;
     await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
 

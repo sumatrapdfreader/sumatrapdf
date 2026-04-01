@@ -165,7 +165,7 @@ int Tooltip::Add(const char* s, const Rect& rc, bool multiline) {
     ti.lpszText = (WCHAR*)ws;
     BOOL ok = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
     if (!ok) {
-        ReportIfFast(!ok);
+        logf("Tooltip::Add: TTM_ADDTOOLW failed\n");
         return -1;
     }
     bool isRtl = IsTextRtl(ws);

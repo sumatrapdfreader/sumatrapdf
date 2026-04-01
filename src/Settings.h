@@ -367,9 +367,12 @@ struct GlobalPrefs {
     // with DefaultDisplayMode after deserialization and before
     // serialization
     char* defaultDisplayMode;
-    // default zoom (in %) or one of those values: fit page, fit width, fit
-    // content
+    // default zoom. valid values: fit page, fit width, fit content or
+    // percent like 100%
     char* defaultZoom;
+    // default zoom for image files. valid values: fit page, fit width, fit
+    // content or percent like 100%
+    char* defaultImageZoom;
     // if true, we expose the SyncTeX inverse search command line in
     // Settings -> Options
     bool enableTeXEnhancements;
@@ -404,10 +407,11 @@ struct GlobalPrefs {
     bool restoreSession;
     // if true, we'll always open files using existing SumatraPDF process
     bool reuseInstance;
-    // if false, the menu bar will be hidden for all newly opened windows
-    // (use F9 to show it until the window closes or Alt to show it just
-    // briefly), only applies if UseTabs is false
+    // if false, the menu bar will be hidden (use F9 to toggle, persisted
+    // across sessions)
     bool showMenubar;
+    // if true, show the menu bar when using tabs (useTabs = true)
+    bool showMenubarWithTabs;
     // if true, we show the toolbar at the top of the window
     bool showToolbar;
     // if true, we show the Favorites sidebar
@@ -524,6 +528,10 @@ struct GlobalPrefs {
     DisplayMode defaultDisplayModeEnum;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
+    // value of DefaultImageZoom for internal usage. 0 means not set
+    float defaultImageZoomFloat;
+    // position of the document properties window
+    Point propWinPos;
 };
 // for parsing themes
 struct Themes {
@@ -768,6 +776,12 @@ static const FieldInfo gFILETIMEFields[] = {
 };
 static const StructInfo gFILETIMEInfo = {sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime"};
 
+static const FieldInfo gPointFields[] = {
+    {offsetof(Point, x), SettingType::Int, 0},
+    {offsetof(Point, y), SettingType::Int, 0},
+};
+static const StructInfo gPointInfo = {sizeof(Point), 2, gPointFields, "X\0Y"};
+
 static const FieldInfo gGlobalPrefsFields[] = {
     {(size_t)-1, SettingType::Comment,
      (intptr_t)"For documentation, see https://www.sumatrapdfreader.org/settings/settings3-7.html"},
@@ -776,6 +790,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, customScreenDPI), SettingType::Int, 0},
     {offsetof(GlobalPrefs, defaultDisplayMode), SettingType::String, (intptr_t)"automatic"},
     {offsetof(GlobalPrefs, defaultZoom), SettingType::String, (intptr_t)"fit page"},
+    {offsetof(GlobalPrefs, defaultImageZoom), SettingType::String, (intptr_t)""},
     {offsetof(GlobalPrefs, enableTeXEnhancements), SettingType::Bool, false},
     {offsetof(GlobalPrefs, escToExit), SettingType::Bool, false},
     {offsetof(GlobalPrefs, fullPathInTitle), SettingType::Bool, false},
@@ -790,6 +805,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, restoreSession), SettingType::Bool, true},
     {offsetof(GlobalPrefs, reuseInstance), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showMenubar), SettingType::Bool, true},
+    {offsetof(GlobalPrefs, showMenubarWithTabs), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToolbar), SettingType::Bool, true},
     {offsetof(GlobalPrefs, showFavorites), SettingType::Bool, false},
     {offsetof(GlobalPrefs, showToc), SettingType::Bool, true},
@@ -847,20 +863,21 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, reopenOnce), SettingType::StringArray, 0},
     {offsetof(GlobalPrefs, timeOfLastUpdateCheck), SettingType::Compact, (intptr_t)&gFILETIMEInfo},
     {offsetof(GlobalPrefs, openCountWeek), SettingType::Int, 0},
+    {offsetof(GlobalPrefs, propWinPos), SettingType::Compact, (intptr_t)&gPointInfo},
     {(size_t)-1, SettingType::Comment, 0},
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 79, gGlobalPrefsFields,
-    "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0EnableTeXEnhancements\0EscToExit\0FullPathI"
-    "nTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0ReloadMo"
-    "difiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowTo"
-    "olbar\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0ScrollbarInSinglePage\0SmoothScroll\0FastScrol"
-    "lOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0TocDy\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontS"
-    "ize\0DisableAntiAlias\0UseSysColors\0UseTabs\0UseMruTabSwitching\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0"
-    "\0ChmUI\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0SelectionHandlers\0\0Shortcuts\0"
-    "\0Themes\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0FileStates\0SessionData\0Reopen"
-    "Once\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    sizeof(GlobalPrefs), 82, gGlobalPrefsFields,
+    "\0\0CheckForUpdates\0CustomScreenDPI\0DefaultDisplayMode\0DefaultZoom\0DefaultImageZoom\0EnableTeXEnhancements\0Es"
+    "cToExit\0FullPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFreque"
+    "ntlyRead\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0S"
+    "howMenubar\0ShowMenubarWithTabs\0ShowToolbar\0ShowFavorites\0ShowToc\0ShowLinks\0ShowStartPage\0SidebarDx\0Scrollb"
+    "arInSinglePage\0SmoothScroll\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0TocDy\0ToolbarSi"
+    "ze\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0UseSysColors\0UseTabs\0UseMruTabSwitching\0ZoomLevels\0ZoomIncrement\0\0"
+    "FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ChmUI\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaul"
+    "ts\0\0SelectionHandlers\0\0Shortcuts\0\0Themes\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0Wind"
+    "owPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0\0"};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},
     {offsetof(Theme, textColor), SettingType::Color, (intptr_t)""},

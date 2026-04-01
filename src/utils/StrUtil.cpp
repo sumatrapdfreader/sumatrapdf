@@ -2268,7 +2268,7 @@ TempStr FormatNumWithThousandSepTemp(i64 num, LCID locale) {
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-TempStr FormatFloatWithThousandSepTemp(double number, LCID locale) {
+TempStr FormatFloatWithThousandSepTemp(double number, LCID locale, bool stripTrailingZero) {
     i64 num = (i64)(number * 100 + 0.5);
 
     char* tmp = FormatNumWithThousandSepTemp(num / 100, locale);
@@ -2285,7 +2285,7 @@ TempStr FormatFloatWithThousandSepTemp(double number, LCID locale) {
 
     // add between one and two decimals after the point
     char* buf = fmt::FormatTemp("%s%s%02d", tmp, decimal, num % 100);
-    if (str::EndsWith(buf, "0")) {
+    if (stripTrailingZero && str::EndsWith(buf, "0")) {
         buf[str::Len(buf) - 1] = '\0';
     }
 
@@ -2318,7 +2318,7 @@ TempStr FormatSizeShortTemp(i64 size, const char* sizeUnits[3]) {
         unit = sizeUnits[2];
     }
 
-    char* sizestr = str::FormatFloatWithThousandSepTemp(s);
+    char* sizestr = str::FormatFloatWithThousandSepTemp(s, LOCALE_USER_DEFAULT, false);
     if (!unit) {
         return sizestr;
     }
