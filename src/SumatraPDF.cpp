@@ -2692,6 +2692,14 @@ static bool MaybeSaveAnnotations(WindowTab* tab) {
     if (IsStressTesting()) {
         return true;
     }
+    // if the file no longer exists (e.g. USB removed, network drive disconnected),
+    // don't try to access it - engine uses memory-mapped I/O and accessing
+    // pages of a gone file causes EXCEPTION_IN_PAGE_ERROR
+    auto filePath = dm->GetFilePath();
+    if (!file::Exists(filePath)) {
+        logf("MaybeSaveAnnotations: file '%s' no longer exists, skipping\n", filePath);
+        return true;
+    }
     bool shouldConfirm = EngineHasUnsavedAnnotations(engine);
     if (!shouldConfirm) {
         return true;
