@@ -2536,7 +2536,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     // TODO: automatically construct "foo.pdf" => "foo Copy.pdf"
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    TempStr srcFileName = str::DupTemp(engine->FilePath());
+    char* srcFileName = str::Dup(engine->FilePath());
     str::BufSet(dstFileName, dimof(dstFileName), srcFileName);
 
     ofn.lStructSize = sizeof(ofn);
@@ -2552,11 +2552,13 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
+        str::Free(srcFileName);
         return false;
     }
     char* dstFilePath = ToUtf8Temp(dstFileName);
     bool savingToExisting = str::Eq(dstFilePath, srcFileName);
     if (savingToExisting) {
+        str::Free(srcFileName);
         return SaveAnnotationsToExistingFile(tab);
     }
 
@@ -2564,6 +2566,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     auto fn = MkFunc1(ShowSaveAnnotationError, &data);
     ok = EngineMupdfSaveUpdated(engine, dstFilePath, fn);
     if (!ok) {
+        str::Free(srcFileName);
         return false;
     }
 
@@ -2579,6 +2582,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     char* newPath = path::NormalizeTemp(dstFilePath);
     // TODO: this should be 'duplicate FileInHistory"
     RenameFileInHistory(srcFileName, newPath);
+    str::Free(srcFileName);
 
     LoadArgs args(newPath, win);
     args.forceReuse = true;
