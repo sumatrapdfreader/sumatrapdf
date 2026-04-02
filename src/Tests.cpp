@@ -40,7 +40,13 @@ void TestRenderPage(const Flags& i) {
             printf("failed to create engine\n");
             continue;
         }
-        RenderPageArgs args(i.pageNumber, zoom, 0);
+        int pageNo = i.pageNumber;
+        if (pageNo < 1 || pageNo > engine->PageCount()) {
+            printf("invalid page number %d (document has %d pages)\n", pageNo, engine->PageCount());
+            SafeEngineRelease(&engine);
+            continue;
+        }
+        RenderPageArgs args(pageNo, zoom, 0);
         auto bmp = engine->RenderPage(args);
         if (bmp == nullptr) {
             printf("failed to render page\n");
