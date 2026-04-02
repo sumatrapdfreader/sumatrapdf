@@ -229,10 +229,13 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
 
     FileInfo* fi = &archive->files[idx];
 
-    u8* uncompressed = (u8*)Allocator::Alloc(allocator, fi->uncompressedSize);
+    // over-allocate by 2 bytes and zero them so the result is always null-terminated
+    u8* uncompressed = (u8*)Allocator::Alloc(allocator, fi->uncompressedSize + 2);
     if (!uncompressed) {
         return nullptr;
     }
+    uncompressed[fi->uncompressedSize] = 0;
+    uncompressed[fi->uncompressedSize + 1] = 0;
 
     bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, fi->uncompressedSize, allocator);
     if (!ok) {
