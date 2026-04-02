@@ -585,16 +585,23 @@ void CommandPaletteWnd::CollectTabsRegular(MainWindow* mainWin, WindowTab* currT
 void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) {
     currTabIdx = 0;
     tabs.Reset();
-    // first add tabs in MRU order from selection history
+    // current tab is by definition the most recently used, so add it first
+    if (currTab) {
+        AppendTab(tabs, currTab, currTab, currTabIdx);
+    }
+    // then add remaining tabs in MRU order from selection history
     Vec<WindowTab*>* history = mainWin->tabSelectionHistory;
     if (history) {
         // history is oldest-first, iterate in reverse for MRU order
         for (int i = history->Size() - 1; i >= 0; i--) {
             WindowTab* tab = history->At(i);
+            if (tab == currTab) {
+                continue;
+            }
             AppendTab(tabs, tab, currTab, currTabIdx);
         }
     }
-    // add any tabs not in the history (e.g. current tab, tabs from other windows)
+    // add any tabs not in the history (e.g. tabs from other windows)
     for (MainWindow* w : gWindows) {
         for (WindowTab* tab : w->Tabs()) {
             bool alreadyAdded = false;
