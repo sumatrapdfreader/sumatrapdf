@@ -3121,6 +3121,9 @@ void HandleLinkMupdf(EngineMupdf* e, IPageDestination* dest, ILinkHandler* linkH
     if (!link->outline) {
         uri = link->link->uri;
     }
+    if (!uri) {
+        return;
+    }
     if (IsExternalLink(uri)) {
         linkHandler->LaunchURL(uri);
         return;
