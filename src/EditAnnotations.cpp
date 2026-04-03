@@ -796,12 +796,13 @@ static void DoIcon(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void IconSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto idx = ew->dropDownIcon->GetCurrentSelection();
     auto item = ew->dropDownIcon->items.At(idx);
-    SetIconName(ew->tab->selectedAnnotation, item);
+    SetIconName(annot, item);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
