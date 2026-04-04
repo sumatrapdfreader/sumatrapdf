@@ -224,6 +224,7 @@ struct CommandPaletteWnd : Wnd {
     bool AdvanceSelection(int dir);
     void SwitchToCommands();
     void SwitchToTabs();
+    void SwitchToEverything();
     void SwitchToFileHistory();
     void OnSelectionChange();
     void OnListDoubleClick();
@@ -659,6 +660,10 @@ void CommandPaletteWnd::SwitchToTabs() {
     EditSetTextAndFocus(editQuery, kPalettePrefixTabs);
 }
 
+void CommandPaletteWnd::SwitchToEverything() {
+    EditSetTextAndFocus(editQuery, kPalettePrefixEverything);
+}
+
 void CommandPaletteWnd::SwitchToFileHistory() {
     EditSetTextAndFocus(editQuery, kPalettePrefixFileHistory);
 }
@@ -884,7 +889,7 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
 
     // strip prefix and remember which lists to search
     bool searchTabs = false, searchHistory = false, searchCommands = false;
-    if (str::StartsWith(filter, kPalettePrefixAll)) {
+    if (str::StartsWith(filter, kPalettePrefixEverything)) {
         filter++;
         searchTabs = searchHistory = searchCommands = true;
     } else if (str::StartsWith(filter, kPalettePrefixTabs)) {
