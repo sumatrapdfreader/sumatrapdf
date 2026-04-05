@@ -609,12 +609,13 @@ static void DoTextAlignment(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextAlignmentSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto idx = ew->dropDownTextAlignment->GetCurrentSelection();
     int newQuadding = idx;
-    SetQuadding(ew->tab->selectedAnnotation, newQuadding);
+    SetQuadding(annot, newQuadding);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -636,12 +637,13 @@ static void DoTextFont(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextFontSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto idx = ew->dropDownTextFont->GetCurrentSelection();
     const char* font = seqstrings::IdxToStr(gFontNames, idx);
-    SetDefaultAppearanceTextFont(ew->tab->selectedAnnotation, font);
+    SetDefaultAppearanceTextFont(annot, font);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -664,7 +666,7 @@ static void DoTextSize(EditAnnotationsWindow* ew, Annotation* annot) {
 
 static void TextFontSizeChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
     auto annot = ew->tab->selectedAnnotation;
-    if (!annot) {
+    if (!annot || !annot->engine) {
         return;
     }
     int fontSize = ev->pos;
@@ -686,13 +688,14 @@ static void DoTextColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void TextColorSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto idx = ew->dropDownTextColor->GetCurrentSelection();
     char* item = ew->dropDownTextColor->items.At(idx);
     auto col = GetDropDownColor(item);
-    SetDefaultAppearanceTextColor(ew->tab->selectedAnnotation, col);
+    SetDefaultAppearanceTextColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -711,11 +714,12 @@ static void DoBorder(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void BorderWidthChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     int borderWidth = ev->pos;
-    SetBorderWidth(ew->tab->selectedAnnotation, borderWidth);
+    SetBorderWidth(annot, borderWidth);
     TempStr s = str::FormatTemp(_TRA("Border: %d"), borderWidth);
     ew->staticBorder->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
@@ -740,27 +744,29 @@ static void DoLineStartEnd(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void LineStartSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto start = ew->dropDownLineStart->GetCurrentSelection();
     if (start < 0) {
         return;
     }
-    SetLineStartStyles(ew->tab->selectedAnnotation, start);
+    SetLineStartStyles(annot, start);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
 
 static void LineEndSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto end = ew->dropDownLineEnd->GetCurrentSelection();
     if (end < 0) {
         return;
     }
-    SetLineEndStyles(ew->tab->selectedAnnotation, end);
+    SetLineEndStyles(annot, end);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -825,13 +831,14 @@ static void DoColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void ColorSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto idx = ew->dropDownColor->GetCurrentSelection();
     auto item = ew->dropDownColor->items.At(idx);
     auto col = GetDropDownColor(item);
-    SetColor(ew->tab->selectedAnnotation, col);
+    SetColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -847,13 +854,14 @@ static void DoInteriorColor(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void InteriorColorSelectionChanged(EditAnnotationsWindow* ew) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     auto idx = ew->dropDownInteriorColor->GetCurrentSelection();
     auto item = ew->dropDownInteriorColor->items.At(idx);
     auto col = GetDropDownColor(item);
-    SetInteriorColor(ew->tab->selectedAnnotation, col);
+    SetInteriorColor(annot, col);
     EnableSaveIfAnnotationsChanged(ew);
     MainWindowRerender(ew->tab->win);
 }
@@ -879,11 +887,12 @@ static void DoSaveEmbed(EditAnnotationsWindow* ew, Annotation* annot) {
 }
 
 static void OpacityChanging(EditAnnotationsWindow* ew, Trackbar::PositionChangingEvent* ev) {
-    if (!ew->tab->selectedAnnotation) {
+    auto annot = ew->tab->selectedAnnotation;
+    if (!annot || !annot->engine) {
         return;
     }
     int opacity = ev->pos;
-    SetOpacity(ew->tab->selectedAnnotation, opacity);
+    SetOpacity(annot, opacity);
     TempStr s = str::FormatTemp(_TRA("Opacity: %d"), opacity);
     ew->staticOpacity->SetText(s);
     EnableSaveIfAnnotationsChanged(ew);
