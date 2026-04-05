@@ -1324,7 +1324,8 @@ static ByteSlice PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
         for (int i = 0; i < n; i++) {
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
 
-            if (!pdf_is_embedded_file(ctx, fs)) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1666
+            if (false && !pdf_is_embedded_file(ctx, fs)) {
                 continue;
             }
             if (no == i + 1) {
@@ -1364,13 +1365,14 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, const 
         for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
 
-            if (!pdf_is_embedded_file(ctx, fs)) {
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1666
+            if (false && !pdf_is_embedded_file(ctx, fs)) {
                 continue;
             }
             pdf_filespec_params fileParams = {};
             pdf_get_filespec_params(ctx, fs, &fileParams);
             const char* nameStr = fileParams.filename;
-            if (str::IsEmpty(nameStr)) {
+            if (str::IsEmpty(nameStr) || (fileParams.size < 0)) {
                 continue;
             }
             fz_outline* link = fz_new_outline(ctx);
