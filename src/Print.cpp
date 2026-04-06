@@ -1141,7 +1141,6 @@ static short GetPaperKind(const char* kindName) {
 
 static short GetPaperSourceByName(Printer* printer, const char* binName) {
     auto devMode = printer->devMode;
-    ReportIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
         return devMode->dmDefaultSource;
     }
