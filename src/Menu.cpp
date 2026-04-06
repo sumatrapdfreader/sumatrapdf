@@ -1905,11 +1905,15 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         } break;
 
         case CmdCopyLinkTarget: {
-            TempStr tmp = CleanupURLForClipbardCopyTemp(value);
-            CopyTextToClipboard(tmp);
+            if (value) {
+                TempStr tmp = CleanupURLForClipbardCopyTemp(value);
+                CopyTextToClipboard(tmp);
+            }
         } break;
         case CmdCopyComment:
-            CopyTextToClipboard(value);
+            if (value) {
+                CopyTextToClipboard(value);
+            }
             break;
 
         case CmdCopyImage: {
