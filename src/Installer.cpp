@@ -507,7 +507,7 @@ static void OnInstallationFinished(Flags* cli) {
 
 static void ShowAndEnable(Wnd* w, bool enable) {
     if (w) {
-        HwndSetVisibility(w->hwnd, enable);
+        ShowWindow(w->hwnd, enable ? SW_SHOW : SW_HIDE);
         w->SetIsEnabled(enable);
     }
 }
@@ -704,8 +704,8 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         "CreateInstallerWindowControls: cli->allUsers: %d, cli->withPreview: %d, cli->withFilter: %d, install dir: "
         "'%s'\n",
         (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir);
-    // intelligently show options if user chose non-defaults
-    // via cmd-line
+    // show options if user chose non-defaults via cmd-line
+    // or if previous install had them enabled
     bool showOptions = false;
 
     HWND hwnd = wnd->hwnd;
