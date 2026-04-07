@@ -187,6 +187,9 @@ void SetCurrentLangByCode(const char* langCode) {
         return;
     }
     StrSpan d = LoadDataResource(2);
+    if (d.IsEmpty()) {
+        return;
+    }
     ParseTranslationsTxt(d, langCode);
     str::Free(d);
 }
