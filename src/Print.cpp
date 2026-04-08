@@ -847,6 +847,16 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     }
 
     HRESULT res = PrintDlgExW(&pdex);
+
+    // PrintDlgExW pumps messages, so the window may have been closed/destroyed while the dialog was open
+    if (!IsMainWindowValid(win)) {
+        logf("PrintCurrentFile: window closed during PrintDlgEx\n");
+        free(ppr);
+        GlobalFree(pdex.hDevMode);
+        GlobalFree(pdex.hDevNames);
+        return;
+    }
+
     if (res != S_OK) {
         logf("PrintCurrentFile: PrintDlgEx failed\n");
         MessageBoxWarning(win->hwndFrame, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
