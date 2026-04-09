@@ -491,7 +491,9 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
             auto wnd = GetNotificationForGroup(hwndForNotif, kNotifUpdateCheckInProgress);
-            NotificationUpdateMessage(wnd, _TRA("You have the latest version."), 5 * 1000, true);
+            if (wnd) {
+                NotificationUpdateMessage(wnd, _TRA("You have the latest version."), 5 * 1000, true);
+            }
         }
         delete updateInfo;
         return 0;
