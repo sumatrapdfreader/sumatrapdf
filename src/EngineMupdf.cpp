@@ -3638,8 +3638,8 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, const char* path, const ShowErro
     if (!engine) {
         return false;
     }
-    EngineMupdf* epdf = (EngineMupdf*)engine;
-    if (!epdf->pdfdoc) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
         return false;
     }
     if (!EngineMupdfHasUnsavedAnnotations(engine)) {
