@@ -164,6 +164,12 @@ static int font_name_eq(const char* name1, const char* name2) {
 static int cmp_win_font_info(const void* el1, const void* el2) {
     win_font_info* i1 = (win_font_info*)el1;
     win_font_info* i2 = (win_font_info*)el2;
+    if (!i1->fontface) {
+        return i2->fontface ? -1 : 0;
+    }
+    if (!i2->fontface) {
+        return 1;
+    }
     return cmp_font_name(i1->fontface, i2->fontface);
 }
 
@@ -278,6 +284,9 @@ static void append_mapping(fz_context* ctx, const char* facename, const char* pa
     g_font_allocated += strlen(facename) + 1;
     // TODO: allocate facename and path from a pool allocator
     i->fontface = strdup(facename);
+    if (!i->fontface) {
+        return;
+    }
     i->file_idx = (u32)file_idx;
     i->index = (u32)index;
     fl->len++;
