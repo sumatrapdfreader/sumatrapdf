@@ -1966,6 +1966,9 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
     if (!IsMainWindowValid(win)) {
         return;
     }
+    if (win->isBeingClosed) {
+        return;
+    }
     const char* path = args->FilePath();
     if (!args->ctrl) {
         ShowErrorLoadingNotification(win, path, args->noSavePrefs);

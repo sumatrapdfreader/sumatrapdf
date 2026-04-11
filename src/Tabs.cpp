@@ -528,6 +528,9 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab) {
     if (!win) {
         return nullptr;
     }
+    if (!win->tabsCtrl) {
+        return nullptr;
+    }
 
     auto tabs = win->tabsCtrl;
     int idx = win->TabCount();
