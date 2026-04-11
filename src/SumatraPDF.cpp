@@ -2863,6 +2863,12 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     if (!win) {
         return;
     }
+    // guard against reentrant CloseWindow calls triggered by Windows theme
+    // system message pumping (uxtheme.dll). The forceClose=true path from
+    // WM_DESTROY is the expected reentrant cleanup and must still proceed.
+    if (win->isBeingClosed && !forceClose) {
+        return;
+    }
     logf("CloseWindow: win: 0x%p, hwndFrame: 0x%x, quitIfLast: %d, forceClose: %d\n", win, win->hwndFrame,
          (int)quitIfLast, (int)forceClose);
     win->isBeingClosed = true;
