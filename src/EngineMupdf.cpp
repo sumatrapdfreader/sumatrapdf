@@ -2828,6 +2828,9 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
     }
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = pages[pageIdx];
+    if (!pageInfo) {
+        return nullptr;
+    }
 
     ScopedCritSec ctxScope(ctxAccess);
     if (!pageInfo->page) {
