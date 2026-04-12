@@ -3862,7 +3862,7 @@ void EngineMupdfGetAnnotations(EngineBase* engine, Vec<Annotation*>& annotsOut) 
 
 bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf->pdfdoc) {
+    if (!epdf || !epdf->pdfdoc) {
         return false;
     }
 #if 0
@@ -3883,6 +3883,9 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
 
 bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf) {
+        return false;
+    }
     return (epdf->pdfdoc != nullptr);
 }
 
