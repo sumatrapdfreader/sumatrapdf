@@ -1108,6 +1108,13 @@ bool EngineDjVu::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
 
     int pageNo = ParseDjVuLink(link);
     if ((pageNo < 1) || (pageNo > pageCount)) {
+        // try resolving as a named destination (e.g. "#vii" for named pages)
+        TempStr resolved = ResolveNamedDestTemp(link);
+        if (resolved) {
+            pageNo = ParseDjVuLink(resolved);
+        }
+    }
+    if ((pageNo < 1) || (pageNo > pageCount)) {
         logf("EngineDjVu::HandleLink: invalid page in a link '%s', pageNo: %d, number of pages: %d\n", link, pageNo,
              pageCount);
         ReportIf(true);
