@@ -4016,8 +4016,11 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
     } else {
         ReportIf(change != AnnotationChange::Modify);
     }
-    auto ctx = e->Ctx();
-    RebuildCommentsFromAnnotations(ctx, pageInfo);
+    {
+        auto ctx = e->Ctx();
+        ScopedCritSec ctxScope(e->ctxAccess);
+        RebuildCommentsFromAnnotations(ctx, pageInfo);
+    }
     pageInfo->elementsNeedRebuilding = true;
 }
 
