@@ -733,14 +733,3 @@ TryAgainAnsi:
     }
     return PDFSYNCERR_SUCCESS;
 }
-
-/* moved synctex logging here so that we can log it to our logs */
-extern "C" int _synctex_error(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    AutoFreeStr s = str::FmtV(fmt, args);
-    char* s2 = str::JoinTemp(s, "\n"); // synctex doesn't use '\n'
-    loga(s2);
-    va_end(args);
-    return 0;
-}
