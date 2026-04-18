@@ -81,7 +81,6 @@ class SyncTex : public Synchronizer {
 
     EngineBase* engine; // needed for converting between coordinate systems
     synctex_scanner_p scanner;
-    AutoFreeStr originalDir; // original directory when synctex.gz is copied to temp
 };
 
 Synchronizer::Synchronizer(const char* syncFilePathIn) {
@@ -604,8 +603,6 @@ int SyncTex::RebuildIndexIfNeeded() {
         scanner = synctex_scanner_new_with_output_file(temppathSync, nullptr, 1);
         if (scanner) {
             logfa("synctex_scanner_new_with_output_file: ok for '%s'\n", temppathSync);
-            // remember original dir for path resolution
-            originalDir.Set(str::Dup(path::GetDirTemp(pathSyncTemp)));
         }
     } else {
         // try the path directly first (works for ASCII paths and UTF-8 aware builds)
@@ -644,8 +641,6 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
     }
 
-    // the name may be in the system's local encoding (e.g. GBK) or UTF-8
-    // try to use it as-is first (UTF-8), then convert from local encoding
     filename.Set(str::Dup(name));
     if (!filename) {
         return PDFSYNCERR_OUTOFMEMORY;
@@ -655,34 +650,7 @@ int SyncTex::DocToSource(int pageNo, Point pt, AutoFreeStr& filename, int* line,
     str::TransCharsInPlace(filename, "*/", " \\");
     // Convert the source filepath to an absolute path
     if (!path::IsAbsolute(filename)) {
-        if (originalDir.Get()) {
-            // resolve relative to original dir when loaded from temp
-            filename.Set(path::Join(originalDir.Get(), filename));
-        } else {
-            filename.Set(PrependDir(filename));
-        }
-    }
-    // if the file doesn't exist, try converting from local encoding to UTF-8
-    if (!file::Exists(filename)) {
-        char* utf8Name = strconv::AnsiToUtf8(name);
-        if (utf8Name) {
-            AutoFreeStr altPath;
-            str::TransCharsInPlace(utf8Name, "*/", " \\");
-            if (!path::IsAbsolute(utf8Name)) {
-                if (originalDir.Get()) {
-                    altPath.Set(path::Join(originalDir.Get(), utf8Name));
-                } else {
-                    altPath.Set(PrependDir(utf8Name));
-                }
-            } else {
-                altPath.Set(utf8Name);
-                utf8Name = nullptr;
-            }
-            str::Free(utf8Name);
-            if (file::Exists(altPath)) {
-                filename.Set(altPath.StealData());
-            }
-        }
+        filename.Set(PrependDir(filename));
     }
 
     *line = synctex_node_line(node);
@@ -713,22 +681,8 @@ int SyncTex::SourceToDoc(const char* srcfilename, int line, int col, int* page, 
         return PDFSYNCERR_OUTOFMEMORY;
     }
 
-    // if scanner was loaded from a temp file (non-ASCII original path),
-    // try querying with just the filename since the scanner's base dir is wrong
-    TempStr queryPath = srcfilepath;
-    if (originalDir.Get()) {
-        // try relative to original dir
-        if (str::StartsWithI(srcfilepath, originalDir.Get())) {
-            int dirLen = str::Leni(originalDir.Get());
-            if (srcfilepath[dirLen] == '\\' || srcfilepath[dirLen] == '/') {
-                dirLen++;
-            }
-            queryPath = str::DupTemp(srcfilepath + dirLen);
-        }
-    }
-
     bool isUtf8 = true;
-    TempStr mb_srcfilepath = queryPath;
+    TempStr mb_srcfilepath = srcfilepath;
 TryAgainAnsi:
     if (!mb_srcfilepath) {
         return PDFSYNCERR_OUTOFMEMORY;
@@ -737,7 +691,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        char* tmp = strconv::Utf8ToAnsi(queryPath);
+        char* tmp = strconv::Utf8ToAnsi(srcfilepath);
         mb_srcfilepath = str::DupTemp(tmp);
         str::Free(tmp);
         goto TryAgainAnsi;
