@@ -1,10 +1,9 @@
 /*
-Copyright (c) 2008-2017 jerome DOT laurens AT u-bourgogne DOT fr
+Copyright (c) 2008-2024 jerome DOT laurens AT u-bourgogne DOT fr
 
 This file is part of the __SyncTeX__ package.
 
-[//]: # (Latest Revision: Fri Jul 14 16:20:41 UTC 2017)
-[//]: # (Version: 1.21)
+Latest Revision: Thu Mar 21 12:51:01 UTC 2024
 
 See `synctex_parser_readme.md` for more details
 
@@ -47,13 +46,30 @@ If you include or use a significant part of the __SyncTeX__ package into a softw
 I would appreciate to be listed as contributor and see "__SyncTeX__" highlighted.
 */
 
-#ifndef __SYNCTEX_VERSION__
-#   define __SYNCTEX_VERSION__
+#ifndef _SYNCTEX_VERSION_H_
+#   define _SYNCTEX_VERSION_H_
 
+/* The version of .synctex files contents. */
+#   define SYNCTEX_VERSION 1
+#   define SYNCTEX_FILE_VERSION SYNCTEX_VERSION
+
+
+/* The version of the synctex parser library */
 #   define SYNCTEX_VERSION_MAJOR 1
+#   define SYNCTEX_VERSION_MINOR 31
 
-#   define SYNCTEX_VERSION_STRING "1.21"
+/* Keep next value in synch with `synctex_parser_version.txt` contents. */
+#   define SYNCTEX_VERSION_STRING "1.31"
 
-#   define SYNCTEX_CLI_VERSION_STRING "1.5"
+/* The version of the synctex CLI tool */
+#   define SYNCTEX_CLI_VERSION_MAJOR 1
+#   define SYNCTEX_CLI_VERSION_MINOR 7
+#   define SYNCTEX_CLI_VERSION_STRING "1.7"
+
+/* The version of the synctex support,
+ * how synctex is embedded in various TeX engines. */
+#   define SYNCTEX_SUPPORT_VERSION_MAJOR 1
+#   define SYNCTEX_SUPPORT_VERSION_MINOR 0
+#   define SYNCTEX_SUPPORT_VERSION_STRING "1.0"
 
 #endif

@@ -67,8 +67,9 @@ In order to help developers to automatically manage the version and build number
 and download the parser only when necessary, the synctex_parser.version
 is an ASCII text file just containing the current version and build numbers.
 
-History:
---------
+Old history:
+------------
+See the ChangeLog
 1.1: Thu Jul 17 09:28:13 UTC 2008
 - First official version available in TeXLive 2008 DVD.
   Unfortunately, the backwards synchronization is not working properly mainly for ConTeXt users, see below.
