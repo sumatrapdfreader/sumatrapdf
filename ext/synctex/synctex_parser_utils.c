@@ -165,8 +165,8 @@ void _synctex_strip_last_path_extension(char * string) {
 		char * last_component = NULL;
 		char * last_extension = NULL;
 #       if defined(SYNCTEX_WINDOWS)
-		last_component = PathFindFileName(string);
-		last_extension = PathFindExtension(string);
+		last_component = PathFindFileNameA(string);
+		last_extension = PathFindExtensionA(string);
 		if(last_extension == NULL)return;
 		if(last_component == NULL)last_component = string;
 		if(last_extension>last_component){/* filter out paths like "my/dir/.hidden" */
