@@ -1,11 +1,11 @@
 /* 
- Copyright (c) 2008-2017 jerome DOT laurens AT u-bourgogne DOT fr
+ Copyright (c) 2008-2024 jerome DOT laurens AT u-bourgogne DOT fr
  
  This file is part of the __SyncTeX__ package.
  
- [//]: # (Latest Revision: Fri Jul 14 16:20:41 UTC 2017)
- [//]: # (Version: 1.21)
- 
+ Version: see synctex_version.h
+ Latest Revision: Thu Mar 21 14:12:58 UTC 2024
+
  See `synctex_parser_readme.md` for more details
  
  ## License
@@ -67,10 +67,10 @@ extern "C" {
 #endif
 
 #	if defined(_WIN32) || defined(__OS2__)
-#       define SYNCTEX_CASE_SENSITIVE_PATH 0
+#   define SYNCTEX_CASE_SENSITIVE_PATH 0
 #		define SYNCTEX_IS_PATH_SEPARATOR(c) ('/' == c || '\\' == c)
 #	else
-#       define SYNCTEX_CASE_SENSITIVE_PATH 1
+#   define SYNCTEX_CASE_SENSITIVE_PATH 1
 #		define SYNCTEX_IS_PATH_SEPARATOR(c) ('/' == c)
 #	endif
     
@@ -122,6 +122,11 @@ void _synctex_strip_last_path_extension(char * string);
  *  It is 0 otherwise. */
 synctex_bool_t _synctex_is_equivalent_file_name(const char *lhs, const char *rhs);
 
+/**
+ * The client is responsible of the management of the returned string, if any.
+ */
+char * _synctex_merge_strings(const char * first,...);
+
 /*	Description forthcoming.*/
 synctex_bool_t _synctex_path_is_absolute(const char * name);
 
@@ -165,6 +170,20 @@ const char * _synctex_get_io_mode_name(synctex_io_mode_t io_mode);
 
 synctex_bool_t synctex_ignore_leading_dot_slash_in_path(const char ** name);
     
+synctex_bool_t synctex_ignore_leading_dot_slash_in_path(const char ** name);
+int synctex_parse_int(char * ptr, char ** endptr);
+
+typedef enum {
+	synctex_parse_int_policy_request = -1,
+	synctex_parse_int_policy_C = 0,
+	synctex_parse_int_policy_raw1 = 1,
+	synctex_parse_int_policy_raw2 = 2,
+} synctex_parse_int_policy_t;
+
+synctex_parse_int_policy_t synctex_parse_int_policy(synctex_parse_int_policy_t policy);
+
+int synctex_parse_int(char * ptr, char ** endptr);
+
 #ifdef __cplusplus
 }
 #endif
