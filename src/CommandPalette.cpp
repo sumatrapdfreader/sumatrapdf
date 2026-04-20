@@ -969,7 +969,13 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
 
     WindowTab* tab = data->tab;
     if (tab != nullptr) {
-        MainWindow* mainWin = tab->win;
+        // tab snapshot was taken when palette opened; tab may have been
+        // closed since then (e.g. file watcher reload, DDE), so validate
+        MainWindow* mainWin = FindMainWindowByTab(tab);
+        if (!mainWin) {
+            ScheduleDelete();
+            return;
+        }
         if (mainWin->CurrentTab() != tab) {
             SelectTabInWindow(tab);
         }
