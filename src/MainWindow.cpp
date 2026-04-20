@@ -756,6 +756,10 @@ MainWindow* FindMainWindowByTab(WindowTab* tabToFind) {
     return nullptr;
 }
 
+bool IsWindowTabValid(WindowTab* tab) {
+    return FindMainWindowByTab(tab) != nullptr;
+}
+
 MainWindow* FindMainWindowByController(DocController* ctrl) {
     for (auto& win : gWindows) {
         for (auto& tab : win->Tabs()) {

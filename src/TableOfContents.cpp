@@ -184,6 +184,11 @@ static void GoToTocLink(GoToTocLinkData* d) {
     auto tocItem = d->tocItem;
     auto ctrl = d->ctrl;
 
+    // validate tab before dereferencing — it may have been freed
+    // while this task was queued (e.g. user closed the tab/window)
+    if (!IsWindowTabValid(tab)) {
+        return;
+    }
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
     if (!IsMainWindowValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
