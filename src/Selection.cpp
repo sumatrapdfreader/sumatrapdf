@@ -233,6 +233,10 @@ TempStr GetSelectedTextTemp(WindowTab* tab, const char* lineSep, bool& isTextOnl
     }
     StrVec selections;
     for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        // selection may reference pages that no longer exist after a reload
+        if (!dm->ValidPageNo(sel.pageNo)) {
+            continue;
+        }
         char* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
         if (!str::IsEmpty(text)) {
             selections.Append(text);
@@ -284,6 +288,9 @@ void CopySelectionToClipboard(MainWindow* win) {
     }
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage* selOnPage = &tab->selectionOnPage->at(0);
+    if (!dm->ValidPageNo(selOnPage->pageNo)) {
+        return;
+    }
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
     int rotation = dm->GetRotation();
     RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);

@@ -47,12 +47,24 @@ DocumentTextCache::~DocumentTextCache() {
 
 bool DocumentTextCache::HasTextForPage(int pageNo) const {
     ReportIf(pageNo < 1 || pageNo > nPages);
+    if (pageNo < 1 || pageNo > nPages) {
+        return false;
+    }
     PageText* pageText = &pagesText[pageNo - 1];
     return pageText->text != nullptr;
 }
 
 const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ReportIf(pageNo < 1 || pageNo > nPages);
+    if (pageNo < 1 || pageNo > nPages) {
+        if (lenOut) {
+            *lenOut = 0;
+        }
+        if (coordsOut) {
+            *coordsOut = nullptr;
+        }
+        return L"";
+    }
 
     ScopedCritSec scope(&access);
     PageText* pageText = &pagesText[pageNo - 1];
