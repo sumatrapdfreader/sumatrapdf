@@ -92,6 +92,11 @@ struct PageDestinationMupdf : IPageDestination {
     char* value = nullptr;
     char* name = nullptr;
 
+    // anchor (x, y) on the destination page resolved from the link URI;
+    // -1 means "not resolved" (e.g. external URL or file launch).
+    float destX = -1.f;
+    float destY = -1.f;
+
     PageDestinationMupdf(fz_link* l, fz_outline* o) {
         // exactly one must be provided
         kind = kindDestinationMupdf;
@@ -106,6 +111,16 @@ struct PageDestinationMupdf : IPageDestination {
             return r;
         }
         return rect;
+    }
+
+    RectF GetDestPoint2() override {
+        if (outline) {
+            return RectF{outline->x, outline->y, 0, 0};
+        }
+        if (destY >= 0.f) {
+            return RectF{destX, destY, 0, 0};
+        }
+        return {};
     }
     ~PageDestinationMupdf() override {
         str::Free(value);
@@ -223,7 +238,13 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
 
     auto dest = new PageDestinationMupdf(link, outline);
     dest->rect = FzGetRectF(link, outline);
-    dest->pageNo = FzGetPageNo(ctx, doc, link, outline);
+    {
+        float x = 0, y = 0;
+        const char* destUri = link ? link->uri : (outline ? outline->uri : nullptr);
+        dest->pageNo = ResolveLink(ctx, doc, destUri, &x, &y);
+        dest->destX = x;
+        dest->destY = y;
+    }
     return dest;
 }
 

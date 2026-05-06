@@ -61,6 +61,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - fix Edit Annotations window not restoring to the correct monitor in multi-monitor setups
 - use `GetFileAttributesEx` instead of opening files for change detection on network drives, avoiding Windows Defender re-scans
 - fix toolbar page number misalignment when `PrinterAccess` is revoked in `sumatrapdfrestrict.ini`
+- add citation/reference hover preview: hovering an internal-document link (e.g. a `[1]` citation, figure reference, or footnote marker) now shows a small popup rendering the destination region, so you can see the bibliography entry / figure / footnote without leaving the current page. Toggle with the `EnableCitationHover` advanced setting (fixes [#128](https://github.com/sumatrapdfreader/sumatrapdf/issues/128), [#4221](https://github.com/sumatrapdfreader/sumatrapdf/issues/4221))
 
 ## 3.6.1 (2026-04-06)
 

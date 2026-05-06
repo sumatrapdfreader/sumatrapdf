@@ -57,6 +57,8 @@
 #include "Toolbar.h"
 #include "Translations.h"
 
+#include "RefHover.h"
+
 #include "utils/Log.h"
 
 // if set instead of trying to render pages we don't have, we simply do nothing
@@ -793,6 +795,24 @@ static bool gShowAnnotationNotification = true;
 // Forward declaration
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
+// Returns true when el is an internal-document link (not an external URL or
+// file launch). Used as a heuristic for "this is probably a citation link".
+static bool IsCitationLink(IPageElement* el) {
+    if (!el || !el->Is(kindPageElementDest)) {
+        return false;
+    }
+    IPageDestination* dest = el->AsLink();
+    if (!dest) {
+        return false;
+    }
+    Kind k = dest->GetKind();
+    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
+        return false;
+    }
+    int destPage = PageDestGetPageNo(dest);
+    return destPage > 0;
+}
+
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     DisplayModel* dm = win->AsFixed();
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
@@ -902,6 +922,27 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;
+
+            // Citation hover: render the destination region of an internal
+            // link (typically the bibliography entry) into a popup.
+            if (gGlobalPrefs->enableCitationHover) {
+                if (!win->refHover) {
+                    win->refHover = RefHoverCreate(win->hwndCanvas);
+                }
+                IPageElement* el = dm->GetElementAtPos(pos, nullptr);
+                if (win->refHover && IsCitationLink(el)) {
+                    IPageDestination* dest = el->AsLink();
+                    int destPage = PageDestGetPageNo(dest);
+                    RectF destPt = PageDestGetDestPoint(dest);
+                    Point screenPt = {x, y};
+                    ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
+                    RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y);
+                } else if (win->refHover) {
+                    RefHoverHide(win->refHover, win->hwndCanvas);
+                }
+            } else if (win->refHover) {
+                RefHoverHide(win->refHover, win->hwndCanvas);
+            }
             break;
         }
 
@@ -2847,6 +2888,13 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
                 SetCursor((HCURSOR) nullptr);
             }
             break;
+
+        case kRefHoverTimerID: {
+            DisplayModel* dm = win->AsFixed();
+            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+            RefHoverOnTimer(win->refHover, hwnd, engine);
+            break;
+        }
 
         case HIDE_FWDSRCHMARK_TIMER_ID:
             win->fwdSearchMark.hideStep++;
