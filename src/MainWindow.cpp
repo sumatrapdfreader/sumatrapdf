@@ -174,6 +174,10 @@ MainWindow::~MainWindow() {
 }
 
 void ClearMouseState(MainWindow* win) {
+    win->dragStartPending = false;
+    win->textDragPending = false;
+    win->imageDragPending = false;
+    win->imageDragElement = nullptr;
     win->linkOnLastButtonDown = nullptr;
     win->annotationUnderCursor = nullptr;
 }

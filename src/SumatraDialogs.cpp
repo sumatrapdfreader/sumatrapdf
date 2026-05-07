@@ -174,6 +174,7 @@ struct Dialog_GetPassword_Data {
     const char* fileName; /* name of the file for which we need the password */
     char* pwdOut;         /* password entered by the user */
     bool* remember;       /* remember the password (encrypted) or ask again? */
+    bool* showPassword;   /* keep the "show password" state across retries */
 };
 
 static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
@@ -197,6 +198,12 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
         HwndSetDlgItemText(hDlg, IDC_REMEMBER_PASSWORD, _TRA("&Remember the password for this document"));
         HwndSetDlgItemText(hDlg, IDOK, _TRA("OK"));
         HwndSetDlgItemText(hDlg, IDCANCEL, _TRA("Cancel"));
+        if (data->showPassword && *data->showPassword) {
+            CheckDlgButton(hDlg, IDC_SHOW_PASSWORD, BST_CHECKED);
+            HWND hwndEdit = GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT);
+            SendMessageW(hwndEdit, EM_SETPASSWORDCHAR, 0, 0);
+            InvalidateRect(hwndEdit, nullptr, TRUE);
+        }
 
         CenterDialog(hDlg);
         HwndSetFocus(GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT));
@@ -226,6 +233,10 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
                 case IDC_SHOW_PASSWORD: {
                     HWND hwndEdit = GetDlgItem(hDlg, IDC_GET_PASSWORD_EDIT);
                     bool show = BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_SHOW_PASSWORD);
+                    data = (Dialog_GetPassword_Data*)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+                    if (data && data->showPassword) {
+                        *data->showPassword = show;
+                    }
                     SendMessageW(hwndEdit, EM_SETPASSWORDCHAR, show ? 0 : (WPARAM)L'\x25CF', 0);
                     InvalidateRect(hwndEdit, nullptr, TRUE);
                     return TRUE;
@@ -241,10 +252,11 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wp, 
    nullptr if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-char* Dialog_GetPassword(HWND hwndParent, const char* fileName, bool* rememberPassword) {
+char* Dialog_GetPassword(HWND hwndParent, const char* fileName, bool* rememberPassword, bool* showPassword) {
     Dialog_GetPassword_Data data = {nullptr};
     data.fileName = fileName;
     data.remember = rememberPassword;
+    data.showPassword = showPassword;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_GET_PASSWORD, hwndParent, Dialog_GetPassword_Proc, (LPARAM)&data);
     if (IDOK != res) {
