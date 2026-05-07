@@ -1317,6 +1317,9 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     ParseFlags(GetCommandLineW(), flags, gToolNames);
     gCli = &flags;
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
+    if (flags.justExtractFiles) {
+        isInstaller = false;
+    }
     bool isUninstaller = flags.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
 
