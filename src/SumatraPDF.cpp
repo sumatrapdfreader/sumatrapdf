@@ -2871,7 +2871,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     ClearTocBox(win);
     AbortFinding(win, true);
 
-    win->linkOnLastButtonDown = nullptr;
+    ClearMouseState(win);
     win->annotationUnderCursor = nullptr;
     win->annotationBeingDragged = nullptr;
     win->annotationBeingResized = false;
