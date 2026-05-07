@@ -739,6 +739,14 @@ static WCHAR* FzTextPageToStr(fz_stext_page* text, Rect** coordsOut) {
     return content.StealData();
 }
 
+static fz_stext_options NewTextPageOptions(int flags = 0) {
+    fz_stext_options opts{};
+    // Use glyph outline bounds so text selection rectangles match visible text
+    // instead of the looser line-height boxes from default MuPDF extraction.
+    opts.flags = flags | FZ_STEXT_ACCURATE_BBOXES;
+    return opts;
+}
+
 static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, Rect* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
@@ -1339,8 +1347,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Vec<FitzPageImageI
 }
 
 static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx) {
-    fz_stext_options opts{};
-    opts.flags = FZ_STEXT_PRESERVE_IMAGES;
+    fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
     fz_stext_page* stext = nullptr;
     fz_var(stext);
     fz_try(ctx) {
@@ -3041,8 +3048,7 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
 
     fz_stext_page* stext = nullptr;
     fz_var(stext);
-    fz_stext_options opts{};
-    opts.flags = FZ_STEXT_PRESERVE_IMAGES;
+    fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
     fz_try(ctx) {
         stext = fz_new_stext_page_from_page2(ctx, page, &opts, cookie);
     }
@@ -3481,6 +3487,14 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     fz_try(ctx) {
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        // Match `extract -r`: normalize embedded images to RGB before creating
+        // a Windows bitmap for copy/save operations.
+        if (pixmap && pixmap->colorspace && !fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
+            fz_pixmap* rgb =
+                fz_convert_pixmap(ctx, pixmap, fz_device_rgb(ctx), nullptr, nullptr, fz_default_color_params, 1);
+            fz_drop_pixmap(ctx, pixmap);
+            pixmap = rgb;
+        }
         bmp = NewRenderedFzPixmap(ctx, pixmap);
     }
     fz_always(ctx) {
@@ -3507,7 +3521,7 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
 
     fz_stext_page* stext = nullptr;
     fz_var(stext);
-    fz_stext_options opts{};
+    fz_stext_options opts = NewTextPageOptions();
     fz_try(ctx) {
         stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
     }
@@ -3538,7 +3552,7 @@ PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
 
     fz_stext_page* stext = nullptr;
     fz_var(stext);
-    fz_stext_options opts{};
+    fz_stext_options opts = NewTextPageOptions();
     fz_try(ctx) {
         stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
     }
