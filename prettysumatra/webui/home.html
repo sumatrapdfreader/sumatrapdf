@@ -1,0 +1,184 @@
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'none';">
+<title>PrettySumatraPDF - Home</title>
+<link rel="stylesheet" href="vendor/fontawesome/all.min.css">
+<link rel="stylesheet" href="vendor/inter/inter.css">
+<style>
+:root {
+  --bg-app: #F2F2F2FF; --bg-surface: rgba(255, 255, 255, 0.65);
+  --bg-card: rgba(255, 255, 255, 0.45); --bg-card-hover: rgba(255, 255, 255, 0.85);
+  --bg-button: rgba(255, 255, 255, 0.5); --bg-button-hover: rgba(255, 255, 255, 0.9);
+  --bg-input: rgba(255, 255, 255, 0.7); --text-main: #1d1d1f; --text-muted: #86868b;
+  --border-color: rgba(0, 0, 0, 0.06); --border-input: rgba(0, 0, 0, 0.1); --border-hover: rgba(234, 179, 8, 0.4);
+  --brand-primary: #eab308; --brand-gradient: linear-gradient(135deg, #facc15 0%, #ca8a04 100%);
+  --brand-glow: rgba(234, 179, 8, 0.25); --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.06); --shadow-hover: 0 12px 40px rgba(234, 179, 8, 0.15);
+  --radius-md: 14px; --radius-lg: 20px; --radius-xl: 24px; --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme="dark"] {
+  --bg-app: #0f0f11;
+  --bg-surface: rgba(28, 28, 30, 0.8);
+  --bg-card: rgba(44, 44, 46, 0.5);
+  --bg-card-hover: rgba(58, 58, 60, 0.85);
+  --bg-button: rgba(44, 44, 46, 0.7);
+  --bg-button-hover: rgba(72, 72, 74, 0.95);
+  --bg-input: rgba(44, 44, 46, 0.7);
+  --text-main: #F2F2F2FF;
+  --text-muted: #a1a1a6;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.15);
+  --border-hover: rgba(234, 179, 8, 0.6);
+  --brand-glow: rgba(234, 179, 8, 0.2);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 12px 40px rgba(234, 179, 8, 0.2);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background-color: var(--bg-app); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+body::before, body::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; filter: blur(48px); animation: float 28s ease-in-out 1 alternate both; }
+body::before { top: -10%; left: 10%; width: 40vw; height: 40vw; background: radial-gradient(circle, var(--brand-glow) 0%, transparent 70%); }
+body::after { bottom: -10%; right: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(234, 179, 8, 0.1) 0%, transparent 70%); animation-delay: -10s; }
+@keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, 30px) scale(1.1); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+body::after { animation: float 20s infinite alternate ease-in-out; animation-delay: -10s; }
+[data-theme="dark"] body::before { background: radial-gradient(circle, rgba(234, 179, 8, 0.15) 0%, transparent 70%); }
+[data-theme="dark"] body::after { background: radial-gradient(circle, rgba(234, 179, 8, 0.08) 0%, transparent 70%); }
+
+.hero { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px 40px; text-align: center; flex-shrink: 0; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.hero-logo { width: 112px; height: 112px; margin-bottom: 16px; filter: drop-shadow(0 4px 12px var(--brand-glow)); object-fit: contain; display: block; }
+.hero-title { font-size: 3rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 12px; color: var(--text-main); }
+.hero-title span { background: var(--brand-gradient); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { font-size: 1.15rem; color: var(--text-muted); max-width: 550px; margin-bottom: 36px; line-height: 1.5; }
+.search-container { width: 100%; max-width: 650px; position: relative; margin-bottom: 32px; }
+.search-container i.search-icon { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.3rem; z-index: 2; }
+.search-input { width: 100%; height: 64px; background: var(--bg-input); backdrop-filter: blur(10px) saturate(130%); -webkit-backdrop-filter: blur(10px) saturate(130%); border: 1px solid var(--border-input); border-radius: var(--radius-xl); padding: 0 24px 0 60px; font-family: inherit; font-size: 1.15rem; color: var(--text-main); box-shadow: var(--shadow-sm); transition: var(--transition); }
+.search-input::placeholder { color: var(--text-muted); font-weight: 500; }
+.search-input:focus { outline: none; border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-glow), var(--shadow-md); background: var(--bg-surface); }
+.quick-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.btn-action { display: flex; align-items: center; gap: 12px; background: var(--bg-button); backdrop-filter: blur(8px); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 24px; color: var(--text-main); font-weight: 600; font-size: 1.05rem; cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); }
+.btn-action:hover { background: var(--bg-button-hover); transform: translateY(-2px); }
+.btn-action i { color: var(--brand-primary); font-size: 1.2rem; transition: transform 0.3s ease; }
+.btn-action:hover i { transform: scale(1.1); }
+.btn-primary-action { background: var(--brand-gradient); color: white; border: none; box-shadow: 0 2px 6px rgba(234, 179, 8, 0.2); }
+.btn-primary-action i { color: white; }
+.btn-primary-action:hover { background: var(--brand-gradient); box-shadow: 0 6px 16px rgba(234, 179, 8, 0.3); transform: translateY(-2px); border: none; }
+
+.recent-section { flex-grow: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 32px 40px; overflow-y: auto; scrollbar-width: none; animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+.recent-section::-webkit-scrollbar { display: none; } .recent-section::-webkit-scrollbar-thumb { background: var(--border-input); border-radius: 4px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+.section-title { font-size: 1.3rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+.section-title i { color: var(--brand-primary); }
+.file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+.file-card { position: relative; background: var(--bg-card); backdrop-filter: blur(8px); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.file-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--brand-gradient); opacity: 0; transition: var(--transition); }
+.file-card:hover { background: var(--bg-card-hover); transform: translateY(-6px); box-shadow: var(--shadow-hover); border-color: var(--border-hover); }
+.file-card:hover::before { opacity: 1; }
+.file-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.file-icon { width: 54px; height: 54px; background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(234, 179, 8, 0.05) 100%); border: 1px solid rgba(234, 179, 8, 0.2); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--brand-primary); font-size: 1.6rem; transition: transform 0.3s ease; }
+.file-card:hover .file-icon { transform: scale(1.08) rotate(-3deg); }
+.file-action-icon { color: var(--text-muted); opacity: 0; transform: translateX(-10px); transition: var(--transition); font-size: 1.1rem; }
+.file-card:hover .file-action-icon { opacity: 1; transform: translateX(0); color: var(--brand-primary); }
+.file-info { display: flex; flex-direction: column; gap: 6px; }
+.file-name { font-weight: 600; font-size: 1.05rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-path { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.skeleton-card { animation: pulse 1.5s ease-in-out 1; pointer-events: none; opacity: 0.7; }
+.skel-block { background: var(--border-input); border-radius: 4px; }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .search-input, .btn-action, .file-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (max-width: 768px) { .hero-title { font-size: 2.2rem; } .hero { padding: 40px 20px 20px; } .search-input { height: 56px; font-size: 1rem; } .file-grid { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); } }
+</style>
+</head>
+
+<body>
+<div class="hero">
+  <img class="hero-logo" src="../../gfx/PrettySumatra/SumatraPDF-256.png" alt="SumatraPDF">
+  <div class="hero-title">Pretty<span>Sumatra</span>PDF</div>
+  <div class="hero-subtitle">Tu biblioteca digital, más elegante que nunca. Busca, abre o retoma tus lecturas al instante.</div>
+  <div class="search-container">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="searchInput" class="search-input" placeholder="Buscar documentos por nombre..." autocomplete="off">
+  </div>
+  <div class="quick-actions">
+    <button class="btn-action btn-primary-action" onclick="post('openFile')">
+      <i class="fa-solid fa-folder-open"></i> Explorar Archivos
+    </button>
+    <button class="btn-action" onclick="post('reopenLast')">
+      <i class="fa-solid fa-clock-rotate-left"></i> Retomar Último
+    </button>
+  </div>
+</div>
+
+<div class="recent-section">
+  <div class="section-header">
+    <div class="section-title"><i class="fa-regular fa-clock"></i> Documentos Recientes</div>
+  </div>
+  <div class="file-grid" id="recentGrid">
+    <div class="file-card skeleton-card"><div class="file-card-header"><div class="file-icon"><i class="fa-solid fa-file"></i></div></div><div class="file-info"><div class="skel-block" style="height: 18px; width: 70%;"></div><div class="skel-block" style="height: 12px; width: 40%;"></div></div></div>
+    <div class="file-card skeleton-card" style="animation-delay: 0.2s"><div class="file-card-header"><div class="file-icon"><i class="fa-solid fa-file"></i></div></div><div class="file-info"><div class="skel-block" style="height: 18px; width: 85%;"></div><div class="skel-block" style="height: 12px; width: 50%;"></div></div></div>
+  </div>
+</div>
+
+<script>
+function post(name, payload = {}) { if (window.external && typeof window.external.invoke === 'function') window.external.invoke(JSON.stringify({ type: 'command', name, payload, ts: Date.now() })); }
+
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') post('searchFiles', { query: e.target.value });
+});
+searchInput.addEventListener('input', (e) => {
+  const q = e.target.value.trim();
+  if (!q) renderRecentFiles(window._recentFiles || []);
+  else renderRecentFiles(filterFiles(window._recentFiles || [], q));
+});
+
+function filterFiles(files, query) {
+  const q = query.toLowerCase();
+  return files.filter(f => (f.name && f.name.toLowerCase().includes(q)) || (f.path && f.path.toLowerCase().includes(q)));
+}
+
+function renderRecentFiles(files) {
+  const grid = document.getElementById('recentGrid'); grid.innerHTML = '';
+  if (!files || files.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted); animation: slideUp 0.5s;"><i class="fa-regular fa-folder-open" style="font-size: 3rem; opacity: 0.5; margin-bottom: 16px;"></i><h3 style="font-weight: 600; margin-bottom: 8px;">No hay archivos recientes</h3><p style="font-size: 0.95rem;">Los documentos que abras aparecerán aquí mágicamente.</p></div>`; return;
+  }
+  files.forEach((file, index) => {
+    const card = document.createElement('div'); card.className = 'file-card'; card.style.animation = `slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.05}s both`;
+    card.onclick = () => post('openRecent', { path: file.path });
+    card.innerHTML = `<div class="file-card-header"><div class="file-icon"><i class="fa-solid fa-file-pdf"></i></div><i class="fa-solid fa-arrow-right file-action-icon"></i></div><div class="file-info"><div class="file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div><div class="file-path" title="${escapeHtml(file.path)}">${escapeHtml(file.path)}</div></div>`;
+    grid.appendChild(card);
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+window.setRecentFiles = function(files) {
+  window._recentFiles = Array.isArray(files) ? files : [];
+  renderRecentFiles(window._recentFiles);
+};
+
+window.applyTheme = function(isDark) { 
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+};
+
+post('homePageReady');
+</script>
+</body>
+</html>

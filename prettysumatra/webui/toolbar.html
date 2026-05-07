@@ -1,0 +1,353 @@
+
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'none';">
+<title>PrettySumatraPDF</title>
+<link rel="stylesheet" href="vendor/fontawesome/all.min.css">
+<link rel="stylesheet" href="vendor/inter/inter.css">
+<style>
+:root {
+  --bg-app: #F2F2F2FF; --bg-toolbar: rgba(255, 255, 255, 0.75); --bg-button: rgba(255, 255, 255, 0.5);
+  --bg-button-hover: rgba(255, 255, 255, 0.9); --bg-button-active: rgba(230, 230, 230, 0.9); --bg-input: rgba(255, 255, 255, 0.8);
+  --text-main: #1d1d1f; --text-muted: #86868b; --border-color: rgba(0, 0, 0, 0.08); --border-input: rgba(0, 0, 0, 0.1);
+  --brand-primary: #eab308; --brand-primary-hover: #ca8a04; --brand-gradient: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04); --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px; --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-theme="dark"] {
+  --bg-app: #0f0f11; --bg-toolbar: rgba(28, 28, 30, 0.75); --bg-button: rgba(44, 44, 46, 0.6);
+  --bg-button-hover: rgba(58, 58, 60, 0.9); --bg-button-active: rgba(72, 72, 74, 0.9); --bg-input: rgba(44, 44, 46, 0.8);
+  --text-main: #f5f5f7; --text-muted: #a1a1a6; --border-color: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.1); --brand-primary: #facc15; --brand-primary-hover: #fef08a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background-color: var(--bg-app); color: var(--text-main); height: 100vh; padding: 16px; display: block; overflow: hidden; }
+.toolbar-container { display: flex; align-items: center; justify-content: safe center; width: 100%; max-width: 1600px; margin: 0 auto; background: var(--bg-toolbar); backdrop-filter: blur(10px) saturate(130%); -webkit-backdrop-filter: blur(10px) saturate(130%); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 10px 16px; box-shadow: var(--shadow-md); gap: 16px; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+.toolbar-container::-webkit-scrollbar { display: none; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+.brand-icon { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--radius-md); box-shadow: 0 2px 8px rgba(234, 179, 8, 0.3); overflow: hidden; background: linear-gradient(135deg, rgba(250, 204, 21, 0.08), rgba(234, 179, 8, 0.16)); }
+.brand-icon img { width: 100%; height: 100%; object-fit: contain; object-position: center; display: block; }
+.brand-text { display: flex; flex-direction: column; }
+.brand-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
+.brand-title span { color: var(--brand-primary); }
+.brand-subtitle { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+
+.toolbar-section { display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; flex-shrink: 0; }
+.control-group { display: flex; align-items: center; background: var(--bg-button); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 4px; transition: var(--transition); flex-shrink: 0; }
+.control-group:hover { box-shadow: var(--shadow-sm); }
+.btn { background: transparent; border: none; color: var(--text-main); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-size: 0.95rem; border-radius: var(--radius-sm); transition: var(--transition); flex-shrink: 0; }
+.btn-icon { width: 32px; height: 32px; color: var(--text-muted); }
+.btn-icon:hover { background: var(--bg-button-hover); color: var(--text-main); transform: translateY(-1px); }
+.btn-icon:active { background: var(--bg-button-active); transform: translateY(0); }
+.btn-primary { background: var(--brand-gradient); color: white; padding: 0 16px; height: 36px; font-weight: 600; border-radius: var(--radius-md); box-shadow: 0 2px 6px rgba(234, 179, 8, 0.2); }
+.btn-primary:hover { box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3); transform: translateY(-1px); }
+.btn.active { background: var(--bg-button-active); color: var(--brand-primary); }
+.divider { width: 1px; height: 20px; background: var(--border-color); margin: 0 4px; flex-shrink: 0; }
+.page-input { width: 44px; height: 28px; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-sm); color: var(--text-main); text-align: center; font-family: inherit; font-size: 0.9rem; font-weight: 500; flex-shrink: 0; }
+.page-input:focus { outline: 2px solid var(--brand-primary); border-color: transparent; }
+.page-meta { font-size: 0.85rem; color: var(--text-muted); margin: 0 6px 0 2px; font-weight: 500; white-space: nowrap; }
+.custom-select { background: transparent; border: none; color: var(--text-main); font-family: inherit; font-size: 0.9rem; font-weight: 500; padding: 4px 8px; cursor: pointer; appearance: none; -webkit-appearance: none; outline: none; }
+.select-wrapper { position: relative; display: flex; align-items: center; flex-shrink: 0; }
+.select-wrapper i { position: absolute; right: 8px; pointer-events: none; font-size: 0.75rem; color: var(--text-muted); }
+.search-box { display: flex; align-items: center; background: var(--bg-input); border: 1px solid var(--border-input); border-radius: var(--radius-md); padding: 0 4px 0 12px; height: 36px; transition: var(--transition); flex-shrink: 0; }
+.search-box:focus-within { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.2); }
+.search-input { border: none; background: transparent; color: var(--text-main); font-family: inherit; font-size: 0.9rem; width: 140px; outline: none; transition: var(--transition); }
+.search-input::placeholder { color: var(--text-muted); }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+/* =========================================================
+   MODERN MINIMALIST 3-STATE THEME SWITCH
+   ========================================================= */
+.theme-pill-container { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.modern-theme-switch {
+  position: relative;
+  display: flex;
+  background: var(--bg-button);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.modern-theme-switch:hover { box-shadow: var(--shadow-sm); }
+
+/* Indicador deslizante (El fondo activo) */
+.mts-slider {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 28px; height: 28px;
+  background: var(--bg-toolbar);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+.modern-theme-switch[data-state="light"] .mts-slider { transform: translateX(0); }
+.modern-theme-switch[data-state="dark"] .mts-slider { transform: translateX(30px); }
+.modern-theme-switch[data-state="auto"] .mts-slider { transform: translateX(60px); }
+
+/* Efecto de resplandor sutil según el estado */
+.modern-theme-switch[data-state="light"] .mts-slider { box-shadow: 0 0 6px rgba(234, 179, 8, 0.2); border: 1px solid rgba(234, 179, 8, 0.1); }
+.modern-theme-switch[data-state="auto"] .mts-slider { box-shadow: 0 0 6px rgba(0, 120, 212, 0.2); border: 1px solid rgba(0, 120, 212, 0.1); }
+
+/* Botones individuales (Zonas de clic) */
+.mts-btn {
+  position: relative;
+  width: 28px; height: 28px;
+  background: transparent; border: none; border-radius: 50%;
+  color: var(--text-muted); font-size: 0.9rem; cursor: pointer;
+  z-index: 2; display: flex; align-items: center; justify-content: center;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+.mts-btn:hover { color: var(--text-main); }
+
+/* Colores activos */
+.modern-theme-switch[data-state="light"] .mts-btn[data-val="light"] { color: var(--brand-primary); }
+.modern-theme-switch[data-state="dark"] .mts-btn[data-val="dark"] { color: var(--text-main); }
+
+/* --- ANIMACIÓN ESTADO: CLARO (SOL) --- */
+.modern-theme-switch[data-state="light"] .mts-btn[data-val="light"] i {
+  transform: rotate(0deg);
+}
+@keyframes sunSpin { 100% { transform: rotate(360deg); } }
+
+/* --- ANIMACIÓN ESTADO: OSCURO (LUNA) --- */
+.modern-theme-switch[data-state="dark"] .mts-btn[data-val="dark"] i {
+  transform: rotate(-15deg); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mts-tiny-star { position: absolute; background: currentColor; border-radius: 50%; opacity: 0; pointer-events: none; }
+.ts-1 { width: 2px; height: 2px; top: 6px; right: 6px; }
+.ts-2 { width: 1.5px; height: 1.5px; bottom: 8px; left: 4px; }
+.modern-theme-switch[data-state="dark"] .ts-1 { animation: mtsTwinkle 0.9s ease-out 1 0.15s; }
+.modern-theme-switch[data-state="dark"] .ts-2 { animation: mtsTwinkle 0.9s ease-out 1 0.3s; }
+@keyframes mtsTwinkle { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 0.8; transform: scale(1); } }
+
+/* --- ANIMACIÓN ESTADO: AUTO (WIN11) --- */
+.win11-icon { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5px; width: 12px; height: 12px; }
+.win11-icon i { background: currentColor; border-radius: 0.5px; transition: all 0.3s ease; }
+
+.modern-theme-switch[data-state="auto"] .mts-btn[data-val="auto"] .win11-icon i { background: #0078D4; }
+.modern-theme-switch[data-state="auto"] .mts-btn[data-val="auto"] .win11-icon { animation: winBreathe 0.8s ease-in-out 1 0.15s; }
+.modern-theme-switch[data-state="auto"] .mts-btn[data-val="auto"] .win11-icon i:nth-child(1) { animation: winPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.0s; }
+.modern-theme-switch[data-state="auto"] .mts-btn[data-val="auto"] .win11-icon i:nth-child(2) { animation: winPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.1s; }
+.modern-theme-switch[data-state="auto"] .mts-btn[data-val="auto"] .win11-icon i:nth-child(3) { animation: winPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.2s; }
+.modern-theme-switch[data-state="auto"] .mts-btn[data-val="auto"] .win11-icon i:nth-child(4) { animation: winPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 0.3s; }
+
+@keyframes winPop { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes winBreathe { 0% { filter: drop-shadow(0 0 0px rgba(0, 120, 212, 0)); } 100% { filter: drop-shadow(0 0 3px rgba(0, 120, 212, 0.4)); } }
+
+/* Botón de invertir documento */
+.invert-doc-btn { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); background: var(--bg-button); border: 1px solid var(--border-color); transition: var(--transition); flex-shrink: 0; margin-left: 4px; }
+.invert-doc-btn:hover { color: var(--text-main); background: var(--bg-button-hover); }
+.invert-doc-btn.active { background: var(--bg-button-active); color: var(--brand-primary); }
+
+@media (max-width: 1200px) {
+  .toolbar-container { padding: 6px 10px; gap: 10px; } .toolbar-section { gap: 6px; }
+  .btn-icon { width: 28px; height: 28px; font-size: 0.9rem; } .divider { height: 16px; margin: 0 2px; }
+  #openButtonText { display: none; } .btn-primary { padding: 0; width: 30px; height: 30px; border-radius: 50%; }
+  .btn-primary i { margin: 0; font-size: 0.9rem; } .page-input { width: 36px; height: 24px; font-size: 0.85rem; }
+  .page-meta { font-size: 0.8rem; } .brand-subtitle { display: none; }
+  .control-group:has(#zoomSelect) .select-wrapper, .control-group:has(#zoomSelect) .divider, .control-group:has(#viewModeSelect) .select-wrapper, .control-group:has(#viewModeSelect) .divider { display: none; }
+  .search-box { position: relative; width: 32px; padding: 0; justify-content: center; cursor: pointer; overflow: hidden; }
+  .search-box i.fa-magnifying-glass { min-width: 32px; text-align: center; pointer-events: none; }
+  .search-box:not(:focus-within) .search-input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .search-box:not(:focus-within) #searchPrev, .search-box:not(:focus-within) #searchNext { display: none; }
+  .search-box:focus-within { width: 180px; padding: 0 4px 0 8px; justify-content: flex-start; }
+  .search-box:focus-within .search-input { position: relative; width: 100px; opacity: 1; cursor: text; }
+}
+@media (max-width: 900px) { .brand { display: none; } .search-box:focus-within { width: 140px; } .search-box:focus-within .search-input { width: 70px; } }
+@media (max-width: 768px) { .toolbar-container { gap: 6px; padding: 4px 8px; } .toolbar-section { gap: 4px; } }
+.skeleton-container { display: flex !important; align-items: center; justify-content: center; gap: 16px; width: 100%; max-width: 1600px; height: 58px; margin: 0 auto; background: var(--bg-toolbar); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 10px 16px; position: relative; overflow: hidden; box-shadow: var(--shadow-md); z-index: 999; }
+.skel-shape { background: rgba(150, 150, 150, 0.3); height: 36px; border-radius: var(--radius-md); }
+.skel-circle { width: 36px; border-radius: 50%; } .skel-box { width: 90px; } .skel-large { width: 160px; }
+.skeleton-container::after { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.35), transparent); animation: shimmer 1.2s linear 1; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+@media (max-width: 1200px) { .skeleton-container { height: 44px; gap: 10px; } .skel-shape { height: 30px; } .skel-circle { width: 30px; } }
+@media (max-width: 768px) { .skeleton-container { height: 40px; } }
+</style>
+</head>
+
+<body>
+<div id="skeletonToolbar" class="skeleton-container">
+  <div class="skel-shape skel-circle"></div><div class="skel-shape skel-box"></div><div class="skel-shape skel-large"></div><div class="skel-shape skel-box"></div><div class="skel-shape skel-circle"></div>
+</div>
+<div id="mainToolbar" class="toolbar-container" style="display: none !important;">
+  <div class="brand"><div class="brand-icon"><img src="sumatrapdf/gfx/PrettySumatra/SumatraPDF-256.png" alt="SumatraPDF"></div><div class="brand-text"><div class="brand-title">Pretty<span>Sumatra</span>PDF</div><div id="toolbarSubtitle" class="brand-subtitle subtitle">Focused reading</div></div></div>
+  <div class="toolbar-section">
+    <button id="openButton" class="btn btn-primary" data-cmd="openFile" type="button" title="Open File (Ctrl+O)"><i class="fa-regular fa-folder-open"></i><span id="openButtonText">Open</span></button>
+    <div class="control-group"><button id="pagePrevButton" class="btn btn-icon" data-cmd="goToPage" data-delta="-1" type="button"><i class="fa-solid fa-chevron-left"></i></button><div class="divider"></div><input id="pageInput" class="page-input page" type="number" min="1" value="1"><div class="divider"></div><button id="pageNextButton" class="btn btn-icon" data-cmd="goToPage" data-delta="1" type="button"><i class="fa-solid fa-chevron-right"></i></button></div>
+    <div class="control-group"><button id="zoomOutButton" class="btn btn-icon" data-exec="zoomOut" type="button"><i class="fa-solid fa-magnifying-glass-minus"></i></button><div class="divider"></div><div class="select-wrapper"><select id="zoomSelect" class="custom-select" style="padding-right: 24px;"><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option></select><i class="fa-solid fa-chevron-down"></i></div><div class="divider"></div><button id="zoomInButton" class="btn btn-icon" data-exec="zoomIn" type="button"><i class="fa-solid fa-magnifying-glass-plus"></i></button></div>
+    <div class="control-group"><div class="select-wrapper"><select id="viewModeSelect" class="custom-select" style="padding-right: 24px;"><option value="singlePage" selected>Single Page</option><option value="facing">Facing</option><option value="bookView">Book View</option></select><i class="fa-solid fa-chevron-down"></i></div><div class="divider"></div><button id="continuousToggle" class="btn btn-icon toggle active" type="button"><i class="fa-solid fa-arrows-up-down"></i></button></div>
+  </div>
+  <div class="toolbar-section">
+    <div class="control-group"><button id="highlightButton" disabled class="btn btn-icon" data-exec="highlightSelection" type="button"><i class="fa-solid fa-highlighter"></i></button><div class="divider"></div><button id="annotateButton" disabled class="btn btn-icon" data-exec="addAnnotation" type="button"><i class="fa-solid fa-comment-dots"></i></button><div class="divider"></div><button id="drawButton" disabled class="btn btn-icon" data-exec="freeDraw" type="button"><i class="fa-solid fa-pen"></i></button></div>
+    <div class="search-box"><i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); font-size: 0.9rem;"></i><input id="searchInput" type="search" class="search-input search" placeholder="Search text"><button id="searchPrev" class="btn btn-icon" style="width: 28px; height: 28px;" type="button"><i class="fa-solid fa-angle-up"></i></button><button id="searchNext" class="btn btn-icon" style="width: 28px; height: 28px;" type="button"><i class="fa-solid fa-angle-down"></i></button></div>
+    <div class="control-group">
+      <button id="bookmarksToggle" class="btn btn-icon toggle active" data-exec="toggleBookmarks" type="button" title="Marcadores"><i class="fa-solid fa-bookmark"></i></button>
+      <button id="favoritesToggle" class="btn btn-icon toggle" data-exec="toggleFavorites" type="button" title="Favoritos"><i class="fa-solid fa-star"></i></button>
+      <button id="commandPaletteButton" class="btn btn-icon" data-exec="commandPalette" type="button"><i class="fa-solid fa-terminal"></i></button>
+      <button id="printButton" class="btn btn-icon" data-exec="print" type="button"><i class="fa-solid fa-print"></i></button>
+    </div>
+    
+    <div class="theme-pill-container">
+      <div id="themeSwitch" class="modern-theme-switch" data-state="auto">
+        <!-- El fondo que se desliza suavemente -->
+        <div class="mts-slider"></div>
+        
+        <!-- Botones (Iconos con animaciones sutiles incrustadas) -->
+        <button class="mts-btn" data-val="light" title="Tema Claro">
+          <i class="fa-solid fa-sun"></i>
+        </button>
+        <button class="mts-btn" data-val="dark" title="Tema Oscuro">
+          <i class="fa-solid fa-moon"></i>
+          <span class="mts-tiny-star ts-1"></span>
+          <span class="mts-tiny-star ts-2"></span>
+        </button>
+        <button class="mts-btn" data-val="auto" title="Seguir Sistema (Windows 11)">
+          <div class="win11-icon"><i></i><i></i><i></i><i></i></div>
+        </button>
+      </div>
+      
+      <button id="documentInvertToggle" class="invert-doc-btn toggle" type="button" title="Invertir Documento"><i class="fa-solid fa-circle-half-stroke"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+const toolbarText={}; const pageInput=document.getElementById('pageInput'); const pageMeta=document.getElementById('pageMeta'); const toolbarSubtitle=document.getElementById('toolbarSubtitle');
+const openButton=document.getElementById('openButton'); const openButtonText=document.getElementById('openButtonText'); const pagePrevButton=document.getElementById('pagePrevButton'); const pageNextButton=document.getElementById('pageNextButton');
+const zoomOutButton=document.getElementById('zoomOutButton'); const zoomInButton=document.getElementById('zoomInButton'); const searchInput=document.getElementById('searchInput');
+const zoomSelect=document.getElementById('zoomSelect'); const viewModeSelect=document.getElementById('viewModeSelect'); const continuousToggle=document.getElementById('continuousToggle');
+const bookmarksToggle=document.getElementById('bookmarksToggle'); const favoritesToggle=document.getElementById('favoritesToggle'); const fullscreenToggle=document.getElementById('fullscreenToggle');
+const commandPaletteButton=document.getElementById('commandPaletteButton'); const rotateLeftButton=document.getElementById('rotateLeftButton'); const rotateRightButton=document.getElementById('rotateRightButton');
+const printButton=document.getElementById('printButton');
+const documentInvertToggle=document.getElementById('documentInvertToggle');
+const themeSwitch=document.getElementById('themeSwitch');
+let currentPage=1; let totalPages=1; let lastAppDark=false; let lastWindowsDark=false; let lastFollowWindows=false; let lastDocInverted=false;
+
+function formatText(template, values) { return String(template || '').replace(/\{([a-zA-Z0-9_]+)\}/g, (m, k) => Object.prototype.hasOwnProperty.call(values, k) ? String(values[k]) : m); }
+function applyToolbarText(payload={}) {
+  Object.assign(toolbarText, payload); document.documentElement.lang=toolbarText.lang||document.documentElement.lang||'en';
+  if(toolbarSubtitle) toolbarSubtitle.textContent=toolbarText.subtitle||toolbarSubtitle.textContent;
+  if(openButtonText) openButtonText.textContent=toolbarText.openButton||openButtonText.textContent;
+  if(pagePrevButton) pagePrevButton.title=toolbarText.pagePrevTitle||pagePrevButton.title;
+  if(pageNextButton) pageNextButton.title=toolbarText.pageNextTitle||pageNextButton.title;
+  if(zoomOutButton) zoomOutButton.title=toolbarText.zoomOutTitle||zoomOutButton.title;
+  if(zoomInButton) zoomInButton.title=toolbarText.zoomInTitle||zoomInButton.title;
+  if(continuousToggle) continuousToggle.title=toolbarText.continuousTitle||continuousToggle.title;
+  if(searchInput) searchInput.placeholder=toolbarText.searchPlaceholder||searchInput.placeholder;
+  if(favoritesToggle) favoritesToggle.title=toolbarText.favoritesTitle||favoritesToggle.title;
+  if(viewModeSelect && viewModeSelect.options[0]) viewModeSelect.options[0].textContent=toolbarText.viewSinglePage||viewModeSelect.options[0].textContent;
+  setPageState(currentPage, totalPages); setThemeButtonState(lastAppDark, lastWindowsDark, lastFollowWindows); setDocumentInvertState(lastDocInverted);
+}
+window.hybridToolbarApplyText=applyToolbarText;
+if(window.__hybridToolbarTextPayload) applyToolbarText(window.__hybridToolbarTextPayload);
+function post(n, p={}) { if(window.external && typeof window.external.invoke==='function') window.external.invoke(JSON.stringify({type:'command', name:n, payload:p, ts:Date.now()})); }
+function setPage(p) { const n=Math.max(1, parseInt(p||'1', 10)); currentPage=n; if(pageInput) pageInput.value=String(n); if(pageMeta) pageMeta.textContent=formatText(toolbarText.pageTemplate||'{current}', {current:n}); return n; }
+function setPageState(c, pCount) { const cP=Math.max(1, parseInt(c||'1', 10)); const t=Math.max(1, parseInt(pCount||'1', 10)); currentPage=cP; totalPages=t; if(pageInput){pageInput.max=String(t); pageInput.value=String(Math.min(cP,t));} if(pageMeta) pageMeta.textContent=formatText(toolbarText.pageTemplate||'{current}', {current:pageInput.value}); }
+window.hybridToolbarSetPageState=setPageState;
+function normalizeZoomValue(z) { const n=Math.max(1, Number(z)||100); return (n/100).toFixed(4).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1'); }
+function setZoomState(z) { if(!zoomSelect) return; const n=Math.max(1, Number(z)||100); const norm=normalizeZoomValue(n); const opts=Array.from(zoomSelect.options||[]); const match=opts.find(o=>Math.abs(parseFloat(o.value)-parseFloat(norm))<0.0009); if(match){zoomSelect.value=match.value;return;} const dyn=document.createElement('option'); dyn.value=norm; dyn.textContent=String(Math.round(n))+'%'; dyn.setAttribute('data-dynamic-zoom','1'); zoomSelect.appendChild(dyn); zoomSelect.value=norm; }
+window.hybridToolbarSetZoomState=setZoomState;
+function setSearchText(text) { if(!searchInput) return; searchInput.value = text || ''; }
+window.hybridToolbarSetSearchText=setSearchText;
+function focusSearch(selectText=true) { if(!searchInput) return; searchInput.focus(); if(selectText && typeof searchInput.select==='function') searchInput.select(); }
+window.hybridToolbarFocusSearch=focusSearch;
+
+function setThemeButtonState(aD, wD, fW) {
+  lastAppDark=!!aD; lastWindowsDark=!!wD; lastFollowWindows=!!fW;
+  if(!themeSwitch) return;
+  if (fW) { themeSwitch.setAttribute('data-state', 'auto'); } 
+  else if (aD) { themeSwitch.setAttribute('data-state', 'dark'); } 
+  else { themeSwitch.setAttribute('data-state', 'light'); }
+}
+function setDocumentInvertState(dI) { lastDocInverted=!!dI; if(documentInvertToggle) documentInvertToggle.classList.toggle('active', lastDocInverted); }
+function hybridToolbarApplyTheme(p={}) {
+  const root=document.documentElement; const keys=['canvas','panel','panel2','stroke','text','muted','btn','accent','brand1','brand2'];
+  for(const k of keys) { if(typeof p[k]==='string' && p[k]) root.style.setProperty('--'+k, p[k]); }
+  const aD=!!p.appDark; root.dataset.theme=aD?'dark':'light';
+  setThemeButtonState(aD, !!p.windowsDark, !!p.followWindows); setDocumentInvertState(!!p.docInverted);
+}
+window.hybridToolbarApplyTheme=hybridToolbarApplyTheme;
+if(window.__hybridToolbarThemePayload) hybridToolbarApplyTheme(window.__hybridToolbarThemePayload);
+document.querySelectorAll('[data-cmd]').forEach((b) => { b.addEventListener('click', () => { const cmd=b.dataset.cmd; if(cmd==='goToPage' && pageInput) { const n=setPage(parseInt(pageInput.value||'1',10)+parseInt(b.dataset.delta||'0',10)); post('goToPage', {page:n}); return; } if(cmd==='openFile') post('openFile', {}); }); });
+function execCommand(n) { if(!n) return; post('execCommand', {command:n}); }
+document.querySelectorAll('[data-exec]').forEach((b) => { b.addEventListener('click', () => { if(b.classList.contains('toggle')) b.classList.toggle('active'); execCommand(b.dataset.exec||''); }); });
+if(pageInput) { pageInput.addEventListener('change', () => post('goToPage', {page:setPage(pageInput.value)})); pageInput.addEventListener('keydown', (e) => { if(e.key==='Enter') pageInput.dispatchEvent(new Event('change')); }); }
+if(zoomSelect) zoomSelect.addEventListener('change', () => post('zoom', {value:parseFloat(zoomSelect.value)}));
+if(viewModeSelect) viewModeSelect.addEventListener('change', () => execCommand(viewModeSelect.value));
+if(continuousToggle) { continuousToggle.addEventListener('click', () => { continuousToggle.classList.toggle('active'); execCommand('showPagesContinuously'); }); }
+post('setFitMode', {mode:'page'});
+function runSearch(dir) { if(!searchInput) return; const q=searchInput.value.trim(); if(!q) return; post('search', {query:q, direction:dir}); }
+const sPrev=document.getElementById('searchPrev'); const sNext=document.getElementById('searchNext');
+if(sPrev) sPrev.addEventListener('click', () => runSearch('backward')); if(sNext) sNext.addEventListener('click', () => runSearch('forward'));
+if(searchInput) searchInput.addEventListener('keydown', (e) => { if(e.key==='Enter') runSearch('forward'); });
+let searchDebounceTimer = 0;
+if(searchInput) searchInput.addEventListener('input', () => {
+  if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => runSearch('forward'), 220);
+});
+
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    e.stopPropagation();
+    focusSearch(true);
+    return;
+  }
+  if (e.key === 'F3') {
+    e.preventDefault();
+    runSearch(e.shiftKey ? 'backward' : 'forward');
+  }
+}, true);
+
+// Mapeo de botones del Switch minimalista (con auto-inversión inteligente del PDF)
+if(themeSwitch) {
+  themeSwitch.querySelectorAll('.mts-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.val;
+      if (val === 'auto') {
+        if (!lastFollowWindows) execCommand('toggleThemeFollowWindows');
+        // Si Windows es oscuro y el doc no está invertido, invertirlo. Y viceversa.
+        if (lastWindowsDark && !lastDocInverted) execCommand('toggleDocumentInvert');
+        if (!lastWindowsDark && lastDocInverted) execCommand('toggleDocumentInvert');
+      } else if (val === 'light') {
+        if (lastFollowWindows) execCommand('toggleThemeFollowWindows');
+        if (lastAppDark) execCommand('toggleTheme');
+        // En modo claro, asegurar que el documento NO esté invertido
+        if (lastDocInverted) execCommand('toggleDocumentInvert');
+      } else if (val === 'dark') {
+        if (lastFollowWindows) execCommand('toggleThemeFollowWindows');
+        if (!lastAppDark) execCommand('toggleTheme');
+        // En modo oscuro, asegurar que el documento SÍ esté invertido
+        if (!lastDocInverted) execCommand('toggleDocumentInvert');
+      }
+    });
+  });
+}
+
+const diToggle=document.getElementById('documentInvertToggle');
+if(diToggle) diToggle.addEventListener('click', () => execCommand('toggleDocumentInvert'));
+post('toolbarReady', {});
+
+let isRevealed = false;
+function revealToolbar() {
+  if (isRevealed) return;
+  isRevealed = true;
+  const skel = document.getElementById('skeletonToolbar');
+  const tool = document.getElementById('mainToolbar');
+  if (skel) skel.style.setProperty('display', 'none', 'important');
+  if (tool) tool.style.setProperty('display', 'flex', 'important');
+}
+setTimeout(revealToolbar, 800);
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  revealToolbar();
+}
+</script>
+</body>
+</html>
