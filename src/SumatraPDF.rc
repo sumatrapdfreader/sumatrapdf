@@ -80,10 +80,10 @@ IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
 // have icon as ,1, which is index of this icon. unless we delete
 // those old registry on install, the icon would change
 2                       ICON "..\\gfx\\SumatraPDF-smaller.ico"
-3                       ICON "..\\gfx\\gfxalt\\epub-32bit.ico"
-4                       ICON "..\\gfx\\gfxalt\\cbx-32bit.ico"
-5                       ICON "..\\gfx\\gfxalt\\chm-32bit.ico"
-6                       ICON "..\\gfx\\gfxalt\\djvu-32bit.ico"
+3                       ICON "..\\gfx\\epub-32bit.ico"
+4                       ICON "..\\gfx\\cbx-32bit.ico"
+5                       ICON "..\\gfx\\chm-32bit.ico"
+6                       ICON "..\\gfx\\djvu-32bit.ico"
 
     /////////////////////////////////////////////////////////////////////////////
 

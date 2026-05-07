@@ -55,6 +55,42 @@ struct PropertiesLayout {
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
+static COLORREF PropertiesPanelBgColor() {
+    return PrettyStyleEnabled() ? PrettySurfaceColor() : GetSysColor(COLOR_BTNFACE);
+}
+
+static COLORREF PropertiesEditBgColor() {
+    return PrettyStyleEnabled() ? PrettySurfaceAltColor() : GetSysColor(COLOR_WINDOW);
+}
+
+static COLORREF PropertiesTextColor() {
+    return ThemeWindowTextColor();
+}
+
+static HBRUSH PropertiesPanelBrush() {
+    static HBRUSH brush = nullptr;
+    static COLORREF cachedCol = CLR_INVALID;
+    COLORREF col = PropertiesPanelBgColor();
+    if (!brush || cachedCol != col) {
+        DeleteObject(brush);
+        brush = CreateSolidBrush(col);
+        cachedCol = col;
+    }
+    return brush;
+}
+
+static HBRUSH PropertiesEditBrush() {
+    static HBRUSH brush = nullptr;
+    static COLORREF cachedCol = CLR_INVALID;
+    COLORREF col = PropertiesEditBgColor();
+    if (!brush || cachedCol != col) {
+        DeleteObject(brush);
+        brush = CreateSolidBrush(col);
+        cachedCol = col;
+    }
+    return brush;
+}
+
 PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
     for (PropertiesLayout* pl : gPropertiesWindows) {
         if (pl->hwnd == hwnd) {
@@ -648,6 +684,27 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_CREATE:
             break;
 
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wp;
+            RECT rc = ToRECT(ClientRect(hwnd));
+            FillRect(hdc, &rc, PropertiesPanelBrush());
+            return 1;
+        }
+
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, PropertiesTextColor());
+            SetBkColor(hdc, PropertiesPanelBgColor());
+            return (LRESULT)PropertiesPanelBrush();
+        }
+
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, PropertiesTextColor());
+            SetBkColor(hdc, PropertiesEditBgColor());
+            return (LRESULT)PropertiesEditBrush();
+        }
+
         case WM_SIZE:
             pl = FindPropertyWindowByHwnd(hwnd);
             if (pl && pl->hwndEdit) {
@@ -758,7 +815,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     HMODULE h = GetModuleHandleW(nullptr);
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
-    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
+    wcex.hbrBackground = nullptr;
     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
     wcex.hIcon = LoadIconW(h, iconName);
     ReportIf(!wcex.hIcon);
@@ -785,8 +842,8 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     int editDy = cRc.dy - kButtonAreaDy;
     DWORD editStyle =
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
-    HWND hwndEdit =
-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, editDy, hwnd, nullptr, h, nullptr);
+    DWORD editExStyle = PrettyStyleEnabled() ? 0 : WS_EX_CLIENTEDGE;
+    HWND hwndEdit = CreateWindowExW(editExStyle, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, editDy, hwnd, nullptr, h, nullptr);
     layoutData->hwndEdit = hwndEdit;
 
     if (!DefWndProcPropertiesEdit) {

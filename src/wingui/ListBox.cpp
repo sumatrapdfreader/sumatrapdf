@@ -145,7 +145,6 @@ bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
 }
 
 LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorlistbox
     if (msg == WM_CTLCOLORLISTBOX) {
         HDC hdc = (HDC)wp;
         if (!IsSpecialColor(textColor)) {
@@ -154,11 +153,9 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         if (!IsSpecialColor(bgColor)) {
             SetBkColor(hdc, bgColor);
         }
-        auto br = BackgroundBrush();
-        return (LRESULT)br;
+        return (LRESULT)BackgroundBrush();
     }
 
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-measureitem
     if (msg == WM_MEASUREITEM) {
         if (!onDrawItem.IsValid()) {
             return 0;
@@ -169,7 +166,6 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
         return TRUE;
     }
 
-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-drawitem
     if (msg == WM_DRAWITEM) {
         if (!onDrawItem.IsValid()) {
             return 0;

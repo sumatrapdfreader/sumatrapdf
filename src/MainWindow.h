@@ -5,6 +5,7 @@ struct DoubleBuffer;
 struct Edit;
 struct LinkHandler;
 struct StressTest;
+struct WebviewWnd;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
@@ -88,6 +89,8 @@ struct StaticLink {
     ~StaticLink();
 };
 
+TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
+
 /* Describes information related to one window with (optional) a document
    on the screen */
 struct MainWindow {
@@ -118,6 +121,10 @@ struct MainWindow {
 
     HWND hwndFrame = nullptr;
     HWND hwndCanvas = nullptr;
+
+    WebviewWnd* hybridToolbar = nullptr;
+    // Nuevo: WebView para la HomePage
+    WebviewWnd* homePageWebView = nullptr;
 
     HWND hwndReBar = nullptr;
     HWND hwndToolbar = nullptr;
@@ -242,6 +249,7 @@ struct MainWindow {
         bool isFullScreen = false;
         bool tabsVisible = false;
         bool isToolbarVisible = false;
+        bool isToolbarCompact = false;
         bool tocVisible = false;
         bool showFavorites = false;
         bool showMenuBarRebar = false;

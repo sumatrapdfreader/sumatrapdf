@@ -57,7 +57,7 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     int numCores = (int)si.dwNumberOfProcessors;
-    nRenderThreads = std::max(gMaxRenderThreads, numCores);
+    nRenderThreads = std::max(1, std::min(gMaxRenderThreads, numCores));
     if (nRenderThreads > kMaxRenderThreads) {
         nRenderThreads = kMaxRenderThreads;
     }
@@ -68,6 +68,9 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
         auto* data = new RenderThreadData{this, i};
         renderThreads[i] = CreateThread(nullptr, 0, RenderCacheThread, data, 0, nullptr);
         ReportIf(nullptr == renderThreads[i]);
+        if (renderThreads[i]) {
+            SetThreadPriority(renderThreads[i], THREAD_PRIORITY_BELOW_NORMAL);
+        }
     }
 }
 
@@ -604,6 +607,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     newRequest->bmp = nullptr;
     newRequest->errorCode = 0;
     newRequest->renderFinishedCb = renderFinishedCb;
+    newRequest->isDisplayRenderRequest = (tile != nullptr);
 
     ReleaseSemaphore(startRendering, 1, nullptr);
 
@@ -746,20 +750,15 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             continue;
         }
 
-        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderFinishedCb.IsValid()) {
+        // If the page moved out of the viewport neighborhood, skip stale
+        // on-screen requests so current page paints sooner.
+        if (req.isDisplayRenderRequest && !req.dm->PageVisibleNearby(req.pageNo)) {
             continue;
         }
 
         if (req.dm->pauseRendering) {
             // aborted due to pause - do nothing
             continue;
-        }
-
-        // make sure that we have extracted page text for
-        // all rendered pages to allow text selection and
-        // searching without any further delays
-        if (!req.dm->textCache->HasTextForPage(req.pageNo)) {
-            req.dm->textCache->GetTextForPage(req.pageNo);
         }
 
         ReportIf(req.abortCookie != nullptr);
@@ -787,6 +786,12 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             }
             cache->Add(req, bmp);
             req.bmp = nullptr; // ownership transferred to cache
+
+            // Keep text extraction off the pre-render critical path so first paint
+            // of the bitmap lands sooner while preserving text features near viewport.
+            if (req.dm->PageVisibleNearby(req.pageNo) && !req.dm->textCache->HasTextForPage(req.pageNo)) {
+                req.dm->textCache->GetTextForPage(req.pageNo);
+            }
         }
 
         ReportIf(!req.renderFinishedCb.IsValid());

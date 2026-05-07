@@ -33,6 +33,8 @@
 
 #include "SimpleBrowserWindow.h"
 
+#include "prettysumatra/BridgeDispatcher.h"
+
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "DocProperties.h"
@@ -108,6 +110,95 @@ constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
+constexpr int kNativeToolbarIntegrationDy = 4;
+
+static int GetHybridToolbarHeight(HWND hwndFrame) {
+    Rect workArea = GetWorkAreaRect(WindowRect(hwndFrame), hwndFrame);
+    int workDy = workArea.dy;
+    int baseHeight = 120;
+    if (workDy >= 1700) {
+        baseHeight = 110;
+    } else if (workDy >= 1300) {
+        baseHeight = 100;
+    } else if (workDy >= 1000) {
+        baseHeight = 90;
+    } else if (workDy >= 700) {
+        baseHeight = 70;
+    } else {
+        baseHeight = 50;
+    }
+    return DpiScale(hwndFrame, baseHeight);
+}
+
+static const char* GetHybridToolbarFallbackHtml() {
+    return "<html><body style='font-family:sans-serif;padding:12px'>Toolbar HTML not found</body></html>";
+}
+
+static std::string BuildFileUrl(const std::string& filePath) {
+    std::string url = "file:///";
+    for (char ch : filePath) {
+        if (ch == '\\') {
+            url.push_back('/');
+        } else if (ch == ' ') {
+            url += "%20";
+        } else {
+            url.push_back(ch);
+        }
+    }
+    return url;
+}
+
+static bool LoadHybridToolbarFromFile(WebviewWnd* wv, const std::vector<std::string>& candidates) {
+    for (const auto& p : candidates) {
+        if (!file::Exists(p.c_str())) {
+            continue;
+        }
+        std::string fileUrl = BuildFileUrl(p);
+        wv->Navigate(fileUrl.c_str());
+        return true;
+    }
+    return false;
+}
+
+static void CreateHybridToolbar(MainWindow* win) {
+    if (!prettysumatra::bridge::UseHybridToolbar() || win->hybridToolbar) {
+        return;
+    }
+    win->hybridToolbar = new WebviewWnd();
+    win->hybridToolbar->dataDir = str::Dup(GetPathInAppDataDirTemp("webViewData"));
+    CreateWebViewArgs args;
+    args.parent = win->hwndFrame;
+    Rect rc = ClientRect(win->hwndFrame);
+    int initialDx = std::max(rc.dx, 1);
+    args.pos = {0, 0, initialDx, GetHybridToolbarHeight(win->hwndFrame)};
+    if (!win->hybridToolbar->Create(args)) {
+        delete win->hybridToolbar;
+        win->hybridToolbar = nullptr;
+        if (win->hwndReBar) {
+            HwndSetVisibility(win->hwndReBar, false);
+        }
+        return;
+    }
+    prettysumatra::bridge::InitHybridToolbarTheme(win->hwndFrame);
+    prettysumatra::bridge::InitHybridToolbarText(win->hwndFrame);
+
+    char exePath[MAX_PATH] = {0};
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+    std::string exeDir = path::GetDirTemp(exePath);
+    std::vector<std::string> candidates = {
+        exeDir + "\\toolbar.html",
+        exeDir + "\\..\\toolbar.html",
+        exeDir + "\\..\\..\\toolbar.html",
+        exeDir + "\\..\\..\\..\\toolbar.html",
+    };
+
+    if (!LoadHybridToolbarFromFile(win->hybridToolbar, candidates)) {
+        win->hybridToolbar->SetHtml(GetHybridToolbarFallbackHtml());
+    }
+
+    prettysumatra::bridge::SyncHybridToolbarTheme(win->hwndFrame);
+    prettysumatra::bridge::SyncHybridToolbarText(win->hwndFrame);
+}
 
 // used to show it in debug, but is not very useful,
 // so always disable
@@ -724,10 +815,8 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
 }
 
 static bool IsMenubarVisible() {
-    if (SettingsUseTabs()) {
-        return gGlobalPrefs->showMenubarWithTabs;
-    }
-    return gGlobalPrefs->showMenubar;
+    // PrettySumatra: classic menubar is intentionally disabled.
+    return false;
 }
 
 static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
@@ -1174,13 +1263,17 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         return;
     }
 
+    int oldPageNo = win->currPageNo;
+    int pageCount = win->ctrl->PageCount();
+
     if (kInvalidPageNo != pageNo) {
         TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
         HwndSetText(win->hwndPageEdit, label);
-        ToolbarUpdateStateForWindow(win, false);
-        if (win->ctrl->HasPageLabels()) {
-            UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
+        bool nearBoundary = oldPageNo <= 1 || oldPageNo >= pageCount || pageNo <= 1 || pageNo >= pageCount;
+        if (nearBoundary) {
+            ToolbarUpdateStateForWindow(win, false);
         }
+        UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
     }
     if (pageNo == win->currPageNo) {
         return;
@@ -1771,6 +1864,9 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);
     UpdateToolbarButtonsToolTipsForWindow(win);
+    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
+        prettysumatra::bridge::SyncHybridToolbarText(win->hwndFrame);
+    }
 
     win->tocLabelWithClose->SetLabel(_TRA("Bookmarks"));
     win->favLabelWithClose->SetLabel(_TRA("Favorites"));
@@ -1859,6 +1955,7 @@ static MainWindow* CreateMainWindow() {
 
     CreateTabbar(win);
     CreateToolbar(win);
+    CreateHybridToolbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
     if (CanAccessDisk() && !gPluginMode) {
@@ -1913,6 +2010,10 @@ static MainWindow* CreateMainWindow() {
         // this will only happen with themes
         // could custom paint instead of using DarkMode
         // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
+    }
+
+    if (prettysumatra::bridge::UseHybridToolbar() && win->hybridToolbar) {
+        HwndSetVisibility(win->hwndReBar, false);
     }
 
     // re-enable painting now that dark mode is configured
@@ -2038,6 +2139,8 @@ void UpdateAfterThemeChange() {
         RebuildMenuBarForWindow(win);
         // TODO: probably leaking toolbar image list
         UpdateToolbarAfterThemeChange(win);
+        prettysumatra::bridge::SyncHybridToolbarTheme(win->hwndFrame);
+        prettysumatra::bridge::SyncHomePageTheme(win->hwndFrame);
         if (UseDarkModeLib()) {
             DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
             DarkMode::setChildCtrlsTheme(win->hwndFrame);
@@ -4072,7 +4175,8 @@ using LayoutState = MainWindow::LayoutState;
 static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
     return s1->rc == s2->rc && s1->presentation == s2->presentation && s1->tabsInTitlebar == s2->tabsInTitlebar &&
            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
-           s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
+           s1->isToolbarVisible == s2->isToolbarVisible && s1->isToolbarCompact == s2->isToolbarCompact &&
+           s1->tocVisible == s2->tocVisible &&
            s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar;
 }
 
@@ -4083,6 +4187,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         return;
     }
     // build a snapshot of all state that affects layout
+    MainWindow::LayoutState prevState = win->lastLayoutState;
     MainWindow::LayoutState curState;
     curState.rc = rc;
     curState.presentation = (int)win->presentation;
@@ -4090,6 +4195,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.isFullScreen = win->isFullScreen;
     curState.tabsVisible = win->tabsVisible;
     curState.isToolbarVisible = win->isToolbarVisible;
+    curState.isToolbarCompact = IsToolbarCompact(win);
     curState.tocVisible = win->tocVisible;
     curState.showFavorites = gGlobalPrefs->showFavorites;
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
@@ -4104,6 +4210,11 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         win->lastLayoutState = curState;
     } else {
         win->lastLayoutState = {};
+    }
+
+    bool toolbarDensityChanged = prevState.rc.dx > 0 && prevState.isToolbarCompact != curState.isToolbarCompact;
+    if (updateToolbars && toolbarDensityChanged && win->hwndToolbar) {
+        ReCreateToolbar(win);
     }
     if (gRedrawLog) {
         RECT r = ToRECT(rc);
@@ -4189,17 +4300,36 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         rc.y += menuBarDy;
         rc.dy -= menuBarDy;
     }
-    if (win->isToolbarVisible) {
+    if (win->hybridToolbar && win->isToolbarVisible) {
+        int hybridToolbarHeight = GetHybridToolbarHeight(win->hwndFrame);
+        constexpr int kHybridToolbarOverlapDy = 1;
         if (updateToolbars) {
-            Rect rcRebar = WindowRect(win->hwndReBar);
-            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rc.y, rc.dx, rcRebar.dy, SWP_NOZORDER);
+            dh.SetWindowPos(win->hybridToolbar->hwnd, nullptr, rc.x, rc.y, rc.dx, hybridToolbarHeight, SWP_NOZORDER);
+            ShowWindow(win->hybridToolbar->hwnd, SW_SHOW);
         }
-        Rect rcRebar = WindowRect(win->hwndReBar);
-        rc.y += rcRebar.dy;
-        rc.dy -= rcRebar.dy;
+        rc.y += hybridToolbarHeight - kHybridToolbarOverlapDy;
+        rc.dy -= hybridToolbarHeight - kHybridToolbarOverlapDy;
+    } else if (win->hybridToolbar && updateToolbars) {
+        ShowWindow(win->hybridToolbar->hwnd, SW_HIDE);
+    }
+    if (win->isToolbarVisible && !win->hybridToolbar) {
+        int integrationDy = DpiScale(win->hwndFrame, kNativeToolbarIntegrationDy);
+        int rebarDy = (int)SendMessageW(win->hwndReBar, RB_GETBARHEIGHT, 0, 0);
+        if (rebarDy <= 0) {
+            rebarDy = WindowRect(win->hwndReBar).dy;
+        }
+        if (updateToolbars) {
+            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rc.y, rc.dx, rebarDy + integrationDy, SWP_NOZORDER);
+        }
+        rc.y += rebarDy + integrationDy;
+        rc.dy -= rebarDy + integrationDy;
     }
     if (updateToolbars) {
-        ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
+        bool showNativeToolbar = win->isToolbarVisible && !win->hybridToolbar;
+        ShowWindow(win->hwndReBar, showNativeToolbar ? SW_SHOW : SW_HIDE);
+    }
+    if (updateToolbars && win->hybridToolbar) {
+        RedrawWindow(win->hybridToolbar->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
 
     // ToC and Favorites sidebars at the left
@@ -4902,7 +5032,7 @@ void ExitFullScreen(MainWindow* win) {
         win->tabsCtrl->SetIsVisible(true);
     }
     win->isToolbarVisible = ShouldShowToolbar(win);
-    if (win->isToolbarVisible) {
+    if (win->isToolbarVisible && !win->hybridToolbar) {
         ShowWindow(win->hwndReBar, SW_SHOW);
     }
     // destroy any fullscreen menu rebar before restoring normal menu
@@ -5385,7 +5515,20 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
         return;
     }
 
+    SendMessageW(win->hwndTocBox, WM_SETREDRAW, FALSE, 0);
+    SendMessageW(win->hwndFavBox, WM_SETREDRAW, FALSE, 0);
+    bool oldSuppressFrameRedraw = win->suppressFrameRedraw;
+    win->suppressFrameRedraw = true;
     RelayoutFrame(win, false, sidebarDx);
+    win->suppressFrameRedraw = oldSuppressFrameRedraw;
+    SendMessageW(win->hwndFavBox, WM_SETREDRAW, TRUE, 0);
+    SendMessageW(win->hwndTocBox, WM_SETREDRAW, TRUE, 0);
+    if (win->tocVisible) {
+        RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    }
+    if (gGlobalPrefs->showFavorites) {
+        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    }
 }
 
 static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
@@ -5407,7 +5550,20 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
         return;
     }
     gGlobalPrefs->tocDy = tocDy;
+    SendMessageW(win->hwndTocBox, WM_SETREDRAW, FALSE, 0);
+    SendMessageW(win->hwndFavBox, WM_SETREDRAW, FALSE, 0);
+    bool oldSuppressFrameRedraw = win->suppressFrameRedraw;
+    win->suppressFrameRedraw = true;
     RelayoutFrame(win, false, rToc.dx);
+    win->suppressFrameRedraw = oldSuppressFrameRedraw;
+    SendMessageW(win->hwndFavBox, WM_SETREDRAW, TRUE, 0);
+    SendMessageW(win->hwndTocBox, WM_SETREDRAW, TRUE, 0);
+    if (win->tocVisible) {
+        RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    }
+    if (gGlobalPrefs->showFavorites) {
+        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    }
 }
 
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
@@ -8238,6 +8394,20 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             break;
 
+        case WM_DPICHANGED:
+            if (win) {
+                RECT* suggested = (RECT*)lp;
+                if (suggested) {
+                    SetWindowPos(hwnd, nullptr, suggested->left, suggested->top, suggested->right - suggested->left,
+                                 suggested->bottom - suggested->top, SWP_NOZORDER | SWP_NOACTIVATE);
+                }
+                if (win->hwndToolbar) {
+                    ReCreateToolbar(win);
+                }
+                RelayoutFrame(win);
+            }
+            return 0;
+
         case WM_GETMINMAXINFO:
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);
 
@@ -8350,10 +8520,6 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_SYSCOMMAND:
-            // temporarily show the menu bar if it has been hidden
-            if (wp == SC_KEYMENU && win && !IsMenubarVisible()) {
-                ToggleMenuBar(win, true);
-            }
             return DefWindowProc(hwnd, msg, wp, lp);
 
         case WM_ENTERMENULOOP:
@@ -8602,3 +8768,4 @@ void ShutdownCleanup() {
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
 }
+

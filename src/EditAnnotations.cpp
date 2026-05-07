@@ -161,6 +161,64 @@ struct EditAnnotationsWindow : Wnd {
     ~EditAnnotationsWindow() override;
 };
 
+static void SetCtlColorsIfPretty(Wnd* w, COLORREF txt, COLORREF bg) {
+    if (!PrettyStyleEnabled() || !w) {
+        return;
+    }
+    w->SetColors(txt, bg);
+}
+
+static void ApplyEditAnnotationsPrettyTheme(EditAnnotationsWindow* ew) {
+    if (!PrettyStyleEnabled() || !ew) {
+        return;
+    }
+
+    COLORREF colBg = PrettySurfaceColor();
+    COLORREF colAlt = PrettySurfaceAltColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+
+    SetCtlColorsIfPretty(ew, colTxt, colBg);
+
+    SetCtlColorsIfPretty(ew->listBox, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->editContents, colTxt, colAlt);
+
+    SetCtlColorsIfPretty(ew->staticRect, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticAuthor, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticModificationDate, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticPopup, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticContents, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticTextAlignment, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticTextFont, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticTextSize, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticTextColor, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticLineStart, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticLineEnd, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticIcon, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticBorder, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticColor, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticInteriorColor, colTxt, colBg);
+    SetCtlColorsIfPretty(ew->staticOpacity, colTxt, colBg);
+
+    SetCtlColorsIfPretty(ew->dropDownTextAlignment, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownTextFont, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownTextColor, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownLineStart, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownLineEnd, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownIcon, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownColor, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->dropDownInteriorColor, colTxt, colAlt);
+
+    SetCtlColorsIfPretty(ew->trackbarTextSize, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->trackbarBorder, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->trackbarOpacity, colTxt, colAlt);
+
+    SetCtlColorsIfPretty(ew->buttonSaveAttachment, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->buttonEmbedAttachment, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->buttonDelete, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->buttonSaveToCurrentFile, colTxt, colAlt);
+    SetCtlColorsIfPretty(ew->buttonSaveToNewFile, colTxt, colAlt);
+}
+
 #if 0
 static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
     int nAnnots = ew->annotations.Size();
@@ -1393,7 +1451,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
     }
 
     {
-        auto w = CreateStatic(parent, "Border:");
+        auto w = CreateStatic(parent, _TRA("Border:"));
         w->SetInsetsPt(8, 0, 0, 0);
         ew->staticBorder = w;
         vbox->AddChild(w);
@@ -1612,9 +1670,13 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     args.icon = LoadIconW(h, iconName);
     // mainWindow->isDialog = true;
     if (UseDarkModeLib()) {
-        args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
+        if (PrettyStyleEnabled()) {
+            args.bgColor = PrettySurfaceColor();
+        } else {
+            args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
+        }
     } else {
-        args.bgColor = MkGray(0xee);
+        args.bgColor = PrettyStyleEnabled() ? PrettySurfaceColor() : MkGray(0xee);
     }
 
     args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
@@ -1628,6 +1690,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
     ew->CreateCustom(args);
 
     CreateMainLayout(ew);
+    ApplyEditAnnotationsPrettyTheme(ew);
     ew->tab = tab;
     tab->editAnnotsWindow = ew;
 

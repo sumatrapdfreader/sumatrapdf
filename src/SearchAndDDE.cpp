@@ -30,6 +30,7 @@
 #include "Commands.h"
 #include "AppTools.h"
 #include "SearchAndDDE.h"
+#include "prettysumatra/BridgeDispatcher.h"
 #include "Selection.h"
 #include "Toolbar.h"
 #include "SumatraDialogs.h"
@@ -86,13 +87,19 @@ void FindFirst(MainWindow* win) {
                 Edit_SetModify(win->hwndFindEdit, FALSE);
                 HwndSetText(win->hwndFindEdit, s);
                 Edit_SetModify(win->hwndFindEdit, FALSE);
+                if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
+                    prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, s);
+                }
             }
         }
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (!HwndIsFocused(win->hwndFindEdit)) {
+        if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
+            prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, HwndGetTextTemp(win->hwndFindEdit));
+            prettysumatra::bridge::FocusHybridToolbarSearch(win->hwndFrame);
+        } else if (!HwndIsFocused(win->hwndFindEdit)) {
             HwndSetFocus(win->hwndFindEdit);
         }
         return;
@@ -163,6 +170,9 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
 
     TempStr s = ToUtf8Temp(selection);
     HwndSetText(win->hwndFindEdit, s);
+    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
+        prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, s);
+    }
     AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
@@ -443,6 +453,8 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const ch
     if (str::IsEmpty(text)) {
         return;
     }
+    HwndSetText(win->hwndFindEdit, text);
+    Edit_SetModify(win->hwndFindEdit, TRUE);
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);
     win->findThread = nullptr;

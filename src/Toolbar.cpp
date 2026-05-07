@@ -27,6 +27,7 @@ extern "C" {
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"
+#include "prettysumatra/BridgeDispatcher.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "resource.h"
@@ -42,15 +43,404 @@ extern "C" {
 #include "DarkModeSubclass.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "wingui/WebView.h"
 
 #include "utils/Log.h"
 
+// ── DPI / Zoom helpers ──────────────────────────────────────────────────────
+// Minimum icon size in logical (96-DPI) pixels.
+constexpr int kMinIconSizeLogical = 14;
+// Maximum icon size in logical (96-DPI) pixels. Prevents oversized icons on
+// very-high-DPI displays when toolbarSize is left at the default value.
+constexpr int kMaxIconSizeLogical = 48;
+
+// Clamp an already-DPI-scaled icon size to sane bounds so the toolbar never
+// looks broken at extreme zoom levels. Rounds to the nearest even number for
+// clean sub-pixel rendering.
+static int ClampIconSize(int sz) {
+    sz = (sz + 1) & ~1;   // round to nearest even
+    if (sz < kMinIconSizeLogical) sz = kMinIconSizeLogical;
+    if (sz > kMaxIconSizeLogical) sz = kMaxIconSizeLogical;
+    return sz;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
-static int kButtonSpacingX = 4;
+// NOTE: These were compile-time constants.
+// They are now computed per-window so they scale with the monitor DPI and
+// the Windows display zoom setting (100%, 125%, 150%, 200%, ...).
+static inline int ButtonSpacingX(HWND hwnd) { return DpiScale(hwnd, 4); }
+static inline int TextPaddingRight(HWND hwnd) { return DpiScale(hwnd, 6); }
 
-// distance between label and edit field
-constexpr int kTextPaddingRight = 6;
+enum class ToolbarDensity {
+    Auto,
+    Normal,
+    Compact,
+};
+
+static ToolbarDensity GetToolbarDensityFromEnv() {
+    char buf[16] = {};
+    DWORD n = GetEnvironmentVariableA("PRETTYSUMATRA_TOOLBAR_DENSITY", buf, dimof(buf));
+    if (n == 0 || n >= dimof(buf)) {
+        return ToolbarDensity::Auto;
+    }
+    if (str::EqI(buf, "compact")) {
+        return ToolbarDensity::Compact;
+    }
+    if (str::EqI(buf, "normal")) {
+        return ToolbarDensity::Normal;
+    }
+    return ToolbarDensity::Auto;
+}
+
+static bool IsToolbarCompactDensity(MainWindow* win) {
+    auto density = GetToolbarDensityFromEnv();
+    if (density == ToolbarDensity::Compact) {
+        return true;
+    }
+    if (density == ToolbarDensity::Normal) {
+        return false;
+    }
+    Rect rc = ClientRect(win->hwndFrame);
+    // 1180 is in logical (96-DPI) pixels; DpiScale converts it to physical
+    // pixels for the monitor the window is currently on, so the compact
+    // layout triggers at the same visual width at every zoom level.
+    int compactThreshold = DpiScale(win->hwndFrame, 1180);
+    return rc.dx > 0 && rc.dx <= compactThreshold;
+}
+
+bool IsToolbarCompact(MainWindow* win) {
+    return IsToolbarCompactDensity(win);
+}
+
+static bool IsPillToolbarCmd(int cmdId) {
+    return cmdId == CmdZoomFitWidthAndContinuous || cmdId == CmdZoomFitPageAndSinglePage ||
+           cmdId == CmdToggleTableOfContents;
+}
+
+static bool IsPillToolbarCmdActive(MainWindow* win, int cmdId) {
+    if (!win) {
+        return false;
+    }
+    if (cmdId == CmdToggleTableOfContents) {
+        return win->tocVisible;
+    }
+    if (!win->IsDocLoaded() || !win->ctrl) {
+        return false;
+    }
+    DisplayMode dm = win->ctrl->GetDisplayMode();
+    if (cmdId == CmdZoomFitWidthAndContinuous) {
+        return dm == DisplayMode::Continuous;
+    }
+    if (cmdId == CmdZoomFitPageAndSinglePage) {
+        return dm == DisplayMode::SinglePage;
+    }
+    return false;
+}
+
+// those are not real commands but we refer to toolbar placeholders by command id
+constexpr int PageInfoId = (int)CmdLast + 16;
+constexpr int WarningMsgId = (int)CmdLast + 17;
+constexpr int MoreActionsId = (int)CmdLast + 18;
+
+static bool IsToolbarOverflowMode(MainWindow* win) {
+    if (!IsToolbarCompactDensity(win)) {
+        return false;
+    }
+    Rect rc = ClientRect(win->hwndFrame);
+    // Below 980 logical pixels secondary actions collapse into the "More"
+    // overflow menu. DpiScale converts to physical pixels for the current
+    // monitor so the threshold is consistent across all zoom levels.
+    int overflowThreshold = DpiScale(win->hwndFrame, 980);
+    return rc.dx > 0 && rc.dx <= overflowThreshold;
+}
+
+static bool IsOverflowSecondaryCmd(int cmdId) {
+    return cmdId == CmdPrint || cmdId == CmdRotateLeft || cmdId == CmdRotateRight;
+}
+
+static bool TryGetToolbarRectByCmd(HWND hwndToolbar, int cmdId, RECT& out) {
+    RECT r{};
+    LRESULT ok = SendMessageW(hwndToolbar, TB_GETRECT, cmdId, (LPARAM)&r);
+    if (!ok || (r.right <= r.left) || (r.bottom <= r.top)) {
+        return false;
+    }
+    out = r;
+    return true;
+}
+
+static bool GetToolbarContentRect(HWND hwndToolbar, RECT& outRect) {
+    int nButtons = (int)SendMessageW(hwndToolbar, TB_BUTTONCOUNT, 0, 0);
+    if (nButtons <= 0) {
+        return false;
+    }
+    RECT content{};
+    bool haveAny = false;
+    for (int i = 0; i < nButtons; i++) {
+        RECT r{};
+        if (!SendMessageW(hwndToolbar, TB_GETITEMRECT, i, (LPARAM)&r)) {
+            continue;
+        }
+        if (r.right <= r.left || r.bottom <= r.top) {
+            continue;
+        }
+        if (!haveAny) {
+            content = r;
+            haveAny = true;
+        } else {
+            content.left = std::min(content.left, r.left);
+            content.top = std::min(content.top, r.top);
+            content.right = std::max(content.right, r.right);
+            content.bottom = std::max(content.bottom, r.bottom);
+        }
+    }
+    if (!haveAny) {
+        return false;
+    }
+    outRect = content;
+    return true;
+}
+
+static void FillRoundRect(HDC hdc, const RECT& rc, int radius, COLORREF fillCol, COLORREF strokeCol) {
+    if (radius <= 1) {
+        HBRUSH fill = CreateSolidBrush(fillCol);
+        HBRUSH stroke = CreateSolidBrush(strokeCol);
+        FillRect(hdc, &rc, fill);
+        FrameRect(hdc, &rc, stroke);
+        DeleteObject(stroke);
+        DeleteObject(fill);
+        return;
+    }
+    HBRUSH fill = CreateSolidBrush(fillCol);
+    HPEN pen = CreatePen(PS_SOLID, 1, strokeCol);
+    HGDIOBJ oldBrush = SelectObject(hdc, fill);
+    HGDIOBJ oldPen = SelectObject(hdc, pen);
+    RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, radius, radius);
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(pen);
+    DeleteObject(fill);
+}
+
+static void StrokeRoundRect(HDC hdc, const RECT& rc, int radius, COLORREF strokeCol) {
+    if (radius <= 1) {
+        HBRUSH stroke = CreateSolidBrush(strokeCol);
+        FrameRect(hdc, &rc, stroke);
+        DeleteObject(stroke);
+        return;
+    }
+    HPEN pen = CreatePen(PS_SOLID, 1, strokeCol);
+    HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    HGDIOBJ oldPen = SelectObject(hdc, pen);
+    RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, radius, radius);
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(pen);
+}
+
+static COLORREF LerpColor(COLORREF a, COLORREF b, int t256) {
+    int ar = GetRValue(a);
+    int ag = GetGValue(a);
+    int ab = GetBValue(a);
+    int br = GetRValue(b);
+    int bg = GetGValue(b);
+    int bb = GetBValue(b);
+    int r = ar + ((br - ar) * t256) / 256;
+    int g = ag + ((bg - ag) * t256) / 256;
+    int bl = ab + ((bb - ab) * t256) / 256;
+    return RGB(r, g, bl);
+}
+
+static void DrawVerticalBlend(HDC hdc, const RECT& rc, COLORREF topCol, COLORREF bottomCol) {
+    int h = rc.bottom - rc.top;
+    if (h <= 0 || rc.right <= rc.left) {
+        return;
+    }
+    HGDIOBJ oldPen = SelectObject(hdc, GetStockObject(DC_PEN));
+    for (int y = 0; y < h; y++) {
+        int t256 = (h <= 1) ? 256 : (y * 256) / (h - 1);
+        COLORREF c = LerpColor(topCol, bottomCol, t256);
+        SetDCPenColor(hdc, c);
+        int yPos = rc.top + y;
+        MoveToEx(hdc, rc.left, yPos, nullptr);
+        LineTo(hdc, rc.right, yPos);
+    }
+    SelectObject(hdc, oldPen);
+}
+
+static RECT ToToolbarClientRect(HWND hwndToolbar, HWND child) {
+    RECT r{};
+    if (!child || !GetWindowRect(child, &r)) {
+        return {0, 0, 0, 0};
+    }
+    MapWindowPoints(HWND_DESKTOP, hwndToolbar, (LPPOINT)&r, 2);
+    return r;
+}
+
+static bool IsToolbarLightColor(COLORREF c) {
+    int r = GetRValue(c);
+    int g = GetGValue(c);
+    int b = GetBValue(c);
+    // ITU-R BT.709 luma approximation
+    int luma = (2126 * r + 7152 * g + 722 * b) / 10000;
+    return luma >= 160;
+}
+
+struct ToolbarVisualTokens {
+    COLORREF shellShadowFill;
+    COLORREF shellShadowStroke;
+    COLORREF shellFill;
+    COLORREF shellStroke;
+    COLORREF shellTopTint;
+    COLORREF groupFill;
+    COLORREF groupStroke;
+    COLORREF blendTop;
+    COLORREF hoverFill;
+    COLORREF hoverStroke;
+    COLORREF pressedFill;
+    COLORREF pressedStroke;
+    COLORREF checkedFill;
+    COLORREF checkedStroke;
+    COLORREF checkedText;
+    int shellRadius;
+    int groupRadius;
+    int buttonRadius;
+    int pillRadius;
+};
+
+static ToolbarVisualTokens GetToolbarVisualTokens(MainWindow* win, COLORREF base, bool isLight) {
+    ToolbarVisualTokens t{};
+    if (isLight) {
+        t.shellShadowFill = RGB(232, 238, 248);
+        t.shellShadowStroke = RGB(220, 228, 240);
+        t.shellFill = RGB(249, 251, 255);
+        t.shellStroke = RGB(203, 214, 230);
+        t.shellTopTint = RGB(255, 255, 255);
+        t.groupFill = RGB(241, 246, 253);
+        t.groupStroke = RGB(218, 227, 239);
+        t.blendTop = RGB(234, 241, 251);
+        t.hoverFill = RGB(232, 239, 250);
+        t.hoverStroke = RGB(201, 213, 230);
+        t.pressedFill = RGB(221, 232, 247);
+        t.pressedStroke = RGB(182, 198, 220);
+        t.checkedFill = RGB(0, 120, 212);
+        t.checkedStroke = RGB(0, 95, 170);
+        t.checkedText = RGB(255, 255, 255);
+    } else {
+        t.shellShadowFill = AccentColor(base, -8);
+        t.shellShadowStroke = AccentColor(base, -4);
+        t.shellFill = AccentColor(base, 10);
+        t.shellStroke = AccentColor(base, 24);
+        t.shellTopTint = AccentColor(base, 17);
+        t.groupFill = AccentColor(base, 14);
+        t.groupStroke = AccentColor(base, 28);
+        t.blendTop = AccentColor(base, 20);
+        t.hoverFill = AccentColor(base, 22);
+        t.hoverStroke = AccentColor(base, 34);
+        t.pressedFill = AccentColor(base, 17);
+        t.pressedStroke = AccentColor(base, 31);
+        t.checkedFill = AccentColor(base, 48);
+        t.checkedStroke = AccentColor(base, 63);
+        t.checkedText = RGB(255, 255, 255);
+    }
+    t.shellRadius = 0;
+    t.groupRadius = DpiScale(win->hwndFrame, 4);
+    t.buttonRadius = DpiScale(win->hwndFrame, 6);
+    t.pillRadius = DpiScale(win->hwndFrame, 8);
+    return t;
+}
+
+static void DrawToolbarFloatingShell(MainWindow* win, HDC hdc, HWND hwndToolbar) {
+    RECT rc{};
+    GetClientRect(hwndToolbar, &rc);
+
+    RECT content{};
+    if (!GetToolbarContentRect(hwndToolbar, content)) {
+        return;
+    }
+
+    RECT pageRect = ToToolbarClientRect(hwndToolbar, win->hwndPageBg);
+    if (pageRect.right > pageRect.left && pageRect.bottom > pageRect.top) {
+        content.left = std::min(content.left, pageRect.left);
+        content.top = std::min(content.top, pageRect.top);
+        content.right = std::max(content.right, pageRect.right);
+        content.bottom = std::max(content.bottom, pageRect.bottom);
+    }
+    RECT findRect = ToToolbarClientRect(hwndToolbar, win->hwndFindBg);
+    if (findRect.right > findRect.left && findRect.bottom > findRect.top && IsWindowVisible(win->hwndFindBg)) {
+        content.left = std::min(content.left, findRect.left);
+        content.top = std::min(content.top, findRect.top);
+        content.right = std::max(content.right, findRect.right);
+        content.bottom = std::max(content.bottom, findRect.bottom);
+    }
+
+    bool isCompact = IsToolbarCompactDensity(win);
+    int shellPadX = DpiScale(win->hwndFrame, isCompact ? 10 : 14);
+    int shellPadY = DpiScale(win->hwndFrame, isCompact ? 5 : 7);
+    RECT shell = {content.left - shellPadX, content.top - shellPadY, content.right + shellPadX, content.bottom + shellPadY};
+    shell.left = std::max(shell.left, rc.left + DpiScale(win->hwndFrame, 8));
+    shell.right = std::min(shell.right, rc.right - DpiScale(win->hwndFrame, 8));
+    shell.top = std::max(shell.top, rc.top + DpiScale(win->hwndFrame, 3));
+    shell.bottom = std::min(shell.bottom, rc.bottom - DpiScale(win->hwndFrame, 1));
+    if (shell.right <= shell.left || shell.bottom <= shell.top) {
+        return;
+    }
+
+        COLORREF base = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
+    bool isLight = IsToolbarLightColor(base);
+    ToolbarVisualTokens tokens = GetToolbarVisualTokens(win, base, isLight);
+    RECT shadow = shell;
+    OffsetRect(&shadow, 0, DpiScale(win->hwndFrame, 1));
+    FillRoundRect(hdc, shadow, tokens.shellRadius, tokens.shellShadowFill, tokens.shellShadowStroke);
+    FillRoundRect(hdc, shell, tokens.shellRadius, tokens.shellFill, tokens.shellFill);
+
+    // Top tint keeps depth subtle and avoids legacy glossy look.
+    RECT gloss = shell;
+    gloss.bottom = gloss.top + ((shell.bottom - shell.top) * 36) / 100;
+    if (gloss.bottom > gloss.top + 1) {
+        HBRUSH glossBrush = CreateSolidBrush(tokens.shellTopTint);
+        FillRect(hdc, &gloss, glossBrush);
+        DeleteObject(glossBrush);
+    }
+    StrokeRoundRect(hdc, shell, tokens.shellRadius, tokens.shellStroke);
+
+    struct GroupRange {
+        int firstCmd;
+        int lastCmd;
+    };
+    GroupRange groups[] = {
+        {CmdGoToPrevPage, PageInfoId},
+        {CmdZoomOut, CmdToggleTableOfContents},
+        {CmdFindFirst, CmdFindToggleMatchCase},
+        {MoreActionsId, MoreActionsId},
+        {CmdPrint, CmdRotateRight},
+    };
+
+    for (auto& g : groups) {
+        RECT r1{}, r2{};
+        if (!TryGetToolbarRectByCmd(hwndToolbar, g.firstCmd, r1) || !TryGetToolbarRectByCmd(hwndToolbar, g.lastCmd, r2)) {
+            continue;
+        }
+        RECT gr = {r1.left - DpiScale(win->hwndFrame, isCompact ? 4 : 6), shell.top + DpiScale(win->hwndFrame, 6),
+                   r2.right + DpiScale(win->hwndFrame, isCompact ? 4 : 6), shell.bottom - DpiScale(win->hwndFrame, 6)};
+        gr.left = std::max(gr.left, shell.left + DpiScale(win->hwndFrame, 3));
+        gr.right = std::min(gr.right, shell.right - DpiScale(win->hwndFrame, 3));
+        if (gr.right <= gr.left) {
+            continue;
+        }
+        FillRoundRect(hdc, gr, tokens.groupRadius, tokens.groupFill, tokens.groupStroke);
+    }
+
+    int blendDy = DpiScale(win->hwndFrame, isCompact ? 4 : 6);
+    RECT blend = {shell.left + DpiScale(win->hwndFrame, 12), std::max(shell.bottom - DpiScale(win->hwndFrame, 1), rc.top),
+                  shell.right - DpiScale(win->hwndFrame, 12), std::min(shell.bottom + blendDy, rc.bottom)};
+    if (blend.bottom > blend.top && blend.right > blend.left) {
+            COLORREF blendBottom = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
+        DrawVerticalBlend(hdc, blend, tokens.blendTop, blendBottom);
+    }
+}
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
@@ -59,29 +449,40 @@ struct ToolbarButtonInfo {
     const char* toolTip;
 };
 
-// thos are not real commands but we have to refer to toolbar buttons
-// is by a command. those are just background for area to be
-// covered by other HWNDs. They need the right size
-constexpr int PageInfoId = (int)CmdLast + 16;
-constexpr int WarningMsgId = (int)CmdLast + 17;
-
 static ToolbarButtonInfo gToolbarButtons[] = {
-    {TbIcon::Open, CmdOpenFile, _TRN("Open")},
-    {TbIcon::Print, CmdPrint, _TRN("Print")},
-    {TbIcon::None, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
+    // group: primary action
+    {TbIcon::Text, CmdOpenFile, _TRN("Open")},
+    {TbIcon::None, 0, nullptr},
+
+    // group: navigation + page indicator
     {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
     {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
+    {TbIcon::None, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
     {TbIcon::None, 0, nullptr}, // separator
-    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
-    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
-    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
-    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
+
+    // group: view and zoom
     {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
     {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
+    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
+    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
+    {TbIcon::Text, CmdToggleTableOfContents, _TRN("Sidebar")},
+    {TbIcon::None, 0, nullptr}, // separator
+
+    // group: search
     {TbIcon::None, CmdFindFirst, nullptr},
     {TbIcon::SearchPrev, CmdFindPrev, _TRN("Find Previous")},
     {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
     {TbIcon::MatchCase, CmdFindToggleMatchCase, _TRN("Toggle Match Case")},
+    {TbIcon::None, 0, nullptr}, // separator
+
+    // group: overflow trigger for small widths
+    {TbIcon::Text, MoreActionsId, _TRN("More")},
+    {TbIcon::None, 0, nullptr}, // separator
+
+    // group: secondary actions
+    {TbIcon::Print, CmdPrint, _TRN("Print")},
+    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
+    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
 };
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
@@ -103,8 +504,14 @@ static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE fla
     TBBUTTONINFOW bi{};
     bi.cbSize = sizeof(bi);
     bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
-    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
-    bi.fsState = set ? bi.fsState | flag : bi.fsState & ~flag;
+    if (!SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi)) {
+        return;
+    }
+    BYTE newState = set ? (BYTE)(bi.fsState | flag) : (BYTE)(bi.fsState & ~flag);
+    if (newState == bi.fsState) {
+        return;
+    }
+    bi.fsState = newState;
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
 
@@ -121,14 +528,16 @@ static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
 static int GetToolbarButtonsByID(int cmdId, int (&buttons)[4]) {
     int nFound = 0;
     int n = TotalButtonsCount();
+    int targetCmdId = cmdId;
+    if (auto cmd = FindCustomCommand(targetCmdId)) {
+        targetCmdId = cmd->origId;
+    }
     for (int idx = 0; idx < n; idx++) {
         ToolbarButtonInfo& tb = GetToolbarButtonInfoByIdx(idx);
         int tbCmdId = tb.cmdId;
         auto cmd = FindCustomCommand(tbCmdId);
         if (cmd) tbCmdId = cmd->origId;
-        cmd = FindCustomCommand(cmdId);
-        if (cmd) cmdId = cmd->origId;
-        if (cmdId != tbCmdId) continue;
+        if (targetCmdId != tbCmdId) continue;
         buttons[nFound++] = idx;
         if (nFound >= 4) {
             return nFound;
@@ -155,6 +564,14 @@ static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
     TbSetButtonInfoById(hwndToolbar, cmd, &bi);
 }
 
+static void TbSetButtonDxByIdx(HWND hwndToolbar, int idx, int dx) {
+    TBBUTTONINFOW bi{};
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_BYINDEX | TBIF_SIZE;
+    bi.cx = (WORD)dx;
+    SendMessageW(hwndToolbar, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+}
+
 // which documents support rotation
 static bool NeedsRotateUI(MainWindow* win) {
     if (win->AsChm()) {
@@ -163,9 +580,7 @@ static bool NeedsRotateUI(MainWindow* win) {
     return true;
 }
 
-// some commands are only avialble in certain contexts
-// we remove toolbar buttons for un-availalbe commands
-static bool IsCmdAvailable(MainWindow* win, int cmdId) {
+static bool IsCmdAvailableWithCtx(MainWindow* win, int cmdId, BuildMenuCtx* ctx) {
     switch (cmdId) {
         case CmdZoomFitWidthAndContinuous:
         case CmdZoomFitPageAndSinglePage:
@@ -179,18 +594,14 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
         case CmdFindToggleMatchCase:
             return NeedsFindUI(win);
         case PageInfoId:
+        case MoreActionsId:
             return true;
     }
-    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
     auto [remove, disable] = GetCommandIdState(ctx, cmdId);
     return !remove;
 }
 
-static bool IsCmdEnabled(MainWindow* win, int cmdId) {
-    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
-    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
-
+static bool IsCmdEnabledWithCtx(MainWindow* win, int cmdId, BuildMenuCtx* ctx) {
     switch (cmdId) {
         case CmdNextTab:
         case CmdPrevTab:
@@ -198,6 +609,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
         case CmdPrevTabSmart:
             return SettingsUseTabs();
         case PageInfoId:
+        case MoreActionsId:
             return true;
     }
 
@@ -324,17 +736,36 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
 void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
     HWND hwnd = win->hwndToolbar;
     int n = TotalButtonsCount();
+    bool overflowMode = IsToolbarOverflowMode(win);
+    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
     for (int i = 0; i < n; i++) {
         auto& tb = GetToolbarButtonInfoByIdx(i);
         int cmdId = tb.cmdId;
         if (setButtonsVisibility && cmdId != WarningMsgId) {
-            bool hide = !IsCmdAvailable(win, cmdId);
+            bool hide = !IsCmdAvailableWithCtx(win, cmdId, ctx);
+            if (IsOverflowSecondaryCmd(cmdId)) {
+                hide = hide || overflowMode;
+            } else if (cmdId == MoreActionsId) {
+                hide = hide || !overflowMode;
+            }
             UpdateToolbarButtonStateByIdx(hwnd, i, hide, TBSTATE_HIDDEN);
         }
         if (SkipBuiltInButton(tb)) {
             continue;
         }
-        bool isEnabled = IsCmdEnabled(win, cmdId);
+        bool isEnabled = IsCmdEnabledWithCtx(win, cmdId, ctx);
+        if (cmdId == MoreActionsId) {
+            bool hasAny = false;
+            int overflowCmds[] = {CmdPrint, CmdRotateLeft, CmdRotateRight};
+            for (int c : overflowCmds) {
+                if (IsCmdAvailableWithCtx(win, c, ctx)) {
+                    hasAny = true;
+                    break;
+                }
+            }
+            isEnabled = isEnabled && hasAny;
+        }
         UpdateToolbarButtonStateByIdx(hwnd, i, isEnabled, TBSTATE_ENABLED);
     }
 
@@ -410,6 +841,8 @@ void ShowOrHideToolbar(MainWindow* win) {
     RelayoutWindow(win);
 }
 
+static void ShowToolbarOverflowMenu(MainWindow* win);
+
 void UpdateFindbox(MainWindow* win) {
     // remove SS_WHITERECT so WM_CTLCOLORSTATIC controls the background color
     SetWindowStyle(win->hwndFindBg, SS_WHITERECT, false);
@@ -453,7 +886,8 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                 NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;
                 switch (custDraw->nmcd.dwDrawStage) {
                     case CDDS_PREPAINT:
-                        return CDRF_NOTIFYITEMDRAW;
+                        DrawToolbarFloatingShell(win, custDraw->nmcd.hdc, chwnd);
+                        return CDRF_NOTIFYITEMDRAW | TBCDRF_USECDCOLORS;
 
                     case CDDS_ITEMPREPAINT: {
                         auto col = ThemeWindowTextColor();
@@ -472,11 +906,60 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                         } else {
                             custDraw->clrText = col;
                         }
-                        return CDRF_DODEFAULT;
+                        int cmdId = (int)custDraw->nmcd.dwItemSpec;
+                        bool isDisabled = (itemState & CDIS_DISABLED) != 0;
+                        bool isHot = (itemState & CDIS_HOT) != 0;
+                        bool isPressed = (itemState & CDIS_SELECTED) != 0;
+                        bool isChecked = (itemState & CDIS_CHECKED) != 0;
+                        bool isPill = IsPillToolbarCmd(cmdId);
+                        if (!isDisabled && (isPill || isHot || isPressed || isChecked)) {
+                            RECT rc = custDraw->nmcd.rc;
+                            int insetX = DpiScale(win->hwndFrame, 2);
+                            int insetY = DpiScale(win->hwndFrame, 3);
+                            InflateRect(&rc, -insetX, -insetY);
+
+                            bool visualActive = isPill ? IsPillToolbarCmdActive(win, cmdId) : isChecked || isPressed;
+                            COLORREF base = ThemeControlBackgroundColor();
+                            bool isLight = IsToolbarLightColor(base);
+                            ToolbarVisualTokens tokens = GetToolbarVisualTokens(win, base, isLight);
+                            COLORREF fillCol = tokens.hoverFill;
+                            COLORREF strokeCol = tokens.hoverStroke;
+                            if (isPressed && !visualActive) {
+                                fillCol = tokens.pressedFill;
+                                strokeCol = tokens.pressedStroke;
+                            }
+                            if (visualActive) {
+                                fillCol = tokens.checkedFill;
+                                strokeCol = tokens.checkedStroke;
+                            }
+                            if (isHot || visualActive || isPressed) {
+                                HBRUSH fill = CreateSolidBrush(fillCol);
+                                HPEN pen = CreatePen(PS_SOLID, 1, strokeCol);
+                                HGDIOBJ oldBrush = SelectObject(custDraw->nmcd.hdc, fill);
+                                HGDIOBJ oldPen = SelectObject(custDraw->nmcd.hdc, pen);
+                                int radius = isPill ? tokens.pillRadius : tokens.buttonRadius;
+                                RoundRect(custDraw->nmcd.hdc, rc.left, rc.top, rc.right, rc.bottom, radius, radius);
+                                SelectObject(custDraw->nmcd.hdc, oldPen);
+                                SelectObject(custDraw->nmcd.hdc, oldBrush);
+                                DeleteObject(pen);
+                                DeleteObject(fill);
+                            }
+                            custDraw->clrText = visualActive ? tokens.checkedText : ThemeWindowTextColor();
+                            return TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOETCHEDEFFECT;
+                        }
+                        return TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOETCHEDEFFECT;
                         // return CDRF_NEWFONT;
                     }
                 }
             }
+        }
+    }
+    if (WM_COMMAND == uMsg) {
+        int cmdId = LOWORD(wParam);
+        if (cmdId == MoreActionsId) {
+            auto win = FindMainWindowByHwnd(hWnd);
+            ShowToolbarOverflowMenu(win);
+            return 0;
         }
     }
     // allow window dragging from empty rebar area (main toolbar)
@@ -511,11 +994,19 @@ static LRESULT CALLBACK WndProcEditBg(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         HDC hdc = GetDC(hwnd);
         RECT rc;
         GetClientRect(hwnd, &rc);
-        COLORREF bgCol2 = ThemeControlBackgroundColor();
-        COLORREF col = AccentColor(bgCol2, 40);
-        HBRUSH br = CreateSolidBrush(col);
-        FrameRect(hdc, &rc, br);
-        DeleteObject(br);
+        MainWindow* win = FindMainWindowByHwnd(hwnd);
+        if (win) {
+            COLORREF base = PrettyStyleEnabled() ? PrettySurfaceColor() : ThemeControlBackgroundColor();
+            bool isLight = IsToolbarLightColor(base);
+            ToolbarVisualTokens tokens = GetToolbarVisualTokens(win, base, isLight);
+            COLORREF fillCol = isLight ? RGB(252, 254, 255) : AccentColor(base, 13);
+            COLORREF strokeCol = isLight ? RGB(194, 207, 226) : AccentColor(base, 33);
+            int radius = DpiScale(win->hwndFrame, 7);
+            if (ThemeColorizeControls()) {
+                fillCol = LerpColor(tokens.shellFill, fillCol, 112);
+            }
+            FillRoundRect(hdc, rc, radius, fillCol, strokeCol);
+        }
         ReleaseDC(hwnd, hdc);
     }
     return res;
@@ -582,6 +1073,68 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     }
 
     return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
+}
+
+static void ShowToolbarOverflowMenu(MainWindow* win) {
+    if (!win || !win->hwndToolbar) {
+        return;
+    }
+
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        return;
+    }
+
+    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+
+    struct MenuItem {
+        int cmdId;
+        const char* label;
+    };
+    MenuItem items[] = {
+        {CmdPrint, _TRN("Print")},
+        {CmdRotateLeft, _TRN("Rotate &Left")},
+        {CmdRotateRight, _TRN("Rotate &Right")},
+    };
+
+    bool hasItems = false;
+    for (auto& item : items) {
+        if (!IsCmdAvailableWithCtx(win, item.cmdId, ctx)) {
+            continue;
+        }
+        UINT flags = MF_STRING;
+        if (!IsCmdEnabledWithCtx(win, item.cmdId, ctx)) {
+            flags |= MF_GRAYED;
+        }
+        AppendMenuW(menu, flags, (UINT_PTR)item.cmdId, ToWStrTemp(trans::GetTranslation(item.label)));
+        hasItems = true;
+    }
+
+    if (!hasItems) {
+        DestroyMenu(menu);
+        return;
+    }
+
+    RECT rect{};
+    if (!TryGetToolbarRectByCmd(win->hwndToolbar, MoreActionsId, rect)) {
+        DestroyMenu(menu);
+        return;
+    }
+    MapWindowPoints(win->hwndToolbar, HWND_DESKTOP, (POINT*)&rect, 2);
+
+    UINT flags = TPM_TOPALIGN | TPM_RETURNCMD;
+    if (IsUIRtl()) {
+        flags |= TPM_RIGHTALIGN;
+    } else {
+        flags |= TPM_LEFTALIGN;
+    }
+    UINT_PTR selected = TrackPopupMenu(menu, flags, rect.left, rect.bottom, 0, win->hwndFrame, nullptr);
+    DestroyMenu(menu);
+
+    if (selected != 0) {
+        PostMessageW(win->hwndFrame, WM_COMMAND, selected, 0);
+    }
 }
 
 static WNDPROC DefWndProcEditSearch = nullptr;
@@ -678,26 +1231,26 @@ void UpdateToolbarFindText(MainWindow* win) {
         return;
     }
     bool showUI = NeedsFindUI(win);
-    HwndSetVisibility(win->hwndFindLabel, showUI);
+    HwndSetVisibility(win->hwndFindLabel, false);
     HwndSetVisibility(win->hwndFindBg, showUI);
     HwndSetVisibility(win->hwndFindEdit, showUI);
     if (!showUI) {
         return;
     }
 
-    const char* text = _TRA("Find:");
+    const char* text = "";
     HwndSetText(win->hwndFindLabel, text);
 
     Rect findWndRect = WindowRect(win->hwndFindBg);
 
     RECT r{};
-    TbGetRectById(win->hwndToolbar, CmdZoomIn, &r);
-    int currX = r.right + DpiScale(win->hwndToolbar, 10);
+    TbGetRectById(win->hwndToolbar, CmdFindFirst, &r);
+    int currX = r.left + DpiScale(win->hwndToolbar, 6);
     int currY = (r.bottom - findWndRect.dy) / 2;
 
     Size size = HwndMeasureText(win->hwndFindLabel, text);
-    size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
-    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
+    size.dx += DpiScale(win->hwndFrame, TextPaddingRight(win->hwndFrame));
+    size.dx += DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX;
@@ -719,25 +1272,26 @@ void UpdateToolbarState(MainWindow* win) {
     if (!win->IsDocLoaded()) {
         return;
     }
+
+    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame) && win->ctrl) {
+        prettysumatra::bridge::SyncHybridToolbarPageState(win->hwndFrame, win->ctrl->CurrentPageNo(), win->ctrl->PageCount());
+        prettysumatra::bridge::SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
+    }
+
     HWND hwnd = win->hwndToolbar;
     DisplayMode dm = win->ctrl->GetDisplayMode();
-    float zoomVirtual = win->ctrl->GetZoomVirtual();
-    {
-        bool isChecked = dm == DisplayMode::Continuous && zoomVirtual == kZoomFitWidth;
-        SetToolbarButtonCheckedState(win, CmdZoomFitWidthAndContinuous, isChecked);
-    }
-    {
-        bool isChecked = dm == DisplayMode::SinglePage && zoomVirtual == kZoomFitPage;
-        SetToolbarButtonCheckedState(win, CmdZoomFitPageAndSinglePage, isChecked);
-        if (!isChecked) {
-            win->CurrentTab()->prevZoomVirtual = kInvalidZoom;
-        }
+    if (dm != DisplayMode::SinglePage) {
+        win->CurrentTab()->prevZoomVirtual = kInvalidZoom;
     }
 }
 
 static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
     bool isRtl = IsUIRtl();
-    int findBoxDx = HwndMeasureText(win->hwndFrame, "this is a story of my", hfont).dx;
+    // The probe string determines the initial width of the find box.
+    // HwndMeasureText uses the already-DPI-scaled hfont, so findBoxDx is
+    // already in physical pixels for the current monitor - no extra DpiScale().
+    const char* probe = IsToolbarCompactDensity(win) ? "story of" : "this is a story of my";
+    int findBoxDx = HwndMeasureText(win->hwndFrame, probe, hfont).dx;
     HMODULE hmod = GetModuleHandleW(nullptr);
     HWND p = win->hwndToolbar;
     DWORD style = WS_VISIBLE | WS_CHILD;
@@ -832,20 +1386,21 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (!win->hwndToolbar) {
         return;
     }
-    const char* text = _TRA("Page:");
+    const char* text = "";
     if (!updateOnly) {
         HwndSetText(win->hwndPageLabel, text);
     }
-    int padX = DpiScale(win->hwndFrame, kTextPaddingRight);
+    HwndSetVisibility(win->hwndPageLabel, false);
+    int padX = DpiScale(win->hwndFrame, TextPaddingRight(win->hwndFrame));
     Size size = HwndMeasureText(win->hwndPageLabel, text);
     size.dx += padX;
-    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
+    size.dx += DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
 
     Rect pageWndRect = WindowRect(win->hwndPageBg);
 
     RECT r{};
-    SendMessageW(win->hwndToolbar, TB_GETRECT, CmdPrint, (LPARAM)&r);
-    int currX = r.right + DpiScale(win->hwndFrame, 10);
+    TbGetRectById(win->hwndToolbar, PageInfoId, &r);
+    int currX = r.left + DpiScale(win->hwndFrame, 4);
     int currY = (r.bottom - pageWndRect.dy) / 2;
 
     TempStr txt = nullptr;
@@ -859,7 +1414,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         txt = HwndGetTextTemp(win->hwndPageTotal);
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= padX;
-        size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
+        size2.dx -= DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
 #endif
         // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
         txt = (TempStr) " ";
@@ -887,7 +1442,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         size2 = HwndMeasureText(win->hwndPageTotal, txt);
     }
     size2.dx += padX;
-    size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
+    size2.dx += DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
 
     int padding = GetSystemMetrics(SM_CXEDGE);
     int x = currX - 1;
@@ -896,7 +1451,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
     if (IsUIRtl()) {
         currX += size2.dx;
         currX -= padX;
-        currX -= DpiScale(win->hwndFrame, kButtonSpacingX);
+        currX -= DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
     }
     x = currX + size.dx;
     y = currY;
@@ -927,6 +1482,15 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
         TbSetButtonDx(win->hwndToolbar, PageInfoId, size2.dx);
     }
     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
+
+    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame) && win->ctrl) {
+        int total = pageCount;
+        if (total <= 0) {
+            total = win->ctrl->PageCount();
+        }
+        prettysumatra::bridge::SyncHybridToolbarPageState(win->hwndFrame, win->ctrl->CurrentPageNo(), total);
+        prettysumatra::bridge::SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
+    }
 }
 
 static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
@@ -1088,10 +1652,11 @@ static int SetToolbarIconsImageList(MainWindow* win) {
         // scale if default size
         iconSize = DpiScale(hwndParent, iconSize);
     }
-    // icon sizes must be multiple of 4 or else they are sheared
-    // TODO: I must be doing something wrong, any size should be ok
-    // it might be about size of buttons / bitmaps
-    iconSize = RoundUp(iconSize, 4);
+    // Clamp to the valid logical-pixel range, then round to the nearest even
+    // number. An even dimension is sufficient to avoid icon shearing and
+    // works correctly at every DPI / display-zoom combination.
+    iconSize = ClampIconSize(iconSize);
+    iconSize = RoundUp(iconSize, 2);
     int dx = iconSize;
     // this doesn't seem to be required and doesn't help with weird sizes like 22
     // but the docs say to do it
@@ -1111,18 +1676,68 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
     HwndScheduleRepaint(win->hwndToolbar);
 }
 
+// Call this after WM_DPICHANGED so icons and layout metrics are recomputed
+// for the new DPI / zoom level without destroying every child window.
+// This is faster than ReCreateToolbar for live DPI changes (e.g. dragging
+// the window between monitors with different scale settings).
+void UpdateToolbarAfterDpiChange(MainWindow* win) {
+    if (!win->hwndToolbar) return;
+
+    // 1. Rebuild SVG icon bitmap at the new DPI-scaled size.
+    SetToolbarIconsImageList(win);
+
+    // 2. Recompute TBMETRICS (padding, button spacing) that depend on DPI.
+    const bool isCompact = IsToolbarCompactDensity(win);
+    int iconSize = gGlobalPrefs->toolbarSize;
+    if (iconSize == kDefaultIconSize) {
+        iconSize = DpiScale(win->hwndFrame, iconSize);
+    }
+    iconSize = ClampIconSize(iconSize);
+    iconSize = RoundUp(iconSize, 2);
+
+    const int yPad = DpiScale(win->hwndFrame, isCompact ? 4 : 7);
+    TBMETRICS tbMetrics{};
+    tbMetrics.cbSize = sizeof(tbMetrics);
+    tbMetrics.dwMask = TBMF_PAD | TBMF_BUTTONSPACING;
+    tbMetrics.cxPad = DpiScale(win->hwndFrame, isCompact ? 6 : 10);
+    tbMetrics.cyPad = yPad;
+    tbMetrics.cxButtonSpacing = ButtonSpacingX(win->hwndFrame);
+    tbMetrics.cyButtonSpacing = DpiScale(win->hwndFrame, 4);
+    TbSetMetrics(win->hwndToolbar, &tbMetrics);
+
+    // 3. Update button dimensions.
+    const int buttonDy = iconSize + DpiScale(win->hwndFrame, isCompact ? 10 : 14);
+    SendMessageW(win->hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, buttonDy));
+
+    // 4. Refresh separator widths and fixed-width text buttons.
+    const int sepDx = DpiScale(win->hwndFrame, isCompact ? 8 : 12);
+    for (int i = 0; i < kButtonsCount; i++) {
+        if (gToolbarButtons[i].bmpIndex == TbIcon::None && gToolbarButtons[i].cmdId == 0) {
+            TbSetButtonDxByIdx(win->hwndToolbar, i, sepDx);
+        }
+    }
+    TbSetButtonDx(win->hwndToolbar, CmdOpenFile,
+                  DpiScale(win->hwndFrame, isCompact ? 62 : 84));
+    TbSetButtonDx(win->hwndToolbar, CmdToggleTableOfContents,
+                  DpiScale(win->hwndFrame, isCompact ? 70 : 92));
+    TbSetButtonDx(win->hwndToolbar, MoreActionsId,
+                  DpiScale(win->hwndFrame, isCompact ? 58 : 72));
+
+    HwndScheduleRepaint(win->hwndToolbar);
+}
+
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 void CreateToolbar(MainWindow* win) {
     bool isRtl = IsUIRtl();
+    bool isCompact = IsToolbarCompactDensity(win);
 
-    kButtonSpacingX = 0;
+    // buttonSpacingOverride: set to 0 so cxButtonSpacing is not incremented
+    // during toolbar creation (spacing is already baked into the button sizes).
+    const int buttonSpacingOverride = 0;
     HINSTANCE hinst = GetModuleHandle(nullptr);
     HWND hwndParent = win->hwndFrame;
 
     DWORD style = WS_CHILD | WS_CLIPCHILDREN | RBS_VARHEIGHT;
-    if (IsCurrentThemeDefault()) {
-        style |= WS_BORDER | RBS_BANDBORDERS;
-    }
     style |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
     DWORD exStyle = WS_EX_TOOLWINDOW;
     if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
@@ -1136,9 +1751,7 @@ void CreateToolbar(MainWindow* win) {
     rbi.fMask = 0;
     rbi.himl = (HIMAGELIST) nullptr;
     SendMessageW(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
-    if (!IsCurrentThemeDefault()) {
-        SendMessageW(win->hwndReBar, RB_SETBKCOLOR, 0, ThemeControlBackgroundColor());
-    }
+    SendMessageW(win->hwndReBar, RB_SETBKCOLOR, 0, PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor());
 
     style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
     style |= TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN;
@@ -1168,10 +1781,10 @@ void CreateToolbar(MainWindow* win) {
     // tbMetrics.dwMask = TBMF_PAD;
     tbMetrics.dwMask = TBMF_BUTTONSPACING;
     TbGetMetrics(hwndToolbar, &tbMetrics);
-    int yPad = DpiScale(win->hwndFrame, 2);
-    tbMetrics.cxPad += DpiScale(win->hwndFrame, 14);
+    int yPad = DpiScale(win->hwndFrame, isCompact ? 4 : 7);
+    tbMetrics.cxPad += DpiScale(win->hwndFrame, isCompact ? 6 : 10);
     tbMetrics.cyPad += yPad;
-    tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, kButtonSpacingX);
+    tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, buttonSpacingOverride);
     // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
     TbSetMetrics(hwndToolbar, &tbMetrics);
 
@@ -1185,6 +1798,18 @@ void CreateToolbar(MainWindow* win) {
         tbButtons[i] = TbButtonFromButtonInfo(bi);
     }
     SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
+
+    // Widen separators so command groups are visually distinct, closer to the mockup structure.
+    int sepDx = DpiScale(win->hwndFrame, isCompact ? 8 : 12);
+    for (int i = 0; i < kButtonsCount; i++) {
+        if (gToolbarButtons[i].bmpIndex == TbIcon::None && gToolbarButtons[i].cmdId == 0) {
+            TbSetButtonDxByIdx(hwndToolbar, i, sepDx);
+        }
+    }
+
+    TbSetButtonDx(hwndToolbar, CmdOpenFile, DpiScale(win->hwndFrame, isCompact ? 62 : 84));
+    TbSetButtonDx(hwndToolbar, CmdToggleTableOfContents, DpiScale(win->hwndFrame, isCompact ? 70 : 92));
+    TbSetButtonDx(hwndToolbar, MoreActionsId, DpiScale(win->hwndFrame, isCompact ? 58 : 72));
 
     gCustomButtonsCount = 0;
 
@@ -1226,7 +1851,8 @@ void CreateToolbar(MainWindow* win) {
         buttons[i] = TbButtonFromButtonInfo(tbi, true);
     }
     SendMessageW(hwndToolbar, TB_ADDBUTTONS, gCustomButtonsCount, (LPARAM)buttons);
-    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
+    int buttonDy = iconSize + DpiScale(win->hwndFrame, isCompact ? 10 : 14);
+    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, buttonDy));
 
     RECT rc;
     LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
@@ -1240,9 +1866,6 @@ void CreateToolbar(MainWindow* win) {
     rbBand.cbSize = sizeof(REBARBANDINFOW);
     rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
     rbBand.fStyle = RBBS_FIXEDSIZE;
-    if (theme::IsAppThemed() && IsCurrentThemeDefault()) {
-        rbBand.fStyle |= RBBS_CHILDEDGE;
-    }
     rbBand.hbmBack = nullptr;
     rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
     rbBand.hwndChild = hwndToolbar;
@@ -1256,7 +1879,9 @@ void CreateToolbar(MainWindow* win) {
     int defFontSize = GetAppFontSize();
     // 18 was the default toolbar size, we want to scale the fonts in proportion
     int newSize = (defFontSize * gGlobalPrefs->toolbarSize) / kDefaultIconSize;
-    int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically
+    // Leave room for top+bottom padding plus a 1-px safety margin so the
+    // font never overflows the button height at any DPI / zoom level.
+    int maxFontSize = iconSize - yPad * 2 - 1;
     if (newSize > maxFontSize) {
         logfa("CreateToolbar: setting toolbar font size to %d (scaled was %d, default size: %d)\n", maxFontSize,
               newSize, defFontSize);
@@ -1272,8 +1897,25 @@ void CreateToolbar(MainWindow* win) {
 
     UpdateToolbarPageText(win, -1);
     UpdateToolbarFindText(win);
+
+    if (prettysumatra::bridge::UseHybridToolbar()) {
+        ShowWindow(win->hwndReBar, SW_HIDE);
+    }
 }
 
+// ReCreateToolbar must be called whenever the window moves to a monitor with
+// a different DPI (WM_DPICHANGED) or when the user changes the display zoom
+// in Windows Settings -> Display -> Scale. Example handler snippet:
+//
+//   case WM_DPICHANGED: {
+//       const RECT* r = reinterpret_cast<const RECT*>(lParam);
+//       SetWindowPos(hwnd, nullptr, r->left, r->top,
+//                    r->right - r->left, r->bottom - r->top,
+//                    SWP_NOZORDER | SWP_NOACTIVATE);
+//       ReCreateToolbar(win);
+//       RelayoutWindow(win);
+//       break;
+//   }
 void ReCreateToolbar(MainWindow* win) {
     if (win->hwndReBar) {
         HwndDestroyWindowSafe(&win->hwndPageLabel);

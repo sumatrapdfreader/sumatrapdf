@@ -821,6 +821,7 @@ function sumatrapdf_files()
     "Version.h",
     "VirtWnd.*",
     "WindowTab.*",
+    "prettysumatra/*.*",
   })
   filter { "configurations:Debug or DebugFull" }
   files_in_dir("src", {

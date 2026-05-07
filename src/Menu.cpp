@@ -277,10 +277,6 @@ static MenuDef menuDefView[] = {
         CmdToggleBookmarks,
     },
     {
-        _TRN("Show &Menu"),
-        CmdToggleMenuBar,
-    },
-    {
         _TRN("Show &Toolbar"),
         CmdToggleToolbar,
     },
@@ -2543,56 +2539,17 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
 void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
+    (void)showTemporarily;
     ReportIf(!win->menu);
 
     if (win->presentation) {
         return;
     }
 
-    HWND hwnd = win->hwndFrame;
-
-    if (showTemporarily) {
-        if (win->tabsInTitlebar) {
-            // can't show regular menu with custom caption, so do nothing
-            return;
-        }
-        SetMenu(hwnd, win->menu);
-        return;
-    }
-
-    if (win->isFullScreen) {
-        gGlobalPrefs->fullscreen.showMenubar = !gGlobalPrefs->fullscreen.showMenubar;
-        if (gGlobalPrefs->fullscreen.showMenubar) {
-            // use rebar-based menu bar (WS_CAPTION is stripped in fullscreen, so SetMenu won't work)
-            CreateMenuBarRebar(win);
-        } else {
-            DestroyMenuBarRebar(win);
-        }
-        RelayoutWindow(win);
-        ShowMenuBarRebar(win);
-        return;
-    }
-
-    if (win->tabsInTitlebar) {
-        // toggle rebar menu bar while keeping tabs in titlebar
-        bool isShowing = IsShowingMenuBarRebar(win);
-        if (isShowing) {
-            DestroyMenuBarRebar(win);
-            gGlobalPrefs->showMenubar = false;
-            gGlobalPrefs->showMenubarWithTabs = false;
-        } else {
-            CreateMenuBarRebar(win);
-            gGlobalPrefs->showMenubar = true;
-            gGlobalPrefs->showMenubarWithTabs = true;
-        }
-        // layout first so the rebar is positioned correctly, then show it
-        RelayoutWindow(win);
-        ShowMenuBarRebar(win);
-        return;
-    }
-
-    bool hideMenu = GetMenu(hwnd) != nullptr;
-    SetMenu(hwnd, hideMenu ? nullptr : win->menu);
-    gGlobalPrefs->showMenubar = !hideMenu;
-    gGlobalPrefs->showMenubarWithTabs = !hideMenu;
+    // PrettySumatra: force-disable classic menu bar UI.
+    SetMenu(win->hwndFrame, nullptr);
+    DestroyMenuBarRebar(win);
+    gGlobalPrefs->showMenubar = false;
+    gGlobalPrefs->showMenubarWithTabs = false;
+    gGlobalPrefs->fullscreen.showMenubar = false;
 }

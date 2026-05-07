@@ -1,6 +1,8 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#pragma once
+
 // note: include BaseUtil.h instead of including directly
 
 #define UTF8_BOM "\xEF\xBB\xBF"

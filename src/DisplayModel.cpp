@@ -1212,16 +1212,6 @@ void DisplayModel::RenderVisibleParts() {
     }
 
     if (gPredictiveRender) {
-        // prerender two more pages in facing and book view modes
-        // if the rendering queue still has place for them
-        if (!IsSingle(GetDisplayMode())) {
-            if (firstVisiblePage > 2) {
-                cb->RequestRendering(firstVisiblePage - 2);
-            }
-            if (lastVisiblePage + 1 < PageCount()) {
-                cb->RequestRendering(lastVisiblePage + 2);
-            }
-        }
         if (firstVisiblePage > 1) {
             cb->RequestRendering(firstVisiblePage - 1);
         }

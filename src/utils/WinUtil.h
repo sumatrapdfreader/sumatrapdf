@@ -283,7 +283,7 @@ Size GetBitmapSize(HBITMAP hbmp);
 BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
+void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool preserveColorContent = false);
 ByteSlice SerializeBitmap(HBITMAP hbmp);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);

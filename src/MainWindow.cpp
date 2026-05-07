@@ -17,6 +17,9 @@
 
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/WebView.h"
+
+#include "HomePage.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -44,6 +47,8 @@
 #include "uia/Provider.h"
 
 #include "utils/Log.h"
+
+void HomePageDestroy(MainWindow* win);
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
@@ -162,6 +167,13 @@ MainWindow::~MainWindow() {
     if (favTreeView) {
         delete favTreeView->treeModel;
         delete favTreeView;
+    }
+
+    delete hybridToolbar;
+    if (homePageWebView) {
+        DestroyWindow(homePageWebView->hwnd);
+        delete homePageWebView;
+        homePageWebView = nullptr;
     }
 
     delete sidebarSplitter;
@@ -707,28 +719,31 @@ bool HasOpenedDocuments(MainWindow* win) {
 }
 
 void UpdateControlsColors(MainWindow* win) {
-    COLORREF bgCol = ThemeControlBackgroundColor();
+    COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
+    COLORREF editBgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : bgCol;
+    COLORREF headerBgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : bgCol;
+    COLORREF treeBgCol = bgCol;
     COLORREF txtCol = ThemeWindowTextColor();
 
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
-    COLORREF splitterCol = ThemeControlBackgroundColor();
+    COLORREF splitterCol = PrettyStyleEnabled() ? PrettyBorderColor() : ThemeControlBackgroundColor();
 
     {
         auto tocTreeView = win->tocTreeView;
-        tocTreeView->SetColors(txtCol, bgCol);
+        tocTreeView->SetColors(txtCol, treeBgCol);
 
-        win->tocLabelWithClose->SetColors(txtCol, bgCol);
+        win->tocLabelWithClose->SetColors(txtCol, headerBgCol);
         if (win->tocFilterEdit) {
-            win->tocFilterEdit->SetColors(txtCol, bgCol);
+            win->tocFilterEdit->SetColors(txtCol, editBgCol);
         }
         win->sidebarSplitter->SetColors(kColorNoChange, splitterCol);
     }
 
     auto favTreeView = win->favTreeView;
     if (favTreeView) {
-        favTreeView->SetColors(txtCol, bgCol);
-        win->favLabelWithClose->SetColors(txtCol, bgCol);
+        favTreeView->SetColors(txtCol, treeBgCol);
+        win->favLabelWithClose->SetColors(txtCol, headerBgCol);
         win->favSplitter->SetColors(kColorNoChange, splitterCol);
     }
 }

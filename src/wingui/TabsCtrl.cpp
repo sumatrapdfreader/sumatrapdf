@@ -204,7 +204,14 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     gfx.SetPageUnit(UnitPixel);
 
-    SolidBrush br(GdipCol(ThemeControlBackgroundColor()));
+    bool pretty = PrettyStyleEnabled();
+    COLORREF shellBg = pretty ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
+    COLORREF tabBgSelected = pretty ? PrettySurfaceColor() : ThemeControlBackgroundColor();
+    COLORREF tabBgBackground = pretty ? PrettySurfaceAltColor() : AccentColor(tabBgSelected, 25);
+    COLORREF tabBgHighlight = pretty ? ThemeTabBgHighlight() : AccentColor(tabBgSelected, 35);
+    COLORREF tabStroke      = pretty ? ThemeTabStroke() : tabBgBackground;
+    COLORREF activeStrip    = pretty ? ThemeTabActiveStrip() : ThemeWindowLinkColor();
+    SolidBrush br(GdipCol(shellBg));
 
     Font f(hdc, GetFont());
 
@@ -225,11 +232,6 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     Gdiplus::RectF rTxt;
 
     COLORREF textColor = ThemeWindowTextColor();
-    COLORREF tabBgSelected = ThemeControlBackgroundColor();
-    COLORREF tabBgHighlight;
-    COLORREF tabBgBackground;
-    tabBgBackground = AccentColor(tabBgSelected, 25);
-    tabBgHighlight = AccentColor(tabBgSelected, 35);
 
     COLORREF tabBgCol;
     for (int i = 0; i < n; i++) {
@@ -260,6 +262,13 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
         br.SetColor(GdipCol(tabBgCol));
         gr = ToGdipRect(ti->r);
         gfx.FillRectangle(&br, gr);
+
+        if (pretty) {
+            SolidBrush stripBr(GdipCol(isSelected ? activeStrip : tabStroke));
+            int stripH = DpiScale(hwnd, 2);
+            Gdiplus::Rect stripRc(ti->r.x, ti->r.y + ti->r.dy - stripH, ti->r.dx, stripH);
+            gfx.FillRectangle(&stripBr, stripRc);
+        }
 
         // debug: paint close hit area in light green
         if (false && ti->canClose && (i == tabUnderMouse)) {
@@ -331,8 +340,8 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
 
-    COLORREF bgCol = tabSelectedBg;
-    COLORREF textCol = tabSelectedText;
+    COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : tabSelectedBg;
+    COLORREF textCol = PrettyStyleEnabled() ? ThemeWindowTextColor() : tabSelectedText;
 
     SolidBrush br(GdipCol(bgCol));
     Gdiplus::Rect gr(0, 0, ti->r.dx, ti->r.dy);

@@ -56,6 +56,7 @@
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
+#include "prettysumatra/BridgeDispatcher.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "Tabs.h"
@@ -229,6 +230,9 @@ static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
         return;
     }
     HwndSetText(win->hwndFindEdit, searchTerm);
+    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
+        prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, searchTerm);
+    }
     bool wasModified = true;
     bool showProgress = true;
     FindTextOnThread(win, TextSearch::Direction::Forward, searchTerm, wasModified, showProgress);

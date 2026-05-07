@@ -103,6 +103,80 @@ static bool HasDlgTemplateExFont(DLGTEMPLATEEX* tpl) {
     return style != 0;
 }
 
+static HBRUSH gPrettyDlgBgBrush = nullptr;
+static HBRUSH gPrettyDlgEditBrush = nullptr;
+static COLORREF gPrettyDlgBgCol = CLR_INVALID;
+static COLORREF gPrettyDlgEditCol = CLR_INVALID;
+
+static HBRUSH GetPrettyDialogBrush(bool editSurface) {
+    if (!PrettyStyleEnabled()) {
+        return nullptr;
+    }
+    COLORREF col = editSurface ? PrettySurfaceAltColor() : PrettySurfaceColor();
+    if (editSurface) {
+        if (!gPrettyDlgEditBrush || gPrettyDlgEditCol != col) {
+            if (gPrettyDlgEditBrush) {
+                DeleteObject(gPrettyDlgEditBrush);
+            }
+            gPrettyDlgEditBrush = CreateSolidBrush(col);
+            gPrettyDlgEditCol = col;
+        }
+        return gPrettyDlgEditBrush;
+    }
+    if (!gPrettyDlgBgBrush || gPrettyDlgBgCol != col) {
+        if (gPrettyDlgBgBrush) {
+            DeleteObject(gPrettyDlgBgBrush);
+        }
+        gPrettyDlgBgBrush = CreateSolidBrush(col);
+        gPrettyDlgBgCol = col;
+    }
+    return gPrettyDlgBgBrush;
+}
+
+static bool HandlePrettyDialogColors(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp, LRESULT& result) {
+    if (!PrettyStyleEnabled()) {
+        return false;
+    }
+
+    COLORREF colBg = PrettySurfaceColor();
+    COLORREF colEdit = PrettySurfaceAltColor();
+    COLORREF colTxt = ThemeWindowTextColor();
+
+    switch (msg) {
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wp;
+            RECT rc{};
+            GetClientRect(hDlg, &rc);
+            FillRect(hdc, &rc, GetPrettyDialogBrush(false));
+            result = 1;
+            return true;
+        }
+        case WM_CTLCOLORDLG: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, colTxt);
+            SetBkColor(hdc, colBg);
+            result = (LRESULT)GetPrettyDialogBrush(false);
+            return true;
+        }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, colTxt);
+            SetBkMode(hdc, TRANSPARENT);
+            result = (LRESULT)GetPrettyDialogBrush(false);
+            return true;
+        }
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdc = (HDC)wp;
+            SetTextColor(hdc, colTxt);
+            SetBkColor(hdc, colEdit);
+            result = (LRESULT)GetPrettyDialogBrush(true);
+            return true;
+        }
+    }
+    return false;
+}
+
 // gets a dialog template from the resources and sets the RTL flag
 // cf. http://www.ureader.com/msg/1484387.aspx
 static void SetDlgTemplateRtl(DLGTEMPLATE* tpl) {
@@ -270,6 +344,10 @@ struct Dialog_GoToPage_Data {
 static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     HWND editPageNo;
     Dialog_GoToPage_Data* data;
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
+        return prettyResult;
+    }
 
     //[ ACCESSKEY_GROUP GoTo Page Dialog
     if (WM_INITDIALOG == msg) {
@@ -351,6 +429,10 @@ static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LP
 
 static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_Find_Data* data;
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
+        return prettyResult;
+    }
 
     switch (msg) {
         case WM_INITDIALOG: {
@@ -456,6 +538,10 @@ static void FilterLangList(HWND hDlg, const char* filter, const char* currLangCo
 static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_ChangeLanguage_Data* data;
     HWND langList;
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
+        return prettyResult;
+    }
 
     if (WM_INITDIALOG == msg) {
         DIALOG_SIZER_START(sz)
@@ -675,6 +761,10 @@ struct Dialog_CustomZoom_Data {
 
 static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     Dialog_CustomZoom_Data* data;
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
+        return prettyResult;
+    }
 
     switch (msg) {
         case WM_INITDIALOG:
@@ -727,6 +817,10 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
 }
 
 static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM) {
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, 0, prettyResult)) {
+        return prettyResult;
+    }
     switch (msg) {
         case WM_INITDIALOG: {
             if (UseDarkModeLib()) {
@@ -802,6 +896,10 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
 
 static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
     GlobalPrefs* prefs;
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
+        return prettyResult;
+    }
 
     switch (msg) {
         //[ ACCESSKEY_GROUP Settings Dialog
@@ -1046,6 +1144,10 @@ struct Dialog_AddFav_Data {
 };
 
 static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+    LRESULT prettyResult = 0;
+    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
+        return prettyResult;
+    }
     if (WM_INITDIALOG == msg) {
         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
