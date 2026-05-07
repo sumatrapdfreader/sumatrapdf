@@ -21,12 +21,18 @@ static constexpr float kAnchorTopMarginPt = 6.f;
 static constexpr float kRightMarginPt = 4.f;
 // pt of padding around the detected entry box.
 static constexpr float kEntryPadPt = 6.f;
-// zoom for the rendered strip — higher = sharper but larger popup.
+// upper bound for the auto-fit base zoom. We render at min(kRenderZoom,
+// fit-to-popup-max), then multiply by RefHoverState::userZoom (the
+// mouse-wheel adjustment).
 static constexpr float kRenderZoom = 1.5f;
 // upper bounds for the popup window in screen pixels.
-static constexpr int kMaxPopupWidth = 800;
-static constexpr int kMaxPopupHeight = 320;
+static constexpr int kMaxPopupWidth = 1200;
+static constexpr int kMaxPopupHeight = 600;
 static constexpr int kBorder = 4;
+// user-zoom (mouse-wheel) bounds and step.
+static constexpr float kMinUserZoom = 0.4f;
+static constexpr float kMaxUserZoom = 3.0f;
+static constexpr float kUserZoomStep = 1.15f;
 
 static bool gClassRegistered = false;
 
@@ -44,17 +50,21 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->bmp) {
+            // Draw the bitmap at native pixel size, top-left aligned.
+            // GDI clips at the popup edges when the bitmap exceeds the
+            // client area (which happens when the user wheel-zooms in —
+            // that's how zoomed-in content "fills" the previously blank
+            // bottom/right of the popup).
             Size bmpSize = s->bmp->GetSize();
-            int destW = rc.right - rc.left - 2 * kBorder;
-            int destH = rc.bottom - rc.top - 2 * kBorder;
-            float sx = (float)destW / (float)bmpSize.dx;
-            float sy = (float)destH / (float)bmpSize.dy;
-            float scale = sx < sy ? sx : sy;
-            int drawW = (int)(bmpSize.dx * scale);
-            int drawH = (int)(bmpSize.dy * scale);
-            int dx = (rc.right - rc.left - drawW) / 2;
-            int dy = (rc.bottom - rc.top - drawH) / 2;
-            s->bmp->Blit(hdc, Rect{dx, dy, drawW, drawH});
+            HDC bmpDC = CreateCompatibleDC(hdc);
+            HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->GetBitmap()) : nullptr;
+            if (oldBmp) {
+                BitBlt(hdc, kBorder, kBorder, bmpSize.dx, bmpSize.dy, bmpDC, 0, 0, SRCCOPY);
+                SelectObject(bmpDC, oldBmp);
+            }
+            if (bmpDC) {
+                DeleteDC(bmpDC);
+            }
         }
 
         EndPaint(hwnd, &ps);
@@ -114,24 +124,21 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
     int popupW = bmpSize.dx + 2 * kBorder;
     int popupH = bmpSize.dy + 2 * kBorder;
 
-    // Letterbox to max bounds.
-    if (popupW > kMaxPopupWidth) {
-        float scale = (float)(kMaxPopupWidth - 2 * kBorder) / (float)bmpSize.dx;
-        popupW = kMaxPopupWidth;
-        popupH = (int)(bmpSize.dy * scale) + 2 * kBorder;
-    }
-    if (popupH > kMaxPopupHeight) {
-        float scale = (float)(kMaxPopupHeight - 2 * kBorder) / (float)bmpSize.dy;
-        popupH = kMaxPopupHeight;
-        popupW = (int)(bmpSize.dx * scale) + 2 * kBorder;
-    }
-
-    int x = screenPt.x + 16;
-    int y = screenPt.y + 16;
     HMONITOR hmon = MonitorFromPoint({screenPt.x, screenPt.y}, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi{};
     mi.cbSize = sizeof(mi);
     GetMonitorInfoW(hmon, &mi);
+    int monW = mi.rcWork.right - mi.rcWork.left;
+    int monH = mi.rcWork.bottom - mi.rcWork.top;
+    if (popupW > monW) {
+        popupW = monW;
+    }
+    if (popupH > monH) {
+        popupH = monH;
+    }
+
+    int x = screenPt.x + 16;
+    int y = screenPt.y + 16;
     if (x + popupW > mi.rcWork.right) {
         x = screenPt.x - popupW - 4;
     }
@@ -141,6 +148,63 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
 
     SetWindowPos(s->hwndPopup, HWND_TOPMOST, x, y, popupW, popupH, SWP_NOACTIVATE | SWP_SHOWWINDOW);
     InvalidateRect(s->hwndPopup, nullptr, TRUE);
+}
+
+// Re-render at the adjusted zoom; popup window keeps its initial size.
+// The rendered region is sized to exactly fill the popup at the new zoom
+// (anchored at the original detected top-left), so wheel-down brings in
+// new page content from below/right and wheel-up shows less of the page
+// at higher detail. Either way the popup stays full — no blank area.
+// Returns true if the zoom actually changed.
+bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
+    if (!s || !s->hwndPopup || s->displayedDestPage <= 0 || !engine) {
+        return false;
+    }
+    float factor = (wheelDelta > 0) ? kUserZoomStep : (1.f / kUserZoomStep);
+    float newZoom = s->userZoom * factor;
+    if (newZoom < kMinUserZoom) {
+        newZoom = kMinUserZoom;
+    } else if (newZoom > kMaxUserZoom) {
+        newZoom = kMaxUserZoom;
+    }
+    if (newZoom == s->userZoom) {
+        return false;
+    }
+    s->userZoom = newZoom;
+
+    RECT rc;
+    GetClientRect(s->hwndPopup, &rc);
+    float clientW = (float)((rc.right - rc.left) - 2 * kBorder);
+    float clientH = (float)((rc.bottom - rc.top) - 2 * kBorder);
+    float zoom = s->baseZoom * s->userZoom;
+    if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
+        return false;
+    }
+
+    RectF mediabox = engine->PageMediabox(s->displayedDestPage);
+    RectF region = s->lastRegion;
+    region.dx = clientW / zoom;
+    region.dy = clientH / zoom;
+    // Clamp to page bounds.
+    if (region.x + region.dx > mediabox.dx) {
+        region.dx = mediabox.dx - region.x;
+    }
+    if (region.y + region.dy > mediabox.dy) {
+        region.dy = mediabox.dy - region.y;
+    }
+    if (region.dx <= 0.f || region.dy <= 0.f) {
+        return false;
+    }
+
+    RenderPageArgs args(s->displayedDestPage, zoom, 0, &region);
+    RenderedBitmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        return false;
+    }
+    delete s->bmp;
+    s->bmp = bmp;
+    InvalidateRect(s->hwndPopup, nullptr, TRUE);
+    return true;
 }
 
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY) {
@@ -414,7 +478,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
     return box;
 }
 
-void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine) {
+void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
     KillTimer(hwndCanvas, kRefHoverTimerID);
     if (!s || !engine || s->pendingDestPage <= 0) {
         return;
@@ -429,7 +493,24 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine) {
     }
 
     RectF region = DetectEntryBox(engine, destPage, destX, destY);
-    RenderPageArgs args(destPage, kRenderZoom, 0, &region);
+    // New destination — reset user-driven zoom. baseZoom matches the
+    // document's current display zoom for the destination page, so popup
+    // text height is comparable to the visible page text. If the region
+    // is too tall to fit at that zoom, shrink baseZoom by height only —
+    // we deliberately don't constrain by width (the popup may be wider
+    // than the default max bound; ShowPopup caps it at the monitor work
+    // area).
+    s->userZoom = 1.f;
+    float baseZoom = (pageZoom > 0.f) ? pageZoom : kRenderZoom;
+    float availH = (float)(kMaxPopupHeight - 2 * kBorder);
+    if (region.dy > 0.f && region.dy * baseZoom > availH) {
+        baseZoom = availH / region.dy;
+    }
+    if (baseZoom < kMinUserZoom) {
+        baseZoom = kMinUserZoom;
+    }
+    s->baseZoom = baseZoom;
+    RenderPageArgs args(destPage, s->baseZoom * s->userZoom, 0, &region);
     RenderedBitmap* bmp = engine->RenderPage(args);
     if (!bmp) {
         return;
@@ -438,6 +519,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine) {
     delete s->bmp;
     s->bmp = bmp;
     s->displayedDestPage = destPage;
+    s->lastRegion = region;
 
     ShowPopup(s, s->pendingScreenPt);
 }

@@ -2134,6 +2134,22 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return res;
     }
 
+    // Wheel-zoom the citation-hover popup while the cursor is still on the
+    // citation link that opened it. Avoids moving the cursor onto the popup
+    // (which would dismiss the hover).
+    if (win->refHover && win->refHover->hwndPopup && IsWindowVisible(win->refHover->hwndPopup)) {
+        DisplayModel* dmHover = win->AsFixed();
+        if (dmHover) {
+            Point pt = HwndGetCursorPos(win->hwndCanvas);
+            IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
+            if (IsCitationLink(elHover)) {
+                short delta = GET_WHEEL_DELTA_WPARAM(wp);
+                RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
+                return 0;
+            }
+        }
+    }
+
     DisplayModel* dm = win->AsFixed();
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
@@ -2892,7 +2908,11 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
         case kRefHoverTimerID: {
             DisplayModel* dm = win->AsFixed();
             EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-            RefHoverOnTimer(win->refHover, hwnd, engine);
+            float pageZoom = 1.f;
+            if (dm && win->refHover && win->refHover->pendingDestPage > 0) {
+                pageZoom = dm->GetZoomReal(win->refHover->pendingDestPage);
+            }
+            RefHoverOnTimer(win->refHover, hwnd, engine, pageZoom);
             break;
         }
 
