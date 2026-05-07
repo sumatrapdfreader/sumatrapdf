@@ -610,7 +610,7 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
     }
 
     if (isToggle) {
-        s = (const char*)str::JoinTemp(s, newIsOn ? ": on" : ": off");
+        s = (const char*)str::JoinTemp(s, newIsOn ? ": set to true" : ": set to false");
         return s;
     }
 
