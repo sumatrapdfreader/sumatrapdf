@@ -1561,8 +1561,8 @@
     <None Include="..\.github\workflows\codeql.yml" />
     <None Include="..\.github\workflows\daily.yml" />
     <None Include="..\.gitignore" />
-    <None Include="..\Claude.md" />
     <None Include="..\SECURITY.md" />
+    <None Include="..\agents.md" />
     <None Include="..\cmd\build-all.ts" />
     <None Include="..\cmd\build-ci-daily.ts" />
     <None Include="..\cmd\build-ci.ts" />

@@ -813,8 +813,8 @@
       <Filter>.github\workflows</Filter>
     </None>
     <None Include="..\.gitignore" />
-    <None Include="..\Claude.md" />
     <None Include="..\SECURITY.md" />
+    <None Include="..\agents.md" />
     <None Include="..\cmd\build-all.ts">
       <Filter>cmd</Filter>
     </None>
