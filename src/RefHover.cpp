@@ -12,11 +12,15 @@
 
 #define REF_HOVER_CLASS L"SumatraPDFRefHover"
 
-// Fallback strip dimensions (used when text-based detection can't find boundaries).
-static constexpr float kStripHeightPt = 130.f;
 // Larger fallback used when detection found something tiny (likely a figure
 // fragment) — gives enough height to capture a diagram + caption.
 static constexpr float kFigureStripHeightPt = 280.f;
+// Non-reference targets (TOC, topbar links, generic cross-refs that don't
+// resolve to a bibliography-shaped entry) get a fixed-ratio box anchored on
+// the destination — keeps the popup visually consistent regardless of what
+// happens to be near the goto target.
+static constexpr float kNonRefBoxWidthPt = 360.f;
+static constexpr float kNonRefBoxHeightPt = 260.f;
 static constexpr float kAnchorTopMarginPt = 6.f;
 static constexpr float kRightMarginPt = 4.f;
 // pt of padding around the detected entry box.
@@ -235,10 +239,10 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
     }
 }
 
-// Fallback box when text-based detection can't find boundaries: a strip from
-// destX to the right page margin. heightPt controls how tall — small for the
-// "no text near destY" case, larger for figures/diagrams.
-static RectF FallbackBox(RectF mediabox, float destX, float destY, float heightPt) {
+// Wide strip from destX to the right page margin — used only when detection
+// found a small box that looks like a figure caption number, so that the
+// popup captures the surrounding figure + caption.
+static RectF FigureStripBox(RectF mediabox, float destX, float destY, float heightPt) {
     float lx = (destX >= 0.f) ? destX - 12.f : 0.f;
     if (lx < 0.f) {
         lx = 0.f;
@@ -262,24 +266,63 @@ static RectF FallbackBox(RectF mediabox, float destX, float destY, float heightP
     return RectF{lx, ty, w, heightPt};
 }
 
+// Used when the link doesn't resolve to a bibliography-shaped entry (TOC
+// targets, topbar links, image-only PDFs). Returns a fixed-pt box anchored
+// near the destination so that all "non-reference" popups have the same
+// shape regardless of what happens to be near the target.
+static RectF FixedRatioBox(RectF mediabox, float destX, float destY) {
+    float w = kNonRefBoxWidthPt;
+    float h = kNonRefBoxHeightPt;
+    if (w > mediabox.dx) {
+        w = mediabox.dx;
+    }
+    if (h > mediabox.dy) {
+        h = mediabox.dy;
+    }
+    float lx = (destX >= 0.f) ? destX - 12.f : 0.f;
+    float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
+    if (lx < 0.f) {
+        lx = 0.f;
+    }
+    if (ty < 0.f) {
+        ty = 0.f;
+    }
+    if (lx + w > mediabox.dx) {
+        lx = mediabox.dx - w;
+    }
+    if (ty + h > mediabox.dy) {
+        ty = mediabox.dy - h;
+    }
+    if (lx < 0.f) {
+        lx = 0.f;
+    }
+    if (ty < 0.f) {
+        ty = 0.f;
+    }
+    return RectF{lx, ty, w, h};
+}
+
 // Find the bounding box of a single bibliography entry on the destination
 // page. Uses per-glyph text+coords from the engine's text cache:
 //   1. Locate the leftmost glyph with y in a small band around destY (entry start).
 //   2. Scan forward; stop at "[N" near the same left margin (next entry) or
 //      a vertical paragraph gap.
 //   3. Return the min/max bounding box of glyphs in [start, end), padded.
-// Falls back to FallbackBox() if no glyphs are near destY.
+// Falls back to FixedRatioBox() if no glyphs are near destY (the link is not
+// a bibliography reference — TOC / topbar / cross-ref). The fixed-ratio box
+// gives every non-reference target the same popup shape, which avoids the
+// thin wide popups produced when the detection latched onto a topbar row.
 static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float destY) {
     RectF mediabox = engine->PageMediabox(destPage);
     if (destY < 0.f) {
-        return FallbackBox(mediabox, destX, destY, kStripHeightPt);
+        return FixedRatioBox(mediabox, destX, destY);
     }
 
     int textLen = 0;
     Rect* coords = nullptr;
     const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
     if (!text || textLen <= 0 || !coords) {
-        return FallbackBox(mediabox, destX, destY, kStripHeightPt);
+        return FixedRatioBox(mediabox, destX, destY);
     }
 
     int dY = (int)destY;
@@ -314,7 +357,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         }
     }
     if (startIdx < 0) {
-        return FallbackBox(mediabox, destX, destY, kStripHeightPt);
+        return FixedRatioBox(mediabox, destX, destY);
     }
 
     int firstLineLeftX = coords[startIdx].x;
@@ -447,7 +490,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         }
     }
     if (minX == INT_MAX) {
-        return FallbackBox(mediabox, destX, destY, kStripHeightPt);
+        return FixedRatioBox(mediabox, destX, destY);
     }
 
     RectF box{(float)minX - kEntryPadPt, (float)minY - kEntryPadPt, (float)(maxX - minX) + 2.f * kEntryPadPt,
@@ -467,13 +510,13 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         box.dy = mediabox.dy - box.y;
     }
     if (box.dx < 50.f || box.dy < 20.f) {
-        return FallbackBox(mediabox, destX, destY, kStripHeightPt);
+        return FixedRatioBox(mediabox, destX, destY);
     }
     // If detection produced a small box (text-only scan got trapped in one
     // fragment of a figure / diagram), expand to a generous strip so the
     // surrounding visual content is included in the render.
     if (box.dx < 150.f && box.dy < 60.f) {
-        return FallbackBox(mediabox, destX, destY, kFigureStripHeightPt);
+        return FigureStripBox(mediabox, destX, destY, kFigureStripHeightPt);
     }
     return box;
 }
