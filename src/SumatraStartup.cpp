@@ -1033,11 +1033,6 @@ static void DeleteStaleFilesAsync() {
     }
 }
 
-void StartDeleteStaleFiles() {
-    auto fn = MkFunc0Void(DeleteStaleFilesAsync);
-    RunAsync(fn, "DeleteStaleFilesThread");
-}
-
 static void LayoutAndFocusOnStartup(MainWindow* win) {
     if (!win || !IsWindow(win->hwndFrame)) {
         return;
@@ -1795,7 +1790,11 @@ ContinueOpenWindow:
         // BringWindowToTop(win->hwndFrame);
     }
 
-    StartDeleteStaleFiles();
+    {
+        auto fn = MkFunc0Void(DeleteStaleFilesAsync);
+        RunAsync(fn, "DeleteStaleFilesAsync");
+    }
+
     // needed if RememberOpenedFiles = false
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5456
     uitask::Post(MkFunc0(LayoutAndFocusOnStartup, win), "LayoutAndFocusOnStartup");

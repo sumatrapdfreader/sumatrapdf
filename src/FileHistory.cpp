@@ -356,14 +356,6 @@ void CleanUpThumbnailCache() {
 
 // --- file existence check
 
-struct FileExistenceData {
-    FileExistenceData() = default;
-    ~FileExistenceData() = default;
-
-    StrVec toCheck;
-    StrVec missing;
-};
-
 extern void MaybeRedrawHomePage();
 
 // document path is either a file or a directory
@@ -383,7 +375,15 @@ bool DocumentPathExists(const char* path) {
     return file::Exists(realPath);
 }
 
-static void HideMissingFiles(FileExistenceData* d) {
+struct CheckFilesExistData {
+    CheckFilesExistData() = default;
+    ~CheckFilesExistData() = default;
+
+    StrVec toCheck;
+    StrVec missing;
+};
+
+static void HideMissingFiles(CheckFilesExistData* d) {
     for (const char* path : d->missing) {
         gFileHistory.MarkFileInexistent(path, true);
     }
@@ -392,7 +392,7 @@ static void HideMissingFiles(FileExistenceData* d) {
     delete d;
 }
 
-static void FileExistenceCheckerAsync(FileExistenceData* d) {
+static void CheckFilesExistAsync(CheckFilesExistData* d) {
     StrVec& toCheck = d->toCheck;
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
@@ -414,8 +414,8 @@ static void FileExistenceCheckerAsync(FileExistenceData* d) {
         logf("FileExistenceChecker: missing '%s' at %d\n", path, i + 1);
     }
 
-    Func0 fn = MkFunc0<FileExistenceData>(HideMissingFiles, d);
-    uitask::Post(fn, "TaskHideMissingFiles");
+    Func0 fn = MkFunc0<CheckFilesExistData>(HideMissingFiles, d);
+    uitask::Post(fn, "HideMissingFiles");
 }
 
 static void GetFilePathsToCheck(StrVec& toCheck) {
@@ -438,12 +438,12 @@ static void GetFilePathsToCheck(StrVec& toCheck) {
 }
 
 void RemoveNonExistentFilesAsync() {
-    auto d = new FileExistenceData();
+    auto d = new CheckFilesExistData();
     GetFilePathsToCheck(d->toCheck);
     if (d->toCheck.Size() == 0) {
         return;
     }
-    logf("RemoveNonExistentFilesAsync: starting FileExistenceCheckerThread to check %d files\n", d->toCheck.Size());
-    Func0 fn = MkFunc0<FileExistenceData>(FileExistenceCheckerAsync, d);
-    RunAsync(fn, "FileExistenceThread");
+    logf("RemoveNonExistentFilesAsync: starting CheckFilesExistAsync to check %d files\n", d->toCheck.Size());
+    Func0 fn = MkFunc0<CheckFilesExistData>(CheckFilesExistAsync, d);
+    RunAsync(fn, "CheckFilesExistAsync");
 }
