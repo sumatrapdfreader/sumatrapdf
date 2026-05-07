@@ -4,6 +4,9 @@ import { clearDirPreserveSettings } from "./clean";
 
 let clean = false;
 
+let t = `/t:SumatraPDF`;
+t = `/t:SumatraPDF-dll`;
+
 async function main() {
   const timeStart = performance.now();
 
@@ -17,7 +20,6 @@ async function main() {
 
   const { msbuildPath } = detectVisualStudio2026();
   const sln = String.raw`vs2022\SumatraPDF.sln`;
-  const t = `/t:SumatraPDF`;
   // const t = `/t:SumatraPDF;test_util`;
   const p = `/p:Configuration=Debug;Platform=x64`;
   await runLogged(msbuildPath, [sln, t, p, `/m`]);

@@ -334,21 +334,19 @@ Kind GuessFileTypeFromContent(const ByteSlice& d) {
 static bool IsEpubArchive(MultiFormatArchive* archive) {
     // assume that if this file exists, this is a epub file
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1801
-    ByteSlice container = archive->GetFileDataByName("META-INF/container.xml");
-    if (container) {
-        container.Free();
+    auto* container = archive->GetFileDataByName("META-INF/container.xml");
+    if (container && container->data) {
         return true;
     }
 
-    ByteSlice mimeType = archive->GetFileDataByName("mimetype");
-    if (!mimeType) {
+    auto* mimeType = archive->GetFileDataByName("mimetype");
+    if (!mimeType || !mimeType->data) {
         return false;
     }
-    AutoFree mtFree(mimeType);
 
-    char* mt = (char*)mimeType.Get();
+    char* mt = mimeType->data;
     // trailing whitespace is allowed for the mimetype file
-    size_t n = mimeType.size();
+    size_t n = mimeType->fileSizeUncompressed;
     for (size_t i = n; i > 0; i--) {
         if (!str::IsWs(mt[i - 1])) {
             break;
@@ -414,7 +412,8 @@ Kind GuessFileTypeFromContent(const char* path) {
     ByteSlice d = {(u8*)buf, (size_t)n};
     auto res = GuessFileTypeFromContent(d);
     if (res == kindFileZip) {
-        MultiFormatArchive* archive = OpenZipArchive(path, true);
+        ArchiveExtractProgressCb emptyCb;
+        MultiFormatArchive* archive = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (archive) {
             if (IsXpsArchive(archive)) {
                 res = kindFileXps;

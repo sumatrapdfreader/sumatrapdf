@@ -19,6 +19,8 @@
 
 #include "wingui/UIModels.h"
 
+#include "GumboHelpers.h"
+
 #include "DocProperties.h"
 #include "DocController.h"
 #include "FzImgReader.h"
@@ -106,6 +108,7 @@ class EngineEbook : public EngineBase {
 
     bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
+    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override;
 
@@ -132,7 +135,7 @@ class EngineEbook : public EngineBase {
     // a break between two merged documents
     Vec<DrawInstr*> baseAnchors;
     // needed so that memory allocated by ResolveHtmlEntities isn't leaked
-    PoolAllocator allocator;
+    Arena* allocator = nullptr;
     // TODO: still needed?
     CRITICAL_SECTION pagesAccess;
     // page dimensions can vary between filetypes
@@ -196,6 +199,7 @@ EngineEbook::EngineEbook() {
     pageBorder = 0.4f * GetFileDPI();
     preferredLayout = preferredLayout = PageLayout(PageLayout::Type::Single);
     InitializeCriticalSection(&pagesAccess);
+    allocator = ArenaNew();
 }
 
 EngineEbook::~EngineEbook() {
@@ -211,6 +215,7 @@ EngineEbook::~EngineEbook() {
 
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
+    ArenaDelete(allocator);
 }
 
 RectF EngineEbook::PageMediabox(int) {
@@ -377,7 +382,7 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         InterlockedDecrement(&gAllowAllocFailure);
     };
 
-    str::WStr content;
+    WStrBuilder content;
     Vec<Rect> coords;
     bool insertSpace = false;
 
@@ -446,6 +451,95 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
     ReportIf(coords.size() != content.size());
 
     PageText res;
+    res.len = (int)content.size();
+    res.text = content.StealData();
+    res.coords = coords.StealData();
+    return res;
+}
+
+PageTextUtf8 EngineEbook::ExtractPageTextUtf8(int pageNo) {
+    const char* lineSep = "\n";
+    ScopedCritSec scope(&pagesAccess);
+
+    InterlockedIncrement(&gAllowAllocFailure);
+    defer {
+        InterlockedDecrement(&gAllowAllocFailure);
+    };
+
+    StrBuilder content;
+    Vec<Rect> coords;
+    bool insertSpace = false;
+
+    Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
+    for (DrawInstr& i : *pageInstrs) {
+        Rect bbox = GetInstrBbox(i, pageBorder);
+        switch (i.type) {
+            case DrawInstrType::String:
+                if (coords.size() > 0 &&
+                    (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
+                    content.Append(lineSep);
+                    coords.AppendBlanks(str::Len(lineSep));
+                    ReportIf(*lineSep && !coords.Last().IsEmpty());
+                } else if (insertSpace && coords.size() > 0) {
+                    int swidth = bbox.x - coords.Last().BR().x;
+                    if (swidth > 0) {
+                        content.AppendChar(' ');
+                        coords.Append(Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
+                    }
+                }
+                insertSpace = false;
+                {
+                    TempStr s = strconv::FromHtmlUtf8Temp(i.str.s, i.str.len);
+                    size_t len = str::Len(s);
+                    content.Append(s);
+                    if (len > 0) {
+                        double cwidth = 1.0 * bbox.dx / (double)len;
+                        for (size_t k = 0; k < len; k++) {
+                            coords.Append(Rect((int)(bbox.x + (double)k * cwidth), bbox.y, (int)cwidth, bbox.dy));
+                        }
+                    }
+                }
+                break;
+            case DrawInstrType::RtlString:
+                if (coords.size() > 0 &&
+                    (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
+                    content.Append(lineSep);
+                    coords.AppendBlanks(str::Len(lineSep));
+                    ReportIf(*lineSep && !coords.Last().IsEmpty());
+                } else if (insertSpace && coords.size() > 0) {
+                    int swidth = coords.Last().x - bbox.BR().x;
+                    if (swidth > 0) {
+                        content.AppendChar(' ');
+                        coords.Append(Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
+                    }
+                }
+                insertSpace = false;
+                {
+                    TempStr s = strconv::FromHtmlUtf8Temp(i.str.s, i.str.len);
+                    size_t len = str::Len(s);
+                    content.Append(s);
+                    if (len > 0) {
+                        double cwidth = 1.0 * bbox.dx / (double)len;
+                        for (size_t k = 0; k < len; k++) {
+                            coords.Append(
+                                Rect((int)(bbox.x + (double)(len - k - 1) * cwidth), bbox.y, (int)cwidth, bbox.dy));
+                        }
+                    }
+                }
+                break;
+            case DrawInstrType::ElasticSpace:
+            case DrawInstrType::FixedSpace:
+                insertSpace = true;
+                break;
+        }
+    }
+    if (content.size() > 0 && !str::EndsWith(content.Get(), lineSep)) {
+        content.Append(lineSep);
+        coords.AppendBlanks(str::Len(lineSep));
+    }
+    ReportIf(coords.size() != content.size());
+
+    PageTextUtf8 res;
     res.len = (int)content.size();
     res.text = content.StealData();
     res.coords = coords.StealData();
@@ -790,7 +884,7 @@ bool EngineEpub::FinishLoading() {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
@@ -935,7 +1029,7 @@ bool EngineFb2::FinishLoading() {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     if (doc->IsZipped()) {
@@ -1059,7 +1153,7 @@ bool EngineMobi::FinishLoading() {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
@@ -1202,7 +1296,7 @@ bool EnginePdb::Load(const char* fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = HtmlFormatter(&args).FormatAllPages();
@@ -1410,52 +1504,77 @@ class EngineChm : public EngineEbook {
     IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo) override;
 };
 
+static uint CharsetNameToCodepage(const char* charset) {
+    static struct {
+        const char* name;
+        uint codepage;
+    } codepages[] = {
+        {"ISO-8859-1", 1252}, {"Latin1", 1252}, {"CP1252", 1252},       {"Windows-1252", 1252}, {"ISO-8859-2", 28592},
+        {"Latin2", 28592},    {"CP1251", 1251}, {"Windows-1251", 1251}, {"KOI8-R", 20866},      {"shift-jis", 932},
+        {"x-euc", 932},       {"euc-kr", 949},  {"Big5", 950},          {"GB2312", 936},        {"UTF-8", CP_UTF8},
+    };
+    for (int i = 0; i < dimofi(codepages); i++) {
+        if (str::EqI(charset, codepages[i].name)) {
+            return codepages[i].codepage;
+        }
+    }
+    return 0;
+}
+
+static uint FindHttpCharsetInNode(const GumboNode* node) {
+    if (!node) {
+        return 0;
+    }
+    if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "meta")) {
+        const GumboAttribute* httpEquiv = gumbo_get_attribute(&node->v.element.attributes, "http-equiv");
+        if (httpEquiv && str::EqI(httpEquiv->value, "Content-Type")) {
+            const GumboAttribute* content = gumbo_get_attribute(&node->v.element.attributes, "content");
+            AutoFree mimetype, charset;
+            if (content && str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset)) {
+                uint cp = CharsetNameToCodepage(charset);
+                if (cp) {
+                    return cp;
+                }
+            }
+        }
+    }
+    const GumboVector* children = nullptr;
+    if (node->type == GUMBO_NODE_ELEMENT) {
+        children = &node->v.element.children;
+    } else if (node->type == GUMBO_NODE_DOCUMENT) {
+        children = &node->v.document.children;
+    }
+    if (children) {
+        for (unsigned int i = 0; i < children->length; i++) {
+            uint cp = FindHttpCharsetInNode((const GumboNode*)children->data[i]);
+            if (cp) {
+                return cp;
+            }
+        }
+    }
+    return 0;
+}
+
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
 static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
     if (!strstr(html, "charset=")) {
         return 0;
     }
-
-    HtmlPullParser parser(html, std::min(htmlLen, (size_t)1024));
-    HtmlToken* tok;
-    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (tok->tag != Tag_Meta) {
-            continue;
-        }
-        AttrInfo* attr = tok->GetAttrByName("http-equiv");
-        if (!attr || !attr->ValIs("Content-Type")) {
-            continue;
-        }
-        attr = tok->GetAttrByName("content");
-        AutoFree mimetype, charset;
-        if (!attr || !str::Parse(attr->val, attr->valLen, "%S;%_charset=%S", &mimetype, &charset)) {
-            continue;
-        }
-
-        static struct {
-            const char* name;
-            uint codepage;
-        } codepages[] = {
-            {"ISO-8859-1", 1252},  {"Latin1", 1252},   {"CP1252", 1252},   {"Windows-1252", 1252},
-            {"ISO-8859-2", 28592}, {"Latin2", 28592},  {"CP1251", 1251},   {"Windows-1251", 1251},
-            {"KOI8-R", 20866},     {"shift-jis", 932}, {"x-euc", 932},     {"euc-kr", 949},
-            {"Big5", 950},         {"GB2312", 936},    {"UTF-8", CP_UTF8},
-        };
-        for (int i = 0; i < dimofi(codepages); i++) {
-            if (str::EqI(charset, codepages[i].name)) {
-                return codepages[i].codepage;
-            }
-        }
-        break;
+    size_t parseLen = std::min(htmlLen, (size_t)1024);
+    GumboOptions opts = GumboMakeOptions();
+    GumboOutput* output = gumbo_parse_with_options(&opts, html, parseLen);
+    if (!output) {
+        return 0;
     }
-
-    return 0;
+    uint cp = FindHttpCharsetInNode(output->document);
+    gumbo_destroy_output(&opts, output);
+    return cp;
 }
 
 class ChmHtmlCollector : public EbookTocVisitor {
     ChmFile* doc = nullptr;
     StrVec added;
-    str::Str html;
+    StrBuilder html;
 
   public:
     explicit ChmHtmlCollector(ChmFile* doc) : doc(doc) {
@@ -1507,7 +1626,10 @@ class ChmHtmlCollector : public EbookTocVisitor {
         }
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", plainUrl);
         uint charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
-        TempStr s = doc->SmartToUtf8Temp((const char*)pageHtml.Get(), charset);
+        if (!charset) {
+            charset = doc->codepage;
+        }
+        TempStr s = SmartToUtf8Temp((const char*)pageHtml.Get(), charset);
         html.Append(s);
         added.Append(plainUrl);
         pageHtml.Free();
@@ -1530,7 +1652,7 @@ bool EngineChm::Load(const char* fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::GdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
@@ -1671,7 +1793,7 @@ bool EngineHtml::Load(const char* fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
@@ -1789,7 +1911,7 @@ bool EngineTxt::Load(const char* fileName) {
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
     args.fontSize = GetDefaultFontSize();
-    args.textAllocator = &allocator;
+    args.textAllocator = allocator;
     args.textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);

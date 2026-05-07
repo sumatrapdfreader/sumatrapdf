@@ -5,7 +5,7 @@
 
 namespace strconv {
 
-WCHAR* Utf8ToWStr(const char* s, size_t cb, Allocator* a) {
+WCHAR* Utf8ToWStr(const char* s, size_t cb, Arena* a) {
     // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
     if (!s) {
         return nullptr;
@@ -14,11 +14,11 @@ WCHAR* Utf8ToWStr(const char* s, size_t cb, Allocator* a) {
         cb = str::Len(s);
     }
     if (cb == 0) {
-        return Allocator::AllocArray<WCHAR>(a, 1);
+        return AllocArray<WCHAR>(a, 1);
     }
     // ask for the size of buffer needed for converted string
     int cchNeeded = MultiByteToWideChar(CP_UTF8, 0, s, (int)cb, nullptr, 0);
-    WCHAR* res = Allocator::AllocArray<WCHAR>(a, cchNeeded + 1); // +1 for terminating 0
+    WCHAR* res = AllocArray<WCHAR>(a, cchNeeded + 1); // +1 for terminating 0
     if (!res) {
         return nullptr;
     }
@@ -30,7 +30,7 @@ WCHAR* Utf8ToWStr(const char* s, size_t cb, Allocator* a) {
     return res;
 }
 
-char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
+char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch, Arena* a) {
     // subtle: if s is nullptr, we return nullptr. if empty string => we return empty string
     if (!s) {
         return nullptr;
@@ -39,14 +39,14 @@ char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
         cch = str::Len(s);
     }
     if (cch == 0) {
-        return Allocator::AllocArray<char>(a, 1);
+        return AllocArray<char>(a, 1);
     }
     // ask for the size of buffer needed for converted string
     int cbNeeded = WideCharToMultiByte(codePage, 0, s, (int)cch, nullptr, 0, nullptr, nullptr);
     if (cbNeeded == 0) {
         return nullptr;
     }
-    char* res = Allocator::AllocArray<char>(a, cbNeeded + 1); // +1 for terminating 0
+    char* res = AllocArray<char>(a, cbNeeded + 1); // +1 for terminating 0
     if (!res) {
         return nullptr;
     }
@@ -56,7 +56,7 @@ char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch, Allocator* a) {
     return res;
 }
 
-char* WStrToUtf8(const WCHAR* s, size_t cch, Allocator* a) {
+char* WStrToUtf8(const WCHAR* s, size_t cch, Arena* a) {
     return WStrToCodePage(CP_UTF8, s, cch, a);
 }
 
@@ -119,7 +119,7 @@ TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest) {
         return nullptr;
     }
     size_t tmpLen = str::Len(tmp);
-    Allocator* a = GetTempAllocator();
+    Arena* a = GetTempAllocator();
     TempStr res = (TempStr)WStrToCodePage(codePageDest, tmp, tmpLen, a);
     return res;
 }
@@ -131,8 +131,12 @@ TempStr StrToUtf8Temp(const char* src, uint codePage) {
 // tries to convert a string in unknown encoding to utf8, as best
 // as it can
 // caller has to free() it
-TempStr UnknownToUtf8Temp(const char* s) {
-    size_t len = str::Len(s);
+// pass cb = (size_t)-1 to have it auto-computed via str::Len (requires s
+// to be null-terminated). When the length is already known, pass it
+// directly to avoid the extra strlen scan -- the input doesn't need to
+// be null-terminated in that case.
+TempStr UnknownToUtf8Temp(const char* s, size_t cb) {
+    size_t len = (cb == (size_t)-1) ? str::Len(s) : cb;
 
     if (len < 3) {
         return str::DupTemp(s, len);

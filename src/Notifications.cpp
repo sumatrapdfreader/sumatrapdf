@@ -242,10 +242,6 @@ int CalcPerc(int current, int total) {
 constexpr int kCloseLeftMargin = 16;
 constexpr int kProgressDy = 5;
 
-static COLORREF NotificationTextForBg(COLORREF bg) {
-    return GetLightness(bg) > 128 ? RGB(37, 48, 64) : RGB(236, 240, 248);
-}
-
 void NotificationWnd::Layout(const char* message) {
     Size szText;
     {
@@ -339,19 +335,6 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         colBorder = colBg;
         colTxt = ThemeNotificationsHighlightTextColor();
     }
-
-    COLORREF progressCol = ThemeNotificationsProgressColor();
-    if (PrettyStyleEnabled()) {
-        if (highlight) {
-            colBg = AccentColor(PrettyAccentColor(), 22);
-            colBorder = PrettyAccentColor();
-        } else {
-            colBg = PrettySurfaceAltColor();
-            colBorder = PrettyBorderColor();
-        }
-        colTxt = NotificationTextForBg(colBg);
-        progressCol = PrettyAccentColor();
-    }
     // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
     // COLORREF colBg = MkGray(0xff);
 
@@ -395,7 +378,8 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         rc = rProgress;
         int progressWidth = rc.dx;
 
-        Pen pen(GdiRgbFromCOLORREF(progressCol));
+        COLORREF col = ThemeNotificationsProgressColor();
+        Pen pen(GdiRgbFromCOLORREF(col));
         grc = {rc.x, rc.y, rc.dx, rc.dy};
         graphics.DrawRectangle(&pen, grc);
 
@@ -404,7 +388,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         rc.y += 2;
         rc.dy -= 3;
 
-        br.SetColor(GdiRgbFromCOLORREF(progressCol));
+        br.SetColor(GdiRgbFromCOLORREF(col));
         grc = {rc.x, rc.y, rc.dx, rc.dy};
         graphics.FillRectangle(&br, grc);
     }

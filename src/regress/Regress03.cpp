@@ -6,8 +6,7 @@
 void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const TextSearch::Direction direction,
                        const TextSel* expected, const int expectedLen) {
     EngineBase* engine = CreateEngineFromFile(searchFileA, nullptr, true);
-    DocumentTextCache* textCache = new DocumentTextCache(engine);
-    TextSearch* tsrch = new TextSearch(engine, textCache);
+    TextSearch* tsrch = new TextSearch(engine);
     tsrch->SetDirection(direction);
     int findCount = 0;
     int startPage;
@@ -58,7 +57,6 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
         }
     }
     delete tsrch;
-    delete textCache;
 }
 
 #include "Regress03.h"

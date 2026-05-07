@@ -285,7 +285,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->displayR2L = displayR2L;
 
     free(fs->decryptionKey);
-    fs->decryptionKey = engine->GetDecryptionKey();
+    fs->decryptionKey = engine->decryptionKey.s ? str::Dup(engine->decryptionKey.s) : nullptr;
 }
 
 SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
@@ -354,9 +354,8 @@ DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocC
     pageSpacing.dy += 4;
 #endif
 
-    textCache = new DocumentTextCache(engine);
-    textSelection = new TextSelection(engine, textCache);
-    textSearch = new TextSearch(engine, textCache);
+    textSelection = new TextSelection(engine);
+    textSearch = new TextSearch(engine);
 }
 
 DisplayModel::~DisplayModel() {
@@ -369,7 +368,6 @@ DisplayModel::~DisplayModel() {
     delete pdfSync;
     delete textSearch;
     delete textSelection;
-    delete textCache;
     SafeEngineRelease(&engine);
     free(pagesInfo);
 }
@@ -1176,7 +1174,7 @@ bool DisplayModel::IsOverText(Point pt) {
     if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return false;
     }
-    if (!textCache->HasTextForPage(pageNo)) {
+    if (!engine->HasTextForPage(pageNo)) {
         return false;
     }
 
@@ -1212,6 +1210,16 @@ void DisplayModel::RenderVisibleParts() {
     }
 
     if (gPredictiveRender) {
+        // prerender two more pages in facing and book view modes
+        // if the rendering queue still has place for them
+        if (!IsSingle(GetDisplayMode())) {
+            if (firstVisiblePage > 2) {
+                cb->RequestRendering(firstVisiblePage - 2);
+            }
+            if (lastVisiblePage + 1 < PageCount()) {
+                cb->RequestRendering(lastVisiblePage + 2);
+            }
+        }
         if (firstVisiblePage > 1) {
             cb->RequestRendering(firstVisiblePage - 1);
         }
@@ -1804,12 +1812,12 @@ void DisplayModel::RotateBy(int newRotation) {
  * into a newly allocated buffer (which the caller needs to free()). */
 char* DisplayModel::GetTextInRegion(int pageNo, RectF region) const {
     Rect* coords;
-    const WCHAR* pageText = textCache->GetTextForPage(pageNo, nullptr, &coords);
+    const WCHAR* pageText = engine->GetTextForPage(pageNo, nullptr, &coords);
     if (str::IsEmpty(pageText)) {
         return nullptr;
     }
 
-    str::WStr result;
+    WStrBuilder result;
     Rect regionI = region.Round();
     for (const WCHAR* src = pageText; *src; src++) {
         if (*src != '\n') {

@@ -80,6 +80,7 @@ CmdTogglePageInfo,i,Show / Hide Current Page Number,was Shift + i before 3.6
 CmdChangeScrollbar,,Change Scrollbar,"Opens dialog to choose scrollbar mode (windows/smart/overlay/hidden)"
 CmdChangeBackgroundColor,,Change Background Color,"Opens color picker to change document background color"
 CmdToggleToolbar,F8,Toggle Toolbar,
+CmdToggleChmUI,,Toggle CHM UI,"Toggle dedicated CHM UI for CHM documents, reloading the current CHM document, ver 3.7+"
 CmdToggleUseTabs,,Toggle Use Tabs,"Toggle UseTabs setting, only affects new windows, ver 3.7+"
 CmdToggleTabsMru,,Toggle Tabs MRU Order,"Toggle TabsMru setting: Ctrl+Tab switches tabs in most recently used order, ver 3.7+"
 CmdToggleFrequentlyRead,,Toggle Frequently Read,ver 3.5+

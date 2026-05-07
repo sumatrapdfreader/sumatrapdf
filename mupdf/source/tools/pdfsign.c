@@ -26,7 +26,7 @@
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
-#include "mupdf/helpers/pkcs7-openssl.h"
+#include "mupdf/helpers/pkcs7-windows.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -71,7 +71,7 @@ static void verify_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signat
 		return;
 	}
 
-	verifier = pkcs7_openssl_new_verifier(ctx);
+	verifier = pkcs7_windows_new_verifier(ctx);
 	fz_var(dn);
 	fz_try(ctx)
 	{
@@ -168,7 +168,7 @@ static void sign_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 
 	fz_try(ctx)
 	{
-		signer = pkcs7_openssl_read_pfx(ctx, certificatefile, certificatepassword);
+		signer = pkcs7_windows_read_pfx(ctx, certificatefile, certificatepassword);
 
 		parent = pdf_dict_get(ctx, signature, PDF_NAME(P));
 		if (pdf_is_dict(ctx, parent))
@@ -216,7 +216,7 @@ static void list_signature(fz_context *ctx, pdf_document *doc, pdf_obj *signatur
 		return;
 	}
 
-	verifier = pkcs7_openssl_new_verifier(ctx);
+	verifier = pkcs7_windows_new_verifier(ctx);
 
 	dn = pdf_signature_get_signatory(ctx, verifier, doc, signature);
 	if (dn)

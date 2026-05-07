@@ -18,15 +18,23 @@ extern "C" {
 }
 
 // copied from mupdf/source/fitz/geometry.c
+// Values MUST match upstream exactly: in DLL builds these symbols shadow
+// the ones in libmupdf.dll for the EXE side, but the DLL's own code keeps
+// using its internal values. A stale value here means EXE-side code passes
+// a different "constant" than the DLL expects, which silently corrupts
+// behavior (e.g. fz_infinite_rect as scissor culls every draw call).
 
 const fz_matrix fz_identity = {1, 0, 0, 1, 0, 0};
 
-const fz_rect fz_infinite_rect = {1, 1, -1, -1};
-const fz_rect fz_empty_rect = {0, 0, 0, 0};
+const fz_rect fz_infinite_rect = {FZ_MIN_INF_RECT, FZ_MIN_INF_RECT, FZ_MAX_INF_RECT, FZ_MAX_INF_RECT};
+const fz_rect fz_empty_rect = {FZ_MAX_INF_RECT, FZ_MAX_INF_RECT, FZ_MIN_INF_RECT, FZ_MIN_INF_RECT};
+const fz_rect fz_invalid_rect = {0, 0, -1, -1};
 const fz_rect fz_unit_rect = {0, 0, 1, 1};
 
-const fz_irect fz_infinite_irect = {1, 1, -1, -1};
-const fz_irect fz_empty_irect = {0, 0, 0, 0};
+const fz_irect fz_infinite_irect = {FZ_MIN_INF_RECT, FZ_MIN_INF_RECT, FZ_MAX_INF_RECT, FZ_MAX_INF_RECT};
+const fz_irect fz_empty_irect = {FZ_MAX_INF_RECT, FZ_MAX_INF_RECT, FZ_MIN_INF_RECT, FZ_MIN_INF_RECT};
+const fz_irect fz_invalid_irect = {0, 0, -1, -1};
+const fz_irect fz_unit_bbox = {0, 0, 1, 1};
 
 extern "C" {
 #include <mupdf/fitz/color.h>

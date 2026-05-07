@@ -66,6 +66,17 @@ struct PageText {
 
 void FreePageText(PageText*);
 
+// UTF-8 variant: text is a UTF-8 byte string (len bytes, not including the
+// terminating null), and coords has one entry per UTF-8 byte (the same rect
+// repeated for each byte of a multi-byte codepoint).
+struct PageTextUtf8 {
+    char* text = nullptr;
+    Rect* coords = nullptr;
+    int len = 0;
+};
+
+void FreePageTextUtf8(PageTextUtf8*);
+
 // a link destination
 struct IPageDestination : KindBase {
     // page the destination points to (-1 for external destinations such as URLs)
@@ -367,6 +378,8 @@ struct RenderPageArgs {
 class EngineBase {
   public:
     Kind kind = nullptr;
+
+    Arena* arena = nullptr;
     AtomicRefCount refCount = 1; // starts life as acquired
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
@@ -377,7 +390,8 @@ class EngineBase {
     bool allowsPrinting = true;
     bool allowsCopyingText = true;
     bool isPasswordProtected = false;
-    char* decryptionKey = nullptr;
+    // hex-encoded password fingerprint + crypt key; arena-allocated
+    Str decryptionKey;
     bool hasPageLabels = false;
     bool hideAnnotations = false;
     bool disableAntiAlias = false;
@@ -386,7 +400,9 @@ class EngineBase {
     StrVec errors;
 
     // TODO: migrate other engines to use this
-    AutoFreeStr fileNameBase;
+    Str fileNameBase;
+
+    EngineBase();
 
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual EngineBase* Clone() = 0;
@@ -425,6 +441,14 @@ class EngineBase {
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coordsOut (if coordsOut is non-nullptr)
     virtual PageText ExtractPageText(int pageNo) = 0;
+    // UTF-8 variant of ExtractPageText. Default implementation returns empty.
+    virtual PageTextUtf8 ExtractPageTextUtf8(int) { return {}; }
+
+    // cached per-page text. First call on a page extracts text and caches it,
+    // subsequent calls return the cached copy. The returned pointers are owned
+    // by EngineBase and remain valid for the lifetime of the engine.
+    bool HasTextForPage(int pageNo);
+    const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
 
@@ -484,11 +508,6 @@ class EngineBase {
     // whether this document required a password in order to be loaded
     bool IsPasswordProtected() const;
 
-    // returns a string to remember when the user wants to save a document's password
-    // (don't implement for document types that don't support password protection)
-    // caller must free() the result
-    char* GetDecryptionKey() const;
-
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
@@ -507,6 +526,10 @@ class EngineBase {
 
   protected:
     virtual ~EngineBase();
+
+    // cached text, one entry per page (lazily allocated)
+    PageText* pagesText = nullptr;
+    CRITICAL_SECTION textCacheLock;
 };
 
 struct PasswordUI {

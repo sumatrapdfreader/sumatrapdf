@@ -22,7 +22,7 @@ void dbglayoutf(const char* fmt, ...) {
     va_end(args);
 }
 
-static void LogAppendNum(str::Str& s, int n, const char* suffix) {
+static void LogAppendNum(StrBuilder& s, int n, const char* suffix) {
     if (n == Inf) {
         s.Append("Inf");
     } else {
@@ -34,7 +34,7 @@ static void LogAppendNum(str::Str& s, int n, const char* suffix) {
 }
 
 void LogConstraints(Constraints c, const char* suffix) {
-    str::Str s;
+    StrBuilder s;
     if (c.min.dx == c.max.dx) {
         dbglayoutf("dx: ");
         LogAppendNum(s, c.min.dx, " ");

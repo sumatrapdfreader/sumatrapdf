@@ -34,7 +34,7 @@ TempStr SerializeColorTemp(COLORREF);
 
 PdfColor MkPdfColor(u8 r, u8 g, u8 b, u8 a = 0xff); // 0xff is opaque
 void UnpackPdfColor(PdfColor, u8& r, u8& g, u8& b, u8& a);
-void SerializePdfColor(PdfColor c, str::Str& out);
+void SerializePdfColor(PdfColor c, StrBuilder& out);
 
 COLORREF AdjustLightness(COLORREF c, float factor);
 COLORREF AdjustLightness2(COLORREF c, float units);

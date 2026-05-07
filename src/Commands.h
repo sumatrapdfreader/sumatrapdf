@@ -231,7 +231,8 @@ enum {
     CmdDocumentShowOutline = 420,
     CmdSetScreenshotHotkey = 421,
     CmdToggleReuseInstance = 422,
-    CmdNone = 423,
+    CmdToggleChmUI = 423,
+    CmdNone = 424,
 
     /* range for file history */
     CmdFileHistoryFirst,

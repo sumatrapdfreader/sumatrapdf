@@ -154,9 +154,9 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             if ((HWND)lp == win->hwndHomeSearch) {
                 HDC hdcEdit = (HDC)wp;
                 SetTextColor(hdcEdit, ThemeWindowTextColor());
-                SetBkColor(hdcEdit, PrettySurfaceColor());
+                SetBkColor(hdcEdit, ThemeControlBackgroundColor());
                 if (!win->brControlBgColor) {
-                    win->brControlBgColor = CreateSolidBrush(PrettySurfaceColor());
+                    win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
                 }
                 return (LRESULT)win->brControlBgColor;
             }

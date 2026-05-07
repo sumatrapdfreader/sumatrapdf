@@ -34,6 +34,14 @@ struct FzPageInfo {
     // if false, only loaded page (fast)
     // if true, loaded expensive info (extracted text etc.)
     bool fullyLoaded = false;
+
+    // cached "View" rendering of the page; built lazily under
+    // EngineMupdf::renderLock. fz_display_list is safe to *replay* across
+    // cloned contexts in principle, but the image objects it references are
+    // not -- shared images (notably JBIG2 with shared dictionaries) trigger
+    // races inside mupdf's image store on concurrent decode. So renderLock
+    // is engine-wide, not per-page.
+    fz_display_list* displayList = nullptr;
 };
 
 class EngineMupdf : public EngineBase {
@@ -52,6 +60,7 @@ class EngineMupdf : public EngineBase {
     ByteSlice GetFileData() override;
     bool SaveFileAs(const char* copyFileName) override;
     PageText ExtractPageText(int pageNo) override;
+    PageTextUtf8 ExtractPageTextUtf8(int pageNo) override;
 
     bool HasClipOptimizations(int pageNo) override;
     TempStr GetPropertyTemp(const char* name) override;
@@ -73,12 +82,34 @@ class EngineMupdf : public EngineBase {
 
     fz_context* Ctx() const;
 
-    // make sure to never ask for pagesAccess in an ctxAccess
-    // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION* ctxAccess;
-    CRITICAL_SECTION pagesAccess;
+    // Lock hierarchy (acquire in this order; never go upward):
+    //   pagesLock           - protects the pages[] vector / FzPageInfo lookup
+    //   renderLock          - serializes any mupdf call that may run a page
+    //                         or replay a display list, i.e. anything that
+    //                         can decode an image. Engine-wide (not per-page)
+    //                         because shared image objects (e.g. JBIG2 with
+    //                         shared dictionaries) race in mupdf's image
+    //                         store under concurrent decode -- crashes
+    //                         in template_image_compose_opt with use-after-
+    //                         free on the source pixmap. Also acquired under
+    //                         pagesLock inside GetFzPageInfo.
+    //   docLock             - serializes document-scope mupdf operations:
+    //                         outline, fonts, info, named dests, page-tree
+    //                         access, annotation mutations. Independent of
+    //                         renderLock; never acquire pagesLock while
+    //                         holding docLock.
+    //
+    // docLock must NOT alias one of fz_locks[] -- mupdf takes those briefly
+    // for its own internal coordination, and reusing one as a long-held outer
+    // lock would serialize every cloned-context allocation across all threads.
+    CRITICAL_SECTION pagesLock;
+    CRITICAL_SECTION renderLock;
+    CRITICAL_SECTION docLock;
 
-    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
+    // per-FZ_LOCK-index critical sections used by mupdf via fz_locks_ctx
+    // callbacks. Mupdf holds these only momentarily; do not hold them across
+    // your own code.
+    CRITICAL_SECTION fz_locks[FZ_LOCK_MAX];
 
     fz_context* _ctx = nullptr;
     fz_locks_context fz_locks_ctx;

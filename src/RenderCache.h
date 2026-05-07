@@ -8,7 +8,7 @@ constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
 
 #define INVALID_TILE_RES ((USHORT) - 1)
 
-#define MAX_PAGE_REQUESTS 16
+#define MAX_PAGE_REQUESTS 8
 // keep this value reasonably low, else we'll run out of
 // GDI resources/memory when caching many larger bitmaps
 // TODO: this should be based on amount of memory taken by rendered pages
@@ -85,10 +85,6 @@ struct PageRenderRequest {
     // called when rendering finishes (success or failure)
     // if null, render cache handles caching directly (legacy path)
     Func1<PageRenderRequest*> renderFinishedCb;
-
-    // True for viewport/tile requests used by on-screen painting.
-    // False for non-viewport renders such as thumbnails.
-    bool isDisplayRenderRequest = false;
 };
 
 constexpr int kMaxRenderThreads = 32;
@@ -108,7 +104,13 @@ struct RenderCache {
     PageRenderRequest* curReqs[kMaxRenderThreads]{};
     CRITICAL_SECTION requestAccess;
     HANDLE renderThreads[kMaxRenderThreads]{};
+    // Render threads are spawned lazily: nRenderThreads is the count actually
+    // running so far, maxRenderThreads is the cap. Threads track idleThreads
+    // (incremented when they're about to wait on startRendering); Render()
+    // only spawns a fresh thread when no idle one is available.
     int nRenderThreads = 0;
+    int maxRenderThreads = 0;
+    int idleThreads = 0;
 
     Size maxTileSize{};
     bool isRemoteSession = false;
@@ -157,6 +159,7 @@ struct RenderCache {
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = kInvalidZoom,
                            TilePosition* tile = nullptr);
     bool DropCacheEntry(BitmapCacheEntry* entry);
+    bool DropCacheEntryIfNotUsed(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm, int pageNo, TilePosition* tile = nullptr);
     void FreeNotVisible();
 

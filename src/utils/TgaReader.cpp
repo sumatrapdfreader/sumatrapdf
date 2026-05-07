@@ -424,7 +424,7 @@ ByteSlice SerializeBitmap(HBITMAP hbmp) {
     headerLE.bitDepth = 24;
     TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
 
-    str::Str tgaData;
+    StrBuilder tgaData;
     tgaData.Append((char*)&headerLE, sizeof(headerLE));
     for (int k = 0; k < h; k++) {
         const char* line = bmpData + k * stride;

@@ -82,9 +82,9 @@ struct ChmModel : DocController {
     float initZoom = kInvalidZoom;
 
     Vec<ChmCacheEntry*> urlDataCache;
-    // use a pool allocator for strings that aren't freed until this ChmModel
-    // is deleted (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
-    PoolAllocator poolAlloc;
+    // arena for strings that aren't freed until this ChmModel is deleted
+    // (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
+    Arena* poolAlloc = nullptr;
 
     bool Load(const char* fileName);
     bool DisplayPage(const char* pageUrl);

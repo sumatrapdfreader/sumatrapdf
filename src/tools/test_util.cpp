@@ -30,7 +30,7 @@ extern void WinUtilTest();
 extern void StrFormatTest();
 extern void StrVecTest();
 
-void GetPrintersInfo(struct str::Str&) {
+void GetPrintersInfo(struct StrBuilder&) {
     /* stub: do nothing */
 }
 

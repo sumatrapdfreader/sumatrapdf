@@ -838,6 +838,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\common\common.h" />
     <ClInclude Include="..\src\utils\Archive.h" />
     <ClInclude Include="..\src\utils\AvifReader.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
@@ -881,7 +882,6 @@
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="..\src\utils\UITask.h" />
     <ClInclude Include="..\src\utils\Vec.h" />
-    <ClInclude Include="..\src\utils\VecSegmented.h" />
     <ClInclude Include="..\src\utils\WebpReader.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
@@ -889,6 +889,12 @@
     <ClInclude Include="..\src\utils\windrawlib.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\common\arena.cpp" />
+    <ClCompile Include="..\src\common\base.cpp" />
+    <ClCompile Include="..\src\common\dir_scan.cpp" />
+    <ClCompile Include="..\src\common\file_util.cpp" />
+    <ClCompile Include="..\src\common\str_util.cpp" />
+    <ClCompile Include="..\src\common\win_util.cpp" />
     <ClCompile Include="..\src\utils\Archive.cpp" />
     <ClCompile Include="..\src\utils\AvifReader.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />

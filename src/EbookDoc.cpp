@@ -211,7 +211,7 @@ static ByteSlice Base64Decode(const ByteSlice& data) {
     return {(u8*)result, size};
 }
 
-static inline void AppendChar(str::Str& htmlData, char c) {
+static inline void AppendChar(StrBuilder& htmlData, char c) {
     switch (c) {
         case '&':
             htmlData.Append("&amp;");
@@ -252,12 +252,12 @@ const char* EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 EpubDoc::EpubDoc(const char* fileName) {
     this->fileName.SetCopy(fileName);
     InitializeCriticalSection(&zipAccess);
-    zip = OpenZipArchive(fileName, true);
+    archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
 }
 
 EpubDoc::EpubDoc(IStream* stream) {
     InitializeCriticalSection(&zipAccess);
-    zip = OpenZipArchive(stream, true);
+    archive = OpenArchiveFromStream(stream);
 }
 
 EpubDoc::~EpubDoc() {
@@ -270,7 +270,7 @@ EpubDoc::~EpubDoc() {
 
     LeaveCriticalSection(&zipAccess);
     DeleteCriticalSection(&zipAccess);
-    delete zip;
+    delete archive;
 }
 
 // TODO: switch to seqstring
@@ -299,14 +299,14 @@ static bool isImageMediaType(const char* mediatype) {
 }
 
 bool EpubDoc::Load() {
-    if (!zip) {
+    if (!archive) {
         return false;
     }
-    ByteSlice container = zip->GetFileDataByName("META-INF/container.xml");
-    if (!container) {
+    auto* containerFi = archive->GetFileDataByName("META-INF/container.xml");
+    if (!containerFi || !containerFi->data) {
         return false;
     }
-    AutoFree contFree = container.Get();
+    ByteSlice container{(u8*)containerFi->data, containerFi->fileSizeUncompressed};
     HtmlParser parser;
     HtmlElement* node = parser.ParseInPlace(container);
     if (!node) {
@@ -326,8 +326,9 @@ bool EpubDoc::Load() {
 
     // encrypted files will be ignored (TODO: support decryption)
     StrVec encList;
-    ByteSlice encryption = zip->GetFileDataByName("META-INF/encryption.xml");
-    if (encryption) {
+    auto* encryptionFi = archive->GetFileDataByName("META-INF/encryption.xml");
+    if (encryptionFi && encryptionFi->data) {
+        ByteSlice encryption{(u8*)encryptionFi->data, encryptionFi->fileSizeUncompressed};
         (void)parser.ParseInPlace(encryption);
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
@@ -340,14 +341,13 @@ bool EpubDoc::Load() {
             }
             cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
         }
-        encryption.Free();
     }
 
-    ByteSlice content = zip->GetFileDataByName(contentPath);
-    AutoFree contentFree = content.Get();
-    if (!content) {
+    auto* contentFi = archive->GetFileDataByName(contentPath);
+    if (!contentFi || !contentFi->data) {
         return false;
     }
+    ByteSlice content{(u8*)contentFi->data, contentFi->fileSizeUncompressed};
     ParseMetadata(content);
     node = parser.ParseInPlace(content);
     if (!node) {
@@ -382,7 +382,7 @@ bool EpubDoc::Load() {
             // load the image lazily
             ImageData data;
             data.fileName = str::Dup(imgPath);
-            data.fileId = zip->GetFileId(data.fileName);
+            data.fileId = archive->GetFileId(data.fileName);
             images.Append(data);
         } else if (isHtmlMediaType(mediaType)) {
             char* htmlPath = node->GetAttributeTemp("href");
@@ -438,12 +438,12 @@ bool EpubDoc::Load() {
         auto idx = idList.Find(idref);
         const char* fname = pathList.At(idx);
         char* fullPath = str::JoinTemp(contentPath, fname);
-        ByteSlice html = zip->GetFileDataByName(fullPath);
-        if (!html) {
+        auto* htmlFi = archive->GetFileDataByName(fullPath);
+        if (!htmlFi || !htmlFi->data) {
             continue;
         }
+        ByteSlice html{(u8*)htmlFi->data, htmlFi->fileSizeUncompressed};
         TempStr decoded = DecodeTextToUtf8Temp(html, true);
-        html.Free();
         if (!decoded) {
             continue;
         }
@@ -536,7 +536,11 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         for (ImageData& img : images) {
             if (str::EndsWithI(img.fileName, fileName)) {
                 if (img.base.empty()) {
-                    img.base = zip->GetFileDataById(img.fileId);
+                    auto* fi = archive->GetFileDataById(img.fileId);
+                    if (fi && fi->data) {
+                        img.base = {(u8*)fi->data, fi->fileSizeUncompressed};
+                        fi->data = nullptr;
+                    }
                 }
                 if (!img.base.empty()) {
                     return &img.base;
@@ -554,7 +558,11 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     for (ImageData& img : images) {
         if (str::Eq(img.fileName, url)) {
             if (img.base.empty()) {
-                img.base = zip->GetFileDataById(img.fileId);
+                auto* fi = archive->GetFileDataById(img.fileId);
+                if (fi && fi->data) {
+                    img.base = {(u8*)fi->data, fi->fileSizeUncompressed};
+                    fi->data = nullptr;
+                }
             }
             if (!img.base.empty()) {
                 return &img.base;
@@ -564,10 +572,12 @@ ByteSlice* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
 
     // try to also load images which aren't registered in the manifest
     ImageData data;
-    data.fileId = zip->GetFileId(url);
+    data.fileId = archive->GetFileId(url);
     if (data.fileId != (size_t)-1) {
-        data.base = zip->GetFileDataById(data.fileId);
-        if (!data.base.empty()) {
+        auto* fi = archive->GetFileDataById(data.fileId);
+        if (fi && fi->data) {
+            data.base = {(u8*)fi->data, fi->fileSizeUncompressed};
+            fi->data = nullptr;
             data.fileName = str::Dup(url);
             images.Append(data);
             return &images.Last().base;
@@ -586,7 +596,13 @@ ByteSlice EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     ScopedCritSec scope(&zipAccess);
 
     AutoFreeStr url = NormalizeURL(relPath, pagePath);
-    return zip->GetFileDataByName(url);
+    auto* fi = archive->GetFileDataByName(url);
+    if (!fi || !fi->data) {
+        return {};
+    }
+    ByteSlice res{(u8*)fi->data, fi->fileSizeUncompressed};
+    fi->data = nullptr;
+    return res;
 }
 
 TempStr EpubDoc::GetPropertyTemp(const char* name) const {
@@ -720,13 +736,15 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     if (!tocPath) {
         return false;
     }
-    size_t tocDataLen;
-    AutoFree tocData;
+    size_t tocDataLen = 0;
+    const char* tocData = nullptr;
     {
         ScopedCritSec scope(&zipAccess);
-        ByteSlice res = zip->GetFileDataByName(tocPath);
-        tocDataLen = res.size();
-        tocData.Set(res);
+        auto* fi = archive->GetFileDataByName(tocPath);
+        if (fi && fi->data) {
+            tocData = fi->data;
+            tocDataLen = fi->fileSizeUncompressed;
+        }
     }
     if (!tocData) {
         return false;
@@ -782,8 +800,18 @@ Fb2Doc::~Fb2Doc() {
     }
 }
 
+static ByteSlice takeFileData(MultiFormatArchive* archive, size_t fileId) {
+    auto* fi = archive->GetFileDataById(fileId);
+    if (!fi || !fi->data) {
+        return {};
+    }
+    ByteSlice res{(u8*)fi->data, fi->fileSizeUncompressed};
+    fi->data = nullptr;
+    return res;
+}
+
 static ByteSlice loadFromFile(Fb2Doc* doc) {
-    MultiFormatArchive* archive = OpenZipArchive(doc->fileName, false);
+    MultiFormatArchive* archive = OpenArchiveFromFile(doc->fileName, /*eagerLoad=*/true, gArchiveProgressCb);
     if (!archive) {
         return file::ReadFile(doc->fileName);
     }
@@ -800,7 +828,7 @@ static ByteSlice loadFromFile(Fb2Doc* doc) {
     }
 
     if (nFiles == 1) {
-        return archive->GetFileDataById(0);
+        return takeFileData(archive, 0);
     }
 
     ByteSlice data;
@@ -812,7 +840,7 @@ static ByteSlice loadFromFile(Fb2Doc* doc) {
     for (auto&& fileInfo : fileInfos) {
         auto path = fileInfo->name;
         if (str::EndsWithI(path, ".fb2") && data.empty()) {
-            data = archive->GetFileDataById(fileInfo->fileId);
+            data = takeFileData(archive, fileInfo->fileId);
         } else if (!str::EndsWithI(path, ".url")) {
             return {};
         }
@@ -822,7 +850,7 @@ static ByteSlice loadFromFile(Fb2Doc* doc) {
 
 static ByteSlice loadFromStream(Fb2Doc* doc) {
     auto stream = doc->stream;
-    MultiFormatArchive* archive = OpenZipArchive(stream, false);
+    MultiFormatArchive* archive = OpenArchiveFromStream(stream);
     if (!archive) {
         return {};
     }
@@ -833,7 +861,7 @@ static ByteSlice loadFromStream(Fb2Doc* doc) {
         return {};
     }
     doc->isZipped = true;
-    return archive->GetFileDataById(0);
+    return takeFileData(archive, 0);
 }
 
 bool Fb2Doc::Load() {
@@ -1089,7 +1117,7 @@ PalmDoc::~PalmDoc() {}
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // http://wiki.mobileread.com/wiki/TealDoc
-static const char* HandleTealDocTag(str::Str& builder, StrVec& tocEntries, const char* text, size_t len, uint) {
+static const char* HandleTealDocTag(StrBuilder& builder, StrVec& tocEntries, const char* text, size_t len, uint) {
     if (len < 9) {
     Fallback:
         builder.Append("&lt;");
@@ -1394,7 +1422,7 @@ static TempStr DecompressTcrTextTemp(const char* data, size_t dataLen) {
         curr += 1 + (u8)*curr;
     }
 
-    str::Str text(dataLen * 2);
+    StrBuilder text(dataLen * 2);
     InterlockedIncrement(&gAllowAllocFailure);
     defer {
         InterlockedDecrement(&gAllowAllocFailure);
@@ -1411,7 +1439,7 @@ static TempStr DecompressTcrTextTemp(const char* data, size_t dataLen) {
     return text.StealData(GetTempAllocator());
 }
 
-static const char* TextFindLinkEnd(str::Str& htmlData, const char* curr, char prevChar, bool fromWww = false) {
+static const char* TextFindLinkEnd(StrBuilder& htmlData, const char* curr, char prevChar, bool fromWww = false) {
     const char *end, *quote;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
@@ -1457,7 +1485,7 @@ inline bool IsEmailDomainChar(char c) {
     return isalnum((u8)c) || '-' == c;
 }
 
-static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
+static const char* TextFindEmailEnd(StrBuilder& htmlData, const char* curr) {
     AutoFreeStr beforeAt;
     const char* end = curr;
     if ('@' == *curr) {
@@ -1510,7 +1538,7 @@ static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
     return end;
 }
 
-static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
+static const char* TextFindRfcEnd(StrBuilder& htmlData, const char* curr) {
     if (isalnum((u8) * (curr - 1))) {
         return nullptr;
     }

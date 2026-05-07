@@ -66,7 +66,7 @@ static const char* gArgNames =
 // @gen-end flags
 
 static void EnumeratePrinters() {
-    str::Str out;
+    StrBuilder out;
 
     gLogToConsole = true;
     RedirectIOToExistingConsole();

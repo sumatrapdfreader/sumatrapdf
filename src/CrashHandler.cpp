@@ -39,10 +39,10 @@
 
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
-extern void GetStressTestInfo(str::Str* s);
+extern void GetStressTestInfo(StrBuilder* s);
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
-extern void GetProgramInfo(str::Str& s);
+extern void GetProgramInfo(StrBuilder& s);
 
 // in DEBUG we don't enable symbols download because they are not uploaded
 #if defined(DEBUG)
@@ -63,7 +63,7 @@ allocate memory. I assume it'll use GetProcessHeap() heap and further assume
 that CRT creates its own heap for malloc()/free() etc. so that while a deadlock
 is still possible, the probability should be greatly reduced. */
 
-static HeapAllocator* gCrashHandlerAllocator = nullptr;
+static Arena* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
@@ -85,7 +85,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 // returns true if running on wine (winex11.drv is present)
 // it's not a logical, but convenient place to do it
-static bool GetModules(str::Str& s, bool additionalOnly) {
+static bool GetModules(StrBuilder& s, bool additionalOnly) {
     bool isWine = false;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) {
@@ -116,7 +116,7 @@ static bool GetModules(str::Str& s, bool additionalOnly) {
 }
 
 static char* BuildCrashInfoText(const char* condStr, const char* fileLine, bool isCrash, bool captureCallstack) {
-    str::Str s(16 * 1024, gCrashHandlerAllocator);
+    StrBuilder s(16 * 1024, gCrashHandlerAllocator);
     if (!isCrash) {
         captureCallstack = true;
         s.Append("Type: debug report (not crash)\n");
@@ -187,16 +187,16 @@ void UploadCrashReport(const ByteSlice& d) {
         return;
     }
 
-    str::Str headers(256, gCrashHandlerAllocator);
+    StrBuilder headers(256, gCrashHandlerAllocator);
     headers.AppendFmt("Content-Type: text/plain");
 
-    str::Str data(16 * 1024, gCrashHandlerAllocator);
+    StrBuilder data(16 * 1024, gCrashHandlerAllocator);
     data.AppendSlice(d);
 
     HttpPost(kCrashHandlerServer, kCrashHandlerServerPort, kCrashHandlerServerSubmitURL, &headers, &data);
 }
 
-static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* dstDir, Allocator* allocator) {
+static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* dstDir, Arena* allocator) {
     logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
     lzma::SimpleArchive archive;
     bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
@@ -224,8 +224,8 @@ static bool ExtractSymbols(const u8* archiveData, size_t dataSize, const char* d
             logf("ExtractSymbols: failed to write '%s'\n", filePath);
             LogLastError(err);
         }
-        Allocator::Free(allocator, filePath);
-        Allocator::Free(allocator, uncompressed);
+        Free(allocator, filePath);
+        Free(allocator, uncompressed);
         if (!ok) {
             return false;
         }
@@ -313,7 +313,7 @@ static bool gAddSymbolServer = false;
 static bool gAddExeDir = false;
 
 static TempStr BuildSymbolPathTemp(const char* symDir) {
-    str::Str path(2048, GetTempAllocator());
+    StrBuilder path(2048, GetTempAllocator());
 
     bool symDirExists = dir::Exists(symDir);
 
@@ -549,7 +549,7 @@ static LONG WINAPI CrashDumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) 
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static void GetOsVersion(str::Str& s) {
+static void GetOsVersion(StrBuilder& s) {
     OSVERSIONINFOEX ver{};
     bool ok = GetOsVersion(ver);
     ver.dwOSVersionInfoSize = sizeof(ver);
@@ -574,7 +574,7 @@ static void GetOsVersion(str::Str& s) {
     }
 }
 
-static void GetProcessorName(str::Str& s) {
+static void GetProcessorName(StrBuilder& s) {
     auto key = "HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
     char* name = ReadRegStrTemp(HKEY_LOCAL_MACHINE, key, "ProcessorNameString");
     if (!name) {
@@ -589,7 +589,7 @@ static void GetProcessorName(str::Str& s) {
 
 #define GFX_DRIVER_KEY_FMT "SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
 
-static void GetGraphicsDriverInfo(str::Str& s) {
+static void GetGraphicsDriverInfo(StrBuilder& s) {
     // the info is in registry in:
     // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\
     //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
@@ -620,7 +620,7 @@ static void GetGraphicsDriverInfo(str::Str& s) {
     }
 }
 
-static void GetSystemInfo(str::Str& s) {
+static void GetSystemInfo(StrBuilder& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     s.AppendFmt("Number Of Processors: %d\n", si.dwNumberOfProcessors);
@@ -711,14 +711,14 @@ static void GetSystemInfo(str::Str& s) {
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    str::Str s(1024);
+    StrBuilder s(1024);
     bool isWine = GetModules(s, false);
     gModulesInfo = s.StealData();
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    str::Str s(1024);
+    StrBuilder s(1024);
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
@@ -813,7 +813,7 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
     // we pre-allocate as much as possible to minimize allocations
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
-    gCrashHandlerAllocator = new HeapAllocator();
+    gCrashHandlerAllocator = ArenaNew();
     gSymbolsUrl = BuildSymbolsUrl();
 
     TempStr path = GetSettingsPathTemp();
@@ -878,7 +878,7 @@ void UninstallCrashHandler() {
     str::FreePtr(&gSettingsFile);
     str::FreePtr(&gModulesInfo);
     str::FreePtr(&gCrashFilePath);
-    delete gCrashHandlerAllocator;
+    ArenaDelete(gCrashHandlerAllocator);
 }
 
 // Tests that various ways to crash will generate crash report.

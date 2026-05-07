@@ -84,7 +84,7 @@ static void RemoveInstallDirFromPath(bool allUsers, const char* installDir) {
         return;
     }
 
-    str::Str newPath;
+    StrBuilder newPath;
     size_t installDirLen = str::Len(installDir);
     const char* p = currPath;
     while (*p) {
@@ -429,7 +429,7 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
 
     // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
     // item, which is path to the executable
-    str::Str cmdLine = "-uninstall";
+    StrBuilder cmdLine = "-uninstall";
     if (cli->silent) {
         cmdLine.Append(" -silent");
     }
@@ -475,7 +475,7 @@ static char* GetSelfDeleteBatchPathInTemp() {
 static void InitSelfDelete() {
     log("InitSelfDelete()\n");
     TempStr exePath = GetSelfExePathTemp();
-    str::Str script;
+    StrBuilder script;
     // wait 2 seconds to give our process time to exit
     // alternatively use ping,
     // https://stackoverflow.com/questions/1672338/how-to-sleep-for-five-seconds-in-a-batch-file-cmd

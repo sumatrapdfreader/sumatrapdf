@@ -17,9 +17,6 @@
 
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
-#include "wingui/WebView.h"
-
-#include "HomePage.h"
 
 #include "Settings.h"
 #include "DocController.h"
@@ -47,8 +44,6 @@
 #include "uia/Provider.h"
 
 #include "utils/Log.h"
-
-void HomePageDestroy(MainWindow* win);
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
@@ -97,6 +92,7 @@ StaticLink::~StaticLink() {
 MainWindow::MainWindow(HWND hwnd) {
     hwndFrame = hwnd;
     linkHandler = new LinkHandler(this);
+    cbHandler = CreateControllerCallbackHandler(this);
 }
 
 static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
@@ -169,13 +165,6 @@ MainWindow::~MainWindow() {
         delete favTreeView;
     }
 
-    delete hybridToolbar;
-    if (homePageWebView) {
-        DestroyWindow(homePageWebView->hwnd);
-        delete homePageWebView;
-        homePageWebView = nullptr;
-    }
-
     delete sidebarSplitter;
     delete favSplitter;
     delete tocLabelWithClose;
@@ -183,6 +172,10 @@ MainWindow::~MainWindow() {
 }
 
 void ClearMouseState(MainWindow* win) {
+    win->dragStartPending = false;
+    win->textDragPending = false;
+    win->imageDragPending = false;
+    win->imageDragElement = nullptr;
     win->linkOnLastButtonDown = nullptr;
     win->annotationUnderCursor = nullptr;
 }
@@ -719,31 +712,28 @@ bool HasOpenedDocuments(MainWindow* win) {
 }
 
 void UpdateControlsColors(MainWindow* win) {
-    COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
-    COLORREF editBgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : bgCol;
-    COLORREF headerBgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : bgCol;
-    COLORREF treeBgCol = bgCol;
+    COLORREF bgCol = ThemeControlBackgroundColor();
     COLORREF txtCol = ThemeWindowTextColor();
 
     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
 
-    COLORREF splitterCol = PrettyStyleEnabled() ? PrettyBorderColor() : ThemeControlBackgroundColor();
+    COLORREF splitterCol = ThemeControlBackgroundColor();
 
     {
         auto tocTreeView = win->tocTreeView;
-        tocTreeView->SetColors(txtCol, treeBgCol);
+        tocTreeView->SetColors(txtCol, bgCol);
 
-        win->tocLabelWithClose->SetColors(txtCol, headerBgCol);
+        win->tocLabelWithClose->SetColors(txtCol, bgCol);
         if (win->tocFilterEdit) {
-            win->tocFilterEdit->SetColors(txtCol, editBgCol);
+            win->tocFilterEdit->SetColors(txtCol, bgCol);
         }
         win->sidebarSplitter->SetColors(kColorNoChange, splitterCol);
     }
 
     auto favTreeView = win->favTreeView;
     if (favTreeView) {
-        favTreeView->SetColors(txtCol, treeBgCol);
-        win->favLabelWithClose->SetColors(txtCol, headerBgCol);
+        favTreeView->SetColors(txtCol, bgCol);
+        win->favLabelWithClose->SetColors(txtCol, bgCol);
         win->favSplitter->SetColors(kColorNoChange, splitterCol);
     }
 }
@@ -785,6 +775,10 @@ MainWindow* FindMainWindowByTab(WindowTab* tabToFind) {
         }
     }
     return nullptr;
+}
+
+bool IsWindowTabValid(WindowTab* tab) {
+    return FindMainWindowByTab(tab) != nullptr;
 }
 
 // temporarily highlight this tab

@@ -104,10 +104,13 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdToggleScrollbarInSinglePage,
     CmdToggleLazyLoading,
     CmdToggleFullscreen,
+    CmdToggleMenuBar,
     CmdToggleToolbar,
     CmdToggleUseTabs,
     CmdToggleTips,
     CmdToggleFrequentlyRead,
+    CmdToggleChmUI,
+    CmdToggleReuseInstance,
     CmdFavoriteToggle,
     CmdShowLog,
     CmdClearHistory,
@@ -360,7 +363,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     }
 
     if (cmdId == CmdToggleMenuBar) {
-        return false;
+        return ctx.allowToggleMenuBar;
     }
 
     if (!ctx.supportsAnnots) {
@@ -605,8 +608,19 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
             newIsOn = !gGlobalPrefs->reuseInstance;
         } break;
     }
+
     if (isToggle) {
         s = (const char*)str::JoinTemp(s, newIsOn ? ": on" : ": off");
+        return s;
+    }
+
+    if (cmdId == CmdToggleChmUI) {
+        if (gGlobalPrefs->chmUI.useFixedPageUI) {
+            s = (const char*)str::JoinTemp(s, ": browser");
+        } else {
+            s = (const char*)str::JoinTemp(s, ": fixed");
+        }
+        return s;
     }
 
     if (cmdId == CmdToggleWindowsPreviewer) {
@@ -615,6 +629,7 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
         } else {
             s = _TRA("Register Windows Previewer");
         }
+        return s;
     }
 
     if (cmdId == CmdToggleWindowsSearchFilter) {
@@ -623,6 +638,7 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
         } else {
             s = _TRA("Register Windows Search Filter");
         }
+        return s;
     }
 
     return s;
@@ -902,103 +918,8 @@ static void ScheduleDeleteAndExecCommand(i32 cmdId = 0) {
     uitask::Post(fn, "SafeDeleteCommandPaletteWnd");
 }
 
-static void ApplyCommandPaletteShape(HWND hwnd) {
-    if (!PrettyStyleEnabled()) {
-        SetWindowRgn(hwnd, nullptr, TRUE);
-        return;
-    }
-    Rect rc = ClientRect(hwnd);
-    if (rc.dx <= 0 || rc.dy <= 0) {
-        return;
-    }
-    int radius = DpiScale(hwnd, 16);
-    HRGN rgn = CreateRoundRectRgn(0, 0, rc.dx + 1, rc.dy + 1, radius, radius);
-    if (rgn) {
-        SetWindowRgn(hwnd, rgn, TRUE);
-    }
-}
-
-static COLORREF GetReadablePaletteTextColor(COLORREF bgCol) {
-    return GetLightness(bgCol) > 128 ? RGB(44, 52, 64) : RGB(236, 240, 248);
-}
-
-static COLORREF CommandPaletteLightBg() {
-    return PrettyStyleEnabled() ? PrettySurfaceColor() : ThemeWindowControlBackgroundColor();
-}
-
-static COLORREF CommandPaletteLightAltBg() {
-    return PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeWindowControlBackgroundColor();
-}
-
-static COLORREF CommandPaletteLightBorder() {
-    return PrettyStyleEnabled() ? PrettyBorderColor() : ThemeWindowTextDisabledColor();
-}
-
-static COLORREF CommandPaletteLightSelBgFocused() {
-    return PrettyStyleEnabled() ? PrettyAccentColor() : GetSysColor(COLOR_HIGHLIGHT);
-}
-
-static COLORREF CommandPaletteLightSelBgUnfocused() {
-    return PrettyStyleEnabled() ? AccentColor(PrettyAccentColor(), 12) : AccentColor(GetSysColor(COLOR_HIGHLIGHT), 22);
-}
-
-static COLORREF CommandPaletteLightSelText() {
-    return PrettyStyleEnabled() ? ThemeWindowTextColor() : GetSysColor(COLOR_HIGHLIGHTTEXT);
-}
-
 LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
-        case WM_SIZE:
-            ApplyCommandPaletteShape(hwnd);
-            break;
-
-        case WM_ERASEBKGND:
-            return TRUE;
-
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            Rect rc = ClientRect(hwnd);
-            RECT rcPaint = ToRECT(rc);
-
-            COLORREF panelBg = PrettyStyleEnabled() ? CommandPaletteLightBg() : ThemeWindowControlBackgroundColor();
-            HBRUSH panelBrush = CreateSolidBrush(panelBg);
-            FillRect(hdc, &rcPaint, panelBrush);
-            DeleteObject(panelBrush);
-
-            if (PrettyStyleEnabled()) {
-                HPEN pen = CreatePen(PS_SOLID, 1, CommandPaletteLightBorder());
-                HGDIOBJ oldPen = SelectObject(hdc, pen);
-                HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                int radius = DpiScale(hwnd, 16);
-                RoundRect(hdc, 0, 0, rc.dx, rc.dy, radius, radius);
-                SelectObject(hdc, oldBrush);
-                SelectObject(hdc, oldPen);
-                DeleteObject(pen);
-            }
-
-            if (listBox && IsWindow(listBox->hwnd)) {
-                RECT rl = ToRECT(WindowRect(listBox->hwnd));
-                MapWindowPoints(HWND_DESKTOP, hwnd, (POINT*)&rl, 2);
-
-                COLORREF sepCol = PrettyStyleEnabled() ? CommandPaletteLightBorder() : PrettyBorderColor();
-                HPEN sep = CreatePen(PS_SOLID, 1, sepCol);
-                HGDIOBJ oldSep = SelectObject(hdc, sep);
-                int padX = DpiScale(hwnd, 10);
-                int yTop = std::max(0, (int)rl.top - DpiScale(hwnd, 6));
-                int yBottom = std::min(rc.dy - 1, (int)rl.bottom + DpiScale(hwnd, 6));
-                MoveToEx(hdc, padX, yTop, nullptr);
-                LineTo(hdc, rc.dx - padX, yTop);
-                MoveToEx(hdc, padX, yBottom, nullptr);
-                LineTo(hdc, rc.dx - padX, yBottom);
-                SelectObject(hdc, oldSep);
-                DeleteObject(sep);
-            }
-
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
-
         case WM_ACTIVATE:
             if (wp == WA_INACTIVE) {
                 ScheduleDeleteAndExecCommand();
@@ -1031,9 +952,6 @@ void CommandPaletteWnd::OnSelectionChange() {
         return;
     }
     auto m = (ListBoxModelCP*)listBox->model;
-    if (!m || idx < 0 || idx >= m->ItemsCount()) {
-        return;
-    }
     ItemDataCP* data = m->strings.AtData(idx);
     HighlightTab(win, data->tab);
 }
@@ -1399,9 +1317,7 @@ void DrawMaybeHighlightedText(DrawMaybeHighlightedTextArgs& args) {
     // draw highlight background rectangles for matches
     {
         COLORREF highlightCol;
-        if (PrettyStyleEnabled()) {
-            highlightCol = PrettyBorderColor();
-        } else if (IsCurrentThemeDefault()) {
+        if (IsCurrentThemeDefault()) {
             highlightCol = RGB(255, 255, 0); // yellow for default theme
         } else {
             highlightCol = AccentColor(colBg, 40);
@@ -1420,107 +1336,111 @@ void DrawMaybeHighlightedText(DrawMaybeHighlightedTextArgs& args) {
 void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     ListBox* lb = ev->listBox;
     auto m = (ListBoxModelCP*)lb->model;
-    if (!m || ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
+    if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
         return;
     }
 
     HDC hdc = ev->hdc;
     RECT rc = ev->itemRect;
 
+    // set colors based on selection state
+    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
+    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+    if (ev->selected) {
+        if (false && IsCurrentThemeDefault()) {
+            colBg = GetSysColor(COLOR_HIGHLIGHT);
+            colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
+        } else {
+            colBg = AccentColor(colBg, 30);
+        }
+    }
+
+    // fill background
+    SetBkColor(hdc, colBg);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+
+    // For RTL: remove LAYOUT_RTL from DC so we can position text manually.
+    // The item rect spans full width so coordinates are the same mirrored or not.
+    bool isRtl = HwndIsRtl(lb->hwnd);
+    if (isRtl) {
+        SetLayout(hdc, 0); // LAYOUT_LTR
+    }
+
+    // get item text and data
     const char* itemText = m->Item(ev->itemIndex);
     ItemDataCP* data = m->Data(ev->itemIndex);
 
-    bool selected = ev->selected;
-    bool hasFocus = (GetFocus() == lb->hwnd);
-
-    COLORREF colBg;
-    COLORREF colText;
-    COLORREF colRightText;
-
-    if (PrettyStyleEnabled()) {
-        if (selected) {
-            colBg = hasFocus ? CommandPaletteLightSelBgFocused() : CommandPaletteLightSelBgUnfocused();
-            colText = CommandPaletteLightSelText();
-            colRightText = colText;
-        } else {
-            colBg = CommandPaletteLightAltBg();
-            colText = GetReadablePaletteTextColor(colBg);
-            colRightText = AccentColor(colText, 58);
-        }
-    } else {
-        if (selected) {
-            colBg = GetSysColor(COLOR_HIGHLIGHT);
-            colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
-            colRightText = colText;
-        } else {
-            colBg = GetSysColor(COLOR_WINDOW);
-            colText = GetSysColor(COLOR_WINDOWTEXT);
-            colRightText = AccentColor(colText, 80);
-        }
-    }
-
-    HGDIOBJ oldFont = nullptr;
-    if (lb->font) {
-        oldFont = SelectObject(hdc, lb->font);
-    }
-
-    SetBkMode(hdc, OPAQUE);
-    SetBkColor(hdc, colBg);
-    SetTextColor(hdc, colText);
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
-
-    int padX = DpiScale(lb->hwnd, 4);
-    RECT rcText = rc;
-    rcText.left += padX;
-    rcText.right -= padX;
-
-    bool isRtl = HwndIsRtl(lb->hwnd);
-    if (isRtl) {
-        SetLayout(hdc, 0);
-    }
-
-    DrawMaybeHighlightedTextArgs args(filterWords, highlighted);
-    args.hdc = hdc;
-    args.rc = rcText;
-    args.text = itemText;
-    args.colBg = colBg;
-    args.isRtl = isRtl;
-    args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX |
-                   (isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT);
-    DrawMaybeHighlightedText(args);
-
+    // get right-side string: accelerator for commands, directory for file history
+    TempStr rightStr = nullptr;
     if (data->cmdId != 0) {
-        TempStr empty = str::DupTemp("");
-        TempStr withAccel = AppendAccelKeyToMenuStringTemp(empty, data->cmdId);
+        // AppendAccelKeyToMenuStringTemp returns "\tCtrl + X" or original string if no accel
+        TempStr withAccel = AppendAccelKeyToMenuStringTemp((TempStr) "", data->cmdId);
         if (withAccel && withAccel[0] == '\t') {
-            const char* rightStr = withAccel + 1;
-            WCHAR* rightStrW = ToWStrTemp(rightStr);
-
-            RECT rcRight = rc;
-            rcRight.left = rcRight.right - DpiScale(lb->hwnd, 120);
-            rcRight.right -= padX;
-
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, colRightText);
-            DrawTextW(hdc, rightStrW, -1, &rcRight,
-                      DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+            rightStr = withAccel + 1; // skip the tab character
         }
     } else if (data->filePath) {
-        const char* rightStr = path::GetDirTemp(data->filePath);
+        rightStr = path::GetDirTemp(data->filePath);
+    }
+
+    // set text color and background mode
+    SetTextColor(hdc, colText);
+    SetBkMode(hdc, TRANSPARENT);
+
+    // select font
+    HFONT oldFont = nullptr;
+    if (lb->font) {
+        oldFont = SelectFont(hdc, lb->font);
+    }
+
+    // add some padding
+    int padX = DpiScale(lb->hwnd, 4);
+    rc.left += padX;
+    rc.right -= padX;
+
+    // draw command name on the left, highlighting matched words
+    {
+        DrawMaybeHighlightedTextArgs args(filterWords, highlighted);
+        args.hdc = hdc;
+        args.rc = rc;
+        args.text = itemText;
+        args.colBg = colBg;
+        args.isRtl = isRtl;
+        args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+        args.drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
+        DrawMaybeHighlightedText(args);
+    }
+
+    // draw right-side text (shortcut or directory), truncated to avoid overlapping left text
+    if (rightStr && rightStr[0]) {
         WCHAR* rightStrW = ToWStrTemp(rightStr);
+        int gap = DpiScale(lb->hwnd, 8);
+
+        // measure left text width
+        WCHAR* itemTextW2 = ToWStrTemp(itemText);
+        SIZE szLeft{};
+        GetTextExtentPoint32W(hdc, itemTextW2, str::Leni(itemText), &szLeft);
+        int leftEnd = rc.left + szLeft.cx + gap;
 
         RECT rcRight = rc;
-        rcRight.left = rcRight.right - DpiScale(lb->hwnd, 180);
-        rcRight.right -= padX;
-
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, colRightText);
-        DrawTextW(hdc, rightStrW, -1, &rcRight,
-                  DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
+        if (isRtl) {
+            rcRight.right = rc.right - szLeft.cx - gap;
+            fmt |= DT_LEFT | DT_RTLREADING;
+        } else {
+            rcRight.left = leftEnd;
+            rcRight.right -= gap;
+            fmt |= DT_RIGHT;
+        }
+        if (rcRight.left < rcRight.right) {
+            COLORREF rightCol = AccentColor(colText, 80);
+            SetTextColor(hdc, rightCol);
+            DrawTextW(hdc, rightStrW, -1, &rcRight, fmt);
+            SetTextColor(hdc, colText);
+        }
     }
 
     if (oldFont) {
-        SelectObject(hdc, oldFont);
+        SelectFont(hdc, oldFont);
     }
 }
 
@@ -1537,15 +1457,14 @@ static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
 }
 
 bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTabAdvance) {
-    this->win = win;
-    if (str::StartsWith(prefix, kPalettePrefixTabs)) {
+    if (str::Eq(prefix, kPalettePrefixTabs)) {
         smartTabMode = smartTabAdvance != 0;
     }
     CollectStrings(win);
     {
         CreateCustomArgs args;
         args.visible = false;
-        args.style = WS_POPUP | WS_CLIPCHILDREN;
+        args.style = WS_POPUPWINDOW;
         args.font = font;
         CreateCustom(args);
     }
@@ -1554,15 +1473,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     }
 
     auto colBg = ThemeWindowControlBackgroundColor();
-    auto colPanelBg = colBg;
-    auto colListBg = colBg;
-    if (PrettyStyleEnabled()) {
-        colBg = CommandPaletteLightAltBg();
-        colPanelBg = CommandPaletteLightBg();
-        colListBg = CommandPaletteLightAltBg();
-    }
-
-    auto colTxt = PrettyStyleEnabled() ? GetReadablePaletteTextColor(colPanelBg) : ThemeWindowTextColor();
+    auto colTxt = ThemeWindowTextColor();
     SetColors(colTxt, colBg);
 
     auto vbox = new VBox();
@@ -1574,12 +1485,12 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         args.parent = hwnd;
         args.isMultiLine = false;
         args.withBorder = false;
-        args.cueText = "Start typing...";
+        args.cueText = "enter search term";
         args.text = prefix;
         args.font = font;
         args.isRtl = IsUIRtl();
         auto c = new Edit();
-        c->SetColors(colTxt, colPanelBg);
+        c->SetColors(colTxt, colBg);
         c->maxDx = 150;
         HWND ok = c->Create(args);
         ReportIf(!ok);
@@ -1595,28 +1506,28 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         auto pad = Insets{0, 8, 0, 8};
         {
             auto c = CreateStatic(hwnd, font, _TRA("# File History"));
-            c->SetColors(AccentColor(colTxt, 62), colBg);
+            c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFileHistory>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, _TRA("> Commands"));
-            c->SetColors(AccentColor(colTxt, 62), colBg);
+            c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToCommands>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, _TRA("@ Tabs"));
-            c->SetColors(AccentColor(colTxt, 62), colBg);
+            c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         {
             auto c = CreateStatic(hwnd, font, _TRA(": Everything"));
-            c->SetColors(AccentColor(colTxt, 62), colBg);
+            c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToEverything>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
@@ -1634,9 +1545,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         c->onDrawItem =
             MkMethod1<CommandPaletteWnd, ListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
         c->idealSizeLines = 32;
-        c->SetInsetsPt(6, 0);
+        c->SetInsetsPt(4, 0);
         c->Create(args);
-        c->SetColors(colTxt, colListBg);
+        c->SetColors(colTxt, colBg);
         c->onSelectionChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
         auto m = new ListBoxModelCP();
         FilterStringsForQuery(prefix, m->strings);
@@ -1665,14 +1576,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         auto pad = Insets{0, 8, 0, 8};
         for (int i = 0; i < 3; i++) {
             auto c = CreateStatic(hwnd, font, strings[i]);
-            c->SetColors(AccentColor(colTxt, 56), colBg);
+            c->SetColors(colTxt, colBg);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
         vbox->AddChild(hbox);
     }
 
-    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 10, 14, 10, 14));
+    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
     layout = padding;
 
     auto rc = ClientRect(win->hwndFrame);
@@ -1682,18 +1593,15 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     }
     int dx = rc.dx - 256;
     dx = limitValue(dx, 640, 1024);
+    limitValue(dx, 640, 1024);
     LayoutAndSizeToContent(layout, dx, dy, hwnd);
-
-    ApplyCommandPaletteShape(hwnd);
     PositionCommandPalette(hwnd, win->hwndFrame);
 
     editQuery->SetCursorPositionAtEnd();
     if (smartTabMode) {
         int nItems = listBox->model->ItemsCount();
-        if (nItems > 0) {
-            int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
-            SetCurrentSelection(this, tabToSelect);
-        }
+        int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
+        SetCurrentSelection(this, tabToSelect);
     }
 
     SetIsVisible(true);

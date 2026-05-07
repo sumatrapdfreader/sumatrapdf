@@ -331,18 +331,17 @@ static bool ExtractTextViaEngine(PdfExtractTextDialog* dlg, const char* destPath
     if (!ParsePageRanges(pages, ranges)) {
         return false;
     }
-    str::Str text;
+    StrBuilder text;
     for (auto& range : ranges) {
         int start = std::max(range.start, 1);
         int end = std::min(range.end, pageCount);
         for (int pageNo = start; pageNo <= end; pageNo++) {
-            PageText pt = engine->ExtractPageText(pageNo);
+            PageTextUtf8 pt = engine->ExtractPageTextUtf8(pageNo);
             if (pt.text) {
-                TempStr utf8 = ToUtf8Temp(pt.text);
-                text.Append(utf8);
+                text.Append(pt.text);
                 text.AppendChar('\n');
             }
-            FreePageText(&pt);
+            FreePageTextUtf8(&pt);
         }
     }
     return file::WriteFile(destPath, text.AsByteSlice());
@@ -1017,7 +1016,7 @@ static bool ParseDeletePages(const char* s, int pageCount, Vec<int>& pagesToDele
 
 // Build the page range string of pages to KEEP (complement of pagesToDelete).
 static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete) {
-    str::Str s;
+    StrBuilder s;
     int delIdx = 0;
     int rangeStart = -1;
     int rangeEnd = -1;
@@ -1058,7 +1057,7 @@ static TempStr BuildKeepPagesRange(int pageCount, const Vec<int>& pagesToDelete)
 
 // Format a sorted list of page numbers as a compact range string (e.g. "1-3,5,7-10").
 static TempStr FormatPageRange(const Vec<int>& pages) {
-    str::Str s;
+    StrBuilder s;
     int i = 0;
     int n = pages.Size();
     while (i < n) {

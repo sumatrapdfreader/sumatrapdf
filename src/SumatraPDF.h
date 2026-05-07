@@ -106,6 +106,9 @@ extern HWND gLastActiveFrameHwnd;
 struct DocController;
 extern DocController* gMostRecentlyOpenedDoc;
 
+struct DocControllerCallback;
+DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win);
+
 #define gPluginMode (gPluginURL != nullptr)
 
 bool NeedsWindowEmbeddingHacks();

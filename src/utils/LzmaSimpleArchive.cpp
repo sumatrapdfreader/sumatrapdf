@@ -21,18 +21,18 @@ there's a tool for creating them in ../MakeLzSA.cpp
 namespace lzma {
 
 struct ISzAllocatorAlloc : ISzAlloc {
-    Allocator* allocator;
+    Arena* allocator;
 
     static void* _Alloc(void* p, size_t size) {
         ISzAllocatorAlloc* a = (ISzAllocatorAlloc*)p;
-        return Allocator::Alloc(a->allocator, size);
+        return ::Alloc(a->allocator, size);
     }
     static void _Free(void* p, void* address) {
         ISzAllocatorAlloc* a = (ISzAllocatorAlloc*)p;
-        Allocator::Free(a->allocator, address);
+        ::Free(a->allocator, address);
     }
 
-    explicit ISzAllocatorAlloc(Allocator* allocator) {
+    explicit ISzAllocatorAlloc(Arena* allocator) {
         this->Alloc = _Alloc;
         this->Free = _Free;
         this->allocator = allocator;
@@ -71,7 +71,7 @@ u32 lzma_crc32(u32 crc32, const u8* data, size_t data_len) {
 
 // the first compressed byte indicates whether compression is LZMA (0), LZMA+BJC (1) or none (-1)
 static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompressed, size_t uncompressedSize,
-                       Allocator* allocator) {
+                       Arena* allocator) {
     if (compressedSize < 1) {
         return false;
     }
@@ -222,7 +222,7 @@ int GetIdxFromName(SimpleArchive* archive, const char* fileName) {
     return -1;
 }
 
-u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
+u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator) {
     if (idx >= archive->filesCount) {
         return nullptr;
     }
@@ -230,7 +230,7 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
     FileInfo* fi = &archive->files[idx];
 
     // over-allocate by 2 bytes and zero them so the result is always null-terminated
-    u8* uncompressed = (u8*)Allocator::Alloc(allocator, fi->uncompressedSize + 2);
+    u8* uncompressed = (u8*)Alloc(allocator, (size_t)(fi->uncompressedSize + 2));
     if (!uncompressed) {
         return nullptr;
     }
@@ -239,20 +239,20 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
 
     bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, fi->uncompressedSize, allocator);
     if (!ok) {
-        Allocator::Free(allocator, uncompressed);
+        Free(allocator, uncompressed);
         return nullptr;
     }
 
     u32 realCrc = lzma_crc32(0, (const u8*)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
-        Allocator::Free(allocator, uncompressed);
+        Free(allocator, uncompressed);
         return nullptr;
     }
 
     return uncompressed;
 }
 
-u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator* allocator) {
+u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Arena* allocator) {
     int idx = GetIdxFromName(archive, fileName);
     if (-1 != idx) {
         return GetFileDataByIdx(archive, idx, allocator);
@@ -260,7 +260,7 @@ u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator* a
     return nullptr;
 }
 
-static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir, Allocator* allocator) {
+static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir, Arena* allocator) {
     FileInfo* fi = &archive->files[idx];
 
     u8* uncompressed = GetFileDataByIdx(archive, idx, allocator);
@@ -275,20 +275,20 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
         ok = file::WriteFile(filePath, d);
     }
 
-    Allocator::Free(allocator, filePath);
-    Allocator::Free(allocator, uncompressed);
+    Free(allocator, filePath);
+    Free(allocator, uncompressed);
 
     return ok;
 }
 
-bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Allocator* allocator) {
+bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Arena* allocator) {
     auto d = file::ReadFileWithAllocator(archivePath, allocator);
     if (d.empty()) {
         return false;
     }
 
     defer {
-        Allocator::Free(allocator, (void*)d.data());
+        Free(allocator, (void*)d.data());
     };
 
     SimpleArchive archive;

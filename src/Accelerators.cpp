@@ -263,6 +263,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FCONTROL | FVIRTKEY, VK_F4, CmdClose},
     {FVIRTKEY, VK_F6, CmdMoveFrameFocus},
     {FVIRTKEY, VK_F8, CmdToggleToolbar},
+    {FVIRTKEY, VK_F9, CmdToggleMenuBar},
     {FCONTROL | FVIRTKEY, 'L', CmdTogglePresentationMode},
     {FVIRTKEY, VK_F5, CmdTogglePresentationMode},
     {FSHIFT | FVIRTKEY, VK_F11, CmdTogglePresentationMode},
@@ -513,7 +514,7 @@ static TempStr appendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a) {
     bool isGerman = str::Eq(lang, "de");
     bool isAscii = false;
 
-    str::Str str;
+    StrBuilder str;
     str.Append("\t"); // marks start of an accelerator in menu item
     BYTE virt = a.fVirt;
     if (virt & FALT) {

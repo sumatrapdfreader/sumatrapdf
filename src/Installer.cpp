@@ -252,7 +252,7 @@ static void AddInstallDirToPath(bool allUsers, const char* installDir) {
         logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
         return;
     }
-    str::Str newPath;
+    StrBuilder newPath;
     if (currPath && *currPath) {
         newPath.Append(currPath);
         if (newPath.Last() != ';') {

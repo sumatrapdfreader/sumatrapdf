@@ -44,7 +44,7 @@ struct Printer {
 };
 
 Printer* NewPrinter(const char* name);
-void GetPrintersInfo(str::Str& out);
+void GetPrintersInfo(StrBuilder& out);
 
 class EngineBase;
 struct MainWindow;

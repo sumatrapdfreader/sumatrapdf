@@ -3,16 +3,16 @@
 
 namespace strconv {
 
-WCHAR* Utf8ToWStr(const char* s, size_t cb = (size_t)-1, Allocator* a = nullptr);
-char* WStrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
+WCHAR* Utf8ToWStr(const char* s, size_t cb = (size_t)-1, Arena* a = nullptr);
+char* WStrToUtf8(const WCHAR* s, size_t cch = (size_t)-1, Arena* a = nullptr);
 
-char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Allocator* a = nullptr);
+char* WStrToCodePage(uint codePage, const WCHAR* s, size_t cch = (size_t)-1, Arena* a = nullptr);
 TempStr ToMultiByteTemp(const char* src, uint codePageSrc, uint codePageDest);
 WCHAR* StrCPToWStr(const char* src, uint codePage, int cbSrc = -1);
 TempWStr StrCPToWStrTemp(const char* src, uint codePage, int cbSrc = -1);
 TempStr StrToUtf8Temp(const char* src, uint codePage);
 
-TempStr UnknownToUtf8Temp(const char*);
+TempStr UnknownToUtf8Temp(const char*, size_t cb = (size_t)-1);
 
 char* WStrToAnsi(const WCHAR*);
 char* Utf8ToAnsi(const char*);

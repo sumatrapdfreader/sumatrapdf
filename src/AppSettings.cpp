@@ -353,7 +353,7 @@ static void RememberSessionState() {
                     continue;
                 }
                 int nWindows = gInitialSessionData->Size();
-                for (int i = 0; i < nWindows; i++) {
+                for (int i = 0; i < nWindows && !didFind; i++) {
                     SessionData* psd = gInitialSessionData->At(i);
                     int nTabs = psd->tabStates->Size();
                     for (int j = 0; j < nTabs; j++) {
@@ -366,8 +366,9 @@ static void RememberSessionState() {
                         }
                     }
                 }
-                logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : "(none)");
-                // ReportIf(!didFind);
+                if (!didFind) {
+                    logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : "(none)");
+                }
                 continue;
             }
             FileState* fs = NewFileState(fp);

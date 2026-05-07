@@ -26,19 +26,6 @@ static void Out1(const char* msg) {
     printf("%s", msg);
 }
 
-static bool NeedsEscape(const WCHAR* s) {
-    if (str::FindChar(s, '<')) {
-        return true;
-    }
-    if (str::FindChar(s, '&')) {
-        return true;
-    }
-    if (str::FindChar(s, '"')) {
-        return true;
-    }
-    return false;
-}
-
 static bool NeedsEscape(const char* s) {
     // TODO: optimize to do a single loop over s
     if (str::FindChar(s, '<')) {
@@ -53,44 +40,6 @@ static bool NeedsEscape(const char* s) {
     return false;
 }
 
-// TODO: we leak because in the past Escape() was freeing str
-// and now we don't but I didn't update all the code
-// doesn't matter because engine dump does its job and quits
-static char* Escape(const WCHAR* str) {
-    if (str::IsEmpty(str)) {
-        return {};
-    }
-
-    if (!NeedsEscape(str)) {
-        return ToUtf8(str);
-    }
-
-    str::WStr escaped(256);
-    for (const WCHAR* s = str; *s; s++) {
-        switch (*s) {
-            case '&':
-                escaped.Append(L"&amp;");
-                break;
-            case '<':
-                escaped.Append(L"&lt;");
-                break;
-            case '>':
-                escaped.Append(L"&gt;");
-                break;
-            case '"':
-                escaped.Append(L"&quot;");
-                break;
-            case '\'':
-                escaped.Append(L"&amp;");
-                break;
-            default:
-                escaped.AppendChar(*s);
-                break;
-        }
-    }
-    return ToUtf8(escaped.Get());
-}
-
 static TempStr EscapeTemp(const char* str) {
     if (str::IsEmpty(str)) {
         return nullptr;
@@ -100,7 +49,7 @@ static TempStr EscapeTemp(const char* str) {
         return (TempStr)str;
     }
 
-    str::Str escaped(256);
+    StrBuilder escaped(256);
     for (const char* s = str; *s; s++) {
         switch (*s) {
             case '&':
@@ -322,14 +271,14 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     Out1("\t>\n");
 
     if (fullDump) {
-        PageText pageText = engine->ExtractPageText(pageNo);
+        PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
         if (pageText.text != nullptr) {
-            AutoFreeStr text = Escape(pageText.text);
-            if (text.Get()) {
-                Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
+            TempStr text = EscapeTemp(pageText.text);
+            if (text) {
+                Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text);
             }
         }
-        FreePageText(&pageText);
+        FreePageTextUtf8(&pageText);
     }
 
     Vec<IPageElement*> els = engine->GetElements(pageNo);
@@ -444,21 +393,20 @@ bool RenderDocument(EngineBase* engine, const char* renderPath, float zoom = 1.f
     }
 
     if (str::EndsWithI(renderPath, ".txt")) {
-        str::WStr text(1024);
+        StrBuilder text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
-            PageText pageText = engine->ExtractPageText(pageNo);
+            PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
             if (pageText.text != nullptr) {
                 text.Append(pageText.text);
             }
-            FreePageText(&pageText);
+            FreePageTextUtf8(&pageText);
         }
-        Replace(text, L"\n", L"\r\n");
         if (silent) {
             return true;
         }
         TempStr txtFilePath = str::FormatTemp(renderPath, 0);
-        char* textA = ToUtf8Temp(text.Get());
-        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textA);
+        TempStr textCrLf = str::ReplaceTemp(text.Get(), "\n", "\r\n");
+        char* textUTF8BOM = str::JoinTemp(UTF8_BOM, textCrLf);
         return file::WriteFile(txtFilePath, textUTF8BOM);
     }
 

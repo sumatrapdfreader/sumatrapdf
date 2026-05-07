@@ -2748,7 +2748,7 @@ static void OnPaintError(MainWindow* win) {
     auto tab = win->CurrentTab();
     const char* filePath = tab->filePath;
     if (filePath) {
-        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), filePath);
+        TempStr msg = str::FormatTemp(_TRA("Loading %s ..."), path::GetBaseNameTemp(filePath));
         SetTextColor(hdc, ThemeWindowTextColor());
         DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRtl());
     }
@@ -3376,13 +3376,11 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // TODO: achieve this split through subclassing or different window classes
             if (win->AsFixed()) {
                 HomePageDestroySearch(win);
-                HomePageHide(win);
                 return WndProcCanvasFixedPageUI(win, hwnd, msg, wp, lp);
             }
 
             if (win->AsChm()) {
                 HomePageDestroySearch(win);
-                HomePageHide(win);
                 return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
             }
 
@@ -3391,7 +3389,6 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
 
             HomePageDestroySearch(win);
-            HomePageHide(win);
             return WndProcCanvasLoadError(win, hwnd, msg, wp, lp);
     }
 }

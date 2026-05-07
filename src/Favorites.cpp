@@ -34,62 +34,16 @@
 #include "Tabs.h"
 #include "Translations.h"
 #include "Accelerators.h"
-#include "Theme.h"
 
 void RememberFavTreeExpansionStateForAllWindows();
 
-// -------------------------------------------------------------------------
-// Custom draw mejorado: soporta hot-tracking y post-paint para selección
-// -------------------------------------------------------------------------
-static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
-    ev->result = CDRF_DODEFAULT;
-
-    NMTVCUSTOMDRAW* tvcd = ev->nm;
-    NMCUSTOMDRAW* cd = &tvcd->nmcd;
-
-    if (cd->dwDrawStage == CDDS_PREPAINT) {
-        ev->result = CDRF_NOTIFYITEMDRAW;
-        return;
-    }
-    if (cd->dwDrawStage != CDDS_ITEMPREPAINT) {
-        return;
-    }
-    if (!PrettyStyleEnabled()) {
-        return;
-    }
-
-    bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
-    bool hasFocus   = (GetFocus() == ev->treeView->hwnd);
-    bool isHot      = (cd->uItemState & CDIS_HOT) != 0;
-
-    // Fondo: acento en selección activa, surface en hover/selección sin foco
-    if (isSelected && hasFocus) {
-        tvcd->clrTextBk = PrettyAccentColor();
-    } else if (isSelected || isHot) {
-        tvcd->clrTextBk = PrettySurfaceColor();
-    } else {
-        tvcd->clrTextBk = PrettySurfaceAltColor();
-    }
-
-    // Texto: blanco sobre acento, color normal en el resto
-    tvcd->clrText = (isSelected && hasFocus)
-        ? GetSysColor(COLOR_HIGHLIGHTTEXT)
-        : ThemeWindowTextColor();
-
-    // Solicitar notificación post-paint para poder dibujar encima si hace falta
-    ev->result = CDRF_NOTIFYPOSTPAINT | CDRF_NEWFONT;
-}
-
-// -------------------------------------------------------------------------
-// Modelo de datos del árbol de favoritos
-// -------------------------------------------------------------------------
 struct FavTreeItem {
     ~FavTreeItem();
 
-    HTREEITEM hItem   = nullptr;
+    HTREEITEM hItem = nullptr;
     FavTreeItem* parent = nullptr;
-    char* text        = nullptr;
-    bool isExpanded   = false;
+    char* text = nullptr;
+    bool isExpanded = false;
 
     // not owned by us
     Favorite* favorite = nullptr;
@@ -106,6 +60,7 @@ struct FavTreeModel : TreeModel {
     ~FavTreeModel() override;
 
     TreeItem Root() override;
+
     char* Text(TreeItem) override;
     TreeItem Parent(TreeItem) override;
     int ChildCount(TreeItem) override;
@@ -141,12 +96,14 @@ int FavTreeModel::ChildCount(TreeItem ti) {
     if (!fti) {
         return 0;
     }
-    return (int)fti->children.size();
+    size_t n = fti->children.size();
+    return (int)n;
 }
 
 TreeItem FavTreeModel::ChildAt(TreeItem ti, int idx) {
     auto fti = (FavTreeItem*)ti;
-    return (TreeItem)fti->children[idx];
+    auto res = fti->children[idx];
+    return (TreeItem)res;
 }
 
 bool FavTreeModel::IsExpanded(TreeItem ti) {
@@ -170,9 +127,6 @@ HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
     return treeItem->hItem;
 }
 
-// -------------------------------------------------------------------------
-// Lógica de favoritos (sin cambios funcionales)
-// -------------------------------------------------------------------------
 static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
     FileState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
@@ -210,6 +164,8 @@ static void ResetFavMenuIds() {
 static size_t idxCache = (size_t)-1;
 
 static FileState* GetFavByFilePath(const char* filePath) {
+    // it's likely that we'll ask about the info for the same
+    // file as in previous call, so use one element cache
     FileState* fs = gFileHistory.Get(idxCache);
     if (!fs || !str::Eq(fs->filePath, filePath)) {
         fs = gFileHistory.FindByName(filePath, &idxCache);
@@ -256,12 +212,15 @@ static Favorite* FindByPage(FileState* ds, int pageNo, const char* pageLabel = n
 static int SortByPageNo(const void* a, const void* b) {
     Favorite* na = *(Favorite**)a;
     Favorite* nb = *(Favorite**)b;
+    // sort lower page numbers first
     return na->pageNo - nb->pageNo;
 }
 
 static void AddOrReplaceFav(const char* filePath, int pageNo, const char* name, const char* pageLabel) {
     FileState* fav = GetFavByFilePath(filePath);
     if (!fav) {
+        // we were asked to add a favorite for current file but couldn't find
+        // history for this file
         fav = NewFileState(filePath);
         gFileHistory.Append(fav);
     }
@@ -313,6 +272,7 @@ static void RemoveAllFavForFile(const char* filePath) {
     }
 }
 
+// Note: those might be too big
 #define MAX_FAV_SUBMENUS 10
 #define MAX_FAV_MENUS 10
 
@@ -326,6 +286,7 @@ bool HasFavorites() {
     return false;
 }
 
+// caller has to free() the result
 static TempStr FavReadableNameTemp(Favorite* fn) {
     const char* label = fn->pageLabel;
     if (!label) {
@@ -341,6 +302,7 @@ static TempStr FavReadableNameTemp(Favorite* fn) {
     return res;
 }
 
+// caller has to free() the result
 static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isCurrent = false) {
     TempStr rn = FavReadableNameTemp(fn);
     if (isCurrent) {
@@ -399,14 +361,29 @@ static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore =
     Sort(&filePathsSortedOut, SortByBaseFileName);
 }
 
+// For easy access, we try to show favorites in the menu, similar to a list of
+// recently opened files.
+// The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
+// on the assumption that user is usually interested in navigating current file.
+// Then we have a submenu for each file for which there are bookmarks (up to
+// MAX_FAV_SUBMENUS), each having up to MAX_FAV_MENUS menu items.
+// If not all favorites can be shown, we also enable "Show all favorites" menu which
+// will provide a way to see all favorites.
+// Note: not sure if that's the best layout. Maybe we should always use submenu and
+// put the submenu for current file as the first one (potentially named as "Current file"
+// or some such, to make it stand out from other submenus)
 static void AppendFavMenus(HMENU m, const char* currFilePath) {
+    // To minimize mouse movement when navigating current file via favorites
+    // menu, put favorites for current file first
     FileState* currFileFav = nullptr;
     if (currFilePath) {
         currFileFav = GetFavByFilePath(currFilePath);
     }
 
+    // sort the files with favorites by base file name of file path
     StrVec filePathsSorted;
     if (CanAccessDisk()) {
+        // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
     }
     if (currFileFav && currFileFav->favorites->size() > 0) {
@@ -450,6 +427,13 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
     }
 }
 
+// Called when a user opens "Favorites" top-level menu. We need to construct
+// the menu:
+// - disable add/remove menu items if no document is opened
+// - if a document is opened and the page is already bookmarked,
+//   disable "add" menu item and enable "remove" menu item
+// - if a document is opened and the page is not bookmarked,
+//   enable "add" menu item and disable "remove" menu item
 void RebuildFavMenu(MainWindow* win, HMENU menu) {
     if (!win->IsDocLoaded()) {
         MenuSetEnabled(menu, CmdFavoriteAdd, false);
@@ -489,6 +473,9 @@ static void GoToFavoritePage(MainWindow* win, int pageNo) {
     if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo)) {
         win->ctrl->GoToPage(pageNo, true);
     }
+    // we might have been invoked by clicking on a tree view
+    // switch focus so that keyboard navigation works, which enables
+    // a fluid experience
     win->Focus();
 }
 
@@ -502,6 +489,9 @@ static void GoToFavoritePage(GoToFavoritePageData* d) {
     delete d;
 }
 
+// Going to a bookmark within current file scrolls to a given page.
+// Going to a bookmark in another file, loads the file and scrolls to a page
+// (similar to how invoking one of the recently opened files works)
 static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     ReportIf(!fs || !fav);
     if (!fs || !fav) {
@@ -523,11 +513,15 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
         return;
     }
 
+    // When loading a new document, go directly to selected page instead of
+    // first showing last seen page stored in file history
+    // A hacky solution because I don't want to add even more parameters to
+    // LoadDocument() and LoadDocumentInto()
     int pageNo = fav->pageNo;
     FileState* ds = gFileHistory.FindByPath(fs->filePath);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fav->pageNo;
-        ds->scrollPos = PointF(-1, -1);
+        ds->scrollPos = PointF(-1, -1); // don't scroll the page
         pageNo = -1;
     }
 
@@ -558,11 +552,25 @@ static void GoToFavForTreeItem(MainWindow* win, TreeItem ti) {
     FavTreeItem* fti = (FavTreeItem*)ti;
     Favorite* fn = fti->favorite;
     if (!fn) {
+        // can happen for top-level node which is not associated with a favorite
+        // but only serves a parent node for favorites for a given file
         return;
     }
     FileState* f = GetByFavorite(fn);
     GoToFavorite(win, f, fn);
 }
+
+#if 0
+static void GoToFavForTVItem(MainWindow* win, TreeCtrl* treeView, HTREEITEM hItem = nullptr) {
+    TreeItem ti = nullptr;
+    if (nullptr == hItem) {
+        ti = treeView->GetSelection();
+    } else {
+        ti = treeView->GetTreeItemByHandle(hItem);
+    }
+    GoToFavForTreeItem(win, ti);
+}
+#endif
 
 static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
     if (!fs->favorites || fs->favorites->Size() == 0) {
@@ -641,6 +649,7 @@ void UpdateFavoritesTree(MainWindow* win) {
     treeView->SetTreeModel(newModel);
     delete prevModel;
 
+    // hide the favorites tree if we've removed the last favorite
     TreeItem root = newModel->Root();
     bool show = gGlobalPrefs->showFavorites;
     if (newModel->ChildCount(root) == 0) {
@@ -666,6 +675,7 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
             break;
         }
 
+        // find any child item closer to the specified page
         TocItem* subItem = TocItemForPageNo(item->child, pageNo);
         if (subItem) {
             currItem = subItem;
@@ -693,6 +703,7 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
     WindowTab* tab = win->CurrentTab();
     const char* path = tab->filePath;
     AddOrReplaceFav(path, pageNo, name, pl);
+    // expand newly added favorites by default
     FileState* fav = GetFavByFilePath(path);
     if (fav && fav->favorites->size() == 2) {
         win->expandedFavorites.Append(fav);
@@ -706,6 +717,7 @@ static void AddFavoriteForPage(MainWindow* win, int pageNo) {
     auto tab = win->CurrentTab();
     auto* ctrl = tab->ctrl;
     if (ctrl->HasToc()) {
+        // use the current ToC heading as default name
         auto* docTree = ctrl->GetToc();
         TocItem* root = docTree->root;
         TocItem* item = TocItemForPageNo(root, pageNo);
@@ -740,6 +752,7 @@ void RememberFavTreeExpansionState(MainWindow* win) {
     TreeView* treeView = win->favTreeView;
     TreeModel* tm = treeView ? treeView->treeModel : nullptr;
     if (!tm) {
+        // TODO: remember all favorites as expanded
         return;
     }
     TreeItem root = tm->Root();
@@ -774,6 +787,12 @@ static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     ReportIf(!win);
 
+    // When the focus is set to the toc window the first item in the treeview is automatically
+    // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
+    // 0x00001000. We have to ignore this message to prevent the current page to be changed.
+    // The case pnmtv->action==TVC_UNKNOWN is ignored because
+    // it corresponds to a notification sent by
+    // the function TreeView_DeleteAllItems after deletion of the item.
     bool shouldHandle = ev->byKeyboard || ev->byMouse;
     if (!shouldHandle) {
         return;
@@ -796,6 +815,9 @@ static MenuDef menuDefContextFav[] = {
 
 static void FavTreeContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
+    // TreeView* treeView = (TreeView*)ev->w;
+    // HWND hwnd = treeView->hwnd;
+    // MainWindow* win = FindMainWindowByHwnd(hwnd);
 
     POINT pt{};
     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
@@ -809,6 +831,10 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
+    // TODO: it would be nice to have a system for undo-ing things, like in Gmail,
+    // so that we can do destructive operations without asking for permission via
+    // invasive model dialog boxes but also allow reverting them if were done
+    // by mistake
     if (CmdFavoriteDel == cmd) {
         RememberFavTreeExpansionStateForAllWindows();
         FavTreeItem* fti = (FavTreeItem*)ti;
@@ -818,6 +844,7 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
         if (fti->parent) {
             RemoveFav(fp, toDelete->pageNo);
         } else {
+            // this is a top-level node which represents all bookmarks for a given file
             RemoveAllFavForFile(fp);
         }
         UpdateFavoritesTreeForAllWindows();
@@ -825,147 +852,82 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
     }
 }
 
-// -------------------------------------------------------------------------
-// FavBox: encapsula el panel lateral sin subclasificación global
-// -------------------------------------------------------------------------
-
-// Eliminamos gWndProcFavBox global. Usamos una clase que almacena el
-// WNDPROC original en su instancia para mayor seguridad y encapsulación.
-struct FavBox {
-    HWND hwnd      = nullptr;
-    WNDPROC origProc = nullptr;
-    MainWindow* win  = nullptr;
-
-    static FavBox* FromHwnd(HWND hwnd) {
-        return (FavBox*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+static WNDPROC gWndProcFavBox = nullptr;
+static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    MainWindow* win = FindMainWindowByHwnd(hwnd);
+    if (!win) {
+        return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
     }
 
-    static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-        FavBox* self = FromHwnd(hwnd);
-        if (!self) {
-            return DefWindowProc(hwnd, msg, wp, lp);
-        }
+    LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
+    if (res) {
+        return res;
+    }
 
-        MainWindow* win = self->win;
+    TreeView* treeView = win->favTreeView;
+    switch (msg) {
+        case WM_SIZE:
+            LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
+            break;
 
-        LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
-        if (res) {
-            return res;
-        }
-
-        TreeView* treeView = win->favTreeView;
-
-        switch (msg) {
-            case WM_ERASEBKGND:
-                return TRUE;
-
-            case WM_PAINT: {
-                PAINTSTRUCT ps;
-                HDC hdc = BeginPaint(hwnd, &ps);
-                COLORREF bgCol = PrettyStyleEnabled()
-                    ? PrettySurfaceAltColor()
-                    : ThemeControlBackgroundColor();
-                AutoDeleteBrush br = CreateSolidBrush(bgCol);
-                FillRect(hdc, &ps.rcPaint, br);
-                EndPaint(hwnd, &ps);
-                return 0;
+        case WM_COMMAND:
+            if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
+                ToggleFavorites(win);
             }
-
-            case WM_SIZE:
-                LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
-                break;
-
-            case WM_COMMAND:
-                if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
-                    ToggleFavorites(win);
-                }
-                break;
-
-            case WM_DESTROY:
-                // Restaurar el WNDPROC original antes de destruir
-                SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)self->origProc);
-                SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
-                delete self;
-                return 0;
-        }
-
-        return CallWindowProc(self->origProc, hwnd, msg, wp, lp);
+            break;
     }
-
-    static FavBox* Install(HWND hwnd, MainWindow* win) {
-        auto* self  = new FavBox();
-        self->hwnd  = hwnd;
-        self->win   = win;
-        self->origProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)self);
-        SetWindowLongPtr(hwnd, GWLP_WNDPROC,  (LONG_PTR)FavBox::WndProc);
-        return self;
-    }
-};
+    return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
+}
 
 // in TableOfContents.cpp
 extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
 
-// -------------------------------------------------------------------------
-// CreateFavorites: creación del panel con estilos modernos del TreeView
-// -------------------------------------------------------------------------
 void CreateFavorites(MainWindow* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
-    win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0,
-                                    win->hwndFrame, (HMENU)nullptr, h, nullptr);
+    win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
 
-    // Header con label+close
     auto l = new LabelWithCloseWnd();
     {
         LabelWithCloseWnd::CreateArgs args;
         args.parent = win->hwndFavBox;
-        args.cmdId  = IDC_FAV_LABEL_WITH_CLOSE;
-        args.font   = GetDefaultGuiFont(true, false);
-        args.isRtl  = IsUIRtl();
+        args.cmdId = IDC_FAV_LABEL_WITH_CLOSE;
+        // TODO: use the same font size as in GetTreeFont()?
+        args.font = GetDefaultGuiFont(true, false);
+        args.isRtl = IsUIRtl();
         l->Create(args);
     }
-    win->favLabelWithClose = l;
-    l->SetPaddingXY(6, 4);
 
-    // TreeView con estilos modernos
+    win->favLabelWithClose = l;
+    l->SetPaddingXY(2, 2);
+    // label is set in UpdateToolbarSidebarText()
+
     auto treeView = new TreeView();
     TreeView::CreateArgs args;
-    args.parent       = win->hwndFavBox;
-    args.font         = GetAppTreeFont();
+    args.parent = win->hwndFavBox;
+    args.font = GetAppTreeFont();
     args.fullRowSelect = true;
-    args.exStyle      = 0;
-    args.isRtl        = IsUIRtl();
+    args.exStyle = 0;
+    args.isRtl = IsUIRtl();
 
     auto fn = MkFunc1Void(FavTreeContextMenu);
-    treeView->onContextMenu      = fn;
+    treeView->onContextMenu = fn;
     treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
-    treeView->onCustomDraw       = MkFunc1Void(OnFavCustomDraw);
-    treeView->onKeyDown          = MkFunc1Void(TocTreeKeyDown2);
-    treeView->onClick            = MkFunc1Void(FavTreeItemClicked);
+    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
+    treeView->onClick = MkFunc1Void(FavTreeItemClicked);
+    // treeView->onChar = TocTreeCharHandler;
+    // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
     treeView->Create(args);
     ReportIf(!treeView->hwnd);
 
-    // --- Estilos extendidos modernos del TreeView ---
-    HWND hTree = treeView->hwnd;
-
-    // Double-buffer elimina parpadeo; fade anima los botones expand/collapse
-    DWORD tvExStyle = TVS_EX_FADEINOUTEXPANDOS | TVS_EX_AUTOHSCROLL | TVS_EX_DOUBLEBUFFER;
-    TreeView_SetExtendedStyle(hTree, tvExStyle, tvExStyle);
-
-    // Mayor altura de ítem para "breathing room" visual (~28 px escalado por DPI)
-    TreeView_SetItemHeight(hTree, DpiScale(hTree, 28));
-
-    // Indentación generosa para jerarquía clara
-    TreeView_SetIndent(hTree, DpiScale(hTree, 16));
-    // -----------------------------------------------
-
     win->favTreeView = treeView;
 
-    // Instala FavBox (reemplaza la subclasificación con global gWndProcFavBox)
-    FavBox::Install(win->hwndFavBox, win);
+    if (nullptr == gWndProcFavBox) {
+        gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
+    }
+    SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
 
     UpdateControlsColors(win);
 }

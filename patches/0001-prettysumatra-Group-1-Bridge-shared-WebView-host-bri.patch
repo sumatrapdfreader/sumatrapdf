@@ -1,0 +1,2891 @@
+From 8e0be77826d67afbc34d47dc8a58f9640d017d6d Mon Sep 17 00:00:00 2001
+From: "[JaviLendi]" <jlendinez@icloud.com>
+Date: Thu, 7 May 2026 17:15:48 +0200
+Subject: [PATCH 1/4] =?UTF-8?q?prettysumatra:=20Group=201=20=E2=80=94=20Br?=
+ =?UTF-8?q?idge=20&=20shared=20WebView=20host=20(bridge=20dispatcher,=20We?=
+ =?UTF-8?q?bView=20host,=20HomePage)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/HomePage.cpp                       |  749 +++++++++++-------
+ src/HomePage.h                         |   13 +-
+ src/prettysumatra/BridgeDispatcher.cpp | 1010 ++++++++++++++++++++++++
+ src/prettysumatra/BridgeDispatcher.h   |   32 +
+ src/prettysumatra/CommandBridgeSpec.h  |   29 +
+ src/wingui/WebView.cpp                 |  476 +++++++++--
+ src/wingui/WebView.h                   |   32 +-
+ 7 files changed, 2025 insertions(+), 316 deletions(-)
+ create mode 100644 src/prettysumatra/BridgeDispatcher.cpp
+ create mode 100644 src/prettysumatra/BridgeDispatcher.h
+ create mode 100644 src/prettysumatra/CommandBridgeSpec.h
+
+diff --git a/src/HomePage.cpp b/src/HomePage.cpp
+index dd6f2537c..4857a8240 100644
+--- a/src/HomePage.cpp
++++ b/src/HomePage.cpp
+@@ -34,7 +34,116 @@
+ #include "AppSettings.h"
+ #include "OverlayScrollbar.h"
+ #include "DarkModeSubclass.h"
+-#include "utils/Log.h"
++
++#include "wingui/WebView.h"
++#include <string>
++#include <vector>
++#include <windows.h>
++#include <shlwapi.h>
++#include "Toolbar.h"  
++#pragma comment(lib, "shlwapi.lib")
++
++#define HOMEPAGE_HTML_PATH "..\\prettysumatra\\webui\\home.html"
++
++static std::string BuildFileUrl(const std::string& filePath) {
++    std::string url = "file:///";
++    for (char ch : filePath) {
++        if (ch == '\\') {
++            url.push_back('/');
++        } else if (ch == ' ') {
++            url += "%20";
++        } else {
++            url.push_back(ch);
++        }
++    }
++    return url;
++}
++
++// Helper: navega al HTML desde archivo para preservar resolución de recursos relativos.
++static bool LoadWebViewHtmlFromFile(WebviewWnd* wv, const std::vector<std::string>& candidates) {
++    for (auto& p : candidates) {
++        if (!PathFileExistsA(p.c_str())) {
++            continue;
++        }
++        std::string fileUrl = BuildFileUrl(p);
++        wv->Navigate(fileUrl.c_str());
++        return true;
++    }
++    return false;
++}
++
++// Crea el WebView para la HomePage y carga el HTML
++void CreateHomePageWebView(MainWindow* win) {
++
++    if (win->homePageWebView) {
++        // WebView ya existe: reposicionar y mostrar
++        Rect rc = ClientRect(win->hwndCanvas);
++        RECT r = { rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy };
++        SetWindowPos(win->homePageWebView->hwnd, nullptr,
++                     r.left, r.top, r.right - r.left, r.bottom - r.top,
++                     SWP_NOZORDER | SWP_SHOWWINDOW);
++        // Ensure the underlying WebView2 controller is resumed and resized after returning from document view.
++        win->homePageWebView->SetControllerVisible(true);
++        win->homePageWebView->UpdateWebviewSize();
++        return;
++    }
++    
++
++    win->homePageWebView = new WebviewWnd();
++    {
++        win->homePageWebView->dataDir = str::Dup(GetPathInAppDataDirTemp("webViewData"));
++    }
++
++    CreateWebViewArgs args;
++    args.parent = win->hwndCanvas;
++    Rect rcClient = ClientRect(win->hwndCanvas);
++    args.pos = rcClient;
++
++    if (!win->homePageWebView->Create(args)) {
++        delete win->homePageWebView;
++        win->homePageWebView = nullptr;
++        return;
++    }
++
++    // --- FIX FLASH: ocultar la ventana WebView2 y sus hijos antes del primer pintado ---
++    HWND hwndWV = win->homePageWebView->hwnd;
++    // Quitar WS_VISIBLE de la ventana contenedora
++    LONG_PTR style = GetWindowLongPtrW(hwndWV, GWL_STYLE);
++    SetWindowLongPtrW(hwndWV, GWL_STYLE, style & ~WS_VISIBLE);
++    // Ocultar también las ventanas hijas internas del runtime WebView2
++    EnumChildWindows(hwndWV, [](HWND child, LPARAM) -> BOOL {
++        ShowWindow(child, SW_HIDE);
++        return TRUE;
++    }, 0);
++
++    // Buscar home.html en varias rutas
++    char exePath[MAX_PATH];
++    GetModuleFileNameA(NULL, exePath, MAX_PATH);
++    PathRemoveFileSpecA(exePath);
++    std::string exeDir = std::string(exePath);
++    std::vector<std::string> candidates = {
++        exeDir + "\\prettysumatra\\webui\\home.html",
++        exeDir + "\\..\\prettysumatra\\webui\\home.html",
++        exeDir + "\\..\\..\\prettysumatra\\webui\\home.html",
++    };
++
++    if (!LoadWebViewHtmlFromFile(win->homePageWebView, candidates)) {
++        std::string msg = "<html><body style='font-family:sans-serif;padding:20px'><h2>Error: home.html no encontrado</h2><p>Se intentaron:</p><ul>";
++        for (auto& p : candidates) msg += "<li>" + p + "</li>";
++        msg += "</ul></body></html>";
++        win->homePageWebView->SetHtml(msg.c_str());
++    }
++
++    
++
++    // --- FIX FLASH: restaurar visibilidad ahora que el HTML ya está cargado ---
++    SetWindowLongPtrW(hwndWV, GWL_STYLE, style | WS_VISIBLE);
++    SetWindowPos(
++        hwndWV, nullptr,
++        rcClient.x, rcClient.y, rcClient.dx, rcClient.dy,
++        SWP_NOZORDER | SWP_SHOWWINDOW | SWP_FRAMECHANGED
++    );
++}
+ 
+ #ifndef ABOUT_USE_LESS_COLORS
+ #define ABOUT_LINE_OUTER_SIZE 2
+@@ -49,7 +158,6 @@ You can [customize toolbar](Help/Customize-toolbar).
+ Press (Key/CmdCommandPalette) to open [command palette](CmdCommandPalette).
+ To open file from history open [command palette](CmdCommandPalette) with (Key/CmdCommandPalette) and type `#`.
+ You can [extract text from PDF file](Help/Tool-x-extract-text-from-pdf).
+-You can [toggle menu bar](CmdToggleMenuBar) with (Key/CmdToggleMenuBar).
+ You can [toggle toolbar](CmdToggleToolbar) with (Key/CmdToggleToolbar).
+ You can [edit PDF annotations](Help/Editing-annotations).
+ )";
+@@ -321,10 +429,10 @@ constexpr int kAboutRectPadding = 8;
+ 
+ constexpr int kInnerPadding = 8;
+ 
+-constexpr const char* kSumatraTxtFont = "Arial Black";
+-constexpr int kSumatraTxtFontSize = 24;
++constexpr const char* kSumatraTxtFont = "Segoe UI";
++constexpr int kSumatraTxtFontSize = 28;
+ 
+-constexpr const char* kVersionTxtFont = "Arial Black";
++constexpr const char* kVersionTxtFont = "Segoe UI";
+ constexpr int kVersionTxtFontSize = 12;
+ 
+ #define LAYOUT_LTR 0
+@@ -346,20 +454,20 @@ struct AboutLayoutInfoEl {
+ };
+ 
+ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
+-    {"website", "SumatraPDF website", kWebsiteURL},
+-    {"manual", "SumatraPDF manual", kManualURL},
+-    {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
+-    {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
+-    {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
++    {_TRN("website"), _TRN("SumatraPDF website"), kWebsiteURL},
++    {_TRN("manual"), _TRN("SumatraPDF manual"), kManualURL},
++    {_TRN("forums"), _TRN("SumatraPDF forums"), "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
++    {_TRN("programming"), _TRN("The Programmers"), "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
++    {_TRN("licenses"), _TRN("Various Open Source"), "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
+ #if defined(GIT_COMMIT_ID_STR)
+-    {"last change", "git commit " GIT_COMMIT_ID_STR,
++    {_TRN("last change"), _TRN("git commit ") GIT_COMMIT_ID_STR,
+      "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
+ #endif
+ #if defined(PRE_RELEASE_VER)
+-    {"a note", "Pre-release version, for testing only!", nullptr},
++    {_TRN("a note"), _TRN("Pre-release version, for testing only!"), nullptr},
+ #endif
+ #ifdef DEBUG
+-    {"a note", "Debug version, for testing only!", nullptr},
++    {_TRN("a note"), _TRN("Debug version, for testing only!"), nullptr},
+ #endif
+     {nullptr, nullptr, nullptr}};
+ 
+@@ -393,36 +501,82 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
+     uint fmt = DT_LEFT | DT_NOCLIP;
+     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
++    HFONT fontSubtitleTxt = CreateSimpleFont(hdc, kVersionTxtFont, 11);
+ 
+     SetBkMode(hdc, TRANSPARENT);
+ 
+-    const char* txt = kAppName;
+-    Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
+-    Rect mainRect(rect.x + (rect.dx - txtSize.dx) / 2, rect.y + (rect.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
++    Size prettySz = HdcMeasureText(hdc, "Pretty", fmt, fontSumatraTxt);
++    Size sumatraSz = HdcMeasureText(hdc, "Sumatra", fmt, fontSumatraTxt);
++    Size pdfSz = HdcMeasureText(hdc, "PDF", fmt, fontSumatraTxt);
++    Size subtitleSz = HdcMeasureText(hdc, _TRA("Focused reading"), fmt, fontSubtitleTxt);
++    TempStr ver = GetAppVersionTemp();
++    Size verSz = HdcMeasureText(hdc, ver, fmt, fontVersionTxt);
++
++    int textDy = prettySz.dy + DpiScale(hdc, 16);
++    int iconSize = textDy + DpiScale(hdc, 8);
++    int totalDx = iconSize + DpiScale(hdc, 16) + prettySz.dx + sumatraSz.dx + pdfSz.dx;
++    int x0 = rect.x + (rect.dx - totalDx) / 2;
++    int y0 = rect.y + (rect.dy - iconSize) / 2;
+ 
+-    // draw SumatraPDF in colorful way
+-    Point pt = mainRect.TL();
+-    // colorful version
+-    static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
+-    char buf[2] = {};
+-    for (int i = 0; i < str::Leni(kAppName); i++) {
+-        SetTextColor(hdc, cols[i % dimofi(cols)]);
+-        buf[0] = kAppName[i];
+-        HdcDrawText(hdc, buf, pt, fmt, fontSumatraTxt);
+-        txtSize = HdcMeasureText(hdc, buf, fmt, fontSumatraTxt);
+-        pt.x += txtSize.dx;
++    Rect iconRect(x0, y0, iconSize, iconSize);
++    {
++        AutoDeleteBrush brOuter(CreateSolidBrush(RGB(242, 184, 0)));
++        AutoDeletePen penOuter(CreatePen(PS_SOLID, 1, RGB(215, 167, 0)));
++        HGDIOBJ oldBrush = SelectObject(hdc, brOuter);
++        HGDIOBJ oldPen = SelectObject(hdc, penOuter);
++        RoundRect(hdc, iconRect.x, iconRect.y, iconRect.x + iconRect.dx, iconRect.y + iconRect.dy, DpiScale(hdc, 14),
++                  DpiScale(hdc, 14));
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
++    }
++    Rect pageRect(iconRect.x + DpiScale(hdc, 11), iconRect.y + DpiScale(hdc, 8), iconRect.dx - DpiScale(hdc, 20),
++                  iconRect.dy - DpiScale(hdc, 16));
++    {
++        AutoDeleteBrush brPage(CreateSolidBrush(RGB(255, 249, 229)));
++        AutoDeletePen penPage(CreatePen(PS_SOLID, 1, RGB(221, 188, 84)));
++        HGDIOBJ oldBrush = SelectObject(hdc, brPage);
++        HGDIOBJ oldPen = SelectObject(hdc, penPage);
++        RoundRect(hdc, pageRect.x, pageRect.y, pageRect.x + pageRect.dx, pageRect.y + pageRect.dy, DpiScale(hdc, 8),
++                  DpiScale(hdc, 8));
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
++    }
++    Rect lensRect(iconRect.x + iconRect.dx - DpiScale(hdc, 24), iconRect.y + iconRect.dy - DpiScale(hdc, 24), DpiScale(hdc, 18),
++                  DpiScale(hdc, 18));
++    {
++        AutoDeleteBrush brLens(CreateSolidBrush(RGB(247, 220, 128)));
++        AutoDeletePen penLens(CreatePen(PS_SOLID, DpiScale(hdc, 2), RGB(204, 151, 0)));
++        HGDIOBJ oldBrush = SelectObject(hdc, brLens);
++        HGDIOBJ oldPen = SelectObject(hdc, penLens);
++        Ellipse(hdc, lensRect.x, lensRect.y, lensRect.x + lensRect.dx, lensRect.y + lensRect.dy);
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
+     }
+ 
++    int textX = iconRect.x + iconRect.dx + DpiScale(hdc, 16);
++    int textY = iconRect.y + DpiScale(hdc, 3);
++    int sumatraX = textX + prettySz.dx;
++    int pdfX = sumatraX + sumatraSz.dx;
++
++    Rect accentBg(sumatraX - DpiScale(hdc, 2), textY + prettySz.dy - DpiScale(hdc, 9), sumatraSz.dx + DpiScale(hdc, 4),
++                  DpiScale(hdc, 7));
++    FillRect(hdc, accentBg, RGB(255, 231, 145));
++
+     SetTextColor(hdc, ThemeWindowTextColor());
+-    int x = mainRect.x + mainRect.dx + DpiScale(hdc, kInnerPadding);
+-    int y = mainRect.y;
++    HdcDrawText(hdc, "Pretty", Point(textX, textY), fmt, fontSumatraTxt);
++    SetTextColor(hdc, RGB(215, 167, 0));
++    HdcDrawText(hdc, "Sumatra", Point(sumatraX, textY), fmt, fontSumatraTxt);
++    SetTextColor(hdc, ThemeWindowTextColor());
++    HdcDrawText(hdc, "PDF", Point(pdfX, textY), fmt, fontSumatraTxt);
+ 
+-    TempStr ver = GetAppVersionTemp();
+-    Point p = {x, y};
+-    HdcDrawText(hdc, ver, p, fmt, fontVersionTxt);
+-    p.y += DpiScale(hdc, 13);
++    int subY = textY + prettySz.dy + DpiScale(hdc, 1);
++    SetTextColor(hdc, ThemeWindowTextColor());
++    HdcDrawText(hdc, _TRA("Focused reading"), Point(textX, subY), fmt, fontSubtitleTxt);
++    HdcDrawText(hdc, ver, Point(textX + subtitleSz.dx + DpiScale(hdc, 8), subY), fmt, fontVersionTxt);
++
++    Point p = {textX, subY + DpiScale(hdc, 13)};
+     if (gIsPreReleaseBuild) {
+-        HdcDrawText(hdc, "Pre-release", p, fmt);
++        HdcDrawText(hdc, _TRA("Pre-release"), p, fmt);
+     }
+ }
+ 
+@@ -457,27 +611,31 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
+ static Size CalcSumatraVersionSize(HDC hdc) {
+     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
+     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
++    HFONT fontSubtitleTxt = CreateSimpleFont(hdc, kVersionTxtFont, 11);
+ 
+-    /* calculate minimal top box size */
+-    Size sz = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
+-    sz.dy = sz.dy + DpiScale(hdc, kAboutBoxMarginDy * 2);
+-
+-    /* consider version and version-sub strings */
++    uint fmt = DT_LEFT | DT_NOCLIP;
++    Size prettySz = HdcMeasureText(hdc, "Pretty", fmt, fontSumatraTxt);
++    Size sumatraSz = HdcMeasureText(hdc, "Sumatra", fmt, fontSumatraTxt);
++    Size pdfSz = HdcMeasureText(hdc, "PDF", fmt, fontSumatraTxt);
++    Size subtitleSz = HdcMeasureText(hdc, _TRA("Focused reading"), fmt, fontSubtitleTxt);
+     TempStr ver = GetAppVersionTemp();
+-    Size txtSize = HdcMeasureText(hdc, ver, fontVersionTxt);
+-    int minWidth = txtSize.dx + DpiScale(hdc, 8);
+-    int dx = std::max(txtSize.dx, minWidth);
+-    sz.dx += 2 * (dx + DpiScale(hdc, kInnerPadding));
++    Size verSz = HdcMeasureText(hdc, ver, fmt, fontVersionTxt);
++
++    Size sz{};
++    int textDx = prettySz.dx + sumatraSz.dx + pdfSz.dx;
++    int iconDx = prettySz.dy + DpiScale(hdc, 24);
++    sz.dx = iconDx + DpiScale(hdc, 16) + std::max(textDx, subtitleSz.dx + verSz.dx + DpiScale(hdc, 8)) + DpiScale(hdc, 20);
++    sz.dy = std::max(iconDx, prettySz.dy + DpiScale(hdc, 24)) + DpiScale(hdc, kAboutBoxMarginDy * 2);
+     return sz;
+ }
+ 
+-static TempStr TrimGitTemp(char* s) {
++static TempStr TrimGitTemp(const char* s) {
+     if (gitCommidId && str::EndsWith(s, gitCommidId)) {
+         auto sLen = str::Len(s);
+         auto gitLen = str::Len(gitCommidId);
+         s = str::DupTemp(s, sLen - gitLen - 7);
+     }
+-    return s;
++    return TempStr(s);
+ }
+ 
+ /* Draws the about screen and remembers some state for hyperlinking.
+@@ -511,7 +669,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
+ #else
+     Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
+     RECT rcLogoBg = titleBgBand.ToRECT();
+-    FillRect(hdc, &rcLogoBg, bgBrush);
++    FillRect(hdc, &rcLogoBg, brushAboutBg);
+     DrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
+     DrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
+ #endif
+@@ -533,7 +691,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
+     uint fmt = DT_LEFT | DT_NOCLIP;
+     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+         auto& pos = el->leftPos;
+-        HdcDrawText(hdc, el->leftTxt, pos, fmt);
++        HdcDrawText(hdc, _TRA(el->leftTxt), pos, fmt);
+     }
+ 
+     /* render text on the right */
+@@ -548,8 +706,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
+             col = ThemeWindowTextColor();
+         }
+         SetTextColor(hdc, col);
+-        char* s = (char*)el->rightTxt;
+-        s = TrimGitTemp(s);
++        TempStr s = TrimGitTemp(_TRA(el->rightTxt));
+         auto& pos = el->rightPos;
+         HdcDrawText(hdc, s, pos, fmt);
+ 
+@@ -579,7 +736,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
+     int leftDy = 0;
+     uint fmt = DT_LEFT;
+     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+-        Size txtSize = HdcMeasureText(hdc, el->leftTxt, fmt, fontLeftTxt);
++        Size txtSize = HdcMeasureText(hdc, _TRA(el->leftTxt), fmt, fontLeftTxt);
+         el->leftPos.dx = txtSize.dx;
+         el->leftPos.dy = txtSize.dy;
+ 
+@@ -597,8 +754,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
+     int rightLargestDx = 0;
+     int rightDy = 0;
+     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+-        char* s = (char*)el->rightTxt;
+-        s = TrimGitTemp(s);
++        TempStr s = TrimGitTemp(_TRA(el->rightTxt));
+         Size txtSize = HdcMeasureText(hdc, s, fmt, fontRightTxt);
+         el->rightPos.dx = txtSize.dx;
+         el->rightPos.dy = txtSize.dy;
+@@ -676,13 +832,14 @@ static void CopyAboutInfoToClipboard() {
+     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
+     int maxLen = 0;
+     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+-        maxLen = std::max(maxLen, str::Leni(el->leftTxt));
++        maxLen = std::max(maxLen, (int)str::Len(_TRA(el->leftTxt)));
+     }
+     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
+-        for (int i = maxLen - str::Leni(el->leftTxt); i > 0; i--) {
++        int labelLen = (int)str::Len(_TRA(el->leftTxt));
++        for (int i = maxLen - labelLen; i > 0; i--) {
+             info.AppendChar(' ');
+         }
+-        info.AppendFmt("%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
++        info.AppendFmt("%s: %s\r\n", _TRA(el->leftTxt), el->url ? el->url : _TRA(el->rightTxt));
+     }
+     CopyTextToClipboard(info.LendData());
+ }
+@@ -912,6 +1069,8 @@ struct HomePageLayout {
+     StrVec filterWords;
+     Vec<u8> highlighted;
+     Rect rcSearchBorder; // border rect drawn around the edit control
++    Rect rcLauncherOpenPdf;
++    Rect rcLauncherReopenLast;
+ 
+     // tip layout
+     Rect rcTip;               // background rect for tip area
+@@ -925,11 +1084,19 @@ HomePageLayout::~HomePageLayout() {
+     delete openDoc;
+ }
+ 
+-constexpr int kOpenDocumentYShift = 7;
+-constexpr int kThumbsMiddleMargin = 32;
+-constexpr int kSearchEditDy = 28;
+-constexpr int kHeaderSearchGapY = 12;
+-constexpr int kSearchThumbnailsGapY = 12;
++constexpr int kThumbsMiddleMargin = 30;
++constexpr int kSearchEditDy = 40;
++constexpr int kHeaderSearchGapY = 30;
++constexpr int kSearchThumbnailsGapY = 50;
++constexpr int kRecentGridExtraTopGapY = 70;
++constexpr int kLauncherTopGapY = 10;
++constexpr int kLauncherCardsGapY = 10;
++constexpr int kLauncherMainDy = 56;
++constexpr int kLauncherSecondaryDy = 48;
++constexpr int kHomePageOuterPadX = 24;
++constexpr int kHomePageOuterPadY = 20;
++constexpr int kHomePageHeroRadius = 18;
++constexpr int kHomePageCardRadius = 14;
+ 
+ static WNDPROC DefWndProcHomeSearch = nullptr;
+ 
+@@ -967,12 +1134,13 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
+         DefWndProcHomeSearch = (WNDPROC)GetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC);
+     }
+     SetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC, (LONG_PTR)WndProcHomeSearch);
+-    Edit_SetCueBannerText(win->hwndHomeSearch, L"search files (Ctrl + F)");
++    Edit_SetCueBannerText(win->hwndHomeSearch, _TRW("Search files or open a document"));
+     // add left/right padding so text doesn't overlap the border
+-    int margin = DpiScale(win->hwndCanvas, 6);
++    int margin = DpiScale(win->hwndCanvas, 8);
+     SendMessage(win->hwndHomeSearch, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
+ }
+ 
++
+ void HomePageDestroySearch(MainWindow* win) {
+     if (win->hwndHomeSearch) {
+         DestroyWindow(win->hwndHomeSearch);
+@@ -980,6 +1148,22 @@ void HomePageDestroySearch(MainWindow* win) {
+     }
+ }
+ 
++// Oculta la HomePage WebView cuando se cierra
++void HomePageHide(MainWindow* win) {
++    if (win->homePageWebView) {
++        ShowWindow(win->homePageWebView->hwnd, SW_HIDE);
++    }
++}
++
++// Destruye la HomePage WebView (llamar al cerrar ventana)
++void HomePageDestroy(MainWindow* win) {
++    if (win->homePageWebView) {
++        DestroyWindow(win->homePageWebView->hwnd);
++        delete win->homePageWebView;
++        win->homePageWebView = nullptr;
++    }
++}
++
+ void HomePageFocusSearch(MainWindow* win) {
+     EnsureHomeSearchCreated(win);
+     ShowWindow(win->hwndHomeSearch, SW_SHOW);
+@@ -1026,7 +1210,6 @@ void LayoutHomePage(HomePageLayout& l) {
+     }
+ 
+     bool isRtl = IsUIRtl();
+-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+     HFONT hdrFont = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+ 
+     Size sz = CalcSumatraVersionSize(hdc);
+@@ -1039,12 +1222,17 @@ void LayoutHomePage(HomePageLayout& l) {
+ 
+     l.rcLine = {0, sz.dy, rc.dx, 0};
+ 
+-    // --- Pre-compute thumbnail grid x offset so header can align with it ---
+-    // use unfiltered count so layout stays stable when search filters results
+     int nFilesForLayout = allFileStates.Size();
+     int colsForLayout =
+         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
+-    int thumbsColsForLayout = std::max(colsForLayout, 1);
++    colsForLayout = std::max(colsForLayout, 1);
++    if (rc.dx < DpiScale(hdc, 900)) {
++        colsForLayout = std::min(colsForLayout, 2);
++    }
++    if (rc.dx < DpiScale(hdc, 700)) {
++        colsForLayout = 1;
++    }
++    int thumbsColsForLayout = colsForLayout;
+     int thumbsStartX = rc.x + kThumbsMarginLeft +
+                        (rc.dx - thumbsColsForLayout * kThumbnailDx - (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX -
+                         kThumbsMarginLeft - kThumbsMarginRight) /
+@@ -1055,88 +1243,83 @@ void LayoutHomePage(HomePageLayout& l) {
+         thumbsStartX = kThumbsMarginLeft;
+     }
+ 
+-    // --- Step 1: layout header at the top ---
++    int thumbsContentWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
++    int thumbsEndX = thumbsStartX + thumbsContentWidth;
++    int rowPadX = 0;
++    int rowY = DpiScale(hdc, 12);
++    int rowLeftX = thumbsStartX;
++    int rowRightX = thumbsEndX;
++
+     const char* txt = _TRA("Recently Opened");
+     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
+         txt = _TRA("Frequently Read");
+     }
+-    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
++    auto hdr = new VirtWndText(hwnd, txt, hdrFont);
+     l.freqRead = hdr;
+     hdr->isRtl = isRtl;
+-    Size txtSize = hdr->GetIdealSize(true);
++    Size hdrSize = hdr->GetIdealSize(true);
++    int rowHeight = hdrSize.dy;
++    int hdrX = rowLeftX + rowPadX;
++    int hdrDx = std::max(0, rowRightX - hdrX);
++    Rect rcHdr(hdrX, rowY, hdrDx, hdrSize.dy);
+ 
+-    int hdrY = DpiScale(hdc, 8);
+-    Rect rcHdr(thumbsStartX, hdrY, txtSize.dx, txtSize.dy);
+     if (isRtl) {
+-        rcHdr.x = rc.dx - thumbsStartX - rcHdr.dx;
++        rcHdr.x = rc.dx - rcHdr.x - rcHdr.dx;
+     }
+-    hdr->SetBounds(rcHdr);
+-
+-    /* "Open a document" link next to header */
+-    l.himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
+-    Rect rcIconOpen(0, 0, 0, 0);
+-    ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
+-
+-    txt = _TRA("Open a document...");
+-    auto openDoc = new VirtWndText(hwnd, txt, fontText);
+-    openDoc->isRtl = isRtl;
+-    openDoc->withUnderline = true;
+-    txtSize = openDoc->GetIdealSize(true);
+ 
+-    int openDocSpacing = DpiScale(hdc, 16);
+-    rcIconOpen.x = rcHdr.x + rcHdr.dx + openDocSpacing;
+-    rcIconOpen.y = rcHdr.y + rcHdr.dy - rcIconOpen.dy - kOpenDocumentYShift + 3;
+-    if (isRtl) {
+-        rcIconOpen.x = rcHdr.x - openDocSpacing - rcIconOpen.dx;
+-    }
+-    l.rcIconOpen = rcIconOpen;
+-
+-    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, rcHdr.y + rcHdr.dy - txtSize.dy - kOpenDocumentYShift, txtSize.dx,
+-                   txtSize.dy);
+-    if (isRtl) {
+-        rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
+-    }
+-    openDoc->SetBounds(rcOpenDoc);
+-
+-    rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
+-    rcOpenDoc.Inflate(10, 10);
+-    l.openDoc = openDoc;
+-    auto sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
+-    win->staticLinks.Append(sl);
++    hdr->SetBounds(rcHdr);
+ 
+-    int headerBottomY = rcHdr.y + rcHdr.dy;
++    int headerBottomY = rowY + rowHeight;
+ 
+-    // --- Position search edit below header ---
+     EnsureHomeSearchCreated(win);
+     int searchEditDy = DpiScale(hdc, kSearchEditDy);
+     int headerSearchGap = DpiScale(hdc, kHeaderSearchGapY);
+     int searchThumbsGap = DpiScale(hdc, kSearchThumbnailsGapY);
+     {
+-        int thumbsContentWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
+-        int borderDx = thumbsContentWidth * 3 / 4;
+-        if (borderDx < DpiScale(hdc, 200)) {
+-            borderDx = DpiScale(hdc, 200);
+-        }
+-        int borderX = thumbsStartX + (thumbsContentWidth - borderDx) / 2;
++        int borderDx = thumbsContentWidth;
++        int maxBorderDx = rc.dx - 2 * DpiScale(hdc, kHomePageOuterPadX);
++        borderDx = std::min(borderDx, maxBorderDx);
++        borderDx = std::max(borderDx, DpiScale(hdc, 240));
++        int borderX = thumbsStartX;
+         int borderY = headerBottomY + headerSearchGap;
+-        int borderDy = searchEditDy + 2; // 1px border on each side
++        int borderDy = searchEditDy + 2;
+         l.rcSearchBorder = {borderX, borderY, borderDx, borderDy};
+-        // measure font height so we can vertically center the edit
++
+         HFONT editFont = (HFONT)SendMessage(win->hwndHomeSearch, WM_GETFONT, 0, 0);
+         TEXTMETRIC tm;
+         HFONT oldFont = (HFONT)SelectObject(hdc, editFont);
+         GetTextMetrics(hdc, &tm);
+         SelectObject(hdc, oldFont);
+-        int fontDy = tm.tmHeight + tm.tmExternalLeading + 2; // +2 for caret padding
++        int fontDy = tm.tmHeight + tm.tmExternalLeading + 2;
+         int editDy = std::min(fontDy, searchEditDy);
+         int editY = borderY + 1 + (searchEditDy - editDy) / 2;
+         MoveWindow(win->hwndHomeSearch, borderX + 1, editY, borderDx - 2, editDy, TRUE);
+     }
+-    // border is 1px top + 1px bottom = 2px
++
+     int searchAreaDy = headerSearchGap + searchEditDy + 2 + searchThumbsGap;
+     headerBottomY += searchAreaDy;
+ 
+-    // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
++    int launcherTop = headerBottomY + DpiScale(hdc, kLauncherTopGapY);
++    int cardsGapY = DpiScale(hdc, kLauncherCardsGapY);
++    int mainDy = DpiScale(hdc, kLauncherMainDy);
++    int secondaryDy = DpiScale(hdc, kLauncherSecondaryDy);
++
++    int launcherDx = l.rcSearchBorder.dx;
++    int launcherX = l.rcSearchBorder.x;
++    l.rcLauncherOpenPdf = {launcherX, launcherTop, launcherDx, mainDy};
++    l.rcLauncherReopenLast = {launcherX, launcherTop + mainDy + cardsGapY, launcherDx, secondaryDy};
++    headerBottomY = launcherTop + mainDy + cardsGapY + secondaryDy;
++
++    if (isRtl) {
++        auto mirrorRect = [rc](Rect& r) {
++            r.x = rc.dx - r.x - r.dx;
++        };
++        mirrorRect(l.rcLauncherOpenPdf);
++        mirrorRect(l.rcLauncherReopenLast);
++    }
++
++    headerBottomY += DpiScale(hdc, kRecentGridExtraTopGapY);
++
+     int tipHeight = 0;
+     HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+     ParsedTip* tip = nullptr;
+@@ -1150,14 +1333,11 @@ void LayoutHomePage(HomePageLayout& l) {
+     if (tip) {
+         MeasureTipWords(*tip, hdc, fontTip);
+         int tipPadding = DpiScale(hdc, 8);
+-        // do a preliminary layout to get the height (use thumbnails content width)
+         int tipTextWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
+         LayoutTip(*tip, tipTextWidth, 0, 0);
+         tipHeight = tip->totalDy + 2 * tipPadding;
+     }
+ 
+-    // --- Step 3: middle area for thumbnails ---
+-    // thumbnails start directly after headerBottomY (which includes kSearchThumbnailsGapY)
+     int thumbsTopY = headerBottomY;
+     int thumbsBottomY = rc.dy - tipHeight - kThumbsMiddleMargin;
+     int thumbsVisibleDy = std::max(0, thumbsBottomY - thumbsTopY);
+@@ -1183,11 +1363,10 @@ void LayoutHomePage(HomePageLayout& l) {
+     for (int row = 0; row < thumbsRows; row++) {
+         for (int col = 0; col < thumbsCols; col++) {
+             if (row * thumbsCols + col >= nFiles) {
+-                // no more files to display
+                 thumbsRows = col > 0 ? row + 1 : row;
+                 break;
+             }
+-            int idx = row * thumbsCols + col;
++
+             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
+             FileState* fs = fileStates.at(row * thumbsCols + col);
+             thumb.fs = fs;
+@@ -1222,25 +1401,20 @@ void LayoutHomePage(HomePageLayout& l) {
+         }
+     }
+ 
+-    // layout tip at the bottom
+     if (tip) {
+         Rect rcClient = ClientRect(win->hwndCanvas);
+         int tipPadding = DpiScale(hdc, 8);
+ 
+         int tipY = rcClient.dy - tipHeight;
+-        // background spans full window width
+         l.rcTip = {0, tipY, rcClient.dx, tipHeight};
+         l.tip = tip;
+ 
+-        // text area aligned with thumbnails
+         int tipTextWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
+         int tipStartX = thumbsStartX;
+         int tipStartY = tipY + tipPadding;
+         LayoutTip(*tip, tipTextWidth, tipStartX, tipStartY);
+ 
+-        // register tip links; per-link rects first so they take priority in hit testing
+         for (auto& link : tip->links) {
+-            // compute bounding rect of all words in this link
+             Rect linkRect;
+             for (int i = link.firstWord; i <= link.lastWord; i++) {
+                 auto& w = tip->words[i];
+@@ -1254,7 +1428,6 @@ void LayoutHomePage(HomePageLayout& l) {
+             auto slTip = new StaticLink(linkRect, link.cmd, link.cmd);
+             win->staticLinks.Append(slTip);
+         }
+-        // tip background: clicking outside of links picks another tip
+         auto slBg = new StaticLink(l.rcTip, kLinkNextTip);
+         win->staticLinks.Append(slBg);
+     }
+@@ -1272,149 +1445,222 @@ static void GetFileStateIcon(FileState* fs) {
+     fs->iconIdx = sfi.iIcon;
+ }
+ 
+-static void DrawHomePageLayout(HomePageLayout& l) {
++void DrawHomePageLayout(HomePageLayout& l) {
+     bool isRtl = IsUIRtl();
+     auto hdc = l.hdc;
+     auto win = l.win;
+     auto textColor = ThemeWindowTextColor();
+-    auto backgroundColor = ThemeMainWindowBackgroundColor();
++    auto backgroundColor = PrettySurfaceAltColor();
++    bool darkUi = DarkMode::isColorDark(backgroundColor);
++    COLORREF panelCol = darkUi ? AccentColor(backgroundColor, 14) : AdjustLightness2(backgroundColor, 7);
++    COLORREF panelBorderCol = darkUi ? AccentColor(panelCol, 24) : PrettyBorderColor();
++    COLORREF searchCol = PrettySurfaceColor();
++    COLORREF searchBorderCol = darkUi ? AccentColor(searchCol, 28) : AccentColor(searchCol, 22);
++    COLORREF mutedCol = darkUi ? RGB(170, 178, 190) : RGB(93, 103, 117);
++    COLORREF accent = PrettyAccentColor();
+ 
++    Rect rc = ClientRect(win->hwndCanvas);
++    FillRect(hdc, rc, backgroundColor);
++
++    int shellX = std::max(DpiScale(hdc, kHomePageOuterPadX), l.rcSearchBorder.x - DpiScale(hdc, 24));
++    int shellY = DpiScale(hdc, kHomePageOuterPadY);
++    int shellRightLimit = rc.dx - DpiScale(hdc, kHomePageOuterPadX);
++    int shellRight = std::min(shellRightLimit, l.rcSearchBorder.x + l.rcSearchBorder.dx + DpiScale(hdc, 24));
++    int shellBottom = l.rcSearchBorder.y + l.rcSearchBorder.dy + DpiScale(hdc, 16);
++    Rect shell(shellX, shellY, std::max(120, shellRight - shellX), std::max(DpiScale(hdc, 90), shellBottom - shellY));
++    Rect shadow = shell;
++    shadow.y += DpiScale(hdc, 2);
+     {
+-        Rect rc = ClientRect(win->hwndCanvas);
+-        auto color = ThemeMainWindowBackgroundColor();
+-        FillRect(hdc, rc, color);
++        AutoDeleteBrush brShadow(CreateSolidBrush(darkUi ? AccentColor(backgroundColor, 6) : RGB(216, 226, 241)));
++        AutoDeletePen penShadow(CreatePen(PS_SOLID, 1, darkUi ? AccentColor(backgroundColor, 10) : RGB(204, 216, 234)));
++        HGDIOBJ oldBrush = SelectObject(hdc, brShadow);
++        HGDIOBJ oldPen = SelectObject(hdc, penShadow);
++        RoundRect(hdc, shadow.x, shadow.y, shadow.x + shadow.dx, shadow.y + shadow.dy, DpiScale(hdc, kHomePageHeroRadius),
++                  DpiScale(hdc, kHomePageHeroRadius));
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
+     }
+-
+-    // draw search edit border and background on the canvas
+     {
+-        COLORREF bgCol = ThemeControlBackgroundColor();
+-        const Rect& sb = l.rcSearchBorder;
+-        RECT rcBorder = {sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy};
+-        // fill interior with control background so padding matches the edit
+-        HBRUSH brBg = CreateSolidBrush(bgCol);
+-        FillRect(hdc, &rcBorder, brBg);
+-        DeleteObject(brBg);
+-        // draw border frame
+-        COLORREF borderCol = AccentColor(bgCol, 40);
+-        HBRUSH brBorder = CreateSolidBrush(borderCol);
+-        FrameRect(hdc, &rcBorder, brBorder);
+-        DeleteObject(brBorder);
+-    }
+-
+-    if (false) {
+-        const Rect& r = l.rcAppWithVer;
+-        DrawSumatraVersion(hdc, r);
+-    }
+-
+-    auto color = ThemeWindowTextColor();
+-    if (false) {
+-        ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
+-        DrawLine(hdc, l.rcLine);
+-    }
+-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
++        AutoDeleteBrush brHero(CreateSolidBrush(panelCol));
++        AutoDeletePen penHero(CreatePen(PS_SOLID, 1, panelBorderCol));
++        HGDIOBJ oldBrush = SelectObject(hdc, brHero);
++        HGDIOBJ oldPen = SelectObject(hdc, penHero);
++        RoundRect(hdc, shell.x, shell.y, shell.x + shell.dx, shell.y + shell.dy, DpiScale(hdc, kHomePageHeroRadius),
++                  DpiScale(hdc, kHomePageHeroRadius));
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
++    }
++
++    HFONT fontTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
++    HFONT fontSub = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
++    HFONT fontBody = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
++    HFONT fontAction = CreateSimpleFont(hdc, "MS Shell Dlg", 15);
++    HFONT fontActionSub = CreateSimpleFont(hdc, "MS Shell Dlg", 12);
++    HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 13);
++
++    int innerX = shell.x + DpiScale(hdc, 28);
++    int innerRight = shell.x + shell.dx - DpiScale(hdc, 28);
++    int y = shell.y + DpiScale(hdc, 24);
+ 
+-    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
+-    color = ThemeWindowLinkColor();
+-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
+-
+-    SelectObject(hdc, penThumbBorder);
+     SetBkMode(hdc, TRANSPARENT);
+-    color = ThemeWindowTextColor();
+-    SetTextColor(hdc, color);
+-
+-    l.freqRead->Paint(hdc);
+-    SelectObject(hdc, GetStockBrush(NULL_BRUSH));
+-
+-    // clip thumbnails to the middle area
++    SetTextColor(hdc, textColor);
++    Rect rcTitle(innerX, y, shell.dx - DpiScale(hdc, 56), DpiScale(hdc, 34));
++    HdcDrawText(hdc, _TRA("Open and read PDFs"), rcTitle,
++                DT_SINGLELINE | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT), fontTitle);
++    y += DpiScale(hdc, 38);
++
++    Rect rcSub(innerX, y, shell.dx - DpiScale(hdc, 56), DpiScale(hdc, 22));
++    SetTextColor(hdc, mutedCol);
++    HdcDrawText(hdc, _TRA("Access recent files, search documents, and open a PDF in one click."), rcSub,
++                DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT), fontSub);
++    y += DpiScale(hdc, 28);
++
++    // Draw visual frame for the real search edit control.
+     {
+-        const Rect& ta = l.rcThumbsArea;
+-        HRGN thumbsClip = CreateRectRgn(ta.x, ta.y, ta.x + ta.dx, ta.y + ta.dy);
+-        SelectClipRgn(hdc, thumbsClip);
+-        DeleteObject(thumbsClip);
+-    }
+-
++        const Rect& sb = l.rcSearchBorder;
++        AutoDeleteBrush brSearch(CreateSolidBrush(searchCol));
++        AutoDeletePen penSearch(CreatePen(PS_SOLID, 1, searchBorderCol));
++        HGDIOBJ oldBrush = SelectObject(hdc, brSearch);
++        HGDIOBJ oldPen = SelectObject(hdc, penSearch);
++        RoundRect(hdc, sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy, DpiScale(hdc, 12), DpiScale(hdc, 12));
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
++    }
++
++    auto drawLauncherCard = [&](const Rect& rr, COLORREF fillCol, COLORREF borderCol, COLORREF titleCol, COLORREF subCol,
++                                const char* title, const char* subtitle, int radius) {
++        AutoDeleteBrush brCard(CreateSolidBrush(fillCol));
++        AutoDeletePen penCard(CreatePen(PS_SOLID, 1, borderCol));
++        HGDIOBJ oldBrush = SelectObject(hdc, brCard);
++        HGDIOBJ oldPen = SelectObject(hdc, penCard);
++        RoundRect(hdc, rr.x, rr.y, rr.x + rr.dx, rr.y + rr.dy, DpiScale(hdc, radius), DpiScale(hdc, radius));
++        SelectObject(hdc, oldPen);
++        SelectObject(hdc, oldBrush);
++
++        int padX = DpiScale(hdc, 14);
++        int padY = DpiScale(hdc, 10);
++        Rect rtTitle(rr.x + padX, rr.y + padY, rr.dx - 2 * padX, DpiScale(hdc, 24));
++        Rect rtSub(rr.x + padX, rr.y + padY + DpiScale(hdc, 24), rr.dx - 2 * padX, rr.dy - DpiScale(hdc, 28));
++        SetTextColor(hdc, titleCol);
++        HdcDrawText(hdc, title, rtTitle, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT),
++                    fontAction);
++        SetTextColor(hdc, subCol);
++        HdcDrawText(hdc, subtitle, rtSub,
++                    DT_WORDBREAK | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT), fontActionSub);
++    };
++
++    COLORREF launcherMainFill = darkUi ? AccentColor(accent, 46) : AccentColor(accent, 26);
++    COLORREF launcherMainBorder = darkUi ? AccentColor(accent, 64) : AccentColor(accent, 45);
++    COLORREF launcherMainText = RGB(255, 255, 255);
++    COLORREF launcherSubFill = darkUi ? AccentColor(panelCol, 20) : RGB(251, 253, 255);
++    COLORREF launcherSubBorder = darkUi ? AccentColor(panelCol, 40) : AccentColor(panelBorderCol, 28);
++    bool canReopenLast = RecentlyCloseDocumentsCount() > 0;
++    COLORREF launcherDisabledFill = darkUi ? AccentColor(panelCol, 8) : RGB(240, 244, 249);
++    COLORREF launcherDisabledBorder = darkUi ? AccentColor(panelCol, 18) : AccentColor(panelBorderCol, 8);
++    COLORREF launcherDisabledText = darkUi ? RGB(132, 142, 156) : RGB(128, 137, 150);
++
++    // Draw launcher cards
++    drawLauncherCard(
++        l.rcLauncherOpenPdf,
++        launcherMainFill, launcherMainBorder,
++        launcherMainText, launcherMainText,
++        _TRA("Open a document"),
++        _TRA("Browse your files to open any PDF"),
++        kHomePageCardRadius
++    );
++    {
++        COLORREF subTextCol = canReopenLast ? textColor : launcherDisabledText;
++        COLORREF subFill    = canReopenLast ? launcherSubFill    : launcherDisabledFill;
++        COLORREF subBorder  = canReopenLast ? launcherSubBorder  : launcherDisabledBorder;
++        drawLauncherCard(
++            l.rcLauncherReopenLast,
++            subFill, subBorder,
++            subTextCol, subTextCol,
++            _TRA("Reopen last document"),
++            _TRA("Continue where you left off"),
++            kHomePageCardRadius
++        );
++    }
++
++    int sectionY = l.rcThumbsArea.y - DpiScale(hdc, 36);
++    int minSectionY = l.rcSearchBorder.y + l.rcSearchBorder.dy + DpiScale(hdc, 16);
++    sectionY = std::max(sectionY, minSectionY);
++    Rect rcSection(innerX, sectionY, shell.dx - DpiScale(hdc, 56), DpiScale(hdc, 24));
++    SetTextColor(hdc, textColor);
++    const char* sectionTitle = l.freqRead ? l.freqRead->s : _TRA("Recently Opened");
++    HdcDrawText(hdc, sectionTitle, rcSection, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT),
++                fontSub);
++
++    Rect ta = l.rcThumbsArea;
++    HRGN thumbsClip = CreateRectRgn(ta.x, ta.y, ta.x + ta.dx, ta.y + ta.dy);
++    SelectClipRgn(hdc, thumbsClip);
++    DeleteObject(thumbsClip);
++
++    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, 1, panelBorderCol));
+     for (const ThumbnailLayout& thumb : l.thumbnails) {
+         FileState* fs = thumb.fs;
+         const Rect& page = thumb.rcPage;
++        const Rect& rect = thumb.rcText;
++
++        Rect card = page.Union(rect);
++        card.Inflate(DpiScale(hdc, 8), DpiScale(hdc, 8));
++        {
++            AutoDeleteBrush brCard(CreateSolidBrush(darkUi ? AccentColor(panelCol, 8) : RGB(252, 253, 254)));
++            HGDIOBJ oldBrush = SelectObject(hdc, brCard);
++            HGDIOBJ oldPen = SelectObject(hdc, penThumbBorder);
++            RoundRect(hdc, card.x, card.y, card.x + card.dx, card.y + card.dy, DpiScale(hdc, kHomePageCardRadius),
++                      DpiScale(hdc, kHomePageCardRadius));
++            SelectObject(hdc, oldPen);
++            SelectObject(hdc, oldBrush);
++        }
+ 
+         RenderedBitmap* thumbImg = LoadThumbnail(fs);
+         if (thumbImg) {
+             int savedDC = SaveDC(hdc);
+-            HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
++            Rect pageIn = page;
++            pageIn.Inflate(-DpiScale(hdc, 2), -DpiScale(hdc, 2));
++            HRGN clip = CreateRoundRectRgn(pageIn.x, pageIn.y, pageIn.x + pageIn.dx, pageIn.y + pageIn.dy, DpiScale(hdc, 8),
++                                           DpiScale(hdc, 8));
+             ExtSelectClipRgn(hdc, clip, RGN_AND);
+-            // note: we used to invert bitmaps in dark theme but that doesn't
+-            // make sense for thumbnails
+-            thumbImg->Blit(hdc, page);
++            thumbImg->Blit(hdc, pageIn);
+             RestoreDC(hdc, savedDC);
+             DeleteObject(clip);
+         }
+-        RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+-
+-        const Rect& rect = thumb.rcText;
+-        char* path = fs->filePath;
+-        TempStr fileName = path::GetBaseNameTemp(path);
+-        UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
+ 
+-        SelectObject(hdc, fontText);
+-        {
+-            RECT rcText = {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
+-            DrawMaybeHighlightedTextArgs hlArgs(l.filterWords, l.highlighted);
+-            hlArgs.hdc = hdc;
+-            hlArgs.rc = rcText;
+-            hlArgs.text = fileName;
+-            hlArgs.colBg = backgroundColor;
+-            hlArgs.isRtl = isRtl;
+-            hlArgs.drawFmt = fmt;
+-            DrawMaybeHighlightedText(hlArgs);
+-        }
++        DrawMaybeHighlightedTextArgs hlArgs(l.filterWords, l.highlighted);
++        hlArgs.hdc = hdc;
++        hlArgs.rc = ToRECT(rect);
++        hlArgs.text = path::GetBaseNameTemp(fs->filePath);
++        hlArgs.colBg = backgroundColor;
++        hlArgs.isRtl = isRtl;
++        hlArgs.drawFmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
++        DrawMaybeHighlightedText(hlArgs);
+ 
+         GetFileStateIcon(fs);
+         int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
+         ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
+     }
+-
+-    // restore full clip region
+     SelectClipRgn(hdc, nullptr);
+ 
+-    color = ThemeWindowLinkColor();
+-    SetTextColor(hdc, color);
+-    SelectObject(hdc, penLinkLine);
+-
+-    int x = l.rcIconOpen.x;
+-    int y = l.rcIconOpen.y;
+-    int openIconIdx = 0;
+-    ImageList_Draw(l.himlOpen, openIconIdx, hdc, x, y, ILD_NORMAL);
+-
+-    l.openDoc->Paint(hdc);
+-
+-    if (false) {
+-        Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
+-        auto sl = new StaticLink(rcFreqRead, kLinkHideList);
++    if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles()) {
++        Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Show frequently read"));
++        auto sl = new StaticLink(rcFreqRead, kLinkShowList);
+         win->staticLinks.Append(sl);
+     }
+ 
+-    // draw tip at the bottom
+     if (l.tip) {
+-        COLORREF tipBgCol = ThemeControlBackgroundColor();
++        COLORREF tipBgCol = darkUi ? AccentColor(panelCol, 10) : RGB(245, 248, 252);
+         FillRect(hdc, l.rcTip, tipBgCol);
+-
+-        HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
+-        uint fmt = DT_LEFT | DT_NOCLIP;
+-        COLORREF textCol = ThemeWindowTextColor();
+-        COLORREF linkCol = ThemeWindowLinkColor();
+-
++        SetBkMode(hdc, TRANSPARENT);
++        SetTextColor(hdc, textColor);
+         for (auto& w : l.tip->words) {
+-            Point pt = {w.x, w.y};
+-            if (w.isLink) {
+-                SetTextColor(hdc, linkCol);
+-                HdcDrawText(hdc, w.text, pt, fmt, fontTip);
+-            } else {
+-                SetTextColor(hdc, textCol);
+-                HdcDrawText(hdc, w.text, pt, fmt, fontTip);
+-            }
++            Point pt(w.x, w.y);
++            SetTextColor(hdc, w.isLink ? accent : textColor);
++            HdcDrawText(hdc, w.text, pt, DT_LEFT | DT_NOCLIP, fontTip);
+         }
+-        // draw underlines spanning each link
+-        SelectObject(hdc, penLinkLine);
++
++        AutoDeletePen penTipLinkLine(CreatePen(PS_SOLID, 1, accent));
++        SelectObject(hdc, penTipLinkLine);
+         for (auto& link : l.tip->links) {
+             auto& first = l.tip->words[link.firstWord];
+             auto& last = l.tip->words[link.lastWord];
+@@ -1426,38 +1672,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
+     }
+ }
+ 
+-void DrawHomePage(MainWindow* win, HDC hdc) {
+-    HWND hwnd = win->hwndFrame;
+-    DeleteVecMembers(win->staticLinks);
+-
+-    HomePageLayout l;
+-    l.rc = ClientRect(win->hwndCanvas);
+-    l.hdc = hdc;
+-    l.hwnd = hwnd;
+-    l.win = win;
+-    LayoutHomePage(l);
+-
+-    DrawHomePageLayout(l);
+-
+-    // update overlay scrollbar for home page if thumbnails overflow visible area
+-    bool showScrollbarV = ScrollbarsUseOverlay() && l.totalContentDy > l.thumbsVisibleDy;
+-    if (showScrollbarV) {
+-        if (!win->overlayScrollV) {
+-            win->overlayScrollV =
+-                OverlayScrollbarCreate(win->hwndCanvas, OverlayScrollbar::Type::Vert, ScrollbarsOverlayMode());
+-        }
+-        SCROLLINFO si{};
+-        si.cbSize = sizeof(si);
+-        si.fMask = SIF_ALL;
+-        si.nMin = 0;
+-        si.nMax = l.totalContentDy - 1;
+-        si.nPage = l.thumbsVisibleDy;
+-        si.nPos = win->homePageScrollY;
+-        OverlayScrollbarShow(win->overlayScrollV, true);
+-        OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
+-    }
+-    // show thin scrollbar briefly to indicate content is scrollable
+-    OverlayScrollbarShow(win->overlayScrollV, showScrollbarV);
++void DrawHomePage(MainWindow* win, HDC /*hdc*/) {
++    // Muestra el WebView moderno en lugar del renderizado nativo
++    CreateHomePageWebView(win);
+ }
+ 
+ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
+diff --git a/src/HomePage.h b/src/HomePage.h
+index f050da503..8c2794aff 100644
+--- a/src/HomePage.h
++++ b/src/HomePage.h
+@@ -3,7 +3,10 @@
+ 
+ /* styling for About/Properties windows */
+ 
++#include "utils/BaseUtil.h"
++
+ struct MainWindow;
++struct StaticLink;
+ 
+ constexpr const char* kLeftTextFont = "Arial";
+ constexpr int kLeftTextFontSize = 14;
+@@ -14,18 +17,24 @@ void ShowAboutWindow(MainWindow*);
+ 
+ void DrawAboutPage(MainWindow* win, HDC hdc);
+ 
+-TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
+-
+ constexpr const char* kLinkOpenFile = "<File,Open>";
+ constexpr const char* kLinkShowList = "<View,ShowList>";
+ constexpr const char* kLinkHideList = "<View,HideList>";
+ constexpr const char* kLinkNextTip = "<NextTip>";
++constexpr const char* kLinkLauncherOpenPdf = "CmdOpenFile";
++constexpr const char* kLinkLauncherReopenLast = "CmdReopenLastClosedFile";
+ 
+ void SetPromoString(const char*);
+ 
+ void DrawHomePage(MainWindow* win, HDC hdc);
+ void PickAnotherRandomPromotion();
+ void HomePageOnVScroll(MainWindow* win, WPARAM wp);
++
+ void HomePageOnMouseWheel(MainWindow* win, int delta);
+ void HomePageFocusSearch(MainWindow* win);
+ void HomePageDestroySearch(MainWindow* win);
++
++// Nuevo: crear WebView para HomePage
++void CreateHomePageWebView(MainWindow* win);
++void HomePageHide(MainWindow* win);
++void HomePageDestroy(MainWindow* win);
+diff --git a/src/prettysumatra/BridgeDispatcher.cpp b/src/prettysumatra/BridgeDispatcher.cpp
+new file mode 100644
+index 000000000..63b39c0b0
+--- /dev/null
++++ b/src/prettysumatra/BridgeDispatcher.cpp
+@@ -0,0 +1,1010 @@
++#include "utils/BaseUtil.h"
++
++#include "Settings.h"
++#include "SumatraPDF.h"
++
++#include "prettysumatra/BridgeDispatcher.h"
++#include "prettysumatra/CommandBridgeSpec.h"
++
++#include "Commands.h"
++#include "DisplayMode.h"
++#include "wingui/UIModels.h"
++#include "DocController.h"
++#include "EngineBase.h"
++#include "GlobalPrefs.h"
++#include "MainWindow.h"
++#include "ProgressUpdateUI.h"
++#include "TextSelection.h"
++#include "TextSearch.h"
++#include "SearchAndDDE.h"
++#include "WindowTab.h"
++#include "Theme.h"
++#include "Translations.h"
++#include "AppSettings.h"
++#include "DarkModeSubclass.h"
++#include "wingui/Layout.h"
++#include "wingui/WinGui.h"
++#include "wingui/WebView.h"
++#include "FileHistory.h"
++
++#include "utils/JsonParser.h"
++#include "utils/Log.h"
++#include "utils/StrUtil.h"
++#include "utils/WinUtil.h"
++
++namespace prettysumatra {
++namespace bridge {
++
++static bool ParseBoolEnvWithDefault(const char* envName, bool defValue) {
++    char buf[16] = {};
++    DWORD n = GetEnvironmentVariableA(envName, buf, dimof(buf));
++    if (n == 0 || n >= dimof(buf)) {
++        return defValue;
++    }
++    if (str::EqI(buf, "1") || str::EqI(buf, "true") || str::EqI(buf, "yes") || str::EqI(buf, "on")) {
++        return true;
++    }
++    if (str::EqI(buf, "0") || str::EqI(buf, "false") || str::EqI(buf, "no") || str::EqI(buf, "off")) {
++        return false;
++    }
++    return defValue;
++}
++
++static TempStr ColorToCssHex(COLORREF c) {
++    return str::FormatTemp("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
++}
++
++static bool WindowsPrefersDarkModeForHybridToolbar() {
++    DWORD val = 1;
++    DWORD cbData = sizeof(val);
++    constexpr const wchar_t* kThemeRegPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
++    LONG err = RegGetValueW(HKEY_CURRENT_USER, kThemeRegPath, L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &val,
++                            &cbData);
++    if (err != ERROR_SUCCESS) {
++        return false;
++    }
++    return val == 0;
++}
++
++bool UseHybridToolbar() {
++    return ParseBoolEnvWithDefault("PRETTYSUMATRA_WEBVIEW_TOOLBAR", true);
++}
++
++bool UseHybridSidebar() {
++    return ParseBoolEnvWithDefault("PRETTYSUMATRA_WEBVIEW_SIDEBAR", false);
++}
++
++bool UseHybridShell() {
++    if (ParseBoolEnvWithDefault("PRETTYSUMATRA_WEBVIEW_SHELL", false)) {
++        return true;
++    }
++    return UseHybridToolbar() || UseHybridSidebar();
++}
++
++bool LogBridgeMessages() {
++    return ParseBoolEnvWithDefault("PRETTYSUMATRA_LOG_BRIDGE", true);
++}
++
++static bool gHybridFollowWindowsTheme = true;
++static bool gHybridFollowWindowsThemeInitialized = false;
++
++static void EnsureHybridFollowWindowsThemeState() {
++    if (gHybridFollowWindowsThemeInitialized) {
++        return;
++    }
++    gHybridFollowWindowsTheme = IsCurrentThemeDefault();
++    gHybridFollowWindowsThemeInitialized = true;
++}
++
++bool HybridThemeFollowsWindows() {
++    EnsureHybridFollowWindowsThemeState();
++    return gHybridFollowWindowsTheme;
++}
++
++static MainWindow* FindWindowForFrame(HWND hwndFrame) {
++    if (!hwndFrame) {
++        return nullptr;
++    }
++    return FindMainWindowByHwnd(hwndFrame);
++}
++
++static bool HomePageUsesDarkTheme() {
++    return DarkMode::isColorDark(ThemeMainWindowBackgroundColor());
++}
++
++static TempStr HybridToolbarThemeJs(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return nullptr;
++    }
++
++    COLORREF canvas = ThemeMainWindowBackgroundColor();
++    COLORREF panel = ThemeMainWindowBackgroundColor();
++    COLORREF panel2 = PrettyStyleEnabled() ? PrettySurfaceColor() : ThemeWindowControlBackgroundColor();
++    COLORREF stroke = PrettyBorderColor();
++    COLORREF text = ThemeWindowTextColor();
++    COLORREF muted = ThemeWindowTextDisabledColor();
++    COLORREF btn = ThemeControlBackgroundColor();
++    COLORREF accent = PrettyAccentColor();
++    // Keep toolbar brand colors stable (gold) instead of following system accent (often blue).
++    COLORREF brand1 = RGB(248, 204, 24);
++    COLORREF brand2 = RGB(215, 167, 0);
++    bool appDark = DarkMode::isColorDark(panel);
++    bool docInverted = gGlobalPrefs->fixedPageUI.invertColors;
++    bool windowsDark = WindowsPrefersDarkModeForHybridToolbar();
++    bool followWindows = HybridThemeFollowsWindows();
++
++    return str::FormatTemp(
++        "window.__hybridToolbarThemePayload={canvas:'%s',panel:'%s',panel2:'%s',stroke:'%s',"
++        "text:'%s',muted:'%s',btn:'%s',accent:'%s',brand1:'%s',brand2:'%s',appDark:%s,docInverted:%s,windowsDark:%s,followWindows:%s};"
++        "if(window.hybridToolbarApplyTheme){window.hybridToolbarApplyTheme(window.__hybridToolbarThemePayload);}",
++        ColorToCssHex(canvas), ColorToCssHex(panel), ColorToCssHex(panel2), ColorToCssHex(stroke), ColorToCssHex(text),
++        ColorToCssHex(muted), ColorToCssHex(btn), ColorToCssHex(accent), ColorToCssHex(brand1), ColorToCssHex(brand2),
++        appDark ? "true" : "false", docInverted ? "true" : "false", windowsDark ? "true" : "false",
++        followWindows ? "true" : "false");
++}
++
++static const char* JsQuoted(const char* s) {
++    if (!s) {
++        static const char empty[] = {'\'', '\'', '\0'};
++        return empty;
++    }
++    
++    // Calculate needed size
++    size_t len = 0;
++    for (const char* p = s; *p; ++p) {
++        switch (*p) {
++            case '\\':
++            case '\'':
++            case '\n':
++            case '\t':
++                len += 2;
++                break;
++            default:
++                len += 1;
++                break;
++        }
++    }
++    len += 2;  // for surrounding quotes
++    len += 1;  // for null terminator
++    
++    char* out = (char*)malloc(len);
++    if (!out) return nullptr;
++    
++    char* dst = out;
++    *dst++ = '\'';
++    for (const char* p = s; *p; ++p) {
++        switch (*p) {
++            case '\\':
++                *dst++ = '\\';
++                *dst++ = '\\';
++                break;
++            case '\'':
++                *dst++ = '\\';
++                *dst++ = '\'';
++                break;
++            case '\r':
++                break;  // skip carriage returns
++            case '\n':
++                *dst++ = '\\';
++                *dst++ = 'n';
++                break;
++            case '\t':
++                *dst++ = '\\';
++                *dst++ = 't';
++                break;
++            default:
++                *dst++ = *p;
++                break;
++        }
++    }
++    *dst++ = '\'';
++    *dst = '\0';
++    
++    return out;
++}
++
++static TempStr HybridToolbarTextJs(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return nullptr;
++    }
++
++    return str::FormatTemp(
++        "window.__hybridToolbarTextPayload={lang:%s,subtitle:%s,openButton:%s,pagePrevTitle:%s,pageNextTitle:%s,"
++        "pageTemplate:%s,zoomOutTitle:%s,zoomInTitle:%s,viewSinglePage:%s,viewFacing:%s,viewBookView:%s,"
++        "continuousTitle:%s,searchPlaceholder:%s,bookmarksTitle:%s,favoritesTitle:%s,fullscreenTitle:%s,"
++        "commandPaletteText:%s,rotateLeftTitle:%s,rotateRightTitle:%s,printTitle:%s,themeLabel:%s,"
++            "followWindowsTitle:%s,followingWindowsTitle:%s,darkWord:%s,lightWord:%s,toggleThemeTitle:%s,documentLabel:%s,documentInvertTitle:%s};"
++        "if(window.hybridToolbarApplyText){window.hybridToolbarApplyText(window.__hybridToolbarTextPayload);}",
++        JsQuoted(trans::GetCurrentLangCode()), JsQuoted(_TRA("Focused reading")), JsQuoted(_TRA("Open")),
++        JsQuoted(_TRA("Previous page")), JsQuoted(_TRA("Next page")), JsQuoted(_TRA("Page {current} / {total}")),
++        JsQuoted(_TRA("Zoom out")), JsQuoted(_TRA("Zoom in")), JsQuoted(_TRA("Single Page")),
++        JsQuoted(_TRA("Facing")), JsQuoted(_TRA("Book View")), JsQuoted(_TRA("Show pages continuously")),
++        JsQuoted(_TRA("Search text")), JsQuoted(_TRA("Sidebar")), JsQuoted(_TRA("Favorites")),
++        JsQuoted(_TRA("Fullscreen")), JsQuoted(_TRA("Cmd")), JsQuoted(_TRA("Rotate left")),
++        JsQuoted(_TRA("Rotate right")), JsQuoted(_TRA("Print")), JsQuoted(_TRA("Theme")),
++        JsQuoted(_TRA("Follow Windows")), JsQuoted(_TRA("Following Windows ({mode})")), JsQuoted(_TRA("dark")),
++        JsQuoted(_TRA("light")), JsQuoted(_TRA("Toggle light/dark")), JsQuoted(_TRA("Doc")),
++        JsQuoted(_TRA("Invert document colors")));
++}
++
++bool HasHybridToolbar(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    return win && win->hybridToolbar;
++}
++
++void SyncHybridToolbarTheme(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    TempStr js = HybridToolbarThemeJs(hwndFrame);
++    if (!js) {
++        return;
++    }
++    win->hybridToolbar->Eval(js);
++}
++
++void SyncHybridToolbarText(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    TempStr js = HybridToolbarTextJs(hwndFrame);
++    if (!js) {
++        return;
++    }
++    win->hybridToolbar->Eval(js);
++}
++
++void SyncHybridToolbarSearchText(HWND hwndFrame, const char* text) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    TempStr escaped = str::ReplaceTemp(text ? text : "", "\\", "\\\\");
++    escaped = str::ReplaceTemp(escaped, "'", "\\'");
++    escaped = str::ReplaceTemp(escaped, "\r", "");
++    escaped = str::ReplaceTemp(escaped, "\n", "\\n");
++    TempStr js = str::FormatTemp("window.hybridToolbarSetSearchText && window.hybridToolbarSetSearchText('%s');", escaped);
++    win->hybridToolbar->Eval(js);
++}
++
++void FocusHybridToolbarSearch(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++
++    win->hybridToolbar->Focus();
++
++    // Then focus the search input element inside the webview
++    win->hybridToolbar->Eval("window.hybridToolbarFocusSearch && window.hybridToolbarFocusSearch();");
++}
++
++void InitHybridToolbarTheme(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    TempStr js = HybridToolbarThemeJs(hwndFrame);
++    if (!js) {
++        return;
++    }
++    win->hybridToolbar->Init(js);
++}
++
++void InitHybridToolbarText(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    TempStr js = HybridToolbarTextJs(hwndFrame);
++    if (!js) {
++        return;
++    }
++    win->hybridToolbar->Init(js);
++}
++
++void SyncHybridToolbarPageState(HWND hwndFrame, int currentPage, int totalPages) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    if (currentPage <= 0) {
++        currentPage = 1;
++    }
++    if (totalPages <= 0) {
++        totalPages = 1;
++    }
++    TempStr js = str::FormatTemp("window.hybridToolbarSetPageState && window.hybridToolbarSetPageState(%d,%d);",
++                                 currentPage, totalPages);
++    win->hybridToolbar->Eval(js);
++}
++
++void SyncHybridToolbarZoomState(HWND hwndFrame, float zoomPercent) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->hybridToolbar) {
++        return;
++    }
++    if (zoomPercent < 1.0f) {
++        zoomPercent = 1.0f;
++    }
++    if (zoomPercent > 6400.0f) {
++        zoomPercent = 6400.0f;
++    }
++    TempStr js = str::FormatTemp("window.hybridToolbarSetZoomState && window.hybridToolbarSetZoomState(%.4f);", zoomPercent);
++    win->hybridToolbar->Eval(js);
++}
++
++struct BridgeMessage {
++    const char* name = nullptr;
++    const char* path = nullptr;
++    const char* query = nullptr;
++    const char* command = nullptr;
++    const char* direction = nullptr;
++    const char* mode = nullptr;
++    int page = 0;
++    int cmdId = 0;
++    float value = 0.0f;
++    bool hasPage = false;
++    bool hasCmdId = false;
++    bool hasValue = false;
++};
++
++class BridgeMessageVisitor : public json::ValueVisitor {
++  public:
++    explicit BridgeMessageVisitor(BridgeMessage* out) : msg(out) {}
++
++    bool Visit(const char* path, const char* value, json::Type type) override {
++        if (!msg || !path || !value) {
++            return false;
++        }
++        if (str::Eq(path, "/name") && type == json::Type::String) {
++            msg->name = str::DupTemp(value);
++            return true;
++        }
++        if (str::Eq(path, "/payload/path") && type == json::Type::String) {
++            msg->path = str::DupTemp(value);
++            return true;
++        }
++        if (str::Eq(path, "/payload/query") && type == json::Type::String) {
++            msg->query = str::DupTemp(value);
++            return true;
++        }
++        if (str::Eq(path, "/payload/command") && type == json::Type::String) {
++            msg->command = str::DupTemp(value);
++            return true;
++        }
++        if (str::Eq(path, "/payload/direction") && type == json::Type::String) {
++            msg->direction = str::DupTemp(value);
++            return true;
++        }
++        if (str::Eq(path, "/payload/mode") && type == json::Type::String) {
++            msg->mode = str::DupTemp(value);
++            return true;
++        }
++        if (str::Eq(path, "/payload/page") && type == json::Type::Number) {
++            msg->page = atoi(value);
++            msg->hasPage = true;
++            return true;
++        }
++        if (str::Eq(path, "/payload/cmdId") && type == json::Type::Number) {
++            msg->cmdId = atoi(value);
++            msg->hasCmdId = true;
++            return true;
++        }
++        if (str::Eq(path, "/payload/value") && type == json::Type::Number) {
++            msg->value = (float)atof(value);
++            msg->hasValue = true;
++            return true;
++        }
++        return true;
++    }
++
++  private:
++    BridgeMessage* msg = nullptr;
++};
++
++static bool ParseBridgeMessage(const char* rawMsg, BridgeMessage& out) {
++    if (str::IsEmptyOrWhiteSpace(rawMsg)) {
++        return false;
++    }
++    BridgeMessageVisitor visitor(&out);
++    bool ok = json::Parse(rawMsg, &visitor);
++    return ok && !str::IsEmpty(out.name);
++}
++
++static MainWindow* GetTargetWindow() {
++    HWND hwnd = GetForegroundWindow();
++    MainWindow* win = FindMainWindowByHwnd(hwnd);
++    if (!win && gLastActiveFrameHwnd) {
++        win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
++    }
++    if (!win && !gWindows.IsEmpty()) {
++        win = gWindows.at(0);
++    }
++    return win;
++}
++
++static bool DispatchOpenFile(const BridgeMessage& msg) {
++    if (!CanAccessDisk()) {
++        return false;
++    }
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++    if (str::IsEmpty(msg.path)) {
++        PostMessageW(win->hwndFrame, WM_COMMAND, CmdOpenFile, 0);
++        return true;
++    }
++    LoadArgs args(msg.path, win);
++    LoadDocument(&args);
++    return true;
++}
++
++static bool DispatchGoToPage(const BridgeMessage& msg) {
++    MainWindow* win = GetTargetWindow();
++    if (!win || !win->ctrl || !msg.hasPage) {
++        return false;
++    }
++    if (!win->ctrl->ValidPageNo(msg.page)) {
++        return false;
++    }
++    win->ctrl->GoToPage(msg.page, true);
++    return true;
++}
++
++static bool DispatchZoom(const BridgeMessage& msg) {
++    MainWindow* win = GetTargetWindow();
++    if (!win || !win->ctrl || !msg.hasValue) {
++        return false;
++    }
++
++    float zoom = msg.value;
++    if (zoom > 0 && zoom <= 8.0f) {
++        zoom *= 100.0f;
++    }
++    if (zoom < kZoomMin) {
++        zoom = kZoomMin;
++    }
++    if (zoom > kZoomMax) {
++        zoom = kZoomMax;
++    }
++    win->ctrl->SetZoomVirtual(zoom, nullptr);
++    SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
++    return true;
++}
++
++static bool DispatchSetFitMode(const BridgeMessage& msg) {
++    MainWindow* win = GetTargetWindow();
++    if (!win || !win->ctrl || str::IsEmpty(msg.mode)) {
++        return false;
++    }
++
++    float zoom = 0;
++    if (str::EqI(msg.mode, "page-width")) {
++        zoom = kZoomFitWidth;
++    } else if (str::EqI(msg.mode, "page")) {
++        zoom = kZoomFitPage;
++    } else if (str::EqI(msg.mode, "actual-size")) {
++        zoom = kZoomActualSize;
++    } else {
++        return false;
++    }
++    win->ctrl->SetZoomVirtual(zoom, nullptr);
++    SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
++    return true;
++}
++
++static bool DispatchSearch(const BridgeMessage& msg) {
++    MainWindow* win = GetTargetWindow();
++    if (!win || !win->IsDocLoaded() || str::IsEmptyOrWhiteSpace(msg.query)) {
++        return false;
++    }
++
++    TextSearch::Direction dir = TextSearch::Direction::Forward;
++    if (str::EqI(msg.direction, "backward") || str::EqI(msg.direction, "prev") || str::EqI(msg.direction, "previous")) {
++        dir = TextSearch::Direction::Backward;
++    }
++
++    bool wasModified = true;
++    TempStr currentFind = HwndGetTextTemp(win->hwndFindEdit);
++    if (str::Eq(msg.query, currentFind)) {
++        wasModified = false;
++    }
++    FindTextOnThread(win, dir, msg.query, wasModified, true);
++    return true;
++}
++
++static bool DispatchToggleSidebar() {
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++    bool nextTocVisible = !win->tocVisible;
++    SetSidebarVisibility(win, nextTocVisible, gGlobalPrefs->showFavorites);
++    return true;
++}
++
++static bool DispatchSetViewMode(const BridgeMessage& msg) {
++    MainWindow* win = GetTargetWindow();
++    if (!win || str::IsEmpty(msg.mode)) {
++        return false;
++    }
++
++    DisplayMode mode = DisplayMode::Automatic;
++    if (str::EqI(msg.mode, "continuous")) {
++        mode = DisplayMode::Continuous;
++    } else if (str::EqI(msg.mode, "single-page")) {
++        mode = DisplayMode::SinglePage;
++    } else {
++        return false;
++    }
++    SwitchToDisplayMode(win, mode, false);
++    return true;
++}
++
++static bool DispatchPrint() {
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++    PostMessageW(win->hwndFrame, WM_COMMAND, CmdPrint, 0);
++    return true;
++}
++
++static bool WindowsPrefersDarkModeForHybrid() {
++    DWORD val = 1;
++    DWORD cbData = sizeof(val);
++    constexpr const wchar_t* kThemeRegPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
++    LONG err = RegGetValueW(HKEY_CURRENT_USER, kThemeRegPath, L"AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &val,
++                            &cbData);
++    if (err != ERROR_SUCCESS) {
++        return false;
++    }
++    return val == 0;
++}
++
++static void ApplyThemeState(bool targetDark) {
++    SetTheme(targetDark ? "Dark" : "Light");
++    SaveSettings();
++}
++
++static bool DispatchToggleThemeFollowWindows() {
++    EnsureHybridFollowWindowsThemeState();
++    gHybridFollowWindowsTheme = !gHybridFollowWindowsTheme;
++
++    if (gHybridFollowWindowsTheme) {
++        bool windowsDark = WindowsPrefersDarkModeForHybrid();
++        ApplyThemeState(windowsDark);
++    } else {
++        SaveSettings();
++    }
++    MainWindow* win = GetTargetWindow();
++    if (win) {
++        SyncHybridToolbarTheme(win->hwndFrame);
++    }
++    return true;
++}
++
++static bool DispatchToggleThemeLightDark() {
++    EnsureHybridFollowWindowsThemeState();
++    // Theme button always toggles only Light/Dark and exits follow-Windows mode.
++    gHybridFollowWindowsTheme = false;
++
++    bool appIsDark = DarkMode::isColorDark(ThemeWindowControlBackgroundColor());
++    bool targetDark = !appIsDark;
++    ApplyThemeState(targetDark);
++    MainWindow* win = GetTargetWindow();
++    if (win) {
++        SyncHybridToolbarTheme(win->hwndFrame);
++    }
++    return true;
++}
++
++static bool DispatchToggleDocumentInvert() {
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++
++    gGlobalPrefs->fixedPageUI.invertColors ^= true;
++    UpdateDocumentColors();
++    UpdateControlsColors(win);
++    SaveSettings();
++    SyncHybridToolbarTheme(win->hwndFrame);
++    return true;
++}
++
++static int ResolveBridgeCommandId(const char* commandName) {
++    if (str::IsEmptyOrWhiteSpace(commandName)) {
++        return 0;
++    }
++    if (str::EqI(commandName, "commandPalette")) return CmdCommandPalette;
++    if (str::EqI(commandName, "properties")) return CmdProperties;
++    if (str::EqI(commandName, "find")) return CmdFindFirst;
++    if (str::EqI(commandName, "newWindow")) return CmdNewWindow;
++    if (str::EqI(commandName, "saveAs")) return CmdSaveAs;
++    if (str::EqI(commandName, "reload")) return CmdReloadDocument;
++    if (str::EqI(commandName, "reopenLastClosed")) return CmdReopenLastClosedFile;
++
++    if (str::EqI(commandName, "navigateBack")) return CmdNavigateBack;
++    if (str::EqI(commandName, "navigateForward")) return CmdNavigateForward;
++    if (str::EqI(commandName, "prevPage")) return CmdGoToPrevPage;
++    if (str::EqI(commandName, "nextPage")) return CmdGoToNextPage;
++    if (str::EqI(commandName, "firstPage")) return CmdGoToFirstPage;
++    if (str::EqI(commandName, "lastPage")) return CmdGoToLastPage;
++
++    if (str::EqI(commandName, "zoomIn")) return CmdZoomIn;
++    if (str::EqI(commandName, "zoomOut")) return CmdZoomOut;
++    if (str::EqI(commandName, "fitWidth")) return CmdZoomFitWidth;
++    if (str::EqI(commandName, "fitPage")) return CmdZoomFitPage;
++    if (str::EqI(commandName, "actualSize")) return CmdZoomActualSize;
++    if (str::EqI(commandName, "singlePage")) return CmdSinglePageView;
++    if (str::EqI(commandName, "facing")) return CmdFacingView;
++    if (str::EqI(commandName, "bookView")) return CmdBookView;
++    if (str::EqI(commandName, "showPagesContinuously")) return CmdToggleContinuousView;
++
++    if (str::EqI(commandName, "toggleBookmarks")) return CmdToggleBookmarks;
++    if (str::EqI(commandName, "toggleFavorites")) return CmdFavoriteToggle;
++    if (str::EqI(commandName, "toggleFullscreen")) return CmdToggleFullscreen;
++    if (str::EqI(commandName, "rotateLeft")) return CmdRotateLeft;
++    if (str::EqI(commandName, "rotateRight")) return CmdRotateRight;
++    if (str::EqI(commandName, "print")) return CmdPrint;
++    return 0;
++}
++
++static bool DispatchExecCommand(const BridgeMessage& msg) {
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++
++    if (str::EqI(msg.command, "toggleTheme")) {
++        return DispatchToggleThemeLightDark();
++    }
++    if (str::EqI(msg.command, "toggleThemeFollowWindows")) {
++        return DispatchToggleThemeFollowWindows();
++    }
++    if (str::EqI(msg.command, "toggleDocumentInvert")) {
++        return DispatchToggleDocumentInvert();
++    }
++
++    int cmdId = 0;
++    if (msg.hasCmdId) {
++        cmdId = msg.cmdId;
++    } else {
++        cmdId = ResolveBridgeCommandId(msg.command);
++    }
++    if (cmdId <= CmdFirst || cmdId >= CmdLast) {
++        return false;
++    }
++
++    PostMessageW(win->hwndFrame, WM_COMMAND, cmdId, 0);
++    return true;
++}
++
++static bool DispatchToolbarReady() {
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++    SyncHybridToolbarTheme(win->hwndFrame);
++    if (win->ctrl) {
++        SyncHybridToolbarPageState(win->hwndFrame, win->ctrl->CurrentPageNo(), win->ctrl->PageCount());
++        SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
++    } else {
++        SyncHybridToolbarPageState(win->hwndFrame, 1, 1);
++        SyncHybridToolbarZoomState(win->hwndFrame, 100.0f);
++    }
++    return true;
++}
++
++// Helper to escape string for JSON
++static void AppendJsonString(char*& dst, size_t& remaining, const char* src) {
++    *dst++ = '"';
++    remaining--;
++    while (*src && remaining > 1) {
++        if (*src == '"' || *src == '\\') {
++            if (remaining < 2) break;
++            *dst++ = '\\';
++            *dst++ = *src++;
++            remaining -= 2;
++        } else if (*src == '\n') {
++            if (remaining < 2) break;
++            *dst++ = '\\';
++            *dst++ = 'n';
++            src++;
++            remaining -= 2;
++        } else if (*src == '\r') {
++            if (remaining < 2) break;
++            *dst++ = '\\';
++            *dst++ = 'r';
++            src++;
++            remaining -= 2;
++        } else if (*src == '\t') {
++            if (remaining < 2) break;
++            *dst++ = '\\';
++            *dst++ = 't';
++            src++;
++            remaining -= 2;
++        } else {
++            *dst++ = *src++;
++            remaining--;
++        }
++    }
++    if (remaining > 0) {
++        *dst++ = '"';
++        remaining--;
++    }
++}
++
++static constexpr int kHomePageMaxRecentItems = 40;
++
++static u32 CalcRecentFilesSignature() {
++    u32 sig = 0;
++    for (int i = 0; i < kHomePageMaxRecentItems; i++) {
++        FileState* fs = gFileHistory.Get(i);
++        if (!fs || fs->isMissing) {
++            break;
++        }
++        if (!fs->filePath) {
++            continue;
++        }
++        sig ^= MurmurHash2(fs->filePath, str::Len(fs->filePath));
++    }
++    return sig;
++}
++
++// Helper function to serialize recent files to JSON for HomePage
++static ::TempStr SerializeRecentFilesToJson() {
++    // Allocate a large enough buffer for the JSON
++    const size_t bufSize = 8192;
++    char* buf = (char*)malloc(bufSize);
++    if (!buf) return nullptr;
++    
++    char* dst = buf;
++    size_t remaining = bufSize - 1;  // Leave room for null terminator
++    
++    *dst++ = '[';
++    remaining--;
++    
++    bool first = true;
++    for (int i = 0; i < kHomePageMaxRecentItems; i++) {
++        FileState* fs = gFileHistory.Get(i);
++        if (!fs || fs->isMissing) {
++            break;
++        }
++        if (!fs->filePath) {
++            continue;
++        }
++        
++        if (!first && remaining > 0) {
++            *dst++ = ',';
++            remaining--;
++        }
++        first = false;
++        
++        // Extract filename from path
++        const char* filePath = fs->filePath;
++        const char* fileName = filePath;
++        for (const char* p = filePath; *p; p++) {
++            if (*p == '\\' || *p == '/') {
++                fileName = p + 1;
++            }
++        }
++        
++        // Build the JSON entry
++        const char* entryStart = "{\"path\":";
++        if (remaining > str::Len(entryStart)) {
++            memcpy(dst, entryStart, str::Len(entryStart));
++            dst += str::Len(entryStart);
++            remaining -= str::Len(entryStart);
++        }
++        
++        AppendJsonString(dst, remaining, filePath);
++        
++        const char* separator = ",\"name\":";
++        if (remaining > str::Len(separator)) {
++            memcpy(dst, separator, str::Len(separator));
++            dst += str::Len(separator);
++            remaining -= str::Len(separator);
++        }
++        
++        AppendJsonString(dst, remaining, fileName);
++        
++        if (remaining > 0) {
++            *dst++ = '}';
++            remaining--;
++        }
++    }
++    
++    if (remaining > 0) {
++        *dst++ = ']';
++        remaining--;
++    }
++    
++    if (remaining > 0) {
++        *dst++ = '\0';
++    } else {
++        buf[bufSize - 1] = '\0';
++    }
++    
++    return buf;
++}
++
++// HomePage UI message handlers
++static bool DispatchHomePageReady() {
++    MainWindow* win = GetTargetWindow();
++    if (!win || !win->homePageWebView) {
++        return false;
++    }
++
++    static u32 sCachedRecentSignature = (u32)-1;
++    static char* sCachedRecentFilesJson = nullptr;
++    u32 recentSignature = CalcRecentFilesSignature();
++    if (recentSignature != sCachedRecentSignature || !sCachedRecentFilesJson) {
++        free(sCachedRecentFilesJson);
++        sCachedRecentFilesJson = (char*)SerializeRecentFilesToJson();
++        sCachedRecentSignature = recentSignature;
++    }
++    
++    // Send recent files list to HomePage
++    const char* recentFilesJson = sCachedRecentFilesJson ? sCachedRecentFilesJson : "[]";
++    char* js = str::FormatTemp(
++        "window.setRecentFiles && window.setRecentFiles(%s);",
++        recentFilesJson);
++    win->homePageWebView->Eval(js);
++    
++    // Apply current theme
++    bool isDarkMode = HomePageUsesDarkTheme();
++    char* themeJs = str::FormatTemp(
++        "window.applyTheme && window.applyTheme(%s);",
++        isDarkMode ? "true" : "false");
++    win->homePageWebView->Eval(themeJs);
++    
++    return true;
++}
++
++static bool DispatchOpenRecent(const BridgeMessage& msg) {
++    if (!CanAccessDisk()) {
++        return false;
++    }
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++    if (str::IsEmpty(msg.path)) {
++        return false;
++    }
++    LoadArgs args(msg.path, win);
++    LoadDocument(&args);
++    return true;
++}
++
++static bool DispatchApplyTheme(const BridgeMessage& msg) {
++    if (LogBridgeMessages()) {
++        logf("[PrettySumatraBridge] theme changed by user\n");
++    }
++    return true;
++}
++
++static bool DispatchReopenLast() {
++    char* path = PopRecentlyClosedDocument();
++    if (!path) {
++        return false;
++    }
++    MainWindow* win = GetTargetWindow();
++    if (!win) {
++        return false;
++    }
++    LoadArgs args(path, win);
++    LoadDocument(&args);
++    return true;
++}
++
++static bool DispatchKnownCommand(const BridgeMessage& msg) {
++    if (str::Eq(msg.name, kOpenFile)) {
++        return DispatchOpenFile(msg);
++    }
++    if (str::Eq(msg.name, kGoToPage)) {
++        return DispatchGoToPage(msg);
++    }
++    if (str::Eq(msg.name, kZoom)) {
++        return DispatchZoom(msg);
++    }
++    if (str::Eq(msg.name, kSetFitMode)) {
++        return DispatchSetFitMode(msg);
++    }
++    if (str::Eq(msg.name, kSearch)) {
++        return DispatchSearch(msg);
++    }
++    if (str::Eq(msg.name, kToggleSidebar)) {
++        return DispatchToggleSidebar();
++    }
++    if (str::Eq(msg.name, kSetViewMode)) {
++        return DispatchSetViewMode(msg);
++    }
++    if (str::Eq(msg.name, kExecCommand)) {
++        return DispatchExecCommand(msg);
++    }
++    if (str::Eq(msg.name, kToolbarReady)) {
++        return DispatchToolbarReady();
++    }
++    if (str::EqI(msg.name, "print")) {
++        return DispatchPrint();
++    }
++    if (str::Eq(msg.name, kHomePageReady)) {
++        return DispatchHomePageReady();
++    }
++    if (str::Eq(msg.name, kOpenRecent)) {
++        return DispatchOpenRecent(msg);
++    }
++    if (str::Eq(msg.name, kApplyTheme)) {
++        return DispatchApplyTheme(msg);
++    }
++    if (str::Eq(msg.name, kReopenLast)) {
++        return DispatchReopenLast();
++    }
++
++    if (str::Eq(msg.name, kAddAnnotation) || str::Eq(msg.name, kEditAnnotation) || str::Eq(msg.name, kDeleteAnnotation) ||
++        str::Eq(msg.name, kExportAnnotations) || str::Eq(msg.name, kImportAnnotations)) {
++        if (LogBridgeMessages()) {
++            logf("[PrettySumatraBridge] command '%s' not implemented yet\n", msg.name);
++        }
++        return true;
++    }
++    return false;
++}
++
++void SyncHomePageTheme(HWND hwndFrame) {
++    MainWindow* win = FindWindowForFrame(hwndFrame);
++    if (!win || !win->homePageWebView) {
++        return;
++    }
++    // Apply the actual app theme so the home page stays in sync with manual theme changes.
++    bool isDarkMode = HomePageUsesDarkTheme();
++    char* themeJs = str::FormatTemp(
++        "window.applyTheme && window.applyTheme(%s);",
++        isDarkMode ? "true" : "false");
++    win->homePageWebView->Eval(themeJs);
++}
++
++DispatchResult DispatchShellMessage(const char* msg) {
++    if (!UseHybridShell()) {
++        return DispatchResult::Disabled;
++    }
++    if (str::IsEmptyOrWhiteSpace(msg)) {
++        if (LogBridgeMessages()) {
++            log("[PrettySumatraBridge] invalid bridge message: empty payload\n");
++        }
++        return DispatchResult::InvalidMessage;
++    }
++
++    BridgeMessage bridgeMsg;
++    if (!ParseBridgeMessage(msg, bridgeMsg)) {
++        if (LogBridgeMessages()) {
++            logf("[PrettySumatraBridge] invalid command envelope: %s\n", msg);
++        }
++        return DispatchResult::InvalidMessage;
++    }
++
++    bool ok = DispatchKnownCommand(bridgeMsg);
++    if (!ok) {
++        if (LogBridgeMessages()) {
++            logf("[PrettySumatraBridge] unknown command envelope: %s\n", msg);
++        }
++        return DispatchResult::UnknownCommand;
++    }
++
++    if (LogBridgeMessages()) {
++        logf("[PrettySumatraBridge] accepted command '%s'\n", bridgeMsg.name);
++    }
++    return DispatchResult::Accepted;
++}
++
++} // namespace bridge
++} // namespace prettysumatra
+diff --git a/src/prettysumatra/BridgeDispatcher.h b/src/prettysumatra/BridgeDispatcher.h
+new file mode 100644
+index 000000000..17980e997
+--- /dev/null
++++ b/src/prettysumatra/BridgeDispatcher.h
+@@ -0,0 +1,32 @@
++#pragma once
++
++namespace prettysumatra {
++namespace bridge {
++
++enum class DispatchResult {
++    Disabled,
++    InvalidMessage,
++    UnknownCommand,
++    Accepted,
++};
++
++bool UseHybridShell();
++bool UseHybridToolbar();
++bool UseHybridSidebar();
++bool LogBridgeMessages();
++bool HybridThemeFollowsWindows();
++bool HasHybridToolbar(HWND hwndFrame);
++void InitHybridToolbarTheme(HWND hwndFrame);
++void SyncHybridToolbarTheme(HWND hwndFrame);
++void SyncHomePageTheme(HWND hwndFrame);
++void InitHybridToolbarText(HWND hwndFrame);
++void SyncHybridToolbarText(HWND hwndFrame);
++void SyncHybridToolbarSearchText(HWND hwndFrame, const char* text);
++void FocusHybridToolbarSearch(HWND hwndFrame);
++void SyncHybridToolbarPageState(HWND hwndFrame, int currentPage, int totalPages);
++void SyncHybridToolbarZoomState(HWND hwndFrame, float zoomPercent);
++
++DispatchResult DispatchShellMessage(const char* msg);
++
++} // namespace bridge
++} // namespace prettysumatra
+diff --git a/src/prettysumatra/CommandBridgeSpec.h b/src/prettysumatra/CommandBridgeSpec.h
+new file mode 100644
+index 000000000..75be19da8
+--- /dev/null
++++ b/src/prettysumatra/CommandBridgeSpec.h
+@@ -0,0 +1,29 @@
++#pragma once
++
++// PrettySumatra shell/core command names used by the hybrid host.
++namespace prettysumatra {
++namespace bridge {
++
++constexpr const char* kOpenFile = "openFile";
++constexpr const char* kGoToPage = "goToPage";
++constexpr const char* kZoom = "zoom";
++constexpr const char* kSetFitMode = "setFitMode";
++constexpr const char* kSearch = "search";
++constexpr const char* kToggleSidebar = "toggleSidebar";
++constexpr const char* kSetViewMode = "setViewMode";
++constexpr const char* kExecCommand = "execCommand";
++constexpr const char* kToolbarReady = "toolbarReady";
++constexpr const char* kAddAnnotation = "addAnnotation";
++constexpr const char* kEditAnnotation = "editAnnotation";
++constexpr const char* kDeleteAnnotation = "deleteAnnotation";
++constexpr const char* kExportAnnotations = "exportAnnotations";
++constexpr const char* kImportAnnotations = "importAnnotations";
++
++// HomePage UI command names
++constexpr const char* kHomePageReady = "homePageReady";
++constexpr const char* kOpenRecent = "openRecent";
++constexpr const char* kReopenLast = "reopenLast";
++constexpr const char* kApplyTheme = "applyTheme";
++
++} // namespace bridge
++} // namespace prettysumatra
+diff --git a/src/wingui/WebView.cpp b/src/wingui/WebView.cpp
+index f0c4a27ce..481abb73f 100644
+--- a/src/wingui/WebView.cpp
++++ b/src/wingui/WebView.cpp
+@@ -16,12 +16,30 @@
+ // #include "Theme.h"
+ 
+ #include "webview2.h"
++#include <wrl.h>
++#include "WebView2EnvironmentOptions.h"
+ #include "wingui/WebView.h"
+ 
++#include "prettysumatra/BridgeDispatcher.h"
++
+ #include "utils/Log.h"
+ 
+ Kind kindWebView = "webView";
+ 
++namespace {
++enum class SharedWebViewEnvState {
++    NotStarted,
++    Creating,
++    Ready,
++    Failed,
++};
++
++static SharedWebViewEnvState gSharedEnvState = SharedWebViewEnvState::NotStarted;
++static ICoreWebView2Environment* gSharedEnvironment = nullptr;
++static std::wstring gSharedUserDataFolder;
++static std::vector<WebviewWnd*> gPendingWebviews;
++} // namespace
++
+ TempStr GetWebView2VersionTemp() {
+     WCHAR* ver = nullptr;
+     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
+@@ -43,8 +61,7 @@ bool HasWebView() {
+     return true;
+ }
+ 
+-class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
+-                             public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
++class webview2_com_handler : public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
+                              public ICoreWebView2WebMessageReceivedEventHandler,
+                              public ICoreWebView2PermissionRequestedEventHandler {
+     using webview2_com_handler_cb_t = Func1<ICoreWebView2Controller*>;
+@@ -52,25 +69,53 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
+   public:
+     webview2_com_handler(HWND hwnd, WebViewMsgCb& msgCb, webview2_com_handler_cb_t cb)
+         : m_window(hwnd), msgCb(msgCb), m_cb(cb) {}
+-    ULONG STDMETHODCALLTYPE AddRef() { return 1; }
+-
+-    ULONG STDMETHODCALLTYPE Release() { return 1; }
++    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
+ 
+-    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) { return S_OK; }
++    ULONG STDMETHODCALLTYPE Release() {
++        ULONG n = --m_refCount;
++        if (n == 0) {
++            delete this;
++        }
++        return n;
++    }
+ 
+-    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Environment* env) {
+-        env->CreateCoreWebView2Controller(m_window, this);
++    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
++        if (!ppv) {
++            return E_POINTER;
++        }
++        *ppv = nullptr;
++        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler)) {
++            *ppv = static_cast<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler*>(this);
++        } else if (riid == __uuidof(ICoreWebView2WebMessageReceivedEventHandler)) {
++            *ppv = static_cast<ICoreWebView2WebMessageReceivedEventHandler*>(this);
++        } else if (riid == __uuidof(ICoreWebView2PermissionRequestedEventHandler)) {
++            *ppv = static_cast<ICoreWebView2PermissionRequestedEventHandler*>(this);
++        } else {
++            return E_NOINTERFACE;
++        }
++        AddRef();
+         return S_OK;
+     }
+ 
+     HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Controller* controller) {
++        if (FAILED(res) || !controller) {
++            m_cb.Call(nullptr);
++            return E_FAIL;
++        }
++
+         controller->AddRef();
+ 
+-        ICoreWebView2* webview;
+-        ::EventRegistrationToken token;
++        ICoreWebView2* webview = nullptr;
++        ::EventRegistrationToken token = {};
+         controller->get_CoreWebView2(&webview);
++        if (!webview) {
++            controller->Release();
++            m_cb.Call(nullptr);
++            return E_FAIL;
++        }
+         webview->add_WebMessageReceived(this, &token);
+         webview->add_PermissionRequested(this, &token);
++        webview->Release();
+ 
+         m_cb.Call(controller);
+         return S_OK;
+@@ -84,16 +129,17 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
+         }
+         char* s = ToUtf8Temp(message);
+         msgCb.Call(s);
+-        sender->PostWebMessageAsString(message);
+         CoTaskMemFree(message);
+         return S_OK;
+     }
+ 
+-    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* sender, ICoreWebView2PermissionRequestedEventArgs* args) {
++    HRESULT STDMETHODCALLTYPE Invoke(ICoreWebView2* /*sender*/, ICoreWebView2PermissionRequestedEventArgs* args) {
+         COREWEBVIEW2_PERMISSION_KIND kind;
+         args->get_PermissionKind(&kind);
+         if (kind == COREWEBVIEW2_PERMISSION_KIND_CLIPBOARD_READ) {
+             args->put_State(COREWEBVIEW2_PERMISSION_STATE_ALLOW);
++        } else {
++            args->put_State(COREWEBVIEW2_PERMISSION_STATE_DENY);
+         }
+         return S_OK;
+     }
+@@ -102,47 +148,277 @@ class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCo
+     HWND m_window;
+     WebViewMsgCb msgCb;
+     webview2_com_handler_cb_t m_cb;
++        ULONG m_refCount = 1;
++};
++
++class webview2_env_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler {
++  public:
++        using env_ready_cb_t = void (*)(HRESULT, ICoreWebView2Environment*);
++
++    explicit webview2_env_handler(env_ready_cb_t cb) : m_cb(cb) {}
++
++    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
++
++    ULONG STDMETHODCALLTYPE Release() {
++        ULONG n = --m_refCount;
++        if (n == 0) {
++            delete this;
++        }
++        return n;
++    }
++
++    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
++        if (!ppv) {
++            return E_POINTER;
++        }
++        *ppv = nullptr;
++        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler)) {
++            *ppv = static_cast<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler*>(this);
++            AddRef();
++            return S_OK;
++        }
++        return E_NOINTERFACE;
++    }
++
++    HRESULT STDMETHODCALLTYPE Invoke(HRESULT res, ICoreWebView2Environment* env) {
++        if (m_cb) {
++            m_cb(res, env);
++        }
++        return S_OK;
++    }
++
++  private:
++    env_ready_cb_t m_cb;
++    ULONG m_refCount = 1;
++};
++
++class webview2_try_suspend_handler : public ICoreWebView2TrySuspendCompletedHandler {
++  public:
++    ULONG STDMETHODCALLTYPE AddRef() { return ++m_refCount; }
++
++    ULONG STDMETHODCALLTYPE Release() {
++        ULONG n = --m_refCount;
++        if (n == 0) {
++            delete this;
++        }
++        return n;
++    }
++
++    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, LPVOID* ppv) {
++        if (!ppv) {
++            return E_POINTER;
++        }
++        *ppv = nullptr;
++        if (riid == IID_IUnknown || riid == __uuidof(ICoreWebView2TrySuspendCompletedHandler)) {
++            *ppv = static_cast<ICoreWebView2TrySuspendCompletedHandler*>(this);
++            AddRef();
++            return S_OK;
++        }
++        return E_NOINTERFACE;
++    }
++
++    HRESULT STDMETHODCALLTYPE Invoke(HRESULT /*errorCode*/, BOOL /*isSuccessful*/) {
++        return S_OK;
++    }
++
++  private:
++    ULONG m_refCount = 1;
+ };
+ 
+ WebviewWnd::WebviewWnd() {
+     kind = kindWebView;
+ }
+ 
++void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind kind, const char* text) {
++    if (initFailed) {
++        return;
++    }
++    PendingWebViewOp op;
++    op.kind = kind;
++    op.text = text ? text : "";
++    pendingOps.push_back(op);
++}
++
++void WebviewWnd::FlushPendingOps() {
++    if (!webview || initFailed) {
++        return;
++    }
++    std::vector<PendingWebViewOp> ops = pendingOps;
++    pendingOps.clear();
++    for (auto& op : ops) {
++        switch (op.kind) {
++            case PendingWebViewOp::Init:
++                Init(op.text.c_str());
++                break;
++            case PendingWebViewOp::SetHtml:
++                SetHtml(op.text.c_str());
++                break;
++            case PendingWebViewOp::Eval:
++                Eval(op.text.c_str());
++                break;
++            case PendingWebViewOp::Navigate:
++                Navigate(op.text.c_str());
++                break;
++        }
++    }
++}
++
++void WebviewWnd::FailInit() {
++    initFailed = true;
++    pendingOps.clear();
++    if (webview) {
++        webview->Release();
++        webview = nullptr;
++    }
++    if (controller) {
++        controller->Release();
++        controller = nullptr;
++    }
++    HwndDestroyWindowSafe(&hwnd);
++}
++
++void WebviewWnd::SetControllerVisible(bool visible) {
++    isVisible = visible;
++    if (controller) {
++        controller->put_IsVisible(visible ? TRUE : FALSE);
++    }
++    if (!webview) {
++        return;
++    }
++
++    ICoreWebView2_3* webview3 = nullptr;
++    HRESULT hr = webview->QueryInterface(IID_PPV_ARGS(&webview3));
++    if (FAILED(hr) || !webview3) {
++        return;
++    }
++
++    if (visible) {
++        if (isSuspended) {
++            webview3->Resume();
++            isSuspended = false;
++        }
++    } else if (!isSuspended) {
++        auto* handler = new webview2_try_suspend_handler();
++        hr = webview3->TrySuspend(handler);
++        handler->Release();
++        if (SUCCEEDED(hr)) {
++            isSuspended = true;
++        }
++    }
++    webview3->Release();
++}
++
++void WebviewWnd::OnControllerReady(ICoreWebView2Controller* ctrl) {
++    if (!ctrl) {
++        FailInit();
++        return;
++    }
++    controller = ctrl;
++
++    auto style = GetWindowLong(hwnd, GWL_STYLE);
++    style &= ~(WS_OVERLAPPEDWINDOW);
++    SetWindowLong(hwnd, GWL_STYLE, style);
++
++    controller->put_IsVisible(isVisible ? TRUE : FALSE);
++    isSuspended = false;
++    RECT bounds = ClientRECT(hwnd);
++    controller->put_Bounds(bounds);
++    lastBounds = bounds;
++    hasLastBounds = true;
++    controller->get_CoreWebView2(&webview);
++    if (!webview) {
++        FailInit();
++        return;
++    }
++
++    ICoreWebView2Settings* settings = nullptr;
++    HRESULT hr = webview->get_Settings(&settings);
++    if (hr == S_OK && settings) {
++        settings->put_AreDefaultContextMenusEnabled(FALSE);
++        settings->put_AreDevToolsEnabled(FALSE);
++        settings->put_AreDefaultScriptDialogsEnabled(FALSE);
++        settings->put_IsStatusBarEnabled(FALSE);
++        settings->put_IsZoomControlEnabled(FALSE);
++        settings->Release();
++    }
++
++    Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
++    initStarted = true;
++    FlushPendingOps();
++}
++
+ void WebviewWnd::UpdateWebviewSize() {
+     if (controller == nullptr) {
+         return;
+     }
+     RECT bounds = ClientRECT(hwnd);
++    if (hasLastBounds && EqualRect(&bounds, &lastBounds)) {
++        return;
++    }
++    lastBounds = bounds;
++    hasLastBounds = true;
+     controller->put_Bounds(bounds);
+ }
+ 
+ void WebviewWnd::Eval(const char* js) {
++    if (initFailed || str::IsEmpty(js)) {
++        return;
++    }
++    if (!webview) {
++        QueuePendingOp(PendingWebViewOp::Eval, js);
++        return;
++    }
+     TempWStr ws = ToWStrTemp(js);
+     webview->ExecuteScript(ws, nullptr);
+ }
+ 
+ void WebviewWnd::SetHtml(const char* html) {
+-#if 0
+-    std::string s = "data:text/html,";
+-    s += url_encode(html);
+-    WCHAR* html2 = ToWStrTemp(s.c_str());
+-    m_webview->Navigate(html2);
+-#else
++    if (initFailed || str::IsEmpty(html)) {
++        return;
++    }
++    if (!webview) {
++        QueuePendingOp(PendingWebViewOp::SetHtml, html);
++        return;
++    }
+     WCHAR* html2 = ToWStrTemp(html);
+     webview->NavigateToString(html2);
+-#endif
+ }
+ 
+ void WebviewWnd::Init(const char* js) {
++    if (initFailed || str::IsEmpty(js)) {
++        return;
++    }
++    if (!webview) {
++        QueuePendingOp(PendingWebViewOp::Init, js);
++        return;
++    }
+     TempWStr ws = ToWStrTemp(js);
+     webview->AddScriptToExecuteOnDocumentCreated(ws, nullptr);
+ }
+ 
+ void WebviewWnd::Navigate(const char* url) {
++    if (initFailed || str::IsEmpty(url)) {
++        return;
++    }
++    if (!webview) {
++        QueuePendingOp(PendingWebViewOp::Navigate, url);
++        return;
++    }
+     TempWStr ws = ToWStrTemp(url);
+     webview->Navigate(ws);
+ }
+ 
++void WebviewWnd::Focus() {
++    if (!hwnd) {
++        return;
++    }
++    // Ensure the host window takes focus first, then move focus into the WebView2 content.
++    ::SetFocus(hwnd);
++    if (controller) {
++        controller->MoveFocus(COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC);
++    }
++}
++
+ /*
+     Settings:
+     put_IsWebMessageEnabled(BOOL isWebMessageEnabled)
+@@ -156,40 +432,124 @@ void WebviewWnd::Navigate(const char* url) {
+     */
+ 
+ static void ComHandlerCb(WebviewWnd* self, ICoreWebView2Controller* ctrl) {
+-    self->controller = ctrl;
+-    self->controller->get_CoreWebView2(&self->webview);
+-    self->webview->AddRef();
+-    InterlockedAdd(&self->flag, 1);
++    if (!ctrl) {
++        self->FailInit();
++        return;
++    }
++    self->OnControllerReady(ctrl);
++}
++
++static void OnBrowserMessageCb(WebviewWnd* self, const char* msg);
++
++static void FailPendingWebviews() {
++    std::vector<WebviewWnd*> pending = gPendingWebviews;
++    gPendingWebviews.clear();
++    for (WebviewWnd* wv : pending) {
++        if (wv && !wv->initFailed) {
++            wv->FailInit();
++        }
++    }
++}
++
++static void CreateControllerWithSharedEnvironment(WebviewWnd* self, WebViewMsgCb& cb) {
++    if (!self || !gSharedEnvironment) {
++        if (self) {
++            self->FailInit();
++        }
++        return;
++    }
++    auto fn = MkFunc1(ComHandlerCb, self);
++    auto* handler = new webview2_com_handler(self->hwnd, cb, fn);
++    HRESULT hr = gSharedEnvironment->CreateCoreWebView2Controller(self->hwnd, handler);
++    handler->Release();
++    if (FAILED(hr)) {
++        self->FailInit();
++    }
++}
++
++static void OnSharedEnvironmentReady(HRESULT res, ICoreWebView2Environment* env) {
++    if (FAILED(res) || !env) {
++        gSharedEnvState = SharedWebViewEnvState::Failed;
++        FailPendingWebviews();
++        return;
++    }
++
++    env->AddRef();
++    gSharedEnvironment = env;
++    gSharedEnvState = SharedWebViewEnvState::Ready;
++
++    std::vector<WebviewWnd*> pending = gPendingWebviews;
++    gPendingWebviews.clear();
++    for (WebviewWnd* wv : pending) {
++        if (!wv || wv->initFailed) {
++            continue;
++        }
++        auto fn = MkFunc1(OnBrowserMessageCb, wv);
++        CreateControllerWithSharedEnvironment(wv, fn);
++    }
++}
++
++static Microsoft::WRL::ComPtr<CoreWebView2EnvironmentOptions> CreateOfflineEnvironmentOptions() {
++    auto options = Microsoft::WRL::Make<CoreWebView2EnvironmentOptions>();
++    options->put_AdditionalBrowserArguments(
++        L"--disable-background-networking "
++        L"--disable-component-update "
++        L"--disable-component-extensions-with-background-pages "
++        L"--disable-extensions "
++        L"--disable-domain-reliability "
++        L"--disable-renderer-backgrounding "
++        L"--disable-backgrounding-occluded-windows "
++        L"--disable-breakpad "
++        L"--disable-sync "
++        L"--disable-default-apps "
++        L"--disable-features=AutofillServerCommunication,MediaRouter,OptimizationHints,Translate,CertificateTransparencyComponentUpdater "
++        L"--metrics-recording-only "
++        L"--no-pings");
++    return options;
+ }
+ 
+ bool WebviewWnd::Embed(WebViewMsgCb& cb) {
+-    WCHAR* userDataFolder = ToWStrTemp(dataDir);
+-    auto fn = MkFunc1(ComHandlerCb, this);
+-    auto handler = new webview2_com_handler(hwnd, cb, fn);
+-    HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(nullptr, userDataFolder, nullptr, handler);
+-    if (hr != S_OK) {
++    if (initStarted) {
++        return true;
++    }
++    if (!dataDir) {
++        logf("WebviewWnd::Embed: dataDir is null, aborting\n");
++        initFailed = true;
+         return false;
+     }
+-    MSG msg = {};
+-    while ((InterlockedAdd(&flag, 0) == 0) && GetMessage(&msg, NULL, 0, 0)) {
+-        TranslateMessage(&msg);
+-        DispatchMessage(&msg);
++    initStarted = true;
++    userDataFolder = ToWStrTemp(dataDir);
++
++    if (gSharedEnvState == SharedWebViewEnvState::Ready && gSharedEnvironment) {
++        CreateControllerWithSharedEnvironment(this, cb);
++        return !initFailed;
+     }
+ 
+-    // remove window frame and decorations
+-    auto style = GetWindowLong(hwnd, GWL_STYLE);
+-    style &= ~(WS_OVERLAPPEDWINDOW);
+-    SetWindowLong(hwnd, GWL_STYLE, style);
++    if (gSharedEnvState == SharedWebViewEnvState::Failed) {
++        initFailed = true;
++        return false;
++    }
+ 
+-    ICoreWebView2Settings* settings = nullptr;
+-    hr = webview->get_Settings(&settings);
+-    if (hr == S_OK) {
+-        settings->put_AreDefaultContextMenusEnabled(FALSE);
+-        settings->put_AreDevToolsEnabled(FALSE);
+-        settings->put_IsStatusBarEnabled(FALSE);
++    gPendingWebviews.push_back(this);
++
++    if (gSharedEnvState == SharedWebViewEnvState::NotStarted) {
++        gSharedEnvState = SharedWebViewEnvState::Creating;
++        gSharedUserDataFolder = userDataFolder;
++        auto options = CreateOfflineEnvironmentOptions();
++        auto* envHandler = new webview2_env_handler(OnSharedEnvironmentReady);
++        HRESULT hr = CreateCoreWebView2EnvironmentWithOptions(nullptr, gSharedUserDataFolder.c_str(), options.Get(), envHandler);
++        envHandler->Release();
++        if (FAILED(hr)) {
++            gSharedEnvState = SharedWebViewEnvState::Failed;
++            FailPendingWebviews();
++            return false;
++        }
++    } else if (gSharedEnvState == SharedWebViewEnvState::Creating) {
++        if (gSharedUserDataFolder != userDataFolder) {
++            logf("WebviewWnd::Embed: reusing shared WebView2 environment with first dataDir\n");
++        }
+     }
+ 
+-    Init("window.external={invoke:s=>window.chrome.webview.postMessage(s)}");
+     return true;
+ }
+ 
+@@ -204,7 +564,11 @@ void WebviewWnd::OnBrowserMessage(const char* msg) {
+     auto fn = bindings[name];
+     (*fn->first)(seq, args, fn->second);
+     */
+-    log(msg);
++    using prettysumatra::bridge::DispatchResult;
++    DispatchResult res = prettysumatra::bridge::DispatchShellMessage(msg);
++    if (res == DispatchResult::Disabled) {
++        log(msg);
++    }
+ }
+ 
+ static void OnBrowserMessageCb(WebviewWnd* self, const char* msg) {
+@@ -222,18 +586,40 @@ HWND WebviewWnd::Create(const CreateWebViewArgs& args) {
+     }
+ 
+     auto fn = MkFunc1(OnBrowserMessageCb, this);
+-    Embed(fn);
++    if (!Embed(fn)) {
++        HwndDestroyWindowSafe(&hwnd);
++        return nullptr;
++    }
+     UpdateWebviewSize();
+     return hwnd;
+ }
+ 
+ LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+     if (msg == WM_SIZE) {
++        SetControllerVisible(wparam != SIZE_MINIMIZED);
++        UpdateWebviewSize();
++    } else if (msg == WM_SHOWWINDOW) {
++        SetControllerVisible(wparam != FALSE);
+         UpdateWebviewSize();
++    } else if (msg == WM_ACTIVATE) {
++        if (wparam == WA_INACTIVE) {
++            SetControllerVisible(false);
++        } else {
++            SetControllerVisible(true);
++            UpdateWebviewSize();
++        }
+     }
+     return WndProcDefault(hwnd, msg, wparam, lparam);
+ }
+ 
+ WebviewWnd::~WebviewWnd() {
++    if (webview) {
++        webview->Release();
++        webview = nullptr;
++    }
++    if (controller) {
++        controller->Release();
++        controller = nullptr;
++    }
+     str::Free(dataDir);
+ }
+diff --git a/src/wingui/WebView.h b/src/wingui/WebView.h
+index 416d59d42..9a9209b96 100644
+--- a/src/wingui/WebView.h
++++ b/src/wingui/WebView.h
+@@ -1,6 +1,9 @@
+ /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
+    License: Simplified BSD (see COPYING.BSD) */
+ 
++#include <string>
++#include <vector>
++
+ TempStr GetWebView2VersionTemp();
+ bool HasWebView();
+ 
+@@ -10,6 +13,18 @@ typedef interface ICoreWebView2Controller ICoreWebView2Controller;
+ 
+ using WebViewMsgCb = Func1<const char*>;
+ 
++struct PendingWebViewOp {
++    enum Kind {
++        Init,
++        SetHtml,
++        Eval,
++        Navigate,
++    };
++
++    Kind kind;
++    std::string text;
++};
++
+ struct CreateWebViewArgs {
+     HWND parent = nullptr;
+     Rect pos;
+@@ -25,7 +40,13 @@ struct WebviewWnd : Wnd {
+     void SetHtml(const char* html);
+     void Init(const char* js);
+     void Navigate(const char* url);
++    void Focus();
+     bool Embed(WebViewMsgCb& cb);
++    void OnControllerReady(ICoreWebView2Controller* controller);
++    void FailInit();
++    void QueuePendingOp(PendingWebViewOp::Kind kind, const char* text);
++    void FlushPendingOps();
++    void SetControllerVisible(bool visible);
+ 
+     virtual void OnBrowserMessage(const char* msg);
+ 
+@@ -42,7 +63,12 @@ struct WebviewWnd : Wnd {
+     ICoreWebView2* webview = nullptr;
+     ICoreWebView2Controller* controller = nullptr;
+ 
+-    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
+-    // called on a different thread?
+-    volatile LONG flag = 0;
++    bool initStarted = false;
++    bool initFailed = false;
++    bool isVisible = true;
++    bool isSuspended = false;
++    RECT lastBounds = {};
++    bool hasLastBounds = false;
++    std::wstring userDataFolder;
++    std::vector<PendingWebViewOp> pendingOps;
+ };
+-- 
+2.52.0.windows.1
+

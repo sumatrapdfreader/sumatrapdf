@@ -1,11 +1,11 @@
 /*
- Copyright (c) 2008-2017 jerome DOT laurens AT u-bourgogne DOT fr
+ Copyright (c) 2008-2024 jerome DOT laurens AT u-bourgogne DOT fr
  
  This file is part of the __SyncTeX__ package.
  
- [//]: # (Latest Revision: Sun Oct 15 15:09:55 UTC 2017)
- [//]: # (Version: 1.21)
- 
+ Version: see synctex_version.h
+ Latest Revision: Thu Mar 21 14:12:58 UTC 2024
+
  See `synctex_parser_readme.md` for more details
  
  ## License
@@ -37,16 +37,56 @@
  authorization from the copyright holder.
  */
 
+/**
+ * @file synctex_parser_advanced.h
+ * @author LAURENS Jérôme (jerome.laurens@u-bourgogne.fr)
+ * @brief More header declaration than in `synctex_parser.h`.
+ * @version 0.1
+ * @date 2024-03-22
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
+/*  Here are the control characters that strat each line of the synctex output file.
+ *  Their values define the meaning of the line.
+ */
+#   define SYNCTEX_CHAR_BEGIN_SHEET '{'
+#   define SYNCTEX_CHAR_END_SHEET   '}'
+#   define SYNCTEX_CHAR_BEGIN_FORM  '<'
+#   define SYNCTEX_CHAR_END_FORM    '>'
+#   define SYNCTEX_CHAR_BEGIN_VBOX  '['
+#   define SYNCTEX_CHAR_END_VBOX    ']'
+#   define SYNCTEX_CHAR_BEGIN_HBOX  '('
+#   define SYNCTEX_CHAR_END_HBOX    ')'
+#   define SYNCTEX_CHAR_ANCHOR      '!'
+#   define SYNCTEX_CHAR_VOID_VBOX   'v'
+#   define SYNCTEX_CHAR_VOID_HBOX   'h'
+#   define SYNCTEX_CHAR_KERN        'k'
+#   define SYNCTEX_CHAR_GLUE        'g'
+#   define SYNCTEX_CHAR_RULE        'r'
+#   define SYNCTEX_CHAR_MATH        '$'
+#   define SYNCTEX_CHAR_FORM_REF    'f'
+#   define SYNCTEX_CHAR_BOUNDARY    'x'
+#   define SYNCTEX_CHAR_CHARACTER   'c'
+#   define SYNCTEX_CHAR_COMMENT     '%'
+
+#   if !defined(_SYNCTEX_ONLY_CHAR_DEFINITION_)
+
 #include "synctex_parser.h"
 #include "synctex_parser_utils.h"
 
-#ifndef __SYNCTEX_PARSER_PRIVATE__
-#   define __SYNCTEX_PARSER_PRIVATE__
+#ifndef _SYNCTEX_PARSER_ADVANCED_H_
+#   define _SYNCTEX_PARSER_ADVANCED_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-    /*  Reminder that the argument must not be NULL */
+    /**
+     * @brief Reminder that the argument must not be NULL.
+     * 
+     * Some functions require a non NULL node pointer argument.
+     */
     typedef synctex_node_p synctex_non_null_node_p;
 
     /*  Each node of the tree, except the scanner itself belongs to a class.
@@ -63,9 +103,8 @@ extern "C" {
      *  Finally, the info field point to a method giving the private node info offset.
      */
     
-    /**
-     *  These are the masks for the synctex node types.
-     *  int's are 32 bits at leats.
+    /*
+     *  These are the mask hekpers for the synctex node types.
      */
     enum {
         synctex_shift_root,
@@ -79,6 +118,10 @@ extern "C" {
         synctex_shift_h,
         synctex_shift_v
     };
+    /*
+     *  These are the masks for the synctex node types.
+     *  int's are 32 bits at leats.
+     */
     enum {
         synctex_mask_root      = 1,
         synctex_mask_no_root   = synctex_mask_root<<1,
@@ -99,6 +142,7 @@ extern "C" {
         | synctex_mask_box
         | synctex_mask_v
     };
+#if 0
     typedef enum {
         synctex_node_mask_sf =
         synctex_mask_root
@@ -157,7 +201,7 @@ extern "C" {
         |synctex_mask_no_box
         |synctex_mask_proxy
     } synctex_node_mask_t;
-
+#endif
     enum {
         /* input */
         synctex_tree_sibling_idx        =  0,
@@ -251,13 +295,30 @@ extern "C" {
     };
 
     /*  each synctex node has a class */
-    typedef struct synctex_class_t synctex_class_s;
-    typedef synctex_class_s * synctex_class_p;
+    typedef struct _synctex_class_t _synctex_class_s;
     
+    /**
+     * @brief Pointer to a pseudo class.
+     * @typedef synctex_class_p
+     * @author: Jérôme LAURENS
+     *
+     * Each node has a class, it is therefore called an object.
+     * Each class has a unique scanner.
+     * Each class has a type which is a unique identifier.
+     * The class points to various methods,
+     * each of them vary amongst objects.
+     * Each class has a data model which stores node's attributes.
+     * Each class has an tree model which stores children and parent.
+     * Inspectors give access to data and tree elements.
+     */
+    typedef _synctex_class_s * synctex_class_p;
     
-    /*  synctex_node_p is a pointer to a node
-     *  synctex_node_s is the target of the synctex_node_p pointer
-     *  It is a pseudo object oriented program.
+    /**
+     * @typedef synctex_node_p
+     * @brief Pointer to a node structure
+     * 
+     * The eventual target of the pointer is a private `_synctex_node_s` structure.
+     * 
      *  class is a pointer to the class object the node belongs to.
      *  implementation is meant to contain the private data of the node
      *  basically, there are 2 kinds of information: navigation information and
@@ -265,13 +326,19 @@ extern "C" {
      *  thus different nodes will have different private data.
      *  There is no inheritancy overhead.
      */
+
     typedef union {
         synctex_node_p as_node;
         int    as_integer;
         char * as_string;
         void * as_pointer;
-    } synctex_data_u;
-    typedef synctex_data_u * synctex_data_p;
+    } _synctex_data_u;
+
+    /**
+     * @brief Pointer to an opaque node data structure.
+     * 
+     */
+    typedef _synctex_data_u * synctex_data_p;
     
 #   if defined(SYNCTEX_USE_CHARINDEX)
     typedef unsigned int synctex_charindex_t;
@@ -288,97 +355,160 @@ extern "C" {
 #       define SYNCTEX_DECLARE_CHARINDEX
 #       define SYNCTEX_DECLARE_CHAR_OFFSET
 #   endif
-    struct synctex_node_t {
+/**
+ * @brief Node data model.
+ * 
+ */
+    struct _synctex_node_t {
         SYNCTEX_DECLARE_CHARINDEX
+        /** Each node has an associate class. */
         synctex_class_p class_;
 #ifdef DEBUG
-        synctex_data_u data[22];
+        _synctex_data_u data[22];
 #else
-        synctex_data_u data[1];
+        /** Each node has associate data. */
+        _synctex_data_u data[1];
 #endif
     };
     
+    /**
+     * @brief A pointer to an node pointer.
+     * 
+     * First element of an array of node pointers.
+     * Mainly the list of friends of a node.
+     */
     typedef synctex_node_p * synctex_node_r;
     
+    /**
+     * @brief 2D point with integer coordinates.
+     * 
+     * Used at various places.
+     * For the hit point in the output file for example.
+     */
     typedef struct {
+        /** Horizontal coordinate. */
         int h;
+        /** Vertical coordinate. */
         int v;
     } synctex_point_s;
     
+    /**
+     * @brief Pointer to a 2D point.
+     * 
+     */
     typedef synctex_point_s * synctex_point_p;
     
+    /**
+     * @brief 2D rectangle
+     * Used for boxes.
+     */
     typedef struct {
-        synctex_point_s min;   /* top left */
-        synctex_point_s max;   /* bottom right */
+        /** top left */
+        synctex_point_s min;
+        /** bottom right */
+        synctex_point_s max;
     } synctex_box_s;
     
-    typedef synctex_box_s * synctex_box_p;
     /**
-     *  These are the types of the synctex nodes.
-     *  No need to use them but the compiler needs them here.
-     *  There are 3 kinds of nodes.
-     *  - primary nodes
-     *  - proxies
-     *  - handles
-     *  Primary nodes are created at parse time
-     *  of the synctex file.
-     *  Proxies are used to support pdf forms.
-     *  The ref primary nodes are replaced by a tree
-     *  of proxy nodes which duplicate the tree of primary
-     *  nodes available in the refered form.
-     *  Roughly speaking, the primary nodes of the form
-     *  know what to display, the proxy nodes know where.
-     *  Handles are used in queries. They point to either
-     *  primary nodes or proxies.
+     * @brief Pointer to 2D rectangle
+     * Used for NULL terminated lists of boxes.
+     */
+    typedef synctex_box_s * synctex_box_p;
+    
+    /**
+     * @brief Types of the synctex nodes.
+     *
+     * These are exactly the TeX nodes but somehow related.
+     * No real need to use them but the compiler needs them here.
+     * 
+     * Each node type uniquely identifies a node class.
+     * 
+     * There are 3 kinds of nodes.
+     * - primary nodes, created when parsing the `.synctex` file.
+     *   They correspond to lines in the `.synctex` file.
+     * - proxies, used to support pdf forms,
+     *   The ref primary nodes are replaced by a tree
+     *   of proxy nodes which duplicate the tree of primary
+     *   nodes available in the refered form.
+     *   Roughly speaking, the primary nodes of the form
+     *   know what to display, the proxy nodes know where.
+     * - handles are used in queries. They point to either
+     *   primary nodes or proxies.
      */
     typedef enum {
+        /** No correspondance in `.synctex` file. */
         synctex_node_type_none = 0,
+        /** line starting with `Input:` */
         synctex_node_type_input,
+        /** line starting with `{` */
         synctex_node_type_sheet,
+        /** line starting with `<` */
         synctex_node_type_form,
+        /** line starting with `f` */
         synctex_node_type_ref,
-        synctex_node_type_vbox,
+        /** line starting with `[` */
+        synctex_node_type_vbox,/*5*/
+        /** line starting with `v` */
         synctex_node_type_void_vbox,
+        /** line starting with `(` */
         synctex_node_type_hbox,
+        /** line starting with `h` */
         synctex_node_type_void_hbox,
+        /** line starting with `k` */
         synctex_node_type_kern,
-        synctex_node_type_glue,
+        /** line starting with `g` */
+        synctex_node_type_glue,/*10*/
+        /** line starting with `r` */
         synctex_node_type_rule,
+        /** line starting with `$` */
         synctex_node_type_math,
+        /** line starting with `x` */
         synctex_node_type_boundary,
+        /** Undocumented */
         synctex_node_type_box_bdry,
-        synctex_node_type_proxy,
+        /** Undocumented */
+        synctex_node_type_proxy,/*15*/
+        /** Undocumented */
         synctex_node_type_proxy_last,
+        /** Undocumented */
         synctex_node_type_proxy_vbox,
+        /** Undocumented */
         synctex_node_type_proxy_hbox,
+        /** Undocumented */
         synctex_node_type_handle,
+        /** Number of types */
         synctex_node_number_of_types
     } synctex_node_type_t;
-    /*  synctex_node_type gives the type of a given node,
-     *  synctex_node_isa gives the same information as a human readable text. */
-    synctex_node_type_t synctex_node_type(synctex_node_p node);
-    const char * synctex_node_isa(synctex_node_p node);
     
-    synctex_node_type_t synctex_node_target_type(synctex_node_p node);
+    /**
+     * @brief The type of a given node, as integer.
+    */
+    synctex_node_type_t synctex_node_type(synctex_node_p node);
+    
+    /**
+     * @brief The type of a given node, as a human readable text.
+    */
+    const char * synctex_node_isa(synctex_node_p node);
 
-    synctex_node_type_t synctex_node_type(synctex_node_p node);
-    const char * synctex_node_isa(synctex_node_p node);
-    
-    void synctex_node_log(synctex_node_p node);
-    void synctex_node_display(synctex_node_p node);
+    /**
+     * @brief The node type of the target.
+     * 
+     * @param node 
+     * @return synctex_node_type_t 
+     */
+    synctex_node_type_t synctex_node_target_type(synctex_node_p node);
     
     /*  Given a node, access to the location in the synctex file where it is defined.
      */
 
-    int synctex_node_form_tag(synctex_node_p node);
-    
     int synctex_node_weight(synctex_node_p node);
     int synctex_node_child_count(synctex_node_p node);
     
-    int synctex_node_h(synctex_node_p node);
-    int synctex_node_v(synctex_node_p node);
-    int synctex_node_width(synctex_node_p node);
-    
+    /** \defgroup AdvancedGeometry Node geometry (advance)
+     * 
+     *   Available in `synctex_parser_advanced.h`.
+     * @{
+     */
     int synctex_node_box_h(synctex_node_p node);
     int synctex_node_box_v(synctex_node_p node);
     int synctex_node_box_width(synctex_node_p node);
@@ -390,116 +520,234 @@ extern "C" {
     int synctex_node_hbox_width(synctex_node_p node);
     int synctex_node_hbox_height(synctex_node_p node);
     int synctex_node_hbox_depth(synctex_node_p node);
+    /** @} */
     
-    synctex_scanner_p synctex_scanner_new(void);
     synctex_node_p synctex_node_new(synctex_scanner_p scanner,synctex_node_type_t type);
 
     /**
-     *  Scanner display switcher getter.
-     *  If the switcher is 0, synctex_node_display is disabled.
-     *  If the switcher is <0, synctex_node_display has no limit.
-     *  If the switcher is >0, only the first switcher (as number) nodes are displayed.
-     *  - parameter: a scanner
-     *  - returns: an integer
+     * @brief Designated scanner constructor.
+     * 
+     * @return synctex_scanner_p 
      */
-    int synctex_scanner_display_switcher(synctex_scanner_p scanR);
-    void synctex_scanner_set_display_switcher(synctex_scanner_p scanR, int switcher);
+    synctex_scanner_p synctex_scanner_new(void);
+
+    /** \addtogroup Scanner
+     * @{
+     */
+
+/** @defgroup Iterator Managing the answer to queries.
+ *  
+ * Answers to edit and view queries are special structure.
+ * @{
+ */
 
     /**
-     *  Iterator is the structure used to traverse
-     *  the answer to client queries.
-     *  First answers are the best matches, according
-     *  to criteria explained below.
-     *  Next answers are not ordered.
-     *  Objects are handles to nodes in the synctex node tree starting at scanner.
+     * @brief Scanner display switcher getter
+     * 
+     * @param scanR 
+     * @return int 
+     * @see `synctex_scanner_set_display_switcher`
+     */
+    int synctex_scanner_display_switcher(synctex_scanner_p scanR);
+    
+    /**
+     * @brief Scanner display switcher setter.
+     * 
+     * @param scanR 
+     * @param switcher
+     * If the switcher is 0, `synctex_node_display` is disabled.
+     * If the switcher is <0, `synctex_node_display` has no limit.
+     * If the switcher is >0, only the first switcher (as number) nodes are displayed.
+     */
+    void synctex_scanner_set_display_switcher(synctex_scanner_p scanR, int switcher);
+
+    /** @} */
+
+/** @defgroup Iterator Managing the answer to queries.
+ *  
+ * Answers to edit and view queries are special structure.
+ * @{
+ */
+
+    /**
+     * @brief Structure used to traverse the answer to client queries.
+     * 
+     * First answers are the best matches, according
+     * to criteria explained below.
+     * Next answers are not ordered.
+     * Objects are handles to nodes in the synctex node tree starting at scanner.
      */
     typedef struct synctex_iterator_t synctex_iterator_s;
+    
+    /**
+     * @brief Pointer to an iterator structure.
+     * 
+     */
     typedef synctex_iterator_s * synctex_iterator_p;
 
     /**
-     *  Designated creator for a display query, id est,
-     *  forward navigation from source to output.
-     *  Returns NULL if the query has no answer.
-     *  Code example:
-     *      synctex_iterator_p iterator = NULL;
-     *      if ((iterator = synctex_iterator_new_display(...)) {
+     * Designated creator for a display query.
+     * 
+     * A display query is used in forward navigation from source to output.
+     * 
+     * Returns NULL if the query has no answer.
+     * Code example:
+     * ```
+     *    synctex_iterator_p iterator = NULL;
+     *    if ((iterator = synctex_iterator_new_display(...)) {
      *      synctex_node_p node = NULL;
      *      while((node = synctex_iterator_next_result(iterator))) {
-     *          do something with node...
+     *        <do something with node...>
      *      }
+     *      synctex_iterator_free(iterator);
+     *    }
+     * ```
      */
     synctex_iterator_p synctex_iterator_new_display(synctex_scanner_p scanner,const char *  name,int line,int column, int page_hint);
     /**
-     *  Designated creator for an  edit query, id est,
-     *  backward navigation from output to source.
+     *  Designated creator for an  edit query.
+     * 
+     * An edit query is used in backward navigation from output to source.
      *  Code example:
-     *      synctex_iterator_p iterator = NULL;
-     *      if ((iterator = synctex_iterator_new_edit(...)) {
+     * ```
+     *    synctex_iterator_p iterator = NULL;
+     *    if ((iterator = synctex_iterator_new_edit(...)) {
      *      synctex_node_p node = NULL;
      *      while((node = synctex_iterator_next_result(iterator))) {
-     *          do something with node...
+     *        <do something with node...>
      *      }
+     *      synctex_iterator_free(iterator);
+     *    }
+     * ```
      */
     synctex_iterator_p synctex_iterator_new_edit(synctex_scanner_p scanner,int page,float h,float v);
-    /**
-     *  Free all the resources.
+
+    /*
+     *  
      *  - argument iterator: the object to free...
-     *  You should free the iterator before the scanner
-     *  owning the nodes it iterates with.
+     */
+
+    /**
+     * @brief Free all the resources associate to the iterator.
+     * 
+     * You should free the iterator before the scanner
+     * owning the nodes it iterates with.
+     *
+     * @param iterator the object to free...
      */
     void synctex_iterator_free(synctex_iterator_p iterator);
+
     /**
-     *  Whether the iterator actually points to an object.
-     *  - argument iterator: the object to iterate on...
+     * @brief Whether the iterator actually points to a node.
+     * 
+     * @param iterator the object to iterate on...
+     * @return synctex_bool_t 
      */
     synctex_bool_t synctex_iterator_has_next(synctex_iterator_p iterator);
+    
     /**
-     *  Returns the pointed object and advance the cursor
-     *  to the next object. Returns NULL and does nothing
-     *  if the end has already been reached.
-     *  - argument iterator: the object to iterate on...
+     * @brief Get the next query result.
+     * 
+     * Returns the pointed object and advance the cursor
+     * to the next object. Returns NULL and does nothing
+     * if the end has already been reached.
+     * 
+     * @param iterator the object to iterate on...
+     * @return synctex_node_p 
      */
     synctex_node_p synctex_iterator_next_result(synctex_iterator_p iterator);
+    
     /**
-     *  Reset the cursor position to the first result.
-     *  - argument iterator: the object to iterate on...
+     * @brief Reset the cursor position to the first result.
+     * 
+     * @param iterator the object to iterate on...
+     * @return int the number of results
      */
     int synctex_iterator_reset(synctex_iterator_p iterator);
+    
+/** @} */ // end of group Iterator
+ 
     /**
-     *  The number of objects left for traversal.
-     *  - argument iterator: the object to iterate on...
+     * @brief The number of objects left.
+     * 
+     * @param iterator the object to iterate on...
+     * @return int 
      */
     int synctex_iterator_count(synctex_iterator_p iterator);
+
 
     /**
      *  The target of the node, either a handle or a proxy.
      */
     synctex_node_p synctex_node_target(synctex_node_p node);
     
-#define SYNCTEX_NO_UPDATER
 #ifndef SYNCTEX_NO_UPDATER
-    /*  The main synctex updater object.
-     *  This object is used to append information to the synctex file.
-     *  Its implementation is considered private.
-     *  It is used by the synctex command line tool to take into account modifications
-     *  that could occur while postprocessing files by dvipdf like filters.
-     */
-    typedef struct synctex_updater_t synctex_updater_s;
-    typedef synctex_updater_s * synctex_updater_p;
+/** @defgroup Updater A way to alter synctex files.
+ *  
+ * Sometimes it is necessary to modify the `.synctex` file.
+ * An updater is used to append information to the synctex file.
+ * Its implementation is considered unstable.
+ * It is used by the synctex command line tool to take into account modifications
+ * that could occur while postprocessing files by dvipdf like filters.
+ * @{
+ */
+   /**
+    * @brief Updater data structure.
+    * 
+    */
+    typedef struct _synctex_updater_t _synctex_updater_s;
+   /**
+    * @brief Pointer to a `synctex_updater_s` updater data structure.
+    * 
+    */
+    typedef _synctex_updater_s * synctex_updater_p;
     
-    /*  Designated initializer.
-     *  Once you are done with your whole job,
-     *  free the updater */
+    /**
+     * @brief Updater designated creator.
+     * 
+     * Once you are done with your whole job, free the updater.
+     * 
+     * @param output name of a pdf file
+     * @param directory optional directory where the pdf file is,
+     *   defaults to the current working directory.
+     * @return synctex_updater_p
+     * @see synctex_updater_free
+     */
     synctex_updater_p synctex_updater_new_with_output_file(const char * output, const char * directory);
     
-    /*  Use the next functions to append records to the synctex file,
-     *  no consistency tests made on the arguments */
+    /**
+     * @brief Append a magnification record.
+     * 
+     * @param updater 
+     * @param magnification 
+     */
     void synctex_updater_append_magnification(synctex_updater_p updater, char *  magnification);
+
+    /**
+     * @brief Append an x-offset record.
+     * 
+     * @param updater 
+     * @param x_offset 
+     */
     void synctex_updater_append_x_offset(synctex_updater_p updater, char *  x_offset);
+
+    /**
+     * @brief Append an y-offset record.
+     * 
+     * @param updater 
+     * @param y_offset 
+     */
     void synctex_updater_append_y_offset(synctex_updater_p updater, char *  y_offset);
     
     /*  You MUST free the updater, once everything is properly appended */
+
+    /**
+     * @brief Updater designated destructor.
+     * 
+     * @param updater 
+     */
     void synctex_updater_free(synctex_updater_p updater);
+/** @} */ // end of group Updater
 #endif
     
 #if defined(SYNCTEX_DEBUG)
@@ -550,6 +798,8 @@ _Pragma("clang diagnostic ignored \"-Wformat-extra-args\"")
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

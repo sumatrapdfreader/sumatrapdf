@@ -1,0 +1,537 @@
+From b6cff4e77b8334cd3cbb7b7adae40b27cec526e6 Mon Sep 17 00:00:00 2001
+From: "[JaviLendi]" <jlendinez@icloud.com>
+Date: Thu, 7 May 2026 17:16:27 +0200
+Subject: [PATCH 4/4] =?UTF-8?q?prettysumatra:=20Group=204=20=E2=80=94=20Ho?=
+ =?UTF-8?q?usekeeping=20(AUTHORS,=20docs,=20tasks)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .vscode/tasks.json                       |  94 ++++++++----
+ AUTHORS                                  |   1 +
+ PRETTYSUMATRA_NOTES.md                   | 179 +++++++++++++++++++++++
+ docs/prettysumatra/BRIDGE_CONTRACT.md    |  39 +++++
+ docs/prettysumatra/SMOKE_UI_CHECKLIST.md |  99 +++++++++++++
+ docs/prettysumatra/UI_COMPONENT_MAP.md   |  30 ++++
+ 6 files changed, 410 insertions(+), 32 deletions(-)
+ create mode 100644 PRETTYSUMATRA_NOTES.md
+ create mode 100644 docs/prettysumatra/BRIDGE_CONTRACT.md
+ create mode 100644 docs/prettysumatra/SMOKE_UI_CHECKLIST.md
+ create mode 100644 docs/prettysumatra/UI_COMPONENT_MAP.md
+
+diff --git a/.vscode/tasks.json b/.vscode/tasks.json
+index d81b1c736..87e012c58 100644
+--- a/.vscode/tasks.json
++++ b/.vscode/tasks.json
+@@ -6,17 +6,11 @@
+         {
+             "label": "build-rel-64",
+             "type": "shell",
+-            "command": "msbuild",
++            "command": "cmd",
+             "args": [
+-                "${workspaceFolder}\\vs2022\\SumatraPDF.sln",
+-                // Ask msbuild to generate full paths for file names.
+-                "/property:GenerateFullPaths=true",
+-                "/t:SumatraPDF-dll",
+-                "/p:Configuration=Release;Platform=x64",
+-                // multi-process
+-                "/m",
+-                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+-                "/consoleloggerparameters:NoSummary"
++                "/d",
++                "/c",
++                "scripts\\build-vs2022.cmd Release x64 SumatraPDF-dll"
+             ],
+             "group": "build",
+             "presentation": {
+@@ -29,18 +23,11 @@
+         {
+             "label": "build-rel-asan-64",
+             "type": "shell",
+-            "command": "msbuild",
++            "command": "cmd",
+             "args": [
+-                "${workspaceFolder}\\vs2022\\SumatraPDF.sln",
+-                // Ask msbuild to generate full paths for file names.
+-                "/property:GenerateFullPaths=true",
+-                "/t:SumatraPDF",
+-                "/property:Configuration=Release",
+-                "/property:Platform=x64_asan",
+-                // multi-process
+-                "/m",
+-                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+-                "/consoleloggerparameters:NoSummary"
++                "/d",
++                "/c",
++                "scripts\\build-vs2022.cmd Release x64_asan SumatraPDF"
+             ],
+             "group": "build",
+             "presentation": {
+@@ -53,18 +40,11 @@
+         {
+             "label": "build-dbg-64",
+             "type": "shell",
+-            "command": "msbuild",
++            "command": "cmd",
+             "args": [
+-                "${workspaceFolder}\\vs2022\\SumatraPDF.sln",
+-                // Ask msbuild to generate full paths for file names.
+-                "/property:GenerateFullPaths=true",
+-                "/t:SumatraPDF-dll",
+-                "/property:Configuration=Debug",
+-                "/property:Platform=x64",
+-                // multi-process
+-                "/m",
+-                // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+-                "/consoleloggerparameters:NoSummary"
++                "/d",
++                "/c",
++                "scripts\\build-vs2022.cmd Debug x64 SumatraPDF-dll"
+             ],
+             "group": "build",
+             "presentation": {
+@@ -73,6 +53,56 @@
+             },
+             // Use the standard MS compiler pattern to detect errors, warnings and infos
+             "problemMatcher": "$msCompile"
++        },
++        {
++            "label": "run-dbg-64",
++            "type": "shell",
++            "command": "powershell",
++            "args": [
++                "-NoProfile",
++                "-ExecutionPolicy",
++                "Bypass",
++                "-Command",
++                "$exe='${workspaceFolder}\\out\\dbg64\\SumatraPDF.exe'; if (Test-Path $exe) { & $exe } else { Write-Error \"No existe: $exe\"; exit 1 }"
++            ],
++            "presentation": {
++                "reveal": "always"
++            },
++            "problemMatcher": []
++        },
++        {
++            "label": "run-rel-64",
++            "type": "shell",
++            "command": "powershell",
++            "args": [
++                "-NoProfile",
++                "-ExecutionPolicy",
++                "Bypass",
++                "-Command",
++                "$exe='${workspaceFolder}\\out\\rel64\\SumatraPDF.exe'; if (Test-Path $exe) { & $exe } else { Write-Error \"No existe: $exe\"; exit 1 }"
++            ],
++            "presentation": {
++                "reveal": "always"
++            },
++            "problemMatcher": []
++        },
++        {
++            "label": "build-and-run-dbg-64",
++            "dependsOrder": "sequence",
++            "dependsOn": [
++                "build-dbg-64",
++                "run-dbg-64"
++            ],
++            "problemMatcher": []
++        },
++        {
++            "label": "build-and-run-rel-64",
++            "dependsOrder": "sequence",
++            "dependsOn": [
++                "build-rel-64",
++                "run-rel-64"
++            ],
++            "problemMatcher": []
+         }
+     ]
+ }
+diff --git a/AUTHORS b/AUTHORS
+index c3cfbd753..db8871ae2 100644
+--- a/AUTHORS
++++ b/AUTHORS
+@@ -15,6 +15,7 @@
+ * Simon Bünzli (zeniko at gmail.com, https://www.zeniko.ch/#SumatraPDF)
+ * Stefan Stefanov (userchefo at gmail.com)
+ * Tom Clegg
++* Javi Lendi (<https://github.com/JaviLendi>)
+ * vadmium at gmail.com
+ * Vasily Fomin (vasili.fomin at gmail.com)
+ * Victor Kozyakin
+diff --git a/PRETTYSUMATRA_NOTES.md b/PRETTYSUMATRA_NOTES.md
+new file mode 100644
+index 000000000..dbf7b21d5
+--- /dev/null
++++ b/PRETTYSUMATRA_NOTES.md
+@@ -0,0 +1,179 @@
++# PrettySumatra Integration Notes
++
++- Base branch: prettysumatra-base
++- Host strategy: C++ Win32 + optional WebView2 shell
++- Keep rendering core unchanged
++- Port components according to native-hybrid/docs/UI_COMPONENT_MAP.md
++
++## Integration Started
++
++- Added documentation package under docs/prettysumatra:
++	- BRIDGE_CONTRACT.md
++	- UI_COMPONENT_MAP.md
++	- ROADMAP_PHASE0.md
++- Added initial command namespace spec at src/prettysumatra/CommandBridgeSpec.h.
++
++## Native Toolbar Migration (Phase 1)
++
++- Switched default startup path to native toolbar (Win32):
++	- src/prettysumatra/BridgeDispatcher.cpp now defaults PRETTYSUMATRA_WEBVIEW_TOOLBAR to false.
++- Kept WebView toolbar only as temporary fallback behind PRETTYSUMATRA_WEBVIEW_TOOLBAR=1.
++- Hardened toolbar visibility logic:
++	- Native rebar is hidden only when a hybrid toolbar instance was actually created.
++	- No early hide based only on env flags.
++- Updated frame relayout behavior:
++	- Hybrid toolbar space is reserved only when hybrid toolbar window exists.
++	- Prevents blank top strip when WebView is unavailable.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after these changes.
++
++## Native Toolbar Visual Pass (Phase 2)
++
++- Added native custom-draw "pill" highlight for active view controls:
++	- `CmdZoomFitWidthAndContinuous`
++	- `CmdZoomFitPageAndSinglePage`
++	- `CmdToggleTableOfContents` (Sidebar)
++- Sidebar button checked state now tracks TOC visibility so the pill state is meaningful.
++- Added density tuning for small screens:
++	- automatic compact mode for narrow frame widths
++	- optional override via `PRETTYSUMATRA_TOOLBAR_DENSITY=compact|normal|auto`
++- Compact mode reduces toolbar horizontal padding, separator width, and find-box width.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully with phase 2 changes.
++
++## Native Toolbar Modern Polish (Phase 3)
++
++- Finalized a flatter native Win32 look without external UI libraries.
++- Floating shell and group containers were refined:
++	- larger outer margins to avoid edge-to-edge rebar feel
++	- subtler shadow and stroke for cleaner depth
++	- tighter rounded group containers clamped inside the shell bounds
++- Toolbar item custom draw was expanded:
++	- modern hover/pressed visuals for standard buttons (not only pill buttons)
++	- no classic etched/raised toolbar edges
++	- active pill buttons keep strong contrast and white text
++- Find/Page background boxes now use rounded themed borders for consistency with the shell.
++- Removed legacy rebar child-edge styling on the main toolbar band.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after phase 3 updates.
++
++## Native Toolbar Redesign (Phase 4)
++
++- Reworked toolbar visual integration from scratch while keeping native Win32 controls.
++- Floating shell is now based on real content bounds (buttons + page/find controls), instead of spanning full width.
++- Updated glass styling:
++	- cleaner rounded shell and highlight
++	- compact shadow profile
++	- group capsules with wider inner margins
++- Updated interaction styling:
++	- larger inset and refined radii for hover/active button states
++	- spacing and button sizing tuned for better visual rhythm
++- Goal achieved:
++	- stronger integration with the app surface and less "detached bar" appearance.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after phase 4 updates.
++
++## Native Toolbar Win11 Refresh (Phase 5)
++
++- Applied a full visual modernization pass for the native Win32 toolbar with a Windows 11 style direction, while preserving command behavior and layout semantics.
++- Introduced centralized visual tokens in Toolbar.cpp for shell, groups, buttons, and states:
++	- shell and shadow colors
++	- hover/pressed/checked state colors
++	- radius values for shell, groups, normal buttons, and pill buttons
++- Updated floating shell rendering for a cleaner Fluent-like surface:
++	- softer top tint instead of strong glossy effect
++	- subtler blend integration into document background
++	- compact-aware shell padding and group insets
++- Updated item custom-draw behavior:
++	- consistent Win11-style hover, pressed, and checked states for both normal and pill controls
++	- accent checked state with high-contrast text
++	- no functional changes to checked-state logic or command routing
++- Refined embedded page/find box visuals to match the new shell:
++	- rounded fill and stroke aligned with toolbar token set
++	- theme-aware blending when controls are colorized
++- Rebalanced spacing and density metrics for modern rhythm across compact/normal modes:
++	- toolbar horizontal/vertical padding
++	- separator widths
++	- text button widths (Open, Sidebar)
++	- button heights
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after phase 5 updates.
++
++## Win11 Coherence Pass (Phase 6)
++
++- Extended Win11 visual language from the main toolbar to the custom menu toolbar (tabs-in-titlebar mode).
++- Added menu-specific floating shell paint path that reuses the same visual token system as the main toolbar.
++- Updated menu toolbar item custom-draw states for consistency:
++	- hover state
++	- pressed/active state
++	- disabled text treatment
++- Normalized menu toolbar metrics and height rhythm to align with the main toolbar density modes (compact/normal).
++- Preserved menu behavior semantics (popup navigation, keyboard/mouse switching) with no command routing changes.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after phase 6 coherence updates.
++
++## App-Wide Style Rollout (Phased)
++
++- Goal: propagate the same modern PrettySumatra visual language across the whole app, not just the toolbar.
++- Strategy: phase-based rollout with small, testable slices to avoid regressions.
++
++### Phase A - Foundation (done)
++- Added shared style tokens in `Theme` as reusable APIs:
++	- `PrettyStyleEnabled()`
++	- `PrettySurfaceColor()`
++	- `PrettySurfaceAltColor()`
++	- `PrettyBorderColor()`
++	- `PrettyAccentColor()`
++- Added env toggle `PRETTYSUMATRA_STYLE_V1` (default enabled).
++- Applied tokens to Home/Start page surfaces:
++	- background area
++	- search box surface + border
++	- thumbnail borders
++	- tip panel surface + links
++- Applied tokenized edit background in canvas-about edit color handler.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after Phase A.
++
++### Phase B - Sidebar & Navigation (in progress)
++- Implemented initial sidebar tokenization pass:
++	- TOC/Favorites tree backgrounds now follow `PrettySurfaceAltColor()` when Pretty style is enabled.
++	- TOC filter edit surface now uses `PrettySurfaceColor()` for clearer contrast from tree area.
++	- Sidebar and favorites splitters now use `PrettyBorderColor()` for subtler separators.
++	- TOC container and favorites container painting now uses Pretty sidebar background tokens.
++	- TOC custom draw selection/highlight path now respects Pretty accent/surface tokens.
++	- Favorites tree now uses custom draw for focused/unfocused selection to match TOC behavior.
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after Phase B initial pass.
++- Remaining in Phase B:
++	- Apply the same sidebar token discipline to any remaining navigation panes with custom drawing.
++	- Fine tune hover/selection contrast after runtime screenshot pass.
++
++### Phase C - Dialogs & Utilities
++- In progress:
++	- Command Palette initial visual migration to Pretty tokens:
++		- window/query/list surfaces now use Pretty surface tokens
++		- list selected row uses focused/unfocused selection colors aligned with sidebar behavior
++		- matched text highlight uses Pretty border tone
++		- right-side metadata text uses Pretty accent color
++	- Command Palette shell restyle (launcher-like):
++		- borderless floating popup container with rounded corners
++		- subtle outline and separators around results area
++		- refined spacing, paddings and cue text polish for a cleaner visual hierarchy
++		- frosty background treatment (DWM backdrop/blur + translucency fallback)
++	- Edit Annotations window utility pass:
++		- window background now follows Pretty surface token
++		- list/edit/dropdowns/trackbars/buttons now use Pretty surface/alt surface colors
++		- labels and control text now use themed foreground color for consistency
++	- Utility dialogs Pretty token pass (SumatraDialogs):
++		- added shared WM_ERASEBKGND / WM_CTLCOLOR* helper for Pretty surfaces
++		- applied to Go To Page, Find, Change Language, Custom Zoom, Change Scrollbar, Settings and Add Favorite dialogs
++		- static labels now blend with Pretty dialog background, edit/list controls use alt surface for readability
++- Build status:
++	- Debug x64 target SumatraPDF-dll compiles successfully after Command Palette Phase C pass.
++- Remaining in Phase C:
++	- Extend the same token discipline to remaining annotation-related dialogs not yet migrated.
++	- Finalize consistency sweep for utility window border/surface/accent roles.
++
++### Phase D - Polish & Accessibility
++- Contrast pass (light/dark), DPI pass (100/150/200), and focus visuals.
++- Final consistency sweep for icon tone and interaction feedback.
+diff --git a/docs/prettysumatra/BRIDGE_CONTRACT.md b/docs/prettysumatra/BRIDGE_CONTRACT.md
+new file mode 100644
+index 000000000..f76e0f05c
+--- /dev/null
++++ b/docs/prettysumatra/BRIDGE_CONTRACT.md
+@@ -0,0 +1,39 @@
++# Bridge Contract (Shell <-> Native)
++
++This contract defines how a modern shell layer invokes native core actions.
++
++## Command Envelope
++```json
++{
++  "id": "uuid",
++  "type": "command",
++  "name": "openFile",
++  "payload": {},
++  "ts": 0
++}
++```
++
++## Core Commands
++- openFile { path }
++- goToPage { page }
++- zoom { value }
++- setFitMode { mode: "page-width" | "page" | "actual-size" }
++- search { query, direction }
++- toggleSidebar {}
++- setViewMode { mode: "continuous" | "single-page" }
++- addAnnotation { page, startSpanIndex, endSpanIndex, quote, comment }
++- editAnnotation { id, comment }
++- deleteAnnotation { id }
++
++## Events
++- documentLoaded { name, totalPages }
++- pageChanged { page }
++- searchResult { current, total }
++- annotationChanged { total }
++- performance { phase, elapsedMs }
++- error { code, message }
++
++## Reliability
++- Commands must be idempotent where possible.
++- Every command emits success/error completion.
++- Unknown commands return error without crashing host.
+diff --git a/docs/prettysumatra/SMOKE_UI_CHECKLIST.md b/docs/prettysumatra/SMOKE_UI_CHECKLIST.md
+new file mode 100644
+index 000000000..afa21dd01
+--- /dev/null
++++ b/docs/prettysumatra/SMOKE_UI_CHECKLIST.md
+@@ -0,0 +1,99 @@
++# PrettySumatra Smoke UI Checklist
++
++## Scope
++
++- Validate WebView toolbar path, tab/home consistency, menu parity, sidebar behavior, and core commands.
++- Run on Debug x64 after a clean app launch.
++
++## Preconditions
++
++- Build Debug x64 target `SumatraPDF-dll`.
++- Start app with WebView2 runtime available.
++- Use a sample set:
++  - one PDF with at least 20 pages
++  - one PDF with images + text
++  - one non-PDF document supported by app
++
++## 1. Launch and Global Surface
++
++- [ ] App launches without crash and frame paints correctly.
++- [ ] Native toolbar is not visible.
++- [ ] WebView toolbar is visible and interactive.
++- [ ] Home tab renders without overlaps or clipped controls.
++- [ ] Switching theme (Light/Dark, follow Windows) updates toolbar and content colors coherently.
++
++## 2. Home Tab
++
++- [ ] "Recently Opened" title aligns to left content edge.
++- [ ] Search edit is usable and not visually duplicated by a fake control.
++- [ ] Typing in Home search filters recent files live.
++- [ ] Recent cards remain fully visible with no cut-off at top.
++- [ ] Opening an item from recent list loads document.
++
++## 3. Toolbar Core Commands (WebView)
++
++- [ ] Open button opens file picker and loads a document.
++- [ ] Prev/Next page controls update page correctly.
++- [ ] Page input jump works for valid page and clamps invalid values.
++- [ ] Zoom in/out and zoom preset select update rendering.
++- [ ] View mode selector applies single/facing/book behavior.
++- [ ] Continuous toggle changes scrolling layout.
++- [ ] Search box + next/prev arrows find text in document.
++
++## 4. Menu and Command Parity
++
++- [ ] Menu commands (Open, Print, Rotate, Properties, etc.) still work with WebView toolbar active.
++- [ ] Command palette opens and executes commands normally.
++- [ ] No duplicated/conflicting action between menu and WebView toolbar for same command.
++
++## 5. Sidebar, TOC, Favorites
++
++- [ ] Sidebar toggle from toolbar opens/closes TOC reliably.
++- [ ] Favorites toggle behaves independently from TOC visibility.
++- [ ] TOC selection jumps to expected page.
++- [ ] Favorites selection opens expected destination.
++
++## 6. Tabs and Navigation
++
++- [ ] Open 3+ docs in tabs; switching tabs preserves page and zoom state.
++- [ ] Close/reopen tab actions remain stable.
++- [ ] Home tab and document tabs coexist without layout jumps.
++
++## 7. Dialogs and Utilities
++
++- [ ] Find dialog, Go To Page, Settings, and Properties open with coherent colors.
++- [ ] Notifications render readable text and progress states.
++- [ ] No control text/background contrast regression in pretty theme.
++
++## 8. Rendering and Dark Behavior
++
++- [ ] In dark mode, text remains readable.
++- [ ] PDF image-heavy pages do not look incorrectly inverted.
++- [ ] Switching theme while document is open does not require restart.
++
++## 9. Stability Checks
++
++- [ ] Enter/exit fullscreen does not reveal native toolbar.
++- [ ] Enter/exit presentation mode preserves expected controls.
++- [ ] Resize window (small/medium/large) keeps toolbar and page layout coherent.
++- [ ] App exit/relaunch restores expected startup state without UI corruption.
++
++## 10. Pass Criteria
++
++- [ ] No crashes, no assertion dialogs, no command dead-ends.
++- [ ] No native-toolbar reappearance during tested flows.
++- [ ] No major visual overlap/cut-off in Home, tabs, sidebar, or dialogs.
++
++## Quick Log Template
++
++- Build: PASS/FAIL
++- Launch: PASS/FAIL
++- Home: PASS/FAIL
++- Toolbar commands: PASS/FAIL
++- Menu parity: PASS/FAIL
++- Sidebar/TOC/Favorites: PASS/FAIL
++- Tabs/navigation: PASS/FAIL
++- Dialogs/utilities: PASS/FAIL
++- Rendering/theme: PASS/FAIL
++- Stability: PASS/FAIL
++- Notes:
+diff --git a/docs/prettysumatra/UI_COMPONENT_MAP.md b/docs/prettysumatra/UI_COMPONENT_MAP.md
+new file mode 100644
+index 000000000..20d4c5a32
+--- /dev/null
++++ b/docs/prettysumatra/UI_COMPONENT_MAP.md
+@@ -0,0 +1,30 @@
++# UI Component Mapping (Mockup -> Native)
++
++## Toolbar
++- Open button -> Win32 command button + file dialog
++- Prev/Next page -> native command buttons
++- Page jump -> Edit + spin control
++- Zoom selector -> ComboBox
++- Search box -> Edit control + native find command binding
++- Annotation mode toggle -> command toggle button
++- Import/Export annotations -> commands + JSON file bridge
++
++## Sidebar
++- Tabs (Thumbnails/Outline/Notes) -> owner-drawn tab strip
++- Thumbnails list -> virtualized custom list view
++- Outline tree -> TreeView control
++- Notes list -> owner-drawn list with actions
++
++## Reader Surface
++- PDF canvas -> existing Sumatra render surface (no rewrite)
++- Text layer behavior -> bridge to engine text extraction APIs
++- Highlights/comments -> overlay model tied to page/text ranges
++
++## System UX
++- Theme toggle -> app setting + system theme integration
++- Keyboard shortcuts -> command dispatcher table
++- Status toast -> lightweight native status line/overlay
++- Native note modal -> dialog-hosted editor (no browser prompt/confirm)
++
++## Migration Rule
++UI changes must preserve command semantics from Sumatra.
+-- 
+2.52.0.windows.1
+

@@ -2,6 +2,7 @@
 
 LIBRARY libmupdf
 EXPORTS
+	gzwrite
 	ddjvu_page_get_initial_rotation
 	fz_set_optind
 	fz_open_document
@@ -26,6 +27,7 @@ EXPORTS
 	pdfrecolor_main
 	pdftrim_main
 	pdfbake_main
+	pdfsign_main
 	mugrep_main
 	pdfaudit_main
 	fz_argv_from_wargv
@@ -896,3 +898,35 @@ EXPORTS
 	heif_image_handle_get_width
 	heif_image_handle_get_height
 	heif_image_release
+	; gumbo-parser (used by EngineImages for ComicInfo.xml,
+	; ChmFile for TOC/index parsing)
+	gumbo_parse_with_options
+	gumbo_destroy_output
+	gumbo_normalized_tagname
+	gumbo_get_attribute
+
+; pdf signature + form widgets (needed by EngineMupdf::GetProperties
+; signature reporting)
+
+	pdf_count_signatures
+	pdf_first_widget
+	pdf_next_widget
+	pdf_widget_type
+	pdf_check_widget_certificate
+	pdf_check_widget_digest
+	pdf_signature_get_widget_signatory
+	pdf_signature_drop_distinguished_name
+	pdf_signature_format_distinguished_name
+	pdf_signature_is_signed
+	pdf_signature_error_description
+	pdf_signature_incremental_change_since_signing
+	pdf_drop_verifier
+	pdf_to_text_string
+	pdf_to_date
+
+; pkcs7-windows (Windows CryptoAPI verifier backend)
+
+	pkcs7_windows_new_verifier
+	pkcs7_windows_check_certificate
+	pkcs7_windows_check_digest
+	pkcs7_windows_distinguished_name

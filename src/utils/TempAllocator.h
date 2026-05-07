@@ -3,7 +3,7 @@
 
 // note: include BaseUtil.h instead of including directly
 
-Allocator* GetTempAllocator();
+Arena* GetTempAllocator();
 void DestroyTempAllocator();
 void ResetTempAllocator();
 
@@ -13,7 +13,7 @@ FORCEINLINE T* AllocArrayTemp(size_t n) {
         return nullptr;
     }
     auto a = GetTempAllocator();
-    return (T*)Allocator::AllocZero(a, n);
+    return (T*)AllocZero(a, n);
 }
 
 namespace str {
@@ -33,4 +33,4 @@ TempStr FormatTemp(const char* fmt, ...);
 
 TempStr ToUtf8Temp(const WCHAR* s, size_t cch = (size_t)-1);
 TempWStr ToWStrTemp(const char* s, size_t cb = (size_t)-1);
-TempWStr ToWStrTemp(const str::Str& s);
+TempWStr ToWStrTemp(const StrBuilder& s);

@@ -115,14 +115,15 @@ char* DecodeHtmlEntititesTemp(const char* s, uint codepage) {
     return res;
 }
 
-HtmlParser::HtmlParser()
-
-    = default;
+HtmlParser::HtmlParser() {
+    allocator = ArenaNew();
+}
 
 HtmlParser::~HtmlParser() {
     if (freeHtml) {
         free(html);
     }
+    ArenaDelete(allocator);
 }
 
 void HtmlParser::Reset() {
@@ -135,11 +136,13 @@ void HtmlParser::Reset() {
     elementsCount = attributesCount = 0;
     error = ErrParsingNoError;
     errorContext = nullptr;
-    allocator.FreeAll();
+    if (allocator) {
+        allocator->Reset();
+    }
 }
 
 HtmlAttr* HtmlParser::AllocAttr(char* name, HtmlAttr* next) {
-    HtmlAttr* attr = allocator.AllocStruct<HtmlAttr>();
+    HtmlAttr* attr = AllocArray<HtmlAttr>(allocator);
     attr->name = name;
     attr->val = nullptr;
     attr->next = next;
@@ -167,7 +170,7 @@ char* HtmlElement::GetAttributeTemp(const char* name) const {
 }
 
 HtmlElement* HtmlParser::AllocElement(HtmlTag tag, char* name, HtmlElement* parent) {
-    HtmlElement* el = allocator.AllocStruct<HtmlElement>();
+    HtmlElement* el = AllocArray<HtmlElement>(allocator);
     el->tag = tag;
     el->name = name;
     el->firstAttr = nullptr;

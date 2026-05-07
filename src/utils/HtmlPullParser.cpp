@@ -135,7 +135,7 @@ const char* ResolveHtmlEntity(const char* s, size_t len, int& rune) {
 // with alloc in which entities are converted to their values
 // Entities are encoded as utf8 in the result.
 // alloc can be nullptr, in which case we'll allocate with malloc()
-const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc) {
+const char* ResolveHtmlEntities(const char* s, const char* end, Arena* alloc) {
     char* res = nullptr;
     size_t resLen = 0;
     char* dst;
@@ -156,7 +156,7 @@ const char* ResolveHtmlEntities(const char* s, const char* end, Allocator* alloc
             // I'm banking that text after resolving entities will
             // be smaller than the original
             resLen = end - s + 8; // +8 just in case
-            res = (char*)Allocator::Alloc(alloc, resLen);
+            res = (char*)Alloc(alloc, resLen);
             dst = res;
         }
         MemAppend(dst, s, curr - s);

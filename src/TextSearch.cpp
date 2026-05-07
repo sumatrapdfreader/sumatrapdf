@@ -24,7 +24,7 @@ static void markAllPagesNonSkip(Vec<bool>& pagesToSkip) {
         pagesToSkip[i] = false;
     }
 }
-TextSearch::TextSearch(EngineBase* engine, DocumentTextCache* textCache) : TextSelection(engine, textCache) {
+TextSearch::TextSearch(EngineBase* engine) : TextSelection(engine) {
     nPages = engine->PageCount();
     pagesToSkip.SetSize(nPages);
     markAllPagesNonSkip(pagesToSkip);
@@ -138,7 +138,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     searchHitStartAt = findPage = std::min(startPage, endPage);
     findPage = std::max(startPage, endPage);
     findIndex = (findPage == endPage ? endGlyph : startGlyph);
-    pageText = textCache->GetTextForPage(findPage);
+    pageText = engine->GetTextForPage(findPage);
     forward = true;
 }
 
@@ -221,7 +221,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             // ... or because we were looking at whitespace in the pattern and we were at a page break
             // -> skip to next page
             ++currentPage;
-            end = currentPageText = textCache->GetTextForPage(currentPage);
+            end = currentPageText = engine->GetTextForPage(currentPage);
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
@@ -233,7 +233,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
             while ((!*end) && (currentPage < nPages)) {
                 // treat page break as whitespace, too
                 ++currentPage;
-                end = currentPageText = textCache->GetTextForPage(currentPage);
+                end = currentPageText = engine->GetTextForPage(currentPage);
                 SkipWhitespace(end);
             }
         }
@@ -263,7 +263,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     }
     // According to my analysis of 69912675c766b6325f38036913dcf0505a00be36, when we
     // get here with pageNo != 0 the findText has already been set so I didn't add
-    // a findText = textCache->GetData(findPage) here.
+    // a findText = engine->GetTextForPage(findPage) here.
     findPage = pageNo;
 
     const WCHAR* found;
@@ -321,7 +321,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
 
         Reset();
 
-        pageText = textCache->GetTextForPage(pageNo, &findIndex);
+        pageText = engine->GetTextForPage(pageNo, &findIndex);
         if (pageText) {
             if (forward) {
                 findIndex = 0;
@@ -331,7 +331,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
                 if (forward) {
                     if (findPage != r.page) {
                         findPage = r.page;
-                        pageText = textCache->GetTextForPage(findPage);
+                        pageText = engine->GetTextForPage(findPage);
                     }
                     findIndex = r.offset;
                 }
@@ -374,7 +374,7 @@ TextSel* TextSearch::FindNext() {
         if (forward) {
             findPage = finalGlyph.page;
             findIndex = finalGlyph.offset;
-            pageText = textCache->GetTextForPage(findPage);
+            pageText = engine->GetTextForPage(findPage);
         }
         return &result;
     }

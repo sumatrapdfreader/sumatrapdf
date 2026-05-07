@@ -1,0 +1,4187 @@
+From 2468e78f1d922b3088e74faa044c9927690e6aab Mon Sep 17 00:00:00 2001
+From: "[JaviLendi]" <jlendinez@icloud.com>
+Date: Thu, 7 May 2026 17:16:17 +0200
+Subject: [PATCH 3/4] =?UTF-8?q?prettysumatra:=20Group=203=20=E2=80=94=20Na?=
+ =?UTF-8?q?tive=20UI=20polish=20and=20theme=20token=20rollout=20(Toolbar,?=
+ =?UTF-8?q?=20Theme,=20UI=20tweaks)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ premake5.files.lua               |   1 +
+ src/Accelerators.cpp             |   1 -
+ src/Canvas.cpp                   |   3 +
+ src/CanvasAboutUI.cpp            |   4 +-
+ src/CommandPalette.cpp           | 295 +++++++----
+ src/DisplayModel.cpp             |  10 -
+ src/EditAnnotations.cpp          |  69 ++-
+ src/Favorites.cpp                | 284 ++++++-----
+ src/MainWindow.cpp               |  29 +-
+ src/MainWindow.h                 |   8 +
+ src/Menu.cpp                     |  57 +--
+ src/Notifications.cpp            |  22 +-
+ src/RenderCache.cpp              |  23 +-
+ src/RenderCache.h                |   6 +-
+ src/SearchAndDDE.cpp             |  14 +-
+ src/SumatraDialogs.cpp           | 102 ++++
+ src/SumatraPDF.cpp               | 207 +++++++-
+ src/SumatraPDF.rc                |   8 +-
+ src/SumatraProperties.cpp        |  63 ++-
+ src/SumatraStartup.cpp           |   4 +
+ src/TableOfContents.cpp          | 181 ++++++-
+ src/Theme.cpp                    | 153 +++---
+ src/Theme.h                      |  16 +
+ src/Toolbar.cpp                  | 810 +++++++++++++++++++++++++++----
+ src/Toolbar.h                    |   1 +
+ src/utils/StrUtil.h              |   2 +
+ src/utils/WinUtil.cpp            |  65 ++-
+ src/utils/WinUtil.h              |   2 +-
+ src/wingui/LabelWithCloseWnd.cpp |  29 ++
+ src/wingui/ListBox.cpp           |   8 +-
+ src/wingui/Splitter.cpp          |   3 +-
+ src/wingui/TabsCtrl.cpp          |  25 +-
+ vs2022/SumatraPDF-dll.vcxproj    |   1 +
+ 33 files changed, 1971 insertions(+), 535 deletions(-)
+
+diff --git a/premake5.files.lua b/premake5.files.lua
+index f7a6feb78..1b55bc9fe 100644
+--- a/premake5.files.lua
++++ b/premake5.files.lua
+@@ -821,6 +821,7 @@ function sumatrapdf_files()
+     "Version.h",
+     "VirtWnd.*",
+     "WindowTab.*",
++    "prettysumatra/*.*",
+   })
+   filter { "configurations:Debug or DebugFull" }
+   files_in_dir("src", {
+diff --git a/src/Accelerators.cpp b/src/Accelerators.cpp
+index 2a37437c6..88a2b5387 100644
+--- a/src/Accelerators.cpp
++++ b/src/Accelerators.cpp
+@@ -263,7 +263,6 @@ ACCEL gBuiltInAccelerators[] = {
+     {FCONTROL | FVIRTKEY, VK_F4, CmdClose},
+     {FVIRTKEY, VK_F6, CmdMoveFrameFocus},
+     {FVIRTKEY, VK_F8, CmdToggleToolbar},
+-    {FVIRTKEY, VK_F9, CmdToggleMenuBar},
+     {FCONTROL | FVIRTKEY, 'L', CmdTogglePresentationMode},
+     {FVIRTKEY, VK_F5, CmdTogglePresentationMode},
+     {FSHIFT | FVIRTKEY, VK_F11, CmdTogglePresentationMode},
+diff --git a/src/Canvas.cpp b/src/Canvas.cpp
+index 313a8903f..f8bc65f2b 100644
+--- a/src/Canvas.cpp
++++ b/src/Canvas.cpp
+@@ -3376,11 +3376,13 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+             // TODO: achieve this split through subclassing or different window classes
+             if (win->AsFixed()) {
+                 HomePageDestroySearch(win);
++                HomePageHide(win);
+                 return WndProcCanvasFixedPageUI(win, hwnd, msg, wp, lp);
+             }
+ 
+             if (win->AsChm()) {
+                 HomePageDestroySearch(win);
++                HomePageHide(win);
+                 return WndProcCanvasChmUI(win, hwnd, msg, wp, lp);
+             }
+ 
+@@ -3389,6 +3391,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+             }
+ 
+             HomePageDestroySearch(win);
++            HomePageHide(win);
+             return WndProcCanvasLoadError(win, hwnd, msg, wp, lp);
+     }
+ }
+diff --git a/src/CanvasAboutUI.cpp b/src/CanvasAboutUI.cpp
+index de5623ff3..720ed1f37 100644
+--- a/src/CanvasAboutUI.cpp
++++ b/src/CanvasAboutUI.cpp
+@@ -154,9 +154,9 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
+             if ((HWND)lp == win->hwndHomeSearch) {
+                 HDC hdcEdit = (HDC)wp;
+                 SetTextColor(hdcEdit, ThemeWindowTextColor());
+-                SetBkColor(hdcEdit, ThemeControlBackgroundColor());
++                SetBkColor(hdcEdit, PrettySurfaceColor());
+                 if (!win->brControlBgColor) {
+-                    win->brControlBgColor = CreateSolidBrush(ThemeControlBackgroundColor());
++                    win->brControlBgColor = CreateSolidBrush(PrettySurfaceColor());
+                 }
+                 return (LRESULT)win->brControlBgColor;
+             }
+diff --git a/src/CommandPalette.cpp b/src/CommandPalette.cpp
+index b613e6a67..11721a335 100644
+--- a/src/CommandPalette.cpp
++++ b/src/CommandPalette.cpp
+@@ -104,7 +104,6 @@ static i32 gDocumentNotOpenWhitelist[] = {
+     CmdToggleScrollbarInSinglePage,
+     CmdToggleLazyLoading,
+     CmdToggleFullscreen,
+-    CmdToggleMenuBar,
+     CmdToggleToolbar,
+     CmdToggleUseTabs,
+     CmdToggleTips,
+@@ -361,7 +360,7 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
+     }
+ 
+     if (cmdId == CmdToggleMenuBar) {
+-        return ctx.allowToggleMenuBar;
++        return false;
+     }
+ 
+     if (!ctx.supportsAnnots) {
+@@ -903,8 +902,103 @@ static void ScheduleDeleteAndExecCommand(i32 cmdId = 0) {
+     uitask::Post(fn, "SafeDeleteCommandPaletteWnd");
+ }
+ 
++static void ApplyCommandPaletteShape(HWND hwnd) {
++    if (!PrettyStyleEnabled()) {
++        SetWindowRgn(hwnd, nullptr, TRUE);
++        return;
++    }
++    Rect rc = ClientRect(hwnd);
++    if (rc.dx <= 0 || rc.dy <= 0) {
++        return;
++    }
++    int radius = DpiScale(hwnd, 16);
++    HRGN rgn = CreateRoundRectRgn(0, 0, rc.dx + 1, rc.dy + 1, radius, radius);
++    if (rgn) {
++        SetWindowRgn(hwnd, rgn, TRUE);
++    }
++}
++
++static COLORREF GetReadablePaletteTextColor(COLORREF bgCol) {
++    return GetLightness(bgCol) > 128 ? RGB(44, 52, 64) : RGB(236, 240, 248);
++}
++
++static COLORREF CommandPaletteLightBg() {
++    return PrettyStyleEnabled() ? PrettySurfaceColor() : ThemeWindowControlBackgroundColor();
++}
++
++static COLORREF CommandPaletteLightAltBg() {
++    return PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeWindowControlBackgroundColor();
++}
++
++static COLORREF CommandPaletteLightBorder() {
++    return PrettyStyleEnabled() ? PrettyBorderColor() : ThemeWindowTextDisabledColor();
++}
++
++static COLORREF CommandPaletteLightSelBgFocused() {
++    return PrettyStyleEnabled() ? PrettyAccentColor() : GetSysColor(COLOR_HIGHLIGHT);
++}
++
++static COLORREF CommandPaletteLightSelBgUnfocused() {
++    return PrettyStyleEnabled() ? AccentColor(PrettyAccentColor(), 12) : AccentColor(GetSysColor(COLOR_HIGHLIGHT), 22);
++}
++
++static COLORREF CommandPaletteLightSelText() {
++    return PrettyStyleEnabled() ? ThemeWindowTextColor() : GetSysColor(COLOR_HIGHLIGHTTEXT);
++}
++
+ LRESULT CommandPaletteWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+     switch (msg) {
++        case WM_SIZE:
++            ApplyCommandPaletteShape(hwnd);
++            break;
++
++        case WM_ERASEBKGND:
++            return TRUE;
++
++        case WM_PAINT: {
++            PAINTSTRUCT ps;
++            HDC hdc = BeginPaint(hwnd, &ps);
++            Rect rc = ClientRect(hwnd);
++            RECT rcPaint = ToRECT(rc);
++
++            COLORREF panelBg = PrettyStyleEnabled() ? CommandPaletteLightBg() : ThemeWindowControlBackgroundColor();
++            HBRUSH panelBrush = CreateSolidBrush(panelBg);
++            FillRect(hdc, &rcPaint, panelBrush);
++            DeleteObject(panelBrush);
++
++            if (PrettyStyleEnabled()) {
++                HPEN pen = CreatePen(PS_SOLID, 1, CommandPaletteLightBorder());
++                HGDIOBJ oldPen = SelectObject(hdc, pen);
++                HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
++                int radius = DpiScale(hwnd, 16);
++                RoundRect(hdc, 0, 0, rc.dx, rc.dy, radius, radius);
++                SelectObject(hdc, oldBrush);
++                SelectObject(hdc, oldPen);
++                DeleteObject(pen);
++            }
++
++            if (listBox && IsWindow(listBox->hwnd)) {
++                RECT rl = ToRECT(WindowRect(listBox->hwnd));
++                MapWindowPoints(HWND_DESKTOP, hwnd, (POINT*)&rl, 2);
++
++                COLORREF sepCol = PrettyStyleEnabled() ? CommandPaletteLightBorder() : PrettyBorderColor();
++                HPEN sep = CreatePen(PS_SOLID, 1, sepCol);
++                HGDIOBJ oldSep = SelectObject(hdc, sep);
++                int padX = DpiScale(hwnd, 10);
++                int yTop = std::max(0, (int)rl.top - DpiScale(hwnd, 6));
++                int yBottom = std::min(rc.dy - 1, (int)rl.bottom + DpiScale(hwnd, 6));
++                MoveToEx(hdc, padX, yTop, nullptr);
++                LineTo(hdc, rc.dx - padX, yTop);
++                MoveToEx(hdc, padX, yBottom, nullptr);
++                LineTo(hdc, rc.dx - padX, yBottom);
++                SelectObject(hdc, oldSep);
++                DeleteObject(sep);
++            }
++
++            EndPaint(hwnd, &ps);
++            return 0;
++        }
++
+         case WM_ACTIVATE:
+             if (wp == WA_INACTIVE) {
+                 ScheduleDeleteAndExecCommand();
+@@ -937,6 +1031,9 @@ void CommandPaletteWnd::OnSelectionChange() {
+         return;
+     }
+     auto m = (ListBoxModelCP*)listBox->model;
++    if (!m || idx < 0 || idx >= m->ItemsCount()) {
++        return;
++    }
+     ItemDataCP* data = m->strings.AtData(idx);
+     HighlightTab(win, data->tab);
+ }
+@@ -1302,7 +1399,9 @@ void DrawMaybeHighlightedText(DrawMaybeHighlightedTextArgs& args) {
+     // draw highlight background rectangles for matches
+     {
+         COLORREF highlightCol;
+-        if (IsCurrentThemeDefault()) {
++        if (PrettyStyleEnabled()) {
++            highlightCol = PrettyBorderColor();
++        } else if (IsCurrentThemeDefault()) {
+             highlightCol = RGB(255, 255, 0); // yellow for default theme
+         } else {
+             highlightCol = AccentColor(colBg, 40);
+@@ -1321,111 +1420,107 @@ void DrawMaybeHighlightedText(DrawMaybeHighlightedTextArgs& args) {
+ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
+     ListBox* lb = ev->listBox;
+     auto m = (ListBoxModelCP*)lb->model;
+-    if (ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
++    if (!m || ev->itemIndex < 0 || ev->itemIndex >= m->ItemsCount()) {
+         return;
+     }
+ 
+     HDC hdc = ev->hdc;
+     RECT rc = ev->itemRect;
+ 
+-    // set colors based on selection state
+-    COLORREF colBg = IsSpecialColor(lb->bgColor) ? GetSysColor(COLOR_WINDOW) : lb->bgColor;
+-    COLORREF colText = IsSpecialColor(lb->textColor) ? GetSysColor(COLOR_WINDOWTEXT) : lb->textColor;
+-    if (ev->selected) {
+-        if (false && IsCurrentThemeDefault()) {
++    const char* itemText = m->Item(ev->itemIndex);
++    ItemDataCP* data = m->Data(ev->itemIndex);
++
++    bool selected = ev->selected;
++    bool hasFocus = (GetFocus() == lb->hwnd);
++
++    COLORREF colBg;
++    COLORREF colText;
++    COLORREF colRightText;
++
++    if (PrettyStyleEnabled()) {
++        if (selected) {
++            colBg = hasFocus ? CommandPaletteLightSelBgFocused() : CommandPaletteLightSelBgUnfocused();
++            colText = CommandPaletteLightSelText();
++            colRightText = colText;
++        } else {
++            colBg = CommandPaletteLightAltBg();
++            colText = GetReadablePaletteTextColor(colBg);
++            colRightText = AccentColor(colText, 58);
++        }
++    } else {
++        if (selected) {
+             colBg = GetSysColor(COLOR_HIGHLIGHT);
+             colText = GetSysColor(COLOR_HIGHLIGHTTEXT);
++            colRightText = colText;
+         } else {
+-            colBg = AccentColor(colBg, 30);
++            colBg = GetSysColor(COLOR_WINDOW);
++            colText = GetSysColor(COLOR_WINDOWTEXT);
++            colRightText = AccentColor(colText, 80);
+         }
+     }
+ 
+-    // fill background
++    HGDIOBJ oldFont = nullptr;
++    if (lb->font) {
++        oldFont = SelectObject(hdc, lb->font);
++    }
++
++    SetBkMode(hdc, OPAQUE);
+     SetBkColor(hdc, colBg);
++    SetTextColor(hdc, colText);
+     ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rc, nullptr, 0, nullptr);
+ 
+-    // For RTL: remove LAYOUT_RTL from DC so we can position text manually.
+-    // The item rect spans full width so coordinates are the same mirrored or not.
++    int padX = DpiScale(lb->hwnd, 4);
++    RECT rcText = rc;
++    rcText.left += padX;
++    rcText.right -= padX;
++
+     bool isRtl = HwndIsRtl(lb->hwnd);
+     if (isRtl) {
+-        SetLayout(hdc, 0); // LAYOUT_LTR
++        SetLayout(hdc, 0);
+     }
+ 
+-    // get item text and data
+-    const char* itemText = m->Item(ev->itemIndex);
+-    ItemDataCP* data = m->Data(ev->itemIndex);
++    DrawMaybeHighlightedTextArgs args(filterWords, highlighted);
++    args.hdc = hdc;
++    args.rc = rcText;
++    args.text = itemText;
++    args.colBg = colBg;
++    args.isRtl = isRtl;
++    args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX |
++                   (isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT);
++    DrawMaybeHighlightedText(args);
+ 
+-    // get right-side string: accelerator for commands, directory for file history
+-    TempStr rightStr = nullptr;
+     if (data->cmdId != 0) {
+-        // AppendAccelKeyToMenuStringTemp returns "\tCtrl + X" or original string if no accel
+-        TempStr withAccel = AppendAccelKeyToMenuStringTemp((TempStr) "", data->cmdId);
++        TempStr empty = str::DupTemp("");
++        TempStr withAccel = AppendAccelKeyToMenuStringTemp(empty, data->cmdId);
+         if (withAccel && withAccel[0] == '\t') {
+-            rightStr = withAccel + 1; // skip the tab character
+-        }
+-    } else if (data->filePath) {
+-        rightStr = path::GetDirTemp(data->filePath);
+-    }
+-
+-    // set text color and background mode
+-    SetTextColor(hdc, colText);
+-    SetBkMode(hdc, TRANSPARENT);
++            const char* rightStr = withAccel + 1;
++            WCHAR* rightStrW = ToWStrTemp(rightStr);
+ 
+-    // select font
+-    HFONT oldFont = nullptr;
+-    if (lb->font) {
+-        oldFont = SelectFont(hdc, lb->font);
+-    }
+-
+-    // add some padding
+-    int padX = DpiScale(lb->hwnd, 4);
+-    rc.left += padX;
+-    rc.right -= padX;
++            RECT rcRight = rc;
++            rcRight.left = rcRight.right - DpiScale(lb->hwnd, 120);
++            rcRight.right -= padX;
+ 
+-    // draw command name on the left, highlighting matched words
+-    {
+-        DrawMaybeHighlightedTextArgs args(filterWords, highlighted);
+-        args.hdc = hdc;
+-        args.rc = rc;
+-        args.text = itemText;
+-        args.colBg = colBg;
+-        args.isRtl = isRtl;
+-        args.drawFmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+-        args.drawFmt |= isRtl ? (DT_RIGHT | DT_RTLREADING) : DT_LEFT;
+-        DrawMaybeHighlightedText(args);
+-    }
+-
+-    // draw right-side text (shortcut or directory), truncated to avoid overlapping left text
+-    if (rightStr && rightStr[0]) {
++            SetBkMode(hdc, TRANSPARENT);
++            SetTextColor(hdc, colRightText);
++            DrawTextW(hdc, rightStrW, -1, &rcRight,
++                      DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
++        }
++    } else if (data->filePath) {
++        const char* rightStr = path::GetDirTemp(data->filePath);
+         WCHAR* rightStrW = ToWStrTemp(rightStr);
+-        int gap = DpiScale(lb->hwnd, 8);
+-
+-        // measure left text width
+-        WCHAR* itemTextW2 = ToWStrTemp(itemText);
+-        SIZE szLeft{};
+-        GetTextExtentPoint32W(hdc, itemTextW2, str::Leni(itemText), &szLeft);
+-        int leftEnd = rc.left + szLeft.cx + gap;
+ 
+         RECT rcRight = rc;
+-        uint fmt = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_END_ELLIPSIS;
+-        if (isRtl) {
+-            rcRight.right = rc.right - szLeft.cx - gap;
+-            fmt |= DT_LEFT | DT_RTLREADING;
+-        } else {
+-            rcRight.left = leftEnd;
+-            rcRight.right -= gap;
+-            fmt |= DT_RIGHT;
+-        }
+-        if (rcRight.left < rcRight.right) {
+-            COLORREF rightCol = AccentColor(colText, 80);
+-            SetTextColor(hdc, rightCol);
+-            DrawTextW(hdc, rightStrW, -1, &rcRight, fmt);
+-            SetTextColor(hdc, colText);
+-        }
++        rcRight.left = rcRight.right - DpiScale(lb->hwnd, 180);
++        rcRight.right -= padX;
++
++        SetBkMode(hdc, TRANSPARENT);
++        SetTextColor(hdc, colRightText);
++        DrawTextW(hdc, rightStrW, -1, &rcRight,
++                  DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_RIGHT | DT_END_ELLIPSIS);
+     }
+ 
+     if (oldFont) {
+-        SelectFont(hdc, oldFont);
++        SelectObject(hdc, oldFont);
+     }
+ }
+ 
+@@ -1442,14 +1537,15 @@ static Static* CreateStatic(HWND parent, HFONT font, const char* s) {
+ }
+ 
+ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTabAdvance) {
+-    if (str::Eq(prefix, kPalettePrefixTabs)) {
++    this->win = win;
++    if (str::StartsWith(prefix, kPalettePrefixTabs)) {
+         smartTabMode = smartTabAdvance != 0;
+     }
+     CollectStrings(win);
+     {
+         CreateCustomArgs args;
+         args.visible = false;
+-        args.style = WS_POPUPWINDOW;
++        args.style = WS_POPUP | WS_CLIPCHILDREN;
+         args.font = font;
+         CreateCustom(args);
+     }
+@@ -1458,7 +1554,15 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
+     }
+ 
+     auto colBg = ThemeWindowControlBackgroundColor();
+-    auto colTxt = ThemeWindowTextColor();
++    auto colPanelBg = colBg;
++    auto colListBg = colBg;
++    if (PrettyStyleEnabled()) {
++        colBg = CommandPaletteLightAltBg();
++        colPanelBg = CommandPaletteLightBg();
++        colListBg = CommandPaletteLightAltBg();
++    }
++
++    auto colTxt = PrettyStyleEnabled() ? GetReadablePaletteTextColor(colPanelBg) : ThemeWindowTextColor();
+     SetColors(colTxt, colBg);
+ 
+     auto vbox = new VBox();
+@@ -1470,12 +1574,12 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
+         args.parent = hwnd;
+         args.isMultiLine = false;
+         args.withBorder = false;
+-        args.cueText = "enter search term";
++        args.cueText = "Start typing...";
+         args.text = prefix;
+         args.font = font;
+         args.isRtl = IsUIRtl();
+         auto c = new Edit();
+-        c->SetColors(colTxt, colBg);
++        c->SetColors(colTxt, colPanelBg);
+         c->maxDx = 150;
+         HWND ok = c->Create(args);
+         ReportIf(!ok);
+@@ -1491,28 +1595,28 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
+         auto pad = Insets{0, 8, 0, 8};
+         {
+             auto c = CreateStatic(hwnd, font, _TRA("# File History"));
+-            c->SetColors(colTxt, colBg);
++            c->SetColors(AccentColor(colTxt, 62), colBg);
+             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFileHistory>(this);
+             auto p = new Padding(c, pad);
+             hbox->AddChild(p);
+         }
+         {
+             auto c = CreateStatic(hwnd, font, _TRA("> Commands"));
+-            c->SetColors(colTxt, colBg);
++            c->SetColors(AccentColor(colTxt, 62), colBg);
+             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToCommands>(this);
+             auto p = new Padding(c, pad);
+             hbox->AddChild(p);
+         }
+         {
+             auto c = CreateStatic(hwnd, font, _TRA("@ Tabs"));
+-            c->SetColors(colTxt, colBg);
++            c->SetColors(AccentColor(colTxt, 62), colBg);
+             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTabs>(this);
+             auto p = new Padding(c, pad);
+             hbox->AddChild(p);
+         }
+         {
+             auto c = CreateStatic(hwnd, font, _TRA(": Everything"));
+-            c->SetColors(colTxt, colBg);
++            c->SetColors(AccentColor(colTxt, 62), colBg);
+             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToEverything>(this);
+             auto p = new Padding(c, pad);
+             hbox->AddChild(p);
+@@ -1530,9 +1634,9 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
+         c->onDrawItem =
+             MkMethod1<CommandPaletteWnd, ListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
+         c->idealSizeLines = 32;
+-        c->SetInsetsPt(4, 0);
++        c->SetInsetsPt(6, 0);
+         c->Create(args);
+-        c->SetColors(colTxt, colBg);
++        c->SetColors(colTxt, colListBg);
+         c->onSelectionChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
+         auto m = new ListBoxModelCP();
+         FilterStringsForQuery(prefix, m->strings);
+@@ -1561,14 +1665,14 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
+         auto pad = Insets{0, 8, 0, 8};
+         for (int i = 0; i < 3; i++) {
+             auto c = CreateStatic(hwnd, font, strings[i]);
+-            c->SetColors(colTxt, colBg);
++            c->SetColors(AccentColor(colTxt, 56), colBg);
+             auto p = new Padding(c, pad);
+             hbox->AddChild(p);
+         }
+         vbox->AddChild(hbox);
+     }
+ 
+-    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 4, 8));
++    auto padding = new Padding(vbox, DpiScaledInsets(hwnd, 10, 14, 10, 14));
+     layout = padding;
+ 
+     auto rc = ClientRect(win->hwndFrame);
+@@ -1578,15 +1682,18 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
+     }
+     int dx = rc.dx - 256;
+     dx = limitValue(dx, 640, 1024);
+-    limitValue(dx, 640, 1024);
+     LayoutAndSizeToContent(layout, dx, dy, hwnd);
++
++    ApplyCommandPaletteShape(hwnd);
+     PositionCommandPalette(hwnd, win->hwndFrame);
+ 
+     editQuery->SetCursorPositionAtEnd();
+     if (smartTabMode) {
+         int nItems = listBox->model->ItemsCount();
+-        int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
+-        SetCurrentSelection(this, tabToSelect);
++        if (nItems > 0) {
++            int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
++            SetCurrentSelection(this, tabToSelect);
++        }
+     }
+ 
+     SetIsVisible(true);
+diff --git a/src/DisplayModel.cpp b/src/DisplayModel.cpp
+index bc7f3558c..2b1fcef7b 100644
+--- a/src/DisplayModel.cpp
++++ b/src/DisplayModel.cpp
+@@ -1212,16 +1212,6 @@ void DisplayModel::RenderVisibleParts() {
+     }
+ 
+     if (gPredictiveRender) {
+-        // prerender two more pages in facing and book view modes
+-        // if the rendering queue still has place for them
+-        if (!IsSingle(GetDisplayMode())) {
+-            if (firstVisiblePage > 2) {
+-                cb->RequestRendering(firstVisiblePage - 2);
+-            }
+-            if (lastVisiblePage + 1 < PageCount()) {
+-                cb->RequestRendering(lastVisiblePage + 2);
+-            }
+-        }
+         if (firstVisiblePage > 1) {
+             cb->RequestRendering(firstVisiblePage - 1);
+         }
+diff --git a/src/EditAnnotations.cpp b/src/EditAnnotations.cpp
+index 113801a07..3034d310c 100644
+--- a/src/EditAnnotations.cpp
++++ b/src/EditAnnotations.cpp
+@@ -161,6 +161,64 @@ struct EditAnnotationsWindow : Wnd {
+     ~EditAnnotationsWindow() override;
+ };
+ 
++static void SetCtlColorsIfPretty(Wnd* w, COLORREF txt, COLORREF bg) {
++    if (!PrettyStyleEnabled() || !w) {
++        return;
++    }
++    w->SetColors(txt, bg);
++}
++
++static void ApplyEditAnnotationsPrettyTheme(EditAnnotationsWindow* ew) {
++    if (!PrettyStyleEnabled() || !ew) {
++        return;
++    }
++
++    COLORREF colBg = PrettySurfaceColor();
++    COLORREF colAlt = PrettySurfaceAltColor();
++    COLORREF colTxt = ThemeWindowTextColor();
++
++    SetCtlColorsIfPretty(ew, colTxt, colBg);
++
++    SetCtlColorsIfPretty(ew->listBox, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->editContents, colTxt, colAlt);
++
++    SetCtlColorsIfPretty(ew->staticRect, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticAuthor, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticModificationDate, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticPopup, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticContents, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticTextAlignment, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticTextFont, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticTextSize, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticTextColor, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticLineStart, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticLineEnd, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticIcon, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticBorder, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticColor, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticInteriorColor, colTxt, colBg);
++    SetCtlColorsIfPretty(ew->staticOpacity, colTxt, colBg);
++
++    SetCtlColorsIfPretty(ew->dropDownTextAlignment, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownTextFont, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownTextColor, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownLineStart, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownLineEnd, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownIcon, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownColor, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->dropDownInteriorColor, colTxt, colAlt);
++
++    SetCtlColorsIfPretty(ew->trackbarTextSize, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->trackbarBorder, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->trackbarOpacity, colTxt, colAlt);
++
++    SetCtlColorsIfPretty(ew->buttonSaveAttachment, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->buttonEmbedAttachment, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->buttonDelete, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->buttonSaveToCurrentFile, colTxt, colAlt);
++    SetCtlColorsIfPretty(ew->buttonSaveToNewFile, colTxt, colAlt);
++}
++
+ #if 0
+ static Annotation* PickNewSelectedAnnotation(EditAnnotationsWindow* ew, int prevIdx) {
+     int nAnnots = ew->annotations.Size();
+@@ -1393,7 +1451,7 @@ static void CreateMainLayout(EditAnnotationsWindow* ew) {
+     }
+ 
+     {
+-        auto w = CreateStatic(parent, "Border:");
++        auto w = CreateStatic(parent, _TRA("Border:"));
+         w->SetInsetsPt(8, 0, 0, 0);
+         ew->staticBorder = w;
+         vbox->AddChild(w);
+@@ -1612,9 +1670,13 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
+     args.icon = LoadIconW(h, iconName);
+     // mainWindow->isDialog = true;
+     if (UseDarkModeLib()) {
+-        args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
++        if (PrettyStyleEnabled()) {
++            args.bgColor = PrettySurfaceColor();
++        } else {
++            args.bgColor = DarkMode::isEnabled() ? ThemeWindowControlBackgroundColor() : MkGray(0xee);
++        }
+     } else {
+-        args.bgColor = MkGray(0xee);
++        args.bgColor = PrettyStyleEnabled() ? PrettySurfaceColor() : MkGray(0xee);
+     }
+ 
+     args.title = str::JoinTemp(_TRA("Annotations"), ": ", tab->GetTabTitle());
+@@ -1628,6 +1690,7 @@ void ShowEditAnnotationsWindow(WindowTab* tab, Annotation* annot, EditAnnotFocus
+     ew->CreateCustom(args);
+ 
+     CreateMainLayout(ew);
++    ApplyEditAnnotationsPrettyTheme(ew);
+     ew->tab = tab;
+     tab->editAnnotsWindow = ew;
+ 
+diff --git a/src/Favorites.cpp b/src/Favorites.cpp
+index b7ae270b4..cd448831b 100644
+--- a/src/Favorites.cpp
++++ b/src/Favorites.cpp
+@@ -34,16 +34,62 @@
+ #include "Tabs.h"
+ #include "Translations.h"
+ #include "Accelerators.h"
++#include "Theme.h"
+ 
+ void RememberFavTreeExpansionStateForAllWindows();
+ 
++// -------------------------------------------------------------------------
++// Custom draw mejorado: soporta hot-tracking y post-paint para selección
++// -------------------------------------------------------------------------
++static void OnFavCustomDraw(TreeView::CustomDrawEvent* ev) {
++    ev->result = CDRF_DODEFAULT;
++
++    NMTVCUSTOMDRAW* tvcd = ev->nm;
++    NMCUSTOMDRAW* cd = &tvcd->nmcd;
++
++    if (cd->dwDrawStage == CDDS_PREPAINT) {
++        ev->result = CDRF_NOTIFYITEMDRAW;
++        return;
++    }
++    if (cd->dwDrawStage != CDDS_ITEMPREPAINT) {
++        return;
++    }
++    if (!PrettyStyleEnabled()) {
++        return;
++    }
++
++    bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
++    bool hasFocus   = (GetFocus() == ev->treeView->hwnd);
++    bool isHot      = (cd->uItemState & CDIS_HOT) != 0;
++
++    // Fondo: acento en selección activa, surface en hover/selección sin foco
++    if (isSelected && hasFocus) {
++        tvcd->clrTextBk = PrettyAccentColor();
++    } else if (isSelected || isHot) {
++        tvcd->clrTextBk = PrettySurfaceColor();
++    } else {
++        tvcd->clrTextBk = PrettySurfaceAltColor();
++    }
++
++    // Texto: blanco sobre acento, color normal en el resto
++    tvcd->clrText = (isSelected && hasFocus)
++        ? GetSysColor(COLOR_HIGHLIGHTTEXT)
++        : ThemeWindowTextColor();
++
++    // Solicitar notificación post-paint para poder dibujar encima si hace falta
++    ev->result = CDRF_NOTIFYPOSTPAINT | CDRF_NEWFONT;
++}
++
++// -------------------------------------------------------------------------
++// Modelo de datos del árbol de favoritos
++// -------------------------------------------------------------------------
+ struct FavTreeItem {
+     ~FavTreeItem();
+ 
+-    HTREEITEM hItem = nullptr;
++    HTREEITEM hItem   = nullptr;
+     FavTreeItem* parent = nullptr;
+-    char* text = nullptr;
+-    bool isExpanded = false;
++    char* text        = nullptr;
++    bool isExpanded   = false;
+ 
+     // not owned by us
+     Favorite* favorite = nullptr;
+@@ -60,7 +106,6 @@ struct FavTreeModel : TreeModel {
+     ~FavTreeModel() override;
+ 
+     TreeItem Root() override;
+-
+     char* Text(TreeItem) override;
+     TreeItem Parent(TreeItem) override;
+     int ChildCount(TreeItem) override;
+@@ -96,14 +141,12 @@ int FavTreeModel::ChildCount(TreeItem ti) {
+     if (!fti) {
+         return 0;
+     }
+-    size_t n = fti->children.size();
+-    return (int)n;
++    return (int)fti->children.size();
+ }
+ 
+ TreeItem FavTreeModel::ChildAt(TreeItem ti, int idx) {
+     auto fti = (FavTreeItem*)ti;
+-    auto res = fti->children[idx];
+-    return (TreeItem)res;
++    return (TreeItem)fti->children[idx];
+ }
+ 
+ bool FavTreeModel::IsExpanded(TreeItem ti) {
+@@ -127,6 +170,9 @@ HTREEITEM FavTreeModel::GetHandle(TreeItem ti) {
+     return treeItem->hItem;
+ }
+ 
++// -------------------------------------------------------------------------
++// Lógica de favoritos (sin cambios funcionales)
++// -------------------------------------------------------------------------
+ static Favorite* GetFavByMenuId(int menuId, FileState** dsOut) {
+     FileState* ds;
+     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
+@@ -164,8 +210,6 @@ static void ResetFavMenuIds() {
+ static size_t idxCache = (size_t)-1;
+ 
+ static FileState* GetFavByFilePath(const char* filePath) {
+-    // it's likely that we'll ask about the info for the same
+-    // file as in previous call, so use one element cache
+     FileState* fs = gFileHistory.Get(idxCache);
+     if (!fs || !str::Eq(fs->filePath, filePath)) {
+         fs = gFileHistory.FindByName(filePath, &idxCache);
+@@ -212,15 +256,12 @@ static Favorite* FindByPage(FileState* ds, int pageNo, const char* pageLabel = n
+ static int SortByPageNo(const void* a, const void* b) {
+     Favorite* na = *(Favorite**)a;
+     Favorite* nb = *(Favorite**)b;
+-    // sort lower page numbers first
+     return na->pageNo - nb->pageNo;
+ }
+ 
+ static void AddOrReplaceFav(const char* filePath, int pageNo, const char* name, const char* pageLabel) {
+     FileState* fav = GetFavByFilePath(filePath);
+     if (!fav) {
+-        // we were asked to add a favorite for current file but couldn't find
+-        // history for this file
+         fav = NewFileState(filePath);
+         gFileHistory.Append(fav);
+     }
+@@ -272,7 +313,6 @@ static void RemoveAllFavForFile(const char* filePath) {
+     }
+ }
+ 
+-// Note: those might be too big
+ #define MAX_FAV_SUBMENUS 10
+ #define MAX_FAV_MENUS 10
+ 
+@@ -286,7 +326,6 @@ bool HasFavorites() {
+     return false;
+ }
+ 
+-// caller has to free() the result
+ static TempStr FavReadableNameTemp(Favorite* fn) {
+     const char* label = fn->pageLabel;
+     if (!label) {
+@@ -302,7 +341,6 @@ static TempStr FavReadableNameTemp(Favorite* fn) {
+     return res;
+ }
+ 
+-// caller has to free() the result
+ static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isCurrent = false) {
+     TempStr rn = FavReadableNameTemp(fn);
+     if (isCurrent) {
+@@ -361,29 +399,14 @@ static void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore =
+     Sort(&filePathsSortedOut, SortByBaseFileName);
+ }
+ 
+-// For easy access, we try to show favorites in the menu, similar to a list of
+-// recently opened files.
+-// The first menu items are for currently opened file (up to MAX_FAV_MENUS), based
+-// on the assumption that user is usually interested in navigating current file.
+-// Then we have a submenu for each file for which there are bookmarks (up to
+-// MAX_FAV_SUBMENUS), each having up to MAX_FAV_MENUS menu items.
+-// If not all favorites can be shown, we also enable "Show all favorites" menu which
+-// will provide a way to see all favorites.
+-// Note: not sure if that's the best layout. Maybe we should always use submenu and
+-// put the submenu for current file as the first one (potentially named as "Current file"
+-// or some such, to make it stand out from other submenus)
+ static void AppendFavMenus(HMENU m, const char* currFilePath) {
+-    // To minimize mouse movement when navigating current file via favorites
+-    // menu, put favorites for current file first
+     FileState* currFileFav = nullptr;
+     if (currFilePath) {
+         currFileFav = GetFavByFilePath(currFilePath);
+     }
+ 
+-    // sort the files with favorites by base file name of file path
+     StrVec filePathsSorted;
+     if (CanAccessDisk()) {
+-        // only show favorites for other files, if we're allowed to open them
+         GetSortedFilePaths(filePathsSorted, currFileFav);
+     }
+     if (currFileFav && currFileFav->favorites->size() > 0) {
+@@ -427,13 +450,6 @@ static void AppendFavMenus(HMENU m, const char* currFilePath) {
+     }
+ }
+ 
+-// Called when a user opens "Favorites" top-level menu. We need to construct
+-// the menu:
+-// - disable add/remove menu items if no document is opened
+-// - if a document is opened and the page is already bookmarked,
+-//   disable "add" menu item and enable "remove" menu item
+-// - if a document is opened and the page is not bookmarked,
+-//   enable "add" menu item and disable "remove" menu item
+ void RebuildFavMenu(MainWindow* win, HMENU menu) {
+     if (!win->IsDocLoaded()) {
+         MenuSetEnabled(menu, CmdFavoriteAdd, false);
+@@ -473,9 +489,6 @@ static void GoToFavoritePage(MainWindow* win, int pageNo) {
+     if (win->IsDocLoaded() && win->ctrl->ValidPageNo(pageNo)) {
+         win->ctrl->GoToPage(pageNo, true);
+     }
+-    // we might have been invoked by clicking on a tree view
+-    // switch focus so that keyboard navigation works, which enables
+-    // a fluid experience
+     win->Focus();
+ }
+ 
+@@ -489,9 +502,6 @@ static void GoToFavoritePage(GoToFavoritePageData* d) {
+     delete d;
+ }
+ 
+-// Going to a bookmark within current file scrolls to a given page.
+-// Going to a bookmark in another file, loads the file and scrolls to a page
+-// (similar to how invoking one of the recently opened files works)
+ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
+     ReportIf(!fs || !fav);
+     if (!fs || !fav) {
+@@ -513,15 +523,11 @@ static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
+         return;
+     }
+ 
+-    // When loading a new document, go directly to selected page instead of
+-    // first showing last seen page stored in file history
+-    // A hacky solution because I don't want to add even more parameters to
+-    // LoadDocument() and LoadDocumentInto()
+     int pageNo = fav->pageNo;
+     FileState* ds = gFileHistory.FindByPath(fs->filePath);
+     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
+         ds->pageNo = fav->pageNo;
+-        ds->scrollPos = PointF(-1, -1); // don't scroll the page
++        ds->scrollPos = PointF(-1, -1);
+         pageNo = -1;
+     }
+ 
+@@ -552,26 +558,12 @@ static void GoToFavForTreeItem(MainWindow* win, TreeItem ti) {
+     FavTreeItem* fti = (FavTreeItem*)ti;
+     Favorite* fn = fti->favorite;
+     if (!fn) {
+-        // can happen for top-level node which is not associated with a favorite
+-        // but only serves a parent node for favorites for a given file
+         return;
+     }
+     FileState* f = GetByFavorite(fn);
+     GoToFavorite(win, f, fn);
+ }
+ 
+-#if 0
+-static void GoToFavForTVItem(MainWindow* win, TreeCtrl* treeView, HTREEITEM hItem = nullptr) {
+-    TreeItem ti = nullptr;
+-    if (nullptr == hItem) {
+-        ti = treeView->GetSelection();
+-    } else {
+-        ti = treeView->GetTreeItemByHandle(hItem);
+-    }
+-    GoToFavForTreeItem(win, ti);
+-}
+-#endif
+-
+ static FavTreeItem* MakeFavTopLevelItem(FileState* fs, bool isExpanded) {
+     if (!fs->favorites || fs->favorites->Size() == 0) {
+         return nullptr;
+@@ -649,7 +641,6 @@ void UpdateFavoritesTree(MainWindow* win) {
+     treeView->SetTreeModel(newModel);
+     delete prevModel;
+ 
+-    // hide the favorites tree if we've removed the last favorite
+     TreeItem root = newModel->Root();
+     bool show = gGlobalPrefs->showFavorites;
+     if (newModel->ChildCount(root) == 0) {
+@@ -675,7 +666,6 @@ static TocItem* TocItemForPageNo(TocItem* item, int pageNo) {
+             break;
+         }
+ 
+-        // find any child item closer to the specified page
+         TocItem* subItem = TocItemForPageNo(item->child, pageNo);
+         if (subItem) {
+             currItem = subItem;
+@@ -703,7 +693,6 @@ void AddFavoriteWithLabelAndName(MainWindow* win, int pageNo, const char* pageLa
+     WindowTab* tab = win->CurrentTab();
+     const char* path = tab->filePath;
+     AddOrReplaceFav(path, pageNo, name, pl);
+-    // expand newly added favorites by default
+     FileState* fav = GetFavByFilePath(path);
+     if (fav && fav->favorites->size() == 2) {
+         win->expandedFavorites.Append(fav);
+@@ -717,7 +706,6 @@ static void AddFavoriteForPage(MainWindow* win, int pageNo) {
+     auto tab = win->CurrentTab();
+     auto* ctrl = tab->ctrl;
+     if (ctrl->HasToc()) {
+-        // use the current ToC heading as default name
+         auto* docTree = ctrl->GetToc();
+         TocItem* root = docTree->root;
+         TocItem* item = TocItemForPageNo(root, pageNo);
+@@ -752,7 +740,6 @@ void RememberFavTreeExpansionState(MainWindow* win) {
+     TreeView* treeView = win->favTreeView;
+     TreeModel* tm = treeView ? treeView->treeModel : nullptr;
+     if (!tm) {
+-        // TODO: remember all favorites as expanded
+         return;
+     }
+     TreeItem root = tm->Root();
+@@ -787,12 +774,6 @@ static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
+     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
+     ReportIf(!win);
+ 
+-    // When the focus is set to the toc window the first item in the treeview is automatically
+-    // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
+-    // 0x00001000. We have to ignore this message to prevent the current page to be changed.
+-    // The case pnmtv->action==TVC_UNKNOWN is ignored because
+-    // it corresponds to a notification sent by
+-    // the function TreeView_DeleteAllItems after deletion of the item.
+     bool shouldHandle = ev->byKeyboard || ev->byMouse;
+     if (!shouldHandle) {
+         return;
+@@ -815,9 +796,6 @@ static MenuDef menuDefContextFav[] = {
+ 
+ static void FavTreeContextMenu(ContextMenuEvent* ev) {
+     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
+-    // TreeView* treeView = (TreeView*)ev->w;
+-    // HWND hwnd = treeView->hwnd;
+-    // MainWindow* win = FindMainWindowByHwnd(hwnd);
+ 
+     POINT pt{};
+     TreeItem ti = GetOrSelectTreeItemAtPos(ev, pt);
+@@ -831,10 +809,6 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
+     FreeMenuOwnerDrawInfoData(popup);
+     DestroyMenu(popup);
+ 
+-    // TODO: it would be nice to have a system for undo-ing things, like in Gmail,
+-    // so that we can do destructive operations without asking for permission via
+-    // invasive model dialog boxes but also allow reverting them if were done
+-    // by mistake
+     if (CmdFavoriteDel == cmd) {
+         RememberFavTreeExpansionStateForAllWindows();
+         FavTreeItem* fti = (FavTreeItem*)ti;
+@@ -844,7 +818,6 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
+         if (fti->parent) {
+             RemoveFav(fp, toDelete->pageNo);
+         } else {
+-            // this is a top-level node which represents all bookmarks for a given file
+             RemoveAllFavForFile(fp);
+         }
+         UpdateFavoritesTreeForAllWindows();
+@@ -852,82 +825,147 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
+     }
+ }
+ 
+-static WNDPROC gWndProcFavBox = nullptr;
+-static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+-    MainWindow* win = FindMainWindowByHwnd(hwnd);
+-    if (!win) {
+-        return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
+-    }
++// -------------------------------------------------------------------------
++// FavBox: encapsula el panel lateral sin subclasificación global
++// -------------------------------------------------------------------------
++
++// Eliminamos gWndProcFavBox global. Usamos una clase que almacena el
++// WNDPROC original en su instancia para mayor seguridad y encapsulación.
++struct FavBox {
++    HWND hwnd      = nullptr;
++    WNDPROC origProc = nullptr;
++    MainWindow* win  = nullptr;
+ 
+-    LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
+-    if (res) {
+-        return res;
++    static FavBox* FromHwnd(HWND hwnd) {
++        return (FavBox*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+     }
+ 
+-    TreeView* treeView = win->favTreeView;
+-    switch (msg) {
+-        case WM_SIZE:
+-            LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
+-            break;
++    static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
++        FavBox* self = FromHwnd(hwnd);
++        if (!self) {
++            return DefWindowProc(hwnd, msg, wp, lp);
++        }
++
++        MainWindow* win = self->win;
++
++        LRESULT res = TryReflectMessages(hwnd, msg, wp, lp);
++        if (res) {
++            return res;
++        }
+ 
+-        case WM_COMMAND:
+-            if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
+-                ToggleFavorites(win);
++        TreeView* treeView = win->favTreeView;
++
++        switch (msg) {
++            case WM_ERASEBKGND:
++                return TRUE;
++
++            case WM_PAINT: {
++                PAINTSTRUCT ps;
++                HDC hdc = BeginPaint(hwnd, &ps);
++                COLORREF bgCol = PrettyStyleEnabled()
++                    ? PrettySurfaceAltColor()
++                    : ThemeControlBackgroundColor();
++                AutoDeleteBrush br = CreateSolidBrush(bgCol);
++                FillRect(hdc, &ps.rcPaint, br);
++                EndPaint(hwnd, &ps);
++                return 0;
+             }
+-            break;
++
++            case WM_SIZE:
++                LayoutTreeContainer(win->favLabelWithClose, treeView->hwnd);
++                break;
++
++            case WM_COMMAND:
++                if (LOWORD(wp) == IDC_FAV_LABEL_WITH_CLOSE) {
++                    ToggleFavorites(win);
++                }
++                break;
++
++            case WM_DESTROY:
++                // Restaurar el WNDPROC original antes de destruir
++                SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)self->origProc);
++                SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
++                delete self;
++                return 0;
++        }
++
++        return CallWindowProc(self->origProc, hwnd, msg, wp, lp);
+     }
+-    return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
+-}
++
++    static FavBox* Install(HWND hwnd, MainWindow* win) {
++        auto* self  = new FavBox();
++        self->hwnd  = hwnd;
++        self->win   = win;
++        self->origProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
++        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)self);
++        SetWindowLongPtr(hwnd, GWLP_WNDPROC,  (LONG_PTR)FavBox::WndProc);
++        return self;
++    }
++};
+ 
+ // in TableOfContents.cpp
+ extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
+ 
++// -------------------------------------------------------------------------
++// CreateFavorites: creación del panel con estilos modernos del TreeView
++// -------------------------------------------------------------------------
+ void CreateFavorites(MainWindow* win) {
+     HMODULE h = GetModuleHandleW(nullptr);
+     int dx = gGlobalPrefs->sidebarDx;
+     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
+-    win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU) nullptr, h, nullptr);
++    win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0,
++                                    win->hwndFrame, (HMENU)nullptr, h, nullptr);
+ 
++    // Header con label+close
+     auto l = new LabelWithCloseWnd();
+     {
+         LabelWithCloseWnd::CreateArgs args;
+         args.parent = win->hwndFavBox;
+-        args.cmdId = IDC_FAV_LABEL_WITH_CLOSE;
+-        // TODO: use the same font size as in GetTreeFont()?
+-        args.font = GetDefaultGuiFont(true, false);
+-        args.isRtl = IsUIRtl();
++        args.cmdId  = IDC_FAV_LABEL_WITH_CLOSE;
++        args.font   = GetDefaultGuiFont(true, false);
++        args.isRtl  = IsUIRtl();
+         l->Create(args);
+     }
+-
+     win->favLabelWithClose = l;
+-    l->SetPaddingXY(2, 2);
+-    // label is set in UpdateToolbarSidebarText()
++    l->SetPaddingXY(6, 4);
+ 
++    // TreeView con estilos modernos
+     auto treeView = new TreeView();
+     TreeView::CreateArgs args;
+-    args.parent = win->hwndFavBox;
+-    args.font = GetAppTreeFont();
++    args.parent       = win->hwndFavBox;
++    args.font         = GetAppTreeFont();
+     args.fullRowSelect = true;
+-    args.exStyle = 0;
+-    args.isRtl = IsUIRtl();
++    args.exStyle      = 0;
++    args.isRtl        = IsUIRtl();
+ 
+     auto fn = MkFunc1Void(FavTreeContextMenu);
+-    treeView->onContextMenu = fn;
++    treeView->onContextMenu      = fn;
+     treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
+-    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
+-    treeView->onClick = MkFunc1Void(FavTreeItemClicked);
+-    // treeView->onChar = TocTreeCharHandler;
+-    // treeView->onMouseWheel = TocTreeMouseWheelHandler;
++    treeView->onCustomDraw       = MkFunc1Void(OnFavCustomDraw);
++    treeView->onKeyDown          = MkFunc1Void(TocTreeKeyDown2);
++    treeView->onClick            = MkFunc1Void(FavTreeItemClicked);
+ 
+     treeView->Create(args);
+     ReportIf(!treeView->hwnd);
+ 
++    // --- Estilos extendidos modernos del TreeView ---
++    HWND hTree = treeView->hwnd;
++
++    // Double-buffer elimina parpadeo; fade anima los botones expand/collapse
++    DWORD tvExStyle = TVS_EX_FADEINOUTEXPANDOS | TVS_EX_AUTOHSCROLL | TVS_EX_DOUBLEBUFFER;
++    TreeView_SetExtendedStyle(hTree, tvExStyle, tvExStyle);
++
++    // Mayor altura de ítem para "breathing room" visual (~28 px escalado por DPI)
++    TreeView_SetItemHeight(hTree, DpiScale(hTree, 28));
++
++    // Indentación generosa para jerarquía clara
++    TreeView_SetIndent(hTree, DpiScale(hTree, 16));
++    // -----------------------------------------------
++
+     win->favTreeView = treeView;
+ 
+-    if (nullptr == gWndProcFavBox) {
+-        gWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
+-    }
+-    SetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC, (LONG_PTR)WndProcFavBox);
++    // Instala FavBox (reemplaza la subclasificación con global gWndProcFavBox)
++    FavBox::Install(win->hwndFavBox, win);
+ 
+     UpdateControlsColors(win);
+ }
+diff --git a/src/MainWindow.cpp b/src/MainWindow.cpp
+index bbf045c99..500622cea 100644
+--- a/src/MainWindow.cpp
++++ b/src/MainWindow.cpp
+@@ -17,6 +17,9 @@
+ 
+ #include "wingui/LabelWithCloseWnd.h"
+ #include "wingui/FrameRateWnd.h"
++#include "wingui/WebView.h"
++
++#include "HomePage.h"
+ 
+ #include "Settings.h"
+ #include "DocController.h"
+@@ -45,6 +48,8 @@
+ 
+ #include "utils/Log.h"
+ 
++void HomePageDestroy(MainWindow* win);
++
+ static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
+     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
+     delete tabsCtrl;
+@@ -164,6 +169,13 @@ MainWindow::~MainWindow() {
+         delete favTreeView;
+     }
+ 
++    delete hybridToolbar;
++    if (homePageWebView) {
++        DestroyWindow(homePageWebView->hwnd);
++        delete homePageWebView;
++        homePageWebView = nullptr;
++    }
++
+     delete sidebarSplitter;
+     delete favSplitter;
+     delete tocLabelWithClose;
+@@ -707,28 +719,31 @@ bool HasOpenedDocuments(MainWindow* win) {
+ }
+ 
+ void UpdateControlsColors(MainWindow* win) {
+-    COLORREF bgCol = ThemeControlBackgroundColor();
++    COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
++    COLORREF editBgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : bgCol;
++    COLORREF headerBgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : bgCol;
++    COLORREF treeBgCol = bgCol;
+     COLORREF txtCol = ThemeWindowTextColor();
+ 
+     // logfa("retrieved doc colors in tree control: 0x%x 0x%x\n", treeTxtCol, treeBgCol);
+ 
+-    COLORREF splitterCol = ThemeControlBackgroundColor();
++    COLORREF splitterCol = PrettyStyleEnabled() ? PrettyBorderColor() : ThemeControlBackgroundColor();
+ 
+     {
+         auto tocTreeView = win->tocTreeView;
+-        tocTreeView->SetColors(txtCol, bgCol);
++        tocTreeView->SetColors(txtCol, treeBgCol);
+ 
+-        win->tocLabelWithClose->SetColors(txtCol, bgCol);
++        win->tocLabelWithClose->SetColors(txtCol, headerBgCol);
+         if (win->tocFilterEdit) {
+-            win->tocFilterEdit->SetColors(txtCol, bgCol);
++            win->tocFilterEdit->SetColors(txtCol, editBgCol);
+         }
+         win->sidebarSplitter->SetColors(kColorNoChange, splitterCol);
+     }
+ 
+     auto favTreeView = win->favTreeView;
+     if (favTreeView) {
+-        favTreeView->SetColors(txtCol, bgCol);
+-        win->favLabelWithClose->SetColors(txtCol, bgCol);
++        favTreeView->SetColors(txtCol, treeBgCol);
++        win->favLabelWithClose->SetColors(txtCol, headerBgCol);
+         win->favSplitter->SetColors(kColorNoChange, splitterCol);
+     }
+ }
+diff --git a/src/MainWindow.h b/src/MainWindow.h
+index a868ceda0..ad4abd627 100644
+--- a/src/MainWindow.h
++++ b/src/MainWindow.h
+@@ -5,6 +5,7 @@ struct DoubleBuffer;
+ struct Edit;
+ struct LinkHandler;
+ struct StressTest;
++struct WebviewWnd;
+ class SumatraUIAutomationProvider;
+ struct FrameRateWnd;
+ struct LabelWithCloseWnd;
+@@ -88,6 +89,8 @@ struct StaticLink {
+     ~StaticLink();
+ };
+ 
++TempStr GetStaticLinkAtTemp(Vec<StaticLink*>& linkInfo, int x, int y, StaticLink** info);
++
+ /* Describes information related to one window with (optional) a document
+    on the screen */
+ struct MainWindow {
+@@ -119,6 +122,10 @@ struct MainWindow {
+     HWND hwndFrame = nullptr;
+     HWND hwndCanvas = nullptr;
+ 
++    WebviewWnd* hybridToolbar = nullptr;
++    // Nuevo: WebView para la HomePage
++    WebviewWnd* homePageWebView = nullptr;
++
+     HWND hwndReBar = nullptr;
+     HWND hwndToolbar = nullptr;
+     HWND hwndMenuReBar = nullptr;
+@@ -242,6 +249,7 @@ struct MainWindow {
+         bool isFullScreen = false;
+         bool tabsVisible = false;
+         bool isToolbarVisible = false;
++        bool isToolbarCompact = false;
+         bool tocVisible = false;
+         bool showFavorites = false;
+         bool showMenuBarRebar = false;
+diff --git a/src/Menu.cpp b/src/Menu.cpp
+index 2d3ef49a8..b7c8a2df5 100644
+--- a/src/Menu.cpp
++++ b/src/Menu.cpp
+@@ -276,10 +276,6 @@ static MenuDef menuDefView[] = {
+         _TRN("Show Book&marks"),
+         CmdToggleBookmarks,
+     },
+-    {
+-        _TRN("Show &Menu"),
+-        CmdToggleMenuBar,
+-    },
+     {
+         _TRN("Show &Toolbar"),
+         CmdToggleToolbar,
+@@ -2543,56 +2539,17 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
+ // show/hide top-level menu bar. This doesn't persist across launches
+ // so that accidental removal of the menu isn't catastrophic
+ void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
++    (void)showTemporarily;
+     ReportIf(!win->menu);
+ 
+     if (win->presentation) {
+         return;
+     }
+ 
+-    HWND hwnd = win->hwndFrame;
+-
+-    if (showTemporarily) {
+-        if (win->tabsInTitlebar) {
+-            // can't show regular menu with custom caption, so do nothing
+-            return;
+-        }
+-        SetMenu(hwnd, win->menu);
+-        return;
+-    }
+-
+-    if (win->isFullScreen) {
+-        gGlobalPrefs->fullscreen.showMenubar = !gGlobalPrefs->fullscreen.showMenubar;
+-        if (gGlobalPrefs->fullscreen.showMenubar) {
+-            // use rebar-based menu bar (WS_CAPTION is stripped in fullscreen, so SetMenu won't work)
+-            CreateMenuBarRebar(win);
+-        } else {
+-            DestroyMenuBarRebar(win);
+-        }
+-        RelayoutWindow(win);
+-        ShowMenuBarRebar(win);
+-        return;
+-    }
+-
+-    if (win->tabsInTitlebar) {
+-        // toggle rebar menu bar while keeping tabs in titlebar
+-        bool isShowing = IsShowingMenuBarRebar(win);
+-        if (isShowing) {
+-            DestroyMenuBarRebar(win);
+-            gGlobalPrefs->showMenubar = false;
+-            gGlobalPrefs->showMenubarWithTabs = false;
+-        } else {
+-            CreateMenuBarRebar(win);
+-            gGlobalPrefs->showMenubar = true;
+-            gGlobalPrefs->showMenubarWithTabs = true;
+-        }
+-        // layout first so the rebar is positioned correctly, then show it
+-        RelayoutWindow(win);
+-        ShowMenuBarRebar(win);
+-        return;
+-    }
+-
+-    bool hideMenu = GetMenu(hwnd) != nullptr;
+-    SetMenu(hwnd, hideMenu ? nullptr : win->menu);
+-    gGlobalPrefs->showMenubar = !hideMenu;
+-    gGlobalPrefs->showMenubarWithTabs = !hideMenu;
++    // PrettySumatra: force-disable classic menu bar UI.
++    SetMenu(win->hwndFrame, nullptr);
++    DestroyMenuBarRebar(win);
++    gGlobalPrefs->showMenubar = false;
++    gGlobalPrefs->showMenubarWithTabs = false;
++    gGlobalPrefs->fullscreen.showMenubar = false;
+ }
+diff --git a/src/Notifications.cpp b/src/Notifications.cpp
+index 89f123ed3..dddb718f7 100644
+--- a/src/Notifications.cpp
++++ b/src/Notifications.cpp
+@@ -242,6 +242,10 @@ int CalcPerc(int current, int total) {
+ constexpr int kCloseLeftMargin = 16;
+ constexpr int kProgressDy = 5;
+ 
++static COLORREF NotificationTextForBg(COLORREF bg) {
++    return GetLightness(bg) > 128 ? RGB(37, 48, 64) : RGB(236, 240, 248);
++}
++
+ void NotificationWnd::Layout(const char* message) {
+     Size szText;
+     {
+@@ -335,6 +339,19 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
+         colBorder = colBg;
+         colTxt = ThemeNotificationsHighlightTextColor();
+     }
++
++    COLORREF progressCol = ThemeNotificationsProgressColor();
++    if (PrettyStyleEnabled()) {
++        if (highlight) {
++            colBg = AccentColor(PrettyAccentColor(), 22);
++            colBorder = PrettyAccentColor();
++        } else {
++            colBg = PrettySurfaceAltColor();
++            colBorder = PrettyBorderColor();
++        }
++        colTxt = NotificationTextForBg(colBg);
++        progressCol = PrettyAccentColor();
++    }
+     // COLORREF colBg = MkRgb(0xff, 0xff, 0x5c);
+     // COLORREF colBg = MkGray(0xff);
+ 
+@@ -378,8 +395,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
+         rc = rProgress;
+         int progressWidth = rc.dx;
+ 
+-        COLORREF col = ThemeNotificationsProgressColor();
+-        Pen pen(GdiRgbFromCOLORREF(col));
++        Pen pen(GdiRgbFromCOLORREF(progressCol));
+         grc = {rc.x, rc.y, rc.dx, rc.dy};
+         graphics.DrawRectangle(&pen, grc);
+ 
+@@ -388,7 +404,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
+         rc.y += 2;
+         rc.dy -= 3;
+ 
+-        br.SetColor(GdiRgbFromCOLORREF(col));
++        br.SetColor(GdiRgbFromCOLORREF(progressCol));
+         grc = {rc.x, rc.y, rc.dx, rc.dy};
+         graphics.FillRectangle(&br, grc);
+     }
+diff --git a/src/RenderCache.cpp b/src/RenderCache.cpp
+index 8192dd868..7f9db97a9 100644
+--- a/src/RenderCache.cpp
++++ b/src/RenderCache.cpp
+@@ -57,7 +57,7 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
+     SYSTEM_INFO si;
+     GetSystemInfo(&si);
+     int numCores = (int)si.dwNumberOfProcessors;
+-    nRenderThreads = std::max(gMaxRenderThreads, numCores);
++    nRenderThreads = std::max(1, std::min(gMaxRenderThreads, numCores));
+     if (nRenderThreads > kMaxRenderThreads) {
+         nRenderThreads = kMaxRenderThreads;
+     }
+@@ -68,6 +68,9 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
+         auto* data = new RenderThreadData{this, i};
+         renderThreads[i] = CreateThread(nullptr, 0, RenderCacheThread, data, 0, nullptr);
+         ReportIf(nullptr == renderThreads[i]);
++        if (renderThreads[i]) {
++            SetThreadPriority(renderThreads[i], THREAD_PRIORITY_BELOW_NORMAL);
++        }
+     }
+ }
+ 
+@@ -604,6 +607,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
+     newRequest->bmp = nullptr;
+     newRequest->errorCode = 0;
+     newRequest->renderFinishedCb = renderFinishedCb;
++    newRequest->isDisplayRenderRequest = (tile != nullptr);
+ 
+     ReleaseSemaphore(startRendering, 1, nullptr);
+ 
+@@ -746,7 +750,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
+             continue;
+         }
+ 
+-        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderFinishedCb.IsValid()) {
++        // If the page moved out of the viewport neighborhood, skip stale
++        // on-screen requests so current page paints sooner.
++        if (req.isDisplayRenderRequest && !req.dm->PageVisibleNearby(req.pageNo)) {
+             continue;
+         }
+ 
+@@ -755,13 +761,6 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
+             continue;
+         }
+ 
+-        // make sure that we have extracted page text for
+-        // all rendered pages to allow text selection and
+-        // searching without any further delays
+-        if (!req.dm->textCache->HasTextForPage(req.pageNo)) {
+-            req.dm->textCache->GetTextForPage(req.pageNo);
+-        }
+-
+         ReportIf(req.abortCookie != nullptr);
+         EngineBase* engine = req.dm->GetEngine();
+         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+@@ -787,6 +786,12 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
+             }
+             cache->Add(req, bmp);
+             req.bmp = nullptr; // ownership transferred to cache
++
++            // Keep text extraction off the pre-render critical path so first paint
++            // of the bitmap lands sooner while preserving text features near viewport.
++            if (req.dm->PageVisibleNearby(req.pageNo) && !req.dm->textCache->HasTextForPage(req.pageNo)) {
++                req.dm->textCache->GetTextForPage(req.pageNo);
++            }
+         }
+ 
+         ReportIf(!req.renderFinishedCb.IsValid());
+diff --git a/src/RenderCache.h b/src/RenderCache.h
+index 967e92100..5b7f12094 100644
+--- a/src/RenderCache.h
++++ b/src/RenderCache.h
+@@ -8,7 +8,7 @@ constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
+ 
+ #define INVALID_TILE_RES ((USHORT) - 1)
+ 
+-#define MAX_PAGE_REQUESTS 8
++#define MAX_PAGE_REQUESTS 16
+ // keep this value reasonably low, else we'll run out of
+ // GDI resources/memory when caching many larger bitmaps
+ // TODO: this should be based on amount of memory taken by rendered pages
+@@ -85,6 +85,10 @@ struct PageRenderRequest {
+     // called when rendering finishes (success or failure)
+     // if null, render cache handles caching directly (legacy path)
+     Func1<PageRenderRequest*> renderFinishedCb;
++
++    // True for viewport/tile requests used by on-screen painting.
++    // False for non-viewport renders such as thumbnails.
++    bool isDisplayRenderRequest = false;
+ };
+ 
+ constexpr int kMaxRenderThreads = 32;
+diff --git a/src/SearchAndDDE.cpp b/src/SearchAndDDE.cpp
+index 3ee76d56a..99ce6cb58 100644
+--- a/src/SearchAndDDE.cpp
++++ b/src/SearchAndDDE.cpp
+@@ -30,6 +30,7 @@
+ #include "Commands.h"
+ #include "AppTools.h"
+ #include "SearchAndDDE.h"
++#include "prettysumatra/BridgeDispatcher.h"
+ #include "Selection.h"
+ #include "Toolbar.h"
+ #include "SumatraDialogs.h"
+@@ -86,13 +87,19 @@ void FindFirst(MainWindow* win) {
+                 Edit_SetModify(win->hwndFindEdit, FALSE);
+                 HwndSetText(win->hwndFindEdit, s);
+                 Edit_SetModify(win->hwndFindEdit, FALSE);
++                if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
++                    prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, s);
++                }
+             }
+         }
+     }
+ 
+     // Don't show a dialog if we don't have to - use the Toolbar instead
+     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
+-        if (!HwndIsFocused(win->hwndFindEdit)) {
++        if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
++            prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, HwndGetTextTemp(win->hwndFindEdit));
++            prettysumatra::bridge::FocusHybridToolbarSearch(win->hwndFrame);
++        } else if (!HwndIsFocused(win->hwndFindEdit)) {
+             HwndSetFocus(win->hwndFindEdit);
+         }
+         return;
+@@ -163,6 +170,9 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
+ 
+     TempStr s = ToUtf8Temp(selection);
+     HwndSetText(win->hwndFindEdit, s);
++    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
++        prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, s);
++    }
+     AbortFinding(win, false); // cancel "find as you type"
+     Edit_SetModify(win->hwndFindEdit, FALSE);
+     dm->textSearch->SetLastResult(dm->textSelection);
+@@ -443,6 +453,8 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const ch
+     if (str::IsEmpty(text)) {
+         return;
+     }
++    HwndSetText(win->hwndFindEdit, text);
++    Edit_SetModify(win->hwndFindEdit, TRUE);
+     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
+     ftd->ShowUI(showProgress);
+     win->findThread = nullptr;
+diff --git a/src/SumatraDialogs.cpp b/src/SumatraDialogs.cpp
+index f7baf4990..ee2921ca0 100644
+--- a/src/SumatraDialogs.cpp
++++ b/src/SumatraDialogs.cpp
+@@ -103,6 +103,80 @@ static bool HasDlgTemplateExFont(DLGTEMPLATEEX* tpl) {
+     return style != 0;
+ }
+ 
++static HBRUSH gPrettyDlgBgBrush = nullptr;
++static HBRUSH gPrettyDlgEditBrush = nullptr;
++static COLORREF gPrettyDlgBgCol = CLR_INVALID;
++static COLORREF gPrettyDlgEditCol = CLR_INVALID;
++
++static HBRUSH GetPrettyDialogBrush(bool editSurface) {
++    if (!PrettyStyleEnabled()) {
++        return nullptr;
++    }
++    COLORREF col = editSurface ? PrettySurfaceAltColor() : PrettySurfaceColor();
++    if (editSurface) {
++        if (!gPrettyDlgEditBrush || gPrettyDlgEditCol != col) {
++            if (gPrettyDlgEditBrush) {
++                DeleteObject(gPrettyDlgEditBrush);
++            }
++            gPrettyDlgEditBrush = CreateSolidBrush(col);
++            gPrettyDlgEditCol = col;
++        }
++        return gPrettyDlgEditBrush;
++    }
++    if (!gPrettyDlgBgBrush || gPrettyDlgBgCol != col) {
++        if (gPrettyDlgBgBrush) {
++            DeleteObject(gPrettyDlgBgBrush);
++        }
++        gPrettyDlgBgBrush = CreateSolidBrush(col);
++        gPrettyDlgBgCol = col;
++    }
++    return gPrettyDlgBgBrush;
++}
++
++static bool HandlePrettyDialogColors(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp, LRESULT& result) {
++    if (!PrettyStyleEnabled()) {
++        return false;
++    }
++
++    COLORREF colBg = PrettySurfaceColor();
++    COLORREF colEdit = PrettySurfaceAltColor();
++    COLORREF colTxt = ThemeWindowTextColor();
++
++    switch (msg) {
++        case WM_ERASEBKGND: {
++            HDC hdc = (HDC)wp;
++            RECT rc{};
++            GetClientRect(hDlg, &rc);
++            FillRect(hdc, &rc, GetPrettyDialogBrush(false));
++            result = 1;
++            return true;
++        }
++        case WM_CTLCOLORDLG: {
++            HDC hdc = (HDC)wp;
++            SetTextColor(hdc, colTxt);
++            SetBkColor(hdc, colBg);
++            result = (LRESULT)GetPrettyDialogBrush(false);
++            return true;
++        }
++        case WM_CTLCOLORSTATIC: {
++            HDC hdc = (HDC)wp;
++            SetTextColor(hdc, colTxt);
++            SetBkMode(hdc, TRANSPARENT);
++            result = (LRESULT)GetPrettyDialogBrush(false);
++            return true;
++        }
++        case WM_CTLCOLOREDIT:
++        case WM_CTLCOLORLISTBOX: {
++            HDC hdc = (HDC)wp;
++            SetTextColor(hdc, colTxt);
++            SetBkColor(hdc, colEdit);
++            result = (LRESULT)GetPrettyDialogBrush(true);
++            return true;
++        }
++    }
++    return false;
++}
++
+ // gets a dialog template from the resources and sets the RTL flag
+ // cf. http://www.ureader.com/msg/1484387.aspx
+ static void SetDlgTemplateRtl(DLGTEMPLATE* tpl) {
+@@ -270,6 +344,10 @@ struct Dialog_GoToPage_Data {
+ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+     HWND editPageNo;
+     Dialog_GoToPage_Data* data;
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
++        return prettyResult;
++    }
+ 
+     //[ ACCESSKEY_GROUP GoTo Page Dialog
+     if (WM_INITDIALOG == msg) {
+@@ -351,6 +429,10 @@ static LRESULT CALLBACK Dialog_Find_Edit_Proc(HWND hwnd, UINT msg, WPARAM wp, LP
+ 
+ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+     Dialog_Find_Data* data;
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
++        return prettyResult;
++    }
+ 
+     switch (msg) {
+         case WM_INITDIALOG: {
+@@ -456,6 +538,10 @@ static void FilterLangList(HWND hDlg, const char* filter, const char* currLangCo
+ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+     Dialog_ChangeLanguage_Data* data;
+     HWND langList;
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
++        return prettyResult;
++    }
+ 
+     if (WM_INITDIALOG == msg) {
+         DIALOG_SIZER_START(sz)
+@@ -675,6 +761,10 @@ struct Dialog_CustomZoom_Data {
+ 
+ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+     Dialog_CustomZoom_Data* data;
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
++        return prettyResult;
++    }
+ 
+     switch (msg) {
+         case WM_INITDIALOG:
+@@ -727,6 +817,10 @@ bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut) {
+ }
+ 
+ static INT_PTR CALLBACK Dialog_ChangeScrollbar_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM) {
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, 0, prettyResult)) {
++        return prettyResult;
++    }
+     switch (msg) {
+         case WM_INITDIALOG: {
+             if (UseDarkModeLib()) {
+@@ -802,6 +896,10 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId = 0) {
+ 
+ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
+     GlobalPrefs* prefs;
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
++        return prettyResult;
++    }
+ 
+     switch (msg) {
+         //[ ACCESSKEY_GROUP Settings Dialog
+@@ -1046,6 +1144,10 @@ struct Dialog_AddFav_Data {
+ };
+ 
+ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wp, LPARAM lp) {
++    LRESULT prettyResult = 0;
++    if (HandlePrettyDialogColors(hDlg, msg, wp, lp, prettyResult)) {
++        return prettyResult;
++    }
+     if (WM_INITDIALOG == msg) {
+         Dialog_AddFav_Data* data = (Dialog_AddFav_Data*)lp;
+         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
+diff --git a/src/SumatraPDF.cpp b/src/SumatraPDF.cpp
+index 1edc330bf..3ca9471ed 100644
+--- a/src/SumatraPDF.cpp
++++ b/src/SumatraPDF.cpp
+@@ -33,6 +33,8 @@
+ 
+ #include "SimpleBrowserWindow.h"
+ 
++#include "prettysumatra/BridgeDispatcher.h"
++
+ #include "Settings.h"
+ #include "DisplayMode.h"
+ #include "DocProperties.h"
+@@ -108,6 +110,95 @@ constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
+ 
+ constexpr const char* kSumatraWindowTitle = "SumatraPDF";
+ constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
++constexpr int kNativeToolbarIntegrationDy = 4;
++
++static int GetHybridToolbarHeight(HWND hwndFrame) {
++    Rect workArea = GetWorkAreaRect(WindowRect(hwndFrame), hwndFrame);
++    int workDy = workArea.dy;
++    int baseHeight = 120;
++    if (workDy >= 1700) {
++        baseHeight = 110;
++    } else if (workDy >= 1300) {
++        baseHeight = 100;
++    } else if (workDy >= 1000) {
++        baseHeight = 90;
++    } else if (workDy >= 700) {
++        baseHeight = 70;
++    } else {
++        baseHeight = 50;
++    }
++    return DpiScale(hwndFrame, baseHeight);
++}
++
++static const char* GetHybridToolbarFallbackHtml() {
++    return "<html><body style='font-family:sans-serif;padding:12px'>Toolbar HTML not found</body></html>";
++}
++
++static std::string BuildFileUrl(const std::string& filePath) {
++    std::string url = "file:///";
++    for (char ch : filePath) {
++        if (ch == '\\') {
++            url.push_back('/');
++        } else if (ch == ' ') {
++            url += "%20";
++        } else {
++            url.push_back(ch);
++        }
++    }
++    return url;
++}
++
++static bool LoadHybridToolbarFromFile(WebviewWnd* wv, const std::vector<std::string>& candidates) {
++    for (const auto& p : candidates) {
++        if (!file::Exists(p.c_str())) {
++            continue;
++        }
++        std::string fileUrl = BuildFileUrl(p);
++        wv->Navigate(fileUrl.c_str());
++        return true;
++    }
++    return false;
++}
++
++static void CreateHybridToolbar(MainWindow* win) {
++    if (!prettysumatra::bridge::UseHybridToolbar() || win->hybridToolbar) {
++        return;
++    }
++    win->hybridToolbar = new WebviewWnd();
++    win->hybridToolbar->dataDir = str::Dup(GetPathInAppDataDirTemp("webViewData"));
++    CreateWebViewArgs args;
++    args.parent = win->hwndFrame;
++    Rect rc = ClientRect(win->hwndFrame);
++    int initialDx = std::max(rc.dx, 1);
++    args.pos = {0, 0, initialDx, GetHybridToolbarHeight(win->hwndFrame)};
++    if (!win->hybridToolbar->Create(args)) {
++        delete win->hybridToolbar;
++        win->hybridToolbar = nullptr;
++        if (win->hwndReBar) {
++            HwndSetVisibility(win->hwndReBar, false);
++        }
++        return;
++    }
++    prettysumatra::bridge::InitHybridToolbarTheme(win->hwndFrame);
++    prettysumatra::bridge::InitHybridToolbarText(win->hwndFrame);
++
++    char exePath[MAX_PATH] = {0};
++    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
++    std::string exeDir = path::GetDirTemp(exePath);
++    std::vector<std::string> candidates = {
++        exeDir + "\\prettysumatra\\webui\\home.html",
++        exeDir + "..\\prettysumatra\\webui\\home.html",
++        exeDir + "\\..\\..\\prettysumatra\\webui\\home.html",
++        exeDir + "\\..\\..\\..\\prettysumatra\\webui\\home.html",
++    };
++
++    if (!LoadHybridToolbarFromFile(win->hybridToolbar, candidates)) {
++        win->hybridToolbar->SetHtml(GetHybridToolbarFallbackHtml());
++    }
++
++    prettysumatra::bridge::SyncHybridToolbarTheme(win->hwndFrame);
++    prettysumatra::bridge::SyncHybridToolbarText(win->hwndFrame);
++}
+ 
+ // used to show it in debug, but is not very useful,
+ // so always disable
+@@ -724,10 +815,8 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
+ }
+ 
+ static bool IsMenubarVisible() {
+-    if (SettingsUseTabs()) {
+-        return gGlobalPrefs->showMenubarWithTabs;
+-    }
+-    return gGlobalPrefs->showMenubar;
++    // PrettySumatra: classic menubar is intentionally disabled.
++    return false;
+ }
+ 
+ static bool MenuBarButtonsNeedRebuild(HMENU oldMenu, HMENU newMenu) {
+@@ -1174,13 +1263,17 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
+         return;
+     }
+ 
++    int oldPageNo = win->currPageNo;
++    int pageCount = win->ctrl->PageCount();
++
+     if (kInvalidPageNo != pageNo) {
+         TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
+         HwndSetText(win->hwndPageEdit, label);
+-        ToolbarUpdateStateForWindow(win, false);
+-        if (win->ctrl->HasPageLabels()) {
+-            UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
++        bool nearBoundary = oldPageNo <= 1 || oldPageNo >= pageCount || pageNo <= 1 || pageNo >= pageCount;
++        if (nearBoundary) {
++            ToolbarUpdateStateForWindow(win, false);
+         }
++        UpdateToolbarPageText(win, win->ctrl->PageCount(), true);
+     }
+     if (pageNo == win->currPageNo) {
+         return;
+@@ -1771,6 +1864,9 @@ static void UpdateToolbarSidebarText(MainWindow* win) {
+     UpdateToolbarPageText(win, -1);
+     UpdateToolbarFindText(win);
+     UpdateToolbarButtonsToolTipsForWindow(win);
++    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
++        prettysumatra::bridge::SyncHybridToolbarText(win->hwndFrame);
++    }
+ 
+     win->tocLabelWithClose->SetLabel(_TRA("Bookmarks"));
+     win->favLabelWithClose->SetLabel(_TRA("Favorites"));
+@@ -1859,6 +1955,7 @@ static MainWindow* CreateMainWindow() {
+ 
+     CreateTabbar(win);
+     CreateToolbar(win);
++    CreateHybridToolbar(win);
+     CreateSidebar(win);
+     UpdateFindbox(win);
+     if (CanAccessDisk() && !gPluginMode) {
+@@ -1915,6 +2012,10 @@ static MainWindow* CreateMainWindow() {
+         // DarkMode::setDarkTooltips(win->infotip->hwnd, (int)DarkMode::ToolTipsType::tooltip);
+     }
+ 
++    if (prettysumatra::bridge::UseHybridToolbar() && win->hybridToolbar) {
++        HwndSetVisibility(win->hwndReBar, false);
++    }
++
+     // re-enable painting now that dark mode is configured
+     SendMessageW(win->hwndFrame, WM_SETREDRAW, TRUE, 0);
+ 
+@@ -2038,6 +2139,8 @@ void UpdateAfterThemeChange() {
+         RebuildMenuBarForWindow(win);
+         // TODO: probably leaking toolbar image list
+         UpdateToolbarAfterThemeChange(win);
++        prettysumatra::bridge::SyncHybridToolbarTheme(win->hwndFrame);
++        prettysumatra::bridge::SyncHomePageTheme(win->hwndFrame);
+         if (UseDarkModeLib()) {
+             DarkMode::setDarkTitleBarEx(win->hwndFrame, true);
+             DarkMode::setChildCtrlsTheme(win->hwndFrame);
+@@ -4072,7 +4175,8 @@ using LayoutState = MainWindow::LayoutState;
+ static bool IsLayoutStateEq(LayoutState* s1, LayoutState* s2) {
+     return s1->rc == s2->rc && s1->presentation == s2->presentation && s1->tabsInTitlebar == s2->tabsInTitlebar &&
+            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
+-           s1->isToolbarVisible == s2->isToolbarVisible && s1->tocVisible == s2->tocVisible &&
++           s1->isToolbarVisible == s2->isToolbarVisible && s1->isToolbarCompact == s2->isToolbarCompact &&
++           s1->tocVisible == s2->tocVisible &&
+            s1->showFavorites == s2->showFavorites && s1->showMenuBarRebar == s2->showMenuBarRebar;
+ }
+ 
+@@ -4083,6 +4187,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
+         return;
+     }
+     // build a snapshot of all state that affects layout
++    MainWindow::LayoutState prevState = win->lastLayoutState;
+     MainWindow::LayoutState curState;
+     curState.rc = rc;
+     curState.presentation = (int)win->presentation;
+@@ -4090,6 +4195,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
+     curState.isFullScreen = win->isFullScreen;
+     curState.tabsVisible = win->tabsVisible;
+     curState.isToolbarVisible = win->isToolbarVisible;
++    curState.isToolbarCompact = IsToolbarCompact(win);
+     curState.tocVisible = win->tocVisible;
+     curState.showFavorites = gGlobalPrefs->showFavorites;
+     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
+@@ -4105,6 +4211,11 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
+     } else {
+         win->lastLayoutState = {};
+     }
++
++    bool toolbarDensityChanged = prevState.rc.dx > 0 && prevState.isToolbarCompact != curState.isToolbarCompact;
++    if (updateToolbars && toolbarDensityChanged && win->hwndToolbar) {
++        ReCreateToolbar(win);
++    }
+     if (gRedrawLog) {
+         RECT r = ToRECT(rc);
+         LogRedraw("RelayoutFrame", win->hwndFrame, &r);
+@@ -4189,17 +4300,36 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
+         rc.y += menuBarDy;
+         rc.dy -= menuBarDy;
+     }
+-    if (win->isToolbarVisible) {
++    if (win->hybridToolbar && win->isToolbarVisible) {
++        int hybridToolbarHeight = GetHybridToolbarHeight(win->hwndFrame);
++        constexpr int kHybridToolbarOverlapDy = 1;
+         if (updateToolbars) {
+-            Rect rcRebar = WindowRect(win->hwndReBar);
+-            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rc.y, rc.dx, rcRebar.dy, SWP_NOZORDER);
++            dh.SetWindowPos(win->hybridToolbar->hwnd, nullptr, rc.x, rc.y, rc.dx, hybridToolbarHeight, SWP_NOZORDER);
++            ShowWindow(win->hybridToolbar->hwnd, SW_SHOW);
+         }
+-        Rect rcRebar = WindowRect(win->hwndReBar);
+-        rc.y += rcRebar.dy;
+-        rc.dy -= rcRebar.dy;
++        rc.y += hybridToolbarHeight - kHybridToolbarOverlapDy;
++        rc.dy -= hybridToolbarHeight - kHybridToolbarOverlapDy;
++    } else if (win->hybridToolbar && updateToolbars) {
++        ShowWindow(win->hybridToolbar->hwnd, SW_HIDE);
++    }
++    if (win->isToolbarVisible && !win->hybridToolbar) {
++        int integrationDy = DpiScale(win->hwndFrame, kNativeToolbarIntegrationDy);
++        int rebarDy = (int)SendMessageW(win->hwndReBar, RB_GETBARHEIGHT, 0, 0);
++        if (rebarDy <= 0) {
++            rebarDy = WindowRect(win->hwndReBar).dy;
++        }
++        if (updateToolbars) {
++            dh.SetWindowPos(win->hwndReBar, nullptr, rc.x, rc.y, rc.dx, rebarDy + integrationDy, SWP_NOZORDER);
++        }
++        rc.y += rebarDy + integrationDy;
++        rc.dy -= rebarDy + integrationDy;
+     }
+     if (updateToolbars) {
+-        ShowWindow(win->hwndReBar, win->isToolbarVisible ? SW_SHOW : SW_HIDE);
++        bool showNativeToolbar = win->isToolbarVisible && !win->hybridToolbar;
++        ShowWindow(win->hwndReBar, showNativeToolbar ? SW_SHOW : SW_HIDE);
++    }
++    if (updateToolbars && win->hybridToolbar) {
++        RedrawWindow(win->hybridToolbar->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+     }
+ 
+     // ToC and Favorites sidebars at the left
+@@ -4902,7 +5032,7 @@ void ExitFullScreen(MainWindow* win) {
+         win->tabsCtrl->SetIsVisible(true);
+     }
+     win->isToolbarVisible = ShouldShowToolbar(win);
+-    if (win->isToolbarVisible) {
++    if (win->isToolbarVisible && !win->hybridToolbar) {
+         ShowWindow(win->hwndReBar, SW_SHOW);
+     }
+     // destroy any fullscreen menu rebar before restoring normal menu
+@@ -5385,7 +5515,20 @@ static void OnSidebarSplitterMove(Splitter::MoveEvent* ev) {
+         return;
+     }
+ 
++    SendMessageW(win->hwndTocBox, WM_SETREDRAW, FALSE, 0);
++    SendMessageW(win->hwndFavBox, WM_SETREDRAW, FALSE, 0);
++    bool oldSuppressFrameRedraw = win->suppressFrameRedraw;
++    win->suppressFrameRedraw = true;
+     RelayoutFrame(win, false, sidebarDx);
++    win->suppressFrameRedraw = oldSuppressFrameRedraw;
++    SendMessageW(win->hwndFavBox, WM_SETREDRAW, TRUE, 0);
++    SendMessageW(win->hwndTocBox, WM_SETREDRAW, TRUE, 0);
++    if (win->tocVisible) {
++        RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
++    }
++    if (gGlobalPrefs->showFavorites) {
++        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
++    }
+ }
+ 
+ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
+@@ -5407,7 +5550,20 @@ static void OnFavSplitterMove(Splitter::MoveEvent* ev) {
+         return;
+     }
+     gGlobalPrefs->tocDy = tocDy;
++    SendMessageW(win->hwndTocBox, WM_SETREDRAW, FALSE, 0);
++    SendMessageW(win->hwndFavBox, WM_SETREDRAW, FALSE, 0);
++    bool oldSuppressFrameRedraw = win->suppressFrameRedraw;
++    win->suppressFrameRedraw = true;
+     RelayoutFrame(win, false, rToc.dx);
++    win->suppressFrameRedraw = oldSuppressFrameRedraw;
++    SendMessageW(win->hwndFavBox, WM_SETREDRAW, TRUE, 0);
++    SendMessageW(win->hwndTocBox, WM_SETREDRAW, TRUE, 0);
++    if (win->tocVisible) {
++        RedrawWindow(win->hwndTocBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
++    }
++    if (gGlobalPrefs->showFavorites) {
++        RedrawWindow(win->hwndFavBox, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_UPDATENOW);
++    }
+ }
+ 
+ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout) {
+@@ -8238,6 +8394,20 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+             }
+             break;
+ 
++        case WM_DPICHANGED:
++            if (win) {
++                RECT* suggested = (RECT*)lp;
++                if (suggested) {
++                    SetWindowPos(hwnd, nullptr, suggested->left, suggested->top, suggested->right - suggested->left,
++                                 suggested->bottom - suggested->top, SWP_NOZORDER | SWP_NOACTIVATE);
++                }
++                if (win->hwndToolbar) {
++                    ReCreateToolbar(win);
++                }
++                RelayoutFrame(win);
++            }
++            return 0;
++
+         case WM_GETMINMAXINFO:
+             return OnFrameGetMinMaxInfo((MINMAXINFO*)lp);
+ 
+@@ -8350,10 +8520,6 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+             return DefWindowProc(hwnd, msg, wp, lp);
+ 
+         case WM_SYSCOMMAND:
+-            // temporarily show the menu bar if it has been hidden
+-            if (wp == SC_KEYMENU && win && !IsMenubarVisible()) {
+-                ToggleMenuBar(win, true);
+-            }
+             return DefWindowProc(hwnd, msg, wp, lp);
+ 
+         case WM_ENTERMENULOOP:
+@@ -8602,3 +8768,4 @@ void ShutdownCleanup() {
+     gAllowedFileTypes.Reset();
+     gAllowedLinkProtocols.Reset();
+ }
++
+diff --git a/src/SumatraPDF.rc b/src/SumatraPDF.rc
+index eb9ff95b2..fc95a1f92 100644
+--- a/src/SumatraPDF.rc
++++ b/src/SumatraPDF.rc
+@@ -80,10 +80,10 @@ IDI_SUMATRAPDF          ICON "..\\gfx\\SumatraPDF-smaller.ico"
+ // have icon as ,1, which is index of this icon. unless we delete
+ // those old registry on install, the icon would change
+ 2                       ICON "..\\gfx\\SumatraPDF-smaller.ico"
+-3                       ICON "..\\gfx\\gfxalt\\epub-32bit.ico"
+-4                       ICON "..\\gfx\\gfxalt\\cbx-32bit.ico"
+-5                       ICON "..\\gfx\\gfxalt\\chm-32bit.ico"
+-6                       ICON "..\\gfx\\gfxalt\\djvu-32bit.ico"
++3                       ICON "..\\gfx\\epub-32bit.ico"
++4                       ICON "..\\gfx\\cbx-32bit.ico"
++5                       ICON "..\\gfx\\chm-32bit.ico"
++6                       ICON "..\\gfx\\djvu-32bit.ico"
+ 
+     /////////////////////////////////////////////////////////////////////////////
+ 
+diff --git a/src/SumatraProperties.cpp b/src/SumatraProperties.cpp
+index 548144c84..dffd26316 100644
+--- a/src/SumatraProperties.cpp
++++ b/src/SumatraProperties.cpp
+@@ -55,6 +55,42 @@ struct PropertiesLayout {
+ 
+ static Vec<PropertiesLayout*> gPropertiesWindows;
+ 
++static COLORREF PropertiesPanelBgColor() {
++    return PrettyStyleEnabled() ? PrettySurfaceColor() : GetSysColor(COLOR_BTNFACE);
++}
++
++static COLORREF PropertiesEditBgColor() {
++    return PrettyStyleEnabled() ? PrettySurfaceAltColor() : GetSysColor(COLOR_WINDOW);
++}
++
++static COLORREF PropertiesTextColor() {
++    return ThemeWindowTextColor();
++}
++
++static HBRUSH PropertiesPanelBrush() {
++    static HBRUSH brush = nullptr;
++    static COLORREF cachedCol = CLR_INVALID;
++    COLORREF col = PropertiesPanelBgColor();
++    if (!brush || cachedCol != col) {
++        DeleteObject(brush);
++        brush = CreateSolidBrush(col);
++        cachedCol = col;
++    }
++    return brush;
++}
++
++static HBRUSH PropertiesEditBrush() {
++    static HBRUSH brush = nullptr;
++    static COLORREF cachedCol = CLR_INVALID;
++    COLORREF col = PropertiesEditBgColor();
++    if (!brush || cachedCol != col) {
++        DeleteObject(brush);
++        brush = CreateSolidBrush(col);
++        cachedCol = col;
++    }
++    return brush;
++}
++
+ PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
+     for (PropertiesLayout* pl : gPropertiesWindows) {
+         if (pl->hwnd == hwnd) {
+@@ -648,6 +684,27 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+         case WM_CREATE:
+             break;
+ 
++        case WM_ERASEBKGND: {
++            HDC hdc = (HDC)wp;
++            RECT rc = ToRECT(ClientRect(hwnd));
++            FillRect(hdc, &rc, PropertiesPanelBrush());
++            return 1;
++        }
++
++        case WM_CTLCOLORSTATIC: {
++            HDC hdc = (HDC)wp;
++            SetTextColor(hdc, PropertiesTextColor());
++            SetBkColor(hdc, PropertiesPanelBgColor());
++            return (LRESULT)PropertiesPanelBrush();
++        }
++
++        case WM_CTLCOLOREDIT: {
++            HDC hdc = (HDC)wp;
++            SetTextColor(hdc, PropertiesTextColor());
++            SetBkColor(hdc, PropertiesEditBgColor());
++            return (LRESULT)PropertiesEditBrush();
++        }
++
+         case WM_SIZE:
+             pl = FindPropertyWindowByHwnd(hwnd);
+             if (pl && pl->hwndEdit) {
+@@ -758,7 +815,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
+     HMODULE h = GetModuleHandleW(nullptr);
+     WNDCLASSEX wcex = {};
+     FillWndClassEx(wcex, kPropertiesWinClassName, WndProcProperties);
+-    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
++    wcex.hbrBackground = nullptr;
+     WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+     wcex.hIcon = LoadIconW(h, iconName);
+     ReportIf(!wcex.hIcon);
+@@ -785,8 +842,8 @@ void ShowProperties(HWND parent, DocController* ctrl) {
+     int editDy = cRc.dy - kButtonAreaDy;
+     DWORD editStyle =
+         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
+-    HWND hwndEdit =
+-        CreateWindowExW(WS_EX_CLIENTEDGE, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, editDy, hwnd, nullptr, h, nullptr);
++    DWORD editExStyle = PrettyStyleEnabled() ? 0 : WS_EX_CLIENTEDGE;
++    HWND hwndEdit = CreateWindowExW(editExStyle, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, editDy, hwnd, nullptr, h, nullptr);
+     layoutData->hwndEdit = hwndEdit;
+ 
+     if (!DefWndProcPropertiesEdit) {
+diff --git a/src/SumatraStartup.cpp b/src/SumatraStartup.cpp
+index 5b3d1be3c..2d8859bc5 100644
+--- a/src/SumatraStartup.cpp
++++ b/src/SumatraStartup.cpp
+@@ -56,6 +56,7 @@
+ #include "Print.h"
+ #include "SearchAndDDE.h"
+ #include "Selection.h"
++#include "prettysumatra/BridgeDispatcher.h"
+ #include "SumatraDialogs.h"
+ #include "SumatraProperties.h"
+ #include "Tabs.h"
+@@ -229,6 +230,9 @@ static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
+         return;
+     }
+     HwndSetText(win->hwndFindEdit, searchTerm);
++    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
++        prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, searchTerm);
++    }
+     bool wasModified = true;
+     bool showProgress = true;
+     FindTextOnThread(win, TextSearch::Direction::Forward, searchTerm, wasModified, showProgress);
+diff --git a/src/TableOfContents.cpp b/src/TableOfContents.cpp
+index 3142acb27..d83822b1e 100644
+--- a/src/TableOfContents.cpp
++++ b/src/TableOfContents.cpp
+@@ -740,6 +740,17 @@ void LoadTocTree(MainWindow* win) {
+     treeView->SetTreeModel(tocTree);
+ 
+     treeView->onCustomDraw = MkFunc1Void(OnTocCustomDraw);
++
++    // --- Estilos extendidos modernos del TreeView ---
++    {
++        HWND hTree = treeView->hwnd;
++        DWORD tvExStyle = TVS_EX_FADEINOUTEXPANDOS | TVS_EX_AUTOHSCROLL | TVS_EX_DOUBLEBUFFER;
++        TreeView_SetExtendedStyle(hTree, tvExStyle, tvExStyle);
++        TreeView_SetItemHeight(hTree, DpiScale(hTree, 28));
++        TreeView_SetIndent(hTree, DpiScale(hTree, 16));
++    }
++    // -----------------------------------------------
++
+     LayoutTocContainer(win);
+     // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+     // RedrawWindow(hwnd, nullptr, nullptr, fl);
+@@ -857,9 +868,17 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
+     bool hasFocus = (GetFocus() == tv->hwnd);
+     COLORREF bgCol;
+     if (isSelected) {
+-        bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
++        if (PrettyStyleEnabled()) {
++            bgCol = hasFocus ? PrettyAccentColor() : PrettySurfaceColor();
++        } else {
++            bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
++        }
+     } else {
+-        bgCol = IsSpecialColor(tv->bgColor) ? GetSysColor(COLOR_WINDOW) : tv->bgColor;
++        if (IsSpecialColor(tv->bgColor)) {
++            bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : GetSysColor(COLOR_WINDOW);
++        } else {
++            bgCol = tv->bgColor;
++        }
+     }
+     HBRUSH hbrBg = CreateSolidBrush(bgCol);
+     FillRect(hdc, &labelRect, hbrBg);
+@@ -867,7 +886,9 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
+ 
+     // draw highlight background rectangles
+     COLORREF highlightCol;
+-    if (IsCurrentThemeDefault()) {
++    if (PrettyStyleEnabled()) {
++        highlightCol = PrettyBorderColor();
++    } else if (IsCurrentThemeDefault()) {
+         highlightCol = RGB(255, 255, 0);
+     } else {
+         highlightCol = AccentColor(bgCol, 40);
+@@ -931,6 +952,19 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
+             return;
+         }
+         LRESULT res = 0;
++        bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
++        bool hasFocus   = (GetFocus() == ev->treeView->hwnd);
++        bool isHot      = (cd->uItemState & CDIS_HOT) != 0;
++        if (PrettyStyleEnabled()) {
++            if (isSelected && hasFocus) {
++                tvcd->clrTextBk = PrettyAccentColor();
++                tvcd->clrText   = GetSysColor(COLOR_HIGHLIGHTTEXT);
++            } else if (isSelected || isHot) {
++                tvcd->clrTextBk = PrettySurfaceColor();
++            } else {
++                tvcd->clrTextBk = PrettySurfaceAltColor();
++            }
++        }
+         if (tocItem->color != kColorUnset) {
+             tvcd->clrText = tocItem->color;
+         }
+@@ -938,9 +972,8 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
+             UpdateFont(cd->hdc, tocItem->fontFlags);
+             res = CDRF_NEWFONT;
+         }
+-        if (filterActive) {
+-            res |= CDRF_NOTIFYPOSTPAINT;
+-        }
++        // Siempre notificar post-paint (highlight de filtro + posibles decoraciones futuras)
++        res |= CDRF_NOTIFYPOSTPAINT;
+         ev->result = res;
+         return;
+     }
+@@ -1068,9 +1101,16 @@ static void LayoutTocContainer(MainWindow* win) {
+     y += labelSize.dy;
+     if (edit && edit->hwnd) {
+         Size editSize = edit->GetIdealSize();
+-        MoveWindow(edit->hwnd, 0, y, rc.dx, editSize.dy, TRUE);
+-        dy -= editSize.dy;
+-        y += editSize.dy;
++        int vPad   = DpiScale(hwndContainer, 4);   // padding vertical arriba/abajo del área de búsqueda
++        int hPad   = DpiScale(hwndContainer, 6);   // margen exterior derecho
++        // El margen izquierdo es mayor para dejar espacio al icono de lupa (~26px)
++        int lupaW  = DpiScale(hwndContainer, 26);
++        int editH  = editSize.dy + DpiScale(hwndContainer, 2);
++        int areaH  = editH + vPad * 2;             // altura total del área buscador (fondo coloreado)
++        // El Edit se posiciona dejando lupaW a la izquierda
++        MoveWindow(edit->hwnd, lupaW, y + vPad, rc.dx - lupaW - hPad, editH, TRUE);
++        dy -= areaH + DpiScale(hwndContainer, 1);  // 1px gap para la línea separadora
++        y  += areaH + DpiScale(hwndContainer, 1);
+     }
+     MoveWindow(treeView->hwnd, 0, y, rc.dx, dy, TRUE);
+ }
+@@ -1090,6 +1130,105 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
+     TreeView* treeView = win->tocTreeView;
+ 
+     switch (msg) {
++        case WM_ERASEBKGND:
++            return TRUE;
++
++        // Colorea el fondo del Edit (buscador) con PrettySurfaceColor para distinguirlo
++        // del fondo del panel (PrettySurfaceAltColor), creando contraste visual
++        case WM_CTLCOLOREDIT: {
++            if (PrettyStyleEnabled()) {
++                HDC hdcEdit = (HDC)wp;
++                SetBkColor(hdcEdit, PrettySurfaceColor());
++                SetTextColor(hdcEdit, ThemeWindowTextColor());
++                static HBRUSH hbrEdit = nullptr;
++                // Recrear solo si cambia el tema (simplificado: recrear siempre es seguro)
++                if (hbrEdit) DeleteObject(hbrEdit);
++                hbrEdit = CreateSolidBrush(PrettySurfaceColor());
++                return (LRESULT)hbrEdit;
++            }
++            break;
++        }
++
++        case WM_PAINT: {
++            PAINTSTRUCT ps;
++            HDC hdc = BeginPaint(hwnd, &ps);
++            Rect rc2 = WindowRect(hwnd);
++
++            // 1) Fondo general del panel
++            COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
++            {
++                AutoDeleteBrush br = CreateSolidBrush(bgCol);
++                FillRect(hdc, &ps.rcPaint, br);
++            }
++
++            Edit* filterEdit = win->tocFilterEdit;
++            if (filterEdit && filterEdit->hwnd) {
++                RECT rcEdit;
++                GetWindowRect(filterEdit->hwnd, &rcEdit);
++                MapWindowPoints(HWND_DESKTOP, hwnd, (POINT*)&rcEdit, 2);
++
++                int vPad  = DpiScale(hwnd, 4);
++                int areaT = rcEdit.top - vPad;
++                int areaB = rcEdit.bottom + vPad;
++
++                if (PrettyStyleEnabled()) {
++                    // 2) Fondo distinto del área buscador (un nivel más claro que el panel)
++                    RECT rcSearchArea = { 0, areaT, rc2.dx, areaB };
++                    AutoDeleteBrush brSearch = CreateSolidBrush(PrettySurfaceColor());
++                    FillRect(hdc, &rcSearchArea, brSearch);
++
++                    // 3) Icono de lupa usando Segoe MDL2 Assets (U+E721)
++                    // Renderizado con antialiasing nativo de Windows, sin pixelado
++                    int lupaW   = DpiScale(hwnd, 26);
++                    int iconSz  = DpiScale(hwnd, 14); // tamaño de fuente del icono
++
++                    // Crear fuente Segoe MDL2 Assets; fallback a Segoe UI Symbol
++                    HFONT hIconFont = CreateFontW(
++                        -iconSz,          // altura negativa = tamaño en puntos
++                        0, 0, 0,
++                        FW_NORMAL, FALSE, FALSE, FALSE,
++                        DEFAULT_CHARSET,
++                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
++                        CLEARTYPE_QUALITY,  // antialiasing ClearType
++                        DEFAULT_PITCH | FF_DONTCARE,
++                        L"Segoe MDL2 Assets"
++                    );
++                    if (!hIconFont) {
++                        // Fallback: Segoe UI Symbol (Windows 7/8)
++                        hIconFont = CreateFontW(
++                            -iconSz, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
++                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
++                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
++                            L"Segoe UI Symbol"
++                        );
++                    }
++
++                    if (hIconFont) {
++                        HFONT oldFont = (HFONT)SelectObject(hdc, hIconFont);
++                        // Color del icono: texto del tema ligeramente atenuado
++                        COLORREF iconCol = ThemeWindowTextColor();
++                        BYTE dimR = (BYTE)((GetRValue(iconCol) * 160 + GetRValue(PrettySurfaceColor()) * 95) / 255);
++                        BYTE dimG = (BYTE)((GetGValue(iconCol) * 160 + GetGValue(PrettySurfaceColor()) * 95) / 255);
++                        BYTE dimB = (BYTE)((GetBValue(iconCol) * 160 + GetBValue(PrettySurfaceColor()) * 95) / 255);
++                        SetTextColor(hdc, RGB(dimR, dimG, dimB));
++                        SetBkMode(hdc, TRANSPARENT);
++
++                        // Rect donde centrar el icono (zona izquierda del área buscador)
++                        RECT rcIcon = { 0, areaT, lupaW, areaB };
++                        // U+E721 = icono de lupa en Segoe MDL2 Assets
++                        DrawTextW(hdc, L"\uE721", -1, &rcIcon,
++                                  DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
++
++                        SelectObject(hdc, oldFont);
++                        DeleteObject(hIconFont);
++                    }
++                }
++            }
++
++            EndPaint(hwnd, &ps);
++            return 0;
++        }
++
+         case WM_SIZE:
+             LayoutTocContainer(win);
+             break;
+@@ -1285,22 +1424,38 @@ void CreateToc(MainWindow* win) {
+         l->Create(args);
+     }
+     win->tocLabelWithClose = l;
+-    l->SetPaddingXY(2, 2);
++    l->SetPaddingXY(6, 4);
+     // label is set in UpdateToolbarSidebarText()
+ 
+     auto filterEdit = new Edit();
+     {
+         Edit::CreateArgs eargs;
+-        eargs.parent = win->hwndTocBox;
++        eargs.parent    = win->hwndTocBox;
+         eargs.withBorder = false;
+-        eargs.cueText = _TRA("Search Bookmarks");
+-        eargs.font = GetDefaultGuiFont(false, false);
++        eargs.cueText   = _TRA("Search Bookmarks");
++        eargs.font      = GetDefaultGuiFont(false, false);
+         filterEdit->Create(eargs);
+     }
+     win->tocFilterEdit = filterEdit;
+     filterEdit->onTextChanged = MkFunc0(OnTocFilterTextChanged, win);
+     SetWindowSubclass(filterEdit->hwnd, WndProcTocFilterEdit, NextSubclassId(), (DWORD_PTR)win);
+ 
++    // --- Aspecto distintivo del buscador ---
++    if (filterEdit->hwnd) {
++        HWND hEdit = filterEdit->hwnd;
++        // Fondo ligeramente diferenciado del panel (usa surface en lugar de surfaceAlt)
++        // Se aplica vía WM_CTLCOLOREDIT reflejado desde WndProcTocBox.
++        // Padding interno: el edit nativo no soporta padding directo, pero podemos
++        // añadir márgenes horizontales con EM_SETMARGINS para que el texto no quede
++        // pegado al borde izquierdo, dando sensación de search-bar moderna.
++        // Margen izquierdo = 0 (el edit ya está desplazado lupaW px en LayoutTocContainer)
++        // Margen derecho = 6px para que el texto no toque el borde derecho
++        int rMargin = DpiScale(hEdit, 6);
++        SendMessage(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN,
++                    MAKELPARAM(0, rMargin));
++    }
++    // ----------------------------------------
++
+     auto treeView = new TreeView();
+     TreeView::CreateArgs args;
+     args.parent = win->hwndTocBox;
+diff --git a/src/Theme.cpp b/src/Theme.cpp
+index b37e24607..bb299c8c5 100644
+--- a/src/Theme.cpp
++++ b/src/Theme.cpp
+@@ -45,25 +45,9 @@ static const char* themesTxt = R"(Themes [
+         TextColor = #000000
+         BackgroundColor = #f2f2f2
+         ControlBackgroundColor = #ffffff
+-        LinkColor = #0020a0
++        LinkColor = #eab308
+         ColorizeControls = false
+     ]
+-    [
+-        Name = Dark from 3.5
+-        TextColor = #bac9d0
+-        BackgroundColor = #263238
+-        ControlBackgroundColor = #263238
+-        LinkColor = #8aa3b0
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Darker
+-        TextColor = #c3c3c6
+-        BackgroundColor = #2d2d30
+-        ControlBackgroundColor = #2d2d30
+-        LinkColor = #9999a0
+-        ColorizeControls = true
+-    ]
+     [
+         Name = Dark
+         TextColor = #F9FAFB
+@@ -72,70 +56,6 @@ static const char* themesTxt = R"(Themes [
+         LinkColor = #6B7280
+         ColorizeControls = true
+     ]
+-    [
+-        Name = Dark background Bright text
+-        TextColor = #ffffff
+-        BackgroundColor = #2d2d30
+-        ControlBackgroundColor = #2d2d30
+-        LinkColor = #9999a0
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Solarized Light
+-        TextColor = #212323
+-        BackgroundColor = #fdf6e3
+-        ControlBackgroundColor = #eee8d5
+-        LinkColor = #9999a0
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Solarized Dark
+-        TextColor = #839496
+-        BackgroundColor = #002b36
+-        ControlBackgroundColor = #073642
+-        LinkColor = #268bd2
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Dracula
+-        TextColor = #f8f8f2
+-        BackgroundColor = #282a36
+-        ControlBackgroundColor = #44475a
+-        LinkColor = #8be9fd
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Nebula
+-        TextColor = #CBE3E7
+-        BackgroundColor = #100E23
+-        ControlBackgroundColor = #1E1C31
+-        LinkColor = #91DDFF
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Greeny
+-        TextColor = #FDD085
+-        BackgroundColor = #4F6232
+-        ControlBackgroundColor = #1E3304
+-        LinkColor = #A2E53B
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Choco
+-        TextColor = #D7AD62
+-        BackgroundColor = #2A1104
+-        ControlBackgroundColor = #172736
+-        LinkColor = #E8CD12
+-        ColorizeControls = true
+-    ]
+-    [
+-        Name = Purpy
+-        TextColor = #E2C3C3
+-        BackgroundColor = #20222A
+-        ControlBackgroundColor = #1E0126
+-        LinkColor = #EFF0B8
+-        ColorizeControls = true
+-    ]
+ ]
+ )";
+ 
+@@ -420,6 +340,62 @@ COLORREF ThemeWindowLinkColor() {
+     return col;
+ }
+ 
++bool PrettyStyleEnabled() {
++    char buf[16] = {};
++    DWORD n = GetEnvironmentVariableA("PRETTYSUMATRA_STYLE_V1", buf, dimof(buf));
++    if (n == 0 || n >= dimof(buf)) {
++        return true;
++    }
++    if (str::EqI(buf, "0") || str::EqI(buf, "false") || str::EqI(buf, "off")) {
++        return false;
++    }
++    return true;
++}
++
++COLORREF PrettySurfaceColor() {
++    COLORREF col = ThemeControlBackgroundColor();
++    if (!PrettyStyleEnabled()) {
++        return col;
++    }
++    if (IsLightColor(col)) {
++        return AdjustLightness2(col, 6);
++    }
++    return AccentColor(col, 12);
++}
++
++COLORREF PrettySurfaceAltColor() {
++    COLORREF col = ThemeControlBackgroundColor();
++    if (!PrettyStyleEnabled()) {
++        return col;
++    }
++    if (IsLightColor(col)) {
++        return AdjustLightness2(col, 2);
++    }
++    return AccentColor(col, 8);
++}
++
++COLORREF PrettyBorderColor() {
++    COLORREF col = ThemeControlBackgroundColor();
++    if (!PrettyStyleEnabled()) {
++        return AccentColor(col, 40);
++    }
++    if (IsLightColor(col)) {
++        return AccentColor(col, 26);
++    }
++    return AccentColor(col, 42);
++}
++
++COLORREF PrettyAccentColor() {
++    COLORREF col = ThemeWindowLinkColor();
++    if (!PrettyStyleEnabled()) {
++        return col;
++    }
++    if (IsLightColor(col)) {
++        return AdjustLightness2(col, 8);
++    }
++    return AccentColor(col, 22);
++}
++
+ COLORREF ThemeNotificationsBackgroundColor() {
+     auto col = ThemeWindowBackgroundColor();
+     return AdjustLightness2(col, 10);
+@@ -456,6 +432,21 @@ bool ThemeColorizeControls() {
+     return !IsMenuFontSizeDefault();
+ }
+ 
++COLORREF ThemeTabBgHighlight() {
++    auto col = ThemeControlBackgroundColor();
++    return AccentColor(col, 60);
++}
++
++COLORREF ThemeTabStroke() {
++    auto col = ThemeControlBackgroundColor();
++    return AccentColor(col, 30);
++}
++
++COLORREF ThemeTabActiveStrip() {
++    return ThemeWindowLinkColor();
++}
++
++
+ #if 0
+ void dumpThemes() {
+     logf("Themes [\n");
+diff --git a/src/Theme.h b/src/Theme.h
+index dab5ba6a0..92334e422 100644
+--- a/src/Theme.h
++++ b/src/Theme.h
+@@ -15,17 +15,33 @@ COLORREF ThemeWindowTextColor();
+ COLORREF ThemeWindowTextDisabledColor();
+ COLORREF ThemeWindowControlBackgroundColor();
+ COLORREF ThemeWindowLinkColor();
++bool PrettyStyleEnabled();
++COLORREF PrettySurfaceColor();
++COLORREF PrettySurfaceAltColor();
++COLORREF PrettyBorderColor();
++COLORREF PrettyAccentColor();
+ COLORREF ThemeNotificationsBackgroundColor();
+ COLORREF ThemeNotificationsTextColor();
+ COLORREF ThemeNotificationsHighlightColor();
+ COLORREF ThemeNotificationsHighlightTextColor();
+ COLORREF ThemeNotificationsProgressColor();
++COLORREF ThemeTabBgHighlight();
++COLORREF ThemeTabStroke();
++COLORREF ThemeTabActiveStrip();
+ bool ThemeColorizeControls();
+ bool IsCurrentThemeDefault();
+ COLORREF AccentColor(COLORREF col, int light, int dark = 0);
+ void FreeThemes();
+ bool UseDarkModeLib();
+ 
++struct TabColorTokens {
++    COLORREF bgHighlight;  // fondo de tab seleccionada (highlight cálido)
++    COLORREF stroke;       // borde de tab seleccionada
++    COLORREF activeStrip;  // franja inferior activa
++};
++
++TabColorTokens GetTabColorTokens();
++
+ extern int gFirstSetThemeCmdId;
+ extern int gLastSetThemeCmdId;
+ extern int gCurrSetThemeCmdId;
+diff --git a/src/Toolbar.cpp b/src/Toolbar.cpp
+index a894f6f0c..ab9e089cd 100644
+--- a/src/Toolbar.cpp
++++ b/src/Toolbar.cpp
+@@ -27,6 +27,7 @@ extern "C" {
+ #include "TextSelection.h"
+ #include "TextSearch.h"
+ #include "SumatraPDF.h"
++#include "prettysumatra/BridgeDispatcher.h"
+ #include "MainWindow.h"
+ #include "WindowTab.h"
+ #include "resource.h"
+@@ -42,15 +43,404 @@ extern "C" {
+ #include "DarkModeSubclass.h"
+ #include "wingui/Layout.h"
+ #include "wingui/WinGui.h"
++#include "wingui/WebView.h"
+ 
+ #include "utils/Log.h"
+ 
++// ── DPI / Zoom helpers ──────────────────────────────────────────────────────
++// Minimum icon size in logical (96-DPI) pixels.
++constexpr int kMinIconSizeLogical = 14;
++// Maximum icon size in logical (96-DPI) pixels. Prevents oversized icons on
++// very-high-DPI displays when toolbarSize is left at the default value.
++constexpr int kMaxIconSizeLogical = 48;
++
++// Clamp an already-DPI-scaled icon size to sane bounds so the toolbar never
++// looks broken at extreme zoom levels. Rounds to the nearest even number for
++// clean sub-pixel rendering.
++static int ClampIconSize(int sz) {
++    sz = (sz + 1) & ~1;   // round to nearest even
++    if (sz < kMinIconSizeLogical) sz = kMinIconSizeLogical;
++    if (sz > kMaxIconSizeLogical) sz = kMaxIconSizeLogical;
++    return sz;
++}
++// ────────────────────────────────────────────────────────────────────────────
++
++
+ // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
+ 
+-static int kButtonSpacingX = 4;
++// NOTE: These were compile-time constants.
++// They are now computed per-window so they scale with the monitor DPI and
++// the Windows display zoom setting (100%, 125%, 150%, 200%, ...).
++static inline int ButtonSpacingX(HWND hwnd) { return DpiScale(hwnd, 4); }
++static inline int TextPaddingRight(HWND hwnd) { return DpiScale(hwnd, 6); }
++
++enum class ToolbarDensity {
++    Auto,
++    Normal,
++    Compact,
++};
++
++static ToolbarDensity GetToolbarDensityFromEnv() {
++    char buf[16] = {};
++    DWORD n = GetEnvironmentVariableA("PRETTYSUMATRA_TOOLBAR_DENSITY", buf, dimof(buf));
++    if (n == 0 || n >= dimof(buf)) {
++        return ToolbarDensity::Auto;
++    }
++    if (str::EqI(buf, "compact")) {
++        return ToolbarDensity::Compact;
++    }
++    if (str::EqI(buf, "normal")) {
++        return ToolbarDensity::Normal;
++    }
++    return ToolbarDensity::Auto;
++}
++
++static bool IsToolbarCompactDensity(MainWindow* win) {
++    auto density = GetToolbarDensityFromEnv();
++    if (density == ToolbarDensity::Compact) {
++        return true;
++    }
++    if (density == ToolbarDensity::Normal) {
++        return false;
++    }
++    Rect rc = ClientRect(win->hwndFrame);
++    // 1180 is in logical (96-DPI) pixels; DpiScale converts it to physical
++    // pixels for the monitor the window is currently on, so the compact
++    // layout triggers at the same visual width at every zoom level.
++    int compactThreshold = DpiScale(win->hwndFrame, 1180);
++    return rc.dx > 0 && rc.dx <= compactThreshold;
++}
++
++bool IsToolbarCompact(MainWindow* win) {
++    return IsToolbarCompactDensity(win);
++}
++
++static bool IsPillToolbarCmd(int cmdId) {
++    return cmdId == CmdZoomFitWidthAndContinuous || cmdId == CmdZoomFitPageAndSinglePage ||
++           cmdId == CmdToggleTableOfContents;
++}
++
++static bool IsPillToolbarCmdActive(MainWindow* win, int cmdId) {
++    if (!win) {
++        return false;
++    }
++    if (cmdId == CmdToggleTableOfContents) {
++        return win->tocVisible;
++    }
++    if (!win->IsDocLoaded() || !win->ctrl) {
++        return false;
++    }
++    DisplayMode dm = win->ctrl->GetDisplayMode();
++    if (cmdId == CmdZoomFitWidthAndContinuous) {
++        return dm == DisplayMode::Continuous;
++    }
++    if (cmdId == CmdZoomFitPageAndSinglePage) {
++        return dm == DisplayMode::SinglePage;
++    }
++    return false;
++}
++
++// those are not real commands but we refer to toolbar placeholders by command id
++constexpr int PageInfoId = (int)CmdLast + 16;
++constexpr int WarningMsgId = (int)CmdLast + 17;
++constexpr int MoreActionsId = (int)CmdLast + 18;
++
++static bool IsToolbarOverflowMode(MainWindow* win) {
++    if (!IsToolbarCompactDensity(win)) {
++        return false;
++    }
++    Rect rc = ClientRect(win->hwndFrame);
++    // Below 980 logical pixels secondary actions collapse into the "More"
++    // overflow menu. DpiScale converts to physical pixels for the current
++    // monitor so the threshold is consistent across all zoom levels.
++    int overflowThreshold = DpiScale(win->hwndFrame, 980);
++    return rc.dx > 0 && rc.dx <= overflowThreshold;
++}
++
++static bool IsOverflowSecondaryCmd(int cmdId) {
++    return cmdId == CmdPrint || cmdId == CmdRotateLeft || cmdId == CmdRotateRight;
++}
++
++static bool TryGetToolbarRectByCmd(HWND hwndToolbar, int cmdId, RECT& out) {
++    RECT r{};
++    LRESULT ok = SendMessageW(hwndToolbar, TB_GETRECT, cmdId, (LPARAM)&r);
++    if (!ok || (r.right <= r.left) || (r.bottom <= r.top)) {
++        return false;
++    }
++    out = r;
++    return true;
++}
++
++static bool GetToolbarContentRect(HWND hwndToolbar, RECT& outRect) {
++    int nButtons = (int)SendMessageW(hwndToolbar, TB_BUTTONCOUNT, 0, 0);
++    if (nButtons <= 0) {
++        return false;
++    }
++    RECT content{};
++    bool haveAny = false;
++    for (int i = 0; i < nButtons; i++) {
++        RECT r{};
++        if (!SendMessageW(hwndToolbar, TB_GETITEMRECT, i, (LPARAM)&r)) {
++            continue;
++        }
++        if (r.right <= r.left || r.bottom <= r.top) {
++            continue;
++        }
++        if (!haveAny) {
++            content = r;
++            haveAny = true;
++        } else {
++            content.left = std::min(content.left, r.left);
++            content.top = std::min(content.top, r.top);
++            content.right = std::max(content.right, r.right);
++            content.bottom = std::max(content.bottom, r.bottom);
++        }
++    }
++    if (!haveAny) {
++        return false;
++    }
++    outRect = content;
++    return true;
++}
++
++static void FillRoundRect(HDC hdc, const RECT& rc, int radius, COLORREF fillCol, COLORREF strokeCol) {
++    if (radius <= 1) {
++        HBRUSH fill = CreateSolidBrush(fillCol);
++        HBRUSH stroke = CreateSolidBrush(strokeCol);
++        FillRect(hdc, &rc, fill);
++        FrameRect(hdc, &rc, stroke);
++        DeleteObject(stroke);
++        DeleteObject(fill);
++        return;
++    }
++    HBRUSH fill = CreateSolidBrush(fillCol);
++    HPEN pen = CreatePen(PS_SOLID, 1, strokeCol);
++    HGDIOBJ oldBrush = SelectObject(hdc, fill);
++    HGDIOBJ oldPen = SelectObject(hdc, pen);
++    RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, radius, radius);
++    SelectObject(hdc, oldPen);
++    SelectObject(hdc, oldBrush);
++    DeleteObject(pen);
++    DeleteObject(fill);
++}
++
++static void StrokeRoundRect(HDC hdc, const RECT& rc, int radius, COLORREF strokeCol) {
++    if (radius <= 1) {
++        HBRUSH stroke = CreateSolidBrush(strokeCol);
++        FrameRect(hdc, &rc, stroke);
++        DeleteObject(stroke);
++        return;
++    }
++    HPEN pen = CreatePen(PS_SOLID, 1, strokeCol);
++    HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
++    HGDIOBJ oldPen = SelectObject(hdc, pen);
++    RoundRect(hdc, rc.left, rc.top, rc.right, rc.bottom, radius, radius);
++    SelectObject(hdc, oldPen);
++    SelectObject(hdc, oldBrush);
++    DeleteObject(pen);
++}
++
++static COLORREF LerpColor(COLORREF a, COLORREF b, int t256) {
++    int ar = GetRValue(a);
++    int ag = GetGValue(a);
++    int ab = GetBValue(a);
++    int br = GetRValue(b);
++    int bg = GetGValue(b);
++    int bb = GetBValue(b);
++    int r = ar + ((br - ar) * t256) / 256;
++    int g = ag + ((bg - ag) * t256) / 256;
++    int bl = ab + ((bb - ab) * t256) / 256;
++    return RGB(r, g, bl);
++}
++
++static void DrawVerticalBlend(HDC hdc, const RECT& rc, COLORREF topCol, COLORREF bottomCol) {
++    int h = rc.bottom - rc.top;
++    if (h <= 0 || rc.right <= rc.left) {
++        return;
++    }
++    HGDIOBJ oldPen = SelectObject(hdc, GetStockObject(DC_PEN));
++    for (int y = 0; y < h; y++) {
++        int t256 = (h <= 1) ? 256 : (y * 256) / (h - 1);
++        COLORREF c = LerpColor(topCol, bottomCol, t256);
++        SetDCPenColor(hdc, c);
++        int yPos = rc.top + y;
++        MoveToEx(hdc, rc.left, yPos, nullptr);
++        LineTo(hdc, rc.right, yPos);
++    }
++    SelectObject(hdc, oldPen);
++}
++
++static RECT ToToolbarClientRect(HWND hwndToolbar, HWND child) {
++    RECT r{};
++    if (!child || !GetWindowRect(child, &r)) {
++        return {0, 0, 0, 0};
++    }
++    MapWindowPoints(HWND_DESKTOP, hwndToolbar, (LPPOINT)&r, 2);
++    return r;
++}
++
++static bool IsToolbarLightColor(COLORREF c) {
++    int r = GetRValue(c);
++    int g = GetGValue(c);
++    int b = GetBValue(c);
++    // ITU-R BT.709 luma approximation
++    int luma = (2126 * r + 7152 * g + 722 * b) / 10000;
++    return luma >= 160;
++}
++
++struct ToolbarVisualTokens {
++    COLORREF shellShadowFill;
++    COLORREF shellShadowStroke;
++    COLORREF shellFill;
++    COLORREF shellStroke;
++    COLORREF shellTopTint;
++    COLORREF groupFill;
++    COLORREF groupStroke;
++    COLORREF blendTop;
++    COLORREF hoverFill;
++    COLORREF hoverStroke;
++    COLORREF pressedFill;
++    COLORREF pressedStroke;
++    COLORREF checkedFill;
++    COLORREF checkedStroke;
++    COLORREF checkedText;
++    int shellRadius;
++    int groupRadius;
++    int buttonRadius;
++    int pillRadius;
++};
++
++static ToolbarVisualTokens GetToolbarVisualTokens(MainWindow* win, COLORREF base, bool isLight) {
++    ToolbarVisualTokens t{};
++    if (isLight) {
++        t.shellShadowFill = RGB(232, 238, 248);
++        t.shellShadowStroke = RGB(220, 228, 240);
++        t.shellFill = RGB(249, 251, 255);
++        t.shellStroke = RGB(203, 214, 230);
++        t.shellTopTint = RGB(255, 255, 255);
++        t.groupFill = RGB(241, 246, 253);
++        t.groupStroke = RGB(218, 227, 239);
++        t.blendTop = RGB(234, 241, 251);
++        t.hoverFill = RGB(232, 239, 250);
++        t.hoverStroke = RGB(201, 213, 230);
++        t.pressedFill = RGB(221, 232, 247);
++        t.pressedStroke = RGB(182, 198, 220);
++        t.checkedFill = RGB(0, 120, 212);
++        t.checkedStroke = RGB(0, 95, 170);
++        t.checkedText = RGB(255, 255, 255);
++    } else {
++        t.shellShadowFill = AccentColor(base, -8);
++        t.shellShadowStroke = AccentColor(base, -4);
++        t.shellFill = AccentColor(base, 10);
++        t.shellStroke = AccentColor(base, 24);
++        t.shellTopTint = AccentColor(base, 17);
++        t.groupFill = AccentColor(base, 14);
++        t.groupStroke = AccentColor(base, 28);
++        t.blendTop = AccentColor(base, 20);
++        t.hoverFill = AccentColor(base, 22);
++        t.hoverStroke = AccentColor(base, 34);
++        t.pressedFill = AccentColor(base, 17);
++        t.pressedStroke = AccentColor(base, 31);
++        t.checkedFill = AccentColor(base, 48);
++        t.checkedStroke = AccentColor(base, 63);
++        t.checkedText = RGB(255, 255, 255);
++    }
++    t.shellRadius = 0;
++    t.groupRadius = DpiScale(win->hwndFrame, 4);
++    t.buttonRadius = DpiScale(win->hwndFrame, 6);
++    t.pillRadius = DpiScale(win->hwndFrame, 8);
++    return t;
++}
++
++static void DrawToolbarFloatingShell(MainWindow* win, HDC hdc, HWND hwndToolbar) {
++    RECT rc{};
++    GetClientRect(hwndToolbar, &rc);
++
++    RECT content{};
++    if (!GetToolbarContentRect(hwndToolbar, content)) {
++        return;
++    }
+ 
+-// distance between label and edit field
+-constexpr int kTextPaddingRight = 6;
++    RECT pageRect = ToToolbarClientRect(hwndToolbar, win->hwndPageBg);
++    if (pageRect.right > pageRect.left && pageRect.bottom > pageRect.top) {
++        content.left = std::min(content.left, pageRect.left);
++        content.top = std::min(content.top, pageRect.top);
++        content.right = std::max(content.right, pageRect.right);
++        content.bottom = std::max(content.bottom, pageRect.bottom);
++    }
++    RECT findRect = ToToolbarClientRect(hwndToolbar, win->hwndFindBg);
++    if (findRect.right > findRect.left && findRect.bottom > findRect.top && IsWindowVisible(win->hwndFindBg)) {
++        content.left = std::min(content.left, findRect.left);
++        content.top = std::min(content.top, findRect.top);
++        content.right = std::max(content.right, findRect.right);
++        content.bottom = std::max(content.bottom, findRect.bottom);
++    }
++
++    bool isCompact = IsToolbarCompactDensity(win);
++    int shellPadX = DpiScale(win->hwndFrame, isCompact ? 10 : 14);
++    int shellPadY = DpiScale(win->hwndFrame, isCompact ? 5 : 7);
++    RECT shell = {content.left - shellPadX, content.top - shellPadY, content.right + shellPadX, content.bottom + shellPadY};
++    shell.left = std::max(shell.left, rc.left + DpiScale(win->hwndFrame, 8));
++    shell.right = std::min(shell.right, rc.right - DpiScale(win->hwndFrame, 8));
++    shell.top = std::max(shell.top, rc.top + DpiScale(win->hwndFrame, 3));
++    shell.bottom = std::min(shell.bottom, rc.bottom - DpiScale(win->hwndFrame, 1));
++    if (shell.right <= shell.left || shell.bottom <= shell.top) {
++        return;
++    }
++
++        COLORREF base = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
++    bool isLight = IsToolbarLightColor(base);
++    ToolbarVisualTokens tokens = GetToolbarVisualTokens(win, base, isLight);
++    RECT shadow = shell;
++    OffsetRect(&shadow, 0, DpiScale(win->hwndFrame, 1));
++    FillRoundRect(hdc, shadow, tokens.shellRadius, tokens.shellShadowFill, tokens.shellShadowStroke);
++    FillRoundRect(hdc, shell, tokens.shellRadius, tokens.shellFill, tokens.shellFill);
++
++    // Top tint keeps depth subtle and avoids legacy glossy look.
++    RECT gloss = shell;
++    gloss.bottom = gloss.top + ((shell.bottom - shell.top) * 36) / 100;
++    if (gloss.bottom > gloss.top + 1) {
++        HBRUSH glossBrush = CreateSolidBrush(tokens.shellTopTint);
++        FillRect(hdc, &gloss, glossBrush);
++        DeleteObject(glossBrush);
++    }
++    StrokeRoundRect(hdc, shell, tokens.shellRadius, tokens.shellStroke);
++
++    struct GroupRange {
++        int firstCmd;
++        int lastCmd;
++    };
++    GroupRange groups[] = {
++        {CmdGoToPrevPage, PageInfoId},
++        {CmdZoomOut, CmdToggleTableOfContents},
++        {CmdFindFirst, CmdFindToggleMatchCase},
++        {MoreActionsId, MoreActionsId},
++        {CmdPrint, CmdRotateRight},
++    };
++
++    for (auto& g : groups) {
++        RECT r1{}, r2{};
++        if (!TryGetToolbarRectByCmd(hwndToolbar, g.firstCmd, r1) || !TryGetToolbarRectByCmd(hwndToolbar, g.lastCmd, r2)) {
++            continue;
++        }
++        RECT gr = {r1.left - DpiScale(win->hwndFrame, isCompact ? 4 : 6), shell.top + DpiScale(win->hwndFrame, 6),
++                   r2.right + DpiScale(win->hwndFrame, isCompact ? 4 : 6), shell.bottom - DpiScale(win->hwndFrame, 6)};
++        gr.left = std::max(gr.left, shell.left + DpiScale(win->hwndFrame, 3));
++        gr.right = std::min(gr.right, shell.right - DpiScale(win->hwndFrame, 3));
++        if (gr.right <= gr.left) {
++            continue;
++        }
++        FillRoundRect(hdc, gr, tokens.groupRadius, tokens.groupFill, tokens.groupStroke);
++    }
++
++    int blendDy = DpiScale(win->hwndFrame, isCompact ? 4 : 6);
++    RECT blend = {shell.left + DpiScale(win->hwndFrame, 12), std::max(shell.bottom - DpiScale(win->hwndFrame, 1), rc.top),
++                  shell.right - DpiScale(win->hwndFrame, 12), std::min(shell.bottom + blendDy, rc.bottom)};
++    if (blend.bottom > blend.top && blend.right > blend.left) {
++            COLORREF blendBottom = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
++        DrawVerticalBlend(hdc, blend, tokens.blendTop, blendBottom);
++    }
++}
+ 
+ struct ToolbarButtonInfo {
+     /* index in the toolbar bitmap (-1 for separators) */
+@@ -59,29 +449,40 @@ struct ToolbarButtonInfo {
+     const char* toolTip;
+ };
+ 
+-// thos are not real commands but we have to refer to toolbar buttons
+-// is by a command. those are just background for area to be
+-// covered by other HWNDs. They need the right size
+-constexpr int PageInfoId = (int)CmdLast + 16;
+-constexpr int WarningMsgId = (int)CmdLast + 17;
+-
+ static ToolbarButtonInfo gToolbarButtons[] = {
+-    {TbIcon::Open, CmdOpenFile, _TRN("Open")},
+-    {TbIcon::Print, CmdPrint, _TRN("Print")},
+-    {TbIcon::None, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
++    // group: primary action
++    {TbIcon::Text, CmdOpenFile, _TRN("Open")},
++    {TbIcon::None, 0, nullptr},
++
++    // group: navigation + page indicator
+     {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
+     {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
++    {TbIcon::None, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
+     {TbIcon::None, 0, nullptr}, // separator
+-    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
+-    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
+-    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
+-    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
++
++    // group: view and zoom
+     {TbIcon::ZoomOut, CmdZoomOut, _TRN("Zoom Out")},
+     {TbIcon::ZoomIn, CmdZoomIn, _TRN("Zoom In")},
++    {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
++    {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
++    {TbIcon::Text, CmdToggleTableOfContents, _TRN("Sidebar")},
++    {TbIcon::None, 0, nullptr}, // separator
++
++    // group: search
+     {TbIcon::None, CmdFindFirst, nullptr},
+     {TbIcon::SearchPrev, CmdFindPrev, _TRN("Find Previous")},
+     {TbIcon::SearchNext, CmdFindNext, _TRN("Find Next")},
+     {TbIcon::MatchCase, CmdFindToggleMatchCase, _TRN("Toggle Match Case")},
++    {TbIcon::None, 0, nullptr}, // separator
++
++    // group: overflow trigger for small widths
++    {TbIcon::Text, MoreActionsId, _TRN("More")},
++    {TbIcon::None, 0, nullptr}, // separator
++
++    // group: secondary actions
++    {TbIcon::Print, CmdPrint, _TRN("Print")},
++    {TbIcon::RotateLeft, CmdRotateLeft, _TRN("Rotate &Left")},
++    {TbIcon::RotateRight, CmdRotateRight, _TRN("Rotate &Right")},
+ };
+ // unicode chars: https://www.compart.com/en/unicode/U+25BC
+ 
+@@ -103,8 +504,14 @@ static void UpdateToolbarButtonStateByIdx(HWND hwnd, int idx, bool set, BYTE fla
+     TBBUTTONINFOW bi{};
+     bi.cbSize = sizeof(bi);
+     bi.dwMask = TBIF_BYINDEX | TBIF_STATE;
+-    SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi);
+-    bi.fsState = set ? bi.fsState | flag : bi.fsState & ~flag;
++    if (!SendMessageW(hwnd, TB_GETBUTTONINFOW, idx, (LPARAM)&bi)) {
++        return;
++    }
++    BYTE newState = set ? (BYTE)(bi.fsState | flag) : (BYTE)(bi.fsState & ~flag);
++    if (newState == bi.fsState) {
++        return;
++    }
++    bi.fsState = newState;
+     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+ }
+ 
+@@ -121,14 +528,16 @@ static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
+ static int GetToolbarButtonsByID(int cmdId, int (&buttons)[4]) {
+     int nFound = 0;
+     int n = TotalButtonsCount();
++    int targetCmdId = cmdId;
++    if (auto cmd = FindCustomCommand(targetCmdId)) {
++        targetCmdId = cmd->origId;
++    }
+     for (int idx = 0; idx < n; idx++) {
+         ToolbarButtonInfo& tb = GetToolbarButtonInfoByIdx(idx);
+         int tbCmdId = tb.cmdId;
+         auto cmd = FindCustomCommand(tbCmdId);
+         if (cmd) tbCmdId = cmd->origId;
+-        cmd = FindCustomCommand(cmdId);
+-        if (cmd) cmdId = cmd->origId;
+-        if (cmdId != tbCmdId) continue;
++        if (targetCmdId != tbCmdId) continue;
+         buttons[nFound++] = idx;
+         if (nFound >= 4) {
+             return nFound;
+@@ -155,6 +564,14 @@ static void TbSetButtonDx(HWND hwndToolbar, int cmd, int dx) {
+     TbSetButtonInfoById(hwndToolbar, cmd, &bi);
+ }
+ 
++static void TbSetButtonDxByIdx(HWND hwndToolbar, int idx, int dx) {
++    TBBUTTONINFOW bi{};
++    bi.cbSize = sizeof(bi);
++    bi.dwMask = TBIF_BYINDEX | TBIF_SIZE;
++    bi.cx = (WORD)dx;
++    SendMessageW(hwndToolbar, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
++}
++
+ // which documents support rotation
+ static bool NeedsRotateUI(MainWindow* win) {
+     if (win->AsChm()) {
+@@ -163,9 +580,7 @@ static bool NeedsRotateUI(MainWindow* win) {
+     return true;
+ }
+ 
+-// some commands are only avialble in certain contexts
+-// we remove toolbar buttons for un-availalbe commands
+-static bool IsCmdAvailable(MainWindow* win, int cmdId) {
++static bool IsCmdAvailableWithCtx(MainWindow* win, int cmdId, BuildMenuCtx* ctx) {
+     switch (cmdId) {
+         case CmdZoomFitWidthAndContinuous:
+         case CmdZoomFitPageAndSinglePage:
+@@ -179,18 +594,14 @@ static bool IsCmdAvailable(MainWindow* win, int cmdId) {
+         case CmdFindToggleMatchCase:
+             return NeedsFindUI(win);
+         case PageInfoId:
++        case MoreActionsId:
+             return true;
+     }
+-    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+-    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+     auto [remove, disable] = GetCommandIdState(ctx, cmdId);
+     return !remove;
+ }
+ 
+-static bool IsCmdEnabled(MainWindow* win, int cmdId) {
+-    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+-    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+-
++static bool IsCmdEnabledWithCtx(MainWindow* win, int cmdId, BuildMenuCtx* ctx) {
+     switch (cmdId) {
+         case CmdNextTab:
+         case CmdPrevTab:
+@@ -198,6 +609,7 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
+         case CmdPrevTabSmart:
+             return SettingsUseTabs();
+         case PageInfoId:
++        case MoreActionsId:
+             return true;
+     }
+ 
+@@ -324,17 +736,36 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
+ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
+     HWND hwnd = win->hwndToolbar;
+     int n = TotalButtonsCount();
++    bool overflowMode = IsToolbarOverflowMode(win);
++    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
++    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
+     for (int i = 0; i < n; i++) {
+         auto& tb = GetToolbarButtonInfoByIdx(i);
+         int cmdId = tb.cmdId;
+         if (setButtonsVisibility && cmdId != WarningMsgId) {
+-            bool hide = !IsCmdAvailable(win, cmdId);
++            bool hide = !IsCmdAvailableWithCtx(win, cmdId, ctx);
++            if (IsOverflowSecondaryCmd(cmdId)) {
++                hide = hide || overflowMode;
++            } else if (cmdId == MoreActionsId) {
++                hide = hide || !overflowMode;
++            }
+             UpdateToolbarButtonStateByIdx(hwnd, i, hide, TBSTATE_HIDDEN);
+         }
+         if (SkipBuiltInButton(tb)) {
+             continue;
+         }
+-        bool isEnabled = IsCmdEnabled(win, cmdId);
++        bool isEnabled = IsCmdEnabledWithCtx(win, cmdId, ctx);
++        if (cmdId == MoreActionsId) {
++            bool hasAny = false;
++            int overflowCmds[] = {CmdPrint, CmdRotateLeft, CmdRotateRight};
++            for (int c : overflowCmds) {
++                if (IsCmdAvailableWithCtx(win, c, ctx)) {
++                    hasAny = true;
++                    break;
++                }
++            }
++            isEnabled = isEnabled && hasAny;
++        }
+         UpdateToolbarButtonStateByIdx(hwnd, i, isEnabled, TBSTATE_ENABLED);
+     }
+ 
+@@ -410,6 +841,8 @@ void ShowOrHideToolbar(MainWindow* win) {
+     RelayoutWindow(win);
+ }
+ 
++static void ShowToolbarOverflowMenu(MainWindow* win);
++
+ void UpdateFindbox(MainWindow* win) {
+     // remove SS_WHITERECT so WM_CTLCOLORSTATIC controls the background color
+     SetWindowStyle(win->hwndFindBg, SS_WHITERECT, false);
+@@ -453,7 +886,8 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
+                 NMTBCUSTOMDRAW* custDraw = (NMTBCUSTOMDRAW*)hdr;
+                 switch (custDraw->nmcd.dwDrawStage) {
+                     case CDDS_PREPAINT:
+-                        return CDRF_NOTIFYITEMDRAW;
++                        DrawToolbarFloatingShell(win, custDraw->nmcd.hdc, chwnd);
++                        return CDRF_NOTIFYITEMDRAW | TBCDRF_USECDCOLORS;
+ 
+                     case CDDS_ITEMPREPAINT: {
+                         auto col = ThemeWindowTextColor();
+@@ -472,13 +906,62 @@ LRESULT CALLBACK ReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
+                         } else {
+                             custDraw->clrText = col;
+                         }
+-                        return CDRF_DODEFAULT;
++                        int cmdId = (int)custDraw->nmcd.dwItemSpec;
++                        bool isDisabled = (itemState & CDIS_DISABLED) != 0;
++                        bool isHot = (itemState & CDIS_HOT) != 0;
++                        bool isPressed = (itemState & CDIS_SELECTED) != 0;
++                        bool isChecked = (itemState & CDIS_CHECKED) != 0;
++                        bool isPill = IsPillToolbarCmd(cmdId);
++                        if (!isDisabled && (isPill || isHot || isPressed || isChecked)) {
++                            RECT rc = custDraw->nmcd.rc;
++                            int insetX = DpiScale(win->hwndFrame, 2);
++                            int insetY = DpiScale(win->hwndFrame, 3);
++                            InflateRect(&rc, -insetX, -insetY);
++
++                            bool visualActive = isPill ? IsPillToolbarCmdActive(win, cmdId) : isChecked || isPressed;
++                            COLORREF base = ThemeControlBackgroundColor();
++                            bool isLight = IsToolbarLightColor(base);
++                            ToolbarVisualTokens tokens = GetToolbarVisualTokens(win, base, isLight);
++                            COLORREF fillCol = tokens.hoverFill;
++                            COLORREF strokeCol = tokens.hoverStroke;
++                            if (isPressed && !visualActive) {
++                                fillCol = tokens.pressedFill;
++                                strokeCol = tokens.pressedStroke;
++                            }
++                            if (visualActive) {
++                                fillCol = tokens.checkedFill;
++                                strokeCol = tokens.checkedStroke;
++                            }
++                            if (isHot || visualActive || isPressed) {
++                                HBRUSH fill = CreateSolidBrush(fillCol);
++                                HPEN pen = CreatePen(PS_SOLID, 1, strokeCol);
++                                HGDIOBJ oldBrush = SelectObject(custDraw->nmcd.hdc, fill);
++                                HGDIOBJ oldPen = SelectObject(custDraw->nmcd.hdc, pen);
++                                int radius = isPill ? tokens.pillRadius : tokens.buttonRadius;
++                                RoundRect(custDraw->nmcd.hdc, rc.left, rc.top, rc.right, rc.bottom, radius, radius);
++                                SelectObject(custDraw->nmcd.hdc, oldPen);
++                                SelectObject(custDraw->nmcd.hdc, oldBrush);
++                                DeleteObject(pen);
++                                DeleteObject(fill);
++                            }
++                            custDraw->clrText = visualActive ? tokens.checkedText : ThemeWindowTextColor();
++                            return TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOETCHEDEFFECT;
++                        }
++                        return TBCDRF_NOEDGES | TBCDRF_NOOFFSET | TBCDRF_NOETCHEDEFFECT;
+                         // return CDRF_NEWFONT;
+                     }
+                 }
+             }
+         }
+     }
++    if (WM_COMMAND == uMsg) {
++        int cmdId = LOWORD(wParam);
++        if (cmdId == MoreActionsId) {
++            auto win = FindMainWindowByHwnd(hWnd);
++            ShowToolbarOverflowMenu(win);
++            return 0;
++        }
++    }
+     // allow window dragging from empty rebar area (main toolbar)
+     if (WM_LBUTTONDOWN == uMsg) {
+         auto win = FindMainWindowByHwnd(hWnd);
+@@ -511,11 +994,19 @@ static LRESULT CALLBACK WndProcEditBg(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+         HDC hdc = GetDC(hwnd);
+         RECT rc;
+         GetClientRect(hwnd, &rc);
+-        COLORREF bgCol2 = ThemeControlBackgroundColor();
+-        COLORREF col = AccentColor(bgCol2, 40);
+-        HBRUSH br = CreateSolidBrush(col);
+-        FrameRect(hdc, &rc, br);
+-        DeleteObject(br);
++        MainWindow* win = FindMainWindowByHwnd(hwnd);
++        if (win) {
++            COLORREF base = PrettyStyleEnabled() ? PrettySurfaceColor() : ThemeControlBackgroundColor();
++            bool isLight = IsToolbarLightColor(base);
++            ToolbarVisualTokens tokens = GetToolbarVisualTokens(win, base, isLight);
++            COLORREF fillCol = isLight ? RGB(252, 254, 255) : AccentColor(base, 13);
++            COLORREF strokeCol = isLight ? RGB(194, 207, 226) : AccentColor(base, 33);
++            int radius = DpiScale(win->hwndFrame, 7);
++            if (ThemeColorizeControls()) {
++                fillCol = LerpColor(tokens.shellFill, fillCol, 112);
++            }
++            FillRoundRect(hdc, rc, radius, fillCol, strokeCol);
++        }
+         ReleaseDC(hwnd, hdc);
+     }
+     return res;
+@@ -584,6 +1075,68 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
+     return CallWindowProc(DefWndProcToolbar, hwnd, msg, wp, lp);
+ }
+ 
++static void ShowToolbarOverflowMenu(MainWindow* win) {
++    if (!win || !win->hwndToolbar) {
++        return;
++    }
++
++    HMENU menu = CreatePopupMenu();
++    if (!menu) {
++        return;
++    }
++
++    auto ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
++    AutoRun delCtx(DeleteBuildMenuCtx, ctx);
++
++    struct MenuItem {
++        int cmdId;
++        const char* label;
++    };
++    MenuItem items[] = {
++        {CmdPrint, _TRN("Print")},
++        {CmdRotateLeft, _TRN("Rotate &Left")},
++        {CmdRotateRight, _TRN("Rotate &Right")},
++    };
++
++    bool hasItems = false;
++    for (auto& item : items) {
++        if (!IsCmdAvailableWithCtx(win, item.cmdId, ctx)) {
++            continue;
++        }
++        UINT flags = MF_STRING;
++        if (!IsCmdEnabledWithCtx(win, item.cmdId, ctx)) {
++            flags |= MF_GRAYED;
++        }
++        AppendMenuW(menu, flags, (UINT_PTR)item.cmdId, ToWStrTemp(trans::GetTranslation(item.label)));
++        hasItems = true;
++    }
++
++    if (!hasItems) {
++        DestroyMenu(menu);
++        return;
++    }
++
++    RECT rect{};
++    if (!TryGetToolbarRectByCmd(win->hwndToolbar, MoreActionsId, rect)) {
++        DestroyMenu(menu);
++        return;
++    }
++    MapWindowPoints(win->hwndToolbar, HWND_DESKTOP, (POINT*)&rect, 2);
++
++    UINT flags = TPM_TOPALIGN | TPM_RETURNCMD;
++    if (IsUIRtl()) {
++        flags |= TPM_RIGHTALIGN;
++    } else {
++        flags |= TPM_LEFTALIGN;
++    }
++    UINT_PTR selected = TrackPopupMenu(menu, flags, rect.left, rect.bottom, 0, win->hwndFrame, nullptr);
++    DestroyMenu(menu);
++
++    if (selected != 0) {
++        PostMessageW(win->hwndFrame, WM_COMMAND, selected, 0);
++    }
++}
++
+ static WNDPROC DefWndProcEditSearch = nullptr;
+ static LRESULT CALLBACK WndProcEditSearch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+     MainWindow* win = FindMainWindowByHwnd(hwnd);
+@@ -678,26 +1231,26 @@ void UpdateToolbarFindText(MainWindow* win) {
+         return;
+     }
+     bool showUI = NeedsFindUI(win);
+-    HwndSetVisibility(win->hwndFindLabel, showUI);
++    HwndSetVisibility(win->hwndFindLabel, false);
+     HwndSetVisibility(win->hwndFindBg, showUI);
+     HwndSetVisibility(win->hwndFindEdit, showUI);
+     if (!showUI) {
+         return;
+     }
+ 
+-    const char* text = _TRA("Find:");
++    const char* text = "";
+     HwndSetText(win->hwndFindLabel, text);
+ 
+     Rect findWndRect = WindowRect(win->hwndFindBg);
+ 
+     RECT r{};
+-    TbGetRectById(win->hwndToolbar, CmdZoomIn, &r);
+-    int currX = r.right + DpiScale(win->hwndToolbar, 10);
++    TbGetRectById(win->hwndToolbar, CmdFindFirst, &r);
++    int currX = r.left + DpiScale(win->hwndToolbar, 6);
+     int currY = (r.bottom - findWndRect.dy) / 2;
+ 
+     Size size = HwndMeasureText(win->hwndFindLabel, text);
+-    size.dx += DpiScale(win->hwndFrame, kTextPaddingRight);
+-    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
++    size.dx += DpiScale(win->hwndFrame, TextPaddingRight(win->hwndFrame));
++    size.dx += DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
+ 
+     int padding = GetSystemMetrics(SM_CXEDGE);
+     int x = currX;
+@@ -719,25 +1272,26 @@ void UpdateToolbarState(MainWindow* win) {
+     if (!win->IsDocLoaded()) {
+         return;
+     }
++
++    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame) && win->ctrl) {
++        prettysumatra::bridge::SyncHybridToolbarPageState(win->hwndFrame, win->ctrl->CurrentPageNo(), win->ctrl->PageCount());
++        prettysumatra::bridge::SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
++    }
++
+     HWND hwnd = win->hwndToolbar;
+     DisplayMode dm = win->ctrl->GetDisplayMode();
+-    float zoomVirtual = win->ctrl->GetZoomVirtual();
+-    {
+-        bool isChecked = dm == DisplayMode::Continuous && zoomVirtual == kZoomFitWidth;
+-        SetToolbarButtonCheckedState(win, CmdZoomFitWidthAndContinuous, isChecked);
+-    }
+-    {
+-        bool isChecked = dm == DisplayMode::SinglePage && zoomVirtual == kZoomFitPage;
+-        SetToolbarButtonCheckedState(win, CmdZoomFitPageAndSinglePage, isChecked);
+-        if (!isChecked) {
+-            win->CurrentTab()->prevZoomVirtual = kInvalidZoom;
+-        }
++    if (dm != DisplayMode::SinglePage) {
++        win->CurrentTab()->prevZoomVirtual = kInvalidZoom;
+     }
+ }
+ 
+ static void CreateFindBox(MainWindow* win, HFONT hfont, int iconDy) {
+     bool isRtl = IsUIRtl();
+-    int findBoxDx = HwndMeasureText(win->hwndFrame, "this is a story of my", hfont).dx;
++    // The probe string determines the initial width of the find box.
++    // HwndMeasureText uses the already-DPI-scaled hfont, so findBoxDx is
++    // already in physical pixels for the current monitor - no extra DpiScale().
++    const char* probe = IsToolbarCompactDensity(win) ? "story of" : "this is a story of my";
++    int findBoxDx = HwndMeasureText(win->hwndFrame, probe, hfont).dx;
+     HMODULE hmod = GetModuleHandleW(nullptr);
+     HWND p = win->hwndToolbar;
+     DWORD style = WS_VISIBLE | WS_CHILD;
+@@ -832,20 +1386,21 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
+     if (!win->hwndToolbar) {
+         return;
+     }
+-    const char* text = _TRA("Page:");
++    const char* text = "";
+     if (!updateOnly) {
+         HwndSetText(win->hwndPageLabel, text);
+     }
+-    int padX = DpiScale(win->hwndFrame, kTextPaddingRight);
++    HwndSetVisibility(win->hwndPageLabel, false);
++    int padX = DpiScale(win->hwndFrame, TextPaddingRight(win->hwndFrame));
+     Size size = HwndMeasureText(win->hwndPageLabel, text);
+     size.dx += padX;
+-    size.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
++    size.dx += DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
+ 
+     Rect pageWndRect = WindowRect(win->hwndPageBg);
+ 
+     RECT r{};
+-    SendMessageW(win->hwndToolbar, TB_GETRECT, CmdPrint, (LPARAM)&r);
+-    int currX = r.right + DpiScale(win->hwndFrame, 10);
++    TbGetRectById(win->hwndToolbar, PageInfoId, &r);
++    int currX = r.left + DpiScale(win->hwndFrame, 4);
+     int currY = (r.bottom - pageWndRect.dy) / 2;
+ 
+     TempStr txt = nullptr;
+@@ -859,7 +1414,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
+         txt = HwndGetTextTemp(win->hwndPageTotal);
+         size2 = ClientRect(win->hwndPageTotal).Size();
+         size2.dx -= padX;
+-        size2.dx -= DpiScale(win->hwndFrame, kButtonSpacingX);
++        size2.dx -= DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
+ #endif
+         // hack: https://github.com/sumatrapdfreader/sumatrapdf/issues/4475
+         txt = (TempStr) " ";
+@@ -887,7 +1442,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
+         size2 = HwndMeasureText(win->hwndPageTotal, txt);
+     }
+     size2.dx += padX;
+-    size2.dx += DpiScale(win->hwndFrame, kButtonSpacingX);
++    size2.dx += DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
+ 
+     int padding = GetSystemMetrics(SM_CXEDGE);
+     int x = currX - 1;
+@@ -896,7 +1451,7 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
+     if (IsUIRtl()) {
+         currX += size2.dx;
+         currX -= padX;
+-        currX -= DpiScale(win->hwndFrame, kButtonSpacingX);
++        currX -= DpiScale(win->hwndFrame, ButtonSpacingX(win->hwndFrame));
+     }
+     x = currX + size.dx;
+     y = currY;
+@@ -927,6 +1482,15 @@ void UpdateToolbarPageText(MainWindow* win, int pageCount, bool updateOnly) {
+         TbSetButtonDx(win->hwndToolbar, PageInfoId, size2.dx);
+     }
+     InvalidateRect(win->hwndToolbar, nullptr, TRUE);
++
++    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame) && win->ctrl) {
++        int total = pageCount;
++        if (total <= 0) {
++            total = win->ctrl->PageCount();
++        }
++        prettysumatra::bridge::SyncHybridToolbarPageState(win->hwndFrame, win->ctrl->CurrentPageNo(), total);
++        prettysumatra::bridge::SyncHybridToolbarZoomState(win->hwndFrame, win->ctrl->GetZoomVirtual(true));
++    }
+ }
+ 
+ static void CreatePageBox(MainWindow* win, HFONT font, int iconDy) {
+@@ -1088,10 +1652,11 @@ static int SetToolbarIconsImageList(MainWindow* win) {
+         // scale if default size
+         iconSize = DpiScale(hwndParent, iconSize);
+     }
+-    // icon sizes must be multiple of 4 or else they are sheared
+-    // TODO: I must be doing something wrong, any size should be ok
+-    // it might be about size of buttons / bitmaps
+-    iconSize = RoundUp(iconSize, 4);
++    // Clamp to the valid logical-pixel range, then round to the nearest even
++    // number. An even dimension is sufficient to avoid icon shearing and
++    // works correctly at every DPI / display-zoom combination.
++    iconSize = ClampIconSize(iconSize);
++    iconSize = RoundUp(iconSize, 2);
+     int dx = iconSize;
+     // this doesn't seem to be required and doesn't help with weird sizes like 22
+     // but the docs say to do it
+@@ -1111,18 +1676,68 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
+     HwndScheduleRepaint(win->hwndToolbar);
+ }
+ 
++// Call this after WM_DPICHANGED so icons and layout metrics are recomputed
++// for the new DPI / zoom level without destroying every child window.
++// This is faster than ReCreateToolbar for live DPI changes (e.g. dragging
++// the window between monitors with different scale settings).
++void UpdateToolbarAfterDpiChange(MainWindow* win) {
++    if (!win->hwndToolbar) return;
++
++    // 1. Rebuild SVG icon bitmap at the new DPI-scaled size.
++    SetToolbarIconsImageList(win);
++
++    // 2. Recompute TBMETRICS (padding, button spacing) that depend on DPI.
++    const bool isCompact = IsToolbarCompactDensity(win);
++    int iconSize = gGlobalPrefs->toolbarSize;
++    if (iconSize == kDefaultIconSize) {
++        iconSize = DpiScale(win->hwndFrame, iconSize);
++    }
++    iconSize = ClampIconSize(iconSize);
++    iconSize = RoundUp(iconSize, 2);
++
++    const int yPad = DpiScale(win->hwndFrame, isCompact ? 4 : 7);
++    TBMETRICS tbMetrics{};
++    tbMetrics.cbSize = sizeof(tbMetrics);
++    tbMetrics.dwMask = TBMF_PAD | TBMF_BUTTONSPACING;
++    tbMetrics.cxPad = DpiScale(win->hwndFrame, isCompact ? 6 : 10);
++    tbMetrics.cyPad = yPad;
++    tbMetrics.cxButtonSpacing = ButtonSpacingX(win->hwndFrame);
++    tbMetrics.cyButtonSpacing = DpiScale(win->hwndFrame, 4);
++    TbSetMetrics(win->hwndToolbar, &tbMetrics);
++
++    // 3. Update button dimensions.
++    const int buttonDy = iconSize + DpiScale(win->hwndFrame, isCompact ? 10 : 14);
++    SendMessageW(win->hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, buttonDy));
++
++    // 4. Refresh separator widths and fixed-width text buttons.
++    const int sepDx = DpiScale(win->hwndFrame, isCompact ? 8 : 12);
++    for (int i = 0; i < kButtonsCount; i++) {
++        if (gToolbarButtons[i].bmpIndex == TbIcon::None && gToolbarButtons[i].cmdId == 0) {
++            TbSetButtonDxByIdx(win->hwndToolbar, i, sepDx);
++        }
++    }
++    TbSetButtonDx(win->hwndToolbar, CmdOpenFile,
++                  DpiScale(win->hwndFrame, isCompact ? 62 : 84));
++    TbSetButtonDx(win->hwndToolbar, CmdToggleTableOfContents,
++                  DpiScale(win->hwndFrame, isCompact ? 70 : 92));
++    TbSetButtonDx(win->hwndToolbar, MoreActionsId,
++                  DpiScale(win->hwndFrame, isCompact ? 58 : 72));
++
++    HwndScheduleRepaint(win->hwndToolbar);
++}
++
+ // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
+ void CreateToolbar(MainWindow* win) {
+     bool isRtl = IsUIRtl();
++    bool isCompact = IsToolbarCompactDensity(win);
+ 
+-    kButtonSpacingX = 0;
++    // buttonSpacingOverride: set to 0 so cxButtonSpacing is not incremented
++    // during toolbar creation (spacing is already baked into the button sizes).
++    const int buttonSpacingOverride = 0;
+     HINSTANCE hinst = GetModuleHandle(nullptr);
+     HWND hwndParent = win->hwndFrame;
+ 
+     DWORD style = WS_CHILD | WS_CLIPCHILDREN | RBS_VARHEIGHT;
+-    if (IsCurrentThemeDefault()) {
+-        style |= WS_BORDER | RBS_BANDBORDERS;
+-    }
+     style |= CCS_NODIVIDER | CCS_NOPARENTALIGN | WS_VISIBLE;
+     DWORD exStyle = WS_EX_TOOLWINDOW;
+     if (isRtl) exStyle |= WS_EX_LAYOUTRTL;
+@@ -1136,9 +1751,7 @@ void CreateToolbar(MainWindow* win) {
+     rbi.fMask = 0;
+     rbi.himl = (HIMAGELIST) nullptr;
+     SendMessageW(win->hwndReBar, RB_SETBARINFO, 0, (LPARAM)&rbi);
+-    if (!IsCurrentThemeDefault()) {
+-        SendMessageW(win->hwndReBar, RB_SETBKCOLOR, 0, ThemeControlBackgroundColor());
+-    }
++    SendMessageW(win->hwndReBar, RB_SETBKCOLOR, 0, PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor());
+ 
+     style = WS_CHILD | WS_CLIPSIBLINGS | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT;
+     style |= TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN;
+@@ -1168,10 +1781,10 @@ void CreateToolbar(MainWindow* win) {
+     // tbMetrics.dwMask = TBMF_PAD;
+     tbMetrics.dwMask = TBMF_BUTTONSPACING;
+     TbGetMetrics(hwndToolbar, &tbMetrics);
+-    int yPad = DpiScale(win->hwndFrame, 2);
+-    tbMetrics.cxPad += DpiScale(win->hwndFrame, 14);
++    int yPad = DpiScale(win->hwndFrame, isCompact ? 4 : 7);
++    tbMetrics.cxPad += DpiScale(win->hwndFrame, isCompact ? 6 : 10);
+     tbMetrics.cyPad += yPad;
+-    tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, kButtonSpacingX);
++    tbMetrics.cxButtonSpacing += DpiScale(win->hwndFrame, buttonSpacingOverride);
+     // tbMetrics.cyButtonSpacing += DpiScale(win->hwndFrame, 4);
+     TbSetMetrics(hwndToolbar, &tbMetrics);
+ 
+@@ -1186,6 +1799,18 @@ void CreateToolbar(MainWindow* win) {
+     }
+     SendMessageW(hwndToolbar, TB_ADDBUTTONS, kButtonsCount, (LPARAM)tbButtons);
+ 
++    // Widen separators so command groups are visually distinct, closer to the mockup structure.
++    int sepDx = DpiScale(win->hwndFrame, isCompact ? 8 : 12);
++    for (int i = 0; i < kButtonsCount; i++) {
++        if (gToolbarButtons[i].bmpIndex == TbIcon::None && gToolbarButtons[i].cmdId == 0) {
++            TbSetButtonDxByIdx(hwndToolbar, i, sepDx);
++        }
++    }
++
++    TbSetButtonDx(hwndToolbar, CmdOpenFile, DpiScale(win->hwndFrame, isCompact ? 62 : 84));
++    TbSetButtonDx(hwndToolbar, CmdToggleTableOfContents, DpiScale(win->hwndFrame, isCompact ? 70 : 92));
++    TbSetButtonDx(hwndToolbar, MoreActionsId, DpiScale(win->hwndFrame, isCompact ? 58 : 72));
++
+     gCustomButtonsCount = 0;
+ 
+     char* text;
+@@ -1226,7 +1851,8 @@ void CreateToolbar(MainWindow* win) {
+         buttons[i] = TbButtonFromButtonInfo(tbi, true);
+     }
+     SendMessageW(hwndToolbar, TB_ADDBUTTONS, gCustomButtonsCount, (LPARAM)buttons);
+-    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, iconSize));
++    int buttonDy = iconSize + DpiScale(win->hwndFrame, isCompact ? 10 : 14);
++    SendMessageW(hwndToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(iconSize, buttonDy));
+ 
+     RECT rc;
+     LRESULT res = SendMessageW(hwndToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
+@@ -1240,9 +1866,6 @@ void CreateToolbar(MainWindow* win) {
+     rbBand.cbSize = sizeof(REBARBANDINFOW);
+     rbBand.fMask = RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE;
+     rbBand.fStyle = RBBS_FIXEDSIZE;
+-    if (theme::IsAppThemed() && IsCurrentThemeDefault()) {
+-        rbBand.fStyle |= RBBS_CHILDEDGE;
+-    }
+     rbBand.hbmBack = nullptr;
+     rbBand.lpText = (WCHAR*)L"Toolbar"; // NOLINT
+     rbBand.hwndChild = hwndToolbar;
+@@ -1256,7 +1879,9 @@ void CreateToolbar(MainWindow* win) {
+     int defFontSize = GetAppFontSize();
+     // 18 was the default toolbar size, we want to scale the fonts in proportion
+     int newSize = (defFontSize * gGlobalPrefs->toolbarSize) / kDefaultIconSize;
+-    int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically
++    // Leave room for top+bottom padding plus a 1-px safety margin so the
++    // font never overflows the button height at any DPI / zoom level.
++    int maxFontSize = iconSize - yPad * 2 - 1;
+     if (newSize > maxFontSize) {
+         logfa("CreateToolbar: setting toolbar font size to %d (scaled was %d, default size: %d)\n", maxFontSize,
+               newSize, defFontSize);
+@@ -1272,8 +1897,25 @@ void CreateToolbar(MainWindow* win) {
+ 
+     UpdateToolbarPageText(win, -1);
+     UpdateToolbarFindText(win);
++
++    if (prettysumatra::bridge::UseHybridToolbar()) {
++        ShowWindow(win->hwndReBar, SW_HIDE);
++    }
+ }
+ 
++// ReCreateToolbar must be called whenever the window moves to a monitor with
++// a different DPI (WM_DPICHANGED) or when the user changes the display zoom
++// in Windows Settings -> Display -> Scale. Example handler snippet:
++//
++//   case WM_DPICHANGED: {
++//       const RECT* r = reinterpret_cast<const RECT*>(lParam);
++//       SetWindowPos(hwnd, nullptr, r->left, r->top,
++//                    r->right - r->left, r->bottom - r->top,
++//                    SWP_NOZORDER | SWP_NOACTIVATE);
++//       ReCreateToolbar(win);
++//       RelayoutWindow(win);
++//       break;
++//   }
+ void ReCreateToolbar(MainWindow* win) {
+     if (win->hwndReBar) {
+         HwndDestroyWindowSafe(&win->hwndPageLabel);
+diff --git a/src/Toolbar.h b/src/Toolbar.h
+index 12689eaa3..053a3a573 100644
+--- a/src/Toolbar.h
++++ b/src/Toolbar.h
+@@ -16,6 +16,7 @@ bool ShouldShowToolbar(MainWindow*);
+ void ShowOrHideToolbar(MainWindow*);
+ void UpdateToolbarState(MainWindow*);
+ void UpdateToolbarAfterThemeChange(MainWindow*);
++bool IsToolbarCompact(MainWindow*);
+ 
+ void CreateMenuBarRebar(MainWindow*);
+ void DestroyMenuBarRebar(MainWindow*);
+diff --git a/src/utils/StrUtil.h b/src/utils/StrUtil.h
+index b19233e03..dd9a5f5fc 100644
+--- a/src/utils/StrUtil.h
++++ b/src/utils/StrUtil.h
+@@ -1,6 +1,8 @@
+ /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
+    License: Simplified BSD (see COPYING.BSD) */
+ 
++#pragma once
++
+ // note: include BaseUtil.h instead of including directly
+ 
+ #define UTF8_BOM "\xEF\xBB\xBF"
+diff --git a/src/utils/WinUtil.cpp b/src/utils/WinUtil.cpp
+index 493169f02..5e1972b0e 100755
+--- a/src/utils/WinUtil.cpp
++++ b/src/utils/WinUtil.cpp
+@@ -2266,7 +2266,34 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
+     return res;
+ }
+ 
+-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
++static bool ShouldPreserveColorPixel(u8 b, u8 g, u8 r) {
++    u8 mx = std::max(r, std::max(g, b));
++    u8 mn = std::min(r, std::min(g, b));
++    int chroma = (int)mx - (int)mn;
++    // Conservative strategy: only remap pixels that strongly look like paper/text.
++    // Preserve everything else to avoid damaging photos and grayscale illustrations.
++    int luma = (2126 * (int)r + 7152 * (int)g + 722 * (int)b) / 10000;
++
++    // Bright near-neutral tones: paper/background (should be remapped).
++    if (luma >= 236 && chroma <= 14) {
++        return false;
++    }
++
++    // Dark near-neutral tones: text/ink (should be remapped).
++    if (luma <= 58 && chroma <= 14) {
++        return false;
++    }
++
++    // Slightly darker neutrals are often antialiasing around glyphs.
++    if (luma <= 86 && chroma <= 7) {
++        return false;
++    }
++
++    // Everything else is more likely image tone/detail.
++    return true;
++}
++
++void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool preserveColorContent) {
+     if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE) {
+         return;
+     }
+@@ -2289,9 +2316,14 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
+         size.dx * 4 == info.dsBm.bmWidthBytes) {
+         int bmpBytes = size.dx * size.dy * 4;
+         u8* bmpData = (u8*)info.dsBm.bmBits;
+-        for (int i = 0; i < bmpBytes; i++) {
+-            int k = i % 4;
+-            bmpData[i] = (u8)(base[k] + mul255(bmpData[i], diff[k]));
++        for (int i = 0; i < bmpBytes; i += 4) {
++            if (preserveColorContent && ShouldPreserveColorPixel(bmpData[i + 0], bmpData[i + 1], bmpData[i + 2])) {
++                continue;
++            }
++            bmpData[i + 0] = (u8)(base[0] + mul255(bmpData[i + 0], diff[0]));
++            bmpData[i + 1] = (u8)(base[1] + mul255(bmpData[i + 1], diff[1]));
++            bmpData[i + 2] = (u8)(base[2] + mul255(bmpData[i + 2], diff[2]));
++            bmpData[i + 3] = (u8)(base[3] + mul255(bmpData[i + 3], diff[3]));
+         }
+         return;
+     }
+@@ -2301,9 +2333,13 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
+         info.dsBm.bmWidthBytes >= size.dx * 3) {
+         u8* bmpData = (u8*)info.dsBm.bmBits;
+         for (int y = 0; y < size.dy; y++) {
+-            for (int x = 0; x < size.dx * 3; x++) {
+-                int k = x % 3;
+-                bmpData[x] = (u8)(base[k] + mul255(bmpData[x], diff[k]));
++            for (int x = 0; x < size.dx * 3; x += 3) {
++                if (preserveColorContent && ShouldPreserveColorPixel(bmpData[x + 0], bmpData[x + 1], bmpData[x + 2])) {
++                    continue;
++                }
++                bmpData[x + 0] = (u8)(base[0] + mul255(bmpData[x + 0], diff[0]));
++                bmpData[x + 1] = (u8)(base[1] + mul255(bmpData[x + 1], diff[1]));
++                bmpData[x + 2] = (u8)(base[2] + mul255(bmpData[x + 2], diff[2]));
+             }
+             bmpData += info.dsBm.bmWidthBytes;
+         }
+@@ -2312,6 +2348,10 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
+ 
+     // for paletted DI bitmaps: only update the color palette
+     if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
++        if (preserveColorContent) {
++            // Keep indexed-color images untouched in preserve mode.
++            return;
++        }
+         ReportIf(info.dsBmih.biBitCount != 8);
+         RGBQUAD palette[256];
+         HDC hDC = CreateCompatibleDC(nullptr);
+@@ -2343,9 +2383,14 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
+     ReportIf(!bmpData);
+ 
+     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+-        for (int i = 0; i < bmpBytes; i++) {
+-            int k = i % 4;
+-            bmpData[i] = (u8)(base[k] + mul255(bmpData[i], diff[k]));
++        for (int i = 0; i < bmpBytes; i += 4) {
++            if (preserveColorContent && ShouldPreserveColorPixel(bmpData[i + 0], bmpData[i + 1], bmpData[i + 2])) {
++                continue;
++            }
++            bmpData[i + 0] = (u8)(base[0] + mul255(bmpData[i + 0], diff[0]));
++            bmpData[i + 1] = (u8)(base[1] + mul255(bmpData[i + 1], diff[1]));
++            bmpData[i + 2] = (u8)(base[2] + mul255(bmpData[i + 2], diff[2]));
++            bmpData[i + 3] = (u8)(base[3] + mul255(bmpData[i + 3], diff[3]));
+         }
+         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
+     }
+diff --git a/src/utils/WinUtil.h b/src/utils/WinUtil.h
+index 5b3402ab0..8e5224678 100644
+--- a/src/utils/WinUtil.h
++++ b/src/utils/WinUtil.h
+@@ -283,7 +283,7 @@ Size GetBitmapSize(HBITMAP hbmp);
+ BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
+ void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
+ COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
+-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
++void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool preserveColorContent = false);
+ ByteSlice SerializeBitmap(HBITMAP hbmp);
+ HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
+ bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
+diff --git a/src/wingui/LabelWithCloseWnd.cpp b/src/wingui/LabelWithCloseWnd.cpp
+index 060e93430..2a262e19e 100644
+--- a/src/wingui/LabelWithCloseWnd.cpp
++++ b/src/wingui/LabelWithCloseWnd.cpp
+@@ -7,11 +7,14 @@
+ #include "utils/ScopedWin.h"
+ #include "utils/WinUtil.h"
+ 
++#include <algorithm>
++
+ #include "wingui/UIModels.h"
+ #include "wingui/Layout.h"
+ #include "wingui/WinGui.h"
+ 
+ #include "AppTools.h"
++#include "Theme.h"
+ 
+ #include "wingui/LabelWithCloseWnd.h"
+ 
+@@ -25,6 +28,32 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
+     HBRUSH br = w->BackgroundBrush();
+     FillRect(hdc, &ps.rcPaint, br);
+ 
++    if (PrettyStyleEnabled()) {
++        RECT leftStripe = ps.rcPaint;
++        leftStripe.right = leftStripe.left + DpiScale(w->hwnd, 3);
++        HBRUSH accentBrush = CreateSolidBrush(PrettyAccentColor());
++        FillRect(hdc, &leftStripe, accentBrush);
++        DeleteObject(accentBrush);
++
++        RECT topStripe = ps.rcPaint;
++        int stripeBottom = topStripe.top + DpiScale(w->hwnd, 2);
++        if (stripeBottom < topStripe.bottom) {
++            topStripe.bottom = stripeBottom;
++        }
++        HBRUSH stripeBrush = CreateSolidBrush(PrettyAccentColor());
++        FillRect(hdc, &topStripe, stripeBrush);
++        DeleteObject(stripeBrush);
++
++        RECT bottomBorder = ps.rcPaint;
++        int borderTop = bottomBorder.bottom - 1;
++        if (borderTop > bottomBorder.top) {
++            bottomBorder.top = borderTop;
++        }
++        HBRUSH borderBrush = CreateSolidBrush(PrettyBorderColor());
++        FillRect(hdc, &bottomBorder, borderBrush);
++        DeleteObject(borderBrush);
++    }
++
+     Rect cr = ClientRect(w->hwnd);
+ 
+     int x = DpiScale(w->hwnd, w->padX);
+diff --git a/src/wingui/ListBox.cpp b/src/wingui/ListBox.cpp
+index 7ee64d28c..11756fc3e 100644
+--- a/src/wingui/ListBox.cpp
++++ b/src/wingui/ListBox.cpp
+@@ -145,7 +145,6 @@ bool ListBox::OnCommand(WPARAM wparam, LPARAM lparam) {
+ }
+ 
+ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
+-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorlistbox
+     if (msg == WM_CTLCOLORLISTBOX) {
+         HDC hdc = (HDC)wp;
+         if (!IsSpecialColor(textColor)) {
+@@ -154,11 +153,9 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
+         if (!IsSpecialColor(bgColor)) {
+             SetBkColor(hdc, bgColor);
+         }
+-        auto br = BackgroundBrush();
+-        return (LRESULT)br;
++        return (LRESULT)BackgroundBrush();
+     }
+ 
+-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-measureitem
+     if (msg == WM_MEASUREITEM) {
+         if (!onDrawItem.IsValid()) {
+             return 0;
+@@ -169,7 +166,6 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
+         return TRUE;
+     }
+ 
+-    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-drawitem
+     if (msg == WM_DRAWITEM) {
+         if (!onDrawItem.IsValid()) {
+             return 0;
+@@ -186,4 +182,4 @@ LRESULT ListBox::OnMessageReflect(UINT msg, WPARAM wp, LPARAM lparam) {
+     }
+ 
+     return 0;
+-}
++}
+\ No newline at end of file
+diff --git a/src/wingui/Splitter.cpp b/src/wingui/Splitter.cpp
+index 3988da8a7..71f96ad8a 100644
+--- a/src/wingui/Splitter.cpp
++++ b/src/wingui/Splitter.cpp
+@@ -197,7 +197,8 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+     }
+ 
+     if (WM_PAINT == msg) {
+-        OnSplitterPaint(hwnd, AccentColor(bgColor, 30));
++        COLORREF col = PrettyStyleEnabled() ? bgColor : AccentColor(bgColor, 30);
++        OnSplitterPaint(hwnd, col);
+         return 0;
+     }
+ 
+diff --git a/src/wingui/TabsCtrl.cpp b/src/wingui/TabsCtrl.cpp
+index 60156db92..e87e79c95 100644
+--- a/src/wingui/TabsCtrl.cpp
++++ b/src/wingui/TabsCtrl.cpp
+@@ -204,7 +204,14 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
+     gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+     gfx.SetPageUnit(UnitPixel);
+ 
+-    SolidBrush br(GdipCol(ThemeControlBackgroundColor()));
++    bool pretty = PrettyStyleEnabled();
++    COLORREF shellBg = pretty ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
++    COLORREF tabBgSelected = pretty ? PrettySurfaceColor() : ThemeControlBackgroundColor();
++    COLORREF tabBgBackground = pretty ? PrettySurfaceAltColor() : AccentColor(tabBgSelected, 25);
++    COLORREF tabBgHighlight = pretty ? ThemeTabBgHighlight() : AccentColor(tabBgSelected, 35);
++    COLORREF tabStroke      = pretty ? ThemeTabStroke() : tabBgBackground;
++    COLORREF activeStrip    = pretty ? ThemeTabActiveStrip() : ThemeWindowLinkColor();
++    SolidBrush br(GdipCol(shellBg));
+ 
+     Font f(hdc, GetFont());
+ 
+@@ -225,11 +232,6 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
+     Gdiplus::RectF rTxt;
+ 
+     COLORREF textColor = ThemeWindowTextColor();
+-    COLORREF tabBgSelected = ThemeControlBackgroundColor();
+-    COLORREF tabBgHighlight;
+-    COLORREF tabBgBackground;
+-    tabBgBackground = AccentColor(tabBgSelected, 25);
+-    tabBgHighlight = AccentColor(tabBgSelected, 35);
+ 
+     COLORREF tabBgCol;
+     for (int i = 0; i < n; i++) {
+@@ -261,6 +263,13 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
+         gr = ToGdipRect(ti->r);
+         gfx.FillRectangle(&br, gr);
+ 
++        if (pretty) {
++            SolidBrush stripBr(GdipCol(isSelected ? activeStrip : tabStroke));
++            int stripH = DpiScale(hwnd, 2);
++            Gdiplus::Rect stripRc(ti->r.x, ti->r.y + ti->r.dy - stripH, ti->r.dx, stripH);
++            gfx.FillRectangle(&stripBr, stripRc);
++        }
++
+         // debug: paint close hit area in light green
+         if (false && ti->canClose && (i == tabUnderMouse)) {
+             Gdiplus::SolidBrush dbgBr(Gdiplus::Color(80, 0, 255, 0));
+@@ -331,8 +340,8 @@ HBITMAP TabsCtrl::RenderForDragging(int idx) {
+     sf.SetLineAlignment(StringAlignmentCenter);
+     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
+ 
+-    COLORREF bgCol = tabSelectedBg;
+-    COLORREF textCol = tabSelectedText;
++    COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceColor() : tabSelectedBg;
++    COLORREF textCol = PrettyStyleEnabled() ? ThemeWindowTextColor() : tabSelectedText;
+ 
+     SolidBrush br(GdipCol(bgCol));
+     Gdiplus::Rect gr(0, 0, ti->r.dx, ti->r.dy);
+diff --git a/vs2022/SumatraPDF-dll.vcxproj b/vs2022/SumatraPDF-dll.vcxproj
+index e9b758022..4da2bc19f 100644
+--- a/vs2022/SumatraPDF-dll.vcxproj
++++ b/vs2022/SumatraPDF-dll.vcxproj
+@@ -1239,6 +1239,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
+     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
+     <ClCompile Include="..\src\PalmDbReader.cpp" />
+     <ClCompile Include="..\src\PdfCreator.cpp" />
++    <ClCompile Include="..\src\prettysumatra\BridgeDispatcher.cpp" />
+     <ClCompile Include="..\src\PdfSync.cpp" />
+     <ClCompile Include="..\src\PdfTools.cpp" />
+     <ClCompile Include="..\src\Print.cpp" />
+-- 
+2.52.0.windows.1
+

@@ -908,7 +908,7 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4702", "4706", "4819" }
+    disablewarnings { "4100", "4244", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
     uses_zlib()
     includedirs { "ext/synctex" }
 
@@ -973,7 +973,7 @@ workspace "SumatraPDF"
     filter {}
 
     -- for synctex
-    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    disablewarnings { "4100", "4244", "4267", "4701", "4702", "4703", "4706", "4819", "6324" }
     uses_zlib()
     includedirs { "ext/synctex" }
 

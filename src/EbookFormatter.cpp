@@ -296,7 +296,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken* t) {
         HandleTagHx(&tok);
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
-            char* link = (char*)Allocator::Alloc(textAllocator, 24);
+            char* link = (char*)Alloc(textAllocator, 24);
             sprintf_s(link, 24, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
             currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), Gdiplus::RectF(0, currY, pageDx, 0)));
         }

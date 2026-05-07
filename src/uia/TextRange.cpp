@@ -95,7 +95,7 @@ int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum) {
     ReportIf(pageNum <= 0);
 
     int pageLen;
-    document->GetDM()->textCache->GetTextForPage(pageNum, &pageLen);
+    document->GetDM()->GetEngine()->GetTextForPage(pageNum, &pageLen);
     return pageLen;
 }
 
@@ -124,8 +124,8 @@ void SumatraUIAutomationTextRange::ValidateEndEndpoint() {
 int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, bool dontReturnInitial) {
     // based on TextSelection::SelectWordAt
     int textLen;
-    auto cache = document->GetDM()->textCache;
-    const WCHAR* pageText = cache->GetTextForPage(pageno, &textLen);
+    auto engine = document->GetDM()->GetEngine();
+    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx > 0; idx--) {
@@ -145,8 +145,8 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
 
 int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
-    auto cache = document->GetDM()->textCache;
-    const WCHAR* pageText = cache->GetTextForPage(pageno, &textLen);
+    auto engine = document->GetDM()->GetEngine();
+    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx < textLen; idx++) {
@@ -166,8 +166,8 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
 
 int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
-    auto cache = document->GetDM()->textCache;
-    const WCHAR* pageText = cache->GetTextForPage(pageno, &textLen);
+    auto engine = document->GetDM()->GetEngine();
+    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx > 0; idx--) {
@@ -187,8 +187,8 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
 
 int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool dontReturnInitial) {
     int textLen;
-    auto cache = document->GetDM()->textCache;
-    const WCHAR* pageText = cache->GetTextForPage(pageno, &textLen);
+    auto engine = document->GetDM()->GetEngine();
+    const WCHAR* pageText = engine->GetTextForPage(pageno, &textLen);
 
     if (dontReturnInitial) {
         for (; idx < textLen; idx++) {
@@ -450,7 +450,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
         return S_OK;
     }
 
-    TextSelection selection(document->GetDM()->GetEngine(), document->GetDM()->textCache);
+    TextSelection selection(document->GetDM()->GetEngine());
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
 

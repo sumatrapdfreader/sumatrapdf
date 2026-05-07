@@ -197,8 +197,7 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     }
 
     if (WM_PAINT == msg) {
-        COLORREF col = PrettyStyleEnabled() ? bgColor : AccentColor(bgColor, 30);
-        OnSplitterPaint(hwnd, col);
+        OnSplitterPaint(hwnd, AccentColor(bgColor, 30));
         return 0;
     }
 

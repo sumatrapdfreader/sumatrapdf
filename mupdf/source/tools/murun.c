@@ -24,7 +24,7 @@
 
 #if FZ_ENABLE_PDF
 #include "mupdf/pdf.h"
-#include "mupdf/helpers/pkcs7-openssl.h"
+#include "mupdf/helpers/pkcs7-windows.h"
 #endif
 
 #if FZ_ENABLE_JS
@@ -11679,7 +11679,7 @@ static void ffi_PDFWidget_checkCertificate(js_State *J)
 	fz_var(verifier);
 	fz_try(ctx)
 	{
-		verifier = pkcs7_openssl_new_verifier(ctx);
+		verifier = pkcs7_windows_new_verifier(ctx);
 		val = pdf_check_widget_certificate(ctx, verifier, widget);
 	}
 	fz_always(ctx)
@@ -11698,7 +11698,7 @@ static void ffi_PDFWidget_checkDigest(js_State *J)
 	fz_var(verifier);
 	fz_try(ctx)
 	{
-		verifier = pkcs7_openssl_new_verifier(ctx);
+		verifier = pkcs7_windows_new_verifier(ctx);
 		val = pdf_check_widget_digest(ctx, verifier, widget);
 	}
 	fz_always(ctx)
@@ -11731,7 +11731,7 @@ static void ffi_PDFWidget_getSignatory(js_State *J)
 	fz_var(dn);
 	fz_try(ctx)
 	{
-		verifier = pkcs7_openssl_new_verifier(ctx);
+		verifier = pkcs7_windows_new_verifier(ctx);
 		dn = pdf_signature_get_widget_signatory(ctx, verifier, widget);
 		if (dn)
 		{
@@ -12044,7 +12044,7 @@ static void ffi_new_PDFPKCS7Signer(js_State *J)
 	{
 		fz_buffer *buf = ffi_tonewbuffer(J, 1);
 		fz_try(ctx)
-			signer = pkcs7_openssl_read_pfx_from_buffer(ctx, buf, password);
+			signer = pkcs7_windows_read_pfx_from_buffer(ctx, buf, password);
 		fz_always(ctx)
 			fz_drop_buffer(ctx, buf);
 		fz_catch(ctx)
@@ -12054,7 +12054,7 @@ static void ffi_new_PDFPKCS7Signer(js_State *J)
 	{
 		const char *filename = js_tostring(J, 1);
 		fz_try(ctx)
-			signer = pkcs7_openssl_read_pfx(ctx, filename, password);
+			signer = pkcs7_windows_read_pfx(ctx, filename, password);
 		fz_catch(ctx)
 			rethrow(J);
 	}

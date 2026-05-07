@@ -53,7 +53,6 @@ struct ScrollState {
     int page = 0;
 };
 
-struct DocumentTextCache;
 struct TextSelection;
 struct TextSearch;
 struct TextSel;
@@ -130,7 +129,6 @@ struct DisplayModel : DocController {
 
     Synchronizer* pdfSync = nullptr;
 
-    DocumentTextCache* textCache = nullptr;
     TextSelection* textSelection = nullptr;
     // access only from Search thread
     TextSearch* textSearch = nullptr;

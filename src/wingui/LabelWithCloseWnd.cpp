@@ -7,14 +7,11 @@
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
 
-#include <algorithm>
-
 #include "wingui/UIModels.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
 
 #include "AppTools.h"
-#include "Theme.h"
 
 #include "wingui/LabelWithCloseWnd.h"
 
@@ -27,32 +24,6 @@
 static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     HBRUSH br = w->BackgroundBrush();
     FillRect(hdc, &ps.rcPaint, br);
-
-    if (PrettyStyleEnabled()) {
-        RECT leftStripe = ps.rcPaint;
-        leftStripe.right = leftStripe.left + DpiScale(w->hwnd, 3);
-        HBRUSH accentBrush = CreateSolidBrush(PrettyAccentColor());
-        FillRect(hdc, &leftStripe, accentBrush);
-        DeleteObject(accentBrush);
-
-        RECT topStripe = ps.rcPaint;
-        int stripeBottom = topStripe.top + DpiScale(w->hwnd, 2);
-        if (stripeBottom < topStripe.bottom) {
-            topStripe.bottom = stripeBottom;
-        }
-        HBRUSH stripeBrush = CreateSolidBrush(PrettyAccentColor());
-        FillRect(hdc, &topStripe, stripeBrush);
-        DeleteObject(stripeBrush);
-
-        RECT bottomBorder = ps.rcPaint;
-        int borderTop = bottomBorder.bottom - 1;
-        if (borderTop > bottomBorder.top) {
-            bottomBorder.top = borderTop;
-        }
-        HBRUSH borderBrush = CreateSolidBrush(PrettyBorderColor());
-        FillRect(hdc, &bottomBorder, borderBrush);
-        DeleteObject(borderBrush);
-    }
 
     Rect cr = ClientRect(w->hwnd);
 

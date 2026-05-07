@@ -31,7 +31,7 @@ struct Fmt {
 
     int currArgNo = 0;
     int currPercArgNo = 0;
-    str::Str res;
+    StrBuilder res;
 
     char buf[256] = {};
 };

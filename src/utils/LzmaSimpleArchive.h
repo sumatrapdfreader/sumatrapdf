@@ -23,9 +23,9 @@ struct SimpleArchive {
 
 bool ParseSimpleArchive(const u8* archiveHeader, size_t dataLen, SimpleArchive* archiveOut);
 int GetIdxFromName(SimpleArchive* archive, const char* name);
-u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator);
-u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Allocator* allocator);
+u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* allocator);
+u8* GetFileDataByName(SimpleArchive* archive, const char* fileName, Arena* allocator);
 // files is an array of char * entries, last element must be nullptr
-bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Allocator* allocator);
+bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Arena* allocator);
 
 } // namespace lzma

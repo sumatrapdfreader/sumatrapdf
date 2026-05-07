@@ -53594,3 +53594,147 @@ tl:Landas:
 uk:Шлях:
 :Path:
 vn:Đường dẫn:
+:Toggle Reuse Instance
+am:እንደገና አጠቃቀም ምሳሌን ቀይር
+:Toggle Reuse Instance
+ar:تبديل إعادة استخدام المثيل
+:Toggle Reuse Instance
+br:Kemmañ adimplij an intañs
+:Toggle Reuse Instance
+cn:切换重用实例
+:Toggle Reuse Instance
+co:Attivà/Disattivà a Riutilizazione di l'Istanza
+:Toggle Reuse Instance
+de:Instanz-Wiederverwendung umschalten
+:Toggle Reuse Instance
+el:Εναλλαγή Επαναχρησιμοποίησης Στιγμιότυπου
+:Toggle Reuse Instance
+hi:पुनः उपयोग इंस्टेंस टॉगल करें
+:Toggle Reuse Instance
+it:Attiva/Disattiva Riutilizzo Istanza
+:Toggle Reuse Instance
+ja:インスタンスの再利用を切り替え
+:Toggle Reuse Instance
+ml:പുനരുപയോഗ ഇൻസ്റ്റൻസ് ടോഗിൾ ചെയ്യുക
+:Toggle Reuse Instance
+nl:Hergebruik instantie schakelen
+:Toggle Reuse Instance
+pl:Przełącz ponowne użycie instancji
+:Toggle Reuse Instance
+ru:Переключить повторное использование экземпляра
+:Toggle Reuse Instance
+sat:ᱨᱤᱭᱩᱡᱽ ᱤᱱᱥᱴᱟᱱᱥ ᱴᱚᱜᱚᱞ
+:Toggle Reuse Instance
+sk:Prepnúť opätovné použitie inštancie
+:Toggle Reuse Instance
+sr-rs:Укључи/искључи поновно коришћење инстанце
+:Toggle Reuse Instance
+tw:切換重用實例
+:Toggle Reuse Instance
+az:Nümunənin Yenidən İstifadəsini Dəyişdir
+:Toggle Reuse Instance
+by:Пераключыць паўторнае выкарыстанне асобніка
+:Toggle Reuse Instance
+ca:Commuta la reutilització d'instància
+:Toggle Reuse Instance
+cy:Toglo Ailddefnyddio Enghraifft
+:Toggle Reuse Instance
+cz:Přepnout opětovné použití instance
+:Toggle Reuse Instance
+es:Alternar reutilización de instancia
+:Toggle Reuse Instance
+fa:تغییر وضعیت استفاده مجدد از نمونه
+:Toggle Reuse Instance
+fi:Vaihda uudelleenkäytön instanssi
+:Toggle Reuse Instance
+fo:Skifta endurnýtslu av tilviki
+:Toggle Reuse Instance
+fr:Basculer la réutilisation de l'instance
+:Toggle Reuse Instance
+ga:Scoránaigh Athúsáid Cás
+:Toggle Reuse Instance
+gl:Alternar reutilización de instancia
+:Toggle Reuse Instance
+he:החלף שימוש חוזר במופע
+:Toggle Reuse Instance
+hu:Példány újrafelhasználásának váltása
+:Toggle Reuse Instance
+id:Alihkan Gunakan Ulang Instance
+:Toggle Reuse Instance
+kr:인스턴스 재사용 토글
+:Toggle Reuse Instance
+lv:Pārslēgt instances atkārtotu izmantošanu
+:Toggle Reuse Instance
+my:ပြန်လည်အသုံးပြုမှု Instance ကိုပြောင်းလဲရန်
+:Toggle Reuse Instance
+pt:Alternar Reutilização de Instância
+:Toggle Reuse Instance
+ro:Comutare reutilizare instanță
+:Toggle Reuse Instance
+sl:Preklopi ponovno uporabo instance
+:Toggle Reuse Instance
+sv:Växla återanvänd instans
+:Toggle Reuse Instance
+ta:மறுபயன்பாட்டு நிகழ்வை நிலைமாற்று
+:Toggle Reuse Instance
+tr:Örnek Yeniden Kullanımını Aç/Kapat
+:Toggle Reuse Instance
+uz:Qayta foydalanish misolini almashtirish
+:Toggle Reuse Instance
+af:Wissel Hergebruik Instansie
+:Toggle Reuse Instance
+bg:Превключване на повторна употреба на инстанция
+:Toggle Reuse Instance
+bn:পুনঃব্যবহার ইনস্ট্যান্স টগল করুন
+:Toggle Reuse Instance
+bs:Uključi/isključi ponovnu upotrebu instance
+:Toggle Reuse Instance
+ca-xv:Commuta la reutilització d'instància
+:Toggle Reuse Instance
+dk:Skift Genbrug Instans
+:Toggle Reuse Instance
+et:Lülita eksemplari taaskasutamine
+:Toggle Reuse Instance
+eu:Txandakatu instantzia berrerabili
+:Toggle Reuse Instance
+fy-nl:Werbrûk ynstânsje yn-/útskeakelje
+:Toggle Reuse Instance
+hr:Uključi/isključi ponovnu upotrebu instance
+:Toggle Reuse Instance
+jv:Ngalih Nganggo Maneh Instance
+:Toggle Reuse Instance
+ka:ინსტანციის ხელახალი გამოყენების გადართვა
+:Toggle Reuse Instance
+ku:Vekirina Dîsa Bikaranîna Nimûneyê
+:Toggle Reuse Instance
+kw:Kestyl Devnydhyans Dasusya
+:Toggle Reuse Instance
+lt:Perjungti pakartotinį naudojimą
+:Toggle Reuse Instance
+mk:Вклучи/исклучи повторна употреба на инстанца
+:Toggle Reuse Instance
+mm:အသုံးပြုမှုပြန်လည်အသုံးပြုခြင်းကို ဖွင့်/ပိုတ်
+:Toggle Reuse Instance
+ne:पुन: प्रयोग उदाहरण टगल गर्नुहोस्
+:Toggle Reuse Instance
+nn:Slå av/på gjenbruk av instans
+:Toggle Reuse Instance
+no:Veksle gjenbruk av instans
+:Toggle Reuse Instance
+pa:ਮੁੜ ਵਰਤੋਂ ਇੰਸਟੈਂਸ ਟੌਗਲ ਕਰੋ
+:Toggle Reuse Instance
+si:නැවත භාවිත කිරීමේ අවස්ථාව ටොගල් කරන්න
+:Toggle Reuse Instance
+sn:Chinja Kushandisazve Instance
+:Toggle Reuse Instance
+sp-rs:Uključi/isključi ponovnu upotrebu instance
+:Toggle Reuse Instance
+sq:Aktivizo/Çaktivizo Ripërdorimin e Instancës
+:Toggle Reuse Instance
+th:สลับการใช้งานอินสแตนซ์ซ้ำ
+:Toggle Reuse Instance
+tl:I-toggle ang Muling Paggamit ng Instance
+:Toggle Reuse Instance
+uk:Перемкнути повторне використання екземпляра
+:Toggle Reuse Instance
+vn:Bật/Tắt Tái Sử Dụng Instance

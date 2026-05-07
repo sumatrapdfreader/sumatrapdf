@@ -142,7 +142,7 @@ struct HtmlFormatterArgs {
        that is read-only and outlives us. Sometimes (e.g. when resolving
        html entities) we need a modified text. This allocator is
        used to allocate this text. */
-    Allocator* textAllocator = nullptr;
+    Arena* textAllocator = nullptr;
 
     mui::TextRenderMethod textRenderMethod = mui::TextRenderMethod::Gdiplus;
 
@@ -227,7 +227,7 @@ class HtmlFormatter {
     Graphics* gfx = nullptr; // for measuring text
     AutoFreeWStr defaultFontName;
     float defaultFontSize = 0;
-    Allocator* textAllocator = nullptr;
+    Arena* textAllocator = nullptr;
     mui::ITextRender* textMeasure = nullptr;
 
     // style stack of the current line
@@ -289,4 +289,4 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
 
 mui::TextRenderMethod GetTextRenderMethod();
 void SetTextRenderMethod(mui::TextRenderMethod method);
-HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Allocator* textAllocator = nullptr);
+HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator = nullptr);

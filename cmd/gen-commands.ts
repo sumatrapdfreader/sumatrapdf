@@ -226,6 +226,7 @@ export const commands = [
     "CmdDocumentShowOutline", "Show Document Bookmarks",
     "CmdSetScreenshotHotkey", "Set Screenshot Hotkey",
     "CmdToggleReuseInstance", "Toggle Reuse Instance",
+    "CmdToggleChmUI", "Toggle CHM UI",
     "CmdNone", "Do nothing",
 ];
 

@@ -400,7 +400,7 @@ void DetectTextEditors(Vec<TextEditor*>& res) {
 // the caller must free() the result
 char* BuildOpenFileCmd(const char* pattern, const char* path, int line, int col) {
     const char* perc;
-    str::Str cmdline(256);
+    StrBuilder cmdline(256);
 
     logf("BuildOpenFileCmd: path: '%s', pattern: '%s'\n", path, pattern);
     const char* s = pattern;

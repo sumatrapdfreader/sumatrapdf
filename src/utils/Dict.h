@@ -20,7 +20,7 @@ enum {
 // note: StrToInt would be more natural name but it's re-#define'd in <shlwapi.h>
 class MapStrToInt {
   public:
-    PoolAllocator allocator;
+    Arena* allocator = nullptr;
     HashTable* h = nullptr;
 
     explicit MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);

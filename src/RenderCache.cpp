@@ -57,43 +57,43 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     int numCores = (int)si.dwNumberOfProcessors;
-    nRenderThreads = std::max(1, std::min(gMaxRenderThreads, numCores));
-    if (nRenderThreads > kMaxRenderThreads) {
-        nRenderThreads = kMaxRenderThreads;
+    maxRenderThreads = std::max(gMaxRenderThreads, numCores);
+    if (maxRenderThreads > kMaxRenderThreads) {
+        maxRenderThreads = kMaxRenderThreads;
     }
 
-    // use a semaphore so each queued request wakes one thread
+    // use a semaphore so each queued request wakes one thread.
+    // threads themselves are spawned lazily in Render() when work appears
+    // and no idle thread is available -- many sessions only ever need a
+    // couple of render threads, so creating 8+ upfront is wasteful.
     startRendering = CreateSemaphoreW(nullptr, 0, INT_MAX, nullptr);
-    for (int i = 0; i < nRenderThreads; i++) {
-        auto* data = new RenderThreadData{this, i};
-        renderThreads[i] = CreateThread(nullptr, 0, RenderCacheThread, data, 0, nullptr);
-        ReportIf(nullptr == renderThreads[i]);
-        if (renderThreads[i]) {
-            SetThreadPriority(renderThreads[i], THREAD_PRIORITY_BELOW_NORMAL);
-        }
-    }
 }
 
 RenderCache::~RenderCache() {
-    EnterCriticalSection(&requestAccess);
-    EnterCriticalSection(&cacheAccess);
-
-    // signal all threads to exit
+    // Signal threads to exit FIRST, then wait for them WITHOUT holding the
+    // critical sections. Workers take requestAccess for their idle bookkeeping,
+    // so holding it here would deadlock until the WaitForMultipleObjects
+    // timeout fires -- after which DeleteCriticalSection on a still-in-use
+    // CS would access-violate.
     AtomicBoolSet(&shouldExit, true);
-    // wake all threads waiting on the semaphore
-    ReleaseSemaphore(startRendering, nRenderThreads, nullptr);
 
-    // wait for all threads to finish
-    DWORD res = WaitForMultipleObjects((DWORD)nRenderThreads, renderThreads, TRUE, 5000);
-    if (res == WAIT_TIMEOUT) {
-        logf("RenderCache::~RenderCache: threads didn't exit in 5 seconds\n");
-    }
+    if (nRenderThreads > 0) {
+        // wake all threads waiting on the semaphore
+        ReleaseSemaphore(startRendering, nRenderThreads, nullptr);
 
-    for (int i = 0; i < nRenderThreads; i++) {
-        CloseHandle(renderThreads[i]);
+        // wait for all threads to finish
+        DWORD res = WaitForMultipleObjects((DWORD)nRenderThreads, renderThreads, TRUE, 5000);
+        if (res == WAIT_TIMEOUT) {
+            logf("RenderCache::~RenderCache: threads didn't exit in 5 seconds\n");
+        }
+
+        for (int i = 0; i < nRenderThreads; i++) {
+            CloseHandle(renderThreads[i]);
+        }
     }
     CloseHandle(startRendering);
 
+    // Threads are gone; remaining state inspection is single-threaded.
     bool hasCurReq = false;
     for (int i = 0; i < nRenderThreads; i++) {
         if (curReqs[i]) {
@@ -106,9 +106,7 @@ RenderCache::~RenderCache() {
         ReportIf(true);
     }
 
-    LeaveCriticalSection(&cacheAccess);
     DeleteCriticalSection(&cacheAccess);
-    LeaveCriticalSection(&requestAccess);
     DeleteCriticalSection(&requestAccess);
 }
 
@@ -177,6 +175,14 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     return true;
 }
 
+bool RenderCache::DropCacheEntryIfNotUsed(BitmapCacheEntry* entry) {
+    ScopedCritSec scope(&cacheAccess);
+    if (!entry || entry->refs > 1) {
+        return false;
+    }
+    return DropCacheEntry(entry);
+}
+
 static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     int n = rc->cacheCount;
     if (n < MAX_BITMAPS_CACHED) {
@@ -188,7 +194,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     for (int i = 0; i < n; i++) {
         auto entry = rc->cache[i];
         if (entry->dm == dm && !dm->PageVisibleNearby(entry->pageNo)) {
-            bool didDrop = rc->DropCacheEntry(entry);
+            bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
             if (didDrop) {
                 return true;
             }
@@ -205,7 +211,7 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
             // in a different window, but it's harder to detect
             continue;
         }
-        bool didDrop = rc->DropCacheEntry(entry);
+        bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
         if (didDrop) {
             return true;
         }
@@ -312,7 +318,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
                           tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
         }
         if (shouldFree) {
-            DropCacheEntry(entry);
+            DropCacheEntryIfNotUsed(entry);
         }
     }
 }
@@ -324,7 +330,7 @@ void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         if (entry->dm == dm) {
-            DropCacheEntry(entry);
+            DropCacheEntryIfNotUsed(entry);
         }
     }
 }
@@ -341,7 +347,7 @@ void RenderCache::FreeNotVisible() {
             shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->tile, 2.0);
         }
         if (shouldFree) {
-            DropCacheEntry(entry);
+            DropCacheEntryIfNotUsed(entry);
         }
     }
 }
@@ -607,9 +613,22 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     newRequest->bmp = nullptr;
     newRequest->errorCode = 0;
     newRequest->renderFinishedCb = renderFinishedCb;
-    newRequest->isDisplayRenderRequest = (tile != nullptr);
 
     ReleaseSemaphore(startRendering, 1, nullptr);
+
+    // Lazy thread spawn: if no thread is currently waiting and we're below
+    // the cap, start a new one. Existing busy threads will pick up the work
+    // when they finish their current task.
+    if (idleThreads == 0 && nRenderThreads < maxRenderThreads) {
+        int idx = nRenderThreads;
+        auto* td = new RenderThreadData{this, idx};
+        renderThreads[idx] = CreateThread(nullptr, 0, RenderCacheThread, td, 0, nullptr);
+        if (renderThreads[idx]) {
+            nRenderThreads++;
+        } else {
+            delete td;
+        }
+    }
 
     return true;
 }
@@ -736,7 +755,18 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             break;
         }
         if (cache->ClearCurrentRequest(threadIdx)) {
+            // Mark ourselves idle so Render() knows whether to spawn a new
+            // thread when work appears. Increment before waiting, decrement
+            // after waking (whether due to new work or shutdown).
+            {
+                ScopedCritSec scope(&cache->requestAccess);
+                cache->idleThreads++;
+            }
             DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
+            {
+                ScopedCritSec scope(&cache->requestAccess);
+                cache->idleThreads--;
+            }
             if (AtomicBoolGet(&cache->shouldExit)) {
                 break;
             }
@@ -750,9 +780,7 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             continue;
         }
 
-        // If the page moved out of the viewport neighborhood, skip stale
-        // on-screen requests so current page paints sooner.
-        if (req.isDisplayRenderRequest && !req.dm->PageVisibleNearby(req.pageNo)) {
+        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderFinishedCb.IsValid()) {
             continue;
         }
 
@@ -763,6 +791,13 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
 
         ReportIf(req.abortCookie != nullptr);
         EngineBase* engine = req.dm->GetEngine();
+
+        // make sure that we have extracted page text for
+        // all rendered pages to allow text selection and
+        // searching without any further delays
+        if (!engine->HasTextForPage(req.pageNo)) {
+            engine->GetTextForPage(req.pageNo);
+        }
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
         auto timeStart = TimeGet();
         bmp = engine->RenderPage(args);
@@ -786,12 +821,6 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             }
             cache->Add(req, bmp);
             req.bmp = nullptr; // ownership transferred to cache
-
-            // Keep text extraction off the pre-render critical path so first paint
-            // of the bitmap lands sooner while preserving text features near viewport.
-            if (req.dm->PageVisibleNearby(req.pageNo) && !req.dm->textCache->HasTextForPage(req.pageNo)) {
-                req.dm->textCache->GetTextForPage(req.pageNo);
-            }
         }
 
         ReportIf(!req.renderFinishedCb.IsValid());

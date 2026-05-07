@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/HtmlParserLookup.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
 

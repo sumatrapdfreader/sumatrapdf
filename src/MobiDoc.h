@@ -30,14 +30,14 @@ struct MobiDoc {
     explicit MobiDoc(const char* filePath);
 
     bool ParseHeader();
-    bool LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut);
+    bool LoadDocRecordIntoBuffer(size_t recNo, StrBuilder& strOut);
     void LoadImages();
     bool LoadImage(size_t imageNo);
     bool LoadForPdbReader(PdbReader* pdbReader);
     bool DecodeExthHeader(const u8* data, size_t dataLen);
 
   public:
-    str::Str* doc = nullptr;
+    StrBuilder* doc = nullptr;
 
     size_t imagesCount = 0;
 

@@ -13,11 +13,11 @@ const char* gLogAppName = "SumatraPDF";
 
 Mutex gLogMutex;
 
-// we use HeapAllocator because we can do logging during crash handling
+// we use a dedicated Arena so we can do logging during crash handling
 // where we want to avoid allocator deadlocks by calling malloc()
-HeapAllocator* gLogAllocator = nullptr;
+Arena* gLogAllocator = nullptr;
 
-str::Str* gLogBuf = nullptr;
+StrBuilder* gLogBuf = nullptr;
 bool gLogToConsole = false;
 // we always log if IsDebuggerPresent()
 // this forces logging to debuger always
@@ -186,8 +186,8 @@ static void log2(const char* s, bool always) {
     };
 
     if (!gLogBuf) {
-        gLogAllocator = new HeapAllocator();
-        gLogBuf = new str::Str(32 * 1024, gLogAllocator);
+        gLogAllocator = ArenaNew();
+        gLogBuf = new StrBuilder(32 * 1024, gLogAllocator);
     } else {
         if (gLogBuf->Size() > kMaxLogBuf) {
             // TODO: use gLogBuf->Clear(), which doesn't free the allocated space
@@ -287,7 +287,7 @@ void DestroyLogging() {
     gLogMutex.Lock();
     delete gLogBuf;
     gLogBuf = nullptr;
-    delete gLogAllocator;
+    ArenaDelete(gLogAllocator);
     gLogAllocator = nullptr;
     gLogMutex.Unlock();
     str::FreePtr(&gLogFilePath);

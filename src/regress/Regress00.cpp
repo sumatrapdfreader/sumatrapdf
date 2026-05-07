@@ -37,8 +37,8 @@ static void Regress00()
     EpubDoc *doc = EpubDoc::CreateFromFile(filePath);
     ReportIf(!doc);
 
-    PoolAllocator textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
+    Arena* textAllocator = ArenaNew();
+    HtmlFormatterArgs *args = CreateFormatterDefaultArgs(820, 920, textAllocator);
     if (!args) {
         return;
     }
@@ -55,7 +55,7 @@ static void Regress00()
     delete args;
     ReportIf(page != 3);
 
-    args = CreateFormatterDefaultArgs(820, 920, &textAllocator);
+    args = CreateFormatterDefaultArgs(820, 920, textAllocator);
     args->htmlStr = doc->GetHtmlData();
     args->reparseIdx = pages[2]->reparseIdx;
     formatter = new EpubFormatter(args, doc);
@@ -66,4 +66,5 @@ static void Regress00()
     delete formatter;
     delete args;
     delete doc;
+    ArenaDelete(textAllocator);
 }

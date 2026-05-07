@@ -11,7 +11,7 @@ store pointer types or POD types
 template <typename T>
 class Vec {
   public:
-    Allocator* allocator = nullptr;
+    Arena* allocator = nullptr;
     size_t len = 0;
     size_t cap = 0;
     size_t capacityHint = 0;
@@ -48,9 +48,9 @@ class Vec {
         size_t newPadding = allocSize - len * kElSize;
         T* newEls;
         if (buf == els) {
-            newEls = (T*)Allocator::MemDup(allocator, buf, len * kElSize, newPadding);
+            newEls = (T*)MemDup(allocator, buf, len * kElSize, newPadding);
         } else {
-            newEls = (T*)Allocator::Realloc(allocator, els, allocSize);
+            newEls = (T*)Realloc(allocator, els, allocSize);
         }
         if (!newEls) {
             ReportIf(InterlockedExchangeAdd(&gAllowAllocFailure, 0) == 0);
@@ -93,7 +93,7 @@ class Vec {
 
     void FreeEls() {
         if (els != buf) {
-            Allocator::Free(allocator, els);
+            Free(allocator, els);
             els = nullptr;
         }
     }
@@ -116,12 +116,17 @@ class Vec {
     }
 
     bool SetSize(size_t newSize) {
-        Reset();
-        return MakeSpaceAt(0, newSize);
+        if (newSize <= cap) {
+            len = newSize;
+            memset(els + len, 0, (cap - len) * kElSize);
+            return true;
+        }
+        auto res = MakeSpaceAt(0, newSize);
+        return res != nullptr;
     }
 
     // allocator is not owned by Vec and must outlive it
-    explicit Vec(size_t capHint = 0, Allocator* a = nullptr) {
+    explicit Vec(size_t capHint = 0, Arena* a = nullptr) {
         allocator = a;
         capacityHint = capHint;
         els = buf;
@@ -309,7 +314,7 @@ class Vec {
     T* StealData() {
         T* res = els;
         if (els == buf) {
-            res = (T*)Allocator::MemDup(allocator, buf, (len + kPadding) * kElSize);
+            res = (T*)MemDup(allocator, buf, (len + kPadding) * kElSize);
         }
         els = buf;
         Reset();

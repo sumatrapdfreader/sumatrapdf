@@ -135,7 +135,7 @@ bool ParseColor(COLORREF* destColor, const char* s) {
     return p.parsedOk;
 }
 
-void SerializePdfColor(PdfColor c, str::Str& out) {
+void SerializePdfColor(PdfColor c, StrBuilder& out) {
     u8 r, g, b, a;
     UnpackPdfColor(c, r, g, b, a);
     out.AppendFmt("#%02x%02x%02x", r, g, b);

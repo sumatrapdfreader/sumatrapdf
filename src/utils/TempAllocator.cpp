@@ -15,28 +15,25 @@ to free memory used by allocator.
 A good place to do it is at the beginning of window message loop.
 */
 
-thread_local static PoolAllocator* gTempAllocator = nullptr;
+thread_local static Arena* gTempAllocator = nullptr;
 
 // forbid inlinining to not blow out the size of callers
-NO_INLINE Allocator* GetTempAllocator() {
+NO_INLINE Arena* GetTempAllocator() {
     if (gTempAllocator) {
         return gTempAllocator;
     }
-
-    gTempAllocator = new PoolAllocator();
-    // this can be large because 64k is nothing and it's used frequently
-    gTempAllocator->minBlockSize = 64 * 1024;
+    gTempAllocator = ArenaNew();
     return gTempAllocator;
 }
 
 void DestroyTempAllocator() {
-    delete gTempAllocator;
+    ArenaDelete(gTempAllocator);
     gTempAllocator = nullptr;
 }
 
 void ResetTempAllocator() {
     if (gTempAllocator) {
-        gTempAllocator->Reset(true);
+        gTempAllocator->Reset();
     }
 }
 
@@ -93,7 +90,7 @@ TempStr ReplaceTemp(const char* s, const char* toReplace, const char* replaceWit
     }
     // heuristic: allow 6 replacements without reallocating
     size_t capHint = str::Len(s) + 1 + (lenDiff * 6);
-    str::Str result(capHint);
+    StrBuilder result(capHint);
     bool ok;
     while (end != nullptr) {
         ok = result.Append(curr, end - curr);
@@ -146,7 +143,7 @@ TempWStr ToWStrTemp(const char* s, size_t cb) {
 }
 
 // handles embedded 0 in the string
-TempWStr ToWStrTemp(const str::Str& str) {
+TempWStr ToWStrTemp(const StrBuilder& str) {
     if (str.IsEmpty()) {
         return nullptr;
     }

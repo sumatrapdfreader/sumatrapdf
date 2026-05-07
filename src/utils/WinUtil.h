@@ -283,14 +283,13 @@ Size GetBitmapSize(HBITMAP hbmp);
 BitmapPixels* GetBitmapPixels(HBITMAP hbmp);
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 COLORREF GetPixel(BitmapPixels* bitmap, int x, int y);
-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool preserveColorContent = false);
+void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 ByteSlice SerializeBitmap(HBITMAP hbmp);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 double GetProcessRunningTime();
 
 void VariantInitBstr(VARIANT& urlVar, const WCHAR* s);
-StrSpan LoadDataResource(int resId);
 bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command);
 
 void RectInflateTB(RECT& r, int top, int bottom);

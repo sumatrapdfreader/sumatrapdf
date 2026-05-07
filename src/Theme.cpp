@@ -45,8 +45,24 @@ static const char* themesTxt = R"(Themes [
         TextColor = #000000
         BackgroundColor = #f2f2f2
         ControlBackgroundColor = #ffffff
-        LinkColor = #eab308
+        LinkColor = #0020a0
         ColorizeControls = false
+    ]
+    [
+        Name = Dark from 3.5
+        TextColor = #bac9d0
+        BackgroundColor = #263238
+        ControlBackgroundColor = #263238
+        LinkColor = #8aa3b0
+        ColorizeControls = true
+    ]
+    [
+        Name = Darker
+        TextColor = #c3c3c6
+        BackgroundColor = #2d2d30
+        ControlBackgroundColor = #2d2d30
+        LinkColor = #9999a0
+        ColorizeControls = true
     ]
     [
         Name = Dark
@@ -54,6 +70,70 @@ static const char* themesTxt = R"(Themes [
         BackgroundColor = #000000
         ControlBackgroundColor = #000000
         LinkColor = #6B7280
+        ColorizeControls = true
+    ]
+    [
+        Name = Dark background Bright text
+        TextColor = #ffffff
+        BackgroundColor = #2d2d30
+        ControlBackgroundColor = #2d2d30
+        LinkColor = #9999a0
+        ColorizeControls = true
+    ]
+    [
+        Name = Solarized Light
+        TextColor = #212323
+        BackgroundColor = #fdf6e3
+        ControlBackgroundColor = #eee8d5
+        LinkColor = #9999a0
+        ColorizeControls = true
+    ]
+    [
+        Name = Solarized Dark
+        TextColor = #839496
+        BackgroundColor = #002b36
+        ControlBackgroundColor = #073642
+        LinkColor = #268bd2
+        ColorizeControls = true
+    ]
+    [
+        Name = Dracula
+        TextColor = #f8f8f2
+        BackgroundColor = #282a36
+        ControlBackgroundColor = #44475a
+        LinkColor = #8be9fd
+        ColorizeControls = true
+    ]
+    [
+        Name = Nebula
+        TextColor = #CBE3E7
+        BackgroundColor = #100E23
+        ControlBackgroundColor = #1E1C31
+        LinkColor = #91DDFF
+        ColorizeControls = true
+    ]
+    [
+        Name = Greeny
+        TextColor = #FDD085
+        BackgroundColor = #4F6232
+        ControlBackgroundColor = #1E3304
+        LinkColor = #A2E53B
+        ColorizeControls = true
+    ]
+    [
+        Name = Choco
+        TextColor = #D7AD62
+        BackgroundColor = #2A1104
+        ControlBackgroundColor = #172736
+        LinkColor = #E8CD12
+        ColorizeControls = true
+    ]
+    [
+        Name = Purpy
+        TextColor = #E2C3C3
+        BackgroundColor = #20222A
+        ControlBackgroundColor = #1E0126
+        LinkColor = #EFF0B8
         ColorizeControls = true
     ]
 ]
@@ -340,62 +420,6 @@ COLORREF ThemeWindowLinkColor() {
     return col;
 }
 
-bool PrettyStyleEnabled() {
-    char buf[16] = {};
-    DWORD n = GetEnvironmentVariableA("PRETTYSUMATRA_STYLE_V1", buf, dimof(buf));
-    if (n == 0 || n >= dimof(buf)) {
-        return true;
-    }
-    if (str::EqI(buf, "0") || str::EqI(buf, "false") || str::EqI(buf, "off")) {
-        return false;
-    }
-    return true;
-}
-
-COLORREF PrettySurfaceColor() {
-    COLORREF col = ThemeControlBackgroundColor();
-    if (!PrettyStyleEnabled()) {
-        return col;
-    }
-    if (IsLightColor(col)) {
-        return AdjustLightness2(col, 6);
-    }
-    return AccentColor(col, 12);
-}
-
-COLORREF PrettySurfaceAltColor() {
-    COLORREF col = ThemeControlBackgroundColor();
-    if (!PrettyStyleEnabled()) {
-        return col;
-    }
-    if (IsLightColor(col)) {
-        return AdjustLightness2(col, 2);
-    }
-    return AccentColor(col, 8);
-}
-
-COLORREF PrettyBorderColor() {
-    COLORREF col = ThemeControlBackgroundColor();
-    if (!PrettyStyleEnabled()) {
-        return AccentColor(col, 40);
-    }
-    if (IsLightColor(col)) {
-        return AccentColor(col, 26);
-    }
-    return AccentColor(col, 42);
-}
-
-COLORREF PrettyAccentColor() {
-    COLORREF col = ThemeWindowLinkColor();
-    if (!PrettyStyleEnabled()) {
-        return col;
-    }
-    if (IsLightColor(col)) {
-        return AdjustLightness2(col, 8);
-    }
-    return AccentColor(col, 22);
-}
-
 COLORREF ThemeNotificationsBackgroundColor() {
     auto col = ThemeWindowBackgroundColor();
     return AdjustLightness2(col, 10);
@@ -431,21 +455,6 @@ bool ThemeColorizeControls() {
     }
     return !IsMenuFontSizeDefault();
 }
-
-COLORREF ThemeTabBgHighlight() {
-    auto col = ThemeControlBackgroundColor();
-    return AccentColor(col, 60);
-}
-
-COLORREF ThemeTabStroke() {
-    auto col = ThemeControlBackgroundColor();
-    return AccentColor(col, 30);
-}
-
-COLORREF ThemeTabActiveStrip() {
-    return ThemeWindowLinkColor();
-}
-
 
 #if 0
 void dumpThemes() {

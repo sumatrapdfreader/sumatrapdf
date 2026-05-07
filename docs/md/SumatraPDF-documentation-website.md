@@ -98,9 +98,9 @@ Staring in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you ca
 
 [Delete pages from PDF](Tool-x-delete-pages-from-pdf.md)
 
-[Extract images from PDF](Tool-x-extract-images-from-pdf.md)
+[Extract pages from PDF](Tool-x-extract-pages-from-pdf.md)
 
-[Extract text from PDF](Tool-x-extract-text-from-pdf.md)
+[Extract images from PDF](Tool-x-extract-images-from-pdf.md)
 
 [Search text in a PDF](Tool-x-search-pdf.md)
 

@@ -7,7 +7,7 @@ struct TextSearch : public TextSelection {
         Forward = true
     };
 
-    TextSearch(EngineBase* engine, DocumentTextCache* textCache);
+    explicit TextSearch(EngineBase* engine);
     ~TextSearch();
 
     void SetMatchCase(bool sensitive);

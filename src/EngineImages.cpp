@@ -7,14 +7,17 @@
 #include "utils/FileUtil.h"
 #include "utils/GuessFileType.h"
 #include "utils/GdiPlusUtil.h"
-#include "utils/HtmlParserLookup.h"
-#include "utils/HtmlPullParser.h"
+#include "GumboHelpers.h"
 #include "utils/JsonParser.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 #include "utils/DirIter.h"
 
 #include "wingui/UIModels.h"
+
+extern "C" {
+#include <mupdf/fitz.h>
+}
 
 #include "FzImgReader.h"
 #include "DocProperties.h"
@@ -33,7 +36,7 @@ using Gdiplus::FrameDimensionPage;
 using Gdiplus::FrameDimensionTime;
 using Gdiplus::Graphics;
 using Gdiplus::ImageAttributes;
-using Gdiplus::InterpolationModeHighQualityBicubic;
+using Gdiplus::InterpolationModeHighQualityBilinear;
 using Gdiplus::Matrix;
 using Gdiplus::MatrixOrderAppend;
 using Gdiplus::Ok;
@@ -49,21 +52,61 @@ Kind kindEngineImage = "engineImage";
 Kind kindEngineImageDir = "engineImageDir";
 Kind kindEngineComicBooks = "engineComicBooks";
 
-// number of decoded bitmaps to cache for quicker rendering
-#define MAX_IMAGE_PAGE_CACHE 10
+// number of decoded bitmaps to cache for quicker rendering.
+// Sized for multi-threaded prefetch: enough to hold a few visible pages,
+// the worker pool's in-flight pages, and a few prefetch slots without
+// thrashing. Each cached entry holds the decoded GDI+ Bitmap, so the
+// memory cost scales with image dimensions -- bump cautiously.
+#define MAX_IMAGE_PAGE_CACHE 32
 
 ///// EngineImages methods apply to all types of engines handling full-page images /////
 
 struct ImagePage {
     int pageNo = 0;
+    // Decoded forms; at most one is non-null. img (mupdf, lazy) is preferred
+    // for RenderPage when available: each render decodes the JPEG at near-
+    // target scale (DCT-domain 1/2, 1/4, 1/8 downsampling), so big images
+    // displayed at small zooms cost only a fraction of a full-res decode.
+    // bmp (GDI+) is the fallback for paths that need GDI+ (multi-frame TIFF,
+    // or rotation/tile cases the mupdf render path doesn't handle yet).
     Bitmap* bmp = nullptr;
+    fz_image* img = nullptr;
     bool ownBmp = true;
     bool failedToLoad = false;
-    int refs = 1;
+    // true while LoadBitmapForPage / LoadFzPixmapForPage is running on a worker;
+    // concurrent GetPage callers wait on loadedEvent instead of serializing on cacheLock
+    bool loading = false;
+
+    // refcount: cache holds 1, every successful GetPage adds 1.
+    // mutated atomically so DropPage's common case (refs > 0 after decrement)
+    // doesn't need to acquire cacheLock. ++ stays under cacheLock in GetPage
+    // because we need exclusion against eviction-in-progress.
+    AtomicInt refs = 1;
+
+    // manual-reset event, signaled when loading transitions to false
+    HANDLE loadedEvent = nullptr;
+
+    // serializes GDI+ DrawImage calls against this->bmp -- a single Bitmap*
+    // is not safe to draw from multiple threads concurrently. Different pages
+    // have different drawLocks so they render in parallel.
+    // Not needed for the pix path: fz_pixmap is immutable after load and
+    // fz_scale_pixmap is safe to call concurrently.
+    CRITICAL_SECTION drawLock;
 
     ImagePage(int pageNo, Bitmap* bmp) {
         this->pageNo = pageNo;
         this->bmp = bmp;
+        InitializeCriticalSection(&drawLock);
+        loadedEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    }
+    ~ImagePage() {
+        DeleteCriticalSection(&drawLock);
+        if (loadedEvent) {
+            CloseHandle(loadedEvent);
+        }
+        // img is dropped by DropPage before delete (it needs the engine's
+        // per-thread fz_context to call into mupdf safely).
+        ReportIf(img);
     }
 };
 
@@ -71,7 +114,12 @@ struct ImagePageInfo {
     Vec<IPageElement*> allElements;
     RectF mediabox{};
     PageInfoState state = PageInfoState::Unknown;
+    // raw image bytes; populated lazily by GetImageData for file-backed
+    // engines (EngineImage, EngineImageDir). Unused by EngineCbx (which
+    // returns a view into the archive's cache).
+    ByteSlice rawData;
     ImagePageInfo() = default;
+    ~ImagePageInfo() { rawData.Free(); }
 };
 
 class EngineImages : public EngineBase {
@@ -105,15 +153,40 @@ class EngineImages : public EngineBase {
 
     ScopedComPtr<IStream> fileStream;
 
-    CRITICAL_SECTION cacheAccess;
+    CRITICAL_SECTION cacheLock;
     Vec<ImagePage*> pageCache;
     Vec<ImagePageInfo*> pageInfos;
+
+    // root mupdf context. Each thread that calls into mupdf gets its own
+    // cloned context via Ctx() -- mupdf's per-context setjmp/error stack
+    // is NOT thread-safe (concurrent fz_try would clobber each other's
+    // jmp_buf and fz_throw would longjmp into a stale stack frame). Cloned
+    // contexts share the underlying allocator/store/etc via refcounts.
+    fz_context* fz_ctx = nullptr;
+    struct ThreadCtx {
+        DWORD threadID;
+        fz_context* ctx;
+    };
+    Vec<ThreadCtx> threadCtxs;
+    CRITICAL_SECTION threadCtxsLock;
+
+    fz_context* Ctx();
 
     void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);
 
     virtual Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) = 0;
+    // Optional: load the page as an fz_image (encoded form, lazy decode).
+    // RenderPage then asks mupdf to decode the JPEG at near-target scale on
+    // each render -- much cheaper than decoding at full resolution and
+    // scaling down. Default impl uses GetImageData + fz_new_image_from_buffer,
+    // which works for any single-frame format mupdf understands (JPEG, PNG,
+    // BMP, etc.). Subclasses can override to return nullptr (forcing the
+    // GDI+ path) for cases mupdf can't handle -- e.g. multi-frame TIFFs.
+    virtual fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo);
     virtual RectF LoadMediabox(int pageNo) = 0;
-    virtual ByteSlice GetRawImageData(int pageNo) = 0;
+    // Returns a non-owning view into engine-owned storage; the caller must
+    // not free. Bytes stay valid until the engine is destroyed.
+    virtual ByteSlice GetImageData(int pageNo) = 0;
     virtual TempStr GetImagePathTemp(int pageNo) { return nullptr; }
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
@@ -130,19 +203,86 @@ EngineImages::EngineImages() {
     preferredLayout.nonContinuous = true;
     isImageCollection = true;
 
-    InitializeCriticalSection(&cacheAccess);
+    InitializeCriticalSection(&cacheLock);
+    InitializeCriticalSection(&threadCtxsLock);
+    fz_ctx = fz_new_context_windows();
+}
+
+fz_context* EngineImages::Ctx() {
+    DWORD tid = GetCurrentThreadId();
+    {
+        ScopedCritSec scope(&threadCtxsLock);
+        for (auto& tc : threadCtxs) {
+            if (tc.threadID == tid) {
+                return tc.ctx;
+            }
+        }
+    }
+    // clone outside the lock to avoid blocking other threads.
+    // safe because only the current thread can register an entry for its own tid.
+    fz_context* newCtx = fz_clone_context(fz_ctx);
+    if (!newCtx) {
+        return fz_ctx; // last-resort fallback; caller will serialize on the root
+    }
+    {
+        ScopedCritSec scope(&threadCtxsLock);
+        threadCtxs.Append({tid, newCtx});
+    }
+    return newCtx;
 }
 
 EngineImages::~EngineImages() {
-    EnterCriticalSection(&cacheAccess);
+    // drop per-thread cloned contexts BEFORE pages: workers are no longer
+    // running by the time we destruct, so this just releases their refcounts
+    // on the shared mupdf state. Pages then drop their pixmaps via the root
+    // ctx in DropPage.
+    for (auto& tc : threadCtxs) {
+        fz_drop_context(tc.ctx);
+    }
+    threadCtxs.Reset();
+
+    EnterCriticalSection(&cacheLock);
     while (pageCache.size() > 0) {
         ImagePage* lastPage = pageCache.Last();
         ReportIf(lastPage->refs != 1);
         DropPage(lastPage, true);
     }
     DeleteVecMembers(pageInfos);
-    LeaveCriticalSection(&cacheAccess);
-    DeleteCriticalSection(&cacheAccess);
+    LeaveCriticalSection(&cacheLock);
+    DeleteCriticalSection(&cacheLock);
+    if (fz_ctx) {
+        fz_drop_context_windows(fz_ctx);
+    }
+    DeleteCriticalSection(&threadCtxsLock);
+}
+
+// Wrap the page's raw image bytes in an fz_image for lazy mupdf decoding.
+// The actual JPEG/PNG decode happens later in RenderPage at near-target
+// scale, much cheaper than decoding at full resolution up front.
+fz_image* EngineImages::LoadFzImageForPage(fz_context* ctx, int pageNo) {
+    ByteSlice data = GetImageData(pageNo);
+    if (data.empty()) {
+        return nullptr;
+    }
+    fz_image* img = nullptr;
+    fz_buffer* buf = nullptr;
+    fz_var(buf);
+    fz_var(img);
+    fz_try(ctx) {
+        // fz_new_buffer_from_copied_data takes ownership of the copy; the
+        // resulting fz_image keeps a ref to the buffer, so it's safe to drop
+        // the local buffer ref in fz_always.
+        buf = fz_new_buffer_from_copied_data(ctx, data.data(), data.size());
+        img = fz_new_image_from_buffer(ctx, buf);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        img = nullptr;
+    }
+    return img;
 }
 
 RectF EngineImages::PageMediabox(int pageNo) {
@@ -154,6 +294,73 @@ RectF EngineImages::PageMediabox(int pageNo) {
         pi->state = PageInfoState::Known;
     }
     return pi->mediabox;
+}
+
+// Wrap a fresh fz_pixmap into a RenderedBitmap (DIB section). Converts to
+// 32bpp BGRA which is the GDI-compatible layout. The pixmap argument is
+// consumed (dropped) on success; on failure it's also dropped.
+static RenderedBitmap* FzPixmapToRenderedBitmap(fz_context* ctx, fz_pixmap* pixmap) {
+    fz_pixmap* bgr = nullptr;
+    fz_var(bgr);
+    fz_try(ctx) {
+        bgr = fz_convert_pixmap(ctx, pixmap, fz_device_bgr(ctx), nullptr, nullptr, fz_default_color_params, 1);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return nullptr;
+    }
+    if (!bgr || !bgr->samples) {
+        if (bgr) {
+            fz_drop_pixmap(ctx, bgr);
+        }
+        return nullptr;
+    }
+
+    int w = bgr->w;
+    int h = bgr->h;
+    int n = bgr->n;
+    int bitsCount = n * 8;
+    // DIB rows are DWORD-aligned. mupdf pixmap rows are tightly packed
+    // (stride = n * w). For 24bpp these often differ -- e.g. w=4001, n=3:
+    // dibStride = 12004, pixmap stride = 12003. A bulk memcpy then offsets
+    // every subsequent row by 1 byte and the image renders skewed.
+    int dibStride = ((w * bitsCount + 31) / 32) * 4;
+    int srcStride = (int)bgr->stride;
+    int rowBytes = w * n;
+    int imgSize = dibStride * h;
+
+    BITMAPINFO bmi{};
+    BITMAPINFOHEADER* bmih = &bmi.bmiHeader;
+    bmih->biSize = sizeof(*bmih);
+    bmih->biWidth = w;
+    bmih->biHeight = -h;
+    bmih->biPlanes = 1;
+    bmih->biCompression = BI_RGB;
+    bmih->biBitCount = bitsCount;
+    bmih->biSizeImage = imgSize;
+
+    void* data = nullptr;
+    HANDLE hMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, imgSize, nullptr);
+    HBITMAP hbmp = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hMap, 0);
+    if (data) {
+        u8* dst = (u8*)data;
+        u8* src = bgr->samples;
+        if (srcStride == dibStride) {
+            memcpy(dst, src, imgSize);
+        } else {
+            for (int y = 0; y < h; y++) {
+                memcpy(dst + (size_t)y * dibStride, src + (size_t)y * srcStride, rowBytes);
+            }
+        }
+    }
+    fz_drop_pixmap(ctx, bgr);
+    if (!hbmp) {
+        if (hMap) {
+            CloseHandle(hMap);
+        }
+        return nullptr;
+    }
+    return new RenderedBitmap(hbmp, Size(w, h), hMap);
 }
 
 RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
@@ -175,8 +382,71 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
         }
     };
 
-    RectF pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
+    RectF mediabox = PageMediabox(pageNo);
+    RectF pageRc = pageRect ? *pageRect : mediabox;
     Rect screen = Transform(pageRc, pageNo, zoom, rotation).Round();
+
+    // Mupdf fast path: rotation 0 + full-page render + cached fz_image available.
+    // Tiles (pageRect != mediabox) and rotations fall through to the GDI+ path.
+    if (page->img && rotation == 0 && !page->failedToLoad) {
+        Rect mediaScreen = Transform(mediabox, pageNo, zoom, rotation).Round();
+        bool isFullPage = (mediaScreen.dx == screen.dx && mediaScreen.dy == screen.dy);
+        if (isFullPage) {
+            // Per-thread cloned context lets multiple workers decode/scale concurrently.
+            fz_context* ctx = Ctx();
+            RenderedBitmap* result = nullptr;
+            fz_pixmap* decoded = nullptr;
+            fz_pixmap* scaled = nullptr;
+            fz_var(decoded);
+            fz_var(scaled);
+            // Build a CTM mapping the fz_image unit box (1x1) to target
+            // screen dimensions. mupdf reads |ctm| as the output pixel size
+            // (w = sqrt(ctm.a^2 + ctm.b^2)) and picks a JPEG decode scale
+            // (1, 1/2, 1/4, 1/8) so huge images at small zooms decode
+            // dramatically faster.
+            fz_matrix ctm = fz_scale((float)screen.dx, (float)screen.dy);
+            fz_try(ctx) {
+                int dw = 0, dh = 0;
+                decoded = fz_get_pixmap_from_image(ctx, page->img, nullptr, &ctm, &dw, &dh);
+                if (decoded && (decoded->w != screen.dx || decoded->h != screen.dy)) {
+                    // mupdf decoded at a JPEG-friendly scale that's >= target;
+                    // do the final exact-size scale on the much smaller pixmap.
+                    scaled = fz_scale_pixmap(ctx, decoded, 0, 0, (float)screen.dx, (float)screen.dy, nullptr);
+                }
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+            }
+            fz_pixmap* final = scaled ? scaled : decoded;
+            if (final) {
+                result = FzPixmapToRenderedBitmap(ctx, final);
+            }
+            if (scaled) {
+                fz_drop_pixmap(ctx, scaled);
+            }
+            if (decoded) {
+                fz_drop_pixmap(ctx, decoded);
+            }
+            if (result) {
+                DropPage(page, false);
+                return result;
+            }
+            // fall through to GDI+ on failure
+        }
+    }
+
+    // GDI+ path: needs page->bmp. If we only have img (subclass loaded via
+    // mupdf), lazy-load the GDI+ Bitmap on demand for this rare path
+    // (rotation, sub-rect tile, or mupdf decode/scale failure).
+    if (!page->bmp && !page->failedToLoad) {
+        ScopedCritSec scope(&page->drawLock);
+        if (!page->bmp) {
+            bool ownBmp = true;
+            page->bmp = LoadBitmapForPage(pageNo, ownBmp);
+            page->ownBmp = ownBmp;
+        }
+    }
+
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
 
@@ -196,7 +466,10 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
         g.SetInterpolationMode(Gdiplus::InterpolationModeNearestNeighbor);
     } else {
         g.SetSmoothingMode(SmoothingModeAntiAlias);
-        g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+        // HighQualityBilinear is several times faster than HighQualityBicubic
+        // and visually indistinguishable for typical photographic content,
+        // especially when downscaling (the common case for image viewing).
+        g.SetInterpolationMode(InterpolationModeHighQualityBilinear);
     }
     g.SetPageUnit(UnitPixel);
 
@@ -234,9 +507,10 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
     Status ok;
     {
         // GDI+ Bitmap is not thread-safe; concurrent DrawImage on the same Bitmap
-        // from multiple render threads causes InsufficientBuffer (status 4) errors.
-        // Serialize access to the shared page bitmap.
-        ScopedCritSec scope(&cacheAccess);
+        // from multiple threads causes InsufficientBuffer (status 4) errors.
+        // Per-page lock: different pages render in parallel, only repeated draws
+        // of the same page serialize.
+        ScopedCritSec scope(&page->drawLock);
         ok = g.DrawImage(page->bmp, ToGdipRect(pageRcI), pageRcI.x, pageRcI.y, pageRcI.dx, pageRcI.dy, UnitPixel,
                          &imgAttrs);
     }
@@ -324,6 +598,20 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
         return nullptr;
     }
 
+    // mupdf fz_image path leaves page->bmp null; lazy-load the GDI+ Bitmap
+    if (!page->bmp && !page->failedToLoad) {
+        ScopedCritSec scope(&page->drawLock);
+        if (!page->bmp) {
+            bool ownBmp = true;
+            page->bmp = LoadBitmapForPage(pageNo, ownBmp);
+            page->ownBmp = ownBmp;
+        }
+    }
+    if (!page->bmp) {
+        DropPage(page, false);
+        return nullptr;
+    }
+
     HBITMAP hbmp;
     auto bmp = page->bmp;
     int dx = bmp->GetWidth();
@@ -357,57 +645,106 @@ bool EngineImages::SaveFileAs(const char* dstPath) {
 }
 
 ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {
-    ScopedCritSec scope(&cacheAccess);
-
     ImagePage* result = nullptr;
+    bool isLoader = false;
+    bool waitForLoad = false;
 
-    for (size_t i = 0; i < pageCache.size(); i++) {
-        if (pageCache.at(i)->pageNo == pageNo) {
-            result = pageCache.at(i);
-            break;
+    {
+        ScopedCritSec scope(&cacheLock);
+
+        for (size_t i = 0; i < pageCache.size(); i++) {
+            if (pageCache.at(i)->pageNo == pageNo) {
+                result = pageCache.at(i);
+                break;
+            }
         }
-    }
-    if (!result && tryOnly) {
-        return nullptr;
+        if (!result && tryOnly) {
+            return nullptr;
+        }
+
+        if (!result) {
+            // TODO: drop most memory intensive pages first
+            if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
+                ReportIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
+                DropPage(pageCache.Last(), true);
+            }
+            // insert a loading placeholder; do the actual decode without
+            // holding cacheLock so other threads can keep using the cache
+            result = new ImagePage(pageNo, nullptr);
+            result->loading = true;
+            pageCache.InsertAt(0, result);
+            isLoader = true;
+        } else if (result != pageCache.at(0)) {
+            // keep the list Most Recently Used first
+            pageCache.Remove(result);
+            pageCache.InsertAt(0, result);
+        }
+
+        if (!isLoader && result->loading) {
+            waitForLoad = true;
+        }
+        // ++ under lock: prevents racing with eviction that would otherwise
+        // delete the page between our lookup and our ref bump.
+        AtomicIntInc(&result->refs);
     }
 
-    if (!result) {
-        // TODO: drop most memory intensive pages first
-        if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
-            ReportIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
-            DropPage(pageCache.Last(), true);
+    if (isLoader) {
+        // Slow path: load without cacheLock held. The page is pinned
+        // (refs >= 2) so it can't be deleted under us, even if some other
+        // thread evicts it from the cache while we're working.
+        // Try the mupdf image path first (lazy decode at render time at near-
+        // target scale); fall back to GDI+ Bitmap if the subclass opts out
+        // or mupdf can't handle the format.
+        fz_image* img = LoadFzImageForPage(Ctx(), pageNo);
+        Bitmap* bmp = nullptr;
+        bool ownBmp = true;
+        if (!img) {
+            bmp = LoadBitmapForPage(pageNo, ownBmp);
         }
-        result = new ImagePage(pageNo, nullptr);
-        result->bmp = LoadBitmapForPage(pageNo, result->ownBmp);
-        if (!result->bmp) {
-            result->failedToLoad = true;
+        {
+            ScopedCritSec scope(&cacheLock);
+            result->img = img;
+            result->bmp = bmp;
+            result->ownBmp = ownBmp;
+            if (!img && !bmp) {
+                result->failedToLoad = true;
+            }
+            result->loading = false;
         }
-        pageCache.InsertAt(0, result);
-    } else if (result != pageCache.at(0)) {
-        // keep the list Most Recently Used first
-        pageCache.Remove(result);
-        pageCache.InsertAt(0, result);
-    }
-    if (!result) {
-        return nullptr;
+        SetEvent(result->loadedEvent);
+    } else if (waitForLoad) {
+        // Another thread is decoding this same page; wait for it to finish.
+        WaitForSingleObject(result->loadedEvent, INFINITE);
     }
 
-    result->refs++;
     return result;
 }
 
 void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
-    ScopedCritSec scope(&cacheAccess);
-    page->refs--;
-    ReportIf(page->refs < 0);
+    int newRefs = AtomicIntDec(&page->refs);
+    ReportIf(newRefs < 0);
 
-    if (0 == page->refs || forceRemove) {
+    // common case: ref still held by someone (typically the cache) -- no lock,
+    // no removal, just return. This is the hot path during render workloads.
+    if (newRefs > 0 && !forceRemove) {
+        return;
+    }
+
+    {
+        ScopedCritSec scope(&cacheLock);
+        // pageCache.Remove is a no-op if the page was already evicted earlier
         pageCache.Remove(page);
     }
 
-    if (0 == page->refs) {
+    if (newRefs == 0) {
         if (page->ownBmp) {
             delete page->bmp;
+        }
+        if (page->img) {
+            // safe across threads: fz_drop_image uses our per-thread cloned
+            // ctx for atomic refcount + dealloc via mupdf's locks callbacks.
+            fz_drop_image(Ctx(), page->img);
+            page->img = nullptr;
         }
         delete page;
     }
@@ -543,8 +880,9 @@ class EngineImage : public EngineImages {
     bool FinishLoading();
 
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo) override;
     RectF LoadMediabox(int pageNo) override;
-    ByteSlice GetRawImageData(int pageNo) override;
+    ByteSlice GetImageData(int pageNo) override;
 };
 
 EngineImage::EngineImage() {
@@ -596,8 +934,9 @@ bool EngineImage::LoadSingleFile(const char* path) {
     // if no extension?
     const char* fileExt = GfxFileExtFromData(data);
     if (fileExt == nullptr) {
-        Kind kind = GuessFileTypeFromName(path);
-        fileExt = GfxFileExtFromKind(kind);
+        // imageFormat already holds the Kind we resolved above; skip the
+        // redundant GuessFileTypeFromName call.
+        fileExt = GfxFileExtFromKind(imageFormat);
     }
     if (fileExt == nullptr) {
         fileExt = path::GetExtTemp(path);
@@ -607,8 +946,13 @@ bool EngineImage::LoadSingleFile(const char* path) {
     }
     str::ReplaceWithCopy(&defaultExt, fileExt);
     image = BitmapFromData(data);
-    data.Free();
-    return FinishLoading();
+    bool ok = FinishLoading();
+    if (ok) {
+        pageInfos[0]->rawData = data;
+    } else {
+        data.Free();
+    }
+    return ok;
 }
 
 bool EngineImage::LoadFromStream(IStream* stream) {
@@ -631,8 +975,13 @@ bool EngineImage::LoadFromStream(IStream* stream) {
 
     ByteSlice data = GetDataFromStream(stream, nullptr);
     image = BitmapFromData(data);
-    data.Free();
-    return FinishLoading();
+    bool ok = FinishLoading();
+    if (ok) {
+        pageInfos[0]->rawData = data;
+    } else {
+        data.Free();
+    }
+    return ok;
 }
 
 static bool IsMultiImage(Kind fmt) {
@@ -1026,7 +1375,7 @@ static void GetBitmapExifProperties(Bitmap* bmp, StrVec& keyValOut) {
         if (GetImagePropertyItem(bmp, PropertyTagExifCompConfig, &item)) {
             // each byte: 0=does not exist, 1=Y, 2=Cb, 3=Cr, 4=R, 5=G, 6=B
             static const char* compNames[] = {"", "Y", "Cb", "Cr", "R", "G", "B"};
-            str::Str s;
+            StrBuilder s;
             u8* data = (u8*)item->value;
             for (ULONG i = 0; i < item->length; i++) {
                 u8 c = data[i];
@@ -1205,9 +1554,8 @@ void EngineImages::GetImageProperties(int pageNo, StrVec& keyValOut) {
     if (imgPath) {
         AddProp(keyValOut, kPropImagePath, imgPath);
     }
-    ByteSlice data = GetRawImageData(pageNo);
+    ByteSlice data = GetImageData(pageNo);
     GetExifPropertiesFromData(data, keyValOut);
-    data.Free();
 }
 
 void EngineImage::GetImageProperties(int pageNo, StrVec& keyValOut) {
@@ -1243,8 +1591,23 @@ Bitmap* EngineImage::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return frame;
 }
 
-ByteSlice EngineImage::GetRawImageData(int) {
-    return file::ReadFile(FilePath());
+ByteSlice EngineImage::GetImageData(int) {
+    ScopedCritSec scope(&cacheLock);
+    auto pi = pageInfos[0];
+    if (pi->rawData.empty()) {
+        pi->rawData = file::ReadFile(FilePath());
+    }
+    return pi->rawData;
+}
+
+fz_image* EngineImage::LoadFzImageForPage(fz_context* ctx, int pageNo) {
+    // mupdf can decode the file's first frame, but multi-frame TIFFs and
+    // animated GIFs are handled by GDI+'s SelectActiveFrame in
+    // LoadBitmapForPage. Fall back to the GDI+ path for non-first frames.
+    if (pageNo != 1) {
+        return nullptr;
+    }
+    return EngineImages::LoadFzImageForPage(ctx, pageNo);
 }
 
 RectF EngineImage::LoadMediabox(int pageNo) {
@@ -1361,7 +1724,7 @@ class EngineImageDir : public EngineImages {
 
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
-    ByteSlice GetRawImageData(int pageNo) override;
+    ByteSlice GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(pageFileNames.At(pageNo - 1)); }
 
     StrVec pageFileNames;
@@ -1488,9 +1851,14 @@ Bitmap* EngineImageDir::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     return res;
 }
 
-ByteSlice EngineImageDir::GetRawImageData(int pageNo) {
-    char* path = pageFileNames.At(pageNo - 1);
-    return file::ReadFile(path);
+ByteSlice EngineImageDir::GetImageData(int pageNo) {
+    ScopedCritSec scope(&cacheLock);
+    auto pi = pageInfos[pageNo - 1];
+    if (pi->rawData.empty()) {
+        char* path = pageFileNames.At(pageNo - 1);
+        pi->rawData = file::ReadFile(path);
+    }
+    return pi->rawData;
 }
 
 RectF EngineImageDir::LoadMediabox(int pageNo) {
@@ -1542,58 +1910,78 @@ struct ComicInfoParser : json::ValueVisitor {
     void Parse(const ByteSlice& xmlData);
 };
 
-static TempStr GetTextContentTemp(HtmlPullParser& parser) {
-    HtmlToken* tok = parser.Next();
-    if (!tok || !tok->IsText()) {
-        return nullptr;
+static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* node) {
+    if (!node) {
+        return;
     }
-    return ResolveHtmlEntitiesTemp(tok->s, tok->sLen);
+    if (node->type == GUMBO_NODE_ELEMENT) {
+        if (GumboTagNameIs(node, "Title")) {
+            TempStr v = GumboTextContentTemp(node);
+            if (v) {
+                cip->Visit("/ComicBookInfo/1.0/title", v, json::Type::String);
+            }
+        } else if (GumboTagNameIs(node, "Year")) {
+            TempStr v = GumboTextContentTemp(node);
+            if (v) {
+                cip->Visit("/ComicBookInfo/1.0/publicationYear", v, json::Type::Number);
+            }
+        } else if (GumboTagNameIs(node, "Month")) {
+            TempStr v = GumboTextContentTemp(node);
+            if (v) {
+                cip->Visit("/ComicBookInfo/1.0/publicationMonth", v, json::Type::Number);
+            }
+        } else if (GumboTagNameIs(node, "Summary")) {
+            TempStr v = GumboTextContentTemp(node);
+            if (v) {
+                cip->Visit("/X-summary", v, json::Type::String);
+            }
+        } else if (GumboTagNameIs(node, "Writer")) {
+            TempStr v = GumboTextContentTemp(node);
+            if (v) {
+                cip->Visit("/ComicBookInfo/1.0/credits[0]/person", v, json::Type::String);
+                cip->Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool);
+            }
+        } else if (GumboTagNameIs(node, "Penciller")) {
+            TempStr v = GumboTextContentTemp(node);
+            if (v) {
+                cip->Visit("/ComicBookInfo/1.0/credits[1]/person", v, json::Type::String);
+                cip->Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type::Bool);
+            }
+        }
+        const GumboVector* children = &node->v.element.children;
+        for (unsigned int i = 0; i < children->length; i++) {
+            ComicInfoVisitNode(cip, (const GumboNode*)children->data[i]);
+        }
+    } else if (node->type == GUMBO_NODE_DOCUMENT) {
+        const GumboVector* children = &node->v.document.children;
+        for (unsigned int i = 0; i < children->length; i++) {
+            ComicInfoVisitNode(cip, (const GumboNode*)children->data[i]);
+        }
+    }
 }
 
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
 void ComicInfoParser::Parse(const ByteSlice& xmlData) {
-    // TODO: convert UTF-16 data and skip UTF-8 BOM
-    HtmlPullParser parser(xmlData);
-    HtmlToken* tok;
-    while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (!tok->IsStartTag()) {
-            continue;
-        }
-        if (tok->NameIs("Title")) {
-            TempStr value = GetTextContentTemp(parser);
-            if (value) {
-                Visit("/ComicBookInfo/1.0/title", value, json::Type::String);
-            }
-        } else if (tok->NameIs("Year")) {
-            TempStr value = GetTextContentTemp(parser);
-            if (value) {
-                Visit("/ComicBookInfo/1.0/publicationYear", value, json::Type::Number);
-            }
-        } else if (tok->NameIs("Month")) {
-            TempStr value = GetTextContentTemp(parser);
-            if (value) {
-                Visit("/ComicBookInfo/1.0/publicationMonth", value, json::Type::Number);
-            }
-        } else if (tok->NameIs("Summary")) {
-            TempStr value = GetTextContentTemp(parser);
-            if (value) {
-                Visit("/X-summary", value, json::Type::String);
-            }
-        } else if (tok->NameIs("Writer")) {
-            TempStr value = GetTextContentTemp(parser);
-            if (value) {
-                Visit("/ComicBookInfo/1.0/credits[0]/person", value, json::Type::String);
-                Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool);
-            }
-        } else if (tok->NameIs("Penciller")) {
-            TempStr value = GetTextContentTemp(parser);
-            if (value) {
-                Visit("/ComicBookInfo/1.0/credits[1]/person", value, json::Type::String);
-                Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type::Bool);
-            }
-        }
+    if (xmlData.empty()) {
+        return;
     }
+    // Detect the encoding from a leading BOM and produce UTF-8 (gumbo expects
+    // UTF-8 input). Handles UTF-8, UTF-16 LE, and UTF-16 BE BOMs; if there's
+    // no BOM the data is treated as UTF-8 (ComicInfo.xml's spec encoding).
+    TempStr utf8 = strconv::UnknownToUtf8Temp((const char*)xmlData.data(), xmlData.size());
+    if (!utf8) {
+        return;
+    }
+    size_t utf8Len = str::Len(utf8);
+
+    GumboOptions opts = GumboMakeOptions();
+    GumboOutput* output = gumbo_parse_with_options(&opts, utf8, utf8Len);
+    if (!output) {
+        return;
+    }
+    ComicInfoVisitNode(this, output->document);
+    gumbo_destroy_output(&opts, output);
 }
 
 // extract ComicBookInfo metadata
@@ -1641,26 +2029,34 @@ class EngineCbx : public EngineImages {
 
     TocTree* GetToc() override;
 
+    // realPath: when non-null we actually open the archive from this
+    // (local) path but still report `path` via FilePath() so callers
+    // (file history, bookmarks, etc.) see the user's original file.
     static EngineBase* CreateFromFile(const char* path, const char* password = nullptr,
-                                      MultiFormatArchive::Format* formatOut = nullptr, bool* isEncryptedOut = nullptr);
+                                      MultiFormatArchive::Format* formatOut = nullptr, bool* isEncryptedOut = nullptr,
+                                      Kind hintKind = nullptr, const char* realPath = nullptr);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
-    ByteSlice GetRawImageData(int pageNo) override;
+    ByteSlice GetImageData(int pageNo) override;
     TempStr GetImagePathTemp(int pageNo) override { return str::DupTemp(files[pageNo - 1]->name); }
 
     bool LoadFromFile(const char* fileName);
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
-    ByteSlice GetImageData(int pageNo);
-
-    // access to cbxFile must be protected after initialization (with cacheAccess)
+    // access to cbxFile must be protected after initialization (with cacheLock)
     MultiFormatArchive* cbxArchive = nullptr;
     Vec<MultiFormatArchive::FileInfo*> files;
     TocTree* tocTree = nullptr;
+
+    // When set, the archive was actually opened from this local path (e.g.
+    // a cached copy of a network-drive file). FilePath() still returns the
+    // original path so file history / bookmarks / state track the user's
+    // real file, not our cache.
+    char* physicalPath = nullptr;
 
     ComicInfoParser cip;
 };
@@ -1674,6 +2070,7 @@ EngineCbx::EngineCbx(MultiFormatArchive* archive) {
 EngineCbx::~EngineCbx() {
     delete tocTree;
     delete cbxArchive;
+    str::Free(physicalPath);
 }
 
 EngineBase* EngineCbx::Clone() {
@@ -1690,7 +2087,8 @@ EngineBase* EngineCbx::Clone() {
     }
     const char* path = FilePath();
     if (path) {
-        auto clone = CreateFromFile(path);
+        // keep the cached-local-copy in play on the clone too
+        auto clone = CreateFromFile(path, nullptr, nullptr, nullptr, nullptr, physicalPath);
         if (!clone) {
             logf("EngineCbx::Clone() failed: CreateFromFile('%s') failed\n", path);
         }
@@ -1786,10 +2184,10 @@ bool EngineCbx::FinishLoading() {
         }
     }
 
-    ByteSlice metadata = cbxArchive->GetFileDataByName("ComicInfo.xml");
-    if (metadata) {
+    auto* metadataFi = cbxArchive->GetFileDataByName("ComicInfo.xml");
+    if (metadataFi && metadataFi->data) {
+        ByteSlice metadata{(u8*)metadataFi->data, metadataFi->fileSizeUncompressed};
         cip.Parse(metadata);
-        metadata.Free();
     }
     const char* comment = cbxArchive->GetComment();
     if (comment) {
@@ -1818,14 +2216,13 @@ bool EngineCbx::FinishLoading() {
                 smallest = pageFiles[i];
             }
         }
-        ByteSlice d = cbxArchive->GetFileDataById(smallest->fileId);
-        if (!d) {
+        auto* fi = cbxArchive->GetFileDataById(smallest->fileId);
+        if (!fi || !fi->data) {
             logf("EngineCbx::FinishLoading(): wrong password, failed to extract file\n");
             delete cbxArchive;
             cbxArchive = nullptr;
             return false;
         }
-        d.Free();
     }
 
     std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
@@ -1865,15 +2262,14 @@ TocTree* EngineCbx::GetToc() {
     return tocTree;
 }
 
-ByteSlice EngineCbx::GetRawImageData(int pageNo) {
-    return GetImageData(pageNo);
-}
-
 ByteSlice EngineCbx::GetImageData(int pageNo) {
     ReportIf((pageNo < 1) || (pageNo > PageCount()));
     size_t fileId = files[pageNo - 1]->fileId;
-    ByteSlice d = cbxArchive->GetFileDataById(fileId);
-    return d;
+    auto* fi = cbxArchive->GetFileDataById(fileId);
+    if (!fi || !fi->data) {
+        return {};
+    }
+    return {(u8*)fi->data, fi->fileSizeUncompressed};
 }
 
 TempStr EngineCbx::GetPropertyTemp(const char* name) {
@@ -1908,7 +2304,7 @@ TempStr EngineCbx::GetPropertyTemp(const char* name) {
 void EngineCbx::GetProperties(StrVec& keyValOut) {
     EngineBase::GetProperties(keyValOut);
 
-    str::Str filesStr;
+    StrBuilder filesStr;
     auto& fileInfos = cbxArchive->GetFileInfos();
     size_t n = fileInfos.size();
     for (size_t i = 0; i < n; i++) {
@@ -1922,6 +2318,8 @@ void EngineCbx::GetProperties(StrVec& keyValOut) {
         filesStr.AppendChar('\n');
         filesStr.Append(fi->name);
     }
+    // show paths in Windows style (#5543)
+    str::TransCharsInPlace(filesStr.CStr(), "/", "\\");
     AddProp(keyValOut, kPropFiles, filesStr.CStr());
 }
 
@@ -1930,13 +2328,11 @@ Bitmap* EngineCbx::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     defer{};
     ByteSlice img = GetImageData(pageNo);
     if (img.empty()) {
-        img.Free();
         logf("EngineCbx::LoadBitmapForPage(page: %d) failed\n", pageNo);
         return nullptr;
     }
     deleteAfterUse = true;
     auto res = BitmapFromData(img);
-    img.Free();
     auto dur = TimeSinceInMs(timeStart);
     logf("EngineCbx::LoadBitmapForPage(page: %d) took %.2f ms\n", pageNo, dur);
     return res;
@@ -1959,30 +2355,41 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
     ByteSlice img = GetImageData(pageNo);
     if (!img.empty()) {
         Size size = ImageSizeFromData(img);
-        img.Free();
-        if (size.IsEmpty()) {
-            logf("EngineCbx::LoadMediabox: empty media box for page: %d\n", pageNo);
+        if (!size.IsEmpty()) {
+            return RectF(0, 0, (float)size.dx, (float)size.dy);
         }
-        return RectF(0, 0, (float)size.dx, (float)size.dy);
+        // partial/corrupt header (e.g. dx>0 but dy==0) -- don't return that;
+        // fall through to GetPage so we can use the actual decoded dimensions
+        // and never hand back a zero-area mediabox (would div-by-zero in
+        // CalcZoomReal).
+        logf("EngineCbx::LoadMediabox: empty media box from header for page: %d\n", pageNo);
     }
-    img.Free();
 
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
-        if (page->bmp) {
-            RectF mbox(0, 0, (float)page->bmp->GetWidth(), (float)page->bmp->GetHeight());
-            DropPage(page, false);
-            return mbox;
+        int w = 0, h = 0;
+        if (page->img) {
+            // mupdf decoded the image; use its dimensions
+            w = page->img->w;
+            h = page->img->h;
+        } else if (page->bmp) {
+            w = (int)page->bmp->GetWidth();
+            h = (int)page->bmp->GetHeight();
         }
         DropPage(page, false);
+        if (w > 0 && h > 0) {
+            return RectF(0, 0, (float)w, (float)h);
+        }
     }
 
-    // use A4-like dimensions (at 96 DPI) as fallback for failed pages
+    // use A4-like dimensions (at 96 DPI) as fallback for failed pages.
+    // Important: this MUST be non-empty -- DisplayModel::CalcZoomReal divides
+    // by the mediabox, and a zero-area box trips a debug-break assertion.
     return RectF(0, 0, 595, 842);
 }
 
 EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, MultiFormatArchive::Format* formatOut,
-                                      bool* isEncryptedOut) {
+                                      bool* isEncryptedOut, Kind hintKind, const char* realPath) {
     auto timeStart = TimeGet();
     // we sniff the type from content first because the
     // files can be mis-named e.g. .cbr archive with .cbz ext
@@ -1991,7 +2398,19 @@ EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, Mu
     // opening a full archive just for type detection
     MultiFormatArchive* archive = new MultiFormatArchive();
     archive->password = str::Dup(password);
-    if (!archive->Open(path)) {
+
+    // realPath is a local copy of a file that lives on a slow drive (see
+    // caller in EngineCreate.cpp). We open the archive from there but
+    // still surface `path` as the logical file path.
+    const char* openPath = realPath ? realPath : path;
+
+    // eagerly decompress small archives up front so we don't have to
+    // re-open the file for each page's image data.
+    constexpr i64 kMaxEagerLoadSize = 32 * 1024 * 1024;
+    i64 fileSize = file::GetSize(openPath);
+    bool eagerLoad = fileSize > 0 && fileSize < kMaxEagerLoadSize;
+
+    if (!archive->Open(openPath, eagerLoad, hintKind, gArchiveProgressCb)) {
         delete archive;
         return nullptr;
     }
@@ -2004,6 +2423,9 @@ EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, Mu
     logf("EngineCbx::CreateFromFile(): opening archive took %.2f\n", TimeSinceInMs(timeStart));
 
     auto* engine = new EngineCbx(archive);
+    if (realPath) {
+        engine->physicalPath = str::Dup(realPath);
+    }
     if (engine->LoadFromFile(path)) {
         return engine;
     }
@@ -2012,42 +2434,18 @@ EngineBase* EngineCbx::CreateFromFile(const char* path, const char* password, Mu
 }
 
 EngineBase* EngineCbx::CreateFromStream(IStream* stream) {
-    auto* archive = OpenZipArchive(stream, false);
-    if (archive) {
-        EngineCbx* engine = new EngineCbx(archive);
-        if (engine->LoadFromStream(stream)) {
-            return engine;
-        }
-        SafeEngineRelease(&engine);
+    // libarchive inside OpenArchiveFromStream tries every container it
+    // knows (zip/rar/7z/tar/...) in one pass, so a single call replaces
+    // the old try-each-format cascade.
+    MultiFormatArchive* archive = OpenArchiveFromStream(stream);
+    if (!archive) {
+        return nullptr;
     }
-
-    archive = OpenRarArchive(stream);
-    if (archive) {
-        EngineCbx* engine = new EngineCbx(archive);
-        if (engine->LoadFromStream(stream)) {
-            return engine;
-        }
-        SafeEngineRelease(&engine);
+    EngineCbx* engine = new EngineCbx(archive);
+    if (engine->LoadFromStream(stream)) {
+        return engine;
     }
-
-    archive = Open7zArchive(stream);
-    if (archive) {
-        EngineCbx* engine = new EngineCbx(archive);
-        if (engine->LoadFromStream(stream)) {
-            return engine;
-        }
-        SafeEngineRelease(&engine);
-    }
-
-    archive = OpenTarArchive(stream);
-    if (archive) {
-        EngineCbx* engine = new EngineCbx(archive);
-        if (engine->LoadFromStream(stream)) {
-            return engine;
-        }
-        SafeEngineRelease(&engine);
-    }
-
+    SafeEngineRelease(&engine);
     return nullptr;
 }
 
@@ -2060,10 +2458,10 @@ bool IsEngineCbxSupportedFileType(Kind kind) {
     return KindIndexOf(cbxKinds, n, kind) >= 0;
 }
 
-EngineBase* CreateEngineCbxFromFile(const char* path, PasswordUI* pwdUI) {
+EngineBase* CreateEngineCbxFromFile(const char* path, PasswordUI* pwdUI, Kind hintKind, const char* realPath) {
     MultiFormatArchive::Format fmt = MultiFormatArchive::Format::Unknown;
     bool isEncrypted = false;
-    EngineBase* engine = EngineCbx::CreateFromFile(path, nullptr, &fmt, &isEncrypted);
+    EngineBase* engine = EngineCbx::CreateFromFile(path, nullptr, &fmt, &isEncrypted, hintKind, realPath);
     if (engine || !pwdUI) {
         return engine;
     }
@@ -2083,7 +2481,7 @@ EngineBase* CreateEngineCbxFromFile(const char* path, PasswordUI* pwdUI) {
         if (!pwd) {
             return nullptr; // user cancelled
         }
-        engine = EngineCbx::CreateFromFile(path, pwd);
+        engine = EngineCbx::CreateFromFile(path, pwd, nullptr, nullptr, hintKind, realPath);
         str::Free(pwd);
         if (engine) {
             return engine;

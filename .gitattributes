@@ -1,2 +1,7 @@
 # Disable LF normalization for all files
 * -text
+docs/**/*.md          text eol=lf
+cmd/**/*.ts           text eol=lf
+src/**/*.cpp           text eol=lf
+src/**/*.h             text eol=lf
+src/**/*.c             text eol=lf

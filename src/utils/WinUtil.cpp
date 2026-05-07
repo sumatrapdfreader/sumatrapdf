@@ -2266,34 +2266,7 @@ BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
     return res;
 }
 
-static bool ShouldPreserveColorPixel(u8 b, u8 g, u8 r) {
-    u8 mx = std::max(r, std::max(g, b));
-    u8 mn = std::min(r, std::min(g, b));
-    int chroma = (int)mx - (int)mn;
-    // Conservative strategy: only remap pixels that strongly look like paper/text.
-    // Preserve everything else to avoid damaging photos and grayscale illustrations.
-    int luma = (2126 * (int)r + 7152 * (int)g + 722 * (int)b) / 10000;
-
-    // Bright near-neutral tones: paper/background (should be remapped).
-    if (luma >= 236 && chroma <= 14) {
-        return false;
-    }
-
-    // Dark near-neutral tones: text/ink (should be remapped).
-    if (luma <= 58 && chroma <= 14) {
-        return false;
-    }
-
-    // Slightly darker neutrals are often antialiasing around glyphs.
-    if (luma <= 86 && chroma <= 7) {
-        return false;
-    }
-
-    // Everything else is more likely image tone/detail.
-    return true;
-}
-
-void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool preserveColorContent) {
+void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE) {
         return;
     }
@@ -2316,14 +2289,9 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool
         size.dx * 4 == info.dsBm.bmWidthBytes) {
         int bmpBytes = size.dx * size.dy * 4;
         u8* bmpData = (u8*)info.dsBm.bmBits;
-        for (int i = 0; i < bmpBytes; i += 4) {
-            if (preserveColorContent && ShouldPreserveColorPixel(bmpData[i + 0], bmpData[i + 1], bmpData[i + 2])) {
-                continue;
-            }
-            bmpData[i + 0] = (u8)(base[0] + mul255(bmpData[i + 0], diff[0]));
-            bmpData[i + 1] = (u8)(base[1] + mul255(bmpData[i + 1], diff[1]));
-            bmpData[i + 2] = (u8)(base[2] + mul255(bmpData[i + 2], diff[2]));
-            bmpData[i + 3] = (u8)(base[3] + mul255(bmpData[i + 3], diff[3]));
+        for (int i = 0; i < bmpBytes; i++) {
+            int k = i % 4;
+            bmpData[i] = (u8)(base[k] + mul255(bmpData[i], diff[k]));
         }
         return;
     }
@@ -2333,13 +2301,9 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool
         info.dsBm.bmWidthBytes >= size.dx * 3) {
         u8* bmpData = (u8*)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
-            for (int x = 0; x < size.dx * 3; x += 3) {
-                if (preserveColorContent && ShouldPreserveColorPixel(bmpData[x + 0], bmpData[x + 1], bmpData[x + 2])) {
-                    continue;
-                }
-                bmpData[x + 0] = (u8)(base[0] + mul255(bmpData[x + 0], diff[0]));
-                bmpData[x + 1] = (u8)(base[1] + mul255(bmpData[x + 1], diff[1]));
-                bmpData[x + 2] = (u8)(base[2] + mul255(bmpData[x + 2], diff[2]));
+            for (int x = 0; x < size.dx * 3; x++) {
+                int k = x % 3;
+                bmpData[x] = (u8)(base[k] + mul255(bmpData[x], diff[k]));
             }
             bmpData += info.dsBm.bmWidthBytes;
         }
@@ -2348,10 +2312,6 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool
 
     // for paletted DI bitmaps: only update the color palette
     if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
-        if (preserveColorContent) {
-            // Keep indexed-color images untouched in preserve mode.
-            return;
-        }
         ReportIf(info.dsBmih.biBitCount != 8);
         RGBQUAD palette[256];
         HDC hDC = CreateCompatibleDC(nullptr);
@@ -2383,14 +2343,9 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor, bool
     ReportIf(!bmpData);
 
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
-        for (int i = 0; i < bmpBytes; i += 4) {
-            if (preserveColorContent && ShouldPreserveColorPixel(bmpData[i + 0], bmpData[i + 1], bmpData[i + 2])) {
-                continue;
-            }
-            bmpData[i + 0] = (u8)(base[0] + mul255(bmpData[i + 0], diff[0]));
-            bmpData[i + 1] = (u8)(base[1] + mul255(bmpData[i + 1], diff[1]));
-            bmpData[i + 2] = (u8)(base[2] + mul255(bmpData[i + 2], diff[2]));
-            bmpData[i + 3] = (u8)(base[3] + mul255(bmpData[i + 3], diff[3]));
+        for (int i = 0; i < bmpBytes; i++) {
+            int k = i % 4;
+            bmpData[i] = (u8)(base[k] + mul255(bmpData[i], diff[k]));
         }
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
@@ -2617,28 +2572,6 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
     urlVar.bstrVal = SysAllocString(s);
-}
-
-StrSpan LoadDataResource(int resId) {
-    HRSRC resSrc = FindResourceW(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
-    ReportIf(!resSrc);
-    if (!resSrc) {
-        return {};
-    }
-    HGLOBAL res = LoadResource(nullptr, resSrc);
-    ReportIf(!res);
-    if (!res) {
-        return {};
-    }
-    DWORD size = SizeofResource(nullptr, resSrc);
-    const char* resData = (const char*)LockResource(res);
-    ReportIf(!resData);
-    if (!resData) {
-        return {};
-    }
-    char* s = str::Dup(resData, size);
-    UnlockResource(res);
-    return {s, (int)size};
 }
 
 static HDDEDATA CALLBACK DdeCallback(UINT, UINT, HCONV, HSZ, HSZ, HDDEDATA, ULONG_PTR, ULONG_PTR) {
@@ -3351,7 +3284,7 @@ static HWND CreateTextViewWindow(const WCHAR* className, const char* title, cons
     SendMessageW(hwndEdit, EM_SETTABSTOPS, 1, (LPARAM)&tabStop);
 
     // edit control needs \r\n line endings
-    str::Str crlfText;
+    StrBuilder crlfText;
     for (const char* s = text; *s; s++) {
         if (*s == '\n' && (s == text || *(s - 1) != '\r')) {
             crlfText.AppendChar('\r');
@@ -3576,7 +3509,7 @@ TempStr GetExecutableSignerTemp(const char* exePath) {
         return nullptr;
     }
 
-    auto signerInfo = (CMSG_SIGNER_INFO*)Allocator::AllocZero(GetTempAllocator(), signerInfoSize);
+    auto signerInfo = (CMSG_SIGNER_INFO*)AllocZero(GetTempAllocator(), signerInfoSize);
     ok = CryptMsgGetParam(hMsg, CMSG_SIGNER_INFO_PARAM, 0, signerInfo, &signerInfoSize);
     if (!ok) {
         CryptMsgClose(hMsg);

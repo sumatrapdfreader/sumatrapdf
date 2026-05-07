@@ -84,7 +84,7 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
                 (k == kindDestinationAttachment);
     ReportIf(!isOk);
 
-    str::Str infotip;
+    StrBuilder infotip;
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;
@@ -185,6 +185,11 @@ static void GoToTocLink(GoToTocLinkData* d) {
     auto tocItem = d->tocItem;
     auto ctrl = d->ctrl;
 
+    // validate tab before dereferencing — it may have been freed
+    // while this task was queued (e.g. user closed the tab/window)
+    if (!IsWindowTabValid(tab)) {
+        return;
+    }
     MainWindow* win = tab->win;
     // tocItem is invalid if the DocController has been replaced
     if (!IsMainWindowValid(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
@@ -740,17 +745,6 @@ void LoadTocTree(MainWindow* win) {
     treeView->SetTreeModel(tocTree);
 
     treeView->onCustomDraw = MkFunc1Void(OnTocCustomDraw);
-
-    // --- Estilos extendidos modernos del TreeView ---
-    {
-        HWND hTree = treeView->hwnd;
-        DWORD tvExStyle = TVS_EX_FADEINOUTEXPANDOS | TVS_EX_AUTOHSCROLL | TVS_EX_DOUBLEBUFFER;
-        TreeView_SetExtendedStyle(hTree, tvExStyle, tvExStyle);
-        TreeView_SetItemHeight(hTree, DpiScale(hTree, 28));
-        TreeView_SetIndent(hTree, DpiScale(hTree, 16));
-    }
-    // -----------------------------------------------
-
     LayoutTocContainer(win);
     // uint fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
@@ -868,17 +862,9 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
     bool hasFocus = (GetFocus() == tv->hwnd);
     COLORREF bgCol;
     if (isSelected) {
-        if (PrettyStyleEnabled()) {
-            bgCol = hasFocus ? PrettyAccentColor() : PrettySurfaceColor();
-        } else {
-            bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
-        }
+        bgCol = GetSysColor(hasFocus ? COLOR_HIGHLIGHT : COLOR_BTNFACE);
     } else {
-        if (IsSpecialColor(tv->bgColor)) {
-            bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : GetSysColor(COLOR_WINDOW);
-        } else {
-            bgCol = tv->bgColor;
-        }
+        bgCol = IsSpecialColor(tv->bgColor) ? GetSysColor(COLOR_WINDOW) : tv->bgColor;
     }
     HBRUSH hbrBg = CreateSolidBrush(bgCol);
     FillRect(hdc, &labelRect, hbrBg);
@@ -886,9 +872,7 @@ static void DrawTocItemHighlight(TreeView::CustomDrawEvent* ev, MainWindow* win)
 
     // draw highlight background rectangles
     COLORREF highlightCol;
-    if (PrettyStyleEnabled()) {
-        highlightCol = PrettyBorderColor();
-    } else if (IsCurrentThemeDefault()) {
+    if (IsCurrentThemeDefault()) {
         highlightCol = RGB(255, 255, 0);
     } else {
         highlightCol = AccentColor(bgCol, 40);
@@ -952,19 +936,6 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
             return;
         }
         LRESULT res = 0;
-        bool isSelected = (cd->uItemState & CDIS_SELECTED) != 0;
-        bool hasFocus   = (GetFocus() == ev->treeView->hwnd);
-        bool isHot      = (cd->uItemState & CDIS_HOT) != 0;
-        if (PrettyStyleEnabled()) {
-            if (isSelected && hasFocus) {
-                tvcd->clrTextBk = PrettyAccentColor();
-                tvcd->clrText   = GetSysColor(COLOR_HIGHLIGHTTEXT);
-            } else if (isSelected || isHot) {
-                tvcd->clrTextBk = PrettySurfaceColor();
-            } else {
-                tvcd->clrTextBk = PrettySurfaceAltColor();
-            }
-        }
         if (tocItem->color != kColorUnset) {
             tvcd->clrText = tocItem->color;
         }
@@ -972,8 +943,9 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
             UpdateFont(cd->hdc, tocItem->fontFlags);
             res = CDRF_NEWFONT;
         }
-        // Siempre notificar post-paint (highlight de filtro + posibles decoraciones futuras)
-        res |= CDRF_NOTIFYPOSTPAINT;
+        if (filterActive) {
+            res |= CDRF_NOTIFYPOSTPAINT;
+        }
         ev->result = res;
         return;
     }
@@ -1101,16 +1073,9 @@ static void LayoutTocContainer(MainWindow* win) {
     y += labelSize.dy;
     if (edit && edit->hwnd) {
         Size editSize = edit->GetIdealSize();
-        int vPad   = DpiScale(hwndContainer, 4);   // padding vertical arriba/abajo del área de búsqueda
-        int hPad   = DpiScale(hwndContainer, 6);   // margen exterior derecho
-        // El margen izquierdo es mayor para dejar espacio al icono de lupa (~26px)
-        int lupaW  = DpiScale(hwndContainer, 26);
-        int editH  = editSize.dy + DpiScale(hwndContainer, 2);
-        int areaH  = editH + vPad * 2;             // altura total del área buscador (fondo coloreado)
-        // El Edit se posiciona dejando lupaW a la izquierda
-        MoveWindow(edit->hwnd, lupaW, y + vPad, rc.dx - lupaW - hPad, editH, TRUE);
-        dy -= areaH + DpiScale(hwndContainer, 1);  // 1px gap para la línea separadora
-        y  += areaH + DpiScale(hwndContainer, 1);
+        MoveWindow(edit->hwnd, 0, y, rc.dx, editSize.dy, TRUE);
+        dy -= editSize.dy;
+        y += editSize.dy;
     }
     MoveWindow(treeView->hwnd, 0, y, rc.dx, dy, TRUE);
 }
@@ -1130,105 +1095,6 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     TreeView* treeView = win->tocTreeView;
 
     switch (msg) {
-        case WM_ERASEBKGND:
-            return TRUE;
-
-        // Colorea el fondo del Edit (buscador) con PrettySurfaceColor para distinguirlo
-        // del fondo del panel (PrettySurfaceAltColor), creando contraste visual
-        case WM_CTLCOLOREDIT: {
-            if (PrettyStyleEnabled()) {
-                HDC hdcEdit = (HDC)wp;
-                SetBkColor(hdcEdit, PrettySurfaceColor());
-                SetTextColor(hdcEdit, ThemeWindowTextColor());
-                static HBRUSH hbrEdit = nullptr;
-                // Recrear solo si cambia el tema (simplificado: recrear siempre es seguro)
-                if (hbrEdit) DeleteObject(hbrEdit);
-                hbrEdit = CreateSolidBrush(PrettySurfaceColor());
-                return (LRESULT)hbrEdit;
-            }
-            break;
-        }
-
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            Rect rc2 = WindowRect(hwnd);
-
-            // 1) Fondo general del panel
-            COLORREF bgCol = PrettyStyleEnabled() ? PrettySurfaceAltColor() : ThemeControlBackgroundColor();
-            {
-                AutoDeleteBrush br = CreateSolidBrush(bgCol);
-                FillRect(hdc, &ps.rcPaint, br);
-            }
-
-            Edit* filterEdit = win->tocFilterEdit;
-            if (filterEdit && filterEdit->hwnd) {
-                RECT rcEdit;
-                GetWindowRect(filterEdit->hwnd, &rcEdit);
-                MapWindowPoints(HWND_DESKTOP, hwnd, (POINT*)&rcEdit, 2);
-
-                int vPad  = DpiScale(hwnd, 4);
-                int areaT = rcEdit.top - vPad;
-                int areaB = rcEdit.bottom + vPad;
-
-                if (PrettyStyleEnabled()) {
-                    // 2) Fondo distinto del área buscador (un nivel más claro que el panel)
-                    RECT rcSearchArea = { 0, areaT, rc2.dx, areaB };
-                    AutoDeleteBrush brSearch = CreateSolidBrush(PrettySurfaceColor());
-                    FillRect(hdc, &rcSearchArea, brSearch);
-
-                    // 3) Icono de lupa usando Segoe MDL2 Assets (U+E721)
-                    // Renderizado con antialiasing nativo de Windows, sin pixelado
-                    int lupaW   = DpiScale(hwnd, 26);
-                    int iconSz  = DpiScale(hwnd, 14); // tamaño de fuente del icono
-
-                    // Crear fuente Segoe MDL2 Assets; fallback a Segoe UI Symbol
-                    HFONT hIconFont = CreateFontW(
-                        -iconSz,          // altura negativa = tamaño en puntos
-                        0, 0, 0,
-                        FW_NORMAL, FALSE, FALSE, FALSE,
-                        DEFAULT_CHARSET,
-                        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                        CLEARTYPE_QUALITY,  // antialiasing ClearType
-                        DEFAULT_PITCH | FF_DONTCARE,
-                        L"Segoe MDL2 Assets"
-                    );
-                    if (!hIconFont) {
-                        // Fallback: Segoe UI Symbol (Windows 7/8)
-                        hIconFont = CreateFontW(
-                            -iconSz, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                            L"Segoe UI Symbol"
-                        );
-                    }
-
-                    if (hIconFont) {
-                        HFONT oldFont = (HFONT)SelectObject(hdc, hIconFont);
-                        // Color del icono: texto del tema ligeramente atenuado
-                        COLORREF iconCol = ThemeWindowTextColor();
-                        BYTE dimR = (BYTE)((GetRValue(iconCol) * 160 + GetRValue(PrettySurfaceColor()) * 95) / 255);
-                        BYTE dimG = (BYTE)((GetGValue(iconCol) * 160 + GetGValue(PrettySurfaceColor()) * 95) / 255);
-                        BYTE dimB = (BYTE)((GetBValue(iconCol) * 160 + GetBValue(PrettySurfaceColor()) * 95) / 255);
-                        SetTextColor(hdc, RGB(dimR, dimG, dimB));
-                        SetBkMode(hdc, TRANSPARENT);
-
-                        // Rect donde centrar el icono (zona izquierda del área buscador)
-                        RECT rcIcon = { 0, areaT, lupaW, areaB };
-                        // U+E721 = icono de lupa en Segoe MDL2 Assets
-                        DrawTextW(hdc, L"\uE721", -1, &rcIcon,
-                                  DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
-
-                        SelectObject(hdc, oldFont);
-                        DeleteObject(hIconFont);
-                    }
-                }
-            }
-
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
-
         case WM_SIZE:
             LayoutTocContainer(win);
             break;
@@ -1424,37 +1290,21 @@ void CreateToc(MainWindow* win) {
         l->Create(args);
     }
     win->tocLabelWithClose = l;
-    l->SetPaddingXY(6, 4);
+    l->SetPaddingXY(2, 2);
     // label is set in UpdateToolbarSidebarText()
 
     auto filterEdit = new Edit();
     {
         Edit::CreateArgs eargs;
-        eargs.parent    = win->hwndTocBox;
+        eargs.parent = win->hwndTocBox;
         eargs.withBorder = false;
-        eargs.cueText   = _TRA("Search Bookmarks");
-        eargs.font      = GetDefaultGuiFont(false, false);
+        eargs.cueText = _TRA("Search Bookmarks");
+        eargs.font = GetDefaultGuiFont(false, false);
         filterEdit->Create(eargs);
     }
     win->tocFilterEdit = filterEdit;
     filterEdit->onTextChanged = MkFunc0(OnTocFilterTextChanged, win);
     SetWindowSubclass(filterEdit->hwnd, WndProcTocFilterEdit, NextSubclassId(), (DWORD_PTR)win);
-
-    // --- Aspecto distintivo del buscador ---
-    if (filterEdit->hwnd) {
-        HWND hEdit = filterEdit->hwnd;
-        // Fondo ligeramente diferenciado del panel (usa surface en lugar de surfaceAlt)
-        // Se aplica vía WM_CTLCOLOREDIT reflejado desde WndProcTocBox.
-        // Padding interno: el edit nativo no soporta padding directo, pero podemos
-        // añadir márgenes horizontales con EM_SETMARGINS para que el texto no quede
-        // pegado al borde izquierdo, dando sensación de search-bar moderna.
-        // Margen izquierdo = 0 (el edit ya está desplazado lupaW px en LayoutTocContainer)
-        // Margen derecho = 6px para que el texto no toque el borde derecho
-        int rMargin = DpiScale(hEdit, 6);
-        SendMessage(hEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN,
-                    MAKELPARAM(0, rMargin));
-    }
-    // ----------------------------------------
 
     auto treeView = new TreeView();
     TreeView::CreateArgs args;

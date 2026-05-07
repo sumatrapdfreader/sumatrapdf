@@ -234,7 +234,7 @@ static bool IsStressTestSupportedFile(const char* filePath, const char* filter) 
     if (!kind) {
         return false;
     }
-    if (IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind)) {
+    if (IsSupportedFileType(kind, true) || DocIsSupportedFileType(kind) || ChmModel::IsSupportedFileType(kind)) {
         return true;
     }
     if (!filter) {
@@ -247,6 +247,9 @@ static bool IsStressTestSupportedFile(const char* filePath, const char* filter) 
         return false;
     }
     if (IsSupportedFileType(kindSniffed, true)) {
+        return true;
+    }
+    if (ChmModel::IsSupportedFileType(kindSniffed)) {
         return true;
     }
     return DocIsSupportedFileType(kindSniffed);
@@ -280,7 +283,7 @@ static TempStr FormatTimeTemp(int totalSecs) {
     return str::FormatTemp("%d secs", secs);
 }
 
-static void FormatTime(int totalSecs, str::Str* s) {
+static void FormatTime(int totalSecs, StrBuilder* s) {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
     int mins = totalMins % 60;
@@ -865,14 +868,14 @@ Next:
 }
 
 // note: used from CrashHandler, shouldn't allocate memory
-static void GetLogInfo(StressTest* st, str::Str* s) {
+static void GetLogInfo(StressTest* st, StrBuilder* s) {
     s->AppendFmt(", stress test rendered %d files in ", st->nFilesProcessed);
     FormatTime(SecsSinceSystemTime(st->stressStartTime), s);
     s->AppendFmt(", currPage: %d", st->currPageNo);
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
-void GetStressTestInfo(str::Str* s) {
+void GetStressTestInfo(StrBuilder* s) {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
     // whether they want to share what files they had opened during a crash)

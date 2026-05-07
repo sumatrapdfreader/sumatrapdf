@@ -43,7 +43,7 @@ static void HtmlEntities() {
         utassert(got == entities[i].rune);
         utassert((-1 == got) == !entEnd);
     }
-    Allocator* ta = GetTempAllocator();
+    Arena* ta = GetTempAllocator();
     const char* unchanged[] = {"foo", "", " as;d "};
     for (size_t i = 0; i < dimof(unchanged); i++) {
         const char* s = unchanged[i];

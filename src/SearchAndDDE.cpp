@@ -30,7 +30,6 @@
 #include "Commands.h"
 #include "AppTools.h"
 #include "SearchAndDDE.h"
-#include "prettysumatra/BridgeDispatcher.h"
 #include "Selection.h"
 #include "Toolbar.h"
 #include "SumatraDialogs.h"
@@ -87,19 +86,13 @@ void FindFirst(MainWindow* win) {
                 Edit_SetModify(win->hwndFindEdit, FALSE);
                 HwndSetText(win->hwndFindEdit, s);
                 Edit_SetModify(win->hwndFindEdit, FALSE);
-                if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
-                    prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, s);
-                }
             }
         }
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
-            prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, HwndGetTextTemp(win->hwndFindEdit));
-            prettysumatra::bridge::FocusHybridToolbarSearch(win->hwndFrame);
-        } else if (!HwndIsFocused(win->hwndFindEdit)) {
+        if (!HwndIsFocused(win->hwndFindEdit)) {
             HwndSetFocus(win->hwndFindEdit);
         }
         return;
@@ -170,9 +163,6 @@ void FindSelection(MainWindow* win, TextSearch::Direction direction) {
 
     TempStr s = ToUtf8Temp(selection);
     HwndSetText(win->hwndFindEdit, s);
-    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
-        prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, s);
-    }
     AbortFinding(win, false); // cancel "find as you type"
     Edit_SetModify(win->hwndFindEdit, FALSE);
     dm->textSearch->SetLastResult(dm->textSelection);
@@ -453,8 +443,6 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const ch
     if (str::IsEmpty(text)) {
         return;
     }
-    HwndSetText(win->hwndFindEdit, text);
-    Edit_SetModify(win->hwndFindEdit, TRUE);
     FindThreadData* ftd = new FindThreadData(win, direction, text, wasModified);
     ftd->ShowUI(showProgress);
     win->findThread = nullptr;
@@ -1108,7 +1096,7 @@ Returns:
 error: <error message>
 if file doesn't exist or no opened file
 */
-static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, str::Str& res) {
+static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, StrBuilder& res) {
     AutoFreeStr filePath;
     const char* next = str::Parse(cmd, "[GetFileState(\"%s\")]", &filePath);
     if (!next) {
@@ -1225,7 +1213,7 @@ static bool HandleExecuteCmds(HWND hwnd, const char* cmd) {
     return didHandle;
 }
 
-static bool HandleRequestCmds(HWND hwnd, const char* cmd, str::Str& rsp) {
+static bool HandleRequestCmds(HWND hwnd, const char* cmd, StrBuilder& rsp) {
     bool didHandle = false;
     while (!str::IsEmpty(cmd)) {
         {
@@ -1262,7 +1250,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    str::Str str;
+    StrBuilder str;
     bool didHandle = HandleRequestCmds(hwnd, cmd, str);
     if (!didHandle) {
         str.Set("error: unknoqn command");
@@ -1283,7 +1271,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     }
 
     int cbDdeData = sizeof(DDEDATA);
-    u8* res = (u8*)Allocator::AllocZero(GetTempAllocator(), cbDdeData + cbData);
+    u8* res = (u8*)AllocZero(GetTempAllocator(), cbDdeData + cbData);
     DDEDATA* ddeData = (DDEDATA*)res;
     ddeData->fRelease = 1; // tell client to free HGLOBAL
     ddeData->cfFormat = fmt;
@@ -1327,20 +1315,91 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM) {
     return 0;
 }
 
+// Payload for async Open command carried in kCopyDataOpen WM_COPYDATA
+struct OpenCopyDataAsync {
+    char* path; // heap-allocated, freed by OpenCopyDataAsyncRun
+    u32 newWindow;
+};
+
+static void OpenCopyDataAsyncRun(OpenCopyDataAsync* d) {
+    // Pick a target window the same way HandleOpenCmd would, then kick off
+    // the load on a worker thread. We stay off the UI thread for the heavy
+    // bit so the sender (already returned from SendMessageW by now) never
+    // had to wait on us in the first place.
+    MainWindow* win = nullptr;
+    if (d->newWindow) {
+        MainWindow* emptyExistingWin = nullptr;
+        for (auto& w : gWindows) {
+            if (!w->HasDocsLoaded()) {
+                emptyExistingWin = w;
+                break;
+            }
+        }
+        win = emptyExistingWin ? emptyExistingWin : CreateAndShowMainWindow(nullptr);
+    } else {
+        win = FindMainWindowByFile(d->path, true);
+        if (!win) {
+            win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+        }
+        if (!win && gWindows.Size() > 0) {
+            win = gWindows[0];
+        }
+    }
+    LoadArgs args(d->path, win);
+    args.activateExisting = d->newWindow == 0;
+    // Match the legacy DDE Open(..., setFocus=1) behavior used by
+    // shell/reuseInstance launches: opening into an existing instance should
+    // bring that window to the foreground.
+    if (win) {
+        win->Focus();
+    }
+    StartLoadDocument(&args);
+
+    str::Free(d->path);
+    delete d;
+}
+
 LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
     COPYDATASTRUCT* cds = (COPYDATASTRUCT*)lp;
-    if (!cds || cds->dwData != 0x44646557 /* DdeW */ || wp) {
+    if (!cds || wp) {
         return FALSE;
     }
 
-    const WCHAR* cmdW = (const WCHAR*)cds->lpData;
-    if (cmdW[cds->cbData / sizeof(WCHAR) - 1]) {
-        return FALSE;
+    if (cds->dwData == kCopyDataOpen) {
+        // Simple-open fast path used by the reuseInstance handshake: the
+        // sibling SumatraPDF that Explorer just spawned is blocked in
+        // SendMessageW. Copy the path out, post an async task, return
+        // immediately so the sender unblocks and exits.
+        if (cds->cbData < sizeof(SumatraOpenCopyData) + 1) {
+            return FALSE;
+        }
+        auto* data = (const SumatraOpenCopyData*)cds->lpData;
+        const char* path = (const char*)(data + 1);
+        size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
+        // require null-terminator within bounds
+        if (strnlen_s(path, pathMax) >= pathMax) {
+            return FALSE;
+        }
+        auto* d = new OpenCopyDataAsync;
+        d->path = str::Dup(path);
+        d->newWindow = data->newWindow;
+        auto fn = MkFunc0<OpenCopyDataAsync>(OpenCopyDataAsyncRun, d);
+        uitask::Post(fn, "OnCopyData/Open");
+        return TRUE;
     }
 
-    TempStr cmd = ToUtf8Temp(cmdW);
-    bool didHandle = HandleExecuteCmds(hwnd, cmd);
-    return didHandle ? TRUE : FALSE;
+    if (cds->dwData == kCopyDataDdeW) {
+        const WCHAR* cmdW = (const WCHAR*)cds->lpData;
+        if (cmdW[cds->cbData / sizeof(WCHAR) - 1]) {
+            return FALSE;
+        }
+        // Legacy DDE grammar — callers expect synchronous handling.
+        TempStr cmd = ToUtf8Temp(cmdW);
+        bool didHandle = HandleExecuteCmds(hwnd, cmd);
+        return didHandle ? TRUE : FALSE;
+    }
+
+    return FALSE;
 }
 
 #if 0

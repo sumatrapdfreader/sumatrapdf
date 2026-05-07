@@ -118,7 +118,7 @@ Printer::~Printer() {
     free((void*)bins);
 }
 
-static void AppendPrinterAttributes(str::Str& out, DWORD attr) {
+static void AppendPrinterAttributes(StrBuilder& out, DWORD attr) {
     struct {
         DWORD flag;
         const char* name;
@@ -147,7 +147,7 @@ static void AppendPrinterAttributes(str::Str& out, DWORD attr) {
     }
 }
 
-static void AppendPrinterStatus(str::Str& out, DWORD status) {
+static void AppendPrinterStatus(StrBuilder& out, DWORD status) {
     struct {
         DWORD flag;
         const char* name;
@@ -190,7 +190,7 @@ static void AppendPrinterStatus(str::Str& out, DWORD status) {
     }
 }
 
-static void AppendDeviceCapabilities(str::Str& out, const WCHAR* nameW, const WCHAR* portW) {
+static void AppendDeviceCapabilities(StrBuilder& out, const WCHAR* nameW, const WCHAR* portW) {
     // paper bins
     DWORD bins = DeviceCapabilitiesW(nameW, portW, DC_BINS, nullptr, nullptr);
     DWORD binNames = DeviceCapabilitiesW(nameW, portW, DC_BINNAMES, nullptr, nullptr);
@@ -309,7 +309,7 @@ static void AppendDeviceCapabilities(str::Str& out, const WCHAR* nameW, const WC
     }
 }
 
-static void AppendDevModeInfo(str::Str& out, DEVMODEW* dm) {
+static void AppendDevModeInfo(StrBuilder& out, DEVMODEW* dm) {
     if (!dm) {
         return;
     }
@@ -356,7 +356,7 @@ static void AppendDevModeInfo(str::Str& out, DEVMODEW* dm) {
     }
 }
 
-void GetPrintersInfo(str::Str& out) {
+void GetPrintersInfo(StrBuilder& out) {
     PRINTER_INFO_2* info2Arr = nullptr;
     DWORD bufSize = 0;
     DWORD printersCount = 0;
@@ -453,7 +453,7 @@ Printer* NewPrinter(char* printerName) {
         //}
         goto Exit;
     }
-    devMode = (DEVMODEW*)Allocator::AllocZero(nullptr, structSize);
+    devMode = (DEVMODEW*)AllocZero(nullptr, structSize);
 
     // Get the default DevMode for the printer and modify it for your needs.
     ret = DocumentPropertiesW(nullptr, hPrinter, printerNameW, devMode, nullptr, DM_OUT_BUFFER);

@@ -1,21 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct DocumentTextCache {
-    EngineBase* engine = nullptr;
-    int nPages = 0;
-    PageText* pagesText = nullptr;
-    int debugSize = 0;
-
-    CRITICAL_SECTION access;
-
-    explicit DocumentTextCache(EngineBase* engine);
-    ~DocumentTextCache();
-
-    bool HasTextForPage(int pageNo) const;
-    const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
-};
-
 // TODO: replace with Vec<TextSel>
 struct TextSel {
     int len = 0;
@@ -31,9 +16,8 @@ struct TextSelection {
     int endGlyph = -1;
 
     EngineBase* engine = nullptr;
-    DocumentTextCache* textCache = nullptr;
 
-    TextSelection(EngineBase* engine, DocumentTextCache* textCache);
+    explicit TextSelection(EngineBase* engine);
     ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);

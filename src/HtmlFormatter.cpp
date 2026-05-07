@@ -1497,7 +1497,7 @@ void SetTextRenderMethod(mui::TextRenderMethod method) {
     gTextRenderMethod = method;
 }
 
-HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Allocator* textAllocator) {
+HtmlFormatterArgs* CreateFormatterDefaultArgs(int dx, int dy, Arena* textAllocator) {
     HtmlFormatterArgs* args = new HtmlFormatterArgs();
     args->SetFontName(L"Georgia");
     args->fontSize = 12.5f;

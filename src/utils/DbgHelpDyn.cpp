@@ -293,12 +293,12 @@ NO_INLINE static bool GetAddrInfo(void* addr, char* moduleName, DWORD moduleLen,
     return false;
 }
 
-static void AppendAddress(str::Str& s, DWORD64 addr) {
+static void AppendAddress(StrBuilder& s, DWORD64 addr) {
     void* p = reinterpret_cast<void*>(addr);
     s.AppendFmt("%p", p);
 }
 
-void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
+void GetAddressInfo(StrBuilder& s, DWORD64 addr, bool compact) {
     static const int MAX_SYM_LEN = 512;
 
     char buf[sizeof(SYMBOL_INFO) + MAX_SYM_LEN * sizeof(char)];
@@ -348,7 +348,7 @@ void GetAddressInfo(str::Str& s, DWORD64 addr, bool compact) {
     s.Append("\n");
 }
 
-static bool GetStackFrameInfo(str::Str& s, STACKFRAME64* stackFrame, CONTEXT* ctx, HANDLE hThread) {
+static bool GetStackFrameInfo(StrBuilder& s, STACKFRAME64* stackFrame, CONTEXT* ctx, HANDLE hThread) {
 #if defined(_WIN64)
     int machineType = IMAGE_FILE_MACHINE_AMD64;
 #else
@@ -373,7 +373,7 @@ static bool GetStackFrameInfo(str::Str& s, STACKFRAME64* stackFrame, CONTEXT* ct
     return true;
 }
 
-static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
+static bool GetCallstack(StrBuilder& s, CONTEXT& ctx, HANDLE hThread) {
     if (!CanStackWalk()) {
         s.Append("GetCallstack(): CanStackWalk() returned false\n");
         return false;
@@ -415,7 +415,7 @@ static bool GetCallstack(str::Str& s, CONTEXT& ctx, HANDLE hThread) {
     return true;
 }
 
-void GetThreadCallstack(str::Str& s, DWORD threadId) {
+void GetThreadCallstack(StrBuilder& s, DWORD threadId) {
     if (threadId == GetCurrentThreadId()) {
         return;
     }
@@ -456,7 +456,7 @@ void GetThreadCallstack(str::Str& s, DWORD threadId) {
 // from local buffer overrun because optimizations are disabled in function)"
 #pragma warning(push)
 #pragma warning(disable : 4748)
-NO_INLINE bool GetCurrentThreadCallstack(str::Str& s) {
+NO_INLINE bool GetCurrentThreadCallstack(StrBuilder& s) {
     // not available under Win2000
     if (!DynRtlCaptureContext) {
         return false;
@@ -472,10 +472,10 @@ NO_INLINE bool GetCurrentThreadCallstack(str::Str& s) {
 }
 #pragma optimize("", off)
 
-str::Str* gCallstackLogs = nullptr;
+StrBuilder* gCallstackLogs = nullptr;
 
 TempStr GetCurrentThreadCallstackTemp() {
-    str::Str s(2048);
+    StrBuilder s(2048);
     if (!GetCurrentThreadCallstack(s)) {
         return (TempStr) "";
     }
@@ -485,7 +485,7 @@ TempStr GetCurrentThreadCallstackTemp() {
 // start remembering callstack logs done with LogCallstack()
 void RememberCallstackLogs() {
     ReportIf(gCallstackLogs);
-    gCallstackLogs = new str::Str();
+    gCallstackLogs = new StrBuilder();
 }
 
 void FreeCallstackLogs() {
@@ -502,7 +502,7 @@ ByteSlice GetCallstacks() {
 }
 
 void LogCallstack() {
-    str::Str s(2048);
+    StrBuilder s(2048);
     if (!GetCurrentThreadCallstack(s)) {
         return;
     }
@@ -513,7 +513,7 @@ void LogCallstack() {
     }
 }
 
-void GetAllThreadsCallstacks(str::Str& s) {
+void GetAllThreadsCallstacks(StrBuilder& s) {
     HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (threadSnap == INVALID_HANDLE_VALUE) {
         return;
@@ -535,7 +535,7 @@ void GetAllThreadsCallstacks(str::Str& s) {
 }
 #pragma warning(pop)
 
-void GetExceptionInfo(str::Str& s, EXCEPTION_POINTERS* excPointers) {
+void GetExceptionInfo(StrBuilder& s, EXCEPTION_POINTERS* excPointers) {
     if (!excPointers) {
         return;
     }

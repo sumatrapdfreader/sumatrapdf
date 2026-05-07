@@ -23,59 +23,7 @@ static bool isDigit(WCHAR c) {
     return c >= '0' && c <= '9';
 }
 
-DocumentTextCache::DocumentTextCache(EngineBase* engine) : engine(engine) {
-    nPages = engine->PageCount();
-    pagesText = AllocArray<PageText>(nPages);
-    debugSize = nPages * (sizeof(Rect*) + sizeof(WCHAR*) + sizeof(int));
-
-    InitializeCriticalSection(&access);
-}
-
-DocumentTextCache::~DocumentTextCache() {
-    EnterCriticalSection(&access);
-
-    int n = engine->PageCount();
-    for (int i = 0; i < n; i++) {
-        PageText* pageText = &pagesText[i];
-        free(pageText->coords);
-        free(pageText->text);
-    }
-    free(pagesText);
-    LeaveCriticalSection(&access);
-    DeleteCriticalSection(&access);
-}
-
-bool DocumentTextCache::HasTextForPage(int pageNo) const {
-    ReportIf(pageNo < 1 || pageNo > nPages);
-    PageText* pageText = &pagesText[pageNo - 1];
-    return pageText->text != nullptr;
-}
-
-const WCHAR* DocumentTextCache::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
-    ReportIf(pageNo < 1 || pageNo > nPages);
-
-    ScopedCritSec scope(&access);
-    PageText* pageText = &pagesText[pageNo - 1];
-
-    if (!pageText->text) {
-        *pageText = engine->ExtractPageText(pageNo);
-        if (!pageText->text) {
-            pageText->text = str::Dup(L"");
-            pageText->len = 0;
-        }
-        debugSize += (pageText->len + 1) * (int)(sizeof(WCHAR) + sizeof(Rect));
-    }
-
-    if (lenOut) {
-        *lenOut = pageText->len;
-    }
-    if (coordsOut) {
-        *coordsOut = pageText->coords;
-    }
-    return pageText->text;
-}
-
-TextSelection::TextSelection(EngineBase* engine, DocumentTextCache* textCache) : engine(engine), textCache(textCache) {}
+TextSelection::TextSelection(EngineBase* engine) : engine(engine) {}
 
 TextSelection::~TextSelection() {
     Reset();
@@ -96,7 +44,7 @@ void TextSelection::Reset() {
 static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
     int textLen;
     Rect* coords;
-    ts->textCache->GetTextForPage(pageNo, &textLen, &coords);
+    ts->engine->GetTextForPage(pageNo, &textLen, &coords);
     PointF pt = PointF(x, y);
 
     unsigned int maxDist = UINT_MAX;
@@ -149,7 +97,7 @@ static int FindClosestGlyph(TextSelection* ts, int pageNo, double x, double y) {
 static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr) {
     int len;
     Rect* coords;
-    const WCHAR* text = ts->textCache->GetTextForPage(pageNo, &len, &coords);
+    const WCHAR* text = ts->engine->GetTextForPage(pageNo, &len, &coords);
     ReportIf(len < glyph + length);
     Rect mediabox = ts->engine->PageMediabox(pageNo).Round();
     Rect *c = &coords[glyph], *end = c + length;
@@ -206,7 +154,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
 bool TextSelection::IsOverGlyph(int pageNo, double x, double y) {
     int textLen;
     Rect* coords;
-    textCache->GetTextForPage(pageNo, &textLen, &coords);
+    engine->GetTextForPage(pageNo, &textLen, &coords);
 
     int glyphIx = FindClosestGlyph(this, pageNo, x, y);
     Point pt = ToPoint(PointF(x, y));
@@ -226,7 +174,7 @@ void TextSelection::StartAt(int pageNo, int glyphIx) {
     startGlyph = glyphIx;
     if (glyphIx < 0) {
         int textLen;
-        textCache->GetTextForPage(pageNo, &textLen);
+        engine->GetTextForPage(pageNo, &textLen);
         startGlyph += textLen + 1;
     }
 }
@@ -248,7 +196,7 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
     endGlyph = glyphIx;
     if (glyphIx < 0) {
         int textLen;
-        textCache->GetTextForPage(pageNo, &textLen);
+        engine->GetTextForPage(pageNo, &textLen);
         endGlyph = textLen + glyphIx + 1;
     }
 
@@ -262,7 +210,7 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx) {
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
-        textCache->GetTextForPage(page, &textLen);
+        engine->GetTextForPage(page, &textLen);
 
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
@@ -315,7 +263,7 @@ static int ExtendForwardAcrossCommaGroups(const WCHAR* text, int textLen, int cu
 void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     int i = FindClosestGlyph(this, pageNo, x, y);
     int textLen;
-    const WCHAR* text = textCache->GetTextForPage(pageNo, &textLen);
+    const WCHAR* text = engine->GetTextForPage(pageNo, &textLen);
 
     bool isAllDigits = true;
     WCHAR c = 0;
@@ -401,7 +349,7 @@ WCHAR* TextSelection::ExtractText(const char* lineSep) {
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
-        textCache->GetTextForPage(page, &textLen);
+        engine->GetTextForPage(page, &textLen);
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
         if (length > 0) {

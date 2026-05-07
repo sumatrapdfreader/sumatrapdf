@@ -20,6 +20,7 @@ const char* kPropPdfFileStructure = "pdfFileStructure";
 const char* kPropFiles = "files";
 const char* kPropKeywords = "keywords";
 const char* kPropEncryption = "encryption";
+const char* kPropSignatures = "signatures";
 const char* kPropImageSize = "imageSize";
 const char* kPropDpi = "dpi";
 const char* kPropComment = "comment";

@@ -924,16 +924,24 @@ function utils_files()
     "TxtParser.*",
     "UITask.*",
     "Vec.h",
-    "VecSegmented.h",
     "WebpReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
     "ZipUtil.*",
   })
-  filter { "configurations:Debug or DebugFull" }
-  files_in_dir("src/utils", {
-    "windrawlib.*",
+  files_in_dir("src/common", {
+    "arena.cpp",
+    "base.cpp",
+    "dir_scan.cpp",
+    "file_util.cpp",
+    "str_util.cpp",
+    "win_util.cpp",
+    "common.h",
   })
+  filter { "configurations:Debug or DebugFull" }
+      files_in_dir("src/utils", {
+        "windrawlib.*",
+      })
   filter {}
 end
 
@@ -967,6 +975,7 @@ function engines_files()
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
     "EnginePs.*",
+    "GumboHelpers.*",
     "HtmlFormatter.*",
     "MobiDoc.*",
     "PalmDbReader.*",
@@ -1268,7 +1277,7 @@ function mupdf_files()
   }
   files {
     "mupdf/source/helpers/mu-threads/mu-threads.c",
-    "mupdf/source/helpers/pkcs7/pkcs7-openssl.c",
+    "mupdf/source/helpers/pkcs7/pkcs7-windows.c",
   }
 end
 
@@ -1292,6 +1301,15 @@ function efi_files()
 end
 
 function test_util_files()
+  files_in_dir("src/common", {
+    "arena.cpp",
+    "base.cpp",
+    "dir_scan.cpp",
+    "file_util.cpp",
+    "log.cpp",
+    "str_util.cpp",
+    "win_util.cpp",
+  })
   files_in_dir("src/utils", {
     "BaseUtil.*",
     "BitManip.*",
@@ -1361,6 +1379,7 @@ function pdf_preview_files()
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
     "FzImgReader.*",
+    "GumboHelpers.*",
     "HtmlFormatter.*",
     "MobiDoc.*",
     "mui/Mui.*",
@@ -1392,6 +1411,7 @@ function search_filter_files()
     "EngineBase.*",
     "EngineMupdf.*",
     "EngineMupdfImpl.*",
+    "GumboHelpers.*",
     "MobiDoc.*",
     "MUPDF_Exports.cpp",
     "PalmDbReader.*",

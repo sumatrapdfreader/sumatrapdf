@@ -16,6 +16,7 @@ extern const char* kPropPdfFileStructure;
 extern const char* kPropFiles;
 extern const char* kPropKeywords;
 extern const char* kPropEncryption;
+extern const char* kPropSignatures;
 extern const char* kPropImageSize;
 extern const char* kPropDpi;
 extern const char* kPropComment;

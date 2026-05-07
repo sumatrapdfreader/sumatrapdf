@@ -107,7 +107,7 @@ static DWORD WINAPI CrashDumpThread(void*) {
         return 0;
     }
 
-    str::Str s(16 * 1024);
+    StrBuilder s(16 * 1024);
     dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     dbghelp::GetAllThreadsCallstacks(s);
     s.Append("\r\n");

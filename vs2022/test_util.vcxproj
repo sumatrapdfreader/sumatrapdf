@@ -912,6 +912,13 @@
     <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
+    <ClCompile Include="..\src\common\arena.cpp" />
+    <ClCompile Include="..\src\common\base.cpp" />
+    <ClCompile Include="..\src\common\dir_scan.cpp" />
+    <ClCompile Include="..\src\common\file_util.cpp" />
+    <ClCompile Include="..\src\common\log.cpp" />
+    <ClCompile Include="..\src\common\str_util.cpp" />
+    <ClCompile Include="..\src\common\win_util.cpp" />
     <ClCompile Include="..\src\tools\test_util.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
@@ -927,7 +934,9 @@
     <ClCompile Include="..\src\utils\HtmlPrettyPrint.cpp" />
     <ClCompile Include="..\src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
-    <ClCompile Include="..\src\utils\Log.cpp" />
+    <ClCompile Include="..\src\utils\Log.cpp">
+      <ObjectFileName>$(IntDir)\Log1.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />

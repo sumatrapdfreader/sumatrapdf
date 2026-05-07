@@ -105,7 +105,7 @@ TempStr JoinTemp(const char* path, const char* fileName, const char* fileName2) 
     return res;
 }
 
-char* Join(Allocator* allocator, const char* path, const char* fileName) {
+char* Join(Arena* allocator, const char* path, const char* fileName) {
     if (IsSep(*fileName)) {
         fileName++;
     }
@@ -399,6 +399,21 @@ bool IsOnNetworkDrive(const char* path) {
     return PathIsNetworkPathW(ws);
 }
 
+bool IsCloudPlaceholder(const char* path) {
+    WCHAR* ws = ToWStrTemp(path);
+    DWORD attrs = GetFileAttributesW(ws);
+    if (attrs == INVALID_FILE_ATTRIBUTES) {
+        return false;
+    }
+    // Any of these signal that the bytes aren't all local yet:
+    //   FILE_ATTRIBUTE_OFFLINE                = 0x00001000
+    //   FILE_ATTRIBUTE_RECALL_ON_OPEN         = 0x00040000
+    //   FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS  = 0x00400000
+    const DWORD cloudBits =
+        FILE_ATTRIBUTE_OFFLINE | FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS;
+    return (attrs & cloudBits) != 0;
+}
+
 bool IsOnFixedDrive(const char* path) {
     WCHAR* ws = ToWStrTemp(path);
     if (PathIsNetworkPathW(ws)) {
@@ -594,7 +609,7 @@ FILE* OpenFILE(const char* path) {
     return _wfopen(pathW, L"rb");
 }
 
-ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
+ByteSlice ReadFileWithAllocator(const char* filePath, Arena* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -618,7 +633,7 @@ ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         goto Error;
     }
-    d = Allocator::AllocArray<char>(allocator, size + ZERO_PADDING_COUNT);
+    d = AllocArray<char>(allocator, size + ZERO_PADDING_COUNT);
     if (!d) {
         goto Error;
     }
@@ -643,7 +658,7 @@ ByteSlice ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
 
     return {(u8*)d, size};
 Error:
-    Allocator::Free(allocator, (void*)d);
+    Free(allocator, (void*)d);
     return {};
 #endif
 }
@@ -771,6 +786,54 @@ bool Copy(const char* dst, const char* src, bool dontOverwrite) {
         return false;
     }
     return true;
+}
+
+thread_local CopyProgressCb gFileCopyProgressCb;
+
+static DWORD CALLBACK CopyProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INTEGER TotalBytesTransferred,
+                                          LARGE_INTEGER, LARGE_INTEGER, DWORD, DWORD, HANDLE, HANDLE, LPVOID lpData) {
+    auto* cb = (const CopyProgressCb*)lpData;
+    CopyProgress p;
+    p.bytesCopied = TotalBytesTransferred.QuadPart;
+    p.bytesTotal = TotalFileSize.QuadPart;
+    cb->Call(&p);
+    return PROGRESS_CONTINUE;
+}
+
+bool Copy(const char* dst, const char* src, bool dontOverwrite, const CopyProgressCb& cbProgress) {
+    if (cbProgress.IsEmpty()) {
+        return Copy(dst, src, dontOverwrite);
+    }
+    WCHAR* dstW = ToWStrTemp(dst);
+    WCHAR* srcW = ToWStrTemp(src);
+    BOOL cancel = FALSE;
+    DWORD flags = dontOverwrite ? COPY_FILE_FAIL_IF_EXISTS : 0;
+    BOOL ok = CopyFileExW(srcW, dstW, CopyProgressRoutine, (LPVOID)&cbProgress, &cancel, flags);
+    if (!ok) {
+        LogLastError();
+        return false;
+    }
+    return true;
+}
+
+FILETIME GetAccessTime(const char* path) {
+    FILETIME t{};
+    AutoCloseHandle h(OpenReadOnly(path));
+    if (h.IsValid()) {
+        GetFileTime(h, nullptr, &t, nullptr);
+    }
+    return t;
+}
+
+bool SetAccessTime(const char* path, FILETIME accessTime) {
+    WCHAR* pathW = ToWStrTemp(path);
+    DWORD access = FILE_WRITE_ATTRIBUTES;
+    DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    AutoCloseHandle h(CreateFileW(pathW, access, share, nullptr, OPEN_EXISTING, 0, nullptr));
+    if (INVALID_HANDLE_VALUE == h) {
+        return false;
+    }
+    return SetFileTime(h, nullptr, &accessTime, nullptr);
 }
 
 FILETIME GetModificationTime(const char* filePath) {

@@ -5,7 +5,6 @@
 #include "utils/ScopedWin.h"
 #include "utils/CmdLineArgsIter.h"
 #include "utils/FileUtil.h"
-#include "utils/HtmlParserLookup.h"
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 #include "utils/GdiPlusUtil.h"
@@ -51,6 +50,7 @@
 struct BuildMenuCtx {
     WindowTab* tab = nullptr;
     bool isCbx = false;
+    bool isImageCollection = false;
     bool hasSelection = false;
     bool supportsAnnotations = false;
     Annotation* annotationUnderCursor = nullptr;
@@ -275,6 +275,10 @@ static MenuDef menuDefView[] = {
     {
         _TRN("Show Book&marks"),
         CmdToggleBookmarks,
+    },
+    {
+        _TRN("Show &Menu"),
+        CmdToggleMenuBar,
     },
     {
         _TRN("Show &Toolbar"),
@@ -828,6 +832,22 @@ static MenuDef menuDefContextImage[] = {
 //[ ACCESSKEY_GROUP Context Menu (Document )
 static MenuDef menuDefDocumentOperations[] = {
     {
+        _TRN("P&roperties"),
+        CmdProperties,
+    },
+    {
+        _TRN("Show PDF Info"),
+        CmdPdShowInfo,
+    },
+    {
+        _TRN("Show Document Outline"),
+        CmdDocumentShowOutline,
+    },
+    {
+        _TRN("Extract Pages From PDF"),
+        CmdPdfExtractPages,
+    },
+    {
         _TRN("Encrypt PDF"),
         CmdPdfEncrypt,
     },
@@ -848,24 +868,16 @@ static MenuDef menuDefDocumentOperations[] = {
         CmdPdfDeletePages,
     },
     {
-        _TRN("Extract Pages From PDF"),
-        CmdPdfExtractPages,
-    },
-    {
-        _TRN("Show PDF Info"),
-        CmdPdShowInfo,
-    },
-    {
-        _TRN("Show Document Outline"),
-        CmdDocumentShowOutline,
-    },
-    {
         _TRN("Bake PDF"),
         CmdPdfBake,
     },
     {
         _TRN("Extract Text From Document"),
         CmdDocumentExtractText,
+    },
+    {
+        _TRN("Show in &folder"),
+        CmdShowInFolder,
     },
     {
         nullptr,
@@ -1263,6 +1275,9 @@ BuildMenuCtx* NewBuildMenuCtx(WindowTab* tab, Point pt) {
     if (engine && (engine->kind == kindEngineComicBooks)) {
         ctx->isCbx = true;
     }
+    if (engine && engine->IsImageCollection()) {
+        ctx->isImageCollection = true;
+    }
     ctx->supportsAnnotations = EngineSupportsAnnotations(engine) && !tab->win->isFullScreen;
     ctx->hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
     ctx->canSendEmail = CanSendAsEmailAttachment(tab);
@@ -1462,6 +1477,7 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
 
     remove |= (ctx->tab && ctx->tab->AsChm() && cmdIdInList(removeIfChm));
     remove |= (!ctx->isCbx && (cmdId == CmdToggleMangaMode));
+    remove |= (ctx->isImageCollection && (cmdId == CmdDocumentExtractText));
     remove |= (!ctx->supportsAnnotations && cmdIdInList(removeIfAnnotsNotSupported));
     remove |= !ctx->canSendEmail && (cmdId == CmdSendByEmail);
 
@@ -1476,6 +1492,8 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
         remove |= (cmdId == CmdPdfDecompress);
         remove |= (cmdId == CmdPdfDeletePages);
         remove |= (cmdId == CmdPdfExtractPages);
+        remove |= (cmdId == CmdPdShowInfo);
+        remove |= (cmdId == CmdPdfBake);
     }
     if (ctx->pageCount < 2) {
         remove |= (cmdId == CmdPdfDeletePages);
@@ -2539,17 +2557,56 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
 // show/hide top-level menu bar. This doesn't persist across launches
 // so that accidental removal of the menu isn't catastrophic
 void ToggleMenuBar(MainWindow* win, bool showTemporarily) {
-    (void)showTemporarily;
     ReportIf(!win->menu);
 
     if (win->presentation) {
         return;
     }
 
-    // PrettySumatra: force-disable classic menu bar UI.
-    SetMenu(win->hwndFrame, nullptr);
-    DestroyMenuBarRebar(win);
-    gGlobalPrefs->showMenubar = false;
-    gGlobalPrefs->showMenubarWithTabs = false;
-    gGlobalPrefs->fullscreen.showMenubar = false;
+    HWND hwnd = win->hwndFrame;
+
+    if (showTemporarily) {
+        if (win->tabsInTitlebar) {
+            // can't show regular menu with custom caption, so do nothing
+            return;
+        }
+        SetMenu(hwnd, win->menu);
+        return;
+    }
+
+    if (win->isFullScreen) {
+        gGlobalPrefs->fullscreen.showMenubar = !gGlobalPrefs->fullscreen.showMenubar;
+        if (gGlobalPrefs->fullscreen.showMenubar) {
+            // use rebar-based menu bar (WS_CAPTION is stripped in fullscreen, so SetMenu won't work)
+            CreateMenuBarRebar(win);
+        } else {
+            DestroyMenuBarRebar(win);
+        }
+        RelayoutWindow(win);
+        ShowMenuBarRebar(win);
+        return;
+    }
+
+    if (win->tabsInTitlebar) {
+        // toggle rebar menu bar while keeping tabs in titlebar
+        bool isShowing = IsShowingMenuBarRebar(win);
+        if (isShowing) {
+            DestroyMenuBarRebar(win);
+            gGlobalPrefs->showMenubar = false;
+            gGlobalPrefs->showMenubarWithTabs = false;
+        } else {
+            CreateMenuBarRebar(win);
+            gGlobalPrefs->showMenubar = true;
+            gGlobalPrefs->showMenubarWithTabs = true;
+        }
+        // layout first so the rebar is positioned correctly, then show it
+        RelayoutWindow(win);
+        ShowMenuBarRebar(win);
+        return;
+    }
+
+    bool hideMenu = GetMenu(hwnd) != nullptr;
+    SetMenu(hwnd, hideMenu ? nullptr : win->menu);
+    gGlobalPrefs->showMenubar = !hideMenu;
+    gGlobalPrefs->showMenubarWithTabs = !hideMenu;
 }

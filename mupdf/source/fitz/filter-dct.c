@@ -281,8 +281,17 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 			state->wp = state->scanline;
 		}
 
-		while (state->rp < state->wp && p < ep)
-			*p++ = *state->rp++;
+		/* Sumatra: bulk memcpy of leftover scanline; byte-by-byte was 20%+ exclusive in profiles */
+		{
+			size_t avail = (size_t)(state->wp - state->rp);
+			size_t space = (size_t)(ep - p);
+			size_t n = avail < space ? avail : space;
+			if (n) {
+				memcpy(p, state->rp, n);
+				p += n;
+				state->rp += n;
+			}
+		}
 
 		while (p < ep)
 		{
@@ -305,8 +314,17 @@ next_dctd(fz_context *ctx, fz_stream *stm, size_t max)
 				state->wp = state->scanline + state->stride;
 			}
 
-			while (state->rp < state->wp && p < ep)
-				*p++ = *state->rp++;
+			/* Sumatra: see note above */
+			{
+				size_t avail = (size_t)(state->wp - state->rp);
+				size_t space = (size_t)(ep - p);
+				size_t n = avail < space ? avail : space;
+				if (n) {
+					memcpy(p, state->rp, n);
+					p += n;
+					state->rp += n;
+				}
+			}
 		}
 		stm->rp = state->buffer;
 		stm->wp = p;

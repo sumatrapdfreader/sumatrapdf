@@ -56,7 +56,6 @@
 #include "Print.h"
 #include "SearchAndDDE.h"
 #include "Selection.h"
-#include "prettysumatra/BridgeDispatcher.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "Tabs.h"
@@ -148,7 +147,7 @@ static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
     if (targetHwnd) {
         // try WM_COPYDATA first, as that allows targetting a specific window
         size_t cbData = (str::Len(cmd) + 1) * sizeof(WCHAR);
-        COPYDATASTRUCT cds = {0x44646557 /* DdeW */, (DWORD)cbData, (void*)cmd};
+        COPYDATASTRUCT cds = {kCopyDataDdeW, (DWORD)cbData, (void*)cmd};
         LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res) {
             return;
@@ -158,16 +157,73 @@ static void SendMyselfDDE(const char* cmdA, HWND targetHwnd) {
     DDEExecute(kSumatraDdeServer, kSumatraDdeTopic, cmd);
 }
 
+// Returns true if the only thing the caller wants is to open a file (no
+// goto-page, no forward search, no view overrides, etc.). In that case we
+// can use the cheaper kCopyDataOpen fast path instead of building a DDE
+// grammar string and blocking the caller in SendMessageW while the
+// receiver loads the document.
+static bool IsSimpleOpenCase(const Flags& i, bool isFirstWin) {
+    if (!isFirstWin) {
+        return true; // extras only apply to the first window
+    }
+    if (i.namedDest || i.pageNumber > 0) {
+        return false;
+    }
+    if (i.startView != DisplayMode::Automatic || i.startZoom != kInvalidZoom) {
+        return false;
+    }
+    if (i.startScroll.x != -1 && i.startScroll.y != -1) {
+        return false;
+    }
+    if (i.forwardSearchOrigin && i.forwardSearchLine) {
+        return false;
+    }
+    if (i.search) {
+        return false;
+    }
+    return true;
+}
+
+// Send just the path + newWindow flag to an already-running SumatraPDF via
+// WM_COPYDATA. Receiver (OnCopyData) handles it asynchronously so this
+// SendMessageW returns fast. Returns true if the message was handled.
+static bool SendOpenFileToExistingInstance(HWND targetHwnd, const char* fullPath, u32 newWindow) {
+    size_t pathLen = strlen(fullPath);
+    size_t cbData = sizeof(SumatraOpenCopyData) + pathLen + 1;
+    SumatraOpenCopyData* payload = (SumatraOpenCopyData*)malloc(cbData);
+    if (!payload) {
+        return false;
+    }
+    payload->newWindow = newWindow;
+    memcpy(payload + 1, fullPath, pathLen + 1);
+    COPYDATASTRUCT cds = {kCopyDataOpen, (DWORD)cbData, payload};
+    LRESULT res = SendMessageW(targetHwnd, WM_COPYDATA, 0, (LPARAM)&cds);
+    free(payload);
+    return res != 0;
+}
+
 // delegate file opening to a previously running instance by sending a DDE message
 static void OpenUsingDDE(HWND targetHwnd, const char* path, Flags& i, bool isFirstWin) {
     char* fullPath = path::NormalizeTemp(path);
 
-    str::Str cmd;
-    int newWindow = 0;
+    u32 newWindow = 0;
     if (i.inNewWindow) {
         // 2 forces opening a new window
         newWindow = 2;
     }
+
+    // Common case: Explorer double-clicks a file while SumatraPDF is already
+    // running (reuseInstance). Use the simpler kCopyDataOpen format; the
+    // receiver loads async so Explorer's child SumatraPDF process can exit
+    // instantly instead of blocking on the file load.
+    if (targetHwnd && !i.reuseDdeInstance && IsSimpleOpenCase(i, isFirstWin)) {
+        if (SendOpenFileToExistingInstance(targetHwnd, fullPath, newWindow)) {
+            return;
+        }
+        // fall through to the DDE grammar path if WM_COPYDATA wasn't handled
+    }
+
+    StrBuilder cmd;
     cmd.AppendFmt("[Open(\"%s\", %d, 1, 0)]", fullPath, newWindow);
     if (i.namedDest && isFirstWin) {
         cmd.AppendFmt("[GotoNamedDest(\"%s\", \"%s\")]", fullPath, i.namedDest);
@@ -230,9 +286,6 @@ static void MaybeStartSearch(MainWindow* win, const char* searchTerm) {
         return;
     }
     HwndSetText(win->hwndFindEdit, searchTerm);
-    if (prettysumatra::bridge::HasHybridToolbar(win->hwndFrame)) {
-        prettysumatra::bridge::SyncHybridToolbarSearchText(win->hwndFrame, searchTerm);
-    }
     bool wasModified = true;
     bool showProgress = true;
     FindTextOnThread(win, TextSearch::Direction::Forward, searchTerm, wasModified, showProgress);
@@ -903,8 +956,59 @@ static void ShowNoAdminErrorMessage() {
     TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
 }
 
+// delete locally cached copies of cbx files that haven't been opened in a
+// while. We cache network-drive cbx archives under <data>/cbx-cache/ to
+// avoid slow re-reads; they're pure cache so evicting cold entries is
+// safe.
+static void DeleteStaleCbxCacheFiles() {
+    TempStr dataDir = GetNotImportantDataDirTemp();
+    if (!dataDir) {
+        return;
+    }
+    TempStr cacheDir = path::JoinTemp(dataDir, "cbx-cache");
+    if (path::GetType(cacheDir) != path::Type::Dir) {
+        return;
+    }
+
+    constexpr i64 kMaxAgeSec = 7LL * 24 * 60 * 60;
+    FILETIME nowFt;
+    GetSystemTimeAsFileTime(&nowFt);
+    ULARGE_INTEGER now;
+    now.LowPart = nowFt.dwLowDateTime;
+    now.HighPart = nowFt.dwHighDateTime;
+
+    DirIter di{cacheDir};
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
+        TempStr ext = path::GetExtTemp(de->name);
+        bool isCbx = str::EqI(ext, ".cbx") || str::EqI(ext, ".cbz") || str::EqI(ext, ".cbr") || str::EqI(ext, ".cb7") ||
+                     str::EqI(ext, ".cbt");
+        if (!isCbx) {
+            continue;
+        }
+        FILETIME atime = de->fd->ftLastAccessTime;
+        ULARGE_INTEGER a;
+        a.LowPart = atime.dwLowDateTime;
+        a.HighPart = atime.dwHighDateTime;
+        // FILETIME is 100-ns ticks since 1601; convert delta to seconds.
+        i64 ageSec = (i64)((now.QuadPart - a.QuadPart) / 10000000ULL);
+        if (ageSec < kMaxAgeSec) {
+            continue;
+        }
+        bool ok = file::Delete(de->filePath);
+        logf("DeleteStaleCbxCacheFiles: delete '%s' (age %lld days) -> %d\n", de->filePath,
+             (long long)(ageSec / (24 * 60 * 60)), (int)ok);
+    }
+}
+
 // delete symbols and manual from possibly previous versions
 static void DeleteStaleFilesAsync() {
+    DeleteStaleCbxCacheFiles();
+
+    if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
+        return;
+    }
     TempStr dir = GetNotImportantDataDirTemp();
     TempStr ver = GetVerDirNameTemp("");
     logf("DeleteStaleFilesAsync: dir: '%s', gIsPreRelaseBuild: %d, ver: %s\n", dir, (int)gIsPreReleaseBuild, ver);
@@ -930,11 +1034,6 @@ static void DeleteStaleFilesAsync() {
 }
 
 void StartDeleteStaleFiles() {
-    // for now we only care about pre-release builds as they can be updated frequently
-    if (!(gIsPreReleaseBuild || gIsDebugBuild)) {
-        logf("DeleteStaleFiles: skipping because gIsPreRelaseBuild: %d\n", (int)gIsPreReleaseBuild);
-        return;
-    }
     auto fn = MkFunc0Void(DeleteStaleFilesAsync);
     RunAsync(fn, "DeleteStaleFilesThread");
 }
@@ -1039,31 +1138,18 @@ static MutoolFunc toolFuncs[] = {
 #if FZ_ENABLE_JS
     murun_main,
 #endif
-    mudraw_main,
-    muconvert_main,
+    mudraw_main,   muconvert_main,
 #if FZ_ENABLE_PDF
-    pdfaudit_main,
-    pdfbake_main,
-    pdfclean_main,
-    pdfcreate_main,
-    pdfextract_main,
-    pdfinfo_main,
-    pdfmerge_main,
-    pdfpages_main,
-    pdfposter_main,
-    pdfrecolor_main,
-    pdfshow_main,
-    // pdfsign_main,
-    pdftrim_main,
+    pdfaudit_main, pdfbake_main,   pdfclean_main,   pdfcreate_main, pdfextract_main, pdfinfo_main, pdfmerge_main,
+    pdfpages_main, pdfposter_main, pdfrecolor_main, pdfshow_main,   pdfsign_main,    pdftrim_main,
 #endif
-    mugrep_main,
-    mutrace_main,
+    mugrep_main,   mutrace_main,
 #if FZ_ENABLE_BARCODE
     mubar_main,
 #endif
 };
 
-static SeqStrings toolNames =
+static SeqStrings gToolNames =
 #if FZ_ENABLE_JS
     "run\0"
 #endif
@@ -1081,7 +1167,7 @@ static SeqStrings toolNames =
     "poster\0"
     "recolor\0"
     "show\0"
-    // "sign\0"
+    "sign\0"
     "trim\0"
 #endif
     "grep\0"
@@ -1091,7 +1177,7 @@ static SeqStrings toolNames =
 #endif
     "\0";
 
-static SeqStrings toolDescs =
+static SeqStrings gToolDescs =
 #if FZ_ENABLE_JS
     "run javascript\0"
 #endif
@@ -1109,7 +1195,7 @@ static SeqStrings toolDescs =
     "split large PDF page into many tiles\0"
     "change colorspace of PDF document\0"
     "show internal PDF objects\0"
-    // "manipulate PDF digital signatures\0"
+    "manipulate PDF digital signatures\0"
     "trim PDF page contents\0"
 #endif
     "search for text\0"
@@ -1149,7 +1235,7 @@ static int MaybeRunMutool() {
     argv = fz_argv_from_wargv(argc, wargv);
     {
         const char* toolName = argv[0];
-        int idx = seqstrings::StrToIdxIS(toolNames, toolName);
+        int idx = seqstrings::StrToIdxIS(gToolNames, toolName);
         if (idx >= 0) {
             fz_redirect_io_to_existing_console();
             res = toolFuncs[idx](argc, argv);
@@ -1179,6 +1265,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     HWND existingHwnd = nullptr;
     WindowTab* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
+    bool logFileBecauseDebug = false;
 
     supressThrowFromNew();
 
@@ -1227,9 +1314,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         return RunInstaller();
     }
 
-    ParseFlags(GetCommandLineW(), flags, toolNames);
+    ParseFlags(GetCommandLineW(), flags, gToolNames);
     gCli = &flags;
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
+    if (flags.justExtractFiles) {
+        isInstaller = false;
+    }
     bool isUninstaller = flags.uninstall;
     bool noLogHere = isInstaller || isUninstaller;
 
@@ -1262,6 +1352,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         if (!flags.logFile) {
             flags.logFile = str::Dup("sumlog.txt");
             flags.log = true;
+            logFileBecauseDebug = true;
         }
     }
     if (flags.log && !noLogHere) {
@@ -1720,7 +1811,9 @@ Exit:
     HandleRedirectedConsoleOnShutdown();
     DeleteManualBrowserWindow();
 
-    LaunchFileIfExists(logFilePath);
+    if (!logFileBecauseDebug) {
+        LaunchFileIfExists(logFilePath);
+    }
     if (AreDangerousThreadsPending()) {
         fastExit = true;
     }

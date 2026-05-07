@@ -37,40 +37,6 @@ Gdiplus::RectF RectToRectF(const Gdiplus::Rect r) {
     return Gdiplus::RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height);
 }
 
-// Get width of each character and add them up.
-// Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
-// underreports the width
-RectF MeasureTextAccurate2(Graphics* g, Font* f, const WCHAR* s, int len) {
-    ReportIf(0 >= len);
-    FixedArray<Region, 1024> regionBuf(len);
-    Region* r = regionBuf.Get();
-    StringFormat sf(StringFormat::GenericTypographic());
-    sf.SetFormatFlags(sf.GetFormatFlags() | StringFormatFlagsMeasureTrailingSpaces);
-    Gdiplus::RectF layoutRect;
-    FixedArray<CharacterRange, 1024> charRangesBuf(len);
-    CharacterRange* charRanges = charRangesBuf.Get();
-    for (int i = 0; i < len; i++) {
-        charRanges[i].First = i;
-        charRanges[i].Length = 1;
-    }
-    sf.SetMeasurableCharacterRanges(len, charRanges);
-    Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, len, r);
-    ReportIf(status != Ok);
-    Gdiplus::RectF bbox;
-    float maxDy = 0;
-    float totalDx = 0;
-    for (int i = 0; i < len; i++) {
-        r[i].GetBounds(&bbox, g);
-        if (bbox.Height > maxDy) {
-            maxDy = bbox.Height;
-        }
-        totalDx += bbox.Width;
-    }
-    bbox.Width = totalDx;
-    bbox.Height = maxDy;
-    return RectF{bbox};
-}
-
 // note: gdi+ seems to under-report the width, the longer the text, the
 // bigger the difference. I'm trying to correct for that with those magic values
 #define PER_CHAR_DX_ADJUST .2f

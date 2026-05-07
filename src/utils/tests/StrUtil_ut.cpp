@@ -127,7 +127,7 @@ static void StrUrlExtractTest() {
 void strStrTest() {
     {
         // verify that we use buf for initial allocations
-        str::Str str;
+        StrBuilder str;
         char* buf = str.Get();
         str.Append("blah");
         utassert(str.Contains("blah"));
@@ -147,13 +147,13 @@ void strStrTest() {
         utassert(str.Contains("ahlo"));
         utassert(buf == buf2);
         str.Reset();
-        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
+        for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
             str.AppendChar((char)i);
         }
         buf2 = str.Get();
         // we should have allocated buf on the heap
         utassert(buf != buf2);
-        for (int i = 0; i < str::Str::kBufChars + 4; i++) {
+        for (int i = 0; i < StrBuilder::kBufChars + 4; i++) {
             char c = str.at(i);
             utassert(c == (char)i);
         }
@@ -161,7 +161,7 @@ void strStrTest() {
 
     {
         // verify that initialCapacity hint works
-        str::Str str(1024);
+        StrBuilder str(1024);
         char* buf = nullptr;
 
         for (int i = 0; i < 50; i++) {

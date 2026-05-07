@@ -866,6 +866,7 @@
     <ClInclude Include="..\mupdf\include\mupdf\helpers\mu-office-lib.h" />
     <ClInclude Include="..\mupdf\include\mupdf\helpers\mu-threads.h" />
     <ClInclude Include="..\mupdf\include\mupdf\helpers\pkcs7-openssl.h" />
+    <ClInclude Include="..\mupdf\include\mupdf\helpers\pkcs7-windows.h" />
     <ClInclude Include="..\mupdf\include\mupdf\html.h" />
     <ClInclude Include="..\mupdf\include\mupdf\memento.h" />
     <ClInclude Include="..\mupdf\include\mupdf\pdf.h" />
@@ -1069,7 +1070,7 @@
     <ClCompile Include="..\mupdf\source\fitz\xmltext-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\zip.c" />
     <ClCompile Include="..\mupdf\source\helpers\mu-threads\mu-threads.c" />
-    <ClCompile Include="..\mupdf\source\helpers\pkcs7\pkcs7-openssl.c" />
+    <ClCompile Include="..\mupdf\source\helpers\pkcs7\pkcs7-windows.c" />
     <ClCompile Include="..\mupdf\source\html\css-apply.c" />
     <ClCompile Include="..\mupdf\source\html\css-parse.c" />
     <ClCompile Include="..\mupdf\source\html\epub-doc.c" />

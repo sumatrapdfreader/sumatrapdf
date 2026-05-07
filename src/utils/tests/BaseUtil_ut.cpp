@@ -107,35 +107,6 @@ static void GeomTest() {
     }
 }
 
-static const char* strings[] = {"s1", "string", "another one", "and one more"};
-
-static void PoolAllocatorStringsTest(PoolAllocator& a, int nRounds) {
-    a.Reset();
-
-    int nStrings = (int)dimof(strings);
-    for (int i = 0; i < nRounds; i++) {
-        for (int j = 0; j < nStrings; j++) {
-            const char* s = strings[j];
-            char* got = str::Dup(&a, s);
-            utassert(str::Eq(s, got));
-        }
-    }
-
-    int nTotal = nStrings * nRounds;
-    for (int i = 0; i < nTotal; i++) {
-        const char* exp = strings[i % nStrings];
-
-        void* d = a.At(i);
-        char* got = (char*)d;
-        utassert(str::Eq(exp, got));
-    }
-}
-
-static void PoolAllocatorTest() {
-    PoolAllocator a;
-    PoolAllocatorStringsTest(a, 2048);
-}
-
 static int roundUpTestCases[] = {
     0, 0, 1, 8, 2, 8, 3, 8, 4, 8, 5, 8, 6, 8, 7, 8, 8, 8, 9, 16,
 };
@@ -188,8 +159,6 @@ void BaseUtilTest() {
     ListTest();
     Func0Test();
     Func1Test();
-
-    PoolAllocatorTest();
 
     size_t n = dimof(roundUpTestCases) / 2;
     for (size_t i = 0; i < n; i++) {

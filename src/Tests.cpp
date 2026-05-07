@@ -57,22 +57,21 @@ void TestRenderPage(const Flags& i) {
 }
 
 static void extractPageText(EngineBase* engine, int pageNo) {
-    PageText pageText = engine->ExtractPageText(pageNo);
+    PageTextUtf8 pageText = engine->ExtractPageTextUtf8(pageNo);
     if (!pageText.text) {
         return;
     }
-    AutoFreeWStr uni = str::Replace(pageText.text, L"\n", L"_");
-    auto uniA = ToUtf8Temp(uni);
+    TempStr s = str::ReplaceTemp(pageText.text, "\n", "_");
     printf("text on page %d: '", pageNo);
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do
     int idx = 0;
-    while (uniA[idx] != 0) {
-        char c = uniA[idx++];
+    while (s[idx] != 0) {
+        char c = s[idx++];
         printf("%02x ", (u8)c);
     }
     printf("'\n");
-    FreePageText(&pageText);
+    FreePageTextUtf8(&pageText);
 }
 
 void TestExtractPage(const Flags& ci) {

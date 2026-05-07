@@ -69,6 +69,7 @@ struct ChmTocTraceItem {
 
 ChmModel::ChmModel(DocControllerCallback* cb) : DocController(cb) {
     InitializeCriticalSection(&docAccess);
+    poolAlloc = ArenaNew();
 }
 
 ChmModel::~ChmModel() {
@@ -84,6 +85,7 @@ ChmModel::~ChmModel() {
     DeleteVecMembers(urlDataCache);
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);
+    ArenaDelete(poolAlloc);
 }
 
 const char* ChmModel::GetFilePath() const {
@@ -307,7 +309,7 @@ class ChmTocBuilder : public EbookTocVisitor {
 
     StrVec* pages = nullptr;
     Vec<ChmTocTraceItem>* tocTrace = nullptr;
-    Allocator* allocator = nullptr;
+    Arena* allocator = nullptr;
     // TODO: could use dict::MapStrToInt instead of StrList in the caller as well
     dict::MapStrToInt urlsSet;
 
@@ -332,7 +334,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
+    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Arena* allocator) {
         this->doc = doc;
         this->pages = pages;
         this->tocTrace = tocTrace;
@@ -368,7 +370,7 @@ bool ChmModel::Load(const char* fileName) {
 
     // parse the ToC here, since page numbering depends on it
     tocTrace = new Vec<ChmTocTraceItem>();
-    ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, &poolAlloc);
+    ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, poolAlloc);
     doc->ParseToc(&tmpTocBuilder);
     ReportIf(pages.Size() == 0);
     return pages.Size() > 0;
@@ -455,7 +457,7 @@ ByteSlice ChmModel::GetDataForUrl(const char* url) {
     TempStr plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
-        char* s = str::Dup(&poolAlloc, plainUrl);
+        char* s = str::Dup(poolAlloc, plainUrl);
         e = new ChmCacheEntry(s);
         e->data = doc->GetData(plainUrl);
         if (e->data.empty()) {

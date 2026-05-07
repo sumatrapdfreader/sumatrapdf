@@ -36,7 +36,7 @@ struct HtmlElement {
 };
 
 class HtmlParser {
-    PoolAllocator allocator;
+    Arena* allocator = nullptr;
 
     // text to parse. It can be changed.
     char* html = nullptr;
