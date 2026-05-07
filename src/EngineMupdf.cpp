@@ -3487,6 +3487,14 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     fz_try(ctx) {
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        // Match `extract -r`: normalize embedded images to RGB before creating
+        // a Windows bitmap for copy/save operations.
+        if (pixmap && pixmap->colorspace && !fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
+            fz_pixmap* rgb =
+                fz_convert_pixmap(ctx, pixmap, fz_device_rgb(ctx), nullptr, nullptr, fz_default_color_params, 1);
+            fz_drop_pixmap(ctx, pixmap);
+            pixmap = rgb;
+        }
         bmp = NewRenderedFzPixmap(ctx, pixmap);
     }
     fz_always(ctx) {
