@@ -1,6 +1,9 @@
 /* Copyright 2024 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include <string>
+#include <vector>
+
 TempStr GetWebView2VersionTemp();
 bool HasWebView();
 
@@ -9,6 +12,18 @@ typedef interface ICoreWebView2 ICoreWebView2;
 typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
 using WebViewMsgCb = Func1<const char*>;
+
+struct PendingWebViewOp {
+    enum Kind {
+        Init,
+        SetHtml,
+        Eval,
+        Navigate,
+    };
+
+    Kind kind;
+    std::string text;
+};
 
 struct CreateWebViewArgs {
     HWND parent = nullptr;
@@ -25,7 +40,13 @@ struct WebviewWnd : Wnd {
     void SetHtml(const char* html);
     void Init(const char* js);
     void Navigate(const char* url);
+    void Focus();
     bool Embed(WebViewMsgCb& cb);
+    void OnControllerReady(ICoreWebView2Controller* controller);
+    void FailInit();
+    void QueuePendingOp(PendingWebViewOp::Kind kind, const char* text);
+    void FlushPendingOps();
+    void SetControllerVisible(bool visible);
 
     virtual void OnBrowserMessage(const char* msg);
 
@@ -42,7 +63,12 @@ struct WebviewWnd : Wnd {
     ICoreWebView2* webview = nullptr;
     ICoreWebView2Controller* controller = nullptr;
 
-    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
-    // called on a different thread?
-    volatile LONG flag = 0;
+    bool initStarted = false;
+    bool initFailed = false;
+    bool isVisible = true;
+    bool isSuspended = false;
+    RECT lastBounds = {};
+    bool hasLastBounds = false;
+    std::wstring userDataFolder;
+    std::vector<PendingWebViewOp> pendingOps;
 };

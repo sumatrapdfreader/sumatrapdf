@@ -34,7 +34,116 @@
 #include "AppSettings.h"
 #include "OverlayScrollbar.h"
 #include "DarkModeSubclass.h"
-#include "utils/Log.h"
+
+#include "wingui/WebView.h"
+#include <string>
+#include <vector>
+#include <windows.h>
+#include <shlwapi.h>
+#include "Toolbar.h"  
+#pragma comment(lib, "shlwapi.lib")
+
+#define HOMEPAGE_HTML_PATH "..\\prettysumatra\\webui\\home.html"
+
+static std::string BuildFileUrl(const std::string& filePath) {
+    std::string url = "file:///";
+    for (char ch : filePath) {
+        if (ch == '\\') {
+            url.push_back('/');
+        } else if (ch == ' ') {
+            url += "%20";
+        } else {
+            url.push_back(ch);
+        }
+    }
+    return url;
+}
+
+// Helper: navega al HTML desde archivo para preservar resolución de recursos relativos.
+static bool LoadWebViewHtmlFromFile(WebviewWnd* wv, const std::vector<std::string>& candidates) {
+    for (auto& p : candidates) {
+        if (!PathFileExistsA(p.c_str())) {
+            continue;
+        }
+        std::string fileUrl = BuildFileUrl(p);
+        wv->Navigate(fileUrl.c_str());
+        return true;
+    }
+    return false;
+}
+
+// Crea el WebView para la HomePage y carga el HTML
+void CreateHomePageWebView(MainWindow* win) {
+
+    if (win->homePageWebView) {
+        // WebView ya existe: reposicionar y mostrar
+        Rect rc = ClientRect(win->hwndCanvas);
+        RECT r = { rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy };
+        SetWindowPos(win->homePageWebView->hwnd, nullptr,
+                     r.left, r.top, r.right - r.left, r.bottom - r.top,
+                     SWP_NOZORDER | SWP_SHOWWINDOW);
+        // Ensure the underlying WebView2 controller is resumed and resized after returning from document view.
+        win->homePageWebView->SetControllerVisible(true);
+        win->homePageWebView->UpdateWebviewSize();
+        return;
+    }
+    
+
+    win->homePageWebView = new WebviewWnd();
+    {
+        win->homePageWebView->dataDir = str::Dup(GetPathInAppDataDirTemp("webViewData"));
+    }
+
+    CreateWebViewArgs args;
+    args.parent = win->hwndCanvas;
+    Rect rcClient = ClientRect(win->hwndCanvas);
+    args.pos = rcClient;
+
+    if (!win->homePageWebView->Create(args)) {
+        delete win->homePageWebView;
+        win->homePageWebView = nullptr;
+        return;
+    }
+
+    // --- FIX FLASH: ocultar la ventana WebView2 y sus hijos antes del primer pintado ---
+    HWND hwndWV = win->homePageWebView->hwnd;
+    // Quitar WS_VISIBLE de la ventana contenedora
+    LONG_PTR style = GetWindowLongPtrW(hwndWV, GWL_STYLE);
+    SetWindowLongPtrW(hwndWV, GWL_STYLE, style & ~WS_VISIBLE);
+    // Ocultar también las ventanas hijas internas del runtime WebView2
+    EnumChildWindows(hwndWV, [](HWND child, LPARAM) -> BOOL {
+        ShowWindow(child, SW_HIDE);
+        return TRUE;
+    }, 0);
+
+    // Buscar home.html en varias rutas
+    char exePath[MAX_PATH];
+    GetModuleFileNameA(NULL, exePath, MAX_PATH);
+    PathRemoveFileSpecA(exePath);
+    std::string exeDir = std::string(exePath);
+    std::vector<std::string> candidates = {
+        exeDir + "\\prettysumatra\\webui\\home.html",
+        exeDir + "\\..\\prettysumatra\\webui\\home.html",
+        exeDir + "\\..\\..\\prettysumatra\\webui\\home.html",
+    };
+
+    if (!LoadWebViewHtmlFromFile(win->homePageWebView, candidates)) {
+        std::string msg = "<html><body style='font-family:sans-serif;padding:20px'><h2>Error: home.html no encontrado</h2><p>Se intentaron:</p><ul>";
+        for (auto& p : candidates) msg += "<li>" + p + "</li>";
+        msg += "</ul></body></html>";
+        win->homePageWebView->SetHtml(msg.c_str());
+    }
+
+    
+
+    // --- FIX FLASH: restaurar visibilidad ahora que el HTML ya está cargado ---
+    SetWindowLongPtrW(hwndWV, GWL_STYLE, style | WS_VISIBLE);
+    SetWindowPos(
+        hwndWV, nullptr,
+        rcClient.x, rcClient.y, rcClient.dx, rcClient.dy,
+        SWP_NOZORDER | SWP_SHOWWINDOW | SWP_FRAMECHANGED
+    );
+}
 
 #ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE 2
@@ -49,7 +158,6 @@ You can [customize toolbar](Help/Customize-toolbar).
 Press (Key/CmdCommandPalette) to open [command palette](CmdCommandPalette).
 To open file from history open [command palette](CmdCommandPalette) with (Key/CmdCommandPalette) and type `#`.
 You can [extract text from PDF file](Help/Tool-x-extract-text-from-pdf).
-You can [toggle menu bar](CmdToggleMenuBar) with (Key/CmdToggleMenuBar).
 You can [toggle toolbar](CmdToggleToolbar) with (Key/CmdToggleToolbar).
 You can [edit PDF annotations](Help/Editing-annotations).
 )";
@@ -321,10 +429,10 @@ constexpr int kAboutRectPadding = 8;
 
 constexpr int kInnerPadding = 8;
 
-constexpr const char* kSumatraTxtFont = "Arial Black";
-constexpr int kSumatraTxtFontSize = 24;
+constexpr const char* kSumatraTxtFont = "Segoe UI";
+constexpr int kSumatraTxtFontSize = 28;
 
-constexpr const char* kVersionTxtFont = "Arial Black";
+constexpr const char* kVersionTxtFont = "Segoe UI";
 constexpr int kVersionTxtFontSize = 12;
 
 #define LAYOUT_LTR 0
@@ -346,20 +454,20 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    {"website", "SumatraPDF website", kWebsiteURL},
-    {"manual", "SumatraPDF manual", kManualURL},
-    {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
-    {"programming", "The Programmers", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
-    {"licenses", "Various Open Source", "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
+    {_TRN("website"), _TRN("SumatraPDF website"), kWebsiteURL},
+    {_TRN("manual"), _TRN("SumatraPDF manual"), kManualURL},
+    {_TRN("forums"), _TRN("SumatraPDF forums"), "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
+    {_TRN("programming"), _TRN("The Programmers"), "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
+    {_TRN("licenses"), _TRN("Various Open Source"), "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS"},
 #if defined(GIT_COMMIT_ID_STR)
-    {"last change", "git commit " GIT_COMMIT_ID_STR,
+    {_TRN("last change"), _TRN("git commit ") GIT_COMMIT_ID_STR,
      "https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
 #endif
 #if defined(PRE_RELEASE_VER)
-    {"a note", "Pre-release version, for testing only!", nullptr},
+    {_TRN("a note"), _TRN("Pre-release version, for testing only!"), nullptr},
 #endif
 #ifdef DEBUG
-    {"a note", "Debug version, for testing only!", nullptr},
+    {_TRN("a note"), _TRN("Debug version, for testing only!"), nullptr},
 #endif
     {nullptr, nullptr, nullptr}};
 
@@ -393,36 +501,82 @@ static void DrawSumatraVersion(HDC hdc, Rect rect) {
     uint fmt = DT_LEFT | DT_NOCLIP;
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
+    HFONT fontSubtitleTxt = CreateSimpleFont(hdc, kVersionTxtFont, 11);
 
     SetBkMode(hdc, TRANSPARENT);
 
-    const char* txt = kAppName;
-    Size txtSize = HdcMeasureText(hdc, txt, fmt, fontSumatraTxt);
-    Rect mainRect(rect.x + (rect.dx - txtSize.dx) / 2, rect.y + (rect.dy - txtSize.dy) / 2, txtSize.dx, txtSize.dy);
+    Size prettySz = HdcMeasureText(hdc, "Pretty", fmt, fontSumatraTxt);
+    Size sumatraSz = HdcMeasureText(hdc, "Sumatra", fmt, fontSumatraTxt);
+    Size pdfSz = HdcMeasureText(hdc, "PDF", fmt, fontSumatraTxt);
+    Size subtitleSz = HdcMeasureText(hdc, _TRA("Focused reading"), fmt, fontSubtitleTxt);
+    TempStr ver = GetAppVersionTemp();
+    Size verSz = HdcMeasureText(hdc, ver, fmt, fontVersionTxt);
 
-    // draw SumatraPDF in colorful way
-    Point pt = mainRect.TL();
-    // colorful version
-    static COLORREF cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
-    char buf[2] = {};
-    for (int i = 0; i < str::Leni(kAppName); i++) {
-        SetTextColor(hdc, cols[i % dimofi(cols)]);
-        buf[0] = kAppName[i];
-        HdcDrawText(hdc, buf, pt, fmt, fontSumatraTxt);
-        txtSize = HdcMeasureText(hdc, buf, fmt, fontSumatraTxt);
-        pt.x += txtSize.dx;
+    int textDy = prettySz.dy + DpiScale(hdc, 16);
+    int iconSize = textDy + DpiScale(hdc, 8);
+    int totalDx = iconSize + DpiScale(hdc, 16) + prettySz.dx + sumatraSz.dx + pdfSz.dx;
+    int x0 = rect.x + (rect.dx - totalDx) / 2;
+    int y0 = rect.y + (rect.dy - iconSize) / 2;
+
+    Rect iconRect(x0, y0, iconSize, iconSize);
+    {
+        AutoDeleteBrush brOuter(CreateSolidBrush(RGB(242, 184, 0)));
+        AutoDeletePen penOuter(CreatePen(PS_SOLID, 1, RGB(215, 167, 0)));
+        HGDIOBJ oldBrush = SelectObject(hdc, brOuter);
+        HGDIOBJ oldPen = SelectObject(hdc, penOuter);
+        RoundRect(hdc, iconRect.x, iconRect.y, iconRect.x + iconRect.dx, iconRect.y + iconRect.dy, DpiScale(hdc, 14),
+                  DpiScale(hdc, 14));
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
+    }
+    Rect pageRect(iconRect.x + DpiScale(hdc, 11), iconRect.y + DpiScale(hdc, 8), iconRect.dx - DpiScale(hdc, 20),
+                  iconRect.dy - DpiScale(hdc, 16));
+    {
+        AutoDeleteBrush brPage(CreateSolidBrush(RGB(255, 249, 229)));
+        AutoDeletePen penPage(CreatePen(PS_SOLID, 1, RGB(221, 188, 84)));
+        HGDIOBJ oldBrush = SelectObject(hdc, brPage);
+        HGDIOBJ oldPen = SelectObject(hdc, penPage);
+        RoundRect(hdc, pageRect.x, pageRect.y, pageRect.x + pageRect.dx, pageRect.y + pageRect.dy, DpiScale(hdc, 8),
+                  DpiScale(hdc, 8));
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
+    }
+    Rect lensRect(iconRect.x + iconRect.dx - DpiScale(hdc, 24), iconRect.y + iconRect.dy - DpiScale(hdc, 24), DpiScale(hdc, 18),
+                  DpiScale(hdc, 18));
+    {
+        AutoDeleteBrush brLens(CreateSolidBrush(RGB(247, 220, 128)));
+        AutoDeletePen penLens(CreatePen(PS_SOLID, DpiScale(hdc, 2), RGB(204, 151, 0)));
+        HGDIOBJ oldBrush = SelectObject(hdc, brLens);
+        HGDIOBJ oldPen = SelectObject(hdc, penLens);
+        Ellipse(hdc, lensRect.x, lensRect.y, lensRect.x + lensRect.dx, lensRect.y + lensRect.dy);
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
     }
 
-    SetTextColor(hdc, ThemeWindowTextColor());
-    int x = mainRect.x + mainRect.dx + DpiScale(hdc, kInnerPadding);
-    int y = mainRect.y;
+    int textX = iconRect.x + iconRect.dx + DpiScale(hdc, 16);
+    int textY = iconRect.y + DpiScale(hdc, 3);
+    int sumatraX = textX + prettySz.dx;
+    int pdfX = sumatraX + sumatraSz.dx;
 
-    TempStr ver = GetAppVersionTemp();
-    Point p = {x, y};
-    HdcDrawText(hdc, ver, p, fmt, fontVersionTxt);
-    p.y += DpiScale(hdc, 13);
+    Rect accentBg(sumatraX - DpiScale(hdc, 2), textY + prettySz.dy - DpiScale(hdc, 9), sumatraSz.dx + DpiScale(hdc, 4),
+                  DpiScale(hdc, 7));
+    FillRect(hdc, accentBg, RGB(255, 231, 145));
+
+    SetTextColor(hdc, ThemeWindowTextColor());
+    HdcDrawText(hdc, "Pretty", Point(textX, textY), fmt, fontSumatraTxt);
+    SetTextColor(hdc, RGB(215, 167, 0));
+    HdcDrawText(hdc, "Sumatra", Point(sumatraX, textY), fmt, fontSumatraTxt);
+    SetTextColor(hdc, ThemeWindowTextColor());
+    HdcDrawText(hdc, "PDF", Point(pdfX, textY), fmt, fontSumatraTxt);
+
+    int subY = textY + prettySz.dy + DpiScale(hdc, 1);
+    SetTextColor(hdc, ThemeWindowTextColor());
+    HdcDrawText(hdc, _TRA("Focused reading"), Point(textX, subY), fmt, fontSubtitleTxt);
+    HdcDrawText(hdc, ver, Point(textX + subtitleSz.dx + DpiScale(hdc, 8), subY), fmt, fontVersionTxt);
+
+    Point p = {textX, subY + DpiScale(hdc, 13)};
     if (gIsPreReleaseBuild) {
-        HdcDrawText(hdc, "Pre-release", p, fmt);
+        HdcDrawText(hdc, _TRA("Pre-release"), p, fmt);
     }
 }
 
@@ -457,27 +611,31 @@ static Rect DrawHideFrequentlyReadLink(HWND hwnd, HDC hdc, const char* txt) {
 static Size CalcSumatraVersionSize(HDC hdc) {
     HFONT fontSumatraTxt = CreateSimpleFont(hdc, kSumatraTxtFont, kSumatraTxtFontSize);
     HFONT fontVersionTxt = CreateSimpleFont(hdc, kVersionTxtFont, kVersionTxtFontSize);
+    HFONT fontSubtitleTxt = CreateSimpleFont(hdc, kVersionTxtFont, 11);
 
-    /* calculate minimal top box size */
-    Size sz = HdcMeasureText(hdc, kAppName, fontSumatraTxt);
-    sz.dy = sz.dy + DpiScale(hdc, kAboutBoxMarginDy * 2);
-
-    /* consider version and version-sub strings */
+    uint fmt = DT_LEFT | DT_NOCLIP;
+    Size prettySz = HdcMeasureText(hdc, "Pretty", fmt, fontSumatraTxt);
+    Size sumatraSz = HdcMeasureText(hdc, "Sumatra", fmt, fontSumatraTxt);
+    Size pdfSz = HdcMeasureText(hdc, "PDF", fmt, fontSumatraTxt);
+    Size subtitleSz = HdcMeasureText(hdc, _TRA("Focused reading"), fmt, fontSubtitleTxt);
     TempStr ver = GetAppVersionTemp();
-    Size txtSize = HdcMeasureText(hdc, ver, fontVersionTxt);
-    int minWidth = txtSize.dx + DpiScale(hdc, 8);
-    int dx = std::max(txtSize.dx, minWidth);
-    sz.dx += 2 * (dx + DpiScale(hdc, kInnerPadding));
+    Size verSz = HdcMeasureText(hdc, ver, fmt, fontVersionTxt);
+
+    Size sz{};
+    int textDx = prettySz.dx + sumatraSz.dx + pdfSz.dx;
+    int iconDx = prettySz.dy + DpiScale(hdc, 24);
+    sz.dx = iconDx + DpiScale(hdc, 16) + std::max(textDx, subtitleSz.dx + verSz.dx + DpiScale(hdc, 8)) + DpiScale(hdc, 20);
+    sz.dy = std::max(iconDx, prettySz.dy + DpiScale(hdc, 24)) + DpiScale(hdc, kAboutBoxMarginDy * 2);
     return sz;
 }
 
-static TempStr TrimGitTemp(char* s) {
+static TempStr TrimGitTemp(const char* s) {
     if (gitCommidId && str::EndsWith(s, gitCommidId)) {
         auto sLen = str::Len(s);
         auto gitLen = str::Len(gitCommidId);
         s = str::DupTemp(s, sLen - gitLen - 7);
     }
-    return s;
+    return TempStr(s);
 }
 
 /* Draws the about screen and remembers some state for hyperlinking.
@@ -511,7 +669,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
 #else
     Rect titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
-    FillRect(hdc, &rcLogoBg, bgBrush);
+    FillRect(hdc, &rcLogoBg, brushAboutBg);
     DrawLine(hdc, Rect(0, rect.y, rc.dx, 0));
     DrawLine(hdc, Rect(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
@@ -533,7 +691,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
     uint fmt = DT_LEFT | DT_NOCLIP;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         auto& pos = el->leftPos;
-        HdcDrawText(hdc, el->leftTxt, pos, fmt);
+        HdcDrawText(hdc, _TRA(el->leftTxt), pos, fmt);
     }
 
     /* render text on the right */
@@ -548,8 +706,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, Rect rect, Vec<StaticLink*>& staticLin
             col = ThemeWindowTextColor();
         }
         SetTextColor(hdc, col);
-        char* s = (char*)el->rightTxt;
-        s = TrimGitTemp(s);
+        TempStr s = TrimGitTemp(_TRA(el->rightTxt));
         auto& pos = el->rightPos;
         HdcDrawText(hdc, s, pos, fmt);
 
@@ -579,7 +736,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     int leftDy = 0;
     uint fmt = DT_LEFT;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        Size txtSize = HdcMeasureText(hdc, el->leftTxt, fmt, fontLeftTxt);
+        Size txtSize = HdcMeasureText(hdc, _TRA(el->leftTxt), fmt, fontLeftTxt);
         el->leftPos.dx = txtSize.dx;
         el->leftPos.dy = txtSize.dy;
 
@@ -597,8 +754,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, Rect* rect) {
     int rightLargestDx = 0;
     int rightDy = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        char* s = (char*)el->rightTxt;
-        s = TrimGitTemp(s);
+        TempStr s = TrimGitTemp(_TRA(el->rightTxt));
         Size txtSize = HdcMeasureText(hdc, s, fmt, fontRightTxt);
         el->rightPos.dx = txtSize.dx;
         el->rightPos.dy = txtSize.dy;
@@ -676,13 +832,14 @@ static void CopyAboutInfoToClipboard() {
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
     int maxLen = 0;
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        maxLen = std::max(maxLen, str::Leni(el->leftTxt));
+        maxLen = std::max(maxLen, (int)str::Len(_TRA(el->leftTxt)));
     }
     for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
-        for (int i = maxLen - str::Leni(el->leftTxt); i > 0; i--) {
+        int labelLen = (int)str::Len(_TRA(el->leftTxt));
+        for (int i = maxLen - labelLen; i > 0; i--) {
             info.AppendChar(' ');
         }
-        info.AppendFmt("%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
+        info.AppendFmt("%s: %s\r\n", _TRA(el->leftTxt), el->url ? el->url : _TRA(el->rightTxt));
     }
     CopyTextToClipboard(info.LendData());
 }
@@ -912,6 +1069,8 @@ struct HomePageLayout {
     StrVec filterWords;
     Vec<u8> highlighted;
     Rect rcSearchBorder; // border rect drawn around the edit control
+    Rect rcLauncherOpenPdf;
+    Rect rcLauncherReopenLast;
 
     // tip layout
     Rect rcTip;               // background rect for tip area
@@ -925,11 +1084,19 @@ HomePageLayout::~HomePageLayout() {
     delete openDoc;
 }
 
-constexpr int kOpenDocumentYShift = 7;
-constexpr int kThumbsMiddleMargin = 32;
-constexpr int kSearchEditDy = 28;
-constexpr int kHeaderSearchGapY = 12;
-constexpr int kSearchThumbnailsGapY = 12;
+constexpr int kThumbsMiddleMargin = 30;
+constexpr int kSearchEditDy = 40;
+constexpr int kHeaderSearchGapY = 30;
+constexpr int kSearchThumbnailsGapY = 50;
+constexpr int kRecentGridExtraTopGapY = 70;
+constexpr int kLauncherTopGapY = 10;
+constexpr int kLauncherCardsGapY = 10;
+constexpr int kLauncherMainDy = 56;
+constexpr int kLauncherSecondaryDy = 48;
+constexpr int kHomePageOuterPadX = 24;
+constexpr int kHomePageOuterPadY = 20;
+constexpr int kHomePageHeroRadius = 18;
+constexpr int kHomePageCardRadius = 14;
 
 static WNDPROC DefWndProcHomeSearch = nullptr;
 
@@ -967,16 +1134,33 @@ static void EnsureHomeSearchCreated(MainWindow* win) {
         DefWndProcHomeSearch = (WNDPROC)GetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC);
     }
     SetWindowLongPtr(win->hwndHomeSearch, GWLP_WNDPROC, (LONG_PTR)WndProcHomeSearch);
-    Edit_SetCueBannerText(win->hwndHomeSearch, L"search files (Ctrl + F)");
+    Edit_SetCueBannerText(win->hwndHomeSearch, _TRW("Search files or open a document"));
     // add left/right padding so text doesn't overlap the border
-    int margin = DpiScale(win->hwndCanvas, 6);
+    int margin = DpiScale(win->hwndCanvas, 8);
     SendMessage(win->hwndHomeSearch, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(margin, margin));
 }
+
 
 void HomePageDestroySearch(MainWindow* win) {
     if (win->hwndHomeSearch) {
         DestroyWindow(win->hwndHomeSearch);
         win->hwndHomeSearch = nullptr;
+    }
+}
+
+// Oculta la HomePage WebView cuando se cierra
+void HomePageHide(MainWindow* win) {
+    if (win->homePageWebView) {
+        ShowWindow(win->homePageWebView->hwnd, SW_HIDE);
+    }
+}
+
+// Destruye la HomePage WebView (llamar al cerrar ventana)
+void HomePageDestroy(MainWindow* win) {
+    if (win->homePageWebView) {
+        DestroyWindow(win->homePageWebView->hwnd);
+        delete win->homePageWebView;
+        win->homePageWebView = nullptr;
     }
 }
 
@@ -1026,7 +1210,6 @@ void LayoutHomePage(HomePageLayout& l) {
     }
 
     bool isRtl = IsUIRtl();
-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
     HFONT hdrFont = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
 
     Size sz = CalcSumatraVersionSize(hdc);
@@ -1039,12 +1222,17 @@ void LayoutHomePage(HomePageLayout& l) {
 
     l.rcLine = {0, sz.dy, rc.dx, 0};
 
-    // --- Pre-compute thumbnail grid x offset so header can align with it ---
-    // use unfiltered count so layout stays stable when search filters results
     int nFilesForLayout = allFileStates.Size();
     int colsForLayout =
         (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
-    int thumbsColsForLayout = std::max(colsForLayout, 1);
+    colsForLayout = std::max(colsForLayout, 1);
+    if (rc.dx < DpiScale(hdc, 900)) {
+        colsForLayout = std::min(colsForLayout, 2);
+    }
+    if (rc.dx < DpiScale(hdc, 700)) {
+        colsForLayout = 1;
+    }
+    int thumbsColsForLayout = colsForLayout;
     int thumbsStartX = rc.x + kThumbsMarginLeft +
                        (rc.dx - thumbsColsForLayout * kThumbnailDx - (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX -
                         kThumbsMarginLeft - kThumbsMarginRight) /
@@ -1055,88 +1243,83 @@ void LayoutHomePage(HomePageLayout& l) {
         thumbsStartX = kThumbsMarginLeft;
     }
 
-    // --- Step 1: layout header at the top ---
+    int thumbsContentWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
+    int thumbsEndX = thumbsStartX + thumbsContentWidth;
+    int rowPadX = 0;
+    int rowY = DpiScale(hdc, 12);
+    int rowLeftX = thumbsStartX;
+    int rowRightX = thumbsEndX;
+
     const char* txt = _TRA("Recently Opened");
     if (gGlobalPrefs->homePageSortByFrequentlyRead) {
         txt = _TRA("Frequently Read");
     }
-    VirtWndText* hdr = new VirtWndText(hwnd, txt, hdrFont);
+    auto hdr = new VirtWndText(hwnd, txt, hdrFont);
     l.freqRead = hdr;
     hdr->isRtl = isRtl;
-    Size txtSize = hdr->GetIdealSize(true);
+    Size hdrSize = hdr->GetIdealSize(true);
+    int rowHeight = hdrSize.dy;
+    int hdrX = rowLeftX + rowPadX;
+    int hdrDx = std::max(0, rowRightX - hdrX);
+    Rect rcHdr(hdrX, rowY, hdrDx, hdrSize.dy);
 
-    int hdrY = DpiScale(hdc, 8);
-    Rect rcHdr(thumbsStartX, hdrY, txtSize.dx, txtSize.dy);
     if (isRtl) {
-        rcHdr.x = rc.dx - thumbsStartX - rcHdr.dx;
+        rcHdr.x = rc.dx - rcHdr.x - rcHdr.dx;
     }
+
     hdr->SetBounds(rcHdr);
 
-    /* "Open a document" link next to header */
-    l.himlOpen = (HIMAGELIST)SendMessageW(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
-    Rect rcIconOpen(0, 0, 0, 0);
-    ImageList_GetIconSize(l.himlOpen, &rcIconOpen.dx, &rcIconOpen.dy);
+    int headerBottomY = rowY + rowHeight;
 
-    txt = _TRA("Open a document...");
-    auto openDoc = new VirtWndText(hwnd, txt, fontText);
-    openDoc->isRtl = isRtl;
-    openDoc->withUnderline = true;
-    txtSize = openDoc->GetIdealSize(true);
-
-    int openDocSpacing = DpiScale(hdc, 16);
-    rcIconOpen.x = rcHdr.x + rcHdr.dx + openDocSpacing;
-    rcIconOpen.y = rcHdr.y + rcHdr.dy - rcIconOpen.dy - kOpenDocumentYShift + 3;
-    if (isRtl) {
-        rcIconOpen.x = rcHdr.x - openDocSpacing - rcIconOpen.dx;
-    }
-    l.rcIconOpen = rcIconOpen;
-
-    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, rcHdr.y + rcHdr.dy - txtSize.dy - kOpenDocumentYShift, txtSize.dx,
-                   txtSize.dy);
-    if (isRtl) {
-        rcOpenDoc.x = rcIconOpen.x - rcOpenDoc.dx - 3;
-    }
-    openDoc->SetBounds(rcOpenDoc);
-
-    rcOpenDoc = rcOpenDoc.Union(rcIconOpen);
-    rcOpenDoc.Inflate(10, 10);
-    l.openDoc = openDoc;
-    auto sl = new StaticLink(rcOpenDoc, kLinkOpenFile);
-    win->staticLinks.Append(sl);
-
-    int headerBottomY = rcHdr.y + rcHdr.dy;
-
-    // --- Position search edit below header ---
     EnsureHomeSearchCreated(win);
     int searchEditDy = DpiScale(hdc, kSearchEditDy);
     int headerSearchGap = DpiScale(hdc, kHeaderSearchGapY);
     int searchThumbsGap = DpiScale(hdc, kSearchThumbnailsGapY);
     {
-        int thumbsContentWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
-        int borderDx = thumbsContentWidth * 3 / 4;
-        if (borderDx < DpiScale(hdc, 200)) {
-            borderDx = DpiScale(hdc, 200);
-        }
-        int borderX = thumbsStartX + (thumbsContentWidth - borderDx) / 2;
+        int borderDx = thumbsContentWidth;
+        int maxBorderDx = rc.dx - 2 * DpiScale(hdc, kHomePageOuterPadX);
+        borderDx = std::min(borderDx, maxBorderDx);
+        borderDx = std::max(borderDx, DpiScale(hdc, 240));
+        int borderX = thumbsStartX;
         int borderY = headerBottomY + headerSearchGap;
-        int borderDy = searchEditDy + 2; // 1px border on each side
+        int borderDy = searchEditDy + 2;
         l.rcSearchBorder = {borderX, borderY, borderDx, borderDy};
-        // measure font height so we can vertically center the edit
+
         HFONT editFont = (HFONT)SendMessage(win->hwndHomeSearch, WM_GETFONT, 0, 0);
         TEXTMETRIC tm;
         HFONT oldFont = (HFONT)SelectObject(hdc, editFont);
         GetTextMetrics(hdc, &tm);
         SelectObject(hdc, oldFont);
-        int fontDy = tm.tmHeight + tm.tmExternalLeading + 2; // +2 for caret padding
+        int fontDy = tm.tmHeight + tm.tmExternalLeading + 2;
         int editDy = std::min(fontDy, searchEditDy);
         int editY = borderY + 1 + (searchEditDy - editDy) / 2;
         MoveWindow(win->hwndHomeSearch, borderX + 1, editY, borderDx - 2, editDy, TRUE);
     }
-    // border is 1px top + 1px bottom = 2px
+
     int searchAreaDy = headerSearchGap + searchEditDy + 2 + searchThumbsGap;
     headerBottomY += searchAreaDy;
 
-    // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
+    int launcherTop = headerBottomY + DpiScale(hdc, kLauncherTopGapY);
+    int cardsGapY = DpiScale(hdc, kLauncherCardsGapY);
+    int mainDy = DpiScale(hdc, kLauncherMainDy);
+    int secondaryDy = DpiScale(hdc, kLauncherSecondaryDy);
+
+    int launcherDx = l.rcSearchBorder.dx;
+    int launcherX = l.rcSearchBorder.x;
+    l.rcLauncherOpenPdf = {launcherX, launcherTop, launcherDx, mainDy};
+    l.rcLauncherReopenLast = {launcherX, launcherTop + mainDy + cardsGapY, launcherDx, secondaryDy};
+    headerBottomY = launcherTop + mainDy + cardsGapY + secondaryDy;
+
+    if (isRtl) {
+        auto mirrorRect = [rc](Rect& r) {
+            r.x = rc.dx - r.x - r.dx;
+        };
+        mirrorRect(l.rcLauncherOpenPdf);
+        mirrorRect(l.rcLauncherReopenLast);
+    }
+
+    headerBottomY += DpiScale(hdc, kRecentGridExtraTopGapY);
+
     int tipHeight = 0;
     HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
     ParsedTip* tip = nullptr;
@@ -1150,14 +1333,11 @@ void LayoutHomePage(HomePageLayout& l) {
     if (tip) {
         MeasureTipWords(*tip, hdc, fontTip);
         int tipPadding = DpiScale(hdc, 8);
-        // do a preliminary layout to get the height (use thumbnails content width)
         int tipTextWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
         LayoutTip(*tip, tipTextWidth, 0, 0);
         tipHeight = tip->totalDy + 2 * tipPadding;
     }
 
-    // --- Step 3: middle area for thumbnails ---
-    // thumbnails start directly after headerBottomY (which includes kSearchThumbnailsGapY)
     int thumbsTopY = headerBottomY;
     int thumbsBottomY = rc.dy - tipHeight - kThumbsMiddleMargin;
     int thumbsVisibleDy = std::max(0, thumbsBottomY - thumbsTopY);
@@ -1183,11 +1363,10 @@ void LayoutHomePage(HomePageLayout& l) {
     for (int row = 0; row < thumbsRows; row++) {
         for (int col = 0; col < thumbsCols; col++) {
             if (row * thumbsCols + col >= nFiles) {
-                // no more files to display
                 thumbsRows = col > 0 ? row + 1 : row;
                 break;
             }
-            int idx = row * thumbsCols + col;
+
             ThumbnailLayout& thumb = *l.thumbnails.AppendBlanks(1);
             FileState* fs = fileStates.at(row * thumbsCols + col);
             thumb.fs = fs;
@@ -1222,25 +1401,20 @@ void LayoutHomePage(HomePageLayout& l) {
         }
     }
 
-    // layout tip at the bottom
     if (tip) {
         Rect rcClient = ClientRect(win->hwndCanvas);
         int tipPadding = DpiScale(hdc, 8);
 
         int tipY = rcClient.dy - tipHeight;
-        // background spans full window width
         l.rcTip = {0, tipY, rcClient.dx, tipHeight};
         l.tip = tip;
 
-        // text area aligned with thumbnails
         int tipTextWidth = thumbsColsForLayout * kThumbnailDx + (thumbsColsForLayout - 1) * kThumbsSpaceBetweenX;
         int tipStartX = thumbsStartX;
         int tipStartY = tipY + tipPadding;
         LayoutTip(*tip, tipTextWidth, tipStartX, tipStartY);
 
-        // register tip links; per-link rects first so they take priority in hit testing
         for (auto& link : tip->links) {
-            // compute bounding rect of all words in this link
             Rect linkRect;
             for (int i = link.firstWord; i <= link.lastWord; i++) {
                 auto& w = tip->words[i];
@@ -1254,7 +1428,6 @@ void LayoutHomePage(HomePageLayout& l) {
             auto slTip = new StaticLink(linkRect, link.cmd, link.cmd);
             win->staticLinks.Append(slTip);
         }
-        // tip background: clicking outside of links picks another tip
         auto slBg = new StaticLink(l.rcTip, kLinkNextTip);
         win->staticLinks.Append(slBg);
     }
@@ -1272,149 +1445,222 @@ static void GetFileStateIcon(FileState* fs) {
     fs->iconIdx = sfi.iIcon;
 }
 
-static void DrawHomePageLayout(HomePageLayout& l) {
+void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto hdc = l.hdc;
     auto win = l.win;
     auto textColor = ThemeWindowTextColor();
-    auto backgroundColor = ThemeMainWindowBackgroundColor();
+    auto backgroundColor = PrettySurfaceAltColor();
+    bool darkUi = DarkMode::isColorDark(backgroundColor);
+    COLORREF panelCol = darkUi ? AccentColor(backgroundColor, 14) : AdjustLightness2(backgroundColor, 7);
+    COLORREF panelBorderCol = darkUi ? AccentColor(panelCol, 24) : PrettyBorderColor();
+    COLORREF searchCol = PrettySurfaceColor();
+    COLORREF searchBorderCol = darkUi ? AccentColor(searchCol, 28) : AccentColor(searchCol, 22);
+    COLORREF mutedCol = darkUi ? RGB(170, 178, 190) : RGB(93, 103, 117);
+    COLORREF accent = PrettyAccentColor();
 
+    Rect rc = ClientRect(win->hwndCanvas);
+    FillRect(hdc, rc, backgroundColor);
+
+    int shellX = std::max(DpiScale(hdc, kHomePageOuterPadX), l.rcSearchBorder.x - DpiScale(hdc, 24));
+    int shellY = DpiScale(hdc, kHomePageOuterPadY);
+    int shellRightLimit = rc.dx - DpiScale(hdc, kHomePageOuterPadX);
+    int shellRight = std::min(shellRightLimit, l.rcSearchBorder.x + l.rcSearchBorder.dx + DpiScale(hdc, 24));
+    int shellBottom = l.rcSearchBorder.y + l.rcSearchBorder.dy + DpiScale(hdc, 16);
+    Rect shell(shellX, shellY, std::max(120, shellRight - shellX), std::max(DpiScale(hdc, 90), shellBottom - shellY));
+    Rect shadow = shell;
+    shadow.y += DpiScale(hdc, 2);
     {
-        Rect rc = ClientRect(win->hwndCanvas);
-        auto color = ThemeMainWindowBackgroundColor();
-        FillRect(hdc, rc, color);
+        AutoDeleteBrush brShadow(CreateSolidBrush(darkUi ? AccentColor(backgroundColor, 6) : RGB(216, 226, 241)));
+        AutoDeletePen penShadow(CreatePen(PS_SOLID, 1, darkUi ? AccentColor(backgroundColor, 10) : RGB(204, 216, 234)));
+        HGDIOBJ oldBrush = SelectObject(hdc, brShadow);
+        HGDIOBJ oldPen = SelectObject(hdc, penShadow);
+        RoundRect(hdc, shadow.x, shadow.y, shadow.x + shadow.dx, shadow.y + shadow.dy, DpiScale(hdc, kHomePageHeroRadius),
+                  DpiScale(hdc, kHomePageHeroRadius));
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
     }
-
-    // draw search edit border and background on the canvas
     {
-        COLORREF bgCol = ThemeControlBackgroundColor();
-        const Rect& sb = l.rcSearchBorder;
-        RECT rcBorder = {sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy};
-        // fill interior with control background so padding matches the edit
-        HBRUSH brBg = CreateSolidBrush(bgCol);
-        FillRect(hdc, &rcBorder, brBg);
-        DeleteObject(brBg);
-        // draw border frame
-        COLORREF borderCol = AccentColor(bgCol, 40);
-        HBRUSH brBorder = CreateSolidBrush(borderCol);
-        FrameRect(hdc, &rcBorder, brBorder);
-        DeleteObject(brBorder);
+        AutoDeleteBrush brHero(CreateSolidBrush(panelCol));
+        AutoDeletePen penHero(CreatePen(PS_SOLID, 1, panelBorderCol));
+        HGDIOBJ oldBrush = SelectObject(hdc, brHero);
+        HGDIOBJ oldPen = SelectObject(hdc, penHero);
+        RoundRect(hdc, shell.x, shell.y, shell.x + shell.dx, shell.y + shell.dy, DpiScale(hdc, kHomePageHeroRadius),
+                  DpiScale(hdc, kHomePageHeroRadius));
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
     }
 
-    if (false) {
-        const Rect& r = l.rcAppWithVer;
-        DrawSumatraVersion(hdc, r);
-    }
+    HFONT fontTitle = CreateSimpleFont(hdc, "MS Shell Dlg", 24);
+    HFONT fontSub = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT fontBody = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    HFONT fontAction = CreateSimpleFont(hdc, "MS Shell Dlg", 15);
+    HFONT fontActionSub = CreateSimpleFont(hdc, "MS Shell Dlg", 12);
+    HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 13);
 
-    auto color = ThemeWindowTextColor();
-    if (false) {
-        ScopedSelectObject pen(hdc, CreatePen(PS_SOLID, 1, color), true);
-        DrawLine(hdc, l.rcLine);
-    }
-    HFONT fontText = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
+    int innerX = shell.x + DpiScale(hdc, 28);
+    int innerRight = shell.x + shell.dx - DpiScale(hdc, 28);
+    int y = shell.y + DpiScale(hdc, 24);
 
-    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, kThumbsBorderDx, color));
-    color = ThemeWindowLinkColor();
-    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, color));
-
-    SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
-    color = ThemeWindowTextColor();
-    SetTextColor(hdc, color);
+    SetTextColor(hdc, textColor);
+    Rect rcTitle(innerX, y, shell.dx - DpiScale(hdc, 56), DpiScale(hdc, 34));
+    HdcDrawText(hdc, _TRA("Open and read PDFs"), rcTitle,
+                DT_SINGLELINE | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT), fontTitle);
+    y += DpiScale(hdc, 38);
 
-    l.freqRead->Paint(hdc);
-    SelectObject(hdc, GetStockBrush(NULL_BRUSH));
+    Rect rcSub(innerX, y, shell.dx - DpiScale(hdc, 56), DpiScale(hdc, 22));
+    SetTextColor(hdc, mutedCol);
+    HdcDrawText(hdc, _TRA("Access recent files, search documents, and open a PDF in one click."), rcSub,
+                DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT), fontSub);
+    y += DpiScale(hdc, 28);
 
-    // clip thumbnails to the middle area
+    // Draw visual frame for the real search edit control.
     {
-        const Rect& ta = l.rcThumbsArea;
-        HRGN thumbsClip = CreateRectRgn(ta.x, ta.y, ta.x + ta.dx, ta.y + ta.dy);
-        SelectClipRgn(hdc, thumbsClip);
-        DeleteObject(thumbsClip);
+        const Rect& sb = l.rcSearchBorder;
+        AutoDeleteBrush brSearch(CreateSolidBrush(searchCol));
+        AutoDeletePen penSearch(CreatePen(PS_SOLID, 1, searchBorderCol));
+        HGDIOBJ oldBrush = SelectObject(hdc, brSearch);
+        HGDIOBJ oldPen = SelectObject(hdc, penSearch);
+        RoundRect(hdc, sb.x, sb.y, sb.x + sb.dx, sb.y + sb.dy, DpiScale(hdc, 12), DpiScale(hdc, 12));
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
     }
 
+    auto drawLauncherCard = [&](const Rect& rr, COLORREF fillCol, COLORREF borderCol, COLORREF titleCol, COLORREF subCol,
+                                const char* title, const char* subtitle, int radius) {
+        AutoDeleteBrush brCard(CreateSolidBrush(fillCol));
+        AutoDeletePen penCard(CreatePen(PS_SOLID, 1, borderCol));
+        HGDIOBJ oldBrush = SelectObject(hdc, brCard);
+        HGDIOBJ oldPen = SelectObject(hdc, penCard);
+        RoundRect(hdc, rr.x, rr.y, rr.x + rr.dx, rr.y + rr.dy, DpiScale(hdc, radius), DpiScale(hdc, radius));
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
+
+        int padX = DpiScale(hdc, 14);
+        int padY = DpiScale(hdc, 10);
+        Rect rtTitle(rr.x + padX, rr.y + padY, rr.dx - 2 * padX, DpiScale(hdc, 24));
+        Rect rtSub(rr.x + padX, rr.y + padY + DpiScale(hdc, 24), rr.dx - 2 * padX, rr.dy - DpiScale(hdc, 28));
+        SetTextColor(hdc, titleCol);
+        HdcDrawText(hdc, title, rtTitle, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT),
+                    fontAction);
+        SetTextColor(hdc, subCol);
+        HdcDrawText(hdc, subtitle, rtSub,
+                    DT_WORDBREAK | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT), fontActionSub);
+    };
+
+    COLORREF launcherMainFill = darkUi ? AccentColor(accent, 46) : AccentColor(accent, 26);
+    COLORREF launcherMainBorder = darkUi ? AccentColor(accent, 64) : AccentColor(accent, 45);
+    COLORREF launcherMainText = RGB(255, 255, 255);
+    COLORREF launcherSubFill = darkUi ? AccentColor(panelCol, 20) : RGB(251, 253, 255);
+    COLORREF launcherSubBorder = darkUi ? AccentColor(panelCol, 40) : AccentColor(panelBorderCol, 28);
+    bool canReopenLast = RecentlyCloseDocumentsCount() > 0;
+    COLORREF launcherDisabledFill = darkUi ? AccentColor(panelCol, 8) : RGB(240, 244, 249);
+    COLORREF launcherDisabledBorder = darkUi ? AccentColor(panelCol, 18) : AccentColor(panelBorderCol, 8);
+    COLORREF launcherDisabledText = darkUi ? RGB(132, 142, 156) : RGB(128, 137, 150);
+
+    // Draw launcher cards
+    drawLauncherCard(
+        l.rcLauncherOpenPdf,
+        launcherMainFill, launcherMainBorder,
+        launcherMainText, launcherMainText,
+        _TRA("Open a document"),
+        _TRA("Browse your files to open any PDF"),
+        kHomePageCardRadius
+    );
+    {
+        COLORREF subTextCol = canReopenLast ? textColor : launcherDisabledText;
+        COLORREF subFill    = canReopenLast ? launcherSubFill    : launcherDisabledFill;
+        COLORREF subBorder  = canReopenLast ? launcherSubBorder  : launcherDisabledBorder;
+        drawLauncherCard(
+            l.rcLauncherReopenLast,
+            subFill, subBorder,
+            subTextCol, subTextCol,
+            _TRA("Reopen last document"),
+            _TRA("Continue where you left off"),
+            kHomePageCardRadius
+        );
+    }
+
+    int sectionY = l.rcThumbsArea.y - DpiScale(hdc, 36);
+    int minSectionY = l.rcSearchBorder.y + l.rcSearchBorder.dy + DpiScale(hdc, 16);
+    sectionY = std::max(sectionY, minSectionY);
+    Rect rcSection(innerX, sectionY, shell.dx - DpiScale(hdc, 56), DpiScale(hdc, 24));
+    SetTextColor(hdc, textColor);
+    const char* sectionTitle = l.freqRead ? l.freqRead->s : _TRA("Recently Opened");
+    HdcDrawText(hdc, sectionTitle, rcSection, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT),
+                fontSub);
+
+    Rect ta = l.rcThumbsArea;
+    HRGN thumbsClip = CreateRectRgn(ta.x, ta.y, ta.x + ta.dx, ta.y + ta.dy);
+    SelectClipRgn(hdc, thumbsClip);
+    DeleteObject(thumbsClip);
+
+    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, 1, panelBorderCol));
     for (const ThumbnailLayout& thumb : l.thumbnails) {
         FileState* fs = thumb.fs;
         const Rect& page = thumb.rcPage;
+        const Rect& rect = thumb.rcText;
+
+        Rect card = page.Union(rect);
+        card.Inflate(DpiScale(hdc, 8), DpiScale(hdc, 8));
+        {
+            AutoDeleteBrush brCard(CreateSolidBrush(darkUi ? AccentColor(panelCol, 8) : RGB(252, 253, 254)));
+            HGDIOBJ oldBrush = SelectObject(hdc, brCard);
+            HGDIOBJ oldPen = SelectObject(hdc, penThumbBorder);
+            RoundRect(hdc, card.x, card.y, card.x + card.dx, card.y + card.dy, DpiScale(hdc, kHomePageCardRadius),
+                      DpiScale(hdc, kHomePageCardRadius));
+            SelectObject(hdc, oldPen);
+            SelectObject(hdc, oldBrush);
+        }
 
         RenderedBitmap* thumbImg = LoadThumbnail(fs);
         if (thumbImg) {
             int savedDC = SaveDC(hdc);
-            HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
+            Rect pageIn = page;
+            pageIn.Inflate(-DpiScale(hdc, 2), -DpiScale(hdc, 2));
+            HRGN clip = CreateRoundRectRgn(pageIn.x, pageIn.y, pageIn.x + pageIn.dx, pageIn.y + pageIn.dy, DpiScale(hdc, 8),
+                                           DpiScale(hdc, 8));
             ExtSelectClipRgn(hdc, clip, RGN_AND);
-            // note: we used to invert bitmaps in dark theme but that doesn't
-            // make sense for thumbnails
-            thumbImg->Blit(hdc, page);
+            thumbImg->Blit(hdc, pageIn);
             RestoreDC(hdc, savedDC);
             DeleteObject(clip);
         }
-        RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-        const Rect& rect = thumb.rcText;
-        char* path = fs->filePath;
-        TempStr fileName = path::GetBaseNameTemp(path);
-        UINT fmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
-
-        SelectObject(hdc, fontText);
-        {
-            RECT rcText = {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
-            DrawMaybeHighlightedTextArgs hlArgs(l.filterWords, l.highlighted);
-            hlArgs.hdc = hdc;
-            hlArgs.rc = rcText;
-            hlArgs.text = fileName;
-            hlArgs.colBg = backgroundColor;
-            hlArgs.isRtl = isRtl;
-            hlArgs.drawFmt = fmt;
-            DrawMaybeHighlightedText(hlArgs);
-        }
+        DrawMaybeHighlightedTextArgs hlArgs(l.filterWords, l.highlighted);
+        hlArgs.hdc = hdc;
+        hlArgs.rc = ToRECT(rect);
+        hlArgs.text = path::GetBaseNameTemp(fs->filePath);
+        hlArgs.colBg = backgroundColor;
+        hlArgs.isRtl = isRtl;
+        hlArgs.drawFmt = DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT);
+        DrawMaybeHighlightedText(hlArgs);
 
         GetFileStateIcon(fs);
         int x = isRtl ? page.x + page.dx - DpiScale(hdc, 16) : page.x;
         ImageList_Draw(fs->himl, fs->iconIdx, hdc, x, rect.y, ILD_TRANSPARENT);
     }
-
-    // restore full clip region
     SelectClipRgn(hdc, nullptr);
 
-    color = ThemeWindowLinkColor();
-    SetTextColor(hdc, color);
-    SelectObject(hdc, penLinkLine);
-
-    int x = l.rcIconOpen.x;
-    int y = l.rcIconOpen.y;
-    int openIconIdx = 0;
-    ImageList_Draw(l.himlOpen, openIconIdx, hdc, x, y, ILD_NORMAL);
-
-    l.openDoc->Paint(hdc);
-
-    if (false) {
-        Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Hide frequently read"));
-        auto sl = new StaticLink(rcFreqRead, kLinkHideList);
+    if (HasPermission(Perm::SavePreferences | Perm::DiskAccess) && SettingsRememberOpenedFiles()) {
+        Rect rcFreqRead = DrawHideFrequentlyReadLink(win->hwndCanvas, hdc, _TRA("Show frequently read"));
+        auto sl = new StaticLink(rcFreqRead, kLinkShowList);
         win->staticLinks.Append(sl);
     }
 
-    // draw tip at the bottom
     if (l.tip) {
-        COLORREF tipBgCol = ThemeControlBackgroundColor();
+        COLORREF tipBgCol = darkUi ? AccentColor(panelCol, 10) : RGB(245, 248, 252);
         FillRect(hdc, l.rcTip, tipBgCol);
-
-        HFONT fontTip = CreateSimpleFont(hdc, "MS Shell Dlg", 16);
-        uint fmt = DT_LEFT | DT_NOCLIP;
-        COLORREF textCol = ThemeWindowTextColor();
-        COLORREF linkCol = ThemeWindowLinkColor();
-
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, textColor);
         for (auto& w : l.tip->words) {
-            Point pt = {w.x, w.y};
-            if (w.isLink) {
-                SetTextColor(hdc, linkCol);
-                HdcDrawText(hdc, w.text, pt, fmt, fontTip);
-            } else {
-                SetTextColor(hdc, textCol);
-                HdcDrawText(hdc, w.text, pt, fmt, fontTip);
-            }
+            Point pt(w.x, w.y);
+            SetTextColor(hdc, w.isLink ? accent : textColor);
+            HdcDrawText(hdc, w.text, pt, DT_LEFT | DT_NOCLIP, fontTip);
         }
-        // draw underlines spanning each link
-        SelectObject(hdc, penLinkLine);
+
+        AutoDeletePen penTipLinkLine(CreatePen(PS_SOLID, 1, accent));
+        SelectObject(hdc, penTipLinkLine);
         for (auto& link : l.tip->links) {
             auto& first = l.tip->words[link.firstWord];
             auto& last = l.tip->words[link.lastWord];
@@ -1426,38 +1672,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
     }
 }
 
-void DrawHomePage(MainWindow* win, HDC hdc) {
-    HWND hwnd = win->hwndFrame;
-    DeleteVecMembers(win->staticLinks);
-
-    HomePageLayout l;
-    l.rc = ClientRect(win->hwndCanvas);
-    l.hdc = hdc;
-    l.hwnd = hwnd;
-    l.win = win;
-    LayoutHomePage(l);
-
-    DrawHomePageLayout(l);
-
-    // update overlay scrollbar for home page if thumbnails overflow visible area
-    bool showScrollbarV = ScrollbarsUseOverlay() && l.totalContentDy > l.thumbsVisibleDy;
-    if (showScrollbarV) {
-        if (!win->overlayScrollV) {
-            win->overlayScrollV =
-                OverlayScrollbarCreate(win->hwndCanvas, OverlayScrollbar::Type::Vert, ScrollbarsOverlayMode());
-        }
-        SCROLLINFO si{};
-        si.cbSize = sizeof(si);
-        si.fMask = SIF_ALL;
-        si.nMin = 0;
-        si.nMax = l.totalContentDy - 1;
-        si.nPage = l.thumbsVisibleDy;
-        si.nPos = win->homePageScrollY;
-        OverlayScrollbarShow(win->overlayScrollV, true);
-        OverlayScrollbarSetInfo(win->overlayScrollV, &si, TRUE);
-    }
-    // show thin scrollbar briefly to indicate content is scrollable
-    OverlayScrollbarShow(win->overlayScrollV, showScrollbarV);
+void DrawHomePage(MainWindow* win, HDC /*hdc*/) {
+    // Muestra el WebView moderno en lugar del renderizado nativo
+    CreateHomePageWebView(win);
 }
 
 void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
