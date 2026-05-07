@@ -59,6 +59,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - you can drag&drop images from PDF documents to other applications (web apps, image editors, file explorer etc.)
 - pen/stylus input now works for text selection on Windows tablets
 - fix Edit Annotations window not restoring to the correct monitor in multi-monitor setups
+- focus `Contents` edit field when clicking on an annotation to open or select it in the Edit Annotations window
 - use `GetFileAttributesEx` instead of opening files for change detection on network drives, avoiding Windows Defender re-scans
 - fix toolbar page number misalignment when `PrinterAccess` is revoked in `sumatrapdfrestrict.ini`
 

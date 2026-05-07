@@ -1254,12 +1254,12 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     }
 
     if (IsCtrlPressed() && win->annotationUnderCursor) {
-        ShowEditAnnotationsWindow(tab, win->annotationUnderCursor);
+        ShowEditAnnotationsWindow(tab, win->annotationUnderCursor, EditAnnotFocus::Edit);
         return;
     }
 
     if (win->annotationUnderCursor && (tab->selectedAnnotation || tab->editAnnotsWindow)) {
-        SetSelectedAnnotation(tab, win->annotationUnderCursor);
+        SetSelectedAnnotation(tab, win->annotationUnderCursor, false, EditAnnotFocus::Edit);
         return;
     }
 
