@@ -503,6 +503,8 @@ MainWindow* FindMainWindowBySyncFile(const char* path, bool focusTab) {
     return nullptr;
 }
 
+bool gShowPassword = false;
+
 class HwndPasswordUI : public PasswordUI {
     HWND hwnd;
     size_t pwdIdx;
@@ -562,7 +564,7 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
     HwndToForeground(hwnd);
 
     bool* rememberPwd = SettingsRememberOpenedFiles() ? saveKey : nullptr;
-    return Dialog_GetPassword(hwnd, path, rememberPwd);
+    return Dialog_GetPassword(hwnd, path, rememberPwd, &gShowPassword);
 }
 
 // update global windowState for next default launch when either
