@@ -412,7 +412,14 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         if (isNewLine && pastFirstLine && indentX < 0 && !atFirstLineLeftX) {
             indentX = r.x;
         }
-        bool atIndentX = (indentX > 0) && (r.x >= indentX - 5 && r.x <= indentX + 5);
+        // Tolerance is generous because continuation lines share the same pen
+        // position but per-glyph bbox left edge varies with side-bearings —
+        // a roman "i" and an italic "C" can differ by several pt even though
+        // both lines start at the same indent. Without this, multi-line
+        // entries that switch into italics on a continuation line get cut off
+        // (rule (d) below would otherwise terminate at that line's first
+        // glyph).
+        bool atIndentX = (indentX > 0) && (r.x >= indentX - 25 && r.x <= indentX + 25);
 
         // (a) "[N" at the entry's first-line X = next numeric entry.
         if (c == L'[' && atFirstLineLeftX && i + 1 < textLen && text[i + 1] >= L'0' && text[i + 1] <= L'9') {
