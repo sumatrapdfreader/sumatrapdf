@@ -412,14 +412,6 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         if (isNewLine && pastFirstLine && indentX < 0 && !atFirstLineLeftX) {
             indentX = r.x;
         }
-        // Tolerance is generous because continuation lines share the same pen
-        // position but per-glyph bbox left edge varies with side-bearings —
-        // a roman "i" and an italic "C" can differ by several pt even though
-        // both lines start at the same indent. Without this, multi-line
-        // entries that switch into italics on a continuation line get cut off
-        // (rule (d) below would otherwise terminate at that line's first
-        // glyph).
-        bool atIndentX = (indentX > 0) && (r.x >= indentX - 25 && r.x <= indentX + 25);
 
         // (a) "[N" at the entry's first-line X = next numeric entry.
         if (c == L'[' && atFirstLineLeftX && i + 1 < textLen && text[i + 1] >= L'0' && text[i + 1] <= L'9') {
@@ -429,7 +421,8 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
 
         // (b) Indent change: a new line back at the entry's first-line X
         // after a continuation line at a different X. Catches author-year
-        // hanging-indent bibliographies where there's no [N] marker.
+        // hanging-indent bibliographies where there's no [N] marker — this
+        // is the primary signal for the *next* entry's start.
         if (isNewLine && atFirstLineLeftX && pastFirstLine && prevLineLeftX != INT_MAX &&
             (prevLineLeftX < firstLineLeftX - 5 || prevLineLeftX > firstLineLeftX + 5)) {
             endIdx = i;
@@ -442,14 +435,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
             break;
         }
 
-        // (d) Once we know indentX, a new line at any X other than firstLineLeftX
-        // or indentX is external content (author bios, footers, etc.) — end here.
-        if (isNewLine && pastFirstLine && indentX > 0 && !atFirstLineLeftX && !atIndentX) {
-            endIdx = i;
-            break;
-        }
-
-        // (e) Single-line-entry case: a new line back at firstLineLeftX before
+        // (d) Single-line-entry case: a new line back at firstLineLeftX before
         // we discovered a continuation indent. The previous "entry" was one
         // line. Common pattern: stacked numbered footnotes "¹url\n²url\n³url".
         if (isNewLine && pastFirstLine && atFirstLineLeftX && indentX < 0 && prevLineLeftX != INT_MAX) {
