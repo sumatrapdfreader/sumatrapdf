@@ -15,14 +15,12 @@
 // Larger fallback used when detection found something tiny (likely a figure
 // fragment) — gives enough height to capture a diagram + caption.
 static constexpr float kFigureStripHeightPt = 280.f;
-// Non-reference targets (TOC, topbar links, generic cross-refs that don't
-// resolve to a bibliography-shaped entry) get a fixed-ratio box anchored on
-// the destination — keeps the popup visually consistent regardless of what
-// happens to be near the goto target.
-static constexpr float kNonRefBoxWidthPt = 360.f;
-static constexpr float kNonRefBoxHeightPt = 260.f;
 static constexpr float kAnchorTopMarginPt = 6.f;
 static constexpr float kRightMarginPt = 4.f;
+// Single-line detected entries below this point-height are treated as
+// ambiguous (likely a table caption or section header rather than a real
+// bibliography entry) and rendered with the full-page landscape box.
+static constexpr float kSingleLinePt = 30.f;
 // pt of padding around the detected entry box.
 static constexpr float kEntryPadPt = 6.f;
 // upper bound for the auto-fit base zoom. We render at min(kRenderZoom,
@@ -266,35 +264,25 @@ static RectF FigureStripBox(RectF mediabox, float destX, float destY, float heig
     return RectF{lx, ty, w, heightPt};
 }
 
-// Used when the link doesn't resolve to a bibliography-shaped entry (TOC
-// targets, topbar links, image-only PDFs). Returns a fixed-pt box anchored
-// near the destination so that all "non-reference" popups have the same
-// shape regardless of what happens to be near the target.
-static RectF FixedRatioBox(RectF mediabox, float destX, float destY) {
-    float w = kNonRefBoxWidthPt;
-    float h = kNonRefBoxHeightPt;
-    if (w > mediabox.dx) {
-        w = mediabox.dx;
-    }
+// Used when the link doesn't resolve to a recognizable bibliography entry —
+// TOC targets, topbar/section links, table or figure captions, image-only
+// PDFs. Returns a landscape view of the page (full page width × half page
+// height) anchored at destY, so the popup shows enough surrounding context
+// for the user to recognize where the link points (e.g. the table rows
+// below a caption, the section content below a heading).
+static RectF LandscapeBox(RectF mediabox, float destX, float destY) {
+    float w = mediabox.dx;
+    float h = mediabox.dy / 2.f;
     if (h > mediabox.dy) {
         h = mediabox.dy;
     }
-    float lx = (destX >= 0.f) ? destX - 12.f : 0.f;
+    float lx = 0.f;
     float ty = (destY >= 0.f) ? destY - kAnchorTopMarginPt : 0.f;
-    if (lx < 0.f) {
-        lx = 0.f;
-    }
     if (ty < 0.f) {
         ty = 0.f;
     }
-    if (lx + w > mediabox.dx) {
-        lx = mediabox.dx - w;
-    }
     if (ty + h > mediabox.dy) {
         ty = mediabox.dy - h;
-    }
-    if (lx < 0.f) {
-        lx = 0.f;
     }
     if (ty < 0.f) {
         ty = 0.f;
@@ -308,21 +296,21 @@ static RectF FixedRatioBox(RectF mediabox, float destX, float destY) {
 //   2. Scan forward; stop at "[N" near the same left margin (next entry) or
 //      a vertical paragraph gap.
 //   3. Return the min/max bounding box of glyphs in [start, end), padded.
-// Falls back to FixedRatioBox() if no glyphs are near destY (the link is not
-// a bibliography reference — TOC / topbar / cross-ref). The fixed-ratio box
-// gives every non-reference target the same popup shape, which avoids the
-// thin wide popups produced when the detection latched onto a topbar row.
+// Falls back to LandscapeBox() when the link is not a bibliography reference
+// (TOC, topbar, cross-ref, table caption). The landscape box renders a half-
+// page-tall slice of the page anchored on the destination so the user sees
+// surrounding context (e.g. the table rows under a caption).
 static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float destY) {
     RectF mediabox = engine->PageMediabox(destPage);
     if (destY < 0.f) {
-        return FixedRatioBox(mediabox, destX, destY);
+        return LandscapeBox(mediabox, destX, destY);
     }
 
     int textLen = 0;
     Rect* coords = nullptr;
     const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
     if (!text || textLen <= 0 || !coords) {
-        return FixedRatioBox(mediabox, destX, destY);
+        return LandscapeBox(mediabox, destX, destY);
     }
 
     int dY = (int)destY;
@@ -357,7 +345,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         }
     }
     if (startIdx < 0) {
-        return FixedRatioBox(mediabox, destX, destY);
+        return LandscapeBox(mediabox, destX, destY);
     }
 
     int firstLineLeftX = coords[startIdx].x;
@@ -483,7 +471,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         }
     }
     if (minX == INT_MAX) {
-        return FixedRatioBox(mediabox, destX, destY);
+        return LandscapeBox(mediabox, destX, destY);
     }
 
     RectF box{(float)minX - kEntryPadPt, (float)minY - kEntryPadPt, (float)(maxX - minX) + 2.f * kEntryPadPt,
@@ -503,7 +491,15 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         box.dy = mediabox.dy - box.y;
     }
     if (box.dx < 50.f || box.dy < 20.f) {
-        return FixedRatioBox(mediabox, destX, destY);
+        return LandscapeBox(mediabox, destX, destY);
+    }
+    // Single-line detected entries with no continuation indent are usually
+    // not bibliography references — could be a table/figure caption, a
+    // section heading, or an in-text cross-ref destination. Show the
+    // landscape view so the user sees what's below the caption (the table,
+    // the section content, etc.) rather than just the caption text itself.
+    if (box.dy < kSingleLinePt && indentX < 0) {
+        return LandscapeBox(mediabox, destX, destY);
     }
     // If detection produced a small box (text-only scan got trapped in one
     // fragment of a figure / diagram), expand to a generous strip so the
@@ -531,16 +527,19 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     RectF region = DetectEntryBox(engine, destPage, destX, destY);
     // New destination — reset user-driven zoom. baseZoom matches the
     // document's current display zoom for the destination page, so popup
-    // text height is comparable to the visible page text. If the region
-    // is too tall to fit at that zoom, shrink baseZoom by height only —
-    // we deliberately don't constrain by width (the popup may be wider
-    // than the default max bound; ShowPopup caps it at the monitor work
-    // area).
+    // text height is comparable to the visible page text. Shrink baseZoom
+    // if either dimension would exceed the popup max; landscape-style
+    // regions for non-reference targets are typically wider than tall, so
+    // the width cap matters here.
     s->userZoom = 1.f;
     float baseZoom = (pageZoom > 0.f) ? pageZoom : kRenderZoom;
     float availH = (float)(kMaxPopupHeight - 2 * kBorder);
+    float availW = (float)(kMaxPopupWidth - 2 * kBorder);
     if (region.dy > 0.f && region.dy * baseZoom > availH) {
         baseZoom = availH / region.dy;
+    }
+    if (region.dx > 0.f && region.dx * baseZoom > availW) {
+        baseZoom = availW / region.dx;
     }
     if (baseZoom < kMinUserZoom) {
         baseZoom = kMinUserZoom;
