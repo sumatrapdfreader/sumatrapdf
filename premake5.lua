@@ -169,23 +169,23 @@ end
 -- per-workspace setting that differ in clang-cl.exe vs cl.exe builds
 function clang_conf()
   filter "options:with-clang"
-  location "vs2022-clang"
-  toolset "clang"
-  buildoptions { "-fms-compatibility", "-fms-extensions", "-Wno-microsoft-include", "-march=x86-64-v3", "-maes" }
+      location "vs2022-clang"
+      toolset "clang"
+      buildoptions { "-fms-compatibility", "-fms-extensions", "-Wno-microsoft-include", "-march=x86-64-v3", "-maes" }
 
-  warnings "Off"
-  exceptionhandling "On"
+      warnings "Off"
+      exceptionhandling "On"
   filter {}
 
   filter { 'options:not with-clang' }
-  warnings "Extra"
-  exceptionhandling "Off"
+      warnings "Extra"
+      exceptionhandling "Off"
   filter {}
 end
 
 function warnings_as_errors()
   filter { "configurations:not ReleaseAnalyze" and "options:not with-clang" }
-  fatalwarnings { "All" }
+      fatalwarnings { "All" }
   filter {}
 end
 
@@ -355,7 +355,8 @@ workspace "SumatraPDF"
       "LIBARCHIVE_STATIC",
       'PLATFORM_CONFIG_H="config_windows.h"',
     }
-    disablewarnings { "4018", "4054", "4055", "4090", "4098", "4100", "4127", "4146", "4244", "4245", "4267", "4305", "4389", "4456", "4457", "4706", "4996" }
+    warnings_as_errors()
+    disablewarnings { "4018", "4054", "4055", "4090", "4098", "4100", "4127", "4130","4146", "4152", "4200", "4201", "4244", "4245", "4267", "4305", "4389", "4456", "4457", "4706", "4996" }
     uses_zlib()
     includedirs { "ext/libarchive/libarchive" }
     libarchive_files()

@@ -12,24 +12,17 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 int utf8StrLen(const u8* s);
 int utf8RuneLen(const u8* s);
 
-template <typename T>
-struct Span {
-    T* d = nullptr;
+struct StrSpan {
+    char* d = nullptr;
     int size = 0;
 
-    Span() = default;
-    ~Span() = default;
-    Span(const T* d, int size) : d((T*)d), size(size) {}
-    T* Data() const { return d; }
-    int Size() const { return size; }
-};
-
-struct StrSpan : Span<char> {
     StrSpan() = default;
     StrSpan(const char* s);
     StrSpan(const char* s, int sLen);
-    char* CStr() const { return d; }
+
     int Len() const { return size; }
+    int Size() const { return size; }
+    char* CStr() const { return d; }
     bool IsEmpty() const { return !d || size == 0; }
 };
 
