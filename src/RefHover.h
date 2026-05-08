@@ -9,12 +9,25 @@ struct RefHoverState {
     // currently shown rendered destination strip (owned)
     RenderedBitmap* bmp = nullptr;
     int displayedDestPage = -1;
+    // Destination point used for the currently-displayed bitmap. Compared
+    // against incoming requests so adjacent links that target the same page
+    // but different positions (e.g. a section-7 link and a bib ref both
+    // landing on page 41) re-render rather than reuse the stale popup.
+    float displayedDestX = -1.f;
+    float displayedDestY = -1.f;
 
     // pending request: set by RefHoverSchedule, consumed by RefHoverOnTimer
     Point pendingScreenPt{};
     int pendingDestPage = -1;
     float pendingDestX = -1.f;
     float pendingDestY = -1.f;
+    // Source link location, used to recover a more specific destY when the
+    // PDF link is page-level (destY < 0). We extract the source link's text
+    // from srcPage at srcRect and search for that text on destPage to find
+    // the matching entry's Y. Without this, page-level abbreviation /
+    // glossary links render the whole abbreviations page from top.
+    int pendingSrcPage = -1;
+    RectF pendingSrcRect{};
 
     // re-render context, kept so mouse-wheel can zoom the popup without
     // re-running detection. Reset on every new destination.
@@ -31,7 +44,8 @@ constexpr UINT_PTR kRefHoverTimerID = 9;
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
-void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY);
+void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
+                      int srcPage, RectF srcRect);
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.

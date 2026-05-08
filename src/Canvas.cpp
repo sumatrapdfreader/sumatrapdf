@@ -936,7 +936,10 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     RectF destPt = PageDestGetDestPoint(dest);
                     Point screenPt = {x, y};
                     ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
-                    RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y);
+                    int srcPage = el->GetPageNo();
+                    RectF srcRect = el->GetRect();
+                    RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y, srcPage,
+                                     srcRect);
                 } else if (win->refHover) {
                     RefHoverHide(win->refHover, win->hwndCanvas);
                 }
