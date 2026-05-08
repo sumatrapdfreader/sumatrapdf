@@ -401,8 +401,11 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
             indentX = r.x;
         }
 
-        // (a) "[N" at the entry's first-line X = next numeric entry.
-        if (c == L'[' && atFirstLineLeftX && i + 1 < textLen && text[i + 1] >= L'0' && text[i + 1] <= L'9') {
+        // (a) "[" at the entry's first-line X = next entry marker. Works for
+        // both numeric "[123]" and alphanumeric "[Foo+09]" / "[Bib05]" styles
+        // — body-text "[…]" can't trigger this because body sits at indentX,
+        // not firstLineLeftX.
+        if (c == L'[' && atFirstLineLeftX) {
             endIdx = i;
             break;
         }
@@ -498,7 +501,10 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
     // section heading, or an in-text cross-ref destination. Show the
     // landscape view so the user sees what's below the caption (the table,
     // the section content, etc.) rather than just the caption text itself.
-    if (box.dy < kSingleLinePt && indentX < 0) {
+    // Exception: an entry starting with "[" is a description-list-style
+    // citation marker ("[Nyg11]", "[1]", …) — those are real references
+    // even when single-line, keep their fitted box.
+    if (box.dy < kSingleLinePt && indentX < 0 && text[startIdx] != L'[') {
         return LandscapeBox(mediabox, destX, destY);
     }
     // If detection produced a small box (text-only scan got trapped in one
