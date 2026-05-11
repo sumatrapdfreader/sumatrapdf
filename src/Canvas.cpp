@@ -938,8 +938,17 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
                     int srcPage = el->GetPageNo();
                     RectF srcRect = el->GetRect();
+                    Rect pageScreenRect{};
+                    PageInfo* pi = (srcPage > 0) ? dm->GetPageInfo(srcPage) : nullptr;
+                    if (pi && !pi->pageOnScreen.IsEmpty()) {
+                        pageScreenRect = pi->pageOnScreen;
+                        POINT topLeft = {pageScreenRect.x, pageScreenRect.y};
+                        ClientToScreen(win->hwndCanvas, &topLeft);
+                        pageScreenRect.x = topLeft.x;
+                        pageScreenRect.y = topLeft.y;
+                    }
                     RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y, srcPage,
-                                     srcRect);
+                                     srcRect, pageScreenRect);
                 } else if (win->refHover) {
                     RefHoverHide(win->refHover, win->hwndCanvas);
                 }

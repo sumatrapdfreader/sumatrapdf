@@ -28,6 +28,10 @@ struct RefHoverState {
     // glossary links render the whole abbreviations page from top.
     int pendingSrcPage = -1;
     RectF pendingSrcRect{};
+    // Screen rect of the source page (visible portion). Used to clamp the
+    // popup so it stays within the document area and doesn't drift into
+    // the gray margins outside the page.
+    Rect pendingPageScreenRect{};
 
     // re-render context, kept so mouse-wheel can zoom the popup without
     // re-running detection. Reset on every new destination.
@@ -45,7 +49,7 @@ constexpr UINT_PTR kRefHoverTimerID = 9;
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
-                      int srcPage, RectF srcRect);
+                      int srcPage, RectF srcRect, Rect pageScreenRect);
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.

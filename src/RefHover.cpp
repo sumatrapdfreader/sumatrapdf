@@ -175,39 +175,79 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
     MONITORINFO mi{};
     mi.cbSize = sizeof(mi);
     GetMonitorInfoW(hmon, &mi);
-    int monW = mi.rcWork.right - mi.rcWork.left;
-    int monH = mi.rcWork.bottom - mi.rcWork.top;
-    if (popupW > monW) {
-        popupW = monW;
+
+    // Horizontal bounds: monitor work area (popup is allowed to extend
+    // into the gray margins beyond the page text column).
+    // Vertical bounds: monitor work area intersected with the page screen
+    // rect, so the popup stays within the visible page vertically and
+    // doesn't spill into the next-page area or the page header / footer
+    // gap above / below.
+    int leftBound = mi.rcWork.left;
+    int rightBound = mi.rcWork.right;
+    int topBound = mi.rcWork.top;
+    int bottomBound = mi.rcWork.bottom;
+    Rect pr = s->pendingPageScreenRect;
+    if (pr.dy > 0) {
+        if (pr.y > topBound) {
+            topBound = pr.y;
+        }
+        if (pr.y + pr.dy < bottomBound) {
+            bottomBound = pr.y + pr.dy;
+        }
     }
-    if (popupH > monH) {
-        popupH = monH;
+    int boundW = rightBound - leftBound;
+    int boundH = bottomBound - topBound;
+    if (popupW > boundW) {
+        popupW = boundW;
+    }
+    if (popupH > boundH) {
+        popupH = boundH;
     }
 
-    int x = screenPt.x + 16;
-    int y = screenPt.y + 16;
-    if (x + popupW > mi.rcWork.right) {
-        x = screenPt.x - popupW - 4;
+    // Horizontally: center the popup on the source page (not the canvas /
+    // monitor edge) so when the popup is wider than the page text column it
+    // expands symmetrically into the gray margins. The popup's X is
+    // independent of the cursor so consecutive hovers on the same page
+    // don't make the popup jump horizontally.
+    int pageCenterX = (pr.dx > 0) ? (pr.x + pr.dx / 2) : screenPt.x;
+    int x = pageCenterX - popupW / 2;
+    // Vertically: gap above/below the cursor so 1-2 lines of context around
+    // the hovered word stay visible. Prefer below cursor; flip above if
+    // overflow. If neither side fits the full popup, shrink popupH to
+    // whichever side has more room — popup is cut (bitmap clipped at popup
+    // edges in WM_PAINT) rather than overlapping the cursor.
+    constexpr int kCursorPad = 30;
+    int spaceBelow = bottomBound - (screenPt.y + kCursorPad);
+    int spaceAbove = (screenPt.y - kCursorPad) - topBound;
+    int y;
+    if (spaceBelow >= popupH) {
+        y = screenPt.y + kCursorPad;
+    } else if (spaceAbove >= popupH) {
+        y = screenPt.y - popupH - kCursorPad;
+    } else if (spaceBelow >= spaceAbove) {
+        if (spaceBelow > 0) {
+            popupH = spaceBelow;
+        }
+        y = screenPt.y + kCursorPad;
+    } else {
+        if (spaceAbove > 0) {
+            popupH = spaceAbove;
+        }
+        y = screenPt.y - popupH - kCursorPad;
     }
-    if (y + popupH > mi.rcWork.bottom) {
-        y = screenPt.y - popupH - 4;
+    // Horizontal clamp to monitor work area.
+    if (x < leftBound) {
+        x = leftBound;
     }
-    // Final clamp: when neither below-cursor nor above-cursor has enough
-    // room for the full popup (cursor near a screen edge and popup taller
-    // than half the work area), the alternate position can land off-screen.
-    // Pull the popup back into the work area; it may overlap the cursor
-    // but at least it won't be clipped at the top/left edge.
-    if (x < mi.rcWork.left) {
-        x = mi.rcWork.left;
+    if (x + popupW > rightBound) {
+        x = rightBound - popupW;
     }
-    if (y < mi.rcWork.top) {
-        y = mi.rcWork.top;
+    // Final vertical clamp (defensive).
+    if (y < topBound) {
+        y = topBound;
     }
-    if (x + popupW > mi.rcWork.right) {
-        x = mi.rcWork.right - popupW;
-    }
-    if (y + popupH > mi.rcWork.bottom) {
-        y = mi.rcWork.bottom - popupH;
+    if (y + popupH > bottomBound) {
+        popupH = bottomBound - y;
     }
 
     SetWindowPos(s->hwndPopup, HWND_TOPMOST, x, y, popupW, popupH, SWP_NOACTIVATE | SWP_SHOWWINDOW);
@@ -272,7 +312,7 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
 }
 
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
-                      int srcPage, RectF srcRect) {
+                      int srcPage, RectF srcRect, Rect pageScreenRect) {
     if (!s) {
         return;
     }
@@ -288,6 +328,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int des
     s->pendingDestY = destY;
     s->pendingSrcPage = srcPage;
     s->pendingSrcRect = srcRect;
+    s->pendingPageScreenRect = pageScreenRect;
     SetTimer(hwndCanvas, kRefHoverTimerID, kRefHoverDelayMs, nullptr);
 }
 
@@ -323,9 +364,135 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
         h = mediabox.dy;
         ty = 0.f;
     }
+    // Cap to a focused region size so the popup is wide and short rather
+    // than narrow and tall.
+    constexpr float kMaxLandscapePt = 200.f;
+    if (h > kMaxLandscapePt) {
+        h = kMaxLandscapePt;
+    }
+    // Caption extension: if a "Figure N.M" / "Table N.M" / "Listing N.M" /
+    // "Algorithm N.M" caption appears within ~250pt below the capped region
+    // bottom (typical figure body height), extend the region downward to
+    // include the full caption block. Necessary for image-only figures
+    // where the figure body has no extractable text at destY — the caller
+    // falls to LandscapeBox without ever running the caption-aware
+    // DetectEntryBox path.
+    if (text && coords && textLen > 0) {
+        auto isCaptionAt = [&](int idx) -> bool {
+            if (idx > 0) {
+                WCHAR prev = text[idx - 1];
+                bool prevAlnum = (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') ||
+                                 (prev >= L'0' && prev <= L'9');
+                if (prevAlnum) {
+                    return false;
+                }
+            }
+            auto matchWord = [&](const WCHAR* w, int n) -> bool {
+                if (idx + n + 1 >= textLen) {
+                    return false;
+                }
+                for (int j = 0; j < n; j++) {
+                    WCHAR c = text[idx + j];
+                    if (c >= L'A' && c <= L'Z') {
+                        c = (WCHAR)(c + 32);
+                    }
+                    if (c != w[j]) {
+                        return false;
+                    }
+                }
+                int k = idx + n;
+                while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
+                    k++;
+                }
+                return k < textLen && text[k] >= L'0' && text[k] <= L'9';
+            };
+            return matchWord(L"figure", 6) || matchWord(L"table", 5) || matchWord(L"listing", 7) ||
+                   matchWord(L"algorithm", 9);
+        };
+        // Search to end of page so tall figures with captions far below the
+        // initial 200pt cap still match. First "Figure N.M" line-start on the
+        // page below the cap wins — typically the relevant caption.
+        int searchTop = (int)(ty + h);
+        int searchBot = (int)mediabox.dy;
+        int capStartIdx = -1;
+        for (int i = 0; i < textLen; i++) {
+            if (coords[i].y < searchTop || coords[i].y > searchBot) {
+                continue;
+            }
+            if (isCaptionAt(i)) {
+                capStartIdx = i;
+                break;
+            }
+        }
+        if (capStartIdx >= 0) {
+            int capStartY = coords[capStartIdx].y;
+            int capLineH = coords[capStartIdx].dy;
+            if (capLineH < 10) {
+                capLineH = 12;
+            }
+            int lineSpacing = capLineH * 14 / 10;
+            if (lineSpacing < 14) {
+                lineSpacing = 14;
+            }
+            // Page right text margin: max right-X across all text glyphs on
+            // the page. Justified body lines (filling the text column) end
+            // within a few pt of this; LaTeX-style captions (raggedright)
+            // typically don't reach it. Used below to distinguish caption
+            // continuation from a justified body paragraph that follows.
+            int pageRightX = 0;
+            for (int j = 0; j < textLen; j++) {
+                int rx = coords[j].x + coords[j].dx;
+                if (rx > pageRightX) {
+                    pageRightX = rx;
+                }
+            }
+            // Scan line by line from capStartY. Always accept line 0
+            // (the caption start itself). For each subsequent line within
+            // capStartY + 3·lineSpacing, stop if its right edge reaches
+            // the page right margin (= justified body paragraph). Captions
+            // up to 3 lines are accepted as long as no line is justified.
+            int captionEndY = capStartY + capLineH;
+            for (int lineIdx = 0; lineIdx < 3; lineIdx++) {
+                int expectedY = capStartY + lineIdx * lineSpacing;
+                int rangeTop = expectedY - 3;
+                int rangeBot = expectedY + 3;
+                bool foundLine = false;
+                int lineBottomY = expectedY + capLineH;
+                int lineRightX = 0;
+                for (int j = 0; j < textLen; j++) {
+                    int gy = coords[j].y;
+                    if (gy < rangeTop || gy > rangeBot) {
+                        continue;
+                    }
+                    foundLine = true;
+                    int gb = gy + coords[j].dy;
+                    if (gb > lineBottomY) {
+                        lineBottomY = gb;
+                    }
+                    int rx = coords[j].x + coords[j].dx;
+                    if (rx > lineRightX) {
+                        lineRightX = rx;
+                    }
+                }
+                if (!foundLine) {
+                    break;
+                }
+                if (lineIdx > 0 && lineRightX > pageRightX - 30) {
+                    // Justified body line — stop before extending region
+                    // into the next paragraph.
+                    break;
+                }
+                captionEndY = lineBottomY;
+            }
+            float extendedH = (float)captionEndY + kAnchorTopMarginPt - ty;
+            if (extendedH > h) {
+                h = extendedH;
+            }
+        }
+    }
     // Trim trailing blank margin: find the bottom of the last text glyph
-    // on the page (page numbers / footers count) and end the region just
-    // below it so the popup doesn't render a tall empty page footer.
+    // inside the candidate region and end the region just below it so the
+    // popup doesn't render an empty trailing margin.
     if (text && coords && textLen > 0) {
         int boxTop = (int)ty;
         int boxBottom = (int)(ty + h);
@@ -645,6 +812,9 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
                 continue;
             }
             if (isCaptionLabelAt(i)) {
+                // Let LandscapeBox handle the caption-extension — it has a
+                // tighter, line-count-capped walk that doesn't sweep into
+                // following body paragraphs.
                 return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
             }
         }
@@ -851,20 +1021,51 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
         return true;
     };
 
-    // Prefer the leftmost match — entry-list starts (e.g. "AKM" at the left
-    // margin of the abbreviations page) sit at the smallest X on the page.
-    int bestX = INT_MAX;
-    int bestY = -1;
+    // Prefer line-start matches (no other glyph at smaller x with same y)
+    // over mid-line matches. A "Figure 7.1" caption sits at line start; a
+    // body-text mention "in Figure 7.1 below" sits mid-line. Same logic
+    // benefits abbreviation entries vs. body mentions of an abbreviation.
+    auto isLineStartMatch = [&](int idx) -> bool {
+        int sy = destCoords[idx].y;
+        int sx = destCoords[idx].x;
+        for (int i = 0; i < destLen; i++) {
+            if (i == idx) {
+                continue;
+            }
+            if (destCoords[i].y != sy) {
+                continue;
+            }
+            WCHAR c = destText[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            if (destCoords[i].x < sx) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    int bestX_lineStart = INT_MAX;
+    int bestY_lineStart = -1;
+    int bestX_any = INT_MAX;
+    int bestY_any = -1;
     for (int i = 0; i < destLen; i++) {
         if (!matchAt(i)) {
             continue;
         }
         Rect r = destCoords[i];
-        if (r.x < bestX) {
-            bestX = r.x;
-            bestY = r.y;
+        if (isLineStartMatch(i)) {
+            if (r.x < bestX_lineStart) {
+                bestX_lineStart = r.x;
+                bestY_lineStart = r.y;
+            }
+        } else if (r.x < bestX_any) {
+            bestX_any = r.x;
+            bestY_any = r.y;
         }
     }
+    int bestY = (bestY_lineStart >= 0) ? bestY_lineStart : bestY_any;
     return (bestY >= 0) ? (float)bestY : -1.f;
 }
 
@@ -905,27 +1106,57 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // the width cap matters here.
     s->userZoom = 1.f;
     float baseZoom = (pageZoom > 0.f) ? pageZoom : kRenderZoom;
-    // Cap popup height by monitor work area so big screens get bigger
-    // popups (more of a long region — full table + caption etc. — fits).
-    int popupHCap = kMaxPopupHeight;
+    // Popup max size:
+    //   width  ~95% of monitor work area — popup may span beyond the page
+    //                text column into the surrounding gray margins so the
+    //                rendered figure / caption / table is at a readable
+    //                size, not shrunk to fit a narrow text column.
+    //   height 45% of source page height — keeps the bottom of the page
+    //                visible below the popup so the line under the cursor
+    //                and surrounding context stay readable.
+    int popupWCap = kMaxPopupWidth;
     {
         POINT mp = {s->pendingScreenPt.x, s->pendingScreenPt.y};
         HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi{};
         mi.cbSize = sizeof(mi);
         if (GetMonitorInfoW(hmon, &mi)) {
-            int monH = mi.rcWork.bottom - mi.rcWork.top;
-            int dyn = monH * 9 / 10;
-            if (dyn > popupHCap) {
-                popupHCap = dyn;
+            int monW = mi.rcWork.right - mi.rcWork.left;
+            int dyn = monW * 95 / 100;
+            if (dyn > popupWCap) {
+                popupWCap = dyn;
             }
-            if (popupHCap > 1400) {
-                popupHCap = 1400;
+        }
+    }
+    // Default popup height cap: 45% of source page height, fall back to
+    // kMaxPopupHeight when page rect is unknown. For tall regions (figure
+    // with caption), grow the cap into whichever side of the cursor has
+    // more available space within the page rect, so the figure body and
+    // its full caption fit. Cursor at the bottom of the page → popup
+    // expands upward into the page top; cursor at top → expands downward.
+    int popupHCap;
+    if (region.dy > 250.f && s->pendingPageScreenRect.dy > 0) {
+        Rect pr = s->pendingPageScreenRect;
+        int curY = s->pendingScreenPt.y;
+        int spaceAbove = curY - pr.y - 30;
+        int spaceBelow = (pr.y + pr.dy) - curY - 30;
+        int maxSpace = (spaceAbove > spaceBelow) ? spaceAbove : spaceBelow;
+        if (maxSpace < 0) {
+            maxSpace = 0;
+        }
+        int pageBased = pr.dy * 75 / 100;
+        popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
+    } else {
+        popupHCap = kMaxPopupHeight;
+        if (s->pendingPageScreenRect.dy > 0) {
+            int pageBased = s->pendingPageScreenRect.dy * 45 / 100;
+            if (pageBased < popupHCap) {
+                popupHCap = pageBased;
             }
         }
     }
     float availH = (float)(popupHCap - 2 * kBorder);
-    float availW = (float)(kMaxPopupWidth - 2 * kBorder);
+    float availW = (float)(popupWCap - 2 * kBorder);
     if (region.dy > 0.f && region.dy * baseZoom > availH) {
         baseZoom = availH / region.dy;
     }
