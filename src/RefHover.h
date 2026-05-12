@@ -59,3 +59,9 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
 // Positive delta zooms in, negative zooms out. Returns true if the zoom
 // changed and a re-render happened.
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta);
+// Scroll the popup's rendered region by a wheel notch. Positive delta scrolls
+// toward earlier content (up); negative scrolls toward later content (down).
+// Rolls over to the previous / next page when the viewport hits a page edge
+// (continuous scrolling). Popup window keeps its initial size; only the
+// rendered region's Y (and possibly page number) changes.
+bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta);

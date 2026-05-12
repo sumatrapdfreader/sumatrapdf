@@ -36,7 +36,9 @@
 //       positions each render their own content (no stale popup on the
 //       second hover).
 //   [ ] Popup hides on mouse-out, re-appears on re-enter.
-//   [ ] Mouse-wheel over popup zooms in / out.
+//   [ ] Mouse-wheel over popup scrolls; rolls over to the prev / next page
+//       when the viewport reaches a page edge.
+//   [ ] Ctrl+mouse-wheel over popup zooms in / out.
 //   [ ] Popup height grows on bigger monitors (capped at ~90% of work
 //       area, max 1400px).
 //
@@ -307,6 +309,100 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     }
     delete s->bmp;
     s->bmp = bmp;
+    // Persist the popup-fitting dx/dy so a subsequent scroll keeps rendering
+    // a bitmap that fills the popup. Without this, scroll would fall back to
+    // the original (smaller) entry-box dimensions and leave visible padding.
+    s->lastRegion = region;
+    InvalidateRect(s->hwndPopup, nullptr, TRUE);
+    return true;
+}
+
+// Scroll the rendered region by one wheel notch. Rolls over to the previous
+// or next page when the region would cross a page edge — the popup behaves
+// like a small continuous-scroll viewport into the document.
+bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
+    if (!s || !s->hwndPopup || s->displayedDestPage <= 0 || !engine) {
+        return false;
+    }
+    float zoom = s->baseZoom * s->userZoom;
+    if (zoom <= 0.f) {
+        return false;
+    }
+    int pageCount = engine->PageCount();
+    int page = s->displayedDestPage;
+    RectF region = s->lastRegion;
+    RectF mediabox = engine->PageMediabox(page);
+    if (mediabox.dx <= 0.f || mediabox.dy <= 0.f) {
+        return false;
+    }
+
+    // ~60 screen pixels per WHEEL_DELTA notch, expressed in page points so the
+    // perceived scroll speed stays roughly constant across zoom levels.
+    // Positive wheelDelta → wheel forward → scroll toward earlier content
+    // (region.y decreases). Negative → later content (region.y increases).
+    float scrollPt = 60.f * ((float)wheelDelta / (float)WHEEL_DELTA) / zoom;
+    float newY = region.y - scrollPt;
+
+    if (newY < 0.f) {
+        // Overflow off the page top — carry the remainder onto the previous
+        // page if there is one. Position the new region near the prev page's
+        // bottom and offset upward by the overflow so the seam between pages
+        // feels continuous across the wheel.
+        if (page > 1) {
+            float overflow = -newY;
+            page--;
+            mediabox = engine->PageMediabox(page);
+            newY = mediabox.dy - region.dy - overflow;
+            if (newY < 0.f) {
+                newY = 0.f;
+            }
+        } else {
+            newY = 0.f;
+        }
+    } else if (newY + region.dy > mediabox.dy) {
+        if (page < pageCount) {
+            float overflow = (newY + region.dy) - mediabox.dy;
+            page++;
+            mediabox = engine->PageMediabox(page);
+            newY = overflow;
+            if (newY + region.dy > mediabox.dy) {
+                newY = mediabox.dy - region.dy;
+            }
+            if (newY < 0.f) {
+                newY = 0.f;
+            }
+        } else {
+            newY = mediabox.dy - region.dy;
+            if (newY < 0.f) {
+                newY = 0.f;
+            }
+        }
+    }
+
+    if (page == s->displayedDestPage && newY == region.y) {
+        return false;
+    }
+    region.y = newY;
+    if (region.dy > mediabox.dy) {
+        region.dy = mediabox.dy;
+    }
+    if (region.x + region.dx > mediabox.dx) {
+        region.x = mediabox.dx - region.dx;
+        if (region.x < 0.f) {
+            region.x = 0.f;
+            region.dx = mediabox.dx;
+        }
+    }
+
+    RenderPageArgs args(page, zoom, 0, &region);
+    RenderedBitmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        return false;
+    }
+    delete s->bmp;
+    s->bmp = bmp;
+    s->displayedDestPage = page;
+    s->lastRegion = region;
     InvalidateRect(s->hwndPopup, nullptr, TRUE);
     return true;
 }
@@ -381,8 +477,8 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
         auto isCaptionAt = [&](int idx) -> bool {
             if (idx > 0) {
                 WCHAR prev = text[idx - 1];
-                bool prevAlnum = (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') ||
-                                 (prev >= L'0' && prev <= L'9');
+                bool prevAlnum =
+                    (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') || (prev >= L'0' && prev <= L'9');
                 if (prevAlnum) {
                     return false;
                 }
@@ -778,8 +874,8 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         auto isCaptionLabelAt = [&](int idx) -> bool {
             if (idx > 0) {
                 WCHAR prev = text[idx - 1];
-                bool prevAlnum = (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') ||
-                                 (prev >= L'0' && prev <= L'9');
+                bool prevAlnum =
+                    (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') || (prev >= L'0' && prev <= L'9');
                 if (prevAlnum) {
                     return false;
                 }
@@ -853,9 +949,8 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
     };
     WCHAR firstC = text[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
-    bool labelStart = matchPrefix(L"figure", 6) || matchPrefix(L"table", 5) ||
-                      matchPrefix(L"section", 7) || matchPrefix(L"chapter", 7) ||
-                      matchPrefix(L"algorithm", 9);
+    bool labelStart = matchPrefix(L"figure", 6) || matchPrefix(L"table", 5) || matchPrefix(L"section", 7) ||
+                      matchPrefix(L"chapter", 7) || matchPrefix(L"algorithm", 9);
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
     }

@@ -2146,9 +2146,11 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         return res;
     }
 
-    // Wheel-zoom the citation-hover popup while the cursor is still on the
-    // citation link that opened it. Avoids moving the cursor onto the popup
-    // (which would dismiss the hover).
+    // Mouse-wheel on the citation-hover popup (cursor still on the citation
+    // link that opened it). Avoids moving the cursor onto the popup itself,
+    // which would dismiss the hover.
+    //   plain wheel → scroll popup content (rolls over to prev/next page)
+    //   ctrl+wheel  → zoom popup content
     if (win->refHover && win->refHover->hwndPopup && IsWindowVisible(win->refHover->hwndPopup)) {
         DisplayModel* dmHover = win->AsFixed();
         if (dmHover) {
@@ -2156,7 +2158,12 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
             if (IsCitationLink(elHover)) {
                 short delta = GET_WHEEL_DELTA_WPARAM(wp);
-                RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
+                bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
+                if (isCtrl) {
+                    RefHoverWheelZoom(win->refHover, dmHover->GetEngine(), delta);
+                } else {
+                    RefHoverWheelScroll(win->refHover, dmHover->GetEngine(), delta);
+                }
                 return 0;
             }
         }
