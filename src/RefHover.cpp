@@ -589,15 +589,9 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
             if (capLineH < 10) {
                 capLineH = 12;
             }
-            int lineSpacing = capLineH * 14 / 10;
-            if (lineSpacing < 14) {
-                lineSpacing = 14;
-            }
             // Page right text margin: max right-X across all text glyphs on
-            // the page. Justified body lines (filling the text column) end
-            // within a few pt of this; LaTeX-style captions (raggedright)
-            // typically don't reach it. Used below to distinguish caption
-            // continuation from a justified body paragraph that follows.
+            // the page. A line reaching within ~30pt of pageRightX is at the
+            // column edge (justified body, or a hyphenated caption line).
             int pageRightX = 0;
             for (int j = 0; j < textLen; j++) {
                 int rx = coords[j].x + coords[j].dx;
@@ -605,25 +599,41 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
                     pageRightX = rx;
                 }
             }
-            // Scan line by line from capStartY. Always accept line 0
-            // (the caption start itself). For each subsequent line within
-            // capStartY + 3·lineSpacing, stop if its right edge reaches
-            // the page right margin (= justified body paragraph). Captions
-            // up to 3 lines are accepted as long as no line is justified.
+            // Walk subsequent lines below capStartY. Stop when we hit a
+            // paragraph break (vertical gap above inter-line leading) or
+            // a body-shape line. Two signals to detect body:
+            //   1) gap > ~70% of capLineH (parskip / float-separator) =
+            //      new paragraph.
+            //   2) a "short" caption line seen earlier and the current line
+            //      fills the column (raggedright-then-justified transition).
+            // Either signal alone catches a common case; together they cover
+            // hyphenated multi-line German captions (e.g. "...Bo-/gner...")
+            // where every caption line happens to reach the right margin.
             int captionEndY = capStartY + capLineH;
+            int prevLineBottom = capStartY + capLineH - 1;
+            bool seenShortLine = false;
             for (int lineIdx = 0; lineIdx < 3; lineIdx++) {
-                int expectedY = capStartY + lineIdx * lineSpacing;
-                int rangeTop = expectedY - 3;
-                int rangeBot = expectedY + 3;
+                int capTop, capBot;
+                if (lineIdx == 0) {
+                    capTop = capStartY - 3;
+                    capBot = capStartY + 3;
+                } else {
+                    capTop = prevLineBottom + 1;
+                    capBot = prevLineBottom + capLineH * 18 / 10;
+                }
                 bool foundLine = false;
-                int lineBottomY = expectedY + capLineH;
+                int lineTopY = INT_MAX;
+                int lineBottomY = -1;
                 int lineRightX = 0;
                 for (int j = 0; j < textLen; j++) {
                     int gy = coords[j].y;
-                    if (gy < rangeTop || gy > rangeBot) {
+                    if (gy < capTop || gy > capBot) {
                         continue;
                     }
                     foundLine = true;
+                    if (gy < lineTopY) {
+                        lineTopY = gy;
+                    }
                     int gb = gy + coords[j].dy;
                     if (gb > lineBottomY) {
                         lineBottomY = gb;
@@ -636,12 +646,21 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
                 if (!foundLine) {
                     break;
                 }
-                if (lineIdx > 0 && lineRightX > pageRightX - 30) {
-                    // Justified body line — stop before extending region
-                    // into the next paragraph.
-                    break;
+                bool isShort = lineRightX < pageRightX - 30;
+                if (lineIdx >= 1) {
+                    int gap = lineTopY - prevLineBottom;
+                    if (gap > capLineH * 7 / 10) {
+                        break;
+                    }
+                    if (!isShort && seenShortLine) {
+                        break;
+                    }
                 }
                 captionEndY = lineBottomY;
+                prevLineBottom = lineBottomY;
+                if (isShort) {
+                    seenShortLine = true;
+                }
             }
             float extendedH = (float)captionEndY + kAnchorTopMarginPt - ty;
             if (extendedH > h) {
@@ -760,6 +779,37 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
             }
         }
         startIdx = leftmostIdx;
+    }
+
+    // Tight-y walk above can miss a "[VB25]"-style label that sits on a
+    // slightly different baseline than its body line 1 (description-list
+    // layouts where label and body use different fonts/sizes). If the
+    // current leftmost still isn't a "[", search for one within roughly a
+    // line height of destY at any smaller x — that's the bracket label of
+    // the entry the link points at.
+    if (text[startIdx] != L'[') {
+        int sy = coords[startIdx].y;
+        int sDy = coords[startIdx].dy;
+        int yTol = sDy > 10 ? sDy : 10;
+        int bracketIdx = -1;
+        int bracketX = coords[startIdx].x;
+        for (int i = 0; i < textLen; i++) {
+            if (text[i] != L'[') {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.y < sy - yTol || r.y > sy + yTol) {
+                continue;
+            }
+            if (r.x >= bracketX) {
+                continue;
+            }
+            bracketX = r.x;
+            bracketIdx = i;
+        }
+        if (bracketIdx >= 0) {
+            startIdx = bracketIdx;
+        }
     }
 
     int firstLineLeftX = coords[startIdx].x;
