@@ -455,16 +455,78 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
     if (ty < 0.f) {
         ty = 0.f;
     }
+    // When destY anchors at a "Figure N.M" / "Abbildung N.M" / "Table N.M"
+    // caption line, the figure / table *body* sits above the caption — but
+    // ty currently starts at the caption. Extend upward so the popup
+    // includes the figure body, not just the caption + the paragraph
+    // following it.
+    bool destAtCaption = false;
+    if (text && coords && textLen > 0 && destY > 0.f) {
+        auto isCaptionAt = [&](int idx) -> bool {
+            if (idx > 0) {
+                WCHAR prev = text[idx - 1];
+                bool prevAlnum =
+                    (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') || (prev >= L'0' && prev <= L'9');
+                if (prevAlnum) {
+                    return false;
+                }
+            }
+            auto matchWord = [&](const WCHAR* w, int n) -> bool {
+                if (idx + n + 1 >= textLen) {
+                    return false;
+                }
+                for (int j = 0; j < n; j++) {
+                    WCHAR c = text[idx + j];
+                    if (c >= L'A' && c <= L'Z') {
+                        c = (WCHAR)(c + 32);
+                    }
+                    if (c != w[j]) {
+                        return false;
+                    }
+                }
+                int k = idx + n;
+                while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
+                    k++;
+                }
+                return k < textLen && text[k] >= L'0' && text[k] <= L'9';
+            };
+            return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
+                   matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
+                   matchWord(L"algorithmus", 11);
+        };
+        int dY = (int)destY;
+        for (int i = 0; i < textLen; i++) {
+            int gy = coords[i].y;
+            if (gy < dY - 5 || gy > dY + 15) {
+                continue;
+            }
+            if (isCaptionAt(i)) {
+                destAtCaption = true;
+                break;
+            }
+        }
+    }
+    if (destAtCaption) {
+        constexpr float kFigureBodyExtendPt = 250.f;
+        float newTy = ty - kFigureBodyExtendPt;
+        if (newTy < 0.f) {
+            newTy = 0.f;
+        }
+        ty = newTy;
+    }
     float h = mediabox.dy - ty;
     if (h <= 0.f) {
         h = mediabox.dy;
         ty = 0.f;
     }
     // Cap to a focused region size so the popup is wide and short rather
-    // than narrow and tall.
+    // than narrow and tall. Captions get a taller cap so the figure body
+    // above and the caption text below both fit.
     constexpr float kMaxLandscapePt = 200.f;
-    if (h > kMaxLandscapePt) {
-        h = kMaxLandscapePt;
+    constexpr float kMaxLandscapeCaptionPt = 360.f;
+    float maxLandscape = destAtCaption ? kMaxLandscapeCaptionPt : kMaxLandscapePt;
+    if (h > maxLandscape) {
+        h = maxLandscape;
     }
     // Caption extension: if a "Figure N.M" / "Table N.M" / "Listing N.M" /
     // "Algorithm N.M" caption appears within ~250pt below the capped region
@@ -502,8 +564,9 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
                 }
                 return k < textLen && text[k] >= L'0' && text[k] <= L'9';
             };
-            return matchWord(L"figure", 6) || matchWord(L"table", 5) || matchWord(L"listing", 7) ||
-                   matchWord(L"algorithm", 9);
+            return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
+                   matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
+                   matchWord(L"algorithmus", 11);
         };
         // Search to end of page so tall figures with captions far below the
         // initial 200pt cap still match. First "Figure N.M" line-start on the
@@ -706,6 +769,101 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         firstLineDy = 12;
     }
 
+    // Bracket-style entry ("[ZM12]", "[1]", …): build the bounding box from
+    // a y-range whose upper bound is the next "[" at firstLineLeftX. The
+    // iterative scan below depends on text-array order, but some PDFs draw
+    // labels and body in non-monotonic order — that made rule (a) terminate
+    // on a *later* entry's "[" appearing early in the text array, before our
+    // entry's body lines 2+. The y-range approach is order-independent.
+    if (text[startIdx] == L'[') {
+        int entryYBoundary = (int)mediabox.dy;
+        for (int i = 0; i < textLen; i++) {
+            if (i == startIdx) {
+                continue;
+            }
+            if (text[i] != L'[') {
+                continue;
+            }
+            Rect r = coords[i];
+            // Accept "[" up to 30pt right of firstLineLeftX: some layouts
+            // prefix entries with a page number or section index (e.g. a
+            // "2" left of "[VB25]"), so the label "[" isn't exactly at
+            // firstLineLeftX. Body-text "[…]" sits at indentX (≥ ~60pt
+            // right of firstLineLeftX) so it's still excluded.
+            if (r.x < firstLineLeftX - 5 || r.x > firstLineLeftX + 30) {
+                continue;
+            }
+            if (r.y <= firstLineY + firstLineDy) {
+                continue;
+            }
+            if (r.y < entryYBoundary) {
+                entryYBoundary = r.y;
+            }
+        }
+        // Cap to a reasonable entry height so a last-on-page entry (no next
+        // "[") doesn't sweep the page footer / page number into the popup.
+        constexpr int kMaxBracketEntryPt = 250;
+        int capY = firstLineY + kMaxBracketEntryPt;
+        if (capY < entryYBoundary) {
+            entryYBoundary = capY;
+        }
+        // Pull the boundary up by ~half a line height so the next entry's
+        // first line — whose glyph tops can round to within 1–2 pt of the
+        // "[" we picked — is reliably excluded.
+        entryYBoundary -= 6;
+        int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
+        for (int i = 0; i < textLen; i++) {
+            WCHAR c = text[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.x < firstLineLeftX - 20) {
+                continue;
+            }
+            if (r.y < firstLineY - 5) {
+                continue;
+            }
+            if (r.y >= entryYBoundary) {
+                continue;
+            }
+            if (r.x < bMinX) {
+                bMinX = r.x;
+            }
+            if (r.y < bMinY) {
+                bMinY = r.y;
+            }
+            if (r.x + r.dx > bMaxX) {
+                bMaxX = r.x + r.dx;
+            }
+            if (r.y + r.dy > bMaxY) {
+                bMaxY = r.y + r.dy;
+            }
+        }
+        if (bMinX != INT_MAX && (bMaxX - bMinX) >= 50 && (bMaxY - bMinY) >= 12) {
+            RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt,
+                      (float)(bMaxX - bMinX) + 2.f * kEntryPadPt, (float)(bMaxY - bMinY) + 2.f * kEntryPadPt};
+            if (box.x < 0.f) {
+                box.dx += box.x;
+                box.x = 0.f;
+            }
+            if (box.y < 0.f) {
+                box.dy += box.y;
+                box.y = 0.f;
+            }
+            if (box.x + box.dx > mediabox.dx) {
+                box.dx = mediabox.dx - box.x;
+            }
+            if (box.y + box.dy > mediabox.dy) {
+                box.dy = mediabox.dy - box.y;
+            }
+            if (box.dx >= 50.f && box.dy >= 20.f) {
+                return box;
+            }
+        }
+        // Fall through to the iterative-scan logic on degenerate result.
+    }
+
     // 2. Scan forward to find the end of the entry.
     int endIdx = textLen;
     int prevY = firstLineY;
@@ -899,8 +1057,9 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
                 }
                 return k < textLen && text[k] >= L'0' && text[k] <= L'9';
             };
-            return matchWord(L"figure", 6) || matchWord(L"table", 5) || matchWord(L"listing", 7) ||
-                   matchWord(L"algorithm", 9);
+            return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
+                   matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
+                   matchWord(L"algorithmus", 11);
         };
         int boxBottomY = (int)(box.y + box.dy);
         for (int i = 0; i < textLen; i++) {
@@ -949,8 +1108,10 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
     };
     WCHAR firstC = text[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
-    bool labelStart = matchPrefix(L"figure", 6) || matchPrefix(L"table", 5) || matchPrefix(L"section", 7) ||
-                      matchPrefix(L"chapter", 7) || matchPrefix(L"algorithm", 9);
+    bool labelStart = matchPrefix(L"figure", 6) || matchPrefix(L"abbildung", 9) || matchPrefix(L"table", 5) ||
+                      matchPrefix(L"tabelle", 7) || matchPrefix(L"listing", 7) || matchPrefix(L"section", 7) ||
+                      matchPrefix(L"abschnitt", 9) || matchPrefix(L"chapter", 7) || matchPrefix(L"kapitel", 7) ||
+                      matchPrefix(L"algorithm", 9) || matchPrefix(L"algorithmus", 11);
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
     }
