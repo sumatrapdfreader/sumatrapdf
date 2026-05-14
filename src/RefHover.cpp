@@ -712,10 +712,17 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
     int textLen = 0;
     Rect* coords = nullptr;
     const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
-    if (destY < 0.f) {
-        return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
+    // Sparse-text dest page (image-only or near-image-only — e.g. a
+    // children's PDF overview with character thumbnails plus a single
+    // heading). Fitting to the heading line gives a thin sliver and hides
+    // the actual content. Show the whole page so the user sees what they
+    // would navigate to; the auto-fit in RefHoverOnTimer scales the bitmap
+    // to popup limits.
+    constexpr int kSparsePageTextLen = 50;
+    if (!text || textLen < kSparsePageTextLen || !coords) {
+        return RectF{0.f, 0.f, mediabox.dx, mediabox.dy};
     }
-    if (!text || textLen <= 0 || !coords) {
+    if (destY < 0.f) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
     }
 
@@ -1253,16 +1260,21 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
         return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
     };
 
-    // Pick the best alphanumeric run from the source rect as the search
-    // needle. Strips surrounding punctuation ("(AKM)" → "AKM"). Tokens
+    // Collect alphanumeric candidate runs from the source rect as search
+    // needles. Strips surrounding punctuation ("(AKM)" → "AKM"). Tokens
     // flanked by parentheses (the typical "definition" convention for
     // expanding a phrase, e.g. "Architectural Knowledge Management (AKM)")
-    // win over equally / longer-but-non-flanked tokens — that keeps the
-    // resolver from latching onto a citation key like "KLV06" inside
-    // "[KLV06]" when both appear near the link rect.
-    int bestStart = -1;
-    int bestLen = 0;
-    bool bestIsParens = false;
+    // are preferred — that keeps the resolver from latching onto a citation
+    // key like "KLV06" inside "[KLV06]" when both appear near the link rect.
+    // Each candidate is tried against the dest page in priority order;
+    // first match wins. Trying multiple candidates handles cases where the
+    // longest run isn't on the dest page but a shorter run is (e.g. Bluey
+    // "Jump to all (a-z)" → "Jump" not on dest, "all" matches "All
+    // Characters").
+    struct Cand { int start; int len; bool flanked; };
+    constexpr int kMaxCands = 16;
+    Cand cands[kMaxCands];
+    int ncands = 0;
     int curStart = -1;
     int curLen = 0;
     for (int i = 0; i <= rawLen; i++) {
@@ -1273,26 +1285,32 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
             }
             curLen++;
         } else {
-            if (curLen >= 2) {
+            if (curLen >= 2 && ncands < kMaxCands) {
                 bool flanked = (curStart > 0 && rawText[curStart - 1] == L'(' && i < rawLen && rawText[i] == L')');
-                bool take = false;
-                if (flanked && !bestIsParens) {
-                    take = true;
-                } else if (flanked == bestIsParens && curLen > bestLen) {
-                    take = true;
-                }
-                if (take) {
-                    bestStart = curStart;
-                    bestLen = curLen;
-                    bestIsParens = flanked;
-                }
+                cands[ncands++] = {curStart, curLen, flanked};
             }
             curStart = -1;
             curLen = 0;
         }
     }
-    if (bestLen < 2) {
+    if (ncands == 0) {
         return -1.f;
+    }
+    // Sort: parens-flanked first, then by length descending.
+    for (int i = 0; i < ncands - 1; i++) {
+        for (int j = i + 1; j < ncands; j++) {
+            bool swap = false;
+            if (cands[j].flanked && !cands[i].flanked) {
+                swap = true;
+            } else if (cands[j].flanked == cands[i].flanked && cands[j].len > cands[i].len) {
+                swap = true;
+            }
+            if (swap) {
+                Cand t = cands[i];
+                cands[i] = cands[j];
+                cands[j] = t;
+            }
+        }
     }
 
     int destLen = 0;
@@ -1301,32 +1319,6 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
     if (!destText || destLen <= 0 || !destCoords) {
         return -1.f;
     }
-    auto matchAt = [&](int idx) -> bool {
-        if (idx + bestLen > destLen) {
-            return false;
-        }
-        for (int j = 0; j < bestLen; j++) {
-            WCHAR a = destText[idx + j];
-            WCHAR b = rawText[bestStart + j];
-            if (a >= L'A' && a <= L'Z') {
-                a = (WCHAR)(a + 32);
-            }
-            if (b >= L'A' && b <= L'Z') {
-                b = (WCHAR)(b + 32);
-            }
-            if (a != b) {
-                return false;
-            }
-        }
-        if (idx > 0 && isAlnum(destText[idx - 1])) {
-            return false;
-        }
-        if (idx + bestLen < destLen && isAlnum(destText[idx + bestLen])) {
-            return false;
-        }
-        return true;
-    };
-
     // Prefer line-start matches (no other glyph at smaller x with same y)
     // over mid-line matches. A "Figure 7.1" caption sits at line start; a
     // body-text mention "in Figure 7.1 below" sits mid-line. Same logic
@@ -1352,27 +1344,60 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
         return true;
     };
 
-    int bestX_lineStart = INT_MAX;
-    int bestY_lineStart = -1;
-    int bestX_any = INT_MAX;
-    int bestY_any = -1;
-    for (int i = 0; i < destLen; i++) {
-        if (!matchAt(i)) {
-            continue;
-        }
-        Rect r = destCoords[i];
-        if (isLineStartMatch(i)) {
-            if (r.x < bestX_lineStart) {
-                bestX_lineStart = r.x;
-                bestY_lineStart = r.y;
+    for (int ci = 0; ci < ncands; ci++) {
+        int bestStart = cands[ci].start;
+        int bestLen = cands[ci].len;
+        auto matchAt = [&](int idx) -> bool {
+            if (idx + bestLen > destLen) {
+                return false;
             }
-        } else if (r.x < bestX_any) {
-            bestX_any = r.x;
-            bestY_any = r.y;
+            for (int j = 0; j < bestLen; j++) {
+                WCHAR a = destText[idx + j];
+                WCHAR b = rawText[bestStart + j];
+                if (a >= L'A' && a <= L'Z') {
+                    a = (WCHAR)(a + 32);
+                }
+                if (b >= L'A' && b <= L'Z') {
+                    b = (WCHAR)(b + 32);
+                }
+                if (a != b) {
+                    return false;
+                }
+            }
+            if (idx > 0 && isAlnum(destText[idx - 1])) {
+                return false;
+            }
+            if (idx + bestLen < destLen && isAlnum(destText[idx + bestLen])) {
+                return false;
+            }
+            return true;
+        };
+
+        int bestX_lineStart = INT_MAX;
+        int bestY_lineStart = -1;
+        int bestX_any = INT_MAX;
+        int bestY_any = -1;
+        for (int i = 0; i < destLen; i++) {
+            if (!matchAt(i)) {
+                continue;
+            }
+            Rect r = destCoords[i];
+            if (isLineStartMatch(i)) {
+                if (r.x < bestX_lineStart) {
+                    bestX_lineStart = r.x;
+                    bestY_lineStart = r.y;
+                }
+            } else if (r.x < bestX_any) {
+                bestX_any = r.x;
+                bestY_any = r.y;
+            }
+        }
+        int bestY = (bestY_lineStart >= 0) ? bestY_lineStart : bestY_any;
+        if (bestY >= 0) {
+            return (float)bestY;
         }
     }
-    int bestY = (bestY_lineStart >= 0) ? bestY_lineStart : bestY_any;
-    return (bestY >= 0) ? (float)bestY : -1.f;
+    return -1.f;
 }
 
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
@@ -1383,12 +1408,22 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     int destPage = s->pendingDestPage;
     float destX = s->pendingDestX;
     float destY = s->pendingDestY;
+
+    RectF mediabox = engine->PageMediabox(destPage);
+    if (mediabox.dx <= 0.f || mediabox.dy <= 0.f) {
+        return;
+    }
     // PageDestGetDestPoint returns {0,0,0,0} when the link has no specific
     // anchor (page-level destination) — that's the typical case for body-text
     // abbreviation / glossary links and for some TOC-derived bib refs. In
     // those cases destY == 0 (not < 0), so we have to treat <= 0 as "no
     // anchor" and try to recover a specific Y from the source link's text.
-    if (destY <= 0.f) {
+    // Some PDFs author /XYZ with y just past the page bottom (negative in
+    // PDF user space, top-down flips it past mediabox.dy) when they mean
+    // "top of page" — e.g. Bluey.pdf "JUMP TO ALL (A-Z)" uses
+    // /XYZ 0 -2.58 0. Treat past-page-bottom destY the same as page-level.
+    if (destY <= 0.f || destY >= mediabox.dy - 1.f) {
+        destY = 0.f;
         float resolved = ResolveDestYFromSourceText(engine, s->pendingSrcPage, s->pendingSrcRect, destPage);
         if (resolved >= 0.f) {
             destY = resolved;
@@ -1396,11 +1431,6 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
                 destX = 0.f;
             }
         }
-    }
-
-    RectF mediabox = engine->PageMediabox(destPage);
-    if (mediabox.dx <= 0.f || mediabox.dy <= 0.f) {
-        return;
     }
 
     RectF region = DetectEntryBox(engine, destPage, destX, destY);
