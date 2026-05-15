@@ -586,11 +586,16 @@ TempStr DealPlainSync(TempStr pathSync) {
         return pathSync;
     } else {
         logf("DealPlainSync: '%s' NOT utf-8, decode by local ansi and write utf-8 to temp file\n", pathSync);
-        ByteSlice dst(ConvertLocalToUTF8((char*)src.data()));
+        char* converted = ConvertLocalToUTF8((char*)src.data());
+        if (!converted) {
+            logfa("DealPlainSync: unable to convert '%s' from local ansi to utf-8.\n", pathSync);
+            return nullptr;
+        }
+        ByteSlice dst(converted);
 
         if (dst.IsEmpty()) {
             logfa("DealPlainSync: decoded content is empty.\n", pathSync);
-            // return nullptr;
+            return nullptr;
         }
         TempStr tempPath = GetTempFilePathTemp("stx"); // stxabcdef.tmp
         if (!tempPath) {
