@@ -120,6 +120,14 @@ static MenuDef menuDefFile[] = {
         CmdSaveAs,
     },
     {
+        _TRN("Save &Workspace..."),
+        CmdSaveWorkspace,
+    },
+    {
+        _TRN("Open Workspace..."),
+        CmdOpenWorkspace,
+    },
+    {
         _TRN("Save Annotations to existing PDF"),
         CmdSaveAnnotations,
     },

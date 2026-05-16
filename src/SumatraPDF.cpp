@@ -4048,6 +4048,147 @@ static TempWStr GetFileFilterTemp() {
     return ToWStrTemp(fileFilter);
 }
 
+// Writes the current session's open file paths to the given file.
+// Returns true on success.
+static bool DoSaveWorkspaceToFile(MainWindow* win, const char* path) {
+    // Persist display state into FileStates and rebuild SessionData so we
+    // have a fresh, authoritative list of every currently-open tab.
+    SaveSettings();
+
+    StrBuilder sb;
+    Vec<SessionData*>* sessionData = gGlobalPrefs->sessionData;
+    for (SessionData* sd : *sessionData) {
+        for (TabState* ts : *sd->tabStates) {
+            if (str::IsEmpty(ts->filePath)) {
+                continue;
+            }
+            sb.Append(ts->filePath);
+            sb.Append("\r\n");
+        }
+    }
+
+    ByteSlice data = sb.AsByteSlice();
+    bool ok = file::WriteFile(path, data);
+    if (!ok) {
+        MessageBoxWarning(win->hwndFrame, _TRA("Failed to save workspace"));
+    }
+    return ok;
+}
+
+static void SaveWorkspace(MainWindow* win) {
+    if (!CanAccessDisk()) {
+        return;
+    }
+
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win->hwndFrame;
+    ofn.lpstrFilter = L"SumatraPDF Workspace (*.sumatraws)\0*.sumatraws\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = L"sumatraws";
+
+    WCHAR dstFileName[MAX_PATH]{};
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = MAX_PATH;
+
+    if (!GetSaveFileNameW(&ofn)) {
+        return;
+    }
+
+    TempStr path = ToUtf8Temp(dstFileName);
+    DoSaveWorkspaceToFile(win, path);
+}
+
+static void LoadWorkspace(MainWindow* win) {
+    if (!CanAccessDisk()) {
+        return;
+    }
+
+    // Show the Open dialog first so the user can cancel before being asked
+    // about saving.
+    OPENFILENAMEW ofn{};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = win->hwndFrame;
+    ofn.lpstrFilter = L"SumatraPDF Workspace (*.sumatraws)\0*.sumatraws\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+
+    WCHAR srcFileName[MAX_PATH]{};
+    ofn.lpstrFile = srcFileName;
+    ofn.nMaxFile = MAX_PATH;
+
+    if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+
+    // Ask whether the current workspace should be saved before replacing it.
+    {
+        UINT flags = MB_YESNOCANCEL | MB_ICONQUESTION | MbRtlReadingMaybe();
+        auto caption = _TRA("Save Workspace");
+        auto msg = _TRA("Do you want to save the current workspace before opening a new one?");
+        int res = MsgBox(win->hwndFrame, msg, caption, flags);
+        if (res == IDCANCEL) {
+            return;
+        }
+        if (res == IDYES) {
+            // Show Save As dialog; if the user cancels it we abort the whole
+            // load so we don't unexpectedly discard the current session.
+            OPENFILENAMEW saveOfn{};
+            saveOfn.lStructSize = sizeof(saveOfn);
+            saveOfn.hwndOwner = win->hwndFrame;
+            saveOfn.lpstrFilter = L"SumatraPDF Workspace (*.sumatraws)\0*.sumatraws\0All Files (*.*)\0*.*\0";
+            saveOfn.nFilterIndex = 1;
+            saveOfn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+            saveOfn.lpstrDefExt = L"sumatraws";
+
+            WCHAR saveFileName[MAX_PATH]{};
+            saveOfn.lpstrFile = saveFileName;
+            saveOfn.nMaxFile = MAX_PATH;
+
+            if (!GetSaveFileNameW(&saveOfn)) {
+                return;
+            }
+            TempStr savePath = ToUtf8Temp(saveFileName);
+            if (!DoSaveWorkspaceToFile(win, savePath)) {
+                return;
+            }
+        }
+    }
+
+    // Close all open tabs across every window before loading the new workspace
+    // so that only the files from the loaded workspace remain open.
+    Vec<MainWindow*> allWindows(gWindows);
+    for (MainWindow* w : allWindows) {
+        CloseAllTabs(w);
+    }
+
+    // Read and open the files listed in the workspace file.
+    TempStr path = ToUtf8Temp(srcFileName);
+    ByteSlice data = file::ReadFile(path);
+    if (data.empty()) {
+        return;
+    }
+
+    // Parse one file path per line; look up the matching FileState from
+    // history so that scroll position, zoom etc. are restored as well.
+    StrVec lines;
+    TempStr content = str::DupTemp((char*)data.data(), (int)data.size());
+    Split(&lines, content, "\n", true);
+    str::Free(data.data());
+
+    // Use the first still-valid window as the load target.
+    MainWindow* loadWin = gWindows.size() > 0 ? gWindows.at(0) : win;
+    for (char* line : lines) {
+        str::TrimWSInPlace(line, str::TrimOpt::Both);
+        if (str::Leni(line) == 0) {
+            continue;
+        }
+        LoadArgs args(line, loadWin);
+        LoadDocument(&args);
+    }
+}
+
 static void OpenFile(MainWindow* win) {
     if (!CanAccessDisk()) {
         return;
@@ -6489,6 +6630,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSaveAs:
             SaveCurrentFileAs(win);
+            break;
+
+        case CmdSaveWorkspace:
+            SaveWorkspace(win);
+            break;
+
+        case CmdOpenWorkspace:
+            LoadWorkspace(win);
             break;
 
         case CmdPrint:
