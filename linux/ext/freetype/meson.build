@@ -32,7 +32,7 @@ freetype_sources = files(
 freetype_inc = include_directories(freetype_inc_dir, freetype_mupdf_scripts)
 
 freetype_lib = static_library('freetype', freetype_sources,
-  include_directories: [freetype_inc, zlib_inc],
+  include_directories: [freetype_inc, zlib_inc, brotli_inc],
   c_args: [
     '-DFT2_BUILD_LIBRARY',
     '-DFT_CONFIG_MODULES_H="slimftmodules.h"',
@@ -40,7 +40,7 @@ freetype_lib = static_library('freetype', freetype_sources,
     '-DFT_CONFIG_OPTION_USE_BROTLI',
     '-DFT_CONFIG_OPTION_SYSTEM_ZLIB',
   ],
-  dependencies: [zlib_dep],
+  dependencies: [zlib_dep, brotli_dep],
 )
 
 freetype_dep = declare_dependency(
