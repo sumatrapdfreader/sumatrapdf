@@ -21,7 +21,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y meson ninja-build gcc g++
+          sudo apt-get install -y meson ninja-build gcc g++ libgtk-4-dev
 
       - name: Configure
         run: |

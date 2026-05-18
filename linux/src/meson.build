@@ -1,6 +1,8 @@
 # Phase 1: Minimal test binary to verify MuPDF works on Linux
 # Phase 2+: Full application sources will be added here
 
+gtk4_dep = dependency('gtk4', version: '>= 4.6')
+
 common_deps = [
   mupdf_dep,
   zlib_dep,
@@ -20,8 +22,22 @@ common_deps = [
 
 common_link_args = ['-lm', '-lpthread']
 
-# The main application binary (currently the renderer test)
+# ─── GTK 4 GUI application ────────────────────────────────────────────────────
+
 sumatrapdf = executable('sumatrapdf',
+  files('main_gtk.c'),
+  mupdf_resource_objs,
+  include_directories: [
+    include_directories('../../mupdf/include'),
+  ],
+  dependencies: common_deps + [gtk4_dep],
+  link_args: common_link_args,
+  install: true,
+)
+
+# ─── CLI test binary (headless) ───────────────────────────────────────────────
+
+test_mupdf = executable('test-mupdf',
   files('test_mupdf.c'),
   mupdf_resource_objs,
   include_directories: [
@@ -29,10 +45,10 @@ sumatrapdf = executable('sumatrapdf',
   ],
   dependencies: common_deps,
   link_args: common_link_args,
-  install: true,
+  install: false,
 )
 
-test('mupdf-smoke', sumatrapdf, args: [])
+test('mupdf-smoke', test_mupdf, args: [])
 
 # ─── Install targets ──────────────────────────────────────────────────────────
 
