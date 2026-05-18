@@ -1165,8 +1165,7 @@ static HWND GetBrowserControlHwnd(HWND hwndControlParent) {
 }
 
 // WndProc of the window that is a parent hwnd of embedded browser control.
-static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    HtmlWindow* win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, HtmlWindow* win) {
     if (!win) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -1202,7 +1201,8 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 }
 
 static LRESULT CALLBACK WndProcParent2(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    return WndProcParent(hwnd, msg, wp, lp);
+    auto win = reinterpret_cast<HtmlWindow*>(data);
+    return WndProcParent(hwnd, msg, wp, lp, win);
 }
 
 void HtmlWindow::SubclassHwnd() {
@@ -1218,6 +1218,10 @@ void HtmlWindow::UnsubclassHwnd() {
         return;
     }
     RemoveWindowSubclass(hwndParent, WndProcParent2, subclassId);
+    auto curr = (HtmlWindow*)GetWindowLongPtr(hwndParent, GWLP_USERDATA);
+    if (curr == this) {
+        SetWindowLongPtr(hwndParent, GWLP_USERDATA, 0);
+    }
     subclassId = 0;
 }
 
