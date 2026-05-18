@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.sumatrapdf.SumatraPDF</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>SumatraPDF</name>
+  <summary>Fast, minimal document viewer</summary>
+  <description>
+    <p>
+      SumatraPDF is a fast, lightweight document viewer for PDF, EPUB, XPS,
+      CBZ, and other formats. Originally Windows-only, this is the Linux port
+      built with GTK 4.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Fast PDF rendering via MuPDF engine</li>
+      <li>Support for PDF, EPUB, XPS, CBZ, MOBI, FB2 formats</li>
+      <li>Lightweight and low memory footprint</li>
+      <li>Keyboard-driven navigation</li>
+    </ul>
+  </description>
+  <url type="homepage">https://www.sumatrapdfreader.org</url>
+  <url type="bugtracker">https://github.com/nicekr/sumatrapdf/issues</url>
+  <launchable type="desktop-id">sumatrapdf.desktop</launchable>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="3.6-dev" date="2026-05-18">
+      <description><p>Initial Linux port (development preview).</p></description>
+    </release>
+  </releases>
+</component>

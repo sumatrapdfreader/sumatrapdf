@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=SumatraPDF
+GenericName=Document Viewer
+Comment=View PDF, EPUB, XPS, CBZ and other document formats
+Exec=sumatrapdf %f
+Icon=sumatrapdf
+Terminal=false
+Categories=Office;Viewer;Graphics;
+MimeType=application/pdf;application/epub+zip;application/x-cbz;application/oxps;application/vnd.ms-xpsdocument;image/svg+xml;
+Keywords=PDF;document;viewer;reader;
+StartupNotify=true

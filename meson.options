@@ -1,0 +1,3 @@
+option('enable_djvu', type: 'boolean', value: true, description: 'Enable DjVu format support')
+option('enable_chm', type: 'boolean', value: true, description: 'Enable CHM format support')
+option('enable_ebook', type: 'boolean', value: true, description: 'Enable EPUB/MOBI/FB2 support')
