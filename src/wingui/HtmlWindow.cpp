@@ -1342,29 +1342,45 @@ HtmlWindow* HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback* cb) {
 
 HtmlWindow::~HtmlWindow() {
     UnsubclassHwnd();
-    if (oleInPlaceObject) {
-        oleInPlaceObject->InPlaceDeactivate();
-        oleInPlaceObject->UIDeactivate();
-        oleInPlaceObject->Release();
+    auto inPlaceObj = oleInPlaceObject;
+    auto cp = connectionPoint;
+    auto obj = oleObject;
+    auto view = viewObject;
+    auto content = htmlContent;
+    auto browser = webBrowser;
+    oleInPlaceObject = nullptr;
+    connectionPoint = nullptr;
+    oleObject = nullptr;
+    viewObject = nullptr;
+    htmlContent = nullptr;
+    webBrowser = nullptr;
+
+    if (inPlaceObj) {
+        inPlaceObj->InPlaceDeactivate();
+        inPlaceObj->UIDeactivate();
+        inPlaceObj->Release();
     }
-    if (connectionPoint) {
-        connectionPoint->Unadvise(adviseCookie);
-        connectionPoint->Release();
+    if (cp) {
+        cp->Unadvise(adviseCookie);
+        cp->Release();
     }
-    if (oleObject) {
-        oleObject->Close(OLECLOSE_NOSAVE);
-        oleObject->SetClientSite(nullptr);
-        oleObject->Release();
+    if (obj) {
+        // Detach the client site before closing. Some IE/Trident teardown paths
+        // appear to invalidate the object during Close(), which makes a later
+        // SetClientSite(nullptr) unsafe.
+        obj->SetClientSite(nullptr);
+        obj->Close(OLECLOSE_NOSAVE);
+        obj->Release();
     }
 
-    if (viewObject) {
-        viewObject->Release();
+    if (view) {
+        view->Release();
     }
-    if (htmlContent) {
-        htmlContent->Release();
+    if (content) {
+        content->Release();
     }
-    if (webBrowser) {
-        webBrowser->Release();
+    if (browser) {
+        browser->Release();
     }
 
     FreeWindowId(windowId);
