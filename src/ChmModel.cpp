@@ -115,7 +115,10 @@ void ChmModel::GoToPage(int pageNo, bool) {
 }
 
 bool ChmModel::SetParentHwnd(HWND hwnd) {
-    ReportIf(htmlWindow || htmlWindowCb);
+    if (htmlWindow || htmlWindowCb) {
+        ReportIf(true);
+        RemoveParentHwnd();
+    }
     htmlWindowCb = new HtmlWindowHandler(this);
     htmlWindow = HtmlWindow::Create(hwnd, htmlWindowCb);
     if (!htmlWindow) {
@@ -127,6 +130,9 @@ bool ChmModel::SetParentHwnd(HWND hwnd) {
 }
 
 void ChmModel::RemoveParentHwnd() {
+    if (!htmlWindow && !htmlWindowCb) {
+        return;
+    }
     delete htmlWindow;
     htmlWindow = nullptr;
     delete htmlWindowCb;
