@@ -1142,6 +1142,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (!win) {
         return;
     }
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        return;
+    }
     WindowTab* tab = win->CurrentTab();
     ReportIf(!tab);
 
@@ -1314,6 +1317,9 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2541
     // ReportIf(win->IsDocLoaded() && args->showWin && win->canvasRc.IsEmpty() && !win->AsChm());
 
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        return;
+    }
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     // restore scroll state after the canvas size has been restored
     if ((args->showWin || ss.page != 1) && win->AsFixed()) {
@@ -1831,6 +1837,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         win->currentTabTemp = AddTabToWindow(win, tab);
         win->RedrawAll(true);
 
+        if (!IsMainWindowValid(win) || win->isBeingClosed) {
+            return nullptr;
+        }
+
         // logf("LoadDocument: !forceReuse, created win->CurrentTab() at 0x%p\n", win->CurrentTab());
     } else {
         win->CurrentTab()->SetFilePath(fullPath);
@@ -1844,7 +1854,14 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     args->placeWindow = !gGlobalPrefs->useTabs;
     bool lazyLoad = args->lazyLoad;
     if (!lazyLoad) {
+        if (!IsMainWindowValid(win) || win->isBeingClosed) {
+            return nullptr;
+        }
         ReplaceDocumentInCurrentTab(args, args->ctrl, nullptr);
+    }
+
+    if (!IsMainWindowValid(win) || win->isBeingClosed) {
+        return nullptr;
     }
 
     if (gPluginMode) {
