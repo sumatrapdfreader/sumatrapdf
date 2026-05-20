@@ -1225,8 +1225,8 @@ static void AddFileMenuItem(HMENU menuFile, const char* filePath, int index) {
     menuString = ShortenStringUtf8InTheMiddleTemp(menuString, kMaxRunes);
 
     TempStr fileName = MenuToSafeStringTemp(menuString);
-    int menuIdx = (int)((index + 1) % 10);
-    menuString = str::FormatTemp("&%d) %s", menuIdx, fileName);
+    int menuIdx = (int)((index) % kFileHistoryMaxRecent);
+    menuString = str::FormatTemp("&%d) %s", menuIdx + 1, fileName);
     uint menuId = CmdFileHistoryFirst + index;
     uint flags = MF_BYCOMMAND | MF_ENABLED | MF_STRING;
     InsertMenuW(menuFile, CmdExit, flags, menuId, ToWStrTemp(menuString));
