@@ -414,8 +414,11 @@ bool SaveSettings() {
     }
     logf("SaveSettings\n");
     // update display states for all tabs
+    // we snapshot the list because SaveSettings() can be called re-entrantly
+    // (e.g. from LoadDocumentFinish while other documents are still loading/closing)
     for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->Tabs()) {
+        Vec<WindowTab*> tabs = win->Tabs();
+        for (WindowTab* tab : tabs) {
             UpdateTabFileDisplayStateForTab(tab);
         }
     }
