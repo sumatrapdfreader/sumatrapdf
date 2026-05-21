@@ -92,3 +92,5 @@ bool WriteExtendedFileExtensionInfo(HKEY hkey, const char* installedExePat);
 bool RemoveUninstallerRegistryInfo(HKEY hkey);
 void RemoveInstallRegistryKeys(HKEY hkey);
 int GetInstallerWinDx();
+
+void ReRegisterFileAssociations();
