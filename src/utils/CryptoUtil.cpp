@@ -4,6 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/CryptoUtil.h"
 
+#include <WinCrypt.h>
+
 #ifndef DWORD_MAX
 #define DWORD_MAX 0xffffffffUL
 #endif
@@ -124,4 +126,39 @@ CleanUp:
         CryptReleaseContext(hProv, 0);
     }
     return ok;
+}
+
+ByteSlice ExtractP7m(ByteSlice d) {
+    if (d.empty()) {
+        return {};
+    }
+    const u8* data = d.data();
+    DWORD dataLen = (DWORD)d.size();
+
+    HCRYPTMSG hMsg = CryptMsgOpenToDecode(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, 0, 0, nullptr, nullptr);
+    if (!hMsg) {
+        return {};
+    }
+
+    BOOL ok = CryptMsgUpdate(hMsg, data, dataLen, TRUE);
+    if (!ok) {
+        CryptMsgClose(hMsg);
+        return {};
+    }
+
+    DWORD cbContent = 0;
+    ok = CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, nullptr, &cbContent);
+    if (!ok || cbContent == 0) {
+        CryptMsgClose(hMsg);
+        return {};
+    }
+
+    u8* content = AllocArray<u8>(cbContent);
+    ok = CryptMsgGetParam(hMsg, CMSG_CONTENT_PARAM, 0, content, &cbContent);
+    CryptMsgClose(hMsg);
+    if (!ok) {
+        free(content);
+        return {};
+    }
+    return {content, cbContent};
 }

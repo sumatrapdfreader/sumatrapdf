@@ -4032,7 +4032,7 @@ static TempWStr GetFileFilterTemp() {
         const char* filter;
         bool available;
     } fileFormats[] = {
-        {_TRA("PDF documents"), "*.pdf", true},
+        {_TRA("PDF documents"), "*.pdf;*.p7m", true},
         {_TRA("XPS documents"), "*.xps;*.oxps", true},
         {_TRA("DjVu documents"), "*.djvu", true},
         {_TRA("Postscript documents"), "*.ps;*.eps", IsEnginePsAvailable()},

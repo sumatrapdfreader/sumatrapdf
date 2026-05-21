@@ -44,4 +44,9 @@ void CryptoUtilTest() {
                             "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592"));
     utassert(TestDigestSHA2("The quick brown fox jumps over the lazy dog.", 44,
                             "ef537f25c895bfa782526529a9b63d97aa631564d5d789c2b765448c8635fb6c"));
+
+    // basic sanity for p7m extractor (no real p7m data, just ensure no crash and empty on bad input)
+    utassert(ExtractP7m(ByteSlice()).empty());
+    utassert(ExtractP7m(ByteSlice((const u8*)"not a p7m", 9)).empty());
+    utassert(ExtractP7m(ByteSlice((const u8*)"%PDF-1.4", 8)).empty());
 }

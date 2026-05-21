@@ -250,6 +250,26 @@ static EngineBase* CreateEngineForKind(Kind kind, Kind contentHintKind, const ch
 EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enableChmEngine) {
     ReportIf(!path);
 
+    if (str::EndsWithI(path, ".p7m")) {
+        ByteSlice fileData = file::ReadFile(path);
+        ByteSlice extracted = ExtractP7m(fileData);
+        fileData.Free();
+        if (!extracted.empty()) {
+            Kind kind = GuessFileTypeFromContent(extracted);
+            if (kind == kindFilePDF) {
+                EngineBase* engine = CreateEngineMupdfFromData(extracted, "file.pdf", pwdUI);
+                extracted.Free();
+                if (engine) {
+                    engine->SetFilePath(path);
+                    engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
+                    return engine;
+                }
+            } else {
+                extracted.Free();
+            }
+        }
+    }
+
     // try to open with the engine guess from file name; if that fails,
     // guess the file type from content (one disk read inside
     // GuessFileTypeFromContent) and retry.
