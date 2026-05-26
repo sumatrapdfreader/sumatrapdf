@@ -32,6 +32,22 @@ static void ShellNotifyAssociationsChanged() {
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 }
 
+static bool HasRegistryValue(HKEY hkey, const char* keyName, const char* valName) {
+    WCHAR* keyW = ToWStrTemp(keyName);
+    WCHAR* valW = ToWStrTemp(valName);
+    DWORD type = 0;
+    DWORD cb = 0;
+    LSTATUS res = SHGetValueW(hkey, keyW, valW, &type, nullptr, &cb);
+    // success or ERROR_MORE_DATA means the value exists
+    return (res == ERROR_SUCCESS || res == ERROR_MORE_DATA);
+}
+
+static bool HasOurOpenWithEntry(HKEY hkey, const char* ext) {
+    TempStr key = str::JoinTemp("Software\\Classes\\", ext, "\\OpenWithProgids");
+    TempStr progID = str::JoinTemp(kAppName, ext);
+    return HasRegistryValue(hkey, key, progID);
+}
+
 // caller needs to str::Free() the result
 static char* GetInstallDate() {
     SYSTEMTIME st;
@@ -634,4 +650,45 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
     LoggedDeleteRegKey(hkey, keyName);
 
     ShellNotifyAssociationsChanged();
+}
+
+// re-register our "Open With" file association handlers (under OpenWithProgids
+// and the corresponding ProgID entries) if this is an installed (non-portable)
+// copy of SumatraPDF. We do this at startup to counter other apps (e.g. Microsoft
+// Edge) that might remove us from the "Open with" context menu for .pdf etc. files.
+// We only touch HKCU (always writable by the current user) and optionally HKLM
+// (for all-users installs; fails gracefully without admin rights).
+void ReRegisterFileAssociations() {
+    if (!IsOurExeInstalled()) {
+        return;
+    }
+    TempStr exePath = GetSelfExePathTemp();
+    if (str::IsEmpty(exePath)) {
+        return;
+    }
+
+    bool didRegister = false;
+    if (!HasOurOpenWithEntry(HKEY_CURRENT_USER, ".pdf")) {
+        RegisterForOpenWith(HKEY_CURRENT_USER, exePath);
+        if (IsWindows10OrGreater()) {
+            RegisterForDefaultPrograms(HKEY_CURRENT_USER, exePath);
+        }
+        didRegister = true;
+    }
+
+    // for all-users installs, also try to restore the HKLM entries (best effort)
+    TempStr regPathUninst = GetRegPathUninstTemp(kAppName);
+    if (HasRegistryValue(HKEY_LOCAL_MACHINE, regPathUninst, "InstallLocation")) {
+        if (!HasOurOpenWithEntry(HKEY_LOCAL_MACHINE, ".pdf")) {
+            RegisterForOpenWith(HKEY_LOCAL_MACHINE, exePath);
+            if (IsWindows10OrGreater()) {
+                RegisterForDefaultPrograms(HKEY_LOCAL_MACHINE, exePath);
+            }
+            didRegister = true;
+        }
+    }
+
+    if (didRegister) {
+        ShellNotifyAssociationsChanged();
+    }
 }

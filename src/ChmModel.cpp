@@ -133,6 +133,9 @@ bool ChmModel::SetParentHwnd(HWND hwnd) {
 }
 
 void ChmModel::RemoveParentHwnd() {
+    if (!htmlWindow && !htmlWindowCb) {
+        return;
+    }
     delete htmlWindow;
     htmlWindow = nullptr;
     delete htmlWindowCb;
