@@ -796,8 +796,8 @@ static bool gShowAnnotationNotification = true;
 static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
 // Returns true when el is an internal-document link (not an external URL or
-// file launch). Used as a heuristic for "this is probably a citation link".
-static bool IsCitationLink(IPageElement* el) {
+// file launch). Such links are eligible for RefHover destination preview.
+static bool IsInternalLinkDest(IPageElement* el) {
     if (!el || !el->Is(kindPageElementDest)) {
         return false;
     }
@@ -894,13 +894,15 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
         case MouseAction::None: {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
+            IPageElement* el = dm->GetElementAtPos(pos, nullptr);
+            bool hasInternalLink = IsInternalLinkDest(el);
             if (annot != prev) {
 #if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
                 TempStr prevName = prev ? AnnotationReadableNameTemp(prev->type) : (TempStr) "none";
                 logf("different annot under cursor. prev: %s, new: %s\n", prevName, name);
 #endif
-                if (gShowAnnotationNotification) {
+                if (gShowAnnotationNotification && !hasInternalLink) {
                     if (annot) {
                         // auto r = annot->bounds;
                         // logf("new pos: %d-%d, size: %d-%d\n", (int)r.x, (int)r.y, (int)r.dx, (int)r.dy);
@@ -918,19 +920,18 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     }
                 }
             }
-            if (!annot) {
+            if (!annot || hasInternalLink) {
                 RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
             }
             win->annotationUnderCursor = annot;
 
-            // Citation hover: render the destination region of an internal
-            // link (typically the bibliography entry) into a popup.
+            // RefHover: render the destination region of an internal link
+            // (bibliography entry, glossary, generic goto-link) into a popup.
             if (gGlobalPrefs->enableCitationHover) {
                 if (!win->refHover) {
                     win->refHover = RefHoverCreate(win->hwndCanvas);
                 }
-                IPageElement* el = dm->GetElementAtPos(pos, nullptr);
-                if (win->refHover && IsCitationLink(el)) {
+                if (win->refHover && hasInternalLink) {
                     IPageDestination* dest = el->AsLink();
                     int destPage = PageDestGetPageNo(dest);
                     RectF destPt = PageDestGetDestPoint(dest);
@@ -2156,7 +2157,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         if (dmHover) {
             Point pt = HwndGetCursorPos(win->hwndCanvas);
             IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
-            if (IsCitationLink(elHover)) {
+            if (IsInternalLinkDest(elHover)) {
                 short delta = GET_WHEEL_DELTA_WPARAM(wp);
                 bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
                 if (isCtrl) {
