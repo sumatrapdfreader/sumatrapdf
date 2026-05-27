@@ -96,6 +96,9 @@ struct PageDestinationMupdf : IPageDestination {
     // -1 means "not resolved" (e.g. external URL or file launch).
     float destX = -1.f;
     float destY = -1.f;
+    // /XYZ zoom level requested by the link (1.0 = 100%). 0 means
+    // "not specified" — caller should use document default.
+    float destZoom = 0.f;
 
     PageDestinationMupdf(fz_link* l, fz_outline* o) {
         // exactly one must be provided
@@ -122,6 +125,11 @@ struct PageDestinationMupdf : IPageDestination {
         }
         return {};
     }
+
+    float GetZoom2() override {
+        return destZoom;
+    }
+
     ~PageDestinationMupdf() override {
         str::Free(value);
         str::Free(name);
@@ -160,26 +168,38 @@ static NO_INLINE RectF FzGetRectF(fz_link* link, fz_outline* outline) {
     return {};
 }
 
-static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float* xp, float* yp) {
+static int ResolveLink(fz_context* ctx, fz_document* doc, const char* uri, float* xp, float* yp,
+                       float* zoomp = nullptr) {
     if (!uri) {
         return -1;
     }
     int pageNo = -1;
-    fz_location loc;
+    fz_link_dest ldest{};
 
-    fz_var(loc);
+    fz_var(ldest);
     fz_var(pageNo);
     fz_try(ctx) {
-        loc = fz_resolve_link(ctx, doc, uri, xp, yp);
-        pageNo = fz_page_number_from_location(ctx, doc, loc);
+        ldest = fz_resolve_link_dest(ctx, doc, uri);
+        pageNo = fz_page_number_from_location(ctx, doc, ldest.loc);
     }
     fz_catch(ctx) {
-        fz_warn(ctx, "fz_resolve_link failed");
+        fz_warn(ctx, "fz_resolve_link_dest failed");
         fz_report_error(ctx);
         pageNo = -1;
     }
     if (pageNo < 0) {
         return -1;
+    }
+    if (xp) {
+        *xp = isnan(ldest.x) ? 0.f : ldest.x;
+    }
+    if (yp) {
+        *yp = isnan(ldest.y) ? 0.f : ldest.y;
+    }
+    if (zoomp) {
+        float z = isnan(ldest.zoom) ? 0.f : ldest.zoom;
+        // mupdf reports zoom as percentage (100 = 100%); we use 1.0 as 100%.
+        *zoomp = z / 100.f;
     }
     return pageNo + 1;
 }
@@ -239,11 +259,12 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
     auto dest = new PageDestinationMupdf(link, outline);
     dest->rect = FzGetRectF(link, outline);
     {
-        float x = 0, y = 0;
+        float x = 0, y = 0, z = 0;
         const char* destUri = link ? link->uri : (outline ? outline->uri : nullptr);
-        dest->pageNo = ResolveLink(ctx, doc, destUri, &x, &y);
+        dest->pageNo = ResolveLink(ctx, doc, destUri, &x, &y, &z);
         dest->destX = x;
         dest->destY = y;
+        dest->destZoom = z;
     }
     return dest;
 }

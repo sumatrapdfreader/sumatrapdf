@@ -408,7 +408,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
 }
 
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
-                      int srcPage, RectF srcRect, Rect pageScreenRect) {
+                      float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect) {
     if (!s) {
         return;
     }
@@ -422,6 +422,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int des
     s->pendingDestPage = destPage;
     s->pendingDestX = destX;
     s->pendingDestY = destY;
+    s->pendingDestZoom = destZoom;
     s->pendingSrcPage = srcPage;
     s->pendingSrcRect = srcRect;
     s->pendingPageScreenRect = pageScreenRect;
@@ -1433,7 +1434,32 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         }
     }
 
-    RectF region = DetectEntryBox(engine, destPage, destX, destY);
+    // When the link supplies an /XYZ zoom hint, honour it: render the
+    // destination region anchored at the link's (destX, destY) at the
+    // requested zoom rather than auto-fitting a detected entry box.
+    // This matches the navigation behaviour (DisplayModel::ScrollTo
+    // also reads the link zoom).
+    float linkZoom = s->pendingDestZoom;
+    bool useLinkZoom = (linkZoom > 0.f);
+    // Popup must not look smaller than the page does on screen — if the
+    // user is already viewing the document at a higher zoom than the
+    // link's /XYZ hint, render the popup at the current display zoom
+    // instead (still anchored at the link's top). Otherwise the preview
+    // would feel like a zoom-OUT, defeating the point of XYZ.
+    if (useLinkZoom && pageZoom > linkZoom) {
+        linkZoom = pageZoom;
+    }
+
+    RectF region;
+    if (useLinkZoom) {
+        // Span full page width — strict /XYZ would crop at destX, but for
+        // a hover preview that just chops the left-most letters of the
+        // target lines. Top anchor (destY) is preserved.
+        // dx/dy placeholders; resized against popup caps below.
+        region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
+    } else {
+        region = DetectEntryBox(engine, destPage, destX, destY);
+    }
     // New destination — reset user-driven zoom. baseZoom matches the
     // document's current display zoom for the destination page, so popup
     // text height is comparable to the visible page text. Shrink baseZoom
@@ -1441,7 +1467,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // regions for non-reference targets are typically wider than tall, so
     // the width cap matters here.
     s->userZoom = 1.f;
-    float baseZoom = (pageZoom > 0.f) ? pageZoom : kRenderZoom;
+    float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRenderZoom);
     // Popup max size:
     //   width  ~95% of monitor work area — popup may span beyond the page
     //                text column into the surrounding gray margins so the
@@ -1493,11 +1519,35 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     }
     float availH = (float)(popupHCap - 2 * kBorder);
     float availW = (float)(popupWCap - 2 * kBorder);
-    if (region.dy > 0.f && region.dy * baseZoom > availH) {
-        baseZoom = availH / region.dy;
-    }
-    if (region.dx > 0.f && region.dx * baseZoom > availW) {
-        baseZoom = availW / region.dx;
+    if (useLinkZoom) {
+        // Keep the link's requested zoom; size the region so it fills the
+        // popup without overflowing. Clamp to what's left of the page so
+        // we don't render past the mediabox edge.
+        float wantW = availW / baseZoom;
+        float wantH = availH / baseZoom;
+        float maxW = mediabox.dx - region.x;
+        float maxH = mediabox.dy - region.y;
+        if (wantW > maxW) {
+            wantW = maxW;
+        }
+        if (wantH > maxH) {
+            wantH = maxH;
+        }
+        if (wantW < 1.f) {
+            wantW = 1.f;
+        }
+        if (wantH < 1.f) {
+            wantH = 1.f;
+        }
+        region.dx = wantW;
+        region.dy = wantH;
+    } else {
+        if (region.dy > 0.f && region.dy * baseZoom > availH) {
+            baseZoom = availH / region.dy;
+        }
+        if (region.dx > 0.f && region.dx * baseZoom > availW) {
+            baseZoom = availW / region.dx;
+        }
     }
     if (baseZoom < kMinUserZoom) {
         baseZoom = kMinUserZoom;

@@ -21,6 +21,12 @@ struct RefHoverState {
     int pendingDestPage = -1;
     float pendingDestX = -1.f;
     float pendingDestY = -1.f;
+    // /XYZ zoom hint from the link (1.0 = 100%). 0 means "no zoom hint";
+    // RefHover then falls back to its auto-fit DetectEntryBox heuristic.
+    // When non-zero, the popup renders the destination region centred on
+    // (destX, destY) at this zoom — honouring the link author's intent
+    // (e.g. "goto top-left at 2x").
+    float pendingDestZoom = 0.f;
     // Source link location, used to recover a more specific destY when the
     // PDF link is page-level (destY < 0). We extract the source link's text
     // from srcPage at srcRect and search for that text on destPage to find
@@ -49,7 +55,7 @@ constexpr UINT_PTR kRefHoverTimerID = 9;
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
 void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
-                      int srcPage, RectF srcRect, Rect pageScreenRect);
+                      float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect);
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.

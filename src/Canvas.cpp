@@ -935,6 +935,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     IPageDestination* dest = el->AsLink();
                     int destPage = PageDestGetPageNo(dest);
                     RectF destPt = PageDestGetDestPoint(dest);
+                    float destZoom = PageDestGetZoom(dest);
                     Point screenPt = {x, y};
                     ClientToScreen(win->hwndCanvas, (POINT*)&screenPt);
                     int srcPage = el->GetPageNo();
@@ -948,8 +949,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         pageScreenRect.x = topLeft.x;
                         pageScreenRect.y = topLeft.y;
                     }
-                    RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y, srcPage,
-                                     srcRect, pageScreenRect);
+                    RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y, destZoom,
+                                     srcPage, srcRect, pageScreenRect);
                 } else if (win->refHover) {
                     RefHoverHide(win->refHover, win->hwndCanvas);
                 }
