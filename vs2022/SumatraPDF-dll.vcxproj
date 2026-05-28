@@ -1245,6 +1245,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\PdfTools.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
+    <ClCompile Include="..\src\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\RegistryInstaller.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
