@@ -17,38 +17,88 @@ static bool IsAsciiAlnum(WCHAR c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
 }
 
-// True if `text[idx..]` starts a caption label like "Figure 1.2", "Table 3",
-// "Listing 4.1", "Algorithm 5" (en/de). Matches case-insensitively and
-// requires the previous glyph to be a word boundary and the word to be
-// followed by whitespace and a digit. Used by the popup region detectors to
-// recognize a figure/table/caption destination so the popup includes the
-// figure body above the caption.
+// Caption / heading keyword tables. Each entry is a lowercase word recognised
+// at the start of a "Figure 1.2" / "Tableau 2" style label. Add a language by
+// appending entries; the call sites loop the table so no other code changes.
+// Trailing nullptr terminates the list.
+//
+// Entries are matched case-insensitively against the input glyph (via
+// towlower) so capitalised or all-caps PDF text matches too. Accented dict
+// words must be stored already-lowercased (NFC) — PDF text extraction
+// produces NFC most of the time.
+static const WCHAR* const kCaptionWords[] = {
+    // en
+    L"figure", L"table", L"listing", L"algorithm",
+    // de
+    L"abbildung", L"tabelle", L"algorithmus",
+    // es / it / pt (shared roots)
+    L"figura", L"tabla", L"algoritmo",
+    // fr
+    L"tableau", L"algorithme",
+    nullptr,
+};
+
+// Heading prefixes recognised at the start of a destination glyph run. Used
+// to disambiguate a section heading / figure caption destination from a
+// description-list bibliography entry. Superset of kCaptionWords — includes
+// "section" / "chapter" / locale equivalents that aren't captions but are
+// heading destinations.
+static const WCHAR* const kHeadingPrefixWords[] = {
+    // en
+    L"figure", L"table", L"listing", L"section", L"chapter", L"algorithm",
+    // de
+    L"abbildung", L"tabelle", L"abschnitt", L"kapitel", L"algorithmus",
+    // es
+    L"figura", L"tabla", L"sección", L"capítulo", L"algoritmo",
+    // fr
+    L"tableau", L"chapitre", L"algorithme",
+    nullptr,
+};
+
+// Match `text[idx..]` case-insensitively against the lowercase dictionary
+// word `w`. Returns true on full word match. When requireTrailingDigit is
+// set, also requires optional whitespace then a digit immediately after the
+// word (the "Figure 1.2" trailing-number constraint).
+static bool MatchWordAt(const WCHAR* text, int textLen, int idx, const WCHAR* w, bool requireTrailingDigit) {
+    int n = 0;
+    while (w[n]) {
+        n++;
+    }
+    if (idx + n > textLen) {
+        return false;
+    }
+    if (requireTrailingDigit && idx + n + 1 >= textLen) {
+        return false;
+    }
+    for (int j = 0; j < n; j++) {
+        WCHAR c = (WCHAR)towlower(text[idx + j]);
+        if (c != w[j]) {
+            return false;
+        }
+    }
+    if (!requireTrailingDigit) {
+        return true;
+    }
+    int k = idx + n;
+    while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
+        k++;
+    }
+    return k < textLen && text[k] >= L'0' && text[k] <= L'9';
+}
+
+// True if `text[idx..]` starts a caption label like "Figure 1.2", "Tableau 2".
+// See kCaptionWords for the language list. Requires the previous glyph to be
+// a word boundary and the word to be followed by whitespace and a digit.
 static bool IsCaptionLabelAt(const WCHAR* text, int textLen, int idx) {
     if (idx > 0 && IsAsciiAlnum(text[idx - 1])) {
         return false;
     }
-    auto matchWord = [&](const WCHAR* w, int n) -> bool {
-        if (idx + n + 1 >= textLen) {
-            return false;
+    for (int i = 0; kCaptionWords[i]; i++) {
+        if (MatchWordAt(text, textLen, idx, kCaptionWords[i], /*requireTrailingDigit=*/true)) {
+            return true;
         }
-        for (int j = 0; j < n; j++) {
-            WCHAR c = text[idx + j];
-            if (c >= L'A' && c <= L'Z') {
-                c = (WCHAR)(c + 32);
-            }
-            if (c != w[j]) {
-                return false;
-            }
-        }
-        int k = idx + n;
-        while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
-            k++;
-        }
-        return k < textLen && text[k] >= L'0' && text[k] <= L'9';
-    };
-    return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
-           matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
-           matchWord(L"algorithmus", 11);
+    }
+    return false;
 }
 
 // Clip a region to the page mediabox: shifts a negative x/y to 0 (shrinking
@@ -755,27 +805,12 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // Use the entry's first character / first word to disambiguate: real
     // bibliographies rarely start with a digit or with a label word like
     // "Figure"/"Table"/"Section". Catches "6.2 Foo", "Figure 2.2: …", etc.
-    auto matchPrefix = [&](const WCHAR* word, int n) {
-        if (startIdx + n >= textLen) {
-            return false;
-        }
-        for (int j = 0; j < n; j++) {
-            WCHAR c = text[startIdx + j];
-            if (c >= L'A' && c <= L'Z') {
-                c = (WCHAR)(c + 32);
-            }
-            if (c != word[j]) {
-                return false;
-            }
-        }
-        return true;
-    };
     WCHAR firstC = text[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
-    bool labelStart = matchPrefix(L"figure", 6) || matchPrefix(L"abbildung", 9) || matchPrefix(L"table", 5) ||
-                      matchPrefix(L"tabelle", 7) || matchPrefix(L"listing", 7) || matchPrefix(L"section", 7) ||
-                      matchPrefix(L"abschnitt", 9) || matchPrefix(L"chapter", 7) || matchPrefix(L"kapitel", 7) ||
-                      matchPrefix(L"algorithm", 9) || matchPrefix(L"algorithmus", 11);
+    bool labelStart = false;
+    for (int i = 0; !labelStart && kHeadingPrefixWords[i]; i++) {
+        labelStart = MatchWordAt(text, textLen, startIdx, kHeadingPrefixWords[i], /*requireTrailingDigit=*/false);
+    }
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
     }

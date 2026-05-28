@@ -148,7 +148,26 @@ static void EmptyInputsHandled() {
     utassert(IsEmpty(box3));
 }
 
-// (8) LandscapeBox: returned region spans the full mediabox width, starts at
+// (8a) Caption-detection table covers non-English label words: a "Tableau 2"
+// French caption above the destination triggers the upward figure-body
+// extension (region top moves above destY).
+static void FrenchCaptionDetected() {
+    WCHAR text[512];
+    Rect coords[512];
+    int len = 0;
+    // Caption line "Tableau 2: Données" at y=300 — this is the destY.
+    AddText(text, coords, len, 512, L"Tableau 2: Donnees", 72, 300);
+    // Body paragraph below.
+    for (int i = 0; i < 5; i++) {
+        AddText(text, coords, len, 512, L"Paragraphe de texte courant.", 72, 320 + i * 14);
+    }
+    RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, text, coords, len);
+    // destAtCaption pulls region top above destY (figure body extension).
+    utassert(box.y < 300.f - 50.f);
+    utassert(box.dx == kPageW);
+}
+
+// (9) LandscapeBox: returned region spans the full mediabox width, starts at
 // destY-margin, height is positive and bounded.
 static void LandscapeBoxBasicShape() {
     WCHAR text[256];
@@ -167,12 +186,13 @@ static void LandscapeBoxBasicShape() {
 }
 
 void RefHoverTest() {
-    SparseTextReturnsWholePage();
-    NegativeDestYFallsToLandscape();
-    BracketEntryFitsToOneEntry();
-    EquationLabelDetected();
     BodyTextParenRejected();
-    NonTrailingParenRejected();
+    BracketEntryFitsToOneEntry();
     EmptyInputsHandled();
+    EquationLabelDetected();
+    FrenchCaptionDetected();
     LandscapeBoxBasicShape();
+    NegativeDestYFallsToLandscape();
+    NonTrailingParenRejected();
+    SparseTextReturnsWholePage();
 }
