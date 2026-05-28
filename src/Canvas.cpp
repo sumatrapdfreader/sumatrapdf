@@ -932,6 +932,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                     win->refHover = RefHoverCreate(win->hwndCanvas);
                 }
                 if (win->refHover && hasInternalLink) {
+                    // request WM_MOUSELEAVE so popup hides when cursor leaves canvas
+                    TrackMouseLeave(win->hwndCanvas);
                     IPageDestination* dest = el->AsLink();
                     int destPage = PageDestGetPageNo(dest);
                     RectF destPt = PageDestGetDestPoint(dest);
@@ -2679,6 +2681,12 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
 
         case WM_MOUSEMOVE:
             OnMouseMove(win, x, y, wp);
+            return 0;
+
+        case WM_MOUSELEAVE:
+            if (win->refHover) {
+                RefHoverHide(win->refHover, win->hwndCanvas);
+            }
             return 0;
 
         case WM_LBUTTONDOWN:
