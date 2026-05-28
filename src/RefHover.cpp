@@ -85,6 +85,64 @@ static constexpr float kUserZoomStep = 1.15f;
 
 static bool gClassRegistered = false;
 
+static bool IsAsciiAlnum(WCHAR c) {
+    return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
+}
+
+// True if `text[idx..]` starts a caption label like "Figure 1.2", "Table 3",
+// "Listing 4.1", "Algorithm 5" (en/de). Matches case-insensitively and
+// requires the previous glyph to be a word boundary and the word to be
+// followed by whitespace and a digit. Used by the popup region detectors to
+// recognize a figure/table/caption destination so the popup includes the
+// figure body above the caption.
+static bool IsCaptionLabelAt(const WCHAR* text, int textLen, int idx) {
+    if (idx > 0 && IsAsciiAlnum(text[idx - 1])) {
+        return false;
+    }
+    auto matchWord = [&](const WCHAR* w, int n) -> bool {
+        if (idx + n + 1 >= textLen) {
+            return false;
+        }
+        for (int j = 0; j < n; j++) {
+            WCHAR c = text[idx + j];
+            if (c >= L'A' && c <= L'Z') {
+                c = (WCHAR)(c + 32);
+            }
+            if (c != w[j]) {
+                return false;
+            }
+        }
+        int k = idx + n;
+        while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
+            k++;
+        }
+        return k < textLen && text[k] >= L'0' && text[k] <= L'9';
+    };
+    return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
+           matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
+           matchWord(L"algorithmus", 11);
+}
+
+// Clip a region to the page mediabox: shifts a negative x/y to 0 (shrinking
+// the box by the same amount) and trims any overhang past the right/bottom
+// edge. Used everywhere a detected region must be passed to RenderPage.
+static void ClipToMediabox(RectF& box, RectF mediabox) {
+    if (box.x < 0.f) {
+        box.dx += box.x;
+        box.x = 0.f;
+    }
+    if (box.y < 0.f) {
+        box.dy += box.y;
+        box.y = 0.f;
+    }
+    if (box.x + box.dx > mediabox.dx) {
+        box.dx = mediabox.dx - box.x;
+    }
+    if (box.y + box.dy > mediabox.dy) {
+        box.dy = mediabox.dy - box.y;
+    }
+}
+
 static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_PAINT) {
         PAINTSTRUCT ps;
@@ -463,45 +521,13 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
     // following it.
     bool destAtCaption = false;
     if (text && coords && textLen > 0 && destY > 0.f) {
-        auto isCaptionAt = [&](int idx) -> bool {
-            if (idx > 0) {
-                WCHAR prev = text[idx - 1];
-                bool prevAlnum =
-                    (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') || (prev >= L'0' && prev <= L'9');
-                if (prevAlnum) {
-                    return false;
-                }
-            }
-            auto matchWord = [&](const WCHAR* w, int n) -> bool {
-                if (idx + n + 1 >= textLen) {
-                    return false;
-                }
-                for (int j = 0; j < n; j++) {
-                    WCHAR c = text[idx + j];
-                    if (c >= L'A' && c <= L'Z') {
-                        c = (WCHAR)(c + 32);
-                    }
-                    if (c != w[j]) {
-                        return false;
-                    }
-                }
-                int k = idx + n;
-                while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
-                    k++;
-                }
-                return k < textLen && text[k] >= L'0' && text[k] <= L'9';
-            };
-            return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
-                   matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
-                   matchWord(L"algorithmus", 11);
-        };
         int dY = (int)destY;
         for (int i = 0; i < textLen; i++) {
             int gy = coords[i].y;
             if (gy < dY - 5 || gy > dY + 15) {
                 continue;
             }
-            if (isCaptionAt(i)) {
+            if (IsCaptionLabelAt(text, textLen, i)) {
                 destAtCaption = true;
                 break;
             }
@@ -537,38 +563,6 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
     // falls to LandscapeBox without ever running the caption-aware
     // DetectEntryBox path.
     if (text && coords && textLen > 0) {
-        auto isCaptionAt = [&](int idx) -> bool {
-            if (idx > 0) {
-                WCHAR prev = text[idx - 1];
-                bool prevAlnum =
-                    (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') || (prev >= L'0' && prev <= L'9');
-                if (prevAlnum) {
-                    return false;
-                }
-            }
-            auto matchWord = [&](const WCHAR* w, int n) -> bool {
-                if (idx + n + 1 >= textLen) {
-                    return false;
-                }
-                for (int j = 0; j < n; j++) {
-                    WCHAR c = text[idx + j];
-                    if (c >= L'A' && c <= L'Z') {
-                        c = (WCHAR)(c + 32);
-                    }
-                    if (c != w[j]) {
-                        return false;
-                    }
-                }
-                int k = idx + n;
-                while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
-                    k++;
-                }
-                return k < textLen && text[k] >= L'0' && text[k] <= L'9';
-            };
-            return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
-                   matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
-                   matchWord(L"algorithmus", 11);
-        };
         // Search to end of page so tall figures with captions far below the
         // initial 200pt cap still match. First "Figure N.M" line-start on the
         // page below the cap wins — typically the relevant caption.
@@ -579,7 +573,7 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
             if (coords[i].y < searchTop || coords[i].y > searchBot) {
                 continue;
             }
-            if (isCaptionAt(i)) {
+            if (IsCaptionLabelAt(text, textLen, i)) {
                 capStartIdx = i;
                 break;
             }
@@ -696,6 +690,115 @@ static RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR*
         }
     }
     return RectF{0.f, ty, mediabox.dx, h};
+}
+
+// Detect a labelled display equation at (destX, destY): a "(N)" or "(N.M)"
+// glyph cluster sitting near the right column edge on or near destY, with
+// no other text further right on that line. Returns the equation's tight
+// bounding box (full page width, ~one eq line tall) when found, empty rect
+// otherwise. Used to avoid the landscape-style 200pt slice that sweeps in
+// the paragraph and the next equation below an equation cross-reference.
+static RectF DetectEquationBox(EngineBase* engine, int destPage, float destX, float destY) {
+    (void)destX;
+    RectF empty{};
+    if (destY <= 0.f) {
+        return empty;
+    }
+    int textLen = 0;
+    Rect* coords = nullptr;
+    const WCHAR* text = engine->GetTextForPage(destPage, &textLen, &coords);
+    if (!text || textLen <= 0 || !coords) {
+        return empty;
+    }
+    RectF mediabox = engine->PageMediabox(destPage);
+    int dY = (int)destY;
+
+    // Scan glyphs in a band around destY. Find a ')' whose right edge is the
+    // rightmost in its line, preceded by digits and an opening '('.
+    int bestLabelY = -1;
+    int bestLabelDy = 0;
+    int bestDist = INT_MAX;
+    for (int i = 0; i < textLen; i++) {
+        if (text[i] != L')') {
+            continue;
+        }
+        int ly = coords[i].y;
+        if (ly < dY - 40 || ly > dY + 40) {
+            continue;
+        }
+        // Walk backward through digits on the same line.
+        int p = i - 1;
+        int digits = 0;
+        while (p >= 0 && str::IsDigit(text[p]) && coords[p].y == ly) {
+            p--;
+            digits++;
+        }
+        if (digits == 0) {
+            continue;
+        }
+        // Optional ".M" form.
+        if (p >= 0 && text[p] == L'.' && coords[p].y == ly) {
+            p--;
+            int d2 = 0;
+            while (p >= 0 && str::IsDigit(text[p]) && coords[p].y == ly) {
+                p--;
+                d2++;
+            }
+            if (d2 == 0) {
+                continue;
+            }
+        }
+        if (p < 0 || text[p] != L'(' || coords[p].y != ly) {
+            continue;
+        }
+        int labelLeftX = coords[p].x;
+        int labelRightX = coords[i].x + coords[i].dx;
+        // Reject if any non-space glyph on the same line sits further right
+        // than the label — equation labels are line-trailing by construction.
+        bool hasRightOf = false;
+        for (int j = 0; j < textLen; j++) {
+            if (j >= p && j <= i) {
+                continue;
+            }
+            if (str::IsWs(text[j])) {
+                continue;
+            }
+            if (coords[j].y != ly) {
+                continue;
+            }
+            if (coords[j].x + coords[j].dx > labelRightX) {
+                hasRightOf = true;
+                break;
+            }
+        }
+        if (hasRightOf) {
+            continue;
+        }
+        // Reject if the label sits in the left half of the page (likely a
+        // body-text "(N)" footnote marker, not a display-eq label).
+        if (labelLeftX < (int)(mediabox.dx * 0.5f)) {
+            continue;
+        }
+        int dist = std::abs(ly - dY);
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestLabelY = ly;
+            bestLabelDy = coords[i].dy;
+        }
+    }
+    if (bestLabelY < 0) {
+        return empty;
+    }
+    if (bestLabelDy <= 0) {
+        bestLabelDy = 12;
+    }
+    // Region: one eq line — labeled row + small vertical padding. Multi-row
+    // align environments are rare in cross-refs; a tight box is the right
+    // default and the user can wheel-scroll if context is needed.
+    float pad = (float)bestLabelDy + 6.f;
+    RectF box{0.f, (float)bestLabelY - pad, mediabox.dx, (float)bestLabelDy + 2.f * pad};
+    ClipToMediabox(box, mediabox);
+    return box;
 }
 
 // Find the bounding box of a single bibliography entry on the destination
@@ -901,20 +1004,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
         if (bMinX != INT_MAX && (bMaxX - bMinX) >= 50 && (bMaxY - bMinY) >= 12) {
             RectF box{(float)bMinX - kEntryPadPt, (float)bMinY - kEntryPadPt,
                       (float)(bMaxX - bMinX) + 2.f * kEntryPadPt, (float)(bMaxY - bMinY) + 2.f * kEntryPadPt};
-            if (box.x < 0.f) {
-                box.dx += box.x;
-                box.x = 0.f;
-            }
-            if (box.y < 0.f) {
-                box.dy += box.y;
-                box.y = 0.f;
-            }
-            if (box.x + box.dx > mediabox.dx) {
-                box.dx = mediabox.dx - box.x;
-            }
-            if (box.y + box.dy > mediabox.dy) {
-                box.dy = mediabox.dy - box.y;
-            }
+            ClipToMediabox(box, mediabox);
             if (box.dx >= 50.f && box.dy >= 20.f) {
                 return box;
             }
@@ -1063,20 +1153,7 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
 
     RectF box{(float)minX - kEntryPadPt, (float)minY - kEntryPadPt, (float)(maxX - minX) + 2.f * kEntryPadPt,
               (float)(maxY - minY) + 2.f * kEntryPadPt};
-    if (box.x < 0.f) {
-        box.dx += box.x;
-        box.x = 0.f;
-    }
-    if (box.y < 0.f) {
-        box.dy += box.y;
-        box.y = 0.f;
-    }
-    if (box.x + box.dx > mediabox.dx) {
-        box.dx = mediabox.dx - box.x;
-    }
-    if (box.y + box.dy > mediabox.dy) {
-        box.dy = mediabox.dy - box.y;
-    }
+    ClipToMediabox(box, mediabox);
     if (box.dx < 50.f || box.dy < 20.f) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
     }
@@ -1087,44 +1164,12 @@ static RectF DetectEntryBox(EngineBase* engine, int destPage, float destX, float
     // where each line happens to start with "[TAG]" — those would otherwise
     // be misclassified as description-list bibliography entries.
     {
-        auto isCaptionLabelAt = [&](int idx) -> bool {
-            if (idx > 0) {
-                WCHAR prev = text[idx - 1];
-                bool prevAlnum =
-                    (prev >= L'a' && prev <= L'z') || (prev >= L'A' && prev <= L'Z') || (prev >= L'0' && prev <= L'9');
-                if (prevAlnum) {
-                    return false;
-                }
-            }
-            auto matchWord = [&](const WCHAR* w, int n) -> bool {
-                if (idx + n + 1 >= textLen) {
-                    return false;
-                }
-                for (int j = 0; j < n; j++) {
-                    WCHAR c = text[idx + j];
-                    if (c >= L'A' && c <= L'Z') {
-                        c = (WCHAR)(c + 32);
-                    }
-                    if (c != w[j]) {
-                        return false;
-                    }
-                }
-                int k = idx + n;
-                while (k < textLen && (text[k] == L' ' || text[k] == L'\t')) {
-                    k++;
-                }
-                return k < textLen && text[k] >= L'0' && text[k] <= L'9';
-            };
-            return matchWord(L"figure", 6) || matchWord(L"abbildung", 9) || matchWord(L"table", 5) ||
-                   matchWord(L"tabelle", 7) || matchWord(L"listing", 7) || matchWord(L"algorithm", 9) ||
-                   matchWord(L"algorithmus", 11);
-        };
         int boxBottomY = (int)(box.y + box.dy);
         for (int i = 0; i < textLen; i++) {
             if (coords[i].y <= boxBottomY) {
                 continue;
             }
-            if (isCaptionLabelAt(i)) {
+            if (IsCaptionLabelAt(text, textLen, i)) {
                 // Let LandscapeBox handle the caption-extension — it has a
                 // tighter, line-count-capped walk that doesn't sweep into
                 // following body paragraphs.
@@ -1458,7 +1503,12 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         // dx/dy placeholders; resized against popup caps below.
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
-        region = DetectEntryBox(engine, destPage, destX, destY);
+        // Equation cross-reference: tight box around the labelled line.
+        // Falls through to DetectEntryBox when no eq label is found.
+        region = DetectEquationBox(engine, destPage, destX, destY);
+        if (region.dx <= 0.f || region.dy <= 0.f) {
+            region = DetectEntryBox(engine, destPage, destX, destY);
+        }
     }
     // New destination — reset user-driven zoom. baseZoom matches the
     // document's current display zoom for the destination page, so popup
