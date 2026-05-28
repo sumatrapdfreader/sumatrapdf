@@ -2938,8 +2938,8 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             DisplayModel* dm = win->AsFixed();
             EngineBase* engine = dm ? dm->GetEngine() : nullptr;
             float pageZoom = 1.f;
-            if (dm && win->refHover && win->refHover->pendingDestPage > 0) {
-                pageZoom = dm->GetZoomReal(win->refHover->pendingDestPage);
+            if (dm && win->refHover && win->refHover->pending.destPage > 0) {
+                pageZoom = dm->GetZoomReal(win->refHover->pending.destPage);
             }
             RefHoverOnTimer(win->refHover, hwnd, engine, pageZoom);
             break;

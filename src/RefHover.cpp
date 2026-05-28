@@ -69,8 +69,8 @@
 #define REF_HOVER_CLASS L"SumatraPDFRefHover"
 
 // upper bound for the auto-fit base zoom. We render at min(kRenderZoom,
-// fit-to-popup-max), then multiply by RefHoverState::userZoom (the
-// mouse-wheel adjustment).
+// fit-to-popup-max), then multiply by RefHoverState::Displayed::userZoom
+// (the mouse-wheel adjustment).
 static constexpr float kRenderZoom = 1.5f;
 // upper bounds for the popup window in screen pixels.
 static constexpr int kMaxPopupWidth = 1200;
@@ -186,7 +186,7 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
     int rightBound = mi.rcWork.right;
     int topBound = mi.rcWork.top;
     int bottomBound = mi.rcWork.bottom;
-    Rect pr = s->pendingPageScreenRect;
+    Rect pr = s->pending.pageScreenRect;
     if (pr.dy > 0) {
         if (pr.y > topBound) {
             topBound = pr.y;
@@ -261,32 +261,32 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
 // at higher detail. Either way the popup stays full — no blank area.
 // Returns true if the zoom actually changed.
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
-    if (!s || !s->hwndPopup || s->displayedDestPage <= 0 || !engine) {
+    if (!s || !s->hwndPopup || s->displayed.destPage <= 0 || !engine) {
         return false;
     }
     float factor = (wheelDelta > 0) ? kUserZoomStep : (1.f / kUserZoomStep);
-    float newZoom = s->userZoom * factor;
+    float newZoom = s->displayed.userZoom * factor;
     if (newZoom < kMinUserZoom) {
         newZoom = kMinUserZoom;
     } else if (newZoom > kMaxUserZoom) {
         newZoom = kMaxUserZoom;
     }
-    if (newZoom == s->userZoom) {
+    if (newZoom == s->displayed.userZoom) {
         return false;
     }
-    s->userZoom = newZoom;
+    s->displayed.userZoom = newZoom;
 
     RECT rc;
     GetClientRect(s->hwndPopup, &rc);
     float clientW = (float)((rc.right - rc.left) - 2 * kBorder);
     float clientH = (float)((rc.bottom - rc.top) - 2 * kBorder);
-    float zoom = s->baseZoom * s->userZoom;
+    float zoom = s->displayed.baseZoom * s->displayed.userZoom;
     if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
         return false;
     }
 
-    RectF mediabox = engine->PageMediabox(s->displayedDestPage);
-    RectF region = s->lastRegion;
+    RectF mediabox = engine->PageMediabox(s->displayed.destPage);
+    RectF region = s->displayed.region;
     region.dx = clientW / zoom;
     region.dy = clientH / zoom;
     // Clamp to page bounds.
@@ -300,7 +300,7 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         return false;
     }
 
-    RenderPageArgs args(s->displayedDestPage, zoom, 0, &region);
+    RenderPageArgs args(s->displayed.destPage, zoom, 0, &region);
     RenderedBitmap* bmp = engine->RenderPage(args);
     if (!bmp) {
         return false;
@@ -310,7 +310,7 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     // Persist the popup-fitting dx/dy so a subsequent scroll keeps rendering
     // a bitmap that fills the popup. Without this, scroll would fall back to
     // the original (smaller) entry-box dimensions and leave visible padding.
-    s->lastRegion = region;
+    s->displayed.region = region;
     InvalidateRect(s->hwndPopup, nullptr, TRUE);
     return true;
 }
@@ -319,16 +319,16 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
 // or next page when the region would cross a page edge — the popup behaves
 // like a small continuous-scroll viewport into the document.
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
-    if (!s || !s->hwndPopup || s->displayedDestPage <= 0 || !engine) {
+    if (!s || !s->hwndPopup || s->displayed.destPage <= 0 || !engine) {
         return false;
     }
-    float zoom = s->baseZoom * s->userZoom;
+    float zoom = s->displayed.baseZoom * s->displayed.userZoom;
     if (zoom <= 0.f) {
         return false;
     }
     int pageCount = engine->PageCount();
-    int page = s->displayedDestPage;
-    RectF region = s->lastRegion;
+    int page = s->displayed.destPage;
+    RectF region = s->displayed.region;
     RectF mediabox = engine->PageMediabox(page);
     if (mediabox.dx <= 0.f || mediabox.dy <= 0.f) {
         return false;
@@ -377,7 +377,7 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         }
     }
 
-    if (page == s->displayedDestPage && newY == region.y) {
+    if (page == s->displayed.destPage && newY == region.y) {
         return false;
     }
     region.y = newY;
@@ -399,8 +399,8 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     }
     delete s->bmp;
     s->bmp = bmp;
-    s->displayedDestPage = page;
-    s->lastRegion = region;
+    s->displayed.destPage = page;
+    s->displayed.region = region;
     InvalidateRect(s->hwndPopup, nullptr, TRUE);
     return true;
 }
@@ -412,18 +412,18 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int des
     }
     KillTimer(hwndCanvas, kRefHoverTimerID);
 
-    if (IsWindowVisible(s->hwndPopup) && s->displayedDestPage == destPage && s->displayedDestX == destX &&
-        s->displayedDestY == destY) {
+    if (IsWindowVisible(s->hwndPopup) && s->displayed.destPage == destPage && s->displayed.destX == destX &&
+        s->displayed.destY == destY) {
         return;
     }
-    s->pendingScreenPt = screenPt;
-    s->pendingDestPage = destPage;
-    s->pendingDestX = destX;
-    s->pendingDestY = destY;
-    s->pendingDestZoom = destZoom;
-    s->pendingSrcPage = srcPage;
-    s->pendingSrcRect = srcRect;
-    s->pendingPageScreenRect = pageScreenRect;
+    s->pending.screenPt = screenPt;
+    s->pending.destPage = destPage;
+    s->pending.destX = destX;
+    s->pending.destY = destY;
+    s->pending.destZoom = destZoom;
+    s->pending.srcPage = srcPage;
+    s->pending.srcRect = srcRect;
+    s->pending.pageScreenRect = pageScreenRect;
     SetTimer(hwndCanvas, kRefHoverTimerID, kRefHoverDelayMs, nullptr);
 }
 
@@ -432,10 +432,10 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
         return;
     }
     KillTimer(hwndCanvas, kRefHoverTimerID);
-    s->pendingDestPage = -1;
+    s->pending.destPage = -1;
     if (s->hwndPopup && IsWindowVisible(s->hwndPopup)) {
         ShowWindow(s->hwndPopup, SW_HIDE);
-        s->displayedDestPage = -1;
+        s->displayed.destPage = -1;
     }
 }
 
@@ -630,12 +630,12 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
 
 void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
     KillTimer(hwndCanvas, kRefHoverTimerID);
-    if (!s || !engine || s->pendingDestPage <= 0) {
+    if (!s || !engine || s->pending.destPage <= 0) {
         return;
     }
-    int destPage = s->pendingDestPage;
-    float destX = s->pendingDestX;
-    float destY = s->pendingDestY;
+    int destPage = s->pending.destPage;
+    float destX = s->pending.destX;
+    float destY = s->pending.destY;
 
     RectF mediabox = engine->PageMediabox(destPage);
     if (mediabox.dx <= 0.f || mediabox.dy <= 0.f) {
@@ -652,7 +652,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // /XYZ 0 -2.58 0. Treat past-page-bottom destY the same as page-level.
     if (destY <= 0.f || destY >= mediabox.dy - 1.f) {
         destY = 0.f;
-        float resolved = ResolveDestYFromSourceText(engine, s->pendingSrcPage, s->pendingSrcRect, destPage);
+        float resolved = ResolveDestYFromSourceText(engine, s->pending.srcPage, s->pending.srcRect, destPage);
         if (resolved >= 0.f) {
             destY = resolved;
             if (destX < 0.f) {
@@ -666,7 +666,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // requested zoom rather than auto-fitting a detected entry box.
     // This matches the navigation behaviour (DisplayModel::ScrollTo
     // also reads the link zoom).
-    float linkZoom = s->pendingDestZoom;
+    float linkZoom = s->pending.destZoom;
     bool useLinkZoom = (linkZoom > 0.f);
     // Popup must not look smaller than the page does on screen — if the
     // user is already viewing the document at a higher zoom than the
@@ -701,7 +701,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // if either dimension would exceed the popup max; landscape-style
     // regions for non-reference targets are typically wider than tall, so
     // the width cap matters here.
-    s->userZoom = 1.f;
+    s->displayed.userZoom = 1.f;
     float baseZoom = useLinkZoom ? linkZoom : ((pageZoom > 0.f) ? pageZoom : kRenderZoom);
     // Popup max size:
     //   width  ~95% of monitor work area — popup may span beyond the page
@@ -713,7 +713,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     //                and surrounding context stay readable.
     int popupWCap = kMaxPopupWidth;
     {
-        POINT mp = {s->pendingScreenPt.x, s->pendingScreenPt.y};
+        POINT mp = {s->pending.screenPt.x, s->pending.screenPt.y};
         HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
         MONITORINFO mi{};
         mi.cbSize = sizeof(mi);
@@ -732,9 +732,9 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // its full caption fit. Cursor at the bottom of the page → popup
     // expands upward into the page top; cursor at top → expands downward.
     int popupHCap;
-    if (region.dy > 250.f && s->pendingPageScreenRect.dy > 0) {
-        Rect pr = s->pendingPageScreenRect;
-        int curY = s->pendingScreenPt.y;
+    if (region.dy > 250.f && s->pending.pageScreenRect.dy > 0) {
+        Rect pr = s->pending.pageScreenRect;
+        int curY = s->pending.screenPt.y;
         int spaceAbove = curY - pr.y - 30;
         int spaceBelow = (pr.y + pr.dy) - curY - 30;
         int maxSpace = (spaceAbove > spaceBelow) ? spaceAbove : spaceBelow;
@@ -745,8 +745,8 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
     } else {
         popupHCap = kMaxPopupHeight;
-        if (s->pendingPageScreenRect.dy > 0) {
-            int pageBased = s->pendingPageScreenRect.dy * 45 / 100;
+        if (s->pending.pageScreenRect.dy > 0) {
+            int pageBased = s->pending.pageScreenRect.dy * 45 / 100;
             if (pageBased < popupHCap) {
                 popupHCap = pageBased;
             }
@@ -787,8 +787,8 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     if (baseZoom < kMinUserZoom) {
         baseZoom = kMinUserZoom;
     }
-    s->baseZoom = baseZoom;
-    RenderPageArgs args(destPage, s->baseZoom * s->userZoom, 0, &region);
+    s->displayed.baseZoom = baseZoom;
+    RenderPageArgs args(destPage, s->displayed.baseZoom * s->displayed.userZoom, 0, &region);
     RenderedBitmap* bmp = engine->RenderPage(args);
     if (!bmp) {
         return;
@@ -796,10 +796,10 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
 
     delete s->bmp;
     s->bmp = bmp;
-    s->displayedDestPage = destPage;
-    s->displayedDestX = destX;
-    s->displayedDestY = destY;
-    s->lastRegion = region;
+    s->displayed.destPage = destPage;
+    s->displayed.destX = destX;
+    s->displayed.destY = destY;
+    s->displayed.region = region;
 
-    ShowPopup(s, s->pendingScreenPt);
+    ShowPopup(s, s->pending.screenPt);
 }
