@@ -200,10 +200,11 @@ static bool CreateAppShortcut(int csidl, const char* installedExePath) {
 // https://docs.microsoft.com/en-us/windows/win32/shell/csidl
 // CSIDL_COMMON_DESKTOPDIRECTORY - files and folders on desktop for all users. C:\Documents and Settings\All
 // Users\Desktop
-// CSIDL_COMMON_STARTMENU - Start menu for all users, C:\Documents and Settings\All Users\Start Menu
+// CSIDL_COMMON_PROGRAMS - Programs item in Start menu for all users, C:\Documents and Settings\All Users\Start
+// Menu\Programs
 // CSIDL_DESKTOP - virtual folder, desktop for current user
-// CSIDL_STARTMENU - Start menu for current user. Settings\username\Start Menu
-static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP, CSIDL_STARTMENU};
+// CSIDL_PROGRAMS - Programs item in Start menu for current user. Settings\username\Start Menu\Programs
+static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_PROGRAMS, CSIDL_DESKTOP, CSIDL_PROGRAMS};
 
 static void CreateAppShortcuts(bool forAllUsers, const char* installedExePath) {
     logf("CreateAppShortcuts(forAllUsers=%d)\n", (int)forAllUsers);
