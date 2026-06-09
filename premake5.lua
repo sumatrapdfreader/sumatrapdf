@@ -928,6 +928,10 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
+    -- resolve static imports (uxtheme.dll etc.) from System32 only, so that
+    -- a DLL planted next to the exe can't be side-loaded (seen in crash reports
+    -- with our signed exe re-distributed alongside a fake UxTheme.dll)
+    linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     filter "platforms:x64_asan"
     linkoptions { "/INFERASANLIBS" }
     filter {}
@@ -999,6 +1003,10 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll" }
     linkoptions { "/DELAYLOAD:urlmon.dll /DELAYLOAD:wininet.dll" }
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
+    -- resolve static imports (uxtheme.dll etc.) from System32 only, so that
+    -- a DLL planted next to the exe can't be side-loaded. doesn't affect
+    -- delay-loaded libmupdf.dll which LoadLibmupdf() loads by full path
+    linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "test_util" }
     prebuildcommands { "..\\bin\\MakeLZSA.exe ..\\translations\\translations.txt.lzsa ..\\translations\\translations-good.txt:translations-good.txt" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll" }
