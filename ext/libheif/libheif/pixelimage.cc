@@ -951,13 +951,16 @@ Error HeifPixelImage::copy_image_to(const std::shared_ptr<const HeifPixelImage>&
     uint32_t src_width = source->get_width(channel);
     uint32_t src_height = source->get_height(channel);
 
-    uint32_t copy_width = std::min(src_width, channel_width(w - x0, chroma, channel));
-    uint32_t copy_height = std::min(src_height, channel_height(h - y0, chroma, channel));
-
-    copy_width *= source->get_storage_bits_per_pixel(channel) / 8;
-
     uint32_t xs = channel_width(x0, chroma, channel);
     uint32_t ys = channel_height(y0, chroma, channel);
+
+    // Compute copy size from actual plane bounds to avoid chroma rounding mismatch.
+    // channel_height(y0) + channel_height(h - y0) can exceed channel_height(h) with 4:2:0
+    // due to ceiling division, so we use (plane_size - offset) instead.
+    uint32_t copy_width = std::min(src_width, channel_width(w, chroma, channel) - xs);
+    uint32_t copy_height = std::min(src_height, channel_height(h, chroma, channel) - ys);
+
+    copy_width *= source->get_storage_bits_per_pixel(channel) / 8;
     xs *= source->get_storage_bits_per_pixel(channel) / 8;
 
     for (uint32_t py = 0; py < copy_height; py++) {
@@ -1854,13 +1857,16 @@ HeifPixelImage::extract_image_area(uint32_t x0, uint32_t y0, uint32_t w, uint32_
       };
     }
 
-    uint32_t copy_width = channel_width(minW, chroma, channel);
-    uint32_t copy_height = channel_height(minH, chroma, channel);
-
-    copy_width *= get_storage_bits_per_pixel(channel) / 8;
-
     uint32_t xs = channel_width(x0, chroma, channel);
     uint32_t ys = channel_height(y0, chroma, channel);
+
+    // Clamp copy size to source plane bounds to avoid chroma rounding mismatch OOB read.
+    uint32_t src_plane_h = channel_height(get_height(), chroma, channel);
+    uint32_t src_plane_w = channel_width(get_width(), chroma, channel);
+    uint32_t copy_width = std::min(channel_width(minW, chroma, channel), src_plane_w - xs);
+    uint32_t copy_height = std::min(channel_height(minH, chroma, channel), src_plane_h - ys);
+
+    copy_width *= get_storage_bits_per_pixel(channel) / 8;
     xs *= get_storage_bits_per_pixel(channel) / 8;
 
     for (uint32_t py = 0; py < copy_height; py++) {

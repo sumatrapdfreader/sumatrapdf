@@ -113,8 +113,8 @@ Error MaskImageCodec::decode_mask_image(const HeifContext* context,
 
   size_t stride;
   uint8_t* dst = img->get_plane(heif_channel_Y, &stride);
-  if (((uint32_t)stride) == width) {
-    memcpy(dst, data.data(), data.size());
+  if (stride == static_cast<size_t>(width)) {
+    memcpy(dst, data.data(), static_cast<size_t>(width) * height);
   }
   else
   {
