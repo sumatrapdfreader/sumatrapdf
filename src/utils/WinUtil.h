@@ -364,6 +364,7 @@ HGLOBAL MemToHGLOBAL(void* src, int n, UINT flags = GMEM_MOVEABLE);
 HGLOBAL StrToHGLOBAL(const char* s, UINT flags = GMEM_MOVEABLE);
 TempStr AtomToStrTemp(ATOM a);
 int MsgBox(HWND, const char*, const char*, UINT);
+void MaskFpExceptions();
 
 constexpr u32 kCpuMMX = 1 << 1;
 constexpr u32 kCpuSSE = 1 << 2;
