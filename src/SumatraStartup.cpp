@@ -728,7 +728,7 @@ static HRESULT CALLBACK LoadLibmupdfDialogCallback(HWND hwnd, UINT msg, WPARAM w
     return S_OK;
 }
 
-static bool LoadLibmupdf() {
+static bool LoadLibmupdf(bool showErrorDialog) {
     if (!ExeHasInstallerResources()) {
         // this is not a version that needs libmupdf.dll
         return true;
@@ -745,6 +745,12 @@ static bool LoadLibmupdf() {
         logf("error string: %s\n", errStr ? errStr : "(none)");
     }
     ReportIfFast(true);
+
+    if (!showErrorDialog) {
+        // e.g. -print-to ... -silent invoked by another program:
+        // a modal dialog would hang the caller
+        return false;
+    }
 
     TempStr msg = str::FormatTemp(
         "SumatraPDF.exe failed to load libmupdf.dll.\nError code: %d\nError message: %s\n"
@@ -1448,6 +1454,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         ::ExitProcess(exitCode);
     }
 
+    // load libmupdf.dll eagerly before any code path that might call into it.
+    // if we let the delay-load helper do it and it fails, it raises a fatal
+    // exception. this must remain after the installer checks above because
+    // during installation libmupdf.dll isn't extracted yet
+    if (!LoadLibmupdf(!flags.silent)) {
+        ::ExitProcess(1);
+    }
+
 #if defined(DEBUG)
     if (flags.testExtractPage) {
         TestExtractPage(flags);
@@ -1664,11 +1678,6 @@ ContinueOpenWindow:
         SHFILEINFOW sfi{};
         uint flg = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
         SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flg);
-    }
-
-    // below is code that might use libmupdf functions so try to load it eagerly
-    if (!LoadLibmupdf()) {
-        ::ExitProcess(1);
     }
 
     if (restoreSession) {
