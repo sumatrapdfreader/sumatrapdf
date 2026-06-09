@@ -799,6 +799,9 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
             engine->GetTextForPage(req.pageNo);
         }
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
+        // a previous render might have run a 3rd-party WIC codec that unmasked
+        // fp exceptions on this thread, which would crash mupdf float math
+        MaskFpExceptions();
         auto timeStart = TimeGet();
         bmp = engine->RenderPage(args);
         if (req.abort) {

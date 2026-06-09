@@ -1643,7 +1643,11 @@ RectF EngineImage::LoadMediabox(int pageNo) {
 EngineBase* EngineImage::CreateFromFile(const char* path) {
     logf("EngineImage::CreateFromFile(%s)\n", path);
     EngineImage* engine = new EngineImage();
-    if (!engine->LoadSingleFile(path)) {
+    bool ok = engine->LoadSingleFile(path);
+    // decoding might run a 3rd-party WIC codec (e.g. CopyTrans HEIC) that
+    // unmasks fp exceptions on this thread, which would crash later float math
+    MaskFpExceptions();
+    if (!ok) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -1652,7 +1656,9 @@ EngineBase* EngineImage::CreateFromFile(const char* path) {
 
 EngineBase* EngineImage::CreateFromStream(IStream* stream) {
     EngineImage* engine = new EngineImage();
-    if (!engine->LoadFromStream(stream)) {
+    bool ok = engine->LoadFromStream(stream);
+    MaskFpExceptions();
+    if (!ok) {
         SafeEngineRelease(&engine);
         return nullptr;
     }

@@ -2231,6 +2231,9 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
     if (!stm) {
         return false;
     }
+    // a 3rd-party DLL might have unmasked fp exceptions on this thread, which
+    // would crash mupdf on benign NaN comparisons e.g. in pdf_resolve_link_dest()
+    MaskFpExceptions();
     auto ctx = Ctx();
 
 #if 0
