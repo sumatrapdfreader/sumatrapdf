@@ -138,21 +138,19 @@ struct DjVuContext {
         ReportIf(!ctx);
     }
 
+    // refCount is protected by gDjVuContextAccess (not by lock: ~EngineDjVu
+    // holds lock while calling ReleaseDjVuContext() which takes
+    // gDjVuContextAccess, so taking lock here would invert the lock order
+    // vs. GetDjVuContext() and could deadlock)
     int AddRef() {
-        EnterCriticalSection(&lock);
         ++refCount;
-        int res = refCount;
-        LeaveCriticalSection(&lock);
-        return res;
+        return refCount;
     }
 
     int Release() {
-        EnterCriticalSection(&lock);
         ReportIf(refCount <= 0);
         --refCount;
-        int res = refCount;
-        LeaveCriticalSection(&lock);
-        return res;
+        return refCount;
     }
 
     ~DjVuContext() {
@@ -220,21 +218,30 @@ struct DjVuContext {
 // in djvu which got deleted first
 static DjVuContext* gDjVuContext;
 
+// engines are created / destroyed on multiple threads (async document loads),
+// so creation of gDjVuContext and refCount changes must be serialized.
+// SRWLOCK because it can be statically initialized
+static SRWLOCK gDjVuContextAccess = SRWLOCK_INIT;
+
 static DjVuContext* GetDjVuContext() {
+    AcquireSRWLockExclusive(&gDjVuContextAccess);
     if (!gDjVuContext) {
         gDjVuContext = new DjVuContext();
     } else {
         gDjVuContext->AddRef();
     }
-    return gDjVuContext;
+    DjVuContext* res = gDjVuContext;
+    ReleaseSRWLockExclusive(&gDjVuContextAccess);
+    return res;
 }
 
 static void ReleaseDjVuContext() {
+    AcquireSRWLockExclusive(&gDjVuContextAccess);
     ReportIf(!gDjVuContext);
-    int refCount = gDjVuContext->Release();
-    if (refCount != 0) {
-        return;
+    if (gDjVuContext) {
+        gDjVuContext->Release();
     }
+    ReleaseSRWLockExclusive(&gDjVuContextAccess);
 }
 
 void CleanupEngineDjVu() {
