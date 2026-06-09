@@ -1851,6 +1851,11 @@ EngineMupdf::EngineMupdf() {
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     _ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_DEFAULT);
+    if (!_ctx) {
+        // can happen when out of memory. Load() will fail
+        log("EngineMupdf: fz_new_context() failed\n");
+        return;
+    }
     InstallFitzErrorCallbacks(this, _ctx);
 
     install_load_windows_font_funcs(_ctx);
@@ -1858,6 +1863,10 @@ EngineMupdf::EngineMupdf() {
 }
 
 fz_context* EngineMupdf::Ctx() const {
+    if (!_ctx) {
+        // fz_new_context() failed in the constructor, likely OOM
+        return nullptr;
+    }
     return GetOrClonePerThreadContext(const_cast<EngineMupdf*>(this), _ctx);
 }
 
@@ -1898,7 +1907,9 @@ EngineMupdf::~EngineMupdf() {
     }
 
     fz_drop_document(ctx, _doc);
-    fz_purge_glyph_cache(ctx);
+    if (ctx) {
+        fz_purge_glyph_cache(ctx);
+    }
     fz_drop_context(ctx);
 
     str::Free(pdfPassword);
@@ -2094,7 +2105,10 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
     bool ok;
     const char* pathA = path;
     auto ctx = Ctx();
-    ReportIf(FilePath() || _doc || !ctx);
+    ReportIf(FilePath() || _doc);
+    if (!ctx) {
+        return false;
+    }
     SetFilePath(path);
 
     auto ext = path::GetExtTemp(path);
@@ -2199,7 +2213,7 @@ bool EngineMupdf::Load(const char* path, PasswordUI* pwdUI) {
 // TODO: need to do stuff to support .txt etc.
 bool EngineMupdf::Load(IStream* stream, const char* nameHint, PasswordUI* pwdUI) {
     auto ctx = Ctx();
-    ReportIf(FilePath() || _doc || !ctx);
+    ReportIf(FilePath() || _doc);
     if (!ctx) {
         return false;
     }
