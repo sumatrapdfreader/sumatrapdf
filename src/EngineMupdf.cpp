@@ -3474,7 +3474,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
     ScopedCritSec scope(&docLock);
 
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx);
-    ReportIf(!image);
+    // can happen when the file becomes unreadable (e.g. network drive read errors)
     if (!image) {
         return nullptr;
     }
