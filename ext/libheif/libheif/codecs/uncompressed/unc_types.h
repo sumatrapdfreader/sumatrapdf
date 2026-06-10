@@ -23,106 +23,10 @@
 #define LIBHEIF_UNC_TYPES_H
 
 #include <cstdint>
+#include <libheif/heif_uncompressed.h>
 
-/**
- * Component type.
- *
- * See ISO/IEC 23001-17 Table 1.
-*/
-enum heif_uncompressed_component_type
-{
-  /**
-   * Monochrome component.
-   */
-  component_type_monochrome = 0,
-
-  /**
-   * Luma component (Y).
-   */
-  component_type_Y = 1,
-
-  /**
-   * Chroma component (Cb / U).
-   */
-  component_type_Cb = 2,
-
-  /**
-   * Chroma component (Cr / V).
-   */
-  component_type_Cr = 3,
-
-  /**
-   * Red component (R).
-   */
-  component_type_red = 4,
-
-  /**
-   * Green component (G).
-   */
-  component_type_green = 5,
-
-  /**
-   * Blue component (B).
-   */
-  component_type_blue = 6,
-
-  /**
-   * Alpha / transparency component (A).
-   */
-  component_type_alpha = 7,
-
-  /**
-   * Depth component (D).
-   */
-  component_type_depth = 8,
-
-  /**
-   * Disparity component (Disp).
-   */
-  component_type_disparity = 9,
-
-  /**
-   * Palette component (P).
-   *
-   * The {@code component_format} value for this component shall be 0.
-   */
-  component_type_palette = 10,
-
-  /**
-   * Filter Array (FA) component such as Bayer, RGBW, etc.
-   */
-  component_type_filter_array = 11,
-
-  /**
-   * Padded component (unused bits/bytes).
-   */
-  component_type_padded = 12,
-
-  /**
-   * Cyan component (C).
-   */
-  component_type_cyan = 13,
-
-  /**
-   * Magenta component (M).
-   */
-  component_type_magenta = 14,
-
-  /**
-   * Yellow component (Y).
-   */
-  component_type_yellow = 15,
-
-  /**
-   * Key (black) component (K).
-   */
-  component_type_key_black = 16,
-
-  /**
-   * Maximum valid component type value.
-   */
-  component_type_max_valid = component_type_key_black
-};
+// Update this when adding new values to heif_uncompressed_component_type.
+#define heif_cmpd_component_type_max_valid heif_cmpd_component_type_key_black
 
 /**
  * HEIF uncompressed component format.
@@ -132,7 +36,7 @@ enum heif_uncompressed_component_type
  *
  * See ISO/IEC 23001-17 Table 2.
  */
-enum heif_uncompressed_component_format
+enum heif_uncompressed_component_format : uint8_t
 {
   /**
    * Unsigned integer.
@@ -285,8 +189,6 @@ enum heif_uncompressed_interleave_mode
    */
   interleave_mode_max_valid = interleave_mode_multi_y
 };
-
-
 
 
 #endif //LIBHEIF_UNC_TYPES_H

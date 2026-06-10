@@ -184,6 +184,9 @@ public:
 
   bool end_of_sequence_reached() const;
 
+  // See m_num_repetitions for the meaning of the return value.
+  uint32_t get_number_of_repetitions() const { return m_num_repetitions; }
+
   // Compute some parameters after all frames have been encoded (for example: track duration).
   virtual Error finalize_track();
 
@@ -218,6 +221,13 @@ protected:
   };
   std::vector<SampleTiming> m_presentation_timeline;
   uint64_t m_num_output_samples = 0; // Can be larger than the vector. It then repeats the playback.
+
+  // How many times the media timeline is repeated.
+  // 0  = editlist is present but its pattern is not understood (caller should assume a single playback).
+  // 1  = no editlist: media plays exactly once.
+  // UINT32_MAX = infinite (mvhd duration is the indefinite-sentinel and the editlist is in repeat mode).
+  // N  = the media segment is played N times.
+  uint32_t m_num_repetitions = 1;
 
   // Continuous counting through all repetitions. You have to take the modulo operation to get the
   // index into m_presentation_timeline SampleTiming table.

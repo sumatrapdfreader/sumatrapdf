@@ -46,6 +46,8 @@ public:
 
   Result<std::vector<uint8_t>> read_bitstream_configuration_data() const override;
 
+  Result<std::optional<ImageSize>> get_coded_image_size_from_config() const override;
+
 private:
   const std::shared_ptr<const Box_avcC> m_avcC;
 };

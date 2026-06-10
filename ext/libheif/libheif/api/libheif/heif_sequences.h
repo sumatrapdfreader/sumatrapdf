@@ -82,7 +82,12 @@ int heif_context_number_of_sequence_tracks(const heif_context*);
 
 /**
  * Returns the IDs for each of the tracks stored in the HEIF file.
- * The output array must have heif_context_number_of_sequence_tracks() entries.
+ *
+ * The caller MUST allocate `out_track_id_array` with exactly
+ * heif_context_number_of_sequence_tracks() entries. The function writes
+ * that many IDs unconditionally. Passing a smaller array results in a
+ * buffer overflow (undefined behavior); there is no capacity parameter
+ * and no truncation.
  */
 LIBHEIF_API
 void heif_context_get_track_ids(const heif_context* ctx, uint32_t out_track_id_array[]);
@@ -111,13 +116,13 @@ heif_track* heif_context_get_track(const heif_context*, uint32_t id);
 
 typedef uint32_t heif_track_type;
 
-enum heif_track_type_4cc
+typedef enum heif_track_type_4cc
 {
   heif_track_type_video = heif_fourcc('v', 'i', 'd', 'e'),
   heif_track_type_image_sequence = heif_fourcc('p', 'i', 'c', 't'),
   heif_track_type_auxiliary = heif_fourcc('a', 'u', 'x', 'v'),
   heif_track_type_metadata = heif_fourcc('m', 'e', 't', 'a')
-};
+} heif_track_type_4cc;
 
 /**
  * Get the four-cc track handler type.
@@ -130,11 +135,11 @@ LIBHEIF_API
 heif_track_type heif_track_get_track_handler_type(const heif_track*);
 
 
-enum heif_auxiliary_track_info_type
+typedef enum heif_auxiliary_track_info_type
 {
   heif_auxiliary_track_info_type_unknown = 0,
   heif_auxiliary_track_info_type_alpha = 1
-};
+} heif_auxiliary_track_info_type;
 
 LIBHEIF_API
 enum heif_auxiliary_track_info_type heif_track_get_auxiliary_info_type(const heif_track*);
@@ -153,6 +158,41 @@ int heif_track_has_alpha_channel(const heif_track*);
  */
 LIBHEIF_API
 uint32_t heif_track_get_timescale(const heif_track*);
+
+/**
+ * Special return value of `heif_track_get_number_of_repetitions()` indicating that
+ * the editlist requests indefinite repetition (the mvhd duration is the ISOBMFF
+ * "duration unknown" sentinel and the editlist is in repeat mode).
+ */
+#define heif_sequence_track_number_of_repetitions_infinite 0xFFFFFFFFu
+
+/**
+ * How many times the media segment should be played according to the track's edit list.
+ *
+ * Returns:
+ *  - 0 if an edit list box is present but follows a pattern libheif does not interpret
+ *    as a loop count. Callers should fall back to a single playback in that case.
+ *  - 1 when no edit list is present. The media plays exactly once.
+ *  - `heif_sequence_track_number_of_repetitions_infinite` (= UINT32_MAX) when the file
+ *    signals indefinite playback (mvhd duration is the all-1s sentinel together with an
+ *    editlist in repeat mode), or when the repetition count does not fit in uint32_t.
+ *  - Otherwise the number of times the media segment is played.
+ *
+ * The reported value is informational; it does not change how
+ * `heif_track_decode_next_image()` walks samples. By default, that function applies
+ * the edit list and (for repeated playback) returns samples for every requested
+ * repetition; iterating until end-of-sequence on an infinite-loop file therefore
+ * never terminates.
+ *
+ * Clients that want to handle repetition themselves (e.g. to honor an "infinite"
+ * value with their own looping policy or to enforce an application-level cap) should
+ * set `heif_decoding_options::ignore_sequence_editlist` when calling
+ * `heif_track_decode_next_image()`. With that flag set, libheif plays the media
+ * timeline exactly once. Use the value returned by this function to decide how often
+ * to replay the track at the application level.
+ */
+LIBHEIF_API
+uint32_t heif_track_get_number_of_repetitions(const heif_track*);
 
 
 // --- reading visual tracks
@@ -177,8 +217,8 @@ heif_error heif_track_get_image_resolution(const heif_track*, uint16_t* out_widt
 LIBHEIF_API
 heif_error heif_track_decode_next_image(heif_track* track,
                                         heif_image** out_img,
-                                        enum heif_colorspace colorspace,
-                                        enum heif_chroma chroma,
+                                        heif_colorspace colorspace,
+                                        heif_chroma chroma,
                                         const heif_decoding_options* options);
 
 /**
@@ -275,12 +315,12 @@ void heif_context_set_number_of_sequence_repetitions(heif_context*, uint32_t num
  * The difference between `heif_sample_aux_info_presence_optional` and `heif_sample_aux_info_presence_mandatory`
  * is that `heif_sample_aux_info_presence_mandatory` will throw an error if the data is missing when writing a sample.
  */
-enum heif_sample_aux_info_presence
+typedef enum heif_sample_aux_info_presence
 {
   heif_sample_aux_info_presence_none = 0,
   heif_sample_aux_info_presence_optional = 1,
   heif_sample_aux_info_presence_mandatory = 2
-};
+} heif_sample_aux_info_presence;
 
 
 typedef struct heif_track_options heif_track_options;
@@ -338,7 +378,7 @@ void heif_track_options_set_gimi_track_id(heif_track_options*,
 
 // --- writing visual tracks
 
-enum heif_sequence_gop_structure
+typedef enum heif_sequence_gop_structure
 {
   // Only independently decodable keyframes.
   heif_sequence_gop_structure_intra_only,
@@ -349,7 +389,24 @@ enum heif_sequence_gop_structure
   // All frame types are allowed, including frame reordering, to achieve
   // the best compression ratio.
   heif_sequence_gop_structure_unrestricted
-};
+} heif_sequence_gop_structure;
+
+
+// Describes the intent of the encoded sequence content. Encoder plugins may
+// use this to choose different default tunings (e.g. perceptual quality vs.
+// rate-distortion) for slide-show-style image sequences vs. video.
+//
+// Pass `_auto` to let libheif pick a value. Today libheif derives the kind
+// from the track's handler type (`pict` -> image_sequence, `vide` -> video);
+// in the future it may use additional input signals (e.g. frame rate or
+// frame-to-frame similarity). Plugins never see `_auto`: libheif resolves it
+// to a concrete kind before passing the options to the encoder plugin.
+typedef enum heif_sequence_content_kind
+{
+  heif_sequence_content_kind_auto = 0,
+  heif_sequence_content_kind_image_sequence = 1,
+  heif_sequence_content_kind_video = 2
+} heif_sequence_content_kind;
 
 
 typedef struct heif_sequence_encoding_options
@@ -371,11 +428,31 @@ typedef struct heif_sequence_encoding_options
   int keyframe_distance_max; // 0 - undefined
 
   int save_alpha_channel;
+
+  // version 3 options
+
+  // Intent of the encoded content. Encoder plugins may use this to choose
+  // different tunings for slide-show-style image sequences vs. video.
+  // Set to `_auto` (the default) to let libheif pick. libheif resolves the
+  // value to a concrete kind before passing the options to the encoder
+  // plugin, so plugins never see `_auto`.
+  enum heif_sequence_content_kind content_kind;
 } heif_sequence_encoding_options;
 
 
 LIBHEIF_API
 heif_sequence_encoding_options* heif_sequence_encoding_options_alloc(void);
+
+/**
+ * Copy fields from `src` into `dst`, respecting both structs' version numbers.
+ * Only fields present in `min(dst->version, src->version)` are copied, so this
+ * is safe when libheif and the caller were built against different header
+ * versions of `heif_sequence_encoding_options`. Pass NULL `src` to leave `dst`
+ * unchanged.
+ */
+LIBHEIF_API
+void heif_sequence_encoding_options_copy(heif_sequence_encoding_options* dst,
+                                         const heif_sequence_encoding_options* src);
 
 LIBHEIF_API
 void heif_sequence_encoding_options_release(heif_sequence_encoding_options*);
@@ -588,12 +665,12 @@ const heif_tai_clock_info* heif_track_get_tai_clock_info_of_first_cluster(heif_t
 
 // --- track references
 
-enum heif_track_reference_type
+typedef enum heif_track_reference_type
 {
   heif_track_reference_type_description = heif_fourcc('c', 'd', 's', 'c'), // track_description
   heif_track_reference_type_thumbnails = heif_fourcc('t', 'h', 'm', 'b'), // thumbnails
   heif_track_reference_type_auxiliary = heif_fourcc('a', 'u', 'x', 'l') // auxiliary data (e.g. depth maps or alpha channel)
-};
+} heif_track_reference_type;
 
 /**
  * Add a reference between tracks.
@@ -610,7 +687,12 @@ size_t heif_track_get_number_of_track_reference_types(const heif_track*);
 
 /**
  * List the reference types used in this track.
- * The passed array must have heif_track_get_number_of_track_reference_types() entries.
+ *
+ * The caller MUST allocate `out_reference_types` with exactly
+ * heif_track_get_number_of_track_reference_types() entries. The function
+ * writes that many values unconditionally. Passing a smaller array
+ * results in a buffer overflow (undefined behavior); there is no
+ * capacity parameter and no truncation.
  */
 LIBHEIF_API
 void heif_track_get_track_reference_types(const heif_track*, uint32_t out_reference_types[]);

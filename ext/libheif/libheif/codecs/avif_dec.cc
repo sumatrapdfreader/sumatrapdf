@@ -61,7 +61,7 @@ int Decoder_AVIF::get_chroma_bits_per_pixel() const
 
 Error Decoder_AVIF::get_coded_image_colorspace(heif_colorspace* out_colorspace, heif_chroma* out_chroma) const
 {
-  *out_chroma = (heif_chroma) (m_av1C->get_configuration().get_heif_chroma());
+  *out_chroma = m_av1C->get_configuration().get_heif_chroma();
 
   if (*out_chroma == heif_chroma_monochrome) {
     *out_colorspace = heif_colorspace_monochrome;

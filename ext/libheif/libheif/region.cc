@@ -25,6 +25,7 @@
 #include "libheif/heif_regions.h"
 #include <algorithm>
 #include <utility>
+#include <limits>
 
 
 Error RegionItem::parse(const std::vector<uint8_t>& data,
@@ -357,7 +358,7 @@ Error RegionGeometry_Polygon::parse(const std::vector<uint8_t>& data,
     };
   }
 
-  if (auto err = m_memory_handle.alloc(numPoints * sizeof(Point), limits, "region polygon")) {
+  if (auto err = m_memory_handle.alloc(numPoints, sizeof(Point), limits, "region polygon")) {
     return err;
   }
 
@@ -458,7 +459,17 @@ Error RegionGeometry_InlineMask::parse(const std::vector<uint8_t>& data,
     };
   }
 
-  if (width / 8 + 1 > UINT32_MAX / height) {
+  // Mask is stored with one bit per pixel, no padding exists at the end of the line.
+  // Only the very last byte is padded.
+
+  // error if:
+  // (width * height + 7) / 8 > UINT32_MAX
+  // more strict:
+  // (width * height + height) / 8 > UINT32_MAX
+  // width/8 * height + 1 > UINT32_MAX
+
+  uint64_t bytes_for_mask = (static_cast<uint64_t>(width) * height + 7) / 8;
+  if (bytes_for_mask > std::numeric_limits<ptrdiff_t>::max()) {
     return {
       heif_error_Memory_allocation_error,
       heif_suberror_Unspecified,
@@ -474,18 +485,18 @@ Error RegionGeometry_InlineMask::parse(const std::vector<uint8_t>& data,
     };
   }
 
-  unsigned int additionalBytesRequired = width * height / 8;
-  if (data.size() - *dataOffset < additionalBytesRequired) {
+  if (data.size() - *dataOffset < bytes_for_mask) {
         return Error(heif_error_Invalid_input, heif_suberror_Invalid_region_data,
                  "Insufficient data remaining for inline mask region data[]");
   }
 
-  if (auto err = m_memory_handle.alloc(additionalBytesRequired, limits, "region mask")) {
+  if (auto err = m_memory_handle.alloc(bytes_for_mask, limits, "region mask")) {
     return err;
   }
 
-  mask_data.resize(additionalBytesRequired);
-  std::copy(data.begin() + *dataOffset, data.begin() + *dataOffset + additionalBytesRequired, mask_data.begin());
+  mask_data.resize(bytes_for_mask);
+  std::copy(data.begin() + *dataOffset, data.begin() + *dataOffset + static_cast<ptrdiff_t>(bytes_for_mask), mask_data.begin());
+  *dataOffset += static_cast<unsigned int>(bytes_for_mask);
   return Error::Ok;
 }
 

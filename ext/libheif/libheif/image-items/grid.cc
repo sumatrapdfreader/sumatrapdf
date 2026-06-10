@@ -24,6 +24,7 @@
 #include <cstring>
 #include <deque>
 #include <future>
+#include <mutex>
 #include <set>
 #include <algorithm>
 #include "api_structs.h"
@@ -136,20 +137,20 @@ std::string ImageGrid::dump() const
 ImageItem_Grid::ImageItem_Grid(HeifContext* ctx)
     : ImageItem(ctx)
 {
-  m_encoding_options = heif_encoding_options_alloc();
+  m_tile_encoding_options = heif_encoding_options_alloc();
 }
 
 
 ImageItem_Grid::ImageItem_Grid(HeifContext* ctx, heif_item_id id)
     : ImageItem(ctx, id)
 {
-  m_encoding_options = heif_encoding_options_alloc();
+  m_tile_encoding_options = heif_encoding_options_alloc();
 }
 
 
 ImageItem_Grid::~ImageItem_Grid()
 {
-  heif_encoding_options_free(m_encoding_options);
+  heif_encoding_options_free(m_tile_encoding_options);
 }
 
 
@@ -226,6 +227,12 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_Grid::decode_compressed_image(
     return decode_full_grid_image(options, processed_ids);
   }
 }
+
+// Note: ImageItem_Grid does not override check_decoded_image_size(). The composed
+// grid image is built to the grid-header size by construction (decode_and_paste_tile_image
+// creates the canvas at get_grid_spec() size), so checking it against that same size
+// would be tautological. The base default checks the composed image against 'ispe',
+// which is the meaningful cross-check (grid-header size vs signaled size).
 
 #if ENABLE_PARALLEL_TILE_DECODING
 static void wait_for_jobs(std::deque<std::future<Error> >* jobs) {
@@ -347,8 +354,10 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_Grid::decode_full_grid_image(c
         return err;
       }
 
-      if (src_width < grid.get_width() / grid.get_columns() ||
-          src_height < grid.get_height() / grid.get_rows()) {
+      // Integer division would let e.g. 9 tiles of 11px each "cover" a 107px canvas
+      // (107/9 == 11), leaving an 8-pixel gap inside the visible image area.
+      if (static_cast<uint64_t>(src_width) * grid.get_columns() < grid.get_width() ||
+          static_cast<uint64_t>(src_height) * grid.get_rows() < grid.get_height()) {
         return Error{heif_error_Invalid_input,
                      heif_suberror_Invalid_grid_data,
                      "Grid tiles do not cover whole image"};
@@ -484,14 +493,15 @@ Error ImageItem_Grid::decode_and_paste_tile_image(heif_item_id tileID, uint32_t 
 
   auto tileItem = get_context()->get_image(tileID, true);
   if (!tileItem && !options.strict_decoding) {
-    // We ignore missing images.
+    // We ignore missing images. The un-pasted canvas region stays zero from calloc().
 #if ENABLE_PARALLEL_TILE_DECODING
     std::lock_guard<std::mutex> lock(warningsMutex);
 #endif
-    warnings->push_back(Error{
+    warnings->emplace_back(
       heif_error_Invalid_input,
       heif_suberror_Missing_grid_images,
-    });
+      "Missing grid image"
+    );
     return progress_and_return_ok(options, progress_counter);
   }
 
@@ -503,7 +513,7 @@ Error ImageItem_Grid::decode_and_paste_tile_image(heif_item_id tileID, uint32_t 
   auto decodeResult = tileItem->decode_image(options, false, 0, 0, processed_ids);
   if (!decodeResult) {
     if (!options.strict_decoding) {
-      // We ignore broken tiles.
+      // We ignore broken tiles. The un-pasted canvas region stays zero from calloc().
 #if ENABLE_PARALLEL_TILE_DECODING
       std::lock_guard<std::mutex> lock(warningsMutex);
 #endif
@@ -541,10 +551,10 @@ Error ImageItem_Grid::decode_and_paste_tile_image(heif_item_id tileID, uint32_t 
         assert(alpha_bpp <= 16);
 
         auto alpha_default_value = static_cast<uint16_t>((1UL << alpha_bpp) - 1UL);
-        grid_image->fill_plane(heif_channel_Alpha, alpha_default_value);
+        grid_image->fill_channel(heif_channel_Alpha, alpha_default_value);
       }
 
-      grid_image->forward_all_metadata_from(tile_img);
+      grid_image->copy_metadata_from(*tile_img);
 
       inout_image = grid_image; // We have to set this at the very end because of the unlocked check to `inout_image` above.
     }
@@ -572,15 +582,24 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_Grid::decode_grid_tile(const h
 {
   uint32_t idx = ty * m_grid_spec.get_columns() + tx;
 
-  assert(idx < m_grid_tile_ids.size());
+  if (idx >= m_grid_tile_ids.size()) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Missing_grid_images,
+                 "Grid tile coordinate out of range"};
+  }
 
   heif_item_id tile_id = m_grid_tile_ids[idx];
   std::shared_ptr<const ImageItem> tile_item = get_context()->get_image(tile_id, true);
+  if (!tile_item) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Missing_grid_images,
+                 "Grid tile references a non-existent item"};
+  }
   if (auto error = tile_item->get_item_error()) {
     return error;
   }
 
-  return tile_item->decode_compressed_image(options, true, tx, ty, processed_ids);
+  return tile_item->decode_compressed_image(options, false, 0, 0, processed_ids);
 }
 
 
@@ -625,10 +644,16 @@ heif_image_tiling ImageItem_Grid::get_heif_image_tiling() const
 
 void ImageItem_Grid::get_tile_size(uint32_t& w, uint32_t& h) const
 {
-  heif_item_id first_tile_id = get_grid_tiles()[0];
-  auto tile = get_context()->get_image(first_tile_id, true);
-  if (tile->get_item_error()) {
+  const auto& tile_ids = get_grid_tiles();
+  if (tile_ids.empty() || tile_ids[0] == 0) {
     w = h = 0;
+    return;
+  }
+
+  auto tile = get_context()->get_image(tile_ids[0], true);
+  if (tile == nullptr || tile->get_item_error()) {
+    w = h = 0;
+    return;
   }
 
   w = tile->get_width();
@@ -639,13 +664,12 @@ void ImageItem_Grid::get_tile_size(uint32_t& w, uint32_t& h) const
 
 int ImageItem_Grid::get_luma_bits_per_pixel() const
 {
-  heif_item_id child;
-  Error err = get_context()->get_id_of_non_virtual_child_image(get_id(), child);
-  if (err) {
+  auto child_result = get_context()->find_first_coded_image_id(get_id());
+  if (child_result.is_error()) {
     return -1;
   }
 
-  auto image = get_context()->get_image(child, true);
+  auto image = get_context()->get_image(*child_result, true);
   if (!image) {
     return -1;
   }
@@ -656,25 +680,23 @@ int ImageItem_Grid::get_luma_bits_per_pixel() const
 
 int ImageItem_Grid::get_chroma_bits_per_pixel() const
 {
-  heif_item_id child;
-  Error err = get_context()->get_id_of_non_virtual_child_image(get_id(), child);
-  if (err) {
+  auto child_result = get_context()->find_first_coded_image_id(get_id());
+  if (child_result.is_error()) {
     return -1;
   }
 
-  auto image = get_context()->get_image(child, true);
+  auto image = get_context()->get_image(*child_result, true);
   return image->get_chroma_bits_per_pixel();
 }
 
 Result<std::shared_ptr<Decoder>> ImageItem_Grid::get_decoder() const
 {
-  heif_item_id child;
-  Error err = get_context()->get_id_of_non_virtual_child_image(get_id(), child);
-  if (err) {
-    return {err};
+  auto child_result = get_context()->find_first_coded_image_id(get_id());
+  if (child_result.is_error()) {
+    return child_result.error();
   }
 
-  auto image = get_context()->get_image(child, true);
+  auto image = get_context()->get_image(*child_result, true);
   if (!image) {
     return Error{heif_error_Invalid_input,
       heif_suberror_Nonexisting_item_referenced};
@@ -684,6 +706,34 @@ Result<std::shared_ptr<Decoder>> ImageItem_Grid::get_decoder() const
   }
 
   return image->get_decoder();
+}
+
+
+void ImageItem_Grid::populate_component_descriptions()
+{
+  if (!get_component_descriptions().empty()) {
+    return;
+  }
+
+  if (m_grid_tile_ids.empty()) {
+    ImageItem::populate_component_descriptions();
+    return;
+  }
+
+  auto child = get_context()->get_image(m_grid_tile_ids[0], true);
+  if (!child) {
+    ImageItem::populate_component_descriptions();
+    return;
+  }
+
+  // Try child-delegation first (correct for unci children with float/signed/
+  // complex datatypes). If the child has no descriptions yet (e.g. it's a
+  // visual codec without an initialized decoder), fall back to the base
+  // populate which queries this item's own colorspace/bpp accessors (which
+  // already delegate to the child).
+  if (!populate_descriptions_from_child(*child, child->get_width(), child->get_height())) {
+    ImageItem::populate_component_descriptions();
+  }
 }
 
 
@@ -711,11 +761,16 @@ Result<std::shared_ptr<ImageItem_Grid>> ImageItem_Grid::add_new_grid_item(HeifCo
   // Create Grid Item
 
   std::shared_ptr<HeifFile> file = ctx->get_heif_file();
-  heif_item_id grid_id = file->add_new_image(fourcc("grid"));
+  auto grid_id_result = file->add_new_image(fourcc("grid"));
+  if (!grid_id_result) {
+    return grid_id_result.error();
+  }
+  heif_item_id grid_id = *grid_id_result;
   grid_image = std::make_shared<ImageItem_Grid>(ctx, grid_id);
-  grid_image->set_encoding_options(encoding_options);
+  grid_image->set_tile_encoding_options(encoding_options);
   grid_image->set_grid_spec(grid);
   grid_image->set_resolution(output_width, output_height);
+  grid_image->m_grid_orientation = encoding_options->image_orientation;
 
   ctx->insert_image_item(grid_id, grid_image);
   const int construction_method = 1; // 0=mdat 1=idat
@@ -740,16 +795,22 @@ Result<std::shared_ptr<ImageItem_Grid>> ImageItem_Grid::add_new_grid_item(HeifCo
   return grid_image;
 }
 
+void ImageItem_Grid::set_tile_encoding_options(const heif_encoding_options* options)
+{
+  heif_encoding_options_copy(m_tile_encoding_options, options);
+
+  // do not propagate image transformation to tiles
+  m_tile_encoding_options->image_orientation = heif_orientation_normal;
+}
+
 
 Error ImageItem_Grid::add_image_tile(uint32_t tile_x, uint32_t tile_y,
                                      const std::shared_ptr<HeifPixelImage>& image,
                                      heif_encoder* encoder)
 {
-  auto encoding_options = get_encoding_options();
-
   auto encodingResult = get_context()->encode_image(image,
                                             encoder,
-                                            *encoding_options,
+                                            *m_tile_encoding_options,
                                             heif_image_input_class_normal);
   if (!encodingResult) {
     return encodingResult.error();
@@ -779,13 +840,17 @@ Error ImageItem_Grid::add_image_tile(uint32_t tile_x, uint32_t tile_y,
     }
 
     // add color profile similar to first tile image
-    // TODO: this shouldn't be necessary. The colr profiles should be in the ImageExtraData above.
-    auto colr_boxes = add_color_profile(image, *encoding_options,
+    // TODO: this shouldn't be necessary. The colr profiles should be in the ImageDescription above.
+    auto colr_boxes = add_color_profile(image, *m_tile_encoding_options,
                                         heif_image_input_class_normal,
-                                        encoding_options->output_nclx_profile);
+                                        m_tile_encoding_options->output_nclx_profile);
     for (auto& property : colr_boxes) {
       add_property(property, is_property_essential(property));
     }
+
+    // Add transformative properties
+
+    get_context()->get_heif_file()->add_orientation_properties(get_id(), m_grid_orientation);
   }
 
   return Error::Ok;
@@ -805,8 +870,8 @@ Result<std::shared_ptr<ImageItem_Grid>> ImageItem_Grid::add_and_encode_full_grid
 
   ImageGrid grid;
   grid.set_num_tiles(columns, rows);
-  uint32_t tile_width = tiles[0]->get_width(heif_channel_interleaved);
-  uint32_t tile_height = tiles[0]->get_height(heif_channel_interleaved);
+  uint32_t tile_width = tiles[0]->get_width();
+  uint32_t tile_height = tiles[0]->get_height();
   grid.set_output_size(tile_width * columns, tile_height * rows);
   std::vector<uint8_t> grid_data = grid.write();
 
@@ -842,7 +907,11 @@ Result<std::shared_ptr<ImageItem_Grid>> ImageItem_Grid::add_and_encode_full_grid
 
   // Create Grid Item
 
-  heif_item_id grid_id = file->add_new_image(fourcc("grid"));
+  auto grid_id_result = file->add_new_image(fourcc("grid"));
+  if (!grid_id_result) {
+    return grid_id_result.error();
+  }
+  heif_item_id grid_id = *grid_id_result;
   griditem = std::make_shared<ImageItem_Grid>(ctx, grid_id);
   ctx->insert_image_item(grid_id, griditem);
   const int construction_method = 1; // 0=mdat 1=idat

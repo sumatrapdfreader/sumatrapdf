@@ -59,7 +59,10 @@ Result<Encoder::CodedImageData> Encoder_AVIF::encode(const std::shared_ptr<HeifP
     uint8_t* data;
     int size;
 
-    encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    err = encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     bool found_config = fill_av1C_configuration_from_stream(&config, data, size);
     (void) found_config;
@@ -140,7 +143,10 @@ Error Encoder_AVIF::get_data(heif_encoder* encoder)
 
     uintptr_t out_frame_number;
     int is_keyframe = 0;
-    encoder->plugin->get_compressed_data2(encoder->encoder, &data, &size, &out_frame_number, &is_keyframe, nullptr);
+    struct heif_error err = encoder->plugin->get_compressed_data2(encoder->encoder, &data, &size, &out_frame_number, &is_keyframe, nullptr);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     if (data == nullptr) {
       break;

@@ -66,8 +66,8 @@ private:
   std::shared_ptr<class Box_hvcC> m_hvcC;
   bool m_hvcC_sent = false;
 
-  int m_encoded_image_width = 0;
-  int m_encoded_image_height = 0;
+  uint32_t m_encoded_image_width = 0;
+  uint32_t m_encoded_image_height = 0;
 
   std::optional<CodedImageData> m_current_output_data;
 

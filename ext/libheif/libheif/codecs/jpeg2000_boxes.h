@@ -507,7 +507,10 @@ private:
 
     uint32_t read32()
     {
-        uint32_t res = (headerData[cursor] << 24) | (headerData[cursor + 1] << 16) | (headerData[cursor + 2] << 8) | headerData[cursor + 3];
+        uint32_t res = (uint32_t{headerData[cursor]} << 24) |
+                       (uint32_t{headerData[cursor + 1]} << 16) |
+                       (uint32_t{headerData[cursor + 2]} << 8) |
+                       uint32_t{headerData[cursor + 3]};
         cursor += 4;
         return res;
     }

@@ -42,7 +42,7 @@ typedef struct heif_region_item heif_region_item;
  * Each region item will contain zero or more regions, which may have different geometry or
  * mask representations.
 */
-enum heif_region_type
+typedef enum heif_region_type
 {
   /**
    * Point geometry.
@@ -121,7 +121,7 @@ enum heif_region_type
    * considered to form a closed surface. Only the edge is part of the region.
   */
   heif_region_type_polyline = 6
-};
+} heif_region_type;
 
 typedef struct heif_region heif_region;
 

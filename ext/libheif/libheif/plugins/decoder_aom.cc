@@ -58,6 +58,7 @@ struct aom_decoder
   std::deque<Packet> output_queue;
   bool strict_decoding = false;
   std::string error_message;
+  const heif_security_limits* limits = nullptr;
 };
 
 static const char kSuccess[] = "Success";
@@ -134,6 +135,7 @@ heif_error aom_new_decoder2(void** dec, const heif_decoder_plugin_options* optio
   }
 
   decoder->codec_initialized = true;
+  decoder->limits = options->limits;
   *dec = decoder;
 
   heif_error err = {heif_error_Ok, heif_suberror_Unspecified, kSuccess};
@@ -143,7 +145,7 @@ heif_error aom_new_decoder2(void** dec, const heif_decoder_plugin_options* optio
 
 heif_error aom_new_decoder(void** dec)
 {
-  heif_decoder_plugin_options options;
+  heif_decoder_plugin_options options{};
   options.format = heif_compression_AV1;
   options.strict_decoding = false;
   options.num_threads = 0;
@@ -304,7 +306,7 @@ static heif_error get_next_image_from_decoder(aom_decoder* decoder,
     int bytes_per_pixel = (bpp + 7) / 8;
 
     for (int y = 0; y < h; y++) {
-      memcpy(dst_mem + y * dst_stride, data + y * stride, w * bytes_per_pixel);
+      memcpy(dst_mem + y * dst_stride, data + static_cast<size_t>(y) * stride, static_cast<size_t>(w) * bytes_per_pixel);
     }
   }
 
@@ -335,7 +337,7 @@ heif_error aom_push_data2(void* decoder_raw, const void* frame_data, size_t fram
   for (;;) {
     heif_image* img;
     uintptr_t out_user_data;
-    heif_error err = get_next_image_from_decoder(decoder, &iter, &img, &out_user_data, nullptr); // TODO: send limits);
+    heif_error err = get_next_image_from_decoder(decoder, &iter, &img, &out_user_data, decoder->limits);
     if (err.code) {
       return err;
     }
@@ -408,7 +410,7 @@ static heif_error aom_flush_data(void* decoder_raw)
 
 static const heif_decoder_plugin decoder_aom
     {
-        5,
+        6,
         aom_plugin_name,
         aom_init_plugin,
         aom_deinit_plugin,
@@ -420,7 +422,7 @@ static const heif_decoder_plugin decoder_aom
         aom_set_strict_decoding,
         "aom",
         aom_decode_next_image,
-        /* minimum_required_libheif_version */ LIBHEIF_MAKE_VERSION(1,21,0),
+        /* minimum_required_libheif_version */ LIBHEIF_MAKE_VERSION(1,22,0),
         aom_does_support_format2,
         aom_new_decoder2,
         aom_push_data2,

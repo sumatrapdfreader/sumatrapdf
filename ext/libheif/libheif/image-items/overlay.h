@@ -106,6 +106,12 @@ public:
 
   Error get_coded_image_colorspace(heif_colorspace* out_colorspace, heif_chroma* out_chroma) const override;
 
+  // Delegates to the first overlay-input image's component descriptions,
+  // rescaled to this overlay's ispe (the canvas size). Without this override
+  // the base populate would bail (iovl has no get_decoder()) and the handle
+  // would report 0 components.
+  void populate_component_descriptions() override;
+
   heif_brand2 get_compatible_brand() const override;
 
   Result<Encoder::CodedImageData> encode(const std::shared_ptr<HeifPixelImage>& image,

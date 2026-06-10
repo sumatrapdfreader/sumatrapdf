@@ -38,13 +38,14 @@ typedef struct heif_security_limits
 {
   uint8_t version;
 
-  // --- version 1
+  // --- version 1 (v1.19.0)
 
   // Limit on the maximum image size to avoid allocating too much memory.
   // For example, setting this to 32768^2 pixels = 1 Gigapixels results
   // in 1.5 GB memory need for YUV-4:2:0 or 4 GB for RGB32.
   uint64_t max_image_size_pixels;
   uint64_t max_number_of_tiles;
+  // Also used for polarization pattern (splz) size limit.
   uint32_t max_bayer_pattern_pixels;
   uint32_t max_items;
 
@@ -58,16 +59,32 @@ typedef struct heif_security_limits
 
   uint32_t max_children_per_box; // for all boxes that are not covered by other limits
 
-  // --- version 2
+  // --- version 2 (v1.20.0)
 
   uint64_t max_total_memory;
   uint32_t max_sample_description_box_entries;
   uint32_t max_sample_group_description_box_entries;
 
-  // --- version 3
+  // --- version 3 (v1.21.0)
 
   uint32_t max_sequence_frames;
   uint32_t max_number_of_file_brands;
+
+  // --- version 4 (v1.22.0)
+
+  uint32_t max_bad_pixels;
+
+  // Upper bound (in bytes) on the pixel_size field of an uncompressed (ISO 23001-17)
+  // uncC box. Caps the byte stride between adjacent pixels and prevents pathological
+  // padding values from blowing up tile-size arithmetic.
+  uint32_t max_iso23001_17_pixel_size_bytes;
+
+  // Internal: when libheif derives a limits struct from another one (e.g. to
+  // tighten the maximum image size for a specific decode), this points back to
+  // the registered context whose total-memory budget the allocation should be
+  // accounted against. nullptr means "this is a root context" (the registered
+  // one). User code should leave this as nullptr; the field is set internally.
+  const struct heif_security_limits* parent;
 } heif_security_limits;
 
 

@@ -61,7 +61,7 @@ int heif_context_get_list_of_item_IDs(const heif_context* ctx,
  * Gets the item type.
  *
  * Usually, this is a four character code (e.g. `mime` or `uri `), but it can theoretically be
- * any 4-byte number. Thus, the type is returned as an integer. You can use {@link heif_fourcc} to map
+ * any 4-byte number. Thus, the type is returned as an integer. You can use #heif_fourcc to map
  * between the two representations.
  *
  * @param ctx the file context

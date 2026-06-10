@@ -250,6 +250,15 @@ typedef uint32_t heif_brand2;
 #define heif_brand2_avci   heif_fourcc('a','v','c','i')
 #define heif_brand2_avcs   heif_fourcc('a','v','c','s')
 
+/**
+ * Unified ID namespace (`unif`) brand.
+ *
+ * All IDs (item, track, entity group) share a single global namespace.
+ *
+ * See ISO/IEC 14496-12.
+ */
+#define heif_brand2_unif   heif_fourcc('u','n','i','f')
+
 #define heif_brand2_iso8   heif_fourcc('i','s','o','8')
 #define heif_brand2_isom   heif_fourcc('i','s','o','m')
 #define heif_brand2_mp41   heif_fourcc('m','p','4','1')
@@ -311,13 +320,13 @@ const char* heif_get_file_mime_type(const uint8_t* data, int len);
 
 // ========================= file type check ======================
 
-enum heif_filetype_result
+typedef enum heif_filetype_result
 {
   heif_filetype_no,
   heif_filetype_yes_supported,   // it is heif and can be read by libheif
   heif_filetype_yes_unsupported, // it is heif, but cannot be read by libheif
   heif_filetype_maybe // not sure whether it is an heif, try detection with more input data
-};
+} heif_filetype_result;
 
 // input data should be at least 12 bytes
 LIBHEIF_API
@@ -342,7 +351,7 @@ int heif_check_jpeg_filetype(const uint8_t* data, int len);
 // ===================== DEPRECATED =====================
 
 // DEPRECATED, use heif_brand2 and the heif_brand2_* constants instead
-enum heif_brand
+typedef enum heif_brand
 {
   heif_unknown_brand,
   heif_heic, // HEIF image with h265
@@ -362,7 +371,7 @@ enum heif_brand
   heif_evbs, // EVC sequence
   heif_j2ki, // JPEG2000 image
   heif_j2is, // JPEG2000 image sequence
-};
+} heif_brand;
 
 // input data should be at least 12 bytes
 // DEPRECATED, use heif_read_main_brand() instead

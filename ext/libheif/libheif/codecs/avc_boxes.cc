@@ -324,7 +324,7 @@ void skip_scaling_list(BitReader& reader, int sizeOfScalingList)
 #else
   // fast version
   for (int j = 0; j < sizeOfScalingList; j++) {
-    int delta_scale;
+    int32_t delta_scale;
     reader.get_svlc(&delta_scale);
     nextScale = (lastScale + delta_scale + 256) % 256;
 
@@ -340,7 +340,8 @@ void skip_scaling_list(BitReader& reader, int sizeOfScalingList)
 
 Error parse_sps_for_avcC_configuration(const uint8_t* sps, size_t size,
                                        Box_avcC::configuration* config,
-                                       int* width, int* height)
+                                       uint32_t* width, uint32_t* height,
+                                       ImageSize* coded_size)
 {
   // remove start-code emulation bytes from SPS header stream
 
@@ -361,14 +362,14 @@ Error parse_sps_for_avcC_configuration(const uint8_t* sps, size_t size,
   config->AVCLevelIndication = reader.get_bits8(8);
   config->lengthSize = 4;
 
-  int value;
-  reader.get_uvlc(&value); // SPS ID
-
   Error invalidUVLC{
     heif_error_Invalid_input,
     heif_suberror_Unspecified,
     "Invalid variable length code in AVC SPS header"
   };
+
+  uint32_t value;
+  if (!reader.get_uvlc(&value)) { return invalidUVLC; } // SPS ID
 
   if (std::set<int>{100, 110, 122, 244, 44, 83, 86}.contains(config->AVCProfileIndication)) {
     if (!reader.get_uvlc(&value)) {
@@ -412,33 +413,48 @@ Error parse_sps_for_avcC_configuration(const uint8_t* sps, size_t size,
     config->bit_depth_chroma = 8;
   }
 
-  reader.get_uvlc(&value); // log2_max_frame_num_minus4
-  int pic_order_cnt_type;
-  reader.get_uvlc(&pic_order_cnt_type);
+  if (!reader.get_uvlc(&value)) { return invalidUVLC; } // log2_max_frame_num_minus4
+  uint32_t pic_order_cnt_type;
+  if (!reader.get_uvlc(&pic_order_cnt_type)) { return invalidUVLC; }
   if (pic_order_cnt_type == 0) {
-    reader.get_uvlc(&value);
+    if (!reader.get_uvlc(&value)) { return invalidUVLC; }
   }
   else if (pic_order_cnt_type == 1) {
     reader.get_bits(1);
-    reader.get_svlc(&value);
-    reader.get_svlc(&value);
-    int num_ref_franes_in_pic_order_cnt_cycle;
-    reader.get_uvlc(&num_ref_franes_in_pic_order_cnt_cycle);
-    for (int i = 0; i < num_ref_franes_in_pic_order_cnt_cycle; i++) {
-      reader.get_uvlc(&value);
+    int32_t svalue;
+    if (!reader.get_svlc(&svalue) ||
+        !reader.get_svlc(&svalue)) { return invalidUVLC; }
+    uint32_t num_ref_franes_in_pic_order_cnt_cycle;
+    if (!reader.get_uvlc(&num_ref_franes_in_pic_order_cnt_cycle)) { return invalidUVLC; }
+    for (uint32_t i = 0; i < num_ref_franes_in_pic_order_cnt_cycle; i++) {
+      if (!reader.get_uvlc(&value)) { return invalidUVLC; }
     }
   }
 
-  reader.get_uvlc(&value); // num_ref_frames
+  if (!reader.get_uvlc(&value)) { return invalidUVLC; } // num_ref_frames
   reader.skip_bits(1);
 
-  int pic_width_in_mbs_minus1;
-  int pic_height_in_mbs_minus1;
-  reader.get_uvlc(&pic_width_in_mbs_minus1);
-  reader.get_uvlc(&pic_height_in_mbs_minus1);
+  uint32_t pic_width_in_mbs_minus1;
+  uint32_t pic_height_in_mbs_minus1;
+  if (!reader.get_uvlc(&pic_width_in_mbs_minus1) ||
+      !reader.get_uvlc(&pic_height_in_mbs_minus1)) {
+    return invalidUVLC;
+  }
+
+  if (pic_width_in_mbs_minus1 > (UINT32_MAX / 16) - 1 ||
+      pic_height_in_mbs_minus1 > (UINT32_MAX / 16) - 1) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Invalid_image_size,
+            "AVC SPS image size too large"};
+  }
 
   *width = (pic_width_in_mbs_minus1 + 1) * 16;
   *height = (pic_height_in_mbs_minus1 + 1) * 16;
+
+  if (coded_size) {
+    coded_size->width = *width;
+    coded_size->height = *height;
+  }
 
   uint32_t frame_mbs_only_flag = reader.get_bits(1);
   if (!frame_mbs_only_flag) {
@@ -447,14 +463,24 @@ Error parse_sps_for_avcC_configuration(const uint8_t* sps, size_t size,
   reader.skip_bits(1);
   uint32_t frame_cropping_flag = reader.get_bits(1);
   if (frame_cropping_flag) {
-    int left, right, top, bottom;
-    reader.get_uvlc(&left);
-    reader.get_uvlc(&right);
-    reader.get_uvlc(&top);
-    reader.get_uvlc(&bottom);
+    uint32_t left, right, top, bottom;
+    if (!reader.get_uvlc(&left) ||
+        !reader.get_uvlc(&right) ||
+        !reader.get_uvlc(&top) ||
+        !reader.get_uvlc(&bottom)) {
+      return invalidUVLC;
+    }
 
-    *width -= left + right;
-    *height -= top + bottom;
+    uint64_t crop_horizontal = static_cast<uint64_t>(left) + right;
+    uint64_t crop_vertical = static_cast<uint64_t>(top) + bottom;
+    if (crop_horizontal > *width || crop_vertical > *height) {
+      return {heif_error_Invalid_input,
+              heif_suberror_Invalid_image_size,
+              "AVC SPS cropping exceeds image size"};
+    }
+
+    *width -= static_cast<uint32_t>(crop_horizontal);
+    *height -= static_cast<uint32_t>(crop_vertical);
   }
 
   return {};

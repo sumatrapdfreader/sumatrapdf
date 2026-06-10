@@ -50,14 +50,17 @@ Result<Encoder::CodedImageData> Encoder_VVC::encode(const std::shared_ptr<HeifPi
                  err.message);
   }
 
-  int encoded_width = 0;
-  int encoded_height = 0;
+  uint32_t encoded_width = 0;
+  uint32_t encoded_height = 0;
 
   for (;;) {
     uint8_t* data;
     int size;
 
-    encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, NULL);
+    err = encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, NULL);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     if (data == NULL) {
       break;
@@ -140,6 +143,8 @@ Error Encoder_VVC::encode_sequence_frame(const std::shared_ptr<HeifPixelImage>& 
 
     m_vvcC = std::make_shared<Box_vvcC>();
     m_encoder_active = true;
+    uint64_t avg_fr = framerate_denom ? (256ULL * framerate_num + framerate_denom / 2) / framerate_denom : 0;
+    m_avg_frame_rate = avg_fr <= UINT16_MAX ? static_cast<uint16_t>(avg_fr) : 0;
   }
 
   Error dataErr = get_data(encoder);
@@ -187,7 +192,10 @@ Error Encoder_VVC::get_data(heif_encoder* encoder)
 
     uintptr_t frameNr=0;
     int more_frame_packets = 1;
-    encoder->plugin->get_compressed_data2(encoder->encoder, &data, &size, &frameNr, nullptr, &more_frame_packets);
+    struct heif_error err = encoder->plugin->get_compressed_data2(encoder->encoder, &data, &size, &frameNr, nullptr, &more_frame_packets);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     if (data == nullptr) {
       break;
@@ -205,6 +213,7 @@ Error Encoder_VVC::get_data(heif_encoder* encoder)
       parse_sps_for_vvcC_configuration(data, size,
                                        &m_vvcC->get_configuration(),
                                        &m_encoded_image_width, &m_encoded_image_height);
+      m_vvcC->get_configuration().avg_frame_rate = m_avg_frame_rate;
     }
 
     switch (nal_type) {

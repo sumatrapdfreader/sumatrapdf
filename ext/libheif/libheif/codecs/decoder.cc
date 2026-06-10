@@ -25,6 +25,7 @@
 #include "context.h"
 #include "plugin_registry.h"
 #include "api_structs.h"
+#include "security_limits.h"
 
 #include "codecs/hevc_dec.h"
 #include "codecs/avif_dec.h"
@@ -74,11 +75,31 @@ Result<std::vector<uint8_t>*> DataExtent::read_data() const
     if (err) {
       return err;
     }
+
+    // Account the (now-known) buffer size against the file's total-memory budget.
+    // append_data_from_iloc has already enforced max_memory_block_size per extent.
+    if (auto memErr = m_raw_memory_handle.alloc(m_raw.size(), m_file->get_security_limits(),
+                                                "decoder input buffer (iloc)")) {
+      m_raw.clear();
+      m_raw.shrink_to_fit();
+      return memErr;
+    }
   }
   else {
+    assert(m_file);
+
+    // Reserve the buffer in the total-memory tracker before allocating it.
+    // This also enforces max_memory_block_size and rejects sizes that would
+    // exceed max_total_memory across all concurrently-live DataExtents.
+    if (auto memErr = m_raw_memory_handle.alloc(m_size, m_file->get_security_limits(),
+                                                "decoder input buffer (sample)")) {
+      return memErr;
+    }
+
     // file range
     Error err = m_file->append_data_from_file_range(m_raw, m_offset, m_size);
     if (err) {
+      m_raw_memory_handle.free();
       return err;
     }
   }
@@ -92,6 +113,17 @@ Result<std::vector<uint8_t>> DataExtent::read_data(uint64_t offset, uint64_t siz
   std::vector<uint8_t> data;
 
   if (!m_raw.empty()) {
+    // No caller currently reaches this cached path with an out-of-range request, so
+    // hitting it indicates an internal logic error rather than malformed input. Guard
+    // it defensively anyway. The subtraction form avoids a uint64_t wrap in
+    // 'offset + size' that would otherwise allow an out-of-bounds read below.
+    // TODO: this would be better reported as an internal error; change it once we have
+    //       a dedicated error code for that.
+    if (offset > m_raw.size() || size > m_raw.size() - offset) {
+      return Error{heif_error_Invalid_input,
+                   heif_suberror_End_of_data,
+                   "Requested data range exceeds the cached extent buffer"};
+    }
     data.insert(data.begin(), m_raw.begin() + offset, m_raw.begin() + offset + size);
     return data;
   }
@@ -124,14 +156,17 @@ std::shared_ptr<Decoder> Decoder::alloc_for_infe_type(const ImageItem* item)
   switch (format_4cc) {
     case fourcc("hvc1"): {
       auto hvcC = item->get_property<Box_hvcC>();
+      if (!hvcC) return nullptr;
       return std::make_shared<Decoder_HEVC>(hvcC);
     }
     case fourcc("av01"): {
       auto av1C = item->get_property<Box_av1C>();
+      if (!av1C) return nullptr;
       return std::make_shared<Decoder_AVIF>(av1C);
     }
     case fourcc("avc1"): {
       auto avcC = item->get_property<Box_avcC>();
+      if (!avcC) return nullptr;
       return std::make_shared<Decoder_AVC>(avcC);
     }
     case fourcc("j2k1"): {
@@ -140,6 +175,7 @@ std::shared_ptr<Decoder> Decoder::alloc_for_infe_type(const ImageItem* item)
     }
     case fourcc("vvc1"): {
       auto vvcC = item->get_property<Box_vvcC>();
+      if (!vvcC) return nullptr;
       return std::make_shared<Decoder_VVC>(vvcC);
     }
     case fourcc("jpeg"): {
@@ -151,7 +187,15 @@ std::shared_ptr<Decoder> Decoder::alloc_for_infe_type(const ImageItem* item)
       auto uncC = item->get_property<Box_uncC>();
       auto cmpd = item->get_property<Box_cmpd>();
       auto ispe = item->get_property<Box_ispe>();
-      return std::make_shared<Decoder_uncompressed>(uncC,cmpd,ispe);
+      auto decoder = std::make_shared<Decoder_uncompressed>(uncC, cmpd, ispe);
+      decoder->set_cpat(item->get_property<Box_cpat>());
+      decoder->set_cmpC(item->get_property<Box_cmpC>());
+      decoder->set_icef(item->get_property<Box_icef>());
+      decoder->set_cloc(item->get_property<Box_cloc>());
+      decoder->set_splz(item->get_all_properties<Box_splz>());
+      decoder->set_sbpm(item->get_all_properties<Box_sbpm>());
+      decoder->set_snuc(item->get_all_properties<Box_snuc>());
+      return decoder;
     }
 #endif
     case fourcc("mski"): {
@@ -171,21 +215,25 @@ std::shared_ptr<Decoder> Decoder::alloc_for_sequence_sample_description_box(std:
   switch (sampleType) {
     case fourcc("hvc1"): {
       auto hvcC = sample_description_box->get_child_box<Box_hvcC>();
+      if (!hvcC) return nullptr;
       return std::make_shared<Decoder_HEVC>(hvcC);
     }
 
     case fourcc("av01"): {
       auto av1C = sample_description_box->get_child_box<Box_av1C>();
+      if (!av1C) return nullptr;
       return std::make_shared<Decoder_AVIF>(av1C);
     }
 
     case fourcc("vvc1"): {
       auto vvcC = sample_description_box->get_child_box<Box_vvcC>();
+      if (!vvcC) return nullptr;
       return std::make_shared<Decoder_VVC>(vvcC);
     }
 
     case fourcc("avc1"): {
       auto avcC = sample_description_box->get_child_box<Box_avcC>();
+      if (!avcC) return nullptr;
       return std::make_shared<Decoder_AVC>(avcC);
     }
 
@@ -196,7 +244,15 @@ std::shared_ptr<Decoder> Decoder::alloc_for_sequence_sample_description_box(std:
       auto ispe = std::make_shared<Box_ispe>();
       ispe->set_size(sample_description_box->get_VisualSampleEntry_const().width,
                      sample_description_box->get_VisualSampleEntry_const().height);
-      return std::make_shared<Decoder_uncompressed>(uncC, cmpd, ispe);
+      auto decoder = std::make_shared<Decoder_uncompressed>(uncC, cmpd, ispe);
+      decoder->set_cpat(sample_description_box->get_child_box<Box_cpat>());
+      decoder->set_cmpC(sample_description_box->get_child_box<Box_cmpC>());
+      decoder->set_icef(sample_description_box->get_child_box<Box_icef>());
+      decoder->set_cloc(sample_description_box->get_child_box<Box_cloc>());
+      decoder->set_splz(sample_description_box->get_child_boxes<Box_splz>());
+      decoder->set_sbpm(sample_description_box->get_child_boxes<Box_sbpm>());
+      decoder->set_snuc(sample_description_box->get_child_boxes<Box_snuc>());
+      return decoder;
     }
 #endif
 
@@ -254,12 +310,17 @@ Result<std::vector<uint8_t>> Decoder::get_compressed_data(bool with_configuratio
 
 Decoder::~Decoder()
 {
+  release_decoder();
+}
+
+
+void Decoder::release_decoder()
+{
   if (m_decoder) {
     assert(m_decoder_plugin);
     m_decoder_plugin->free_decoder(m_decoder);
+    m_decoder = nullptr;
   }
-
-  //std::unique_ptr<void, void (*)(void*)> decoderSmartPtr(m_decoder, m_decoder_plugin->free_decoder);
 }
 
 
@@ -301,6 +362,25 @@ Error Decoder::decode_sequence_frame_from_compressed_data(bool upload_configurat
     return pluginErr;
   }
 
+  // Reject memory-bomb inputs whose codec configuration record (SPS) declares
+  // a coded picture size beyond libheif's security limits, before handing any
+  // bytes to the decoder plugin. Codecs whose configuration record does not
+  // carry dimensions (e.g. AV1's av1C) return nullopt and skip the check.
+  //
+  // TODO: check this also in the decoder plugin since SPS packets may be
+  //       found within the actual image bitstream.
+  auto codedSize = get_coded_image_size_from_config();
+  if (codedSize.is_error()) {
+    return codedSize.error();
+  }
+
+  if (codedSize->has_value()) {
+    Error sizeErr = check_for_valid_image_size(limits, (*codedSize)->width, (*codedSize)->height);
+    if (sizeErr) {
+      return sizeErr;
+    }
+  }
+
   // --- decode image with the plugin
 
   heif_error err;
@@ -316,6 +396,7 @@ Error Decoder::decode_sequence_frame_from_compressed_data(bool upload_configurat
       plugin_options.format = get_compression_format();
       plugin_options.num_threads = options.num_codec_threads;
       plugin_options.strict_decoding = options.strict_decoding;
+      plugin_options.limits = limits;
 
       err = m_decoder_plugin->new_decoder2(&m_decoder, &plugin_options);
       if (err.code != heif_error_Ok) {
@@ -391,6 +472,14 @@ Result<std::shared_ptr<HeifPixelImage> > Decoder::get_decoded_frame(const heif_d
     return pluginErr;
   }
 
+  // The plugin's per-decoder context is created lazily on the first push of
+  // compressed data. If a caller polls for a frame before any data was pushed
+  // (e.g. when a sequence advances into a new chunk that uses a freshly-
+  // allocated decoder), there is nothing buffered yet — return nullptr.
+  if (!m_decoder) {
+    return {nullptr};
+  }
+
   heif_image* decoded_img = nullptr;
 
   heif_error err;
@@ -437,6 +526,7 @@ Decoder::decode_single_frame_from_compressed_data(const heif_decoding_options& o
 {
   Error decodeError = decode_sequence_frame_from_compressed_data(true, options, 0, limits);
   if (decodeError) {
+    release_decoder();
     return decodeError;
   }
 
@@ -451,15 +541,19 @@ Decoder::decode_single_frame_from_compressed_data(const heif_decoding_options& o
     Result<std::shared_ptr<HeifPixelImage>> imgResult;
     imgResult = get_decoded_frame(options, nullptr, limits);
     if (imgResult.error()) {
+      release_decoder();
       return imgResult.error();
     }
 
     if (*imgResult != nullptr) {
+      release_decoder();
       return imgResult;
     }
   }
 
-  // We did not receive and image from the decoder. We give up.
+  // We did not receive an image from the decoder. We give up.
+
+  release_decoder();
 
   return Error{
     heif_error_Decoder_plugin_error,

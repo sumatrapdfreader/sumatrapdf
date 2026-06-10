@@ -34,6 +34,11 @@ extern "C" {
 #include <libheif/heif_brands.h>
 #include <libheif/heif_color.h>
 
+// Forward declaration. The full definition lives in heif_uncompressed.h.
+// heif_encoding_options only stores a pointer, so a forward typedef is enough here
+// and avoids a circular include (heif_uncompressed.h pulls in heif.h, which pulls in this header).
+typedef struct heif_unci_image_parameters heif_unci_image_parameters;
+
 
 // ----- encoder -----
 
@@ -55,7 +60,7 @@ typedef struct heif_encoder_parameter heif_encoder_parameter;
 // Note that the encoder may be limited to a certain subset of features (e.g. only 8 bit, only lossy).
 // You will have to query the specific capabilities further.
 LIBHEIF_API
-int heif_have_encoder_for_format(enum heif_compression_format format);
+int heif_have_encoder_for_format(heif_compression_format format);
 
 // Get a list of available encoders. You can filter the encoders by compression format and name.
 // Use format_filter==heif_compression_undefined and name_filter==NULL as wildcards.
@@ -64,7 +69,7 @@ int heif_have_encoder_for_format(enum heif_compression_format format);
 // By setting out_encoders==nullptr, you can query the number of encoders, 'count' is ignored.
 // Note: to get the actual encoder from the descriptors returned here, use heif_context_get_encoder().
 LIBHEIF_API
-int heif_get_encoder_descriptors(enum heif_compression_format format_filter,
+int heif_get_encoder_descriptors(heif_compression_format format_filter,
                                  const char* name_filter,
                                  const heif_encoder_descriptor** out_encoders,
                                  int count);
@@ -79,7 +84,7 @@ LIBHEIF_API
 const char* heif_encoder_descriptor_get_id_name(const heif_encoder_descriptor*);
 
 LIBHEIF_API
-enum heif_compression_format
+heif_compression_format
 heif_encoder_descriptor_get_compression_format(const heif_encoder_descriptor*);
 
 LIBHEIF_API
@@ -99,7 +104,7 @@ heif_error heif_context_get_encoder(heif_context* context,
 // for this format, the encoder with the highest plugin priority will be returned.
 LIBHEIF_API
 heif_error heif_context_get_encoder_for_format(heif_context* context,
-                                               enum heif_compression_format format,
+                                               heif_compression_format format,
                                                heif_encoder**);
 
 /**
@@ -146,12 +151,12 @@ LIBHEIF_API
 const char* heif_encoder_parameter_get_name(const heif_encoder_parameter*);
 
 
-enum heif_encoder_parameter_type
+typedef enum heif_encoder_parameter_type
 {
   heif_encoder_parameter_type_integer = 1,
   heif_encoder_parameter_type_boolean = 2,
   heif_encoder_parameter_type_string = 3
-};
+} heif_encoder_parameter_type;
 
 // Return the parameter type.
 LIBHEIF_API
@@ -256,7 +261,7 @@ int heif_encoder_has_default(heif_encoder*,
 
 
 // The orientation values are defined equal to the EXIF Orientation tag.
-enum heif_orientation
+typedef enum heif_orientation
 {
   heif_orientation_normal = 1,
   heif_orientation_flip_horizontally = 2,
@@ -266,7 +271,11 @@ enum heif_orientation
   heif_orientation_rotate_90_cw = 6,
   heif_orientation_rotate_90_cw_then_flip_vertically = 7,
   heif_orientation_rotate_270_cw = 8
-};
+} heif_orientation;
+
+
+LIBHEIF_API
+heif_orientation heif_orientation_concat(heif_orientation first, heif_orientation second);
 
 
 typedef struct heif_encoding_options
@@ -297,7 +306,7 @@ typedef struct heif_encoding_options
   // version 5 options
 
   // libheif will generate irot/imir boxes to match these orientations
-  enum heif_orientation image_orientation;
+  heif_orientation image_orientation;
 
   // version 6 options
 
@@ -307,6 +316,14 @@ typedef struct heif_encoding_options
 
   // Set this to true to use compressed form of uncC where possible.
   uint8_t prefer_uncC_short_form;
+
+  // version 8 options
+
+  // Optional 'unci'-specific encoding parameters (compression method, and future fields
+  // such as interleave type and padding).
+  //
+  // Default: nullptr
+  const heif_unci_image_parameters* unci_parameters;
 
   // TODO: we should add a flag to force MIAF compatible outputs. E.g. this will put restrictions on grid tile sizes and
   //       might add a clap box when the grid output size does not match the color subsampling factors.
@@ -364,6 +381,19 @@ LIBHEIF_API
 void heif_context_add_compatible_brand(heif_context* ctx,
                                        heif_brand2 compatible_brand);
 
+/**
+ * Enable the unified ID namespace ('unif' brand).
+ *
+ * When enabled, item IDs, track IDs, and entity group IDs share a single
+ * global counter so no ID value is reused across categories. The 'unif'
+ * compatible brand is automatically added to the output file.
+ *
+ * @param ctx the encoding context
+ * @param flag non-zero to enable, zero to disable
+ */
+LIBHEIF_API
+void heif_context_set_unif(heif_context* ctx, int flag);
+
 // --- deprecated functions ---
 
 // DEPRECATED, typo in function name
@@ -383,7 +413,7 @@ int heif_encoder_descriptor_supportes_lossless_compression(const heif_encoder_de
 // Note: to get the actual encoder from the descriptors returned here, use heif_context_get_encoder().
 LIBHEIF_API
 int heif_context_get_encoder_descriptors(heif_context*, // TODO: why do we need this parameter?
-                                         enum heif_compression_format format_filter,
+                                         heif_compression_format format_filter,
                                          const char* name_filter,
                                          const heif_encoder_descriptor** out_encoders,
                                          int count);

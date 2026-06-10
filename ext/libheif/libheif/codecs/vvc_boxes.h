@@ -40,12 +40,12 @@ public:
   bool is_essential() const override { return true; }
 
   struct VvcPTLRecord {
-    uint8_t num_bytes_constraint_info; // 6 bits
-    uint8_t general_profile_idc; // 7 bits
-    uint8_t general_tier_flag; // 1 bit
-    uint8_t general_level_idc; // 8 bits
-    uint8_t ptl_frame_only_constraint_flag; // 1 bit
-    uint8_t ptl_multi_layer_enabled_flag; // 1 bit
+    uint8_t num_bytes_constraint_info = 0; // 6 bits
+    uint8_t general_profile_idc = 0; // 7 bits
+    uint8_t general_tier_flag = 0; // 1 bit
+    uint8_t general_level_idc = 0; // 8 bits
+    uint8_t ptl_frame_only_constraint_flag = 0; // 1 bit
+    uint8_t ptl_multi_layer_enabled_flag = 0; // 1 bit
     std::vector<uint8_t> general_constraint_info;
 
     std::vector<bool> ptl_sublayer_level_present_flag; // TODO: should we save this here or can we simply derive it on the fly?
@@ -60,15 +60,15 @@ public:
     bool ptl_present_flag = true;
 
     // only if PTL present
-    uint16_t ols_idx; // 9 bits
-    uint8_t num_sublayers; // 3 bits
-    uint8_t constant_frame_rate; // 2 bits
-    uint8_t chroma_format_idc; // 2 bits
-    uint8_t bit_depth_minus8; // 3 bits
-    struct VvcPTLRecord native_ptl;
-    uint16_t max_picture_width;
-    uint16_t max_picture_height;
-    uint16_t avg_frame_rate;
+    uint16_t ols_idx = 0; // 9 bits
+    uint8_t num_sublayers = 0; // 3 bits
+    uint8_t constant_frame_rate = 0; // 2 bits
+    uint8_t chroma_format_idc = 0; // 2 bits
+    uint8_t bit_depth_minus8 = 0; // 3 bits
+    struct VvcPTLRecord native_ptl{};
+    uint16_t max_picture_width = 0;
+    uint16_t max_picture_height = 0;
+    uint16_t avg_frame_rate = 0;
   };
 
 
@@ -84,6 +84,10 @@ public:
 
   void append_nal_data(const std::vector<uint8_t>& nal);
   void append_nal_data(const uint8_t* data, size_t size);
+
+  // Returns the bytes of the first NAL unit of the requested type stored in
+  // the configuration record, or nullptr if none is present.
+  const std::vector<uint8_t>* get_first_nal_of_type(uint8_t nal_type) const;
 
   Error write(StreamWriter& writer) const override;
 
@@ -114,8 +118,14 @@ public:
 };
 
 
+struct ImageSize;
+
+// Parses a VVC SPS NAL unit. *width / *height return the post-conformance-
+// window cropping (display) dimensions. If non-null, *coded_size receives the
+// pre-cropping dimensions actually allocated by the decoder.
 Error parse_sps_for_vvcC_configuration(const uint8_t* sps, size_t size,
                                        Box_vvcC::configuration* inout_config,
-                                       int* width, int* height);
+                                       uint32_t* width, uint32_t* height,
+                                       ImageSize* coded_size = nullptr);
 
 #endif // LIBHEIF_VVC_BOXES_H

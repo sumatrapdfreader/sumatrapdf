@@ -96,6 +96,34 @@ void ImageItem_JPEG2000::set_decoder_input_data()
   m_decoder->set_data_extent(std::move(extent));
 }
 
+Error ImageItem_JPEG2000::check_decoded_image_size(const HeifPixelImage& img,
+                                                   bool decode_tile_only,
+                                                   uint32_t tile_x0, uint32_t tile_y0) const
+{
+  uint32_t expected_w, expected_h;
+
+  if (decode_tile_only) {
+    get_tile_size(expected_w, expected_h);
+  }
+  else {
+    expected_w = get_ispe_width();
+    expected_h = get_ispe_height();
+  }
+
+  if (expected_w == 0 || expected_h == 0) {
+    return Error::Ok;
+  }
+
+  // Only the logical image size is checked; the component layout may be arbitrary.
+  if (img.get_width() != expected_w || img.get_height() != expected_h) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Invalid_image_size,
+                 "Decoded image does not have the size signaled in the file."};
+  }
+
+  return Error::Ok;
+}
+
 heif_brand2 ImageItem_JPEG2000::get_compatible_brand() const
 {
   return heif_brand2_j2ki;

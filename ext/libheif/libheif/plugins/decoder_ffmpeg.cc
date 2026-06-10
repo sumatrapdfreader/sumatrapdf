@@ -195,7 +195,7 @@ static heif_error ffmpeg_new_decoder2(void** dec, const heif_decoder_plugin_opti
 
 static heif_error ffmpeg_new_decoder(void** dec)
 {
-  heif_decoder_plugin_options options;
+  heif_decoder_plugin_options options{};
   options.format = heif_compression_HEVC;
   options.num_threads = 0;
   options.strict_decoding = false;
@@ -457,7 +457,7 @@ static heif_error ffmpeg_av_decode(ffmpeg_decoder* decoder, AVCodecContext* av_d
       int bytes_per_pixel = (bpp + 7) / 8;
 
       for (int y = 0; y < h; y++) {
-        memcpy(dst_mem + y * dst_stride, data + y * stride, w * bytes_per_pixel);
+        memcpy(dst_mem + y * dst_stride, data + static_cast<size_t>(y) * stride, static_cast<size_t>(w) * bytes_per_pixel);
       }
     }
 

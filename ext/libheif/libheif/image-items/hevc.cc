@@ -84,13 +84,13 @@ heif_brand2 ImageItem_HEVC::get_compatible_brand() const
   }
 
   const auto& config = hvcC->get_configuration();
-  if (config.is_profile_compatibile(HEVCDecoderConfigurationRecord::Profile_Main) ||
-      config.is_profile_compatibile(HEVCDecoderConfigurationRecord::Profile_MainStillPicture)) {
+  if (config.is_profile_compatible(HEVCDecoderConfigurationRecord::Profile_Main) ||
+      config.is_profile_compatible(HEVCDecoderConfigurationRecord::Profile_MainStillPicture)) {
     return heif_brand2_heic;
   }
 
-  if (config.is_profile_compatibile(HEVCDecoderConfigurationRecord::Profile_Main10) ||
-      config.is_profile_compatibile(HEVCDecoderConfigurationRecord::Profile_RExt)) {
+  if (config.is_profile_compatible(HEVCDecoderConfigurationRecord::Profile_Main10) ||
+      config.is_profile_compatible(HEVCDecoderConfigurationRecord::Profile_RExt)) {
     return heif_brand2_heix;
   }
 

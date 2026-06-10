@@ -65,8 +65,8 @@ private:
   std::shared_ptr<class Box_avcC> m_avcC;
   bool m_avcC_sent = false;
 
-  int m_encoded_image_width = 0;
-  int m_encoded_image_height = 0;
+  uint32_t m_encoded_image_width = 0;
+  uint32_t m_encoded_image_height = 0;
 
   std::optional<CodedImageData> m_current_output_data;
   bool m_output_image_complete = false;

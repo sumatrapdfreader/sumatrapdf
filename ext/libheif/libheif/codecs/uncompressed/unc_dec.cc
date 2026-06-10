@@ -19,6 +19,7 @@
  */
 
 #include "codecs/uncompressed/unc_dec.h"
+#include "codecs/uncompressed/unc_boxes.h"
 #include "codecs/uncompressed/unc_codec.h"
 #include "error.h"
 #include "context.h"
@@ -26,6 +27,19 @@
 #include <string>
 #include <algorithm>
 #include <utility>
+
+
+Decoder_uncompressed::Decoder_uncompressed(std::shared_ptr<Box_uncC> uncC,
+                                           std::shared_ptr<Box_cmpd> cmpd,
+                                           std::shared_ptr<const Box_ispe> ispe)
+    : m_ispe(std::move(ispe))
+{
+  if (uncC) {
+    fill_uncC_and_cmpd_from_profile(uncC, cmpd);
+  }
+  m_uncC = std::move(uncC);
+  m_cmpd = std::move(cmpd);
+}
 
 
 Result<std::vector<uint8_t>> Decoder_uncompressed::read_bitstream_configuration_data() const
@@ -39,31 +53,26 @@ int Decoder_uncompressed::get_luma_bits_per_pixel() const
   assert(m_uncC);
 
   if (!m_cmpd) {
-    if (isKnownUncompressedFrameConfigurationBoxProfile(m_uncC)) {
-      return 8;
-    }
-    else {
-      return -1;
-    }
+    return -1;
   }
 
   int luma_bits = 0;
   int alternate_channel_bits = 0;
   for (Box_uncC::Component component : m_uncC->get_components()) {
-    uint16_t component_index = component.component_index;
+    uint32_t component_index = component.component_index;
     if (component_index >= m_cmpd->get_components().size()) {
       return -1;
     }
     auto component_type = m_cmpd->get_components()[component_index].component_type;
     switch (component_type) {
-      case component_type_monochrome:
-      case component_type_red:
-      case component_type_green:
-      case component_type_blue:
-      case component_type_filter_array:
+      case heif_cmpd_component_type_monochrome:
+      case heif_cmpd_component_type_red:
+      case heif_cmpd_component_type_green:
+      case heif_cmpd_component_type_blue:
+      case heif_cmpd_component_type_filter_array:
         alternate_channel_bits = std::max(alternate_channel_bits, (int) component.component_bit_depth);
         break;
-      case component_type_Y:
+      case heif_cmpd_component_type_Y:
         luma_bits = std::max(luma_bits, (int) component.component_bit_depth);
         break;
         // TODO: there are other things we'll need to handle eventually, like palette.
@@ -94,21 +103,21 @@ int Decoder_uncompressed::get_chroma_bits_per_pixel() const
   int chroma_bits = 0;
   int alternate_channel_bits = 0;
   for (Box_uncC::Component component : m_uncC->get_components()) {
-    uint16_t component_index = component.component_index;
+    uint32_t component_index = component.component_index;
     if (component_index >= m_cmpd->get_components().size()) {
       return -1;
     }
     auto component_type = m_cmpd->get_components()[component_index].component_type;
     switch (component_type) {
-      case component_type_monochrome:
-      case component_type_red:
-      case component_type_green:
-      case component_type_blue:
-      case component_type_filter_array:
+      case heif_cmpd_component_type_monochrome:
+      case heif_cmpd_component_type_red:
+      case heif_cmpd_component_type_green:
+      case heif_cmpd_component_type_blue:
+      case heif_cmpd_component_type_filter_array:
         alternate_channel_bits = std::max(alternate_channel_bits, (int) component.component_bit_depth);
         break;
-      case component_type_Cb:
-      case component_type_Cr:
+      case heif_cmpd_component_type_Cb:
+      case heif_cmpd_component_type_Cr:
         chroma_bits = std::max(chroma_bits, (int) component.component_bit_depth);
         break;
         // TODO: there are other things we'll need to handle eventually, like palette.
@@ -172,6 +181,13 @@ Decoder_uncompressed::decode_single_frame_from_compressed_data(const struct heif
   properties.uncC = m_uncC;
   properties.cmpd = m_cmpd;
   properties.ispe = m_ispe;
+  properties.cpat = m_cpat;
+  properties.cmpC = m_cmpC;
+  properties.icef = m_icef;
+  properties.splz = m_splz;
+  properties.sbpm = m_sbpm;
+  properties.snuc = m_snuc;
+  properties.cloc = m_cloc;
 
   auto decodeResult = UncompressedImageCodec::decode_uncompressed_image(properties,
                                                           get_data_extent(),

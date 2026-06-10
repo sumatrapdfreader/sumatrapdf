@@ -25,7 +25,7 @@
 
 
 heif_security_limits global_security_limits{
-    .version = 3,
+    .version = 4,
 
     // --- version 1
 
@@ -54,13 +54,73 @@ heif_security_limits global_security_limits{
     // --- version 3
 
     .max_sequence_frames = 18'000'000,  // 100 hours at 50 fps
-    .max_number_of_file_brands = 1000
+    .max_number_of_file_brands = 1000,
+
+    // --- version 4
+
+    .max_bad_pixels = 1000,
+
+    .max_iso23001_17_pixel_size_bytes = 256,
+
+    .parent = nullptr
 };
 
 
 heif_security_limits disabled_security_limits{
-    .version = 3
+    .version = 4,
+    .parent = nullptr
 };
+
+
+uint32_t max_coding_unit_size_for_codec(heif_compression_format format)
+{
+  switch (format) {
+    case heif_compression_AV1:      return 128;  // AV1 max superblock
+    case heif_compression_VVC:      return 128;  // VVC max CTU
+    case heif_compression_HEVC:     return 64;   // HEVC max CTU
+    case heif_compression_AVC:      return 16;   // H.264 macroblock
+    case heif_compression_JPEG:     return 16;   // JPEG MCU (4:2:0)
+    case heif_compression_JPEG2000: return 64;
+    case heif_compression_HTJ2K:    return 64;
+    default:                        return 0;
+  }
+}
+
+
+heif_security_limits tighten_image_size_limit_for_ispe(const heif_security_limits* base,
+                                                       uint32_t ispe_width,
+                                                       uint32_t ispe_height,
+                                                       uint32_t coding_unit_size)
+{
+  heif_security_limits result = *base;
+
+  // The returned struct is a stack-local derived copy. Point parent at the
+  // registered context so MemoryHandle::alloc() can still find the entry in
+  // sMemoryUsage for total-memory accounting. If base is itself derived, walk
+  // to the root so we keep the parent chain at one hop.
+  result.parent = (base->version >= 4 && base->parent) ? base->parent : base;
+  result.version = 4;
+
+  if (ispe_width == 0 || ispe_height == 0) {
+    return result;
+  }
+
+  uint64_t padded_w = static_cast<uint64_t>(ispe_width)  + coding_unit_size;
+  uint64_t padded_h = static_cast<uint64_t>(ispe_height) + coding_unit_size;
+
+  // Skip tightening if the padded dimensions would overflow uint64_t when multiplied.
+  // The image is already absurdly large; check_for_valid_image_size will reject it.
+  if (padded_w != 0 && padded_h > std::numeric_limits<uint64_t>::max() / padded_w) {
+    return result;
+  }
+
+  uint64_t allowed = padded_w * padded_h;
+
+  if (result.max_image_size_pixels == 0 || allowed < result.max_image_size_pixels) {
+    result.max_image_size_pixels = allowed;
+  }
+  return result;
+}
 
 
 Error check_for_valid_image_size(const heif_security_limits* limits, uint32_t width, uint32_t height)
@@ -136,15 +196,30 @@ size_t TotalMemoryTracker::get_max_total_memory_used() const
 }
 
 
+Error MemoryHandle::alloc(size_t count, size_t element_size,
+                          const heif_security_limits* limits_context,
+                          const char* reason_description)
+{
+  if (element_size != 0 && count > SIZE_MAX / element_size) {
+    std::stringstream sstr;
+    if (reason_description) {
+      sstr << "Allocation size overflow computing " << count << " * " << element_size
+           << " for " << reason_description;
+    }
+    else {
+      sstr << "Allocation size overflow computing " << count << " * " << element_size;
+    }
+    return {heif_error_Memory_allocation_error,
+            heif_suberror_Security_limit_exceeded,
+            sstr.str()};
+  }
+  return alloc(count * element_size, limits_context, reason_description);
+}
+
+
 Error MemoryHandle::alloc(size_t memory_amount, const heif_security_limits* limits_context,
                           const char* reason_description)
 {
-  // we allow several allocations on the same handle, but they have to be for the same context
-  if (m_limits_context) {
-    assert(m_limits_context == limits_context);
-  }
-
-
   // --- check whether limits are exceeded
 
   if (!limits_context) {
@@ -171,15 +246,29 @@ Error MemoryHandle::alloc(size_t memory_amount, const heif_security_limits* limi
             sstr.str()};
   }
 
-  if (limits_context == &global_security_limits ||
-      limits_context == &disabled_security_limits) {
+  // Resolve to the registered (root) context for total-memory accounting.
+  // The passed-in limits may be a stack-local derived copy (e.g. tightened for
+  // ispe) whose `parent` points back to the registered context.
+  const heif_security_limits* root_limits = limits_context;
+  while (root_limits->version >= 4 && root_limits->parent) {
+    root_limits = root_limits->parent;
+  }
+
+  // we allow several allocations on the same handle, but they have to be for the same registered context
+  if (m_limits_context) {
+    assert(m_limits_context == root_limits);
+  }
+
+  if (root_limits == &global_security_limits ||
+      root_limits == &disabled_security_limits) {
     return Error::Ok;
   }
 
   std::lock_guard<std::mutex> lock(get_memory_usage_mutex());
-  auto it = sMemoryUsage.find(limits_context);
+  auto it = sMemoryUsage.find(root_limits);
   if (it == sMemoryUsage.end()) {
-    assert(false);
+    // Unregistered limits context with no resolvable parent — total-memory
+    // tracking is not available, but the per-block check above still applies.
     return Error::Ok;
   }
 
@@ -208,7 +297,7 @@ Error MemoryHandle::alloc(size_t memory_amount, const heif_security_limits* limi
 
   // --- register memory usage
 
-  m_limits_context = limits_context;
+  m_limits_context = root_limits;
   m_memory_amount += memory_amount;
 
   it->second.total_memory_usage += memory_amount;

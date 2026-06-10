@@ -27,10 +27,11 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <mutex>
 #include <utility>
 #include <set>
 
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "api/libheif/heif_plugin.h"
 #include "codecs/encoder.h"
 
@@ -51,7 +52,7 @@ public:
 };
 
 
-class ImageItem : public ImageExtraData,
+class ImageItem : public ImageDescription,
                   public ErrorBuffer
 {
 public:
@@ -75,7 +76,12 @@ public:
 
   bool is_property_essential(const std::shared_ptr<Box>& property) const;
 
-  virtual Error get_item_error() const { return Error::Ok; }
+  virtual Error get_item_error() const { return m_item_error; }
+
+  // Mark this item as undecodable. The file still loads and other items remain
+  // usable, but decoding this item (or listing it as a non-error image) will
+  // surface this error.
+  void set_item_error(const Error& err) { m_item_error = err; }
 
   virtual heif_compression_format get_compression_format() const { return heif_compression_undefined; }
 
@@ -97,7 +103,35 @@ public:
 
   void set_properties(std::vector<std::shared_ptr<Box>> properties) {
     m_properties = std::move(properties);
+    // Codec-config-independent populate (e.g. unci, which reads cmpd/uncC
+    // directly off the just-set property boxes). Visual codecs leave
+    // m_components empty here; their populate runs after initialize_decoder()
+    // because they need codec config (colorspace, bit depth) which only the
+    // decoder can read.
+    populate_component_descriptions();
   }
+
+  // Populate the inherited ImageDescription::m_components from the just-set
+  // property boxes / codec config. The unci subclass overrides this and
+  // reads cmpd/uncC directly. The base implementation handles visual codecs
+  // (HEVC/AVC/AVIF/JPEG/JPEG2000/VVC) by querying get_coded_image_colorspace()
+  // + get_luma_bits_per_pixel() + get_chroma_bits_per_pixel() and emitting
+  // Y/Cb/Cr or R/G/B / monochrome descriptions in canonical order.
+  // Idempotent: skips work if m_components is already populated.
+  // Alpha-from-aux (separate alpha item linked via auxl) is *not* emitted
+  // here; the alpha plane is attached at decode time via
+  // transfer_channel_from_image_as, which mints its own component on the
+  // destination.
+  virtual void populate_component_descriptions();
+
+  // Populate this item's m_components by cloning descriptions from a child
+  // item (e.g. tili's tile item, grid/iden/iovl's first child) and rescaling
+  // per-component dims from the child's logical size to this item's full
+  // image (ispe) size. Returns true on success. Returns false (and leaves
+  // m_components untouched) if the child has no descriptions or sizes are
+  // unusable, so the caller can fall back to the base populate.
+  bool populate_descriptions_from_child(const class ImageItem& child,
+                                        uint32_t child_w, uint32_t child_h);
 
   template<class BoxType>
   std::shared_ptr<BoxType> get_property() const
@@ -109,6 +143,18 @@ public:
     }
 
     return nullptr;
+  }
+
+  template<class BoxType>
+  std::vector<std::shared_ptr<const BoxType>> get_all_properties() const
+  {
+    std::vector<std::shared_ptr<const BoxType>> result;
+    for (auto& property : m_properties) {
+      if (auto box = std::dynamic_pointer_cast<const BoxType>(property)) {
+        result.push_back(box);
+      }
+    }
+    return result;
   }
 
   heif_property_id add_property(std::shared_ptr<Box> property, bool essential);
@@ -158,7 +204,7 @@ public:
 
   Error postprocess_coded_image_colorspace(heif_colorspace* inout_colorspace, heif_chroma* inout_chroma) const;
 
-  virtual void process_before_write() { }
+  virtual Error process_before_write() { return {}; }
 
   // -- thumbnails
 
@@ -181,7 +227,9 @@ public:
     m_is_alpha_channel = true;
   }
 
-  void set_alpha_channel(std::shared_ptr<ImageItem> img) { m_alpha_channel = std::move(img); }
+  // Attach an alpha aux ImageItem and append a corresponding Alpha
+  // ComponentDescription to this item's m_components. Idempotent.
+  void set_alpha_channel(std::shared_ptr<ImageItem> img);
 
   bool is_alpha_channel() const { return m_is_alpha_channel; }
 
@@ -275,17 +323,23 @@ public:
 
 
 
-  // --- ImageExtraData
+  // --- ImageDescription
 
   void set_clli(const heif_content_light_level& clli) override;
 
   void set_mdcv(const heif_mastering_display_colour_volume& mdcv) override;
+
+  void set_amve(const heif_ambient_viewing_environment& amve) override;
+
+  void set_nominal_diffuse_white_luminance(uint32_t luminance) override;
 
   void set_pixel_ratio(uint32_t h, uint32_t v) override;
 
   void set_color_profile_nclx(const nclx_profile& profile) override;
 
   void set_color_profile_icc(const std::shared_ptr<const color_profile_raw>& profile) override;
+
+  void set_omaf_image_projection(heif_omaf_image_projection image_projection) override;
 
   // --- miaf
 
@@ -312,6 +366,16 @@ public:
                                                                           bool decode_tile_only, uint32_t tile_x0,
                                                                           uint32_t tile_y0,
                                                                           std::set<heif_item_id> processed_ids) const;
+
+  // Validate the just-decoded pixel image against the size signaled for this item.
+  // Called by decode_image() right after decode_compressed_image(), BEFORE transforms,
+  // so the reference is the pre-transform coded size (ispe), or the signaled tile size
+  // for a tile decode -- NOT get_width()/get_height() (which are post-transform).
+  // Default impl handles plain coded codecs (HEVC/AVC/VVC/AVIF/JPEG). Subclasses
+  // override where the size source or component layout differs.
+  virtual Error check_decoded_image_size(const HeifPixelImage& img,
+                                         bool decode_tile_only,
+                                         uint32_t tile_x0, uint32_t tile_y0) const;
 
   Result<std::vector<std::shared_ptr<Box>>> get_properties() const;
 
@@ -360,7 +424,7 @@ public:
   const std::vector<heif_item_id>& get_region_item_ids() const { return m_region_item_ids; }
 
 
-  void add_decoding_warning(Error err) { m_decoding_warnings.emplace_back(std::move(err)); }
+  void add_decoding_warning(Error err) const { m_decoding_warnings.emplace_back(std::move(err)); }
 
   const std::vector<Error>& get_decoding_warnings() const { return m_decoding_warnings; }
 
@@ -390,6 +454,8 @@ public:
 private:
   HeifContext* m_heif_context;
   std::vector<std::shared_ptr<Box>> m_properties;
+
+  Error m_item_error;  // if set, this item cannot be decoded (e.g. unsupported required reference types)
 
   heif_item_id m_id = 0;
   uint32_t m_width = 0, m_height = 0;  // after all transformations have been applied
@@ -425,11 +491,13 @@ private:
   bool m_has_extrinsic_matrix = false;
   Box_cmex::ExtrinsicMatrix m_extrinsic_matrix{};
 
-  std::vector<Error> m_decoding_warnings;
+  mutable std::vector<Error> m_decoding_warnings;
+
+  mutable std::mutex m_decode_mutex;
 
   std::vector<heif_item_id> m_text_item_ids;
 
-  void generate_property_boxes_for_ImageExtraData();
+  void generate_property_boxes_for_ImageDescription();
 
 protected:
   // Result<std::vector<uint8_t>> read_bitstream_configuration_data_override(heif_item_id itemId, heif_compression_format format) const;

@@ -36,8 +36,12 @@ class Chunk
 public:
   Chunk(HeifContext* ctx, uint32_t track_id, heif_compression_format format);
 
-  Chunk(HeifContext* ctx, uint32_t track_id,
-        uint32_t first_sample, uint32_t num_samples, uint64_t file_offset, const std::shared_ptr<const Box_stsz>& sample_sizes);
+  // Returns nullptr if the chunk cannot be constructed validly (e.g. the
+  // running file offset would wrap uint64_t).
+  static std::shared_ptr<Chunk> create(HeifContext* ctx, uint32_t track_id,
+                                       uint32_t first_sample, uint32_t num_samples,
+                                       uint64_t file_offset,
+                                       const std::shared_ptr<const Box_stsz>& sample_sizes);
 
   virtual ~Chunk() = default;
 
@@ -56,6 +60,13 @@ public:
   void set_decoder(std::shared_ptr<class Decoder> dec) { m_decoder = dec; }
 
 private:
+  // Sets `success` to false if the chunk cannot be constructed validly
+  // (e.g. the running file offset would wrap uint64_t). Otherwise leaves it
+  // unchanged.
+  Chunk(HeifContext* ctx, uint32_t track_id,
+        uint32_t first_sample, uint32_t num_samples, uint64_t file_offset,
+        const std::shared_ptr<const Box_stsz>& sample_sizes, bool& success);
+
   HeifContext* m_ctx = nullptr;
   uint32_t m_track_id = 0;
 

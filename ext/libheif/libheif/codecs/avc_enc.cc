@@ -49,14 +49,17 @@ Result<Encoder::CodedImageData> Encoder_AVC::encode(const std::shared_ptr<HeifPi
                  err.message);
   }
 
-  int encoded_width = 0;
-  int encoded_height = 0;
+  uint32_t encoded_width = 0;
+  uint32_t encoded_height = 0;
 
   for (;;) {
     uint8_t* data;
     int size;
 
-    encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    err = encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     if (data == nullptr) {
       break;
@@ -106,8 +109,8 @@ Result<Encoder::CodedImageData> Encoder_AVC::encode(const std::shared_ptr<HeifPi
                                         &check_encoded_width,
                                         &check_encoded_height);
 
-    assert((int)check_encoded_width == encoded_width);
-    assert((int)check_encoded_height == encoded_height);
+    assert(check_encoded_width == encoded_width);
+    assert(check_encoded_height == encoded_height);
   }
 
   codedImage.codingConstraints.intra_pred_used = true;
@@ -193,7 +196,10 @@ Error Encoder_AVC::get_data(heif_encoder* encoder)
 
     uintptr_t frameNr=0;
     int more_frame_packets = 1;
-    encoder->plugin->get_compressed_data2(encoder->encoder, &data, &size, &frameNr, nullptr, &more_frame_packets);
+    struct heif_error err = encoder->plugin->get_compressed_data2(encoder->encoder, &data, &size, &frameNr, nullptr, &more_frame_packets);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     if (data == nullptr) {
       break;

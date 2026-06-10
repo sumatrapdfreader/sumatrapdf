@@ -44,6 +44,7 @@ Op_to_hdr_planes::state_after_conversion(const ColorState& input_state,
 
   output_state = input_state;
   output_state.bits_per_pixel = target_state.bits_per_pixel;
+  output_state.alpha_bits_per_pixel = target_state.bits_per_pixel;
 
   states.emplace_back(output_state, SpeedCosts_Unoptimized);
 
@@ -76,7 +77,7 @@ Op_to_hdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
     if (input->has_channel(channel)) {
       uint32_t width = input->get_width(channel);
       uint32_t height = input->get_height(channel);
-      if (auto err = outimg->add_plane(channel, width, height, target_state.bits_per_pixel, limits)) {
+      if (auto err = outimg->add_channel(channel, width, height, target_state.bits_per_pixel, limits)) {
         return err;
       }
 
@@ -88,11 +89,11 @@ Op_to_hdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
 
       const uint8_t* p_in;
       size_t stride_in;
-      p_in = input->get_plane(channel, &stride_in);
+      p_in = input->get_channel_memory(channel, &stride_in);
 
       uint16_t* p_out;
       size_t stride_out;
-      p_out = (uint16_t*) outimg->get_plane(channel, &stride_out);
+      p_out = (uint16_t*) outimg->get_channel_memory(channel, &stride_out);
       stride_out /= 2;
 
       for (uint32_t y = 0; y < height; y++)
@@ -134,6 +135,7 @@ Op_to_sdr_planes::state_after_conversion(const ColorState& input_state,
 
   output_state = input_state;
   output_state.bits_per_pixel = 8;
+  output_state.alpha_bits_per_pixel = 8;
 
   states.emplace_back(output_state, SpeedCosts_Unoptimized);
 
@@ -170,7 +172,7 @@ Op_to_sdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
       if (input_bits > 8) {
         uint32_t width = input->get_width(channel);
         uint32_t height = input->get_height(channel);
-        if (auto err = outimg->add_plane(channel, width, height, 8, limits)) {
+        if (auto err = outimg->add_channel(channel, width, height, 8, limits)) {
           return err;
         }
 
@@ -178,12 +180,12 @@ Op_to_sdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
 
         const uint16_t* p_in;
         size_t stride_in;
-        p_in = (uint16_t*) input->get_plane(channel, &stride_in);
+        p_in = (uint16_t*) input->get_channel_memory(channel, &stride_in);
         stride_in /= 2;
 
         uint8_t* p_out;
         size_t stride_out;
-        p_out = outimg->get_plane(channel, &stride_out);
+        p_out = outimg->get_channel_memory(channel, &stride_out);
 
         for (uint32_t y = 0; y < height; y++)
           for (uint32_t x = 0; x < width; x++) {
@@ -193,7 +195,7 @@ Op_to_sdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
       } else if (input_bits < 8) {
         uint32_t width = input->get_width(channel);
         uint32_t height = input->get_height(channel);
-        if (auto err = outimg->add_plane(channel, width, height, 8, limits)) {
+        if (auto err = outimg->add_channel(channel, width, height, 8, limits)) {
           return err;
         }
 
@@ -222,10 +224,10 @@ Op_to_sdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
         }
 
         size_t stride_in;
-        const uint8_t* p_in = input->get_plane(channel, &stride_in);
+        const uint8_t* p_in = input->get_channel_memory(channel, &stride_in);
 
         size_t stride_out;
-        uint8_t* p_out = outimg->get_plane(channel, &stride_out);
+        uint8_t* p_out = outimg->get_channel_memory(channel, &stride_out);
 
         for (uint32_t y = 0; y < height; y++)
           for (uint32_t x = 0; x < width; x++) {
@@ -233,7 +235,7 @@ Op_to_sdr_planes::convert_colorspace(const std::shared_ptr<const HeifPixelImage>
             p_out[y * stride_out + x] = (uint8_t) ((in * mulFactor) >> 8);
           }
       } else {
-        outimg->copy_new_plane_from(input, channel, channel, limits);
+        outimg->copy_new_channel_from(input, channel, channel, limits);
       }
     }
   }

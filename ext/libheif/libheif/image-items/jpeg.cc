@@ -23,7 +23,7 @@
 #include "codecs/jpeg_enc.h"
 #include "codecs/jpeg_boxes.h"
 #include "security_limits.h"
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "api_structs.h"
 #include <cstring>
 #include <utility>

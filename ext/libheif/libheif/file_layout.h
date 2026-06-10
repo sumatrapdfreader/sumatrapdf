@@ -24,9 +24,7 @@
 #include "error.h"
 #include "bitstream.h"
 #include "box.h"
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
 #include "mini.h"
-#endif
 
 #include <memory>
 #include <vector>
@@ -61,9 +59,7 @@ public:
 
   std::shared_ptr<Box_meta> get_meta_box() { return m_meta_box; }
 
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
   std::shared_ptr<Box_mini> get_mini_box() { return m_mini_box; }
-#endif
 
   std::shared_ptr<Box_moov> get_moov_box() { return m_moov_box; }
 
@@ -79,9 +75,7 @@ private:
 
   std::shared_ptr<Box_ftyp> m_ftyp_box;
   std::shared_ptr<Box_meta> m_meta_box;
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
   std::shared_ptr<Box_mini> m_mini_box;
-#endif
   std::shared_ptr<Box_moov> m_moov_box;
 
 

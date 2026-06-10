@@ -22,7 +22,7 @@
 #ifndef LIBHEIF_UNC_CODEC_H
 #define LIBHEIF_UNC_CODEC_H
 
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "file.h"
 #include "context.h"
 #include "libheif/heif_uncompressed.h"
@@ -40,18 +40,11 @@
 class HeifContext;
 
 
-bool isKnownUncompressedFrameConfigurationBoxProfile(const std::shared_ptr<const Box_uncC>& uncC);
-
-Error fill_cmpd_and_uncC(std::shared_ptr<Box_cmpd>& cmpd,
-                         std::shared_ptr<Box_uncC>& uncC,
-                         const std::shared_ptr<const HeifPixelImage>& image,
-                         const heif_unci_image_parameters* parameters,
-                         bool save_alpha_channel);
-
 bool map_uncompressed_component_to_channel(const std::shared_ptr<const Box_cmpd> &cmpd,
-                                           const std::shared_ptr<const Box_uncC> &uncC,
                                            Box_uncC::Component component,
                                            heif_channel *channel);
+
+heif_component_datatype unc_component_format_to_datatype(uint8_t format);
 
 
 class UncompressedImageCodec
@@ -72,7 +65,17 @@ public:
     std::shared_ptr<const Box_uncC> uncC;
     std::shared_ptr<const Box_cmpC> cmpC;
     std::shared_ptr<const Box_icef> icef;
-    // ...
+    std::shared_ptr<const Box_cpat> cpat;
+    std::vector<std::shared_ptr<const Box_splz>> splz;
+    std::vector<std::shared_ptr<const Box_sbpm>> sbpm;
+    std::vector<std::shared_ptr<const Box_snuc>> snuc;
+    std::shared_ptr<const Box_cloc> cloc;
+
+    // Source ImageDescription (typically the ImageItem) to clone the
+    // pre-populated component descriptions from. Owned externally (we hold
+    // the shared_ptr to the item via the boxes above keeping the file alive,
+    // and the caller passes a stable pointer).
+    const ImageDescription* source_extra_data = nullptr;
 
     void fill_from_image_item(const std::shared_ptr<const ImageItem>&);
   };
@@ -88,10 +91,10 @@ public:
                                             heif_colorspace* out_colourspace,
                                             bool* out_has_alpha);
 
-  static Result<std::shared_ptr<HeifPixelImage>> create_image(std::shared_ptr<const Box_cmpd>,
-                                                              std::shared_ptr<const Box_uncC>,
+  static Result<std::shared_ptr<HeifPixelImage>> create_image(const unci_properties& properties,
                                                               uint32_t width,
                                                               uint32_t height,
+                                                              std::vector<uint32_t>& uncC_index_to_comp_ids,
                                                               const heif_security_limits* limits);
 
   static Error check_header_validity(std::optional<const std::shared_ptr<const Box_ispe>>,

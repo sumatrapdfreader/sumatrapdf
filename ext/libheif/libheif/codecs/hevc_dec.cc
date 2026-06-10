@@ -22,6 +22,7 @@
 #include "hevc_boxes.h"
 #include "error.h"
 #include "context.h"
+#include "plugins/nalu_utils.h"
 
 #include <string>
 
@@ -47,6 +48,32 @@ int Decoder_HEVC::get_luma_bits_per_pixel() const
 int Decoder_HEVC::get_chroma_bits_per_pixel() const
 {
   return m_hvcC->get_configuration().bit_depth_chroma;
+}
+
+
+Result<std::optional<ImageSize>> Decoder_HEVC::get_coded_image_size_from_config() const
+{
+  const auto& nal_arrays = m_hvcC->get_configuration().m_nal_array;
+
+  for (const auto& arr : nal_arrays) {
+    if (arr.m_NAL_unit_type != HEVC_NAL_UNIT_SPS_NUT || arr.m_nal_units.empty()) {
+      continue;
+    }
+
+    const std::vector<uint8_t>& sps = arr.m_nal_units[0];
+    HEVCDecoderConfigurationRecord scratch = m_hvcC->get_configuration();
+    uint32_t cropped_w = 0, cropped_h = 0;
+    ImageSize coded{};
+    Error e = parse_sps_for_hvcC_configuration(sps.data(), sps.size(), &scratch,
+                                               &cropped_w, &cropped_h, &coded);
+    if (e) {
+      return e;
+    }
+
+    return std::optional<ImageSize>{coded};
+  }
+
+  return std::optional<ImageSize>{};
 }
 
 

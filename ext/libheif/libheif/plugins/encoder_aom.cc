@@ -93,6 +93,7 @@ struct encoder_struct_aom
 #endif
 
   aom_tune_metric tune;
+  bool tune_auto = true;
 
   heif_chroma chroma = heif_chroma_420;
 
@@ -193,8 +194,43 @@ static const char* const kParam_chroma_valid_values[] = {
 
 static const char* kParam_tune = "tune";
 static const char* const kParam_tune_valid_values[] = {
-    "psnr", "ssim", "iq", nullptr
+    "auto", "psnr", "ssim", "iq", nullptr
 };
+
+#if defined(AOM_HAVE_TUNE_IQ)
+// This table has been copied from libavif/src/codec_aom.c
+
+// Quality (q) to quantizer (qp) formula for tune=iq (Image Quality), expressed as a look-up table for more clarity.
+// Copied from libavif (src/codec_aom.c). The formula is a piecewise linear function empirically selected
+// to correct for the non-linear bitrate increase of tune=iq relative to tune=ssim with the same qp.
+//
+// | Quality | Quantizer                          | Step size |
+// |---------|------------------------------------|-----------|
+// |  0 -  6 | 63 - floor(quality / 3)            |         3 |
+// |  7 - 28 | 61 - round((quality - 7) / 2)      |         2 |
+// | 29 - 53 | 50 - round((quality - 29) * 3 / 5) |      1.66 |
+// | 54 - 99 | 35 - round((quality - 54) * 3 / 4) |      1.33 |
+// |     100 | 0 (lossless)                       |         1 |
+//
+// The x axis of the table represents the ones digit, while the y axis represents the tens digit
+// of the q value [0-100], which is then mapped to a qp value [0-63].
+// clang-format off
+static const int tuneIqQualityToQuantizer[101] = {
+// 1s digit: *0  *1  *2  *3  *4  *5  *6  *7  *8  *9     10s digit:
+             63, 63, 63, 62, 62, 62, 61, 61, 60, 60, // 0*
+             59, 59, 58, 58, 57, 57, 56, 56, 55, 55, // 1*
+             54, 54, 53, 53, 52, 52, 51, 51, 50, 50, // 2*
+             49, 49, 48, 48, 47, 46, 46, 45, 45, 44, // 3*
+             43, 43, 42, 42, 41, 40, 40, 39, 39, 38, // 4*
+             37, 37, 36, 36, 35, 34, 33, 33, 32, 31, // 5*
+             30, 30, 29, 28, 27, 27, 26, 25, 24, 24, // 6*
+             23, 22, 21, 21, 20, 19, 18, 18, 17, 16, // 7*
+             15, 15, 14, 13, 12, 12, 11, 10,  9,  9, // 8*
+              8,  7,  6,  6,  5,  4,  3,  3,  2,  1, // 9*
+              0  // quality 100
+};
+// clang-format on
+#endif
 
 static const int AOM_PLUGIN_PRIORITY = 60;
 
@@ -310,7 +346,7 @@ static void aom_init_parameters()
   p->version = 2;
   p->name = kParam_tune;
   p->type = heif_encoder_parameter_type_string;
-  p->string.default_value = "ssim";
+  p->string.default_value = "auto";
   p->has_default = true;
   p->string.valid_values = kParam_tune_valid_values;
   d[i++] = p++;
@@ -663,17 +699,24 @@ heif_error aom_set_parameter_string(void* encoder_raw, const char* name, const c
   }
 
   if (strcmp(name, kParam_tune) == 0) {
-    if (strcmp(value, "psnr") == 0) {
+    if (strcmp(value, "auto") == 0) {
+      encoder->tune_auto = true;
+      return heif_error_ok;
+    }
+    else if (strcmp(value, "psnr") == 0) {
       encoder->tune = AOM_TUNE_PSNR;
+      encoder->tune_auto = false;
       return heif_error_ok;
     }
     else if (strcmp(value, "ssim") == 0) {
       encoder->tune = AOM_TUNE_SSIM;
+      encoder->tune_auto = false;
       return heif_error_ok;
     }
 #if defined(AOM_HAVE_TUNE_IQ)
     else if (strcmp(value, "iq") == 0) {
       encoder->tune = AOM_TUNE_IQ;
+      encoder->tune_auto = false;
       return heif_error_ok;
     }
 #endif
@@ -723,6 +766,10 @@ heif_error aom_get_parameter_string(void* encoder_raw, const char* name,
     return heif_error_ok;
   }
   else if (strcmp(name, kParam_tune) == 0) {
+    if (encoder->tune_auto) {
+      save_strcpy(value, value_size, "auto");
+      return heif_error_ok;
+    }
     switch (encoder->tune) {
       case AOM_TUNE_PSNR:
         save_strcpy(value, value_size, "psnr");
@@ -865,6 +912,10 @@ static heif_error aom_start_sequence_encoding_intern(void* encoder_raw, const he
 {
   encoder_struct_aom* encoder = (encoder_struct_aom*) encoder_raw;
 
+  // destroy the codec in case it was already initialized
+  // (e.g. when the encoder is reused for alpha encoding after being used for YUV encoding)
+  aom_codec_destroy(&encoder->codec);
+
   heif_error err;
 
   const int source_width = heif_image_get_width(image, heif_channel_Y);
@@ -998,7 +1049,71 @@ static heif_error aom_start_sequence_encoding_intern(void* encoder_raw, const he
     quality = encoder->alpha_quality;
   }
 
-  int cq_level = ((100 - quality) * 63 + 50) / 100;
+  // Fetch NCLX and determine the effective tune metric early, since the
+  // quality-to-quantizer mapping for AOM_TUNE_IQ uses a different (non-linear) table.
+
+  heif_color_profile_nclx* nclx = nullptr;
+  err = heif_image_get_nclx_color_profile(image, &nclx);
+  if (err.code != heif_error_Ok) {
+    assert(nclx == nullptr);
+  }
+
+  // make sure NCLX profile is deleted at end of function
+  auto nclx_deleter = std::unique_ptr<heif_color_profile_nclx, void (*)(heif_color_profile_nclx*)>(nclx, heif_nclx_color_profile_free);
+
+  // A slide-show-style image sequence is treated like a still image (favor
+  // perceptual quality / AOM_TUNE_IQ when supported); only true video content
+  // keeps SSIM-tuned encoding.
+  bool tune_as_video = (image_sequence &&
+                        options &&
+                        options->version >= 3 &&
+                        options->content_kind == heif_sequence_content_kind_video);
+
+  aom_tune_metric effective_tune = encoder->tune;
+  if (encoder->tune_auto) {
+    if (tune_as_video) {
+      effective_tune = AOM_TUNE_SSIM;
+    }
+    else if (input_class == heif_image_input_class_alpha) {
+      // AOM_TUNE_SSIM causes ringing on alpha; PSNR avoids that.
+      effective_tune = AOM_TUNE_PSNR;
+    }
+    else {
+      effective_tune = AOM_TUNE_SSIM;
+
+#if defined(AOM_HAVE_TUNE_IQ)
+      // AOM_TUNE_IQ is tuned for the YCbCr family of color spaces (and other YUV-like
+      // spaces such as YCgCo, ICtCp, including monochrome). It does NOT generalize to
+      // GBR samples (matrix_coefficients = IDENTITY), so we keep SSIM for that case.
+      // AOM_TUNE_IQ stabilized in libaom v3.13.0 (all-intra only); v3.14.0 added
+      // support for the good-quality and realtime inter-frame modes.
+
+      static const int aom_version_3_13_0 = (3 << 16) | (13 << 8);
+      static const int aom_version_3_14_0 = (3 << 16) | (14 << 8);
+
+      bool is_identity_matrix = nclx && (nclx->matrix_coefficients == heif_matrix_coefficients_RGB_GBR);
+      int aom_version = aom_codec_version();
+      bool iq_supports_inter = (aom_version >= aom_version_3_14_0);
+
+      if (!is_identity_matrix &&
+          (cfg.g_usage == AOM_USAGE_ALL_INTRA || iq_supports_inter) &&
+          aom_version >= aom_version_3_13_0) {
+        effective_tune = AOM_TUNE_IQ;
+      }
+#endif
+    }
+  }
+
+  int cq_level;
+#if defined(AOM_HAVE_TUNE_IQ)
+  if (effective_tune == AOM_TUNE_IQ) {
+    cq_level = tuneIqQualityToQuantizer[quality];
+  }
+  else
+#endif
+  {
+    cq_level = ((100 - quality) * 63 + 50) / 100;
+  }
 
   // Work around the bug in libaom v2.0.2 or older fixed by
   // https://aomedia-review.googlesource.com/c/aom/+/113064. If using a libaom
@@ -1056,15 +1171,6 @@ static heif_error aom_start_sequence_encoding_intern(void* encoder_raw, const he
   // TODO: set AV1E_SET_TILE_ROWS and AV1E_SET_TILE_COLUMNS.
 
 
-  heif_color_profile_nclx* nclx = nullptr;
-  err = heif_image_get_nclx_color_profile(image, &nclx);
-  if (err.code != heif_error_Ok) {
-    assert(nclx == nullptr);
-  }
-
-  // make sure NCLX profile is deleted at end of function
-  auto nclx_deleter = std::unique_ptr<heif_color_profile_nclx, void (*)(heif_color_profile_nclx*)>(nclx, heif_nclx_color_profile_free);
-
   // In aom, color_range defaults to limited range (0). Set it to full range (1).
   aom_error = aom_codec_control(&codec, AV1E_SET_COLOR_RANGE, nclx ? nclx->full_range_flag : 1); CHECK_ERROR;
   aom_error = aom_codec_control(&codec, AV1E_SET_CHROMA_SAMPLE_POSITION, chroma_info.chroma_sample_position); CHECK_ERROR;
@@ -1077,7 +1183,7 @@ static heif_error aom_start_sequence_encoding_intern(void* encoder_raw, const he
     aom_error = aom_codec_control(&codec, AV1E_SET_TRANSFER_CHARACTERISTICS, nclx->transfer_characteristics); CHECK_ERROR;
        }
 
-  aom_error = aom_codec_control(&codec, AOME_SET_TUNING, encoder->tune); CHECK_ERROR;
+  aom_error = aom_codec_control(&codec, AOME_SET_TUNING, effective_tune); CHECK_ERROR;
 
   if (encoder->lossless || (input_class == heif_image_input_class_alpha && encoder->lossless_alpha)) {
     aom_error = aom_codec_control(&codec, AV1E_SET_LOSSLESS, 1); CHECK_ERROR;

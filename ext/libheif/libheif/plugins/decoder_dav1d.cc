@@ -99,22 +99,23 @@ heif_error dav1d_new_decoder2(void** dec, const heif_decoder_plugin_options* opt
 
   dav1d_default_settings(&decoder->settings);
 
-  if (heif_get_global_security_limits()->max_image_size_pixels > std::numeric_limits<unsigned int>::max()) {
+  const heif_security_limits* limits = options->limits ? options->limits : heif_get_global_security_limits();
+  if (limits->max_image_size_pixels > std::numeric_limits<unsigned int>::max()) {
     decoder->settings.frame_size_limit = 0;
   }
   else {
-    decoder->settings.frame_size_limit = static_cast<unsigned int>(heif_get_global_security_limits()->max_image_size_pixels);
+    decoder->settings.frame_size_limit = static_cast<unsigned int>(limits->max_image_size_pixels);
   }
 
   decoder->settings.all_layers = 0;
 
+  if (options->num_threads) {
+    decoder->settings.n_threads = options->num_threads;
+  }
+
   if (dav1d_open(&decoder->context, &decoder->settings) != 0) {
     delete decoder;
     return {heif_error_Decoder_plugin_error, heif_suberror_Unspecified, kSuccess};
-  }
-
-  if (options->num_threads) {
-    decoder->settings.n_threads = options->num_threads;
   }
 
   *dec = decoder;
@@ -124,7 +125,7 @@ heif_error dav1d_new_decoder2(void** dec, const heif_decoder_plugin_options* opt
 
 heif_error dav1d_new_decoder(void** dec)
 {
-  struct heif_decoder_plugin_options options;
+  struct heif_decoder_plugin_options options{};
   options.format = heif_compression_AV1;
   options.strict_decoding = false;
   options.num_threads = 0;
@@ -179,17 +180,19 @@ static heif_error push_pending_data_into_decoder(dav1d_decoder* decoder)
       break;
     }
 
-    // Decoder has accepted data. Remove packet and check for error.
-
-    decoder->queued_data.pop_front();
-
-    if ((res < 0) && (res != DAV1D_ERR(EAGAIN))) {
+    if (res < 0) {
+      // dav1d_send_data failed. Data was not consumed, unref before removing from queue.
+      dav1d_data_unref(&decoder->queued_data.front());
+      decoder->queued_data.pop_front();
       return {
         heif_error_Decoder_plugin_error,
         heif_suberror_Unspecified,
         kEmptyString
       };
     }
+
+    // Decoder has accepted data (Dav1dData is consumed). Remove from queue.
+    decoder->queued_data.pop_front();
   }
 
   return heif_error_ok;
@@ -300,6 +303,7 @@ heif_error dav1d_decode_next_image2(void* decoder_raw, heif_image** out_img,
       colorspace = heif_colorspace_monochrome;
       break;
     default: {
+      dav1d_picture_unref(&frame);
       return {
         heif_error_Decoder_plugin_error,
         heif_suberror_Unspecified,
@@ -319,6 +323,7 @@ heif_error dav1d_decode_next_image2(void* decoder_raw, heif_image** out_img,
                           &heif_img);
   if (err.code != heif_error_Ok) {
     assert(heif_img == nullptr);
+    dav1d_picture_unref(&frame);
     return err;
   }
 
@@ -361,6 +366,7 @@ heif_error dav1d_decode_next_image2(void* decoder_raw, heif_image** out_img,
       err.message = decoder->error_message.c_str();
 
       heif_image_release(heif_img);
+      dav1d_picture_unref(&frame);
       return err;
     }
 
@@ -370,7 +376,7 @@ heif_error dav1d_decode_next_image2(void* decoder_raw, heif_image** out_img,
     const int bytes_per_pixel = (bpp + 7) / 8;
 
     for (uint32_t y = 0; y < h; y++) {
-      memcpy(dst_mem + y * dst_stride, data + y * stride, w * bytes_per_pixel);
+      memcpy(dst_mem + y * dst_stride, data + static_cast<size_t>(y) * stride, static_cast<size_t>(w) * bytes_per_pixel);
     }
   }
 
@@ -415,7 +421,7 @@ heif_error dav1d_flush_data(void* decoder_raw)
 
 static const heif_decoder_plugin decoder_dav1d
     {
-        5,
+        6,
         dav1d_plugin_name,
         dav1d_init_plugin,
         dav1d_deinit_plugin,
@@ -427,7 +433,7 @@ static const heif_decoder_plugin decoder_dav1d
         dav1d_set_strict_decoding,
         "dav1d",
         dav1d_decode_next_image,
-        /* minimum_required_libheif_version */ LIBHEIF_MAKE_VERSION(1,21,0),
+        /* minimum_required_libheif_version */ LIBHEIF_MAKE_VERSION(1,22,0),
         dav1d_does_support_format2,
         dav1d_new_decoder2,
         dav1d_push_data2,

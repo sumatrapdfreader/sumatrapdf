@@ -740,7 +740,13 @@ std::vector<heif_channel> build_SIZ(encoder_struct_ojph *encoder, const heif_ima
   heif_chroma chroma = heif_image_get_chroma_format(image);
 
   encoder->codestream.set_planar(true);
-  sourceChannels = {heif_channel_Y, heif_channel_Cb, heif_channel_Cr};
+
+  if (chroma == heif_chroma_monochrome) {
+    sourceChannels = {heif_channel_Y};
+  } else {
+    sourceChannels = {heif_channel_Y, heif_channel_Cb, heif_channel_Cr};
+  }
+
   siz.set_num_components((ojph::ui32)sourceChannels.size());
   for (ojph::ui32 i = 0; i < siz.get_num_components(); i++) {
     int bit_depth = heif_image_get_bits_per_pixel_range(image, sourceChannels[i]);
@@ -771,7 +777,8 @@ heif_error ojph_encode_image(void *encoder_raw, const heif_image *image, heif_im
 {
   encoder_struct_ojph* encoder = (encoder_struct_ojph*) encoder_raw;
 
-  if (heif_image_get_colorspace(image) != heif_colorspace_YCbCr) {
+  if (heif_image_get_colorspace(image) != heif_colorspace_YCbCr &&
+      heif_image_get_colorspace(image) != heif_colorspace_monochrome) {
     return {
       heif_error_Encoding_error,
       heif_suberror_Unspecified,

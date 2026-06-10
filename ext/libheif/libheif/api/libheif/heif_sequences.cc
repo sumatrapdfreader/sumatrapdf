@@ -26,6 +26,7 @@
 #include "sequences/track_visual.h"
 #include "sequences/track_metadata.h"
 
+#include <algorithm>
 #include <array>
 #include <cstring>
 #include <memory>
@@ -131,6 +132,12 @@ int heif_track_has_alpha_channel(const heif_track* track)
 uint32_t heif_track_get_timescale(const heif_track* track)
 {
   return track->track->get_timescale();
+}
+
+
+uint32_t heif_track_get_number_of_repetitions(const heif_track* track)
+{
+  return track->track->get_number_of_repetitions();
 }
 
 
@@ -398,7 +405,7 @@ heif_sequence_encoding_options* heif_sequence_encoding_options_alloc()
 {
   heif_sequence_encoding_options* options = new heif_sequence_encoding_options();
 
-  options->version = 2;
+  options->version = 3;
   options->output_nclx_profile = nullptr;
 
   options->color_conversion_options.version = 1;
@@ -413,7 +420,38 @@ heif_sequence_encoding_options* heif_sequence_encoding_options_alloc()
   options->keyframe_distance_max = 0;
   options->save_alpha_channel = 1;
 
+  // version 3
+
+  options->content_kind = heif_sequence_content_kind_auto;
+
   return options;
+}
+
+
+// overwrite the (possibly lower version) input options over the default options
+void heif_sequence_encoding_options_copy(heif_sequence_encoding_options* dst,
+                                         const heif_sequence_encoding_options* src)
+{
+  if (src == nullptr) {
+    return;
+  }
+
+  int min_version = std::min(dst->version, src->version);
+
+  switch (min_version) {
+    case 3:
+      dst->content_kind = src->content_kind;
+      [[fallthrough]];
+    case 2:
+      dst->gop_structure = src->gop_structure;
+      dst->keyframe_distance_min = src->keyframe_distance_min;
+      dst->keyframe_distance_max = src->keyframe_distance_max;
+      dst->save_alpha_channel = src->save_alpha_channel;
+      [[fallthrough]];
+    case 1:
+      dst->output_nclx_profile = src->output_nclx_profile;
+      dst->color_conversion_options = src->color_conversion_options;
+  }
 }
 
 
@@ -520,9 +558,9 @@ heif_error heif_track_encode_sequence_image(heif_track* track,
 
         encoding_options->output_nclx_profile = &nclx;
         nclx.version = 1;
-        nclx.color_primaries = (enum heif_color_primaries) input_nclx.get_colour_primaries();
-        nclx.transfer_characteristics = (enum heif_transfer_characteristics) input_nclx.get_transfer_characteristics();
-        nclx.matrix_coefficients = (enum heif_matrix_coefficients) input_nclx.get_matrix_coefficients();
+        nclx.color_primaries = (heif_color_primaries) input_nclx.get_colour_primaries();
+        nclx.transfer_characteristics = (heif_transfer_characteristics) input_nclx.get_transfer_characteristics();
+        nclx.matrix_coefficients = (heif_matrix_coefficients) input_nclx.get_matrix_coefficients();
         nclx.full_range_flag = input_nclx.get_full_range_flag();
       }
     }
@@ -673,12 +711,7 @@ const char* heif_raw_sequence_sample_get_gimi_sample_content_id(const heif_raw_s
 
 void heif_image_set_gimi_sample_content_id(heif_image* img, const char* contentID)
 {
-  if (contentID) {
-    img->image->set_gimi_sample_content_id(contentID);
-  }
-  else {
-    img->image->set_gimi_sample_content_id({});
-  }
+  img->image->set_gimi_sample_content_id(contentID ? contentID : std::string{});
 }
 
 

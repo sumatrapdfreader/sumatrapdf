@@ -34,11 +34,11 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <utility>
 
 
 struct NALUnit {
-  void* data;
-  size_t size;
+  std::vector<uint8_t> data;
 };
 
 struct webcodecs_decoder
@@ -60,8 +60,8 @@ static char plugin_name[MAX_PLUGIN_NAME_LENGTH];
  * prefers hardware decoding when available.
  *
  * As of this writing, most HEIC images will be decoded directly into the NV12
- * pixel format. For images returned in NV12 format, the format will be
- * preserved when returning the data to C++.
+ * pixel format. For images returned in NV12 or planar YUV format (I420, I422,
+ * I444), the format will be preserved when returning the data to C++.
  *
  * Any other image format returned by the WebCodecs API will be converted to
  * RGBA before being returned to C++ to ensure that the result can be
@@ -124,12 +124,13 @@ EM_JS(emscripten::EM_VAL, decode_with_browser_hevc, (const char *codec_ptr, uint
           return;
         }
 
-        const format = decoded.format === 'NV12' ? 'NV12' : 'RGBA';
+        const nativeFormats = ['NV12', 'I420', 'I422', 'I444'];
+        const format = nativeFormats.includes(decoded.format) ? decoded.format : 'RGBA';
         const fullRange = decoded.colorSpace ? decoded.colorSpace.fullRange : false;
-        const formatOptions = format === 'NV12' ?
+        const formatOptions = nativeFormats.includes(format) ?
           {} :
           {'format': format, 'colorSpace': 'srgb'};
-        const bufferSize = format === 'NV12' ?
+        const bufferSize = nativeFormats.includes(format) ?
           decoded.allocationSize() :
           decoded.codedWidth * decoded.codedHeight * 4;
 
@@ -204,7 +205,7 @@ static std::vector<uint8_t> remove_start_code_emulation2(const uint8_t* sps, siz
 
 Error parse_sps_for_hvcC_configuration2(const uint8_t* sps, size_t size,
                                        HEVCDecoderConfigurationRecord* config,
-                                       int* width, int* height)
+                                       uint32_t* width, uint32_t* height)
 {
   // remove start-code emulation bytes from SPS header stream
 
@@ -268,44 +269,76 @@ Error parse_sps_for_hvcC_configuration2(const uint8_t* sps, size_t size,
 
   // --- SPS continued ---
 
-  int dummy, value;
-  reader.get_uvlc(&dummy); // skip seq_parameter_seq_id
+  Error invalidUVLC{
+    heif_error_Invalid_input,
+    heif_suberror_Invalid_parameter_value,
+    "Invalid variable length code in HEVC SPS header"
+  };
 
-  reader.get_uvlc(&value);
+  uint32_t dummy, value;
+  if (!reader.get_uvlc(&dummy) || // skip seq_parameter_seq_id
+      !reader.get_uvlc(&value)) {
+    return invalidUVLC;
+  }
   config->chroma_format = (uint8_t) value;
 
   if (config->chroma_format == 3) {
     reader.skip_bits(1);
   }
 
-  reader.get_uvlc(width);
-  reader.get_uvlc(height);
+  if (!reader.get_uvlc(width) ||
+      !reader.get_uvlc(height)) {
+    return invalidUVLC;
+  }
 
   bool conformance_window = reader.get_bits(1);
   if (conformance_window) {
-    int left, right, top, bottom;
-    reader.get_uvlc(&left);
-    reader.get_uvlc(&right);
-    reader.get_uvlc(&top);
-    reader.get_uvlc(&bottom);
+    uint32_t left, right, top, bottom;
+    if (!reader.get_uvlc(&left) ||
+        !reader.get_uvlc(&right) ||
+        !reader.get_uvlc(&top) ||
+        !reader.get_uvlc(&bottom)) {
+      return invalidUVLC;
+    }
 
-    //printf("conformance borders: %d %d %d %d\n",left,right,top,bottom);
+    //printf("conformance borders: %u %u %u %u\n",left,right,top,bottom);
 
-    int subH = 1, subV = 1;
+    uint32_t subH = 1, subV = 1;
     if (config->chroma_format == 1) {
       subV = 2;
       subH = 2;
     }
     if (config->chroma_format == 2) { subH = 2; }
 
-    *width -= subH * (left + right);
-    *height -= subV * (top + bottom);
+    const uint64_t crop_w = (uint64_t)subH * ((uint64_t)left + (uint64_t)right);
+    const uint64_t crop_h = (uint64_t)subV * ((uint64_t)top + (uint64_t)bottom);
+    if (crop_w > *width || crop_h > *height) {
+      return Error{heif_error_Invalid_input,
+                   heif_suberror_Invalid_parameter_value,
+                   "SPS conformance window exceeds image dimensions"};
+    }
+    *width  -= (uint32_t)crop_w;
+    *height -= (uint32_t)crop_h;
   }
 
-  reader.get_uvlc(&value);
+  if (!reader.get_uvlc(&value)) {
+    return invalidUVLC;
+  }
+  if (value > 8) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Invalid_parameter_value,
+                 "SPS bit_depth_luma_minus8 out of range"};
+  }
   config->bit_depth_luma = (uint8_t) (value + 8);
 
-  reader.get_uvlc(&value);
+  if (!reader.get_uvlc(&value)) {
+    return invalidUVLC;
+  }
+  if (value > 8) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Invalid_parameter_value,
+                 "SPS bit_depth_chroma_minus8 out of range"};
+  }
   config->bit_depth_chroma = (uint8_t) (value + 8);
 
 
@@ -404,109 +437,177 @@ static struct heif_error webcodecs_push_data(void* decoder_raw, const void* data
       return err;
     }
 
-    NALUnit nal_unit = {(void*)(cdata + ptr), nal_size};
-    decoder->data_queue.push(nal_unit);
+    NALUnit nal_unit;
+    nal_unit.data.assign(cdata + ptr, cdata + ptr + nal_size);
+    decoder->data_queue.push(std::move(nal_unit));
     ptr += nal_size;
   }
-
 
   struct heif_error err = {heif_error_Ok, heif_suberror_Unspecified, kSuccess};
   return err;
 }
 
 
-static struct heif_error convert_webcodecs_result_to_heif_image(const std::unique_ptr<uint8_t[]>& buffer,
-                                                    int width, int height,
-                                                    int y_offset, int y_src_stride,
-                                                    int uv_offset, int uv_src_stride,
-                                                    struct heif_image** out_img,
-                                                    heif_chroma chroma,
-                                                    bool is_full_range) {
+static void normalize_luma_range(uint8_t* dst, int stride, int width, int height) {
+  // Luma data coming from the browser's VideoDecoder API may be using a
+  // limited range (16-235) instead of the full range (0-255). If this is the
+  // case, we need to normalize the data to the full range.
+  for (int y = 0; y < height; y++) {
+    uint8_t* p = dst + y * stride;
+    for (int x = 0; x < width; x++) {
+      float v = (static_cast<float>(p[x]) - 16.0f) * 255.0f / 219.0f;
+      p[x] = static_cast<uint8_t>(std::min(255.0f, std::max(0.0f, v + 0.5f)));
+    }
+  }
+}
+
+static void normalize_chroma_range(uint8_t* dst, int stride, int width, int height) {
+  // Chroma data coming from the browser's VideoDecoder API may be using a
+  // limited range (16-240) instead of the full range (0-255). If this is the
+  // case, we need to normalize the data to the full range.
+  for (int y = 0; y < height; y++) {
+    uint8_t* p = dst + y * stride;
+    for (int x = 0; x < width; x++) {
+      float v = (static_cast<float>(p[x]) - 16.0f) * 255.0f / 224.0f;
+      p[x] = static_cast<uint8_t>(std::min(255.0f, std::max(0.0f, v + 0.5f)));
+    }
+  }
+}
+
+static struct heif_error convert_planar_yuv_to_heif_image(
+    const uint8_t* y_src, int y_src_stride,
+    const uint8_t* u_src, int u_src_stride,
+    const uint8_t* v_src, int v_src_stride,
+    int width, int height,
+    struct heif_image** out_img,
+    heif_chroma chroma,
+    bool is_full_range) {
   heif_error err;
   bool is_mono = chroma == heif_chroma_monochrome;
-  err = heif_image_create(width,
-                          height,
-                          is_mono ? heif_colorspace_monochrome : heif_colorspace_YCbCr,
-                          is_mono ? heif_chroma_monochrome : heif_chroma_420,
-                          out_img);
+
+  int chroma_w = width;
+  int chroma_h = height;
+  if (chroma == heif_chroma_420 || is_mono) {
+    chroma_w = width / 2;
+    chroma_h = height / 2;
+  } else if (chroma == heif_chroma_422) {
+    chroma_w = width / 2;
+  }
+
+  err = heif_image_create(
+      width, height,
+      is_mono ? heif_colorspace_monochrome
+              : heif_colorspace_YCbCr,
+      is_mono ? heif_chroma_monochrome : chroma,
+      out_img);
   if (err.code) {
     return err;
   }
 
-  err = heif_image_add_plane(*out_img, heif_channel_Y, width, height, 8);
+  err = heif_image_add_plane(
+      *out_img, heif_channel_Y, width, height, 8);
   if (err.code) {
     heif_image_release(*out_img);
     return err;
   }
 
-  if (!is_mono) {
-    err = heif_image_add_plane(*out_img, heif_channel_Cb, width / 2, height / 2, 8);
-    if (err.code) {
-      heif_image_release(*out_img);
-      return err;
-    }
-
-    err = heif_image_add_plane(*out_img, heif_channel_Cr, width / 2, height / 2, 8);
-    if (err.code) {
-      heif_image_release(*out_img);
-      return err;
-    }
-  }
-
-  // The y plane can be reused as-is.
-
   int y_stride;
-  uint8_t* y_dst = heif_image_get_plane(*out_img, heif_channel_Y, &y_stride);
-
+  uint8_t* y_dst = heif_image_get_plane(
+      *out_img, heif_channel_Y, &y_stride);
   for (int i = 0; i < height; ++i) {
     memcpy(y_dst + i * y_stride,
-           buffer.get() + y_offset + i * y_src_stride,
+           y_src + i * y_src_stride,
            width);
   }
 
-  // NV12 luma data coming from the browser's VideoDecoder API may be using a
-  // limited range (16-235) instead of the full range (0-255). If this is the
-  // case, we need to normalize the data to the full range.
   if (!is_full_range) {
-    for (int y = 0; y < height; y++) {
-      uint8_t* p = y_dst + y * y_stride;
-      for (int x = 0; x < width; x++) {
-        float v = (static_cast<float>(p[x]) - 16.0f) * 255.0f / 219.0f;
-        p[x] = static_cast<uint8_t>(std::min(255.0f, std::max(0.0f, v + 0.5f)));
-      }
-    }
+    normalize_luma_range(y_dst, y_stride, width, height);
   }
 
   if (!is_mono) {
-    // In the NV12 format, the U and V planes are interleaved (UVUVUV...), whereas
-    // in libheif they are two separate planes. This code splits the interleaved UV
-    // bytes into two separate planes for use in libheif.
+    err = heif_image_add_plane(
+        *out_img, heif_channel_Cb,
+        chroma_w, chroma_h, 8);
+    if (err.code) {
+      heif_image_release(*out_img);
+      return err;
+    }
 
-    int u_stride;
-    uint8_t* u_dst = heif_image_get_plane(*out_img, heif_channel_Cb, &u_stride);
-    int v_stride;
-    uint8_t* v_dst = heif_image_get_plane(*out_img, heif_channel_Cr, &v_stride);
+    err = heif_image_add_plane(
+        *out_img, heif_channel_Cr,
+        chroma_w, chroma_h, 8);
+    if (err.code) {
+      heif_image_release(*out_img);
+      return err;
+    }
 
-    for (int i = 0; i < height / 2; ++i) {
-      uint8_t* uv_src = buffer.get() + uv_offset + i * uv_src_stride;
-      for (int j = 0; j < width / 2; ++j) {
-        // NV12 chroma data coming from the browser's VideoDecoder API may be using a
-        // limited range (16-240) instead of the full range (0-255). If this is the
-        // case, we need to normalize the data to the full range.
-        if (!is_full_range) {
-          float u = (static_cast<float>(uv_src[j * 2]) - 16.0f) * 255.0f / 224.0f;
-          float v = (static_cast<float>(uv_src[j * 2 + 1]) - 16.0f) * 255.0f / 224.0f;
-          u_dst[i * u_stride + j] = static_cast<uint8_t>(std::min(255.0f, std::max(0.0f, u + 0.5f)));
-          v_dst[i * v_stride + j] = static_cast<uint8_t>(std::min(255.0f, std::max(0.0f, v + 0.5f)));
-        } else {
-          u_dst[i * u_stride + j] = uv_src[j * 2];
-          v_dst[i * v_stride + j] = uv_src[j * 2 + 1];
-        }
-      }
+    int cb_stride;
+    uint8_t* cb_dst = heif_image_get_plane(
+        *out_img, heif_channel_Cb, &cb_stride);
+    for (int i = 0; i < chroma_h; ++i) {
+      memcpy(cb_dst + i * cb_stride,
+             u_src + i * u_src_stride,
+             chroma_w);
+    }
+
+    int cr_stride;
+    uint8_t* cr_dst = heif_image_get_plane(
+        *out_img, heif_channel_Cr, &cr_stride);
+    for (int i = 0; i < chroma_h; ++i) {
+      memcpy(cr_dst + i * cr_stride,
+             v_src + i * v_src_stride,
+             chroma_w);
+    }
+
+    if (!is_full_range) {
+      normalize_chroma_range(
+          cb_dst, cb_stride, chroma_w, chroma_h);
+      normalize_chroma_range(
+          cr_dst, cr_stride, chroma_w, chroma_h);
     }
   }
 
   return {heif_error_Ok, heif_suberror_Unspecified, kSuccess};
+}
+
+static struct heif_error convert_nv12_to_heif_image(
+    const std::unique_ptr<uint8_t[]>& buffer,
+    int width, int height,
+    int y_offset, int y_src_stride,
+    int uv_offset, int uv_src_stride,
+    struct heif_image** out_img,
+    heif_chroma chroma,
+    bool is_full_range) {
+  bool is_mono = chroma == heif_chroma_monochrome;
+
+  if (is_mono) {
+    return convert_planar_yuv_to_heif_image(
+        buffer.get() + y_offset, y_src_stride,
+        nullptr, 0, nullptr, 0,
+        width, height, out_img,
+        heif_chroma_monochrome, is_full_range);
+  }
+
+  int chroma_w = width / 2;
+  int chroma_h = height / 2;
+  std::vector<uint8_t> u_buf(chroma_w * chroma_h);
+  std::vector<uint8_t> v_buf(chroma_w * chroma_h);
+
+  for (int i = 0; i < chroma_h; ++i) {
+    const uint8_t* uv_row =
+        buffer.get() + uv_offset + i * uv_src_stride;
+    for (int j = 0; j < chroma_w; ++j) {
+      u_buf[i * chroma_w + j] = uv_row[j * 2];
+      v_buf[i * chroma_w + j] = uv_row[j * 2 + 1];
+    }
+  }
+
+  return convert_planar_yuv_to_heif_image(
+      buffer.get() + y_offset, y_src_stride,
+      u_buf.data(), chroma_w,
+      v_buf.data(), chroma_w,
+      width, height, out_img,
+      heif_chroma_420, is_full_range);
 }
 
 /** 
@@ -539,7 +640,8 @@ static std::string get_hevc_codec_string(const HEVCDecoderConfigurationRecord& c
       constraint_flags |= (1ULL << (47 - i));
     }
   }
-  snprintf(buffer, sizeof(buffer), "%06X", (unsigned int)(constraint_flags >> 24));
+  snprintf(buffer, sizeof(buffer), "%06X",
+           (unsigned int)(constraint_flags >> 24));
   codec_string += buffer;
 
   return codec_string;
@@ -561,20 +663,19 @@ static void get_nal_units(struct webcodecs_decoder* decoder,
     NALUnit nal_unit = decoder->data_queue.front();
     decoder->data_queue.pop();
 
-    if (nal_unit.size == 0) {
+    if (nal_unit.data.empty()) {
       continue;
     }
 
-    const auto* nal_data = static_cast<const uint8_t*>(nal_unit.data);
-    const uint8_t nal_type = (nal_data[0] >> 1) & 0x3F;
+    const uint8_t nal_type = (nal_unit.data[0] >> 1) & 0x3F;
 
-    if (nal_type == NAL_UNIT_VPS_NUT) {
+    if (nal_type == HEVC_NAL_UNIT_VPS_NUT) {
       vps_nal_unit = nal_unit;
-    } else if (nal_type == NAL_UNIT_SPS_NUT) {
+    } else if (nal_type == HEVC_NAL_UNIT_SPS_NUT) {
       sps_nal_unit = nal_unit;
-    } else if (nal_type == NAL_UNIT_PPS_NUT) {
+    } else if (nal_type == HEVC_NAL_UNIT_PPS_NUT) {
       pps_nal_unit = nal_unit;
-    } else if (nal_type <= NAL_UNIT_MAX_VCL) {
+    } else if (nal_type <= HEVC_NAL_UNIT_MAX_VCL) {
       // Assume the plugin will only receive one VCL NAL unit.
       data_unit = nal_unit;
     }
@@ -588,38 +689,38 @@ static struct heif_error webcodecs_decode_image(void* decoder_raw,
   struct webcodecs_decoder* decoder = (struct webcodecs_decoder*) decoder_raw;
   *out_img = nullptr;
 
-  NALUnit vps_nal_unit = {nullptr, 0};
-  NALUnit sps_nal_unit = {nullptr, 0};
-  NALUnit pps_nal_unit = {nullptr, 0};
-  NALUnit data_unit = {nullptr, 0};
+  NALUnit vps_nal_unit;
+  NALUnit sps_nal_unit;
+  NALUnit pps_nal_unit;
+  NALUnit data_unit;
 
   get_nal_units(decoder, vps_nal_unit, sps_nal_unit, pps_nal_unit, data_unit);
 
-  if (!vps_nal_unit.data || !sps_nal_unit.data || !pps_nal_unit.data || !data_unit.data) {
+  if (vps_nal_unit.data.empty() || sps_nal_unit.data.empty() || pps_nal_unit.data.empty() || data_unit.data.empty()) {
     return {heif_error_Decoder_plugin_error,
             heif_suberror_End_of_data,
             "Missing required NAL units (VPS, SPS, PPS, or data)"};
   }
 
   HEVCDecoderConfigurationRecord config;
-  int w, h;
-  Error err = parse_sps_for_hvcC_configuration2((const uint8_t*)sps_nal_unit.data, sps_nal_unit.size, &config, &w, &h);
+  uint32_t w, h;
+  Error err = parse_sps_for_hvcC_configuration2(sps_nal_unit.data.data(), sps_nal_unit.data.size(), &config, &w, &h);
   if (err != Error::Ok) {
     return {heif_error_Decoder_plugin_error,
             heif_suberror_Unspecified,
             "Failed to parse SPS"};
   }
 
-  config.m_nal_array.push_back(HEVCDecoderConfigurationRecord::NalArray{0, NAL_UNIT_VPS_NUT, {std::vector<uint8_t>((uint8_t*)vps_nal_unit.data, (uint8_t*)vps_nal_unit.data + vps_nal_unit.size)}});
-  config.m_nal_array.push_back(HEVCDecoderConfigurationRecord::NalArray{0, NAL_UNIT_SPS_NUT, {std::vector<uint8_t>((uint8_t*)sps_nal_unit.data, (uint8_t*)sps_nal_unit.data + sps_nal_unit.size)}});
-  config.m_nal_array.push_back(HEVCDecoderConfigurationRecord::NalArray{0, NAL_UNIT_PPS_NUT, {std::vector<uint8_t>((uint8_t*)pps_nal_unit.data, (uint8_t*)pps_nal_unit.data + pps_nal_unit.size)}});
+  config.m_nal_array.push_back(HEVCDecoderConfigurationRecord::NalArray{0, HEVC_NAL_UNIT_VPS_NUT, {vps_nal_unit.data}});
+  config.m_nal_array.push_back(HEVCDecoderConfigurationRecord::NalArray{0, HEVC_NAL_UNIT_SPS_NUT, {sps_nal_unit.data}});
+  config.m_nal_array.push_back(HEVCDecoderConfigurationRecord::NalArray{0, HEVC_NAL_UNIT_PPS_NUT, {pps_nal_unit.data}});
 
   StreamWriter writer;
   config.write(writer);
   std::vector<uint8_t> hvcc_record = writer.get_data();
 
   // The WebCodecs API expects the NAL unit to be prefixed with its size (4 bytes, big-endian).
-  size_t nal_size = data_unit.size;
+  uint32_t nal_size = static_cast<uint32_t>(data_unit.data.size());
   std::vector<uint8_t> data_with_size(4 + nal_size);
   // Write length in Big Endian
   data_with_size[0] = (nal_size >> 24) & 0xFF;
@@ -627,7 +728,7 @@ static struct heif_error webcodecs_decode_image(void* decoder_raw,
   data_with_size[2] = (nal_size >> 8) & 0xFF;
   data_with_size[3] = nal_size & 0xFF;
   // Append NAL payload
-  memcpy(data_with_size.data() + 4, data_unit.data, nal_size);
+  memcpy(data_with_size.data() + 4, data_unit.data.data(), nal_size);
 
   std::string codec_string = get_hevc_codec_string(config);
 
@@ -679,6 +780,8 @@ static struct heif_error webcodecs_decode_image(void* decoder_raw,
             "Decoding failed: result.planes is undefined or not an array"};
   }
 
+  bool is_full_range = !result["fullRange"].isUndefined() && result["fullRange"].as<bool>();
+
   // Most HEIC images in the browser will be decoded natively in NV12 pixel
   // format. Using the bytes directly helps retain the original image fidelity.
   if (format == "NV12") {
@@ -717,14 +820,40 @@ static struct heif_error webcodecs_decode_image(void* decoder_raw,
       uv_src_stride = uv_plane["stride"].as<int>();
     }
 
-    bool is_full_range = !result["fullRange"].isUndefined() && result["fullRange"].as<bool>();
-    return convert_webcodecs_result_to_heif_image(buffer, width, height, y_offset, y_src_stride, uv_offset, uv_src_stride, out_img, (heif_chroma)config.chroma_format, is_full_range);
-  } else if (format == "RGBA") {
-    // Also handle RGBA images as a fallback in cases where the browser returns
-    // something other than NV12. As of now only RGBA is handled as an
-    // alternative format for simplicity's sake, but other formats could be
-    // handled explicitly in the future.
+    return convert_nv12_to_heif_image(buffer, width, height, y_offset, y_src_stride, uv_offset, uv_src_stride, out_img, (heif_chroma)config.chroma_format, is_full_range);
+  } else if (format == "I420" || format == "I422" || format == "I444") {
+    if (planes["length"].as<size_t>() < 3) {
+      return {heif_error_Decoder_plugin_error,
+              heif_suberror_Unspecified,
+              "Decoding failed: planar YUV format requires 3 planes"};
+    }
 
+    emscripten::val y_plane = planes[0];
+    emscripten::val u_plane = planes[1];
+    emscripten::val v_plane = planes[2];
+    if (y_plane.isUndefined() || u_plane.isUndefined() || v_plane.isUndefined()) {
+      return {heif_error_Decoder_plugin_error,
+              heif_suberror_Unspecified,
+              "Decoding failed: one or more YUV planes are undefined"};
+    }
+
+    heif_chroma chroma = heif_chroma_420;
+    if (format == "I422") {
+      chroma = heif_chroma_422;
+    } else if (format == "I444") {
+      chroma = heif_chroma_444;
+    }
+
+    return convert_planar_yuv_to_heif_image(
+        buffer.get() + y_plane["offset"].as<int>(),
+        y_plane["stride"].as<int>(),
+        buffer.get() + u_plane["offset"].as<int>(),
+        u_plane["stride"].as<int>(),
+        buffer.get() + v_plane["offset"].as<int>(),
+        v_plane["stride"].as<int>(),
+        width, height,
+        out_img, chroma, is_full_range);
+  } else if (format == "RGBA") {
     if (planes["length"].as<size_t>() < 1) {
       return {heif_error_Decoder_plugin_error,
               heif_suberror_Unspecified,
@@ -770,20 +899,63 @@ static struct heif_error webcodecs_decode_image(void* decoder_raw,
   } else {
     return {heif_error_Decoder_plugin_error,
             heif_suberror_Unsupported_color_conversion,
-            "Decoding failed: format is not NV12 or RGBA"};
+            "Decoding failed: unsupported pixel format"};
   }
 }
 
 
 void webcodecs_set_strict_decoding(void* decoder_raw, int flag)
 {
+}
 
+
+static int webcodecs_does_support_format2(const heif_decoder_plugin_compressed_format_description* format)
+{
+  return webcodecs_does_support_format(format->format);
+}
+
+
+static struct heif_error webcodecs_new_decoder2(void** dec, const heif_decoder_plugin_options* options)
+{
+  return webcodecs_new_decoder(dec);
+}
+
+
+static struct heif_error webcodecs_push_data2(void* decoder_raw, const void* data, size_t size, uintptr_t user_data)
+{
+  return webcodecs_push_data(decoder_raw, data, size);
+}
+
+
+static struct heif_error webcodecs_flush_data(void* decoder_raw)
+{
+  return {heif_error_Ok, heif_suberror_Unspecified, kSuccess};
+}
+
+
+static struct heif_error webcodecs_decode_next_image(void* decoder_raw,
+                                                     struct heif_image** out_img,
+                                                     const heif_security_limits* limits)
+{
+  return webcodecs_decode_image(decoder_raw, out_img);
+}
+
+
+static struct heif_error webcodecs_decode_next_image2(void* decoder_raw,
+                                                      struct heif_image** out_img,
+                                                      uintptr_t* out_user_data,
+                                                      const heif_security_limits* limits)
+{
+  if (out_user_data) {
+    *out_user_data = 0;
+  }
+  return webcodecs_decode_image(decoder_raw, out_img);
 }
 
 
 static const struct heif_decoder_plugin decoder_webcodecs
     {
-        1,
+        5,
         webcodecs_plugin_name,
         webcodecs_init_plugin,
         webcodecs_deinit_plugin,
@@ -793,7 +965,14 @@ static const struct heif_decoder_plugin decoder_webcodecs
         webcodecs_push_data,
         webcodecs_decode_image,
         webcodecs_set_strict_decoding,
-        "webcodecs"
+        "webcodecs",
+        webcodecs_decode_next_image,
+        0,
+        webcodecs_does_support_format2,
+        webcodecs_new_decoder2,
+        webcodecs_push_data2,
+        webcodecs_flush_data,
+        webcodecs_decode_next_image2
     };
 
 

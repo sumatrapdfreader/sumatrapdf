@@ -859,7 +859,7 @@ WARN_LOGFILE           =
 INPUT = @CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif.h \
 @CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_items.h \
 @CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_regions.h \
-@CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_text.h
+@CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_text.h \
 @CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_library.h \
 @CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_encoding.h \
 @CMAKE_CURRENT_SOURCE_DIR@/libheif/api/libheif/heif_sequences.h

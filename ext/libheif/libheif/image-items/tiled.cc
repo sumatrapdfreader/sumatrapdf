@@ -22,8 +22,12 @@
 #include "context.h"
 #include "file.h"
 #include <algorithm>
+#include <limits>
 #include "security_limits.h"
 #include "codecs/hevc_dec.h"
+#if WITH_UNCOMPRESSED_CODEC
+#include "codecs/uncompressed/unc_boxes.h"
+#endif
 #include "api_structs.h"
 
 
@@ -39,9 +43,19 @@ static uint64_t readvec(const std::vector<uint8_t>& data, size_t& ptr, int len)
 }
 
 
-uint64_t number_of_tiles(const heif_tiled_image_parameters& params)
+Result<uint64_t> number_of_tiles(const heif_tiled_image_parameters& params, const heif_security_limits* limits)
 {
   uint64_t nTiles = nTiles_h(params) * static_cast<uint64_t>(nTiles_v(params));
+
+  // Enforce the limit before the extra-dimensions loop so it is checked
+  // even when number_of_extra_dimensions == 0.
+  if (limits && limits->max_number_of_tiles && nTiles > limits->max_number_of_tiles) {
+    return Error{
+      heif_error_Unsupported_filetype,
+      heif_suberror_Security_limit_exceeded,
+      "Number of tiles exceeds security limit"
+    };
+  }
 
   for (int i = 0; i < params.number_of_extra_dimensions; i++) {
     // We only support up to 8 extra dimensions
@@ -49,7 +63,31 @@ uint64_t number_of_tiles(const heif_tiled_image_parameters& params)
       break;
     }
 
+    if (params.extra_dimensions[i] == 0) {
+      return Error{
+        heif_error_Unsupported_filetype,
+        heif_suberror_Unspecified,
+        "Zero extra dimension size."
+      };
+    }
+
+    if (nTiles > UINT64_MAX / params.extra_dimensions[i]) {
+      return Error{
+        heif_error_Unsupported_filetype,
+        heif_suberror_Unspecified,
+        "Number of tiles exceeds uint64 maximum."
+      };
+    }
+
     nTiles *= params.extra_dimensions[i];
+
+    if (limits && limits->max_number_of_tiles && nTiles > limits->max_number_of_tiles) {
+      return Error{
+        heif_error_Unsupported_filetype,
+        heif_suberror_Security_limit_exceeded,
+        "Number of tiles exceeds security limit"
+      };
+    }
   }
 
   return nTiles;
@@ -58,13 +96,18 @@ uint64_t number_of_tiles(const heif_tiled_image_parameters& params)
 
 uint32_t nTiles_h(const heif_tiled_image_parameters& params)
 {
-  return (params.image_width + params.tile_width - 1) / params.tile_width;
+  // 64-bit arithmetic prevents wrap-around when image_width + tile_width - 1
+  // exceeds UINT32_MAX. The quotient is bounded by image_width, so the
+  // narrowing cast is safe. Callers are responsible for ensuring tile_width > 0.
+  return static_cast<uint32_t>(
+      (static_cast<uint64_t>(params.image_width) + params.tile_width - 1) / params.tile_width);
 }
 
 
 uint32_t nTiles_v(const heif_tiled_image_parameters& params)
 {
-  return (params.image_height + params.tile_height - 1) / params.tile_height;
+  return static_cast<uint32_t>(
+      (static_cast<uint64_t>(params.image_height) + params.tile_height - 1) / params.tile_height);
 }
 
 
@@ -302,15 +345,12 @@ Error TiledHeader::set_parameters(const heif_tiled_image_parameters& params)
 {
   m_parameters = params;
 
-  auto max_tiles = heif_get_global_security_limits()->max_number_of_tiles;
-
-  if (max_tiles && number_of_tiles(params) > max_tiles) {
-    return {heif_error_Unsupported_filetype,
-            heif_suberror_Security_limit_exceeded,
-            "Number of tiles exceeds security limit"};
+  Result<uint64_t> num_tiles_result = number_of_tiles(params, heif_get_global_security_limits());
+  if (auto err = num_tiles_result.error()) {
+    return err;
   }
 
-  m_offsets.resize(number_of_tiles(params));
+  m_offsets.resize(*num_tiles_result);
 
   for (auto& tile: m_offsets) {
     tile.offset = TILD_OFFSET_NOT_LOADED;
@@ -322,16 +362,12 @@ Error TiledHeader::set_parameters(const heif_tiled_image_parameters& params)
 
 Error TiledHeader::read_full_offset_table(const std::shared_ptr<HeifFile>& file, heif_item_id tild_id, const heif_security_limits* limits)
 {
-  auto max_tiles = heif_get_global_security_limits()->max_number_of_tiles;
-
-  uint64_t nTiles = number_of_tiles(m_parameters);
-  if (max_tiles && nTiles > max_tiles) {
-    return {heif_error_Invalid_input,
-            heif_suberror_Security_limit_exceeded,
-            "Number of tiles exceeds security limit."};
+  Result<uint64_t> nTiles_result = number_of_tiles(m_parameters, limits);
+  if (auto err = nTiles_result.error()) {
+    return err;
   }
 
-  return read_offset_table_range(file, tild_id, 0, nTiles);
+  return read_offset_table_range(file, tild_id, 0, *nTiles_result);
 }
 
 
@@ -392,6 +428,13 @@ uint32_t TiledHeader::get_offset_table_entry_size() const
 
 std::pair<uint32_t, uint32_t> TiledHeader::get_tile_offset_table_range_to_read(uint32_t idx, uint32_t nEntries) const
 {
+  // Defense in depth: callers are expected to validate idx, but if they don't,
+  // returning an empty range prevents the subsequent read_offset_table_range
+  // from writing past m_offsets.
+  if (idx >= m_offsets.size()) {
+    return {0, 0};
+  }
+
   uint32_t start = idx;
   uint32_t end = idx+1;
 
@@ -418,11 +461,33 @@ std::pair<uint32_t, uint32_t> TiledHeader::get_tile_offset_table_range_to_read(u
 }
 
 
-void TiledHeader::set_tild_tile_range(uint32_t tile_x, uint32_t tile_y, uint64_t offset, uint32_t size)
+Error TiledHeader::set_tild_tile_range(uint32_t tile_x, uint32_t tile_y, uint64_t offset, uint32_t size)
 {
+  // Offset and size are written into bit-fields of the configured widths;
+  // silently truncating here produces files where the offset table points to
+  // garbage. Reject the value so the caller knows to widen the fields.
+  uint8_t off_bits = m_parameters.offset_field_length;
+  uint8_t sz_bits  = m_parameters.size_field_length;
+
+  if (off_bits < 64 && offset >> off_bits) {
+    std::stringstream sstr;
+    sstr << "Tile offset " << offset << " does not fit in the configured "
+         << static_cast<int>(off_bits) << "-bit offset field. Use a wider "
+            "offset_field_length (40/48/64) when encoding the tili image.";
+    return {heif_error_Encoding_error, heif_suberror_Unspecified, sstr.str()};
+  }
+
+  if (sz_bits != 0 && sz_bits < 32 && size >> sz_bits) {
+    std::stringstream sstr;
+    sstr << "Tile size " << size << " does not fit in the configured "
+         << static_cast<int>(sz_bits) << "-bit size field.";
+    return {heif_error_Encoding_error, heif_suberror_Unspecified, sstr.str()};
+  }
+
   uint64_t idx = uint64_t{tile_y} * nTiles_h(m_parameters) + tile_x;
   m_offsets[idx].offset = offset;
   m_offsets[idx].size = size;
+  return Error::Ok;
 }
 
 
@@ -437,19 +502,39 @@ void writevec(uint8_t* data, size_t& idx, I value, int len)
 }
 
 
-std::vector<uint8_t> TiledHeader::write_offset_table()
+Result<std::vector<uint8_t>> TiledHeader::write_offset_table()
 {
-  uint64_t nTiles = number_of_tiles(m_parameters);
+  Result<uint64_t> nTiles_result = number_of_tiles(m_parameters, nullptr);
+  if (auto err = nTiles_result.error()) {
+    return err;
+  }
+
 
   int offset_entry_size = (m_parameters.offset_field_length + m_parameters.size_field_length) / 8;
-  uint64_t size = nTiles * offset_entry_size;
+  uint64_t size = *nTiles_result * offset_entry_size;
 
   std::vector<uint8_t> data;
   data.resize(size);
 
   size_t idx = 0;
 
+  uint8_t off_bits = m_parameters.offset_field_length;
+  uint8_t sz_bits  = m_parameters.size_field_length;
+
   for (const auto& offset: m_offsets) {
+    if (off_bits < 64 && offset.offset >> off_bits) {
+      std::stringstream sstr;
+      sstr << "Tile offset " << offset.offset << " does not fit in the "
+              "configured " << static_cast<int>(off_bits) << "-bit offset field.";
+      return Error{heif_error_Encoding_error, heif_suberror_Unspecified, sstr.str()};
+    }
+    if (sz_bits != 0 && sz_bits < 32 && offset.size >> sz_bits) {
+      std::stringstream sstr;
+      sstr << "Tile size " << offset.size << " does not fit in the "
+              "configured " << static_cast<int>(sz_bits) << "-bit size field.";
+      return Error{heif_error_Encoding_error, heif_suberror_Unspecified, sstr.str()};
+    }
+
     writevec(data.data(), idx, offset.offset, m_parameters.offset_field_length / 8);
 
     if (m_parameters.size_field_length != 0) {
@@ -484,12 +569,20 @@ std::string TiledHeader::dump() const
 ImageItem_Tiled::ImageItem_Tiled(HeifContext* ctx)
         : ImageItem(ctx)
 {
+  m_tile_encoding_options = heif_encoding_options_alloc();
 }
 
 
 ImageItem_Tiled::ImageItem_Tiled(HeifContext* ctx, heif_item_id id)
         : ImageItem(ctx, id)
 {
+  m_tile_encoding_options = heif_encoding_options_alloc();
+}
+
+
+ImageItem_Tiled::~ImageItem_Tiled()
+{
+  heif_encoding_options_free(m_tile_encoding_options);
 }
 
 
@@ -545,7 +638,26 @@ Error ImageItem_Tiled::initialize_decoder()
       return propertiesResult.error();
     }
 
-    m_tile_item->set_properties(*propertiesResult);
+    // Filter out per-tile boxes incompatible with tili's shared template
+    auto props = *propertiesResult;
+#if WITH_UNCOMPRESSED_CODEC
+    for (const auto& box : props) {
+      if (box->get_short_type() == fourcc("icef")) {
+        auto icef = std::dynamic_pointer_cast<Box_icef>(box);
+        if (icef && icef->get_units().size() > 1) {
+          return {heif_error_Invalid_input,
+                  heif_suberror_Unspecified,
+                  "icef box with multiple units is incompatible with tili shared tile template."};
+        }
+      }
+    }
+    std::erase_if(props, [](const std::shared_ptr<Box>& box) {
+      uint32_t type = box->get_short_type();
+      return type == fourcc("icef") || type == fourcc("sbpm") || type == fourcc("snuc");
+    });
+#endif
+
+    m_tile_item->set_properties(props);
   }
   else {
     // --- This is the new method
@@ -553,6 +665,24 @@ Error ImageItem_Tiled::initialize_decoder()
     // Synthesize an ispe box if there was none in the file
 
     auto tile_properties = tilC_box->get_all_child_boxes();
+
+    // Filter out per-tile boxes incompatible with tili's shared template
+#if WITH_UNCOMPRESSED_CODEC
+    for (const auto& box : tile_properties) {
+      if (box->get_short_type() == fourcc("icef")) {
+        auto icef = std::dynamic_pointer_cast<Box_icef>(box);
+        if (icef && icef->get_units().size() > 1) {
+          return {heif_error_Invalid_input,
+                  heif_suberror_Unspecified,
+                  "icef box with multiple units is incompatible with tili shared tile template."};
+        }
+      }
+    }
+    std::erase_if(tile_properties, [](const std::shared_ptr<Box>& box) {
+      uint32_t type = box->get_short_type();
+      return type == fourcc("icef") || type == fourcc("sbpm") || type == fourcc("snuc");
+    });
+#endif
 
     bool have_ispe = false;
     for (const auto& property : tile_properties) {
@@ -589,26 +719,57 @@ Error ImageItem_Tiled::initialize_decoder()
 }
 
 
-Result<std::shared_ptr<ImageItem_Tiled>>
-ImageItem_Tiled::add_new_tiled_item(HeifContext* ctx, const heif_tiled_image_parameters* parameters,
-                                    const heif_encoder* encoder)
+void ImageItem_Tiled::populate_component_descriptions()
 {
-  auto max_tild_tiles = ctx->get_security_limits()->max_number_of_tiles;
-  if (max_tild_tiles && number_of_tiles(*parameters) > max_tild_tiles) {
-    return Error{heif_error_Usage_error,
-                 heif_suberror_Security_limit_exceeded,
-                 "Number of tiles exceeds security limit."};
+  // Idempotent: skip if already populated.
+  if (!get_component_descriptions().empty()) {
+    return;
   }
 
+  // initialize_decoder() must have run; m_tile_item carries the per-tile
+  // properties (cmpd/uncC for unci tiles, codec config for visual tiles)
+  // and its own populate has filled tile-sized component descriptions.
+  if (!m_tile_item) {
+    return;
+  }
+
+  uint32_t tile_w = m_tild_header.get_parameters().tile_width;
+  uint32_t tile_h = m_tild_header.get_parameters().tile_height;
+  populate_descriptions_from_child(*m_tile_item, tile_w, tile_h);
+}
+
+
+Result<std::shared_ptr<ImageItem_Tiled>>
+ImageItem_Tiled::add_new_tiled_item(HeifContext* ctx, const heif_tiled_image_parameters* parameters,
+                                    const heif_encoder* encoder,
+                                    const heif_encoding_options* encoding_options)
+{
+  Result<uint64_t> num_tiles_result = number_of_tiles(*parameters, ctx->get_security_limits());
+  if (auto err = num_tiles_result.error()) {
+    return err;
+  }
 
   // Create 'tili' Item
 
   auto file = ctx->get_heif_file();
 
-  heif_item_id tild_id = ctx->get_heif_file()->add_new_image(fourcc("tili"));
+  auto tild_id_result = ctx->get_heif_file()->add_new_image(fourcc("tili"));
+  if (!tild_id_result) {
+    return tild_id_result.error();
+  }
+  heif_item_id tild_id = *tild_id_result;
   auto tild_image = std::make_shared<ImageItem_Tiled>(ctx, tild_id);
   tild_image->set_resolution(parameters->image_width, parameters->image_height);
   ctx->insert_image_item(tild_id, tild_image);
+
+  if (encoding_options) {
+    // encoding options for the tiles, but do not apply transformative properties
+    heif_encoding_options_copy(tild_image->m_tile_encoding_options, encoding_options);
+    tild_image->m_tile_encoding_options->image_orientation = heif_orientation_normal;
+
+    // orientation of the main image
+    tild_image->m_image_orientation = encoding_options->image_orientation;
+  }
 
   // Create tilC box
 
@@ -623,10 +784,13 @@ ImageItem_Tiled::add_new_tiled_item(HeifContext* ctx, const heif_tiled_image_par
   tild_header.set_parameters(*parameters);
   tild_header.set_compression_format(encoder->plugin->compression_format);
 
-  std::vector<uint8_t> header_data = tild_header.write_offset_table();
+  Result<std::vector<uint8_t>> header_data_result = tild_header.write_offset_table();
+  if (auto err = header_data_result.error()) {
+    return err;
+  }
 
   const int construction_method = 0; // 0=mdat 1=idat
-  file->append_iloc_data(tild_id, header_data, construction_method);
+  file->append_iloc_data(tild_id, *header_data_result, construction_method);
 
 
   if (parameters->image_width > 0xFFFFFFFF || parameters->image_height > 0xFFFFFFFF) {
@@ -649,7 +813,7 @@ ImageItem_Tiled::add_new_tiled_item(HeifContext* ctx, const heif_tiled_image_par
 #endif
 
   tild_image->set_tild_header(tild_header);
-  tild_image->set_next_tild_position(header_data.size());
+  tild_image->set_next_tild_position(header_data_result->size());
 
   // Set Brands
   //m_heif_file->set_brand(encoder->plugin->compression_format,
@@ -665,22 +829,18 @@ Error ImageItem_Tiled::add_image_tile(uint32_t tile_x, uint32_t tile_y,
 {
   auto item = ImageItem::alloc_for_compression_format(get_context(), encoder->plugin->compression_format);
 
-  heif_encoding_options* options = heif_encoding_options_alloc(); // TODO: should this be taken from heif_context_add_tiled_image() ?
-
   Result<std::shared_ptr<HeifPixelImage>> colorConversionResult;
   colorConversionResult = item->get_encoder()->convert_colorspace_for_encoding(image, encoder,
-                                                                               options->output_nclx_profile,
-                                                                               &options->color_conversion_options,
+                                                                               m_tile_encoding_options->output_nclx_profile,
+                                                                               &m_tile_encoding_options->color_conversion_options,
                                                                                get_context()->get_security_limits());
   if (!colorConversionResult) {
-    heif_encoding_options_free(options);
     return colorConversionResult.error();
   }
 
   std::shared_ptr<HeifPixelImage> colorConvertedImage = *colorConversionResult;
 
-  Result<Encoder::CodedImageData> encodeResult = item->encode_to_bitstream_and_boxes(colorConvertedImage, encoder, *options, heif_image_input_class_normal); // TODO (other than JPEG)
-  heif_encoding_options_free(options);
+  Result<Encoder::CodedImageData> encodeResult = item->encode_to_bitstream_and_boxes(colorConvertedImage, encoder, *m_tile_encoding_options, heif_image_input_class_normal);
 
   if (!encodeResult) {
     return encodeResult.error();
@@ -703,7 +863,9 @@ Error ImageItem_Tiled::add_image_tile(uint32_t tile_x, uint32_t tile_y,
   if (dataSize > 0xFFFFFFFF) {
     return {heif_error_Encoding_error, heif_suberror_Unspecified, "Compressed tile size exceeds maximum tile size."};
   }
-  header.set_tild_tile_range(tile_x, tile_y, offset, static_cast<uint32_t>(dataSize));
+  if (Error err = header.set_tild_tile_range(tile_x, tile_y, offset, static_cast<uint32_t>(dataSize))) {
+    return err;
+  }
   set_next_tild_position(offset + encodeResult->bitstream.size());
 
   auto tilC = get_property<Box_tilC>();
@@ -718,6 +880,28 @@ Error ImageItem_Tiled::add_image_tile(uint32_t tile_x, uint32_t tile_y,
     if (propertyBox->get_short_type() == fourcc("ispe")) {
       continue;
     }
+
+#if WITH_UNCOMPRESSED_CODEC
+    // icef/sbpm/snuc contain per-tile data incompatible with tili's shared tile template
+    uint32_t ptype = propertyBox->get_short_type();
+
+    if (ptype == fourcc("icef")) {
+      auto icef = std::dynamic_pointer_cast<Box_icef>(propertyBox);
+      if (icef && icef->get_units().size() > 1) {
+        return {heif_error_Usage_error,
+                heif_suberror_Unspecified,
+                "icef box with multiple units is incompatible with tili shared tile template."};
+      }
+      // Single-unit icef can be safely skipped
+      continue;
+    }
+
+    if (ptype == fourcc("sbpm") || ptype == fourcc("snuc")) {
+      return {heif_error_Usage_error,
+              heif_suberror_Unspecified,
+              "Cannot store per-tile property (" + fourcc_to_string(ptype) + ") in tili shared tile template."};
+    }
+#endif
 
     // skip properties that exist already
 
@@ -737,6 +921,8 @@ Error ImageItem_Tiled::add_image_tile(uint32_t tile_x, uint32_t tile_y,
         get_file()->add_property(get_id(), propertyBox, propertyBox->is_essential());
         break;
     }
+
+    get_file()->add_orientation_properties(get_id(), m_image_orientation);
   }
 
   //get_file()->set_brand(encoder->plugin->compression_format,
@@ -746,14 +932,19 @@ Error ImageItem_Tiled::add_image_tile(uint32_t tile_x, uint32_t tile_y,
 }
 
 
-void ImageItem_Tiled::process_before_write()
+Error ImageItem_Tiled::process_before_write()
 {
   // overwrite offsets
 
   const int construction_method = 0; // 0=mdat 1=idat
 
-  std::vector<uint8_t> header_data = m_tild_header.write_offset_table();
-  get_file()->replace_iloc_data(get_id(), 0, header_data, construction_method);
+  Result<std::vector<uint8_t>> header_data_result = m_tild_header.write_offset_table();
+  if (auto err = header_data_result.error()) {
+    return err;
+  }
+
+  get_file()->replace_iloc_data(get_id(), 0, *header_data_result, construction_method);
+  return {};
 }
 
 
@@ -767,14 +958,20 @@ ImageItem_Tiled::decode_compressed_image(const heif_decoding_options& options,
   }
   else {
     return Error{heif_error_Unsupported_feature, heif_suberror_Unspecified,
-                 "'tili' images can only be access per tile"};
+                 "'tili' images can only be accessed per tile"};
   }
 }
 
 
 Error ImageItem_Tiled::append_compressed_tile_data(std::vector<uint8_t>& data, uint32_t tx, uint32_t ty) const
 {
-  uint32_t idx = (uint32_t) (ty * nTiles_h(m_tild_header.get_parameters()) + tx);
+  uint64_t idx64 = static_cast<uint64_t>(ty) * nTiles_h(m_tild_header.get_parameters()) + tx;
+  if (idx64 >= m_tild_header.get_num_tiles()) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Unspecified,
+                 "Tile index out of range."};
+  }
+  auto idx = static_cast<uint32_t>(idx64);
 
   if (!m_tild_header.is_tile_offset_known(idx)) {
     Error err = const_cast<ImageItem_Tiled*>(this)->load_tile_offset_entry(idx);
@@ -819,9 +1016,9 @@ ImageItem_Tiled::get_compressed_data_for_tile(uint32_t tx, uint32_t ty) const
   // --- decode
 
   DataExtent extent;
-  extent.m_raw = data;
+  extent.m_raw = std::move(data);
 
-  return extent;
+  return std::move(extent);
 }
 
 
@@ -835,8 +1032,13 @@ ImageItem_Tiled::decode_grid_tile(const heif_decoding_options& options, uint32_t
 
   m_tile_decoder->set_data_extent(std::move(*extentResult));
 
-  return m_tile_decoder->decode_single_frame_from_compressed_data(options,
-                                                                  get_context()->get_security_limits());
+  uint32_t tw = 0, th = 0;
+  get_tile_size(tw, th);
+  heif_security_limits tightened = tighten_image_size_limit_for_ispe(
+      get_context()->get_security_limits(), tw, th,
+      max_coding_unit_size_for_codec(m_tile_decoder->get_compression_format()));
+
+  return m_tile_decoder->decode_single_frame_from_compressed_data(options, &tightened);
 }
 
 

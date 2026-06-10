@@ -34,6 +34,6 @@ Result<std::vector<uint8_t>> TextItem::encode() const
 
 Error TextItem::parse(const std::vector<uint8_t> &data)
 {
-  m_text.assign(data.begin(), data.end());
+  m_text.assign(reinterpret_cast<const char*>(data.data()), data.size());
   return Error::Ok;
 }

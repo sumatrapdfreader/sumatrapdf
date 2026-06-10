@@ -33,18 +33,25 @@ Result<Encoder::CodedImageData> Encoder_JPEG2000::encode(const std::shared_ptr<H
                                                          enum heif_image_input_class input_class)
 {
   Encoder::CodedImageData codedImageData;
+  heif_error err;
 
   heif_image c_api_image;
   c_api_image.image = image;
 
-  encoder->plugin->encode_image(encoder->encoder, &c_api_image, input_class);
+  err = encoder->plugin->encode_image(encoder->encoder, &c_api_image, input_class);\
+  if (err.code != heif_error_Ok) {
+    return Error::from_heif_error(err);
+  }
 
   // get compressed data
   for (;;) {
     uint8_t* data;
     int size;
 
-    encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    err = encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    if (err.code != heif_error_Ok) {
+      return Error::from_heif_error(err);
+    }
 
     if (data == nullptr) {
       break;

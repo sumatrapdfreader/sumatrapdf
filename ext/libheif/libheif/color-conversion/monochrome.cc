@@ -43,6 +43,7 @@ Op_mono_to_YCbCr420::state_after_conversion(const ColorState& input_state,
   output_state.chroma = heif_chroma_420;
   output_state.has_alpha = input_state.has_alpha;
   output_state.bits_per_pixel = input_state.bits_per_pixel;
+  output_state.alpha_bits_per_pixel = input_state.alpha_bits_per_pixel;
 
   states.emplace_back(output_state, SpeedCosts_OptimizedSoftware);
 
@@ -70,9 +71,9 @@ Op_mono_to_YCbCr420::convert_colorspace(const std::shared_ptr<const HeifPixelIma
   uint32_t chroma_width = (width + 1) / 2;
   uint32_t chroma_height = (height + 1) / 2;
 
-  if (auto err = outimg->add_plane(heif_channel_Y, width, height, input_bpp, limits) ||
-                 outimg->add_plane(heif_channel_Cb, chroma_width, chroma_height, input_bpp, limits) ||
-                 outimg->add_plane(heif_channel_Cr, chroma_width, chroma_height, input_bpp, limits)) {
+  if (auto err = outimg->add_channel(heif_channel_Y, width, height, input_bpp, limits) ||
+                 outimg->add_channel(heif_channel_Cb, chroma_width, chroma_height, input_bpp, limits) ||
+                 outimg->add_channel(heif_channel_Cr, chroma_width, chroma_height, input_bpp, limits)) {
     return err;
   }
 
@@ -80,7 +81,7 @@ Op_mono_to_YCbCr420::convert_colorspace(const std::shared_ptr<const HeifPixelIma
   bool has_alpha = input->has_channel(heif_channel_Alpha);
   if (has_alpha) {
     alpha_bpp = input->get_bits_per_pixel(heif_channel_Alpha);
-    if (auto err = outimg->add_plane(heif_channel_Alpha, width, height, alpha_bpp, limits)) {
+    if (auto err = outimg->add_channel(heif_channel_Alpha, width, height, alpha_bpp, limits)) {
       return err;
     }
   }
@@ -93,11 +94,11 @@ Op_mono_to_YCbCr420::convert_colorspace(const std::shared_ptr<const HeifPixelIma
     const uint8_t* in_y;
     size_t in_y_stride = 0;
 
-    in_y = input->get_plane(heif_channel_Y, &in_y_stride);
+    in_y = input->get_channel_memory(heif_channel_Y, &in_y_stride);
 
-    out_y = outimg->get_plane(heif_channel_Y, &out_y_stride);
-    out_cb = outimg->get_plane(heif_channel_Cb, &out_cb_stride);
-    out_cr = outimg->get_plane(heif_channel_Cr, &out_cr_stride);
+    out_y = outimg->get_channel_memory(heif_channel_Y, &out_y_stride);
+    out_cb = outimg->get_channel_memory(heif_channel_Cb, &out_cb_stride);
+    out_cr = outimg->get_channel_memory(heif_channel_Cr, &out_cr_stride);
 
     auto chroma_value = static_cast<uint8_t>(1 << (input_bpp - 1));
 
@@ -117,11 +118,11 @@ Op_mono_to_YCbCr420::convert_colorspace(const std::shared_ptr<const HeifPixelIma
     const uint16_t* in_y;
     size_t in_y_stride = 0;
 
-    in_y = (const uint16_t*) input->get_plane(heif_channel_Y, &in_y_stride);
+    in_y = (const uint16_t*) input->get_channel_memory(heif_channel_Y, &in_y_stride);
 
-    out_y = (uint16_t*) outimg->get_plane(heif_channel_Y, &out_y_stride);
-    out_cb = (uint16_t*) outimg->get_plane(heif_channel_Cb, &out_cb_stride);
-    out_cr = (uint16_t*) outimg->get_plane(heif_channel_Cr, &out_cr_stride);
+    out_y = (uint16_t*) outimg->get_channel_memory(heif_channel_Y, &out_y_stride);
+    out_cb = (uint16_t*) outimg->get_channel_memory(heif_channel_Cb, &out_cb_stride);
+    out_cr = (uint16_t*) outimg->get_channel_memory(heif_channel_Cr, &out_cr_stride);
 
     in_y_stride /= 2;
     out_y_stride /= 2;
@@ -147,8 +148,8 @@ Op_mono_to_YCbCr420::convert_colorspace(const std::shared_ptr<const HeifPixelIma
     size_t in_a_stride = 0;
     size_t out_a_stride = 0;
 
-    in_a = input->get_plane(heif_channel_Alpha, &in_a_stride);
-    out_a = outimg->get_plane(heif_channel_Alpha, &out_a_stride);
+    in_a = input->get_channel_memory(heif_channel_Alpha, &in_a_stride);
+    out_a = outimg->get_channel_memory(heif_channel_Alpha, &out_a_stride);
 
     uint32_t memory_width = (alpha_bpp > 8 ? width * 2 : width);
 
@@ -172,6 +173,10 @@ Op_mono_to_RGB24_32::state_after_conversion(const ColorState& input_state,
   if (input_state.colorspace != heif_colorspace_monochrome ||
       input_state.chroma != heif_chroma_monochrome ||
       input_state.bits_per_pixel != 8) {
+    return {};
+  }
+
+  if (input_state.has_alpha && input_state.get_alpha_bits_per_pixel() != input_state.bits_per_pixel) {
     return {};
   }
 
@@ -230,7 +235,7 @@ Op_mono_to_RGB24_32::convert_colorspace(const std::shared_ptr<const HeifPixelIma
     outimg->create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_24bit);
   }
 
-  if (auto err = outimg->add_plane(heif_channel_interleaved, width, height, 8, limits)) {
+  if (auto err = outimg->add_channel(heif_channel_interleaved, width, height, 8, limits)) {
     return err;
   }
 
@@ -240,12 +245,12 @@ Op_mono_to_RGB24_32::convert_colorspace(const std::shared_ptr<const HeifPixelIma
   uint8_t* out_p;
   size_t out_p_stride = 0;
 
-  in_y = input->get_plane(heif_channel_Y, &in_y_stride);
+  in_y = input->get_channel_memory(heif_channel_Y, &in_y_stride);
   if (has_alpha) {
-    in_a = input->get_plane(heif_channel_Alpha, &in_a_stride);
+    in_a = input->get_channel_memory(heif_channel_Alpha, &in_a_stride);
   }
 
-  out_p = outimg->get_plane(heif_channel_interleaved, &out_p_stride);
+  out_p = outimg->get_channel_memory(heif_channel_interleaved, &out_p_stride);
 
   uint32_t x, y;
   for (y = 0; y < height; y++) {

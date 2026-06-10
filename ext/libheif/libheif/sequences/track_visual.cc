@@ -21,10 +21,11 @@
 #include "track_visual.h"
 
 #include <memory>
+#include <utility>
 #include "codecs/decoder.h"
 #include "codecs/encoder.h"
 #include "chunk.h"
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "context.h"
 #include "api_structs.h"
 #include "codecs/hevc_boxes.h"
@@ -158,7 +159,7 @@ bool Track_Visual::has_alpha_channel() const
     if (sampleEntry) {
       if (auto box_uncv = std::dynamic_pointer_cast<const Box_uncv>(sampleEntry)) {
         if (auto cmpd = box_uncv->get_child_box<const Box_cmpd>()) {
-          if (cmpd->has_component(component_type_alpha)) {
+          if (cmpd->has_component(heif_cmpd_component_type_alpha)) {
             return true;
           }
         }
@@ -247,7 +248,7 @@ Result<std::shared_ptr<HeifPixelImage> > Track_Visual::decode_next_image_sample(
       // --- Find the data extent that stores the compressed frame data.
 
       DataExtent extent = chunk->get_data_extent_for_sample(sample_idx_in_chunk);
-      decoder->set_data_extent(extent);
+      decoder->set_data_extent(std::move(extent));
 
       // std::cout << "PUSH chunk " << chunk_idx << " sample " << sample_idx << " (" << extent.m_size << " bytes)\n";
 
@@ -297,7 +298,7 @@ Result<std::shared_ptr<HeifPixelImage> > Track_Visual::decode_next_image_sample(
     }
 
     auto alphaImage = *alphaResult;
-    image->transfer_plane_from_image_as(alphaImage, heif_channel_Y, heif_channel_Alpha);
+    image->transfer_channel_from_image_as(alphaImage, heif_channel_Y, heif_channel_Alpha);
   }
 
 
@@ -429,6 +430,7 @@ Error Track_Visual::encode_image(std::shared_ptr<HeifPixelImage> image,
       if (err.code) {
         return {err.code, err.subcode, err.message};
       }
+      m_alpha_track_encoder->copy_parameters_from(*h_encoder);
     }
   }
 
@@ -514,19 +516,38 @@ Error Track_Visual::encode_image(std::shared_ptr<HeifPixelImage> image,
 
   // --- encode image
 
-  heif_sequence_encoding_options* local_dummy_options = nullptr;
-  if (!in_options) {
-    local_dummy_options = heif_sequence_encoding_options_alloc();
+  // Build an effective options struct so libheif can resolve "auto" fields
+  // (e.g. content_kind) to concrete values before passing them to the encoder
+  // plugin. heif_sequence_encoding_options_copy is version-aware, so callers
+  // built against older headers won't be read past their actual allocation.
+
+  std::unique_ptr<heif_sequence_encoding_options, void(*)(heif_sequence_encoding_options*)>
+      effective_options(heif_sequence_encoding_options_alloc(),
+                        heif_sequence_encoding_options_release);
+  heif_sequence_encoding_options_copy(effective_options.get(), in_options);
+
+  // Resolve content_kind=auto based on this track's handler type. For auxiliary
+  // tracks (e.g. alpha) the parent track resolves the value before recursing in,
+  // so we never reach this branch with handler=auxv.
+  // TODO: in the future, "auto" could also factor in input frame rate or
+  // frame-to-frame similarity.
+  if (effective_options->content_kind == heif_sequence_content_kind_auto) {
+    switch (get_handler()) {
+      case heif_track_type_video:
+        effective_options->content_kind = heif_sequence_content_kind_video;
+        break;
+      case heif_track_type_image_sequence:
+      default:
+        effective_options->content_kind = heif_sequence_content_kind_image_sequence;
+        break;
+    }
   }
 
   Error encodeError = encoder->encode_sequence_frame(colorConvertedImage, h_encoder,
-                                                     in_options ? *in_options : *local_dummy_options,
+                                                     *effective_options,
                                                      input_class,
                                                      colorConvertedImage->get_sample_duration(), get_timescale(),
                                                      m_current_frame_nr);
-  if (local_dummy_options) {
-    heif_sequence_encoding_options_release(local_dummy_options);
-  }
 
   if (encodeError) {
     return encodeError;
@@ -573,9 +594,12 @@ Error Track_Visual::encode_image(std::shared_ptr<HeifPixelImage> image,
 
     (*alphaImageResult)->set_sample_duration(colorConvertedImage->get_sample_duration());
 
+    // Pass the resolved options (not the caller's in_options) so the alpha aux
+    // track inherits the color track's content_kind instead of re-resolving
+    // from its own 'auxv' handler.
     auto err = m_aux_alpha_track->encode_image(*alphaImageResult,
                                                m_alpha_track_encoder.get(),
-                                               in_options,
+                                               effective_options.get(),
                                                heif_image_input_class_alpha);
     if (err) {
       return err;
@@ -689,8 +713,8 @@ heif_brand2 Track_Visual::get_compatible_brand() const
       if (!hvcC) { return 0; }
 
       const auto& config = hvcC->get_configuration();
-      if (config.is_profile_compatibile(HEVCDecoderConfigurationRecord::Profile_Main) ||
-          config.is_profile_compatibile(HEVCDecoderConfigurationRecord::Profile_MainStillPicture)) {
+      if (config.is_profile_compatible(HEVCDecoderConfigurationRecord::Profile_Main) ||
+          config.is_profile_compatible(HEVCDecoderConfigurationRecord::Profile_MainStillPicture)) {
         return heif_brand2_hevc;
       }
       else {

@@ -20,7 +20,7 @@
 
 #include "heif_image.h"
 #include "heif.h"
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "api_structs.h"
 #include "error.h"
 #include <limits>
@@ -68,33 +68,13 @@ int heif_image_get_height(const heif_image* img, heif_channel channel)
 
 int heif_image_get_primary_width(const heif_image* img)
 {
-  if (img->image->get_colorspace() == heif_colorspace_RGB) {
-    if (img->image->get_chroma_format() == heif_chroma_444) {
-      return uint32_to_int(img->image->get_width(heif_channel_G));
-    }
-    else {
-      return uint32_to_int(img->image->get_width(heif_channel_interleaved));
-    }
-  }
-  else {
-    return uint32_to_int(img->image->get_width(heif_channel_Y));
-  }
+  return uint32_to_int(img->image->get_width());
 }
 
 
 int heif_image_get_primary_height(const heif_image* img)
 {
-  if (img->image->get_colorspace() == heif_colorspace_RGB) {
-    if (img->image->get_chroma_format() == heif_chroma_444) {
-      return uint32_to_int(img->image->get_height(heif_channel_G));
-    }
-    else {
-      return uint32_to_int(img->image->get_height(heif_channel_interleaved));
-    }
-  }
-  else {
-    return uint32_to_int(img->image->get_height(heif_channel_Y));
-  }
+  return uint32_to_int(img->image->get_height());
 }
 
 
@@ -104,16 +84,20 @@ heif_error heif_image_crop(heif_image* img,
   uint32_t w = img->image->get_width();
   uint32_t h = img->image->get_height();
 
-  if (w == 0 || w > 0x7FFFFFFF ||
-      h == 0 || h > 0x7FFFFFFF) {
+  // Margins must be non-negative and must not consume the entire image.
+  // Without this check, `left + right >= w` would underflow the unsigned
+  // `w - 1 - right` computation below and cause an OOB read (issue #1746).
+  if (left < 0 || right < 0 || top < 0 || bottom < 0 ||
+      static_cast<int64_t>(left) + right >= w ||
+      static_cast<int64_t>(top) + bottom >= h) {
     return heif_error{
       heif_error_Usage_error,
-      heif_suberror_Invalid_image_size,
-      "Image size exceeds maximum supported size"
+      heif_suberror_Invalid_parameter_value,
+      "Invalid crop margins"
     };
   }
 
-  auto cropResult = img->image->crop(left, static_cast<int>(w) - 1 - right, top, static_cast<int>(h) - 1 - bottom, nullptr);
+  auto cropResult = img->image->crop(left, w - 1 - right, top, h - 1 - bottom, nullptr);
   if (!cropResult) {
     return cropResult.error_struct(img->image.get());
   }
@@ -145,13 +129,19 @@ heif_error heif_image_extract_area(const heif_image* srcimg,
 
 int heif_image_get_bits_per_pixel(const heif_image* img, heif_channel channel)
 {
-  return img->image->get_storage_bits_per_pixel(channel);
+  // get_storage_bits_per_pixel() returns 0 for a non-existing channel;
+  // the public API documents -1 for that case.
+  uint16_t bpp = img->image->get_storage_bits_per_pixel(channel);
+  return bpp == 0 ? -1 : bpp;
 }
 
 
 int heif_image_get_bits_per_pixel_range(const heif_image* img, heif_channel channel)
 {
-  return img->image->get_bits_per_pixel(channel);
+  // get_bits_per_pixel() returns 0 for a non-existing channel;
+  // keep the public API's -1 result for that case.
+  uint16_t bpp = img->image->get_bits_per_pixel(channel);
+  return bpp == 0 ? -1 : bpp;
 }
 
 
@@ -175,7 +165,7 @@ const uint8_t* heif_image_get_plane_readonly(const heif_image* image,
   }
 
   size_t stride;
-  const auto* p = image->image->get_plane(channel, &stride);
+  const auto* p = image->image->get_channel_memory(channel, &stride);
 
   // TODO: use C++20 std::cmp_greater()
   if (stride > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
@@ -201,7 +191,7 @@ uint8_t* heif_image_get_plane(heif_image* image,
   }
 
   size_t stride;
-  uint8_t* p = image->image->get_plane(channel, &stride);
+  uint8_t* p = image->image->get_channel_memory(channel, &stride);
 
   // TODO: use C++20 std::cmp_greater()
   if (stride > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
@@ -226,7 +216,7 @@ const uint8_t* heif_image_get_plane_readonly2(const heif_image* image,
     return nullptr;
   }
 
-  return image->image->get_plane(channel, out_stride);
+  return image->image->get_channel_memory(channel, out_stride);
 }
 
 
@@ -243,7 +233,7 @@ uint8_t* heif_image_get_plane2(heif_image* image,
     return nullptr;
   }
 
-  return image->image->get_plane(channel, out_stride);
+  return image->image->get_channel_memory(channel, out_stride);
 }
 
 
@@ -325,7 +315,6 @@ void heif_image_handle_set_pixel_aspect_ratio(heif_image_handle* handle, uint32_
   handle->image->set_pixel_ratio(aspect_h, aspect_v);
 }
 
-
 heif_error heif_image_create(int width, int height,
                              heif_colorspace colorspace,
                              heif_chroma chroma,
@@ -335,15 +324,17 @@ heif_error heif_image_create(int width, int height,
     return heif_error_null_pointer_argument;
   }
 
-  // auto-correct colorspace_YCbCr + chroma_monochrome to colorspace_monochrome
+  // auto-correct colorspace_YCbCr + chroma_planar (formerly chroma_monochrome)
+  // to colorspace_monochrome
   // TODO: this should return an error in a later version (see below)
-  if (chroma == heif_chroma_monochrome && colorspace == heif_colorspace_YCbCr) {
+  if (chroma == heif_chroma_planar && colorspace == heif_colorspace_YCbCr) {
     colorspace = heif_colorspace_monochrome;
 
     std::cerr << "libheif warning: heif_image_create() used with an illegal colorspace/chroma combination. This will return an error in a future version.\n";
   }
 
-  // return error if invalid colorspace + chroma combination is used
+  // return error if invalid colorspace + chroma combination is used.
+  // (RGB + planar canonicalization happens later in HeifPixelImage::create.)
   auto validChroma = get_valid_chroma_values_for_colorspace(colorspace);
   if (std::find(validChroma.begin(), validChroma.end(), chroma) == validChroma.end()) {
     *image = nullptr;
@@ -364,7 +355,7 @@ heif_error heif_image_add_plane(heif_image* image,
                                 heif_channel channel, int width, int height, int bit_depth)
 {
   // Note: no security limit, because this is explicitly requested by the user.
-  if (auto err = image->image->add_plane(channel, width, height, bit_depth, nullptr)) {
+  if (auto err = image->image->add_channel(channel, width, height, bit_depth, nullptr)) {
     return err.error_struct(image->image.get());
   }
   else {
@@ -377,7 +368,7 @@ heif_error heif_image_add_plane_safe(heif_image* image,
                                      heif_channel channel, int width, int height, int bit_depth,
                                      const heif_security_limits* limits)
 {
-  if (auto err = image->image->add_plane(channel, width, height, bit_depth, limits)) {
+  if (auto err = image->image->add_channel(channel, width, height, bit_depth, limits)) {
     return err.error_struct(image->image.get());
   }
   else {

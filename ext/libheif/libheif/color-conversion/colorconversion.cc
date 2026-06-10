@@ -39,6 +39,7 @@
 #include "alpha.h"
 #include "hdr_sdr.h"
 #include "chroma_sampling.h"
+#include "bayer_bilinear.h"
 
 #if ENABLE_MULTITHREADING_SUPPORT
 
@@ -66,6 +67,9 @@ std::ostream& operator<<(std::ostream& ostr, heif_colorspace c)
       break;
     case heif_colorspace_undefined:
       ostr << "undefined";
+      break;
+    case heif_colorspace_filter_array:
+      ostr << "filter_array";
       break;
     default:
       assert(false);
@@ -154,6 +158,12 @@ bool ColorState::operator==(const ColorState& b) const
     return false;
   }
 
+  if (has_alpha && b.has_alpha) {
+    if (get_alpha_bits_per_pixel() != b.get_alpha_bits_per_pixel()) {
+      return false;
+    }
+  }
+
   if (colorspace == heif_colorspace_YCbCr) {
     bool ycbcr_parameters_match = nclx.equal_except_transfer_curve(b.nclx);
 
@@ -196,6 +206,10 @@ std::ostream& operator<<(std::ostream& ostr, const ColorState& state)
            << " bpp(R)=" << state.bits_per_pixel
               << " alpha=" << (state.has_alpha ? "yes" : "no");
 
+  if (state.has_alpha && state.get_alpha_bits_per_pixel() != state.bits_per_pixel) {
+    ostr << " alpha_bpp=" << state.get_alpha_bits_per_pixel();
+  }
+
   if (state.colorspace == heif_colorspace_YCbCr) {
     ostr << " matrix-coefficients=" << state.nclx.get_matrix_coefficients()
          << " colour-primaries=" << state.nclx.get_colour_primaries()
@@ -230,6 +244,7 @@ void ColorConversionPipeline::init_ops()
   ops.emplace_back(std::make_shared<Op_RGB_to_RRGGBBaa_BE>());
   ops.emplace_back(std::make_shared<Op_mono_to_YCbCr420>());
   ops.emplace_back(std::make_shared<Op_mono_to_RGB24_32>());
+  ops.emplace_back(std::make_shared<Op_bayer_bilinear_to_RGB24_32>());
   ops.emplace_back(std::make_shared<Op_RRGGBBaa_swap_endianness>());
   ops.emplace_back(std::make_shared<Op_RRGGBBaa_BE_to_RGB_HDR>());
   ops.emplace_back(std::make_shared<Op_RGB24_32_to_YCbCr>());
@@ -240,6 +255,7 @@ void ColorConversionPipeline::init_ops()
   ops.emplace_back(std::make_shared<Op_drop_alpha_plane>());
   ops.emplace_back(std::make_shared<Op_flatten_alpha_plane<uint8_t>>());
   ops.emplace_back(std::make_shared<Op_flatten_alpha_plane<uint16_t>>());
+  ops.emplace_back(std::make_shared<Op_adjust_alpha_bit_depth>());
   ops.emplace_back(std::make_shared<Op_to_hdr_planes>());
   ops.emplace_back(std::make_shared<Op_to_sdr_planes>());
   ops.emplace_back(std::make_shared<Op_YCbCr420_bilinear_to_YCbCr444<uint8_t>>());
@@ -452,37 +468,12 @@ Result<std::shared_ptr<HeifPixelImage>> ColorConversionPipeline::convert_image(c
       out = *outResult;
     }
 
-    // --- pass the color profiles to the new image
+    // copy metadata over to new image
+    out->copy_metadata_from(*in);
 
+    // overwrite color profile nclx from color conversion
     out->set_color_profile_nclx(step.output_state.nclx);
-    out->set_color_profile_icc(in->get_color_profile_icc());
 
-    out->set_premultiplied_alpha(in->is_premultiplied_alpha());
-
-    // pass through HDR information
-    if (in->has_clli()) {
-      out->set_clli(in->get_clli());
-    }
-
-    if (in->has_mdcv()) {
-      out->set_mdcv(in->get_mdcv());
-    }
-
-    if (in->has_nonsquare_pixel_ratio()) {
-      uint32_t h, v;
-      in->get_pixel_ratio(&h, &v);
-      out->set_pixel_ratio(h, v);
-    }
-
-    if (in->has_gimi_sample_content_id()) {
-      out->set_gimi_sample_content_id(in->get_gimi_sample_content_id());
-    }
-
-    if (auto* tai = in->get_tai_timestamp()) {
-      out->set_tai_timestamp(tai);
-    }
-
-    out->set_sample_duration(in->get_sample_duration());
 
     const auto& warnings = in->get_warnings();
     for (const auto& warning : warnings) {
@@ -551,6 +542,10 @@ Result<std::shared_ptr<HeifPixelImage>> convert_colorspace(const std::shared_ptr
   assert(!channels.empty());
   input_state.bits_per_pixel = input->get_bits_per_pixel(*(channels.begin()));
 
+  if (input_state.has_alpha && input->has_channel(heif_channel_Alpha)) {
+    input_state.alpha_bits_per_pixel = input->get_bits_per_pixel(heif_channel_Alpha);
+  }
+
   ColorState output_state = input_state;
   output_state.colorspace = target_colorspace;
   output_state.chroma = target_chroma;
@@ -574,7 +569,7 @@ Result<std::shared_ptr<HeifPixelImage>> convert_colorspace(const std::shared_ptr
   // interleaved output format.
   // For planar formats, we include an alpha plane when included in the input.
 
-  if (num_interleaved_pixels_per_plane(target_chroma) > 1) {
+  if (num_interleaved_components_per_plane(target_chroma) > 1) {
     output_state.has_alpha = is_interleaved_with_alpha(target_chroma);
   }
   else {
@@ -608,6 +603,9 @@ Result<std::shared_ptr<HeifPixelImage>> convert_colorspace(const std::shared_ptr
       output_state.bits_per_pixel <= 8) {
     output_state.bits_per_pixel = 10;
   }
+
+  // Output alpha should always match the output color BPP
+  output_state.alpha_bits_per_pixel = output_state.bits_per_pixel;
 
   ColorConversionPipeline pipeline;
   bool success = pipeline.construct_pipeline(input_state, output_state, options, *options_ext);

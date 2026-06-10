@@ -305,14 +305,20 @@ function libheif_files()
     "error.*",
     "file.*",
     "file_layout.*",
+    "id_creator.*",
     "init.*",
     "logging.*",
+    "mini.*",
     "nclx.*",
-    "pixelimage.*",
+    "omaf_boxes.*",
     "plugin_registry.*",
     "region.*",
     "security_limits.*",
     "text.*",
+  })
+  files_in_dir("ext/libheif/libheif/image", {
+    "image_description.*",
+    "pixelimage.*",
   })
   files_in_dir("ext/libheif/libheif/image-items", {
     "avc.*",
@@ -352,6 +358,7 @@ function libheif_files()
   })
   files_in_dir("ext/libheif/libheif/color-conversion", {
     "alpha.*",
+    "bayer_bilinear.*",
     "chroma_sampling.*",
     "colorconversion.*",
     "hdr_sdr.*",
@@ -376,11 +383,13 @@ function libheif_files()
     "heif.*",
     "heif_brands.*",
     "heif_color.*",
+    "heif_components.*",
     "heif_context.*",
     "heif_decoding.*",
     "heif_encoding.*",
     "heif_image.*",
     "heif_image_handle.*",
+    "heif_omaf.*",
     "heif_plugin.*",
     "heif_security.*",
     "heif_sequences.*",

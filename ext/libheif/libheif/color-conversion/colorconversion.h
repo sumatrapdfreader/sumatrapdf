@@ -21,7 +21,7 @@
 #ifndef LIBHEIF_COLORCONVERSION_H
 #define LIBHEIF_COLORCONVERSION_H
 
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -34,6 +34,7 @@ struct ColorState
   heif_chroma chroma = heif_chroma_undefined;
   bool has_alpha = false;
   int bits_per_pixel = 8;
+  int alpha_bits_per_pixel = 0; // 0 = not set, treated as bits_per_pixel
 
   // ColorConversionOperations can assume that the input and target nclx has no 'unspecified' values
   // if the colorspace is heif_colorspace_YCbCr. Otherwise, the values should preferably be 'unspecified'.
@@ -43,6 +44,9 @@ struct ColorState
 
   ColorState(heif_colorspace colorspace, heif_chroma chroma, bool has_alpha, int bits_per_pixel)
       : colorspace(colorspace), chroma(chroma), has_alpha(has_alpha), bits_per_pixel(bits_per_pixel) {}
+
+  // Returns effective alpha BPP (treats 0 as bits_per_pixel for backward compatibility)
+  int get_alpha_bits_per_pixel() const { return alpha_bits_per_pixel ? alpha_bits_per_pixel : bits_per_pixel; }
 
   bool operator==(const ColorState&) const;
 };

@@ -55,6 +55,13 @@ public:
 
   void set_decoder_input_data() override;
 
+  // JPEG2000 codestreams (SIZ marker) can carry arbitrary component grids and
+  // subsampling, so the generic per-plane check is not appropriate. Validate only
+  // the logical image size (set by the plugin from SIZ Xsiz/Ysiz) against 'ispe'.
+  Error check_decoded_image_size(const HeifPixelImage& img,
+                                 bool decode_tile_only,
+                                 uint32_t tile_x0, uint32_t tile_y0) const override;
+
 private:
   std::shared_ptr<class Decoder_JPEG2000> m_decoder;
   std::shared_ptr<class Encoder_JPEG2000> m_encoder;

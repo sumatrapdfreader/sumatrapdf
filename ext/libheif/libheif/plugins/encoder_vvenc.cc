@@ -342,8 +342,8 @@ static void vvenc_query_input_colorspace2(void* encoder_raw, heif_colorspace* co
 void vvenc_query_encoded_size(void* encoder_raw, uint32_t input_width, uint32_t input_height,
                               uint32_t* encoded_width, uint32_t* encoded_height)
 {
-  *encoded_width = (input_width + 7) & ~0x7;
-  *encoded_height = (input_height + 7) & ~0x7;
+  *encoded_width = (input_width + 7) & ~0x7U;
+  *encoded_height = (input_height + 7) & ~0x7U;
 }
 
 
@@ -433,6 +433,13 @@ static heif_error vvenc_start_sequence_encoding_intern(void* encoder_raw, const 
                                                        bool image_sequence)
 {
   encoder_struct_vvenc* encoder = (encoder_struct_vvenc*) encoder_raw;
+
+  // close the encoder if it was already initialized
+  // (e.g. when the encoder is reused for alpha encoding after being used for YUV encoding)
+  if (encoder->vvencoder) {
+    vvenc_encoder_close(encoder->vvencoder);
+    encoder->vvencoder = nullptr;
+  }
 
   vvenc_config params;
 

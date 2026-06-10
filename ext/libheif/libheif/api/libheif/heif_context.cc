@@ -166,8 +166,7 @@ heif_error heif_context_get_primary_image_handle(heif_context* ctx, heif_image_h
     return err.error_struct(ctx->context.get());
   }
 
-  if (auto errImage = std::dynamic_pointer_cast<ImageItem_Error>(primary_image)) {
-    Error error = errImage->get_item_error();
+  if (Error error = primary_image->get_item_error()) {
     return error.error_struct(ctx->context.get());
   }
 
@@ -189,15 +188,14 @@ heif_error heif_context_get_image_handle(heif_context* ctx,
 
   auto image = ctx->context->get_image(id, true);
 
-  if (auto errImage = std::dynamic_pointer_cast<ImageItem_Error>(image)) {
-    Error error = errImage->get_item_error();
-    return error.error_struct(ctx->context.get());
-  }
-
   if (!image) {
     *imgHdl = nullptr;
 
     return {heif_error_Usage_error, heif_suberror_Nonexisting_item_referenced, ""};
+  }
+
+  if (Error error = image->get_item_error()) {
+    return error.error_struct(ctx->context.get());
   }
 
   *imgHdl = new heif_image_handle();
@@ -215,6 +213,13 @@ void heif_context_debug_dump_boxes_to_file(heif_context* ctx, int fd)
   }
 
   std::string dump = ctx->context->debug_dump_boxes();
+
+  std::string item_dump = ctx->context->debug_dump_item_data();
+  if (!item_dump.empty()) {
+    dump += "\n";
+    dump += item_dump;
+  }
+
   // TODO(fancycode): Should we return an error if writing fails?
 #ifdef _WIN32
   auto written = _write(fd, dump.c_str(), static_cast<unsigned int>(dump.size()));
@@ -245,6 +250,12 @@ static heif_error heif_file_writer_write(heif_context* ctx,
 }
 
 
+void heif_context_set_write_mini_format(heif_context* ctx, int enable)
+{
+  ctx->context->set_write_mini_format(enable != 0);
+}
+
+
 heif_error heif_context_write_to_file(heif_context* ctx,
                                       const char* filename)
 {
@@ -270,7 +281,10 @@ heif_error heif_context_write(heif_context* ctx,
   }
 
   StreamWriter swriter;
-  ctx->context->write(swriter);
+  Error err = ctx->context->write(swriter);
+  if (err) {
+    return err.error_struct(ctx->context.get());
+  }
 
   const auto& data = swriter.get_data();
   heif_error writer_error = writer->write(ctx, data.data(), data.size(), userdata);

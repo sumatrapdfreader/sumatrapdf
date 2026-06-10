@@ -123,7 +123,12 @@ Result<std::vector<uint8_t>> do_inflate(const std::vector<uint8_t>& compressed_i
     err = inflate(&strm, Z_NO_FLUSH);
 
     if (err == Z_BUF_ERROR) {
-      if (dst.size() >= 65536) { // TODO: make this a security limit
+      if (strm.avail_in == 0) {
+        // All input consumed; decompression is complete even without Z_STREAM_END
+        break;
+      }
+
+      if (dst.size() >= 256 * 1024 * 1024) { // TODO: make this a security limit
         inflateEnd(&strm);
         std::stringstream sstr;
         sstr << "Error performing zlib inflate: maximum output buffer size exceeded\n";

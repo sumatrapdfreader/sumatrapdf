@@ -127,6 +127,9 @@ Kr_Kb get_Kr_Kb(uint16_t matrix_coefficients_idx, uint16_t primaries_idx)
         break;
       case 9:
       case 10:
+        // TODO: case 10 is BT.2020 constant-luminance, which is not a linear matrix conversion
+        //   (Y' is derived from gamma-corrected linear luminance; Cb/Cr need EOTF inversion).
+        //   We currently fall through to the NCL coefficients, which is wrong for CL content.
         result.Kr = 0.2627f;
         result.Kb = 0.0593f;
         break;

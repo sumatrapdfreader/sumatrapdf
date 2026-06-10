@@ -111,15 +111,17 @@ public:
 
   Error initialize_decoder() override;
 
+  // Delegates to the first grid tile's already-populated descriptions and
+  // rescales per-component dims to the grid's full ispe size, so the handle
+  // exposes the correct datatype/bit-depth even for unci float tiles
+  // (which the base populate would mis-tag as unsigned_integer).
+  void populate_component_descriptions() override;
+
   int get_luma_bits_per_pixel() const override;
 
   int get_chroma_bits_per_pixel() const override;
 
-  void set_encoding_options(const heif_encoding_options* options) {
-    heif_encoding_options_copy(m_encoding_options, options);
-  }
-
-  const heif_encoding_options* get_encoding_options() const { return m_encoding_options; }
+  void set_tile_encoding_options(const heif_encoding_options* options);
 
   Result<Encoder::CodedImageData> encode(const std::shared_ptr<HeifPixelImage>& image,
                                          heif_encoder* encoder,
@@ -159,7 +161,8 @@ private:
   ImageGrid m_grid_spec;
   std::vector<heif_item_id> m_grid_tile_ids;
 
-  heif_encoding_options* m_encoding_options = nullptr;
+  heif_orientation m_grid_orientation = heif_orientation_normal;
+  heif_encoding_options* m_tile_encoding_options = nullptr;
 
   Error read_grid_spec();
 

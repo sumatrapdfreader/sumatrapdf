@@ -22,7 +22,7 @@
 #ifndef LIBHEIF_UNC_IMAGE_H
 #define LIBHEIF_UNC_IMAGE_H
 
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "file.h"
 #include "context.h"
 #include "libheif/heif_uncompressed.h"
@@ -32,7 +32,9 @@
 #include <vector>
 #include <memory>
 #include <set>
+#include "codecs/uncompressed/unc_encoder.h"
 
+class unc_encoder;
 class HeifContext;
 
 
@@ -58,6 +60,12 @@ public:
 
   void get_tile_size(uint32_t& w, uint32_t& h) const override;
 
+  // Walk the cmpd / uncC / cpat property boxes and populate
+  // ImageDescription::m_components with one ComponentDescription per uncC
+  // component plus one (has_data_plane=false) per extra cpat reference
+  // component. Called once from ImageItem::set_properties().
+  void populate_component_descriptions() override;
+
   // Code from encode_uncompressed_image() has been moved to here.
 
   Result<std::shared_ptr<HeifPixelImage>> decode_compressed_image(const heif_decoding_options& options,
@@ -81,13 +89,10 @@ public:
                                          const heif_encoding_options& options,
                                          heif_image_input_class input_class) override;
 
-  static Result<Encoder::CodedImageData> encode_static(const std::shared_ptr<HeifPixelImage>& image,
-                                                       const heif_encoding_options& options);
-
-  static Result<std::shared_ptr<ImageItem_uncompressed>> add_unci_item(HeifContext* ctx,
-                                                                const heif_unci_image_parameters* parameters,
-                                                                const heif_encoding_options* encoding_options,
-                                                                const std::shared_ptr<const HeifPixelImage>& prototype);
+  static Result<std::shared_ptr<ImageItem_uncompressed> > add_unci_item(HeifContext* ctx,
+                                                                        const heif_unci_image_parameters* parameters,
+                                                                        const heif_encoding_options* encoding_options,
+                                                                        const std::shared_ptr<const HeifPixelImage>& prototype);
 
   Error add_image_tile(uint32_t tile_x, uint32_t tile_y, const std::shared_ptr<const HeifPixelImage>& image, bool save_alpha);
 
@@ -99,6 +104,9 @@ protected:
 private:
   std::shared_ptr<class Decoder_uncompressed> m_decoder;
   std::shared_ptr<class Encoder_uncompressed> m_encoder;
+
+  std::unique_ptr<const unc_encoder> m_unc_encoder;
+  heif_encoding_options m_tile_encoding_options;
 
   /*
   Result<ImageItem::CodedImageData> generate_headers(const std::shared_ptr<const HeifPixelImage>& src_image,

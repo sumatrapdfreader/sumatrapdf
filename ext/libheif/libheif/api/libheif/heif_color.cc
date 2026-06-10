@@ -23,7 +23,7 @@
 #include "common_utils.h"
 #include <cstdint>
 #include "heif.h"
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "api_structs.h"
 #include "error.h"
 #include <set>
@@ -433,6 +433,12 @@ int heif_image_has_content_light_level(const heif_image* image)
 }
 
 
+int heif_image_handle_has_content_light_level(const heif_image_handle* handle)
+{
+  return handle->image->get_property<Box_clli>() ? 1 : 0;
+}
+
+
 void heif_image_get_content_light_level(const heif_image* image, heif_content_light_level* out)
 {
   if (out) {
@@ -481,6 +487,12 @@ int heif_image_has_mastering_display_colour_volume(const heif_image* image)
 }
 
 
+int heif_image_handle_has_mastering_display_colour_volume(const heif_image_handle* handle)
+{
+  return handle->image->get_property<Box_mdcv>() ? 1 : 0;
+}
+
+
 void heif_image_get_mastering_display_colour_volume(const heif_image* image, heif_mastering_display_colour_volume* out)
 {
   *out = image->image->get_mdcv();
@@ -515,6 +527,105 @@ void heif_image_handle_set_mastering_display_colour_volume(const heif_image_hand
   }
 
   handle->image->set_mdcv(*in);
+}
+
+
+// --- ambient viewing environment ---
+
+int heif_image_has_ambient_viewing_environment(const heif_image* image)
+{
+  return image->image->has_amve();
+}
+
+
+int heif_image_handle_has_ambient_viewing_environment(const heif_image_handle* handle)
+{
+  return handle->image->get_property<Box_amve>() ? 1 : 0;
+}
+
+
+int heif_image_get_ambient_viewing_environment(const heif_image* image, heif_ambient_viewing_environment* out)
+{
+  if (!image->image->has_amve()) {
+    return 0;
+  }
+
+  if (out) {
+    *out = image->image->get_amve();
+  }
+
+  return 1;
+}
+
+
+int heif_image_handle_get_ambient_viewing_environment(const heif_image_handle* handle, heif_ambient_viewing_environment* out)
+{
+  auto amve = handle->image->get_property<Box_amve>();
+  if (out && amve) {
+    *out = amve->amve;
+  }
+
+  return amve ? 1 : 0;
+}
+
+
+void heif_image_set_ambient_viewing_environment(const heif_image* image, const heif_ambient_viewing_environment* in)
+{
+  if (in == nullptr) {
+    return;
+  }
+
+  image->image->set_amve(*in);
+}
+
+
+void heif_image_handle_set_ambient_viewing_environment(const heif_image_handle* handle, const heif_ambient_viewing_environment* in)
+{
+  if (in == nullptr) {
+    return;
+  }
+
+  handle->image->set_amve(*in);
+}
+
+
+// --- nominal diffuse white ---
+
+
+int heif_image_has_nominal_diffuse_white_luminance(const heif_image* image)
+{
+  return image->image->has_nominal_diffuse_white();
+}
+
+
+uint32_t heif_image_get_nominal_diffuse_white_luminance(const heif_image* image)
+{
+  return image->image->get_nominal_diffuse_white_luminance();
+}
+
+
+void heif_image_set_nominal_diffuse_white_luminance(const heif_image* image, uint32_t luminance)
+{
+  image->image->set_nominal_diffuse_white_luminance(luminance);
+}
+
+
+int heif_image_handle_has_nominal_diffuse_white_luminance(const heif_image_handle* handle)
+{
+  return handle->image->get_property<Box_ndwt>() ? 1 : 0;
+}
+
+
+uint32_t heif_image_handle_get_nominal_diffuse_white_luminance(const heif_image_handle* handle)
+{
+  auto ndwt = handle->image->get_property<Box_ndwt>();
+  return ndwt ? ndwt->get_diffuse_white_luminance() : 0;
+}
+
+
+void heif_image_handle_set_nominal_diffuse_white_luminance(const heif_image_handle* handle, uint32_t luminance)
+{
+  handle->image->set_nominal_diffuse_white_luminance(luminance);
 }
 
 

@@ -91,8 +91,8 @@ int heif_image_handle_get_chroma_bits_per_pixel(const heif_image_handle*);
 // You can still request the output in your preferred colorspace, but this may involve an internal conversion.
 LIBHEIF_API
 heif_error heif_image_handle_get_preferred_decoding_colorspace(const heif_image_handle* image_handle,
-                                                               enum heif_colorspace* out_colorspace,
-                                                               enum heif_chroma* out_chroma);
+                                                               heif_colorspace* out_colorspace,
+                                                               heif_chroma* out_chroma);
 
 // Get the image width from the 'ispe' box. This is the original image size without
 // any transformations applied to it. Do not use this unless you know exactly what
@@ -121,6 +121,48 @@ heif_context* heif_image_handle_get_context(const heif_image_handle* handle);
 
 LIBHEIF_API
 const char* heif_image_handle_get_gimi_content_id(const heif_image_handle* handle);
+
+LIBHEIF_API
+void heif_image_handle_set_gimi_content_id(heif_image_handle* handle, const char* content_id);
+
+
+// --- cmpd component queries
+
+// Returns the number of components in the cmpd box, or 0 if no cmpd property exists.
+LIBHEIF_API
+uint32_t heif_image_handle_get_number_of_cmpd_components(const heif_image_handle*);
+
+// Returns the component_type for the given cmpd component index.
+// Returns 0 if out of range or no cmpd property.
+LIBHEIF_API
+uint16_t heif_image_handle_get_cmpd_component_type(const heif_image_handle*, uint32_t component_idx);
+
+// Returns the component_type_uri for the given cmpd component index (component_type >= 0x8000).
+// Returns NULL if the component does not have a URI.
+// The returned string must be freed with heif_string_release().
+LIBHEIF_API
+const char* heif_image_handle_get_cmpd_component_type_uri(const heif_image_handle*, uint32_t component_idx);
+
+
+// --- GIMI component content IDs (handle-level)
+
+// Returns non-zero (count of content IDs) if an ItemComponentContentIDProperty is set, 0 otherwise.
+LIBHEIF_API
+int heif_image_handle_has_gimi_component_content_ids(const heif_image_handle*);
+
+// Returns the GIMI component content ID for the given component index.
+// Returns NULL if no ItemComponentContentIDProperty is set or index is out of range.
+// The returned string must be freed with heif_string_release().
+LIBHEIF_API
+const char* heif_image_handle_get_gimi_component_content_id(const heif_image_handle*, uint32_t component_idx);
+
+// Set a GIMI component content ID for a single component.
+// If an ItemComponentContentIDProperty does not yet exist, one will be created.
+// The content IDs array is resized as needed (new entries default to empty).
+LIBHEIF_API
+void heif_image_handle_set_gimi_component_content_id(heif_image_handle*,
+                                                     uint32_t component_idx,
+                                                     const char* content_id);
 
 #ifdef __cplusplus
 }

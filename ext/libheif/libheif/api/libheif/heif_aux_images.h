@@ -51,12 +51,12 @@ heif_error heif_image_handle_get_depth_image_handle(const heif_image_handle* han
                                                     heif_image_handle** out_depth_handle);
 
 
-enum heif_depth_representation_type {
+typedef enum heif_depth_representation_type {
   heif_depth_representation_type_uniform_inverse_Z = 0,
   heif_depth_representation_type_uniform_disparity = 1,
   heif_depth_representation_type_uniform_Z = 2,
   heif_depth_representation_type_nonuniform_disparity = 3
-};
+} heif_depth_representation_type;
 
 typedef struct heif_depth_representation_info {
   uint8_t version;

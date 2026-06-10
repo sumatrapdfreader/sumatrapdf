@@ -34,6 +34,15 @@ void heif_context_set_max_decoding_threads(heif_context* ctx, int max_threads)
 }
 
 
+int heif_context_get_max_decoding_threads(const heif_context* ctx)
+{
+  if (!ctx) {
+    return HeifContext::default_max_decoding_threads;
+  }
+  return ctx->context->get_max_decoding_threads();
+}
+
+
 int heif_have_decoder_for_format(heif_compression_format format)
 {
   auto plugin = get_decoder(format, nullptr);
@@ -43,7 +52,7 @@ int heif_have_decoder_for_format(heif_compression_format format)
 
 static void fill_default_decoding_options(heif_decoding_options& options)
 {
-  options.version = 8;
+  options.version = 10;
 
   options.ignore_transformations = false;
 
@@ -85,6 +94,14 @@ static void fill_default_decoding_options(heif_decoding_options& options)
   options.output_image_nclx_profile = nullptr;
   options.num_codec_threads = 0;
   options.num_library_threads = 0;
+
+  // version 9
+
+  options.autocorrect_broken_input = false;
+
+  // version 10
+
+  options.output_image_nclx_profile_passthrough = false;
 }
 
 
@@ -109,6 +126,12 @@ void heif_decoding_options_copy(heif_decoding_options* dst,
   int min_version = std::min(dst->version, src->version);
 
   switch (min_version) {
+    case 10:
+      dst->output_image_nclx_profile_passthrough = src->output_image_nclx_profile_passthrough;
+      [[fallthrough]];
+    case 9:
+      dst->autocorrect_broken_input = src->autocorrect_broken_input;
+      [[fallthrough]];
     case 8:
       dst->num_library_threads = src->num_library_threads;
       dst->num_codec_threads = src->num_codec_threads;

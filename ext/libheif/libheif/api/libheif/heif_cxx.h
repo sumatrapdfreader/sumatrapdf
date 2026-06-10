@@ -323,8 +323,8 @@ namespace heif {
 
     // throws Error
     void create(int width, int height,
-                enum heif_colorspace colorspace,
-                enum heif_chroma chroma);
+                heif_colorspace colorspace,
+                heif_chroma chroma);
 
     // throws Error
     void add_plane(enum heif_channel channel,
@@ -391,14 +391,14 @@ namespace heif {
   {
   public:
     static std::vector<EncoderDescriptor>
-    get_encoder_descriptors(enum heif_compression_format format_filter,
+    get_encoder_descriptors(heif_compression_format format_filter,
                             const char* name_filter) noexcept;
 
     std::string get_name() const noexcept;
 
     std::string get_id_name() const noexcept;
 
-    enum heif_compression_format get_compression_format() const noexcept;
+    heif_compression_format get_compression_format() const noexcept;
 
     // DEPRECATED: typo in function name
     bool supportes_lossy_compression() const noexcept;
@@ -453,7 +453,7 @@ namespace heif {
   {
   public:
     // throws Error
-    Encoder(enum heif_compression_format format);
+    Encoder(heif_compression_format format);
 
     // throws Error
     void set_lossy_quality(int quality);
@@ -859,8 +859,8 @@ namespace heif {
 
 
   inline void Image::create(int width, int height,
-                            enum heif_colorspace colorspace,
-                            enum heif_chroma chroma)
+                            heif_colorspace colorspace,
+                            heif_chroma chroma)
   {
     heif_image* image;
     Error err = Error(heif_image_create(width, height, colorspace, chroma, &image));
@@ -1023,7 +1023,7 @@ namespace heif {
 
 
   inline std::vector<EncoderDescriptor>
-  EncoderDescriptor::get_encoder_descriptors(enum heif_compression_format format_filter,
+  EncoderDescriptor::get_encoder_descriptors(heif_compression_format format_filter,
                                              const char* name_filter) noexcept
   {
     int maxDescriptors = 10;
@@ -1066,7 +1066,7 @@ namespace heif {
     return heif_encoder_descriptor_get_id_name(m_descriptor);
   }
 
-  inline enum heif_compression_format EncoderDescriptor::get_compression_format() const noexcept
+  inline heif_compression_format EncoderDescriptor::get_compression_format() const noexcept
   {
     return heif_encoder_descriptor_get_compression_format(m_descriptor);
   }
@@ -1103,7 +1103,7 @@ namespace heif {
   }
 
 
-  inline Encoder::Encoder(enum heif_compression_format format)
+  inline Encoder::Encoder(heif_compression_format format)
   {
     heif_encoder* encoder;
     Error err = Error(heif_context_get_encoder_for_format(nullptr, format, &encoder));

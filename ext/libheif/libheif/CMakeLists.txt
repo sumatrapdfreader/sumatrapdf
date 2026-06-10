@@ -4,6 +4,7 @@ configure_file(api/libheif/heif_version.h.in ${CMAKE_CURRENT_BINARY_DIR}/heif_ve
 
 set(libheif_headers
         api/libheif/heif.h
+        api/libheif/heif_export.h
         api/libheif/heif_library.h
         api/libheif/heif_image.h
         api/libheif/heif_color.h
@@ -24,8 +25,10 @@ set(libheif_headers
         api/libheif/heif_image_handle.h
         api/libheif/heif_context.h
         api/libheif/heif_tiling.h
+        api/libheif/heif_components.h
         api/libheif/heif_uncompressed.h
         api/libheif/heif_text.h
+        api/libheif/heif_omaf.h
         api/libheif/heif_cxx.h
         ${CMAKE_CURRENT_BINARY_DIR}/heif_version.h)
 
@@ -42,8 +45,10 @@ set(libheif_sources
         file.h
         file_layout.h
         file_layout.cc
-        pixelimage.cc
-        pixelimage.h
+        image/pixelimage.cc
+        image/pixelimage.h
+        image/image_description.cc
+        image/image_description.h
         plugin_registry.cc
         nclx.cc
         nclx.h
@@ -55,6 +60,7 @@ set(libheif_sources
         logging.h
         logging.cc
         compression.h
+        compression.cc
         compression_brotli.cc
         compression_zlib.cc
         common_utils.cc
@@ -63,6 +69,8 @@ set(libheif_sources
         region.h
         brands.cc
         brands.h
+        id_creator.cc
+        id_creator.h
         text.cc
         text.h
         api_structs.h
@@ -86,8 +94,10 @@ set(libheif_sources
         api/libheif/heif_image_handle.cc
         api/libheif/heif_context.cc
         api/libheif/heif_tiling.cc
+        api/libheif/heif_components.cc
         api/libheif/heif_uncompressed.cc
         api/libheif/heif_text.cc
+        api/libheif/heif_omaf.cc
         codecs/decoder.h
         codecs/decoder.cc
         codecs/encoder.h
@@ -170,6 +180,8 @@ set(libheif_sources
         color-conversion/alpha.h
         color-conversion/chroma_sampling.cc
         color-conversion/chroma_sampling.h
+        color-conversion/bayer_bilinear.cc
+        color-conversion/bayer_bilinear.h
         sequences/seq_boxes.h
         sequences/seq_boxes.cc
         sequences/chunk.h
@@ -293,26 +305,43 @@ if (WITH_UNCOMPRESSED_CODEC)
             codecs/uncompressed/unc_dec.cc
             codecs/uncompressed/unc_enc.h
             codecs/uncompressed/unc_enc.cc
-            codecs/uncompressed/decoder_abstract.h
-            codecs/uncompressed/decoder_abstract.cc
-            codecs/uncompressed/decoder_component_interleave.h
-            codecs/uncompressed/decoder_component_interleave.cc
-            codecs/uncompressed/decoder_pixel_interleave.h
-            codecs/uncompressed/decoder_pixel_interleave.cc
-            codecs/uncompressed/decoder_mixed_interleave.h
-            codecs/uncompressed/decoder_mixed_interleave.cc
-            codecs/uncompressed/decoder_row_interleave.h
-            codecs/uncompressed/decoder_row_interleave.cc
-            codecs/uncompressed/decoder_tile_component_interleave.h
-            codecs/uncompressed/decoder_tile_component_interleave.cc)
+            codecs/uncompressed/unc_decoder.h
+            codecs/uncompressed/unc_decoder.cc
+            codecs/uncompressed/unc_decoder_legacybase.h
+            codecs/uncompressed/unc_decoder_legacybase.cc
+            codecs/uncompressed/unc_decoder_component_interleave.h
+            codecs/uncompressed/unc_decoder_component_interleave.cc
+            codecs/uncompressed/unc_decoder_pixel_interleave.h
+            codecs/uncompressed/unc_decoder_pixel_interleave.cc
+            codecs/uncompressed/unc_decoder_block_pixel_interleave.h
+            codecs/uncompressed/unc_decoder_block_pixel_interleave.cc
+            codecs/uncompressed/unc_decoder_bytealign_component_interleave.h
+            codecs/uncompressed/unc_decoder_bytealign_component_interleave.cc
+            codecs/uncompressed/unc_decoder_block_component_interleave.h
+            codecs/uncompressed/unc_decoder_block_component_interleave.cc
+            codecs/uncompressed/unc_decoder_mixed_interleave.h
+            codecs/uncompressed/unc_decoder_mixed_interleave.cc
+            codecs/uncompressed/unc_decoder_row_interleave.h
+            codecs/uncompressed/unc_decoder_row_interleave.cc
+            codecs/uncompressed/unc_encoder.h
+            codecs/uncompressed/unc_encoder.cc
+            codecs/uncompressed/unc_encoder_rgb_pixel_interleave.cc
+            codecs/uncompressed/unc_encoder_rgb_pixel_interleave.h
+            codecs/uncompressed/unc_encoder_rgb_bytealign_pixel_interleave.cc
+            codecs/uncompressed/unc_encoder_rgb_bytealign_pixel_interleave.h
+            codecs/uncompressed/unc_encoder_component_interleave.cc
+            codecs/uncompressed/unc_encoder_component_interleave.h
+            codecs/uncompressed/unc_encoder_rgb_block_pixel_interleave.cc
+            codecs/uncompressed/unc_encoder_rgb_block_pixel_interleave.h)
 endif ()
 
-if (ENABLE_EXPERIMENTAL_MINI_FORMAT)
-    target_compile_definitions(heif PUBLIC ENABLE_EXPERIMENTAL_MINI_FORMAT=1)
-    target_sources(heif PRIVATE
-            mini.h
-            mini.cc)
-endif ()
+target_sources(heif PRIVATE
+        mini.h
+        mini.cc)
+
+target_sources(heif PRIVATE
+        omaf_boxes.h
+        omaf_boxes.cc)
 
 write_basic_package_version_file(${PROJECT_NAME}-config-version.cmake COMPATIBILITY ExactVersion)
 

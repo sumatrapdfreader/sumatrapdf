@@ -435,7 +435,7 @@ public:
 
   int peek_bits(int n);
 
-  void skip_bytes(int nBytes);
+  void skip_bytes(uint32_t nBytes);
 
   void skip_bits(int n);
 
@@ -443,9 +443,9 @@ public:
 
   void skip_to_byte_boundary();
 
-  bool get_uvlc(int* value);
+  bool get_uvlc(uint32_t* value);
 
-  bool get_svlc(int* value);
+  bool get_svlc(int32_t* value);
 
   int get_current_byte_index() const
   {
@@ -467,6 +467,44 @@ private:
   int nextbits_cnt;
 
   void refill(); // refill to at least 56+1 bits
+};
+
+
+class BitWriter
+{
+public:
+  // Write n bits from the LSBs of value (n must be in [0,32])
+  void write_bits(uint32_t value, int n);
+
+  void write_bits8(uint8_t value, int n) { assert(n >= 0 && n <= 8); write_bits(value, n); }
+
+  void write_bits16(uint16_t value, int n) { assert(n >= 0 && n <= 16); write_bits(value, n); }
+
+  void write_bits32(uint32_t value, int n) { assert(n >= 0 && n <= 32); write_bits(value, n); }
+
+  void write_bits32s(int32_t value) { write_bits(static_cast<uint32_t>(value), 32); }
+
+  void write_flag(bool flag) { write_bits(flag ? 1 : 0, 1); }
+
+  // Write raw bytes. Must be at a byte boundary.
+  void write_bytes(const std::vector<uint8_t>& data);
+
+  void write_bytes(const uint8_t* data, size_t len);
+
+  // Pad with zero bits to the next byte boundary. No-op if already aligned.
+  void skip_to_byte_boundary();
+
+  // Return all written data. Flushes any partial byte (zero-padded).
+  std::vector<uint8_t> get_data() const;
+
+  int get_current_byte_index() const { return static_cast<int>(m_data.size()); }
+
+  int64_t get_bits_written() const { return static_cast<int64_t>(m_data.size()) * 8 + m_bits_in_current_byte; }
+
+private:
+  std::vector<uint8_t> m_data;
+  uint8_t m_current_byte = 0;
+  int m_bits_in_current_byte = 0; // bits already written into m_current_byte (0-7), packed from MSB
 };
 
 

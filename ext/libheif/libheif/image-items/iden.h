@@ -46,6 +46,11 @@ public:
 
   Error get_coded_image_colorspace(heif_colorspace* out_colorspace, heif_chroma* out_chroma) const override;
 
+  // Delegates to the referenced image's component descriptions, rescaled to
+  // this iden's ispe. Without this override the base populate would bail
+  // (iden has no get_decoder()) and the handle would report 0 components.
+  void populate_component_descriptions() override;
+
   int get_luma_bits_per_pixel() const override;
 
   int get_chroma_bits_per_pixel() const override;
@@ -62,6 +67,13 @@ public:
   Result<std::shared_ptr<HeifPixelImage>> decode_compressed_image(const heif_decoding_options& options,
                                                                   bool decode_tile_only, uint32_t tile_x0, uint32_t tile_y0,
                                                                   std::set<heif_item_id> processed_ids) const override;
+
+  // iden forwards decoding to the referenced item, which validates its own decoded
+  // size. Re-checking here against this iden's (possibly absent) 'ispe' would be wrong.
+  Error check_decoded_image_size(const HeifPixelImage&, bool, uint32_t, uint32_t) const override
+  {
+    return Error::Ok;
+  }
 
   heif_brand2 get_compatible_brand() const override;
 

@@ -25,6 +25,26 @@
 #include <cstddef>
 
 #include <error.h>
+#include <libheif/heif_uncompressed.h>
+
+/**
+ * Convert heif_unci_compression enum to a fourcc code.
+ *
+ * @param method the compression method
+ * @return the corresponding fourcc code, or 0 for heif_unci_compression_off
+ */
+uint32_t unci_compression_to_fourcc(heif_unci_compression method);
+
+/**
+ * Compress data using the compression method identified by a fourcc code.
+ *
+ * @param fourcc_code the fourcc code for the compression method (e.g. "defl", "zlib", "brot")
+ * @param data pointer to the data to be compressed
+ * @param size the length of the input array in bytes
+ * @return the corresponding compressed data, or an error
+ */
+Result<std::vector<uint8_t>> compress_unci_fourcc(uint32_t fourcc_code,
+                                                   const uint8_t* data, size_t size);
 
 #if HAVE_ZLIB
 /**

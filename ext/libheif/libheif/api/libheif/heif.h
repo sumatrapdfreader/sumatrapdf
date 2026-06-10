@@ -37,5 +37,7 @@
 #include <libheif/heif_context.h>
 #include <libheif/heif_image_handle.h>
 #include <libheif/heif_tiling.h>
+#include <libheif/heif_components.h>
+#include <libheif/heif_omaf.h>
 
 #endif

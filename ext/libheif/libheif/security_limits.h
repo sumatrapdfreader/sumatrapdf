@@ -41,6 +41,26 @@ static const int MAX_FRACTION_VALUE = 0x10000;
 
 Error check_for_valid_image_size(const heif_security_limits* limits, uint32_t width, uint32_t height);
 
+// Maximum coding-unit size (in pixels) that the given codec may pad a coded
+// frame up to. Used as the margin for tighten_image_size_limit_for_ispe.
+// Returns 0 for codecs without coding-unit padding (e.g. uncompressed).
+uint32_t max_coding_unit_size_for_codec(heif_compression_format format);
+
+// Return a copy of `base` with max_image_size_pixels lowered to a value
+// just above the declared image size. This is used to bound how much memory
+// a codec plugin may allocate for an image whose internal (codec-declared)
+// dimensions exceed the file-declared (ispe) dimensions — without us having
+// to parse the codec bitstream ourselves.
+//
+// `coding_unit_size` is the maximum coding-unit size of the target codec
+// (e.g. 128 for AV1/VVC, 64 for HEVC, 16 for AVC). The allowed coded
+// dimensions are (ispe + coding_unit_size) in each axis, since a codec may
+// pad the coded frame up to a coding-unit boundary.
+heif_security_limits tighten_image_size_limit_for_ispe(const heif_security_limits* base,
+                                                       uint32_t ispe_width,
+                                                       uint32_t ispe_height,
+                                                       uint32_t coding_unit_size);
+
 
 class TotalMemoryTracker
 {
@@ -66,14 +86,39 @@ public:
 
   Error alloc(size_t memory_amount, const heif_security_limits* limits_context, const char* reason_description);
 
+  // calloc-style overload: checks `count * element_size` for size_t overflow before allocating.
+  // Use this when allocating an array whose total size is count*element_size, to avoid silent
+  // truncation on 32-bit builds when count is near UINT32_MAX.
+  Error alloc(size_t count, size_t element_size,
+              const heif_security_limits* limits_context, const char* reason_description);
+
   void free();
 
   void free(size_t memory_amount);
 
   const heif_security_limits* get_security_limits() const { return m_limits_context; }
 
-  void operator=(const MemoryHandle&) = delete;
   MemoryHandle(const MemoryHandle&) = delete;
+  MemoryHandle& operator=(const MemoryHandle&) = delete;
+
+  MemoryHandle(MemoryHandle&& other) noexcept
+      : m_limits_context(other.m_limits_context), m_memory_amount(other.m_memory_amount)
+  {
+    other.m_limits_context = nullptr;
+    other.m_memory_amount = 0;
+  }
+
+  MemoryHandle& operator=(MemoryHandle&& other) noexcept
+  {
+    if (this != &other) {
+      free();
+      m_limits_context = other.m_limits_context;
+      m_memory_amount = other.m_memory_amount;
+      other.m_limits_context = nullptr;
+      other.m_memory_amount = 0;
+    }
+    return *this;
+  }
 
 private:
   const heif_security_limits* m_limits_context = nullptr;

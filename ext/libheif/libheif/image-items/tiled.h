@@ -29,10 +29,11 @@
 #include <memory>
 #include <utility>
 #include "libheif/heif_experimental.h"
+#include "libheif/heif_encoding.h"
 #include <set>
 
 
-uint64_t number_of_tiles(const heif_tiled_image_parameters& params);
+Result<uint64_t> number_of_tiles(const heif_tiled_image_parameters& params, const heif_security_limits* limits);
 
 uint32_t nTiles_h(const heif_tiled_image_parameters& params);
 
@@ -102,13 +103,18 @@ public:
   Error read_offset_table_range(const std::shared_ptr<HeifFile>& file, heif_item_id tild_id,
                                 uint64_t start, uint64_t end);
 
-  std::vector<uint8_t> write_offset_table();
+  Result<std::vector<uint8_t>> write_offset_table();
 
   std::string dump() const;
 
-  void set_tild_tile_range(uint32_t tile_x, uint32_t tile_y, uint64_t offset, uint32_t size);
+  // Returns an error if `offset` does not fit in offset_field_length or
+  // `size` does not fit in size_field_length. Catches the encoder-side
+  // overflow that would otherwise silently truncate the field at write time.
+  Error set_tild_tile_range(uint32_t tile_x, uint32_t tile_y, uint64_t offset, uint32_t size);
 
   size_t get_header_size() const;
+
+  size_t get_num_tiles() const { return m_offsets.size(); }
 
   uint64_t get_tile_offset(uint32_t idx) const { return m_offsets[idx].offset; }
 
@@ -146,6 +152,8 @@ public:
 
   ImageItem_Tiled(HeifContext* ctx);
 
+  ~ImageItem_Tiled() override;
+
   uint32_t get_infe_type() const override { return fourcc("tili"); }
 
   // TODO: nclx depends on contained format
@@ -154,7 +162,8 @@ public:
   heif_compression_format get_compression_format() const override;
 
   static Result<std::shared_ptr<ImageItem_Tiled>> add_new_tiled_item(HeifContext* ctx, const heif_tiled_image_parameters* parameters,
-                                                                     const heif_encoder* encoder);
+                                                                     const heif_encoder* encoder,
+                                                                     const heif_encoding_options* encoding_options);
 
   Error add_image_tile(uint32_t tile_x, uint32_t tile_y,
                        const std::shared_ptr<HeifPixelImage>& image,
@@ -163,7 +172,13 @@ public:
 
   Error initialize_decoder() override;
 
-  void process_before_write() override;
+  // Copies per-component descriptions from the embedded tile item (which has
+  // tile-sized dims) and rescales them to the full image's ispe dimensions,
+  // so the handle exposes the same per-component metadata (datatype,
+  // bit-depth, type) that the decoded image will report after a tile decode.
+  void populate_component_descriptions() override;
+
+  Error process_before_write() override;
 
   Error get_coded_image_colorspace(heif_colorspace* out_colorspace, heif_chroma* out_chroma) const override;
 
@@ -204,11 +219,14 @@ private:
   TiledHeader m_tild_header;
   uint64_t m_next_tild_position = 0;
 
+  heif_orientation m_image_orientation = heif_orientation_normal;
+  heif_encoding_options* m_tile_encoding_options = nullptr;
+
   uint32_t mReadChunkSize_bytes = 64*1024; // 64 kiB
   bool m_preload_offset_table = false;
 
   std::shared_ptr<ImageItem> m_tile_item;
-  std::shared_ptr<class Decoder> m_tile_decoder;
+  std::shared_ptr<Decoder> m_tile_decoder;
 
   Result<DataExtent>
   get_compressed_data_for_tile(uint32_t tx, uint32_t ty) const;

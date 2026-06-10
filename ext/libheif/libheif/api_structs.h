@@ -21,7 +21,7 @@
 #ifndef HEIF_API_STRUCTS_H
 #define HEIF_API_STRUCTS_H
 
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "context.h"
 
 #include <memory>
@@ -82,6 +82,8 @@ struct heif_encoder
   heif_error alloc();
 
   void release();
+
+  void copy_parameters_from(const heif_encoder& src);
 
 
   const struct heif_encoder_plugin* plugin;

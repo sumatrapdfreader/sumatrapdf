@@ -23,12 +23,15 @@
 #include "libheif/heif.h"
 #include "libheif/heif_properties.h"
 #include "compression.h"
+#include "image-items/grid.h"
 #include "image-items/jpeg2000.h"
 #include "image-items/jpeg.h"
+#include "image-items/overlay.h"
 #include "image-items/vvc.h"
 #include "codecs/avif_boxes.h"
 #include "codecs/hevc_boxes.h"
 #include "sequences/seq_boxes.h"
+#include "mini.h"
 
 #include <cstdint>
 #include <fstream>
@@ -143,6 +146,16 @@ Error HeifFile::read(const std::shared_ptr<StreamReader>& reader)
 }
 
 
+bool HeifFile::has_images() const
+{
+  if (!m_meta_box) {
+    return false;
+  }
+
+  return m_hdlr_box && m_hdlr_box->get_handler_type() == fourcc("pict");
+}
+
+
 void HeifFile::new_empty_file()
 {
   //m_input_stream.reset();
@@ -153,39 +166,59 @@ void HeifFile::new_empty_file()
 }
 
 
-void HeifFile::init_for_image()
+void HeifFile::init_for_meta_item()
 {
-  if (m_meta_box) {
-    return;
+  if (!m_meta_box) {
+    m_meta_box = std::make_shared<Box_meta>();
+    m_top_level_boxes.push_back(m_meta_box);
   }
 
-  m_hdlr_box = std::make_shared<Box_hdlr>();
-  m_meta_box = std::make_shared<Box_meta>();
-  m_ipco_box = std::make_shared<Box_ipco>();
-  m_ipma_box = std::make_shared<Box_ipma>();
-  m_iloc_box = std::make_shared<Box_iloc>();
-  m_iinf_box = std::make_shared<Box_iinf>();
-  m_iprp_box = std::make_shared<Box_iprp>();
-  m_pitm_box = std::make_shared<Box_pitm>();
+  if (!m_hdlr_box) {
+    m_hdlr_box = std::make_shared<Box_hdlr>();
+    m_hdlr_box->set_handler_type(fourcc("null"));
+    m_meta_box->append_child_box(m_hdlr_box);
+  }
 
-  m_meta_box->append_child_box(m_hdlr_box);
-  m_meta_box->append_child_box(m_pitm_box);
-  m_meta_box->append_child_box(m_iloc_box);
-  m_meta_box->append_child_box(m_iinf_box);
-  m_meta_box->append_child_box(m_iprp_box);
+  if (!m_iloc_box) {
+    m_iloc_box = std::make_shared<Box_iloc>();
+    m_meta_box->append_child_box(m_iloc_box);
+  }
 
-  m_iprp_box->append_child_box(m_ipco_box);
-  m_iprp_box->append_child_box(m_ipma_box);
+  if (!m_iinf_box) {
+    m_iinf_box = std::make_shared<Box_iinf>();
+    m_meta_box->append_child_box(m_iinf_box);
+  }
+}
 
-  m_infe_boxes.clear();
 
-  m_top_level_boxes.push_back(m_meta_box);
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
-  // TODO: do not create 'mini' box as we cannot write them yet.
-  //       if we include it in the top_level_boxes, it will be written into every file.
-  //m_mini_box = std::make_shared<Box_mini>();
-  //m_top_level_boxes.push_back(m_mini_box);
-#endif
+void HeifFile::init_for_image()
+{
+  init_for_meta_item();
+
+  // Upgrade handler from "null" to "pict" if needed
+  if (m_hdlr_box->get_handler_type() == fourcc("null")) {
+    m_hdlr_box->set_handler_type(fourcc("pict"));
+  }
+
+  if (!m_pitm_box) {
+    m_pitm_box = std::make_shared<Box_pitm>();
+    m_meta_box->append_child_box(m_pitm_box);
+  }
+
+  if (!m_iprp_box) {
+    m_iprp_box = std::make_shared<Box_iprp>();
+    m_meta_box->append_child_box(m_iprp_box);
+  }
+
+  if (!m_ipco_box) {
+    m_ipco_box = std::make_shared<Box_ipco>();
+    m_iprp_box->append_child_box(m_ipco_box);
+  }
+
+  if (!m_ipma_box) {
+    m_ipma_box = std::make_shared<Box_ipma>();
+    m_iprp_box->append_child_box(m_ipma_box);
+  }
 }
 
 
@@ -223,13 +256,42 @@ void HeifFile::derive_box_versions()
 
 void HeifFile::write(StreamWriter& writer)
 {
+  if (m_write_mini_format) {
+    std::string reason;
+    if (Box_mini::can_convert_to_mini(this, reason)) {
+      auto mini = Box_mini::create_from_heif_file(this);
+      if (mini) {
+        // Adjust ftyp for mini format
+        auto ftyp = get_ftyp_box();
+
+        // Determine codec brand from primary item type
+        uint32_t item_type = get_item_type_4cc(get_primary_image_ID());
+        heif_brand2 codec_brand = 0;
+        if (item_type == fourcc("av01")) {
+          codec_brand = heif_brand2_avif;
+        }
+        else if (item_type == fourcc("hvc1")) {
+          codec_brand = heif_brand2_heic;
+        }
+
+        ftyp->set_major_brand(fourcc("mif3"));
+        ftyp->set_minor_version(codec_brand);
+        ftyp->clear_compatible_brands();
+
+        // Write ftyp + mini (no mdat needed)
+        ftyp->write(writer);
+        mini->write(writer);
+        return;
+      }
+    }
+    // Fall through to normal write if conversion fails
+  }
+
   for (auto& box : m_top_level_boxes) {
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
     if (box == nullptr) {
       // Either mini or meta will be null, just ignore that one
       continue;
     }
-#endif
     Error err = box->write(writer);
     (void)err; // TODO: error ?
   }
@@ -260,12 +322,10 @@ std::string HeifFile::debug_dump_boxes() const
   bool first = true;
 
   for (const auto& box : m_top_level_boxes) {
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
     if (box == nullptr) {
       // Either mini or meta will be null, just ignore that one
       continue;
     }
-#endif
     // dump box content for debugging
 
     if (first) {
@@ -280,6 +340,74 @@ std::string HeifFile::debug_dump_boxes() const
   }
 
   return sstr.str();
+}
+
+
+std::string HeifFile::debug_dump_item_data() const
+{
+  std::stringstream sstr;
+  bool has_output = false;
+
+  sstr << "=== Item Data ===\n";
+
+  for (const auto& [id, infe] : m_infe_boxes) {
+    uint32_t item_type = infe->get_item_type_4cc();
+
+    if (item_type == fourcc("grid")) {
+      auto dataResult = get_uncompressed_item_data(id);
+      if (!dataResult) {
+        continue;
+      }
+
+      ImageGrid grid;
+      Error err = grid.parse(*dataResult);
+      if (err) {
+        continue;
+      }
+
+      has_output = true;
+      sstr << "\nitem ID " << id << " (grid):\n";
+
+      std::istringstream lines(grid.dump());
+      std::string line;
+      while (std::getline(lines, line)) {
+        sstr << "  " << line << "\n";
+      }
+    }
+    else if (item_type == fourcc("iovl")) {
+      if (!m_iref_box) {
+        continue;
+      }
+
+      auto refs = m_iref_box->get_references(id, fourcc("dimg"));
+
+      auto dataResult = get_uncompressed_item_data(id);
+      if (!dataResult) {
+        continue;
+      }
+
+      ImageOverlay overlay;
+      Error err = overlay.parse(refs.size(), *dataResult);
+      if (err) {
+        continue;
+      }
+
+      has_output = true;
+      sstr << "\nitem ID " << id << " (iovl):\n";
+
+      std::istringstream lines(overlay.dump());
+      std::string line;
+      while (std::getline(lines, line)) {
+        sstr << "  " << line << "\n";
+      }
+    }
+  }
+
+  if (has_output) {
+    return sstr.str();
+  }
+
+  return {};
 }
 
 
@@ -342,9 +470,7 @@ Error HeifFile::parse_heif_file()
       !m_ftyp_box->has_compatible_brand(heif_brand2_mif1) &&
       !m_ftyp_box->has_compatible_brand(heif_brand2_avif) &&
       !m_ftyp_box->has_compatible_brand(heif_brand2_1pic) &&
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
       !(m_ftyp_box->get_major_brand() == heif_brand2_mif3) &&
-#endif
       !m_ftyp_box->has_compatible_brand(heif_brand2_jpeg) &&
       !m_ftyp_box->has_compatible_brand(heif_brand2_isom) &&
       !m_ftyp_box->has_compatible_brand(heif_brand2_mp42) &&
@@ -358,7 +484,6 @@ Error HeifFile::parse_heif_file()
                  sstr.str());
       }
 
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
   m_mini_box = m_file_layout->get_mini_box();
   m_top_level_boxes.push_back(m_mini_box);
 
@@ -369,7 +494,6 @@ Error HeifFile::parse_heif_file()
     }
     return Error::Ok;
   }
-#endif
 
   m_meta_box = m_file_layout->get_meta_box();
   if (m_meta_box) {
@@ -421,69 +545,13 @@ Error HeifFile::parse_heif_images()
                  heif_suberror_No_hdlr_box);
   }
 
-  if (m_hdlr_box &&
-      m_hdlr_box->get_handler_type() != fourcc("pict")) {
-    return Error(heif_error_Invalid_input,
-                 heif_suberror_No_pict_handler);
-  }
-
-
-  // --- find mandatory boxes needed for image decoding
-
-  m_pitm_box = m_meta_box->get_child_box<Box_pitm>();
-  if (!m_pitm_box) {
-    return Error(heif_error_Invalid_input,
-                 heif_suberror_No_pitm_box);
-  }
-
-  m_iprp_box = m_meta_box->get_child_box<Box_iprp>();
-  if (!m_iprp_box) {
-    return Error(heif_error_Invalid_input,
-                 heif_suberror_No_iprp_box);
-  }
-
-  m_ipco_box = m_iprp_box->get_child_box<Box_ipco>();
-  if (!m_ipco_box) {
-    return Error(heif_error_Invalid_input,
-                 heif_suberror_No_ipco_box);
-  }
-
-  auto ipma_boxes = m_iprp_box->get_child_boxes<Box_ipma>();
-  if (ipma_boxes.empty()) {
-    return Error(heif_error_Invalid_input,
-                 heif_suberror_No_ipma_box);
-  }
-  for (size_t i=1;i<ipma_boxes.size();i++) {
-    ipma_boxes[0]->insert_entries_from_other_ipma_box(*ipma_boxes[i]);
-  }
-  m_ipma_box = ipma_boxes[0];
-
-  m_iloc_box = m_meta_box->get_child_box<Box_iloc>();
-  if (!m_iloc_box) {
-    return Error(heif_error_Invalid_input,
-                 heif_suberror_No_iloc_box);
-  }
-
-  m_idat_box = m_meta_box->get_child_box<Box_idat>();
-
-  m_iref_box = m_meta_box->get_child_box<Box_iref>();
-  if (m_iref_box) {
-    Error error = check_for_ref_cycle(get_primary_image_ID(), m_iref_box);
-    if (error) {
-      return error;
-    }
-  }
+  // --- assign item boxes
 
   m_iinf_box = m_meta_box->get_child_box<Box_iinf>();
   if (!m_iinf_box) {
     return Error(heif_error_Invalid_input,
                  heif_suberror_No_iinf_box);
   }
-
-  m_grpl_box = m_meta_box->get_child_box<Box_grpl>();
-
-
-  // --- build list of images
 
   std::vector<std::shared_ptr<Box_infe>> infe_boxes = m_iinf_box->get_child_boxes<Box_infe>();
 
@@ -495,6 +563,58 @@ Error HeifFile::parse_heif_images()
 
     m_infe_boxes.insert(std::make_pair(infe_box->get_item_ID(), infe_box));
   }
+
+
+  if (has_images()) {
+    // --- find mandatory boxes needed for image decoding
+
+    m_pitm_box = m_meta_box->get_child_box<Box_pitm>();
+    if (!m_pitm_box) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_No_pitm_box);
+    }
+
+    m_iprp_box = m_meta_box->get_child_box<Box_iprp>();
+    if (!m_iprp_box) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_No_iprp_box);
+    }
+
+    m_ipco_box = m_iprp_box->get_child_box<Box_ipco>();
+    if (!m_ipco_box) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_No_ipco_box);
+    }
+
+    auto ipma_boxes = m_iprp_box->get_child_boxes<Box_ipma>();
+    if (ipma_boxes.empty()) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_No_ipma_box);
+    }
+    for (size_t i=1;i<ipma_boxes.size();i++) {
+      ipma_boxes[0]->insert_entries_from_other_ipma_box(*ipma_boxes[i]);
+    }
+    m_ipma_box = ipma_boxes[0];
+  }
+
+  m_iloc_box = m_meta_box->get_child_box<Box_iloc>();
+  if (!m_iloc_box) {
+    return Error(heif_error_Invalid_input,
+                 heif_suberror_No_iloc_box);
+  }
+
+  m_idat_box = m_meta_box->get_child_box<Box_idat>();
+
+  m_iref_box = m_meta_box->get_child_box<Box_iref>();
+  if (m_iref_box && m_pitm_box) {
+    Error error = check_for_ref_cycle(get_primary_image_ID(), m_iref_box);
+    if (error) {
+      return error;
+    }
+  }
+
+  m_grpl_box = m_meta_box->get_child_box<Box_grpl>();
+
 
   return Error::Ok;
 }
@@ -614,6 +734,10 @@ Result<std::vector<uint8_t>> HeifFile::get_uncompressed_item_data(heif_item_id I
   // std::lock_guard<std::mutex> guard(m_read_mutex);   // TODO: I think that this is not needed anymore because this function is not used for image data anymore.
 #endif
 
+  if (!m_iloc_box) {
+    return Error(heif_error_Invalid_input, heif_suberror_No_iloc_box);
+  }
+
   if (!item_exists(ID)) {
     return Error(heif_error_Usage_error,
                  heif_suberror_Nonexisting_item_referenced);
@@ -635,51 +759,58 @@ Result<std::vector<uint8_t>> HeifFile::get_uncompressed_item_data(heif_item_id I
 
   if (item_type == fourcc("mime")) {
     std::string encoding = infe_box->get_content_encoding();
-    if (encoding == "compress_zlib") {
+    // Skip the encoding comparisons when no encoding is set; falling through
+    // to the raw read below is the right behaviour for the uncompressed case.
+    // Skipping is also necessary to avoid libstdc++'s _S_compare(0, N) which
+    // computes unsigned `0 - N` and trips UBSan even though the cast result
+    // is benign.
+    if (!encoding.empty()) {
+      if (encoding == "compress_zlib") {
 #if HAVE_ZLIB
-      std::vector<uint8_t> compressed_data;
-      error = m_iloc_box->read_data(ID, m_input_stream, m_idat_box, &compressed_data, m_limits);
-      if (error) {
-        return error;
-      }
+        std::vector<uint8_t> compressed_data;
+        error = m_iloc_box->read_data(ID, m_input_stream, m_idat_box, &compressed_data, m_limits);
+        if (error) {
+          return error;
+        }
 
-      return decompress_zlib(compressed_data);
+        return decompress_zlib(compressed_data);
 #else
-      return Error(heif_error_Unsupported_feature,
-                   heif_suberror_Unsupported_header_compression_method,
-                   encoding);
+        return Error(heif_error_Unsupported_feature,
+                     heif_suberror_Unsupported_header_compression_method,
+                     encoding);
 #endif
-    }
-    else if (encoding == "deflate") {
+      }
+      else if (encoding == "deflate") {
 #if HAVE_ZLIB
-      std::vector<uint8_t> compressed_data;
-      error = m_iloc_box->read_data(ID, m_input_stream, m_idat_box, &compressed_data, m_limits);
-      if (error) {
-        return error;
-      }
-      return decompress_deflate(compressed_data);
+        std::vector<uint8_t> compressed_data;
+        error = m_iloc_box->read_data(ID, m_input_stream, m_idat_box, &compressed_data, m_limits);
+        if (error) {
+          return error;
+        }
+        return decompress_deflate(compressed_data);
 #else
-      return Error(heif_error_Unsupported_feature,
-                   heif_suberror_Unsupported_header_compression_method,
-                   encoding);
+        return Error(heif_error_Unsupported_feature,
+                     heif_suberror_Unsupported_header_compression_method,
+                     encoding);
 #endif
-    }
-    else if (encoding == "br") {
+      }
+      else if (encoding == "br") {
 #if HAVE_BROTLI
-      std::vector<uint8_t> compressed_data;
-      error = m_iloc_box->read_data(ID, m_input_stream, m_idat_box, &compressed_data, m_limits);
-      if (error) {
-        return error;
-      }
-      return decompress_brotli(compressed_data);
+        std::vector<uint8_t> compressed_data;
+        error = m_iloc_box->read_data(ID, m_input_stream, m_idat_box, &compressed_data, m_limits);
+        if (error) {
+          return error;
+        }
+        return decompress_brotli(compressed_data);
 #else
-      return Error(heif_error_Unsupported_feature,
-                   heif_suberror_Unsupported_header_compression_method,
-                   encoding);
+        return Error(heif_error_Unsupported_feature,
+                     heif_suberror_Unsupported_header_compression_method,
+                     encoding);
 #endif
-    }
-    else if (!encoding.empty()) {
-      return Error(heif_error_Unsupported_feature, heif_suberror_Unsupported_codec);
+      }
+      else {
+        return Error(heif_error_Unsupported_feature, heif_suberror_Unsupported_codec);
+      }
     }
   }
 
@@ -699,17 +830,47 @@ Result<std::vector<uint8_t>> HeifFile::get_uncompressed_item_data(heif_item_id I
 
 Error HeifFile::append_data_from_file_range(std::vector<uint8_t>& out_data, uint64_t offset, uint32_t size) const
 {
-  bool success = m_input_stream->seek(offset);
-  if (!success) {
-    // TODO: error
+  auto old_size = out_data.size();
+
+  // --- check that the requested range does not exceed the file size
+
+  uint64_t end_pos = offset + size;
+  if (m_input_stream->wait_for_file_size(end_pos) != StreamReader::grow_status::size_reached) {
+    std::stringstream sstr;
+    sstr << "File range " << offset << ".." << end_pos << " is beyond end of file.";
+    return {heif_error_Invalid_input,
+            heif_suberror_End_of_data,
+            sstr.str()};
   }
 
-  auto old_size = out_data.size();
+  // --- check security limit on resulting buffer size
+
+  if (m_limits) {
+    auto max_memory_block_size = m_limits->max_memory_block_size;
+    if (max_memory_block_size && max_memory_block_size - old_size < size) {
+      std::stringstream sstr;
+      sstr << "Sample data of " << size << " bytes would grow total buffer to "
+           << (old_size + size) << " bytes, exceeding the security limit of "
+           << max_memory_block_size << " bytes.";
+      return {heif_error_Memory_allocation_error,
+              heif_suberror_Security_limit_exceeded,
+              sstr.str()};
+    }
+  }
+
+  if (!m_input_stream->seek(offset)) {
+    return {heif_error_Invalid_input,
+            heif_suberror_End_of_data,
+            "Cannot seek to sample data offset."};
+  }
+
   out_data.resize(old_size + size);
 
-  success = m_input_stream->read(out_data.data() + old_size, size);
-  if (!success) {
-    // TODO: error
+  if (!m_input_stream->read(out_data.data() + old_size, size)) {
+    out_data.resize(old_size);
+    return {heif_error_Invalid_input,
+            heif_suberror_End_of_data,
+            "Failed to read sample data from file."};
   }
 
   return {};
@@ -718,6 +879,10 @@ Error HeifFile::append_data_from_file_range(std::vector<uint8_t>& out_data, uint
 
 Error HeifFile::append_data_from_iloc(heif_item_id ID, std::vector<uint8_t>& out_data, uint64_t offset, uint64_t size) const
 {
+  if (!m_iloc_box) {
+    return Error(heif_error_Invalid_input, heif_suberror_No_iloc_box);
+  }
+
   const auto& items = m_iloc_box->get_items();
   const Box_iloc::Item* item = nullptr;
   for (const auto& i : items) {
@@ -744,6 +909,10 @@ Result<std::vector<uint8_t>> HeifFile::get_item_data(heif_item_id ID, heif_metad
   Error error;
 
   assert(m_limits);
+
+  if (!m_iloc_box) {
+    return Error(heif_error_Invalid_input, heif_suberror_No_iloc_box);
+  }
 
   auto infe_box = get_infe_box(ID);
   if (!infe_box) {
@@ -842,35 +1011,53 @@ Result<std::vector<uint8_t>> HeifFile::get_item_data(heif_item_id ID, heif_metad
 }
 
 
-// TODO: we should use a acquire() / release() approach here so that we can get multiple IDs before actually creating infe boxes
-heif_item_id HeifFile::get_unused_item_id() const
+Result<heif_item_id> HeifFile::get_unused_item_id()
 {
-  heif_item_id max_id = 0;
+  return m_id_creator.get_new_id(IDCreator::Namespace::item);
+}
 
-  // TODO: replace with better algorithm and data-structure
 
-  for (const auto& infe : m_infe_boxes) {
-    max_id = std::max(max_id, infe.second->get_item_ID());
+Result<heif_item_id> HeifFile::add_new_image(uint32_t item_type)
+{
+  auto result = add_new_infe_box(item_type);
+  if (!result) {
+    return result.error();
   }
-
-  assert(max_id != 0xFFFFFFFF);
-
-  return max_id + 1;
+  return (*result)->get_item_ID();
 }
 
 
-heif_item_id HeifFile::add_new_image(uint32_t item_type)
-{
-  auto box = add_new_infe_box(item_type);
-  return box->get_item_ID();
-}
-
-
-std::shared_ptr<Box_infe> HeifFile::add_new_infe_box(uint32_t item_type)
+Result<std::shared_ptr<Box_infe>> HeifFile::add_new_infe_box(uint32_t item_type)
 {
   init_for_image();
 
-  heif_item_id id = get_unused_item_id();
+  auto idResult = get_unused_item_id();
+  if (!idResult) {
+    return idResult.error();
+  }
+  heif_item_id id = *idResult;
+
+  auto infe = std::make_shared<Box_infe>();
+  infe->set_item_ID(id);
+  infe->set_hidden_item(false);
+  infe->set_item_type_4cc(item_type);
+
+  m_infe_boxes[id] = infe;
+  m_iinf_box->append_child_box(infe);
+
+  return infe;
+}
+
+
+Result<std::shared_ptr<Box_infe>> HeifFile::add_new_meta_infe_box(uint32_t item_type)
+{
+  init_for_meta_item();
+
+  auto idResult = get_unused_item_id();
+  if (!idResult) {
+    return idResult.error();
+  }
+  heif_item_id id = *idResult;
 
   auto infe = std::make_shared<Box_infe>();
   infe->set_item_ID(id);
@@ -982,7 +1169,11 @@ Result<heif_item_id> HeifFile::add_infe(uint32_t item_type, const uint8_t* data,
 {
   // create an infe box describing what kind of data we are storing (this also creates a new ID)
 
-  auto infe_box = add_new_infe_box(item_type);
+  auto infe_result = add_new_infe_box(item_type);
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto infe_box = *infe_result;
   infe_box->set_hidden_item(true);
 
   heif_item_id metadata_id = infe_box->get_item_ID();
@@ -1003,7 +1194,11 @@ Result<heif_item_id> HeifFile::add_infe_mime(const char* content_type, heif_meta
 {
   // create an infe box describing what kind of data we are storing (this also creates a new ID)
 
-  auto infe_box = add_new_infe_box(fourcc("mime"));
+  auto infe_result = add_new_meta_infe_box(fourcc("mime"));
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto infe_box = *infe_result;
   infe_box->set_hidden_item(true);
   infe_box->set_content_type(content_type);
 
@@ -1019,7 +1214,11 @@ Result<heif_item_id> HeifFile::add_precompressed_infe_mime(const char* content_t
 {
   // create an infe box describing what kind of data we are storing (this also creates a new ID)
 
-  auto infe_box = add_new_infe_box(fourcc("mime"));
+  auto infe_result = add_new_meta_infe_box(fourcc("mime"));
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto infe_box = *infe_result;
   infe_box->set_hidden_item(true);
   infe_box->set_content_type(content_type);
 
@@ -1035,7 +1234,11 @@ Result<heif_item_id> HeifFile::add_infe_uri(const char* item_uri_type, const uin
 {
   // create an infe box describing what kind of data we are storing (this also creates a new ID)
 
-  auto infe_box = add_new_infe_box(fourcc("uri "));
+  auto infe_result = add_new_meta_infe_box(fourcc("uri "));
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto infe_box = *infe_result;
   infe_box->set_hidden_item(true);
   infe_box->set_item_uri_type(item_uri_type);
 

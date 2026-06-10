@@ -430,7 +430,7 @@ Error JPEG2000MainHeader::parse_SIZ_segment()
                  heif_suberror_Invalid_J2K_codestream,
                  std::string("Out of range Csiz value"));
   }
-  if (cursor > headerData.size() - (3 * csiz)) {
+  if (3 * static_cast<size_t>(csiz) > headerData.size() - cursor) {
     return Error(heif_error_Invalid_input,
                  heif_suberror_Invalid_J2K_codestream);
   }
@@ -449,7 +449,8 @@ Error JPEG2000MainHeader::parse_SIZ_segment()
 
 Error JPEG2000MainHeader::parse_CAP_segment_body()
 {
-  if (cursor > headerData.size() - 8) {
+  // Need at least Lcap (2) + Pcap (4) = 6 bytes.
+  if (headerData.size() - cursor < 6) {
     return Error(heif_error_Invalid_input,
                  heif_suberror_Invalid_J2K_codestream);
   }
@@ -459,15 +460,25 @@ Error JPEG2000MainHeader::parse_CAP_segment_body()
                  heif_suberror_Invalid_J2K_codestream,
                  std::string("Out of range Lcap value"));
   }
+  // Lcap counts the Lcap field itself, so Lcap-2 bytes must follow it.
+  if (headerData.size() - cursor < static_cast<size_t>(lcap) - 2) {
+    return Error(heif_error_Invalid_input,
+                 heif_suberror_Invalid_J2K_codestream);
+  }
   uint32_t pcap = read32();
+  size_t segment_end = cursor + (static_cast<size_t>(lcap) - 6);
   for (uint8_t i = 2; i <= 32; i++) {
-    if (pcap & (1 << (32 - i))) {
+    if (pcap & (1u << (32 - i))) {
+      if (segment_end - cursor < 2) {
+        return Error(heif_error_Invalid_input,
+                     heif_suberror_Invalid_J2K_codestream,
+                     std::string("CAP segment Pcap inconsistent with Lcap"));
+      }
       switch (i) {
         case JPEG2000_Extension_Capability_HT::IDENT:
           parse_Ccap15();
           break;
         default:
-          std::cout << "unhandled extended capabilities value: " << (int)i << std::endl;
           read16();
       }
     }

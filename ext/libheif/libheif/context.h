@@ -69,6 +69,8 @@ public:
 
   ~HeifContext();
 
+  static constexpr int default_max_decoding_threads = 4;
+
   void set_max_decoding_threads(int max_threads) { m_max_decoding_threads = max_threads; }
 
   int get_max_decoding_threads() const { return m_max_decoding_threads; }
@@ -87,6 +89,12 @@ public:
 
   std::shared_ptr<HeifFile> get_heif_file() const { return m_heif_file; }
 
+
+  void set_unif(bool flag);
+
+  bool get_unif() const;
+
+  IDCreator& get_id_creator();
 
   // === image items ===
 
@@ -123,14 +131,18 @@ public:
                                                                        heif_chroma out_chroma,
                                                                        const heif_decoding_options& options) const;
 
-  Error get_id_of_non_virtual_child_image(heif_item_id in, heif_item_id& out) const;
+  Result<heif_item_id> find_first_coded_image_id(heif_item_id in) const;
 
   std::string debug_dump_boxes() const;
+
+  std::string debug_dump_item_data() const;
 
 
   // === writing ===
 
-  void write(StreamWriter& writer);
+  [[nodiscard]] Error write(StreamWriter& writer);
+
+  void set_write_mini_format(bool enable);
 
   // Create all boxes necessary for an empty HEIF file.
   // Note that this is no valid HEIF file, since some boxes (e.g. pitm) are generated, but
@@ -176,7 +188,7 @@ public:
     m_region_items.push_back(std::move(region_item));
   }
 
-  std::shared_ptr<RegionItem> add_region_item(uint32_t reference_width, uint32_t reference_height);
+  Result<std::shared_ptr<RegionItem>> add_region_item(uint32_t reference_width, uint32_t reference_height);
 
   std::shared_ptr<RegionItem> get_region_item(heif_item_id id) const
   {
@@ -208,6 +220,10 @@ public:
 
   uint64_t get_sequence_duration() const;
 
+  // Returns true if the mvhd box signals an "indefinite" / unknown duration.
+  // For such files, an editlist in repeat mode means "loop forever".
+  bool is_sequence_duration_indefinite() const;
+
   void set_sequence_timescale(uint32_t timescale);
 
   void set_number_of_sequence_repetitions(uint32_t repetitions);
@@ -222,7 +238,7 @@ public:
     m_text_items.push_back(std::move(text_item));
   }
 
-  std::shared_ptr<TextItem> add_text_item(const char* content_type, const char* text);
+  Result<std::shared_ptr<TextItem>> add_text_item(const char* content_type, const char* text);
 
   std::shared_ptr<TextItem> get_text_item(heif_item_id id) const
   {
@@ -294,7 +310,7 @@ private:
 
   std::shared_ptr<HeifFile> m_heif_file;
 
-  int m_max_decoding_threads = 4;
+  int m_max_decoding_threads = default_max_decoding_threads;
 
   heif_security_limits m_limits;
   TotalMemoryTracker m_memory_tracker;

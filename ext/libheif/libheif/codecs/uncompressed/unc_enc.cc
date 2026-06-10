@@ -28,20 +28,25 @@
 
 #include <string>
 
+#include "unc_encoder.h"
+
 
 Result<Encoder::CodedImageData> Encoder_uncompressed::encode(const std::shared_ptr<HeifPixelImage>& image,
-                                                     struct heif_encoder* encoder,
-                                                     const struct heif_encoding_options& options,
-                                                     enum heif_image_input_class input_class)
+                                                             struct heif_encoder* encoder,
+                                                             const struct heif_encoding_options& options,
+                                                             enum heif_image_input_class input_class)
 {
-  Encoder::CodedImageData codedImage;
+  auto uncEncoder = unc_encoder_factory::get_unc_encoder(image, options);
+  if (uncEncoder.error()) {
+    return uncEncoder.error();
+  }
 
-  Result<Encoder::CodedImageData> codingResult = ImageItem_uncompressed::encode_static(image, options);
+  auto codingResult = (*uncEncoder)->encode(image, options);
   if (!codingResult) {
     return codingResult.error();
   }
 
-  codedImage = *codingResult;
+  Encoder::CodedImageData codedImage = *codingResult;
 
   // codedImage.bitstream = std::move(vec);
 
@@ -65,6 +70,10 @@ std::shared_ptr<class Box_VisualSampleEntry> Encoder_uncompressed::get_sample_de
       case fourcc("cmpC"):
       case fourcc("icef"):
       case fourcc("cpat"):
+      case fourcc("splz"):
+      case fourcc("sbpm"):
+      case fourcc("snuc"):
+      case fourcc("cloc"):
         uncv->append_child_box(prop);
       break;
     }

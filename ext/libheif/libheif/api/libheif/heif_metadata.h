@@ -28,7 +28,7 @@ extern "C" {
 #include <libheif/heif_library.h>
 
 
-enum heif_metadata_compression
+typedef enum heif_metadata_compression
 {
   heif_metadata_compression_off = 0,
   heif_metadata_compression_auto = 1,
@@ -36,7 +36,7 @@ enum heif_metadata_compression
   heif_metadata_compression_deflate = 3,
   heif_metadata_compression_zlib = 4,    // do not use for header data
   heif_metadata_compression_brotli = 5
-};
+} heif_metadata_compression;
 
 LIBHEIF_API
 int heif_metadata_compression_method_supported(enum heif_metadata_compression method);

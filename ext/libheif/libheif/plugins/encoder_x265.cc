@@ -348,6 +348,10 @@ static void x265_free_encoder(void* encoder_raw)
     api->encoder_close(encoder->encoder);
   }
 
+  if (encoder->param && encoder->api) {
+    encoder->api->param_free(encoder->param);
+  }
+
   delete encoder;
 }
 
@@ -1114,7 +1118,10 @@ static heif_error x265_encode_sequence_frame(void* encoder_raw, const heif_image
                       &num_nals,
                       pic,
                       &out_pic);
-  uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic->userData);
+  if (num_nals > 0 && out_pic) {
+    uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic->userData);
+    encoder->append_nal_packets(nals, num_nals, frameNr);
+  }
 #else
   x265_picture out_pic;
   api->encoder_encode(encoder->encoder,
@@ -1123,12 +1130,10 @@ static heif_error x265_encode_sequence_frame(void* encoder_raw, const heif_image
                       pic,
                       &out_pic);
 
-  uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic.userData);
-  for (uint32_t i = 0; i < num_nals; i++) {
-    //std::cout << " dequeue frame " << encoder->out_frameNr << ": " << naltype(encoder->nals[i].type) << "\n";
+  if (num_nals > 0) {
+    uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic.userData);
+    encoder->append_nal_packets(nals, num_nals, frameNr);
   }
-
-  encoder->append_nal_packets(nals, num_nals, frameNr);
 
 #endif
 
@@ -1154,7 +1159,6 @@ static heif_error x265_end_sequence_encoding(void* encoder_raw)
                                    &num_nals,
                                    NULL,
                                    &out_pic);
-  uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic->userData);
 #else
   x265_picture out_pic;
   int result = api->encoder_encode(encoder->encoder,
@@ -1162,21 +1166,15 @@ static heif_error x265_end_sequence_encoding(void* encoder_raw)
                                    &num_nals,
                                    NULL,
                                    &out_pic);
-  uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic.userData);
-
-  for (uint32_t i = 0; i < num_nals; i++) {
-    //std::cout << "EOS flush, frame " << encoder->out_frameNr << ": " << naltype(encoder->nals[i].type) << "\n";
-  }
 #endif
-  if (result <= 0) {
-    // TODO: do we need this ?
-    //*data = nullptr;
-    //*size = 0;
-
-    return heif_error_ok; // ?
+  if (result > 0 && num_nals > 0) {
+#if X265_BUILD == 212
+    uintptr_t frameNr = out_pic ? reinterpret_cast<uintptr_t>(out_pic->userData) : 0;
+#else
+    uintptr_t frameNr = reinterpret_cast<uintptr_t>(out_pic.userData);
+#endif
+    encoder->append_nal_packets(nals, num_nals, frameNr);
   }
-
-  encoder->append_nal_packets(nals, num_nals, frameNr);
 
   encoder->api->param_free(encoder->param);
   encoder->param = nullptr;

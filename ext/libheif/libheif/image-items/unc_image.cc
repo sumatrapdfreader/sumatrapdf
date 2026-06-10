@@ -38,35 +38,101 @@
 #include "codecs/uncompressed/unc_enc.h"
 #include "codecs/uncompressed/unc_codec.h"
 #include "image_item.h"
+#include "codecs/uncompressed/unc_encoder.h"
 
 
-
-static void maybe_make_minimised_uncC(std::shared_ptr<Box_uncC>& uncC, const std::shared_ptr<const HeifPixelImage>& image)
-{
-  uncC->set_version(0);
-  if (image->get_colorspace() != heif_colorspace_RGB) {
-    return;
-  }
-  if (!((image->get_chroma_format() == heif_chroma_interleaved_RGB) || (image->get_chroma_format() == heif_chroma_interleaved_RGBA))) {
-    return;
-  }
-  if (image->get_bits_per_pixel(heif_channel_interleaved) != 8) {
-    return;
-  }
-  if (image->get_chroma_format() == heif_chroma_interleaved_RGBA) {
-    uncC->set_profile(fourcc("rgba"));
-  } else {
-    uncC->set_profile(fourcc("rgb3"));
-  }
-  uncC->set_version(1);
-}
-
+struct unciHeaders;
 
 ImageItem_uncompressed::ImageItem_uncompressed(HeifContext* ctx, heif_item_id id)
     : ImageItem(ctx, id)
 {
   m_encoder = std::make_shared<Encoder_uncompressed>();
 }
+
+void ImageItem_uncompressed::populate_component_descriptions()
+{
+  // Idempotent: this method is called from both set_properties() (where
+  // unci populates from cmpd/uncC, no decoder needed) and from
+  // context.cc after initialize_decoder() (where visual codecs populate).
+  // For unci items the first call wins; the second is a no-op.
+  if (!get_component_descriptions().empty()) {
+    return;
+  }
+
+  auto uncC = get_property<Box_uncC>();
+  if (!uncC) {
+    return;
+  }
+  auto cmpd = get_property<Box_cmpd>();
+
+  // For minimized (version-1) uncC, expand the profile fourcc into the
+  // components vector and synthesize cmpd if missing.
+  fill_uncC_and_cmpd_from_profile(uncC, cmpd);
+  if (!cmpd) {
+    return;
+  }
+
+  const auto& cmpd_components = cmpd->get_components();
+  uint32_t img_width = get_ispe_width();
+  uint32_t img_height = get_ispe_height();
+
+  // Determine chroma format so we can apply the correct subsampling for Cb/Cr.
+  heif_chroma chroma = heif_chroma_undefined;
+  heif_colorspace colourspace = heif_colorspace_undefined;
+  (void) UncompressedImageCodec::get_heif_chroma_uncompressed(uncC, cmpd, &chroma, &colourspace, nullptr);
+
+  // Track which cmpd indices already got a description from the uncC walk,
+  // so we don't duplicate them when handling cpat.
+  std::vector<bool> cmpd_index_has_description(cmpd_components.size(), false);
+
+  // 1. uncC components — these get real planes after decode.
+  for (const auto& uc : uncC->get_components()) {
+    if (uc.component_index >= cmpd_components.size()) {
+      continue; // malformed; skip
+    }
+    uint16_t component_type = cmpd_components[uc.component_index].component_type;
+
+    heif_channel channel = map_uncompressed_component_to_channel(component_type);
+    uint32_t plane_w = channel_width(img_width, chroma, channel);
+    uint32_t plane_h = channel_height(img_height, chroma, channel);
+
+    ComponentDescription desc;
+    desc.component_id = mint_component_id();
+    desc.channel = channel;
+    desc.component_type = component_type;
+    desc.datatype = unc_component_format_to_datatype(uc.component_format);
+    desc.bit_depth = uc.component_bit_depth;
+    desc.width = plane_w;
+    desc.height = plane_h;
+    desc.has_data_plane = true;
+    add_component_description(std::move(desc));
+
+    cmpd_index_has_description[uc.component_index] = true;
+  }
+
+  // 2. cpat reference components — one per UNIQUE cmpd_index that's
+  // referenced by the pattern but doesn't have an uncC plane. Two pattern
+  // pixels that share a cmpd_index share the same component id; the
+  // BayerPattern only carries per-pixel gain, not per-pixel identity.
+  if (auto cpat = get_property<Box_cpat>()) {
+    for (const auto& pixel : cpat->get_pattern().pixels) {
+      if (pixel.cmpd_index >= cmpd_components.size()) continue;
+      if (cmpd_index_has_description[pixel.cmpd_index]) continue;
+
+      uint16_t component_type = cmpd_components[pixel.cmpd_index].component_type;
+
+      ComponentDescription desc;
+      desc.component_id = mint_component_id();
+      desc.channel = map_uncompressed_component_to_channel(component_type);
+      desc.component_type = component_type;
+      desc.has_data_plane = false;
+      add_component_description(std::move(desc));
+
+      cmpd_index_has_description[pixel.cmpd_index] = true;
+    }
+  }
+}
+
 
 ImageItem_uncompressed::ImageItem_uncompressed(HeifContext* ctx)
     : ImageItem(ctx)
@@ -106,280 +172,17 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_uncompressed::decode_compresse
 }
 
 
-struct unciHeaders
-{
-  std::shared_ptr<Box_uncC> uncC;
-  std::shared_ptr<Box_cmpd> cmpd;
-};
-
-
-static Result<unciHeaders> generate_headers(const std::shared_ptr<const HeifPixelImage>& src_image,
-                                            const heif_unci_image_parameters* parameters,
-                                            const heif_encoding_options& options)
-{
-  unciHeaders headers;
-
-  bool uses_tiles = (parameters->tile_width != parameters->image_width ||
-                     parameters->tile_height != parameters->image_height);
-
-  std::shared_ptr<Box_uncC> uncC = std::make_shared<Box_uncC>();
-  if (options.prefer_uncC_short_form && !uses_tiles) {
-    maybe_make_minimised_uncC(uncC, src_image);
-  }
-
-  if (uncC->get_version() == 1) {
-    headers.uncC = std::move(uncC);
-  } else {
-    std::shared_ptr<Box_cmpd> cmpd = std::make_shared<Box_cmpd>();
-
-    Error error = fill_cmpd_and_uncC(cmpd, uncC, src_image, parameters, options.save_alpha_channel);
-    if (error) {
-      return error;
-    }
-
-    headers.cmpd = std::move(cmpd);
-    headers.uncC = std::move(uncC);
-  }
-
-  return headers;
-}
-
-
-Result<std::vector<uint8_t>> encode_image_tile(const std::shared_ptr<const HeifPixelImage>& src_image, bool save_alpha)
-{
-  std::vector<uint8_t> data;
-
-  if (src_image->get_colorspace() == heif_colorspace_YCbCr)
-  {
-    uint64_t offset = 0;
-    for (heif_channel channel : {heif_channel_Y, heif_channel_Cb, heif_channel_Cr})
-    {
-      if (src_image->get_bits_per_pixel(channel) != 8) {
-        return Error(heif_error_Unsupported_feature,
-                     heif_suberror_Unsupported_data_version,
-                     "Unsupported colourspace");
-      }
-
-      size_t src_stride;
-      uint32_t src_width = src_image->get_width(channel);
-      uint32_t src_height = src_image->get_height(channel);
-      const uint8_t* src_data = src_image->get_plane(channel, &src_stride);
-      uint64_t out_size = src_width * uint64_t{src_height};
-      data.resize(data.size() + out_size);
-      for (uint32_t y = 0; y < src_height; y++) {
-        memcpy(data.data() + offset + y * src_width, src_data + src_stride * y, src_width);
-      }
-      offset += out_size;
-    }
-
-    return data;
-  }
-  else if (src_image->get_colorspace() == heif_colorspace_RGB)
-  {
-    if (src_image->get_chroma_format() == heif_chroma_444)
-    {
-      uint64_t offset = 0;
-      std::vector<heif_channel> channels = {heif_channel_R, heif_channel_G, heif_channel_B};
-      if (src_image->has_channel(heif_channel_Alpha))
-      {
-        channels.push_back(heif_channel_Alpha);
-      }
-      for (heif_channel channel : channels)
-      {
-        size_t src_stride;
-        const uint8_t* src_data = src_image->get_plane(channel, &src_stride);
-        uint64_t out_size = static_cast<uint64_t>(src_image->get_height()) * src_image->get_width();
-
-        data.resize(data.size() + out_size);
-        for (uint32_t y = 0; y < src_image->get_height(); y++) {
-          memcpy(data.data() + offset + y * src_image->get_width(), src_data + y * src_stride, src_image->get_width());
-        }
-
-        offset += out_size;
-      }
-
-      return data;
-    }
-    else if ((save_alpha && (src_image->get_chroma_format() == heif_chroma_interleaved_RGB ||
-                             src_image->get_chroma_format() == heif_chroma_interleaved_RGBA ||
-                             src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBB_BE ||
-                             src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBB_LE ||
-                             src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBBAA_BE ||
-                             src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBBAA_LE))
-             ||
-             (!save_alpha && (src_image->get_chroma_format() == heif_chroma_interleaved_RGB ||
-                              src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBB_BE ||
-                              src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBB_LE)))
-    {
-      int bytes_per_pixel = 0;
-      switch (src_image->get_chroma_format()) {
-        case heif_chroma_interleaved_RGB:
-          bytes_per_pixel=3;
-          break;
-        case heif_chroma_interleaved_RGBA:
-          bytes_per_pixel=4;
-          break;
-        case heif_chroma_interleaved_RRGGBB_BE:
-        case heif_chroma_interleaved_RRGGBB_LE:
-          bytes_per_pixel=6;
-          break;
-        case heif_chroma_interleaved_RRGGBBAA_BE:
-        case heif_chroma_interleaved_RRGGBBAA_LE:
-          bytes_per_pixel=8;
-          break;
-        default:
-          assert(false);
-      }
-
-      size_t src_stride;
-      const uint8_t* src_data = src_image->get_plane(heif_channel_interleaved, &src_stride);
-      uint64_t out_size = static_cast<uint64_t>(src_image->get_height()) * src_image->get_width() * bytes_per_pixel;
-      data.resize(out_size);
-      for (uint32_t y = 0; y < src_image->get_height(); y++) {
-        memcpy(data.data() + y * src_image->get_width() * bytes_per_pixel, src_data + src_stride * y, src_image->get_width() * bytes_per_pixel);
-      }
-
-      return data;
-    }
-    else
-    if (!save_alpha && (src_image->get_chroma_format() == heif_chroma_interleaved_RGBA ||
-                        src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBBAA_BE ||
-                        src_image->get_chroma_format() == heif_chroma_interleaved_RRGGBBAA_LE)) {
-      int bytes_per_pixel = 0;
-      switch (src_image->get_chroma_format()) {
-        case heif_chroma_interleaved_RGBA:
-          bytes_per_pixel = 3;
-          break;
-        case heif_chroma_interleaved_RRGGBBAA_BE:
-        case heif_chroma_interleaved_RRGGBBAA_LE:
-          bytes_per_pixel = 6;
-          break;
-        default:
-          assert(false);
-      }
-
-      size_t src_stride;
-      const uint8_t* src_data = src_image->get_plane(heif_channel_interleaved, &src_stride);
-      uint64_t out_size = static_cast<uint64_t>(src_image->get_height()) * src_image->get_width() * bytes_per_pixel;
-      data.resize(out_size);
-
-      if (src_image->get_chroma_format() == heif_chroma_interleaved_RGBA) {
-        for (uint32_t y = 0; y < src_image->get_height(); y++) {
-          for (uint32_t x = 0; x < src_image->get_width(); x++) {
-            data[y * src_image->get_width() * bytes_per_pixel + 3 * x + 0] = src_data[src_stride * y + 4 * x + 0];
-            data[y * src_image->get_width() * bytes_per_pixel + 3 * x + 1] = src_data[src_stride * y + 4 * x + 1];
-            data[y * src_image->get_width() * bytes_per_pixel + 3 * x + 2] = src_data[src_stride * y + 4 * x + 2];
-          }
-        }
-      }
-      else {
-        for (uint32_t y = 0; y < src_image->get_height(); y++) {
-          for (uint32_t x = 0; x < src_image->get_width(); x++) {
-            for (int i = 0; i < 6; i++) {
-              data[y * src_image->get_width() * bytes_per_pixel + 6 * x + i] = src_data[src_stride * y + 8 * x + i];
-            }
-          }
-        }
-      }
-
-      return data;
-    }
-    else {
-      return Error(heif_error_Unsupported_feature,
-                   heif_suberror_Unsupported_data_version,
-                   "Unsupported RGB chroma");
-    }
-  }
-  else if (src_image->get_colorspace() == heif_colorspace_monochrome)
-  {
-    uint64_t offset = 0;
-    std::vector<heif_channel> channels;
-    if (src_image->has_channel(heif_channel_Alpha))
-    {
-      channels = {heif_channel_Y, heif_channel_Alpha};
-    }
-    else
-    {
-      channels = {heif_channel_Y};
-    }
-
-    for (heif_channel channel : channels)
-    {
-      if (src_image->get_bits_per_pixel(channel) != 8) {
-        return Error(heif_error_Unsupported_feature,
-                     heif_suberror_Unsupported_data_version,
-                     "Unsupported colourspace");
-      }
-
-      size_t src_stride;
-      const uint8_t* src_data = src_image->get_plane(channel, &src_stride);
-      uint64_t out_size = static_cast<uint64_t>(src_image->get_height()) * src_stride;
-      data.resize(data.size() + out_size);
-      memcpy(data.data() + offset, src_data, out_size);
-      offset += out_size;
-    }
-
-    return data;
-  }
-  else
-  {
-    return Error(heif_error_Unsupported_feature,
-                 heif_suberror_Unsupported_data_version,
-                 "Unsupported colourspace");
-  }
-}
-
-
 Result<Encoder::CodedImageData> ImageItem_uncompressed::encode(const std::shared_ptr<HeifPixelImage>& src_image,
                                                                  heif_encoder* encoder,
                                                                  const heif_encoding_options& options,
                                                                  heif_image_input_class input_class)
 {
-  return encode_static(src_image, options);
-}
-
-
-Result<Encoder::CodedImageData> ImageItem_uncompressed::encode_static(const std::shared_ptr<HeifPixelImage>& src_image,
-                                                               const heif_encoding_options& options)
-{
-  auto parameters = std::unique_ptr<heif_unci_image_parameters,
-                                    void (*)(heif_unci_image_parameters*)>(heif_unci_image_parameters_alloc(),
-                                                                           heif_unci_image_parameters_release);
-
-  parameters->image_width = src_image->get_width();
-  parameters->image_height = src_image->get_height();
-  parameters->tile_width = parameters->image_width;
-  parameters->tile_height = parameters->image_height;
-
-
-  // --- generate configuration property boxes
-
-  Result<unciHeaders> genHeadersResult = generate_headers(src_image, parameters.get(), options);
-  if (!genHeadersResult) {
-    return genHeadersResult.error();
+  Result<std::unique_ptr<const unc_encoder>> uncEncoder = unc_encoder_factory::get_unc_encoder(src_image, options);
+  if (!uncEncoder) {
+    return {uncEncoder.error()};
   }
 
-  const unciHeaders& headers = *genHeadersResult;
-
-  Encoder::CodedImageData codedImageData;
-  if (headers.uncC) {
-    codedImageData.properties.push_back(headers.uncC);
-  }
-  if (headers.cmpd) {
-    codedImageData.properties.push_back(headers.cmpd);
-  }
-
-
-  // --- encode image
-
-  Result<std::vector<uint8_t>> codedBitstreamResult = encode_image_tile(src_image, options.save_alpha_channel);
-  if (!codedBitstreamResult) {
-    return codedBitstreamResult.error();
-  }
-
-  codedImageData.bitstream = *codedBitstreamResult;
-
-  return codedImageData;
+  return (*uncEncoder)->encode(src_image, options);
 }
 
 
@@ -390,42 +193,73 @@ Result<std::shared_ptr<ImageItem_uncompressed>> ImageItem_uncompressed::add_unci
 {
   assert(encoding_options != nullptr);
 
+  // Resolve effective unci parameters: the direct argument takes precedence; otherwise
+  // fall back to encoding_options->unci_parameters. At least one must be non-null.
+
+  if (parameters == nullptr &&
+      (encoding_options->version < 8 || encoding_options->unci_parameters == nullptr)) {
+    return Error{heif_error_Usage_error,
+                 heif_suberror_Invalid_parameter_value,
+                 "heif_context_add_empty_unci_image: either the 'parameters' argument or "
+                 "heif_encoding_options::unci_parameters must be non-null."};
+  }
+
+  if (parameters == nullptr) {
+    parameters = encoding_options->unci_parameters;
+  }
+
   // Check input parameters
 
   if (parameters->image_width % parameters->tile_width != 0 ||
       parameters->image_height % parameters->tile_height != 0) {
-    return Error{heif_error_Invalid_input,
+    return Error{heif_error_Usage_error,
                  heif_suberror_Invalid_parameter_value,
                  "ISO 23001-17 image size must be an integer multiple of the tile size."};
   }
+
+
+  Result<std::unique_ptr<const unc_encoder>> uncEncoder = unc_encoder_factory::get_unc_encoder(prototype, *encoding_options);
+  if (!uncEncoder) {
+    return {uncEncoder.error()};
+  }
+
 
   // Create 'unci' Item
 
   auto file = ctx->get_heif_file();
 
-  heif_item_id unci_id = ctx->get_heif_file()->add_new_image(fourcc("unci"));
+  auto unci_id_result = ctx->get_heif_file()->add_new_image(fourcc("unci"));
+  if (!unci_id_result) {
+    return unci_id_result.error();
+  }
+  heif_item_id unci_id = *unci_id_result;
   auto unci_image = std::make_shared<ImageItem_uncompressed>(ctx, unci_id);
   unci_image->set_resolution(parameters->image_width, parameters->image_height);
+  unci_image->m_unc_encoder = std::move(*uncEncoder);
+  unci_image->m_tile_encoding_options = *encoding_options;
+  unci_image->m_tile_encoding_options.image_orientation = heif_orientation_normal;
+
   ctx->insert_image_item(unci_id, unci_image);
 
 
   // Generate headers
 
-  Result<unciHeaders> genHeadersResult = generate_headers(prototype, parameters, *encoding_options);
-  if (!genHeadersResult) {
-    return genHeadersResult.error();
+  // --- generate configuration property boxes
+
+  auto uncC = unci_image->m_unc_encoder->get_uncC();
+
+  uncC->set_number_of_tile_columns(parameters->image_width / parameters->tile_width);
+  uncC->set_number_of_tile_rows(parameters->image_height / parameters->tile_height);
+
+  unci_image->add_property(uncC, true);
+  if (!uncC->is_minimized()) {
+    unci_image->add_property(unci_image->m_unc_encoder->get_cmpd(), true);
   }
 
-  const unciHeaders& headers = *genHeadersResult;
 
-  assert(headers.uncC);
-
-  if (headers.uncC) {
-    unci_image->add_property(headers.uncC, true);
-  }
-
-  if (headers.cmpd) {
-    unci_image->add_property(headers.cmpd, true);
+  // Add cpat property if Bayer pattern is set
+  if (unci_image->m_unc_encoder->get_cpat()) {
+    unci_image->add_property(unci_image->m_unc_encoder->get_cpat(), true);
   }
 
   // Add `ispe` property
@@ -436,38 +270,26 @@ Result<std::shared_ptr<ImageItem_uncompressed>> ImageItem_uncompressed::add_unci
   unci_image->add_property(ispe, true);
 
   if (parameters->compression != heif_unci_compression_off) {
-    auto icef = std::make_shared<Box_icef>();
     auto cmpC = std::make_shared<Box_cmpC>();
+    cmpC->set_compression_type(unci_compression_to_fourcc(parameters->compression));
     cmpC->set_compressed_unit_type(heif_cmpC_compressed_unit_type_image_tile);
 
-    if (false) {
-    }
-#if HAVE_ZLIB
-    else if (parameters->compression == heif_unci_compression_deflate) {
-      cmpC->set_compression_type(fourcc("defl"));
-    }
-    else if (parameters->compression == heif_unci_compression_zlib) {
-      cmpC->set_compression_type(fourcc("zlib"));
-    }
-#endif
-#if HAVE_BROTLI
-    else if (parameters->compression == heif_unci_compression_brotli) {
-      cmpC->set_compression_type(fourcc("brot"));
-    }
-#endif
-    else {
-      assert(false);
-    }
-
     unci_image->add_property(cmpC, true);
+
+    auto icef = std::make_shared<Box_icef>();
     unci_image->add_property_without_deduplication(icef, true); // icef is empty. A normal add_property() would lead to a wrong deduplication.
   }
+
+  // Add transformative properties
+
+  ctx->get_heif_file()->add_orientation_properties(unci_id, encoding_options->image_orientation);
+
 
   // Create empty image. If we use compression, we append the data piece by piece.
 
   if (parameters->compression == heif_unci_compression_off) {
-    uint64_t tile_size = headers.uncC->compute_tile_data_size_bytes(parameters->image_width / headers.uncC->get_number_of_tile_columns(),
-                                                                    parameters->image_height / headers.uncC->get_number_of_tile_rows());
+    uint64_t tile_size = unci_image->m_unc_encoder->compute_tile_data_size_bytes(parameters->image_width / uncC->get_number_of_tile_columns(),
+                                                                                 parameters->image_height / uncC->get_number_of_tile_rows());
 
     std::vector<uint8_t> dummydata;
     dummydata.resize(tile_size);
@@ -497,7 +319,19 @@ Error ImageItem_uncompressed::add_image_tile(uint32_t tile_x, uint32_t tile_y, c
 
   uint32_t tile_idx = tile_y * uncC->get_number_of_tile_columns() + tile_x;
 
-  Result<std::vector<uint8_t>> codedBitstreamResult = encode_image_tile(image, save_alpha);
+  if (tile_y >= uncC->get_number_of_tile_rows() ||
+      tile_x >= uncC->get_number_of_tile_columns()) {
+    return Error{heif_error_Usage_error,
+                 heif_suberror_Invalid_parameter_value,
+                 "tile_x and/or tile_y are out of range."};
+  }
+
+
+  if (image->has_alpha() && !save_alpha) {
+    // TODO: drop alpha
+  }
+
+  Result<std::vector<uint8_t>> codedBitstreamResult = m_unc_encoder->encode_tile(image);
   if (!codedBitstreamResult) {
     return codedBitstreamResult.error();
   }
@@ -511,43 +345,27 @@ Error ImageItem_uncompressed::add_image_tile(uint32_t tile_x, uint32_t tile_y, c
 
     // uncompressed
 
-    uint64_t tile_data_size = uncC->compute_tile_data_size_bytes(tile_width, tile_height);
+    uint64_t tile_data_size = m_unc_encoder->compute_tile_data_size_bytes(tile_width, tile_height);
 
     get_file()->replace_iloc_data(get_id(), tile_idx * tile_data_size, *codedBitstreamResult, 0);
   }
   else {
-    std::vector<uint8_t> compressed_data;
-    const std::vector<uint8_t>& raw_data = std::move(*codedBitstreamResult);
-    (void)raw_data;
+    const std::vector<uint8_t>& raw_data = *codedBitstreamResult;
 
-    uint32_t compr = cmpC->get_compression_type();
-    switch (compr) {
-#if HAVE_ZLIB
-      case fourcc("defl"):
-        compressed_data = compress_deflate(raw_data.data(), raw_data.size());
-        break;
-      case fourcc("zlib"):
-        compressed_data = compress_zlib(raw_data.data(), raw_data.size());
-        break;
-#endif
-#if HAVE_BROTLI
-      case fourcc("brot"):
-        compressed_data = compress_brotli(raw_data.data(), raw_data.size());
-        break;
-#endif
-      default:
-        assert(false);
-        break;
+    auto compressed = compress_unci_fourcc(cmpC->get_compression_type(),
+                                            raw_data.data(), raw_data.size());
+    if (!compressed) {
+      return compressed.error();
     }
 
-    get_file()->append_iloc_data(get_id(), compressed_data, 0);
+    get_file()->append_iloc_data(get_id(), *compressed, 0);
 
     Box_icef::CompressedUnitInfo unit_info;
     unit_info.unit_offset = m_next_tile_write_pos;
-    unit_info.unit_size = compressed_data.size();
+    unit_info.unit_size = compressed->size();
     icef->set_component(tile_idx, unit_info);
 
-    m_next_tile_write_pos += compressed_data.size();
+    m_next_tile_write_pos += compressed->size();
   }
 
   return Error::Ok;
@@ -610,6 +428,27 @@ Error ImageItem_uncompressed::initialize_decoder()
     return Error{heif_error_Invalid_input,
                  heif_suberror_Unspecified,
                  "No 'uncC' box found."};
+  }
+
+  if (!ispe) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Unspecified,
+                 "No 'ispe' box found for uncompressed image item."};
+  }
+
+  // libheif's pixel allocation and processing (rotate/mirror) only support
+  // bit depths up to 128 per component. Reject larger values up front so they
+  // surface as a clean Unsupported_feature error rather than failing inside
+  // HeifPixelImage::ComponentStorage::alloc().
+  for (const auto& component : uncC->get_components()) {
+    if (component.component_bit_depth > 128) {
+      std::stringstream sstr;
+      sstr << "Uncompressed image with " << component.component_bit_depth
+           << " bits per component is not supported.";
+      return Error{heif_error_Unsupported_feature,
+                   heif_suberror_Unsupported_bit_depth,
+                   sstr.str()};
+    }
   }
 
   m_decoder = std::make_shared<Decoder_uncompressed>(uncC, cmpd, ispe);

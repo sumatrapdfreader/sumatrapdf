@@ -31,6 +31,7 @@
 #include <limits>
 #include <cmath>
 #include <deque>
+#include <set>
 #include "image-items/image_item.h"
 #include <codecs/hevc_boxes.h>
 #include "sequences/track.h"
@@ -44,7 +45,7 @@
 
 #include "context.h"
 #include "file.h"
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "api_structs.h"
 #include "security_limits.h"
 #include "compression.h"
@@ -98,6 +99,51 @@ heif_error heif_encoder::alloc()
 }
 
 
+void heif_encoder::copy_parameters_from(const heif_encoder& src)
+{
+  // Copy dedicated quality/lossless/logging parameters
+  int ival;
+  plugin->get_parameter_quality(src.encoder, &ival);
+  plugin->set_parameter_quality(encoder, ival);
+
+  plugin->get_parameter_lossless(src.encoder, &ival);
+  plugin->set_parameter_lossless(encoder, ival);
+
+  if (plugin->get_parameter_logging_level && plugin->set_parameter_logging_level) {
+    plugin->get_parameter_logging_level(src.encoder, &ival);
+    plugin->set_parameter_logging_level(encoder, ival);
+  }
+
+  // Copy all enumerable plugin parameters
+  const heif_encoder_parameter* const* params = plugin->list_parameters(src.encoder);
+  if (!params) return;
+
+  for (; *params; params++) {
+    const char* name = (*params)->name;
+    switch ((*params)->type) {
+      case heif_encoder_parameter_type_integer: {
+        int v;
+        if (plugin->get_parameter_integer(src.encoder, name, &v).code == heif_error_Ok)
+          plugin->set_parameter_integer(encoder, name, v);
+        break;
+      }
+      case heif_encoder_parameter_type_boolean: {
+        int v;
+        if (plugin->get_parameter_boolean(src.encoder, name, &v).code == heif_error_Ok)
+          plugin->set_parameter_boolean(encoder, name, v);
+        break;
+      }
+      case heif_encoder_parameter_type_string: {
+        char v[256];
+        if (plugin->get_parameter_string(src.encoder, name, v, sizeof(v)).code == heif_error_Ok)
+          plugin->set_parameter_string(encoder, name, v);
+        break;
+      }
+    }
+  }
+}
+
+
 HeifContext::HeifContext()
     : m_memory_tracker(&m_limits)
 {
@@ -143,9 +189,24 @@ static void copy_security_limits(heif_security_limits* dst, const heif_security_
   dst->max_children_per_box = src->max_children_per_box;
 
   if (src->version >= 2) {
+    dst->max_total_memory = src->max_total_memory;
     dst->max_sample_description_box_entries = src->max_sample_description_box_entries;
     dst->max_sample_group_description_box_entries = src->max_sample_group_description_box_entries;
   }
+
+  if (src->version >= 3) {
+    dst->max_sequence_frames = src->max_sequence_frames;
+    dst->max_number_of_file_brands = src->max_number_of_file_brands;
+  }
+
+  if (src->version >= 4) {
+    dst->max_bad_pixels = src->max_bad_pixels;
+    dst->max_iso23001_17_pixel_size_bytes = src->max_iso23001_17_pixel_size_bytes;
+  }
+
+  // `parent` is an internal field; user-supplied limits are always treated as
+  // a root context. dst is HeifContext::m_limits, which is registered.
+  dst->parent = nullptr;
 }
 
 
@@ -158,6 +219,24 @@ void HeifContext::set_security_limits(const heif_security_limits* limits)
 
   // overwrite with input limits
   copy_security_limits(&m_limits, limits);
+}
+
+
+void HeifContext::set_unif(bool flag)
+{
+  m_heif_file->get_id_creator().set_unif(flag);
+}
+
+
+bool HeifContext::get_unif() const
+{
+  return m_heif_file->get_id_creator().get_unif();
+}
+
+
+IDCreator& HeifContext::get_id_creator()
+{
+  return m_heif_file->get_id_creator();
 }
 
 
@@ -267,9 +346,13 @@ bool HeifContext::is_image(heif_item_id ID) const
 }
 
 
-std::shared_ptr<RegionItem> HeifContext::add_region_item(uint32_t reference_width, uint32_t reference_height)
+Result<std::shared_ptr<RegionItem>> HeifContext::add_region_item(uint32_t reference_width, uint32_t reference_height)
 {
-  std::shared_ptr<Box_infe> box = m_heif_file->add_new_infe_box(fourcc("rgan"));
+  auto boxResult = m_heif_file->add_new_infe_box(fourcc("rgan"));
+  if (!boxResult) {
+    return boxResult.error();
+  }
+  auto box = *boxResult;
   box->set_hidden_item(true);
 
   auto regionItem = std::make_shared<RegionItem>(box->get_item_ID(), reference_width, reference_height);
@@ -296,7 +379,7 @@ static uint64_t rescale(uint64_t duration, uint32_t old_base, uint32_t new_base)
 }
 
 
-void HeifContext::write(StreamWriter& writer)
+Error HeifContext::write(StreamWriter& writer)
 {
   // --- finalize some parameters
 
@@ -357,7 +440,9 @@ void HeifContext::write(StreamWriter& writer)
   for (auto& region : m_region_items) {
     std::vector<uint8_t> data_array;
     Error err = region->encode(data_array);
-    // TODO: err
+    if (err) {
+      return err;
+    }
 
     m_heif_file->append_iloc_data(region->item_id, data_array, 0);
   }
@@ -380,7 +465,10 @@ void HeifContext::write(StreamWriter& writer)
   // --- post-process images
 
   for (auto& img : m_all_images) {
-    img.second->process_before_write();
+    Error err = img.second->process_before_write();
+    if (err) {
+      return err;
+    }
   }
 
   // --- sort item properties
@@ -420,11 +508,24 @@ void HeifContext::write(StreamWriter& writer)
   // --- write to file
 
   m_heif_file->write(writer);
+
+  return {};
 }
 
 std::string HeifContext::debug_dump_boxes() const
 {
   return m_heif_file->debug_dump_boxes();
+}
+
+std::string HeifContext::debug_dump_item_data() const
+{
+  return m_heif_file->debug_dump_item_data();
+}
+
+
+void HeifContext::set_write_mini_format(bool enable)
+{
+  m_heif_file->set_write_mini_format(enable);
 }
 
 
@@ -516,6 +617,17 @@ Error HeifContext::interpret_heif_file_images()
     if (err) {
       imageItem = std::make_shared<ImageItem_Error>(imageItem->get_infe_type(), id, err);
       imageItem->set_properties(properties);
+    } else {
+      // The decoder's input data extent must be set before any codec-config
+      // query: some decoders (e.g. JPEG, whose jpgC box is optional) read the
+      // actual bitstream to answer colorspace/bit-depth queries.
+      imageItem->set_decoder_input_data();
+
+      // After initialize_decoder, codec-config queries (colorspace, bit depth)
+      // are available, so visual-codec items can now populate their component
+      // descriptions. Idempotent for items already populated by set_properties
+      // (e.g. unci items).
+      imageItem->populate_component_descriptions();
     }
 
     m_all_images.insert(std::make_pair(id, imageItem));
@@ -528,8 +640,6 @@ Error HeifContext::interpret_heif_file_images()
 
       m_top_level_images.push_back(imageItem);
     }
-
-    imageItem->set_decoder_input_data();
   }
 
   if (!m_primary_image) {
@@ -565,6 +675,19 @@ Error HeifContext::interpret_heif_file_images()
         std::stringstream sstr;
         sstr << "could not parse item property '" << prop->get_type_string() << "'";
         return {heif_error_Unsupported_feature, heif_suberror_Unsupported_essential_property, sstr.str()};
+      }
+    }
+
+
+    // --- Are there any `rref` reference types that we do not process.
+    // This only makes the affected item undecodable; other items in the file
+    // can still be decoded, so we do not abort the whole load.
+
+    auto rrefBox = m_heif_file->get_property_for_item<Box_rref>(pair.first);
+    if (rrefBox) {
+      if (Error err = rrefBox->reference_types_supported_error()) {
+        image->set_item_error(err);
+        continue;
       }
     }
 
@@ -683,6 +806,11 @@ Error HeifContext::interpret_heif_file_images()
 
     if (auto box_gimi_content_id = image->get_property<Box_gimi_content_id>()) {
       image->set_gimi_sample_content_id(box_gimi_content_id->get_content_id());
+    }
+
+    // add image projection information
+    if (auto prfr = image->get_property<Box_prfr>()) {
+      image->ImageDescription::set_omaf_image_projection(prfr->get_omaf_image_projection());
     }
   }
 
@@ -1234,47 +1362,54 @@ bool HeifContext::has_alpha(heif_item_id ID) const
 }
 
 
-Error HeifContext::get_id_of_non_virtual_child_image(heif_item_id id, heif_item_id& out) const
+Result<heif_item_id> HeifContext::find_first_coded_image_id(heif_item_id id) const
 {
-  uint32_t image_type = m_heif_file->get_item_type_4cc(id);
-  if (image_type == fourcc("grid") ||
-      image_type == fourcc("iden") ||
-      image_type == fourcc("iovl")) {
-    auto iref_box = m_heif_file->get_iref_box();
-    if (!iref_box) {
+  std::set<heif_item_id> visited;
+
+  for (;;) {
+    if (!visited.insert(id).second) {
       return Error(heif_error_Invalid_input,
                    heif_suberror_No_item_data,
-                   "Derived image does not reference any other image items");
+                   "Derived image references form a cycle");
     }
 
-    std::vector<heif_item_id> image_references = iref_box->get_references(id, fourcc("dimg"));
+    uint32_t image_type = m_heif_file->get_item_type_4cc(id);
+    if (image_type == fourcc("grid") ||
+        image_type == fourcc("iden") ||
+        image_type == fourcc("iovl")) {
+      auto iref_box = m_heif_file->get_iref_box();
+      if (!iref_box) {
+        return Error(heif_error_Invalid_input,
+                     heif_suberror_No_item_data,
+                     "Derived image does not reference any other image items");
+      }
 
-    // TODO: check whether this really can be recursive (e.g. overlay of grid images)
+      std::vector<heif_item_id> image_references = iref_box->get_references(id, fourcc("dimg"));
 
-    if (image_references.empty() || image_references[0] == id) {
-      return Error(heif_error_Invalid_input,
-                   heif_suberror_No_item_data,
-                   "Derived image does not reference any other image items");
+      if (image_references.empty()) {
+        return Error(heif_error_Invalid_input,
+                     heif_suberror_No_item_data,
+                     "Derived image does not reference any other image items");
+      }
+
+      // follow the first reference
+      id = image_references[0];
     }
     else {
-      return get_id_of_non_virtual_child_image(image_references[0], out);
-    }
-  }
-  else {
-    if (!m_all_images.contains(id)) {
-      std::stringstream sstr;
-      sstr << "Image item " << id << " referenced, but it does not exist\n";
+      if (!m_all_images.contains(id)) {
+        std::stringstream sstr;
+        sstr << "Image item " << id << " referenced, but it does not exist\n";
 
-      return Error(heif_error_Invalid_input,
-        heif_suberror_Nonexisting_item_referenced,
-        sstr.str());
-    }
-    else if (dynamic_cast<ImageItem_Error*>(m_all_images.find(id)->second.get())) {
-      // Should er return an error here or leave it to the follow-up code to detect that?
-    }
+        return Error(heif_error_Invalid_input,
+          heif_suberror_Nonexisting_item_referenced,
+          sstr.str());
+      }
+      else if (dynamic_cast<ImageItem_Error*>(m_all_images.find(id)->second.get())) {
+        // Should we return an error here or leave it to the follow-up code to detect that?
+      }
 
-    out = id;
-    return Error::Ok;
+      return id;
+    }
   }
 }
 
@@ -1304,6 +1439,17 @@ Result<std::shared_ptr<HeifPixelImage>> HeifContext::decode_image(heif_item_id I
 
   std::shared_ptr<HeifPixelImage> img = *decodingResult;
 
+  // For visual codecs (HEVC/AVC/AVIF/JPEG/...) the decoder plugin builds the
+  // returned image via the public C API (heif_image_add_plane_safe), which
+  // auto-mints component ids. Reconcile those with the canonical description
+  // list that ImageItem::populate_component_descriptions() produced, so
+  // handle-side and decoded-image-side ids agree by construction.
+  // No-op for unci (which already shares ids with the item) or for items
+  // without a populated description list (grid/overlay/iden).
+  img->apply_descriptions_from(*imgitem);
+
+  // Note: the decoded image is validated against the signaled size inside
+  // ImageItem::decode_image() (via the per-item check_decoded_image_size()).
 
   // --- convert to output chroma format
 
@@ -1373,11 +1519,14 @@ Result<std::shared_ptr<HeifPixelImage>> HeifContext::convert_to_output_colorspac
   bool different_chroma = (target_chroma != img->get_chroma_format());
   bool different_colorspace = (target_colorspace != img->get_colorspace());
 
-  uint8_t img_bpp = img->get_visual_image_bits_per_pixel();
+  uint16_t img_bpp = img->get_visual_image_bits_per_pixel();
   uint8_t converted_output_bpp = (options.convert_hdr_to_8bit && img_bpp > 8) ? 8 : 0 /* keep input depth */;
 
   nclx_profile img_nclx = img->get_color_profile_nclx_with_fallback();
-  bool different_nclx = !nclx_color_profile_equal(img_nclx, options.output_image_nclx_profile);
+  const bool nclx_passthrough = (options.output_image_nclx_profile == nullptr &&
+                                 options.output_image_nclx_profile_passthrough);
+  const bool different_nclx = !nclx_passthrough &&
+                              !nclx_color_profile_equal(img_nclx, options.output_image_nclx_profile);
 
   if (different_chroma ||
       different_colorspace ||
@@ -1390,6 +1539,11 @@ Result<std::shared_ptr<HeifPixelImage>> HeifContext::convert_to_output_colorspac
       output_profile.set_matrix_coefficients(options.output_image_nclx_profile->matrix_coefficients);
       output_profile.set_colour_primaries(options.output_image_nclx_profile->color_primaries);
       output_profile.set_full_range_flag(options.output_image_nclx_profile->full_range_flag);
+    }
+    else if (nclx_passthrough) {
+      // Keep input image's NCLX as the conversion target so a chroma/colorspace
+      // change does not silently re-tag the pixels with sRGB.
+      output_profile = img_nclx;
     }
     else {
       output_profile.set_sRGB_defaults();
@@ -1416,7 +1570,7 @@ create_alpha_image_from_image_alpha_channel(const std::shared_ptr<HeifPixelImage
                       heif_colorspace_monochrome, heif_chroma_monochrome);
 
   if (image->has_channel(heif_channel_Alpha)) {
-    alpha_image->copy_new_plane_from(image, heif_channel_Alpha, heif_channel_Y, limits);
+    alpha_image->copy_new_channel_from(image, heif_channel_Alpha, heif_channel_Y, limits);
   }
   else if (image->get_chroma_format() == heif_chroma_interleaved_RGBA) {
     if (auto err = alpha_image->extract_alpha_from_RGBA(image, limits)) {
@@ -1520,9 +1674,17 @@ Result<std::shared_ptr<ImageItem>> HeifContext::encode_image(const std::shared_p
     alpha_image = *alpha_image_result;
 
 
-    // --- encode the alpha image
+    // --- encode the alpha image using a fresh encoder instance to avoid
+    //     leaking codec state from the color encoding pass
 
-    auto alphaEncodingResult = encode_image(alpha_image, encoder, options,
+    heif_encoder alpha_enc(encoder->plugin);
+    heif_error alloc_err = alpha_enc.alloc();
+    if (alloc_err.code) {
+      return Error(alloc_err.code, alloc_err.subcode, alloc_err.message);
+    }
+    alpha_enc.copy_parameters_from(*encoder);
+
+    auto alphaEncodingResult = encode_image(alpha_image, &alpha_enc, options,
                          heif_image_input_class_alpha);
     if (!alphaEncodingResult) {
       return alphaEncodingResult.error();
@@ -1674,7 +1836,11 @@ Error HeifContext::add_generic_metadata(const std::shared_ptr<ImageItem>& master
 {
   // create an infe box describing what kind of data we are storing (this also creates a new ID)
 
-  auto metadata_infe_box = m_heif_file->add_new_infe_box(item_type);
+  auto infe_result = m_heif_file->add_new_infe_box(item_type);
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto metadata_infe_box = *infe_result;
   metadata_infe_box->set_hidden_item(true);
   if (content_type != nullptr) {
     metadata_infe_box->set_content_type(content_type);
@@ -1828,7 +1994,11 @@ Result<heif_item_id> HeifContext::add_pyramid_group(const std::vector<heif_item_
     ids.push_back(layer_item->get_id());
   }
 
-  heif_item_id group_id = m_heif_file->get_unused_item_id();
+  auto groupIdResult = m_heif_file->get_id_creator().get_new_id(IDCreator::Namespace::entity_group);
+  if (!groupIdResult) {
+    return groupIdResult.error();
+  }
+  heif_item_id group_id = *groupIdResult;
 
   pymd->set_group_id(group_id);
   pymd->set_layers((uint16_t)tile_w, (uint16_t)tile_h, layers, ids);
@@ -2018,6 +2188,17 @@ uint64_t HeifContext::get_sequence_duration() const
 }
 
 
+bool HeifContext::is_sequence_duration_indefinite() const
+{
+  auto mvhd = m_heif_file->get_mvhd_box();
+  if (!mvhd) {
+    return false;
+  }
+
+  return mvhd->is_duration_indefinite();
+}
+
+
 Result<std::shared_ptr<Track_Visual>> HeifContext::add_visual_sequence_track(const TrackOptions* options,
                                                                              uint32_t handler_type,
                                                                              uint16_t width, uint16_t height)
@@ -2042,9 +2223,13 @@ Result<std::shared_ptr<class Track_Metadata>> HeifContext::add_uri_metadata_sequ
   return trak;
 }
 
-std::shared_ptr<TextItem> HeifContext::add_text_item(const char* content_type, const char* text)
+Result<std::shared_ptr<TextItem>> HeifContext::add_text_item(const char* content_type, const char* text)
 {
-  std::shared_ptr<Box_infe> box = m_heif_file->add_new_infe_box(fourcc("mime"));
+  auto boxResult = m_heif_file->add_new_infe_box(fourcc("mime"));
+  if (!boxResult) {
+    return boxResult.error();
+  }
+  auto box = *boxResult;
   box->set_hidden_item(true);
   box->set_content_type(std::string(content_type));
   auto textItem = std::make_shared<TextItem>(box->get_item_ID(), text);

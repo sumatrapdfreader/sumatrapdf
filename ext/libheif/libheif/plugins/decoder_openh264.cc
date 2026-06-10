@@ -78,6 +78,7 @@ static const int OpenH264_PLUGIN_PRIORITY = 70;
 static char plugin_name[MAX_PLUGIN_NAME_LENGTH];
 
 static heif_error kError_EOF = {heif_error_Decoder_plugin_error, heif_suberror_End_of_data, "Insufficient input data"};
+static heif_error kError_invalid_data = {heif_error_Decoder_plugin_error, heif_suberror_Invalid_parameter_value, "Invalid input data"};
 
 
 static const char* openh264_plugin_name()
@@ -147,7 +148,7 @@ heif_error openh264_new_decoder2(void** dec, const heif_decoder_plugin_options* 
 
 heif_error openh264_new_decoder(void** dec)
 {
-  heif_decoder_plugin_options options;
+  heif_decoder_plugin_options options{};
   options.format = heif_compression_AVC;
   options.num_threads = 0;
   options.strict_decoding = false;
@@ -179,7 +180,9 @@ heif_error openh264_push_data2(void* decoder_raw, const void* frame_data, size_t
 
   const auto* input_data = (const uint8_t*) frame_data;
 
-  assert(frame_size > 4);
+  if (frame_size < 4) {
+    return kError_invalid_data;
+  }
 
   openh264_decoder::Packet pkt;
   pkt.data.insert(pkt.data.end(), input_data, input_data + frame_size);
@@ -269,7 +272,9 @@ heif_error openh264_decode_next_image2(void* decoder_raw, heif_image** out_img,
         do_start_code_emulation_check = found_start_code_emulation;
       }
 
-      assert(size > 0);
+      if (size == 0) {
+        return kError_invalid_data;
+      }
       // Note: we cannot write &indata[idx + size] since that would use the operator[] on an element beyond the vector range.
       scdata.insert(scdata.end(), &indata[idx], indata.data() + idx + size);
 

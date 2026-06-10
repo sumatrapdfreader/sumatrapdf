@@ -155,6 +155,8 @@ struct nclx_profile
 
   bool is_undefined() const;
 
+  bool is_defined() const { return !is_undefined(); }
+
   void replace_undefined_values_with_sRGB_defaults();
 
   bool equal_except_transfer_curve(const nclx_profile& b) const;

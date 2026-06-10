@@ -83,7 +83,7 @@ struct HEVCDecoderConfigurationRecord
 
   bool get_general_profile_compatibility_flag(int idx) const;
 
-  bool is_profile_compatibile(Profile) const;
+  bool is_profile_compatible(Profile) const;
 };
 
 
@@ -162,8 +162,14 @@ Error decode_hevc_aux_sei_messages(const std::vector<uint8_t>& data,
 // Used for AVC, HEVC, and VVC.
 std::vector<uint8_t> remove_start_code_emulation(const uint8_t* sps, size_t size);
 
+struct ImageSize;
+
+// Parses an HEVC SPS NAL unit. *width / *height return the post-conformance-
+// window cropping (display) dimensions. If non-null, *coded_size receives the
+// pre-cropping dimensions actually allocated by the decoder.
 Error parse_sps_for_hvcC_configuration(const uint8_t* sps, size_t size,
                                        HEVCDecoderConfigurationRecord* inout_config,
-                                       int* width, int* height);
+                                       uint32_t* width, uint32_t* height,
+                                       ImageSize* coded_size = nullptr);
 
 #endif

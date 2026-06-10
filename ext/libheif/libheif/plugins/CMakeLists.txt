@@ -82,7 +82,7 @@ set(JPEG_ENCODER_extra_plugin_sources)
 plugin_compilation(jpegenc JPEG JPEG_FOUND JPEG_ENCODER JPEG_ENCODER)
 
 set(OpenJPEG_DECODER_sources decoder_openjpeg.cc decoder_openjpeg.h)
-set(OpenJPEG_DECODER_extra_plugin_sources ) 
+set(OpenJPEG_DECODER_extra_plugin_sources ../error.cc ../common_utils.cc ../common_utils.h)
 plugin_compilation(j2kdec OPENJPEG OPENJPEG_FOUND OpenJPEG_DECODER OPENJPEG_DECODER)
 
 set(OpenJPEG_ENCODER_sources encoder_openjpeg.cc encoder_openjpeg.h)

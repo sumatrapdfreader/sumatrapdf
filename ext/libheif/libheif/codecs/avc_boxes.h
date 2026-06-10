@@ -113,8 +113,14 @@ public:
   }
 };
 
+struct ImageSize;
+
+// Parses an AVC/H.264 SPS NAL unit. *width / *height return the post-frame-
+// cropping (display) dimensions. If non-null, *coded_size receives the
+// pre-cropping dimensions actually allocated by the decoder.
 Error parse_sps_for_avcC_configuration(const uint8_t* sps, size_t size,
                                        Box_avcC::configuration* inout_config,
-                                       int* width, int* height);
+                                       uint32_t* width, uint32_t* height,
+                                       ImageSize* coded_size = nullptr);
 
 #endif

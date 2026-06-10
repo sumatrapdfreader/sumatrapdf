@@ -110,11 +110,7 @@ std::vector<heif_brand2> compute_compatible_brands(const HeifContext* ctx, heif_
 
   for (auto& img : images) {
     heif_brand2 brand = img->get_compatible_brand();
-    if (brand != 0 &&
-        is_structural_image &&
-        std::find(compatible_brands.begin(),
-                  compatible_brands.end(),
-                  brand) == compatible_brands.end()) {
+    if (brand != 0 && is_structural_image) {
       compatible_brands.push_back(brand);
     }
 
@@ -125,7 +121,7 @@ std::vector<heif_brand2> compute_compatible_brands(const HeifContext* ctx, heif_
 
   // --- "miaf"
 
-  if (miaf_compatible && is_structural_image) {
+  if (miaf_compatible && is_structural_image && !images.empty()) {
     compatible_brands.push_back(heif_brand2_miaf);
   }
 
@@ -143,7 +139,7 @@ std::vector<heif_brand2> compute_compatible_brands(const HeifContext* ctx, heif_
 
   if (ctx->has_sequence()) {
     compatible_brands.push_back(heif_brand2_msf1);
-    compatible_brands.push_back(heif_brand2_iso8);
+    compatible_brands.push_back(heif_brand2_isom);
 
     auto track_result = ctx->get_track(0);
     assert(track_result);
@@ -151,12 +147,14 @@ std::vector<heif_brand2> compute_compatible_brands(const HeifContext* ctx, heif_
     std::shared_ptr<const Track> track = *track_result;
     std::shared_ptr<const Track_Visual> visual_track = std::dynamic_pointer_cast<const Track_Visual>(track);
 
-    heif_brand2 track_brand = visual_track->get_compatible_brand();
-    if (track_brand != 0) {
-      compatible_brands.push_back(track_brand);
+    if (visual_track) {
+      heif_brand2 track_brand = visual_track->get_compatible_brand();
+      if (track_brand != 0) {
+        compatible_brands.push_back(track_brand);
 
-      // overwrite any image brand
-      *out_main_brand = track_brand;
+        // overwrite any image brand
+        *out_main_brand = track_brand;
+      }
     }
 
     // if we don't have a track brand, use at least the sequence structural brand
@@ -165,6 +163,21 @@ std::vector<heif_brand2> compute_compatible_brands(const HeifContext* ctx, heif_
     }
   }
 
-  return compatible_brands;
+  // --- "unif" brand
+
+  if (ctx->get_unif()) {
+    compatible_brands.push_back(heif_brand2_unif);
+  }
+
+  // --- remove duplicate brands
+
+  std::vector<heif_brand2> unique_brands;
+  for (auto brand : compatible_brands) {
+    if (std::find(unique_brands.begin(), unique_brands.end(), brand) == unique_brands.end()) {
+      unique_brands.push_back(brand);
+    }
+  }
+
+  return unique_brands;
 }
 

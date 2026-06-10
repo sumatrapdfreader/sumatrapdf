@@ -102,7 +102,11 @@ static void kvazaar_set_default_parameters(void* encoder);
 
 static const char* kvazaar_plugin_name()
 {
+#if HAVE_KVAZAAR_VERSION_STRING
+  snprintf(plugin_name, MAX_PLUGIN_NAME_LENGTH, "kvazaar HEVC encoder %s", kvz_get_version_string());
+#else
   strcpy(plugin_name, "kvazaar HEVC encoder");
+#endif
   return plugin_name;
 }
 
@@ -356,8 +360,8 @@ static void kvazaar_query_input_colorspace2(void* encoder_raw, heif_colorspace* 
 void kvazaar_query_encoded_size(void* encoder_raw, uint32_t input_width, uint32_t input_height,
                                 uint32_t* encoded_width, uint32_t* encoded_height)
 {
-  *encoded_width = (input_width + 7) & ~0x7;
-  *encoded_height = (input_height + 7) & ~0x7;
+  *encoded_width = (input_width + 7) & ~0x7U;
+  *encoded_height = (input_height + 7) & ~0x7U;
 }
 
 
@@ -458,6 +462,19 @@ static heif_error kvazaar_start_sequence_encoding_intern(void* encoder_raw, cons
                                                          bool image_sequence)
 {
   encoder_struct_kvazaar* encoder = (encoder_struct_kvazaar*) encoder_raw;
+
+  // close the encoder if it was already initialized
+  // (e.g. when the encoder is reused for alpha encoding after being used for YUV encoding)
+  if (encoder->api) {
+    if (encoder->kvzencoder) {
+      encoder->api->encoder_close(encoder->kvzencoder);
+      encoder->kvzencoder = nullptr;
+    }
+    if (encoder->config) {
+      encoder->api->config_destroy(encoder->config);
+      encoder->config = nullptr;
+    }
+  }
 
   int bit_depth = heif_image_get_bits_per_pixel_range(image, heif_channel_Y);
 

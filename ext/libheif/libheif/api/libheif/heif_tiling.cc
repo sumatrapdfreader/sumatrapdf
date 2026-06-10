@@ -71,16 +71,23 @@ heif_error heif_image_handle_get_grid_image_tile_id(const heif_image_handle* han
   }
 
   const ImageGrid& gridspec = gridItem->get_grid_spec();
-  if (tile_x >= gridspec.get_columns() || tile_y >= gridspec.get_rows()) {
+
+  if (process_image_transformations) {
+    // transform_requested_tile_position_to_original_tile_position() validates
+    // (tile_x, tile_y) against the *displayed* tile-grid dimensions (which may
+    // differ from the file's dimensions when a 90°/270° rotation is present)
+    // before mapping the coordinates back to the in-file grid.
+    Error err = gridItem->transform_requested_tile_position_to_original_tile_position(tile_x, tile_y);
+    if (err) {
+      return err.error_struct(handle->context.get());
+    }
+  }
+  else if (tile_x >= gridspec.get_columns() || tile_y >= gridspec.get_rows()) {
     return {
       heif_error_Usage_error,
       heif_suberror_Unspecified,
       "Grid tile index out of range"
     };
-  }
-
-  if (process_image_transformations) {
-    gridItem->transform_requested_tile_position_to_original_tile_position(tile_x, tile_y);
   }
 
   *tile_item_id = gridItem->get_grid_tiles()[tile_y * gridspec.get_columns() + tile_x];
@@ -225,14 +232,29 @@ heif_error heif_context_add_grid_image(heif_context* ctx,
     };
   }
 
+  // Fall back to default options when the caller passes nullptr.
+  // add_new_grid_item() copies these into ImageItem_Grid::m_tile_encoding_options,
+  // so the fallback struct only needs to live for the duration of the call.
+  heif_encoding_options* default_options = nullptr;
+  if (!encoding_options) {
+    default_options = heif_encoding_options_alloc();
+    encoding_options = default_options;
+  }
+
   auto generateGridItemResult = ImageItem_Grid::add_new_grid_item(ctx->context.get(),
                                                                   image_width,
                                                                   image_height,
                                                                   static_cast<uint16_t>(tile_rows),
                                                                   static_cast<uint16_t>(tile_columns),
                                                                   encoding_options);
+  heif_encoding_options_free(default_options);
+
   if (!generateGridItemResult) {
     return generateGridItemResult.error_struct(ctx->context.get());
+  }
+
+  if (ctx->context->is_primary_image_set() == false) {
+    ctx->context->set_primary_image(*generateGridItemResult);
   }
 
   if (out_grid_image_handle) {

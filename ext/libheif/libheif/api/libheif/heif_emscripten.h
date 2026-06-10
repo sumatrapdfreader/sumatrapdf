@@ -222,7 +222,7 @@ static int round_odd(int v) {
 }
 
 static emscripten::val heif_js_decode_image(struct heif_image_handle* handle,
-                                            enum heif_colorspace colorspace, enum heif_chroma chroma)
+                                            heif_colorspace colorspace, heif_chroma chroma)
 {
   emscripten::val result = emscripten::val::object();
   if (!handle) {
@@ -323,7 +323,7 @@ static emscripten::val heif_js_decode_image(struct heif_image_handle* handle,
  * This image has to be released after the image data has been read (copied) with heif_image_release().
  */
 static emscripten::val heif_js_decode_image2(struct heif_image_handle* handle,
-                                             enum heif_colorspace colorspace, enum heif_chroma chroma)
+                                             heif_colorspace colorspace, heif_chroma chroma)
 {
   emscripten::val result = emscripten::val::object();
   if (!handle) {
@@ -480,6 +480,7 @@ EMSCRIPTEN_BINDINGS(libheif) {
     .value("heif_suberror_No_item_data", heif_suberror_No_item_data)
     .value("heif_suberror_Invalid_grid_data", heif_suberror_Invalid_grid_data)
     .value("heif_suberror_Missing_grid_images", heif_suberror_Missing_grid_images)
+    .value("heif_suberror_NCLX_colr_VUI_mismatch", heif_suberror_NCLX_colr_VUI_mismatch)
     .value("heif_suberror_No_av1C_box", heif_suberror_No_av1C_box)
     .value("heif_suberror_No_avcC_box", heif_suberror_No_avcC_box)
     .value("heif_suberror_Invalid_mini_box", heif_suberror_Invalid_mini_box)
@@ -553,6 +554,7 @@ EMSCRIPTEN_BINDINGS(libheif) {
     .value("heif_chroma_interleaved_RRGGBBAA_BE", heif_chroma_interleaved_RRGGBBAA_BE)
     .value("heif_chroma_interleaved_RRGGBB_LE", heif_chroma_interleaved_RRGGBB_LE)
     .value("heif_chroma_interleaved_RRGGBBAA_LE", heif_chroma_interleaved_RRGGBBAA_LE)
+    .value("heif_chroma_planar", heif_chroma_planar)
     // Aliases
     .value("heif_chroma_interleaved_24bit", heif_chroma_interleaved_24bit)
     .value("heif_chroma_interleaved_32bit", heif_chroma_interleaved_32bit);
@@ -568,6 +570,8 @@ EMSCRIPTEN_BINDINGS(libheif) {
     .value("heif_colorspace_YCbCr", heif_colorspace_YCbCr)
     .value("heif_colorspace_RGB", heif_colorspace_RGB)
     .value("heif_colorspace_monochrome", heif_colorspace_monochrome)
+    .value("heif_colorspace_filter_array", heif_colorspace_filter_array)
+    .value("heif_colorspace_custom", heif_colorspace_custom)
     .value("heif_colorspace_nonvisual", heif_colorspace_nonvisual);
     emscripten::enum_<heif_channel>("heif_channel")
     .value("heif_channel_Y", heif_channel_Y)
@@ -580,7 +584,8 @@ EMSCRIPTEN_BINDINGS(libheif) {
     .value("heif_channel_interleaved", heif_channel_interleaved)
     .value("heif_channel_filter_array", heif_channel_filter_array)
     .value("heif_channel_depth", heif_channel_depth)
-    .value("heif_channel_disparity", heif_channel_disparity);
+    .value("heif_channel_disparity", heif_channel_disparity)
+    .value("heif_channel_unknown", heif_channel_unknown);
 
     emscripten::enum_<heif_filetype_result>("heif_filetype_result")
     .value("heif_filetype_no", heif_filetype_no)

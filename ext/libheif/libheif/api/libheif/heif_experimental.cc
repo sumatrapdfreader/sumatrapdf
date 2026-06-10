@@ -340,113 +340,13 @@ void heif_pyramid_layer_info_release(heif_pyramid_layer_info* infos)
 }
 
 
-heif_error heif_image_add_channel(heif_image* image,
-                                  heif_channel channel,
-                                  int width, int height,
-                                  heif_channel_datatype datatype, int bit_depth)
-{
-  if (auto err = image->image->add_channel(channel, width, height, datatype, bit_depth, nullptr)) {
-    return err.error_struct(image->image.get());
-  }
-  else {
-    return heif_error_success;
-  }
-}
-
-
-heif_channel_datatype heif_image_get_datatype(const heif_image* image, heif_channel channel)
-{
-  if (image == nullptr) {
-    return heif_channel_datatype_undefined;
-  }
-
-  return image->image->get_datatype(channel);
-}
-
-
-int heif_image_list_channels(heif_image* image,
-                             heif_channel** out_channels)
-{
-  if (!image || !out_channels) {
-    return 0;
-  }
-
-  auto channels = image->image->get_channel_set();
-
-  *out_channels = new heif_channel[channels.size()];
-  heif_channel* p = *out_channels;
-  for (heif_channel c : channels) {
-    *p++ = c;
-  }
-
-  assert(channels.size() < static_cast<size_t>(std::numeric_limits<int>::max()));
-
-  return static_cast<int>(channels.size());
-}
-
-
-void heif_channel_release_list(heif_channel** channels)
-{
-  delete[] channels;
-}
-
-
-#define heif_image_get_channel_X(name, type, datatype, bits) \
-const type* heif_image_get_channel_ ## name ## _readonly(const struct heif_image* image, \
-                                                         enum heif_channel channel, \
-                                                         size_t* out_stride) \
-{                                                            \
-  if (!image || !image->image) {                             \
-    *out_stride = 0;                                         \
-    return nullptr;                                          \
-  }                                                          \
-                                                             \
-  if (image->image->get_datatype(channel) != datatype) {     \
-    return nullptr;                                          \
-  }                                                          \
-  if (image->image->get_storage_bits_per_pixel(channel) != bits) {     \
-    return nullptr;                                          \
-  }                                                          \
-  return  image->image->get_channel<type>(channel, out_stride);                      \
-}                                                            \
-                                                             \
-type* heif_image_get_channel_ ## name (struct heif_image* image, \
-                                       enum heif_channel channel, \
-                                       size_t* out_stride)      \
-{                                                            \
-  if (!image || !image->image) {                             \
-    *out_stride = 0;                                         \
-    return nullptr;                                          \
-  }                                                          \
-                                                             \
-  if (image->image->get_datatype(channel) != datatype) {     \
-    return nullptr;                                          \
-  }                                                          \
-  if (image->image->get_storage_bits_per_pixel(channel) != bits) {     \
-    return nullptr;                                          \
-  }                                                          \
-  return image->image->get_channel<type>(channel, out_stride); \
-}
-
-heif_image_get_channel_X(uint16, uint16_t, heif_channel_datatype_unsigned_integer, 16)
-heif_image_get_channel_X(uint32, uint32_t, heif_channel_datatype_unsigned_integer, 32)
-heif_image_get_channel_X(uint64, uint64_t, heif_channel_datatype_unsigned_integer, 64)
-heif_image_get_channel_X(int16, int16_t, heif_channel_datatype_signed_integer, 16)
-heif_image_get_channel_X(int32, int32_t, heif_channel_datatype_signed_integer, 32)
-heif_image_get_channel_X(int64, int64_t, heif_channel_datatype_signed_integer, 64)
-heif_image_get_channel_X(float32, float, heif_channel_datatype_floating_point, 32)
-heif_image_get_channel_X(float64, double, heif_channel_datatype_floating_point, 64)
-heif_image_get_channel_X(complex32, heif_complex32, heif_channel_datatype_complex_number, 64)
-heif_image_get_channel_X(complex64, heif_complex64, heif_channel_datatype_complex_number, 64)
-
-
 #endif
 
 
 #if HEIF_ENABLE_EXPERIMENTAL_FEATURES
 heif_error heif_context_add_tiled_image(heif_context* ctx,
                                         const heif_tiled_image_parameters* parameters,
-                                        const heif_encoding_options* options, // TODO: do we need this?
+                                        const heif_encoding_options* options,
                                         const heif_encoder* encoder,
                                         heif_image_handle** out_grid_image_handle)
 {
@@ -455,7 +355,7 @@ heif_error heif_context_add_tiled_image(heif_context* ctx,
   }
 
   Result<std::shared_ptr<ImageItem_Tiled> > gridImageResult;
-  gridImageResult = ImageItem_Tiled::add_new_tiled_item(ctx->context.get(), parameters, encoder);
+  gridImageResult = ImageItem_Tiled::add_new_tiled_item(ctx->context.get(), parameters, encoder, options);
 
   if (!gridImageResult) {
     return gridImageResult.error_struct(ctx->context.get());

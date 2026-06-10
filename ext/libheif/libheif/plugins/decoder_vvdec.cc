@@ -55,6 +55,7 @@ struct vvdec_decoder
   std::string error_message;
 };
 
+static const char kEmptyString[] = "";
 static const char kSuccess[] = "Success";
 
 static const int VVDEC_PLUGIN_PRIORITY = 100;
@@ -131,7 +132,7 @@ heif_error vvdec_new_decoder2(void** dec, const heif_decoder_plugin_options* opt
 
 heif_error vvdec_new_decoder(void** dec)
 {
-  heif_decoder_plugin_options options;
+  heif_decoder_plugin_options options{};
   options.format = heif_compression_VVC;
   options.num_threads = 0;
   options.strict_decoding = false;
@@ -179,10 +180,27 @@ heif_error vvdec_push_data2(void* decoder_raw, const void* frame_data, size_t fr
 
   const auto* data = (const uint8_t*) frame_data;
 
-  for (;;) {
+  while (frame_size > 0) {
+    if (frame_size < 4) {
+      return {
+        heif_error_Decoder_plugin_error,
+        heif_suberror_End_of_data,
+        kEmptyString
+      };
+    }
+
     uint32_t size = four_bytes_to_uint32(data[0], data[1], data[2], data[3]);
 
+    if (frame_size - 4 < size) {
+      return {
+        heif_error_Decoder_plugin_error,
+        heif_suberror_End_of_data,
+        kEmptyString
+      };
+    }
+
     data += 4;
+    frame_size -= 4;
 
     std::vector<uint8_t> nalu;
     nalu.push_back(0);
@@ -192,10 +210,7 @@ heif_error vvdec_push_data2(void* decoder_raw, const void* frame_data, size_t fr
 
     decoder->nalus.push_back({std::move(nalu), user_data});
     data += size;
-    frame_size -= 4 + size;
-    if (frame_size == 0) {
-      break;
-    }
+    frame_size -= size;
   }
 
   return heif_error_ok;
@@ -360,7 +375,7 @@ heif_error vvdec_decode_next_image2(void* decoder_raw, heif_image** out_img,
     int bytes_per_pixel = (bpp + 7) / 8;
 
     for (int y = 0; y < h; y++) {
-      memcpy(dst_mem + y * dst_stride, data + y * stride, w * bytes_per_pixel);
+      memcpy(dst_mem + y * dst_stride, data + static_cast<size_t>(y) * stride, static_cast<size_t>(w) * bytes_per_pixel);
     }
 
 #if 0

@@ -72,9 +72,28 @@ Chunk::Chunk(HeifContext* ctx, uint32_t track_id, heif_compression_format format
 }
 
 
-Chunk::Chunk(HeifContext* ctx, uint32_t track_id,
-             uint32_t first_sample, uint32_t num_samples, uint64_t file_offset, const std::shared_ptr<const Box_stsz>& stsz)
+std::shared_ptr<Chunk> Chunk::create(HeifContext* ctx, uint32_t track_id,
+                                     uint32_t first_sample, uint32_t num_samples,
+                                     uint64_t file_offset,
+                                     const std::shared_ptr<const Box_stsz>& stsz)
 {
+  bool success;
+  auto chunk = std::shared_ptr<Chunk>(new Chunk(ctx, track_id, first_sample,
+                                                num_samples, file_offset, stsz,
+                                                success));
+  if (!success) {
+    return nullptr;
+  }
+  return chunk;
+}
+
+
+Chunk::Chunk(HeifContext* ctx, uint32_t track_id,
+             uint32_t first_sample, uint32_t num_samples, uint64_t file_offset,
+             const std::shared_ptr<const Box_stsz>& stsz, bool& success)
+{
+  success = false;
+
   m_ctx = ctx;
   m_track_id = track_id;
 
@@ -94,10 +113,20 @@ Chunk::Chunk(HeifContext* ctx, uint32_t track_id,
       range.size = stsz->get_sample_sizes()[first_sample + i];
     }
 
+    // Detect uint64_t wrap when advancing the running offset. Cumulative chunk
+    // size can exceed UINT64_MAX with a malformed stsz (uint32_t sample size ×
+    // uint32_t sample count) starting from a large co64 chunk offset. Stop
+    // building the chunk; create() will discard the partially-built object.
+    if (file_offset > UINT64_MAX - range.size) {
+      return;
+    }
+
     m_sample_ranges.push_back(range);
 
     file_offset += range.size;
   }
+
+  success = true;
 }
 
 

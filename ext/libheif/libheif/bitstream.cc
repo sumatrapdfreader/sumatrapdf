@@ -165,8 +165,10 @@ BitstreamRange::BitstreamRange(std::shared_ptr<StreamReader> istr,
 BitstreamRange::BitstreamRange(std::shared_ptr<StreamReader> istr,
                                size_t start,
                                size_t end) // one past end
-  : m_istr(std::move(istr)), m_remaining(end)
+  : m_istr(std::move(istr)), m_remaining(end - start)
 {
+  assert(end >= start);
+
   bool success = m_istr->seek(start);
   assert(success);
   (void)success; // TODO
@@ -649,10 +651,11 @@ int BitReader::peek_bits(int n)
   return (int) val;
 }
 
-void BitReader::skip_bytes(int nBytes)
+void BitReader::skip_bytes(uint32_t nBytes)
 {
   // TODO: this is slow
-  while (nBytes--) {
+  while (nBytes) {
+    nBytes--;
     skip_bits(8);
   }
 }
@@ -693,7 +696,7 @@ void BitReader::skip_to_byte_boundary()
   nextbits_cnt -= nskip;
 }
 
-bool BitReader::get_uvlc(int* value)
+bool BitReader::get_uvlc(uint32_t* value)
 {
   int num_zeros = 0;
 
@@ -703,10 +706,9 @@ bool BitReader::get_uvlc(int* value)
     if (num_zeros > MAX_UVLC_LEADING_ZEROS) { return false; }
   }
 
-  int offset = 0;
   if (num_zeros != 0) {
-    offset = (int) get_bits(num_zeros);
-    *value = offset + (1 << num_zeros) - 1;
+    uint32_t offset = get_bits(num_zeros);
+    *value = offset + (1u << num_zeros) - 1u;
     assert(*value > 0);
     return true;
   }
@@ -716,19 +718,19 @@ bool BitReader::get_uvlc(int* value)
   }
 }
 
-bool BitReader::get_svlc(int* value)
+bool BitReader::get_svlc(int32_t* value)
 {
-  int v;
+  uint32_t v;
   if (!get_uvlc(&v)) {
     return false;
   }
   else if (v == 0) {
-    *value = v;
+    *value = 0;
     return true;
   }
 
-  bool negative = ((v & 1) == 0);
-  *value = negative ? -v / 2 : (v + 1) / 2;
+  bool negative = ((v & 1u) == 0);
+  *value = negative ? -static_cast<int32_t>(v / 2) : static_cast<int32_t>((v + 1) / 2);
   return true;
 }
 
@@ -760,6 +762,57 @@ void BitReader::refill()
 #endif
 }
 
+
+// --- BitWriter ---
+
+void BitWriter::write_bits(uint32_t value, int n)
+{
+  assert(n >= 0 && n <= 32);
+
+  for (int i = n - 1; i >= 0; i--) {
+    uint8_t bit = (value >> i) & 1;
+    m_current_byte |= (bit << (7 - m_bits_in_current_byte));
+    m_bits_in_current_byte++;
+
+    if (m_bits_in_current_byte == 8) {
+      m_data.push_back(m_current_byte);
+      m_current_byte = 0;
+      m_bits_in_current_byte = 0;
+    }
+  }
+}
+
+void BitWriter::write_bytes(const std::vector<uint8_t>& data)
+{
+  write_bytes(data.data(), data.size());
+}
+
+void BitWriter::write_bytes(const uint8_t* data, size_t len)
+{
+  assert(m_bits_in_current_byte == 0);
+  m_data.insert(m_data.end(), data, data + len);
+}
+
+void BitWriter::skip_to_byte_boundary()
+{
+  if (m_bits_in_current_byte > 0) {
+    m_data.push_back(m_current_byte);
+    m_current_byte = 0;
+    m_bits_in_current_byte = 0;
+  }
+}
+
+std::vector<uint8_t> BitWriter::get_data() const
+{
+  std::vector<uint8_t> result = m_data;
+  if (m_bits_in_current_byte > 0) {
+    result.push_back(m_current_byte);
+  }
+  return result;
+}
+
+
+// --- StreamWriter ---
 
 void StreamWriter::write8(uint8_t v)
 {

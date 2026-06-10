@@ -13,6 +13,9 @@
     <Filter Include="color-conversion">
       <UniqueIdentifier>{F702E0EE-E3FB-FE40-0C2E-E4C5F885DE4C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="image">
+      <UniqueIdentifier>{A87CA80F-1491-D0C0-DD12-742049E6CCF1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="image-items">
       <UniqueIdentifier>{F7E3F257-6399-6B4D-EC8D-652458426251}</UniqueIdentifier>
     </Filter>
@@ -33,6 +36,9 @@
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_color.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_components.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_context.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
@@ -46,6 +52,9 @@
       <Filter>api\libheif</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.h">
+      <Filter>api\libheif</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_omaf.h">
       <Filter>api\libheif</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\api\libheif\heif_plugin.h">
@@ -126,6 +135,9 @@
     <ClInclude Include="..\ext\libheif\libheif\color-conversion\alpha.h">
       <Filter>color-conversion</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\color-conversion\bayer_bilinear.h">
+      <Filter>color-conversion</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\color-conversion\chroma_sampling.h">
       <Filter>color-conversion</Filter>
     </ClInclude>
@@ -155,6 +167,7 @@
     <ClInclude Include="..\ext\libheif\libheif\error.h" />
     <ClInclude Include="..\ext\libheif\libheif\file.h" />
     <ClInclude Include="..\ext\libheif\libheif\file_layout.h" />
+    <ClInclude Include="..\ext\libheif\libheif\id_creator.h" />
     <ClInclude Include="..\ext\libheif\libheif\image-items\avc.h">
       <Filter>image-items</Filter>
     </ClInclude>
@@ -191,10 +204,17 @@
     <ClInclude Include="..\ext\libheif\libheif\image-items\vvc.h">
       <Filter>image-items</Filter>
     </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image\image_description.h">
+      <Filter>image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\libheif\libheif\image\pixelimage.h">
+      <Filter>image</Filter>
+    </ClInclude>
     <ClInclude Include="..\ext\libheif\libheif\init.h" />
     <ClInclude Include="..\ext\libheif\libheif\logging.h" />
+    <ClInclude Include="..\ext\libheif\libheif\mini.h" />
     <ClInclude Include="..\ext\libheif\libheif\nclx.h" />
-    <ClInclude Include="..\ext\libheif\libheif\pixelimage.h" />
+    <ClInclude Include="..\ext\libheif\libheif\omaf_boxes.h" />
     <ClInclude Include="..\ext\libheif\libheif\plugin_registry.h" />
     <ClInclude Include="..\ext\libheif\libheif\plugins\decoder_dav1d.h">
       <Filter>plugins</Filter>
@@ -231,6 +251,9 @@
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_color.cc">
       <Filter>api\libheif</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_components.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_context.cc">
       <Filter>api\libheif</Filter>
     </ClCompile>
@@ -244,6 +267,9 @@
       <Filter>api\libheif</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_image_handle.cc">
+      <Filter>api\libheif</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_omaf.cc">
       <Filter>api\libheif</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\api\libheif\heif_plugin.cc">
@@ -324,6 +350,9 @@
     <ClCompile Include="..\ext\libheif\libheif\color-conversion\alpha.cc">
       <Filter>color-conversion</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\color-conversion\bayer_bilinear.cc">
+      <Filter>color-conversion</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\color-conversion\chroma_sampling.cc">
       <Filter>color-conversion</Filter>
     </ClCompile>
@@ -353,6 +382,7 @@
     <ClCompile Include="..\ext\libheif\libheif\error.cc" />
     <ClCompile Include="..\ext\libheif\libheif\file.cc" />
     <ClCompile Include="..\ext\libheif\libheif\file_layout.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\id_creator.cc" />
     <ClCompile Include="..\ext\libheif\libheif\image-items\avc.cc">
       <Filter>image-items</Filter>
     </ClCompile>
@@ -389,10 +419,17 @@
     <ClCompile Include="..\ext\libheif\libheif\image-items\vvc.cc">
       <Filter>image-items</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image\image_description.cc">
+      <Filter>image</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libheif\libheif\image\pixelimage.cc">
+      <Filter>image</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libheif\libheif\init.cc" />
     <ClCompile Include="..\ext\libheif\libheif\logging.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\mini.cc" />
     <ClCompile Include="..\ext\libheif\libheif\nclx.cc" />
-    <ClCompile Include="..\ext\libheif\libheif\pixelimage.cc" />
+    <ClCompile Include="..\ext\libheif\libheif\omaf_boxes.cc" />
     <ClCompile Include="..\ext\libheif\libheif\plugin_registry.cc" />
     <ClCompile Include="..\ext\libheif\libheif\plugins\decoder_dav1d.cc">
       <Filter>plugins</Filter>

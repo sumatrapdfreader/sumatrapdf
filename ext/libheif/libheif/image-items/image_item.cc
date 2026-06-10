@@ -40,6 +40,7 @@
 #include <limits>
 #include <cassert>
 #include <cstring>
+#include <sstream>
 //#include <ranges>
 
 #if WITH_UNCOMPRESSED_CODEC
@@ -200,9 +201,11 @@ std::shared_ptr<ImageItem> ImageItem::alloc_for_infe_box(HeifContext* ctx, const
   else if (item_type == fourcc("iden")) {
     return std::make_shared<ImageItem_iden>(ctx, id);
   }
+#if HEIF_ENABLE_EXPERIMENTAL_FEATURES
   else if (item_type == fourcc("tili")) {
     return std::make_shared<ImageItem_Tiled>(ctx, id);
   }
+#endif
   else {
     // This item has an unknown type. It could be an image or anything else.
     // Do not process the item.
@@ -321,19 +324,24 @@ Result<Encoder::CodedImageData> ImageItem::encode_to_bitstream_and_boxes(const s
   // --- write PIXI property
 
   std::shared_ptr<Box_pixi> pixi = std::make_shared<Box_pixi>();
-  if (colorspace == heif_colorspace_monochrome) {
-    pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Y));
+  bool valid_pixi = false;
+
+  if (colorspace == heif_colorspace_filter_array) {
+    // Skip pixi for filter array images — bit depth info is in uncC
+  }
+  else if (colorspace == heif_colorspace_monochrome) {
+    valid_pixi = pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Y));
   }
   else if (colorspace == heif_colorspace_YCbCr) {
-    pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Y));
-    pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Cb));
-    pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Cr));
+    valid_pixi = (pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Y)) ||
+                  pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Cb)) ||
+                  pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_Cr)));
   }
   else if (colorspace == heif_colorspace_RGB) {
     if (chroma == heif_chroma_444) {
-      pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_R));
-      pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_G));
-      pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_B));
+      valid_pixi = (pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_R)) ||
+                    pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_G)) ||
+                    pixi->add_channel_bits(image->get_bits_per_pixel(heif_channel_B)));
     }
     else if (chroma == heif_chroma_interleaved_RGB ||
              chroma == heif_chroma_interleaved_RGBA ||
@@ -341,18 +349,21 @@ Result<Encoder::CodedImageData> ImageItem::encode_to_bitstream_and_boxes(const s
              chroma == heif_chroma_interleaved_RRGGBB_BE ||
              chroma == heif_chroma_interleaved_RRGGBBAA_LE ||
              chroma == heif_chroma_interleaved_RRGGBBAA_BE) {
-      uint8_t bpp = image->get_bits_per_pixel(heif_channel_interleaved);
-      pixi->add_channel_bits(bpp);
-      pixi->add_channel_bits(bpp);
-      pixi->add_channel_bits(bpp);
+      uint16_t bpp = image->get_bits_per_pixel(heif_channel_interleaved);
+      valid_pixi = (pixi->add_channel_bits(bpp) ||
+                    pixi->add_channel_bits(bpp) ||
+                    pixi->add_channel_bits(bpp));
     }
   }
-  codedImage.properties.push_back(pixi);
+
+  if (valid_pixi) {
+    codedImage.properties.push_back(pixi);
+  }
 
   // --- generate properties for image extra data
 
-  // copy over ImageExtraData into image item
-  *static_cast<ImageExtraData*>(this) = static_cast<ImageExtraData>(*image);
+  // copy over ImageDescription into image item
+  *static_cast<ImageDescription*>(this) = static_cast<ImageDescription>(*image);
 
   auto extra_data_properties = image->generate_property_boxes(false);
   codedImage.properties.insert(codedImage.properties.end(),
@@ -384,7 +395,11 @@ Error ImageItem::encode_to_item(HeifContext* ctx,
 
   Encoder::CodedImageData& codedImage = *codingResult;
 
-  auto infe_box = ctx->get_heif_file()->add_new_infe_box(get_infe_type());
+  auto infe_result = ctx->get_heif_file()->add_new_infe_box(get_infe_type());
+  if (!infe_result) {
+    return infe_result.error();
+  }
+  auto infe_box = *infe_result;
   heif_item_id image_id = infe_box->get_item_ID();
   set_id(image_id);
 
@@ -538,6 +553,144 @@ Result<Encoder::CodedImageData> ImageItem::encode(const std::shared_ptr<HeifPixe
 }
 
 
+void ImageItem::set_alpha_channel(std::shared_ptr<ImageItem> img)
+{
+  m_alpha_channel = std::move(img);
+  if (!m_alpha_channel) {
+    return;
+  }
+
+  // Avoid emitting a duplicate Alpha description if set_alpha_channel was
+  // called more than once.
+  for (const auto& d : get_component_descriptions()) {
+    if (d.channel == heif_channel_Alpha) {
+      return;
+    }
+  }
+
+  // Bit depth of the alpha plane comes from the alpha aux item's coded
+  // image (typically a monochrome HEVC/AVIF channel). Fall back to 8 bpp
+  // if the decoder cannot tell us.
+  int alpha_bpp = m_alpha_channel->get_luma_bits_per_pixel();
+  if (alpha_bpp <= 0) {
+    alpha_bpp = 8;
+  }
+
+  ComponentDescription desc;
+  desc.component_id = mint_component_id();
+  desc.channel = heif_channel_Alpha;
+  desc.component_type = heif_cmpd_component_type_alpha;
+  desc.datatype = heif_component_datatype_unsigned_integer;
+  desc.bit_depth = static_cast<uint16_t>(alpha_bpp);
+  desc.width = get_ispe_width();
+  desc.height = get_ispe_height();
+  desc.has_data_plane = true;
+  add_component_description(std::move(desc));
+}
+
+
+void ImageItem::populate_component_descriptions()
+{
+  // Idempotent: a subclass override (e.g. unci) may already have populated.
+  if (!get_component_descriptions().empty()) {
+    return;
+  }
+
+  // Visual codecs (HEVC/AVC/AVIF/JPEG/JPEG2000/VVC). Requires the decoder to
+  // be initialized so we can read colorspace / chroma / bit depths from the
+  // codec config. If the decoder isn't ready (e.g. on the encoder-output
+  // path that doesn't call initialize_decoder, or for items whose codec is
+  // not supported), bail out and leave m_components empty.
+  auto decoderResult = get_decoder();
+  if (!decoderResult || !*decoderResult) {
+    return;
+  }
+  heif_colorspace colorspace = heif_colorspace_undefined;
+  heif_chroma chroma = heif_chroma_undefined;
+  if (Error err = get_coded_image_colorspace(&colorspace, &chroma); err) {
+    return;
+  }
+
+  uint32_t img_w = get_ispe_width();
+  uint32_t img_h = get_ispe_height();
+  int luma_bpp = get_luma_bits_per_pixel();
+  int chroma_bpp = get_chroma_bits_per_pixel();
+  if (luma_bpp <= 0) luma_bpp = 8;
+  if (chroma_bpp <= 0) chroma_bpp = luma_bpp;
+
+  auto emit = [this](heif_channel ch, uint16_t type, int bpp,
+                     uint32_t w, uint32_t h) {
+    ComponentDescription desc;
+    desc.component_id = mint_component_id();
+    desc.channel = ch;
+    desc.component_type = type;
+    desc.datatype = heif_component_datatype_unsigned_integer;
+    desc.bit_depth = static_cast<uint16_t>(bpp);
+    desc.width = w;
+    desc.height = h;
+    desc.has_data_plane = true;
+    add_component_description(std::move(desc));
+  };
+
+  switch (colorspace) {
+    case heif_colorspace_monochrome:
+      emit(heif_channel_Y, heif_cmpd_component_type_monochrome, luma_bpp, img_w, img_h);
+      break;
+
+    case heif_colorspace_YCbCr: {
+      uint32_t cw = channel_width(img_w, chroma, heif_channel_Cb);
+      uint32_t ch_ = channel_height(img_h, chroma, heif_channel_Cb);
+      emit(heif_channel_Y,  heif_cmpd_component_type_Y,  luma_bpp,   img_w, img_h);
+      emit(heif_channel_Cb, heif_cmpd_component_type_Cb, chroma_bpp, cw,    ch_);
+      emit(heif_channel_Cr, heif_cmpd_component_type_Cr, chroma_bpp, cw,    ch_);
+      break;
+    }
+
+    case heif_colorspace_RGB:
+      emit(heif_channel_R, heif_cmpd_component_type_red,   luma_bpp, img_w, img_h);
+      emit(heif_channel_G, heif_cmpd_component_type_green, luma_bpp, img_w, img_h);
+      emit(heif_channel_B, heif_cmpd_component_type_blue,  luma_bpp, img_w, img_h);
+      break;
+
+    default:
+      // Other colorspaces (filter_array, nonvisual) are unci-only and are
+      // populated by the unci override.
+      break;
+  }
+}
+
+
+bool ImageItem::populate_descriptions_from_child(const ImageItem& child,
+                                                  uint32_t child_w, uint32_t child_h)
+{
+  const auto& child_descs = child.get_component_descriptions();
+  if (child_descs.empty()) {
+    return false;
+  }
+
+  uint32_t img_w = get_ispe_width();
+  uint32_t img_h = get_ispe_height();
+  if (img_w == 0 || img_h == 0 || child_w == 0 || child_h == 0) {
+    return false;
+  }
+
+  for (const auto& src : child_descs) {
+    ComponentDescription d = src;
+    d.component_id = mint_component_id();
+    if (src.has_data_plane) {
+      // Preserve subsampling ratio: a half-size chroma plane in the child
+      // becomes half of img_w/h in the wrapper.
+      uint64_t w64 = static_cast<uint64_t>(img_w) * src.width / child_w;
+      uint64_t h64 = static_cast<uint64_t>(img_h) * src.height / child_h;
+      d.width = static_cast<uint32_t>(w64);
+      d.height = static_cast<uint32_t>(h64);
+    }
+    add_component_description(std::move(d));
+  }
+  return true;
+}
+
+
 std::vector<std::shared_ptr<Box_colr> >
 ImageItem::add_color_profile(const std::shared_ptr<HeifPixelImage>& image,
                              const heif_encoding_options& options,
@@ -547,6 +700,11 @@ ImageItem::add_color_profile(const std::shared_ptr<HeifPixelImage>& image,
   std::vector<std::shared_ptr<Box_colr> > colr_boxes;
 
   if (input_class == heif_image_input_class_normal || input_class == heif_image_input_class_thumbnail) {
+    // No color profile for non-visual images (e.g. elevation data)
+    if (image->get_colorspace() == heif_colorspace_custom) {
+      return colr_boxes;
+    }
+
     auto icc_profile = image->get_color_profile_icc();
     if (icc_profile) {
       auto colr = std::make_shared<Box_colr>();
@@ -591,29 +749,52 @@ Error ImageItem::transform_requested_tile_position_to_original_tile_position(uin
     return propertiesResult.error();
   }
 
+  // The caller's (tile_x, tile_y) are in the *displayed* tile grid, so they
+  // must be validated against the displayed dimensions, not the in-file ones.
+  // For rotations of 90°/270° the displayed grid has its columns and rows
+  // swapped relative to the file. Using the file dims (as before) both let
+  // out-of-range coordinates through and produced unsigned underflows inside
+  // the inverse-rotation formulas (e.g. `num_rows - 1 - tile_x` with
+  // `tile_x >= num_rows`).
   heif_image_tiling tiling = get_heif_image_tiling();
+  if (Error err = process_image_transformations_on_tiling(tiling)) {
+    return err;
+  }
 
-  //for (auto& prop : std::ranges::reverse_view(propertiesResult.value)) {
+  if (tile_x >= tiling.num_columns || tile_y >= tiling.num_rows) {
+    return {heif_error_Usage_error,
+            heif_suberror_Unspecified,
+            "Tile coordinate out of range for displayed image"};
+  }
+
+  // Walk the property chain in reverse, undoing each transformation as we go.
+  // Track the current (intermediate) tile-grid dimensions so each inverse uses
+  // the right extent and so 90°/270° rotations swap dims for subsequent steps.
+  uint32_t cur_cols = tiling.num_columns;
+  uint32_t cur_rows = tiling.num_rows;
+
   for (auto propIter = propertiesResult->rbegin(); propIter != propertiesResult->rend(); propIter++) {
     if (auto irot = std::dynamic_pointer_cast<Box_irot>(*propIter)) {
       switch (irot->get_rotation_ccw()) {
         case 90: {
-          uint32_t tx0 = tiling.num_columns - 1 - tile_y;
+          uint32_t tx0 = cur_rows - 1 - tile_y;
           uint32_t ty0 = tile_x;
-          tile_y = ty0;
           tile_x = tx0;
+          tile_y = ty0;
+          std::swap(cur_cols, cur_rows);
           break;
         }
         case 270: {
           uint32_t tx0 = tile_y;
-          uint32_t ty0 = tiling.num_rows - 1 - tile_x;
-          tile_y = ty0;
+          uint32_t ty0 = cur_cols - 1 - tile_x;
           tile_x = tx0;
+          tile_y = ty0;
+          std::swap(cur_cols, cur_rows);
           break;
         }
         case 180: {
-          tile_x = tiling.num_columns - 1 - tile_x;
-          tile_y = tiling.num_rows - 1 - tile_y;
+          tile_x = cur_cols - 1 - tile_x;
+          tile_y = cur_rows - 1 - tile_y;
           break;
         }
         case 0:
@@ -627,10 +808,10 @@ Error ImageItem::transform_requested_tile_position_to_original_tile_position(uin
     if (auto imir = std::dynamic_pointer_cast<Box_imir>(*propIter)) {
       switch (imir->get_mirror_direction()) {
         case heif_transform_mirror_direction_horizontal:
-          tile_x = tiling.num_columns - 1 - tile_x;
+          tile_x = cur_cols - 1 - tile_x;
           break;
         case heif_transform_mirror_direction_vertical:
-          tile_y = tiling.num_rows - 1 - tile_y;
+          tile_y = cur_rows - 1 - tile_y;
           break;
         default:
           assert(false);
@@ -645,36 +826,56 @@ Error ImageItem::transform_requested_tile_position_to_original_tile_position(uin
 
 void ImageItem::set_clli(const heif_content_light_level& clli)
 {
-  ImageExtraData::set_clli(clli);
-  add_property(get_clli_box(), false);
+  ImageDescription::set_clli(clli);
+  add_property(create_clli_box(), false);
 }
 
 
 void ImageItem::set_mdcv(const heif_mastering_display_colour_volume& mdcv)
 {
-  ImageExtraData::set_mdcv(mdcv);
-  add_property(get_mdcv_box(), false);
+  ImageDescription::set_mdcv(mdcv);
+  add_property(create_mdcv_box(), false);
+}
+
+
+void ImageItem::set_amve(const heif_ambient_viewing_environment& amve)
+{
+  ImageDescription::set_amve(amve);
+  add_property(create_amve_box(), false);
+}
+
+
+void ImageItem::set_nominal_diffuse_white_luminance(uint32_t luminance)
+{
+  ImageDescription::set_nominal_diffuse_white_luminance(luminance);
+  add_property(create_ndwt_box(), false);
 }
 
 
 void ImageItem::set_pixel_ratio(uint32_t h, uint32_t v)
 {
-  ImageExtraData::set_pixel_ratio(h, v);
-  add_property(get_pasp_box(), false);
+  ImageDescription::set_pixel_ratio(h, v);
+  add_property(create_pasp_box(), false);
 }
 
 
 void ImageItem::set_color_profile_nclx(const nclx_profile& profile)
 {
-  ImageExtraData::set_color_profile_nclx(profile);
-  add_property(get_colr_box_nclx(), false);
+  ImageDescription::set_color_profile_nclx(profile);
+  add_property(create_colr_box_nclx(), false);
 }
 
 
 void ImageItem::set_color_profile_icc(const std::shared_ptr<const color_profile_raw>& profile)
 {
-  ImageExtraData::set_color_profile_icc(profile);
-  add_property(get_colr_box_icc(), false);
+  ImageDescription::set_color_profile_icc(profile);
+  add_property(create_colr_box_icc(), false);
+}
+
+void ImageItem::set_omaf_image_projection(heif_omaf_image_projection projection)
+{
+  ImageDescription::set_omaf_image_projection(projection);
+  add_property(create_prfr_box(), true);
 }
 
 
@@ -682,6 +883,24 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
                                                                 bool decode_tile_only, uint32_t tile_x0, uint32_t tile_y0,
                                                                 std::set<heif_item_id> processed_ids) const
 {
+  // Check for cycles before taking m_decode_mutex: a derived item that
+  // (transitively) references itself would otherwise re-enter decode_image()
+  // on the same ImageItem and self-deadlock on the non-recursive mutex.
+  // The matching insert lives inside decode_compressed_image() of derived
+  // items (grid/overlay/iden), so the current item is in processed_ids only
+  // when called from one of its own descendants.
+  if (processed_ids.contains(m_id)) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Unspecified,
+                 "'iref' has cyclic references"};
+  }
+
+  if (m_item_error) {
+    return m_item_error;
+  }
+
+  std::lock_guard<std::mutex> lock(m_decode_mutex);
+
   // --- check whether image size (according to 'ispe') exceeds maximum
 
   if (!decode_tile_only) {
@@ -716,12 +935,16 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
     return Error(heif_error_Decoder_plugin_error, heif_suberror_Unspecified);
   }
 
+  // --- validate the decoded image against the signaled size (pre-transform)
+
+  if (Error err = check_decoded_image_size(*img, decode_tile_only, tile_x0, tile_y0)) {
+    return err;
+  }
+
   std::shared_ptr<HeifFile> file = m_heif_context->get_heif_file();
 
 
   // --- apply image transformations
-
-  Error error;
 
   if (options.ignore_transformations == false) {
     Result<std::vector<std::shared_ptr<Box>>> propertiesResult = get_properties();
@@ -735,7 +958,7 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
       if (auto rot = std::dynamic_pointer_cast<Box_irot>(property)) {
         auto rotateResult = img->rotate_ccw(rot->get_rotation_ccw(), m_heif_context->get_security_limits());
         if (!rotateResult) {
-          return error;
+          return rotateResult.error();
         }
 
         img = *rotateResult;
@@ -746,7 +969,7 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
         auto mirrorResult = img->mirror_inplace(mirror->get_mirror_direction(),
                                                 get_context()->get_security_limits());
         if (!mirrorResult) {
-          return error;
+          return mirrorResult.error();
         }
         img = *mirrorResult;
       }
@@ -785,6 +1008,13 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
 
           img = *cropResult;
         }
+      }
+
+
+      if (auto iscl = std::dynamic_pointer_cast<Box_iscl>(property)) {
+        return Error(heif_error_Unsupported_feature,
+                     heif_suberror_Unspecified,
+                     "Image scaling (iscl) transformative property is not yet supported");
       }
     }
   }
@@ -843,7 +1073,7 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
       }
       alpha = std::move(scaled_alpha);
     }
-    img->transfer_plane_from_image_as(alpha, channel, heif_channel_Alpha);
+    img->transfer_channel_from_image_as(alpha, channel, heif_channel_Alpha);
 
     if (is_premultiplied_alpha()) {
       img->set_premultiplied_alpha(true);
@@ -856,9 +1086,71 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
   // If there is an NCLX profile in the HEIF/AVIF metadata, use this for the color conversion.
   // Otherwise, use the profile that is stored in the image stream itself and then set the
   // (non-NCLX) profile later.
-  auto nclx = get_color_profile_nclx();
-  if (!nclx.is_undefined()) {
-    img->set_color_profile_nclx(nclx);
+  const auto heif_nclx = get_color_profile_nclx();
+  if (heif_nclx.is_defined()) {
+
+    // Since we have a HEIF colr box, we overwrite the bitstream's CICP parameter
+    // with that parameter from the colr box.
+    nclx_profile consolidated_nclx = heif_nclx;
+
+    // If the decoder plugin populated an NCLX profile from the bitstream's
+    // color signalling (e.g. HEVC SPS VUI, AV1 sequence header), compare it
+    // against the colr box. Per ISO/IEC 14496-12 and ISO/IEC 23000-22 (MIAF)
+    // the colr box overrides the bitstream, but a mismatch is a strong
+    // indication of a muxer bug.
+    const auto bitstream_nclx = img->get_color_profile_nclx();
+    if (bitstream_nclx.is_defined()) {
+
+      // Check whether there is a CICP mismatch between the HEIF colr box and the compressed bitstream
+      // If yes, output a warning.
+
+      auto cicp_mismatch = [](uint16_t bs, uint16_t cr) {
+        return bs != 2 /*unspecified*/ && cr != 2 && bs != cr;
+      };
+
+      if (cicp_mismatch(bitstream_nclx.m_colour_primaries,        heif_nclx.m_colour_primaries)        ||
+          cicp_mismatch(bitstream_nclx.m_transfer_characteristics, heif_nclx.m_transfer_characteristics) ||
+          cicp_mismatch(bitstream_nclx.m_matrix_coefficients,     heif_nclx.m_matrix_coefficients)     ||
+          bitstream_nclx.m_full_range_flag != heif_nclx.m_full_range_flag) {
+        std::stringstream msg;
+        msg << "colr box NCLX ("
+            << heif_nclx.m_colour_primaries << "/"
+            << heif_nclx.m_transfer_characteristics << "/"
+            << heif_nclx.m_matrix_coefficients << "/"
+            << (heif_nclx.m_full_range_flag ? "full" : "limited")
+            << ") disagrees with bitstream signalling ("
+            << bitstream_nclx.m_colour_primaries << "/"
+            << bitstream_nclx.m_transfer_characteristics << "/"
+            << bitstream_nclx.m_matrix_coefficients << "/"
+            << (bitstream_nclx.m_full_range_flag ? "full" : "limited")
+            << "); colr takes precedence per ISO/IEC 14496-12 and ISO/IEC 23000-22 (MIAF)";
+        add_decoding_warning({heif_error_Invalid_input,
+                              heif_suberror_NCLX_colr_VUI_mismatch,
+                              msg.str()});
+      }
+
+      // Fix full-range flag in images that are probably broken.
+
+      if (options.version >= 9 && options.autocorrect_broken_input) {
+
+        // Some Sony cameras mis-tag full_range_flag=0 in colr while the bitstream VUI is correct (full_range_flag=1), see issue #1770.
+        // Rationale for the fix: if the bitstream explicitly says full_range=1, it probably does with for a reason.
+        // Thus, we keep the full-range flag.
+
+        if (bitstream_nclx.get_full_range_flag() == true &&
+            heif_nclx.get_full_range_flag() == false) {
+          add_decoding_warning({
+                                 heif_error_Invalid_input,
+                                 heif_suberror_NCLX_colr_VUI_mismatch,
+                                 "Autocorrecting full-range flag to ON (colr=limited, bitstream=full)"
+                               });
+
+          consolidated_nclx.set_full_range_flag(true);
+        }
+      }
+    }
+
+    img->set_color_profile_nclx(consolidated_nclx);
   }
 
   auto icc = get_color_profile_icc();
@@ -887,6 +1179,20 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
       img->set_mdcv(mdcv->mdcv);
     }
 
+    // AMVE
+
+    auto amve = get_property<Box_amve>();
+    if (amve) {
+      img->set_amve(amve->amve);
+    }
+
+    // NDWT
+
+    auto ndwt = get_property<Box_ndwt>();
+    if (ndwt) {
+      img->set_nominal_diffuse_white_luminance(ndwt->get_diffuse_white_luminance());
+    }
+
     // PASP
 
     auto pasp = get_property<Box_pasp>();
@@ -907,7 +1213,14 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_image(const heif_decod
     if (gimi_content_id) {
       img->set_gimi_sample_content_id(gimi_content_id->get_content_id());
     }
+
+    // Image projection (OMAF)
+    auto prfr = get_property<Box_prfr>();
+    if (prfr) {
+      img->set_omaf_image_projection(prfr->get_omaf_image_projection());
+    }
   }
+
 
   return img;
 }
@@ -952,8 +1265,47 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem::decode_compressed_image(const
 
   decoder->set_data_extent(std::move(extent));
 
-  return decoder->decode_single_frame_from_compressed_data(options,
-                                                           get_context()->get_security_limits());
+  // Tighten max_image_size_pixels for this decode so a decoder plugin (e.g.
+  // dav1d) cannot allocate buffers far larger than the ispe-declared size
+  // when the codec bitstream lies about its dimensions.
+  heif_security_limits tightened = tighten_image_size_limit_for_ispe(
+      get_context()->get_security_limits(),
+      get_width(), get_height(),
+      max_coding_unit_size_for_codec(get_compression_format()));
+
+  return decoder->decode_single_frame_from_compressed_data(options, &tightened);
+}
+
+
+Error ImageItem::check_decoded_image_size(const HeifPixelImage& img,
+                                          bool decode_tile_only,
+                                          uint32_t tile_x0, uint32_t tile_y0) const
+{
+  uint32_t expected_w, expected_h;
+
+  if (decode_tile_only) {
+    // The decoded buffer is a single tile, sized to the signaled tile size.
+    get_tile_size(expected_w, expected_h);
+  }
+  else {
+    // Pre-transform coded size from the 'ispe' property.
+    expected_w = get_ispe_width();
+    expected_h = get_ispe_height();
+  }
+
+  // No 'ispe' / no tile size known -> cannot validate (a missing-'ispe' warning is
+  // already emitted upstream). Skip rather than reject.
+  if (expected_w == 0 || expected_h == 0) {
+    return Error::Ok;
+  }
+
+  if (!img.primary_planes_have_size(expected_w, expected_h)) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Invalid_image_size,
+                 "Decoded image does not have the size signaled in the file."};
+  }
+
+  return Error::Ok;
 }
 
 
@@ -1125,6 +1477,14 @@ Error ImageItem::process_image_transformations_on_tiling(heif_image_tiling& tili
       right_excess += right;
       top_excess += top;
       bottom_excess += bottom;
+    }
+
+    // --- scaling (not supported yet)
+
+    if (auto iscl = std::dynamic_pointer_cast<Box_iscl>(property)) {
+      return {heif_error_Unsupported_feature,
+              heif_suberror_Unspecified,
+              "Image scaling (iscl) transformative property is not yet supported"};
     }
   }
 

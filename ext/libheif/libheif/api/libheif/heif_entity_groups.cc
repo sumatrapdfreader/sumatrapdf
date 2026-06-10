@@ -53,6 +53,7 @@ heif_entity_group* heif_context_get_entity_groups(const heif_context* ctx,
     }
 
     auto groupBox = std::dynamic_pointer_cast<Box_EntityToGroup>(group);
+    if (!groupBox) continue;
     const std::vector<heif_item_id>& items = groupBox->get_item_ids();
 
     if (item_filter != 0 && std::all_of(items.begin(), items.end(), [item_filter](heif_item_id item) {

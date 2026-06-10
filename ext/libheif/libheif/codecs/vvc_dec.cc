@@ -22,6 +22,7 @@
 #include "vvc_boxes.h"
 #include "error.h"
 #include "context.h"
+#include "plugins/nalu_utils.h"
 
 #include <string>
 
@@ -53,6 +54,26 @@ int Decoder_VVC::get_luma_bits_per_pixel() const
 int Decoder_VVC::get_chroma_bits_per_pixel() const
 {
   return get_luma_bits_per_pixel();
+}
+
+
+Result<std::optional<ImageSize>> Decoder_VVC::get_coded_image_size_from_config() const
+{
+  const std::vector<uint8_t>* sps = m_vvcC->get_first_nal_of_type(VVC_NAL_UNIT_SPS_NUT);
+  if (!sps || sps->empty()) {
+    return std::optional<ImageSize>{};
+  }
+
+  Box_vvcC::configuration scratch = m_vvcC->get_configuration();
+  uint32_t cropped_w = 0, cropped_h = 0;
+  ImageSize coded{};
+  Error e = parse_sps_for_vvcC_configuration(sps->data(), sps->size(), &scratch,
+                                             &cropped_w, &cropped_h, &coded);
+  if (e) {
+    return e;
+  }
+
+  return std::optional<ImageSize>{coded};
 }
 
 

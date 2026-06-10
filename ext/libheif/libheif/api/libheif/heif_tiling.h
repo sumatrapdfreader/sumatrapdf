@@ -85,8 +85,8 @@ typedef struct heif_decoding_options heif_decoding_options;
 LIBHEIF_API
 heif_error heif_image_handle_decode_image_tile(const heif_image_handle* in_handle,
                                                heif_image** out_img,
-                                               enum heif_colorspace colorspace,
-                                               enum heif_chroma chroma,
+                                               heif_colorspace colorspace,
+                                               heif_chroma chroma,
                                                const heif_decoding_options* options,
                                                uint32_t tile_x, uint32_t tile_y);
 

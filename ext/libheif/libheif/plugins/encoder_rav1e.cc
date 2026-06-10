@@ -509,6 +509,13 @@ heif_error rav1e_start_sequence_encoding_intern(void* encoder_raw, const heif_im
 {
   auto* encoder = (encoder_struct_rav1e*) encoder_raw;
 
+  // unref the context if it was already initialized
+  // (e.g. when the encoder is reused for alpha encoding after being used for YUV encoding)
+  if (encoder->rav1eContextRaw) {
+    rav1e_context_unref(encoder->rav1eContextRaw);
+    encoder->rav1eContextRaw = nullptr;
+  }
+
   const heif_chroma chroma = heif_image_get_chroma_format(image);
 
   RaChromaSampling chromaSampling;

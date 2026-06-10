@@ -24,6 +24,7 @@
 
 #include "box.h"
 #include "bitstream.h"
+#include "image/pixelimage.h"
 #include "unc_types.h"
 #include "sequences/seq_boxes.h"
 
@@ -31,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
 
 
 /**
@@ -62,12 +64,16 @@ public:
 
   const std::vector<Component>& get_components() const { return m_components; }
 
-  bool has_component(heif_uncompressed_component_type) const;
+  bool has_component(heif_cmpd_component_type) const;
 
-  void add_component(const Component& component)
+  uint16_t add_component(const Component& component)
   {
+    auto index = static_cast<uint16_t>(m_components.size());
     m_components.push_back(component);
+    return index;
   }
+
+  void set_components(const std::vector<uint16_t>&);
 
 protected:
   Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
@@ -87,7 +93,15 @@ public:
 
   bool is_essential() const override { return true; }
 
-  void derive_box_version() override {};
+  bool is_minimized() const
+  {
+    return m_profile != 0 && m_num_tile_cols==1 && m_num_tile_rows==1;
+  }
+
+  void derive_box_version() override
+  {
+    set_version(is_minimized() ? 1 : 0);
+  }
 
   std::string dump(Indent&) const override;
 
@@ -95,7 +109,7 @@ public:
 
   struct Component
   {
-    uint16_t component_index;
+    uint32_t component_index;
     uint16_t component_bit_depth; // range [1..256]
     uint8_t component_format;
     uint8_t component_align_size;
@@ -208,7 +222,9 @@ public:
 
   uint32_t get_number_of_tiles() const { return m_num_tile_rows * m_num_tile_rows; }
 
-  uint64_t compute_tile_data_size_bytes(uint32_t tile_width, uint32_t tile_height) const;
+  std::shared_ptr<Box_cmpd> get_synthetic_cmpd() const { return m_synthetic_cmpd; }
+
+  void set_synthetic_cmpd(std::shared_ptr<Box_cmpd> cmpd) { m_synthetic_cmpd = std::move(cmpd); }
 
 protected:
   Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
@@ -229,6 +245,8 @@ protected:
   uint32_t m_tile_align_size = 0;
   uint32_t m_num_tile_cols = 1;
   uint32_t m_num_tile_rows = 1;
+
+  std::shared_ptr<Box_cmpd> m_synthetic_cmpd;
 };
 
 
@@ -341,21 +359,13 @@ public:
     set_short_type(fourcc("cpat"));
   }
 
-  struct PatternComponent
-  {
-    uint32_t component_index;
-    float component_gain;
-  };
+  uint16_t get_pattern_width() const { return m_pattern.pattern_width; }
 
-  uint16_t get_pattern_width() const
-  {
-    return m_pattern_width;
-  }
+  uint16_t get_pattern_height() const { return m_pattern.pattern_height; }
 
-  uint16_t get_pattern_height() const
-  {
-    return m_pattern_height;
-  }
+  const BayerPatternCmpd& get_pattern() const { return m_pattern; }
+
+  void set_pattern(const BayerPatternCmpd& pattern) { m_pattern = pattern; }
 
   std::string dump(Indent&) const override;
 
@@ -364,10 +374,120 @@ public:
 protected:
   Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
 
-  uint16_t m_pattern_width = 0;
-  uint16_t m_pattern_height = 0;
-  std::vector<PatternComponent> m_components;
+  BayerPatternCmpd m_pattern;
 };
+
+
+/**
+ * Polarization pattern definition box (splz).
+ *
+ * Describes the polarization filter array pattern on an image sensor.
+ * Multiple splz boxes can exist (one per set of components with
+ * different polarization filters).
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.5.
+ */
+class Box_splz : public FullBox
+{
+public:
+  Box_splz() { set_short_type(fourcc("splz")); }
+
+  const PolarizationPattern& get_pattern() const { return m_pattern; }
+
+  void set_pattern(const PolarizationPattern& pattern) { m_pattern = pattern; }
+
+  std::string dump(Indent&) const override;
+
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  PolarizationPattern m_pattern;
+};
+
+
+/**
+ * Sensor bad pixels map box (sbpm).
+ *
+ * Identifies bad pixels on a sensor for which at least one component
+ * value is corrupted. Supports bad rows, bad columns, and individual
+ * bad pixel coordinates.
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.7.
+ */
+class Box_sbpm : public FullBox
+{
+public:
+  Box_sbpm() { set_short_type(fourcc("sbpm")); }
+
+  const SensorBadPixelsMap& get_bad_pixels_map() const { return m_map; }
+  void set_bad_pixels_map(const SensorBadPixelsMap& map) { m_map = map; }
+
+  std::string dump(Indent&) const override;
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  SensorBadPixelsMap m_map;
+};
+
+
+/**
+ * Sensor non-uniformity correction box (snuc).
+ *
+ * Provides per-pixel gain and offset tables for sensor non-uniformity
+ * correction. The correction equation is: y = nuc_gain * x + nuc_offset.
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.6.
+ */
+class Box_snuc : public FullBox
+{
+public:
+  Box_snuc() { set_short_type(fourcc("snuc")); }
+
+  const SensorNonUniformityCorrection& get_nuc() const { return m_nuc; }
+  void set_nuc(const SensorNonUniformityCorrection& nuc) { m_nuc = nuc; }
+
+  std::string dump(Indent&) const override;
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  MemoryHandle m_memory_handle;
+  SensorNonUniformityCorrection m_nuc;
+};
+
+
+/**
+ * Chroma location box (cloc).
+ *
+ * Signals the chroma sample position for subsampled images.
+ *
+ * This is from ISO/IEC 23001-17 Section 6.1.4.
+ */
+class Box_cloc : public FullBox
+{
+public:
+  Box_cloc() { set_short_type(fourcc("cloc")); }
+
+  uint8_t get_chroma_location() const { return m_chroma_location; }
+  void set_chroma_location(uint8_t loc) { m_chroma_location = loc; }
+
+  std::string dump(Indent&) const override;
+  Error write(StreamWriter& writer) const override;
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits* limits) override;
+
+  uint8_t m_chroma_location = 0;
+};
+
+
+void fill_uncC_and_cmpd_from_profile(const std::shared_ptr<Box_uncC>& uncC,
+                                     std::shared_ptr<Box_cmpd>& cmpd);
 
 
 class Box_uncv : public Box_VisualSampleEntry
@@ -377,6 +497,47 @@ public:
   {
     set_short_type(fourcc("uncv"));
   }
+};
+
+
+/**
+ * GIMI ItemComponentContentIDProperty.
+ *
+ * A UUID-type item property that assigns a unique Content ID string
+ * to each cmpd component of an image item.
+ *
+ * UUID: 9db9dd6e-373c-5a4e-8110-21fc83a911fd
+ */
+class Box_gimi_component_content_ids : public Box
+{
+public:
+  Box_gimi_component_content_ids()
+  {
+    set_uuid_type(std::vector<uint8_t>{0x9d, 0xb9, 0xdd, 0x6e, 0x37, 0x3c, 0x5a, 0x4e,
+                                       0x81, 0x10, 0x21, 0xfc, 0x83, 0xa9, 0x11, 0xfd});
+  }
+
+  bool is_essential() const override { return false; }
+
+  bool is_transformative_property() const override { return false; }
+
+  std::string dump(Indent&) const override;
+
+  const char* debug_box_name() const override { return "GIMI Component Content IDs"; }
+
+  const std::vector<std::string>& get_content_ids() const { return m_content_ids; }
+
+  void set_content_ids(const std::vector<std::string>& ids) { m_content_ids = ids; }
+
+  [[nodiscard]] parse_error_fatality get_parse_error_fatality() const override { return parse_error_fatality::ignorable; }
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits*) override;
+
+  Error write(StreamWriter& writer) const override;
+
+private:
+  std::vector<std::string> m_content_ids;
 };
 
 

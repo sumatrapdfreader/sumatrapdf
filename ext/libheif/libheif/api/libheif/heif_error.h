@@ -28,8 +28,10 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#include <libheif/heif_export.h>
 
-enum heif_error_code
+
+typedef enum heif_error_code
 {
   // Everything ok, no error occurred.
   heif_error_Ok = 0,
@@ -71,10 +73,10 @@ enum heif_error_code
   heif_error_Canceled = 12,
 
   heif_error_End_of_sequence = 13
-};
+} heif_error_code;
 
 
-enum heif_suberror_code
+typedef enum heif_suberror_code
 {
   // no further information available
   heif_suberror_Unspecified = 0,
@@ -191,6 +193,11 @@ enum heif_suberror_code
 
   heif_suberror_No_moov_box = 151,
 
+  // The colr (NCLX) box and the codec bitstream VUI/color signalling disagree.
+  // Per ISO/IEC 14496-12 and ISO/IEC 23000-22 (MIAF) the colr box takes precedence,
+  // but the conflict is reported as a warning.
+  heif_suberror_NCLX_colr_VUI_mismatch = 152,
+
   // --- Memory_allocation_error ---
 
   // A security limit preventing unreasonable memory allocations was exceeded by the input file.
@@ -278,16 +285,16 @@ enum heif_suberror_code
   heif_suberror_Plugin_is_not_loaded = 6001,         // trying to remove a plugin that is not loaded
   heif_suberror_Cannot_read_plugin_directory = 6002, // error while scanning the directory for plugins
   heif_suberror_No_matching_decoder_installed = 6003 // no decoder found for that compression format
-};
+} heif_suberror_code;
 
 
 typedef struct heif_error
 {
   // main error category
-  enum heif_error_code code;
+  heif_error_code code;
 
   // more detailed error code
-  enum heif_suberror_code subcode;
+  heif_suberror_code subcode;
 
   // textual error message (is always defined, you do not have to check for NULL)
   const char* message;

@@ -21,11 +21,17 @@
 #include "heif_uncompressed.h"
 #include "context.h"
 #include "api_structs.h"
+#include "image/pixelimage.h"
 #include "image-items/unc_image.h"
 
 #include <array>
+#include <cstring>
 #include <memory>
 #include <algorithm>
+
+
+// ISO/IEC 23001-17 property functions (Bayer / polarization / sensor bad
+// pixels / NUC / chroma sample location) live in heif_properties.cc.
 
 
 heif_unci_image_parameters* heif_unci_image_parameters_alloc()
@@ -76,6 +82,10 @@ void heif_unci_image_parameters_release(heif_unci_image_parameters* params)
 }
 
 
+// Multi-component access functions (heif_image_get/add_component_*,
+// heif_image_set_gimi_component_content_id) live in heif_components.cc.
+
+
 heif_error heif_context_add_empty_unci_image(heif_context* ctx,
                                                     const heif_unci_image_parameters* parameters,
                                                     const heif_encoding_options* encoding_options,
@@ -102,6 +112,12 @@ heif_error heif_context_add_empty_unci_image(heif_context* ctx,
 
   if (!unciImageResult) {
     return unciImageResult.error_struct(ctx->context.get());
+  }
+
+  // mark the new image as primary image
+
+  if (ctx->context->is_primary_image_set() == false) {
+    ctx->context->set_primary_image(*unciImageResult);
   }
 
   assert(out_unci_image_handle);

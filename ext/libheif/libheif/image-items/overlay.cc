@@ -24,6 +24,8 @@
 #include "color-conversion/colorconversion.h"
 #include "security_limits.h"
 
+#include <utility>
+
 
 template<typename I>
 void writevec(uint8_t* data, size_t& idx, I value, int len)
@@ -242,14 +244,13 @@ Error ImageItem_Overlay::read_overlay_spec()
 
   m_overlay_image_ids = iref_box->get_references(get_id(), fourcc("dimg"));
 
-  /* TODO: probably, it is valid that an iovl image has no references ?
-
-  if (image_references.empty()) {
+  // An overlay with no input images is degenerate: ISO/IEC 23008-12 image-overlay
+  // derivation places "one or more" input images onto the canvas.
+  if (m_overlay_image_ids.empty()) {
     return Error(heif_error_Invalid_input,
                  heif_suberror_Missing_grid_images,
-                 "'iovl' image with more than one reference image");
+                 "'iovl' image has no referenced input images");
   }
-  */
 
 
   auto overlayDataResult = heif_file->get_uncompressed_item_data(get_id());
@@ -279,6 +280,12 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_Overlay::decode_compressed_ima
   return decode_overlay_image(options, processed_ids);
 }
 
+// Note: ImageItem_Overlay does not override check_decoded_image_size(). The overlay
+// canvas is built to the overlay-header size by construction (decode_overlay_image
+// creates it at m_overlay_spec canvas size), so checking it against that same size
+// would be tautological. The base default checks the canvas against 'ispe', which is
+// the meaningful cross-check (overlay-header size vs signaled size).
+
 
 Result<std::shared_ptr<HeifPixelImage>> ImageItem_Overlay::decode_overlay_image(const heif_decoding_options& options,
                                                                                 std::set<heif_item_id> processed_ids) const
@@ -307,13 +314,13 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_Overlay::decode_overlay_image(
   img->create(w, h,
               heif_colorspace_RGB,
               heif_chroma_444);
-  if (auto error = img->add_plane(heif_channel_R, w, h, 8, get_context()->get_security_limits())) { // TODO: other bit depths
+  if (auto error = img->add_channel(heif_channel_R, w, h, 8, get_context()->get_security_limits())) { // TODO: other bit depths
     return error;
   }
-  if (auto error = img->add_plane(heif_channel_G, w, h, 8, get_context()->get_security_limits())) { // TODO: other bit depths
+  if (auto error = img->add_channel(heif_channel_G, w, h, 8, get_context()->get_security_limits())) { // TODO: other bit depths
     return error;
   }
-  if (auto error = img->add_plane(heif_channel_B, w, h, 8, get_context()->get_security_limits())) { // TODO: other bit depths
+  if (auto error = img->add_channel(heif_channel_B, w, h, 8, get_context()->get_security_limits())) { // TODO: other bit depths
     return error;
   }
 
@@ -388,26 +395,24 @@ Result<std::shared_ptr<HeifPixelImage>> ImageItem_Overlay::decode_overlay_image(
 
 int ImageItem_Overlay::get_luma_bits_per_pixel() const
 {
-  heif_item_id child;
-  Error err = get_context()->get_id_of_non_virtual_child_image(get_id(), child);
-  if (err) {
+  auto child_result = get_context()->find_first_coded_image_id(get_id());
+  if (child_result.is_error()) {
     return -1;
   }
 
-  auto image = get_context()->get_image(child, true);
+  auto image = get_context()->get_image(*child_result, true);
   return image->get_luma_bits_per_pixel();
 }
 
 
 int ImageItem_Overlay::get_chroma_bits_per_pixel() const
 {
-  heif_item_id child;
-  Error err = get_context()->get_id_of_non_virtual_child_image(get_id(), child);
-  if (err) {
+  auto child_result = get_context()->find_first_coded_image_id(get_id());
+  if (child_result.is_error()) {
     return -1;
   }
 
-  auto image = get_context()->get_image(child, true);
+  auto image = get_context()->get_image(*child_result, true);
   return image->get_chroma_bits_per_pixel();
 }
 
@@ -418,6 +423,41 @@ Error ImageItem_Overlay::get_coded_image_colorspace(heif_colorspace* out_colorsp
   *out_chroma = heif_chroma_444;
 
   return Error::Ok;
+}
+
+
+void ImageItem_Overlay::populate_component_descriptions()
+{
+  if (!get_component_descriptions().empty()) {
+    return;
+  }
+
+  // The overlay is always composed in RGB 8-bit 4:4:4 onto the canvas
+  // (decode_overlay_image converts each input child to RGB and uses an RGB
+  // background color). So the description we publish reflects that fixed
+  // output format, not the children's formats.
+  uint32_t w = get_ispe_width();
+  uint32_t h = get_ispe_height();
+  if (w == 0 || h == 0) {
+    return;
+  }
+
+  auto emit = [this, w, h](heif_channel ch, uint16_t type) {
+    ComponentDescription d;
+    d.component_id = mint_component_id();
+    d.channel = ch;
+    d.component_type = type;
+    d.datatype = heif_component_datatype_unsigned_integer;
+    d.bit_depth = 8;
+    d.width = w;
+    d.height = h;
+    d.has_data_plane = true;
+    add_component_description(std::move(d));
+  };
+
+  emit(heif_channel_R, heif_cmpd_component_type_red);
+  emit(heif_channel_G, heif_cmpd_component_type_green);
+  emit(heif_channel_B, heif_cmpd_component_type_blue);
 }
 
 
@@ -445,7 +485,11 @@ Result<std::shared_ptr<ImageItem_Overlay>> ImageItem_Overlay::add_new_overlay_it
 
   // Create IOVL Item
 
-  heif_item_id iovl_id = file->add_new_image(fourcc("iovl"));
+  auto iovl_id_result = file->add_new_image(fourcc("iovl"));
+  if (!iovl_id_result) {
+    return iovl_id_result.error();
+  }
+  heif_item_id iovl_id = *iovl_id_result;
   std::shared_ptr<ImageItem_Overlay> iovl_image = std::make_shared<ImageItem_Overlay>(ctx, iovl_id);
   ctx->insert_image_item(iovl_id, iovl_image);
   const int construction_method = 1; // 0=mdat 1=idat

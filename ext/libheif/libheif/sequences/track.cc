@@ -138,7 +138,9 @@ SampleAuxInfoReader::SampleAuxInfoReader(std::shared_ptr<Box_saiz> saiz,
     for (uint32_t i = 0; i < nSamples; i++) {
       if (!oneChunk && i > chunks[current_chunk]->last_sample_number()) {
         current_chunk++;
-        assert(current_chunk < chunks.size());
+        if (current_chunk >= chunks.size()) {
+          break;
+        }
         offset = saio->get_chunk_offset(current_chunk);
       }
 
@@ -165,7 +167,7 @@ Result<std::vector<uint8_t> > SampleAuxInfoReader::get_sample_info(const HeifFil
 
   if (m_contiguous_and_constant_size) {
     size = m_saiz->get_sample_size(0);
-    offset = m_singleChunk_offset + sample_idx * size;
+    offset = m_singleChunk_offset + uint64_t{sample_idx} * size;
   }
   else {
     size = m_saiz->get_sample_size(sample_idx);
@@ -310,6 +312,19 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
     };
   }
 
+  // Enforce the sequence-frame limit before allocating any per-chunk state below.
+  // Box_stsz::parse already applies this when parsing from a file, but check again
+  // here so the invariant holds even if m_stsz was built another way.
+  const auto* limits = m_heif_context->get_security_limits();
+  if (limits->max_sequence_frames > 0 &&
+      m_stsz->num_samples() > limits->max_sequence_frames) {
+    return {
+      heif_error_Memory_allocation_error,
+      heif_suberror_Security_limit_exceeded,
+      "Security limit for maximum number of sequence frames exceeded"
+    };
+  }
+
   m_stts = stbl->get_child_box<Box_stts>();
   if (!m_stts) {
     return {
@@ -318,6 +333,8 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
       "Track has no 'stts' box."
     };
   }
+
+  m_ctts = stbl->get_child_box<Box_ctts>();
 
   // --- check that number of samples in various boxes are consistent
 
@@ -375,7 +392,7 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
       }
     }
 
-    if (current_sample_idx + sampleToChunk.samples_per_chunk > m_stsz->num_samples()) {
+    if (static_cast<uint64_t>(current_sample_idx) + sampleToChunk.samples_per_chunk > m_stsz->num_samples()) {
       return {
         heif_error_Invalid_input,
         heif_suberror_Unspecified,
@@ -383,10 +400,18 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
       };
     }
 
-    auto chunk = std::make_shared<Chunk>(m_heif_context, m_id,
-                                         current_sample_idx, sampleToChunk.samples_per_chunk,
-                                         m_stco->get_offsets()[chunk_idx],
-                                         m_stsz);
+    auto chunk = Chunk::create(m_heif_context, m_id,
+                               current_sample_idx, sampleToChunk.samples_per_chunk,
+                               m_stco->get_offsets()[chunk_idx],
+                               m_stsz);
+
+    if (!chunk) {
+      return {
+        heif_error_Invalid_input,
+        heif_suberror_Unspecified,
+        "Chunk file offset overflows 64-bit range."
+      };
+    }
 
     if (auto visualSampleDescription = std::dynamic_pointer_cast<const Box_VisualSampleEntry>(sample_description)) {
       if (chunk_idx > 0 && (int32_t) sampleToChunk.sample_description_index == previous_sample_description_index) {
@@ -395,7 +420,15 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
       }
       else {
         // use a new decoder
-        chunk->set_decoder(Decoder::alloc_for_sequence_sample_description_box(visualSampleDescription));
+        auto decoder = Decoder::alloc_for_sequence_sample_description_box(visualSampleDescription);
+        if (!decoder) {
+          return {
+            heif_error_Invalid_input,
+            heif_suberror_Unspecified,
+            "Sample description has unsupported codec or is missing the codec configuration box."
+          };
+        }
+        chunk->set_decoder(decoder);
       }
     }
 
@@ -403,6 +436,14 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
 
     current_sample_idx += sampleToChunk.samples_per_chunk;
     previous_sample_description_index = sampleToChunk.sample_description_index;
+  }
+
+  if (current_sample_idx != m_stsz->num_samples()) {
+    return {
+      heif_error_Invalid_input,
+      heif_suberror_Unspecified,
+      "Number of samples covered by 'stsc' does not match 'stsz'/'stts'."
+    };
   }
 
   // --- read sample auxiliary information boxes
@@ -443,6 +484,22 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
         };
       }
 
+      if (saio->get_num_chunks() != 1 && m_chunks.empty() && saiz->get_num_samples() > 0) {
+        return Error{
+          heif_error_Invalid_input,
+          heif_suberror_Unspecified,
+          "'saiz' box references samples but no chunks exist."
+        };
+      }
+
+      if (saiz->get_num_samples() > m_stsz->num_samples()) {
+        return Error{
+          heif_error_Invalid_input,
+          heif_suberror_Unspecified,
+          "Number of samples in 'saiz' box exceeds actual number of samples."
+        };
+      }
+
       if (aux_info_type == fourcc("suid")) {
         m_aux_reader_content_ids = std::make_unique<SampleAuxInfoReader>(saiz, saio, m_chunks);
       }
@@ -474,32 +531,29 @@ Error Track::load(const std::shared_ptr<Box_trak>& trak_box)
             box->get_item_uri_type() == "urn:uuid:15beb8e4-944d-5fc6-a3dd-cb5a7e655c73") {
           heif_item_id id = box->get_item_ID();
 
+          if (!iloc) {
+            return {
+              heif_error_Invalid_input,
+              heif_suberror_Unspecified,
+              "Track meta references item content-id but file has no 'iloc' box."
+            };
+          }
+
           std::vector<uint8_t> data;
           Error err = iloc->read_data(id, m_heif_context->get_heif_file()->get_reader(), idat, &data, m_heif_context->get_security_limits());
           if (err) {
-            // TODO
+            return err;
           }
 
-          Result contentIdResult = vector_to_string(data);
+          Result<std::string> contentIdResult = vector_to_string(data);
           if (!contentIdResult) {
-            // TODO
+            return contentIdResult.error();
           }
 
           m_track_info.gimi_track_content_id = *contentIdResult;
         }
       }
     }
-  }
-
-
-  // --- security checks
-
-  if (m_stsz->num_samples() > m_heif_context->get_security_limits()->max_sequence_frames) {
-    return {
-      heif_error_Memory_allocation_error,
-      heif_suberror_Security_limit_exceeded,
-      "Security limit for maximum number of sequence frames exceeded"
-    };
   }
 
 
@@ -524,15 +578,10 @@ Track::Track(HeifContext* ctx, uint32_t track_id, const TrackOptions* options, u
   // --- find next free track ID
 
   if (track_id == 0) {
-    track_id = 1; // minimum track ID
-
-    for (const auto& track : m_moov->get_child_boxes<Box_trak>()) {
-      auto tkhd = track->get_child_box<Box_tkhd>();
-
-      if (tkhd->get_track_id() >= track_id) {
-        track_id = tkhd->get_track_id() + 1;
-      }
-    }
+    auto idResult = ctx->get_id_creator().get_new_id(IDCreator::Namespace::track);
+    // Track constructor cannot return errors; assert on overflow (extremely unlikely).
+    assert(idResult);
+    track_id = *idResult;
 
     auto mvhd = m_moov->get_child_box<Box_mvhd>();
     mvhd->set_next_track_id(track_id + 1);
@@ -1016,11 +1065,15 @@ Error Track::init_sample_timing_table()
     while (current_chunk < m_chunks.size() &&
            i > m_chunks[current_chunk]->last_sample_number()) {
       current_chunk++;
-      current_sample_in_chunk_idx=0;
+      current_sample_in_chunk_idx = 0;
+    }
 
-      if (current_chunk > m_chunks.size()) {
-        timing.chunkIdx = 0; // TODO: error
-      }
+    if (current_chunk >= m_chunks.size()) {
+      return {
+        heif_error_Invalid_input,
+        heif_suberror_Unspecified,
+        "Sample not covered by any chunk."
+      };
     }
 
     timing.chunkIdx = current_chunk;
@@ -1051,7 +1104,20 @@ Error Track::init_sample_timing_table()
       };
     }
 
-    m_num_output_samples = m_heif_context->get_sequence_duration() / get_duration_in_media_units() * media_timeline.size();
+    uint64_t multiplier = m_heif_context->get_sequence_duration() / get_duration_in_media_units();
+    m_num_output_samples = multiplier * media_timeline.size();
+
+    if (m_heif_context->is_sequence_duration_indefinite()) {
+      // mvhd carries the all-1s sentinel -> editlist repeats forever.
+      m_num_repetitions = std::numeric_limits<uint32_t>::max();
+    }
+    else if (multiplier >= std::numeric_limits<uint32_t>::max()) {
+      // Doesn't fit in the API's uint32_t; treat as effectively infinite.
+      m_num_repetitions = std::numeric_limits<uint32_t>::max();
+    }
+    else {
+      m_num_repetitions = static_cast<uint32_t>(multiplier);
+    }
   }
   else {
     fallback = true;
@@ -1061,6 +1127,10 @@ Error Track::init_sample_timing_table()
   if (fallback) {
     m_presentation_timeline = media_timeline;
     m_num_output_samples = media_timeline.size();
+    // No editlist box at all: the media plays exactly once.
+    // Editlist box present but its pattern isn't one libheif interprets: report
+    // 0 so callers know they should not rely on a repetition count.
+    m_num_repetitions = m_elst ? 0 : 1;
   }
 
   return {};

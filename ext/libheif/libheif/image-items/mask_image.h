@@ -26,7 +26,7 @@
 
 #include "box.h"
 #include "bitstream.h"
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "file.h"
 #include "context.h"
 

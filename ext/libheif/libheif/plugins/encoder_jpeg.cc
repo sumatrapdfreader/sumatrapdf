@@ -344,7 +344,11 @@ heif_error jpeg_encode_image(void* encoder_raw, const heif_image* image,
   auto* encoder = (encoder_struct_jpeg*) encoder_raw;
 
 
-  jpeg_compress_struct cinfo;
+  if (heif_image_get_bits_per_pixel(image, heif_channel_Y) != 8) {
+    return heif_error{heif_error_Encoding_error, heif_suberror_Encoder_encoding, "Cannot write JPEG image with >8 bpp."};
+  }
+
+  jpeg_compress_struct cinfo{};
   ErrorHandler jerr;
   cinfo.err = jpeg_std_error(reinterpret_cast<jpeg_error_mgr*>(&jerr));
   jerr.pub.error_exit = &OnJpegError;
@@ -352,11 +356,6 @@ heif_error jpeg_encode_image(void* encoder_raw, const heif_image* image,
     cinfo.err->output_message(reinterpret_cast<j_common_ptr>(&cinfo));
     jpeg_destroy_compress(&cinfo);
     return heif_error{heif_error_Encoding_error, heif_suberror_Encoder_encoding, "JPEG encoding error"};
-  }
-
-  if (heif_image_get_bits_per_pixel(image, heif_channel_Y) != 8) {
-    jpeg_destroy_compress(&cinfo);
-    return heif_error{heif_error_Encoding_error, heif_suberror_Encoder_encoding, "Cannot write JPEG image with >8 bpp."};
   }
 
   uint8_t* outbuffer = nullptr;

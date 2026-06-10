@@ -27,6 +27,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <limits>
 
 
 class Box_container : public Box {
@@ -77,6 +78,18 @@ public:
   uint32_t get_time_scale() const { return m_timescale; }
 
   uint64_t get_duration() const { return m_duration; }
+
+  // True when the duration field carries the ISOBMFF "duration unknown / indefinite"
+  // sentinel (all-1s for the field width corresponding to the box version).
+  // Files written with such a duration alongside an editlist in repeat mode signal
+  // that the media should be looped indefinitely.
+  bool is_duration_indefinite() const
+  {
+    if (get_version() == 1) {
+      return m_duration == std::numeric_limits<uint64_t>::max();
+    }
+    return m_duration == std::numeric_limits<uint32_t>::max();
+  }
 
   void set_duration(uint64_t duration) { m_duration = duration; }
 
@@ -796,6 +809,7 @@ private:
   };
 
   std::vector<Entry> m_entries;
+  MemoryHandle m_memory_handle;
 };
 
 // Bitrate

@@ -184,7 +184,7 @@ bool HEVCDecoderConfigurationRecord::get_general_profile_compatibility_flag(int 
 }
 
 
-bool HEVCDecoderConfigurationRecord::is_profile_compatibile(Profile profile) const
+bool HEVCDecoderConfigurationRecord::is_profile_compatible(Profile profile) const
 {
   return (general_profile_idc == profile ||
           get_general_profile_compatibility_flag(profile));
@@ -451,12 +451,12 @@ static Result<std::shared_ptr<SEIMessage>> read_depth_representation_info(BitRea
   msg->has_d_min = (uint8_t) reader.get_bits(1);
   msg->has_d_max = (uint8_t) reader.get_bits(1);
 
-  int rep_type;
+  uint32_t rep_type;
   if (!reader.get_uvlc(&rep_type)) {
     return Error{heif_error_Invalid_input, heif_suberror_Invalid_parameter_value, "invalid depth representation type in input"};
   }
 
-  if (rep_type < 0 || rep_type > 3) {
+  if (rep_type > 3) {
     return Error{heif_error_Invalid_input, heif_suberror_Invalid_parameter_value, "input depth representation type out of range"};
   }
 
@@ -466,7 +466,7 @@ static Result<std::shared_ptr<SEIMessage>> read_depth_representation_info(BitRea
   //printf("type: %d\n",rep_type);
 
   if (msg->has_d_min || msg->has_d_max) {
-    int ref_view;
+    uint32_t ref_view;
     if (!reader.get_uvlc(&ref_view)) {
       return Error{heif_error_Invalid_input, heif_suberror_Invalid_parameter_value, "invalid disparity_reference_view in input"};
     }
@@ -593,7 +593,8 @@ std::vector<uint8_t> remove_start_code_emulation(const uint8_t* sps, size_t size
 
 Error parse_sps_for_hvcC_configuration(const uint8_t* sps, size_t size,
                                        HEVCDecoderConfigurationRecord* config,
-                                       int* width, int* height)
+                                       uint32_t* width, uint32_t* height,
+                                       ImageSize* coded_size)
 {
   // remove start-code emulation bytes from SPS header stream
 
@@ -657,44 +658,81 @@ Error parse_sps_for_hvcC_configuration(const uint8_t* sps, size_t size,
 
   // --- SPS continued ---
 
-  int dummy, value;
-  reader.get_uvlc(&dummy); // skip seq_parameter_seq_id
+  Error invalidUVLC{
+    heif_error_Invalid_input,
+    heif_suberror_Invalid_parameter_value,
+    "Invalid variable length code in HEVC SPS header"
+  };
 
-  reader.get_uvlc(&value);
+  uint32_t dummy, value;
+  if (!reader.get_uvlc(&dummy) || // skip seq_parameter_seq_id
+      !reader.get_uvlc(&value)) {
+    return invalidUVLC;
+  }
   config->chroma_format = (uint8_t) value;
 
   if (config->chroma_format == 3) {
     reader.skip_bits(1);
   }
 
-  reader.get_uvlc(width);
-  reader.get_uvlc(height);
+  if (!reader.get_uvlc(width) ||
+      !reader.get_uvlc(height)) {
+    return invalidUVLC;
+  }
+
+  if (coded_size) {
+    coded_size->width = *width;
+    coded_size->height = *height;
+  }
 
   bool conformance_window = reader.get_bits(1);
   if (conformance_window) {
-    int left, right, top, bottom;
-    reader.get_uvlc(&left);
-    reader.get_uvlc(&right);
-    reader.get_uvlc(&top);
-    reader.get_uvlc(&bottom);
+    uint32_t left, right, top, bottom;
+    if (!reader.get_uvlc(&left) ||
+        !reader.get_uvlc(&right) ||
+        !reader.get_uvlc(&top) ||
+        !reader.get_uvlc(&bottom)) {
+      return invalidUVLC;
+    }
 
-    //printf("conformance borders: %d %d %d %d\n",left,right,top,bottom);
+    //printf("conformance borders: %u %u %u %u\n",left,right,top,bottom);
 
-    int subH = 1, subV = 1;
+    uint32_t subH = 1, subV = 1;
     if (config->chroma_format == 1) {
       subV = 2;
       subH = 2;
     }
     if (config->chroma_format == 2) { subH = 2; }
 
-    *width -= subH * (left + right);
-    *height -= subV * (top + bottom);
+    const uint64_t crop_w = (uint64_t)subH * ((uint64_t)left + (uint64_t)right);
+    const uint64_t crop_h = (uint64_t)subV * ((uint64_t)top + (uint64_t)bottom);
+    if (crop_w > *width || crop_h > *height) {
+      return Error{heif_error_Invalid_input,
+                   heif_suberror_Invalid_parameter_value,
+                   "SPS conformance window exceeds image dimensions"};
+    }
+    *width  -= (uint32_t)crop_w;
+    *height -= (uint32_t)crop_h;
   }
 
-  reader.get_uvlc(&value);
+  if (!reader.get_uvlc(&value)) {
+    return invalidUVLC;
+  }
+  if (value > 8) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Invalid_parameter_value,
+                 "SPS bit_depth_luma_minus8 out of range"};
+  }
   config->bit_depth_luma = (uint8_t) (value + 8);
 
-  reader.get_uvlc(&value);
+  if (!reader.get_uvlc(&value)) {
+    return invalidUVLC;
+  }
+  if (value > 8) {
+    return Error{heif_error_Invalid_input,
+                 heif_suberror_Invalid_parameter_value,
+                 "SPS bit_depth_chroma_minus8 out of range"};
+  }
   config->bit_depth_chroma = (uint8_t) (value + 8);
 
 

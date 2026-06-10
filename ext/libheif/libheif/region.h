@@ -24,7 +24,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include "pixelimage.h"
+#include "image/pixelimage.h"
 #include "libheif/heif_regions.h"
 
 

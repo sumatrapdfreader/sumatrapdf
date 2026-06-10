@@ -530,8 +530,16 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
       box = std::make_shared<Box_clap>();
       break;
 
+    case fourcc("iscl"):
+      box = std::make_shared<Box_iscl>();
+      break;
+
     case fourcc("iref"):
       box = std::make_shared<Box_iref>();
+      break;
+
+    case fourcc("rref"):
+      box = std::make_shared<Box_rref>();
       break;
 
     case fourcc("hvcC"):
@@ -626,6 +634,10 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
       box = std::make_shared<Box_amve>();
       break;
 
+    case fourcc("ndwt"):
+      box = std::make_shared<Box_ndwt>();
+      break;
+
     case fourcc("cmin"):
       box = std::make_shared<Box_cmin>();
       break;
@@ -670,6 +682,22 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
 
     case fourcc("cpat"):
       box = std::make_shared<Box_cpat>();
+      break;
+
+    case fourcc("splz"):
+      box = std::make_shared<Box_splz>();
+      break;
+
+    case fourcc("sbpm"):
+      box = std::make_shared<Box_sbpm>();
+      break;
+
+    case fourcc("snuc"):
+      box = std::make_shared<Box_snuc>();
+      break;
+
+    case fourcc("cloc"):
+      box = std::make_shared<Box_cloc>();
       break;
 
     case fourcc("uncv"):
@@ -736,11 +764,9 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
       break;
 #endif
 
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
     case fourcc("mini"):
       box = std::make_shared<Box_mini>();
       break;
-#endif
 
     case fourcc("mdat"):
       // avoid generating a 'Box_other'
@@ -757,6 +783,11 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
       else if (hdr.get_uuid_type() == std::vector<uint8_t>{0x26, 0x1e, 0xf3, 0x74, 0x1d, 0x97, 0x5b, 0xba, 0xac, 0xbd, 0x9d, 0x2c, 0x8e, 0xa7, 0x35, 0x22}) {
         box = std::make_shared<Box_gimi_content_id>();
       }
+#if WITH_UNCOMPRESSED_CODEC
+      else if (hdr.get_uuid_type() == std::vector<uint8_t>{0x9d, 0xb9, 0xdd, 0x6e, 0x37, 0x3c, 0x5a, 0x4e, 0x81, 0x10, 0x21, 0xfc, 0x83, 0xa9, 0x11, 0xfd}) {
+        box = std::make_shared<Box_gimi_component_content_ids>();
+      }
+#endif
       else {
         box = std::make_shared<Box_other>(hdr.get_short_type());
       }
@@ -882,6 +913,11 @@ Error Box::read(BitstreamRange& range, std::shared_ptr<Box>* result, const heif_
 
     case fourcc("sdtp"):
       box = std::make_shared<Box_sdtp>();
+      break;
+
+    // OMAF
+    case fourcc("prfr"):
+      box = std::make_shared<Box_prfr>();
       break;
 
     default:
@@ -1270,7 +1306,7 @@ Error Box_ftyp::parse(BitstreamRange& range, const heif_security_limits* limits)
 
   uint64_t n_minor_brands = (get_box_size() - get_header_size() - 8) / 4;
 
-  if (n_minor_brands > limits->max_number_of_file_brands) {
+  if (limits->max_number_of_file_brands && n_minor_brands > limits->max_number_of_file_brands) {
     return {
       heif_error_Memory_allocation_error,
       heif_suberror_Security_limit_exceeded,
@@ -2114,8 +2150,23 @@ void Box_iloc::derive_box_version()
 
   m_offset_size = 4;
   m_length_size = 4;
-  //m_base_offset_size = 4; // set above
   m_index_size = 0;
+
+  // extent.length is already known; extent.offset within an item equals
+  // the cumulative length of all preceding extents (they are written sequentially).
+  // base_offset absorbs the absolute file position, so extent.offset is relative.
+  for (const auto& item : m_items) {
+    uint64_t cumulative_offset = 0;
+    for (const auto& extent : item.extents) {
+      if (cumulative_offset > 0xFFFFFFFF) {
+        m_offset_size = 8;
+      }
+      if (extent.length > 0xFFFFFFFF) {
+        m_length_size = 8;
+      }
+      cumulative_offset += extent.length;
+    }
+  }
 
   set_version((uint8_t) min_version);
 }
@@ -2873,6 +2924,43 @@ Error Box_amve::write(StreamWriter& writer) const
 }
 
 
+Error Box_ndwt::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() != 0) {
+    return unsupported_version_error("ndwt");
+  }
+
+  m_diffuse_white_luminance = range.read32();
+
+  return range.get_error();
+}
+
+
+std::string Box_ndwt::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+  sstr << Box::dump(indent);
+
+  sstr << indent << "diffuse_white_luminance: " << m_diffuse_white_luminance << "\n";
+
+  return sstr.str();
+}
+
+
+Error Box_ndwt::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write32(m_diffuse_white_luminance);
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}
+
+
 Box_cclv::Box_cclv()
 {
   set_short_type(fourcc("cclv"));
@@ -3336,19 +3424,17 @@ void Box_ipma::sort_properties(const std::shared_ptr<Box_ipco>& ipco)
 {
   auto properties = ipco->get_all_child_boxes();
 
+  // Stable-partition: all descriptive properties before all transformative properties.
+  // The order within each group is preserved (spec requires it for transformative properties).
+
   for (auto& item : m_entries) {
-    size_t nAssoc = item.associations.size();
-
-    // simple Bubble sort as a stable sorting algorithm
-
-    for (size_t n = 0; n < nAssoc - 1; n++)
-      for (size_t i = 0; i < nAssoc - 1 - n; i++) {
-        // If transformative property precedes descriptive property, swap them.
-        if (properties[item.associations[i].property_index - 1]->is_transformative_property() &&
-            !properties[item.associations[i + 1].property_index - 1]->is_transformative_property()) {
-          std::swap(item.associations[i], item.associations[i+1]);
-        }
-      }
+    std::stable_partition(item.associations.begin(), item.associations.end(),
+                          [&properties](const PropertyAssociation& assoc) {
+                            if (assoc.property_index == 0 || assoc.property_index > properties.size()) {
+                              return true; // keep invalid/unset entries in the descriptive group
+                            }
+                            return !properties[assoc.property_index - 1]->is_transformative_property();
+                          });
   }
 }
 
@@ -3490,6 +3576,57 @@ std::string Box_imir::dump(Indent& indent) const
 }
 
 
+Error Box_iscl::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() != 0) {
+    return unsupported_version_error("iscl");
+  }
+
+  m_target_width_numerator = range.read16();
+  m_target_width_denominator = range.read16();
+  m_target_height_numerator = range.read16();
+  m_target_height_denominator = range.read16();
+
+  if (m_target_width_numerator == 0 || m_target_width_denominator == 0 ||
+      m_target_height_numerator == 0 || m_target_height_denominator == 0) {
+    return {heif_error_Invalid_input,
+            heif_suberror_Invalid_fractional_number,
+            "iscl property has zero numerator or denominator"};
+  }
+
+  return range.get_error();
+}
+
+
+Error Box_iscl::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  writer.write16(m_target_width_numerator);
+  writer.write16(m_target_width_denominator);
+  writer.write16(m_target_height_numerator);
+  writer.write16(m_target_height_denominator);
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}
+
+
+std::string Box_iscl::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+  sstr << FullBox::dump(indent);
+
+  sstr << indent << "horizontal scaling factor: " << m_target_width_numerator << " / " << m_target_width_denominator << "\n";
+  sstr << indent << "vertical scaling factor:   " << m_target_height_numerator << " / " << m_target_height_denominator << "\n";
+
+  return sstr.str();
+}
+
+
 Error Box_clap::parse(BitstreamRange& range, const heif_security_limits* limits)
 {
   //parse_full_box_header(range);
@@ -3541,9 +3678,9 @@ Error Box_clap::write(StreamWriter& writer) const
   writer.write32(m_clean_aperture_width.denominator);
   writer.write32(m_clean_aperture_height.numerator);
   writer.write32(m_clean_aperture_height.denominator);
-  writer.write32(m_horizontal_offset.numerator);
+  writer.write32s(m_horizontal_offset.numerator);
   writer.write32(m_horizontal_offset.denominator);
-  writer.write32(m_vertical_offset.numerator);
+  writer.write32s(m_vertical_offset.numerator);
   writer.write32(m_vertical_offset.denominator);
 
   prepend_header(writer, box_start);
@@ -3954,6 +4091,142 @@ void Box_iref::overwrite_reference(heif_item_id from_id, uint32_t type, uint32_t
   }
 
   assert(false); // reference was not found
+}
+
+
+Error Box_rref::parse(BitstreamRange& range, const heif_security_limits* limits)
+{
+  parse_full_box_header(range);
+
+  if (get_version() > 1) {
+    return unsupported_version_error("rref");
+  }
+
+  size_t remainingBytes = range.get_remaining_bytes();
+
+  // The number of reference types should be stored in uint(8), but the
+  // common test images C043, C044 store them as uint(32).
+  // Let us detect this case by the number of data bytes in this box.
+  bool cnt_as_uint32 = (remainingBytes > 0 && remainingBytes % 4 == 0);
+
+  uint8_t nRefTypes;
+  if (cnt_as_uint32) {
+    // fix broken C043, C044 files
+    // TODO: remove me when the files have been corrected as the above check can misfire when there is extra padding
+    nRefTypes = (uint8_t)range.read32();
+  }
+  else {
+    nRefTypes = range.read8();
+  }
+
+  for (uint8_t i = 0; i < nRefTypes; i++) {
+    uint32_t refType = range.read32();
+
+    if (range.error()) {
+      std::stringstream sstr;
+      sstr << "rref box should contain " << ((int)nRefTypes) << " reference types, but we can only read " << m_reference_types.size() << " reference types.";
+
+      return {
+        heif_error_Invalid_input,
+        heif_suberror_End_of_data,
+        sstr.str()
+      };
+    }
+
+    m_reference_types.push_back(refType);
+  }
+
+  return range.get_error();
+}
+
+
+static constexpr std::array supported_reference_types{
+  fourcc("thmb"),
+  fourcc("base"),
+  fourcc("cdsc"),
+  fourcc("dimg"),
+  fourcc("auxl"),
+  fourcc("prem")
+};
+
+
+bool Box_rref::all_reference_types_supported() const
+{
+  return std::ranges::all_of(m_reference_types, [](uint32_t t) {
+    return std::ranges::find(supported_reference_types, t) != supported_reference_types.end();
+  });
+}
+
+
+Error Box_rref::reference_types_supported_error() const
+{
+  std::vector<uint32_t> unsupported_types;
+
+  for (uint32_t refType : m_reference_types) {
+    if (std::ranges::find(supported_reference_types, refType) == supported_reference_types.end()) {
+      unsupported_types.push_back(refType);
+    }
+  }
+
+  if (unsupported_types.empty()) {
+    return Error::Ok;
+  }
+
+  std::stringstream sstr;
+
+  sstr << "Unsupported reference types: ";
+  for (size_t i = 0; i < unsupported_types.size(); i++) {
+    if (i > 0) {
+      sstr << ", ";
+    }
+    sstr << fourcc_to_string(unsupported_types[i]);
+  }
+
+  return {
+    heif_error_Unsupported_feature,
+    heif_suberror_Unspecified,
+    sstr.str()
+  };
+}
+
+
+Error Box_rref::write(StreamWriter& writer) const
+{
+  size_t box_start = reserve_box_header_space(writer);
+
+  if (m_reference_types.size() > std::numeric_limits<uint8_t>::max()) {
+    return {
+      heif_error_Usage_error,
+      heif_suberror_Unspecified,
+      "Too many rref reference types."
+    };
+  }
+
+  writer.write8(static_cast<uint8_t>(m_reference_types.size()));
+
+  for (uint32_t refType : m_reference_types) {
+    writer.write32(refType);
+  }
+
+  prepend_header(writer, box_start);
+
+  return Error::Ok;
+}
+
+
+std::string Box_rref::dump(Indent& indent) const
+{
+  std::ostringstream sstr;
+  sstr << Box::dump(indent);
+
+  sstr << indent << "reference types: ";
+  for (size_t i = 0; i < m_reference_types.size(); i++) {
+    if (i > 0) sstr << ", ";
+    sstr << fourcc_to_string(m_reference_types[i]);
+  }
+  sstr << "\n";
+
+  return sstr.str();
 }
 
 
@@ -5154,4 +5427,3 @@ std::string Box_gimi_content_id::dump(Indent& indent) const
 
   return sstr.str();
 }
-

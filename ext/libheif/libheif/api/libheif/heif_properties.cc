@@ -22,6 +22,7 @@
 #include "context.h"
 #include "api_structs.h"
 #include "file.h"
+#include "image/pixelimage.h"
 
 #include <array>
 #include <cstring>
@@ -458,3 +459,549 @@ heif_error heif_camera_extrinsic_matrix_get_rotation_matrix(const heif_camera_ex
   return heif_error_success;
 }
 
+
+// ====================== ISO/IEC 23001-17 properties ======================
+
+
+heif_error heif_image_set_bayer_pattern(heif_image* image,
+                                        uint32_t bayer_component_id,
+                                        uint16_t pattern_width,
+                                        uint16_t pattern_height,
+                                        const struct heif_bayer_pattern_pixel* patternPixels)
+{
+  if (image == nullptr || patternPixels == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (pattern_width == 0 || pattern_height == 0) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Bayer pattern dimensions must be non-zero."};
+  }
+
+  BayerPattern pattern;
+  pattern.pattern_width = pattern_width;
+  pattern.pattern_height = pattern_height;
+
+  size_t num_pixels = size_t{pattern_width} * pattern_height;
+  pattern.pixels.assign(patternPixels, patternPixels + num_pixels);
+
+  image->image->set_bayer_pattern(pattern);
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_add_bayer_component(heif_image* image,
+                                          uint16_t component_type,
+                                          uint32_t* out_component_id)
+{
+  if (image == nullptr || out_component_id == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  *out_component_id = image->image->add_component_without_data(component_type);
+
+  return heif_error_success;
+}
+
+
+int heif_image_get_bayer_pattern_size(const heif_image* image,
+                                      uint32_t bayer_component_id,
+                                      uint16_t* out_pattern_width,
+                                      uint16_t* out_pattern_height)
+{
+  if (image == nullptr || !image->image->has_bayer_pattern(bayer_component_id)) {
+    if (out_pattern_width) {
+      *out_pattern_width = 0;
+    }
+    if (out_pattern_height) {
+      *out_pattern_height = 0;
+    }
+    return 0;
+  }
+
+  const BayerPattern& pattern = image->image->get_bayer_pattern(bayer_component_id);
+
+  if (out_pattern_width) {
+    *out_pattern_width = pattern.pattern_width;
+  }
+  if (out_pattern_height) {
+    *out_pattern_height = pattern.pattern_height;
+  }
+
+  return 1;
+}
+
+
+heif_error heif_image_get_bayer_pattern(const heif_image* image,
+                                        uint32_t bayer_component_id,
+                                        struct heif_bayer_pattern_pixel* out_patternPixels)
+{
+  if (image == nullptr || out_patternPixels == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (!image->image->has_bayer_pattern(bayer_component_id)) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Image does not have a Bayer pattern."};
+  }
+
+  const BayerPattern& pattern = image->image->get_bayer_pattern(bayer_component_id);
+  size_t num_pixels = size_t{pattern.pattern_width} * pattern.pattern_height;
+  std::copy(pattern.pixels.begin(), pattern.pixels.begin() + num_pixels, out_patternPixels);
+
+  return heif_error_success;
+}
+
+
+float heif_polarization_angle_no_filter()
+{
+  uint32_t bits = 0xFFFFFFFF;
+  float f;
+  memcpy(&f, &bits, sizeof(f));
+  return f;
+}
+
+
+int heif_polarization_angle_is_no_filter(float angle)
+{
+  uint32_t bits;
+  memcpy(&bits, &angle, sizeof(bits));
+  return bits == 0xFFFFFFFF;
+}
+
+
+heif_error heif_image_add_polarization_pattern(heif_image* image,
+                                               uint32_t num_component_ids,
+                                               const uint32_t* component_ids,
+                                               uint16_t pattern_width,
+                                               uint16_t pattern_height,
+                                               const float* polarization_angles)
+{
+  if (image == nullptr || polarization_angles == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_component_ids > 0 && component_ids == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (pattern_width == 0 || pattern_height == 0) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Polarization pattern dimensions must be non-zero."};
+  }
+
+  PolarizationPattern pattern;
+  pattern.component_ids.assign(component_ids, component_ids + num_component_ids);
+  pattern.pattern_width = pattern_width;
+  pattern.pattern_height = pattern_height;
+
+  size_t num_pixels = size_t{pattern_width} * pattern_height;
+  pattern.polarization_angles.assign(polarization_angles, polarization_angles + num_pixels);
+
+  image->image->add_polarization_pattern(pattern);
+
+  return heif_error_success;
+}
+
+
+int heif_image_get_number_of_polarization_patterns(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return static_cast<int>(image->image->get_polarization_patterns().size());
+}
+
+
+heif_error heif_image_get_polarization_pattern_info(const heif_image* image,
+                                                    int pattern_index,
+                                                    uint32_t* out_num_component_ids,
+                                                    uint16_t* out_pattern_width,
+                                                    uint16_t* out_pattern_height)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& patterns = image->image->get_polarization_patterns();
+  if (pattern_index < 0 || static_cast<size_t>(pattern_index) >= patterns.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Polarization pattern index out of range."};
+  }
+
+  const auto& p = patterns[pattern_index];
+  if (out_num_component_ids) {
+    *out_num_component_ids = static_cast<uint32_t>(p.component_ids.size());
+  }
+  if (out_pattern_width) {
+    *out_pattern_width = p.pattern_width;
+  }
+  if (out_pattern_height) {
+    *out_pattern_height = p.pattern_height;
+  }
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_get_polarization_pattern_data(const heif_image* image,
+                                                    int pattern_index,
+                                                    uint32_t* out_component_ids,
+                                                    float* out_polarization_angles)
+{
+  if (image == nullptr || out_polarization_angles == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& patterns = image->image->get_polarization_patterns();
+  if (pattern_index < 0 || static_cast<size_t>(pattern_index) >= patterns.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Polarization pattern index out of range."};
+  }
+
+  const auto& p = patterns[pattern_index];
+
+  if (out_component_ids && !p.component_ids.empty()) {
+    std::copy(p.component_ids.begin(), p.component_ids.end(), out_component_ids);
+  }
+
+  size_t num_pixels = size_t{p.pattern_width} * p.pattern_height;
+  std::copy(p.polarization_angles.begin(), p.polarization_angles.begin() + num_pixels, out_polarization_angles);
+
+  return heif_error_success;
+}
+
+
+int heif_image_get_polarization_pattern_index_for_component(const heif_image* image,
+                                                            uint32_t component_id)
+{
+  if (image == nullptr) {
+    return -1;
+  }
+
+  const auto& patterns = image->image->get_polarization_patterns();
+  for (size_t i = 0; i < patterns.size(); i++) {
+    const auto& p = patterns[i];
+    if (p.component_ids.empty()) {
+      // Empty component list means pattern applies to all components.
+      return static_cast<int>(i);
+    }
+    for (uint32_t idx : p.component_ids) {
+      if (idx == component_id) {
+        return static_cast<int>(i);
+      }
+    }
+  }
+
+  return -1;
+}
+
+
+heif_error heif_image_add_sensor_bad_pixels_map(heif_image* image,
+                                                 uint32_t num_component_ids,
+                                                 const uint32_t* component_ids,
+                                                 int correction_applied,
+                                                 uint32_t num_bad_rows,
+                                                 const uint32_t* bad_rows,
+                                                 uint32_t num_bad_columns,
+                                                 const uint32_t* bad_columns,
+                                                 uint32_t num_bad_pixels,
+                                                 const struct heif_bad_pixel* bad_pixels)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_component_ids > 0 && component_ids == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_bad_rows > 0 && bad_rows == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_bad_columns > 0 && bad_columns == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_bad_pixels > 0 && bad_pixels == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  SensorBadPixelsMap map;
+  map.component_ids.assign(component_ids, component_ids + num_component_ids);
+  map.correction_applied = (correction_applied != 0);
+
+  map.bad_rows.assign(bad_rows, bad_rows + num_bad_rows);
+  map.bad_columns.assign(bad_columns, bad_columns + num_bad_columns);
+
+  map.bad_pixels.resize(num_bad_pixels);
+  for (uint32_t i = 0; i < num_bad_pixels; i++) {
+    map.bad_pixels[i].row = bad_pixels[i].row;
+    map.bad_pixels[i].column = bad_pixels[i].column;
+  }
+
+  image->image->add_sensor_bad_pixels_map(map);
+
+  return heif_error_success;
+}
+
+
+int heif_image_get_number_of_sensor_bad_pixels_maps(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return static_cast<int>(image->image->get_sensor_bad_pixels_maps().size());
+}
+
+
+heif_error heif_image_get_sensor_bad_pixels_map_info(const heif_image* image,
+                                                      int map_index,
+                                                      uint32_t* out_num_component_ids,
+                                                      int* out_correction_applied,
+                                                      uint32_t* out_num_bad_rows,
+                                                      uint32_t* out_num_bad_columns,
+                                                      uint32_t* out_num_bad_pixels)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& maps = image->image->get_sensor_bad_pixels_maps();
+  if (map_index < 0 || static_cast<size_t>(map_index) >= maps.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Sensor bad pixels map index out of range."};
+  }
+
+  const auto& m = maps[map_index];
+  if (out_num_component_ids) {
+    *out_num_component_ids = static_cast<uint32_t>(m.component_ids.size());
+  }
+  if (out_correction_applied) {
+    *out_correction_applied = m.correction_applied ? 1 : 0;
+  }
+  if (out_num_bad_rows) {
+    *out_num_bad_rows = static_cast<uint32_t>(m.bad_rows.size());
+  }
+  if (out_num_bad_columns) {
+    *out_num_bad_columns = static_cast<uint32_t>(m.bad_columns.size());
+  }
+  if (out_num_bad_pixels) {
+    *out_num_bad_pixels = static_cast<uint32_t>(m.bad_pixels.size());
+  }
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_get_sensor_bad_pixels_map_data(const heif_image* image,
+                                                      int map_index,
+                                                      uint32_t* out_component_ids,
+                                                      uint32_t* out_bad_rows,
+                                                      uint32_t* out_bad_columns,
+                                                      struct heif_bad_pixel* out_bad_pixels)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& maps = image->image->get_sensor_bad_pixels_maps();
+  if (map_index < 0 || static_cast<size_t>(map_index) >= maps.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Sensor bad pixels map index out of range."};
+  }
+
+  const auto& m = maps[map_index];
+
+  if (out_component_ids && !m.component_ids.empty()) {
+    std::copy(m.component_ids.begin(), m.component_ids.end(), out_component_ids);
+  }
+
+  if (out_bad_rows && !m.bad_rows.empty()) {
+    std::copy(m.bad_rows.begin(), m.bad_rows.end(), out_bad_rows);
+  }
+
+  if (out_bad_columns && !m.bad_columns.empty()) {
+    std::copy(m.bad_columns.begin(), m.bad_columns.end(), out_bad_columns);
+  }
+
+  if (out_bad_pixels && !m.bad_pixels.empty()) {
+    for (size_t i = 0; i < m.bad_pixels.size(); i++) {
+      out_bad_pixels[i].row = m.bad_pixels[i].row;
+      out_bad_pixels[i].column = m.bad_pixels[i].column;
+    }
+  }
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_add_sensor_nuc(heif_image* image,
+                                      uint32_t num_component_ids,
+                                      const uint32_t* component_ids,
+                                      int nuc_is_applied,
+                                      uint32_t image_width,
+                                      uint32_t image_height,
+                                      const float* nuc_gains,
+                                      const float* nuc_offsets)
+{
+  if (image == nullptr || nuc_gains == nullptr || nuc_offsets == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (num_component_ids > 0 && component_ids == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (image_width == 0 || image_height == 0) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "NUC image dimensions must be non-zero."};
+  }
+
+  SensorNonUniformityCorrection nuc;
+  nuc.component_ids.assign(component_ids, component_ids + num_component_ids);
+  nuc.nuc_is_applied = (nuc_is_applied != 0);
+  nuc.image_width = image_width;
+  nuc.image_height = image_height;
+
+  size_t num_pixels = size_t{image_width} * image_height;
+  nuc.nuc_gains.assign(nuc_gains, nuc_gains + num_pixels);
+  nuc.nuc_offsets.assign(nuc_offsets, nuc_offsets + num_pixels);
+
+  image->image->add_sensor_nuc(nuc);
+
+  return heif_error_success;
+}
+
+
+int heif_image_get_number_of_sensor_nucs(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return static_cast<int>(image->image->get_sensor_nuc().size());
+}
+
+
+heif_error heif_image_get_sensor_nuc_info(const heif_image* image,
+                                           int nuc_index,
+                                           uint32_t* out_num_component_ids,
+                                           int* out_nuc_is_applied,
+                                           uint32_t* out_image_width,
+                                           uint32_t* out_image_height)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& nucs = image->image->get_sensor_nuc();
+  if (nuc_index < 0 || static_cast<size_t>(nuc_index) >= nucs.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Sensor NUC index out of range."};
+  }
+
+  const auto& n = nucs[nuc_index];
+  if (out_num_component_ids) {
+    *out_num_component_ids = static_cast<uint32_t>(n.component_ids.size());
+  }
+  if (out_nuc_is_applied) {
+    *out_nuc_is_applied = n.nuc_is_applied ? 1 : 0;
+  }
+  if (out_image_width) {
+    *out_image_width = n.image_width;
+  }
+  if (out_image_height) {
+    *out_image_height = n.image_height;
+  }
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_get_sensor_nuc_data(const heif_image* image,
+                                           int nuc_index,
+                                           uint32_t* out_component_ids,
+                                           float* out_nuc_gains,
+                                           float* out_nuc_offsets)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  const auto& nucs = image->image->get_sensor_nuc();
+  if (nuc_index < 0 || static_cast<size_t>(nuc_index) >= nucs.size()) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Sensor NUC index out of range."};
+  }
+
+  const auto& n = nucs[nuc_index];
+
+  if (out_component_ids && !n.component_ids.empty()) {
+    std::copy(n.component_ids.begin(), n.component_ids.end(), out_component_ids);
+  }
+
+  size_t num_pixels = size_t{n.image_width} * n.image_height;
+
+  if (out_nuc_gains && !n.nuc_gains.empty()) {
+    std::copy(n.nuc_gains.begin(), n.nuc_gains.begin() + num_pixels, out_nuc_gains);
+  }
+
+  if (out_nuc_offsets && !n.nuc_offsets.empty()) {
+    std::copy(n.nuc_offsets.begin(), n.nuc_offsets.begin() + num_pixels, out_nuc_offsets);
+  }
+
+  return heif_error_success;
+}
+
+
+heif_error heif_image_set_chroma_location(heif_image* image, uint8_t chroma_location)
+{
+  if (image == nullptr) {
+    return heif_error_null_pointer_argument;
+  }
+
+  if (chroma_location > 6) {
+    return {heif_error_Usage_error,
+            heif_suberror_Invalid_parameter_value,
+            "Chroma location must be in the range 0-6."};
+  }
+
+  image->image->set_chroma_location(chroma_location);
+
+  return heif_error_success;
+}
+
+
+int heif_image_has_chroma_location(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return image->image->has_chroma_location() ? 1 : 0;
+}
+
+
+uint8_t heif_image_get_chroma_location(const heif_image* image)
+{
+  if (image == nullptr) {
+    return 0;
+  }
+
+  return image->image->get_chroma_location();
+}

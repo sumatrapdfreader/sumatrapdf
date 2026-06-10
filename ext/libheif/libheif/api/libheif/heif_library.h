@@ -48,22 +48,14 @@ extern "C" {
 //  1.18           5            7             1             1            1            1
 //  1.19           6            7             2             1            1            1
 //  1.20           7            7             2             1            1            1
+//  1.21           8            7             2             1            1            1
+//  1.22           9            8             2             1            1            1
+//  1.23          10            8             2             1            1            1
 
-#if (defined(_WIN32) || defined __CYGWIN__) && !defined(LIBHEIF_STATIC_BUILD)
-#ifdef LIBHEIF_EXPORTS
-#define LIBHEIF_API __declspec(dllexport)
-#else
-#define LIBHEIF_API __declspec(dllimport)
-#endif
-#elif defined(HAVE_VISIBILITY) && HAVE_VISIBILITY
-#ifdef LIBHEIF_EXPORTS
-#define LIBHEIF_API __attribute__((__visibility__("default")))
-#else
-#define LIBHEIF_API
-#endif
-#else
-#define LIBHEIF_API
-#endif
+// The LIBHEIF_API export macro is defined in its own dependency-free header so
+// that heif_error.h (which is needed by this header) can use it without
+// creating an include cycle.
+#include <libheif/heif_export.h>
 
 /**
  * Build a 32 bit integer from a 4-character code.
@@ -160,16 +152,16 @@ void heif_deinit(void);
 
 // --- Plugins are currently only supported on Unix platforms.
 
-enum heif_plugin_type
+typedef enum heif_plugin_type
 {
   heif_plugin_type_encoder,
   heif_plugin_type_decoder
-};
+} heif_plugin_type;
 
 typedef struct heif_plugin_info
 {
   int version; // version of this info struct
-  enum heif_plugin_type type;
+  heif_plugin_type type;
   const void* plugin;
   void* internal_handle; // for internal use only
 } heif_plugin_info;

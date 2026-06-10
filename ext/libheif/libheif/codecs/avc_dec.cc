@@ -47,6 +47,29 @@ int Decoder_AVC::get_chroma_bits_per_pixel() const
 }
 
 
+Result<std::optional<ImageSize>> Decoder_AVC::get_coded_image_size_from_config() const
+{
+  const auto& sps_set = m_avcC->getSequenceParameterSets();
+
+  for (const auto& sps : sps_set) {
+    if (sps.empty()) continue;
+    Box_avcC::configuration scratch = m_avcC->get_configuration();
+    uint32_t cropped_w = 0, cropped_h = 0;
+    ImageSize coded{};
+
+    Error e = parse_sps_for_avcC_configuration(sps.data(), sps.size(), &scratch,
+                                               &cropped_w, &cropped_h, &coded);
+    if (e) {
+      return e;
+    }
+
+    return std::optional<ImageSize>{coded};
+  }
+
+  return std::optional<ImageSize>{};
+}
+
+
 Error Decoder_AVC::get_coded_image_colorspace(heif_colorspace* out_colorspace, heif_chroma* out_chroma) const
 {
   *out_chroma = m_avcC->get_configuration().chroma_format;

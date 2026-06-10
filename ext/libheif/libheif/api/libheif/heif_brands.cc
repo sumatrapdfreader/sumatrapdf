@@ -257,7 +257,6 @@ const char* heif_get_file_mime_type(const uint8_t* data, int len)
   else if (mainBrand == heif_brand2_avcs) {
     return "image/avcs";
   }
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
   else if (mainBrand == heif_brand2_mif3) {
     heif_brand2 minorBrand = heif_read_minor_version_brand(data, len);
     if (minorBrand == heif_brand2_avif) {
@@ -272,7 +271,6 @@ const char* heif_get_file_mime_type(const uint8_t* data, int len)
     // There could be other options in here, like VVC or J2K
     return "image/heif";
   }
-#endif
   else if (mainBrand == heif_brand2_j2ki) {
     return "image/hej2k";
   }
@@ -357,11 +355,9 @@ heif_error heif_has_compatible_filetype(const uint8_t* data, int len)
       heif_brand2_jpeg,
       heif_brand2_miaf,
       heif_brand2_mif1,
-      heif_brand2_mif2
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
-      , heif_brand2_mif3
-#endif
-      ,heif_brand2_msf1,
+      heif_brand2_mif2,
+      heif_brand2_mif3,
+      heif_brand2_msf1,
     heif_brand2_isom,
     heif_brand2_mp41,
     heif_brand2_mp42

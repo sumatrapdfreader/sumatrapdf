@@ -229,6 +229,8 @@ const char* Error::get_error_string(heif_suberror_code err)
       return "Invalid data in generic compression inflation";
     case heif_suberror_No_moov_box:
       return "No 'moov' box";
+    case heif_suberror_NCLX_colr_VUI_mismatch:
+      return "colr box and bitstream colour signalling disagree";
     case heif_suberror_No_icbr_box:
       return "No 'icbr' box";
     case heif_suberror_Invalid_mini_box:

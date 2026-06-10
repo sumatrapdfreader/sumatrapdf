@@ -35,7 +35,7 @@ extern "C" {
 /**
  * libheif known compression formats.
  */
-enum heif_compression_format
+typedef enum heif_compression_format
 {
   /**
    * Unspecified / undefined compression format.
@@ -115,7 +115,7 @@ enum heif_compression_format
    * The core encoding is defined in ISO/IEC 15444-15, or ITU-T T.814.
   */
   heif_compression_HTJ2K = 10
-};
+} heif_compression_format;
 
 
 // ========================= heif_context =========================
@@ -136,13 +136,13 @@ void heif_context_free(heif_context*);
 
 typedef struct heif_reading_options heif_reading_options;
 
-enum heif_reader_grow_status
+typedef enum heif_reader_grow_status
 {
   heif_reader_grow_status_size_reached,    // requested size has been reached, we can read until this point
   heif_reader_grow_status_timeout,         // size has not been reached yet, but it may still grow further (deprecated)
   heif_reader_grow_status_size_beyond_eof, // size has not been reached and never will. The file has grown to its full size
   heif_reader_grow_status_error            // an error has occurred
-};
+} heif_reader_grow_status;
 
 
 typedef struct heif_reader_range_request_result
@@ -294,6 +294,20 @@ heif_error heif_context_get_image_handle(heif_context* ctx,
 // the output having a specific format. At best, you should not use this at all.
 LIBHEIF_API
 void heif_context_debug_dump_boxes_to_file(heif_context* ctx, int fd);
+
+// ====================================================================================================
+//   Mini format (experimental)
+
+// Enable writing in the compact 'mini' box format (ISO/IEC 23008-12 DAmd2).
+// When enabled, the output file will use a single 'mini' box instead of the standard
+// meta+mdat box structure, if the file content is compatible with the mini format.
+// If the content cannot be represented as a mini box, the standard format is used as fallback.
+// Note: the mini box format is defined by a draft amendment to ISO/IEC 23008-12
+// and may have reduced interoperability with other readers.
+// Default: disabled.
+LIBHEIF_API
+void heif_context_set_write_mini_format(heif_context*, int enable);
+
 
 // ====================================================================================================
 //   Write the heif_context to a HEIF file

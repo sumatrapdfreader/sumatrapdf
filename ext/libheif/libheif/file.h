@@ -22,6 +22,7 @@
 #define LIBHEIF_FILE_H
 
 #include "box.h"
+#include "id_creator.h"
 #include "nclx.h"
 #include "image-items/avif.h"
 #include "image-items/hevc.h"
@@ -67,19 +68,23 @@ public:
   // You have to make sure that the pointer points to a valid object as long as the HeifFile is used.
   void set_security_limits(const heif_security_limits* limits) { m_limits = limits; }
 
+  const heif_security_limits* get_security_limits() const { return m_limits; }
+
   Error read(const std::shared_ptr<StreamReader>& reader);
 
   Error read_from_file(const char* input_filename);
 
   Error read_from_memory(const void* data, size_t size, bool copy);
 
-  bool has_images() const { return m_meta_box != nullptr; }
+  bool has_images() const;
 
   bool has_sequences() const { return m_moov_box != nullptr; }
 
   std::shared_ptr<StreamReader> get_reader() { return m_input_stream; }
 
   void new_empty_file();
+
+  void init_for_meta_item();
 
   void init_for_image();
 
@@ -93,9 +98,12 @@ public:
 
   void write(StreamWriter& writer);
 
+  void set_write_mini_format(bool enable) { m_write_mini_format = enable; }
+  bool get_write_mini_format() const { return m_write_mini_format; }
+
   int get_num_images() const { return static_cast<int>(m_infe_boxes.size()); }
 
-  heif_item_id get_primary_image_ID() const { return m_pitm_box->get_item_ID(); }
+  heif_item_id get_primary_image_ID() const { return m_pitm_box ? m_pitm_box->get_item_ID() : 0; }
 
   size_t get_number_of_items() const { return m_infe_boxes.size(); }
 
@@ -180,14 +188,22 @@ public:
 
   std::string debug_dump_boxes() const;
 
+  std::string debug_dump_item_data() const;
+
 
   // --- writing ---
 
-  heif_item_id get_unused_item_id() const;
+  IDCreator& get_id_creator() { return m_id_creator; }
 
-  heif_item_id add_new_image(uint32_t item_type);
+  const IDCreator& get_id_creator() const { return m_id_creator; }
 
-  std::shared_ptr<Box_infe> add_new_infe_box(uint32_t item_type);
+  Result<heif_item_id> get_unused_item_id();
+
+  Result<heif_item_id> add_new_image(uint32_t item_type);
+
+  Result<std::shared_ptr<Box_infe>> add_new_infe_box(uint32_t item_type);
+
+  Result<std::shared_ptr<Box_infe>> add_new_meta_infe_box(uint32_t item_type);
 
   void add_ispe_property(heif_item_id id, uint32_t width, uint32_t height, bool essential);
 
@@ -257,20 +273,19 @@ private:
   std::shared_ptr<Box_ftyp> m_ftyp_box;
   std::shared_ptr<Box_hdlr> m_hdlr_box;
   std::shared_ptr<Box_meta> m_meta_box;
-#if ENABLE_EXPERIMENTAL_MINI_FORMAT
   std::shared_ptr<Box_mini> m_mini_box; // meta alternative
-#endif
+  bool m_write_mini_format = false;
 
-  std::shared_ptr<Box_ipco> m_ipco_box;
-  std::shared_ptr<Box_ipma> m_ipma_box;
   std::shared_ptr<Box_iloc> m_iloc_box;
   std::shared_ptr<Box_idat> m_idat_box;
   std::shared_ptr<Box_iref> m_iref_box;
-  std::shared_ptr<Box_pitm> m_pitm_box;
   std::shared_ptr<Box_iinf> m_iinf_box;
   std::shared_ptr<Box_grpl> m_grpl_box;
+  std::shared_ptr<Box_pitm> m_pitm_box; // only non-null if has_images()==true
+  std::shared_ptr<Box_iprp> m_iprp_box; // only non-null if has_images()==true
+  std::shared_ptr<Box_ipco> m_ipco_box; // only non-null if has_images()==true
+  std::shared_ptr<Box_ipma> m_ipma_box; // only non-null if has_images()==true
 
-  std::shared_ptr<Box_iprp> m_iprp_box;
 
   std::map<heif_item_id, std::shared_ptr<Box_infe> > m_infe_boxes;
 
@@ -285,6 +300,7 @@ private:
   std::shared_ptr<Box_mvhd> m_mvhd_box;
 
   const heif_security_limits* m_limits = nullptr;
+  IDCreator m_id_creator;
 
   Error parse_heif_file();
 

@@ -31,7 +31,7 @@ extern "C" {
 typedef struct heif_image heif_image;
 
 
-enum heif_chroma_downsampling_algorithm
+typedef enum heif_chroma_downsampling_algorithm
 {
   heif_chroma_downsampling_nearest_neighbor = 1,
   heif_chroma_downsampling_average = 2,
@@ -39,13 +39,13 @@ enum heif_chroma_downsampling_algorithm
   // Combine with 'heif_chroma_upsampling_bilinear' for best quality.
   // Makes edges look sharper when using YUV 420 with bilinear chroma upsampling.
   heif_chroma_downsampling_sharp_yuv = 3
-};
+} heif_chroma_downsampling_algorithm;
 
-enum heif_chroma_upsampling_algorithm
+typedef enum heif_chroma_upsampling_algorithm
 {
   heif_chroma_upsampling_nearest_neighbor = 1,
   heif_chroma_upsampling_bilinear = 2
-};
+} heif_chroma_upsampling_algorithm;
 
 
 typedef struct heif_color_conversion_options
@@ -55,8 +55,8 @@ typedef struct heif_color_conversion_options
 
   // --- version 1 options
 
-  enum heif_chroma_downsampling_algorithm preferred_chroma_downsampling_algorithm;
-  enum heif_chroma_upsampling_algorithm preferred_chroma_upsampling_algorithm;
+  heif_chroma_downsampling_algorithm preferred_chroma_downsampling_algorithm;
+  heif_chroma_upsampling_algorithm preferred_chroma_upsampling_algorithm;
 
   // When set to 'false' libheif may also use a different algorithm if the preferred one is not available
   // or using a different algorithm is computationally less complex. Note that currently (v1.17.0) this
@@ -71,12 +71,12 @@ typedef struct heif_color_conversion_options
 } heif_color_conversion_options;
 
 
-enum heif_alpha_composition_mode
+typedef enum heif_alpha_composition_mode
 {
   heif_alpha_composition_mode_none,
   heif_alpha_composition_mode_solid_color,
   heif_alpha_composition_mode_checkerboard,
-};
+} heif_alpha_composition_mode;
 
 
 typedef struct heif_color_conversion_options_ext
@@ -85,7 +85,7 @@ typedef struct heif_color_conversion_options_ext
 
   // --- version 1 options
 
-  enum heif_alpha_composition_mode alpha_composition_mode;
+  heif_alpha_composition_mode alpha_composition_mode;
 
   // color values should be specified in the range [0, 65535]
   uint16_t background_red, background_green, background_blue;
@@ -111,13 +111,13 @@ void heif_color_conversion_options_ext_free(heif_color_conversion_options_ext*);
 
 // ------------------------- color profiles -------------------------
 
-enum heif_color_profile_type
+typedef enum heif_color_profile_type
 {
   heif_color_profile_type_not_present = 0,
   heif_color_profile_type_nclx = heif_fourcc('n', 'c', 'l', 'x'),
   heif_color_profile_type_rICC = heif_fourcc('r', 'I', 'C', 'C'),
   heif_color_profile_type_prof = heif_fourcc('p', 'r', 'o', 'f')
-};
+} heif_color_profile_type;
 
 
 // Returns 'heif_color_profile_type_not_present' if there is no color profile.
@@ -126,7 +126,7 @@ enum heif_color_profile_type
 //       However, you can still use heif_image_handle_get_raw_color_profile() and
 //       heif_image_handle_get_nclx_color_profile() to access both profiles.
 LIBHEIF_API
-enum heif_color_profile_type heif_image_handle_get_color_profile_type(const heif_image_handle* handle);
+heif_color_profile_type heif_image_handle_get_color_profile_type(const heif_image_handle* handle);
 
 LIBHEIF_API
 size_t heif_image_handle_get_raw_color_profile_size(const heif_image_handle* handle);
@@ -137,7 +137,7 @@ struct heif_error heif_image_handle_get_raw_color_profile(const heif_image_handl
                                                           void* out_data);
 
 
-enum heif_color_primaries
+typedef enum heif_color_primaries
 {
   heif_color_primaries_ITU_R_BT_709_5 = 1, // g=0.3;0.6, b=0.15;0.06, r=0.64;0.33, w=0.3127,0.3290
   heif_color_primaries_unspecified = 2,
@@ -151,9 +151,9 @@ enum heif_color_primaries
   heif_color_primaries_SMPTE_RP_431_2 = 11,
   heif_color_primaries_SMPTE_EG_432_1 = 12,
   heif_color_primaries_EBU_Tech_3213_E = 22
-};
+} heif_color_primaries;
 
-enum heif_transfer_characteristics
+typedef enum heif_transfer_characteristics
 {
   heif_transfer_characteristic_ITU_R_BT_709_5 = 1,
   heif_transfer_characteristic_unspecified = 2,
@@ -172,9 +172,9 @@ enum heif_transfer_characteristics
   heif_transfer_characteristic_ITU_R_BT_2100_0_PQ = 16,
   heif_transfer_characteristic_SMPTE_ST_428_1 = 17,
   heif_transfer_characteristic_ITU_R_BT_2100_0_HLG = 18
-};
+} heif_transfer_characteristics;
 
-enum heif_matrix_coefficients
+typedef enum heif_matrix_coefficients
 {
   heif_matrix_coefficients_RGB_GBR = 0,
   heif_matrix_coefficients_ITU_R_BT_709_5 = 1,  // TODO: or 709-6 according to h.273
@@ -190,7 +190,7 @@ enum heif_matrix_coefficients
   heif_matrix_coefficients_chromaticity_derived_non_constant_luminance = 12,
   heif_matrix_coefficients_chromaticity_derived_constant_luminance = 13,
   heif_matrix_coefficients_ICtCp = 14
-};
+} heif_matrix_coefficients;
 
 typedef struct heif_color_profile_nclx
 {
@@ -198,9 +198,9 @@ typedef struct heif_color_profile_nclx
 
   uint8_t version;
 
-  enum heif_color_primaries color_primaries;
-  enum heif_transfer_characteristics transfer_characteristics;
-  enum heif_matrix_coefficients matrix_coefficients;
+  heif_color_primaries color_primaries;
+  heif_transfer_characteristics transfer_characteristics;
+  heif_matrix_coefficients matrix_coefficients;
   uint8_t full_range_flag;
 
   // --- decoded values (not used when saving nclx)
@@ -240,7 +240,7 @@ void heif_nclx_color_profile_free(heif_color_profile_nclx* nclx_profile);
 // This function will now return ICC if one is present and NCLX only if there is no ICC.
 // You may better avoid this function and simply query for NCLX and ICC directly.
 LIBHEIF_API
-enum heif_color_profile_type heif_image_get_color_profile_type(const heif_image* image);
+heif_color_profile_type heif_image_get_color_profile_type(const heif_image* image);
 
 // Returns the size of the ICC profile if one is assigned to the image. Otherwise, it returns 0.
 LIBHEIF_API
@@ -276,17 +276,34 @@ heif_error heif_image_set_nclx_color_profile(heif_image* image,
 
 // --- content light level ---
 
-// Note: a value of 0 for any of these values indicates that the value is undefined.
-// The unit of these values is Candelas per square meter.
+// Semantics follow the H.265 'Content light level information' SEI message
+// (ITU-T H.265 Annex D.3.35). Identifies upper bounds for the nominal
+// target brightness light level of the pictures. The bounds are defined
+// against samples in a 4:4:4 RGB representation in the linear light domain,
+// in units of candelas per square metre (cd/m^2 = nits). A field value
+// of 0 means "no upper bound indicated" (i.e. undefined).
 typedef struct heif_content_light_level
 {
+  // Upper bound on the maximum light level among all individual linear-light
+  // 4:4:4 RGB samples across the sequence, in cd/m^2 (= field).
+  // Also called MaxCLL.
   uint16_t max_content_light_level;
+
+  // Upper bound on the maximum per-picture average light level among the
+  // linear-light 4:4:4 RGB samples (averaged over any individual picture),
+  // in cd/m^2 (= field). Also called MaxFALL (or MaxPALL).
+  // For letterboxed content the average is expected to be taken only over
+  // the visually relevant region (H.265 D.3.35 NOTE 3).
   uint16_t max_pic_average_light_level;
 } heif_content_light_level;
 
 LIBHEIF_API
 int heif_image_has_content_light_level(const heif_image*);
 
+LIBHEIF_API
+int heif_image_handle_has_content_light_level(const heif_image_handle*);
+
+// TODO: this function should also return 'int' to be consistent to heif_image_handle_get_content_light_level.
 LIBHEIF_API
 void heif_image_get_content_light_level(const heif_image*, heif_content_light_level* out);
 
@@ -303,13 +320,43 @@ void heif_image_handle_set_content_light_level(const heif_image_handle*, const h
 
 // --- mastering display colour volume ---
 
-// Note: color coordinates are defined according to the CIE 1931 definition of x as specified in ISO 11664-1 (see also ISO 11664-3 and CIE 15).
+// Semantics follow the H.265 'Mastering display colour volume' SEI message
+// (ITU-T H.265 Annex D.3.28) and SMPTE ST 2086. Identifies the colour
+// volume (primaries, white point, luminance range) of the mastering display
+// for the associated content. CIE 1931 chromaticity coordinates are defined
+// by ISO 11664-1 (see also ISO 11664-3 and CIE 15).
+//
+// For RGB mastering displays, H.265 suggests the index order
+//   [0]=green, [1]=blue, [2]=red
+// (see H.265 Annex E, Table E.3).
 typedef struct heif_mastering_display_colour_volume
 {
+  // CIE 1931 chromaticity coordinates of the three colour primaries, in
+  // normalized increments of 0.00002 (CIE value = field / 50000).
+  // Valid ranges per H.265: x in 5..37000, y in 5..42000 inclusive; values
+  // outside indicate "unknown / unspecified".
+  // Note: SMPTE ST 2086 uses four-decimal-place coordinates, i.e. multiples
+  // of 5 in this encoding.
   uint16_t display_primaries_x[3];
   uint16_t display_primaries_y[3];
+
+  // CIE 1931 chromaticity coordinates of the mastering display's white
+  // point, in normalized increments of 0.00002. Valid ranges as for the
+  // primaries (x in 5..37000, y in 5..42000).
+  // Note: ANSI/CTA 861-G uses (0,0) to indicate that the white point
+  // chromaticity is unknown.
   uint16_t white_point_x;
   uint16_t white_point_y;
+
+  // Nominal maximum / minimum display luminance of the mastering display,
+  // in units of 0.0001 candelas per square metre (cd/m^2 = field / 10000).
+  // Valid ranges per H.265:
+  //   max in 50000..100000000  (5..10000 cd/m^2)
+  //   min in     1..50000      (0.0001..5 cd/m^2)
+  // When max == 50000, min shall not equal 50000.
+  // Note: ANSI/CTA 861-G uses 0 to indicate "unknown".
+  // Note: SMPTE ST 2086 (2018) specifies max as a multiple of 1 cd/m^2, i.e.
+  // a multiple of 10000 in this encoding.
   uint32_t max_display_mastering_luminance;
   uint32_t min_display_mastering_luminance;
 } heif_mastering_display_colour_volume;
@@ -325,15 +372,33 @@ typedef struct heif_decoded_mastering_display_colour_volume
   double min_display_mastering_luminance;
 } heif_decoded_mastering_display_colour_volume;
 
+// Semantics follow the H.265 'Ambient viewing environment' SEI message
+// (ITU-T H.265 Annex D.3.39). Identifies the nominal ambient viewing
+// environment intended for display of the associated content.
 typedef struct heif_ambient_viewing_environment
 {
+  // Environmental illuminance of the ambient viewing environment, in units
+  // of 0.0001 lux (i.e. lux = value / 10000). In H.265 this field is called
+  // 'ambient_illuminance' and is required to be non-zero; 0 is treated here
+  // as "undefined".
   uint32_t ambient_illumination;
+
+  // Normalized CIE 1931 chromaticity coordinates of the environmental
+  // ambient light, in units of 0.00002 (i.e. CIE x = value / 50000).
+  // Valid range per H.265 is 0..50000 inclusive. CIE 1931 x/y are defined
+  // by ISO 11664-1 (see also ISO 11664-3 and CIE 15).
+  //
+  // Example (Rec. ITU-R BT.2035, D65 background): ambient_illumination=100000,
+  // ambient_light_x=15635, ambient_light_y=16450.
   uint16_t ambient_light_x;
   uint16_t ambient_light_y;
 } heif_ambient_viewing_environment;
 
 LIBHEIF_API
 int heif_image_has_mastering_display_colour_volume(const heif_image*);
+
+LIBHEIF_API
+int heif_image_handle_has_mastering_display_colour_volume(const heif_image_handle*);
 
 LIBHEIF_API
 void heif_image_get_mastering_display_colour_volume(const heif_image*, heif_mastering_display_colour_volume* out);
@@ -347,6 +412,57 @@ void heif_image_set_mastering_display_colour_volume(const heif_image*, const hei
 
 LIBHEIF_API
 void heif_image_handle_set_mastering_display_colour_volume(const heif_image_handle*, const heif_mastering_display_colour_volume* in);
+
+
+// --- ambient viewing environment ---
+
+LIBHEIF_API
+int heif_image_has_ambient_viewing_environment(const heif_image*);
+
+LIBHEIF_API
+int heif_image_handle_has_ambient_viewing_environment(const heif_image_handle*);
+
+// Returns whether the image has 'ambient viewing environment' information. If 0 is returned, the output is not filled.
+LIBHEIF_API
+int heif_image_get_ambient_viewing_environment(const heif_image*, heif_ambient_viewing_environment* out);
+
+// Returns whether the image has 'ambient viewing environment' information. If 0 is returned, the output is not filled.
+LIBHEIF_API
+int heif_image_handle_get_ambient_viewing_environment(const heif_image_handle*, heif_ambient_viewing_environment* out);
+
+LIBHEIF_API
+void heif_image_set_ambient_viewing_environment(const heif_image*, const heif_ambient_viewing_environment* in);
+
+LIBHEIF_API
+void heif_image_handle_set_ambient_viewing_environment(const heif_image_handle*, const heif_ambient_viewing_environment* in);
+
+
+// --- nominal diffuse white ---
+
+// Nominal diffuse white luminance (ISO/IEC 23008-12 'ndwt' box). The luminance
+// is given in units of 0.0001 candelas per square metre. A value of 0 is valid
+// and selects the default definition of ISO/TS 22028-5.
+
+// If the image has no 'nominal diffuse white' information, the getter returns 0,
+// which is indistinguishable from a stored luminance of 0. Use the has_ function
+// to disambiguate.
+LIBHEIF_API
+int heif_image_has_nominal_diffuse_white_luminance(const heif_image*);
+
+LIBHEIF_API
+uint32_t heif_image_get_nominal_diffuse_white_luminance(const heif_image*);
+
+LIBHEIF_API
+void heif_image_set_nominal_diffuse_white_luminance(const heif_image*, uint32_t luminance);
+
+LIBHEIF_API
+int heif_image_handle_has_nominal_diffuse_white_luminance(const heif_image_handle*);
+
+LIBHEIF_API
+uint32_t heif_image_handle_get_nominal_diffuse_white_luminance(const heif_image_handle*);
+
+LIBHEIF_API
+void heif_image_handle_set_nominal_diffuse_white_luminance(const heif_image_handle*, uint32_t luminance);
 
 
 // Converts the internal numeric representation of heif_mastering_display_colour_volume to the

@@ -70,7 +70,10 @@ Result<Encoder::CodedImageData> Encoder_JPEG::encode(const std::shared_ptr<HeifP
     uint8_t* data;
     int size;
 
-    encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    err = encoder->plugin->get_compressed_data(encoder->encoder, &data, &size, nullptr);
+    if (err.code) {
+      return Error(err.code, err.subcode, err.message);
+    }
 
     if (data == nullptr) {
       break;

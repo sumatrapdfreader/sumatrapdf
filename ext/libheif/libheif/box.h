@@ -950,6 +950,50 @@ private:
 };
 
 
+class Box_iscl : public FullBox
+{
+public:
+  Box_iscl()
+  {
+    set_short_type(fourcc("iscl"));
+  }
+
+  bool is_essential() const override { return true; }
+
+  bool is_transformative_property() const override { return true; }
+
+  uint16_t get_target_width_numerator() const { return m_target_width_numerator; }
+  uint16_t get_target_width_denominator() const { return m_target_width_denominator; }
+  uint16_t get_target_height_numerator() const { return m_target_height_numerator; }
+  uint16_t get_target_height_denominator() const { return m_target_height_denominator; }
+
+  void set_scale(uint16_t w_num, uint16_t w_den, uint16_t h_num, uint16_t h_den)
+  {
+    m_target_width_numerator = w_num;
+    m_target_width_denominator = w_den;
+    m_target_height_numerator = h_num;
+    m_target_height_denominator = h_den;
+  }
+
+  std::string dump(Indent&) const override;
+
+  const char* debug_box_name() const override { return "Image Scaling"; }
+
+  [[nodiscard]] parse_error_fatality get_parse_error_fatality() const override { return parse_error_fatality::ignorable; }
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits*) override;
+
+  Error write(StreamWriter& writer) const override;
+
+private:
+  uint16_t m_target_width_numerator = 1;
+  uint16_t m_target_width_denominator = 1;
+  uint16_t m_target_height_numerator = 1;
+  uint16_t m_target_height_denominator = 1;
+};
+
+
 class Box_clap : public Box
 {
 public:
@@ -1038,6 +1082,38 @@ protected:
 
 private:
   std::vector<Reference> m_references;
+};
+
+
+class Box_rref : public FullBox
+{
+public:
+  Box_rref()
+  {
+    set_short_type(fourcc("rref"));
+  }
+
+  bool is_essential() const override { return true; }
+
+  std::string dump(Indent&) const override;
+
+  const char* debug_box_name() const override { return "Required Reference Types"; }
+
+  const std::vector<uint32_t>& get_reference_types() const { return m_reference_types; }
+
+  bool all_reference_types_supported() const;
+
+  Error reference_types_supported_error() const;
+
+  void add_reference_type(uint32_t type) { m_reference_types.push_back(type); }
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits*) override;
+
+  Error write(StreamWriter& writer) const override;
+
+private:
+  std::vector<uint32_t> m_reference_types;
 };
 
 
@@ -1260,9 +1336,15 @@ public:
 
   int get_bits_per_channel(int channel) const { return m_bits_per_channel[channel]; }
 
-  void add_channel_bits(uint8_t c)
+  bool add_channel_bits(uint16_t c)
   {
-    m_bits_per_channel.push_back(c);
+    if (c <= 255) {
+      m_bits_per_channel.push_back(static_cast<uint8_t>(c));
+      return true;
+    }
+    else {
+      return false;
+    }
   }
 
   std::string dump(Indent&) const override;
@@ -1391,6 +1473,36 @@ public:
 
 protected:
   Error parse(BitstreamRange& range, const heif_security_limits*) override;
+};
+
+
+class Box_ndwt : public FullBox
+{
+public:
+  Box_ndwt()
+  {
+    set_short_type(fourcc("ndwt"));
+  }
+
+  // Nominal diffuse white luminance in units of 0.0001 cd/m^2.
+  // A value of 0 means the default definition of ISO/TS 22028-5 should be used.
+  uint32_t get_diffuse_white_luminance() const { return m_diffuse_white_luminance; }
+
+  void set_diffuse_white_luminance(uint32_t luminance) { m_diffuse_white_luminance = luminance; }
+
+  std::string dump(Indent&) const override;
+
+  const char* debug_box_name() const override { return "Nominal Diffuse White"; }
+
+  Error write(StreamWriter& writer) const override;
+
+  [[nodiscard]] parse_error_fatality get_parse_error_fatality() const override { return parse_error_fatality::optional; }
+
+protected:
+  Error parse(BitstreamRange& range, const heif_security_limits*) override;
+
+private:
+  uint32_t m_diffuse_white_luminance = 0;
 };
 
 

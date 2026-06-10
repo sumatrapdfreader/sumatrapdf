@@ -36,7 +36,11 @@ heif_error heif_image_handle_add_text_item(heif_image_handle *image_handle,
                                            heif_text_item** out_text_item)
 {
 
-  std::shared_ptr<TextItem> textItem = image_handle->context->add_text_item(content_type, text);
+  auto textItemResult = image_handle->context->add_text_item(content_type, text);
+  if (!textItemResult) {
+    return textItemResult.error_struct(image_handle->context.get());
+  }
+  std::shared_ptr<TextItem> textItem = *textItemResult;
   image_handle->image->add_text_item_id(textItem->get_item_id());
   if (out_text_item) {
     heif_text_item* item = new heif_text_item();
