@@ -76,19 +76,10 @@ async function main() {
     }
   }
 
-  // read Claude API key from secrets file
-  const secretsPath = join(rootDir, "..", "hack", "secrets", "sumatrapdf.env");
-  const secretsText = await Bun.file(secretsPath).text();
-  let apiKey = "";
-  for (const sline of secretsText.split("\n")) {
-    const eqIdx = sline.indexOf("=");
-    if (eqIdx > 0 && sline.substring(0, eqIdx).trim() === "CLAUDE_API_KEY") {
-      apiKey = sline.substring(eqIdx + 1).trim();
-      break;
-    }
-  }
+  // read Claude API key from environment variable
+  const apiKey = process.env.CLAUDE_API_KEY || "";
   if (!apiKey) {
-    console.error("CLAUDE_API_KEY not found in " + secretsPath);
+    console.error("CLAUDE_API_KEY environment variable not set");
     process.exit(1);
   }
 
