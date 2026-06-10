@@ -143,10 +143,9 @@ cglobal msac_decode_symbol_adapt4, 0, 6, 6
     mov           esp, [esp]
 %endif
 %endif
-    not            t4
     sub           t2d, t1d ; rng
     shl            t1, gprsize*8-16
-    add            t4, t1  ; ~dif
+    sub            t4, t1  ; dif - v
 .renorm3:
     mov           t1d, [t0+msac.cnt]
     movifnidn      t7, t0
@@ -157,33 +156,31 @@ cglobal msac_decode_symbol_adapt4, 0, 6, 6
     shl           t2d, cl
     shl            t4, cl
     mov [t7+msac.rng], t2d
-    not            t4
     sub           t1d, ecx
     jae .end ; no refill required
 
 ; refill:
-    mov            t2, [t7+msac.buf]
-    mov           rcx, [t7+msac.end]
 %if ARCH_X86_64 == 0
     push           t5
 %endif
-    lea            t5, [t2+gprsize]
-    cmp            t5, rcx
+    mov            t2, [t7+msac.buf]
+    mov            t5, [t7+msac.end]
+    lea           rcx, [t2+gprsize]
+    sub           rcx, t5
     ja .refill_eob
-    mov            t2, [t2]
-    lea           ecx, [t1+23]
-    add           t1d, 16
-    shr           ecx, 3   ; shift_bytes
-    bswap          t2
-    sub            t5, rcx
-    shl           ecx, 3   ; shift_bits
-    shr            t2, cl
-    sub           ecx, t1d ; shift_bits - 16 - cnt
-    mov           t1d, gprsize*8-16
-    shl            t2, cl
-    mov [t7+msac.buf], t5
-    sub           t1d, ecx ; cnt + gprsize*8 - shift_bits
-    xor            t4, t2
+    mov            t5, [t2]
+    lea           ecx, [t1+16-gprsize*8]
+    not            t5
+    bswap          t5
+    shr            t5, cl
+    neg           ecx
+    shr           ecx, 3 ; num_bytes_read
+    or             t4, t5
+.refill_end:
+    add            t2, rcx
+    lea           t1d, [t1+rcx*8] ; cnt += num_bits_read
+    mov [t7+msac.buf], t2
+.refill_end2:
 %if ARCH_X86_64 == 0
     pop            t5
 %endif
@@ -191,29 +188,35 @@ cglobal msac_decode_symbol_adapt4, 0, 6, 6
     mov [t7+msac.cnt], t1d
     mov [t7+msac.dif], t4
     RET
-.refill_eob: ; avoid overreading the input buffer
-    mov            t5, rcx
-    mov           ecx, gprsize*8-24
-    sub           ecx, t1d ; c
-.refill_eob_loop:
-    cmp            t2, t5
-    jae .refill_eob_end    ; eob reached
-    movzx         t1d, byte [t2]
-    inc            t2
-    shl            t1, cl
-    xor            t4, t1
-    sub           ecx, 8
-    jge .refill_eob_loop
-.refill_eob_end:
-    mov           t1d, gprsize*8-24
-%if ARCH_X86_64 == 0
-    pop            t5
+.pad_with_ones:
+    lea           ecx, [t1-16]
+%if ARCH_X86_64
+    ror           rcx, cl
+%else
+    shr           ecx, cl
 %endif
-    sub           t1d, ecx
-    mov [t7+msac.buf], t2
-    mov [t7+msac.dif], t4
-    mov [t7+msac.cnt], t1d
-    RET
+    or             t4, rcx
+    jmp .refill_end2
+.refill_eob: ; avoid overreading the input buffer
+    cmp            t2, t5
+    jae .pad_with_ones ; eob reached
+    ; We can safely do a register-sized load of the last bytes of the buffer
+    ; as this code is only reached if the msac buffer size is >= gprsize.
+    mov            t5, [t5-gprsize]
+    shl           ecx, 3
+    shr            t5, cl
+    lea           ecx, [t1+16-gprsize*8]
+    not            t5
+    bswap          t5
+    shr            t5, cl
+    neg           ecx
+    or             t4, t5
+    mov           t5d, [t7+msac.end]
+    shr           ecx, 3
+    sub           t5d, t2d ; num_bytes_left
+    cmp           ecx, t5d
+    cmovae        ecx, t5d ; num_bytes_read
+    jmp .refill_end
 
 cglobal msac_decode_symbol_adapt8, 0, 6, 6
     DECODE_SYMBOL_ADAPT_INIT
@@ -366,7 +369,6 @@ cglobal msac_decode_bool_adapt, 0, 6, 0
 %if ARCH_X86_64 == 0
     movzx         eax, al
 %endif
-    not            t4
     test          t3d, t3d
     jz m(msac_decode_symbol_adapt4, SUFFIX).renorm3
 %if UNIX64 == 0
@@ -420,7 +422,6 @@ cglobal msac_decode_bool_equi, 0, 6, 0
     mov           ecx, 0xbfff
     setb           al ; the upper 32 bits contains garbage but that's OK
     sub           ecx, t2d
-    not            t4
     ; In this case of this function, (d =) 16 - clz(v) = 2 - (v >> 14)
     ;   i.e. (0 <= d <= 2) and v < (3 << 14)
     shr           ecx, 14           ; d
@@ -447,7 +448,6 @@ cglobal msac_decode_bool, 0, 6, 0
     cmovb         t2d, t1d
     cmovb          t4, t3
     setb           al
-    not            t4
 %if ARCH_X86_64 == 0
     movzx         eax, al
 %endif
@@ -497,48 +497,45 @@ cglobal msac_decode_bool, 0, 6, 0
     tzcnt         eax, eax
     movzx         ecx, word [buf+rax+16]
     movzx         t2d, word [buf+rax+14]
-    not            t4
 %if ARCH_X86_64
     add           t6d, 5
 %endif
     sub           eax, 5   ; setup for merging the tok_br and tok branches
     sub           t2d, ecx
     shl           rcx, gprsize*8-16
-    add            t4, rcx
+    sub            t4, rcx
     bsr           ecx, t2d
     xor           ecx, 15
     shl           t2d, cl
     shl            t4, cl
     movd           m2, t2d
     mov [t7+msac.rng], t2d
-    not            t4
     sub           t5d, ecx
     jae %%end
-    mov            t2, [t7+msac.buf]
-    mov           rcx, [t7+msac.end]
 %if UNIX64 == 0
     push           t8
 %endif
-    lea            t8, [t2+gprsize]
-    cmp            t8, rcx
+    mov            t2, [t7+msac.buf]
+    mov            t8, [t7+msac.end]
+    lea           rcx, [t2+gprsize]
+    sub           rcx, t8
     ja %%refill_eob
-    mov            t2, [t2]
-    lea           ecx, [t5+23]
-    add           t5d, 16
+    mov            t8, [t2]
+    lea           ecx, [t5+16-gprsize*8]
+    not            t8
+    bswap          t8
+    shr            t8, cl
+    neg           ecx
     shr           ecx, 3
-    bswap          t2
-    sub            t8, rcx
-    shl           ecx, 3
-    shr            t2, cl
-    sub           ecx, t5d
-    mov           t5d, gprsize*8-16
-    shl            t2, cl
-    mov [t7+msac.buf], t8
+    or             t4, t8
+%%refill_end:
+    add            t2, rcx
+    lea           t5d, [t5+rcx*8]
+    mov [t7+msac.buf], t2
+%%refill_end2:
 %if UNIX64 == 0
     pop            t8
 %endif
-    sub           t5d, ecx
-    xor            t4, t2
 %%end:
     movp           m3, t4
 %if ARCH_X86_64
@@ -559,27 +556,34 @@ cglobal msac_decode_bool, 0, 6, 0
     shr           eax, 1
     mov [t7+msac.cnt], t5d
     RET
-%%refill_eob:
-    mov            t8, rcx
-    mov           ecx, gprsize*8-24
-    sub           ecx, t5d
-%%refill_eob_loop:
-    cmp            t2, t8
-    jae %%refill_eob_end
-    movzx         t5d, byte [t2]
-    inc            t2
-    shl            t5, cl
-    xor            t4, t5
-    sub           ecx, 8
-    jge %%refill_eob_loop
-%%refill_eob_end:
-%if UNIX64 == 0
-    pop            t8
+%%pad_with_ones:
+    ; ensure that dif is padded with at least 15 bits of ones at the end
+    lea           ecx, [t5-16]
+%if ARCH_X86_64
+    ror           rcx, cl
+%else
+    shr           ecx, cl
 %endif
-    mov           t5d, gprsize*8-24
-    mov [t7+msac.buf], t2
-    sub           t5d, ecx
-    jmp %%end
+    or             t4, rcx
+    jmp %%refill_end2
+%%refill_eob:
+    cmp            t2, t8
+    jae %%pad_with_ones
+    mov            t8, [t8-gprsize]
+    shl           ecx, 3
+    shr            t8, cl
+    lea           ecx, [t5+16-gprsize*8]
+    not            t8
+    bswap          t8
+    shr            t8, cl
+    neg           ecx
+    or             t4, t8
+    mov           t8d, [t7+msac.end]
+    shr           ecx, 3
+    sub           t8d, t2d
+    cmp           ecx, t8d
+    cmovae        ecx, t8d
+    jmp %%refill_end
 %endmacro
 
 cglobal msac_decode_hi_tok, 0, 7 + ARCH_X86_64, 6
@@ -619,7 +623,6 @@ cglobal msac_decode_symbol_adapt16, 3, 6, 6
     mov           t3d, [t0+msac.update_cdf]
     mov           t4d, t2d
     not            t2
-%if STACK_ALIGNMENT < 32
     mov            r5, rsp
 %if WIN64
     and           rsp, ~31
@@ -627,11 +630,6 @@ cglobal msac_decode_symbol_adapt16, 3, 6, 6
 %else
     and            r5, ~31
     %define buf r5-32
-%endif
-%elif WIN64
-    sub           rsp, 64
-%else
-    %define buf rsp-56
 %endif
     psrlw          m1, m0, 6
     movd      [buf-4], xm2
@@ -666,11 +664,7 @@ cglobal msac_decode_symbol_adapt16, 3, 6, 6
     movzx         t2d, word [buf+rax-2]
     shr           eax, 1
 %if WIN64
-%if STACK_ALIGNMENT < 32
     mov           rsp, r5
-%else
-    add           rsp, 64
-%endif
 %endif
     vzeroupper
     jmp m(msac_decode_symbol_adapt4, _sse2).renorm2

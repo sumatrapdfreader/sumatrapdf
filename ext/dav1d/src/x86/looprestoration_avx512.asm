@@ -329,11 +329,11 @@ ALIGN function_align
     packuswb        m2, m4
     psrlw           m2, 8
     vpackuswb   m2{k2}, m3, m5
-    mova    [dstq+r10], m2
-    add            r10, 64
-    jl .hv_loop
-    mov             t6, t5
-    mov             t5, t4
+    movu    [dstq+r10], m2 ; We don't have a separate 5-tap version so the 7-tap
+    add            r10, 64 ; function is used for chroma as well, and in some
+    jl .hv_loop            ; esoteric edge cases chroma dst pointers may only
+    mov             t6, t5 ; have a 32-byte alignment despite having a width
+    mov             t5, t4 ; larger than 32, so use an unaligned store here.
     mov             t4, t3
     mov             t3, t2
     mov             t2, t1
@@ -379,7 +379,7 @@ ALIGN function_align
     packuswb        m0, m2
     psrlw           m0, 8
     vpackuswb   m0{k2}, m1, m3
-    mova    [dstq+r10], m0
+    movu    [dstq+r10], m0
     add            r10, 64
     jl .v_loop
     mov             t6, t5

@@ -1353,8 +1353,8 @@ function fgy_32x32_16bpc_neon, export=1
         calc_offset     r6,  lr,  r6,  0,   0
         add_offset      r5,  r6,  lr,  r5,  r9
 
-        add             r4,  r4,  #32*2        // grain_lut += BLOCK_SIZE * bx
-        add             r6,  r11, r9,  lsl #5  // grain_lut += grain_stride * BLOCK_SIZE * by
+        add             r4,  r4,  #32*2        // grain_lut += FG_BLOCK_SIZE * bx
+        add             r6,  r11, r9,  lsl #5  // grain_lut += grain_stride * FG_BLOCK_SIZE * by
 
         ldr             r10, [sp, #120]        // type
         adr             r11, L(fgy_loop_tbl)
@@ -1362,8 +1362,8 @@ function fgy_32x32_16bpc_neon, export=1
         tst             r10, #1
         ldr             r10, [r11, r10, lsl #2]
 
-        add             r8,  r8,  r9,  lsl #5  // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             r8,  r8,  #32*2        // grain_lut += BLOCK_SIZE * bx
+        add             r8,  r8,  r9,  lsl #5  // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             r8,  r8,  #32*2        // grain_lut += FG_BLOCK_SIZE * bx
 
         add             r11, r11, r10
 
@@ -1651,10 +1651,10 @@ function fguv_32x32_\layout\()_16bpc_neon, export=1
 
         vmov.16         d31[3], r7             // overlap y [1]
 
-        add             r4,  r4,  #2*(32 >> \sx)      // grain_lut += BLOCK_SIZE * bx
-        add             r8,  lr,  r10, lsl #(5 - \sy) // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             r11, r11, r10, lsl #(5 - \sy) // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             r11, r11, #2*(32 >> \sx)      // grain_lut += BLOCK_SIZE * bx
+        add             r4,  r4,  #2*(32 >> \sx)      // grain_lut += FG_BLOCK_SIZE * bx
+        add             r8,  lr,  r10, lsl #(5 - \sy) // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             r11, r11, r10, lsl #(5 - \sy) // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             r11, r11, #2*(32 >> \sx)      // grain_lut += FG_BLOCK_SIZE * bx
 
         movrel_local    r12, overlap_coeffs_\sx
         ldr             lr,       [sp, #132]   // type

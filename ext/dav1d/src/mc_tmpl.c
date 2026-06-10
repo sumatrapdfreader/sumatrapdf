@@ -84,17 +84,33 @@ prep_c(int16_t *tmp, const pixel *src, const ptrdiff_t src_stride,
      F[6] * src[x + +3 * stride] + \
      F[7] * src[x + +4 * stride])
 
+#define FILTER_8TAP2(src, x, F) \
+    (F[0] * src[0][x] + \
+     F[1] * src[1][x] + \
+     F[2] * src[2][x] + \
+     F[3] * src[3][x] + \
+     F[4] * src[4][x] + \
+     F[5] * src[5][x] + \
+     F[6] * src[6][x] + \
+     F[7] * src[7][x])
+
 #define DAV1D_FILTER_8TAP_RND(src, x, F, stride, sh) \
     ((FILTER_8TAP(src, x, F, stride) + ((1 << (sh)) >> 1)) >> (sh))
 
 #define DAV1D_FILTER_8TAP_RND2(src, x, F, stride, rnd, sh) \
     ((FILTER_8TAP(src, x, F, stride) + (rnd)) >> (sh))
 
+#define DAV1D_FILTER_8TAP_RND3(src, x, F, sh) \
+    ((FILTER_8TAP2(src, x, F) + ((1 << (sh)) >> 1)) >> (sh))
+
 #define DAV1D_FILTER_8TAP_CLIP(src, x, F, stride, sh) \
     iclip_pixel(DAV1D_FILTER_8TAP_RND(src, x, F, stride, sh))
 
 #define DAV1D_FILTER_8TAP_CLIP2(src, x, F, stride, rnd, sh) \
     iclip_pixel(DAV1D_FILTER_8TAP_RND2(src, x, F, stride, rnd, sh))
+
+#define DAV1D_FILTER_8TAP_CLIP3(src, x, F, sh) \
+    iclip_pixel(DAV1D_FILTER_8TAP_RND3(src, x, F, sh))
 
 #define GET_H_FILTER(mx) \
     const int8_t *const fh = !(mx) ? NULL : w > 4 ? \
@@ -179,43 +195,50 @@ put_8tap_scaled_c(pixel *dst, const ptrdiff_t dst_stride,
 {
     const int intermediate_bits = get_intermediate_bits(bitdepth_max);
     const int intermediate_rnd = (1 << intermediate_bits) >> 1;
-    int tmp_h = (((h - 1) * dy + my) >> 10) + 8;
-    int16_t mid[128 * (256 + 7)], *mid_ptr = mid;
+    int16_t mid[128 * 8];
+    int16_t *mid_ptrs[8];
+    int in_y = -8;
     src_stride = PXSTRIDE(src_stride);
 
+    for (int i = 0; i < 8; i++)
+        mid_ptrs[i] = &mid[128 * i];
+
     src -= src_stride * 3;
-    do {
-        int x;
-        int imx = mx, ioff = 0;
 
-        for (x = 0; x < w; x++) {
-            GET_H_FILTER(imx >> 6);
-            mid_ptr[x] = fh ? DAV1D_FILTER_8TAP_RND(src, ioff, fh, 1,
-                                                    6 - intermediate_bits) :
-                              src[ioff] << intermediate_bits;
-            imx += dx;
-            ioff += imx >> 10;
-            imx &= 0x3ff;
-        }
-
-        mid_ptr += 128;
-        src += src_stride;
-    } while (--tmp_h);
-
-    mid_ptr = mid + 128 * 3;
     for (int y = 0; y < h; y++) {
         int x;
-        GET_V_FILTER(my >> 6);
+        int src_y = my >> 10;
+        GET_V_FILTER((my & 0x3ff) >> 6);
+
+        while (in_y < src_y) {
+            int imx = mx, ioff = 0;
+            int16_t *mid_ptr = mid_ptrs[0];
+
+            for (int i = 0; i < 7; i++)
+                mid_ptrs[i] = mid_ptrs[i + 1];
+            mid_ptrs[7] = mid_ptr;
+
+            for (x = 0; x < w; x++) {
+                GET_H_FILTER(imx >> 6);
+                mid_ptr[x] = fh ? DAV1D_FILTER_8TAP_RND(src, ioff, fh, 1,
+                                                        6 - intermediate_bits) :
+                                  src[ioff] << intermediate_bits;
+                imx += dx;
+                ioff += imx >> 10;
+                imx &= 0x3ff;
+            }
+
+            src += src_stride;
+            in_y++;
+        }
 
         for (x = 0; x < w; x++)
-            dst[x] = fv ? DAV1D_FILTER_8TAP_CLIP(mid_ptr, x, fv, 128,
-                                                 6 + intermediate_bits) :
-                          iclip_pixel((mid_ptr[x] + intermediate_rnd) >>
+            dst[x] = fv ? DAV1D_FILTER_8TAP_CLIP3(mid_ptrs, x, fv,
+                                                  6 + intermediate_bits) :
+                          iclip_pixel((mid_ptrs[3][x] + intermediate_rnd) >>
                                               intermediate_bits);
 
         my += dy;
-        mid_ptr += (my >> 10) * 128;
-        my &= 0x3ff;
         dst += PXSTRIDE(dst_stride);
     }
 }
@@ -288,41 +311,48 @@ prep_8tap_scaled_c(int16_t *tmp, const pixel *src, ptrdiff_t src_stride,
                    HIGHBD_DECL_SUFFIX)
 {
     const int intermediate_bits = get_intermediate_bits(bitdepth_max);
-    int tmp_h = (((h - 1) * dy + my) >> 10) + 8;
-    int16_t mid[128 * (256 + 7)], *mid_ptr = mid;
+    int16_t mid[128 * 8];
+    int16_t *mid_ptrs[8];
+    int in_y = -8;
     src_stride = PXSTRIDE(src_stride);
 
+    for (int i = 0; i < 8; i++)
+        mid_ptrs[i] = &mid[128 * i];
+
     src -= src_stride * 3;
-    do {
-        int x;
-        int imx = mx, ioff = 0;
 
-        for (x = 0; x < w; x++) {
-            GET_H_FILTER(imx >> 6);
-            mid_ptr[x] = fh ? DAV1D_FILTER_8TAP_RND(src, ioff, fh, 1,
-                                                    6 - intermediate_bits) :
-                              src[ioff] << intermediate_bits;
-            imx += dx;
-            ioff += imx >> 10;
-            imx &= 0x3ff;
-        }
-
-        mid_ptr += 128;
-        src += src_stride;
-    } while (--tmp_h);
-
-    mid_ptr = mid + 128 * 3;
     for (int y = 0; y < h; y++) {
         int x;
-        GET_V_FILTER(my >> 6);
+        int src_y = my >> 10;
+        GET_V_FILTER((my & 0x3ff) >> 6);
+
+        while (in_y < src_y) {
+            int imx = mx, ioff = 0;
+            int16_t *mid_ptr = mid_ptrs[0];
+
+            for (int i = 0; i < 7; i++)
+                mid_ptrs[i] = mid_ptrs[i + 1];
+            mid_ptrs[7] = mid_ptr;
+
+            for (x = 0; x < w; x++) {
+                GET_H_FILTER(imx >> 6);
+                mid_ptr[x] = fh ? DAV1D_FILTER_8TAP_RND(src, ioff, fh, 1,
+                                                        6 - intermediate_bits) :
+                                  src[ioff] << intermediate_bits;
+                imx += dx;
+                ioff += imx >> 10;
+                imx &= 0x3ff;
+            }
+
+            src += src_stride;
+            in_y++;
+        }
 
         for (x = 0; x < w; x++)
-            tmp[x] = (fv ? DAV1D_FILTER_8TAP_RND(mid_ptr, x, fv, 128, 6)
-                         : mid_ptr[x]) - PREP_BIAS;
+            tmp[x] = (fv ? DAV1D_FILTER_8TAP_RND3(mid_ptrs, x, fv, 6)
+                         : mid_ptrs[3][x]) - PREP_BIAS;
 
         my += dy;
-        mid_ptr += (my >> 10) * 128;
-        my &= 0x3ff;
         tmp += w;
     }
 }
@@ -392,6 +422,15 @@ filter_fns(sharp_smooth,   DAV1D_FILTER_8TAP_SHARP,   DAV1D_FILTER_8TAP_SMOOTH)
 #define FILTER_BILIN_CLIP(src, x, mxy, stride, sh) \
     iclip_pixel(FILTER_BILIN_RND(src, x, mxy, stride, sh))
 
+#define FILTER_BILIN2(src1, src2, x, mxy) \
+    (16 * src1[x] + ((mxy) * (src2[x] - src1[x])))
+
+#define FILTER_BILIN_RND2(src1, src2, x, mxy, sh) \
+    ((FILTER_BILIN2(src1, src2, x, mxy) + ((1 << (sh)) >> 1)) >> (sh))
+
+#define FILTER_BILIN_CLIP2(src1, src2, x, mxy, sh) \
+    iclip_pixel(FILTER_BILIN_RND2(src1, src2, x, mxy, sh))
+
 static void put_bilin_c(pixel *dst, ptrdiff_t dst_stride,
                         const pixel *src, ptrdiff_t src_stride,
                         const int w, int h, const int mx, const int my
@@ -456,36 +495,37 @@ static void put_bilin_scaled_c(pixel *dst, ptrdiff_t dst_stride,
                                HIGHBD_DECL_SUFFIX)
 {
     const int intermediate_bits = get_intermediate_bits(bitdepth_max);
-    int tmp_h = (((h - 1) * dy + my) >> 10) + 2;
-    int16_t mid[128 * (256 + 1)], *mid_ptr = mid;
+    int16_t mid[128 * 2];
+    int in_y = -2;
 
     do {
         int x;
-        int imx = mx, ioff = 0;
+        int y = my >> 10;
+        int16_t *mid1 = &mid[(y & 1) * 128];
+        int16_t *mid2 = &mid[((y + 1) & 1) * 128];
+        int dmy = my & 0x3ff;
 
-        for (x = 0; x < w; x++) {
-            mid_ptr[x] = FILTER_BILIN_RND(src, ioff, imx >> 6, 1,
-                                          4 - intermediate_bits);
-            imx += dx;
-            ioff += imx >> 10;
-            imx &= 0x3ff;
+        while (in_y < y) {
+            int imx = mx, ioff = 0;
+            int16_t *mid_ptr = &mid[(in_y & 1) * 128];
+
+            for (x = 0; x < w; x++) {
+                mid_ptr[x] = FILTER_BILIN_RND(src, ioff, imx >> 6, 1,
+                                              4 - intermediate_bits);
+                imx += dx;
+                ioff += imx >> 10;
+                imx &= 0x3ff;
+            }
+
+            src += PXSTRIDE(src_stride);
+            in_y++;
         }
 
-        mid_ptr += 128;
-        src += PXSTRIDE(src_stride);
-    } while (--tmp_h);
-
-    mid_ptr = mid;
-    do {
-        int x;
-
         for (x = 0; x < w; x++)
-            dst[x] = FILTER_BILIN_CLIP(mid_ptr, x, my >> 6, 128,
+            dst[x] = FILTER_BILIN_CLIP2(mid1, mid2, x, dmy >> 6,
                                        4 + intermediate_bits);
 
         my += dy;
-        mid_ptr += (my >> 10) * 128;
-        my &= 0x3ff;
         dst += PXSTRIDE(dst_stride);
     } while (--h);
 }
@@ -551,35 +591,36 @@ static void prep_bilin_scaled_c(int16_t *tmp,
                                 const int dx, const int dy HIGHBD_DECL_SUFFIX)
 {
     const int intermediate_bits = get_intermediate_bits(bitdepth_max);
-    int tmp_h = (((h - 1) * dy + my) >> 10) + 2;
-    int16_t mid[128 * (256 + 1)], *mid_ptr = mid;
+    int16_t mid[128 * 2];
+    int in_y = -2;
 
     do {
         int x;
-        int imx = mx, ioff = 0;
+        int y = my >> 10;
+        int16_t *mid1 = &mid[(y & 1) * 128];
+        int16_t *mid2 = &mid[((y + 1) & 1) * 128];
+        int dmy = my & 0x3ff;
 
-        for (x = 0; x < w; x++) {
-            mid_ptr[x] = FILTER_BILIN_RND(src, ioff, imx >> 6, 1,
-                                          4 - intermediate_bits);
-            imx += dx;
-            ioff += imx >> 10;
-            imx &= 0x3ff;
+        while (in_y < y) {
+            int imx = mx, ioff = 0;
+            int16_t *mid_ptr = &mid[(in_y & 1) * 128];
+
+            for (x = 0; x < w; x++) {
+                mid_ptr[x] = FILTER_BILIN_RND(src, ioff, imx >> 6, 1,
+                                              4 - intermediate_bits);
+                imx += dx;
+                ioff += imx >> 10;
+                imx &= 0x3ff;
+            }
+
+            src += PXSTRIDE(src_stride);
+            in_y++;
         }
 
-        mid_ptr += 128;
-        src += PXSTRIDE(src_stride);
-    } while (--tmp_h);
-
-    mid_ptr = mid;
-    do {
-        int x;
-
         for (x = 0; x < w; x++)
-            tmp[x] = FILTER_BILIN_RND(mid_ptr, x, my >> 6, 128, 4) - PREP_BIAS;
+            tmp[x] = FILTER_BILIN_RND2(mid1, mid2, x, dmy >> 6, 4) - PREP_BIAS;
 
         my += dy;
-        mid_ptr += (my >> 10) * 128;
-        my &= 0x3ff;
         tmp += w;
     } while (--h);
 }
@@ -695,16 +736,16 @@ static void w_mask_c(pixel *dst, const ptrdiff_t dst_stride,
     const int mask_rnd = 1 << (mask_sh - 5);
     do {
         for (int x = 0; x < w; x++) {
-            const int m = imin(38 + ((abs(tmp1[x] - tmp2[x]) + mask_rnd) >> mask_sh), 64);
-            dst[x] = iclip_pixel((tmp1[x] * m +
-                                  tmp2[x] * (64 - m) + rnd) >> sh);
+            const int tmpdiff = tmp1[x] - tmp2[x];
+            const int m = imin(38 + ((abs(tmpdiff) + mask_rnd) >> mask_sh), 64);
+            dst[x] = iclip_pixel((tmpdiff * m + tmp2[x] * 64 + rnd) >> sh);
 
             if (ss_hor) {
                 x++;
 
-                const int n = imin(38 + ((abs(tmp1[x] - tmp2[x]) + mask_rnd) >> mask_sh), 64);
-                dst[x] = iclip_pixel((tmp1[x] * n +
-                                      tmp2[x] * (64 - n) + rnd) >> sh);
+                const int tmpdiff = tmp1[x] - tmp2[x];
+                const int n = imin(38 + ((abs(tmpdiff) + mask_rnd) >> mask_sh), 64);
+                dst[x] = iclip_pixel((tmpdiff * n + tmp2[x] * 64 + rnd) >> sh);
 
                 if (h & ss_ver) {
                     mask[x >> 1] = (m + n + mask[x >> 1] + 2 - sign) >> 2;
@@ -902,6 +943,20 @@ static void resize_c(pixel *dst, const ptrdiff_t dst_stride,
     } while (--h);
 }
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/mc.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/mc.h"
+#elif ARCH_PPC64LE
+#include "src/ppc/mc.h"
+#elif ARCH_RISCV
+#include "src/riscv/mc.h"
+#elif ARCH_X86
+#include "src/x86/mc.h"
+#endif
+#endif
+
 COLD void bitfn(dav1d_mc_dsp_init)(Dav1dMCDSPContext *const c) {
 #define init_mc_fns(type, name) do { \
     c->mc        [type] = put_##name##_c; \
@@ -937,9 +992,15 @@ COLD void bitfn(dav1d_mc_dsp_init)(Dav1dMCDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_mc_dsp_init_arm)(c);
+    mc_dsp_init_arm(c);
+#elif ARCH_LOONGARCH64
+    mc_dsp_init_loongarch(c);
+#elif ARCH_PPC64LE
+    mc_dsp_init_ppc(c);
+#elif ARCH_RISCV
+    mc_dsp_init_riscv(c);
 #elif ARCH_X86
-    bitfn(dav1d_mc_dsp_init_x86)(c);
+    mc_dsp_init_x86(c);
 #endif
 #endif
 }

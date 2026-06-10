@@ -29,11 +29,7 @@
 
 %if ARCH_X86_64
 
-SECTION_RODATA 64
-pb_0to63:      db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-               db 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-               db 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47
-               db 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+SECTION_RODATA 16
 scale_mask:    db -1, -1,  0, -1, -1, -1,  4, -1, -1, -1,  8, -1, -1, -1, 12, -1
 scale_shift:           dw   7,   7,   6,   6,   5,   5,   4,   4
 pw_27_17_17_27:        dw 108,  68,  68, 108,  27,  17,  17,  27
@@ -52,6 +48,8 @@ scale_rnd:             dd 64
 uv_offset_mul:         dd 256
                        dd 1024
 pb_8_9_0_1:            db 8, 9, 0, 1
+
+cextern pb_0to63
 
 SECTION .text
 
@@ -83,7 +81,7 @@ cglobal fgy_32x32xn_16bpc, 6, 15, 21, dst, src, stride, fg_data, w, scaling, \
     setnz           r7b
     vpbroadcastd    m12, [base+pw_27_17_17_27+r6*8+0]
     vpbroadcastd    m13, [base+pw_27_17_17_27+r6*8+4]
-    test            r7b, [fg_dataq+FGData.overlap_flag]
+    test            [fg_dataq+FGData.overlap_flag], r7b
     jnz .v_overlap
 
     imul           seed, sbyd, (173 << 24) | 37
@@ -382,7 +380,7 @@ cglobal fguv_32x32xn_i%1_16bpc, 6, 15, 22, dst, src, stride, fg_data, w, scaling
     packssdw         m4, m5, m5
     vpbroadcastd    m21, [base+scale_shift+r9*8+4]
 %if %2
-    mova            m12, [base+pb_0to63] ; pw_even
+    mova            m12, [pb_0to63] ; pw_even
     mov            r13d, 0x0101
     vpbroadcastq    m10, [base+pw_23_22+r9*8]
     kmovw            k3, r13d
@@ -419,7 +417,7 @@ cglobal fguv_32x32xn_i%1_16bpc, 6, 15, 22, dst, src, stride, fg_data, w, scaling
     pmaddwd         m14, m0
     pshufb          m15, m1 ; { uv_luma_mult, uv_mult }
 %endif
-    test            r7b, [fg_dataq+FGData.overlap_flag]
+    test            [fg_dataq+FGData.overlap_flag], r7b
     jnz %%v_overlap
 
     imul           seed, sbyd, (173 << 24) | 37

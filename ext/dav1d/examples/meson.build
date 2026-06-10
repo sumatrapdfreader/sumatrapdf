@@ -46,20 +46,24 @@ if sdl2_dependency.found()
     dav1dplay_deps = [sdl2_dependency, libm_dependency]
     dav1dplay_cflags = []
 
-    placebo_dependency = dependency('libplacebo', version: '>= 3.110.0', required: false)
+    placebo_dependency = dependency('libplacebo', version: '>= 4.160.0', required: false)
 
-    if placebo_dependency.found()
+    have_vulkan = false
+    have_placebo = placebo_dependency.found()
+    if have_placebo
         dav1dplay_deps += placebo_dependency
-        dav1dplay_cflags += '-DHAVE_PLACEBO'
 
         # If libplacebo is found, we might be able to use Vulkan
         # with it, in which case we need the Vulkan library too.
         vulkan_dependency = dependency('vulkan', required: false)
         if vulkan_dependency.found()
             dav1dplay_deps += vulkan_dependency
-            dav1dplay_cflags += '-DHAVE_VULKAN'
+            have_vulkan = true
         endif
     endif
+
+    dav1dplay_cflags += '-DHAVE_PLACEBO=' + (have_placebo ? '1' : '0')
+    dav1dplay_cflags += '-DHAVE_VULKAN=' + (have_vulkan ? '1' : '0')
 
     dav1dplay = executable('dav1dplay',
         dav1dplay_sources,

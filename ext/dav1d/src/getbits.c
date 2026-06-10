@@ -36,50 +36,61 @@
 void dav1d_init_get_bits(GetBits *const c, const uint8_t *const data,
                          const size_t sz)
 {
-    // If sz were 0, c->eof would need to be initialized to 1.
     assert(sz);
     c->ptr = c->ptr_start = data;
     c->ptr_end = &c->ptr_start[sz];
-    c->bits_left = 0;
     c->state = 0;
+    c->bits_left = 0;
     c->error = 0;
-    c->eof = 0;
 }
 
-static void refill(GetBits *const c, const unsigned n) {
-    assert(c->bits_left <= 56);
-    uint64_t state = 0;
-    do {
-        state <<= 8;
-        c->bits_left += 8;
-        if (!c->eof)
-            state |= *c->ptr++;
+unsigned dav1d_get_bit(GetBits *const c) {
+    if (!c->bits_left) {
         if (c->ptr >= c->ptr_end) {
-            c->error = c->eof;
-            c->eof = 1;
+            c->error = 1;
+        } else {
+            const unsigned state = *c->ptr++;
+            c->bits_left = 7;
+            c->state = (uint64_t) state << 57;
+            return state >> 7;
         }
-    } while (n > c->bits_left);
-    c->state |= state << (64 - c->bits_left);
-}
-
-unsigned dav1d_get_bits(GetBits *const c, const unsigned n) {
-    assert(n <= 32 /* can go up to 57 if we change return type */);
-    assert(n /* can't shift state by 64 */);
-
-    if (n > c->bits_left) refill(c, n);
+    }
 
     const uint64_t state = c->state;
-    c->bits_left -= n;
-    c->state <<= n;
-
-    return (unsigned) (state >> (64 - n));
+    c->bits_left--;
+    c->state = state << 1;
+    return (unsigned) (state >> 63);
 }
 
-int dav1d_get_sbits(GetBits *const c, const unsigned n) {
-    const int shift = 31 - n;
-    const int res = dav1d_get_bits(c, n + 1) << shift;
-    return res >> shift;
+static inline void refill(GetBits *const c, const int n) {
+    assert(c->bits_left >= 0 && c->bits_left < 32);
+    unsigned state = 0;
+    do {
+        if (c->ptr >= c->ptr_end) {
+            c->error = 1;
+            if (state) break;
+            return;
+        }
+        state = (state << 8) | *c->ptr++;
+        c->bits_left += 8;
+    } while (n > c->bits_left);
+    c->state |= (uint64_t) state << (64 - c->bits_left);
 }
+
+#define GET_BITS(name, type, type64)            \
+type name(GetBits *const c, const int n) {      \
+    assert(n > 0 && n <= 32);                   \
+    /* Unsigned cast avoids refill after eob */ \
+    if ((unsigned) n > (unsigned) c->bits_left) \
+        refill(c, n);                           \
+    const uint64_t state = c->state;            \
+    c->bits_left -= n;                          \
+    c->state = state << n;                      \
+    return (type) ((type64) state >> (64 - n)); \
+}
+
+GET_BITS(dav1d_get_bits,  unsigned, uint64_t)
+GET_BITS(dav1d_get_sbits, int,      int64_t)
 
 unsigned dav1d_get_uleb128(GetBits *const c) {
     uint64_t val = 0;
@@ -92,7 +103,7 @@ unsigned dav1d_get_uleb128(GetBits *const c) {
         i += 7;
     } while (more && i < 56);
 
-    if (val > UINT_MAX || more) {
+    if (val > UINT32_MAX || more) {
         c->error = 1;
         return 0;
     }
@@ -108,15 +119,20 @@ unsigned dav1d_get_uniform(GetBits *const c, const unsigned max) {
     assert(l > 1);
     const unsigned m = (1U << l) - max;
     const unsigned v = dav1d_get_bits(c, l - 1);
-    return v < m ? v : (v << 1) - m + dav1d_get_bits(c, 1);
+    return v < m ? v : (v << 1) - m + dav1d_get_bit(c);
 }
 
 unsigned dav1d_get_vlc(GetBits *const c) {
+    if (dav1d_get_bit(c))
+        return 0;
+
     int n_bits = 0;
-    while (!dav1d_get_bits(c, 1))
+    do {
         if (++n_bits == 32)
-            return 0xFFFFFFFFU;
-    return n_bits ? ((1U << n_bits) - 1) + dav1d_get_bits(c, n_bits) : 0;
+            return UINT32_MAX;
+    } while (!dav1d_get_bit(c));
+
+    return ((1U << n_bits) - 1) + dav1d_get_bits(c, n_bits);
 }
 
 static unsigned get_bits_subexp_u(GetBits *const c, const unsigned ref,
@@ -132,7 +148,7 @@ static unsigned get_bits_subexp_u(GetBits *const c, const unsigned ref,
             break;
         }
 
-        if (!dav1d_get_bits(c, 1)) {
+        if (!dav1d_get_bit(c)) {
             v += dav1d_get_bits(c, b);
             break;
         }
@@ -145,18 +161,4 @@ static unsigned get_bits_subexp_u(GetBits *const c, const unsigned ref,
 
 int dav1d_get_bits_subexp(GetBits *const c, const int ref, const unsigned n) {
     return (int) get_bits_subexp_u(c, ref + (1 << n), 2 << n) - (1 << n);
-}
-
-void dav1d_bytealign_get_bits(GetBits *c) {
-    // bits_left is never more than 7, because it is only incremented
-    // by refill(), called by dav1d_get_bits and that never reads more
-    // than 7 bits more than it needs.
-    //
-    // If this wasn't true, we would need to work out how many bits to
-    // discard (bits_left % 8), subtract that from bits_left and then
-    // shift state right by that amount.
-    assert(c->bits_left <= 7);
-
-    c->bits_left = 0;
-    c->state = 0;
 }

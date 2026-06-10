@@ -38,27 +38,32 @@
 #include "src/tables.h"
 
 #define INVALID_MV 0x80008000
+#define INVALID_REF2CUR (-32)
 
-typedef struct refmvs_temporal_block {
+PACKED(typedef struct refmvs_temporal_block {
     mv mv;
-    int8_t ref;
-} refmvs_temporal_block;
+    uint8_t ref;
+}) refmvs_temporal_block;
+CHECK_SIZE(refmvs_temporal_block, 5);
 
-typedef union refmvs_refpair {
+PACKED(typedef union refmvs_refpair {
     int8_t ref[2]; // [0] = 0: intra=1, [1] = -1: comp=0
     uint16_t pair;
-} refmvs_refpair;
+}) ALIGN(refmvs_refpair, 2);
+CHECK_SIZE(refmvs_refpair, 2);
 
 typedef union refmvs_mvpair {
     mv mv[2];
     uint64_t n;
 } refmvs_mvpair;
+CHECK_SIZE(refmvs_mvpair, 8);
 
 PACKED(typedef struct refmvs_block {
     refmvs_mvpair mv;
     refmvs_refpair ref;
     uint8_t bs, mf; // 1 = globalmv+affine, 2 = newmv
 }) ALIGN(refmvs_block, 4);
+CHECK_SIZE(refmvs_block, 12);
 
 typedef struct refmvs_frame {
     const Dav1dFrameHeader *frm_hdr;
@@ -68,18 +73,18 @@ typedef struct refmvs_frame {
     uint8_t sign_bias[7], mfmv_sign[7];
     int8_t pocdiff[7];
     uint8_t mfmv_ref[3];
-    int mfmv_ref2cur[3];
-    int mfmv_ref2ref[3][7];
+    int8_t mfmv_ref2cur[3];
+    uint8_t mfmv_ref2ref[3][7];
     int n_mfmvs;
 
+    int n_blocks;
     refmvs_temporal_block *rp;
     /*const*/ refmvs_temporal_block *const *rp_ref;
     refmvs_temporal_block *rp_proj;
     ptrdiff_t rp_stride;
 
     refmvs_block *r; // 35 x r_stride memory
-    ptrdiff_t r_stride;
-    int n_tile_rows, n_tile_threads, n_frame_threads;
+    int n_tile_threads, n_frame_threads;
 } refmvs_frame;
 
 typedef struct refmvs_tile {
@@ -96,41 +101,62 @@ typedef struct refmvs_candidate {
     int weight;
 } refmvs_candidate;
 
+// initialize temporal MVs; this can be done in any configuration, e.g. one
+// tile/sbrow at a time, where col_{start,end}8 are the tile boundaries; or
+// it can just be for the whole frame's sbrow, where col_{start,end}8 are the
+// frame boundaries. row_{start,end}8 are the superblock row boundaries.
+#define decl_load_tmvs_fn(name) \
+void (name)(const refmvs_frame *rf, int tile_row_idx, \
+            int col_start8, int col_end8, int row_start8, int row_end8)
+typedef decl_load_tmvs_fn(*load_tmvs_fn);
+
+#define decl_save_tmvs_fn(name) \
+void (name)(refmvs_temporal_block *rp, const ptrdiff_t stride, \
+            refmvs_block *const *const rr, const uint8_t *const ref_sign, \
+            int col_end8, int row_end8, int col_start8, int row_start8)
+typedef decl_save_tmvs_fn(*save_tmvs_fn);
+
 #define decl_splat_mv_fn(name) \
 void (name)(refmvs_block **rr, const refmvs_block *rmv, int bx4, int bw4, int bh4)
 typedef decl_splat_mv_fn(*splat_mv_fn);
 
 typedef struct Dav1dRefmvsDSPContext {
+    load_tmvs_fn load_tmvs;
+    save_tmvs_fn save_tmvs;
     splat_mv_fn splat_mv;
 } Dav1dRefmvsDSPContext;
-
-// call once per frame thread
-void dav1d_refmvs_init(refmvs_frame *rf);
-void dav1d_refmvs_clear(refmvs_frame *rf);
 
 // call once per frame
 int dav1d_refmvs_init_frame(refmvs_frame *rf,
                             const Dav1dSequenceHeader *seq_hdr,
                             const Dav1dFrameHeader *frm_hdr,
-                            const unsigned ref_poc[7],
+                            const uint8_t ref_poc[7],
                             refmvs_temporal_block *rp,
-                            const unsigned ref_ref_poc[7][7],
+                            const uint8_t ref_ref_poc[7][7],
                             /*const*/ refmvs_temporal_block *const rp_ref[7],
                             int n_tile_threads, int n_frame_threads);
 
-// initialize temporal MVs; this can be done in any configuration, e.g. one
-// tile/sbrow at a time, where col_{start,end}8 are the tile boundaries; or
-// it can just be for the whole frame's sbrow, where col_{start,end}8 are the
-// frame boundaries. row_{start,end}8 are the superblock row boundaries.
-void dav1d_refmvs_load_tmvs(const refmvs_frame *rf, int tile_row_idx,
-                            int col_start8, int col_end8,
-                            int row_start8, int row_end8);
-
 // cache the current tile/sbrow (or frame/sbrow)'s projectable motion vectors
 // into buffers for use in future frame's temporal MV prediction
-void dav1d_refmvs_save_tmvs(const refmvs_tile *rt,
-                            int col_start8, int col_end8,
-                            int row_start8, int row_end8);
+static inline void dav1d_refmvs_save_tmvs(const Dav1dRefmvsDSPContext *const dsp,
+                                          const refmvs_tile *const rt,
+                                          const int col_start8, int col_end8,
+                                          const int row_start8, int row_end8)
+{
+    const refmvs_frame *const rf = rt->rf;
+
+    assert(row_start8 >= 0);
+    assert((unsigned) (row_end8 - row_start8) <= 16U);
+    row_end8 = imin(row_end8, rf->ih8);
+    col_end8 = imin(col_end8, rf->iw8);
+
+    const ptrdiff_t stride = rf->rp_stride;
+    const uint8_t *const ref_sign = rf->mfmv_sign;
+    refmvs_temporal_block *rp = &rf->rp[row_start8 * stride];
+
+    dsp->save_tmvs(rp, stride, rt->r + 6, ref_sign,
+                   col_end8, row_end8, col_start8, row_start8);
+}
 
 // initialize tile boundaries and refmvs_block pointers for one tile/sbrow
 void dav1d_refmvs_tile_sbrow_init(refmvs_tile *rt, const refmvs_frame *rf,
@@ -146,6 +172,7 @@ void dav1d_refmvs_find(const refmvs_tile *rt,
 
 void dav1d_refmvs_dsp_init(Dav1dRefmvsDSPContext *dsp);
 void dav1d_refmvs_dsp_init_arm(Dav1dRefmvsDSPContext *dsp);
+void dav1d_refmvs_dsp_init_loongarch(Dav1dRefmvsDSPContext *dsp);
 void dav1d_refmvs_dsp_init_x86(Dav1dRefmvsDSPContext *dsp);
 
 #endif /* DAV1D_SRC_REF_MVS_H */

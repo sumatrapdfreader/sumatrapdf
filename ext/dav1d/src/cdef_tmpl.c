@@ -303,6 +303,20 @@ static int cdef_find_dir_c(const pixel *img, const ptrdiff_t stride,
     return best_dir;
 }
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/cdef.h"
+#elif ARCH_PPC64LE
+#include "src/ppc/cdef.h"
+#elif ARCH_RISCV
+#include "src/riscv/cdef.h"
+#elif ARCH_X86
+#include "src/x86/cdef.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/cdef.h"
+#endif
+#endif
+
 COLD void bitfn(dav1d_cdef_dsp_init)(Dav1dCdefDSPContext *const c) {
     c->dir = cdef_find_dir_c;
     c->fb[0] = cdef_filter_block_8x8_c;
@@ -311,11 +325,15 @@ COLD void bitfn(dav1d_cdef_dsp_init)(Dav1dCdefDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_cdef_dsp_init_arm)(c);
+    cdef_dsp_init_arm(c);
 #elif ARCH_PPC64LE
-    bitfn(dav1d_cdef_dsp_init_ppc)(c);
+    cdef_dsp_init_ppc(c);
+#elif ARCH_RISCV
+    cdef_dsp_init_riscv(c);
 #elif ARCH_X86
-    bitfn(dav1d_cdef_dsp_init_x86)(c);
+    cdef_dsp_init_x86(c);
+#elif ARCH_LOONGARCH64
+    cdef_dsp_init_loongarch(c);
 #endif
 #endif
 }

@@ -39,12 +39,73 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, coef *coeff, int eob \
             HIGHBD_DECL_SUFFIX)
 typedef decl_itx_fn(*itxfm_fn);
 
+#define decl_itx2_fns(w, h, opt) \
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_dct_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_identity_##w##x##h, opt))
+
+#define decl_itx12_fns(w, h, opt) \
+decl_itx2_fns(w, h, opt); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_flipadst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_dct_identity_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_dct_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_flipadst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_dct_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_flipadst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_dct_##w##x##h, opt))
+
+#define decl_itx16_fns(w, h, opt) \
+decl_itx12_fns(w, h, opt); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_adst_identity_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_flipadst_identity_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_adst_##w##x##h, opt)); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_identity_flipadst_##w##x##h, opt))
+
+#define decl_itx17_fns(w, h, opt) \
+decl_itx16_fns(w, h, opt); \
+decl_itx_fn(BF(dav1d_inv_txfm_add_wht_wht_##w##x##h, opt))
+
 typedef struct Dav1dInvTxfmDSPContext {
     itxfm_fn itxfm_add[N_RECT_TX_SIZES][N_TX_TYPES_PLUS_LL];
 } Dav1dInvTxfmDSPContext;
 
 bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c, int bpc);
-bitfn_decls(void dav1d_itx_dsp_init_arm, Dav1dInvTxfmDSPContext *c, int bpc);
-bitfn_decls(void dav1d_itx_dsp_init_x86, Dav1dInvTxfmDSPContext *c, int bpc);
+
+#define assign_itx_fn(pfx, w, h, type, type_enum, ext) \
+    c->itxfm_add[pfx##TX_##w##X##h][type_enum] = \
+        BF(dav1d_inv_txfm_add_##type##_##w##x##h, ext)
+
+#define assign_itx1_fn(pfx, w, h, ext) \
+    assign_itx_fn(pfx, w, h, dct_dct,           DCT_DCT,           ext)
+
+#define assign_itx2_fn(pfx, w, h, ext) \
+    assign_itx1_fn(pfx, w, h, ext); \
+    assign_itx_fn(pfx, w, h, identity_identity, IDTX,              ext)
+
+#define assign_itx12_fn(pfx, w, h, ext) \
+    assign_itx2_fn(pfx, w, h, ext); \
+    assign_itx_fn(pfx, w, h, dct_adst,          ADST_DCT,          ext); \
+    assign_itx_fn(pfx, w, h, dct_flipadst,      FLIPADST_DCT,      ext); \
+    assign_itx_fn(pfx, w, h, dct_identity,      H_DCT,             ext); \
+    assign_itx_fn(pfx, w, h, adst_dct,          DCT_ADST,          ext); \
+    assign_itx_fn(pfx, w, h, adst_adst,         ADST_ADST,         ext); \
+    assign_itx_fn(pfx, w, h, adst_flipadst,     FLIPADST_ADST,     ext); \
+    assign_itx_fn(pfx, w, h, flipadst_dct,      DCT_FLIPADST,      ext); \
+    assign_itx_fn(pfx, w, h, flipadst_adst,     ADST_FLIPADST,     ext); \
+    assign_itx_fn(pfx, w, h, flipadst_flipadst, FLIPADST_FLIPADST, ext); \
+    assign_itx_fn(pfx, w, h, identity_dct,      V_DCT,             ext)
+
+#define assign_itx16_fn(pfx, w, h, ext) \
+    assign_itx12_fn(pfx, w, h, ext); \
+    assign_itx_fn(pfx, w, h, adst_identity,     H_ADST,            ext); \
+    assign_itx_fn(pfx, w, h, flipadst_identity, H_FLIPADST,        ext); \
+    assign_itx_fn(pfx, w, h, identity_adst,     V_ADST,            ext); \
+    assign_itx_fn(pfx, w, h, identity_flipadst, V_FLIPADST,        ext)
+
+#define assign_itx17_fn(pfx, w, h, ext) \
+    assign_itx16_fn(pfx, w, h, ext); \
+    assign_itx_fn(pfx, w, h, wht_wht,           WHT_WHT,           ext)
 
 #endif /* DAV1D_SRC_ITX_H */

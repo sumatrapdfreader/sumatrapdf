@@ -33,6 +33,10 @@
 
 #include "common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct Dav1dData {
     const uint8_t *data; ///< data pointer
     size_t sz; ///< data size
@@ -105,5 +109,9 @@ DAV1D_API int dav1d_data_wrap_user_data(Dav1dData *data,
  * @param data Input context.
  */
 DAV1D_API void dav1d_data_unref(Dav1dData *data);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* DAV1D_DATA_H */

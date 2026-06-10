@@ -396,21 +396,16 @@ SECTION .text
 
 %macro CDEF_FILTER 2 ; w, h
 INIT_YMM avx2
-cglobal cdef_filter_%1x%2_8bpc, 5, 10, 0, dst, stride, left, top, bot, \
+cglobal cdef_filter_%1x%2_8bpc, 5, 11, 0, dst, stride, left, top, bot, \
                                           pri, sec, dir, damping, edge
-%assign stack_offset_entry stack_offset
     mov          edged, edgem
     cmp          edged, 0xf
     jne .border_block
 
-    PUSH           r10
     PUSH           r11
+    PUSH           r12
 %if %2 == 4
- %assign regs_used 12
- %if STACK_ALIGNMENT < 32
-    PUSH  r%+regs_used
-  %assign regs_used regs_used+1
- %endif
+%assign regs_used 13
     ALLOC_STACK   0x60, 16
     pmovzxbw       xm0, [leftq+1]
     vpermq          m0, m0, q0110
@@ -420,23 +415,15 @@ cglobal cdef_filter_%1x%2_8bpc, 5, 10, 0, dst, stride, left, top, bot, \
     movu    [rsp+0x28], m1
     movu    [rsp+0x40], m2
 %elif %1 == 4
-    PUSH           r12
- %assign regs_used 13
- %if STACK_ALIGNMENT < 32
-    PUSH  r%+regs_used
-   %assign regs_used regs_used+1
- %endif
+%assign regs_used 14
+    PUSH           r13
     ALLOC_STACK 8*2+%1*%2*1, 16
     pmovzxwd        m0, [leftq]
     mova    [rsp+0x10], m0
 %else
-    PUSH           r12
+%assign regs_used 15
     PUSH           r13
- %assign regs_used 14
- %if STACK_ALIGNMENT < 32
-    PUSH  r%+regs_used
-  %assign regs_used regs_used+1
- %endif
+    PUSH           r14
     ALLOC_STACK 8*4+%1*%2*2+32, 16
     lea            r11, [strideq*3]
     movu           xm4, [dstq+strideq*2]
@@ -1207,13 +1194,9 @@ cglobal cdef_filter_%1x%2_8bpc, 5, 10, 0, dst, stride, left, top, bot, \
 
 .border_block:
  DEFINE_ARGS dst, stride, left, top, bot, pri, sec, stride3, dst4, edge
-%define rstk rsp
-%assign stack_offset stack_offset_entry
-%assign regs_used 10
-%if STACK_ALIGNMENT < 32
-    PUSH  r%+regs_used
- %assign regs_used regs_used+1
-%endif
+    RESET_STACK_STATE
+    %assign stack_offset stack_offset - (regs_used - 11) * gprsize
+    %assign regs_used 11
     ALLOC_STACK 2*16+(%2+4)*32, 16
 %define px rsp+2*16+2*32
 

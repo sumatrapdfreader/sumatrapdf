@@ -34,6 +34,50 @@
 #define x18 do_not_use_x18
 #define w18 do_not_use_w18
 
+#if HAVE_AS_ARCH_DIRECTIVE
+        .arch AS_ARCH_LEVEL
+#endif
+
+#if HAVE_AS_ARCHEXT_DOTPROD_DIRECTIVE
+#define ENABLE_DOTPROD  .arch_extension dotprod
+#define DISABLE_DOTPROD .arch_extension nodotprod
+#else
+#define ENABLE_DOTPROD
+#define DISABLE_DOTPROD
+#endif
+#if HAVE_AS_ARCHEXT_I8MM_DIRECTIVE
+#define ENABLE_I8MM  .arch_extension i8mm
+#define DISABLE_I8MM .arch_extension noi8mm
+#else
+#define ENABLE_I8MM
+#define DISABLE_I8MM
+#endif
+#if HAVE_AS_ARCHEXT_SVE_DIRECTIVE
+#define ENABLE_SVE  .arch_extension sve
+#define DISABLE_SVE .arch_extension nosve
+#else
+#define ENABLE_SVE
+#define DISABLE_SVE
+#endif
+#if HAVE_AS_ARCHEXT_SVE2_DIRECTIVE
+#define ENABLE_SVE2  .arch_extension sve2
+#define DISABLE_SVE2 .arch_extension nosve2
+#else
+#define ENABLE_SVE2
+#define DISABLE_SVE2
+#endif
+
+/* If we do support the .arch_extension directives, disable support for all
+ * the extensions that we may use, in case they were implicitly enabled by
+ * the .arch level. This makes it clear if we try to assemble an instruction
+ * from an unintended extension set; we only allow assmbling such instructions
+ * within regions where we explicitly enable those extensions. */
+DISABLE_DOTPROD
+DISABLE_I8MM
+DISABLE_SVE
+DISABLE_SVE2
+
+
 /* Support macros for
  *   - Armv8.3-A Pointer Authentication and
  *   - Armv8.5-A Branch Target Identification
@@ -134,6 +178,12 @@
 #error Authentication of leaf functions is enabled but not supported in dav1d!
 #endif
 #define GNU_PROPERTY_AARCH64_PAC (1 << 1)
+
+#elif defined(__APPLE__) && defined(__arm64e__)
+
+#define GNU_PROPERTY_AARCH64_PAC 0
+#define AARCH64_SIGN_LINK_REGISTER      pacibsp
+#define AARCH64_VALIDATE_LINK_REGISTER  autibsp
 
 #else /* __ARM_FEATURE_PAC_DEFAULT */
 
@@ -271,6 +321,32 @@ EXTERN\name:
 EXTERN\name:
     .endif
 \name:
+.endm
+
+.macro jumptable name
+#ifdef _WIN32
+// MS armasm64 doesn't seem to be able to create relocations for subtraction
+// of labels in different sections; for armasm64 (and all of Windows for
+// simplicity), write the jump table in the text section, to allow calculating
+// differences at assembly time. See
+// https://developercommunity.visualstudio.com/t/armasm64-unable-to-create-cross-section/10722340
+// for reference. (LLVM can create such relocations, but checking for _WIN32
+// for simplicity, as execute-only memory isn't relevant on Windows at the
+// moment.)
+        function \name
+#else
+// For other platforms, write jump tables in a const data section, to allow
+// working in environments where executable memory isn't readable.
+        const \name
+#endif
+.endm
+
+.macro endjumptable
+#ifdef _WIN32
+        endfunc
+#else
+        endconst
+#endif
 .endm
 
 #ifdef __APPLE__

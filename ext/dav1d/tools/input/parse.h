@@ -89,6 +89,8 @@ static inline int parse_obu_header(const uint8_t *buf, int buf_size,
     buf_size--;
 
     if (extension_flag) {
+        if (!buf_size)
+            return -1;
         buf++;
         buf_size--;
         // ignore fields

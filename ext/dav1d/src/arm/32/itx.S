@@ -965,6 +965,8 @@ function inv_txfm_\variant\()add_8x8_neon
 
 .ifc \variant, identity_
         // The identity shl #1 and downshift srshr #1 cancel out
+
+        b               L(itx_8x8_epilog)
 .else
         blx             r4
 
@@ -976,8 +978,8 @@ function inv_txfm_\variant\()add_8x8_neon
         vrshr.s16       q13, q13, #1
         vrshr.s16       q14, q14, #1
         vrshr.s16       q15, q15, #1
-.endif
 
+L(itx_8x8_epilog):
         transpose_8x8h  q8,  q9,  q10, q11, q12, q13, q14, q15, d17, d19, d21, d23, d24, d26, d28, d30
 
         blx             r5
@@ -985,11 +987,12 @@ function inv_txfm_\variant\()add_8x8_neon
         load_add_store_8x8 r0, r7
         vpop            {q4-q7}
         pop             {r4-r5,r7,pc}
+.endif
 endfunc
 .endm
 
-def_fn_8x8_base
 def_fn_8x8_base identity_
+def_fn_8x8_base
 
 .macro def_fn_8x8 txfm1, txfm2
 function inv_txfm_add_\txfm1\()_\txfm2\()_8x8_8bpc_neon, export=1
@@ -1444,14 +1447,16 @@ function inv_txfm_horz\suffix\()_16x4_neon
 .else
         identity_4x16_shift1 d0[0]
 .endif
+        b               L(horz_16x4_epilog)
 .else
         blx             r4
-.endif
-.if \shift > 0
 .irp i, q8, q9, q10, q11, q12, q13, q14, q15
         vrshr.s16       \i,  \i,  #\shift
 .endr
-.endif
+.if \shift == 1
+        b               L(horz_16x4_epilog)
+.else
+L(horz_16x4_epilog):
         transpose_4x4h  q8,  q9,  d16, d17, d18, d19
         transpose_4x4h  q10, q11, d20, d21, d22, d23
         transpose_4x4h  q12, q13, d24, d25, d26, d27
@@ -1462,13 +1467,15 @@ function inv_txfm_horz\suffix\()_16x4_neon
 .endr
 
         pop             {pc}
+.endif
+.endif
 endfunc
 .endm
 
-def_horz_16 scale=0, identity=0, shift=2
-def_horz_16 scale=1, identity=0, shift=1, suffix=_scale
-def_horz_16 scale=0, identity=1, shift=-2, suffix=_identity
 def_horz_16 scale=1, identity=1, shift=-1, suffix=_scale_identity
+def_horz_16 scale=0, identity=1, shift=-2, suffix=_identity
+def_horz_16 scale=1, identity=0, shift=1, suffix=_scale
+def_horz_16 scale=0, identity=0, shift=2
 
 function inv_txfm_add_vert_4x16_neon
         push            {lr}
@@ -1597,6 +1604,8 @@ function inv_txfm_\variant\()add_16x4_neon
 .endr
 
         identity_4x16_shift1 d0[0]
+
+        b               L(itx_16x4_epilog)
 .else
         vmov.i16        q2,  #0
         vmov.i16        q3,  #0
@@ -1615,30 +1624,25 @@ function inv_txfm_\variant\()add_16x4_neon
         vswp            d19, d22
         vswp            d18, d20
         vswp            d19, d21
-.irp i, q8, q9, q10, q11
+        vswp            d25, d28
+        vswp            d27, d30
+        vswp            d26, d28
+        vswp            d27, d29
+.irp i, q8, q9, q10, q11, q12, q13, q14, q15
         vrshr.s16       \i,  \i,  #1
 .endr
-.endif
+
+L(itx_16x4_epilog):
         transpose_4x8h  q8,  q9,  q10, q11
         blx             r5
         mov             r6,  r0
         load_add_store_8x4 r6, r7
 
-.ifc \variant, identity_
         vmov            q8,  q12
         vmov            q9,  q13
         vmov            q10, q14
         vmov            q11, q15
-.else
-        vswp            d25, d28
-        vswp            d27, d30
-        vswp            d26, d28
-        vswp            d27, d29
-        vrshr.s16       q8,  q12, #1
-        vrshr.s16       q9,  q13, #1
-        vrshr.s16       q10, q14, #1
-        vrshr.s16       q11, q15, #1
-.endif
+
         transpose_4x8h  q8,  q9,  q10, q11
         blx             r5
         add             r6,  r0,  #8
@@ -1646,6 +1650,7 @@ function inv_txfm_\variant\()add_16x4_neon
 
         vpop            {q4-q7}
         pop             {r4-r11,pc}
+.endif
 endfunc
 
 function inv_txfm_\variant\()add_4x16_neon
@@ -1696,12 +1701,14 @@ function inv_txfm_\variant\()add_4x16_neon
         movw            r12, #(5793-4096)*8
         vdup.16         d0,  r12
         identity_8x4_shift1 q8,  q9,  q10, q11, d0[0]
+
+        b               L(itx_4x16_epilog)
 .else
         blx             r4
 .irp i, q8, q9, q10, q11
         vrshr.s16       \i,  \i,  #1
 .endr
-.endif
+L(itx_4x16_epilog):
         transpose_4x8h  q8,  q9,  q10, q11
         vswp            d19, d21
         vswp            d18, d20
@@ -1714,11 +1721,12 @@ function inv_txfm_\variant\()add_4x16_neon
 
         vpop            {q4-q7}
         pop             {r4-r11,pc}
+.endif
 endfunc
 .endm
 
-def_fn_416_base
 def_fn_416_base identity_
+def_fn_416_base
 
 .macro def_fn_416 w, h, txfm1, txfm2, eob_half
 function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_neon, export=1
@@ -1728,11 +1736,15 @@ function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
 .if \w == 4
+.ifnc \txfm1, identity
         movrel_local    r4,  inv_\txfm1\()_8h_x\w\()_neon
+.endif
         movrel_local    r5,  inv_\txfm2\()_4h_x\h\()_neon
         mov             r10, #\eob_half
 .else
+.ifnc \txfm1, identity
         movrel_local    r4,  inv_\txfm1\()_4h_x\w\()_neon
+.endif
         movrel_local    r5,  inv_\txfm2\()_8h_x\h\()_neon
 .endif
 .ifc \txfm1, identity
@@ -1765,8 +1777,7 @@ def_fn_416 \w, \h, identity, flipadst, 32
 def_fns_416 4, 16
 def_fns_416 16, 4
 
-.macro def_fn_816_base variant
-function inv_txfm_\variant\()add_16x8_neon
+function inv_txfm_add_16x8_neon
         sub_sp_align    256
 
 .irp i, 0, 4
@@ -1805,6 +1816,7 @@ function inv_txfm_\variant\()add_16x8_neon
         pop             {r4-r11,pc}
 endfunc
 
+.macro def_fn_816_base variant
 function inv_txfm_\variant\()add_8x16_neon
         sub_sp_align    256
 
@@ -1849,6 +1861,10 @@ function inv_txfm_\variant\()add_8x16_neon
 .endr
 2:
 
+.ifc \variant, identity_
+        b               L(itx_8x16_epilog)
+.else
+L(itx_8x16_epilog):
 .irp i, 0, 4
         add             r6,  r0,  #(\i)
         add             r7,  sp,  #(\i*2)
@@ -1859,11 +1875,18 @@ function inv_txfm_\variant\()add_8x16_neon
         add_sp_align    256
         vpop            {q4-q7}
         pop             {r4-r11,pc}
+.endif
 endfunc
 .endm
 
-def_fn_816_base
 def_fn_816_base identity_
+def_fn_816_base
+
+/* Define symbols used in .if statement */
+.equ dct, 1
+.equ identity, 2
+.equ adst, 3
+.equ flipadst, 4
 
 .macro def_fn_816 w, h, txfm1, txfm2, eob_8x8, eob_4x4
 function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_neon, export=1
@@ -1873,7 +1896,9 @@ function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
 .if \w == 8
+.ifnc \txfm1, identity
         movrel_local    r4,  inv_\txfm1\()_8h_x8_neon
+.endif
         movrel_local    r5,  inv_\txfm2\()_4h_x16_neon
 .else
 .ifc \txfm1, identity
@@ -1889,7 +1914,7 @@ function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_neon, export=1
 .else
         mov             r10, #\eob_4x4
 .endif
-.ifc \txfm1, identity
+.if \w == 8 && \txfm1 == identity
         b               inv_txfm_identity_add_\w\()x\h\()_neon
 .else
         b               inv_txfm_add_\w\()x\h\()_neon

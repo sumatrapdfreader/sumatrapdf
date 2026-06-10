@@ -60,9 +60,9 @@ static unsigned get_seed(void) {
 static unsigned get_seed(void) {
 #ifdef __APPLE__
     return (unsigned) mach_absolute_time();
-#elif defined(HAVE_CLOCK_GETTIME)
+#elif HAVE_CLOCK_GETTIME
     struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
+    clock_gettime(CLOCK_REALTIME, &ts);
     return (unsigned) (1000000000ULL * ts.tv_sec + ts.tv_nsec);
 #endif
 }

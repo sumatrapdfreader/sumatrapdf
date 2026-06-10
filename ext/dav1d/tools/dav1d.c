@@ -33,14 +33,15 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <math.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#ifdef HAVE_IO_H
+#if HAVE_IO_H
 # include <io.h>
 #endif
 #ifdef _WIN32
@@ -67,7 +68,7 @@ static uint64_t get_time_nanos(void) {
     uint64_t seconds = t.QuadPart / frequency.QuadPart;
     uint64_t fractions = t.QuadPart % frequency.QuadPart;
     return 1000000000 * seconds + 1000000000 * fractions / frequency.QuadPart;
-#elif defined(HAVE_CLOCK_GETTIME)
+#elif HAVE_CLOCK_GETTIME
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return 1000000000ULL * ts.tv_sec + ts.tv_nsec;
@@ -181,6 +182,11 @@ static void picture_release(Dav1dPicture *const p, void *const _) {
     free(p->allocator_data);
 }
 
+static volatile sig_atomic_t signal_terminate;
+static void signal_handler(const int s) {
+    signal_terminate = 1;
+}
+
 int main(const int argc, char *const *const argv) {
     const int istty = isatty(fileno(stderr));
     int res = 0;
@@ -192,14 +198,21 @@ int main(const int argc, char *const *const argv) {
     Dav1dContext *c;
     Dav1dData data;
     unsigned n_out = 0, total, fps[2], timebase[2];
-    uint64_t nspf, tfirst, elapsed;
+    uint64_t nspf, tfirst, elapsed = 0;
     double i_fps;
     FILE *frametimes = NULL;
-    const char *version = dav1d_version();
+    const unsigned version = dav1d_version_api();
+    const int major = DAV1D_API_MAJOR(version);
+    const int minor = DAV1D_API_MINOR(version);
+    const int patch = DAV1D_API_PATCH(version);
 
-    if (strcmp(version, DAV1D_VERSION)) {
-        fprintf(stderr, "Version mismatch (library: %s, executable: %s)\n",
-                version, DAV1D_VERSION);
+    if (DAV1D_API_VERSION_MAJOR != major ||
+        DAV1D_API_VERSION_MINOR  > minor) {
+        fprintf(stderr, "Version mismatch (library: %d.%d.%d, executable: %d.%d.%d)\n",
+                major, minor, patch,
+                DAV1D_API_VERSION_MAJOR,
+                DAV1D_API_VERSION_MINOR,
+                DAV1D_API_VERSION_PATCH);
         return EXIT_FAILURE;
     }
 
@@ -266,7 +279,21 @@ int main(const int argc, char *const *const argv) {
     }
     tfirst = get_time_nanos();
 
+#ifdef _WIN32
+    signal(SIGINT,  signal_handler);
+    signal(SIGTERM, signal_handler);
+#else
+    static const struct sigaction sa = {
+        .sa_handler = signal_handler,
+        .sa_flags = SA_RESETHAND,
+    };
+    sigaction(SIGINT,  &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+#endif
+
     do {
+        if ((res = signal_terminate)) break;
+
         memset(&p, 0, sizeof(p));
         if ((res = dav1d_send_data(c, &data)) < 0) {
             if (res != DAV1D_ERR(EAGAIN)) {
@@ -313,6 +340,8 @@ int main(const int argc, char *const *const argv) {
 
     // flush
     if (res == 0) while (!cli_settings.limit || n_out < cli_settings.limit) {
+        if ((res = signal_terminate)) break;
+
         if ((res = dav1d_get_picture(c, &p)) < 0) {
             if (res != DAV1D_ERR(EAGAIN)) {
                 fprintf(stderr, "Error decoding frame: %s\n",

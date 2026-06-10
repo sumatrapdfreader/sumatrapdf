@@ -43,7 +43,7 @@
 // these functions are based on an implementation from FFmpeg, and relicensed
 // with author's permission
 
-#define PROBE_SIZE 1024
+#define PROBE_SIZE 2048
 
 static int annexb_probe(const uint8_t *data) {
     int ret, cnt = 0;
@@ -113,10 +113,10 @@ static int annexb_probe(const uint8_t *data) {
         temporal_unit_size -= obu_unit_size;
         frame_unit_size -= obu_unit_size;
         if (frame_unit_size <= 0)
-            break;
+            return 0;
     }
 
-    return 0;
+    return seq;
 }
 
 typedef struct DemuxerPriv {

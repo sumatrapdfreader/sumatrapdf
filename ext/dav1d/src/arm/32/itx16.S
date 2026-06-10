@@ -547,11 +547,11 @@ function inv_txfm_add_wht_wht_4x4_16bpc_neon, export=1
         vmov.i16        q15, #0
         vld1.32         {q8,  q9},  [r2, :128]
         vst1.32         {q14, q15}, [r2, :128]!
-        vshr.s16        q8,  q8,  #2
+        vshr.s32        q8,  q8,  #2
         vld1.32         {q10, q11}, [r2, :128]
-        vshr.s16        q9,  q9,  #2
-        vshr.s16        q10, q10, #2
-        vshr.s16        q11, q11, #2
+        vshr.s32        q9,  q9,  #2
+        vshr.s32        q10, q10, #2
+        vshr.s32        q11, q11, #2
 
         iwht4
 
@@ -598,7 +598,9 @@ function inv_txfm_add_4x4_neon
         vld1.16         {d3}, [r0, :64], r1
 
 L(itx_4x4_end):
-        vmvn.i16        q15, #0xfc00 // 0x3ff
+        // read bitdepth_max from the callers stack
+        ldr             r4,  [sp, #44]
+        vdup.i16        q15, r4
         sub             r0,  r0,  r1, lsl #2
         vqadd.s16       q8,  q8,  q0
         vqadd.s16       q9,  q9,  q1
@@ -668,12 +670,21 @@ def_fn_4x4 identity, flipadst
 .macro idct_4s_x8 r0, r1, r2, r3, r4, r5, r6, r7
         idct_4s_x4      \r0, \r2, \r4, \r6
 
+        vmov.i32        q5,  #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        q4,  #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
+.irp r, \r0, \r2, \r4, \r6
+        vmin.s32        \r,  \r,  q5
+.endr
+.irp r, \r0, \r2, \r4, \r6
+        vmax.s32        \r,  \r,  q4
+.endr
+
         vmul_vmls       q2,  \r1, \r7, d2[0], d2[1] // -> t4a
-        vmul_vmla       q4,  \r1, \r7, d2[1], d2[0] // -> t7a
+        vmul_vmla       q3,  \r1, \r7, d2[1], d2[0] // -> t7a
         vmul_vmls       q6,  \r5, \r3, d3[0], d3[1] // -> t5a
         vmul_vmla       q7,  \r5, \r3, d3[1], d3[0] // -> t6a
         vrshr.s32       \r1, q2,  #12               // t4a
-        vrshr.s32       \r7, q4,  #12               // t7a
+        vrshr.s32       \r7, q3,  #12               // t7a
         vrshr.s32       \r3, q6,  #12               // t5a
         vrshr.s32       \r5, q7,  #12               // t6a
 
@@ -682,17 +693,24 @@ def_fn_4x4 identity, flipadst
         vqadd.s32       q3,  \r7, \r5               // t7
         vqsub.s32       \r3, \r7, \r5               // t6a
 
-        vmul_vmls       q4,  \r3, \r1, d0[0], d0[0] // -> t5
+.irp r, q2, \r1, q3, \r3
+        vmin.s32        \r,  \r,  q5
+.endr
+.irp r, q2, \r1, q3, \r3
+        vmax.s32        \r,  \r,  q4
+.endr
+
+        vmul_vmls       q7,  \r3, \r1, d0[0], d0[0] // -> t5
         vmul_vmla       q6,  \r3, \r1, d0[0], d0[0] // -> t6
-        vrshr.s32       q4,  q4,  #12               // t5
+        vrshr.s32       q7,  q7,  #12               // t5
         vrshr.s32       q5,  q6,  #12               // t6
 
         vqsub.s32       \r7, \r0, q3  // out7
         vqadd.s32       \r0, \r0, q3  // out0
         vqadd.s32       \r1, \r2, q5  // out1
         vqsub.s32       q6,  \r2, q5  // out6
-        vqadd.s32       \r2, \r4, q4  // out2
-        vqsub.s32       \r5, \r4, q4  // out5
+        vqadd.s32       \r2, \r4, q7  // out2
+        vqsub.s32       \r5, \r4, q7  // out5
         vqadd.s32       \r3, \r6, q2  // out3
         vqsub.s32       \r4, \r6, q2  // out4
         vmov            \r6, q6       // out6
@@ -700,6 +718,15 @@ def_fn_4x4 identity, flipadst
 
 .macro idct_2s_x8 r0, r1, r2, r3, r4, r5, r6, r7
         idct_2s_x4      \r0, \r2, \r4, \r6
+
+        vmov.i32        d9,  #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        d8,  #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
+.irp r, \r0, \r2, \r4, \r6
+        vmin.s32        \r,  \r,  d9
+.endr
+.irp r, \r0, \r2, \r4, \r6
+        vmax.s32        \r,  \r,  d8
+.endr
 
         vmul_vmls       d4,  \r1, \r7, d2[0], d2[1] // -> t4a
         vmul_vmla       d5,  \r1, \r7, d2[1], d2[0] // -> t7a
@@ -714,6 +741,13 @@ def_fn_4x4 identity, flipadst
         vqsub.s32       \r1, \r1, \r3               // t5a
         vqadd.s32       d5,  \r7, \r5               // t7
         vqsub.s32       \r3, \r7, \r5               // t6a
+
+.irp r, d4, \r1, d5, \r3
+        vmin.s32        \r,  \r,  d9
+.endr
+.irp r, d4, \r1, d5, \r3
+        vmax.s32        \r,  \r,  d8
+.endr
 
         vmul_vmls       d6,  \r3, \r1, d0[0], d0[0] // -> t5
         vmul_vmla       d7,  \r3, \r1, d0[0], d0[0] // -> t6
@@ -763,19 +797,28 @@ endfunc
 
         vqadd.s32       q2,  q8,  q12 // t0
         vqsub.s32       q3,  q8,  q12 // t4
+        vmov.i32        q12, #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
         vqadd.s32       q4,  q15, q11 // t1
         vqsub.s32       q5,  q15, q11 // t5
         vqadd.s32       q6,  q10, q14 // t2
         vqsub.s32       q7,  q10, q14 // t6
+        vmvn.i32        q14, #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
         vqadd.s32       q10, q13, q9  // t3
         vqsub.s32       q11, q13, q9  // t7
 
+.irp r, q2, q3, q4, q5, q6, q7, q10, q11
+        vmin.s32        \r,  \r,  q12
+.endr
+.irp r, q2, q3, q4, q5, q6, q7, q10, q11
+        vmax.s32        \r,  \r,  q14
+.endr
+
         vmul_vmla       q8,  q3,  q5,  d1[1], d1[0]
-        vmul_vmls       q12, q3,  q5,  d1[0], d1[1]
+        vmul_vmls       q13, q3,  q5,  d1[0], d1[1]
         vmul_vmls       q14, q11, q7,  d1[1], d1[0]
 
         vrshr.s32       q3,  q8,  #12 // t4a
-        vrshr.s32       q5,  q12, #12 // t5a
+        vrshr.s32       q5,  q13, #12 // t5a
 
         vmul_vmla       q8,  q11, q7,  d1[0], d1[1]
 
@@ -786,12 +829,24 @@ endfunc
         vqsub.s32       q2,  q2,  q6  // t2
         vqadd.s32       \r7, q4,  q10 // out7
         vqsub.s32       q4,  q4,  q10 // t3
-        vqneg.s32       \r7, \r7      // out7
+
+        vmvn.i32        q10, #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
 
         vqadd.s32       \r1, q3,  q7  // out1
         vqsub.s32       q3,  q3,  q7  // t6
         vqadd.s32       \r6, q5,  q11 // out6
         vqsub.s32       q5,  q5,  q11 // t7
+
+        // Not clipping the output registers, as they will be downshifted and
+        // narrowed afterwards anyway.
+.irp r, q2, q4, q3, q5
+        vmin.s32        \r,  \r,  q12
+.endr
+.irp r, q2, q4, q3, q5
+        vmax.s32        \r,  \r,  q10
+.endr
+
+        vqneg.s32       \r7, \r7      // out7
         vqneg.s32       \r1, \r1      // out1
 
         vmul_vmla       q10, q2,  q4,  d0[0], d0[0] // -> out3 (q11 or q12)
@@ -1068,6 +1123,14 @@ function inv_dct_2s_x16_neon
 
         idct_2s_x8      d16, d18, d20, d22, d24, d26, d28, d30
 
+        // idct_8 leaves the row_clip_max/min constants in d9 and d8
+.irp r, d16, d18, d20, d22, d24, d26, d28, d30
+        vmin.s32        \r,  \r,  d9
+.endr
+.irp r, d16, d18, d20, d22, d24, d26, d28, d30
+        vmax.s32        \r,  \r,  d8
+.endr
+
         vld1.32         {q0, q1}, [r12, :128]
         sub             r12, r12, #32
 
@@ -1099,6 +1162,13 @@ function inv_dct_2s_x16_neon
         vqadd.s32       d25, d29, d27  // t12
         vqsub.s32       d29, d29, d27  // t13
 
+.irp r, d4, d17, d5, d31, d23, d19, d25, d29
+        vmin.s32        \r,  \r,  d9
+.endr
+.irp r, d4, d17, d5, d31, d23, d19, d25, d29
+        vmax.s32        \r,  \r,  d8
+.endr
+
         vmul_vmls       d6,  d5,  d4,  d1[0], d1[1]  // -> t9a
         vmul_vmla       d7,  d5,  d4,  d1[1], d1[0]  // -> t14a
         vrshr.s32       d21, d6,  #12                // t9a
@@ -1118,6 +1188,13 @@ function inv_dct_2s_x16_neon
         vqsub.s32       d21, d21, d23  // t10
         vqsub.s32       d25, d27, d29  // t13
         vqadd.s32       d27, d27, d29  // t14
+
+.irp r, d4, d17, d5, d31, d19, d21, d25, d27
+        vmin.s32        \r,  \r,  d9
+.endr
+.irp r, d4, d17, d5, d31, d19, d21, d25, d27
+        vmax.s32        \r,  \r,  d8
+.endr
 
         vmul_vmls       d6,  d5,  d4,  d0[0], d0[0]  // -> t11
         vmul_vmla       d7,  d5,  d4,  d0[0], d0[0]  // -> t12
@@ -1193,6 +1270,9 @@ endfunc
 
         vld1.32         {q0, q1}, [r12, :128]
 
+        vmov.i32        d11, #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        d10, #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
+
         vqsub.s32       d5,  d16, d23 // t8a
         vqadd.s32       d16, d16, d23 // t0a
         vqsub.s32       d7,  d31, d24 // t9a
@@ -1209,6 +1289,13 @@ endfunc
         vqsub.s32       d22, d22, d17 // t14a
         vqadd.s32       d28, d25, d30 // t7a
         vqsub.s32       d25, d25, d30 // t15a
+
+.irp r, d5, d16, d7, d31, d23, d18, d24, d29, d21, d20, d26, d27, d19, d22, d28, d25
+        vmin.s32        \r,  \r,  d11
+.endr
+.irp r, d5, d16, d7, d31, d23, d18, d24, d29, d21, d20, d26, d27, d19, d22, d28, d25
+        vmax.s32        \r,  \r,  d10
+.endr
 
         vmul_vmla       d4,  d5,  d7,  d2[1], d2[0] // -> t8
         vmul_vmls       d6,  d5,  d7,  d2[0], d2[1] // -> t9
@@ -1244,6 +1331,13 @@ endfunc
         vqadd.s32       d20, d29, d22 // t11a
         vqsub.s32       d29, d29, d22 // t15a
 
+.irp r, d2, d16, d3, d31, d21, d23, d26, d24, d19, d17, d28, d30, d27, d18, d20, d29
+        vmin.s32        \r,  \r,  d11
+.endr
+.irp r, d2, d16, d3, d31, d21, d23, d26, d24, d19, d17, d28, d30, d27, d18, d20, d29
+        vmax.s32        \r,  \r,  d10
+.endr
+
         vmul_vmla       d4,  d2,  d3,  d1[1], d1[0] // -> t4a
         vmul_vmls       d6,  d2,  d3,  d1[0], d1[1] // -> t5a
         vmul_vmls       d8,  d24, d23, d1[1], d1[0] // -> t6a
@@ -1272,24 +1366,34 @@ endfunc
         vqadd.s32       \o15,d31, d26 // out15
         vmov            \o0, d4
 .endif
-        vqneg.s32       \o15, \o15    // out15
 
         vqsub.s32       d3,  d29, d18 // t15a
         vqadd.s32       \o13,d29, d18 // out13
         vqadd.s32       \o2, d17, d30 // out2
         vqsub.s32       d26, d17, d30 // t14a
-        vqneg.s32       \o13,\o13     // out13
 
         vqadd.s32       \o1, d19, d27 // out1
         vqsub.s32       d27, d19, d27 // t10
         vqadd.s32       \o14,d28, d20 // out14
         vqsub.s32       d20, d28, d20 // t11
-        vqneg.s32       \o1, \o1      // out1
 
         vqadd.s32       \o3, d22, d24 // out3
         vqsub.s32       d22, d22, d24 // t6
         vqadd.s32       \o12,d25, d23 // out12
         vqsub.s32       d23, d25, d23 // t7
+
+        // Not clipping the output registers, as they will be downshifted and
+        // narrowed afterwards anyway.
+.irp r, d2, d21, d3, d26, d27, d20, d22, d23
+        vmin.s32        \r,  \r,  d11
+.endr
+.irp r, d2, d21, d3, d26, d27, d20, d22, d23
+        vmax.s32        \r,  \r,  d10
+.endr
+
+        vqneg.s32       \o15, \o15    // out15
+        vqneg.s32       \o13,\o13     // out13
+        vqneg.s32       \o1, \o1      // out1
         vqneg.s32       \o3, \o3      // out3
 
         vmul_vmls       d24, d2,  d21, d0[0], d0[0] // -> out8 (d24 or d23)
@@ -1385,6 +1489,10 @@ function inv_txfm_horz\suffix\()_16x2_neon
         vqrshrn.s32     d21, q13, #\shift
         vqrshrn.s32     d22, q14, #\shift
         vqrshrn.s32     d23, q15, #\shift
+.if \scale
+        b               L(horz_16x2_epilog)
+.else
+L(horz_16x2_epilog):
         vuzp.16         q8,  q9
         vuzp.16         q10, q11
 
@@ -1393,11 +1501,12 @@ function inv_txfm_horz\suffix\()_16x2_neon
 .endr
 
         pop             {pc}
+.endif
 endfunc
 .endm
 
-def_horz_16 scale=0, shift=2
 def_horz_16 scale=1, shift=1, suffix=_scale
+def_horz_16 scale=0, shift=2
 
 function inv_txfm_add_vert_4x16_neon
         push            {lr}
@@ -1947,6 +2056,9 @@ function inv_dct32_odd_2s_x16_neon
 
         vld1.32         {q0, q1}, [r12, :128]
 
+        vmov.i32        d11, #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        d10, #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
+
         vqsub.s32       d5,  d16, d24 // t17
         vqadd.s32       d16, d16, d24 // t16
         vqsub.s32       d7,  d31, d23 // t30
@@ -1963,6 +2075,13 @@ function inv_dct32_odd_2s_x16_neon
         vqadd.s32       d29, d29, d21 // t27
         vqadd.s32       d25, d19, d27 // t28
         vqsub.s32       d19, d19, d27 // t29
+
+.irp r, d5, d16, d7, d31, d24, d28, d23, d18, d20, d30, d26, d17, d22, d29, d25, d19
+        vmin.s32        \r,  \r,  d11
+.endr
+.irp r, d5, d16, d7, d31, d24, d28, d23, d18, d20, d30, d26, d17, d22, d29, d25, d19
+        vmax.s32        \r,  \r,  d10
+.endr
 
         vmul_vmls       d4,  d7,  d5,  d2[0], d2[1] // -> t17a
         vmul_vmla       d6,  d7,  d5,  d2[1], d2[0] // -> t30a
@@ -2000,6 +2119,13 @@ function inv_dct32_odd_2s_x16_neon
         vqsub.s32       d29, d31, d25 // t28a
         vqadd.s32       d31, d31, d25 // t31a
 
+.irp r, d2, d27, d3, d21, d24, d16, d19, d30, d28, d17, d23, d26, d22, d20, d29, d31
+        vmin.s32        \r,  \r,  d11
+.endr
+.irp r, d2, d27, d3, d21, d24, d16, d19, d30, d28, d17, d23, d26, d22, d20, d29, d31
+        vmax.s32        \r,  \r,  d10
+.endr
+
         vmul_vmls       d4,  d2,  d3,  d1[0], d1[1] // -> t18a
         vmul_vmla       d6,  d2,  d3,  d1[1], d1[0] // -> t29a
         vmul_vmls       d8,  d29, d24, d1[0], d1[1] // -> t19
@@ -2036,6 +2162,13 @@ function inv_dct32_odd_2s_x16_neon
         vqadd.s32       d28, d24, d19 // t28a = out28
         vqsub.s32       d24, d24, d19 // t27a
         vmov            d19, d4       // out19
+
+.irp r, d2, d16, d3, d31, d23, d17, d30, d21, d27, d18, d19, d26, d29, d25, d28, d24
+        vmin.s32        \r,  \r,  d11
+.endr
+.irp r, d2, d16, d3, d31, d23, d17, d30, d21, d27, d18, d19, d26, d29, d25, d28, d24
+        vmax.s32        \r,  \r,  d10
+.endr
 
         vmul_vmls       d4,  d24, d26, d0[0], d0[0] // -> t20
         vmul_vmla       d6,  d24, d26, d0[0], d0[0] // -> t27
@@ -2081,6 +2214,18 @@ function inv_txfm_horz\suffix\()_dct_32x2_neon
         scale_input     d0[0], q8,  q9,  q10, q11, q12, q13, q14, q15
 .endif
         bl              inv_dct_2s_x16_neon
+
+        // idct_16 leaves the row_clip_max/min constants in d9 and d8,
+        // but here we want to use full q registers for clipping.
+        vmov.i32        q3,  #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        q2,  #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
+.irp r, q8, q9, q10, q11, q12, q13, q14, q15
+        vmin.s32        \r,  \r,  q3
+.endr
+.irp r, q8, q9, q10, q11, q12, q13, q14, q15
+        vmax.s32        \r,  \r,  q2
+.endr
+
         vtrn.32         d16, d17
         vtrn.32         d18, d19
         vtrn.32         d20, d21
@@ -2745,14 +2890,21 @@ function inv_dct64_step1_neon
         vqsub.s32       d30, d23, d22    // t62
         vqadd.s32       d31, d23, d22    // t63
 
+.irp r, q12, q13, q14, q15
+        vmin.s32        \r,  \r,  q5
+.endr
+.irp r, q12, q13, q14, q15
+        vmax.s32        \r,  \r,  q4
+.endr
+
         vmul_vmla       d4,  d29, d26, d0[0], d0[1] // -> t34a
         vmul_vmls       d6,  d29, d26, d0[1], d0[0] // -> t61a
         vneg.s32        d4,  d4                     // t34a
-        vmul_vmls       d8,  d30, d25, d0[1], d0[0] // -> t33a
+        vmul_vmls       d7,  d30, d25, d0[1], d0[0] // -> t33a
         vrshr.s32       d26, d4,  #12               // t34a
         vmul_vmla       d4,  d30, d25, d0[0], d0[1] // -> t62a
         vrshr.s32       d29, d6,  #12               // t61a
-        vrshr.s32       d25, d8,  #12               // t33a
+        vrshr.s32       d25, d7,  #12               // t33a
         vrshr.s32       d30, d4,  #12               // t62a
 
         vqadd.s32       d16, d24, d27    // t32a
@@ -2764,13 +2916,20 @@ function inv_dct64_step1_neon
         vqsub.s32       d21, d30, d29    // t61
         vqadd.s32       d22, d30, d29    // t62
 
+.irp r, q8, q9, q10, q11
+        vmin.s32        \r,  \r,  q5
+.endr
+.irp r, q8, q9, q10, q11
+        vmax.s32        \r,  \r,  q4
+.endr
+
         vmul_vmla       d4,  d21, d18, d1[0], d1[1] // -> t61a
         vmul_vmls       d6,  d21, d18, d1[1], d1[0] // -> t34a
-        vmul_vmla       d8,  d20, d19, d1[0], d1[1] // -> t60
+        vmul_vmla       d7,  d20, d19, d1[0], d1[1] // -> t60
         vrshr.s32       d21, d4,  #12               // t61a
         vrshr.s32       d18, d6,  #12               // t34a
         vmul_vmls       d4,  d20, d19, d1[1], d1[0] // -> t35
-        vrshr.s32       d20, d8,  #12               // t60
+        vrshr.s32       d20, d7,  #12               // t60
         vrshr.s32       d19, d4,  #12               // t35
 
         vst1.32         {d16, d17, d18, d19}, [r6, :128]!
@@ -2805,14 +2964,21 @@ function inv_dct64_step2_neon
         vqadd.s32       d30, d23, d22      // t48
         vqsub.s32       d31, d23, d22      // t55
 
+.irp r, q12, q13, q14, q15
+        vmin.s32        \r,  \r,  q5
+.endr
+.irp r, q12, q13, q14, q15
+        vmax.s32        \r,  \r,  q4
+.endr
+
         vmul_vmla       d4,  d27, d25, d1[1], d1[0] // -> t56a
         vmul_vmls       d6,  d27, d25, d1[0], d1[1] // -> t39a
-        vmul_vmla       d8,  d31, d28, d1[1], d1[0] // -> t40a
+        vmul_vmla       d7,  d31, d28, d1[1], d1[0] // -> t40a
         vrshr.s32       d25, d4,  #12               // t56a
         vrshr.s32       d27, d6,  #12               // t39a
-        vneg.s32        d8,  d8                     // t40a
+        vneg.s32        d7,  d7                     // t40a
         vmul_vmls       d4,  d31, d28, d1[0], d1[1] // -> t55a
-        vrshr.s32       d31, d8,  #12               // t40a
+        vrshr.s32       d31, d7,  #12               // t40a
         vrshr.s32       d28, d4,  #12               // t55a
 
         vqadd.s32       d16, d24, d29      // t32a
@@ -2824,13 +2990,20 @@ function inv_dct64_step2_neon
         vqsub.s32       d21, d25, d28      // t55
         vqadd.s32       d22, d25, d28      // t56
 
+.irp r, q8, q9, q10, q11
+        vmin.s32        \r,  \r,  q5
+.endr
+.irp r, q8, q9, q10, q11
+        vmax.s32        \r,  \r,  q4
+.endr
+
         vmul_vmls       d4,  d21, d18, d0[0], d0[0] // -> t40a
         vmul_vmla       d6,  d21, d18, d0[0], d0[0] // -> t55a
-        vmul_vmls       d8,  d20, d19, d0[0], d0[0] // -> t47
+        vmul_vmls       d7,  d20, d19, d0[0], d0[0] // -> t47
         vrshr.s32       d18, d4,  #12               // t40a
         vrshr.s32       d21, d6,  #12               // t55a
         vmul_vmla       d4,  d20, d19, d0[0], d0[0] // -> t48
-        vrshr.s32       d19, d8,  #12               // t47
+        vrshr.s32       d19, d7,  #12               // t47
         vrshr.s32       d20, d4,  #12               // t48
 
         vstr            d16, [r6, #4*2*0]  // t32a
@@ -2916,6 +3089,17 @@ function inv_txfm_dct\suffix\()_2s_x64_neon
 
         bl              inv_dct_2s_x16_neon
 
+        // idct_16 leaves the row_clip_max/min constants in d9 and d8,
+        // but here we want to use full q registers for clipping.
+        vmov.i32        q3,  #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        q2,  #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
+.irp r, q8, q9, q10, q11, q12, q13, q14, q15
+        vmin.s32        \r,  \r,  q3
+.endr
+.irp r, q8, q9, q10, q11, q12, q13, q14, q15
+        vmax.s32        \r,  \r,  q2
+.endr
+
         store16         r6
 
         movdup_if       d0,  r12, 2896*8*(1<<16), \scale
@@ -2934,6 +3118,8 @@ function inv_txfm_dct\suffix\()_2s_x64_neon
 
         mov             r9,  #-8
 
+        vmov.i32        d1,  #0x1ffff // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        d0,  #0x1ffff // row_clip_min = (~bdmax << 7), 0xfffe0000
 .macro store_addsub r0, r1, r2, r3
         vld1.32         {d2},  [r6, :64]!
         vld1.32         {d3},  [r6, :64]!
@@ -2942,16 +3128,32 @@ function inv_txfm_dct\suffix\()_2s_x64_neon
         vld1.32         {d4},  [r6, :64]!
         vqadd.s32       d7,  d3,  \r1
         vqsub.s32       \r1, d3,  \r1
+        vmin.s32        d6,  d6,  d1
+        vmin.s32        \r0, \r0, d1
         vld1.32         {d5},  [r6, :64]!
         vqadd.s32       d2,  d4,  \r2
         sub             r6,  r6,  #8*4
+        vmax.s32        d6,  d6,  d0
+        vmax.s32        \r0, \r0, d0
         vqsub.s32       \r2, d4,  \r2
+        vmin.s32        d7,  d7,  d1
+        vmin.s32        \r1, \r1, d1
         vst1.32         {d6},  [r6,  :64]!
         vst1.32         {\r0}, [r10, :64], r9
+        vmin.s32        d2,  d2,  d1
+        vmin.s32        \r2, \r2, d1
+        vmax.s32        d7,  d7,  d0
+        vmax.s32        \r1, \r1, d0
         vqadd.s32       d3,  d5,  \r3
         vqsub.s32       \r3, d5,  \r3
+        vmax.s32        d2,  d2,  d0
+        vmax.s32        \r2, \r2, d0
+        vmin.s32        d3,  d3,  d1
+        vmin.s32        \r3, \r3, d1
         vst1.32         {d7},  [r6,  :64]!
         vst1.32         {\r1}, [r10, :64], r9
+        vmax.s32        d3,  d3,  d0
+        vmax.s32        \r3, \r3, d0
         vst1.32         {d2},  [r6,  :64]!
         vst1.32         {\r2}, [r10, :64], r9
         vst1.32         {d3},  [r6,  :64]!
@@ -2966,6 +3168,8 @@ function inv_txfm_dct\suffix\()_2s_x64_neon
         add             r6,  r6,  #2*4*16
 
         movrel_local    r12, idct64_coeffs
+        vmov.i32        q5,  #0x1ffff        // row_clip_max = ~(~bdmax << 7), 0x1ffff
+        vmvn.i32        q4,  #0x1ffff        // row_clip_min = (~bdmax << 7), 0xfffe0000
         movdup_if       d0,  lr,  2896*8*(1<<16), \scale
         vmov_if         d7,  #0,  \clear
         add             r9,  r7,  r8, lsl #4 // offset 16

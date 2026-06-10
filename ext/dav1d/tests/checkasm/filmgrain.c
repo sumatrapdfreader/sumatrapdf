@@ -283,6 +283,7 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                 fg_data[0].grain_scale_shift = rnd() & 3;
                 fg_data[0].ar_coeff_shift = (rnd() & 3) + 6;
                 fg_data[0].ar_coeff_lag = rnd() & 3;
+                fg_data[0].num_y_points = csfl ? 2 + (rnd() % 13) : 0;
                 const int num_y_pos = 2 * fg_data[0].ar_coeff_lag * (fg_data[0].ar_coeff_lag + 1);
                 for (int n = 0; n < num_y_pos; n++)
                     fg_data[0].ar_coeffs_y[n] = (rnd() & 0xff) - 128;
@@ -294,7 +295,6 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                                                    fg_data, uv_pl HIGHBD_TAIL_SUFFIX);
 
                 if (csfl) {
-                    fg_data[0].num_y_points = 2 + (rnd() % 13);
                     const int pad = 0xff / fg_data[0].num_y_points;
                     for (int n = 0; n < fg_data[0].num_y_points; n++) {
                         fg_data[0].y_points[n][0] = 0xff * n / fg_data[0].num_y_points;

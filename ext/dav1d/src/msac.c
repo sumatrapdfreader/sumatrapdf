@@ -43,15 +43,40 @@ static inline void ctx_refill(MsacContext *const s) {
     const uint8_t *buf_end = s->buf_end;
     int c = EC_WIN_SIZE - s->cnt - 24;
     ec_win dif = s->dif;
-    while (c >= 0 && buf_pos < buf_end) {
-        dif ^= ((ec_win)*buf_pos++) << c;
+    do {
+        if (buf_pos >= buf_end) {
+            // set remaining bits to 1;
+            dif |= ~(~(ec_win)0xff << c);
+            break;
+        }
+        dif |= (ec_win)(*buf_pos++ ^ 0xff) << c;
         c -= 8;
-    }
+    } while (c >= 0);
     s->dif = dif;
     s->cnt = EC_WIN_SIZE - c - 24;
     s->buf_pos = buf_pos;
 }
 
+int dav1d_msac_decode_subexp(MsacContext *const s, const int ref,
+                             const int n, unsigned k)
+{
+    assert(n >> k == 8);
+
+    unsigned a = 0;
+    if (dav1d_msac_decode_bool_equi(s)) {
+        if (dav1d_msac_decode_bool_equi(s))
+            k += dav1d_msac_decode_bool_equi(s) + 1;
+        a = 1 << k;
+    }
+    const unsigned v = dav1d_msac_decode_bools(s, k) + a;
+    return ref * 2 <= n ? inv_recenter(ref, v) :
+                          n - 1 - inv_recenter(n - 1 - ref, v);
+}
+
+#if !(HAVE_ASM && TRIM_DSP_FUNCTIONS && ( \
+  ARCH_AARCH64 || \
+  (ARCH_ARM && (defined(__ARM_NEON) || defined(__APPLE__) || defined(_WIN32))) \
+))
 /* Takes updated dif and range values, renormalizes them so that
  * 32768 <= rng < 65536 (reading more bytes from the stream into dif if
  * necessary), and stores them back in the decoder context.
@@ -61,11 +86,13 @@ static inline void ctx_norm(MsacContext *const s, const ec_win dif,
                             const unsigned rng)
 {
     const int d = 15 ^ (31 ^ clz(rng));
+    const int cnt = s->cnt;
     assert(rng <= 65535U);
-    s->cnt -= d;
-    s->dif = ((dif + 1) << d) - 1; /* Shift in 1s in the LSBs */
+    s->dif = dif << d;
     s->rng = rng << d;
-    if (s->cnt < 0)
+    s->cnt = cnt - d;
+    // unsigned compare avoids redundant refills at eob
+    if ((unsigned)cnt < (unsigned)d)
         ctx_refill(s);
 }
 
@@ -98,22 +125,6 @@ unsigned dav1d_msac_decode_bool_c(MsacContext *const s, const unsigned f) {
     v += ret * (r - 2 * v);
     ctx_norm(s, dif, v);
     return !ret;
-}
-
-int dav1d_msac_decode_subexp(MsacContext *const s, const int ref,
-                             const int n, unsigned k)
-{
-    assert(n >> k == 8);
-
-    unsigned a = 0;
-    if (dav1d_msac_decode_bool_equi(s)) {
-        if (dav1d_msac_decode_bool_equi(s))
-            k += dav1d_msac_decode_bool_equi(s) + 1;
-        a = 1 << k;
-    }
-    const unsigned v = dav1d_msac_decode_bools(s, k) + a;
-    return ref * 2 <= n ? inv_recenter(ref, v) :
-                          n - 1 - inv_recenter(n - 1 - ref, v);
 }
 
 /* Decodes a symbol given an inverse cumulative distribution function (CDF)
@@ -188,13 +199,14 @@ unsigned dav1d_msac_decode_hi_tok_c(MsacContext *const s, uint16_t *const cdf) {
     }
     return tok;
 }
+#endif
 
 void dav1d_msac_init(MsacContext *const s, const uint8_t *const data,
                      const size_t sz, const int disable_cdf_update_flag)
 {
     s->buf_pos = data;
     s->buf_end = data + sz;
-    s->dif = ((ec_win)1 << (EC_WIN_SIZE - 1)) - 1;
+    s->dif = 0;
     s->rng = 0x8000;
     s->cnt = -15;
     s->allow_update_cdf = !disable_cdf_update_flag;
@@ -203,6 +215,6 @@ void dav1d_msac_init(MsacContext *const s, const uint8_t *const data,
 #if ARCH_X86_64 && HAVE_ASM
     s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt_c;
 
-    dav1d_msac_init_x86(s);
+    msac_init_x86(s);
 #endif
 }

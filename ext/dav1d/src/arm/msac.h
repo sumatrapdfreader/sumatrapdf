@@ -39,7 +39,7 @@ unsigned dav1d_msac_decode_bool_adapt_neon(MsacContext *s, uint16_t *cdf);
 unsigned dav1d_msac_decode_bool_equi_neon(MsacContext *s);
 unsigned dav1d_msac_decode_bool_neon(MsacContext *s, unsigned f);
 
-#if ARCH_AARCH64 || defined(__ARM_NEON)
+#if defined(__ARM_NEON) || defined(__APPLE__) || defined(_WIN32) || ARCH_AARCH64
 #define dav1d_msac_decode_symbol_adapt4  dav1d_msac_decode_symbol_adapt4_neon
 #define dav1d_msac_decode_symbol_adapt8  dav1d_msac_decode_symbol_adapt8_neon
 #define dav1d_msac_decode_symbol_adapt16 dav1d_msac_decode_symbol_adapt16_neon

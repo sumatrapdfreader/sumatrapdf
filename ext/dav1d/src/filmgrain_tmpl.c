@@ -162,8 +162,8 @@ static inline entry sample_lut(const entry grain_lut[][GRAIN_WIDTH],
     const int randval = offsets[bx][by];
     const int offx = 3 + (2 >> subx) * (3 + (randval >> 4));
     const int offy = 3 + (2 >> suby) * (3 + (randval & 0xF));
-    return grain_lut[offy + y + (BLOCK_SIZE >> suby) * by]
-                    [offx + x + (BLOCK_SIZE >> subx) * bx];
+    return grain_lut[offy + y + (FG_BLOCK_SIZE >> suby) * by]
+                    [offx + x + (FG_BLOCK_SIZE >> subx) * bx];
 }
 
 static void fgy_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
@@ -195,13 +195,13 @@ static void fgy_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
         seed[i] ^= (((row_num - i) * 173 + 105) & 0xFF);
     }
 
-    assert(stride % (BLOCK_SIZE * sizeof(pixel)) == 0);
+    assert(stride % (FG_BLOCK_SIZE * sizeof(pixel)) == 0);
 
     int offsets[2 /* col offset */][2 /* row offset */];
 
-    // process this row in BLOCK_SIZE^2 blocks
-    for (unsigned bx = 0; bx < pw; bx += BLOCK_SIZE) {
-        const int bw = imin(BLOCK_SIZE, (int) pw - bx);
+    // process this row in FG_BLOCK_SIZE^2 blocks
+    for (unsigned bx = 0; bx < pw; bx += FG_BLOCK_SIZE) {
+        const int bw = imin(FG_BLOCK_SIZE, (int) pw - bx);
 
         if (data->overlap_flag && bx) {
             // shift previous offsets left
@@ -278,7 +278,7 @@ static void fgy_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
 static NOINLINE void
 fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
                const ptrdiff_t stride, const Dav1dFilmGrainData *const data,
-               const int pw, const uint8_t scaling[SCALING_SIZE],
+               const size_t pw, const uint8_t scaling[SCALING_SIZE],
                const entry grain_lut[][GRAIN_WIDTH], const int bh,
                const int row_num, const pixel *const luma_row,
                const ptrdiff_t luma_stride, const int uv, const int is_id,
@@ -306,13 +306,13 @@ fguv_32x32xn_c(pixel *const dst_row, const pixel *const src_row,
         seed[i] ^= (((row_num - i) * 173 + 105) & 0xFF);
     }
 
-    assert(stride % (BLOCK_SIZE * sizeof(pixel)) == 0);
+    assert(stride % (FG_BLOCK_SIZE * sizeof(pixel)) == 0);
 
     int offsets[2 /* col offset */][2 /* row offset */];
 
-    // process this row in BLOCK_SIZE^2 blocks (subsampled)
-    for (int bx = 0; bx < pw; bx += BLOCK_SIZE >> sx) {
-        const int bw = imin(BLOCK_SIZE >> sx, pw - bx);
+    // process this row in FG_BLOCK_SIZE^2 blocks (subsampled)
+    for (unsigned bx = 0; bx < pw; bx += FG_BLOCK_SIZE >> sx) {
+        const int bw = imin(FG_BLOCK_SIZE >> sx, (int)(pw - bx));
         if (data->overlap_flag && bx) {
             // shift previous offsets left
             for (int i = 0; i < rows; i++)
@@ -412,6 +412,14 @@ fguv_ss_fn(420, 1, 1);
 fguv_ss_fn(422, 1, 0);
 fguv_ss_fn(444, 0, 0);
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/filmgrain.h"
+#elif ARCH_X86
+#include "src/x86/filmgrain.h"
+#endif
+#endif
+
 COLD void bitfn(dav1d_film_grain_dsp_init)(Dav1dFilmGrainDSPContext *const c) {
     c->generate_grain_y = generate_grain_y_c;
     c->generate_grain_uv[DAV1D_PIXEL_LAYOUT_I420 - 1] = generate_grain_uv_420_c;
@@ -425,9 +433,9 @@ COLD void bitfn(dav1d_film_grain_dsp_init)(Dav1dFilmGrainDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_film_grain_dsp_init_arm)(c);
+    film_grain_dsp_init_arm(c);
 #elif ARCH_X86
-    bitfn(dav1d_film_grain_dsp_init_x86)(c);
+    film_grain_dsp_init_x86(c);
 #endif
 #endif
 }

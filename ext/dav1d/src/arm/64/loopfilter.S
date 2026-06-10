@@ -28,6 +28,11 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
+// depending on how many pixels need to be stored, returns:
+// x14 = (1 << 0) : 0 pixels
+// x14 = (1 << 4) : inner 4 pixels
+// x14 = (1 << 6) : inner 6 pixels
+// x14 = 0 : all pixels
 .macro loop_filter wd
 function lpf_16_wd\wd\()_neon
         uabd            v0.16b,  v22.16b, v23.16b // abs(p1 - p0)
@@ -77,8 +82,10 @@ function lpf_16_wd\wd\()_neon
         mov             x16, v1.d[0]
         mov             x17, v1.d[1]
         adds            x16, x16, x17
-        b.eq            9f                        // if (!fm || wd < 4) return;
-
+        b.ne            9f                        // if (!fm || wd < 4) return;
+        mov             x14, #(1 << 0)
+        ret
+9:
 .if \wd >= 6
         movi            v10.16b, #1
         uabd            v2.16b,  v21.16b, v23.16b // abs(p2 - p0)
@@ -474,20 +481,20 @@ function lpf_16_wd\wd\()_neon
         bif             v11.16b, v29.16b, v15.16b // out q5
 .endif
 
+        mov             x14, #0
         ret
 .if \wd == 16
 7:
         // Return to a shorter epilogue, writing only the inner 6 pixels
-        ret             x13
+        mov             x14, #(1 << 6)
+        ret
 .endif
 .if \wd >= 8
 8:
         // Return to a shorter epilogue, writing only the inner 4 pixels
-        ret             x14
+        mov             x14, #(1 << 4)
+        ret
 .endif
-9:
-        // Return directly without writing back any pixels
-        ret             x15
 endfunc
 .endm
 
@@ -497,22 +504,34 @@ loop_filter 6
 loop_filter 4
 
 .macro lpf_16_wd16
-        adr             x13, 7f
-        adr             x14, 8f
         bl              lpf_16_wd16_neon
+        cbz             x14, 1f
+        tbnz            x14, #6, 7f
+        tbnz            x14, #4, 8f
+        ret             x15
+1:
 .endm
 
 .macro lpf_16_wd8
-        adr             x14, 8f
         bl              lpf_16_wd8_neon
+        cbz             x14, 1f
+        tbnz            x14, #4, 8f
+        ret             x15
+1:
 .endm
 
 .macro lpf_16_wd6
         bl              lpf_16_wd6_neon
+        cbz             x14, 1f
+        ret             x15
+1:
 .endm
 
 .macro lpf_16_wd4
         bl              lpf_16_wd4_neon
+        cbz             x14, 1f
+        ret             x15
+1:
 .endm
 
 function lpf_v_4_16_neon

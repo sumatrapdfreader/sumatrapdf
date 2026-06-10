@@ -32,6 +32,10 @@
 #include "config.h"
 #include "src/arm/asm.S"
 
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
 .macro  movrel rd, val, offset=0
 #if defined(__APPLE__)
   .if \offset < 0
@@ -51,6 +55,10 @@
         adrp            \rd, \val+(\offset)
         add             \rd, \rd, :lo12:\val+(\offset)
   .endif
+#elif __has_feature(hwaddress_sanitizer)
+        adrp            \rd, :pg_hi21_nc:\val+(\offset)
+        movk            \rd, #:prel_g3:\val+0x100000000
+        add             \rd, \rd, :lo12:\val+(\offset)
 #elif defined(PIC)
         adrp            \rd, \val+(\offset)
         add             \rd, \rd, :lo12:\val+(\offset)
@@ -149,6 +157,35 @@
         trn2            \r7\().2d,  \t9\().2d,  \r7\().2d
 .endm
 
+.macro transpose_8x8h_mov r0, r1, r2, r3, r4, r5, r6, r7, t8, t9, o0, o1, o2, o3, o4, o5, o6, o7
+        trn1            \t8\().8h,  \r0\().8h,  \r1\().8h
+        trn2            \t9\().8h,  \r0\().8h,  \r1\().8h
+        trn1            \r1\().8h,  \r2\().8h,  \r3\().8h
+        trn2            \r3\().8h,  \r2\().8h,  \r3\().8h
+        trn1            \r0\().8h,  \r4\().8h,  \r5\().8h
+        trn2            \r5\().8h,  \r4\().8h,  \r5\().8h
+        trn1            \r2\().8h,  \r6\().8h,  \r7\().8h
+        trn2            \r7\().8h,  \r6\().8h,  \r7\().8h
+
+        trn1            \r4\().4s,  \r0\().4s,  \r2\().4s
+        trn2            \r2\().4s,  \r0\().4s,  \r2\().4s
+        trn1            \r6\().4s,  \r5\().4s,  \r7\().4s
+        trn2            \r7\().4s,  \r5\().4s,  \r7\().4s
+        trn1            \r5\().4s,  \t9\().4s,  \r3\().4s
+        trn2            \t9\().4s,  \t9\().4s,  \r3\().4s
+        trn1            \r3\().4s,  \t8\().4s,  \r1\().4s
+        trn2            \t8\().4s,  \t8\().4s,  \r1\().4s
+
+        trn1            \o0\().2d,  \r3\().2d,  \r4\().2d
+        trn2            \o4\().2d,  \r3\().2d,  \r4\().2d
+        trn1            \o1\().2d,  \r5\().2d,  \r6\().2d
+        trn2            \o5\().2d,  \r5\().2d,  \r6\().2d
+        trn2            \o6\().2d,  \t8\().2d,  \r2\().2d
+        trn1            \o2\().2d,  \t8\().2d,  \r2\().2d
+        trn1            \o3\().2d,  \t9\().2d,  \r7\().2d
+        trn2            \o7\().2d,  \t9\().2d,  \r7\().2d
+.endm
+
 .macro transpose_8x16b r0, r1, r2, r3, r4, r5, r6, r7, t8, t9
         trn1            \t8\().16b, \r0\().16b, \r1\().16b
         trn2            \t9\().16b, \r0\().16b, \r1\().16b
@@ -224,6 +261,18 @@
         trn2            \r2\().4s,  \t4\().4s,  \t6\().4s
         trn1            \r1\().4s,  \t5\().4s,  \t7\().4s
         trn2            \r3\().4s,  \t5\().4s,  \t7\().4s
+.endm
+
+.macro  transpose_4x8h_mov r0, r1, r2, r3, t4, t5, t6, t7, o0, o1, o2, o3
+        trn1            \t4\().8h,  \r0\().8h,  \r1\().8h
+        trn2            \t5\().8h,  \r0\().8h,  \r1\().8h
+        trn1            \t6\().8h,  \r2\().8h,  \r3\().8h
+        trn2            \t7\().8h,  \r2\().8h,  \r3\().8h
+
+        trn1            \o0\().4s,  \t4\().4s,  \t6\().4s
+        trn2            \o2\().4s,  \t4\().4s,  \t6\().4s
+        trn1            \o1\().4s,  \t5\().4s,  \t7\().4s
+        trn2            \o3\().4s,  \t5\().4s,  \t7\().4s
 .endm
 
 #endif /* DAV1D_SRC_ARM_64_UTIL_S */

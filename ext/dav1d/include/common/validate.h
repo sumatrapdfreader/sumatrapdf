@@ -32,24 +32,26 @@
 #include <stdlib.h>
 
 #if defined(NDEBUG)
-#define debug_abort()
+#define debug_print(...) do {} while (0)
+#define debug_abort() do {} while (0)
 #else
+#define debug_print(...) fprintf(stderr, __VA_ARGS__)
 #define debug_abort abort
 #endif
 
 #define validate_input_or_ret_with_msg(x, r, ...) \
     if (!(x)) { \
-        fprintf(stderr, "Input validation check \'%s\' failed in %s!\n", \
-                #x, __func__); \
-        fprintf(stderr, __VA_ARGS__); \
+        debug_print("Input validation check \'%s\' failed in %s!\n", \
+                    #x, __func__); \
+        debug_print(__VA_ARGS__); \
         debug_abort(); \
         return r; \
     }
 
 #define validate_input_or_ret(x, r) \
     if (!(x)) { \
-        fprintf(stderr, "Input validation check \'%s\' failed in %s!\n", \
-                #x, __func__); \
+        debug_print("Input validation check \'%s\' failed in %s!\n", \
+                    #x, __func__); \
         debug_abort(); \
         return r; \
     }

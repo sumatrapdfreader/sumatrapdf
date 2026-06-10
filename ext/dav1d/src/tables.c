@@ -419,6 +419,7 @@ const uint16_t ALIGN(dav1d_sgr_params[16][2], 4) = {
     {   0, 1177 }, {   0,  925 }, {  56,    0 }, {  22,    0 },
 };
 
+ATTR_MCMODEL_SMALL
 const uint8_t ALIGN(dav1d_sgr_x_by_x[256], 64) = {
     255, 128,  85,  64,  51,  43,  37,  32,  28,  26,  23,  21,  20,  18,  17,
      16,  15,  14,  13,  13,  12,  12,  11,  11,  10,  10,   9,   9,   9,   9,
@@ -440,6 +441,7 @@ const uint8_t ALIGN(dav1d_sgr_x_by_x[256], 64) = {
       0
 };
 
+ATTR_MCMODEL_SMALL
 const int8_t ALIGN(dav1d_mc_subpel_filters[6][15][8], 8) = {
     [DAV1D_FILTER_8TAP_REGULAR] = {
         {   0,   1,  -3,  63,   4,  -1,   0,   0 },
@@ -544,6 +546,7 @@ const int8_t ALIGN(dav1d_mc_subpel_filters[6][15][8], 8) = {
     }
 };
 
+ATTR_MCMODEL_SMALL
 const int8_t ALIGN(dav1d_mc_warp_filter[193][8], 8) = {
     // [-1, 0)
     { 0,   0, 127,   1,   0, 0, 0, 0 }, { 0,  -1, 127,   2,   0, 0, 0, 0 },
@@ -648,6 +651,7 @@ const int8_t ALIGN(dav1d_mc_warp_filter[193][8], 8) = {
     { 0, 0, 0,   0,   2, 127,  -1, 0 },
 };
 
+ATTR_MCMODEL_SMALL
 const int8_t ALIGN(dav1d_resize_filter[64][8], 8) = {
     { 0,  0,  0, -128,    0,  0,  0, 0 }, { 0,  0,  1, -128,   -2,  1,  0, 0 },
     { 0, -1,  3, -127,   -4,  2, -1, 0 }, { 0, -1,  4, -127,   -6,  3, -1, 0 },
@@ -711,6 +715,7 @@ const uint8_t ALIGN(dav1d_sm_weights[128], 16) = {
       7,   6,   6,   5,   5,   4,   4,   4
 };
 
+ATTR_MCMODEL_SMALL
 const uint16_t dav1d_dr_intra_derivative[44] = {
     // Values that are 0 will never be used
           0,    // Angles:
@@ -756,6 +761,7 @@ const uint16_t dav1d_dr_intra_derivative[44] = {
     [1*idx+32] = f4, [1*idx+40] = f5,      \
     [1*idx+48] = f6
 #endif
+ATTR_MCMODEL_SMALL
 const int8_t ALIGN(dav1d_filter_intra_taps[5][64], 64) = {
     {
         F( 0,  -6, 10,  0,  0,  0, 12,  0 ),
@@ -822,6 +828,7 @@ const uint8_t ALIGN(dav1d_obmc_masks[64], 16) = {
 };
 
 // Taken from the spec. Range is [-2048, 2047], mean is 0 and stddev is 512
+ATTR_MCMODEL_SMALL
 const int16_t dav1d_gaussian_sequence[2048] = {
     56,    568,   -180,  172,   124,   -84,   172,   -64,   -900,  24,   820,
     224,   1248,  996,   272,   -8,    -916,  -388,  -732,  -104,  -188, 800,

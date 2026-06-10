@@ -367,7 +367,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=1;ARCH_X86_64=0;__SSE2__;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -398,7 +398,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -429,7 +429,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -460,7 +460,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -491,7 +491,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=1;ARCH_X86_64=0;__SSE2__;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -521,7 +521,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -551,7 +551,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -581,7 +581,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -611,7 +611,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=1;ARCH_X86_64=0;__SSE2__;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -642,7 +642,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -673,7 +673,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -704,7 +704,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -734,7 +734,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=1;ARCH_X86_64=0;__SSE2__;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -766,7 +766,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -798,7 +798,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -830,7 +830,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4201;4244;4245;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;4057;4090;4100;4152;4200;4201;4244;4245;4389;4456;4457;4701;4703;4706;4819;4996;5287;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;ARCH_X86_32=0;ARCH_X86_64=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\dav1d\include\compat\msvc;..\ext\dav1d;..\ext\dav1d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -874,6 +874,7 @@
   <ItemGroup>
     <ClCompile Include="..\ext\dav1d\src\cdf.c" />
     <ClCompile Include="..\ext\dav1d\src\cpu.c" />
+    <ClCompile Include="..\ext\dav1d\src\ctx.c" />
     <ClCompile Include="..\ext\dav1d\src\data.c" />
     <ClCompile Include="..\ext\dav1d\src\decode.c" />
     <ClCompile Include="..\ext\dav1d\src\dequant_tables.c" />
@@ -886,6 +887,7 @@
     <ClCompile Include="..\ext\dav1d\src\mem.c" />
     <ClCompile Include="..\ext\dav1d\src\msac.c" />
     <ClCompile Include="..\ext\dav1d\src\obu.c" />
+    <ClCompile Include="..\ext\dav1d\src\pal.c" />
     <ClCompile Include="..\ext\dav1d\src\picture.c" />
     <ClCompile Include="..\ext\dav1d\src\qm.c" />
     <ClCompile Include="..\ext\dav1d\src\ref.c" />
@@ -913,18 +915,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">$(IntDir)\cpu1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">$(IntDir)\cpu1.obj</ObjectFileName>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\ext\dav1d\src\x86\msac_init.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\ext\dav1d\src\x86\refmvs_init.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</ExcludedFromBuild>
@@ -1712,6 +1702,45 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
     </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\itx16_avx512.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/dav1d/itx16_avx512_asm.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\itx16_sse.asm">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
@@ -1894,6 +1923,45 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/dav1d/loopfilter16_avx2_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/dav1d/loopfilter16_avx2_asm.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx512.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/dav1d/loopfilter16_avx512_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/dav1d/loopfilter16_avx512_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
@@ -2557,6 +2625,45 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/dav1d/msac_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/dav1d/msac_asm.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/dav1d/msac_asm.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">%(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">%(Identity)</Message>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\pal.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -DPREFIX=1 -DARCH_X86_64=0 -DARCH_X86_32=1 -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">..\bin\nasm.exe -f win64 -DARCH_X86_64=1 -DARCH_X86_32=0 -D__x86_64__ -DWIN64 -DMSVC -I ../ext/dav1d/src -I ../ext/dav1d/include -o "$(IntDir)/%(Filename)_asm.obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x86/Debug/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">../out/dbg64_asan/obj/x64_asan/Debug/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">../out/dbgfull32/obj/x86/DebugFull/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">../out/dbgfull64/obj/x64/DebugFull/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">../out/dbgfull64_asan/obj/x64_asan/DebugFull/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x86/Release/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">../out/rel64_asan/obj/x64_asan/Release/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x86/ReleaseAnalyze/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/dav1d/pal_asm.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">../out/rel64_prefast_asan/obj/x64_asan/ReleaseAnalyze/dav1d/pal_asm.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">%(Identity)</Message>

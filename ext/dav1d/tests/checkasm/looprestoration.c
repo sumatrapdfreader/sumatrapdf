@@ -54,9 +54,9 @@ static void init_tmp(pixel *buf, const ptrdiff_t stride,
 }
 
 static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
-    ALIGN_STK_64(pixel, c_src, 448 * 64 + 64,), *const c_dst = c_src + 64;
-    ALIGN_STK_64(pixel, a_src, 448 * 64 + 64,), *const a_dst = a_src + 64;
-    ALIGN_STK_64(pixel, edge_buf, 448 * 8 + 64,), *const h_edge = edge_buf + 64;
+    PIXEL_RECT(c_dst, 384, 64);
+    PIXEL_RECT(a_dst, 384, 64);
+    PIXEL_RECT(h_edge, 384, 8);
     pixel left[64][4];
     LooprestorationParams params;
     int16_t (*const filter)[8] = params.filter;
@@ -86,39 +86,48 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c, const int bpc)
             const int base_h = 1 + (rnd() & 63);
             const int bitdepth_max = (1 << bpc) - 1;
 
-            init_tmp(c_src, 448 * sizeof(pixel), 448, 64, bitdepth_max);
-            init_tmp(edge_buf, 448 * sizeof(pixel), 448, 8, bitdepth_max);
+            CLEAR_PIXEL_RECT(c_dst);
+            /* We potentially read 3 pixels to the left of the input
+             * pointer, and up to the max width, horizontally.
+             * (In the case of LR_HAVE_RIGHT we read 3 pixels past the
+             * input dimensions, but if LR_HAVE_RIGHT we have w == 256.)
+             * Therefore, initialize (384+4) x 64 pixels. */
+            init_tmp(c_dst - 4, c_dst_stride, 384 + 4, 64, bitdepth_max);
+            init_tmp(h_edge - 4, h_edge_stride, 384 + 4, 8, bitdepth_max);
             init_tmp((pixel *) left, 4 * sizeof(pixel), 4, 64, bitdepth_max);
 
             for (enum LrEdgeFlags edges = 0; edges <= 0xf; edges++) {
                 const int w = edges & LR_HAVE_RIGHT ? 256 : base_w;
                 const int h = edges & LR_HAVE_BOTTOM ? 64 : base_h;
 
-                memcpy(a_src, c_src, 448 * 64 * sizeof(pixel));
+                assert(c_dst_stride == a_dst_stride);
+                assert(c_dst_buf_h == a_dst_buf_h);
+                memcpy(a_dst_buf, c_dst_buf, a_dst_stride * a_dst_buf_h);
 
-                call_ref(c_dst, 448 * sizeof(pixel), left,
-                         h_edge, w, h, &params, edges HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst, 448 * sizeof(pixel), left,
-                         h_edge, w, h, &params, edges HIGHBD_TAIL_SUFFIX);
-                if (checkasm_check_pixel(c_dst, 448 * sizeof(pixel),
-                                         a_dst, 448 * sizeof(pixel),
-                                         w, h, "dst"))
+                assert(c_dst_stride == h_edge_stride);
+                call_ref(c_dst, c_dst_stride, left, h_edge,
+                         w, h, &params, edges HIGHBD_TAIL_SUFFIX);
+                call_new(a_dst, a_dst_stride, left, h_edge,
+                         w, h, &params, edges HIGHBD_TAIL_SUFFIX);
+                if (checkasm_check_pixel_padded_align(c_dst, c_dst_stride,
+                                                      a_dst, a_dst_stride,
+                                                      w, h, "dst", 64, 1))
                 {
                     fprintf(stderr, "size = %dx%d, edges = %04d\n",
                             w, h, to_binary(edges));
                     break;
                 }
             }
-            bench_new(alternate(c_dst, a_dst), 448 * sizeof(pixel), left,
+            bench_new(alternate(c_dst, a_dst), a_dst_stride, left,
                       h_edge, 256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }
 }
 
 static void check_sgr(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
-    ALIGN_STK_64(pixel, c_src, 448 * 64 + 64,), *const c_dst = c_src + 64;
-    ALIGN_STK_64(pixel, a_src, 448 * 64 + 64,), *const a_dst = a_src + 64;
-    ALIGN_STK_64(pixel, edge_buf, 448 * 8 + 64,), *const h_edge = edge_buf + 64;
+    PIXEL_RECT(c_dst, 384, 64);
+    PIXEL_RECT(a_dst, 384, 64);
+    PIXEL_RECT(h_edge, 384, 8);
     pixel left[64][4];
     LooprestorationParams params;
 
@@ -146,30 +155,39 @@ static void check_sgr(Dav1dLoopRestorationDSPContext *const c, const int bpc) {
             const int base_h = 1 + (rnd() & 63);
             const int bitdepth_max = (1 << bpc) - 1;
 
-            init_tmp(c_src, 448 * sizeof(pixel), 448, 64, bitdepth_max);
-            init_tmp(edge_buf, 448 * sizeof(pixel), 448, 8, bitdepth_max);
+            CLEAR_PIXEL_RECT(c_dst);
+            /* We potentially read 3 pixels to the left of the input
+             * pointer, and up to the max width, horizontally.
+             * (In the case of LR_HAVE_RIGHT we read 3 pixels past the
+             * input dimensions, but if LR_HAVE_RIGHT we have w == 256.)
+             * Therefore, initialize (384+4) x 64 pixels. */
+            init_tmp(c_dst - 4, c_dst_stride, 384 + 4, 64, bitdepth_max);
+            init_tmp(h_edge - 4, h_edge_stride, 384 + 4, 8, bitdepth_max);
             init_tmp((pixel *) left, 4 * sizeof(pixel), 4, 64, bitdepth_max);
 
             for (enum LrEdgeFlags edges = 0; edges <= 0xf; edges++) {
                 const int w = edges & LR_HAVE_RIGHT ? 256 : base_w;
                 const int h = edges & LR_HAVE_BOTTOM ? 64 : base_h;
 
-                memcpy(a_src, c_src, 448 * 64 * sizeof(pixel));
+                assert(c_dst_stride == a_dst_stride);
+                assert(c_dst_buf_h == a_dst_buf_h);
+                memcpy(a_dst_buf, c_dst_buf, a_dst_stride * a_dst_buf_h);
 
-                call_ref(c_dst, 448 * sizeof(pixel), left, h_edge,
+                assert(c_dst_stride == h_edge_stride);
+                call_ref(c_dst, c_dst_stride, left, h_edge,
                          w, h, &params, edges HIGHBD_TAIL_SUFFIX);
-                call_new(a_dst, 448 * sizeof(pixel), left, h_edge,
+                call_new(a_dst, a_dst_stride, left, h_edge,
                          w, h, &params, edges HIGHBD_TAIL_SUFFIX);
-                if (checkasm_check_pixel(c_dst, 448 * sizeof(pixel),
-                                         a_dst, 448 * sizeof(pixel),
-                                         w, h, "dst"))
+                if (checkasm_check_pixel_padded_align(c_dst, c_dst_stride,
+                                                      a_dst, a_dst_stride,
+                                                      w, h, "dst", 64, 1))
                 {
                     fprintf(stderr, "size = %dx%d, edges = %04d\n",
                             w, h, to_binary(edges));
                     break;
                 }
             }
-            bench_new(alternate(c_dst, a_dst), 448 * sizeof(pixel), left,
+            bench_new(alternate(c_dst, a_dst), a_dst_stride, left,
                       h_edge, 256, 64, &params, 0xf HIGHBD_TAIL_SUFFIX);
         }
     }

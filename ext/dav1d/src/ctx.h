@@ -31,61 +31,59 @@
 #include <stdint.h>
 
 #include "common/attributes.h"
+#include "common/intops.h"
 
 union alias64 { uint64_t u64; uint8_t u8[8]; } ATTR_ALIAS;
 union alias32 { uint32_t u32; uint8_t u8[4]; } ATTR_ALIAS;
 union alias16 { uint16_t u16; uint8_t u8[2]; } ATTR_ALIAS;
 union alias8 { uint8_t u8; } ATTR_ALIAS;
 
-#define set_ctx_rep4(type, var, off, val) do { \
-        const uint64_t const_val = val; \
-        ((union alias64 *) &var[off +  0])->u64 = const_val; \
-        ((union alias64 *) &var[off +  8])->u64 = const_val; \
-        ((union alias64 *) &var[off + 16])->u64 = const_val; \
-        ((union alias64 *) &var[off + 24])->u64 = const_val; \
+typedef void (*dav1d_memset_pow2_fn)(void *ptr, int value);
+EXTERN const dav1d_memset_pow2_fn dav1d_memset_pow2[6];
+
+static inline void dav1d_memset_likely_pow2(void *const ptr, const int value, const int n) {
+    assert(n >= 1 && n <= 32);
+    if ((n&(n-1)) == 0) {
+        dav1d_memset_pow2[ulog2(n)](ptr, value);
+    } else {
+        memset(ptr, value, n);
+    }
+}
+
+// For smaller sizes use multiplication to broadcast bytes. memset misbehaves on the smaller sizes.
+// For the larger sizes, we want to use memset to get access to vector operations.
+#define set_ctx1(var, off, val) \
+    ((union alias8 *) &(var)[off])->u8 = (val) * 0x01
+#define set_ctx2(var, off, val) \
+    ((union alias16 *) &(var)[off])->u16 = (val) * 0x0101
+#define set_ctx4(var, off, val) \
+    ((union alias32 *) &(var)[off])->u32 = (val) * 0x01010101U
+#define set_ctx8(var, off, val) \
+    ((union alias64 *) &(var)[off])->u64 = (val) * 0x0101010101010101ULL
+#define set_ctx16(var, off, val) do { \
+        memset(&(var)[off], val, 16); \
     } while (0)
-#define set_ctx_rep2(type, var, off, val) do { \
-        const uint64_t const_val = val; \
-        ((union alias64 *) &var[off + 0])->u64 = const_val; \
-        ((union alias64 *) &var[off + 8])->u64 = const_val; \
+#define set_ctx32(var, off, val) do { \
+        memset(&(var)[off], val, 32); \
     } while (0)
-#define set_ctx_rep1(typesz, var, off, val) \
-    ((union alias##typesz *) &var[off])->u##typesz = val
-#define case_set(var, dir, diridx, off) \
+#define case_set(var) \
     switch (var) { \
-    case  1: set_ctx( 8, dir, diridx, off, 0x01, set_ctx_rep1); break; \
-    case  2: set_ctx(16, dir, diridx, off, 0x0101, set_ctx_rep1); break; \
-    case  4: set_ctx(32, dir, diridx, off, 0x01010101U, set_ctx_rep1); break; \
-    case  8: set_ctx(64, dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep1); break; \
-    case 16: set_ctx(  , dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep2); break; \
-    case 32: set_ctx(  , dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep4); break; \
+    case 0: set_ctx(set_ctx1); break; \
+    case 1: set_ctx(set_ctx2); break; \
+    case 2: set_ctx(set_ctx4); break; \
+    case 3: set_ctx(set_ctx8); break; \
+    case 4: set_ctx(set_ctx16); break; \
+    case 5: set_ctx(set_ctx32); break; \
+    default: assert(0); \
     }
-#define case_set_upto16(var, dir, diridx, off) \
+#define case_set_upto16(var) \
     switch (var) { \
-    case  1: set_ctx( 8, dir, diridx, off, 0x01, set_ctx_rep1); break; \
-    case  2: set_ctx(16, dir, diridx, off, 0x0101, set_ctx_rep1); break; \
-    case  4: set_ctx(32, dir, diridx, off, 0x01010101U, set_ctx_rep1); break; \
-    case  8: set_ctx(64, dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep1); break; \
-    case 16: set_ctx(  , dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep2); break; \
-    }
-#define case_set_upto32_with_default(var, dir, diridx, off) \
-    switch (var) { \
-    case  1: set_ctx( 8, dir, diridx, off, 0x01, set_ctx_rep1); break; \
-    case  2: set_ctx(16, dir, diridx, off, 0x0101, set_ctx_rep1); break; \
-    case  4: set_ctx(32, dir, diridx, off, 0x01010101U, set_ctx_rep1); break; \
-    case  8: set_ctx(64, dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep1); break; \
-    case 16: set_ctx(  , dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep2); break; \
-    case 32: set_ctx(  , dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep4); break; \
-    default: default_memset(dir, diridx, off, var); break; \
-    }
-#define case_set_upto16_with_default(var, dir, diridx, off) \
-    switch (var) { \
-    case  1: set_ctx( 8, dir, diridx, off, 0x01, set_ctx_rep1); break; \
-    case  2: set_ctx(16, dir, diridx, off, 0x0101, set_ctx_rep1); break; \
-    case  4: set_ctx(32, dir, diridx, off, 0x01010101U, set_ctx_rep1); break; \
-    case  8: set_ctx(64, dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep1); break; \
-    case 16: set_ctx(  , dir, diridx, off, 0x0101010101010101ULL, set_ctx_rep2); break; \
-    default: default_memset(dir, diridx, off, var); break; \
+    case 0: set_ctx(set_ctx1); break; \
+    case 1: set_ctx(set_ctx2); break; \
+    case 2: set_ctx(set_ctx4); break; \
+    case 3: set_ctx(set_ctx8); break; \
+    case 4: set_ctx(set_ctx16); break; \
+    default: assert(0); \
     }
 
 #endif /* DAV1D_SRC_CTX_H */

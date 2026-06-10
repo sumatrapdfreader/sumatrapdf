@@ -279,60 +279,67 @@ L(renorm):
         sub             r4,  r4,  r3           // rng = u - v
         clz             r5,  r4                // clz(rng)
         eor             r5,  r5,  #16          // d = clz(rng) ^ 16
-        mvn             r7,  r7                // ~dif
-        add             r7,  r7,  r3, lsl #16  // ~dif + (v << 16)
+        sub             r7,  r7,  r3, lsl #16  // dif - (v << 16)
 L(renorm2):
         lsl             r4,  r4,  r5           // rng << d
         subs            r6,  r6,  r5           // cnt -= d
-        lsl             r7,  r7,  r5           // (~dif + (v << 16)) << d
+        lsl             r7,  r7,  r5           // (dif - (v << 16)) << d
         str             r4,  [r0, #RNG]
-        mvn             r7,  r7                // ~dif
-        bhs             9f
+        bhs             4f
 
         // refill
         ldr             r3,  [r0, #BUF_POS]    // BUF_POS
         ldr             r4,  [r0, #BUF_END]    // BUF_END
         add             r5,  r3,  #4
-        cmp             r5,  r4
-        bgt             2f
+        subs            r5,  r5,  r4
+        bhi             6f
 
-        ldr             r3,  [r3]              // next_bits
-        add             r8,  r6,  #23          // shift_bits = cnt + 23
-        add             r6,  r6,  #16          // cnt += 16
-        rev             r3,  r3                // next_bits = bswap(next_bits)
-        sub             r5,  r5,  r8, lsr #3   // buf_pos -= shift_bits >> 3
-        and             r8,  r8,  #24          // shift_bits &= 24
-        lsr             r3,  r3,  r8           // next_bits >>= shift_bits
-        sub             r8,  r8,  r6           // shift_bits -= 16 + cnt
-        str             r5,  [r0, #BUF_POS]
-        lsl             r3,  r3,  r8           // next_bits <<= shift_bits
-        rsb             r6,  r8,  #16          // cnt = cnt + 32 - shift_bits
-        eor             r7,  r7,  r3           // dif ^= next_bits
-        b               9f
+        ldr             r8,  [r3]              // next_bits
+        rsb             r5,  r6,  #16
+        add             r4,  r6,  #16          // shift_bits = cnt + 16
+        mvn             r8,  r8
+        lsr             r5,  r5,  #3           // num_bytes_read
+        rev             r8,  r8                // next_bits = bswap(next_bits)
+        lsr             r8,  r8,  r4           // next_bits >>= shift_bits
 
-2:      // refill_eob
-        rsb             r5,  r6,  #8           // c = 8 - cnt
-3:
-        cmp             r3,  r4
-        bge             4f
-        ldrb            r8,  [r3], #1
-        lsl             r8,  r8,  r5
-        eor             r7,  r7,  r8
-        subs            r5,  r5,  #8
-        bge             3b
-
-4:      // refill_eob_end
+2:      // refill_end
+        add             r3,  r3,  r5
+        add             r6,  r6,  r5, lsl #3   // cnt += num_bits_read
         str             r3,  [r0, #BUF_POS]
-        rsb             r6,  r5,  #8           // cnt = 8 - c
 
-9:
+3:      // refill_end2
+        orr             r7,  r7,  r8           // dif |= next_bits
+
+4:      // end
         str             r6,  [r0, #CNT]
         str             r7,  [r0, #DIF]
-
         mov             r0,  lr
         add             sp,  sp,  #48
-
         pop             {r4-r10,pc}
+
+5:      // pad_with_ones
+        add             r8,  r6,  #-240
+        lsr             r8,  r8,  r8
+        b               3b
+
+6:      // refill_eob
+        cmp             r3,  r4
+        bhs             5b
+
+        ldr             r8,  [r4, #-4]
+        lsl             r5,  r5,  #3
+        lsr             r8,  r8,  r5
+        add             r5,  r6,  #16
+        mvn             r8,  r8
+        sub             r4,  r4,  r3           // num_bytes_left
+        rev             r8,  r8
+        lsr             r8,  r8,  r5
+        rsb             r5,  r6,  #16
+        lsr             r5,  r5,  #3
+        cmp             r5,  r4
+        it              hs
+        movhs           r5,  r4
+        b               2b
 endfunc
 
 function msac_decode_symbol_adapt8_neon, export=1
@@ -414,53 +421,38 @@ function msac_decode_hi_tok_neon, export=1
         sub             r4,  r4,  r3           // rng = u - v
         clz             r5,  r4                // clz(rng)
         eor             r5,  r5,  #16          // d = clz(rng) ^ 16
-        mvn             r7,  r7                // ~dif
-        add             r7,  r7,  r3, lsl #16  // ~dif + (v << 16)
+        sub             r7,  r7,  r3, lsl #16  // dif - (v << 16)
         lsl             r4,  r4,  r5           // rng << d
         subs            r6,  r6,  r5           // cnt -= d
-        lsl             r7,  r7,  r5           // (~dif + (v << 16)) << d
+        lsl             r7,  r7,  r5           // (dif - (v << 16)) << d
         str             r4,  [r0, #RNG]
         vdup.16         d1,  r4
-        mvn             r7,  r7                // ~dif
-        bhs             9f
+        bhs             5f
 
         // refill
         ldr             r3,  [r0, #BUF_POS]    // BUF_POS
         ldr             r4,  [r0, #BUF_END]    // BUF_END
         add             r5,  r3,  #4
-        cmp             r5,  r4
-        bgt             2f
+        subs            r5,  r5,  r4
+        bhi             7f
 
-        ldr             r3,  [r3]              // next_bits
-        add             r8,  r6,  #23          // shift_bits = cnt + 23
-        add             r6,  r6,  #16          // cnt += 16
-        rev             r3,  r3                // next_bits = bswap(next_bits)
-        sub             r5,  r5,  r8, lsr #3   // buf_pos -= shift_bits >> 3
-        and             r8,  r8,  #24          // shift_bits &= 24
-        lsr             r3,  r3,  r8           // next_bits >>= shift_bits
-        sub             r8,  r8,  r6           // shift_bits -= 16 + cnt
-        str             r5,  [r0, #BUF_POS]
-        lsl             r3,  r3,  r8           // next_bits <<= shift_bits
-        rsb             r6,  r8,  #16          // cnt = cnt + 32 - shift_bits
-        eor             r7,  r7,  r3           // dif ^= next_bits
-        b               9f
+        ldr             r8,  [r3]              // next_bits
+        rsb             r5,  r6,  #16
+        add             r4,  r6,  #16          // shift_bits = cnt + 16
+        mvn             r8,  r8
+        lsr             r5,  r5,  #3           // num_bytes_read
+        rev             r8,  r8                // next_bits = bswap(next_bits)
+        lsr             r8,  r8,  r4           // next_bits >>= shift_bits
 
-2:      // refill_eob
-        rsb             r5,  r6,  #8           // c = 40 - cnt
-3:
-        cmp             r3,  r4
-        bge             4f
-        ldrb            r8,  [r3], #1
-        lsl             r8,  r8,  r5
-        eor             r7,  r7,  r8
-        subs            r5,  r5,  #8
-        bge             3b
-
-4:      // refill_eob_end
+3:      // refill_end
+        add             r3,  r3,  r5
+        add             r6,  r6,  r5, lsl #3   // cnt += num_bits_read
         str             r3,  [r0, #BUF_POS]
-        rsb             r6,  r5,  #8           // cnt = 40 - c
 
-9:
+4:      // refill_end2
+        orr             r7,  r7,  r8           // dif |= next_bits
+
+5:      // end
         lsl             lr,  lr,  #1
         sub             lr,  lr,  #5
         lsr             r12, r7,  #16
@@ -473,6 +465,30 @@ function msac_decode_hi_tok_neon, export=1
         str             r7,  [r0, #DIF]
         lsr             r0,  r2,  #1
         pop             {r4-r10,pc}
+
+6:      // pad_with_ones
+        add             r8,  r6,  #-240
+        lsr             r8,  r8,  r8
+        b               4b
+
+7:      // refill_eob
+        cmp             r3,  r4
+        bhs             6b
+
+        ldr             r8,  [r4, #-4]
+        lsl             r5,  r5,  #3
+        lsr             r8,  r8,  r5
+        add             r5,  r6,  #16
+        mvn             r8,  r8
+        sub             r4,  r4,  r3           // num_bytes_left
+        rev             r8,  r8
+        lsr             r8,  r8,  r5
+        rsb             r5,  r6,  #16
+        lsr             r5,  r5,  #3
+        cmp             r5,  r4
+        it              hs
+        movhs           r5,  r4
+        b               3b
 endfunc
 
 function msac_decode_bool_equi_neon, export=1
@@ -493,7 +509,6 @@ function msac_decode_bool_equi_neon, export=1
         movhs           r7,  r8                // if (ret) dif = dif - vw;
 
         clz             r5,  r4                // clz(rng)
-        mvn             r7,  r7                // ~dif
         eor             r5,  r5,  #16          // d = clz(rng) ^ 16
         mov             lr,  r2
         b               L(renorm2)
@@ -519,7 +534,6 @@ function msac_decode_bool_neon, export=1
         movhs           r7,  r8                // if (ret) dif = dif - vw;
 
         clz             r5,  r4                // clz(rng)
-        mvn             r7,  r7                // ~dif
         eor             r5,  r5,  #16          // d = clz(rng) ^ 16
         mov             lr,  r2
         b               L(renorm2)
@@ -549,7 +563,6 @@ function msac_decode_bool_adapt_neon, export=1
 
         cmp             r10, #0
         clz             r5,  r4                // clz(rng)
-        mvn             r7,  r7                // ~dif
         eor             r5,  r5,  #16          // d = clz(rng) ^ 16
         mov             lr,  r2
 

@@ -30,44 +30,30 @@
 #define FILTER_OUT_STRIDE 384
 
 .macro sgr_funcs bpc
-// void dav1d_sgr_finish_filter1_Xbpc_neon(int16_t *tmp,
-//                                         const pixel *src, const ptrdiff_t stride,
-//                                         const int32_t *a, const int16_t *b,
-//                                         const int w, const int h);
-function sgr_finish_filter1_\bpc\()bpc_neon, export=1
+// void dav1d_sgr_finish_filter_row1_Xbpc_neon(int16_t *tmp,
+//                                             const pixel *src,
+//                                             const int32_t **a, const int16_t **b,
+//                                             const int w);
+function sgr_finish_filter_row1_\bpc\()bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
-        ldrd            r4,  r5,  [sp, #100]
-        ldr             r6,  [sp, #108]
-        sub             r7,  r3,  #(4*SUM_STRIDE)
-        add             r8,  r3,  #(4*SUM_STRIDE)
-        sub             r9,  r4,  #(2*SUM_STRIDE)
-        add             r10, r4,  #(2*SUM_STRIDE)
-        mov             r11, #SUM_STRIDE
-        mov             r12, #FILTER_OUT_STRIDE
-        add             lr,  r5,  #3
-        bic             lr,  lr,  #3 // Aligned width
-.if \bpc == 8
-        sub             r2,  r2,  lr
-.else
-        sub             r2,  r2,  lr, lsl #1
-.endif
-        sub             r12, r12, lr
-        sub             r11, r11, lr
-        sub             r11, r11, #4 // We read 4 extra elements from both a and b
-        mov             lr,  r5
+        ldr             r4,  [sp, #100]
+        ldrd            r6,  r7,  [r2]
+        ldr             r2,       [r2, #8]
+        ldrd            r8,  r9,  [r3]
+        ldr             r3,       [r3, #8]
         vmov.i16        q14, #3
         vmov.i32        q15, #3
 1:
-        vld1.16         {q0},       [r9,  :128]!
-        vld1.16         {q1},       [r4,  :128]!
-        vld1.16         {q2},       [r10, :128]!
-        vld1.32         {q8,  q9},  [r7,  :128]!
-        vld1.32         {q10, q11}, [r3,  :128]!
-        vld1.32         {q12, q13}, [r8,  :128]!
+        vld1.16         {q0},       [r8,  :128]!
+        vld1.16         {q1},       [r9,  :128]!
+        vld1.16         {q2},       [r3,  :128]!
+        vld1.32         {q8,  q9},  [r6,  :128]!
+        vld1.32         {q10, q11}, [r7,  :128]!
+        vld1.32         {q12, q13}, [r2,  :128]!
 
 2:
-        subs            r5,  r5,  #4
+        subs            r4,  r4,  #4
         vext.8          d6,  d0,  d1,  #2  // -stride
         vext.8          d7,  d2,  d3,  #2  // 0
         vext.8          d8,  d4,  d5,  #2  // +stride
@@ -108,7 +94,7 @@ function sgr_finish_filter1_\bpc\()bpc_neon, export=1
         vmovl.u8        q12, d24           // src
 .endif
         vmov            d0,  d1
-        vmlal.u16       q3,  d2,  d24      // b + a * src
+        vmlsl.u16       q3,  d2,  d24      // b - a * src
         vmov            d2,  d3
         vrshrn.i32      d6,  q3,  #9
         vmov            d4,  d5
@@ -118,67 +104,42 @@ function sgr_finish_filter1_\bpc\()bpc_neon, export=1
         vmov            q8,  q9
         vmov            q10, q11
         vmov            q12, q13
-        vld1.16         {d1},  [r9,  :64]!
-        vld1.16         {d3},  [r4,  :64]!
-        vld1.16         {d5},  [r10, :64]!
-        vld1.32         {q9},  [r7,  :128]!
-        vld1.32         {q11}, [r3,  :128]!
-        vld1.32         {q13}, [r8,  :128]!
+        vld1.16         {d1},  [r8,  :64]!
+        vld1.16         {d3},  [r9,  :64]!
+        vld1.16         {d5},  [r3,  :64]!
+        vld1.32         {q9},  [r6,  :128]!
+        vld1.32         {q11}, [r7,  :128]!
+        vld1.32         {q13}, [r2,  :128]!
         b               2b
 
 3:
-        subs            r6,  r6,  #1
-        ble             0f
-        mov             r5,  lr
-        add             r0,  r0,  r12, lsl #1
-        add             r1,  r1,  r2
-        add             r3,  r3,  r11, lsl #2
-        add             r7,  r7,  r11, lsl #2
-        add             r8,  r8,  r11, lsl #2
-        add             r4,  r4,  r11, lsl #1
-        add             r9,  r9,  r11, lsl #1
-        add             r10, r10, r11, lsl #1
-        b               1b
-0:
         vpop            {q4-q7}
         pop             {r4-r11,pc}
 endfunc
 
-// void dav1d_sgr_finish_filter2_Xbpc_neon(int16_t *tmp,
-//                                         const pixel *src, const ptrdiff_t stride,
-//                                         const int32_t *a, const int16_t *b,
-//                                         const int w, const int h);
-function sgr_finish_filter2_\bpc\()bpc_neon, export=1
+// void dav1d_sgr_finish_filter2_2rows_Xbpc_neon(int16_t *tmp,
+//                                               const pixel *src, const ptrdiff_t stride,
+//                                               const int32_t **a, const int16_t **b,
+//                                               const int w, const int h);
+function sgr_finish_filter2_2rows_\bpc\()bpc_neon, export=1
         push            {r4-r11,lr}
         vpush           {q4-q7}
         ldrd            r4,  r5,  [sp, #100]
         ldr             r6,  [sp, #108]
-        add             r7,  r3,  #(4*(SUM_STRIDE))
-        sub             r3,  r3,  #(4*(SUM_STRIDE))
-        add             r8,  r4,  #(2*(SUM_STRIDE))
-        sub             r4,  r4,  #(2*(SUM_STRIDE))
-        mov             r9,  #(2*SUM_STRIDE)
-        mov             r10, #FILTER_OUT_STRIDE
-        add             r11, r5,  #7
-        bic             r11, r11, #7 // Aligned width
-.if \bpc == 8
-        sub             r2,  r2,  r11
-.else
-        sub             r2,  r2,  r11, lsl #1
-.endif
-        sub             r10, r10, r11
-        sub             r9,  r9,  r11
-        sub             r9,  r9,  #4 // We read 4 extra elements from a
-        sub             r12, r9,  #4 // We read 8 extra elements from b
+        ldrd            r8,  r9,  [r3]
+        ldrd            r10, r11, [r4]
+        mov             r7,  #2*FILTER_OUT_STRIDE
+        add             r2,  r1,  r2
+        add             r7,  r7,  r0
         mov             lr,  r5
 
 1:
-        vld1.16         {q0,  q1},  [r4, :128]!
-        vld1.16         {q2,  q3},  [r8, :128]!
-        vld1.32         {q8,  q9},  [r3, :128]!
-        vld1.32         {q11, q12}, [r7, :128]!
-        vld1.32         {q10},      [r3, :128]!
-        vld1.32         {q13},      [r7, :128]!
+        vld1.16         {q0,  q1},  [r10, :128]!
+        vld1.16         {q2,  q3},  [r11, :128]!
+        vld1.32         {q8,  q9},  [r8,  :128]!
+        vld1.32         {q11, q12}, [r9,  :128]!
+        vld1.32         {q10},      [r8,  :128]!
+        vld1.32         {q13},      [r9,  :128]!
 
 2:
         vmov.i16        q14, #5
@@ -229,8 +190,8 @@ function sgr_finish_filter2_\bpc\()bpc_neon, export=1
 .if \bpc == 8
         vmovl.u8        q2,  d4
 .endif
-        vmlal.u16       q4,  d0,  d4       // b + a * src
-        vmlal.u16       q5,  d1,  d5       // b + a * src
+        vmlsl.u16       q4,  d0,  d4       // b - a * src
+        vmlsl.u16       q5,  d1,  d5       // b - a * src
         vmov            q0,  q1
         vrshrn.i32      d8,  q4,  #9
         vrshrn.i32      d9,  q5,  #9
@@ -240,26 +201,24 @@ function sgr_finish_filter2_\bpc\()bpc_neon, export=1
         ble             3f
         vmov            q8,  q10
         vmov            q11, q13
-        vld1.16         {q1},       [r4, :128]!
-        vld1.16         {q3},       [r8, :128]!
-        vld1.32         {q9,  q10}, [r3, :128]!
-        vld1.32         {q12, q13}, [r7, :128]!
+        vld1.16         {q1},       [r10, :128]!
+        vld1.16         {q3},       [r11, :128]!
+        vld1.32         {q9,  q10}, [r8,  :128]!
+        vld1.32         {q12, q13}, [r9,  :128]!
         b               2b
 
 3:
         subs            r6,  r6,  #1
         ble             0f
         mov             r5,  lr
-        add             r0,  r0,  r10, lsl #1
-        add             r1,  r1,  r2
-        add             r3,  r3,  r9,  lsl #2
-        add             r7,  r7,  r9,  lsl #2
-        add             r4,  r4,  r12, lsl #1
-        add             r8,  r8,  r12, lsl #1
+        ldrd            r8,  r9,  [r3]
+        ldrd            r10, r11, [r4]
+        mov             r0,  r7
+        mov             r1,  r2
 
-        vld1.32         {q8, q9}, [r3, :128]!
-        vld1.16         {q0, q1}, [r4, :128]!
-        vld1.32         {q10},    [r3, :128]!
+        vld1.32         {q8, q9}, [r9,  :128]!
+        vld1.16         {q0, q1}, [r11, :128]!
+        vld1.32         {q10},    [r9,  :128]!
 
         vmov.i16        q12, #5
         vmov.i16        q13, #6
@@ -291,8 +250,8 @@ function sgr_finish_filter2_\bpc\()bpc_neon, export=1
         vmul.i32        q5,  q5,  q15      // * 6
         vmla.i32        q5,  q9,  q14      // * 5 -> b
 
-        vmlal.u16       q4,  d4,  d22      // b + a * src
-        vmlal.u16       q5,  d5,  d23
+        vmlsl.u16       q4,  d4,  d22      // b - a * src
+        vmlsl.u16       q5,  d5,  d23
         vmov            q0,  q1
         vrshrn.i32      d8,  q4,  #8
         vrshrn.i32      d9,  q5,  #8
@@ -300,301 +259,152 @@ function sgr_finish_filter2_\bpc\()bpc_neon, export=1
         vst1.16         {q4}, [r0, :128]!
 
         ble             5f
-        vld1.16         {q1},      [r4, :128]!
-        vld1.32         {q9, q10}, [r3, :128]!
+        vld1.16         {q1},      [r11, :128]!
+        vld1.32         {q9, q10}, [r9,  :128]!
         b               4b
 
 5:
-        subs            r6,  r6,  #1
-        ble             0f
-        mov             r5,  lr
-        sub             r3,  r3,  r11, lsl #2 // Rewind r3/r4 to where they started
-        sub             r4,  r4,  r11, lsl #1
-        add             r0,  r0,  r10, lsl #1
-        add             r1,  r1,  r2
-        sub             r3,  r3,  #16
-        sub             r4,  r4,  #16
-        b               1b
 0:
         vpop            {q4-q7}
         pop             {r4-r11,pc}
 endfunc
 
-// void dav1d_sgr_weighted1_Xbpc_neon(pixel *dst, const ptrdiff_t dst_stride,
-//                                    const pixel *src, const ptrdiff_t src_stride,
-//                                    const int16_t *t1, const int w, const int h,
-//                                    const int wt, const int bitdepth_max);
-function sgr_weighted1_\bpc\()bpc_neon, export=1
-        push            {r4-r9,lr}
-        ldrd            r4,  r5,  [sp, #28]
-        ldrd            r6,  r7,  [sp, #36]
+// void dav1d_sgr_weighted_row1_Xbpc_neon(pixel *dst,
+//                                        const int16_t *t1, const int w,
+//                                        const int w1, const int bitdepth_max);
+function sgr_weighted_row1_\bpc\()bpc_neon, export=1
+        push            {lr}
 .if \bpc == 16
-        ldr             r8,  [sp, #44]
+        ldr             lr,  [sp, #4]
 .endif
-        vdup.16         d31, r7
-        cmp             r6,  #2
+        vdup.16         d31, r3
 .if \bpc == 16
-        vdup.16         q14, r8
+        vmov.i16        q13, #0
+        vdup.16         q14, lr
 .endif
-        add             r9,  r0,  r1
-        add             r12, r2,  r3
-        add             lr,  r4,  #2*FILTER_OUT_STRIDE
-        mov             r7,  #(4*FILTER_OUT_STRIDE)
-        lsl             r1,  r1,  #1
-        lsl             r3,  r3,  #1
-        add             r8,  r5,  #7
-        bic             r8,  r8,  #7 // Aligned width
-.if \bpc == 8
-        sub             r1,  r1,  r8
-        sub             r3,  r3,  r8
-.else
-        sub             r1,  r1,  r8, lsl #1
-        sub             r3,  r3,  r8, lsl #1
-.endif
-        sub             r7,  r7,  r8, lsl #1
-        mov             r8,  r5
-        blt             2f
+
 1:
 .if \bpc == 8
-        vld1.8          {d0},  [r2,  :64]!
-        vld1.8          {d16}, [r12, :64]!
+        vld1.8          {d0}, [r0, :64]
 .else
-        vld1.16         {q0},  [r2,  :128]!
-        vld1.16         {q8},  [r12, :128]!
+        vld1.16         {q0}, [r0, :128]
 .endif
-        vld1.16         {q1},  [r4,  :128]!
-        vld1.16         {q9},  [lr,  :128]!
-        subs            r5,  r5,  #8
-.if \bpc == 8
-        vshll.u8        q0,  d0,  #4     // u
-        vshll.u8        q8,  d16, #4     // u
-.else
-        vshl.i16        q0,  q0,  #4     // u
-        vshl.i16        q8,  q8,  #4     // u
-.endif
-        vsub.i16        q1,  q1,  q0     // t1 - u
-        vsub.i16        q9,  q9,  q8     // t1 - u
-        vshll.u16       q2,  d0,  #7     // u << 7
-        vshll.u16       q3,  d1,  #7     // u << 7
-        vshll.u16       q10, d16, #7     // u << 7
-        vshll.u16       q11, d17, #7     // u << 7
-        vmlal.s16       q2,  d2,  d31    // v
-        vmlal.s16       q3,  d3,  d31    // v
-        vmlal.s16       q10, d18, d31    // v
-        vmlal.s16       q11, d19, d31    // v
-.if \bpc == 8
+        vld1.16         {q1}, [r1, :128]!
+        subs            r2,  r2,  #8
+        vmull.s16       q2,  d2,  d31    // v
+        vmull.s16       q3,  d3,  d31    // v
         vrshrn.i32      d4,  q2,  #11
         vrshrn.i32      d5,  q3,  #11
-        vrshrn.i32      d20, q10, #11
-        vrshrn.i32      d21, q11, #11
-        vqmovun.s16     d4,  q2
-        vqmovun.s16     d20, q10
-        vst1.8          {d4},  [r0, :64]!
-        vst1.8          {d20}, [r9, :64]!
-.else
-        vqrshrun.s32    d4,  q2,  #11
-        vqrshrun.s32    d5,  q3,  #11
-        vqrshrun.s32    d20, q10, #11
-        vqrshrun.s32    d21, q11, #11
-        vmin.u16        q2,  q2,  q14
-        vmin.u16        q10, q10, q14
-        vst1.16         {q2},  [r0, :128]!
-        vst1.16         {q10}, [r9, :128]!
-.endif
-        bgt             1b
-
-        sub             r6,  r6,  #2
-        cmp             r6,  #1
-        blt             0f
-        mov             r5,  r8
-        add             r0,  r0,  r1
-        add             r9,  r9,  r1
-        add             r2,  r2,  r3
-        add             r12, r12, r3
-        add             r4,  r4,  r7
-        add             lr,  lr,  r7
-        beq             2f
-        b               1b
-
-2:
 .if \bpc == 8
-        vld1.8          {d0}, [r2, :64]!
-.else
-        vld1.16         {q0}, [r2, :128]!
-.endif
-        vld1.16         {q1}, [r4, :128]!
-        subs            r5,  r5,  #8
-.if \bpc == 8
-        vshll.u8        q0,  d0,  #4     // u
-.else
-        vshl.i16        q0,  q0,  #4     // u
-.endif
-        vsub.i16        q1,  q1,  q0     // t1 - u
-        vshll.u16       q2,  d0,  #7     // u << 7
-        vshll.u16       q3,  d1,  #7     // u << 7
-        vmlal.s16       q2,  d2,  d31    // v
-        vmlal.s16       q3,  d3,  d31    // v
-.if \bpc == 8
-        vrshrn.i32      d4,  q2,  #11
-        vrshrn.i32      d5,  q3,  #11
+        vaddw.u8        q2,  q2,  d0
         vqmovun.s16     d2,  q2
         vst1.8          {d2}, [r0, :64]!
 .else
-        vqrshrun.s32    d4,  q2,  #11
-        vqrshrun.s32    d5,  q3,  #11
+        vadd.i16        q2,  q2,  q0
+        vmax.s16        q2,  q2,  q13
         vmin.u16        q2,  q2,  q14
         vst1.16         {q2}, [r0, :128]!
 .endif
-        bgt             2b
+        bgt             1b
 0:
-        pop             {r4-r9,pc}
+        pop             {pc}
 endfunc
 
 // void dav1d_sgr_weighted2_Xbpc_neon(pixel *dst, const ptrdiff_t stride,
-//                                    const pixel *src, const ptrdiff_t src_stride,
 //                                    const int16_t *t1, const int16_t *t2,
 //                                    const int w, const int h,
 //                                    const int16_t wt[2], const int bitdepth_max);
 function sgr_weighted2_\bpc\()bpc_neon, export=1
-        push            {r4-r11,lr}
-        ldrd            r4,  r5,  [sp, #36]
-        ldrd            r6,  r7,  [sp, #44]
+        push            {r4-r8,lr}
+        ldrd            r4,  r5,  [sp, #24]
 .if \bpc == 8
-        ldr             r8,  [sp, #52]
+        ldr             r6,  [sp, #32]
 .else
-        ldrd            r8,  r9,  [sp, #52]
+        ldrd            r6,  r7,  [sp, #32]
 .endif
-        cmp             r7,  #2
-        add             r10, r0,  r1
-        add             r11, r2,  r3
-        add             r12, r4,  #2*FILTER_OUT_STRIDE
-        add             lr,  r5,  #2*FILTER_OUT_STRIDE
-        vld2.16         {d30[], d31[]}, [r8] // wt[0], wt[1]
+        cmp             r5,  #2
+        add             r8,  r0,  r1
+        add             r12, r2,  #2*FILTER_OUT_STRIDE
+        add             lr,  r3,  #2*FILTER_OUT_STRIDE
+        vld2.16         {d30[], d31[]}, [r6] // wt[0], wt[1]
 .if \bpc == 16
-        vdup.16         q14, r9
+        vdup.16         q14, r7
 .endif
-        mov             r8,  #4*FILTER_OUT_STRIDE
-        lsl             r1,  r1,  #1
-        lsl             r3,  r3,  #1
-        add             r9,  r6,  #7
-        bic             r9,  r9,  #7 // Aligned width
-.if \bpc == 8
-        sub             r1,  r1,  r9
-        sub             r3,  r3,  r9
-.else
-        sub             r1,  r1,  r9, lsl #1
-        sub             r3,  r3,  r9, lsl #1
-.endif
-        sub             r8,  r8,  r9, lsl #1
-        mov             r9,  r6
         blt             2f
 1:
 .if \bpc == 8
-        vld1.8          {d0},  [r2,  :64]!
-        vld1.8          {d16}, [r11, :64]!
+        vld1.8          {d0},  [r0,  :64]
+        vld1.8          {d16}, [r8,  :64]
 .else
-        vld1.16         {q0},  [r2,  :128]!
-        vld1.16         {q8},  [r11, :128]!
+        vld1.16         {q0},  [r0,  :128]
+        vld1.16         {q8},  [r8,  :128]
 .endif
-        vld1.16         {q1},  [r4,  :128]!
+        vld1.16         {q1},  [r2,  :128]!
         vld1.16         {q9},  [r12, :128]!
-        vld1.16         {q2},  [r5,  :128]!
+        vld1.16         {q2},  [r3,  :128]!
         vld1.16         {q10}, [lr,  :128]!
-        subs            r6,  r6,  #8
-.if \bpc == 8
-        vshll.u8        q0,  d0,  #4     // u
-        vshll.u8        q8,  d16, #4     // u
-.else
-        vshl.i16        q0,  q0,  #4     // u
-        vshl.i16        q8,  q8,  #4     // u
-.endif
-        vsub.i16        q1,  q1,  q0     // t1 - u
-        vsub.i16        q2,  q2,  q0     // t2 - u
-        vsub.i16        q9,  q9,  q8     // t1 - u
-        vsub.i16        q10, q10, q8     // t2 - u
-        vshll.u16       q3,  d0,  #7     // u << 7
-        vshll.u16       q0,  d1,  #7     // u << 7
-        vshll.u16       q11, d16, #7     // u << 7
-        vshll.u16       q8,  d17, #7     // u << 7
-        vmlal.s16       q3,  d2,  d30    // wt[0] * (t1 - u)
-        vmlal.s16       q3,  d4,  d31    // wt[1] * (t2 - u)
-        vmlal.s16       q0,  d3,  d30    // wt[0] * (t1 - u)
-        vmlal.s16       q0,  d5,  d31    // wt[1] * (t2 - u)
-        vmlal.s16       q11, d18, d30    // wt[0] * (t1 - u)
-        vmlal.s16       q11, d20, d31    // wt[1] * (t2 - u)
-        vmlal.s16       q8,  d19, d30    // wt[0] * (t1 - u)
-        vmlal.s16       q8,  d21, d31    // wt[1] * (t2 - u)
-.if \bpc == 8
+        subs            r4,  r4,  #8
+        vmull.s16       q3,  d2,  d30    // wt[0] * t1
+        vmlal.s16       q3,  d4,  d31    // wt[1] * t2
+        vmull.s16       q12, d3,  d30    // wt[0] * t1
+        vmlal.s16       q12, d5,  d31    // wt[1] * t2
+        vmull.s16       q11, d18, d30    // wt[0] * t1
+        vmlal.s16       q11, d20, d31    // wt[1] * t2
+        vmull.s16       q13, d19, d30    // wt[0] * t1
+        vmlal.s16       q13, d21, d31    // wt[1] * t2
         vrshrn.i32      d6,  q3,  #11
-        vrshrn.i32      d7,  q0,  #11
+        vrshrn.i32      d7,  q12, #11
         vrshrn.i32      d22, q11, #11
-        vrshrn.i32      d23, q8,  #11
+        vrshrn.i32      d23, q13, #11
+.if \bpc == 8
+        vaddw.u8        q3,  q3,  d0
+        vaddw.u8        q11, q11, d16
         vqmovun.s16     d6,  q3
         vqmovun.s16     d22, q11
         vst1.8          {d6},  [r0,  :64]!
-        vst1.8          {d22}, [r10, :64]!
+        vst1.8          {d22}, [r8,  :64]!
 .else
-        vqrshrun.s32    d6,  q3,  #11
-        vqrshrun.s32    d7,  q0,  #11
-        vqrshrun.s32    d22, q11, #11
-        vqrshrun.s32    d23, q8,  #11
+        vmov.i16        q13, #0
+        vadd.i16        q3,  q3,  q0
+        vadd.i16        q11, q11, q8
+        vmax.s16        q3,  q3,  q13
+        vmax.s16        q11, q11, q13
         vmin.u16        q3,  q3,  q14
         vmin.u16        q11, q11, q14
         vst1.16         {q3},  [r0,  :128]!
-        vst1.16         {q11}, [r10, :128]!
+        vst1.16         {q11}, [r8,  :128]!
 .endif
         bgt             1b
-
-        subs            r7,  r7,  #2
-        cmp             r7,  #1
-        blt             0f
-        mov             r6,  r9
-        add             r0,  r0,  r1
-        add             r10, r10, r1
-        add             r2,  r2,  r3
-        add             r11, r11, r3
-        add             r4,  r4,  r8
-        add             r12, r12, r8
-        add             r5,  r5,  r8
-        add             lr,  lr,  r8
-        beq             2f
-        b               1b
+        b               0f
 
 2:
 .if \bpc == 8
-        vld1.8          {d0}, [r2, :64]!
+        vld1.8          {d0}, [r0, :64]
 .else
-        vld1.16         {q0}, [r2, :128]!
+        vld1.16         {q0}, [r0, :128]
 .endif
-        vld1.16         {q1}, [r4, :128]!
-        vld1.16         {q2}, [r5, :128]!
-        subs            r6,  r6,  #8
-.if \bpc == 8
-        vshll.u8        q0,  d0,  #4     // u
-.else
-        vshl.i16        q0,  q0,  #4     // u
-.endif
-        vsub.i16        q1,  q1,  q0     // t1 - u
-        vsub.i16        q2,  q2,  q0     // t2 - u
-        vshll.u16       q3,  d0,  #7     // u << 7
-        vshll.u16       q0,  d1,  #7     // u << 7
-        vmlal.s16       q3,  d2,  d30    // wt[0] * (t1 - u)
-        vmlal.s16       q3,  d4,  d31    // wt[1] * (t2 - u)
-        vmlal.s16       q0,  d3,  d30    // wt[0] * (t1 - u)
-        vmlal.s16       q0,  d5,  d31    // wt[1] * (t2 - u)
-.if \bpc == 8
+        vld1.16         {q1}, [r2, :128]!
+        vld1.16         {q2}, [r3, :128]!
+        subs            r4,  r4,  #8
+        vmull.s16       q3,  d2,  d30    // wt[0] * t1
+        vmlal.s16       q3,  d4,  d31    // wt[1] * t2
+        vmull.s16       q11, d3,  d30    // wt[0] * t1
+        vmlal.s16       q11, d5,  d31    // wt[1] * t2
         vrshrn.i32      d6,  q3,  #11
-        vrshrn.i32      d7,  q0,  #11
+        vrshrn.i32      d7,  q11, #11
+.if \bpc == 8
+        vaddw.u8        q3,  q3,  d0
         vqmovun.s16     d6,  q3
         vst1.8          {d6}, [r0, :64]!
 .else
-        vqrshrun.s32    d6,  q3,  #11
-        vqrshrun.s32    d7,  q0,  #11
+        vmov.i16        q13, #0
+        vadd.i16        q3,  q3,  q0
+        vmax.s16        q3,  q3,  q13
         vmin.u16        q3,  q3,  q14
         vst1.16         {q3}, [r0, :128]!
 .endif
-        bgt             1b
+        bgt             2b
 0:
-        pop             {r4-r11,pc}
+        pop             {r4-r8,pc}
 endfunc
 .endm

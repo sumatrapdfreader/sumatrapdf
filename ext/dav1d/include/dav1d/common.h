@@ -32,6 +32,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef DAV1D_API
     #if defined _WIN32
       #if defined DAV1D_BUILDING_DLL
@@ -82,5 +86,9 @@ typedef struct Dav1dDataProps {
  * Release reference to a Dav1dDataProps.
  */
 DAV1D_API void dav1d_data_props_unref(Dav1dDataProps *props);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* DAV1D_COMMON_H */

@@ -31,6 +31,6 @@
 #include "dav1d/data.h"
 #include "src/internal.h"
 
-int dav1d_parse_obus(Dav1dContext *c, Dav1dData *in, int global);
+ptrdiff_t dav1d_parse_obus(Dav1dContext *c, Dav1dData *in);
 
 #endif /* DAV1D_SRC_OBU_H */

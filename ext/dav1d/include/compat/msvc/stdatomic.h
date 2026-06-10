@@ -55,6 +55,15 @@ typedef enum {
 #define atomic_exchange(p_a, v)       InterlockedExchange(p_a, v)
 #define atomic_load_explicit(p_a, mo) atomic_load(p_a)
 
+static inline int atomic_compare_exchange_strong_int(LONG *obj, LONG *expected,
+                                                     LONG desired)
+{
+    LONG orig = *expected;
+    *expected = InterlockedCompareExchange(obj, desired, orig);
+    return *expected == orig;
+}
+#define atomic_compare_exchange_strong(p_a, expected, desired) atomic_compare_exchange_strong_int((LONG *)p_a, (LONG *)expected, (LONG)desired)
+
 /*
  * TODO use a special call to increment/decrement
  * using InterlockedIncrement/InterlockedDecrement

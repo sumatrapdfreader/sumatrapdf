@@ -30,22 +30,32 @@
 #include "dav1d/dav1d.h"
 
 #include <SDL.h>
-#ifdef HAVE_PLACEBO
+#if HAVE_PLACEBO
 # include <libplacebo/config.h>
 #endif
 
 // Check libplacebo Vulkan rendering
-#if defined(HAVE_VULKAN) && defined(SDL_VIDEO_VULKAN)
+#if HAVE_VULKAN && defined(SDL_VIDEO_VULKAN)
 # if defined(PL_HAVE_VULKAN) && PL_HAVE_VULKAN
-#  define HAVE_RENDERER_PLACEBO
-#  define HAVE_PLACEBO_VULKAN
+#  define HAVE_RENDERER_PLACEBO 1
+#  define HAVE_PLACEBO_VULKAN 1
 # endif
 #endif
 
 // Check libplacebo OpenGL rendering
 #if defined(PL_HAVE_OPENGL) && PL_HAVE_OPENGL
-# define HAVE_RENDERER_PLACEBO
-# define HAVE_PLACEBO_OPENGL
+# define HAVE_RENDERER_PLACEBO 1
+# define HAVE_PLACEBO_OPENGL 1
+#endif
+
+#ifndef HAVE_RENDERER_PLACEBO
+#define HAVE_RENDERER_PLACEBO 0
+#endif
+#ifndef HAVE_PLACEBO_VULKAN
+#define HAVE_PLACEBO_VULKAN 0
+#endif
+#ifndef HAVE_PLACEBO_OPENGL
+#define HAVE_PLACEBO_OPENGL 0
 #endif
 
 /**
@@ -61,6 +71,7 @@ typedef struct {
     int untimed;
     int zerocopy;
     int gpugrain;
+    int fullscreen;
 } Dav1dPlaySettings;
 
 #define WINDOW_WIDTH  910
@@ -82,7 +93,7 @@ typedef struct rdr_info
     // Cookie passed to the renderer implementation callbacks
     void *cookie;
     // Callback to create the renderer
-    void* (*create_renderer)(void);
+    void* (*create_renderer)(const Dav1dPlaySettings *settings);
     // Callback to destroy the renderer
     void (*destroy_renderer)(void *cookie);
     // Callback to the render function that renders a prevously sent frame
@@ -129,6 +140,9 @@ static inline SDL_Window *dp_create_sdl_window(int window_flags)
 
     win = SDL_CreateWindow("Dav1dPlay", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+    if (!win)
+        return NULL;
+
     SDL_SetWindowResizable(win, SDL_TRUE);
 
     return win;

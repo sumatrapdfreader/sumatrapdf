@@ -1,7 +1,7 @@
 ;*****************************************************************************
 ;* x86inc.asm: x86 abstraction layer
 ;*****************************************************************************
-;* Copyright (C) 2005-2022 x264 project
+;* Copyright (C) 2005-2024 x264 project
 ;*
 ;* Authors: Loren Merritt <lorenm@u.washington.edu>
 ;*          Henrik Gramner <henrik@gramner.com>
@@ -43,17 +43,25 @@
     %endif
 %endif
 
+%define WIN32  0
 %define WIN64  0
 %define UNIX64 0
 %if ARCH_X86_64
     %ifidn __OUTPUT_FORMAT__,win32
+        %define WIN32  1
         %define WIN64  1
     %elifidn __OUTPUT_FORMAT__,win64
+        %define WIN32  1
         %define WIN64  1
     %elifidn __OUTPUT_FORMAT__,x64
+        %define WIN32  1
         %define WIN64  1
     %else
         %define UNIX64 1
+    %endif
+%else
+    %ifidn __OUTPUT_FORMAT__,win32
+        %define WIN32  1
     %endif
 %endif
 
@@ -104,7 +112,7 @@
 %endif
 
 %define HAVE_PRIVATE_EXTERN 1
-%ifdef __NASM_VER__
+%ifdef __NASM_VERSION_ID__
     %use smartalign
     %if __NASM_VERSION_ID__ < 0x020e0000 ; 2.14
         %define HAVE_PRIVATE_EXTERN 0
@@ -232,7 +240,7 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
 %elif PIC
     call $+5 ; special-cased to not affect the RSB on most CPU:s
     pop %1
-    add %1, (%2)-$+1
+    add %1, -$+1+%2
 %else
     mov %1, %2
 %endif
@@ -386,7 +394,24 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
     %endif
 %endmacro
 
-%macro ALLOC_STACK 0-2 0, 0 ; stack_size, n_xmm_regs (for win64 only)
+%macro RESET_STACK_STATE 0
+    %ifidn rstk, rsp
+        %assign stack_offset stack_offset - stack_size_padded
+    %else
+        %xdefine rstk rsp
+    %endif
+    %assign stack_size 0
+    %assign stack_size_padded 0
+    %assign xmm_regs_used 0
+%endmacro
+
+%macro ALLOC_STACK 0-2 0, 0 ; stack_size, n_xmm_regs
+    RESET_STACK_STATE
+    %ifnum %2
+        %if mmsize != 8
+            %assign xmm_regs_used %2
+        %endif
+    %endif
     %ifnum %1
         %if %1 != 0
             %assign %%pad 0
@@ -396,11 +421,8 @@ DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
             %endif
             %if WIN64
                 %assign %%pad %%pad + 32 ; shadow space
-                %if mmsize != 8
-                    %assign xmm_regs_used %2
-                    %if xmm_regs_used > 8
-                        %assign %%pad %%pad + (xmm_regs_used-8)*16 ; callee-saved xmm registers
-                    %endif
+                %if xmm_regs_used > 8
+                    %assign %%pad %%pad + (xmm_regs_used-8)*16 ; callee-saved xmm registers
                 %endif
             %endif
             %if required_stack_alignment <= STACK_ALIGNMENT
@@ -496,35 +518,62 @@ DECLARE_REG 14, R13, 120
     %endif
 %endmacro
 
-%macro WIN64_PUSH_XMM 0
-    ; Use the shadow space to store XMM6 and XMM7, the rest needs stack space allocated.
-    %if xmm_regs_used > 6 + high_mm_regs
-        movaps [rstk + stack_offset +  8], xmm6
-    %endif
-    %if xmm_regs_used > 7 + high_mm_regs
-        movaps [rstk + stack_offset + 24], xmm7
-    %endif
-    %assign %%xmm_regs_on_stack xmm_regs_used - high_mm_regs - 8
-    %if %%xmm_regs_on_stack > 0
-        %assign %%i 8
-        %rep %%xmm_regs_on_stack
-            movaps [rsp + (%%i-8)*16 + stack_size + 32], xmm %+ %%i
-            %assign %%i %%i+1
-        %endrep
+; Push XMM registers to the stack. If no argument is specified all used register
+; will be pushed, otherwise only push previously unpushed registers.
+%macro WIN64_PUSH_XMM 0-2 ; new_xmm_regs_used, xmm_regs_pushed
+    %if mmsize != 8
+        %if %0 == 2
+            %assign %%pushed %2
+            %assign xmm_regs_used %1
+        %elif %0 == 1
+            %assign %%pushed xmm_regs_used
+            %assign xmm_regs_used %1
+        %else
+            %assign %%pushed 0
+        %endif
+        ; Use the shadow space to store XMM6 and XMM7, the rest needs stack space allocated.
+        %if %%pushed <= 6 + high_mm_regs && xmm_regs_used > 6 + high_mm_regs
+            movaps [rstk + stack_offset +  8], xmm6
+        %endif
+        %if %%pushed <= 7 + high_mm_regs && xmm_regs_used > 7 + high_mm_regs
+            movaps [rstk + stack_offset + 24], xmm7
+        %endif
+        %assign %%pushed %%pushed - high_mm_regs - 8
+        %if %%pushed < 0
+            %assign %%pushed 0
+        %endif
+        %assign %%regs_to_push xmm_regs_used - %%pushed - high_mm_regs - 8
+        %if %%regs_to_push > 0
+            ASSERT (%%regs_to_push + %%pushed) * 16 <= stack_size_padded - stack_size - 32
+            %assign %%i %%pushed + 8
+            %rep %%regs_to_push
+                movaps [rsp + (%%i-8)*16 + stack_size + 32], xmm %+ %%i
+                %assign %%i %%i+1
+            %endrep
+        %endif
     %endif
 %endmacro
 
-%macro WIN64_SPILL_XMM 1
-    %assign xmm_regs_used %1
-    ASSERT xmm_regs_used <= 16 + high_mm_regs
-    %assign %%xmm_regs_on_stack xmm_regs_used - high_mm_regs - 8
-    %if %%xmm_regs_on_stack > 0
-        ; Allocate stack space for callee-saved xmm registers plus shadow space and align the stack.
-        %assign %%pad %%xmm_regs_on_stack*16 + 32
-        %assign stack_size_padded %%pad + ((-%%pad-stack_offset-gprsize) & (STACK_ALIGNMENT-1))
-        SUB rsp, stack_size_padded
+; Allocated stack space for XMM registers and push all, or a subset, of those
+%macro WIN64_SPILL_XMM 1-2 ; xmm_regs_used, xmm_regs_reserved
+    RESET_STACK_STATE
+    %if mmsize != 8
+        %assign xmm_regs_used %1
+        ASSERT xmm_regs_used <= 16 + high_mm_regs
+        %if %0 == 2
+            ASSERT %2 >= %1
+            %assign %%xmm_regs_on_stack %2 - high_mm_regs - 8
+        %else
+            %assign %%xmm_regs_on_stack %1 - high_mm_regs - 8
+        %endif
+        %if %%xmm_regs_on_stack > 0
+            ; Allocate stack space for callee-saved xmm registers plus shadow space and align the stack.
+            %assign %%pad %%xmm_regs_on_stack*16 + 32
+            %assign stack_size_padded %%pad + ((-%%pad-stack_offset-gprsize) & (STACK_ALIGNMENT-1))
+            SUB rsp, stack_size_padded
+        %endif
+        WIN64_PUSH_XMM
     %endif
-    WIN64_PUSH_XMM
 %endmacro
 
 %macro WIN64_RESTORE_XMM_INTERNAL 0
@@ -555,9 +604,7 @@ DECLARE_REG 14, R13, 120
 
 %macro WIN64_RESTORE_XMM 0
     WIN64_RESTORE_XMM_INTERNAL
-    %assign stack_offset (stack_offset-stack_size_padded)
-    %assign stack_size_padded 0
-    %assign xmm_regs_used 0
+    RESET_STACK_STATE
 %endmacro
 
 %define has_epilogue regs_used > 7 || stack_size > 0 || vzeroupper_required || xmm_regs_used > 6+high_mm_regs
@@ -592,12 +639,11 @@ DECLARE_REG 14, R13, 72
 %macro PROLOGUE 2-5+ 0, 0 ; #args, #regs, #xmm_regs, [stack_size,] arg_names...
     %assign num_args %1
     %assign regs_used %2
-    %assign xmm_regs_used %3
     ASSERT regs_used >= num_args
     SETUP_STACK_POINTER %4
     ASSERT regs_used <= 15
     PUSH_IF_USED 9, 10, 11, 12, 13, 14
-    ALLOC_STACK %4
+    ALLOC_STACK %4, %3
     LOAD_IF_USED 6, 7, 8, 9, 10, 11, 12, 13, 14
     %if %0 > 4
         %ifnum %4
@@ -661,7 +707,7 @@ DECLARE_ARG 7, 8, 9, 10, 11, 12, 13, 14
     SETUP_STACK_POINTER %4
     ASSERT regs_used <= 7
     PUSH_IF_USED 3, 4, 5, 6
-    ALLOC_STACK %4
+    ALLOC_STACK %4, %3
     LOAD_IF_USED 0, 1, 2, 3, 4, 5, 6
     %if %0 > 4
         %ifnum %4
@@ -694,13 +740,19 @@ DECLARE_ARG 7, 8, 9, 10, 11, 12, 13, 14
 %endif ;======================================================================
 
 %if WIN64 == 0
-    %macro WIN64_SPILL_XMM 1
-        %assign xmm_regs_used %1
+    %macro WIN64_SPILL_XMM 1-2
+        RESET_STACK_STATE
+        %if mmsize != 8
+            %assign xmm_regs_used %1
+        %endif
     %endmacro
     %macro WIN64_RESTORE_XMM 0
-        %assign xmm_regs_used 0
+        RESET_STACK_STATE
     %endmacro
-    %macro WIN64_PUSH_XMM 0
+    %macro WIN64_PUSH_XMM 0-2
+        %if mmsize != 8 && %0 >= 1
+            %assign xmm_regs_used %1
+        %endif
     %endmacro
 %endif
 
@@ -793,6 +845,11 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     %else
         global %2
     %endif
+    %if WIN32 && !%1
+        %ifdef BUILDING_DLL
+            export %2
+        %endif
+    %endif
     align function_align
     %2:
     RESET_MM_PERMUTATION        ; needed for x86-64, also makes disassembly somewhat nicer
@@ -820,16 +877,16 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
 
 %macro cextern 1
     %xdefine %1 mangle(private_prefix %+ _ %+ %1)
-    CAT_XDEFINE cglobaled_, %1, 1
+    CAT_XDEFINE cglobaled_, %1, 2
     extern %1
 %endmacro
 
-; like cextern, but without the prefix
+; Like cextern, but without the prefix. This should be used for symbols from external libraries.
 %macro cextern_naked 1
     %ifdef PREFIX
         %xdefine %1 mangle(%1)
     %endif
-    CAT_XDEFINE cglobaled_, %1, 1
+    CAT_XDEFINE cglobaled_, %1, 3
     extern %1
 %endmacro
 
@@ -845,9 +902,26 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     %1: %2
 %endmacro
 
-; This is needed for ELF, otherwise the GNU linker assumes the stack is executable by default.
 %if FORMAT_ELF
+    ; The GNU linker assumes the stack is executable by default.
     [SECTION .note.GNU-stack noalloc noexec nowrite progbits]
+
+    %ifdef __NASM_VERSION_ID__
+        %if __NASM_VERSION_ID__ >= 0x020e0300 ; 2.14.03
+            %if ARCH_X86_64
+                ; Control-flow Enforcement Technology (CET) properties.
+                [SECTION .note.gnu.property alloc noexec nowrite note align=gprsize]
+                dd 0x00000004  ; n_namesz
+                dd gprsize + 8 ; n_descsz
+                dd 0x00000005  ; n_type = NT_GNU_PROPERTY_TYPE_0
+                db "GNU",0     ; n_name
+                dd 0xc0000002  ; pr_type = GNU_PROPERTY_X86_FEATURE_1_AND
+                dd 0x00000004  ; pr_datasz
+                dd 0x00000002  ; pr_data = GNU_PROPERTY_X86_FEATURE_1_SHSTK
+                dd 0x00000000  ; pr_padding
+            %endif
+        %endif
+    %endif
 %endif
 
 ; Tell debuggers how large the function was.
@@ -883,21 +957,22 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
 %assign cpuflags_sse4      (1<<10) | cpuflags_ssse3
 %assign cpuflags_sse42     (1<<11) | cpuflags_sse4
 %assign cpuflags_aesni     (1<<12) | cpuflags_sse42
-%assign cpuflags_gfni      (1<<13) | cpuflags_sse42
-%assign cpuflags_avx       (1<<14) | cpuflags_sse42
-%assign cpuflags_xop       (1<<15) | cpuflags_avx
-%assign cpuflags_fma4      (1<<16) | cpuflags_avx
-%assign cpuflags_fma3      (1<<17) | cpuflags_avx
-%assign cpuflags_bmi1      (1<<18) | cpuflags_avx|cpuflags_lzcnt
-%assign cpuflags_bmi2      (1<<19) | cpuflags_bmi1
-%assign cpuflags_avx2      (1<<20) | cpuflags_fma3|cpuflags_bmi2
-%assign cpuflags_avx512    (1<<21) | cpuflags_avx2 ; F, CD, BW, DQ, VL
-%assign cpuflags_avx512icl (1<<22) | cpuflags_avx512|cpuflags_gfni ; VNNI, IFMA, VBMI, VBMI2, VPOPCNTDQ, BITALG, VAES, VPCLMULQDQ
+%assign cpuflags_clmul     (1<<13) | cpuflags_sse42
+%assign cpuflags_gfni      (1<<14) | cpuflags_aesni|cpuflags_clmul
+%assign cpuflags_avx       (1<<15) | cpuflags_sse42
+%assign cpuflags_xop       (1<<16) | cpuflags_avx
+%assign cpuflags_fma4      (1<<17) | cpuflags_avx
+%assign cpuflags_fma3      (1<<18) | cpuflags_avx
+%assign cpuflags_bmi1      (1<<19) | cpuflags_avx|cpuflags_lzcnt
+%assign cpuflags_bmi2      (1<<20) | cpuflags_bmi1
+%assign cpuflags_avx2      (1<<21) | cpuflags_fma3|cpuflags_bmi2
+%assign cpuflags_avx512    (1<<22) | cpuflags_avx2 ; F, CD, BW, DQ, VL
+%assign cpuflags_avx512icl (1<<23) | cpuflags_avx512|cpuflags_gfni ; VNNI, IFMA, VBMI, VBMI2, VPOPCNTDQ, BITALG, VAES, VPCLMULQDQ
 
-%assign cpuflags_cache32   (1<<23)
-%assign cpuflags_cache64   (1<<24)
-%assign cpuflags_aligned   (1<<25) ; not a cpu feature, but a function variant
-%assign cpuflags_atom      (1<<26)
+%assign cpuflags_cache32   (1<<24)
+%assign cpuflags_cache64   (1<<25)
+%assign cpuflags_aligned   (1<<26) ; not a cpu feature, but a function variant
+%assign cpuflags_atom      (1<<27)
 
 ; Returns a boolean value expressing whether or not the specified cpuflag is enabled.
 %define    cpuflag(x) (((((cpuflags & (cpuflags_ %+ x)) ^ (cpuflags_ %+ x)) - 1) >> 31) & 1)
@@ -939,13 +1014,13 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     %endif
 
     %if ARCH_X86_64 || cpuflag(sse2)
-        %ifdef __NASM_VER__
+        %ifdef __NASM_VERSION_ID__
             ALIGNMODE p6
         %else
             CPU amdnop
         %endif
     %else
-        %ifdef __NASM_VER__
+        %ifdef __NASM_VERSION_ID__
             ALIGNMODE nop
         %else
             CPU basicnop
@@ -1035,6 +1110,7 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     %if WIN64
         AVX512_MM_PERMUTATION 6 ; Swap callee-saved registers with volatile registers
     %endif
+    %xdefine bcstw 1to8
     %xdefine bcstd 1to4
     %xdefine bcstq 1to2
 %endmacro
@@ -1050,6 +1126,7 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     INIT_CPUFLAGS %1
     DEFINE_MMREGS ymm
     AVX512_MM_PERMUTATION
+    %xdefine bcstw 1to16
     %xdefine bcstd 1to8
     %xdefine bcstq 1to4
 %endmacro
@@ -1065,6 +1142,7 @@ BRANCH_INSTR jz, je, jnz, jne, jl, jle, jnl, jnle, jg, jge, jng, jnge, ja, jae, 
     INIT_CPUFLAGS %1
     DEFINE_MMREGS zmm
     AVX512_MM_PERMUTATION
+    %xdefine bcstw 1to32
     %xdefine bcstd 1to16
     %xdefine bcstq 1to8
 %endmacro
@@ -1203,12 +1281,27 @@ INIT_XMM
 %endmacro
 %macro call_internal 2
     %xdefine %%i %2
+    %define %%j %%i
     %ifndef cglobaled_%2
         %ifdef cglobaled_%1
             %xdefine %%i %1
         %endif
+    %elif FORMAT_ELF
+        %if ARCH_X86_64
+            %if cglobaled_%2 >= 2
+                ; Always emit PLT relocations when calling external functions,
+                ; the linker will eliminate unnecessary PLT indirections anyway.
+                %define %%j %%i wrt ..plt
+            %endif
+        %elif PIC && cglobaled_%2 == 3
+            ; Go through the GOT for functions declared using cextern_naked with
+            ; PIC, as such functions presumably exists in external libraries.
+            extern _GLOBAL_OFFSET_TABLE_
+            LEA eax, $$+_GLOBAL_OFFSET_TABLE_ wrt ..gotpc
+            %define %%j [eax+%%i wrt ..got]
+        %endif
     %endif
-    call %%i
+    call %%j
     LOAD_MM_PERMUTATION %%i
 %endmacro
 
@@ -1607,11 +1700,11 @@ AVX_INSTR pavgb, mmx2, 0, 0, 1
 AVX_INSTR pavgw, mmx2, 0, 0, 1
 AVX_INSTR pblendvb, sse4, 0, 1, 0 ; last operand must be xmm0 with legacy encoding
 AVX_INSTR pblendw, sse4, 0, 1, 0
-AVX_INSTR pclmulhqhqdq, fnord, 0, 0, 0
-AVX_INSTR pclmulhqlqdq, fnord, 0, 0, 0
-AVX_INSTR pclmullqhqdq, fnord, 0, 0, 0
-AVX_INSTR pclmullqlqdq, fnord, 0, 0, 0
-AVX_INSTR pclmulqdq, fnord, 0, 1, 0
+AVX_INSTR pclmulhqhqdq, clmul, 0, 0, 0
+AVX_INSTR pclmulhqlqdq, clmul, 0, 0, 0
+AVX_INSTR pclmullqhqdq, clmul, 0, 0, 0
+AVX_INSTR pclmullqlqdq, clmul, 0, 0, 0
+AVX_INSTR pclmulqdq, clmul, 0, 1, 0
 AVX_INSTR pcmpeqb, mmx, 0, 0, 1
 AVX_INSTR pcmpeqd, mmx, 0, 0, 1
 AVX_INSTR pcmpeqq, sse4, 0, 0, 1
@@ -1766,6 +1859,7 @@ GPR_INSTR blsi, bmi1
 GPR_INSTR blsmsk, bmi1
 GPR_INSTR blsr, bmi1
 GPR_INSTR bzhi, bmi2
+GPR_INSTR crc32, sse42
 GPR_INSTR mulx, bmi2
 GPR_INSTR pdep, bmi2
 GPR_INSTR pext, bmi2

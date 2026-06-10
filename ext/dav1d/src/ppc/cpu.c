@@ -29,23 +29,21 @@
 
 #include "common/attributes.h"
 
+#include "src/cpu.h"
 #include "src/ppc/cpu.h"
 
-#if (defined(HAVE_GETAUXVAL) || defined(HAVE_ELF_AUX_INFO)) && ARCH_PPC64LE
+#define HAVE_AUX ((HAVE_GETAUXVAL || HAVE_ELF_AUX_INFO) && ARCH_PPC64LE)
+#if HAVE_AUX
 #include <sys/auxv.h>
-#define HAVE_AUX
 #endif
 
 COLD unsigned dav1d_get_cpu_flags_ppc(void) {
-    unsigned flags = 0;
-#if defined(HAVE_GETAUXVAL) && ARCH_PPC64LE
-    unsigned long hw_cap = getauxval(AT_HWCAP);
-#elif defined(HAVE_ELF_AUX_INFO) && ARCH_PPC64LE
-    unsigned long hw_cap = 0;
-    elf_aux_info(AT_HWCAP, &hw_cap, sizeof(hw_cap));
-#endif
-#ifdef HAVE_AUX
+    unsigned flags = dav1d_get_default_cpu_flags();
+#if HAVE_AUX
+    unsigned long hw_cap = dav1d_getauxval(AT_HWCAP);
+    unsigned long hw_cap2 = dav1d_getauxval(AT_HWCAP2);
     flags |= (hw_cap & PPC_FEATURE_HAS_VSX) ? DAV1D_PPC_CPU_FLAG_VSX : 0;
+    flags |= (hw_cap2 & PPC_FEATURE2_ARCH_3_00) ? DAV1D_PPC_CPU_FLAG_PWR9 : 0;
 #endif
     return flags;
 }

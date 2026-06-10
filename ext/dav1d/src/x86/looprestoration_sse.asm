@@ -42,17 +42,15 @@ pb_0to15:      db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
 pb_right_ext_mask: times 24 db 0xff
                    times 8 db 0
 pb_1:          times 16 db 1
-pb_3:          times 16 db 3
 pw_256:        times 8 dw 256
 pw_2056:       times 8 dw 2056
 pw_m16380:     times 8 dw -16380
+pw_164_24:     times 4 dw 164, 24
+pw_455_24:     times 4 dw 455, 24
 pd_4096:       times 4 dd 4096
 pd_34816:      times 4 dd 34816
 pd_0xffff:     times 4 dd 0xffff
-pd_0xf00800a4: times 4 dd 0xf00800a4
-pd_0xf00801c7: times 4 dd 0xf00801c7
-
-cextern sgr_x_by_x
+pf_256:        times 4 dd 256.0
 
 SECTION .text
 
@@ -290,7 +288,7 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, tmpstrid
     call mangle(private_prefix %+ _wiener_filter7_8bpc_ssse3).v
     jmp .v1
 .extend_right:
-    movd            m2, [lpfq-4]
+    movd            m2, [lpfq-1]
 %if ARCH_X86_64
     push            r0
     lea             r0, [pb_right_ext_mask+21]
@@ -302,10 +300,11 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, tmpstrid
     movu            m1, [r6+xq+8]
 %endif
 %if cpuflag(ssse3)
-    pshufb          m2, [base+pb_3]
+    pxor            m3, m3
+    pshufb          m2, m3
 %else
     punpcklbw       m2, m2
-    pshuflw         m2, m2, q3333
+    pshuflw         m2, m2, q0000
     punpcklqdq      m2, m2
 %endif
     pand            m4, m0
@@ -1125,46 +1124,43 @@ WIENER
 ;;      self-guided     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-%macro GATHERDD 3 ; dst, src, tmp
-    movd           %3d, %2
- %if ARCH_X86_64
-    movd            %1, [r13+%3]
-    pextrw         %3d, %2, 2
-    pinsrw          %1, [r13+%3+2], 3
-    pextrw         %3d, %2, 4
-    pinsrw          %1, [r13+%3+2], 5
-    pextrw         %3d, %2, 6
-    pinsrw          %1, [r13+%3+2], 7
- %else
-    movd            %1, [base+sgr_x_by_x-0xf03+%3]
-    pextrw          %3, %2, 2
-    pinsrw          %1, [base+sgr_x_by_x-0xf03+%3+2], 3
-    pextrw          %3, %2, 4
-    pinsrw          %1, [base+sgr_x_by_x-0xf03+%3+2], 5
-    pextrw          %3, %2, 6
-    pinsrw          %1, [base+sgr_x_by_x-0xf03+%3+2], 7
- %endif
+%macro MUL_32X16X2 6 ; dst[1-2], src[1-2], tmp[1-2]
+    pmulhuw         %5, %1, %3
+    pmulhuw         %6, %2, %4
+    pmullw          %1, %3
+    pmullw          %2, %4
+    pslld           %5, 16
+    pslld           %6, 16
+    paddd           %1, %5
+    paddd           %2, %6
 %endmacro
 
-%macro GATHER_X_BY_X 5 ; dst, src0, src1, tmp32, tmp32_restore
- %if ARCH_X86_64
-  %define tmp r14
- %else
-  %define tmp %4
- %endif
-    GATHERDD        %1, %2, tmp
-    GATHERDD        %2, %3, tmp
-    movif32         %4, %5
-    psrld           %1, 24
-    psrld           %2, 24
+%macro SGR_CALC_X 9 ; dst, tmp, b[1-2], an[1-2], s, b_mul, pf_256
+    pmaddwd         %1, %3, %3             ; b * b
+    pmaddwd         %2, %4, %4
+    psubd           %5, %1                 ; p
+    psubd           %6, %2
+    MUL_32X16X2     %5, %6, %7, %7, %1, %2 ; p * s
+    pmaddwd         %3, %8                 ; b * b_mul
+    pmaddwd         %4, %8
+    paddw           %5, %8
+    paddw           %6, %8
+    psrld           %5, 20                 ; z + 1
+    psrld           %6, 20
+    cvtdq2ps        %5, %5
+    cvtdq2ps        %6, %6
+    rcpps           %1, %5                 ; 1 / (z + 1)
+    rcpps           %2, %6
+    cmpltps         %5, %9
+    cmpltps         %6, %9
+    mulps           %1, %9                 ; 256 / (z + 1)
+    mulps           %2, %9
+    packssdw        %5, %6
+    cvtps2dq        %1, %1
+    cvtps2dq        %2, %2
+    psrlw           %5, 8                  ; z < 255 ? 255 : 0
     packssdw        %1, %2
-%endmacro
-
-%macro MULLD 3 ; dst, src, tmp
-    pmulhuw         %3, %1, %2
-    pmullw          %1, %2
-    pslld           %3, 16
-    paddd           %1, %3
+    pminsw          %1, %5                 ; x
 %endmacro
 
 %if ARCH_X86_32
@@ -1200,12 +1196,13 @@ cglobal sgr_filter_5x5_8bpc, 1, 7, 8, -400*24-16-extra_stack, \
  %define t4m    dword [esp+calloff+4*5]
  %define  m8 [base+pb_1]
  %define  m9 [esp+calloff+16*2]
- %define m10 [base+pd_0xf00800a4]
+ %define m10 [base+pw_164_24]
  %define m11 [base+sgr_lshuf5]
  %define m12 [base+pd_34816]
  %define m13 [base+pb_0to15]
+ %define m14 [base+pf_256]
  %define r10 r4
- %define base r6-$$
+ %define base r6-pw_2056
  %assign calloff 0
  %if STACK_ALIGNMENT < 16
     mov        strideq, [rstk+stack_offset+ 8]
@@ -1223,7 +1220,7 @@ cglobal sgr_filter_5x5_8bpc, 1, 7, 8, -400*24-16-extra_stack, \
  %endif
 %else
 DECLARE_REG_TMP 8, 7, 9, 11, 12
-cglobal sgr_filter_5x5_8bpc, 4, 15, 14, -400*24-16, dst, stride, left, lpf, \
+cglobal sgr_filter_5x5_8bpc, 4, 13, 15, -400*24-16, dst, stride, left, lpf, \
                                                     w, h, edge, params
 %endif
 %if ARCH_X86_64 || STACK_ALIGNMENT >= 16
@@ -1231,14 +1228,13 @@ cglobal sgr_filter_5x5_8bpc, 4, 15, 14, -400*24-16, dst, stride, left, lpf, \
 %endif
 %if ARCH_X86_64
     mov        paramsq, r6mp
-    lea            r13, [sgr_x_by_x-0xf03]
     movifnidn       hd, hm
     mov          edged, r7m
     movu            m9, [paramsq]
     add           lpfq, wq
     mova            m8, [pb_1]
     lea             t1, [rsp+wq*2+20]
-    mova           m10, [pd_0xf00800a4]
+    mova           m10, [pw_164_24]
     add           dstq, wq
     lea             t3, [rsp+wq*4+400*12+16]
     mova           m12, [pd_34816]  ; (1 << 11) + (1 << 15)
@@ -1251,11 +1247,12 @@ cglobal sgr_filter_5x5_8bpc, 4, 15, 14, -400*24-16, dst, stride, left, lpf, \
     pxor            m6, m6
     mova           m11, [sgr_lshuf5]
     psllw           m7, 4
+    movaps         m14, [pf_256]
  DEFINE_ARGS dst, stride, left, lpf, _, h, edge, _, _, _, w
  %define lpfm [rsp]
 %else
     mov             r1, [rstk+stack_offset+28] ; params
-    LEA             r6, $$
+    LEA             r6, pw_2056
     movu            m1, [r1]
     add           lpfm, wq
     lea             t1, [rsp+extra_stack+wq*2+20]
@@ -1282,7 +1279,6 @@ cglobal sgr_filter_5x5_8bpc, 4, 15, 14, -400*24-16, dst, stride, left, lpf, \
     jz .no_top
     call .h_top
     add           lpfq, stridemp
-    movif32        t2m, t1
     mov             t2, t1
     call .top_fixup
     add             t1, 400*6
@@ -1362,7 +1358,6 @@ cglobal sgr_filter_5x5_8bpc, 4, 15, 14, -400*24-16, dst, stride, left, lpf, \
     mov           lpfm, r10
     call .h
     lea             t2, [t1+400*6]
-    movif32        t2m, t2
     call .top_fixup
     dec             hd
     jz .no_top_height1
@@ -1582,27 +1577,14 @@ ALIGN function_align
     paddd           m5, m2
     punpcklwd       m0, m1, m6         ; b
     punpckhwd       m1, m6
-    pmaddwd         m2, m0, m0         ; b * b
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p
-    psubd           m5, m3
-    MULLD           m4, m9, m2         ; p * s
-    MULLD           m5, m9, m2
-    pmaddwd         m0, m10            ; b * 164
-    pmaddwd         m1, m10
-    paddusw         m4, m10
-    paddusw         m5, m10
-    psrld           m4, 20             ; min(z, 255)
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m9, m10, m14
     movif32         t3, t3m
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, t2, t2m
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m2
-    MULLD           m1, m5, m2
+    punpcklwd       m2, m3, m3
+    mova   [t4+wq*2+4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m12            ; x * b * 164 + (1 << 11) + (1 << 15)
     paddd           m1, m12
-    mova   [t4+wq*2+4], m3
     psrld           m0, 12             ; b
     psrld           m1, 12
     mova  [t3+wq*4+ 8], m0
@@ -1612,7 +1594,6 @@ ALIGN function_align
     mov             t2, t1
     mov             t1, t0
     mov             t0, t2
-    movif32        t2m, t2
     movif32        t0m, t0
     ret
 .hv_last_row: ; esoteric edge case for odd heights
@@ -1652,26 +1633,13 @@ ALIGN function_align
     paddd           m5, m2
     punpcklwd       m0, m1, m6
     punpckhwd       m1, m6
-    pmaddwd         m2, m0, m0         ; b * b
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p
-    psubd           m5, m3
-    MULLD           m4, m9, m2         ; p * s
-    MULLD           m5, m9, m2
-    pmaddwd         m0, m10            ; b * 164
-    pmaddwd         m1, m10
-    paddusw         m4, m10
-    paddusw         m5, m10
-    psrld           m4, 20             ; min(z, 255)
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, t2, t2m
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m2
-    MULLD           m1, m5, m2
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m9, m10, m14
+    punpcklwd       m2, m3, m3
+    mova   [t4+wq*2+4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m12            ; x * b * 164 + (1 << 11) + (1 << 15)
     paddd           m1, m12
-    mova   [t4+wq*2+4], m3
     psrld           m0, 12             ; b
     psrld           m1, 12
     mova  [t3+wq*4+ 8], m0
@@ -1824,11 +1792,12 @@ cglobal sgr_filter_3x3_8bpc, 1, 7, 8, -400*42-16-extra_stack, \
  %define t4m    dword [esp+calloff+4*3]
  %define  m8 [base+pb_0to15]
  %define  m9 [esp+calloff+16*1]
- %define m10 [base+pd_0xf00801c7]
+ %define m10 [base+pw_455_24]
  %define m11 [base+pd_34816]
  %define m12 m6
  %define m13 [base+sgr_lshuf3]
- %define base r6-$$
+ %define m14 [base+pf_256]
+ %define base r6-pw_2056
  %assign calloff 0
  %if STACK_ALIGNMENT < 16
     mov        strideq, [rstk+stack_offset+ 8]
@@ -1845,7 +1814,7 @@ cglobal sgr_filter_3x3_8bpc, 1, 7, 8, -400*42-16-extra_stack, \
     mov          edged, r2
  %endif
 %else
-cglobal sgr_filter_3x3_8bpc, 4, 15, 14, -400*42-8, dst, stride, left, lpf, \
+cglobal sgr_filter_3x3_8bpc, 4, 13, 15, -400*42-8, dst, stride, left, lpf, \
                                                    w, h, edge, params
 %endif
 %if ARCH_X86_64 || STACK_ALIGNMENT >= 16
@@ -1853,7 +1822,6 @@ cglobal sgr_filter_3x3_8bpc, 4, 15, 14, -400*42-8, dst, stride, left, lpf, \
 %endif
 %if ARCH_X86_64
     mov        paramsq, r6mp
-    lea            r13, [sgr_x_by_x-0xf03]
     mov             hd, hm
     mov          edged, r7m
     movq            m9, [paramsq+4]
@@ -1862,7 +1830,7 @@ cglobal sgr_filter_3x3_8bpc, 4, 15, 14, -400*42-8, dst, stride, left, lpf, \
     mova            m8, [pb_0to15]
     add           dstq, wq
     lea             t3, [rsp+wq*4+400*12+8]
-    mova           m10, [pd_0xf00801c7]
+    mova           m10, [pw_455_24]
     lea             t4, [rsp+wq*2+400*32+8]
     mova           m11, [pd_34816]
     pshuflw         m7, m9, q3333
@@ -1872,11 +1840,12 @@ cglobal sgr_filter_3x3_8bpc, 4, 15, 14, -400*42-8, dst, stride, left, lpf, \
     pxor            m6, m6
     mova           m13, [sgr_lshuf3]
     psllw           m7, 4
+    movaps         m14, [pf_256]
  DEFINE_ARGS dst, stride, left, lpf, _, h, edge, _, _, _, w
  %define lpfm [rsp]
 %else
     mov             r1, [rstk+stack_offset+28] ; params
-    LEA             r6, $$
+    LEA             r6, pw_2056
     movq            m1, [r1+4]
     add           lpfm, wq
     lea             t1, [rsp+extra_stack+wq*2+20]
@@ -2148,31 +2117,15 @@ ALIGN function_align
     paddd           m4, m2             ; a * 9
     paddd           m5, m3
     punpcklwd       m0, m1, m6         ; b
-    pmaddwd         m2, m0, m0         ; b * b
     punpckhwd       m1, m6
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p
-    psubd           m5, m3
-    MULLD           m4, m9, m12        ; p * s
-    MULLD           m5, m9, m12
-    pmaddwd         m0, m10            ; b * 455
-    pmaddwd         m1, m10
-    paddusw         m4, m10
-    paddusw         m5, m10
-    psrld           m4, 20             ; min(z, 255)
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m9, m10, m14
     movif32         t3, t3m
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m12
-    MULLD           m1, m5, m12
-%if ARCH_X86_32
-    pxor            m6, m6
-%endif
+    punpcklwd       m2, m3, m3
+    mova   [t4+wq*2+4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m11            ; x * b * 455 + (1 << 11) + (1 << 15)
     paddd           m1, m11
-    mova   [t4+wq*2+4], m3
     psrld           m0, 12
     psrld           m1, 12
     mova  [t3+wq*4+ 8], m0
@@ -2251,31 +2204,15 @@ ALIGN function_align
     paddd           m4, m2             ; a * 9
     paddd           m5, m3
     punpcklwd       m0, m1, m6         ; b
-    pmaddwd         m2, m0, m0         ; b * b
     punpckhwd       m1, m6
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p
-    psubd           m5, m3
-    MULLD           m4, m9, m12        ; p * s
-    MULLD           m5, m9, m12
-    pmaddwd         m0, m10            ; b * 455
-    pmaddwd         m1, m10
-    paddusw         m4, m10
-    paddusw         m5, m10
-    psrld           m4, 20             ; min(z, 255)
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m9, m10, m14
     movif32         t3, t3m
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m12
-    MULLD           m1, m5, m12
-%if ARCH_X86_32
-    pxor            m6, m6
-%endif
+    punpcklwd       m2, m3, m3
+    mova [t4+wq*2+400*2 +4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m11            ; x * b * 455 + (1 << 11) + (1 << 15)
     paddd           m1, m11
-    mova [t4+wq*2+400*2 +4], m3
     psrld           m0, 12
     psrld           m1, 12
     mova [t3+wq*4+400*4+ 8], m0
@@ -2310,30 +2247,14 @@ ALIGN function_align
     paddd           m4, m2             ; a * 9
     paddd           m5, m3
     punpcklwd       m0, m1, m6         ; b
-    pmaddwd         m2, m0, m0         ; b * b
     punpckhwd       m1, m6
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p
-    psubd           m5, m3
-    MULLD           m4, m9, m12        ; p * s
-    MULLD           m5, m9, m12
-    pmaddwd         m0, m10            ; b * 455
-    pmaddwd         m1, m10
-    paddusw         m4, m10
-    paddusw         m5, m10
-    psrld           m4, 20             ; min(z, 255)
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m12
-    MULLD           m1, m5, m12
-%if ARCH_X86_32
-    pxor            m6, m6
-%endif
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m9, m10, m14
+    punpcklwd       m2, m3, m3
+    mova   [t4+wq*2+4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m11            ; x * b * 455 + (1 << 11) + (1 << 15)
     paddd           m1, m11
-    mova   [t4+wq*2+4], m3
     psrld           m0, 12
     psrld           m1, 12
     mova  [t3+wq*4+ 8], m0
@@ -2362,30 +2283,14 @@ ALIGN function_align
     paddd           m4, m2             ; a * 9
     paddd           m5, m3
     punpcklwd       m0, m1, m6         ; b
-    pmaddwd         m2, m0, m0         ; b * b
     punpckhwd       m1, m6
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p
-    psubd           m5, m3
-    MULLD           m4, m9, m12        ; p * s
-    MULLD           m5, m9, m12
-    pmaddwd         m0, m10            ; b * 455
-    pmaddwd         m1, m10
-    paddusw         m4, m10
-    paddusw         m5, m10
-    psrld           m4, 20             ; min(z, 255)
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m12
-    MULLD           m1, m5, m12
-%if ARCH_X86_32
-    pxor            m6, m6
-%endif
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m9, m10, m14
+    punpcklwd       m2, m3, m3
+    mova [t4+wq*2+400*2+ 4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m11            ; x * b * 455 + (1 << 11) + (1 << 15)
     paddd           m1, m11
-    mova [t4+wq*2+400*2+ 4], m3
     psrld           m0, 12
     psrld           m1, 12
     mova [t3+wq*4+400*4+ 8], m0
@@ -2593,13 +2498,13 @@ cglobal sgr_filter_mix_8bpc, 1, 7, 8, -400*66-48-extra_stack, \
  %xdefine m8 m6
  %define  m9 [base+pd_0xffff]
  %define m10 [base+pd_34816]
- %define m11 [base+pd_0xf00801c7]
- %define m12 [base+pd_0xf00800a4]
+ %define m11 [base+pw_455_24]
+ %define m12 [base+pw_164_24]
  %define m13 [esp+calloff+16*4]
  %define m14 [esp+calloff+16*5]
  %define m15 [esp+calloff+16*6]
  %define  m6 [esp+calloff+16*7]
- %define base r6-$$
+ %define base r6-pw_2056
  %assign calloff 0
  %if STACK_ALIGNMENT < 16
     mov        strideq, [rstk+stack_offset+ 8]
@@ -2616,7 +2521,7 @@ cglobal sgr_filter_mix_8bpc, 1, 7, 8, -400*66-48-extra_stack, \
     mov          edged, r2
  %endif
 %else
-cglobal sgr_filter_mix_8bpc, 4, 15, 16, -400*66-40, dst, stride, left, lpf, \
+cglobal sgr_filter_mix_8bpc, 4, 13, 16, -400*66-40, dst, stride, left, lpf, \
                                                     w, h, edge, params
 %endif
 %if ARCH_X86_64 || STACK_ALIGNMENT >= 16
@@ -2624,7 +2529,6 @@ cglobal sgr_filter_mix_8bpc, 4, 15, 16, -400*66-40, dst, stride, left, lpf, \
 %endif
 %if ARCH_X86_64
     mov        paramsq, r6mp
-    lea            r13, [sgr_x_by_x-0xf03]
     movifnidn       hd, hm
     mov          edged, r7m
     mova           m15, [paramsq]
@@ -2634,9 +2538,9 @@ cglobal sgr_filter_mix_8bpc, 4, 15, 16, -400*66-40, dst, stride, left, lpf, \
     mova           m10, [pd_34816]
     add           dstq, wq
     lea             t3, [rsp+wq*4+400*24+40]
-    mova           m11, [pd_0xf00801c7]
+    mova           m11, [pw_455_24]
     lea             t4, [rsp+wq*2+400*52+40]
-    mova           m12, [base+pd_0xf00800a4]
+    mova           m12, [pw_164_24]
     neg             wq
     pshuflw        m13, m15, q0000
     pshuflw        m14, m15, q2222
@@ -2650,7 +2554,7 @@ cglobal sgr_filter_mix_8bpc, 4, 15, 16, -400*66-40, dst, stride, left, lpf, \
  %define lpfm [rsp]
 %else
     mov             r1, [rstk+stack_offset+28] ; params
-    LEA             r6, $$
+    LEA             r6, pw_2056
     mova            m2, [r1]
     add           lpfm, wq
     lea             t1, [rsp+extra_stack+wq*2+52]
@@ -2991,40 +2895,26 @@ ALIGN function_align
     mova [t2+wq*2+400* 6], m0
     mova [t2+wq*2+400* 8], m4
     mova [t2+wq*2+400*10], m5
-%if ARCH_X86_32
-    pxor            m7, m7
-%else
-    SWAP            m7, m6
-%endif
     pslld           m4, m2, 3
     pslld           m5, m3, 3
     paddd           m4, m2             ; a3 * 9
     paddd           m5, m3
-    punpcklwd       m0, m1, m7         ; b3
-    pmaddwd         m2, m0, m0
-    punpckhwd       m1, m7
-    pmaddwd         m3, m1, m1
-%if ARCH_X86_64
-    SWAP            m7, m6
+    movaps          m7, [base+pf_256]
+%if ARCH_X86_32
+    pxor            m2, m2
+    punpcklwd       m0, m1, m2
+    punpckhwd       m1, m2
+%else
+    punpcklwd       m0, m1, m6         ; b3
+    punpckhwd       m1, m6
 %endif
-    psubd           m4, m2             ; p3
-    psubd           m5, m3
-    MULLD           m4, m14, m7        ; p3 * s1
-    MULLD           m5, m14, m7
-    pmaddwd         m0, m11            ; b3 * 455
-    pmaddwd         m1, m11
-    paddusw         m4, m11
-    paddusw         m5, m11
-    psrld           m4, 20             ; min(z3, 255)
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m7
-    MULLD           m1, m5, m7
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m14, m11, m7
+    punpcklwd       m2, m3, m3
+    mova [t4+wq*2+400*2+ 4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m10            ; x3 * b3 * 455 + (1 << 11) + (1 << 15)
     paddd           m1, m10
-    mova [t4+wq*2+400*2+ 4], m3
     psrld           m0, 12
     psrld           m1, 12
     mova [t3+wq*4+400*4+ 8], m0
@@ -3127,30 +3017,17 @@ ALIGN function_align
     SWAP            m8, m6
 %endif
     punpcklwd       m0, m5, m8         ; b3
-    pmaddwd         m7, m0, m0
     punpckhwd       m5, m8
-    pmaddwd         m8, m5, m5
-    psubd           m2, m7             ; p3
-    psubd           m3, m8
-    MULLD           m2, m14, m8        ; p3 * s1
-    MULLD           m3, m14, m8
-    pmaddwd         m0, m11            ; b3 * 455
-    pmaddwd         m5, m11
-    paddusw         m2, m11
-    paddusw         m3, m11
-    psrld           m2, 20             ; min(z3, 255)
+    SGR_CALC_X      m8, m7, m0, m5, m2, m3, m14, m11, [base+pf_256]
     movif32         t3, t3m
-    psrld           m3, 20
-    GATHER_X_BY_X   m8, m2, m3, r0, dstm
     punpcklwd       m2, m8, m8
-    punpckhwd       m3, m8, m8
-    MULLD           m0, m2, m7
-    MULLD           m5, m3, m7
+    mova [t4+wq*2+400*4+ 4], m8
+    punpckhwd       m8, m8
+    MUL_32X16X2     m0, m5, m2, m8, m3, m7
     paddd           m0, m10            ; x3 * b3 * 455 + (1 << 11) + (1 << 15)
     paddd           m5, m10
     psrld           m0, 12
     psrld           m5, 12
-    mova [t4+wq*2+400*4+ 4], m8
     mova [t3+wq*4+400*8+ 8], m0
     mova [t3+wq*4+400*8+24], m5
 %if ARCH_X86_32
@@ -3172,40 +3049,26 @@ ALIGN function_align
     mova [t2+wq*2+400*4], m1
     pslld           m4, m2, 3
     paddd           m2, m0
-    pslld           m7, m3, 3
+    pslld           m0, m3, 3
     paddd           m3, m8
     paddd           m2, m4             ; a5 * 25
-    paddd           m3, m7
+    paddd           m3, m0
 %if ARCH_X86_32
     pxor            m7, m7
-%else
-    SWAP            m7, m6
-%endif
-    punpcklwd       m0, m5, m7         ; b5
-    pmaddwd         m4, m0, m0
+    punpcklwd       m0, m5, m7
     punpckhwd       m5, m7
-    pmaddwd         m1, m5, m5
-%if ARCH_X86_64
-    SWAP            m7, m6
+%else
+    punpcklwd       m0, m5, m6         ; b5
+    punpckhwd       m5, m6
 %endif
-    psubd           m2, m4             ; p5
-    psubd           m3, m1
-    MULLD           m2, m13, m7        ; p5 * s0
-    MULLD           m3, m13, m7
-    pmaddwd         m0, m12            ; b5 * 164
-    pmaddwd         m5, m12
-    paddusw         m2, m12
-    paddusw         m3, m12
-    psrld           m2, 20             ; min(z5, 255)
-    psrld           m3, 20
-    GATHER_X_BY_X   m1, m2, m3, r0, dstm
+    movaps          m8, [base+pf_256]
+    SGR_CALC_X      m1, m4, m0, m5, m2, m3, m13, m12, m8
     punpcklwd       m2, m1, m1
-    punpckhwd       m3, m1, m1
-    MULLD           m0, m2, m7
-    MULLD           m5, m3, m7
+    mova   [t4+wq*2+4], m1
+    punpckhwd       m1, m1
+    MUL_32X16X2     m0, m5, m2, m1, m3, m4
     paddd           m0, m10            ; x5 * b5 * 164 + (1 << 11) + (1 << 15)
     paddd           m5, m10
-    mova   [t4+wq*2+4], m1
     psrld           m0, 12
     psrld           m5, 12
     mova  [t3+wq*4+ 8], m0
@@ -3222,6 +3085,7 @@ ALIGN function_align
 %else
     mov             wd, w0m
 %endif
+    movaps          m8, [base+pf_256]
 .v0_loop:
     mova            m0, [t1+wq*2+400* 6]
     mova            m4, [t1+wq*2+400* 8]
@@ -3235,40 +3099,25 @@ ALIGN function_align
     mova [t2+wq*2+400* 6], m0
     mova [t2+wq*2+400* 8], m4
     mova [t2+wq*2+400*10], m5
-%if ARCH_X86_32
-    pxor            m7, m7
-%else
-    SWAP            m7, m6
-%endif
     pslld           m4, m2, 3
     pslld           m5, m3, 3
     paddd           m4, m2             ; a3 * 9
     paddd           m5, m3
-    punpcklwd       m0, m1, m7         ; b3
-    pmaddwd         m2, m0, m0
+%if ARCH_X86_32
+    pxor            m7, m7
+    punpcklwd       m0, m1, m7
     punpckhwd       m1, m7
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p3
-    psubd           m5, m3
-%if ARCH_X86_64
-    SWAP            m7, m6
+%else
+    punpcklwd       m0, m1, m6         ; b3
+    punpckhwd       m1, m6
 %endif
-    MULLD           m4, m14, m7        ; p3 * s1
-    MULLD           m5, m14, m7
-    pmaddwd         m0, m11            ; b3 * 455
-    pmaddwd         m1, m11
-    paddusw         m4, m11
-    paddusw         m5, m11
-    psrld           m4, 20             ; min(z3, 255)
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m7
-    MULLD           m1, m5, m7
+    SGR_CALC_X      m3, m2, m0, m1, m4, m5, m14, m11, m8
+    punpcklwd       m2, m3, m3
+    mova [t4+wq*2+400*2+4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m1, m2, m3, m4, m5
     paddd           m0, m10            ; x3 * b3 * 455 + (1 << 11) + (1 << 15)
     paddd           m1, m10
-    mova [t4+wq*2+400*2+4], m3
     psrld           m0, 12
     psrld           m1, 12
     mova            m3, [t1+wq*2+400*0]
@@ -3298,48 +3147,34 @@ ALIGN function_align
     mova            m4, [t1+wq*2+400* 6]
     mova            m5, [t1+wq*2+400* 8]
     mova            m7, [t1+wq*2+400*10]
-    paddw           m1, m4, [t2+wq*2+400* 6]
+    paddw           m8, m4, [t2+wq*2+400* 6]
     paddd           m2, m5, [t2+wq*2+400* 8]
     paddd           m3, m7, [t2+wq*2+400*10]
     mova [t2+wq*2+400* 6], m4
     mova [t2+wq*2+400* 8], m5
     mova [t2+wq*2+400*10], m7
-%if ARCH_X86_32
-    pxor            m7, m7
-%else
-    SWAP            m7, m6
-%endif
     pslld           m4, m2, 3
     pslld           m5, m3, 3
     paddd           m4, m2             ; ((a3 + 8) >> 4) * 9
     paddd           m5, m3
-    punpcklwd       m0, m1, m7         ; b3
-    pmaddwd         m2, m0, m0
-    punpckhwd       m1, m7
-    pmaddwd         m3, m1, m1
-    psubd           m4, m2             ; p3
-    psubd           m5, m3
-%if ARCH_X86_64
-    SWAP            m7, m6
+    movaps          m1, [base+pf_256]
+%if ARCH_X86_32
+    pxor            m7, m7
+    punpcklwd       m0, m8, m7
+    punpckhwd       m8, m7
+%else
+    punpcklwd       m0, m8, m6         ; b3
+    punpckhwd       m8, m6
 %endif
-    MULLD           m4, m14, m7        ; p3 * s1
-    MULLD           m5, m14, m7
-    pmaddwd         m0, m11            ; b3 * 455
-    pmaddwd         m1, m11
-    paddusw         m4, m11
-    paddusw         m5, m11
-    psrld           m4, 20             ; min(z3, 255)
-    psrld           m5, 20
-    GATHER_X_BY_X   m3, m4, m5, r0, dstm
-    punpcklwd       m4, m3, m3
-    punpckhwd       m5, m3, m3
-    MULLD           m0, m4, m7
-    MULLD           m1, m5, m7
-    paddd           m0, m10            ; x3 * b3 * 455 + (1 << 11) + (1 << 15)
-    paddd           m1, m10
+    SGR_CALC_X      m3, m2, m0, m8, m4, m5, m14, m11, m1
+    punpcklwd       m2, m3, m3
     mova [t4+wq*2+400*4+4], m3
+    punpckhwd       m3, m3
+    MUL_32X16X2     m0, m8, m2, m3, m4, m5
+    paddd           m0, m10            ; x3 * b3 * 455 + (1 << 11) + (1 << 15)
+    paddd           m8, m10
     psrld           m0, 12
-    psrld           m8, m1, 12
+    psrld           m8, 12
     mova            m4, [t3+wq*4+400*8+ 8]
     mova            m5, [t3+wq*4+400*0+ 8]
     mova            m7, [t3+wq*4+400*0+24]
@@ -3358,40 +3193,26 @@ ALIGN function_align
     mova [t3+wq*4+400*8+24], m8
     pslld           m7, m2, 3
     paddd           m2, m4
-    pslld           m8, m3, 3
+    pslld           m4, m3, 3
     paddd           m3, m5
     paddd           m2, m7             ; a5 * 25
-    paddd           m3, m8
+    paddd           m3, m4
+    movaps          m8, [base+pf_256]
 %if ARCH_X86_32
     pxor            m7, m7
-%else
-    SWAP            m7, m6
-%endif
-    punpcklwd       m0, m1, m7         ; b5
-    pmaddwd         m4, m0, m0
+    punpcklwd       m0, m1, m7
     punpckhwd       m1, m7
-    pmaddwd         m5, m1, m1
-    psubd           m2, m4             ; p5
-    psubd           m3, m5
-%if ARCH_X86_64
-    SWAP            m7, m6
+%else
+    punpcklwd       m0, m1, m6         ; b5
+    punpckhwd       m1, m6
 %endif
-    MULLD           m2, m13, m7        ; p5 * s0
-    MULLD           m3, m13, m7
-    pmaddwd         m0, m12            ; b5 * 164
-    pmaddwd         m1, m12
-    paddusw         m2, m12
-    paddusw         m3, m12
-    psrld           m2, 20             ; min(z5, 255)
-    psrld           m3, 20
-    GATHER_X_BY_X   m4, m2, m3, r0, dstm
-    punpcklwd       m2, m4, m4
-    punpckhwd       m3, m4, m4
-    MULLD           m0, m2, m7
-    MULLD           m1, m3, m7
+    SGR_CALC_X      m5, m4, m0, m1, m2, m3, m13, m12, m8
+    punpcklwd       m4, m5, m5
+    mova   [t4+wq*2+4], m5
+    punpckhwd       m5, m5
+    MUL_32X16X2     m0, m1, m4, m5, m2, m3
     paddd           m0, m10            ; x5 * b5 * 164 + (1 << 11) + (1 << 15)
     paddd           m1, m10
-    mova   [t4+wq*2+4], m4
     psrld           m0, 12
     psrld           m1, 12
     mova  [t3+wq*4+ 8], m0

@@ -1,7 +1,7 @@
 # The dav1d project and VideoLAN association would like to thank
 
 ## AOM
-The Alliance for Open Media (AOM) for funding this project.
+The Alliance for Open Media (AOM) for partially funding this project.
 
 ## Companies
 * Two Orioles LLC, for important coding effort
@@ -16,18 +16,20 @@ The Alliance for Open Media (AOM) for funding this project.
 
 And all the dav1d Authors (git shortlog -sn), including:
 
-Martin Storsjö, Henrik Gramner, Ronald S. Bultje, Janne Grunau, James Almer,
-Victorien Le Couviour--Tuffet, Matthias Dressel, Marvin Scholz, Luc Trudeau,
-Jean-Baptiste Kempf, Hugo Beauzée-Luyssen, Niklas Haas, Konstantin Pavlov,
-David Michael Barr, Steve Lhomme, Nathan E. Egge, Kyle Siefring, Raphaël Zumer,
-B Krishnan Iyer, Francois Cartegnie, Liwei Wang, Derek Buitenhuis,
-Michael Bradshaw, Wan-Teh Chang, Xuefeng Jiang, Luca Barbato, Jan Beich,
-Christophe Gisquet, Justin Bull, Boyuan Xiao, Dale Curtis, Emmanuel Gil Peyrot,
-Rupert Swarbrick, Thierry Foucu, Thomas Daede, Colin Lee, Jonathan Wright,
-Lynne, Michail Alvanos, Nico Weber, Salome Thirot, SmilingWolf, Tristan Laurent,
-Vittorio Giovara, Yannis Guyon, André Kempe, Anisse Astier, Anton Mitrofanov,
-Dmitriy Sychov, Ewout ter Hoeven, Fred Barbier, Jean-Yves Avenard, Joe Drago,
+Henrik Gramner, Martin Storsjö, Ronald S. Bultje, Janne Grunau, James Almer,
+Victorien Le Couviour--Tuffet, Matthias Dressel, Nathan E. Egge,
+Jean-Baptiste Kempf, Marvin Scholz, Luc Trudeau, Niklas Haas,
+Hugo Beauzée-Luyssen, Konstantin Pavlov, David Michael Barr, Steve Lhomme,
+yuanhecai, Luca Barbato, Wan-Teh Chang, Kyle Siefring, B Krishnan Iyer,
+Francois Cartegnie, Liwei Wang, David Conrad, Derek Buitenhuis, Jan Beich,
+Michael Bradshaw, Raphaël Zumer, Xuefeng Jiang, Arpad Panyik, Christophe Gisquet,
+Justin Bull, Boyuan Xiao, Dale Curtis, Emmanuel Gil Peyrot, Raphael Zumer,
+Rupert Swarbrick, Thierry Foucu, Thomas Daede, jinbo, André Kempe, Colin Lee,
+Jonathan Wright, Lynne, Michail Alvanos, Nico Weber, Salome Thirot, SmilingWolf,
+Tristan Laurent, Tristan Matthews, Vittorio Giovara, Yannis Guyon,
+Andrey Semashev, Anisse Astier, Anton Mitrofanov, Charlie Hayden, Dmitriy Sychov,
+Ewout ter Hoeven, Fred Barbier, Hao Chen, Jean-Yves Avenard, Joe Drago,
 Mark Shuttleworth, Matthieu Bouron, Mehdi Sabwat, Nicolas Frattaroli,
-Pablo Stebler, Rostislav Pehlivanov, Shiz, Steinar Midtskogen, Sylvain BERTRAND,
-Sylvestre Ledru, Timo Gurr, Tristan Matthews, Vibhoothi, Xavier Claessens,
-Xu Guangxin, kossh1 and skal
+Pablo Stebler, Rostislav Pehlivanov, Sebastian Dröge, Shiz, Steinar Midtskogen,
+Sylvain BERTRAND, Sylvestre Ledru, Timo Gurr, Vibhoothi,
+Vignesh Venkatasubramanian, Xavier Claessens, Xu Guangxin, kossh1 and skal.

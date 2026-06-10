@@ -1576,17 +1576,17 @@ L(ipred_filter_tbl):
 endfunc
 
 // void pal_pred_8bpc_neon(pixel *dst, const ptrdiff_t stride,
-//                         const uint16_t *const pal, const uint8_t *idx,
+//                         const pixel *const pal, const uint8_t *idx,
 //                         const int w, const int h);
 function pal_pred_8bpc_neon, export=1
         push            {r4-r5, lr}
         ldrd            r4,  r5,  [sp, #12]
-        vld1.16         {q0}, [r2, :128]
+        vld1.8          {d0}, [r2, :64]
         clz             lr,  r4
         adr             r12, L(pal_pred_tbl)
         sub             lr,  lr,  #25
+        vmov.i8         q15, #7
         ldr             lr,  [r12, lr, lsl #2]
-        vmovn.i16       d0,  q0
         add             r12, r12, lr
         add             r2,  r0,  r1
         bx              r12
@@ -1602,8 +1602,11 @@ L(pal_pred_tbl):
 40:
         lsl             r1,  r1,  #1
 4:
-        vld1.8          {q1}, [r3, :128]!
+        vld1.8          {d2}, [r3, :64]!
         subs            r5,  r5,  #4
+        vshr.u8         d3,  d2,  #4
+        vand.u8         d2,  d2,  d30
+        vzip.8          d2,  d3
         vtbl.8          d2, {d0}, d2
         vtbl.8          d3, {d0}, d3
         vst1.32         {d2[0]}, [r0, :32], r1
@@ -1615,8 +1618,11 @@ L(pal_pred_tbl):
 80:
         lsl             r1,  r1,  #1
 8:
-        vld1.8          {q1, q2}, [r3, :128]!
+        vld1.8          {q1}, [r3, :64]!
         subs            r5,  r5,  #4
+        vshr.u8         q2,  q1,  #4
+        vand.u8         q1,  q1,  q15
+        vzip.8          q1,  q2
         vtbl.8          d2, {d0}, d2
         vtbl.8          d3, {d0}, d3
         vst1.8          {d2}, [r0, :64], r1
@@ -1630,9 +1636,14 @@ L(pal_pred_tbl):
 160:
         lsl             r1,  r1,  #1
 16:
-        vld1.8          {q8,  q9},  [r3, :128]!
+        vld1.8          {q10, q11}, [r3, :64]!
         subs            r5,  r5,  #4
-        vld1.8          {q10, q11}, [r3, :128]!
+        vand.u8         q8,  q10, q15
+        vshr.u8         q9,  q10, #4
+        vand.u8         q10, q11, q15
+        vshr.u8         q11, q11, #4
+        vzip.8          q8,  q9
+        vzip.8          q10, q11
         vtbl.8          d16, {d0}, d16
         vtbl.8          d17, {d0}, d17
         vtbl.8          d18, {d0}, d18
@@ -1650,9 +1661,14 @@ L(pal_pred_tbl):
 320:
         lsl             r1,  r1,  #1
 32:
-        vld1.8          {q8,  q9},  [r3, :128]!
+        vld1.8          {q10, q11}, [r3, :64]!
         subs            r5,  r5,  #2
-        vld1.8          {q10, q11}, [r3, :128]!
+        vand.u8         q8,  q10, q15
+        vshr.u8         q9,  q10, #4
+        vand.u8         q10, q11, q15
+        vshr.u8         q11, q11, #4
+        vzip.8          q8,  q9
+        vzip.8          q10, q11
         vtbl.8          d16, {d0}, d16
         vtbl.8          d17, {d0}, d17
         vtbl.8          d18, {d0}, d18
@@ -1668,9 +1684,14 @@ L(pal_pred_tbl):
 640:
         sub             r1,  r1,  #32
 64:
-        vld1.8          {q8,  q9},  [r3, :128]!
+        vld1.8          {q10, q11}, [r3, :64]!
         subs            r5,  r5,  #1
-        vld1.8          {q10, q11}, [r3, :128]!
+        vand.u8         q8,  q10, q15
+        vshr.u8         q9,  q10, #4
+        vand.u8         q10, q11, q15
+        vshr.u8         q11, q11, #4
+        vzip.8          q8,  q9
+        vzip.8          q10, q11
         vtbl.8          d16, {d0}, d16
         vtbl.8          d17, {d0}, d17
         vtbl.8          d18, {d0}, d18

@@ -130,7 +130,8 @@ static void fwht4_1d(double *const out, const double *const in)
 
 static int copy_subcoefs(coef *coeff,
                          const enum RectTxfmSize tx, const enum TxfmType txtp,
-                         const int sw, const int sh, const int subsh)
+                         const int sw, const int sh, const int subsh,
+                         int *const max_eob)
 {
     /* copy the topleft coefficients such that the return value (being the
      * coefficient scantable index for the eob token) guarantees that only
@@ -160,6 +161,7 @@ static int copy_subcoefs(coef *coeff,
         } else if (!eob && (rcx > sub_low || rcy > sub_low))
             eob = n; /* lower boundary */
     }
+    *max_eob = n - 1;
 
     if (eob)
         eob += rnd() % (n - eob - 1);
@@ -182,7 +184,7 @@ static int copy_subcoefs(coef *coeff,
 
 static int ftx(coef *const buf, const enum RectTxfmSize tx,
                const enum TxfmType txtp, const int w, const int h,
-               const int subsh, const int bitdepth_max)
+               const int subsh, int *const max_eob, const int bitdepth_max)
 {
     double out[64 * 64], temp[64 * 64];
     const double scale = scaling_factors[ctz(w * h) - 4];
@@ -236,7 +238,7 @@ static int ftx(coef *const buf, const enum RectTxfmSize tx,
         for (int x = 0; x < sw; x++)
             buf[y * sw + x] = (coef) (out[y * w + x] + 0.5);
 
-    return copy_subcoefs(buf, tx, txtp, sw, sh, subsh);
+    return copy_subcoefs(buf, tx, txtp, sw, sh, subsh, max_eob);
 }
 
 static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
@@ -264,7 +266,7 @@ static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
     for (int bpc = bpc_min; bpc <= bpc_max; bpc += 2) {
         bitfn(dav1d_itx_dsp_init)(c, bpc);
         for (enum TxfmType txtp = 0; txtp < N_TX_TYPES_PLUS_LL; txtp++)
-            for (int subsh = 0; subsh < subsh_max; subsh++)
+            for (int subsh = !!txtp; subsh < subsh_max; subsh++)
                 if (check_func(c->itxfm_add[tx][txtp],
                                "inv_txfm_add_%dx%d_%s_%s_%d_%dbpc",
                                w, h, itx_1d_names[itx_1d_types[txtp][0]],
@@ -272,7 +274,9 @@ static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
                                bpc))
                 {
                     const int bitdepth_max = (1 << bpc) - 1;
-                    const int eob = ftx(coeff[0], tx, txtp, w, h, subsh, bitdepth_max);
+                    int max_eob;
+                    const int eob = ftx(coeff[0], tx, txtp, w, h, subsh, &max_eob,
+                                        bitdepth_max);
                     memcpy(coeff[1], coeff[0], sizeof(*coeff));
 
                     CLEAR_PIXEL_RECT(c_dst);
@@ -295,24 +299,30 @@ static void check_itxfm_add(Dav1dInvTxfmDSPContext *const c,
                         fail();
 
                     bench_new(alternate(c_dst, a_dst), a_dst_stride,
-                              alternate(coeff[0], coeff[1]), eob HIGHBD_TAIL_SUFFIX);
+                              alternate(coeff[0], coeff[1]), max_eob HIGHBD_TAIL_SUFFIX);
                 }
     }
-    report("add_%dx%d", w, h);
 }
 
 void bitfn(checkasm_check_itx)(void) {
     static const uint8_t txfm_size_order[N_RECT_TX_SIZES] = {
-        TX_4X4,   RTX_4X8,  RTX_4X16,
-        RTX_8X4,  TX_8X8,   RTX_8X16,  RTX_8X32,
-        RTX_16X4, RTX_16X8, TX_16X16,  RTX_16X32, RTX_16X64,
-                  RTX_32X8, RTX_32X16, TX_32X32,  RTX_32X64,
-                            RTX_64X16, RTX_64X32, TX_64X64
+        TX_4X4,                                               // tx4
+        RTX_4X8,   RTX_8X4,   TX_8X8,                         // tx8
+        RTX_4X16,  RTX_16X4,  RTX_8X16,  RTX_16X8,  TX_16X16, // tx16
+        RTX_8X32,  RTX_32X8,  RTX_16X32, RTX_32X16, TX_32X32, // tx32
+        RTX_16X64, RTX_64X16, RTX_32X64, RTX_64X32, TX_64X64, // tx64
     };
 
     /* Zero unused function pointer elements. */
     Dav1dInvTxfmDSPContext c = { { { 0 } } };
 
-    for (int i = 0; i < N_RECT_TX_SIZES; i++)
-        check_itxfm_add(&c, txfm_size_order[i]);
+    int idx = 0, tx;
+    do {
+        do {
+            tx = txfm_size_order[idx++];
+            check_itxfm_add(&c, tx);
+        } while (tx >= N_TX_SIZES);
+        report("add_tx%d", 4 << tx);
+    } while (tx < N_TX_SIZES - 1);
+    assert(idx == N_RECT_TX_SIZES);
 }

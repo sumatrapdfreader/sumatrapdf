@@ -89,8 +89,8 @@ inv_dct4_1d_internal_c(int32_t *const c, const ptrdiff_t stride,
     c[3 * stride] = CLIP(t0 - t3);
 }
 
-void dav1d_inv_dct4_1d_c(int32_t *const c, const ptrdiff_t stride,
-                         const int min, const int max)
+static void inv_dct4_1d_c(int32_t *const c, const ptrdiff_t stride,
+                          const int min, const int max)
 {
     inv_dct4_1d_internal_c(c, stride, min, max, 0);
 }
@@ -142,8 +142,8 @@ inv_dct8_1d_internal_c(int32_t *const c, const ptrdiff_t stride,
     c[7 * stride] = CLIP(t0 - t7);
 }
 
-void dav1d_inv_dct8_1d_c(int32_t *const c, const ptrdiff_t stride,
-                         const int min, const int max)
+static void inv_dct8_1d_c(int32_t *const c, const ptrdiff_t stride,
+                          const int min, const int max)
 {
     inv_dct8_1d_internal_c(c, stride, min, max, 0);
 }
@@ -237,8 +237,8 @@ inv_dct16_1d_internal_c(int32_t *const c, const ptrdiff_t stride,
     c[15 * stride] = CLIP(t0 - t15a);
 }
 
-void dav1d_inv_dct16_1d_c(int32_t *const c, const ptrdiff_t stride,
-                          const int min, const int max)
+static void inv_dct16_1d_c(int32_t *const c, const ptrdiff_t stride,
+                           const int min, const int max)
 {
     inv_dct16_1d_internal_c(c, stride, min, max, 0);
 }
@@ -427,14 +427,14 @@ inv_dct32_1d_internal_c(int32_t *const c, const ptrdiff_t stride,
     c[31 * stride] = CLIP(t0  - t31);
 }
 
-void dav1d_inv_dct32_1d_c(int32_t *const c, const ptrdiff_t stride,
-                          const int min, const int max)
+static void inv_dct32_1d_c(int32_t *const c, const ptrdiff_t stride,
+                           const int min, const int max)
 {
     inv_dct32_1d_internal_c(c, stride, min, max, 0);
 }
 
-void dav1d_inv_dct64_1d_c(int32_t *const c, const ptrdiff_t stride,
-                          const int min, const int max)
+static void inv_dct64_1d_c(int32_t *const c, const ptrdiff_t stride,
+                           const int min, const int max)
 {
     assert(stride > 0);
     inv_dct32_1d_internal_c(c, stride << 1, min, max, 1);
@@ -962,13 +962,13 @@ inv_adst16_1d_internal_c(const int32_t *const in, const ptrdiff_t in_s,
 }
 
 #define inv_adst_1d(sz) \
-void dav1d_inv_adst##sz##_1d_c(int32_t *const c, const ptrdiff_t stride, \
-                               const int min, const int max) \
+static void inv_adst##sz##_1d_c(int32_t *const c, const ptrdiff_t stride, \
+                                const int min, const int max) \
 { \
     inv_adst##sz##_1d_internal_c(c, stride, min, max, c, stride); \
 } \
-void dav1d_inv_flipadst##sz##_1d_c(int32_t *const c, const ptrdiff_t stride, \
-                                   const int min, const int max) \
+static void inv_flipadst##sz##_1d_c(int32_t *const c, const ptrdiff_t stride, \
+                                          const int min, const int max) \
 { \
     inv_adst##sz##_1d_internal_c(c, stride, min, max, \
                                  &c[(sz - 1) * stride], -stride); \
@@ -980,8 +980,8 @@ inv_adst_1d(16)
 
 #undef inv_adst_1d
 
-void dav1d_inv_identity4_1d_c(int32_t *const c, const ptrdiff_t stride,
-                              const int min, const int max)
+static void inv_identity4_1d_c(int32_t *const c, const ptrdiff_t stride,
+                               const int min, const int max)
 {
     assert(stride > 0);
     for (int i = 0; i < 4; i++) {
@@ -990,16 +990,16 @@ void dav1d_inv_identity4_1d_c(int32_t *const c, const ptrdiff_t stride,
     }
 }
 
-void dav1d_inv_identity8_1d_c(int32_t *const c, const ptrdiff_t stride,
-                              const int min, const int max)
+static void inv_identity8_1d_c(int32_t *const c, const ptrdiff_t stride,
+                               const int min, const int max)
 {
     assert(stride > 0);
     for (int i = 0; i < 8; i++)
         c[stride * i] *= 2;
 }
 
-void dav1d_inv_identity16_1d_c(int32_t *const c, const ptrdiff_t stride,
-                               const int min, const int max)
+static void inv_identity16_1d_c(int32_t *const c, const ptrdiff_t stride,
+                                const int min, const int max)
 {
     assert(stride > 0);
     for (int i = 0; i < 16; i++) {
@@ -1008,14 +1008,61 @@ void dav1d_inv_identity16_1d_c(int32_t *const c, const ptrdiff_t stride,
     }
 }
 
-void dav1d_inv_identity32_1d_c(int32_t *const c, const ptrdiff_t stride,
-                               const int min, const int max)
+static void inv_identity32_1d_c(int32_t *const c, const ptrdiff_t stride,
+                                const int min, const int max)
 {
     assert(stride > 0);
     for (int i = 0; i < 32; i++)
         c[stride * i] *= 4;
 }
 
+const itx_1d_fn dav1d_tx1d_fns[N_TX_SIZES][N_TX_1D_TYPES] = {
+    [TX_4X4] = {
+        [DCT] = inv_dct4_1d_c,
+        [ADST] = inv_adst4_1d_c,
+        [FLIPADST] = inv_flipadst4_1d_c,
+        [IDENTITY] = inv_identity4_1d_c,
+    }, [TX_8X8] = {
+        [DCT] = inv_dct8_1d_c,
+        [ADST] = inv_adst8_1d_c,
+        [FLIPADST] = inv_flipadst8_1d_c,
+        [IDENTITY] = inv_identity8_1d_c,
+    }, [TX_16X16] = {
+        [DCT] = inv_dct16_1d_c,
+        [ADST] = inv_adst16_1d_c,
+        [FLIPADST] = inv_flipadst16_1d_c,
+        [IDENTITY] = inv_identity16_1d_c,
+    }, [TX_32X32] = {
+        [DCT] = inv_dct32_1d_c,
+        [IDENTITY] = inv_identity32_1d_c,
+    }, [TX_64X64] = {
+        [DCT] = inv_dct64_1d_c,
+    },
+};
+
+const uint8_t /* enum Tx1dType */ dav1d_tx1d_types[N_TX_TYPES][2] = {
+    [DCT_DCT]           = { DCT, DCT },
+    [ADST_DCT]          = { ADST, DCT },
+    [DCT_ADST]          = { DCT, ADST },
+    [ADST_ADST]         = { ADST, ADST },
+    [FLIPADST_DCT]      = { FLIPADST, DCT },
+    [DCT_FLIPADST]      = { DCT, FLIPADST },
+    [FLIPADST_FLIPADST] = { FLIPADST, FLIPADST },
+    [ADST_FLIPADST]     = { ADST, FLIPADST },
+    [FLIPADST_ADST]     = { FLIPADST, ADST },
+    [IDTX]              = { IDENTITY, IDENTITY },
+    [V_DCT]             = { DCT, IDENTITY },
+    [H_DCT]             = { IDENTITY, DCT },
+    [V_ADST]            = { ADST, IDENTITY },
+    [H_ADST]            = { IDENTITY, ADST },
+    [V_FLIPADST]        = { FLIPADST, IDENTITY },
+    [H_FLIPADST]        = { IDENTITY, FLIPADST },
+};
+
+#if !(HAVE_ASM && TRIM_DSP_FUNCTIONS && ( \
+  ARCH_AARCH64 || \
+  (ARCH_ARM && (defined(__ARM_NEON) || defined(__APPLE__) || defined(_WIN32))) \
+))
 void dav1d_inv_wht4_1d_c(int32_t *const c, const ptrdiff_t stride) {
     assert(stride > 0);
     const int in0 = c[0 * stride], in1 = c[1 * stride];
@@ -1032,3 +1079,4 @@ void dav1d_inv_wht4_1d_c(int32_t *const c, const ptrdiff_t stride) {
     c[2 * stride] = t1;
     c[3 * stride] = t2 + t1;
 }
+#endif

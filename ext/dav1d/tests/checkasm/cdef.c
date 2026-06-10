@@ -106,7 +106,7 @@ static void check_cdef_filter(const cdef_fn fn, const int w, const int h) {
 static void check_cdef_direction(const cdef_dir_fn fn) {
     ALIGN_STK_64(pixel, src, 8 * 8,);
 
-    declare_func(int, pixel *src, ptrdiff_t dst_stride, unsigned *var
+    declare_func(int, const pixel *src, ptrdiff_t dst_stride, unsigned *var
                  HIGHBD_DECL_SUFFIX);
 
     if (check_func(fn, "cdef_dir_%dbpc", BITDEPTH)) {

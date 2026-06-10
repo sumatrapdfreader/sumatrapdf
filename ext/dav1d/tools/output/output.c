@@ -46,6 +46,7 @@ struct MuxerContext {
     unsigned fps[2];
     const char *filename;
     int framenum;
+    uint64_t priv_data[];
 };
 
 extern const Muxer null_muxer;
@@ -123,12 +124,12 @@ int output_open(MuxerContext **const c_out,
         }
     }
 
-    if (!(c = malloc(sizeof(MuxerContext) + impl->priv_data_size))) {
+    if (!(c = malloc(offsetof(MuxerContext, priv_data) + impl->priv_data_size))) {
         fprintf(stderr, "Failed to allocate memory\n");
         return DAV1D_ERR(ENOMEM);
     }
     c->impl = impl;
-    c->data = (MuxerPriv *) &c[1];
+    c->data = (MuxerPriv *) c->priv_data;
     int have_num_pattern = 0;
     for (const char *ptr = filename ? strchr(filename, '%') : NULL;
          !have_num_pattern && ptr; ptr = strchr(ptr, '%'))

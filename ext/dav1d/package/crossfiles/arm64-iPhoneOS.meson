@@ -1,0 +1,27 @@
+[binaries]
+c = ['clang', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk']
+cpp = ['clang++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk']
+objc = ['clang', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk']
+objcpp = ['clang++', '-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk']
+ar = 'ar'
+strip = 'strip'
+
+[built-in options]
+c_args = ['-miphoneos-version-min=11.0']
+cpp_args = ['-miphoneos-version-min=11.0']
+c_link_args = ['-miphoneos-version-min=11.0']
+cpp_link_args = ['-miphoneos-version-min=11.0']
+objc_args = ['-miphoneos-version-min=11.0']
+objcpp_args = ['-miphoneos-version-min=11.0']
+
+[properties]
+root = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer'
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'darwin'
+subsystem = 'ios'
+kernel = 'xnu'
+cpu_family = 'aarch64'
+cpu = 'aarch64'
+endian = 'little'

@@ -391,8 +391,6 @@ end
 function dav1d_x68_files()
   files_in_dir("ext/dav1d/src/x86", {
     "cpu.c",
-    "msac_init.c",
-    "refmvs_init.c",
   })
 
   files_in_dir("ext/dav1d/src/x86", {
@@ -416,11 +414,13 @@ function dav1d_x68_files()
     "ipred_avx512.asm",
     "ipred_sse.asm",
     "itx16_avx2.asm",
+    "itx16_avx512.asm",
     "itx16_sse.asm",
     "itx_avx2.asm",
     "itx_avx512.asm",
     "itx_sse.asm",
     "loopfilter16_avx2.asm",
+    "loopfilter16_avx512.asm",
     "loopfilter16_sse.asm",
     "loopfilter_avx2.asm",
     "loopfilter_avx512.asm",
@@ -438,6 +438,7 @@ function dav1d_x68_files()
     "mc_avx512.asm",
     "mc_sse.asm",
     "msac.asm",
+    "pal.asm",
     "refmvs.asm",
   })
 end
@@ -446,6 +447,7 @@ function dav1d_files()
   files_in_dir("ext/dav1d/src", {
     "cdf.c",
     "cpu.c",
+    "ctx.c",
     "data.c",
     "decode.c",
     "dequant_tables.c",
@@ -458,6 +460,7 @@ function dav1d_files()
     "mem.c",
     "msac.c",
     "obu.c",
+    "pal.c",
     "picture.c",
     "qm.c",
     "ref.c",

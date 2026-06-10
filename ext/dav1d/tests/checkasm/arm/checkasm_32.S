@@ -101,9 +101,10 @@ function checked_call_\variant, export=1
         mov             r12, r0
         mov             r0,  r2
         mov             r1,  r3
-        ldrd            r2,  r3,  [sp, #ARG_STACK_A + pushed]
+        ldr             r2,  [sp, #ARG_STACK_A + pushed]
+        ldr             r3,  [sp, #ARG_STACK_A + pushed + 4]
         @ Call the target function
-        blx             r12
+        v4blx           r12
 
         @ Load the number of stack parameters, stack canary and its reference
         ldr             r12, [sp, #ARG_STACK_A + pushed + 8 + 4*(MAX_ARGS-4)]
@@ -120,7 +121,8 @@ function checked_call_\variant, export=1
         movrel          r12, register_init
 .ifc \variant, vfp
 .macro check_reg_vfp, dreg, offset
-        ldrd            r2,  r3,  [r12, #8 * (\offset)]
+        ldr             r2,  [r12, #(8 * (\offset))]
+        ldr             r3,  [r12, #(8 * (\offset)) + 4]
         vmov            r0,  lr,  \dreg
         eor             r2,  r2,  r0
         eor             r3,  r3,  lr
@@ -148,7 +150,8 @@ function checked_call_\variant, export=1
         @ keep track of the checked GPR
         mov             r1,  #4
 .macro check_reg reg1, reg2=
-        ldrd            r2,  r3,  [r12], #8
+        ldr             r2,  [r12], #4
+        ldr             r3,  [r12], #4
         eors            r2,  r2,  \reg1
         bne             2f
         add             r1,  r1,  #1
@@ -182,11 +185,7 @@ function checked_call_\variant, export=1
 2:
         movrel          r0, error_message_gpr
 1:
-#ifdef PREFIX
-        bl              _checkasm_fail_func
-#else
-        bl              checkasm_fail_func
-#endif
+        bl              X(fail_func)
 0:
         pop             {r0, r1}
 .ifc \variant, vfp
@@ -198,4 +197,5 @@ function checked_call_\variant, export=1
 endfunc
 .endm
 
+clobbercheck novfp
 clobbercheck vfp

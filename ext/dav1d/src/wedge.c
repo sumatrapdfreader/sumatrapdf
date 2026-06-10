@@ -83,37 +83,7 @@ static const wedge_code_type wedge_codebook_16_heqw[16] = {
     { WEDGE_OBLIQUE117, 2, 4 }, { WEDGE_OBLIQUE117, 6, 4 },
 };
 
-static uint8_t ALIGN(wedge_masks_444_32x32[2 * 16 * 32 * 32], 64);
-static uint8_t ALIGN(wedge_masks_444_32x16[2 * 16 * 32 * 16], 64);
-static uint8_t ALIGN(wedge_masks_444_32x8 [2 * 16 * 32 *  8], 64);
-static uint8_t ALIGN(wedge_masks_444_16x32[2 * 16 * 16 * 32], 64);
-static uint8_t ALIGN(wedge_masks_444_16x16[2 * 16 * 16 * 16], 64);
-static uint8_t ALIGN(wedge_masks_444_16x8 [2 * 16 * 16 *  8], 64);
-static uint8_t ALIGN(wedge_masks_444_8x32 [2 * 16 *  8 * 32], 64);
-static uint8_t ALIGN(wedge_masks_444_8x16 [2 * 16 *  8 * 16], 64);
-static uint8_t ALIGN(wedge_masks_444_8x8  [2 * 16 *  8 *  8], 64);
-
-static uint8_t ALIGN(wedge_masks_422_16x32[2 * 16 * 16 * 32], 64);
-static uint8_t ALIGN(wedge_masks_422_16x16[2 * 16 * 16 * 16], 64);
-static uint8_t ALIGN(wedge_masks_422_16x8 [2 * 16 * 16 *  8], 64);
-static uint8_t ALIGN(wedge_masks_422_8x32 [2 * 16 *  8 * 32], 64);
-static uint8_t ALIGN(wedge_masks_422_8x16 [2 * 16 *  8 * 16], 64);
-static uint8_t ALIGN(wedge_masks_422_8x8  [2 * 16 *  8 *  8], 64);
-static uint8_t ALIGN(wedge_masks_422_4x32 [2 * 16 *  4 * 32], 64);
-static uint8_t ALIGN(wedge_masks_422_4x16 [2 * 16 *  4 * 16], 64);
-static uint8_t ALIGN(wedge_masks_422_4x8  [2 * 16 *  4 *  8], 32);
-
-static uint8_t ALIGN(wedge_masks_420_16x16[2 * 16 * 16 * 16], 64);
-static uint8_t ALIGN(wedge_masks_420_16x8 [2 * 16 * 16 *  8], 64);
-static uint8_t ALIGN(wedge_masks_420_16x4 [2 * 16 * 16 *  4], 64);
-static uint8_t ALIGN(wedge_masks_420_8x16 [2 * 16 *  8 * 16], 64);
-static uint8_t ALIGN(wedge_masks_420_8x8  [2 * 16 *  8 *  8], 64);
-static uint8_t ALIGN(wedge_masks_420_8x4  [2 * 16 *  8 *  4], 64);
-static uint8_t ALIGN(wedge_masks_420_4x16 [2 * 16 *  4 * 16], 64);
-static uint8_t ALIGN(wedge_masks_420_4x8  [2 * 16 *  4 *  8], 32);
-static uint8_t ALIGN(wedge_masks_420_4x4  [2 * 16 *  4 *  4], 16);
-
-const uint8_t *dav1d_wedge_masks[N_BS_SIZES][3][2][16];
+Dav1dMasks dav1d_masks;
 
 static void insert_border(uint8_t *const dst, const uint8_t *const src,
                           const int ctr)
@@ -136,29 +106,33 @@ static void hflip(uint8_t *const dst, const uint8_t *const src) {
             dst[y_off + 64 - 1 - x] = src[y_off + x];
 }
 
-static void invert(uint8_t *const dst, const uint8_t *const src,
-                   const int w, const int h)
-{
-    for (int y = 0, y_off = 0; y < h; y++, y_off += w)
-        for (int x = 0; x < w; x++)
-            dst[y_off + x] = 64 - src[y_off + x];
-}
-
-static void copy2d(uint8_t *dst, const uint8_t *src,
+static void copy2d(uint8_t *dst, const uint8_t *src, int sign,
                    const int w, const int h, const int x_off, const int y_off)
 {
     src += y_off * 64 + x_off;
-    for (int y = 0; y < h; y++) {
-        memcpy(dst, src, w);
-        src += 64;
-        dst += w;
+    if (sign) {
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++)
+                dst[x] = 64 - src[x];
+            src += 64;
+            dst += w;
+        }
+    } else {
+        for (int y = 0; y < h; y++) {
+            memcpy(dst, src, w);
+            src += 64;
+            dst += w;
+        }
     }
 }
 
-static COLD void init_chroma(uint8_t *chroma, const uint8_t *luma,
-                             const int sign, const int w, const int h,
-                             const int ss_ver)
+#define MASK_OFFSET(x) ((uint16_t)(((uintptr_t)(x) - (uintptr_t)&dav1d_masks) >> 3))
+
+static COLD uint16_t init_chroma(uint8_t *chroma, const uint8_t *luma,
+                                 const int sign, const int w, const int h,
+                                 const int ss_ver)
 {
+    const uint16_t offset = MASK_OFFSET(chroma);
     for (int y = 0; y < h; y += 1 + ss_ver) {
         for (int x = 0; x < w; x += 2) {
             int sum = luma[x] + luma[x + 1] + 1;
@@ -168,62 +142,69 @@ static COLD void init_chroma(uint8_t *chroma, const uint8_t *luma,
         luma += w << ss_ver;
         chroma += w >> 1;
     }
+    return offset;
 }
 
-static COLD void fill2d_16x2(uint8_t *dst, const int w, const int h,
-                             const enum BlockSize bs,
+static COLD void fill2d_16x2(const int w, const int h, const enum BlockSize bs,
                              const uint8_t (*const master)[64 * 64],
                              const wedge_code_type *const cb,
                              uint8_t *masks_444, uint8_t *masks_422,
-                             uint8_t *masks_420, const unsigned signs)
+                             uint8_t *masks_420, unsigned signs)
 {
-    uint8_t *ptr = dst;
-    for (int n = 0; n < 16; n++) {
-        copy2d(ptr, master[cb[n].direction], w, h,
-               32 - (w * cb[n].x_offset >> 3), 32 - (h * cb[n].y_offset >> 3));
-        ptr += w * h;
-    }
-    for (int n = 0, off = 0; n < 16; n++, off += w * h)
-        invert(ptr + off, dst + off, w, h);
-
     const int n_stride_444 = (w * h);
     const int n_stride_422 = n_stride_444 >> 1;
     const int n_stride_420 = n_stride_444 >> 2;
-    const int sign_stride_444 = 16 * n_stride_444;
     const int sign_stride_422 = 16 * n_stride_422;
     const int sign_stride_420 = 16 * n_stride_420;
-    // assign pointers in externally visible array
+
+    // assign pointer offsets in lookup table
     for (int n = 0; n < 16; n++) {
-        const int sign = (signs >> n) & 1;
-        dav1d_wedge_masks[bs][0][0][n] = &masks_444[ sign * sign_stride_444];
+        const int sign = signs & 1;
+
+        copy2d(masks_444, master[cb[n].direction], sign, w, h,
+               32 - (w * cb[n].x_offset >> 3), 32 - (h * cb[n].y_offset >> 3));
+
         // not using !sign is intentional here, since 444 does not require
         // any rounding since no chroma subsampling is applied.
-        dav1d_wedge_masks[bs][0][1][n] = &masks_444[ sign * sign_stride_444];
-        dav1d_wedge_masks[bs][1][0][n] = &masks_422[ sign * sign_stride_422];
-        dav1d_wedge_masks[bs][1][1][n] = &masks_422[!sign * sign_stride_422];
-        dav1d_wedge_masks[bs][2][0][n] = &masks_420[ sign * sign_stride_420];
-        dav1d_wedge_masks[bs][2][1][n] = &masks_420[!sign * sign_stride_420];
+        dav1d_masks.offsets[0][bs].wedge[0][n] =
+        dav1d_masks.offsets[0][bs].wedge[1][n] = MASK_OFFSET(masks_444);
+
+        dav1d_masks.offsets[1][bs].wedge[0][n] =
+            init_chroma(&masks_422[ sign * sign_stride_422], masks_444, 0, w, h, 0);
+        dav1d_masks.offsets[1][bs].wedge[1][n] =
+            init_chroma(&masks_422[!sign * sign_stride_422], masks_444, 1, w, h, 0);
+        dav1d_masks.offsets[2][bs].wedge[0][n] =
+            init_chroma(&masks_420[ sign * sign_stride_420], masks_444, 0, w, h, 1);
+        dav1d_masks.offsets[2][bs].wedge[1][n] =
+            init_chroma(&masks_420[!sign * sign_stride_420], masks_444, 1, w, h, 1);
+
+        signs >>= 1;
         masks_444 += n_stride_444;
         masks_422 += n_stride_422;
         masks_420 += n_stride_420;
-
-        // since the pointers come from inside, we know that
-        // violation of the const is OK here. Any other approach
-        // means we would have to duplicate the sign correction
-        // logic in two places, which isn't very nice, or mark
-        // the table faced externally as non-const, which also sucks
-        init_chroma((uint8_t *)dav1d_wedge_masks[bs][1][0][n],
-                    dav1d_wedge_masks[bs][0][0][n], 0, w, h, 0);
-        init_chroma((uint8_t *)dav1d_wedge_masks[bs][1][1][n],
-                    dav1d_wedge_masks[bs][0][0][n], 1, w, h, 0);
-        init_chroma((uint8_t *)dav1d_wedge_masks[bs][2][0][n],
-                    dav1d_wedge_masks[bs][0][0][n], 0, w, h, 1);
-        init_chroma((uint8_t *)dav1d_wedge_masks[bs][2][1][n],
-                    dav1d_wedge_masks[bs][0][0][n], 1, w, h, 1);
     }
 }
 
-COLD void dav1d_init_wedge_masks(void) {
+static COLD void build_nondc_ii_masks(uint8_t *const mask_v, const int w,
+                                      const int h, const int step)
+{
+    static const uint8_t ii_weights_1d[32] = {
+        60, 52, 45, 39, 34, 30, 26, 22, 19, 17, 15, 13, 11, 10,  8,  7,
+         6,  6,  5,  4,  4,  3,  3,  2,  2,  2,  2,  1,  1,  1,  1,  1,
+    };
+
+    uint8_t *const mask_h  = &mask_v[w * h];
+    uint8_t *const mask_sm = &mask_h[w * h];
+    for (int y = 0, off = 0; y < h; y++, off += w) {
+        memset(&mask_v[off], ii_weights_1d[y * step], w);
+        for (int x = 0; x < w; x++) {
+            mask_sm[off + x] = ii_weights_1d[imin(x, y) * step];
+            mask_h[off + x] = ii_weights_1d[x * step];
+        }
+    }
+}
+
+COLD void dav1d_init_ii_wedge_masks(void) {
     // This function is guaranteed to be called only once
 
     enum WedgeMasterLineType {
@@ -257,9 +238,11 @@ COLD void dav1d_init_wedge_masks(void) {
     hflip(master[WEDGE_OBLIQUE153], master[WEDGE_OBLIQUE27]);
 
 #define fill(w, h, sz_422, sz_420, hvsw, signs) \
-    fill2d_16x2((uint8_t *) wedge_masks_444_##w##x##h,  w, h, BS_##w##x##h, \
-                master, wedge_codebook_16_##hvsw, wedge_masks_444_##w##x##h, \
-                wedge_masks_422_##sz_422, wedge_masks_420_##sz_420, signs)
+    fill2d_16x2(w, h, BS_##w##x##h - BS_32x32, \
+                master, wedge_codebook_16_##hvsw, \
+                dav1d_masks.wedge_444_##w##x##h, \
+                dav1d_masks.wedge_422_##sz_422, \
+                dav1d_masks.wedge_420_##sz_420, signs)
 
     fill(32, 32, 16x32, 16x16, heqw, 0x7bfb);
     fill(32, 16, 16x16, 16x8,  hltw, 0x7beb);
@@ -271,72 +254,46 @@ COLD void dav1d_init_wedge_masks(void) {
     fill( 8, 16,  4x16,  4x8,  hgtw, 0x7beb);
     fill( 8,  8,  4x8,   4x4,  heqw, 0x7bfb);
 #undef fill
-}
 
-#define N_II_PRED_MODES (N_INTER_INTRA_PRED_MODES - 1)
-static uint8_t ALIGN(ii_dc_mask[32 * 32], 64);
-static uint8_t ALIGN(ii_nondc_mask_32x32[N_II_PRED_MODES][32 * 32], 64);
-static uint8_t ALIGN(ii_nondc_mask_16x32[N_II_PRED_MODES][16 * 32], 64);
-static uint8_t ALIGN(ii_nondc_mask_16x16[N_II_PRED_MODES][16 * 16], 64);
-static uint8_t ALIGN(ii_nondc_mask_8x32 [N_II_PRED_MODES][ 8 * 32], 64);
-static uint8_t ALIGN(ii_nondc_mask_8x16 [N_II_PRED_MODES][ 8 * 16], 64);
-static uint8_t ALIGN(ii_nondc_mask_8x8  [N_II_PRED_MODES][ 8 *  8], 64);
-static uint8_t ALIGN(ii_nondc_mask_4x16 [N_II_PRED_MODES][ 4 * 16], 64);
-static uint8_t ALIGN(ii_nondc_mask_4x8  [N_II_PRED_MODES][ 4 *  8], 32);
-static uint8_t ALIGN(ii_nondc_mask_4x4  [N_II_PRED_MODES][ 4 *  4], 16);
-#undef N_II_PRED_MODES
-
-#define set1(sz) \
-    [II_DC_PRED] = ii_dc_mask, \
-    [II_VERT_PRED] = ii_nondc_mask_##sz[II_VERT_PRED - 1], \
-    [II_HOR_PRED] = ii_nondc_mask_##sz[II_HOR_PRED - 1], \
-    [II_SMOOTH_PRED] = ii_nondc_mask_##sz[II_SMOOTH_PRED - 1]
-#define set(sz_444, sz_422, sz_420) \
-    { { set1(sz_444) }, { set1(sz_422) }, { set1(sz_420) } }
-const uint8_t *dav1d_ii_masks[N_BS_SIZES][3][N_INTER_INTRA_PRED_MODES] = {
-    [BS_8x8]   = set( 8x8,   4x8,   4x4),
-    [BS_8x16]  = set( 8x16,  4x16,  4x8),
-    [BS_16x8]  = set(16x16,  8x8,   8x8),
-    [BS_16x16] = set(16x16,  8x16,  8x8),
-    [BS_16x32] = set(16x32,  8x32,  8x16),
-    [BS_32x16] = set(32x32, 16x16, 16x16),
-    [BS_32x32] = set(32x32, 16x32, 16x16),
-};
-#undef set
-#undef set1
-
-static COLD void build_nondc_ii_masks(uint8_t *const mask_v,
-                                      uint8_t *const mask_h,
-                                      uint8_t *const mask_sm,
-                                      const int w, const int h, const int step)
-{
-    static const uint8_t ii_weights_1d[] = {
-        60, 52, 45, 39, 34, 30, 26, 22, 19, 17, 15, 13, 11, 10,  8,  7,
-         6,  6,  5,  4,  4,  3,  3,  2,  2,  2,  2,  1,  1,  1,  1,  1,
-    };
-
-    for (int y = 0, off = 0; y < h; y++, off += w) {
-        memset(&mask_v[off], ii_weights_1d[y * step], w);
-        for (int x = 0; x < w; x++) {
-            mask_sm[off + x] = ii_weights_1d[imin(x, y) * step];
-            mask_h[off + x] = ii_weights_1d[x * step];
-        }
+    memset(dav1d_masks.ii_dc, 32, 32 * 32);
+    for (int c = 0; c < 3; c++) {
+        dav1d_masks.offsets[c][BS_32x32-BS_32x32].ii[II_DC_PRED] =
+        dav1d_masks.offsets[c][BS_32x16-BS_32x32].ii[II_DC_PRED] =
+        dav1d_masks.offsets[c][BS_16x32-BS_32x32].ii[II_DC_PRED] =
+        dav1d_masks.offsets[c][BS_16x16-BS_32x32].ii[II_DC_PRED] =
+        dav1d_masks.offsets[c][BS_16x8 -BS_32x32].ii[II_DC_PRED] =
+        dav1d_masks.offsets[c][BS_8x16 -BS_32x32].ii[II_DC_PRED] =
+        dav1d_masks.offsets[c][BS_8x8  -BS_32x32].ii[II_DC_PRED] =
+            MASK_OFFSET(dav1d_masks.ii_dc);
     }
-}
 
-COLD void dav1d_init_interintra_masks(void) {
-    // This function is guaranteed to be called only once
+#define BUILD_NONDC_II_MASKS(w, h, step) \
+    build_nondc_ii_masks(dav1d_masks.ii_nondc_##w##x##h, w, h, step)
 
-    memset(ii_dc_mask, 32, 32 * 32);
-#define set(a) a[II_VERT_PRED - 1], a[II_HOR_PRED - 1], a[II_SMOOTH_PRED - 1]
-    build_nondc_ii_masks(set(ii_nondc_mask_32x32), 32, 32, 1);
-    build_nondc_ii_masks(set(ii_nondc_mask_16x32), 16, 32, 1);
-    build_nondc_ii_masks(set(ii_nondc_mask_16x16), 16, 16, 2);
-    build_nondc_ii_masks(set(ii_nondc_mask_8x32),   8, 32, 1);
-    build_nondc_ii_masks(set(ii_nondc_mask_8x16),   8, 16, 2);
-    build_nondc_ii_masks(set(ii_nondc_mask_8x8),    8,  8, 4);
-    build_nondc_ii_masks(set(ii_nondc_mask_4x16),   4, 16, 2);
-    build_nondc_ii_masks(set(ii_nondc_mask_4x8),    4,  8, 4);
-    build_nondc_ii_masks(set(ii_nondc_mask_4x4),    4,  4, 8);
-#undef set
+#define ASSIGN_NONDC_II_OFFSET(bs, w444, h444, w422, h422, w420, h420) \
+    dav1d_masks.offsets[0][bs-BS_32x32].ii[p + 1] = \
+        MASK_OFFSET(&dav1d_masks.ii_nondc_##w444##x##h444[p*w444*h444]); \
+    dav1d_masks.offsets[1][bs-BS_32x32].ii[p + 1] = \
+        MASK_OFFSET(&dav1d_masks.ii_nondc_##w422##x##h422[p*w422*h422]); \
+    dav1d_masks.offsets[2][bs-BS_32x32].ii[p + 1] = \
+        MASK_OFFSET(&dav1d_masks.ii_nondc_##w420##x##h420[p*w420*h420])
+
+    BUILD_NONDC_II_MASKS(32, 32, 1);
+    BUILD_NONDC_II_MASKS(16, 32, 1);
+    BUILD_NONDC_II_MASKS(16, 16, 2);
+    BUILD_NONDC_II_MASKS( 8, 32, 1);
+    BUILD_NONDC_II_MASKS( 8, 16, 2);
+    BUILD_NONDC_II_MASKS( 8,  8, 4);
+    BUILD_NONDC_II_MASKS( 4, 16, 2);
+    BUILD_NONDC_II_MASKS( 4,  8, 4);
+    BUILD_NONDC_II_MASKS( 4,  4, 8);
+    for (int p = 0; p < 3; p++) {
+        ASSIGN_NONDC_II_OFFSET(BS_32x32, 32, 32, 16, 32, 16, 16);
+        ASSIGN_NONDC_II_OFFSET(BS_32x16, 32, 32, 16, 16, 16, 16);
+        ASSIGN_NONDC_II_OFFSET(BS_16x32, 16, 32,  8, 32,  8, 16);
+        ASSIGN_NONDC_II_OFFSET(BS_16x16, 16, 16,  8, 16,  8,  8);
+        ASSIGN_NONDC_II_OFFSET(BS_16x8,  16, 16,  8,  8,  8,  8);
+        ASSIGN_NONDC_II_OFFSET(BS_8x16,   8, 16,  4, 16,  4,  8);
+        ASSIGN_NONDC_II_OFFSET(BS_8x8,    8,  8,  4,  8,  4,  4);
+    }
 }

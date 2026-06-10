@@ -57,6 +57,18 @@ typedef decl_backup_ipred_edge_fn(*backup_ipred_edge_fn);
 void (name)(Dav1dTaskContext *t, enum BlockSize bs, const Av1Block *b)
 typedef decl_read_coef_blocks_fn(*read_coef_blocks_fn);
 
+#define decl_copy_pal_block_fn(name) \
+void (name)(Dav1dTaskContext *t, int bx4, int by4, int bw4, int bh4)
+typedef decl_copy_pal_block_fn(*copy_pal_block_fn);
+
+#define decl_read_pal_plane_fn(name) \
+void (name)(Dav1dTaskContext *t, Av1Block *b, int pl, int sz_ctx, int bx4, int by4)
+typedef decl_read_pal_plane_fn(*read_pal_plane_fn);
+
+#define decl_read_pal_uv_fn(name) \
+void (name)(Dav1dTaskContext *t, Av1Block *b, int sz_ctx, int bx4, int by4)
+typedef decl_read_pal_uv_fn(*read_pal_uv_fn);
+
 decl_recon_b_intra_fn(dav1d_recon_b_intra_8bpc);
 decl_recon_b_intra_fn(dav1d_recon_b_intra_16bpc);
 
@@ -81,5 +93,14 @@ decl_backup_ipred_edge_fn(dav1d_backup_ipred_edge_16bpc);
 
 decl_read_coef_blocks_fn(dav1d_read_coef_blocks_8bpc);
 decl_read_coef_blocks_fn(dav1d_read_coef_blocks_16bpc);
+
+decl_copy_pal_block_fn(dav1d_copy_pal_block_y_8bpc);
+decl_copy_pal_block_fn(dav1d_copy_pal_block_y_16bpc);
+decl_copy_pal_block_fn(dav1d_copy_pal_block_uv_8bpc);
+decl_copy_pal_block_fn(dav1d_copy_pal_block_uv_16bpc);
+decl_read_pal_plane_fn(dav1d_read_pal_plane_8bpc);
+decl_read_pal_plane_fn(dav1d_read_pal_plane_16bpc);
+decl_read_pal_uv_fn(dav1d_read_pal_uv_8bpc);
+decl_read_pal_uv_fn(dav1d_read_pal_uv_16bpc);
 
 #endif /* DAV1D_SRC_RECON_H */

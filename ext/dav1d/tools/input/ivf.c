@@ -104,6 +104,12 @@ static int ivf_open(IvfInputContext *const c, const char *const file,
         fseeko(c->f, sz, SEEK_CUR);
     }
 
+    if (*num_frames == 0) { /* Reading bailed early */
+        fprintf(stderr, "No frames read from %s\n", file);
+        fclose(c->f);
+        return -1;
+    }
+
     uint64_t fps_num = (uint64_t) timebase[0] * *num_frames;
     uint64_t fps_den = (uint64_t) timebase[1] * duration;
     if (fps_num && fps_den) { /* Reduce fraction */

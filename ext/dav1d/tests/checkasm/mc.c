@@ -98,6 +98,7 @@ static void check_mc(Dav1dMCDSPContext *const c) {
                                                     w, h, "dst");
 
                         if (filter == FILTER_2D_8TAP_REGULAR ||
+                            filter == FILTER_2D_8TAP_SHARP ||
                             filter == FILTER_2D_BILINEAR)
                         {
                             bench_new(a_dst, a_dst_stride, src, src_stride, w, h,
@@ -155,6 +156,7 @@ static void check_mct(Dav1dMCDSPContext *const c) {
                                                 w, h, "tmp");
 
                         if (filter == FILTER_2D_8TAP_REGULAR ||
+                            filter == FILTER_2D_8TAP_SHARP ||
                             filter == FILTER_2D_BILINEAR)
                         {
                             bench_new(a_tmp, src, src_stride, w, h,

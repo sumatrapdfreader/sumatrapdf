@@ -31,18 +31,36 @@
 
 #include "config.h"
 #include "src/arm/asm.S"
+#include "src/arm/arm-arch.h"
+
+.macro v4bx rd
+#if __ARM_ARCH >= 5 || defined(__ARM_ARCH_4T__)
+        bx              \rd
+#else
+        mov             pc, \rd
+#endif
+.endm
+
+.macro v4blx rd
+#if __ARM_ARCH >= 5
+        blx             \rd
+#else
+        mov             lr,  pc
+        v4bx            \rd
+#endif
+.endm
 
 .macro movrel_local rd, val, offset=0
-#if defined(PIC)
+#if (__ARM_ARCH >= 7 || defined(__ARM_ARCH_6T2__)) && !defined(PIC)
+        movw            \rd, #:lower16:\val+\offset
+        movt            \rd, #:upper16:\val+\offset
+#else
         ldr             \rd,  90001f
         b               90002f
 90001:
         .word           \val + \offset - (90002f + 8 - 4 * CONFIG_THUMB)
 90002:
         add             \rd,  \rd,  pc
-#else
-        movw            \rd, #:lower16:\val+\offset
-        movt            \rd, #:upper16:\val+\offset
 #endif
 .endm
 

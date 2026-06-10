@@ -275,7 +275,6 @@ cglobal generate_grain_y_16bpc, 3, 6, 8, buf, fg_data, bdmax
 
 .ar2:
 %if ARCH_X86_32
-%assign stack_offset_old stack_offset
     ALLOC_STACK -16*8
 %endif
     DEFINE_ARGS buf, fg_data, bdmax, shift
@@ -428,7 +427,6 @@ cglobal generate_grain_y_16bpc, 3, 6, 8, buf, fg_data, bdmax
 %elif ARCH_X86_64
     %define         tmp  rsp+stack_offset-72
 %else
-%assign stack_offset stack_offset_old
     ALLOC_STACK  -16*12
     %define         tmp  rsp
     mov          bdmaxd, bdmaxm
@@ -715,7 +713,6 @@ cglobal generate_grain_uv_%1_16bpc, 1, 7, 8, buf, x, pic_reg, fg_data, h
     DEFINE_ARGS buf, bufy, fg_data, uv, bdmax, shift
 %else
     DEFINE_ARGS buf, bufy, pic_reg, fg_data, uv, shift
-%assign stack_offset_old stack_offset
     ALLOC_STACK  -16*2
     mov           bufyq, r1m
     mov             uvd, r3m
@@ -831,9 +828,7 @@ cglobal generate_grain_uv_%1_16bpc, 1, 7, 8, buf, x, pic_reg, fg_data, h
 %if ARCH_X86_64
     DEFINE_ARGS buf, bufy, fg_data, uv, max, cf3, min, val3, x
 %else
-%assign stack_offset stack_offset_old
-%xdefine rstk rsp
-%assign stack_size_padded 0
+    RESET_STACK_STATE
     DEFINE_ARGS buf, shift, pic_reg, fg_data, uv, bufy, cf3
     mov           bufyq, r1m
     mov             uvd, r3m
@@ -1159,7 +1154,6 @@ cglobal generate_grain_uv_%1_16bpc, 1, 7, 8, buf, x, pic_reg, fg_data, h
 %endif
 %else
     DEFINE_ARGS buf, bufy, pic_reg, fg_data, uv, shift
-%assign stack_offset stack_offset_old
     ALLOC_STACK  -16*14
     mov           bufyq, r1m
     mov             uvd, r3m

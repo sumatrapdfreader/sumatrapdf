@@ -32,15 +32,15 @@
 #include <stdint.h>
 
 typedef struct GetBits {
-    int error, eof;
     uint64_t state;
-    unsigned bits_left;
+    int bits_left, error;
     const uint8_t *ptr, *ptr_start, *ptr_end;
 } GetBits;
 
 void dav1d_init_get_bits(GetBits *c, const uint8_t *data, size_t sz);
-unsigned dav1d_get_bits(GetBits *c, unsigned n);
-int dav1d_get_sbits(GetBits *c, unsigned n);
+unsigned dav1d_get_bit(GetBits *c);
+unsigned dav1d_get_bits(GetBits *c, int n);
+int dav1d_get_sbits(GetBits *c, int n);
 unsigned dav1d_get_uleb128(GetBits *c);
 
 // Output in range 0..max-1
@@ -49,7 +49,19 @@ unsigned dav1d_get_vlc(GetBits *c);
 int dav1d_get_bits_subexp(GetBits *c, int ref, unsigned n);
 
 // Discard bits from the buffer until we're next byte-aligned.
-void dav1d_bytealign_get_bits(GetBits *c);
+static inline void dav1d_bytealign_get_bits(GetBits *c) {
+    // bits_left is never more than 7, because it is only incremented
+    // by refill(), called by dav1d_get_bits and that never reads more
+    // than 7 bits more than it needs.
+    //
+    // If this wasn't true, we would need to work out how many bits to
+    // discard (bits_left % 8), subtract that from bits_left and then
+    // shift state right by that amount.
+    assert(c->bits_left <= 7);
+
+    c->bits_left = 0;
+    c->state = 0;
+}
 
 // Return the current bit position relative to the start of the buffer.
 static inline unsigned dav1d_get_bits_pos(const GetBits *c) {

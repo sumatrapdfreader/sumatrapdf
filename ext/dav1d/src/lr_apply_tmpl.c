@@ -71,8 +71,9 @@ static void lr_stripe(const Dav1dFrameContext *const f, pixel *p,
 
         lr_fn = dsp->lr.wiener[!(filter[0][0] | filter[1][0])];
     } else {
-        assert(lr->type == DAV1D_RESTORATION_SGRPROJ);
-        const uint16_t *const sgr_params = dav1d_sgr_params[lr->sgr_idx];
+        assert(lr->type >= DAV1D_RESTORATION_SGRPROJ);
+        const int sgr_idx = lr->type - DAV1D_RESTORATION_SGRPROJ;
+        const uint16_t *const sgr_params = dav1d_sgr_params[sgr_idx];
         params.sgr.s0 = sgr_params[0];
         params.sgr.s1 = sgr_params[1];
         params.sgr.w0 = lr->sgr_weights[0];

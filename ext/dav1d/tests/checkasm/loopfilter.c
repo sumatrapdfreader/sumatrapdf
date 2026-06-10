@@ -105,16 +105,16 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
     ptrdiff_t stride, b4_stride;
     int w, h;
     if (dir) {
-        a_dst = a_dst_mem + 128 * 8;
-        c_dst = c_dst_mem + 128 * 8;
-        w = 128;
+        a_dst = a_dst_mem + n_blks * 4 * 8;
+        c_dst = c_dst_mem + n_blks * 4 * 8;
+        w = n_blks * 4;
         h = 16;
         b4_stride = 32;
     } else {
         a_dst = a_dst_mem + 8;
         c_dst = c_dst_mem + 8;
         w = 16;
-        h = 128;
+        h = n_blks * 4;
         b4_stride = 2;
     }
     stride = w * sizeof(pixel);
@@ -169,7 +169,7 @@ static void check_lpf_sb(loopfilter_sb_fn fn, const char *const name,
                 } else {
                     L = l[2 * x + 1][lf_idx] ? l[2 * x + 1][lf_idx] : l[2 * x][lf_idx];
                 }
-                init_lpf_border(c_dst + i * (dir ? 1 : 16), dir ? 128 : 1,
+                init_lpf_border(c_dst + i * (dir ? 1 : 16), dir ? n_blks * 4 : 1,
                                 lut.e[L], lut.i[L], bitdepth_max);
             }
             memcpy(a_dst_mem, c_dst_mem, 128 * sizeof(pixel) * 16);

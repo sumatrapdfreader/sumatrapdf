@@ -44,7 +44,7 @@ COLD void dav1d_log_default_callback(void *const cookie,
 }
 
 COLD void dav1d_log(Dav1dContext *const c, const char *const format, ...) {
-    validate_input(c != NULL);
+    assert(c != NULL);
 
     if (!c->logger.callback)
         return;

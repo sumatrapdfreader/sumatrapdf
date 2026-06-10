@@ -65,11 +65,11 @@ static inline int apply_sign64(const int v, const int64_t s) {
 }
 
 static inline int ulog2(const unsigned v) {
-    return 31 - clz(v);
+    return 31 ^ clz(v);
 }
 
 static inline int u64log2(const uint64_t v) {
-    return 63 - clzll(v);
+    return 63 ^ clzll(v);
 }
 
 static inline unsigned inv_recenter(const unsigned r, const unsigned v) {

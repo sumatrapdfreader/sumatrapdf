@@ -34,6 +34,10 @@
 #include "common.h"
 #include "headers.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Number of bytes to align AND pad picture memory buffers by, so that SIMD
  * implementations can over-read by a few bytes, and use aligned read/write
  * instructions. */
@@ -78,9 +82,14 @@ typedef struct Dav1dPicture {
      */
     Dav1dMasteringDisplay *mastering_display;
     /**
-     * ITU-T T.35 metadata as defined in section 5.8.2 and 6.7.2
+     * Array of ITU-T T.35 metadata as defined in section 5.8.2 and 6.7.2
      */
     Dav1dITUTT35 *itut_t35;
+
+    /**
+     * Number of ITU-T T35 metadata entries in the array
+     */
+    size_t n_itut_t35;
 
     uintptr_t reserved[4]; ///< reserved for future use
 
@@ -140,5 +149,9 @@ typedef struct Dav1dPicAllocator {
  * Release reference to a picture.
  */
 DAV1D_API void dav1d_picture_unref(Dav1dPicture *p);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* DAV1D_PICTURE_H */

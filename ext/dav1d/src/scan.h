@@ -32,6 +32,9 @@
 
 #include "src/levels.h"
 
-extern const uint16_t *const dav1d_scans[N_RECT_TX_SIZES];
+EXTERN const uint16_t *const dav1d_scans[N_RECT_TX_SIZES];
+EXTERN const uint8_t *const dav1d_last_nonzero_col_from_eob[N_RECT_TX_SIZES];
+
+void dav1d_init_last_nonzero_col_from_eob_tables(void);
 
 #endif /* DAV1D_SRC_SCAN_H */

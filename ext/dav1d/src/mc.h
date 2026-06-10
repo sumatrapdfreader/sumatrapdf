@@ -113,6 +113,36 @@ void (name)(pixel *dst, ptrdiff_t dst_stride, \
             int dst_w, int h, int src_w, int dx, int mx HIGHBD_DECL_SUFFIX)
 typedef decl_resize_fn(*resize_fn);
 
+#define decl_8tap_gen(decl_name, fn_name, opt) \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_regular,        opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_regular_smooth, opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_regular_sharp,  opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_smooth_regular, opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_smooth,         opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_smooth_sharp,   opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_sharp_regular,  opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_sharp_smooth,   opt)); \
+    decl_##decl_name##_fn(BF(dav1d_##fn_name##_8tap_sharp,          opt))
+
+#define decl_8tap_fns(opt) \
+    decl_8tap_gen(mc,  put,  opt); \
+    decl_8tap_gen(mct, prep, opt)
+
+#define init_8tap_gen(name, opt) \
+    init_##name##_fn(FILTER_2D_8TAP_REGULAR,        8tap_regular,        opt); \
+    init_##name##_fn(FILTER_2D_8TAP_REGULAR_SMOOTH, 8tap_regular_smooth, opt); \
+    init_##name##_fn(FILTER_2D_8TAP_REGULAR_SHARP,  8tap_regular_sharp,  opt); \
+    init_##name##_fn(FILTER_2D_8TAP_SMOOTH_REGULAR, 8tap_smooth_regular, opt); \
+    init_##name##_fn(FILTER_2D_8TAP_SMOOTH,         8tap_smooth,         opt); \
+    init_##name##_fn(FILTER_2D_8TAP_SMOOTH_SHARP,   8tap_smooth_sharp,   opt); \
+    init_##name##_fn(FILTER_2D_8TAP_SHARP_REGULAR,  8tap_sharp_regular,  opt); \
+    init_##name##_fn(FILTER_2D_8TAP_SHARP_SMOOTH,   8tap_sharp_smooth,   opt); \
+    init_##name##_fn(FILTER_2D_8TAP_SHARP,          8tap_sharp,          opt)
+
+#define init_8tap_fns(opt) \
+    init_8tap_gen(mc,  opt); \
+    init_8tap_gen(mct, opt)
+
 typedef struct Dav1dMCDSPContext {
     mc_fn mc[N_2D_FILTERS];
     mc_scaled_fn mc_scaled[N_2D_FILTERS];
@@ -132,7 +162,5 @@ typedef struct Dav1dMCDSPContext {
 } Dav1dMCDSPContext;
 
 bitfn_decls(void dav1d_mc_dsp_init, Dav1dMCDSPContext *c);
-bitfn_decls(void dav1d_mc_dsp_init_arm, Dav1dMCDSPContext *c);
-bitfn_decls(void dav1d_mc_dsp_init_x86, Dav1dMCDSPContext *c);
 
 #endif /* DAV1D_SRC_MC_H */

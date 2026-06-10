@@ -232,7 +232,6 @@ cglobal generate_grain_y_8bpc, 2, 7 + 2 * ARCH_X86_64, 16, buf, fg_data
 
 .ar2:
 %if ARCH_X86_32
-%assign stack_offset_old stack_offset
     ALLOC_STACK -16*8
 %endif
     DEFINE_ARGS buf, fg_data, shift
@@ -333,7 +332,6 @@ cglobal generate_grain_y_8bpc, 2, 7 + 2 * ARCH_X86_64, 16, buf, fg_data
 .ar3:
     DEFINE_ARGS buf, fg_data, shift
 %if ARCH_X86_32
-%assign stack_offset stack_offset_old
     ALLOC_STACK  -16*14
 %elif WIN64
     SUB             rsp, 16*6
@@ -601,7 +599,6 @@ cglobal generate_grain_uv_%1_8bpc, 1, 7 + 3 * ARCH_X86_64, 16, buf, bufy, fg_dat
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
     movifnidn     bufyq, bufymp
 %if ARCH_X86_32
-%assign stack_offset_old stack_offset
     ALLOC_STACK   -2*16
 %endif
     imul            uvd, 28
@@ -738,9 +735,7 @@ cglobal generate_grain_uv_%1_8bpc, 1, 7 + 3 * ARCH_X86_64, 16, buf, bufy, fg_dat
 
 .ar1:
 %if ARCH_X86_32
-%assign stack_offset stack_offset_old
-%assign stack_size_padded 0
-%xdefine rstk rsp
+    RESET_STACK_STATE
 %endif
     DEFINE_ARGS buf, bufy, fg_data, uv, val3, cf3, min, max, x
     imul            uvd, 28
@@ -881,9 +876,6 @@ cglobal generate_grain_uv_%1_8bpc, 1, 7 + 3 * ARCH_X86_64, 16, buf, bufy, fg_dat
 
 .ar2:
 %if ARCH_X86_32
-%assign stack_offset stack_offset_old
-%assign stack_size_padded 0
-%xdefine rstk rsp
     ALLOC_STACK   -8*16
 %endif
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
@@ -1014,9 +1006,7 @@ cglobal generate_grain_uv_%1_8bpc, 1, 7 + 3 * ARCH_X86_64, 16, buf, bufy, fg_dat
 
 .ar3:
 %if ARCH_X86_32
-%assign stack_offset stack_offset_old
-%assign stack_size_padded 0
-%xdefine rstk rsp
+    RESET_STACK_STATE
 %endif
     DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
     movifnidn     bufyq, bufymp

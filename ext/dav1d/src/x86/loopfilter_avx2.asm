@@ -1444,7 +1444,7 @@ cglobal lpf_v_sb_y_8bpc, 7, 10, 16, 32 * 11, \
     cmp byte [maskq+0], 0                       ; vmask[0]
     je .end
 
-    FILTER         4, v
+    call .v4
 
 .end:
     add           lq, 32
@@ -1453,6 +1453,10 @@ cglobal lpf_v_sb_y_8bpc, 7, 10, 16, 32 * 11, \
     sub           wd, 8
     jg .loop
     RET
+ALIGN function_align
+.v4:
+    FILTER         4, v
+    ret
 
 INIT_YMM avx2
 cglobal lpf_h_sb_y_8bpc, 7, 10, 16, 32 * 21, \
@@ -1481,7 +1485,7 @@ cglobal lpf_h_sb_y_8bpc, 7, 10, 16, 32 * 21, \
     cmp byte [maskq+0], 0                       ; vmask[0]
     je .no_filter
 
-    FILTER         4, h
+    call .h4
     jmp .end
 
 .no_filter:
@@ -1493,6 +1497,10 @@ cglobal lpf_h_sb_y_8bpc, 7, 10, 16, 32 * 21, \
     sub           hd, 8
     jg .loop
     RET
+ALIGN function_align
+.h4:
+    FILTER         4, h
+    ret
 
 INIT_YMM avx2
 cglobal lpf_v_sb_uv_8bpc, 7, 10, 16, \
@@ -1515,7 +1523,7 @@ cglobal lpf_v_sb_uv_8bpc, 7, 10, 16, \
     cmp byte [maskq+0], 0                       ; vmask[0]
     je .end
 
-    FILTER         4, v
+    call mangle(private_prefix %+ _lpf_v_sb_y_8bpc_avx2).v4
 
 .end:
     add           lq, 32
@@ -1545,7 +1553,7 @@ cglobal lpf_h_sb_uv_8bpc, 7, 10, 16, \
     cmp byte [maskq+0], 0                       ; vmask[0]
     je .no_filter
 
-    FILTER         4, h
+    call mangle(private_prefix %+ _lpf_h_sb_y_8bpc_avx2).h4
     jmp .end
 
 .no_filter:

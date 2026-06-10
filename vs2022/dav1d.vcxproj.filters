@@ -65,6 +65,9 @@
     <ClCompile Include="..\ext\dav1d\src\cpu.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\ctx.c">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\dav1d\src\data.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -99,6 +102,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\dav1d\src\obu.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\dav1d\src\pal.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\dav1d\src\picture.c">
@@ -144,12 +150,6 @@
       <Filter>src\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\dav1d\src\x86\cpu.c">
-      <Filter>src\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\dav1d\src\x86\msac_init.c">
-      <Filter>src\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\ext\dav1d\src\x86\refmvs_init.c">
       <Filter>src\x86</Filter>
     </ClCompile>
   </ItemGroup>
@@ -214,6 +214,9 @@
     <CustomBuild Include="..\ext\dav1d\src\x86\itx16_avx2.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\itx16_avx512.asm">
+      <Filter>src\x86</Filter>
+    </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\itx16_sse.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
@@ -227,6 +230,9 @@
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx2.asm">
+      <Filter>src\x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_avx512.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\loopfilter16_sse.asm">
@@ -278,6 +284,9 @@
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\msac.asm">
+      <Filter>src\x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\ext\dav1d\src\x86\pal.asm">
       <Filter>src\x86</Filter>
     </CustomBuild>
     <CustomBuild Include="..\ext\dav1d\src\x86\refmvs.asm">

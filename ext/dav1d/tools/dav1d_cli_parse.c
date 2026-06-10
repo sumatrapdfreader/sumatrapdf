@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
 
@@ -62,6 +62,7 @@ enum {
     ARG_NEG_STRIDE,
     ARG_OUTPUT_INVISIBLE,
     ARG_INLOOP_FILTERS,
+    ARG_DECODE_FRAME_TYPE,
 };
 
 static const struct option long_opts[] = {
@@ -88,6 +89,7 @@ static const struct option long_opts[] = {
     { "negstride",       0, NULL, ARG_NEG_STRIDE },
     { "outputinvisible", 1, NULL, ARG_OUTPUT_INVISIBLE },
     { "inloopfilters",   1, NULL, ARG_INLOOP_FILTERS },
+    { "decodeframetype", 1, NULL, ARG_DECODE_FRAME_TYPE },
     { NULL,              0, NULL, 0 },
 };
 
@@ -98,9 +100,13 @@ static const struct option long_opts[] = {
 #endif
 
 #if ARCH_AARCH64 || ARCH_ARM
-#define ALLOWED_CPU_MASKS " or 'neon'"
+#define ALLOWED_CPU_MASKS ", 'neon', 'dotprod' or 'i8mm'"
+#elif ARCH_LOONGARCH
+#define ALLOWED_CPU_MASKS ", 'lsx' or 'lasx'"
 #elif ARCH_PPC64LE
-#define ALLOWED_CPU_MASKS " or 'vsx'"
+#define ALLOWED_CPU_MASKS ", 'vsx' or 'pwr9'"
+#elif ARCH_RISCV
+#define ALLOWED_CPU_MASKS " or 'rvv'"
 #elif ARCH_X86
 #define ALLOWED_CPU_MASKS \
     ", 'sse2', 'ssse3', 'sse41', 'avx2' or 'avx512icl'"
@@ -145,7 +151,9 @@ static void usage(const char *const app, const char *const reason, ...) {
             " --negstride:          use negative picture strides\n"
             "                       this is mostly meant as a developer option\n"
             " --outputinvisible $num: whether to output invisible (alt-ref) frames (default: 0)\n"
-            " --inloopfilters $str: which in-loop filters to enable (none, (no)deblock, (no)cdef, (no)restoration or all; default: all)\n");
+            " --inloopfilters $str: which in-loop filters to enable (none, (no)deblock, (no)cdef, (no)restoration or all; default: all)\n"
+            " --decodeframetype $str: which frame types to decode (reference, intra, key or all; default: all)\n"
+            );
     exit(1);
 }
 
@@ -207,13 +215,45 @@ enum CpuMask {
     X86_CPU_MASK_AVX2      = DAV1D_X86_CPU_FLAG_AVX2      | X86_CPU_MASK_SSE41,
     X86_CPU_MASK_AVX512ICL = DAV1D_X86_CPU_FLAG_AVX512ICL | X86_CPU_MASK_AVX2,
 };
+#elif ARCH_AARCH64 || ARCH_ARM
+enum CpuMask {
+    ARM_CPU_MASK_NEON      = DAV1D_ARM_CPU_FLAG_NEON,
+    ARM_CPU_MASK_DOTPROD   = DAV1D_ARM_CPU_FLAG_DOTPROD | ARM_CPU_MASK_NEON,
+    ARM_CPU_MASK_I8MM      = DAV1D_ARM_CPU_FLAG_I8MM    | ARM_CPU_MASK_DOTPROD,
+#if ARCH_AARCH64
+    // SVE doesn't imply DOTPROD or I8MM.
+    ARM_CPU_MASK_SVE       = DAV1D_ARM_CPU_FLAG_SVE     | ARM_CPU_MASK_NEON,
+    // SVE2 implies DOTPROD, but not I8MM.
+    ARM_CPU_MASK_SVE2      = DAV1D_ARM_CPU_FLAG_SVE2    | ARM_CPU_MASK_SVE | ARM_CPU_MASK_DOTPROD,
 #endif
+};
+#endif
+
+#if ARCH_PPC64LE
+enum CpuMask {
+    PPC_CPU_MASK_VSX       = DAV1D_PPC_CPU_FLAG_VSX,
+    PPC_CPU_MASK_PWR9      = DAV1D_PPC_CPU_FLAG_VSX | DAV1D_PPC_CPU_FLAG_PWR9,
+};
+#endif
+
 
 static const EnumParseTable cpu_mask_tbl[] = {
 #if ARCH_AARCH64 || ARCH_ARM
-    { "neon", DAV1D_ARM_CPU_FLAG_NEON },
+    { "neon",    ARM_CPU_MASK_NEON },
+    { "dotprod", ARM_CPU_MASK_DOTPROD },
+    { "i8mm",    ARM_CPU_MASK_I8MM },
+#if ARCH_AARCH64
+    { "sve",     ARM_CPU_MASK_SVE },
+    { "sve2",    ARM_CPU_MASK_SVE2 },
+#endif /* ARCH_AARCH64 */
+#elif ARCH_LOONGARCH
+    { "lsx", DAV1D_LOONGARCH_CPU_FLAG_LSX },
+    { "lasx", DAV1D_LOONGARCH_CPU_FLAG_LASX },
 #elif ARCH_PPC64LE
-    { "vsx", DAV1D_PPC_CPU_FLAG_VSX },
+    { "vsx",  PPC_CPU_MASK_VSX },
+    { "pwr9", PPC_CPU_MASK_PWR9 },
+#elif ARCH_RISCV
+    { "rvv", DAV1D_RISCV_CPU_FLAG_V },
 #elif ARCH_X86
     { "sse2",      X86_CPU_MASK_SSE2 },
     { "ssse3",     X86_CPU_MASK_SSSE3 },
@@ -233,7 +273,13 @@ static const EnumParseTable inloop_filters_tbl[] = {
     { "restoration",   DAV1D_INLOOPFILTER_RESTORATION },
     { "norestoration", DAV1D_INLOOPFILTER_ALL - DAV1D_INLOOPFILTER_RESTORATION },
     { "all",           DAV1D_INLOOPFILTER_ALL },
-    { 0 },
+};
+
+static const EnumParseTable decode_frame_type_tbl[] = {
+    { "all",           DAV1D_DECODEFRAMETYPE_ALL },
+    { "reference",     DAV1D_DECODEFRAMETYPE_REFERENCE },
+    { "intra",         DAV1D_DECODEFRAMETYPE_INTRA },
+    { "key",           DAV1D_DECODEFRAMETYPE_KEY },
 };
 
 #define ARRAY_SIZE(n) (sizeof(n)/sizeof(*(n)))
@@ -381,6 +427,11 @@ void parse(const int argc, char *const *const argv,
             lib_settings->inloop_filters =
                 parse_enum(optarg, inloop_filters_tbl,
                            ARRAY_SIZE(inloop_filters_tbl),ARG_INLOOP_FILTERS, argv[0]);
+            break;
+        case ARG_DECODE_FRAME_TYPE:
+            lib_settings->decode_frame_type =
+                parse_enum(optarg, decode_frame_type_tbl,
+                           ARRAY_SIZE(decode_frame_type_tbl), ARG_DECODE_FRAME_TYPE, argv[0]);
             break;
         default:
             usage(argv[0], NULL);

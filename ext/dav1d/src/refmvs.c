@@ -657,19 +657,19 @@ void dav1d_refmvs_tile_sbrow_init(refmvs_tile *const rt, const refmvs_frame *con
 {
     if (rf->n_tile_threads == 1) tile_row_idx = 0;
     rt->rp_proj = &rf->rp_proj[16 * rf->rp_stride * tile_row_idx];
-    const int uses_2pass = rf->n_tile_threads > 1 && rf->n_frame_threads > 1;
-    const ptrdiff_t pass_off = (uses_2pass && pass == 2) ?
-        35 * rf->r_stride * rf->n_tile_rows : 0;
-    refmvs_block *r = &rf->r[35 * rf->r_stride * tile_row_idx + pass_off];
+    const ptrdiff_t r_stride = rf->rp_stride * 2;
+    const ptrdiff_t pass_off = (rf->n_frame_threads > 1 && pass == 2) ?
+        35 * 2 * rf->n_blocks : 0;
+    refmvs_block *r = &rf->r[35 * r_stride * tile_row_idx + pass_off];
     const int sbsz = rf->sbsz;
     const int off = (sbsz * sby) & 16;
-    for (int i = 0; i < sbsz; i++, r += rf->r_stride)
+    for (int i = 0; i < sbsz; i++, r += r_stride)
         rt->r[off + 5 + i] = r;
     rt->r[off + 0] = r;
-    r += rf->r_stride;
+    r += r_stride;
     rt->r[off + 1] = NULL;
     rt->r[off + 2] = r;
-    r += rf->r_stride;
+    r += r_stride;
     rt->r[off + 3] = NULL;
     rt->r[off + 4] = r;
     if (sby & 1) {
@@ -687,9 +687,9 @@ void dav1d_refmvs_tile_sbrow_init(refmvs_tile *const rt, const refmvs_frame *con
     rt->tile_col.end = imin(tile_col_end4, rf->iw4);
 }
 
-void dav1d_refmvs_load_tmvs(const refmvs_frame *const rf, int tile_row_idx,
-                            const int col_start8, const int col_end8,
-                            const int row_start8, int row_end8)
+static void load_tmvs_c(const refmvs_frame *const rf, int tile_row_idx,
+                        const int col_start8, const int col_end8,
+                        const int row_start8, int row_end8)
 {
     if (rf->n_tile_threads == 1) tile_row_idx = 0;
     assert(row_start8 >= 0);
@@ -710,7 +710,7 @@ void dav1d_refmvs_load_tmvs(const refmvs_frame *const rf, int tile_row_idx,
     rp_proj = &rf->rp_proj[16 * stride * tile_row_idx];
     for (int n = 0; n < rf->n_mfmvs; n++) {
         const int ref2cur = rf->mfmv_ref2cur[n];
-        if (ref2cur == INT_MIN) continue;
+        if (ref2cur == INVALID_REF2CUR) continue;
 
         const int ref = rf->mfmv_ref[n];
         const int ref_sign = ref - 4;
@@ -760,22 +760,14 @@ void dav1d_refmvs_load_tmvs(const refmvs_frame *const rf, int tile_row_idx,
     }
 }
 
-void dav1d_refmvs_save_tmvs(const refmvs_tile *const rt,
-                            const int col_start8, int col_end8,
-                            const int row_start8, int row_end8)
+static void save_tmvs_c(refmvs_temporal_block *rp, const ptrdiff_t stride,
+                        refmvs_block *const *const rr,
+                        const uint8_t *const ref_sign,
+                        const int col_end8, const int row_end8,
+                        const int col_start8, const int row_start8)
 {
-    const refmvs_frame *const rf = rt->rf;
-
-    assert(row_start8 >= 0);
-    assert((unsigned) (row_end8 - row_start8) <= 16U);
-    row_end8 = imin(row_end8, rf->ih8);
-    col_end8 = imin(col_end8, rf->iw8);
-
-    const ptrdiff_t stride = rf->rp_stride;
-    const uint8_t *const ref_sign = rf->mfmv_sign;
-    refmvs_temporal_block *rp = &rf->rp[row_start8 * stride];
     for (int y = row_start8; y < row_end8; y++) {
-        const refmvs_block *const b = rt->r[6 + (y & 15) * 2];
+        const refmvs_block *const b = rr[(y & 15) * 2];
 
         for (int x = col_start8; x < col_end8;) {
             const refmvs_block *const cand_b = &b[x * 2 + 1];
@@ -794,8 +786,10 @@ void dav1d_refmvs_save_tmvs(const refmvs_tile *const rt,
                     rp[x] = (refmvs_temporal_block) { .mv = cand_b->mv.mv[0],
                                                       .ref = cand_b->ref.ref[0] };
             } else {
-                for (int n = 0; n < bw8; n++, x++)
+                for (int n = 0; n < bw8; n++, x++) {
+                    rp[x].mv.n = 0;
                     rp[x].ref = 0; // "invalid"
+                }
             }
         }
         rp += stride;
@@ -805,42 +799,44 @@ void dav1d_refmvs_save_tmvs(const refmvs_tile *const rt,
 int dav1d_refmvs_init_frame(refmvs_frame *const rf,
                             const Dav1dSequenceHeader *const seq_hdr,
                             const Dav1dFrameHeader *const frm_hdr,
-                            const unsigned ref_poc[7],
+                            const uint8_t ref_poc[7],
                             refmvs_temporal_block *const rp,
-                            const unsigned ref_ref_poc[7][7],
+                            const uint8_t ref_ref_poc[7][7],
                             /*const*/ refmvs_temporal_block *const rp_ref[7],
                             const int n_tile_threads, const int n_frame_threads)
 {
+    const int rp_stride = ((frm_hdr->width[0] + 127) & ~127) >> 3;
+    const int n_tile_rows = n_tile_threads > 1 ? frm_hdr->tiling.rows : 1;
+    const int n_blocks = rp_stride * n_tile_rows;
+
     rf->sbsz = 16 << seq_hdr->sb128;
     rf->frm_hdr = frm_hdr;
     rf->iw8 = (frm_hdr->width[0] + 7) >> 3;
     rf->ih8 = (frm_hdr->height + 7) >> 3;
     rf->iw4 = rf->iw8 << 1;
     rf->ih4 = rf->ih8 << 1;
-
-    const ptrdiff_t r_stride = ((frm_hdr->width[0] + 127) & ~127) >> 2;
-    const int n_tile_rows = n_tile_threads > 1 ? frm_hdr->tiling.rows : 1;
-    if (r_stride != rf->r_stride || n_tile_rows != rf->n_tile_rows) {
-        if (rf->r) dav1d_freep_aligned(&rf->r);
-        const int uses_2pass = n_tile_threads > 1 && n_frame_threads > 1;
-        rf->r = dav1d_alloc_aligned(sizeof(*rf->r) * 35 * r_stride * n_tile_rows * (1 + uses_2pass), 64);
-        if (!rf->r) return DAV1D_ERR(ENOMEM);
-        rf->r_stride = r_stride;
-    }
-
-    const ptrdiff_t rp_stride = r_stride >> 1;
-    if (rp_stride != rf->rp_stride || n_tile_rows != rf->n_tile_rows) {
-        if (rf->rp_proj) dav1d_freep_aligned(&rf->rp_proj);
-        rf->rp_proj = dav1d_alloc_aligned(sizeof(*rf->rp_proj) * 16 * rp_stride * n_tile_rows, 64);
-        if (!rf->rp_proj) return DAV1D_ERR(ENOMEM);
-        rf->rp_stride = rp_stride;
-    }
-    rf->n_tile_rows = n_tile_rows;
+    rf->rp = rp;
+    rf->rp_stride = rp_stride;
     rf->n_tile_threads = n_tile_threads;
     rf->n_frame_threads = n_frame_threads;
-    rf->rp = rp;
-    rf->rp_ref = rp_ref;
-    const unsigned poc = frm_hdr->frame_offset;
+
+    if (n_blocks != rf->n_blocks) {
+        const size_t r_sz = sizeof(*rf->r) * 35 * 2 * n_blocks * (1 + (n_frame_threads > 1));
+        const size_t rp_proj_sz = sizeof(*rf->rp_proj) * 16 * n_blocks;
+        /* Note that sizeof(*rf->r) == 12, but it's accessed using 16-byte unaligned
+         * loads in save_tmvs() asm which can overread 4 bytes into rp_proj. */
+        dav1d_free_aligned(rf->r);
+        rf->r = dav1d_alloc_aligned(ALLOC_REFMVS, r_sz + rp_proj_sz, 64);
+        if (!rf->r) {
+            rf->n_blocks = 0;
+            return DAV1D_ERR(ENOMEM);
+        }
+
+        rf->rp_proj = (refmvs_temporal_block*)((uintptr_t)rf->r + r_sz);
+        rf->n_blocks = n_blocks;
+    }
+
+    const int poc = frm_hdr->frame_offset;
     for (int i = 0; i < 7; i++) {
         const int poc_diff = get_poc_diff(seq_hdr->order_hint_n_bits,
                                           ref_poc[i], poc);
@@ -852,6 +848,7 @@ int dav1d_refmvs_init_frame(refmvs_frame *const rf,
 
     // temporal MV setup
     rf->n_mfmvs = 0;
+    rf->rp_ref = rp_ref;
     if (frm_hdr->use_ref_frame_mvs && seq_hdr->order_hint_n_bits) {
         int total = 2;
         if (rp_ref[0] && ref_ref_poc[0][6] != ref_poc[3] /* alt-of-last != gold */) {
@@ -878,15 +875,15 @@ int dav1d_refmvs_init_frame(refmvs_frame *const rf,
             rf->mfmv_ref[rf->n_mfmvs++] = 1; // last2
 
         for (int n = 0; n < rf->n_mfmvs; n++) {
-            const unsigned rpoc = ref_poc[rf->mfmv_ref[n]];
+            const int rpoc = ref_poc[rf->mfmv_ref[n]];
             const int diff1 = get_poc_diff(seq_hdr->order_hint_n_bits,
                                            rpoc, frm_hdr->frame_offset);
             if (abs(diff1) > 31) {
-                rf->mfmv_ref2cur[n] = INT_MIN;
+                rf->mfmv_ref2cur[n] = INVALID_REF2CUR;
             } else {
                 rf->mfmv_ref2cur[n] = rf->mfmv_ref[n] < 4 ? -diff1 : diff1;
                 for (int m = 0; m < 7; m++) {
-                    const unsigned rrpoc = ref_ref_poc[rf->mfmv_ref[n]][m];
+                    const int rrpoc = ref_ref_poc[rf->mfmv_ref[n]][m];
                     const int diff2 = get_poc_diff(seq_hdr->order_hint_n_bits,
                                                    rpoc, rrpoc);
                     // unsigned comparison also catches the < 0 case
@@ -900,18 +897,6 @@ int dav1d_refmvs_init_frame(refmvs_frame *const rf,
     return 0;
 }
 
-void dav1d_refmvs_init(refmvs_frame *const rf) {
-    rf->r = NULL;
-    rf->r_stride = 0;
-    rf->rp_proj = NULL;
-    rf->rp_stride = 0;
-}
-
-void dav1d_refmvs_clear(refmvs_frame *const rf) {
-    if (rf->r) dav1d_freep_aligned(&rf->r);
-    if (rf->rp_proj) dav1d_freep_aligned(&rf->rp_proj);
-}
-
 static void splat_mv_c(refmvs_block **rr, const refmvs_block *const rmv,
                        const int bx4, const int bw4, int bh4)
 {
@@ -922,15 +907,29 @@ static void splat_mv_c(refmvs_block **rr, const refmvs_block *const rmv,
     } while (--bh4);
 }
 
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/refmvs.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/refmvs.h"
+#elif ARCH_X86
+#include "src/x86/refmvs.h"
+#endif
+#endif
+
 COLD void dav1d_refmvs_dsp_init(Dav1dRefmvsDSPContext *const c)
 {
+    c->load_tmvs = load_tmvs_c;
+    c->save_tmvs = save_tmvs_c;
     c->splat_mv = splat_mv_c;
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    dav1d_refmvs_dsp_init_arm(c);
+    refmvs_dsp_init_arm(c);
+#elif ARCH_LOONGARCH64
+    refmvs_dsp_init_loongarch(c);
 #elif ARCH_X86
-    dav1d_refmvs_dsp_init_x86(c);
+    refmvs_dsp_init_x86(c);
 #endif
 #endif
 }

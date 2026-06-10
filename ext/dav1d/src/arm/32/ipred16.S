@@ -1732,7 +1732,7 @@ function ipred_filter_16bpc_neon, export=1
 endfunc
 
 // void pal_pred_16bpc_neon(pixel *dst, const ptrdiff_t stride,
-//                          const uint16_t *const pal, const uint8_t *idx,
+//                          const pixel *const pal, const uint8_t *idx,
 //                          const int w, const int h);
 function pal_pred_16bpc_neon, export=1
         push            {r4-r5, lr}
@@ -1742,6 +1742,7 @@ function pal_pred_16bpc_neon, export=1
         clz             lr,  r4
         adr             r12, L(pal_pred_tbl)
         sub             lr,  lr,  #25
+        vmov.i8         q13, #7
         ldr             lr,  [r12, lr, lsl #2]
         vmov.i16        q15, #0x100
         add             r12, r12, lr
@@ -1759,8 +1760,11 @@ L(pal_pred_tbl):
 40:
         lsl             r1,  r1,  #1
 4:
-        vld1.8          {q1}, [r3, :128]!
+        vld1.8          {d2}, [r3, :64]!
         subs            r5,  r5,  #4
+        vshr.u8         d3,  d2,  #4
+        vand.u8         d2,  d2,  d26
+        vzip.8          d2,  d3
         // Restructure q1 from a, b, c, ... into 2*a, 2*a+1, 2*b, 2*b+1, 2*c, 2*c+1, ...
         vadd.i8         q0,  q1,  q1
         vadd.i8         q1,  q1,  q1
@@ -1780,8 +1784,11 @@ L(pal_pred_tbl):
 80:
         lsl             r1,  r1,  #1
 8:
-        vld1.8          {q1, q2}, [r3, :128]!
+        vld1.8          {q1}, [r3, :64]!
         subs            r5,  r5,  #4
+        vshr.u8         q2,  q1,  #4
+        vand.u8         q1,  q1,  q13
+        vzip.8          q1,  q2
         // Prefer doing the adds twice, instead of chaining a vmov after
         // the add.
         vadd.i8         q0,  q1,  q1
@@ -1811,9 +1818,14 @@ L(pal_pred_tbl):
 160:
         lsl             r1,  r1,  #1
 16:
-        vld1.8          {q2, q3},   [r3, :128]!
+        vld1.8          {q10, q11}, [r3, :64]!
         subs            r5,  r5,  #4
-        vld1.8          {q10, q11}, [r3, :128]!
+        vand.u8         q2,  q10, q13
+        vshr.u8         q3,  q10, #4
+        vand.u8         q10, q11, q13
+        vshr.u8         q11, q11, #4
+        vzip.8          q2,  q3
+        vzip.8          q10, q11
         vadd.i8         q0,  q2,  q2
         vadd.i8         q1,  q2,  q2
         vadd.i8         q2,  q3,  q3
@@ -1860,9 +1872,14 @@ L(pal_pred_tbl):
         lsl             r1,  r1,  #1
         sub             r1,  r1,  #32
 32:
-        vld1.8          {q2, q3},   [r3, :128]!
+        vld1.8          {q10, q11}, [r3, :64]!
         subs            r5,  r5,  #2
-        vld1.8          {q10, q11}, [r3, :128]!
+        vand.u8         q2,  q10, q13
+        vshr.u8         q3,  q10, #4
+        vand.u8         q10, q11, q13
+        vshr.u8         q11, q11, #4
+        vzip.8          q2,  q3
+        vzip.8          q10, q11
         vadd.i8         q0,  q2,  q2
         vadd.i8         q1,  q2,  q2
         vadd.i8         q2,  q3,  q3
@@ -1908,9 +1925,14 @@ L(pal_pred_tbl):
 640:
         sub             r1,  r1,  #96
 64:
-        vld1.8          {q2, q3},   [r3, :128]!
+        vld1.8          {q10, q11}, [r3, :64]!
         subs            r5,  r5,  #1
-        vld1.8          {q10, q11}, [r3, :128]!
+        vand.u8         q2,  q10, q13
+        vshr.u8         q3,  q10, #4
+        vand.u8         q10, q11, q13
+        vshr.u8         q11, q11, #4
+        vzip.8          q2,  q3
+        vzip.8          q10, q11
         vadd.i8         q0,  q2,  q2
         vadd.i8         q1,  q2,  q2
         vadd.i8         q2,  q3,  q3

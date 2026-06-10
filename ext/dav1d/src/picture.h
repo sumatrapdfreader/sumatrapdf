@@ -101,6 +101,19 @@ int dav1d_default_picture_alloc(Dav1dPicture *p, void *cookie);
 void dav1d_default_picture_release(Dav1dPicture *p, void *cookie);
 void dav1d_picture_unref_internal(Dav1dPicture *p);
 
+struct itut_t35_ctx_context {
+    Dav1dITUTT35 *itut_t35;
+    size_t n_itut_t35;
+    Dav1dRef ref;
+};
+
+void dav1d_picture_free_itut_t35(const uint8_t *data, void *user_data);
+void dav1d_picture_copy_props(Dav1dPicture *p,
+                              Dav1dContentLightLevel *content_light, Dav1dRef *content_light_ref,
+                              Dav1dMasteringDisplay *mastering_display, Dav1dRef *mastering_display_ref,
+                              Dav1dITUTT35 *itut_t35, Dav1dRef *itut_t35_ref, size_t n_itut_t35,
+                              const Dav1dDataProps *props);
+
 /**
  * Get event flags from picture flags.
  */

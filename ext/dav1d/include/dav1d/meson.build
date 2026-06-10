@@ -22,24 +22,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# installed version.h header generation
-version_h_data = configuration_data()
-version_h_data.set('DAV1D_API_VERSION_MAJOR', dav1d_api_version_major)
-version_h_data.set('DAV1D_API_VERSION_MINOR', dav1d_api_version_minor)
-version_h_data.set('DAV1D_API_VERSION_PATCH', dav1d_api_version_revision)
-version_h_target = configure_file(input: 'version.h.in',
-                                  output: 'version.h',
-                                  configuration: version_h_data)
-
 dav1d_api_headers = [
     'common.h',
     'data.h',
     'dav1d.h',
     'headers.h',
     'picture.h',
+    'version.h',
 ]
 
 # install headers
 install_headers(dav1d_api_headers,
-                version_h_target,
                 subdir : 'dav1d')

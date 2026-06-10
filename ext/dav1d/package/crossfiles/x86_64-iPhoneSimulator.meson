@@ -1,0 +1,27 @@
+[binaries]
+c = ['clang', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk']
+cpp = ['clang++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk']
+objc = ['clang', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk']
+objcpp = ['clang++', '-arch', 'x86_64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk']
+ar = 'ar'
+strip = 'strip'
+
+[built-in options]
+c_args = ['-miphoneos-version-min=11.0']
+cpp_args = ['-miphoneos-version-min=11.0']
+c_link_args = ['-miphoneos-version-min=11.0']
+cpp_link_args = ['-miphoneos-version-min=11.0']
+objc_args = ['-miphoneos-version-min=11.0']
+objcpp_args = ['-miphoneos-version-min=11.0']
+
+[properties]
+root = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer'
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'darwin'
+subsystem = 'ios-simulator'
+kernel = 'xnu'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'

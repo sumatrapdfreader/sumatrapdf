@@ -1194,13 +1194,9 @@ cglobal iidentity_4x16_internal_8bpc, 0, 5, 11, dst, stride, c, eob, tx2
 %ifidn %1_%2, dct_dct
     movd                xm1, [o(pw_2896x8)]
     pmulhrsw            xm0, xm1, [cq]
+    mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    movd                xm2, [o(pw_2048)]
-    pmulhrsw            xm0, xm1
-    pmulhrsw            xm0, xm2
-    vpbroadcastw         m0, xm0
-    mova                 m1, m0
-    jmp m(iadst_8x4_internal_8bpc).end3
+    jmp m(inv_txfm_add_dct_dct_8x8_8bpc).dconly2
 %endif
 %endmacro
 
@@ -1340,20 +1336,20 @@ cglobal iidentity_8x4_internal_8bpc, 0, 5, 7, dst, stride, c, eob, tx2
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
+    or                  r3d, 8
+.dconly:
     pmulhrsw            xm0, xm2
-    psrlw               xm2, 3 ; pw_2048
+.dconly2:
+    movd                xm2, [pw_2048]
     pmulhrsw            xm0, xm1
+    lea                  r2, [strideq*3]
     pmulhrsw            xm0, xm2
     vpbroadcastw         m0, xm0
-.end:
-    mov                 r2d, 2
-.end2:
-    lea                  r3, [strideq*3]
-.loop:
-    WRITE_8X4             0, 0, 1, 2
+.dconly_loop:
+    WRITE_8X4             0, 0, 1, 2, strideq*1, strideq*2, r2
     lea                dstq, [dstq+strideq*4]
-    dec                 r2d
-    jg .loop
+    sub                 r3d, 4
+    jg .dconly_loop
     RET
 %endif
 %endmacro
@@ -1543,13 +1539,8 @@ cglobal iidentity_8x8_internal_8bpc, 0, 5, 7, dst, stride, c, eob, tx2
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    pmulhrsw            xm0, xm2
-    psrlw               xm2, 3 ; pw_2048
-    pmulhrsw            xm0, xm1
-    pmulhrsw            xm0, xm2
-    vpbroadcastw         m0, xm0
-    mov                 r2d, 4
-    jmp m(inv_txfm_add_dct_dct_8x8_8bpc).end2
+    or                  r3d, 16
+    jmp m(inv_txfm_add_dct_dct_8x8_8bpc).dconly
 %endif
 %endmacro
 
@@ -1902,7 +1893,7 @@ cglobal iidentity_8x16_internal_8bpc, 0, 5, 13, dst, stride, c, eob, tx2
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
-    mov                 r2d, 2
+    or                  r3d, 4
 .dconly:
     pmulhrsw            xm0, xm2
     movd                xm2, [pw_2048] ; intentionally rip-relative
@@ -1911,17 +1902,17 @@ cglobal iidentity_8x16_internal_8bpc, 0, 5, 13, dst, stride, c, eob, tx2
     vpbroadcastw         m0, xm0
     pxor                 m3, m3
 .dconly_loop:
-    mova                xm1, [dstq]
-    vinserti128          m1, [dstq+strideq], 1
+    mova                xm1, [dstq+strideq*0]
+    vinserti128          m1, [dstq+strideq*1], 1
     punpckhbw            m2, m1, m3
     punpcklbw            m1, m3
     paddw                m2, m0
     paddw                m1, m0
     packuswb             m1, m2
-    mova             [dstq], xm1
-    vextracti128 [dstq+strideq], m1, 1
+    mova         [dstq+strideq*0], xm1
+    vextracti128 [dstq+strideq*1], m1, 1
     lea                dstq, [dstq+strideq*2]
-    dec                 r2d
+    sub                 r3d, 2
     jg .dconly_loop
     RET
 %endif
@@ -2162,7 +2153,7 @@ cglobal iidentity_16x4_internal_8bpc, 0, 5, 11, dst, stride, c, eob, tx2
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    mov                 r2d, 4
+    or                  r3d, 8
     jmp m(inv_txfm_add_dct_dct_16x4_8bpc).dconly
 %endif
 %endmacro
@@ -2473,7 +2464,7 @@ cglobal iidentity_16x8_internal_8bpc, 0, 5, 13, dst, stride, c, eob, tx2
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    mov                 r2d, 8
+    or                  r3d, 16
     jmp m(inv_txfm_add_dct_dct_16x4_8bpc).dconly
 %endif
 %endmacro
@@ -3120,13 +3111,8 @@ cglobal inv_txfm_add_dct_dct_8x32_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    pmulhrsw            xm0, xm2
-    psrlw               xm2, 2 ; pw_2048
-    pmulhrsw            xm0, xm1
-    pmulhrsw            xm0, xm2
-    vpbroadcastw         m0, xm0
-    mov                 r2d, 8
-    jmp m(inv_txfm_add_dct_dct_8x8_8bpc).end2
+    or                  r3d, 32
+    jmp m(inv_txfm_add_dct_dct_8x8_8bpc).dconly
 .full:
     REPX   {pmulhrsw x, m9}, m12, m13, m14, m15
     pmulhrsw             m6, m9, [rsp+32*2]
@@ -3290,7 +3276,7 @@ cglobal inv_txfm_add_dct_dct_32x8_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    mov                 r2d, 8
+    or                  r3d, 8
 .dconly:
     pmulhrsw            xm0, xm2
     movd                xm2, [pw_2048] ; intentionally rip-relative
@@ -3307,7 +3293,7 @@ cglobal inv_txfm_add_dct_dct_32x8_8bpc, 4, 4, 0, dst, stride, c, eob
     packuswb             m1, m2
     mova             [dstq], m1
     add                dstq, strideq
-    dec                 r2d
+    dec                 r3d
     jg .dconly_loop
     RET
 .normal:
@@ -3672,7 +3658,7 @@ cglobal inv_txfm_add_dct_dct_16x32_8bpc, 4, 4, 0, dst, stride, c, eob
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    mov                 r2d, 16
+    or                  r3d, 32
     jmp m(inv_txfm_add_dct_dct_16x4_8bpc).dconly
 .full:
     mova       [tmp1q-32*4], m1
@@ -3991,7 +3977,7 @@ cglobal inv_txfm_add_dct_dct_32x16_8bpc, 4, 4, 0, dst, stride, c, eob
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    mov                 r2d, 16
+    or                  r3d, 16
     jmp m(inv_txfm_add_dct_dct_32x8_8bpc).dconly
 .normal:
     PROLOGUE              0, 6, 16, 32*19, dst, stride, c, eob, tmp1, tmp2
@@ -4222,7 +4208,7 @@ cglobal inv_txfm_add_dct_dct_32x32_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    mov                 r2d, 32
+    or                  r3d, 32
     jmp m(inv_txfm_add_dct_dct_32x8_8bpc).dconly
 .normal:
     PROLOGUE              0, 9, 16, 32*67, dst, stride, c, eob, tmp1, tmp2, \
@@ -4486,7 +4472,7 @@ cglobal inv_txfm_add_dct_dct_16x64_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    mov                 r2d, 32
+    or                  r3d, 64
     jmp m(inv_txfm_add_dct_dct_16x4_8bpc).dconly
 .normal:
     PROLOGUE              0, 10, 16, 32*67, dst, stride, c, eob, tmp1, tmp2
@@ -4832,7 +4818,7 @@ cglobal inv_txfm_add_dct_dct_64x16_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    mov                 r2d, 16
+    or                  r3d, 16
 .dconly:
     pmulhrsw            xm0, xm2
     movd                xm2, [o(pw_2048)]
@@ -4856,7 +4842,7 @@ cglobal inv_txfm_add_dct_dct_64x16_8bpc, 4, 4, 0, dst, stride, c, eob
     mova        [dstq+32*0], m2
     mova        [dstq+32*1], m3
     add                dstq, strideq
-    dec                 r2d
+    dec                 r3d
     jg .dconly_loop
     RET
 .normal:
@@ -4997,7 +4983,7 @@ cglobal inv_txfm_add_dct_dct_32x64_8bpc, 4, 4, 0, dst, stride, c, eob
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    mov                 r2d, 64
+    or                  r3d, 64
     jmp m(inv_txfm_add_dct_dct_32x8_8bpc).dconly
 .normal:
     PROLOGUE              0, 11, 16, 32*99, dst, stride, c, eob, tmp1, tmp2
@@ -5200,7 +5186,7 @@ cglobal inv_txfm_add_dct_dct_64x32_8bpc, 4, 4, 0, dst, stride, c, eob
     movd                xm2, [o(pw_16384)]
     mov                [cq], eobd
     pmulhrsw            xm0, xm1
-    mov                 r2d, 32
+    or                  r3d, 32
     jmp m(inv_txfm_add_dct_dct_64x16_8bpc).dconly
 .normal:
     PROLOGUE              0, 9, 16, 32*131, dst, stride, c, eob, tmp1, tmp2, \
@@ -5381,7 +5367,7 @@ cglobal inv_txfm_add_dct_dct_64x64_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw            xm0, xm1, [cq]
     movd                xm2, [o(pw_8192)]
     mov                [cq], eobd
-    mov                 r2d, 64
+    or                  r3d, 64
     jmp m(inv_txfm_add_dct_dct_64x16_8bpc).dconly
 .normal:
     PROLOGUE              0, 11, 16, 32*199, dst, stride, c, eob, tmp1, tmp2

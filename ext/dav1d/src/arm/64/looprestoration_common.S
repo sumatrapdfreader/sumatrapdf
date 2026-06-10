@@ -28,405 +28,307 @@
 #include "src/arm/asm.S"
 #include "util.S"
 
-#define SUM_STRIDE (384+16)
+// Series of LUTs for efficiently computing sgr's 1 - x/(x+1) table.
+// In the comments, let RefTable denote the original, reference table.
+const x_by_x_tables
+// RangeMins
+//
+// Min(RefTable[i*8:i*8+8])
+// First two values are zeroed.
+//
+// Lookup using RangeMins[(x >> 3)]
+        .byte 0,  0, 11,  8,  6,  5,  5,  4,  4,  3,  3,  3,  2,  2,  2,  2
+        .byte 2,  2,  2,  2,  2,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0
 
-// void dav1d_sgr_box3_v_neon(int32_t *sumsq, int16_t *sum,
-//                            const int w, const int h,
-//                            const enum LrEdgeFlags edges);
-function sgr_box3_v_neon, export=1
-        add             w10, w3,  #2 // Number of output rows to move back
-        mov             w11, w3      // Number of input rows to move back
-        add             w2,  w2,  #2 // Actual summed width
-        mov             x7,       #(4*SUM_STRIDE) // sumsq stride
-        mov             x8,       #(2*SUM_STRIDE) // sum stride
-        sub             x0,  x0,  #(4*SUM_STRIDE) // sumsq -= stride
-        sub             x1,  x1,  #(2*SUM_STRIDE) // sum   -= stride
+// DiffMasks
+//
+// This contains a bit pattern, indicating at which index positions the value of RefTable changes. For each range
+// in the RangeMins table (covering 8 RefTable entries), we have one byte; each bit indicates whether the value of
+// RefTable changes at that particular index.
+// Using popcount, we can integrate the diff bit field. By shifting away bits in a byte, we can refine the range of
+// the integral. Finally, adding the integral to RangeMins[(x>>3)] reconstructs RefTable (for x > 15).
+//
+// Lookup using DiffMasks[(x >> 3)]
+        .byte 0x00, 0x00, 0xD4, 0x44
+        .byte 0x42, 0x04, 0x00, 0x00
+        .byte 0x00, 0x80, 0x00, 0x00
+        .byte 0x04, 0x00, 0x00, 0x00
+        .byte 0x00, 0x00, 0x00, 0x00
+        .byte 0x00, 0x40, 0x00, 0x00
+        .byte 0x00, 0x00, 0x00, 0x00
+        .byte 0x00, 0x00, 0x00, 0x02
+// Binary form:
+// 0b00000000, 0b00000000, 0b11010100, 0b01000100
+// 0b01000010, 0b00000100, 0b00000000, 0b00000000
+// 0b00000000, 0b10000000, 0b00000000, 0b00000000
+// 0b00000100, 0b00000000, 0b00000000, 0b00000000
+// 0b00000000, 0b00000000, 0b00000000, 0b00000000
+// 0b00000000, 0b01000000, 0b00000000, 0b00000000
+// 0b00000000, 0b00000000, 0b00000000, 0b00000000
+// 0b00000000, 0b00000000, 0b00000000, 0b00000010
 
-        tst             w4,  #4 // LR_HAVE_TOP
-        b.eq            0f
-        // If have top, read from row -2.
-        sub             x5,  x0,  #(4*SUM_STRIDE)
-        sub             x6,  x1,  #(2*SUM_STRIDE)
-        add             w11, w11, #2
-        b               1f
-0:
-        // !LR_HAVE_TOP
-        // If we don't have top, read from row 0 even if
-        // we start writing to row -1.
-        add             x5,  x0,  #(4*SUM_STRIDE)
-        add             x6,  x1,  #(2*SUM_STRIDE)
-1:
+// RefLo
+//
+// RefTable[0:16]
+//      i.e. First 16 elements of the original table.
+// Add to the sum obtained in the rest of the other lut logic to include the first 16 bytes of RefTable.
+//
+// Lookup using RangeMins[x] (tbl will replace x > 15 with 0)
+        .byte 255, 128,  85,  64,  51,  43,  37,  32, 28,  26,  23,  21,  20,  18,  17,  16
 
-        tst             w4,  #8 // LR_HAVE_BOTTOM
-        b.eq            1f
-        // LR_HAVE_BOTTOM
-        add             w3,  w3,  #2  // Sum all h+2 lines with the main loop
-        add             w11, w11, #2
-1:
-        mov             w9,  w3       // Backup of h for next loops
+// Pseudo assembly
+//
+// hi_bits = x >> 3
+// tbl             ref,    {RefLo}, x
+// tbl             diffs,  {DiffMasks[0:16], DiffMasks[16:32]}, hi_bits
+// tbl             min,    {RangeMins[0:16], RangeMins[16:32]}, hi_bits
+// lo_bits = x & 0x7
+// diffs = diffs << lo_bits
+// ref = ref + min
+// integral = popcnt(diffs)
+// ref = ref + integral
+// return ref
+endconst
 
-1:
-        // Start of horizontal loop; start one vertical filter slice.
-        // Start loading rows into v16-v21 and v24-v26 taking top
-        // padding into consideration.
-        tst             w4,  #4 // LR_HAVE_TOP
-        ld1             {v16.4s, v17.4s}, [x5], x7
-        ld1             {v24.8h},         [x6], x8
-        b.eq            2f
-        // LR_HAVE_TOP
-        ld1             {v18.4s, v19.4s}, [x5], x7
-        ld1             {v25.8h},         [x6], x8
-        ld1             {v20.4s, v21.4s}, [x5], x7
-        ld1             {v26.8h},         [x6], x8
-        b               3f
-2:      // !LR_HAVE_TOP
-        mov             v18.16b, v16.16b
-        mov             v19.16b, v17.16b
-        mov             v25.16b, v24.16b
-        mov             v20.16b, v16.16b
-        mov             v21.16b, v17.16b
-        mov             v26.16b, v24.16b
+// void dav1d_sgr_box3_vert_neon(int32_t **sumsq, int16_t **sum,
+//                               int32_t *AA, int16_t *BB,
+//                               const int w, const int s,
+//                               const int bitdepth_max);
+function sgr_box3_vert_neon, export=1
+        stp             d8,  d9,  [sp, #-0x40]!
+        stp             d10, d11, [sp, #0x10]
+        stp             d12, d13, [sp, #0x20]
+        stp             d14, d15, [sp, #0x30]
 
-3:
-        subs            w3,  w3,  #1
-.macro add3
-        add             v16.4s,  v16.4s,  v18.4s
-        add             v17.4s,  v17.4s,  v19.4s
-        add             v24.8h,  v24.8h,  v25.8h
-        add             v16.4s,  v16.4s,  v20.4s
-        add             v17.4s,  v17.4s,  v21.4s
-        add             v24.8h,  v24.8h,  v26.8h
-        st1             {v16.4s, v17.4s}, [x0], x7
-        st1             {v24.8h},         [x1], x8
-.endm
-        add3
-        mov             v16.16b, v18.16b
-        mov             v17.16b, v19.16b
-        mov             v24.16b, v25.16b
-        mov             v18.16b, v20.16b
-        mov             v19.16b, v21.16b
-        mov             v25.16b, v26.16b
-        b.le            4f
-        ld1             {v20.4s, v21.4s}, [x5], x7
-        ld1             {v26.8h},         [x6], x8
-        b               3b
+        add             w4,  w4,  #2
+        clz             w9,  w6        // bitdepth_max
+        dup             v28.4s,   w5   // strength
 
-4:
-        tst             w4,  #8 // LR_HAVE_BOTTOM
-        b.ne            5f
-        // !LR_HAVE_BOTTOM
-        // Produce two more rows, extending the already loaded rows.
-        add3
-        mov             v16.16b, v18.16b
-        mov             v17.16b, v19.16b
-        mov             v24.16b, v25.16b
-        add3
+        ldp             x5,  x6,  [x0]
+        ldr             x0,       [x0, #16]
+        ldp             x7,  x8,  [x1]
+        ldr             x1,       [x1, #16]
 
-5:      // End of one vertical slice.
-        subs            w2,  w2,  #8
-        b.le            0f
-        // Move pointers back up to the top and loop horizontally.
-        // Input pointers
-        msub            x5,  x7,  x11, x5
-        msub            x6,  x8,  x11, x6
-        // Output pointers
-        msub            x0,  x7,  x10, x0
-        msub            x1,  x8,  x10, x1
-        add             x0,  x0,  #32
-        add             x1,  x1,  #16
-        add             x5,  x5,  #32
-        add             x6,  x6,  #16
-        mov             w3,  w9
-        b               1b
+        movi            v31.4s,   #9   // n
 
-0:
-        ret
-.purgem add3
-endfunc
-
-// void dav1d_sgr_box5_v_neon(int32_t *sumsq, int16_t *sum,
-//                            const int w, const int h,
-//                            const enum LrEdgeFlags edges);
-function sgr_box5_v_neon, export=1
-        add             w10, w3,  #2 // Number of output rows to move back
-        mov             w11, w3      // Number of input rows to move back
-        add             w2,  w2,  #8 // Actual summed width
-        mov             x7,       #(4*SUM_STRIDE) // sumsq stride
-        mov             x8,       #(2*SUM_STRIDE) // sum stride
-        sub             x0,  x0,  #(4*SUM_STRIDE) // sumsq -= stride
-        sub             x1,  x1,  #(2*SUM_STRIDE) // sum   -= stride
-
-        tst             w4,  #4 // LR_HAVE_TOP
-        b.eq            0f
-        // If have top, read from row -2.
-        sub             x5,  x0,  #(4*SUM_STRIDE)
-        sub             x6,  x1,  #(2*SUM_STRIDE)
-        add             w11, w11, #2
-        b               1f
-0:
-        // !LR_HAVE_TOP
-        // If we don't have top, read from row 0 even if
-        // we start writing to row -1.
-        add             x5,  x0,  #(4*SUM_STRIDE)
-        add             x6,  x1,  #(2*SUM_STRIDE)
-1:
-
-        tst             w4,  #8 // LR_HAVE_BOTTOM
-        b.eq            0f
-        // LR_HAVE_BOTTOM
-        add             w3,  w3,  #2  // Handle h+2 lines with the main loop
-        add             w11, w11, #2
-        b               1f
-0:
-        // !LR_HAVE_BOTTOM
-        sub             w3,  w3,  #1  // Handle h-1 lines with the main loop
-1:
-        mov             w9,  w3       // Backup of h for next loops
-
-1:
-        // Start of horizontal loop; start one vertical filter slice.
-        // Start loading rows into v16-v25 and v26-v30 taking top
-        // padding into consideration.
-        tst             w4,  #4 // LR_HAVE_TOP
-        ld1             {v16.4s, v17.4s}, [x5], x7
-        ld1             {v26.8h},         [x6], x8
-        b.eq            2f
-        // LR_HAVE_TOP
-        ld1             {v20.4s, v21.4s}, [x5], x7
-        ld1             {v28.8h},         [x6], x8
-        mov             v18.16b, v16.16b
-        mov             v19.16b, v17.16b
-        mov             v27.16b, v26.16b
-        ld1             {v22.4s, v23.4s}, [x5], x7
-        ld1             {v29.8h},         [x6], x8
-        b               3f
-2:      // !LR_HAVE_TOP
-        mov             v18.16b, v16.16b
-        mov             v19.16b, v17.16b
-        mov             v27.16b, v26.16b
-        mov             v20.16b, v16.16b
-        mov             v21.16b, v17.16b
-        mov             v28.16b, v26.16b
-        mov             v22.16b, v16.16b
-        mov             v23.16b, v17.16b
-        mov             v29.16b, v26.16b
-
-3:
-        cbz             w3,  4f
-        ld1             {v24.4s, v25.4s}, [x5], x7
-        ld1             {v30.8h},         [x6], x8
-
-3:
-        // Start of vertical loop
-        subs            w3,  w3,  #2
-.macro add5
-        add             v16.4s,  v16.4s,  v18.4s
-        add             v17.4s,  v17.4s,  v19.4s
-        add             v26.8h,  v26.8h,  v27.8h
-        add             v0.4s,   v20.4s,  v22.4s
-        add             v1.4s,   v21.4s,  v23.4s
-        add             v2.8h,   v28.8h,  v29.8h
-        add             v16.4s,  v16.4s,  v24.4s
-        add             v17.4s,  v17.4s,  v25.4s
-        add             v26.8h,  v26.8h,  v30.8h
-        add             v16.4s,  v16.4s,  v0.4s
-        add             v17.4s,  v17.4s,  v1.4s
-        add             v26.8h,  v26.8h,  v2.8h
-        st1             {v16.4s, v17.4s}, [x0], x7
-        st1             {v26.8h},         [x1], x8
-.endm
-        add5
-.macro shift2
-        mov             v16.16b, v20.16b
-        mov             v17.16b, v21.16b
-        mov             v26.16b, v28.16b
-        mov             v18.16b, v22.16b
-        mov             v19.16b, v23.16b
-        mov             v27.16b, v29.16b
-        mov             v20.16b, v24.16b
-        mov             v21.16b, v25.16b
-        mov             v28.16b, v30.16b
-.endm
-        shift2
-        add             x0,  x0,  x7
-        add             x1,  x1,  x8
-        b.le            5f
-        ld1             {v22.4s, v23.4s}, [x5], x7
-        ld1             {v29.8h},         [x6], x8
-        ld1             {v24.4s, v25.4s}, [x5], x7
-        ld1             {v30.8h},         [x6], x8
-        b               3b
-
-4:
-        // h == 1, !LR_HAVE_BOTTOM.
-        // Pad the last row with the only content row, and add.
-        mov             v24.16b, v22.16b
-        mov             v25.16b, v23.16b
-        mov             v30.16b, v29.16b
-        add5
-        shift2
-        add             x0,  x0,  x7
-        add             x1,  x1,  x8
-        add5
-        b               6f
-
-5:
-        tst             w4,  #8 // LR_HAVE_BOTTOM
-        b.ne            6f
-        // !LR_HAVE_BOTTOM
-        cbnz            w3,  5f
-        // The intended three edge rows left; output the one at h-2 and
-        // the past edge one at h.
-        ld1             {v22.4s, v23.4s}, [x5], x7
-        ld1             {v29.8h},         [x6], x8
-        // Pad the past-edge row from the last content row.
-        mov             v24.16b, v22.16b
-        mov             v25.16b, v23.16b
-        mov             v30.16b, v29.16b
-        add5
-        shift2
-        add             x0,  x0,  x7
-        add             x1,  x1,  x8
-        // The last two rows are already padded properly here.
-        add5
-        b               6f
-
-5:
-        // w3 == -1, two rows left, output one.
-        // Pad the last two rows from the mid one.
-        mov             v22.16b, v20.16b
-        mov             v23.16b, v21.16b
-        mov             v29.16b, v28.16b
-        mov             v24.16b, v20.16b
-        mov             v25.16b, v21.16b
-        mov             v30.16b, v28.16b
-        add5
-        add             x0,  x0,  x7
-        add             x1,  x1,  x8
-        b               6f
-
-6:      // End of one vertical slice.
-        subs            w2,  w2,  #8
-        b.le            0f
-        // Move pointers back up to the top and loop horizontally.
-        // Input pointers
-        msub            x5,  x7,  x11, x5
-        msub            x6,  x8,  x11, x6
-        // Output pointers
-        msub            x0,  x7,  x10, x0
-        msub            x1,  x8,  x10, x1
-        add             x0,  x0,  #32
-        add             x1,  x1,  #16
-        add             x5,  x5,  #32
-        add             x6,  x6,  #16
-        mov             w3,  w9
-        b               1b
-
-0:
-        ret
-.purgem add5
-endfunc
-
-// void dav1d_sgr_calc_ab1_neon(int32_t *a, int16_t *b,
-//                              const int w, const int h, const int strength,
-//                              const int bitdepth_max);
-// void dav1d_sgr_calc_ab2_neon(int32_t *a, int16_t *b,
-//                              const int w, const int h, const int strength,
-//                              const int bitdepth_max);
-function sgr_calc_ab1_neon, export=1
-        clz             w9,  w5
-        add             x3,  x3,  #2 // h += 2
-        movi            v31.4s,   #9 // n
-        mov             x5,  #455
-        mov             x8,  #SUM_STRIDE
-        b               sgr_calc_ab_neon
-endfunc
-
-function sgr_calc_ab2_neon, export=1
-        clz             w9,  w5
-        add             x3,  x3,  #3  // h += 3
-        asr             x3,  x3,  #1  // h /= 2
-        movi            v31.4s,   #25 // n
-        mov             x5,  #164
-        mov             x8,  #(2*SUM_STRIDE)
-endfunc
-
-function sgr_calc_ab_neon
         sub             w9,  w9,  #24  // -bitdepth_min_8
-        movrel          x12, X(sgr_x_by_x)
-        ld1             {v16.16b, v17.16b, v18.16b}, [x12]
+        movrel          x12, x_by_x_tables
+        mov             w13, #455      // one_by_x
+        ld1             {v24.16b, v25.16b, v26.16b, v27.16b}, [x12] // RangeMins, DiffMasks
+        movi            v22.16b, #0x7
+        ldr             q23, [x12, #64] //RefLo
         dup             v6.8h,    w9   // -bitdepth_min_8
-        movi            v19.16b,  #5
-        movi            v20.8b,   #55  // idx of last 5
-        movi            v21.8b,   #72  // idx of last 4
-        movi            v22.8b,   #101 // idx of last 3
-        movi            v23.8b,   #169 // idx of last 2
-        movi            v24.8b,   #254 // idx of last 1
         saddl           v7.4s,    v6.4h,   v6.4h  // -2*bitdepth_min_8
-        add             x2,  x2,  #2 // w += 2
-        add             x7,  x2,  #7
-        bic             x7,  x7,  #7 // aligned w
-        sub             x7,  x8,  x7 // increment between rows
-        movi            v29.8h,   #1, lsl #8
-        dup             v28.4s,   w4
-        dup             v30.4s,   w5 // one_by_x
-        sub             x0,  x0,  #(4*(SUM_STRIDE))
-        sub             x1,  x1,  #(2*(SUM_STRIDE))
-        mov             x6,  x2   // backup of w
-        sub             v16.16b, v16.16b, v19.16b
-        sub             v17.16b, v17.16b, v19.16b
-        sub             v18.16b, v18.16b, v19.16b
+        dup             v30.4s,   w13  // one_by_x
+
+        ld1             {v8.4s,  v9.4s,  v10.4s, v11.4s}, [x5], #64
+        ld1             {v12.4s, v13.4s, v14.4s, v15.4s}, [x6], #64
+        ld1             {v16.4s, v17.4s, v18.4s, v19.4s}, [x0], #64
+        ld1             {v20.8h, v21.8h}, [x8], #32
+        ld1             {v0.8h,  v1.8h},  [x7], #32
 1:
-        subs            x2,  x2,  #8
-        ld1             {v0.4s, v1.4s}, [x0]   // a
-        ld1             {v2.8h}, [x1]          // b
-        srshl           v0.4s,  v0.4s,  v7.4s
-        srshl           v1.4s,  v1.4s,  v7.4s
-        srshl           v4.8h,  v2.8h,  v6.8h
-        mul             v0.4s,  v0.4s,  v31.4s // a * n
-        mul             v1.4s,  v1.4s,  v31.4s // a * n
-        umull           v3.4s,  v4.4h,  v4.4h  // b * b
-        umull2          v4.4s,  v4.8h,  v4.8h  // b * b
-        uqsub           v0.4s,  v0.4s,  v3.4s  // imax(a * n - b * b, 0)
-        uqsub           v1.4s,  v1.4s,  v4.4s  // imax(a * n - b * b, 0)
-        mul             v0.4s,  v0.4s,  v28.4s // p * s
-        mul             v1.4s,  v1.4s,  v28.4s // p * s
-        uqshrn          v0.4h,  v0.4s,  #16
-        uqshrn2         v0.8h,  v1.4s,  #16
-        uqrshrn         v0.8b,  v0.8h,  #4     // imin(z, 255)
+        ld1             {v2.8h,  v3.8h},   [x1], #32
+        add             v8.4s,   v8.4s,   v12.4s
+        add             v9.4s,   v9.4s,   v13.4s
+        add             v10.4s,  v10.4s,  v14.4s
+        add             v11.4s,  v11.4s,  v15.4s
+        add             v0.8h,   v0.8h,   v20.8h
+        add             v1.8h,   v1.8h,   v21.8h
 
-        cmhi            v25.8b, v0.8b,  v20.8b // = -1 if sgr_x_by_x[v0] < 5
-        cmhi            v26.8b, v0.8b,  v21.8b // = -1 if sgr_x_by_x[v0] < 4
-        tbl             v1.8b, {v16.16b, v17.16b, v18.16b}, v0.8b
-        cmhi            v27.8b, v0.8b,  v22.8b // = -1 if sgr_x_by_x[v0] < 3
-        cmhi            v4.8b,  v0.8b,  v23.8b // = -1 if sgr_x_by_x[v0] < 2
-        add             v25.8b, v25.8b, v26.8b
-        cmhi            v5.8b,  v0.8b,  v24.8b // = -1 if sgr_x_by_x[v0] < 1
-        add             v27.8b, v27.8b, v4.8b
-        add             v5.8b,  v5.8b,  v19.8b
-        add             v25.8b, v25.8b, v27.8b
-        add             v1.8b,  v1.8b,  v5.8b
-        add             v1.8b,  v1.8b,  v25.8b
-        uxtl            v1.8h,  v1.8b          // x
+        add             v16.4s,  v16.4s,  v8.4s
+        add             v17.4s,  v17.4s,  v9.4s
+        add             v18.4s,  v18.4s,  v10.4s
+        add             v19.4s,  v19.4s,  v11.4s
+        add             v4.8h,   v2.8h,   v0.8h
+        add             v5.8h,   v3.8h,   v1.8h
 
-        umull           v3.4s,  v1.4h,  v2.4h  // x * BB[i]
-        umull2          v4.4s,  v1.8h,  v2.8h  // x * BB[i]
-        mul             v3.4s,  v3.4s,  v30.4s // x * BB[i] * sgr_one_by_x
-        mul             v4.4s,  v4.4s,  v30.4s // x * BB[i] * sgr_one_by_x
-        srshr           v3.4s,  v3.4s,  #12    // AA[i]
-        srshr           v4.4s,  v4.4s,  #12    // AA[i]
-        sub             v2.8h,  v29.8h, v1.8h  // 256 - x
+        srshl           v16.4s,  v16.4s,  v7.4s
+        srshl           v17.4s,  v17.4s,  v7.4s
+        srshl           v18.4s,  v18.4s,  v7.4s
+        srshl           v19.4s,  v19.4s,  v7.4s
+        srshl           v9.8h,   v4.8h,   v6.8h
+        srshl           v13.8h,  v5.8h,   v6.8h
+        mul             v16.4s,  v16.4s,  v31.4s // a * n
+        mul             v17.4s,  v17.4s,  v31.4s // a * n
+        mul             v18.4s,  v18.4s,  v31.4s // a * n
+        mul             v19.4s,  v19.4s,  v31.4s // a * n
+        umull           v8.4s,   v9.4h,   v9.4h  // b * b
+        umull2          v9.4s,   v9.8h,   v9.8h  // b * b
+        umull           v12.4s,  v13.4h,  v13.4h // b * b
+        umull2          v13.4s,  v13.8h,  v13.8h // b * b
+        uqsub           v16.4s,  v16.4s,  v8.4s  // imax(a * n - b * b, 0)
+        uqsub           v17.4s,  v17.4s,  v9.4s  // imax(a * n - b * b, 0)
+        uqsub           v18.4s,  v18.4s,  v12.4s // imax(a * n - b * b, 0)
+        uqsub           v19.4s,  v19.4s,  v13.4s // imax(a * n - b * b, 0)
+        mul             v16.4s,  v16.4s,  v28.4s // p * s
+        mul             v17.4s,  v17.4s,  v28.4s // p * s
+        mul             v18.4s,  v18.4s,  v28.4s // p * s
+        mul             v19.4s,  v19.4s,  v28.4s // p * s
+        uqshrn          v16.4h,  v16.4s,  #16
+        uqshrn2         v16.8h,  v17.4s,  #16
+        uqshrn          v18.4h,  v18.4s,  #16
+        uqshrn2         v18.8h,  v19.4s,  #16
+        uqrshrn         v1.8b,   v16.8h,  #4     // imin(z, 255)
+        uqrshrn2        v1.16b,  v18.8h,  #4     // imin(z, 255)
 
-        st1             {v3.4s, v4.4s}, [x0], #32
-        st1             {v2.8h}, [x1], #16
+        ld1             {v16.4s, v17.4s}, [x0], #32
+        subs            w4,  w4,  #16
+
+        ushr            v0.16b,  v1.16b,  #3
+        ld1             {v8.4s,  v9.4s}, [x5], #32
+        tbl             v2.16b,  {v26.16b, v27.16b}, v0.16b // RangeMins
+        tbl             v0.16b,  {v24.16b, v25.16b}, v0.16b // DiffMasks
+        tbl             v3.16b,  {v23.16b}, v1.16b          // RefLo
+        and             v1.16b,  v1.16b,   v22.16b
+        ld1             {v12.4s, v13.4s}, [x6], #32
+        ushl            v1.16b,  v2.16b,  v1.16b
+        ld1             {v20.8h, v21.8h}, [x8], #32
+        add             v3.16b,  v3.16b,  v0.16b
+        cnt             v1.16b,  v1.16b
+        ld1             {v18.4s, v19.4s}, [x0], #32
+        add             v3.16b,  v3.16b,  v1.16b
+        ld1             {v10.4s, v11.4s}, [x5], #32
+        uxtl            v0.8h,   v3.8b           // x
+        uxtl2           v1.8h,   v3.16b          // x
+
+        ld1             {v14.4s, v15.4s}, [x6], #32
+
+        umull           v2.4s,   v0.4h,   v4.4h // x * BB[i]
+        umull2          v3.4s,   v0.8h,   v4.8h // x * BB[i]
+        umull           v4.4s,   v1.4h,   v5.4h // x * BB[i]
+        umull2          v5.4s,   v1.8h,   v5.8h // x * BB[i]
+        mul             v2.4s,   v2.4s,  v30.4s // x * BB[i] * sgr_one_by_x
+        mul             v3.4s,   v3.4s,  v30.4s // x * BB[i] * sgr_one_by_x
+        mul             v4.4s,   v4.4s,  v30.4s // x * BB[i] * sgr_one_by_x
+        mul             v5.4s,   v5.4s,  v30.4s // x * BB[i] * sgr_one_by_x
+        st1             {v0.8h, v1.8h}, [x3], #32
+        ld1             {v0.8h, v1.8h}, [x7], #32
+        srshr           v2.4s,   v2.4s,  #12    // AA[i]
+        srshr           v3.4s,   v3.4s,  #12    // AA[i]
+        srshr           v4.4s,   v4.4s,  #12    // AA[i]
+        srshr           v5.4s,   v5.4s,  #12    // AA[i]
+
+        st1             {v2.4s, v3.4s, v4.4s, v5.4s}, [x2], #64
         b.gt            1b
 
-        subs            x3,  x3,  #1
-        b.le            0f
-        add             x0,  x0,  x7, lsl #2
-        add             x1,  x1,  x7, lsl #1
-        mov             x2,  x6
-        b               1b
-0:
+        ldp             d14, d15, [sp, #0x30]
+        ldp             d12, d13, [sp, #0x20]
+        ldp             d10, d11, [sp, #0x10]
+        ldp             d8,  d9,  [sp], 0x40
+        ret
+endfunc
+
+// void dav1d_sgr_box5_vert_neon(int32_t **sumsq, int16_t **sum,
+//                               int32_t *AA, int16_t *BB,
+//                               const int w, const int s,
+//                               const int bitdepth_max);
+function sgr_box5_vert_neon, export=1
+        stp             d8,  d9,  [sp, #-0x30]!
+        stp             d10, d11, [sp, #0x10]
+        stp             d12, d13, [sp, #0x20]
+
+        add             w4,  w4,  #2
+        clz             w15, w6        // bitdepth_max
+        dup             v28.4s,   w5   // strength
+
+        ldp             x5,  x6,  [x0]
+        ldp             x7,  x8,  [x0, #16]
+        ldr             x0,       [x0, #32]
+        ldp             x9,  x10, [x1]
+        ldp             x11, x12, [x1, #16]
+        ldr             x1,       [x1, #32]
+
+        movi            v31.4s,   #25   // n
+
+        sub             w15, w15, #24  // -bitdepth_min_8
+        movrel          x13, x_by_x_tables
+        movi            v30.4s,  #164
+        ld1             {v24.16b, v25.16b, v26.16b, v27.16b}, [x13] // RangeMins, DiffMasks
+        dup             v6.8h,   w15  // -bitdepth_min_8
+        movi            v19.8b,  #0x7
+        ldr             q18, [x13, #64] // RefLo
+        saddl           v7.4s,   v6.4h,   v6.4h  // -2*bitdepth_min_8
+
+        ld1             {v8.4s,  v9.4s},  [x5], #32
+        ld1             {v10.4s, v11.4s}, [x6], #32
+        ld1             {v12.4s, v13.4s}, [x7], #32
+        ld1             {v16.4s, v17.4s}, [x8], #32
+        ld1             {v20.8h},         [x9], #16
+        ld1             {v21.8h},         [x10], #16
+        ld1             {v22.8h},         [x11], #16
+        ld1             {v23.8h},         [x12], #16
+        ld1             {v0.4s,  v1.4s},  [x0], #32
+        ld1             {v2.8h},          [x1], #16
+
+1:
+        add             v8.4s,   v8.4s,   v10.4s
+        add             v9.4s,   v9.4s,   v11.4s
+        add             v12.4s,  v12.4s,  v16.4s
+        add             v13.4s,  v13.4s,  v17.4s
+
+        add             v20.8h,  v20.8h,  v21.8h
+        add             v22.8h,  v22.8h,  v23.8h
+
+        add             v0.4s,   v0.4s,   v8.4s
+        add             v1.4s,   v1.4s,   v9.4s
+        add             v2.8h,   v2.8h,   v20.8h
+
+        add             v0.4s,   v0.4s,   v12.4s
+        add             v1.4s,   v1.4s,   v13.4s
+        add             v2.8h,   v2.8h,   v22.8h
+
+        subs            w4,  w4,  #8
+
+        srshl           v0.4s,   v0.4s,   v7.4s
+        srshl           v1.4s,   v1.4s,   v7.4s
+        srshl           v4.8h,   v2.8h,   v6.8h
+        mul             v0.4s,   v0.4s,   v31.4s // a * n
+        mul             v1.4s,   v1.4s,   v31.4s // a * n
+        umull           v3.4s,   v4.4h,   v4.4h  // b * b
+        umull2          v4.4s,   v4.8h,   v4.8h  // b * b
+        uqsub           v0.4s,   v0.4s,   v3.4s  // imax(a * n - b * b, 0)
+        uqsub           v1.4s,   v1.4s,   v4.4s  // imax(a * n - b * b, 0)
+        mul             v0.4s,   v0.4s,   v28.4s // p * s
+        mul             v1.4s,   v1.4s,   v28.4s // p * s
+        ld1             {v8.4s,  v9.4s},  [x5], #32
+        uqshrn          v0.4h,   v0.4s,   #16
+        uqshrn2         v0.8h,   v1.4s,   #16
+        ld1             {v10.4s, v11.4s}, [x6], #32
+        uqrshrn         v0.8b,   v0.8h,   #4     // imin(z, 255)
+
+        ld1             {v12.4s, v13.4s}, [x7], #32
+
+        ushr            v1.8b,   v0.8b,  #3
+        ld1             {v16.4s, v17.4s}, [x8], #32
+        tbl             v5.8b,   {v26.16b, v27.16b}, v1.8b // RangeMins
+        tbl             v1.8b,   {v24.16b, v25.16b}, v1.8b // DiffMasks
+        tbl             v4.8b,   {v18.16b}, v0.8b          // RefLo
+        and             v0.8b,   v0.8b,  v19.8b
+        ld1             {v20.8h},         [x9], #16
+        ushl            v5.8b,   v5.8b,  v0.8b
+        add             v4.8b,   v4.8b,  v1.8b
+        ld1             {v21.8h},         [x10], #16
+        cnt             v5.8b,   v5.8b
+        ld1             {v22.8h},         [x11], #16
+        add             v5.8b,   v4.8b,  v5.8b
+        ld1             {v23.8h},         [x12], #16
+        uxtl            v5.8h,   v5.8b           // x
+
+        ld1             {v0.4s,  v1.4s},  [x0], #32
+        umull           v3.4s,   v5.4h,   v2.4h  // x * BB[i]
+        umull2          v4.4s,   v5.8h,   v2.8h  // x * BB[i]
+        mul             v3.4s,   v3.4s,   v30.4s // x * BB[i] * sgr_one_by_x
+        mul             v4.4s,   v4.4s,   v30.4s // x * BB[i] * sgr_one_by_x
+        srshr           v3.4s,   v3.4s,   #12    // AA[i]
+        srshr           v4.4s,   v4.4s,   #12    // AA[i]
+        ld1             {v2.8h},          [x1], #16
+
+        st1             {v3.4s, v4.4s}, [x2], #32
+        st1             {v5.8h}, [x3], #16
+        b.gt            1b
+
+        ldp             d12, d13, [sp, #0x20]
+        ldp             d10, d11, [sp, #0x10]
+        ldp             d8,  d9,  [sp], 0x30
         ret
 endfunc

@@ -715,16 +715,31 @@ cfl_ac_fn(422, 1, 0)
 cfl_ac_fn(444, 0, 0)
 
 static void pal_pred_c(pixel *dst, const ptrdiff_t stride,
-                       const uint16_t *const pal, const uint8_t *idx,
+                       const pixel *const pal, const uint8_t *idx,
                        const int w, const int h)
 {
     for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++)
-            dst[x] = (pixel) pal[idx[x]];
-        idx += w;
+        for (int x = 0; x < w; x += 2) {
+            const int i = *idx++;
+            assert(!(i & 0x88));
+            dst[x + 0] = pal[i & 7];
+            dst[x + 1] = pal[i >> 4];
+        }
         dst += PXSTRIDE(stride);
     }
 }
+
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+#include "src/arm/ipred.h"
+#elif ARCH_RISCV
+#include "src/riscv/ipred.h"
+#elif ARCH_X86
+#include "src/x86/ipred.h"
+#elif ARCH_LOONGARCH64
+#include "src/loongarch/ipred.h"
+#endif
+#endif
 
 COLD void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
     c->intra_pred[DC_PRED      ] = ipred_dc_c;
@@ -755,9 +770,13 @@ COLD void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
 
 #if HAVE_ASM
 #if ARCH_AARCH64 || ARCH_ARM
-    bitfn(dav1d_intra_pred_dsp_init_arm)(c);
+    intra_pred_dsp_init_arm(c);
+#elif ARCH_RISCV
+    intra_pred_dsp_init_riscv(c);
 #elif ARCH_X86
-    bitfn(dav1d_intra_pred_dsp_init_x86)(c);
+    intra_pred_dsp_init_x86(c);
+#elif ARCH_LOONGARCH64
+    intra_pred_dsp_init_loongarch(c);
 #endif
 #endif
 }

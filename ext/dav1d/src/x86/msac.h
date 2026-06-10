@@ -28,20 +28,20 @@
 #ifndef DAV1D_SRC_X86_MSAC_H
 #define DAV1D_SRC_X86_MSAC_H
 
+#include "src/cpu.h"
+
 unsigned dav1d_msac_decode_symbol_adapt4_sse2(MsacContext *s, uint16_t *cdf,
                                               size_t n_symbols);
 unsigned dav1d_msac_decode_symbol_adapt8_sse2(MsacContext *s, uint16_t *cdf,
                                               size_t n_symbols);
 unsigned dav1d_msac_decode_symbol_adapt16_sse2(MsacContext *s, uint16_t *cdf,
                                                size_t n_symbols);
+unsigned dav1d_msac_decode_symbol_adapt16_avx2(MsacContext *s, uint16_t *cdf,
+                                               size_t n_symbols);
 unsigned dav1d_msac_decode_bool_adapt_sse2(MsacContext *s, uint16_t *cdf);
 unsigned dav1d_msac_decode_bool_equi_sse2(MsacContext *s);
 unsigned dav1d_msac_decode_bool_sse2(MsacContext *s, unsigned f);
 unsigned dav1d_msac_decode_hi_tok_sse2(MsacContext *s, uint16_t *cdf);
-
-/* Needed for checkasm */
-unsigned dav1d_msac_decode_symbol_adapt16_avx2(MsacContext *s, uint16_t *cdf,
-                                               size_t n_symbols);
 
 #if ARCH_X86_64 || defined(__SSE2__) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define dav1d_msac_decode_symbol_adapt4  dav1d_msac_decode_symbol_adapt4_sse2
@@ -55,10 +55,21 @@ unsigned dav1d_msac_decode_symbol_adapt16_avx2(MsacContext *s, uint16_t *cdf,
 
 #if ARCH_X86_64
 #define dav1d_msac_decode_symbol_adapt16(ctx, cdf, symb) ((ctx)->symbol_adapt16(ctx, cdf, symb))
+
+static ALWAYS_INLINE void msac_init_x86(MsacContext *const s) {
+    const unsigned flags = dav1d_get_cpu_flags();
+
+    if (flags & DAV1D_X86_CPU_FLAG_SSE2) {
+        s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_sse2;
+    }
+
+    if (flags & DAV1D_X86_CPU_FLAG_AVX2) {
+        s->symbol_adapt16 = dav1d_msac_decode_symbol_adapt16_avx2;
+    }
+}
+
 #elif defined(__SSE2__) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
 #define dav1d_msac_decode_symbol_adapt16 dav1d_msac_decode_symbol_adapt16_sse2
 #endif
-
-void dav1d_msac_init_x86(MsacContext *const s);
 
 #endif /* DAV1D_SRC_X86_MSAC_H */

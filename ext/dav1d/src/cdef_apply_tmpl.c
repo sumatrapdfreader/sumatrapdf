@@ -143,7 +143,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dTaskContext *const tc,
         edges &= ~CDEF_HAVE_LEFT;
         edges |= CDEF_HAVE_RIGHT;
         enum Backup2x8Flags prev_flag = 0;
-        for (int sbx = 0, last_skip = 1; sbx < sb64w; sbx++, edges |= CDEF_HAVE_LEFT) {
+        for (int sbx = 0; sbx < sb64w; sbx++, edges |= CDEF_HAVE_LEFT) {
             const int sb128x = sbx >> 1;
             const int sb64_idx = ((by & sbsz) >> 3) + (sbx & 1);
             const int cdef_idx = lflvl[sb128x].cdef_idx[sb64_idx];
@@ -151,7 +151,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dTaskContext *const tc,
                 (!f->frame_hdr->cdef.y_strength[cdef_idx] &&
                  !f->frame_hdr->cdef.uv_strength[cdef_idx]))
             {
-                last_skip = 1;
+                prev_flag = 0;
                 goto next_sb;
             }
 
@@ -184,10 +184,10 @@ void bytefn(dav1d_cdef_brow)(Dav1dTaskContext *const tc,
                 // go to the next block
                 const uint32_t bx_mask = 3U << (bx & 30);
                 if (!(noskip_mask & bx_mask)) {
-                    last_skip = 1;
+                    prev_flag = 0;
                     goto next_b;
                 }
-                const int do_left = last_skip ? flag : (prev_flag ^ flag) & flag;
+                const enum Backup2x8Flags do_left = (prev_flag ^ flag) & flag;
                 prev_flag = flag;
                 if (do_left && edges & CDEF_HAVE_LEFT) {
                     // we didn't backup the prefilter data because it wasn't
@@ -287,7 +287,6 @@ void bytefn(dav1d_cdef_brow)(Dav1dTaskContext *const tc,
 
             skip_uv:
                 bit ^= 1;
-                last_skip = 0;
 
             next_b:
                 bptrs[0] += 8;

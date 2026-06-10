@@ -443,7 +443,7 @@ workspace "SumatraPDF"
     filter { 'platforms:x64 or x64_asan' }
     defines { "ARCH_X86_32=0", "ARCH_X86_64=1" }
     filter {}
-    disablewarnings { "4057", "4090", "4100", "4152", "4201", "4244", "4245", "4456", "4457", "4701", "4703", "4706", "4819", "4996", "5287" }
+    disablewarnings { "4057", "4090", "4100", "4152", "4200", "4201", "4244", "4245", "4389", "4456", "4457", "4701", "4703", "4706", "4819", "4996", "5287" }
     includedirs { "ext/dav1d/include/compat/msvc", "ext/dav1d", "ext/dav1d/include" }
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
     -- -I .\ext\libjpeg-turbo\win\ -f win32

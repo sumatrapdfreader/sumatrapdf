@@ -31,6 +31,19 @@ dav1d_input_sources = files(
     'input/section5.c',
 )
 
+dav1d_input_objs = static_library('dav1d_input',
+    dav1d_input_sources,
+
+    include_directories : dav1d_inc_dirs,
+    install : false,
+    build_by_default : false,
+)
+
+# Leave subdir if tools are disabled
+if not get_option('enable_tools')
+    subdir_done()
+endif
+
 dav1d_output_sources = files(
     'output/md5.c',
     'output/null.c',
@@ -47,17 +60,9 @@ if not get_option('xxhash_muxer').disabled()
         xxh3_found = true
     elif get_option('xxhash_muxer').enabled()
         # manual error since 'required' kw arg in has_header_symbol() was only added in meson 0.50
-        error( 'C symbol XXH3_createState not found in header xxhash.h')
+        error( 'Requested xxhash_muxer to be built, but no usable xxhash.h was found.')
     endif
 endif
-
-dav1d_input_objs = static_library('dav1d_input',
-    dav1d_input_sources,
-
-    include_directories : dav1d_inc_dirs,
-    install : false,
-    build_by_default : false,
-)
 
 dav1d_output_objs = static_library('dav1d_output',
     dav1d_output_sources,
@@ -66,13 +71,6 @@ dav1d_output_objs = static_library('dav1d_output',
     install : false,
     build_by_default : false,
 )
-
-
-# Leave subdir if tools are disabled
-if not get_option('enable_tools')
-    subdir_done()
-endif
-
 
 #
 # Build definition for the dav1d tools

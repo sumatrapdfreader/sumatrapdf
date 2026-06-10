@@ -66,7 +66,8 @@ z_filter_wh:  db  7,  7, 11, 11, 15, 15, 19, 19, 19, 23, 23, 23, 31, 31, 31, 39
 z_filter_k:   db  0, 16,  0, 16,  0, 20,  0, 20,  8, 16,  8, 16
               db 32, 16, 32, 16, 24, 20, 24, 20, 16, 16, 16, 16
               db  0,  0,  0,  0,  0,  0,  0,  0,  8,  0,  8,  0
-z_filter_s:   db  0,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7
+const \
+z_filter_s,   db  0,  0,  0,  1,  1,  2,  2,  3,  3,  4,  4,  5,  5,  6,  6,  7
               db  7,  8,  8,  9,  9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15
               db 15, 15, 15, 15, 15, 15, 15, 15 ; should be in one cache line
 pb_128:       times 4 db 128 ; those are just placed here for alignment.
@@ -772,7 +773,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w32:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM       6
     movu                 m3, [tlq+1]
     punpcklbw            m2, m3, m5
@@ -823,29 +823,17 @@ ALIGN function_align
     jl .w64_loop
     RET
 
-%macro SETUP_STACK_FRAME 3 ; stack_size, regs_used, xmm_regs_used
-    %assign stack_offset 0
-    %assign stack_size_padded 0
-    %assign regs_used %2
-    %xdefine rstk rsp
-    SETUP_STACK_POINTER %1
-    %if regs_used != %2 && WIN64
-        PUSH r%2
-    %endif
-    ALLOC_STACK %1, %3
-%endmacro
-
 cglobal ipred_smooth_h_8bpc, 3, 7, 0, dst, stride, tl, w, h
-%define base r6-ipred_smooth_h_avx2_table
-    lea                  r6, [ipred_smooth_h_avx2_table]
+%define base r5-ipred_smooth_h_avx2_table
+    lea                  r5, [ipred_smooth_h_avx2_table]
     mov                  wd, wm
     vpbroadcastb         m3, [tlq+wq] ; right
     tzcnt                wd, wd
     mov                  hd, hm
-    movsxd               wq, [r6+wq*4]
+    movsxd               wq, [r5+wq*4]
     vpbroadcastd         m4, [base+pb_127_m127]
     vpbroadcastd         m5, [base+pw_128]
-    add                  wq, r6
+    add                  wq, r5
     jmp                  wq
 .w4:
     WIN64_SPILL_XMM       8
@@ -891,7 +879,6 @@ cglobal ipred_smooth_h_8bpc, 3, 7, 0, dst, stride, tl, w, h
     RET
 ALIGN function_align
 .w8:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM       8
     vbroadcasti128       m6, [base+smooth_weights+8*2]
     mova                 m7, [base+ipred_h_shuf]
@@ -927,7 +914,7 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w16:
-    SETUP_STACK_FRAME  32*4, 7, 8
+    ALLOC_STACK        32*4, 8
     lea                  r3, [rsp+64*2-4]
     call .prep ; only worthwhile for for w16 and above
     sub                 tlq, 2
@@ -951,7 +938,7 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w32:
-    SETUP_STACK_FRAME  32*4, 7, 6
+    ALLOC_STACK        32*4
     lea                  r3, [rsp+64*2-2]
     call .prep
     dec                 tlq
@@ -971,19 +958,19 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w64:
-    SETUP_STACK_FRAME  32*4, 7, 9
+    ALLOC_STACK        32*4, 9
     lea                  r3, [rsp+64*2-2]
     call .prep
-    add                  r6, smooth_weights+16*15-ipred_smooth_h_avx2_table
+    add                  r5, smooth_weights+16*15-ipred_smooth_h_avx2_table
     dec                 tlq
-    mova                xm5, [r6-16*7]
-    vinserti128          m5, [r6-16*5], 1
-    mova                xm6, [r6-16*6]
-    vinserti128          m6, [r6-16*4], 1
-    mova                xm7, [r6-16*3]
-    vinserti128          m7, [r6-16*1], 1
-    mova                xm8, [r6-16*2]
-    vinserti128          m8, [r6-16*0], 1
+    mova                xm5, [r5-16*7]
+    vinserti128          m5, [r5-16*5], 1
+    mova                xm6, [r5-16*6]
+    vinserti128          m6, [r5-16*4], 1
+    mova                xm7, [r5-16*3]
+    vinserti128          m7, [r5-16*1], 1
+    mova                xm8, [r5-16*2]
+    vinserti128          m8, [r5-16*0], 1
 .w64_loop:
     vpbroadcastb         m2, [tlq+hq]
     punpcklbw            m2, m3
@@ -1113,7 +1100,6 @@ cglobal ipred_smooth_8bpc, 3, 7, 0, dst, stride, tl, w, h, v_weights
     RET
 ALIGN function_align
 .w8:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      12
     mova                m10, [base+ipred_h_shuf]
     vbroadcasti128      m11, [base+smooth_weights+8*2]
@@ -1157,7 +1143,9 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w16:
-    SETUP_STACK_FRAME  32*4, 7, 14
+    %assign regs_used 4
+    ALLOC_STACK       -32*4, 14
+    %assign regs_used 7
     vbroadcasti128      m11, [tlq+1]
     lea                  r3, [rsp+64*2-4]
     punpcklbw           m10, m11, m0 ; top, bottom
@@ -1197,7 +1185,9 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w32:
-    SETUP_STACK_FRAME  32*4, 7, 11
+    %assign regs_used 4
+    ALLOC_STACK       -32*4, 11
+    %assign regs_used 7
     movu                 m8, [tlq+1]
     lea                  r3, [rsp+64*2-2]
     punpcklbw            m7, m8, m0
@@ -1232,7 +1222,9 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w64:
-    SETUP_STACK_FRAME  32*8, 7, 16
+    %assign regs_used 4
+    ALLOC_STACK       -32*8, 16
+    %assign regs_used 7
     movu                m13, [tlq+1 ]
     movu                m15, [tlq+33]
     add                  r6, smooth_weights+16*15-ipred_smooth_avx2_table
@@ -1316,7 +1308,6 @@ ALIGN function_align
     ret
 
 cglobal ipred_z1_8bpc, 3, 8, 0, dst, stride, tl, w, h, angle, dx, maxbase
-    %assign org_stack_offset stack_offset
     lea                  r6, [ipred_z1_avx2_table]
     tzcnt                wd, wm
     movifnidn        angled, anglem
@@ -1415,7 +1406,6 @@ ALIGN function_align
     pmovmskb            r5d, m1
     ret
 .w4_no_upsample:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -16, 11
     mov            maxbased, 7
     test             angled, 0x400 ; !enable_intra_edge_filter
@@ -1522,7 +1512,6 @@ ALIGN function_align
     mov                 r3b, hb
     cmp                 r3d, 8
     ja .w8_no_upsample ; !enable_intra_edge_filter || is_sm || d >= 40 || h > 8
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -32, 8
     movu                xm2, [z_filter_s+6]
     mova                xm0, [tlq-1]
@@ -1592,7 +1581,6 @@ ALIGN function_align
     or             maxbased, 8 ; imin(h+7, 15)
     jmp .w8_main
 .w8_no_upsample:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -32, 10
     lea            maxbased, [hq+7]
     test             angled, 0x400
@@ -1696,7 +1684,6 @@ ALIGN function_align
     jmp .w16_main
 ALIGN function_align
 .w16:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -64, 12
     lea            maxbased, [hq+15]
     test             angled, 0x400
@@ -1816,7 +1803,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w32:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -96, 15
     lea                 r3d, [hq+31]
     mov            maxbased, 63
@@ -1960,7 +1946,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w64:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK        -128, 16
     lea            maxbased, [hq+63]
     test             angled, 0x400 ; !enable_intra_edge_filter
@@ -2275,14 +2260,14 @@ ALIGN function_align
     vpbroadcastd        xm4, [base+z_filter_k-4+r3*4+12*2]
     punpckhqdq          xm3, xm3      ; 34 44 44 44
     pmaddubsw           xm3, xm4
-    movd                xm4, r6m      ; max_width
-    pminsw              xm4, xm15
-    vpbroadcastb        xm4, xm4
+    vpbroadcastd        xm4, r6m      ; max_width
+    packssdw            xm4, xm4
     paddw               xm0, xm2
     paddw               xm0, xm3
     pmulhrsw            xm0, xm13
-    psubb               xm4, [base+pb_1to32]
+    packsswb            xm4, xm4
     psrlq               xm1, 8
+    psubb               xm4, [base+pb_1to32]
     packuswb            xm0, xm0
     vpblendvb           xm0, xm1, xm4
     movd           [rsp+65], xm0
@@ -2324,14 +2309,14 @@ ALIGN function_align
     vpbroadcastd         m3, [base+z_filter_k-4+r3*4+12*2]
     pshufb               m2, m4
     pmaddubsw            m2, m3
-    movd                xm4, r7m ; max_height
-    pminsw              xm4, xm15
-    vpbroadcastb        xm4, xm4
-    psubb               xm4, [base+pb_16to1]
+    vpbroadcastd        xm4, r7m ; max_height
+    packssdw            xm4, xm4
     paddw                m1, m0
     paddw                m1, m2
     pmulhrsw             m1, m13
+    packsswb            xm4, xm4
     vextracti128        xm0, m1, 1
+    psubb               xm4, [base+pb_16to1]
     packuswb            xm0, xm1
     vpblendvb           xm0, [rsp+48], xm4
     mova           [rsp+48], xm0
@@ -2465,14 +2450,14 @@ ALIGN function_align
     pmaddubsw           xm2, xm4
     vpbroadcastd        xm4, [base+z_filter_k-4+r3*4+12*2]
     pmaddubsw           xm3, xm4
-    movd                xm4, r6m ; max_width
-    pminuw              xm4, xm15
-    vpbroadcastb        xm4, xm4
+    vpbroadcastd        xm4, r6m ; max_width
+    packssdw            xm4, xm4
     paddw               xm0, xm2
     paddw               xm0, xm3
     pmulhrsw            xm0, xm13
-    psubb               xm4, [base+pb_1to32]
+    packsswb            xm4, xm4
     psrldq              xm1, 1
+    psubb               xm4, [base+pb_1to32]
     packuswb            xm0, xm0
     vpblendvb           xm0, xm1, xm4
     movq           [rsp+65], xm0
@@ -2530,14 +2515,14 @@ ALIGN function_align
     vinserti128          m2, [rsp+43], 1
     pshufb               m0, m2, m0
     pmaddubsw            m0, m7
-    movd                xm7, r7m ; max_height
+    vpbroadcastd         m7, r7m ; max_height
     pshufb               m1, m2, m1
     pmaddubsw            m1, m8
     pshufb               m2, m4
     pmaddubsw            m2, m9
-    pminsw              xm7, xm15
+    packssdw             m7, m7
     paddw                m1, m0
-    vpbroadcastb         m7, xm7
+    packsswb             m7, m7
     paddw                m1, m2
     pmulhrsw             m1, m13
     psubb                m7, [base+pb_32to1]
@@ -2679,14 +2664,14 @@ ALIGN function_align
     shufps               m2, m1, q2121                ; 12 23 34 45 56 67 78 89   89 9a ab bc cd de ef ff
     pmaddubsw            m2, m4
     pmaddubsw            m1, m5
-    movd                xm4, r6m ; max_width
-    pminsw              xm4, xm15
-    vpbroadcastb        xm4, xm4
+    vpbroadcastd        xm4, r6m ; max_width
+    packssdw            xm4, xm4
     paddw                m0, m2
     paddw                m0, m1
     pmulhrsw             m0, m13
-    psubb               xm4, [base+pb_1to32]
+    packsswb            xm4, xm4
     vextracti128        xm2, m0, 1
+    psubb               xm4, [base+pb_1to32]
     packuswb            xm0, xm2
     vpblendvb           xm0, xm6, xm4
     movu           [rsp+65], xm0
@@ -2703,9 +2688,9 @@ ALIGN function_align
     vpbroadcastd         m8, [base+z_filter_k-4+r3*4+12*1]
     vpbroadcastd         m9, [base+z_filter_k-4+r3*4+12*2]
 .w16_filter_left:
-    movd                xm6, r7m ; max_height
-    pminsw              xm6, xm15
-    vpbroadcastb         m6, xm6
+    vpbroadcastd         m6, r7m ; max_height
+    packssdw             m6, m6
+    packsswb             m6, m6
     cmp                  hd, 32
     jl .w16_filter_left_h16
     vpbroadcastd        xm0, [base+pb_5]
@@ -2916,9 +2901,9 @@ ALIGN function_align
     vinserti128          m6, [base+z_filter_s+22], 1 ; 56 67 78 89 9a ab bc cd   ab bc cd de ef ff ff ff
     movu                xm3, [tlq+ 6]
     vinserti128          m3, [tlq+17], 1
-    movd                xm0, r6m ; max_width
-    pminsw              xm0, xm15
-    vpbroadcastb        m10, xm0
+    vpbroadcastd        m10, r6m ; max_width
+    packssdw            m10, m10
+    packsswb            m10, m10
 .w32_filter_above:
     pshufb               m0, m1, m5
     shufps               m4, m5, m6, q1021           ; 12 23 34 45 56 67 78 89   67 78 89 9a ab bc cd de
@@ -2974,20 +2959,20 @@ ALIGN function_align
     paddw                m0, m3
     movu                xm2, [tlq+36]
     vinserti128          m2, [tlq+49], 1
+    vpbroadcastd        m10, r6m ; max_width
     pshufb               m4, m2, m4
     pmaddubsw            m4, m7
     pshufb               m3, m2, m6
     pmaddubsw            m3, m8
     pshufb               m2, m5
     pmaddubsw            m2, m9
-    movd                xm5, r6m ; max_width
-    pminsw              xm5, xm15
-    vpbroadcastb        m10, xm5
+    packssdw            m10, m10
     paddw                m3, m4
     paddw                m2, m3
     vpbroadcastd         m3, [base+pb_32]
     pmulhrsw             m0, m13
     pmulhrsw             m2, m13
+    packsswb            m10, m10
     mova                xm5, [base+z_filter_s]
     vinserti128          m5, [base+z_filter_s+6], 1
     psubb                m3, m10, m3
@@ -3001,7 +2986,6 @@ ALIGN function_align
     jmp .w32_filter_above
 
 cglobal ipred_z3_8bpc, 4, 9, 0, dst, stride, tl, w, h, angle, dy, org_w, maxbase
-    %assign org_stack_offset stack_offset
     lea                  r6, [ipred_z3_avx2_table]
     tzcnt                hd, hm
     movifnidn        angled, anglem
@@ -3102,7 +3086,6 @@ ALIGN function_align
     pmovmskb            r5d, m1
     ret
 .h4_no_upsample:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -16, 12
     mov            maxbased, 7
     test             angled, 0x400 ; !enable_intra_edge_filter
@@ -3215,7 +3198,6 @@ ALIGN function_align
     mov                 r4b, wb
     cmp                 r4d, 8
     ja .h8_no_upsample ; !enable_intra_edge_filter || is_sm || d >= 40 || w > 8
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -32, 8
     and                 r4d, 4
     mova                xm0, [tlq-15]
@@ -3297,7 +3279,6 @@ ALIGN function_align
     or             maxbased, 8 ; imin(w+7, 15)
     jmp .h8_main
 .h8_no_upsample:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -32, 10
     lea            maxbased, [wq+7]
     test             angled, 0x400
@@ -3455,7 +3436,6 @@ ALIGN function_align
     jmp .h16_main
 ALIGN function_align
 .h16:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -64, 12
     lea            maxbased, [wq+15]
     test             angled, 0x400
@@ -3661,7 +3641,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .h32:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -96, 15
     lea            maxbased, [wq+31]
     and            maxbased, 31
@@ -3890,7 +3869,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .h64:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK        -128, 16
     lea            maxbased, [wq+63]
     test             angled, 0x400 ; !enable_intra_edge_filter
@@ -4221,6 +4199,7 @@ cglobal ipred_filter_8bpc, 3, 7, 0, dst, stride, tl, w, h, filter
     movzx           filterd, byte filterm
 %endif
     shl             filterd, 6
+    WIN64_SPILL_XMM       9, 15
     add             filterq, r6
     lea                  r6, [ipred_filter_avx2_table]
     movq                xm0, [tlq-3] ; _ 6 5 0 1 2 3 4
@@ -4234,7 +4213,6 @@ cglobal ipred_filter_8bpc, 3, 7, 0, dst, stride, tl, w, h, filter
     mov                  hd, hm
     jmp                  wq
 .w4:
-    WIN64_SPILL_XMM       9
     mova                xm8, [base+filter_shuf2]
     sub                 tlq, 3
     sub                 tlq, hq
@@ -4251,8 +4229,7 @@ cglobal ipred_filter_8bpc, 3, 7, 0, dst, stride, tl, w, h, filter
     RET
 ALIGN function_align
 .w8:
-    %assign stack_offset stack_offset - stack_size_padded
-    WIN64_SPILL_XMM      10
+    WIN64_PUSH_XMM       10
     mova                 m8, [base+filter_shuf1]
     FILTER_XMM            7, 0, 6, [base+filter_shuf2]
     vpbroadcastd         m0, [tlq+4]
@@ -4278,26 +4255,18 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w16:
-%if WIN64
-    %assign stack_offset stack_offset - stack_size_padded
-    %assign xmm_regs_used 15
-    %assign stack_size_padded 0x98
-    SUB                 rsp, stack_size_padded
-%endif
     sub                  hd, 2
-    TAIL_CALL .w16_main, 0
-.w16_main:
+    call .w16_main
 %if WIN64
-    movaps       [rsp+0xa8], xmm6
-    movaps       [rsp+0xb8], xmm7
-    movaps       [rsp+0x28], xmm8
-    movaps       [rsp+0x38], xmm9
-    movaps       [rsp+0x48], xmm10
-    movaps       [rsp+0x58], xmm11
-    movaps       [rsp+0x68], xmm12
-    movaps       [rsp+0x78], xmm13
-    movaps       [rsp+0x88], xmm14
+    jmp .end
+%else
+    RET
 %endif
+.w16_main:
+    ; The spills are into the callers stack frame
+    %assign stack_size stack_size + gprsize
+    WIN64_PUSH_XMM       15, 9
+    %assign stack_size stack_size - gprsize
     FILTER_XMM           12, 0, 7, [base+filter_shuf2]
     vpbroadcastd         m0, [tlq+5]
     vpblendd             m0, [tlq-12], 0x14
@@ -4350,7 +4319,6 @@ ALIGN function_align
     ret
 ALIGN function_align
 .w32:
-    sub                 rsp, stack_size_padded
     sub                  hd, 2
     lea                  r3, [dstq+16]
     lea                 r5d, [hq-2]
@@ -4415,6 +4383,7 @@ ALIGN function_align
     shufps              xm6, xm12, xm6, q3131 ; d0 d1 d2 d3
     mova   [dstq+strideq*0], xm0
     mova   [dstq+strideq*1], xm6
+.end:
     RET
 ALIGN function_align
 .main:
@@ -5307,18 +5276,20 @@ cglobal ipred_cfl_ac_444_8bpc, 4, 9, 6, ac, y, stride, wpad, hpad, w, h, sz, ac_
     RET
 
 cglobal pal_pred_8bpc, 4, 6, 5, dst, stride, pal, idx, w, h
-    vbroadcasti128       m4, [palq]
+    vpbroadcastq         m4, [palq]
     lea                  r2, [pal_pred_avx2_table]
     tzcnt                wd, wm
     movifnidn            hd, hm
     movsxd               wq, [r2+wq*4]
-    packuswb             m4, m4
     add                  wq, r2
     lea                  r2, [strideq*3]
     jmp                  wq
 .w4:
-    pshufb              xm0, xm4, [idxq]
-    add                idxq, 16
+    movq                xm0, [idxq]
+    add                idxq, 8
+    psrlw               xm1, xm0, 4
+    punpcklbw           xm0, xm1
+    pshufb              xm0, xm4, xm0
     movd   [dstq+strideq*0], xm0
     pextrd [dstq+strideq*1], xm0, 1
     pextrd [dstq+strideq*2], xm0, 2
@@ -5327,11 +5298,14 @@ cglobal pal_pred_8bpc, 4, 6, 5, dst, stride, pal, idx, w, h
     sub                  hd, 4
     jg .w4
     RET
-ALIGN function_align
 .w8:
-    pshufb              xm0, xm4, [idxq+16*0]
-    pshufb              xm1, xm4, [idxq+16*1]
-    add                idxq, 16*2
+    movu                xm2, [idxq]
+    add                idxq, 16
+    pshufb              xm1, xm4, xm2
+    psrlw               xm2, 4
+    pshufb              xm2, xm4, xm2
+    punpcklbw           xm0, xm1, xm2
+    punpckhbw           xm1, xm2
     movq   [dstq+strideq*0], xm0
     movhps [dstq+strideq*1], xm0
     movq   [dstq+strideq*2], xm1
@@ -5340,47 +5314,48 @@ ALIGN function_align
     sub                  hd, 4
     jg .w8
     RET
-ALIGN function_align
 .w16:
-    pshufb               m0, m4, [idxq+32*0]
-    pshufb               m1, m4, [idxq+32*1]
-    add                idxq, 32*2
+    movu                 m2, [idxq]
+    add                idxq, 32
+    pshufb               m1, m4, m2
+    psrlw                m2, 4
+    pshufb               m2, m4, m2
+    punpcklbw            m0, m1, m2
+    punpckhbw            m1, m2
     mova         [dstq+strideq*0], xm0
-    vextracti128 [dstq+strideq*1], m0, 1
-    mova         [dstq+strideq*2], xm1
+    mova         [dstq+strideq*1], xm1
+    vextracti128 [dstq+strideq*2], m0, 1
     vextracti128 [dstq+r2       ], m1, 1
     lea                dstq, [dstq+strideq*4]
     sub                  hd, 4
     jg .w16
     RET
-ALIGN function_align
 .w32:
-    pshufb               m0, m4, [idxq+32*0]
-    pshufb               m1, m4, [idxq+32*1]
-    pshufb               m2, m4, [idxq+32*2]
-    pshufb               m3, m4, [idxq+32*3]
-    add                idxq, 32*4
+    vpermq               m2, [idxq], q3120
+    add                idxq, 32
+    pshufb               m1, m4, m2
+    psrlw                m2, 4
+    pshufb               m2, m4, m2
+    punpcklbw            m0, m1, m2
+    punpckhbw            m1, m2
     mova   [dstq+strideq*0], m0
     mova   [dstq+strideq*1], m1
-    mova   [dstq+strideq*2], m2
-    mova   [dstq+r2       ], m3
-    lea                dstq, [dstq+strideq*4]
-    sub                  hd, 4
-    jg .w32
-    RET
-ALIGN function_align
-.w64:
-    pshufb               m0, m4, [idxq+32*0]
-    pshufb               m1, m4, [idxq+32*1]
-    pshufb               m2, m4, [idxq+32*2]
-    pshufb               m3, m4, [idxq+32*3]
-    add                idxq, 32*4
-    mova [dstq+strideq*0+32*0], m0
-    mova [dstq+strideq*0+32*1], m1
-    mova [dstq+strideq*1+32*0], m2
-    mova [dstq+strideq*1+32*1], m3
     lea                dstq, [dstq+strideq*2]
     sub                  hd, 2
+    jg .w32
+    RET
+.w64:
+    vpermq               m2, [idxq], q3120
+    add                idxq, 32
+    pshufb               m1, m4, m2
+    psrlw                m2, 4
+    pshufb               m2, m4, m2
+    punpcklbw            m0, m1, m2
+    punpckhbw            m1, m2
+    mova        [dstq+32*0], m0
+    mova        [dstq+32*1], m1
+    add                dstq, strideq
+    dec                  hd
     jg .w64
     RET
 

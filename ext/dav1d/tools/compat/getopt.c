@@ -55,7 +55,11 @@
 #include <getopt.h>
 #include <stdarg.h>
 #include <stdio.h>
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <err.h>
+#endif
 
 #define	REPLACE_GETOPT		/* use this getopt as the system getopt(3) */
 
@@ -79,12 +83,6 @@ char    *optarg;		/* argument associated with option */
 #define	BADCH		(int)'?'
 #define	BADARG		((*options == ':') ? (int)':' : (int)'?')
 #define	INORDER 	(int)1
-
-#ifndef __CYGWIN__
-#define __progname __argv[0]
-#else
-extern char __declspec(dllimport) *__progname;
-#endif
 
 #ifdef __CYGWIN__
 static char EMSG[] = "";
@@ -113,6 +111,13 @@ static const char noarg[] = "option doesn't take an argument -- %.*s";
 static const char illoptchar[] = "unknown option -- %c";
 static const char illoptstring[] = "unknown option -- %s";
 
+#ifdef _WIN32
+#ifndef __CYGWIN__
+#define __progname __argv[0]
+#else
+extern char __declspec(dllimport) *__progname;
+#endif
+
 static void
 _vwarnx(const char *fmt,va_list ap)
 {
@@ -130,6 +135,7 @@ warnx(const char *fmt,...)
   _vwarnx(fmt,ap);
   va_end(ap);
 }
+#endif
 
 /*
  * Compute the greatest common divisor of a and b.

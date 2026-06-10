@@ -4,56 +4,56 @@ stages:
     - test
 
 .debian-amd64-common:
-    image: registry.videolan.org/dav1d-debian-unstable:20211102173310
+    image: registry.videolan.org/dav1d-debian-unstable:20250207200301
     stage: build
     tags:
         - docker
         - amd64
 
-.debian-amd64-experimental:
-    image: registry.videolan.org/dav1d-debian-experimental:20220427173740
+.debian-amd64-minimum:
+    image: registry.videolan.org/dav1d-debian-minimum:20250207200301
     stage: build
     tags:
         - docker
         - amd64
 
 .debian-llvm-mingw-common:
-    image: registry.videolan.org/vlc-debian-llvm-mingw:20201201162707
+    image: registry.videolan.org/vlc-debian-llvm-msvcrt:20250305204125
     stage: build
     tags:
         - docker
         - amd64
 
 .debian-aarch64-common:
-    image: registry.videolan.org/dav1d-debian-bullseye-aarch64:20211006142507
+    image: registry.videolan.org/dav1d-debian-bookworm-aarch64:20250215002814
     stage: build
     tags:
         - docker
         - aarch64
 
 .debian-armv7-common:
-    image: registry.videolan.org/dav1d-debian-bullseye-armv7:20211004204031
+    image: registry.videolan.org/dav1d-debian-bookworm-armv7:20250215014239
     stage: build
     tags:
         - docker
         - armv7
 
 .debian-ppc64le-common:
-    image: registry.videolan.org/dav1d-debian-unstable-ppc64le:20211006193415
+    image: registry.videolan.org/dav1d-debian-unstable-ppc64le:20250215003029
     stage: build
     tags:
         - docker
         - ppc64le
 
-.ubuntu-common:
-    image: registry.videolan.org/dav1d-ubuntu-bionic:20211005085855
+.android-common:
+    image: registry.videolan.org/vlc-debian-android:20241118101328
     stage: build
     tags:
         - docker
         - amd64
 
-.android-common:
-    image: registry.videolan.org/vlc-debian-android:20200529135226
+.debian-wasm-emscripten-common:
+    image: registry.videolan.org/vlc-debian-wasm-emscripten:20250207201514
     stage: build
     tags:
         - docker
@@ -107,8 +107,9 @@ build-debian:
         - avx2
         - amd64
     script:
-        - meson build --buildtype release
-                      --werror
+        - meson setup build --buildtype release
+                            -Dtrim_dsp=false
+                            --werror
         - ninja -C build
         - cd build && meson test -v
     artifacts:
@@ -119,9 +120,9 @@ build-debian:
 build-debian-static:
     extends: .debian-amd64-common
     script:
-        - meson build --buildtype release
-                      --default-library static
-                      --werror
+        - meson setup build --buildtype release
+                            --default-library static
+                            --werror
         - ninja -C build
         - cd build && meson test -v
         - nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -v " _*dav1d_")
@@ -133,7 +134,7 @@ build-debian-illegal-instructions:
         - avx2
         - amd64
     script:
-        - meson build --buildtype debug
+        - meson setup build --buildtype debug
         - ninja -C build
         - cd build
         - exit_code=0
@@ -144,9 +145,10 @@ build-debian-illegal-instructions:
 build-debian32:
     extends: .debian-amd64-common
     script:
-        - meson build --buildtype release
-                      --werror
-                      --cross-file package/crossfiles/i686-linux32.meson
+        - meson setup build --buildtype release
+                            -Dtrim_dsp=false
+                            --werror
+                            --cross-file package/crossfiles/i686-linux32.meson
         - ninja -C build
         - cd build && meson test -v
     artifacts:
@@ -157,34 +159,29 @@ build-debian32:
 build-debian-examples:
     extends: .debian-amd64-common
     script:
-        - meson build --buildtype release
-                      --werror
-                      -Denable_examples=true
+        - meson setup build --buildtype release
+                            --werror
+                            -Denable_examples=true
         - ninja -C build
 
 build-debian-no-tools:
     extends: .debian-amd64-common
     script:
-        - meson build --buildtype release
-                      --werror
-                      -Denable_tools=false
+        - meson setup build --buildtype release
+                            --werror
+                            -Denable_tools=false
         - ninja -C build
 
-build-debian-bitdepth-8:
+build-debian-bitdepth:
     extends: .debian-amd64-common
     script:
-        - meson build --buildtype release
-                      --werror
-                      -Dbitdepths=8
+        - meson setup build --buildtype release
+                            --werror
+                            -Dbitdepths=$DEPTH
         - ninja -C build
-
-build-debian-bitdepth-16:
-    extends: .debian-amd64-common
-    script:
-        - meson build --buildtype release
-                      --werror
-                      -Dbitdepths=16
-        - ninja -C build
+    parallel:
+      matrix:
+        - DEPTH: [8, 16]
 
 build-debian-avx:
     extends: .debian-amd64-common
@@ -195,11 +192,20 @@ build-debian-avx:
     variables:
         CFLAGS: '-mavx'
     script:
-        - meson build --buildtype debug
-                      --werror
+        - meson setup build --buildtype debugoptimized
+                            --werror
         - ninja -C build
         - cd build
         - time meson test -v --suite checkasm
+
+build-debian-minimum:
+    extends: .debian-amd64-minimum
+    script:
+        - meson setup build --buildtype release
+                            --werror
+                            -Dtrim_dsp=false
+        - ninja -C build
+        - cd build && meson test -v
 
 build-debian-avx512:
     extends: .debian-amd64-common
@@ -209,119 +215,92 @@ build-debian-avx512:
     variables:
         CFLAGS: '-mavx'
     script:
-        - meson build --buildtype debug
-                      --werror
+        - meson setup build --buildtype debugoptimized
+                            --werror
         - ninja -C build
         - cd build
         - time meson test -v --suite checkasm
 
-.build-debian-experimental:
-    extends: .debian-amd64-experimental
+build-debian-clang:
+    extends: .debian-amd64-common
+    variables:
+        CC: clang
+        CC_LD: mold
     script:
-        - meson build --buildtype release
-                      --werror
-                      -Dc_link_args='-fuse-ld=mold'
+        - meson setup build --buildtype release
+                            --werror
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && meson test -v
 
-build-debian-gcc12:
-    extends: .build-debian-experimental
-
-build-debian-clang14:
-    extends: .build-debian-experimental
-    variables:
-        CC: clang
-
-build-win32:
+build-win:
     extends: .debian-amd64-common
     script:
         - wineserver -p && wine wineboot
-        - meson build --buildtype release
-                      --werror
-                      --libdir lib
-                      --prefix "$(pwd)/build/dav1d_install"
-                      --cross-file package/crossfiles/i686-w64-mingw32.meson
-                      -Ddefault_library=both
+        - meson setup build --buildtype release
+                            --werror
+                            --libdir lib
+                            --prefix "$(pwd)/build/dav1d_install"
+                            --cross-file package/crossfiles/${CROSSFILE}.meson
+                            -Ddefault_library=both
+                            -Dtrim_dsp=false
         - ninja -C build
         - ninja -C build install
         - cd build && meson test -v
-        - i686-w64-mingw32-nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
+        - ${CROSSFILE}-nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
             - build/dav1d_install/
         expire_in: 1 week
+    parallel:
+      matrix:
+        - CROSSFILE: [i686-w64-mingw32, x86_64-w64-mingw32]
 
 build-win32-unaligned-stack:
     extends: .debian-llvm-mingw-common
     script:
         - wineserver -p && wine wineboot
-        - meson build --buildtype release
-                      --werror
-                      --cross-file package/crossfiles/i686-w64-mingw32.meson
-                      -Dstack_alignment=4
+        - meson setup build --buildtype release
+                            --werror
+                            --cross-file package/crossfiles/i686-w64-mingw32.meson
+                            -Dstack_alignment=4
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && meson test -v
 
-build-win64:
-    extends: .debian-amd64-common
+build-win-arm:
+    extends: .debian-llvm-mingw-common
     script:
-        - wineserver -p && wine wineboot
-        - meson build --buildtype release
-                      --werror
-                      --libdir lib
-                      --prefix "$(pwd)/build/dav1d_install"
-                      --cross-file package/crossfiles/x86_64-w64-mingw32.meson
-                      -Ddefault_library=both
+        - meson setup build --buildtype release
+                            --werror
+                            --libdir lib
+                            --prefix "$(pwd)/build/dav1d_install"
+                            --cross-file package/crossfiles/${CROSSFILE}.meson
+                            -Ddefault_library=both
+                            -Dtrim_dsp=false
         - ninja -C build
         - ninja -C build install
-        - cd build && meson test -v
-        - x86_64-w64-mingw32-nm -A -g src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
+        - ${CROSSFILE}-nm -A -g build/src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
             - build/dav1d_install/
         expire_in: 1 week
-
-build-win-arm32:
-    extends: .debian-llvm-mingw-common
-    script:
-        - meson build --buildtype release
-                      --werror
-                      --libdir lib
-                      --prefix "$(pwd)/build/dav1d_install"
-                      --cross-file /opt/crossfiles/armv7-w64-mingw32.meson
-                      -Ddefault_library=both
-        - ninja -C build
-        - armv7-w64-mingw32-nm -A -g build/src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
-
-build-win-arm64:
-    extends: .debian-llvm-mingw-common
-    script:
-        - meson build --buildtype release
-                      --werror
-                      --libdir lib
-                      --prefix "$(pwd)/build/dav1d_install"
-                      --cross-file /opt/crossfiles/aarch64-w64-mingw32.meson
-                      -Ddefault_library=both
-        - ninja -C build
-        - ninja -C build install
-        - aarch64-w64-mingw32-nm -A -g build/src/libdav1d.a | grep " [ABCDGRST] " | (! grep -E -v " \.| _*dav1d_")
-    artifacts:
-        name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-        paths:
-            - build/dav1d_install/
-        expire_in: 1 week
+    parallel:
+      matrix:
+        - CROSSFILE: [armv7-w64-mingw32, aarch64-w64-mingw32]
 
 .build-android-common:
     extends: .android-common
     script:
-        - meson build --buildtype release
-                      --werror
-                      --libdir lib
-                      --prefix "$(pwd)/build/dav1d_install"
-                      --cross-file $CROSSFILE
-                      -Ddefault_library=both
+        - meson setup build --buildtype release
+                            --werror
+                            --libdir lib
+                            --prefix "$(pwd)/build/dav1d_install"
+                            --cross-file $CROSSFILE
+                            -Ddefault_library=both
+                            -Dtrim_dsp=false
         - ninja -C build
         - ninja -C build install
 
@@ -329,22 +308,20 @@ build-android-armv7:
     extends: .build-android-common
     variables:
         CROSSFILE: package/crossfiles/arm-android.meson
-    except:
-        - tags
+    rules:
+        - if: '$CI_COMMIT_BRANCH'
 
 build-android-aarch64:
     extends: .build-android-common
     variables:
         CROSSFILE: package/crossfiles/aarch64-android.meson
-    except:
-        - tags
+    rules:
+        - if: '$CI_COMMIT_BRANCH'
 
 build-android-armv7-release:
     extends: build-android-armv7
-    except:
-    only:
-        refs:
-            - tags@videolan/dav1d
+    rules:
+        - if: '$CI_COMMIT_TAG && $CI_PROJECT_PATH == "videolan/dav1d"'
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
@@ -353,10 +330,8 @@ build-android-armv7-release:
 
 build-android-aarch64-release:
     extends: build-android-aarch64
-    except:
-    only:
-        refs:
-            - tags@videolan/dav1d
+    rules:
+        - if: '$CI_COMMIT_TAG && $CI_PROJECT_PATH == "videolan/dav1d"'
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
@@ -366,8 +341,8 @@ build-android-aarch64-release:
 build-debian-aarch64:
     extends: .debian-aarch64-common
     script:
-        - meson build --buildtype debugoptimized
-                      --werror
+        - meson setup build --buildtype debugoptimized
+                            --werror
         - ninja -C build
         - cd build && meson test -v
 
@@ -377,7 +352,19 @@ build-debian-aarch64-clang-5:
         CC: clang-5.0
         CFLAGS: '-integrated-as'
     script:
-        - meson build --buildtype release
+        - meson setup build --buildtype release
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian-aarch64-clang-18:
+    extends: .debian-amd64-common
+    variables:
+        QEMU_LD_PREFIX: /usr/aarch64-linux-gnu/
+    script:
+        - meson setup build --buildtype release
+                            -Dtrim_dsp=false
+                            --werror
+                            --cross-file package/crossfiles/aarch64-linux-clang.meson
         - ninja -C build
         - cd build && meson test -v
 
@@ -385,11 +372,12 @@ build-macos:
     stage: build
     tags:
         - amd64
-        - catalina
+        - macos
     script:
-        - meson build --buildtype release
-                      -Ddefault_library=both
-                      --werror
+        - meson setup build --buildtype release
+                            -Ddefault_library=both
+                            -Dtrim_dsp=false
+                            --werror
         - ninja -C build
         - cd build && meson test -v
 
@@ -398,15 +386,15 @@ build-debian-werror:
     variables:
         CC: clang
     script:
-        - meson build --buildtype debug
-                      --werror
+        - meson setup build --buildtype debug
+                            --werror
         - ninja -C build
 
 build-debian-armv7:
     extends: .debian-armv7-common
     script:
-        - linux32 meson build --buildtype debugoptimized
-                              --werror
+        - linux32 meson setup build --buildtype debugoptimized
+                                    --werror
         - ninja -C build
         - cd build && meson test -v
 
@@ -416,34 +404,61 @@ build-debian-armv7-clang-5:
         CC: clang-5.0
         CFLAGS: '-integrated-as'
     script:
-        - linux32 meson build --buildtype release
+        - linux32 meson setup build --buildtype release
         - ninja -C build
         - cd build && meson test -v
 
-build-ubuntu-snap:
-    extends: .ubuntu-common
-    script:
-        - cd package/snap && snapcraft snap
-        - |
-           if [ "$CI_PROJECT_NAMESPACE" = "videolan" ]; then
-            SNAP_CHANNEL=edge
-            if [ "$CI_COMMIT_TAG" ]; then SNAP_CHANNEL=stable; fi
-            echo $SNAP_LOGIN | base64 --decode | snapcraft login --with -
-            snapcraft push dav1d_*.snap --release $SNAP_CHANNEL
-            snapcraft logout
-           fi
-    artifacts:
-        name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
-        paths:
-            - package/snap/dav1d_*.snap
-        expire_in: 1 week
-    allow_failure: true
-
 build-debian-ppc64le:
     extends: .debian-ppc64le-common
+    variables:
+        CC: gcc-13
     script:
-        - meson build --buildtype release
-                      --werror
+        - meson setup build --buildtype release
+                            -Dtrim_dsp=false
+                            --werror
+        - ninja -C build
+        - cd build && meson test -v
+
+build-debian-wasm:
+    extends: .debian-wasm-emscripten-common
+    script:
+        - source $EMSCRIPTEN_SDK/emsdk_env.sh
+        - meson setup build --buildtype release
+                            --werror
+                            --default-library static
+                            --cross-file package/crossfiles/${CROSSFILE}.meson
+        - ninja -C build
+        - cd build && meson test -v
+    parallel:
+      matrix:
+        - CROSSFILE: [wasm32, wasm64]
+
+build-debian-riscv64:
+    extends: .debian-amd64-common
+    variables:
+        QEMU_CPU: rv64,v=true,vext_spec=v1.0,vlen=256,elen=64
+        QEMU_LD_PREFIX: /usr/riscv64-linux-gnu/
+    script:
+        - meson setup build --buildtype release
+                            -Dtrim_dsp=false
+                            --werror
+                            --cross-file package/crossfiles/${CROSSFILE}.meson
+        - ninja -C build
+        - cd build && meson test -v
+    parallel:
+      matrix:
+        - CROSSFILE: [riscv64-linux, riscv64-linux-clang]
+
+build-debian-loongarch64:
+    extends: .debian-amd64-common
+    variables:
+        QEMU_CPU: max-loongarch-cpu
+        QEMU_LD_PREFIX: /opt/cross-tools/target/
+    script:
+        - meson setup build --buildtype release
+                            -Dtrim_dsp=false
+                            --werror
+                            --cross-file package/crossfiles/loongarch64-linux.meson
         - ninja -C build
         - cd build && meson test -v
 
@@ -479,12 +494,31 @@ build-debian-ppc64le:
         - ninja -C build
         - cd build
         - exit_code=0
-        - time meson test -q --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--cpumask 0"     || exit_code=$((exit_code + $?))
-        - time meson test -q --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--cpumask sse2"  || exit_code=$((exit_code + $?))
-        - time meson test -q --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--cpumask ssse3" || exit_code=$((exit_code + $?))
-        - time meson test -q --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--cpumask sse41" || exit_code=$((exit_code + $?))
-        - time meson test -q --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--cpumask avx2"  || exit_code=$((exit_code + $?))
+        - time meson test -q --suite testdata --test-args "--cpumask 0"     || exit_code=$((exit_code + $?))
+        - time meson test -q --suite testdata --test-args "--cpumask sse2"  || exit_code=$((exit_code + $?))
+        - time meson test -q --suite testdata --test-args "--cpumask ssse3" || exit_code=$((exit_code + $?))
+        - time meson test -q --suite testdata --test-args "--cpumask sse41" || exit_code=$((exit_code + $?))
+        - time meson test -q --suite testdata --test-args "--cpumask avx2"  || exit_code=$((exit_code + $?))
         - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
+
+.test-argon:
+    stage: test
+    cache:
+        key: argon-20230512
+        paths:
+            - cache/argon/
+    variables:
+        ARGON_URL: https://streams.videolan.org/argon/argon.tar.zst
+    before_script:
+        - test -d cache/argon || mkdir -p cache/argon
+        - test -f cache/argon/argon.tar.zst ||
+          (cd cache/argon && curl --remote-name "${ARGON_URL}" --remote-name "${ARGON_URL}.sha512sum" &&
+          sha512sum --check argon.tar.zst.sha512sum )
+        - tar -xf cache/argon/argon.tar.zst -C tests
+    dependencies: []
+    allow_failure: true
+    rules:
+        - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 test-debian:
     extends:
@@ -492,10 +526,12 @@ test-debian:
         - .test-common
     needs: ["build-debian"]
     script:
-        - meson build --buildtype release
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      -Db_coverage=true
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Denable_seek_stress=true
+                            -Dlogging=false
+                            -Db_coverage=true
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && time meson test -v
         - ninja coverage-html
@@ -505,14 +541,16 @@ test-debian:
           grep -Eo '[0-9.]+' | awk '{ print "coverage:", $1 * 100 } '
         - time meson test -v --suite testdata_seek-stress --test-args "--threads 2 --framedelay 1"
         - time meson test -v --suite testdata_seek-stress --test-args "--threads 2 --framedelay 2"
-        - time meson test -v --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--threads=1 --negstride"
+        - time meson test -v --suite testdata --test-args "--threads=1 --negstride"
     coverage: '/^coverage: (\d+.\d+)$/'
     artifacts:
         expose_as: 'Coverage HTML report'
         paths:
             - coverage/
         reports:
-            cobertura: build/meson-logs/coverage.xml
+            coverage_report:
+                coverage_format: cobertura
+                path: build/meson-logs/coverage.xml
 
 test-debian-asm:
     extends:
@@ -537,11 +575,12 @@ test-debian-avx512:
         CFLAGS: '-mavx'
     needs: ["build-debian-avx512"]
     script:
-        - meson build --buildtype release
-                      -Dtestdata_tests=true
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dtrim_dsp=false
         - ninja -C build
-        - cd build && time meson test --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--cpumask avx512icl"
-        - time meson test --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--threads 2 --framedelay 2 --cpumask avx512icl"
+        - cd build && time meson test --suite testdata --test-args "--cpumask avx512icl"
+        - time meson test --suite testdata --test-args "--threads 2 --framedelay 2 --cpumask avx512icl"
 
 test-debian-unaligned-stack:
     extends:
@@ -553,10 +592,12 @@ test-debian-unaligned-stack:
         - avx2
         - amd64
     script:
-        - meson build --buildtype release
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      -Dstack_alignment=16
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Denable_seek_stress=true
+                            -Dlogging=false
+                            -Dstack_alignment=16
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && time meson test -v
 
@@ -568,15 +609,16 @@ test-debian-asan:
     variables:
         ASAN_OPTIONS: 'detect_leaks=0'
     script:
-        - meson build --buildtype debugoptimized
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      -Db_sanitize=address
+        - meson setup build --buildtype debugoptimized
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Db_sanitize=address
         - ninja -C build
         - cd build
         - exit_code=0
-        - time meson test -v --setup=sanitizer --test-args "--cpumask 0"    || exit_code=$((exit_code + $?))
-        - time meson test -v --setup=sanitizer --test-args "--cpumask 0xff" || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite checkasm || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite testdata --test-args "--cpumask 0"    || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite testdata --test-args "--cpumask 0xff" || exit_code=$((exit_code + $?))
         - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
 
 test-debian-msan:
@@ -588,14 +630,19 @@ test-debian-msan:
         MSAN_OPTIONS: 'exitcode=1'
         CC: clang
     script:
-        - meson build --buildtype debugoptimized
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      -Db_sanitize=memory
-                      -Db_lundef=false
-                      -Denable_asm=false
+        - meson setup build --buildtype debugoptimized
+                            -Dtestdata_tests=true
+                            -Denable_seek_stress=true
+                            -Dlogging=false
+                            -Db_sanitize=memory
+                            -Db_lundef=false
+                            -Denable_asm=false
         - ninja -C build
-        - cd build && time meson test -v --setup=sanitizer
+        - cd build
+        - exit_code=0
+        - time meson test -v --setup=sanitizer || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite testdata --test-args "--frametimes /dev/null" || exit_code=$((exit_code + $?))
+        - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
 
 test-debian-ubsan:
     extends:
@@ -606,12 +653,13 @@ test-debian-ubsan:
         UBSAN_OPTIONS: 'print_stacktrace=1:halt_on_error=1'
         CC: clang
     script:
-        - meson build --buildtype debugoptimized
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      -Db_sanitize=undefined
-                      -Db_lundef=false
-                      -Denable_asm=false
+        - meson setup build --buildtype debugoptimized
+                            -Dtestdata_tests=true
+                            -Denable_seek_stress=true
+                            -Dlogging=false
+                            -Db_sanitize=undefined
+                            -Db_lundef=false
+                            -Denable_asm=false
         - ninja -C build
         - cd build && time meson test -v --setup=sanitizer
 
@@ -624,17 +672,18 @@ test-debian-tsan:
         TSAN_OPTIONS: 'halt_on_error=1'
         CC: clang
     script:
-        - meson build --buildtype debugoptimized
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      -Db_sanitize=thread
-                      -Db_lundef=false
+        - meson setup build --buildtype debugoptimized
+                            -Dtestdata_tests=true
+                            -Denable_seek_stress=true
+                            -Dlogging=false
+                            -Db_sanitize=thread
+                            -Db_lundef=false
         - ninja -C build
         - cd build
         - exit_code=0
-        - time meson test -v --setup=sanitizer --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--threads 2 --framedelay 1"             || exit_code=$((exit_code + $?))
-        - time meson test -v --setup=sanitizer --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--threads 2 --framedelay 2"             || exit_code=$((exit_code + $?))
-        - time meson test -v --setup=sanitizer --suite testdata-8 --suite testdata-10 --suite testdata-12 --test-args "--threads 2 --framedelay 2 --negstride" || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite testdata --test-args "--threads 2 --framedelay 1"             || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite testdata --test-args "--threads 2 --framedelay 2"             || exit_code=$((exit_code + $?))
+        - time meson test -v --setup=sanitizer --suite testdata --test-args "--threads 2 --framedelay 2 --negstride" || exit_code=$((exit_code + $?))
         - time meson test -v --setup=sanitizer --suite testdata_seek-stress --test-args "--threads 2 --framedelay 1"                                           || exit_code=$((exit_code + $?))
         - time meson test -v --setup=sanitizer --suite testdata_seek-stress --test-args "--threads 2 --framedelay 2"                                           || exit_code=$((exit_code + $?))
         - time meson test -v --setup=sanitizer --suite oss-fuzz-asan --suite oss-fuzz-msan --suite oss-fuzz-ubsan                                              || exit_code=$((exit_code + $?))
@@ -644,17 +693,18 @@ test-win64:
     extends:
         - .debian-amd64-common
         - .test-common
-    needs: ["build-win64"]
+    needs: ["build-win: [x86_64-w64-mingw32]"]
     tags:
         - docker
         - avx2
         - amd64
     script:
         - wineserver -p && wine wineboot
-        - meson build --buildtype release
-                      -Dtestdata_tests=true
-                      -Dlogging=false
-                      --cross-file package/crossfiles/x86_64-w64-mingw32.meson
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Dtrim_dsp=false
+                            --cross-file package/crossfiles/x86_64-w64-mingw32.meson
         - ninja -C build
         - cd build && time meson test -v
 
@@ -664,9 +714,10 @@ test-debian-aarch64:
         - .test-common
     needs: ["build-debian-aarch64"]
     script:
-        - meson build --buildtype release
-                      -Dtestdata_tests=true
-                      -Dlogging=false
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && time meson test -v
 
@@ -674,13 +725,65 @@ test-debian-ppc64le:
     extends:
         - .debian-ppc64le-common
         - .test-common
+    variables:
+        CC: gcc-13
     needs: ["build-debian-ppc64le"]
     script:
-        - meson build --buildtype release
-                      -Dtestdata_tests=true
-                      -Dlogging=false
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Dtrim_dsp=false
         - ninja -C build
         - cd build && time meson test -v
+
+test-debian-riscv64:
+    extends:
+        - .debian-amd64-common
+        - .test-common
+    needs: ["build-debian-riscv64"]
+    script:
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Dtrim_dsp=false
+                            --cross-file package/crossfiles/riscv64-linux.meson
+        - ninja -C build
+        - cd build && time meson test -v --timeout-multiplier 10
+    variables:
+        QEMU_LD_PREFIX: /usr/riscv64-linux-gnu/
+    parallel:
+      matrix:
+        - QEMU_CPU: [ "rv64,v=true,vext_spec=v1.0,vlen=128,elen=64",
+                      "rv64,v=true,vext_spec=v1.0,vlen=256,elen=64",
+                      "rv64,v=true,vext_spec=v1.0,vlen=512,elen=64",
+                      "rv64,v=true,vext_spec=v1.0,vlen=1024,elen=64" ]
+
+test-debian-aarch64-qemu:
+    extends:
+        - .debian-amd64-common
+        - .test-common
+    needs: ["build-debian-aarch64"]
+    script:
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Dtrim_dsp=false
+                            --cross-file package/crossfiles/aarch64-linux.meson
+        - ninja -C build
+        - cd build && time meson test -v --timeout-multiplier 10
+    variables:
+        QEMU_LD_PREFIX: /usr/aarch64-linux-gnu/
+    parallel:
+      matrix:
+        # sve-default-vector-length sets the max vector length in bytes;
+        # the default is 64, allowing up to 512 bit vectors. Testing 1024
+        # and 2048 bit vectors requires raising this limit. The sve<n>
+        # option sets the active vector length in bits.
+        - QEMU_CPU: [ "max,sve-default-vector-length=256,sve128=on",
+                      "max,sve-default-vector-length=256,sve256=on",
+                      "max,sve-default-vector-length=256,sve512=on",
+                      "max,sve-default-vector-length=256,sve1024=on",
+                      "max,sve-default-vector-length=256,sve2048=on" ]
 
 test-debian-armv7-clang-5:
     extends:
@@ -691,19 +794,121 @@ test-debian-armv7-clang-5:
         CC: clang-5.0
         CFLAGS: '-integrated-as'
     script:
-        - linux32 meson build --buildtype release
-                              -Dtestdata_tests=true
-                              -Dlogging=false
+        - linux32 meson setup build --buildtype release
+                                    -Dtestdata_tests=true
+                                    -Dlogging=false
+                                    -Dtrim_dsp=false
         - ninja -C build
         - cd build && time meson test -v
+
+test-debian-loongarch64:
+    extends:
+        - .debian-amd64-common
+        - .test-common
+    needs: ["build-debian-loongarch64"]
+    variables:
+        QEMU_CPU: max-loongarch-cpu
+        QEMU_LD_PREFIX: /opt/cross-tools/target/
+    script:
+        - meson setup build --buildtype release
+                            -Dtestdata_tests=true
+                            -Dlogging=false
+                            -Dtrim_dsp=false
+                            --cross-file package/crossfiles/loongarch64-linux.meson
+        - ninja -C build
+        - cd build && time meson test -v --timeout-multiplier 10
+
+.test-argon-script: &test-argon-script
+        - meson setup build --buildtype release
+                            -Dlogging=false
+                            -Dtrim_dsp=false
+        - cd build && ninja
+        - exit_code=0
+
+test-debian-argon:
+    extends:
+        - .debian-amd64-common
+        - .test-argon
+    needs: ["build-debian"]
+    tags:
+        - docker
+        - amd64
+        - avx2
+    script:
+        - *test-argon-script
+        - ../tests/dav1d_argon.bash -t 1 -c 0         || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 2 -c sse2 -g 0 || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 3 -c ssse3     || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 4 -c sse41     || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 5 -c avx2      || exit_code=$((exit_code + $?))
+        - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
+
+test-debian32-argon:
+    extends:
+        - .debian-amd64-common
+        - .test-argon
+    needs: ["build-debian32"]
+    script:
+        - meson setup build --buildtype release
+                            -Dlogging=false
+                            -Dtrim_dsp=false
+                            --cross-file package/crossfiles/i686-linux32.meson
+        - cd build && ninja
+        - exit_code=0
+        - ../tests/dav1d_argon.bash -t 2 -c sse2       || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 2 -c ssse3      || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 2 -c sse41 -g 0 || exit_code=$((exit_code + $?))
+        - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
+
+test-debian-argon-avx512:
+    extends:
+        - .debian-amd64-common
+        - .test-argon
+    needs: ["build-debian-avx512"]
+    tags:
+        - docker
+        - amd64-avx512
+    script:
+        - *test-argon-script
+        - ../tests/dav1d_argon.bash -t 2 -c avx512icl || exit_code=$((exit_code + $?))
+        - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
+
+test-debian-armv7-argon:
+    extends:
+        - .debian-armv7-common
+        - .test-argon
+    needs: ["build-debian-armv7"]
+    script:
+        - *test-argon-script
+        - ../tests/dav1d_argon.bash -t 3 -c 0         || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 2 -c neon      || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 1 -c neon -g 0 || exit_code=$((exit_code + $?))
+        - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
+
+test-debian-aarch64-argon:
+    extends:
+        - .debian-aarch64-common
+        - .test-argon
+    needs: ["build-debian-aarch64"]
+    tags:
+        - docker
+        - aarch64
+        - dotprod
+    script:
+        - *test-argon-script
+        - ../tests/dav1d_argon.bash -t 2 -c 0         || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 3 -c neon      || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 1 -c neon -g 0 || exit_code=$((exit_code + $?))
+        - ../tests/dav1d_argon.bash -t 4 -c dotprod   || exit_code=$((exit_code + $?))
+        - if [ $exit_code -ne 0 ]; then exit $exit_code; fi
 
 
 .pages-common:
     extends: .debian-amd64-common
     script:
-        - meson build --buildtype release
-                      --werror
-                      -Denable_docs=true
+        - meson setup build --buildtype release
+                            --werror
+                            -Denable_docs=true
         - ninja -C build doc/html
         - mv build/doc/html public
     artifacts:

@@ -34,38 +34,38 @@
 
 #include "src/levels.h"
 
-extern const uint8_t dav1d_al_part_ctx[2][N_BL_LEVELS][N_PARTITIONS];
-extern const uint8_t /* enum BlockSize */
+EXTERN const uint8_t dav1d_al_part_ctx[2][N_BL_LEVELS][N_PARTITIONS];
+EXTERN const uint8_t /* enum BlockSize */
                      dav1d_block_sizes[N_BL_LEVELS][N_PARTITIONS][2];
 // width, height (in 4px blocks), log2 versions of these two
-extern const uint8_t dav1d_block_dimensions[N_BS_SIZES][4];
+EXTERN const uint8_t dav1d_block_dimensions[N_BS_SIZES][4];
 typedef struct TxfmInfo {
     // width, height (in 4px blocks), log2 of them, min/max of log2, sub, pad
     uint8_t w, h, lw, lh, min, max, sub, ctx;
 } TxfmInfo;
-extern const TxfmInfo dav1d_txfm_dimensions[N_RECT_TX_SIZES];
-extern const uint8_t /* enum (Rect)TxfmSize */
+EXTERN const TxfmInfo dav1d_txfm_dimensions[N_RECT_TX_SIZES];
+EXTERN const uint8_t /* enum (Rect)TxfmSize */
                      dav1d_max_txfm_size_for_bs[N_BS_SIZES][4 /* y, 420, 422, 444 */];
-extern const uint8_t /* enum TxfmType */
+EXTERN const uint8_t /* enum TxfmType */
                      dav1d_txtp_from_uvmode[N_UV_INTRA_PRED_MODES];
 
-extern const uint8_t /* enum InterPredMode */
+EXTERN const uint8_t /* enum InterPredMode */
                      dav1d_comp_inter_pred_modes[N_COMP_INTER_PRED_MODES][2];
 
-extern const uint8_t dav1d_partition_type_count[N_BL_LEVELS];
-extern const uint8_t /* enum TxfmType */ dav1d_tx_types_per_set[40];
+EXTERN const uint8_t dav1d_partition_type_count[N_BL_LEVELS];
+EXTERN const uint8_t /* enum TxfmType */ dav1d_tx_types_per_set[40];
 
-extern const uint8_t dav1d_filter_mode_to_y_mode[5];
-extern const uint8_t dav1d_ymode_size_context[N_BS_SIZES];
-extern const uint8_t dav1d_lo_ctx_offsets[3][5][5];
-extern const uint8_t dav1d_skip_ctx[5][5];
-extern const uint8_t /* enum TxClass */
+EXTERN const uint8_t dav1d_filter_mode_to_y_mode[5];
+EXTERN const uint8_t dav1d_ymode_size_context[N_BS_SIZES];
+EXTERN const uint8_t dav1d_lo_ctx_offsets[3][5][5];
+EXTERN const uint8_t dav1d_skip_ctx[5][5];
+EXTERN const uint8_t /* enum TxClass */
                      dav1d_tx_type_class[N_TX_TYPES_PLUS_LL];
-extern const uint8_t /* enum Filter2d */
+EXTERN const uint8_t /* enum Filter2d */
                      dav1d_filter_2d[DAV1D_N_FILTERS /* h */][DAV1D_N_FILTERS /* v */];
-extern const uint8_t /* enum Dav1dFilterMode */ dav1d_filter_dir[N_2D_FILTERS][2];
-extern const uint8_t dav1d_intra_mode_context[N_INTRA_PRED_MODES];
-extern const uint8_t dav1d_wedge_ctx_lut[N_BS_SIZES];
+EXTERN const uint8_t /* enum Dav1dFilterMode */ dav1d_filter_dir[N_2D_FILTERS][2];
+EXTERN const uint8_t dav1d_intra_mode_context[N_INTRA_PRED_MODES];
+EXTERN const uint8_t dav1d_wedge_ctx_lut[N_BS_SIZES];
 
 static const unsigned cfl_allowed_mask =
     (1 << BS_32x32) |
@@ -103,23 +103,23 @@ static const unsigned interintra_allowed_mask =
     (1 << BS_8x16) |
     (1 << BS_8x8);
 
-extern const Dav1dWarpedMotionParams dav1d_default_wm_params;
+EXTERN const Dav1dWarpedMotionParams dav1d_default_wm_params;
 
-extern const int8_t dav1d_cdef_directions[12][2];
+EXTERN const int8_t dav1d_cdef_directions[12][2];
 
-extern const uint16_t dav1d_sgr_params[16][2];
-extern const uint8_t dav1d_sgr_x_by_x[256];
+EXTERN const uint16_t dav1d_sgr_params[16][2];
+EXTERN const uint8_t dav1d_sgr_x_by_x[256];
 
-extern const int8_t dav1d_mc_subpel_filters[6][15][8];
-extern const int8_t dav1d_mc_warp_filter[193][8];
-extern const int8_t dav1d_resize_filter[64][8];
+EXTERN const int8_t dav1d_mc_subpel_filters[6][15][8];
+EXTERN const int8_t dav1d_mc_warp_filter[193][8];
+EXTERN const int8_t dav1d_resize_filter[64][8];
 
-extern const uint8_t dav1d_sm_weights[128];
-extern const uint16_t dav1d_dr_intra_derivative[44];
-extern const int8_t dav1d_filter_intra_taps[5][64];
+EXTERN const uint8_t dav1d_sm_weights[128];
+EXTERN const uint16_t dav1d_dr_intra_derivative[44];
+EXTERN const int8_t dav1d_filter_intra_taps[5][64];
 
-extern const uint8_t dav1d_obmc_masks[64];
+EXTERN const uint8_t dav1d_obmc_masks[64];
 
-extern const int16_t dav1d_gaussian_sequence[2048]; // for fgs
+EXTERN const int16_t dav1d_gaussian_sequence[2048]; // for fgs
 
 #endif /* DAV1D_SRC_TABLES_H */

@@ -204,18 +204,9 @@ cglobal generate_grain_y_8bpc, 2, 9, 8, buf, fg_data
 
 .ar2:
 %if WIN64
-    ; xmm6 and xmm7 already saved
-    %assign xmm_regs_used 16
     %assign stack_size_padded 168
     SUB             rsp, stack_size_padded
-    movaps   [rsp+16*2], xmm8
-    movaps   [rsp+16*3], xmm9
-    movaps   [rsp+16*4], xmm10
-    movaps   [rsp+16*5], xmm11
-    movaps   [rsp+16*6], xmm12
-    movaps   [rsp+16*7], xmm13
-    movaps   [rsp+16*8], xmm14
-    movaps   [rsp+16*9], xmm15
+    WIN64_PUSH_XMM   16, 8
 %endif
     DEFINE_ARGS buf, fg_data, h, x
     mov             r6d, [fg_dataq+FGData.ar_coeff_shift]
@@ -287,15 +278,9 @@ cglobal generate_grain_y_8bpc, 2, 9, 8, buf, fg_data
 INIT_YMM avx2
 .ar3:
 %if WIN64
-    ; xmm6 and xmm7 already saved
-    %assign stack_offset 16
     ALLOC_STACK   16*14
     %assign stack_size stack_size - 16*4
-    %assign xmm_regs_used 12
-    movaps  [rsp+16*12], xmm8
-    movaps  [rsp+16*13], xmm9
-    movaps  [rsp+16*14], xmm10
-    movaps  [rsp+16*15], xmm11
+    WIN64_PUSH_XMM   12, 8
 %else
     ALLOC_STACK   16*12
 %endif

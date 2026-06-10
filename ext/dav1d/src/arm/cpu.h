@@ -30,6 +30,10 @@
 
 enum CpuFlags {
     DAV1D_ARM_CPU_FLAG_NEON = 1 << 0,
+    DAV1D_ARM_CPU_FLAG_DOTPROD = 1 << 1,
+    DAV1D_ARM_CPU_FLAG_I8MM = 1 << 2,
+    DAV1D_ARM_CPU_FLAG_SVE = 1 << 3,
+    DAV1D_ARM_CPU_FLAG_SVE2 = 1 << 4,
 };
 
 unsigned dav1d_get_cpu_flags_arm(void);

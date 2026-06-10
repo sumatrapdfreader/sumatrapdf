@@ -740,12 +740,12 @@ function generate_grain_\type\()_16bpc_neon, export=1
         add             x4,  x1,  #FGD_AR_COEFFS_UV
 .endif
         add             w9,  w9,  w15 // grain_scale_shift - bitdepth_min_8
-        adr             x16, L(gen_grain_\type\()_tbl)
+        movrel          x16, gen_grain_\type\()_tbl
         ldr             w17, [x1, #FGD_AR_COEFF_LAG]
         add             w9,  w9,  #4
-        ldrh            w17, [x16, w17, uxtw #1]
+        ldrsw           x17, [x16, w17, uxtw #2]
         dup             v31.8h,  w9    // 4 - bitdepth_min_8 + data->grain_scale_shift
-        sub             x16, x16, w17, uxtw
+        add             x16, x16, x17
         neg             v31.8h,  v31.8h
 
 .ifc \type, uv_444
@@ -945,13 +945,14 @@ L(generate_grain_\type\()_lag3):
         ldp             x30, x19, [sp], #96
         AARCH64_VALIDATE_LINK_REGISTER
         ret
-
-L(gen_grain_\type\()_tbl):
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag0)
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag1)
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag2)
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag3)
 endfunc
+
+jumptable gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag0) - gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag1) - gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag2) - gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag3) - gen_grain_\type\()_tbl
+endjumptable
 .endm
 
 gen_grain_82 y
@@ -991,12 +992,12 @@ function generate_grain_\type\()_16bpc_neon, export=1
         ldr             w9,  [x1, #FGD_GRAIN_SCALE_SHIFT]
         add             x4,  x1,  #FGD_AR_COEFFS_UV
         add             w9,  w9,  w15 // grain_scale_shift - bitdepth_min_8
-        adr             x16, L(gen_grain_\type\()_tbl)
+        movrel          x16, gen_grain_\type\()_tbl
         ldr             w17, [x1, #FGD_AR_COEFF_LAG]
         add             w9,  w9,  #4
-        ldrh            w17, [x16, w17, uxtw #1]
+        ldrsw           x17, [x16, w17, uxtw #2]
         dup             v31.8h,  w9    // 4 - bitdepth_min_8 + data->grain_scale_shift
-        sub             x16, x16, w17, uxtw
+        add             x16, x16, x17
         neg             v31.8h,  v31.8h
 
         cmp             w13, #0
@@ -1155,13 +1156,14 @@ L(generate_grain_\type\()_lag3):
         ldp             x30, x19, [sp], #96
         AARCH64_VALIDATE_LINK_REGISTER
         ret
-
-L(gen_grain_\type\()_tbl):
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag0)
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag1)
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag2)
-        .hword L(gen_grain_\type\()_tbl) - L(generate_grain_\type\()_lag3)
 endfunc
+
+jumptable gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag0) - gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag1) - gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag2) - gen_grain_\type\()_tbl
+        .word L(generate_grain_\type\()_lag3) - gen_grain_\type\()_tbl
+endjumptable
 .endm
 
 gen_grain_44 uv_420
@@ -1306,18 +1308,18 @@ function fgy_32x32_16bpc_neon, export=1
         add_offset      x5,  w6,  x10, x5,  x9
 
         ldr             w11, [sp, #88]         // type
-        adr             x13, L(fgy_loop_tbl)
+        movrel          x13, fgy_loop_tbl
 
-        add             x4,  x12, #32*2        // grain_lut += BLOCK_SIZE * bx
-        add             x6,  x14, x9,  lsl #5  // grain_lut += grain_stride * BLOCK_SIZE * by
+        add             x4,  x12, #32*2        // grain_lut += FG_BLOCK_SIZE * bx
+        add             x6,  x14, x9,  lsl #5  // grain_lut += grain_stride * FG_BLOCK_SIZE * by
 
         tst             w11, #1
-        ldrh            w11, [x13, w11, uxtw #1]
+        ldrsw           x11, [x13, w11, uxtw #2]
 
-        add             x8,  x16, x9,  lsl #5  // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             x8,  x8,  #32*2        // grain_lut += BLOCK_SIZE * bx
+        add             x8,  x16, x9,  lsl #5  // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             x8,  x8,  #32*2        // grain_lut += FG_BLOCK_SIZE * bx
 
-        sub             x11, x13, w11, uxtw
+        add             x11, x13, x11
 
         b.eq            1f
         // y overlap
@@ -1480,13 +1482,14 @@ L(loop_\ox\oy):
         fgy             0, 1
         fgy             1, 0
         fgy             1, 1
-
-L(fgy_loop_tbl):
-        .hword L(fgy_loop_tbl) - L(loop_00)
-        .hword L(fgy_loop_tbl) - L(loop_01)
-        .hword L(fgy_loop_tbl) - L(loop_10)
-        .hword L(fgy_loop_tbl) - L(loop_11)
 endfunc
+
+jumptable fgy_loop_tbl
+        .word L(loop_00) - fgy_loop_tbl
+        .word L(loop_01) - fgy_loop_tbl
+        .word L(loop_10) - fgy_loop_tbl
+        .word L(loop_11) - fgy_loop_tbl
+endjumptable
 
 // void dav1d_fguv_32x32_420_16bpc_neon(pixel *const dst,
 //                                      const pixel *const src,
@@ -1581,19 +1584,19 @@ function fguv_32x32_\layout\()_16bpc_neon, export=1
         add_offset      x17, w16, x17, x5,  x10
         add_offset      x5,  w8,  x11, x5,  x10
 
-        add             x4,  x13, #2*(32 >> \sx)      // grain_lut += BLOCK_SIZE * bx
-        add             x8,  x15, x10, lsl #(5 - \sy) // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             x11, x17, x10, lsl #(5 - \sy) // grain_lut += grain_stride * BLOCK_SIZE * by
-        add             x11, x11, #2*(32 >> \sx)      // grain_lut += BLOCK_SIZE * bx
+        add             x4,  x13, #2*(32 >> \sx)      // grain_lut += FG_BLOCK_SIZE * bx
+        add             x8,  x15, x10, lsl #(5 - \sy) // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             x11, x17, x10, lsl #(5 - \sy) // grain_lut += grain_stride * FG_BLOCK_SIZE * by
+        add             x11, x11, #2*(32 >> \sx)      // grain_lut += FG_BLOCK_SIZE * bx
 
         ldr             w13, [sp, #112]        // type
 
         movrel          x16, overlap_coeffs_\sx
-        adr             x14, L(fguv_loop_sx\sx\()_tbl)
+        movrel          x14, fguv_loop_sx\sx\()_tbl
 
         ld1             {v27.4h, v28.4h}, [x16] // overlap_coeffs
         tst             w13, #1
-        ldrh            w13, [x14, w13, uxtw #1]
+        ldrsw           x13, [x14, w13, uxtw #2]
 
         b.eq            1f
         // y overlap
@@ -1601,7 +1604,7 @@ function fguv_32x32_\layout\()_16bpc_neon, export=1
         mov             w9,  #(2 >> \sy)
 
 1:
-        sub             x13, x14, w13, uxtw
+        add             x13, x14, x13
 
 .if \sy
         movi            v25.8h,  #23
@@ -1818,17 +1821,18 @@ L(fguv_loop_sx0_csfl\csfl\()_\ox\oy):
         ldr             x30,      [sp], #80
         AARCH64_VALIDATE_LINK_REGISTER
         ret
-
-L(fguv_loop_sx0_tbl):
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl0_00)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl0_01)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl0_10)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl0_11)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl1_00)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl1_01)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl1_10)
-        .hword L(fguv_loop_sx0_tbl) - L(fguv_loop_sx0_csfl1_11)
 endfunc
+
+jumptable fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl0_00) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl0_01) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl0_10) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl0_11) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl1_00) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl1_01) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl1_10) - fguv_loop_sx0_tbl
+        .word L(fguv_loop_sx0_csfl1_11) - fguv_loop_sx0_tbl
+endjumptable
 
 function fguv_loop_sx1_neon
 .macro fguv_loop_sx1 csfl, ox, oy
@@ -1984,14 +1988,15 @@ L(fguv_loop_sx1_csfl\csfl\()_\ox\oy):
         ldr             x30,      [sp], #80
         AARCH64_VALIDATE_LINK_REGISTER
         ret
-
-L(fguv_loop_sx1_tbl):
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl0_00)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl0_01)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl0_10)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl0_11)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl1_00)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl1_01)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl1_10)
-        .hword L(fguv_loop_sx1_tbl) - L(fguv_loop_sx1_csfl1_11)
 endfunc
+
+jumptable fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl0_00) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl0_01) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl0_10) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl0_11) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl1_00) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl1_01) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl1_10) - fguv_loop_sx1_tbl
+        .word L(fguv_loop_sx1_csfl1_11) - fguv_loop_sx1_tbl
+endjumptable

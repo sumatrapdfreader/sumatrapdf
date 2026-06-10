@@ -30,6 +30,7 @@
 
 enum CpuFlags {
     DAV1D_PPC_CPU_FLAG_VSX = 1 << 0,
+    DAV1D_PPC_CPU_FLAG_PWR9 = 1 << 1,
 };
 
 unsigned dav1d_get_cpu_flags_ppc(void);

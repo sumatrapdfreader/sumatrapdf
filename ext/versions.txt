@@ -70,8 +70,9 @@ extract         trunk
 windrawlib      trunk
   https://github.com/mity/windrawlib
 
-dav1d           trunk      2022-05-28
+dav1d           1.5.3      2025-12-31
   https://code.videolan.org/videolan/dav1d
+  https://code.videolan.org/videolan/dav1d/-/tags/1.5.3
 
 libheif         trunk      2026-01-16
   https://github.com/strukturag/libheif

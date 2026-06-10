@@ -243,15 +243,14 @@ static inline int get_poc_diff(const int order_hint_n_bits,
     return (diff & (mask - 1)) - (diff & mask);
 }
 
-static inline int get_jnt_comp_ctx(const int order_hint_n_bits,
-                                   const unsigned poc, const unsigned ref0poc,
-                                   const unsigned ref1poc,
+static inline int get_jnt_comp_ctx(const int order_hint_n_bits, const int poc,
+                                   const int ref0poc, const int ref1poc,
                                    const BlockContext *const a,
                                    const BlockContext *const l,
                                    const int yb4, const int xb4)
 {
-    const unsigned d0 = abs(get_poc_diff(order_hint_n_bits, ref0poc, poc));
-    const unsigned d1 = abs(get_poc_diff(order_hint_n_bits, poc, ref1poc));
+    const int d0 = abs(get_poc_diff(order_hint_n_bits, ref0poc, poc));
+    const int d1 = abs(get_poc_diff(order_hint_n_bits, poc, ref1poc));
     const int offset = d0 == d1;
     const int a_ctx = a->comp_type[xb4] >= COMP_INTER_AVG ||
                       a->ref[0][xb4] == 6;

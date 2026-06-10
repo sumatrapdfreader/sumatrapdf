@@ -144,7 +144,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         if (!frame_size) continue;
 
         if (!have_seq_hdr) {
-            Dav1dSequenceHeader seq = { 0 };
+            Dav1dSequenceHeader seq;
             int err = dav1d_parse_sequence_header(&seq, ptr, frame_size);
             // skip frames until we see a sequence header
             if  (err != 0) {

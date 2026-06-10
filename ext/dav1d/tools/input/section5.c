@@ -32,14 +32,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 
 #include "dav1d/headers.h"
 
 #include "input/demuxer.h"
 #include "input/parse.h"
 
-#define PROBE_SIZE 1024
+#define PROBE_SIZE 2048
 
 static int section5_probe(const uint8_t *data) {
     int ret, cnt = 0;
@@ -77,7 +79,7 @@ static int section5_probe(const uint8_t *data) {
         }
     }
 
-    return 0;
+    return seq;
 }
 
 typedef struct DemuxerPriv {

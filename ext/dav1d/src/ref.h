@@ -45,16 +45,33 @@ struct Dav1dRef {
     void *user_data;
 };
 
-Dav1dRef *dav1d_ref_create(size_t size);
+#if !TRACK_HEAP_ALLOCATIONS
+#define dav1d_ref_create(type, size) dav1d_ref_create(size)
+#endif
+
+Dav1dRef *dav1d_ref_create(enum AllocationType type, size_t size);
 Dav1dRef *dav1d_ref_create_using_pool(Dav1dMemPool *pool, size_t size);
-Dav1dRef *dav1d_ref_wrap(const uint8_t *ptr,
-                         void (*free_callback)(const uint8_t *data, void *user_data),
-                         void *user_data);
 void dav1d_ref_dec(Dav1dRef **ref);
-int dav1d_ref_is_writable(Dav1dRef *ref);
+
+static inline Dav1dRef *dav1d_ref_init(Dav1dRef *const ref, const void *const ptr,
+                                       void (*const free_callback)(const uint8_t *data, void *user_data),
+                                       void *const user_data, const int free_ref)
+{
+    ref->data = NULL;
+    ref->const_data = ptr;
+    atomic_init(&ref->ref_cnt, 1);
+    ref->free_ref = free_ref;
+    ref->free_callback = free_callback;
+    ref->user_data = user_data;
+    return ref;
+}
 
 static inline void dav1d_ref_inc(Dav1dRef *const ref) {
     atomic_fetch_add_explicit(&ref->ref_cnt, 1, memory_order_relaxed);
+}
+
+static inline int dav1d_ref_is_writable(Dav1dRef *const ref) {
+    return atomic_load(&ref->ref_cnt) == 1 && ref->data;
 }
 
 #endif /* DAV1D_SRC_REF_H */

@@ -28,31 +28,25 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "src/levels.h"
+
 #ifndef DAV1D_SRC_ITX_1D_H
 #define DAV1D_SRC_ITX_1D_H
+
+enum Tx1dType {
+    DCT,
+    ADST,
+    IDENTITY,
+    FLIPADST,
+    N_TX_1D_TYPES,
+};
 
 #define decl_itx_1d_fn(name) \
 void (name)(int32_t *c, ptrdiff_t stride, int min, int max)
 typedef decl_itx_1d_fn(*itx_1d_fn);
 
-decl_itx_1d_fn(dav1d_inv_dct4_1d_c);
-decl_itx_1d_fn(dav1d_inv_dct8_1d_c);
-decl_itx_1d_fn(dav1d_inv_dct16_1d_c);
-decl_itx_1d_fn(dav1d_inv_dct32_1d_c);
-decl_itx_1d_fn(dav1d_inv_dct64_1d_c);
-
-decl_itx_1d_fn(dav1d_inv_adst4_1d_c);
-decl_itx_1d_fn(dav1d_inv_adst8_1d_c);
-decl_itx_1d_fn(dav1d_inv_adst16_1d_c);
-
-decl_itx_1d_fn(dav1d_inv_flipadst4_1d_c);
-decl_itx_1d_fn(dav1d_inv_flipadst8_1d_c);
-decl_itx_1d_fn(dav1d_inv_flipadst16_1d_c);
-
-decl_itx_1d_fn(dav1d_inv_identity4_1d_c);
-decl_itx_1d_fn(dav1d_inv_identity8_1d_c);
-decl_itx_1d_fn(dav1d_inv_identity16_1d_c);
-decl_itx_1d_fn(dav1d_inv_identity32_1d_c);
+EXTERN const itx_1d_fn dav1d_tx1d_fns[N_TX_SIZES][N_TX_1D_TYPES];
+EXTERN const uint8_t /* enum Tx1dType */ dav1d_tx1d_types[N_TX_TYPES][2];
 
 void dav1d_inv_wht4_1d_c(int32_t *c, ptrdiff_t stride);
 
