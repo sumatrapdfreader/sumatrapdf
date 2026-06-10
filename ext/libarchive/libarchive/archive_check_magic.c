@@ -148,14 +148,14 @@ __archive_check_magic(struct archive *a, unsigned int magic,
 	if (!handle_type) {
 		errmsg("PROGRAMMER ERROR: Function ");
 		errmsg(function);
-		errmsg(" invoked with invalid archive handle.\n");
+		errmsg(" invoked with invalid archive handle\n");
 		diediedie();
 	}
 
 	if (a->magic != magic) {
 		archive_set_error(a, -1,
 		    "PROGRAMMER ERROR: Function '%s' invoked"
-		    " on '%s' archive object, which is not supported.",
+		    " on '%s' archive object, which is not supported",
 		    function,
 		    handle_type);
 		a->state = ARCHIVE_STATE_FATAL;

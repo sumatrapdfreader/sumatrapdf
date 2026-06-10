@@ -29,6 +29,9 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -376,23 +379,33 @@ archive_compressor_xz_options(struct archive_write_filter *f,
 
 	if (strcmp(key, "compression-level") == 0) {
 		if (value == NULL || !(value[0] >= '0' && value[0] <= '9') ||
-		    value[1] != '\0')
-			return (ARCHIVE_WARN);
+		    value[1] != '\0') {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression-level invalid");
+			return (ARCHIVE_FAILED);
+		}
 		data->compression_level = value[0] - '0';
 		if (data->compression_level > 9)
 			data->compression_level = 9;
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "threads") == 0) {
 		char *endptr;
+		unsigned long val;
 
-		if (value == NULL)
-			return (ARCHIVE_WARN);
-		errno = 0;
-		data->threads = (int)strtoul(value, &endptr, 10);
-		if (errno != 0 || *endptr != '\0') {
-			data->threads = 1;
-			return (ARCHIVE_WARN);
+		if (value == NULL) {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "threads option requires an argument");
+			return (ARCHIVE_FAILED);
 		}
+		errno = 0;
+		val = strtoul(value, &endptr, 10);
+		if (errno != 0 || *endptr != '\0' || val > (unsigned)INT_MAX) {
+			data->threads = 1;
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "threads invalid");
+			return (ARCHIVE_FAILED);
+		}
+		data->threads = (int)val;
 		if (data->threads == 0) {
 #ifdef HAVE_LZMA_STREAM_ENCODER_MT
 			data->threads = lzma_cputhreads();

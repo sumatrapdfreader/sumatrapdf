@@ -398,16 +398,17 @@ archive_write_zip_options(struct archive_write *a, const char *key,
 		return (ret);
 	} else if (strcmp(key, "compression-level") == 0) {
 		char *endptr;
+		unsigned long v;
 
 		if (val == NULL)
 			return (ARCHIVE_WARN);
 		errno = 0;
-		zip->compression_level = (short)strtoul(val, &endptr, 10);
-		if (errno != 0 || *endptr != '\0' || zip->compression_level < 0 ||
-			zip->compression_level > 9) {
+		v = strtoul(val, &endptr, 10);
+		if (errno != 0 || *endptr != '\0' || v > 9) {
 			zip->compression_level = 6; // set to default
 			return (ARCHIVE_WARN);
 		}
+		zip->compression_level = (short)v;
 
 		if (zip->compression_level == 0) {
 			zip->requested_compression = COMPRESSION_STORE;
@@ -435,17 +436,19 @@ archive_write_zip_options(struct archive_write *a, const char *key,
 		}
 	} else if (strcmp(key, "threads") == 0) {
 		char *endptr;
+		unsigned long v;
 
 		if (val == NULL)
 			return (ARCHIVE_FAILED);
 		errno = 0;
-		zip->threads = (short)strtoul(val, &endptr, 10);
-		if (errno != 0 || *endptr != '\0') {
+		v = strtoul(val, &endptr, 10);
+		if (errno != 0 || *endptr != '\0' || v > SHRT_MAX) {
 			zip->threads = 1;
 			archive_set_error(&(a->archive), ARCHIVE_ERRNO_MISC,
 			    "Illegal value `%s'", val);
 			return (ARCHIVE_FAILED);
 		}
+		zip->threads = (short)v;
 		if (zip->threads == 0) {
 #ifdef HAVE_LZMA_STREAM_ENCODER_MT
 			zip->threads = lzma_cputhreads();

@@ -211,8 +211,11 @@ archive_write_lzop_options(struct archive_write_filter *f, const char *key,
 
 	if (strcmp(key, "compression-level") == 0) {
 		if (value == NULL || !(value[0] >= '1' && value[0] <= '9') ||
-		    value[1] != '\0')
-			return (ARCHIVE_WARN);
+		    value[1] != '\0') {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression-level invalid");
+			return (ARCHIVE_FAILED);
+		}
 		data->compression_level = value[0] - '0';
 		return (ARCHIVE_OK);
 	}

@@ -322,7 +322,7 @@ write_header(struct archive_write *a, struct archive_entry *entry)
 		    h + c_filesize_offset, c_filesize_size);
 	if (ret) {
 		archive_set_error(&a->archive, ERANGE,
-		    "File is too large for this format.");
+		    "File is too large for this format");
 		ret_final = ARCHIVE_FAILED;
 		goto exit_write_header;
 	}

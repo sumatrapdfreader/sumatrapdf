@@ -921,7 +921,7 @@ next_entry(struct archive_read_disk *a, struct tree *t,
 		r = archive_match_path_excluded(a->matching, entry);
 		if (r < 0) {
 			archive_set_error(&(a->archive), errno,
-			    "Failed : %s", archive_error_string(a->matching));
+			    "%s", archive_error_string(a->matching));
 			return (r);
 		}
 		if (r) {
@@ -1035,7 +1035,7 @@ next_entry(struct archive_read_disk *a, struct tree *t,
 		r = archive_match_time_excluded(a->matching, entry);
 		if (r < 0) {
 			archive_set_error(&(a->archive), errno,
-			    "Failed : %s", archive_error_string(a->matching));
+			    "%s", archive_error_string(a->matching));
 			return (r);
 		}
 		if (r) {
@@ -1061,7 +1061,7 @@ next_entry(struct archive_read_disk *a, struct tree *t,
 		r = archive_match_owner_excluded(a->matching, entry);
 		if (r < 0) {
 			archive_set_error(&(a->archive), errno,
-			    "Failed : %s", archive_error_string(a->matching));
+			    "%s", archive_error_string(a->matching));
 			return (r);
 		}
 		if (r) {

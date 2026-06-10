@@ -733,7 +733,7 @@ xar_read_header(struct archive_read *a, struct archive_entry *entry)
 		}
 		archive_set_error(&a->archive,
 		    ARCHIVE_ERRNO_FILE_FORMAT,
-		    "Gname cannot be converted from %s to current locale.",
+		    "Gname cannot be converted from %s to current locale",
 		    archive_string_conversion_charset_name(xar->sconv));
 		r = ARCHIVE_WARN;
 	}
@@ -748,7 +748,7 @@ xar_read_header(struct archive_read *a, struct archive_entry *entry)
 		}
 		archive_set_error(&a->archive,
 		    ARCHIVE_ERRNO_FILE_FORMAT,
-		    "Uname cannot be converted from %s to current locale.",
+		    "Uname cannot be converted from %s to current locale",
 		    archive_string_conversion_charset_name(xar->sconv));
 		r = ARCHIVE_WARN;
 	}
@@ -762,7 +762,7 @@ xar_read_header(struct archive_read *a, struct archive_entry *entry)
 		}
 		archive_set_error(&a->archive,
 		    ARCHIVE_ERRNO_FILE_FORMAT,
-		    "Pathname cannot be converted from %s to current locale.",
+		    "Pathname cannot be converted from %s to current locale",
 		    archive_string_conversion_charset_name(xar->sconv));
 		r = ARCHIVE_WARN;
 	}
@@ -778,7 +778,7 @@ xar_read_header(struct archive_read *a, struct archive_entry *entry)
 		}
 		archive_set_error(&a->archive,
 		    ARCHIVE_ERRNO_FILE_FORMAT,
-		    "Linkname cannot be converted from %s to current locale.",
+		    "Linkname cannot be converted from %s to current locale",
 		    archive_string_conversion_charset_name(xar->sconv));
 		r = ARCHIVE_WARN;
 	}
@@ -1008,7 +1008,7 @@ move_reading_point(struct archive_read *a, uint64_t offset)
 			if (pos == ARCHIVE_FAILED) {
 				archive_set_error(&(a->archive),
 				    ARCHIVE_ERRNO_MISC,
-				    "Cannot seek.");
+				    "Cannot seek");
 				return (ARCHIVE_FAILED);
 			}
 			xar->offset = pos;
@@ -1476,7 +1476,7 @@ decompression_init(struct archive_read *a, enum enctype encoding)
 			r = inflateInit(&(xar->stream));
 		if (r != Z_OK) {
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
-			    "Couldn't initialize zlib stream.");
+			    "Couldn't initialize zlib stream");
 			return (ARCHIVE_FATAL);
 		}
 		xar->stream_valid = 1;
@@ -1691,7 +1691,7 @@ decompress(struct archive_read *a, const void **buff, size_t *outbytes,
 		default:
 			archive_set_error(&(a->archive),
 			    ARCHIVE_ERRNO_MISC,
-			    "%s decompression failed(%d)",
+			    "%s decompression failed (%d)",
 			    (xar->entry_encoding == XZ)?"xz":"lzma",
 			    r);
 			return (ARCHIVE_FATAL);

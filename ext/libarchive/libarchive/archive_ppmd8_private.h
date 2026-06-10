@@ -83,12 +83,6 @@ typedef struct
   UInt16 BinSumm[25][64];
 } CPpmd8;
 
-void Ppmd8_Construct(CPpmd8 *p);
-Bool Ppmd8_Alloc(CPpmd8 *p, UInt32 size);
-void Ppmd8_Free(CPpmd8 *p);
-void Ppmd8_Init(CPpmd8 *p, unsigned maxOrder, unsigned restoreMethod);
-#define Ppmd8_WasAllocated(p) ((p)->Base != NULL)
-
 
 /* ---------- Internal Functions ---------- */
 
@@ -104,30 +98,11 @@ extern const Byte PPMD8_kExpEscape[16];
   #define Ppmd8_GetStats(p, ctx) ((CPpmd_State *)Ppmd8_GetPtr((p), ((ctx)->Stats)))
 #endif
 
-void Ppmd8_Update1(CPpmd8 *p);
-void Ppmd8_Update1_0(CPpmd8 *p);
-void Ppmd8_Update2(CPpmd8 *p);
-void Ppmd8_UpdateBin(CPpmd8 *p);
-
 #define Ppmd8_GetBinSumm(p) \
     &p->BinSumm[p->NS2Indx[Ppmd8Context_OneState(p->MinContext)->Freq - 1]][ \
     p->NS2BSIndx[Ppmd8_GetContext(p, p->MinContext->Suffix)->NumStats] + \
     p->PrevSuccess + p->MinContext->Flags + ((p->RunLength >> 26) & 0x20)]
 
-CPpmd_See *Ppmd8_MakeEscFreq(CPpmd8 *p, unsigned numMasked, UInt32 *scale);
-
-
-/* ---------- Decode ---------- */
-
-Bool Ppmd8_RangeDec_Init(CPpmd8 *p);
-#define Ppmd8_RangeDec_IsFinishedOK(p) ((p)->Code == 0)
-int Ppmd8_DecodeSymbol(CPpmd8 *p); /* returns: -1 as EndMarker, -2 as DataError */
-
-/* ---------- Encode ---------- */
-
-#define Ppmd8_RangeEnc_Init(p) { (p)->Low = 0; (p)->Range = 0xFFFFFFFF; }
-void Ppmd8_RangeEnc_FlushData(CPpmd8 *p);
-void Ppmd8_EncodeSymbol(CPpmd8 *p, int symbol); /* symbol = -1 means EndMarker */
 
 typedef struct
 {

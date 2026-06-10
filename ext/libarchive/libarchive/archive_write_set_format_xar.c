@@ -526,12 +526,13 @@ xar_options(struct archive_write *a, const char *key, const char *value)
 	}
 	if (strcmp(key, "threads") == 0) {
 		char *endptr;
+		unsigned long val;
 
 		if (value == NULL)
 			return (ARCHIVE_FAILED);
 		errno = 0;
-		xar->opt_threads = (int)strtoul(value, &endptr, 10);
-		if (errno != 0 || *endptr != '\0') {
+		val = strtoul(value, &endptr, 10);
+		if (errno != 0 || *endptr != '\0' || val > (unsigned)INT_MAX) {
 			xar->opt_threads = 1;
 			archive_set_error(&(a->archive),
 			    ARCHIVE_ERRNO_MISC,
@@ -539,6 +540,7 @@ xar_options(struct archive_write *a, const char *key, const char *value)
 			    value);
 			return (ARCHIVE_FAILED);
 		}
+		xar->opt_threads = (int)val;
 		if (xar->opt_threads == 0) {
 #ifdef HAVE_LZMA_STREAM_ENCODER_MT
 			xar->opt_threads = lzma_cputhreads();

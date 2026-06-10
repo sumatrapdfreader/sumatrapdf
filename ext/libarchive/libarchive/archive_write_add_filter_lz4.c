@@ -160,8 +160,11 @@ archive_filter_lz4_options(struct archive_write_filter *f,
 	if (strcmp(key, "compression-level") == 0) {
 		int val;
 		if (value == NULL || !((val = value[0] - '0') >= 1 && val <= 9) ||
-		    value[1] != '\0')
-			return (ARCHIVE_WARN);
+		    value[1] != '\0') {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression-level invalid");
+			return (ARCHIVE_FAILED);
+		}
 
 #ifndef HAVE_LZ4HC_H
 		if(val >= 3)
@@ -184,8 +187,11 @@ archive_filter_lz4_options(struct archive_write_filter *f,
 	}
 	if (strcmp(key, "block-size") == 0) {
 		if (value == NULL || !(value[0] >= '4' && value[0] <= '7') ||
-		    value[1] != '\0')
-			return (ARCHIVE_WARN);
+		    value[1] != '\0') {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "block-size invalid");
+			return (ARCHIVE_FAILED);
+		}
 		data->block_maximum_size = value[0] - '0';
 		return (ARCHIVE_OK);
 	}

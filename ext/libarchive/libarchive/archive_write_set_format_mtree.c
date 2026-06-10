@@ -2262,7 +2262,7 @@ mtree_entry_exchange_same_entry(struct archive_write *a, struct mtree_entry *np,
 	if ((np->mode & AE_IFMT) != (file->mode & AE_IFMT)) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
 		    "Found duplicate entries for `%s' with "
-		    "differing file types.",
+		    "differing file types",
 		    np->pathname.s);
 		return (ARCHIVE_FAILED);
 	}

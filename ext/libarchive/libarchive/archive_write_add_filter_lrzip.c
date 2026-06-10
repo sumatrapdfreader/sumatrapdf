@@ -97,8 +97,11 @@ archive_write_lrzip_options(struct archive_write_filter *f, const char *key,
 	struct write_lrzip *data = (struct write_lrzip *)f->data;
 
 	if (strcmp(key, "compression") == 0) {
-		if (value == NULL)
-			return (ARCHIVE_WARN);
+		if (value == NULL) {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression option requires an argument");
+			return (ARCHIVE_FAILED);
+		}
 		else if (strcmp(value, "bzip2") == 0)
 			data->compression = bzip2;
 		else if (strcmp(value, "gzip") == 0)
@@ -109,13 +112,19 @@ archive_write_lrzip_options(struct archive_write_filter *f, const char *key,
 			data->compression = none;
 		else if (strcmp(value, "zpaq") == 0)
 			data->compression = zpaq;
-		else
-			return (ARCHIVE_WARN);
+		else {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression invalid");
+			return (ARCHIVE_FAILED);
+		}
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "compression-level") == 0) {
 		if (value == NULL || !(value[0] >= '1' && value[0] <= '9') ||
-		    value[1] != '\0')
-			return (ARCHIVE_WARN);
+		    value[1] != '\0') {
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression-level invalid");
+			return (ARCHIVE_FAILED);
+		}
 		data->compression_level = value[0] - '0';
 		return (ARCHIVE_OK);
 	}

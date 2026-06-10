@@ -397,7 +397,7 @@ archive_read_format_cpio_read_header(struct archive_read *a,
 			return (ARCHIVE_FATAL);
 		}
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
-		    "Pathname can't be converted from %s to current locale.",
+		    "Pathname can't be converted from %s to current locale",
 		    archive_string_conversion_charset_name(sconv));
 		r = ARCHIVE_WARN;
 	}
@@ -426,7 +426,7 @@ archive_read_format_cpio_read_header(struct archive_read *a,
 			archive_set_error(&a->archive,
 			    ARCHIVE_ERRNO_FILE_FORMAT,
 			    "Linkname can't be converted from %s to "
-			    "current locale.",
+			    "current locale",
 			    archive_string_conversion_charset_name(sconv));
 			r = ARCHIVE_WARN;
 		}

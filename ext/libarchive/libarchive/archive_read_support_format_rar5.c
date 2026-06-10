@@ -675,7 +675,7 @@ static int run_filter(struct archive_read* a, struct filter_info* flt) {
 	rar->cstate.filtered_buf = malloc(flt->block_length);
 	if(!rar->cstate.filtered_buf) {
 		archive_set_error(&a->archive, ENOMEM,
-		    "Can't allocate memory for filter data.");
+		    "Can't allocate memory for filter data");
 		return ARCHIVE_FATAL;
 	}
 
@@ -1851,7 +1851,7 @@ static int process_head_file(struct archive_read* a, struct rar5* rar,
 	    rar->cstate.window_buf == NULL) {
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 				  "Declared solid file, but no window buffer "
-				  "initialized yet.");
+				  "initialized yet");
 		return ARCHIVE_FATAL;
 	}
 
@@ -1861,7 +1861,7 @@ static int process_head_file(struct archive_read* a, struct rar5* rar,
 	    (rar->file.dir == 0 && window_size == 0))
 	{
 		archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
-		    "Declared dictionary size is not supported.");
+		    "Declared dictionary size is not supported");
 		return ARCHIVE_FATAL;
 	}
 
@@ -1873,7 +1873,7 @@ static int process_head_file(struct archive_read* a, struct rar5* rar,
 		{
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT,
 			    "Window size for this solid file doesn't match "
-			    "the window size used in previous solid file. ");
+			    "the window size used in previous solid file");
 			return ARCHIVE_FATAL;
 		}
 	}
@@ -1899,7 +1899,7 @@ static int process_head_file(struct archive_read* a, struct rar5* rar,
 		if(!new_window_buf) {
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_PROGRAMMER,
 				"Not enough memory when trying to realloc the window "
-				"buffer.");
+				"buffer");
 			return ARCHIVE_FATAL;
 		}
 
@@ -3057,7 +3057,7 @@ static int parse_filter(struct archive_read* ar, const uint8_t* p) {
 	filt = add_new_filter(rar);
 	if(filt == NULL) {
 		archive_set_error(&ar->archive, ENOMEM,
-		    "Can't allocate memory for a filter descriptor.");
+		    "Can't allocate memory for a filter descriptor");
 		return ARCHIVE_FATAL;
 	}
 
@@ -3506,7 +3506,7 @@ static int merge_block(struct archive_read* a, ssize_t block_size,
 	rar->vol.push_buf = malloc(block_size + 8);
 	if(!rar->vol.push_buf) {
 		archive_set_error(&a->archive, ENOMEM,
-		    "Can't allocate memory for a merge block buffer.");
+		    "Can't allocate memory for a merge block buffer");
 		return ARCHIVE_FATAL;
 	}
 
@@ -3539,7 +3539,7 @@ static int merge_block(struct archive_read* a, ssize_t block_size,
 		if(partial_offset + cur_block_size > block_size) {
 			archive_set_error(&a->archive,
 			    ARCHIVE_ERRNO_PROGRAMMER,
-			    "Consumed too much data when merging blocks.");
+			    "Consumed too much data when merging blocks");
 			return ARCHIVE_FATAL;
 		}
 
@@ -3808,7 +3808,7 @@ static int push_data_ready(struct archive_read* a, struct rar5* rar,
 	 * as an internal error. */
 
 	archive_set_error(&a->archive, ARCHIVE_ERRNO_PROGRAMMER,
-	    "Error: premature end of data_ready stack");
+	    "Premature end of data_ready stack");
 	return ARCHIVE_FATAL;
 }
 

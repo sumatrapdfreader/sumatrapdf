@@ -742,7 +742,7 @@ _archive_write_header(struct archive *_a, struct archive_entry *entry)
 
 	if (a->format_write_header == NULL) {
 		archive_set_error(&(a->archive), -1,
-		    "Format must be set before you can write to an archive.");
+		    "Format must be set before you can write to an archive");
 		a->archive.state = ARCHIVE_STATE_FATAL;
 		return (ARCHIVE_FATAL);
 	}

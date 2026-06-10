@@ -1713,7 +1713,7 @@ get_sconv_object(struct archive *a, const char *fc, const char *tc, int flag)
 		if (a != NULL) {
 #if HAVE_ICONV
 			archive_set_error(a, ARCHIVE_ERRNO_MISC,
-			    "iconv_open failed : Cannot handle ``%s''",
+			    "iconv_open failed: Cannot handle ``%s''",
 			    (flag & SCONV_TO_CHARSET)?tc:fc);
 #else
 			archive_set_error(a, ARCHIVE_ERRNO_MISC,

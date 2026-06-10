@@ -90,7 +90,9 @@ _archive_set_either_option(struct archive *a, const char *m, const char *o, cons
 	if (r2 == ARCHIVE_FATAL)
 		return (ARCHIVE_FATAL);
 
-	if (r2 == ARCHIVE_WARN - 1)
+	if (r1 == ARCHIVE_WARN - 1)
+		return r2;
+	if (r2 == ARCHIVE_WARN -1)
 		return r1;
 	return r1 > r2 ? r1 : r2;
 }

@@ -245,7 +245,9 @@ archive_compressor_zstd_options(struct archive_write_filter *f, const char *key,
 	if (strcmp(key, "compression-level") == 0) {
 		intmax_t level;
 		if (string_to_number(value, &level) != ARCHIVE_OK) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression-level invalid");
+			return (ARCHIVE_FAILED);
 		}
 		/* If we don't have the library, hard-code the max level */
 		int minimum = CLEVEL_MIN;
@@ -263,14 +265,18 @@ archive_compressor_zstd_options(struct archive_write_filter *f, const char *key,
 		}
 #endif
 		if (level < minimum || level > maximum) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "compression-level out of range");
+			return (ARCHIVE_FAILED);
 		}
 		data->compression_level = (int)level;
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "threads") == 0) {
 		intmax_t threads;
 		if (string_to_number(value, &threads) != ARCHIVE_OK) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "threads invalid");
+			return (ARCHIVE_FAILED);
 		}
 
 #if defined(HAVE_SYSCONF) && defined(_SC_NPROCESSORS_ONLN)
@@ -286,7 +292,9 @@ archive_compressor_zstd_options(struct archive_write_filter *f, const char *key,
 		}
 #endif
 		if (threads < 0 || threads > INT_MAX) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "threads out of rnage");
+			return (ARCHIVE_FAILED);
 		}
 		data->threads = (int)threads;
 		return (ARCHIVE_OK);
@@ -296,26 +304,34 @@ archive_compressor_zstd_options(struct archive_write_filter *f, const char *key,
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "min-frame-in") == 0) {
 		if (string_to_size(value, &data->min_frame_in) != ARCHIVE_OK) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "min-frame-in invalid");
+			return (ARCHIVE_FAILED);
 		}
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "min-frame-out") == 0 ||
 	    strcmp(key, "min-frame-size") == 0) {
 		if (string_to_size(value, &data->min_frame_out) != ARCHIVE_OK) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "min-frame-out invalid");
+			return (ARCHIVE_FAILED);
 		}
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "max-frame-in") == 0 ||
 	    strcmp(key, "max-frame-size") == 0) {
 		if (string_to_size(value, &data->max_frame_in) != ARCHIVE_OK ||
 		    data->max_frame_in < 1024) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "max-frame-size invalid");
+			return (ARCHIVE_FAILED);
 		}
 		return (ARCHIVE_OK);
 	} else if (strcmp(key, "max-frame-out") == 0) {
 		if (string_to_size(value, &data->max_frame_out) != ARCHIVE_OK ||
 		    data->max_frame_out < 1024) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "max-frame-out invalid");
+			return (ARCHIVE_FAILED);
 		}
 		return (ARCHIVE_OK);
 #endif
@@ -323,22 +339,30 @@ archive_compressor_zstd_options(struct archive_write_filter *f, const char *key,
 	else if (strcmp(key, "long") == 0) {
 		intmax_t long_distance;
 		if (string_to_number(value, &long_distance) != ARCHIVE_OK) {
-			return (ARCHIVE_WARN);
+			archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "long invalid");
+			return (ARCHIVE_FAILED);
 		}
 #if HAVE_ZSTD_H && HAVE_ZSTD_compressStream && ZSTD_VERSION_NUMBER >= MINVER_LONG
 		ZSTD_bounds bounds = ZSTD_cParam_getBounds(ZSTD_c_windowLog);
 		if (ZSTD_isError(bounds.error)) {
 			int max_distance = ((int)(sizeof(size_t) == 4 ? 30 : 31));
-			if (((int)long_distance) < 10 || (int)long_distance > max_distance)
-				return (ARCHIVE_WARN);
+			if (((int)long_distance) < 10 || (int)long_distance > max_distance) {
+				archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "long out of range");
+				return (ARCHIVE_FAILED);
+			}
 		} else {
-			if ((int)long_distance < bounds.lowerBound || (int)long_distance > bounds.upperBound)
-				return (ARCHIVE_WARN);
+			if ((int)long_distance < bounds.lowerBound || (int)long_distance > bounds.upperBound) {
+				archive_set_error(f->archive, ARCHIVE_ERRNO_MISC,
+			    "long out of range");
+				return (ARCHIVE_FAILED);
+			}
 		}
 #else
 		int max_distance = ((int)(sizeof(size_t) == 4 ? 30 : 31));
 		if (((int)long_distance) < 10 || (int)long_distance > max_distance)
-		    return (ARCHIVE_WARN);
+		    return (ARCHIVE_FAILED);
 #endif
 		data->long_distance = (int)long_distance;
 		return (ARCHIVE_OK);

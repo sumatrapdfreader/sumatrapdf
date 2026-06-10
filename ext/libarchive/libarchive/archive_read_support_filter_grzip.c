@@ -62,7 +62,7 @@ archive_read_support_filter_grzip(struct archive *_a)
 {
 	struct archive_read *a = (struct archive_read *)_a;
 
-	if (__archive_read_register_bidder(a, NULL, NULL,
+	if (__archive_read_register_bidder(a, NULL, "grzip",
 				&grzip_bidder_vtable) != ARCHIVE_OK)
 		return (ARCHIVE_FATAL);
 

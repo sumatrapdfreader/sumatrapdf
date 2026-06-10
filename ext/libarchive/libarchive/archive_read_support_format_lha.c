@@ -613,7 +613,7 @@ archive_read_format_lha_read_header(struct archive_read *a,
 		archive_set_error(&a->archive,
 			ARCHIVE_ERRNO_FILE_FORMAT,
 			"Pathname cannot be converted "
-			"from %s to Unicode.",
+			"from %s to Unicode",
 			archive_string_conversion_charset_name(lha->sconv_dir));
 		err = ARCHIVE_FATAL;
 	} else if (0 != archive_mstring_get_wcs(&a->archive, &conv_buffer, &conv_buffer_p))
@@ -634,7 +634,7 @@ archive_read_format_lha_read_header(struct archive_read *a,
 		archive_set_error(&a->archive,
 			ARCHIVE_ERRNO_FILE_FORMAT,
 			"Pathname cannot be converted "
-			"from %s to Unicode.",
+			"from %s to Unicode",
 			archive_string_conversion_charset_name(lha->sconv_fname));
 		err = ARCHIVE_FATAL;
 	}

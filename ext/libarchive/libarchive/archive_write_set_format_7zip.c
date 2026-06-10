@@ -28,6 +28,9 @@
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -333,6 +336,7 @@ string_to_number(const char *string, intmax_t *numberp)
 
 	if (string == NULL || *string == '\0')
 		return (ARCHIVE_WARN);
+	errno = 0;
 	*numberp = strtoimax(string, &end, 10);
 	if (end == string || *end != '\0' || errno == EOVERFLOW) {
 		*numberp = 0;
@@ -487,8 +491,9 @@ _7z_options(struct archive_write *a, const char *key, const char *value)
 		}
 
 		char *end = NULL;
+		errno = 0;
 		long lvl = strtol(value, &end, 10);
-		if (end == NULL || *end != '\0') {
+		if (errno != 0 || end == NULL || *end != '\0') {
 			archive_set_error(&(a->archive), ARCHIVE_ERRNO_MISC,
 				"parsing compression-level option value failed `%s'", value);
 			return (ARCHIVE_FAILED);
@@ -525,7 +530,7 @@ _7z_options(struct archive_write *a, const char *key, const char *value)
 		if (string_to_number(value, &threads) != ARCHIVE_OK) {
 			return (ARCHIVE_WARN);
 		}
-		if (threads < 0) {
+		if (threads < 0 || threads > INT_MAX) {
 			return (ARCHIVE_WARN);
 		}
 		if (threads == 0) {

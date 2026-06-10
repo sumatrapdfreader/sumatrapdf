@@ -975,7 +975,7 @@ archive_read_format_7zip_read_header(struct archive_read *a,
 		archive_set_error(&a->archive,
 		    ARCHIVE_ERRNO_FILE_FORMAT,
 		    "Pathname cannot be converted "
-		    "from %s to current locale.",
+		    "from %s to current locale",
 		    archive_string_conversion_charset_name(zip->sconv));
 		ret = ARCHIVE_WARN;
 	}
@@ -1581,7 +1581,7 @@ init_decompression(struct archive_read *a, struct _7zip *zip,
 			    -15 /* Don't check for zlib header */);
 		if (r != Z_OK) {
 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
-			    "Couldn't initialize zlib stream.");
+			    "Couldn't initialize zlib stream");
 			return (ARCHIVE_FAILED);
 		}
 		zip->stream_valid = 1;
@@ -1723,7 +1723,7 @@ decompress(struct archive_read *a, struct _7zip *zip,
 			if (bytes < 0) {
 				archive_set_error(&(a->archive),
 				    ARCHIVE_ERRNO_MISC,
-				    "BCJ2 conversion Failed");
+				    "BCJ2 conversion failed");
 				return (ARCHIVE_FAILED);
 			}
 			zip->main_stream_bytes_remaining -=
@@ -1777,7 +1777,7 @@ decompress(struct archive_read *a, struct _7zip *zip,
 		default:
 			archive_set_error(&(a->archive),
 			    ARCHIVE_ERRNO_MISC,
-				"Decompression failed(%d)",
+				"Decompression failed (%d)",
 			    r);
 			return (ARCHIVE_FAILED);
 		}
@@ -1979,7 +1979,7 @@ decompress(struct archive_read *a, struct _7zip *zip,
 		bytes = Bcj2_Decode(zip, bcj2_next_out, bcj2_avail_out);
 		if (bytes < 0) {
 			archive_set_error(&(a->archive),
-			    ARCHIVE_ERRNO_MISC, "BCJ2 conversion Failed");
+			    ARCHIVE_ERRNO_MISC, "BCJ2 conversion failed");
 			return (ARCHIVE_FAILED);
 		}
 		zip->main_stream_bytes_remaining -=
