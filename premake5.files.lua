@@ -824,6 +824,7 @@ function sumatrapdf_files()
     "Tests.cpp",
     "TextSearch.*",
     "TextSelection.*",
+    "TextToSpeech.*",
     "Theme.*",
     "Toolbar.*",
     "TranslationLangs.cpp",

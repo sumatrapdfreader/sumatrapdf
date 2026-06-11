@@ -20,6 +20,8 @@ enum class TbIcon {
     Save,
     RotateLeft,
     RotateRight,
+    Speak,
+    StopSpeaking,
     kMax
 };
 

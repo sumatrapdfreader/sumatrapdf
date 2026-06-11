@@ -42,6 +42,7 @@ extern "C" {
 #include "DarkModeSubclass.h"
 #include "wingui/Layout.h"
 #include "wingui/WinGui.h"
+#include "TextToSpeech.h"
 
 #include "utils/Log.h"
 
@@ -71,6 +72,8 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::None, PageInfoId, nullptr}, // text box for page number + show current page / no of pages
     {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
     {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
+    {TbIcon::None, 0, nullptr}, // separator
+    {TbIcon::Speak, CmdReadAloud, _TRN("Speak Selection")},
     {TbIcon::None, 0, nullptr}, // separator
     {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
     {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
@@ -265,6 +268,11 @@ static TBBUTTON TbButtonFromButtonInfo(const ToolbarButtonInfo& bi, bool noTrans
     b.iBitmap = (int)bi.bmpIndex;
     b.fsState = TBSTATE_ENABLED;
     b.fsStyle = BTNS_BUTTON;
+
+    if (bi.cmdId == CmdReadAloud) {
+        b.fsStyle |= BTNS_DROPDOWN;
+    }
+
     if (bi.cmdId == CmdFindToggleMatchCase) {
         b.fsStyle = BTNS_CHECK;
     }
@@ -326,6 +334,14 @@ void UpdateToolbarButtonsToolTipsForWindow(MainWindow* win) {
 #endif
 }
 
+static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
+    TBBUTTONINFOW bi{};
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_BYINDEX | TBIF_IMAGE;
+    bi.iImage = (int)icon;
+    SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+}
+
 // TODO: this is called too often
 // TODO: also set checked state instead of calling SetToolbarButtonCheckedState() all over
 void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
@@ -343,6 +359,11 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         }
         bool isEnabled = IsCmdEnabled(win, cmdId);
         UpdateToolbarButtonStateByIdx(hwnd, i, isEnabled, TBSTATE_ENABLED);
+
+        if (cmdId == CmdReadAloud || cmdId == CmdStopReadAloud) {
+            bool speaking = TtsIsSpeaking();
+            SetToolbarButtonImageByIdx(hwnd, i, speaking ? TbIcon::StopSpeaking : TbIcon::Speak);
+        }
     }
 
     // Find labels may have to be repositioned if some
@@ -1188,6 +1209,7 @@ void CreateToolbar(MainWindow* win) {
 
     LRESULT exstyle = SendMessageW(hwndToolbar, TB_GETEXTENDEDSTYLE, 0, 0);
     exstyle |= TBSTYLE_EX_MIXEDBUTTONS;
+    exstyle |= TBSTYLE_EX_DRAWDDARROWS;
     SendMessageW(hwndToolbar, TB_SETEXTENDEDSTYLE, 0, exstyle);
 
     TBBUTTON tbButtons[kButtonsCount];

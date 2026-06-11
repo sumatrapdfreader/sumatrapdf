@@ -299,6 +299,8 @@ CmdPdfExtractPages,,Extract Pages From PDF,"Extract pages from a PDF file using 
 CmdPdfEncrypt,,Encrypt PDF,"Encrypt a PDF file with a password using AES-256 encryption, ver 3.7+"
 CmdPdfDecrypt,,Decrypt PDF,"Decrypt an encrypted PDF file, removing password protection, ver 3.7+"
 CmdSetScreenshotHotkey,,Set Screenshot Hotkey,"Open dialog to set or remove a global hotkey for taking screenshots, ver 3.7+"
+CmdReadAloud,,Read Aloud,"Read selected text (or current page if no selection) using Windows text-to-speech. Invoking again stops reading. Toolbar button dropdown selects the voice, ver 3.7+"
+CmdStopReadAloud,,Stop Read Aloud,"Stop reading text aloud, ver 3.7+"
 ```
 
 ## Debug

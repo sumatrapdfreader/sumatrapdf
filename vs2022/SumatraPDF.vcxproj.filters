@@ -291,6 +291,9 @@
     <ClInclude Include="..\src\TextSelection.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\TextToSpeech.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Theme.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -621,6 +624,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\TextSelection.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TextToSpeech.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Theme.cpp">

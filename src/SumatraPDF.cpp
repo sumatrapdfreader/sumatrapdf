@@ -96,6 +96,7 @@
 #include "RegistrySearchFilter.h"
 #include "Theme.h"
 #include "DarkModeSubclass.h"
+#include "TextToSpeech.h"
 
 #include "utils/Log.h"
 
@@ -108,6 +109,12 @@ constexpr const char* kRestrictionsFileName = "sumatrapdfrestrict.ini";
 
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
+
+// Text-to-speech/read-aloud helpers are implemented together near the end of this file.
+static void ReadAloudClearSourceTab();
+static void ReadAloudInTab(WindowTab* tab);
+static void StopReadAloudIfSourceTab(WindowTab* tab);
+static void StopReadAloudIfSourceWindow(MainWindow* win);
 
 // used to show it in debug, but is not very useful,
 // so always disable
@@ -3296,6 +3303,9 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         return;
     }
 
+    // Stop eventual TTS reading
+    StopReadAloudIfSourceTab(tab);
+
     int tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (CanCloseWindow(win)) {
@@ -3448,6 +3458,8 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         return;
     }
 
+    // Stop eventual TTS reading
+    StopReadAloudIfSourceWindow(win);
     bool lastWindow = (1 == gWindows.size());
     // RememberDefaultWindowPosition becomes a no-op once the window is hidden
     RememberDefaultWindowPosition(win);
@@ -6737,6 +6749,28 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdReadAloud: {
+            if (!tab) {
+                break;
+            }
+
+            if (TtsIsSpeaking()) {
+                TtsStop();
+                ReadAloudClearSourceTab();
+                ToolbarUpdateStateForWindow(win, true);
+            } else {
+                ReadAloudInTab(tab);
+            }
+            break;
+        }
+
+        case CmdStopReadAloud: {
+            TtsStop();
+            ReadAloudClearSourceTab();
+            ToolbarUpdateStateForWindow(win, true);
+            break;
+        }
+
         case CmdToggleFrequentlyRead: {
             gGlobalPrefs->showStartPage = !gGlobalPrefs->showStartPage;
             win->RedrawAll(true);
@@ -8373,6 +8407,399 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
 HWND gLastActiveFrameHwnd = nullptr;
 
+// Text-to-speech/read-aloud integration
+static constexpr UINT WM_TTS_EVENT = WM_APP + 0x421;
+static constexpr UINT CmdTtsVoiceDefault = 0x7100;
+static constexpr UINT CmdTtsVoiceFirst = 0x7101;
+static constexpr UINT CmdTtsVoiceLast = 0x71ff;
+static constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
+
+static WindowTab* gReadAloudSourceTab = nullptr;
+
+// Text cleanup for speech
+static bool IsReadAloudLowerAscii(char c) {
+    return c >= 'a' && c <= 'z';
+}
+
+static bool IsReadAloudLineBreak(char c) {
+    return c == '\r' || c == '\n';
+}
+
+static bool IsReadAloudHorizontalSpace(char c) {
+    return c == ' ' || c == '\t';
+}
+
+static bool ReadAloudAppendChar(char** dst, size_t* len, size_t* cap, char c) {
+    if (!dst || !len || !cap) {
+        return false;
+    }
+
+    if (*len + 1 >= *cap) {
+        size_t newCap = (*cap == 0) ? 256 : (*cap * 2);
+        char* newDst = (char*)realloc(*dst, newCap);
+        if (!newDst) {
+            free(*dst);
+            *dst = nullptr;
+            *len = 0;
+            *cap = 0;
+            return false;
+        }
+
+        *dst = newDst;
+        *cap = newCap;
+    }
+
+    (*dst)[*len] = c;
+    (*len)++;
+    (*dst)[*len] = 0;
+    return true;
+}
+
+static TempStr CleanReadAloudTextTemp(const char* text) {
+    if (str::IsEmpty(text)) {
+        return nullptr;
+    }
+
+    char* out = nullptr;
+    size_t outLen = 0;
+    size_t outCap = 0;
+
+    const char* s = text;
+    bool lastWasSpace = false;
+
+    while (*s) {
+        char c = *s;
+
+        // Remove likely soft hyphenation caused by PDF line wrapping:
+        // "cap-\nturing" -> "capturing"
+        //
+        // Conservative rule: only join lowercase ASCII on both sides.
+        // This avoids damaging many intentional hyphen cases.
+        if (c == '-' && IsReadAloudLineBreak(s[1])) {
+            const char* after = s + 1;
+
+            while (IsReadAloudLineBreak(*after)) {
+                after++;
+            }
+
+            bool prevIsLower = s > text && IsReadAloudLowerAscii(s[-1]);
+            bool nextIsLower = IsReadAloudLowerAscii(*after);
+
+            if (prevIsLower && nextIsLower) {
+                s = after;
+                lastWasSpace = false;
+                continue;
+            }
+        }
+
+        // Convert extracted visual line breaks into spaces.
+        if (IsReadAloudLineBreak(c)) {
+            int lineBreaks = 0;
+
+            while (IsReadAloudLineBreak(*s)) {
+                if (*s == '\n') {
+                    lineBreaks++;
+                }
+                s++;
+            }
+
+            while (IsReadAloudHorizontalSpace(*s)) {
+                s++;
+            }
+
+            if (!lastWasSpace && outLen > 0) {
+                if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
+                    return nullptr;
+                }
+                lastWasSpace = true;
+            }
+
+            // Keep a slightly stronger pause for paragraph breaks.
+            if (lineBreaks >= 2) {
+                if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
+                    return nullptr;
+                }
+            }
+
+            continue;
+        }
+
+        // Collapse spaces and tabs.
+        if (IsReadAloudHorizontalSpace(c)) {
+            if (!lastWasSpace && outLen > 0) {
+                if (!ReadAloudAppendChar(&out, &outLen, &outCap, ' ')) {
+                    return nullptr;
+                }
+                lastWasSpace = true;
+            }
+
+            s++;
+            continue;
+        }
+
+        if (!ReadAloudAppendChar(&out, &outLen, &outCap, c)) {
+            return nullptr;
+        }
+
+        lastWasSpace = false;
+        s++;
+    }
+
+    TempStr res = str::DupTemp(out);
+    free(out);
+    return res;
+}
+
+static TempStr GetReadAloudCurrentPageTextTemp(WindowTab* tab) {
+    if (!tab || !tab->ctrl) {
+        return nullptr;
+    }
+
+    EngineBase* engine = tab->GetEngine();
+    if (!engine) {
+        return nullptr;
+    }
+
+    int pageNo = tab->ctrl->CurrentPageNo();
+    if (!tab->ctrl->ValidPageNo(pageNo)) {
+        return nullptr;
+    }
+
+    PageText pageText = engine->ExtractPageText(pageNo);
+    if (!pageText.text || pageText.len <= 0) {
+        FreePageText(&pageText);
+        return nullptr;
+    }
+
+    TempStr text = ToUtf8Temp(pageText.text, (size_t)pageText.len);
+    FreePageText(&pageText);
+
+    if (str::IsEmpty(text)) {
+        return nullptr;
+    }
+
+    return text;
+}
+
+// Read-aloud lifetime and commands
+static void ReadAloudSetSourceTab(WindowTab* tab) {
+    gReadAloudSourceTab = tab;
+}
+
+static void ReadAloudClearSourceTab() {
+    gReadAloudSourceTab = nullptr;
+}
+
+static void StopReadAloudIfSourceTab(WindowTab* tab) {
+    if (!tab || gReadAloudSourceTab != tab) {
+        return;
+    }
+
+    if (TtsIsSpeaking()) {
+        TtsStop();
+    }
+
+    ReadAloudClearSourceTab();
+}
+
+static void StopReadAloudIfSourceWindow(MainWindow* win) {
+    if (!win || !gReadAloudSourceTab || gReadAloudSourceTab->win != win) {
+        return;
+    }
+
+    if (TtsIsSpeaking()) {
+        TtsStop();
+    }
+
+    ReadAloudClearSourceTab();
+}
+
+static void ReadAloudInTab(WindowTab* tab) {
+    if (!tab || !tab->win) {
+        return;
+    }
+
+    if (!HasPermission(Perm::CopySelection)) {
+        return;
+    }
+
+    bool isTextOnlySelection = false;
+    TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
+
+    if (str::IsEmpty(text)) {
+        text = GetReadAloudCurrentPageTextTemp(tab);
+    }
+
+    TempStr cleaned = CleanReadAloudTextTemp(text);
+    if (str::IsEmpty(cleaned)) {
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("No text available to read aloud");
+        args.timeoutMs = 2000;
+        ShowNotification(args);
+        return;
+    }
+
+    bool ok = TtsSpeakUtf8(cleaned);
+    if (!ok) {
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("Text-to-speech failed");
+        args.timeoutMs = 2000;
+        ShowNotification(args);
+        return;
+    }
+
+    ReadAloudSetSourceTab(tab);
+    ToolbarUpdateStateForWindow(tab->win, true);
+}
+
+static void ReadAloudCurrentPageInTab(WindowTab* tab) {
+    if (!tab || !tab->win) {
+        return;
+    }
+
+    if (!HasPermission(Perm::CopySelection)) {
+        return;
+    }
+
+    TempStr text = GetReadAloudCurrentPageTextTemp(tab);
+
+    if (str::IsEmpty(text)) {
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("No text available on this page");
+        args.timeoutMs = 2000;
+        ShowNotification(args);
+        return;
+    }
+
+    TempStr cleaned = CleanReadAloudTextTemp(text);
+    if (str::IsEmpty(cleaned)) {
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("No text available on this page");
+        args.timeoutMs = 2000;
+        ShowNotification(args);
+        return;
+    }
+
+    bool ok = TtsSpeakUtf8(cleaned);
+    if (!ok) {
+        NotificationCreateArgs args;
+        args.hwndParent = tab->win->hwndCanvas;
+        args.msg = _TRA("Text-to-speech failed");
+        args.timeoutMs = 2000;
+        ShowNotification(args);
+        return;
+    }
+
+    ReadAloudSetSourceTab(tab);
+    ToolbarUpdateStateForWindow(tab->win, true);
+}
+
+// Voice selection menu
+static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
+    if (str::IsEmpty(lang)) {
+        return str::DupTemp("unknown");
+    }
+
+    char* end = nullptr;
+    unsigned long langId = strtoul(lang, &end, 16);
+    if (end == lang || langId == 0) {
+        return str::DupTemp(lang);
+    }
+
+    WCHAR localeName[LOCALE_NAME_MAX_LENGTH] = {};
+    int len = LCIDToLocaleName((LCID)langId, localeName, dimof(localeName), 0);
+    if (len <= 0) {
+        return str::DupTemp(lang);
+    }
+
+    return ToUtf8Temp(localeName);
+}
+
+static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
+    if (!win || !nmtb || nmtb->iItem != CmdReadAloud) {
+        return;
+    }
+
+    RECT rc{};
+    SendMessageW(nmtb->hdr.hwndFrom, TB_GETRECT, CmdReadAloud, (LPARAM)&rc);
+    MapWindowPoints(nmtb->hdr.hwndFrom, HWND_DESKTOP, (POINT*)&rc, 2);
+
+    HMENU menu = CreatePopupMenu();
+    if (!menu) {
+        return;
+    }
+
+    const char* currentVoiceId = TtsGetVoiceId();
+
+    UINT defaultFlags = MF_STRING;
+    if (str::IsEmpty(currentVoiceId)) {
+        defaultFlags |= MF_CHECKED;
+    }
+
+    AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, L"Read current page");
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+
+    AppendMenuW(menu, defaultFlags, CmdTtsVoiceDefault, L"System default");
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+
+    Vec<TtsVoiceInfo> voices = TtsGetVoices();
+
+    const char* lastLang = nullptr;
+
+    UINT cmd = CmdTtsVoiceFirst;
+    for (TtsVoiceInfo& voice : voices) {
+        if (cmd > CmdTtsVoiceLast) {
+            break;
+        }
+
+        const char* lang = str::IsEmpty(voice.lang) ? "" : voice.lang;
+
+        if (lastLang && !str::EqI(lastLang, lang)) {
+            AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+        }
+
+        UINT flags = MF_STRING;
+        if (str::Eq(voice.id, currentVoiceId)) {
+            flags |= MF_CHECKED;
+        }
+
+        TempStr localeName = TtsLangIdToLocaleNameTemp(voice.lang);
+        TempStr label = str::FormatTemp("%s - %s", voice.name, localeName);
+        AppendMenuW(menu, flags, cmd, ToWStrTemp(label));
+
+        lastLang = lang;
+        cmd++;
+    }
+
+    UINT selected = (UINT)TrackPopupMenu(menu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, rc.left, rc.bottom, 0,
+                                         win->hwndFrame, nullptr);
+
+    if (selected == CmdTtsMenuReadCurrentPage) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab) {
+            if (TtsIsSpeaking()) {
+                TtsStop();
+            }
+            ReadAloudCurrentPageInTab(tab);
+        }
+    } else if (selected == CmdTtsVoiceDefault) {
+        TtsSetVoiceById("");
+    } else if (selected >= CmdTtsVoiceFirst && selected < cmd) {
+        int voiceIndex = (int)(selected - CmdTtsVoiceFirst);
+
+        if (voiceIndex >= 0 && voiceIndex < voices.Size()) {
+            TtsSetVoiceById(voices[voiceIndex].id);
+        }
+    }
+
+    TtsFreeVoices(voices);
+    DestroyMenu(menu);
+}
+
 LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     MainWindow* win = FindMainWindowByHwnd(hwnd);
 
@@ -8406,6 +8833,7 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
     switch (msg) {
         case WM_CREATE:
             // do nothing
+            TtsSetNotifyWindow(hwnd, WM_TTS_EVENT, 0, 0);
             goto InitMouseWheelInfo;
 
         case WM_SIZE:
@@ -8448,6 +8876,15 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
                 return 0;
             }
             break;
+
+        case WM_NOTIFY: {
+            NMHDR* hdr = (NMHDR*)lp;
+            if (win && hdr && hdr->hwndFrom == win->hwndToolbar && hdr->code == TBN_DROPDOWN) {
+                ShowTtsVoiceMenu(win, (NMTOOLBARW*)lp);
+                return TBDDRET_DEFAULT;
+            }
+            break;
+        }
 
         case WM_COMMAND:
             return FrameOnCommand(win, hwnd, msg, wp, lp);
@@ -8656,6 +9093,18 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
             }
             return MA_ACTIVATE;
 
+        case WM_TTS_EVENT:
+            TtsProcessEvents();
+
+            if (!TtsIsSpeaking()) {
+                ReadAloudClearSourceTab();
+            }
+
+            if (win) {
+                ToolbarUpdateStateForWindow(win, true);
+            }
+
+            return 0;
         case WM_ERASEBKGND:
             // not sure why it's needed but it causes
             // flash of caption area in choco theme when resizing sidebar
@@ -8779,6 +9228,8 @@ void ShowCrashHandlerMessage() {
 }
 
 void ShutdownCleanup() {
+    TtsRelease();
+
     gAllowedFileTypes.Reset();
     gAllowedLinkProtocols.Reset();
 }
