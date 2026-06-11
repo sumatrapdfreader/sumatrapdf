@@ -91,6 +91,9 @@ struct IPageDestination : KindBase {
     virtual RectF GetRect2() { return rect; }
     // optional zoom level on the above returned page
     virtual float GetZoom2() { return zoom; }
+    // anchor point (x, y) on the destination page; rect's dx/dy may be 0.
+    // Default falls back to GetRect2 (callers should still tolerate (0,0)).
+    virtual RectF GetDestPoint2() { return GetRect2(); }
 
     // string value associated with the destination (e.g. a path or a URL)
     virtual char* GetValue2() { return nullptr; }
@@ -117,6 +120,15 @@ static inline int PageDestGetPageNo(IPageDestination* dest) {
 // rectangle of the destination on the above returned page
 static inline RectF PageDestGetRect(IPageDestination* dest) {
     return dest->GetRect2();
+}
+
+// anchor point on the destination page (x, y in user-space). Returns {0,0,0,0}
+// when the destination has no specific anchor.
+static inline RectF PageDestGetDestPoint(IPageDestination* dest) {
+    if (!dest) {
+        return {};
+    }
+    return dest->GetDestPoint2();
 }
 
 // optional zoom level on the above returned page

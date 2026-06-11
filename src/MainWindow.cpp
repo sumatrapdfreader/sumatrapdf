@@ -33,6 +33,7 @@
 #include "OverlayScrollbar.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "RefHover.h"
 #include "WindowTab.h"
 #include "TableOfContents.h"
 #include "resource.h"
@@ -109,6 +110,7 @@ void CreateMovePatternLazy(MainWindow* win) {
 
 MainWindow::~MainWindow() {
     KillTimer(hwndCanvas, kSmoothScrollTimerID);
+    RefHoverDestroy(refHover);
     FinishStressTest(this);
 
     ReportIf(TabCount() > 0);
