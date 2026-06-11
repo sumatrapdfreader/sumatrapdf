@@ -10,6 +10,11 @@ static bool gTtsCoInitialized = false;
 static bool gTtsActive = false;
 static ULONG gTtsStreamNum = 0;
 
+// copy of the text passed to last Speak() and the position (in WCHARs)
+// of the last word boundary reached, for resuming stopped speech
+static WCHAR* gTtsSpokenText = nullptr;
+static ULONG gTtsLastWordPos = 0;
+
 static char* gTtsVoiceId = nullptr;
 
 static HWND gTtsNotifyHwnd = nullptr;
@@ -184,6 +189,8 @@ void TtsRelease() {
 
     gTtsActive = false;
     gTtsStreamNum = 0;
+    gTtsLastWordPos = 0;
+    str::FreePtr(&gTtsSpokenText);
 
     if (gTtsCoInitialized) {
         CoUninitialize();
@@ -317,7 +324,7 @@ void TtsSetNotifyWindow(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return;
     }
 
-    const ULONGLONG events = SPFEI(SPEI_END_INPUT_STREAM);
+    const ULONGLONG events = SPFEI(SPEI_END_INPUT_STREAM) | SPFEI(SPEI_WORD_BOUNDARY);
     eventSource->SetInterest(events, events);
 
     if (gTtsNotifyHwnd && gTtsNotifyMsg) {
@@ -380,6 +387,11 @@ void TtsProcessEvents() {
             gTtsStreamNum = 0;
         }
 
+        if (eventItem.eEventId == SPEI_WORD_BOUNDARY && eventItem.ulStreamNum == gTtsStreamNum) {
+            // lParam is the character position of the word in the spoken text
+            gTtsLastWordPos = (ULONG)eventItem.lParam;
+        }
+
         TtsClearEvent(&eventItem);
 
         eventItem = {};
@@ -409,6 +421,9 @@ bool TtsSpeakUtf8(const char* text) {
     HRESULT hr = gTtsVoice->Speak(textW, SPF_ASYNC | SPF_PURGEBEFORESPEAK | SPF_IS_NOT_XML, &streamNum);
 
     if (SUCCEEDED(hr)) {
+        str::Free(gTtsSpokenText);
+        gTtsSpokenText = str::Dup(textW);
+        gTtsLastWordPos = 0;
         gTtsStreamNum = streamNum;
         gTtsActive = true;
         return true;
@@ -421,6 +436,14 @@ bool TtsIsSpeaking() {
     return gTtsActive;
 }
 
+int TtsGetSpokenPosUtf8() {
+    if (!gTtsSpokenText || gTtsLastWordPos == 0) {
+        return -1;
+    }
+    int n = WideCharToMultiByte(CP_UTF8, 0, gTtsSpokenText, (int)gTtsLastWordPos, nullptr, 0, nullptr, nullptr);
+    return n > 0 ? n : -1;
+}
+
 void TtsStop() {
     if (gTtsVoice) {
         gTtsVoice->Speak(nullptr, SPF_ASYNC | SPF_PURGEBEFORESPEAK, nullptr);
@@ -428,4 +451,5 @@ void TtsStop() {
 
     gTtsActive = false;
     gTtsStreamNum = 0;
+    gTtsLastWordPos = 0;
 }

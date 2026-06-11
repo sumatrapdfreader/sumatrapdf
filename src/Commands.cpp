@@ -238,7 +238,8 @@ static SeqStrings gCommandNames =
     "CmdToggleReuseInstance\0"
     "CmdToggleChmUI\0"
     "CmdReadAloud\0"
-    "CmdStopReadAloud\0"
+    "CmdPauseReadAloud\0"
+    "CmdContinueReadAloud\0"
     "CmdNone\0"
     "\0";
 
@@ -467,7 +468,8 @@ static i32 gCommandIds[] = {
     CmdToggleReuseInstance,
     CmdToggleChmUI,
     CmdReadAloud,
-    CmdStopReadAloud,
+    CmdPauseReadAloud,
+    CmdContinueReadAloud,
     CmdNone,
 };
 
@@ -696,7 +698,8 @@ SeqStrings gCommandDescriptions =
     "Toggle Reuse Instance\0"
     "Toggle CHM UI\0"
     "Read Aloud\0"
-    "Stop Read Aloud\0"
+    "Pause Read Aloud\0"
+    "Continue Read Aloud\0"
     "Do nothing\0"
     "\0";
 // clang-format on

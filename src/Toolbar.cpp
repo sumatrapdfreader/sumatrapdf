@@ -73,7 +73,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
     {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
     {TbIcon::None, 0, nullptr}, // separator
-    {TbIcon::Speak, CmdReadAloud, _TRN("Speak Selection")},
+    {TbIcon::Speak, CmdReadAloud, _TRN("Read Aloud")},
     {TbIcon::None, 0, nullptr}, // separator
     {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
     {TbIcon::LayoutSinglePage, CmdZoomFitPageAndSinglePage, _TRN("Fit a Single Page")},
@@ -342,6 +342,20 @@ static void SetToolbarButtonImageByIdx(HWND hwnd, int idx, TbIcon icon) {
     SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
 }
 
+// sets button text, which the toolbar shows as its tooltip
+static void SetToolbarButtonToolTipByIdx(HWND hwnd, int idx, int cmdId, const char* s) {
+    const char* accelStr = AppendAccelKeyToMenuStringTemp(nullptr, cmdId);
+    if (accelStr) {
+        TempStr s2 = str::FormatTemp(" (%s)", accelStr + 1); // +1 to skip \t
+        s = str::JoinTemp(s, s2);
+    }
+    TBBUTTONINFOW bi{};
+    bi.cbSize = sizeof(bi);
+    bi.dwMask = TBIF_BYINDEX | TBIF_TEXT;
+    bi.pszText = ToWStrTemp(s);
+    SendMessageW(hwnd, TB_SETBUTTONINFOW, idx, (LPARAM)&bi);
+}
+
 // TODO: this is called too often
 // TODO: also set checked state instead of calling SetToolbarButtonCheckedState() all over
 void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
@@ -360,9 +374,17 @@ void ToolbarUpdateStateForWindow(MainWindow* win, bool setButtonsVisibility) {
         bool isEnabled = IsCmdEnabled(win, cmdId);
         UpdateToolbarButtonStateByIdx(hwnd, i, isEnabled, TBSTATE_ENABLED);
 
-        if (cmdId == CmdReadAloud || cmdId == CmdStopReadAloud) {
+        if (cmdId == CmdReadAloud || cmdId == CmdPauseReadAloud) {
             bool speaking = TtsIsSpeaking();
             SetToolbarButtonImageByIdx(hwnd, i, speaking ? TbIcon::StopSpeaking : TbIcon::Speak);
+            // tooltip reflects what clicking the button will do
+            const char* tip = _TRA("Read Aloud");
+            if (speaking) {
+                tip = _TRA("Pause Reading");
+            } else if (CanContinueReadAloud(win->CurrentTab())) {
+                tip = _TRA("Continue Reading");
+            }
+            SetToolbarButtonToolTipByIdx(hwnd, i, cmdId, tip);
         }
     }
 

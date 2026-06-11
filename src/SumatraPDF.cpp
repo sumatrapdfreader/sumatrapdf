@@ -112,7 +112,10 @@ constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
 
 // Text-to-speech/read-aloud helpers are implemented together near the end of this file.
 static void ReadAloudClearSourceTab();
+static void ReadAloudContinueInTab(WindowTab* tab);
 static void ReadAloudInTab(WindowTab* tab);
+static void ReadAloudStopRememberPos();
+static void ResetReadAloudStateForTab(WindowTab* tab);
 static void StopReadAloudIfSourceTab(WindowTab* tab);
 static void StopReadAloudIfSourceWindow(MainWindow* win);
 
@@ -2920,6 +2923,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     WindowTab* currentTab = win->CurrentTab();
     if (currentTab) {
         currentTab->selectedAnnotation = nullptr;
+        ResetReadAloudStateForTab(currentTab);
     }
     if (deleteModel) {
         if (currentTab) {
@@ -6755,19 +6759,26 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
 
             if (TtsIsSpeaking()) {
-                TtsStop();
-                ReadAloudClearSourceTab();
+                ReadAloudStopRememberPos();
                 ToolbarUpdateStateForWindow(win, true);
+            } else if (CanContinueReadAloud(tab)) {
+                ReadAloudContinueInTab(tab);
             } else {
                 ReadAloudInTab(tab);
             }
             break;
         }
 
-        case CmdStopReadAloud: {
-            TtsStop();
-            ReadAloudClearSourceTab();
+        case CmdPauseReadAloud: {
+            ReadAloudStopRememberPos();
             ToolbarUpdateStateForWindow(win, true);
+            break;
+        }
+
+        case CmdContinueReadAloud: {
+            if (!TtsIsSpeaking()) {
+                ReadAloudContinueInTab(tab);
+            }
             break;
         }
 
@@ -8413,6 +8424,8 @@ static constexpr UINT CmdTtsVoiceDefault = 0x7100;
 static constexpr UINT CmdTtsVoiceFirst = 0x7101;
 static constexpr UINT CmdTtsVoiceLast = 0x71ff;
 static constexpr UINT CmdTtsMenuReadCurrentPage = 0x7200;
+static constexpr UINT CmdTtsMenuContinueReading = 0x7201;
+static constexpr UINT CmdTtsMenuReadSelection = 0x7202;
 
 static WindowTab* gReadAloudSourceTab = nullptr;
 
@@ -8614,6 +8627,59 @@ static void StopReadAloudIfSourceWindow(MainWindow* win) {
     ReadAloudClearSourceTab();
 }
 
+// reset "Continue reading" state, called when its document goes away
+static void ResetReadAloudStateForTab(WindowTab* tab) {
+    if (!tab) {
+        return;
+    }
+    StopReadAloudIfSourceTab(tab);
+    str::FreePtr(&tab->readAloudText);
+    tab->readAloudResumePos = -1;
+}
+
+// stop reading and remember where we stopped so that "Continue reading"
+// can pick up from there
+static void ReadAloudStopRememberPos() {
+    // drain pending word-boundary events for an accurate position
+    TtsProcessEvents();
+    WindowTab* tab = gReadAloudSourceTab;
+    if (tab && TtsIsSpeaking()) {
+        int pos = TtsGetSpokenPosUtf8();
+        if (pos > 0 && pos < str::Leni(tab->readAloudText)) {
+            tab->readAloudResumePos = pos;
+        }
+    }
+    TtsStop();
+    ReadAloudClearSourceTab();
+}
+
+static void ReadAloudShowNotif(WindowTab* tab, const char* msg) {
+    NotificationCreateArgs args;
+    args.hwndParent = tab->win->hwndCanvas;
+    args.msg = msg;
+    args.timeoutMs = 2000;
+    ShowNotification(args);
+}
+
+// speaks already cleaned text and remembers it on the tab so that
+// reading can be resumed after stopping
+static void ReadAloudStartText(WindowTab* tab, const char* cleaned, const char* errMsg) {
+    if (str::IsEmpty(cleaned)) {
+        ReadAloudShowNotif(tab, errMsg);
+        return;
+    }
+
+    if (!TtsSpeakUtf8(cleaned)) {
+        ReadAloudShowNotif(tab, _TRA("Text-to-speech failed"));
+        return;
+    }
+
+    str::ReplaceWithCopy(&tab->readAloudText, cleaned);
+    tab->readAloudResumePos = -1;
+    ReadAloudSetSourceTab(tab);
+    ToolbarUpdateStateForWindow(tab->win, true);
+}
+
 static void ReadAloudInTab(WindowTab* tab) {
     if (!tab || !tab->win) {
         return;
@@ -8631,27 +8697,7 @@ static void ReadAloudInTab(WindowTab* tab) {
     }
 
     TempStr cleaned = CleanReadAloudTextTemp(text);
-    if (str::IsEmpty(cleaned)) {
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = _TRA("No text available to read aloud");
-        args.timeoutMs = 2000;
-        ShowNotification(args);
-        return;
-    }
-
-    bool ok = TtsSpeakUtf8(cleaned);
-    if (!ok) {
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = _TRA("Text-to-speech failed");
-        args.timeoutMs = 2000;
-        ShowNotification(args);
-        return;
-    }
-
-    ReadAloudSetSourceTab(tab);
-    ToolbarUpdateStateForWindow(tab->win, true);
+    ReadAloudStartText(tab, cleaned, _TRA("No text available to read aloud"));
 }
 
 static void ReadAloudCurrentPageInTab(WindowTab* tab) {
@@ -8664,38 +8710,43 @@ static void ReadAloudCurrentPageInTab(WindowTab* tab) {
     }
 
     TempStr text = GetReadAloudCurrentPageTextTemp(tab);
-
-    if (str::IsEmpty(text)) {
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = _TRA("No text available on this page");
-        args.timeoutMs = 2000;
-        ShowNotification(args);
-        return;
-    }
-
     TempStr cleaned = CleanReadAloudTextTemp(text);
-    if (str::IsEmpty(cleaned)) {
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = _TRA("No text available on this page");
-        args.timeoutMs = 2000;
-        ShowNotification(args);
+    ReadAloudStartText(tab, cleaned, _TRA("No text available on this page"));
+}
+
+static void ReadAloudSelectionInTab(WindowTab* tab) {
+    if (!tab || !tab->win) {
         return;
     }
 
-    bool ok = TtsSpeakUtf8(cleaned);
-    if (!ok) {
-        NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
-        args.msg = _TRA("Text-to-speech failed");
-        args.timeoutMs = 2000;
-        ShowNotification(args);
+    if (!HasPermission(Perm::CopySelection)) {
         return;
     }
 
-    ReadAloudSetSourceTab(tab);
-    ToolbarUpdateStateForWindow(tab->win, true);
+    bool isTextOnlySelection = false;
+    TempStr text = GetSelectedTextTemp(tab, "\r\n", isTextOnlySelection);
+    TempStr cleaned = CleanReadAloudTextTemp(text);
+    ReadAloudStartText(tab, cleaned, _TRA("No text available to read aloud"));
+}
+
+bool CanContinueReadAloud(WindowTab* tab) {
+    if (!tab || str::IsEmpty(tab->readAloudText)) {
+        return false;
+    }
+    int pos = tab->readAloudResumePos;
+    return pos > 0 && pos < str::Leni(tab->readAloudText);
+}
+
+static void ReadAloudContinueInTab(WindowTab* tab) {
+    if (!CanContinueReadAloud(tab) || !tab->win) {
+        return;
+    }
+
+    // speak the remaining text; ReadAloudStartText() remembers it as the
+    // new spoken text so that a position reported on a subsequent stop
+    // stays relative to what is being spoken
+    TempStr rest = str::DupTemp(tab->readAloudText + tab->readAloudResumePos);
+    ReadAloudStartText(tab, rest, _TRA("No text available to read aloud"));
 }
 
 // Voice selection menu
@@ -8740,7 +8791,14 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
         defaultFlags |= MF_CHECKED;
     }
 
+    WindowTab* currTab = win->CurrentTab();
+    bool canContinue = CanContinueReadAloud(currTab);
+    bool hasSelection =
+        currTab && win->showSelection && currTab->selectionOnPage && currTab->selectionOnPage->size() > 0;
+
     AppendMenuW(menu, MF_STRING, CmdTtsMenuReadCurrentPage, L"Read current page");
+    AppendMenuW(menu, canContinue ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuContinueReading, L"Continue reading");
+    AppendMenuW(menu, hasSelection ? MF_STRING : MF_STRING | MF_GRAYED, CmdTtsMenuReadSelection, L"Read selection");
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
 
     AppendMenuW(menu, defaultFlags, CmdTtsVoiceDefault, L"System default");
@@ -8779,13 +8837,22 @@ static void ShowTtsVoiceMenu(MainWindow* win, NMTOOLBARW* nmtb) {
                                          win->hwndFrame, nullptr);
 
     if (selected == CmdTtsMenuReadCurrentPage) {
-        WindowTab* tab = win->CurrentTab();
-        if (tab) {
+        if (currTab) {
             if (TtsIsSpeaking()) {
                 TtsStop();
             }
-            ReadAloudCurrentPageInTab(tab);
+            ReadAloudCurrentPageInTab(currTab);
         }
+    } else if (selected == CmdTtsMenuContinueReading) {
+        if (TtsIsSpeaking()) {
+            TtsStop();
+        }
+        ReadAloudContinueInTab(currTab);
+    } else if (selected == CmdTtsMenuReadSelection) {
+        if (TtsIsSpeaking()) {
+            TtsStop();
+        }
+        ReadAloudSelectionInTab(currTab);
     } else if (selected == CmdTtsVoiceDefault) {
         TtsSetVoiceById("");
     } else if (selected >= CmdTtsVoiceFirst && selected < cmd) {
@@ -9096,12 +9163,16 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_TTS_EVENT:
             TtsProcessEvents();
 
-            if (!TtsIsSpeaking()) {
+            // also gets here for word boundary events while still speaking;
+            // only the end of speech needs handling
+            if (!TtsIsSpeaking() && gReadAloudSourceTab) {
+                // reading finished: there's nothing left to continue
+                str::FreePtr(&gReadAloudSourceTab->readAloudText);
+                gReadAloudSourceTab->readAloudResumePos = -1;
                 ReadAloudClearSourceTab();
-            }
-
-            if (win) {
-                ToolbarUpdateStateForWindow(win, true);
+                if (win) {
+                    ToolbarUpdateStateForWindow(win, true);
+                }
             }
 
             return 0;

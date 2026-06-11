@@ -228,7 +228,8 @@ export const commands = [
     "CmdToggleReuseInstance", "Toggle Reuse Instance",
     "CmdToggleChmUI", "Toggle CHM UI",
     "CmdReadAloud", "Read Aloud",
-    "CmdStopReadAloud", "Stop Read Aloud",
+    "CmdPauseReadAloud", "Pause Read Aloud",
+    "CmdContinueReadAloud", "Continue Read Aloud",
     "CmdNone", "Do nothing",
 ];
 

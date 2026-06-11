@@ -62,6 +62,7 @@ WindowTab::~WindowTab() {
     delete ctrl;
     str::FreePtr(&filePath);
     str::FreePtr(&frameTitle);
+    str::FreePtr(&readAloudText);
 }
 
 bool WindowTab::IsDocLoaded() const {

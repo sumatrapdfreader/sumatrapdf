@@ -233,8 +233,9 @@ enum {
     CmdToggleReuseInstance = 422,
     CmdToggleChmUI = 423,
     CmdReadAloud = 424,
-    CmdStopReadAloud = 425,
-    CmdNone = 426,
+    CmdPauseReadAloud = 425,
+    CmdContinueReadAloud = 426,
+    CmdNone = 427,
 
     /* range for file history */
     CmdFileHistoryFirst,

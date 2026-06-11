@@ -22,7 +22,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add `CmdPdfEncrypt` (`Encrypt PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to encrypt a PDF file with a password using AES-256
 - add `CmdPdfDecrypt` (`Decrypt PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to decrypt an encrypted PDF file, removing password protection
 - add `CmdDocumentExtractText` (`Extract Text From Document` in `Ctrl + k` [command palette](Command-Palette.md)) to extract text from document pages to a .txt file
-- add `CmdReadAloud` (`Read Aloud` in `Ctrl + k` [command palette](Command-Palette.md)) to read selected text (or current page) using Windows text-to-speech, with voice selection from the toolbar button dropdown
+- add `CmdReadAloud`, `CmdPauseReadAloud`, `CmdContinueReadAloud` (`Read Aloud` etc. in `Ctrl + k` [command palette](Command-Palette.md)) to read selected text (or current page) using Windows text-to-speech, with pause / continue and voice selection from the toolbar button dropdown
 - add `ToolbarText` parameter for `ExternalViewers` advanced setting to show external viewer as a toolbar button
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)

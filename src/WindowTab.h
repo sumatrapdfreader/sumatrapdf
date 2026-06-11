@@ -65,6 +65,12 @@ struct WindowTab {
     // TODO: arguably a hack
     bool ignoreNextAutoReload = false;
 
+    // read aloud: cleaned text that was being read and the utf8 offset
+    // within it where the user stopped reading; enables "Continue reading"
+    // (reset when the document is closed or reloaded)
+    char* readAloudText = nullptr;
+    int readAloudResumePos = -1;
+
     WindowTab(MainWindow* win);
     ~WindowTab();
 

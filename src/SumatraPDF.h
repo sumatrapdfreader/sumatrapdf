@@ -126,6 +126,8 @@ bool SumatraLaunchBrowser(const char* url);
 bool OpenFileExternally(const char* path);
 void CloseCurrentTab(MainWindow* win, bool quitIfLast);
 void CloseTab(WindowTab* tab, bool quitIfLast);
+// true if read aloud was paused and can be resumed in this tab
+bool CanContinueReadAloud(WindowTab* tab);
 bool CanCloseWindow(MainWindow* win);
 void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose);
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, bool relayout = true);
