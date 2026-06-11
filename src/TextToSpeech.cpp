@@ -1,19 +1,50 @@
 #include "utils/BaseUtil.h"
 
+#include <mmsystem.h>
+#include <roapi.h>
+#include <winstring.h>
+#include <activation.h>
+#include <asyncinfo.h>
+#include <windows.foundation.h>
+#include <windows.media.core.h>
+#include <windows.media.speechsynthesis.h>
+#include <shcore.h>
+// must come after the windows.media headers: both define SpeechRecognizerState
+// and this order compiles in both msvc and clang
 #include <sapi.h>
+
 #include <TextToSpeech.h>
 
+#include "utils/Log.h"
+
 #pragma comment(lib, "sapi.lib")
+#pragma comment(lib, "winmm.lib")
 
-static ISpVoice* gTtsVoice = nullptr;
-static bool gTtsCoInitialized = false;
+/*
+Two implementations:
+- Windows.Media.SpeechSynthesis (WinRT, Windows 10+), preferred because it
+  sees the modern OneCore voices. It only synthesizes to a WAV stream so we
+  play it ourselves with waveOut, which also gives us pause position from
+  word boundary cues embedded in the stream.
+- SAPI 5 as fallback for systems without WinRT.
+
+WinRT functions are resolved dynamically from combase.dll / shcore.dll so
+that we don't import them statically (the exe must still load on Windows 7).
+*/
+
+enum class TtsBackend {
+    Unknown,
+    WinRt,
+    Sapi
+};
+static TtsBackend gTtsBackend = TtsBackend::Unknown;
+
+// shared state
 static bool gTtsActive = false;
-static ULONG gTtsStreamNum = 0;
 
-// copy of the text passed to last Speak() and the position (in WCHARs)
+// copy of the text passed to last speak request and the position (in WCHARs)
 // of the last word boundary reached, for resuming stopped speech
 static WCHAR* gTtsSpokenText = nullptr;
-static ULONG gTtsLastWordPos = 0;
 
 static char* gTtsVoiceId = nullptr;
 
@@ -22,14 +53,49 @@ static UINT gTtsNotifyMsg = 0;
 static WPARAM gTtsNotifyWParam = 0;
 static LPARAM gTtsNotifyLParam = 0;
 
-static char* TtsGetVoiceLanguage(ISpObjectToken* token);
-static const char* TtsVoiceLangForSort(const TtsVoiceInfo& voice);
-static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b);
-static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices);
+static void TtsPostNotifyMsg() {
+    if (gTtsNotifyHwnd && gTtsNotifyMsg) {
+        PostMessageW(gTtsNotifyHwnd, gTtsNotifyMsg, gTtsNotifyWParam, gTtsNotifyLParam);
+    }
+}
+
+static const char* TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
+    return str::IsEmpty(voice.lang) ? "ffff" : voice.lang;
+}
+
+static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
+    int langCmp = lstrcmpiA(TtsVoiceLangForSort(a), TtsVoiceLangForSort(b));
+    if (langCmp != 0) {
+        return langCmp < 0;
+    }
+
+    return lstrcmpiA(a.name ? a.name : "", b.name ? b.name : "") < 0;
+}
+
+static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {
+    for (int i = 1; i < voices.Size(); i++) {
+        TtsVoiceInfo value = voices[i];
+        int j = i - 1;
+
+        while (j >= 0 && TtsVoiceLess(value, voices[j])) {
+            voices[j + 1] = voices[j];
+            j--;
+        }
+
+        voices[j + 1] = value;
+    }
+}
+
+//--- SAPI 5 implementation
+
+static ISpVoice* gSapiVoice = nullptr;
+static bool gSapiCoInitialized = false;
+static ULONG gSapiStreamNum = 0;
+static ULONG gSapiLastWordPos = 0;
 
 // Voice token lookup and metadata
 
-static ISpObjectToken* TtsFindVoiceTokenById(const char* voiceId) {
+static ISpObjectToken* SapiFindVoiceTokenById(const char* voiceId) {
     if (str::IsEmpty(voiceId)) {
         return nullptr;
     }
@@ -88,7 +154,7 @@ static ISpObjectToken* TtsFindVoiceTokenById(const char* voiceId) {
     return result;
 }
 
-static char* TtsGetVoiceLanguage(ISpObjectToken* token) {
+static char* SapiGetVoiceLanguage(ISpObjectToken* token) {
     if (!token) {
         return nullptr;
     }
@@ -112,115 +178,95 @@ static char* TtsGetVoiceLanguage(ISpObjectToken* token) {
     return lang;
 }
 
-static const char* TtsVoiceLangForSort(const TtsVoiceInfo& voice) {
-    return str::IsEmpty(voice.lang) ? "ffff" : voice.lang;
-}
-
-static bool TtsVoiceLess(const TtsVoiceInfo& a, const TtsVoiceInfo& b) {
-    int langCmp = lstrcmpiA(TtsVoiceLangForSort(a), TtsVoiceLangForSort(b));
-    if (langCmp != 0) {
-        return langCmp < 0;
+static void SapiSetNotify() {
+    if (!gSapiVoice) {
+        return;
     }
 
-    return lstrcmpiA(a.name ? a.name : "", b.name ? b.name : "") < 0;
-}
-
-static void TtsSortVoicesByLanguage(Vec<TtsVoiceInfo>& voices) {
-    for (int i = 1; i < voices.Size(); i++) {
-        TtsVoiceInfo value = voices[i];
-        int j = i - 1;
-
-        while (j >= 0 && TtsVoiceLess(value, voices[j])) {
-            voices[j + 1] = voices[j];
-            j--;
-        }
-
-        voices[j + 1] = value;
+    ISpEventSource* eventSource = nullptr;
+    HRESULT hr = gSapiVoice->QueryInterface(IID_ISpEventSource, (void**)&eventSource);
+    if (FAILED(hr) || !eventSource) {
+        return;
     }
+
+    const ULONGLONG events = SPFEI(SPEI_END_INPUT_STREAM) | SPFEI(SPEI_WORD_BOUNDARY);
+    eventSource->SetInterest(events, events);
+
+    if (gTtsNotifyHwnd && gTtsNotifyMsg) {
+        eventSource->SetNotifyWindowMessage(gTtsNotifyHwnd, gTtsNotifyMsg, gTtsNotifyWParam, gTtsNotifyLParam);
+    }
+
+    eventSource->Release();
 }
 
-// Lifecycle
-
-static bool TtsInit() {
-    if (gTtsVoice) {
+static bool SapiInit() {
+    if (gSapiVoice) {
         return true;
     }
 
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (SUCCEEDED(hr)) {
-        gTtsCoInitialized = true;
+        gSapiCoInitialized = true;
     } else if (hr != RPC_E_CHANGED_MODE) {
         return false;
     }
 
-    hr = CoCreateInstance(CLSID_SpVoice, nullptr, CLSCTX_ALL, IID_ISpVoice, (void**)&gTtsVoice);
+    hr = CoCreateInstance(CLSID_SpVoice, nullptr, CLSCTX_ALL, IID_ISpVoice, (void**)&gSapiVoice);
     if (FAILED(hr)) {
-        gTtsVoice = nullptr;
+        gSapiVoice = nullptr;
 
-        if (gTtsCoInitialized) {
+        if (gSapiCoInitialized) {
             CoUninitialize();
-            gTtsCoInitialized = false;
+            gSapiCoInitialized = false;
         }
 
         return false;
     }
 
     if (!str::IsEmpty(gTtsVoiceId)) {
-        ISpObjectToken* token = TtsFindVoiceTokenById(gTtsVoiceId);
+        ISpObjectToken* token = SapiFindVoiceTokenById(gTtsVoiceId);
         if (token) {
-            gTtsVoice->SetVoice(token);
+            gSapiVoice->SetVoice(token);
             token->Release();
         }
     }
 
-    if (gTtsNotifyHwnd && gTtsNotifyMsg) {
-        TtsSetNotifyWindow(gTtsNotifyHwnd, gTtsNotifyMsg, gTtsNotifyWParam, gTtsNotifyLParam);
-    }
-
+    SapiSetNotify();
     return true;
 }
 
-void TtsRelease() {
-    if (gTtsVoice) {
-        gTtsVoice->Speak(nullptr, SPF_PURGEBEFORESPEAK, nullptr);
-        gTtsVoice->Release();
-        gTtsVoice = nullptr;
+static void SapiRelease() {
+    if (gSapiVoice) {
+        gSapiVoice->Speak(nullptr, SPF_PURGEBEFORESPEAK, nullptr);
+        gSapiVoice->Release();
+        gSapiVoice = nullptr;
     }
 
-    gTtsActive = false;
-    gTtsStreamNum = 0;
-    gTtsLastWordPos = 0;
-    str::FreePtr(&gTtsSpokenText);
+    gSapiStreamNum = 0;
+    gSapiLastWordPos = 0;
 
-    if (gTtsCoInitialized) {
+    if (gSapiCoInitialized) {
         CoUninitialize();
-        gTtsCoInitialized = false;
+        gSapiCoInitialized = false;
     }
-
-    free(gTtsVoiceId);
-    gTtsVoiceId = nullptr;
 }
 
-// Voice enumeration and selection
-
-Vec<TtsVoiceInfo> TtsGetVoices() {
-    Vec<TtsVoiceInfo> voices;
-
-    if (!TtsInit()) {
-        return voices;
+static void SapiGetVoices(Vec<TtsVoiceInfo>& voices) {
+    if (!SapiInit()) {
+        return;
     }
 
     ISpObjectTokenCategory* category = nullptr;
     HRESULT hr = CoCreateInstance(CLSID_SpObjectTokenCategory, nullptr, CLSCTX_ALL, IID_ISpObjectTokenCategory,
                                   (void**)&category);
     if (FAILED(hr) || !category) {
-        return voices;
+        return;
     }
 
     hr = category->SetId(SPCAT_VOICES, FALSE);
     if (FAILED(hr)) {
         category->Release();
-        return voices;
+        return;
     }
 
     IEnumSpObjectTokens* enumTokens = nullptr;
@@ -228,7 +274,7 @@ Vec<TtsVoiceInfo> TtsGetVoices() {
     category->Release();
 
     if (FAILED(hr) || !enumTokens) {
-        return voices;
+        return;
     }
 
     ISpObjectToken* token = nullptr;
@@ -245,7 +291,7 @@ Vec<TtsVoiceInfo> TtsGetVoices() {
             TtsVoiceInfo info{};
             info.id = str::Dup(ToUtf8Temp(idW));
             info.name = str::Dup(ToUtf8Temp(nameW));
-            info.lang = TtsGetVoiceLanguage(token);
+            info.lang = SapiGetVoiceLanguage(token);
             voices.Append(info);
         }
 
@@ -262,79 +308,31 @@ Vec<TtsVoiceInfo> TtsGetVoices() {
     }
 
     enumTokens->Release();
-    TtsSortVoicesByLanguage(voices);
-    return voices;
 }
 
-bool TtsSetVoiceById(const char* voiceId) {
-    if (!TtsInit()) {
+static bool SapiSetVoiceById(const char* voiceId) {
+    if (!SapiInit()) {
         return false;
     }
 
     HRESULT hr = E_FAIL;
 
     if (str::IsEmpty(voiceId)) {
-        hr = gTtsVoice->SetVoice(nullptr);
+        hr = gSapiVoice->SetVoice(nullptr);
     } else {
-        ISpObjectToken* token = TtsFindVoiceTokenById(voiceId);
+        ISpObjectToken* token = SapiFindVoiceTokenById(voiceId);
         if (!token) {
             return false;
         }
 
-        hr = gTtsVoice->SetVoice(token);
+        hr = gSapiVoice->SetVoice(token);
         token->Release();
     }
 
-    if (FAILED(hr)) {
-        return false;
-    }
-
-    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? voiceId : "");
-    return true;
+    return SUCCEEDED(hr);
 }
 
-const char* TtsGetVoiceId() {
-    return gTtsVoiceId ? gTtsVoiceId : "";
-}
-
-void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
-    for (TtsVoiceInfo& voice : voices) {
-        free(voice.id);
-        free(voice.name);
-        free(voice.lang);
-    }
-    voices.Reset();
-}
-
-// Notification and SAPI event handling
-
-void TtsSetNotifyWindow(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    gTtsNotifyHwnd = hwnd;
-    gTtsNotifyMsg = msg;
-    gTtsNotifyWParam = wp;
-    gTtsNotifyLParam = lp;
-
-    if (!gTtsVoice) {
-        return;
-    }
-
-    ISpEventSource* eventSource = nullptr;
-    HRESULT hr = gTtsVoice->QueryInterface(IID_ISpEventSource, (void**)&eventSource);
-    if (FAILED(hr) || !eventSource) {
-        return;
-    }
-
-    const ULONGLONG events = SPFEI(SPEI_END_INPUT_STREAM) | SPFEI(SPEI_WORD_BOUNDARY);
-    eventSource->SetInterest(events, events);
-
-    if (gTtsNotifyHwnd && gTtsNotifyMsg) {
-        eventSource->SetNotifyWindowMessage(gTtsNotifyHwnd, gTtsNotifyMsg, gTtsNotifyWParam, gTtsNotifyLParam);
-    }
-
-    eventSource->Release();
-}
-
-static void TtsClearEvent(SPEVENT* eventItem) {
+static void SapiClearEvent(SPEVENT* eventItem) {
     if (!eventItem) {
         return;
     }
@@ -367,13 +365,13 @@ static void TtsClearEvent(SPEVENT* eventItem) {
     eventItem->lParam = 0;
 }
 
-void TtsProcessEvents() {
-    if (!gTtsVoice) {
+static void SapiProcessEvents() {
+    if (!gSapiVoice) {
         return;
     }
 
     ISpEventSource* eventSource = nullptr;
-    HRESULT hr = gTtsVoice->QueryInterface(IID_ISpEventSource, (void**)&eventSource);
+    HRESULT hr = gSapiVoice->QueryInterface(IID_ISpEventSource, (void**)&eventSource);
     if (FAILED(hr) || !eventSource) {
         return;
     }
@@ -382,17 +380,17 @@ void TtsProcessEvents() {
     ULONG fetched = 0;
 
     while (eventSource->GetEvents(1, &eventItem, &fetched) == S_OK && fetched > 0) {
-        if (eventItem.eEventId == SPEI_END_INPUT_STREAM && eventItem.ulStreamNum == gTtsStreamNum) {
+        if (eventItem.eEventId == SPEI_END_INPUT_STREAM && eventItem.ulStreamNum == gSapiStreamNum) {
             gTtsActive = false;
-            gTtsStreamNum = 0;
+            gSapiStreamNum = 0;
         }
 
-        if (eventItem.eEventId == SPEI_WORD_BOUNDARY && eventItem.ulStreamNum == gTtsStreamNum) {
+        if (eventItem.eEventId == SPEI_WORD_BOUNDARY && eventItem.ulStreamNum == gSapiStreamNum) {
             // lParam is the character position of the word in the spoken text
-            gTtsLastWordPos = (ULONG)eventItem.lParam;
+            gSapiLastWordPos = (ULONG)eventItem.lParam;
         }
 
-        TtsClearEvent(&eventItem);
+        SapiClearEvent(&eventItem);
 
         eventItem = {};
         fetched = 0;
@@ -401,14 +399,729 @@ void TtsProcessEvents() {
     eventSource->Release();
 }
 
-// Speech control
-
-bool TtsSpeakUtf8(const char* text) {
-    if (str::IsEmpty(text)) {
+static bool SapiSpeak(const WCHAR* textW) {
+    if (!SapiInit()) {
         return false;
     }
 
-    if (!TtsInit()) {
+    ULONG streamNum = 0;
+    HRESULT hr = gSapiVoice->Speak(textW, SPF_ASYNC | SPF_PURGEBEFORESPEAK | SPF_IS_NOT_XML, &streamNum);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    gSapiLastWordPos = 0;
+    gSapiStreamNum = streamNum;
+    return true;
+}
+
+static void SapiStop() {
+    if (gSapiVoice) {
+        gSapiVoice->Speak(nullptr, SPF_ASYNC | SPF_PURGEBEFORESPEAK, nullptr);
+    }
+
+    gSapiStreamNum = 0;
+    gSapiLastWordPos = 0;
+}
+
+//--- Windows.Media.SpeechSynthesis implementation
+
+namespace WMSS = ABI::Windows::Media::SpeechSynthesis;
+namespace WMC = ABI::Windows::Media::Core;
+
+using SynthAsyncOp = __FIAsyncOperation_1_Windows__CMedia__CSpeechSynthesis__CSpeechSynthesisStream;
+using SynthAsyncHandler =
+    __FIAsyncOperationCompletedHandler_1_Windows__CMedia__CSpeechSynthesis__CSpeechSynthesisStream;
+
+typedef HRESULT(WINAPI* Sig_RoInitialize)(RO_INIT_TYPE initType);
+typedef HRESULT(WINAPI* Sig_RoGetActivationFactory)(HSTRING activatableClassId, REFIID iid, void** factory);
+typedef HRESULT(WINAPI* Sig_WindowsCreateString)(PCNZWCH sourceString, UINT32 length, HSTRING* string);
+typedef HRESULT(WINAPI* Sig_WindowsDeleteString)(HSTRING string);
+typedef PCWSTR(WINAPI* Sig_WindowsGetStringRawBuffer)(HSTRING string, UINT32* length);
+typedef HRESULT(WINAPI* Sig_CreateStreamOverRandomAccessStream)(IUnknown* randomAccessStream, REFIID riid, void** ppv);
+
+static Sig_RoInitialize pRoInitialize = nullptr;
+static Sig_RoGetActivationFactory pRoGetActivationFactory = nullptr;
+static Sig_WindowsCreateString pWindowsCreateString = nullptr;
+static Sig_WindowsDeleteString pWindowsDeleteString = nullptr;
+static Sig_WindowsGetStringRawBuffer pWindowsGetStringRawBuffer = nullptr;
+static Sig_CreateStreamOverRandomAccessStream pCreateStreamOverRandomAccessStream = nullptr;
+
+static WMSS::ISpeechSynthesizer* gWinSynth = nullptr;
+static WMSS::IInstalledVoicesStatic* gWinVoicesStatic = nullptr;
+static bool gWinCoInitialized = false;
+static bool gWinInitFailed = false;
+
+// pending synthesis operation, completion signaled via notify message
+static SynthAsyncOp* gWinSynthOp = nullptr;
+
+// playback of the synthesized WAV stream
+static HWAVEOUT gWinWaveOut = nullptr;
+static WAVEHDR gWinWaveHdr{};
+static char* gWinWavData = nullptr; // the whole WAV file
+static DWORD gWinAvgBytesPerSec = 0;
+static DWORD gWinSamplesPerSec = 0;
+static LONG gWinWaveDone = 0; // set from the waveOut callback thread
+
+// word boundary cues extracted from the synthesized stream: position in
+// the spoken text (in WCHARs) and the time the word starts playing
+struct WinTtsCue {
+    int inputPos;
+    int timeMs;
+};
+static Vec<WinTtsCue> gWinCues;
+
+static char* HStringToUtf8Dup(HSTRING hs) {
+    UINT32 len = 0;
+    PCWSTR s = pWindowsGetStringRawBuffer(hs, &len);
+    if (!s) {
+        return nullptr;
+    }
+    return str::Dup(ToUtf8Temp(s, (size_t)len));
+}
+
+class WinTtsSynthCompletedHandler : public SynthAsyncHandler {
+    LONG refCount = 1;
+
+  public:
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) override {
+        if (!ppv) {
+            return E_POINTER;
+        }
+        if (riid == IID_IUnknown || riid == IID_IAgileObject || riid == __uuidof(SynthAsyncHandler)) {
+            *ppv = static_cast<SynthAsyncHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+
+    STDMETHODIMP_(ULONG) AddRef() override { return (ULONG)InterlockedIncrement(&refCount); }
+
+    STDMETHODIMP_(ULONG) Release() override {
+        ULONG res = (ULONG)InterlockedDecrement(&refCount);
+        if (0 == res) {
+            delete this;
+        }
+        return res;
+    }
+
+    // can be called on a background thread; actual handling happens
+    // on the UI thread in WinTtsProcessEvents()
+    STDMETHODIMP Invoke(SynthAsyncOp*, AsyncStatus) override {
+        TtsPostNotifyMsg();
+        return S_OK;
+    }
+};
+
+static void WinTtsCancelSynth() {
+    if (!gWinSynthOp) {
+        return;
+    }
+
+    IAsyncInfo* info = nullptr;
+    if (SUCCEEDED(gWinSynthOp->QueryInterface(IID_PPV_ARGS(&info))) && info) {
+        info->Cancel();
+        info->Release();
+    }
+    gWinSynthOp->Release();
+    gWinSynthOp = nullptr;
+}
+
+static void WinTtsStopPlayback() {
+    if (gWinWaveOut) {
+        waveOutReset(gWinWaveOut);
+        if (gWinWaveHdr.dwFlags & WHDR_PREPARED) {
+            waveOutUnprepareHeader(gWinWaveOut, &gWinWaveHdr, sizeof(gWinWaveHdr));
+        }
+        waveOutClose(gWinWaveOut);
+        gWinWaveOut = nullptr;
+    }
+
+    gWinWaveHdr = {};
+    free(gWinWavData);
+    gWinWavData = nullptr;
+    gWinAvgBytesPerSec = 0;
+    gWinSamplesPerSec = 0;
+    InterlockedExchange(&gWinWaveDone, 0);
+}
+
+static bool WinTtsInit() {
+    if (gWinSynth) {
+        return true;
+    }
+    if (gWinInitFailed) {
+        return false;
+    }
+    gWinInitFailed = true;
+
+    HMODULE combase = LoadLibraryW(L"combase.dll");
+    HMODULE shcore = LoadLibraryW(L"shcore.dll");
+    if (!combase || !shcore) {
+        return false;
+    }
+
+    pRoInitialize = (Sig_RoInitialize)GetProcAddress(combase, "RoInitialize");
+    pRoGetActivationFactory = (Sig_RoGetActivationFactory)GetProcAddress(combase, "RoGetActivationFactory");
+    pWindowsCreateString = (Sig_WindowsCreateString)GetProcAddress(combase, "WindowsCreateString");
+    pWindowsDeleteString = (Sig_WindowsDeleteString)GetProcAddress(combase, "WindowsDeleteString");
+    pWindowsGetStringRawBuffer = (Sig_WindowsGetStringRawBuffer)GetProcAddress(combase, "WindowsGetStringRawBuffer");
+    pCreateStreamOverRandomAccessStream =
+        (Sig_CreateStreamOverRandomAccessStream)GetProcAddress(shcore, "CreateStreamOverRandomAccessStream");
+
+    if (!pRoInitialize || !pRoGetActivationFactory || !pWindowsCreateString || !pWindowsDeleteString ||
+        !pWindowsGetStringRawBuffer || !pCreateStreamOverRandomAccessStream) {
+        return false;
+    }
+
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (SUCCEEDED(hr)) {
+        gWinCoInitialized = true;
+    } else if (hr != RPC_E_CHANGED_MODE) {
+        return false;
+    }
+    // ok if it fails because COM is already initialized
+    pRoInitialize(RO_INIT_SINGLETHREADED);
+
+    const WCHAR* clsName = RuntimeClass_Windows_Media_SpeechSynthesis_SpeechSynthesizer;
+    HSTRING cls = nullptr;
+    hr = pWindowsCreateString(clsName, (UINT32)str::Len(clsName), &cls);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    IActivationFactory* factory = nullptr;
+    hr = pRoGetActivationFactory(cls, IID_PPV_ARGS(&factory));
+    pWindowsDeleteString(cls);
+    if (FAILED(hr) || !factory) {
+        return false;
+    }
+
+    factory->QueryInterface(IID_PPV_ARGS(&gWinVoicesStatic)); // optional
+
+    IInspectable* inspectable = nullptr;
+    hr = factory->ActivateInstance(&inspectable);
+    factory->Release();
+    if (FAILED(hr) || !inspectable) {
+        return false;
+    }
+
+    hr = inspectable->QueryInterface(IID_PPV_ARGS(&gWinSynth));
+    inspectable->Release();
+    if (FAILED(hr) || !gWinSynth) {
+        gWinSynth = nullptr;
+        return false;
+    }
+
+    // ask for word boundary metadata in the synthesized stream so that we
+    // know where we are when stopping (best effort, needs Windows 10 1703+)
+    WMSS::ISpeechSynthesizer2* synth2 = nullptr;
+    if (SUCCEEDED(gWinSynth->QueryInterface(IID_PPV_ARGS(&synth2))) && synth2) {
+        WMSS::ISpeechSynthesizerOptions* options = nullptr;
+        if (SUCCEEDED(synth2->get_Options(&options)) && options) {
+            options->put_IncludeWordBoundaryMetadata(true);
+            options->put_IncludeSentenceBoundaryMetadata(false);
+            options->Release();
+        }
+        synth2->Release();
+    }
+
+    gWinInitFailed = false;
+    return true;
+}
+
+static void WinTtsRelease() {
+    WinTtsCancelSynth();
+    WinTtsStopPlayback();
+    gWinCues.Reset();
+
+    if (gWinVoicesStatic) {
+        gWinVoicesStatic->Release();
+        gWinVoicesStatic = nullptr;
+    }
+    if (gWinSynth) {
+        gWinSynth->Release();
+        gWinSynth = nullptr;
+    }
+    if (gWinCoInitialized) {
+        CoUninitialize();
+        gWinCoInitialized = false;
+    }
+}
+
+static void WinTtsGetVoices(Vec<TtsVoiceInfo>& voices) {
+    if (!WinTtsInit() || !gWinVoicesStatic) {
+        return;
+    }
+
+    __FIVectorView_1_Windows__CMedia__CSpeechSynthesis__CVoiceInformation* allVoices = nullptr;
+    HRESULT hr = gWinVoicesStatic->get_AllVoices(&allVoices);
+    if (FAILED(hr) || !allVoices) {
+        return;
+    }
+
+    UINT32 n = 0;
+    allVoices->get_Size(&n);
+
+    for (UINT32 i = 0; i < n; i++) {
+        WMSS::IVoiceInformation* vi = nullptr;
+        if (FAILED(allVoices->GetAt(i, &vi)) || !vi) {
+            continue;
+        }
+
+        HSTRING id = nullptr;
+        HSTRING name = nullptr;
+        HSTRING lang = nullptr;
+        vi->get_Id(&id);
+        vi->get_DisplayName(&name);
+        vi->get_Language(&lang);
+
+        if (id && name) {
+            TtsVoiceInfo info{};
+            info.id = HStringToUtf8Dup(id);
+            info.name = HStringToUtf8Dup(name);
+            info.lang = lang ? HStringToUtf8Dup(lang) : nullptr;
+            voices.Append(info);
+        }
+
+        if (id) {
+            pWindowsDeleteString(id);
+        }
+        if (name) {
+            pWindowsDeleteString(name);
+        }
+        if (lang) {
+            pWindowsDeleteString(lang);
+        }
+
+        vi->Release();
+    }
+
+    allVoices->Release();
+}
+
+static bool WinTtsSetVoiceById(const char* voiceId) {
+    if (!WinTtsInit() || !gWinVoicesStatic) {
+        return false;
+    }
+
+    if (str::IsEmpty(voiceId)) {
+        WMSS::IVoiceInformation* def = nullptr;
+        if (FAILED(gWinVoicesStatic->get_DefaultVoice(&def)) || !def) {
+            return false;
+        }
+        HRESULT hr = gWinSynth->put_Voice(def);
+        def->Release();
+        return SUCCEEDED(hr);
+    }
+
+    __FIVectorView_1_Windows__CMedia__CSpeechSynthesis__CVoiceInformation* allVoices = nullptr;
+    if (FAILED(gWinVoicesStatic->get_AllVoices(&allVoices)) || !allVoices) {
+        return false;
+    }
+
+    bool didSet = false;
+    UINT32 n = 0;
+    allVoices->get_Size(&n);
+
+    for (UINT32 i = 0; i < n && !didSet; i++) {
+        WMSS::IVoiceInformation* vi = nullptr;
+        if (FAILED(allVoices->GetAt(i, &vi)) || !vi) {
+            continue;
+        }
+
+        HSTRING id = nullptr;
+        vi->get_Id(&id);
+        if (id) {
+            UINT32 len = 0;
+            PCWSTR s = pWindowsGetStringRawBuffer(id, &len);
+            if (s && str::EqI(ToUtf8Temp(s, (size_t)len), voiceId)) {
+                didSet = SUCCEEDED(gWinSynth->put_Voice(vi));
+            }
+            pWindowsDeleteString(id);
+        }
+        vi->Release();
+    }
+
+    allVoices->Release();
+    return didSet;
+}
+
+static bool WinTtsSpeak(const WCHAR* textW) {
+    if (!WinTtsInit()) {
+        return false;
+    }
+
+    WinTtsCancelSynth();
+    WinTtsStopPlayback();
+    gWinCues.Reset();
+
+    HSTRING text = nullptr;
+    HRESULT hr = pWindowsCreateString(textW, (UINT32)str::Len(textW), &text);
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    SynthAsyncOp* op = nullptr;
+    hr = gWinSynth->SynthesizeTextToStreamAsync(text, &op);
+    pWindowsDeleteString(text);
+    if (FAILED(hr) || !op) {
+        return false;
+    }
+
+    auto handler = new WinTtsSynthCompletedHandler();
+    op->put_Completed(handler);
+    handler->Release();
+
+    gWinSynthOp = op;
+    return true;
+}
+
+// extract word boundary cues: where each word starts in the spoken text
+// and when it starts playing
+static void WinTtsExtractCues(WMSS::ISpeechSynthesisStream* stream) {
+    gWinCues.Reset();
+
+    WMC::ITimedMetadataTrackProvider* provider = nullptr;
+    if (FAILED(stream->QueryInterface(IID_PPV_ARGS(&provider))) || !provider) {
+        return;
+    }
+
+    __FIVectorView_1_Windows__CMedia__CCore__CTimedMetadataTrack* tracks = nullptr;
+    HRESULT hr = provider->get_TimedMetadataTracks(&tracks);
+    provider->Release();
+    if (FAILED(hr) || !tracks) {
+        return;
+    }
+
+    UINT32 nTracks = 0;
+    tracks->get_Size(&nTracks);
+
+    for (UINT32 i = 0; i < nTracks; i++) {
+        WMC::ITimedMetadataTrack* track = nullptr;
+        if (FAILED(tracks->GetAt(i, &track)) || !track) {
+            continue;
+        }
+
+        __FIVectorView_1_Windows__CMedia__CCore__CIMediaCue* cues = nullptr;
+        if (SUCCEEDED(track->get_Cues(&cues)) && cues) {
+            UINT32 nCues = 0;
+            cues->get_Size(&nCues);
+
+            for (UINT32 j = 0; j < nCues; j++) {
+                WMC::IMediaCue* cue = nullptr;
+                if (FAILED(cues->GetAt(j, &cue)) || !cue) {
+                    continue;
+                }
+
+                WMC::ISpeechCue* speechCue = nullptr;
+                if (SUCCEEDED(cue->QueryInterface(IID_PPV_ARGS(&speechCue))) && speechCue) {
+                    __FIReference_1_int* posRef = nullptr;
+                    speechCue->get_StartPositionInInput(&posRef);
+                    if (posRef) {
+                        INT32 pos = 0;
+                        posRef->get_Value(&pos);
+                        posRef->Release();
+
+                        ABI::Windows::Foundation::TimeSpan ts{};
+                        cue->get_StartTime(&ts);
+
+                        WinTtsCue wc;
+                        wc.inputPos = (int)pos;
+                        wc.timeMs = (int)(ts.Duration / 10000);
+                        gWinCues.Append(wc);
+                    }
+                    speechCue->Release();
+                }
+                cue->Release();
+            }
+            cues->Release();
+        }
+        track->Release();
+    }
+
+    tracks->Release();
+
+    // sort by time (insertion sort, the cues are mostly sorted already)
+    for (int i = 1; i < gWinCues.Size(); i++) {
+        WinTtsCue value = gWinCues[i];
+        int j = i - 1;
+        while (j >= 0 && gWinCues[j].timeMs > value.timeMs) {
+            gWinCues[j + 1] = gWinCues[j];
+            j--;
+        }
+        gWinCues[j + 1] = value;
+    }
+}
+
+// reads the whole synthesized WAV file into gWinWavData
+static bool WinTtsReadStreamBytes(WMSS::ISpeechSynthesisStream* stream) {
+    IStream* istm = nullptr;
+    HRESULT hr = pCreateStreamOverRandomAccessStream((IUnknown*)stream, IID_PPV_ARGS(&istm));
+    if (FAILED(hr) || !istm) {
+        return false;
+    }
+
+    bool ok = false;
+    STATSTG st{};
+    if (SUCCEEDED(istm->Stat(&st, STATFLAG_NONAME))) {
+        constexpr ULONGLONG kMaxWavSize = 512 * 1024 * 1024;
+        ULONGLONG size = st.cbSize.QuadPart;
+        if (size > 0 && size < kMaxWavSize) {
+            char* buf = (char*)malloc((size_t)size);
+            if (buf) {
+                LARGE_INTEGER zero{};
+                istm->Seek(zero, STREAM_SEEK_SET, nullptr);
+
+                size_t total = 0;
+                while (total < (size_t)size) {
+                    ULONG read = 0;
+                    hr = istm->Read(buf + total, (ULONG)((size_t)size - total), &read);
+                    if (FAILED(hr) || read == 0) {
+                        break;
+                    }
+                    total += read;
+                }
+
+                if (total == (size_t)size) {
+                    gWinWavData = buf;
+                    gWinWaveHdr.dwBufferLength = (DWORD)size; // temporarily holds the file size
+                    ok = true;
+                } else {
+                    free(buf);
+                }
+            }
+        }
+    }
+
+    istm->Release();
+    return ok;
+}
+
+static DWORD WavGetU32(const char* d) {
+    DWORD res;
+    memcpy(&res, d, 4);
+    return res;
+}
+
+// finds "fmt " and "data" chunks in a RIFF WAVE file
+static bool WinTtsParseWav(const char* d, size_t n, WAVEFORMATEX* wfx, const char** dataOut, DWORD* dataSizeOut) {
+    if (n < 12 + 8 || !str::EqN(d, "RIFF", 4) || !str::EqN(d + 8, "WAVE", 4)) {
+        return false;
+    }
+
+    bool haveFmt = false;
+    const char* data = nullptr;
+    DWORD dataSize = 0;
+
+    size_t off = 12;
+    while (off + 8 <= n) {
+        const char* chunkId = d + off;
+        DWORD chunkSize = WavGetU32(d + off + 4);
+        off += 8;
+        if (chunkSize > n - off) {
+            break;
+        }
+
+        if (str::EqN(chunkId, "fmt ", 4) && chunkSize >= 16) {
+            size_t toCopy = (size_t)chunkSize;
+            if (toCopy > sizeof(WAVEFORMATEX)) {
+                toCopy = sizeof(WAVEFORMATEX);
+            }
+            *wfx = {};
+            memcpy(wfx, d + off, toCopy);
+            wfx->cbSize = 0;
+            haveFmt = true;
+        } else if (str::EqN(chunkId, "data", 4)) {
+            data = d + off;
+            dataSize = chunkSize;
+        }
+
+        off += chunkSize + (chunkSize & 1); // chunks are word-aligned
+    }
+
+    if (!haveFmt || !data || dataSize == 0) {
+        return false;
+    }
+
+    *dataOut = data;
+    *dataSizeOut = dataSize;
+    return true;
+}
+
+static void CALLBACK WinTtsWaveOutCb(HWAVEOUT, UINT msg, DWORD_PTR, DWORD_PTR, DWORD_PTR) {
+    if (msg != WOM_DONE) {
+        return;
+    }
+    InterlockedExchange(&gWinWaveDone, 1);
+    TtsPostNotifyMsg();
+}
+
+static bool WinTtsStartPlayback() {
+    DWORD wavSize = gWinWaveHdr.dwBufferLength;
+    gWinWaveHdr = {};
+
+    WAVEFORMATEX wfx{};
+    const char* data = nullptr;
+    DWORD dataSize = 0;
+    if (!WinTtsParseWav(gWinWavData, wavSize, &wfx, &data, &dataSize)) {
+        logf("WinTtsStartPlayback: failed to parse WAV, size: %d\n", (int)wavSize);
+        return false;
+    }
+
+    MMRESULT res = waveOutOpen(&gWinWaveOut, WAVE_MAPPER, &wfx, (DWORD_PTR)WinTtsWaveOutCb, 0, CALLBACK_FUNCTION);
+    if (res != MMSYSERR_NOERROR) {
+        logf("WinTtsStartPlayback: waveOutOpen() failed: %d, format tag: %d\n", (int)res, (int)wfx.wFormatTag);
+        gWinWaveOut = nullptr;
+        return false;
+    }
+
+    gWinAvgBytesPerSec = wfx.nAvgBytesPerSec;
+    gWinSamplesPerSec = wfx.nSamplesPerSec;
+
+    gWinWaveHdr.lpData = (LPSTR)data;
+    gWinWaveHdr.dwBufferLength = dataSize;
+    if (waveOutPrepareHeader(gWinWaveOut, &gWinWaveHdr, sizeof(gWinWaveHdr)) != MMSYSERR_NOERROR ||
+        waveOutWrite(gWinWaveOut, &gWinWaveHdr, sizeof(gWinWaveHdr)) != MMSYSERR_NOERROR) {
+        log("WinTtsStartPlayback: waveOutPrepareHeader() or waveOutWrite() failed\n");
+        WinTtsStopPlayback();
+        return false;
+    }
+
+    logf("WinTtsStartPlayback: playing %d bytes, %d Hz, %d word cues\n", (int)dataSize, (int)wfx.nSamplesPerSec,
+         gWinCues.Size());
+    return true;
+}
+
+static void WinTtsProcessEvents() {
+    // a pending synthesis finished: start playing the result
+    if (gWinSynthOp) {
+        IAsyncInfo* info = nullptr;
+        if (FAILED(gWinSynthOp->QueryInterface(IID_PPV_ARGS(&info))) || !info) {
+            return;
+        }
+
+        AsyncStatus status = AsyncStatus::Started;
+        info->get_Status(&status);
+        info->Release();
+
+        if (status == AsyncStatus::Started) {
+            return; // still synthesizing
+        }
+
+        SynthAsyncOp* op = gWinSynthOp;
+        gWinSynthOp = nullptr;
+
+        bool ok = false;
+        if (status == AsyncStatus::Completed) {
+            WMSS::ISpeechSynthesisStream* stream = nullptr;
+            HRESULT hr = op->GetResults(&stream);
+            if (SUCCEEDED(hr) && stream) {
+                WinTtsExtractCues(stream);
+                bool didRead = WinTtsReadStreamBytes(stream);
+                if (!didRead) {
+                    log("WinTtsProcessEvents: failed to read synthesized stream\n");
+                }
+                ok = didRead && WinTtsStartPlayback();
+                stream->Release();
+            } else {
+                logf("WinTtsProcessEvents: GetResults() failed: 0x%x\n", (int)hr);
+            }
+        } else {
+            logf("WinTtsProcessEvents: synthesis failed, status: %d\n", (int)status);
+        }
+        op->Release();
+
+        if (!ok) {
+            WinTtsStopPlayback();
+            gTtsActive = false;
+        }
+        return;
+    }
+
+    // playback finished
+    if (InterlockedCompareExchange(&gWinWaveDone, 0, 1) == 1) {
+        if (gWinWaveOut) {
+            WinTtsStopPlayback();
+            gTtsActive = false;
+        }
+    }
+}
+
+// position (in WCHARs) in the spoken text of the word being played
+static int WinTtsLastWordPosWide() {
+    if (!gWinWaveOut || gWinCues.Size() == 0) {
+        return 0;
+    }
+
+    MMTIME mmt{};
+    mmt.wType = TIME_MS;
+    if (waveOutGetPosition(gWinWaveOut, &mmt, sizeof(mmt)) != MMSYSERR_NOERROR) {
+        return 0;
+    }
+
+    DWORD ms;
+    if (mmt.wType == TIME_MS) {
+        ms = mmt.u.ms;
+    } else if (mmt.wType == TIME_BYTES && gWinAvgBytesPerSec) {
+        ms = (DWORD)((u64)mmt.u.cb * 1000 / gWinAvgBytesPerSec);
+    } else if (mmt.wType == TIME_SAMPLES && gWinSamplesPerSec) {
+        ms = (DWORD)((u64)mmt.u.sample * 1000 / gWinSamplesPerSec);
+    } else {
+        return 0;
+    }
+
+    int pos = 0;
+    for (WinTtsCue& cue : gWinCues) {
+        if (cue.timeMs > (int)ms) {
+            break;
+        }
+        pos = cue.inputPos;
+    }
+    return pos;
+}
+
+static void WinTtsStop() {
+    WinTtsCancelSynth();
+    WinTtsStopPlayback();
+}
+
+//--- public interface, dispatches to one of the implementations
+
+static bool IsWinRtBackend() {
+    if (gTtsBackend == TtsBackend::Unknown) {
+        if (WinTtsInit()) {
+            gTtsBackend = TtsBackend::WinRt;
+            log("Tts: using Windows.Media.SpeechSynthesis\n");
+        } else {
+            gTtsBackend = TtsBackend::Sapi;
+            log("Tts: using SAPI\n");
+        }
+    }
+    return gTtsBackend == TtsBackend::WinRt;
+}
+
+void TtsSetNotifyWindow(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    gTtsNotifyHwnd = hwnd;
+    gTtsNotifyMsg = msg;
+    gTtsNotifyWParam = wp;
+    gTtsNotifyLParam = lp;
+
+    SapiSetNotify();
+}
+
+void TtsProcessEvents() {
+    if (gTtsBackend == TtsBackend::WinRt) {
+        WinTtsProcessEvents();
+    } else {
+        SapiProcessEvents();
+    }
+}
+
+bool TtsSpeakUtf8(const char* text) {
+    if (str::IsEmpty(text)) {
         return false;
     }
 
@@ -417,19 +1130,20 @@ bool TtsSpeakUtf8(const char* text) {
         return false;
     }
 
-    ULONG streamNum = 0;
-    HRESULT hr = gTtsVoice->Speak(textW, SPF_ASYNC | SPF_PURGEBEFORESPEAK | SPF_IS_NOT_XML, &streamNum);
-
-    if (SUCCEEDED(hr)) {
-        str::Free(gTtsSpokenText);
-        gTtsSpokenText = str::Dup(textW);
-        gTtsLastWordPos = 0;
-        gTtsStreamNum = streamNum;
-        gTtsActive = true;
-        return true;
+    bool ok;
+    if (IsWinRtBackend()) {
+        ok = WinTtsSpeak(textW);
+    } else {
+        ok = SapiSpeak(textW);
+    }
+    if (!ok) {
+        return false;
     }
 
-    return false;
+    str::Free(gTtsSpokenText);
+    gTtsSpokenText = str::Dup(textW);
+    gTtsActive = true;
+    return true;
 }
 
 bool TtsIsSpeaking() {
@@ -437,19 +1151,76 @@ bool TtsIsSpeaking() {
 }
 
 int TtsGetSpokenPosUtf8() {
-    if (!gTtsSpokenText || gTtsLastWordPos == 0) {
+    int wpos;
+    if (gTtsBackend == TtsBackend::WinRt) {
+        wpos = WinTtsLastWordPosWide();
+    } else {
+        wpos = (int)gSapiLastWordPos;
+    }
+
+    if (!gTtsSpokenText || wpos <= 0) {
         return -1;
     }
-    int n = WideCharToMultiByte(CP_UTF8, 0, gTtsSpokenText, (int)gTtsLastWordPos, nullptr, 0, nullptr, nullptr);
+    int n = WideCharToMultiByte(CP_UTF8, 0, gTtsSpokenText, wpos, nullptr, 0, nullptr, nullptr);
     return n > 0 ? n : -1;
 }
 
 void TtsStop() {
-    if (gTtsVoice) {
-        gTtsVoice->Speak(nullptr, SPF_ASYNC | SPF_PURGEBEFORESPEAK, nullptr);
+    if (gTtsBackend == TtsBackend::WinRt) {
+        WinTtsStop();
+    } else {
+        SapiStop();
+    }
+    gTtsActive = false;
+}
+
+Vec<TtsVoiceInfo> TtsGetVoices() {
+    Vec<TtsVoiceInfo> voices;
+    if (IsWinRtBackend()) {
+        WinTtsGetVoices(voices);
+    } else {
+        SapiGetVoices(voices);
+    }
+    TtsSortVoicesByLanguage(voices);
+    return voices;
+}
+
+bool TtsSetVoiceById(const char* voiceId) {
+    bool ok;
+    if (IsWinRtBackend()) {
+        ok = WinTtsSetVoiceById(voiceId);
+    } else {
+        ok = SapiSetVoiceById(voiceId);
+    }
+    if (!ok) {
+        return false;
     }
 
+    str::ReplaceWithCopy(&gTtsVoiceId, voiceId ? voiceId : "");
+    return true;
+}
+
+const char* TtsGetVoiceId() {
+    return gTtsVoiceId ? gTtsVoiceId : "";
+}
+
+void TtsFreeVoices(Vec<TtsVoiceInfo>& voices) {
+    for (TtsVoiceInfo& voice : voices) {
+        free(voice.id);
+        free(voice.name);
+        free(voice.lang);
+    }
+    voices.Reset();
+}
+
+void TtsRelease() {
+    WinTtsRelease();
+    SapiRelease();
+
     gTtsActive = false;
-    gTtsStreamNum = 0;
-    gTtsLastWordPos = 0;
+    gTtsBackend = TtsBackend::Unknown;
+    str::FreePtr(&gTtsSpokenText);
+
+    free(gTtsVoiceId);
+    gTtsVoiceId = nullptr;
 }

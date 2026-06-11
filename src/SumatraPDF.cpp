@@ -8755,6 +8755,12 @@ static TempStr TtsLangIdToLocaleNameTemp(const char* lang) {
         return str::DupTemp("unknown");
     }
 
+    // Windows.Media.SpeechSynthesis voices report a locale name like "en-US",
+    // SAPI voices a hex language id like "409"
+    if (str::FindChar(lang, '-')) {
+        return str::DupTemp(lang);
+    }
+
     char* end = nullptr;
     unsigned long langId = strtoul(lang, &end, 16);
     if (end == lang || langId == 0) {
