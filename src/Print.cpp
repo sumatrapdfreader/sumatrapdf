@@ -1589,11 +1589,37 @@ static short DetectPrinterPaperSize(EngineBase* engine, Printer* printer) {
     return 0;
 }
 
-static void SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* printer) {
+// let the driver validate and canonicalize the devmode; returns false if the
+// driver rejects it (e.g. doesn't support a custom paper size, see issue #2188)
+static bool ValidateDevMode(Printer* printer) {
+    WCHAR* nameW = ToWStrTemp(printer->name);
+    HANDLE hPrinter = nullptr;
+    if (!OpenPrinterW(nameW, &hPrinter, nullptr)) {
+        return false;
+    }
+    LONG ret = DocumentPropertiesW(nullptr, hPrinter, nameW, printer->devMode, printer->devMode,
+                                   DM_IN_BUFFER | DM_OUT_BUFFER);
+    ClosePrinter(hPrinter);
+    return ret == IDOK;
+}
+
+static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* printer) {
     // get size of first page in tenths of a millimeter
     RectF mediabox = engine->PageMediabox(1);
     SizeF size = engine->Transform(mediabox, 1, 254.0f / engine->GetFileDPI(), 0).Size();
+
+    auto devMode = printer->devMode;
+    size_t devModeSize = devMode->dmSize + devMode->dmDriverExtra;
+    AutoFree backup((char*)memdup(devMode, devModeSize));
     SetCustomPaperSize(printer, size);
+    if (ValidateDevMode(printer)) {
+        return true;
+    }
+    // the driver doesn't support this custom paper size; many printers
+    // (e.g. laser printers with fixed paper trays) don't and would create
+    // a print job that never prints (issue #2188)
+    memcpy(devMode, backup.Get(), devModeSize);
+    return false;
 }
 
 bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const char* settings) {
@@ -1638,6 +1664,7 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
     // set paper size to match the size of the document's first page
     // (will be overridden by any paper= value in -print-settings)
     auto devMode = printer->devMode;
+    short printerDefaultPaper = devMode->dmPaperSize;
     devMode->dmPaperSize = GetPaperSize(engine);
     {
         Print_Advanced_Data advanced;
@@ -1648,8 +1675,11 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
         if (advanced.rotation == PrintRotationAdv::Auto && devMode->dmPaperSize == 0) {
             if (devMode->dmPaperSize = DetectPrinterPaperSize(engine, printer)) {
                 devMode->dmFields |= DM_PAPERSIZE;
-            } else {
-                SetPrinterCustomPaperSizeForEngine(engine, printer);
+            } else if (!SetPrinterCustomPaperSizeForEngine(engine, printer)) {
+                // can't print on paper matching the document's page size;
+                // print on the printer's default paper and rely on scaling
+                // (shrink by default) to fit the page (issue #2188)
+                devMode->dmPaperSize = printerDefaultPaper;
             }
         }
 
