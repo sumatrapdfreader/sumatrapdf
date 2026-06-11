@@ -85,6 +85,8 @@ struct NotificationWnd : Wnd {
     Rect rTxt;
     Rect rClose;
     Rect rProgress;
+    // DT_* format for drawing the message, set in Layout()
+    uint txtFmt = DT_SINGLELINE | DT_NOPREFIX;
 };
 
 constexpr int kMaxNotifs = 128;
@@ -117,16 +119,14 @@ static int GetForSameHwnd(NotificationWnd* wnd, NotificationWnd* wnds[kMaxNotifs
     return GetForHwnd(parent, wnds);
 }
 
-void RelayoutNotifications(HWND hwnd) {
+// hwndCanvas is the parent of the notification windows
+void RelayoutNotifications(HWND hwndCanvas) {
     NotificationWnd* wnds[kMaxNotifs];
-    HWND parent = HwndGetParent(hwnd);
-    int nWnds = GetForHwnd(parent, wnds);
+    int nWnds = GetForHwnd(hwndCanvas, wnds);
     if (nWnds == 0) {
         return;
     }
 
-    auto* first = wnds[0];
-    HWND hwndCanvas = GetParent(first->hwnd);
     Rect frame = ClientRect(hwndCanvas);
     int topLeftMargin = DpiScale(hwndCanvas, kTopLeftMargin);
     int dyPadding = DpiScale(hwndCanvas, kPadding);
@@ -138,6 +138,13 @@ void RelayoutNotifications(HWND hwnd) {
             continue;
         }
         Rect rect = WindowRect(wnd->hwnd);
+        // re-wrap the message if the notification no longer fits
+        // (e.g. when the window was made smaller, issue #2916)
+        int maxDx = frame.dx - (2 * topLeftMargin);
+        if (maxDx > 0 && rect.dx > maxDx) {
+            wnd->Layout(HwndGetTextTemp(wnd->hwnd));
+            rect = WindowRect(wnd->hwnd);
+        }
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRtl()) {
             int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
@@ -161,7 +168,7 @@ static void NotifsRemoveNotification(NotificationWnd* wnd) {
         gNotifs[pos] = gNotifs[gNotifsCount];
     }
     gNotifs[gNotifsCount] = nullptr;
-    RelayoutNotifications(wnd->hwnd);
+    RelayoutNotifications(HwndGetParent(wnd->hwnd));
     delete wnd;
 }
 
@@ -243,25 +250,44 @@ constexpr int kCloseLeftMargin = 16;
 constexpr int kProgressDy = 5;
 
 void NotificationWnd::Layout(const char* message) {
+    int padX = DpiScale(hwnd, 12);
+    int padY = DpiScale(hwnd, 8);
+    int closeDx = DpiScale(hwnd, 16);
+    int closeLeftMargin = DpiScale(hwnd, kCloseLeftMargin) - padX;
+
+    // limit the width to the parent window so that the close button
+    // stays reachable even for very long messages (issue #2916)
+    int topLeftMargin = DpiScale(hwnd, kTopLeftMargin);
+    Rect rParent = ClientRect(GetParent(hwnd));
+    int maxTextDx = rParent.dx - (2 * topLeftMargin) - (2 * padX);
+    if (!noClose) {
+        maxTextDx -= closeLeftMargin + closeDx + padX;
+    }
+
     Size szText;
+    txtFmt = DT_SINGLELINE | DT_NOPREFIX;
     {
         HDC hdc = GetDC(hwnd);
-        uint fmt = DT_SINGLELINE | DT_NOPREFIX;
-        szText = HdcMeasureText(hdc, message, fmt, font);
+        szText = HdcMeasureText(hdc, message, txtFmt, font);
+        if (maxTextDx > 0 && szText.dx > maxTextDx) {
+            // too wide: word-wrap the message; DT_WORD_ELLIPSIS truncates
+            // words too long to wrap (e.g. long file paths)
+            txtFmt = DT_WORDBREAK | DT_WORD_ELLIPSIS | DT_NOPREFIX;
+            szText = HdcMeasureText(hdc, message, maxTextDx, txtFmt, font);
+            if (szText.dx > maxTextDx) {
+                szText.dx = maxTextDx;
+            }
+        }
         ReleaseDC(hwnd, hdc);
     }
 
-    int padX = DpiScale(hwnd, 12);
-    int padY = DpiScale(hwnd, 8);
     int dx = padX + szText.dx + padX;
     int dy = padY + szText.dy + padY;
     rTxt = {padX, padY, szText.dx, szText.dy};
     if (!noClose) {
-        int closeDx = DpiScale(hwnd, 16);
-        int leftMargin = DpiScale(hwnd, kCloseLeftMargin - padX);
-        rClose = {dx + leftMargin, padY, closeDx, closeDx + 2};
+        rClose = {dx + closeLeftMargin, padY, closeDx, closeDx + 2};
         // close button
-        dx += leftMargin + closeDx + padX;
+        dx += closeLeftMargin + closeDx + padX;
     } else {
         rClose = {};
         dx += padX;
@@ -279,6 +305,13 @@ void NotificationWnd::Layout(const char* message) {
         rClose.x += diff;
         dx = rCurr.dx;
     }
+    // but never wider than the parent window (issue #2916)
+    int maxDx = rParent.dx - (2 * topLeftMargin);
+    if (maxDx > 0 && dx > maxDx) {
+        int diff = dx - maxDx;
+        rClose.x -= diff;
+        dx = maxDx;
+    }
 #if 0
     if (dy < rCurr.dy) {
         dy = rCurr.dy;
@@ -295,8 +328,7 @@ void NotificationWnd::Layout(const char* message) {
 
     // y-center close
     if (!noClose) {
-        int closeDx = rClose.dx;
-        rClose.y = ((dy - closeDx) / 2) + 1;
+        rClose.y = ((dy - rClose.dx) / 2) + 1;
     }
 
     if (dx == rCurr.dx && dy == rCurr.dy) {
@@ -353,9 +385,8 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, colTxt);
     char* text = HwndGetTextTemp(hwnd);
-    uint format = DT_SINGLELINE | DT_NOPREFIX;
     RECT rTmp = ToRECT(rTxt);
-    HdcDrawText(hdc, text, &rTmp, format);
+    HdcDrawText(hdc, text, &rTmp, txtFmt);
 
     if (!noClose) {
         Point curPos = HwndGetCursorPos(hwnd);
@@ -433,7 +464,7 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
         delayTimerId = 0;
         BringWindowToTop(hwnd);
         ShowWindow(hwnd, SW_SHOW);
-        RelayoutNotifications(hwnd);
+        RelayoutNotifications(HwndGetParent(hwnd));
         if (timeoutMs != 0) {
             SetTimer(hwnd, kNotifTimerTimeoutId, timeoutMs, nullptr);
         }
@@ -523,7 +554,7 @@ static bool NotifsAdd(NotificationWnd** wnds, int nWnds, NotificationWnd* wnd, K
     wnd->groupId = groupId;
     gNotifs[gNotifsCount] = wnd;
     gNotifsCount++;
-    RelayoutNotifications(wnd->hwnd);
+    RelayoutNotifications(HwndGetParent(wnd->hwnd));
     return true;
 }
 

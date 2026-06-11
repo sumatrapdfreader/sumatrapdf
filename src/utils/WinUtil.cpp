@@ -3056,7 +3056,8 @@ int HdcDrawText(HDC hdc, const char* s, const Point& pos, uint fmt, HFONT font) 
 }
 
 // uses the same logic as HdcDrawText
-Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
+// maxDx limits the width, used when measuring text wrapped with DT_WORDBREAK
+Size HdcMeasureText(HDC hdc, const char* s, int maxDx, uint fmt, HFONT font) {
     fmt |= DT_CALCRECT;
     TempWStr ws = ToWStrTemp(s);
     if (!ws) {
@@ -3064,18 +3065,9 @@ Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
     }
 
     ScopedSelectFont f(hdc, font);
-    HGDIOBJ origFont = nullptr;
-    if (font) {
-        origFont = SelectObject(hdc, font);
-    }
     int sLen = (int)str::Len(ws);
-    // pick a very large area
-    // TODO: allow limiting by dx
-    RECT rc{0, 0, 4096, 4096};
+    RECT rc{0, 0, maxDx, 4096};
     int dy = DrawTextW(hdc, ws, sLen, &rc, fmt);
-    if (font) {
-        SelectObject(hdc, origFont);
-    }
     if (0 == dy) {
         return {};
     }
@@ -3085,6 +3077,11 @@ Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
         dy = dy2;
     }
     return Size(dx, dy);
+}
+
+Size HdcMeasureText(HDC hdc, const char* s, uint fmt, HFONT font) {
+    // a very large area
+    return HdcMeasureText(hdc, s, 4096, fmt, font);
 }
 
 Size HdcMeasureText(HDC hdc, const char* s, HFONT font) {
