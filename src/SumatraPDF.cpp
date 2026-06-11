@@ -1534,11 +1534,12 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (CanAccessDisk() && tab->GetEngineType() == kindEngineMupdf) {
         ReportIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         path = args->FilePath();
-        int res = Synchronizer::Create(path, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
-        // expose SyncTeX in the UI
-        if (PDFSYNCERR_SUCCESS == res) {
-            gGlobalPrefs->enableTeXEnhancements = true;
-        }
+        // note: we used to set gGlobalPrefs->enableTeXEnhancements to true on
+        // success to expose SyncTeX in the UI but that made an explicit
+        // EnableTeXEnhancements = false impossible as it was persisted on exit;
+        // the setting is now only changed by the user or -inverse-search et al.
+        // (issue #1289)
+        Synchronizer::Create(path, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
     }
 
     bool shouldPlace = args->isNewWindow || args->placeWindow && fs;

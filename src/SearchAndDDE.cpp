@@ -552,7 +552,6 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
             ShowNotification(args);
             return true;
         }
-        gGlobalPrefs->enableTeXEnhancements = true;
     }
 
     int pageNo = dm->GetPageNoByPoint(Point(x, y));
