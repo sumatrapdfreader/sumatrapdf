@@ -140,6 +140,11 @@ ScrollbarInSinglePage = false
 ; if true, implements smooth scrolling (introduced in version 3.6)
 SmoothScroll = false
 
+; if true, hovering an internal-document link shows a popup rendering the
+; destination region (citation entry, figure, footnote) (introduced in version
+; 3.7)
+EnableCitationHover = true
+
 ; if true, mouse wheel scrolling is faster when mouse is over a scrollbar
 ; (introduced in version 3.6)
 FastScrollOverScrollbar = false

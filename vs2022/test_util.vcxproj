@@ -910,6 +910,7 @@
     <ClCompile Include="..\src\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\DisplayMode.cpp" />
     <ClCompile Include="..\src\Flags.cpp" />
+    <ClCompile Include="..\src\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraUnitTests.cpp" />
     <ClCompile Include="..\src\common\arena.cpp" />
@@ -958,6 +959,7 @@
     <ClCompile Include="..\src\utils\tests\HtmlPrettyPrint_ut.cpp" />
     <ClCompile Include="..\src\utils\tests\HtmlPullParser_ut.cpp" />
     <ClCompile Include="..\src\utils\tests\JsonParser_ut.cpp" />
+    <ClCompile Include="..\src\utils\tests\RefHover_ut.cpp" />
     <ClCompile Include="..\src\utils\tests\SettingsUtil_ut.cpp" />
     <ClCompile Include="..\src\utils\tests\SimpleLog_ut.cpp" />
     <ClCompile Include="..\src\utils\tests\SquareTreeParser_ut.cpp" />

@@ -748,6 +748,15 @@ const globalPrefs: Field[] = [
   setVersion(mkField("SmoothScroll", Bool, false, "if true, implements smooth scrolling"), "3.6"),
   setVersion(
     mkField(
+      "EnableCitationHover",
+      Bool,
+      true,
+      "if true, hovering an internal-document link shows a popup rendering the destination region (citation entry, figure, footnote)",
+    ),
+    "3.7",
+  ),
+  setVersion(
+    mkField(
       "FastScrollOverScrollbar",
       Bool,
       false,
