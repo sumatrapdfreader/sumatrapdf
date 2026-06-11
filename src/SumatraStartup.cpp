@@ -1358,12 +1358,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
     if (flags.log && !noLogHere) {
         if (flags.logFile) {
-            logFilePath = flags.logFile;
-            logFilePath = path::NormalizeTemp(logFilePath);
+            logFilePath = path::NormalizeTemp(flags.logFile);
             dir::CreateForFile(logFilePath);
         } else {
             logFilePath = GetLogFilePathTemp();
         }
+        // logFilePath is used after the message loop exits, long after
+        // the temp allocator memory it points into has been reused
+        logFilePath = str::Dup(logFilePath);
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
             LogCommandLine();
