@@ -346,6 +346,7 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
+    {"build", "Built: " __DATE__ " " __TIME__, nullptr},
     {"website", "SumatraPDF website", kWebsiteURL},
     {"manual", "SumatraPDF manual", kManualURL},
     {"forums", "SumatraPDF forums", "https://github.com/sumatrapdfreader/sumatrapdf/discussions"},
