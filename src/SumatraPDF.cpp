@@ -4435,6 +4435,13 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (updateToolbars && win->isToolbarVisible) {
         RedrawWindow(win->hwndReBar, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
     }
+    // during a live splitter drag we must paint synchronously: WM_PAINT is
+    // starved by the stream of WM_MOUSEMOVE messages and the next relayout's
+    // WM_SETREDRAW FALSE would discard the pending invalidation
+    bool isSplitterDrag = sidebarDx != -1;
+    if (isSplitterDrag) {
+        RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_UPDATENOW | RDW_ALLCHILDREN);
+    }
     if (updateToolbars && win->tabsInTitlebar && !win->isFullScreen) {
         RECT r = ToRECT(win->captionRect);
         InvalidateRect(win->hwndFrame, &r, TRUE);
