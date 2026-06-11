@@ -1,0 +1,17 @@
+-Isrc
+-Isrc/utils
+-Imupdf/include
+-Iext/libdjvu
+-Iext/CHMLib
+-Iext/libarchive
+-Iext/darkmodelib/include
+-Iext/zlib
+-Iext/synctex
+-Ipackages/Microsoft.Web.WebView2.1.0.992.28/build/native/include
+-DUNICODE
+-DWIN32
+-D_WIN32
+-D_CRT_SECURE_NO_WARNINGS
+-DWINVER=0x0a00
+-D_WIN32_WINNT=0x0a00
+-DPRE_RELEASE_VER=8.8
