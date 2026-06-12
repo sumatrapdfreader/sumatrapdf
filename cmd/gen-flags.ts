@@ -83,6 +83,7 @@ const args = [
     "UpgradeFrom", "upgrade-from",
     "ForTesting", "for-testing",
     "TestSynctex", "test-synctex",
+    "TestSearch", "test-search",
 ];
 
 function generateCode(): string {

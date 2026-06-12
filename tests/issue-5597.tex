@@ -1,0 +1,17 @@
+% Source for tests/issue-5597.pdf (issue #5597: case-insensitive Turkish/accented search).
+% Compile with XeLaTeX (needs a Unicode font so the text extracts as proper
+% Unicode codepoints, e.g. U+0130 for the dotted capital İ):
+%
+%   xelatex -interaction=nonstopmode issue-5597.tex
+%
+% (xelatex ships with MiKTeX: %LOCALAPPDATA%\Programs\MiKTeX\miktex\bin\x64\xelatex.exe)
+\documentclass{article}
+\usepackage{fontspec}
+\setmainfont{Arial}
+\begin{document}
+İbradı
+
+CAFÉ
+
+Ankara
+\end{document}

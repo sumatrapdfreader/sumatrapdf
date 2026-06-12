@@ -1343,6 +1343,44 @@ int TestSynctex(const Flags& flags) {
     return 0;
 }
 
+// Headless case-insensitive text-search test for issue #5597. Loads the pdf,
+// searches (case-insensitive) for the needle and writes the result -- the page
+// it was found on (1-based) or NOTFOUND -- to the output file, then exits.
+// Used by tests/issue-5597.ts; not meant for end users.
+int TestSearch(const Flags& flags) {
+    ScopedGdiPlus gdiPlus;
+    if (!gGlobalPrefs) {
+        gGlobalPrefs = NewGlobalPrefs(nullptr);
+    }
+    const char* pdfPath = flags.testSearchPdf;
+    const char* needle = flags.testSearchNeedle; // utf-8
+
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+    } else {
+        TempWStr needleW = ToWStrTemp(needle);
+        auto ts = new TextSearch(engine);
+        ts->SetDirection(TextSearch::Direction::Forward);
+        ts->SetMatchCase(false);
+        TextSel* sel = ts->FindFirst(1, needleW);
+        if (sel && sel->len > 0) {
+            out.AppendFmt("FOUND needle=%s page=%d\n", needle, sel->pages[0]);
+        } else {
+            out.AppendFmt("NOTFOUND needle=%s\n", needle);
+        }
+        delete ts;
+        SafeEngineRelease(&engine);
+    }
+
+    if (flags.testSearchOut) {
+        file::WriteFile(flags.testSearchOut, out.AsByteSlice());
+    }
+    printf("%s", out.Get());
+    return 0;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1573,6 +1611,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (flags.testSynctex) {
         int TestSynctex(const Flags& flags);
         return TestSynctex(flags);
+    }
+
+    if (flags.testSearch) {
+        int TestSearch(const Flags& flags);
+        return TestSearch(flags);
     }
 
     if (flags.appdataDir) {

@@ -142,24 +142,85 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     forward = true;
 }
 
-static WCHAR CharToLower2(WCHAR c) {
-    WCHAR buf[1] = {c};
-    CharLowerBuffW(buf, 1);
-    return buf[0];
+// Locale-independent Unicode case folding for search. CharLowerW folds accented
+// letters (e.g. É->é, Ş->ş) regardless of the CRT locale, unlike towlower() or
+// the ASCII-only fast paths we used before.
+static WCHAR FoldCaseForSearch(WCHAR c) {
+    // U+0130 (İ, Latin capital I with dot above) lowercases to 'i' under
+    // standard Unicode case folding, but CharLowerW only does this under a
+    // Turkish system locale and otherwise leaves it unchanged -- so searching
+    // "ibradı" wouldn't find "İbradı" on non-Turkish systems (issue #5597).
+    // Fold it explicitly so search is case-insensitive regardless of locale.
+    if (c == 0x0130) {
+        return L'i';
+    }
+    return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
 }
 
-static inline WCHAR CharToLower(WCHAR c) {
-    // fast path that hopefully will be inlined
-    if (c >= 'a' && c <= 'z') {
-        return c;
+static const WCHAR* StrStrFoldCase(const WCHAR* haystack, const WCHAR* needle) {
+    if (!haystack || !needle || !*needle) {
+        return haystack;
     }
-    if (c >= '0' && c <= '9') {
-        return c;
+    size_t needleLen = str::Len(needle);
+    for (const WCHAR* s = haystack; *s; s++) {
+        if (FoldCaseForSearch(s[0]) != FoldCaseForSearch(needle[0])) {
+            continue;
+        }
+        size_t i = 1;
+        for (; i < needleLen; i++) {
+            if (!s[i]) {
+                break;
+            }
+            if (FoldCaseForSearch(s[i]) != FoldCaseForSearch(needle[i])) {
+                break;
+            }
+        }
+        if (i == needleLen) {
+            return s;
+        }
     }
-    if (c >= 'A' && c <= 'Z') {
-        return c + 32;
+    return nullptr;
+}
+
+static const WCHAR* StrRStr(const WCHAR* start, const WCHAR* end, const WCHAR* needle) {
+    if (!start || !end || !needle || !*needle || start >= end) {
+        return nullptr;
     }
-    return CharToLower2(c);
+    size_t needleLen = str::Len(needle);
+    if (needleLen > (size_t)(end - start)) {
+        return nullptr;
+    }
+    const WCHAR* s = end - needleLen;
+    for (; s >= start; s--) {
+        if (memcmp(s, needle, needleLen * sizeof(WCHAR)) == 0) {
+            return s;
+        }
+    }
+    return nullptr;
+}
+
+static const WCHAR* StrRStrFoldCase(const WCHAR* start, const WCHAR* end, const WCHAR* needle) {
+    if (!start || !end || !needle || !*needle || start >= end) {
+        return nullptr;
+    }
+    size_t needleLen = str::Len(needle);
+    if (needleLen > (size_t)(end - start)) {
+        return nullptr;
+    }
+    const WCHAR* s = end - needleLen;
+    for (; s >= start; s--) {
+        bool isMatch = true;
+        for (size_t i = 0; i < needleLen; i++) {
+            if (FoldCaseForSearch(s[i]) != FoldCaseForSearch(needle[i])) {
+                isMatch = false;
+                break;
+            }
+        }
+        if (isMatch) {
+            return s;
+        }
+    }
+    return nullptr;
 }
 
 // try to match "findText" from "start" with whitespace tolerance
@@ -189,9 +250,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
         if (matchCase) {
             isMatch = *match == *end;
         } else {
-            WCHAR matchLower = CharToLower(*match);
-            WCHAR matchEnd = CharToLower(*end);
-            isMatch = matchLower == matchEnd;
+            isMatch = FoldCaseForSearch(*match) == FoldCaseForSearch(*end);
         }
         if (isMatch) {
             /* characters are identical */;
@@ -276,10 +335,14 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
             if (matchCase) {
                 found = StrStr(s, anchor);
             } else {
-                found = StrStrI(s, anchor);
+                found = StrStrFoldCase(s, anchor);
             }
         } else {
-            found = StrRStrI(pageText, pageText + findIndex, anchor);
+            if (matchCase) {
+                found = StrRStr(pageText, pageText + findIndex, anchor);
+            } else {
+                found = StrRStrFoldCase(pageText, pageText + findIndex, anchor);
+            }
         }
         if (!found) {
             return false;

@@ -104,6 +104,14 @@ struct Flags {
     int testSynctexLine = 0;
     char* testSynctexOut = nullptr;
 
+    // -test-search <pdf> <needle> <outfile>: headless case-insensitive search
+    // test (issue #5597). Searches the pdf for <needle> and writes the result
+    // (found page or NOTFOUND) to <outfile>, then exits without showing UI.
+    bool testSearch = false;
+    char* testSearchPdf = nullptr;
+    char* testSearchNeedle = nullptr;
+    char* testSearchOut = nullptr;
+
     bool crashOnOpen = false;
 
     // deprecated flags

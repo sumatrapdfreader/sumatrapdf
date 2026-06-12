@@ -54,6 +54,7 @@ Guidelines for test scripts:
 - bun has FFI; if you need to call Windows APIs, put reusable wrappers in tests/winapi.ts
 - prefer driving the app via cmd-line flags that write a machine-readable result (see `-test-synctex`) over GUI automation
 - put runtime scratch output in a gitignored subdir so it isn't committed
+- if a binary test fixture (e.g. a .pdf) is generated from source (LaTeX, a script, etc.), commit the source alongside it (e.g. `tests/issue-<number>.tex` next to `tests/issue-<number>.pdf`) with a comment on how to regenerate it, so the fixture can be modified later
 
 ## Windows Shell Safety
 
