@@ -2182,6 +2182,11 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         }
     }
 
+    // ignore wheel events while middle-button drag-scrolling is active
+    if (MouseAction::Scrolling == win->mouseAction) {
+        return 0;
+    }
+
     DisplayModel* dm = win->AsFixed();
 
     // Note: not all mouse drivers correctly report the Ctrl key's state
