@@ -28,13 +28,21 @@ static bool IsAsciiAlnum(WCHAR c) {
 // produces NFC most of the time.
 static const WCHAR* const kCaptionWords[] = {
     // en
-    L"figure", L"table", L"listing", L"algorithm",
+    L"figure",
+    L"table",
+    L"listing",
+    L"algorithm",
     // de
-    L"abbildung", L"tabelle", L"algorithmus",
+    L"abbildung",
+    L"tabelle",
+    L"algorithmus",
     // es / it / pt (shared roots)
-    L"figura", L"tabla", L"algoritmo",
+    L"figura",
+    L"tabla",
+    L"algoritmo",
     // fr
-    L"tableau", L"algorithme",
+    L"tableau",
+    L"algorithme",
     nullptr,
 };
 
@@ -45,13 +53,28 @@ static const WCHAR* const kCaptionWords[] = {
 // heading destinations.
 static const WCHAR* const kHeadingPrefixWords[] = {
     // en
-    L"figure", L"table", L"listing", L"section", L"chapter", L"algorithm",
+    L"figure",
+    L"table",
+    L"listing",
+    L"section",
+    L"chapter",
+    L"algorithm",
     // de
-    L"abbildung", L"tabelle", L"abschnitt", L"kapitel", L"algorithmus",
+    L"abbildung",
+    L"tabelle",
+    L"abschnitt",
+    L"kapitel",
+    L"algorithmus",
     // es
-    L"figura", L"tabla", L"sección", L"capítulo", L"algoritmo",
+    L"figura",
+    L"tabla",
+    L"sección",
+    L"capítulo",
+    L"algoritmo",
     // fr
-    L"tableau", L"chapitre", L"algorithme",
+    L"tableau",
+    L"chapitre",
+    L"algorithme",
     nullptr,
 };
 
@@ -416,6 +439,48 @@ RectF DetectEquationBox(const WCHAR* text, const Rect* coords, int textLen, Rect
     return box;
 }
 
+// Horizontal extent of the run of glyphs on the same line (±3pt) as
+// anchorIdx, expanding left / right glyph by glyph but never across a
+// horizontal gap wider than kMaxLineGapPt. In multi-column layouts this
+// keeps the run within one column: gutters are wider than spacing within a
+// line. (Tradeoff: a description-list label separated from its body by more
+// than the threshold isn't reached; the bracket-label search in
+// DetectEntryBox recovers the common "[Foo09]" case.)
+static void LineRunExtent(const WCHAR* text, const Rect* coords, int textLen, int anchorIdx, int* leftIdxOut,
+                          int* leftXOut, int* rightXOut) {
+    constexpr int kMaxLineGapPt = 20;
+    int sy = coords[anchorIdx].y;
+    int leftIdx = anchorIdx;
+    int leftX = coords[anchorIdx].x;
+    int rightX = coords[anchorIdx].x + coords[anchorIdx].dx;
+    bool extended = true;
+    while (extended) {
+        extended = false;
+        for (int i = 0; i < textLen; i++) {
+            WCHAR c = text[i];
+            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+                continue;
+            }
+            Rect r = coords[i];
+            if (r.y < sy - 3 || r.y > sy + 3) {
+                continue;
+            }
+            if (r.x < leftX && r.x + r.dx >= leftX - kMaxLineGapPt) {
+                leftX = r.x;
+                leftIdx = i;
+                extended = true;
+            }
+            if (r.x + r.dx > rightX && r.x <= rightX + kMaxLineGapPt) {
+                rightX = r.x + r.dx;
+                extended = true;
+            }
+        }
+    }
+    *leftIdxOut = leftIdx;
+    *leftXOut = leftX;
+    *rightXOut = rightX;
+}
+
 // Find the bounding box of a single bibliography entry on the destination
 // page. Uses per-glyph text+coords from the engine's text cache:
 //   1. Locate the leftmost glyph with y in a small band around destY (entry start).
@@ -480,41 +545,35 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     // page's body-text X, not the destination-page entry-start X. That lands
     // startIdx mid-line on hanging-indent description-list bibs, dropping
     // the leading "[KOS06]" / "Philippe Kruchten" portion from the popup.
-    // Walk to the leftmost glyph on the same line as startIdx so the entry
-    // bounds always include the line's left edge.
+    // Walk to the leftmost glyph of the line run containing startIdx so the
+    // entry bounds always include the line's left edge. The gap-bounded run
+    // keeps the walk within the destination's column in 2-column layouts —
+    // the gutter is wider than spacing within a line — instead of latching
+    // onto same-y text of another column. Also remember the run's right
+    // edge: it estimates the column's right edge for the box passes below.
+    int lineRunRightX;
     {
-        int sy = coords[startIdx].y;
-        int leftmostX = coords[startIdx].x;
-        int leftmostIdx = startIdx;
-        for (int i = 0; i < textLen; i++) {
-            WCHAR c = text[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
-                continue;
-            }
-            Rect r = coords[i];
-            if (r.y < sy - 3 || r.y > sy + 3) {
-                continue;
-            }
-            if (r.x < leftmostX) {
-                leftmostX = r.x;
-                leftmostIdx = i;
-            }
-        }
-        startIdx = leftmostIdx;
+        int leftIdx = startIdx;
+        int leftX = coords[startIdx].x;
+        LineRunExtent(text, coords, textLen, startIdx, &leftIdx, &leftX, &lineRunRightX);
+        startIdx = leftIdx;
     }
 
     // Tight-y walk above can miss a "[VB25]"-style label that sits on a
     // slightly different baseline than its body line 1 (description-list
     // layouts where label and body use different fonts/sizes). If the
     // current leftmost still isn't a "[", search for one within roughly a
-    // line height of destY at any smaller x — that's the bracket label of
-    // the entry the link points at.
+    // line height of destY at a smaller x — that's the bracket label of
+    // the entry the link points at. Don't look further left than a hanging
+    // indent (in 2-column layouts another column's "[" is much further).
     if (text[startIdx] != L'[') {
+        constexpr int kMaxHangingIndentPt = 60;
         int sy = coords[startIdx].y;
         int sDy = coords[startIdx].dy;
         int yTol = sDy > 10 ? sDy : 10;
         int bracketIdx = -1;
         int bracketX = coords[startIdx].x;
+        int minBracketX = coords[startIdx].x - kMaxHangingIndentPt;
         for (int i = 0; i < textLen; i++) {
             if (text[i] != L'[') {
                 continue;
@@ -523,7 +582,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             if (r.y < sy - yTol || r.y > sy + yTol) {
                 continue;
             }
-            if (r.x >= bracketX) {
+            if (r.x >= bracketX || r.x < minBracketX) {
                 continue;
             }
             bracketX = r.x;
@@ -533,6 +592,10 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             startIdx = bracketIdx;
         }
     }
+
+    // glyphs right of this aren't part of the entry's column (2-column
+    // layouts); the slack covers ragged-right lines longer than line 1
+    int columnRightX = lineRunRightX + 40;
 
     int firstLineLeftX = coords[startIdx].x;
     int firstLineY = coords[startIdx].y;
@@ -590,7 +653,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
                 continue;
             }
             Rect r = coords[i];
-            if (r.x < firstLineLeftX - 20) {
+            if (r.x < firstLineLeftX - 20 || r.x > columnRightX) {
                 continue;
             }
             if (r.y < firstLineY - 5) {
@@ -654,8 +717,8 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
             endIdx = i;
             break;
         }
-        // Skip glyphs in other columns (left of the entry's column).
-        if (r.x < firstLineLeftX - 20) {
+        // Skip glyphs in other columns (left or right of the entry's column).
+        if (r.x < firstLineLeftX - 20 || r.x > columnRightX) {
             continue;
         }
 
@@ -739,7 +802,7 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
         }
         Rect r = coords[i];
         // Exclude glyphs that aren't in the entry's column.
-        if (r.x < firstLineLeftX - 20) {
+        if (r.x < firstLineLeftX - 20 || r.x > columnRightX) {
             continue;
         }
         if (r.y < firstLineY - 5) {
