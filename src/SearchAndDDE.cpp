@@ -476,7 +476,15 @@ void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool sho
         DisplayModel* dm = win->AsFixed();
         if (dm && dm->textSearch) {
             TempWStr ws = ToWStrTemp(s);
-            if (!str::Eq(ws, dm->textSearch->findText)) {
+            // compare with lastText, not findText: SetText strips a trailing
+            // space (match word end) from findText but keeps it in lastText, and
+            // strips a leading space (match word start) from both. Normalize ws
+            // the same way (drop one leading space) so trailing/leading/whole-word
+            // searches don't always look "modified" and find-next can advance.
+            if (ws[0] == ' ') {
+                ws++;
+            }
+            if (!str::Eq(ws, dm->textSearch->lastText)) {
                 wasModified = true;
             }
         }
