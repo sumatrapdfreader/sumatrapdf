@@ -797,7 +797,7 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y);
 
 // Returns true when el is an internal-document link (not an external URL or
 // file launch). Such links are eligible for RefHover destination preview.
-static bool IsInternalLinkDest(IPageElement* el) {
+static bool IsInternalLinkDest(IPageElement* el, DisplayModel* dm) {
     if (!el || !el->Is(kindPageElementDest)) {
         return false;
     }
@@ -809,8 +809,9 @@ static bool IsInternalLinkDest(IPageElement* el) {
     if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
         return false;
     }
+    // a malformed document can have a link to a non-existent page
     int destPage = PageDestGetPageNo(dest);
-    return destPage > 0;
+    return dm && dm->ValidPageNo(destPage);
 }
 
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
@@ -895,7 +896,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
             IPageElement* el = dm->GetElementAtPos(pos, nullptr);
-            bool hasInternalLink = IsInternalLinkDest(el);
+            bool hasInternalLink = IsInternalLinkDest(el, dm);
             if (annot != prev) {
 #if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
@@ -2160,7 +2161,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         if (dmHover) {
             Point pt = HwndGetCursorPos(win->hwndCanvas);
             IPageElement* elHover = dmHover->GetElementAtPos(pt, nullptr);
-            if (IsInternalLinkDest(elHover)) {
+            if (IsInternalLinkDest(elHover, dmHover)) {
                 short delta = GET_WHEEL_DELTA_WPARAM(wp);
                 bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
                 if (isCtrl) {
@@ -2935,13 +2936,18 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
 
         case kRefHoverTimerID: {
+            // the document might have changed (tab switch, reload, close)
+            // between scheduling the hover and the timer firing, making the
+            // pending page invalid for the current document
             DisplayModel* dm = win->AsFixed();
-            EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-            float pageZoom = 1.f;
-            if (dm && win->refHover && win->refHover->pending.destPage > 0) {
-                pageZoom = dm->GetZoomReal(win->refHover->pending.destPage);
+            int destPage = win->refHover ? win->refHover->pending.destPage : -1;
+            if (!dm || !dm->ValidPageNo(destPage)) {
+                KillTimer(hwnd, kRefHoverTimerID);
+                RefHoverHide(win->refHover, hwnd);
+                break;
             }
-            RefHoverOnTimer(win->refHover, hwnd, engine, pageZoom);
+            float pageZoom = dm->GetZoomReal(destPage);
+            RefHoverOnTimer(win->refHover, hwnd, dm->GetEngine(), pageZoom);
             break;
         }
 
