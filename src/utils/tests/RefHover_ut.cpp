@@ -87,6 +87,57 @@ static void BracketEntryFitsToOneEntry() {
     utassert(box.y >= 200.f - 12.f);
 }
 
+// (3d) Author-year hanging-indent bibliography (no "[N]" markers): the next
+// entry is detected by the indent change — a new line back at the entry's
+// first-line X after an indented continuation line (rule (b)).
+static void AuthorYearEntryFitsToOneEntry() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"Smith, J. (2010). Some title here.", 72, 200);
+    AddText(text, coords, len, 1024, L"Journal of Things, 12(3), 45-67.", 92, 215);
+    AddText(text, coords, len, 1024, L"Doe, A. (2011). Another work title.", 72, 240);
+    AddText(text, coords, len, 1024, L"Other Journal, 4(2), 89-101.", 92, 255);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // both lines of entry 1, nothing of entry 2
+    utassert(box.y <= 200.f && box.y >= 188.f);
+    utassert(box.y + box.dy > 215.f);
+    utassert(box.y + box.dy < 240.f);
+    utassert(box.dx < kPageW);
+}
+
+// (3e) Single-line description-list entries (abbreviation lists) with normal
+// leading: the next entry is detected by a new line back at the entry's X
+// before any continuation indent was seen (rule (d)).
+static void SingleLineEntryList() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"JVM Java Virtual Machine. 19, 36", 72, 200);
+    AddText(text, coords, len, 1024, L"LLM Large Language Model. 45", 72, 215);
+    AddText(text, coords, len, 1024, L"PDF Portable Document Format. 7", 72, 230);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // first entry only: the second line's glyphs (bottom 227) are excluded
+    utassert(box.y + box.dy < 227.f);
+    utassert(box.dx < kPageW);
+}
+
+// (3f) Single-line entries separated by blank lines: the vertical paragraph
+// gap ends the entry (rule (c)).
+static void GapSeparatedEntryList() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"First footnote text goes here.", 72, 200);
+    AddText(text, coords, len, 1024, L"Second footnote starts here.", 72, 240);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    utassert(box.y + box.dy < 240.f);
+    utassert(box.dx < kPageW);
+}
+
 // (3a) 2-column layout, entry in the right column: the detected box must not
 // extend into the left column's same-y body text (the start-of-line walk must
 // not cross the column gutter).
@@ -177,13 +228,16 @@ static void EquationLabelDetected() {
 }
 
 // (5) "(N)" sitting in the left half of the page (body-text marker, not a
-// display-eq label): DetectEquationBox returns empty.
+// display-eq label): DetectEquationBox returns empty. The label is alone on
+// its line (line-trailing), so only the left-half rule can reject it — this
+// pins that rule specifically.
 static void BodyTextParenRejected() {
     WCHAR text[512];
     Rect coords[512];
     int len = 0;
-    // "(14)" at x=80 — left half of 612-wide page.
-    AddText(text, coords, len, 512, L"(14) inline text continuing past the label.", 80, 300);
+    AddText(text, coords, len, 512, L"some body text on another line.", 72, 280);
+    // line-trailing "(14)" at x=80 — left half of the 612-wide page
+    AddText(text, coords, len, 512, L"(14)", 80, 300);
     RectF box = DetectEquationBox(text, coords, len, Mediabox(), 80.f, 300.f);
     utassert(IsEmpty(box));
 }
@@ -309,9 +363,12 @@ static void LandscapeBoxBasicShape() {
 
 void RefHoverTest() {
     AccentedAllCapsHeadingDetected();
+    AuthorYearEntryFitsToOneEntry();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
     CaptionExtensionPicksTopmost();
+    GapSeparatedEntryList();
+    SingleLineEntryList();
     EmptyInputsHandled();
     EquationLabelDetected();
     FrenchCaptionDetected();
