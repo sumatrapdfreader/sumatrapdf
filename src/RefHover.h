@@ -36,6 +36,32 @@ struct RefHoverState {
         Rect pageScreenRect{};
     } pending;
 
+    // Async rendering: renders run on a background thread (a complex page
+    // would otherwise stall the UI for the duration of the render) and the
+    // bitmap is delivered back on the UI thread via uitask.
+    struct RenderRequest {
+        bool valid = false;
+        // matched against renderGen on completion, stale results are dropped
+        int gen = 0;
+        EngineBase* engine = nullptr; // AddRef()'ed for the render duration
+        int pageNo = -1;
+        float zoom = 0.f;
+        RectF region{};
+        // initial show: commit displayed.* and show the popup on completion.
+        // false for wheel zoom / scroll re-renders, which update displayed.*
+        // optimistically and only need the new bitmap.
+        bool showPopup = false;
+        Point screenPt{};
+        float destXRaw = -1.f;
+        float destYRaw = -1.f;
+    };
+    // bumped on every new request and on hide, invalidating older results
+    int renderGen = 0;
+    bool renderInFlight = false;
+    // the latest request that arrived while another was in flight; started
+    // when that one completes (coalesces wheel-scroll / zoom streams)
+    RenderRequest queuedRender;
+
     // Currently-displayed bitmap context. Compared against incoming hover
     // requests to skip a re-render when the destination hasn't changed, and
     // re-used by the wheel-zoom / wheel-scroll handlers so they can re-render

@@ -58,6 +58,8 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
+#include "utils/ThreadUtil.h"
+#include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -146,6 +148,30 @@ static bool RegisterClassIfNeeded() {
     return gClassRegistered > 0;
 }
 
+// live RefHoverState instances (one per MainWindow). An async render
+// completion looks its state up here so a popup destroyed while a render
+// was in flight (e.g. the window was closed) is detected and the result
+// dropped instead of dereferencing freed memory.
+constexpr int kMaxLiveStates = 32;
+static RefHoverState* gLiveStates[kMaxLiveStates];
+
+static bool IsLiveState(RefHoverState* s) {
+    for (RefHoverState* live : gLiveStates) {
+        if (live == s) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void DropQueuedRender(RefHoverState* s) {
+    if (s->queuedRender.valid && s->queuedRender.engine) {
+        s->queuedRender.engine->Release();
+    }
+    s->queuedRender.valid = false;
+    s->queuedRender.engine = nullptr;
+}
+
 RefHoverState* RefHoverCreate(HWND hwndCanvas) {
     if (!RegisterClassIfNeeded()) {
         // don't keep retrying window creation on every mouse move
@@ -160,6 +186,12 @@ RefHoverState* RefHoverCreate(HWND hwndCanvas) {
     }
     SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)s);
     s->hwndPopup = hwnd;
+    for (RefHoverState*& slot : gLiveStates) {
+        if (!slot) {
+            slot = s;
+            break;
+        }
+    }
     return s;
 }
 
@@ -167,6 +199,13 @@ void RefHoverDestroy(RefHoverState* s) {
     if (!s) {
         return;
     }
+    for (RefHoverState*& slot : gLiveStates) {
+        if (slot == s) {
+            slot = nullptr;
+            break;
+        }
+    }
+    DropQueuedRender(s);
     if (s->hwndPopup) {
         DestroyWindow(s->hwndPopup);
         s->hwndPopup = nullptr;
@@ -275,6 +314,106 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
     InvalidateRect(s->hwndPopup, nullptr, TRUE);
 }
 
+// Renders run on a background thread: a complex page would otherwise stall
+// the UI thread for the duration of engine->RenderPage() on every hover and
+// every wheel notch (everything else in the app renders via the background
+// RenderCache). The job owns an engine reference for the render duration
+// (same cross-thread AddRef/Release pattern as Print.cpp); the result is
+// marshalled back to the UI thread via uitask and dropped if it's stale
+// (renderGen moved on) or the RefHoverState is gone.
+struct RefHoverRenderJob {
+    RefHoverState* s = nullptr;
+    RefHoverState::RenderRequest req;
+    RenderedBitmap* bmp = nullptr;
+};
+
+static void RefHoverStartRenderJob(RefHoverRenderJob* job);
+
+// runs on the UI thread
+static void RefHoverRenderDone(RefHoverRenderJob* job) {
+    RefHoverState* s = job->s;
+    if (!IsLiveState(s)) {
+        delete job->bmp;
+        delete job;
+        return;
+    }
+    s->renderInFlight = false;
+    if (job->bmp && job->req.gen == s->renderGen) {
+        delete s->bmp;
+        s->bmp = job->bmp;
+        if (job->req.showPopup) {
+            s->displayed.destPage = job->req.pageNo;
+            // store the raw link destination, not the detection-resolved
+            // values: RefHoverSchedule() compares them against incoming raw
+            // link values to skip a re-render for the same link. With the
+            // resolved values stored, page-level destinations (destY <= 0,
+            // e.g. abbreviation links) never compared equal, so every pause
+            // of the mouse within the same link re-ran detection plus a
+            // render and re-positioned the popup at the new cursor position.
+            s->displayed.destX = job->req.destXRaw;
+            s->displayed.destY = job->req.destYRaw;
+            s->displayed.region = job->req.region;
+            ShowPopup(s, job->req.screenPt);
+        } else {
+            InvalidateRect(s->hwndPopup, nullptr, TRUE);
+        }
+    } else {
+        delete job->bmp;
+    }
+    delete job;
+    // a request arrived while this render was in flight: start it now
+    // (wheel zoom / scroll streams coalesce to the latest request)
+    if (s->queuedRender.valid) {
+        if (s->queuedRender.gen == s->renderGen) {
+            auto* next = new RefHoverRenderJob();
+            next->s = s;
+            next->req = s->queuedRender;
+            s->queuedRender.valid = false;
+            s->queuedRender.engine = nullptr;
+            RefHoverStartRenderJob(next);
+        } else {
+            DropQueuedRender(s);
+        }
+    }
+}
+
+// runs on a background thread
+static void RefHoverRenderThread(RefHoverRenderJob* job) {
+    RenderPageArgs args(job->req.pageNo, job->req.zoom, 0, &job->req.region);
+    job->bmp = job->req.engine->RenderPage(args);
+    job->req.engine->Release();
+    job->req.engine = nullptr;
+    auto fn = MkFunc0<RefHoverRenderJob>(RefHoverRenderDone, job);
+    uitask::Post(fn, "RefHoverRenderDone");
+}
+
+static void RefHoverStartRenderJob(RefHoverRenderJob* job) {
+    job->s->renderInFlight = true;
+    auto fn = MkFunc0<RefHoverRenderJob>(RefHoverRenderThread, job);
+    RunAsync(fn, "RefHoverRender");
+}
+
+// Queue a render of (pageNo, zoom, region). Older in-flight results are
+// invalidated; if a render is already running the request is parked in
+// queuedRender (overwriting any previously parked one) and started when
+// the running render completes.
+static void RefHoverRequestRender(RefHoverState* s, EngineBase* engine, RefHoverState::RenderRequest req) {
+    s->renderGen++;
+    req.valid = true;
+    req.gen = s->renderGen;
+    engine->AddRef();
+    req.engine = engine;
+    if (s->renderInFlight) {
+        DropQueuedRender(s);
+        s->queuedRender = req;
+        return;
+    }
+    auto* job = new RefHoverRenderJob();
+    job->s = s;
+    job->req = req;
+    RefHoverStartRenderJob(job);
+}
+
 // Re-render at the adjusted zoom; popup window keeps its initial size.
 // The rendered region is sized to exactly fill the popup at the new zoom
 // (anchored at the original detected top-left), so wheel-down brings in
@@ -322,18 +461,19 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         return false;
     }
 
-    RenderPageArgs args(s->displayed.destPage, zoom, 0, &region);
-    RenderedBitmap* bmp = engine->RenderPage(args);
-    if (!bmp) {
-        return false;
-    }
-    delete s->bmp;
-    s->bmp = bmp;
-    // Persist the popup-fitting dx/dy so a subsequent scroll keeps rendering
-    // a bitmap that fills the popup. Without this, scroll would fall back to
-    // the original (smaller) entry-box dimensions and leave visible padding.
+    // Commit the new region immediately (the next wheel notch must compound
+    // on it, not on the still-displayed old one) and render asynchronously;
+    // the popup repaints with the new bitmap when the render completes.
+    // Persisting the popup-fitting dx/dy also keeps a subsequent scroll
+    // rendering a bitmap that fills the popup — without it, scroll would
+    // fall back to the original (smaller) entry-box dimensions and leave
+    // visible padding.
     s->displayed.region = region;
-    InvalidateRect(s->hwndPopup, nullptr, TRUE);
+    RefHoverState::RenderRequest req;
+    req.pageNo = s->displayed.destPage;
+    req.zoom = zoom;
+    req.region = region;
+    RefHoverRequestRender(s, engine, req);
     return true;
 }
 
@@ -415,16 +555,15 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
         }
     }
 
-    RenderPageArgs args(page, zoom, 0, &region);
-    RenderedBitmap* bmp = engine->RenderPage(args);
-    if (!bmp) {
-        return false;
-    }
-    delete s->bmp;
-    s->bmp = bmp;
+    // Commit page/region immediately so the next wheel notch compounds on
+    // them; the popup repaints when the async render delivers the bitmap.
     s->displayed.destPage = page;
     s->displayed.region = region;
-    InvalidateRect(s->hwndPopup, nullptr, TRUE);
+    RefHoverState::RenderRequest req;
+    req.pageNo = page;
+    req.zoom = zoom;
+    req.region = region;
+    RefHoverRequestRender(s, engine, req);
     return true;
 }
 
@@ -456,6 +595,10 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
     }
     KillTimer(hwndCanvas, kRefHoverTimerID);
     s->pending.destPage = -1;
+    // invalidate any in-flight render result and drop a parked one — a slow
+    // render finishing after hide must not pop the window back up
+    s->renderGen++;
+    DropQueuedRender(s);
     if (s->hwndPopup && IsWindowVisible(s->hwndPopup)) {
         ShowWindow(s->hwndPopup, SW_HIDE);
         s->displayed.destPage = -1;
@@ -817,25 +960,17 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         baseZoom = kMinUserZoom;
     }
     s->displayed.baseZoom = baseZoom;
-    RenderPageArgs args(destPage, s->displayed.baseZoom * s->displayed.userZoom, 0, &region);
-    RenderedBitmap* bmp = engine->RenderPage(args);
-    if (!bmp) {
-        return;
-    }
-
-    delete s->bmp;
-    s->bmp = bmp;
-    s->displayed.destPage = destPage;
-    // store the raw link destination, not the locals modified above:
-    // RefHoverSchedule() compares them against incoming raw link values to
-    // skip a re-render for the same link. With the resolved values stored,
-    // page-level destinations (destY <= 0, e.g. abbreviation links) never
-    // compared equal, so every pause of the mouse within the same link
-    // re-ran detection plus a synchronous render and re-positioned the
-    // popup at the new cursor position.
-    s->displayed.destX = s->pending.destX;
-    s->displayed.destY = s->pending.destY;
-    s->displayed.region = region;
-
-    ShowPopup(s, s->pending.screenPt);
+    // Render on a background thread; displayed.* is committed and the popup
+    // shown by the completion handler, so a slow render never blocks the UI
+    // and a hover that moved on (renderGen bumped by hide / a new request)
+    // is dropped instead of flashing a stale popup.
+    RefHoverState::RenderRequest req;
+    req.pageNo = destPage;
+    req.zoom = s->displayed.baseZoom * s->displayed.userZoom;
+    req.region = region;
+    req.showPopup = true;
+    req.screenPt = s->pending.screenPt;
+    req.destXRaw = s->pending.destX;
+    req.destYRaw = s->pending.destY;
+    RefHoverRequestRender(s, engine, req);
 }
