@@ -1721,10 +1721,21 @@ HFONT GetDefaultGuiFontOfSize(int size) {
 }
 
 HFONT GetUserGuiFont(const char* fontName, int size) {
+    return GetUserGuiFontEx(fontName, size, false, false);
+}
+
+HFONT GetUserGuiFontEx(const char* fontName, int size, bool bold, bool italic) {
     if (str::EqI(fontName, "automatic") || str::EqI(fontName, "auto")) {
         fontName = nullptr;
     }
-    auto f = FindCreatedFont(fontName, size, 0, (u16)0);
+    u16 flags = 0;
+    if (bold) {
+        flags |= kFontFlagBold;
+    }
+    if (italic) {
+        flags |= kFontFlagItalic;
+    }
+    auto f = FindCreatedFont(fontName, size, flags, (u16)0);
     if (f) {
         return f->font;
     }
@@ -1739,8 +1750,14 @@ HFONT GetUserGuiFont(const char* fontName, int size) {
         str::BufSet(dest, cchDestBufSize, nameW);
     }
     ncm.lfMessageFont.lfHeight = -size;
+    if (bold) {
+        ncm.lfMessageFont.lfWeight = FW_BOLD;
+    }
+    if (italic) {
+        ncm.lfMessageFont.lfItalic = TRUE;
+    }
     HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return RememberCreatedFont(res, fontName, size, 0, 0);
+    return RememberCreatedFont(res, fontName, size, flags, 0);
 }
 
 HFONT GetDefaultGuiFont(bool bold, bool italic) {

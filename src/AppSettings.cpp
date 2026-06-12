@@ -50,24 +50,21 @@ static WatchedFile* gWatchedSettingsFile = nullptr;
 static HFONT gAppFont = nullptr;
 static HFONT gBiggerAppFont = nullptr;
 static HFONT gAppMenuFont = nullptr;
-static HFONT gTreeFont = nullptr;
 static HFONT gSidebarLabelFont = nullptr;
 static HFONT gTreeFontEx[4] = {nullptr, nullptr, nullptr, nullptr};
 
 // TODO: if font sizes change, would need to re-layout the app
 static void ResetCachedFonts() {
+    // fonts are owned by the WinUtil font cache (freed via DeleteCreatedFonts),
+    // so just drop the references; old fonts stay valid for windows that
+    // still hold them (the exception is gAppMenuFont, which leaks here)
     gAppFont = nullptr;
     gBiggerAppFont = nullptr;
     gAppMenuFont = nullptr;
-    gTreeFont = nullptr;
     gSidebarLabelFont = nullptr;
-    for (int i = 1; i < 4; i++) {
-        if (gTreeFontEx[i]) {
-            DeleteObject(gTreeFontEx[i]);
-            gTreeFontEx[i] = nullptr;
-        }
+    for (int i = 0; i < 4; i++) {
+        gTreeFontEx[i] = nullptr;
     }
-    gTreeFontEx[0] = nullptr;
 }
 
 // number of weeks past since 2011-01-01
@@ -592,12 +589,8 @@ HFONT GetAppFont() {
 constexpr int kMinBiggerFontSize = 14;
 
 // if user provided font size, we use that
-// otherwise we return 1.4x of default font size but no smaller than 16
-// on my laptop on high dpi default font size is 12
-HFONT GetAppBiggerFont() {
-    if (gBiggerAppFont) {
-        return gBiggerAppFont;
-    }
+// otherwise we return 1.2x of default font size but no smaller than 14
+static int GetAppBiggerFontSize() {
     int fntSize = gGlobalPrefs->uIFontSize;
     if (fntSize < kMinFontSize) {
         fntSize = GetAppMenuFontSize();
@@ -606,7 +599,14 @@ HFONT GetAppBiggerFont() {
             fntSize = kMinBiggerFontSize;
         }
     }
-    gBiggerAppFont = GetDefaultGuiFontOfSize(fntSize);
+    return fntSize;
+}
+
+HFONT GetAppBiggerFont() {
+    if (gBiggerAppFont) {
+        return gBiggerAppFont;
+    }
+    gBiggerAppFont = GetDefaultGuiFontOfSize(GetAppBiggerFontSize());
     return gBiggerAppFont;
 }
 
@@ -619,35 +619,15 @@ HFONT GetAppTreeFontEx(bool bold, bool italic) {
     if (gTreeFontEx[idx]) {
         return gTreeFontEx[idx];
     }
-    if (idx == 0) {
-        if (gTreeFont) {
-            gTreeFontEx[0] = gTreeFont;
-            return gTreeFont;
-        }
-        int fntSize = gGlobalPrefs->treeFontSize;
-        if (fntSize < kMinFontSize) {
-            fntSize = gGlobalPrefs->uIFontSize;
-        }
-        if (fntSize < kMinFontSize) {
-            fntSize = GetAppMenuFontSize();
-        }
-        char* fntNameUser = gGlobalPrefs->treeFontName;
-        gTreeFont = GetUserGuiFont(fntNameUser, fntSize);
-        gTreeFontEx[0] = gTreeFont;
-        return gTreeFont;
+    int fntSize = gGlobalPrefs->treeFontSize;
+    if (fntSize < kMinFontSize) {
+        fntSize = gGlobalPrefs->uIFontSize;
     }
-    HFONT base = GetAppTreeFont();
-    LOGFONTW lf{};
-    if (GetObjectW(base, sizeof(lf), &lf) == 0) {
-        return GetDefaultGuiFont(bold, italic);
+    if (fntSize < kMinFontSize) {
+        fntSize = GetAppMenuFontSize();
     }
-    if (bold) {
-        lf.lfWeight = FW_BOLD;
-    }
-    if (italic) {
-        lf.lfItalic = TRUE;
-    }
-    gTreeFontEx[idx] = CreateFontIndirectW(&lf);
+    char* fntNameUser = gGlobalPrefs->treeFontName;
+    gTreeFontEx[idx] = GetUserGuiFontEx(fntNameUser, fntSize, bold, italic);
     return gTreeFontEx[idx];
 }
 
@@ -655,13 +635,7 @@ HFONT GetAppSidebarLabelFont() {
     if (gSidebarLabelFont) {
         return gSidebarLabelFont;
     }
-    HFONT base = GetAppBiggerFont();
-    LOGFONTW lf{};
-    if (GetObjectW(base, sizeof(lf), &lf) == 0) {
-        return GetDefaultGuiFont(true, false);
-    }
-    lf.lfWeight = FW_BOLD;
-    gSidebarLabelFont = CreateFontIndirectW(&lf);
+    gSidebarLabelFont = GetUserGuiFontEx(nullptr, GetAppBiggerFontSize(), true, false);
     return gSidebarLabelFont;
 }
 

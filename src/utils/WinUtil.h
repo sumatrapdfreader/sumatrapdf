@@ -169,6 +169,7 @@ HFONT CreateSimpleFont(HDC hdc, const char* fontName, int fontSize);
 HFONT GetDefaultGuiFont(bool bold = false, bool italic = false);
 HFONT GetDefaultGuiFontOfSize(int size);
 HFONT GetUserGuiFont(const char* fontName, int size);
+HFONT GetUserGuiFontEx(const char* fontName, int size, bool bold, bool italic);
 int GetSizeOfDefaultGuiFont();
 void DeleteCreatedFonts();
 
