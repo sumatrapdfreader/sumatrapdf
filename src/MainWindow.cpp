@@ -613,6 +613,11 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink)
 
     char* destName = PageDestGetName(remoteLink);
     if (destName) {
+        // MuPDF encodes GoToR named destinations as "nameddest=<name>" in the URI
+        // fragment, but GetNamedDest() prepends "#nameddest=" itself
+        if (str::StartsWithI(destName, "nameddest=")) {
+            destName += 10;
+        }
         IPageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
             newWin->linkHandler->ScrollTo(dest);
