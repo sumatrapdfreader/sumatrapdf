@@ -62,7 +62,11 @@ EngineMupdf* AsEngineMupdf(EngineBase* engine) {
 class FitzAbortCookie : public AbortCookie {
   public:
     fz_cookie cookie;
-    FitzAbortCookie() { memset(&cookie, 0, sizeof(cookie)); }
+    FitzAbortCookie() {
+        memset(&cookie, 0, sizeof(cookie));
+        // Unknown progress avoids MuPDF pre-counting annotations; the cookie is only used for aborting.
+        cookie.progress_max = (size_t)-1;
+    }
     void Abort() override { cookie.abort = 1; }
     void* GetData() override { return (void*)&cookie; }
 };
