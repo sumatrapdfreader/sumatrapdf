@@ -12,6 +12,8 @@ This creates ./out/dbg64/SumatraPDF.exe executable
 
 To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`
 
+When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing` cmd-line flag. It starts a new instance (won't interfere with an already running SumatraPDF), doesn't restore the previous session (only loads files given on the cmd-line) and doesn't save settings (won't overwrite the settings of the user).
+
 After making a change to .cpp, .c or .h file (and before running build.ts), run clang-format on those files to reformat them in place
 
 Never commit changes automatically. Always wait for explicit command to commit changes.

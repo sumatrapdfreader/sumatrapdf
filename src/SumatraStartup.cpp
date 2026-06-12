@@ -1317,6 +1317,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
 
     ParseFlags(GetCommandLineW(), flags, gToolNames);
     gCli = &flags;
+    gForTesting = flags.forTesting;
     bool isInstaller = flags.install || flags.runInstallNow || flags.fastInstall || IsInstallerAndNamedAsSuch();
     if (flags.justExtractFiles) {
         isInstaller = false;
@@ -1615,7 +1616,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     // only call FindPrevInstWindow() once
     existingInstanceHwnd = FindPrevInstWindow(&hMutex);
 
-    if (flags.printDialog || flags.stressTestPath || gPluginMode) {
+    if (flags.printDialog || flags.stressTestPath || gPluginMode || gForTesting) {
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
         existingHwnd = FindWindowW(FRAME_CLASS_NAME, nullptr);

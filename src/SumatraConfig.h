@@ -10,6 +10,10 @@ extern bool gIsAsanBuild;
 extern bool gIsPreReleaseBuild;
 extern bool gIsStoreBuild;
 extern bool gDisableDocumentRestrictions;
+// set by -for-testing cmd-line flag, used for ad-hoc testing by humans
+// or agents. Always starts a new instance, doesn't restore a session and
+// doesn't save settings
+extern bool gForTesting;
 extern const char* builtOn;
 extern const char* currentVersion; // e.g. "3.2.1138"
 extern const char* gitCommidId;

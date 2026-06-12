@@ -82,6 +82,9 @@ struct Flags {
     int maxFiles = 0;
 
     // related to testing
+    // -for-testing: for ad-hoc testing by humans or agents. Always starts
+    // a new instance, doesn't restore session, doesn't save settings
+    bool forTesting = false;
     bool testRenderPage = false;
     bool testExtractPage = false;
     int testPageNo = 0;

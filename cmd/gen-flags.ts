@@ -81,6 +81,7 @@ const args = [
     "EngineDump", "engine-dump",
     "SetColorRange", "set-color-range",
     "UpgradeFrom", "upgrade-from",
+    "ForTesting", "for-testing",
 ];
 
 function generateCode(): string {

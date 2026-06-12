@@ -15,6 +15,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 - `-new-window` : when opening a file, always open it in a new window, as opposed to in a tab (**ver 3.2+**)
 - `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
 - `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. Read more detailed documentation.
+- `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)
 
 ## Navigation options
 
