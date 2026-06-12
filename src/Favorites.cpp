@@ -893,8 +893,7 @@ void CreateFavorites(MainWindow* win) {
         LabelWithCloseWnd::CreateArgs args;
         args.parent = win->hwndFavBox;
         args.cmdId = IDC_FAV_LABEL_WITH_CLOSE;
-        // TODO: use the same font size as in GetTreeFont()?
-        args.font = GetDefaultGuiFont(true, false);
+        args.font = GetAppSidebarLabelFont();
         args.isRtl = IsUIRtl();
         l->Create(args);
     }

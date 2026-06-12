@@ -51,6 +51,8 @@ static HFONT gAppFont = nullptr;
 static HFONT gBiggerAppFont = nullptr;
 static HFONT gAppMenuFont = nullptr;
 static HFONT gTreeFont = nullptr;
+static HFONT gSidebarLabelFont = nullptr;
+static HFONT gTreeFontEx[4] = {nullptr, nullptr, nullptr, nullptr};
 
 // TODO: if font sizes change, would need to re-layout the app
 static void ResetCachedFonts() {
@@ -58,6 +60,14 @@ static void ResetCachedFonts() {
     gBiggerAppFont = nullptr;
     gAppMenuFont = nullptr;
     gTreeFont = nullptr;
+    gSidebarLabelFont = nullptr;
+    for (int i = 1; i < 4; i++) {
+        if (gTreeFontEx[i]) {
+            DeleteObject(gTreeFontEx[i]);
+            gTreeFontEx[i] = nullptr;
+        }
+    }
+    gTreeFontEx[0] = nullptr;
 }
 
 // number of weeks past since 2011-01-01
@@ -564,7 +574,8 @@ constexpr int kMinFontSize = 9;
 int GetAppFontSize() {
     auto fntSize = gGlobalPrefs->uIFontSize;
     if (fntSize < kMinFontSize) {
-        fntSize = GetSizeOfDefaultGuiFont();
+        // match the menu font so tabs/toolbar text scale like native menus
+        fntSize = GetAppMenuFontSize();
     }
     return fntSize;
 }
@@ -589,7 +600,7 @@ HFONT GetAppBiggerFont() {
     }
     int fntSize = gGlobalPrefs->uIFontSize;
     if (fntSize < kMinFontSize) {
-        fntSize = GetSizeOfDefaultGuiFont();
+        fntSize = GetAppMenuFontSize();
         fntSize = (fntSize * 12) / 10;
         if (fntSize < kMinBiggerFontSize) {
             fntSize = kMinBiggerFontSize;
@@ -600,19 +611,58 @@ HFONT GetAppBiggerFont() {
 }
 
 HFONT GetAppTreeFont() {
-    if (gTreeFont) {
+    return GetAppTreeFontEx(false, false);
+}
+
+HFONT GetAppTreeFontEx(bool bold, bool italic) {
+    int idx = (bold ? 1 : 0) | (italic ? 2 : 0);
+    if (gTreeFontEx[idx]) {
+        return gTreeFontEx[idx];
+    }
+    if (idx == 0) {
+        if (gTreeFont) {
+            gTreeFontEx[0] = gTreeFont;
+            return gTreeFont;
+        }
+        int fntSize = gGlobalPrefs->treeFontSize;
+        if (fntSize < kMinFontSize) {
+            fntSize = gGlobalPrefs->uIFontSize;
+        }
+        if (fntSize < kMinFontSize) {
+            fntSize = GetAppMenuFontSize();
+        }
+        char* fntNameUser = gGlobalPrefs->treeFontName;
+        gTreeFont = GetUserGuiFont(fntNameUser, fntSize);
+        gTreeFontEx[0] = gTreeFont;
         return gTreeFont;
     }
-    int fntSize = gGlobalPrefs->treeFontSize;
-    if (fntSize < kMinFontSize) {
-        fntSize = gGlobalPrefs->uIFontSize;
+    HFONT base = GetAppTreeFont();
+    LOGFONTW lf{};
+    if (GetObjectW(base, sizeof(lf), &lf) == 0) {
+        return GetDefaultGuiFont(bold, italic);
     }
-    if (fntSize < kMinFontSize) {
-        fntSize = GetSizeOfDefaultGuiFont();
+    if (bold) {
+        lf.lfWeight = FW_BOLD;
     }
-    char* fntNameUser = gGlobalPrefs->treeFontName;
-    gTreeFont = GetUserGuiFont(fntNameUser, fntSize);
-    return gTreeFont;
+    if (italic) {
+        lf.lfItalic = TRUE;
+    }
+    gTreeFontEx[idx] = CreateFontIndirectW(&lf);
+    return gTreeFontEx[idx];
+}
+
+HFONT GetAppSidebarLabelFont() {
+    if (gSidebarLabelFont) {
+        return gSidebarLabelFont;
+    }
+    HFONT base = GetAppBiggerFont();
+    LOGFONTW lf{};
+    if (GetObjectW(base, sizeof(lf), &lf) == 0) {
+        return GetDefaultGuiFont(true, false);
+    }
+    lf.lfWeight = FW_BOLD;
+    gSidebarLabelFont = CreateFontIndirectW(&lf);
+    return gSidebarLabelFont;
 }
 
 int GetAppMenuFontSize() {

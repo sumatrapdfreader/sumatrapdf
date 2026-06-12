@@ -753,11 +753,9 @@ void LoadTocTree(MainWindow* win) {
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
 // to get LOGFONT from existing font and then create a derived font
 static void UpdateFont(HDC hdc, int fontFlags) {
-    // TODO: this is a bit hacky, in that we use default font
-    // and not the font from TreeCtrl. But in this case they are the same
     bool italic = bit::IsSet(fontFlags, fontBitItalic);
     bool bold = bit::IsSet(fontFlags, fontBitBold);
-    HFONT hfont = GetDefaultGuiFont(bold, italic);
+    HFONT hfont = GetAppTreeFontEx(bold, italic);
     SelectObject(hdc, hfont);
 }
 
@@ -1285,8 +1283,7 @@ void CreateToc(MainWindow* win) {
         args.parent = win->hwndTocBox;
         args.cmdId = IDC_TOC_LABEL_WITH_CLOSE;
         args.isRtl = IsUIRtl();
-        // TODO: use the same font size as in GetTreeFont()?
-        args.font = GetDefaultGuiFont(true, false);
+        args.font = GetAppSidebarLabelFont();
         l->Create(args);
     }
     win->tocLabelWithClose = l;
@@ -1299,7 +1296,7 @@ void CreateToc(MainWindow* win) {
         eargs.parent = win->hwndTocBox;
         eargs.withBorder = false;
         eargs.cueText = _TRA("Search Bookmarks");
-        eargs.font = GetDefaultGuiFont(false, false);
+        eargs.font = GetAppFont();
         filterEdit->Create(eargs);
     }
     win->tocFilterEdit = filterEdit;

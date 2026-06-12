@@ -28,4 +28,6 @@ bool IsAppFontSizeDefault();
 HFONT GetAppMenuFont();
 HFONT GetAppBiggerFont();
 HFONT GetAppTreeFont();
+HFONT GetAppTreeFontEx(bool bold, bool italic);
+HFONT GetAppSidebarLabelFont();
 bool IsMenuFontSizeDefault();
