@@ -25,81 +25,56 @@ static WCHAR FoldCaseW(WCHAR c) {
     return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
 }
 
-// Caption / heading keyword tables. Each entry is a lowercase word recognised
-// at the start of a "Figure 1.2" / "Tableau 2" style label. Add a language by
-// appending entries; the call sites loop the table so no other code changes.
-// Trailing nullptr terminates the list.
+// Caption / heading keyword tables, \0-separated utf8 strings. Each entry
+// is a lowercase word recognised at the start of a "Figure 1.2" /
+// "Tableau 2" style label. Add a language by appending entries; the call
+// sites loop the table so no other code changes.
 //
 // Entries are matched case-insensitively against the input glyph (via
 // CharLowerW, which folds accented letters regardless of the CRT locale)
 // so capitalised or all-caps PDF text matches too. Accented dict words
 // must be stored already-lowercased (NFC) — PDF text extraction produces
 // NFC most of the time.
-static const WCHAR* const kCaptionWords[] = {
+// clang-format off
+static SeqStrings gCaptionWords =
     // en
-    L"figure",
-    L"table",
-    L"listing",
-    L"algorithm",
+    "figure\0" "table\0" "listing\0" "algorithm\0"
     // de
-    L"abbildung",
-    L"tabelle",
-    L"algorithmus",
+    "abbildung\0" "tabelle\0" "algorithmus\0"
     // es / it / pt (shared roots: figura, algoritmo)
-    L"figura",
-    L"algoritmo",
+    "figura\0" "algoritmo\0"
     // es
-    L"tabla",
+    "tabla\0"
     // it
-    L"tabella",
+    "tabella\0"
     // pt
-    L"tabela",
+    "tabela\0"
     // fr
-    L"tableau",
-    L"algorithme",
-    nullptr,
-};
+    "tableau\0" "algorithme\0";
+// clang-format on
 
 // Heading prefixes recognised at the start of a destination glyph run. Used
 // to disambiguate a section heading / figure caption destination from a
-// description-list bibliography entry. Superset of kCaptionWords — includes
+// description-list bibliography entry. Superset of gCaptionWords — includes
 // "section" / "chapter" / locale equivalents that aren't captions but are
 // heading destinations.
-static const WCHAR* const kHeadingPrefixWords[] = {
+// clang-format off
+static SeqStrings gHeadingPrefixWords =
     // en
-    L"figure",
-    L"table",
-    L"listing",
-    L"section",
-    L"chapter",
-    L"algorithm",
+    "figure\0" "table\0" "listing\0" "section\0" "chapter\0" "algorithm\0"
     // de
-    L"abbildung",
-    L"tabelle",
-    L"abschnitt",
-    L"kapitel",
-    L"algorithmus",
+    "abbildung\0" "tabelle\0" "abschnitt\0" "kapitel\0" "algorithmus\0"
     // es / it / pt (shared roots: figura, algoritmo; capítulo is es + pt)
-    L"figura",
-    L"algoritmo",
-    L"capítulo",
+    "figura\0" "algoritmo\0" "capítulo\0"
     // es
-    L"tabla",
-    L"sección",
+    "tabla\0" "sección\0"
     // it
-    L"tabella",
-    L"sezione",
-    L"capitolo",
+    "tabella\0" "sezione\0" "capitolo\0"
     // pt
-    L"tabela",
-    L"seção",
-    L"secção",
+    "tabela\0" "seção\0" "secção\0"
     // fr
-    L"tableau",
-    L"chapitre",
-    L"algorithme",
-    nullptr,
-};
+    "tableau\0" "chapitre\0" "algorithme\0";
+// clang-format on
 
 // Match `text[idx..]` case-insensitively against the lowercase dictionary
 // word `w`. Returns true on full word match. When requireTrailingDigit is
@@ -147,10 +122,13 @@ static bool IsCaptionLabelAt(const WCHAR* text, int textLen, int idx) {
     if (idx > 0 && IsAsciiAlnum(text[idx - 1])) {
         return false;
     }
-    for (int i = 0; kCaptionWords[i]; i++) {
-        if (MatchWordAt(text, textLen, idx, kCaptionWords[i], /*requireTrailingDigit=*/true)) {
+    SeqStrings words = gCaptionWords;
+    while (words) {
+        TempWStr w = ToWStrTemp(words);
+        if (MatchWordAt(text, textLen, idx, w, /*requireTrailingDigit=*/true)) {
             return true;
         }
+        seqstrings::Next(words);
     }
     return false;
 }
@@ -906,8 +884,11 @@ RectF DetectEntryBox(const WCHAR* text, const Rect* coords, int textLen, RectF m
     WCHAR firstC = text[startIdx];
     bool digitStart = (firstC >= L'0' && firstC <= L'9');
     bool labelStart = false;
-    for (int i = 0; !labelStart && kHeadingPrefixWords[i]; i++) {
-        labelStart = MatchWordAt(text, textLen, startIdx, kHeadingPrefixWords[i], /*requireTrailingDigit=*/false);
+    SeqStrings words = gHeadingPrefixWords;
+    while (!labelStart && words) {
+        TempWStr w = ToWStrTemp(words);
+        labelStart = MatchWordAt(text, textLen, startIdx, w, /*requireTrailingDigit=*/false);
+        seqstrings::Next(words);
     }
     if (digitStart || labelStart) {
         return LandscapeBox(mediabox, destX, destY, text, coords, textLen);
