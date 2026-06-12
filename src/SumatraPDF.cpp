@@ -147,7 +147,7 @@ bool SettingsRememberOpenedFiles() {
 }
 
 static Kind kNotifPersistentWarning = "persistentWarning";
-static Kind kNotifZoom = "zoom";
+static Kind kNotifZoomOrView = "zoomOrView";
 
 HBITMAP gBitmapReloadingCue;
 RenderCache* gRenderCache;
@@ -2942,7 +2942,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifActionResponse);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView);
 
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
     win->mouseAction = MouseAction::None;
@@ -3294,7 +3294,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     AbortFinding(win, true);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
     RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom);
+    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView);
 
     RememberRecentlyClosedDocument(tab->filePath);
 
@@ -4836,10 +4836,38 @@ static void ShowZoomNotification(MainWindow* win, float zoomLevel) {
         return;
     }
     NotificationCreateArgs args;
-    args.groupId = kNotifZoom;
+    args.groupId = kNotifZoomOrView;
     args.timeoutMs = 2000;
     args.hwndParent = win->hwndCanvas;
     args.msg = BuildZoomString(zoomLevel);
+    ShowNotification(args);
+}
+
+static void ShowViewModeNotification(MainWindow* win, int cmdId) {
+    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    if (wnd) {
+        return;
+    }
+    const char* viewName = nullptr;
+    switch (cmdId) {
+        case CmdSinglePageView:
+            viewName = _TRA("Single Page");
+            break;
+        case CmdFacingView:
+            viewName = _TRA("Facing");
+            break;
+        case CmdBookView:
+            viewName = _TRA("Book View");
+            break;
+        default:
+            return;
+    }
+    TempStr msg = str::FormatTemp("%s: %s", _TRA("View"), viewName);
+    NotificationCreateArgs args;
+    args.groupId = kNotifZoomOrView;
+    args.timeoutMs = 2000;
+    args.hwndParent = win->hwndCanvas;
+    args.msg = msg;
     ShowNotification(args);
 }
 
@@ -5313,7 +5341,7 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoom)) {
+    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView)) {
         return;
     }
     if (win->showSelection) {
@@ -6709,14 +6737,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdSinglePageView:
             SwitchToDisplayMode(win, DisplayMode::SinglePage, true);
+            ShowViewModeNotification(win, cmdId);
             break;
 
         case CmdFacingView:
             SwitchToDisplayMode(win, DisplayMode::Facing, true);
+            ShowViewModeNotification(win, cmdId);
             break;
 
         case CmdBookView:
             SwitchToDisplayMode(win, DisplayMode::BookView, true);
+            ShowViewModeNotification(win, cmdId);
             break;
 
         case CmdToggleContinuousView:
@@ -7986,7 +8017,16 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
                 bgCol = GdiRgbFromCOLORREF(hotBg);
             }
             SolidBrush bgBr(bgCol);
-            gfx.FillRectangle(&bgBr, rButton.x, rButton.y, rButton.dx, rButton.dy);
+            int x = rButton.x;
+            int y = rButton.y;
+            int w = rButton.dx;
+            int h = rButton.dy;
+            // leave the frame-border pixel visible at the top-right corner;
+            // only the right edge borders the frame, the bottom is interior
+            if (isClose && !IsZoomed(win->hwndFrame)) {
+                w -= kFrameBorderSize;
+            }
+            gfx.FillRectangle(&bgBr, x, y, w, h);
         }
 
         Color iconCol;
@@ -8110,8 +8150,8 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             LogRedraw("WM_PAINT", hwnd, &ps.rcPaint);
 
             Rect cr = win->captionRect;
-            // captionArea spans from (0,0) to include the border on top/left
-            Rect captionArea = {0, 0, cr.x + cr.dx, cr.y + cr.dy};
+            // span the full client width so the right frame-border column is painted
+            Rect captionArea = {0, 0, ClientRect(hwnd).dx, cr.y + cr.dy};
             DoubleBuffer buffer(hwnd, captionArea);
             HDC memDC = buffer.GetDC();
             {

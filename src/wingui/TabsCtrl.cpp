@@ -269,6 +269,7 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
 
         // draw text
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+        r = ti->rClose;
         rTxt = ToGdipRectF(ti->r);
         if (HwndIsRtl(hwnd)) {
             // RTL: [8px | close | text | 8px]
