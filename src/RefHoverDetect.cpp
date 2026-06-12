@@ -45,10 +45,15 @@ static const WCHAR* const kCaptionWords[] = {
     L"abbildung",
     L"tabelle",
     L"algorithmus",
-    // es / it / pt (shared roots)
+    // es / it / pt (shared roots: figura, algoritmo)
     L"figura",
-    L"tabla",
     L"algoritmo",
+    // es
+    L"tabla",
+    // it
+    L"tabella",
+    // pt
+    L"tabela",
     // fr
     L"tableau",
     L"algorithme",
@@ -74,12 +79,21 @@ static const WCHAR* const kHeadingPrefixWords[] = {
     L"abschnitt",
     L"kapitel",
     L"algorithmus",
-    // es
+    // es / it / pt (shared roots: figura, algoritmo; capítulo is es + pt)
     L"figura",
+    L"algoritmo",
+    L"capítulo",
+    // es
     L"tabla",
     L"sección",
-    L"capítulo",
-    L"algoritmo",
+    // it
+    L"tabella",
+    L"sezione",
+    L"capitolo",
+    // pt
+    L"tabela",
+    L"seção",
+    L"secção",
     // fr
     L"tableau",
     L"chapitre",
@@ -109,6 +123,14 @@ static bool MatchWordAt(const WCHAR* text, int textLen, int idx, const WCHAR* w,
         }
     }
     if (!requireTrailingDigit) {
+        // require a trailing word boundary so that e.g. "Sections of ..."
+        // doesn't match "section" or "Tableaux ..." match "tableau"
+        if (idx + n < textLen) {
+            WCHAR next = text[idx + n];
+            if ((next >= L'a' && next <= L'z') || (next >= L'A' && next <= L'Z')) {
+                return false;
+            }
+        }
         return true;
     }
     int k = idx + n;
@@ -218,18 +240,22 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, const WCHAR* text, 
     // DetectEntryBox path.
     if (text && coords && textLen > 0) {
         // Search to end of page so tall figures with captions far below the
-        // initial 200pt cap still match. First "Figure N.M" line-start on the
-        // page below the cap wins — typically the relevant caption.
+        // initial 200pt cap still match. The topmost (smallest y) "Figure
+        // N.M" below the cap wins — PDFs draw text in arbitrary order, so
+        // the first label in glyph-array order can be a caption much
+        // further down the page.
         int searchTop = (int)(ty + h);
         int searchBot = (int)mediabox.dy;
         int capStartIdx = -1;
+        int capBestY = INT_MAX;
         for (int i = 0; i < textLen; i++) {
-            if (coords[i].y < searchTop || coords[i].y > searchBot) {
+            int gy = coords[i].y;
+            if (gy < searchTop || gy > searchBot || gy >= capBestY) {
                 continue;
             }
             if (IsCaptionLabelAt(text, textLen, i)) {
                 capStartIdx = i;
-                break;
+                capBestY = gy;
             }
         }
         if (capStartIdx >= 0) {
