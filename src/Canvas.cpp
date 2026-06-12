@@ -898,7 +898,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             IPageElement* el = dm->GetElementAtPos(pos, nullptr);
             // the annotation notification below is suppressed in favor of
             // the citation hover popup, but only when that feature is on
-            bool hasInternalLink = gGlobalPrefs->enableCitationHover && IsInternalLinkDest(el, dm);
+            bool citationHoverEnabled = gGlobalPrefs->citationHoverDelay >= 0;
+            bool hasInternalLink = citationHoverEnabled && IsInternalLinkDest(el, dm);
             if (annot != prev) {
 #if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
@@ -930,7 +931,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
             // RefHover: render the destination region of an internal link
             // (bibliography entry, glossary, generic goto-link) into a popup.
-            if (gGlobalPrefs->enableCitationHover) {
+            if (citationHoverEnabled) {
                 if (!win->refHover) {
                     win->refHover = RefHoverCreate(win->hwndCanvas);
                 }
@@ -954,8 +955,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
                         pageScreenRect.x = topLeft.x;
                         pageScreenRect.y = topLeft.y;
                     }
-                    RefHoverSchedule(win->refHover, win->hwndCanvas, screenPt, destPage, destPt.x, destPt.y, destZoom,
-                                     srcPage, srcRect, pageScreenRect);
+                    int delayMs = gGlobalPrefs->citationHoverDelay;
+                    RefHoverSchedule(win->refHover, win->hwndCanvas, delayMs, screenPt, destPage, destPt.x, destPt.y,
+                                     destZoom, srcPage, srcRect, pageScreenRect);
                 } else if (win->refHover) {
                     RefHoverHide(win->refHover, win->hwndCanvas);
                 }

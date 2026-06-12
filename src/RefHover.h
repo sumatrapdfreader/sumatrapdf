@@ -55,13 +55,14 @@ struct RefHoverState {
     } displayed;
 };
 
-constexpr int kRefHoverDelayMs = 300;
 constexpr UINT_PTR kRefHoverTimerID = 9;
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 void RefHoverDestroy(RefHoverState* s);
-void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
-                      float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect);
+// delayMs: how long the cursor must hover before the popup shows
+// (the CitationHoverDelay advanced setting)
+void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point screenPt, int destPage, float destX,
+                      float destY, float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect);
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.

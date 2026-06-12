@@ -2,9 +2,9 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { join, dirname, extname } from "node:path";
 
 const msBuildRelPath = String.raw`MSBuild\Current\Bin\MSBuild.exe`;
-const clangFormatRelPath = String.raw`VC\Tools\Llvm\bin\clang-format.exe`;
-const clangTidyRelPath = String.raw`VC\Tools\Llvm\bin\clang-tidy.exe`;
-const llvmPdbutilRelPath = String.raw`VC\Tools\Llvm\bin\llvm-pdbutil.exe`;
+// VS 2022 ships llvm tools in Llvm\bin, VS 18 in Llvm\x64\bin
+const clangFormatRelPaths = [String.raw`VC\Tools\Llvm\bin\clang-format.exe`, String.raw`VC\Tools\Llvm\x64\bin\clang-format.exe`];
+const clangTidyRelPaths = [String.raw`VC\Tools\Llvm\bin\clang-tidy.exe`, String.raw`VC\Tools\Llvm\x64\bin\clang-tidy.exe`];
 
 const vsEditions = ["Community", "Professional", "Enterprise"];
 
@@ -81,6 +81,16 @@ function findTool(vsRoot: string, relPath: string): string {
   return "";
 }
 
+function findToolMulti(vsRoot: string, relPaths: string[]): string {
+  for (const relPath of relPaths) {
+    const p = findTool(vsRoot, relPath);
+    if (p) {
+      return p;
+    }
+  }
+  return "";
+}
+
 export function detectVisualStudioVer(ver: string): VisualStudioInfo | undefined {
   const vsRoot = findVsRootVer(ver);
   if (vsRoot == "") return;
@@ -90,8 +100,8 @@ export function detectVisualStudioVer(ver: string): VisualStudioInfo | undefined
     return;
   }
 
-  const clangFormatPath = findTool(vsRoot, clangFormatRelPath);
-  const clangTidyPath = findTool(vsRoot, clangTidyRelPath);
+  const clangFormatPath = findToolMulti(vsRoot, clangFormatRelPaths);
+  const clangTidyPath = findToolMulti(vsRoot, clangTidyRelPaths);
   const llvmPdbutilPath = findLlvmPdbUtil();
 
   console.log(`vsRoot: ${vsRoot}`);
