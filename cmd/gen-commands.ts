@@ -230,6 +230,7 @@ export const commands = [
     "CmdReadAloud", "Read Aloud",
     "CmdPauseReadAloud", "Pause Read Aloud",
     "CmdContinueReadAloud", "Continue Read Aloud",
+    "CmdToggleHoverPreview", "Toggle Hover Preview",
     "CmdNone", "Do nothing",
 ];
 

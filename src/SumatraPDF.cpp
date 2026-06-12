@@ -7429,6 +7429,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SaveSettings();
             break;
 
+        case CmdToggleHoverPreview:
+            // a negative CitationHoverDelay disables the citation /
+            // reference hover preview; re-enable with the default delay
+            gGlobalPrefs->citationHoverDelay = (gGlobalPrefs->citationHoverDelay >= 0) ? -1 : 300;
+            SaveSettings();
+            break;
+
         case CmdToggleChmUI: {
             gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
             SaveSettings();
