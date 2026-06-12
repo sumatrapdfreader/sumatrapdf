@@ -8,9 +8,9 @@ Our code is in src/ directory. External dependencies are in ext/ directory and m
 
 To build run: bun ./cmd/build.ts
 
-This creates ./out/dbg64/SumatraPDF.exe executable
+This creates ./out/dbg64/SumatraPDF-dll.exe executable. Note: ./out/dbg64/SumatraPDF.exe is a different (static) build target that build.ts does NOT update, so it can be stale — always use SumatraPDF-dll.exe for testing.
 
-To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF.exe`
+To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF-dll.exe`
 
 When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing` cmd-line flag. It starts a new instance (won't interfere with an already running SumatraPDF), doesn't restore the previous session (only loads files given on the cmd-line) and doesn't save settings (won't overwrite the settings of the user).
 
