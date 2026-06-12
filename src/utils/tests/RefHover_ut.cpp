@@ -234,6 +234,61 @@ static void FrenchCaptionDetected() {
     utassert(box.dx == kPageW);
 }
 
+// (8b) Italian / Portuguese caption words ("Tabella 2", "Tabela 2") are in
+// the dictionary, as the es/it/pt comment claims.
+static void ItalianPortugueseCaptionDetected() {
+    const WCHAR* captions[] = {L"Tabella 2: Dati", L"Tabela 2: Dados"};
+    for (const WCHAR* caption : captions) {
+        WCHAR text[512];
+        Rect coords[512];
+        int len = 0;
+        AddText(text, coords, len, 512, caption, 72, 300);
+        for (int i = 0; i < 5; i++) {
+            AddText(text, coords, len, 512, L"testo del corpo del documento.", 72, 320 + i * 14);
+        }
+        RectF box = LandscapeBox(Mediabox(), 72.f, 300.f, text, coords, len);
+        // destAtCaption pulls region top above destY (figure body extension)
+        utassert(box.y < 300.f - 50.f);
+    }
+}
+
+// (10) A bibliography entry starting with "Sections of ..." must not be
+// mistaken for a "Section N" heading (the dictionary match requires a
+// trailing word boundary): the entry box stays fitted, not landscape.
+static void PluralHeadingWordNotMatched() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"Sections of papers, J. Smith.", 72, 200);
+    AddText(text, coords, len, 1024, L"continuation line of the entry.", 92, 215);
+    AddText(text, coords, len, 1024, L"Another entry begins here now.", 72, 240);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // fitted entry box, not the full-width landscape heading view
+    utassert(box.dx < kPageW);
+    utassert(box.y + box.dy < 240.f);
+}
+
+// (11) Caption-extension picks the topmost caption below the region, not the
+// first one in glyph-array order (PDFs draw text in arbitrary order).
+static void CaptionExtensionPicksTopmost() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    for (int i = 0; i < 3; i++) {
+        AddText(text, coords, len, 1024, L"body paragraph at the dest.", 72, 100 + i * 14);
+    }
+    // a far caption drawn EARLY in the content stream ... (the leading
+    // space stands in for the inter-block separator of real extraction)
+    AddText(text, coords, len, 1024, L" Figure 9: far away caption", 72, 700);
+    // ... and a nearer caption drawn later
+    AddText(text, coords, len, 1024, L" Figure 2: near caption", 72, 420);
+    RectF box = LandscapeBox(Mediabox(), 72.f, 100.f, text, coords, len);
+    // region must extend to the near caption only, not down to y=700
+    utassert(box.y + box.dy > 420.f);
+    utassert(box.y + box.dy < 600.f);
+}
+
 // (9) LandscapeBox: returned region spans the full mediabox width, starts at
 // destY-margin, height is positive and bounded.
 static void LandscapeBoxBasicShape() {
@@ -256,12 +311,15 @@ void RefHoverTest() {
     AccentedAllCapsHeadingDetected();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
+    CaptionExtensionPicksTopmost();
     EmptyInputsHandled();
     EquationLabelDetected();
     FrenchCaptionDetected();
+    ItalianPortugueseCaptionDetected();
     LandscapeBoxBasicShape();
     NegativeDestYFallsToLandscape();
     NonTrailingParenRejected();
+    PluralHeadingWordNotMatched();
     SparseTextReturnsWholePage();
     TwoColumnLeftEntryStaysInColumn();
     TwoColumnRightEntryStaysInColumn();
