@@ -400,6 +400,11 @@ static void RememberSessionState() {
 // added or removed from gFileHistory (in order to keep
 // the list of recently opened documents in sync)
 bool SaveSettings() {
+    if (gForTesting) {
+        // started with -for-testing for ad-hoc testing: don't modify
+        // the settings of the tester
+        return true;
+    }
     if (gDontSaveSettings) {
         // if we are exiting the application by File->Exit,
         // OnMenuExit will have called SaveSettings() already

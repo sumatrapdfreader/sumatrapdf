@@ -139,7 +139,7 @@ bool SettingsUseTabs() {
 }
 
 bool SettingsRestoreSession() {
-    return gGlobalPrefs->restoreSession && !gMyWindowWasEmbedded;
+    return gGlobalPrefs->restoreSession && !gMyWindowWasEmbedded && !gForTesting;
 }
 
 bool SettingsRememberOpenedFiles() {

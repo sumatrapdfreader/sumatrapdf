@@ -55,6 +55,11 @@ bool gDisableDocumentRestrictions = false;
 
 bool gIsStoreBuild = false;
 
+// set by -for-testing cmd-line flag, used for ad-hoc testing by humans
+// or agents. Always starts a new instance, doesn't restore a session and
+// doesn't save settings
+bool gForTesting = false;
+
 int GetAppIconID() {
     return IDI_SUMATRAPDF;
 }
