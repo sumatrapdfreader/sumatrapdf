@@ -442,6 +442,10 @@ void EngineBase::GetProperties(StrVec& keyValueOut) {
         if (!key) {
             break;
         }
+        // font list is loaded asynchronously in ShowProperties()
+        if (str::Eq(key, kPropFontList)) {
+            continue;
+        }
         TempStr val = GetPropertyTemp(key);
         if (val) {
             keyValueOut.Append(key);
