@@ -237,6 +237,9 @@
     <ClInclude Include="..\src\RefHover.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\RefHoverDetect.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\RegistryPreview.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -560,6 +563,9 @@
     <ClCompile Include="..\src\RefHover.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\RefHoverDetect.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\RegistryInstaller.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -725,6 +731,9 @@
     <ClCompile Include="..\src\utils\tests\JsonParser_ut.cpp">
       <Filter>src\utils\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\tests\RefHover_ut.cpp">
+      <Filter>src\utils\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\tests\SettingsUtil_ut.cpp">
       <Filter>src\utils\tests</Filter>
     </ClCompile>
@@ -830,6 +839,7 @@
     <None Include="..\.gitignore" />
     <None Include="..\SECURITY.md" />
     <None Include="..\agents.md" />
+    <None Include="..\claude.md" />
     <None Include="..\cmd\build-all.ts">
       <Filter>cmd</Filter>
     </None>
@@ -941,6 +951,7 @@
     <None Include="..\cmd\wc.ts">
       <Filter>cmd</Filter>
     </None>
+    <None Include="..\compile_flags.txt" />
     <None Include="..\docs\gen_docs.search.html">
       <Filter>docs</Filter>
     </None>
