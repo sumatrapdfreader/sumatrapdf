@@ -4587,16 +4587,35 @@ static void OnMenuChangeBackgroundColor(MainWindow* win) {
     bool isCbx = engine && engine->kind == kindEngineComicBooks;
     bool isEbook = engine && engine->kind == kindEngineMupdf && !str::EqI(engine->defaultExt, ".pdf");
 
-    COLORREF curColor = tab->bgColor;
-    bool isCur = (curColor != kColorUnset);
-    bool isCheckered = (curColor == kColorUnset);
-
-    // if tab has no per-doc color, check global settings for the appropriate type
-    if (!isCur) {
-        COLORREF bg;
-        ThemeDocumentColors(bg);
-        curColor = bg;
+    COLORREF curColor;
+    bool isCheckered;
+    if (tab->bgColorCheckered) {
+        curColor = kColorUnset;
+        isCheckered = true;
+    } else if (tab->bgColor != kColorUnset) {
+        curColor = tab->bgColor;
         isCheckered = false;
+    } else {
+        // no per-document override: FixedPageUI/etc. WindowBgCol takes priority over theme
+        ParsedColor* bgOverride = nullptr;
+        if (isCbx) {
+            bgOverride = GetPrefsColor(gGlobalPrefs->comicBookUI.windowBgCol);
+        } else if (isImage) {
+            bgOverride = GetPrefsColor(gGlobalPrefs->imageUI.windowBgCol);
+        } else if (isEbook) {
+            bgOverride = GetPrefsColor(gGlobalPrefs->eBookUI.windowBgCol);
+        } else {
+            bgOverride = GetPrefsColor(gGlobalPrefs->fixedPageUI.windowBgCol);
+        }
+        if (bgOverride->parsedOk) {
+            curColor = bgOverride->col;
+            isCheckered = (bgOverride->col == kColorUnset);
+        } else {
+            COLORREF bg;
+            ThemeDocumentColors(bg);
+            curColor = bg;
+            isCheckered = false;
+        }
     }
 
     const char* allFilesLabel = "For all &PDF files";
