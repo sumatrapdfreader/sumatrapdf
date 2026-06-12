@@ -155,7 +155,7 @@ static void CloseWindowIfNoDocuments(MainWindow* win) {
     CloseWindow(win, true, false);
 }
 
-static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
+static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt) {
     MainWindow* oldWin = tab->win;
 
     // don't migrate if it's only one document tab and not
@@ -175,7 +175,28 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     RemoveTab(tab);
 
     if (!newWin) {
-        newWin = CreateAndShowMainWindow(nullptr);
+        if (IsZoomed(oldWin->hwndFrame)) {
+            // dragging a tab out of a maximized window: like Chrome, create a
+            // normal (non-maximized) window with the size the source window
+            // would have when restored, positioned at the cursor so it lands
+            // on the new window's tab strip
+            WINDOWPLACEMENT wp{};
+            wp.length = sizeof(wp);
+            GetWindowPlacement(oldWin->hwndFrame, &wp);
+            int dx = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+            int dy = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+            int x = releasePt.x - DpiScale(oldWin->hwndFrame, 100);
+            int y = releasePt.y - GetTabbarHeight(oldWin->hwndFrame) / 2;
+            Rect rect = ShiftRectToWorkArea(Rect(x, y, dx, dy), oldWin->hwndFrame, true);
+            newWin = CreateAndShowMainWindow(nullptr, false);
+            if (!newWin) {
+                return;
+            }
+            MoveWindow(newWin->hwndFrame, rect);
+            ShowMainWindow(newWin, WIN_STATE_NORMAL);
+        } else {
+            newWin = CreateAndShowMainWindow(nullptr);
+        }
         if (!newWin) {
             return;
         }
@@ -504,7 +525,7 @@ static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev
         // don't re-add to the same window
         releaseWnd = nullptr;
     }
-    MaybeMigrateTab(tab, releaseWnd);
+    MaybeMigrateTab(tab, releaseWnd, ev->releasePoint);
 }
 
 void CreateTabbar(MainWindow* win) {
