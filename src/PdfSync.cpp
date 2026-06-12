@@ -623,6 +623,13 @@ TempStr DealPlainSync(TempStr pathSync) {
     }
 }
 
+static bool IsGzipFile(const char* path) {
+    // gzip files start with magic bytes 0x1f 0x8b; only need to read the header
+    u8 buf[2] = {0};
+    int nRead = file::ReadN(path, (char*)buf, sizeof(buf));
+    return nRead == 2 && buf[0] == 0x1f && buf[1] == 0x8b;
+}
+
 // returns path of ungzipped file
 TempStr ungzipToTempSync(char* gzPath) {
     if (!gzPath) {
@@ -688,31 +695,34 @@ int SyncTex::RebuildIndexIfNeeded() {
     if (!path_nonascii) {
         // Only ASCII
         if (file::Exists(pathSync)) {
-            // plain file first
-            tempsync2 = DealPlainSync(pathSync);
-        } else {
-            if (file::Exists(pathSyncGz)) {
-                // gz file second
-                tempsync1 = ungzipToTempSync(pathSyncGz);
+            if (IsGzipFile(pathSync)) {
+                // --synctex=NUMBER with NUMBER&2: gzip data in a .synctex file
+                tempsync1 = ungzipToTempSync(pathSync);
                 tempsync2 = DealPlainSync(tempsync1);
             } else {
-                return PDFSYNCERR_SYNCFILE_NOTFOUND;
+                tempsync2 = DealPlainSync(pathSync);
             }
+        } else if (file::Exists(pathSyncGz)) {
+            tempsync1 = ungzipToTempSync(pathSyncGz);
+            tempsync2 = DealPlainSync(tempsync1);
+        } else {
+            return PDFSYNCERR_SYNCFILE_NOTFOUND;
         }
     } else {
         // ANSI in file path
         if (file::Exists(pathSync)) {
-            // plain file first
-            tempsync1 = CopyPlainSyncToTempFile(pathSync);
-            tempsync2 = DealPlainSync(tempsync1);
-        } else {
-            if (file::Exists(pathSyncGz)) {
-                // gz file second
-                tempsync1 = ungzipToTempSync(pathSyncGz);
+            if (IsGzipFile(pathSync)) {
+                tempsync1 = ungzipToTempSync(pathSync);
                 tempsync2 = DealPlainSync(tempsync1);
             } else {
-                return PDFSYNCERR_SYNCFILE_NOTFOUND;
+                tempsync1 = CopyPlainSyncToTempFile(pathSync);
+                tempsync2 = DealPlainSync(tempsync1);
             }
+        } else if (file::Exists(pathSyncGz)) {
+            tempsync1 = ungzipToTempSync(pathSyncGz);
+            tempsync2 = DealPlainSync(tempsync1);
+        } else {
+            return PDFSYNCERR_SYNCFILE_NOTFOUND;
         }
     }
     logfa("[dbg]: tempsync1: %s\n", tempsync1 ? tempsync1 : "[NULL]");
