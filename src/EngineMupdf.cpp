@@ -3653,35 +3653,45 @@ static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& font
 }
 
 TempStr EngineMupdf::ExtractFontListTemp() {
+    if (!pdfdoc) {
+        return nullptr;
+    }
+
     Vec<pdf_obj*> fontList;
     Vec<pdf_obj*> resList;
 
     auto ctx = Ctx();
 
-    // collect all fonts from all page objects
+    // collect all fonts from all page objects.
+    // this runs on a background thread (GetFontsThread) so it must not
+    // starve the UI thread: walk raw pdf objects via pdf_lookup_page_obj
+    // instead of GetFzPageInfo, which would load and parse every page
+    // while holding pagesLock and renderLock. the object walk only needs
+    // docLock, taken per-page so other threads can interleave
     int nPages = PageCount();
-    for (int i = 1; i <= nPages; i++) {
-        auto pageInfo = GetFzPageInfo(i, false);
-        if (!pageInfo) {
-            continue;
-        }
-        fz_page* fzpage = pageInfo->page;
-        if (!fzpage) {
-            continue;
-        }
-
-        ScopedCritSec scope(&docLock);
-        pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
+    for (int i = 0; i < nPages; i++) {
+        ScopedCritSec perPageScope(&docLock);
         fz_try(ctx) {
-            pdf_obj* resources = pdf_page_resources(ctx, page);
+            pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, i);
+            pdf_obj* resources = pdf_dict_gets(ctx, pageObj, "Resources");
             pdf_extract_fonts(ctx, resources, fontList, resList);
-            pdf_annot* annot;
-            for (annot = pdf_first_annot(ctx, page); annot; annot = pdf_next_annot(ctx, annot)) {
-                pdf_obj* o = pdf_annot_ap(ctx, annot);
-                if (o) {
-                    // TODO(port): not sure this is the right thing
-                    resources = pdf_xobject_resources(ctx, o);
-                    pdf_extract_fonts(ctx, resources, fontList, resList);
+            // fonts used by annotation appearance streams
+            pdf_obj* annots = pdf_dict_gets(ctx, pageObj, "Annots");
+            int nAnnots = pdf_array_len(ctx, annots);
+            for (int k = 0; k < nAnnots; k++) {
+                pdf_obj* annot = pdf_array_get(ctx, annots, k);
+                pdf_obj* ap = pdf_dict_gets(ctx, pdf_dict_gets(ctx, annot, "AP"), "N");
+                if (!ap) {
+                    continue;
+                }
+                if (pdf_is_stream(ctx, ap)) {
+                    pdf_extract_fonts(ctx, pdf_dict_gets(ctx, ap, "Resources"), fontList, resList);
+                } else {
+                    // appearance state sub-dictionary
+                    for (int j = 0; j < pdf_dict_len(ctx, ap); j++) {
+                        pdf_obj* state = pdf_dict_get_val(ctx, ap, j);
+                        pdf_extract_fonts(ctx, pdf_dict_gets(ctx, state, "Resources"), fontList, resList);
+                    }
                 }
             }
         }
@@ -3690,8 +3700,6 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         }
     }
 
-    // start docLock scope here so that we don't also have to
-    // ask for pagesLock (as is required for GetFzPage)
     ScopedCritSec scope(&docLock);
 
     for (pdf_obj* res : resList) {
