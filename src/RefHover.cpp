@@ -87,7 +87,8 @@ static constexpr float kMinUserZoom = 0.4f;
 static constexpr float kMaxUserZoom = 3.0f;
 static constexpr float kUserZoomStep = 1.15f;
 
-static bool gClassRegistered = false;
+// 0 = not tried, 1 = registered, -1 = failed
+static int gClassRegistered = 0;
 
 static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (msg == WM_PAINT) {
@@ -130,21 +131,26 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-static void RegisterClassIfNeeded() {
-    if (gClassRegistered) {
-        return;
+// returns false if registration failed (and won't be retried)
+static bool RegisterClassIfNeeded() {
+    if (gClassRegistered != 0) {
+        return gClassRegistered > 0;
     }
     WNDCLASSW wc{};
     wc.lpfnWndProc = RefHoverWndProc;
     wc.hInstance = GetModuleHandleW(nullptr);
     wc.lpszClassName = REF_HOVER_CLASS;
     wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    RegisterClassW(&wc);
-    gClassRegistered = true;
+    ATOM atom = RegisterClassW(&wc);
+    gClassRegistered = atom ? 1 : -1;
+    return gClassRegistered > 0;
 }
 
 RefHoverState* RefHoverCreate(HWND hwndCanvas) {
-    RegisterClassIfNeeded();
+    if (!RegisterClassIfNeeded()) {
+        // don't keep retrying window creation on every mouse move
+        return nullptr;
+    }
     auto* s = new RefHoverState();
     HWND hwnd = CreateWindowExW(WS_EX_TOOLWINDOW, REF_HOVER_CLASS, nullptr, WS_POPUP | WS_BORDER, 0, 0, 10, 10,
                                 hwndCanvas, nullptr, GetModuleHandleW(nullptr), nullptr);
@@ -256,6 +262,13 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
     }
     if (y + popupH > bottomBound) {
         popupH = bottomBound - y;
+    }
+
+    // degenerate bounds (page barely visible, no room on either side of
+    // the cursor): hide instead of showing a 0-sized topmost window
+    if (popupW <= 0 || popupH <= 0) {
+        ShowWindow(s->hwndPopup, SW_HIDE);
+        return;
     }
 
     SetWindowPos(s->hwndPopup, HWND_TOPMOST, x, y, popupW, popupH, SWP_NOACTIVATE | SWP_SHOWWINDOW);
