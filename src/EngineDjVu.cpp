@@ -539,6 +539,22 @@ bool EngineDjVu::FinishLoading() {
         }
     }
 
+    // a page can end up with an invalid mediabox: a broken INFO chunk declaring
+    // zero dimensions, ddjvu_document_get_pageinfo failing (mediabox stays 0 x 0)
+    // or info.dpi being 0 (mediabox becomes inf). a zero-sized page lays out with
+    // zoom 0, triggering "zoom <= 0" reports in TransformPoint. use a letter-sized
+    // mediabox instead so the page renders as a blank rectangle
+    for (int i = 0; i < pageCount; i++) {
+        RectF& mbox = pages[i]->mediabox;
+        // legit dimensions are at most 65535 * GetFileDPI() / 25, well below 1e6
+        bool isValid = mbox.dx > 0 && mbox.dx < 1e6f && mbox.dy > 0 && mbox.dy < 1e6f;
+        if (!isValid) {
+            logf("EngineDjVu::FinishLoading: invalid mediabox (%.2f x %.2f) for page %d, using letter size\n", mbox.dx,
+                 mbox.dy, i + 1);
+            mbox = RectF(0, 0, 8.5f * GetFileDPI(), 11.f * GetFileDPI());
+        }
+    }
+
     while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy) {
         gDjVuContext->SpinMessageLoopWithUnlock();
     }

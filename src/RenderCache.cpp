@@ -470,6 +470,10 @@ bool RenderCache::ReduceTileSize() {
 }
 
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
+    // a page that laid out with an invalid zoom (e.g. a zero-sized page) can't be rendered
+    if (dm->GetZoomReal(pageNo) <= 0) {
+        return;
+    }
     TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
     // only honor the request if there's a good chance that the
     // rendered tile will actually be used
