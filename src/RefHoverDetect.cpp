@@ -17,15 +17,24 @@ static bool IsAsciiAlnum(WCHAR c) {
     return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
 }
 
+// Locale-independent lowercasing. The process runs in the "C" locale where
+// towlower() only folds ASCII (as does ToLowerW() in src/common), so
+// accented dictionary words ("sección", "capítulo") would never match
+// all-caps headings ("SECCIÓN 2").
+static WCHAR FoldCaseW(WCHAR c) {
+    return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
+}
+
 // Caption / heading keyword tables. Each entry is a lowercase word recognised
 // at the start of a "Figure 1.2" / "Tableau 2" style label. Add a language by
 // appending entries; the call sites loop the table so no other code changes.
 // Trailing nullptr terminates the list.
 //
 // Entries are matched case-insensitively against the input glyph (via
-// towlower) so capitalised or all-caps PDF text matches too. Accented dict
-// words must be stored already-lowercased (NFC) — PDF text extraction
-// produces NFC most of the time.
+// CharLowerW, which folds accented letters regardless of the CRT locale)
+// so capitalised or all-caps PDF text matches too. Accented dict words
+// must be stored already-lowercased (NFC) — PDF text extraction produces
+// NFC most of the time.
 static const WCHAR* const kCaptionWords[] = {
     // en
     L"figure",
@@ -94,7 +103,7 @@ static bool MatchWordAt(const WCHAR* text, int textLen, int idx, const WCHAR* w,
         return false;
     }
     for (int j = 0; j < n; j++) {
-        WCHAR c = (WCHAR)towlower(text[idx + j]);
+        WCHAR c = FoldCaseW(text[idx + j]);
         if (c != w[j]) {
             return false;
         }

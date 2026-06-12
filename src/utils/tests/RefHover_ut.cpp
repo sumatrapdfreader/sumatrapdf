@@ -131,6 +131,29 @@ static void TwoColumnLeftEntryStaysInColumn() {
     utassert(box.y + box.dy < 240.f);
 }
 
+// (3c) All-caps accented Spanish heading "SECCIÓN 2": the heading-prefix
+// dictionary must match case-insensitively beyond ASCII (the process runs in
+// the "C" locale where towlower doesn't fold Ó), so the destination is
+// detected as a heading and routed to the full-width landscape view rather
+// than fitted like a bibliography entry.
+static void AccentedAllCapsHeadingDetected() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    AddText(text, coords, len, 1024, L"SECCIÓN 2 RESULTADOS", 72, 200);
+    // body paragraph: first line indented, second back at the margin
+    AddText(text, coords, len, 1024, L"texto del cuerpo del documento.", 92, 215);
+    AddText(text, coords, len, 1024, L"continua en el margen izquierdo.", 72, 230);
+    for (int i = 0; i < 3; i++) {
+        AddText(text, coords, len, 1024, L"mas lineas de texto del cuerpo.", 72, 245 + i * 15);
+    }
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // heading destination => landscape view spanning the full page width
+    utassert(box.x == 0.f);
+    utassert(box.dx == kPageW);
+}
+
 // (4) Equation label "(14)" at right column edge near destY: DetectEquationBox
 // returns a tight, full-width strip near the label.
 static void EquationLabelDetected() {
@@ -230,6 +253,7 @@ static void LandscapeBoxBasicShape() {
 }
 
 void RefHoverTest() {
+    AccentedAllCapsHeadingDetected();
     BodyTextParenRejected();
     BracketEntryFitsToOneEntry();
     EmptyInputsHandled();
