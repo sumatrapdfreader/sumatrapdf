@@ -3631,7 +3631,10 @@ PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
 }
 
 static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
-    if (!res || pdf_mark_obj(ctx, res)) {
+    // dedupe/cycle-protect via resList, not pdf_mark_obj: marks mutate shared
+    // pdf_obj flags, which races with other threads using marks (and would
+    // leave objects marked while locks are dropped between pages)
+    if (!res || resList.Contains(res)) {
         return;
     }
     resList.Append(res);
@@ -3666,10 +3669,16 @@ TempStr EngineMupdf::ExtractFontListTemp() {
     // this runs on a background thread (GetFontsThread) so it must not
     // starve the UI thread: walk raw pdf objects via pdf_lookup_page_obj
     // instead of GetFzPageInfo, which would load and parse every page
-    // while holding pagesLock and renderLock. the object walk only needs
-    // docLock, taken per-page so other threads can interleave
+    // while holding pagesLock for the duration.
+    // renderLock is needed too, not just docLock: we read the same objects
+    // the renderer reads when building display lists (page /Resources etc.)
+    // and pdf object reads can mutate (pdf_dict_get sorts large dicts,
+    // pdf_resolve_indirect lazy-loads), so unserialized overlap with a
+    // render makes pages fail with render errors. both locks are released
+    // between pages so the UI thread can interleave
     int nPages = PageCount();
     for (int i = 0; i < nPages; i++) {
+        ScopedCritSec renderScope(&renderLock);
         ScopedCritSec perPageScope(&docLock);
         fz_try(ctx) {
             pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, i);
@@ -3700,11 +3709,10 @@ TempStr EngineMupdf::ExtractFontListTemp() {
         }
     }
 
+    // font dicts are also read by the renderer when loading fonts, so
+    // serialize with renders here as well
+    ScopedCritSec renderScope(&renderLock);
     ScopedCritSec scope(&docLock);
-
-    for (pdf_obj* res : resList) {
-        pdf_unmark_obj(ctx, res);
-    }
 
     StrVec fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
