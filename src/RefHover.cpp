@@ -57,6 +57,7 @@
 //     misauthored destination.
 
 #include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -72,10 +73,15 @@
 // fit-to-popup-max), then multiply by RefHoverState::Displayed::userZoom
 // (the mouse-wheel adjustment).
 static constexpr float kRenderZoom = 1.5f;
-// upper bounds for the popup window in screen pixels.
+// pixel metrics below are for 96 dpi, DpiScale()'d at point of use.
+// upper bounds for the popup window.
 static constexpr int kMaxPopupWidth = 1200;
 static constexpr int kMaxPopupHeight = 600;
 static constexpr int kBorder = 4;
+// vertical gap kept between the cursor and the popup.
+static constexpr int kCursorPad = 30;
+// pixels scrolled per mouse-wheel notch.
+static constexpr int kScrollStepPx = 60;
 // user-zoom (mouse-wheel) bounds and step.
 static constexpr float kMinUserZoom = 0.4f;
 static constexpr float kMaxUserZoom = 3.0f;
@@ -103,10 +109,11 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             // that's how zoomed-in content "fills" the previously blank
             // bottom/right of the popup).
             Size bmpSize = s->bmp->GetSize();
+            int border = DpiScale(hwnd, kBorder);
             HDC bmpDC = CreateCompatibleDC(hdc);
             HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->GetBitmap()) : nullptr;
             if (oldBmp) {
-                BitBlt(hdc, kBorder, kBorder, bmpSize.dx, bmpSize.dy, bmpDC, 0, 0, SRCCOPY);
+                BitBlt(hdc, border, border, bmpSize.dx, bmpSize.dy, bmpDC, 0, 0, SRCCOPY);
                 SelectObject(bmpDC, oldBmp);
             }
             if (bmpDC) {
@@ -168,8 +175,9 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
         return;
     }
     Size bmpSize = s->bmp->GetSize();
-    int popupW = bmpSize.dx + 2 * kBorder;
-    int popupH = bmpSize.dy + 2 * kBorder;
+    int border = DpiScale(s->hwndPopup, kBorder);
+    int popupW = bmpSize.dx + 2 * border;
+    int popupH = bmpSize.dy + 2 * border;
 
     HMONITOR hmon = MonitorFromPoint({screenPt.x, screenPt.y}, MONITOR_DEFAULTTONEAREST);
     MONITORINFO mi{};
@@ -216,24 +224,24 @@ static void ShowPopup(RefHoverState* s, Point screenPt) {
     // overflow. If neither side fits the full popup, shrink popupH to
     // whichever side has more room — popup is cut (bitmap clipped at popup
     // edges in WM_PAINT) rather than overlapping the cursor.
-    constexpr int kCursorPad = 30;
-    int spaceBelow = bottomBound - (screenPt.y + kCursorPad);
-    int spaceAbove = (screenPt.y - kCursorPad) - topBound;
+    int cursorPad = DpiScale(s->hwndPopup, kCursorPad);
+    int spaceBelow = bottomBound - (screenPt.y + cursorPad);
+    int spaceAbove = (screenPt.y - cursorPad) - topBound;
     int y;
     if (spaceBelow >= popupH) {
-        y = screenPt.y + kCursorPad;
+        y = screenPt.y + cursorPad;
     } else if (spaceAbove >= popupH) {
-        y = screenPt.y - popupH - kCursorPad;
+        y = screenPt.y - popupH - cursorPad;
     } else if (spaceBelow >= spaceAbove) {
         if (spaceBelow > 0) {
             popupH = spaceBelow;
         }
-        y = screenPt.y + kCursorPad;
+        y = screenPt.y + cursorPad;
     } else {
         if (spaceAbove > 0) {
             popupH = spaceAbove;
         }
-        y = screenPt.y - popupH - kCursorPad;
+        y = screenPt.y - popupH - cursorPad;
     }
     // Horizontal clamp to monitor work area.
     if (x < leftBound) {
@@ -278,8 +286,9 @@ bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
 
     RECT rc;
     GetClientRect(s->hwndPopup, &rc);
-    float clientW = (float)((rc.right - rc.left) - 2 * kBorder);
-    float clientH = (float)((rc.bottom - rc.top) - 2 * kBorder);
+    int border = DpiScale(s->hwndPopup, kBorder);
+    float clientW = (float)((rc.right - rc.left) - 2 * border);
+    float clientH = (float)((rc.bottom - rc.top) - 2 * border);
     float zoom = s->displayed.baseZoom * s->displayed.userZoom;
     if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
         return false;
@@ -338,7 +347,8 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     // perceived scroll speed stays roughly constant across zoom levels.
     // Positive wheelDelta → wheel forward → scroll toward earlier content
     // (region.y decreases). Negative → later content (region.y increases).
-    float scrollPt = 60.f * ((float)wheelDelta / (float)WHEEL_DELTA) / zoom;
+    float scrollStep = (float)DpiScale(s->hwndPopup, kScrollStepPx);
+    float scrollPt = scrollStep * ((float)wheelDelta / (float)WHEEL_DELTA) / zoom;
     float newY = region.y - scrollPt;
 
     if (newY < 0.f) {
@@ -715,7 +725,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     //   height 45% of source page height — keeps the bottom of the page
     //                visible below the popup so the line under the cursor
     //                and surrounding context stay readable.
-    int popupWCap = kMaxPopupWidth;
+    int popupWCap = DpiScale(s->hwndPopup, kMaxPopupWidth);
     {
         POINT mp = {s->pending.screenPt.x, s->pending.screenPt.y};
         HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
@@ -736,11 +746,12 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     // its full caption fit. Cursor at the bottom of the page → popup
     // expands upward into the page top; cursor at top → expands downward.
     int popupHCap;
+    int cursorPad = DpiScale(s->hwndPopup, kCursorPad);
     if (region.dy > 250.f && s->pending.pageScreenRect.dy > 0) {
         Rect pr = s->pending.pageScreenRect;
         int curY = s->pending.screenPt.y;
-        int spaceAbove = curY - pr.y - 30;
-        int spaceBelow = (pr.y + pr.dy) - curY - 30;
+        int spaceAbove = curY - pr.y - cursorPad;
+        int spaceBelow = (pr.y + pr.dy) - curY - cursorPad;
         int maxSpace = (spaceAbove > spaceBelow) ? spaceAbove : spaceBelow;
         if (maxSpace < 0) {
             maxSpace = 0;
@@ -748,7 +759,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         int pageBased = pr.dy * 75 / 100;
         popupHCap = (pageBased > maxSpace) ? pageBased : maxSpace;
     } else {
-        popupHCap = kMaxPopupHeight;
+        popupHCap = DpiScale(s->hwndPopup, kMaxPopupHeight);
         if (s->pending.pageScreenRect.dy > 0) {
             int pageBased = s->pending.pageScreenRect.dy * 45 / 100;
             if (pageBased < popupHCap) {
@@ -756,8 +767,9 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
             }
         }
     }
-    float availH = (float)(popupHCap - 2 * kBorder);
-    float availW = (float)(popupWCap - 2 * kBorder);
+    int border = DpiScale(s->hwndPopup, kBorder);
+    float availH = (float)(popupHCap - 2 * border);
+    float availW = (float)(popupWCap - 2 * border);
     if (useLinkZoom) {
         // Keep the link's requested zoom; size the region so it fills the
         // popup without overflowing. Clamp to what's left of the page so
