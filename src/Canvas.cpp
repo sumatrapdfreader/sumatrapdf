@@ -896,7 +896,9 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
             Annotation* annot = dm->GetAnnotationAtPos(pos, nullptr);
             Annotation* prev = win->annotationUnderCursor;
             IPageElement* el = dm->GetElementAtPos(pos, nullptr);
-            bool hasInternalLink = IsInternalLinkDest(el, dm);
+            // the annotation notification below is suppressed in favor of
+            // the citation hover popup, but only when that feature is on
+            bool hasInternalLink = gGlobalPrefs->enableCitationHover && IsInternalLinkDest(el, dm);
             if (annot != prev) {
 #if 0
                 TempStr name = annot ? AnnotationReadableNameTemp(annot->type) : (TempStr) "none";
