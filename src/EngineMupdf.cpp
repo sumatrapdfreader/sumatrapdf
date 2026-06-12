@@ -126,9 +126,7 @@ struct PageDestinationMupdf : IPageDestination {
         return {};
     }
 
-    float GetZoom2() override {
-        return destZoom;
-    }
+    float GetZoom2() override { return destZoom; }
 
     ~PageDestinationMupdf() override {
         str::Free(value);
@@ -262,9 +260,12 @@ static IPageDestination* NewPageDestinationMupdf(fz_context* ctx, fz_document* d
         float x = 0, y = 0, z = 0;
         const char* destUri = link ? link->uri : (outline ? outline->uri : nullptr);
         dest->pageNo = ResolveLink(ctx, doc, destUri, &x, &y, &z);
-        dest->destX = x;
-        dest->destY = y;
-        dest->destZoom = z;
+        if (dest->pageNo > 0) {
+            dest->destX = x;
+            dest->destY = y;
+            dest->destZoom = z;
+        }
+        // when not resolved destX / destY keep their -1 sentinel
     }
     return dest;
 }
