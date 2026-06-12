@@ -801,8 +801,15 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
     delete s->bmp;
     s->bmp = bmp;
     s->displayed.destPage = destPage;
-    s->displayed.destX = destX;
-    s->displayed.destY = destY;
+    // store the raw link destination, not the locals modified above:
+    // RefHoverSchedule() compares them against incoming raw link values to
+    // skip a re-render for the same link. With the resolved values stored,
+    // page-level destinations (destY <= 0, e.g. abbreviation links) never
+    // compared equal, so every pause of the mouse within the same link
+    // re-ran detection plus a synchronous render and re-positioned the
+    // popup at the new cursor position.
+    s->displayed.destX = s->pending.destX;
+    s->displayed.destY = s->pending.destY;
     s->displayed.region = region;
 
     ShowPopup(s, s->pending.screenPt);
