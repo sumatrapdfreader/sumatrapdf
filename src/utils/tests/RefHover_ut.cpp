@@ -87,6 +87,50 @@ static void BracketEntryFitsToOneEntry() {
     utassert(box.y >= 200.f - 12.f);
 }
 
+// (3a) 2-column layout, entry in the right column: the detected box must not
+// extend into the left column's same-y body text (the start-of-line walk must
+// not cross the column gutter).
+static void TwoColumnRightEntryStaysInColumn() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column body text at x=72 (right edge ≈ 72+29*6=246), same y range.
+    for (int i = 0; i < 5; i++) {
+        AddText(text, coords, len, 1024, L"left column body text line...", 72, 200 + i * 15);
+    }
+    // Right column starts at x=320 (gutter ≈ 246..320).
+    AddText(text, coords, len, 1024, L"[Foo10] Smith J., 2010, Title.", 320, 200);
+    AddText(text, coords, len, 1024, L"continuation of the entry.", 340, 215);
+    AddText(text, coords, len, 1024, L"[Bar11] Doe J., 2011, Other.", 320, 240);
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 320.f, 200.f);
+    utassert(!IsEmpty(box));
+    // Box must stay right of the gutter (not include the left column).
+    utassert(box.x > 246.f);
+    // And still end before the sibling entry.
+    utassert(box.y + box.dy < 240.f);
+}
+
+// (3b) 2-column layout, entry in the left column: the detected box must not
+// extend into the right column's same-y text.
+static void TwoColumnLeftEntryStaysInColumn() {
+    WCHAR text[1024];
+    Rect coords[1024];
+    int len = 0;
+    // Left column entry at x=72 (line right edge ≈ 72+29*6=246).
+    AddText(text, coords, len, 1024, L"[Foo10] Smith J., 2010, Title", 72, 200);
+    AddText(text, coords, len, 1024, L"continuation of the entry.", 92, 215);
+    AddText(text, coords, len, 1024, L"[Bar11] Doe J., 2011, Other.", 72, 240);
+    // Right column body text at x=340, same y range.
+    for (int i = 0; i < 5; i++) {
+        AddText(text, coords, len, 1024, L"right column body text line..", 340, 200 + i * 15);
+    }
+    RectF box = DetectEntryBox(text, coords, len, Mediabox(), 72.f, 200.f);
+    utassert(!IsEmpty(box));
+    // Box must not reach into the right column at x=340.
+    utassert(box.x + box.dx < 340.f);
+    utassert(box.y + box.dy < 240.f);
+}
+
 // (4) Equation label "(14)" at right column edge near destY: DetectEquationBox
 // returns a tight, full-width strip near the label.
 static void EquationLabelDetected() {
@@ -195,4 +239,6 @@ void RefHoverTest() {
     NegativeDestYFallsToLandscape();
     NonTrailingParenRejected();
     SparseTextReturnsWholePage();
+    TwoColumnLeftEntryStaysInColumn();
+    TwoColumnRightEntryStaysInColumn();
 }
