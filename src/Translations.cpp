@@ -135,6 +135,10 @@ const char* GetTranslation(const char* s) {
         return s;
     }
     auto c = gTranslationCache;
+    if (!c) {
+        // translations failed to load (e.g. corrupted resource data)
+        return s;
+    }
     int n = c->Size();
     ReportDebugIf(n % 2 != 0);
     n = n / 2;
@@ -169,6 +173,13 @@ const char* GetCurrentLangCode() {
     return gCurrLangCode;
 }
 
+// when we can't load translations, reset the language to english so that
+// GetTranslation() doesn't try to use a gTranslationCache that was never built
+static void FallbackToEnglish() {
+    gCurrLangIdx = 0;
+    gCurrLangCode = GetLangCodeByIdx(0);
+}
+
 void SetCurrentLangByCode(const char* langCode) {
     if (str::Eq(langCode, gCurrLangCode)) {
         return;
@@ -192,22 +203,26 @@ void SetCurrentLangByCode(const char* langCode) {
     bool lok = LockDataResource(IDR_TRANSLATIONS, &ldr);
     if (!lok) {
         logf("SetCurrentLangByCode: LockDataResource(IDR_TRANSLATIONS) failed\n");
+        FallbackToEnglish();
         return;
     }
     lzma::SimpleArchive archive;
     lok = lzma::ParseSimpleArchive(ldr.data, (size_t)ldr.dataSize, &archive);
     if (!lok) {
         logf("SetCurrentLangByCode: ParseSimpleArchive failed\n");
+        FallbackToEnglish();
         return;
     }
     int fileIdx = lzma::GetIdxFromName(&archive, "translations-good.txt");
     if (fileIdx < 0) {
         logf("SetCurrentLangByCode: translations-good.txt not found in archive\n");
+        FallbackToEnglish();
         return;
     }
     u8* data = lzma::GetFileDataByIdx(&archive, fileIdx, nullptr);
     if (!data) {
         logf("SetCurrentLangByCode: GetFileDataByIdx failed\n");
+        FallbackToEnglish();
         return;
     }
     int dataSize = (int)(archive.files[fileIdx].uncompressedSize);
