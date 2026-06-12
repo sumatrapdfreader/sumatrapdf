@@ -66,6 +66,7 @@
 #include "AppSettings.h"
 #include "AppTools.h"
 #include "Canvas.h"
+#include "RefHover.h"
 #include "CrashHandler.h"
 #include "ExternalViewers.h"
 #include "Favorites.h"
@@ -2916,6 +2917,9 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     win->annotationBeingResized = false;
 
     win->fwdSearchMark.show = false;
+    // hide the citation-hover popup and cancel a pending hover: it
+    // belongs to the document being closed / replaced
+    RefHoverHide(win->refHover, win->hwndCanvas);
     if (win->uiaProvider) {
         win->uiaProvider->OnDocumentUnload();
     }
@@ -8979,6 +8983,10 @@ LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) 
         case WM_ACTIVATE:
             if (wp != WA_INACTIVE) {
                 gLastActiveFrameHwnd = hwnd;
+            } else if (win) {
+                // hide the topmost citation-hover popup when switching to
+                // another application (no WM_MOUSELEAVE is generated then)
+                RefHoverHide(win->refHover, win->hwndCanvas);
             }
             break;
 

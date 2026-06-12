@@ -499,7 +499,11 @@ static float ResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF s
     // longest run isn't on the dest page but a shorter run is (e.g. Bluey
     // "Jump to all (a-z)" → "Jump" not on dest, "all" matches "All
     // Characters").
-    struct Cand { int start; int len; bool flanked; };
+    struct Cand {
+        int start;
+        int len;
+        bool flanked;
+    };
     constexpr int kMaxCands = 16;
     Cand cands[kMaxCands];
     int ncands = 0;
