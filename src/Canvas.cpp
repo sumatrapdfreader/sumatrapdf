@@ -1134,6 +1134,10 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // hide the citation-hover popup: a click either follows the hovered link
+    // or starts a selection / drag, during which the popup would be stale
+    RefHoverHide(win->refHover, win->hwndCanvas);
+
     if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::None;
         return;
