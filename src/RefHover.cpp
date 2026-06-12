@@ -428,9 +428,9 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
     return true;
 }
 
-void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int destPage, float destX, float destY,
-                      float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect) {
-    if (!s) {
+void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point screenPt, int destPage, float destX,
+                      float destY, float destZoom, int srcPage, RectF srcRect, Rect pageScreenRect) {
+    if (!s || delayMs < 0) {
         return;
     }
     KillTimer(hwndCanvas, kRefHoverTimerID);
@@ -447,7 +447,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, Point screenPt, int des
     s->pending.srcPage = srcPage;
     s->pending.srcRect = srcRect;
     s->pending.pageScreenRect = pageScreenRect;
-    SetTimer(hwndCanvas, kRefHoverTimerID, kRefHoverDelayMs, nullptr);
+    SetTimer(hwndCanvas, kRefHoverTimerID, (UINT)delayMs, nullptr);
 }
 
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
