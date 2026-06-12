@@ -143,6 +143,26 @@ static const char* gIconStopSpeaking =
   <path d="M5 7a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2l0 -10" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/master/icons/circle-arrow-left.svg
+static const char* gIconNavigateBack =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M12 21a9 9 0 1 0 0 -18a9 9 0 0 0 0 18" />
+  <path d="M8 12l4 4" />
+  <path d="M8 12h8" />
+  <path d="M12 8l-4 4" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/master/icons/circle-arrow-right.svg
+static const char* gIconNavigateForward =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0 -18" />
+  <path d="M16 12l-4 -4" />
+  <path d="M16 12h-8" />
+  <path d="M12 16l4 -4" />
+</svg>)";
+
 // must match order in enum class TbIcon
 // clang-format off
 static const char* gIcons[] = {
@@ -163,6 +183,8 @@ static const char* gIcons[] = {
     gIconRotateRight,
     gIconSpeak,
     gIconStopSpeaking,
+    gIconNavigateBack,
+    gIconNavigateForward,
 };
 // clang-format on
 

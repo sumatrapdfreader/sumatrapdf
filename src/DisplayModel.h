@@ -254,6 +254,21 @@ struct DisplayModel : DocController {
        resp. number of Back history entries */
     size_t navHistoryIdx = 0;
 
+    /* Stable-view nav point tracking (see DisplayModel.cpp): a view the user
+       dwelled on is committed into navHistory by the next view change, so
+       Back / Forward also work for plain scrolling and page turns, not just
+       for ToC / link / bookmark jumps (which call AddNavPoint() directly) */
+    struct StableNavPointState {
+        ScrollState pending;
+        ScrollState lastCommitted;
+        DWORD64 pendingTick = 0;
+        bool hasPending = false;
+        bool hasLastCommitted = false;
+        /* set while SetScrollState() restores a view (session restore,
+           Back / Forward themselves) so the restore isn't recorded */
+        bool suppress = false;
+    } stableNavPoint;
+
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
     bool displayR2L = false;

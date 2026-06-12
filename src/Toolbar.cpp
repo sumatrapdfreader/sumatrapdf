@@ -73,6 +73,9 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     {TbIcon::PagePrev, CmdGoToPrevPage, _TRN("Previous Page")},
     {TbIcon::PageNext, CmdGoToNextPage, _TRN("Next Page")},
     {TbIcon::None, 0, nullptr}, // separator
+    {TbIcon::NavigateBack, CmdNavigateBack, _TRN("Back")},
+    {TbIcon::NavigateForward, CmdNavigateForward, _TRN("Forward")},
+    {TbIcon::None, 0, nullptr}, // separator
     {TbIcon::Speak, CmdReadAloud, _TRN("Read Aloud")},
     {TbIcon::None, 0, nullptr}, // separator
     {TbIcon::LayoutContinuous, CmdZoomFitWidthAndContinuous, _TRN("Fit Width and Show Pages Continuously")},
@@ -252,6 +255,11 @@ static bool IsCmdEnabled(MainWindow* win, int cmdId) {
             return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
         case CmdGoToPrevPage:
             return win->ctrl->CurrentPageNo() > 1;
+
+        case CmdNavigateBack:
+            return win->ctrl->CanNavigate(-1);
+        case CmdNavigateForward:
+            return win->ctrl->CanNavigate(1);
 
         default:
             return true;

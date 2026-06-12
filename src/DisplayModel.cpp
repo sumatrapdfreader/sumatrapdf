@@ -332,6 +332,89 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
     return std::min(lastPageNo, pageCount);
 }
 
+// Stable-view nav point tracking: remember views the user dwelled on so
+// that Back / Forward have history entries for plain scrolling and page
+// turns, without turning every intermediate scroll position into a fake
+// history entry. A view becomes a candidate once it is reached; it is
+// committed into navHistory by the next view-changing operation, but only
+// if the user stayed on it for long enough.
+static constexpr DWORD64 kStableNavPointDelayMs = 1500;
+
+static bool IsValidNavScrollState(const ScrollState& ss) {
+    return ss.page > 0;
+}
+
+// two views count as "the same" when they show the same page within about
+// half a viewport of each other, so small scroll adjustments don't create
+// distinct history entries
+static bool IsMeaningfullyDifferentNavScrollState(DisplayModel* dm, const ScrollState& a, const ScrollState& b) {
+    if (!IsValidNavScrollState(a) || !IsValidNavScrollState(b)) {
+        return true;
+    }
+    if (a.page != b.page) {
+        return true;
+    }
+    Rect viewPort = dm->GetViewPort();
+    double minDx = std::max(32.0, viewPort.dx * 0.50);
+    double minDy = std::max(32.0, viewPort.dy * 0.50);
+    return fabs(a.x - b.x) > minDx || fabs(a.y - b.y) > minDy;
+}
+
+// called right before an explicit view change with the current (pre-change)
+// scroll state. Returns true if that view should be committed to navHistory
+// (i.e. the caller should AddNavPoint()).
+static bool ShouldCommitStableNavPointBeforeViewChange(DisplayModel* dm, const ScrollState& curr) {
+    auto& nav = dm->stableNavPoint;
+    if (nav.suppress || !IsValidNavScrollState(curr)) {
+        return false;
+    }
+
+    DWORD64 now = GetTickCount64();
+
+    // first explicit user movement: remember the initial view so that Back
+    // can return to it. AddNavPoint() de-duplicates exact repeats.
+    if (!nav.hasPending) {
+        nav.pending = curr;
+        nav.pendingTick = now;
+        nav.hasPending = true;
+        nav.lastCommitted = curr;
+        nav.hasLastCommitted = true;
+        return true;
+    }
+
+    // the visible view changed since the last candidate was recorded; start
+    // the stability window again instead of committing an intermediate view
+    if (IsMeaningfullyDifferentNavScrollState(dm, curr, nav.pending)) {
+        nav.pending = curr;
+        nav.pendingTick = now;
+        return false;
+    }
+
+    if (now - nav.pendingTick < kStableNavPointDelayMs) {
+        return false;
+    }
+
+    if (nav.hasLastCommitted && !IsMeaningfullyDifferentNavScrollState(dm, curr, nav.lastCommitted)) {
+        return false;
+    }
+
+    nav.lastCommitted = curr;
+    nav.hasLastCommitted = true;
+    return true;
+}
+
+// called after a view change completed; the new view becomes the candidate
+// for the next stable nav point
+static void RememberStableNavPointCandidateAfterViewChange(DisplayModel* dm, const ScrollState& curr) {
+    auto& nav = dm->stableNavPoint;
+    if (nav.suppress || !IsValidNavScrollState(curr)) {
+        return;
+    }
+    nav.pending = curr;
+    nav.pendingTick = GetTickCount64();
+    nav.hasPending = true;
+}
+
 // must call SetInitialViewSettings() after creation
 DisplayModel::DisplayModel(EngineBase* engine, DocControllerCallback* cb) : DocController(cb) {
     this->engine = engine;
@@ -1301,6 +1384,8 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     if (addNavPt) {
         AddNavPoint();
+    } else if (ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
+        AddNavPoint();
     }
 
     /* in facing mode only start at odd pages (odd because page
@@ -1374,6 +1459,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     cb->UpdateScrollbars(canvasSize);
     cb->PageNoChanged(this, pageNo);
     RepaintDisplay();
+    RememberStableNavPointCandidateAfterViewChange(this, GetScrollState());
 }
 
 void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuous) {
@@ -1537,6 +1623,10 @@ bool DisplayModel::HandleLink(IPageDestination* dest, ILinkHandler* lh) {
 }
 
 void DisplayModel::ScrollXTo(int xOff) {
+    if (ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
+        AddNavPoint();
+    }
+
     int currPageNo = CurrentPageNo();
     viewPort.x = xOff;
     RecalcVisibleParts();
@@ -1546,6 +1636,7 @@ void DisplayModel::ScrollXTo(int xOff) {
         cb->PageNoChanged(this, CurrentPageNo());
     }
     RepaintDisplay();
+    RememberStableNavPointCandidateAfterViewChange(this, GetScrollState());
 }
 
 void DisplayModel::ScrollXBy(int dx) {
@@ -1556,6 +1647,10 @@ void DisplayModel::ScrollXBy(int dx) {
 }
 
 void DisplayModel::ScrollYTo(int yOff) {
+    if (ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
+        AddNavPoint();
+    }
+
     int currPageNo = CurrentPageNo();
     viewPort.y = yOff;
     RecalcVisibleParts();
@@ -1566,6 +1661,7 @@ void DisplayModel::ScrollYTo(int yOff) {
         cb->PageNoChanged(this, newPageNo);
     }
     RepaintDisplay();
+    RememberStableNavPointCandidateAfterViewChange(this, GetScrollState());
 }
 
 /* Scroll the doc in y-axis by 'dy'. If 'changePage' is TRUE, automatically
@@ -1580,6 +1676,10 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
     ReportIf(0 == dy);
     if (0 == dy) {
         return;
+    }
+
+    if (ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
+        AddNavPoint();
     }
 
     int newYOff = currYOff;
@@ -1624,6 +1724,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
         cb->PageNoChanged(this, newPageNo);
     }
     RepaintDisplay();
+    RememberStableNavPointCandidateAfterViewChange(this, GetScrollState());
 }
 
 int DisplayModel::yOffset() {
@@ -1938,6 +2039,9 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
     if (gLogScrollState) {
         logf("SetScrollState: page: %d, pos: %d,%d\n", state.page, (int)state.x, (int)state.y);
     }
+    // this restores a view (session restore, Back / Forward themselves):
+    // don't let stable nav point tracking record it as user navigation
+    stableNavPoint.suppress = true;
     // must have both GoToPage() calls
     GoToPage(state.page, false);
     // Bail out, if the page wasn't scrolled
@@ -1945,6 +2049,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
         if (gLogScrollState) {
             logf("  exit because not scrolled\n");
         }
+        stableNavPoint.suppress = false;
         return;
     }
 
@@ -1971,6 +2076,7 @@ void DisplayModel::SetScrollState(const ScrollState& state) {
         logf("  newPt:  %d,%d\n", newPt.x, newPt.y);
     }
     GoToPage(state.page, newPt.y, false, newPt.x);
+    stableNavPoint.suppress = false;
 }
 
 // don't remember more than "enough" history entries (same number as Firefox uses)
