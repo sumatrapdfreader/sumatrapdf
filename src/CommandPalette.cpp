@@ -607,6 +607,10 @@ static const char* UpdateCommandNameTemp(MainWindow* win, int cmdId, const char*
             isToggle = true;
             newIsOn = !gGlobalPrefs->reuseInstance;
         } break;
+        case CmdToggleHoverPreview: {
+            isToggle = true;
+            newIsOn = gGlobalPrefs->citationHoverDelay < 0;
+        } break;
     }
 
     if (isToggle) {
