@@ -148,7 +148,9 @@ bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
     ReportIf(!filePath);
     FileState* state = FindByPath(filePath);
     if (!state) {
-        return false;
+        // keep a record so IsMissing can be persisted in settings (fixes #5585)
+        state = NewFileState(filePath);
+        states->Append(state);
     }
     // move the file history entry to the end of the list
     // of recently opened documents (if it exists at all),
@@ -171,6 +173,7 @@ bool FileHistory::MarkFileInexistent(const char* filePath, bool hide) const {
     state->thumbnail = nullptr;
     state->openCount >>= 2;
     state->isMissing = hide;
+    logf("MarkFileInexistent: '%s', isMissing: %d\n", filePath, (int)hide);
     return true;
 }
 

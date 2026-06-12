@@ -383,6 +383,15 @@ void SetTabState(WindowTab* tab, TabState* state) {
     }
 }
 
+static void RestoreMissingTabOnStartup(MainWindow* win, TabState* state) {
+    logf("RestoreTabOnStartup: file not found '%s', creating placeholder tab\n", state->filePath);
+    gFileHistory.MarkFileInexistent(state->filePath, true);
+    WindowTab* tab = new WindowTab(win);
+    tab->SetFilePath(state->filePath);
+    tab->tabState = state;
+    AddTabToWindow(win, tab);
+}
+
 // TODO: when files are lazy loaded, they do not restore TabState. Need to remember
 // it in LoadArgs and call SetTabState() if present after loading
 static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad = true) {
@@ -395,6 +404,7 @@ static void RestoreTabOnStartup(MainWindow* win, TabState* state, bool lazyLoad 
     }
     args.lazyLoad = lazyLoad;
     if (!LoadDocument(&args)) {
+        RestoreMissingTabOnStartup(win, state);
         return;
     }
     WindowTab* tab = win->CurrentTab();
