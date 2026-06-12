@@ -1,4 +1,5 @@
 #include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
 
 #include <mmsystem.h>
 #include <roapi.h>
@@ -612,6 +613,32 @@ static bool WinTtsInit() {
     inspectable->Release();
     if (FAILED(hr) || !gWinSynth) {
         gWinSynth = nullptr;
+        if (gWinVoicesStatic) {
+            gWinVoicesStatic->Release();
+            gWinVoicesStatic = nullptr;
+        }
+        return false;
+    }
+
+    // restricted environments (e.g. Windows Sandbox) have the synthesizer
+    // but no voices installed; report failure so that we fall back to
+    // SAPI, which might have voices of its own
+    UINT32 nVoices = 0;
+    if (gWinVoicesStatic) {
+        __FIVectorView_1_Windows__CMedia__CSpeechSynthesis__CVoiceInformation* allVoices = nullptr;
+        if (SUCCEEDED(gWinVoicesStatic->get_AllVoices(&allVoices)) && allVoices) {
+            allVoices->get_Size(&nVoices);
+            allVoices->Release();
+        }
+    }
+    if (nVoices == 0) {
+        log("WinTtsInit: no voices installed\n");
+        gWinSynth->Release();
+        gWinSynth = nullptr;
+        if (gWinVoicesStatic) {
+            gWinVoicesStatic->Release();
+            gWinVoicesStatic = nullptr;
+        }
         return false;
     }
 
@@ -1092,7 +1119,9 @@ static void WinTtsStop() {
 
 static bool IsWinRtBackend() {
     if (gTtsBackend == TtsBackend::Unknown) {
-        if (WinTtsInit()) {
+        // an escape hatch, also for testing the SAPI implementation
+        bool forceSapi = !str::IsEmpty(GetEnvVariableTemp("SUMATRA_TTS_FORCE_SAPI"));
+        if (!forceSapi && WinTtsInit()) {
             gTtsBackend = TtsBackend::WinRt;
             log("Tts: using Windows.Media.SpeechSynthesis\n");
         } else {
