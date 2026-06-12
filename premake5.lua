@@ -553,22 +553,19 @@ workspace "SumatraPDF"
       "HAVE_OT",
       "HAVE_UCDN",
       "HAVE_FREETYPE",
-    }
-    filter "configurations:Debug or DebugFull"
-    defines {
-      "HAVE_ATEXIT",
+      -- plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that
+      -- harfbuzz allocations don't depend on mupdf's thread-local fz_hb_secret
+      -- context being set (it's NULL during atexit and when fz_hb_lock/unlock
+      -- pairs nest via store scavenging)
       "hb_malloc_impl=sumatra_hb_malloc",
       "hb_calloc_impl=sumatra_hb_calloc",
       "hb_realloc_impl=sumatra_hb_realloc",
       "hb_free_impl=sumatra_hb_free"
     }
-    filter "configurations:Release or ReleaseAnalyze"
-      defines {
-        "hb_malloc_impl=fz_hb_malloc",
-        "hb_calloc_impl=fz_hb_calloc",
-        "hb_realloc_impl=fz_hb_realloc",
-        "hb_free_impl=fz_hb_free"
-      }
+    filter "configurations:Debug or DebugFull"
+    defines {
+      "HAVE_ATEXIT",
+    }
     filter {}
     disablewarnings { "4805", "4100", "4146", "4244", "4245", "4267", "4456", "4457", "4459", "4701", "4702", "4706" }
     harfbuzz_files()

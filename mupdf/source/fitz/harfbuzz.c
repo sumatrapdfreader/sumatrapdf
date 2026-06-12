@@ -124,10 +124,20 @@
  * problems that for now, we'll just forbid it.
  */
 
-/* SumatraPDF: opening multiple epub files will crash because different threads will clobber
+#if 1 /* SumatraPDF */
+/* opening multiple epub files will crash because different threads will clobber
 * fz_hb_secret. Locking is not good enough
 */
 __declspec(thread) static fz_context *fz_hb_secret = NULL;
+
+/* fz_hb_lock can nest on a thread: an allocation made under
+* fz_hb_lock can fail and trigger store scavenging, which can drop the last
+* reference to a font and re-enter fz_hb_lock via destroy_hb_shaper_data.
+* fz_ft_lock is a recursive critical section so the locking itself is fine,
+* but the inner fz_hb_unlock must not clear fz_hb_secret while the outer
+* harfbuzz call still needs it, so only clear it when the outermost
+* fz_hb_unlock is called. */
+__declspec(thread) static int fz_hb_lock_depth = 0;
 
 static void set_hb_context(fz_context *ctx)
 {
@@ -142,16 +152,43 @@ static fz_context *get_hb_context(void)
 void fz_hb_lock(fz_context *ctx)
 {
 	fz_ft_lock(ctx);
+	fz_ft_lock(ctx);
 
+	fz_hb_lock_depth++;
 	set_hb_context(ctx);
 }
 
 void fz_hb_unlock(fz_context *ctx)
 {
-	set_hb_context(NULL);
+	fz_hb_lock_depth--;
+	if (fz_hb_lock_depth == 0)
+		set_hb_context(NULL);
 
 	fz_ft_unlock(ctx);
 }
+#else /* original mupdf code, unchanged, to make updating mupdf easier */
+static fz_context* fz_hb_secret = NULL;
+
+static void set_hb_context(fz_context* ctx) {
+    fz_hb_secret = ctx;
+}
+
+static fz_context* get_hb_context(void) {
+    return fz_hb_secret;
+}
+
+void fz_hb_lock(fz_context* ctx) {
+    fz_ft_lock(ctx);
+
+    set_hb_context(ctx);
+}
+
+void fz_hb_unlock(fz_context* ctx) {
+    set_hb_context(NULL);
+
+    fz_ft_unlock(ctx);
+}
+#endif
 
 void *fz_hb_malloc(size_t size)
 {

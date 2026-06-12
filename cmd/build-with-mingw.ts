@@ -669,7 +669,10 @@ const mupdfLibs: LibDef = {
     "ext/brotli/c/include",
     "ext/zlib",
   ],
-  // harfbuzz allocator defines differ between debug and release
+  // plain malloc/free wrappers (ext/mupdf_load_system_font.c) so that harfbuzz
+  // allocations don't depend on mupdf's thread-local fz_hb_secret context
+  // being set; HAVE_ATEXIT (frees harfbuzz singletons at exit) is debug-only,
+  // it only matters for leak detection
   debugExtraDefines: [
     "HAVE_ATEXIT",
     "hb_malloc_impl=sumatra_hb_malloc",
@@ -678,10 +681,10 @@ const mupdfLibs: LibDef = {
     "hb_free_impl=sumatra_hb_free",
   ],
   releaseExtraDefines: [
-    "hb_malloc_impl=fz_hb_malloc",
-    "hb_calloc_impl=fz_hb_calloc",
-    "hb_realloc_impl=fz_hb_realloc",
-    "hb_free_impl=fz_hb_free",
+    "hb_malloc_impl=sumatra_hb_malloc",
+    "hb_calloc_impl=sumatra_hb_calloc",
+    "hb_realloc_impl=sumatra_hb_realloc",
+    "hb_free_impl=sumatra_hb_free",
   ],
   files: [
     // ── libjpeg-turbo (skip .asm, use jsimd_none.c as SIMD fallback) ──
