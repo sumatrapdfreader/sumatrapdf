@@ -27,6 +27,7 @@
 #include "CommandPalette.h"
 #include "Accelerators.h"
 #include "SumatraPDF.h"
+#include "TableOfContents.h"
 #include "Tabs.h"
 #include "ExternalViewers.h"
 #include "Annotation.h"
@@ -47,6 +48,7 @@ static i32 gBlacklistCommandsFromPalette[] = {
     CmdOpenWithKnownExternalViewerFirst,
     CmdOpenWithKnownExternalViewerLast,
     CmdCommandPalette,
+    CmdCommandPaletteTOC,
     CmdNextTabSmart,
     CmdPrevTabSmart,
     CmdSetTheme,
@@ -200,6 +202,8 @@ struct ItemDataCP {
     i32 cmdId = 0;
     WindowTab* tab = nullptr;
     const char* filePath = nullptr;
+    TocItem* tocItem = nullptr;
+    int indent = 0; // nesting level in the TOC tree (0 for top-level)
 };
 
 using StrVecCP = StrVecWithData<ItemDataCP>;
@@ -223,6 +227,7 @@ struct CommandPaletteWnd : Wnd {
     StrVecCP tabs;
     StrVecCP fileHistory;
     StrVecCP commands;
+    StrVecCP toc;
     ListBox* listBox = nullptr;
     Static* staticInfo = nullptr;
 
@@ -230,6 +235,8 @@ struct CommandPaletteWnd : Wnd {
     Vec<u8> highlighted; // reused across DrawListBoxItem calls
 
     int currTabIdx = 0;
+    int currTocIdx = 0; // best-guess TOC item for the current page
+    bool tocMode = false;
     bool smartTabMode = false;
     bool stickyMode = false;
 
@@ -239,6 +246,7 @@ struct CommandPaletteWnd : Wnd {
     void CollectStrings(MainWindow*);
     void CollectTabsRegular(MainWindow*, WindowTab* currTab);
     void CollectTabsMru(MainWindow*, WindowTab* currTab);
+    void CollectToc(MainWindow*);
     void FilterStringsForQuery(const char*, StrVecCP&);
 
     bool Create(MainWindow* win, const char* prefix, int smartTabAdvance);
@@ -250,6 +258,7 @@ struct CommandPaletteWnd : Wnd {
     void SwitchToTabs();
     void SwitchToEverything();
     void SwitchToFileHistory();
+    void SwitchToTOC();
     void OnSelectionChange();
     void OnListDoubleClick();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
@@ -710,6 +719,47 @@ void CommandPaletteWnd::CollectTabsMru(MainWindow* mainWin, WindowTab* currTab) 
     }
 }
 
+// recursively flatten the (fully expanded) TOC tree into `toc`, recording the
+// nesting level so we can paint each item with an indent. Also tracks the item
+// that is the best guess for `currPageNo` (largest pageNo <= currPageNo).
+static void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo, int& bestIdx, int& bestPageNo) {
+    while (ti) {
+        const char* title = ti->title ? ti->title : "";
+        ItemDataCP data;
+        data.tocItem = ti;
+        data.indent = indent;
+        toc.Append(title, data);
+        int pageNo = ti->pageNo;
+        if (pageNo > 0 && pageNo <= currPageNo && pageNo > bestPageNo) {
+            bestPageNo = pageNo;
+            bestIdx = toc.Size() - 1;
+        }
+        if (ti->child) {
+            CollectTocRec(toc, ti->child, indent + 1, currPageNo, bestIdx, bestPageNo);
+        }
+        ti = ti->next;
+    }
+}
+
+void CommandPaletteWnd::CollectToc(MainWindow* mainWin) {
+    toc.Reset();
+    currTocIdx = 0;
+    if (!mainWin->ctrl) {
+        return;
+    }
+    TocTree* tree = mainWin->ctrl->GetToc();
+    if (!tree || !tree->root) {
+        return;
+    }
+    int currPageNo = mainWin->ctrl->CurrentPageNo();
+    int bestIdx = 0;
+    int bestPageNo = 0;
+    // tree->root is a synthetic container; the visible top-level items are its
+    // children (matches how the TOC tree view is populated)
+    CollectTocRec(toc, tree->root->child, 0, currPageNo, bestIdx, bestPageNo);
+    currTocIdx = bestIdx;
+}
+
 void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = mainWin->IsDocLoaded();
@@ -797,6 +847,8 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
         CollectTabsRegular(mainWin, currTab);
     }
 
+    CollectToc(mainWin);
+
     // append paths of files from history, excluding
     // already appended (from opened files)
     fileHistory.Reset();
@@ -867,6 +919,10 @@ void CommandPaletteWnd::SwitchToEverything() {
 
 void CommandPaletteWnd::SwitchToFileHistory() {
     EditSetTextAndFocus(editQuery, kPalettePrefixFileHistory);
+}
+
+void CommandPaletteWnd::SwitchToTOC() {
+    EditSetTextAndFocus(editQuery, kPalettePrefixTOC);
 }
 
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
@@ -1112,8 +1168,9 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
         filter = "";
     }
 
-    // strip prefix and remember which lists to search
-    bool searchTabs = false, searchHistory = false, searchCommands = false;
+    // strip prefix and remember which lists to search. the everything (":")
+    // mode intentionally does NOT include the TOC tree.
+    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false;
     if (str::StartsWith(filter, kPalettePrefixEverything)) {
         filter++;
         searchTabs = searchHistory = searchCommands = true;
@@ -1123,6 +1180,9 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
     } else if (str::StartsWith(filter, kPalettePrefixFileHistory)) {
         filter++;
         searchHistory = true;
+    } else if (str::StartsWith(filter, kPalettePrefixTOC)) {
+        filter++;
+        searchToc = true;
     } else {
         if (str::StartsWith(filter, kPalettePrefixCommands)) {
             filter++;
@@ -1142,6 +1202,9 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
     }
     if (searchCommands) {
         FilterStrings(commands, filterWords, strings);
+    }
+    if (searchToc) {
+        FilterStrings(toc, filterWords, strings);
     }
 }
 
@@ -1171,6 +1234,14 @@ void CommandPaletteWnd::QueryChanged() {
         SetCurrentSelection(this, currSelIdx);
         return;
     }
+    // in TOC mode with no filter text, position at the best guess for the
+    // current page (same as opening directly via CmdCommandPaletteTOC). With a
+    // filter the list is narrowed, so just select the first match.
+    if (str::StartsWith(filter, kPalettePrefixTOC) && filterWords.Size() == 0) {
+        int idx = (currTocIdx >= 0 && currTocIdx < nItems) ? currTocIdx : 0;
+        SetCurrentSelection(this, idx);
+        return;
+    }
     SetCurrentSelection(this, 0);
 }
 
@@ -1196,6 +1267,14 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         MainWindow* mainWin = tab->win;
         gTabToSelectOnClose = tab;
         gHwndToActivateOnClose = mainWin->hwndFrame;
+        ScheduleDeleteAndExecCommand();
+        return;
+    }
+
+    if (data->tocItem) {
+        // navigate to the picked TOC item, then restore the main window
+        gHwndToActivateOnClose = win->hwndFrame;
+        GoToTocItem(win, data->tocItem);
         ScheduleDeleteAndExecCommand();
         return;
     }
@@ -1402,6 +1481,16 @@ void CommandPaletteWnd::DrawListBoxItem(ListBox::DrawItemEvent* ev) {
     rc.left += padX;
     rc.right -= padX;
 
+    // indent TOC items by their nesting level so the tree hierarchy is visible
+    if (data->indent > 0) {
+        int indentW = data->indent * DpiScale(lb->hwnd, 16);
+        if (isRtl) {
+            rc.right -= indentW;
+        } else {
+            rc.left += indentW;
+        }
+    }
+
     // draw command name on the left, highlighting matched words
     {
         DrawMaybeHighlightedTextArgs args(filterWords, highlighted);
@@ -1465,6 +1554,7 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
     if (str::Eq(prefix, kPalettePrefixTabs)) {
         smartTabMode = smartTabAdvance != 0;
     }
+    tocMode = str::Eq(prefix, kPalettePrefixTOC);
     CollectStrings(win);
     {
         CreateCustomArgs args;
@@ -1534,6 +1624,13 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
             auto c = CreateStatic(hwnd, font, _TRA(": Everything"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToEverything>(this);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        if (toc.Size() > 0) {
+            auto c = CreateStatic(hwnd, font, _TRA("* TOC"));
+            c->SetColors(colTxt, colBg);
+            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTOC>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }
@@ -1607,6 +1704,12 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
         int nItems = listBox->model->ItemsCount();
         int tabToSelect = (currTabIdx + nItems + smartTabAdvance) % nItems;
         SetCurrentSelection(this, tabToSelect);
+    } else if (tocMode) {
+        // position at the best guess in the TOC tree for the current page
+        int nItems = listBox->model->ItemsCount();
+        if (currTocIdx >= 0 && currTocIdx < nItems) {
+            SetCurrentSelection(this, currTocIdx);
+        }
     }
 
     SetIsVisible(true);

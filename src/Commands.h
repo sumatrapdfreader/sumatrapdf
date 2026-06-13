@@ -237,7 +237,8 @@ enum {
     CmdContinueReadAloud = 426,
     CmdToggleHoverPreview = 427,
     CmdRemoveDeletedFilesFromHistory = 428,
-    CmdNone = 429,
+    CmdCommandPaletteTOC = 429,
+    CmdNone = 430,
 
     /* range for file history */
     CmdFileHistoryFirst,

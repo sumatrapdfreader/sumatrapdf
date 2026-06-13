@@ -242,6 +242,7 @@ static SeqStrings gCommandNames =
     "CmdContinueReadAloud\0"
     "CmdToggleHoverPreview\0"
     "CmdRemoveDeletedFilesFromHistory\0"
+    "CmdCommandPaletteTOC\0"
     "CmdNone\0"
     "\0";
 
@@ -474,6 +475,7 @@ static i32 gCommandIds[] = {
     CmdContinueReadAloud,
     CmdToggleHoverPreview,
     CmdRemoveDeletedFilesFromHistory,
+    CmdCommandPaletteTOC,
     CmdNone,
 };
 
@@ -706,6 +708,7 @@ SeqStrings gCommandDescriptions =
     "Continue Read Aloud\0"
     "Toggle Hover Preview\0"
     "Remove Deleted Files From History\0"
+    "Command Palette: Table Of Contents\0"
     "Do nothing\0"
     "\0";
 // clang-format on
@@ -1198,7 +1201,7 @@ CustomCommand* CreateCommandFromDefinition(const char* definition) {
     if (cmdId == CmdCommandPalette && firstArg) {
         // validate mode
         const char* s = firstArg->strVal;
-        static SeqStrings validModes = ">\0#\0@\0:\0"; // TODO: "@@\0" ?
+        static SeqStrings validModes = ">\0#\0@\0:\0*\0"; // TODO: "@@\0" ?
         if (seqstrings::StrToIdx(validModes, s) < 0) {
             logf("CreateCommandFromDefinition: invalid CmdCommandPalette mode in '%s'\n", definition);
             FreeCommandArgs(firstArg);

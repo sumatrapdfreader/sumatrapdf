@@ -6665,6 +6665,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             RunCommandPalette(win, mode, 0);
         } break;
 
+        case CmdCommandPaletteTOC:
+            // alias for `CmdCommandPalette *`: open the palette in TOC mode
+            RunCommandPalette(win, kPalettePrefixTOC, 0);
+            break;
+
         case CmdClearHistory:
             ClearHistory(win);
             break;

@@ -270,7 +270,7 @@ ACCEL gBuiltInAccelerators[] = {
     {FSHIFT | FCONTROL | FVIRTKEY, 'L', CmdToggleFullscreen},
     {FVIRTKEY, VK_F11, CmdToggleFullscreen},
     {FVIRTKEY, VK_F12, CmdToggleBookmarks},
-    {FSHIFT | FVIRTKEY, VK_F12, CmdToggleBookmarks},
+    {FSHIFT | FVIRTKEY, VK_F12, CmdCommandPaletteTOC},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_SUBTRACT, CmdRotateLeft},
     {FSHIFT | FCONTROL | FVIRTKEY, VK_OEM_MINUS, CmdRotateLeft},
     {FSHIFT | FCONTROL | FVIRTKEY, 'T', CmdReopenLastClosedFile},

@@ -16,6 +16,7 @@ Command IDs,Keyboard shortcuts,Command Palette,Notes
 CmdClose,"Ctrl + W, Ctrl + F4",Close Document,
 CmdCloseCurrentDocument,q,Close Current Document,
 CmdCommandPalette,Ctrl + K,Command Palette,
+CmdCommandPaletteTOC,Shift + F12,Command Palette: Table Of Contents,"Jump to a table of contents entry of the current document, ver 3.7+"
 CmdDuplicateInNewWindow,Shift + Ctrl + N,Open Current Document In New Window,
 CmdDuplicateInNewTab,,Open Current Document In New Tab,ver 3.6+
 CmdExit,Ctrl + Q,Exit Application,
@@ -34,7 +35,7 @@ CmdReopenLastClosedFile,Shift + Ctrl + T,Reopen Last Closed,
 CmdSaveAs,Ctrl + S,Save File As...,
 CmdToggleCursorPosition,m,Toggle Cursor Position,
 CmdShowInFolder,,Show File In Folder...,
-CmdToggleBookmarks,"Shift + F12, F12",Toggle Bookmarks,
+CmdToggleBookmarks,F12,Toggle Bookmarks,
 CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
 CmdCollapseAll,,Collapse All,
 CmdExpandAll,,Expand All,

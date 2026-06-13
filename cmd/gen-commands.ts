@@ -232,6 +232,7 @@ export const commands = [
     "CmdContinueReadAloud", "Continue Read Aloud",
     "CmdToggleHoverPreview", "Toggle Hover Preview",
     "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
+    "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
     "CmdNone", "Do nothing",
 ];
 

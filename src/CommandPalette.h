@@ -5,6 +5,7 @@ constexpr const char* kPalettePrefixCommands = ">";
 constexpr const char* kPalettePrefixFileHistory = "#";
 constexpr const char* kPalettePrefixTabs = "@";
 constexpr const char* kPalettePrefixEverything = ":";
+constexpr const char* kPalettePrefixTOC = "*";
 
 void RunCommandPalette(MainWindow*, const char* prefix, int smartTabAdvance);
 HWND CommandPaletteHwndForAccelerator(HWND hwnd);
