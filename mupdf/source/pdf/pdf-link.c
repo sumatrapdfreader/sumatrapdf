@@ -138,7 +138,8 @@ populate_destination(fz_context *ctx, pdf_document *doc, pdf_obj *dest, int is_r
 		p = fz_transform_point_xy(arg1v, arg2v, ctm);
 		destination->x = arg1 ? p.x : NAN;
 		destination->y = arg2 ? p.y : NAN;
-		destination->zoom = arg3 ? (arg3v > 0 ? (arg3v * 100) : 100) : NAN;
+		/* SumatraPDF */
+		destination->zoom = arg3 ? (arg3v > 0 ? (arg3v * 100) : NAN) : NAN;
 		break;
 	case FZ_LINK_DEST_FIT_R:
 		rect.x0 = arg1v;

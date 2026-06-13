@@ -1381,6 +1381,61 @@ int TestSearch(const Flags& flags) {
     return 0;
 }
 
+// walk the outline tree in document order, return the `target`-th (1-based) item
+// that has a destination. `counter` tracks how many dests we've seen so far.
+static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
+    for (; item; item = item->next) {
+        if (item->dest) {
+            counter++;
+            if (counter == target) {
+                return item->dest;
+            }
+        }
+        IPageDestination* d = NthDestInToc(item->child, target, counter);
+        if (d) {
+            return d;
+        }
+    }
+    return nullptr;
+}
+
+// Headless test for PDF destination zoom resolution (issue #5537). Resolves the
+// <no>-th (1-based) outline destination and writes "page=P zoom=Z" to the output
+// file. zoom is in SumatraPDF units (1.0 == 100%); zoom=0 means "retain current
+// zoom" (what /XYZ ... 0 must map to). Used by tests/issue-5537.ts.
+int TestDest(const Flags& flags) {
+    ScopedGdiPlus gdiPlus;
+    if (!gGlobalPrefs) {
+        gGlobalPrefs = NewGlobalPrefs(nullptr);
+    }
+
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(flags.testDestPdf, nullptr, false);
+    if (!engine) {
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", flags.testDestPdf);
+    } else {
+        TocTree* toc = engine->GetToc();
+        IPageDestination* dest = nullptr;
+        if (toc && toc->root) {
+            int counter = 0;
+            dest = NthDestInToc(toc->root, flags.testDestNo, counter);
+        }
+        if (dest) {
+            out.AppendFmt("dest=%d page=%d zoom=%g\n", flags.testDestNo, PageDestGetPageNo(dest),
+                          PageDestGetZoom(dest));
+        } else {
+            out.AppendFmt("dest=%d NODEST\n", flags.testDestNo);
+        }
+        SafeEngineRelease(&engine);
+    }
+
+    if (flags.testDestOut) {
+        file::WriteFile(flags.testDestOut, out.AsByteSlice());
+    }
+    printf("%s", out.Get());
+    return 0;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1616,6 +1671,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (flags.testSearch) {
         int TestSearch(const Flags& flags);
         return TestSearch(flags);
+    }
+
+    if (flags.testDest) {
+        int TestDest(const Flags& flags);
+        return TestDest(flags);
     }
 
     if (flags.appdataDir) {

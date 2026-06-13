@@ -112,6 +112,14 @@ struct Flags {
     char* testSearchNeedle = nullptr;
     char* testSearchOut = nullptr;
 
+    // -test-dest <pdf> <no> <outfile>: headless test for PDF destination zoom
+    // (issue #5537). Resolves the <no>-th (1-based) destination in the document
+    // outline and writes its page + zoom to <outfile>, then exits.
+    bool testDest = false;
+    char* testDestPdf = nullptr;
+    int testDestNo = 0;
+    char* testDestOut = nullptr;
+
     bool crashOnOpen = false;
 
     // deprecated flags

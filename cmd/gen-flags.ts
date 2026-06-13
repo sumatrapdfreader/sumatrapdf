@@ -84,6 +84,7 @@ const args = [
     "ForTesting", "for-testing",
     "TestSynctex", "test-synctex",
     "TestSearch", "test-search",
+    "TestDest", "test-dest",
 ];
 
 function generateCode(): string {
