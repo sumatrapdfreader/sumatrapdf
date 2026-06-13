@@ -2835,7 +2835,18 @@ void MainWindowRerender(MainWindow* win, bool includeNonClientArea) {
 
 static void RerenderEverything() {
     for (auto* win : gWindows) {
+        // rerender the currently displayed tab right away
         MainWindowRerender(win);
+        // drop cached renders of the other (non-current) tabs so they
+        // get re-rendered with the new colors when switched to (issue #5646)
+        DisplayModel* currentDm = win->AsFixed();
+        for (WindowTab* tab : win->Tabs()) {
+            DisplayModel* dm = tab->AsFixed();
+            if (dm && dm != currentDm) {
+                gRenderCache->CancelRendering(dm);
+                gRenderCache->FreeForDisplayModel(dm);
+            }
+        }
     }
 }
 
