@@ -86,6 +86,8 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 [trace](Tool-trace.md)
 
+[run](Tool-run.md)
+
 [Extract text from PDF](Tool-x-extract-text-from-pdf.md)
 
 [Convert text file to a PDF](Tool-x-convert-text-to-pdf.md)

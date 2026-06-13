@@ -24,6 +24,7 @@ SumatraPDF <command> [options]
   trim    -- trim PDF page contents
   grep    -- search for text
   trace   -- trace device calls
+  run     -- run a MuPDF JavaScript program
 ```
 
 Tools:
@@ -43,3 +44,4 @@ Tools:
 - [trim](Tool-trim.md)
 - [grep](Tool-grep.md)
 - [trace](Tool-trace.md)
+- [run](Tool-run.md)
