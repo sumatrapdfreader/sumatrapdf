@@ -1208,13 +1208,36 @@ static SeqStrings gToolDescs =
 
 constexpr int kNoMutool = -1234321; // arbitrary negative value that won't collide with any mutool exit code
 
+// Returns the index into gToolNames if the command line invokes one of the
+// mupdf-derived command-line tools (e.g. `SumatraPDF.exe info file.pdf`), else
+// -1. CommandLineToArgvW always returns the program path as argv[0], so the tool
+// name (if any) is argv[1]. This must not depend on how the exe path was spelled
+// on the command line (absolute, relative, short, just the name via PATH).
+static int ToolIdxFromCmdLine() {
+    int argc = 0;
+    WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    if (!wargv) {
+        return -1;
+    }
+    int idx = -1;
+    if (argc >= 2) {
+        TempStr toolName = ToUtf8Temp(wargv[1]);
+        idx = seqstrings::StrToIdxIS(gToolNames, toolName);
+    }
+    LocalFree(wargv);
+    return idx;
+}
+
+// true if the command line invokes a command-line tool. Used early to suppress
+// console logging so it doesn't contaminate the tool's stdout (issue #5677).
+static bool IsRunningTool() {
+    return ToolIdxFromCmdLine() >= 0;
+}
+
 static int MaybeRunMutool() {
-    WCHAR* exePath;
     int argc = 0;
     char** argv = nullptr;
     int res = kNoMutool;
-
-    WCHAR* cmdLine = GetCommandLineW();
 
     WCHAR** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
     if (!wargv) {
@@ -1224,14 +1247,12 @@ static int MaybeRunMutool() {
         return kNoMutool;
     }
     WCHAR** wargvOrig = wargv;
-    if (argc == 0) goto Exit;
-    exePath = GetSelfExePathW();
-    if (str::Find(wargv[0], exePath) != nullptr) {
-        argc--;
-        wargv++;
+    // argv[0] is always the program path; the tool name (if any) is argv[1]
+    if (argc < 2) {
+        goto Exit;
     }
-    str::Free(exePath);
-    if (argc == 0) goto Exit;
+    argc--;
+    wargv++;
 
     argv = fz_argv_from_wargv(argc, wargv);
     {
@@ -1341,7 +1362,10 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     mui::Initialize();
     uitask::Initialize();
 
-    if (!IsDebuggerPresent()) {
+    // when running a command-line tool (e.g. `info file.pdf`), keep logging off
+    // the console so it doesn't contaminate the tool's stdout (issue #5677)
+    bool isTool = IsRunningTool();
+    if (!IsDebuggerPresent() && !isTool) {
         // VSCode shows both debugger output and console out which doubles the logging
         // TODO: only if AttachConsole() succeeds?
         gLogToConsole = true;
@@ -1551,8 +1575,12 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 #endif
 
-    if (MaybeRunMutool() != kNoMutool) {
-        goto Exit;
+    {
+        int mutoolRes = MaybeRunMutool();
+        if (mutoolRes != kNoMutool) {
+            exitCode = mutoolRes; // propagate the tool's exit code to the process
+            goto Exit;
+        }
     }
 
     // -x is one of options for poster tool, so we must run MaybeRunMutool() before this

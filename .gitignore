@@ -33,9 +33,6 @@ docs/scratch.txt
 bin/zopflipng.exe
 
 docs-www/
-*.pdf
-*.cbr
-*.cbz
 translations/translations.txt.lzsa
 log.txt
 sumlog.txt

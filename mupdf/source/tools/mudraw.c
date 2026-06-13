@@ -2821,21 +2821,31 @@ int mudraw_main(int argc, char **argv)
 
 int fz_redirect_io_to_existing_console() {
     FILE* con = NULL;
-    HANDLE h;
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+    // a stream redirected to a file (`> out.txt`) or pipe (`| more`) is already
+    // wired to the inherited OS handle. We must NOT freopen it to "CONOUT$" or
+    // the redirected output is lost (issue #5677); only console streams need
+    // re-binding to the parent console.
+    DWORD outType = GetFileType(hOut);
+    DWORD errType = GetFileType(hErr);
+    BOOL outRedirected = (outType == FILE_TYPE_DISK || outType == FILE_TYPE_PIPE);
+    BOOL errRedirected = (errType == FILE_TYPE_DISK || errType == FILE_TYPE_PIPE);
 
-	BOOL ok = AttachConsole(ATTACH_PARENT_PROCESS);
-    if (!ok) {
-        return 0;
+    // only attach to the parent console if we actually need it for a stream
+    if (!outRedirected || !errRedirected) {
+        AttachConsole(ATTACH_PARENT_PROCESS);
     }
 
-    h = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (h != INVALID_HANDLE_VALUE) {
+    if (outRedirected) {
+        setvbuf(stdout, NULL, _IONBF, 0);
+    } else if (hOut != INVALID_HANDLE_VALUE) {
         freopen_s(&con, "CONOUT$", "w", stdout);
-        // make them unbuffered
         setvbuf(stdout, NULL, _IONBF, 0);
     }
-    h = GetStdHandle(STD_ERROR_HANDLE);
-    if (h != INVALID_HANDLE_VALUE) {
+    if (errRedirected) {
+        setvbuf(stderr, NULL, _IONBF, 0);
+    } else if (hErr != INVALID_HANDLE_VALUE) {
         freopen_s(&con, "CONOUT$", "w", stderr);
         setvbuf(stderr, NULL, _IONBF, 0);
     }
