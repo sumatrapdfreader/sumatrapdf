@@ -152,7 +152,6 @@ static fz_context *get_hb_context(void)
 void fz_hb_lock(fz_context *ctx)
 {
 	fz_ft_lock(ctx);
-	fz_ft_lock(ctx);
 
 	fz_hb_lock_depth++;
 	set_hb_context(ctx);
