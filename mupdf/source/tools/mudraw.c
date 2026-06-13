@@ -52,6 +52,8 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #ifdef _WIN32
 #include <windows.h>
 #include <direct.h> /* for getcwd */
+#include <io.h>     /* SumatraPDF: for _open_osfhandle (stdin wiring) */
+#include <fcntl.h>  /* SumatraPDF: for _O_RDONLY */
 #else
 #include <sys/stat.h> /* for mkdir */
 #include <unistd.h> /* for getcwd */
@@ -2823,17 +2825,20 @@ int fz_redirect_io_to_existing_console() {
     FILE* con = NULL;
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     // a stream redirected to a file (`> out.txt`) or pipe (`| more`) is already
     // wired to the inherited OS handle. We must NOT freopen it to "CONOUT$" or
     // the redirected output is lost (issue #5677); only console streams need
     // re-binding to the parent console.
     DWORD outType = GetFileType(hOut);
     DWORD errType = GetFileType(hErr);
+    DWORD inType = GetFileType(hIn);
     BOOL outRedirected = (outType == FILE_TYPE_DISK || outType == FILE_TYPE_PIPE);
     BOOL errRedirected = (errType == FILE_TYPE_DISK || errType == FILE_TYPE_PIPE);
+    BOOL inRedirected = (inType == FILE_TYPE_DISK || inType == FILE_TYPE_PIPE);
 
     // only attach to the parent console if we actually need it for a stream
-    if (!outRedirected || !errRedirected) {
+    if (!outRedirected || !errRedirected || !inRedirected) {
         AttachConsole(ATTACH_PARENT_PROCESS);
     }
 
@@ -2848,6 +2853,29 @@ int fz_redirect_io_to_existing_console() {
     } else if (hErr != INVALID_HANDLE_VALUE) {
         freopen_s(&con, "CONOUT$", "w", stderr);
         setvbuf(stderr, NULL, _IONBF, 0);
+    }
+
+    // SumatraPDF: a GUI-subsystem app's CRT stdin isn't wired to the inherited
+    // handle, so `mutool run`'s readline() fails with "cannot read line from
+    // stdin" (issue #5665). Bind stdin to the pipe/file when redirected
+    // (`echo x | SumatraPDF run s.js`), or to the parent console otherwise so
+    // interactive readline() works.
+    if (inRedirected) {
+        // freopen() can't name a pipe/file handle, so re-bind the CRT stdin
+        // stream to it directly. (UCRT's FILE is a single pointer, so copying
+        // the struct redirects stdin; the fd now owns hIn, don't close it.)
+        int fd = _open_osfhandle((intptr_t)hIn, _O_RDONLY);
+        if (fd != -1) {
+            FILE* f = _fdopen(fd, "r");
+            if (f) {
+                *stdin = *f;
+                setvbuf(stdin, NULL, _IONBF, 0);
+            }
+        }
+    } else {
+        // GetStdHandle(STD_INPUT_HANDLE) is usually unset for a GUI app launched
+        // from a console; read from the parent console via CONIN$.
+        freopen_s(&con, "CONIN$", "r", stdin);
     }
     return 1;
 }
