@@ -11,7 +11,7 @@
 // headless `-test-synctex` flag (added for this test) which performs a
 // SourceToDoc() forward-search query and writes the result to a file.
 //
-// Run:  bun tests/issue-5633.ts [--no-build]
+// Run:  bun tests/issue-5633.ts [--no-build]   (or via tests/all.ts)
 //
 // FFI / Windows APIs are not needed here (the app reports results via a result
 // file), so there is no tests/winapi.ts. If a future test needs to read GUI
@@ -20,12 +20,10 @@
 import { gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
+import { EXE, runStandalone } from "./util.ts";
 
-const SCRIPT_DIR = import.meta.dir;
-const ROOT = join(SCRIPT_DIR, "..");
-const DATA = join(SCRIPT_DIR, "issue-5633-data");
+const DATA = join(import.meta.dir, "issue-5633-data");
 const WORK = join(DATA, ".work");
-const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
 
 // line 4 of issue-5633-data/test.tex is a body paragraph that synctex maps to a position
 const TARGET_LINE = 4;
@@ -46,8 +44,7 @@ function findPdflatex(): string | null {
 }
 
 function fail(msg: string): never {
-  console.error(`\n❌ ${msg}`);
-  process.exit(1);
+  throw new Error(msg);
 }
 
 function run(cmd: string[], cwd: string): { ok: boolean; stdout: string; stderr: string } {
@@ -57,14 +54,6 @@ function run(cmd: string[], cwd: string): { ok: boolean; stdout: string; stderr:
     stdout: p.stdout.toString(),
     stderr: p.stderr.toString(),
   };
-}
-
-function buildApp() {
-  console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
-  const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
-  if (p.exitCode !== 0) {
-    fail("build failed");
-  }
 }
 
 // runs the app's headless synctex forward-search for the given pdf and returns
@@ -81,8 +70,10 @@ function querySynctex(pdfPath: string): { ret: number; page: number; nrects: num
   return { ret: parseInt(m[1]), page: parseInt(m[2]), nrects: parseInt(m[3]), raw };
 }
 
-function main() {
-  const noBuild = process.argv.includes("--no-build");
+export async function testit(): Promise<void> {
+  if (!existsSync(EXE)) {
+    throw new Error(`app not found: ${EXE} (build first)`);
+  }
 
   const pdflatex = findPdflatex();
   if (!pdflatex) {
@@ -96,13 +87,6 @@ function main() {
     );
   }
   console.log(`• pdflatex: ${pdflatex}`);
-
-  if (!noBuild) {
-    buildApp();
-  }
-  if (!existsSync(EXE)) {
-    fail(`app not found: ${EXE} (run without --no-build)`);
-  }
 
   // fresh work dir
   rmSync(WORK, { recursive: true, force: true });
@@ -168,11 +152,12 @@ function main() {
   }
 
   console.log("");
-  if (allPass) {
-    console.log("✅ all 3 synctex formats resolved (issue #5633 fixed)");
-    process.exit(0);
+  if (!allPass) {
+    throw new Error("one or more synctex formats failed to resolve");
   }
-  fail("one or more synctex formats failed to resolve");
+  console.log("✅ all 3 synctex formats resolved (issue #5633 fixed)");
 }
 
-main();
+if (import.meta.main) {
+  await runStandalone(testit);
+}

@@ -47,13 +47,25 @@ Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Nami
 - if it needs a small number (one or two) of extra files, name them `tests/issue-<number>.<rest>`
 - if it needs more files, or a file must live in a directory, put them in `tests/issue-<number>-data/`
 
+Structure of each test (so they compose in tests/all.ts):
+- each `tests/issue-<number>.ts` exports `export async function testit(): Promise<void>` that runs the test logic and THROWS on failure (returns normally on success). It must NOT call `process.exit` or build the app itself.
+- end the file with a standalone runner so it can still be run directly:
+  ```ts
+  if (import.meta.main) {
+    await runStandalone(testit);
+  }
+  ```
+  `runStandalone` (from `tests/util.ts`) builds the app (unless `--no-build`), runs `testit()`, and exits 0 on pass / 1 on failure.
+- shared helpers (`EXE` path, `buildApp`, `runStandalone`) live in `tests/util.ts` — use them instead of re-implementing per file.
+- register every new test in `tests/all.ts` (import its `testit` and add it to the `tests` array). `bun tests/all.ts` builds once and runs them all in order, stopping at the first failure.
+
 Guidelines for test scripts:
-- build the app the same way cmd/build.ts does (invoke `bun cmd/build.ts`) and test the resulting out/dbg64/SumatraPDF-dll.exe
-- if a needed external tool (e.g. MiKTeX) isn't installed, exit with a clear error message and instructions to install it
+- build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF-dll.exe
+- if a needed external tool (e.g. MiKTeX) isn't installed, throw with a clear error message and instructions to install it
 - a good test fails when the fix is reverted (verify this) — not just passes with the fix present
 - bun has FFI; if you need to call Windows APIs, put reusable wrappers in tests/winapi.ts
 - prefer driving the app via cmd-line flags that write a machine-readable result (see `-test-synctex`) over GUI automation
-- put runtime scratch output in a gitignored subdir so it isn't committed
+- put runtime scratch output in a gitignored subdir or the OS temp dir so it isn't committed
 - if a binary test fixture (e.g. a .pdf) is generated from source (LaTeX, a script, etc.), commit the source alongside it (e.g. `tests/issue-<number>.tex` next to `tests/issue-<number>.pdf`) with a comment on how to regenerate it, so the fixture can be modified later
 
 ## Windows Shell Safety

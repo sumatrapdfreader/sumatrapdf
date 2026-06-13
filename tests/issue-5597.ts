@@ -14,53 +14,32 @@
 // case-insensitive regardless of locale. This test fails if that fold is
 // removed (verified).
 //
-// Run:  bun tests/issue-5597.ts [--no-build]
+// Run:  bun tests/issue-5597.ts [--no-build]   (or via tests/all.ts)
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { EXE, runStandalone } from "./util.ts";
 
-const SCRIPT_DIR = import.meta.dir;
-const ROOT = join(SCRIPT_DIR, "..");
-const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
-const PDF = join(SCRIPT_DIR, "issue-5597.pdf");
-
-function fail(msg: string): never {
-  console.error(`\n❌ ${msg}`);
-  process.exit(1);
-}
-
-function buildApp() {
-  console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
-  const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
-  if (p.exitCode !== 0) {
-    fail("build failed");
-  }
-}
+const PDF = join(import.meta.dir, "issue-5597.pdf");
 
 // returns the 1-based page the needle was found on, or 0 if not found
 function search(needle: string): number {
-  const out = join(SCRIPT_DIR, "issue-5597-search-result.txt");
-  try {
-    require("node:fs").rmSync(out, { force: true });
-  } catch {}
+  const out = join(tmpdir(), "sumatra-issue-5597-result.txt");
+  rmSync(out, { force: true });
   const p = Bun.spawnSync({ cmd: [EXE, "-test-search", PDF, needle, out], stdout: "pipe", stderr: "pipe" });
-  const raw = existsSync(out) ? require("node:fs").readFileSync(out, "utf-8").trim() : p.stdout.toString().trim();
-  try {
-    require("node:fs").rmSync(out, { force: true });
-  } catch {}
+  const raw = existsSync(out) ? readFileSync(out, "utf-8").trim() : p.stdout.toString().trim();
+  rmSync(out, { force: true });
   const m = raw.match(/FOUND .*page=(\d+)/);
   return m ? parseInt(m[1]) : 0;
 }
 
-function main() {
-  if (!process.argv.includes("--no-build")) {
-    buildApp();
-  }
+export async function testit(): Promise<void> {
   if (!existsSync(EXE)) {
-    fail(`app not found: ${EXE} (run without --no-build)`);
+    throw new Error(`app not found: ${EXE} (build first)`);
   }
   if (!existsSync(PDF)) {
-    fail(`test pdf not found: ${PDF}`);
+    throw new Error(`test pdf not found: ${PDF}`);
   }
 
   // locale-independent sanity checks — these must pass (verify the harness +
@@ -81,7 +60,7 @@ function main() {
     console.log(`    ${ok ? "✅" : "❌"} "${s.needle}" (${s.desc}) -> ${page ? `page ${page}` : "NOT FOUND"}`);
   }
   if (!sanityOk) {
-    fail("sanity checks failed — harness/pdf problem, not the issue under test");
+    throw new Error("sanity checks failed — harness/pdf problem, not the issue under test");
   }
 
   // the headline #5597 case: lowercase 'i' must match capital dotted 'İ' (U+0130)
@@ -89,12 +68,14 @@ function main() {
   const page = search("ibradı");
   if (page === 1) {
     console.log('    ✅ FOUND on page 1 — issue #5597 is fixed on this system');
-    process.exit(0);
+    return;
   }
   console.log("    ❌ NOT FOUND — issue #5597 is NOT fixed on this (non-Turkish) locale.");
   console.log("       CharLowerW(U+0130 İ) is locale-dependent and returns İ unchanged here,");
   console.log("       so İ never folds to 'i'. A locale-independent fold is needed.");
-  process.exit(1);
+  throw new Error('searching "ibradı" did not find "İbradı"');
 }
 
-main();
+if (import.meta.main) {
+  await runStandalone(testit);
+}

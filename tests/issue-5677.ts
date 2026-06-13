@@ -12,15 +12,13 @@
 // This runs `info issue-5677.pdf`, captures stdout, and asserts it contains the
 // expected PDF info and none of the internal log noise.
 //
-// Run:  bun tests/issue-5677.ts [--no-build]
+// Run:  bun tests/issue-5677.ts [--no-build]   (or via tests/all.ts)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { EXE, runStandalone } from "./util.ts";
 
-const SCRIPT_DIR = import.meta.dir;
-const ROOT = join(SCRIPT_DIR, "..");
-const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
-const PDF = join(SCRIPT_DIR, "issue-5677.pdf");
+const PDF = join(import.meta.dir, "issue-5677.pdf");
 
 // must appear in `info` output for our test pdf (proves the tool ran and read it)
 const INFO_MARKERS = ["PDF-1.7", "Pages: 1", "Issue 5677 Test"];
@@ -35,29 +33,12 @@ const LOG_MARKERS = [
   "GetExistingInstallationDir",
 ];
 
-function fail(msg: string): never {
-  console.error(`\n❌ ${msg}`);
-  process.exit(1);
-}
-
-function buildApp() {
-  console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
-  const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
-  if (p.exitCode !== 0) {
-    fail("build failed");
-  }
-}
-
-function main() {
-  const noBuild = process.argv.includes("--no-build");
-  if (!noBuild) {
-    buildApp();
-  }
+export async function testit(): Promise<void> {
   if (!existsSync(EXE)) {
-    fail(`app not found: ${EXE} (run without --no-build)`);
+    throw new Error(`app not found: ${EXE} (build first)`);
   }
   if (!existsSync(PDF)) {
-    fail(`test pdf not found: ${PDF}`);
+    throw new Error(`test pdf not found: ${PDF}`);
   }
 
   // capture stdout via a pipe (equivalent to `info file.pdf > out.txt`)
@@ -84,13 +65,15 @@ function main() {
   }
 
   if (problems.length === 0) {
-    console.log("\n✅ `info` produced clean output (issue #5677 fixed)");
-    process.exit(0);
+    console.log("✅ `info` produced clean output (issue #5677 fixed)");
+    return;
   }
   for (const p of problems) {
     console.error(`  ❌ ${p}`);
   }
-  fail("`info` output is not clean");
+  throw new Error("`info` output is not clean");
 }
 
-main();
+if (import.meta.main) {
+  await runStandalone(testit);
+}

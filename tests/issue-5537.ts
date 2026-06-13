@@ -5,29 +5,22 @@
 // value"), NOT force 100%. SumatraPDF resolves such a destination to zoom 0,
 // which DisplayModel::ScrollTo treats as "don't change zoom".
 //
-// This builds a tiny PDF whose outline has three /XYZ destinations and checks
-// each via the headless `-test-dest <pdf> <no> <outfile>` flag:
+// Builds a tiny PDF whose outline has three /XYZ destinations and checks each
+// via the headless `-test-dest <pdf> <no> <outfile>` flag:
 //   1. /XYZ 100 700 0    -> zoom 0    (retain current zoom)   <- the fix
 //   2. /XYZ 100 700 1.5  -> zoom 1.5  (explicit 150%)
 //   3. /XYZ 100 700 1    -> zoom 1    (explicit 100%, NOT retained)
 // Before the fix, dest 1 resolved to zoom 1 (forced 100%) and would fail here.
 //
-// Run:  bun tests/issue-5537.ts [--no-build]
+// Run:  bun tests/issue-5537.ts [--no-build]   (or via tests/all.ts)
 
 import { existsSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { EXE, runStandalone } from "./util.ts";
 
-const SCRIPT_DIR = import.meta.dir;
-const ROOT = join(SCRIPT_DIR, "..");
-const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
 const PDF = join(tmpdir(), "sumatra-issue-5537.pdf");
 const OUT = join(tmpdir(), "sumatra-issue-5537-result.txt");
-
-function fail(msg: string): never {
-  console.error(`\n❌ ${msg}`);
-  process.exit(1);
-}
 
 // build a minimal PDF (2 pages) with an outline of 3 /XYZ destinations
 function makePdf(): Buffer {
@@ -57,14 +50,6 @@ function makePdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-function buildApp() {
-  console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
-  const p = Bun.spawnSync({ cmd: ["bun", join(ROOT, "cmd", "build.ts")], cwd: ROOT, stdout: "inherit", stderr: "inherit" });
-  if (p.exitCode !== 0) {
-    fail("build failed");
-  }
-}
-
 // returns { page, zoom } for the n-th outline destination
 function resolveDest(no: number): { page: number; zoom: number; raw: string } {
   rmSync(OUT, { force: true });
@@ -77,12 +62,9 @@ function resolveDest(no: number): { page: number; zoom: number; raw: string } {
   return { page: parseInt(m[1]), zoom: parseFloat(m[2]), raw };
 }
 
-function main() {
-  if (!process.argv.includes("--no-build")) {
-    buildApp();
-  }
+export async function testit(): Promise<void> {
   if (!existsSync(EXE)) {
-    fail(`app not found: ${EXE} (run without --no-build)`);
+    throw new Error(`app not found: ${EXE} (build first)`);
   }
   writeFileSync(PDF, makePdf());
 
@@ -104,11 +86,12 @@ function main() {
 
   rmSync(PDF, { force: true });
   rmSync(OUT, { force: true });
-  if (allOk) {
-    console.log("\n✅ /XYZ zoom 0 retains current zoom; explicit zooms preserved (issue #5537 fixed)");
-    process.exit(0);
+  if (!allOk) {
+    throw new Error("destination zoom resolution is wrong");
   }
-  fail("destination zoom resolution is wrong");
+  console.log("✅ /XYZ zoom 0 retains current zoom; explicit zooms preserved (issue #5537 fixed)");
 }
 
-main();
+if (import.meta.main) {
+  await runStandalone(testit);
+}
