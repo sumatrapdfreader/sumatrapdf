@@ -452,14 +452,25 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
 }
 
 // Process a single <ul>'s <li> children as TOC entries at `level`.
-// Recurses into nested <ul>s (either as <li>'s child, or as a <ul> sibling
-// directly after the <li> -- some broken ToCs do that).
+// A nested <ul> holds the children of the preceding <li>, so it's always walked
+// at level + 1. It can appear either inside the <li> (well-formed ToCs) or as a
+// <ul> sibling among the <li>s -- gumbo's HTML5 repair leaves the latter as a
+// bare child of the parent <ul> when the <li> was explicitly closed, which some
+// broken CHM ToCs do. Walking every such <ul> at level + 1 reproduces the
+// nesting the previous, pre-gumbo parser produced (and walks each <ul> once, so
+// no entries are duplicated).
 static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool isIndex, int level) {
     const GumboVector* lis = &ulNode->v.element.children;
     for (unsigned int j = 0; j < lis->length; j++) {
-        const GumboNode* li = (const GumboNode*)lis->data[j];
-        if (!GumboTagNameIs(li, "li")) {
+        const GumboNode* child = (const GumboNode*)lis->data[j];
+        if (GumboTagNameIs(child, "ul")) {
+            // a bare <ul> among the <li>s holds the children of the preceding <li>
+            WalkChmUl(visitor, child, isIndex, level + 1);
             continue;
+        }
+        const GumboNode* li = child;
+        if (!GumboTagNameIs(li, "li")) {
+            continue; // skip whitespace / text / unexpected nodes
         }
         const GumboNode* objNode = GumboFindChildByTag(li, "object");
         if (!objNode) {
@@ -470,12 +481,6 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
             continue;
         }
         const GumboNode* nested = GumboFindChildByTag(li, "ul");
-        if (!nested && j + 1 < lis->length) {
-            const GumboNode* afterLi = (const GumboNode*)lis->data[j + 1];
-            if (afterLi->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(afterLi, "ul")) {
-                nested = afterLi;
-            }
-        }
         if (nested) {
             WalkChmUl(visitor, nested, isIndex, level + 1);
         }
