@@ -46,6 +46,7 @@ Arguments can use special values:
 - `"%1"` : will be replaced with a full path of the current document
 - `%p` : will be replaced with current page number. Not all viewers support page numbers
 - `"%d"` : will be replaced with directory of the current document. Useful for launching file managers. Available in version **3.5** and later
+- `%%` : will be replaced with a literal `%`. Use this to pass a `%` to the external program, e.g. `%%d` reaches it as `%d` (handy for tools like `mutool draw -o page-%d.png`). Available in version **3.7** and later
 
 Please make sure to use quotes around file / directory special values (i.e. `"%1"` and `"%d"`) to avoid issues with file paths that have spaces in them.
 

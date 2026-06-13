@@ -368,24 +368,49 @@ bool CouldBePDFDoc(WindowTab* tab) {
 //  %1 : file path (else the file path is appended)
 //  %d : directory in which file is
 //  %p : current page number
-static TempStr FormatParamTemp(char* arg, WindowTab* tab) {
-    if (str::Find(arg, "%p")) {
-        int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
-        TempStr pageNoStr = str::FormatTemp("%d", pageNo);
-        arg = str::ReplaceTemp(arg, "%p", pageNoStr);
+//  %% : a literal '%' (so e.g. "%%d" reaches the external program as "%d",
+//       useful for tools like `mutool draw -o page-%d.png` -- see #5583)
+// any other "%x" sequence is passed through unchanged.
+// Note: substituted values (path, dir) are inserted literally and not
+// re-scanned, so a '%' inside a file path can't trigger another substitution.
+static TempStr FormatParamTemp(const char* arg, WindowTab* tab) {
+    const char* path = tab->filePath ? tab->filePath : "";
+
+    StrBuilder out;
+    const char* s = arg;
+    while (*s) {
+        if (s[0] != '%') {
+            out.AppendChar(*s++);
+            continue;
+        }
+        switch (s[1]) {
+            case '%':
+                out.AppendChar('%'); // %% -> literal %
+                s += 2;
+                break;
+            case '1':
+                // TODO: if %1 is un-quoted, we should quote it but it's complicated because
+                // it could be part of a pattern like %1.Page%p.txt
+                // (as in https://github.com/sumatrapdfreader/sumatrapdf/issues/3868)
+                out.Append(path);
+                s += 2;
+                break;
+            case 'd':
+                out.Append(path::GetDirTemp(path));
+                s += 2;
+                break;
+            case 'p':
+                out.AppendFmt("%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0);
+                s += 2;
+                break;
+            default:
+                // unknown (or trailing) '%': leave it literal and keep scanning
+                out.AppendChar('%');
+                s += 1;
+                break;
+        }
     }
-    const char* path = tab->filePath;
-    if (str::Find(arg, "%d")) {
-        TempStr dir = path::GetDirTemp(path);
-        arg = str::ReplaceTemp(arg, "%d", dir);
-    }
-    if (str::Find(arg, "%1")) {
-        // TODO: if %1 is un-quoted, we should quote it but it's complicated because
-        // it could be part of a pattern like %1.Page%p.txt
-        // (as in https://github.com/sumatrapdfreader/sumatrapdf/issues/3868)
-        arg = str::ReplaceTemp(arg, "%1", path);
-    }
-    return (char*)arg;
+    return str::DupTemp(out.Get());
 }
 
 static TempStr GetDocumentPathQuoted(WindowTab* tab) {
