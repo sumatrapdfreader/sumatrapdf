@@ -287,7 +287,7 @@ bool HasFavorites() {
 }
 
 // caller has to free() the result
-static TempStr FavReadableNameTemp(Favorite* fn) {
+TempStr FavReadableNameTemp(Favorite* fn) {
     const char* label = fn->pageLabel;
     if (!label) {
         label = str::FormatTemp("%d", fn->pageNo);
@@ -492,7 +492,7 @@ static void GoToFavoritePage(GoToFavoritePageData* d) {
 // Going to a bookmark within current file scrolls to a given page.
 // Going to a bookmark in another file, loads the file and scrolls to a page
 // (similar to how invoking one of the recently opened files works)
-static void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
+void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav) {
     ReportIf(!fs || !fav);
     if (!fs || !fav) {
         return;

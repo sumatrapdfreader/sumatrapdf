@@ -14,6 +14,7 @@ Command palette is fast and convenient way to:
 - `#` : open file from history
 - `@` : switch to another tab
 - `*` : jump to a table of contents entry of current document
+- `$` : jump to a favorite (current document's favorites first, then others)
 - `:` : combined view (replicates behavior before ver 3.6)
 
 How to use it:
@@ -46,6 +47,15 @@ Type `*` to jump to a table of contents entry of the current document (or press
 The list shows the fully expanded table of contents, indented to reflect the
 tree hierarchy. The entry closest to the current page is pre-selected. Type to
 filter, then `Enter` (or double-click) to navigate to the selected entry.
+
+## Favorites
+
+Type `$` to jump to a favorite (bookmark):
+
+Favorites of the current document are listed first, followed by favorites of
+other documents (labeled with the file name). Type to filter, then `Enter` (or
+double-click) to navigate to the selected favorite. Picking a favorite in
+another document opens that document.
 
 ## Combined view
 

@@ -28,6 +28,7 @@
 #include "Accelerators.h"
 #include "SumatraPDF.h"
 #include "TableOfContents.h"
+#include "Favorites.h"
 #include "Tabs.h"
 #include "ExternalViewers.h"
 #include "Annotation.h"
@@ -204,6 +205,8 @@ struct ItemDataCP {
     const char* filePath = nullptr;
     TocItem* tocItem = nullptr;
     int indent = 0; // nesting level in the TOC tree (0 for top-level)
+    FileState* favFs = nullptr;
+    Favorite* fav = nullptr;
 };
 
 using StrVecCP = StrVecWithData<ItemDataCP>;
@@ -228,6 +231,7 @@ struct CommandPaletteWnd : Wnd {
     StrVecCP fileHistory;
     StrVecCP commands;
     StrVecCP toc;
+    StrVecCP favorites;
     ListBox* listBox = nullptr;
     Static* staticInfo = nullptr;
 
@@ -247,6 +251,7 @@ struct CommandPaletteWnd : Wnd {
     void CollectTabsRegular(MainWindow*, WindowTab* currTab);
     void CollectTabsMru(MainWindow*, WindowTab* currTab);
     void CollectToc(MainWindow*);
+    void CollectFavorites(MainWindow*);
     void FilterStringsForQuery(const char*, StrVecCP&);
 
     bool Create(MainWindow* win, const char* prefix, int smartTabAdvance);
@@ -259,6 +264,7 @@ struct CommandPaletteWnd : Wnd {
     void SwitchToEverything();
     void SwitchToFileHistory();
     void SwitchToTOC();
+    void SwitchToFavorites();
     void OnSelectionChange();
     void OnListDoubleClick();
     void DrawListBoxItem(ListBox::DrawItemEvent* ev);
@@ -760,6 +766,54 @@ void CommandPaletteWnd::CollectToc(MainWindow* mainWin) {
     currTocIdx = bestIdx;
 }
 
+static void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCurrent) {
+    if (!fs || !fs->favorites) {
+        return;
+    }
+    for (Favorite* fav : *fs->favorites) {
+        TempStr rn = FavReadableNameTemp(fav);
+        TempStr disp;
+        if (isCurrent) {
+            // current file's favorites are shown first, no need to repeat the name
+            disp = rn;
+        } else {
+            TempStr base = path::GetBaseNameTemp(fs->filePath);
+            disp = str::FormatTemp("%s : %s", base, rn);
+        }
+        ItemDataCP data;
+        data.favFs = fs;
+        data.fav = fav;
+        favorites.Append(disp, data);
+    }
+}
+
+void CommandPaletteWnd::CollectFavorites(MainWindow* mainWin) {
+    favorites.Reset();
+    WindowTab* currTab = mainWin->CurrentTab();
+    const char* currFilePath = currTab ? currTab->filePath : nullptr;
+
+    // current file's favorites first (matches the favorites menu layout)
+    FileState* currFs = nullptr;
+    if (currFilePath) {
+        for (FileState* fs : *gGlobalPrefs->fileStates) {
+            if (str::Eq(fs->filePath, currFilePath)) {
+                currFs = fs;
+                break;
+            }
+        }
+    }
+    if (currFs) {
+        AppendFavoritesForFile(favorites, currFs, true);
+    }
+    // then favorites of all other files, in most-recently-used order
+    for (FileState* fs : *gGlobalPrefs->fileStates) {
+        if (fs == currFs) {
+            continue;
+        }
+        AppendFavoritesForFile(favorites, fs, false);
+    }
+}
+
 void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     CommandPaletteBuildCtx ctx;
     ctx.isDocLoaded = mainWin->IsDocLoaded();
@@ -848,6 +902,7 @@ void CommandPaletteWnd::CollectStrings(MainWindow* mainWin) {
     }
 
     CollectToc(mainWin);
+    CollectFavorites(mainWin);
 
     // append paths of files from history, excluding
     // already appended (from opened files)
@@ -925,11 +980,17 @@ void CommandPaletteWnd::SwitchToTOC() {
     EditSetTextAndFocus(editQuery, kPalettePrefixTOC);
 }
 
+void CommandPaletteWnd::SwitchToFavorites() {
+    EditSetTextAndFocus(editQuery, kPalettePrefixFavorites);
+}
+
 CommandPaletteWnd* gCommandPaletteWnd = nullptr;
 HWND gCommandPaletteHwnd = nullptr;
 static HWND gHwndToActivateOnClose = nullptr;
 static WindowTab* gTabToSelectOnClose = nullptr;
 static i32 gCmdIdToExecOnClose = 0;
+static FileState* gFavFsToGoToOnClose = nullptr;
+static Favorite* gFavToGoToOnClose = nullptr;
 
 void SafeDeleteCommandPaletteWnd() {
     if (!gCommandPaletteWnd) {
@@ -963,6 +1024,17 @@ void SafeDeleteCommandPaletteWnd() {
         gCmdIdToExecOnClose = 0;
         if (win && IsMainWindowValid(win)) {
             HwndPostCommand(win->hwndFrame, cmdId);
+        }
+    }
+    if (gFavToGoToOnClose) {
+        FileState* fs = gFavFsToGoToOnClose;
+        Favorite* fav = gFavToGoToOnClose;
+        gFavFsToGoToOnClose = nullptr;
+        gFavToGoToOnClose = nullptr;
+        // navigate after the palette is gone (GoToFavorite may load another
+        // document, so we don't want to do it while the popup is still up)
+        if (win && IsMainWindowValid(win)) {
+            GoToFavorite(win, fs, fav);
         }
     }
 }
@@ -1169,8 +1241,8 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
     }
 
     // strip prefix and remember which lists to search. the everything (":")
-    // mode intentionally does NOT include the TOC tree.
-    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false;
+    // mode intentionally does NOT include the TOC tree or favorites.
+    bool searchTabs = false, searchHistory = false, searchCommands = false, searchToc = false, searchFavorites = false;
     if (str::StartsWith(filter, kPalettePrefixEverything)) {
         filter++;
         searchTabs = searchHistory = searchCommands = true;
@@ -1183,6 +1255,9 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
     } else if (str::StartsWith(filter, kPalettePrefixTOC)) {
         filter++;
         searchToc = true;
+    } else if (str::StartsWith(filter, kPalettePrefixFavorites)) {
+        filter++;
+        searchFavorites = true;
     } else {
         if (str::StartsWith(filter, kPalettePrefixCommands)) {
             filter++;
@@ -1205,6 +1280,9 @@ void CommandPaletteWnd::FilterStringsForQuery(const char* filter, StrVecCP& stri
     }
     if (searchToc) {
         FilterStrings(toc, filterWords, strings);
+    }
+    if (searchFavorites) {
+        FilterStrings(favorites, filterWords, strings);
     }
 }
 
@@ -1275,6 +1353,16 @@ void CommandPaletteWnd::ExecuteCurrentSelection() {
         // navigate to the picked TOC item, then restore the main window
         gHwndToActivateOnClose = win->hwndFrame;
         GoToTocItem(win, data->tocItem);
+        ScheduleDeleteAndExecCommand();
+        return;
+    }
+
+    if (data->fav) {
+        // navigate to the favorite after the palette closes (deferred because
+        // it may load another document)
+        gHwndToActivateOnClose = win->hwndFrame;
+        gFavFsToGoToOnClose = data->favFs;
+        gFavToGoToOnClose = data->fav;
         ScheduleDeleteAndExecCommand();
         return;
     }
@@ -1631,6 +1719,13 @@ bool CommandPaletteWnd::Create(MainWindow* win, const char* prefix, int smartTab
             auto c = CreateStatic(hwnd, font, _TRA("* TOC"));
             c->SetColors(colTxt, colBg);
             c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToTOC>(this);
+            auto p = new Padding(c, pad);
+            hbox->AddChild(p);
+        }
+        if (favorites.Size() > 0) {
+            auto c = CreateStatic(hwnd, font, _TRA("$ Favorites"));
+            c->SetColors(colTxt, colBg);
+            c->onClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::SwitchToFavorites>(this);
             auto p = new Padding(c, pad);
             hbox->AddChild(p);
         }

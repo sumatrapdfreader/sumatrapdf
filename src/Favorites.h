@@ -31,3 +31,7 @@ void GoToFavoriteByMenuId(MainWindow* win, int cmdId);
 void UpdateFavoritesTree(MainWindow* win);
 void UpdateFavoritesTreeForAllWindows();
 bool IsPageInFavorites(const char* filePath, int pageNo);
+
+// shared with CommandPalette.cpp (favorites mode)
+TempStr FavReadableNameTemp(Favorite* fn);
+void GoToFavorite(MainWindow* win, FileState* fs, Favorite* fav);
