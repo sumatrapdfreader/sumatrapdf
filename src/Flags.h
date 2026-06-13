@@ -120,6 +120,14 @@ struct Flags {
     int testDestNo = 0;
     char* testDestOut = nullptr;
 
+    // -test-named-dest <pdf> <name> <outfile>: headless test for resolving a
+    // remote link's named destination (issue #5642). Resolves <name> (which may
+    // carry mupdf's "nameddest=" prefix) and writes the page to <outfile>.
+    bool testNamedDest = false;
+    char* testNamedDestPdf = nullptr;
+    char* testNamedDestName = nullptr;
+    char* testNamedDestOut = nullptr;
+
     bool crashOnOpen = false;
 
     // deprecated flags

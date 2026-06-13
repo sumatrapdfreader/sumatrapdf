@@ -339,3 +339,7 @@ HWND GetHwndForNotification();
 
 void RelayoutCaption(MainWindow* win);
 void OpenSystemMenu(MainWindow* win);
+
+// strips mupdf's "nameddest=" prefix from a remote link's destination name
+// so it can be passed to GetNamedDest (issue #5642)
+const char* CleanRemoteDestName(const char* destName);

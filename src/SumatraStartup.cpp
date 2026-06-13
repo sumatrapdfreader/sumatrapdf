@@ -1436,6 +1436,40 @@ int TestDest(const Flags& flags) {
     return 0;
 }
 
+// Headless test for remote named-destination resolution (issue #5642). Loads the
+// pdf and resolves <name> -- which may carry mupdf's "nameddest=" prefix, as a
+// remote GoToR link's name does -- the same way LinkHandler::LaunchFile does
+// (CleanRemoteDestName + GetNamedDest), writing the resolved page to <outfile>.
+// Used by tests/issue-5642.ts.
+int TestNamedDest(const Flags& flags) {
+    ScopedGdiPlus gdiPlus;
+    if (!gGlobalPrefs) {
+        gGlobalPrefs = NewGlobalPrefs(nullptr);
+    }
+
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(flags.testNamedDestPdf, nullptr, false);
+    if (!engine) {
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", flags.testNamedDestPdf);
+    } else {
+        const char* name = CleanRemoteDestName(flags.testNamedDestName);
+        IPageDestination* dest = engine->GetNamedDest(name);
+        if (dest) {
+            out.AppendFmt("name=%s page=%d\n", flags.testNamedDestName, PageDestGetPageNo(dest));
+            delete dest;
+        } else {
+            out.AppendFmt("name=%s NOTFOUND\n", flags.testNamedDestName);
+        }
+        SafeEngineRelease(&engine);
+    }
+
+    if (flags.testNamedDestOut) {
+        file::WriteFile(flags.testNamedDestOut, out.AsByteSlice());
+    }
+    printf("%s", out.Get());
+    return 0;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1676,6 +1710,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (flags.testDest) {
         int TestDest(const Flags& flags);
         return TestDest(flags);
+    }
+
+    if (flags.testNamedDest) {
+        int TestNamedDest(const Flags& flags);
+        return TestNamedDest(flags);
     }
 
     if (flags.appdataDir) {

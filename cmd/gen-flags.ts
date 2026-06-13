@@ -85,6 +85,7 @@ const args = [
     "TestSynctex", "test-synctex",
     "TestSearch", "test-search",
     "TestDest", "test-dest",
+    "TestNamedDest", "test-named-dest",
 ];
 
 function generateCode(): string {

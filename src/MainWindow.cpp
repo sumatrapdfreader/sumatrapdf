@@ -534,6 +534,17 @@ static bool IsFileSupportedByContent(const char* filePath) {
     return IsSupportedFileType(kindSniffed, true);
 }
 
+// MuPDF encodes GoToR named destinations as "nameddest=<name>" in the link URI
+// fragment, but EngineBase::GetNamedDest prepends "#nameddest=" itself -- so the
+// prefix must be stripped or the lookup becomes "#nameddest=nameddest=<name>"
+// and fails, leaving the remote PDF on page 1 (issue #5642).
+const char* CleanRemoteDestName(const char* destName) {
+    if (destName && str::StartsWithI(destName, "nameddest=")) {
+        return destName + 10; // strlen("nameddest=")
+    }
+    return destName;
+}
+
 // for safety, only handle relative paths and only open them in SumatraPDF
 // (unless they're of an allowed perceived type) and never launch any external
 // file in plugin mode (where documents are supposed to be self-contained)
@@ -613,12 +624,7 @@ void LinkHandler::LaunchFile(const char* pathOrig, IPageDestination* remoteLink)
 
     char* destName = PageDestGetName(remoteLink);
     if (destName) {
-        // MuPDF encodes GoToR named destinations as "nameddest=<name>" in the URI
-        // fragment, but GetNamedDest() prepends "#nameddest=" itself
-        if (str::StartsWithI(destName, "nameddest=")) {
-            destName += 10;
-        }
-        IPageDestination* dest = newWin->ctrl->GetNamedDest(destName);
+        IPageDestination* dest = newWin->ctrl->GetNamedDest(CleanRemoteDestName(destName));
         if (dest) {
             newWin->linkHandler->ScrollTo(dest);
             delete dest;
