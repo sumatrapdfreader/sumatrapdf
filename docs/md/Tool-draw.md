@@ -40,6 +40,12 @@ When converting to an image (like PNG), you can change the size of the output im
 
 `SumatraPDF draw -o "foo-%d.png" -w 400 -h 800 foo.pdf`
 
+### Render at a specific resolution (DPI)
+
+Instead of a pixel size you can render at a resolution with `-r` (the default is 72 dpi). This is handy for print-quality images:
+
+`SumatraPDF draw -o "foo-%d.png" -r 300 foo.pdf`
+
 ### Convert PNG to PDF
 
 `SumatraPDF draw  -o foo.pdf foo.png`

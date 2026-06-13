@@ -10,6 +10,8 @@ PDF file can contain embedded fonts, images, patterns etc. Each object has an ob
 
 By default it shows all supported types of objects.
 
+Objects are reported per page: the page's object number followed by the matching objects used on it. If you don't supply a `pages` list, all pages are inspected.
+
 You can narrow down what it prints with options:
 
 - `-F` list fonts

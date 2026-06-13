@@ -8,6 +8,10 @@ PDF format has annotations and widgets (used in forms) as special kinds of objec
 
 `bake` is an advanced tool that converts annotations and widgets into regular PDF objects. It bakes PDF form and annotations into static content.
 
+By default it bakes both annotations and form fields into the page content. Use `-A` to keep annotations as annotations (don't bake them) and `-F` to keep form fields interactive.
+
+If you don't specify an output file, it writes to `out.pdf`.
+
 ## All options
 
 ```

@@ -12,6 +12,26 @@ Using `trim` you can trim the area outside of a given box i.e. if there is conte
 
 With `-e` it'll do the opposite i.e. remove the content inside the box.
 
+The `-m` margin can be given as a single value applied to all sides, two values `<V>,<H>` (vertical, horizontal) or four values `<T>,<R>,<B>,<L>` (top, right, bottom, left). Positive values move inwards, negative outwards.
+
+## Examples
+
+Trim to the MediaBox with a 200 point margin inwards:
+
+`SumatraPDF trim -b mediabox -m 200 -o out.pdf in.pdf`
+
+Trim with 20 points off the top & bottom and 30 points off the left & right:
+
+`SumatraPDF trim -b mediabox -m 20,30 -o out.pdf in.pdf`
+
+Trim with separate margins for each side (top, right, bottom, left):
+
+`SumatraPDF trim -b mediabox -m 10,10,50,20 -o out.pdf in.pdf`
+
+Remove the contents of the ArtBox instead of keeping them:
+
+`SumatraPDF trim -b artbox -e -o out.pdf in.pdf`
+
 ## All options
 
 ```

@@ -4,9 +4,9 @@
 
 **Usage:** `SumatraPDF trace [options] file [pages]`
 
-Trace is advanced option for inspecting the structure of
+Trace is an advanced tool for inspecting how a page is rendered.
 
-It prints detailed information about how PDF would be drawn, in XML format.
+It prints a trace of all the device calls used to draw a page, in XML format. The root element is the document, with a child element for each page, and within each page one element per device call (path fills and strokes, text spans, images, clips etc.).
 
 The output is very large and can look like:
 

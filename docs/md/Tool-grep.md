@@ -20,6 +20,18 @@ Other options:
 - `-i` you can combine it with case-insensitive flag
 - `x.*` is a regular expression that says: every string that starts with `x`
 
+## Show where matches are
+
+By default only the matching text is printed. Add:
+
+- `-n` to print the page number for each match
+- `-H` to print the file name for each match (useful when searching several files at once)
+- `-[` and `-]` to wrap each match with a start / end marker, so you can spot it within the line
+
+`SumatraPDF grep -i -n -H foo file.pdf file2.pdf`
+
+You can also search more than one file by listing them after the pattern.
+
 ## All options
 
 ```

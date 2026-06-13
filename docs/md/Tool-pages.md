@@ -4,7 +4,7 @@
 
 `Usage: SumatraPDF pages [options] file.pdf [pages]`
 
-`pages` shows information about pages in XML format. The output looks like:
+`pages` lists the box dimensions (MediaBox, CropBox, TrimBox etc.), rotation and UserUnit for each page, in XML format. The output looks like:
 
 ```xml
 <page pagenum="1">
@@ -14,6 +14,8 @@
 <Rotate v="0" />
 </page>
 ```
+
+If you don't supply a `pages` list, all pages are shown.
 
 ## All options
 

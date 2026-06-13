@@ -6,12 +6,15 @@
 
 See [all-options](#all-options) below.
 
-`clean` rewrites s PDF file. You can:
+`clean` rewrites the syntax of a PDF file. You can:
 
 - compress a PDF
 - decompress a PDF
 - encrypt / decrypt PDF
 - extract / remove pages
+- repair a broken PDF (rewriting it often fixes structural problems)
+
+If you don't specify an output file, it writes to `out.pdf`.
 
 ## Compress a PDF
 

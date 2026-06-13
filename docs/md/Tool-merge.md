@@ -4,6 +4,16 @@
 
 **Usage:** `SumatraPDF merge [-o output.pdf] [-O options] input.pdf [pages] [input2.pdf] [pages2] ...`
 
+`merge` picks pages from two or more files and combines them into a single output PDF.
+
+Each input file can be followed by a comma-separated list of page numbers and ranges to take from it (the first page is `1`, the last is `N`). If you omit the page list for a file, all of its pages are used.
+
+To take pages 1-3 from `a.pdf` and page 5 from `b.pdf` into `merged.pdf`:
+
+`SumatraPDF merge -o merged.pdf a.pdf 1-3 b.pdf 5`
+
+If you don't specify `-o`, the output is written to `out.pdf`. See `-O` below for the available output options.
+
 ## All options
 
 ```

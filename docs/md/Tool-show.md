@@ -4,9 +4,18 @@
 
 **Usage:** `SumatraPDF show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *`
 
-`show` is advanced tool for inspecting internal structure of a PDF file.
+`show` is an advanced tool for inspecting the internal structure of a PDF file. It prints the requested objects and streams to standard output (streams are decoded, and non-printable bytes are shown as a period by default).
 
-Example information.
+You tell it what to show with one or more keywords, or a path to an object:
+
+- `trailer` - the trailer dictionary
+- `xref` - the cross reference table
+- `pages` - the object number for every page
+- `grep` - all objects in a compact one-line format, suitable for piping to `grep`
+- `outline` - the document outline (table of contents / bookmarks)
+- `js` - document-level JavaScript
+- `form` - form objects
+- `<path>` - a path to a specific object (see [Object paths](#object-paths) below)
 
 ## trailer
 
@@ -88,6 +97,26 @@ page 3 = 13 0 R
 |       "DATHIS."       #page=3&zoom=75,0,0
 |       "DAVID D'ANGERS."       #page=5&zoom=75,0,0
 ```
+
+## Object paths
+
+Instead of a keyword you can pass a path to drill down to a specific object. A path starts with an object number, the keyword `trailer` or `pages`, and walks into the object with `.` or `/` separators. Use `pages/N` to select the N-th page (the first page is `1`), and `*` to iterate over all array indices or dictionary properties.
+
+Find the number of pages in a document:
+
+`SumatraPDF show input.pdf trailer/Root/Pages/Count`
+
+Print the content stream of the first page (`-b` prints raw stream bytes):
+
+`SumatraPDF show -b input.pdf pages/1/Contents`
+
+Print the base font name of every font used on every page:
+
+`SumatraPDF show input.pdf pages/*/Resources/Font/*/BaseFont`
+
+List all JPEG-compressed streams (using `grep` to filter the one-line output):
+
+`SumatraPDF show input.pdf grep | grep "/Filter/DCTDecode"`
 
 ## All options
 

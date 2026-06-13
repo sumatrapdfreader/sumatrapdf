@@ -4,6 +4,26 @@
 
 **Usage:** `SumatraPDF convert [options] file [pages]`
 
+`convert` converts a document into another format: raster images (`png`, `pnm`, `cbz` ...), print formats (`pcl`, `ps`, `pwg` ...), vector formats (`pdf`, `svg`) or text (`html`, `xhtml`, `text`, `stext`). The output format is inferred from the output file's extension, or set explicitly with `-F`.
+
+The output file name is given with `-o`. For per-page formats, embed `%d` in the name to substitute the page number (printf modifiers like `%03d` work too). If you don't pass `-o`, output goes to stdout.
+
+Convert each page of a PDF to a PNG image:
+
+`SumatraPDF convert -o page%d.png input.pdf`
+
+Convert a PDF to plain text:
+
+`SumatraPDF convert -o out.txt input.pdf`
+
+Convert only pages 1-5 to a single CBZ:
+
+`SumatraPDF convert -o out.cbz input.pdf 1-5`
+
+Fine-tune the output with `-O` (for example the render resolution for raster output):
+
+`SumatraPDF convert -o page%d.png -O resolution=300 input.pdf`
+
 ## All options
 
 ```

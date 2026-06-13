@@ -12,7 +12,9 @@ To print a page that is twice as big in both x and y dimensions:
 
 `SumatraPDF poster -x 2 -y 2 input.pdf output.pdf`
 
-For every PDF page it'll create 4 pages you can print separately and assemble a bigger print from.
+`-x` and `-y` are the number of pieces to divide each page into horizontally and vertically, so `-x 2 -y 2` turns every PDF page into 4 pages you can print separately and assemble into a bigger print.
+
+Use `-m` to add an overlap (in points or as a percentage) between adjacent tiles, which makes it easier to align and glue them together. If you don't specify an output file, it writes to `out.pdf`.
 
 ## All options
 
