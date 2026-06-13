@@ -82,6 +82,7 @@ const args = [
     "SetColorRange", "set-color-range",
     "UpgradeFrom", "upgrade-from",
     "ForTesting", "for-testing",
+    "TestSynctex", "test-synctex",
 ];
 
 function generateCode(): string {

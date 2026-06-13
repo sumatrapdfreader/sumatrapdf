@@ -1255,6 +1255,48 @@ static void LogCommandLine() {
     logf("'%s'\n  ver %s\n", s, UPDATE_CHECK_VERA);
 }
 
+// Headless synctex forward-search test for issue #5633. Loads the pdf, builds
+// the synctex index (decompressing .synctex/.synctex.gz as needed) and runs a
+// SourceToDoc query, writing a machine-readable result line to the output file.
+// Used by tests/latex/issue-5633.ts; not meant for end users.
+int TestSynctex(const Flags& flags) {
+    ScopedGdiPlus gdiPlus;
+    const char* pdfPath = flags.testSynctexPdf;
+    const char* srcPath = flags.testSynctexSrc;
+    int line = flags.testSynctexLine;
+
+    // engine creation reads a few fields off gGlobalPrefs (e.g. disableAntiAlias)
+    if (!gGlobalPrefs) {
+        gGlobalPrefs = NewGlobalPrefs(nullptr);
+    }
+
+    StrBuilder out;
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+    } else {
+        Synchronizer* sync = nullptr;
+        int err = Synchronizer::Create(pdfPath, engine, &sync);
+        if (err != PDFSYNCERR_SUCCESS || !sync) {
+            out.AppendFmt("ERROR sync-create-failed err=%d\n", err);
+        } else {
+            int page = 0;
+            Vec<Rect> rects;
+            int ret = sync->SourceToDoc(srcPath, line, 0, &page, rects);
+            out.AppendFmt("ret=%d page=%d nrects=%d src=%s line=%d\n", ret, page, rects.Size(), srcPath, line);
+            delete sync;
+        }
+        SafeEngineRelease(&engine);
+    }
+
+    if (flags.testSynctexOut) {
+        file::WriteFile(flags.testSynctexOut, out.AsByteSlice());
+    }
+    // also echo to stdout in case a console is attached
+    printf("%s", out.Get());
+    return 0;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1477,6 +1519,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         void EngineDump(const Flags& flags);
         EngineDump(flags);
         return 0;
+    }
+
+    if (flags.testSynctex) {
+        int TestSynctex(const Flags& flags);
+        return TestSynctex(flags);
     }
 
     if (flags.appdataDir) {

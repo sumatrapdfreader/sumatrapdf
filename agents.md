@@ -40,6 +40,21 @@ To add a new cmd-line flag:
 - implement handling in Flags.cpp
 - document in docs/md/Version-history.md in **next** section
 
+## Writing tests
+
+Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Naming convention, keyed by the GitHub issue number being tested:
+- the test script is `tests/issue-<number>.ts`
+- if it needs a small number (one or two) of extra files, name them `tests/issue-<number>.<rest>`
+- if it needs more files, or a file must live in a directory, put them in `tests/issue-<number>-data/`
+
+Guidelines for test scripts:
+- build the app the same way cmd/build.ts does (invoke `bun cmd/build.ts`) and test the resulting out/dbg64/SumatraPDF-dll.exe
+- if a needed external tool (e.g. MiKTeX) isn't installed, exit with a clear error message and instructions to install it
+- a good test fails when the fix is reverted (verify this) — not just passes with the fix present
+- bun has FFI; if you need to call Windows APIs, put reusable wrappers in tests/winapi.ts
+- prefer driving the app via cmd-line flags that write a machine-readable result (see `-test-synctex`) over GUI automation
+- put runtime scratch output in a gitignored subdir so it isn't committed
+
 ## Windows Shell Safety
 
 The Bash tool runs under Git Bash (MSYS2), **not** cmd.exe. This causes critical issues with Windows-style commands:

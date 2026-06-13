@@ -95,6 +95,15 @@ struct Flags {
     char* dde = nullptr;
     bool engineDump = false; // -engine-dump
 
+    // -test-synctex <pdf> <srcfile> <line> <outfile>: headless synctex
+    // forward-search test (issue #5633). Loads the pdf, runs SourceToDoc and
+    // writes the result to <outfile>, then exits without showing any UI.
+    bool testSynctex = false;
+    char* testSynctexPdf = nullptr;
+    char* testSynctexSrc = nullptr;
+    int testSynctexLine = 0;
+    char* testSynctexOut = nullptr;
+
     bool crashOnOpen = false;
 
     // deprecated flags
