@@ -3480,6 +3480,15 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     // Stop eventual TTS reading
     StopReadAloudIfSourceWindow(win);
     bool lastWindow = (1 == gWindows.size());
+    // if not the last window, save after the window is removed from gWindows
+    // (so its now-closed state isn't re-saved); via defer so it also runs on the
+    // reentrant early-return path below (#5418, #5668)
+    bool saveAfterClose = !lastWindow;
+    defer {
+        if (saveAfterClose) {
+            SaveSettings();
+        }
+    };
     // RememberDefaultWindowPosition becomes a no-op once the window is hidden
     RememberDefaultWindowPosition(win);
     // hide the window before saving prefs (closing seems slightly faster that way)
@@ -3513,10 +3522,6 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
         HWND hwnd = win->hwndFrame;
         DeleteMainWindow(win);
         DestroyWindow(hwnd);
-    }
-
-    if (!lastWindow) {
-        SaveSettings();
     }
 
     if (lastWindow && quitIfLast) {

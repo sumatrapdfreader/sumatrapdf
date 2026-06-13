@@ -333,7 +333,53 @@ static TabState* CloneTabState(const TabState* src) {
     return dst;
 }
 
+static SessionData* CloneSessionData(const SessionData* src) {
+    SessionData* dst = NewSessionData();
+    dst->tabIndex = src->tabIndex;
+    dst->windowState = src->windowState;
+    dst->windowPos = src->windowPos;
+    dst->sidebarDx = src->sidebarDx;
+    for (TabState* ts : *src->tabStates) {
+        dst->tabStates->Append(CloneTabState(ts));
+    }
+    return dst;
+}
+
+// session snapshot loaded at startup. Also the source of state for re-saving
+// not-yet-loaded (lazy) tabs, kept mirroring the live session by
+// SyncInitialSessionData() so it never carries closed-window entries.
 Vec<SessionData*>* gInitialSessionData = nullptr;
+
+// find the saved state for a lazy tab by file path. Because gInitialSessionData
+// is kept in sync with the live session, this never matches a closed window;
+// per-tab disambiguation (e.g. same file in two windows) comes from the more
+// reliable tab->tabState, which RememberSessionState prefers.
+static TabState* FindSessionTabState(const char* fp) {
+    if (!gInitialSessionData) {
+        return nullptr;
+    }
+    for (SessionData* psd : *gInitialSessionData) {
+        for (TabState* pts : *psd->tabStates) {
+            if (str::Eq(pts->filePath, fp)) {
+                return pts;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// keep gInitialSessionData mirroring the just-saved live session, so re-saving
+// not-yet-loaded tabs never feeds stale state from a closed window back into the
+// saved session (fixes #5668). Call after RememberSessionState().
+static void SyncInitialSessionData() {
+    if (!gInitialSessionData) {
+        return;
+    }
+    FreeSessionDataVec(gInitialSessionData);
+    for (SessionData* sd : *gGlobalPrefs->sessionData) {
+        gInitialSessionData->Append(CloneSessionData(sd));
+    }
+}
 
 static void RememberSessionState() {
     Vec<SessionData*>* sessionState = gGlobalPrefs->sessionData;
@@ -352,28 +398,17 @@ static void RememberSessionState() {
             }
             const char* fp = tab->filePath;
             if (!tab->ctrl) {
-                // lazy loading, file not loaded into a tab
-                // use the saved state from previous session
-                // note: might stil have issues if multiple tabs with same file
-                bool didFind = false;
-                if (!gInitialSessionData) {
-                    continue;
+                // file not loaded into a tab (lazy loading, or a placeholder for
+                // a missing file). Prefer the tab's own remembered state -- it's
+                // authoritative and disambiguates the same file open in multiple
+                // windows -- and only fall back to the (in-sync) startup snapshot.
+                TabState* src = tab->tabState;
+                if (!src) {
+                    src = FindSessionTabState(fp);
                 }
-                int nWindows = gInitialSessionData->Size();
-                for (int i = 0; i < nWindows && !didFind; i++) {
-                    SessionData* psd = gInitialSessionData->At(i);
-                    int nTabs = psd->tabStates->Size();
-                    for (int j = 0; j < nTabs; j++) {
-                        TabState* pts = psd->tabStates->At(j);
-                        if (str::Eq(pts->filePath, fp)) {
-                            TabState* ts = CloneTabState(pts);
-                            windowState->tabStates->Append(ts);
-                            didFind = true;
-                            break;
-                        }
-                    }
-                }
-                if (!didFind) {
+                if (src) {
+                    windowState->tabStates->Append(CloneTabState(src));
+                } else {
                     logf("RememberSessionState: didn't find state for file '%s'\n", fp ? fp : "(none)");
                 }
                 continue;
@@ -435,6 +470,7 @@ bool SaveSettings() {
         }
     }
     RememberSessionState();
+    SyncInitialSessionData();
 
     // remove entries which should (no longer) be remembered
     gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
