@@ -472,7 +472,58 @@ static bool SetupPluginMode(Flags& i) {
     return true;
 }
 
-static HWND FindPrevInstWindow(HANDLE* hMutex) {
+// Minimal redeclaration of the shell's IVirtualDesktopManager (Windows 10 1607+),
+// to tell whether a window is on the user's current virtual desktop. We use a
+// distinct name (and don't include <shobjidl.h>) to avoid clashing with the SDK
+// declaration; the vtable layout matches so COM calls dispatch correctly. Lets
+// reusing an existing instance avoid yanking focus to another desktop (#5630).
+struct ISumatraVirtualDesktopManager : public IUnknown {
+    virtual HRESULT STDMETHODCALLTYPE IsWindowOnCurrentVirtualDesktop(HWND topLevelWindow, BOOL* onCurrentDesktop) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetWindowDesktopId(HWND topLevelWindow, GUID* desktopId) = 0;
+    virtual HRESULT STDMETHODCALLTYPE MoveWindowToDesktop(HWND topLevelWindow, REFGUID desktopId) = 0;
+};
+
+// {AA509086-5CA9-4C25-8F95-589D3C07B48A}
+static const GUID kClsidVirtualDesktopManager = {0xAA509086,
+                                                 0x5CA9,
+                                                 0x4C25,
+                                                 {0x8F, 0x95, 0x58, 0x9D, 0x3C, 0x07, 0xB4, 0x8A}};
+// {A5CD92FF-29BE-454C-8D04-D42879C3B837}
+static const GUID kIidVirtualDesktopManager = {0xA5CD92FF,
+                                               0x29BE,
+                                               0x454C,
+                                               {0x8D, 0x04, 0xD4, 0x28, 0x79, 0xC3, 0xB8, 0x37}};
+
+// returns nullptr on Windows without virtual desktops (e.g. Win7) or on failure.
+// COM is already initialized (ScopedOle in WinMain) by the time we call this.
+static ISumatraVirtualDesktopManager* CreateVirtualDesktopManager() {
+    ISumatraVirtualDesktopManager* mgr = nullptr;
+    CoCreateInstance(kClsidVirtualDesktopManager, nullptr, CLSCTX_ALL, kIidVirtualDesktopManager, (void**)&mgr);
+    return mgr;
+}
+
+// true if hwnd is on the user's current virtual desktop. Defaults to true when
+// we can't tell (no manager on Win7, or the query fails), preserving the old
+// "reuse the first instance window" behavior.
+static bool IsWindowOnCurrentDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd) {
+    if (!vdm || !hwnd) {
+        return true;
+    }
+    BOOL onCurrent = FALSE;
+    HRESULT hr = vdm->IsWindowOnCurrentVirtualDesktop(hwnd, &onCurrent);
+    if (FAILED(hr)) {
+        return true;
+    }
+    return onCurrent != FALSE;
+}
+
+// Finds a window of a previously running instance to reuse. Prefers a window on
+// the current virtual desktop; if the instance only has windows on other
+// desktops, returns one of them and sets *openInNewWindow so the caller opens
+// the file in a new window (which Windows places on the current desktop),
+// instead of switching to another desktop (#5630).
+static HWND FindPrevInstWindow(HANDLE* hMutex, bool* openInNewWindow) {
+    *openInNewWindow = false;
     // create a unique identifier for this executable and appdata combination
     // (allows independent side-by-side installations)
     TempStr combinedPath = str::JoinTemp(GetSelfExePathTemp(), "|", GetAppDataDirTemp());
@@ -512,16 +563,40 @@ Retry:
     prevProcId = *procId;
     UnmapViewOfFile(procId);
     CloseHandle(hMap);
-    while ((hwnd = FindWindowExW(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
-        DWORD wndProcId;
-        GetWindowThreadProcessId(hwnd, &wndProcId);
-        if (wndProcId == prevProcId) {
+    {
+        // nullptr on Win7 / no virtual desktops -> IsWindowOnCurrentDesktop()
+        // returns true for every window, so we reuse the first one as before.
+        ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+        HWND otherDesktopWnd = nullptr; // a window of the prev instance, on another desktop
+        while ((hwnd = FindWindowExW(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, nullptr)) != nullptr) {
+            DWORD wndProcId;
+            GetWindowThreadProcessId(hwnd, &wndProcId);
+            if (wndProcId != prevProcId) {
+                continue;
+            }
+            if (IsWindowOnCurrentDesktop(vdm, hwnd)) {
+                if (vdm) {
+                    vdm->Release();
+                }
+                AllowSetForegroundWindow(prevProcId);
+                return hwnd; // reuse the window on the current desktop
+            }
+            otherDesktopWnd = hwnd;
+        }
+        if (vdm) {
+            vdm->Release();
+        }
+        if (otherDesktopWnd) {
+            // the previous instance has windows, but none on the current virtual
+            // desktop. Reuse it but open the file in a new window (it lands on the
+            // current desktop) rather than switching desktops (#5630).
             AllowSetForegroundWindow(prevProcId);
-            return hwnd;
+            *openInNewWindow = true;
+            return otherDesktopWnd;
         }
     }
 
-    // fall through
+    // process is alive but its window isn't ready yet (startup race): retry
 Error:
     if (--retriesLeft < 0) {
         return nullptr;
@@ -1489,6 +1564,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     HANDLE hMutex = nullptr;
     HWND existingInstanceHwnd = nullptr;
     HWND existingHwnd = nullptr;
+    bool openInNewWindow = false;
     WindowTab* tabToSelect = nullptr;
     const char* logFilePath = nullptr;
     bool logFileBecauseDebug = false;
@@ -1866,7 +1942,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     }
 
     // only call FindPrevInstWindow() once
-    existingInstanceHwnd = FindPrevInstWindow(&hMutex);
+    existingInstanceHwnd = FindPrevInstWindow(&hMutex, &openInNewWindow);
 
     if (flags.printDialog || flags.stressTestPath || gPluginMode || gForTesting) {
         // TODO: pass print request through to previous instance?
@@ -1888,10 +1964,19 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         if (nFiles > 0 && IsNoAdminToAdmin(existingHwnd)) {
             goto Exit;
         }
+        // reusing an instance whose windows are all on other virtual desktops:
+        // open the first file in a new window so it lands on the current desktop
+        // (#5630). Subsequent files then open into that (now current) window.
+        bool reuseInNewWindow = openInNewWindow && (existingHwnd == existingInstanceHwnd);
         for (int n = 0; n < nFiles; n++) {
             char* path = flags.fileNames[n];
             bool isFirstWindow = (0 == n);
+            bool savedInNewWindow = flags.inNewWindow;
+            if (reuseInNewWindow && n == 0) {
+                flags.inNewWindow = true;
+            }
             OpenUsingDDE(existingHwnd, path, flags, isFirstWindow);
+            flags.inNewWindow = savedInNewWindow;
         }
         if (0 == nFiles) {
             // https://github.com/sumatrapdfreader/sumatrapdf/issues/2306
