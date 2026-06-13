@@ -1127,6 +1127,9 @@ void fz_free_argv(int argc, char** argv);
 int fz_redirect_io_to_existing_console();
 }
 
+// in src/common/win_util.cpp (part of the utils lib)
+bool WasLaunchedByPowershellWithPipeRedirect();
+
 // must match premake5.lua
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
@@ -1259,6 +1262,28 @@ static int MaybeRunMutool() {
         const char* toolName = argv[0];
         int idx = seqstrings::StrToIdxIS(gToolNames, toolName);
         if (idx >= 0) {
+            // PowerShell pipes a GUI app's stdout through a pipe that the CRT
+            // can't write to ("cannot fwrite: Invalid argument"), so the tool's
+            // output is silently lost. Detect it and tell the user how to run it
+            // properly instead of producing broken/empty output (issue #5677).
+            // Emit the message via raw WriteFile (CRT fwrite is what's broken
+            // here) to the inherited stderr handle so it survives the bad pipe.
+            if (WasLaunchedByPowershellWithPipeRedirect()) {
+                static const char* msg =
+                    "SumatraPDF: command-line tools don't work when their output is redirected by\n"
+                    "PowerShell (e.g. `SumatraPDF.exe info file.pdf > out.txt` or `... | more`).\n"
+                    "PowerShell pipes a GUI app's output through a pipe that drops the data.\n"
+                    "\n"
+                    "Run the command from cmd.exe instead, e.g.:\n"
+                    "    cmd /c \"SumatraPDF.exe info file.pdf > out.txt\"\n";
+                HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+                if (hErr && hErr != INVALID_HANDLE_VALUE) {
+                    DWORD written = 0;
+                    WriteFile(hErr, msg, (DWORD)str::Len(msg), &written, nullptr);
+                }
+                res = 1;
+                goto Exit;
+            }
             fz_redirect_io_to_existing_console();
             res = toolFuncs[idx](argc, argv);
             goto Exit;
