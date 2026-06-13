@@ -6127,6 +6127,47 @@ void ClearHistory(MainWindow* win) {
     RunAsync(fn, "ClearHistoryAsync");
 }
 
+// looks through the file history and removes entries for files that no
+// longer exist on disk. Done synchronously on the main thread for simplicity.
+void RemoveDeletedFilesFromHistory(MainWindow* win) {
+    if (!win || !gFileHistory.states) {
+        return;
+    }
+    int nRemoved = 0;
+    Vec<FileState*>* states = gFileHistory.states;
+    // iterate from the end because removing changes indices
+    for (int i = states->Size() - 1; i >= 0; i--) {
+        FileState* fs = states->at(i);
+        const char* path = fs->filePath;
+        if (!path) {
+            continue;
+        }
+        // files on network / removable drives can be temporarily missing,
+        // so only remove files we're confident are really gone
+        if (!path::IsOnFixedDrive(path)) {
+            continue;
+        }
+        if (DocumentPathExists(path)) {
+            continue;
+        }
+        // don't remove a file that's currently open in some tab
+        if (FindTabByFile(path)) {
+            continue;
+        }
+        DeleteThumbnailForFile(path);
+        states->RemoveAt(i);
+        DeleteFileState(fs);
+        nRemoved++;
+    }
+
+    if (nRemoved > 0) {
+        SaveSettings();
+        MaybeRedrawHomePage();
+    }
+    TempStr msg = str::FormatTemp(_TRA("Deleted files removed from history: %d"), nRemoved);
+    ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
+}
+
 static void TogglePredictiveRender(MainWindow* win) {
     gPredictiveRender = !gPredictiveRender;
     NotificationCreateArgs args;
@@ -6602,6 +6643,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdClearHistory:
             ClearHistory(win);
+            break;
+
+        case CmdRemoveDeletedFilesFromHistory:
+            RemoveDeletedFilesFromHistory(win);
             break;
 
         case CmdReopenLastClosedFile:

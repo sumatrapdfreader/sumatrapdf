@@ -231,6 +231,7 @@ export const commands = [
     "CmdPauseReadAloud", "Pause Read Aloud",
     "CmdContinueReadAloud", "Continue Read Aloud",
     "CmdToggleHoverPreview", "Toggle Hover Preview",
+    "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
     "CmdNone", "Do nothing",
 ];
 

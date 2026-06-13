@@ -253,6 +253,7 @@ CmdAdvancedSettings,,Advanced Options (Settings)...,
 CmdChangeLanguage,,Change Language...,
 CmdCheckUpdate,,Check For Updates,
 CmdClearHistory,,Clear History,Clears history of opened files (for recently opened list in home page)
+CmdRemoveDeletedFilesFromHistory,,Remove Deleted Files From History,"ver 3.7+, removes from history entries for files that no longer exist on disk"
 CmdContributeTranslation,,Contribute Translation,
 CmdForgetSelectedDocument,,Remove Selected Document From History,
 CmdListPrinters,,List Printers,ver 3.7+

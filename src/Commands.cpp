@@ -241,6 +241,7 @@ static SeqStrings gCommandNames =
     "CmdPauseReadAloud\0"
     "CmdContinueReadAloud\0"
     "CmdToggleHoverPreview\0"
+    "CmdRemoveDeletedFilesFromHistory\0"
     "CmdNone\0"
     "\0";
 
@@ -472,6 +473,7 @@ static i32 gCommandIds[] = {
     CmdPauseReadAloud,
     CmdContinueReadAloud,
     CmdToggleHoverPreview,
+    CmdRemoveDeletedFilesFromHistory,
     CmdNone,
 };
 
@@ -703,6 +705,7 @@ SeqStrings gCommandDescriptions =
     "Pause Read Aloud\0"
     "Continue Read Aloud\0"
     "Toggle Hover Preview\0"
+    "Remove Deleted Files From History\0"
     "Do nothing\0"
     "\0";
 // clang-format on

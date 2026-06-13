@@ -114,6 +114,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdFavoriteToggle,
     CmdShowLog,
     CmdClearHistory,
+    CmdRemoveDeletedFilesFromHistory,
     CmdReopenLastClosedFile,
     CmdSelectNextTheme,
     CmdListPrinters,

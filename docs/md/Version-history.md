@@ -7,6 +7,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add cmd-line tools `SumatraPDF <tool> <args>`. Tools: draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace
 - add `-for-testing` [cmd-line argument](Command-line-arguments.md) for ad-hoc testing: always starts a new instance, doesn't restore a session, doesn't save settings
 - add Back / Forward navigation buttons to the toolbar; navigation history now also records views you scrolled to and stayed on, not just table of contents / link jumps
+- add `CmdRemoveDeletedFilesFromHistory` (`Remove Deleted Files From History` in `Ctrl + k` [command palette](Command-Palette.md)) to remove history entries for files that no longer exist on disk
 - add `CmdPdShowInfo` (`Show PDF Info` in `Ctrl + k` [command palette](Command-Palette.md))
 - add `CmdDocumentShowOutline` (`Show Document Outline` in `Ctrl + k` [command palette](Command-Palette.md))
 - improved overlay scrollbar
