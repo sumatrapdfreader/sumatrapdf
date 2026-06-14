@@ -7820,6 +7820,7 @@ void OpenSystemMenu(MainWindow* win) {
 }
 
 static int CaptionButtonAt(MainWindow* win, Point pt) {
+    UnmirrorRtl(win->hwndFrame, pt);
     for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
         if (win->captionBtn[i].visible && win->captionBtn[i].rect.Contains(pt)) {
             return i;
@@ -7871,12 +7872,14 @@ static void MenuBarAsPopupMenu(MainWindow* win, int x, int y) {
         AppendMenuW(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
 
+    uint flags = TPM_LEFTALIGN;
     if (IsUIRtl()) {
         x += win->captionBtn[CB_MENU].rect.dx;
+        flags = TPM_RIGHTALIGN;
     }
 
     MarkMenuOwnerDraw(popup);
-    TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, nullptr);
+    TrackPopupMenu(popup, flags, x, y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
 
     while (count > 0) {
@@ -7929,6 +7932,7 @@ void RelayoutCaption(MainWindow* win) {
     bool maximized = IsZoomed(win->hwndFrame);
     bool showingMenuBar = IsShowingMenuBarRebar(win);
     int tabHeight = GetTabbarHeight(win->hwndFrame);
+    bool isRtl = IsUIRtl();
 
     if (showingMenuBar) {
         // Two-row layout:
@@ -7946,26 +7950,67 @@ void RelayoutCaption(MainWindow* win) {
         int btnDy = menuBarDy;
         int btnDx = menuBarDy;
 
-        win->captionBtn[CB_CLOSE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-        win->captionBtn[CB_CLOSE].visible = true;
-        rc.dx -= btnDx;
+        int row1X = 0;
+        int row1Dx = 0;
+        int buttonsWidth = 3 * btnDx;
+        int tabsX = rc.x;
+        int tabsDx = rc.dx;
 
-        win->captionBtn[CB_RESTORE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-        win->captionBtn[CB_RESTORE].visible = maximized;
+        if (isRtl) {
+            int x = rc.x;
+            win->captionBtn[CB_CLOSE].rect = {x, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_CLOSE].visible = true;
+            x += btnDx;
 
-        win->captionBtn[CB_MAXIMIZE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-        win->captionBtn[CB_MAXIMIZE].visible = !maximized;
-        rc.dx -= btnDx;
+            win->captionBtn[CB_RESTORE].rect = {x, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_RESTORE].visible = maximized;
+            if (maximized) {
+                x += btnDx;
+            }
 
-        win->captionBtn[CB_MINIMIZE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
-        win->captionBtn[CB_MINIMIZE].visible = true;
-        rc.dx -= btnDx;
+            win->captionBtn[CB_MAXIMIZE].rect = {x, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
+            if (!maximized) {
+                x += btnDx;
+            }
 
-        // Row 1 left: system menu (sized to match window buttons)
-        win->captionBtn[CB_SYSTEM_MENU].rect = {rc.x, row1Y, btnDx, btnDy};
-        win->captionBtn[CB_SYSTEM_MENU].visible = true;
-        int row1X = rc.x + btnDx;
-        int row1Dx = rc.dx - btnDx;
+            win->captionBtn[CB_MINIMIZE].rect = {x, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_MINIMIZE].visible = true;
+            x += btnDx;
+
+            int right = rc.x + rc.dx;
+            right -= btnDx;
+            win->captionBtn[CB_SYSTEM_MENU].rect = {right, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_SYSTEM_MENU].visible = true;
+
+            row1X = x;
+            row1Dx = right - x;
+            tabsX = rc.x + buttonsWidth;
+            tabsDx = rc.dx - buttonsWidth - btnDx;
+        } else {
+            win->captionBtn[CB_CLOSE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_CLOSE].visible = true;
+            rc.dx -= btnDx;
+
+            win->captionBtn[CB_RESTORE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_RESTORE].visible = maximized;
+
+            win->captionBtn[CB_MAXIMIZE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
+            rc.dx -= btnDx;
+
+            win->captionBtn[CB_MINIMIZE].rect = {rc.x + rc.dx - btnDx, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_MINIMIZE].visible = true;
+            rc.dx -= btnDx;
+
+            // Row 1 left: system menu (sized to match window buttons)
+            win->captionBtn[CB_SYSTEM_MENU].rect = {rc.x, row1Y, btnDx, btnDy};
+            win->captionBtn[CB_SYSTEM_MENU].visible = true;
+            row1X = rc.x + btnDx;
+            row1Dx = rc.dx - btnDx;
+            tabsX = rc.x;
+            tabsDx = rc.dx;
+        }
 
         // CB_MENU hidden when menu bar rebar is showing
         win->captionBtn[CB_MENU].rect = {row1X, row1Y, menuBarDy, menuBarDy};
@@ -8000,51 +8045,91 @@ void RelayoutCaption(MainWindow* win) {
         if (hasFileTabs) {
             // Row 2: tabs
             win->tabsCtrl->SetIsVisible(true);
-            dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, rc.x, row2Y, rc.dx, tabHeight, SWP_NOZORDER);
+            dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabsX, row2Y, tabsDx, tabHeight, SWP_NOZORDER);
         } else {
             // no file tabs: hide tab bar, single-row caption
             win->tabsCtrl->SetIsVisible(false);
         }
         dh.End();
     } else {
-        // Single-row layout (original)
+        // Single-row layout
         int btnDy = rc.y + rc.dy;
         int btnDx = btnDy;
 
-        win->captionBtn[CB_CLOSE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-        win->captionBtn[CB_CLOSE].visible = true;
-        rc.dx -= btnDx;
-
-        win->captionBtn[CB_RESTORE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-        win->captionBtn[CB_RESTORE].visible = maximized;
-
-        win->captionBtn[CB_MAXIMIZE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-        win->captionBtn[CB_MAXIMIZE].visible = !maximized;
-        rc.dx -= btnDx;
-
-        win->captionBtn[CB_MINIMIZE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
-        win->captionBtn[CB_MINIMIZE].visible = true;
-        rc.dx -= btnDx;
-
         // tabs fill the full caption height (rc.dy)
         int tabDy = rc.dy;
-        rc.y += rc.dy - tabDy;
+        int tabY = rc.y + rc.dy - tabDy;
 
-        win->captionBtn[CB_SYSTEM_MENU].rect = {rc.x, rc.y, tabDy, tabDy};
-        win->captionBtn[CB_SYSTEM_MENU].visible = true;
-        rc.x += tabDy;
-        rc.dx -= tabDy;
+        int tabsX = 0;
+        int tabsDx = 0;
 
-        win->captionBtn[CB_MENU].rect = {rc.x, rc.y, tabDy, tabDy};
-        win->captionBtn[CB_MENU].visible = true;
-        rc.x += tabDy;
-        rc.dx -= tabDy;
+        if (isRtl) {
+            int x = rc.x;
+            win->captionBtn[CB_CLOSE].rect = {x, 0, btnDx, btnDy};
+            win->captionBtn[CB_CLOSE].visible = true;
+            x += btnDx;
 
-        // leave a gap between the tab bar and the minimize button
-        rc.dx -= kTabsButtonGapX;
+            win->captionBtn[CB_RESTORE].rect = {x, 0, btnDx, btnDy};
+            win->captionBtn[CB_RESTORE].visible = maximized;
+            if (maximized) {
+                x += btnDx;
+            }
+
+            win->captionBtn[CB_MAXIMIZE].rect = {x, 0, btnDx, btnDy};
+            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
+            if (!maximized) {
+                x += btnDx;
+            }
+
+            win->captionBtn[CB_MINIMIZE].rect = {x, 0, btnDx, btnDy};
+            win->captionBtn[CB_MINIMIZE].visible = true;
+            x += btnDx;
+
+            int right = rc.x + rc.dx;
+            right -= tabDy;
+            win->captionBtn[CB_SYSTEM_MENU].rect = {right, tabY, tabDy, tabDy};
+            win->captionBtn[CB_SYSTEM_MENU].visible = true;
+            right -= tabDy;
+            win->captionBtn[CB_MENU].rect = {right, tabY, tabDy, tabDy};
+            win->captionBtn[CB_MENU].visible = true;
+            right -= kTabsButtonGapX;
+
+            tabsX = x;
+            tabsDx = right - x;
+        } else {
+            win->captionBtn[CB_CLOSE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
+            win->captionBtn[CB_CLOSE].visible = true;
+            rc.dx -= btnDx;
+
+            win->captionBtn[CB_RESTORE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
+            win->captionBtn[CB_RESTORE].visible = maximized;
+
+            win->captionBtn[CB_MAXIMIZE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
+            win->captionBtn[CB_MAXIMIZE].visible = !maximized;
+            rc.dx -= btnDx;
+
+            win->captionBtn[CB_MINIMIZE].rect = {rc.x + rc.dx - btnDx, 0, btnDx, btnDy};
+            win->captionBtn[CB_MINIMIZE].visible = true;
+            rc.dx -= btnDx;
+
+            win->captionBtn[CB_SYSTEM_MENU].rect = {rc.x, tabY, tabDy, tabDy};
+            win->captionBtn[CB_SYSTEM_MENU].visible = true;
+            rc.x += tabDy;
+            rc.dx -= tabDy;
+
+            win->captionBtn[CB_MENU].rect = {rc.x, tabY, tabDy, tabDy};
+            win->captionBtn[CB_MENU].visible = true;
+            rc.x += tabDy;
+            rc.dx -= tabDy;
+
+            // leave a gap between the tab bar and the minimize button
+            rc.dx -= kTabsButtonGapX;
+            tabsX = rc.x;
+            tabsDx = rc.dx;
+        }
 
         DeferWinPosHelper dh;
-        dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabDy, SWP_NOZORDER);
+        dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabsX, tabY, tabsDx, tabDy, SWP_NOZORDER);
         dh.End();
     }
 
@@ -8106,10 +8191,15 @@ static void DrawCaptionButton(MainWindow* win, HDC hdc, ButtonInfo* bi) {
             int y = rButton.y;
             int w = rButton.dx;
             int h = rButton.dy;
-            // leave the frame-border pixel visible at the top-right corner;
-            // only the right edge borders the frame, the bottom is interior
+            // leave the frame-border pixel visible at the outer top corner;
+            // only the outer edge borders the frame, the bottom is interior
             if (isClose && !IsZoomed(win->hwndFrame)) {
-                w -= kFrameBorderSize;
+                if (IsUIRtl()) {
+                    x += kFrameBorderSize;
+                    w -= kFrameBorderSize;
+                } else {
+                    w -= kFrameBorderSize;
+                }
             }
             gfx.FillRectangle(&bgBr, x, y, w, h);
         }
