@@ -1152,6 +1152,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraProperties.h" />
+    <ClInclude Include="..\src\SumatraTest.h" />
     <ClInclude Include="..\src\SvgIcons.h" />
     <ClInclude Include="..\src\TabGroupsManage.h" />
     <ClInclude Include="..\src\TableOfContents.h" />
@@ -1273,6 +1274,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraProperties.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
+    <ClCompile Include="..\src\SumatraTest.cpp" />
     <ClCompile Include="..\src\SvgIcons.cpp" />
     <ClCompile Include="..\src\TabGroupsManage.cpp" />
     <ClCompile Include="..\src\TableOfContents.cpp" />

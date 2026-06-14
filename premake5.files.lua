@@ -805,6 +805,7 @@ function sumatrapdf_files()
     "SumatraPDF.rc",
     "SumatraProperties.*",
     "SumatraStartup.cpp",
+    "SumatraTest.*",
     "SvgIcons.*",
     "TableOfContents.*",
     "Tabs.*",
