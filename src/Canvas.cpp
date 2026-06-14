@@ -2104,8 +2104,9 @@ static void ZoomByMouseWheel(MainWindow* win, WPARAM wp) {
     Point pt = HwndGetCursorPos(win->hwndCanvas);
     float newZoom;
     float factor = 0;
-    if (!gWheelZoomRelative) {
-        // before 3.6 we were scrolling by steps
+    // when ZoomIncrement is zero/negative, zoom must step through ZoomLevels (issue #5662)
+    bool discreteWheelZoom = !gWheelZoomRelative || gGlobalPrefs->zoomIncrement <= 0;
+    if (discreteWheelZoom) {
         newZoom = win->ctrl->GetNextZoomStep(delta < 0 ? kZoomMin : kZoomMax);
         bool smartZoom = false; // Note: if true will prioritze selection
         SmartZoom(win, newZoom, &pt, smartZoom);
