@@ -701,6 +701,10 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
     // I could 1. UnmirrorRtl() or 2. make canvas always non-rtl
     // for now chose 2
     HwndSetRtl(win->hwndCanvas, false);
+    // tabs use LTR hwnd coords for painting/hit-testing; RTL tab order follows parent
+    if (win->tabsCtrl) {
+        HwndSetRtl(win->tabsCtrl->hwnd, false);
+    }
 
     bool tocVisible = win->tocVisible;
     bool favVisible = gGlobalPrefs->showFavorites;

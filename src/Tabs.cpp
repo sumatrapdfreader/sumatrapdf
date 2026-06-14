@@ -535,7 +535,7 @@ void CreateTabbar(MainWindow* win) {
     args.font = GetAppFont();
     int tabWidth = gGlobalPrefs->tabWidth;
     args.tabDefaultDx = tabWidth;
-    args.isRtl = IsUIRtl();
+    args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)
 
     TabsCtrl* tabsCtrl = new TabsCtrl();
     tabsCtrl->onTabClosed = MkFunc1(MainWindowTabClosed, win);

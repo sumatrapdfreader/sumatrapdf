@@ -50,6 +50,12 @@ static void HwndTabsSetItemSize(HWND hwnd, Size sz) {
     TabCtrl_SetItemSize(hwnd, sz.dx, sz.dy);
 }
 
+// hwnd is kept LTR (like the canvas); UI direction comes from the parent frame
+static bool IsTabsRtl(HWND hwnd) {
+    HWND parent = GetParent(hwnd);
+    return parent && HwndIsRtl(parent);
+}
+
 TabInfo::~TabInfo() {
     str::Free(text);
     str::Free(tooltip);
@@ -85,7 +91,7 @@ void TabsCtrl::LayoutTabs() {
     int closeY = (dy - closeDy) / 2;
     // logfa("  closeDx: %d, closeDy: %d\n", closeDx, closeDy);
 
-    bool isRtl = HwndIsRtl(hwnd);
+    bool isRtl = IsTabsRtl(hwnd);
     int closePad = 8; // padding between close circle and tab edge
 
     HFONT hfont = GetFont();
@@ -135,14 +141,7 @@ void TabsCtrl::LayoutTabs() {
 // Finds the index of the tab, which contains the given point.
 TabsCtrl::MouseState TabsCtrl::TabStateFromMousePosition(const Point& p) {
     TabsCtrl::MouseState res;
-    // WS_EX_LAYOUTRTL mirrors client coordinates in mouse messages,
-    // but GDI+ (used for painting) doesn't respect DC mirroring.
-    // Un-mirror so mouse coords match our manually laid out tab rects.
     Point pt = p;
-    if (HwndIsRtl(hwnd)) {
-        Rect rc = ClientRect(hwnd);
-        pt.x = rc.dx - 1 - pt.x;
-    }
     if (pt.x < 0 || pt.y < 0) {
         return res;
     }
@@ -215,7 +214,7 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
     sf.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap);
     sf.SetLineAlignment(StringAlignmentCenter);
     sf.SetTrimming(Gdiplus::StringTrimmingEllipsisCharacter);
-    if (HwndIsRtl(hwnd)) {
+    if (IsTabsRtl(hwnd)) {
         sf.SetAlignment(Gdiplus::StringAlignmentFar);
     }
 
@@ -271,7 +270,7 @@ void TabsCtrl::Paint(HDC hdc, const RECT& rc) {
         gfx.SetCompositingMode(Gdiplus::CompositingModeSourceOver);
         r = ti->rClose;
         rTxt = ToGdipRectF(ti->r);
-        if (HwndIsRtl(hwnd)) {
+        if (IsTabsRtl(hwnd)) {
             // RTL: [8px | close | text | 8px]
             rTxt.X += (8 + r.dx);
         } else {
@@ -466,6 +465,7 @@ LRESULT TabsCtrl::OnNotifyReflect(WPARAM wp, LPARAM lp) {
 
         case TCN_SELCHANGE:
             TriggerSelectionChanged(this);
+            HwndScheduleRepaint(hwnd);
             break;
 
         case TTN_GETDISPINFOA:
@@ -632,18 +632,15 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 }
                 SetSelected(tabUnderMouse);
                 TriggerSelectionChanged(this);
+                // LoadModelIntoTab() can pump messages; ensure tabs are fully painted.
+                HwndRepaintNow(hwnd);
             }
             TabInfo* ti = GetTab(tabUnderMouse);
             if (ti->isPinned) {
                 return 0;
             }
 
-            int mx = mousePos.x;
-            if (HwndIsRtl(hwnd)) {
-                Rect rc = ClientRect(hwnd);
-                mx = rc.dx - 1 - mx;
-            }
-            grabLocation.x = mx - ti->r.x;
+            grabLocation.x = mousePos.x - ti->r.x;
             grabLocation.y = mousePos.y - ti->r.y;
             SetCapture(hwnd);
             return 0;
@@ -719,17 +716,10 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0;
         }
 
-        case WM_ERASEBKGND: {
-            // just paint with the background color to avoid flickering, we will paint the tabs in WM_PAINT
-            if (!IsCurrentThemeDefault()) {
-                HDC hdc = (HDC)wp;
-                RECT rc = ClientRECT(hwnd);
-                HBRUSH hbr = CreateSolidBrush(ThemeControlBackgroundColor());
-                FillRect(hdc, &rc, hbr);
-                DeleteObject(hbr);
-            }
-            return TRUE; // we handled it so don't erase
-        }
+        case WM_ERASEBKGND:
+            // We paint the full client in WM_PAINT. Don't erase here: TabCtrl_SetCurSel
+            // invalidates native (LTR) item rects while we lay out tabs manually in RTL.
+            return TRUE;
 
         case WM_NCPAINT:
             return 0; // prevent native tab control from drawing its edge
@@ -738,36 +728,21 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             return 0; // remove non-client area so no edge is reserved
 
         case WM_PAINT: {
-            PAINTSTRUCT ps;
-            RECT rc = ClientRECT(hwnd);
-            HDC hdc = BeginPaint(hwnd, &ps);
-            DoubleBuffer buffer(hwnd, ToRect(rc));
-            Paint(buffer.GetDC(), rc);
-            buffer.Flush(hdc);
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
-
-#if 0
-        case WM_PAINT: {
             RECT rc;
-            GetUpdateRect(hwnd, &rc, FALSE);
-            // TODO: when is wp != nullptr?
-            hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
-#if 1
-            DoubleBuffer buffer(hwnd, ToRect(rc));
-            Paint(buffer.GetDC(), rc);
-            buffer.Flush(hdc);
-#else
-            Paint(hdc, rc);
-#endif
-            ValidateRect(hwnd, nullptr);
-            if (!wp) {
-                EndPaint(hwnd, &ps);
+            if (!GetUpdateRect(hwnd, &rc, FALSE)) {
+                return 0;
             }
+            // TabCtrl_SetCurSel invalidates native (LTR) item rects; we lay out tabs
+            // manually (RTL tabs start from the right). Avoid BeginPaint's clip region.
+            RECT clientRc = ClientRECT(hwnd);
+            HDC hdc = GetDC(hwnd);
+            DoubleBuffer buffer(hwnd, ToRect(clientRc));
+            Paint(buffer.GetDC(), clientRc);
+            buffer.Flush(hdc);
+            ReleaseDC(hwnd, hdc);
+            ValidateRect(hwnd, nullptr);
             return 0;
         }
-#endif
     }
 
     return WndProcDefault(hwnd, msg, wp, lp);
@@ -896,7 +871,11 @@ int TabsCtrl::SetSelected(int idx) {
         logf("TabsCtrl::SetSelected(): idx: %d, TabsCount(): %d\n", idx, nTabs);
     }
     ReportIf(idx < 0 || idx >= nTabs);
+    // Suppress native tab invalidation (LTR item rects); we repaint the full client.
+    SendMessageW(hwnd, WM_SETREDRAW, FALSE, 0);
     int prevSelectedIdx = TabCtrl_SetCurSel(hwnd, idx);
+    SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
+    HwndRepaintNow(hwnd);
     return prevSelectedIdx;
 }
 
