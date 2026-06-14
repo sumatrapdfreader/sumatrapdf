@@ -505,8 +505,9 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
         }
         if (arg == Arg::PrintSettings) {
             // argument is a comma separated list of page ranges and
-            // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape] and
-            // disable-auto-rotation e.g. -print-settings "1-3,5,10-8,odd,fit"
+            // advanced options [even|odd|last], [noscale|shrink|fit] and [autorotation|portrait|landscape] and
+            // disable-auto-rotation; page numbers can be negative (-1 = last page)
+            // e.g. -print-settings "1-3,5,10-8,odd,fit" or "last" or "-1"
             i.printSettings = str::Dup(param);
             str::RemoveCharsInPlace(i.printSettings, " ");
             str::TransCharsInPlace(i.printSettings, ";", ",");

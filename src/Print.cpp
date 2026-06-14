@@ -1494,14 +1494,28 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
     }
 
     for (char* s : rangeList) {
-        int val;
+        int val, val2;
         PRINTPAGERANGE pr{};
-        if (str::Parse(s, "%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
-            pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
-            pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
+        if (str::EqI(s, "last")) {
+            pr.nFromPage = pr.nToPage = (DWORD)pageCount;
             ranges.Append(pr);
-        } else if (str::Parse(s, "%d%$", &pr.nFromPage)) {
-            pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
+        } else if (str::Parse(s, "%d-%d%$", &val, &val2)) {
+            int from = val;
+            int to = val2;
+            if (from < 0) {
+                from = (int)pageCount + from + 1;
+            }
+            if (to < 0) {
+                to = (int)pageCount + to + 1;
+            }
+            pr.nFromPage = limitValue((DWORD)from, (DWORD)1, (DWORD)pageCount);
+            pr.nToPage = limitValue((DWORD)to, (DWORD)1, (DWORD)pageCount);
+            ranges.Append(pr);
+        } else if (str::Parse(s, "%d%$", &val)) {
+            if (val < 0) {
+                val = (int)pageCount + val + 1;
+            }
+            pr.nFromPage = pr.nToPage = limitValue((DWORD)val, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         } else if (str::EqI(s, "even")) {
             advanced.range = PrintRangeAdv::Even;
