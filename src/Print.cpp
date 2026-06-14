@@ -112,6 +112,7 @@ void Printer::SetDevMode(DEVMODEW* dm) {
 Printer::~Printer() {
     str::Free(name);
     str::Free(output);
+    str::Free(docName);
     free((void*)devMode);
     free((void*)papers);
     free((void*)paperSizes);
@@ -605,7 +606,9 @@ static bool PrintToDevice(const PrintData& pd) {
 
     DOCINFOW di{};
     di.cbSize = sizeof(DOCINFO);
-    if (gPluginMode) {
+    if (pd.printer->docName) {
+        di.lpszDocName = ToWStrTemp(pd.printer->docName);
+    } else if (gPluginMode) {
         TempStr fileName = url::GetFileNameTemp(gPluginURL);
         // fall back to a generic "filename" instead of the more confusing temporary filename
         if (!fileName) {
@@ -1565,6 +1568,8 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             devMode->dmFields |= DM_PAPERSIZE;
         } else if (str::StartsWithI(s, "output=")) {
             printer->output = str::Dup(s + 7);
+        } else if (str::StartsWithI(s, "docname=")) {
+            printer->docName = str::Dup(s + 8);
         }
     }
 
