@@ -88,6 +88,8 @@ Starting in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease) you c
 
 [run](Tool-run.md)
 
+[run JavaScript examples](Tool-run-javascript-examples.md)
+
 [Extract text from PDF](Tool-x-extract-text-from-pdf.md)
 
 [Convert text file to a PDF](Tool-x-convert-text-to-pdf.md)

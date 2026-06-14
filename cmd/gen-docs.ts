@@ -2,6 +2,8 @@
 // vendored in cmd/markdown-it.min.js from https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js
 // @ts-ignore
 import MarkdownIt from "./markdown-it.min.js";
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
 import {
   readFileSync,
   writeFileSync,
@@ -26,6 +28,12 @@ const mdToProcess: string[] = [];
 const searchJS = `<script>${readFileSync(join(docsDir, "gen_docs.search.js"), "utf-8")}</script>`;
 const searchHTML = readFileSync(join(docsDir, "gen_docs.search.html"), "utf-8");
 const tmplManual = readFileSync(join(docsDir, "manual.tmpl.html"), "utf-8");
+
+hljs.registerLanguage("javascript", javascript);
+
+function highlightJsCode(code: string): string {
+  return hljs.highlight(code, { language: "javascript" }).value;
+}
 
 function buildTocHTML(currentPage: string): string {
   const text = readFileSync(
@@ -191,11 +199,16 @@ function mdToHTML(name: string): string {
   md.renderer.rules.paragraph_open = () => "<div>";
   md.renderer.rules.paragraph_close = () => "</div>\n";
 
-  // render ```commands fenced blocks as CSV tables
+  // render ```commands fenced blocks as CSV tables; highlight ```js blocks
   md.renderer.rules.fence = (tokens: MarkdownIt.Token[], idx: number) => {
     const t = tokens[idx];
-    if (t.info.trim() === "commands")
+    const lang = t.info.trim().split(/\s+/)[0];
+    if (lang === "commands")
       return genCsvTableHTML(parseCsv(t.content));
+    if (lang === "js" || lang === "javascript") {
+      const highlighted = highlightJsCode(t.content);
+      return `<pre><code class="hljs language-javascript">${highlighted}</code></pre>\n`;
+    }
     return `<pre><code>${md.utils.escapeHtml(t.content)}</code></pre>\n`;
   };
 

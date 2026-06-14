@@ -45,3 +45,4 @@ Tools:
 - [grep](Tool-grep.md)
 - [trace](Tool-trace.md)
 - [run](Tool-run.md)
+- [run JavaScript examples](Tool-run-javascript-examples.md)
