@@ -1512,8 +1512,12 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             advanced.scale = PrintScaleAdv::Fit;
         } else if (str::EqI(s, "portrait")) {
             advanced.rotation = PrintRotationAdv::Portrait;
+            devMode->dmOrientation = DMORIENT_PORTRAIT;
+            devMode->dmFields |= DM_ORIENTATION;
         } else if (str::EqI(s, "landscape")) {
             advanced.rotation = PrintRotationAdv::Landscape;
+            devMode->dmOrientation = DMORIENT_LANDSCAPE;
+            devMode->dmFields |= DM_ORIENTATION;
         } else if (str::EqI(s, "disable-auto-rotation")) {
             advanced.autoRotate = false;
         } else if (str::Parse(s, "%dx%$", &val)) {
@@ -1597,8 +1601,8 @@ static bool ValidateDevMode(Printer* printer) {
     if (!OpenPrinterW(nameW, &hPrinter, nullptr)) {
         return false;
     }
-    LONG ret = DocumentPropertiesW(nullptr, hPrinter, nameW, printer->devMode, printer->devMode,
-                                   DM_IN_BUFFER | DM_OUT_BUFFER);
+    LONG ret =
+        DocumentPropertiesW(nullptr, hPrinter, nameW, printer->devMode, printer->devMode, DM_IN_BUFFER | DM_OUT_BUFFER);
     ClosePrinter(hPrinter);
     return ret == IDOK;
 }
