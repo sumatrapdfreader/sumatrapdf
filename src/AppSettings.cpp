@@ -368,6 +368,45 @@ static TabState* FindSessionTabState(const char* fp) {
     return nullptr;
 }
 
+// lazy tabs borrow tab->tabState from gInitialSessionData. After we replace that
+// snapshot, repoint those pointers so the next SaveSettings() does not clone freed
+// TabState objects
+static void RefreshLazyTabStatePointers() {
+    if (!gInitialSessionData) {
+        return;
+    }
+    int sdIdx = 0;
+    for (MainWindow* win : gWindows) {
+        bool hasFileTab = false;
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->filePath) {
+                hasFileTab = true;
+                break;
+            }
+        }
+        if (!hasFileTab) {
+            continue;
+        }
+        if (sdIdx >= gInitialSessionData->Size()) {
+            break;
+        }
+        SessionData* sd = gInitialSessionData->At(sdIdx++);
+        int tsIdx = 0;
+        for (WindowTab* tab : win->Tabs()) {
+            if (!tab->filePath) {
+                continue;
+            }
+            if (tsIdx >= sd->tabStates->Size()) {
+                break;
+            }
+            if (!tab->ctrl && tab->tabState) {
+                tab->tabState = sd->tabStates->At(tsIdx);
+            }
+            tsIdx++;
+        }
+    }
+}
+
 // keep gInitialSessionData mirroring the just-saved live session, so re-saving
 // not-yet-loaded tabs never feeds stale state from a closed window back into the
 // saved session (fixes #5668). Call after RememberSessionState().
@@ -379,6 +418,7 @@ static void SyncInitialSessionData() {
     for (SessionData* sd : *gGlobalPrefs->sessionData) {
         gInitialSessionData->Append(CloneSessionData(sd));
     }
+    RefreshLazyTabStatePointers();
 }
 
 static void RememberSessionState() {
