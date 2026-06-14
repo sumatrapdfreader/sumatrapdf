@@ -204,6 +204,13 @@ Rect MapLtrClientRectToScreen(HWND hwnd, Rect r) {
     return ToRect(rc);
 }
 
+int MapChildXForRtlParent(HWND parent, int ltrX, int childDx) {
+    if (!HwndIsRtl(parent)) {
+        return ltrX;
+    }
+    return ClientRect(parent).dx - ltrX - childDx;
+}
+
 int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
     ReportIf(nPoints > 64);
     POINT pnts[64];

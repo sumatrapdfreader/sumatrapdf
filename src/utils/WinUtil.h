@@ -18,6 +18,8 @@ Rect WindowRect(HWND);
 Rect MapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
 // map client coords where x=0 is the physical left edge (even on WS_EX_LAYOUTRTL windows)
 Rect MapLtrClientRectToScreen(HWND hwnd, Rect r);
+// for SetWindowPos on a WS_EX_LAYOUTRTL parent: child x as offset from physical left
+int MapChildXForRtlParent(HWND parent, int ltrX, int childDx);
 
 void EditSelectAll(HWND);
 int EditIdealDy(HWND, bool hasBorder, int lines = 1);

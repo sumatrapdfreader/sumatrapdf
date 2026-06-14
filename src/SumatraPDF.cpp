@@ -4365,7 +4365,8 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         } else if (win->tabsVisible) {
             int tabHeight = GetTabbarHeight(win->hwndFrame);
             if (updateToolbars) {
-                dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+                int tabX = MapChildXForRtlParent(win->hwndFrame, rc.x, rc.dx);
+                dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabX, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
             }
             rc.y += tabHeight;
             rc.dy -= tabHeight;
@@ -8050,12 +8051,14 @@ void RelayoutCaption(MainWindow* win) {
         }
 
         DeferWinPosHelper dh;
-        dh.SetWindowPos(win->hwndMenuReBar, nullptr, row1X, row1Y, menuBarWidth, menuBarDy, SWP_NOZORDER);
+        int menuBarX = MapChildXForRtlParent(win->hwndFrame, row1X, menuBarWidth);
+        dh.SetWindowPos(win->hwndMenuReBar, nullptr, menuBarX, row1Y, menuBarWidth, menuBarDy, SWP_NOZORDER);
 
         if (hasFileTabs) {
             // Row 2: tabs
             win->tabsCtrl->SetIsVisible(true);
-            dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabsX, row2Y, tabsDx, tabHeight, SWP_NOZORDER);
+            int tabBarX = MapChildXForRtlParent(win->hwndFrame, tabsX, tabsDx);
+            dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabBarX, row2Y, tabsDx, tabHeight, SWP_NOZORDER);
         } else {
             // no file tabs: hide tab bar, single-row caption
             win->tabsCtrl->SetIsVisible(false);
@@ -8139,7 +8142,8 @@ void RelayoutCaption(MainWindow* win) {
         }
 
         DeferWinPosHelper dh;
-        dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabsX, tabY, tabsDx, tabDy, SWP_NOZORDER);
+        int tabBarX = MapChildXForRtlParent(win->hwndFrame, tabsX, tabsDx);
+        dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabBarX, tabY, tabsDx, tabDy, SWP_NOZORDER);
         dh.End();
     }
 
