@@ -19,25 +19,32 @@
 
 import { gzipSync } from "node:zlib";
 import { existsSync, mkdirSync, rmSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { EXE, runStandalone } from "./util.ts";
 
 const DATA = join(import.meta.dir, "issue-5633-data");
 const WORK = join(DATA, ".work");
+const UNICODE_WORK = join(WORK, "synctex-zażółć");
+const TEX_FILE = "test.tex";
 
 // line 4 of issue-5633-data/test.tex is a body paragraph that synctex maps to a position
 const TARGET_LINE = 4;
 
-function findPdflatex(): string | null {
-  const inPath = Bun.which("pdflatex");
-  if (inPath) return inPath;
+function findLatexEngine(engine: "pdflatex" | "lualatex"): string | null {
+  const exe = `${engine}.exe`;
   const localAppData = process.env.LOCALAPPDATA ?? "";
   const candidates = [
-    join(localAppData, "Programs", "MiKTeX", "miktex", "bin", "x64", "pdflatex.exe"),
-    "C:/Program Files/MiKTeX/miktex/bin/x64/pdflatex.exe",
-    "C:/Program Files (x86)/MiKTeX/miktex/bin/x64/pdflatex.exe",
+    exe,
+    join(localAppData, "Programs", "MiKTeX", "miktex", "bin", "x64", exe),
+    join("C:/Program Files/MiKTeX/miktex/bin/x64", exe),
+    join("C:/Program Files (x86)/MiKTeX/miktex/bin/x64", exe),
   ];
   for (const c of candidates) {
+    if (c === exe) {
+      const inPath = Bun.which(c);
+      if (inPath) return inPath;
+      continue;
+    }
     if (c && existsSync(c)) return c;
   }
   return null;
@@ -58,10 +65,14 @@ function run(cmd: string[], cwd: string): { ok: boolean; stdout: string; stderr:
 
 // runs the app's headless synctex forward-search for the given pdf and returns
 // the parsed result (ret is a PDFSYNCERR_* code; 0 == PDFSYNCERR_SUCCESS)
-function querySynctex(pdfPath: string): { ret: number; page: number; nrects: number; raw: string } {
-  const outPath = join(WORK, "result.txt");
+function querySynctex(
+  pdfPath: string,
+  srcPath: string,
+  cwd: string,
+): { ret: number; page: number; nrects: number; raw: string } {
+  const outPath = join(cwd, "result.txt");
   rmSync(outPath, { force: true });
-  const r = run([EXE, "-test-synctex", pdfPath, "test.tex", String(TARGET_LINE), outPath], WORK);
+  const r = run([EXE, "-test-synctex", pdfPath, srcPath, String(TARGET_LINE), outPath], cwd);
   const raw = existsSync(outPath) ? readFileSync(outPath, "utf-8").trim() : `(no result file)\nstdout: ${r.stdout}\nstderr: ${r.stderr}`;
   const m = raw.match(/ret=(-?\d+)\s+page=(-?\d+)\s+nrects=(-?\d+)/);
   if (!m) {
@@ -70,39 +81,43 @@ function querySynctex(pdfPath: string): { ret: number; page: number; nrects: num
   return { ret: parseInt(m[1]), page: parseInt(m[2]), nrects: parseInt(m[3]), raw };
 }
 
-export async function testit(): Promise<void> {
-  if (!existsSync(EXE)) {
-    throw new Error(`app not found: ${EXE} (build first)`);
-  }
-
-  const pdflatex = findPdflatex();
-  if (!pdflatex) {
+function requireLatexEngine(engine: "pdflatex" | "lualatex"): string {
+  const path = findLatexEngine(engine);
+  if (!path) {
     fail(
-      "MiKTeX (pdflatex) not found.\n\n" +
+      `MiKTeX (${engine}) not found.\n\n` +
         "Install it with:\n" +
         "    winget install MiKTeX.MiKTeX\n\n" +
-        "pdflatex is searched for in %PATH% and in:\n" +
-        "    %LOCALAPPDATA%\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe\n" +
-        "    C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe",
+        `${engine}.exe is searched for in %PATH% and in:\n` +
+        `    %LOCALAPPDATA%\\Programs\\MiKTeX\\miktex\\bin\\x64\\${engine}.exe\n` +
+        `    C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\${engine}.exe`,
     );
   }
-  console.log(`• pdflatex: ${pdflatex}`);
+  return path;
+}
 
-  // fresh work dir
-  rmSync(WORK, { recursive: true, force: true });
-  mkdirSync(WORK, { recursive: true });
-  copyFileSync(join(DATA, "test.tex"), join(WORK, "test.tex"));
+type EngineCase = {
+  engine: "pdflatex" | "lualatex";
+  enginePath: string;
+  cwd: string;
+  srcPath: string;
+};
+
+function runEngineCase(engineCase: EngineCase): boolean {
+  const srcName = basename(engineCase.srcPath);
+  mkdirSync(engineCase.cwd, { recursive: true });
+  copyFileSync(join(DATA, TEX_FILE), engineCase.srcPath);
 
   // produce a real test.pdf + uncompressed test.synctex (-synctex=-1 => no gzip)
-  console.log("• running pdflatex -synctex=-1 ...");
-  const tex = run([pdflatex, "-interaction=nonstopmode", "-synctex=-1", "test.tex"], WORK);
-  const pdfPath = join(WORK, "test.pdf");
-  const synctexPath = join(WORK, "test.synctex");
-  const gzPath = join(WORK, "test.synctex.gz");
+  console.log(`• running ${engineCase.engine} -synctex=-1 in ${dirname(engineCase.srcPath)} ...`);
+  const tex = run([engineCase.enginePath, "-interaction=nonstopmode", "-synctex=-1", srcName], engineCase.cwd);
+  const pdfPath = join(engineCase.cwd, "test.pdf");
+  const synctexPath = join(engineCase.cwd, "test.synctex");
+  const gzPath = join(engineCase.cwd, "test.synctex.gz");
   if (!existsSync(pdfPath) || !existsSync(synctexPath)) {
     console.error(tex.stdout);
     console.error(tex.stderr);
-    fail("pdflatex did not produce test.pdf + test.synctex");
+    fail(`${engineCase.engine} did not produce test.pdf + test.synctex`);
   }
 
   const plainBytes = readFileSync(synctexPath);
@@ -141,10 +156,10 @@ export async function testit(): Promise<void> {
   let allPass = true;
   for (const c of cases) {
     c.setup();
-    const res = querySynctex(pdfPath);
+    const res = querySynctex(pdfPath, engineCase.srcPath, engineCase.cwd);
     const pass = res.ret === 0 && res.page >= 1 && res.nrects >= 1;
     allPass &&= pass;
-    const mark = pass ? "✅" : "❌";
+    const mark = pass ? "PASS" : "FAIL";
     console.log(`${mark} ${c.name.padEnd(26)} -> ${res.raw.split("\n")[0]}`);
     if (!pass && res.ret === -999) {
       console.log(`     ${res.raw}`);
@@ -152,10 +167,47 @@ export async function testit(): Promise<void> {
   }
 
   console.log("");
+  return allPass;
+}
+
+export async function testit(): Promise<void> {
+  if (!existsSync(EXE)) {
+    throw new Error(`app not found: ${EXE} (build first)`);
+  }
+
+  const pdflatex = requireLatexEngine("pdflatex");
+  const lualatex = requireLatexEngine("lualatex");
+  console.log(`• pdflatex: ${pdflatex}`);
+  console.log(`• lualatex: ${lualatex}`);
+
+  // fresh work dir
+  rmSync(WORK, { recursive: true, force: true });
+
+  const cases: EngineCase[] = [
+    {
+      engine: "pdflatex",
+      enginePath: pdflatex,
+      cwd: join(WORK, "pdflatex"),
+      srcPath: join(WORK, "pdflatex", TEX_FILE),
+    },
+    {
+      engine: "lualatex",
+      enginePath: lualatex,
+      cwd: UNICODE_WORK,
+      srcPath: join(UNICODE_WORK, TEX_FILE),
+    },
+  ];
+
+  let allPass = true;
+  for (const c of cases) {
+    console.log(`\n========== ${c.engine} ==========`);
+    allPass &&= runEngineCase(c);
+  }
+
   if (!allPass) {
     throw new Error("one or more synctex formats failed to resolve");
   }
-  console.log("✅ all 3 synctex formats resolved (issue #5633 fixed)");
+  console.log("PASS all synctex formats resolved for pdflatex and lualatex (issues #5633/#5678 fixed)");
 }
 
 if (import.meta.main) {
