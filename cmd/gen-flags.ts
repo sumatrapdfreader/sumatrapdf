@@ -86,6 +86,7 @@ const args = [
     "TestSearch", "test-search",
     "TestDest", "test-dest",
     "TestNamedDest", "test-named-dest",
+    "TestChm", "test-chm",
 ];
 
 function generateCode(): string {

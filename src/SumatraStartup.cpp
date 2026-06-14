@@ -74,6 +74,11 @@
 
 #include "utils/Log.h"
 
+#include <chm_lib.h>
+#include "lzx.h"
+#include "EbookBase.h"
+#include "ChmFile.h"
+
 // return false if failed in a way that should abort the app
 static NO_INLINE bool MaybeMakePluginWindow(MainWindow* win, HWND hwndParent) {
     if (!hwndParent) {
@@ -1555,6 +1560,130 @@ int TestNamedDest(const Flags& flags) {
     return 0;
 }
 
+static int ChmTestEnumerate(struct chmFile* h, struct chmUnitInfo* ui, void* ctx) {
+    if (!ui || str::IsEmpty(ui->path)) {
+        return CHM_ENUMERATOR_CONTINUE;
+    }
+    auto* paths = (StrVec*)ctx;
+    paths->Append(ui->path);
+    return CHM_ENUMERATOR_CONTINUE;
+}
+
+// Headless CHM exercise test. Runs an isolated PRETREE make_decode_table check (so
+// ASan can catch the lzx.c overflow on a heap buffer), opens the chm via chm_open,
+// enumerates and retrieves objects, and optionally loads ChmFile / EngineChm.
+// Used by tests/issue-chm-lzx.ts; not meant for end users.
+int TestChm(const Flags& flags) {
+    ScopedGdiPlus gdiPlus;
+    if (!gGlobalPrefs) {
+        gGlobalPrefs = NewGlobalPrefs(nullptr);
+    }
+
+    const char* chmPath = flags.testChmFile;
+    StrBuilder out;
+    bool ok = true;
+
+    int pretreeRes = LZX_test_pretree_make_decode_table();
+    if (pretreeRes == 1) {
+        out.Append("pretree_isolated=REJECTED\n");
+    } else {
+        out.AppendFmt("pretree_isolated=UNEXPECTED_%d\n", pretreeRes);
+        ok = false;
+    }
+
+    ByteSlice fileData = file::ReadFile(chmPath);
+    if (!fileData) {
+        out.AppendFmt("open=FAILED path=%s\n", chmPath);
+        ok = false;
+    } else {
+        struct chmFile* h = chm_open((const char*)fileData.data(), fileData.size());
+        if (!h) {
+            out.AppendFmt("chm_open=FAILED path=%s\n", chmPath);
+            ok = false;
+        } else {
+            out.Append("chm_open=OK\n");
+
+            int retrieveOk = 0;
+            int retrieveFail = 0;
+            StrVec paths;
+            chm_enumerate(h, CHM_ENUMERATE_ALL, ChmTestEnumerate, &paths);
+
+            for (int i = 0; i < paths.Size(); i++) {
+                const char* path = paths.At(i);
+                struct chmUnitInfo ui{};
+                if (chm_resolve_object(h, path, &ui) != CHM_RESOLVE_SUCCESS) {
+                    continue;
+                }
+                if (ui.length == 0 || ui.length > 128 * 1024 * 1024) {
+                    continue;
+                }
+                u8* buf = AllocArray<u8>((size_t)ui.length + 1);
+                if (!buf) {
+                    retrieveFail++;
+                    continue;
+                }
+                int64_t got = chm_retrieve_object(h, &ui, buf, 0, (int64_t)ui.length);
+                if (got == (int64_t)ui.length) {
+                    retrieveOk++;
+                } else {
+                    retrieveFail++;
+                }
+                free(buf);
+            }
+
+            struct chmUnitInfo payloadUi{};
+            if (chm_resolve_object(h, "/payload", &payloadUi) == CHM_RESOLVE_SUCCESS) {
+                u8 payloadBuf[16]{};
+                int64_t got = chm_retrieve_object(h, &payloadUi, payloadBuf, 0, 1);
+                if (got > 0) {
+                    out.Append("payload_retrieve=ATTEMPTED\n");
+                } else {
+                    out.Append("payload_retrieve=FAILED\n");
+                }
+            } else {
+                out.Append("payload_retrieve=NOTFOUND\n");
+            }
+
+            out.AppendFmt("paths=%d retrieve_ok=%d retrieve_fail=%d\n", paths.Size(), retrieveOk, retrieveFail);
+            chm_close(h);
+        }
+    }
+
+    ChmFile* doc = ChmFile::CreateFromFile(chmPath);
+    if (doc) {
+        out.Append("chmfile=OK\n");
+        StrVec allPaths;
+        doc->GetAllPaths(&allPaths);
+        out.AppendFmt("chmfile_paths=%d\n", allPaths.Size());
+        if (doc->HasToc()) {
+            out.Append("chmfile_toc=YES\n");
+        }
+        delete doc;
+    } else {
+        out.Append("chmfile=FAILED\n");
+    }
+
+    EngineBase* engine = CreateEngineChmFromFile(chmPath);
+    if (engine) {
+        out.AppendFmt("engine=OK pages=%d\n", engine->PageCount());
+        SafeEngineRelease(&engine);
+    } else {
+        out.Append("engine=FAILED\n");
+    }
+
+    if (ok) {
+        out.Append("result=OK\n");
+    } else {
+        out.Append("result=FAILED\n");
+    }
+
+    if (flags.testChmOut) {
+        file::WriteFile(flags.testChmOut, out.AsByteSlice());
+    }
+    printf("%s", out.Get());
+    return ok ? 0 : 1;
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
     int exitCode = 1; // by default it's error
     int nWithDde = 0;
@@ -1801,6 +1930,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     if (flags.testNamedDest) {
         int TestNamedDest(const Flags& flags);
         return TestNamedDest(flags);
+    }
+
+    if (flags.testChm) {
+        int TestChm(const Flags& flags);
+        return TestChm(flags);
     }
 
     if (flags.appdataDir) {

@@ -840,6 +840,9 @@
     <None Include="..\cmd\build-all.ts">
       <Filter>cmd</Filter>
     </None>
+    <None Include="..\cmd\build-asan.ts">
+      <Filter>cmd</Filter>
+    </None>
     <None Include="..\cmd\build-ci-daily.ts">
       <Filter>cmd</Filter>
     </None>
@@ -903,7 +906,13 @@
     <None Include="..\cmd\gen-settings.ts">
       <Filter>cmd</Filter>
     </None>
+    <None Include="..\cmd\logview.ts">
+      <Filter>cmd</Filter>
+    </None>
     <None Include="..\cmd\markdown-it.min.js">
+      <Filter>cmd</Filter>
+    </None>
+    <None Include="..\cmd\optimize-ico.ts">
       <Filter>cmd</Filter>
     </None>
     <None Include="..\cmd\package.json">

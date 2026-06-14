@@ -1598,6 +1598,7 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <None Include="..\agents.md" />
     <None Include="..\claude.md" />
     <None Include="..\cmd\build-all.ts" />
+    <None Include="..\cmd\build-asan.ts" />
     <None Include="..\cmd\build-ci-daily.ts" />
     <None Include="..\cmd\build-ci.ts" />
     <None Include="..\cmd\build-codeql.ts" />
@@ -1619,7 +1620,9 @@ cd ../out/rel64_prefast_asan &amp; ..\..\bin\MakeLZSA.exe InstallerData.dat libm
     <None Include="..\cmd\gen-docs.ts" />
     <None Include="..\cmd\gen-flags.ts" />
     <None Include="..\cmd\gen-settings.ts" />
+    <None Include="..\cmd\logview.ts" />
     <None Include="..\cmd\markdown-it.min.js" />
+    <None Include="..\cmd\optimize-ico.ts" />
     <None Include="..\cmd\package.json" />
     <None Include="..\cmd\pdb-sizes.ts" />
     <None Include="..\cmd\premake.ts" />

@@ -50,6 +50,10 @@ int LZXreset(struct LZXstate* pState);
 /* decompress an LZX compressed block */
 int LZXdecompress(struct LZXstate* pState, uint8_t* inpos, uint8_t* outpos, int inlen, int outlen);
 
+/* Test helper for -test-chm: build a PRETREE table from malformed code lengths on an
+ * isolated heap buffer (so ASan can catch overflows). Returns 1 if rejected safely. */
+int LZX_test_pretree_make_decode_table(void);
+
 #ifdef __cplusplus
 }
 #endif

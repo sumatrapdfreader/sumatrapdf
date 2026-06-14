@@ -927,7 +927,9 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:uiautomationcore.dll" }
     -- resolve static imports (uxtheme.dll etc.) from System32 only, so that
     -- a DLL planted next to the exe can't be side-loaded (seen in crash reports
-    -- with our signed exe re-distributed alongside a fake UxTheme.dll)
+    -- with our signed exe re-distributed alongside a fake UxTheme.dll).
+    -- skip for x64_asan: ASan needs clang_rt.asan_dynamic-x86_64.dll beside the exe.
+    filter "not platforms:x64_asan"
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     filter "platforms:x64_asan"
     linkoptions { "/INFERASANLIBS" }

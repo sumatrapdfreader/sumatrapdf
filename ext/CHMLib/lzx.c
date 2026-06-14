@@ -354,6 +354,7 @@ static int make_decode_table(ULONG nsyms, ULONG nbits, UBYTE* length, UWORD* tab
     ULONG fill;
     ULONG pos = 0; /* the current position in the decode table */
     ULONG table_mask = 1 << nbits;
+    ULONG table_elems = table_mask + (nsyms << 1);
     ULONG bit_mask = table_mask >> 1; /* don't do 0 length codes */
     ULONG next_symbol = bit_mask;     /* base of allocation for long codes */
 
@@ -391,6 +392,9 @@ static int make_decode_table(ULONG nsyms, ULONG nbits, UBYTE* length, UWORD* tab
                     for (fill = 0; fill < bit_num - nbits; fill++) {
                         /* if this path hasn't been taken yet, 'allocate' two entries */
                         if (table[leaf] == 0) {
+                            if ((next_symbol << 1) + 1 >= table_elems) {
+                                return 1;
+                            }
                             table[(next_symbol << 1)] = 0;
                             table[(next_symbol << 1) + 1] = 0;
                             table[leaf] = next_symbol++;
@@ -416,6 +420,30 @@ static int make_decode_table(ULONG nsyms, ULONG nbits, UBYTE* length, UWORD* tab
     for (sym = 0; sym < nsyms; sym++)
         if (length[sym]) return 1;
     return 0;
+}
+
+int LZX_test_pretree_make_decode_table(void) {
+    ULONG nsyms = LZX_PRETREE_MAXSYMBOLS;
+    ULONG nbits = LZX_PRETREE_TABLEBITS;
+    ULONG table_elems = (1 << nbits) + (nsyms << 1);
+    UWORD* table = (UWORD*)calloc(table_elems, sizeof(UWORD));
+    UBYTE* length = (UBYTE*)malloc(nsyms);
+    ULONG i;
+
+    if (!table || !length) {
+        free(table);
+        free(length);
+        return -1;
+    }
+
+    for (i = 0; i < nsyms; i++) {
+        length[i] = 15;
+    }
+
+    i = (ULONG)make_decode_table(nsyms, nbits, length, table);
+    free(table);
+    free(length);
+    return (int)i;
 }
 
 struct lzx_bits {

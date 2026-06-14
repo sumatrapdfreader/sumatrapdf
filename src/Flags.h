@@ -128,6 +128,13 @@ struct Flags {
     char* testNamedDestName = nullptr;
     char* testNamedDestOut = nullptr;
 
+    // -test-chm <chm> [<outfile>]: headless CHM exercise test. Opens the chm,
+    // runs an isolated PRETREE make_decode_table check, enumerates objects,
+    // retrieves compressed content, and optionally loads via ChmFile/EngineChm.
+    bool testChm = false;
+    char* testChmFile = nullptr;
+    char* testChmOut = nullptr;
+
     bool crashOnOpen = false;
 
     // deprecated flags

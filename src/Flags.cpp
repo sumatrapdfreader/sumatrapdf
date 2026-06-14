@@ -39,7 +39,7 @@ enum class Arg {
     MangaMode = 68, Search = 69, AllUsers = 70, AllUsers2 = 71,
     RunInstallNow = 72, Adobe = 73, DDE = 74, EngineDump = 75,
     SetColorRange = 76, UpgradeFrom = 77, ForTesting = 78, TestSynctex = 79,
-    TestSearch = 80, TestDest = 81, TestNamedDest = 82,
+    TestSearch = 80, TestDest = 81, TestNamedDest = 82, TestChm = 83,
 };
 
 static const char* gArgNames =
@@ -63,7 +63,7 @@ static const char* gArgNames =
     "manga-mode\0" "search\0" "all-users\0" "allusers\0"
     "run-install-now\0" "a\0" "dde\0" "engine-dump\0"
     "set-color-range\0" "upgrade-from\0" "for-testing\0" "test-synctex\0"
-    "test-search\0" "test-dest\0" "test-named-dest\0";
+    "test-search\0" "test-dest\0" "test-named-dest\0" "test-chm\0";
 // clang-format on
 // @gen-end flags
 
@@ -562,6 +562,15 @@ void ParseFlags(const WCHAR* cmdLine, Flags& i, const char* toolNames) {
             i.testNamedDestOut = str::Dup(args.EatParam());
             continue;
         }
+        if (arg == Arg::TestChm) {
+            // -test-chm <chm> [<outfile>]
+            i.testChm = true;
+            i.testChmFile = str::Dup(param);
+            if (args.AdditionalParam(1)) {
+                i.testChmOut = str::Dup(args.EatParam());
+            }
+            continue;
+        }
         if (arg == Arg::Page) {
             i.pageNumber = paramInt;
             continue;
@@ -762,4 +771,6 @@ Flags::~Flags() {
     str::Free(testNamedDestPdf);
     str::Free(testNamedDestName);
     str::Free(testNamedDestOut);
+    str::Free(testChmFile);
+    str::Free(testChmOut);
 }
