@@ -36,6 +36,9 @@
 #include <stdio.h>
 #include <math.h>
 
+/* SumatraPDF: console line input for REPL (mudraw.c) */
+int fz_console_readline(char *buf, size_t size);
+
 #define PS1 "> "
 
 FZ_NORETURN static void rethrow(js_State *J)
@@ -191,12 +194,8 @@ static void jsB_read(js_State *J)
 static void jsB_readline(js_State *J)
 {
 	char line[256];
-	size_t n;
-	if (!fgets(line, sizeof line, stdin))
+	if (!fz_console_readline(line, sizeof line))
 		js_error(J, "cannot read line from stdin");
-	n = strlen(line);
-	if (n > 0 && line[n-1] == '\n')
-		line[n-1] = 0;
 	js_pushstring(J, line);
 }
 
@@ -13274,7 +13273,7 @@ int murun_main(int argc, char **argv)
 	} else {
 		char line[256];
 		fputs(PS1, stdout);
-		while (fgets(line, sizeof line, stdin)) {
+		while (fz_console_readline(line, sizeof line)) {
 			eval_print(J, line);
 			fputs(PS1, stdout);
 		}

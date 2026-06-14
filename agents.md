@@ -14,7 +14,7 @@ To debug run: `windbgx -Q -o -g ./out/dbg64/SumatraPDF-dll.exe`
 
 When launching SumatraPDF.exe for ad-hoc testing, always pass the `-for-testing` cmd-line flag. It starts a new instance (won't interfere with an already running SumatraPDF), doesn't restore the previous session (only loads files given on the cmd-line) and doesn't save settings (won't overwrite the settings of the user).
 
-After making a change to .cpp, .c or .h file (and before running build.ts), run clang-format on those files to reformat them in place
+After making a change to a .cpp, .c or .h file under `src/` (and before running build.ts), run clang-format on those files to reformat them in place. Do **not** clang-format third-party / vendored code (`mupdf/`, `ext/`, etc.) — keep edits there minimal and match the existing local style.
 
 Never commit changes automatically. Always wait for explicit command to commit changes.
 
