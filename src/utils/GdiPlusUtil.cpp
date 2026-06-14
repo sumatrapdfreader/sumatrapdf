@@ -287,6 +287,16 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, bmp.GetWidth(), bmp.GetHeight(), PixelFormat32bppARGB);
 }
 
+void ApplyExifOrientation(Bitmap* bmp, int exifOrientation) {
+    if (!bmp || exifOrientation < 2 || exifOrientation > 8) {
+        return;
+    }
+    int iRot = exifOrientation - 2;
+    if (iRot < (int)dimof(rfts)) {
+        bmp->RotateFlip(rfts[iRot]);
+    }
+}
+
 static void MaybeFlipBitmap(Bitmap* bmp) {
     u8 buf[64] = {}; // empirically is 26
 
@@ -304,15 +314,7 @@ static void MaybeFlipBitmap(Bitmap* bmp) {
     }
     auto propItem = (Gdiplus::PropertyItem*)buf;
     u16* propValPtr = (u16*)propItem->value;
-    u16 iRot = propValPtr[0] - 2;
-    // https://stackoverflow.com/questions/6222053/problem-reading-jpeg-metadata-orientation
-    // Note: flip values are different than http://www.ionicwind.com/forums/index.php?topic=3267.0
-    // and https://github.com/larryli/PhotoTime/blob/3c77913e4c5ee46ab25dcc6e74a3f4c7502dbec2/gdip.c#L111
-    // is different still
-    // https://github.com/larryli/PhotoTime/blob/3c77913e4c5ee46ab25dcc6e74a3f4c7502dbec2/gdip.c#L130
-    if (iRot < dimof(rfts)) {
-        bmp->RotateFlip(rfts[iRot]);
-    }
+    ApplyExifOrientation(bmp, propValPtr[0]);
 }
 
 static Bitmap* DecodeWithWIC(const ByteSlice& bmpData) {
@@ -554,8 +556,38 @@ static int JpegExifOrientation(ByteReader r) {
 }
 
 // EXIF orientations 5-8 swap width and height
-static bool ExifOrientationSwapsDimensions(int orientation) {
+bool ExifOrientationSwapsDimensions(int orientation) {
     return orientation >= 5 && orientation <= 8;
+}
+
+int WebpExifOrientation(const ByteSlice& d) {
+    if (!webp::HasSignature(d)) {
+        return 0;
+    }
+    ByteReader r(d);
+    size_t idx = 12;
+    while (idx + 8 <= r.len) {
+        if (r.Byte(idx) == 'E' && r.Byte(idx + 1) == 'X' && r.Byte(idx + 2) == 'I' && r.Byte(idx + 3) == 'F') {
+            size_t size = (size_t)r.DWordLE(idx + 4);
+            size_t payload = idx + 8;
+            if (payload + size <= r.len && size >= 8) {
+                int orient = JpegExifOrientationFromTiff(r, payload);
+                if (orient != 0) {
+                    return orient;
+                }
+            }
+        }
+        size_t size = (size_t)r.DWordLE(idx + 4);
+        size_t chunkSize = size + (size & 1);
+        if (chunkSize < size) {
+            return 0;
+        }
+        idx += 8 + chunkSize;
+        if (idx < 8) {
+            return 0;
+        }
+    }
+    return 0;
 }
 
 static bool JpegSizeFromData(ByteReader r, Size& result) {
@@ -723,6 +755,9 @@ Size ImageSizeFromData(const ByteSlice& d) {
         ok = TgaSizeFromData(r, result);
     } else if (kind == kindFileWebp) {
         ok = WebpSizeFromData(r, result);
+        if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
+            std::swap(result.dx, result.dy);
+        }
     } else if (kind == kindFileJp2) {
         ok = Jp2SizeFromData(r, result);
     } else if (kind == kindFileAvif || kind == kindFileHeic) {
@@ -766,6 +801,9 @@ Size ImageSizeFromHeader(const ByteSlice& d) {
         ok = TgaSizeFromData(r, result);
     } else if (kind == kindFileWebp) {
         ok = WebpSizeFromData(r, result);
+        if (ok && ExifOrientationSwapsDimensions(WebpExifOrientation(d))) {
+            std::swap(result.dx, result.dy);
+        }
     } else if (kind == kindFileJp2) {
         ok = Jp2SizeFromData(r, result);
     } else if (kind == kindFileAvif || kind == kindFileHeic) {

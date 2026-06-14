@@ -388,7 +388,10 @@ RenderedBitmap* EngineImages::RenderPage(RenderPageArgs& args) {
 
     // Mupdf fast path: rotation 0 + full-page render + cached fz_image available.
     // Tiles (pageRect != mediabox) and rotations fall through to the GDI+ path.
-    if (page->img && rotation == 0 && !page->failedToLoad) {
+    // Images with EXIF orientation also use the GDI+ path, which applies it.
+    uint8_t fzOrientation = page->img ? page->img->orientation : 0;
+    bool needsExifOrientation = fzOrientation != 0 && fzOrientation != 1;
+    if (page->img && rotation == 0 && !page->failedToLoad && !needsExifOrientation) {
         Rect mediaScreen = Transform(mediabox, pageNo, zoom, rotation).Round();
         bool isFullPage = (mediaScreen.dx == screen.dx && mediaScreen.dy == screen.dy);
         if (isFullPage) {
@@ -2378,6 +2381,10 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
             // mupdf decoded the image; use its dimensions
             w = page->img->w;
             h = page->img->h;
+            uint8_t orientation = page->img->orientation;
+            if (orientation != 0 && (orientation & 1) == 0) {
+                std::swap(w, h);
+            }
         } else if (page->bmp) {
             w = (int)page->bmp->GetWidth();
             h = (int)page->bmp->GetHeight();

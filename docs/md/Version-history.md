@@ -41,6 +41,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - you can now drag&drop selected text to another application, like a text editor
 - added `List Printers` (`CmdListPrinters`) command to `Ctrl + k` Command Palette to list available printers
 - fix `-print-settings paper=A3` (and other standard sizes) when the printer driver reports a longer paper name such as `A3 297 x 420 mm` (fixes #5632)
+- fix EXIF orientation ignored for JPEG and WebP images (fixes #1544)
 - add `-log-to-file <file>` cmd-line flag to log to a specific file (like `-log` but with custom log file path)
 - move `DefaultImageZoom` advanced setting to `ImageUI.DefaultZoom`, default to `shrink to fit`
 - improve `Toggle Use Tabs` (`CmdToggleUseTabs`). You can now transition between using tabs / not using tabs witout restarting the app

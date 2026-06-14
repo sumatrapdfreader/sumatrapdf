@@ -21,5 +21,8 @@ void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, i
 Gdiplus::Bitmap* BitmapFromDataWin(const ByteSlice& bmpData);
 Size ImageSizeFromData(const ByteSlice&);
 Size ImageSizeFromHeader(const ByteSlice&);
+bool ExifOrientationSwapsDimensions(int orientation);
+void ApplyExifOrientation(Gdiplus::Bitmap* bmp, int exifOrientation);
+int WebpExifOrientation(const ByteSlice& d);
 CLSID GetGdiPlusEncoderClsid(const WCHAR* format);
 RenderedBitmap* LoadRenderedBitmapWin(const char* path);

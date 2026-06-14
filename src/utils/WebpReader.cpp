@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "utils/WebpReader.h"
 
 #ifndef NO_LIBWEBP
@@ -42,7 +43,8 @@ Gdiplus::Bitmap* ImageFromData(const ByteSlice& d) {
         return nullptr;
     }
     bmp.UnlockBits(&bmpData);
-    return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
+    ApplyExifOrientation(&bmp, WebpExifOrientation(d));
+    return bmp.Clone(0, 0, bmp.GetWidth(), bmp.GetHeight(), PixelFormat32bppARGB);
 }
 
 } // namespace webp
