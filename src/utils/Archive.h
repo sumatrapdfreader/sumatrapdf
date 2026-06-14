@@ -106,9 +106,9 @@ class MultiFormatArchive {
     bool OpenUnrarFallback(const char* rarPathUtf, bool eagerLoad, const ArchiveExtractProgressCb& cbProgress);
     // Populate fileInfos_[fileId]->data via the respective backend; set
     // ->failed when extraction didn't produce the expected bytes.
-    void LoadFileDataByIdUnarrDll(size_t fileId);
+    void LoadFileDataByIdUnrarDll(size_t fileId);
     void LoadFileDataByIdLibarchive(size_t fileId);
-    ByteSlice GetFileDataPartByIdUnarrDll(size_t fileId, size_t sizeHint);
+    ByteSlice GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint);
     bool LoadedUsingUnrarDll() const { return rarFilePath_ != nullptr; }
 };
 

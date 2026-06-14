@@ -1,11 +1,6 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern "C" {
-typedef struct ar_stream_s ar_stream;
-typedef struct ar_archive_s ar_archive;
-}
-
 class ZipCreator {
     ISequentialStream* stream;
     StrBuilder centraldir;

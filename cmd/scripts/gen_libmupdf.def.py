@@ -4,7 +4,7 @@
 Generates a list of all exports from libmupdf.dll from the function lists
 contained in the mupdf/include/* headers (only MuPDF and MuXPS are included)
 and adds exports for the other libraries contained within libmupdf.dll but
-used by SumatraPDF-mupdf-dll.exe (unarr, libdjvu, zlib, lzma, libwebp).
+used by SumatraPDF-mupdf-dll.exe (libdjvu, zlib, lzma, libwebp).
 """
 
 import os, re, util
@@ -42,10 +42,6 @@ EXPORTS
 ; MuXPS exports
 
 %(muxps_exports)s
-
-; unarr exports (required for ArchUtil, ZipUtil)
-
-%(unarr_exports)s
 
 ; djvu exports (required for DjVuEngine)
 
@@ -132,8 +128,6 @@ def main():
 	fitz_exports = generateExports("include/mupdf/fitz", doc_exports + more_formats + misc_exports)
 	mupdf_exports = generateExports("include/mupdf/pdf", form_exports + sign_exports + ["pdf_open_compressed_stream"])
 	muxps_exports = generateExports("include/mupdf/xps.h", ["xps_parse_solid_color_brush", "xps_print_path"])
-	unarr_exports = generateExports("../ext/unarr/unarr.h")
-
 	list = LIBMUPDF_DEF % locals()
 	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
 

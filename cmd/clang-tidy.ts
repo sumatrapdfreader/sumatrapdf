@@ -21,8 +21,6 @@ const includes = [
   "-I",
   "ext/synctex",
   "-I",
-  "ext/unarr",
-  "-I",
   "ext/lzma/C",
   "-I",
   "ext/libwebp/src",

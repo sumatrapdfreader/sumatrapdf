@@ -366,7 +366,7 @@ workspace "SumatraPDF"
     files { "ext/bzip2/blocksort.c", "ext/bzip2/bzlib.c", "ext/bzip2/bz_internal_error.c",
             "ext/bzip2/compress.c", "ext/bzip2/crctable.c", "ext/bzip2/decompress.c",
             "ext/bzip2/huffman.c", "ext/bzip2/randtable.c" }
-    -- LZMA files needed by LzmaSimpleArchive in utils (previously provided by unarrlib)
+    -- LZMA files needed by LzmaSimpleArchive in utils
     includedirs { "ext/lzma/C" }
     files { "ext/lzma/C/LzmaDec.c", "ext/lzma/C/Bra86.c", "ext/lzma/C/Bra.c" }
     -- liblzma for LZMA/LZMA2/XZ decompression (needed for 7zip support in libarchive)

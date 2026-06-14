@@ -379,43 +379,6 @@ const chm: LibDef = {
   files: [{ dir: "ext/CHMLib", patterns: ["chm_lib.c", "lzx.c"] }],
 };
 
-const unarrlib: LibDef = {
-  name: "unarrlib",
-  alwaysOptimize: true,
-  defines: ["HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT"],
-  includes: ["ext/zlib", "ext/bzip2", "ext/lzma/C"],
-  files: [
-    { dir: "ext/unarr/common", patterns: ["*.c"] },
-    { dir: "ext/unarr/rar", patterns: ["*.c"] },
-    { dir: "ext/unarr/zip", patterns: ["*.c"] },
-    { dir: "ext/unarr/tar", patterns: ["*.c"] },
-    { dir: "ext/unarr/_7z", patterns: ["*.c"] },
-    { dir: "ext/bzip2", patterns: ["bzip_all.c"] },
-    {
-      dir: "ext/unarr/lzmasdk",
-      patterns: ["CpuArch.c", "Ppmd7.c", "Ppmd7Dec.c", "Ppmd8.c", "Ppmd8Dec.c"],
-    },
-    {
-      dir: "ext/lzma/C",
-      patterns: [
-        "LzmaDec.c",
-        "Bra86.c",
-        "LzmaEnc.c",
-        "LzFind.c",
-        "LzFindMt.c",
-        "Threads.c",
-        "7zBuf.c",
-        "7zDec.c",
-        "7zIn.c",
-        "7zStream.c",
-        "Bcj2.c",
-        "Bra.c",
-        "Lzma2Dec.c",
-      ],
-    },
-  ],
-};
-
 const libwebp: LibDef = {
   name: "libwebp",
   alwaysOptimize: true,
@@ -1225,7 +1188,6 @@ const utils: LibDef = {
     "ext/libheif/libheif/api",
     "ext/libwebp/src",
     "ext/dav1d/include",
-    "ext/unarr",
     "mupdf/include",
     "ext/zlib",
   ],
@@ -1752,7 +1714,7 @@ namespace _com_util {
 
 // Order: libraries that have no deps first, then dependents.
 // The link order for archives is: most-dependent first, least-dependent last.
-const ALL_LIBS: LibDef[] = [zlib, unrar, libdjvu, chm, unarrlib, libwebp, dav1d, libheif, mupdfLibs, mupdf, utils];
+const ALL_LIBS: LibDef[] = [zlib, unrar, libdjvu, chm, libwebp, dav1d, libheif, mupdfLibs, mupdf, utils];
 
 async function build(isRelease: boolean, clean: boolean): Promise<void> {
   const config = isRelease ? "release" : "debug";

@@ -161,7 +161,7 @@ bool MultiFormatArchive::Open(const char* path, bool eagerLoad, Kind hintKind,
         return false;
     }
     if (eagerLoad) {
-        // Discard the paths so LoadFileDataByIdLibarchive / LoadFileDataByIdUnarrDll
+        // Discard the paths so LoadFileDataByIdLibarchive / LoadFileDataByIdUnrarDll
         // can't re-open the archive to fetch a missing entry. Entries whose
         // decompression failed above have failed=true and data=nullptr, and
         // later GetFileDataById will see archivePath_==nullptr and mark
@@ -288,7 +288,7 @@ MultiFormatArchive::FileInfo* MultiFormatArchive::GetFileDataById(size_t fileId)
     }
 
     if (LoadedUsingUnrarDll()) {
-        LoadFileDataByIdUnarrDll(fileId);
+        LoadFileDataByIdUnrarDll(fileId);
     } else {
         LoadFileDataByIdLibarchive(fileId);
     }
@@ -367,7 +367,7 @@ ByteSlice MultiFormatArchive::GetFileDataPartById(size_t fileId, size_t sizeHint
     }
 
     if (LoadedUsingUnrarDll()) {
-        return GetFileDataPartByIdUnarrDll(fileId, sizeHint);
+        return GetFileDataPartByIdUnrarDll(fileId, sizeHint);
     }
 
     if (!archivePath_) {
@@ -498,7 +498,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
     }
 }
 
-void MultiFormatArchive::LoadFileDataByIdUnarrDll(size_t fileId) {
+void MultiFormatArchive::LoadFileDataByIdUnrarDll(size_t fileId) {
     auto* fileInfo = fileInfos_[fileId];
     ReportIf(fileInfo->fileId != fileId);
     if (fileInfo->data != nullptr) {
@@ -564,7 +564,7 @@ Exit:
     fileInfo->data = data;
 }
 
-ByteSlice MultiFormatArchive::GetFileDataPartByIdUnarrDll(size_t fileId, size_t sizeHint) {
+ByteSlice MultiFormatArchive::GetFileDataPartByIdUnrarDll(size_t fileId, size_t sizeHint) {
     ReportIf(!rarFilePath_);
 
     auto* fileInfo = fileInfos_[fileId];

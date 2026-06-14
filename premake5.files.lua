@@ -166,19 +166,6 @@ function libdjvu_files()
   })
 end
 
-function unarrr_lzmasdk_files()
-  files_in_dir("ext/unarr/lzmasdk", {
-    "CpuArch.c", "Ppmd7.c", "Ppmd7Dec.c", "Ppmd8.c", "Ppmd8Dec.c",
-  })
-end
-
-function unarr_lzma_files()
-  files_in_dir("ext/lzma/C", {
-    "7zBuf.c", "7zDec.c", "7zIn.c", "7zStream.c", "Bcj2.c", "Bra.c", "Bra86.c",
-    "LzFind.c", "LzFindMt.c", "Lzma2Dec.c", "LzmaDec.c", "LzmaEnc.c", "Threads.c",
-  })
-end
-
 function libarchive_files()
   files { "ext/libarchive/libarchive/*.h" }
   files_in_dir("ext/libarchive/libarchive", {
