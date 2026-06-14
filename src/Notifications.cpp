@@ -249,6 +249,11 @@ int CalcPerc(int current, int total) {
 constexpr int kCloseLeftMargin = 16;
 constexpr int kProgressDy = 5;
 
+static bool NotificationCloseHitTest(HWND hwnd, const Rect& rClose, Point pt) {
+    UnmirrorRtl(hwnd, pt);
+    return rClose.Contains(pt);
+}
+
 void NotificationWnd::Layout(const char* message) {
     int padX = DpiScale(hwnd, 12);
     int padY = DpiScale(hwnd, 8);
@@ -264,8 +269,13 @@ void NotificationWnd::Layout(const char* message) {
         maxTextDx -= closeLeftMargin + closeDx + padX;
     }
 
+    bool isRtl = IsUIRtl();
+
     Size szText;
     txtFmt = DT_SINGLELINE | DT_NOPREFIX;
+    if (isRtl) {
+        txtFmt |= DT_RIGHT | DT_RTLREADING;
+    }
     {
         HDC hdc = GetDC(hwnd);
         szText = HdcMeasureText(hdc, message, txtFmt, font);
@@ -283,17 +293,25 @@ void NotificationWnd::Layout(const char* message) {
 
     int dx = padX + szText.dx + padX;
     int dy = padY + szText.dy + padY;
-    rTxt = {padX, padY, szText.dx, szText.dy};
+    int closeBlockDx = closeLeftMargin + closeDx + padX;
     if (!noClose) {
-        rClose = {dx + closeLeftMargin, padY, closeDx, closeDx + 2};
-        // close button
-        dx += closeLeftMargin + closeDx + padX;
+        if (isRtl) {
+            rClose = {padX, padY, closeDx, closeDx + 2};
+            int textX = padX + closeBlockDx;
+            rTxt = {textX, padY, szText.dx, szText.dy};
+            dx = textX + szText.dx + padX;
+        } else {
+            rTxt = {padX, padY, szText.dx, szText.dy};
+            rClose = {dx + closeLeftMargin, padY, closeDx, closeDx + 2};
+            dx += closeBlockDx;
+        }
     } else {
+        rTxt = {padX, padY, szText.dx, szText.dy};
         rClose = {};
         dx += padX;
     }
     int progressDy = DpiScale(hwnd, kProgressDy);
-    rProgress = {padX, dy, szText.dx, progressDy};
+    rProgress = {rTxt.x, dy, rTxt.dx, progressDy};
     if (HasProgress()) {
         dy += padY + progressDy + padY;
     }
@@ -302,14 +320,22 @@ void NotificationWnd::Layout(const char* message) {
     // for less flicker we don't want to shrink the window when the text shrinks
     if (dx < rCurr.dx) {
         int diff = rCurr.dx - dx;
-        rClose.x += diff;
+        if (isRtl) {
+            rTxt.dx += diff;
+        } else {
+            rClose.x += diff;
+        }
         dx = rCurr.dx;
     }
     // but never wider than the parent window (issue #2916)
     int maxDx = rParent.dx - (2 * topLeftMargin);
     if (maxDx > 0 && dx > maxDx) {
         int diff = dx - maxDx;
-        rClose.x -= diff;
+        if (isRtl) {
+            rTxt.dx -= diff;
+        } else {
+            rClose.x -= diff;
+        }
         dx = maxDx;
     }
 #if 0
@@ -393,7 +419,7 @@ void NotificationWnd::OnPaint(HDC hdcIn, PAINTSTRUCT* ps) {
         DrawCloseButtonArgs args;
         args.hdc = hdc;
         args.r = rClose;
-        args.isHover = rClose.Contains(curPos);
+        args.isHover = NotificationCloseHitTest(hwnd, rClose, curPos);
         DrawCloseButton(args);
     }
 #if 0
@@ -484,7 +510,7 @@ void NotificationWnd::OnTimer(UINT_PTR timerId) {
 LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_SETCURSOR == msg && !noClose) {
         Point pt = HwndGetCursorPos(hwnd);
-        if (!pt.IsEmpty() && rClose.Contains(pt)) {
+        if (!pt.IsEmpty() && NotificationCloseHitTest(hwnd, rClose, pt)) {
             SetCursorCached(IDC_HAND);
             return TRUE;
         }
@@ -498,8 +524,11 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_MOUSEMOVE == msg) {
         HwndScheduleRepaint(hwnd);
 
-        if (!noClose && IsMouseOverRect(hwnd, rClose)) {
-            TrackMouseLeave(hwnd);
+        if (!noClose) {
+            Point pt = HwndGetCursorPos(hwnd);
+            if (NotificationCloseHitTest(hwnd, rClose, pt)) {
+                TrackMouseLeave(hwnd);
+            }
         }
         goto DoDefault;
     }
@@ -511,7 +540,7 @@ LRESULT NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     if (WM_LBUTTONUP) {
         Point pt = Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
-        if (!noClose && rClose.Contains(pt)) {
+        if (!noClose && NotificationCloseHitTest(hwnd, rClose, pt)) {
             // TODO a better way to delete myself
             if (wndRemovedCb.IsValid()) {
                 auto fn = MkFunc0<NotificationWnd>(NotifRemove, this);
