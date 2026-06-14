@@ -84,6 +84,7 @@ struct PageDestinationDjVu : IPageDestination {
             return nullptr;
         }
         value = str::Dup(link);
+        url::DecodeInPlace(value);
         return value;
     }
 };

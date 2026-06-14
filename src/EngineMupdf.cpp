@@ -149,6 +149,7 @@ char* PageDestinationMupdf ::GetValue2() {
     char* uri = FzGetURL(link, outline);
     if (uri && IsExternalLink(uri)) {
         value = str::Dup(uri);
+        url::DecodeInPlace(value);
     }
     return value;
 }

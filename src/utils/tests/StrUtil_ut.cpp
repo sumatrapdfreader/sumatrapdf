@@ -122,6 +122,10 @@ static void StrUrlExtractTest() {
     utassert(str::Eq(fileName, "na/me.ext"));
     fileName = url::GetFileNameTemp("http://example.net/%E2%82%AC");
     utassert(str::Eq(fileName, "\xE2\x82\xaC"));
+    char wikiUrl[] =
+        "https://ru.wikipedia.org/wiki/%D0%AD%D0%BD%D0%B5%D1%80%D0%B3%D0%B8%D1%8F_%E2%80%94_%D0%91%D1%83%D1%80%D0%B0%D0%BD";
+    url::DecodeInPlace(wikiUrl);
+    utassert(str::Eq(wikiUrl, "https://ru.wikipedia.org/wiki/\xD0\xAD\xD0\xBD\xD0\xB5\xD1\x80\xD0\xB3\xD0\xB8\xD1\x8F_\xE2\x80\x94_\xD0\x91\xD1\x83\xD1\x80\xD0\xB0\xD0\xBD"));
 }
 
 void strStrTest() {

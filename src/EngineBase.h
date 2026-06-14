@@ -138,6 +138,7 @@ static inline float PageDestGetZoom(IPageDestination* dest) {
 
 struct PageDestinationURL : IPageDestination {
     char* url = nullptr;
+    char* displayUrl = nullptr;
 
     PageDestinationURL() = delete;
 
@@ -147,9 +148,21 @@ struct PageDestinationURL : IPageDestination {
         url = str::Dup(u);
     }
 
-    ~PageDestinationURL() override { str::Free(url); }
+    ~PageDestinationURL() override {
+        str::Free(url);
+        str::Free(displayUrl);
+    }
 
-    char* GetValue2() override { return url; }
+    char* GetValue2() override {
+        if (!url) {
+            return nullptr;
+        }
+        if (!displayUrl) {
+            displayUrl = str::Dup(url);
+            url::DecodeInPlace(displayUrl);
+        }
+        return displayUrl;
+    }
 };
 
 struct PageDestinationFile : IPageDestination {
