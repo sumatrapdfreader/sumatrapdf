@@ -299,6 +299,52 @@ a.for-nav-icon:hover {
   font-size: 11pt;
 }
 
+.code-block {
+  position: relative;
+  margin: 1em 0;
+}
+
+.code-block pre {
+  margin: 0;
+}
+
+.sum-code-copy-btn {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  z-index: 1;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 9pt;
+  line-height: 1.2;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #24292e;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.code-block:hover .sum-code-copy-btn,
+.sum-code-copy-btn:focus {
+  opacity: 1;
+}
+
+.sum-code-copy-btn:hover {
+  background: #f6f8fa;
+}
+
+.sum-code-copy-btn.copied {
+  border-color: #2da44e;
+  color: #1a7f37;
+}
+
 pre > code {
   font-size: 10pt;
 }

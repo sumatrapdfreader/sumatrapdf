@@ -125,7 +125,7 @@ async function main() {
   }
 
   // copy CSS and JS files
-  const htmlFiles = ["sumatra.css", "gen_toc.js", "favicon.ico"];
+  const htmlFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
   for (const name of htmlFiles) {
     const srcPath = join("docs", name);
     const dstPath = join(websiteDir, "www", name);

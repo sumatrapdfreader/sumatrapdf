@@ -35,6 +35,36 @@ function highlightJsCode(code: string): string {
   return hljs.highlight(code, { language: "javascript" }).value;
 }
 
+function isMultiLineCode(content: string): boolean {
+  return content.replace(/\r\n/g, "\n").trimEnd().includes("\n");
+}
+
+function genPlainCodeBlockHTML(codeInnerHtml: string, codeClass = ""): string {
+  const cls = codeClass ? ` class="${codeClass}"` : "";
+  return `<pre><code${cls}>${codeInnerHtml}</code></pre>\n`;
+}
+
+function genCodeBlockHTML(codeInnerHtml: string, codeClass = ""): string {
+  const cls = codeClass ? ` class="${codeClass}"` : "";
+  return (
+    `<div class="code-block">` +
+    `<button type="button" class="sum-code-copy-btn" title="Copy to clipboard">Copy</button>` +
+    `<pre><code${cls}>${codeInnerHtml}</code></pre>` +
+    `</div>\n`
+  );
+}
+
+function renderFenceCodeBlock(
+  content: string,
+  codeInnerHtml: string,
+  codeClass = "",
+): string {
+  if (!isMultiLineCode(content)) {
+    return genPlainCodeBlockHTML(codeInnerHtml, codeClass);
+  }
+  return genCodeBlockHTML(codeInnerHtml, codeClass);
+}
+
 function buildTocHTML(currentPage: string): string {
   const text = readFileSync(
     join(mdDir, "SumatraPDF-documentation.md"),
@@ -207,9 +237,13 @@ function mdToHTML(name: string): string {
       return genCsvTableHTML(parseCsv(t.content));
     if (lang === "js" || lang === "javascript") {
       const highlighted = highlightJsCode(t.content);
-      return `<pre><code class="hljs language-javascript">${highlighted}</code></pre>\n`;
+      return renderFenceCodeBlock(
+        t.content,
+        highlighted,
+        "hljs language-javascript",
+      );
     }
-    return `<pre><code>${md.utils.escapeHtml(t.content)}</code></pre>\n`;
+    return renderFenceCodeBlock(t.content, md.utils.escapeHtml(t.content));
   };
 
   md.renderer.rules.heading_open = (
@@ -357,7 +391,7 @@ function writeDocsHtmlFiles(): void {
   }
 
   copyDirRecursive(join(wwwOutDir, "img"), join(mdDir, "img"));
-  const htmlFiles = ["sumatra.css", "gen_toc.js", "favicon.ico"];
+  const htmlFiles = ["sumatra.css", "gen_toc.js", "gen_code_copy.js", "favicon.ico"];
   for (const name of htmlFiles) {
     const srcPath = join("docs", name);
     const dstPath = join(wwwOutDir, name);
