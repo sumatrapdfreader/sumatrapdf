@@ -1397,44 +1397,49 @@ static short GetPaperSize(EngineBase* engine) {
     }
 }
 
-#if 0
-static short GetPaperByName(const WCHAR* papername) {
-    if (str::EqI(papername, L"letter")) {
+static short GetStandardPaperByName(const char* paperName) {
+    if (str::EqI(paperName, "letter")) {
         return DMPAPER_LETTER;
     }
-    if (str::EqI(papername, L"legal")) {
+    if (str::EqI(paperName, "legal")) {
         return DMPAPER_LEGAL;
     }
-    if (str::EqI(papername, L"tabloid")) {
+    if (str::EqI(paperName, "tabloid")) {
         return DMPAPER_TABLOID;
     }
-    if (str::EqI(papername, L"statement")) {
+    if (str::EqI(paperName, "statement")) {
         return DMPAPER_STATEMENT;
     }
-    if (str::EqI(papername, L"A2")) {
+    if (str::EqI(paperName, "A2")) {
         return DMPAPER_A2;
     }
-    if (str::EqI(papername, L"A3")) {
+    if (str::EqI(paperName, "A3")) {
         return DMPAPER_A3;
     }
-    if (str::EqI(papername, L"A4")) {
+    if (str::EqI(paperName, "A4")) {
         return DMPAPER_A4;
     }
-    if (str::EqI(papername, L"A5")) {
+    if (str::EqI(paperName, "A5")) {
         return DMPAPER_A5;
     }
-    if (str::EqI(papername, L"A6")) {
+    if (str::EqI(paperName, "A6")) {
         return DMPAPER_A6;
     }
     return 0;
 }
-#endif
 
 // wantedName can be a paper name, like "A6" or number for DMPAPER_* contstants like DMPAPER_LETTER
 static short GetPaperByName(Printer* printer, const char* wantedName) {
     auto devMode = printer->devMode;
-    if (!(devMode->dmFields & DM_PAPERSIZE)) {
-        return devMode->dmPaperSize;
+
+    TempStr name = str::DupTemp(wantedName);
+    str::TrimWSInPlace(name, str::TrimOpt::Both);
+    size_t nameLen = str::Len(name);
+    if (nameLen >= 2 && name[0] == '"' && name[nameLen - 1] == '"') {
+        name[nameLen - 1] = '\0';
+        wantedName = name + 1;
+    } else {
+        wantedName = name;
     }
 
     int n = printer->nPaperSizes;
@@ -1443,12 +1448,25 @@ static short GetPaperByName(Printer* printer, const char* wantedName) {
         if (str::EqIS(wantedName, paperName)) {
             return printer->papers[i];
         }
+        // e.g. "A3" matches driver names like "A3 297 x 420 mm"
+        size_t wantedLen = str::Len(wantedName);
+        if (wantedLen > 0 && str::StartsWithI(paperName, wantedName)) {
+            char next = paperName[wantedLen];
+            if (next == '\0' || next == ' ') {
+                return printer->papers[i];
+            }
+        }
     }
 
     // alternatively allow indicating the paper directly by number
     DWORD paperId = 0;
     if (str::Parse(wantedName, "%u%$", &paperId)) {
         return (short)paperId;
+    }
+
+    short standard = GetStandardPaperByName(wantedName);
+    if (standard != 0) {
+        return standard;
     }
     return devMode->dmPaperSize;
 }
