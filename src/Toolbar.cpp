@@ -1317,8 +1317,8 @@ void CreateToolbar(MainWindow* win) {
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 
     int defFontSize = GetAppFontSize();
-    // 18 was the default toolbar size, we want to scale the fonts in proportion
-    int newSize = (defFontSize * gGlobalPrefs->toolbarSize) / kDefaultIconSize;
+    // ToolbarSize scales icons only; UI font size comes from UIFontSize (GetAppFontSize).
+    int newSize = defFontSize;
     int maxFontSize = iconSize - yPad * 2 - 2; // -2 determined empirically
     if (newSize > maxFontSize) {
         logfa("CreateToolbar: setting toolbar font size to %d (scaled was %d, default size: %d)\n", maxFontSize,
