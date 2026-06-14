@@ -16,6 +16,8 @@ RECT ClientRECT(HWND);
 Rect ClientRect(HWND);
 Rect WindowRect(HWND);
 Rect MapRectToWindow(Rect, HWND hwndFrom, HWND hwndTo);
+// map client coords where x=0 is the physical left edge (even on WS_EX_LAYOUTRTL windows)
+Rect MapLtrClientRectToScreen(HWND hwnd, Rect r);
 
 void EditSelectAll(HWND);
 int EditIdealDy(HWND, bool hasBorder, int lines = 1);

@@ -189,6 +189,21 @@ Rect MapRectToWindow(Rect rect, HWND hwndFrom, HWND hwndTo) {
     return ToRect(rc);
 }
 
+Rect MapLtrClientRectToScreen(HWND hwnd, Rect r) {
+    RECT rc = ToRECT(r);
+    if (HwndIsRtl(hwnd)) {
+        RECT cr{};
+        GetClientRect(hwnd, &cr);
+        int w = cr.right;
+        int left = w - rc.right;
+        int right = w - rc.left;
+        rc.left = left;
+        rc.right = right;
+    }
+    MapWindowPoints(hwnd, nullptr, (POINT*)&rc, 2);
+    return ToRect(rc);
+}
+
 int MapWindowPoints(HWND hwndFrom, HWND hwndTo, Point* points, int nPoints) {
     ReportIf(nPoints > 64);
     POINT pnts[64];

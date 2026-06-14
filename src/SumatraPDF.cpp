@@ -732,8 +732,11 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
         }
     }
     ReCreateToolbar(win);
+    // RTL is not part of LayoutState; force a full relayout and repaint
+    win->lastLayoutState = {};
     RelayoutWindow(win);
-    win->RedrawAll(true);
+    uint redrawFlags = RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW;
+    RedrawWindow(win->hwndFrame, nullptr, nullptr, redrawFlags);
 }
 
 static bool IsMenubarVisible() {
@@ -7811,12 +7814,26 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd, bool changeDefaultItem) {
     return menu;
 }
 
+static void TrackCaptionPopupMenu(MainWindow* win, HMENU menu, Rect btnRect) {
+    Rect rs = MapLtrClientRectToScreen(win->hwndFrame, btnRect);
+    TPMPARAMS tpm{};
+    tpm.cbSize = sizeof(TPMPARAMS);
+    tpm.rcExclude = ToRECT(rs);
+
+    uint flags = TPM_LEFTALIGN | TPM_TOPALIGN | TPM_VERTICAL;
+    int x = rs.x;
+    int y = rs.y + rs.dy;
+    if (IsUIRtl()) {
+        x = rs.x + rs.dx;
+        flags = TPM_RIGHTALIGN | TPM_TOPALIGN | TPM_VERTICAL | TPM_LAYOUTRTL;
+    }
+    TrackPopupMenuEx(menu, flags, x, y, win->hwndFrame, &tpm);
+}
+
 void OpenSystemMenu(MainWindow* win) {
     Rect r = win->captionBtn[CB_SYSTEM_MENU].rect;
-    Rect rScreen = MapRectToWindow(r, win->hwndFrame, HWND_DESKTOP);
     HMENU systemMenu = GetUpdatedSystemMenu(win->hwndFrame, false);
-    uint flags = 0;
-    TrackPopupMenuEx(systemMenu, flags, rScreen.x, rScreen.y + rScreen.dy, win->hwndFrame, nullptr);
+    TrackCaptionPopupMenu(win, systemMenu, r);
 }
 
 static int CaptionButtonAt(MainWindow* win, Point pt) {
@@ -7849,7 +7866,7 @@ static void ClearAllHighlights(MainWindow* win) {
     }
 }
 
-static void MenuBarAsPopupMenu(MainWindow* win, int x, int y) {
+static void MenuBarAsPopupMenu(MainWindow* win, Rect btnRect) {
     int count = GetMenuItemCount(win->menu);
     if (count <= 0) {
         return;
@@ -7872,14 +7889,8 @@ static void MenuBarAsPopupMenu(MainWindow* win, int x, int y) {
         AppendMenuW(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
 
-    uint flags = TPM_LEFTALIGN;
-    if (IsUIRtl()) {
-        x += win->captionBtn[CB_MENU].rect.dx;
-        flags = TPM_RIGHTALIGN;
-    }
-
     MarkMenuOwnerDraw(popup);
-    TrackPopupMenu(popup, flags, x, y, 0, win->hwndFrame, nullptr);
+    TrackCaptionPopupMenu(win, popup, btnRect);
     FreeMenuOwnerDrawInfoData(popup);
 
     while (count > 0) {
@@ -7906,10 +7917,9 @@ static void HandleCaptionClick(MainWindow* win, int btnIdx) {
         case CB_MENU:
             if (!KillTimer(win->hwndFrame, DO_NOT_REOPEN_MENU_TIMER_ID) && !win->isMenuOpen) {
                 Rect r = win->captionBtn[CB_MENU].rect;
-                Rect rScreen = MapRectToWindow(r, win->hwndFrame, HWND_DESKTOP);
                 win->isMenuOpen = true;
                 RepaintButton(win->hwndFrame, CB_MENU, win);
-                MenuBarAsPopupMenu(win, rScreen.x, rScreen.y + rScreen.dy);
+                MenuBarAsPopupMenu(win, r);
                 win->isMenuOpen = false;
                 RepaintButton(win->hwndFrame, CB_MENU, win);
                 SetTimer(win->hwndFrame, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
@@ -8329,6 +8339,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             Rect captionArea = {0, 0, ClientRect(hwnd).dx, cr.y + cr.dy};
             DoubleBuffer buffer(hwnd, captionArea);
             HDC memDC = buffer.GetDC();
+            // RTL windows mirror DC coordinates; use explicit LTR coords for caption painting
+            bool isRtl = IsUIRtl();
+            if (isRtl) {
+                SetLayout(memDC, 0);
+            }
             {
                 HBRUSH brCap = CreateSolidBrush(ThemeControlBackgroundColor());
                 RECT rcFill = ToRECT(captionArea);
@@ -8337,6 +8352,9 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
                 DrawCaptionButton(win, memDC, &win->captionBtn[i]);
+            }
+            if (isRtl) {
+                SetLayout(hdc, 0);
             }
             buffer.Flush(hdc);
 
