@@ -4735,6 +4735,7 @@ static void ShowOptionsDialog(HWND hwnd) {
         DeleteThumbnailCacheDirectory();
     }
     UpdateDocumentColors();
+    ApplySettingsToOpenWindows();
 
     // note: ideally we would also update state for useTabs changes but that's complicated since
     // to do it right we would have to convert tabs to windows. When moving no tabs -> tabs,
