@@ -12,7 +12,7 @@ Save a script to a `.js` file and run it:
 SumatraPDF run script.js [arguments...]
 ```
 
-For the full list of classes and methods, see the [JavaScript API reference](https://mupdf.readthedocs.io/en/latest/reference/javascript/index.html).
+For the full list of classes and methods, see the [JavaScript API reference](Tool-run-javascript-reference.md).
 
 ## Contents
 

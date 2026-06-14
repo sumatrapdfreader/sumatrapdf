@@ -107,4 +107,4 @@ See the upstream documentation:
 
 - [`mutool run`](https://mupdf.readthedocs.io/en/1.27.2/tools/mutool-run.html) - the equivalent MuPDF command-line tool
 - [JavaScript examples](Tool-run-javascript-examples.md) - example-driven recipes
-- [JavaScript API reference](https://mupdf.readthedocs.io/en/1.27.2/reference/javascript/index.html) - full list of classes and methods
+- [JavaScript API reference](Tool-run-javascript-reference.md) - full list of classes and methods
