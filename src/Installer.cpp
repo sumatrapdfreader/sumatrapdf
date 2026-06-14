@@ -762,6 +762,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     HWND hwnd = wnd->hwnd;
     int margin = DpiScale(hwnd, kInstallerWinMargin);
     bool isRtl = IsUIRtl();
+    bool showInstallButton = !cli->fastInstall;
 
     wnd->btnInstall = CreateDefaultButton(hwnd, _TRA("Install SumatraPDF"), isRtl);
     auto b = wnd->btnInstall;
@@ -775,6 +776,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
         int y = r.dy - size.dy - margin;
         b->SetBounds({x, y, size.dx, size.dy});
     }
+    ShowAndEnable(wnd->btnInstall, showInstallButton);
 
     Rect r = ClientRect(hwnd);
     wnd->btnOptions = CreateDefaultButton(hwnd, _TRA("&Options"), isRtl);
@@ -897,7 +899,9 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
 
     HWND hwnds[8] = {};
     int nHwnds = 0;
-    hwnds[nHwnds++] = wnd->btnInstall->hwnd;
+    if (showInstallButton) {
+        hwnds[nHwnds++] = wnd->btnInstall->hwnd;
+    }
     hwnds[nHwnds++] = wnd->editInstallationDir->hwnd;
     hwnds[nHwnds++] = wnd->btnBrowseDir->hwnd;
     hwnds[nHwnds++] = wnd->checkboxForAllUsers->hwnd;
@@ -911,7 +915,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     SetTabOrder(hwnds, nHwnds);
 
     SetInstallButtonElevationState();
-    HwndSetFocus(wnd->btnInstall->hwnd);
+    HwndSetFocus(showInstallButton ? wnd->btnInstall->hwnd : wnd->btnOptions->hwnd);
 }
 //] ACCESSKEY_GROUP Installer
 
