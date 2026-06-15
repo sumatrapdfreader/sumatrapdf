@@ -1017,6 +1017,10 @@ void LayoutHomePage(HomePageLayout& l) {
     Vec<FileState*> fileStates;
     for (int i = 0; i < allFileStates.Size(); i++) {
         FileState* fs = allFileStates.at(i);
+        // a state without a path can't be opened or thumbnailed - don't show it
+        if (str::IsEmpty(fs->filePath)) {
+            continue;
+        }
         if (hasFilter) {
             TempStr baseName = path::GetBaseNameTemp(fs->filePath);
             if (!FilterMatches(baseName, l.filterWords)) {

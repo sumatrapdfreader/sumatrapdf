@@ -302,7 +302,19 @@ bool LoadSettings() {
         gprefs->treeFontName = const_cast<char*>("automatic");
     }
 
-    // TODO: verify that all states have a non-nullptr file path?
+    // drop file states without a path: they can't be opened, found by path
+    // or shown as a thumbnail, so they're useless and would render as blank
+    // thumbnails on the home page
+    {
+        Vec<FileState*>* fileStates = gprefs->fileStates;
+        for (int i = fileStates->Size() - 1; i >= 0; i--) {
+            FileState* fs = fileStates->at(i);
+            if (str::IsEmpty(fs->filePath)) {
+                fileStates->RemoveAt(i);
+                DeleteFileState(fs);
+            }
+        }
+    }
     gFileHistory.UpdateStatesSource(gprefs->fileStates);
     //    auto fontName = ToWStrTemp(gprefs->fixedPageUI.ebookFontName);
     //    SetDefaultEbookFont(fontName.Get(), gprefs->fixedPageUI.ebookFontSize);
