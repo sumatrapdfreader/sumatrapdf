@@ -1323,6 +1323,98 @@ static bool IsRunningTool() {
     return ToolIdxFromCmdLine() >= 0;
 }
 
+// returns the pointer into the command line just past the first argument
+// (our own program path), i.e. the args to forward to the child. Mirrors how
+// CommandLineToArgvW parses argv[0]: if quoted, up to the closing quote;
+// otherwise up to the first whitespace.
+static const WCHAR* SkipFirstArg(const WCHAR* s) {
+    while (*s == L' ' || *s == L'\t') {
+        s++;
+    }
+    if (*s == L'"') {
+        s++;
+        while (*s && *s != L'"') {
+            s++;
+        }
+        if (*s == L'"') {
+            s++;
+        }
+    } else {
+        while (*s && *s != L' ' && *s != L'\t') {
+            s++;
+        }
+    }
+    while (*s == L' ' || *s == L'\t') {
+        s++;
+    }
+    return s;
+}
+
+// When this is SumatraPDF-dll.exe (carries embedded installer resources) and is
+// properly installed - libmupdf.dll and sumatrapdf-tool.exe sit next to it - run
+// the requested tool by launching the console sumatrapdf-tool.exe instead of
+// running it in-process. This is a GUI (Windows subsystem) exe and interacts
+// poorly with cmd.exe / PowerShell; the console exe doesn't. The child inherits
+// our standard handles, so console output and redirection (`> out.txt`, `| more`)
+// keep working. Returns the child's exit code, or kNoMutool when delegation
+// doesn't apply (the caller then runs the tool in-process). The static
+// SumatraPDF.exe (no embedded resources) always runs the tool in-process.
+static int MaybeDelegateToToolExe() {
+    if (!ExeHasInstallerResources()) {
+        return kNoMutool;
+    }
+    TempStr toolExe = GetPathInExeDirTemp("sumatrapdf-tool.exe");
+    TempStr libmupdf = GetPathInExeDirTemp("libmupdf.dll");
+    if (!file::Exists(toolExe) || !file::Exists(libmupdf)) {
+        return kNoMutool;
+    }
+
+    // Capture the standard handles cmd.exe set up for us *before* attaching to a
+    // console. A stream redirected to a file/pipe (`> out.txt`, `| more`) already
+    // has a valid handle here; we must keep it so the child writes there.
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hErr = GetStdHandle(STD_ERROR_HANDLE);
+    // Attach to the parent (cmd.exe) console so the *non-redirected* streams have
+    // somewhere to go; harmless (and a no-op) when there's no parent console.
+    AttachConsole(ATTACH_PARENT_PROCESS);
+    auto isInvalid = [](HANDLE h) { return h == nullptr || h == INVALID_HANDLE_VALUE; };
+    if (isInvalid(hIn)) {
+        hIn = GetStdHandle(STD_INPUT_HANDLE);
+    }
+    if (isInvalid(hOut)) {
+        hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    }
+    if (isInvalid(hErr)) {
+        hErr = GetStdHandle(STD_ERROR_HANDLE);
+    }
+
+    const WCHAR* rest = SkipFirstArg(GetCommandLineW());
+    TempStr cmd = str::FormatTemp("\"%s\" %s", toolExe, ToUtf8Temp(rest));
+    TempWStr cmdW = ToWStrTemp(cmd);
+    TempWStr toolExeW = ToWStrTemp(toolExe);
+
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = hIn;
+    si.hStdOutput = hOut;
+    si.hStdError = hErr;
+
+    PROCESS_INFORMATION pi{};
+    BOOL ok = CreateProcessW(toolExeW, cmdW, nullptr, nullptr, TRUE /*inherit handles*/, 0, nullptr, nullptr, &si, &pi);
+    if (!ok) {
+        logf("MaybeDelegateToToolExe: CreateProcessW failed for '%s'\n", toolExe);
+        return kNoMutool; // fall back to running the tool in-process
+    }
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD exitCode = 1;
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return (int)exitCode;
+}
+
 static int MaybeRunMutool() {
     int argc = 0;
     char** argv = nullptr;
@@ -1368,6 +1460,13 @@ static int MaybeRunMutool() {
                     WriteFile(hErr, msg, (DWORD)str::Len(msg), &written, nullptr);
                 }
                 res = 1;
+                goto Exit;
+            }
+            // in the installed dll build, hand off to the console
+            // sumatrapdf-tool.exe (which interacts properly with the console)
+            int delegated = MaybeDelegateToToolExe();
+            if (delegated != kNoMutool) {
+                res = delegated;
                 goto Exit;
             }
             fz_redirect_io_to_existing_console();
