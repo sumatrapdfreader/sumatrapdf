@@ -431,10 +431,22 @@ Kind GuessFileTypeFromContent(const char* path) {
 }
 
 // embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
+// or "c:/foo.pdf:${pdfStreamNo}:attachname=${hexUtf8Name}"
 // return pointer starting at ":${pdfStream}"
 const char* FindEmbeddedPdfFileStreamNo(const char* path) {
     const char* start = path;
-    const char* end = start + str::Len(start) - 1;
+    const char* parseEnd = start + str::Len(start);
+    const char* meta = nullptr;
+    for (const char* pos = str::Find(path, ":attachname="); pos; pos = str::Find(pos + 1, ":attachname=")) {
+        meta = pos;
+    }
+    if (meta) {
+        parseEnd = meta;
+    }
+    if (parseEnd <= start) {
+        return nullptr;
+    }
+    const char* end = parseEnd - 1;
 
     int nDigits = 0;
     while (end > start) {

@@ -239,8 +239,17 @@ void LoadArgs::SetFilePath(const char* path) {
     fileName.SetCopy(path);
 }
 
+const char* LoadArgs::DisplayName() const {
+    return displayName.Get();
+}
+
+void LoadArgs::SetDisplayName(const char* name) {
+    displayName.SetCopy(name);
+}
+
 LoadArgs* LoadArgs::Clone() {
     LoadArgs* res = new LoadArgs(fileName, win);
+    res->SetDisplayName(displayName.Get());
     res->tabState = this->tabState;
     return res;
 }
@@ -1317,7 +1326,11 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, const char* p
 }
 
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
-    const char* titlePath = tab->filePath;
+    const char* titlePath = tab->displayName ? tab->displayName : tab->filePath;
+    TempStr embeddedFileName = GetEmbeddedFileNameTemp(titlePath);
+    if (embeddedFileName) {
+        titlePath = embeddedFileName;
+    }
     if (!gGlobalPrefs->fullPathInTitle) {
         titlePath = path::GetBaseNameTemp(titlePath);
     }
@@ -2238,6 +2251,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         // insert a new tab for the loaded document
         WindowTab* tab = new WindowTab(win);
         tab->SetFilePath(fullPath);
+        tab->SetDisplayName(args->DisplayName());
         win->currentTabTemp = AddTabToWindow(win, tab);
 
         if (!IsMainWindowValid(win) || win->isBeingClosed) {
@@ -2247,6 +2261,7 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
         // logf("LoadDocument: !forceReuse, created win->CurrentTab() at 0x%p\n", win->CurrentTab());
     } else {
         win->CurrentTab()->SetFilePath(fullPath);
+        win->CurrentTab()->SetDisplayName(args->DisplayName());
 #if 0
         auto path = ToUtf8Temp(fullPath);
         logf("LoadDocument: forceReuse, set win->CurrentTab() (0x%p) filePath to '%s'\n", win->CurrentTab(), path.Get());

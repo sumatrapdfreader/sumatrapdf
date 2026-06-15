@@ -491,7 +491,8 @@ static void OpenAttachment(WindowTab* tab, const char* fileName, int attachmentN
     MainWindow* win = tab->win;
     EngineBase* newEngine = CreateEngineMupdfFromData(data, fileName, nullptr);
     DocController* ctrl = CreateControllerForEngineOrFile(newEngine, nullptr, nullptr, win);
-    LoadArgs* args = new LoadArgs(tab->filePath, win);    
+    LoadArgs* args = new LoadArgs(tab->filePath, win);
+    args->SetDisplayName(fileName);
     args->ctrl = ctrl;
     LoadDocumentFinish(args);
     str::Free(data.data());

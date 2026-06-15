@@ -17,6 +17,7 @@ struct WindowTab {
     };
     Type type = Type::None;
     const char* filePath = nullptr;
+    const char* displayName = nullptr;
     MainWindow* win = nullptr;
     DocController* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
@@ -79,6 +80,7 @@ struct WindowTab {
     DisplayModel* AsFixed() const;
 
     void SetFilePath(const char* path);
+    void SetDisplayName(const char* name);
 
     // only if AsFixed()
     EngineBase* GetEngine() const;

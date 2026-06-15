@@ -216,9 +216,11 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
     // TabsOnChangedDoc(newWin);
     WindowTab* newTab = new WindowTab(newWin);
     newTab->SetFilePath(tab->filePath);
+    newTab->SetDisplayName(tab->displayName);
     newWin->currentTabTemp = AddTabToWindow(newWin, newTab);
     newWin->ctrl = nullptr;
     LoadArgs args(tab->filePath, newWin);
+    args.SetDisplayName(tab->displayName);
     args.forceReuse = true;
     args.noSavePrefs = true;
     LoadDocument(&args);

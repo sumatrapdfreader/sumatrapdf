@@ -173,6 +173,8 @@ struct LoadArgs {
 
     const char* FilePath() const;
     void SetFilePath(const char* path);
+    const char* DisplayName() const;
+    void SetDisplayName(const char* name);
     LoadArgs* Clone();
 
     // we don't own those values
@@ -204,6 +206,7 @@ struct LoadArgs {
 
   private:
     AutoFreeStr fileName;
+    AutoFreeStr displayName;
 };
 
 struct PasswordUI;

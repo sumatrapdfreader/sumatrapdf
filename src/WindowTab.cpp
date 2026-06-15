@@ -34,6 +34,10 @@ void WindowTab::SetFilePath(const char* path) {
     str::ReplaceWithCopy(&filePath, path);
 }
 
+void WindowTab::SetDisplayName(const char* name) {
+    str::ReplaceWithCopy(&displayName, name);
+}
+
 bool WindowTab::IsAboutTab() const {
     ReportIf(type == WindowTab::Type::None);
     return type == WindowTab::Type::About;
@@ -61,6 +65,7 @@ WindowTab::~WindowTab() {
     gMostRecentlyOpenedDoc = nullptr;
     delete ctrl;
     str::FreePtr(&filePath);
+    str::FreePtr(&displayName);
     str::FreePtr(&frameTitle);
     str::FreePtr(&readAloudText);
 }
@@ -92,6 +97,13 @@ EngineBase* WindowTab::GetEngine() const {
 }
 
 const char* WindowTab::GetTabTitle() const {
+    if (displayName) {
+        return displayName;
+    }
+    TempStr embeddedFileName = GetEmbeddedFileNameTemp(filePath);
+    if (embeddedFileName) {
+        return embeddedFileName;
+    }
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }

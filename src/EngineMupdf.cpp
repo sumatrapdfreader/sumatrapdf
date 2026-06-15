@@ -2032,16 +2032,42 @@ const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
     char* streamNoStr = (char*)FindEmbeddedPdfFileStreamNo(path2);
     if (streamNoStr) {
         char* rest = (char*)str::Parse(streamNoStr, ":%d", &streamNo);
-        // there shouldn't be any left unparsed data
-        ReportIf(!rest);
-        if (!rest) {
+        bool hasAttachmentName = rest && str::StartsWith(rest, ":attachname=");
+        // there shouldn't be any left unparsed data except attachment name metadata
+        ReportIf(!rest || (*rest && !hasAttachmentName));
+        if (!rest || (*rest && !hasAttachmentName)) {
             streamNo = -1;
+        }
+        if (hasAttachmentName) {
+            *rest = 0;
         }
         // replace ':' with 0 to create a filesystem path
         *streamNoStr = 0;
     }
     *streamNoOut = streamNo;
     return path2;
+}
+
+TempStr GetEmbeddedFileNameTemp(const char* path) {
+    const char* meta = nullptr;
+    for (const char* pos = str::Find(path, ":attachname="); pos; pos = str::Find(pos + 1, ":attachname=")) {
+        meta = pos;
+    }
+    if (!meta) {
+        return nullptr;
+    }
+    const char* hex = meta + str::Len(":attachname=");
+    size_t hexLen = str::Len(hex);
+    if (hexLen == 0 || (hexLen % 2) != 0) {
+        return nullptr;
+    }
+    size_t nameLen = hexLen / 2;
+    char* name = AllocArrayTemp<char>(nameLen + 1);
+    if (!str::HexToMem(hex, (u8*)name, nameLen)) {
+        return nullptr;
+    }
+    name[nameLen] = 0;
+    return name;
 }
 
 ByteSlice EngineMupdf::LoadStreamFromPDFFile(const char* filePath) {
@@ -2696,7 +2722,9 @@ static NO_INLINE IPageDestination* DestFromAttachment(EngineMupdf* engine, fz_ou
     // WCHAR* path = ToWStr(outline->uri);
     dest->name = str::Dup(outline->title);
     // page is really a stream number
-    dest->value = str::Format("%s:%d", engine->FilePath(), outline->page.page);
+    const char* title = outline->title ? outline->title : "";
+    AutoFreeStr nameHex(str::MemToHex((const u8*)title, str::Len(title)));
+    dest->value = str::Format("%s:%d:attachname=%s", engine->FilePath(), outline->page.page, nameHex.Get());
     dest->pageNo = outline->page.page;
     return dest;
 }
