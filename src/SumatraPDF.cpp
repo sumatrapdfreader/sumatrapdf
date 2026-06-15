@@ -859,6 +859,7 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void ZoomChanged(DocController* ctrl, float zoomVirtual) override;
     void UpdateScrollbars(Size canvas) override;
     void RequestRendering(int pageNo) override;
+    void RequestPredictiveRendering(int originPageNo, const int* pages, int nPages) override;
     void CleanUp(DisplayModel* dm) override;
     void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) override;
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
@@ -1005,6 +1006,15 @@ void ControllerCallbackHandler::RequestRendering(int pageNo) {
     if (dm->ShouldCacheRendering(pageNo)) {
         gRenderCache->RequestRendering(dm, pageNo);
     }
+}
+
+void ControllerCallbackHandler::RequestPredictiveRendering(int originPageNo, const int* pages, int nPages) {
+    ReportIf(!win->AsFixed());
+    if (!win->AsFixed()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    gRenderCache->RequestPredictiveRendering(dm, originPageNo, pages, nPages);
 }
 
 void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {

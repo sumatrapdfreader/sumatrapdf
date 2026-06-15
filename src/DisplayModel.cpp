@@ -255,10 +255,15 @@ void DisplayModel::RenderFinished(PageRenderRequest* req) {
             pageInfo->failedToRender = true;
         }
         RepaintDisplay();
-        return;
-    }
-    if (PageVisibleNearby(req->pageNo)) {
+    } else if (PageVisibleNearby(req->pageNo)) {
         RepaintDisplay();
+    }
+    // continue chained predictive rendering: render the next predicted page
+    // (RequestPredictiveRendering stops the chain if the origin page is no
+    // longer visible). A failed render still continues the chain so one bad
+    // page doesn't stop predicting the rest.
+    if (req->nPredictiveRequests > 0) {
+        cb->RequestPredictiveRendering(req->predictiveOriginPageNo, req->predictiveRequests, req->nPredictiveRequests);
     }
 }
 
@@ -1293,21 +1298,29 @@ void DisplayModel::RenderVisibleParts() {
     }
 
     if (gPredictiveRender) {
-        // prerender two more pages in facing and book view modes
-        // if the rendering queue still has place for them
-        if (!IsSingle(GetDisplayMode())) {
-            if (firstVisiblePage > 2) {
-                cb->RequestRendering(firstVisiblePage - 2);
-            }
-            if (lastVisiblePage + 1 < PageCount()) {
-                cb->RequestRendering(lastVisiblePage + 2);
-            }
+        // build a chain of pages to prerender (most likely next page first),
+        // then render them one at a time so they don't flood the queue.
+        // The chain is anchored to lastVisiblePage and stops once it scrolls
+        // out of view (see RenderCache::RequestPredictiveRendering).
+        int pred[kMaxPredictiveRequests];
+        int nPred = 0;
+        if (lastVisiblePage < PageCount()) {
+            pred[nPred++] = lastVisiblePage + 1;
         }
         if (firstVisiblePage > 1) {
-            cb->RequestRendering(firstVisiblePage - 1);
+            pred[nPred++] = firstVisiblePage - 1;
         }
-        if (lastVisiblePage < PageCount()) {
-            cb->RequestRendering(lastVisiblePage + 1);
+        // prerender two more pages in facing and book view modes
+        if (!IsSingle(GetDisplayMode())) {
+            if (lastVisiblePage + 1 < PageCount()) {
+                pred[nPred++] = lastVisiblePage + 2;
+            }
+            if (firstVisiblePage > 2) {
+                pred[nPred++] = firstVisiblePage - 2;
+            }
+        }
+        if (nPred > 0) {
+            cb->RequestPredictiveRendering(lastVisiblePage, pred, nPred);
         }
     }
 

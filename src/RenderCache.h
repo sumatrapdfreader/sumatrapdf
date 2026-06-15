@@ -15,7 +15,20 @@ constexpr int RENDER_DELAY_FAILED = std::numeric_limits<int>::max() - 2;
 // i.e. one big page can use as much memory as lots of small pages
 #define MAX_BITMAPS_CACHED 128
 
+// predictive rendering renders up to this many pages ahead, one at a time
+// (chained), so they don't flood the render queue
+constexpr int kMaxPredictiveRequests = 4;
+
 struct PageInfo;
+
+// describes the chain of pages to render predictively after the current page.
+// originPageNo is the visible page that anchors the chain; the chain stops
+// once it's no longer visible.
+struct PredictiveChain {
+    int originPageNo = 0;
+    int nPages = 0;
+    int pages[kMaxPredictiveRequests]{};
+};
 
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
    A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
@@ -81,6 +94,14 @@ struct PageRenderRequest {
     // set by render thread before calling renderFinishedCb
     RenderedBitmap* bmp = nullptr;
     int errorCode = 0; // 0 = success
+
+    // Predictive rendering: once this page finishes rendering, the pages in
+    // predictiveRequests are rendered one at a time (chained), each new request
+    // carrying the remaining pages forward. predictiveOriginPageNo is the visible
+    // page that anchors the chain - if it's no longer visible the chain stops.
+    int predictiveOriginPageNo = 0;
+    int nPredictiveRequests = 0;
+    int predictiveRequests[kMaxPredictiveRequests]{};
 
     // called when rendering finishes (success or failure)
     // if null, render cache handles caching directly (legacy path)
@@ -150,9 +171,12 @@ struct RenderCache {
 
     bool IsRenderQueueFull() const { return requestCount == MAX_PAGE_REQUESTS; }
     int GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
-    void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
+    void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true,
+                          const PredictiveChain* chain = nullptr);
+    // start (or continue) a chained predictive render anchored to originPageNo
+    void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                const Func1<PageRenderRequest*>& renderFinishedCb);
+                const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain = nullptr);
     void ClearQueueForDisplayModel(DisplayModel* dm, int pageNo = kInvalidPageNo, TilePosition* tile = nullptr);
     void AbortCurrentRequest(int threadIdx);
 

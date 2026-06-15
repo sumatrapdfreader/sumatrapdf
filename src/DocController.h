@@ -38,6 +38,8 @@ struct DocControllerCallback {
     virtual void Repaint() = 0;
     virtual void UpdateScrollbars(Size canvas) = 0;
     virtual void RequestRendering(int pageNo) = 0;
+    // start (or continue) chained predictive rendering anchored to originPageNo
+    virtual void RequestPredictiveRendering(int originPageNo, const int* pages, int nPages) = 0;
     virtual void CleanUp(DisplayModel* dm) = 0;
     virtual void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) = 0;
     // ChmModel //

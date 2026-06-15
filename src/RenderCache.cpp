@@ -491,7 +491,8 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 }
 
 /* Render a bitmap for page <pageNo> in <dm>. */
-void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
+void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage,
+                                   const PredictiveChain* chain) {
     // logvf("RenderCache::RequestRendering: pageNo %d\n", pageNo);
     ScopedCritSec scope(&requestAccess);
     ReportIf(!dm);
@@ -555,7 +556,57 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
     }
 
     auto cb = MkMethod1<DisplayModel, PageRenderRequest*, &DisplayModel::RenderFinishedAsync>(dm);
-    Render(dm, pageNo, rotation, zoom, &tile, nullptr, cb);
+    Render(dm, pageNo, rotation, zoom, &tile, nullptr, cb, chain);
+}
+
+// Start (or continue) a chain of predictive renders. Renders the first page in
+// `pages` that still needs rendering, carrying the rest forward so that when it
+// finishes the next one is requested, and so on - rendering predicted pages one
+// at a time instead of flooding the queue. The chain stops once `originPageNo`
+// (the visible page that started it) is no longer visible.
+void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages) {
+    ReportIf(!dm);
+    if (!dm || dm->pauseRendering) {
+        return;
+    }
+    // the view has moved on - don't keep rendering pages predicted for it
+    if (!dm->PageVisible(originPageNo)) {
+        return;
+    }
+
+    int rotation = NormalizeRotation(dm->GetRotation());
+    // find the first page that actually needs rendering (skip cached/invalid)
+    int i = 0;
+    for (; i < nPages; i++) {
+        int pageNo = pages[i];
+        if (!dm->ValidPageNo(pageNo) || !dm->ShouldCacheRendering(pageNo)) {
+            continue;
+        }
+        float zoom = dm->GetZoomReal(pageNo);
+        if (zoom <= 0) {
+            continue;
+        }
+        TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
+        if (tile.res > 1) {
+            continue;
+        }
+        if (!Exists(dm, pageNo, rotation, zoom, &tile)) {
+            break;
+        }
+    }
+    if (i >= nPages) {
+        // nothing left to predict
+        return;
+    }
+
+    // carry the remaining pages forward so they're chained after this one
+    PredictiveChain chain;
+    chain.originPageNo = originPageNo;
+    for (int j = i + 1; j < nPages; j++) {
+        chain.pages[chain.nPages++] = pages[j];
+    }
+    TilePosition tile(GetTileRes(dm, pages[i]), 0, 0);
+    RequestRendering(dm, pages[i], tile, true, &chain);
 }
 
 void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectF pageRect,
@@ -573,7 +624,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 }
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
-                         const Func1<PageRenderRequest*>& renderFinishedCb) {
+                         const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain) {
     logvf("RenderCache::Render: pageNo %d\n", pageNo);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
@@ -623,6 +674,15 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     newRequest->timestamp = GetTickCount();
     newRequest->bmp = nullptr;
     newRequest->errorCode = 0;
+    newRequest->predictiveOriginPageNo = 0;
+    newRequest->nPredictiveRequests = 0;
+    if (chain) {
+        newRequest->predictiveOriginPageNo = chain->originPageNo;
+        newRequest->nPredictiveRequests = chain->nPages;
+        for (int i = 0; i < chain->nPages; i++) {
+            newRequest->predictiveRequests[i] = chain->pages[i];
+        }
+    }
     newRequest->renderFinishedCb = renderFinishedCb;
 
     ReleaseSemaphore(startRendering, 1, nullptr);
