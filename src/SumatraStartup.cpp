@@ -606,7 +606,12 @@ Error:
     goto Retry;
 }
 
-static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
+// forwardSysKeys is set when hwnd is a child pane (TOC tree / edit box) whose
+// Alt / F10 menu keys should be routed to the frame (see MaybeTranslateAccelerator)
+static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardSysKeys = nullptr) {
+    if (forwardSysKeys) {
+        *forwardSysKeys = false;
+    }
     HACCEL* accTables = GetAcceleratorTables();
 
     HACCEL accTable = accTables[0];
@@ -638,11 +643,17 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel) {
     }
     if (str::EqI(clsName, WC_EDITW)) {
         *hwndAccel = win->hwndFrame;
+        if (forwardSysKeys) {
+            *forwardSysKeys = true;
+        }
         return editAccTable;
     }
 
     if (str::EqI(clsName, WC_TREEVIEWW)) {
         *hwndAccel = win->hwndFrame;
+        if (forwardSysKeys) {
+            *forwardSysKeys = true;
+        }
         return treeViewAccTable;
     }
 
@@ -655,9 +666,21 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
                      (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST));
     if (!doAccels) return false;
     HWND hwndAccel;
-    HACCEL accels = FindAcceleratorsForHwnd(msg.hwnd, &hwndAccel);
+    bool forwardSysKeys = false;
+    HACCEL accels = FindAcceleratorsForHwnd(msg.hwnd, &hwndAccel, &forwardSysKeys);
     if (!accels) return false;
-    return TranslateAcceleratorW(hwndAccel, accels, &msg);
+    if (TranslateAcceleratorW(hwndAccel, accels, &msg)) {
+        return true;
+    }
+    // Alt+<mnemonic> / F10 open the menu bar, but those aren't in the accelerator
+    // tables; when focus is on a child pane (TOC tree / edit box) the control
+    // would swallow them. Retarget the system-key messages to the frame so its
+    // menu still responds (issue #4614). Retargeting before TranslateMessage()
+    // also makes the generated WM_SYSCHAR go to the frame.
+    if (forwardSysKeys && (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP || msg.message == WM_SYSCHAR)) {
+        msg.hwnd = hwndAccel;
+    }
+    return false;
 }
 
 static int RunMessageLoop() {
