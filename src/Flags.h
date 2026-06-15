@@ -69,6 +69,7 @@ struct Flags {
     // the document in new window
     bool inNewWindow = false;
     char* search = nullptr;
+    char* password = nullptr;
 
     // stress-testing related
     char* stressTestPath = nullptr;

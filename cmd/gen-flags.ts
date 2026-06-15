@@ -78,6 +78,7 @@ const args = [
     "RunInstallNow", "run-install-now",
     "Adobe", "a",
     "DDE", "dde",
+    "Pwd", "pwd",
     "EngineDump", "engine-dump",
     "SetColorRange", "set-color-range",
     "UpgradeFrom", "upgrade-from",

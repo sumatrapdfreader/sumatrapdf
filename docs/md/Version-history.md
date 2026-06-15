@@ -10,6 +10,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - [external viewer](Customize-external-viewers.md) command lines now support `%%` as a literal `%`, so e.g. `%%d` is passed to the program as `%d` (fixes #5583)
 - with `ReuseInstance`, opening a file now reuses a window on the current virtual desktop (or opens a new window there) instead of switching to a window on another desktop (fixes #5630)
 - add `-for-testing` [cmd-line argument](Command-line-arguments.md) for ad-hoc testing: always starts a new instance, doesn't restore a session, doesn't save settings
+- add `-pwd` [cmd-line argument](Command-line-arguments.md) for opening password-protected documents from the command line (fixes #906)
 - add Back / Forward navigation buttons to the toolbar; navigation history now also records views you scrolled to and stayed on, not just table of contents / link jumps
 - add `CmdRemoveDeletedFilesFromHistory` (`Remove Deleted Files From History` in `Ctrl + k` [command palette](Command-Palette.md)) to remove history entries for files that no longer exist on disk
 - add `CmdPdShowInfo` (`Show PDF Info` in `Ctrl + k` [command palette](Command-Palette.md))

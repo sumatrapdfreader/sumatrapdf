@@ -519,6 +519,7 @@ bool gShowPassword = false;
 class HwndPasswordUI : public PasswordUI {
     HWND hwnd;
     size_t pwdIdx;
+    bool triedCliPwd = false;
 
   public:
     explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {}
@@ -540,6 +541,11 @@ char* HwndPasswordUI::GetPassword(const char* path, u8* fileDigest, u8 decryptio
     }
 
     *saveKey = false;
+
+    if (!triedCliPwd && gCli && gCli->password) {
+        triedCliPwd = true;
+        return str::Dup(gCli->password);
+    }
 
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->size()) {

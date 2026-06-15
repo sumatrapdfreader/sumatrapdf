@@ -16,6 +16,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
 - `-appdata <directory>` : set custom directory where we'll store `SumatraPDF-settings.txt` file and thumbnail cache
 - `-restrict` : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. Read more detailed documentation.
 - `-for-testing` : for ad-hoc testing by humans or agents. Always starts a new instance, doesn't restore a session (only loads files given on the command line) and doesn't save settings (**ver 3.7+**)
+- `-pwd <password>` : use the given password to open password-protected documents. If the password is wrong, SumatraPDF falls back to default passwords and then asks interactively.
 
 ## Navigation options
 

@@ -74,6 +74,23 @@ int TestSynctex(const Flags& flags) {
 // searches (case-insensitive) for the needle and writes the result -- the page
 // it was found on (1-based) or NOTFOUND -- to the output file, then exits.
 // Used by tests/issue-5597.ts; not meant for end users.
+class TestPasswordUI : public PasswordUI {
+    const char* password = nullptr;
+    bool triedPassword = false;
+
+  public:
+    explicit TestPasswordUI(const char* password) : password(password) {}
+
+    char* GetPassword(const char*, u8*, u8[32], bool* saveKey) override {
+        *saveKey = false;
+        if (triedPassword || !password) {
+            return nullptr;
+        }
+        triedPassword = true;
+        return str::Dup(password);
+    }
+};
+
 int TestSearch(const Flags& flags) {
     ScopedGdiPlus gdiPlus;
     if (!gGlobalPrefs) {
@@ -83,7 +100,8 @@ int TestSearch(const Flags& flags) {
     const char* needle = flags.testSearchNeedle; // utf-8
 
     StrBuilder out;
-    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    TestPasswordUI pwdUI(flags.password);
+    EngineBase* engine = CreateEngineFromFile(pdfPath, flags.password ? &pwdUI : nullptr, false);
     if (!engine) {
         out.AppendFmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
     } else {
