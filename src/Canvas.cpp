@@ -68,6 +68,8 @@ bool gNoFlickerRender = true;
 
 Kind kNotifAnnotation = "notifAnnotation";
 
+constexpr int kRenderDelayShowNotif = 500;
+
 // OLE drag-drop support for dragging selected text out of the window
 class TextDropSource : public IDropSource {
     LONG refCount = 1;
@@ -1887,8 +1889,8 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
             HFONT fontRightTxt = CreateSimpleFont(hdc, "MS Shell Dlg", 14);
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             if (renderDelay != RENDER_DELAY_FAILED) {
-                if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
-                    ScheduleRepaint(win, REPAINT_MESSAGE_DELAY_IN_MS / 4);
+                if (renderDelay < kRenderDelayShowNotif) {
+                    ScheduleRepaint(win, kRenderDelayShowNotif - renderDelay);
                 } else {
                     SetTextColor(hdc, colDocTxt);
                     DrawCenteredText(hdc, bounds, _TRA("Please wait - rendering..."), isRtl);

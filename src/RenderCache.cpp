@@ -857,6 +857,7 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull()) {
             RequestRendering(dm, pageNo, tile);
+            renderDelay = 1;
         }
     }
     RenderedBitmap* renderedBmp = entry ? entry->bitmap : nullptr;
