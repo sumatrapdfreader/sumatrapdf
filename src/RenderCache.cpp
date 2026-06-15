@@ -4,6 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/UITask.h"
 #include "utils/Timer.h"
 
 #include "wingui/UIModels.h"
@@ -701,6 +703,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
         }
     }
 
+    UpdateRenderInfo();
     return true;
 }
 
@@ -738,16 +741,19 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
     ReportIf(requestCount < 0);
     ReportIf(req->abort);
 
+    UpdateRenderInfo();
     return true;
 }
 
 bool RenderCache::ClearCurrentRequest(int threadIdx) {
     ScopedCritSec scope(&requestAccess);
     if (curReqs[threadIdx]) {
+        RecordFinishedRequest(curReqs[threadIdx]);
         delete curReqs[threadIdx]->abortCookie;
     }
     curReqs[threadIdx] = nullptr;
 
+    UpdateRenderInfo();
     bool isQueueEmpty = requestCount == 0;
     return isQueueEmpty;
 }
@@ -798,6 +804,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel* dm, int pageNo, TilePo
             curPos++;
         }
     }
+    UpdateRenderInfo();
 }
 
 void RenderCache::AbortCurrentRequest(int threadIdx) {
@@ -810,6 +817,7 @@ void RenderCache::AbortCurrentRequest(int threadIdx) {
         cr->abortCookie->Abort();
     }
     cr->abort = true;
+    UpdateRenderInfo();
 }
 
 static DWORD WINAPI RenderCacheThread(LPVOID data) {
@@ -1092,4 +1100,196 @@ void RenderCache::LogCacheSize() {
         }
     }
     logValueSize("bitmapCache", size);
+}
+
+// --------- render queue debug window (CmdDebugToggleRenderInfo) ---------
+
+extern RenderCache* gRenderCache;
+
+constexpr const WCHAR* kRenderInfoWinClass = L"SUMATRA_RENDER_INFO";
+
+static HWND gRenderInfoHwnd = nullptr;
+static HWND gRenderInfoEdit = nullptr;
+
+bool IsRenderInfoWindowVisible() {
+    return gRenderInfoHwnd != nullptr;
+}
+
+static void SerializePredictive(StrBuilder& s, int originPageNo, int nPred, const int* pred) {
+    if (nPred <= 0) {
+        return;
+    }
+    s.AppendFmt("  pred[origin=%d:", originPageNo);
+    for (int j = 0; j < nPred; j++) {
+        s.AppendFmt(" %d", pred[j]);
+    }
+    s.Append("]");
+}
+
+static void SerializeRequest(StrBuilder& s, const char* label, PageRenderRequest* r, DWORD now) {
+    int ageMs = (int)(now - r->timestamp);
+    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  age %5dms", label, r->pageNo, r->zoom,
+                r->rotation, r->tile.res, r->tile.row, r->tile.col, ageMs);
+    if (r->abort) {
+        s.Append("  ABORT");
+    }
+    SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
+    if (r->dm && r->dm->GetEngine()) {
+        TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
+        s.AppendFmt("  %s", name);
+    }
+    s.Append("\r\n");
+}
+
+static void SerializeFinished(StrBuilder& s, FinishedRequestInfo* r, DWORD now) {
+    int durMs = (int)(r->finishedAt - r->timestamp);
+    int agoMs = (int)(now - r->finishedAt);
+    const char* label = r->aborted ? "ABORTED" : "DONE";
+    s.AppendFmt("%-9s page %3d  zoom %6.2f  rot %3d  tile[res=%d row=%d col=%d]  took %5dms  %6dms ago", label,
+                r->pageNo, r->zoom, r->rotation, r->tile.res, r->tile.row, r->tile.col, durMs, agoMs);
+    SerializePredictive(s, r->predictiveOriginPageNo, r->nPredictiveRequests, r->predictiveRequests);
+    if (r->fileName[0]) {
+        s.AppendFmt("  %s", r->fileName);
+    }
+    s.Append("\r\n");
+}
+
+void RenderCache::RecordFinishedRequest(PageRenderRequest* r) {
+    FinishedRequestInfo& fi = finishedHistory[finishedHistoryNext];
+    fi.pageNo = r->pageNo;
+    fi.zoom = r->zoom;
+    fi.rotation = r->rotation;
+    fi.tile = r->tile;
+    fi.timestamp = r->timestamp;
+    fi.finishedAt = GetTickCount();
+    fi.aborted = r->abort;
+    fi.predictiveOriginPageNo = r->predictiveOriginPageNo;
+    fi.nPredictiveRequests = r->nPredictiveRequests;
+    for (int i = 0; i < kMaxPredictiveRequests; i++) {
+        fi.predictiveRequests[i] = r->predictiveRequests[i];
+    }
+    fi.fileName[0] = 0;
+    if (r->dm && r->dm->GetEngine()) {
+        TempStr name = path::GetBaseNameTemp(r->dm->GetEngine()->FilePath());
+        str::BufSet(fi.fileName, dimof(fi.fileName), name);
+    }
+    finishedHistoryNext = (finishedHistoryNext + 1) % kFinishedHistorySize;
+    if (finishedHistoryCount < kFinishedHistorySize) {
+        finishedHistoryCount++;
+    }
+}
+
+void RenderCache::SerializeQueueState(StrBuilder& s) {
+    ScopedCritSec scope(&requestAccess);
+    DWORD now = GetTickCount();
+    int nInProgress = 0;
+    for (int i = 0; i < nRenderThreads; i++) {
+        if (curReqs[i]) {
+            nInProgress++;
+        }
+    }
+    s.AppendFmt("Render queue: %d rendering, %d queued (%d threads)\r\n\r\n", nInProgress, requestCount,
+                nRenderThreads);
+
+    for (int i = 0; i < nRenderThreads; i++) {
+        if (curReqs[i]) {
+            SerializeRequest(s, "RENDERING", curReqs[i], now);
+        }
+    }
+    // queued requests are rendered LIFO, so list from top (next to render) down
+    for (int i = requestCount - 1; i >= 0; i--) {
+        SerializeRequest(s, "QUEUED", &requests[i], now);
+    }
+
+    // recently finished requests, most recently finished first
+    if (finishedHistoryCount > 0) {
+        s.AppendFmt("\r\nLast %d finished:\r\n", finishedHistoryCount);
+        int idx = finishedHistoryNext - 1;
+        for (int n = 0; n < finishedHistoryCount; n++) {
+            if (idx < 0) {
+                idx += kFinishedHistorySize;
+            }
+            SerializeFinished(s, &finishedHistory[idx], now);
+            idx--;
+        }
+    }
+}
+
+static void SetRenderInfoTextOnUI(char* s) {
+    if (gRenderInfoEdit) {
+        HwndSetText(gRenderInfoEdit, s);
+    }
+    str::Free(s);
+}
+
+void RenderCache::UpdateRenderInfo() {
+    if (!IsRenderInfoWindowVisible()) {
+        return;
+    }
+    StrBuilder s;
+    SerializeQueueState(s);
+    // marshal to the UI thread: updating the window from a render thread while
+    // holding requestAccess could deadlock if the UI thread is blocked on it
+    char* dup = str::Dup(s.CStr());
+    auto fn = MkFunc0(SetRenderInfoTextOnUI, dup);
+    uitask::Post(fn, "RenderInfo");
+}
+
+static LRESULT CALLBACK WndProcRenderInfo(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+        case WM_SIZE:
+            if (gRenderInfoEdit) {
+                MoveWindow(gRenderInfoEdit, 0, 0, LOWORD(lp), HIWORD(lp), TRUE);
+            }
+            return 0;
+        case WM_CLOSE:
+            DestroyWindow(hwnd);
+            return 0;
+        case WM_DESTROY:
+            gRenderInfoHwnd = nullptr;
+            gRenderInfoEdit = nullptr;
+            return 0;
+    }
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static void CreateRenderInfoWindow() {
+    HMODULE h = GetModuleHandleW(nullptr);
+    WNDCLASSEX wcex = {};
+    FillWndClassEx(wcex, kRenderInfoWinClass, WndProcRenderInfo);
+    wcex.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
+    RegisterClassEx(&wcex);
+
+    DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+    HWND hwnd = CreateWindowExW(0, kRenderInfoWinClass, L"Render Queue Info", dwStyle, CW_USEDEFAULT, CW_USEDEFAULT,
+                                700, 500, nullptr, nullptr, h, nullptr);
+    if (!hwnd) {
+        return;
+    }
+    gRenderInfoHwnd = hwnd;
+
+    Rect cRc = ClientRect(hwnd);
+    DWORD editStyle =
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
+    HWND hwndEdit = CreateWindowExW(0, WC_EDITW, L"", editStyle, 0, 0, cRc.dx, cRc.dy, hwnd, nullptr, h, nullptr);
+    gRenderInfoEdit = hwndEdit;
+
+    HDC hdc = GetDC(hwnd);
+    HFONT font = CreateSimpleFont(hdc, "Consolas", 12);
+    ReleaseDC(hwnd, hdc);
+    if (font) {
+        SendMessageW(hwndEdit, WM_SETFONT, (WPARAM)font, TRUE);
+    }
+    ShowWindow(hwnd, SW_SHOW);
+}
+
+void ToggleRenderInfoWindow() {
+    if (gRenderInfoHwnd) {
+        DestroyWindow(gRenderInfoHwnd);
+        return;
+    }
+    CreateRenderInfoWindow();
+    if (gRenderCache) {
+        gRenderCache->UpdateRenderInfo();
+    }
 }

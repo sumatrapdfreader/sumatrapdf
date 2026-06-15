@@ -602,6 +602,10 @@ static MenuDef menuDefDebug[] = {
         CmdDebugShowNotif,
     },
     {
+        "Toggle render queue info",
+        CmdDebugToggleRenderInfo,
+    },
+    {
         nullptr,
         0,
     },

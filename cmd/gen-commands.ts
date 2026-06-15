@@ -233,6 +233,7 @@ export const commands = [
     "CmdToggleHoverPreview", "Toggle Hover Preview",
     "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
     "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
+    "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",
     "CmdNone", "Do nothing",
 ];
 

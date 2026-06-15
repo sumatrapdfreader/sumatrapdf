@@ -238,7 +238,8 @@ enum {
     CmdToggleHoverPreview = 427,
     CmdRemoveDeletedFilesFromHistory = 428,
     CmdCommandPaletteTOC = 429,
-    CmdNone = 430,
+    CmdDebugToggleRenderInfo = 430,
+    CmdNone = 431,
 
     /* range for file history */
     CmdFileHistoryFirst,

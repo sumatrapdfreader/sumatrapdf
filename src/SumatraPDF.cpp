@@ -7401,6 +7401,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             TogglePredictiveRender(win);
             break;
 
+        case CmdDebugToggleRenderInfo:
+            ToggleRenderInfoWindow();
+            break;
+
         case CmdToggleLinks:
             gGlobalPrefs->showLinks = !gGlobalPrefs->showLinks;
             for (auto& w : gWindows) {

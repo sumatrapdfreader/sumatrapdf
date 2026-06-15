@@ -100,6 +100,7 @@ static i32 gDocumentNotOpenWhitelist[] = {
     CmdDebugStartStressTest,
     CmdDebugTestApp,
     CmdDebugTogglePredictiveRender,
+    CmdDebugToggleRenderInfo,
     CmdDebugToggleRtl,
     CmdChangeScrollbar,
     CmdToggleAntiAlias,
@@ -162,6 +163,7 @@ static i32 gCommandsDebugOnly[] = {
     CmdDebugTestApp,
     CmdDebugShowNotif,
     CmdDebugStartStressTest,
+    CmdDebugToggleRenderInfo,
     0,
 };
 

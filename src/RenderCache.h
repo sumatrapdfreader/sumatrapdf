@@ -112,6 +112,26 @@ constexpr int kMaxRenderThreads = 32;
 
 extern int gMaxRenderThreads;
 
+// keep a small history of recently finished render requests for the
+// render-info debug window
+constexpr int kFinishedHistorySize = 32;
+
+// snapshot of a finished render request (kept after the request is gone, so it
+// copies the file name instead of holding on to a DisplayModel pointer)
+struct FinishedRequestInfo {
+    int pageNo = 0;
+    float zoom = 0;
+    int rotation = 0;
+    TilePosition tile;
+    DWORD timestamp = 0;  // when it was requested
+    DWORD finishedAt = 0; // when it finished
+    bool aborted = false;
+    int predictiveOriginPageNo = 0;
+    int nPredictiveRequests = 0;
+    int predictiveRequests[kMaxPredictiveRequests]{};
+    char fileName[128]{};
+};
+
 struct RenderCache {
     BitmapCacheEntry* cache[MAX_BITMAPS_CACHED]{};
     int cacheCount = 0;
@@ -121,6 +141,12 @@ struct RenderCache {
 
     PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
     int requestCount = 0;
+
+    // ring buffer of recently finished requests (for the render-info window),
+    // protected by requestAccess
+    FinishedRequestInfo finishedHistory[kFinishedHistorySize]{};
+    int finishedHistoryCount = 0; // number of valid entries (capped at size)
+    int finishedHistoryNext = 0;  // next slot to write
     // per-thread current request tracking (index matches thread index)
     PageRenderRequest* curReqs[kMaxRenderThreads]{};
     CRITICAL_SECTION requestAccess;
@@ -190,4 +216,18 @@ struct RenderCache {
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
     void LogCacheSize();
+
+    // record a just-finished request in finishedHistory (call holding requestAccess)
+    void RecordFinishedRequest(PageRenderRequest* req);
+    // serialize the queue (in-progress + queued requests) as plain text, one
+    // line per request, for the render-info debug window
+    void SerializeQueueState(StrBuilder& s);
+    // if the render-info debug window is shown, refresh it with the current
+    // queue state. Cheap no-op when the window is hidden. Safe to call from
+    // any thread (and while holding requestAccess).
+    void UpdateRenderInfo();
 };
+
+// render queue debug window (CmdDebugToggleRenderInfo)
+void ToggleRenderInfoWindow();
+bool IsRenderInfoWindowVisible();
