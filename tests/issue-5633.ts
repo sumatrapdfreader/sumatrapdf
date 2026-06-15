@@ -81,21 +81,6 @@ function querySynctex(
   return { ret: parseInt(m[1]), page: parseInt(m[2]), nrects: parseInt(m[3]), raw };
 }
 
-function requireLatexEngine(engine: "pdflatex" | "lualatex"): string {
-  const path = findLatexEngine(engine);
-  if (!path) {
-    fail(
-      `MiKTeX (${engine}) not found.\n\n` +
-        "Install it with:\n" +
-        "    winget install MiKTeX.MiKTeX\n\n" +
-        `${engine}.exe is searched for in %PATH% and in:\n` +
-        `    %LOCALAPPDATA%\\Programs\\MiKTeX\\miktex\\bin\\x64\\${engine}.exe\n` +
-        `    C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\${engine}.exe`,
-    );
-  }
-  return path;
-}
-
 type EngineCase = {
   engine: "pdflatex" | "lualatex";
   enginePath: string;
@@ -175,28 +160,48 @@ export async function testit(): Promise<void> {
     throw new Error(`app not found: ${EXE} (build first)`);
   }
 
-  const pdflatex = requireLatexEngine("pdflatex");
-  const lualatex = requireLatexEngine("lualatex");
-  console.log(`• pdflatex: ${pdflatex}`);
-  console.log(`• lualatex: ${lualatex}`);
-
-  // fresh work dir
-  rmSync(WORK, { recursive: true, force: true });
-
-  const cases: EngineCase[] = [
-    {
+  // only run the engines that are actually installed; a missing engine (i.e.
+  // MiKTeX not installed) is not a failure - we print a message and skip it
+  const cases: EngineCase[] = [];
+  const pdflatex = findLatexEngine("pdflatex");
+  if (pdflatex) {
+    console.log(`• pdflatex: ${pdflatex}`);
+    cases.push({
       engine: "pdflatex",
       enginePath: pdflatex,
       cwd: join(WORK, "pdflatex"),
       srcPath: join(WORK, "pdflatex", TEX_FILE),
-    },
-    {
+    });
+  } else {
+    console.log("• pdflatex not found, skipping");
+  }
+  const lualatex = findLatexEngine("lualatex");
+  if (lualatex) {
+    console.log(`• lualatex: ${lualatex}`);
+    cases.push({
       engine: "lualatex",
       enginePath: lualatex,
       cwd: UNICODE_WORK,
       srcPath: join(UNICODE_WORK, TEX_FILE),
-    },
-  ];
+    });
+  } else {
+    console.log("• lualatex not found, skipping");
+  }
+
+  if (cases.length === 0) {
+    console.log(
+      "\nSKIP issue-5633: MiKTeX not installed, skipping synctex test.\n" +
+        "To run it, install MiKTeX with:\n" +
+        "    winget install MiKTeX.MiKTeX\n" +
+        "pdflatex.exe / lualatex.exe are searched for in %PATH% and in:\n" +
+        "    %LOCALAPPDATA%\\Programs\\MiKTeX\\miktex\\bin\\x64\\\n" +
+        "    C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\",
+    );
+    return;
+  }
+
+  // fresh work dir
+  rmSync(WORK, { recursive: true, force: true });
 
   let allPass = true;
   for (const c of cases) {
@@ -207,7 +212,7 @@ export async function testit(): Promise<void> {
   if (!allPass) {
     throw new Error("one or more synctex formats failed to resolve");
   }
-  console.log("PASS all synctex formats resolved for pdflatex and lualatex (issues #5633/#5678 fixed)");
+  console.log("PASS all synctex formats resolved (issues #5633/#5678 fixed)");
 }
 
 if (import.meta.main) {

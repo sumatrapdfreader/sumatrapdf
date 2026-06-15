@@ -63,7 +63,7 @@ Structure of each test (so they compose in tests/all.ts):
 
 Guidelines for test scripts:
 - build the app the same way cmd/build.ts does (via `buildApp`/`runStandalone` in tests/util.ts) and test the resulting out/dbg64/SumatraPDF-dll.exe
-- if a needed external tool (e.g. MiKTeX) isn't installed, throw with a clear error message and instructions to install it
+- if a needed external tool (e.g. MiKTeX) isn't installed, don't fail the test: print a clear message (with instructions to install it) and skip that part, returning normally so `tests/all.ts` continues
 - a good test fails when the fix is reverted (verify this) — not just passes with the fix present
 - bun has FFI; if you need to call Windows APIs, put reusable wrappers in tests/winapi.ts
 - prefer driving the app via cmd-line flags that write a machine-readable result (see `-test-synctex`) over GUI automation
