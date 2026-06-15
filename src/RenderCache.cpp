@@ -499,6 +499,13 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
         return;
     }
 
+    for (int i = 0; i < nRenderThreads; i++) {
+        auto* cr = curReqs[i];
+        if (cr && cr->dm == dm && !dm->PageVisibleNearby(cr->pageNo)) {
+            AbortCurrentRequest(i);
+        }
+    }
+
     int rotation = NormalizeRotation(dm->GetRotation());
     float zoom = dm->GetZoomReal(pageNo);
 
