@@ -77,6 +77,25 @@ struct TabGroupsDialog {
 
 static Vec<TabGroupsDialog*> gTabGroupsDialogs;
 
+static int ButtonPadding(HWND hwnd) {
+    return DpiScale(hwnd, kButtonPadding);
+}
+
+static int ButtonAreaDy(TabGroupsDialog* d) {
+    int padding = ButtonPadding(d->hwnd);
+    int buttonAreaDy = DpiScale(d->hwnd, kButtonAreaDy);
+    if (d->btnOk) {
+        buttonAreaDy = std::max(buttonAreaDy, d->btnOk->GetIdealSize().dy + 2 * padding);
+    }
+    if (d->btnDelete) {
+        buttonAreaDy = std::max(buttonAreaDy, d->btnDelete->GetIdealSize().dy + 2 * padding);
+    }
+    if (d->btnCancel) {
+        buttonAreaDy = std::max(buttonAreaDy, d->btnCancel->GetIdealSize().dy + 2 * padding);
+    }
+    return buttonAreaDy;
+}
+
 static TabGroupsDialog* FindDialog(HWND hwnd) {
     for (auto* d : gTabGroupsDialogs) {
         if (d->hwnd == hwnd) {
@@ -93,16 +112,20 @@ static void PopulateListBox(TabGroupsDialog* d) {
 
 static void LayoutControls(TabGroupsDialog* d) {
     Rect rc = ClientRect(d->hwnd);
-    int y = kPadding;
-    int x = kPadding;
-    int dx = rc.dx - 2 * kPadding;
+    int padding = DpiScale(d->hwnd, kPadding);
+    int buttonPadding = ButtonPadding(d->hwnd);
+    int buttonAreaDy = ButtonAreaDy(d);
+    int y = padding;
+    int x = padding;
+    int dx = rc.dx - 2 * padding;
 
     if (d->mode == TabGroupDialogMode::Save && d->hwndEdit) {
-        MoveWindow(d->hwndEdit, x, y, dx, kEditHeight, TRUE);
-        y += kEditHeight + kPadding;
+        int editHeight = DpiScale(d->hwnd, kEditHeight);
+        MoveWindow(d->hwndEdit, x, y, dx, editHeight, TRUE);
+        y += editHeight + padding;
     }
 
-    int lbDy = rc.dy - y - kButtonAreaDy;
+    int lbDy = rc.dy - y - buttonAreaDy;
     if (lbDy < 20) {
         lbDy = 20;
     }
@@ -114,15 +137,15 @@ static void LayoutControls(TabGroupsDialog* d) {
     // buttons at the bottom right: [Save/Open] [Delete] [Cancel]
     Size okSize = d->btnOk->GetIdealSize();
     Size cancelSize = d->btnCancel->GetIdealSize();
-    int btnY = rc.dy - kButtonPadding - okSize.dy;
-    int btnX = rc.dx - kButtonPadding - cancelSize.dx;
+    int btnY = rc.dy - buttonPadding - okSize.dy;
+    int btnX = rc.dx - buttonPadding - cancelSize.dx;
     MoveWindow(d->btnCancel->hwnd, btnX, btnY, cancelSize.dx, cancelSize.dy, TRUE);
     if (d->btnDelete) {
         Size deleteSize = d->btnDelete->GetIdealSize();
-        btnX -= kButtonPadding + deleteSize.dx;
+        btnX -= buttonPadding + deleteSize.dx;
         MoveWindow(d->btnDelete->hwnd, btnX, btnY, deleteSize.dx, deleteSize.dy, TRUE);
     }
-    btnX -= kButtonPadding + okSize.dx;
+    btnX -= buttonPadding + okSize.dx;
     MoveWindow(d->btnOk->hwnd, btnX, btnY, okSize.dx, okSize.dy, TRUE);
 }
 

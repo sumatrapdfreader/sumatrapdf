@@ -6,6 +6,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/Dpi.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 
@@ -54,6 +55,20 @@ struct PropertiesLayout {
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
+
+static int ButtonPadding(HWND hwnd) {
+    return DpiScale(hwnd, kButtonPadding);
+}
+
+static int ButtonAreaDy(PropertiesLayout* pl) {
+    int padding = ButtonPadding(pl->hwnd);
+    int buttonAreaDy = DpiScale(pl->hwnd, kButtonAreaDy);
+    if (pl->btnCopyToClipboard) {
+        Size buttonSize = pl->btnCopyToClipboard->GetIdealSize();
+        buttonAreaDy = std::max(buttonAreaDy, buttonSize.dy + 2 * padding);
+    }
+    return buttonAreaDy;
+}
 
 PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
     for (PropertiesLayout* pl : gPropertiesWindows) {
@@ -638,12 +653,16 @@ static void SizeToContent(PropertiesLayout* pl) {
     int editPadding = GetSystemMetrics(SM_CXVSCROLL) + 2 * GetSystemMetrics(SM_CXEDGE) + 16;
     int frameDx = GetSystemMetrics(SM_CXFRAME) * 2;
     int wantedClientDx = maxLineDx + editPadding;
+    if (pl->btnCopyToClipboard) {
+        Size buttonSize = pl->btnCopyToClipboard->GetIdealSize();
+        wantedClientDx = std::max(wantedClientDx, buttonSize.dx + 2 * ButtonPadding(hwnd));
+    }
     int wantedDx = wantedClientDx + frameDx;
 
     // calculate height to fit all lines
     int editBorderDy = 2 * GetSystemMetrics(SM_CYEDGE);
     int frameDy = GetSystemMetrics(SM_CYFRAME) * 2 + GetSystemMetrics(SM_CYCAPTION);
-    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + kButtonAreaDy + frameDy;
+    int wantedDy = (nLines + 3) * lineHeight + editBorderDy + ButtonAreaDy(pl) + frameDy;
 
     // cap at 80% of screen
     Rect work = GetWorkAreaRect(WindowRect(hwnd), hwnd);
@@ -658,11 +677,12 @@ static void SizeToContent(PropertiesLayout* pl) {
 
 static void LayoutButtons(PropertiesLayout* pl) {
     Rect cRc = ClientRect(pl->hwnd);
-    int btnY = cRc.dy - kButtonAreaDy + kButtonPadding;
+    int padding = ButtonPadding(pl->hwnd);
+    int btnY = cRc.dy - ButtonAreaDy(pl) + padding;
 
     if (pl->btnCopyToClipboard) {
         auto sz = pl->btnCopyToClipboard->GetIdealSize();
-        int x = cRc.dx - kButtonPadding - sz.dx;
+        int x = cRc.dx - padding - sz.dx;
         Rect rc{x, btnY, sz.dx, sz.dy};
         pl->btnCopyToClipboard->SetBounds(rc);
     }
@@ -708,7 +728,7 @@ LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (pl && pl->hwndEdit) {
                 int dx = LOWORD(lp);
                 int dy = HIWORD(lp);
-                int editDy = dy - kButtonAreaDy;
+                int editDy = dy - ButtonAreaDy(pl);
                 MoveWindow(pl->hwndEdit, 0, 0, dx, editDy, TRUE);
                 LayoutButtons(pl);
                 RECT rc = {0, editDy, dx, dy};
@@ -838,7 +858,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
 
     // create the edit control
     Rect cRc = ClientRect(hwnd);
-    int editDy = cRc.dy - kButtonAreaDy;
+    int editDy = cRc.dy - DpiScale(hwnd, kButtonAreaDy);
     DWORD editStyle =
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
     HWND hwndEdit =
@@ -857,10 +877,6 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         SendMessageW(hwndEdit, WM_SETFONT, (WPARAM)font, TRUE);
     }
 
-    SetEditText(hwndEdit, layoutData->propsText.CStr());
-
-    SizeToContent(layoutData);
-
     // create buttons
     {
         Button::CreateArgs args;
@@ -874,6 +890,9 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         b->onClick = MkFunc0(CopyPropertiesToClipboard, layoutData);
     }
 
+    SetEditText(hwndEdit, layoutData->propsText.CStr());
+
+    SizeToContent(layoutData);
     LayoutButtons(layoutData);
 
     Point savedPos = gGlobalPrefs->propWinPos;
