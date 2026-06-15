@@ -528,6 +528,61 @@ static void GetPropsText(DocController* ctrl, StrBuilder& out) {
     AppendPropTranslated(out, kPropFiles, GetPropValueTemp(props, kPropFiles));
 }
 
+static int GetPropertyLabelWidth(const char* line, int lineLen, int* labelBytesOut) {
+    for (int i = 0; i + 2 < lineLen; i++) {
+        if (line[i] != ':' || line[i + 1] != ' ') {
+            continue;
+        }
+        TempWStr label = ToWStrTemp(line, (size_t)i + 1);
+        *labelBytesOut = i + 1;
+        return str::Leni(label);
+    }
+    return -1;
+}
+
+static void AlignPropertiesText(StrBuilder& text) {
+    int maxLabelWidth = 0;
+    const char* start = text.CStr();
+    while (*start) {
+        const char* nl = str::FindChar(start, '\n');
+        int lineLen = nl ? (int)(nl - start) : str::Leni(start);
+        int labelBytes = 0;
+        int labelWidth = GetPropertyLabelWidth(start, lineLen, &labelBytes);
+        if (labelWidth > maxLabelWidth) {
+            maxLabelWidth = labelWidth;
+        }
+        start = nl ? nl + 1 : start + lineLen;
+    }
+    if (maxLabelWidth == 0) {
+        return;
+    }
+
+    StrBuilder aligned;
+    start = text.CStr();
+    while (*start) {
+        const char* nl = str::FindChar(start, '\n');
+        int lineLen = nl ? (int)(nl - start) : str::Leni(start);
+        int labelBytes = 0;
+        int labelWidth = GetPropertyLabelWidth(start, lineLen, &labelBytes);
+        if (labelWidth >= 0) {
+            int nSpacesBefore = maxLabelWidth - labelWidth;
+            for (int i = 0; i < nSpacesBefore; i++) {
+                aligned.AppendChar(' ');
+            }
+            aligned.Append(start, (size_t)labelBytes);
+            aligned.Append("  ");
+            aligned.Append(start + labelBytes + 1, (size_t)lineLen - labelBytes - 1);
+        } else {
+            aligned.Append(start, (size_t)lineLen);
+        }
+        if (nl) {
+            aligned.AppendChar('\n');
+        }
+        start = nl ? nl + 1 : start + lineLen;
+    }
+    text.Set(aligned.CStr());
+}
+
 static void SetEditText(HWND hwndEdit, const char* text) {
     // edit control needs \r\n line endings
     StrBuilder crlfText;
@@ -752,6 +807,7 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     layoutData = new PropertiesLayout();
     gPropertiesWindows.Append(layoutData);
     GetPropsText(ctrl, layoutData->propsText);
+    AlignPropertiesText(layoutData->propsText);
     layoutData->propsText.Append("\n");
     layoutData->propsText.Append(_TRA("Getting fonts information..."));
 
