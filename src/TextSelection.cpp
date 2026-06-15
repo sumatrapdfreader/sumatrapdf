@@ -36,6 +36,7 @@ void TextSelection::Reset() {
     result.pages = nullptr;
     free(result.rects);
     result.rects = nullptr;
+    wordStartPage = wordStartGlyph = wordEndPage = wordEndGlyph = -1;
 }
 
 // returns the index of the glyph closest to the right of the given coordinates
@@ -260,7 +261,7 @@ static int ExtendForwardAcrossCommaGroups(const WCHAR* text, int textLen, int cu
     return pos;
 }
 
-void TextSelection::SelectWordAt(int pageNo, double x, double y) {
+void TextSelection::GetWordBoundsAt(int pageNo, double x, double y, int* wordStartOut, int* wordEndOut) {
     int i = FindClosestGlyph(this, pageNo, x, y);
     int textLen;
     const WCHAR* text = engine->GetTextForPage(pageNo, &textLen);
@@ -331,8 +332,53 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
             wordStart = maybeNumberStart;
         }
     }
+    *wordStartOut = wordStart;
+    *wordEndOut = wordEnd;
+}
+
+void TextSelection::SelectWordAt(int pageNo, double x, double y) {
+    int wordStart = 0, wordEnd = 0;
+    GetWordBoundsAt(pageNo, x, y, &wordStart, &wordEnd);
+    // remember the word as the anchor for word-granular drag extension
+    wordStartPage = pageNo;
+    wordStartGlyph = wordStart;
+    wordEndPage = pageNo;
+    wordEndGlyph = wordEnd;
     StartAt(pageNo, wordStart);
     SelectUpTo(pageNo, wordEnd);
+}
+
+// (pageA, glyphA) is before (pageB, glyphB) in reading order
+static bool PosBefore(int pageA, int glyphA, int pageB, int glyphB) {
+    if (pageA != pageB) {
+        return pageA < pageB;
+    }
+    return glyphA < glyphB;
+}
+
+void TextSelection::SelectWordsUpTo(int pageNo, double x, double y) {
+    // no anchor word yet (shouldn't happen) - fall back to glyph selection
+    if (wordStartGlyph == -1) {
+        SelectUpTo(pageNo, x, y);
+        return;
+    }
+    int cursorStart = 0, cursorEnd = 0;
+    GetWordBoundsAt(pageNo, x, y, &cursorStart, &cursorEnd);
+
+    // union the anchor word with the word under the cursor, so the selection
+    // always covers whole words from the lower to the upper of the two
+    int startPg = wordStartPage, startGl = wordStartGlyph;
+    if (PosBefore(pageNo, cursorStart, startPg, startGl)) {
+        startPg = pageNo;
+        startGl = cursorStart;
+    }
+    int endPg = wordEndPage, endGl = wordEndGlyph;
+    if (PosBefore(endPg, endGl, pageNo, cursorEnd)) {
+        endPg = pageNo;
+        endGl = cursorEnd;
+    }
+    StartAt(startPg, startGl);
+    SelectUpTo(endPg, endGl);
 }
 
 void TextSelection::CopySelection(TextSelection* orig) {

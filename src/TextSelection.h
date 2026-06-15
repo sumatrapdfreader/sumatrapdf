@@ -15,6 +15,13 @@ struct TextSelection {
     int startGlyph = -1;
     int endGlyph = -1;
 
+    // the word selected by the most recent SelectWordAt(); used as the anchor
+    // for word-granular extension via SelectWordsUpTo()
+    int wordStartPage = -1;
+    int wordStartGlyph = -1;
+    int wordEndPage = -1;
+    int wordEndGlyph = -1;
+
     EngineBase* engine = nullptr;
 
     explicit TextSelection(EngineBase* engine);
@@ -25,7 +32,11 @@ struct TextSelection {
     void StartAt(int pageNo, double x, double y);
     void SelectUpTo(int pageNo, int glyphIx);
     void SelectUpTo(int pageNo, double x, double y);
+    void GetWordBoundsAt(int pageNo, double x, double y, int* wordStartOut, int* wordEndOut);
     void SelectWordAt(int pageNo, double x, double y);
+    // extend the selection so it spans whole words from the anchor word (set by
+    // the last SelectWordAt) to the word at (x, y)
+    void SelectWordsUpTo(int pageNo, double x, double y);
     void CopySelection(TextSelection* orig);
     WCHAR* ExtractText(const char* lineSep);
     void Reset();

@@ -191,7 +191,12 @@ void UpdateTextSelection(MainWindow* win, bool select) {
         int pageNo = dm->GetPageNoByPoint(win->selectionRect.BR());
         if (win->ctrl->ValidPageNo(pageNo)) {
             PointF pt = dm->CvtFromScreen(win->selectionRect.BR(), pageNo);
-            dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
+            if (win->selectingByWord) {
+                // double-click-drag: extend a whole word at a time (issue #4761)
+                dm->textSelection->SelectWordsUpTo(pageNo, pt.x, pt.y);
+            } else {
+                dm->textSelection->SelectUpTo(pageNo, pt.x, pt.y);
+            }
         }
     }
 
@@ -386,6 +391,7 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM) {
 
     win->selectionRect = Rect(x, y, 0, 0);
     win->showSelection = true;
+    win->selectingByWord = false;
     win->mouseAction = MouseAction::Selecting;
 
     bool isShift = IsShiftPressed();
@@ -426,5 +432,6 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
         win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(win->AsFixed(), win->selectionRect);
         win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
     }
+    win->selectingByWord = false;
     ScheduleRepaint(win, 0);
 }

@@ -210,6 +210,9 @@ struct MainWindow {
 
     // true while selecting and when CurrentTab()->selectionOnPage != nullptr
     bool showSelection = false;
+    // true while a text selection started by double-clicking a word is being
+    // dragged, so the selection extends a word at a time instead of a glyph
+    bool selectingByWord = false;
     // selection rectangle in screen coordinates (only needed while selecting)
     Rect selectionRect;
     // size of the current rectangular selection in document units

@@ -1431,6 +1431,16 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
             PointF pt = dm->CvtFromScreen(mousePos, pageNo);
             dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(win, false);
+            // keep the gesture active so dragging after the double-click extends
+            // the selection a word at a time (issue #4761). dragStartPending is
+            // cleared so that releasing without dragging keeps the whole word.
+            win->selectingByWord = true;
+            win->showSelection = true;
+            win->selectionRect = Rect(x, y, 0, 0);
+            win->mouseAction = MouseAction::SelectingText;
+            win->dragStartPending = false;
+            SetCapture(win->hwndCanvas);
+            SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
             ScheduleRepaint(win, 0);
         }
         return;
