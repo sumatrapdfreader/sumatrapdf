@@ -18,6 +18,8 @@ After making a change to a .cpp, .c or .h file under `src/` (and before running 
 
 Never commit changes automatically. Always wait for explicit command to commit changes.
 
+When committing a fix for a GitHub issue, include `(fixes #<issue-no>)` at the end of the commit message.
+
 ## Adding a new advanced setting
 
 To add a new advanced setting:
