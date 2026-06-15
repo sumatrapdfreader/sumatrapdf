@@ -3076,6 +3076,34 @@ fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, cons
     return text;
 }
 
+// Like fz_new_stext_page_from_page() but runs the *whole* page - contents plus
+// annotations and form-field widgets - instead of only the page contents. This
+// makes free-text annotations and form-field values part of the extracted text
+// so they can be selected and searched, matching Acrobat (and SumatraPDF <=3.1).
+// mupdf's fz_new_stext_page_from_page() runs only fz_run_page_contents() (issue #1649).
+static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page* page,
+                                                        const fz_stext_options* options) {
+    if (page == nullptr) {
+        return nullptr;
+    }
+    fz_stext_page* text = fz_new_stext_page(ctx, fz_bound_page(ctx, page));
+    fz_device* dev = nullptr;
+    fz_var(dev);
+    fz_try(ctx) {
+        dev = fz_new_stext_device(ctx, text, options);
+        fz_run_page(ctx, page, dev, fz_identity, nullptr);
+        fz_close_device(ctx, dev);
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+    }
+    fz_catch(ctx) {
+        fz_drop_stext_page(ctx, text);
+        fz_rethrow(ctx);
+    }
+    return text;
+}
+
 // Maybe: handle FZ_ERROR_TRYLATER, which can happen when parsing from network.
 // (I don't think we read from network now).
 // Maybe: when loading fully, cache extracted text in FzPageInfo
@@ -3616,7 +3644,7 @@ PageText EngineMupdf::ExtractPageText(int pageNo) {
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions();
     fz_try(ctx) {
-        stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
+        stext = fz_new_stext_page_from_whole_page(ctx, pageInfo->page, &opts);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -3647,7 +3675,7 @@ PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions();
     fz_try(ctx) {
-        stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
+        stext = fz_new_stext_page_from_whole_page(ctx, pageInfo->page, &opts);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
