@@ -1897,8 +1897,15 @@ static bool DrawDocument(MainWindow* win, HDC hdc, RECT* rcArea) {
                 if (renderDelay < kRenderDelayShowNotif) {
                     ScheduleRepaint(win, kRenderDelayShowNotif - renderDelay);
                 } else {
+                    // the page is taking a while to render: tell the user about it.
+                    // Also force a buffer flush (shouldPaint) so the notification is
+                    // actually shown. Without this, in non-continuous mode the stale
+                    // previous page would keep showing because no rendered page would
+                    // set shouldPaint and gNoFlickerRender skips flushing the buffer.
+                    shouldPaint = true;
                     SetTextColor(hdc, colDocTxt);
-                    DrawCenteredText(hdc, bounds, _TRA("Please wait - rendering..."), isRtl);
+                    TempStr msg = str::FormatTemp(_TRA("Rendering page %d..."), pageNo);
+                    DrawCenteredText(hdc, bounds, msg, isRtl);
                 }
                 rendering = true;
             } else {
