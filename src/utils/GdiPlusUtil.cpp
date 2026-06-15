@@ -10,6 +10,7 @@
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
 #include "utils/AvifReader.h"
+#include "utils/JxlReader.h"
 #include "utils/WinUtil.h"
 #include "utils/GdiPlusUtil.h"
 
@@ -357,6 +358,12 @@ Bitmap* BitmapFromDataWin(const ByteSlice& bmpData) {
     }
     if (kindFileWebp == kind) {
         bmp = webp::ImageFromData(bmpData);
+        if (bmp) {
+            return bmp;
+        }
+    }
+    if (kindFileJxl == kind) {
+        bmp = jxl::ImageFromData(bmpData);
         if (bmp) {
             return bmp;
         }

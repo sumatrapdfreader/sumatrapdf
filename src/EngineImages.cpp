@@ -1674,7 +1674,7 @@ static Kind imageEngineKinds[] = {
     kindFileTiff, kindFileBmp,  kindFileTga,
     kindFileJxr,  kindFileHdp,  kindFileWdp,
     kindFileWebp, kindFileJp2,  kindFileHeic,
-    kindFileAvif
+    kindFileAvif, kindFileJxl
 };
 // clang-format on
 

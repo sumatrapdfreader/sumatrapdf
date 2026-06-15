@@ -881,6 +881,19 @@ EXPORTS
 	WebPDecodeBGRAInto
 	WebPGetInfo
 
+; libjxl exports (needed for JxlReader)
+
+	JxlSignatureCheck
+	JxlDecoderCreate
+	JxlDecoderDestroy
+	JxlDecoderSubscribeEvents
+	JxlDecoderSetInput
+	JxlDecoderCloseInput
+	JxlDecoderProcessInput
+	JxlDecoderGetBasicInfo
+	JxlDecoderImageOutBufferSize
+	JxlDecoderSetImageOutBuffer
+
 ; libavif exports (needed for AvifReader)
 
 ; libheif exports (needed for AvifReader)

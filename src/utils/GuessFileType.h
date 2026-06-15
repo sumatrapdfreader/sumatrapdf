@@ -27,6 +27,7 @@ extern Kind kindFileJxr;
 extern Kind kindFileHdp;
 extern Kind kindFileWdp;
 extern Kind kindFileWebp;
+extern Kind kindFileJxl;
 extern Kind kindFileJp2;
 
 extern Kind kindFileFb2;

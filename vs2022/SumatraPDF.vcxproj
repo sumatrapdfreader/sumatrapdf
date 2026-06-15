@@ -1728,6 +1728,15 @@
     <ProjectReference Include="libheif.vcxproj">
       <Project>{380D6779-A4EC-E514-AD04-71EB19634C76}</Project>
     </ProjectReference>
+    <ProjectReference Include="libjxl.vcxproj">
+      <Project>{8AC56F0B-7667-9AE1-5F22-AE354B632132}</Project>
+    </ProjectReference>
+    <ProjectReference Include="highway.vcxproj">
+      <Project>{56E0D845-C2BF-57E1-CBD7-E2B73736BE42}</Project>
+    </ProjectReference>
+    <ProjectReference Include="skcms.vcxproj">
+      <Project>{46625C10-B276-84C1-7BF8-2721E7CB80F2}</Project>
+    </ProjectReference>
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>

@@ -8,6 +8,7 @@
 #include "utils/Archive.h"
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
+#include "utils/JxlReader.h"
 #include "utils/GuessFileType.h"
 
 Kind kindFilePDF = "filePDF";
@@ -25,6 +26,7 @@ Kind kindFileJxr = "fileJxr";
 Kind kindFileHdp = "fileHdp";
 Kind kindFileWdp = "fileWdp";
 Kind kindFileWebp = "fileWebp";
+Kind kindFileJxl = "fileJxl";
 Kind kindFileJp2 = "fileJp2";
 Kind kindFileCbz = "fileCbz";
 Kind kindFileCbr = "fileCbr";
@@ -92,6 +94,7 @@ Kind kindFileAvif = "fileAvif";
     V(".hdp", kindFileHdp)        \
     V(".wdp", kindFileWdp)        \
     V(".webp", kindFileWebp)      \
+    V(".jxl", kindFileJxl)        \
     V(".epub", kindFileEpub)      \
     V(".mobi", kindFileMobi)      \
     V(".prc", kindFileMobi)       \
@@ -327,6 +330,9 @@ Kind GuessFileTypeFromContent(const ByteSlice& d) {
     }
     if (webp::HasSignature(d)) {
         return kindFileWebp;
+    }
+    if (jxl::HasSignature(d)) {
+        return kindFileJxl;
     }
     return nullptr;
 }

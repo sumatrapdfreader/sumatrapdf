@@ -927,6 +927,7 @@ function utils_files()
     "UITask.*",
     "Vec.h",
     "WebpReader.*",
+    "JxlReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
     "ZipUtil.*",

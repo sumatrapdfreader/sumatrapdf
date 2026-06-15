@@ -452,7 +452,7 @@ workspace "SumatraPDF"
     rtti "On"
     defines { "JPEGXL_ENABLE_SKCMS=1", "JPEGXL_ENABLE_TRANSCODE_JPEG=0", "JPEGXL_BUNDLING_LIBJXL=1", "_CRT_SECURE_NO_WARNINGS" }
     includedirs { "ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/skcms", "ext/brotli/c/include" }
-    disablewarnings { "4018", "4100", "4127", "4146", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
+    disablewarnings { "4018", "4100", "4127", "4146", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4505", "4806", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
     buildoptions { "/bigobj" }
     libjxl_files()
 
@@ -795,7 +795,7 @@ workspace "SumatraPDF"
     -- linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     linkoptions { "-IGNORE:4702" }
     links_zlib()
-    links { "mupdf", "libdjvu", "libwebp", "dav1d", "libheif" }
+    links { "mupdf", "libdjvu", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -821,7 +821,7 @@ workspace "SumatraPDF"
     uses_zlib()
     defines { "LIBHEIF_STATIC_BUILD", "LIBARCHIVE_STATIC" }
     includedirs { "src", "ext/lzma/C" }
-    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/dav1d/include", "ext/libarchive", "mupdf/include" }
+    includedirs { "ext/libheif/libheif/api", "ext/libwebp/src", "ext/dav1d/include", "ext/libarchive", "mupdf/include", "ext/libjxl/lib/include" }
     utils_files()
 
 ---- executables
@@ -965,7 +965,7 @@ workspace "SumatraPDF"
 
     links_zlib()
     links {
-      "libdjvu", "libwebp", "dav1d", "libheif", "mupdf", "libarchive", "utils", "unrar", "chm"
+      "libdjvu", "libwebp", "dav1d", "libheif", "libjxl", "highway", "skcms", "mupdf", "libarchive", "utils", "unrar", "chm"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
