@@ -810,6 +810,20 @@ workspace "SumatraPDF"
     bin2coff_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
+  -- small console app that runs the mupdf command-line tools (draw, convert,
+  -- info, ...). Console subsystem (so it works with cmd.exe / PowerShell) and
+  -- links libmupdf.dll for everything, so the exe itself is tiny. It's embedded
+  -- in SumatraPDF-dll.exe as a resource (see the InstallerData.dat prebuild).
+  project "sumatrapdf-tool"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    mixed_dbg_rel_conf()
+    includedirs { "src" }
+    sumatrapdf_tool_files()
+    links { "libmupdf" }
+    links { "shell32" }
+
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
@@ -1006,9 +1020,9 @@ workspace "SumatraPDF"
     -- a DLL planted next to the exe can't be side-loaded. doesn't affect
     -- delay-loaded libmupdf.dll which LoadLibmupdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
-    dependson { "PdfFilter", "PdfPreview", "test_util" }
+    dependson { "PdfFilter", "PdfPreview", "test_util", "sumatrapdf-tool" }
     prebuildcommands { "..\\bin\\MakeLZSA.exe ..\\translations\\translations.txt.lzsa ..\\translations\\translations-good.txt:translations-good.txt" }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll" }
+    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll sumatrapdf-tool.exe:sumatrapdf-tool.exe" }
 
 workspace "MakeLZSA"
   configurations { "Debug", "Release" }

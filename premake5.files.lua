@@ -1505,3 +1505,9 @@ function bin2coff_files()
     "bin2coff.c"
   })
 end
+
+function sumatrapdf_tool_files()
+  files_in_dir("src", {
+    "sumatrapdf-tool.cpp"
+  })
+end

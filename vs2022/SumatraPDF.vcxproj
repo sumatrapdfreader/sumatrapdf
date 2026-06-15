@@ -1604,6 +1604,7 @@
     <None Include="..\cmd\gen-docs-website.ts" />
     <None Include="..\cmd\gen-docs.ts" />
     <None Include="..\cmd\gen-flags.ts" />
+    <None Include="..\cmd\gen-js-reference-md.ts" />
     <None Include="..\cmd\gen-settings.ts" />
     <None Include="..\cmd\logview.ts" />
     <None Include="..\cmd\markdown-it.min.js" />
@@ -1652,6 +1653,7 @@
     <None Include="..\docs\md\Keyboard-shortcuts.md" />
     <None Include="..\docs\md\LaTeX-integration.md" />
     <None Include="..\docs\md\Logview.md" />
+    <None Include="..\docs\md\Managing-favorites.md" />
     <None Include="..\docs\md\Reporting-printing-bugs.md" />
     <None Include="..\docs\md\Scrolling-and-zooming.md" />
     <None Include="..\docs\md\Set-as-default-pdf-viewer.md" />
@@ -1672,6 +1674,8 @@
     <None Include="..\docs\md\Tool-pages.md" />
     <None Include="..\docs\md\Tool-poster.md" />
     <None Include="..\docs\md\Tool-recolor.md" />
+    <None Include="..\docs\md\Tool-run-javascript-examples.md" />
+    <None Include="..\docs\md\Tool-run-javascript-reference.md" />
     <None Include="..\docs\md\Tool-run.md" />
     <None Include="..\docs\md\Tool-show.md" />
     <None Include="..\docs\md\Tool-trace.md" />
