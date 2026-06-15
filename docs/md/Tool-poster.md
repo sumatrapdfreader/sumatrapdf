@@ -1,8 +1,10 @@
-# SumatraPDF poster
+# sumatrapdf-tool poster
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF poster [options] input.pdf [output.pdf]`
+**Usage:** `sumatrapdf-tool poster [options] input.pdf [output.pdf]`
 
 `poster` splits large PDF pages into many tiles.
 
@@ -10,7 +12,7 @@ Imagine you want to print PDF page in a larger size. `poster` allows you to crea
 
 To print a page that is twice as big in both x and y dimensions:
 
-`SumatraPDF poster -x 2 -y 2 input.pdf output.pdf`
+`sumatrapdf-tool poster -x 2 -y 2 input.pdf output.pdf`
 
 `-x` and `-y` are the number of pieces to divide each page into horizontally and vertically, so `-x 2 -y 2` turns every PDF page into 4 pages you can print separately and assemble into a bigger print.
 

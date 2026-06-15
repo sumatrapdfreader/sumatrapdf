@@ -2,12 +2,14 @@
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-You can run `SumatraPDF <tool>` to perform operations on PDF and other files.
+You can run `sumatrapdf-tool.exe <tool>` to perform operations on PDF and other files.
 
 Convert, extract, compress and more.
 
+> `sumatrapdf-tool.exe` is a small console program installed next to `SumatraPDF.exe`. The command-line tools only work after SumatraPDF has been installed.
+
 ```
-SumatraPDF <command> [options]
+sumatrapdf-tool.exe <command> [options]
   draw    -- convert document
   convert -- convert document (with simpler options)
   audit   -- produce usage stats from PDF files

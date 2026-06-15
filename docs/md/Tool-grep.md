@@ -1,10 +1,12 @@
-# SumatraPDF grep
+# sumatrapdf-tool grep
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 To search text in `file.pdf`:
 
-`SumatraPDF grep -i foo file.pdf`
+`sumatrapdf-tool grep -i foo file.pdf`
 
 `-i` ignores case i.e. does case-insensitive search, which is probably a good default.
 
@@ -14,7 +16,7 @@ Other options:
 
 ## Search with a regular expression
 
-`SumatraPDF grep -i -G x.* file.pdf`
+`sumatrapdf-tool grep -i -G x.* file.pdf`
 
 - `-G` search pattern is a regex
 - `-i` you can combine it with case-insensitive flag
@@ -28,7 +30,7 @@ By default only the matching text is printed. Add:
 - `-H` to print the file name for each match (useful when searching several files at once)
 - `-[` and `-]` to wrap each match with a start / end marker, so you can spot it within the line
 
-`SumatraPDF grep -i -n -H foo file.pdf file2.pdf`
+`sumatrapdf-tool grep -i -n -H foo file.pdf file2.pdf`
 
 You can also search more than one file by listing them after the pattern.
 

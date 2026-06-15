@@ -1,8 +1,10 @@
-# SumatraPDF run
+# sumatrapdf-tool run
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF run script.js [arguments...]`
+**Usage:** `sumatrapdf-tool run script.js [arguments...]`
 
 `run` executes a [MuPDF](https://mupdf.readthedocs.io/) JavaScript program. It's
 the same scripting engine as `mutool run` and gives you programmatic access to
@@ -11,16 +13,16 @@ images, extract text and more.
 
 ## Run a script
 
-`SumatraPDF run script.js` runs the program in `script.js`.
+`sumatrapdf-tool run script.js` runs the program in `script.js`.
 
 A minimal `hello.js`:
 
 ```js
-print("hello from SumatraPDF run");
+print("hello from sumatrapdf-tool run");
 ```
 
 ```
-SumatraPDF run hello.js
+sumatrapdf-tool run hello.js
 ```
 
 ## Open a document
@@ -34,12 +36,12 @@ print(doc.countPages() + " pages");
 ```
 
 ```
-SumatraPDF run pages.js file.pdf
+sumatrapdf-tool run pages.js file.pdf
 ```
 
 ## Script arguments
 
-When you run `SumatraPDF run script.js a b c`, the script can read the arguments
+When you run `sumatrapdf-tool run script.js a b c`, the script can read the arguments
 that follow the script name:
 
 - `scriptPath` - path of the script (`script.js`)
@@ -49,11 +51,11 @@ that follow the script name:
 
 ## Interactive mode (REPL)
 
-Run `SumatraPDF run` with no script to start an interactive read-eval-print loop.
+Run `sumatrapdf-tool run` with no script to start an interactive read-eval-print loop.
 It prints a `> ` prompt, evaluates each line you type and prints the result:
 
 ```
-SumatraPDF run
+sumatrapdf-tool run
 > 1 + 2
 3
 > var doc = Document.openDocument("file.pdf")
@@ -76,14 +78,14 @@ print("you typed: " + line);
 ```
 
 ```
-echo hello | SumatraPDF run echo.js
+echo hello | sumatrapdf-tool run echo.js
 ```
 
 The interactive REPL also reads from stdin, so you can pipe a whole program into
 it:
 
 ```
-echo "print(6*7)" | SumatraPDF run
+echo "print(6*7)" | sumatrapdf-tool run
 ```
 
 ## Built-in functions
@@ -102,7 +104,7 @@ In addition to the MuPDF API, these global functions are available:
 ## MuPDF JavaScript API
 
 The objects used above (`Document`, `Page`, `Pixmap`, `PDFDocument`, `Buffer`
-etc.) are the MuPDF scripting API. `SumatraPDF run` is the same as `mutool run`.
+etc.) are the MuPDF scripting API. `sumatrapdf-tool run` is the same as `mutool run`.
 See the upstream documentation:
 
 - [`mutool run`](https://mupdf.readthedocs.io/en/1.27.2/tools/mutool-run.html) - the equivalent MuPDF command-line tool

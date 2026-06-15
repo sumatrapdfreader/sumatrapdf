@@ -1,12 +1,14 @@
-# SumatraPDF trim
+# sumatrapdf-tool trim
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF trim [options] <input filename>`
+**Usage:** `sumatrapdf-tool trim [options] <input filename>`
 
 A PDF page has a fixed dimension. It can also have MediaBox, CropBox, BleedBox, TrimeBox and ArtBox which define rectangular area within the page.
 
-You can see what kind of boxes a PDF page has using [SumatraPDF pages](Tool-pages.md).
+You can see what kind of boxes a PDF page has using [sumatrapdf-tool pages](Tool-pages.md).
 
 Using `trim` you can trim the area outside of a given box i.e. if there is content outside of the box, it'll be removed.
 
@@ -18,19 +20,19 @@ The `-m` margin can be given as a single value applied to all sides, two values 
 
 Trim to the MediaBox with a 200 point margin inwards:
 
-`SumatraPDF trim -b mediabox -m 200 -o out.pdf in.pdf`
+`sumatrapdf-tool trim -b mediabox -m 200 -o out.pdf in.pdf`
 
 Trim with 20 points off the top & bottom and 30 points off the left & right:
 
-`SumatraPDF trim -b mediabox -m 20,30 -o out.pdf in.pdf`
+`sumatrapdf-tool trim -b mediabox -m 20,30 -o out.pdf in.pdf`
 
 Trim with separate margins for each side (top, right, bottom, left):
 
-`SumatraPDF trim -b mediabox -m 10,10,50,20 -o out.pdf in.pdf`
+`sumatrapdf-tool trim -b mediabox -m 10,10,50,20 -o out.pdf in.pdf`
 
 Remove the contents of the ArtBox instead of keeping them:
 
-`SumatraPDF trim -b artbox -e -o out.pdf in.pdf`
+`sumatrapdf-tool trim -b artbox -e -o out.pdf in.pdf`
 
 ## All options
 

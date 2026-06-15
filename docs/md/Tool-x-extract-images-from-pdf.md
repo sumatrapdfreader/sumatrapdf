@@ -1,10 +1,12 @@
 # Extract images from a PDF
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 You can use SumatraPDF from command-line to extract images embedded in a PDF file.
 
-To extract all images: `SumatraPDF extract input.pdf`
+To extract all images: `sumatrapdf-tool extract input.pdf`
 
 It'll save each image in a file with name `image-<object-number>.png`.
 
@@ -14,7 +16,7 @@ Image extension depends on the type of the file i.e. jpeg images will be saved a
 
 You can extract only specific images. In a PDF file each image has an object number.
 
-First, you need to find out object numbers of embedded images: `SumatraPDF info -I input.pdf`
+First, you need to find out object numbers of embedded images: `sumatrapdf-tool info -I input.pdf`
 
 The output looks like:
 
@@ -28,9 +30,9 @@ Images (9):
 
 `3`, `6`, `10` and `15` are object numbers.
 
-To extract image 3 and 15: `SumatraPDF extract input.pdf 3 15`
+To extract image 3 and 15: `sumatrapdf-tool extract input.pdf 3 15`
 
 Reference:
 
-- [SumatraPDF extract](Tool-extract.md)
-- [SumatraPDF info](Tool-info.md)
+- [sumatrapdf-tool extract](Tool-extract.md)
+- [sumatrapdf-tool info](Tool-info.md)

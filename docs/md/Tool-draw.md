@@ -1,8 +1,10 @@
-# SumatraPDF draw
+# sumatrapdf-tool draw
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF draw [options] file [pages]`
+**Usage:** `sumatrapdf-tool draw [options] file [pages]`
 
 See [all-options](#all-options) below.
 
@@ -18,7 +20,7 @@ Let's assume you have `foo.pdf` with 8 pages.
 
 ### Extract 2nd page as png image
 
-`SumatraPDF draw -o foo-page-2.png -F png foo.pdf 2`
+`sumatrapdf-tool draw -o foo-page-2.png -F png foo.pdf 2`
 
 ### Rotate pages
 
@@ -26,11 +28,11 @@ Use `-R 90|180|270` option to rotate pages.
 
 ### Extract each page as PNG image
 
-`SumatraPDF draw -o "foo-%d.png" foo.pdf`
+`sumatrapdf-tool draw -o "foo-%d.png" foo.pdf`
 
 ### Convert PDF to PNG
 
-`SumatraPDF draw -o "foo-%d.png" foo.pdf`
+`sumatrapdf-tool draw -o "foo-%d.png" foo.pdf`
 
 ### Change output image size
 
@@ -38,29 +40,29 @@ Each page in a PDF has a given width / height.
 
 When converting to an image (like PNG), you can change the size of the output image:
 
-`SumatraPDF draw -o "foo-%d.png" -w 400 -h 800 foo.pdf`
+`sumatrapdf-tool draw -o "foo-%d.png" -w 400 -h 800 foo.pdf`
 
 ### Render at a specific resolution (DPI)
 
 Instead of a pixel size you can render at a resolution with `-r` (the default is 72 dpi). This is handy for print-quality images:
 
-`SumatraPDF draw -o "foo-%d.png" -r 300 foo.pdf`
+`sumatrapdf-tool draw -o "foo-%d.png" -r 300 foo.pdf`
 
 ### Convert PNG to PDF
 
-`SumatraPDF draw  -o foo.pdf foo.png`
+`sumatrapdf-tool draw  -o foo.pdf foo.png`
 
 ### Convert PDF to self-contained HTML file
 
-`SumatraPDF draw -o foo.html foo.pdf`
+`sumatrapdf-tool draw -o foo.html foo.pdf`
 
 ### Convert PDF to self-contained SVG file
 
-`SumatraPDF draw -o foo.svg foo.pdf`
+`sumatrapdf-tool draw -o foo.svg foo.pdf`
 
 ### Extract all text from PDF
 
-`SumatraPDF draw -o foo.txt foo.pdf`
+`sumatrapdf-tool draw -o foo.txt foo.pdf`
 
 ### Structured text
 
@@ -70,7 +72,7 @@ If you want to see detailed information about text in PDF, especially for furthe
 
 ### Extract structured text from PDF in XML format
 
-`SumatraPDF draw -o foo.stext foo.pdf`
+`sumatrapdf-tool draw -o foo.stext foo.pdf`
 
 In XML format it might look like:
 
@@ -83,7 +85,7 @@ Here it shows that letter `d` in font `CharisSIL` is at a given x/y position in 
 
 ### Extract structured text from PDF in JSON format
 
-`SumatraPDF draw -o foo.stext.json -F stext.json foo.pdf`
+`sumatrapdf-tool draw -o foo.stext.json -F stext.json foo.pdf`
 
 It's the same information but in JSON format.
 

@@ -1,8 +1,10 @@
-# SumatraPDF merge
+# sumatrapdf-tool merge
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF merge [-o output.pdf] [-O options] input.pdf [pages] [input2.pdf] [pages2] ...`
+**Usage:** `sumatrapdf-tool merge [-o output.pdf] [-O options] input.pdf [pages] [input2.pdf] [pages2] ...`
 
 `merge` picks pages from two or more files and combines them into a single output PDF.
 
@@ -10,7 +12,7 @@ Each input file can be followed by a comma-separated list of page numbers and ra
 
 To take pages 1-3 from `a.pdf` and page 5 from `b.pdf` into `merged.pdf`:
 
-`SumatraPDF merge -o merged.pdf a.pdf 1-3 b.pdf 5`
+`sumatrapdf-tool merge -o merged.pdf a.pdf 1-3 b.pdf 5`
 
 If you don't specify `-o`, the output is written to `out.pdf`. See `-O` below for the available output options.
 

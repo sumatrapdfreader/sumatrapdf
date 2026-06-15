@@ -1,8 +1,10 @@
-# JavaScript API reference for SumatraPDF run
+# JavaScript API reference for sumatrapdf-tool run
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-API reference for [SumatraPDF run](Tool-run.md). The scripting engine is the same as [`mutool run`](https://mupdf.readthedocs.io/en/latest/tools/mutool-run.html); this page is adapted from the [MuPDF JavaScript reference](https://mupdf.readthedocs.io/en/latest/reference/javascript/index.html).
+API reference for [sumatrapdf-tool run](Tool-run.md). The scripting engine is the same as [`mutool run`](https://mupdf.readthedocs.io/en/latest/tools/mutool-run.html); this page is adapted from the [MuPDF JavaScript reference](https://mupdf.readthedocs.io/en/latest/reference/javascript/index.html).
 
 See also [JavaScript examples](Tool-run-javascript-examples.md).
 

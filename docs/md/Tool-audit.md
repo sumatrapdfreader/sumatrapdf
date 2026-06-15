@@ -1,8 +1,10 @@
-# SumatraPDF audit
+# sumatrapdf-tool audit
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF audit [options] input.pdf [input2.pdf ...]`
+**Usage:** `sumatrapdf-tool audit [options] input.pdf [input2.pdf ...]`
 
 See [all-options](#all-options) below.
 
@@ -18,7 +20,7 @@ The figures are indicative rather than 100% accurate, and the report assumes som
 
 ## Generate HTML report about PDF file
 
-`SumatraPDF audit -o report.html .\foo.pdf`
+`sumatrapdf-tool audit -o report.html .\foo.pdf`
 
 You can then open `report.html` in a browser.
 

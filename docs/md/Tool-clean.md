@@ -1,8 +1,10 @@
-# SumatraPDF clean
+# sumatrapdf-tool clean
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF clean [options] input.pdf [output.pdf] [pages]`
+**Usage:** `sumatrapdf-tool clean [options] input.pdf [output.pdf] [pages]`
 
 See [all-options](#all-options) below.
 
@@ -18,25 +20,25 @@ If you don't specify an output file, it writes to `out.pdf`.
 
 ## Compress a PDF
 
-`SumatraPDF clean -gggg -e 100 -f -i -t -Z foo.pdf foo-compressed.pdf`
+`sumatrapdf-tool clean -gggg -e 100 -f -i -t -Z foo.pdf foo-compressed.pdf`
 
 ## Decompress a PDF
 
-`SumatraPDF clean -d foo.pdf foo-decompressed.pdf`
+`sumatrapdf-tool clean -d foo.pdf foo-decompressed.pdf`
 
 ## Encrypt a PDF
 
-`SumatraPDF clean -E aes-256 -U pwd foo.pdf foo-encrypted.pdf`
+`sumatrapdf-tool clean -E aes-256 -U pwd foo.pdf foo-encrypted.pdf`
 
 Now to open `foo-encrypted.pdf` the user will have to provide password `pwd`.
 
 ## Decrypt a PDF
 
-`SumatraPDF clean -D -p pwd foo-encrypted.pdf foo-decrypted.pdf`
+`sumatrapdf-tool clean -D -p pwd foo-encrypted.pdf foo-decrypted.pdf`
 
 ## Extract pages from PDF as PDF
 
-`SumatraPDF clean input.pdf output.pdf 1,3-5`
+`sumatrapdf-tool clean input.pdf output.pdf 1,3-5`
 
 This creates PDF output.pdf with pages 1,3,4,5 of PDF input.pdf
 
@@ -44,21 +46,21 @@ This creates PDF output.pdf with pages 1,3,4,5 of PDF input.pdf
 
 Let's say you have `input.pdf` with 8 pages. To delete a page 4:
 
-`SumatraPDF clean input.pdf output.pdf 1-3,5-N`
+`sumatrapdf-tool clean input.pdf output.pdf 1-3,5-N`
 
 `N` represents last page.
 
 ### Extract 2nd page
 
-`SumatraPDF draw -o foo-page-2.pdf foo.pdf 2`
+`sumatrapdf-tool draw -o foo-page-2.pdf foo.pdf 2`
 
 ### Extract pages 1,2,7,8 into a separate file each
 
-`SumatraPDF draw -o "foo-page-%d.pdf" foo.pdf 1-2,7,8`
+`sumatrapdf-tool draw -o "foo-page-%d.pdf" foo.pdf 1-2,7,8`
 
 ### Delete 3rd page
 
-`SumatraPDF draw -o foo-3rd-page-deleted.pdf foo.pdf 1-2,4-8`
+`sumatrapdf-tool draw -o foo-3rd-page-deleted.pdf foo.pdf 1-2,4-8`
 
 ## All options
 

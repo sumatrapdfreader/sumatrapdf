@@ -1,9 +1,11 @@
 # Convert text file to a PDF
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 To use SumatraPDF to convert a text file to a PDF from command-line:
 
-`SumatraPDF convert -o output.pdf input.txt`
+`sumatrapdf-tool convert -o output.pdf input.txt`
 
 More info:
 
-- [SumatraPDF convert](Tool-convert.md)
+- [sumatrapdf-tool convert](Tool-convert.md)

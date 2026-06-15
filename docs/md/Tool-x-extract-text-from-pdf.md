@@ -1,5 +1,7 @@
 # Extract text from PDF using SumatraPDF
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 ## In application
@@ -26,11 +28,11 @@ You can use SumatraPDF cmd-line to extract text from a PDF file.
 
 ### Extract all text from PDF
 
-`SumatraPDF convert -o output.txt input.pdf`
+`sumatrapdf-tool convert -o output.txt input.pdf`
 
 ### Extract text from selected pages of a PDF
 
-`SumatraPDF convert -o output.txt input.pdf 1-3,4,8-9`
+`sumatrapdf-tool convert -o output.txt input.pdf 1-3,4,8-9`
 
 This will extract text from pages 1,2,3,4,8,9.
 
@@ -60,10 +62,10 @@ You can use this output in your custom processing program.
 
 ### Extract structured text from PDF in XML format
 
-`SumatraPDF draw -o foo.stext foo.pdf`
+`sumatrapdf-tool draw -o foo.stext foo.pdf`
 
 ### Extract structured text from PDF in JSON format
 
-`SumatraPDF draw -o foo.stext.json -F stext.json foo.pdf`
+`sumatrapdf-tool draw -o foo.stext.json -F stext.json foo.pdf`
 
 It's the same information but in JSON format.

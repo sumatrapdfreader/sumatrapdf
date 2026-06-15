@@ -1,8 +1,10 @@
 # Search text in PDF from command line
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 To search text in `file.pdf`:
 
-`SumatraPDF grep -i foo file.pdf`
+`sumatrapdf-tool grep -i foo file.pdf`
 
 `-i` ignores case i.e. does case-insensitive search, which is probably a good default.
 
@@ -12,10 +14,10 @@ Other options:
 
 ## Search with a regular expression
 
-`SumatraPDF grep -i -G x.* file.pdf`
+`sumatrapdf-tool grep -i -G x.* file.pdf`
 
 - `-G` search pattern is a regex
 - `-i` you can combine it with case-insensitive flag
 - `x.*` is a regular expression that says: every string that starts with `x`
 
-For all options see [SumatraPDF grep](Tool-grep.md).
+For all options see [sumatrapdf-tool grep](Tool-grep.md).

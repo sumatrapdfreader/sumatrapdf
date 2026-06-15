@@ -4,7 +4,7 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
-- add cmd-line tools `SumatraPDF <tool> <args>`. Tools: draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace
+- add cmd-line tools `sumatrapdf-tool.exe <tool> <args>`. Tools: draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace
 - [command palette](Command-Palette.md) has a new `*` mode (`CmdCommandPalette *`, also `CmdCommandPaletteTOC` bound to `Shift + F12`) that jumps to a table of contents entry of the current document. Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
 - [command palette](Command-Palette.md) has a new `$` mode (`CmdCommandPalette $`) that jumps to a favorite, listing the current document's favorites first, then favorites of other documents
 - [external viewer](Customize-external-viewers.md) command lines now support `%%` as a literal `%`, so e.g. `%%d` is passed to the program as `%d` (fixes #5583)

@@ -1,5 +1,7 @@
 # Extract pages from PDF
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 ## In application
@@ -18,7 +20,7 @@ Or:
 
 To extract pages from a PDF using SumatraPDF on a command line:
 
-`SumatraPDF clean input.pdf output.pdf 1,2-5,8-N`
+`sumatrapdf-tool clean input.pdf output.pdf 1,2-5,8-N`
 
 This extracts pages 1, 2, 3, 4, 5 and 8 to last from `input.pdf` and saves as `output.pdf`
 

@@ -1,15 +1,17 @@
-# JavaScript examples for SumatraPDF run
+# JavaScript examples for sumatrapdf-tool run
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-Example-driven recipes for [SumatraPDF run](Tool-run.md). The scripting engine is the
+Example-driven recipes for [sumatrapdf-tool run](Tool-run.md). The scripting engine is the
 same as [`mutool run`](https://mupdf.readthedocs.io/en/latest/tools/mutool-run.html);
 these examples are adapted from the [MuPDF JavaScript cookbook](https://mupdf.readthedocs.io/en/latest/cookbook/javascript/index.html).
 
 Save a script to a `.js` file and run it:
 
 ```
-SumatraPDF run script.js [arguments...]
+sumatrapdf-tool run script.js [arguments...]
 ```
 
 For the full list of classes and methods, see the [JavaScript API reference](Tool-run-javascript-reference.md).
@@ -235,7 +237,7 @@ pdf.save("out.pdf")
 A re-implementation of `mutool merge` in JavaScript.
 
 ```
-SumatraPDF run pdf-merge.js output.pdf input1.pdf input2.pdf ...
+sumatrapdf-tool run pdf-merge.js output.pdf input1.pdf input2.pdf ...
 ```
 
 ```js
@@ -274,7 +276,7 @@ function pdfmerge() {
 }
 
 if (process.argv.length < 4)
-	print("usage: SumatraPDF run pdf-merge.js output.pdf input1.pdf input2.pdf ...")
+	print("usage: sumatrapdf-tool run pdf-merge.js output.pdf input1.pdf input2.pdf ...")
 else
 	pdfmerge()
 ```
@@ -373,7 +375,7 @@ pixmap.saveAsPNG("out.png")
 Trace device calls while rendering a page.
 
 ```
-SumatraPDF run trace-device.js document.pdf pageNumber
+sumatrapdf-tool run trace-device.js document.pdf pageNumber
 ```
 
 ```js
@@ -506,7 +508,7 @@ var traceDevice = {
 }
 
 if (scriptArgs.length != 2)
-	print("usage: SumatraPDF run trace-device.js document.pdf pageNumber")
+	print("usage: sumatrapdf-tool run trace-device.js document.pdf pageNumber")
 else {
 	var doc = mupdf.Document.openDocument(scriptArgs[0]);
 	var page = doc.loadPage(parseInt(scriptArgs[1])-1);

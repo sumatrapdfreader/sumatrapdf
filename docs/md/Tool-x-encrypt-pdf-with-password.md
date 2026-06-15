@@ -1,5 +1,7 @@
 # Encrypt a PDF with password
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 ## In application
@@ -18,7 +20,7 @@ Or:
 
 To encrypt a PDF with password using SumatraPDF from command-line:
 
-`SumatraPDF clean -E aes-256 -U pwd foo.pdf foo-encrypted.pdf`
+`sumatrapdf-tool clean -E aes-256 -U pwd foo.pdf foo-encrypted.pdf`
 
 Flags:
 

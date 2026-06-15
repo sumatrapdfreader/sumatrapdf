@@ -1,8 +1,10 @@
-# SumatraPDF bake
+# sumatrapdf-tool bake
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF bake [options] input.pdf [output.pdf]`
+**Usage:** `sumatrapdf-tool bake [options] input.pdf [output.pdf]`
 
 PDF format has annotations and widgets (used in forms) as special kinds of objects.
 

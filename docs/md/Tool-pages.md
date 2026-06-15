@@ -1,8 +1,10 @@
-# SumatraPDF pages
+# sumatrapdf-tool pages
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-`Usage: SumatraPDF pages [options] file.pdf [pages]`
+`Usage: sumatrapdf-tool pages [options] file.pdf [pages]`
 
 `pages` lists the box dimensions (MediaBox, CropBox, TrimBox etc.), rotation and UserUnit for each page, in XML format. The output looks like:
 

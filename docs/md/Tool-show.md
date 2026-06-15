@@ -1,8 +1,10 @@
-# SumatraPDF show
+# sumatrapdf-tool show
+
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
 
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
-**Usage:** `SumatraPDF show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *`
+**Usage:** `sumatrapdf-tool show [options] file.pdf ( trailer | xref | pages | grep | outline | js | form | <path> ) *`
 
 `show` is an advanced tool for inspecting the internal structure of a PDF file. It prints the requested objects and streams to standard output (streams are decoded, and non-printable bytes are shown as a period by default).
 
@@ -104,19 +106,19 @@ Instead of a keyword you can pass a path to drill down to a specific object. A p
 
 Find the number of pages in a document:
 
-`SumatraPDF show input.pdf trailer/Root/Pages/Count`
+`sumatrapdf-tool show input.pdf trailer/Root/Pages/Count`
 
 Print the content stream of the first page (`-b` prints raw stream bytes):
 
-`SumatraPDF show -b input.pdf pages/1/Contents`
+`sumatrapdf-tool show -b input.pdf pages/1/Contents`
 
 Print the base font name of every font used on every page:
 
-`SumatraPDF show input.pdf pages/*/Resources/Font/*/BaseFont`
+`sumatrapdf-tool show input.pdf pages/*/Resources/Font/*/BaseFont`
 
 List all JPEG-compressed streams (using `grep` to filter the one-line output):
 
-`SumatraPDF show input.pdf grep | grep "/Filter/DCTDecode"`
+`sumatrapdf-tool show input.pdf grep | grep "/Filter/DCTDecode"`
 
 ## All options
 

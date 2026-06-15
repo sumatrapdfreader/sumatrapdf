@@ -1,5 +1,7 @@
 # Decrypt a PDF
 
+> The command-line tools are provided by `sumatrapdf-tool`, which is installed next to `SumatraPDF.exe`. They only work after SumatraPDF has been installed.
+
 **Available in [pre-release 3.7](https://www.sumatrapdfreader.org/prerelease)**
 
 ## In application
@@ -18,7 +20,7 @@ Or:
 
 To decrypt a PDF using SumatraPDF from command-line:
 
-`SumatraPDF clean -D -p pwd foo-encrypted.pdf foo-decrypted.pdf`
+`sumatrapdf-tool clean -D -p pwd foo-encrypted.pdf foo-decrypted.pdf`
 
 Flags:
 
