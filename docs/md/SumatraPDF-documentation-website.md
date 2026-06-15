@@ -12,6 +12,8 @@
 
 [Scrolling, zooming, navigating](Scrolling-and-zooming.md)
 
+[Managing favorites](Managing-favorites.md)
+
 [Commands](Commands.md)
 
 [Command-line arguments](Command-line-arguments.md)
