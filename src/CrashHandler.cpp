@@ -247,7 +247,7 @@ static bool DownloadAndUnzipSymbols(const char* symDir) {
     }
 
     if (!dir::CreateAll(symDir)) {
-        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", gSymbolsDir);
+        logf("CrashHandlerDownloadSymbols: couldn't create symbols dir '%s'\n", symDir);
         return false;
     }
 
