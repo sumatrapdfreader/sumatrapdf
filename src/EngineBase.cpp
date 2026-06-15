@@ -4,6 +4,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/ThreadUtil.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/UIModels.h"
@@ -53,6 +54,14 @@ void FreePageText(PageText* pageText) {
     free((void*)pageText->coords);
     pageText->text = nullptr;
     pageText->coords = nullptr;
+    pageText->len = 0;
+}
+
+static void EnsurePageText(PageText* pageText) {
+    if (pageText->text) {
+        return;
+    }
+    pageText->text = str::Dup(L"");
     pageText->len = 0;
 }
 
@@ -342,9 +351,21 @@ EngineBase::~EngineBase() {
         }
         free(pagesText);
     }
+    free(pagesTextState);
     DeleteCriticalSection(&textCacheLock);
     str::Free(defaultExt);
     ArenaDelete(arena);
+}
+
+struct TextExtractionThreadData {
+    EngineBase* engine = nullptr;
+    int pageNo = 0;
+};
+
+static void ExtractTextThread(TextExtractionThreadData* data) {
+    data->engine->GetTextForPage(data->pageNo);
+    data->engine->Release();
+    delete data;
 }
 
 bool EngineBase::HasTextForPage(int pageNo) {
@@ -360,6 +381,60 @@ bool EngineBase::HasTextForPage(int pageNo) {
     return pt->text != nullptr;
 }
 
+TextExtractionState EngineBase::GetTextExtractionState(int pageNo) {
+    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (pageNo < 1 || pageNo > pageCount) {
+        return TextExtractionState::Finished;
+    }
+    ScopedCritSec scope(&textCacheLock);
+    if (!pagesTextState) {
+        return TextExtractionState::NotExtracted;
+    }
+    return pagesTextState[pageNo - 1];
+}
+
+void EngineBase::RequestTextExtraction(int pageNo) {
+    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (pageNo < 1 || pageNo > pageCount) {
+        return;
+    }
+
+    {
+        ScopedCritSec scope(&textCacheLock);
+        if (!pagesText) {
+            pagesText = AllocArray<PageText>(pageCount);
+        }
+        if (!pagesTextState) {
+            pagesTextState = AllocArray<TextExtractionState>(pageCount);
+        }
+        PageText* pt = &pagesText[pageNo - 1];
+        if (pt->text || pagesTextState[pageNo - 1] != TextExtractionState::NotExtracted) {
+            return;
+        }
+        pagesTextState[pageNo - 1] = TextExtractionState::Pending;
+    }
+
+    AddRef();
+    auto data = new TextExtractionThreadData();
+    data->engine = this;
+    data->pageNo = pageNo;
+    auto fn = MkFunc0<TextExtractionThreadData>(ExtractTextThread, data);
+    HANDLE thread = StartThread(fn, "ExtractPageText");
+    if (thread) {
+        SafeCloseHandle(&thread);
+        return;
+    }
+
+    {
+        ScopedCritSec scope(&textCacheLock);
+        if (pagesTextState && !pagesText[pageNo - 1].text) {
+            pagesTextState[pageNo - 1] = TextExtractionState::NotExtracted;
+        }
+    }
+    Release();
+    delete data;
+}
+
 const WCHAR* EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOut) {
     ReportIf(pageNo < 1 || pageNo > pageCount);
     if (pageNo < 1 || pageNo > pageCount) {
@@ -372,20 +447,38 @@ const WCHAR* EngineBase::GetTextForPage(int pageNo, int* lenOut, Rect** coordsOu
         return L"";
     }
 
-    ScopedCritSec scope(&textCacheLock);
-    if (!pagesText) {
-        pagesText = AllocArray<PageText>(pageCount);
-    }
-    PageText* pt = &pagesText[pageNo - 1];
-
-    if (!pt->text) {
-        *pt = ExtractPageText(pageNo);
+    bool extract = false;
+    {
+        ScopedCritSec scope(&textCacheLock);
+        if (!pagesText) {
+            pagesText = AllocArray<PageText>(pageCount);
+        }
+        if (!pagesTextState) {
+            pagesTextState = AllocArray<TextExtractionState>(pageCount);
+        }
+        PageText* pt = &pagesText[pageNo - 1];
         if (!pt->text) {
-            pt->text = str::Dup(L"");
-            pt->len = 0;
+            pagesTextState[pageNo - 1] = TextExtractionState::Pending;
+            extract = true;
         }
     }
 
+    if (extract) {
+        PageText extracted = ExtractPageText(pageNo);
+        EnsurePageText(&extracted);
+
+        ScopedCritSec scope(&textCacheLock);
+        PageText* pt = &pagesText[pageNo - 1];
+        if (!pt->text) {
+            *pt = extracted;
+            extracted = PageText();
+        }
+        pagesTextState[pageNo - 1] = TextExtractionState::Finished;
+        FreePageText(&extracted);
+    }
+
+    ScopedCritSec scope(&textCacheLock);
+    PageText* pt = &pagesText[pageNo - 1];
     if (lenOut) {
         *lenOut = pt->len;
     }

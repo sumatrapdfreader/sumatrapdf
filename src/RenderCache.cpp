@@ -803,12 +803,6 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
         ReportIf(req.abortCookie != nullptr);
         EngineBase* engine = req.dm->GetEngine();
 
-        // make sure that we have extracted page text for
-        // all rendered pages to allow text selection and
-        // searching without any further delays
-        if (!engine->HasTextForPage(req.pageNo)) {
-            engine->GetTextForPage(req.pageNo);
-        }
         RenderPageArgs args(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View, &req.abortCookie);
         // a previous render might have run a 3rd-party WIC codec that unmasked
         // fp exceptions on this thread, which would crash mupdf float math

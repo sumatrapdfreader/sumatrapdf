@@ -854,6 +854,11 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
     }
 
     Point pos{x, y};
+    int pageNo = dm->GetPageNoByPoint(pos);
+    if (dm->ValidPageNo(pageNo)) {
+        dm->GetEngine()->RequestTextExtraction(pageNo);
+    }
+
     NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
 
     if (win->textDragPending) {

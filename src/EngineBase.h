@@ -66,6 +66,12 @@ struct PageText {
 
 void FreePageText(PageText*);
 
+enum class TextExtractionState {
+    NotExtracted,
+    Pending,
+    Finished,
+};
+
 // UTF-8 variant: text is a UTF-8 byte string (len bytes, not including the
 // terminating null), and coords has one entry per UTF-8 byte (the same rect
 // repeated for each byte of a multi-byte codepoint).
@@ -473,6 +479,8 @@ class EngineBase {
     // subsequent calls return the cached copy. The returned pointers are owned
     // by EngineBase and remain valid for the lifetime of the engine.
     bool HasTextForPage(int pageNo);
+    TextExtractionState GetTextExtractionState(int pageNo);
+    void RequestTextExtraction(int pageNo);
     const WCHAR* GetTextForPage(int pageNo, int* lenOut = nullptr, Rect** coordsOut = nullptr);
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
@@ -554,6 +562,7 @@ class EngineBase {
 
     // cached text, one entry per page (lazily allocated)
     PageText* pagesText = nullptr;
+    TextExtractionState* pagesTextState = nullptr;
     CRITICAL_SECTION textCacheLock;
 };
 
