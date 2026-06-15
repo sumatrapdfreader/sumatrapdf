@@ -420,6 +420,42 @@ workspace "SumatraPDF"
     -- build src/libdav1d.a.p/looprestoration_avx2.obj: CUSTOM_COMMAND_DEP ../src/x86/looprestoration_avx2.asm | C$:/Users/kjk/AppData/Local/bin/NASM/nasm.EXE
     -- COMMAND = "C:\Users\kjk\AppData\Local\bin\NASM\nasm.EXE" "-f" "win64" "-I" "C:/Users/kjk/src/dav1d/src/" "-I" "C:/Users/kjk/src/dav1d/build/" "-MQ" "src/libdav1d.a.p/looprestoration_avx2.obj" "-MF" "src/libdav1d.a.p/looprestoration_avx2.obj.ndep" "../src/x86/looprestoration_avx2.asm" "-o" "src/libdav1d.a.p/looprestoration_avx2.obj"
 
+  -- highway: SIMD dispatch library used by libjxl (ext/highway, v1.2.0)
+  project "highway"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++17"
+    optimized_conf()
+    includedirs { "ext/highway" }
+    disablewarnings { "4100", "4127", "4244", "4245", "4267", "4324", "4456", "4457", "4701", "4702", "4723", "5054", "4146", "4458" }
+    highway_files()
+
+  -- skcms: color management used by libjxl (ext/skcms). Baseline only.
+  project "skcms"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++17"
+    optimized_conf()
+    defines { "SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX" }
+    includedirs { "ext/skcms" }
+    disablewarnings { "4100", "4244", "4245", "4267", "4310", "4456", "4701", "4702" }
+    skcms_files()
+
+  -- libjxl decoder (ext/libjxl, v0.11.2). Decoder subset only; uses skcms for
+  -- color management and brotli (compiled in mupdf-libs) for compressed metadata.
+  project "libjxl"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++17"
+    optimized_conf()
+    exceptionhandling "On"
+    rtti "On"
+    defines { "JPEGXL_ENABLE_SKCMS=1", "JPEGXL_ENABLE_TRANSCODE_JPEG=0", "JPEGXL_BUNDLING_LIBJXL=1", "_CRT_SECURE_NO_WARNINGS" }
+    includedirs { "ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/skcms", "ext/brotli/c/include" }
+    disablewarnings { "4018", "4100", "4127", "4146", "4244", "4245", "4267", "4305", "4308", "4310", "4324", "4334", "4456", "4457", "4458", "4459", "4701", "4702", "4703", "4838", "4996", "5054" }
+    buildoptions { "/bigobj" }
+    libjxl_files()
+
   project "libheif"
     kind "StaticLib"
     language "C++"

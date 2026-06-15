@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ops">
+      <UniqueIdentifier>{F799880B-63A3-887C-EC1E-9F7C5827947C}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\highway\hwy\abort.h" />
+    <ClInclude Include="..\ext\highway\hwy\aligned_allocator.h" />
+    <ClInclude Include="..\ext\highway\hwy\base.h" />
+    <ClInclude Include="..\ext\highway\hwy\bit_set.h" />
+    <ClInclude Include="..\ext\highway\hwy\cache_control.h" />
+    <ClInclude Include="..\ext\highway\hwy\detect_compiler_arch.h" />
+    <ClInclude Include="..\ext\highway\hwy\detect_targets.h" />
+    <ClInclude Include="..\ext\highway\hwy\foreach_target.h" />
+    <ClInclude Include="..\ext\highway\hwy\highway.h" />
+    <ClInclude Include="..\ext\highway\hwy\highway_export.h" />
+    <ClInclude Include="..\ext\highway\hwy\nanobenchmark.h" />
+    <ClInclude Include="..\ext\highway\hwy\ops\arm_neon-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\arm_sve-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\emu128-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\generic_ops-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\inside-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\ppc_vsx-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\rvv-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\scalar-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\set_macros-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\shared-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\wasm_128-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\wasm_256-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\x86_128-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\x86_256-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\ops\x86_512-inl.h">
+      <Filter>ops</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\highway\hwy\per_target.h" />
+    <ClInclude Include="..\ext\highway\hwy\print-inl.h" />
+    <ClInclude Include="..\ext\highway\hwy\print.h" />
+    <ClInclude Include="..\ext\highway\hwy\profiler.h" />
+    <ClInclude Include="..\ext\highway\hwy\robust_statistics.h" />
+    <ClInclude Include="..\ext\highway\hwy\stats.h" />
+    <ClInclude Include="..\ext\highway\hwy\targets.h" />
+    <ClInclude Include="..\ext\highway\hwy\timer-inl.h" />
+    <ClInclude Include="..\ext\highway\hwy\timer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\highway\hwy\abort.cc" />
+    <ClCompile Include="..\ext\highway\hwy\aligned_allocator.cc" />
+    <ClCompile Include="..\ext\highway\hwy\nanobenchmark.cc" />
+    <ClCompile Include="..\ext\highway\hwy\per_target.cc" />
+    <ClCompile Include="..\ext\highway\hwy\print.cc" />
+    <ClCompile Include="..\ext\highway\hwy\targets.cc" />
+    <ClCompile Include="..\ext\highway\hwy\timer.cc" />
+  </ItemGroup>
+</Project>

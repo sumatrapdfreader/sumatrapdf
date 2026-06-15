@@ -1,0 +1,1112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|Win32">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|x64">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|ARM64">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull|Win32">
+      <Configuration>DebugFull</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull|x64">
+      <Configuration>DebugFull</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull|ARM64">
+      <Configuration>DebugFull</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull x64_asan|Win32">
+      <Configuration>DebugFull x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull x64_asan|x64">
+      <Configuration>DebugFull x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull x64_asan|ARM64">
+      <Configuration>DebugFull x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|Win32">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|x64">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|ARM64">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|Win32">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|x64">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|ARM64">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|Win32">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|x64">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|ARM64">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8AC56F0B-7667-9AE1-5F22-AE354B632132}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>libjxl</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)..\out\dbg32\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj\x86\Debug\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)..\out\dbg64\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj\x64\Debug\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(ProjectDir)..\out\dbgarm64\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj\arm64\Debug\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj\x64_asan\Debug\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
+    <OutDir>$(ProjectDir)..\out\dbgfull32\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj\x86\DebugFull\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
+    <OutDir>$(ProjectDir)..\out\dbgfull64\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj\x64\DebugFull\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj\arm64\DebugFull\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj\x64_asan\DebugFull\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)..\out\rel32\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj\x86\Release\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj\x64\Release\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <OutDir>$(ProjectDir)..\out\arm64\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj\arm64\Release\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64_asan\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj\x64_asan\Release\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj\x86\ReleaseAnalyze\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj\x64\ReleaseAnalyze\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj\arm64\ReleaseAnalyze\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj\x64_asan\ReleaseAnalyze\libjxl\</IntDir>
+    <TargetName>libjxl</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4189;4522;4611;4800;6319;4018;4100;4127;4146;4244;4245;4267;4305;4308;4310;4324;4334;4456;4457;4458;4459;4701;4702;4703;4838;4996;5054;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;JPEGXL_ENABLE_SKCMS=1;JPEGXL_ENABLE_TRANSCODE_JPEG=0;JPEGXL_BUNDLING_LIBJXL=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\libjxl;..\ext\libjxl\lib\include;..\ext\highway;..\ext\skcms;..\ext\brotli\c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\cms.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\cms_interface.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\codestream_header.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\color_encoding.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\compressed_icc.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\decode.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\decode_cxx.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\encode.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\encode_cxx.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\gain_map.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\jxl_cms_export.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\jxl_export.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\memory_manager.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\parallel_runner.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\stats.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\types.h" />
+    <ClInclude Include="..\ext\libjxl\lib\include\jxl\version.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\ac_context.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\ac_strategy.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\alpha.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\ans_common.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\ans_params.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\arch_macros.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\bits.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\byte_order.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\c_callback_support.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\common.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\compiler_specific.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\data_parallel.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\exif.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\fast_math-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\float.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\iaca.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\include_jpeglib.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\matrix_ops.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\os_macros.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\override.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\printf_macros.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\random.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\rational_polynomial-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\rect.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\sanitizer_definitions.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\sanitizers.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\scope_guard.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\span.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\base\status.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\blending.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\box_content_decoder.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\chroma_from_luma.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\color_encoding_cms.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\jxl_cms_internal.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\opsin_params.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\tone_mapping-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\tone_mapping.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\transfer_functions-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\cms\transfer_functions.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\codec_in_out.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\coeff_order.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\coeff_order_fwd.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\color_encoding_internal.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\common.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\compressed_dc.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\convolve-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\convolve.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dct-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dct_block-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dct_scales.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dct_util.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_ans.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_bit_reader.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_cache.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_context_map.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_external_image.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_frame.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_group.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_group_border.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_huffman.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_modular.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_noise.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_patch_dictionary.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_transforms-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_xyb-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\dec_xyb.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\decode_to_jpeg.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\enc_ans_params.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\entropy_coder.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\epf.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\field_encodings.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\fields.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\frame_dimensions.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\frame_header.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\headers.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\huffman_table.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\icc_codec.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\icc_codec_common.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\image.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\image_bundle.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\image_metadata.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\image_ops.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\inverse_mtf-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\jpeg\dec_jpeg_data_writer.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\jpeg\dec_jpeg_output_chunk.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\jpeg\dec_jpeg_serialization_state.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\jpeg\jpeg_data.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\lehmer_code.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\loop_filter.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\luminance.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\memory_manager_internal.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\encoding\context_predict.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\encoding\dec_ma.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\encoding\encoding.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\encoding\ma_common.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\modular_image.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\options.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\transform\palette.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\transform\rct.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\transform\squeeze.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\modular\transform\transform.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\noise.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\opsin_params.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\pack_signed.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\padded_bytes.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\passes_state.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\patch_dictionary_internal.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\quant_weights.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\quantizer-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\quantizer.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\low_memory_render_pipeline.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\render_pipeline.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\render_pipeline_stage.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\simple_render_pipeline.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_blending.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_chroma_upsampling.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_cms.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_epf.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_from_linear.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_gaborish.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_noise.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_patches.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_splines.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_spot.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_to_linear.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_tone_mapping.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_upsampling.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_write.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_xyb.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_ycbcr.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\simd_util-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\simd_util.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\splines.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\toc.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\transpose-inl.h" />
+    <ClInclude Include="..\ext\libjxl\lib\jxl\xorshift128plus-inl.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\libjxl\lib\jxl\ac_strategy.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\alpha.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\ans_common.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\blending.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\box_content_decoder.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\chroma_from_luma.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\cms\jxl_cms.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\coeff_order.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\color_encoding_internal.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\compressed_dc.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\convolve_separable5.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\convolve_slow.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\convolve_symmetric3.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\convolve_symmetric5.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dct_scales.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_ans.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_cache.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_context_map.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_external_image.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_frame.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_group.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_group_border.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_huffman.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_modular.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_noise.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_patch_dictionary.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\dec_xyb.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\decode.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\entropy_coder.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\epf.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\fields.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\frame_header.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\headers.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\huffman_table.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\icc_codec.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\icc_codec_common.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\image.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\image_bundle.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\image_metadata.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\image_ops.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\loop_filter.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\luminance.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\memory_manager_internal.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\encoding\dec_ma.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\encoding\encoding.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\modular_image.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\transform\palette.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\transform\rct.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\transform\squeeze.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\modular\transform\transform.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\opsin_params.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\passes_state.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\quant_weights.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\quantizer.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\low_memory_render_pipeline.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\render_pipeline.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\simple_render_pipeline.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_blending.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_chroma_upsampling.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_cms.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_epf.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_from_linear.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_gaborish.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_noise.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_patches.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_splines.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_spot.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_to_linear.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_tone_mapping.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_upsampling.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_write.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_xyb.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\render_pipeline\stage_ycbcr.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\simd_util.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\splines.cc" />
+    <ClCompile Include="..\ext\libjxl\lib\jxl\toc.cc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

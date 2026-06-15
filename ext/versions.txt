@@ -78,3 +78,19 @@ libheif         1.23.0     2026-05-29
 darkmodelib     trunk      2026-01-16
   https://github.com/ozone10/darkmodelib
   https://github.com/ozone10/darkmodelib/commit/57cc10c819d17c47b6afd295b424153082144193
+
+libjxl          0.11.2     2026-02-10
+  https://github.com/libjxl/libjxl/releases/tag/v0.11.2
+  decoder subset only (ext/libjxl/lib/jxl + lib/include/jxl); SKCMS color mgmt,
+  JPEG transcoding disabled. Generated headers (version.h, jxl_export.h,
+  jxl_cms_export.h) are checked in under lib/include/jxl.
+
+highway         1.2.0      (libjxl dependency)
+  https://github.com/google/highway
+  https://github.com/google/highway/commit/457c891775a7397bdb0376bb1031e6e027af1c48
+  core headers + 7 runtime .cc only
+
+skcms           git        (libjxl dependency)
+  https://skia.googlesource.com/skcms
+  https://skia.googlesource.com/skcms/+/b2e692629c1fb19342517d7fb61f1cf83d075492
+  baseline transform only (HSW/SKX disabled)

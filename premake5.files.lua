@@ -1506,6 +1506,29 @@ function bin2coff_files()
   })
 end
 
+-- highway (SIMD library, dependency of libjxl). Only the core runtime sources;
+-- the rest is header-only.
+function highway_files()
+  files { "ext/highway/hwy/*.cc", "ext/highway/hwy/*.h", "ext/highway/hwy/ops/*.h" }
+end
+
+-- skcms (color management, dependency of libjxl). Baseline only (HSW/SKX
+-- disabled), so no per-file /arch flags are needed.
+function skcms_files()
+  files {
+    "ext/skcms/skcms.cc",
+    "ext/skcms/skcms.h",
+    "ext/skcms/src/skcms_TransformBaseline.cc",
+    "ext/skcms/src/*.h",
+  }
+end
+
+-- libjxl decoder. ext/libjxl/lib/jxl only contains the decoder subset we
+-- vendored (see ext/versions.txt), so globbing it picks exactly those files.
+function libjxl_files()
+  files { "ext/libjxl/lib/jxl/**.cc", "ext/libjxl/lib/jxl/**.h", "ext/libjxl/lib/include/jxl/*.h" }
+end
+
 function sumatrapdf_tool_files()
   files_in_dir("src", {
     "sumatrapdf-tool.cpp"
