@@ -59,14 +59,8 @@ See also [JavaScript examples](Tool-run-javascript-examples.md).
 
 ## Introduction
 
-MuPDF can be used in two ways with Javascript as follows:
-
-- With `mutool run`.
-- With `mupdf.js <https://mupdfjs.readthedocs.io/en/latest/>` package for Node and browsers.
-
-Both ways are very similar and here we show code samples and the documentation
-for both. However if a function or class is specific to only one environment,
-then it is marked with the **mutool run only** or **mupdf.js only** tags.
+This is the JavaScript API available through `sumatrapdf-tool run`. The
+scripting engine is the same as `mutool run`.
 
 ## Functions
 
@@ -129,8 +123,6 @@ Whether to respect the document's own style sheet.
 ### Common
 
 ### Archive
-
-**mutool run only**
 
 #### Constructors
 
@@ -263,11 +255,7 @@ The number of bytes in this buffer (read-only).
 
 #### Buffer.prototype.[n]
 
-**mutool run only**
-
 Get or set the byte at index `n`.
-
-See `readByte()` and `writeByte()` for the equivalent in mupdf.js.
 
 - **Throws:** RangeError on out of bounds accesses.
 
@@ -285,18 +273,6 @@ Returns the contents of this buffer as a string.
 
 ```
 var str = buffer.asString()
-```
-
-#### Buffer.prototype.asUint8Array()
-
-**mupdf.js only**
-
-Returns the contents of this buffer as a Uint8Array.
-
-- **Returns:** Uint8Array
-
-```
-var arr = buffer.asUint8Array()
 ```
 
 #### Buffer.prototype.getLength()
@@ -380,8 +356,6 @@ buffer.writeLine("a line")
 ```
 
 #### Buffer.prototype.writeRune(c)
-
-**mutool run only**
 
 Encode a unicode character as UTF-8 and append to the end of
 the buffer.
@@ -573,8 +547,6 @@ var name = cs.toString() // "[ColorSpace DeviceRGB]"
 ```
 
 ### DOM
-
-**mutool run only**
 
 This represents an HTML or an DOM node. It is a helper class intended to
 access the DOM (Document Object Model) content of a `Story`
@@ -819,8 +791,6 @@ var dict = xml.getAttributes()
 
 #### DOM.prototype.getText()
 
-**mutool run only**
-
 Returns the text contents of the node.
 
 - **Returns:** string | null
@@ -831,8 +801,6 @@ var text = xml.getText()
 
 #### DOM.prototype.getTag()
 
-**mutool run only**
-
 Returns the tag name for the node.
 
 - **Returns:** string | null
@@ -842,8 +810,6 @@ var text = xml.getTag()
 ```
 
 ### DefaultColorSpaces
-
-**mutool run only**
 
 An object given to a `Device` with the `Device.prototype.setDefaultColorSpaces()` call so it
 can obtain the current default `ColorSpace` objects.
@@ -1276,8 +1242,6 @@ Render flags
 
 #### Device.prototype.renderFlags(set, clear)
 
-**mutool run only**
-
 The specified rendering flags are set, and some others are cleared.
 
 Both set and clear are arrays where each element one of these flag names:
@@ -1307,8 +1271,6 @@ Device colorspaces
 ^^^^^^^^^^^^^^^^^^
 
 #### Device.prototype.setDefaultColorSpaces(defaultCS)
-
-**mutool run only**
 
 Change the set of default device colorspaces to one given.
 
@@ -1346,8 +1308,6 @@ Structures
 
 #### Device.prototype.beginStructure(structure, raw, index)
 
-**mutool run only**
-
 Begin a :term:`standard structure type` with the raw tag name and a unique identifier.
 
 - **string structure**: One of the pre-defined structure types in PDF.
@@ -1360,8 +1320,6 @@ device.beginStructure("Document", "my_tag_name", 123)
 
 #### Device.prototype.endStructure()
 
-**mutool run only**
-
 End a standard structure element.
 
 ```
@@ -1372,8 +1330,6 @@ Metatext
 ^^^^^^^^
 
 #### Device.prototype.beginMetatext(meta, text)
-
-**mutool run only**
 
 Begin meta text where meta is either of:
 
@@ -1390,8 +1346,6 @@ device.beginMetatext("Title", "My title")
 ```
 
 #### Device.prototype.endMetatext()
-
-**mutool run only**
 
 End meta text information.
 
@@ -1501,8 +1455,6 @@ var results = displayList.search("my search phrase")
 ```
 
 #### DisplayList.protoype.decodeBarcode(subarea, rotate)
-
-**mutool run only**
 
 Decodes a barcode detected in the display list, and returns an
 object with properties for barcode type and contents.
@@ -2190,8 +2142,6 @@ var mask = image.getMask()
 
 #### Image.prototype.getInterpolate()
 
-**mutool run only**
-
 Returns whether interpolation was used during decoding.
 
 - **Returns:** boolean
@@ -2201,8 +2151,6 @@ var interpolate = image.getInterpolate()
 ```
 
 #### Image.prototype.getColorKey()
-
-**mutool run only**
 
 Returns an array with `2 * getNumberOfComponents()` integers
 for an image with color key masking, or `null` if masking is
@@ -2217,8 +2165,6 @@ var result = image.getColorKey()
 
 #### Image.prototype.getDecode()
 
-**mutool run only**
-
 Returns an array with `2 * getNumberOfComponents()` numbers
 for an image with color mapping, or `null` if mapping is not
 used. Each pair of numbers define the lower and upper values to
@@ -2232,8 +2178,6 @@ var arr = image.getDecode()
 
 #### Image.prototype.getOrientation()
 
-**mutool run only**
-
 Returns the orientation of the image.
 
 - **Returns:** number
@@ -2243,8 +2187,6 @@ var orientation = image.getOrientation()
 ```
 
 #### Image.prototype.setOrientation(orientation)
-
-**mutool run only**
 
 Set the image orientation to the given orientation.
 
@@ -2550,8 +2492,6 @@ var m = mupdf.Matrix.invert([1, 0.5, 1, 1, 1, 1])
 ```
 
 ### MultiArchive
-
-**mutool run only**
 
 #### Constructors
 
@@ -2981,8 +2921,6 @@ var isPDF = page.isPDF()
 ```
 
 #### Page.prototype.decodeBarcode(subarea, rotate)
-
-**mutool run only**
 
 Decodes a barcode detected on the page, and returns an object with
 properties for barcode type and contents.
@@ -3493,8 +3431,6 @@ var warpedPixmap = pixmap.warp([[0, 0], [100, 100], [130, 170], [150, 200]], 200
 
 #### Pixmap.prototype.autowarp(points)
 
-**mutool run only**
-
 Same as `Pixmap.prototype.warp()` except that width and height
 are automatically determined.
 
@@ -3575,8 +3511,6 @@ var buffer = pixmap.asJPEG(80, false)
 
 #### Pixmap.prototype.decodeBarcode(rotate)
 
-**mutool run only**
-
 Decodes a barcode detected in the pixmap, and returns an object with
 properties for barcode type and contents.
 
@@ -3589,8 +3523,6 @@ var barcodeInfo = displayList.decodeBarcode([0, 0, 100, 100 ], 0)
 ```
 
 #### Pixmap.prototype.encodeBarcode(barcodeType, contents, size, errorCorrectionLevel, quietZones, humanReadableText)
-
-**mutool run only**
 
 Encodes a barcode into a pixmap. The supported types of barcode is either one of:
 
@@ -3620,8 +3552,6 @@ var pix = Pixmap.encodeBarcode("qrcode", "Hello world!", 100, 2, true, false)
 
 #### Pixmap.prototype.getSample(x, y, index)
 
-**mutool run only**
-
 Get the value of component `index` at position x, y (relative to
 the image origin: 0, 0 is the top left pixel).
 
@@ -3640,8 +3570,6 @@ var sample = rgbpixmap.getSample(10, 10, 1)
 
 #### Pixmap.prototype.saveAsPNG(filename)
 
-**mutool run only**
-
 Save this Pixmap as a PNG. Only works for gray and RGB images.
 
 - **string filename**: Desired name of image file.
@@ -3651,8 +3579,6 @@ pixmap.saveAsPNG("filename.png")
 ```
 
 #### Pixmap.prototype.saveAsJPEG(filename, quality)
-
-**mutool run only**
 
 Save this Pixmap as a JPEG file. Only works for gray, RGB and CMYK images.
 
@@ -3665,8 +3591,6 @@ pixmap.saveAsJPEG("filename.jpg", 80)
 
 #### Pixmap.prototype.saveAsPAM(filename)
 
-**mutool run only**
-
 Save this Pixmap as a PAM file.
 
 - **string filename**: Desired name of image file.
@@ -3676,8 +3600,6 @@ pixmap.saveAsPAM("filename.pam")
 ```
 
 #### Pixmap.prototype.saveAsPNM(filename)
-
-**mutool run only**
 
 Save this Pixmap as a PNM file. Only works for gray and RGB images without alpha.
 
@@ -3689,8 +3611,6 @@ pixmap.saveAsPNM("filename.pnm")
 
 #### Pixmap.prototype.saveAsPBM(filename)
 
-**mutool run only**
-
 Save this Pixmap as a PBM file. Only works for alpha only, gray and CMYK images without alpha.
 
 - **string filename**: Desired name of image file.
@@ -3700,8 +3620,6 @@ pixmap.saveAsPBM("filename.pbm")
 ```
 
 #### Pixmap.prototype.saveAsPKM(filename)
-
-**mutool run only**
 
 Save this Pixmap as a PKM file. Only works for alpha only, gray and CMYK images without alpha.
 
@@ -3713,8 +3631,6 @@ pixmap.saveAsPKM("filename.pkm")
 
 #### Pixmap.prototype.saveAsJPX(filename, quality)
 
-**mutool run only**
-
 Save this Pixmap as a JPX file.
 
 - **string filename**: Desired name of image file.
@@ -3725,8 +3641,6 @@ pixmap.saveAsJPX("filename.jpx", 90)
 ```
 
 #### Pixmap.prototype.detectDocument(points)
-
-**mutool run only**
 
 Detect a "document" in a `Pixmap`. Only a grayscale `Pixmap`
 without alpha is supported, anything else will cause an exception
@@ -3742,8 +3656,6 @@ var documentLocation = pixmap.detectDocument([0,0,100,0,100,100,0,100])
 
 #### Pixmap.prototype.detectSkew()
 
-**mutool run only**
-
 Returns the angle of skew detected from `Pixmap`.
 Note, if the `Pixmap` is not Greyscale with no alpha then an exception will be thrown.
 
@@ -3754,8 +3666,6 @@ var angle = pixmap.detectSkew()
 ```
 
 #### Pixmap.prototype.deskew(angle, border)
-
-**mutool run only**
 
 Returns a new `Pixmap` being the deskewed version of the supplied `Pixmap`.
 Note, if a `Pixmap` is supplied that is not RGB or Greyscale, or has alpha then an exception will be thrown.
@@ -3769,8 +3679,6 @@ var deskewed = pixmap.deskew(angle, 0)
 ```
 
 #### Pixmap.prototype.computeMD5()
-
-**mutool run only**
 
 Returns the MD5 digest of the pixmap pixel data.
 The digest is returned as a string of 16 hex digits.
@@ -3796,8 +3704,6 @@ Points are not represented by a class; they are just plain arrays of two numbers
 #### Static methods
 
 #### Point.transform(point, matrix)
-
-**mutool run only**
 
 Transforms the supplied point by the given transformation matrix.
 
@@ -3832,27 +3738,19 @@ Quads are not represented by a class; they are just plain arrays of eight number
 
 #### Quad.empty
 
-**mutool run only**
-
 A quad whose coordinates are such that it is categorized as empty.
 
 #### Quad.invalid
 
-**mutool run only**
-
 A quad whose coordinates are such that it is categorized as invalid.
 
 #### Quad.infinite
-
-**mutool run only**
 
 A quad whose coordinates are such that it is categorized as infinite.
 
 #### Static methods
 
 #### Quad.isEmpty(quad)
-
-**mutool run only**
 
 Returns a boolean indicating if the quad is empty or not.
 
@@ -3867,8 +3765,6 @@ var isEmpty = mupdf.Quad.isEmpty([0, 0, 100, 100]) // false
 
 #### Quad.isValid(quad)
 
-**mutool run only**
-
 Returns a boolean indicating if the quad is valid or not.
 
 - **Quad quad**: Rectangle to evaluate.
@@ -3882,8 +3778,6 @@ var isValid = mupdf.Quad.isValid([0, 0, -100, 100]) // false
 
 #### Quad.isInfinite(quad)
 
-**mutool run only**
-
 Returns a boolean indicating if the quad is infinite or not.
 
 - **Quad quad**: Rectangle to evaluate.
@@ -3896,8 +3790,6 @@ var isInfinite = mupdf.Quad.isInfinite([0, 0, 100, 100]) // false
 ```
 
 #### Quad.transform(quad, matrix)
-
-**mutool run only**
 
 Transforms the supplied quad by the given transformation matrix.
 
@@ -3915,8 +3807,6 @@ var m = mupdf.Quad.transform([0, 0, 100, 100], [1, 0.5, 1, 1, 1, 1])
 
 #### Quad.isPointInside(quad, point)
 
-**mutool run only**
-
 Return whether the point is inside the quad.
 
 :returns boolean
@@ -3926,8 +3816,6 @@ var inside = mupdf.Rect.isPointInside([0, 0, 100, 100], [50, 50])
 ```
 
 #### Quad.quadFromRect(rect)
-
-**mutool run only**
 
 Create a Quad that maps exactly to the coordinate of rectangle.
 
@@ -4073,8 +3961,6 @@ var bounds = shade.getBounds()
 ```
 
 ### Story
-
-**mutool run only**
 
 #### Constructors
 
@@ -4662,8 +4548,6 @@ Called once per character for in a text span.
 
 ### TreeArchive
 
-**mutool run only**
-
 #### Constructors
 
 #### TreeArchive()
@@ -4931,8 +4815,6 @@ annotation.setHiddenForEditing(true)
 
 #### PDFAnnotation.prototype.getHot()
 
-**mutool run only**
-
 Check if the annotation is hot, i.e. that the pointing device's cursor
 is hovering over the annotation.
 
@@ -4943,8 +4825,6 @@ annotation.getHot()
 ```
 
 #### PDFAnnotation.prototype.setHot(hot)
-
-**mutool run only**
 
 Set the annotation as being hot, i.e. that the pointing device's cursor
 is hovering over the annotation.
@@ -4957,8 +4837,6 @@ annotation.setHot(true)
 
 #### PDFAnnotation.prototype.requestSynthesis()
 
-**mutool run only**
-
 Request that if an annotation does not have an appearance stream, flag
 the annotation to have one generated. The appearance stream
 will be created during future calls to
@@ -4970,8 +4848,6 @@ annotation.requestSynthesis()
 ```
 
 #### PDFAnnotation.prototype.requestResynthesis()
-
-**mutool run only**
 
 Request that an appearance stream shall be re-generated for an
 annotation next time update() is called on
@@ -4987,8 +4863,6 @@ annotation.requestResynthesis()
 ```
 
 #### PDFAnnotation.prototype.process(processor)
-
-**mutool run only**
 
 Run through the annotation appearance stream and call methods
 on the supplied `PDFProcessor`.
@@ -5291,8 +5165,6 @@ annotation.setOpacity(0.5)
 
 #### PDFAnnotation.prototype.hasQuadding()
 
-**mutool run only**
-
 Returns whether the annotation is capable of supporting
 quadding (justification).
 
@@ -5560,8 +5432,6 @@ Returns the callout style.
 #### Default Appearance
 
 #### PDFAnnotation.prototype.hasDefaultAppearance()
-
-**mutool run only**
 
 Returns whether the annotation is capable of supporting a default
 appearance.
@@ -5978,8 +5848,6 @@ annotation.setIsOpen(true)
 
 #### PDFAnnotation.prototype.hasPopup()
 
-**mutool run only**
-
 Returns whether the annotation is capable of supporting a popup.
 
 - **Returns:** boolean
@@ -6131,8 +5999,6 @@ annotation.addVertex([0, 0])
 
 #### PDFAnnotation.prototype.getStampImageObject()
 
-**mutool run only**
-
 If the annotation is a stamp annotation and it consists of an
 image, return the `PDFObject` representing that image.
 
@@ -6143,8 +6009,6 @@ var pdfobj = annotation.getStampImageObject()
 ```
 
 #### PDFAnnotation.prototype.setStampImageObject(imgobj)
-
-**mutool run only**
 
 Create an appearance stream containing the image passed as
 argument and set that as the normal appearance of the
@@ -6157,8 +6021,6 @@ annotation.setStampImageObject(imgobj)
 ```
 
 #### PDFAnnotation.prototype.setStampImage(img)
-
-**mutool run only**
 
 Add the image passed as argument to the document as a PDF
 object, and pass a reference to that object to when setting the
@@ -6173,8 +6035,6 @@ annotation.setStampImage(img)
 #### Intent
 
 #### PDFAnnotation.prototype.hasIntent()
-
-**mutool run only**
 
 Returns whether the annotation is capable of supporting an intent.
 
@@ -6229,8 +6089,6 @@ clicked, or when an annotation gains/loses input focus.
 
 #### PDFAnnotation.prototype.eventEnter()
 
-**mutool run only**
-
 Trigger appearance changes and event handlers for
 when the pointing device's cursor enters an
 annotation's active area.
@@ -6240,8 +6098,6 @@ annot.eventEnter()
 ```
 
 #### PDFAnnotation.prototype.eventExit()
-
-**mutool run only**
 
 Trigger appearance changes and event handlers for
 when the pointing device's cursor exits an
@@ -6253,8 +6109,6 @@ annot.eventExit()
 
 #### PDFAnnotation.prototype.eventDown()
 
-**mutool run only**
-
 Trigger appearance changes and event handlers for
 when the pointing device's button is depressed within
 an annotation's active area.
@@ -6264,8 +6118,6 @@ widget.eventDown()
 ```
 
 #### PDFAnnotation.prototype.eventUp()
-
-**mutool run only**
 
 Trigger appearance changes and event handlers for
 when the pointing device's button is released within
@@ -6277,8 +6129,6 @@ widget.eventUp()
 
 #### PDFAnnotation.prototype.eventFocus()
 
-**mutool run only**
-
 Trigger event handlers for when an annotation gains
 input focus.
 
@@ -6287,8 +6137,6 @@ widget.eventFocus()
 ```
 
 #### PDFAnnotation.prototype.eventBlur()
-
-**mutool run only**
 
 Trigger event handlers for when an annotation loses
 input focus.
@@ -6334,8 +6182,6 @@ To open an existing PDF document, use `Document.openDocument()`.
 
 #### PDFDocument.formatURIFromPathAndDest(path, destination)
 
-**mutool run only**
-
 Format a link URI given a
 `system independent path <https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/pdfreference1.7old.pdf#G8.1640868>`
 to a remote document and a destination object or a destination
@@ -6345,8 +6191,6 @@ string suitable for `Page.prototype.createLink()`.
 - **Link | string destination**: Link or string referring to a destination using either a destination object or a destination name in the remote document.
 
 #### PDFDocument.appendDestToURI(uri, destination)
-
-**mutool run only**
 
 Append a fragment representing a document destination to a an
 existing URI that points to a remote document. The resulting
@@ -6445,8 +6289,6 @@ var lang = pdfDocument.getLanguage()
 ```
 
 #### PDFDocument.prototype.wasPureXFA()
-
-**mutool run only**
 
 Returns whether the document was an XFA form without AcroForm
 fields.
@@ -6708,8 +6550,6 @@ var obj = pdfDocument.findPage(0)
 
 #### PDFDocument.prototype.findPageNumber(page)
 
-**mutool run only**
-
 Find a given `PDFPage` and return its page number.
 If the page can not be found, returns -1.
 
@@ -6722,8 +6562,6 @@ var pageNumber = pdfDocument.findPageNumber(page)
 ```
 
 #### PDFDocument.prototype.lookupDest(obj)
-
-**mutool run only**
 
 Find the destination corresponding to a specific named
 destination given as a name or byte string in the form of a
@@ -6975,8 +6813,6 @@ var buffer = pdfDocument.getEmbeddedFileContents(fileSpecObject)
 
 #### PDFDocument.prototype.verifyEmbeddedFileChecksum(fileSpecObject)
 
-**mutool run only**
-
 Verify the MD5 checksum of the embedded file contents.
 
 - **Object fileSpecObject: :term**: `file specification`.
@@ -6988,8 +6824,6 @@ var fileChecksumValid = pdfDocument.verifyEmbeddedFileChecksum(fileSpecObject)
 ```
 
 #### PDFDocument.prototype.isFilespec(object)
-
-**mutool run only**
 
 Check if the given `object` is a :term:`file specification`.
 
@@ -7016,8 +6850,6 @@ var isFilespecObject = pdfDocument.isEmbeddedFile(obj)
 
 #### PDFDocument.prototype.countAssociatedFiles()
 
-**mutool run only**
-
 Return the number of :term:`associated files <associated file>`
 associated with this document. Note that this is the number of
 files associated at the document level, not necessarily the
@@ -7031,8 +6863,6 @@ var count = pdfDocument.countAssociatedFiles()
 ```
 
 #### PDFDocument.prototype.associatedFile(n)
-
-**mutool run only**
 
 Return the :term:`file specification` object that represents the nth
 :term:`associated file` for this document.
@@ -7205,8 +7035,6 @@ pdfDocument.redo()
 ```
 
 #### PDFDocument.prototype.saveJournal(filename)
-
-**mutool run only**
 
 Save the undo/redo journal to a file.
 
@@ -7497,8 +7325,6 @@ var jsIsSupported = pdfDocument.isJSSupported()
 
 #### PDFDocument.prototype.setJSEventListener(listener)
 
-**mutool run only**
-
 Calls the listener whenever a document Javascript action
 triggers an event.
 
@@ -7519,8 +7345,6 @@ print(message)
 
 #### PDFDocument.prototype.zugferdProfile()
 
-**mutool run only**
-
 Determine if the current PDF is a ZUGFeRD PDF, and, if so,
 return the profile type in use. Possible return values include:
 "NOT ZUGFERD", "COMFORT", "BASIC", "EXTENDED", "BASIC WL",
@@ -7534,8 +7358,6 @@ var profile = pdfDocument.zugferdProfile()
 
 #### PDFDocument.prototype.zugferdVersion()
 
-**mutool run only**
-
 Determine if the current PDF is a ZUGFeRD PDF, and, if so,
 return the version of the spec it claims to conform to.
 Returns 0 for non-zugferd PDFs.
@@ -7547,8 +7369,6 @@ var version = pdfDocument.zugferdVersion()
 ```
 
 #### PDFDocument.prototype.zugferdXML()
-
-**mutool run only**
 
 Return a buffer containing the embedded ZUGFeRD XML data from
 this ZUGFeRD PDF.
@@ -7646,7 +7466,6 @@ Javascript objects and `PDFObject` using a few basic rules:
 	Arrays and dictionaries are recursively translated to PDF arrays and dictionaries.
 	Be aware of cycles though! The translation does NOT cope with cyclic references!
 
-**mutool run only**
 This automatic translation goes both ways -- entries of PDF dictionaries and
 arrays can be accessed like Javascript objects and arrays.
 
@@ -7666,11 +7485,7 @@ Number of entries in array PDFObjects. Zero for all other object types.
 
 #### PDFObject.prototype.[n]
 
-**mutool run only**
-
 Get or set the element at index `n` in an array (0-indexed).
-
-See `PDFObject.prototype.get()` and `PDFObject.prototype.put()` for the equivalent in mupdf.js.
 
 - **Throws:** Error on out of bounds accesses.
 
@@ -7682,13 +7497,8 @@ pdfObject[1] = "world"
 
 #### PDFObject.prototype.[name]
 
-**mutool run only**
-
 Access a key named `name` in a dictionary. It is both possible to
 get and set its value, but also delete the key entirely.
-
-See `PDFObject.prototype.get()`, `PDFObject.prototype.put()`, and
-`PDFObject.prototype.delete()` for the equivalent in mupdf.js.
 
 ```
 var pages = doc.getTrailer().Root.Pages
@@ -7846,8 +7656,6 @@ var val = obj.valueOf()
 ```
 
 #### PDFObject.prototype.compare(other_obj)
-
-**mutool run only**
 
 Compare the object to another one. Returns 0 on match, non-zero
 on mismatch.
@@ -8088,46 +7896,6 @@ PDFPage objects.
 
 Instances of this class are returned by :js`~Document.prototype.loadPage` called on a `PDFDocument`.
 
-#### Static properties
-
-**mupdf.js only**
-
-#### PDFPage.REDACT_IMAGE_NONE
-
-for no image redactions
-
-#### PDFPage.REDACT_IMAGE_REMOVE
-
-to redact entire images
-
-#### PDFPage.REDACT_IMAGE_PIXELS
-
-for redacting just the covered pixels
-
-#### PDFPage.REDACT_IMAGE_UNLESS_INVISIBLE
-
-only redact visible images
-
-#### PDFPage.REDACT_LINE_ART_NONE
-
-for no line art redactions
-
-#### PDFPage.REDACT_LINE_ART_REMOVE_IF_COVERED
-
-redacts line art if covered
-
-#### PDFPage.REDACT_LINE_ART_REMOVE_IF_TOUCHED
-
-redacts line art if touched
-
-#### PDFPage.REDACT_TEXT_REMOVE
-
-to redact text
-
-#### PDFPage.REDACT_TEXT_NONE
-
-for no text redaction
-
 #### Instance methods
 
 #### PDFPage.prototype.getObject()
@@ -8258,8 +8026,6 @@ page.applyRedactions(true, mupdf.PDFPage.REDACT_IMAGE_NONE)
 
 #### PDFPage.prototype.process(processor)
 
-**mutool run only**
-
 Run through the page contents stream and call methods on the
 supplied `PDFProcessor`.
 
@@ -8283,8 +8049,6 @@ var transform = pdfPage.getTransform()
 
 #### PDFPage.prototype.createSignature(name)
 
-**mutool run only**
-
 Create a new signature widget with the given name as field
 label.
 
@@ -8297,8 +8061,6 @@ var signatureWidget = pdfPage.createSignature("test")
 ```
 
 #### PDFPage.prototype.countAssociatedFiles()
-
-**mutool run only**
 
 Return the number of :term:`associated files <associated file>`
 associated with this page. Note that this is the number of
@@ -8314,8 +8076,6 @@ var count = pdfPage.countAssociatedFiles()
 
 #### PDFPage.prototype.associatedFile(n)
 
-**mutool run only**
-
 Return the :term:`file specification` object that represents the nth
 Associated File on this page.
 
@@ -8330,8 +8090,6 @@ var obj = pdfPage.associatedFile(0)
 ```
 
 #### PDFPage.prototype.clip(rect)
-
-**mutool run only**
 
 Clip the page to the given rectangle.
 
@@ -8653,8 +8411,6 @@ var state = widget.toggle()
 
 #### PDFWidget.prototype.getEditingState()
 
-**mutool run only**
-
 Get whether the widget is in editing state.
 
 - **Returns:** boolean
@@ -8664,8 +8420,6 @@ var state = widget.getEditingState()
 ```
 
 #### PDFWidget.prototype.setEditingState(state)
-
-**mutool run only**
 
 Set whether the widget is in editing state.
 
@@ -8683,8 +8437,6 @@ widget.getEditingState(false)
 ```
 
 #### PDFWidget.prototype.layoutTextWidget()
-
-**mutool run only**
 
 Layout the value of a text widget. Returns a text layout object.
 
@@ -8706,97 +8458,15 @@ If the value is read only and the widget cannot be interacted with.
 var isReadOnly = widget.isReadOnly()
 ```
 
-#### PDFWidget.prototype.isMultiline()
-
-**mupdf.js only**
-
-Return whether the widget is multi-line.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isPassword()
-
-**mupdf.js only**
-
-Return whether the widget is a password input.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isComb()
-
-**mupdf.js only**
-
-Return whether the widget is a text field laid out in "comb" style (forms where you write one character per square).
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isButton()
-
-**mupdf.js only**
-
-Return whether the widget is of "button", "checkbox" or "radiobutton" type.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isPushButton()
-
-**mupdf.js only**
-
-Return whether the widget is of "button" type.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isCheckbox()
-
-**mupdf.js only**
-
-Return whether the widget is of "checkbox" type.
-
-- **Returns:** boolean
-
 #### PDFWidget.prototype.isRadioButton()
 
 Return whether the widget is of "radiobutton" type.
 
 - **Returns:** boolean
 
-#### PDFWidget.prototype.isText()
-
-**mupdf.js only**
-
-Return whether the widget is of "text" type.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isChoice()
-
-**mupdf.js only**
-
-Return whether the widget is of "combobox" or "listbox" type.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isListBox()
-
-**mupdf.js only**
-
-Return whether the widget is of "listbox" type.
-
-- **Returns:** boolean
-
-#### PDFWidget.prototype.isComboBox()
-
-**mupdf.js only**
-
-Return whether the widget is of "combobox" type.
-
-- **Returns:** boolean
-
 #### Signatures
 
 #### PDFWidget.prototype.isSigned()
-
-**mutool run only**
 
 Returns true if the signature is signed.
 
@@ -8807,8 +8477,6 @@ var isSigned = widget.isSigned()
 ```
 
 #### PDFWidget.prototype.validateSignature()
-
-**mutool run only**
 
 Returns number of updates ago when signature became invalid.
 Returns 0 is signature is still valid, 1 if it became
@@ -8821,8 +8489,6 @@ var validNum = widget.validateSignature()
 ```
 
 #### PDFWidget.prototype.checkCertificate()
-
-**mutool run only**
 
 Returns "OK" if signature checked out OK, otherwise a text
 string containing an error message, e.g. "Self-signed
@@ -8837,8 +8503,6 @@ var result = widget.checkCertificate()
 
 #### PDFWidget.prototype.checkDigest()
 
-**mutool run only**
-
 Returns "OK" if digest checked out OK, otherwise a text string
 containing an error message.
 
@@ -8849,8 +8513,6 @@ var result = widget.checkDigest()
 ```
 
 #### PDFWidget.prototype.getSignatory()
-
-**mutool run only**
 
 Returns a text string with the distinguished name from a signed
 signature, or a text string with an error message.
@@ -8867,8 +8529,6 @@ var signatory = widget.getSignatory()
 ```
 
 #### PDFWidget.prototype.previewSignature(signer, signatureConfig, image, reason, location)
-
-**mutool run only**
 
 Return a `Pixmap` preview of what the signature would look like
 if signed with the given configuration. Reason and location may
@@ -8897,8 +8557,6 @@ image,
 
 #### PDFWidget.prototype.sign(signer, signatureConfig, image, reason, location)
 
-**mutool run only**
-
 Sign the signature with the given configuration. Reason and
 location may be `undefined`, in which case they are not shown.
 
@@ -8923,8 +8581,6 @@ image,
 
 #### PDFWidget.prototype.clearSignature()
 
-**mutool run only**
-
 Clear a signed signature, making it unsigned again.
 
 ```
@@ -8932,8 +8588,6 @@ widget.clearSignature()
 ```
 
 #### PDFWidget.prototype.incrementalChangesSinceSigning()
-
-**mutool run only**
 
 Returns true if there have been incremental changes since the
 signature widget was signed.
@@ -8943,5 +8597,3 @@ signature widget was signed.
 ```
 var changed = widget.incrementalChangesSinceSigning()
 ```
-
-

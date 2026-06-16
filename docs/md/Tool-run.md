@@ -6,7 +6,7 @@
 
 **Usage:** `sumatrapdf-tool run script.js [arguments...]`
 
-`run` executes a [MuPDF](https://mupdf.readthedocs.io/) JavaScript program. It's
+`run` executes a [sumatrapdf-tool](Tool-run-javascript-examples.md) JavaScript program. It's
 the same scripting engine as `mutool run` and gives you programmatic access to
 PDF (and other) documents: read and edit pages, annotations, metadata, render to
 images, extract text and more.

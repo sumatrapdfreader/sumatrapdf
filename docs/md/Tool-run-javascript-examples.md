@@ -234,14 +234,14 @@ pdf.save("out.pdf")
 
 ### Merge PDFs
 
-A re-implementation of `mutool merge` in JavaScript.
+A re-implementation of `sumatrapdf-tool merge` in JavaScript.
 
 ```
 sumatrapdf-tool run pdf-merge.js output.pdf input1.pdf input2.pdf ...
 ```
 
 ```js
-// A re-implementation of "mutool merge" in JavaScript.
+// A re-implementation of "sumatrapdf-tool merge" in JavaScript.
 
 import * as mupdf from "mupdf"
 
