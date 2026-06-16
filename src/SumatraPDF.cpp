@@ -6538,6 +6538,17 @@ static void TocItemToText(StrBuilder& s, TocItem* item, int level) {
     }
 }
 
+// for toggle commands that accept an optional "state" bool arg (issue #5067):
+// returns false if the command asked for a state that already matches the
+// current one (so the toggle should be skipped); true otherwise (no explicit
+// state given, or the requested state differs and a flip is needed)
+static bool ShouldToggle(CustomCommand* cmd, bool curState) {
+    if (!GetCommandArg(cmd, kCmdArgState)) {
+        return true; // no explicit state: always toggle
+    }
+    return GetCommandBoolArg(cmd, kCmdArgState, !curState) != curState;
+}
+
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int cmdId = LOWORD(wp);
     bool openAnnotationEdit = false;
@@ -6878,16 +6889,22 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowViewModeNotification(win, cmdId);
             break;
 
-        case CmdToggleContinuousView:
-            ToggleContinuousView(win);
+        case CmdToggleContinuousView: {
+            bool cur = win->ctrl && IsContinuous(win->ctrl->GetDisplayMode());
+            if (ShouldToggle(cmd, cur)) {
+                ToggleContinuousView(win);
+            }
             break;
+        }
 
         case CmdToggleMangaMode:
             ToggleMangaMode(win);
             break;
 
         case CmdToggleToolbar:
-            OnMenuViewShowHideToolbar(win);
+            if (ShouldToggle(cmd, gGlobalPrefs->showToolbar)) {
+                OnMenuViewShowHideToolbar(win);
+            }
             break;
 
         case CmdChangeScrollbar:
@@ -6962,7 +6979,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         }
 
         case CmdToggleMenuBar: {
-            ToggleMenuBar(win, false);
+            if (ShouldToggle(cmd, gGlobalPrefs->showMenubar)) {
+                ToggleMenuBar(win, false);
+            }
             break;
         }
 
@@ -6998,7 +7017,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents:
-            ToggleTocBox(win);
+            if (ShouldToggle(cmd, win->tocVisible)) {
+                ToggleTocBox(win);
+            }
             break;
 
         case CmdScrollUpHalfPage: {
@@ -7169,11 +7190,15 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdTogglePresentationMode:
-            TogglePresentationMode(win);
+            if (ShouldToggle(cmd, win->presentation != PM_DISABLED)) {
+                TogglePresentationMode(win);
+            }
             break;
 
         case CmdToggleFullscreen:
-            ToggleFullScreen(win);
+            if (ShouldToggle(cmd, win->isFullScreen)) {
+                ToggleFullScreen(win);
+            }
             break;
 
         case CmdRotateLeft:

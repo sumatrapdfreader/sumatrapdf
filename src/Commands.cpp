@@ -754,6 +754,16 @@ static const ArgSpec argSpecs[] = {
 
     {CmdCommandPalette, kCmdArgMode, CommandArg::Type::String}, // default
 
+    // toggle commands accept an optional bool to force a state (issue #5067),
+    // e.g. [CmdToggleFullscreen on] / [CmdToggleToolbar state=off]
+    {CmdToggleContinuousView, kCmdArgState, CommandArg::Type::Bool},   // default
+    {CmdToggleToolbar, kCmdArgState, CommandArg::Type::Bool},          // default
+    {CmdToggleMenuBar, kCmdArgState, CommandArg::Type::Bool},          // default
+    {CmdToggleFullscreen, kCmdArgState, CommandArg::Type::Bool},       // default
+    {CmdTogglePresentationMode, kCmdArgState, CommandArg::Type::Bool}, // default
+    {CmdToggleBookmarks, kCmdArgState, CommandArg::Type::Bool},        // default
+    {CmdToggleTableOfContents, kCmdArgState, CommandArg::Type::Bool},  // default
+
     {CmdNone, "", CommandArg::Type::None}, // sentinel
 };
 
@@ -979,6 +989,8 @@ static CommandArg* ParseArgOfType(const char* argName, CommandArg::Type type, co
     return nullptr;
 }
 
+static int ParseBool(const char* s);
+
 CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
     // first is default value
     const char* valStart = str::SkipChar(*argsInOut, ' ');
@@ -1000,22 +1012,27 @@ CommandArg* TryParseDefaultArg(int defaultArgIdx, const char** argsInOut) {
     // no matter what, we advance past the value
     *argsInOut = valEnd;
 
-    // we don't support bool because we don't have to yet
-    // (no command have default bool value)
+    if (type == CommandArg::Type::Bool) {
+        // a default (positional) bool, e.g. [CmdToggleFullscreen on] (issue #5067)
+        auto arg = NewArg(type, argName);
+        arg->boolVal = ParseBool(val) != 0; // 1 -> true, 0 -> false, -1 (unrecognized) -> true
+        return arg;
+    }
     return ParseArgOfType(argName, type, val);
 }
 
 // 1  : true
 // 0  : false
 // -1 : not a known boolean string
+// returns 1 for a true value, 0 for a false value, -1 if not a recognized bool
 static int ParseBool(const char* s) {
-    if (str::EqI(s, "1") || str::EqI(s, "true") || str::EqI(s, "yes")) {
-        return true;
+    if (str::EqI(s, "1") || str::EqI(s, "true") || str::EqI(s, "yes") || str::EqI(s, "on")) {
+        return 1;
     }
-    if (str::EqI(s, "0") || str::EqI(s, "false") || str::EqI(s, "no")) {
-        return true;
+    if (str::EqI(s, "0") || str::EqI(s, "false") || str::EqI(s, "no") || str::EqI(s, "off")) {
+        return 0;
     }
-    return false;
+    return -1;
 }
 
 // parse:

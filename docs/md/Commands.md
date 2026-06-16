@@ -498,6 +498,31 @@ Shortcuts [
 ]
 ```
 
+## Toggle commands (force an on/off state)
+
+**Ver 3.7+**
+
+These toggle commands accept an optional `state` boolean argument that forces an explicit state instead of flipping the current one. This is useful for automation (e.g. via [DDE](DDE-Commands.md)) where you want to set a known state rather than toggle blindly:
+
+- `CmdToggleFullscreen`
+- `CmdTogglePresentationMode`
+- `CmdToggleToolbar`
+- `CmdToggleMenuBar`
+- `CmdToggleContinuousView`
+- `CmdToggleTableOfContents`, `CmdToggleBookmarks`
+
+Arguments:
+
+- `state` : default, boolean. `on`/`true`/`1`/`yes` forces the feature on, `off`/`false`/`0`/`no` forces it off. If the document is already in the requested state, nothing happens. If omitted, the command toggles (the original behavior).
+
+Examples (DDE):
+
+```
+[CmdToggleFullscreen on]
+[CmdToggleToolbar off]
+[CmdToggleContinuousView state: on]
+```
+
 # Debugging
 
 If a custom shortcut defined in `Shortcuts` doesn't work it could be caused by invalid command name or invalid command arguments.
