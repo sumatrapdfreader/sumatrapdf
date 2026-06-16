@@ -167,6 +167,7 @@ Order doesn't matter. Available tokens:
 | Option | Meaning |
 | --- | --- |
 | `3x` | number of copies (here, 3) |
+| `collate` / `nocollate` | collate copies (`1,2,3 / 1,2,3`) or not (`1,1 / 2,2 / 3,3`) |
 | `simplex` | one-sided |
 | `duplex` / `duplexlong` | two-sided, flip on long edge |
 | `duplexshort` | two-sided, flip on short edge |
@@ -210,19 +211,24 @@ SumatraPDF.exe -print-to-default -print-settings "ignore-pdf-print-settings" doc
 This applies to command-line printing only; when you print from the window, the
 print dialog's own values are used.
 
-## Setting a default page scaling
+## Print dialog defaults
 
-The page scaling defaults to *shrink*. To change the default used by the print
-dialog and command-line printing, set the `PrinterDefaults` advanced setting (in
-`Settings → Advanced Options`):
+You can change some defaults used by the print dialog with the `PrinterDefaults`
+advanced setting (in `Settings → Advanced Options`):
 
 ```
 PrinterDefaults [
 	PrintScale = none
+	Collate = collate
 ]
 ```
 
-Accepted values: `shrink` (default), `fit`, `stretch`, `none`.
+- `PrintScale` — default page scaling. Values: `shrink` (default), `fit`,
+  `stretch`, `none`.
+- `Collate` — default for the print dialog's Collate checkbox. Values: `default`
+  (leave the printer/driver default), `collate`, `nocollate`. You can still
+  change it per print in the dialog. For command-line printing, use the
+  `collate` / `nocollate` `-print-settings` tokens instead.
 
 ## Recipes for common tasks
 

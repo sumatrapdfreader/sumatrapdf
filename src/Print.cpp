@@ -1088,6 +1088,32 @@ static HGLOBAL GlobalMemDup(const void* data, size_t len) {
     return hGlobal;
 }
 
+// the PrinterDefaults.Collate setting (issue #1558).
+// returns 1 to force collate, 0 to force no-collate, -1 to leave the driver default
+static int CollateDefaultPref() {
+    const char* s = gGlobalPrefs->printerDefaults.collate;
+    if (str::EqI(s, "collate")) {
+        return 1;
+    }
+    if (str::EqI(s, "nocollate")) {
+        return 0;
+    }
+    return -1;
+}
+
+// apply a collate preference (1 = collate, 0 = no-collate) to a DEVMODE handle
+static void SetDevModeCollate(HGLOBAL hDevMode, int collate) {
+    if (!hDevMode || collate < 0) {
+        return;
+    }
+    DEVMODEW* dm = (DEVMODEW*)GlobalLock(hDevMode);
+    if (dm) {
+        dm->dmCollate = collate ? DMCOLLATE_TRUE : DMCOLLATE_FALSE;
+        dm->dmFields |= DM_COLLATE;
+        GlobalUnlock(hDevMode);
+    }
+}
+
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
 
@@ -1204,6 +1230,23 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
     if (defaultDevMode) {
         DEVMODE* p = defaultDevMode.Get();
         pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+    }
+
+    // seed the dialog's Collate checkbox from the PrinterDefaults.Collate setting
+    // (issue #1558). When there's no remembered DEVMODE yet (first print of the
+    // session), seed one from the default printer so the preference still shows.
+    int collatePref = CollateDefaultPref();
+    if (collatePref >= 0) {
+        if (!pdex.hDevMode) {
+            TempStr defName = GetDefaultPrinterNameTemp();
+            Printer* seed = defName ? NewPrinter(defName) : nullptr;
+            if (seed && seed->devMode) {
+                auto p = seed->devMode;
+                pdex.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+            }
+            delete seed;
+        }
+        SetDevModeCollate(pdex.hDevMode, collatePref);
     }
 
     HRESULT res = PrintDlgExW(&pdex);
@@ -1726,6 +1769,12 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
         } else if (str::EqI(s, "monochrome")) {
             devMode->dmColor = DMCOLOR_MONOCHROME;
             devMode->dmFields |= DM_COLOR;
+        } else if (str::EqI(s, "collate")) {
+            devMode->dmCollate = DMCOLLATE_TRUE;
+            devMode->dmFields |= DM_COLLATE;
+        } else if (str::EqI(s, "nocollate")) {
+            devMode->dmCollate = DMCOLLATE_FALSE;
+            devMode->dmFields |= DM_COLLATE;
         } else if (str::StartsWithI(s, "bin=")) {
             devMode->dmDefaultSource = GetPaperSourceByName(printer, s + 4);
             devMode->dmFields |= DM_DEFAULTSOURCE;

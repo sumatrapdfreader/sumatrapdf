@@ -206,6 +206,9 @@ struct ForwardSearch {
 struct PrinterDefaults {
     // default value for scaling (shrink, fit, none)
     char* printScale;
+    // default value for collate in the print dialog (default, collate,
+    // nocollate)
+    char* collate;
 };
 
 // options for fullscreen mode
@@ -717,8 +720,10 @@ static const StructInfo gForwardSearchInfo = {sizeof(ForwardSearch), 4, gForward
 
 static const FieldInfo gPrinterDefaultsFields[] = {
     {offsetof(PrinterDefaults, printScale), SettingType::String, (intptr_t)"shrink"},
+    {offsetof(PrinterDefaults, collate), SettingType::String, (intptr_t)"default"},
 };
-static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 1, gPrinterDefaultsFields, "PrintScale"};
+static const StructInfo gPrinterDefaultsInfo = {sizeof(PrinterDefaults), 2, gPrinterDefaultsFields,
+                                                "PrintScale\0Collate"};
 
 static const FieldInfo gFullscreenFields[] = {
     {offsetof(Fullscreen, showToolbar), SettingType::Bool, false},

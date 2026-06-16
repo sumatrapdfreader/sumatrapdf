@@ -388,6 +388,10 @@ ForwardSearch [
 PrinterDefaults [
     ; default value for scaling (shrink, fit, none)
     PrintScale = shrink
+
+    ; default value for collate in the print dialog (default, collate,
+    ; nocollate)
+    Collate = default
 ]
 
 ; options for fullscreen mode (introduced in version 3.7)

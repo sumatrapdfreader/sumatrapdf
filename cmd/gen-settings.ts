@@ -207,6 +207,7 @@ const fileTime: Field[] = [mkField("DwHighDateTime", Int, 0, ""), mkField("DwLow
 
 const printerDefaults: Field[] = [
   mkField("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)"),
+  mkField("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)"),
 ];
 
 const forwardSearch: Field[] = [
