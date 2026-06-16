@@ -976,6 +976,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_SCALE, _TRA("Page scaling"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_SHRINK, _TRA("&Shrink pages to printable area (if necessary)"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_FIT, _TRA("&Fit pages to printable area"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_STRETCH,
+                               _TRA("S&tretch pages to fill paper (ignore aspect ratio)"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, _TRA("&Use original page sizes"));
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, _TRA("Compatibility"));
 
@@ -983,10 +985,11 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                              data->range == PrintRangeAdv::Even  ? IDC_PRINT_RANGE_EVEN
                              : data->range == PrintRangeAdv::Odd ? IDC_PRINT_RANGE_ODD
                                                                  : IDC_PRINT_RANGE_ALL);
-            CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_NONE,
-                             data->scale == PrintScaleAdv::Fit      ? IDC_PRINT_SCALE_FIT
-                             : data->scale == PrintScaleAdv::Shrink ? IDC_PRINT_SCALE_SHRINK
-                                                                    : IDC_PRINT_SCALE_NONE);
+            CheckRadioButton(hDlg, IDC_PRINT_SCALE_SHRINK, IDC_PRINT_SCALE_STRETCH,
+                             data->scale == PrintScaleAdv::Fit       ? IDC_PRINT_SCALE_FIT
+                             : data->scale == PrintScaleAdv::Stretch ? IDC_PRINT_SCALE_STRETCH
+                             : data->scale == PrintScaleAdv::Shrink  ? IDC_PRINT_SCALE_SHRINK
+                                                                     : IDC_PRINT_SCALE_NONE);
 
             return FALSE;
             //] ACCESSKEY_GROUP Advanced Print Tab
@@ -1003,6 +1006,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 }
                 if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_FIT)) {
                     data->scale = PrintScaleAdv::Fit;
+                } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_STRETCH)) {
+                    data->scale = PrintScaleAdv::Stretch;
                 } else if (IsDlgButtonChecked(hDlg, IDC_PRINT_SCALE_SHRINK)) {
                     data->scale = PrintScaleAdv::Shrink;
                 } else {
@@ -1019,6 +1024,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 case IDC_PRINT_RANGE_ODD:
                 case IDC_PRINT_SCALE_SHRINK:
                 case IDC_PRINT_SCALE_FIT:
+                case IDC_PRINT_SCALE_STRETCH:
                 case IDC_PRINT_SCALE_NONE: {
                     HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
                     EnableWindow(hApplyButton, TRUE);

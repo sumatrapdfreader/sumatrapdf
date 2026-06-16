@@ -20,7 +20,8 @@ enum class PrintRangeAdv {
 enum class PrintScaleAdv {
     None = 0,
     Shrink,
-    Fit
+    Fit,
+    Stretch
 };
 enum class PrintRotationAdv {
     Auto = 0,

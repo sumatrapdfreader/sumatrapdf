@@ -52,7 +52,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
     - `even` or `odd`.
     - `portrait` or `landscape` : can provide 90 degree rotation of contents (NOT the rotation of paper which must be pre-set by the choice of printer defaults)
     - `disable-auto-rotation` : by default a page wider than it is tall is rotated 90 degrees to fit the paper; this prints the content in its original orientation instead (available since 3.5)
-    - `noscale`, `shrink` and `fit`
+    - `noscale`, `shrink`, `fit` and `stretch` (`stretch` fills the paper in both dimensions, ignoring the aspect ratio)
     - `color` or `monochrome`
     - `duplex`, `duplexshort`, `duplexlong` and `simplex`
     - `bin=<num or name>` : select tray to print to

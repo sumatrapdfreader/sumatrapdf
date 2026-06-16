@@ -814,7 +814,16 @@ static bool PrintToDevice(const PrintData& pd) {
             // that printing forms/labels of varying size remains reliably possible)
             Point offset(-printable.x, -printable.y);
 
-            if (pd.advData.scale != PrintScaleAdv::None) {
+            if (PrintScaleAdv::Stretch == pd.advData.scale) {
+                // stretch the page to fill the whole printable area in both
+                // dimensions, ignoring the aspect ratio (issue #2220). Render at
+                // a zoom large enough that the bitmap is at least as big as the
+                // printable area in both dimensions (so we only ever downscale
+                // one of them); the StretchBlt in the blit loop below then resizes
+                // it to exactly fill the printable area.
+                zoom = std::max((float)printable.dx / pSize.dx, (float)printable.dy / pSize.dy);
+                offset = Point(0, 0);
+            } else if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectF rect = engine.PageContentBox(pageNo, RenderTarget::Print);
@@ -859,6 +868,10 @@ static bool PrintToDevice(const PrintData& pd) {
                 if (bmp && bmp->IsValid()) {
                     auto size = bmp->GetSize();
                     Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
+                    if (PrintScaleAdv::Stretch == pd.advData.scale) {
+                        // resize the rendered page to exactly fill the printable area
+                        rc = Rect(0, 0, printable.dx, printable.dy);
+                    }
                     ok = bmp->Blit(hdc, rc);
                 }
                 delete bmp;
@@ -1074,6 +1087,8 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         hasDefaults = true;
         if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "fit")) {
             defaultScaleAdv = PrintScaleAdv::Fit;
+        } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "stretch")) {
+            defaultScaleAdv = PrintScaleAdv::Stretch;
         } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "none")) {
             defaultScaleAdv = PrintScaleAdv::None;
         }
@@ -1545,6 +1560,8 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             advanced.scale = PrintScaleAdv::Shrink;
         } else if (str::EqI(s, "fit")) {
             advanced.scale = PrintScaleAdv::Fit;
+        } else if (str::EqI(s, "stretch")) {
+            advanced.scale = PrintScaleAdv::Stretch;
         } else if (str::EqI(s, "portrait")) {
             advanced.rotation = PrintRotationAdv::Portrait;
             devMode->dmOrientation = DMORIENT_PORTRAIT;
