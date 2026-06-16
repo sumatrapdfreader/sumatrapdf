@@ -616,7 +616,10 @@ static bool PrintToDevice(const PrintData& pd) {
         }
         di.lpszDocName = ToWStrTemp(fileName);
     } else {
-        di.lpszDocName = ToWStrTemp(engine.FilePath());
+        // use just the file name (not the full path) as the print job name:
+        // other apps do the same, and some printer drivers/spoolers choke on
+        // long or non-ASCII full paths as the job name (issue #2166)
+        di.lpszDocName = ToWStrTemp(path::GetBaseNameTemp(engine.FilePath()));
     }
     if (pd.printer->output) {
         di.lpszOutput = ToWStrTemp(pd.printer->output);
