@@ -42,6 +42,11 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - you can now drag&drop selected text to another application, like a text editor
 - added `List Printers` (`CmdListPrinters`) command to `Ctrl + k` Command Palette to list available printers
 - fix `-print-settings paper=A3` (and other standard sizes) when the printer driver reports a longer paper name such as `A3 297 x 420 mm` (fixes #5632)
+- add `stretch` page scaling (and a matching "Stretch pages to fill paper" option in the Advanced print dialog) that fills the paper in both dimensions, ignoring the aspect ratio (fixes #2220)
+- add "Center page horizontally on the paper" option to the Advanced print dialog and `center` [print setting](Command-line-arguments.md), to center a page smaller than the paper (fixes #348)
+- add "Choose paper source by document page size" option to the Advanced print dialog and `bin=auto` [print setting](Command-line-arguments.md), to let the printer pick the input tray whose paper matches the page (fixes #349)
+- add "Print each page at its document page size" option to the Advanced print dialog and `paper=auto` [print setting](Command-line-arguments.md), to correctly print documents with mixed page sizes (fixes #533)
+- use the file name (not the full path) as the print job name, which some printer drivers couldn't handle for long or non-ASCII paths (fixes #2166)
 - fix EXIF orientation ignored for JPEG and WebP images (fixes #1544)
 - add `-log-to-file <file>` cmd-line flag to log to a specific file (like `-log` but with custom log file path)
 - move `DefaultImageZoom` advanced setting to `ImageUI.DefaultZoom`, default to `shrink to fit`

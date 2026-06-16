@@ -580,6 +580,9 @@ static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     return bounds;
 }
 
+static short GetPaperSize(EngineBase* engine, int pageNo = 1);
+static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, int pageNo);
+
 static bool PrintToDevice(const PrintData& pd) {
     ReportIf(!pd.engine);
     if (!pd.engine) {
@@ -683,22 +686,30 @@ static bool PrintToDevice(const PrintData& pd) {
     // Positive x is to the right; positive y is down.
     SetMapMode(hdc, MM_TEXT);
 
-    const Size paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
-    const Rect printable(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
-                         GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
     float fileDPI = engine.GetFileDPI();
-    float px = (float)GetDeviceCaps(hdc, LOGPIXELSX);
-    float py = (float)GetDeviceCaps(hdc, LOGPIXELSY);
-    float dpiFactor = std::min(px / fileDPI, py / fileDPI);
-    bool bPrintPortrait = paperSize.dx < paperSize.dy;
-    if (devMode && (devMode->dmFields & DM_ORIENTATION)) {
-        bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
-    }
-    if (pd.advData.rotation == PrintRotationAdv::Portrait) {
-        bPrintPortrait = true;
-    } else if (pd.advData.rotation == PrintRotationAdv::Landscape) {
-        bPrintPortrait = false;
-    }
+    // paper geometry; recomputed per page when printing mixed page sizes (#533)
+    Size paperSize;
+    Rect printable;
+    float dpiFactor = 1.0f;
+    bool bPrintPortrait = false;
+    auto computeGeometry = [&] {
+        paperSize = Size(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
+        printable = Rect(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
+                         GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
+        float px = (float)GetDeviceCaps(hdc, LOGPIXELSX);
+        float py = (float)GetDeviceCaps(hdc, LOGPIXELSY);
+        dpiFactor = std::min(px / fileDPI, py / fileDPI);
+        bPrintPortrait = paperSize.dx < paperSize.dy;
+        if (devMode && (devMode->dmFields & DM_ORIENTATION)) {
+            bPrintPortrait = DMORIENT_PORTRAIT == devMode->dmOrientation;
+        }
+        if (pd.advData.rotation == PrintRotationAdv::Portrait) {
+            bPrintPortrait = true;
+        } else if (pd.advData.rotation == PrintRotationAdv::Landscape) {
+            bPrintPortrait = false;
+        }
+    };
+    computeGeometry();
 
     if (pd.sel.size() > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
@@ -784,6 +795,15 @@ static bool PrintToDevice(const PrintData& pd) {
                 continue;
             }
             UpdateProgress(progressCb, current, total);
+
+            // for mixed page size documents, set the paper size to match this
+            // page before printing it, so each page goes to the right paper/tray
+            // (issue #533). ResetDC must be called outside of StartPage/EndPage.
+            if (pd.advData.perPagePaperSize && devMode) {
+                SetDevModePaperSizeForPage(devMode, &engine, (int)pageNo);
+                ResetDCW(hdc, devMode);
+                computeGeometry();
+            }
 
             res = StartPage(hdc);
             if (res <= 0) {
@@ -1406,9 +1426,9 @@ PaperFormat GetPaperFormatFromSizeApprox(SizeF size) {
     return PaperFormat::Other;
 }
 
-static short GetPaperSize(EngineBase* engine) {
-    RectF mediabox = engine->PageMediabox(1);
-    SizeF size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
+static short GetPaperSize(EngineBase* engine, int pageNo) {
+    RectF mediabox = engine->PageMediabox(pageNo);
+    SizeF size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), 0).Size();
 
     switch (GetPaperFormatFromSizeApprox(size)) {
         case PaperFormat::A2:
@@ -1432,6 +1452,32 @@ static short GetPaperSize(EngineBase* engine) {
         default:
             return 0;
     }
+}
+
+// set the DEVMODE paper size to match a specific page, for mixed page size
+// documents (issue #533). Uses a standard paper kind when the page matches one,
+// otherwise a custom paper size (in tenths of a millimeter).
+static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, int pageNo) {
+    short ps = GetPaperSize(engine, pageNo);
+    if (ps != 0) {
+        devMode->dmPaperSize = ps;
+        devMode->dmFields |= DM_PAPERSIZE;
+        devMode->dmFields &= ~(DM_PAPERLENGTH | DM_PAPERWIDTH);
+        return;
+    }
+    // non-standard size: size in tenths of a millimeter. Normalize to portrait
+    // (width <= length), like the standard paper kinds above, so that landscape
+    // pages are handled by the auto-rotation logic rather than landscape paper.
+    RectF mediabox = engine->PageMediabox(pageNo);
+    SizeF size = engine->Transform(mediabox, pageNo, 254.0f / engine->GetFileDPI(), 0).Size();
+    float w = size.dx, h = size.dy;
+    if (w > h) {
+        std::swap(w, h);
+    }
+    devMode->dmPaperSize = 0;
+    devMode->dmPaperWidth = (short)w;
+    devMode->dmPaperLength = (short)h;
+    devMode->dmFields |= DM_PAPERSIZE | DM_PAPERLENGTH | DM_PAPERWIDTH;
 }
 
 static short GetStandardPaperByName(const char* paperName) {
@@ -1632,7 +1678,11 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             devMode->dmFields |= DM_DEFAULTSOURCE;
         } else if (str::StartsWithI(s, "paper=")) {
             float mmW = 0, mmH = 0;
-            if (str::Parse(s + 6, "%fmm x %fmm%$", &mmW, &mmH) && mmW > 0 && mmH > 0) {
+            if (str::EqI(s + 6, "auto")) {
+                // set the paper size per page from the document's page size, for
+                // mixed page size documents (issue #533)
+                advanced.perPagePaperSize = true;
+            } else if (str::Parse(s + 6, "%fmm x %fmm%$", &mmW, &mmH) && mmW > 0 && mmH > 0) {
                 // custom paper size specified as dimensions e.g. "paper=76mm x 130mm"
                 // SetCustomPaperSize expects tenths of a millimeter
                 SizeF size(mmW * 10.f, mmH * 10.f);

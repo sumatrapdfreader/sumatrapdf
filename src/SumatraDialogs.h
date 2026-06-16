@@ -38,16 +38,21 @@ struct Print_Advanced_Data {
     // when true, let the printer pick the input tray whose paper matches the
     // document's page size (DMBIN_FORMSOURCE), independent of page scaling
     bool paperSourceByPageSize;
+    // when true, set the paper size to each page's own size before printing it,
+    // so mixed page size documents print to the right paper/tray
+    bool perPagePaperSize;
 
     explicit Print_Advanced_Data(PrintRangeAdv range = PrintRangeAdv::All, PrintScaleAdv scale = PrintScaleAdv::Shrink,
                                  PrintRotationAdv rotation = PrintRotationAdv::Auto, bool autoRotate = true,
-                                 bool centerHorizontally = false, bool paperSourceByPageSize = false)
+                                 bool centerHorizontally = false, bool paperSourceByPageSize = false,
+                                 bool perPagePaperSize = false)
         : range(range),
           scale(scale),
           rotation(rotation),
           autoRotate(autoRotate),
           centerHorizontally(centerHorizontally),
-          paperSourceByPageSize(paperSourceByPageSize) {}
+          paperSourceByPageSize(paperSourceByPageSize),
+          perPagePaperSize(perPagePaperSize) {}
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
