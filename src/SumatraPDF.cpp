@@ -3703,6 +3703,14 @@ static void SaveCurrentFileAs(MainWindow* win) {
 
     bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
+        // GetSaveFileNameW() returns FALSE both on user cancellation (extended
+        // error == 0) and on an actual failure such as a path that is too long
+        // (FNERR_BUFFERTOOSMALL). Only the latter deserves a warning (issue #1016).
+        DWORD cdErr = CommDlgExtendedError();
+        if (cdErr != 0) {
+            logf("GetSaveFileNameW() failed, CommDlgExtendedError() = 0x%x\n", (uint)cdErr);
+            MessageBoxWarning(win->hwndFrame, _TRA("Failed to save a file"));
+        }
         return;
     }
 
@@ -3764,6 +3772,13 @@ static void SaveCurrentFileAs(MainWindow* win) {
                 errorMsg = str::FormatTemp("%s\n\n%s", _TRA("Failed to save a file"), s);
             }
         }
+    }
+    // Belt-and-suspenders: some failure modes (e.g. a destination path longer
+    // than MAX_PATH) can report success while nothing was actually written, so
+    // the user has no way to tell the save silently failed (issue #1016).
+    if (ok && !file::Exists(realDstFileName)) {
+        logf("SaveCurrentFileAs(): '%s' doesn't exist after a reportedly successful save\n", realDstFileName);
+        ok = false;
     }
     if (!ok) {
         TempStr msg = (errorMsg != nullptr) ? errorMsg : (TempStr)_TRA("Failed to save a file");
