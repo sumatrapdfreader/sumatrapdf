@@ -787,17 +787,30 @@ static void FavTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     ReportIf(!win);
 
-    // When the focus is set to the toc window the first item in the treeview is automatically
-    // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
-    // 0x00001000. We have to ignore this message to prevent the current page to be changed.
-    // The case pnmtv->action==TVC_UNKNOWN is ignored because
-    // it corresponds to a notification sent by
-    // the function TreeView_DeleteAllItems after deletion of the item.
-    bool shouldHandle = ev->byKeyboard || ev->byMouse;
-    if (!shouldHandle) {
+    // Navigate only on a mouse click, not on keyboard selection changes:
+    // arrow keys / type-ahead should move the selection so the user can browse
+    // favorites without each move jumping the document (and stealing focus to
+    // the canvas). Enter navigates, handled in FavTreeKeyDown (#1936).
+    if (!ev->byMouse) {
         return;
     }
     GoToFavForTreeItem(win, ev->selectedItem);
+}
+
+// in TableOfContents.cpp
+extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
+
+static void FavTreeKeyDown(TreeView::KeyDownEvent* ev) {
+    if (ev->keyCode == VK_RETURN) {
+        MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
+        if (win) {
+            GoToFavForTreeItem(win, ev->treeView->GetSelection());
+            ev->result = 1;
+            return;
+        }
+    }
+    // reuse the toc tree handler for Tab/focus handling
+    TocTreeKeyDown2(ev);
 }
 
 // clang-format off
@@ -879,9 +892,6 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
     return CallWindowProc(gWndProcFavBox, hwnd, msg, wp, lp);
 }
 
-// in TableOfContents.cpp
-extern void TocTreeKeyDown2(TreeView::KeyDownEvent*);
-
 void CreateFavorites(MainWindow* win) {
     HMODULE h = GetModuleHandleW(nullptr);
     int dx = gGlobalPrefs->sidebarDx;
@@ -913,7 +923,7 @@ void CreateFavorites(MainWindow* win) {
     auto fn = MkFunc1Void(FavTreeContextMenu);
     treeView->onContextMenu = fn;
     treeView->onSelectionChanged = MkFunc1Void(FavTreeSelectionChanged);
-    treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
+    treeView->onKeyDown = MkFunc1Void(FavTreeKeyDown);
     treeView->onClick = MkFunc1Void(FavTreeItemClicked);
     // treeView->onChar = TocTreeCharHandler;
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
