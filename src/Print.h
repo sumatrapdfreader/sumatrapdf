@@ -50,9 +50,21 @@ void GetPrintersInfo(StrBuilder& out);
 class EngineBase;
 struct MainWindow;
 
-bool PrintFile(const char* fileName, char* printerName = nullptr, bool displayErrors = true,
-               const char* settings = nullptr);
-bool PrintFile2(EngineBase* engine, char* printerName = nullptr, bool displayErrors = true,
-                const char* settings = nullptr);
+// result of command-line printing; the numeric values double as the process
+// exit code so an automated caller can tell why printing failed (issue #3478)
+enum class PrintResult {
+    Ok = 0,
+    Failed = 1,             // generic / unspecified failure (reserved)
+    CannotLoadFile = 2,     // couldn't open the file or unsupported format
+    PrintingNotAllowed = 3, // the document doesn't allow printing
+    PrinterNotFound = 4,    // the named (or default) printer doesn't exist
+    PrintFailed = 5,        // the printer driver / device failed
+    NoPermission = 6,       // printing is disabled by restriction policy
+};
+
+PrintResult PrintFile(const char* fileName, char* printerName = nullptr, bool displayErrors = true,
+                      const char* settings = nullptr);
+PrintResult PrintFile2(EngineBase* engine, char* printerName = nullptr, bool displayErrors = true,
+                       const char* settings = nullptr);
 void PrintCurrentFile(MainWindow* win, bool waitForCompletion = false);
 void AbortPrinting(MainWindow* win);

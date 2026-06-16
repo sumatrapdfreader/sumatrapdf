@@ -69,6 +69,19 @@ For a detailed printing guide with examples for common tasks, see [Printing](Pri
 - `-print-dialog` : displays the Print dialog for all the files indicated on this command line.
 - `-exit-when-done` : used in combination with `-print-dialog` (and `-stress-test`). Exits SumatraPDF after the Print dialog has been dismissed and the document printed.
 
+When printing with `-print-to` / `-print-to-default`, the process exit code tells you why printing failed (useful for unattended/silent printing):
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | success |
+| `2` | couldn't open the file (not found or unsupported format) |
+| `3` | the document doesn't allow printing |
+| `4` | the printer (named, or default) doesn't exist |
+| `5` | the printer driver / device failed |
+| `6` | printing is disabled by restriction policy |
+
+With multiple files, the exit code is `0` only if all printed; otherwise it's the category of the first failure. Note: failures that happen inside the print spooler/driver *after* the job is submitted (out of paper, offline, etc.) can't be reported this way.
+
 ## Options related to forward/inverse search (for LaTeX editors)
 
 - `-forward-search "<sourcepath>" <line> "<pdfpath>"`: performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. `-forward-search "/path/to/main.tex" 123 "/path/to/main.pdf"` highlights all text related to line 123 in main.tex.

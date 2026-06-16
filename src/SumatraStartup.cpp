@@ -1887,14 +1887,17 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
     // (fixes #3975)
     if (flags.printerName && !flags.printDialog) {
         // note: this prints all PDF files. Another option would be to
-        // print only the first one
+        // print only the first one.
+        // exit code is 0 on success, otherwise the category of the first
+        // failure (see PrintResult), so an automated caller knows why (#3478)
+        PrintResult printRes = PrintResult::Ok;
         for (char* path : flags.fileNames) {
-            bool ok = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
-            if (!ok) {
-                exitCode++;
+            PrintResult r = PrintFile(path, flags.printerName, !flags.silent, flags.printSettings);
+            if (r != PrintResult::Ok && printRes == PrintResult::Ok) {
+                printRes = r;
             }
         }
-        --exitCode; // was 1 if no print failures, turn 1 into 0
+        exitCode = (int)printRes;
         logf("Finished printing, exitCode: %d\n", exitCode);
         goto Exit;
     }

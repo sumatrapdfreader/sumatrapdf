@@ -1815,24 +1815,26 @@ static bool SetPrinterCustomPaperSizeForEngine(EngineBase* engine, Printer* prin
     return false;
 }
 
-bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const char* settings) {
+PrintResult PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const char* settings) {
     bool ok = false;
     Printer* printer = nullptr;
 
     if (!HasPermission(Perm::PrinterAccess)) {
-        return false;
+        return PrintResult::NoPermission;
     }
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (engine && !engine->AllowsPrinting()) {
-        engine = nullptr;
+        MessageBoxWarningCond(displayErrors, _TRA("Cannot print this file"), _TRA("Printing problem."));
+        logf("PrintFile2: printing not allowed by the document\n");
+        return PrintResult::PrintingNotAllowed;
     }
 #endif
 
     if (!engine) {
         MessageBoxWarningCond(displayErrors, _TRA("Cannot print this file"), _TRA("Printing problem."));
         logf("PrintFile2: engine is null\n");
-        return false;
+        return PrintResult::CannotLoadFile;
     }
 
     logf("PrintFile2: file: '%s', printer: '%s'\n", engine->FilePath(), printerName);
@@ -1843,7 +1845,7 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
         TempStr defName = GetDefaultPrinterNameTemp();
         if (!defName) {
             logf("PrintFile: GetDefaultPrinterName() failed\n");
-            return false;
+            return PrintResult::PrinterNotFound;
         }
         printer = NewPrinter(defName);
     }
@@ -1851,7 +1853,7 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
     if (!printer) {
         TempStr msg = str::FormatTemp(_TRA("Printer '%s' doesn't exist"), printerName);
         MessageBoxWarningCond(displayErrors, msg, _TRA("Printing problem."));
-        return false;
+        return PrintResult::PrinterNotFound;
     }
 
     // set paper size to match the size of the document's first page
@@ -1894,21 +1896,24 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
             MessageBoxWarningCond(displayErrors, _TRA("Couldn't initialize printer"), _TRA("Printing problem."));
         }
     }
+    if (!ok) {
+        return PrintResult::PrintFailed;
+    }
     logf("PrintFile2: finished ok\n");
-    return ok;
+    return PrintResult::Ok;
 }
 
-bool PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
+PrintResult PrintFile(const char* fileName, char* printerName, bool displayErrors, const char* settings) {
     logf("PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     fileName = path::NormalizeTemp(fileName);
     EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
     if (!engine) {
         TempStr msg = str::FormatTemp("Couldn't open file '%s' for printing", fileName);
         MessageBoxWarningCond(displayErrors, msg, "Error");
-        return false;
+        return PrintResult::CannotLoadFile;
     }
-    bool ok = PrintFile2(engine, printerName, displayErrors, settings);
+    PrintResult res = PrintFile2(engine, printerName, displayErrors, settings);
     SafeEngineRelease(&engine);
     logfa("PrintFile: finished ok\n");
-    return ok;
+    return res;
 }

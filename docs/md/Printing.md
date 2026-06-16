@@ -92,6 +92,25 @@ SumatraPDF exits; check the process exit code for success/failure.
 - `-exit-when-done` — used with `-print-dialog` (and `-stress-test`); exit after
   the dialog is dismissed and the document printed
 
+### Exit codes
+
+For unattended/silent printing, the process exit code tells you *why* a print
+failed:
+
+| Exit code | Meaning |
+| --- | --- |
+| `0` | success |
+| `2` | couldn't open the file (not found or unsupported format) |
+| `3` | the document doesn't allow printing |
+| `4` | the printer (named, or default) doesn't exist |
+| `5` | the printer driver / device failed |
+| `6` | printing is disabled by restriction policy |
+
+With several files, the code is `0` only if all printed, otherwise the category
+of the first failure. Anything that goes wrong inside the spooler/driver *after*
+the job is submitted (out of paper, printer offline, jam) can't be reported —
+SumatraPDF only knows whether the job was handed off.
+
 You can print several files in one command; the settings apply to all of them:
 
 ```
