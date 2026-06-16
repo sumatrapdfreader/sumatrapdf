@@ -268,7 +268,9 @@ struct FindThreadData {
             // i.e. canceled
             RemoveNotification(wnd);
         } else if (!success && loopedAround) {
-            NotificationUpdateMessage(wnd, _TRA("No matches were found"), 0);
+            // auto-dismiss the result notification (the find-progress
+            // notification it reuses has no timeout) (fixes #4473)
+            NotificationUpdateMessage(wnd, _TRA("No matches were found"), kNotifDefaultTimeOut);
         } else {
             auto pageNo = win->AsFixed()->textSearch->GetSearchHitStartPageNo();
             TempStr label = win->ctrl->GetPageLabeTemp(pageNo);
@@ -277,7 +279,7 @@ struct FindThreadData {
                 buf = str::FormatTemp(_TRA("Found text at page %s (again)"), label);
                 MessageBeep(MB_ICONINFORMATION);
             }
-            NotificationUpdateMessage(wnd, buf, 0, loopedAround);
+            NotificationUpdateMessage(wnd, buf, kNotifDefaultTimeOut, loopedAround);
         }
     }
 
