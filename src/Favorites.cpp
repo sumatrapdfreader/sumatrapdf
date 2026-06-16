@@ -309,7 +309,10 @@ static TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isC
         return str::FormatTemp("%s : %s", _TRA("Current file"), rn);
     }
     TempStr fp = path::GetBaseNameTemp(fav->filePath);
-    return str::FormatTemp("%s : %s", fp, rn);
+    // show the favorite's name first, then the file name, so that a long file
+    // name doesn't push the user's description out of view in the favorites
+    // pane / menu (fixes #829, #2236)
+    return str::FormatTemp("%s : %s", rn, fp);
 }
 
 static void AppendFavMenuItems(HMENU m, FileState* f, int& idx, bool combined, bool isCurrent) {
