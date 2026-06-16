@@ -12,7 +12,7 @@ Multiple DDE commands: `[Command1(parameter1, parameter2, ..., )][Command2(...)]
 
 ## Sending DDE commands
 
-You can either use windows api by sending DDE commands to server `SUMATRA` and topic `control`. See [this code](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/utils/WinUtil.cpp#L2437) for example of sending DDE command.
+You can either use windows api by sending DDE commands to server `SUMATRA` and topic `control`. See the `DDEExecute()` function in [src/utils/WinUtil.cpp](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/utils/WinUtil.cpp) for an example of sending a DDE command.
 
 Or you can use `-dde` command-line argument to `SumatraPDF.exe` e.g. `SumatraPDF.exe -dde "[SetView(\"c:\\file.pdf\",\"continuous\",-3)]"`.
 
@@ -135,8 +135,10 @@ Also a DDE *request* transaction: returns the document position currently under 
     page: 1
     x: 305.04
     y: 395.58
+    ypdf: 396.42
     ```
 
     - `page` : the page under the cursor, or `0` if the cursor isn't over a page
-    - `x`, `y` : the position on that page, in PDF points (`y` increases downward)
+    - `x`, `y` : the position on that page, in PDF points, MuPDF convention (origin top-left, `y` increases downward — same as the `m` notification and `.smx`)
+    - `ypdf` : the same point's `y` in PDF/Adobe convention (origin bottom-left, `y` increases upward); only present when over a page. `x` is the same in both conventions.
 - example: `[GetMousePos()]`

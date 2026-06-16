@@ -1255,14 +1255,23 @@ static const char* HandleGetMousePosCmd(const char* cmd, bool* ack, StrBuilder& 
     }
     Point pos = HwndGetCursorPos(win->hwndCanvas);
     int pageNo = dm->GetPageNoByPoint(pos);
+    bool validPage = dm->ValidPageNo(pageNo);
     PointF pt = dm->CvtFromScreen(pos);
     // match FormatCursorPositionTemp's "pt" computation exactly
-    float dpi = dm->GetEngine()->GetFileDPI();
+    EngineBase* engine = dm->GetEngine();
+    float dpi = engine->GetFileDPI();
     float x = pt.x < 0 ? 0 : pt.x;
     float y = pt.y < 0 ? 0 : pt.y;
-    res.AppendFmt("page: %d\n", dm->ValidPageNo(pageNo) ? pageNo : 0);
-    res.AppendFmt("x: %.2f\n", (double)x / dpi * 72.0);
-    res.AppendFmt("y: %.2f\n", (double)y / dpi * 72.0);
+    double xPt = (double)x / dpi * 72.0;
+    double yPt = (double)y / dpi * 72.0;
+    res.AppendFmt("page: %d\n", validPage ? pageNo : 0);
+    res.AppendFmt("x: %.2f\n", xPt);
+    res.AppendFmt("y: %.2f\n", yPt); // MuPDF convention: origin top-left, y down
+    if (validPage) {
+        // also provide PDF/Adobe coordinates: origin bottom-left, y up (#1411)
+        double pageHeightPt = (double)engine->PageMediabox(pageNo).dy / dpi * 72.0;
+        res.AppendFmt("ypdf: %.2f\n", pageHeightPt - yPt);
+    }
     return next;
 }
 
