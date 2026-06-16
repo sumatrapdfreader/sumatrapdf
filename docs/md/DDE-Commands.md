@@ -84,11 +84,22 @@ Unlike the commands above (which are sent as DDE *execute* requests), this is a 
 
     ```
     path: c:\file.pdf
+    page: 1
+    pageCount: 6
     zoom: 120
     view: continuous
     sumver: 3.7
     ```
 
+    - `page` : the current page number; `pageCount` : the total number of pages
     - `zoom` : a zoom factor in percent, or -1 (Fit Page), -2 (Fit Width), -3 (Fit Content) — the same convention as `SetView`
     - on error (no such open file) it returns `error: <message>`
 - example: `[GetFileState()]`
+
+### Get open files
+
+Also a DDE *request* transaction: returns the full path of every open document (across all windows and tabs), one per line.
+
+- format: `[GetOpenFiles()]`
+- returns one file path per line (split the response by `\n`); empty if nothing is open
+- example: `[GetOpenFiles()]`

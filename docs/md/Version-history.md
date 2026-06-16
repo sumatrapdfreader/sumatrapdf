@@ -53,6 +53,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - can set a default for the print dialog's Collate checkbox via the new `PrinterDefaults.Collate` advanced setting, and control it from the command line with the `collate` / `nocollate` `-print-settings` tokens (fixes #1558)
 - add a "Rotate printout" option to the Advanced print dialog and the `rotate=<90|180|270>` `-print-settings` token, to rotate the printout and fix a wrong orientation (e.g. upside-down output on virtual printers like XPS / Print to PDF) (fixes #1246)
 - implement the `[GetFileState]` [DDE command](DDE-Commands.md) to query a document's path, zoom, view mode and version; also fixes a crash and broken/empty replies in the DDE request path on 64-bit (fixes #483)
+- `[GetFileState]` also returns the current page and page count, and a new `[GetOpenFiles]` DDE request returns the paths of all open documents (fixes #5060)
 - fix EXIF orientation ignored for JPEG and WebP images (fixes #1544)
 - add `-log-to-file <file>` cmd-line flag to log to a specific file (like `-log` but with custom log file path)
 - move `DefaultImageZoom` advanced setting to `ImageUI.DefaultZoom`, default to `shrink to fit`

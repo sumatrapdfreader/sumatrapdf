@@ -1153,9 +1153,31 @@ static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, 
     float zoom = ctrl->GetZoomVirtual();
     const char* view = DisplayModeToString(ctrl->GetDisplayMode());
     res.AppendFmt("path: %s\n", docPath ? docPath : "");
+    res.AppendFmt("page: %d\n", ctrl->CurrentPageNo());
+    res.AppendFmt("pageCount: %d\n", ctrl->PageCount());
     res.AppendFmt("zoom: %g\n", zoom);
     res.AppendFmt("view: %s\n", view ? view : "");
     res.AppendFmt("sumver: %s\n", CURR_VERSION_STRA);
+    return next;
+}
+
+// returns the full path of every open document, one per line (issue #5060)
+static const char* HandleGetOpenFilesCmd(const char* cmd, bool* ack, StrBuilder& res) {
+    const char* next = str::Parse(cmd, "[GetOpenFiles()]");
+    if (!next) {
+        next = str::Parse(cmd, "[GetOpenFiles]");
+    }
+    if (!next) {
+        return nullptr;
+    }
+    *ack = true;
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (!str::IsEmpty(tab->filePath)) {
+                res.AppendFmt("%s\n", tab->filePath);
+            }
+        }
+    }
     return next;
 }
 
@@ -1254,6 +1276,9 @@ static bool HandleRequestCmds(HWND hwnd, const char* cmd, StrBuilder& rsp) {
         }
 
         const char* nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
+        if (!nextCmd) {
+            nextCmd = HandleGetOpenFilesCmd(cmd, &didHandle, rsp);
+        }
         if (!nextCmd) {
             AutoFreeStr tmp;
             nextCmd = str::Parse(cmd, "%s]", &tmp);
