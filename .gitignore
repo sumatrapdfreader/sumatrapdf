@@ -39,3 +39,6 @@ log.txt
 sumlog.txt
 vs2022/enc_temp_folder
 docs/md/.obsidian
+
+# temporary / scratch output written by tests (see tests/util.ts tmpPath())
+tests/tmp/

@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, runStandalone } from "./util.ts";
+import { ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const ASAN_EXE = join(ROOT, "out", "dbg64_asan", "SumatraPDF.exe");
 const CHM = join(import.meta.dir, "issue-chm-lzx.chm");
@@ -53,7 +53,7 @@ export async function testit(): Promise<void> {
     throw new Error(`missing fixture: ${CHM}`);
   }
 
-  const outPath = join(import.meta.dir, ".issue-chm-lzx-result.txt");
+  const outPath = tmpPath("issue-chm-lzx-result.txt");
   const res = runTestChm(CHM, outPath);
   console.log(res.out.trim());
 

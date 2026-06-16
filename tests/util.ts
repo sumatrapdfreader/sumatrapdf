@@ -4,10 +4,21 @@
 // and THROWS on failure (returns normally on success). It does NOT build the app
 // or call process.exit -- that's the runner's job, so tests compose in all.ts.
 
+import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 export const ROOT = join(import.meta.dir, "..");
 export const EXE = join(ROOT, "out", "dbg64", "SumatraPDF-dll.exe");
+
+// directory for temporary / scratch files produced by tests. It's gitignored
+// (tests/tmp/), so tests must write their runtime output here, never directly
+// into tests/. Use tmpPath() to get a path inside it (dir created on demand).
+export const TMP_DIR = join(import.meta.dir, "tmp");
+
+export function tmpPath(name: string): string {
+  mkdirSync(TMP_DIR, { recursive: true });
+  return join(TMP_DIR, name);
+}
 
 // build SumatraPDF-dll.exe the same way cmd/build.ts does
 export function buildApp(): void {

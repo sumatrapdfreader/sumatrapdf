@@ -75,7 +75,7 @@ Guidelines for test scripts:
 - a good test fails when the fix is reverted (verify this) — not just passes with the fix present
 - bun has FFI; if you need to call Windows APIs, put reusable wrappers in tests/winapi.ts
 - prefer driving the app via cmd-line flags that write a machine-readable result (see `-test-synctex`) over GUI automation
-- put runtime scratch output in a gitignored subdir or the OS temp dir so it isn't committed
+- never write runtime scratch / result files directly into `tests/` — that leaves the repo dirty. Write them under `tests/tmp/` (gitignored), using `tmpPath("name")` from `tests/util.ts` (it creates the dir on demand); the OS temp dir (`os.tmpdir()`) is also fine if you clean up after
 - if a binary test fixture (e.g. a .pdf) is generated from source (LaTeX, a script, etc.), commit the source alongside it (e.g. `tests/issue-<number>.tex` next to `tests/issue-<number>.pdf`) with a comment on how to regenerate it, so the fixture can be modified later
 
 ## Windows Shell Safety
