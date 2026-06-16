@@ -42,6 +42,14 @@ To add a new cmd-line flag:
 - implement handling in Flags.cpp
 - document in docs/md/Version-history.md in **next** section
 
+## Bug reproduction / test files
+
+We keep test and reproduction files for bugs in `C:\Users\kjk\OneDrive\!sumatra\bugs\`, named after the GitHub issue number:
+- a single file is `bug-<bug-no><rest>` (e.g. `bug-534.pdf`)
+- if a repro needs more than one file, use a directory `bug-<bug-no><rest>\`
+
+When fixing a bug, look there first for an existing repro file for that issue and use it. When you create a test/repro file while working on a bug, save it there (using the naming above) after fixing the bug.
+
 ## Writing tests
 
 Tests live in tests/ and are run with bun (e.g. `bun tests/issue-5633.ts`). Naming convention, keyed by the GitHub issue number being tested:
