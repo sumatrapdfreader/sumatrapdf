@@ -1932,20 +1932,31 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
     }
 
     if (CmdForgetSelectedDocument == cmd) {
-        TempStr filePath = str::DupTemp(fs->filePath);
-        if (!fs->favorites->IsEmpty()) {
-            // only hide documents with favorites
-            gFileHistory.MarkFileInexistent(fs->filePath, true);
-        } else {
-            gFileHistory.Remove(fs);
-            DeleteFileState(fs);
-        }
-        DeleteThumbnailForFile(filePath);
-        SaveSettings();
-        win->DeleteToolTip();
-        win->RedrawAll(true);
+        ForgetFileFromFrequentlyRead(win, path);
         return;
     }
+}
+
+// removes a file from the Frequently Read list on the home page. Files with
+// favorites are only hidden (so the favorites aren't lost). Used by both the
+// context menu and the per-thumbnail ✕ button (issue #283).
+void ForgetFileFromFrequentlyRead(MainWindow* win, const char* filePath) {
+    FileState* fs = gFileHistory.FindByPath(filePath);
+    if (!fs) {
+        return;
+    }
+    TempStr path = str::DupTemp(fs->filePath);
+    if (!fs->favorites->IsEmpty()) {
+        // only hide documents with favorites
+        gFileHistory.MarkFileInexistent(fs->filePath, true);
+    } else {
+        gFileHistory.Remove(fs);
+        DeleteFileState(fs);
+    }
+    DeleteThumbnailForFile(path);
+    SaveSettings();
+    win->DeleteToolTip();
+    win->RedrawAll(true);
 }
 
 // s could be in format "file://path.pdf#page=1" or "mailto:foo@bar.com"

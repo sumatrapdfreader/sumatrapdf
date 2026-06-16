@@ -27,6 +27,7 @@
 #include "Accelerators.h"
 #include "CommandPalette.h"
 #include "FileThumbnails.h"
+#include "Menu.h"
 #include "HomePage.h"
 #include "Translations.h"
 #include "Version.h"
@@ -1277,6 +1278,255 @@ static void GetFileStateIcon(FileState* fs) {
     fs->iconIdx = sfi.iIcon;
 }
 
+// --- Floating close (✕) button for Frequently Read thumbnails (issue #283) ---
+//
+// A single, semi-transparent, layered top-level window shown over the top-right
+// corner of the thumbnail under the mouse. It's a separate window (not painted
+// into the home page) so showing/hiding it and its hover highlight don't force
+// an expensive repaint of the whole home page. Styled like the tab close button
+// (gray X, red circle + white X on hover).
+
+constexpr const WCHAR* kHomeCloseBtnClass = L"SumatraHomeCloseBtn";
+
+struct HomeCloseBtn {
+    HWND hwnd = nullptr;
+    MainWindow* win = nullptr; // window the button currently belongs to
+    char* filePath = nullptr;  // file removed when the button is clicked
+    Rect thumbScreenRc;        // thumbnail rect (screen coords), for leave detection
+    bool isHover = false;
+    bool visible = false;
+};
+static HomeCloseBtn gHomeCloseBtn;
+
+// renders the button into a premultiplied 32-bit DIB and pushes it to the
+// layered window. SourceConstantAlpha makes the whole button semi-transparent
+// (and fully opaque while hovered).
+static void PaintHomeCloseBtn() {
+    HomeCloseBtn& b = gHomeCloseBtn;
+    if (!b.hwnd || !b.visible) {
+        return;
+    }
+    RECT wrc;
+    GetWindowRect(b.hwnd, &wrc);
+    int w = wrc.right - wrc.left;
+    int h = wrc.bottom - wrc.top;
+    if (w <= 0 || h <= 0) {
+        return;
+    }
+
+    // draw into a native ARGB GDI+ bitmap so antialiased edges get correct alpha
+    Gdiplus::Bitmap bmp(w, h, PixelFormat32bppARGB);
+    {
+        Gdiplus::Graphics g(&bmp);
+        g.Clear(Gdiplus::Color(0, 0, 0, 0));
+        g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+        if (b.isHover) {
+            COLORREF bg = kColCloseXHoverBg; // runtime var so GetXValue() isn't a constant cast
+            Gdiplus::SolidBrush br(Gdiplus::Color(255, GetRValue(bg), GetGValue(bg), GetBValue(bg)));
+            g.FillEllipse(&br, 0, 0, w - 1, h - 1);
+        } else {
+            // white circle so the gray X stays visible on any thumbnail background
+            Gdiplus::SolidBrush br(Gdiplus::Color(255, 255, 255, 255));
+            g.FillEllipse(&br, 0, 0, w - 1, h - 1);
+        }
+        COLORREF xcol = b.isHover ? kColCloseXHover : kColCloseX;
+        Gdiplus::Pen pen(Gdiplus::Color(255, GetRValue(xcol), GetGValue(xcol), GetBValue(xcol)), 2.0f);
+        int pad = w / 3;
+        g.DrawLine(&pen, pad, pad, w - pad, h - pad);
+        g.DrawLine(&pen, w - pad, pad, pad, h - pad);
+    }
+
+    HDC hdcScreen = GetDC(nullptr);
+    HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    BITMAPINFO bmi{};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = w;
+    bmi.bmiHeader.biHeight = -h;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    void* bits = nullptr;
+    HBITMAP hbmp = CreateDIBSection(hdcMem, &bmi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    HBITMAP hbmpOld = (HBITMAP)SelectObject(hdcMem, hbmp);
+
+    Gdiplus::Rect lockRc(0, 0, w, h);
+    Gdiplus::BitmapData data;
+    if (bmp.LockBits(&lockRc, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &data) == Gdiplus::Ok) {
+        for (int y = 0; y < h; y++) {
+            DWORD* src = (DWORD*)((BYTE*)data.Scan0 + (size_t)y * data.Stride);
+            DWORD* dst = (DWORD*)bits + (size_t)y * w;
+            for (int x = 0; x < w; x++) {
+                DWORD px = src[x]; // 0xAARRGGBB, straight alpha
+                int a = (px >> 24) & 0xff;
+                int r = (px >> 16) & 0xff;
+                int gg = (px >> 8) & 0xff;
+                int bb = px & 0xff;
+                r = r * a / 255;
+                gg = gg * a / 255;
+                bb = bb * a / 255;
+                dst[x] = ((DWORD)a << 24) | ((DWORD)r << 16) | ((DWORD)gg << 8) | (DWORD)bb;
+            }
+        }
+        bmp.UnlockBits(&data);
+    }
+
+    POINT ptSrc = {0, 0};
+    SIZE szWnd = {w, h};
+    POINT ptDst = {wrc.left, wrc.top};
+    BYTE constAlpha = b.isHover ? 255 : 215;
+    BLENDFUNCTION blend{};
+    blend.BlendOp = AC_SRC_OVER;
+    blend.SourceConstantAlpha = constAlpha;
+    blend.AlphaFormat = AC_SRC_ALPHA;
+    UpdateLayeredWindow(b.hwnd, hdcScreen, &ptDst, &szWnd, hdcMem, &ptSrc, 0, &blend, ULW_ALPHA);
+
+    SelectObject(hdcMem, hbmpOld);
+    DeleteObject(hbmp);
+    DeleteDC(hdcMem);
+    ReleaseDC(nullptr, hdcScreen);
+}
+
+static void HideHomeCloseBtnInternal() {
+    HomeCloseBtn& b = gHomeCloseBtn;
+    if (b.hwnd && IsWindow(b.hwnd) && b.visible) {
+        ShowWindow(b.hwnd, SW_HIDE);
+    }
+    b.visible = false;
+    b.isHover = false;
+    str::FreePtr(&b.filePath);
+}
+
+void HomePageHideCloseButton() {
+    HideHomeCloseBtnInternal();
+}
+
+static LRESULT CALLBACK WndProcHomeCloseBtn(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    HomeCloseBtn& b = gHomeCloseBtn;
+    switch (msg) {
+        case WM_MOUSEMOVE: {
+            if (!b.isHover) {
+                b.isHover = true;
+                PaintHomeCloseBtn();
+            }
+            TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
+            tme.dwFlags = TME_LEAVE;
+            tme.hwndTrack = hwnd;
+            TrackMouseEvent(&tme);
+            return 0;
+        }
+        case WM_MOUSELEAVE: {
+            b.isHover = false;
+            POINT pt;
+            GetCursorPos(&pt);
+            if (b.thumbScreenRc.Contains(Point(pt.x, pt.y))) {
+                PaintHomeCloseBtn(); // back over the thumbnail: drop highlight, stay
+            } else {
+                HideHomeCloseBtnInternal();
+            }
+            return 0;
+        }
+        case WM_LBUTTONUP: {
+            MainWindow* win = b.win;
+            TempStr path = str::DupTemp(b.filePath);
+            HideHomeCloseBtnInternal();
+            if (win && !str::IsEmpty(path)) {
+                ForgetFileFromFrequentlyRead(win, path);
+            }
+            return 0;
+        }
+        case WM_ERASEBKGND:
+            return 1;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static void EnsureHomeCloseBtnWindow(MainWindow* win) {
+    HomeCloseBtn& b = gHomeCloseBtn;
+    if (b.hwnd && !IsWindow(b.hwnd)) {
+        b.hwnd = nullptr; // owner window was destroyed under us
+    }
+    // recreate if it now belongs to a different main window (different owner)
+    if (b.hwnd && b.win && b.win != win) {
+        DestroyWindow(b.hwnd);
+        b.hwnd = nullptr;
+    }
+    if (b.hwnd) {
+        return;
+    }
+    static bool classRegistered = false;
+    if (!classRegistered) {
+        WNDCLASSEXW wc{};
+        wc.cbSize = sizeof(wc);
+        wc.lpfnWndProc = WndProcHomeCloseBtn;
+        wc.hInstance = GetModuleHandleW(nullptr);
+        wc.hCursor = LoadCursorW(nullptr, IDC_HAND);
+        wc.lpszClassName = kHomeCloseBtnClass;
+        RegisterClassExW(&wc);
+        classRegistered = true;
+    }
+    DWORD exStyle = WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+    HWND owner = GetAncestor(win->hwndFrame, GA_ROOT);
+    b.hwnd = CreateWindowExW(exStyle, kHomeCloseBtnClass, nullptr, WS_POPUP, 0, 0, 1, 1, owner, nullptr,
+                             GetModuleHandleW(nullptr), nullptr);
+}
+
+void HomePageUpdateCloseButton(MainWindow* win, int x, int y) {
+    if (!win || !CanAccessDisk()) {
+        HomePageHideCloseButton();
+        return;
+    }
+    StaticLink* link = nullptr;
+    TempStr target = GetStaticLinkAtTemp(win->staticLinks, x, y, &link);
+    // a thumbnail link's target is a file path (not a "<...>" command or a URL)
+    bool isThumb = !str::IsEmpty(target) && link && target[0] != '<' && !str::StartsWithI(target, "http");
+    if (!isThumb) {
+        HomePageHideCloseButton();
+        return;
+    }
+    HomeCloseBtn& b = gHomeCloseBtn;
+    if (b.visible && b.filePath && str::Eq(b.filePath, target)) {
+        return; // already shown for this thumbnail
+    }
+    EnsureHomeCloseBtnWindow(win);
+    if (!b.hwnd) {
+        return;
+    }
+    int sz = DpiScale(win->hwndCanvas, 18);
+    int margin = DpiScale(win->hwndCanvas, 5);
+    Rect r = link->rect;
+    POINT tl = {r.x, r.y};
+    ClientToScreen(win->hwndCanvas, &tl);
+    b.thumbScreenRc = Rect(tl.x, tl.y, r.dx, r.dy);
+    int bx = IsUIRtl() ? (tl.x + margin) : (tl.x + r.dx - sz - margin);
+    int by = tl.y + margin;
+    str::ReplaceWithCopy(&b.filePath, target);
+    b.win = win;
+    b.isHover = false;
+    SetWindowPos(b.hwnd, nullptr, bx, by, sz, sz, SWP_NOACTIVATE | SWP_NOZORDER);
+    if (!b.visible) {
+        b.visible = true;
+        ShowWindow(b.hwnd, SW_SHOWNOACTIVATE);
+    }
+    PaintHomeCloseBtn();
+}
+
+void HomePageOnCanvasMouseLeave() {
+    HomeCloseBtn& b = gHomeCloseBtn;
+    if (!b.visible) {
+        return;
+    }
+    POINT pt;
+    GetCursorPos(&pt);
+    if (b.hwnd && IsWindow(b.hwnd)) {
+        RECT wrc;
+        GetWindowRect(b.hwnd, &wrc);
+        if (PtInRect(&wrc, pt)) {
+            return; // moved from the canvas onto the button itself; keep it
+        }
+    }
+    HomePageHideCloseButton();
+}
+
 static void DrawHomePageLayout(HomePageLayout& l) {
     bool isRtl = IsUIRtl();
     auto hdc = l.hdc;
@@ -1433,6 +1683,9 @@ static void DrawHomePageLayout(HomePageLayout& l) {
 
 void DrawHomePage(MainWindow* win, HDC hdc) {
     HWND hwnd = win->hwndFrame;
+    // any home-page repaint (scroll, resize, filter) invalidates thumbnail
+    // positions, so drop the floating close button; it reappears on hover
+    HomePageHideCloseButton();
     DeleteVecMembers(win->staticLinks);
 
     HomePageLayout l;

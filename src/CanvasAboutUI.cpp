@@ -76,7 +76,18 @@ static bool IsLink(const char* url) {
     return false;
 }
 
+static void OnMouseMoveAbout(MainWindow* win, HWND hwnd, int x, int y) {
+    HomePageUpdateCloseButton(win, x, y);
+    TRACKMOUSEEVENT tme{sizeof(TRACKMOUSEEVENT)};
+    tme.dwFlags = TME_LEAVE;
+    tme.hwndTrack = hwnd;
+    TrackMouseEvent(&tme);
+}
+
 static void OnMouseLeftButtonUpAbout(MainWindow* win, int x, int y, WPARAM) {
+    // clicking the canvas dismisses the floating ✕ button (its own clicks are
+    // handled by the button window, not here)
+    HomePageHideCloseButton();
     char* url = GetStaticLinkAtTemp(win->staticLinks, x, y, nullptr);
     char* prevUrl = win->urlOnLastButtonDown;
     bool clickedURL = url && str::Eq(url, prevUrl);
@@ -170,6 +181,14 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             }
             break;
 
+        case WM_MOUSEMOVE:
+            OnMouseMoveAbout(win, hwnd, x, y);
+            return 0;
+
+        case WM_MOUSELEAVE:
+            HomePageOnCanvasMouseLeave();
+            return 0;
+
         case WM_LBUTTONDOWN:
             OnMouseLeftButtonDownAbout(win, x, y, wp);
             return 0;
@@ -208,10 +227,12 @@ LRESULT WndProcCanvasAbout(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPAR
             return 0;
 
         case WM_VSCROLL:
+            HomePageHideCloseButton();
             HomePageOnVScroll(win, wp);
             return 0;
 
         case WM_MOUSEWHEEL: {
+            HomePageHideCloseButton();
             int delta = GET_WHEEL_DELTA_WPARAM(wp);
             HomePageOnMouseWheel(win, delta);
             return 0;
