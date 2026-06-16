@@ -1232,6 +1232,40 @@ static const char* HandleGetOpenFilesCmd(const char* cmd, bool* ack, StrBuilder&
     return next;
 }
 
+// returns the document position currently under the mouse cursor, in PDF points
+// -- the same unit as the "pt" cursor-position notification and .smx files
+// (issue #1411). page is 0 if the cursor isn't over a page.
+static const char* HandleGetMousePosCmd(const char* cmd, bool* ack, StrBuilder& res) {
+    const char* next = str::Parse(cmd, "[GetMousePos()]");
+    if (!next) {
+        next = str::Parse(cmd, "[GetMousePos]");
+    }
+    if (!next) {
+        return nullptr;
+    }
+    *ack = true;
+    MainWindow* win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+    if (!win && gWindows.Size() > 0) {
+        win = gWindows[0];
+    }
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        res.Append("error: no document\n");
+        return next;
+    }
+    Point pos = HwndGetCursorPos(win->hwndCanvas);
+    int pageNo = dm->GetPageNoByPoint(pos);
+    PointF pt = dm->CvtFromScreen(pos);
+    // match FormatCursorPositionTemp's "pt" computation exactly
+    float dpi = dm->GetEngine()->GetFileDPI();
+    float x = pt.x < 0 ? 0 : pt.x;
+    float y = pt.y < 0 ? 0 : pt.y;
+    res.AppendFmt("page: %d\n", dm->ValidPageNo(pageNo) ? pageNo : 0);
+    res.AppendFmt("x: %.2f\n", (double)x / dpi * 72.0);
+    res.AppendFmt("y: %.2f\n", (double)y / dpi * 72.0);
+    return next;
+}
+
 /*
 Handle all commands as defined in Commands.h
 eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
@@ -1332,6 +1366,9 @@ static bool HandleRequestCmds(HWND hwnd, const char* cmd, StrBuilder& rsp) {
         const char* nextCmd = HandleGetFileStateCmd(hwnd, cmd, &didHandle, rsp);
         if (!nextCmd) {
             nextCmd = HandleGetOpenFilesCmd(cmd, &didHandle, rsp);
+        }
+        if (!nextCmd) {
+            nextCmd = HandleGetMousePosCmd(cmd, &didHandle, rsp);
         }
         if (!nextCmd) {
             AutoFreeStr tmp;

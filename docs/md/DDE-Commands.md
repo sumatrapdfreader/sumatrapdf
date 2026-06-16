@@ -121,3 +121,22 @@ Also a DDE *request* transaction: returns the full path of every open document (
 - format: `[GetOpenFiles()]`
 - returns one file path per line (split the response by `\n`); empty if nothing is open
 - example: `[GetOpenFiles()]`
+
+### Get mouse position
+
+**Ver 3.7+**
+
+Also a DDE *request* transaction: returns the document position currently under the mouse cursor, in PDF points (the same unit used by `.smx` files and the `m` cursor-position notification). Useful for external tools that interact with annotations at the cursor.
+
+- format: `[GetMousePos()]`
+- returns:
+
+    ```
+    page: 1
+    x: 305.04
+    y: 395.58
+    ```
+
+    - `page` : the page under the cursor, or `0` if the cursor isn't over a page
+    - `x`, `y` : the position on that page, in PDF points (`y` increases downward)
+- example: `[GetMousePos()]`
