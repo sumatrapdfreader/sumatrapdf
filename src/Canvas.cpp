@@ -3470,6 +3470,17 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             OnTimer(win, hwnd, wp);
             return 0;
 
+        case WM_KILLFOCUS:
+            // stop middle-button auto-scroll when the canvas loses focus, e.g.
+            // the user clicked the bookmarks/menu or minimized the window (#3203)
+            if (win->mouseAction == MouseAction::Scrolling) {
+                win->mouseAction = MouseAction::None;
+                win->xScrollSpeed = 0;
+                win->yScrollSpeed = 0;
+                KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+            }
+            return DefWindowProc(hwnd, msg, wp, lp);
+
         case WM_SIZE:
             if (!IsIconic(win->hwndFrame)) {
                 if (gRedrawLog) {
