@@ -160,10 +160,36 @@ Order doesn't matter. Available tokens:
 | --- | --- |
 | `output=<file>` | write to a file (for "print to file" style printers) |
 | `docname=<name>` | set the print job name shown in the print queue |
+| `ignore-pdf-print-settings` | ignore the print defaults embedded in the PDF (see below) |
 
 > If `paper=A4` doesn't take effect, the driver may report the size under a
 > different name. List the exact names your printer accepts and use one of them,
 > or fall back to `paperkind=<num>`.
+
+## Print defaults embedded in a PDF
+
+A PDF can carry print hints in its `ViewerPreferences` dictionary. When you
+print a **PDF** from the command line, SumatraPDF reads them and uses them as
+defaults:
+
+| ViewerPreferences key | Effect |
+| --- | --- |
+| `PrintScaling` | `/None` prints at original size (no scaling); `/AppDefault` uses SumatraPDF's default |
+| `NumCopies` | number of copies |
+| `Duplex` | `Simplex`, `DuplexFlipShortEdge` or `DuplexFlipLongEdge` |
+| `PickTrayByPDFSize` | when true, pick the input tray by page size (same as `bin=auto`) |
+
+These are **defaults only**. Anything you pass in `-print-settings` overrides the
+PDF's value — e.g. `-print-settings "2x"` prints 2 copies even if the PDF asks
+for 3. To ignore the PDF's embedded values completely, add
+`ignore-pdf-print-settings`:
+
+```
+SumatraPDF.exe -print-to-default -print-settings "ignore-pdf-print-settings" document.pdf
+```
+
+This applies to command-line printing only; when you print from the window, the
+print dialog's own values are used.
 
 ## Setting a default page scaling
 

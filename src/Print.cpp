@@ -1591,6 +1591,59 @@ static short GetPaperSourceByName(Printer* printer, const char* binName) {
     return devMode->dmDefaultSource;
 }
 
+// the -print-settings token that disables honoring a PDF's /ViewerPreferences
+// print defaults (issue #534)
+static const char* kIgnorePdfPrintSettingsToken = "ignore-pdf-print-settings";
+
+static bool PrintSettingsHaveToken(const char* settings, const char* token) {
+    if (!settings) {
+        return false;
+    }
+    StrVec list;
+    Split(&list, settings, ",", true);
+    for (char* s : list) {
+        if (str::EqI(s, token)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// apply the print defaults from a PDF's /ViewerPreferences (issue #534) to the
+// DEVMODE and advanced data. These are defaults only: any explicit value in
+// -print-settings is applied afterwards and overrides them.
+static void ApplyPdfViewerPrintPrefs(const PdfViewerPrintPrefs& prefs, DEVMODEW* devMode,
+                                     Print_Advanced_Data& advanced) {
+    if (prefs.hasPickTrayByPdfSize && prefs.pickTrayByPdfSize) {
+        // PickTrayByPDFSize: let the printer pick the tray by page size
+        devMode->dmDefaultSource = DMBIN_FORMSOURCE;
+        devMode->dmFields |= DM_DEFAULTSOURCE;
+    }
+    if (prefs.hasNumCopies && prefs.numCopies >= 1) {
+        short copies = (short)std::min(prefs.numCopies, 9999);
+        devMode->dmCopies = copies;
+        devMode->dmFields |= DM_COPIES;
+    }
+    if (prefs.hasDuplex) {
+        switch (prefs.duplex) {
+            case PdfDuplexPref::Simplex:
+                devMode->dmDuplex = DMDUP_SIMPLEX;
+                break;
+            case PdfDuplexPref::FlipShortEdge:
+                devMode->dmDuplex = DMDUP_HORIZONTAL;
+                break;
+            case PdfDuplexPref::FlipLongEdge:
+                devMode->dmDuplex = DMDUP_VERTICAL;
+                break;
+        }
+        devMode->dmFields |= DM_DUPLEX;
+    }
+    if (prefs.hasPrintScaling && prefs.printScalingNone) {
+        // PrintScaling /None means print at the original size (no scaling)
+        advanced.scale = PrintScaleAdv::None;
+    }
+}
+
 static void ApplyPrintSettings(Printer* printer, const char* settings, int pageCount, Vec<PRINTPAGERANGE>& ranges,
                                Print_Advanced_Data& advanced) {
     auto devMode = printer->devMode;
@@ -1699,6 +1752,8 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             printer->output = str::Dup(s + 7);
         } else if (str::StartsWithI(s, "docname=")) {
             printer->docName = str::Dup(s + 8);
+        } else if (str::EqI(s, kIgnorePdfPrintSettingsToken)) {
+            // handled before ApplyPrintSettings (see PrintFile2); ignore here
         }
     }
 
@@ -1807,6 +1862,16 @@ bool PrintFile2(EngineBase* engine, char* printerName, bool displayErrors, const
     {
         Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
+
+        // apply print defaults from the PDF's /ViewerPreferences (issue #534),
+        // unless the caller opted out. Done before ApplyPrintSettings so that an
+        // explicit -print-settings value overrides the PDF's default.
+        if (!PrintSettingsHaveToken(settings, kIgnorePdfPrintSettingsToken)) {
+            PdfViewerPrintPrefs prefs;
+            if (GetPdfViewerPrintPrefs(engine, prefs)) {
+                ApplyPdfViewerPrintPrefs(prefs, devMode, advanced);
+            }
+        }
 
         ApplyPrintSettings(printer, settings, engine->PageCount(), ranges, advanced);
 

@@ -47,6 +47,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - add "Choose paper source by document page size" option to the Advanced print dialog and `bin=auto` [print setting](Command-line-arguments.md), to let the printer pick the input tray whose paper matches the page (fixes #349)
 - add "Print each page at its document page size" option to the Advanced print dialog and `paper=auto` [print setting](Command-line-arguments.md), to correctly print documents with mixed page sizes (fixes #533)
 - use the file name (not the full path) as the print job name, which some printer drivers couldn't handle for long or non-ASCII paths (fixes #2166)
+- command-line printing now honors print defaults embedded in a PDF's `ViewerPreferences` (`PrintScaling`, `NumCopies`, `Duplex`, `PickTrayByPDFSize`); explicit `-print-settings` values override them, and `ignore-pdf-print-settings` disables them (fixes #534)
 - fix EXIF orientation ignored for JPEG and WebP images (fixes #1544)
 - add `-log-to-file <file>` cmd-line flag to log to a specific file (like `-log` but with custom log file path)
 - move `DefaultImageZoom` advanced setting to `ImageUI.DefaultZoom`, default to `shrink to fit`

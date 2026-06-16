@@ -571,6 +571,30 @@ struct PasswordUI {
     virtual ~PasswordUI() = default;
 };
 
+enum class PdfDuplexPref {
+    Simplex,
+    FlipShortEdge,
+    FlipLongEdge
+};
+
+// print-related entries read from a PDF's /ViewerPreferences dictionary
+// (issue #534). Each value has a matching "has" flag because the keys are
+// all optional.
+struct PdfViewerPrintPrefs {
+    bool hasPickTrayByPdfSize = false;
+    bool pickTrayByPdfSize = false;
+    bool hasNumCopies = false;
+    int numCopies = 0;
+    bool hasDuplex = false;
+    PdfDuplexPref duplex = PdfDuplexPref::Simplex;
+    bool hasPrintScaling = false;
+    bool printScalingNone = false; // true when /PrintScaling is /None
+};
+
+// reads the four print-related /ViewerPreferences entries from a PDF document.
+// returns false for non-PDF engines or when none of the entries are present.
+bool GetPdfViewerPrintPrefs(EngineBase* engine, PdfViewerPrintPrefs& prefs);
+
 template <typename T>
 void SafeEngineRelease(T** enginePtr) {
     T* engine = *enginePtr;

@@ -2505,6 +2505,78 @@ static PageLayout GetPreferredLayout(fz_context* ctx, fz_document* doc) {
     return layout;
 }
 
+bool GetPdfViewerPrintPrefs(EngineBase* engineBase, PdfViewerPrintPrefs& prefs) {
+    EngineMupdf* engine = AsEngineMupdf(engineBase);
+    if (!engine || !engine->pdfdoc) {
+        return false;
+    }
+    fz_context* ctx = engine->Ctx();
+    if (!ctx) {
+        return false;
+    }
+    pdf_document* pdfdoc = engine->pdfdoc;
+
+    ScopedCritSec cs(&engine->docLock);
+
+    pdf_obj* vprefs = nullptr;
+    fz_var(vprefs);
+    fz_try(ctx) {
+        pdf_obj* root = pdf_dict_gets(ctx, pdf_trailer(ctx, pdfdoc), "Root");
+        vprefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        vprefs = nullptr;
+    }
+    if (!vprefs) {
+        return false;
+    }
+
+    bool found = false;
+    fz_try(ctx) {
+        pdf_obj* o = pdf_dict_gets(ctx, vprefs, "PickTrayByPDFSize");
+        if (pdf_is_bool(ctx, o)) {
+            prefs.hasPickTrayByPdfSize = true;
+            prefs.pickTrayByPdfSize = pdf_to_bool(ctx, o) != 0;
+            found = true;
+        }
+        o = pdf_dict_gets(ctx, vprefs, "NumCopies");
+        if (pdf_is_int(ctx, o)) {
+            prefs.hasNumCopies = true;
+            prefs.numCopies = pdf_to_int(ctx, o);
+            found = true;
+        }
+        const char* dup = pdf_to_name(ctx, pdf_dict_gets(ctx, vprefs, "Duplex"));
+        if (str::Eq(dup, "Simplex")) {
+            prefs.hasDuplex = true;
+            prefs.duplex = PdfDuplexPref::Simplex;
+            found = true;
+        } else if (str::Eq(dup, "DuplexFlipShortEdge")) {
+            prefs.hasDuplex = true;
+            prefs.duplex = PdfDuplexPref::FlipShortEdge;
+            found = true;
+        } else if (str::Eq(dup, "DuplexFlipLongEdge")) {
+            prefs.hasDuplex = true;
+            prefs.duplex = PdfDuplexPref::FlipLongEdge;
+            found = true;
+        }
+        const char* ps = pdf_to_name(ctx, pdf_dict_gets(ctx, vprefs, "PrintScaling"));
+        if (str::Eq(ps, "None")) {
+            prefs.hasPrintScaling = true;
+            prefs.printScalingNone = true;
+            found = true;
+        } else if (str::Eq(ps, "AppDefault")) {
+            prefs.hasPrintScaling = true;
+            prefs.printScalingNone = false;
+            found = true;
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return found;
+}
+
 static bool IsLinearizedFile(EngineMupdf* e) {
     if (!e->pdfdoc) {
         return false;
