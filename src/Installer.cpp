@@ -228,11 +228,17 @@ static void RemoveShortcutFile(int csidl) {
 // those are shortcuts created by versions before 3.4
 static int shortcutDirsPre34[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
 
+// those are shortcuts created by versions 3.4 through 3.6
+static int shortcutDirs34To36[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP, CSIDL_STARTMENU};
+
 void RemoveAppShortcuts() {
     for (int csidl : shortcutDirs) {
         RemoveShortcutFile(csidl);
     }
     for (int csidl : shortcutDirsPre34) {
+        RemoveShortcutFile(csidl);
+    }
+    for (int csidl : shortcutDirs34To36) {
         RemoveShortcutFile(csidl);
     }
 }
