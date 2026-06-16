@@ -7640,12 +7640,16 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdPresentationBlackBackground:
             if (win->presentation) {
-                win->ChangePresentationMode(PM_BLACK_SCREEN);
+                // toggle: pressing the key again restores the slide (so a
+                // presenter remote bound to '.' can black out and back) (#2820)
+                bool isBlack = win->presentation == PM_BLACK_SCREEN;
+                win->ChangePresentationMode(isBlack ? PM_ENABLED : PM_BLACK_SCREEN);
             }
             break;
         case CmdPresentationWhiteBackground:
             if (win->presentation) {
-                win->ChangePresentationMode(PM_WHITE_SCREEN);
+                bool isWhite = win->presentation == PM_WHITE_SCREEN;
+                win->ChangePresentationMode(isWhite ? PM_ENABLED : PM_WHITE_SCREEN);
             }
             break;
 
