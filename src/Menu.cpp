@@ -827,6 +827,10 @@ static MenuDef menuDefContextImage[] = {
         CmdResizeImage,
     },
     {
+        _TRN("Convert to &PDF"),
+        CmdConvertImageToPdf,
+    },
+    {
         nullptr,
         0,
     },
@@ -2021,6 +2025,7 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         if (!isImageEngine && !onImage) {
             MenuRemove(popup, CmdCropImage);
             MenuRemove(popup, CmdResizeImage);
+            MenuRemove(popup, CmdConvertImageToPdf);
         }
         // remove the Image submenu entirely if no items left
         if (!onImage && !isImageEngine) {
@@ -2145,7 +2150,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     switch (cmdId) {
         case CmdSaveImage:
         case CmdCropImage:
-        case CmdResizeImage: {
+        case CmdResizeImage:
+        case CmdConvertImageToPdf: {
             if (pageEl && pageEl->Is(kindPageElementImage)) {
                 RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
@@ -2154,12 +2160,15 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
                     TempStr noExt = path::GetPathNoExtTemp(base);
                     TempStr destPath = path::JoinTemp(dir, str::FormatTemp("%s_page_%d.png", noExt, pageNoUnderCursor));
                     ImageEditMode m = ImageEditMode::Save;
+                    bool selectPdf = false;
                     if (cmdId == CmdCropImage) {
                         m = ImageEditMode::Crop;
                     } else if (cmdId == CmdResizeImage) {
                         m = ImageEditMode::Resize;
+                    } else if (cmdId == CmdConvertImageToPdf) {
+                        selectPdf = true;
                     }
-                    ShowImageEditWindow(win, m, destPath, bmp);
+                    ShowImageEditWindow(win, m, destPath, bmp, selectPdf);
                     delete bmp;
                 }
             } else {

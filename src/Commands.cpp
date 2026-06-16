@@ -244,6 +244,7 @@ static SeqStrings gCommandNames =
     "CmdRemoveDeletedFilesFromHistory\0"
     "CmdCommandPaletteTOC\0"
     "CmdDebugToggleRenderInfo\0"
+    "CmdConvertImageToPdf\0"
     "CmdNone\0"
     "\0";
 
@@ -478,6 +479,7 @@ static i32 gCommandIds[] = {
     CmdRemoveDeletedFilesFromHistory,
     CmdCommandPaletteTOC,
     CmdDebugToggleRenderInfo,
+    CmdConvertImageToPdf,
     CmdNone,
 };
 
@@ -712,6 +714,7 @@ SeqStrings gCommandDescriptions =
     "Remove Deleted Files From History\0"
     "Command Palette: Table Of Contents\0"
     "Debug: Toggle Render Queue Info\0"
+    "Convert Image To PDF\0"
     "Do nothing\0"
     "\0";
 // clang-format on

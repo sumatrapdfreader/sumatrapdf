@@ -150,6 +150,7 @@ static i32 gCommandsNoActivate[] = {
     CmdListPrinters,
     CmdCropImage,
     CmdResizeImage,
+    CmdConvertImageToPdf,
     CmdTabGroupSave,
     CmdTabGroupRestore,
     // TOOD: probably more

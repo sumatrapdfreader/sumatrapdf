@@ -11,4 +11,4 @@ enum class ImageEditMode {
 };
 
 void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, const char* filePath = nullptr,
-                         RenderedBitmap* rbmp = nullptr);
+                         RenderedBitmap* rbmp = nullptr, bool selectPdf = false);

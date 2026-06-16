@@ -234,6 +234,7 @@ export const commands = [
     "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
     "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
     "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",
+    "CmdConvertImageToPdf", "Convert Image To PDF",
     "CmdNone", "Do nothing",
 ];
 

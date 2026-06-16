@@ -263,6 +263,7 @@ CmdScreenshot,,Take Screenshot,"ver 3.7+, requires Shortcuts entry (e.g. Key = P
 CmdCropImage,,Crop Image,ver 3.7+
 CmdResizeImage,,Resize Image,ver 3.7+
 CmdSaveImage,,Save Image,"Save image from context menu, ver 3.7+"
+CmdConvertImageToPdf,,Convert Image To PDF,"Save the image under the cursor (or the current image document) as a new PDF, ver 3.7+"
 CmdPasteClipboardImage,,Paste Image From Clipboard,"Paste image from clipboard and open it, ver 3.7+"
 CmdShowErrors,,Show Errors,"Show mupdf warnings/errors in right-click context menu, ver 3.7+"
 CmdShowLog,,Show Logs,

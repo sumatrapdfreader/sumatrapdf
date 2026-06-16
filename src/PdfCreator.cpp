@@ -253,6 +253,7 @@ static const char* pdfCreatorPropsMap[] = {
     kPropAuthor, "Author",
     kPropSubject, "Subject",
     kPropCopyright, "Copyright",
+    kPropCreationDate, "CreationDate",
     kPropModificationDate, "ModDate",
     kPropCreatorApp, "Creator",
     kPropPdfProducer, "Producer",

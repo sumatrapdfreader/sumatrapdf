@@ -6771,6 +6771,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowImageEditWindow(win, ImageEditMode::Resize);
             break;
 
+        case CmdConvertImageToPdf:
+            ShowImageEditWindow(win, ImageEditMode::Save, nullptr, nullptr, /* selectPdf */ true);
+            break;
+
         case CmdPasteClipboardImage:
             PasteImageFromClipboard(win);
             break;
