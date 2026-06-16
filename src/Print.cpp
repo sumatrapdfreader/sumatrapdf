@@ -1253,6 +1253,15 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion) {
         defaultScaleAdv = advanced.scale;
     }
 
+    if (devMode && advanced.paperSourceByPageSize) {
+        // let the printer pick the input tray whose paper matches the document's
+        // page size, independent of the page-scaling option (issue #349). Applied
+        // after the settings are remembered above so it doesn't stick to the next
+        // print job in this session.
+        devMode->dmDefaultSource = DMBIN_FORMSOURCE;
+        devMode->dmFields |= DM_DEFAULTSOURCE;
+    }
+
     if (devMode) {
         auto dmCopy = (DEVMODEW*)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra);
         printer->SetDevMode(dmCopy);
@@ -1509,6 +1518,12 @@ static short GetPaperKind(const char* kindName) {
 
 static short GetPaperSourceByName(Printer* printer, const char* binName) {
     auto devMode = printer->devMode;
+    // "auto" lets the printer pick the input tray whose paper matches the
+    // document's page size (matches Adobe's "Choose paper source by PDF page
+    // size"; issues #349, #534)
+    if (str::EqIS(binName, "auto")) {
+        return DMBIN_FORMSOURCE;
+    }
     if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
         return devMode->dmDefaultSource;
     }

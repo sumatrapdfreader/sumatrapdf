@@ -980,6 +980,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                                _TRA("S&tretch pages to fill paper (ignore aspect ratio)"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_SCALE_NONE, _TRA("&Use original page sizes"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, _TRA("Center page hori&zontally on the paper"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
+                               _TRA("Choose &paper source by document page size"));
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, _TRA("Compatibility"));
 
             CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
@@ -992,6 +994,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                              : data->scale == PrintScaleAdv::Shrink  ? IDC_PRINT_SCALE_SHRINK
                                                                      : IDC_PRINT_SCALE_NONE);
             CheckDlgButton(hDlg, IDC_PRINT_CENTER_HORIZONTALLY, data->centerHorizontally ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
+                           data->paperSourceByPageSize ? BST_CHECKED : BST_UNCHECKED);
 
             return FALSE;
             //] ACCESSKEY_GROUP Advanced Print Tab
@@ -1016,6 +1020,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                     data->scale = PrintScaleAdv::None;
                 }
                 data->centerHorizontally = IsDlgButtonChecked(hDlg, IDC_PRINT_CENTER_HORIZONTALLY) != 0;
+                data->paperSourceByPageSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE) != 0;
                 return TRUE;
             }
             break;
@@ -1029,7 +1034,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 case IDC_PRINT_SCALE_FIT:
                 case IDC_PRINT_SCALE_STRETCH:
                 case IDC_PRINT_SCALE_NONE:
-                case IDC_PRINT_CENTER_HORIZONTALLY: {
+                case IDC_PRINT_CENTER_HORIZONTALLY:
+                case IDC_PRINT_PAPER_SOURCE_BY_SIZE: {
                     HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
                     EnableWindow(hApplyButton, TRUE);
                 } break;

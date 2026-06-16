@@ -56,7 +56,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
     - `center` : horizontally center the page on the paper. Useful with `noscale` when the page is smaller than the paper (e.g. envelopes or A5 stock fed through a tray that centers the paper)
     - `color` or `monochrome`
     - `duplex`, `duplexshort`, `duplexlong` and `simplex`
-    - `bin=<num or name>` : select tray to print to
+    - `bin=<num or name>` : select tray to print to. Use `bin=auto` to let the printer pick the input tray whose paper matches the document page size (like Adobe's "Choose paper source by PDF page size")
     - `paper=<page size>` : page size is `A2`, `A3`, `A4`, `A5`, `A6`, `letter`, `legal`, `tabloid`, `statement`, or a name reported by the printer (e.g. `A3 297 x 420 mm`). Custom dimensions: `paper=76mm x 130mm`
     - `paperkind=<num>` : paper size by Windows `DMPAPER_*` id (from `PrinterInformation.exe --ListPapers` or similar); use when `paper=A3` does not match the driver's paper name
   - e.g. `-print-settings "1-3,5,10-8,odd,fit,bin=2"` prints pages 1, 3, 5, 9 (i.e. the odd pages from the ranges 1-3, 5-5 and 10-8) and scales them so that they fit into the printable area of the paper.
