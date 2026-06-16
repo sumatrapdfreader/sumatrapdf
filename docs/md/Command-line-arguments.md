@@ -50,6 +50,7 @@ Anything that is not recognized as a known option is interpreted as a file path 
   - used in combination with `-print-to` and `-print-to-default`. Allows to tweak some of the printing related settings without using the Print dialog. The settings-list is a comma separated list of page ranges and advanced options such as
     - `even` or `odd`.
     - `portrait` or `landscape` : can provide 90 degree rotation of contents (NOT the rotation of paper which must be pre-set by the choice of printer defaults)
+    - `disable-auto-rotation` : by default a page wider than it is tall is rotated 90 degrees to fit the paper; this prints the content in its original orientation instead (available since 3.5)
     - `noscale`, `shrink` and `fit`
     - `color` or `monochrome`
     - `duplex`, `duplexshort`, `duplexlong` and `simplex`
