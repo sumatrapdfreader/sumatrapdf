@@ -348,6 +348,29 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y) {
     SelectUpTo(pageNo, wordEnd);
 }
 
+void TextSelection::SelectLineAt(int pageNo, double x, double y) {
+    int i = FindClosestGlyph(this, pageNo, x, y);
+    if (i < 0) {
+        return;
+    }
+    int textLen;
+    Rect* coords;
+    engine->GetTextForPage(pageNo, &textLen, &coords);
+    // line breaks are represented by zero-size coords (x == 0 && dx == 0), the
+    // same way FillResultRects segments lines; select the run of real glyphs
+    // containing i
+    int lineStart = i;
+    while (lineStart > 0 && (coords[lineStart - 1].x || coords[lineStart - 1].dx)) {
+        lineStart--;
+    }
+    int lineEnd = i;
+    while (lineEnd < textLen && (coords[lineEnd].x || coords[lineEnd].dx)) {
+        lineEnd++;
+    }
+    StartAt(pageNo, lineStart);
+    SelectUpTo(pageNo, lineEnd);
+}
+
 // (pageA, glyphA) is before (pageB, glyphB) in reading order
 static bool PosBefore(int pageA, int glyphA, int pageB, int glyphB) {
     if (pageA != pageB) {

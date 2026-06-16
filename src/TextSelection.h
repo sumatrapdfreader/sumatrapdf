@@ -34,6 +34,8 @@ struct TextSelection {
     void SelectUpTo(int pageNo, double x, double y);
     void GetWordBoundsAt(int pageNo, double x, double y, int* wordStartOut, int* wordEndOut);
     void SelectWordAt(int pageNo, double x, double y);
+    // select the whole line of text at (x, y) (triple-click; issue #694)
+    void SelectLineAt(int pageNo, double x, double y);
     // extend the selection so it spans whole words from the anchor word (set by
     // the last SelectWordAt) to the word at (x, y)
     void SelectWordsUpTo(int pageNo, double x, double y);

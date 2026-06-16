@@ -1139,6 +1139,20 @@ static bool StopAnnotationResize(MainWindow* win, int x, int y, bool aborted) {
     return true;
 }
 
+// Windows has no triple-click message, so we detect it ourselves: a left button
+// down shortly after (and near) the double-click that selected a word (#694)
+static DWORD gLastWordSelectTime = 0;
+static Point gLastWordSelectPos;
+
+static bool IsTripleClick(int x, int y) {
+    if ((DWORD)GetMessageTime() - gLastWordSelectTime > GetDoubleClickTime()) {
+        return false;
+    }
+    int dx = abs(x - gLastWordSelectPos.x);
+    int dy = abs(y - gLastWordSelectPos.y);
+    return dx <= GetSystemMetrics(SM_CXDOUBLECLK) && dy <= GetSystemMetrics(SM_CYDOUBLECLK);
+}
+
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
     if (IsRightDragging(win)) {
@@ -1219,6 +1233,28 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     bool isCtrl = IsCtrlPressed();
     bool canCopy = HasPermission(Perm::CopySelection);
     bool isOverText = win->AsFixed()->IsOverText(pt);
+
+    // triple-click selects the whole line (issue #694). Must come before the
+    // "already selected text" check below, because the 3rd click lands inside
+    // the word that the 2nd click (double-click) just selected.
+    if (canCopy && !isShift && !isCtrl && isOverText && IsTripleClick(x, y)) {
+        int pageNo = dm->GetPageNoByPoint(pt);
+        if (win->ctrl->ValidPageNo(pageNo)) {
+            PointF ptf = dm->CvtFromScreen(pt, pageNo);
+            dm->textSelection->SelectLineAt(pageNo, ptf.x, ptf.y);
+            UpdateTextSelection(win, false);
+            win->selectingByWord = false; // a drag now extends by glyph, not word
+            win->showSelection = true;
+            win->selectionRect = Rect(x, y, 0, 0);
+            win->mouseAction = MouseAction::SelectingText;
+            win->dragStartPending = false;
+            SetCapture(win->hwndCanvas);
+            SetTimer(win->hwndCanvas, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+            ScheduleRepaint(win, 0);
+            gLastWordSelectTime = 0; // so a 4th click doesn't re-trigger
+        }
+        return;
+    }
 
     // if clicking on already selected text, prepare for drag-out instead of new selection
     if (canCopy && !isShift && !isCtrl && isOverText && win->showSelection && IsPointInSelection(win, pt)) {
@@ -1431,6 +1467,10 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
             PointF pt = dm->CvtFromScreen(mousePos, pageNo);
             dm->textSelection->SelectWordAt(pageNo, pt.x, pt.y);
             UpdateTextSelection(win, false);
+            // remember this double-click so a quick 3rd click nearby is detected
+            // as a triple-click (line selection, issue #694)
+            gLastWordSelectTime = (DWORD)GetMessageTime();
+            gLastWordSelectPos = Point(x, y);
             // keep the gesture active so dragging after the double-click extends
             // the selection a word at a time (issue #4761). dragStartPending is
             // cleared so that releasing without dragging keeps the whole word.
