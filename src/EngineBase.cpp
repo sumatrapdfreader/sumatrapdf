@@ -110,8 +110,32 @@ Kind kindTocFzOutlineAttachment = "tocFzOutlineAttachment";
 Kind kindTocFzLink = "tocFzLink";
 Kind kindTocDjvu = "tocDjvu";
 
+// Sanitize a string for display in a single-line tree-view control (e.g. a
+// bookmark/TOC label): drop soft hyphens and turn control chars / line
+// separators into spaces, so they don't render as a stray hyphen or as
+// boxes (#2647).
+TempStr CleanupTreeViewControlStringTemp(const char* s) {
+    if (!s) {
+        return nullptr;
+    }
+    WCHAR* ws = ToWStrTemp(s);
+    // soft hyphen (U+00AD): an invisible line-break hint, but rendered as a
+    // visible hyphen by some fonts
+    str::RemoveCharsInPlace(ws, L"\x00ad");
+    // control chars (incl. embedded newlines/tabs) and the Unicode line and
+    // paragraph separators render as boxes in a single-line label
+    for (WCHAR* p = ws; *p; p++) {
+        if (*p < 0x20 || *p == 0x7f || *p == 0x2028 || *p == 0x2029) {
+            *p = ' ';
+        }
+    }
+    // collapse the runs of whitespace we just introduced (and trim)
+    str::NormalizeWSInPlace(ws);
+    return ToUtf8Temp(ws);
+}
+
 TocItem::TocItem(TocItem* parent, const char* title, int pageNo) {
-    this->title = str::Dup(title);
+    this->title = str::Dup(CleanupTreeViewControlStringTemp(title));
     this->pageNo = pageNo;
     this->parent = parent;
 }
