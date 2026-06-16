@@ -70,7 +70,7 @@ Notice escaping of DDE command string: `"` and `\` with `\`.
         - `"continuous"`
         - `"continuous facing"`
         - `"continuous book view"`
-    - `zoom level` : either a zoom factor between 8 and 6400 (in percent) or one of -1 (Fit Page), -2 (Fit Width) or -3 (Fit Content)
+    - `zoom level` : either a zoom factor between 8 and 6400 (in percent) or one of -1 (Fit Page), -2 (Fit Width) or -3 (Fit Content). Use `0` to keep the current zoom unchanged — useful when scrolling with the scroll arguments, since re-applying a Fit zoom on every call re-fits the page and would reset the scroll position
     - `scrollX, scrollY` : PDF document (user) coordinates of the point to be visible in the top-left of the window
 - example: `[SetView("c:\file.pdf","continuous",-3)]`
 - note: the pdf file must already be opened

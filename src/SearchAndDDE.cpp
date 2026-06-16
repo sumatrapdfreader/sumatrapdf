@@ -1052,7 +1052,11 @@ static const char* HandleSetViewCmd(const char* cmd, bool* ack) {
         SwitchToDisplayMode(win, mode);
     }
 
-    if (zoom != kInvalidZoom) {
+    // a zoom of 0 means "keep the current zoom". Re-applying a fit zoom (-1/-2/-3)
+    // on every call re-fits the page and resets the scroll position, which made
+    // scrolling via the scroll arguments jump to the next page (issue #5068). Use
+    // zoom 0 to scroll without changing the zoom.
+    if (zoom != kInvalidZoom && zoom != 0) {
         SmartZoom(win, zoom, nullptr, false);
     }
 
