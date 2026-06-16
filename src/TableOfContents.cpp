@@ -979,18 +979,23 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
 // this calls GoToTocLinkTask) which will eventually call GoToPage()
 // which adds nav point. Maybe I should not add nav point
 // if going to the same page?
+// set when a mouse click changed the tree selection (handled by
+// TocTreeSelectionChanged), so the NM_CLICK that follows doesn't navigate again
+static bool gTocSelChangedByMouseClick = false;
+
 void TocTreeClick(TreeView::ClickEvent* ev) {
-#if 0
-    ev->didHandle = true;
-    if (!ev->treeItem) {
+    bool handledBySelChange = gTocSelChangedByMouseClick;
+    gTocSelChangedByMouseClick = false;
+    // A normal click changes the selection and is handled by
+    // TocTreeSelectionChanged. Clicking the item that is already selected fires
+    // no selection-change notification, so handle that here to let the user
+    // re-click the current bookmark to jump back to its page (#2465).
+    if (ev->isDblClick || !ev->treeItem || handledBySelChange) {
         return;
     }
-    MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
+    MainWindow* win = FindMainWindowByHwnd(ev->treeView->hwnd);
     ReportIf(!win);
-    bool allowExternal = false;
-    GoToTocTreeItem(win, ev->treeItem, allowExternal);
-#endif
-    ev->result = -1;
+    GoToTocTreeItem(win, ev->treeItem, true);
 }
 
 static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
@@ -1006,6 +1011,11 @@ static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
     bool shouldHandle = ev->byKeyboard || ev->byMouse;
     if (!shouldHandle) {
         return;
+    }
+    if (ev->byMouse) {
+        // remember that this click already navigated, so the following
+        // NM_CLICK (TocTreeClick) doesn't navigate a second time (#2465)
+        gTocSelChangedByMouseClick = true;
     }
     bool allowExternal = ev->byMouse;
     GoToTocTreeItem(win, ev->selectedItem, allowExternal);
@@ -1332,7 +1342,7 @@ void CreateToc(MainWindow* win) {
     treeView->onSelectionChanged = MkFunc1Void(TocTreeSelectionChanged);
     treeView->onKeyDown = MkFunc1Void(TocTreeKeyDown2);
     treeView->onGetTooltip = MkFunc1Void(TocCustomizeTooltip);
-    // treeView->onClick = TocTreeClick; // TODO: maybe not necessary
+    treeView->onClick = MkFunc1Void(TocTreeClick);
     // treeView->onChar = TocTreeCharHandler;
     // treeView->onMouseWheel = TocTreeMouseWheelHandler;
 
