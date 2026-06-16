@@ -421,6 +421,35 @@ TextSel* TextSearch::FindFirst(int page, const WCHAR* text) {
     return nullptr;
 }
 
+// search only `pageNo` (no wrapping to other pages), mirroring the per-page step
+// inside FindStartingAtPage. Used for page-constrained search (issue #3085)
+TextSel* TextSearch::FindFirstOnPage(int pageNo, const WCHAR* text) {
+    SetText(text);
+    if (str::IsEmpty(findText) || pageNo < 1 || pageNo > nPages) {
+        return nullptr;
+    }
+    Reset();
+    pageText = engine->GetTextForPage(pageNo, &findIndex);
+    if (!pageText) {
+        return nullptr;
+    }
+    if (forward) {
+        findIndex = 0;
+    }
+    PageAndOffset r;
+    if (!FindTextInPage(pageNo, &r)) {
+        return nullptr;
+    }
+    if (forward) {
+        if (findPage != r.page) {
+            findPage = r.page;
+            pageText = engine->GetTextForPage(findPage);
+        }
+        findIndex = r.offset;
+    }
+    return &result;
+}
+
 TextSel* TextSearch::FindNext() {
     ReportIf(!findText);
     if (!findText) {

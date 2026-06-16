@@ -14,6 +14,8 @@ struct TextSearch : public TextSelection {
     void SetDirection(Direction direction);
     void SetLastResult(TextSelection* sel);
     TextSel* FindFirst(int page, const WCHAR* text);
+    // like FindFirst but searches only the given page (issue #3085)
+    TextSel* FindFirstOnPage(int page, const WCHAR* text);
     TextSel* FindNext();
 
     int GetCurrentPageNo() const;

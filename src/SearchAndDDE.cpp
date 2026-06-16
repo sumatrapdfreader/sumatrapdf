@@ -800,6 +800,53 @@ static const char* HandleSearchCmd(const char* cmd, bool* ack) {
 }
 
 /*
+Go to a page and select the search term, but only if it's found on that page
+(unlike Search, which keeps searching following pages and wraps around).
+
+[GotoPageWord("<pdffile>",<page>,"<search-term>")]
+*/
+static const char* HandleGotoPageWordCmd(const char* cmd, bool* ack) {
+    AutoFreeStr pdfFile;
+    AutoFreeStr term;
+    int page = 0;
+    const char* next = str::Parse(cmd, "[GotoPageWord(\"%s\",%d,\"%s\")]", &pdfFile, &page, &term);
+    if (!next) {
+        return nullptr;
+    }
+    MainWindow* win = FindMainWindowByFile(pdfFile, true);
+    if (!win) {
+        return next;
+    }
+    if (!win->IsDocLoaded()) {
+        ReloadDocument(win, false);
+        if (!win->IsDocLoaded()) {
+            return next;
+        }
+    }
+    *ack = true;
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !win->ctrl->ValidPageNo(page)) {
+        return next;
+    }
+    // stop any running async search, then go to the page
+    AbortFinding(win, true);
+    win->ctrl->GoToPage(page, true);
+    if (!str::IsEmpty(term.Get())) {
+        TempWStr termW = ToWStrTemp(term);
+        dm->textSearch->SetDirection(TextSearch::Direction::Forward);
+        TextSel* sel = dm->textSearch->FindFirstOnPage(page, termW);
+        if (sel && sel->len > 0) {
+            ShowSearchResult(win, sel, false);
+        } else {
+            // term not on this page: stay on the page, select nothing
+            ClearSearchResult(win);
+        }
+    }
+    win->Focus();
+    return next;
+}
+
+/*
 Open file DDE Command
 
 [Open("<pdffilepath>"[,<newWindow>,<setFocus>,<forceRefresh>,<inCurrentTab>])]
@@ -1255,6 +1302,9 @@ static bool HandleExecuteCmds(HWND hwnd, const char* cmd) {
         }
         if (!nextCmd) {
             nextCmd = HandleSearchCmd(cmd, &didHandle);
+        }
+        if (!nextCmd) {
+            nextCmd = HandleGotoPageWordCmd(cmd, &didHandle);
         }
         if (!nextCmd) {
             nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);

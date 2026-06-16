@@ -59,6 +59,24 @@ Notice escaping of DDE command string: `"` and `\` with `\`.
 - example: `[GotoPage("c:\file.pdf", 37)]`
 - note: the pdf file must be already opened.
 
+### Search
+
+Search the document for a term and select/scroll to the first match. Like the Find box, the search continues onto following pages and wraps around to the start.
+
+- format: `[Search("<pdffilepath>","<search-term>")]`
+- example: `[Search("c:\file.pdf", "needle")]`
+- note: the pdf file must be already opened.
+
+### Go to page and word
+
+**Ver 3.7+**
+
+Go to a specific page and select the search term **only if it is found on that page** (unlike `Search`, which keeps searching following pages and wraps around). If the term is not on that page, it stays on the page and selects nothing. Useful for making a shortcut to a precise location.
+
+- format: `[GotoPageWord("<pdffilepath>",<page number>,"<search-term>")]`
+- example: `[GotoPageWord("c:\file.pdf", 12, "green")]`
+- note: the pdf file must be already opened.
+
 ### Set view settings
 
 - format: `[SetView("<pdffilepath>","<view mode>",<zoom level>[,<scrollX>,<scrollY>])]`
