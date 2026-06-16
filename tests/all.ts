@@ -11,6 +11,7 @@
 
 import { buildApp } from "./util.ts";
 import { testit as issue906 } from "./issue-906.ts";
+import { testit as issue933 } from "./issue-933.ts";
 import { testit as issue4967 } from "./issue-4967.ts";
 import { testit as issue5065 } from "./issue-5065.ts";
 import { testit as issue5353 } from "./issue-5353.ts";
@@ -24,6 +25,7 @@ import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["issue-906", issue906],
+  ["issue-933", issue933],
   ["issue-4967", issue4967],
   ["issue-5065", issue5065],
   ["issue-5353", issue5353],

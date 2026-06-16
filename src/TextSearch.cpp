@@ -157,25 +157,65 @@ static WCHAR FoldCaseForSearch(WCHAR c) {
     return (WCHAR)(uintptr_t)CharLowerW((LPWSTR)(uintptr_t)c);
 }
 
+// German ß (sharp s, U+00DF) is spelled "ss" and the two are often used
+// interchangeably, so for case-insensitive search we treat ß as equivalent to
+// "ss" (issue #933). Fold first so capital ẞ (U+1E9E) and case differences work.
+static bool IsSharpS(WCHAR c) {
+    return c != 0 && FoldCaseForSearch(c) == 0x00DF;
+}
+static bool IsLatinS(WCHAR c) {
+    return c != 0 && FoldCaseForSearch(c) == L's';
+}
+
+// Compare needle `n` against haystack `h` for a single search "unit", case-
+// folded, treating ß as equivalent to "ss". On a match returns true and reports
+// how many WCHARs were consumed from each side (1:1 normally, but 1:2 / 2:1 for
+// the ß <-> ss equivalence). Safe to call at a string end (reads at most h[1]
+// / n[1], which is the NUL terminator at worst).
+static bool MatchSearchUnit(const WCHAR* h, const WCHAR* n, int& hAdv, int& nAdv) {
+    // ß in the needle matches "ss" in the text
+    if (IsSharpS(*n) && IsLatinS(h[0]) && IsLatinS(h[1])) {
+        hAdv = 2;
+        nAdv = 1;
+        return true;
+    }
+    // "ss" in the needle matches ß in the text
+    if (IsLatinS(n[0]) && IsLatinS(n[1]) && IsSharpS(*h)) {
+        hAdv = 1;
+        nAdv = 2;
+        return true;
+    }
+    // everything else (including ß~ß and ss~ss) matches one-to-one
+    if (FoldCaseForSearch(*h) == FoldCaseForSearch(*n)) {
+        hAdv = 1;
+        nAdv = 1;
+        return true;
+    }
+    return false;
+}
+
 static const WCHAR* StrStrFoldCase(const WCHAR* haystack, const WCHAR* needle) {
     if (!haystack || !needle || !*needle) {
         return haystack;
     }
-    size_t needleLen = str::Len(needle);
     for (const WCHAR* s = haystack; *s; s++) {
-        if (FoldCaseForSearch(s[0]) != FoldCaseForSearch(needle[0])) {
-            continue;
-        }
-        size_t i = 1;
-        for (; i < needleLen; i++) {
-            if (!s[i]) {
+        const WCHAR* h = s;
+        const WCHAR* n = needle;
+        bool isMatch = true;
+        while (*n) {
+            if (!*h) {
+                isMatch = false;
                 break;
             }
-            if (FoldCaseForSearch(s[i]) != FoldCaseForSearch(needle[i])) {
+            int hAdv, nAdv;
+            if (!MatchSearchUnit(h, n, hAdv, nAdv)) {
+                isMatch = false;
                 break;
             }
+            h += hAdv;
+            n += nAdv;
         }
-        if (i == needleLen) {
+        if (isMatch) {
             return s;
         }
     }
@@ -203,24 +243,31 @@ static const WCHAR* StrRStrFoldCase(const WCHAR* start, const WCHAR* end, const 
     if (!start || !end || !needle || !*needle || start >= end) {
         return nullptr;
     }
-    size_t needleLen = str::Len(needle);
-    if (needleLen > (size_t)(end - start)) {
-        return nullptr;
-    }
-    const WCHAR* s = end - needleLen;
-    for (; s >= start; s--) {
+    // ß <-> ss makes the matched length variable, so scan forward within
+    // [start, end) and remember the last start position that matches.
+    const WCHAR* result = nullptr;
+    for (const WCHAR* s = start; s < end && *s; s++) {
+        const WCHAR* h = s;
+        const WCHAR* n = needle;
         bool isMatch = true;
-        for (size_t i = 0; i < needleLen; i++) {
-            if (FoldCaseForSearch(s[i]) != FoldCaseForSearch(needle[i])) {
+        while (*n) {
+            if (h >= end || !*h) {
                 isMatch = false;
                 break;
             }
+            int hAdv, nAdv;
+            if (!MatchSearchUnit(h, n, hAdv, nAdv)) {
+                isMatch = false;
+                break;
+            }
+            h += hAdv;
+            n += nAdv;
         }
         if (isMatch) {
-            return s;
+            result = s;
         }
     }
-    return nullptr;
+    return result;
 }
 
 // try to match "findText" from "start" with whitespace tolerance
@@ -247,10 +294,25 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
         /* Going from page n to page n+1 is a space, too.*/
         lookingAtWs = (!*end && (currentPage < nPages)) || str::IsWs(*end);
         bool isMatch = false;
+        // extra advance for the German ß <-> ss equivalence, where one side
+        // consumes one WCHAR and the other two (issue #933)
+        int extraMatchAdv = 0;
+        int extraEndAdv = 0;
         if (matchCase) {
             isMatch = *match == *end;
         } else {
             isMatch = FoldCaseForSearch(*match) == FoldCaseForSearch(*end);
+            if (!isMatch) {
+                if (IsSharpS(*match) && IsLatinS(end[0]) && IsLatinS(end[1])) {
+                    // ß in the search text matches "ss" in the page
+                    isMatch = true;
+                    extraEndAdv = 1;
+                } else if (IsLatinS(match[0]) && IsLatinS(match[1]) && IsSharpS(*end)) {
+                    // "ss" in the search text matches ß in the page
+                    isMatch = true;
+                    extraMatchAdv = 1;
+                }
+            }
         }
         if (isMatch) {
             /* characters are identical */;
@@ -271,6 +333,9 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
         } else {
             return notFound;
         }
+        // consume the extra char on whichever side of a ß <-> ss match is longer
+        match += extraMatchAdv;
+        end += extraEndAdv;
         match++;
         // We might get here either ...
         if (*end) {
