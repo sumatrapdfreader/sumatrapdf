@@ -816,19 +816,23 @@ void InstallCrashHandler(const char* crashDumpPath, const char* crashFilePath, c
     gCrashHandlerAllocator = ArenaNew();
     gSymbolsUrl = BuildSymbolsUrl();
 
-    TempStr path = GetSettingsPathTemp();
-    // can be empty on first run but that's fine because then we know it has default values
-    ByteSlice prefsData = file::ReadFile(path);
-    if (!prefsData.empty()) {
-        // serialize without FileStates info because it's the largest
-        GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());
-        DeleteFileStates(gp->fileStates);
-        gp->fileStates = new Vec<FileState*>();
-        // TODO: also sessionData?
-        ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
-        gSettingsFile = (char*)d.data();
-        DeleteGlobalPrefs(gp);
-        prefsData.Free();
+    // installer/uninstaller don't use app settings; reading them here would
+    // trigger GetAppDataDirTemp() before installation is complete
+    if (!IsInstallerOrUninstallerExe()) {
+        TempStr path = GetSettingsPathTemp();
+        // can be empty on first run but that's fine because then we know it has default values
+        ByteSlice prefsData = file::ReadFile(path);
+        if (!prefsData.empty()) {
+            // serialize without FileStates info because it's the largest
+            GlobalPrefs* gp = NewGlobalPrefs((const char*)prefsData.data());
+            DeleteFileStates(gp->fileStates);
+            gp->fileStates = new Vec<FileState*>();
+            // TODO: also sessionData?
+            ByteSlice d = SerializeGlobalPrefs(gp, nullptr);
+            gSettingsFile = (char*)d.data();
+            DeleteGlobalPrefs(gp);
+            prefsData.Free();
+        }
     }
 
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);

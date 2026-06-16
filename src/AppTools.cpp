@@ -106,6 +106,13 @@ bool IsDllBuild() {
     return resSrc != nullptr;
 }
 
+// true if the executable name indicates installer or uninstaller mode
+// (e.g. SumatraPDF-prerel-64-install.exe)
+bool IsInstallerOrUninstallerExe() {
+    TempStr exeName = path::GetBaseNameTemp(GetSelfExePathTemp());
+    return str::FindI(exeName, "uninstall") || str::FindI(exeName, "install");
+}
+
 static char* gAppDataDir = nullptr;
 
 void DeleteAppTools() {
