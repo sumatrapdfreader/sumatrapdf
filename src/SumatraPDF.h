@@ -31,7 +31,10 @@ constexpr int kHideCursorDelayInMs = 3000;
 #define REPAINT_MESSAGE_DELAY_IN_MS 1000
 
 #define AUTO_RELOAD_TIMER_ID 5
-#define AUTO_RELOAD_DELAY_IN_MS 100
+// debounce: coalesce bursts of file-change notifications (a single save can
+// fire several) into one reload. SetTimer() with the same id resets it, so the
+// reload only happens once the file has been quiet for this long (#5690)
+#define AUTO_RELOAD_DELAY_IN_MS 500
 
 // permissions that can be revoked through sumatrapdfrestrict.ini or the -restrict command line flag
 enum class Perm : uint {

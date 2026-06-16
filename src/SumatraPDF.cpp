@@ -1366,7 +1366,10 @@ static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), tab->frameTitle);
+        // base the prefix on the freshly-built title 's', not tab->frameTitle:
+        // the latter may already carry the prefix from a previous refresh, so
+        // reusing it stacks "[..] [..] [..] file.pdf" on repeated changes (#5690)
+        s = str::FormatTemp(_TRA("[Changes detected; refreshing] %s"), s);
     }
     str::ReplaceWithCopy(&tab->frameTitle, s);
 }
