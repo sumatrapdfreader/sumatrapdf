@@ -1881,7 +1881,11 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         }
     }
 
-    if (flags.printerName) {
+    // -print-dialog takes precedence: if the user explicitly asked for the
+    // print dialog, show it (handled after the file loads, below) instead of
+    // printing silently, even when -print-to/-print-to-default is also given
+    // (fixes #3975)
+    if (flags.printerName && !flags.printDialog) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         for (char* path : flags.fileNames) {
