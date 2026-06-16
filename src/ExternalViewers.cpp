@@ -449,19 +449,48 @@ bool PathMatchFilter(const char* path, const char* filter) {
 }
 
 // TODO: find a better file for this?
+// extract the executable (first token) from cmdLine, honoring a leading quote,
+// and set *restOut to the remaining command line (after the exe and any spaces)
+static TempStr ExtractExePathTemp(const char* cmdLine, const char** restOut) {
+    const char* s = str::SkipChar(cmdLine, ' ');
+    StrBuilder exe;
+    if (*s == '"') {
+        s++;
+        while (*s && *s != '"') {
+            exe.AppendChar(*s++);
+        }
+        if (*s == '"') {
+            s++;
+        }
+    } else {
+        while (*s && *s != ' ') {
+            exe.AppendChar(*s++);
+        }
+    }
+    *restOut = str::SkipChar(s, ' ');
+    return str::DupTemp(exe.Get());
+}
+
 bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter) {
     const char* path = tab->filePath;
     if (!PathMatchFilter(path, filter)) {
         return false;
     }
-
-    StrVec args;
-    ParseCmdLine(cmdLine, args);
-    int nArgs = args.Size();
-    if (nArgs == 0) {
+    if (str::IsEmptyOrWhiteSpace(cmdLine)) {
         return false;
     }
-    const char* exePath = args.At(0);
+    // Split into the exe (first token) and the rest of the command line, then do
+    // the %1/%p/%d/%% substitution on the rest WITHOUT re-tokenizing and
+    // re-quoting it, so the user's own quoting is preserved (issue #5695).
+    // Re-quoting moved/mangled quotes and broke e.g. cmd.exe command lines.
+    // This matches how the known external viewers are launched (FormatParamTemp
+    // on the raw args). The user is responsible for quoting arguments that
+    // contain spaces, e.g. "%1".
+    const char* rest = nullptr;
+    TempStr exePath = ExtractExePathTemp(cmdLine, &rest);
+    if (str::IsEmpty(exePath)) {
+        return false;
+    }
     // TODO: this should be in ViewWithCustomExternalViewer()
     if (!file::Exists(exePath)) {
         TempStr msg = str::FormatTemp(
@@ -470,17 +499,11 @@ bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter) {
         MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
         return false;
     }
-    StrVec argsQuoted;
-    if (nArgs == 1) {
+    if (str::IsEmptyOrWhiteSpace(rest)) {
+        // no arguments given: pass the document path as the only argument
         return LaunchFileShell(exePath, path);
     }
-    for (int i = 1; i < nArgs; i++) {
-        char* s = args.At(i);
-        TempStr param = FormatParamTemp(s, tab);
-        TempStr paramQuoted = QuoteCmdLineArgTemp(param);
-        argsQuoted.Append(paramQuoted);
-    }
-    TempStr params = JoinTemp(&argsQuoted, " ");
+    TempStr params = FormatParamTemp(rest, tab);
     return LaunchFileShell(exePath, params);
 }
 

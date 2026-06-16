@@ -41,6 +41,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `Ctrl + click` on a PDF link opens it in a new tab (instead of navigating in the current tab)
 - you can now drag&drop selected text to another application, like a text editor
 - triple-click selects the whole line of text (double-click still selects a word) (fixes #694)
+- fix `ExternalViewers` `CommandLine` parsing mangling quotes (e.g. `-t="Hello World"` became `"-t=Hello World"`); the command line is now passed through with the user's quoting preserved, only substituting `%1`/`%p`/`%d` (fixes #5695)
 - added `List Printers` (`CmdListPrinters`) command to `Ctrl + k` Command Palette to list available printers
 - fix `-print-settings paper=A3` (and other standard sizes) when the printer driver reports a longer paper name such as `A3 297 x 420 mm` (fixes #5632)
 - add `stretch` page scaling (and a matching "Stretch pages to fill paper" option in the Advanced print dialog) that fills the paper in both dimensions, ignoring the aspect ratio (fixes #2220)
