@@ -74,3 +74,21 @@ Notice escaping of DDE command string: `"` and `\` with `\`.
     - `scrollX, scrollY` : PDF document (user) coordinates of the point to be visible in the top-left of the window
 - example: `[SetView("c:\file.pdf","continuous",-3)]`
 - note: the pdf file must already be opened
+
+### Get file state
+
+Unlike the commands above (which are sent as DDE *execute* requests), this is a DDE *request* transaction: it returns information about a document.
+
+- format: `[GetFileState("<pdffilepath>")]` or `[GetFileState()]` for the currently active document
+- returns multiple `key: value` lines (split the response by `\n`, then each line by the first `:`):
+
+    ```
+    path: c:\file.pdf
+    zoom: 120
+    view: continuous
+    sumver: 3.7
+    ```
+
+    - `zoom` : a zoom factor in percent, or -1 (Fit Page), -2 (Fit Width), -3 (Fit Content) — the same convention as `SetView`
+    - on error (no such open file) it returns `error: <message>`
+- example: `[GetFileState()]`

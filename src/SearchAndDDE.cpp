@@ -34,6 +34,7 @@
 #include "Toolbar.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+#include "Version.h"
 
 #include "utils/Log.h"
 
@@ -1091,10 +1092,12 @@ Return info about document <filepath> or currently viewed document if no
 Returns info in the format:
 
 path: c:\file.pdf
-zoom: 1.34
+zoom: 120
 view: continuous
-sumver: 3.5
+sumver: 3.7
 
+zoom is a percentage, or -1 = fit page, -2 = fit width, -3 = fit content
+(the same convention as the SetView command).
 i.e. multiple lines, each line is
 key: value
 This should make parsing easy:
@@ -1118,20 +1121,41 @@ static const char* HandleGetFileStateCmd(HWND hwnd, const char* cmd, bool* ack, 
         return nullptr;
     }
 
-    res.Append("error: hello");
-    MainWindow* win = FindMainWindowByFile(filePath, true);
+    // we recognized the command, so from here on we always produce a response
+    *ack = true;
+
+    MainWindow* win = nullptr;
+    if (!str::IsEmpty(filePath.Get())) {
+        win = FindMainWindowByFile(filePath, true);
+    } else {
+        // no path given: report the currently active document
+        win = FindMainWindowByHwnd(gLastActiveFrameHwnd);
+        if (!win && gWindows.Size() > 0) {
+            win = gWindows[0];
+        }
+    }
     if (!win) {
+        res.Append("error: no opened file");
         return next;
     }
     if (!win->IsDocLoaded()) {
         ReloadDocument(win, false);
         if (!win->IsDocLoaded()) {
+            res.Append("error: file not loaded");
             return next;
         }
     }
 
-    res.Append("error: hello");
-    *ack = true;
+    DocController* ctrl = win->ctrl;
+    const char* docPath = ctrl->GetFilePath();
+    // zoom uses the same convention as SetView: a percentage, or -1 = fit page,
+    // -2 = fit width, -3 = fit content
+    float zoom = ctrl->GetZoomVirtual();
+    const char* view = DisplayModeToString(ctrl->GetDisplayMode());
+    res.AppendFmt("path: %s\n", docPath ? docPath : "");
+    res.AppendFmt("zoom: %g\n", zoom);
+    res.AppendFmt("view: %s\n", view ? view : "");
+    res.AppendFmt("sumver: %s\n", CURR_VERSION_STRA);
     return next;
 }
 
@@ -1279,16 +1303,27 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-    int cbDdeData = sizeof(DDEDATA);
+    // the payload goes at DDEDATA.Value, i.e. offsetof(DDEDATA, Value) -- NOT
+    // sizeof(DDEDATA), whose trailing Value[1] + padding would push it too far
+    // and the client would read zeros
+    int cbDdeData = (int)offsetof(DDEDATA, Value);
     u8* res = (u8*)AllocZero(GetTempAllocator(), cbDdeData + cbData);
     DDEDATA* ddeData = (DDEDATA*)res;
-    ddeData->fRelease = 1; // tell client to free HGLOBAL
-    ddeData->cfFormat = fmt;
+    ddeData->fResponse = 1; // this data answers a WM_DDE_REQUEST (not an advise)
+    ddeData->fRelease = 1;  // tell client to free HGLOBAL
+    ddeData->cfFormat = (short)fmt;
     memcpy(res + cbDdeData, data, cbData);
 
     HGLOBAL h = MemToHGLOBAL(res, cbDdeData + cbData, GMEM_MOVEABLE | GMEM_DDESHARE);
-    LPARAM lpres = MAKELPARAM(h, a);
-    PostMessageW(hwndClient, WM_DDE_DATA, (WPARAM)hwnd, lpres);
+    // must use PackDDElParam, not MAKELPARAM: on 64-bit MAKELPARAM would
+    // truncate the HGLOBAL to 16 bits and the DDE client would dereference a
+    // garbage handle (crash in user32's WM_DDE_DATA handling)
+    LPARAM lpres = PackDDElParam(WM_DDE_DATA, (UINT_PTR)h, a);
+    if (!PostMessageW(hwndClient, WM_DDE_DATA, (WPARAM)hwnd, lpres)) {
+        // the client went away: we still own the data and the packed lParam
+        GlobalFree(h);
+        FreeDDElParam(WM_DDE_DATA, lpres);
+    }
     return 0;
 }
 
