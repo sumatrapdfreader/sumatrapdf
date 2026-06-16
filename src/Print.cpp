@@ -825,6 +825,14 @@ static bool PrintToDevice(const PrintData& pd) {
                 rotation = (rotation + 90) % 360;
                 std::swap(pSize.dx, pSize.dy);
             }
+            // apply the user-requested extra rotation on top, to fix wrong
+            // orientation (e.g. upside-down output on virtual printers) (#1246)
+            if (pd.advData.extraRotation != 0) {
+                rotation = (rotation + pd.advData.extraRotation) % 360;
+                if (pd.advData.extraRotation == 90 || pd.advData.extraRotation == 270) {
+                    std::swap(pSize.dx, pSize.dy);
+                }
+            }
 
             // dpiFactor means no physical zoom
             float zoom = dpiFactor;
@@ -1742,6 +1750,15 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             devMode->dmFields |= DM_ORIENTATION;
         } else if (str::EqI(s, "disable-auto-rotation")) {
             advanced.autoRotate = false;
+        } else if (str::StartsWithI(s, "rotate=")) {
+            // extra rotation of the printout in degrees: 90, 180 or 270 (#1246)
+            int deg = 0;
+            if (str::Parse(s + 7, "%d%$", &deg)) {
+                deg = ((deg % 360) + 360) % 360;
+                if (deg == 90 || deg == 180 || deg == 270) {
+                    advanced.extraRotation = deg;
+                }
+            }
         } else if (str::EqI(s, "center")) {
             advanced.centerHorizontally = true;
         } else if (str::Parse(s, "%dx%$", &val)) {

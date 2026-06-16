@@ -984,6 +984,16 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                                _TRA("Choose &paper source by document page size"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE,
                                _TRA("Print each page at its &document page size (mixed sizes)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_ROTATE_LABEL, _TRA("&Rotate printout:"));
+            {
+                HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ROTATE);
+                CbAddString(hwndCb, _TRA("None"));
+                CbAddString(hwndCb, "90°");
+                CbAddString(hwndCb, "180°");
+                CbAddString(hwndCb, "270°");
+                int rotIdx = (data->extraRotation / 90) % 4;
+                CbSetCurrentSelection(hwndCb, rotIdx);
+            }
             HwndSetDlgItemText(hDlg, IDC_SECTION_PRINT_COMPATIBILITY, _TRA("Compatibility"));
 
             CheckRadioButton(hDlg, IDC_PRINT_RANGE_ALL, IDC_PRINT_RANGE_ODD,
@@ -1025,6 +1035,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 data->centerHorizontally = IsDlgButtonChecked(hDlg, IDC_PRINT_CENTER_HORIZONTALLY) != 0;
                 data->paperSourceByPageSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE) != 0;
                 data->perPagePaperSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE) != 0;
+                int rotIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ROTATE, CB_GETCURSEL, 0, 0);
+                data->extraRotation = rotIdx > 0 ? rotIdx * 90 : 0;
                 return TRUE;
             }
             break;
@@ -1044,6 +1056,11 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                     HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
                     EnableWindow(hApplyButton, TRUE);
                 } break;
+                case IDC_PRINT_ROTATE:
+                    if (HIWORD(wp) == CBN_SELCHANGE) {
+                        EnableWindow(GetDlgItem(GetParent(hDlg), ID_APPLY_NOW), TRUE);
+                    }
+                    break;
             }
     }
     return FALSE;

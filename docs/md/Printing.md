@@ -150,6 +150,7 @@ Order doesn't matter. Available tokens:
 | --- | --- |
 | `portrait` / `landscape` | rotate the *content* 90° (this is content rotation, **not** the paper orientation, which is set by the printer/driver) |
 | `disable-auto-rotation` | don't auto-rotate a wide page 90° to fit the paper; print it in its original orientation |
+| `rotate=90` / `rotate=180` / `rotate=270` | rotate the printout by extra degrees, to fix a wrong orientation (e.g. `rotate=180` for upside-down output on virtual printers). In the window, use the **Rotate printout** dropdown on the Advanced print tab |
 
 **Paper and tray**
 
@@ -292,6 +293,12 @@ SumatraPDF.exe -print-to "Multi-tray Printer" -print-settings "paper=auto,bin=au
 
 ```
 SumatraPDF.exe -print-to "Receipt Printer" -print-settings "disable-auto-rotation" wide.pdf
+```
+
+**Fix an upside-down printout (e.g. when printing to XPS / Print to PDF)**
+
+```
+SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "rotate=180" doc.pdf
 ```
 
 **"Print" to a PDF file**
