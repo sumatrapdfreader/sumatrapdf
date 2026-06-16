@@ -17,6 +17,8 @@
 
 [Command-line arguments](Command-line-arguments.md)
 
+[Printing](Printing.md)
+
 [Advanced options / settings](Advanced-options-settings.md)
 
 [Customizing toolbar](Customize-toolbar.md)

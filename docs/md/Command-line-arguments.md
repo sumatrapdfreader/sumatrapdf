@@ -44,6 +44,8 @@ Anything that is not recognized as a known option is interpreted as a file path 
 
 ## Printing options
 
+For a detailed printing guide with examples for common tasks, see [Printing](Printing.md).
+
 - `-print-to-default` : prints all files indicated on this command line to the system default printer. After printing, SumatraPDF exits immediately (check the error code for failure).
 - `-print-to <printer-name>` : prints all files indicated on this command line to the named printer. After printing, SumatraPDF exits immediately (check the error code for failure). E.g. `-print-to "Microsoft XPS Document Writer"` prints all indicated files to the XPS virtual printer.
 - `-print-settings <settings-list>`
