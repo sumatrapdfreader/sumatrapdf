@@ -2345,7 +2345,10 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, const char* nameHint, PasswordU
 
     auto eBookUI = GetEBookUI();
     if (eBookUI) {
-        if (eBookUI->fontSize > 6 && eBookUI->fontSize < 30) {
+        // accept any reasonable font size; the old upper bound of 30 made
+        // larger sizes silently revert to the default (#2276). 256 is just a
+        // sanity cap to reject garbage values.
+        if (eBookUI->fontSize > 6 && eBookUI->fontSize < 256) {
             lfontDy = eBookUI->fontSize;
         }
         if (eBookUI->layoutDx > 100) {
