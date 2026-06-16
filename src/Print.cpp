@@ -857,6 +857,16 @@ static bool PrintToDevice(const PrintData& pd) {
                 }
             }
 
+            // optionally center the page horizontally on the physical paper
+            // (issue #348). The scaling modes already center the page and Stretch
+            // fills the paper, so this only affects placement for PrintScaleNone,
+            // where the page is otherwise aligned to the top-left corner. Useful
+            // for printing a page smaller than the paper (e.g. envelopes or A5
+            // stock fed through a tray that centers the paper).
+            if (pd.advData.centerHorizontally && PrintScaleAdv::None == pd.advData.scale) {
+                offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
+            }
+
             bool ok = false;
             short shrink = 1;
             do {
@@ -1575,6 +1585,8 @@ static void ApplyPrintSettings(Printer* printer, const char* settings, int pageC
             devMode->dmFields |= DM_ORIENTATION;
         } else if (str::EqI(s, "disable-auto-rotation")) {
             advanced.autoRotate = false;
+        } else if (str::EqI(s, "center")) {
+            advanced.centerHorizontally = true;
         } else if (str::Parse(s, "%dx%$", &val)) {
             if (val < 0) {
                 val = 1;

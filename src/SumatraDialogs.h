@@ -34,10 +34,16 @@ struct Print_Advanced_Data {
     PrintScaleAdv scale;
     PrintRotationAdv rotation;
     bool autoRotate;
+    bool centerHorizontally;
 
     explicit Print_Advanced_Data(PrintRangeAdv range = PrintRangeAdv::All, PrintScaleAdv scale = PrintScaleAdv::Shrink,
-                                 PrintRotationAdv rotation = PrintRotationAdv::Auto, bool autoRotate = true)
-        : range(range), scale(scale), rotation(rotation), autoRotate(autoRotate) {}
+                                 PrintRotationAdv rotation = PrintRotationAdv::Auto, bool autoRotate = true,
+                                 bool centerHorizontally = false)
+        : range(range),
+          scale(scale),
+          rotation(rotation),
+          autoRotate(autoRotate),
+          centerHorizontally(centerHorizontally) {}
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
