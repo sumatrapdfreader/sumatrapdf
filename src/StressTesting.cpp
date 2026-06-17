@@ -107,6 +107,11 @@ static void BenchChmLoadOnly(const char* filePath) {
     double timeMs = TimeSinceInMs(t);
     logf("load: %.2f ms\n", timeMs);
 
+    // build the table of contents (exercises ChmFile's ToC/index parsing)
+    auto tToc = TimeGet();
+    TocTree* toc = chmModel->GetToc();
+    logf("toc: %.2f ms (%s)\n", TimeSinceInMs(tToc), toc ? "present" : "none");
+
     delete chmModel;
 
     logf("Finished (in %.2f ms): %s\n", TimeSinceInMs(total), filePath);

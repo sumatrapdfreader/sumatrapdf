@@ -970,74 +970,89 @@ bool MobiDoc::HasToc() {
     return docTocIndex < doc->size();
 }
 
-static void AppendDeepText(const GumboNode* node, StrBuilder& sb) {
-    if (!node) {
-        return;
-    }
-    if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_CDATA || node->type == GUMBO_NODE_WHITESPACE) {
-        sb.Append(node->v.text.text);
-        return;
-    }
-    if (node->type != GUMBO_NODE_ELEMENT) {
-        return;
-    }
-    const GumboVector* children = &node->v.element.children;
-    for (unsigned int i = 0; i < children->length; i++) {
-        AppendDeepText((const GumboNode*)children->data[i], sb);
+static void AppendDeepText(const GumboNode* root, StrBuilder& sb) {
+    // iterative pre-order DFS so a deeply nested element can't overflow the stack
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(root);
+    while (toVisit.size() > 0) {
+        const GumboNode* node = toVisit.Pop();
+        if (!node) {
+            continue;
+        }
+        if (node->type == GUMBO_NODE_TEXT || node->type == GUMBO_NODE_CDATA || node->type == GUMBO_NODE_WHITESPACE) {
+            sb.Append(node->v.text.text);
+            continue;
+        }
+        if (node->type != GUMBO_NODE_ELEMENT) {
+            continue;
+        }
+        const GumboVector* children = &node->v.element.children;
+        // push in reverse so children are visited (and text appended) in document order
+        for (unsigned int i = children->length; i > 0; i--) {
+            toVisit.Append((const GumboNode*)children->data[i - 1]);
+        }
     }
 }
 
 struct MobiTocWalker {
     EbookTocVisitor* visitor = nullptr;
-    int itemLevel = 0;
-    bool stopped = false;
 
     void Walk(const GumboNode* node);
-    void WalkChildren(const GumboVector* children);
 };
 
-void MobiTocWalker::WalkChildren(const GumboVector* children) {
-    for (unsigned int i = 0; i < children->length && !stopped; i++) {
-        Walk((const GumboNode*)children->data[i]);
-    }
-}
+// (node, level) pair for the iterative walk below
+struct MobiTocWalkItem {
+    const GumboNode* node;
+    int level;
+};
 
-void MobiTocWalker::Walk(const GumboNode* node) {
-    if (stopped || !node) {
-        return;
-    }
-    if (node->type == GUMBO_NODE_DOCUMENT) {
-        WalkChildren(&node->v.document.children);
-        return;
-    }
-    if (node->type != GUMBO_NODE_ELEMENT) {
-        return;
-    }
-    if (GumboTagNameIs(node, "mbp:pagebreak")) {
-        stopped = true;
-        return;
-    }
-    if (GumboTagNameIs(node, "a")) {
-        const GumboAttribute* attr = gumbo_get_attribute(&node->v.element.attributes, "filepos");
-        if (!attr) {
-            attr = gumbo_get_attribute(&node->v.element.attributes, "href");
+// Iterative pre-order walk (was recursive) so a deeply nested ToC region can't
+// overflow the stack. `level` is carried per node instead of being tracked via
+// recursion depth. We stop at the first <mbp:pagebreak> in document order, like
+// the recursive version did.
+void MobiTocWalker::Walk(const GumboNode* root) {
+    Vec<MobiTocWalkItem> stack;
+    stack.Append({root, 0});
+    while (stack.size() > 0) {
+        MobiTocWalkItem it = stack.Pop();
+        const GumboNode* node = it.node;
+        int level = it.level;
+        if (!node) {
+            continue;
         }
-        if (attr) {
-            StrBuilder text;
-            AppendDeepText(node, text);
-            if (!text.IsEmpty()) {
-                visitor->Visit(text.LendData(), attr->value, itemLevel);
+        const GumboVector* children = nullptr;
+        int childLevel = level;
+        if (node->type == GUMBO_NODE_DOCUMENT) {
+            children = &node->v.document.children;
+        } else if (node->type == GUMBO_NODE_ELEMENT) {
+            if (GumboTagNameIs(node, "mbp:pagebreak")) {
+                return;
+            }
+            if (GumboTagNameIs(node, "a")) {
+                const GumboAttribute* attr = gumbo_get_attribute(&node->v.element.attributes, "filepos");
+                if (!attr) {
+                    attr = gumbo_get_attribute(&node->v.element.attributes, "href");
+                }
+                if (attr) {
+                    StrBuilder text;
+                    AppendDeepText(node, text);
+                    if (!text.IsEmpty()) {
+                        visitor->Visit(text.LendData(), attr->value, level);
+                    }
+                }
+                continue; // don't descend into the <a>'s children
+            }
+            bool isLevel =
+                GumboTagNameIs(node, "blockquote") || GumboTagNameIs(node, "ul") || GumboTagNameIs(node, "ol");
+            childLevel = isLevel ? level + 1 : level;
+            children = &node->v.element.children;
+        }
+        if (children) {
+            // push in reverse so children are visited in document order
+            for (unsigned int i = children->length; i > 0; i--) {
+                stack.Append({(const GumboNode*)children->data[i - 1], childLevel});
             }
         }
-        return;
-    }
-    bool isLevel = GumboTagNameIs(node, "blockquote") || GumboTagNameIs(node, "ul") || GumboTagNameIs(node, "ol");
-    if (isLevel) {
-        itemLevel++;
-    }
-    WalkChildren(&node->v.element.children);
-    if (isLevel) {
-        itemLevel--;
     }
 }
 

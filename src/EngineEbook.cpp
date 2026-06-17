@@ -1522,33 +1522,37 @@ static uint CharsetNameToCodepage(const char* charset) {
 }
 
 static uint FindHttpCharsetInNode(const GumboNode* node) {
-    if (!node) {
-        return 0;
-    }
-    if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "meta")) {
-        const GumboAttribute* httpEquiv = gumbo_get_attribute(&node->v.element.attributes, "http-equiv");
-        if (httpEquiv && str::EqI(httpEquiv->value, "Content-Type")) {
-            const GumboAttribute* content = gumbo_get_attribute(&node->v.element.attributes, "content");
-            AutoFree mimetype, charset;
-            if (content && str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset)) {
-                uint cp = CharsetNameToCodepage(charset);
-                if (cp) {
-                    return cp;
+    // iterative pre-order DFS so a deeply nested document can't overflow the stack
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(node);
+    while (toVisit.size() > 0) {
+        const GumboNode* n = toVisit.Pop();
+        if (!n) {
+            continue;
+        }
+        if (n->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(n, "meta")) {
+            const GumboAttribute* httpEquiv = gumbo_get_attribute(&n->v.element.attributes, "http-equiv");
+            if (httpEquiv && str::EqI(httpEquiv->value, "Content-Type")) {
+                const GumboAttribute* content = gumbo_get_attribute(&n->v.element.attributes, "content");
+                AutoFree mimetype, charset;
+                if (content && str::Parse(content->value, "%S;%_charset=%S", &mimetype, &charset)) {
+                    uint cp = CharsetNameToCodepage(charset);
+                    if (cp) {
+                        return cp;
+                    }
                 }
             }
         }
-    }
-    const GumboVector* children = nullptr;
-    if (node->type == GUMBO_NODE_ELEMENT) {
-        children = &node->v.element.children;
-    } else if (node->type == GUMBO_NODE_DOCUMENT) {
-        children = &node->v.document.children;
-    }
-    if (children) {
-        for (unsigned int i = 0; i < children->length; i++) {
-            uint cp = FindHttpCharsetInNode((const GumboNode*)children->data[i]);
-            if (cp) {
-                return cp;
+        const GumboVector* children = nullptr;
+        if (n->type == GUMBO_NODE_ELEMENT) {
+            children = &n->v.element.children;
+        } else if (n->type == GUMBO_NODE_DOCUMENT) {
+            children = &n->v.document.children;
+        }
+        if (children) {
+            // push in reverse so children are visited in document order
+            for (unsigned int i = children->length; i > 0; i--) {
+                toVisit.Append((const GumboNode*)children->data[i - 1]);
             }
         }
     }

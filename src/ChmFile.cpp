@@ -459,13 +459,38 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, const GumboNode* objNode
 // broken CHM ToCs do. Walking every such <ul> at level + 1 reproduces the
 // nesting the previous, pre-gumbo parser produced (and walks each <ul> once, so
 // no entries are duplicated).
+// One suspended <ul> walk: `i` is the next child of `ul` to process at `level`.
+struct ChmUlFrame {
+    const GumboNode* ul;
+    int level;
+    unsigned int i;
+};
+
 static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool isIndex, int level) {
-    const GumboVector* lis = &ulNode->v.element.children;
-    for (unsigned int j = 0; j < lis->length; j++) {
-        const GumboNode* child = (const GumboNode*)lis->data[j];
+    if (!ulNode) {
+        return;
+    }
+    // Iterative version of the recursive <ul>/<li> walk: each stack frame holds
+    // a <ul> and how far we've scanned its children, so a pathologically deep
+    // ToC nesting can't overflow the call stack. Order and levels match the
+    // recursive walk exactly (parent frame resumes after its child completes).
+    Vec<ChmUlFrame> stack;
+    stack.Append({ulNode, level, 0});
+    while (stack.size() > 0) {
+        ChmUlFrame& top = stack.Last();
+        const GumboVector* lis = &top.ul->v.element.children;
+        if (top.i >= lis->length) {
+            stack.RemoveLast();
+            continue;
+        }
+        const GumboNode* child = (const GumboNode*)lis->data[top.i];
+        int lvl = top.level;
+        top.i++;
+        // any stack.Append() below may reallocate -> don't touch `top` after this
+
         if (GumboTagNameIs(child, "ul")) {
             // a bare <ul> among the <li>s holds the children of the preceding <li>
-            WalkChmUl(visitor, child, isIndex, level + 1);
+            stack.Append({child, lvl + 1, 0});
             continue;
         }
         const GumboNode* li = child;
@@ -476,13 +501,13 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, bool is
         if (!objNode) {
             continue;
         }
-        bool valid = isIndex ? VisitChmIndexItem(visitor, objNode, level) : VisitChmTocItem(visitor, objNode, level);
+        bool valid = isIndex ? VisitChmIndexItem(visitor, objNode, lvl) : VisitChmTocItem(visitor, objNode, lvl);
         if (!valid) {
             continue;
         }
         const GumboNode* nested = GumboFindChildByTag(li, "ul");
         if (nested) {
-            WalkChmUl(visitor, nested, isIndex, level + 1);
+            stack.Append({nested, lvl + 1, 0});
         }
     }
 }
@@ -508,26 +533,33 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl
 
 // Ignore any <ul><li> structure and visit every <object type="text/sitemap">
 // in document order. Used for ToCs where the list scaffolding is broken.
-static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* node, bool isIndex, bool* hadOneInOut) {
-    if (!node) {
-        return *hadOneInOut;
-    }
-    if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "object")) {
-        const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
-        if (type && str::EqI(type->value, "text/sitemap")) {
-            *hadOneInOut |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
-            return *hadOneInOut; // don't recurse into the object's <param> children
+static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, bool isIndex, bool* hadOneInOut) {
+    // iterative pre-order DFS so a deeply nested document can't overflow the stack
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(root);
+    while (toVisit.size() > 0) {
+        const GumboNode* node = toVisit.Pop();
+        if (!node) {
+            continue;
         }
-    }
-    const GumboVector* children = nullptr;
-    if (node->type == GUMBO_NODE_ELEMENT) {
-        children = &node->v.element.children;
-    } else if (node->type == GUMBO_NODE_DOCUMENT) {
-        children = &node->v.document.children;
-    }
-    if (children) {
-        for (unsigned int i = 0; i < children->length; i++) {
-            WalkBrokenChmTocOrIndex(visitor, (const GumboNode*)children->data[i], isIndex, hadOneInOut);
+        if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "object")) {
+            const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
+            if (type && str::EqI(type->value, "text/sitemap")) {
+                *hadOneInOut |= isIndex ? VisitChmIndexItem(visitor, node, 1) : VisitChmTocItem(visitor, node, 1);
+                continue; // don't recurse into the object's <param> children
+            }
+        }
+        const GumboVector* children = nullptr;
+        if (node->type == GUMBO_NODE_ELEMENT) {
+            children = &node->v.element.children;
+        } else if (node->type == GUMBO_NODE_DOCUMENT) {
+            children = &node->v.document.children;
+        }
+        if (children) {
+            // push in reverse so children are visited in document order
+            for (unsigned int i = children->length; i > 0; i--) {
+                toVisit.Append((const GumboNode*)children->data[i - 1]);
+            }
         }
     }
     return *hadOneInOut;

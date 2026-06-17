@@ -1919,52 +1919,59 @@ struct ComicInfoParser : json::ValueVisitor {
     void Parse(const ByteSlice& xmlData);
 };
 
-static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* node) {
-    if (!node) {
-        return;
-    }
-    if (node->type == GUMBO_NODE_ELEMENT) {
-        if (GumboTagNameIs(node, "Title")) {
-            TempStr v = GumboTextContentTemp(node);
-            if (v) {
-                cip->Visit("/ComicBookInfo/1.0/title", v, json::Type::String);
-            }
-        } else if (GumboTagNameIs(node, "Year")) {
-            TempStr v = GumboTextContentTemp(node);
-            if (v) {
-                cip->Visit("/ComicBookInfo/1.0/publicationYear", v, json::Type::Number);
-            }
-        } else if (GumboTagNameIs(node, "Month")) {
-            TempStr v = GumboTextContentTemp(node);
-            if (v) {
-                cip->Visit("/ComicBookInfo/1.0/publicationMonth", v, json::Type::Number);
-            }
-        } else if (GumboTagNameIs(node, "Summary")) {
-            TempStr v = GumboTextContentTemp(node);
-            if (v) {
-                cip->Visit("/X-summary", v, json::Type::String);
-            }
-        } else if (GumboTagNameIs(node, "Writer")) {
-            TempStr v = GumboTextContentTemp(node);
-            if (v) {
-                cip->Visit("/ComicBookInfo/1.0/credits[0]/person", v, json::Type::String);
-                cip->Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool);
-            }
-        } else if (GumboTagNameIs(node, "Penciller")) {
-            TempStr v = GumboTextContentTemp(node);
-            if (v) {
-                cip->Visit("/ComicBookInfo/1.0/credits[1]/person", v, json::Type::String);
-                cip->Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type::Bool);
-            }
+static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
+    // iterative pre-order DFS so a deeply nested document can't overflow the stack
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(root);
+    while (toVisit.size() > 0) {
+        const GumboNode* node = toVisit.Pop();
+        if (!node) {
+            continue;
         }
-        const GumboVector* children = &node->v.element.children;
-        for (unsigned int i = 0; i < children->length; i++) {
-            ComicInfoVisitNode(cip, (const GumboNode*)children->data[i]);
+        const GumboVector* children = nullptr;
+        if (node->type == GUMBO_NODE_ELEMENT) {
+            if (GumboTagNameIs(node, "Title")) {
+                TempStr v = GumboTextContentTemp(node);
+                if (v) {
+                    cip->Visit("/ComicBookInfo/1.0/title", v, json::Type::String);
+                }
+            } else if (GumboTagNameIs(node, "Year")) {
+                TempStr v = GumboTextContentTemp(node);
+                if (v) {
+                    cip->Visit("/ComicBookInfo/1.0/publicationYear", v, json::Type::Number);
+                }
+            } else if (GumboTagNameIs(node, "Month")) {
+                TempStr v = GumboTextContentTemp(node);
+                if (v) {
+                    cip->Visit("/ComicBookInfo/1.0/publicationMonth", v, json::Type::Number);
+                }
+            } else if (GumboTagNameIs(node, "Summary")) {
+                TempStr v = GumboTextContentTemp(node);
+                if (v) {
+                    cip->Visit("/X-summary", v, json::Type::String);
+                }
+            } else if (GumboTagNameIs(node, "Writer")) {
+                TempStr v = GumboTextContentTemp(node);
+                if (v) {
+                    cip->Visit("/ComicBookInfo/1.0/credits[0]/person", v, json::Type::String);
+                    cip->Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type::Bool);
+                }
+            } else if (GumboTagNameIs(node, "Penciller")) {
+                TempStr v = GumboTextContentTemp(node);
+                if (v) {
+                    cip->Visit("/ComicBookInfo/1.0/credits[1]/person", v, json::Type::String);
+                    cip->Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type::Bool);
+                }
+            }
+            children = &node->v.element.children;
+        } else if (node->type == GUMBO_NODE_DOCUMENT) {
+            children = &node->v.document.children;
         }
-    } else if (node->type == GUMBO_NODE_DOCUMENT) {
-        const GumboVector* children = &node->v.document.children;
-        for (unsigned int i = 0; i < children->length; i++) {
-            ComicInfoVisitNode(cip, (const GumboNode*)children->data[i]);
+        if (children) {
+            // push in reverse so children are visited in document order
+            for (unsigned int i = children->length; i > 0; i--) {
+                toVisit.Append((const GumboNode*)children->data[i - 1]);
+            }
         }
     }
 }

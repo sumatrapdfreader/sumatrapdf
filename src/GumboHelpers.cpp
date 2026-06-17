@@ -46,23 +46,28 @@ const GumboNode* GumboFindChildByTag(const GumboNode* node, const char* name) {
 }
 
 const GumboNode* GumboFindDescendantByTag(const GumboNode* node, const char* name) {
-    if (!node) {
-        return nullptr;
-    }
-    const GumboVector* children = nullptr;
-    if (node->type == GUMBO_NODE_ELEMENT) {
-        if (GumboTagNameIs(node, name)) {
-            return node;
+    // iterative pre-order DFS so a deeply nested document can't overflow the
+    // stack (gumbo builds the tree iteratively, but recursing over it doesn't)
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(node);
+    while (toVisit.size() > 0) {
+        const GumboNode* n = toVisit.Pop();
+        if (!n) {
+            continue;
         }
-        children = &node->v.element.children;
-    } else if (node->type == GUMBO_NODE_DOCUMENT) {
-        children = &node->v.document.children;
-    }
-    if (children) {
-        for (unsigned int i = 0; i < children->length; i++) {
-            const GumboNode* found = GumboFindDescendantByTag((const GumboNode*)children->data[i], name);
-            if (found) {
-                return found;
+        const GumboVector* children = nullptr;
+        if (n->type == GUMBO_NODE_ELEMENT) {
+            if (GumboTagNameIs(n, name)) {
+                return n;
+            }
+            children = &n->v.element.children;
+        } else if (n->type == GUMBO_NODE_DOCUMENT) {
+            children = &n->v.document.children;
+        }
+        if (children) {
+            // push in reverse so children are visited in document order
+            for (unsigned int i = children->length; i > 0; i--) {
+                toVisit.Append((const GumboNode*)children->data[i - 1]);
             }
         }
     }
