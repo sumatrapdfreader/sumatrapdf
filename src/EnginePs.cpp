@@ -202,7 +202,7 @@ static EngineBase* ps2pdf(const char* path) {
         return nullptr;
     }
 
-    TempStr nameHint = str::Join(path, ".pdf");
+    TempStr nameHint = str::JoinTemp(path, ".pdf");
     return CreateEngineMupdfFromStream(stream, nameHint);
 }
 
