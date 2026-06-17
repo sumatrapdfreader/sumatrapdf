@@ -27,9 +27,14 @@ async function main() {
   console.log(`build took ${elapsed}s`);
 
   const path = join("out", "dbg64", "SumatraPDF-dll.exe");
-  Bun.spawn([path], {
+  // launch and detach: don't keep this script alive waiting for SumatraPDF to exit
+  const proc = Bun.spawn([path], {
     cwd: ".",
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "ignore",
   });
+  proc.unref();
 }
 
 await main();
