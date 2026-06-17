@@ -191,6 +191,7 @@ CmdZoomShrinkToFit,,Zoom: Shrink To Fit,"Shows at 100% if page is smaller than v
 CmdZoomFitPage,Ctrl + 0,Zoom: Fit Page,
 CmdZoomFitPageAndSinglePage,,Zoom: Fit Page and Single Page,
 CmdZoomFitWidth,Ctrl + 2,Zoom: Fit Width,
+CmdZoomFitByOrientation,,Zoom: Fit Page or Width by Orientation,"Fit width when the view is wider than tall (landscape), fit page otherwise (portrait); re-evaluated as the window/screen is resized or rotated"
 CmdZoomFitWidthAndContinuous,,Zoom: Fit Width And Continuous,
 CmdZoomIn,Ctrl + Add,Zoom In,
 CmdZoomOut,Ctrl + Subtract,Zoom Out,

@@ -81,6 +81,7 @@ export const commands = [
     "CmdZoomFitPage", "Zoom: Fit Page",
     "CmdZoomActualSize", "Zoom: Actual Size",
     "CmdZoomFitWidth", "Zoom: Fit Width",
+    "CmdZoomFitByOrientation", "Zoom: Fit Page or Width by Orientation",
     "CmdZoom6400", "Zoom: 6400%",
     "CmdZoom3200", "Zoom: 3200%",
     "CmdZoom1600", "Zoom: 1600%",

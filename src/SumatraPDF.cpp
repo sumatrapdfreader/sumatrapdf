@@ -6878,6 +6878,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdZoom8_33:
         case CmdZoomFitPage:
         case CmdZoomFitWidth:
+        case CmdZoomFitByOrientation:
         case CmdZoomFitContent:
         case CmdZoomShrinkToFit:
         case CmdZoomActualSize:

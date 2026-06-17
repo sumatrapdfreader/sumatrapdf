@@ -635,6 +635,12 @@ bool DisplayModel::LastBookPageVisible() const {
 /* Given a zoom level that can include a "virtual" zoom levels like kZoomFitWidth,
    kZoomFitPage or kZoomFitContent, calculate an absolute zoom level */
 float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) const {
+    if (kZoomFitByOrientation == zoomVirtual) {
+        // pick fit width for a landscape viewport, fit page for portrait, so the
+        // most readable zoom is used as the window/screen is rotated (issue #702).
+        // Recomputed on every relayout, so it tracks resizes automatically.
+        zoomVirtual = (viewPort.dx > viewPort.dy) ? kZoomFitWidth : kZoomFitPage;
+    }
     bool isShrinkToFit = (kZoomShrinkToFit == zoomVirtual);
     if (isShrinkToFit) {
         zoomVirtual = kZoomFitPage;
@@ -761,7 +767,8 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     ReportIf(!IsValidZoom(newZoomVirtual));
     zoomVirtual = newZoomVirtual;
     int nPages = PageCount();
-    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) || (kZoomShrinkToFit == newZoomVirtual)) {
+    if ((kZoomFitWidth == newZoomVirtual) || (kZoomFitPage == newZoomVirtual) || (kZoomShrinkToFit == newZoomVirtual) ||
+        (kZoomFitByOrientation == newZoomVirtual)) {
         /* we want the same zoom for all pages, so use the smallest zoom
            across the pages so that the largest page fits. In most documents
            all pages are the same size anyway */

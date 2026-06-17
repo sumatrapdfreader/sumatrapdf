@@ -48,6 +48,9 @@ bool IsValidZoom(float zoom) {
     if (kZoomShrinkToFit == zoom) {
         return true;
     }
+    if (kZoomFitByOrientation == zoom) {
+        return true;
+    }
     return false;
 }
 
@@ -96,6 +99,9 @@ float ZoomFromString(const char* s, float defVal) {
     if (str::EqIS(s, "shrink to fit")) {
         return kZoomShrinkToFit;
     }
+    if (str::EqIS(s, "fit by orientation")) {
+        return kZoomFitByOrientation;
+    }
     float zoom;
     if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom)) {
         return zoom;
@@ -128,6 +134,8 @@ void ZoomToString(char** dst, float zoom, FileState* stateForIssue2140) {
         *dst = str::Dup("fit content");
     } else if (kZoomShrinkToFit == zoom) {
         *dst = str::Dup("shrink to fit");
+    } else if (kZoomFitByOrientation == zoom) {
+        *dst = str::Dup("fit by orientation");
     } else {
         *dst = str::Format("%g", zoom);
     }

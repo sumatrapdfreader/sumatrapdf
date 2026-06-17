@@ -1180,6 +1180,7 @@ constexpr float kZoomFitPage = -1.F;
 constexpr float kZoomFitWidth = -2.F;
 constexpr float kZoomFitContent = -3.F;
 constexpr float kZoomShrinkToFit = -4.F;
+constexpr float kZoomFitByOrientation = -5.F;
 constexpr float kZoomActualSize = 100.0F;
 constexpr float kZoomMax = 6400.F; /* max zoom in % */
 constexpr float kZoomMin = 8.33F;  /* min zoom in % */

@@ -569,6 +569,9 @@ TempStr ZoomLevelStr(float zoom) {
     if (zoom == kZoomShrinkToFit) {
         return (TempStr)_TRA("Shrink To Fit");
     }
+    if (zoom == kZoomFitByOrientation) {
+        return (TempStr)_TRA("Fit by Orientation");
+    }
     if (zoom == 0) {
         return (TempStr) "-";
     }
@@ -580,6 +583,7 @@ TempStr ZoomLevelStr(float zoom) {
 static float gZoomLevels[] = {
     kZoomFitPage,
     kZoomFitWidth,
+    kZoomFitByOrientation,
     kZoomFitContent,
     kZoomShrinkToFit,
     0,
