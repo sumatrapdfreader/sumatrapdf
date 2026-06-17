@@ -7042,6 +7042,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             break;
 
+        case CmdExpandToCurrentPage:
+            ExpandTocToCurrentPage(win);
+            break;
+
         case CmdScrollUpHalfPage: {
             if (win->IsCurrentTabAbout()) {
                 HomePageOnVScroll(win, SB_PAGEUP);

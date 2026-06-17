@@ -236,6 +236,7 @@ export const commands = [
     "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
     "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",
     "CmdConvertImageToPdf", "Convert Image To PDF",
+    "CmdExpandToCurrentPage", "Expand TOC to Current Page",
     "CmdNone", "Do nothing",
 ];
 

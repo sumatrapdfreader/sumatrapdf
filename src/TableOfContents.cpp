@@ -367,6 +367,37 @@ void UpdateTocSelection(MainWindow* win, int currPageNo) {
     treeView->SelectItem(toSelect);
 }
 
+// expand the table of contents tree down to the entry matching the current
+// page, then select and scroll to it (issue #1998, like Explorer's
+// "Expand to current folder")
+void ExpandTocToCurrentPage(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    // make sure the bookmarks (table of contents) sidebar is visible
+    if (!win->tocVisible) {
+        SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
+    }
+    if (!win->tocLoaded || !win->tocVisible) {
+        return;
+    }
+    TreeView* treeView = win->tocTreeView;
+    int currPageNo = win->ctrl->CurrentPageNo();
+    TocItem* item = TreeItemForPageNo(treeView, currPageNo);
+    if (!item) {
+        return;
+    }
+    HTREEITEM hi = treeView->GetHandleByTreeItem((TreeItem)item);
+    if (!hi) {
+        return;
+    }
+    // TreeView_EnsureVisible expands any collapsed ancestors and scrolls the
+    // item into view, which is exactly the "expand to current page" behavior
+    TreeView_EnsureVisible(treeView->hwnd, hi);
+    treeView->SelectItem((TreeItem)item);
+    HwndSetFocus(treeView->hwnd);
+}
+
 static void UpdateDocTocExpansionStateRecur(TreeView* treeView, Vec<int>& tocState, TocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
@@ -539,6 +570,10 @@ static MenuDef menuDefContextToc[] = {
         CmdCollapseAll,
     },
     {
+        _TRN("Expand to Current Page"),
+        CmdExpandToCurrentPage,
+    },
+    {
         kMenuSeparator,
         0,
     },
@@ -672,6 +707,9 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             break;
         case CmdCollapseAll:
             win->tocTreeView->CollapseAll();
+            break;
+        case CmdExpandToCurrentPage:
+            ExpandTocToCurrentPage(win);
             break;
         case CmdFavoriteAdd:
             AddFavoriteFromToc(win, dti);

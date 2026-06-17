@@ -39,6 +39,7 @@ CmdToggleBookmarks,F12,Toggle Bookmarks,
 CmdToggleTableOfContents,,Toggle Table Of Contents,ver 3.6+
 CmdCollapseAll,,Collapse All,
 CmdExpandAll,,Expand All,
+CmdExpandToCurrentPage,,Expand TOC to Current Page,"In the Bookmarks (table of contents) sidebar, expand the tree down to the entry for the current page and select it, ver 3.7+"
 CmdOpenEmbeddedPDF,,Open Embedded PDF,
 CmdSaveEmbeddedFile,,Save Embedded File...,
 CmdCreateShortcutToFile,,Create .lnk Shortcut,

@@ -6,6 +6,7 @@ void ClearTocBox(MainWindow*);
 void ToggleTocBox(MainWindow*);
 void LoadTocTree(MainWindow*);
 void UpdateTocSelection(MainWindow*, int currPageNo);
+void ExpandTocToCurrentPage(MainWindow*);
 void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
 void UnsubclassToc(MainWindow*);
 void TocFilterChanged(MainWindow*);

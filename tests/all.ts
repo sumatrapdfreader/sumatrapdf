@@ -10,6 +10,7 @@
 // and register it in the `tests` array below.
 
 import { buildApp } from "./util.ts";
+import { testit as issue1998 } from "./issue-1998.ts";
 import { testit as issue906 } from "./issue-906.ts";
 import { testit as issue933 } from "./issue-933.ts";
 import { testit as issue4967 } from "./issue-4967.ts";
@@ -24,6 +25,7 @@ import { testit as issue5681 } from "./issue-5681.ts";
 import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
+  ["issue-1998", issue1998],
   ["issue-906", issue906],
   ["issue-933", issue933],
   ["issue-4967", issue4967],

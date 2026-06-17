@@ -246,6 +246,7 @@ static SeqStrings gCommandNames =
     "CmdCommandPaletteTOC\0"
     "CmdDebugToggleRenderInfo\0"
     "CmdConvertImageToPdf\0"
+    "CmdExpandToCurrentPage\0"
     "CmdNone\0"
     "\0";
 
@@ -482,6 +483,7 @@ static i32 gCommandIds[] = {
     CmdCommandPaletteTOC,
     CmdDebugToggleRenderInfo,
     CmdConvertImageToPdf,
+    CmdExpandToCurrentPage,
     CmdNone,
 };
 
@@ -718,6 +720,7 @@ SeqStrings gCommandDescriptions =
     "Command Palette: Table Of Contents\0"
     "Debug: Toggle Render Queue Info\0"
     "Convert Image To PDF\0"
+    "Expand TOC to Current Page\0"
     "Do nothing\0"
     "\0";
 // clang-format on
