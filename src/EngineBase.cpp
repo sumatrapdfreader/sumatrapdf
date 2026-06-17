@@ -388,6 +388,7 @@ struct TextExtractionThreadData {
 
 static void ExtractTextThread(TextExtractionThreadData* data) {
     data->engine->GetTextForPage(data->pageNo);
+    data->engine->ReleaseTextExtractionThreadContext();
     data->engine->Release();
     delete data;
 }

@@ -3766,6 +3766,10 @@ PageTextUtf8 EngineMupdf::ExtractPageTextUtf8(int pageNo) {
     return res;
 }
 
+void EngineMupdf::ReleaseTextExtractionThreadContext() {
+    ReleasePerThreadContext(this);
+}
+
 static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
     // dedupe/cycle-protect via resList, not pdf_mark_obj: marks mutate shared
     // pdf_obj flags, which races with other threads using marks (and would
