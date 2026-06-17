@@ -116,7 +116,8 @@ bool IsInstallerOrUninstallerExe() {
 static char* gAppDataDir = nullptr;
 
 void DeleteAppTools() {
-    str::FreePtr(&gAppDataDir);
+    // gAppDataDir is allocated from gLifetimeArena (freed wholesale on exit)
+    gAppDataDir = nullptr;
 }
 
 void SetAppDataDir(const char* dir) {
@@ -131,7 +132,10 @@ void SetAppDataDir(const char* dir) {
             ReportIf(true);
         }
     }
-    str::ReplaceWithCopy(&gAppDataDir, dir);
+    // lives for the whole program: allocate from the lifetime arena. SetAppDataDir
+    // is called at most a couple of times (default + a -appdata override), so the
+    // (rare) replaced value being retained until exit is negligible.
+    gAppDataDir = str::Dup(GetLifetimeArena(), dir);
 }
 
 TempStr GetAppDataDirTemp() {

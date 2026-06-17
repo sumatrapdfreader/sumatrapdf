@@ -711,16 +711,18 @@ static void ResetTempAllocatorWithLogging() {
     ResetTempAllocator();
 }
 
-// Logs the temp allocator's lifetime allocation count and peak bytes. Call on
-// exit, before logging is torn down.
-static void LogTempAllocatorLifetimeStats() {
-    Arena* a = GetTempAllocator();
+// Logs an arena's lifetime allocation count and peak bytes. Call on exit, before
+// logging is torn down.
+static void LogArenaLifetimeStats(const char* what, Arena* a) {
+    if (!a) {
+        return;
+    }
     u64 nAllocs = a->nAllocsLifetime;
     u64 peakBytes = a->peakBytesLifetime;
     char human[32];
     FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
-    logf("temp allocator lifetime: %s allocations, peak %s bytes (%s)\n",
-         str::FormatNumWithThousandSepTemp((i64)nAllocs), str::FormatNumWithThousandSepTemp((i64)peakBytes), human);
+    logf("%s lifetime: %s allocations, peak %s bytes (%s)\n", what, str::FormatNumWithThousandSepTemp((i64)nAllocs),
+         str::FormatNumWithThousandSepTemp((i64)peakBytes), human);
 }
 
 static int RunMessageLoop() {
@@ -2231,9 +2233,11 @@ Exit:
         UninstallCrashHandler();
     }
     DeleteAppTools();
-    LogTempAllocatorLifetimeStats();
+    LogArenaLifetimeStats("temp allocator", GetTempAllocator());
+    LogArenaLifetimeStats("lifetime arena", gLifetimeArena);
     DestroyLogging();
     DestroyTempAllocator();
+    DestroyLifetimeArena();
 
     return exitCode;
 }

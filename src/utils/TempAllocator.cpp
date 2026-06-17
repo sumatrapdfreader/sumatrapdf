@@ -37,6 +37,23 @@ void ResetTempAllocator() {
     }
 }
 
+// Arena for allocations that live for the whole lifetime of the program (i.e.
+// never freed until exit). Allocating them here avoids per-allocation frees and
+// lets us track how much such memory we use (logged on exit). Never Reset().
+Arena* gLifetimeArena = nullptr;
+
+Arena* GetLifetimeArena() {
+    if (!gLifetimeArena) {
+        gLifetimeArena = ArenaNew();
+    }
+    return gLifetimeArena;
+}
+
+void DestroyLifetimeArena() {
+    ArenaDelete(gLifetimeArena);
+    gLifetimeArena = nullptr;
+}
+
 namespace str {
 TempStr DupTemp(const char* s, size_t cb) {
     return str::Dup(GetTempAllocator(), s, cb);

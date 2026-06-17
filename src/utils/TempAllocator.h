@@ -7,6 +7,11 @@ Arena* GetTempAllocator();
 void DestroyTempAllocator();
 void ResetTempAllocator();
 
+// arena for allocations that live until the program exits (see TempAllocator.cpp)
+extern Arena* gLifetimeArena;
+Arena* GetLifetimeArena();
+void DestroyLifetimeArena();
+
 template <typename T>
 FORCEINLINE T* AllocArrayTemp(size_t n) {
     if (!mulSafe<size_t>(&n, sizeof(T))) {
