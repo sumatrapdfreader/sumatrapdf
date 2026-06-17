@@ -177,7 +177,14 @@ void PaintSelection(MainWindow* win, HDC hdc) {
     }
 
     ParsedColor* parsedCol = GetPrefsColor(gGlobalPrefs->fixedPageUI.selectionColor);
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col);
+    // honor the alpha channel of SelectionColor (#aarrggbb): a smaller alpha makes
+    // the overlay more transparent so the selected text stays crisp (issue #3209).
+    // Fall back to the historical default when no alpha is given (e.g. #rrggbb).
+    u8 alpha = GetAlpha(parsedCol->col);
+    if (alpha == 0) {
+        alpha = kSelectionDefaultAlpha;
+    }
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, parsedCol->col, alpha);
 }
 
 void UpdateTextSelection(MainWindow* win, bool select) {

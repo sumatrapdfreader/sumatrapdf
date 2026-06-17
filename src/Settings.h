@@ -49,7 +49,9 @@ struct FixedPageUI {
     char* backgroundColor;
     ParsedColor backgroundColorParsed;
     // color value for the text selection rectangle (also used to highlight
-    // found text)
+    // found text). Use an #aarrggbb value to control opacity: a smaller
+    // alpha (e.g. #40f5fc0c) makes the selection more transparent so the
+    // selected text stays crisp; #rrggbb uses the default opacity
     char* selectionColor;
     ParsedColor selectionColorParsed;
     // top, right, bottom and left margin (in that order) between window

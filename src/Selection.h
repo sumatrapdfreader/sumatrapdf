@@ -22,9 +22,12 @@ struct SelectionOnPage {
     static Vec<SelectionOnPage>* FromTextSelect(TextSel* textSel);
 };
 
+// default opacity of the selection rectangle when SelectionColor has no alpha
+constexpr u8 kSelectionDefaultAlpha = 0x5f;
+
 void DeleteOldSelectionInfo(MainWindow* win, bool alsoTextSel = false);
-void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor, u8 alpha = 0x5f,
-                                int margin = 1);
+void PaintTransparentRectangles(HDC hdc, Rect screenRc, Vec<Rect>& rects, COLORREF selectionColor,
+                                u8 alpha = kSelectionDefaultAlpha, int margin = 1);
 void PaintSelection(MainWindow* win, HDC hdc);
 void UpdateTextSelection(MainWindow* win, bool select = true);
 void CopySelectionToClipboard(MainWindow* win);
