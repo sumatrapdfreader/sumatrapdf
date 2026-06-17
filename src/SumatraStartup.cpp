@@ -711,6 +711,18 @@ static void ResetTempAllocatorWithLogging() {
     ResetTempAllocator();
 }
 
+// Logs the temp allocator's lifetime allocation count and peak bytes. Call on
+// exit, before logging is torn down.
+static void LogTempAllocatorLifetimeStats() {
+    Arena* a = GetTempAllocator();
+    u64 nAllocs = a->nAllocsLifetime;
+    u64 peakBytes = a->peakBytesLifetime;
+    char human[32];
+    FormatSizeHumanIntoBuf(peakBytes, Str(human, (int)sizeof(human)));
+    logf("temp allocator lifetime: %s allocations, peak %s bytes (%s)\n",
+         str::FormatNumWithThousandSepTemp((i64)nAllocs), str::FormatNumWithThousandSepTemp((i64)peakBytes), human);
+}
+
 static int RunMessageLoop() {
     MSG msg;
 
@@ -2219,6 +2231,7 @@ Exit:
         UninstallCrashHandler();
     }
     DeleteAppTools();
+    LogTempAllocatorLifetimeStats();
     DestroyLogging();
     DestroyTempAllocator();
 
