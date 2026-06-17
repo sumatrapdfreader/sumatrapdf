@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { detectVisualStudio2026, runLogged } from "./util";
 import { clearDirPreserveSettings } from "./clean";
@@ -27,13 +28,11 @@ async function main() {
   console.log(`build took ${elapsed}s`);
 
   const path = join("out", "dbg64", "SumatraPDF-dll.exe");
-  // launch and detach: don't keep this script alive waiting for SumatraPDF to exit
-  const proc = Bun.spawn([path], {
-    cwd: ".",
-    stdin: "ignore",
-    stdout: "ignore",
-    stderr: "ignore",
-  });
+  // launch fully detached so SumatraPDF keeps running after this script exits.
+  // Bun.spawn isn't enough here: it kills its children when the parent exits, so
+  // unref() alone would let the script return but immediately kill SumatraPDF.
+  // node:child_process with { detached: true } + unref() truly detaches it.
+  const proc = spawn(path, [], { cwd: ".", detached: true, stdio: "ignore" });
   proc.unref();
 }
 
