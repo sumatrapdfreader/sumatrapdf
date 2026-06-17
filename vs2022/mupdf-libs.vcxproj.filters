@@ -731,6 +731,9 @@
     <ClCompile Include="..\ext\gumbo-parser\src\parser.c">
       <Filter>gumbo-parser\src</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\gumbo-parser\src\gumbo_utils.c">
+      <Filter>gumbo-parser\src</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\gumbo-parser\src\string_buffer.c">
       <Filter>gumbo-parser\src</Filter>
     </ClCompile>

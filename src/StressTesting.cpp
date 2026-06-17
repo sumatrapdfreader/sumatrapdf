@@ -146,6 +146,13 @@ static void BenchFile(const char* path, const char* pagesSpec) {
     int pages = engine->PageCount();
     logf("page count: %d\n", pages);
 
+    // build the table of contents: this is what the UI does on open and
+    // it exercises the document's ToC parsing (e.g. MobiDoc), which the
+    // plain render path below doesn't reach
+    auto tToc = TimeGet();
+    TocTree* toc = engine->GetToc();
+    logf("toc: %.2f ms (%s)\n", TimeSinceInMs(tToc), toc ? "present" : "none");
+
     if (!pagesSpec) {
         for (int i = 1; i <= pages; i++) {
             BenchLoadRender(engine, i);

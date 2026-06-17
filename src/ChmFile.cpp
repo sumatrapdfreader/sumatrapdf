@@ -570,7 +570,7 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool i
         result = hadOne;
     }
 
-    gumbo_destroy_output(&opts, output);
+    gumbo_destroy_output_iter(&opts, output);
     return result;
 }
 

@@ -1990,7 +1990,7 @@ void ComicInfoParser::Parse(const ByteSlice& xmlData) {
         return;
     }
     ComicInfoVisitNode(this, output->document);
-    gumbo_destroy_output(&opts, output);
+    gumbo_destroy_output_iter(&opts, output);
 }
 
 // extract ComicBookInfo metadata

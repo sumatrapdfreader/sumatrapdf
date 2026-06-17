@@ -966,7 +966,7 @@ bool MobiDoc::HasToc() {
             }
         }
     }
-    gumbo_destroy_output(&opts, output);
+    gumbo_destroy_output_iter(&opts, output);
     return docTocIndex < doc->size();
 }
 
@@ -1060,7 +1060,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     walker.visitor = visitor;
     walker.Walk(output->document);
 
-    gumbo_destroy_output(&opts, output);
+    gumbo_destroy_output_iter(&opts, output);
     return true;
 }
 

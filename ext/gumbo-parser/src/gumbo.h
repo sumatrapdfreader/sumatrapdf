@@ -666,6 +666,14 @@ GumboOutput* gumbo_parse_with_options(
 /** Release the memory used for the parse tree & parse errors. */
 void gumbo_destroy_output(const GumboOptions* options, GumboOutput* output);
 
+/**
+ * SumatraPDF additions (see gumbo_utils.c). Iterative equivalents of
+ * destroy_node / gumbo_destroy_output that don't recurse, so a deeply nested
+ * document can't overflow the stack while being freed.
+ */
+void gumbo_destroy_node_iter(GumboOptions* options, GumboNode* node);
+void gumbo_destroy_output_iter(const GumboOptions* options, GumboOutput* output);
+
 #ifdef __cplusplus
 }
 #endif

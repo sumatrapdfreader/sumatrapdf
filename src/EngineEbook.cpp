@@ -1567,7 +1567,7 @@ static uint ExtractHttpCharset(const char* html, size_t htmlLen) {
         return 0;
     }
     uint cp = FindHttpCharsetInNode(output->document);
-    gumbo_destroy_output(&opts, output);
+    gumbo_destroy_output_iter(&opts, output);
     return cp;
 }
 

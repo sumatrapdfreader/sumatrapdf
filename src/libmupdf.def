@@ -915,6 +915,8 @@ EXPORTS
 	; ChmFile for TOC/index parsing)
 	gumbo_parse_with_options
 	gumbo_destroy_output
+	gumbo_destroy_output_iter
+	gumbo_destroy_node_iter
 	gumbo_normalized_tagname
 	gumbo_get_attribute
 
