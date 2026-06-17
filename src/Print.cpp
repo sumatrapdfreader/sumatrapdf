@@ -583,6 +583,81 @@ static RectF BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
 static short GetPaperSize(EngineBase* engine, int pageNo = 1);
 static void SetDevModePaperSizeForPage(DEVMODEW* devMode, EngineBase* engine, int pageNo);
 
+// Rasterize a page (or, for selections, a page-space sub-rectangle of it) onto
+// the printer HDC in horizontal device-pixel bands. Banding bounds peak memory
+// regardless of page size / printer DPI, replacing the old "shrink to half
+// resolution if the whole-page bitmap can't be allocated" fallback that quietly
+// degraded print quality. `pageRectFull` is the page-space area to print (the
+// page mediabox, or a selection rectangle). When `stretchTo` is null the content
+// is placed 1:1 at `offset`; otherwise it is scaled to fill `*stretchTo`.
+// Returns true if at least one band was rendered and blitted.
+static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom, int rotation,
+                             const RectF& pageRectFull, Point offset, const Rect* stretchTo, RenderTarget target,
+                             AbortCookieManager* abortCookie, const ProgressUpdateCb& progressCb) {
+    RectF devFull = engine.Transform(pageRectFull, pageNo, zoom, rotation);
+    int fullW = (int)(devFull.dx + 0.5f);
+    int fullH = (int)(devFull.dy + 0.5f);
+    if (fullW <= 0 || fullH <= 0) {
+        return false;
+    }
+    Rect devTarget = stretchTo ? *stretchTo : Rect(offset.x, offset.y, fullW, fullH);
+
+    // cap peak bitmap memory per band (RGBA pixels); 16 MB keeps memory small
+    // while keeping the band/blit count low for normal pages
+    const i64 kMaxBandBytes = 16 * 1024 * 1024;
+    int bandH = (int)std::max((i64)1, kMaxBandBytes / ((i64)fullW * 4));
+    bandH = std::min(bandH, fullH);
+
+    bool anyOk = false;
+    int dy0 = 0;
+    while (dy0 < fullH) {
+        if (WasCanceled(progressCb)) {
+            break;
+        }
+        int h = std::min(bandH, fullH - dy0);
+        // the page-space rectangle whose rendering produces exactly this band of
+        // device rows; the inverse transform handles rotation (a horizontal
+        // device band maps to a page strip along whatever axis matches)
+        RectF devBand(devFull.x, devFull.y + (float)dy0, devFull.dx, (float)h);
+        RectF pageBand = engine.Transform(devBand, pageNo, zoom, rotation, /* inverse */ true);
+
+        RenderPageArgs args(pageNo, zoom, rotation, &pageBand, target);
+        if (abortCookie) {
+            args.cookie_out = &abortCookie->cookie;
+        }
+        RenderedBitmap* bmp = engine.RenderPage(args);
+        if (abortCookie) {
+            abortCookie->Clear();
+        }
+        if (!bmp || !bmp->IsValid()) {
+            delete bmp;
+            // couldn't allocate even a band: try thinner bands before giving up,
+            // so we still print at full resolution (never the old whole-page shrink)
+            if (bandH > 1) {
+                bandH = std::max(1, bandH / 2);
+                continue; // retry the same dy0 with a thinner band
+            }
+            break;
+        }
+
+        // place this band: device rows [dy0, dy0+h) of the full [0, fullH) output,
+        // mapped into devTarget (1:1 when not stretching). Compute the bottom edge
+        // the same way so adjacent bands meet with no seam.
+        Rect rc;
+        rc.x = devTarget.x;
+        rc.dx = devTarget.dx;
+        rc.y = devTarget.y + (int)((i64)dy0 * devTarget.dy / fullH);
+        int yBot = devTarget.y + (int)((i64)(dy0 + h) * devTarget.dy / fullH);
+        rc.dy = yBot - rc.y;
+        if (bmp->Blit(hdc, rc)) {
+            anyOk = true;
+        }
+        delete bmp;
+        dy0 += h;
+    }
+    return anyOk;
+}
+
 static bool PrintToDevice(const PrintData& pd) {
     ReportIf(!pd.engine);
     if (!pd.engine) {
@@ -745,26 +820,8 @@ static bool PrintToDevice(const PrintData& pd) {
                     offset.y += (int)(printable.dy - bSize.dy * zoom) / 2;
                 }
 
-                bool ok = false;
-                short shrink = 1;
-                do {
-                    RenderPageArgs args(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion,
-                                        RenderTarget::Print);
-                    if (abortCookie) {
-                        args.cookie_out = &abortCookie->cookie;
-                    }
-                    RenderedBitmap* bmp = engine.RenderPage(args);
-                    if (abortCookie) {
-                        abortCookie->Clear();
-                    }
-                    if (bmp && bmp->IsValid()) {
-                        Size size = bmp->GetSize();
-                        Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
-                        ok = bmp->Blit(hdc, rc);
-                    }
-                    delete bmp;
-                    shrink *= 2;
-                } while (!ok && shrink < 32 && !WasCanceled(progressCb));
+                PrintPageInBands(engine, hdc, pd.sel.at(i).pageNo, zoom, pd.rotation, *clipRegion, offset, nullptr,
+                                 RenderTarget::Print, abortCookie, progressCb);
             }
             // TODO: abort if !ok?
 
@@ -895,30 +952,16 @@ static bool PrintToDevice(const PrintData& pd) {
                 offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
             }
 
-            bool ok = false;
-            short shrink = 1;
-            do {
-                RenderPageArgs args(pageNo, zoom / shrink, rotation, nullptr, RenderTarget::Print);
-                if (abortCookie) {
-                    args.cookie_out = &abortCookie->cookie;
-                }
-                RenderedBitmap* bmp = engine.RenderPage(args);
-                if (abortCookie) {
-                    abortCookie->Clear();
-                }
-                if (bmp && bmp->IsValid()) {
-                    auto size = bmp->GetSize();
-                    Rect rc(offset.x, offset.y, size.dx * shrink, size.dy * shrink);
-                    if (PrintScaleAdv::Stretch == pd.advData.scale) {
-                        // resize the rendered page to exactly fill the printable area
-                        rc = Rect(0, 0, printable.dx, printable.dy);
-                    }
-                    ok = bmp->Blit(hdc, rc);
-                }
-                delete bmp;
-                shrink *= 2;
-            } while (!ok && shrink < 32 && !WasCanceled(progressCb));
-            // TODO: abort if !ok?
+            RectF mediabox = engine.PageMediabox((int)pageNo);
+            if (PrintScaleAdv::Stretch == pd.advData.scale) {
+                // resize the rendered page to exactly fill the printable area
+                Rect stretchRc(0, 0, printable.dx, printable.dy);
+                PrintPageInBands(engine, hdc, (int)pageNo, zoom, rotation, mediabox, Point(0, 0), &stretchRc,
+                                 RenderTarget::Print, abortCookie, progressCb);
+            } else {
+                PrintPageInBands(engine, hdc, (int)pageNo, zoom, rotation, mediabox, offset, nullptr,
+                                 RenderTarget::Print, abortCookie, progressCb);
+            }
 
             res = EndPage(hdc);
             bool wasCanceled = WasCanceled(progressCb);
