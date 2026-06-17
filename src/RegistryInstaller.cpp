@@ -186,10 +186,12 @@ static bool RegisterForOpenWith(HKEY hkey, const char* installedExePath) {
         char* progIDKey = str::JoinTemp("Software\\Classes\\", progIDName);
         // ok &= CreateRegKey(hkey, progIDKey);
 
-        // .pdf => "PDF file"
-        char* extUC = str::ToUpperInPlace(str::DupTemp(ext + 1));
-        char* desc = str::JoinTemp(extUC, " File");
-        ok &= LoggedWriteRegStr(hkey, progIDKey, nullptr, desc);
+        // Don't set the progID's friendly name (its (Default) value). A hardcoded
+        // English string like "PDF File" overrides the localized type name that
+        // Windows generates for the file type, so non-English systems wrongly show
+        // English names in Explorer's "Type" column (issue #3323). Delete any value
+        // a previous version wrote so Windows falls back to the localized name.
+        ok &= LoggedDeleteRegValue(hkey, progIDKey, nullptr);
         // ok &= LoggedWriteRegStr(hkey, progIDKey, L"AppUserModelID", L"SumatraPDF"); // ???
 
         // Per https://docs.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticona
