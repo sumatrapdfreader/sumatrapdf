@@ -12,16 +12,30 @@
 // visible than when fully collapsed -- and an item must be selected. Reverting
 // the fix leaves the tree collapsed with no expansion, so the test fails.
 //
-// Needs a PDF with a multi-level outline; uses one from the local bugs folder
-// and skips cleanly if it isn't present (so tests/all.ts keeps going).
+// Drives the app from Bun via FFI (tests/winapi.ts). Needs a PDF with a
+// multi-level outline; uses one from the local bugs folder and skips cleanly if
+// it isn't present (so tests/all.ts keeps going).
 
-import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, tmpPath } from "./util";
+import { EXE, tmpPath } from "./util";
+import {
+  collapseTreeRoots,
+  countVisibleTreeRows,
+  findChildWindow,
+  sendMessage,
+  sleep,
+  treeGetSelection,
+  waitForTopWindow,
+  WM_COMMAND,
+} from "./winapi";
 
 // a PDF with a nested (multi-level) table of contents
 const TOC_PDF = "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\bug-1352-merged_manuals-1.4.2.pdf";
+
+// command ids (see src/Commands.h)
+const CmdGoToLastPage = 264;
+const CmdExpandToCurrentPage = 433;
 
 const SETTINGS = [
   `ShowToc = true`,
@@ -51,35 +65,64 @@ export async function testit(): Promise<void> {
   mkdirSync(appdata, { recursive: true });
   writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const ps1 = join(ROOT, "tests", "issue-1998.verify.ps1");
-  const r = spawnSync(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-Exe", EXE, "-Pdf", pdf, "-AppData", appdata],
-    { encoding: "utf8", timeout: 90_000 },
-  );
-  const out = (r.stdout || "") + (r.stderr || "");
-  const m = out.match(/RESULT collapsed=(\d+) after=(\d+) hasSelection=(\d+)/);
-  if (!m) {
-    throw new Error(`could not read TOC tree state; output:\n${out}`);
-  }
-  const collapsed = parseInt(m[1], 10);
-  const after = parseInt(m[2], 10);
-  const hasSelection = m[3] === "1";
-  console.log(`  collapsed rows=${collapsed}, after-expand rows=${after}, hasSelection=${hasSelection}`);
+  // kill stale dev-build instances so reuse-instance can't forward our launch
+  // to an old window (which would leave our process window-less)
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  await sleep(300);
 
-  if (collapsed <= 0) {
-    throw new Error(`baseline collapsed tree has no rows (${collapsed}) -- test setup wrong`);
+  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
+  try {
+    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
+    if (!frame) {
+      throw new Error("SumatraPDF main window did not appear");
+    }
+
+    // wait for the TOC tree to load with items
+    let tree = 0;
+    for (let i = 0; i < 60; i++) {
+      tree = findChildWindow(frame, "SysTreeView32");
+      if (tree && countVisibleTreeRows(tree) > 0) {
+        break;
+      }
+      await sleep(250);
+    }
+    if (!tree) {
+      throw new Error("could not find the TOC tree window");
+    }
+
+    // go to the last page (deep in the document, under nested TOC entries)
+    sendMessage(frame, WM_COMMAND, CmdGoToLastPage, 0);
+    await sleep(600);
+
+    // collapse the whole tree, then measure
+    collapseTreeRoots(tree);
+    await sleep(300);
+    const collapsed = countVisibleTreeRows(tree);
+
+    // invoke the command under test
+    sendMessage(frame, WM_COMMAND, CmdExpandToCurrentPage, 0);
+    await sleep(600);
+    const after = countVisibleTreeRows(tree);
+    const hasSelection = treeGetSelection(tree) !== 0n;
+
+    console.log(`  collapsed rows=${collapsed}, after-expand rows=${after}, hasSelection=${hasSelection}`);
+
+    if (collapsed <= 0) {
+      throw new Error(`baseline collapsed tree has no rows (${collapsed}) -- test setup wrong`);
+    }
+    if (!hasSelection) {
+      throw new Error(`CmdExpandToCurrentPage did not select a TOC entry`);
+    }
+    if (after <= collapsed) {
+      throw new Error(
+        `CmdExpandToCurrentPage did not expand the tree to the current page ` +
+          `(visible rows ${collapsed} -> ${after}; expected an increase)`,
+      );
+    }
+    console.log(`  expanded TOC to current page: ${collapsed} -> ${after} visible rows ✓`);
+  } finally {
+    proc.kill();
   }
-  if (!hasSelection) {
-    throw new Error(`CmdExpandToCurrentPage did not select a TOC entry`);
-  }
-  if (after <= collapsed) {
-    throw new Error(
-      `CmdExpandToCurrentPage did not expand the tree to the current page ` +
-        `(visible rows ${collapsed} -> ${after}; expected an increase)`,
-    );
-  }
-  console.log(`  expanded TOC to current page: ${collapsed} -> ${after} visible rows ✓`);
 }
 
 if (import.meta.main) {

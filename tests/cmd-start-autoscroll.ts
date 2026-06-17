@@ -6,11 +6,31 @@
 // The test puts the real cursor over the canvas, invokes the command via
 // WM_COMMAND, moves the cursor offset to set a scroll speed, and checks the
 // document scrolls -- then invokes the command again and checks it stops.
+//
+// Drives the app from Bun via FFI (tests/winapi.ts).
 
-import { spawnSync } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, ROOT, tmpPath } from "./util";
+import { EXE, tmpPath } from "./util";
+import {
+  clientToScreen,
+  getClientRect,
+  getScrollPos,
+  moveWindow,
+  packCoords,
+  postMessage,
+  setCursorPos,
+  showWindow,
+  sleep,
+  SW_RESTORE,
+  waitForChildWindow,
+  waitForTopWindow,
+  WM_COMMAND,
+  WM_MOUSEMOVE,
+} from "./winapi";
+
+// command id (see src/Commands.h)
+const CmdStartAutoScroll = 434;
 
 function makePdf(nPages: number): string {
   const objs: string[] = [];
@@ -55,32 +75,64 @@ export async function testit(): Promise<void> {
   mkdirSync(appdata, { recursive: true });
   writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const ps1 = join(ROOT, "tests", "cmd-start-autoscroll.verify.ps1");
-  const r = spawnSync(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-Exe", EXE, "-Pdf", pdf, "-AppData", appdata],
-    { encoding: "utf8", timeout: 90_000 },
-  );
-  const out = (r.stdout || "") + (r.stderr || "");
-  const m = out.match(/RESULT start=(\d+) mid=(\d+) afterStop=(\d+)/);
-  if (!m) {
-    throw new Error(`could not read scroll position; output:\n${out}`);
-  }
-  const start = parseInt(m[1], 10);
-  const mid = parseInt(m[2], 10);
-  const afterStop = parseInt(m[3], 10);
-  const scrolled = mid - start;
-  const afterStopDelta = afterStop - mid;
-  console.log(`  invoked command: scrolled ${scrolled}px (pos ${start}->${mid}), then +${afterStopDelta}px after stop`);
+  Bun.spawnSync(["taskkill", "/F", "/IM", "SumatraPDF-dll.exe"]);
+  await sleep(300);
 
-  if (scrolled < 30) {
-    throw new Error(`CmdStartAutoScroll did not start auto-scroll (moved only ${scrolled}px)`);
+  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
+  try {
+    const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
+    if (!frame) {
+      throw new Error("SumatraPDF main window did not appear");
+    }
+    showWindow(frame, SW_RESTORE);
+    moveWindow(frame, 0, 0, 900, 750);
+    await sleep(1200);
+
+    const canvas = await waitForChildWindow(frame, "SUMATRA_PDF_CANVAS");
+    if (!canvas) {
+      throw new Error("could not find the canvas window");
+    }
+
+    const rc = getClientRect(canvas);
+    const cx = Math.floor((rc.right - rc.left) / 2);
+    const cy = Math.floor((rc.bottom - rc.top) / 2);
+
+    // put the real cursor over the canvas center -- the command anchors there
+    const scr = clientToScreen(canvas, cx, cy);
+    setCursorPos(scr.x, scr.y);
+    await sleep(150);
+
+    // invoke CmdStartAutoScroll (no middle button involved)
+    postMessage(frame, WM_COMMAND, CmdStartAutoScroll, 0);
+    await sleep(100);
+
+    // move the cursor offset down from the anchor to set a scroll speed
+    postMessage(canvas, WM_MOUSEMOVE, 0, packCoords(cx, cy + 80));
+    await sleep(150);
+    const start = getScrollPos(canvas);
+    await sleep(800);
+    const mid = getScrollPos(canvas);
+
+    // invoke again to stop (toggles off, like a second middle-click)
+    postMessage(frame, WM_COMMAND, CmdStartAutoScroll, 0);
+    await sleep(300);
+    const afterStop = getScrollPos(canvas);
+
+    const scrolled = mid - start;
+    const afterStopDelta = afterStop - mid;
+    console.log(`  invoked command: scrolled ${scrolled}px (pos ${start}->${mid}), then +${afterStopDelta}px after stop`);
+
+    if (scrolled < 30) {
+      throw new Error(`CmdStartAutoScroll did not start auto-scroll (moved only ${scrolled}px)`);
+    }
+    // after the second invocation the auto-scroll must stop (allow a little timer slack)
+    if (afterStopDelta > 15) {
+      throw new Error(`CmdStartAutoScroll did not stop on the second invocation (+${afterStopDelta}px after stop)`);
+    }
+    console.log(`  CmdStartAutoScroll starts and stops auto-scroll ✓`);
+  } finally {
+    proc.kill();
   }
-  // after the second invocation the auto-scroll must stop (allow a little timer slack)
-  if (afterStopDelta > 15) {
-    throw new Error(`CmdStartAutoScroll did not stop on the second invocation (+${afterStopDelta}px after stop)`);
-  }
-  console.log(`  CmdStartAutoScroll starts and stops auto-scroll ✓`);
 }
 
 if (import.meta.main) {
