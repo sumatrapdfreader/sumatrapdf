@@ -912,27 +912,32 @@ TempStr MobiDoc::GetPropertyTemp(const char* name) {
     return strconv::StrToUtf8Temp(v, textEncoding);
 }
 
-static const GumboNode* FindMobiTocReference(const GumboNode* node) {
-    if (!node) {
-        return nullptr;
-    }
-    if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "reference")) {
-        const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
-        if (type && str::EqI(type->value, "toc")) {
-            return node;
+static const GumboNode* FindMobiTocReference(const GumboNode* root) {
+    // iterative pre-order traversal. Avoids recursion so a deeply nested
+    // document (e.g. a huge MOBI dictionary) can't overflow the stack
+    Vec<const GumboNode*> toVisit;
+    toVisit.Append(root);
+    while (toVisit.size() > 0) {
+        const GumboNode* node = toVisit.Pop();
+        if (!node) {
+            continue;
         }
-    }
-    const GumboVector* children = nullptr;
-    if (node->type == GUMBO_NODE_ELEMENT) {
-        children = &node->v.element.children;
-    } else if (node->type == GUMBO_NODE_DOCUMENT) {
-        children = &node->v.document.children;
-    }
-    if (children) {
-        for (unsigned int i = 0; i < children->length; i++) {
-            const GumboNode* found = FindMobiTocReference((const GumboNode*)children->data[i]);
-            if (found) {
-                return found;
+        if (node->type == GUMBO_NODE_ELEMENT && GumboTagNameIs(node, "reference")) {
+            const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
+            if (type && str::EqI(type->value, "toc")) {
+                return node;
+            }
+        }
+        const GumboVector* children = nullptr;
+        if (node->type == GUMBO_NODE_ELEMENT) {
+            children = &node->v.element.children;
+        } else if (node->type == GUMBO_NODE_DOCUMENT) {
+            children = &node->v.document.children;
+        }
+        if (children) {
+            // push in reverse so children are visited in document order
+            for (unsigned int i = children->length; i > 0; i--) {
+                toVisit.Append((const GumboNode*)children->data[i - 1]);
             }
         }
     }
