@@ -603,7 +603,7 @@ static bool OpenFile(StressTest* st, const char* fileName) {
             rect.Inflate(rand() % 10, rand() % 10);
             SendMessageW(st->win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
             if (st->win->AsFixed()) {
-                st->win->cbHandler->RequestRendering(1);
+                st->win->cbHandler->RequestRendering(st->win->AsFixed(), 1);
             }
             ScheduleRepaint(st->win, 0);
         }

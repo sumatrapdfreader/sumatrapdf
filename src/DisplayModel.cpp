@@ -263,7 +263,8 @@ void DisplayModel::RenderFinished(PageRenderRequest* req) {
     // longer visible). A failed render still continues the chain so one bad
     // page doesn't stop predicting the rest.
     if (req->nPredictiveRequests > 0) {
-        cb->RequestPredictiveRendering(req->predictiveOriginPageNo, req->predictiveRequests, req->nPredictiveRequests);
+        cb->RequestPredictiveRendering(this, req->predictiveOriginPageNo, req->predictiveRequests,
+                                       req->nPredictiveRequests);
     }
 }
 
@@ -1301,7 +1302,7 @@ void DisplayModel::RenderVisibleParts() {
     // empty, so request the visible pages first and last to
     // make sure they're rendered before the predicted pages
     for (int pageNo = firstVisiblePage; pageNo <= lastVisiblePage; pageNo++) {
-        cb->RequestRendering(pageNo);
+        cb->RequestRendering(this, pageNo);
     }
 
     if (gPredictiveRender) {
@@ -1327,7 +1328,7 @@ void DisplayModel::RenderVisibleParts() {
             }
         }
         if (nPred > 0) {
-            cb->RequestPredictiveRendering(lastVisiblePage, pred, nPred);
+            cb->RequestPredictiveRendering(this, lastVisiblePage, pred, nPred);
         }
     }
 
@@ -1336,7 +1337,7 @@ void DisplayModel::RenderVisibleParts() {
     // * if queue fills up, the invisible pages from predictive rendering
     //   wont be rendered
     for (int pageNo = lastVisiblePage; pageNo >= firstVisiblePage; pageNo--) {
-        cb->RequestRendering(pageNo);
+        cb->RequestRendering(this, pageNo);
     }
 }
 

@@ -858,8 +858,8 @@ struct ControllerCallbackHandler : DocControllerCallback {
     void PageNoChanged(DocController* ctrl, int pageNo) override;
     void ZoomChanged(DocController* ctrl, float zoomVirtual) override;
     void UpdateScrollbars(Size canvas) override;
-    void RequestRendering(int pageNo) override;
-    void RequestPredictiveRendering(int originPageNo, const int* pages, int nPages) override;
+    void RequestRendering(DisplayModel* dm, int pageNo) override;
+    void RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages, int nPages) override;
     void CleanUp(DisplayModel* dm) override;
     void RenderThumbnail(DisplayModel* dm, Size size, const OnBitmapRendered*) override;
     void GotoLink(IPageDestination* dest) override { win->linkHandler->GotoLink(dest); }
@@ -993,13 +993,11 @@ static void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
 }
 
 /* Send the request to render a given page to a rendering thread */
-void ControllerCallbackHandler::RequestRendering(int pageNo) {
-    ReportIf(!win->AsFixed());
-    if (!win->AsFixed()) {
+void ControllerCallbackHandler::RequestRendering(DisplayModel* dm, int pageNo) {
+    ReportIf(!dm);
+    if (!dm) {
         return;
     }
-
-    DisplayModel* dm = win->AsFixed();
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
@@ -1008,12 +1006,12 @@ void ControllerCallbackHandler::RequestRendering(int pageNo) {
     }
 }
 
-void ControllerCallbackHandler::RequestPredictiveRendering(int originPageNo, const int* pages, int nPages) {
-    ReportIf(!win->AsFixed());
-    if (!win->AsFixed()) {
+void ControllerCallbackHandler::RequestPredictiveRendering(DisplayModel* dm, int originPageNo, const int* pages,
+                                                           int nPages) {
+    ReportIf(!dm);
+    if (!dm) {
         return;
     }
-    DisplayModel* dm = win->AsFixed();
     gRenderCache->RequestPredictiveRendering(dm, originPageNo, pages, nPages);
 }
 
