@@ -40,6 +40,17 @@ static DWORD WINAPI RenderCacheThread(LPVOID data);
 bool gShowTileLayout = false;
 int gMaxRenderThreads = 8;
 
+// RenderCache's verbose per-operation logging (FreePage / Paint / DropCacheEntry
+// / ...) is noisy, so it's disabled by default. Set gLogRenderCache = true to
+// re-enable it when debugging the cache.
+static bool gLogRenderCache = false;
+#define rcLogf(...)             \
+    do {                        \
+        if (gLogRenderCache) {  \
+            logvf(__VA_ARGS__); \
+        }                       \
+    } while (0)
+
 struct RenderThreadData {
     RenderCache* cache;
     int threadIdx;
@@ -103,8 +114,8 @@ RenderCache::~RenderCache() {
         }
     }
     if (hasCurReq || 0 != requestCount || cacheCount != 0) {
-        logvf("RenderCache::~RenderCache: hasCurReq: %d, requestCount: %d, cacheCount: %d\n", (int)hasCurReq,
-              requestCount, cacheCount);
+        rcLogf("RenderCache::~RenderCache: hasCurReq: %d, requestCount: %d, cacheCount: %d\n", (int)hasCurReq,
+               requestCount, cacheCount);
         ReportIf(true);
     }
 
@@ -157,8 +168,8 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     }
     ReportIf(entry->refs != 0);
     ReportIf(cache[idx] != entry);
-    logvf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo,
-          entry->rotation, entry->zoom);
+    rcLogf("RenderCache::DropCacheEntry: dm: 0x%p, pageNo: %d, rotation: %d, zoom: %.2f\n", entry->dm, entry->pageNo,
+           entry->rotation, entry->zoom);
 
     delete entry;
 
@@ -301,7 +312,7 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
 /* Free all bitmaps in the cache that are of a specific page (or all pages
    of the given DisplayModel, or even all invisible pages). */
 void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
-    logvf("RenderCache::FreePage: dm: 0x%p, pageNo: %d\n", dm, pageNo);
+    rcLogf("RenderCache::FreePage: dm: 0x%p, pageNo: %d\n", dm, pageNo);
     ReportIf(!dm || (pageNo == kInvalidPageNo));
     if (!dm || (pageNo == kInvalidPageNo)) {
         return;
@@ -326,7 +337,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
 }
 
 void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
-    logvf("RenderCache::FreeForDisplayModel: dm: 0x%p\n", dm);
+    rcLogf("RenderCache::FreeForDisplayModel: dm: 0x%p\n", dm);
     ScopedCritSec scope(&cacheAccess);
     // must go from end becaues freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
@@ -338,7 +349,7 @@ void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
 }
 
 void RenderCache::FreeNotVisible() {
-    // logvf("RenderCache::FreeNotVisible\n");
+    // rcLogf("RenderCache::FreeNotVisible\n");
     ScopedCritSec scope(&cacheAccess);
     // must go from end becaues freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
@@ -443,7 +454,7 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
 
 // reduce the size of tiles in order to hopefully use less memory overall
 bool RenderCache::ReduceTileSize() {
-    logvf("RenderCache::ReduceTileSize: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
+    rcLogf("RenderCache::ReduceTileSize: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
     if (maxTileSize.dx < 200 || maxTileSize.dy < 200) {
         return false;
     }
@@ -495,7 +506,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage,
                                    const PredictiveChain* chain) {
-    // logvf("RenderCache::RequestRendering: pageNo %d\n", pageNo);
+    // rcLogf("RenderCache::RequestRendering: pageNo %d\n", pageNo);
     ScopedCritSec scope(&requestAccess);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
@@ -627,7 +638,7 @@ void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectF* pageRect,
                          const Func1<PageRenderRequest*>& renderFinishedCb, const PredictiveChain* chain) {
-    logvf("RenderCache::Render: pageNo %d\n", pageNo);
+    rcLogf("RenderCache::Render: pageNo %d\n", pageNo);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {
         return false;
@@ -1001,7 +1012,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
-        logvf("RenderCache::Paint() pageNo: %d, bounds={%d,%d,%d,%d} in %.2f ms\n", pageNo, bounds.x, bounds.y, bounds.dx,
+        rcLogf("RenderCache::Paint() pageNo: %d, bounds={%d,%d,%d,%d} in %.2f ms\n", pageNo, bounds.x, bounds.y, bounds.dx,
              bounds.dy, dur);
     };
 #endif
@@ -1080,7 +1091,7 @@ int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageI
             }
             // free tiles with different resolution
             TilePosition tile(targetRes, (USHORT)-1, 0);
-            logvf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
+            rcLogf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
             FreePage(dm, pageNo, &tile);
         }
         FreeNotVisible();

@@ -536,7 +536,6 @@ void DisplayModel::BuildPagesInfo() {
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
     // +1 so we can index by pageNo (1-based)
-    log("DisplayModel::BuildPagesInfo started\n");
     auto timeStart = TimeGet();
     defer {
         auto dur = TimeSinceInMs(timeStart);
