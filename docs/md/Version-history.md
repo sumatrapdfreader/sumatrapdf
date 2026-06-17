@@ -4,6 +4,8 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
+- middle-click auto-scroll is now smooth: it's driven by a high-frequency timer with fractional-pixel accumulation instead of a coarse 20ms timer with integer steps, so it no longer looks choppy (also enables fine, slow scroll speeds) (fixes #2693)
+- add `CmdStartAutoScroll` (`Start Auto-Scroll` in the `Ctrl + k` command palette) to start middle-click-style auto-scroll without a middle mouse button (useful on laptops / trackpads): it anchors at the cursor, then move the cursor away to scroll; invoke again or middle-click to stop. Bind it to a key via [shortcuts](Customizing-keyboard-shortcuts.md)
 - associated file types now show their localized name in Explorer's "Type" column on non-English Windows; previously registration hardcoded an English name like "PDF File", overriding the name Windows would localize (fixes #3323)
 - add `CmdExpandToCurrentPage` (`Expand TOC to Current Page`, in the Bookmarks sidebar right-click menu and the `Ctrl + k` command palette) to expand the table of contents tree down to the current page's entry and select it, like Explorer's "Expand to current folder" (fixes #1998)
 - Save As now warns instead of failing silently when a file can't be written (e.g. the destination path exceeds the Windows `MAX_PATH` limit); previously there was no way to tell the save hadn't happened (fixes #1016)

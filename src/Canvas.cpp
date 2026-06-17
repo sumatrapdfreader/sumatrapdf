@@ -976,8 +976,8 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM) {
 
         case MouseAction::Scrolling: {
             win->annotationUnderCursor = nullptr;
-            win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
-            win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+            win->yScrollSpeed = (float)(y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
+            win->xScrollSpeed = (float)(x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             break;
         }
         case MouseAction::SelectingText:
@@ -1521,6 +1521,27 @@ static void OnMouseMiddleButtonDown(MainWindow* win, int x, int y, WPARAM) {
             win->mouseAction = MouseAction::None;
             break;
     }
+}
+
+// Begin (or, if already active, end) middle-click-style auto-scroll anchored at
+// canvas client point (x, y). Shared by the middle mouse button and by
+// CmdStartAutoScroll, so auto-scroll can be triggered without a middle button.
+static void ToggleAutoScroll(MainWindow* win, int x, int y) {
+    win->xScrollAccum = 0;
+    win->yScrollAccum = 0;
+    SetTimer(win->hwndCanvas, kAutoScrollTimerID, USER_TIMER_MINIMUM, nullptr);
+    OnMouseMiddleButtonDown(win, x, y, 0);
+}
+
+// CmdStartAutoScroll entry point: start/stop auto-scroll anchored at the current
+// cursor position, exactly as a middle-click there would. Move the cursor away
+// from that point to scroll; invoke again (or middle-click, or change focus) to stop.
+void StartAutoScrollAtCursor(MainWindow* win) {
+    if (!win || !win->AsFixed()) {
+        return;
+    }
+    Point pt = HwndGetCursorPos(win->hwndCanvas);
+    ToggleAutoScroll(win, pt.x, pt.y);
 }
 
 static void OnMouseMiddleButtonUp(MainWindow* win, int x, int y, WPARAM) {
@@ -2781,9 +2802,10 @@ static LRESULT WndProcCanvasFixedPageUI(MainWindow* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_MBUTTONDOWN:
-            SetTimer(hwnd, SMOOTHSCROLL_TIMER_ID, SMOOTHSCROLL_DELAY_IN_MS, nullptr);
+            // drive auto-scroll from a high-frequency timer (with fractional-pixel
+            // accumulation in the handler) so it's smooth, not choppy (issue #2693)
             // TODO: Create window that shows location of initial click for reference
-            OnMouseMiddleButtonDown(win, x, y, wp);
+            ToggleAutoScroll(win, x, y);
             return 0;
 
         case WM_MBUTTONUP:
@@ -2990,17 +3012,39 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             break;
 
         case SMOOTHSCROLL_TIMER_ID:
-            if (MouseAction::Scrolling == win->mouseAction) {
-                win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
-            } else if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
+            if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
                 pt = HwndGetCursorPos(win->hwndCanvas);
                 if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y)) {
                     OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
                 }
             } else {
                 KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
-                win->yScrollSpeed = 0;
+            }
+            break;
+
+        case kAutoScrollTimerID:
+            if (MouseAction::Scrolling == win->mouseAction) {
+                // xScrollSpeed/yScrollSpeed are in pixels per 20ms; this timer
+                // fires far more often, so move only the matching fraction each
+                // tick and carry the leftover sub-pixel amount, which keeps
+                // middle-click auto-scroll smooth instead of stepping (issue #2693)
+                constexpr float kBaseIntervalMs = 20.0f;
+                float scale = (float)USER_TIMER_MINIMUM / kBaseIntervalMs;
+                win->xScrollAccum += win->xScrollSpeed * scale;
+                win->yScrollAccum += win->yScrollSpeed * scale;
+                int dx = (int)win->xScrollAccum;
+                int dy = (int)win->yScrollAccum;
+                win->xScrollAccum -= (float)dx;
+                win->yScrollAccum -= (float)dy;
+                if (dx != 0 || dy != 0) {
+                    win->MoveDocBy(dx, dy);
+                }
+            } else {
+                KillTimer(hwnd, kAutoScrollTimerID);
                 win->xScrollSpeed = 0;
+                win->yScrollSpeed = 0;
+                win->xScrollAccum = 0;
+                win->yScrollAccum = 0;
             }
             break;
 
@@ -3517,7 +3561,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 win->mouseAction = MouseAction::None;
                 win->xScrollSpeed = 0;
                 win->yScrollSpeed = 0;
-                KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
+                win->xScrollAccum = 0;
+                win->yScrollAccum = 0;
+                KillTimer(hwnd, kAutoScrollTimerID);
             }
             return DefWindowProc(hwnd, msg, wp, lp);
 

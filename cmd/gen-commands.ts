@@ -237,6 +237,7 @@ export const commands = [
     "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",
     "CmdConvertImageToPdf", "Convert Image To PDF",
     "CmdExpandToCurrentPage", "Expand TOC to Current Page",
+    "CmdStartAutoScroll", "Start Auto-Scroll",
     "CmdNone", "Do nothing",
 ];
 

@@ -7046,6 +7046,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ExpandTocToCurrentPage(win);
             break;
 
+        case CmdStartAutoScroll:
+            // start middle-click-style auto-scroll without needing a middle button
+            StartAutoScrollAtCursor(win);
+            break;
+
         case CmdScrollUpHalfPage: {
             if (win->IsCurrentTabAbout()) {
                 HomePageOnVScroll(win, SB_PAGEUP);

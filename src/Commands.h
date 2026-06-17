@@ -242,7 +242,8 @@ enum {
     CmdDebugToggleRenderInfo = 431,
     CmdConvertImageToPdf = 432,
     CmdExpandToCurrentPage = 433,
-    CmdNone = 434,
+    CmdStartAutoScroll = 434,
+    CmdNone = 435,
 
     /* range for file history */
     CmdFileHistoryFirst,

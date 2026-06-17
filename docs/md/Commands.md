@@ -118,6 +118,7 @@ CmdScrollLeft,"h, Left",Scroll Left,
 CmdScrollRight,"l, Right",Scroll Right,
 CmdScrollUpHalfPage,Shift + Up,Scroll Up By Half Page,
 CmdScrollDownHalfPage,Shift + Down,Scroll Down By Half Page,
+CmdStartAutoScroll,,Start Auto-Scroll,"Start (or stop) middle-click-style auto-scroll anchored at the cursor, without needing a middle mouse button; move the cursor away from the anchor to scroll. Invoke again (or middle-click) to stop, ver 3.7+"
 CmdScrollUpPage,"Ctrl + Up, PageUp, Shift + Return, Shift + Space",Scroll Up By Page,
 CmdScrollDownPage,"Ctrl + Down, PageDown, Return, Space",Scroll Down By Page,
 CmdScrollLeftPage,Shift + Left,Scroll Left By Page,

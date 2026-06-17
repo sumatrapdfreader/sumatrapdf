@@ -247,6 +247,7 @@ static SeqStrings gCommandNames =
     "CmdDebugToggleRenderInfo\0"
     "CmdConvertImageToPdf\0"
     "CmdExpandToCurrentPage\0"
+    "CmdStartAutoScroll\0"
     "CmdNone\0"
     "\0";
 
@@ -484,6 +485,7 @@ static i32 gCommandIds[] = {
     CmdDebugToggleRenderInfo,
     CmdConvertImageToPdf,
     CmdExpandToCurrentPage,
+    CmdStartAutoScroll,
     CmdNone,
 };
 
@@ -721,6 +723,7 @@ SeqStrings gCommandDescriptions =
     "Debug: Toggle Render Queue Info\0"
     "Convert Image To PDF\0"
     "Expand TOC to Current Page\0"
+    "Start Auto-Scroll\0"
     "Do nothing\0"
     "\0";
 // clang-format on

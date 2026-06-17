@@ -202,11 +202,15 @@ struct MainWindow {
     bool annotationBeingResized = false;
     RectF annotationOriginalRect;
 
-    /* when moving the document by smooth scrolling, this keeps track of
-       the speed at which we should scroll, which depends on the distance
-       of the mouse from the point where the user middle clicked. */
-    int xScrollSpeed = 0;
-    int yScrollSpeed = 0;
+    /* when moving the document by middle-click auto-scroll, this keeps track of
+       the speed (in pixels per 20ms) at which we should scroll, which depends on
+       the distance of the mouse from the point where the user middle clicked.
+       xScrollAccum/yScrollAccum carry the fractional pixels between timer ticks
+       so the movement is smooth (issue #2693). */
+    float xScrollSpeed = 0;
+    float yScrollSpeed = 0;
+    float xScrollAccum = 0;
+    float yScrollAccum = 0;
 
     // true while selecting and when CurrentTab()->selectionOnPage != nullptr
     bool showSelection = false;
