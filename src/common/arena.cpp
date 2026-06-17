@@ -156,6 +156,19 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
 
     void* result = (char*)current + posPre;
     current->pos = posPost;
+
+    // update allocation stats on the head arena (stats live on the head, not on
+    // chained blocks). peak is the high-water mark of total bytes used.
+    arena->nAllocsLifetime++;
+    arena->nAllocsSinceReset++;
+    u64 used = current->base_pos + posPost;
+    if (used > arena->peakBytesLifetime) {
+        arena->peakBytesLifetime = used;
+    }
+    if (used > arena->peakBytesSinceReset) {
+        arena->peakBytesSinceReset = used;
+    }
+
     if (sizeToZero) {
         memset(result, 0, (size_t)sizeToZero);
     }
@@ -191,7 +204,8 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
 
     if (!usesExternalBuffer) {
         if (useLargePages) {
-            base = VirtualAlloc(nullptr, (SIZE_T)reserveSize, MEM_RESERVE | MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
+            base =
+                VirtualAlloc(nullptr, (SIZE_T)reserveSize, MEM_RESERVE | MEM_COMMIT | MEM_LARGE_PAGES, PAGE_READWRITE);
             if (base) {
                 commitSize = reserveSize;
             } else {
@@ -233,6 +247,10 @@ Arena* ArenaNew(const ArenaParams& srcParams) {
     arena->name = params.name;
     arena->uses_external_buffer = usesExternalBuffer;
     arena->lock = SRWLOCK_INIT;
+    arena->nAllocsLifetime = 0;
+    arena->peakBytesLifetime = 0;
+    arena->nAllocsSinceReset = 0;
+    arena->peakBytesSinceReset = 0;
     return arena;
 }
 
@@ -332,6 +350,8 @@ void Arena::Free(void* ptr) {
 
 void Arena::Reset() {
     PopTo(0);
+    nAllocsSinceReset = 0;
+    peakBytesSinceReset = 0;
 }
 
 void* Arena::GetAvailableSpace(int* bufSizeOut) {
@@ -476,7 +496,7 @@ Str AllocStrTemp(int size) {
         return Str();
     }
     Arena* arena = GetTempArena();
-    char* res = (char*)arena->Push((u64)size+1, 1, false);
+    char* res = (char*)arena->Push((u64)size + 1, 1, false);
     res[size] = 0;
     return Str(res, size);
 }

@@ -37,11 +37,11 @@ int AtomicIntAdd(AtomicInt* p, int v);
 int AtomicIntInc(AtomicInt* p);
 int AtomicIntDec(AtomicInt* p);
 
-
 // arena.cpp
 
 // Standalone reserve/commit arena
-static const u64 ARENA_HEADER_SIZE = 128;
+// 256 (not 128) to leave room in the header for the allocation stats below
+static const u64 ARENA_HEADER_SIZE = 256;
 
 typedef u64 ArenaFlags;
 enum : ArenaFlags {
@@ -81,6 +81,14 @@ struct Arena {
     const char* name;
     bool uses_external_buffer;
     SRWLOCK lock;
+
+    // allocation statistics, updated after every successful allocation
+    // (see ArenaPushLocked). "peak bytes" is the high-water mark of total
+    // bytes used by the arena (its position, including the header).
+    u64 nAllocsLifetime;     // total allocations over the arena's whole life
+    u64 peakBytesLifetime;   // largest total size the arena ever reached
+    u64 nAllocsSinceReset;   // allocations since the last Reset()
+    u64 peakBytesSinceReset; // largest total size reached since the last Reset()
 
     void* Alloc(int size);
     void Free(void* ptr);
@@ -170,7 +178,7 @@ int len(const T* v) {
     return v->len;
 }
 
-template<typename T>
+template <typename T>
 void VecExpandTo(Arena* arena, T& v, int wantedSize) {
     if (wantedSize <= v.cap) {
         return;
@@ -219,9 +227,7 @@ struct Str {
     int len;
 
     Str() : s(nullptr), len(0) {}
-    explicit Str(char* s_) : s(s_), len(0) {
-        len = (int)strlen(s);
-    }
+    explicit Str(char* s_) : s(s_), len(0) { len = (int)strlen(s); }
     explicit Str(char* s_, int len_) : s(s_), len(len_) {}
 };
 

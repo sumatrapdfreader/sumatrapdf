@@ -683,6 +683,34 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     return false;
 }
 
+// Resets the temp allocator (done once per message-loop iteration) and tracks a
+// global high-water mark of its per-iteration allocation count and peak bytes.
+// Whenever a new max is reached, logs both so we can size the temp allocator.
+static void ResetTempAllocatorWithLogging() {
+    Arena* a = GetTempAllocator();
+    static u64 gMaxAllocs = 0;
+    static u64 gPeakBytes = 0;
+    u64 nAllocs = a->nAllocsSinceReset;
+    u64 peakBytes = a->peakBytesSinceReset;
+    bool isNewMax = false;
+    if (nAllocs > gMaxAllocs) {
+        gMaxAllocs = nAllocs;
+        isNewMax = true;
+    }
+    if (peakBytes > gPeakBytes) {
+        gPeakBytes = peakBytes;
+        isNewMax = true;
+    }
+    if (isNewMax) {
+        char human[32];
+        FormatSizeHumanIntoBuf(gPeakBytes, Str(human, (int)sizeof(human)));
+        logf("temp allocator new max: %s allocations, peak %s bytes (%s)\n",
+             str::FormatNumWithThousandSepTemp((i64)gMaxAllocs), str::FormatNumWithThousandSepTemp((i64)gPeakBytes),
+             human);
+    }
+    ResetTempAllocator();
+}
+
 static int RunMessageLoop() {
     MSG msg;
 
@@ -699,7 +727,7 @@ static int RunMessageLoop() {
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        ResetTempAllocator();
+        ResetTempAllocatorWithLogging();
     }
 
     return (int)msg.wParam;
