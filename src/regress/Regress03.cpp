@@ -27,7 +27,7 @@ void SearchTestWithDir(const char* searchFileA, const WCHAR* searchTerm, const T
             ReportIf(true);
         }
         if (expected[expIndex].len != tsel->len) {
-            wprintf(L"Text selection length mismatch for %s at occurence %i: got %i, wanted %i\n", searchTerm,
+            wprintf(L"Text selection length mismatch for %s at occurrence %i: got %i, wanted %i\n", searchTerm,
                     findCount, expected[expIndex].len, tsel->len);
             ReportIf(true);
         }

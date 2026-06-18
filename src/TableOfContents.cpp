@@ -1011,7 +1011,7 @@ void OnTocCustomDraw(TreeView::CustomDrawEvent* ev) {
     }
 }
 
-// disabled becaues of https://github.com/sumatrapdfreader/sumatrapdf/issues/2202
+// disabled because of https://github.com/sumatrapdfreader/sumatrapdf/issues/2202
 // it was added for https://github.com/sumatrapdfreader/sumatrapdf/issues/1716
 // but unclear if its still needed
 // this calls GoToTocLinkTask) which will eventually call GoToPage()

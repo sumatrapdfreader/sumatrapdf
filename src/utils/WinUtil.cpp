@@ -308,7 +308,7 @@ TempStr GetWindowsVerTemp() {
     BOOL ok = GetVersionExW((OSVERSIONINFO*)&ver); // NOLINT
 #pragma warning(pop)
     if (!ok) {
-        return str::DupTemp("uknown");
+        return str::DupTemp("unknown");
     }
     return OsNameFromVerTemp(ver);
 }

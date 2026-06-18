@@ -82,7 +82,7 @@ static bool PdfDateParse(const char* pdfDate, SYSTEMTIME* timeOut) {
 
 static const char* PdfFilterStateToStr(PdfFilterState state) {
     const char* res = seqstrings::IdxToStr(kPdfFilterStateStrs, (int)state);
-    return res ? res : "uknown";
+    return res ? res : "unknown";
 }
 
 HRESULT PdfFilter::GetNextChunkValue(ChunkValue& chunkValue) {

@@ -319,7 +319,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     }
     ScopedCritSec scope(&cacheAccess);
 
-    // must go from end becaues freeing changes the cache
+    // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         bool shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
@@ -339,7 +339,7 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
 void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
     rcLogf("RenderCache::FreeForDisplayModel: dm: 0x%p\n", dm);
     ScopedCritSec scope(&cacheAccess);
-    // must go from end becaues freeing changes the cache
+    // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         if (entry->dm == dm) {
@@ -351,7 +351,7 @@ void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
 void RenderCache::FreeNotVisible() {
     // rcLogf("RenderCache::FreeNotVisible\n");
     ScopedCritSec scope(&cacheAccess);
-    // must go from end becaues freeing changes the cache
+    // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         // all invisible pages resp. page tiles

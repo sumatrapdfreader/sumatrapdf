@@ -2584,15 +2584,15 @@ static LRESULT OnGesture(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
                 if (!dm->NeedHScroll()) {
                     // if the page is fully visible
                     flipPage = true;
-                    // logf("flipPage becaues !dm->NeedHScroll()");
+                    // logf("flipPage because !dm->NeedHScroll()");
                 }
                 if (deltaX > 0 && !dm->CanScrollRight()) {
                     flipPage = true;
-                    // logf("flipPage becaues deltaX > 0 && !dm->CanScrollRight()");
+                    // logf("flipPage because deltaX > 0 && !dm->CanScrollRight()");
                 }
                 if (deltaX < 0 && !dm->CanScrollLeft()) {
                     flipPage = true;
-                    // logf("flipPage becaues deltaX < 0 && !dm->CanScrollLeft()");
+                    // logf("flipPage because deltaX < 0 && !dm->CanScrollLeft()");
                 }
 
                 if (isFlickX && flipPage) {

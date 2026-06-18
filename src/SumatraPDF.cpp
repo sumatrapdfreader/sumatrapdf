@@ -3752,7 +3752,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // Replace with EngineGetDocumentData() and save that if not empty
     TempStr errorMsg = nullptr;
     if (!file::Exists(srcFileName) && engine) {
-        // Recreate inexistant files from memory...
+        // Recreate nonexistent files from memory...
         logf("calling engine->SaveFileAs(%s)\n", realDstFileName);
         ok = engine->SaveFileAs(realDstFileName);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
@@ -9626,7 +9626,7 @@ void ShowCrashHandlerMessage() {
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
     if (!CanAccessDisk()) {
-        log("ShowCrashHandlerMessage: skipping beacuse !CanAccessDisk()\n");
+        log("ShowCrashHandlerMessage: skipping because !CanAccessDisk()\n");
         return;
     }
 

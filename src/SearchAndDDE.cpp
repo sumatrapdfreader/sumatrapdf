@@ -438,7 +438,7 @@ bool AbortFinding(MainWindow* win, bool hideMessage) {
 
 // wasModified
 //   if true, starting a search for new term
-//   if false, searching for the next occurence of previous term
+//   if false, searching for the next occurrence of previous term
 // TODO: should detect wasModified by comparing with the last search result
 void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, const char* text, bool wasModified,
                       bool showProgress) {
@@ -668,7 +668,7 @@ void ShowForwardSearchResult(MainWindow* win, const char* fileName, int line, in
     } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
         args.msg = _TRA("Synchronization file cannot be opened");
     } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        buf = str::FormatTemp(_TRA("Page number %u inexistant"), page);
+        buf = str::FormatTemp(_TRA("Page number %u nonexistent"), page);
     } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
         args.msg = _TRA("No synchronization info at this position");
     } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
@@ -1301,7 +1301,7 @@ static const char* HandleCmdCommand(HWND hwnd, const char* cmd, bool* ack) {
     }
     MainWindow* win = FindMainWindowByHwnd(hwnd);
     if (!win) {
-        logfa("HandleCmdCommand: not executing DDE becaues MainWindow for hwnd 0x%p not found\n", hwnd);
+        logfa("HandleCmdCommand: not executing DDE because MainWindow for hwnd 0x%p not found\n", hwnd);
         return nullptr;
     }
 
@@ -1411,7 +1411,7 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp) {
     StrBuilder str;
     bool didHandle = HandleRequestCmds(hwnd, cmd, str);
     if (!didHandle) {
-        str.Set("error: unknoqn command");
+        str.Set("error: unknown command");
     }
 
     void* data;
