@@ -5,9 +5,9 @@
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
 
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-#include <OleAcc.h>
+#include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
+#include <oleacc.h>
 
 #include "wingui/UIModels.h"
 

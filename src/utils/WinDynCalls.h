@@ -12,13 +12,13 @@ The intent is to standardize how we do it.
 */
 
 // as an exception, we include system headers needed for the calls that we dynamically load
-#include <Windows.h>
+#include <windows.h>
 #include <dwmapi.h>
 #include <vssym32.h>
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-#include <OleAcc.h>
-#include <WinNls.h>
+#include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
+#include <oleacc.h>
+#include <winnls.h>
 #include <processthreadsapi.h>
 
 // dbghelp.h is included here so that warning C4091 can be disabled in a single location

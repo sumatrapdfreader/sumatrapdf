@@ -7,10 +7,11 @@
 /* Windows platform */
 #define _CRT_SECURE_NO_WARNINGS 1
 
-/* POSIX types not available on MSVC */
-#if defined(_MSC_VER)
+/* POSIX types not available on MSVC / provided for mingw cross compile */
+#if defined(_WIN32) && !defined(__CYGWIN__)
 typedef unsigned int gid_t;
 typedef unsigned int uid_t;
+#if defined(_MSC_VER)
 typedef int id_t;
 typedef int pid_t;
 #if !defined(_SSIZE_T_DEFINED)
@@ -22,6 +23,7 @@ typedef int ssize_t;
 #endif
 #endif
 typedef unsigned short mode_t;
+#endif
 #endif
 
 /* Standard C headers available on MSVC */

@@ -15,10 +15,10 @@
 
 #include "utils/Log.h"
 
-#include <ObjBase.h>
-#include <Shlwapi.h>
-#include <Thumbcache.h>
-#include <Unknwn.h>
+#include <objbase.h>
+#include <shlwapi.h>
+#include <thumbcache.h>
+#include <unknwn.h>
 
 typedef HRESULT DllGetClassObjectFn(REFCLSID rclsid, REFIID riid, void** ppv);
 

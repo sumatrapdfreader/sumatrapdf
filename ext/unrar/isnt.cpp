@@ -25,7 +25,7 @@ DWORD WinNT()
 
 // Replace it with documented Windows 11 check when available.
 #include <comdef.h>
-#include <Wbemidl.h>
+#include <wbemidl.h>
 #pragma comment(lib, "wbemuuid.lib")
 
 static bool WMI_IsWindows10()

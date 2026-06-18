@@ -40,7 +40,7 @@ export function setMingwTools(tools: Partial<MingwTools>): void {
   mingwTools = { ...DEFAULT_MINGW_TOOLS, ...tools };
 }
 
-const JOBS = Math.max(1, cpus().length);
+const JOBS = Math.max(1, Math.min(4, cpus().length));
 
 // ── Common defines (workspace-level from premake5.lua) ─────────────────────
 const COMMON_DEFINES = ["WIN32", "_WIN32", "WINVER=0x0605", "_WIN32_WINNT=0x0603"];
@@ -122,6 +122,7 @@ async function compileAll(
       const i = idx++;
       if (i >= total) break;
       const u = units[i];
+      process.stdout.write(`  [${i+1}/${total}] ${u.src}\n`);
       mkdirSync(dirname(u.obj), { recursive: true });
 
       // simple incremental: skip if .o newer than source
@@ -135,11 +136,14 @@ async function compileAll(
         } catch {}
       }
 
+      // ensure no stale/partial .o from previous failed compile (gcc may leave bad file on error)
+      try { rmSync(u.obj); } catch {}
       const res = await spawnCmd(u.args);
       if (!res.ok) {
         console.error(`FAILED: ${u.src}`);
         if (res.stderr) console.error(res.stderr.trimEnd().slice(0, 1000));
         failed++;
+        try { rmSync(u.obj); } catch {}
       }
       const done = i + 1;
       if (done % 100 === 0 || done === total) {
@@ -394,6 +398,173 @@ const chm: LibDef = {
   defines: ["_CRT_SECURE_NO_WARNINGS"],
   includes: [],
   files: [{ dir: "ext/CHMLib", patterns: ["chm_lib.c", "lzx.c"] }],
+};
+
+const libarchive: LibDef = {
+  name: "libarchive",
+  alwaysOptimize: true,
+  defines: [
+    "_CRT_SECURE_NO_WARNINGS",
+    "LIBARCHIVE_STATIC",
+    'PLATFORM_CONFIG_H="config_windows.h"',
+    "BZ_NO_STDIO",
+    "HAVE_CONFIG_H",
+    "LZMA_API_STATIC",
+  ],
+  includes: [
+    "ext/libarchive/libarchive",
+    "ext/libarchive",
+    "ext/zlib",
+    "ext/bzip2",
+    "ext/lzma/C",
+    "ext/liblzma/api",
+    "ext/liblzma/common",
+    "ext/liblzma/check",
+    "ext/liblzma/delta",
+    "ext/liblzma/lz",
+    "ext/liblzma/lzma",
+    "ext/liblzma/rangecoder",
+    "ext/liblzma/simple",
+    "ext/liblzma",
+  ],
+  files: [
+    {
+      dir: "ext/libarchive/libarchive",
+      patterns: [
+        "archive_acl.c",
+        "archive_check_magic.c",
+        "archive_cmdline.c",
+        "archive_cryptor.c",
+        "archive_digest.c",
+        "archive_entry.c",
+        "archive_entry_copy_bhfi.c",
+        "archive_entry_copy_stat.c",
+        "archive_entry_link_resolver.c",
+        "archive_entry_sparse.c",
+        "archive_entry_stat.c",
+        "archive_entry_strmode.c",
+        "archive_entry_xattr.c",
+        "archive_hmac.c",
+        "archive_match.c",
+        "archive_options.c",
+        "archive_pack_dev.c",
+        "archive_pathmatch.c",
+        "archive_ppmd7.c",
+        "archive_ppmd8.c",
+        "archive_random.c",
+        "archive_rb.c",
+        "archive_string.c",
+        "archive_string_sprintf.c",
+        "archive_time.c",
+        "archive_util.c",
+        "archive_version_details.c",
+        "archive_virtual.c",
+        "archive_windows.c",
+        "archive_blake2s_ref.c",
+        "archive_blake2sp_ref.c",
+        "archive_read.c",
+        "archive_read_add_passphrase.c",
+        "archive_read_append_filter.c",
+        "archive_read_data_into_fd.c",
+        "archive_read_extract.c",
+        "archive_read_extract2.c",
+        "archive_read_open_fd.c",
+        "archive_read_open_file.c",
+        "archive_read_open_filename.c",
+        "archive_read_open_memory.c",
+        "archive_read_set_format.c",
+        "archive_read_set_options.c",
+        "archive_read_support_filter_all.c",
+        "archive_read_support_filter_by_code.c",
+        "archive_read_support_filter_bzip2.c",
+        "archive_read_support_filter_compress.c",
+        "archive_read_support_filter_grzip.c",
+        "archive_read_support_filter_gzip.c",
+        "archive_read_support_filter_lrzip.c",
+        "archive_read_support_filter_lz4.c",
+        "archive_read_support_filter_lzop.c",
+        "archive_read_support_filter_none.c",
+        "archive_read_support_filter_program.c",
+        "archive_read_support_filter_rpm.c",
+        "archive_read_support_filter_uu.c",
+        "archive_read_support_filter_xz.c",
+        "archive_read_support_filter_zstd.c",
+        "archive_read_support_format_7zip.c",
+        "archive_read_support_format_all.c",
+        "archive_read_support_format_ar.c",
+        "archive_read_support_format_by_code.c",
+        "archive_read_support_format_cab.c",
+        "archive_read_support_format_cpio.c",
+        "archive_read_support_format_empty.c",
+        "archive_read_support_format_iso9660.c",
+        "archive_read_support_format_lha.c",
+        "archive_read_support_format_mtree.c",
+        "archive_read_support_format_rar.c",
+        "archive_read_support_format_rar5.c",
+        "archive_read_support_format_raw.c",
+        "archive_read_support_format_tar.c",
+        "archive_read_support_format_warc.c",
+        "archive_read_support_format_xar.c",
+        "archive_read_support_format_zip.c",
+        "archive_read_disk_set_standard_lookup.c",
+        "archive_read_disk_windows.c",
+        "archive_parse_date.c",
+        "filter_fork_windows.c",
+        "xxhash.c",
+      ],
+    },
+    {
+      dir: "ext/bzip2",
+      patterns: [
+        "blocksort.c",
+        "bzlib.c",
+        "bz_internal_error.c",
+        "compress.c",
+        "crctable.c",
+        "decompress.c",
+        "huffman.c",
+        "randtable.c",
+      ],
+    },
+    {
+      dir: "ext/lzma/C",
+      patterns: ["LzmaDec.c", "Bra86.c", "Bra.c"],
+    },
+    {
+      dir: "ext/liblzma",
+      patterns: [
+        "common/alone_decoder.c",
+        "common/auto_decoder.c",
+        "common/block_decoder.c",
+        "common/block_header_decoder.c",
+        "common/block_util.c",
+        "common/common.c",
+        "common/filter_common.c",
+        "common/filter_decoder.c",
+        "common/filter_flags_decoder.c",
+        "common/index.c",
+        "common/index_decoder.c",
+        "common/index_hash.c",
+        "common/stream_decoder.c",
+        "common/stream_flags_common.c",
+        "common/stream_flags_decoder.c",
+        "common/vli_decoder.c",
+        "common/vli_size.c",
+        "check/check.c",
+        "check/crc32_fast.c",
+        "check/crc64_fast.c",
+        "lz/lz_decoder.c",
+        "lzma/lzma_decoder.c",
+        "lzma/lzma2_decoder.c",
+        "rangecoder/price_table.c",
+        "delta/delta_common.c",
+        "delta/delta_decoder.c",
+        "simple/simple_coder.c",
+        "simple/simple_decoder.c",
+        "simple/x86.c",
+      ],
+    },
+  ],
 };
 
 const libwebp: LibDef = {
@@ -945,6 +1116,7 @@ const mupdf: LibDef = {
     "ext/gumbo-parser/src",
     "ext/extract/include",
     "ext/zlib",
+    "ext/libarchive",
   ],
   files: [
     { dir: "ext", patterns: ["mupdf_load_system_font.c"] },
@@ -1198,7 +1370,7 @@ const mupdf: LibDef = {
 const utils: LibDef = {
   name: "utils",
   alwaysOptimize: false,
-  defines: ["LIBHEIF_STATIC_BUILD"],
+  defines: ["LIBHEIF_STATIC_BUILD", "LIBARCHIVE_STATIC"],
   includes: [
     "src",
     "ext/lzma/C",
@@ -1207,6 +1379,7 @@ const utils: LibDef = {
     "ext/dav1d/include",
     "mupdf/include",
     "ext/zlib",
+    "ext/libarchive",
   ],
   files: [
     {
@@ -1406,7 +1579,7 @@ const sumatraDebugExtra: FileGroup[] = [
     dir: "src/testcode",
     patterns: ["TestApp.cpp", "TestTab.cpp", "TestLayout.cpp"],
   },
-  { dir: "src/utils/tests", patterns: ["*.cpp"] },
+  // note: src/utils/tests/*.cpp omitted for mingw (not essential, may pull extra headers)
   { dir: "src/utils", patterns: ["UtAssert.*"] },
 ];
 
@@ -1486,6 +1659,9 @@ async function buildLibrary(
   }
   console.log(`  ${sources.length} source files`);
 
+  // pre-create the obj dir for this lib (helps on some filesystems with parallel workers)
+  mkdirSync(join(outDir, "obj", lib.name), { recursive: true });
+
   // Determine optimization flags
   let optFlags: string[];
   let configDefines: string[];
@@ -1512,14 +1688,6 @@ async function buildLibrary(
   // Build include flags
   const includeFlags = lib.includes.map((d) => `-I${d}`);
 
-  // Suppress warnings; GCC 14+ promotes some to errors even with -w
-  const warnFlags = [
-    "-w",
-    "-Wno-incompatible-pointer-types",
-    "-Wno-int-conversion",
-    "-Wno-implicit-function-declaration",
-  ];
-
   // Prepare compile units
   const units: { src: string; obj: string; args: string[] }[] = [];
   for (const src of sources) {
@@ -1532,6 +1700,17 @@ async function buildLibrary(
       langFlags.push("-std=c++23");
       if (!lib.rtti) langFlags.push("-fno-rtti");
       if (!lib.exceptions) langFlags.push("-fno-exceptions");
+    }
+
+    // Suppress warnings; C-only warnings not valid for g++
+    let warnFlags = ["-w"];
+    if (!isCpp) {
+      warnFlags = [
+        "-w",
+        "-Wno-incompatible-pointer-types",
+        "-Wno-int-conversion",
+        "-Wno-implicit-function-declaration",
+      ];
     }
 
     const obj = objPath(outDir, lib.name, src);
@@ -1568,6 +1747,9 @@ async function buildSumatraExe(
   const sources = await resolveSources(groups);
   console.log(`  ${sources.length} source files`);
 
+  // pre-create obj dir for exe objs (parallel fs safety)
+  mkdirSync(join(outDir, "obj", "sumatrapdf"), { recursive: true });
+
   // Config flags
   const optFlags = isRelease ? ["-Os"] : ["-O0", "-g"];
   const configDefines = isRelease ? ["NDEBUG"] : ["DEBUG"];
@@ -1579,6 +1761,7 @@ async function buildSumatraExe(
     "DISABLE_DOCUMENT_RESTRICTIONS",
     "_DARKMODELIB_NO_INI_CONFIG",
     "LIBHEIF_STATIC_BUILD",
+    "LIBARCHIVE_STATIC",
     "UNICODE",
     "_UNICODE",
     "_USE_MATH_DEFINES",
@@ -1593,6 +1776,7 @@ async function buildSumatraExe(
     "ext/CHMLib",
     "ext/darkmodelib/include",
     "ext/zlib",
+    "ext/libarchive",
     // WebView2 - may not exist for mingw builds
     "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/include",
   ];
@@ -1700,6 +1884,13 @@ namespace _com_util {
   // ── Link ──────────────────────────────────────────────────────────────
   console.log("Linking SumatraPDF.exe...");
   const exePath = join(outDir, "SumatraPDF.exe");
+
+  // use response file to avoid excessive command-line length with hundreds of .o files
+  const linkObjs = [...exeObjs, ...rcObjs, ...fontObjs, ...archives];
+  const rspPath = join(outDir, "obj", "sumatrapdf", "link.rsp");
+  const rspLines = linkObjs.map((p) => p);
+  await writeFile(rspPath, rspLines.join("\n") + "\n");
+
   const linkArgs = [
     mingwTools.cxx,
     "-o",
@@ -1708,11 +1899,7 @@ namespace _com_util {
     "-static-libgcc",
     "-static-libstdc++",
     "-mwindows", // GUI app (WinMain entry point)
-    ...exeObjs,
-    ...rcObjs,
-    ...fontObjs,
-    // archives: order matters (dependents first)
-    ...archives,
+    "@" + rspPath,
     // WebView2 import library (MSVC import lib, mingw can usually consume these)
     "packages/Microsoft.Web.WebView2.1.0.992.28/build/native/x64/WebView2Loader.dll.lib",
     // system libraries
@@ -1731,7 +1918,7 @@ namespace _com_util {
 
 // Order: libraries that have no deps first, then dependents.
 // The link order for archives is: most-dependent first, least-dependent last.
-const ALL_LIBS: LibDef[] = [zlib, unrar, libdjvu, chm, libwebp, dav1d, libheif, mupdfLibs, mupdf, utils];
+const ALL_LIBS: LibDef[] = [zlib, unrar, libdjvu, chm, libarchive, libwebp, dav1d, libheif, mupdfLibs, mupdf, utils];
 
 export interface MingwBuildOptions {
   outDir: string;

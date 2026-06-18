@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
+#include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
 #include "uia/StartPageProvider.h"
 #include "uia/Constants.h"
 #include "uia/Provider.h"

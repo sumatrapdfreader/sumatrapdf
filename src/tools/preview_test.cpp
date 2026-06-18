@@ -1,12 +1,12 @@
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <Windows.h>
+#include <windows.h>
 
-#include <ObjBase.h>
-#include <Shlwapi.h>
-#include <Thumbcache.h>
-#include <Unknwn.h>
+#include <objbase.h>
+#include <shlwapi.h>
+#include <thumbcache.h>
+#include <unknwn.h>
 #include <gdiplus.h>
 
 #include <stdio.h>

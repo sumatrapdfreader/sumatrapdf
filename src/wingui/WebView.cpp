@@ -15,13 +15,23 @@
 
 // #include "Theme.h"
 
+#ifdef _MSC_VER
 #include "webview2.h"
+#endif
 #include "wingui/WebView.h"
 
 #include "utils/Log.h"
 
 Kind kindWebView = "webView";
 
+#ifndef _MSC_VER
+TempStr GetWebView2VersionTemp() {
+    return nullptr;
+}
+bool HasWebView() {
+    return false;
+}
+#else
 TempStr GetWebView2VersionTemp() {
     WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
@@ -42,6 +52,9 @@ bool HasWebView() {
     }
     return true;
 }
+#endif // _MSC_VER
+
+#ifdef _MSC_VER
 
 class webview2_com_handler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
                              public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler,
@@ -237,3 +250,28 @@ LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 WebviewWnd::~WebviewWnd() {
     str::Free(dataDir);
 }
+
+#endif // _MSC_VER
+
+#ifndef _MSC_VER
+// stub implementations for mingw cross-compile / wine (no webview2)
+WebviewWnd::WebviewWnd() = default;
+WebviewWnd::~WebviewWnd() {
+    str::Free(dataDir);
+}
+HWND WebviewWnd::Create(const CreateWebViewArgs&) {
+    return nullptr;
+}
+void WebviewWnd::Eval(const char*) {}
+void WebviewWnd::SetHtml(const char*) {}
+void WebviewWnd::Init(const char*) {}
+void WebviewWnd::Navigate(const char*) {}
+bool WebviewWnd::Embed(WebViewMsgCb&) {
+    return false;
+}
+void WebviewWnd::OnBrowserMessage(const char*) {}
+LRESULT WebviewWnd::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    return WndProcDefault(hwnd, msg, wparam, lparam);
+}
+void WebviewWnd::UpdateWebviewSize() {}
+#endif // !_MSC_VER

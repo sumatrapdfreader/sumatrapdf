@@ -1,7 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include <Thumbcache.h>
+#include <thumbcache.h>
 
 class PageRenderer;
 

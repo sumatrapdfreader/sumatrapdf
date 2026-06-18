@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
+#include <uiautomationcore.h>
+#include <uiautomationcoreapi.h>
 #include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
 #include "utils/WinUtil.h"

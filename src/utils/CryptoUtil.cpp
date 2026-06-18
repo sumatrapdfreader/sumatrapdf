@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/CryptoUtil.h"
 
-#include <WinCrypt.h>
+#include <wincrypt.h>
 
 #ifndef DWORD_MAX
 #define DWORD_MAX 0xffffffffUL
