@@ -1352,6 +1352,25 @@ void ReCreateToolbar(MainWindow* win) {
     CreateToolbar(win);
 }
 
+static int MenuBarToolbarIdealDy(MainWindow* win) {
+    HFONT font = GetAppMenuFont();
+    int dy = FontDyPx(win->hwndFrame, font) + DpiScale(win->hwndFrame, 4);
+    int minDy = DpiScale(win->hwndFrame, kTabBarDy);
+    return std::max(dy, minDy);
+}
+
+int GetMenuBarRebarHeight(MainWindow* win) {
+    if (!win || !win->hwndMenuReBar) {
+        return 0;
+    }
+    // RB_GETBARHEIGHT underreports by 1px without WS_BORDER
+    int dy = (int)SendMessageW(win->hwndMenuReBar, RB_GETBARHEIGHT, 0, 0) + 1;
+    if (dy > 1) {
+        return dy;
+    }
+    return MenuBarToolbarIdealDy(win);
+}
+
 // --- Menu bar as rebar control (used when tabs are in titlebar) ---
 
 static LRESULT CALLBACK MenuBarReBarWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass,
@@ -1620,8 +1639,9 @@ void CreateMenuBarRebar(MainWindow* win) {
 
     RECT rc;
     LRESULT res = SendMessageW(win->hwndMenuToolbar, TB_GETITEMRECT, 0, (LPARAM)&rc);
-    if (!res) {
-        rc.left = rc.right = rc.top = rc.bottom = 0;
+    int menuBarDy = (rc.bottom - rc.top) + 2 * rc.top;
+    if (!res || menuBarDy <= 0) {
+        menuBarDy = MenuBarToolbarIdealDy(win);
     }
 
     ShowWindow(win->hwndMenuToolbar, SW_SHOW);
@@ -1632,7 +1652,7 @@ void CreateMenuBarRebar(MainWindow* win) {
     rbBand.fStyle = RBBS_FIXEDSIZE;
     rbBand.hwndChild = win->hwndMenuToolbar;
     rbBand.cxMinChild = 0;
-    rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;
+    rbBand.cyMinChild = menuBarDy;
     rbBand.cx = 0;
     SendMessageW(win->hwndMenuReBar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 

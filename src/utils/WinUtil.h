@@ -41,6 +41,7 @@ bool IsProcess64();
 bool IsProcess32();
 bool IsArmBuild();
 bool IsRunningInWow64();
+bool IsRunningOnWine();
 bool IsProcessAndOsArchSame();
 
 bool GetOsVersion(OSVERSIONINFOEX& ver);

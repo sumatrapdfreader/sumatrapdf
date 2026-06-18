@@ -17,6 +17,7 @@ void ShowOrHideToolbar(MainWindow*);
 void UpdateToolbarState(MainWindow*);
 void UpdateToolbarAfterThemeChange(MainWindow*);
 
+int GetMenuBarRebarHeight(MainWindow*);
 void CreateMenuBarRebar(MainWindow*);
 void DestroyMenuBarRebar(MainWindow*);
 void ShowMenuBarRebar(MainWindow*);

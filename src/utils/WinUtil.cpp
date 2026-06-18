@@ -355,6 +355,30 @@ bool IsRunningInWow64() {
     return false;
 }
 
+bool IsRunningOnWine() {
+    static int cached = -1;
+    if (cached >= 0) {
+        return cached != 0;
+    }
+    bool isWine = false;
+    AutoCloseHandle snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snap != INVALID_HANDLE_VALUE) {
+        MODULEENTRY32 mod{};
+        mod.dwSize = sizeof(mod);
+        BOOL cont = Module32First(snap, &mod);
+        while (cont) {
+            auto nameA = ToUtf8Temp(mod.szModule);
+            if (str::EqI(nameA, "winex11.drv")) {
+                isWine = true;
+                break;
+            }
+            cont = Module32Next(snap, &mod);
+        }
+    }
+    cached = isWine ? 1 : 0;
+    return isWine;
+}
+
 // return true if running on a 64-bit OS
 bool IsOs64() {
     // 64-bit processes can only run on a 64-bit OS,
@@ -3181,8 +3205,18 @@ Size HwndMeasureText(HWND hwnd, const char* txt, HFONT font) {
 
 // return approximate height of font in pixels
 int FontDyPx(HWND hwnd, HFONT hfont) {
-    Size s = HwndMeasureText(hwnd, "A", hfont);
-    return s.dy;
+    if (!hfont) {
+        Size s = HwndMeasureText(hwnd, "A", hfont);
+        return s.dy;
+    }
+    AutoReleaseDC dc(hwnd);
+    ScopedSelectFont prev(dc, hfont);
+    TEXTMETRIC tm{};
+    if (!GetTextMetrics(dc, &tm)) {
+        Size s = HwndMeasureText(hwnd, "A", hfont);
+        return s.dy;
+    }
+    return tm.tmHeight + tm.tmExternalLeading;
 }
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, uint flag, bool subtree) {

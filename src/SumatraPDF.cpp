@@ -1863,7 +1863,9 @@ static MainWindow* CreateMainWindow() {
     }
 
     // WM_NCCALCSIZE returning 0 disables DWM rounded corners; re-enable them.
-    dwm::SetWindowRoundedCorners(hwndFrame, true);
+    if (!IsRunningOnWine()) {
+        dwm::SetWindowRoundedCorners(hwndFrame, true);
+    }
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
@@ -4395,7 +4397,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             int tabHeight = GetTabbarHeight(win->hwndFrame);
             int captionHeight = tabHeight + 2;
             if (showingMenuBar) {
-                int menuBarDy = (int)SendMessageW(win->hwndMenuReBar, RB_GETBARHEIGHT, 0, 0) + 1;
+                int menuBarDy = GetMenuBarRebarHeight(win);
                 // check if there are actual file tabs to show
                 bool hasFileTabs = false;
                 for (WindowTab* tab : win->Tabs()) {
@@ -4426,7 +4428,7 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool showMenuRebar = IsShowingMenuBarRebar(win) && (!win->tabsInTitlebar || win->isFullScreen);
     if (showMenuRebar) {
         // menu bar rebar in client area (non-titlebar case, or fullscreen where there's no titlebar)
-        int menuBarDy = (int)SendMessageW(win->hwndMenuReBar, RB_GETBARHEIGHT, 0, 0) + 1;
+        int menuBarDy = GetMenuBarRebarHeight(win);
         if (updateToolbars) {
             dh.SetWindowPos(win->hwndMenuReBar, nullptr, rc.x, rc.y, rc.dx, menuBarDy, SWP_NOZORDER);
         }
@@ -5142,7 +5144,9 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
     UpdateWindowFrameBorderColor(win);
     // disable DWM rounded corners and border for true edge-to-edge fullscreen
-    dwm::SetWindowRoundedCorners(win->hwndFrame, false);
+    if (!IsRunningOnWine()) {
+        dwm::SetWindowRoundedCorners(win->hwndFrame, false);
+    }
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
     uint flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
@@ -5215,7 +5219,9 @@ void ExitFullScreen(MainWindow* win) {
     }
 
     // restore DWM rounded corners and border
-    dwm::SetWindowRoundedCorners(win->hwndFrame, true);
+    if (!IsRunningOnWine()) {
+        dwm::SetWindowRoundedCorners(win->hwndFrame, true);
+    }
     UpdateWindowFrameBorderColor(win);
 
     Rect cr = ClientRect(win->hwndFrame);
@@ -8050,8 +8056,7 @@ void RelayoutCaption(MainWindow* win) {
         //   Row 2: tabs, [drag area]
         // Menu bar goes all the way to the top for compactness.
 
-        // Get menu bar natural height; RB_GETBARHEIGHT underreports by 1px without WS_BORDER
-        int menuBarDy = (int)SendMessageW(win->hwndMenuReBar, RB_GETBARHEIGHT, 0, 0) + 1;
+        int menuBarDy = GetMenuBarRebarHeight(win);
 
         int row1Y = rc.y;
         int row2Y = rc.y + menuBarDy;

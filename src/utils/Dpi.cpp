@@ -33,8 +33,7 @@ int DpiGetForHwnd(HWND hwnd) {
     if (DynGetDpiForWindow) {
         uint dpi = DynGetDpiForWindow(hwnd);
         // returns 0 for HWND_DESKTOP
-        if (dpi > 0) {
-            ReportIf(dpi < 72);
+        if (dpi >= 72) {
             return (int)dpi;
         }
     }
@@ -53,6 +52,19 @@ int DpiGetForHwnd(HWND hwnd) {
 GetGlobalDpi:
     ScopedGetDC dc(hwnd);
     int dpi = GetDeviceCaps(dc, LOGPIXELSX);
+    if (dpi < 72) {
+        HDC screenDC = GetDC(nullptr);
+        if (screenDC) {
+            int screenDpi = GetDeviceCaps(screenDC, LOGPIXELSX);
+            ReleaseDC(nullptr, screenDC);
+            if (screenDpi >= 72) {
+                dpi = screenDpi;
+            }
+        }
+    }
+    if (dpi < 72) {
+        dpi = 96;
+    }
     return dpi;
 }
 
