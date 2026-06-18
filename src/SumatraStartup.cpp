@@ -1211,6 +1211,52 @@ static bool IsNoAdminToAdmin(HWND hPrevWnd) {
     return false;
 }
 
+static int WineDpiFromEnv() {
+    static const char* scaleVars[] = {"GDK_SCALE", "QT_SCALE_FACTOR", "ELM_SCALE"};
+    int bestDpi = 0;
+    for (const char* var : scaleVars) {
+        const char* val = getenv(var);
+        if (!val || !*val) {
+            continue;
+        }
+        float scale = (float)atof(val);
+        if (scale < 1.f) {
+            continue;
+        }
+        int dpi = (int)(96.f * scale + 0.5f);
+        if (dpi > bestDpi) {
+            bestDpi = dpi;
+        }
+    }
+    return bestDpi;
+}
+
+static void LogWineDpiInfo() {
+    if (!IsRunningOnWine()) {
+        return;
+    }
+    HDC screenDC = GetDC(nullptr);
+    int screenDpi = screenDC ? GetDeviceCaps(screenDC, LOGPIXELSX) : 0;
+    if (screenDC) {
+        ReleaseDC(nullptr, screenDC);
+    }
+    uint monitorDpiX = 0, monitorDpiY = 0;
+    HMONITOR mon = MonitorFromWindow(nullptr, MONITOR_DEFAULTTOPRIMARY);
+    HRESULT hr = E_FAIL;
+    if (mon && DynGetDpiForMonitor) {
+        hr = DynGetDpiForMonitor(mon, 0, &monitorDpiX, &monitorDpiY);
+    }
+    int envDpi = WineDpiFromEnv();
+    if (envDpi > 0) {
+        DpiSetWineOverride(envDpi);
+    }
+    logf("WineDpi: screenDpi=%d monitorDpi=(%u,%u) GetDpiForMonitor hr=0x%lx envDpi=%d overrideDpi=%d "
+         "SM_CYCAPTION=%d SM_CYFRAME=%d SM_CXPADDEDBORDER=%d screen=(%d,%d)\n",
+         screenDpi, monitorDpiX, monitorDpiY, (unsigned long)hr, envDpi, DpiGet(HWND_DESKTOP),
+         GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CYFRAME), GetSystemMetrics(SM_CXPADDEDBORDER),
+         GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+}
+
 #if 0
 static void LogDpiAwareness() {
     if (!DynGetThreadDpiAwarenessContext) {
@@ -1604,6 +1650,8 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         // TODO: only if AttachConsole() succeeds?
         gLogToConsole = true;
     }
+    logf("wine: %s\n", IsRunningOnWine() ? "true" : "false");
+    LogWineDpiInfo();
 
     Flags flags;
     if (ExeHasNameOfStoreInstaller()) {
@@ -1670,6 +1718,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE, _In_ LPST
         if (logFilePath) {
             StartLogToFile(logFilePath, true);
             LogCommandLine();
+            logf("wine: %s\n", IsRunningOnWine() ? "true" : "false");
         }
         // gRedrawLog = true;
     }

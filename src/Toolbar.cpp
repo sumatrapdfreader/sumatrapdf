@@ -1366,9 +1366,17 @@ int GetMenuBarRebarHeight(MainWindow* win) {
     // RB_GETBARHEIGHT underreports by 1px without WS_BORDER
     int dy = (int)SendMessageW(win->hwndMenuReBar, RB_GETBARHEIGHT, 0, 0) + 1;
     if (dy > 1) {
+        if (IsRunningOnWine()) {
+            logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d\n", win->hwndMenuReBar, dy);
+        }
         return dy;
     }
-    return MenuBarToolbarIdealDy(win);
+    int ideal = MenuBarToolbarIdealDy(win);
+    if (IsRunningOnWine()) {
+        logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d fallbackIdeal=%d\n", win->hwndMenuReBar, dy,
+             ideal);
+    }
+    return ideal;
 }
 
 // --- Menu bar as rebar control (used when tabs are in titlebar) ---

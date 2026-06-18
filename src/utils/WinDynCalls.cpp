@@ -25,6 +25,7 @@ Sig_GetDpiForWindow DynGetDpiForWindow = nullptr;
 Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext = nullptr;
 Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext = nullptr;
 Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext = nullptr;
+Sig_GetDpiForMonitor DynGetDpiForMonitor = nullptr;
 
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
 
@@ -64,6 +65,11 @@ void InitDynCalls() {
         (Sig_GetAwarenessFromDpiAwarenessContext)GetProcAddress(h, "GetAwarenessFromDpiAwarenessContext");
     DynSetThreadDpiAwarenessContext =
         (Sig_SetThreadDpiAwarenessContext)GetProcAddress(h, "SetThreadDpiAwarenessContext");
+
+    h = SafeLoadLibrary("shcore.dll");
+    if (h) {
+        DynGetDpiForMonitor = (Sig_GetDpiForMonitor)GetProcAddress(h, "GetDpiForMonitor");
+    }
 
     h = SafeLoadLibrary("uxtheme.dll");
     if (h) {

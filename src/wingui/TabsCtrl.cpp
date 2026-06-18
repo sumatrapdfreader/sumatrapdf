@@ -84,7 +84,10 @@ void TabsCtrl::LayoutTabs() {
         dx = std::min(tabDefaultDx, maxDx);
     }
     tabSize = {dx, dy};
-    // logfa("TabsCtrl::Layout size: (%d, %d), tab size: (%d, %d)\n", rect.dx, rect.dy, tabSize.dx, tabSize.dy);
+    if (IsRunningOnWine()) {
+        logf("TabsCtrl::LayoutTabs: hwnd=%p client=(%d,%d) tabSize=(%d,%d) nTabs=%d\n", hwnd, rect.dx, rect.dy,
+             tabSize.dx, tabSize.dy, nTabs);
+    }
 
     int closeDy = DpiScale(hwnd, 16);
     int closeDx = closeDy;
@@ -112,6 +115,10 @@ void TabsCtrl::LayoutTabs() {
             ti->rCloseHit = {xEnd - closeDx - 2 * closePad, 0, closeDx + 2 * closePad, dy};
         }
         ti->titleSize = HwndMeasureText(hwnd, ti->text, hfont);
+        if (IsRunningOnWine() && i == 0) {
+            logf("TabsCtrl::LayoutTabs: titleSize=(%d,%d) fontDyPx=%d\n", ti->titleSize.dx, ti->titleSize.dy,
+                 FontDyPx(hwnd, hfont));
+        }
         int y = (dy - ti->titleSize.dy) / 2;
         // logfa("  ti->titleSize.dy: %d\n", ti->titleSize.dy);
         if (y < 0) {

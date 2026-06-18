@@ -1604,6 +1604,13 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         }
         if (args->showWin) {
             ShowWindow(win->hwndFrame, showType);
+            if (IsRunningOnWine()) {
+                Rect wr = WindowRect(win->hwndFrame);
+                Rect cr = ClientRect(win->hwndFrame);
+                logf("LoadDocument: showWin windowRect=(%d,%d,%d,%d) clientRect=(%d,%d,%d,%d) captionRect=(%d,%d,%d,%d)\n",
+                     wr.x, wr.y, wr.dx, wr.dy, cr.x, cr.y, cr.dx, cr.dy, win->captionRect.x, win->captionRect.y,
+                     win->captionRect.dx, win->captionRect.dy);
+            }
         }
 
 #if 0
@@ -2006,6 +2013,14 @@ void ShowMainWindow(MainWindow* win, int windowState) {
     UpdateWindow(win->hwndFrame);
     UpdateToolbarFindText(win);
     HwndEnsureVisible(win->hwndFrame);
+
+    if (IsRunningOnWine()) {
+        Rect wr = WindowRect(win->hwndFrame);
+        Rect cr = ClientRect(win->hwndFrame);
+        logf("ShowMainWindow: windowRect=(%d,%d,%d,%d) clientRect=(%d,%d,%d,%d) captionRect=(%d,%d,%d,%d)\n", wr.x,
+             wr.y, wr.dx, wr.dy, cr.x, cr.y, cr.dx, cr.dy, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
+             win->captionRect.dy);
+    }
 
     if (gWindows.Size() == 1 && (true || IsDebuggerPresent())) {
         HwndToForeground(win->hwndFrame);
@@ -4410,6 +4425,12 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
                 captionHeight = menuBarDy + (hasFileTabs ? tabHeight : 0);
             }
             win->captionRect = {rc.x, rc.y, rc.dx, captionHeight};
+            if (IsRunningOnWine()) {
+                logf("RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
+                     "showingMenuBar=%d\n",
+                     tabHeight, captionHeight, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
+                     win->captionRect.dy, (int)showingMenuBar);
+            }
             if (updateToolbars) {
                 RelayoutCaption(win);
             }
@@ -4417,6 +4438,9 @@ static void RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             rc.dy -= captionHeight;
         } else if (win->tabsVisible) {
             int tabHeight = GetTabbarHeight(win->hwndFrame);
+            if (IsRunningOnWine()) {
+                logf("RelayoutFrame: tabsVisible tabHeight=%d\n", tabHeight);
+            }
             if (updateToolbars) {
                 int tabX = MapChildXForRtlParent(win->hwndFrame, rc.x, rc.dx);
                 dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabX, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
@@ -8049,6 +8073,10 @@ void RelayoutCaption(MainWindow* win) {
     bool showingMenuBar = IsShowingMenuBarRebar(win);
     int tabHeight = GetTabbarHeight(win->hwndFrame);
     bool isRtl = IsUIRtl();
+    if (IsRunningOnWine()) {
+        logf("RelayoutCaption: captionRect=(%d,%d,%d,%d) tabHeight=%d showingMenuBar=%d maximized=%d\n", rc.x, rc.y,
+             rc.dx, rc.dy, tabHeight, (int)showingMenuBar, (int)maximized);
+    }
 
     if (showingMenuBar) {
         // Two-row layout:
@@ -8249,6 +8277,9 @@ void RelayoutCaption(MainWindow* win) {
         int tabBarX = MapChildXForRtlParent(win->hwndFrame, tabsX, tabsDx);
         dh.SetWindowPos(win->tabsCtrl->hwnd, nullptr, tabBarX, tabY, tabsDx, tabDy, SWP_NOZORDER);
         dh.End();
+        if (IsRunningOnWine()) {
+            logf("RelayoutCaption: singleRow btnDy=%d tabY=%d tabDy=%d tabsDx=%d\n", btnDy, tabY, tabDy, tabsDx);
+        }
     }
 
     UpdateTabWidth(win);
@@ -8510,6 +8541,10 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_NCCALCSIZE: {
             RECT* r = wp == TRUE ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
+            if (IsRunningOnWine()) {
+                logf("WM_NCCALCSIZE: before=(%ld,%ld,%ld,%ld) zoomed=%d\n", r->left, r->top, r->right, r->bottom,
+                     (int)IsZoomed(hwnd));
+            }
             bool isFullScreen = win->isFullScreen || win->presentation;
             if (IsZoomed(hwnd) && !isFullScreen) {
                 int frameX = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
@@ -8523,6 +8558,11 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 // keep 1px non-client area at top so DWM preserves content
                 // during resize (returning 0 makes DWM clear the surface)
                 r->top += 1;
+            }
+            if (IsRunningOnWine()) {
+                logf("WM_NCCALCSIZE: after=(%ld,%ld,%ld,%ld) clientDy=%ld cyFrame=%d cyCaption=%d\n", r->left, r->top,
+                     r->right, r->bottom, r->bottom - r->top, GetSystemMetrics(SM_CYFRAME),
+                     GetSystemMetrics(SM_CYCAPTION));
             }
             *callDef = false;
             return 0;

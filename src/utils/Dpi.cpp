@@ -20,36 +20,46 @@ Per-Monitor DPI Aware:
  (as indicated by the WM_DPICHANGED window message).
 */
 
-#include <shellscalingapi.h>
+constexpr int kMdtEffectiveDpi = 0;
+
+static int gWineDpiOverride = 0;
+
+void DpiSetWineOverride(int dpi) {
+    gWineDpiOverride = dpi;
+}
+
+static int DpiApplyWineOverride(int dpi) {
+    if (gWineDpiOverride > dpi) {
+        return gWineDpiOverride;
+    }
+    return dpi;
+}
 
 // get uncached dpi
 int DpiGetForHwnd(HWND hwnd) {
     // GetDpiForWindow() returns defult 96 DPI for desktop window
     // (most likely desktop has DPI_AWARENESS set to UNAWARE)
-    if (!hwnd || (hwnd == HWND_DESKTOP) || (hwnd == GetDesktopWindow())) {
-        goto GetGlobalDpi;
-    }
+    if (hwnd && hwnd != HWND_DESKTOP && hwnd != GetDesktopWindow()) {
+        if (DynGetDpiForWindow) {
+            uint dpiWin = DynGetDpiForWindow(hwnd);
+            // returns 0 for HWND_DESKTOP
+            if (dpiWin >= 72) {
+                return DpiApplyWineOverride((int)dpiWin);
+            }
+        }
 
-    if (DynGetDpiForWindow) {
-        uint dpi = DynGetDpiForWindow(hwnd);
-        // returns 0 for HWND_DESKTOP
-        if (dpi >= 72) {
-            return (int)dpi;
+        if (DynGetDpiForMonitor) {
+            uint dpiX = 96, dpiY = 96;
+            HMONITOR h = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            if (h != nullptr) {
+                HRESULT hr = DynGetDpiForMonitor(h, kMdtEffectiveDpi, &dpiX, &dpiY);
+                if (hr == S_OK && dpiX >= 72) {
+                    return DpiApplyWineOverride((int)dpiX);
+                }
+            }
         }
     }
 
-#if 0
-    // TODO: only available in 8.1
-    uint dpiX = 96, dpiY = 96;
-    HMONITOR h = MonitorFromWindow(hwnd, 0);
-    if (h != nullptr) {
-        HRESULT hr = GetDpiForMonitor(h, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
-        if (hr == S_OK) {
-            return (int)dpiX;
-        }
-    }
-#endif
-GetGlobalDpi:
     ScopedGetDC dc(hwnd);
     int dpi = GetDeviceCaps(dc, LOGPIXELSX);
     if (dpi < 72) {
@@ -65,7 +75,7 @@ GetGlobalDpi:
     if (dpi < 72) {
         dpi = 96;
     }
-    return dpi;
+    return DpiApplyWineOverride(dpi);
 }
 
 int DpiGet(HWND hwnd) {

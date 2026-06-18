@@ -3,6 +3,7 @@
 
 int DpiGetForHwnd(HWND);
 int DpiGet(HWND);
+void DpiSetWineOverride(int dpi);
 int DpiScale(HWND, int);
 void DpiScale(HWND, int&, int&);
 

@@ -100,6 +100,10 @@ extern Sig_GetThreadDpiAwarenessContext DynGetThreadDpiAwarenessContext;
 extern Sig_GetAwarenessFromDpiAwarenessContext DynGetAwarenessFromDpiAwarenessContext;
 extern Sig_SetThreadDpiAwarenessContext DynSetThreadDpiAwarenessContext;
 
+// shcore.dll
+typedef HRESULT(WINAPI* Sig_GetDpiForMonitor)(HMONITOR, int, UINT*, UINT*);
+extern Sig_GetDpiForMonitor DynGetDpiForMonitor;
+
 // uxtheme.dll
 #define UXTHEME_API_LIST(V)                  \
     V(IsAppThemed)                           \
