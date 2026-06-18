@@ -18,11 +18,28 @@ import { join, extname, dirname, basename } from "node:path";
 import { cpus } from "node:os";
 
 // ── Tool paths ──────────────────────────────────────────────────────────────
-const CC = "x86_64-w64-mingw32-gcc";
-const CXX = "x86_64-w64-mingw32-g++";
-const AR = "x86_64-w64-mingw32-ar";
-const WINDRES = "x86_64-w64-mingw32-windres";
-const OBJCOPY = "x86_64-w64-mingw32-objcopy";
+export interface MingwTools {
+  cc: string;
+  cxx: string;
+  ar: string;
+  windres: string;
+  objcopy: string;
+}
+
+const DEFAULT_MINGW_TOOLS: MingwTools = {
+  cc: "x86_64-w64-mingw32-gcc",
+  cxx: "x86_64-w64-mingw32-g++",
+  ar: "x86_64-w64-mingw32-ar",
+  windres: "x86_64-w64-mingw32-windres",
+  objcopy: "x86_64-w64-mingw32-objcopy",
+};
+
+let mingwTools: MingwTools = { ...DEFAULT_MINGW_TOOLS };
+
+export function setMingwTools(tools: Partial<MingwTools>): void {
+  mingwTools = { ...DEFAULT_MINGW_TOOLS, ...tools };
+}
+
 const JOBS = Math.max(1, cpus().length);
 
 // ── Common defines (workspace-level from premake5.lua) ─────────────────────
@@ -147,7 +164,7 @@ async function createArchive(archivePath: string, objFiles: string[]): Promise<v
   for (let i = 0; i < objFiles.length; i += batch) {
     const chunk = objFiles.slice(i, i + batch);
     const flag = i === 0 ? "rcs" : "rs";
-    const res = await spawnCmd([AR, flag, archivePath, ...chunk]);
+    const res = await spawnCmd([mingwTools.ar, flag, archivePath, ...chunk]);
     if (!res.ok) throw new Error(`ar failed: ${res.stderr}`);
   }
 }
@@ -176,7 +193,7 @@ async function embedBinaryFile(
 
   // Run objcopy from the tmpDir so symbols are based on just the filename
   const res = await spawnCmd([
-    OBJCOPY,
+    mingwTools.objcopy,
     "-I", "binary",
     "-O", "pe-x86-64",
     "-B", "i386:x86-64",
@@ -1508,7 +1525,7 @@ async function buildLibrary(
   for (const src of sources) {
     const ext = extname(src).slice(1).toLowerCase();
     const isCpp = ext === "cpp" || ext === "cc";
-    const compiler = isCpp ? CXX : CC;
+    const compiler = isCpp ? mingwTools.cxx : mingwTools.cc;
 
     const langFlags: string[] = [];
     if (isCpp) {
@@ -1588,7 +1605,7 @@ async function buildSumatraExe(
   for (const src of sources) {
     const ext = extname(src).slice(1).toLowerCase();
     const isCpp = ext === "cpp" || ext === "cc";
-    const compiler = isCpp ? CXX : CC;
+    const compiler = isCpp ? mingwTools.cxx : mingwTools.cc;
 
     const langFlags: string[] = [];
     if (isCpp) {
@@ -1630,7 +1647,7 @@ namespace _com_util {
   }
 }
 `);
-  const comRes = await spawnCmd([CXX, "-Os", "-c", comUtilSrc, "-o", comUtilObj]);
+  const comRes = await spawnCmd([mingwTools.cxx, "-Os", "-c", comUtilSrc, "-o", comUtilObj]);
   if (!comRes.ok) {
     console.error(`Failed to compile _com_util stub: ${comRes.stderr}`);
   }
@@ -1663,7 +1680,7 @@ namespace _com_util {
   await writeFile(rcTmpPath, rcFixed);
   const rcTmpAbsolute = join(process.cwd(), rcTmpPath);
   const rcRes = await spawnCmd([
-    WINDRES,
+    mingwTools.windres,
     "-I",
     ".",
     "-D_WIN64",
@@ -1684,7 +1701,7 @@ namespace _com_util {
   console.log("Linking SumatraPDF.exe...");
   const exePath = join(outDir, "SumatraPDF.exe");
   const linkArgs = [
-    CXX,
+    mingwTools.cxx,
     "-o",
     exePath,
     "-static",
@@ -1716,9 +1733,20 @@ namespace _com_util {
 // The link order for archives is: most-dependent first, least-dependent last.
 const ALL_LIBS: LibDef[] = [zlib, unrar, libdjvu, chm, libwebp, dav1d, libheif, mupdfLibs, mupdf, utils];
 
-async function build(isRelease: boolean, clean: boolean): Promise<void> {
+export interface MingwBuildOptions {
+  outDir: string;
+  isRelease?: boolean;
+  clean?: boolean;
+  tools?: Partial<MingwTools>;
+}
+
+export async function buildMingw(opts: MingwBuildOptions): Promise<void> {
+  setMingwTools(opts.tools ?? {});
+  await build(opts.isRelease ?? false, opts.clean ?? false, opts.outDir);
+}
+
+async function build(isRelease: boolean, clean: boolean, outDir: string): Promise<void> {
   const config = isRelease ? "release" : "debug";
-  const outDir = isRelease ? "out/mingw-rel64" : "out/mingw-dbg64";
 
   if (clean && existsSync(outDir)) {
     console.log(`Cleaning ${outDir}...`);
@@ -1759,45 +1787,47 @@ async function build(isRelease: boolean, clean: boolean): Promise<void> {
 }
 
 async function build_debug(clean: boolean): Promise<void> {
-  await build(false, clean);
+  await build(false, clean, "out/mingw-dbg64");
 }
 
 async function build_release(clean: boolean): Promise<void> {
-  await build(true, clean);
+  await build(true, clean, "out/mingw-rel64");
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
-const args = Bun.argv.slice(2);
-let doDebug = false;
-let doRelease = false;
-let doClean = false;
+if (import.meta.main) {
+  const args = Bun.argv.slice(2);
+  let doDebug = false;
+  let doRelease = false;
+  let doClean = false;
 
-for (const arg of args) {
-  if (arg === "-debug") doDebug = true;
-  else if (arg === "-release") doRelease = true;
-  else if (arg === "-clean") doClean = true;
-  else {
-    console.error(`Unknown argument: ${arg}`);
+  for (const arg of args) {
+    if (arg === "-debug") doDebug = true;
+    else if (arg === "-release") doRelease = true;
+    else if (arg === "-clean") doClean = true;
+    else {
+      console.error(`Unknown argument: ${arg}`);
+      console.error("Usage: bun cmd/build-with-mingw.ts [-debug] [-release] [-clean]");
+      process.exit(1);
+    }
+  }
+
+  if (!doDebug && !doRelease) {
     console.error("Usage: bun cmd/build-with-mingw.ts [-debug] [-release] [-clean]");
+    console.error("  -debug    Build Debug x64 configuration");
+    console.error("  -release  Build Release x64 configuration");
+    console.error("  -clean    Delete output directory before building");
     process.exit(1);
   }
-}
 
-if (!doDebug && !doRelease) {
-  console.error("Usage: bun cmd/build-with-mingw.ts [-debug] [-release] [-clean]");
-  console.error("  -debug    Build Debug x64 configuration");
-  console.error("  -release  Build Release x64 configuration");
-  console.error("  -clean    Delete output directory before building");
-  process.exit(1);
+  (async () => {
+    try {
+      if (doDebug) await build_debug(doClean);
+      if (doRelease) await build_release(doClean);
+    } catch (e: any) {
+      console.error(`\nBuild failed: ${e.message}`);
+      process.exit(1);
+    }
+  })();
 }
-
-(async () => {
-  try {
-    if (doDebug) await build_debug(doClean);
-    if (doRelease) await build_release(doClean);
-  } catch (e: any) {
-    console.error(`\nBuild failed: ${e.message}`);
-    process.exit(1);
-  }
-})();
