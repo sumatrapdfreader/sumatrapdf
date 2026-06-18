@@ -40,7 +40,8 @@ export function setMingwTools(tools: Partial<MingwTools>): void {
   mingwTools = { ...DEFAULT_MINGW_TOOLS, ...tools };
 }
 
-const JOBS = Math.max(1, Math.min(4, cpus().length));
+const DEFAULT_JOBS = Math.max(1, Math.min(4, cpus().length));
+let compileJobs = DEFAULT_JOBS;
 
 // ── Common defines (workspace-level from premake5.lua) ─────────────────────
 const COMMON_DEFINES = ["WIN32", "_WIN32", "WINVER=0x0605", "_WIN32_WINNT=0x0603"];
@@ -1721,7 +1722,7 @@ async function buildLibrary(
     });
   }
 
-  await compileAll(units, JOBS);
+  await compileAll(units, compileJobs);
 
   const objs = units.map((u) => u.obj);
   const archivePath = join(outDir, "lib", `lib${lib.name}.a`);
@@ -1805,7 +1806,7 @@ async function buildSumatraExe(
     });
   }
 
-  await compileAll(units, JOBS);
+  await compileAll(units, compileJobs);
   const exeObjs = units.map((u) => u.obj);
 
   // ── Compile _com_util stub (mingw doesn't ship comsuppw.lib) ─────────
@@ -1925,10 +1926,13 @@ export interface MingwBuildOptions {
   isRelease?: boolean;
   clean?: boolean;
   tools?: Partial<MingwTools>;
+  /** parallel compile jobs; defaults to min(4, cpu count) */
+  jobs?: number;
 }
 
 export async function buildMingw(opts: MingwBuildOptions): Promise<void> {
   setMingwTools(opts.tools ?? {});
+  compileJobs = opts.jobs ?? DEFAULT_JOBS;
   await build(opts.isRelease ?? false, opts.clean ?? false, opts.outDir);
 }
 
@@ -1944,7 +1948,7 @@ async function build(isRelease: boolean, clean: boolean, outDir: string): Promis
 
   console.log(`\n=== Building SumatraPDF (${config}, x64, mingw) ===\n`);
   console.log(`Output: ${outDir}`);
-  console.log(`Parallel jobs: ${JOBS}\n`);
+  console.log(`Parallel jobs: ${compileJobs}\n`);
 
   mkdirSync(join(outDir, "obj"), { recursive: true });
   mkdirSync(join(outDir, "lib"), { recursive: true });

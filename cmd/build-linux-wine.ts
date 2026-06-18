@@ -11,6 +11,7 @@
  */
 
 import { existsSync, mkdirSync } from "node:fs";
+import { cpus } from "node:os";
 import { join } from "node:path";
 import { clearDirPreserveSettings } from "../cmd/clean";
 import { buildMingw, type MingwTools } from "../cmd/build-with-mingw";
@@ -119,12 +120,14 @@ async function main(): Promise<void> {
   }
 
   const tools = resolveMingwTools();
-  console.log(`Using ${tools.cxx} / ${tools.cc}`);
+  const jobs = Math.max(1, cpus().length);
+  console.log(`Using ${tools.cxx} / ${tools.cc} (${jobs} parallel jobs)`);
 
   await buildMingw({
     outDir: OUT_DIR,
     isRelease: false,
     tools,
+    jobs,
   });
 
   if (doRun) {
