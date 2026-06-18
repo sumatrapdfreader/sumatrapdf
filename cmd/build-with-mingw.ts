@@ -46,6 +46,10 @@ let compileJobs = DEFAULT_JOBS;
 // ── Common defines (workspace-level from premake5.lua) ─────────────────────
 const COMMON_DEFINES = ["WIN32", "_WIN32", "WINVER=0x0605", "_WIN32_WINNT=0x0603"];
 
+// mingw libstdc++ (INLINE=0) defines type_info::operator== in tinfo.o; force
+// INLINE=1 so RTTI-enabled C++ libs (e.g. libheif) use the header inline form.
+const MINGW_CXX_FLAGS = ["-D__GXX_TYPEINFO_EQUALITY_INLINE=1"];
+
 // ── Types ───────────────────────────────────────────────────────────────────
 interface FileGroup {
   dir: string;
@@ -631,6 +635,7 @@ const dav1d: LibDef = {
         "thread_task.c",
         "cdf.c",
         "cpu.c",
+        "ctx.c",
         "data.c",
         "decode.c",
         "dequant_tables.c",
@@ -642,6 +647,7 @@ const dav1d: LibDef = {
         "mem.c",
         "msac.c",
         "obu.c",
+        "pal.c",
         "picture.c",
         "qm.c",
         "ref.c",
@@ -666,6 +672,42 @@ const dav1d: LibDef = {
   ],
 };
 
+const skcms: LibDef = {
+  name: "skcms",
+  alwaysOptimize: true,
+  defines: ["SKCMS_DISABLE_HSW", "SKCMS_DISABLE_SKX"],
+  includes: ["ext/skcms"],
+  files: [
+    { dir: "ext/skcms", patterns: ["skcms.cc"] },
+    { dir: "ext/skcms/src", patterns: ["skcms_TransformBaseline.cc"] },
+  ],
+};
+
+const highway: LibDef = {
+  name: "highway",
+  alwaysOptimize: true,
+  defines: [],
+  includes: ["ext/highway"],
+  rtti: true,
+  exceptions: true,
+  files: [{ dir: "ext/highway/hwy", patterns: ["*.cc"] }],
+};
+
+const libjxl: LibDef = {
+  name: "libjxl",
+  alwaysOptimize: true,
+  rtti: true,
+  exceptions: true,
+  defines: [
+    "JPEGXL_ENABLE_SKCMS=1",
+    "JPEGXL_ENABLE_TRANSCODE_JPEG=0",
+    "JPEGXL_BUNDLING_LIBJXL=1",
+    "_CRT_SECURE_NO_WARNINGS",
+  ],
+  includes: ["ext/libjxl", "ext/libjxl/lib/include", "ext/highway", "ext/skcms", "ext/brotli/c/include"],
+  files: [{ dir: "ext/libjxl/lib/jxl", patterns: ["**/*.cc"] }],
+};
+
 const libheif: LibDef = {
   name: "libheif",
   alwaysOptimize: true,
@@ -685,15 +727,21 @@ const libheif: LibDef = {
         "error.*",
         "file.*",
         "file_layout.*",
+        "id_creator.*",
         "init.*",
         "logging.*",
+        "mini.*",
         "nclx.*",
-        "pixelimage.*",
+        "omaf_boxes.*",
         "plugin_registry.*",
         "region.*",
         "security_limits.*",
         "text.*",
       ],
+    },
+    {
+      dir: "ext/libheif/libheif/image",
+      patterns: ["image_description.*", "pixelimage.*"],
     },
     {
       dir: "ext/libheif/libheif/image-items",
@@ -741,6 +789,7 @@ const libheif: LibDef = {
       dir: "ext/libheif/libheif/color-conversion",
       patterns: [
         "alpha.*",
+        "bayer_bilinear.*",
         "chroma_sampling.*",
         "colorconversion.*",
         "hdr_sdr.*",
@@ -969,6 +1018,7 @@ const mupdfLibs: LibDef = {
     {
       dir: "ext/freetype/src",
       patterns: [
+        "gzip/ftgzip.c",
         "cff/cff.c",
         "psaux/psaux.c",
         "pshinter/pshinter.c",
@@ -1099,7 +1149,7 @@ const mupdf: LibDef = {
     "FZ_ENABLE_SVG=1",
     "FZ_ENABLE_BROTLI=1",
     "FZ_ENABLE_BARCODE=0",
-    "FZ_ENABLE_JS=0",
+    "FZ_ENABLE_JS=1",
     "FZ_ENABLE_HYPHEN=0",
   ],
   includes: [
@@ -1126,6 +1176,7 @@ const mupdf: LibDef = {
       dir: "mupdf/source/fitz",
       patterns: [
         "archive.c",
+        "barcode.c",
         "bbox-device.c",
         "bidi.c",
         "bidi-std.c",
@@ -1207,6 +1258,7 @@ const mupdf: LibDef = {
         "memento.c",
         "memory.c",
         "noto.c",
+        "ocr-device.c",
         "outline.c",
         "output.c",
         "output-cbz.c",
@@ -1236,6 +1288,7 @@ const mupdf: LibDef = {
         "stext-iterator.c",
         "stext-output.c",
         "stext-para.c",
+        "stext-raft.c",
         "stext-search.c",
         "stext-table.c",
         "store.c",
@@ -1260,9 +1313,11 @@ const mupdf: LibDef = {
         "untar.c",
         "unzip.c",
         "util.c",
+        "warp.c",
         "writer.c",
         "xml-write.c",
         "xml.c",
+        "xmltext-device.c",
         "zip.c",
       ],
     },
@@ -1317,6 +1372,7 @@ const mupdf: LibDef = {
         "pdf-nametree.c",
         "pdf-object.c",
         "pdf-op-buffer.c",
+        "pdf-op-color.c",
         "pdf-op-filter.c",
         "pdf-op-run.c",
         "pdf-op-vectorize.c",
@@ -1329,6 +1385,7 @@ const mupdf: LibDef = {
         "pdf-resources.c",
         "pdf-run.c",
         "pdf-shade.c",
+        "pdf-shade-recolor.c",
         "pdf-signature.c",
         "pdf-store.c",
         "pdf-stream.c",
@@ -1364,6 +1421,31 @@ const mupdf: LibDef = {
       ],
     },
     { dir: "mupdf/source/reflow", patterns: ["*.c"] },
+    {
+      dir: "mupdf/source/tools",
+      patterns: [
+        "muconvert.c",
+        "mudraw.c",
+        "mugrep.c",
+        "murun.c",
+        "mutrace.c",
+        "pdfaudit.c",
+        "pdfbake.c",
+        "pdfclean.c",
+        "pdfcreate.c",
+        "pdfextract.c",
+        "pdfinfo.c",
+        "pdfmerge.c",
+        "pdfpages.c",
+        "pdfposter.c",
+        "pdfrecolor.c",
+        "pdfshow.c",
+        "pdfsign.c",
+        "pdftrim.c",
+      ],
+    },
+    { dir: "mupdf/source/helpers/pkcs7", patterns: ["pkcs7-windows.c"] },
+    { dir: "mupdf/source/helpers/mu-threads", patterns: ["mu-threads.c"] },
   ],
 };
 
@@ -1378,6 +1460,7 @@ const utils: LibDef = {
     "ext/libheif/libheif/api",
     "ext/libwebp/src",
     "ext/dav1d/include",
+    "ext/libjxl/lib/include",
     "mupdf/include",
     "ext/zlib",
     "ext/libarchive",
@@ -1412,6 +1495,7 @@ const utils: LibDef = {
         "HtmlPullParser.*",
         "HtmlPrettyPrint.*",
         "HttpUtil.*",
+        "JxlReader.*",
         "JsonParser.*",
         "Log.*",
         "LzmaSimpleArchive.*",
@@ -1434,6 +1518,10 @@ const utils: LibDef = {
         "WinUtil.*",
         "ZipUtil.*",
       ],
+    },
+    {
+      dir: "src/common",
+      patterns: ["arena.cpp", "base.cpp", "dir_scan.cpp", "file_util.cpp", "str_util.cpp", "win_util.cpp"],
     },
   ],
 };
@@ -1523,12 +1611,14 @@ const sumatraFiles: FileGroup[] = [
       "EditAnnotations.*",
       "EngineDump.cpp",
       "ExternalViewers.*",
+      "ImageSaveCropResize.*",
       "Favorites.*",
       "FileHistory.*",
       "FileThumbnails.*",
       "Flags.*",
       "FzImgReader.*",
       "GlobalPrefs.*",
+      "GumboHelpers.*",
       "HomePage.*",
       "Installer.*",
       "InstallerCommon.cpp",
@@ -1536,14 +1626,19 @@ const sumatraFiles: FileGroup[] = [
       "Menu.*",
       "Notifications.*",
       "PdfSync.*",
+      "PdfTools.*",
       "Print.*",
       "ProgressUpdateUI.*",
       "PreviewPipe.*",
+      "RefHover.*",
+      "RefHoverDetect.*",
+      "OverlayScrollbar.*",
       "RenderCache.*",
       "RegistryInstaller.*",
       "RegistryPreview.*",
       "RegistrySearchFilter.*",
       "SearchAndDDE.*",
+      "Screenshot.*",
       "Selection.*",
       "SettingsStructs.*",
       "SimpleBrowserWindow.*",
@@ -1556,6 +1651,7 @@ const sumatraFiles: FileGroup[] = [
       "SvgIcons.*",
       "TableOfContents.*",
       "Tabs.*",
+      "TabGroupsManage.*",
       "Tester.*",
       "Tests.cpp",
       "TextSearch.*",
@@ -1574,6 +1670,7 @@ const sumatraFiles: FileGroup[] = [
 
 // Debug-only extra files for SumatraPDF
 const sumatraDebugExtra: FileGroup[] = [
+  { dir: "src", patterns: ["SumatraTest.*"] },
   { dir: "src/regress", patterns: ["Regress.*"] },
   { dir: "src", patterns: ["Scratch.*"] },
   {
@@ -1628,6 +1725,7 @@ const SYSTEM_LIBS = [
   "uxtheme",
   "wintrust",
   "crypt32",
+  "ncrypt",
   "advapi32",
   "kernel32",
   "user32",
@@ -1698,7 +1796,7 @@ async function buildLibrary(
 
     const langFlags: string[] = [];
     if (isCpp) {
-      langFlags.push("-std=c++23");
+      langFlags.push("-std=c++23", ...MINGW_CXX_FLAGS);
       if (!lib.rtti) langFlags.push("-fno-rtti");
       if (!lib.exceptions) langFlags.push("-fno-exceptions");
     }
@@ -1795,7 +1893,7 @@ async function buildSumatraExe(
     const langFlags: string[] = [];
     if (isCpp) {
       // -fpermissive: HWND-to-LONG casts, GDI+ overloads, etc.
-      langFlags.push("-std=c++23", "-fno-rtti", "-fno-exceptions", "-fpermissive");
+      langFlags.push("-std=c++23", ...MINGW_CXX_FLAGS, "-fno-rtti", "-fno-exceptions", "-fpermissive");
     }
 
     const obj = objPath(outDir, "sumatrapdf", src);
@@ -1832,11 +1930,61 @@ namespace _com_util {
   }
 }
 `);
-  const comRes = await spawnCmd([mingwTools.cxx, "-Os", "-c", comUtilSrc, "-o", comUtilObj]);
+  const comRes = await spawnCmd([mingwTools.cxx, "-Os", ...MINGW_CXX_FLAGS, "-c", comUtilSrc, "-o", comUtilObj]);
   if (!comRes.ok) {
     console.error(`Failed to compile _com_util stub: ${comRes.stderr}`);
   }
   exeObjs.push(comUtilObj);
+
+  // ── TextToSpeech stub (WinRT headers unavailable for mingw cross-compile) ──
+  const ttsStubSrc = join(outDir, "obj", "_tts_stub.cpp");
+  const ttsStubObj = join(outDir, "obj", "_tts_stub.o");
+  await writeFile(ttsStubSrc, `
+#include "utils/BaseUtil.h"
+#include "TextToSpeech.h"
+
+bool TtsSpeakUtf8(const char*) { return false; }
+void TtsStop() {}
+void TtsRelease() {}
+bool TtsIsSpeaking() { return false; }
+int TtsGetSpokenPosUtf8() { return -1; }
+void TtsSetNotifyWindow(HWND, UINT, WPARAM, LPARAM) {}
+void TtsProcessEvents() {}
+Vec<TtsVoiceInfo> TtsGetVoices() { return {}; }
+void TtsFreeVoices(Vec<TtsVoiceInfo>&) {}
+bool TtsSetVoiceById(const char*) { return false; }
+const char* TtsGetVoiceId() { return nullptr; }
+`);
+  const ttsRes = await spawnCmd([
+    mingwTools.cxx,
+    "-Os",
+    ...MINGW_CXX_FLAGS,
+    "-Isrc",
+    "-c",
+    ttsStubSrc,
+    "-o",
+    ttsStubObj,
+  ]);
+  if (!ttsRes.ok) {
+    console.error(`Failed to compile TextToSpeech stub: ${ttsRes.stderr}`);
+    throw new Error("TextToSpeech stub compile failed");
+  }
+  exeObjs.push(ttsStubObj);
+
+  // ── debug test stubs (TestPlugin/TestPreview don't build cleanly with mingw GDI+) ──
+  const testStubSrc = join(outDir, "obj", "_test_stub.cpp");
+  const testStubObj = join(outDir, "obj", "_test_stub.o");
+  await writeFile(testStubSrc, `
+#include <windows.h>
+void TestPlugin(const WCHAR*) {}
+void TestPreview(const WCHAR*) {}
+`);
+  const testRes = await spawnCmd([mingwTools.cxx, "-Os", ...MINGW_CXX_FLAGS, "-c", testStubSrc, "-o", testStubObj]);
+  if (!testRes.ok) {
+    console.error(`Failed to compile test stub: ${testRes.stderr}`);
+    throw new Error("test stub compile failed");
+  }
+  exeObjs.push(testStubObj);
 
   // ── Embed font files ──────────────────────────────────────────────────
   console.log("Embedding font files...");
@@ -1919,7 +2067,22 @@ namespace _com_util {
 
 // Order: libraries that have no deps first, then dependents.
 // The link order for archives is: most-dependent first, least-dependent last.
-const ALL_LIBS: LibDef[] = [zlib, unrar, libdjvu, chm, libarchive, libwebp, dav1d, libheif, mupdfLibs, mupdf, utils];
+const ALL_LIBS: LibDef[] = [
+  zlib,
+  unrar,
+  libdjvu,
+  chm,
+  libarchive,
+  libwebp,
+  dav1d,
+  libheif,
+  skcms,
+  highway,
+  libjxl,
+  mupdfLibs,
+  mupdf,
+  utils,
+];
 
 export interface MingwBuildOptions {
   outDir: string;
