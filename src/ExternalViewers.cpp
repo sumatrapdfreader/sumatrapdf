@@ -511,14 +511,36 @@ bool RunWithExe(WindowTab* tab, const char* cmdLine, const char* filter) {
     static const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
 
+static bool IsMapiSendMailAvailable() {
+    HMODULE hMapi = LoadLibraryW(L"mapi32.dll");
+    if (!hMapi) {
+        return false;
+    }
+    bool ok = GetProcAddress(hMapi, "MAPISendMailW") != nullptr;
+    FreeLibrary(hMapi);
+    return ok;
+}
+
+static bool IsEmailAttachmentSendAvailable() {
+    static int cached = -1;
+    if (cached >= 0) {
+        return cached != 0;
+    }
+    if (IsRunningOnWine()) {
+        cached = 0;
+        return false;
+    }
+    bool ok = IsMapiSendMailAvailable();
+    cached = ok ? 1 : 0;
+    return ok;
+}
+
 bool CanSendAsEmailAttachment(WindowTab* tab) {
-    // Requirements: a valid filename and access to SendMail's IDropTarget interface
+    // Requirements: a valid filename and a working MAPISendMailW (what we use to send).
     if (!CanViewExternally(tab)) {
         return false;
     }
-
-    ScopedComPtr<IDropTarget> pDropTarget;
-    return pDropTarget.Create(CLSID_SendMail);
+    return IsEmailAttachmentSendAvailable();
 }
 
 // Use MAPISendMailW to send email with attachment.
