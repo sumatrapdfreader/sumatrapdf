@@ -8,9 +8,11 @@
 import { buildApp } from "./util.ts";
 import { testit as allTests } from "./all.ts";
 import { testit as adHocExif } from "./ad-hoc-exif.ts";
+import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const adHocTests: [string, () => void | Promise<void>][] = [
   ["ad-hoc-exif", adHocExif],
+  ["issue-chm-lzx", issueChmLzx],
 ];
 
 export async function testit(): Promise<void> {

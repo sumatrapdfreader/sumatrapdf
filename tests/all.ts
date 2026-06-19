@@ -24,7 +24,6 @@ import { testit as issue5642 } from "./issue-5642.ts";
 import { testit as issue5665 } from "./issue-5665.ts";
 import { testit as issue5677 } from "./issue-5677.ts";
 import { testit as issue5681 } from "./issue-5681.ts";
-import { testit as issueChmLzx } from "./issue-chm-lzx.ts";
 
 const tests: [string, () => void | Promise<void>][] = [
   ["cmd-start-autoscroll", cmdStartAutoScroll],
@@ -41,7 +40,6 @@ const tests: [string, () => void | Promise<void>][] = [
   ["issue-5665", issue5665],
   ["issue-5677", issue5677],
   ["issue-5681", issue5681],
-  ["issue-chm-lzx", issueChmLzx],
 ];
 
 // runs all registered tests in order; throws (stopping) at the first failure
