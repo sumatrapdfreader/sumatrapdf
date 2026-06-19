@@ -2811,6 +2811,10 @@ void LoadModelIntoTab(WindowTab* tab) {
     }
     InvalidateRect(win->hwndCanvas, nullptr, FALSE);
     UpdateWindow(win->hwndCanvas);
+
+    if (IsMainWindowValid(win)) {
+        OnClaudeTabChanged(win);
+    }
 }
 
 enum class MeasurementUnit {

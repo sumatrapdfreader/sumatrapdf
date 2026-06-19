@@ -30,7 +30,6 @@
 #include "Commands.h"
 #include "Menu.h"
 #include "TableOfContents.h"
-#include "ClaudeCode.h"
 #include "Tabs.h"
 #include "SumatraDialogs.h"
 #include "FileHistory.h"
@@ -535,7 +534,6 @@ static void MainWindowTabSelectionChanged(MainWindow* win, TabsCtrl::SelectionCh
     if (isShowingPageInfo) {
         PostMessageW(win->hwndFrame, WM_COMMAND, CmdTogglePageInfo, 0);
     }
-    OnClaudeTabChanged(win);
 }
 
 static void MainWindowTabMigration(MainWindow* win, TabsCtrl::MigrationEvent* ev) {
