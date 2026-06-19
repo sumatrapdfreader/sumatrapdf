@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ThreadUtil.h"
@@ -1025,7 +1026,52 @@ static void SendClaudeMessage(MainWindow* win) {
     RunAsync(MkFunc0(StartClaudeReadThread, ctx), "ClaudeReadThread");
 }
 
-static void UpdateClaudePanelTitle(MainWindow* win) {
+constexpr int kClaudeLabelCloseBtnDx = 16;
+constexpr int kClaudeLabelCloseBtnSpaceDx = 8;
+constexpr int kClaudeLabelPadX = 2;
+
+static int ClaudeLabelMaxTextDx(HWND labelHwnd, int labelDx) {
+    int padX = DpiScale(labelHwnd, kClaudeLabelPadX);
+    int btnDx = DpiScale(labelHwnd, kClaudeLabelCloseBtnDx);
+    int spaceDx = DpiScale(labelHwnd, kClaudeLabelCloseBtnSpaceDx);
+    int maxDx = labelDx - btnDx - spaceDx - 2 * padX;
+    return maxDx > 0 ? maxDx : 0;
+}
+
+static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
+    const char* prefix = "Chat with ";
+    TempStr full = str::JoinTemp(prefix, docName);
+    if (maxDx <= 0) {
+        return full;
+    }
+    Size sz = HwndMeasureText(labelHwnd, full, font);
+    if (sz.dx <= maxDx) {
+        return full;
+    }
+
+    int nRunes = utf8StrLen((u8*)docName);
+    if (nRunes < 0) {
+        return full;
+    }
+
+    TempStr best = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, 1));
+    int lo = 1;
+    int hi = nRunes;
+    while (lo <= hi) {
+        int mid = (lo + hi) / 2;
+        TempStr trial = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, mid));
+        sz = HwndMeasureText(labelHwnd, trial, font);
+        if (sz.dx <= maxDx) {
+            best = trial;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return best;
+}
+
+static void UpdateClaudePanelTitle(MainWindow* win, int labelDx) {
     if (!win || !win->claudeLabelWithClose) {
         return;
     }
@@ -1034,14 +1080,21 @@ static void UpdateClaudePanelTitle(MainWindow* win) {
     if (tab && !tab->IsAboutTab() && tab->filePath) {
         const char* title = tab->GetTabTitle();
         if (!str::IsEmpty(title)) {
-            docName = ShortenStringUtf8Temp(title, 16);
+            docName = title;
         }
     }
-    TempStr label = str::FormatTemp("Chat with %s", docName);
-    win->claudeLabelWithClose->SetLabel(label);
-    if (win->claudeVisible && win->hwndClaudeBox) {
-        LayoutClaudeBox(win);
+
+    HWND labelHwnd = win->claudeLabelWithClose->hwnd;
+    HFONT font = win->claudeLabelWithClose->font;
+    if (!font) {
+        font = GetDefaultGuiFont(true, false);
     }
+    if (labelDx <= 0 && win->hwndClaudeBox) {
+        labelDx = ClientRect(win->hwndClaudeBox).dx;
+    }
+    int maxDx = ClaudeLabelMaxTextDx(labelHwnd, labelDx);
+    TempStr label = FitClaudePanelTitleTemp(labelHwnd, font, docName, maxDx);
+    win->claudeLabelWithClose->SetLabel(label);
 }
 
 // --- Layout ---
@@ -1049,6 +1102,8 @@ static void LayoutClaudeBox(MainWindow* win) {
     HWND hwndContainer = win->hwndClaudeBox;
     Rect rc = ClientRect(hwndContainer);
     int y = 0;
+
+    UpdateClaudePanelTitle(win, rc.dx);
 
     // label
     Size labelSize = win->claudeLabelWithClose->GetIdealSize();
@@ -1292,7 +1347,7 @@ void CreateClaudePanel(MainWindow* win) {
     }
     win->claudeLabelWithClose = label;
     label->SetPaddingXY(2, 2);
-    UpdateClaudePanelTitle(win);
+    UpdateClaudePanelTitle(win, 0);
 
     // session combo
     win->hwndClaudeSessionCombo =
@@ -1394,7 +1449,7 @@ void ToggleClaudePanel(MainWindow* win) {
     HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
 
     if (win->claudeVisible) {
-        UpdateClaudePanelTitle(win);
+        UpdateClaudePanelTitle(win, 0);
         EnsureWebViewReady(win);
         PopulateSessionCombo(win);
         if (win->claudeInput) {
@@ -1408,7 +1463,7 @@ void ToggleClaudePanel(MainWindow* win) {
 
 // call when switching tabs to update session context
 void OnClaudeTabChanged(MainWindow* win) {
-    UpdateClaudePanelTitle(win);
+    UpdateClaudePanelTitle(win, 0);
     if (!win->claudeVisible) {
         return;
     }
