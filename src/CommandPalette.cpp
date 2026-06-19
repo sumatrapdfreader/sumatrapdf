@@ -313,8 +313,13 @@ static bool AllowCommand(const CommandPaletteBuildCtx& ctx, i32 cmdId) {
     if (cmdId <= CmdFirst) {
         return false;
     }
-    if (cmdId == CmdClaudeCode && !IsClaudeCodeAvailable()) {
-        return false;
+    if (cmdId == CmdClaudeCode) {
+        if (!IsClaudeCodeAvailable()) {
+            return false;
+        }
+        if (!ctx.isDocLoaded || !IsClaudeCodeSupportedForFile(ctx.filePath, ctx.engineKind)) {
+            return false;
+        }
     }
     CustomCommand* cmd = FindCustomCommand(cmdId);
     int origCmdId = cmd ? cmd->origId : 0;

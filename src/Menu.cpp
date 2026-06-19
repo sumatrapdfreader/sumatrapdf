@@ -1511,8 +1511,12 @@ std::pair<bool, bool> GetCommandIdState(BuildMenuCtx* ctx, int cmdId) {
     if ((cmdId == CmdCheckUpdate) && gIsStoreBuild) {
         remove = true;
     }
-    if (cmdId == CmdClaudeCode && !IsClaudeCodeAvailable()) {
-        remove = true;
+    if (cmdId == CmdClaudeCode) {
+        if (!IsClaudeCodeAvailable()) {
+            remove = true;
+        } else if (ctx && ctx->tab && !IsClaudeCodeSupportedForTab(ctx->tab)) {
+            disable = true;
+        }
     }
 
     if (!ctx) {

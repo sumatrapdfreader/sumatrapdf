@@ -26,8 +26,11 @@
 #include "SumatraPDF.h"
 #include "resource.h"
 
+#include "utils/GuessFileType.h"
+
 #include "AppTools.h"
 #include "ClaudeCode.h"
+#include "EngineAll.h"
 
 bool IsClaudeCodeAvailable() {
 #ifdef _MSC_VER
@@ -35,6 +38,27 @@ bool IsClaudeCodeAvailable() {
 #else
     return false;
 #endif
+}
+
+bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind) {
+    if (!filePath) {
+        return false;
+    }
+    if (engineKind == kindEngineComicBooks || engineKind == kindEngineImageDir) {
+        return false;
+    }
+    Kind kind = GuessFileTypeFromName(filePath);
+    if (kind == kindFilePDF) {
+        return true;
+    }
+    return IsEngineImageSupportedFileType(kind);
+}
+
+bool IsClaudeCodeSupportedForTab(WindowTab* tab) {
+    if (!tab || tab->IsAboutTab() || !tab->filePath) {
+        return false;
+    }
+    return IsClaudeCodeSupportedForFile(tab->filePath, tab->GetEngineType());
 }
 
 #define IDC_CLAUDE_LABEL_WITH_CLOSE 1110
@@ -330,21 +354,48 @@ static TempStr JsEscapeTemp(const char* s) {
 static void LayoutClaudeBox(MainWindow* win);
 static void AutoSelectRecentSession(MainWindow* win);
 static void WebViewAddError(MainWindow* win, const char* text); // forward decl
+static void WebViewShowUnsupportedFileType(MainWindow* win);
 
-static void SetClaudeWorking(MainWindow* win, bool working) {
+static void UpdateClaudePanelForCurrentTab(MainWindow* win) {
+    if (!win || !win->hwndClaudeBox) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    bool supported = IsClaudeCodeSupportedForTab(tab);
+    bool working = supported && tab && tab->claudeProcess != nullptr;
+    bool enableInput = supported && !working;
+
     if (win->claudeInput) {
-        EnableWindow(win->claudeInput->hwnd, !working);
-        if (working) {
-            SendMessageW(win->claudeInput->hwnd, EM_SETCUEBANNER, TRUE, (LPARAM)L"Agent is working...");
-        } else {
-            SendMessageW(win->claudeInput->hwnd, EM_SETCUEBANNER, TRUE, (LPARAM)L"Ask about this PDF...");
+        EnableWindow(win->claudeInput->hwnd, enableInput);
+        const WCHAR* cue = L"Ask about this document...";
+        if (!supported) {
+            cue = L"Not available for this file type";
+        } else if (working) {
+            cue = L"Agent is working...";
         }
+        SendMessageW(win->claudeInput->hwnd, EM_SETCUEBANNER, TRUE, (LPARAM)cue);
+    }
+    if (win->hwndClaudeSessionCombo) {
+        EnableWindow(win->hwndClaudeSessionCombo, enableInput);
+    }
+    if (win->hwndClaudeModelCombo) {
+        EnableWindow(win->hwndClaudeModelCombo, enableInput);
+    }
+    if (win->hwndClaudeEffortCombo) {
+        EnableWindow(win->hwndClaudeEffortCombo, enableInput);
+    }
+    if (win->hwndClaudeSkipPermsCheck) {
+        EnableWindow(win->hwndClaudeSkipPermsCheck, enableInput);
     }
     if (win->hwndClaudeStopBtn) {
         ShowWindow(win->hwndClaudeStopBtn, working ? SW_SHOW : SW_HIDE);
+        EnableWindow(win->hwndClaudeStopBtn, working);
     }
-    // relayout so stop button appears/disappears next to input
     LayoutClaudeBox(win);
+}
+
+static void SetClaudeWorking(MainWindow* win, bool /*working*/) {
+    UpdateClaudePanelForCurrentTab(win);
 }
 
 static void StopClaude(MainWindow* win) {
@@ -400,6 +451,13 @@ static void WebViewFlushBlock(MainWindow* win) {
 
 static void WebViewClearChat(MainWindow* win) {
     WebViewEval(win, "clearChat()", false); // don't record clear
+}
+
+static void WebViewShowUnsupportedFileType(MainWindow* win) {
+    WebViewClearChat(win);
+    const char* msg = "Claude Code is only available for PDF and image files.";
+    TempStr js = str::FormatTemp("addError('%s')", JsEscapeTemp(msg));
+    WebViewEval(win, js, false);
 }
 
 // Replay a tab's chat log into the WebView
@@ -972,6 +1030,9 @@ static void SendClaudeMessage(MainWindow* win) {
     if (!win->claudeInput) {
         return;
     }
+    if (!IsClaudeCodeSupportedForTab(win->CurrentTab())) {
+        return;
+    }
     HWND hwndInput = win->claudeInput->hwnd;
     int inputLen = GetWindowTextLengthW(hwndInput);
     if (inputLen == 0) {
@@ -1485,7 +1546,7 @@ void CreateClaudePanel(MainWindow* win) {
         args.isMultiLine = true;
         args.idealSizeLines = 3;
         args.withBorder = true;
-        args.cueText = "Ask about this PDF...";
+        args.cueText = "Ask about this document...";
         input->Create(args);
     }
     win->claudeInput = input;
@@ -1529,6 +1590,9 @@ void ToggleClaudePanel(MainWindow* win) {
     if (!IsClaudeCodeAvailable() || !win->hwndClaudeBox) {
         return;
     }
+    if (!win->claudeVisible && !IsClaudeCodeSupportedForTab(win->CurrentTab())) {
+        return;
+    }
     win->claudeVisible = !win->claudeVisible;
     HwndSetVisibility(win->hwndClaudeBox, win->claudeVisible);
     HwndSetVisibility(win->claudeSplitter->hwnd, win->claudeVisible);
@@ -1536,6 +1600,7 @@ void ToggleClaudePanel(MainWindow* win) {
     if (win->claudeVisible) {
         UpdateClaudePanelTitle(win, 0);
         EnsureWebViewReady(win);
+        UpdateClaudePanelForCurrentTab(win);
         PopulateSessionCombo(win);
         if (win->claudeInput) {
             HwndSetFocus(win->claudeInput->hwnd);
@@ -1549,13 +1614,22 @@ void ToggleClaudePanel(MainWindow* win) {
 // call when switching tabs to update session context
 void OnClaudeTabChanged(MainWindow* win) {
     UpdateClaudePanelTitle(win, 0);
+    WindowTab* tab = win->CurrentTab();
+    bool supported = IsClaudeCodeSupportedForTab(tab);
+    UpdateClaudePanelForCurrentTab(win);
+
     if (!win->claudeVisible) {
         return;
     }
+
+    if (!supported) {
+        WebViewShowUnsupportedFileType(win);
+        return;
+    }
+
     PopulateSessionCombo(win);
     WebViewClearChat(win);
 
-    WindowTab* tab = win->CurrentTab();
     if (!tab) {
         return;
     }

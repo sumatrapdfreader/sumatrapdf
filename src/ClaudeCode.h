@@ -2,8 +2,11 @@
    License: GPLv3 */
 
 struct MainWindow;
+struct WindowTab;
 
 bool IsClaudeCodeAvailable();
+bool IsClaudeCodeSupportedForFile(const char* filePath, Kind engineKind = nullptr);
+bool IsClaudeCodeSupportedForTab(WindowTab* tab);
 
 void CreateClaudePanel(MainWindow* win);
 void ToggleClaudePanel(MainWindow* win);
