@@ -2202,6 +2202,9 @@ Exit:
     HandleRedirectedConsoleOnShutdown();
     DeleteManualBrowserWindow();
 
+    LogArenaLifetimeStats("temp allocator", GetTempAllocator());
+    LogArenaLifetimeStats("lifetime arena", gLifetimeArena);
+
     if (!logFileBecauseDebug) {
         LaunchFileIfExists(logFilePath);
     }
@@ -2272,8 +2275,6 @@ Exit:
         UninstallCrashHandler();
     }
     DeleteAppTools();
-    LogArenaLifetimeStats("temp allocator", GetTempAllocator());
-    LogArenaLifetimeStats("lifetime arena", gLifetimeArena);
     DestroyLogging();
     DestroyTempAllocator();
     DestroyLifetimeArena();
