@@ -803,6 +803,14 @@ const globalPrefs: Field[] = [
   ),
   setExpert(
     mkField(
+      "DisableAutoLinks",
+      Bool,
+      false,
+      "if true, disables auto-linking of URLs and email addresses found in PDF text",
+    ),
+  ),
+  setExpert(
+    mkField(
       "UseSysColors",
       Bool,
       false,

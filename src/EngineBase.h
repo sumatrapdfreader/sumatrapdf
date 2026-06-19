@@ -426,6 +426,7 @@ class EngineBase {
     bool hasPageLabels = false;
     bool hideAnnotations = false;
     bool disableAntiAlias = false;
+    bool disableAutoLinks = false;
     int pageCount = -1;
 
     StrVec errors;

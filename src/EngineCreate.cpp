@@ -262,6 +262,7 @@ EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enabl
                 if (engine) {
                     engine->SetFilePath(path);
                     engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
+                    engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
                     return engine;
                 }
             } else {
@@ -286,6 +287,7 @@ EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enabl
     EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
     if (engine) {
         engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
+        engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
         return engine;
     }
 
@@ -300,6 +302,7 @@ EngineBase* CreateEngineFromFile(const char* path, PasswordUI* pwdUI, bool enabl
     }
     if (engine) {
         engine->disableAntiAlias = gGlobalPrefs->disableAntiAlias;
+        engine->disableAutoLinks = gGlobalPrefs->disableAutoLinks;
     }
     return engine;
 }

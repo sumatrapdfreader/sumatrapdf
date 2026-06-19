@@ -2053,6 +2053,7 @@ EngineBase* EngineMupdf::Clone() {
     delete pwdUI;
 
     clone->disableAntiAlias = disableAntiAlias;
+    clone->disableAutoLinks = disableAutoLinks;
 
     if (!decryptionKey.s && pdfdoc && pdfdoc->crypt) {
         clone->decryptionKey = Str();
@@ -3303,7 +3304,9 @@ FzPageInfo* EngineMupdf::GetFzPageInfo(int pageNo, bool loadQuick, fz_cookie* co
         return pageInfo;
     }
 
-    FzLinkifyPageText(pageInfo, stext);
+    if (!disableAutoLinks) {
+        FzLinkifyPageText(pageInfo, stext);
+    }
     FzFindImagePositions(ctx, pageNo, pageInfo->images, stext);
     fz_drop_stext_page(ctx, stext);
     return pageInfo;
