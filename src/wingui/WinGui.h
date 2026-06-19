@@ -536,11 +536,8 @@ struct Splitter : Wnd {
     HBITMAP bmp = nullptr;
     HBRUSH brush = nullptr;
 
-    Point prevResizeLinePos{};
-    // if a parent clips children, DrawXorBar() doesn't work, so for
-    // non-live resize, we need to remove WS_CLIPCHILDREN style from
-    // parent and restore it when we're done
-    bool parentClipsChildren = false;
+    // popup overlay for non-live resize indicator (above child controls like WebView2)
+    HWND resizeOverlayHwnd = nullptr;
     bool isMouseOver = false;
     bool mouseTracking = false;
 

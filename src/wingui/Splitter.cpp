@@ -3,7 +3,6 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/BitManip.h"
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 #include "utils/WinDynCalls.h"
@@ -19,10 +18,9 @@
 
 //- Splitter
 
-// the technique for drawing the splitter for non-live resize is described
-// at http://www.catch22.net/tuts/splitter-windows
-
 Kind kindSplitter = "splitter";
+
+static const WCHAR* kResizeOverlayClass = L"SplitterResizeOverlayWnd";
 
 static void OnSplitterPaint(HWND hwnd, COLORREF bgCol) {
     PAINTSTRUCT ps;
@@ -32,63 +30,103 @@ static void OnSplitterPaint(HWND hwnd, COLORREF bgCol) {
     EndPaint(hwnd, &ps);
 }
 
-static void DrawXorBar(HDC hdc, HBRUSH br, int x1, int y1, int width, int height) {
-    SetBrushOrgEx(hdc, x1, y1, nullptr);
-    HBRUSH hbrushOld = (HBRUSH)SelectObject(hdc, br);
-    PatBlt(hdc, x1, y1, width, height, PATINVERT);
-    SelectObject(hdc, hbrushOld);
-}
-
-static HDC InitDraw(HWND hwnd, Rect& rc) {
-    rc = ChildPosWithinParent(hwnd);
-    HDC hdc = GetDC(GetParent(hwnd));
-    SetROP2(hdc, R2_NOTXORPEN);
-    return hdc;
-}
-
-static void DrawResizeLineV(HWND hwnd, HBRUSH br, int x) {
-    Rect rc;
-    HDC hdc = InitDraw(hwnd, rc);
-    DrawXorBar(hdc, br, x, rc.y, 4, rc.dy);
-    ReleaseDC(GetParent(hwnd), hdc);
-}
-
-static void DrawResizeLineH(HWND hwnd, HBRUSH br, int y) {
-    Rect rc;
-    HDC hdc = InitDraw(hwnd, rc);
-    DrawXorBar(hdc, br, rc.x, y, rc.dx, 4);
-    ReleaseDC(GetParent(hwnd), hdc);
-}
-
-static void DrawResizeLineVH(HWND hwnd, HBRUSH br, bool isVert, Point pos) {
-    if (isVert) {
-        DrawResizeLineV(hwnd, br, pos.x);
-    } else {
-        DrawResizeLineH(hwnd, br, pos.y);
-    }
-}
-
-static void DrawResizeLine(HWND hwnd, HBRUSH br, SplitterType stype, bool erasePrev, bool drawCurr,
-                           Point& prevResizeLinePos) {
-    Point pos = HwndGetCursorPos(GetParent(hwnd));
-    bool isVert = stype != SplitterType::Horiz;
-
-    if (erasePrev) {
-        DrawResizeLineVH(hwnd, br, isVert, prevResizeLinePos);
-    }
-    if (drawCurr) {
-        DrawResizeLineVH(hwnd, br, isVert, pos);
-    }
-    prevResizeLinePos = pos;
-}
-
 static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
+
+static void RegisterResizeOverlayClass();
+
+static void HideResizeOverlay(Splitter* splitter) {
+    if (!splitter || !splitter->resizeOverlayHwnd) {
+        return;
+    }
+    ShowWindow(splitter->resizeOverlayHwnd, SW_HIDE);
+}
+
+static void EnsureResizeOverlay(Splitter* splitter) {
+    if (!splitter || splitter->resizeOverlayHwnd) {
+        return;
+    }
+    RegisterResizeOverlayClass();
+    HWND parent = GetParent(splitter->hwnd);
+    HWND owner = GetAncestor(parent, GA_ROOT);
+    DWORD exStyle = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+    DWORD style = WS_POPUP;
+    HWND hwnd = CreateWindowExW(exStyle, kResizeOverlayClass, nullptr, style, 0, 0, 0, 0, owner, nullptr,
+                                GetModuleHandleW(nullptr), nullptr);
+    ReportIf(!hwnd);
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)splitter);
+    splitter->resizeOverlayHwnd = hwnd;
+}
+
+static void UpdateResizeOverlay(Splitter* splitter, Point pos) {
+    if (!splitter) {
+        return;
+    }
+    EnsureResizeOverlay(splitter);
+    if (!splitter->resizeOverlayHwnd) {
+        return;
+    }
+
+    HWND parent = GetParent(splitter->hwnd);
+    POINT origin = {0, 0};
+    ClientToScreen(parent, &origin);
+    Rect splitterRc = WindowRect(splitter->hwnd);
+
+    int x = 0, y = 0, dx = 0, dy = 0;
+    bool isVert = splitter->type != SplitterType::Horiz;
+    if (isVert) {
+        x = origin.x + pos.x - 2;
+        y = splitterRc.y;
+        dx = 4;
+        dy = splitterRc.dy;
+    } else {
+        x = splitterRc.x;
+        y = origin.y + pos.y - 2;
+        dx = splitterRc.dx;
+        dy = 4;
+    }
+
+    SetWindowPos(splitter->resizeOverlayHwnd, HWND_TOP, x, y, dx, dy, SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    InvalidateRect(splitter->resizeOverlayHwnd, nullptr, TRUE);
+}
+
+static LRESULT ResizeOverlayWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    if (msg == WM_ERASEBKGND) {
+        return TRUE;
+    }
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        auto* splitter = (Splitter*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        if (splitter && splitter->brush) {
+            SetBrushOrgEx(hdc, 0, 0, nullptr);
+            FillRect(hdc, &ps.rcPaint, splitter->brush);
+        }
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    return DefWindowProcW(hwnd, msg, wparam, lparam);
+}
+
+static void RegisterResizeOverlayClass() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    WNDCLASSEX wcex{};
+    FillWndClassEx(wcex, kResizeOverlayClass, ResizeOverlayWndProc);
+    RegisterClassExW(&wcex);
+    registered = true;
+}
 
 Splitter::Splitter() {
     kind = kindSplitter;
 }
 
 Splitter::~Splitter() {
+    if (resizeOverlayHwnd) {
+        DestroyWindow(resizeOverlayHwnd);
+        resizeOverlayHwnd = nullptr;
+    }
     DeleteObject(brush);
     DeleteObject(bmp);
 }
@@ -109,8 +147,9 @@ HWND Splitter::Create(const CreateArgs& args) {
     brush = CreatePatternBrush(bmp);
     ReportIf(!brush);
 
-    DWORD style = GetWindowLong(args.parent, GWL_STYLE);
-    parentClipsChildren = bit::IsMaskSet<DWORD>(style, WS_CLIPCHILDREN);
+    if (!isLive) {
+        RegisterResizeOverlayClass();
+    }
 
     CreateCustomArgs cargs;
     // cargs.className = L"SplitterWndClass";
@@ -131,20 +170,15 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     if (WM_LBUTTONDOWN == msg) {
         SetCapture(hwnd);
         if (!isLive) {
-            if (parentClipsChildren) {
-                SetWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, false);
-            }
-            DrawResizeLine(hwnd, brush, type, false, true, prevResizeLinePos);
+            Point pos = HwndGetCursorPos(GetParent(hwnd));
+            UpdateResizeOverlay(this, pos);
         }
         return 1;
     }
 
     if (WM_LBUTTONUP == msg) {
         if (!isLive) {
-            DrawResizeLine(hwnd, brush, type, true, false, prevResizeLinePos);
-            if (parentClipsChildren) {
-                SetWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, true);
-            }
+            HideResizeOverlay(this);
         }
         ReleaseCapture();
         Splitter::MoveEvent arg;
@@ -152,6 +186,13 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
         arg.finishedDragging = true;
         onMove.Call(&arg);
         HwndScheduleRepaint(hwnd);
+        return 0;
+    }
+
+    if (WM_CAPTURECHANGED == msg) {
+        if ((HWND)lparam != hwnd && !isLive) {
+            HideResizeOverlay(this);
+        }
         return 0;
     }
 
@@ -180,7 +221,8 @@ LRESULT Splitter::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
             if (!arg.resizeAllowed) {
                 curId = IDC_NO;
             } else if (!isLive) {
-                DrawResizeLine(hwnd, brush, type, true, true, prevResizeLinePos);
+                Point pos = HwndGetCursorPos(GetParent(hwnd));
+                UpdateResizeOverlay(this, pos);
             }
         }
         SetCursorCached(curId);
