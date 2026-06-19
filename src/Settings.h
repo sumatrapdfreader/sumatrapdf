@@ -131,8 +131,12 @@ struct ChmUI {
 
 // settings for the Claude Code chat sidebar
 struct ClaudeCode {
-    // Claude model: 0=Sonnet, 1=Opus, 2=Haiku
-    int model;
+    // Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus
+    // if not in the model list
+    char* model;
+    // extra Claude model aliases for the dropdown, comma-separated;
+    // sonnet, opus, and haiku are always included
+    char* models;
     // Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
     int effort;
     // if true, pass --dangerously-skip-permissions to Claude Code
@@ -704,14 +708,15 @@ static const FieldInfo gChmUIFields[] = {
 static const StructInfo gChmUIInfo = {sizeof(ChmUI), 1, gChmUIFields, "UseFixedPageUI"};
 
 static const FieldInfo gClaudeCodeFields[] = {
-    {offsetof(ClaudeCode, model), SettingType::Int, 0},
+    {offsetof(ClaudeCode, model), SettingType::String, (intptr_t)"sonnet"},
+    {offsetof(ClaudeCode, models), SettingType::String, (intptr_t)""},
     {offsetof(ClaudeCode, effort), SettingType::Int, 1},
     {offsetof(ClaudeCode, skipPermissions), SettingType::Bool, false},
     {offsetof(ClaudeCode, bgColor), SettingType::Color, (intptr_t)"#ffffff"},
     {offsetof(ClaudeCode, sidebarDx), SettingType::Int, 0},
 };
-static const StructInfo gClaudeCodeInfo = {sizeof(ClaudeCode), 5, gClaudeCodeFields,
-                                           "Model\0Effort\0SkipPermissions\0BgColor\0SidebarDx"};
+static const StructInfo gClaudeCodeInfo = {sizeof(ClaudeCode), 6, gClaudeCodeFields,
+                                           "Model\0Models\0Effort\0SkipPermissions\0BgColor\0SidebarDx"};
 
 static const FieldInfo gAnnotationsFields[] = {
     {offsetof(Annotations, highlightColor), SettingType::Color, (intptr_t)"#ffff00"},

@@ -72,17 +72,106 @@ static bool ClaudeGetResource(void* ctx, const char* path, WebViewResourceResult
     return res->dataLen > 0;
 }
 
+static void AppendClaudeModelUnique(StrVec& models, const char* model) {
+    if (str::IsEmpty(model)) {
+        return;
+    }
+    TempStr norm = str::DupTemp(model);
+    char* s = norm;
+    while (str::IsWs(*s)) {
+        s++;
+    }
+    if (!*s) {
+        return;
+    }
+    str::ToLowerInPlace(s);
+    for (int i = 0; i < models.Size(); i++) {
+        if (str::EqI(models.At(i), s)) {
+            return;
+        }
+    }
+    models.Append(s);
+}
+
+static void BuildClaudeModelsList(StrVec& models) {
+    models.Reset();
+    AppendClaudeModelUnique(models, "sonnet");
+    AppendClaudeModelUnique(models, "opus");
+    AppendClaudeModelUnique(models, "haiku");
+    const char* extra = gGlobalPrefs->claudeCode.models;
+    if (!str::IsEmpty(extra)) {
+        StrVec parts;
+        Split(&parts, extra, ",", true);
+        for (int i = 0; i < parts.Size(); i++) {
+            AppendClaudeModelUnique(models, parts.At(i));
+        }
+    }
+}
+
+static int FindClaudeModelInList(const StrVec& models, const char* model) {
+    if (str::IsEmpty(model)) {
+        return -1;
+    }
+    TempStr norm = str::DupTemp(model);
+    str::ToLowerInPlace(norm);
+    for (int i = 0; i < models.Size(); i++) {
+        if (str::EqI(models.At(i), norm)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static const char* ResolveClaudeModel(const StrVec& models, const char* model) {
+    int idx = FindClaudeModelInList(models, model);
+    if (idx >= 0) {
+        return models.At(idx);
+    }
+    idx = FindClaudeModelInList(models, "opus");
+    if (idx >= 0) {
+        return models.At(idx);
+    }
+    return "opus";
+}
+
+static TempStr ClaudeModelDisplayNameTemp(const char* model) {
+    if (str::IsEmpty(model)) {
+        return (TempStr) "Opus";
+    }
+    char* dup = str::DupTemp(model);
+    dup[0] = (char)toupper((unsigned char)dup[0]);
+    return dup;
+}
+
+static void PopulateModelCombo(HWND combo) {
+    if (!combo) {
+        return;
+    }
+    SendMessageW(combo, CB_RESETCONTENT, 0, 0);
+    StrVec models;
+    BuildClaudeModelsList(models);
+    for (int i = 0; i < models.Size(); i++) {
+        TempStr display = ClaudeModelDisplayNameTemp(models.At(i));
+        WCHAR* displayW = ToWStrTemp(display);
+        SendMessageW(combo, CB_ADDSTRING, 0, (LPARAM)displayW);
+    }
+}
+
 // Apply persisted settings to the UI controls
 static void ApplyClaudeSettingsToUI(MainWindow* win) {
-    int modelIdx = gGlobalPrefs->claudeCode.model;
     int effortIdx = gGlobalPrefs->claudeCode.effort;
-    if (modelIdx < 0 || modelIdx > 2) {
-        modelIdx = 0;
-    }
     if (effortIdx < 0 || effortIdx > 3) {
         effortIdx = 1;
     }
     if (win->hwndClaudeModelCombo) {
+        PopulateModelCombo(win->hwndClaudeModelCombo);
+        StrVec models;
+        BuildClaudeModelsList(models);
+        const char* model = ResolveClaudeModel(models, gGlobalPrefs->claudeCode.model);
+        int modelIdx = FindClaudeModelInList(models, model);
+        if (modelIdx < 0) {
+            modelIdx = 0;
+        }
         SendMessageW(win->hwndClaudeModelCombo, CB_SETCURSEL, modelIdx, 0);
     }
     if (win->hwndClaudeEffortCombo) {
@@ -97,7 +186,12 @@ static void ApplyClaudeSettingsToUI(MainWindow* win) {
 // Read current settings from UI controls and save
 static void SyncClaudeSettingsFromUI(MainWindow* win) {
     if (win->hwndClaudeModelCombo) {
-        gGlobalPrefs->claudeCode.model = (int)SendMessageW(win->hwndClaudeModelCombo, CB_GETCURSEL, 0, 0);
+        int sel = (int)SendMessageW(win->hwndClaudeModelCombo, CB_GETCURSEL, 0, 0);
+        StrVec models;
+        BuildClaudeModelsList(models);
+        if (sel >= 0 && sel < models.Size()) {
+            str::ReplaceWithCopy(&gGlobalPrefs->claudeCode.model, models.At(sel));
+        }
     }
     if (win->hwndClaudeEffortCombo) {
         gGlobalPrefs->claudeCode.effort = (int)SendMessageW(win->hwndClaudeEffortCombo, CB_GETCURSEL, 0, 0);
@@ -915,13 +1009,11 @@ static void SendClaudeMessage(MainWindow* win) {
     // sync and save settings from UI
     SyncClaudeSettingsFromUI(win);
 
-    const char* models[] = {"sonnet", "opus", "haiku"};
     const char* efforts[] = {"low", "medium", "high", "max"};
-    int modelIdx = gGlobalPrefs->claudeCode.model;
+    StrVec modelList;
+    BuildClaudeModelsList(modelList);
+    const char* model = ResolveClaudeModel(modelList, gGlobalPrefs->claudeCode.model);
     int effortIdx = gGlobalPrefs->claudeCode.effort;
-    if (modelIdx < 0 || modelIdx > 2) {
-        modelIdx = 0;
-    }
     if (effortIdx < 0 || effortIdx > 3) {
         effortIdx = 1;
     }
@@ -970,14 +1062,14 @@ static void SendClaudeMessage(MainWindow* win) {
             "--name \"%s\" "
             "--append-system-prompt \"The user is currently reading the file: %s\" "
             "\"%s\"",
-            claudePath, models[modelIdx], efforts[effortIdx], permsFlag, tab->claudeSessionId, sessionName, filePath,
+            claudePath, model, efforts[effortIdx], permsFlag, tab->claudeSessionId, sessionName, filePath,
             escapedInput);
     } else {
         cmdLine = str::FormatTemp(
             "\"%s\" -p --verbose --model %s --effort %s --output-format stream-json %s --resume %s "
             "--append-system-prompt \"The user is currently reading the file: %s\" "
             "\"%s\"",
-            claudePath, models[modelIdx], efforts[effortIdx], permsFlag, tab->claudeSessionId, filePath, escapedInput);
+            claudePath, model, efforts[effortIdx], permsFlag, tab->claudeSessionId, filePath, escapedInput);
     }
 
     SECURITY_ATTRIBUTES sa;
@@ -1361,10 +1453,6 @@ void CreateClaudePanel(MainWindow* win) {
         CreateWindowExW(0, L"COMBOBOX", L"", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 0, 0, 100, 200,
                         win->hwndClaudeBox, (HMENU)(UINT_PTR)IDC_CLAUDE_MODEL_COMBO, hmod, nullptr);
     SendMessageW(win->hwndClaudeModelCombo, WM_SETFONT, (WPARAM)GetDefaultGuiFont(), TRUE);
-    SendMessageW(win->hwndClaudeModelCombo, CB_ADDSTRING, 0, (LPARAM)L"Sonnet");
-    SendMessageW(win->hwndClaudeModelCombo, CB_ADDSTRING, 0, (LPARAM)L"Opus");
-    SendMessageW(win->hwndClaudeModelCombo, CB_ADDSTRING, 0, (LPARAM)L"Haiku");
-    SendMessageW(win->hwndClaudeModelCombo, CB_SETCURSEL, 0, 0); // default: Sonnet
 
     // effort combo
     win->hwndClaudeEffortCombo =

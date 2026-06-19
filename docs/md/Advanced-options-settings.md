@@ -304,8 +304,13 @@ ChmUI [
 
 ; settings for the Claude Code chat sidebar (introduced in version 3.7)
 ClaudeCode [
-    ; Claude model: 0=Sonnet, 1=Opus, 2=Haiku
-    Model = 0
+    ; Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if
+    ; not in the model list
+    Model = sonnet
+
+    ; extra Claude model aliases for the dropdown, comma-separated; sonnet,
+    ; opus, and haiku are always included
+    Models = 
 
     ; Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max
     Effort = 1

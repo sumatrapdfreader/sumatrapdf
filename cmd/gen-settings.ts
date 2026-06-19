@@ -360,7 +360,18 @@ const chmUI: Field[] = [
 ];
 
 const claudeCode: Field[] = [
-  mkField("Model", Int, 0, "Claude model: 0=Sonnet, 1=Opus, 2=Haiku"),
+  mkField(
+    "Model",
+    Str,
+    "sonnet",
+    "Claude model alias for --model (e.g. sonnet, opus, haiku); uses opus if not in the model list",
+  ),
+  mkField(
+    "Models",
+    Str,
+    "",
+    "extra Claude model aliases for the dropdown, comma-separated; sonnet, opus, and haiku are always included",
+  ),
   mkField("Effort", Int, 1, "Claude effort level: 0=Low, 1=Medium, 2=High, 3=Max"),
   mkField(
     "SkipPermissions",
