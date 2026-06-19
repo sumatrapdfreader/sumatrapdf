@@ -310,8 +310,52 @@ SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "rotate=180" d
 SumatraPDF.exe -print-to "Microsoft Print to PDF" -print-settings "output=C:\out\result.pdf" input.pdf
 ```
 
+## Common command-line printing problems
+
+### Paper size or tray ignored
+
+Drivers often report paper sizes under non-obvious names. If `paper=A4` has no effect:
+
+1. Print once from the Windows dialog and note the exact paper name in the driver.
+2. Use that string: `-print-settings "paper=A3 297 x 420 mm"`.
+3. Or use `paperkind=<num>` with the Windows `DMPAPER_*` id.
+4. For mixed page sizes: `paper=auto,bin=auto`.
+
+Combine with `ignore-pdf-print-settings` if the PDF embeds conflicting `ViewerPreferences`.
+
+### Wrong orientation or margins
+
+- Wide pages auto-rotate 90° to fit — add `disable-auto-rotation` to keep original orientation.
+- Upside-down virtual printer output — try `rotate=180`.
+- Content too small — use `fit` or `shrink` (default); exact size — `noscale`.
+
+### Job prints to wrong printer
+
+`-print-to` requires the **exact** printer name from Windows Settings → Printers. `-print-to-default` avoids name mismatches.
+
+### Silent script reports failure
+
+Check the [exit code](#exit-codes). Common results:
+
+| Code | Check |
+| --- | --- |
+| `4` | Printer name typo or no default printer |
+| `5` | Driver error — update driver, try printing to "Microsoft Print to PDF" to isolate |
+| `6` | `sumatrapdfrestrict.ini` has `PrinterAccess = 0` |
+
+Add `-silent` only after confirming the command works interactively (without `-silent`, error dialogs explain failures).
+
+### Lines or barcodes missing
+
+SumatraPDF renders each page to a bitmap before printing. Very fine lines, hairline barcodes, or light gray rules may disappear at printer resolution. Try `noscale` with a higher-DPI driver, or print from a vector-aware tool. See [Reporting printing bugs](Reporting-printing-bugs.md) — often driver/resolution, not SumatraPDF logic.
+
+### Windows 11: no Advanced tab in print dialog
+
+Use command-line printing (this section) or enable the [legacy print dialog](#windows-11-the-advanced-tab-is-missing) — CLI exposes every Advanced option on all Windows versions.
+
 ## See also
 
+- [FAQ](FAQ.md) — printing quick answers
 - [Command-line arguments](Command-line-arguments.md) — all command-line options
 - [Reporting printing bugs](Reporting-printing-bugs.md) — what to include when a
   printout is wrong

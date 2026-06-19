@@ -1,5 +1,7 @@
 # Corrupted installation
 
+See also [Installation](Installation.md) for portable vs installer overview.
+
 If you're reading this, you might have been told by SumatraPDF that you have a corrupted installation.
 
 **How can that happen?**

@@ -80,13 +80,53 @@ To select an annotation in the editor, place the mouse cursor over an annotation
 
 To move an annotation on the page, left click with mouse and drag to new location.
 
-## Customize highlight color
+## Default colors, size, and opacity
 
-To change default color for highlight annotation (created with keyboard shortcut `a`), use `Settings \ Advanced Options...` menu and change `Annotations` \ `HighlightColor` value. Default is yellow `#ffff00`).
+Open **Settings → Advanced Options...** and edit the `Annotations` block:
+
+| Setting | Used for |
+| --- | --- |
+| `HighlightColor` | New highlights (`a`) — default `#ffff00` |
+| `UnderlineColor` | Underline annotations |
+| `SquigglyColor` | Squiggly underline |
+| `StrikeOutColor` | Strike-out |
+| `FreeTextColor` / `FreeTextBackgroundColor` | Free text annotations |
+| `FreeTextSize` | Default font size for free text (default `12`) |
+| `FreeTextBorderWidth` | Border width for free text |
+| `FreeTextOpacity` | `0`–`100` percent opacity for free text |
+| `TextIconColor` / `TextIconType` | Sticky-note style icons |
+| `DefaultAuthor` | Author name written into new annotations |
+
+Highlight/underline/strikeout opacity is changed **per annotation** in the annotation editor, not via a global default.
+
+See [Advanced options / settings](Advanced-options-settings.md) for the full list.
+
+### Keyboard shortcuts with custom colors
+
+**Ver 3.6+:** `CmdCreateAnnotHighlight` accepts a color argument. You can bind e.g. green highlights to a key — see [Customizing keyboard shortcuts](Customizing-keyboard-shortcuts.md).
+
+### Toolbar buttons
+
+Add annotation commands to the toolbar via the `Shortcuts` array — see [Customize toolbar](Customize-toolbar.md). Example commands: `CmdCreateAnnotHighlight`, `CmdCreateAnnotUnderline`, `CmdSaveAnnotations`.
+
+## Saving workflow
+
+| Action | Shortcut / command |
+| --- | --- |
+| Save annotations to file | `Ctrl + Shift + S` (`CmdSaveAnnotations`) |
+| Save when closing | Prompt dialog — choose existing file, new file, or discard |
+
+There is **no undo** (`Ctrl + Z`) for annotation edits. Delete an annotation with `Delete` when the cursor is over it, or remove it in the annotation editor.
+
+To avoid the save prompt on every close, save explicitly with `Ctrl + Shift + S` before closing.
+
+## Annotations from other programs
+
+SumatraPDF can display most standard PDF annotations created in Acrobat, Foxit, etc. Some proprietary annotation types may show only an icon. Free-text presets and appearance vary between editors.
 
 ## Missing features
 
-This is a first version of annotation editing. We don't yet support all annotation types and can't do everything that other PDF editing apps can do.
+We don't yet support every annotation type or every editing operation other PDF apps offer.
 
 The future will be driven by your feedback. If there are features missing or there are better ways of doing things, let me know in [Discussions](https://github.com/sumatrapdfreader/sumatrapdf/discussions)
 

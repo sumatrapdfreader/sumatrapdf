@@ -51,6 +51,8 @@ Certain actions add navigation point. You can go back and forward in the history
 * `Alt + Left`, `Backspace` : go back in history
 * `Alt + Right`, `Shift + Backspace` : go forward in history
 
+After following an internal hyperlink (footnote, TOC entry), use `Alt + Left` to go back. See [Hyperlinks](Hyperlinks.md).
+
 Actions that add navigation point:
 * explicitly going to a page (`g`, `Ctrl + g`)
 * clicking on links within documents

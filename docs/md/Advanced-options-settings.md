@@ -183,6 +183,7 @@ UIFontSize = 0
 DisableAntiAlias = false
 
 ; if true, disables auto-linking of URLs and email addresses found in PDF text
+; (see https://www.sumatrapdfreader.org/docs/Hyperlinks)
 DisableAutoLinks = false
 
 ; if true, we use Windows system colors for background/text color. Over-rides

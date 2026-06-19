@@ -22,3 +22,5 @@ In restricted mode some actions that are not appropriate in such context are dis
 To restrict SumatraPDF put file `sumatrapdfrestrict.ini` in the same directory where `SumatraPDF` is.
 
 Here's a [full documentation of available options](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini).
+
+To disable only auto-detected URL/email links in PDF text (not embedded hyperlinks), use `DisableAutoLinks` in normal [advanced settings](Advanced-options-settings.md) instead — see [Hyperlinks](Hyperlinks.md).

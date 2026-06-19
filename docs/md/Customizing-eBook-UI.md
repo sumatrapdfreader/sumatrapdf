@@ -1,31 +1,66 @@
 # Customizing eBook UI
 
-**Note: in 3.4 we changed the eBook rendering engine and this customization is no longer possible.**
+EPUB, MOBI, FB2, and similar formats use SumatraPDF's **eBook UI** (HTML-based layout). Since **version 3.4** the engine is MuPDF-based: text selection, in-document search, and bookmarks work much like PDF.
 
-Sumatra has 2 UIs:
+## What you can customize
 
-- one for PDF/DjVu/Comic Book documents
-- another one for eBook documents (ePub, mobi etc.)
+Open **Settings → Advanced Options...** and edit the `EBookUI` section:
 
-As of version 3.1.2 eBook UI doesn't have zoom (changing font size), text selection etc.
+```
+EBookUI [
+    FontSize = 0
+    LayoutDx = 0
+    LayoutDy = 0
+    IgnoreDocumentCSS = false
+    CustomCSS =
+    WindowBgCol =
+]
+```
 
-There are 2 ways to customize eBook UI.
+| Setting | Meaning |
+| --- | --- |
+| `FontSize` | Base font size (default `8.0`; `0` = built-in default) |
+| `LayoutDx` / `LayoutDy` | Virtual page width / height for reflow (defaults `420` / `595`) |
+| `IgnoreDocumentCSS` | Ignore stylesheet from the EPUB (`true` = your `CustomCSS` wins) |
+| `CustomCSS` | Extra CSS rules — often paired with `IgnoreDocumentCSS = true` |
+| `WindowBgCol` | Canvas background around the reflowed text (**ver 3.7+**) |
 
-## Use advanced settings
+Full field reference: [Advanced options / settings](Advanced-options-settings.md).
 
-Use **Settings -> Advanced Settings** menu and find **EbookUI** section.
+## Themes and invert colors
 
-As described in [settings](https://www.sumatrapdfreader.org/settings/settings) you can change the following aspects of eBook UI:
+UI themes (`Theme = ...` in advanced settings) change window chrome. To change how the **document** looks:
 
-- FontName
-- FontSize
-- TextColor
-- BackgroundColor
+- **`Shift + I`** (`CmdInvertColors`) swaps text and background colors for the rendered page. This affects **images** as well as text — there is no built-in "invert text only" mode.
+- `FixedPageUI.InvertColors = true` persists invert for PDF-style rendering; ebook pages respect the same invert when shown through shared color paths.
 
-## Use PDF UI for eBooks
+For dark reading without crushing photos, experiment with `CustomCSS` (dark background, light text) and `IgnoreDocumentCSS = true` instead of global invert. See [Customize theme colors](Customize-theme-colors.md).
 
-Use **Settings -> Advanced Settings** menu and find **EbookUI** section.
+## Continuous vs paged view
 
-Set **UseFixedPageUI = true**
+Use the same view commands as PDF: `c` toggles continuous mode; `Ctrl + 6` / `7` / `8` change column layout. See [Scrolling and zooming](Scrolling-and-zooming.md).
 
-Restart the app after changing the settings.
+## Search and navigation
+
+- In-document find: `Ctrl + F`, `F3` — see [Finding text](Finding-text.md)
+- Table of contents: `F12` or command palette `*` prefix
+- Internal links: click to follow; `Alt + Left` to go back
+
+## Known limitations
+
+Report issues in [discussions](https://github.com/sumatrapdfreader/sumatrapdf/discussions) or the [issue tracker](https://github.com/sumatrapdfreader/sumatrapdf/issues).
+
+- **Vertical writing** (some Asian EPUBs): may not detect top-to-bottom / right-to-left layout correctly.
+- **CSS features**: not every EPUB3 layout feature is supported; complex fixed-layout EPUBs may look wrong.
+- **`ReloadModifiedDocuments`**: auto-reload when the file changes on disk does not apply to eBook UI documents.
+- **Thumbnails in Explorer** for `.epub`: limited compared to PDF — see installer `-with-preview` in [Installation](Installation.md).
+
+## CHM files
+
+CHM uses a separate `ChmUI` section. Set `ChmUI.UseFixedPageUI = true` to render CHM with the PDF-style fixed-page engine instead of the HTML ebook engine.
+
+## See also
+
+- [Supported document formats](Supported-document-formats.md)
+- [FAQ](FAQ.md) — dark mode / invert questions
+- [Advanced options / settings](Advanced-options-settings.md)

@@ -23,7 +23,7 @@ You can [customize keyboard shortcuts](Customizing-keyboard-shortcuts.md). Also 
 - `Ctrl + G` Go To Page...
 - `Alt + Left Arrow` Back
 - `Alt + Right Arrow` Forward
-- `Ctrl + F` Find...
+- `Ctrl + F` Find... (see [Finding text](Finding-text.md))
 
 ### Favorites menu
 

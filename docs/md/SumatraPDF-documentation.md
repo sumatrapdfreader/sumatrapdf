@@ -3,6 +3,16 @@
 ## Documentation for users
 
 :columns
+[FAQ / troubleshooting](FAQ.md)
+
+[Installation](Installation.md)
+
+[Tabs and windows](Tabs-and-windows.md)
+
+[Finding text](Finding-text.md)
+
+[Hyperlinks](Hyperlinks.md)
+
 [Command Palette](Command-Palette.md)
 
 [Keyboard shortcuts](Keyboard-shortcuts.md)
@@ -20,6 +30,10 @@
 [Printing](Printing.md)
 
 [Advanced options / settings](Advanced-options-settings.md)
+
+[How we store settings](How-we-store-settings.md)
+
+[Accessibility and Text-to-Speech](Accessibility-and-Text-to-Speech.md)
 
 [Customizing toolbar](Customize-toolbar.md)
 
