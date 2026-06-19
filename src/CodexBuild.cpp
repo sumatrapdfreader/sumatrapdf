@@ -1098,11 +1098,8 @@ static void SendCodexMessage(MainWindow* win) {
 }
 
 static TempStr FitCodexPanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
-    (void)labelHwnd;
-    (void)font;
-    (void)docName;
-    (void)maxDx;
-    return str::DupTemp("Codex chat");
+    TempStr prefix = str::JoinTemp(_TRA("Codex chat"), " with ");
+    return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
 
 static void UpdateCodexPanelTitle(MainWindow* win, int labelDx) {

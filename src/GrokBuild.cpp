@@ -967,11 +967,8 @@ static void SendGrokMessage(MainWindow* win) {
 }
 
 static TempStr FitGrokPanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
-    (void)labelHwnd;
-    (void)font;
-    (void)docName;
-    (void)maxDx;
-    return str::DupTemp("Grok chat");
+    TempStr prefix = str::JoinTemp(_TRA("Grok chat"), " with ");
+    return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
 
 static void UpdateGrokPanelTitle(MainWindow* win, int labelDx) {

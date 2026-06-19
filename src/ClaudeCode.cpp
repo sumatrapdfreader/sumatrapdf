@@ -925,11 +925,8 @@ static void SendClaudeMessage(MainWindow* win) {
 }
 
 static TempStr FitClaudePanelTitleTemp(HWND labelHwnd, HFONT font, const char* docName, int maxDx) {
-    (void)labelHwnd;
-    (void)font;
-    (void)docName;
-    (void)maxDx;
-    return str::DupTemp("Claude chat");
+    TempStr prefix = str::JoinTemp(_TRA("Claude chat"), " with ");
+    return AIChatFitPanelTitleTemp(labelHwnd, font, prefix, docName, maxDx);
 }
 
 static void UpdateClaudePanelTitle(MainWindow* win, int labelDx) {

@@ -478,6 +478,38 @@ int AIChatLabelMaxTextDx(HWND labelHwnd, int labelDx) {
     return maxDx > 0 ? maxDx : 0;
 }
 
+TempStr AIChatFitPanelTitleTemp(HWND labelHwnd, HFONT font, const char* prefix, const char* docName, int maxDx) {
+    TempStr full = str::JoinTemp(prefix, docName);
+    if (maxDx <= 0) {
+        return full;
+    }
+    Size sz = HwndMeasureText(labelHwnd, full, font);
+    if (sz.dx <= maxDx) {
+        return full;
+    }
+
+    int nRunes = utf8StrLen((u8*)docName);
+    if (nRunes < 0) {
+        return full;
+    }
+
+    TempStr best = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, 1));
+    int lo = 1;
+    int hi = nRunes;
+    while (lo <= hi) {
+        int mid = (lo + hi) / 2;
+        TempStr trial = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, mid));
+        sz = HwndMeasureText(labelHwnd, trial, font);
+        if (sz.dx <= maxDx) {
+            best = trial;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return best;
+}
+
 char* AIChatGenerateSessionId() {
     GUID guid;
     if (FAILED(CoCreateGuid(&guid))) {
