@@ -43,3 +43,4 @@ docs/md/.obsidian
 # temporary / scratch output written by tests (see tests/util.ts tmpPath())
 tests/tmp/
 /.tmp
+/terminals
