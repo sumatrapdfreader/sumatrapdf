@@ -10,6 +10,18 @@ typedef interface ICoreWebView2Controller ICoreWebView2Controller;
 
 using WebViewMsgCb = Func1<const char*>;
 
+struct PendingWebViewOp {
+    enum Kind {
+        Init,
+        SetHtml,
+        Eval,
+        Navigate,
+    };
+
+    Kind kind;
+    char* text = nullptr;
+};
+
 struct CreateWebViewArgs {
     HWND parent = nullptr;
     Rect pos;
@@ -25,7 +37,13 @@ struct WebviewWnd : Wnd {
     void SetHtml(const char* html);
     void Init(const char* js);
     void Navigate(const char* url);
+    void Focus();
     bool Embed(WebViewMsgCb& cb);
+    void OnControllerReady(ICoreWebView2Controller* controller);
+    void FailInit();
+    void QueuePendingOp(PendingWebViewOp::Kind kind, const char* text);
+    void FlushPendingOps();
+    void SetControllerVisible(bool visible);
 
     virtual void OnBrowserMessage(const char* msg);
 
@@ -42,7 +60,13 @@ struct WebviewWnd : Wnd {
     ICoreWebView2* webview = nullptr;
     ICoreWebView2Controller* controller = nullptr;
 
-    // TODO: not sure if flag needs to be atomic i.e. is CreateCoreWebView2EnvironmentWithOptions()
-    // called on a different thread?
-    volatile LONG flag = 0;
+    bool initStarted = false;
+    bool initFailed = false;
+    bool isVisible = true;
+    bool isSuspended = false;
+    bool isInSizeMove = false;
+    RECT lastBounds = {};
+    bool hasLastBounds = false;
+    WCHAR* userDataFolder = nullptr;
+    Vec<PendingWebViewOp> pendingOps;
 };
