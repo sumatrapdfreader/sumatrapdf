@@ -16,6 +16,7 @@
 #include "wingui/WebView.h"
 
 #include "AppTools.h"
+#include "SumatraConfig.h"
 
 #include "SimpleBrowserWindow.h"
 
@@ -47,6 +48,9 @@ HWND SimpleBrowserWindow::Create(const SimpleBrowserCreateArgs& args) {
         if (!cargs.title) {
             cargs.title = "Browser Window";
         }
+        HMODULE h = GetModuleHandleW(nullptr);
+        WCHAR* iconName = MAKEINTRESOURCEW(GetAppIconID());
+        cargs.icon = LoadIconW(h, iconName);
         // TODO: if set, navigate to url doesn't work
         // args.visible = false;
         hwnd = CreateCustom(cargs);
