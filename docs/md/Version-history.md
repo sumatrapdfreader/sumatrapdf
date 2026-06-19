@@ -4,71 +4,53 @@
 
 Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
-- add [AI Chat with document](AI-Chat-with-document.md) sidebar (`CmdAIChatWithClaudeCode`, in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open PDF or image via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
+- add [AI Chat with document](AI-Chat-with-document.md) sidebar (in View menu and `Ctrl + k` [command palette](Command-Palette.md)) for asking questions about the open PDF or image via [Claude Code](https://docs.anthropic.com/en/docs/claude-code); per-tab session state, model/effort selection, and session history from `~/.claude/projects/`
 - add `ClaudeCode` advanced settings (`Model`, `Effort`, `SkipPermissions`, `BgColor`, `SidebarDx`) in `SumatraPDF-settings.txt`
-- add Adobe Reader-compatible `/p` (print dialog) and `/t` (silent print) command-line options
 - add `DisableAutoLinks` advanced setting to disable auto-linking of URLs and email addresses found in PDF text (fixes #5703)
 - the `FixedPageUI.SelectionColor` advanced setting now honors an alpha channel: set an `#aarrggbb` value (e.g. `#40f5fc0c`) to make the text-selection overlay more transparent so selected text stays crisp instead of looking washed out; `#rrggbb` keeps the previous default opacity (fixes #3209)
 - middle-click auto-scroll is now smooth: it's driven by a high-frequency timer with fractional-pixel accumulation instead of a coarse 20ms timer with integer steps, so it no longer looks choppy (also enables fine, slow scroll speeds) (fixes #2693)
-- add `CmdStartAutoScroll` (`Start Auto-Scroll` in the `Ctrl + k` command palette) to start middle-click-style auto-scroll without a middle mouse button (useful on laptops / trackpads): it anchors at the cursor, then move the cursor away to scroll; invoke again or middle-click to stop. Bind it to a key via [shortcuts](Customizing-keyboard-shortcuts.md)
 - associated file types now show their localized name in Explorer's "Type" column on non-English Windows; previously registration hardcoded an English name like "PDF File", overriding the name Windows would localize (fixes #3323)
-- add `CmdExpandToCurrentPage` (`Expand TOC to Current Page`, in the Bookmarks sidebar right-click menu and the `Ctrl + k` command palette) to expand the table of contents tree down to the current page's entry and select it, like Explorer's "Expand to current folder" (fixes #1998)
+- expand the table of contents tree down to the current page's entry and select it, like Explorer's "Expand to current folder" (in the Bookmarks sidebar right-click menu and the `Ctrl + k` command palette) (fixes #1998)
 - Save As now warns instead of failing silently when a file can't be written (e.g. the destination path exceeds the Windows `MAX_PATH` limit); previously there was no way to tell the save hadn't happened (fixes #1016)
 - can convert an image to a PDF: right-click an image (or an open image document) and choose `Image / Convert to PDF`, or pick `PDF` in the format drop-down of the Save Image dialog. The new PDF gets `CreationDate`/`ModDate` metadata with the current time and time zone (fixes #949)
 - in the Favorites pane and menu, a favorite for a file with a long name now shows your favorite's name first, then the file name, so the name you gave it is no longer pushed out of view (fixes #829, #2236)
 - case-insensitive search now treats German ß as equivalent to `ss`, so searching `Strasse` finds `Straße` and vice versa (fixes #933)
 - hovering a thumbnail on the Frequently Read home page now shows a ✕ button in its top-right corner to remove that document from the list, without going through the right-click menu (fixes #283)
-- new zoom mode `Fit by Orientation` (`CmdZoomFitByOrientation`, in the View / Zoom menu) that automatically fits width when the view is landscape and fits page when portrait, updating as you resize the window or rotate the screen (fixes #702)
-- add cmd-line tools `sumatrapdf-tool.exe <tool> <args>`. Tools: draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace
-- [command palette](Command-Palette.md) has a new `*` mode (`CmdCommandPalette *`, also `CmdCommandPaletteTOC` bound to `Shift + F12`) that jumps to a table of contents entry of the current document. Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
-- [command palette](Command-Palette.md) has a new `$` mode (`CmdCommandPalette $`) that jumps to a favorite, listing the current document's favorites first, then favorites of other documents
+- new zoom mode `Fit by Orientation` (in the View / Zoom menu) that automatically fits width when the view is landscape and fits page when portrait, updating as you resize the window or rotate the screen (fixes #702)
+- add `sumatrapdf-tool.exe` command-line tools for PDF manipulation (see [Tools](Tools.md))
+- [command palette](Command-Palette.md) has a new `*` mode that jumps to a table of contents entry of the current document (`Shift + F12`). Shows the fully expanded outline, indented by nesting level, with the entry closest to the current page pre-selected (fixes #5676)
+- [command palette](Command-Palette.md) has a new `$` mode that jumps to a favorite, listing the current document's favorites first, then favorites of other documents
 - [external viewer](Customize-external-viewers.md) command lines now support `%%` as a literal `%`, so e.g. `%%d` is passed to the program as `%d` (fixes #5583)
 - with `ReuseInstance`, opening a file now reuses a window on the current virtual desktop (or opens a new window there) instead of switching to a window on another desktop (fixes #5630)
-- add `-for-testing` [cmd-line argument](Command-line-arguments.md) for ad-hoc testing: always starts a new instance, doesn't restore a session, doesn't save settings
-- add `-dbg-control` [cmd-line argument](Command-line-arguments.md) and `cmd/control.ts` to drive automated tests over a named-pipe request/response protocol
-- add `-pwd` [cmd-line argument](Command-line-arguments.md) for opening password-protected documents from the command line (fixes #906)
 - add Back / Forward navigation buttons to the toolbar; navigation history now also records views you scrolled to and stayed on, not just table of contents / link jumps
-- add `CmdRemoveDeletedFilesFromHistory` (`Remove Deleted Files From History` in `Ctrl + k` [command palette](Command-Palette.md)) to remove history entries for files that no longer exist on disk
-- add `CmdPdShowInfo` (`Show PDF Info` in `Ctrl + k` [command palette](Command-Palette.md))
-- add `CmdDocumentShowOutline` (`Show Document Outline` in `Ctrl + k` [command palette](Command-Palette.md))
 - improved overlay scrollbar
 - make thumbnails on home page scrollable
-- add ability to register / unregister Windows preview handler and search filter from `Ctrl + k` command palette. Use "Register Windows Preview", Un-register Windows Preview", "Register Windows Search Filter", "Un-register Windows Search Filter".
-- add `CmdToggleEscToExit` (`Toggle Esc to Exit` in `Ctrl + k` [command palette](Command-Palette.md)) to toggle `EscToExit` advanced setting
-- add `CmdToggleTips` (`Toggle Tips` in `Ctrl + k` [command palette](Command-Palette.md)) to toggle `ShowTips` advanced setting
-- add `CmdToggleReuseInstance` (`Toggle Reuse Instance` in `Ctrl + k` [command palette](Command-Palette.md)) to toggle `ReuseInstance` advanced setting
-- add `CmdToggleChmUI` (`Toggle CHM UI` in `Ctrl + k` [command palette](Command-Palette.md)) to toggle dedicated CHM UI for CHM documents
-- add `CmdSetTabColor` (`Set Tab Color`) to set a custom color for a document's tab, available from tab right-click context menu
-- add `CmdPdfCompress` (`Compress PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to compress a PDF file
-- add `CmdPdfDecompress` (`Decompress PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to decompress a PDF file
-- add `CmdPdfDeletePages` (`Delete Pages From PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to delete pages from a PDF file
-- add `CmdPdfExtractPages` (`Extract Pages From PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to extract pages from a PDF file
-- add `CmdPdfEncrypt` (`Encrypt PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to encrypt a PDF file with a password using AES-256
-- add `CmdPdfDecrypt` (`Decrypt PDF` in `Ctrl + k` [command palette](Command-Palette.md)) to decrypt an encrypted PDF file, removing password protection
-- add `CmdDocumentExtractText` (`Extract Text From Document` in `Ctrl + k` [command palette](Command-Palette.md)) to extract text from document pages to a .txt file
-- add `CmdReadAloud`, `CmdPauseReadAloud`, `CmdContinueReadAloud` (`Read Aloud` etc. in `Ctrl + k` [command palette](Command-Palette.md)) to read selected text (or current page) using Windows text-to-speech, with pause / continue and voice selection from the toolbar button dropdown
+- add ability to register / unregister Windows preview handler and search filter from `Ctrl + k` command palette
+- set a custom color for a document's tab from the tab right-click context menu
+- compress, decompress, encrypt, decrypt, bake, delete pages from, and extract pages from PDF files (via `Ctrl + k` [command palette](Command-Palette.md))
+- extract text from document pages to a .txt file (via `Ctrl + k` [command palette](Command-Palette.md))
+- read selected text (or current page) aloud using Windows text-to-speech, with pause / continue and voice selection from the toolbar button dropdown
 - add `ToolbarText` parameter for `ExternalViewers` advanced setting to show external viewer as a toolbar button
 - move `Scrollbars` advanced setting from `FixedPageUI` to top-level
 - add `EBookUI.BackgroundColor` advanced setting to override background color for ebook documents (epub, mobi etc.)
 - add `ComicBookUI.BackgroundColor` advanced setting to override the default black background for comic book files
 - add `ImageUI.BackgroundColor` advanced setting to override the default black background for image files
 - background color settings (`FixedPageUI.BackgroundColor`, `EBookUI.BackgroundColor`, `ComicBookUI.BackgroundColor`, `ImageUI.BackgroundColor`) accept `checkered` value to show a checkerboard transparency pattern
-- add `CmdChangeBackgroundColor` (`Change Background Color` in `Ctrl + k` [command palette](Command-Palette.md)) to change document background color per-file or for all files of the same type
+- change document background color per-file or for all files of the same type (via `Ctrl + k` [command palette](Command-Palette.md))
 - `Ctrl + click` on a PDF link opens it in a new tab (instead of navigating in the current tab)
 - you can now drag&drop selected text to another application, like a text editor
 - triple-click selects the whole line of text (double-click still selects a word) (fixes #694)
 - fix `ExternalViewers` `CommandLine` parsing mangling quotes (e.g. `-t="Hello World"` became `"-t=Hello World"`); the command line is now passed through with the user's quoting preserved, only substituting `%1`/`%p`/`%d` (fixes #5695)
-- added `List Printers` (`CmdListPrinters`) command to `Ctrl + k` Command Palette to list available printers
 - fix `-print-settings paper=A3` (and other standard sizes) when the printer driver reports a longer paper name such as `A3 297 x 420 mm` (fixes #5632)
 - add `stretch` page scaling (and a matching "Stretch pages to fill paper" option in the Advanced print dialog) that fills the paper in both dimensions, ignoring the aspect ratio (fixes #2220)
-- add "Center page horizontally on the paper" option to the Advanced print dialog and `center` [print setting](Command-line-arguments.md), to center a page smaller than the paper (fixes #348)
-- add "Choose paper source by document page size" option to the Advanced print dialog and `bin=auto` [print setting](Command-line-arguments.md), to let the printer pick the input tray whose paper matches the page (fixes #349)
-- add "Print each page at its document page size" option to the Advanced print dialog and `paper=auto` [print setting](Command-line-arguments.md), to correctly print documents with mixed page sizes (fixes #533)
+- add "Center page horizontally on the paper" option to the Advanced print dialog, to center a page smaller than the paper (fixes #348)
+- add "Choose paper source by document page size" option to the Advanced print dialog, to let the printer pick the input tray whose paper matches the page (fixes #349)
+- add "Print each page at its document page size" option to the Advanced print dialog, to correctly print documents with mixed page sizes (fixes #533)
 - use the file name (not the full path) as the print job name, which some printer drivers couldn't handle for long or non-ASCII paths (fixes #2166)
 - command-line printing now honors print defaults embedded in a PDF's `ViewerPreferences` (`PrintScaling`, `NumCopies`, `Duplex`, `PickTrayByPDFSize`); explicit `-print-settings` values override them, and `ignore-pdf-print-settings` disables them (fixes #534)
 - command-line printing (`-print-to` / `-print-to-default`) now returns a distinct process exit code per failure category (file not loadable, printing not allowed, printer not found, driver failed, etc.) instead of a plain success/failure, so unattended callers can tell why a print failed (fixes #3478)
-- can set a default for the print dialog's Collate checkbox via the new `PrinterDefaults.Collate` advanced setting, and control it from the command line with the `collate` / `nocollate` `-print-settings` tokens (fixes #1558)
-- add a "Rotate printout" option to the Advanced print dialog and the `rotate=<90|180|270>` `-print-settings` token, to rotate the printout and fix a wrong orientation (e.g. upside-down output on virtual printers like XPS / Print to PDF) (fixes #1246)
+- can set a default for the print dialog's Collate checkbox via the new `PrinterDefaults.Collate` advanced setting (fixes #1558)
+- add a "Rotate printout" option to the Advanced print dialog, to rotate the printout and fix a wrong orientation (e.g. upside-down output on virtual printers like XPS / Print to PDF) (fixes #1246)
 - implement the `[GetFileState]` [DDE command](DDE-Commands.md) to query a document's path, zoom, view mode and version; also fixes a crash and broken/empty replies in the DDE request path on 64-bit (fixes #483)
 - `[GetFileState]` also returns the current page and page count, and a new `[GetOpenFiles]` DDE request returns the paths of all open documents (fixes #5060)
 - add `[GetMousePos]` DDE request returning the document position under the mouse cursor in PDF points (the `.smx` unit), for external annotation tools (fixes #1411)
@@ -76,27 +58,20 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - toggle commands (`CmdToggleFullscreen`, `CmdTogglePresentationMode`, `CmdToggleToolbar`, `CmdToggleMenuBar`, `CmdToggleContinuousView`, `CmdToggleTableOfContents`/`CmdToggleBookmarks`) accept an optional `state` argument to force an on/off state instead of toggling, e.g. `[CmdToggleFullscreen on]` (fixes #5067); also fixes parsing of boolean command arguments (`off`/`no`/`0` and `on` are now recognized)
 - add `[GotoPageWord]` [DDE command](DDE-Commands.md) to go to a page and select a search term only if it's on that page (a page-constrained search, unlike `[Search]` which wraps); also documented the existing `[Search]` DDE command (fixes #3085)
 - fix EXIF orientation ignored for JPEG and WebP images (fixes #1544)
-- add `-log-to-file <file>` cmd-line flag to log to a specific file (like `-log` but with custom log file path)
 - move `DefaultImageZoom` advanced setting to `ImageUI.DefaultZoom`, default to `shrink to fit`
-- improve `Toggle Use Tabs` (`CmdToggleUseTabs`). You can now transition between using tabs / not using tabs witout restarting the app
+- improve Toggle Use Tabs: you can now transition between using tabs / not using tabs without restarting the app
 - allow showing menu bar when using tabs (previously menu bar was only shown when not using tabs)
-- add `CmdScreenshot` (`Take Screenshot` in `Ctrl + k` [command palette](Command-Palette.md)) to capture screenshots of the desktop and all visible windows, saved as PNG files in `Screenshots` sub-directory of SumatraPDF data directory. Global hotkey (e.g. PrtSc) requires a Shortcuts entry.
+- capture screenshots of the desktop and all visible windows, saved as PNG files in `Screenshots` sub-directory of SumatraPDF data directory (global hotkey e.g. PrtSc requires a Shortcuts entry)
 - you can drag&drop images from a browser onto SumatraPDF window. We'll download it to Downloads folder and open
-- add `CmdCropImage` (`Crop Image`) command for cropping images when viewing image files
-- add `CmdResizeImage` (`Resize Image`) command for resizing images when viewing image files
+- crop and resize images when viewing image files
 - `Ctrl + V` pastes image from clipboard, saves as PNG in Downloads folder and opens it
 - Can save images in different formats: PNG, JPEG, BMP, GIF, TIFF.
-- add `CmdPdfBake` (`Bake PDF File` in `Ctrl + k` [command palette](Command-Palette.md)) to bake interactive form and annotation content into static graphics in a new PDF file
 - add `Fullscreen` advanced setting with `ShowToolbar` and `ShowMenubar` options to show toolbar and menu bar in fullscreen mode. Use `F9` / `F8` to toggle them while in fullscreen
-- add `CmdSetScreenshotHotkey` (`Set Screenshot Hotkey` in `Ctrl + k` [command palette](Command-Palette.md)) to set or remove a global hotkey for taking screenshots
 - add `Show Errors` in right-click context menu for PDF documents that have mupdf warnings/errors
-- add `CmdToggleSmoothScroll` (`Toggle Smooth Scroll`) command to toggle `SmoothScroll` advanced setting
 - replace `HideScrollbars` and `UseOverlayScrollbar` settings with `Scrollbars` setting (values: `windows`, `smart`, `overlay`, `hidden`)
-- add `CmdTabGroupSave` (`Save Tab Group`) and `CmdTabGroupRestore` (`Restore Tab Group`) commands to save and restore groups of tabs. Saved groups are persisted in `TabGroups` advanced setting
-- add `CmdChangeScrollbar` (`Change Scrollbar`) command to open scrollbar mode dialog
-- add `CmdZoomShrinkToFit` (`Shrink To Fit`) zoom mode: shows at 100% if page is smaller than view area, otherwise fits page
-- add `CmdToggleScrollbarInSinglePage` (`Toggle Scrollbar In Single Page`) command to toggle `ScrollbarInSinglePage` advanced setting
-- add `TabsMru` advanced setting and `CmdToggleTabsMru` (`Toggle Tabs MRU`) command to toggle it. It changes order of navigating tabs when usint `Ctrl + Tab` (`CmdNextTabSmart`)
+- save and restore groups of tabs; saved groups are persisted in `TabGroups` advanced setting
+- add `Shrink To Fit` zoom mode: shows at 100% if page is smaller than view area, otherwise fits page
+- add `TabsMru` advanced setting to change order of navigating tabs when using `Ctrl + Tab`
 - improve document properties for comic book files (CBZ, CBR, CB7, CBT). We now show list of image files and per-image EXIF metadata
 - improve document properties for image files: size, dimensions, DPI, exif metadata
 - support encrypted .cbz, .cbr files
@@ -105,7 +80,63 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - fix Edit Annotations window not restoring to the correct monitor in multi-monitor setups
 - use `GetFileAttributesEx` instead of opening files for change detection on network drives, avoiding Windows Defender re-scans
 - fix toolbar page number misalignment when `PrinterAccess` is revoked in `sumatrapdfrestrict.ini`
-- add citation/reference hover preview: hovering an internal-document link (e.g. a `[1]` citation, figure reference, or footnote marker) now shows a small popup rendering the destination region, so you can see the bibliography entry / figure / footnote without leaving the current page. The `CitationHoverDelay` advanced setting sets the hover delay in ms (-1 disables the popup); `CmdToggleHoverPreview` (`Toggle Hover Preview` in `Ctrl + k` [command palette](Command-Palette.md)) toggles it (fixes [#128](https://github.com/sumatrapdfreader/sumatrapdf/issues/128), [#4221](https://github.com/sumatrapdfreader/sumatrapdf/issues/4221))
+- add citation/reference hover preview: hovering an internal-document link (e.g. a `[1]` citation, figure reference, or footnote marker) now shows a small popup rendering the destination region, so you can see the bibliography entry / figure / footnote without leaving the current page. The `CitationHoverDelay` advanced setting sets the hover delay in ms (-1 disables the popup) (fixes [#128](https://github.com/sumatrapdfreader/sumatrapdf/issues/128), [#4221](https://github.com/sumatrapdfreader/sumatrapdf/issues/4221))
+
+**New commands:**
+
+- `CmdAIChatWithClaudeCode` : "AI Chat"
+- `CmdChangeBackgroundColor` : "Change Background Color"
+- `CmdChangeScrollbar` : "Change Scrollbar"
+- `CmdCommandPalette *` : command palette table-of-contents mode (`CmdCommandPaletteTOC`, `Shift + F12`)
+- `CmdCommandPalette $` : command palette favorites mode
+- `CmdContinueReadAloud` : "Continue Read Aloud"
+- `CmdConvertImageToPdf` : "Convert Image To PDF"
+- `CmdCropImage` : "Crop Image"
+- `CmdDocumentExtractText` : "Extract Text From Document"
+- `CmdDocumentShowOutline` : "Show Document Outline"
+- `CmdExpandToCurrentPage` : "Expand TOC to Current Page"
+- `CmdListPrinters` : "List Printers"
+- `CmdPauseReadAloud` : "Pause Read Aloud"
+- `CmdPdfBake` : "Bake PDF File"
+- `CmdPdfCompress` : "Compress PDF"
+- `CmdPdfDecrypt` : "Decrypt PDF"
+- `CmdPdfDecompress` : "Decompress PDF"
+- `CmdPdfDeletePages` : "Delete Pages From PDF"
+- `CmdPdfEncrypt` : "Encrypt PDF"
+- `CmdPdfExtractPages` : "Extract Pages From PDF"
+- `CmdPdShowInfo` : "Show PDF Info"
+- `CmdReadAloud` : "Read Aloud"
+- `CmdRemoveDeletedFilesFromHistory` : "Remove Deleted Files From History"
+- `CmdResizeImage` : "Resize Image"
+- `CmdScreenshot` : "Take Screenshot"
+- `CmdSetScreenshotHotkey` : "Set Screenshot Hotkey"
+- `CmdSetTabColor` : "Set Tab Color"
+- `CmdStartAutoScroll` : "Start Auto-Scroll"
+- `CmdTabGroupRestore` : "Restore Tab Group"
+- `CmdTabGroupSave` : "Save Tab Group"
+- `CmdToggleChmUI` : "Toggle CHM UI"
+- `CmdToggleEscToExit` : "Toggle Esc to Exit"
+- `CmdToggleHoverPreview` : "Toggle Hover Preview"
+- `CmdToggleReuseInstance` : "Toggle Reuse Instance"
+- `CmdToggleScrollbarInSinglePage` : "Toggle Scrollbar In Single Page"
+- `CmdToggleSmoothScroll` : "Toggle Smooth Scroll"
+- `CmdToggleTabsMru` : "Toggle Tabs MRU"
+- `CmdToggleTips` : "Toggle Tips"
+- `CmdToggleWindowsPreviewer` : "Toggle Windows Previewer"
+- `CmdToggleWindowsSearchFilter` : "Toggle Windows Search Filter"
+- `CmdZoomFitByOrientation` : "Fit by Orientation"
+- `CmdZoomShrinkToFit` : "Shrink To Fit"
+
+**New command-line arguments:**
+
+- `-for-testing` : for ad-hoc testing; always starts a new instance, doesn't restore a session, doesn't save settings
+- `-dbg-control <named-pipe>` : drive automated tests over a named-pipe request/response protocol (`cmd/control.ts`)
+- `-pwd <password>` : open password-protected documents from the command line (fixes #906)
+- `-log-to-file <file>` : log to a specific file (like `-log` but with a custom log file path)
+- `/p` : Adobe Reader-compatible alias for `-print-dialog`
+- `/t` : Adobe Reader-compatible silent print (alias for `-print-to`)
+- `sumatrapdf-tool.exe <tool> <args>` : command-line tools (draw, convert, audit, bake, clean, create, extract, info, merge, pages, poster, recolor, show, trim, grep, trace)
+- `-print-settings` tokens: `stretch`, `center`, `bin=auto`, `paper=auto`, `collate` / `nocollate`, `rotate=<90|180|270>`, `ignore-pdf-print-settings`
 
 ## 3.6.1 (2026-04-06)
 
@@ -113,9 +144,9 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 ## 3.6 (2026-03-17)
 
-- add `DisableAntiAlias` advanced setting and `CmdToggleAntiAlias` command
-- add `CmdShowAnnotations`, `CmdHideAnnotations`, `CmdToggleShowAnnotations` commands for temporarily hiding / showing annotations
-- add `CmdToggleInverseSearch` to temporarily disable mouse click invoking tex inverse search
+- add `DisableAntiAlias` advanced setting
+- temporarily hide / show annotations
+- temporarily disable mouse click invoking TeX inverse search
 - add `bgcolor`, `opacity`, `textsize`, `borderWidth` arguments to `CmdCreateAnnot*` commands
 - add `Annotations.FreeTextBackgroundColor` and `Annotations.FreeTextOpacity` advanced settings
 - sort thumbnails on home page by most recently used date. Set advanced setting `HomePageSortByFrequentlyRead = true` to revert to pre-3.6 behavior of sorting by frequency of use.
@@ -126,14 +157,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
   - zooming with pinch touch screen gesture or with ctrl + scroll wheel now zooms around the mouse position and does continuous zoom levels. Used to zoom around top-left corner and progress fixed zoom levels shown in menu
 - include manual (`F1` to launch browser with documentation)
 - add `LazyLoading` advanced setting, defaults to true. When restoring a session lazy loading delays loading a file until its tab is selected. Makes SumatraPDF startup faster.
-- new commands in command palette (`Ctrl + K`):
-  - `CmdCloseAllTabs` : "Close All Tabs"
-  - `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
-  - `CmdDeleteFile`: "Delete File"
-  - `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
-  - `CmdToggleLinks` : "Toggle Show Links"
-  - `CmdInvokeInverseSearch`
-  - `CmdMoveTabRight` (`Ctrl + Shift + PageUp`), `CmdMoveTabLeft` (`Ctrl + Shift + PageDown`) to move tabs left / right, like in Chrome
+- move tabs left / right, like in Chrome (`Ctrl + Shift + PageUp` / `Ctrl + Shift + PageDown`)
 - add ability to provide arguments to some commands when creating bindings in `Shortcuts`:
   - `CmdCreateAnnot*` commands take a color argument, `openedit` to automatically open edit annotations window when creating an annotation, `copytoclipboard` to copy selection to clipboard and `setcontent` to set contents of annotation to selection
   - `CmdScrollDown`, `CmdScrollUp` : integer argument, how many lines to scroll
@@ -142,7 +166,7 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - added `UIFontSize` advanced setting
 - removed `TreeFontWeightOffset` advanced setting
 - increase number of thumbnails on home page from 10 => 30
-- add `ShowLinks` advanced setting and "Toggle Show Links" (`CmdToggleLinks`) for command palette
+- add `ShowLinks` advanced setting
 - default `ReuseInstance` setting to true
 - added `Key` arg to `ExternalViewers` advanced setting (keyboard shortcut)
 - added `Key` arg to `SelectionHandlers` advanced setting (keyboard shortcut)
@@ -166,7 +190,27 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - allow creating custom themes in advanced settings in `Themes` section. [See docs](https://www.sumatrapdfreader.org/docs/Customize-theme-colors).
 - improve scrolling with middle click drag [#4529](https://github.com/sumatrapdfreader/sumatrapdf/issues/4529)
 - make built-in keyboard shortcuts work on non-us keyboards (cyrillic , hebrew etc.)
-- add `CmdDuplicateInNewTab` (`Open Current Document In New Tab`) command
+- open current document in a new tab
+
+**New commands:**
+
+- `CmdCloseAllTabs` : "Close All Tabs"
+- `CmdCloseTabsToTheLeft` : "Close Tabs To The Left"
+- `CmdDeleteFile` : "Delete File"
+- `CmdDuplicateInNewTab` : "Open Current Document In New Tab"
+- `CmdHideAnnotations` : "Hide Annotations"
+- `CmdInvokeInverseSearch` : "Invoke Inverse Search"
+- `CmdMoveTabLeft` : "Move Tab Left" (`Ctrl + Shift + PageDown`)
+- `CmdMoveTabRight` : "Move Tab Right" (`Ctrl + Shift + PageUp`)
+- `CmdNextTabSmart` : "Smart Tab Switch" (`Ctrl + Tab`)
+- `CmdPrevTabSmart` : "Smart Tab Switch" (`Ctrl + Shift + Tab`)
+- `CmdShowAnnotations` : "Show Annotations"
+- `CmdToggleTableOfContents` : "Toggle Table Of Contents"
+- `CmdToggleAntiAlias` : "Toggle Anti-Alias"
+- `CmdToggleFrequentlyRead` : "Toggle Frequently Read"
+- `CmdToggleInverseSearch` : "Toggle Inverse Search"
+- `CmdToggleLinks` : "Toggle Show Links"
+- `CmdToggleShowAnnotations` : "Toggle Show Annotations"
 
 ## 3.5.2 (2023-10-25)
 
@@ -187,29 +231,48 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
   you can use `i` (invert colors) to match the background / text color of rendered
   PDF document. Due to technical limitations, it doesn't work well with images
 - `i` (invert colors) is remembered in settings
-- `CmdEditAnnotations` select annotation under cursor and open annotation edit window
+- select annotation under cursor and open annotation edit window
 - rename `CmdShowCursorPosition` => `CmdToggleCursorPosition`
 - add `Annotations [ FreeTextColor, FreeTextSize, FreeTextBorderWidth ]` settings
 - ability to move annotations. `Ctrl + click` to select annotation and then move via drag & drop
-- add `CmdCommandPaletteOnlyTabs` command with `Alt + K` shortcut
 - exit full screen / presentation modes via double click with left mouse button
 - ability to drag out a tab to open it in new window
 - support opening `.avif` images (including inside .cbz/,cbr files)
 - respect image orientation `exif` metadata in .jpeg and .png images
-- support Adobe Reader syntax for opening files `/A "page=<pageno>#nameddest=<dest>search=<string>`
-- add `Next Tab` / `Prev Tab` commands with `Ctrl + PageUp` / `Ctrl + PageDown` shortcuts
+- support Adobe Reader syntax for opening files (see command-line arguments below)
+- add Next Tab / Prev Tab commands with `Ctrl + PageUp` / `Ctrl + PageDown` shortcuts
 - keep Home tab open; add `NoHomeTab` advanced option to disable that
 - add context menu to tabs
 - bugfix: handle files we can't open in `next file in folder` / `prev file in folder` commands
 - command palette: when search starts with `>`, only show commands, not files (like in Visual Studio Code)
-- add `reopen last closed` command (`Ctrl + Shift + T`, like in web browsers)
-- add `clear history` command
+- reopen last closed tab (`Ctrl + Shift + T`, like in web browsers)
+- clear history from command palette
 - can send commands via [DDE](https://www.sumatrapdfreader.org/docs/DDE-Commands)
-- added `CmdOpenWithExplorer`, `CmdOpenWithDirectoryOpus`, `CmdOpenWithTotalCommander`, `CmdOpenWithDoubleCommander` commands
-- enable `CmdCloseOtherTabs`, `CmdCloseTabsToTheRight` commands from command palette
+- open file in Explorer, Directory Opus, Total Commander, or Double Commander from command palette
+- close other tabs / close tabs to the right from command palette
 - recognize `PgUp` / `PgDown` and a few more in keyboard shortcuts
-- add `-disable-auto-rotation` cmd-line print option
-- add `-dde` cmd-line option
+
+**New commands:**
+
+- `CmdClearHistory` : "Clear History"
+- `CmdCloseOtherTabs` : "Close Other Tabs"
+- `CmdCloseTabsToTheRight` : "Close Tabs To The Right"
+- `CmdCommandPaletteOnlyTabs` : "Command Palette: Tabs Only" (`Alt + K`)
+- `CmdEditAnnotations` : "Edit Annotations"
+- `CmdNextTab` : "Next Tab" (`Ctrl + PageDown`)
+- `CmdOpenWithDirectoryOpus` : "Open With Directory Opus"
+- `CmdOpenWithDoubleCommander` : "Open With Double Commander"
+- `CmdOpenWithExplorer` : "Open With Explorer"
+- `CmdOpenWithTotalCommander` : "Open With Total Commander"
+- `CmdPrevTab` : "Prev Tab" (`Ctrl + PageUp`)
+- `CmdReopenLastClosedFile` : "Reopen Last Closed" (`Ctrl + Shift + T`)
+- `CmdToggleCursorPosition` : "Toggle Cursor Position" (renamed from `CmdShowCursorPosition`)
+
+**New command-line arguments:**
+
+- `-dde` : enable DDE server
+- `/A "page=<pageno>#nameddest=<dest>search=<string>"` : Adobe Reader-compatible open syntax
+- `-print-settings disable-auto-rotation` : don't auto-rotate wide pages to fit paper
 
 ## 3.4.6 (2022-06-08)
 
@@ -245,12 +308,12 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 
 ## 3.4 (2022-05-24)
 
-- [Command Palette](Command-Palette.md)
+- [Command Palette](Command-Palette.md) (`Ctrl + K`)
 - [customizable keyboard shortcuts](Customizing-keyboard-shortcuts.md)
 - better support for epub files using mupdf's epub engine. Adds text selection and search in ebook files. Better rendering fidelity. On the downside, might be slower.
 - [search / translate selected text](Customize-search-translation-services.md) with web services
   - we have few built-in and you can [add your own](https://www.sumatrapdfreader.org/settings/settings3-4#SelectionHandlers)
-- installer: `-all-users` cmd-line arg for system-wide install
+- installer supports system-wide install via command line
 - added `Annotations.TextIconColor` and `TextIconType` advanced settings
 - added `Annotations.UnderlineColor` advanced setting
 - added `Annotations.DefaultAuthor` advanced setting
@@ -259,10 +322,19 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
 - `Delete` / `Backspace` keyboard shortcuts delete an annotation under mouse cursor
 - support `.svg` files
 - faster scrolling with mouse wheel when cursor over scrollbar
-- add `-search` cmd-line option and `[Search("<file>", "<search-term>")]` DDE command
+- search for text when opening a document from the command line; also `[Search("<file>", "<search-term>")]` DDE command
 - a way to get list of used fonts in properties window
 - support opening `.heic` image files (if Windows heic codec is installed)
 - add experimental smooth scrolling (enabled with `SmoothScroll` advanced setting)
+
+**New commands:**
+
+- `CmdCommandPalette` : "Command Palette" (`Ctrl + K`)
+
+**New command-line arguments:**
+
+- `-all-users` : system-wide install (installer)
+- `-search <term>` : search for text when opening a document
 
 ## 3.3.3 (2021-07-20)
 
@@ -288,7 +360,6 @@ Available in [pre-release](https://www.sumatrapdfreader.org/prerelease) builds.
   ![Toolbar](img/toolbar.png)
 
 - added ability to hide scrollbar (more screen space for the document). Use right-click context menu.
-- add `-paperkind=${num}` printing option ([checkin](https://github.com/sumatrapdfreader/sumatrapdf/pull/1815/commits/2104e6104ea759dc4f839c7e8be5973f5a4f0488))
 
 Minor improvements and bug-fixes:
 
@@ -304,6 +375,10 @@ Minor improvements and bug-fixes:
 - restore ability to save embedded files (fixes [#1557](https://github.com/sumatrapdfreader/sumatrapdf/issues/1557))
 - `Alt + Space` opens a sys menu
 
+**New command-line arguments:**
+
+- `-print-settings paperkind=${num}` : select paper by Windows paper kind constant ([checkin](https://github.com/sumatrapdfreader/sumatrapdf/pull/1815/commits/2104e6104ea759dc4f839c7e8be5973f5a4f0488))
+
 ## 3.2 (2020-03-15)
 
 This release upgrades the core PDF parsing and rendering library mupdf to the latest version. This fixes PDF rendering bugs and improves performance.
@@ -312,7 +387,6 @@ Added support for multiple windows with tabs:
 
 - added `File / New Window` (`Ctrl-n`) which opens a new window
 - to compare the same file side-by-side, `Ctrl-Shift-n` shortcut opens current file in a new window. The same file is now opened in 2 windows that you can re-arrange as needed
-- `-new-window` cmd-line option will open the document in new window
 - if you hold `SHIFT` when drag&dropping files from Explorer (and other apps), the file will be opened in a new window
 
 Improved management of favorites:
@@ -325,6 +399,10 @@ Improved management of favorites:
 This release no longer supports Windows XP. Latest version that support XP is 3.1.2 that you can download from
 
 [https://www.sumatrapdfreader.org/download-prev.html](https://www.sumatrapdfreader.org/download-prev.html)
+
+**New command-line arguments:**
+
+- `-new-window` : open the document in a new window
 
 ## 3.1.2 (2016-08-14)
 
@@ -427,8 +505,11 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - add support for FictionBook ebook format
 - add support for PDF documents encrypted with Acrobat X
 - “Print as image” compatibility option in print dialog for documents that fail to print properly
-- new command-line option: `-manga-mode [1|true|0|false]` for proper display of manga comic books
 - many robustness fixes and small improvements
+
+**New command-line arguments:**
+
+- `-manga-mode [1|true|0|false]` : proper display of manga comic books
 
 ## 2.1.1 (2012-05-07)
 
@@ -476,7 +557,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - improved support for right-to-left languages e.g. Arabic
 - logical page numbers are displayed and used, if a document provides them (such as i, ii, iii, etc.)
 - allow to restrict SumatraPDF's features with more granularity; see **[sumatrapdfrestrict.ini](https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini)** for documentation
-- `-named-dest` also matches strings in table of contents
+- `-named-dest` also matches strings in table of contents (improvement to existing option)
 - improved support for EPS files (requires Ghostscript)
 - more robust installer
 - many minor improvements and bugfixes
@@ -512,7 +593,7 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - you can choose a custom installation directory in the installer
 - menu items for re-opening current document in Foxit and PDF-XChange (if they're installed)
 - we no longer compress the installer executable with mpress. It caused some anti-virus programs to falsely report Sumatra as a virus. The downside is that the binaries on disk are now bigger. Note: we still compress the portable .zip version
-- `-title` cmd-line option was removed
+- removed `-title` cmd-line option
 - support for AES-256 encrypted PDF documents
 - fixed an integer overflow reported by Jeroen van der Gun and other small fixes and improvements to PDF handling
 
@@ -599,9 +680,13 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 
 - improved rendering of some PDFs
 - support for links inside PDF file
-- added `-restrict` and `-title` cmd-line options (contributed by Matthew Wilcoxson)
 - enabled SyncTex support which mistakenly disabled in 0.9
 - misc fixes and translation updates
+
+**New command-line arguments:**
+
+- `-restrict` : restrict features via `sumatrapdfrestrict.ini` (contributed by Matthew Wilcoxson)
+- `-title <title>` : set window title (contributed by Matthew Wilcoxson)
 
 ## 0.9 (2008-08-10)
 
@@ -610,11 +695,14 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - password dialog no longer shows the password
 - support for AES-encrypted PDF files
 - updates to SyncTeX/PdfSync integration (contributed by William Blum)
-- add `-nameddest` command-line option and DDE commands for jumping to named destination (contributed by Alexander Klenin)
-- add `-reuse-instance` command-line option (contributed by William Blum)
-- add DDE command to open PDF file (contributed by William Blum)
+- add DDE commands for jumping to named destination and opening PDF files (contributed by Alexander Klenin, William Blum)
 - removed poppler rendering engine resulting in smaller program and updated to latest mupdf sources
 - misc bugfixes and translation updates
+
+**New command-line arguments:**
+
+- `-nameddest <name>` : jump to named destination (contributed by Alexander Klenin)
+- `-reuse-instance` : reuse an already running instance (contributed by William Blum)
 
 ## 0.8.1 (2008-05-27)
 
@@ -624,11 +712,14 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - language change is now a separate dialog instead of a menu
 - remember more settings (like default view)
 - automatic checks for new versions
-- add command-line option `-lang $lang`
-- add command-line option `-print-dialog` (contributed by Peter Astrand)
 - ESC or single mouse click hides selection
 - fix showing boxes in table of contents tree
 - translation updates
+
+**New command-line arguments:**
+
+- `-lang <language-code>` : set UI language
+- `-print-dialog` : show print dialog (contributed by Peter Astrand)
 
 ## 0.8 (2008-01-01)
 
@@ -640,8 +731,11 @@ This release no longer supports Windows XP. Latest version that support XP is 3.
 - fixed some crashes
 - rendering speedups
 - fixed loading of some PDFs
-- add command-line option `-esc-to-exit`
-- add command-line option `-bgcolor $color`
+
+**New command-line arguments:**
+
+- `-esc-to-exit` : press Esc to exit
+- `-bgcolor <color>` : set background color
 
 ## 0.7 (2007-07-28)
 
