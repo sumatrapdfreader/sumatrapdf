@@ -1031,7 +1031,7 @@ static void UpdateClaudePanelTitle(MainWindow* win) {
     }
     const char* docName = "document";
     WindowTab* tab = win->CurrentTab();
-    if (tab) {
+    if (tab && !tab->IsAboutTab() && tab->filePath) {
         const char* title = tab->GetTabTitle();
         if (!str::IsEmpty(title)) {
             docName = ShortenStringUtf8Temp(title, 16);

@@ -2088,6 +2088,9 @@ const char* ParseEmbeddedStreamNumber(const char* path, int* streamNoOut) {
 }
 
 TempStr GetEmbeddedFileNameTemp(const char* path) {
+    if (!path) {
+        return nullptr;
+    }
     const char* meta = nullptr;
     for (const char* pos = str::Find(path, ":attachname="); pos; pos = str::Find(pos + 1, ":attachname=")) {
         meta = pos;
