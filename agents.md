@@ -32,7 +32,7 @@ To add a new command:
 - add to cmd/gen-commands.ts, always at the end of the list (before the "CmdNone" command)
 - run "bun cmd/gen-commands.ts" to regenerate src/Commands.h and src/Commands.cpp
 - document in docs/md/Commands.md
-- document in docs/md/Version-history.md in **next** section
+- add an entry to the **New commands** list at the end of the **next** section in docs/md/Version-history.md (see below)
 
 ## Adding a new cmd-line flag
 
@@ -40,7 +40,28 @@ To add a new cmd-line flag:
 - add to cmd/gen-flags.ts
 - run "bun cmd/gen-flags.ts" to regenerate src/Flags.h and src/Flags.cpp
 - implement handling in Flags.cpp
-- document in docs/md/Version-history.md in **next** section
+- document in docs/md/Command-line-arguments.md when appropriate
+- add an entry to the **New command-line arguments** list at the end of the **next** section in docs/md/Version-history.md (see below)
+
+## Version history (docs/md/Version-history.md)
+
+When documenting a release (usually the **next** section at the top):
+
+- Main bullets describe features and behavior changes in prose. Mention menus, shortcuts, and user-visible effects — not a stream of `add CmdFoo` / `add -flag` bullets.
+- At the **end** of the version section, add consolidated lists (only for things **new** in that version):
+
+  **New commands:**
+
+  - `CmdFoo` : "Foo" — optional note (shortcut, palette-only, etc.)
+
+  **New command-line arguments:**
+
+  - `-foo <arg>` : brief description (include `(fixes #N)` here if relevant)
+
+- New `-print-settings` tokens belong under **New command-line arguments** (e.g. `-print-settings` tokens: `stretch`, `center`, …).
+- Command **changes** (renames, removals, new arguments on existing commands, shortcut rebinding) stay in the main bullets, not in **New commands**.
+- Removed flags can be noted in the main bullets; do not list them under **New command-line arguments**.
+- After editing, run `bun cmd/gen-docs.ts` to refresh the HTML docs.
 
 ## Bug reproduction / test files
 
