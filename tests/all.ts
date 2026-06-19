@@ -9,7 +9,7 @@
 // When adding a new test, add it to tests/ as issue-<n>.ts (exporting testit)
 // and register it in the `tests` array below.
 
-import { buildApp } from "./util.ts";
+import { buildApp, formatDuration, runTest } from "./util.ts";
 import { testit as cmdStartAutoScroll } from "./cmd-start-autoscroll.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
 import { testit as issue2693 } from "./issue-2693.ts";
@@ -44,15 +44,12 @@ const tests: [string, () => void | Promise<void>][] = [
 
 // runs all registered tests in order; throws (stopping) at the first failure
 export async function testit(): Promise<void> {
+  const t0 = performance.now();
   for (const [name, fn] of tests) {
     console.log(`\n========== ${name} ==========`);
-    try {
-      await fn();
-    } catch (e) {
-      throw new Error(`${name} failed: ${(e as Error)?.message ?? e}`);
-    }
+    await runTest(name, fn);
   }
-  console.log(`\n✅ all ${tests.length} tests passed`);
+  console.log(`\n✅ all ${tests.length} tests passed in ${formatDuration(performance.now() - t0)}`);
 }
 
 if (import.meta.main) {

@@ -20,6 +20,32 @@ export function tmpPath(name: string): string {
   return join(TMP_DIR, name);
 }
 
+// format a duration in ms for test output (e.g. 34.3ms, 2.3s, 3m 2.3s)
+export function formatDuration(ms: number): string {
+  if (ms < 1000) {
+    return `${ms.toFixed(1)}ms`;
+  }
+  const sec = ms / 1000;
+  if (sec < 60) {
+    return `${sec.toFixed(1)}s`;
+  }
+  const min = Math.floor(sec / 60);
+  const remSec = sec - min * 60;
+  return `${min}m ${remSec.toFixed(1)}s`;
+}
+
+// run one test and print pass/fail timing
+export async function runTest(name: string, fn: () => void | Promise<void>): Promise<void> {
+  const t0 = performance.now();
+  try {
+    await fn();
+    console.log(`✅ ${name} passed in ${formatDuration(performance.now() - t0)}`);
+  } catch (e) {
+    const msg = (e as Error)?.message ?? e;
+    throw new Error(`${name} failed after ${formatDuration(performance.now() - t0)}: ${msg}`);
+  }
+}
+
 // build SumatraPDF-dll.exe the same way cmd/build.ts does
 export function buildApp(): void {
   console.log("• building SumatraPDF-dll.exe (cmd/build.ts) ...");
@@ -32,12 +58,19 @@ export function buildApp(): void {
 // entry point for running a single test file directly:
 //   bun tests/issue-<n>.ts [--no-build]
 // builds (unless --no-build), runs testit(), exits 0 on pass / 1 on failure.
-export async function runStandalone(testit: () => void | Promise<void>): Promise<void> {
+export async function runStandalone(testit: () => void | Promise<void>, name?: string): Promise<void> {
+  const label =
+    name ??
+    (process.argv[1] ?? "test")
+      .replace(/\\/g, "/")
+      .split("/")
+      .pop()!
+      .replace(/\.ts$/, "");
   try {
     if (!process.argv.includes("--no-build")) {
       buildApp();
     }
-    await testit();
+    await runTest(label, testit);
   } catch (e) {
     console.error(`\n❌ ${(e as Error)?.message ?? e}`);
     process.exit(1);
