@@ -756,37 +756,48 @@ static void LayoutControls(ImageEditWindow* ew) {
         y += 16 + kRowPadding;
     }
 
-    // row 2: dest edit + browse button
+    // row 2: dest edit + browse button + save (right-aligned after browse)
+    constexpr int kEditRowDy = 22;
     int browseW = 30;
-    MoveWindow(ew->hwndDestEdit, x, y, w - browseW - 4, 22, TRUE);
-    MoveWindow(ew->hwndBrowseBtn, x + w - browseW, y, browseW, 22, TRUE);
-    y += 22 + kRowPadding;
+    int rightX = x + w;
+    if (ew->btnSave) {
+        Size szSave = ew->btnSave->GetIdealSize();
+        rightX -= szSave.dx;
+        int saveY = y + (kEditRowDy - szSave.dy) / 2;
+        ew->btnSave->SetBounds({rightX, saveY, szSave.dx, szSave.dy});
+        rightX -= 4;
+    }
+    rightX -= browseW;
+    MoveWindow(ew->hwndBrowseBtn, rightX, y, browseW, kEditRowDy, TRUE);
+    rightX -= 4;
+    int editW = rightX - x;
+    if (editW < 0) {
+        editW = 0;
+    }
+    MoveWindow(ew->hwndDestEdit, x, y, editW, kEditRowDy, TRUE);
+    y += kEditRowDy + kRowPadding;
 
-    // row 3: info label, cancel, save
+    // row 3: info label, crop/resize/format
     // layout buttons first to know where info label must stop
     int bx = cRc.dx - kButtonPadding;
-    if (ew->btnSave) {
-        // right-to-left: Resize, Crop, [Format], Save
-        if (ew->btnResize) {
-            Size szResize = ew->btnResize->GetIdealSize();
-            bx -= szResize.dx;
-            ew->btnResize->SetBounds({bx, y, szResize.dx, szResize.dy});
-        }
-        if (ew->btnCrop) {
-            Size szCrop = ew->btnCrop->GetIdealSize();
-            bx -= szCrop.dx + 4;
-            ew->btnCrop->SetBounds({bx, y, szCrop.dx, szCrop.dy});
-        }
-        if (ew->dropFormat) {
-            Size szDrop = ew->dropFormat->GetIdealSize();
-            bx -= szDrop.dx + 4;
-            Size szRef = ew->btnResize ? ew->btnResize->GetIdealSize() : ew->btnSave->GetIdealSize();
-            int dropY = y + (szRef.dy - szDrop.dy) / 2;
-            ew->dropFormat->SetBounds({bx, dropY, szDrop.dx, szDrop.dy});
-        }
-        Size szSave = ew->btnSave->GetIdealSize();
-        bx -= szSave.dx + 4;
-        ew->btnSave->SetBounds({bx, y, szSave.dx, szSave.dy});
+    // right-to-left: Resize, Crop, [Format]
+    if (ew->btnResize) {
+        Size szResize = ew->btnResize->GetIdealSize();
+        bx -= szResize.dx;
+        ew->btnResize->SetBounds({bx, y, szResize.dx, szResize.dy});
+    }
+    if (ew->btnCrop) {
+        Size szCrop = ew->btnCrop->GetIdealSize();
+        bx -= szCrop.dx + 4;
+        ew->btnCrop->SetBounds({bx, y, szCrop.dx, szCrop.dy});
+    }
+    if (ew->dropFormat) {
+        Size szDrop = ew->dropFormat->GetIdealSize();
+        bx -= szDrop.dx + 4;
+        Size szRef = ew->btnResize ? ew->btnResize->GetIdealSize()
+                                   : (ew->btnCrop ? ew->btnCrop->GetIdealSize() : Size{0, kEditRowDy});
+        int dropY = y + (szRef.dy - szDrop.dy) / 2;
+        ew->dropFormat->SetBounds({bx, dropY, szDrop.dx, szDrop.dy});
     }
 
     // size info label to its text, but don't overlap buttons
